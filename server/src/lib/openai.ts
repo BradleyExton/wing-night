@@ -5,18 +5,27 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization - only create client when needed
+let openai: OpenAI | null = null;
 
-export async function generateTeamLogo(prompt: string, teamId: string): Promise<string> {
+function getOpenAI(): OpenAI {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OpenAI API key not configured');
   }
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openai;
+}
+
+export async function generateTeamLogo(prompt: string, teamId: string): Promise<string> {
+  const client = getOpenAI();
 
   const enhancedPrompt = `Create a team logo/mascot for a party game team. Style: bold, fun, cartoon/mascot style, vibrant colors, suitable for a sports team or gaming team. The logo should be: ${prompt}. Make it eye-catching and memorable. No text in the image.`;
 
-  const response = await openai.images.generate({
+  const response = await client.images.generate({
     model: 'dall-e-3',
     prompt: enhancedPrompt,
     n: 1,
@@ -52,5 +61,3 @@ export async function generateTeamLogo(prompt: string, teamId: string): Promise<
   // Return the public URL path
   return `/logos/${filename}`;
 }
-
-export default openai;
