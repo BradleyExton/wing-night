@@ -57,6 +57,10 @@ router.post('/:code/teams', async (req, res) => {
       },
     });
 
+    // Broadcast to all clients in the room
+    const io = req.app.get('io');
+    io.to(code).emit('team-created', { team });
+
     res.json(team);
   } catch (error) {
     console.error('Failed to create team:', error);
