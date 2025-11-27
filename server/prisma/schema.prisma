@@ -1,0 +1,298 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ROOM
+// ============================================
+
+model Room {
+  id                    String    @id @default(cuid())
+  code                  String    @unique
+  editCode              String    @unique
+
+  name                  String?
+  eventDate             DateTime?
+  eventLocation         String?
+
+  phase                 String    @default("DRAFT")
+
+  teamSelectionMode     String    @default("SELF_SELECT")
+  maxTeams              Int       @default(6)
+  maxPlayersPerTeam     Int       @default(6)
+  allowWalkIns          Boolean   @default(true)
+
+  isLocked              Boolean   @default(false)
+  lockedAt              DateTime?
+
+  hostSocketId          String?
+  hostConnected         Boolean   @default(false)
+  hostDisconnectedAt    DateTime?
+
+  displaySocketId       String?
+  displayConnected      Boolean   @default(false)
+
+  currentRoundNumber    Int       @default(0)
+  totalRounds           Int       @default(8)
+
+  timerState            String?
+
+  isPaused              Boolean   @default(false)
+  pausedAt              DateTime?
+  pausedReason          String?
+
+  gameState             String?
+
+  soundEnabled          Boolean   @default(true)
+
+  endedAt               DateTime?
+  endedReason           String?
+  winnerId              String?
+  finalStats            String?
+
+  previousGameId        String?
+  gameNumber            Int       @default(1)
+
+  teams                 Team[]
+  players               Player[]
+  rounds                Round[]
+  expectedGuests        ExpectedGuest[]
+  gameHistory           GameHistory[]
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+// ============================================
+// TEAM
+// ============================================
+
+model Team {
+  id                String    @id @default(cuid())
+  roomId            String
+
+  name              String?   @default("Team")
+  emoji             String?
+  logoUrl           String?
+  logoType          String?
+  logoPrompt        String?
+
+  aiAttemptsUsed    Int       @default(0)
+  maxAiAttempts     Int       @default(3)
+
+  currentSize       Int       @default(0)
+  maxSize           Int       @default(6)
+
+  isReady           Boolean   @default(false)
+
+  score             Int       @default(0)
+
+  totalWingsCompleted Int     @default(0)
+  totalWingsAttempted Int     @default(0)
+
+  createdBy         String    @default("HOST")
+  createdById       String?
+
+  room              Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  players           Player[]
+  expectedGuests    ExpectedGuest[]
+  roundResults      RoundResult[]
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// ============================================
+// PLAYER
+// ============================================
+
+model Player {
+  id                  String    @id @default(cuid())
+  roomId              String
+  teamId              String?
+
+  name                String
+  photoUrl            String?
+
+  socketId            String?
+  sessionId           String?   @unique
+  isConnected         Boolean   @default(false)
+  hasDevice           Boolean   @default(true)
+  lastSeenAt          DateTime?
+  disconnectedAt      DateTime?
+
+  isReady             Boolean   @default(false)
+
+  joinedAt            DateTime  @default(now())
+  joinedVia           String    @default("PHONE")
+
+  wingsCompleted      Int       @default(0)
+  wingsAttempted      Int       @default(0)
+
+  expectedGuestId     String?   @unique
+
+  teamChangeRequested Boolean   @default(false)
+  requestedTeamId     String?
+
+  room                Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  team                Team?     @relation(fields: [teamId], references: [id])
+  expectedGuest       ExpectedGuest? @relation(fields: [expectedGuestId], references: [id])
+  wingResults         WingResult[]
+  votes               Vote[]
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+// ============================================
+// EXPECTED GUEST
+// ============================================
+
+model ExpectedGuest {
+  id              String    @id @default(cuid())
+  roomId          String
+  teamId          String?
+
+  name            String
+  photoUrl        String?
+
+  claimedById     String?
+  claimedAt       DateTime?
+
+  room            Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  team            Team?     @relation(fields: [teamId], references: [id])
+  claimedBy       Player?
+
+  createdAt       DateTime  @default(now())
+}
+
+// ============================================
+// ROUND
+// ============================================
+
+model Round {
+  id                String    @id @default(cuid())
+  roomId            String
+  roundNumber       Int
+
+  sauceName         String?
+  sauceScovilles    Int?
+  sauceNotes        String?
+
+  gameType          String?
+  gameSelectionMode String    @default("PRE_SET")
+  gameConfig        String?
+
+  phase             String    @default("PENDING")
+  startedAt         DateTime?
+  completedAt       DateTime?
+
+  room              Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roundResults      RoundResult[]
+  wingResults       WingResult[]
+
+  createdAt         DateTime  @default(now())
+
+  @@unique([roomId, roundNumber])
+}
+
+// ============================================
+// ROUND RESULT
+// ============================================
+
+model RoundResult {
+  id              String    @id @default(cuid())
+  roundId         String
+  teamId          String
+
+  wingPoints      Int       @default(0)
+  gamePoints      Int       @default(0)
+  bonusPoints     Int       @default(0)
+  totalPoints     Int       @default(0)
+
+  placement       Int?
+
+  round           Round     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  team            Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+
+  @@unique([roundId, teamId])
+}
+
+// ============================================
+// WING RESULT
+// ============================================
+
+model WingResult {
+  id              String    @id @default(cuid())
+  roundId         String
+  playerId        String
+
+  completed       Boolean   @default(false)
+  markedBy        String    @default("HOST")
+
+  completedAt     DateTime?
+
+  round           Round     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  player          Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+
+  @@unique([roundId, playerId])
+}
+
+// ============================================
+// VOTE
+// ============================================
+
+model Vote {
+  id              String    @id @default(cuid())
+  roomId          String
+  roundNumber     Int
+  gameType        String
+
+  playerId        String
+  playerName      String
+  teamId          String
+
+  votedFor        String
+  votedVia        String
+
+  player          Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+
+  @@unique([roomId, roundNumber, playerId])
+}
+
+// ============================================
+// GAME HISTORY
+// ============================================
+
+model GameHistory {
+  id              String    @id @default(cuid())
+  roomId          String
+  gameNumber      Int
+
+  winnerId        String
+  winnerName      String
+  winnerScore     Int
+
+  finalScores     String
+
+  stats           String
+
+  startedAt       DateTime
+  endedAt         DateTime
+  durationMinutes Int
+
+  room            Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@wing-night/shared",
+  "version": "1.0.0",
+  "description": "Shared types for Wing Night",
+  "main": "types/index.ts",
+  "types": "types/index.ts",
+  "type": "module"
+}
