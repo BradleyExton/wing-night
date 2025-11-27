@@ -332,7 +332,3 @@ export async function broadcastRoomUpdate(io: Server, roomCode: string, changes:
   io.to(roomCode).emit('room-updated', { changes });
 }
 
-// Helper function to broadcast to specific room
-export function getIO(io: Server, roomCode: string) {
-  return io.to(roomCode);
-}
