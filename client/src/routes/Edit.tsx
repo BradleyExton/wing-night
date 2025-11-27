@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/common/Button';
 import { Card, CardHeader } from '../components/common/Card';
 import { RoomCode } from '../components/common/RoomCode';
 import { api } from '../lib/api';
-import type { Room, Round } from '../types';
+import type { Room } from '../types';
 
 export function Edit() {
   const { editCode } = useParams<{ editCode: string }>();

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { Button } from '../components/common/Button';
 import { Card, CardHeader } from '../components/common/Card';
 import { Timer } from '../components/common/Timer';
@@ -9,12 +9,10 @@ import { api } from '../lib/api';
 
 export function Play() {
   const { code } = useParams<{ code: string }>();
-  const navigate = useNavigate();
   const { room, player, joinAsPlayer, error, isConnected } = useRoom();
   const [playerName, setPlayerName] = useState('');
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   const handleJoin = async () => {
     if (!code || !playerName.trim()) return;
@@ -33,7 +31,6 @@ export function Play() {
     if (!player || !room) return;
     try {
       await api.updatePlayer(room.code, player.id, { teamId });
-      setSelectedTeamId(teamId);
     } catch (err) {
       console.error('Failed to select team');
     }

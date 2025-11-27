@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/common/Button';
 import { Card, CardHeader } from '../components/common/Card';
@@ -226,7 +226,6 @@ function CountdownTimer({ targetDate }: { targetDate: Date }) {
 }
 
 function HeatIndicator({ level, total }: { level: number; total: number }) {
-  const percentage = (level / total) * 100;
   const flames = Math.ceil((level / total) * 5);
 
   return (
