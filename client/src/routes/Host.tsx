@@ -7,6 +7,7 @@ import { TeamCard } from '../components/common/TeamCard';
 import { RoomCode } from '../components/common/RoomCode';
 import { useRoom } from '../contexts/RoomContext';
 import { api } from '../lib/api';
+import { TriviaHost, TriviaGameState } from '../games/trivia';
 
 export function Host() {
   const { code } = useParams<{ code: string }>();
@@ -14,6 +15,7 @@ export function Host() {
   const { room, joinAsHost, error: roomError, isConnected } = useRoom();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [gameType, setGameType] = useState<string | null>(null);
 
   useEffect(() => {
     if (code) {
@@ -92,6 +94,26 @@ export function Host() {
       await api.endGame(room.code, 'host_ended');
     } catch (err) {
       setError('Failed to end game');
+    }
+  };
+
+  const handleUpdateGameState = async (state: TriviaGameState) => {
+    if (!room) return;
+    try {
+      await api.updateGameState(room.code, state);
+    } catch (err) {
+      setError('Failed to update game state');
+    }
+  };
+
+  const handleEndGamePhase = async () => {
+    if (!room) return;
+    try {
+      await api.completeRound(room.code, room.currentRoundNumber);
+      await handleAdvancePhase('ROUND_RESULTS');
+      setGameType(null);
+    } catch (err) {
+      setError('Failed to end game phase');
     }
   };
 
@@ -297,7 +319,41 @@ export function Host() {
           </>
         )}
 
-        {room.phase === 'GAME_PHASE' && (
+        {room.phase === 'GAME_PHASE' && !gameType && (
+          <>
+            <Card>
+              <CardHeader>Choose a Game</CardHeader>
+              <div className="space-y-3">
+                <Button
+                  className="w-full py-6 text-xl"
+                  onClick={() => setGameType('trivia')}
+                >
+                  <span className="mr-3">❓</span> Trivia
+                </Button>
+                <Button
+                  className="w-full"
+                  variant="ghost"
+                  onClick={() => setGameType('manual')}
+                >
+                  Manual Scoring (no game)
+                </Button>
+              </div>
+            </Card>
+          </>
+        )}
+
+        {room.phase === 'GAME_PHASE' && gameType === 'trivia' && (
+          <TriviaHost
+            roomCode={room.code}
+            teams={room.teams}
+            gameState={room.gameState as TriviaGameState | null}
+            onUpdateGameState={handleUpdateGameState}
+            onAdjustScore={handleAdjustScore}
+            onEndGame={handleEndGamePhase}
+          />
+        )}
+
+        {room.phase === 'GAME_PHASE' && gameType === 'manual' && (
           <>
             <Card>
               <CardHeader>Manual Scoring</CardHeader>
@@ -317,13 +373,7 @@ export function Host() {
                 ))}
               </div>
             </Card>
-            <Button
-              className="w-full"
-              onClick={async () => {
-                await api.completeRound(room.code, room.currentRoundNumber);
-                handleAdvancePhase('ROUND_RESULTS');
-              }}
-            >
+            <Button className="w-full" onClick={handleEndGamePhase}>
               End Game Phase
             </Button>
           </>

@@ -4,6 +4,7 @@ import { Timer } from '../components/common/Timer';
 import { TeamCard } from '../components/common/TeamCard';
 import { RoomCode } from '../components/common/RoomCode';
 import { useRoom } from '../contexts/RoomContext';
+import { TriviaDisplay, TriviaGameState } from '../games/trivia';
 
 export function Display() {
   const { code } = useParams<{ code: string }>();
@@ -140,15 +141,22 @@ export function Display() {
         )}
 
         {room.phase === 'GAME_PHASE' && (
-          <div className="text-center w-full max-w-4xl">
-            <div className="text-4xl font-bold mb-8">GAME TIME</div>
-            {room.timerState && <Timer timerState={room.timerState} size="lg" />}
-            <div className="grid grid-cols-2 gap-4 mt-8">
-              {sortedTeams.map((team, i) => (
-                <TeamCard key={team.id} team={team} rank={i + 1} showScore />
-              ))}
+          room.gameState && (room.gameState as TriviaGameState).questions ? (
+            <TriviaDisplay
+              gameState={room.gameState as TriviaGameState}
+              teams={room.teams}
+            />
+          ) : (
+            <div className="text-center w-full max-w-4xl">
+              <div className="text-4xl font-bold mb-8">GAME TIME</div>
+              {room.timerState && <Timer timerState={room.timerState} size="lg" />}
+              <div className="grid grid-cols-2 gap-4 mt-8">
+                {sortedTeams.map((team, i) => (
+                  <TeamCard key={team.id} team={team} rank={i + 1} showScore />
+                ))}
+              </div>
             </div>
-          </div>
+          )
         )}
 
         {room.phase === 'ROUND_RESULTS' && (

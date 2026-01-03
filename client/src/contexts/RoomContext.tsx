@@ -1,3 +1,4 @@
+/* @refresh reset */
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import type { Room, Player, Team, TimerState, WingStatus } from '../types';
 import { connectSocket, disconnectSocket, getSocket } from '../lib/socket';
@@ -189,6 +190,10 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       setRoom(prev => prev ? { ...prev, isPaused: false } : null);
     });
 
+    socket.on('game-state-updated', (data: { gameState: unknown }) => {
+      setRoom(prev => prev ? { ...prev, gameState: data.gameState } : null);
+    });
+
     return () => {
       socket.off('connect');
       socket.off('disconnect');
@@ -211,6 +216,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       socket.off('wings-updated');
       socket.off('game-paused');
       socket.off('game-resumed');
+      socket.off('game-state-updated');
     };
   }, []);
 

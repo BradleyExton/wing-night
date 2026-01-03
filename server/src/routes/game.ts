@@ -505,7 +505,7 @@ router.post('/:code/rounds/:roundNumber/complete', async (req, res) => {
   }
 });
 
-// Update game state (for manual scoring)
+// Update game state (for trivia and other mini-games)
 router.put('/:code/game-state', async (req, res) => {
   try {
     const { code } = req.params;
@@ -517,6 +517,10 @@ router.put('/:code/game-state', async (req, res) => {
         gameState: JSON.stringify(gameState),
       },
     });
+
+    // Broadcast game state update to all clients
+    const io = req.app.get('io');
+    io.to(code).emit('game-state-updated', { gameState });
 
     res.json({ success: true });
   } catch (error) {
