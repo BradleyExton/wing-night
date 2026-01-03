@@ -10,7 +10,9 @@ import roomsRouter from './routes/rooms.js';
 import teamsRouter from './routes/teams.js';
 import playersRouter from './routes/players.js';
 import gameRouter from './routes/game.js';
+import usersRouter from './routes/users.js';
 import { setupSocketHandlers } from './handlers/socket.js';
+import { clerkAuth, syncUserToDb } from './middleware/auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -26,11 +28,16 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Clerk authentication middleware (adds auth to all requests)
+app.use(clerkAuth);
+app.use(syncUserToDb);
+
 // Static files for uploaded images
 app.use('/logos', express.static(path.join(__dirname, '../public/logos')));
 app.use('/photos', express.static(path.join(__dirname, '../public/photos')));
 
 // API routes
+app.use('/api/users', usersRouter);
 app.use('/api/rooms', roomsRouter);
 app.use('/api/rooms', teamsRouter);
 app.use('/api/rooms', playersRouter);

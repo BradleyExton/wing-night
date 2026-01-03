@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma.js';
 import { generateRoomCode, generateEditCode } from '../lib/roomCodes.js';
+import { authenticatedUser } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -15,17 +16,21 @@ const DEFAULT_SAUCE_LINEUP = [
   { round: 8, name: 'The Last Dab', scoville: 2000000 },
 ];
 
-// Create room
-router.post('/', async (req, res) => {
+// Create room - requires authentication
+router.post('/', ...authenticatedUser, async (req, res) => {
   try {
     const code = await generateRoomCode();
     const editCode = generateEditCode();
+
+    // req.dbUser is guaranteed to exist due to authenticatedUser middleware
+    const hostUserId = req.dbUser!.id;
 
     const room = await prisma.room.create({
       data: {
         code,
         editCode,
         phase: 'DRAFT',
+        hostUserId,
         rounds: {
           create: DEFAULT_SAUCE_LINEUP.map((sauce) => ({
             roundNumber: sauce.round,

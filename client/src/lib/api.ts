@@ -1,12 +1,29 @@
 const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3000/api');
 
+// Store for auth token getter function
+let getAuthToken: (() => Promise<string | null>) | null = null;
+
+export function setAuthTokenGetter(getter: () => Promise<string | null>) {
+  getAuthToken = getter;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+
+  // Add auth token if available
+  if (getAuthToken) {
+    const token = await getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -121,6 +138,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ keepTeams, shuffleTeams }),
     }),
+
+  // User endpoints (authenticated)
+  getUserRooms: () => request<any>('/users/me/rooms'),
+
+  getGameHistory: () => request<any>('/users/me/games'),
+
+  getCurrentUser: () => request<any>('/users/me'),
 };
 
 export default api;
