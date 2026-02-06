@@ -6,6 +6,9 @@ import { Timer } from '../components/common/Timer';
 import { TeamCard } from '../components/common/TeamCard';
 import { useRoom } from '../contexts/RoomContext';
 import { api } from '../lib/api';
+import { getAssetUrl } from '../lib/assets';
+import { sortTeamsByScore } from '../lib/teams';
+import { TriviaPlayer, TriviaGameState } from '../games/trivia';
 
 export function Play() {
   const { code } = useParams<{ code: string }>();
@@ -95,7 +98,7 @@ export function Play() {
 
   const myTeam = room.teams.find(t => t.id === player.teamId);
   const currentRound = room.rounds.find(r => r.roundNumber === room.currentRoundNumber);
-  const sortedTeams = [...room.teams].sort((a, b) => b.score - a.score);
+  const sortedTeams = sortTeamsByScore(room.teams);
 
   return (
     <div className="min-h-screen p-4 flex flex-col">
@@ -117,7 +120,7 @@ export function Play() {
           <div className="flex items-center gap-3">
             {myTeam.logoUrl ? (
               <img
-                src={`http://localhost:3000${myTeam.logoUrl}`}
+                src={getAssetUrl(myTeam.logoUrl) || ''}
                 alt={myTeam.name || 'Team'}
                 className="w-12 h-12 rounded-lg object-cover"
               />
@@ -171,7 +174,7 @@ export function Play() {
                 <div className="text-center">
                   {myTeam.logoUrl ? (
                     <img
-                      src={`http://localhost:3000${myTeam.logoUrl}`}
+                      src={getAssetUrl(myTeam.logoUrl) || ''}
                       alt={myTeam.name || 'Team'}
                       className="w-32 h-32 mx-auto rounded-xl object-cover mb-4"
                     />
@@ -241,21 +244,35 @@ export function Play() {
                 <Timer timerState={room.timerState} size="lg" />
               </div>
             )}
-            <Card>
-              <CardHeader>Current Standings</CardHeader>
-              <div className="space-y-2">
-                {sortedTeams.map((team, i) => (
-                  <TeamCard
-                    key={team.id}
-                    team={team}
-                    rank={i + 1}
-                    showScore
-                    compact
-                    selected={team.id === player.teamId}
-                  />
-                ))}
-              </div>
-            </Card>
+
+            {/* Trivia mini-game */}
+            {room.gameState && (room.gameState as TriviaGameState).questions && (
+              <TriviaPlayer
+                roomCode={room.code}
+                player={player}
+                teams={room.teams}
+                gameState={room.gameState as TriviaGameState}
+              />
+            )}
+
+            {/* Default standings when no mini-game active */}
+            {!room.gameState && (
+              <Card>
+                <CardHeader>Current Standings</CardHeader>
+                <div className="space-y-2">
+                  {sortedTeams.map((team, i) => (
+                    <TeamCard
+                      key={team.id}
+                      team={team}
+                      rank={i + 1}
+                      showScore
+                      compact
+                      selected={team.id === player.teamId}
+                    />
+                  ))}
+                </div>
+              </Card>
+            )}
           </div>
         )}
 

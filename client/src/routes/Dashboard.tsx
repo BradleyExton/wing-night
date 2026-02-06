@@ -219,7 +219,10 @@ function GameCard({
 }) {
   const eventDate = room.eventDate ? new Date(room.eventDate) : null;
   const winner = completed && room.teams.length > 0
-    ? [...room.teams].sort((a, b) => b.score - a.score)[0]
+    ? [...room.teams].sort((a, b) => {
+        const scoreDelta = b.score - a.score;
+        return scoreDelta !== 0 ? scoreDelta : a.id.localeCompare(b.id);
+      })[0]
     : null;
 
   return (

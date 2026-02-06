@@ -28,6 +28,7 @@ export function Edit() {
     try {
       const data = await api.getRoomByEditCode(editCode);
       setRoom(data);
+      localStorage.setItem(`wing-night-editcode-${data.code}`, data.editCode);
       setName(data.name || '');
       setEventDate(data.eventDate ? data.eventDate.split('T')[0] : '');
       setTotalRounds(data.totalRounds);

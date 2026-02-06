@@ -1,10 +1,6 @@
 import { TriviaGameState } from './types';
-
-interface Team {
-  id: string;
-  name: string | null;
-  score: number;
-}
+import type { Team } from '../../types';
+import { sortTeamsByScore } from '../../lib/teams';
 
 interface TriviaDisplayProps {
   gameState: TriviaGameState | null;
@@ -22,7 +18,10 @@ export function TriviaDisplay({ gameState, teams }: TriviaDisplayProps) {
   }
 
   const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
-  const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+  const sortedTeams = sortTeamsByScore(teams);
+  const buzzedTeam = teams.find(t => t.id === gameState.buzzedTeamId);
+  const failedTeamIds = gameState.failedTeams || [];
+  const isStealMode = failedTeamIds.length > 0 && !gameState.buzzedTeamId && gameState.questionActive;
 
   // Calculate this round's scores
   const getRoundScore = (teamId: string): number => {
@@ -74,21 +73,77 @@ export function TriviaDisplay({ gameState, teams }: TriviaDisplayProps) {
         )}
       </div>
 
-      {/* Team scores for this round */}
+      {/* Buzz-in Status Banner */}
+      {!gameState.showAnswer && (
+        <div className="mb-8">
+          {/* Waiting for host to start */}
+          {!gameState.questionActive && (
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-600">
+              <div className="text-2xl text-gray-400">
+                Get ready to buzz in...
+              </div>
+            </div>
+          )}
+
+          {/* Waiting for buzz */}
+          {gameState.questionActive && !gameState.buzzedTeamId && (
+            <div className={`rounded-xl p-6 border-2 ${
+              isStealMode
+                ? 'bg-yellow-900/30 border-yellow-500'
+                : 'bg-primary/20 border-primary animate-pulse'
+            }`}>
+              <div className="text-4xl mb-2">
+                {isStealMode ? '🔔' : '⚡'}
+              </div>
+              <div className="text-3xl font-bold">
+                {isStealMode ? 'STEAL OPPORTUNITY!' : 'BUZZ IN!'}
+              </div>
+              {isStealMode && (
+                <div className="text-xl text-gray-300 mt-2">
+                  {teams.filter(t => !failedTeamIds.includes(t.id)).map(t => t.name).join(' or ')} can steal!
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Team buzzed */}
+          {gameState.buzzedTeamId && buzzedTeam && (
+            <div className="bg-primary/30 rounded-xl p-8 border-2 border-primary">
+              <div className="text-5xl mb-4">🔔</div>
+              <div className="text-4xl font-bold text-primary">
+                {buzzedTeam.name}
+              </div>
+              <div className="text-2xl text-gray-300 mt-2">
+                is answering!
+              </div>
+              {gameState.buzzedPlayerName && (
+                <div className="text-xl text-gray-400 mt-1">
+                  ({gameState.buzzedPlayerName} buzzed in)
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Team scores */}
       <div className="grid grid-cols-3 gap-4">
         {sortedTeams.map((team, i) => {
           const roundScore = getRoundScore(team.id);
-          const currentAnswer = gameState.teamAnswers[team.id]?.[gameState.currentQuestionIndex];
-          const hasAnswered = currentAnswer !== undefined;
+          const gotThisQuestion = gameState.teamAnswers[team.id]?.[gameState.currentQuestionIndex];
+          const hasFailed = failedTeamIds.includes(team.id);
+          const isBuzzed = gameState.buzzedTeamId === team.id;
 
           return (
             <div
               key={team.id}
               className={`p-4 rounded-xl transition-all ${
-                hasAnswered
-                  ? currentAnswer
-                    ? 'bg-green-900/40 border-2 border-green-500 scale-105'
-                    : 'bg-red-900/40 border-2 border-red-500'
+                isBuzzed
+                  ? 'bg-primary/40 border-2 border-primary scale-105 animate-pulse'
+                  : gotThisQuestion
+                  ? 'bg-green-900/40 border-2 border-green-500 scale-105'
+                  : hasFailed && !gameState.showAnswer
+                  ? 'bg-red-900/30 border-2 border-red-500/50 opacity-60'
                   : i === 0
                   ? 'bg-primary/20 border border-primary'
                   : 'bg-bg-card border border-gray-700'
@@ -99,9 +154,19 @@ export function TriviaDisplay({ gameState, teams }: TriviaDisplayProps) {
               {roundScore > 0 && (
                 <div className="text-green-400 text-lg">+{roundScore} this round</div>
               )}
-              {hasAnswered && (
-                <div className={`text-lg mt-1 ${currentAnswer ? 'text-green-400' : 'text-red-400'}`}>
-                  {currentAnswer ? '✓ Correct!' : '✗ Wrong'}
+              {gotThisQuestion && (
+                <div className="text-green-400 text-lg mt-1">
+                  ✓ Correct!
+                </div>
+              )}
+              {hasFailed && !gameState.showAnswer && (
+                <div className="text-red-400 text-lg mt-1">
+                  ✗ Wrong
+                </div>
+              )}
+              {isBuzzed && (
+                <div className="text-primary text-lg mt-1 animate-bounce">
+                  Answering...
                 </div>
               )}
             </div>

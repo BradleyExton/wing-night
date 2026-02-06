@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma.js';
 import { generateRoomCode, generateEditCode } from '../lib/roomCodes.js';
+import { getPhaseUpdate } from '../lib/phase.js';
 import { authenticatedUser } from '../middleware/auth.js';
+import { requireRoomHostOrEditCode } from '../middleware/roomAuth.js';
 
 const router = Router();
 
@@ -232,7 +234,7 @@ router.get('/:code/preview', async (req, res) => {
 });
 
 // Update room
-router.put('/:code', async (req, res) => {
+router.put('/:code', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const {
@@ -268,6 +270,20 @@ router.put('/:code', async (req, res) => {
       },
     });
 
+    const changes: Record<string, unknown> = {};
+    if (name !== undefined) changes.name = room.name;
+    if (eventDate !== undefined) changes.eventDate = room.eventDate;
+    if (eventLocation !== undefined) changes.eventLocation = room.eventLocation;
+    if (teamSelectionMode !== undefined) changes.teamSelectionMode = room.teamSelectionMode;
+    if (maxTeams !== undefined) changes.maxTeams = room.maxTeams;
+    if (maxPlayersPerTeam !== undefined) changes.maxPlayersPerTeam = room.maxPlayersPerTeam;
+    if (allowWalkIns !== undefined) changes.allowWalkIns = room.allowWalkIns;
+    if (totalRounds !== undefined) changes.totalRounds = room.totalRounds;
+    if (soundEnabled !== undefined) changes.soundEnabled = room.soundEnabled;
+
+    const io = req.app.get('io');
+    io.to(code).emit('room-updated', { changes });
+
     res.json(room);
   } catch (error) {
     console.error('Failed to update room:', error);
@@ -276,7 +292,7 @@ router.put('/:code', async (req, res) => {
 });
 
 // Lock/unlock room
-router.put('/:code/lock', async (req, res) => {
+router.put('/:code/lock', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { locked } = req.body;
@@ -289,6 +305,9 @@ router.put('/:code/lock', async (req, res) => {
       },
     });
 
+    const io = req.app.get('io');
+    io.to(code).emit('room-updated', { changes: { isLocked: room.isLocked, lockedAt: room.lockedAt } });
+
     res.json({ isLocked: room.isLocked });
   } catch (error) {
     console.error('Failed to lock/unlock room:', error);
@@ -297,7 +316,7 @@ router.put('/:code/lock', async (req, res) => {
 });
 
 // Open room (DRAFT -> LOBBY)
-router.post('/:code/open', async (req, res) => {
+router.post('/:code/open', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
 
@@ -333,7 +352,7 @@ router.post('/:code/open', async (req, res) => {
 });
 
 // Advance phase
-router.post('/:code/phase', async (req, res) => {
+router.post('/:code/phase', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { phase } = req.body;
@@ -345,17 +364,7 @@ router.post('/:code/phase', async (req, res) => {
     }
 
     // Build update data
-    const updateData: Record<string, unknown> = { phase };
-
-    // When transitioning to ROUND_INTRO, increment currentRoundNumber if it's 0
-    // or if coming from ROUND_RESULTS (starting a new round)
-    if (phase === 'ROUND_INTRO') {
-      if (currentRoom.currentRoundNumber === 0) {
-        updateData.currentRoundNumber = 1;
-      } else if (currentRoom.phase === 'ROUND_RESULTS') {
-        updateData.currentRoundNumber = currentRoom.currentRoundNumber + 1;
-      }
-    }
+    const updateData = getPhaseUpdate(currentRoom, phase);
 
     const room = await prisma.room.update({
       where: { code },
@@ -391,7 +400,7 @@ router.post('/:code/phase', async (req, res) => {
 });
 
 // Update rounds
-router.put('/:code/rounds', async (req, res) => {
+router.put('/:code/rounds', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { rounds } = req.body;
@@ -438,6 +447,9 @@ router.put('/:code/rounds', async (req, res) => {
       },
     });
 
+    const io = req.app.get('io');
+    io.to(code).emit('room-updated', { changes: { rounds: updatedRoom?.rounds || [] } });
+
     res.json(updatedRoom?.rounds);
   } catch (error) {
     console.error('Failed to update rounds:', error);
@@ -446,7 +458,7 @@ router.put('/:code/rounds', async (req, res) => {
 });
 
 // Delete room
-router.delete('/:code', async (req, res) => {
+router.delete('/:code', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     await prisma.room.delete({ where: { code } });

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma.js';
 import { generateSessionId } from '../lib/roomCodes.js';
+import { requireRoomHostOrEditCode, isRoomHostOrEditCode } from '../middleware/roomAuth.js';
 import multer from 'multer';
 import sharp from 'sharp';
 import path from 'path';
@@ -9,6 +10,42 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();
+
+const JOIN_RATE_WINDOW_MS = 60_000;
+const JOIN_RATE_MAX = 5;
+const joinAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(req: { ip: string; headers: Record<string, string | string[] | undefined> }): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded.trim()) {
+    return forwarded.split(',')[0].trim();
+  }
+  if (Array.isArray(forwarded) && forwarded.length > 0) {
+    return forwarded[0];
+  }
+  return req.ip;
+}
+
+function isRateLimited(key: string): boolean {
+  const now = Date.now();
+  const entry = joinAttempts.get(key);
+  if (!entry || entry.resetAt <= now) {
+    joinAttempts.set(key, { count: 1, resetAt: now + JOIN_RATE_WINDOW_MS });
+    return false;
+  }
+
+  entry.count += 1;
+  return entry.count > JOIN_RATE_MAX;
+}
+
+function clearRateLimit(key: string) {
+  joinAttempts.delete(key);
+}
+
+function normalizePlayerName(name: unknown): string {
+  if (typeof name !== 'string') return '';
+  return name.trim().replace(/\s+/g, ' ');
+}
 
 // Configure multer for file uploads
 const upload = multer({
@@ -29,6 +66,11 @@ router.post('/:code/join', async (req, res) => {
   try {
     const { code } = req.params;
     const { playerName, sessionId: existingSessionId, expectedGuestId } = req.body;
+    const rateKey = `${code}:${getClientIp(req)}`;
+
+    if (isRateLimited(rateKey)) {
+      return res.status(429).json({ error: 'Too many join attempts. Try again in a minute.' });
+    }
 
     const room = await prisma.room.findUnique({
       where: { code },
@@ -43,65 +85,86 @@ router.post('/:code/join', async (req, res) => {
       return res.status(404).json({ error: 'Room not found' });
     }
 
-    if (room.isLocked) {
-      return res.status(403).json({ error: 'Room is locked' });
-    }
-
-    if (!['LOBBY', 'TEAM_SETUP'].includes(room.phase)) {
-      // Check if this is a reconnection
-      if (existingSessionId) {
-        const existingPlayer = await prisma.player.findUnique({
-          where: { sessionId: existingSessionId },
-          include: { team: true },
-        });
-
-        if (existingPlayer && existingPlayer.roomId === room.id) {
-          return res.json({
-            player: existingPlayer,
-            room,
-            isReconnection: true,
-          });
-        }
-      }
-      return res.status(400).json({ error: 'Game has already started' });
-    }
-
-    // Check if reconnecting with session ID
     if (existingSessionId) {
       const existingPlayer = await prisma.player.findUnique({
         where: { sessionId: existingSessionId },
         include: { team: true },
       });
 
-      // Only reconnect if same room AND same name (or no new name provided)
       if (existingPlayer && existingPlayer.roomId === room.id) {
-        const nameMatches = !playerName || existingPlayer.name.toLowerCase() === playerName.toLowerCase();
-
-        if (nameMatches) {
-          const updated = await prisma.player.update({
-            where: { id: existingPlayer.id },
-            data: {
-              isConnected: true,
-              lastSeenAt: new Date(),
-              disconnectedAt: null,
-            },
-            include: { team: true },
-          });
-
-          return res.json({
-            player: updated,
-            room,
-            isReconnection: true,
-          });
+        const normalized = normalizePlayerName(playerName);
+        if (normalized && existingPlayer.name.toLowerCase() !== normalized.toLowerCase()) {
+          return res.status(400).json({ error: 'Name does not match existing session' });
         }
-        // Name differs - fall through to create new player with new session
+
+        const updated = await prisma.player.update({
+          where: { id: existingPlayer.id },
+          data: {
+            isConnected: true,
+            lastSeenAt: new Date(),
+            disconnectedAt: null,
+          },
+          include: { team: true },
+        });
+
+        clearRateLimit(rateKey);
+        return res.json({
+          player: updated,
+          room,
+          isReconnection: true,
+          sessionId: existingSessionId,
+        });
+      }
+    }
+
+    if (room.isLocked) {
+      return res.status(403).json({ error: 'Room is locked' });
+    }
+
+    if (!['LOBBY', 'TEAM_SETUP'].includes(room.phase)) {
+      return res.status(400).json({ error: 'Game has already started' });
+    }
+
+    const normalizedName = normalizePlayerName(playerName);
+    if (!normalizedName) {
+      return res.status(400).json({ error: 'Player name required' });
+    }
+
+    if (normalizedName.length > 24) {
+      return res.status(400).json({ error: 'Player name too long' });
+    }
+
+    const lowerName = normalizedName.toLowerCase();
+    const nameTaken = room.players.some((p) => p.name.toLowerCase() === lowerName);
+    if (nameTaken) {
+      return res.status(409).json({ error: 'Name already taken' });
+    }
+
+    const maxPlayers = room.maxTeams * room.maxPlayersPerTeam;
+    if (room.players.length >= maxPlayers) {
+      return res.status(400).json({ error: 'Room is full' });
+    }
+
+    let expectedGuest = null as null | { id: string; name: string; roomId: string; claimedById: string | null };
+    if (expectedGuestId) {
+      expectedGuest = await prisma.expectedGuest.findUnique({
+        where: { id: expectedGuestId },
+      });
+      if (!expectedGuest || expectedGuest.roomId !== room.id) {
+        return res.status(400).json({ error: 'Invalid expected guest' });
+      }
+      if (expectedGuest.claimedById) {
+        return res.status(400).json({ error: 'Expected guest already claimed' });
+      }
+      if (expectedGuest.name.toLowerCase() !== lowerName) {
+        return res.status(400).json({ error: 'Name does not match expected guest' });
       }
     }
 
     // Check walk-ins
     if (!room.allowWalkIns && !expectedGuestId) {
       const isExpected = room.expectedGuests.some(
-        (g) => g.name.toLowerCase() === playerName.toLowerCase() && !g.claimedById
+        (g) => g.name.toLowerCase() === lowerName && !g.claimedById
       );
       if (!isExpected) {
         return res.status(403).json({ error: 'Walk-ins not allowed' });
@@ -113,19 +176,14 @@ router.post('/:code/join', async (req, res) => {
     let guestId = expectedGuestId;
 
     // Try to claim expected guest spot
-    if (expectedGuestId) {
-      const guest = await prisma.expectedGuest.findUnique({
-        where: { id: expectedGuestId },
-      });
-      if (guest && !guest.claimedById) {
-        joinedVia = 'EXPECTED_GUEST';
-      }
+    if (expectedGuest) {
+      joinedVia = 'EXPECTED_GUEST';
     }
 
     const player = await prisma.player.create({
       data: {
         roomId: room.id,
-        name: playerName,
+        name: normalizedName,
         sessionId,
         isConnected: true,
         hasDevice: true,
@@ -147,6 +205,10 @@ router.post('/:code/join', async (req, res) => {
       });
     }
 
+    const io = req.app.get('io');
+    io.to(code).emit('player-joined', { player, team: player.team || undefined });
+
+    clearRateLimit(rateKey);
     res.json({
       player,
       room,
@@ -159,7 +221,7 @@ router.post('/:code/join', async (req, res) => {
 });
 
 // Add deviceless player (host adds)
-router.post('/:code/players', async (req, res) => {
+router.post('/:code/players', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { name, teamId, hasDevice = false } = req.body;
@@ -182,7 +244,7 @@ router.post('/:code/players', async (req, res) => {
 
     // Update team size
     if (teamId) {
-      await prisma.team.update({
+      const updatedTeam = await prisma.team.update({
         where: { id: teamId },
         data: {
           currentSize: {
@@ -190,7 +252,12 @@ router.post('/:code/players', async (req, res) => {
           },
         },
       });
+      const io = req.app.get('io');
+      io.to(code).emit('team-updated', { teamId, changes: { currentSize: updatedTeam.currentSize } });
     }
+
+    const io = req.app.get('io');
+    io.to(code).emit('player-joined', { player, team: player.team || undefined });
 
     res.json(player);
   } catch (error) {
@@ -203,11 +270,25 @@ router.post('/:code/players', async (req, res) => {
 router.put('/:code/players/:playerId', async (req, res) => {
   try {
     const { code, playerId } = req.params;
-    const { name, teamId, isReady, teamChangeRequested, requestedTeamId } = req.body;
+    const { name, teamId, isReady, teamChangeRequested, requestedTeamId, sessionId } = req.body;
+
+    const room = await prisma.room.findUnique({ where: { code } });
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
 
     const player = await prisma.player.findUnique({ where: { id: playerId } });
     if (!player) {
       return res.status(404).json({ error: 'Player not found' });
+    }
+
+    const isHost = isRoomHostOrEditCode(req, room);
+    if (!isHost) {
+      const headerSessionId = req.get('x-session-id');
+      const effectiveSessionId = sessionId || headerSessionId;
+      if (!effectiveSessionId || player.sessionId !== effectiveSessionId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
     }
 
     const oldTeamId = player.teamId;
@@ -261,9 +342,9 @@ router.put('/:code/players/:playerId', async (req, res) => {
 });
 
 // Remove player
-router.delete('/:code/players/:playerId', async (req, res) => {
+router.delete('/:code/players/:playerId', requireRoomHostOrEditCode, async (req, res) => {
   try {
-    const { playerId } = req.params;
+    const { code, playerId } = req.params;
 
     const player = await prisma.player.findUnique({ where: { id: playerId } });
     if (!player) {
@@ -272,10 +353,12 @@ router.delete('/:code/players/:playerId', async (req, res) => {
 
     // Update team size
     if (player.teamId) {
-      await prisma.team.update({
+      const updatedTeam = await prisma.team.update({
         where: { id: player.teamId },
         data: { currentSize: { decrement: 1 } },
       });
+      const io = req.app.get('io');
+      io.to(code).emit('team-updated', { teamId: player.teamId, changes: { currentSize: updatedTeam.currentSize } });
     }
 
     // Unclaim expected guest if needed
@@ -290,6 +373,10 @@ router.delete('/:code/players/:playerId', async (req, res) => {
     }
 
     await prisma.player.delete({ where: { id: playerId } });
+
+    const io = req.app.get('io');
+    io.to(code).emit('player-left', { playerId });
+
     res.json({ success: true });
   } catch (error) {
     console.error('Failed to remove player:', error);
@@ -341,7 +428,7 @@ router.post('/:code/players/:playerId/photo', upload.single('photo'), async (req
 });
 
 // Get expected guests
-router.get('/:code/guests', async (req, res) => {
+router.get('/:code/guests', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
 
@@ -368,7 +455,7 @@ router.get('/:code/guests', async (req, res) => {
 });
 
 // Add expected guest
-router.post('/:code/guests', async (req, res) => {
+router.post('/:code/guests', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { name, teamId } = req.body;
@@ -395,7 +482,7 @@ router.post('/:code/guests', async (req, res) => {
 });
 
 // Update expected guest
-router.put('/:code/guests/:guestId', async (req, res) => {
+router.put('/:code/guests/:guestId', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { guestId } = req.params;
     const { name, teamId } = req.body;
@@ -417,7 +504,7 @@ router.put('/:code/guests/:guestId', async (req, res) => {
 });
 
 // Delete expected guest
-router.delete('/:code/guests/:guestId', async (req, res) => {
+router.delete('/:code/guests/:guestId', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { guestId } = req.params;
     await prisma.expectedGuest.delete({ where: { id: guestId } });

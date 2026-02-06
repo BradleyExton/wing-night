@@ -11,6 +11,8 @@ import { Host } from './routes/Host';
 import { Display } from './routes/Display';
 import { Play } from './routes/Play';
 import { Preview } from './routes/Preview';
+import { GameTester } from './routes/test/GameTester';
+import { GameTestView } from './routes/test/GameTestView';
 
 function App() {
   return (
@@ -39,6 +41,14 @@ function App() {
             {/* Host routes - can be accessed with editCode (legacy) or when authenticated */}
             <Route path="/edit/:editCode" element={<Edit />} />
             <Route path="/host/:code" element={<Host />} />
+
+            {/* Dev-only: Game testing routes */}
+            {import.meta.env.DEV && (
+              <>
+                <Route path="/test/games" element={<GameTester />} />
+                <Route path="/test/games/:gameId" element={<GameTestView />} />
+              </>
+            )}
           </Routes>
         </RoomProvider>
       </AuthProvider>

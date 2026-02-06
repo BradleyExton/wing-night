@@ -1,0 +1,29 @@
+- generic [ref=e69]:
+  - generic [ref=e70]:
+    - generic [ref=e71]:
+      - generic [ref=e72]: Host Controls
+      - heading "Wing Night" [level=1] [ref=e73]
+    - generic [ref=e76]:
+      - img [ref=e78]
+      - generic [ref=e81]:
+        - generic [ref=e82]: Room Code
+        - generic [ref=e83]: TEST
+  - generic [ref=e84]:
+    - text: GAME PHASE
+    - generic [ref=e142]: Round 1 of 8
+  - generic [ref=e148]:
+    - generic [ref=e150]: 1:47
+    - generic [ref=e151]:
+      - button "Pause" [ref=e152]
+      - button "+30s" [ref=e153]
+  - generic [ref=e167]:
+    - generic [ref=e168]: Choose a Game
+    - generic [ref=e169]:
+      - button "❓ Trivia" [ref=e170]:
+        - generic [ref=e171]: ❓
+        - text: Trivia
+      - button "Manual Scoring (no game)" [ref=e172]
+  - generic [ref=e97]:
+    - button "Open TV Display" [ref=e98]
+    - button "Copy Join Link" [ref=e99]
+    - button "End Game Early" [ref=e100]

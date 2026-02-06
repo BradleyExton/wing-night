@@ -1,4 +1,5 @@
 import { Team } from '../../types';
+import { getAssetUrl } from '../../lib/assets';
 
 interface TeamCardProps {
   team: Team;
@@ -48,7 +49,7 @@ export function TeamCard({
 
         {team.logoUrl ? (
           <img
-            src={team.logoUrl.startsWith('/') ? `http://localhost:3000${team.logoUrl}` : team.logoUrl}
+            src={getAssetUrl(team.logoUrl) || ''}
             alt={team.name || 'Team logo'}
             className={`${compact ? 'w-10 h-10' : 'w-14 h-14'} rounded-lg object-cover`}
           />
@@ -91,7 +92,7 @@ export function TeamCard({
               >
                 {player.photoUrl ? (
                   <img
-                    src={player.photoUrl.startsWith('/') ? `http://localhost:3000${player.photoUrl}` : player.photoUrl}
+                    src={getAssetUrl(player.photoUrl) || ''}
                     alt={player.name}
                     className="w-5 h-5 rounded-full object-cover"
                   />

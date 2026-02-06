@@ -1,0 +1,36 @@
+- generic [ref=e69]:
+  - generic [ref=e70]:
+    - generic [ref=e71]:
+      - generic [ref=e72]: Host Controls
+      - heading "Wing Night" [level=1] [ref=e73]
+    - generic [ref=e76]:
+      - img [ref=e78]
+      - generic [ref=e81]:
+        - generic [ref=e82]: Room Code
+        - generic [ref=e83]: TEST
+  - generic [ref=e84]:
+    - text: EATING PHASE
+    - generic [ref=e142]: Round 1 of 8
+  - generic [ref=e148]:
+    - generic [ref=e150]: 1:58
+    - generic [ref=e151]:
+      - button "Pause" [ref=e152]
+      - button "+30s" [ref=e153]
+  - generic [ref=e85]:
+    - generic [ref=e154]:
+      - generic [ref=e155]: Wing Tracking
+      - generic [ref=e156]:
+        - generic [ref=e157]:
+          - generic [ref=e158]: Team 1
+          - button "Mark All Done" [ref=e159]
+        - generic [ref=e160]:
+          - generic [ref=e161]: Team 2
+          - button "Mark All Done" [ref=e162]
+        - generic [ref=e163]:
+          - generic [ref=e164]: Team 3
+          - button "Mark All Done" [ref=e165]
+    - button "End Eating & Start Game" [ref=e166]
+  - generic [ref=e97]:
+    - button "Open TV Display" [ref=e98]
+    - button "Copy Join Link" [ref=e99]
+    - button "End Game Early" [ref=e100]

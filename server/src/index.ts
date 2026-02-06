@@ -20,9 +20,31 @@ const app = express();
 const httpServer = createServer(app);
 
 // CORS configuration
+const allowedOrigins = new Set(
+  [process.env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:5174'].filter(
+    (origin): origin is string => Boolean(origin)
+  )
+);
+
+const isLocalhostDevOrigin = (origin: string) => {
+  try {
+    const url = new URL(origin);
+    return ['localhost', '127.0.0.1'].includes(url.hostname) && /^517\d$/.test(url.port);
+  } catch {
+    return false;
+  }
+};
+
 const corsOptions = {
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.has(origin) || isLocalhostDevOrigin(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
+  },
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Edit-Code', 'X-Session-Id'],
 };
 
 app.use(cors(corsOptions));

@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma.js';
+import { calculateRoundResults } from '../lib/scoring.js';
+import { requireRoomHostOrEditCode } from '../middleware/roomAuth.js';
 
 const router = Router();
 
@@ -33,7 +35,7 @@ router.get('/:code/rounds/current', async (req, res) => {
 });
 
 // Update wing completion
-router.post('/:code/rounds/:roundNumber/wings', async (req, res) => {
+router.post('/:code/rounds/:roundNumber/wings', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code, roundNumber } = req.params;
     const { playerId, completed } = req.body;
@@ -116,6 +118,9 @@ router.post('/:code/rounds/:roundNumber/wings', async (req, res) => {
       }
     }
 
+    const io = req.app.get('io');
+    io.to(code).emit('wing-completed', { playerId, completed });
+
     res.json(wingResult);
   } catch (error) {
     console.error('Failed to update wing completion:', error);
@@ -124,7 +129,7 @@ router.post('/:code/rounds/:roundNumber/wings', async (req, res) => {
 });
 
 // Mark all wings for team
-router.post('/:code/rounds/:roundNumber/wings/team/:teamId', async (req, res) => {
+router.post('/:code/rounds/:roundNumber/wings/team/:teamId', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code, roundNumber, teamId } = req.params;
     const { completed } = req.body;
@@ -173,6 +178,27 @@ router.post('/:code/rounds/:roundNumber/wings/team/:teamId', async (req, res) =>
       });
     }
 
+    const updatedRound = await prisma.round.findUnique({
+      where: {
+        roomId_roundNumber: {
+          roomId: room.id,
+          roundNumber: parseInt(roundNumber),
+        },
+      },
+      include: {
+        wingResults: true,
+      },
+    });
+
+    if (updatedRound) {
+      const wingStatus: Record<string, boolean> = {};
+      for (const result of updatedRound.wingResults) {
+        wingStatus[result.playerId] = result.completed;
+      }
+      const io = req.app.get('io');
+      io.to(code).emit('wings-updated', { wingStatus });
+    }
+
     res.json({ success: true });
   } catch (error) {
     console.error('Failed to mark team wings:', error);
@@ -219,7 +245,7 @@ router.get('/:code/rounds/:roundNumber/wings', async (req, res) => {
 });
 
 // Start timer
-router.post('/:code/timer/start', async (req, res) => {
+router.post('/:code/timer/start', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { duration, type, teamId } = req.body;
@@ -235,12 +261,15 @@ router.post('/:code/timer/start', async (req, res) => {
       teamId,
     };
 
-    const room = await prisma.room.update({
+    await prisma.room.update({
       where: { code },
       data: {
         timerState: JSON.stringify(timerState),
       },
     });
+
+    const io = req.app.get('io');
+    io.to(code).emit('timer-started', { timerState });
 
     res.json({ timerState, serverTime: Date.now() });
   } catch (error) {
@@ -250,7 +279,7 @@ router.post('/:code/timer/start', async (req, res) => {
 });
 
 // Pause timer
-router.post('/:code/timer/pause', async (req, res) => {
+router.post('/:code/timer/pause', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
 
@@ -277,6 +306,9 @@ router.post('/:code/timer/pause', async (req, res) => {
       },
     });
 
+    const io = req.app.get('io');
+    io.to(code).emit('timer-updated', { timerState: updatedTimer });
+
     res.json({ remaining });
   } catch (error) {
     console.error('Failed to pause timer:', error);
@@ -285,7 +317,7 @@ router.post('/:code/timer/pause', async (req, res) => {
 });
 
 // Resume timer
-router.post('/:code/timer/resume', async (req, res) => {
+router.post('/:code/timer/resume', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
 
@@ -313,6 +345,9 @@ router.post('/:code/timer/resume', async (req, res) => {
       },
     });
 
+    const io = req.app.get('io');
+    io.to(code).emit('timer-updated', { timerState: updatedTimer });
+
     res.json({ timerState: updatedTimer, serverTime: Date.now() });
   } catch (error) {
     console.error('Failed to resume timer:', error);
@@ -321,7 +356,7 @@ router.post('/:code/timer/resume', async (req, res) => {
 });
 
 // Add time
-router.post('/:code/timer/add', async (req, res) => {
+router.post('/:code/timer/add', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { secondsToAdd } = req.body;
@@ -357,6 +392,9 @@ router.post('/:code/timer/add', async (req, res) => {
       },
     });
 
+    const io = req.app.get('io');
+    io.to(code).emit('timer-updated', { timerState: updatedTimer });
+
     res.json({ timerState: updatedTimer, serverTime: Date.now(), added: secondsToAdd });
   } catch (error) {
     console.error('Failed to add time:', error);
@@ -365,7 +403,7 @@ router.post('/:code/timer/add', async (req, res) => {
 });
 
 // Stop timer
-router.post('/:code/timer/stop', async (req, res) => {
+router.post('/:code/timer/stop', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
 
@@ -376,6 +414,9 @@ router.post('/:code/timer/stop', async (req, res) => {
       },
     });
 
+    const io = req.app.get('io');
+    io.to(code).emit('timer-updated', { timerState: null });
+
     res.json({ success: true });
   } catch (error) {
     console.error('Failed to stop timer:', error);
@@ -384,7 +425,7 @@ router.post('/:code/timer/stop', async (req, res) => {
 });
 
 // Calculate and save round results
-router.post('/:code/rounds/:roundNumber/complete', async (req, res) => {
+router.post('/:code/rounds/:roundNumber/complete', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code, roundNumber } = req.params;
 
@@ -419,40 +460,11 @@ router.post('/:code/rounds/:roundNumber/complete', async (req, res) => {
       return res.status(404).json({ error: 'Round not found' });
     }
 
-    const results: Array<{
-      teamId: string;
-      wingPoints: number;
-      gamePoints: number;
-      totalPoints: number;
-    }> = [];
-
-    for (const team of room.teams) {
-      // Calculate wing points (50 per completed wing)
-      const teamPlayerIds = team.players.map((p) => p.id);
-      const teamWingResults = round.wingResults.filter((w) =>
-        teamPlayerIds.includes(w.playerId)
-      );
-      const completedWings = teamWingResults.filter((w) => w.completed).length;
-      const wingPoints = completedWings * 50;
-
-      // Game points from manual scoring (stored in gameState)
-      const gameState = room.gameState ? JSON.parse(room.gameState) : {};
-      const gamePoints = gameState.roundScores?.[team.id] || 0;
-
-      const totalPoints = wingPoints + gamePoints;
-
-      results.push({
-        teamId: team.id,
-        wingPoints,
-        gamePoints,
-        totalPoints,
-      });
-    }
-
-    // Sort by total points and assign placements
-    results.sort((a, b) => b.totalPoints - a.totalPoints);
+    const gameState = room.gameState ? JSON.parse(room.gameState) : {};
+    const results = calculateRoundResults(room.teams, round.wingResults, gameState);
 
     // Save round results
+    const teamScores: Record<string, number> = {};
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       await prisma.roundResult.upsert({
@@ -466,7 +478,7 @@ router.post('/:code/rounds/:roundNumber/complete', async (req, res) => {
           wingPoints: result.wingPoints,
           gamePoints: result.gamePoints,
           totalPoints: result.totalPoints,
-          placement: i + 1,
+          placement: result.placement,
         },
         create: {
           roundId: round.id,
@@ -474,12 +486,12 @@ router.post('/:code/rounds/:roundNumber/complete', async (req, res) => {
           wingPoints: result.wingPoints,
           gamePoints: result.gamePoints,
           totalPoints: result.totalPoints,
-          placement: i + 1,
+          placement: result.placement,
         },
       });
 
       // Update team total score
-      await prisma.team.update({
+      const updatedTeam = await prisma.team.update({
         where: { id: result.teamId },
         data: {
           score: {
@@ -487,6 +499,7 @@ router.post('/:code/rounds/:roundNumber/complete', async (req, res) => {
           },
         },
       });
+      teamScores[result.teamId] = updatedTeam.score;
     }
 
     // Mark round complete
@@ -498,6 +511,9 @@ router.post('/:code/rounds/:roundNumber/complete', async (req, res) => {
       },
     });
 
+    const io = req.app.get('io');
+    io.to(code).emit('scores-updated', { teamScores });
+
     res.json(results);
   } catch (error) {
     console.error('Failed to complete round:', error);
@@ -505,8 +521,235 @@ router.post('/:code/rounds/:roundNumber/complete', async (req, res) => {
   }
 });
 
+// Trivia buzz-in endpoint
+router.post('/:code/trivia/buzz', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const { teamId, playerId, playerName } = req.body;
+
+    const room = await prisma.room.findUnique({
+      where: { code },
+    });
+
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const gameState = room.gameState ? JSON.parse(room.gameState) : null;
+    if (!gameState) {
+      return res.status(400).json({ error: 'No game state' });
+    }
+
+    // Check if question is active and no one has buzzed yet
+    if (!gameState.questionActive) {
+      return res.status(400).json({ error: 'Question not active' });
+    }
+
+    if (gameState.buzzLocked) {
+      return res.status(400).json({ error: 'Already buzzed', buzzedTeamId: gameState.buzzedTeamId });
+    }
+
+    // Check if team already failed this question
+    if (gameState.failedTeams?.includes(teamId)) {
+      return res.status(400).json({ error: 'Team already failed this question' });
+    }
+
+    // Register the buzz
+    const updatedState = {
+      ...gameState,
+      buzzedTeamId: teamId,
+      buzzedPlayerId: playerId,
+      buzzedPlayerName: playerName,
+      buzzLocked: true,
+    };
+
+    await prisma.room.update({
+      where: { code },
+      data: {
+        gameState: JSON.stringify(updatedState),
+      },
+    });
+
+    // Broadcast to all clients
+    const io = req.app.get('io');
+    io.to(code).emit('trivia-buzz', {
+      teamId,
+      playerId,
+      playerName,
+    });
+    io.to(code).emit('game-state-updated', { gameState: updatedState });
+
+    res.json({ success: true, buzzedFirst: true });
+  } catch (error) {
+    console.error('Failed to process buzz:', error);
+    res.status(500).json({ error: 'Failed to process buzz' });
+  }
+});
+
+// Host marks answer correct or wrong
+router.post('/:code/trivia/result', requireRoomHostOrEditCode, async (req, res) => {
+  try {
+    const { code } = req.params;
+    const { correct, pointsAwarded } = req.body;
+
+    const room = await prisma.room.findUnique({
+      where: { code },
+      include: { teams: true },
+    });
+
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const gameState = room.gameState ? JSON.parse(room.gameState) : null;
+    if (!gameState || !gameState.buzzedTeamId) {
+      return res.status(400).json({ error: 'No team has buzzed' });
+    }
+
+    const io = req.app.get('io');
+    const buzzedTeamId = gameState.buzzedTeamId;
+
+    if (correct) {
+      // Award points
+      const updatedTeam = await prisma.team.update({
+        where: { id: buzzedTeamId },
+        data: { score: { increment: pointsAwarded || 100 } },
+      });
+
+      // Update team answers for tracking
+      const teamAnswers = gameState.teamAnswers || {};
+      if (!teamAnswers[buzzedTeamId]) {
+        teamAnswers[buzzedTeamId] = [];
+      }
+      teamAnswers[buzzedTeamId][gameState.currentQuestionIndex] = true;
+
+      // Move to showing answer, question is complete
+      const updatedState = {
+        ...gameState,
+        showAnswer: true,
+        questionActive: false,
+        teamAnswers,
+      };
+
+      await prisma.room.update({
+        where: { code },
+        data: { gameState: JSON.stringify(updatedState) },
+      });
+
+      // Broadcast correct answer
+      io.to(code).emit('trivia-result', {
+        correct: true,
+        teamId: buzzedTeamId,
+        pointsAwarded: pointsAwarded || 100,
+      });
+      io.to(code).emit('game-state-updated', { gameState: updatedState });
+
+      const teamScores = Object.fromEntries(
+        room.teams.map(team => [
+          team.id,
+          team.id === buzzedTeamId ? updatedTeam.score : team.score,
+        ])
+      );
+      io.to(code).emit('scores-updated', { teamScores });
+    } else {
+      // Wrong answer - add to failed teams, unlock for steal
+      const failedTeams = [...(gameState.failedTeams || []), buzzedTeamId];
+
+      // Check if all teams have failed
+      const allTeamIds = room.teams.map((t) => t.id);
+      const remainingTeams = allTeamIds.filter((id) => !failedTeams.includes(id));
+
+      let updatedState;
+      if (remainingTeams.length === 0) {
+        // All teams failed, show answer and end question
+        updatedState = {
+          ...gameState,
+          showAnswer: true,
+          questionActive: false,
+          buzzedTeamId: null,
+          buzzedPlayerId: null,
+          buzzedPlayerName: null,
+          buzzLocked: false,
+          failedTeams: [],
+        };
+      } else {
+        // Open for steal
+        updatedState = {
+          ...gameState,
+          failedTeams,
+          buzzedTeamId: null,
+          buzzedPlayerId: null,
+          buzzedPlayerName: null,
+          buzzLocked: false,
+          // questionActive stays true for steal opportunity
+        };
+      }
+
+      await prisma.room.update({
+        where: { code },
+        data: { gameState: JSON.stringify(updatedState) },
+      });
+
+      io.to(code).emit('trivia-result', {
+        correct: false,
+        teamId: buzzedTeamId,
+        stealAvailable: remainingTeams.length > 0,
+        remainingTeams,
+      });
+      io.to(code).emit('game-state-updated', { gameState: updatedState });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to process result:', error);
+    res.status(500).json({ error: 'Failed to process result' });
+  }
+});
+
+// Host skips question (no one got it)
+router.post('/:code/trivia/skip', requireRoomHostOrEditCode, async (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const room = await prisma.room.findUnique({ where: { code } });
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const gameState = room.gameState ? JSON.parse(room.gameState) : null;
+    if (!gameState) {
+      return res.status(400).json({ error: 'No game state' });
+    }
+
+    const updatedState = {
+      ...gameState,
+      showAnswer: true,
+      questionActive: false,
+      buzzedTeamId: null,
+      buzzedPlayerId: null,
+      buzzedPlayerName: null,
+      buzzLocked: false,
+      failedTeams: [],
+    };
+
+    await prisma.room.update({
+      where: { code },
+      data: { gameState: JSON.stringify(updatedState) },
+    });
+
+    const io = req.app.get('io');
+    io.to(code).emit('trivia-skipped', {});
+    io.to(code).emit('game-state-updated', { gameState: updatedState });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to skip question:', error);
+    res.status(500).json({ error: 'Failed to skip question' });
+  }
+});
+
 // Update game state (for trivia and other mini-games)
-router.put('/:code/game-state', async (req, res) => {
+router.put('/:code/game-state', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { gameState } = req.body;
@@ -530,7 +773,7 @@ router.put('/:code/game-state', async (req, res) => {
 });
 
 // End game
-router.post('/:code/end', async (req, res) => {
+router.post('/:code/end', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { reason } = req.body;
@@ -621,7 +864,7 @@ router.post('/:code/end', async (req, res) => {
 });
 
 // Reset game (play again)
-router.post('/:code/reset', async (req, res) => {
+router.post('/:code/reset', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { keepTeams, shuffleTeams } = req.body;
@@ -729,6 +972,14 @@ router.post('/:code/reset', async (req, res) => {
     // Broadcast phase change to all clients
     const io = req.app.get('io');
     io.to(code).emit('phase-changed', { phase: newPhase });
+    io.to(code).emit('room-state', {
+      room: {
+        ...updated,
+        timerState: updated.timerState ? JSON.parse(updated.timerState) : null,
+        gameState: updated.gameState ? JSON.parse(updated.gameState) : null,
+        finalStats: updated.finalStats ? JSON.parse(updated.finalStats) : null,
+      },
+    });
 
     res.json(updated);
   } catch (error) {

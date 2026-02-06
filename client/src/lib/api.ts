@@ -7,6 +7,14 @@ export function setAuthTokenGetter(getter: () => Promise<string | null>) {
   getAuthToken = getter;
 }
 
+function getEditCodeForPath(path: string): string | null {
+  const match = path.match(/^\/rooms\/([^/]+)/);
+  if (!match) return null;
+  const code = match[1];
+  if (code === 'edit') return null;
+  return localStorage.getItem(`wing-night-editcode-${code}`);
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -19,6 +27,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
+  }
+
+  const editCode = getEditCodeForPath(path);
+  if (editCode) {
+    headers['X-Edit-Code'] = editCode;
+  }
+
+  const sessionId = localStorage.getItem('wing-night-session');
+  if (sessionId) {
+    headers['X-Session-Id'] = sessionId;
   }
 
   const response = await fetch(`${API_BASE}${path}`, {
@@ -130,6 +148,21 @@ export const api = {
   completeRound: (code: string, roundNumber: number) => request<any>(`/rooms/${code}/rounds/${roundNumber}/complete`, { method: 'POST' }),
 
   updateGameState: (code: string, gameState: any) => request<any>(`/rooms/${code}/game-state`, { method: 'PUT', body: JSON.stringify({ gameState }) }),
+
+  // Trivia buzz-in
+  triviaBuzz: (code: string, teamId: string, playerId: string, playerName: string) =>
+    request<any>(`/rooms/${code}/trivia/buzz`, {
+      method: 'POST',
+      body: JSON.stringify({ teamId, playerId, playerName }),
+    }),
+
+  triviaResult: (code: string, correct: boolean, pointsAwarded?: number) =>
+    request<any>(`/rooms/${code}/trivia/result`, {
+      method: 'POST',
+      body: JSON.stringify({ correct, pointsAwarded }),
+    }),
+
+  triviaSkip: (code: string) => request<any>(`/rooms/${code}/trivia/skip`, { method: 'POST' }),
 
   endGame: (code: string, reason?: string) => request<any>(`/rooms/${code}/end`, { method: 'POST', body: JSON.stringify({ reason }) }),
 

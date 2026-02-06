@@ -4,6 +4,8 @@ import { Timer } from '../components/common/Timer';
 import { TeamCard } from '../components/common/TeamCard';
 import { RoomCode } from '../components/common/RoomCode';
 import { useRoom } from '../contexts/RoomContext';
+import { getAssetUrl } from '../lib/assets';
+import { sortTeamsByScore } from '../lib/teams';
 import { TriviaDisplay, TriviaGameState } from '../games/trivia';
 
 export function Display() {
@@ -38,7 +40,7 @@ export function Display() {
   }
 
   const currentRound = room.rounds.find(r => r.roundNumber === room.currentRoundNumber);
-  const sortedTeams = [...room.teams].sort((a, b) => b.score - a.score);
+  const sortedTeams = sortTeamsByScore(room.teams);
 
   return (
     <div className="min-h-screen bg-bg-primary p-8 flex flex-col">
@@ -89,7 +91,7 @@ export function Display() {
                 >
                   {team.logoUrl ? (
                     <img
-                      src={`http://localhost:3000${team.logoUrl}`}
+                      src={getAssetUrl(team.logoUrl) || ''}
                       alt={team.name || 'Team'}
                       className="w-24 h-24 mx-auto rounded-xl object-cover mb-4"
                     />
@@ -179,7 +181,7 @@ export function Display() {
               <div className="mb-8">
                 {sortedTeams[0].logoUrl ? (
                   <img
-                    src={`http://localhost:3000${sortedTeams[0].logoUrl}`}
+                    src={getAssetUrl(sortedTeams[0].logoUrl) || ''}
                     alt={sortedTeams[0].name || 'Winner'}
                     className="w-48 h-48 mx-auto rounded-2xl object-cover mb-4"
                   />

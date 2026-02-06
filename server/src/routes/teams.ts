@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma.js';
 import { generateTeamLogo } from '../lib/openai.js';
+import { requireRoomHostOrEditCode } from '../middleware/roomAuth.js';
 import multer from 'multer';
 import sharp from 'sharp';
 import path from 'path';
@@ -25,7 +26,7 @@ const upload = multer({
 });
 
 // Create team
-router.post('/:code/teams', async (req, res) => {
+router.post('/:code/teams', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code } = req.params;
     const { name, createdBy, createdById } = req.body;
@@ -97,9 +98,9 @@ router.get('/:code/teams', async (req, res) => {
 });
 
 // Update team
-router.put('/:code/teams/:teamId', async (req, res) => {
+router.put('/:code/teams/:teamId', requireRoomHostOrEditCode, async (req, res) => {
   try {
-    const { teamId } = req.params;
+    const { code, teamId } = req.params;
     const { name, emoji, isReady } = req.body;
 
     const team = await prisma.team.update({
@@ -114,6 +115,14 @@ router.put('/:code/teams/:teamId', async (req, res) => {
       },
     });
 
+    const changes: Record<string, unknown> = {};
+    if (name !== undefined) changes.name = team.name;
+    if (emoji !== undefined) changes.emoji = team.emoji;
+    if (isReady !== undefined) changes.isReady = team.isReady;
+
+    const io = req.app.get('io');
+    io.to(code).emit('team-updated', { teamId, changes });
+
     res.json(team);
   } catch (error) {
     console.error('Failed to update team:', error);
@@ -122,9 +131,9 @@ router.put('/:code/teams/:teamId', async (req, res) => {
 });
 
 // Delete team
-router.delete('/:code/teams/:teamId', async (req, res) => {
+router.delete('/:code/teams/:teamId', requireRoomHostOrEditCode, async (req, res) => {
   try {
-    const { teamId } = req.params;
+    const { code, teamId } = req.params;
 
     const team = await prisma.team.findUnique({
       where: { id: teamId },
@@ -140,6 +149,8 @@ router.delete('/:code/teams/:teamId', async (req, res) => {
     }
 
     await prisma.team.delete({ where: { id: teamId } });
+    const io = req.app.get('io');
+    io.to(code).emit('team-deleted', { teamId });
     res.json({ success: true });
   } catch (error) {
     console.error('Failed to delete team:', error);
@@ -148,9 +159,9 @@ router.delete('/:code/teams/:teamId', async (req, res) => {
 });
 
 // Generate AI logo
-router.post('/:code/teams/:teamId/logo/generate', async (req, res) => {
+router.post('/:code/teams/:teamId/logo/generate', requireRoomHostOrEditCode, async (req, res) => {
   try {
-    const { teamId } = req.params;
+    const { code, teamId } = req.params;
     const { prompt } = req.body;
 
     const team = await prisma.team.findUnique({ where: { id: teamId } });
@@ -179,6 +190,17 @@ router.post('/:code/teams/:teamId/logo/generate', async (req, res) => {
       },
     });
 
+    const io = req.app.get('io');
+    io.to(code).emit('team-updated', {
+      teamId,
+      changes: {
+        logoUrl: updated.logoUrl,
+        logoType: updated.logoType,
+        logoPrompt: updated.logoPrompt,
+        aiAttemptsUsed: updated.aiAttemptsUsed,
+      },
+    });
+
     res.json(updated);
   } catch (error) {
     console.error('Failed to generate logo:', error);
@@ -187,9 +209,9 @@ router.post('/:code/teams/:teamId/logo/generate', async (req, res) => {
 });
 
 // Upload team logo
-router.post('/:code/teams/:teamId/logo/upload', upload.single('logo'), async (req, res) => {
+router.post('/:code/teams/:teamId/logo/upload', requireRoomHostOrEditCode, upload.single('logo'), async (req, res) => {
   try {
-    const { teamId } = req.params;
+    const { code, teamId } = req.params;
     const file = req.file;
 
     if (!file) {
@@ -229,6 +251,16 @@ router.post('/:code/teams/:teamId/logo/upload', upload.single('logo'), async (re
       },
     });
 
+    const io = req.app.get('io');
+    io.to(code).emit('team-updated', {
+      teamId,
+      changes: {
+        logoUrl: updated.logoUrl,
+        logoType: updated.logoType,
+        logoPrompt: updated.logoPrompt,
+      },
+    });
+
     res.json(updated);
   } catch (error) {
     console.error('Failed to upload logo:', error);
@@ -237,7 +269,7 @@ router.post('/:code/teams/:teamId/logo/upload', upload.single('logo'), async (re
 });
 
 // Adjust team score
-router.post('/:code/teams/:teamId/score', async (req, res) => {
+router.post('/:code/teams/:teamId/score', requireRoomHostOrEditCode, async (req, res) => {
   try {
     const { code, teamId } = req.params;
     const { adjustment, reason } = req.body;

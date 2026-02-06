@@ -1,0 +1,71 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - heading "Game Setup" [level=1] [ref=e7]
+      - generic [ref=e9]:
+        - generic [ref=e10]: Room Code
+        - generic [ref=e11]: TEST
+    - generic [ref=e12]:
+      - button "Preview" [ref=e13]
+      - button "Open Room" [ref=e14]
+  - generic [ref=e15]:
+    - generic [ref=e16]:
+      - generic [ref=e17]: Event Details
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - generic [ref=e20]: Event Name
+          - textbox "Brad's Birthday Wing Night" [ref=e21]
+        - generic [ref=e22]:
+          - generic [ref=e23]: Event Date
+          - textbox [ref=e24]
+    - generic [ref=e25]:
+      - generic [ref=e26]: Game Settings
+      - generic [ref=e28]:
+        - generic [ref=e29]: Number of Rounds
+        - combobox [ref=e30]:
+          - option "5 rounds"
+          - option "6 rounds"
+          - option "7 rounds"
+          - option "8 rounds" [selected]
+          - option "9 rounds"
+          - option "10 rounds"
+          - option "11 rounds"
+          - option "12 rounds"
+    - generic [ref=e31]:
+      - generic [ref=e32]: Hot Sauce Lineup
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - generic [ref=e35]: "#1"
+          - generic [ref=e36]: Frank's RedHot
+          - generic [ref=e37]: 450 SHU
+        - generic [ref=e38]:
+          - generic [ref=e39]: "#2"
+          - generic [ref=e40]: Cholula
+          - generic [ref=e41]: 1,000 SHU
+        - generic [ref=e42]:
+          - generic [ref=e43]: "#3"
+          - generic [ref=e44]: Tabasco
+          - generic [ref=e45]: 2,500 SHU
+        - generic [ref=e46]:
+          - generic [ref=e47]: "#4"
+          - generic [ref=e48]: Sriracha
+          - generic [ref=e49]: 2,200 SHU
+        - generic [ref=e50]:
+          - generic [ref=e51]: "#5"
+          - generic [ref=e52]: Crystal
+          - generic [ref=e53]: 4,000 SHU
+        - generic [ref=e54]:
+          - generic [ref=e55]: "#6"
+          - generic [ref=e56]: El Yucateco
+          - generic [ref=e57]: 8,910 SHU
+        - generic [ref=e58]:
+          - generic [ref=e59]: "#7"
+          - generic [ref=e60]: Dave's Insanity
+          - generic [ref=e61]: 180,000 SHU
+        - generic [ref=e62]:
+          - generic [ref=e63]: "#8"
+          - generic [ref=e64]: The Last Dab
+          - generic [ref=e65]: 2,000,000 SHU
+    - generic [ref=e66]:
+      - button "Save Draft" [ref=e67]
+      - button "Open Room & Start Hosting" [ref=e68]

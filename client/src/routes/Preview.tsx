@@ -4,6 +4,7 @@ import { Button } from '../components/common/Button';
 import { Card, CardHeader } from '../components/common/Card';
 import { RoomCode } from '../components/common/RoomCode';
 import { api } from '../lib/api';
+import { getAssetUrl } from '../lib/assets';
 
 interface PreviewData {
   room: {
@@ -126,7 +127,7 @@ export function Preview() {
                 <div key={team.id} className="bg-bg-secondary rounded-lg p-4">
                   {team.logoUrl ? (
                     <img
-                      src={`http://localhost:3000${team.logoUrl}`}
+                      src={getAssetUrl(team.logoUrl) || ''}
                       alt={team.name || 'Team'}
                       className="w-16 h-16 mx-auto rounded-lg object-cover mb-3"
                     />

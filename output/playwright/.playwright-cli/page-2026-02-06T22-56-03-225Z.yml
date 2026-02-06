@@ -1,0 +1,22 @@
+- generic [ref=e69]:
+  - generic [ref=e70]:
+    - generic [ref=e71]:
+      - generic [ref=e72]: Host Controls
+      - heading "Wing Night" [level=1] [ref=e73]
+    - generic [ref=e76]:
+      - img [ref=e78]
+      - generic [ref=e81]:
+        - generic [ref=e82]: Room Code
+        - generic [ref=e83]: TEST
+  - generic [ref=e84]:
+    - text: ROUND INTRO
+    - generic [ref=e142]: Round 1 of 8
+  - generic [ref=e143]:
+    - generic [ref=e144]: Round 1
+    - generic [ref=e145]: Frank's RedHot
+    - generic [ref=e146]: 450 Scoville Units
+    - button "Start Eating!" [ref=e147]
+  - generic [ref=e97]:
+    - button "Open TV Display" [ref=e98]
+    - button "Copy Join Link" [ref=e99]
+    - button "End Game Early" [ref=e100]

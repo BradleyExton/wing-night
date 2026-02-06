@@ -7,6 +7,8 @@ import { TeamCard } from '../components/common/TeamCard';
 import { RoomCode } from '../components/common/RoomCode';
 import { useRoom } from '../contexts/RoomContext';
 import { api } from '../lib/api';
+import { getAssetUrl } from '../lib/assets';
+import { sortTeamsByScore } from '../lib/teams';
 import { TriviaHost, TriviaGameState } from '../games/trivia';
 
 export function Host() {
@@ -136,6 +138,8 @@ export function Host() {
     );
   }
 
+  const sortedTeams = sortTeamsByScore(room.teams);
+
   const currentRound = room.rounds.find(r => r.roundNumber === room.currentRoundNumber);
 
   return (
@@ -235,7 +239,7 @@ export function Host() {
                     <div className="flex items-center gap-3">
                       {team.logoUrl ? (
                         <img
-                          src={`http://localhost:3000${team.logoUrl}`}
+                          src={getAssetUrl(team.logoUrl) || ''}
                           alt=""
                           className="w-10 h-10 rounded-lg object-cover"
                         />
@@ -384,7 +388,7 @@ export function Host() {
             <Card>
               <CardHeader>Round {room.currentRoundNumber} Results</CardHeader>
               <div className="space-y-2">
-                {[...room.teams].sort((a, b) => b.score - a.score).map((team, i) => (
+                {sortedTeams.map((team, i) => (
                   <TeamCard key={team.id} team={team} rank={i + 1} showScore />
                 ))}
               </div>
@@ -413,14 +417,11 @@ export function Host() {
             {room.teams.length > 0 && (
               <>
                 <div className="text-xl text-gray-400">Winner:</div>
-                <TeamCard
-                  team={[...room.teams].sort((a, b) => b.score - a.score)[0]}
-                  showScore
-                />
+                <TeamCard team={sortedTeams[0]} showScore />
               </>
             )}
             <div className="space-y-2">
-              {[...room.teams].sort((a, b) => b.score - a.score).map((team, i) => (
+              {sortedTeams.map((team, i) => (
                 <TeamCard key={team.id} team={team} rank={i + 1} showScore compact />
               ))}
             </div>

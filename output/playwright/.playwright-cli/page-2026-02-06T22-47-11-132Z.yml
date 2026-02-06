@@ -1,0 +1,63 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]: Wing Night
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - heading "WING NIGHT" [level=1] [ref=e8]
+      - paragraph [ref=e9]: The Ultimate Hot Ones Party Game
+      - paragraph [ref=e10]: Gather your friends, eat progressively hotter wings, compete in challenges, and crown a champion.
+    - generic [ref=e11]:
+      - button "Host a Game" [ref=e12]
+      - generic [ref=e17]: or join a game
+      - generic [ref=e18]:
+        - textbox "Enter room code" [ref=e19]
+        - button "Join" [disabled] [ref=e20]
+  - generic [ref=e22]:
+    - heading "Everything You Need" [level=2] [ref=e23]
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]: 🏆
+        - heading "Team Competition" [level=3] [ref=e27]
+        - paragraph [ref=e28]: Split into teams and compete for glory. Track points across multiple rounds.
+      - generic [ref=e29]:
+        - generic [ref=e30]: 📺
+        - heading "TV Display Mode" [level=3] [ref=e31]
+        - paragraph [ref=e32]: Cast the game to your big screen so everyone can follow along.
+      - generic [ref=e33]:
+        - generic [ref=e34]: 🌶️
+        - heading "Custom Sauces" [level=3] [ref=e35]
+        - paragraph [ref=e36]: Set your own sauce lineup from mild to wild. Track Scoville ratings.
+      - generic [ref=e37]:
+        - generic [ref=e38]: 📊
+        - heading "Live Scoring" [level=3] [ref=e39]
+        - paragraph [ref=e40]: Real-time points and leaderboards. See who's winning at a glance.
+  - generic [ref=e42]:
+    - heading "How It Works" [level=2] [ref=e43]
+    - generic [ref=e44]:
+      - generic [ref=e45]:
+        - generic [ref=e46]: "1"
+        - heading "Create" [level=3] [ref=e47]
+        - paragraph [ref=e48]: Set up your game, customize your sauce lineup, and create teams.
+      - generic [ref=e49]:
+        - generic [ref=e50]: "2"
+        - heading "Invite" [level=3] [ref=e51]
+        - paragraph [ref=e52]: Share the 4-letter room code with your friends. They join from their phones.
+      - generic [ref=e53]:
+        - generic [ref=e54]: "3"
+        - heading "Play" [level=3] [ref=e55]
+        - paragraph [ref=e56]: Eat wings, play mini-games, earn points, and crown a champion.
+  - generic [ref=e58]:
+    - heading "What People Say" [level=2] [ref=e59]
+    - generic [ref=e60]:
+      - generic [ref=e61]:
+        - paragraph [ref=e62]: "\"Best party game we've ever played. The competitive scoring makes it way more fun!\""
+        - paragraph [ref=e63]: — Alex M.
+      - generic [ref=e64]:
+        - paragraph [ref=e65]: "\"10/10 would sweat again. The TV display mode is perfect for watch parties.\""
+        - paragraph [ref=e66]: — Jordan K.
+  - generic [ref=e67]:
+    - heading "Ready to Feel the Heat?" [level=2] [ref=e68]
+    - paragraph [ref=e69]: Create your free account and host your first Wing Night in minutes.
+    - button "Start Hosting - Free" [ref=e70]
+  - contentinfo [ref=e71]:
+    - paragraph [ref=e73]: © 2026 Wing Night. Eat wings. Play games. Crown a champion.

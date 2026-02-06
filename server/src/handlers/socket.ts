@@ -64,7 +64,15 @@ export function setupSocketHandlers(io: Server) {
               },
             });
 
-            io.to(roomCode).emit('player-connected', { playerId: player.id });
+            io.to(roomCode).emit('player-updated', {
+              playerId: player.id,
+              changes: {
+                socketId: socket.id,
+                isConnected: true,
+                lastSeenAt: new Date().toISOString(),
+                disconnectedAt: null,
+              },
+            });
           }
         }
 
@@ -319,7 +327,13 @@ async function handleDisconnect(
           },
         });
 
-        io.to(roomCode).emit('player-disconnected', { playerId: player.id });
+        io.to(roomCode).emit('player-updated', {
+          playerId: player.id,
+          changes: {
+            isConnected: false,
+            disconnectedAt: new Date().toISOString(),
+          },
+        });
       }
     }
   } catch (error) {
@@ -331,4 +345,3 @@ async function handleDisconnect(
 export async function broadcastRoomUpdate(io: Server, roomCode: string, changes: Record<string, unknown>) {
   io.to(roomCode).emit('room-updated', { changes });
 }
-
