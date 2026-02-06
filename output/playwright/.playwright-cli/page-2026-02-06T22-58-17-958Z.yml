@@ -1,9 +1,0 @@
-- generic [ref=e3]:
-  - generic [ref=e4]:
-    - heading "WING NIGHT" [level=1] [ref=e5]
-    - generic [ref=e6]: "Join room: JOIN"
-  - generic [ref=e8]:
-    - generic [ref=e9]:
-      - generic [ref=e10]: Your Name
-      - textbox "Enter your name" [active] [ref=e11]: Alex
-    - button "Join Game" [ref=e12]

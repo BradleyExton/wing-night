@@ -34,3 +34,6 @@ server/public/photos/
 
 # Vite
 client/.vite/
+
+# Playwright artifacts
+output/
