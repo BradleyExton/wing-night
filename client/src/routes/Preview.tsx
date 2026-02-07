@@ -63,7 +63,7 @@ export function Preview() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="full-viewport safe-area flex items-center justify-center">
         <div className="text-xl">Loading...</div>
       </div>
     );
@@ -71,7 +71,7 @@ export function Preview() {
 
   if (error || !preview) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="full-viewport safe-area flex items-center justify-center">
         <div className="text-center">
           <div className="text-xl text-red-500 mb-4">{error || 'Room not found'}</div>
           <Button onClick={() => navigate('/')}>Back to Home</Button>
@@ -82,9 +82,10 @@ export function Preview() {
 
   const eventDate = preview.room.eventDate ? new Date(preview.room.eventDate) : null;
   const isUpcoming = eventDate && eventDate > new Date();
+  const showJoinQr = preview.room.phase === 'LOBBY' || preview.room.phase === 'TEAM_SETUP';
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
+    <div className="full-viewport safe-area safe-area-md-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -111,7 +112,7 @@ export function Preview() {
         {/* Join section */}
         <Card className="mb-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <RoomCode code={preview.room.code} showQR size="lg" />
+            <RoomCode code={preview.room.code} showQR={showJoinQr} size="lg" />
             <Button size="lg" onClick={() => navigate(`/play/${preview.room.code}`)}>
               Join Game
             </Button>

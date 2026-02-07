@@ -11,6 +11,7 @@ import { getConnectionStatus } from '../lib/connection';
 import { formatPlayerCount } from '../lib/format';
 import { getCurrentRound } from '../lib/rounds';
 import { sortTeamsByScore } from '../lib/teams';
+import { getGameById } from '../games';
 import { TriviaPlayer, TriviaGameState } from '../games/trivia';
 
 export function Play() {
@@ -54,7 +55,7 @@ export function Play() {
   // Not joined yet - show join form
   if (!player) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="full-viewport safe-area flex flex-col items-center justify-center">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold neon-glow mb-2">WING NIGHT</h1>
           <div className="text-lg text-gray-400">Join room: <span className="font-mono text-primary">{code}</span></div>
@@ -93,7 +94,7 @@ export function Play() {
   // Joined - show game state
   if (!room) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="full-viewport safe-area flex items-center justify-center">
         <div className="text-xl">Loading...</div>
       </div>
     );
@@ -103,9 +104,12 @@ export function Play() {
   const currentRound = getCurrentRound(room.rounds, room.currentRoundNumber);
   const sortedTeams = sortTeamsByScore(room.teams);
   const connectionStatus = getConnectionStatus(isConnected);
+  const activeGameType = (room.gameState as { gameType?: string } | null)?.gameType;
+  const activeGame = activeGameType ? getGameById(activeGameType) : undefined;
+  const ActivePlayer = activeGame?.PlayerComponent;
 
   return (
-    <div className="min-h-screen p-4 flex flex-col">
+    <div className="full-viewport safe-area flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -251,18 +255,24 @@ export function Play() {
               </div>
             )}
 
-            {/* Trivia mini-game */}
-            {room.gameState && (room.gameState as TriviaGameState).questions && (
+            {ActivePlayer ? (
+              <ActivePlayer
+                roomCode={room.code}
+                player={player}
+                teams={room.teams}
+                gameState={room.gameState}
+              />
+            ) : room.gameState && (room.gameState as TriviaGameState).questions ? (
               <TriviaPlayer
                 roomCode={room.code}
                 player={player}
                 teams={room.teams}
                 gameState={room.gameState as TriviaGameState}
               />
-            )}
+            ) : null}
 
             {/* Default standings when no mini-game active */}
-            {!room.gameState && (
+            {!ActivePlayer && !(room.gameState && (room.gameState as TriviaGameState).questions) && (
               <Card>
                 <CardHeader>Current Standings</CardHeader>
                 <div className="space-y-2">

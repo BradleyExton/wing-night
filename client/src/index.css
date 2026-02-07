@@ -46,12 +46,33 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
   background: linear-gradient(180deg, #1A1A2E 0%, #16213E 100%);
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.full-viewport {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.safe-area {
+  --safe-area-padding: 1rem;
+  padding-top: calc(var(--safe-area-padding) + env(safe-area-inset-top));
+  padding-right: calc(var(--safe-area-padding) + env(safe-area-inset-right));
+  padding-bottom: calc(var(--safe-area-padding) + env(safe-area-inset-bottom));
+  padding-left: calc(var(--safe-area-padding) + env(safe-area-inset-left));
+}
+
+@media (min-width: 768px) {
+  .safe-area-md-8 {
+    --safe-area-padding: 2rem;
+  }
 }
 
 /* Custom scrollbar */

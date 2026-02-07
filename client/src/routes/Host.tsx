@@ -10,7 +10,7 @@ import { api } from '../lib/api';
 import { getAssetUrl } from '../lib/assets';
 import { getCurrentRound } from '../lib/rounds';
 import { sortTeamsByScore } from '../lib/teams';
-import { TriviaHost, TriviaGameState } from '../games/trivia';
+import { getAvailableGames, getGameById } from '../games';
 
 export function Host() {
   const { code } = useParams<{ code: string }>();
@@ -100,7 +100,7 @@ export function Host() {
     }
   };
 
-  const handleUpdateGameState = async (state: TriviaGameState) => {
+  const handleUpdateGameState = async (state: unknown) => {
     if (!room) return;
     try {
       await api.updateGameState(room.code, state);
@@ -120,9 +120,17 @@ export function Host() {
     }
   };
 
+  useEffect(() => {
+    if (!room || room.phase !== 'GAME_PHASE') return;
+    const currentGameType = (room.gameState as { gameType?: string } | null)?.gameType || null;
+    if (!gameType && currentGameType) {
+      setGameType(currentGameType);
+    }
+  }, [room?.phase, room?.gameState, gameType]);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="full-viewport safe-area flex items-center justify-center">
         <div className="text-xl">Connecting...</div>
       </div>
     );
@@ -130,7 +138,7 @@ export function Host() {
 
   if (error || roomError || !room) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="full-viewport safe-area flex items-center justify-center">
         <div className="text-center">
           <div className="text-xl text-red-500 mb-4">{error || roomError || 'Failed to load room'}</div>
           <Button onClick={() => navigate('/')}>Back to Home</Button>
@@ -142,9 +150,14 @@ export function Host() {
   const sortedTeams = sortTeamsByScore(room.teams);
 
   const currentRound = getCurrentRound(room.rounds, room.currentRoundNumber);
+  const availableGames = getAvailableGames();
+  const selectedGame = gameType ? getGameById(gameType) : undefined;
+  const SelectedHost = selectedGame?.HostComponent;
+
+  const showJoinQr = room.phase === 'LOBBY' || room.phase === 'TEAM_SETUP';
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="full-viewport safe-area">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -153,7 +166,7 @@ export function Host() {
         </div>
         <div className="flex items-center gap-4">
           <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-          <RoomCode code={room.code} size="sm" showQR />
+          <RoomCode code={room.code} size="sm" showQR={showJoinQr} />
         </div>
       </div>
 
@@ -329,12 +342,16 @@ export function Host() {
             <Card>
               <CardHeader>Choose a Game</CardHeader>
               <div className="space-y-3">
-                <Button
-                  className="w-full py-6 text-xl"
-                  onClick={() => setGameType('trivia')}
-                >
-                  <span className="mr-3">❓</span> Trivia
-                </Button>
+                {availableGames.map(game => (
+                  <Button
+                    key={game.id}
+                    className="w-full py-6 text-xl"
+                    onClick={() => setGameType(game.id)}
+                  >
+                    <span className="mr-3">{game.icon}</span>
+                    {game.name}
+                  </Button>
+                ))}
                 <Button
                   className="w-full"
                   variant="ghost"
@@ -347,11 +364,11 @@ export function Host() {
           </>
         )}
 
-        {room.phase === 'GAME_PHASE' && gameType === 'trivia' && (
-          <TriviaHost
+        {room.phase === 'GAME_PHASE' && gameType && SelectedHost && (
+          <SelectedHost
             roomCode={room.code}
             teams={room.teams}
-            gameState={room.gameState as TriviaGameState | null}
+            gameState={room.gameState}
             onUpdateGameState={handleUpdateGameState}
             onAdjustScore={handleAdjustScore}
             onEndGame={handleEndGamePhase}

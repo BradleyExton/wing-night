@@ -24,7 +24,7 @@ export function GeoguesrPlayer({ player, teams, gameState }: GeoguesrPlayerProps
 
   if (!state || !state.gameStarted) {
     return (
-      <div className="flex items-center justify-center min-h-[300px]">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-xl text-gray-400">Waiting for game to start...</div>
       </div>
     );
@@ -32,7 +32,7 @@ export function GeoguesrPlayer({ player, teams, gameState }: GeoguesrPlayerProps
 
   if (state.gameEnded) {
     return (
-      <div className="flex items-center justify-center min-h-[300px]">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="text-4xl mb-4">🌍</div>
           <div className="text-xl">Round Complete!</div>
@@ -65,7 +65,7 @@ export function GeoguesrPlayer({ player, teams, gameState }: GeoguesrPlayerProps
       : null;
 
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6 min-h-[60vh]">
         <div className="text-center">
           <div className="text-4xl mb-2">🌍</div>
           <div className="text-xl font-bold">Results</div>
@@ -139,7 +139,7 @@ export function GeoguesrPlayer({ player, teams, gameState }: GeoguesrPlayerProps
 
   // WAITING or GUESSING phase
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6 min-h-[60vh]">
       <div className="text-center text-gray-400 text-sm">
         Round {state.currentRound}
       </div>

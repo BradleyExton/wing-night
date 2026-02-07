@@ -41,7 +41,7 @@ export function GeoguesrHost({
 
   // Initialize game state if not already set
   useEffect(() => {
-    if (!gameState || !gameState.gameStarted) {
+    if (!gameState || gameState.gameType !== 'geoguessr' || !gameState.gameStarted) {
       const teamIds = teams.map(t => t.id);
       // Need at least as many locations as teams
       const locations = getRandomLocations(Math.max(teams.length, 6));
@@ -245,7 +245,7 @@ export function GeoguesrHost({
   // WAITING PHASE - Hand tablet to team
   if (state.phase === 'WAITING' && !allTeamsGuessed) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4 min-h-[70vh]">
         <div className="text-center text-gray-400 text-sm">
           Round {state.currentRound} - {teamsRemaining} team{teamsRemaining !== 1 ? 's' : ''} remaining
         </div>
@@ -299,7 +299,7 @@ export function GeoguesrHost({
   // GUESSING PHASE - Team has tablet, show photo + map
   if (state.phase === 'GUESSING' && state.teamHasTablet && currentLocation) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4 min-h-[70vh]">
         <div className="flex items-center justify-between">
           <div className="text-primary font-bold text-lg">
             {currentTeam?.name}'s Turn
@@ -309,36 +309,38 @@ export function GeoguesrHost({
           </Button>
         </div>
 
-        {/* Location Photo */}
-        <Card>
-          <div className="text-center mb-2 text-gray-400 text-sm">
-            Where is this location?
-          </div>
-          <div className="aspect-video rounded-lg overflow-hidden bg-bg-secondary">
-            <img
-              src={currentLocation.imageUrl}
-              alt="Mystery location"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          {currentLocation.hint && (
-            <div className="text-center mt-2 text-gray-500 text-sm">
-              Hint: {currentLocation.hint}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Location Photo */}
+          <Card>
+            <div className="text-center mb-2 text-gray-400 text-sm">
+              Where is this location?
             </div>
-          )}
-        </Card>
+            <div className="aspect-video rounded-lg overflow-hidden bg-bg-secondary">
+              <img
+                src={currentLocation.imageUrl}
+                alt="Mystery location"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {currentLocation.hint && (
+              <div className="text-center mt-2 text-gray-500 text-sm">
+                Hint: {currentLocation.hint}
+              </div>
+            )}
+          </Card>
 
-        {/* Interactive Map */}
-        <Card>
-          <CardHeader>
-            {guessPosition ? 'Tap to adjust your pin' : 'Tap the map to place your pin'}
-          </CardHeader>
-          <InteractiveMap
-            guessPosition={guessPosition}
-            onMapClick={(lat, lng) => setGuessPosition({ lat, lng })}
-            className="h-64"
-          />
-        </Card>
+          {/* Interactive Map */}
+          <Card>
+            <CardHeader>
+              {guessPosition ? 'Tap to adjust your pin' : 'Tap the map to place your pin'}
+            </CardHeader>
+            <InteractiveMap
+              guessPosition={guessPosition}
+              onMapClick={(lat, lng) => setGuessPosition({ lat, lng })}
+              className="h-[38vh] md:h-[55vh]"
+            />
+          </Card>
+        </div>
 
         {/* Submit Button */}
         <div className="flex gap-2">
@@ -350,7 +352,13 @@ export function GeoguesrHost({
           >
             {guessPosition ? 'Submit Guess' : 'Place a pin first'}
           </Button>
-          <Button variant="secondary" onClick={handleSkipTeam} disabled={saving}>
+          <Button
+            variant="secondary"
+            className="flex-1"
+            onClick={handleSkipTeam}
+            disabled={saving}
+            size="lg"
+          >
             Skip
           </Button>
         </div>
@@ -423,7 +431,7 @@ export function GeoguesrHost({
                   }
                   actualPosition={{ lat: location.latitude, lng: location.longitude }}
                   teamName={team?.name || 'Team'}
-                  className="h-32"
+                  className="h-40 md:h-48"
                 />
               </Card>
             );

@@ -8,6 +8,7 @@ import { getAssetUrl } from '../lib/assets';
 import { sortTeamsByScore } from '../lib/teams';
 import { formatPlayerCount } from '../lib/format';
 import { getCurrentRound } from '../lib/rounds';
+import { getGameById } from '../games';
 import { TriviaDisplay, TriviaGameState } from '../games/trivia';
 
 export function Display() {
@@ -43,6 +44,10 @@ export function Display() {
 
   const currentRound = getCurrentRound(room.rounds, room.currentRoundNumber);
   const sortedTeams = sortTeamsByScore(room.teams);
+  const activeGameType = (room.gameState as { gameType?: string } | null)?.gameType;
+  const activeGame = activeGameType ? getGameById(activeGameType) : undefined;
+  const ActiveDisplay = activeGame?.DisplayComponent;
+  const showJoinQr = room.phase === 'LOBBY' || room.phase === 'TEAM_SETUP';
 
   return (
     <div className="min-h-screen bg-bg-primary p-8 flex flex-col">
@@ -56,7 +61,7 @@ export function Display() {
             </div>
           )}
         </div>
-        <RoomCode code={room.code} showQR size="lg" />
+        <RoomCode code={room.code} showQR={showJoinQr} size="lg" />
       </div>
 
       {/* Main content based on phase */}
@@ -145,7 +150,12 @@ export function Display() {
         )}
 
         {room.phase === 'GAME_PHASE' && (
-          room.gameState && (room.gameState as TriviaGameState).questions ? (
+          ActiveDisplay ? (
+            <ActiveDisplay
+              gameState={room.gameState}
+              teams={room.teams}
+            />
+          ) : room.gameState && (room.gameState as TriviaGameState).questions ? (
             <TriviaDisplay
               gameState={room.gameState as TriviaGameState}
               teams={room.teams}

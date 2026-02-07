@@ -181,7 +181,7 @@ export function GeoguesrDisplay({ gameState, teams }: GeoguesrDisplayProps) {
                       : null
                   }
                   actualPosition={{ lat: location.latitude, lng: location.longitude }}
-                  className="h-28 mb-2"
+                  className="h-32 md:h-36 mb-2"
                 />
                 <div className="flex justify-between items-center">
                   <div className="text-gray-400">
