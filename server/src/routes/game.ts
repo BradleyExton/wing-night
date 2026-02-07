@@ -185,6 +185,42 @@ router.post('/:code/rounds/:roundNumber/wings/team/:teamId', requireRoomHostOrEd
       });
     }
 
+    for (const player of teamPlayers) {
+      const allWingResults = await prisma.wingResult.findMany({
+        where: { playerId: player.id },
+      });
+      const completedCount = allWingResults.filter((w) => w.completed).length;
+
+      await prisma.player.update({
+        where: { id: player.id },
+        data: {
+          wingsCompleted: completedCount,
+          wingsAttempted: allWingResults.length,
+        },
+      });
+    }
+
+    const updatedTeamPlayers = await prisma.player.findMany({
+      where: { teamId },
+      select: { wingsCompleted: true, wingsAttempted: true },
+    });
+    const totalCompleted = updatedTeamPlayers.reduce(
+      (sum, p) => sum + p.wingsCompleted,
+      0
+    );
+    const totalAttempted = updatedTeamPlayers.reduce(
+      (sum, p) => sum + p.wingsAttempted,
+      0
+    );
+
+    await prisma.team.update({
+      where: { id: teamId },
+      data: {
+        totalWingsCompleted: totalCompleted,
+        totalWingsAttempted: totalAttempted,
+      },
+    });
+
     const updatedRound = await prisma.round.findUnique({
       where: {
         roomId_roundNumber: {
@@ -547,7 +583,7 @@ router.post('/:code/rounds/:roundNumber/complete', requireRoomHostOrEditCode, as
 router.post('/:code/trivia/buzz', async (req, res) => {
   try {
     const { code } = req.params;
-    const { teamId, playerId, playerName } = req.body;
+    const { teamId, playerId } = req.body;
 
     const room = await prisma.room.findUnique({
       where: { code },
@@ -560,6 +596,27 @@ router.post('/:code/trivia/buzz', async (req, res) => {
     const gameState = room.gameState ? JSON.parse(room.gameState) : null;
     if (!gameState) {
       return res.status(400).json({ error: 'No game state' });
+    }
+
+    if (!teamId || !playerId) {
+      return res.status(400).json({ error: 'Team and player are required' });
+    }
+
+    const [team, player] = await Promise.all([
+      prisma.team.findUnique({ where: { id: teamId } }),
+      prisma.player.findUnique({ where: { id: playerId } }),
+    ]);
+
+    if (!team || team.roomId !== room.id) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    if (!player || player.roomId !== room.id) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+
+    if (player.teamId !== teamId) {
+      return res.status(400).json({ error: 'Player is not on this team' });
     }
 
     // Check if question is active and no one has buzzed yet
@@ -581,7 +638,7 @@ router.post('/:code/trivia/buzz', async (req, res) => {
       ...gameState,
       buzzedTeamId: teamId,
       buzzedPlayerId: playerId,
-      buzzedPlayerName: playerName,
+      buzzedPlayerName: player.name,
       buzzLocked: true,
     };
 
@@ -597,7 +654,7 @@ router.post('/:code/trivia/buzz', async (req, res) => {
     io.to(code).emit('trivia-buzz', {
       teamId,
       playerId,
-      playerName,
+      playerName: player.name,
     });
     io.to(code).emit('game-state-updated', { gameState: updatedState });
 
@@ -630,12 +687,19 @@ router.post('/:code/trivia/result', requireRoomHostOrEditCode, async (req, res) 
 
     const io = req.app.get('io');
     const buzzedTeamId = gameState.buzzedTeamId;
+    const buzzedTeam = room.teams.find((team) => team.id === buzzedTeamId);
+    if (!buzzedTeam) {
+      return res.status(400).json({ error: 'Buzzed team not found' });
+    }
+
+    const parsedPoints = typeof pointsAwarded === 'string' ? Number(pointsAwarded) : pointsAwarded;
+    const awardPoints = Number.isFinite(parsedPoints) ? parsedPoints : 100;
 
     if (correct) {
       // Award points
       const updatedTeam = await prisma.team.update({
         where: { id: buzzedTeamId },
-        data: { score: { increment: pointsAwarded || 100 } },
+        data: { score: { increment: awardPoints } },
       });
 
       // Update team answers for tracking
@@ -662,7 +726,7 @@ router.post('/:code/trivia/result', requireRoomHostOrEditCode, async (req, res) 
       io.to(code).emit('trivia-result', {
         correct: true,
         teamId: buzzedTeamId,
-        pointsAwarded: pointsAwarded || 100,
+        pointsAwarded: awardPoints,
       });
       io.to(code).emit('game-state-updated', { gameState: updatedState });
 
@@ -675,7 +739,7 @@ router.post('/:code/trivia/result', requireRoomHostOrEditCode, async (req, res) 
       io.to(code).emit('scores-updated', { teamScores });
     } else {
       // Wrong answer - add to failed teams, unlock for steal
-      const failedTeams = [...(gameState.failedTeams || []), buzzedTeamId];
+      const failedTeams = Array.from(new Set([...(gameState.failedTeams || []), buzzedTeamId]));
 
       // Check if all teams have failed
       const allTeamIds = room.teams.map((t) => t.id);

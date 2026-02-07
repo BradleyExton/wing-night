@@ -257,16 +257,49 @@ router.post('/:code/players', requireRoomHostOrEditCode, async (req, res) => {
     const { code } = req.params;
     const { name, teamId, hasDevice = false } = req.body;
 
-    const room = await prisma.room.findUnique({ where: { code } });
+    const room = await prisma.room.findUnique({
+      where: { code },
+      include: { players: true },
+    });
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const normalizedName = normalizePlayerName(name);
+    if (!normalizedName) {
+      return res.status(400).json({ error: 'Player name required' });
+    }
+
+    if (normalizedName.length > 24) {
+      return res.status(400).json({ error: 'Player name too long' });
+    }
+
+    const lowerName = normalizedName.toLowerCase();
+    const nameTaken = room.players.some((p) => p.name.toLowerCase() === lowerName);
+    if (nameTaken) {
+      return res.status(409).json({ error: 'Name already taken' });
+    }
+
+    const maxPlayers = room.maxTeams * room.maxPlayersPerTeam;
+    if (room.players.length >= maxPlayers) {
+      return res.status(400).json({ error: 'Room is full' });
+    }
+
+    if (teamId) {
+      const team = await prisma.team.findUnique({ where: { id: teamId } });
+      if (!team || team.roomId !== room.id) {
+        return res.status(400).json({ error: 'Invalid team' });
+      }
+      if (team.currentSize >= team.maxSize) {
+        return res.status(400).json({ error: 'Team is full' });
+      }
     }
 
     const player = await prisma.player.create({
       data: {
         roomId: room.id,
         teamId,
-        name,
+        name: normalizedName,
         hasDevice,
         joinedVia: 'HOST_ADDED',
       },
@@ -313,6 +346,10 @@ router.put('/:code/players/:playerId', async (req, res) => {
       return res.status(404).json({ error: 'Player not found' });
     }
 
+    if (player.roomId !== room.id) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+
     const isHost = isRoomHostOrEditCode(req, room);
     if (!isHost) {
       const headerSessionId = req.get('x-session-id');
@@ -323,6 +360,28 @@ router.put('/:code/players/:playerId', async (req, res) => {
     }
 
     const oldTeamId = player.teamId;
+    let normalizedName: string | undefined;
+
+    if (name !== undefined) {
+      normalizedName = normalizePlayerName(name);
+      if (!normalizedName) {
+        return res.status(400).json({ error: 'Player name required' });
+      }
+      if (normalizedName.length > 24) {
+        return res.status(400).json({ error: 'Player name too long' });
+      }
+      const nameTaken = await prisma.player.findFirst({
+        where: {
+          roomId: room.id,
+          id: { not: playerId },
+          name: { equals: normalizedName, mode: 'insensitive' },
+        },
+        select: { id: true },
+      });
+      if (nameTaken) {
+        return res.status(409).json({ error: 'Name already taken' });
+      }
+    }
 
     if (teamId !== undefined && teamId) {
       const newTeam = await prisma.team.findUnique({ where: { id: teamId } });
@@ -337,7 +396,7 @@ router.put('/:code/players/:playerId', async (req, res) => {
     const updated = await prisma.player.update({
       where: { id: playerId },
       data: {
-        ...(name !== undefined && { name }),
+        ...(name !== undefined && { name: normalizedName }),
         ...(teamId !== undefined && { teamId }),
         ...(isReady !== undefined && { isReady }),
         ...(teamChangeRequested !== undefined && { teamChangeRequested }),
@@ -392,6 +451,11 @@ router.delete('/:code/players/:playerId', requireRoomHostOrEditCode, async (req,
       return res.status(404).json({ error: 'Player not found' });
     }
 
+    const room = await prisma.room.findUnique({ where: { code } });
+    if (!room || player.roomId !== room.id) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+
     // Update team size
     if (player.teamId) {
       const updatedTeam = await prisma.team.update({
@@ -428,11 +492,21 @@ router.delete('/:code/players/:playerId', requireRoomHostOrEditCode, async (req,
 // Upload player photo
 router.post('/:code/players/:playerId/photo', upload.single('photo'), async (req, res) => {
   try {
-    const { playerId } = req.params;
+    const { code, playerId } = req.params;
     const file = req.file;
 
     if (!file) {
       return res.status(400).json({ error: 'No file provided' });
+    }
+
+    const room = await prisma.room.findUnique({ where: { code } });
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const existingPlayer = await prisma.player.findUnique({ where: { id: playerId } });
+    if (!existingPlayer || existingPlayer.roomId !== room.id) {
+      return res.status(404).json({ error: 'Player not found' });
     }
 
     // Ensure photos directory exists
@@ -506,6 +580,13 @@ router.post('/:code/guests', requireRoomHostOrEditCode, async (req, res) => {
       return res.status(404).json({ error: 'Room not found' });
     }
 
+    if (teamId) {
+      const team = await prisma.team.findUnique({ where: { id: teamId } });
+      if (!team || team.roomId !== room.id) {
+        return res.status(400).json({ error: 'Invalid team' });
+      }
+    }
+
     const guest = await prisma.expectedGuest.create({
       data: {
         roomId: room.id,
@@ -525,8 +606,25 @@ router.post('/:code/guests', requireRoomHostOrEditCode, async (req, res) => {
 // Update expected guest
 router.put('/:code/guests/:guestId', requireRoomHostOrEditCode, async (req, res) => {
   try {
-    const { guestId } = req.params;
+    const { code, guestId } = req.params;
     const { name, teamId } = req.body;
+
+    const room = await prisma.room.findUnique({ where: { code } });
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const existingGuest = await prisma.expectedGuest.findUnique({ where: { id: guestId } });
+    if (!existingGuest || existingGuest.roomId !== room.id) {
+      return res.status(404).json({ error: 'Guest not found' });
+    }
+
+    if (teamId !== undefined && teamId) {
+      const team = await prisma.team.findUnique({ where: { id: teamId } });
+      if (!team || team.roomId !== room.id) {
+        return res.status(400).json({ error: 'Invalid team' });
+      }
+    }
 
     const guest = await prisma.expectedGuest.update({
       where: { id: guestId },
@@ -547,7 +645,17 @@ router.put('/:code/guests/:guestId', requireRoomHostOrEditCode, async (req, res)
 // Delete expected guest
 router.delete('/:code/guests/:guestId', requireRoomHostOrEditCode, async (req, res) => {
   try {
-    const { guestId } = req.params;
+    const { code, guestId } = req.params;
+
+    const room = await prisma.room.findUnique({ where: { code } });
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const existingGuest = await prisma.expectedGuest.findUnique({ where: { id: guestId } });
+    if (!existingGuest || existingGuest.roomId !== room.id) {
+      return res.status(404).json({ error: 'Guest not found' });
+    }
     await prisma.expectedGuest.delete({ where: { id: guestId } });
     res.json({ success: true });
   } catch (error) {
