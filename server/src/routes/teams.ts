@@ -11,6 +11,19 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();
 
+async function getTeamForRoom(roomId: string, teamId: string, includePlayers = false) {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    ...(includePlayers ? { include: { players: true } } : {}),
+  });
+
+  if (!team || team.roomId !== roomId) {
+    return null;
+  }
+
+  return team;
+}
+
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -103,6 +116,16 @@ router.put('/:code/teams/:teamId', requireRoomHostOrEditCode, async (req, res) =
     const { code, teamId } = req.params;
     const { name, emoji, isReady } = req.body;
 
+    const roomId = req.room?.id;
+    if (!roomId) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const existingTeam = await getTeamForRoom(roomId, teamId);
+    if (!existingTeam) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
     const team = await prisma.team.update({
       where: { id: teamId },
       data: {
@@ -135,10 +158,12 @@ router.delete('/:code/teams/:teamId', requireRoomHostOrEditCode, async (req, res
   try {
     const { code, teamId } = req.params;
 
-    const team = await prisma.team.findUnique({
-      where: { id: teamId },
-      include: { players: true },
-    });
+    const roomId = req.room?.id;
+    if (!roomId) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const team = await getTeamForRoom(roomId, teamId, true);
 
     if (!team) {
       return res.status(404).json({ error: 'Team not found' });
@@ -164,7 +189,12 @@ router.post('/:code/teams/:teamId/logo/generate', requireRoomHostOrEditCode, asy
     const { code, teamId } = req.params;
     const { prompt } = req.body;
 
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    const roomId = req.room?.id;
+    if (!roomId) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const team = await getTeamForRoom(roomId, teamId);
     if (!team) {
       return res.status(404).json({ error: 'Team not found' });
     }
@@ -213,6 +243,16 @@ router.post('/:code/teams/:teamId/logo/upload', requireRoomHostOrEditCode, uploa
   try {
     const { code, teamId } = req.params;
     const file = req.file;
+
+    const roomId = req.room?.id;
+    if (!roomId) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const team = await getTeamForRoom(roomId, teamId);
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
 
     if (!file) {
       return res.status(400).json({ error: 'No file provided' });
@@ -273,6 +313,16 @@ router.post('/:code/teams/:teamId/score', requireRoomHostOrEditCode, async (req,
   try {
     const { code, teamId } = req.params;
     const { adjustment, reason } = req.body;
+
+    const roomId = req.room?.id;
+    if (!roomId) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const existingTeam = await getTeamForRoom(roomId, teamId);
+    if (!existingTeam) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
 
     const team = await prisma.team.update({
       where: { id: teamId },

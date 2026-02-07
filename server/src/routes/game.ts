@@ -45,6 +45,11 @@ router.post('/:code/rounds/:roundNumber/wings', requireRoomHostOrEditCode, async
       return res.status(404).json({ error: 'Room not found' });
     }
 
+    const player = await prisma.player.findUnique({ where: { id: playerId } });
+    if (!player || player.roomId !== room.id) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+
     const round = await prisma.round.findUnique({
       where: {
         roomId_roundNumber: {
@@ -79,43 +84,40 @@ router.post('/:code/rounds/:roundNumber/wings', requireRoomHostOrEditCode, async
     });
 
     // Update player wing count
-    const player = await prisma.player.findUnique({ where: { id: playerId } });
-    if (player) {
-      const allWingResults = await prisma.wingResult.findMany({
-        where: { playerId },
-      });
-      const completedCount = allWingResults.filter((w) => w.completed).length;
+    const allWingResults = await prisma.wingResult.findMany({
+      where: { playerId },
+    });
+    const completedCount = allWingResults.filter((w) => w.completed).length;
 
-      await prisma.player.update({
-        where: { id: playerId },
+    await prisma.player.update({
+      where: { id: playerId },
+      data: {
+        wingsCompleted: completedCount,
+        wingsAttempted: allWingResults.length,
+      },
+    });
+
+    // Update team wing count if player has team
+    if (player.teamId) {
+      const teamPlayers = await prisma.player.findMany({
+        where: { teamId: player.teamId },
+      });
+      const totalCompleted = teamPlayers.reduce(
+        (sum, p) => sum + p.wingsCompleted,
+        0
+      );
+      const totalAttempted = teamPlayers.reduce(
+        (sum, p) => sum + p.wingsAttempted,
+        0
+      );
+
+      await prisma.team.update({
+        where: { id: player.teamId },
         data: {
-          wingsCompleted: completedCount,
-          wingsAttempted: allWingResults.length,
+          totalWingsCompleted: totalCompleted,
+          totalWingsAttempted: totalAttempted,
         },
       });
-
-      // Update team wing count if player has team
-      if (player.teamId) {
-        const teamPlayers = await prisma.player.findMany({
-          where: { teamId: player.teamId },
-        });
-        const totalCompleted = teamPlayers.reduce(
-          (sum, p) => sum + p.wingsCompleted,
-          0
-        );
-        const totalAttempted = teamPlayers.reduce(
-          (sum, p) => sum + p.wingsAttempted,
-          0
-        );
-
-        await prisma.team.update({
-          where: { id: player.teamId },
-          data: {
-            totalWingsCompleted: totalCompleted,
-            totalWingsAttempted: totalAttempted,
-          },
-        });
-      }
     }
 
     const io = req.app.get('io');
@@ -137,6 +139,11 @@ router.post('/:code/rounds/:roundNumber/wings/team/:teamId', requireRoomHostOrEd
     const room = await prisma.room.findUnique({ where: { code } });
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    if (!team || team.roomId !== room.id) {
+      return res.status(404).json({ error: 'Team not found' });
     }
 
     const round = await prisma.round.findUnique({
@@ -463,10 +470,19 @@ router.post('/:code/rounds/:roundNumber/complete', requireRoomHostOrEditCode, as
     const gameState = room.gameState ? JSON.parse(room.gameState) : {};
     const results = calculateRoundResults(room.teams, round.wingResults, gameState);
 
+    const existingResults = await prisma.roundResult.findMany({
+      where: { roundId: round.id },
+      select: { teamId: true, totalPoints: true },
+    });
+    const existingByTeam = new Map(existingResults.map((r) => [r.teamId, r.totalPoints]));
+
     // Save round results
     const teamScores: Record<string, number> = {};
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
+      const previousTotal = existingByTeam.get(result.teamId) ?? 0;
+      const delta = result.totalPoints - previousTotal;
+
       await prisma.roundResult.upsert({
         where: {
           roundId_teamId: {
@@ -490,16 +506,22 @@ router.post('/:code/rounds/:roundNumber/complete', requireRoomHostOrEditCode, as
         },
       });
 
-      // Update team total score
-      const updatedTeam = await prisma.team.update({
-        where: { id: result.teamId },
-        data: {
-          score: {
-            increment: result.totalPoints,
+      let updatedScore: number;
+      if (delta !== 0) {
+        const updatedTeam = await prisma.team.update({
+          where: { id: result.teamId },
+          data: {
+            score: {
+              increment: delta,
+            },
           },
-        },
-      });
-      teamScores[result.teamId] = updatedTeam.score;
+        });
+        updatedScore = updatedTeam.score;
+      } else {
+        const existingTeam = room.teams.find((t) => t.id === result.teamId);
+        updatedScore = existingTeam?.score ?? 0;
+      }
+      teamScores[result.teamId] = updatedScore;
     }
 
     // Mark round complete

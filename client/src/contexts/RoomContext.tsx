@@ -276,6 +276,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       setRoom(roomData);
       setIsHost(true);
       setIsDisplay(false);
+      setPlayer(null);
 
       const socket = connectSocket();
       socket.emit('join-as-host', { roomCode: code });
@@ -292,6 +293,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       setRoom(roomData);
       setIsHost(false);
       setIsDisplay(true);
+      setPlayer(null);
 
       const socket = connectSocket();
       socket.emit('join-as-display', { roomCode: code });
