@@ -6,6 +6,8 @@ import { RoomCode } from '../components/common/RoomCode';
 import { useRoom } from '../contexts/RoomContext';
 import { getAssetUrl } from '../lib/assets';
 import { sortTeamsByScore } from '../lib/teams';
+import { formatPlayerCount } from '../lib/format';
+import { getCurrentRound } from '../lib/rounds';
 import { TriviaDisplay, TriviaGameState } from '../games/trivia';
 
 export function Display() {
@@ -39,7 +41,7 @@ export function Display() {
     );
   }
 
-  const currentRound = room.rounds.find(r => r.roundNumber === room.currentRoundNumber);
+  const currentRound = getCurrentRound(room.rounds, room.currentRoundNumber);
   const sortedTeams = sortTeamsByScore(room.teams);
 
   return (
@@ -75,7 +77,7 @@ export function Display() {
               ))}
             </div>
             <div className="text-2xl text-gray-400">
-              {room.players.length} player{room.players.length !== 1 ? 's' : ''} joined
+              {formatPlayerCount(room.players.length)} joined
             </div>
           </div>
         )}

@@ -7,6 +7,9 @@ import { TeamCard } from '../components/common/TeamCard';
 import { useRoom } from '../contexts/RoomContext';
 import { api } from '../lib/api';
 import { getAssetUrl } from '../lib/assets';
+import { getConnectionStatus } from '../lib/connection';
+import { formatPlayerCount } from '../lib/format';
+import { getCurrentRound } from '../lib/rounds';
 import { sortTeamsByScore } from '../lib/teams';
 import { TriviaPlayer, TriviaGameState } from '../games/trivia';
 
@@ -97,8 +100,9 @@ export function Play() {
   }
 
   const myTeam = room.teams.find(t => t.id === player.teamId);
-  const currentRound = room.rounds.find(r => r.roundNumber === room.currentRoundNumber);
+  const currentRound = getCurrentRound(room.rounds, room.currentRoundNumber);
   const sortedTeams = sortTeamsByScore(room.teams);
+  const connectionStatus = getConnectionStatus(isConnected);
 
   return (
     <div className="min-h-screen p-4 flex flex-col">
@@ -108,9 +112,9 @@ export function Play() {
           <div className="text-sm text-gray-400">Playing as</div>
           <div className="font-bold text-lg">{player.name}</div>
         </div>
-        <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${isConnected ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-          <span className="text-sm">{isConnected ? 'Connected' : 'Reconnecting...'}</span>
+        <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${connectionStatus.containerClass}`}>
+          <div className={`w-2 h-2 rounded-full ${connectionStatus.dotClass}`} />
+          <span className="text-sm">{connectionStatus.label}</span>
         </div>
       </div>
 
@@ -131,7 +135,9 @@ export function Play() {
             )}
             <div className="flex-1">
               <div className="font-bold">{myTeam.name}</div>
-              <div className="text-sm text-gray-400">{myTeam.players?.length || 0} players</div>
+              <div className="text-sm text-gray-400">
+                {formatPlayerCount(myTeam.players?.length || 0)}
+              </div>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-primary">{myTeam.score}</div>

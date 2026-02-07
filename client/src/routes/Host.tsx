@@ -8,6 +8,7 @@ import { RoomCode } from '../components/common/RoomCode';
 import { useRoom } from '../contexts/RoomContext';
 import { api } from '../lib/api';
 import { getAssetUrl } from '../lib/assets';
+import { getCurrentRound } from '../lib/rounds';
 import { sortTeamsByScore } from '../lib/teams';
 import { TriviaHost, TriviaGameState } from '../games/trivia';
 
@@ -140,7 +141,7 @@ export function Host() {
 
   const sortedTeams = sortTeamsByScore(room.teams);
 
-  const currentRound = room.rounds.find(r => r.roundNumber === room.currentRoundNumber);
+  const currentRound = getCurrentRound(room.rounds, room.currentRoundNumber);
 
   return (
     <div className="min-h-screen p-4">

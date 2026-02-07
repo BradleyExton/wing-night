@@ -4,6 +4,8 @@ import { useUser, UserButton } from '@clerk/clerk-react';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { api } from '../lib/api';
+import { getPhaseColorClass, getPhaseLabel, formatEventDate } from '../lib/rooms';
+import { sortTeamsByScore } from '../lib/teams';
 
 interface RoomSummary {
   id: string;
@@ -73,27 +75,6 @@ export function Dashboard() {
     }
   };
 
-  const getPhaseLabel = (phase: string) => {
-    const labels: Record<string, string> = {
-      DRAFT: 'Draft',
-      LOBBY: 'Lobby',
-      TEAM_SETUP: 'Team Setup',
-      GAME_INTRO: 'Starting',
-      ROUND_INTRO: 'Round Intro',
-      EATING_PHASE: 'Eating',
-      GAME_PHASE: 'Playing',
-      ROUND_RESULTS: 'Results',
-      GAME_END: 'Completed',
-    };
-    return labels[phase] || phase;
-  };
-
-  const getPhaseColor = (phase: string) => {
-    if (phase === 'DRAFT') return 'text-gray-400';
-    if (phase === 'GAME_END') return 'text-green-400';
-    return 'text-primary';
-  };
-
   if (!isLoaded || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -138,7 +119,7 @@ export function Dashboard() {
                   key={room.id}
                   room={room}
                   getPhaseLabel={getPhaseLabel}
-                  getPhaseColor={getPhaseColor}
+                  getPhaseColor={getPhaseColorClass}
                   onHost={() => navigate(`/host/${room.code}`)}
                   onEdit={() => navigate(`/edit/${room.editCode}`)}
                 />
@@ -157,7 +138,7 @@ export function Dashboard() {
                   key={room.id}
                   room={room}
                   getPhaseLabel={getPhaseLabel}
-                  getPhaseColor={getPhaseColor}
+                  getPhaseColor={getPhaseColorClass}
                   onHost={() => navigate(`/host/${room.code}`)}
                   onEdit={() => navigate(`/edit/${room.editCode}`)}
                 />
@@ -176,7 +157,7 @@ export function Dashboard() {
                   key={room.id}
                   room={room}
                   getPhaseLabel={getPhaseLabel}
-                  getPhaseColor={getPhaseColor}
+                  getPhaseColor={getPhaseColorClass}
                   onHost={() => navigate(`/host/${room.code}`)}
                   onEdit={() => navigate(`/edit/${room.editCode}`)}
                   completed
@@ -218,11 +199,9 @@ function GameCard({
   completed?: boolean;
 }) {
   const eventDate = room.eventDate ? new Date(room.eventDate) : null;
+  const formattedDate = formatEventDate(eventDate);
   const winner = completed && room.teams.length > 0
-    ? [...room.teams].sort((a, b) => {
-        const scoreDelta = b.score - a.score;
-        return scoreDelta !== 0 ? scoreDelta : a.id.localeCompare(b.id);
-      })[0]
+    ? sortTeamsByScore(room.teams)[0]
     : null;
 
   return (
@@ -230,14 +209,8 @@ function GameCard({
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-semibold">{room.name || 'Wing Night'}</h3>
-          {eventDate && (
-            <p className="text-sm text-gray-400">
-              {eventDate.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
+          {formattedDate && (
+            <p className="text-sm text-gray-400">{formattedDate}</p>
           )}
         </div>
         <span className={`text-sm font-medium ${getPhaseColor(room.phase)}`}>

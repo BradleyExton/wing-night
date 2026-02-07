@@ -1,5 +1,7 @@
 import { Team } from '../../types';
 import { getAssetUrl } from '../../lib/assets';
+import { getTeamBorderClass } from '../../lib/teams';
+import { formatPlayerCount } from '../../lib/format';
 
 interface TeamCardProps {
   team: Team;
@@ -11,15 +13,6 @@ interface TeamCardProps {
   compact?: boolean;
 }
 
-const teamColors = [
-  'border-l-orange-500',
-  'border-l-green-500',
-  'border-l-blue-500',
-  'border-l-purple-500',
-  'border-l-amber-500',
-  'border-l-cyan-500',
-];
-
 export function TeamCard({
   team,
   rank,
@@ -29,8 +22,7 @@ export function TeamCard({
   selected,
   compact = false,
 }: TeamCardProps) {
-  const colorIndex = parseInt(team.id, 36) % teamColors.length;
-  const borderColor = teamColors[colorIndex];
+  const borderColor = getTeamBorderClass(team.id);
 
   return (
     <div
@@ -67,7 +59,7 @@ export function TeamCard({
           </div>
           {showPlayers && team.players && (
             <div className="text-sm text-gray-400">
-              {team.players.length} player{team.players.length !== 1 ? 's' : ''}
+              {formatPlayerCount(team.players.length)}
             </div>
           )}
         </div>
