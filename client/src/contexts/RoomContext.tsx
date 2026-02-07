@@ -72,7 +72,11 @@ export function RoomProvider({ children }: { children: ReactNode }) {
       setRoom(prev => {
         if (!prev) return null;
         const players = prev.players.filter(p => p.id !== data.playerId);
-        return { ...prev, players };
+        const teams = prev.teams.map(team => ({
+          ...team,
+          players: team.players.filter(p => p.id !== data.playerId),
+        }));
+        return { ...prev, players, teams };
       });
     });
 
@@ -81,15 +85,23 @@ export function RoomProvider({ children }: { children: ReactNode }) {
         if (!prev) return null;
 
         // Update player in players array
-        const updatedPlayer = prev.players.find(p => p.id === data.playerId);
+        const previousPlayer = prev.players.find(p => p.id === data.playerId);
         const players = prev.players.map(p =>
           p.id === data.playerId ? { ...p, ...data.changes } : p
         );
+        const updatedPlayer = previousPlayer
+          ? { ...previousPlayer, ...data.changes }
+          : undefined;
 
         // If teamId changed, update team.players arrays
         let teams = prev.teams;
-        if (data.changes.teamId !== undefined && updatedPlayer) {
-          const oldTeamId = updatedPlayer.teamId;
+        const teamIdChanged =
+          data.changes.teamId !== undefined &&
+          previousPlayer &&
+          data.changes.teamId !== previousPlayer.teamId;
+
+        if (teamIdChanged && previousPlayer && updatedPlayer) {
+          const oldTeamId = previousPlayer.teamId;
           const newTeamId = data.changes.teamId;
 
           teams = prev.teams.map(t => {
@@ -99,10 +111,25 @@ export function RoomProvider({ children }: { children: ReactNode }) {
             }
             // Add player to new team
             if (t.id === newTeamId) {
-              const playerToAdd = { ...updatedPlayer, ...data.changes };
-              return { ...t, players: [...t.players, playerToAdd] };
+              const alreadyOnTeam = t.players.some(p => p.id === data.playerId);
+              const playerToAdd = updatedPlayer;
+              return {
+                ...t,
+                players: alreadyOnTeam
+                  ? t.players.map(p => (p.id === data.playerId ? playerToAdd : p))
+                  : [...t.players, playerToAdd],
+              };
             }
             return t;
+          });
+        } else if (updatedPlayer?.teamId) {
+          // Update player details within current team roster
+          teams = prev.teams.map(t => {
+            if (t.id !== updatedPlayer.teamId) return t;
+            return {
+              ...t,
+              players: t.players.map(p => (p.id === data.playerId ? updatedPlayer : p)),
+            };
           });
         }
 

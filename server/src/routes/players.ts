@@ -145,7 +145,13 @@ router.post('/:code/join', async (req, res) => {
       return res.status(400).json({ error: 'Room is full' });
     }
 
-    let expectedGuest = null as null | { id: string; name: string; roomId: string; claimedById: string | null };
+    let expectedGuest = null as null | {
+      id: string;
+      name: string;
+      roomId: string;
+      teamId: string | null;
+      claimedById: string | null;
+    };
     if (expectedGuestId) {
       expectedGuest = await prisma.expectedGuest.findUnique({
         where: { id: expectedGuestId },
@@ -174,16 +180,29 @@ router.post('/:code/join', async (req, res) => {
     const sessionId = generateSessionId();
     let joinedVia = 'PHONE';
     let guestId = expectedGuestId;
+    let assignedTeamId: string | null = null;
 
     // Try to claim expected guest spot
     if (expectedGuest) {
       joinedVia = 'EXPECTED_GUEST';
+      assignedTeamId = expectedGuest.teamId;
+    }
+
+    if (assignedTeamId) {
+      const team = await prisma.team.findUnique({ where: { id: assignedTeamId } });
+      if (!team || team.roomId !== room.id) {
+        return res.status(400).json({ error: 'Invalid expected guest team' });
+      }
+      if (team.currentSize >= team.maxSize) {
+        return res.status(400).json({ error: 'Team is full' });
+      }
     }
 
     const player = await prisma.player.create({
       data: {
         roomId: room.id,
         name: normalizedName,
+        teamId: assignedTeamId,
         sessionId,
         isConnected: true,
         hasDevice: true,
@@ -191,7 +210,7 @@ router.post('/:code/join', async (req, res) => {
         expectedGuestId: guestId,
         lastSeenAt: new Date(),
       },
-      include: { team: true },
+      include: { team: { include: { players: true } } },
     });
 
     // Update expected guest if claiming
@@ -203,6 +222,18 @@ router.post('/:code/join', async (req, res) => {
           claimedAt: new Date(),
         },
       });
+    }
+
+    // Update team size if assigned
+    if (assignedTeamId) {
+      const updatedTeam = await prisma.team.update({
+        where: { id: assignedTeamId },
+        data: { currentSize: { increment: 1 } },
+        include: { players: true },
+      });
+      const io = req.app.get('io');
+      io.to(code).emit('team-updated', { teamId: assignedTeamId, changes: { currentSize: updatedTeam.currentSize } });
+      io.to(code).emit('player-updated', { playerId: player.id, changes: { teamId: assignedTeamId } });
     }
 
     const io = req.app.get('io');
@@ -292,6 +323,16 @@ router.put('/:code/players/:playerId', async (req, res) => {
     }
 
     const oldTeamId = player.teamId;
+
+    if (teamId !== undefined && teamId) {
+      const newTeam = await prisma.team.findUnique({ where: { id: teamId } });
+      if (!newTeam || newTeam.roomId !== room.id) {
+        return res.status(400).json({ error: 'Invalid team' });
+      }
+      if (teamId !== oldTeamId && newTeam.currentSize >= newTeam.maxSize) {
+        return res.status(400).json({ error: 'Team is full' });
+      }
+    }
 
     const updated = await prisma.player.update({
       where: { id: playerId },
