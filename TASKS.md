@@ -12,7 +12,7 @@ Status keys:
 Current in-progress work:
 - [-] 0.3 Basic Client
   - Branch: `phase-0-3-basic-client`
-  - PR: pending
+  - PR: [#3](https://github.com/BradleyExton/wing-night/pull/3)
   - Notes: implementing `/host` + `/display` placeholders
 
 Completed:
