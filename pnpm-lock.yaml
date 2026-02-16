@@ -26,6 +26,9 @@ importers:
 
   apps/client:
     dependencies:
+      '@wingnight/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       react:
         specifier: ^18.3.1
         version: 18.3.1
