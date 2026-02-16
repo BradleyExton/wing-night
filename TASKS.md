@@ -12,7 +12,7 @@ Status keys:
 Current in-progress work:
 - [-] 3.2 Host Next Phase Button
   - Branch: `phase-3-2-host-next-phase-button`
-  - PR: _(pending)_
+  - PR: [#11](https://github.com/BradleyExton/wing-night/pull/11)
   - Notes: host-only next phase control wiring + UI trigger payload emit
 - [-] 3.1 Phase Transition Logic
   - Branch: `phase-3-1-phase-transition-logic`
