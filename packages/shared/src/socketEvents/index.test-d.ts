@@ -2,6 +2,8 @@ import type {
   ClientToServerEvents,
   HostSecretPayload,
   RoomState,
+  SetupAssignPlayerPayload,
+  SetupCreateTeamPayload,
   ServerToClientEvents
 } from "../index.js";
 
@@ -23,6 +25,20 @@ export type NextPhaseHostSecretPayloadCheck = Assert<
   Equal<Parameters<ClientToServerEvents["game:nextPhase"]>, [HostSecretPayload]>
 >;
 
+export type CreateTeamPayloadCheck = Assert<
+  Equal<
+    Parameters<ClientToServerEvents["setup:createTeam"]>,
+    [SetupCreateTeamPayload]
+  >
+>;
+
+export type AssignPlayerPayloadCheck = Assert<
+  Equal<
+    Parameters<ClientToServerEvents["setup:assignPlayer"]>,
+    [SetupAssignPlayerPayload]
+  >
+>;
+
 export type SnapshotRoomStateArgCheck = Assert<
   Equal<Parameters<ServerToClientEvents["server:stateSnapshot"]>, [RoomState]>
 >;
@@ -42,6 +58,12 @@ export type InvalidClaimControlArgsCheck = Assert<Equal<Parameters<ClientToServe
 
 // @ts-expect-error game:nextPhase must accept host secret payload.
 export type InvalidNextPhaseNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents["game:nextPhase"]>, []>>;
+
+// @ts-expect-error setup:createTeam must accept host secret + name payload.
+export type InvalidCreateTeamNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents["setup:createTeam"]>, []>>;
+
+// @ts-expect-error setup:assignPlayer must accept host secret + player assignment payload.
+export type InvalidAssignPlayerNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents["setup:assignPlayer"]>, []>>;
 
 // @ts-expect-error host:secretIssued must emit host secret payload.
 export type InvalidSecretIssuedPayloadCheck = Assert<Equal<Parameters<ServerToClientEvents["host:secretIssued"]>, [string]>>;

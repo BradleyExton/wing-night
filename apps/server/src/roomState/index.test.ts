@@ -5,6 +5,8 @@ import { Phase } from "@wingnight/shared";
 
 import {
   advanceRoomStatePhase,
+  assignPlayerToTeam,
+  createTeam,
   createInitialRoomState,
   getRoomStateSnapshot,
   resetRoomState,
@@ -114,4 +116,63 @@ test("setRoomStatePlayers stores a safe clone of player records", () => {
   const persistedSnapshot = getRoomStateSnapshot();
 
   assert.equal(persistedSnapshot.players[0].name, "Player One");
+});
+
+test("createTeam trims team names and ignores empty values", () => {
+  resetRoomState();
+
+  createTeam("  Team Alpha  ");
+  createTeam("   ");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.teams.length, 1);
+  assert.equal(snapshot.teams[0].id, "team-1");
+  assert.equal(snapshot.teams[0].name, "Team Alpha");
+  assert.deepEqual(snapshot.teams[0].playerIds, []);
+  assert.equal(snapshot.teams[0].totalScore, 0);
+});
+
+test("assignPlayerToTeam reassigns a player to only one team at a time", () => {
+  resetRoomState();
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" }
+  ]);
+  createTeam("Team Alpha");
+  createTeam("Team Beta");
+
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-1", "team-2");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.deepEqual(snapshot.teams[0].playerIds, []);
+  assert.deepEqual(snapshot.teams[1].playerIds, ["player-1"]);
+});
+
+test("assignPlayerToTeam supports unassigning via null teamId", () => {
+  resetRoomState();
+  setRoomStatePlayers([{ id: "player-1", name: "Player One" }]);
+  createTeam("Team Alpha");
+
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-1", null);
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.deepEqual(snapshot.teams[0].playerIds, []);
+});
+
+test("assignPlayerToTeam ignores unknown players and unknown teams", () => {
+  resetRoomState();
+  setRoomStatePlayers([{ id: "player-1", name: "Player One" }]);
+  createTeam("Team Alpha");
+
+  assignPlayerToTeam("missing-player", "team-1");
+  assignPlayerToTeam("player-1", "missing-team");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.deepEqual(snapshot.teams[0].playerIds, []);
 });

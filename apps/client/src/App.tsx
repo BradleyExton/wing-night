@@ -6,13 +6,15 @@ import { HostPlaceholder } from "./components/HostPlaceholder";
 import { RouteNotFound } from "./components/RouteNotFound";
 import { roomSocket } from "./socket/createRoomSocket";
 import { saveHostSecret } from "./utils/hostSecretStorage";
+import { requestAssignPlayer } from "./utils/requestAssignPlayer";
+import { requestCreateTeam } from "./utils/requestCreateTeam";
 import { requestNextPhase } from "./utils/requestNextPhase";
 import { resolveClientRoute } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 
 export const App = (): JSX.Element => {
-  const [, setRoomState] = useState<RoomState | null>(null);
+  const [roomState, setRoomState] = useState<RoomState | null>(null);
   const route = resolveClientRoute(window.location.pathname);
 
   useEffect(() => {
@@ -33,8 +35,27 @@ export const App = (): JSX.Element => {
     });
   };
 
+  const handleCreateTeam = (name: string): void => {
+    requestCreateTeam(roomSocket, name, () => {
+      roomSocket.emit("host:claimControl");
+    });
+  };
+
+  const handleAssignPlayer = (playerId: string, teamId: string | null): void => {
+    requestAssignPlayer(roomSocket, playerId, teamId, () => {
+      roomSocket.emit("host:claimControl");
+    });
+  };
+
   if (route === "HOST") {
-    return <HostPlaceholder onNextPhase={handleNextPhase} />;
+    return (
+      <HostPlaceholder
+        roomState={roomState}
+        onNextPhase={handleNextPhase}
+        onCreateTeam={handleCreateTeam}
+        onAssignPlayer={handleAssignPlayer}
+      />
+    );
   }
 
   if (route === "DISPLAY") {

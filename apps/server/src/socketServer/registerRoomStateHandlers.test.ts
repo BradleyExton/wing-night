@@ -6,6 +6,7 @@ import { Phase, type HostSecretPayload, type RoomState } from "@wingnight/shared
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
 type SocketUnderTest = Parameters<typeof registerRoomStateHandlers>[0];
+type MutationHandlersUnderTest = Parameters<typeof registerRoomStateHandlers>[2];
 
 type SocketHarness = {
   socket: SocketUnderTest;
@@ -14,6 +15,8 @@ type SocketHarness = {
   triggerRequestState: () => void;
   triggerHostClaim: () => void;
   triggerNextPhase: (payload: unknown) => void;
+  triggerCreateTeam: (payload: unknown) => void;
+  triggerAssignPlayer: (payload: unknown) => void;
 };
 
 const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
@@ -38,6 +41,12 @@ const createSocketHarness = (): SocketHarness => {
   let nextPhaseHandler = (_payload: unknown): void => {
     assert.fail("Expected game:nextPhase handler to be registered.");
   };
+  let createTeamHandler = (_payload: unknown): void => {
+    assert.fail("Expected setup:createTeam handler to be registered.");
+  };
+  let assignPlayerHandler = (_payload: unknown): void => {
+    assert.fail("Expected setup:assignPlayer handler to be registered.");
+  };
 
   const socket = {
     emit: (
@@ -52,7 +61,12 @@ const createSocketHarness = (): SocketHarness => {
       emittedSecretPayloads.push(payload as HostSecretPayload);
     },
     on: (
-      event: "client:requestState" | "host:claimControl" | "game:nextPhase",
+      event:
+        | "client:requestState"
+        | "host:claimControl"
+        | "game:nextPhase"
+        | "setup:createTeam"
+        | "setup:assignPlayer",
       listener: (() => void) | ((payload: unknown) => void)
     ): void => {
       if (event === "client:requestState") {
@@ -65,7 +79,17 @@ const createSocketHarness = (): SocketHarness => {
         return;
       }
 
-      nextPhaseHandler = listener as (payload: unknown) => void;
+      if (event === "game:nextPhase") {
+        nextPhaseHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      if (event === "setup:createTeam") {
+        createTeamHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      assignPlayerHandler = listener as (payload: unknown) => void;
     }
   } as unknown as SocketUnderTest;
 
@@ -81,7 +105,30 @@ const createSocketHarness = (): SocketHarness => {
     },
     triggerNextPhase: (payload: unknown): void => {
       nextPhaseHandler(payload);
+    },
+    triggerCreateTeam: (payload: unknown): void => {
+      createTeamHandler(payload);
+    },
+    triggerAssignPlayer: (payload: unknown): void => {
+      assignPlayerHandler(payload);
     }
+  };
+};
+
+const createMutationHandlers = (
+  overrides: Partial<MutationHandlersUnderTest> = {}
+): MutationHandlersUnderTest => {
+  return {
+    onAuthorizedNextPhase: () => {
+      // no-op
+    },
+    onAuthorizedCreateTeam: () => {
+      // no-op
+    },
+    onAuthorizedAssignPlayer: () => {
+      // no-op
+    },
+    ...overrides
   };
 };
 
@@ -97,9 +144,11 @@ test("emits state snapshot immediately and on client request", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => firstState,
-    () => {
-      assert.fail("next phase callback should not be called in this test");
-    },
+    createMutationHandlers({
+      onAuthorizedNextPhase: () => {
+        assert.fail("next phase callback should not be called in this test");
+      }
+    }),
     true,
     hostAuth
   );
@@ -119,9 +168,11 @@ test("emits host secret when host claims control and socket is authorized", () =
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.SETUP),
-    () => {
-      assert.fail("next phase callback should not be called in this test");
-    },
+    createMutationHandlers({
+      onAuthorizedNextPhase: () => {
+        assert.fail("next phase callback should not be called in this test");
+      }
+    }),
     true,
     {
       issueHostSecret: () => ({ hostSecret: "issued-host-secret" }),
@@ -142,9 +193,11 @@ test("does not emit host secret when socket is not allowed to claim control", ()
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.SETUP),
-    () => {
-      assert.fail("next phase callback should not be called in this test");
-    },
+    createMutationHandlers({
+      onAuthorizedNextPhase: () => {
+        assert.fail("next phase callback should not be called in this test");
+      }
+    }),
     false,
     hostAuth
   );
@@ -162,9 +215,11 @@ test("ignores malformed game:nextPhase payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => initialState,
-    () => {
-      authorizedCallCount += 1;
-    },
+    createMutationHandlers({
+      onAuthorizedNextPhase: () => {
+        authorizedCallCount += 1;
+      }
+    }),
     true,
     hostAuth
   );
@@ -190,9 +245,11 @@ test("ignores unauthorized game:nextPhase requests", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => initialState,
-    () => {
-      authorizedCallCount += 1;
-    },
+    createMutationHandlers({
+      onAuthorizedNextPhase: () => {
+        authorizedCallCount += 1;
+      }
+    }),
     true,
     hostAuth
   );
@@ -214,10 +271,12 @@ test("runs authorized next phase callback without per-socket snapshot emit", () 
   registerRoomStateHandlers(
     socketHarness.socket,
     () => initialState,
-    () => {
-      authorizedCallCount += 1;
-      broadcastSnapshots.push(advancedState);
-    },
+    createMutationHandlers({
+      onAuthorizedNextPhase: () => {
+        authorizedCallCount += 1;
+        broadcastSnapshots.push(advancedState);
+      }
+    }),
     true,
     hostAuth
   );
@@ -228,4 +287,69 @@ test("runs authorized next phase callback without per-socket snapshot emit", () 
   assert.equal(socketHarness.emittedSnapshots.length, 1);
   assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
   assert.deepEqual(broadcastSnapshots, [advancedState]);
+});
+
+test("runs authorized create-team callback and ignores unauthorized payloads", () => {
+  const socketHarness = createSocketHarness();
+  let createTeamCalls = 0;
+  let createdTeamName = "";
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.SETUP),
+    createMutationHandlers({
+      onAuthorizedCreateTeam: (name) => {
+        createTeamCalls += 1;
+        createdTeamName = name;
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  socketHarness.triggerCreateTeam({ hostSecret: "invalid-host-secret", name: "Team One" });
+  socketHarness.triggerCreateTeam({ hostSecret: "valid-host-secret", name: "Team Two" });
+
+  assert.equal(createTeamCalls, 1);
+  assert.equal(createdTeamName, "Team Two");
+});
+
+test("ignores malformed and unauthorized assign-player payloads", () => {
+  const socketHarness = createSocketHarness();
+  const assignmentCalls: Array<{ playerId: string; teamId: string | null }> = [];
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.SETUP),
+    createMutationHandlers({
+      onAuthorizedAssignPlayer: (playerId, teamId) => {
+        assignmentCalls.push({ playerId, teamId });
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerAssignPlayer(undefined);
+    socketHarness.triggerAssignPlayer({});
+    socketHarness.triggerAssignPlayer({ hostSecret: "valid-host-secret" });
+    socketHarness.triggerAssignPlayer({
+      hostSecret: "valid-host-secret",
+      playerId: 10,
+      teamId: "team-1"
+    });
+    socketHarness.triggerAssignPlayer({
+      hostSecret: "invalid-host-secret",
+      playerId: "player-1",
+      teamId: "team-1"
+    });
+    socketHarness.triggerAssignPlayer({
+      hostSecret: "valid-host-secret",
+      playerId: "player-1",
+      teamId: null
+    });
+  });
+
+  assert.deepEqual(assignmentCalls, [{ playerId: "player-1", teamId: null }]);
 });

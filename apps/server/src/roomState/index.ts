@@ -36,6 +36,57 @@ export const setRoomStatePlayers = (players: Player[]): RoomState => {
   return getRoomStateSnapshot();
 };
 
+export const createTeam = (name: string): RoomState => {
+  const normalizedName = name.trim();
+
+  if (normalizedName.length === 0) {
+    return getRoomStateSnapshot();
+  }
+
+  const nextTeamIndex = roomState.teams.length + 1;
+  roomState.teams.push({
+    id: `team-${nextTeamIndex}`,
+    name: normalizedName,
+    playerIds: [],
+    totalScore: 0
+  });
+
+  return getRoomStateSnapshot();
+};
+
+export const assignPlayerToTeam = (
+  playerId: string,
+  teamId: string | null
+): RoomState => {
+  const playerExists = roomState.players.some((player) => player.id === playerId);
+
+  if (!playerExists) {
+    return getRoomStateSnapshot();
+  }
+
+  if (teamId !== null && !roomState.teams.some((team) => team.id === teamId)) {
+    return getRoomStateSnapshot();
+  }
+
+  for (const team of roomState.teams) {
+    team.playerIds = team.playerIds.filter((id) => id !== playerId);
+  }
+
+  if (teamId === null) {
+    return getRoomStateSnapshot();
+  }
+
+  const targetTeam = roomState.teams.find((team) => team.id === teamId);
+
+  if (!targetTeam) {
+    return getRoomStateSnapshot();
+  }
+
+  targetTeam.playerIds.push(playerId);
+
+  return getRoomStateSnapshot();
+};
+
 export const advanceRoomStatePhase = (): RoomState => {
   const previousPhase = roomState.phase;
   const nextPhase = getNextPhase(previousPhase);

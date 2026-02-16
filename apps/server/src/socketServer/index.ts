@@ -12,6 +12,8 @@ import type {
 } from "../socketContracts/index.js";
 import {
   advanceRoomStatePhase,
+  assignPlayerToTeam,
+  createTeam,
   getRoomStateSnapshot
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
@@ -60,9 +62,19 @@ export const attachSocketServer = (
     registerRoomStateHandlers(
       socket,
       getRoomStateSnapshot,
-      () => {
-        const updatedSnapshot = advanceRoomStatePhase();
-        socketServer.emit("server:stateSnapshot", updatedSnapshot);
+      {
+        onAuthorizedNextPhase: () => {
+          const updatedSnapshot = advanceRoomStatePhase();
+          socketServer.emit("server:stateSnapshot", updatedSnapshot);
+        },
+        onAuthorizedCreateTeam: (name) => {
+          const updatedSnapshot = createTeam(name);
+          socketServer.emit("server:stateSnapshot", updatedSnapshot);
+        },
+        onAuthorizedAssignPlayer: (playerId, teamId) => {
+          const updatedSnapshot = assignPlayerToTeam(playerId, teamId);
+          socketServer.emit("server:stateSnapshot", updatedSnapshot);
+        }
       },
       socketClientRole === CLIENT_ROLES.HOST,
       {
