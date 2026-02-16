@@ -10,20 +10,24 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] 0.2 Basic Server
-  - Branch: `phase-0-2-basic-server`
-  - PR: [#2](https://github.com/BradleyExton/wing-night/pull/2)
-  - Notes: implementing Express + `GET /health`
+- [-] 0.3 Basic Client
+  - Branch: `phase-0-3-basic-client`
+  - PR: [#3](https://github.com/BradleyExton/wing-night/pull/3)
+  - Notes: implementing `/host` + `/display` placeholders
 
 Completed:
+- [x] 0.2 Basic Server
+  - Branch: `phase-0-2-basic-server`
+  - PR: [#2](https://github.com/BradleyExton/wing-night/pull/2)
+  - Merge commit: `ba8d94d`
 - [x] 0.1 Initialize Monorepo
   - Branch: `phase-0-1-monorepo-init`
   - PR: [#1](https://github.com/BradleyExton/wing-night/pull/1)
   - Merge commit: `26615d9`
 
 Backlog status:
-- [-] 0.2 Basic Server
-- [ ] 0.3 Basic Client
+- [x] 0.2 Basic Server
+- [-] 0.3 Basic Client
 - [ ] 1.1 Define Core Types
 - [ ] 1.2 Define Socket Event Contracts
 - [ ] 1.3 In-Memory RoomState
