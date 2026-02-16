@@ -2,6 +2,49 @@
 
 Wing Night -- Codex-First Build Plan
 
+## Execution Tracker
+
+Status keys:
+- [ ] Not started
+- [-] In progress (branch/PR open)
+- [x] Merged to main
+
+Current in-progress work:
+- [-] 0.1 Initialize Monorepo
+  - Branch: `phase-0-1-monorepo-init`
+  - PR: [#1](https://github.com/BradleyExton/wing-night/pull/1)
+  - Notes: pending merge to `main`
+
+Backlog status:
+- [ ] 0.2 Basic Server
+- [ ] 0.3 Basic Client
+- [ ] 1.1 Define Core Types
+- [ ] 1.2 Define Socket Event Contracts
+- [ ] 1.3 In-Memory RoomState
+- [ ] 2.1 Socket Connection
+- [ ] 2.2 Rehydrate on Refresh
+- [ ] 2.3 Host Mutation Protection
+- [ ] 3.1 Phase Transition Logic
+- [ ] 3.2 Host Next Phase Button
+- [ ] 4.1 Content Loader
+- [ ] 4.2 Team Creation UI
+- [ ] 4.3 Lock Teams on Start
+- [ ] 5.1 Load gameConfig
+- [ ] 5.2 Round Scheduling
+- [ ] 6.1 Wing Participation Recording
+- [ ] 6.2 Apply Points in ROUND_RESULTS
+- [ ] 7.1 Trivia Content Loader
+- [ ] 7.2 Turn-Based Trivia Logic
+- [ ] 7.3 PASS_AND_PLAY Mode
+- [ ] 8.1 Server-Based Timer
+- [ ] 8.2 Display Countdown Render
+- [ ] 9.1 Playwright Host/Display Sync
+- [ ] 9.2 Playwright Refresh Rehydrate
+- [ ] 10.1 Manual Round Escape Hatch
+- [ ] 10.2 Score Override UI
+- [ ] 10.3 Game Reset Flow
+- [ ] 10.4 Basic Error Screen for Invalid Content
+
 This roadmap is optimized for: - 4 hours per week - Small, verifiable
 tasks - Codex execution loops - Stable incremental progress
 
