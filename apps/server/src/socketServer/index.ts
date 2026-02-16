@@ -61,7 +61,8 @@ export const attachSocketServer = (
       socket,
       getRoomStateSnapshot,
       () => {
-        advanceRoomStatePhase();
+        const updatedSnapshot = advanceRoomStatePhase();
+        socketServer.emit("server:stateSnapshot", updatedSnapshot);
       },
       socketClientRole === CLIENT_ROLES.HOST,
       {

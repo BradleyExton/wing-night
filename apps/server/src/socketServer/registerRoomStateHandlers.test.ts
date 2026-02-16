@@ -204,21 +204,19 @@ test("ignores unauthorized game:nextPhase requests", () => {
   assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
 });
 
-test("runs authorized next phase callback and emits updated snapshot", () => {
+test("runs authorized next phase callback without per-socket snapshot emit", () => {
   const socketHarness = createSocketHarness();
   const initialState = buildRoomState(Phase.SETUP);
   const advancedState = buildRoomState(Phase.INTRO, 1);
-  let snapshotReads = 0;
+  const broadcastSnapshots: RoomState[] = [];
   let authorizedCallCount = 0;
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => {
-      snapshotReads += 1;
-      return snapshotReads === 1 ? initialState : advancedState;
-    },
+    () => initialState,
     () => {
       authorizedCallCount += 1;
+      broadcastSnapshots.push(advancedState);
     },
     true,
     hostAuth
@@ -227,7 +225,7 @@ test("runs authorized next phase callback and emits updated snapshot", () => {
   socketHarness.triggerNextPhase({ hostSecret: "valid-host-secret" });
 
   assert.equal(authorizedCallCount, 1);
-  assert.equal(socketHarness.emittedSnapshots.length, 2);
+  assert.equal(socketHarness.emittedSnapshots.length, 1);
   assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
-  assert.deepEqual(socketHarness.emittedSnapshots[1], advancedState);
+  assert.deepEqual(broadcastSnapshots, [advancedState]);
 });
