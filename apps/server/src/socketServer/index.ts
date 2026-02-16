@@ -11,11 +11,17 @@ import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js"
 export const attachSocketServer = (
   httpServer: HttpServer
 ): Server<IncomingSocketEvents, OutgoingSocketEvents> => {
+  const configuredCorsOrigin = process.env.SOCKET_IO_CORS_ORIGIN;
+  const corsOrigin =
+    configuredCorsOrigin && configuredCorsOrigin.trim().length > 0
+      ? configuredCorsOrigin.trim()
+      : true;
+
   const socketServer = new Server<IncomingSocketEvents, OutgoingSocketEvents>(
     httpServer,
     {
       cors: {
-        origin: true,
+        origin: corsOrigin,
         credentials: true
       }
     }

@@ -9,6 +9,8 @@ export const createInitialRoomState = (): RoomState => {
   };
 };
 
+// This module-scoped state is intentionally single-process for the MVP.
+// If the server is scaled across workers/processes, migrate to shared storage.
 const roomState = createInitialRoomState();
 
 export const getRoomStateSnapshot = (): RoomState => {
