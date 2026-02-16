@@ -10,7 +10,10 @@ import type {
   IncomingSocketEvents,
   OutgoingSocketEvents
 } from "../socketContracts/index.js";
-import { getRoomStateSnapshot } from "../roomState/index.js";
+import {
+  advanceRoomStatePhase,
+  getRoomStateSnapshot
+} from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
@@ -58,7 +61,7 @@ export const attachSocketServer = (
       socket,
       getRoomStateSnapshot,
       () => {
-        // Phase mutation wiring is added in task 3.1.
+        advanceRoomStatePhase();
       },
       socketClientRole === CLIENT_ROLES.HOST,
       {
