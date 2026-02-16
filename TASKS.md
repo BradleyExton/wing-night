@@ -14,6 +14,10 @@ Current in-progress work:
   - Branch: `phase-0-5-ci-pr-checks`
   - PR: [#7](https://github.com/BradleyExton/wing-night/pull/7)
   - Notes: add deterministic Node 22 PR workflow for lint/test/typecheck/build
+- [-] Realtime foundation bundle (`1.3`, `2.1`, `2.2`)
+  - Branch: `phase-realtime-foundation-1-3-2-1-2-2`
+  - PR: [#8](https://github.com/BradleyExton/wing-night/pull/8)
+  - Notes: in-memory RoomState + socket connect snapshot + refresh rehydrate
 
 Completed:
 - [x] 1.2 Define Socket Event Contracts
@@ -43,9 +47,9 @@ Backlog status:
 - [-] 0.5 CI PR Checks (GitHub Actions)
 - [x] 1.1 Define Core Types
 - [x] 1.2 Define Socket Event Contracts
-- [ ] 1.3 In-Memory RoomState
-- [ ] 2.1 Socket Connection
-- [ ] 2.2 Rehydrate on Refresh
+- [-] 1.3 In-Memory RoomState
+- [-] 2.1 Socket Connection
+- [-] 2.2 Rehydrate on Refresh
 - [ ] 2.3 Host Mutation Protection
 - [ ] 3.1 Phase Transition Logic
 - [ ] 3.2 Host Next Phase Button

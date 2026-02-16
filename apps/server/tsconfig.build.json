@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@wingnight/shared": ["../../packages/shared/dist/index.d.ts"]
+    }
+  }
+}
