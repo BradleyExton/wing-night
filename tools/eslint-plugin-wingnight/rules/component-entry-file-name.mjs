@@ -1,7 +1,7 @@
 const normalize = (filename) => filename.replace(/\\/g, "/");
 
 const COMPONENT_ENTRY_FILE_PATTERN =
-  /\/apps\/client\/src\/components\/.+\/index\.tsx$/;
+  /\/apps\/client\/src\/components\/.+\/index(?:\.test)?\.tsx$/;
 
 export default {
   meta: {
@@ -13,7 +13,7 @@ export default {
     schema: [],
     messages: {
       mustUseIndexTsx:
-        "Component entrypoint files must be named index.tsx in component folders."
+        "Component files in component folders must be named index.tsx or index.test.tsx."
     }
   },
   create(context) {

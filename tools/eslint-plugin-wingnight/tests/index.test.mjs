@@ -117,6 +117,10 @@ test("component-entry-file-name", () => {
       {
         filename: "/repo/apps/client/src/components/Example/index.tsx",
         code: "export const Example = () => null;"
+      },
+      {
+        filename: "/repo/apps/client/src/components/Example/index.test.tsx",
+        code: "export const ExampleTest = () => null;"
       }
     ],
     invalid: [
