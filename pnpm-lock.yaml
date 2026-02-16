@@ -66,6 +66,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@wingnight/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       express:
         specifier: ^4.21.2
         version: 4.22.1
