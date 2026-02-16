@@ -6,6 +6,7 @@ import { HostPlaceholder } from "./components/HostPlaceholder";
 import { RouteNotFound } from "./components/RouteNotFound";
 import { roomSocket } from "./socket/createRoomSocket";
 import { saveHostSecret } from "./utils/hostSecretStorage";
+import { requestNextPhase } from "./utils/requestNextPhase";
 import { resolveClientRoute } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
@@ -26,8 +27,14 @@ export const App = (): JSX.Element => {
     return wireHostControlClaim(roomSocket, saveHostSecret);
   }, [route]);
 
+  const handleNextPhase = (): void => {
+    requestNextPhase(roomSocket, () => {
+      roomSocket.emit("host:claimControl");
+    });
+  };
+
   if (route === "HOST") {
-    return <HostPlaceholder />;
+    return <HostPlaceholder onNextPhase={handleNextPhase} />;
   }
 
   if (route === "DISPLAY") {
