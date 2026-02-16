@@ -10,7 +10,18 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- _(none)_
+- [-] 4.3 Lock Teams on Start
+  - Branch: `phase-4-3-lock-teams-on-start`
+  - PR: [#15](https://github.com/BradleyExton/wing-night/pull/15)
+  - Notes: server-authoritative setup lock after `SETUP` + host UI read-only gating
+- [-] 4.2 Team Creation UI
+  - Branch: `phase-4-2-team-creation-ui`
+  - PR: [#14](https://github.com/BradleyExton/wing-night/pull/14)
+  - Notes: host-only setup mutation flow for create/assign with guarded payloads
+- [-] 4.1 Content Loader
+  - Branch: `phase-4-1-content-loader`
+  - PR: [#13](https://github.com/BradleyExton/wing-night/pull/13)
+  - Notes: local-first players loader + strict validation + startup bootstrap
 
 Completed:
 - [x] 3.2 Host Next Phase Button
@@ -66,9 +77,9 @@ Backlog status:
 - [x] 2.3 Host Mutation Protection
 - [x] 3.1 Phase Transition Logic
 - [x] 3.2 Host Next Phase Button
-- [ ] 4.1 Content Loader
-- [ ] 4.2 Team Creation UI
-- [ ] 4.3 Lock Teams on Start
+- [-] 4.1 Content Loader
+- [-] 4.2 Team Creation UI
+- [-] 4.3 Lock Teams on Start
 - [ ] 5.1 Load gameConfig
 - [ ] 5.2 Round Scheduling
 - [ ] 6.1 Wing Participation Recording
