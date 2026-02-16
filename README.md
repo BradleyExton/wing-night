@@ -150,6 +150,10 @@ Up", "sauce": "Frank's", "pointsPerPlayer": 2, "minigame": "TRIVIA" }
 
 # 🧪 Testing
 
+Lint checks:
+
+pnpm lint
+
 Unit tests:
 
 pnpm test
