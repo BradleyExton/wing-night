@@ -181,8 +181,11 @@ Commands executed in CI:
 - `pnpm typecheck`
 - `pnpm build`
 
-Required status check for branch protection:
-- `PR Checks / verify`
+Required status checks for branch protection:
+- `PR Checks / lint`
+- `PR Checks / test`
+- `PR Checks / typecheck`
+- `PR Checks / build`
 
 ------------------------------------------------------------------------
 
