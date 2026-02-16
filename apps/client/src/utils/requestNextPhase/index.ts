@@ -14,11 +14,13 @@ type NextPhaseSocket = Pick<
 
 export const requestNextPhase = (
   socket: NextPhaseSocket,
+  onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
   const hostSecret = getHostSecret();
 
   if (!hostSecret) {
+    onMissingHostSecret?.();
     return false;
   }
 

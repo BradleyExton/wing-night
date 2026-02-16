@@ -28,7 +28,9 @@ export const App = (): JSX.Element => {
   }, [route]);
 
   const handleNextPhase = (): void => {
-    requestNextPhase(roomSocket);
+    requestNextPhase(roomSocket, () => {
+      roomSocket.emit("host:claimControl");
+    });
   };
 
   if (route === "HOST") {
