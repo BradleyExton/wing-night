@@ -1,4 +1,4 @@
-import { Phase, type Player, type RoomState, type Team } from "../index.js";
+import { type Phase, type Player, type RoomState, type Team } from "../index.js";
 
 type IsAssignable<From, To> = From extends To ? true : false;
 type Assert<T extends true> = T;
