@@ -12,7 +12,7 @@ Status keys:
 Current in-progress work:
 - [-] 0.2 Basic Server
   - Branch: `phase-0-2-basic-server`
-  - PR: pending
+  - PR: [#2](https://github.com/BradleyExton/wing-night/pull/2)
   - Notes: implementing Express + `GET /health`
 
 Completed:
