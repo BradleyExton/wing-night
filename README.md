@@ -90,7 +90,8 @@ pnpm dev
 
 Or individually:
 
-pnpm --filter @wingnight/server dev pnpm --filter @wingnight/client dev
+pnpm --filter @wingnight/server dev
+pnpm --filter @wingnight/client dev
 
 5)  Find your local IP address.
 

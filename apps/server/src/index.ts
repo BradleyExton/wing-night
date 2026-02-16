@@ -8,6 +8,11 @@ const server = createServer((_request, response) => {
   response.end("Wing Night server stub\n");
 });
 
-server.listen(port, () => {
-  console.log(`Wing Night server stub listening on http://localhost:${port}`);
-});
+server
+  .listen(port, () => {
+    console.log(`Wing Night server stub listening on http://localhost:${port}`);
+  })
+  .on("error", (error) => {
+    console.error("Failed to start Wing Night server stub:", error);
+    process.exit(1);
+  });
