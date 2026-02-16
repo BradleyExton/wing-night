@@ -12,7 +12,7 @@ Status keys:
 Current in-progress work:
 - [-] 2.3 Host Mutation Protection
   - Branch: `phase-2-3-host-mutation-protection`
-  - PR: _(pending)_
+  - PR: [#9](https://github.com/BradleyExton/wing-night/pull/9)
   - Notes: server-issued host secret claim flow + guarded mutation payload checks
 - [-] 0.5 CI PR Checks (GitHub Actions)
   - Branch: `phase-0-5-ci-pr-checks`
