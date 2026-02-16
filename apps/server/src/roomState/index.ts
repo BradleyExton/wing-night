@@ -16,10 +16,7 @@ export const createInitialRoomState = (): RoomState => {
 const roomState = createInitialRoomState();
 
 const overwriteRoomState = (nextState: RoomState): void => {
-  roomState.phase = nextState.phase;
-  roomState.currentRound = nextState.currentRound;
-  roomState.players = nextState.players;
-  roomState.teams = nextState.teams;
+  Object.assign(roomState, nextState);
 };
 
 export const getRoomStateSnapshot = (): RoomState => {

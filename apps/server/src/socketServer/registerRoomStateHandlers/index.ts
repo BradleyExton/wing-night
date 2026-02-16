@@ -58,7 +58,6 @@ export const registerRoomStateHandlers = (
     }
 
     onAuthorizedNextPhase();
-    emitSnapshot();
   };
 
   emitSnapshot();

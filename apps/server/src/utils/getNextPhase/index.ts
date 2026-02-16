@@ -7,6 +7,7 @@ const phaseTransitionMap: Record<Phase, Phase> = {
   [Phase.EATING]: Phase.MINIGAME_INTRO,
   [Phase.MINIGAME_INTRO]: Phase.MINIGAME_PLAY,
   [Phase.MINIGAME_PLAY]: Phase.ROUND_RESULTS,
+  // TODO(task-5.2): transition to ROUND_INTRO when additional scheduled rounds remain.
   [Phase.ROUND_RESULTS]: Phase.FINAL_RESULTS,
   [Phase.FINAL_RESULTS]: Phase.FINAL_RESULTS
 };
