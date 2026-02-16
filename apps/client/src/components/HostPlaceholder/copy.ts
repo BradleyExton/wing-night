@@ -12,6 +12,7 @@ export const hostPlaceholderCopy = {
   playersSectionTitle: hostCopy.playersSectionTitle,
   teamsSectionTitle: hostCopy.teamsSectionTitle,
   loadingStateLabel: hostCopy.loadingStateLabel,
+  setupLockedLabel: hostCopy.setupLockedLabel,
   unassignedOptionLabel: hostCopy.unassignedOptionLabel,
   assignmentSelectLabel: hostCopy.assignmentSelectLabel,
   noPlayersLabel: hostCopy.noPlayersLabel,

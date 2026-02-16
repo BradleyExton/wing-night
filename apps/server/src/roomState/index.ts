@@ -37,6 +37,10 @@ export const setRoomStatePlayers = (players: Player[]): RoomState => {
 };
 
 export const createTeam = (name: string): RoomState => {
+  if (roomState.phase !== Phase.SETUP) {
+    return getRoomStateSnapshot();
+  }
+
   const normalizedName = name.trim();
 
   if (normalizedName.length === 0) {
@@ -58,6 +62,10 @@ export const assignPlayerToTeam = (
   playerId: string,
   teamId: string | null
 ): RoomState => {
+  if (roomState.phase !== Phase.SETUP) {
+    return getRoomStateSnapshot();
+  }
+
   const playerExists = roomState.players.some((player) => player.id === playerId);
 
   if (!playerExists) {

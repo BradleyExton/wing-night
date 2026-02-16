@@ -176,3 +176,29 @@ test("assignPlayerToTeam ignores unknown players and unknown teams", () => {
 
   assert.deepEqual(snapshot.teams[0].playerIds, []);
 });
+
+test("createTeam is locked after leaving setup", () => {
+  resetRoomState();
+  advanceRoomStatePhase();
+
+  createTeam("Team Alpha");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.INTRO);
+  assert.equal(snapshot.teams.length, 0);
+});
+
+test("assignPlayerToTeam is locked after leaving setup", () => {
+  resetRoomState();
+  setRoomStatePlayers([{ id: "player-1", name: "Player One" }]);
+  createTeam("Team Alpha");
+  advanceRoomStatePhase();
+
+  assignPlayerToTeam("player-1", "team-1");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.INTRO);
+  assert.deepEqual(snapshot.teams[0].playerIds, []);
+});

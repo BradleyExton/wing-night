@@ -11,6 +11,7 @@ export const hostCopy = {
   playersSectionTitle: "Players",
   teamsSectionTitle: "Teams",
   loadingStateLabel: "Waiting for room state...",
+  setupLockedLabel: "Team setup is locked after the game starts.",
   unassignedOptionLabel: "Unassigned",
   assignmentSelectLabel: (playerName: string): string =>
     `Assign ${playerName} to a team`,

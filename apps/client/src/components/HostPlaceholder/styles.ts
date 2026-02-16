@@ -23,6 +23,9 @@ export const sectionHeadingClassName = "m-0 text-xl font-semibold text-white";
 
 export const sectionDescriptionClassName = "mt-2 text-sm text-white/75";
 
+export const lockNoticeClassName =
+  "mt-3 text-sm font-medium text-[#fbbf24]";
+
 export const teamCreateFormClassName = "mt-4 flex flex-wrap items-end gap-3";
 
 export const teamInputGroupClassName = "flex min-w-[220px] flex-1 flex-col gap-2";
