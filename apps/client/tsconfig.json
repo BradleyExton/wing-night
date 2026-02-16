@@ -5,7 +5,11 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "types": ["vite/client", "node"],
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@wingnight/shared": ["../../packages/shared/src/index.ts"]
+    }
   },
   "include": ["src"]
 }
