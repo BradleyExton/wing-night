@@ -14,6 +14,10 @@ Current in-progress work:
   - Branch: `phase-1-2-socket-contracts`
   - PR: [#5](https://github.com/BradleyExton/wing-night/pull/5)
   - Notes: adding shared socket event maps + app compile wiring
+- [-] Realtime foundation bundle (`1.3`, `2.1`, `2.2`)
+  - Branch: `phase-realtime-foundation-1-3-2-1-2-2`
+  - PR: _(pending)_
+  - Notes: in-memory RoomState + socket connect snapshot + refresh rehydrate
 
 Completed:
 - [x] 1.1 Define Core Types
@@ -38,9 +42,9 @@ Backlog status:
 - [x] 0.3 Basic Client
 - [x] 1.1 Define Core Types
 - [-] 1.2 Define Socket Event Contracts
-- [ ] 1.3 In-Memory RoomState
-- [ ] 2.1 Socket Connection
-- [ ] 2.2 Rehydrate on Refresh
+- [-] 1.3 In-Memory RoomState
+- [-] 2.1 Socket Connection
+- [-] 2.2 Rehydrate on Refresh
 - [ ] 2.3 Host Mutation Protection
 - [ ] 3.1 Phase Transition Logic
 - [ ] 3.2 Host Next Phase Button
