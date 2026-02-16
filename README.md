@@ -70,11 +70,21 @@ State: - In-memory authoritative server state - No database in MVP
 
 # 🚀 Development Setup
 
-1)  Install dependencies:
+1)  Use Node 22:
+
+nvm install 22
+nvm use 22
+
+2)  Enable Corepack and pnpm:
+
+corepack enable
+corepack prepare pnpm@10 --activate
+
+3)  Install dependencies:
 
 pnpm install
 
-2)  Start development:
+4)  Start development:
 
 pnpm dev
 
@@ -82,9 +92,9 @@ Or individually:
 
 pnpm --filter @wingnight/server dev pnpm --filter @wingnight/client dev
 
-3)  Find your local IP address.
+5)  Find your local IP address.
 
-4)  Open on devices (same Wi-Fi):
+6)  Open on devices (same Wi-Fi):
 
 Host: http://`<your-ip>`{=html}:5173/host
 
