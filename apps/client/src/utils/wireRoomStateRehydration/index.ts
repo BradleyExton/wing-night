@@ -8,7 +8,7 @@ import type {
 
 type RoomStateSocket = Pick<
   Socket<InboundSocketEvents, OutboundSocketEvents>,
-  "on" | "off" | "emit"
+  "on" | "off" | "emit" | "connected"
 >;
 
 export const wireRoomStateRehydration = (
@@ -25,6 +25,9 @@ export const wireRoomStateRehydration = (
 
   socket.on("connect", requestLatestState);
   socket.on("server:stateSnapshot", handleSnapshot);
+  if (socket.connected) {
+    requestLatestState();
+  }
 
   return (): void => {
     socket.off("connect", requestLatestState);
