@@ -1,11 +1,11 @@
-import { containerStyle, headingStyle, subtextStyle } from "./styles";
+import { containerClassName, headingClassName, subtextClassName } from "./styles";
 
 export const HostPlaceholder = (): JSX.Element => {
   return (
-    <main style={containerStyle}>
+    <main className={containerClassName}>
       <div>
-        <h1 style={headingStyle}>Host Route Placeholder</h1>
-        <p style={subtextStyle}>Host controls will render here.</p>
+        <h1 className={headingClassName}>Host Route Placeholder</h1>
+        <p className={subtextClassName}>Host controls will render here.</p>
       </div>
     </main>
   );

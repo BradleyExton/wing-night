@@ -1,11 +1,11 @@
-import { containerStyle, headingStyle, subtextStyle } from "./styles";
+import { containerClassName, headingClassName, subtextClassName } from "./styles";
 
 export const DisplayPlaceholder = (): JSX.Element => {
   return (
-    <main style={containerStyle}>
+    <main className={containerClassName}>
       <div>
-        <h1 style={headingStyle}>Display Route Placeholder</h1>
-        <p style={subtextStyle}>Display view will render here.</p>
+        <h1 className={headingClassName}>Display Route Placeholder</h1>
+        <p className={subtextClassName}>Display view will render here.</p>
       </div>
     </main>
   );

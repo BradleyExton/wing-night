@@ -1,21 +1,6 @@
-import type { CSSProperties } from "react";
+export const containerClassName =
+  "min-h-[100dvh] grid place-items-center p-6 bg-[#121212] text-white text-center";
 
-export const containerStyle: CSSProperties = {
-  minHeight: "100dvh",
-  display: "grid",
-  placeItems: "center",
-  padding: "24px",
-  backgroundColor: "#121212",
-  color: "#ffffff",
-  textAlign: "center"
-};
+export const headingClassName = "m-0 text-3xl font-bold";
 
-export const headingStyle: CSSProperties = {
-  fontSize: "2rem",
-  margin: 0
-};
-
-export const subtextStyle: CSSProperties = {
-  marginTop: "12px",
-  opacity: 0.9
-};
+export const subtextClassName = "mt-3 text-base text-white/90";
