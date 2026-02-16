@@ -10,12 +10,20 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] 0.3 Basic Client
-  - Branch: `phase-0-3-basic-client`
-  - PR: [#3](https://github.com/BradleyExton/wing-night/pull/3)
-  - Notes: implementing `/host` + `/display` placeholders
+- [-] 1.2 Define Socket Event Contracts
+  - Branch: `phase-1-2-socket-contracts`
+  - PR: [#5](https://github.com/BradleyExton/wing-night/pull/5)
+  - Notes: adding shared socket event maps + app compile wiring
 
 Completed:
+- [x] 1.1 Define Core Types
+  - Branch: `phase-1-1-core-types`
+  - PR: [#4](https://github.com/BradleyExton/wing-night/pull/4)
+  - Merge commit: `5a40199`
+- [x] 0.3 Basic Client
+  - Branch: `phase-0-3-basic-client`
+  - PR: [#3](https://github.com/BradleyExton/wing-night/pull/3)
+  - Merge commit: `cf1e70d`
 - [x] 0.2 Basic Server
   - Branch: `phase-0-2-basic-server`
   - PR: [#2](https://github.com/BradleyExton/wing-night/pull/2)
@@ -27,9 +35,9 @@ Completed:
 
 Backlog status:
 - [x] 0.2 Basic Server
-- [-] 0.3 Basic Client
-- [ ] 1.1 Define Core Types
-- [ ] 1.2 Define Socket Event Contracts
+- [x] 0.3 Basic Client
+- [x] 1.1 Define Core Types
+- [-] 1.2 Define Socket Event Contracts
 - [ ] 1.3 In-Memory RoomState
 - [ ] 2.1 Socket Connection
 - [ ] 2.2 Rehydrate on Refresh
