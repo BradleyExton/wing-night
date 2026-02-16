@@ -10,28 +10,29 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] 3.2 Host Next Phase Button
-  - Branch: `phase-3-2-host-next-phase-button`
-  - PR: _(pending)_
-  - Notes: host-only next phase control wiring + UI trigger payload emit
-- [-] 3.1 Phase Transition Logic
-  - Branch: `phase-3-1-phase-transition-logic`
-  - PR: [#10](https://github.com/BradleyExton/wing-night/pull/10)
-  - Notes: deterministic reducer-like phase sequencing + room state mutator wiring
-- [-] 2.3 Host Mutation Protection
-  - Branch: `phase-2-3-host-mutation-protection`
-  - PR: [#9](https://github.com/BradleyExton/wing-night/pull/9)
-  - Notes: server-issued host secret claim flow + guarded mutation payload checks
-- [-] 0.5 CI PR Checks (GitHub Actions)
-  - Branch: `phase-0-5-ci-pr-checks`
-  - PR: [#7](https://github.com/BradleyExton/wing-night/pull/7)
-  - Notes: add deterministic Node 22 PR workflow for lint/test/typecheck/build
-- [-] Realtime foundation bundle (`1.3`, `2.1`, `2.2`)
-  - Branch: `phase-realtime-foundation-1-3-2-1-2-2`
-  - PR: [#8](https://github.com/BradleyExton/wing-night/pull/8)
-  - Notes: in-memory RoomState + socket connect snapshot + refresh rehydrate
+- _(none)_
 
 Completed:
+- [x] 3.2 Host Next Phase Button
+  - Branch: `phase-3-2-host-next-phase-button`
+  - PR: [#11](https://github.com/BradleyExton/wing-night/pull/11)
+  - Notes: synced into `main` via `phase-3-mainline-sync`
+- [x] 3.1 Phase Transition Logic
+  - Branch: `phase-3-1-phase-transition-logic`
+  - PR: [#10](https://github.com/BradleyExton/wing-night/pull/10)
+  - Notes: synced into `main` via `phase-3-mainline-sync`
+- [x] 2.3 Host Mutation Protection
+  - Branch: `phase-2-3-host-mutation-protection`
+  - PR: [#9](https://github.com/BradleyExton/wing-night/pull/9)
+  - Merge commit: `fe0d0df`
+- [x] Realtime foundation bundle (`1.3`, `2.1`, `2.2`)
+  - Branch: `phase-realtime-foundation-1-3-2-1-2-2`
+  - PR: [#8](https://github.com/BradleyExton/wing-night/pull/8)
+  - Merge commit: `2a21f5d`
+- [x] 0.5 CI PR Checks (GitHub Actions)
+  - Branch: `phase-0-5-ci-pr-checks`
+  - PR: [#7](https://github.com/BradleyExton/wing-night/pull/7)
+  - Merge commit: `105eb8f`
 - [x] 1.2 Define Socket Event Contracts
   - Branch: `phase-1-2-socket-contracts`
   - PR: [#5](https://github.com/BradleyExton/wing-night/pull/5)
@@ -56,15 +57,15 @@ Completed:
 Backlog status:
 - [x] 0.2 Basic Server
 - [x] 0.3 Basic Client
-- [-] 0.5 CI PR Checks (GitHub Actions)
+- [x] 0.5 CI PR Checks (GitHub Actions)
 - [x] 1.1 Define Core Types
 - [x] 1.2 Define Socket Event Contracts
-- [-] 1.3 In-Memory RoomState
-- [-] 2.1 Socket Connection
-- [-] 2.2 Rehydrate on Refresh
-- [-] 2.3 Host Mutation Protection
-- [-] 3.1 Phase Transition Logic
-- [-] 3.2 Host Next Phase Button
+- [x] 1.3 In-Memory RoomState
+- [x] 2.1 Socket Connection
+- [x] 2.2 Rehydrate on Refresh
+- [x] 2.3 Host Mutation Protection
+- [x] 3.1 Phase Transition Logic
+- [x] 3.2 Host Next Phase Button
 - [ ] 4.1 Content Loader
 - [ ] 4.2 Team Creation UI
 - [ ] 4.3 Lock Teams on Start
