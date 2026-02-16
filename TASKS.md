@@ -10,6 +10,14 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
+- [-] 3.2 Host Next Phase Button
+  - Branch: `phase-3-2-host-next-phase-button`
+  - PR: _(pending)_
+  - Notes: host-only next phase control wiring + UI trigger payload emit
+- [-] 3.1 Phase Transition Logic
+  - Branch: `phase-3-1-phase-transition-logic`
+  - PR: [#10](https://github.com/BradleyExton/wing-night/pull/10)
+  - Notes: deterministic reducer-like phase sequencing + room state mutator wiring
 - [-] 2.3 Host Mutation Protection
   - Branch: `phase-2-3-host-mutation-protection`
   - PR: [#9](https://github.com/BradleyExton/wing-night/pull/9)
@@ -55,8 +63,8 @@ Backlog status:
 - [-] 2.1 Socket Connection
 - [-] 2.2 Rehydrate on Refresh
 - [-] 2.3 Host Mutation Protection
-- [ ] 3.1 Phase Transition Logic
-- [ ] 3.2 Host Next Phase Button
+- [-] 3.1 Phase Transition Logic
+- [-] 3.2 Host Next Phase Button
 - [ ] 4.1 Content Loader
 - [ ] 4.2 Team Creation UI
 - [ ] 4.3 Lock Teams on Start
