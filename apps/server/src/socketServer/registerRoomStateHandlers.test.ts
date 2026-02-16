@@ -13,7 +13,7 @@ type SocketHarness = {
   emittedSecretPayloads: HostSecretPayload[];
   triggerRequestState: () => void;
   triggerHostClaim: () => void;
-  triggerNextPhase: (payload: HostSecretPayload) => void;
+  triggerNextPhase: (payload: unknown) => void;
 };
 
 const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
@@ -35,7 +35,7 @@ const createSocketHarness = (): SocketHarness => {
   let hostClaimHandler = (): void => {
     assert.fail("Expected host:claimControl handler to be registered.");
   };
-  let nextPhaseHandler = (_payload: HostSecretPayload): void => {
+  let nextPhaseHandler = (_payload: unknown): void => {
     assert.fail("Expected game:nextPhase handler to be registered.");
   };
 
@@ -53,7 +53,7 @@ const createSocketHarness = (): SocketHarness => {
     },
     on: (
       event: "client:requestState" | "host:claimControl" | "game:nextPhase",
-      listener: (() => void) | ((payload: HostSecretPayload) => void)
+      listener: (() => void) | ((payload: unknown) => void)
     ): void => {
       if (event === "client:requestState") {
         requestStateHandler = listener as () => void;
@@ -65,7 +65,7 @@ const createSocketHarness = (): SocketHarness => {
         return;
       }
 
-      nextPhaseHandler = listener as (payload: HostSecretPayload) => void;
+      nextPhaseHandler = listener as (payload: unknown) => void;
     }
   } as unknown as SocketUnderTest;
 
@@ -79,10 +79,15 @@ const createSocketHarness = (): SocketHarness => {
     triggerHostClaim: (): void => {
       hostClaimHandler();
     },
-    triggerNextPhase: (payload: HostSecretPayload): void => {
+    triggerNextPhase: (payload: unknown): void => {
       nextPhaseHandler(payload);
     }
   };
+};
+
+const hostAuth = {
+  issueHostSecret: () => ({ hostSecret: "host-secret" }),
+  isValidHostSecret: (hostSecret: string) => hostSecret === "valid-host-secret"
 };
 
 test("emits state snapshot immediately and on client request", () => {
@@ -95,10 +100,8 @@ test("emits state snapshot immediately and on client request", () => {
     () => {
       assert.fail("next phase callback should not be called in this test");
     },
-    {
-      issueHostSecret: () => ({ hostSecret: "host-secret" }),
-      isValidHostSecret: () => false
-    }
+    true,
+    hostAuth
   );
 
   assert.equal(socketHarness.emittedSnapshots.length, 1);
@@ -110,9 +113,8 @@ test("emits state snapshot immediately and on client request", () => {
   assert.deepEqual(socketHarness.emittedSnapshots[1], firstState);
 });
 
-test("emits host secret when host claims control", () => {
+test("emits host secret when host claims control and socket is authorized", () => {
   const socketHarness = createSocketHarness();
-  const issuedPayload: HostSecretPayload = { hostSecret: "issued-host-secret" };
 
   registerRoomStateHandlers(
     socketHarness.socket,
@@ -120,15 +122,64 @@ test("emits host secret when host claims control", () => {
     () => {
       assert.fail("next phase callback should not be called in this test");
     },
+    true,
     {
-      issueHostSecret: () => issuedPayload,
+      issueHostSecret: () => ({ hostSecret: "issued-host-secret" }),
       isValidHostSecret: () => false
     }
   );
 
   socketHarness.triggerHostClaim();
 
-  assert.deepEqual(socketHarness.emittedSecretPayloads, [issuedPayload]);
+  assert.deepEqual(socketHarness.emittedSecretPayloads, [
+    { hostSecret: "issued-host-secret" }
+  ]);
+});
+
+test("does not emit host secret when socket is not allowed to claim control", () => {
+  const socketHarness = createSocketHarness();
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.SETUP),
+    () => {
+      assert.fail("next phase callback should not be called in this test");
+    },
+    false,
+    hostAuth
+  );
+
+  socketHarness.triggerHostClaim();
+
+  assert.equal(socketHarness.emittedSecretPayloads.length, 0);
+});
+
+test("ignores malformed game:nextPhase payloads", () => {
+  const socketHarness = createSocketHarness();
+  const initialState = buildRoomState(Phase.SETUP);
+  let authorizedCallCount = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => initialState,
+    () => {
+      authorizedCallCount += 1;
+    },
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerNextPhase(undefined);
+    socketHarness.triggerNextPhase(null);
+    socketHarness.triggerNextPhase({});
+    socketHarness.triggerNextPhase({ hostSecret: 1234 });
+    socketHarness.triggerNextPhase("not-an-object");
+  });
+
+  assert.equal(authorizedCallCount, 0);
+  assert.equal(socketHarness.emittedSnapshots.length, 1);
+  assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
 });
 
 test("ignores unauthorized game:nextPhase requests", () => {
@@ -142,10 +193,8 @@ test("ignores unauthorized game:nextPhase requests", () => {
     () => {
       authorizedCallCount += 1;
     },
-    {
-      issueHostSecret: () => ({ hostSecret: "host-secret" }),
-      isValidHostSecret: (hostSecret) => hostSecret === "valid-host-secret"
-    }
+    true,
+    hostAuth
   );
 
   socketHarness.triggerNextPhase({ hostSecret: "invalid-host-secret" });
@@ -171,10 +220,8 @@ test("runs authorized next phase callback and emits updated snapshot", () => {
     () => {
       authorizedCallCount += 1;
     },
-    {
-      issueHostSecret: () => ({ hostSecret: "host-secret" }),
-      isValidHostSecret: (hostSecret) => hostSecret === "valid-host-secret"
-    }
+    true,
+    hostAuth
   );
 
   socketHarness.triggerNextPhase({ hostSecret: "valid-host-secret" });
