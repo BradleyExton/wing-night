@@ -5,7 +5,12 @@
     "moduleResolution": "NodeNext",
     "rootDir": "src",
     "outDir": "dist",
-    "noEmit": false
+    "noEmit": false,
+    "baseUrl": ".",
+    "paths": {
+      "@wingnight/shared": ["../../packages/shared/src/index.ts"]
+    }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/socketContracts/**"]
 }
