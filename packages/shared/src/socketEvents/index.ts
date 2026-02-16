@@ -17,4 +17,5 @@ export type ClientToServerEvents = {
 export type ServerToClientEvents = {
   "server:stateSnapshot": (roomState: RoomState) => void;
   "host:secretIssued": (payload: HostSecretPayload) => void;
+  "host:secretInvalid": () => void;
 };

@@ -9,6 +9,7 @@ type RoomStateSocket = {
   emit: {
     (event: "server:stateSnapshot", roomState: RoomState): void;
     (event: "host:secretIssued", payload: HostSecretPayload): void;
+    (event: "host:secretInvalid"): void;
   };
   on: {
     (event: "client:requestState", listener: () => void): void;
@@ -95,6 +96,9 @@ export const registerRoomStateHandlers = (
     }
 
     if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit("host:secretInvalid");
+      }
       return;
     }
 
@@ -107,6 +111,9 @@ export const registerRoomStateHandlers = (
     }
 
     if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit("host:secretInvalid");
+      }
       return;
     }
 
@@ -119,6 +126,9 @@ export const registerRoomStateHandlers = (
     }
 
     if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit("host:secretInvalid");
+      }
       return;
     }
 

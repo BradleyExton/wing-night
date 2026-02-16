@@ -3,10 +3,13 @@ import { Phase, type Player, type RoomState } from "@wingnight/shared";
 import { logPhaseTransition } from "../logger/index.js";
 import { getNextPhase } from "../utils/getNextPhase/index.js";
 
+const DEFAULT_TOTAL_ROUNDS = 3;
+
 export const createInitialRoomState = (): RoomState => {
   return {
     phase: Phase.SETUP,
     currentRound: 0,
+    totalRounds: DEFAULT_TOTAL_ROUNDS,
     players: [],
     teams: []
   };
@@ -95,9 +98,51 @@ export const assignPlayerToTeam = (
   return getRoomStateSnapshot();
 };
 
+const isSetupReadyToStart = (state: RoomState): boolean => {
+  if (state.players.length === 0) {
+    return false;
+  }
+
+  if (state.teams.length < 2) {
+    return false;
+  }
+
+  const playerIds = new Set(state.players.map((player) => player.id));
+  const assignedPlayerIds = new Set<string>();
+
+  for (const team of state.teams) {
+    if (team.playerIds.length === 0) {
+      return false;
+    }
+
+    for (const playerId of team.playerIds) {
+      if (!playerIds.has(playerId)) {
+        return false;
+      }
+
+      if (assignedPlayerIds.has(playerId)) {
+        return false;
+      }
+
+      assignedPlayerIds.add(playerId);
+    }
+  }
+
+  return assignedPlayerIds.size === playerIds.size;
+};
+
 export const advanceRoomStatePhase = (): RoomState => {
   const previousPhase = roomState.phase;
-  const nextPhase = getNextPhase(previousPhase);
+
+  if (previousPhase === Phase.SETUP && !isSetupReadyToStart(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  const nextPhase = getNextPhase(
+    previousPhase,
+    roomState.currentRound,
+    roomState.totalRounds
+  );
 
   roomState.phase = nextPhase;
 
@@ -107,6 +152,10 @@ export const advanceRoomStatePhase = (): RoomState => {
     roomState.currentRound === 0
   ) {
     roomState.currentRound = 1;
+  }
+
+  if (previousPhase === Phase.ROUND_RESULTS && nextPhase === Phase.ROUND_INTRO) {
+    roomState.currentRound += 1;
   }
 
   logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);

@@ -26,6 +26,7 @@ export const wireHostControlClaim = (
   };
 
   socket.on("host:secretIssued", handleHostSecretIssued);
+  socket.on("host:secretInvalid", requestHostControl);
   socket.on("connect", requestHostControl);
 
   if (socket.connected) {
@@ -34,6 +35,7 @@ export const wireHostControlClaim = (
 
   return (): void => {
     socket.off("host:secretIssued", handleHostSecretIssued);
+    socket.off("host:secretInvalid", requestHostControl);
     socket.off("connect", requestHostControl);
   };
 };

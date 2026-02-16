@@ -47,6 +47,10 @@ export type SecretIssuedHostSecretPayloadCheck = Assert<
   Equal<Parameters<ServerToClientEvents["host:secretIssued"]>, [HostSecretPayload]>
 >;
 
+export type SecretInvalidNoArgsCheck = Assert<
+  Equal<Parameters<ServerToClientEvents["host:secretInvalid"]>, []>
+>;
+
 // @ts-expect-error server:stateSnapshot must accept RoomState.
 export type InvalidSnapshotPayloadCheck = Assert<Equal<Parameters<ServerToClientEvents["server:stateSnapshot"]>, [string]>>;
 
@@ -67,3 +71,6 @@ export type InvalidAssignPlayerNoPayloadCheck = Assert<Equal<Parameters<ClientTo
 
 // @ts-expect-error host:secretIssued must emit host secret payload.
 export type InvalidSecretIssuedPayloadCheck = Assert<Equal<Parameters<ServerToClientEvents["host:secretIssued"]>, [string]>>;
+
+// @ts-expect-error host:secretInvalid should not accept arguments.
+export type InvalidSecretInvalidPayloadCheck = Assert<Equal<Parameters<ServerToClientEvents["host:secretInvalid"]>, [string]>>;

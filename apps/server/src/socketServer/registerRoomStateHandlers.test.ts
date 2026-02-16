@@ -12,6 +12,7 @@ type SocketHarness = {
   socket: SocketUnderTest;
   emittedSnapshots: RoomState[];
   emittedSecretPayloads: HostSecretPayload[];
+  invalidSecretEvents: number;
   triggerRequestState: () => void;
   triggerHostClaim: () => void;
   triggerNextPhase: (payload: unknown) => void;
@@ -23,6 +24,7 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
   return {
     phase,
     currentRound,
+    totalRounds: 3,
     players: [],
     teams: []
   };
@@ -31,6 +33,7 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
 const createSocketHarness = (): SocketHarness => {
   const emittedSnapshots: RoomState[] = [];
   const emittedSecretPayloads: HostSecretPayload[] = [];
+  const invalidSecretEvents = { count: 0 };
 
   let requestStateHandler = (): void => {
     assert.fail("Expected client:requestState handler to be registered.");
@@ -50,11 +53,16 @@ const createSocketHarness = (): SocketHarness => {
 
   const socket = {
     emit: (
-      event: "server:stateSnapshot" | "host:secretIssued",
+      event: "server:stateSnapshot" | "host:secretIssued" | "host:secretInvalid",
       payload: RoomState | HostSecretPayload
     ): void => {
       if (event === "server:stateSnapshot") {
         emittedSnapshots.push(payload as RoomState);
+        return;
+      }
+
+      if (event === "host:secretInvalid") {
+        invalidSecretEvents.count += 1;
         return;
       }
 
@@ -97,6 +105,9 @@ const createSocketHarness = (): SocketHarness => {
     socket,
     emittedSnapshots,
     emittedSecretPayloads,
+    get invalidSecretEvents(): number {
+      return invalidSecretEvents.count;
+    },
     triggerRequestState: (): void => {
       requestStateHandler();
     },
@@ -257,6 +268,7 @@ test("ignores unauthorized game:nextPhase requests", () => {
   socketHarness.triggerNextPhase({ hostSecret: "invalid-host-secret" });
 
   assert.equal(authorizedCallCount, 0);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
   assert.equal(socketHarness.emittedSnapshots.length, 1);
   assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
 });
@@ -312,6 +324,7 @@ test("runs authorized create-team callback and ignores unauthorized payloads", (
 
   assert.equal(createTeamCalls, 1);
   assert.equal(createdTeamName, "Team Two");
+  assert.equal(socketHarness.invalidSecretEvents, 1);
 });
 
 test("ignores malformed and unauthorized assign-player payloads", () => {
@@ -352,4 +365,5 @@ test("ignores malformed and unauthorized assign-player payloads", () => {
   });
 
   assert.deepEqual(assignmentCalls, [{ playerId: "player-1", teamId: null }]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
 });
