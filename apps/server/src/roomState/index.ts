@@ -1,5 +1,7 @@
 import { Phase, type RoomState } from "@wingnight/shared";
 
+import { getNextPhase } from "../utils/getNextPhase/index.js";
+
 export const createInitialRoomState = (): RoomState => {
   return {
     phase: Phase.SETUP,
@@ -13,6 +15,36 @@ export const createInitialRoomState = (): RoomState => {
 // If the server is scaled across workers/processes, migrate to shared storage.
 const roomState = createInitialRoomState();
 
+const overwriteRoomState = (nextState: RoomState): void => {
+  roomState.phase = nextState.phase;
+  roomState.currentRound = nextState.currentRound;
+  roomState.players = nextState.players;
+  roomState.teams = nextState.teams;
+};
+
 export const getRoomStateSnapshot = (): RoomState => {
   return structuredClone(roomState);
+};
+
+export const resetRoomState = (): RoomState => {
+  overwriteRoomState(createInitialRoomState());
+
+  return getRoomStateSnapshot();
+};
+
+export const advanceRoomStatePhase = (): RoomState => {
+  const previousPhase = roomState.phase;
+  const nextPhase = getNextPhase(previousPhase);
+
+  roomState.phase = nextPhase;
+
+  if (
+    previousPhase === Phase.INTRO &&
+    nextPhase === Phase.ROUND_INTRO &&
+    roomState.currentRound === 0
+  ) {
+    roomState.currentRound = 1;
+  }
+
+  return getRoomStateSnapshot();
 };

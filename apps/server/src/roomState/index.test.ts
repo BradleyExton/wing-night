@@ -3,7 +3,12 @@ import test from "node:test";
 
 import { Phase } from "@wingnight/shared";
 
-import { createInitialRoomState, getRoomStateSnapshot } from "./index.js";
+import {
+  advanceRoomStatePhase,
+  createInitialRoomState,
+  getRoomStateSnapshot,
+  resetRoomState
+} from "./index.js";
 
 test("createInitialRoomState returns setup defaults", () => {
   assert.deepEqual(createInitialRoomState(), {
@@ -15,10 +20,55 @@ test("createInitialRoomState returns setup defaults", () => {
 });
 
 test("getRoomStateSnapshot returns a safe clone", () => {
+  resetRoomState();
+
   const firstSnapshot = getRoomStateSnapshot();
   firstSnapshot.players.push({ id: "p1", name: "Player One" });
 
   const secondSnapshot = getRoomStateSnapshot();
 
   assert.equal(secondSnapshot.players.length, 0);
+});
+
+test("advanceRoomStatePhase transitions setup to intro", () => {
+  resetRoomState();
+
+  const nextState = advanceRoomStatePhase();
+
+  assert.equal(nextState.phase, Phase.INTRO);
+  assert.equal(nextState.currentRound, 0);
+});
+
+test("advanceRoomStatePhase sets currentRound to 1 on INTRO -> ROUND_INTRO", () => {
+  resetRoomState();
+
+  advanceRoomStatePhase();
+  const nextState = advanceRoomStatePhase();
+
+  assert.equal(nextState.phase, Phase.ROUND_INTRO);
+  assert.equal(nextState.currentRound, 1);
+});
+
+test("advanceRoomStatePhase preserves currentRound after round intro", () => {
+  resetRoomState();
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  const nextState = advanceRoomStatePhase();
+
+  assert.equal(nextState.phase, Phase.EATING);
+  assert.equal(nextState.currentRound, 1);
+});
+
+test("advanceRoomStatePhase is idempotent at FINAL_RESULTS", () => {
+  resetRoomState();
+
+  for (let step = 0; step < 10; step += 1) {
+    advanceRoomStatePhase();
+  }
+
+  const finalSnapshot = getRoomStateSnapshot();
+
+  assert.equal(finalSnapshot.phase, Phase.FINAL_RESULTS);
+  assert.equal(finalSnapshot.currentRound, 1);
 });
