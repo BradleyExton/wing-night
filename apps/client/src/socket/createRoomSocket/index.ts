@@ -8,8 +8,8 @@ import type {
 const resolveSocketServerUrl = (): string => {
   const configuredUrl = import.meta.env.VITE_SOCKET_SERVER_URL;
 
-  if (configuredUrl && configuredUrl.length > 0) {
-    return configuredUrl;
+  if (configuredUrl && configuredUrl.trim().length > 0) {
+    return configuredUrl.trim();
   }
 
   return `${window.location.protocol}//${window.location.hostname}:3000`;

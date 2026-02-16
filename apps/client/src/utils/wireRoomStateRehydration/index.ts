@@ -23,14 +23,12 @@ export const wireRoomStateRehydration = (
     onSnapshot(roomState);
   };
 
-  socket.on("connect", requestLatestState);
   socket.on("server:stateSnapshot", handleSnapshot);
   if (socket.connected) {
     requestLatestState();
   }
 
   return (): void => {
-    socket.off("connect", requestLatestState);
     socket.off("server:stateSnapshot", handleSnapshot);
   };
 };

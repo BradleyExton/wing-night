@@ -9,18 +9,12 @@ import { resolveClientRoute } from "./utils/resolveClientRoute";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 
 export const App = (): JSX.Element => {
-  const [roomState, setRoomState] = useState<RoomState | null>(null);
+  const [, setRoomState] = useState<RoomState | null>(null);
   const route = resolveClientRoute(window.location.pathname);
 
   useEffect(() => {
     return wireRoomStateRehydration(roomSocket, setRoomState);
   }, []);
-
-  useEffect(() => {
-    if (route === "DISPLAY" && roomState) {
-      console.warn("Display received state snapshot", roomState);
-    }
-  }, [roomState, route]);
 
   if (route === "HOST") {
     return <HostPlaceholder />;

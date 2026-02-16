@@ -6,7 +6,6 @@ import { Phase, type RoomState } from "@wingnight/shared";
 import { wireRoomStateRehydration } from "./index";
 
 type RoomStateSocketEvents = {
-  connect: () => void;
   "server:stateSnapshot": (roomState: RoomState) => void;
 };
 type RoomStateSocket = Parameters<typeof wireRoomStateRehydration>[0];
@@ -39,17 +38,8 @@ class MockRoomStateSocket {
     }
   }
 
-  public triggerConnect(): void {
-    this.connected = true;
-    this.handlers.connect?.();
-  }
-
   public triggerSnapshot(roomState: RoomState): void {
     this.handlers["server:stateSnapshot"]?.(roomState);
-  }
-
-  public hasConnectHandler(): boolean {
-    return this.handlers.connect !== undefined;
   }
 
   public hasSnapshotHandler(): boolean {
@@ -68,7 +58,7 @@ test("requests latest state immediately when socket is already connected", () =>
   assert.equal(mockSocket.requestedStateEvents, 1);
 });
 
-test("requests latest state on socket connect", () => {
+test("does not request state while disconnected during initial wiring", () => {
   const mockSocket = new MockRoomStateSocket();
 
   wireRoomStateRehydration(mockSocket as unknown as RoomStateSocket, () => {
@@ -76,9 +66,6 @@ test("requests latest state on socket connect", () => {
   });
 
   assert.equal(mockSocket.requestedStateEvents, 0);
-  mockSocket.triggerConnect();
-
-  assert.equal(mockSocket.requestedStateEvents, 1);
 });
 
 test("forwards server snapshots to callback", () => {
@@ -104,7 +91,7 @@ test("forwards server snapshots to callback", () => {
   assert.deepEqual(receivedSnapshots, [snapshot]);
 });
 
-test("cleanup unregisters connect and snapshot listeners", () => {
+test("cleanup unregisters snapshot listener", () => {
   const mockSocket = new MockRoomStateSocket();
 
   const cleanup = wireRoomStateRehydration(
@@ -114,11 +101,9 @@ test("cleanup unregisters connect and snapshot listeners", () => {
     }
   );
 
-  assert.equal(mockSocket.hasConnectHandler(), true);
   assert.equal(mockSocket.hasSnapshotHandler(), true);
 
   cleanup();
 
-  assert.equal(mockSocket.hasConnectHandler(), false);
   assert.equal(mockSocket.hasSnapshotHandler(), false);
 });

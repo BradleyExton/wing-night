@@ -35,6 +35,8 @@ test("emits state snapshot immediately on registration", () => {
   assert.deepEqual(emittedSnapshots[0], firstState);
   assert.equal(hasRequestStateHandler, true);
   requestStateHandler();
+  assert.equal(emittedSnapshots.length, 2);
+  assert.deepEqual(emittedSnapshots[1], firstState);
 });
 
 test("re-emits latest snapshot when client requests state", () => {
