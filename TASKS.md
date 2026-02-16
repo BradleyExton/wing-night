@@ -12,7 +12,7 @@ Status keys:
 Current in-progress work:
 - [-] 0.5 CI PR Checks (GitHub Actions)
   - Branch: `phase-0-5-ci-pr-checks`
-  - PR: _TBD (will be updated after PR creation)_
+  - PR: [#7](https://github.com/BradleyExton/wing-night/pull/7)
   - Notes: add deterministic Node 22 PR workflow for lint/test/typecheck/build
 
 Completed:
