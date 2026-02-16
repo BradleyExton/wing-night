@@ -7,7 +7,8 @@ import {
   advanceRoomStatePhase,
   createInitialRoomState,
   getRoomStateSnapshot,
-  resetRoomState
+  resetRoomState,
+  setRoomStatePlayers
 } from "./index.js";
 
 test("createInitialRoomState returns setup defaults", () => {
@@ -99,4 +100,18 @@ test("advanceRoomStatePhase logs transition metadata", () => {
     nextPhase: Phase.INTRO,
     currentRound: 0
   });
+});
+
+test("setRoomStatePlayers stores a safe clone of player records", () => {
+  resetRoomState();
+
+  const nextPlayers = [{ id: "player-1", name: "Player One" }];
+  const updatedSnapshot = setRoomStatePlayers(nextPlayers);
+
+  assert.deepEqual(updatedSnapshot.players, nextPlayers);
+
+  nextPlayers[0].name = "Changed Locally";
+  const persistedSnapshot = getRoomStateSnapshot();
+
+  assert.equal(persistedSnapshot.players[0].name, "Player One");
 });
