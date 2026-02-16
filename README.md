@@ -164,6 +164,28 @@ pnpm playwright test
 
 ------------------------------------------------------------------------
 
+# 🤖 CI (PR Checks)
+
+GitHub Actions runs PR checks on every pull request targeting `main`.
+
+Workflow:
+- `.github/workflows/pr-checks.yml`
+- Node: `22`
+- Package manager: `pnpm@10.0.0`
+- Install command: `pnpm install --frozen-lockfile`
+- Concurrency: cancels in-progress runs for the same PR branch
+
+Commands executed in CI:
+- `pnpm lint`
+- `pnpm test`
+- `pnpm typecheck`
+- `pnpm build`
+
+Required status check for branch protection:
+- `PR Checks / verify`
+
+------------------------------------------------------------------------
+
 # 🧠 Development Rules
 
 See AGENTS.md for engineering guardrails.

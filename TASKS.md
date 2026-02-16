@@ -10,12 +10,16 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] 1.2 Define Socket Event Contracts
-  - Branch: `phase-1-2-socket-contracts`
-  - PR: [#5](https://github.com/BradleyExton/wing-night/pull/5)
-  - Notes: adding shared socket event maps + app compile wiring
+- [-] 0.5 CI PR Checks (GitHub Actions)
+  - Branch: `phase-0-5-ci-pr-checks`
+  - PR: _TBD (will be updated after PR creation)_
+  - Notes: add deterministic Node 22 PR workflow for lint/test/typecheck/build
 
 Completed:
+- [x] 1.2 Define Socket Event Contracts
+  - Branch: `phase-1-2-socket-contracts`
+  - PR: [#5](https://github.com/BradleyExton/wing-night/pull/5)
+  - Merge commit: `3f3e5ac`
 - [x] 1.1 Define Core Types
   - Branch: `phase-1-1-core-types`
   - PR: [#4](https://github.com/BradleyExton/wing-night/pull/4)
@@ -36,8 +40,9 @@ Completed:
 Backlog status:
 - [x] 0.2 Basic Server
 - [x] 0.3 Basic Client
+- [-] 0.5 CI PR Checks (GitHub Actions)
 - [x] 1.1 Define Core Types
-- [-] 1.2 Define Socket Event Contracts
+- [x] 1.2 Define Socket Event Contracts
 - [ ] 1.3 In-Memory RoomState
 - [ ] 2.1 Socket Connection
 - [ ] 2.2 Rehydrate on Refresh
@@ -96,6 +101,16 @@ artifact. 3. Include verification steps. 4. End in a working state.
     -   /host
     -   /display Verification:
 -   Both routes render basic placeholder text
+
+## 0.5 CI PR Checks (GitHub Actions)
+
+-   Add GitHub Actions workflow for pull requests to `main`
+-   Use Node 22 + pnpm frozen lockfile install
+-   Run lint, tests, typecheck, and build in a single deterministic job
+-   Configure concurrency cancellation for repeated pushes to the same PR
+Verification:
+-   Open PR to `main` and confirm `PR Checks / verify` runs
+-   Confirm commands: `pnpm lint`, `pnpm test`, `pnpm typecheck`, `pnpm build`
 
 ------------------------------------------------------------------------
 
