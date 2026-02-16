@@ -1,12 +1,31 @@
-import { containerClassName, headingClassName, subtextClassName } from "./styles";
+import {
+  containerClassName,
+  headingClassName,
+  nextPhaseButtonClassName,
+  subtextClassName
+} from "./styles";
 import { hostPlaceholderCopy } from "./copy";
 
-export const HostPlaceholder = (): JSX.Element => {
+type HostPlaceholderProps = {
+  onNextPhase?: () => void;
+};
+
+export const HostPlaceholder = ({
+  onNextPhase
+}: HostPlaceholderProps): JSX.Element => {
   return (
     <main className={containerClassName}>
       <div>
         <h1 className={headingClassName}>{hostPlaceholderCopy.title}</h1>
         <p className={subtextClassName}>{hostPlaceholderCopy.description}</p>
+        <button
+          className={nextPhaseButtonClassName}
+          type="button"
+          onClick={onNextPhase}
+          disabled={onNextPhase === undefined}
+        >
+          {hostPlaceholderCopy.nextPhaseButtonLabel}
+        </button>
       </div>
     </main>
   );
