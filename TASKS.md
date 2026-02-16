@@ -10,6 +10,10 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
+- [-] 2.3 Host Mutation Protection
+  - Branch: `phase-2-3-host-mutation-protection`
+  - PR: _(pending)_
+  - Notes: server-issued host secret claim flow + guarded mutation payload checks
 - [-] 0.5 CI PR Checks (GitHub Actions)
   - Branch: `phase-0-5-ci-pr-checks`
   - PR: [#7](https://github.com/BradleyExton/wing-night/pull/7)
@@ -50,7 +54,7 @@ Backlog status:
 - [-] 1.3 In-Memory RoomState
 - [-] 2.1 Socket Connection
 - [-] 2.2 Rehydrate on Refresh
-- [ ] 2.3 Host Mutation Protection
+- [-] 2.3 Host Mutation Protection
 - [ ] 3.1 Phase Transition Logic
 - [ ] 3.2 Host Next Phase Button
 - [ ] 4.1 Content Loader

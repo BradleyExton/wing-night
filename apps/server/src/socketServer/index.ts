@@ -6,6 +6,7 @@ import type {
   OutgoingSocketEvents
 } from "../socketContracts/index.js";
 import { getRoomStateSnapshot } from "../roomState/index.js";
+import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
 export const attachSocketServer = (
@@ -28,7 +29,17 @@ export const attachSocketServer = (
   );
 
   socketServer.on("connection", (socket) => {
-    registerRoomStateHandlers(socket, getRoomStateSnapshot);
+    registerRoomStateHandlers(
+      socket,
+      getRoomStateSnapshot,
+      () => {
+        // Phase mutation wiring is added in task 3.1.
+      },
+      {
+        issueHostSecret,
+        isValidHostSecret
+      }
+    );
   });
 
   return socketServer;

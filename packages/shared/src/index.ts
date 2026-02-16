@@ -4,5 +4,6 @@ export type { Team } from "./team/index.js";
 export type { RoomState } from "./roomState/index.js";
 export type {
   ClientToServerEvents,
+  HostSecretPayload,
   ServerToClientEvents
 } from "./socketEvents/index.js";

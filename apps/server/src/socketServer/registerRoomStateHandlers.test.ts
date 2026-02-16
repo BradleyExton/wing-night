@@ -1,86 +1,186 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Phase, type RoomState } from "@wingnight/shared";
+import { Phase, type HostSecretPayload, type RoomState } from "@wingnight/shared";
 
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
-test("emits state snapshot immediately on registration", () => {
-  const emittedSnapshots: RoomState[] = [];
-  let hasRequestStateHandler = false;
-  let requestStateHandler = (): void => {
-    assert.fail("Expected client:requestState handler to be registered.");
-  };
+type SocketUnderTest = Parameters<typeof registerRoomStateHandlers>[0];
 
-  const firstState: RoomState = {
-    phase: Phase.SETUP,
-    currentRound: 0,
+type SocketHarness = {
+  socket: SocketUnderTest;
+  emittedSnapshots: RoomState[];
+  emittedSecretPayloads: HostSecretPayload[];
+  triggerRequestState: () => void;
+  triggerHostClaim: () => void;
+  triggerNextPhase: (payload: HostSecretPayload) => void;
+};
+
+const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
+  return {
+    phase,
+    currentRound,
     players: [],
     teams: []
   };
+};
 
-  const socket = {
-    emit: (_event: "server:stateSnapshot", roomState: RoomState): void => {
-      emittedSnapshots.push(roomState);
-    },
-    on: (_event: "client:requestState", listener: () => void): void => {
-      hasRequestStateHandler = true;
-      requestStateHandler = listener;
-    }
+const createSocketHarness = (): SocketHarness => {
+  const emittedSnapshots: RoomState[] = [];
+  const emittedSecretPayloads: HostSecretPayload[] = [];
+
+  let requestStateHandler = (): void => {
+    assert.fail("Expected client:requestState handler to be registered.");
+  };
+  let hostClaimHandler = (): void => {
+    assert.fail("Expected host:claimControl handler to be registered.");
+  };
+  let nextPhaseHandler = (_payload: HostSecretPayload): void => {
+    assert.fail("Expected game:nextPhase handler to be registered.");
   };
 
-  registerRoomStateHandlers(socket, () => firstState);
+  const socket = {
+    emit: (
+      event: "server:stateSnapshot" | "host:secretIssued",
+      payload: RoomState | HostSecretPayload
+    ): void => {
+      if (event === "server:stateSnapshot") {
+        emittedSnapshots.push(payload as RoomState);
+        return;
+      }
 
-  assert.equal(emittedSnapshots.length, 1);
-  assert.deepEqual(emittedSnapshots[0], firstState);
-  assert.equal(hasRequestStateHandler, true);
-  requestStateHandler();
-  assert.equal(emittedSnapshots.length, 2);
-  assert.deepEqual(emittedSnapshots[1], firstState);
+      emittedSecretPayloads.push(payload as HostSecretPayload);
+    },
+    on: (
+      event: "client:requestState" | "host:claimControl" | "game:nextPhase",
+      listener: (() => void) | ((payload: HostSecretPayload) => void)
+    ): void => {
+      if (event === "client:requestState") {
+        requestStateHandler = listener as () => void;
+        return;
+      }
+
+      if (event === "host:claimControl") {
+        hostClaimHandler = listener as () => void;
+        return;
+      }
+
+      nextPhaseHandler = listener as (payload: HostSecretPayload) => void;
+    }
+  } as unknown as SocketUnderTest;
+
+  return {
+    socket,
+    emittedSnapshots,
+    emittedSecretPayloads,
+    triggerRequestState: (): void => {
+      requestStateHandler();
+    },
+    triggerHostClaim: (): void => {
+      hostClaimHandler();
+    },
+    triggerNextPhase: (payload: HostSecretPayload): void => {
+      nextPhaseHandler(payload);
+    }
+  };
+};
+
+test("emits state snapshot immediately and on client request", () => {
+  const socketHarness = createSocketHarness();
+  const firstState = buildRoomState(Phase.SETUP, 0);
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => firstState,
+    () => {
+      assert.fail("next phase callback should not be called in this test");
+    },
+    {
+      issueHostSecret: () => ({ hostSecret: "host-secret" }),
+      isValidHostSecret: () => false
+    }
+  );
+
+  assert.equal(socketHarness.emittedSnapshots.length, 1);
+  assert.deepEqual(socketHarness.emittedSnapshots[0], firstState);
+
+  socketHarness.triggerRequestState();
+
+  assert.equal(socketHarness.emittedSnapshots.length, 2);
+  assert.deepEqual(socketHarness.emittedSnapshots[1], firstState);
 });
 
-test("re-emits latest snapshot when client requests state", () => {
-  const emittedSnapshots: RoomState[] = [];
-  let hasRequestStateHandler = false;
-  let requestStateHandler = (): void => {
-    assert.fail("Expected client:requestState handler to be registered.");
-  };
+test("emits host secret when host claims control", () => {
+  const socketHarness = createSocketHarness();
+  const issuedPayload: HostSecretPayload = { hostSecret: "issued-host-secret" };
 
-  const firstState: RoomState = {
-    phase: Phase.SETUP,
-    currentRound: 0,
-    players: [],
-    teams: []
-  };
-  const updatedState: RoomState = {
-    phase: Phase.INTRO,
-    currentRound: 1,
-    players: [{ id: "p1", name: "Player One" }],
-    teams: [{ id: "t1", name: "Spice Lords", playerIds: ["p1"], totalScore: 0 }]
-  };
-
-  let readCount = 0;
-  const getSnapshot = (): RoomState => {
-    readCount += 1;
-    return readCount === 1 ? firstState : updatedState;
-  };
-
-  const socket = {
-    emit: (_event: "server:stateSnapshot", roomState: RoomState): void => {
-      emittedSnapshots.push(roomState);
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.SETUP),
+    () => {
+      assert.fail("next phase callback should not be called in this test");
     },
-    on: (_event: "client:requestState", listener: () => void): void => {
-      hasRequestStateHandler = true;
-      requestStateHandler = listener;
+    {
+      issueHostSecret: () => issuedPayload,
+      isValidHostSecret: () => false
     }
-  };
+  );
 
-  registerRoomStateHandlers(socket, getSnapshot);
+  socketHarness.triggerHostClaim();
 
-  assert.equal(hasRequestStateHandler, true);
-  requestStateHandler();
+  assert.deepEqual(socketHarness.emittedSecretPayloads, [issuedPayload]);
+});
 
-  assert.equal(emittedSnapshots.length, 2);
-  assert.deepEqual(emittedSnapshots[0], firstState);
-  assert.deepEqual(emittedSnapshots[1], updatedState);
+test("ignores unauthorized game:nextPhase requests", () => {
+  const socketHarness = createSocketHarness();
+  const initialState = buildRoomState(Phase.SETUP);
+  let authorizedCallCount = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => initialState,
+    () => {
+      authorizedCallCount += 1;
+    },
+    {
+      issueHostSecret: () => ({ hostSecret: "host-secret" }),
+      isValidHostSecret: (hostSecret) => hostSecret === "valid-host-secret"
+    }
+  );
+
+  socketHarness.triggerNextPhase({ hostSecret: "invalid-host-secret" });
+
+  assert.equal(authorizedCallCount, 0);
+  assert.equal(socketHarness.emittedSnapshots.length, 1);
+  assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
+});
+
+test("runs authorized next phase callback and emits updated snapshot", () => {
+  const socketHarness = createSocketHarness();
+  const initialState = buildRoomState(Phase.SETUP);
+  const advancedState = buildRoomState(Phase.INTRO, 1);
+  let snapshotReads = 0;
+  let authorizedCallCount = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => {
+      snapshotReads += 1;
+      return snapshotReads === 1 ? initialState : advancedState;
+    },
+    () => {
+      authorizedCallCount += 1;
+    },
+    {
+      issueHostSecret: () => ({ hostSecret: "host-secret" }),
+      isValidHostSecret: (hostSecret) => hostSecret === "valid-host-secret"
+    }
+  );
+
+  socketHarness.triggerNextPhase({ hostSecret: "valid-host-secret" });
+
+  assert.equal(authorizedCallCount, 1);
+  assert.equal(socketHarness.emittedSnapshots.length, 2);
+  assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
+  assert.deepEqual(socketHarness.emittedSnapshots[1], advancedState);
 });
