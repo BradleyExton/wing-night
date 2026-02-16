@@ -16,7 +16,7 @@ Current in-progress work:
   - Notes: adding shared socket event maps + app compile wiring
 - [-] Realtime foundation bundle (`1.3`, `2.1`, `2.2`)
   - Branch: `phase-realtime-foundation-1-3-2-1-2-2`
-  - PR: _(pending)_
+  - PR: [#8](https://github.com/BradleyExton/wing-night/pull/8)
   - Notes: in-memory RoomState + socket connect snapshot + refresh rehydrate
 
 Completed:
