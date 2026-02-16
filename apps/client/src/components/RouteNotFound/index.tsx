@@ -1,12 +1,12 @@
 import { containerClassName, headingClassName, subtextClassName } from "./styles";
-import { uiCopy } from "../../copy";
+import { routeNotFoundCopy } from "./copy";
 
 export const RouteNotFound = (): JSX.Element => {
   return (
     <main className={containerClassName}>
       <div>
-        <h1 className={headingClassName}>{uiCopy.routeNotFound.title}</h1>
-        <p className={subtextClassName}>{uiCopy.routeNotFound.description}</p>
+        <h1 className={headingClassName}>{routeNotFoundCopy.title}</h1>
+        <p className={subtextClassName}>{routeNotFoundCopy.description}</p>
       </div>
     </main>
   );

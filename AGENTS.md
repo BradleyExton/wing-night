@@ -179,7 +179,8 @@ Never remove escape hatches.
 # 15) UI Copy Rules
 
 - Do not hardcode user-facing copy directly inside components.
-- Store copy in dedicated typed modules (for example `copy/index.ts`) and import into UI layers.
+- For component-specific text, colocate copy in the component folder as `copy.ts`.
+- For shared text, use typed feature modules under `apps/client/src/copy/` (for example `host.ts`, `display.ts`, `common.ts`).
 - Components should remain presentational and consume copy values via imports.
 - Structure copy modules so future i18n integration can be added without rewriting component logic.
 
