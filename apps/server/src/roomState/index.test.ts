@@ -72,3 +72,31 @@ test("advanceRoomStatePhase is idempotent at FINAL_RESULTS", () => {
   assert.equal(finalSnapshot.phase, Phase.FINAL_RESULTS);
   assert.equal(finalSnapshot.currentRound, 1);
 });
+
+test("advanceRoomStatePhase logs transition metadata", () => {
+  resetRoomState();
+
+  const originalConsoleWarn = console.warn;
+  const logCalls: unknown[][] = [];
+
+  console.warn = ((...args: unknown[]): void => {
+    logCalls.push(args);
+  }) as typeof console.warn;
+
+  try {
+    advanceRoomStatePhase();
+  } finally {
+    console.warn = originalConsoleWarn;
+  }
+
+  const transitionLog = logCalls.find(
+    (args) => args[0] === "server:phaseTransition"
+  );
+
+  assert.ok(transitionLog);
+  assert.deepEqual(transitionLog[1], {
+    previousPhase: Phase.SETUP,
+    nextPhase: Phase.INTRO,
+    currentRound: 0
+  });
+});

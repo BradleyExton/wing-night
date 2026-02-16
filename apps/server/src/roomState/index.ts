@@ -1,5 +1,6 @@
 import { Phase, type RoomState } from "@wingnight/shared";
 
+import { logPhaseTransition } from "../logger/index.js";
 import { getNextPhase } from "../utils/getNextPhase/index.js";
 
 export const createInitialRoomState = (): RoomState => {
@@ -42,6 +43,8 @@ export const advanceRoomStatePhase = (): RoomState => {
   ) {
     roomState.currentRound = 1;
   }
+
+  logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);
 
   return getRoomStateSnapshot();
 };
