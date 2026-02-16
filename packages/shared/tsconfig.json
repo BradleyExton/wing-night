@@ -8,5 +8,6 @@
     "declaration": true,
     "noEmit": false
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test-d.ts"]
 }
