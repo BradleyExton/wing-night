@@ -10,13 +10,19 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] 0.1 Initialize Monorepo
+- [-] 0.2 Basic Server
+  - Branch: `phase-0-2-basic-server`
+  - PR: pending
+  - Notes: implementing Express + `GET /health`
+
+Completed:
+- [x] 0.1 Initialize Monorepo
   - Branch: `phase-0-1-monorepo-init`
   - PR: [#1](https://github.com/BradleyExton/wing-night/pull/1)
-  - Notes: pending merge to `main`
+  - Merge commit: `26615d9`
 
 Backlog status:
-- [ ] 0.2 Basic Server
+- [-] 0.2 Basic Server
 - [ ] 0.3 Basic Client
 - [ ] 1.1 Define Core Types
 - [ ] 1.2 Define Socket Event Contracts
