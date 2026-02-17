@@ -1,0 +1,17 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "declaration": true,
+    "noEmit": false,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@wingnight/minigames-core": ["../core/src/index.ts"],
+      "@wingnight/shared": ["../../shared/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

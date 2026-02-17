@@ -8,6 +8,12 @@
     "noEmit": false,
     "baseUrl": ".",
     "paths": {
+      "@wingnight/minigames-core": [
+        "../../packages/minigames/core/src/index.ts"
+      ],
+      "@wingnight/minigames-trivia": [
+        "../../packages/minigames/trivia/src/index.ts"
+      ],
       "@wingnight/shared": ["../../packages/shared/src/index.ts"]
     }
   },

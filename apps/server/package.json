@@ -12,6 +12,8 @@
     "test": "tsx --test src/**/*.test.ts"
   },
   "dependencies": {
+    "@wingnight/minigames-core": "workspace:*",
+    "@wingnight/minigames-trivia": "workspace:*",
     "@wingnight/shared": "workspace:*",
     "express": "^4.21.2",
     "socket.io": "^4.8.1"

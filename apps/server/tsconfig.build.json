@@ -2,6 +2,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
+      "@wingnight/minigames-core": [
+        "../../packages/minigames/core/dist/index.d.ts"
+      ],
+      "@wingnight/minigames-trivia": [
+        "../../packages/minigames/trivia/dist/index.d.ts"
+      ],
       "@wingnight/shared": ["../../packages/shared/dist/index.d.ts"]
     }
   }
