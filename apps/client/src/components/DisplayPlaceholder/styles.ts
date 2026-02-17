@@ -46,6 +46,8 @@ export const timerLabelClassName =
 export const timerValueClassName =
   "mt-3 font-mono text-7xl font-black leading-none tabular-nums text-primary md:text-8xl";
 
+export const lowTimeTimerValueClassName = "text-heat animate-pulse";
+
 export const fallbackTextClassName = "mt-5 text-xl text-white/85";
 
 export const footerClassName =

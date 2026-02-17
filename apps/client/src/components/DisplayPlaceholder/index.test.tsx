@@ -68,13 +68,35 @@ test("renders waiting copy when room state is missing", () => {
   assert.match(html, /No teams have joined yet/);
 });
 
-test("renders eating timer view from snapshot config", () => {
+test("renders eating countdown from activeTimer.endsAt", (t) => {
+  t.mock.timers.enable({ apis: ["Date"] });
+  t.mock.timers.setTime(1_700_000_000_000);
+
+  const html = renderToStaticMarkup(
+    <DisplayPlaceholder
+      roomState={buildSnapshot(Phase.EATING, [], {
+        activeTimer: {
+          kind: "EATING",
+          startsAt: 1_699_999_900_000,
+          endsAt: 1_700_000_020_000,
+          durationSeconds: 120
+        }
+      })}
+    />
+  );
+
+  assert.match(html, /Round Timer/);
+  assert.match(html, /00:20/);
+
+  t.mock.timers.reset();
+});
+
+test("does not render timer block when activeTimer is missing", () => {
   const html = renderToStaticMarkup(
     <DisplayPlaceholder roomState={buildSnapshot(Phase.EATING)} />
   );
 
-  assert.match(html, /Round Timer/);
-  assert.match(html, /02:00/);
+  assert.doesNotMatch(html, /Round Timer/);
 });
 
 test("renders round intro details from currentRoundConfig", () => {
@@ -137,4 +159,42 @@ test("renders trivia turn question and active team during MINIGAME_PLAY", () => 
   assert.match(html, /Active Team: Team Alpha/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.doesNotMatch(html, /Scoville/);
+});
+
+test("rehydrate snapshot uses remaining timer, not full duration", (t) => {
+  t.mock.timers.enable({ apis: ["Date"] });
+  t.mock.timers.setTime(1_700_000_000_000);
+
+  const html = renderToStaticMarkup(
+    <DisplayPlaceholder
+      roomState={buildSnapshot(Phase.MINIGAME_PLAY, [
+        {
+          id: "team-alpha",
+          name: "Team Alpha",
+          playerIds: [],
+          totalScore: 3
+        }
+      ], {
+        activeTurnTeamId: "team-alpha",
+        currentTriviaPrompt: {
+          id: "prompt-1",
+          question: "Which scale measures pepper heat?",
+          answer: "Scoville"
+        },
+        activeTimer: {
+          kind: "TRIVIA_TURN",
+          startsAt: 1_699_999_970_000,
+          endsAt: 1_700_000_008_000,
+          durationSeconds: 30
+        }
+      })}
+    />
+  );
+
+  assert.match(html, /Turn Timer/);
+  assert.match(html, /00:08/);
+  assert.match(html, /text-heat/);
+  assert.doesNotMatch(html, /00:30/);
+
+  t.mock.timers.reset();
 });

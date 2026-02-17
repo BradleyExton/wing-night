@@ -12,6 +12,7 @@ import {
   headerTopRowClassName,
   headingClassName,
   leadingStandingCardClassName,
+  lowTimeTimerValueClassName,
   mainClassName,
   phaseBadgeClassName,
   roundMetaClassName,
@@ -32,6 +33,7 @@ import {
   winnerStandingCardClassName
 } from "./styles";
 import { displayPlaceholderCopy } from "./copy";
+import { useCountdownFromEndsAt } from "./useCountdownFromEndsAt";
 
 type DisplayPlaceholderProps = {
   roomState: RoomState | null;
@@ -63,8 +65,8 @@ export const DisplayPlaceholder = ({
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
-  const eatingSeconds = roomState?.gameConfig?.timers.eatingSeconds ?? null;
-  const shouldRenderEatingTimer = isEatingPhase && eatingSeconds !== null;
+  const activeTimer = roomState?.activeTimer ?? null;
+  const shouldRenderEatingContext = isEatingPhase;
   const activeTurnTeamName =
     activeTurnTeamId !== null
       ? (roomState?.teams.find((team) => team.id === activeTurnTeamId)?.name ??
@@ -72,6 +74,16 @@ export const DisplayPlaceholder = ({
       : null;
   const shouldRenderTriviaTurn =
     isTriviaTurnPhase && currentTriviaPrompt !== null && activeTurnTeamName !== null;
+  const countdown = useCountdownFromEndsAt(
+    (isEatingPhase || isTriviaTurnPhase) && activeTimer !== null
+      ? activeTimer.endsAt
+      : null
+  );
+  const shouldRenderCountdownTimer = countdown !== null;
+  const timerLabel =
+    activeTimer?.kind === "TRIVIA_TURN"
+      ? displayPlaceholderCopy.triviaTurnTimerLabel
+      : displayPlaceholderCopy.eatingTimerLabel;
   const leadingTeamId = standings[0]?.id ?? null;
 
   const roundMetaLabel = roomState
@@ -129,7 +141,7 @@ export const DisplayPlaceholder = ({
               </>
             )}
 
-            {shouldRenderEatingTimer && (
+            {shouldRenderEatingContext && (
               <>
                 <h2 className={stageTitleClassName}>
                   {displayPlaceholderCopy.phaseContextTitle(phaseLabel)}
@@ -141,14 +153,6 @@ export const DisplayPlaceholder = ({
                       )
                     : displayPlaceholderCopy.roundFallbackLabel}
                 </p>
-                <div className={timerWrapClassName}>
-                  <p className={timerLabelClassName}>
-                    {displayPlaceholderCopy.eatingTimerLabel}
-                  </p>
-                  <p className={timerValueClassName}>
-                    {displayPlaceholderCopy.eatingTimerValue(eatingSeconds)}
-                  </p>
-                </div>
               </>
             )}
 
@@ -173,8 +177,21 @@ export const DisplayPlaceholder = ({
               </>
             )}
 
+            {shouldRenderCountdownTimer && (
+              <div className={timerWrapClassName}>
+                <p className={timerLabelClassName}>{timerLabel}</p>
+                <p
+                  className={`${timerValueClassName} ${
+                    countdown.isLowTime ? lowTimeTimerValueClassName : ""
+                  }`}
+                >
+                  {countdown.formattedValue}
+                </p>
+              </div>
+            )}
+
             {!shouldRenderRoundDetails &&
-              !shouldRenderEatingTimer &&
+              !shouldRenderEatingContext &&
               !shouldRenderTriviaTurn && (
               <>
                 <h2 className={stageTitleClassName}>
