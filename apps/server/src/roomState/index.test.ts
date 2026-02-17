@@ -462,7 +462,7 @@ test("entering EATING clears wing participation from the previous round", () => 
   assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
 });
 
-test("initializes trivia turn state on MINIGAME_INTRO -> MINIGAME_PLAY", () => {
+test("initializes trivia turn state through the minigame module boundary", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
@@ -475,6 +475,27 @@ test("initializes trivia turn state on MINIGAME_INTRO -> MINIGAME_PLAY", () => {
   assert.deepEqual(snapshot.turnOrderTeamIds, ["team-1", "team-2"]);
   assert.equal(snapshot.activeTurnTeamId, "team-1");
   assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-1");
+  assert.equal(snapshot.triviaPromptCursor, 0);
+  assert.deepEqual(snapshot.pendingMinigamePointsByTeamId, {});
+});
+
+test("does not initialize trivia projection for non-trivia minigame rounds", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments({
+    ...gameConfigFixture,
+    rounds: [{ ...gameConfigFixture.rounds[0], minigame: "GEO" }]
+  });
+  advanceToEatingPhase();
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.MINIGAME_PLAY);
+  assert.equal(snapshot.currentRoundConfig?.minigame, "GEO");
+  assert.equal(snapshot.activeTurnTeamId, null);
+  assert.equal(snapshot.currentTriviaPrompt, null);
   assert.equal(snapshot.triviaPromptCursor, 0);
 });
 
