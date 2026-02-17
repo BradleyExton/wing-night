@@ -170,6 +170,7 @@ GitHub Actions runs PR checks on every pull request targeting `main`.
 
 Workflow:
 - `.github/workflows/pr-checks.yml`
+- `.github/workflows/pr-ui-screenshot.yml`
 - Node: `22`
 - Package manager: `pnpm@10.0.0`
 - Install command: `pnpm install --frozen-lockfile`
@@ -186,6 +187,19 @@ Required status checks for branch protection:
 - `PR Checks / test`
 - `PR Checks / typecheck`
 - `PR Checks / build`
+- `PR UI Screenshot / screenshot-required`
+
+UI screenshot policy:
+- If a PR changes UI files in `apps/client`, the PR description must include at least one screenshot image.
+- The check reads markdown image tags (`![...](...)`) and html image tags (`<img ... />`) in the PR body.
+- Suggested Playwright MCP capture flow:
+
+```bash
+export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
+"$PWCLI" open http://127.0.0.1:5173/host --headed
+"$PWCLI" screenshot --filename output/playwright/pr-host.png
+```
 
 ------------------------------------------------------------------------
 

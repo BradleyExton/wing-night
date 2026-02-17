@@ -10,20 +10,40 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] 2.3 Host Mutation Protection
-  - Branch: `phase-2-3-host-mutation-protection`
-  - PR: [#9](https://github.com/BradleyExton/wing-night/pull/9)
-  - Notes: server-issued host secret claim flow + guarded mutation payload checks
-- [-] 0.5 CI PR Checks (GitHub Actions)
-  - Branch: `phase-0-5-ci-pr-checks`
-  - PR: [#7](https://github.com/BradleyExton/wing-night/pull/7)
-  - Notes: add deterministic Node 22 PR workflow for lint/test/typecheck/build
-- [-] Realtime foundation bundle (`1.3`, `2.1`, `2.2`)
-  - Branch: `phase-realtime-foundation-1-3-2-1-2-2`
-  - PR: [#8](https://github.com/BradleyExton/wing-night/pull/8)
-  - Notes: in-memory RoomState + socket connect snapshot + refresh rehydrate
+- [-] 4.3 Lock Teams on Start
+  - Branch: `phase-4-3-lock-teams-on-start`
+  - PR: [#15](https://github.com/BradleyExton/wing-night/pull/15)
+  - Notes: server-authoritative setup lock after `SETUP` + host UI read-only gating
+- [-] 4.2 Team Creation UI
+  - Branch: `phase-4-2-team-creation-ui`
+  - PR: [#14](https://github.com/BradleyExton/wing-night/pull/14)
+  - Notes: host-only setup mutation flow for create/assign with guarded payloads
+- [-] 4.1 Content Loader
+  - Branch: `phase-4-1-content-loader`
+  - PR: [#13](https://github.com/BradleyExton/wing-night/pull/13)
+  - Notes: local-first players loader + strict validation + startup bootstrap
 
 Completed:
+- [x] 3.2 Host Next Phase Button
+  - Branch: `phase-3-2-host-next-phase-button`
+  - PR: [#11](https://github.com/BradleyExton/wing-night/pull/11)
+  - Notes: synced into `main` via `phase-3-mainline-sync`
+- [x] 3.1 Phase Transition Logic
+  - Branch: `phase-3-1-phase-transition-logic`
+  - PR: [#10](https://github.com/BradleyExton/wing-night/pull/10)
+  - Notes: synced into `main` via `phase-3-mainline-sync`
+- [x] 2.3 Host Mutation Protection
+  - Branch: `phase-2-3-host-mutation-protection`
+  - PR: [#9](https://github.com/BradleyExton/wing-night/pull/9)
+  - Merge commit: `fe0d0df`
+- [x] Realtime foundation bundle (`1.3`, `2.1`, `2.2`)
+  - Branch: `phase-realtime-foundation-1-3-2-1-2-2`
+  - PR: [#8](https://github.com/BradleyExton/wing-night/pull/8)
+  - Merge commit: `2a21f5d`
+- [x] 0.5 CI PR Checks (GitHub Actions)
+  - Branch: `phase-0-5-ci-pr-checks`
+  - PR: [#7](https://github.com/BradleyExton/wing-night/pull/7)
+  - Merge commit: `105eb8f`
 - [x] 1.2 Define Socket Event Contracts
   - Branch: `phase-1-2-socket-contracts`
   - PR: [#5](https://github.com/BradleyExton/wing-night/pull/5)
@@ -48,18 +68,18 @@ Completed:
 Backlog status:
 - [x] 0.2 Basic Server
 - [x] 0.3 Basic Client
-- [-] 0.5 CI PR Checks (GitHub Actions)
+- [x] 0.5 CI PR Checks (GitHub Actions)
 - [x] 1.1 Define Core Types
 - [x] 1.2 Define Socket Event Contracts
-- [-] 1.3 In-Memory RoomState
-- [-] 2.1 Socket Connection
-- [-] 2.2 Rehydrate on Refresh
-- [-] 2.3 Host Mutation Protection
-- [ ] 3.1 Phase Transition Logic
-- [ ] 3.2 Host Next Phase Button
-- [ ] 4.1 Content Loader
-- [ ] 4.2 Team Creation UI
-- [ ] 4.3 Lock Teams on Start
+- [x] 1.3 In-Memory RoomState
+- [x] 2.1 Socket Connection
+- [x] 2.2 Rehydrate on Refresh
+- [x] 2.3 Host Mutation Protection
+- [x] 3.1 Phase Transition Logic
+- [x] 3.2 Host Next Phase Button
+- [-] 4.1 Content Loader
+- [-] 4.2 Team Creation UI
+- [-] 4.3 Lock Teams on Start
 - [ ] 5.1 Load gameConfig
 - [ ] 5.2 Round Scheduling
 - [ ] 6.1 Wing Participation Recording

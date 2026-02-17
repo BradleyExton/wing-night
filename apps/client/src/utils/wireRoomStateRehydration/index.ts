@@ -1,4 +1,8 @@
-import type { RoomState } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  SERVER_TO_CLIENT_EVENTS,
+  type RoomState
+} from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
 import type {
@@ -16,19 +20,19 @@ export const wireRoomStateRehydration = (
   onSnapshot: (roomState: RoomState) => void
 ): (() => void) => {
   const requestLatestState = (): void => {
-    socket.emit("client:requestState");
+    socket.emit(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE);
   };
 
   const handleSnapshot = (roomState: RoomState): void => {
     onSnapshot(roomState);
   };
 
-  socket.on("server:stateSnapshot", handleSnapshot);
+  socket.on(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, handleSnapshot);
   if (socket.connected) {
     requestLatestState();
   }
 
   return (): void => {
-    socket.off("server:stateSnapshot", handleSnapshot);
+    socket.off(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, handleSnapshot);
   };
 };

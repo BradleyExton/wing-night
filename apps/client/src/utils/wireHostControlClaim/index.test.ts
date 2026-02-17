@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { HostSecretPayload } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  SERVER_TO_CLIENT_EVENTS,
+  type HostSecretPayload
+} from "@wingnight/shared";
 
 import { wireHostControlClaim } from "./index";
 
@@ -12,11 +16,15 @@ class MockHostControlSocket {
   public hostClaimRequests = 0;
 
   private connectHandler: (() => void) | null = null;
+  private invalidSecretHandler: (() => void) | null = null;
   private hostSecretIssuedHandler: ((payload: HostSecretPayload) => void) | null =
     null;
 
   public on(
-    event: "connect" | "host:secretIssued",
+    event:
+      | "connect"
+      | typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED
+      | typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID,
     listener: (() => void) | ((payload: HostSecretPayload) => void)
   ): void {
     if (event === "connect") {
@@ -24,11 +32,19 @@ class MockHostControlSocket {
       return;
     }
 
+    if (event === SERVER_TO_CLIENT_EVENTS.SECRET_INVALID) {
+      this.invalidSecretHandler = listener as () => void;
+      return;
+    }
+
     this.hostSecretIssuedHandler = listener as (payload: HostSecretPayload) => void;
   }
 
   public off(
-    event: "connect" | "host:secretIssued",
+    event:
+      | "connect"
+      | typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED
+      | typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID,
     listener: (() => void) | ((payload: HostSecretPayload) => void)
   ): void {
     if (event === "connect") {
@@ -38,13 +54,20 @@ class MockHostControlSocket {
       return;
     }
 
+    if (event === SERVER_TO_CLIENT_EVENTS.SECRET_INVALID) {
+      if (this.invalidSecretHandler === listener) {
+        this.invalidSecretHandler = null;
+      }
+      return;
+    }
+
     if (this.hostSecretIssuedHandler === listener) {
       this.hostSecretIssuedHandler = null;
     }
   }
 
-  public emit(event: "host:claimControl"): void {
-    if (event === "host:claimControl") {
+  public emit(event: typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL): void {
+    if (event === CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL) {
       this.hostClaimRequests += 1;
     }
   }
@@ -55,6 +78,10 @@ class MockHostControlSocket {
 
   public triggerHostSecretIssued(payload: HostSecretPayload): void {
     this.hostSecretIssuedHandler?.(payload);
+  }
+
+  public triggerHostSecretInvalid(): void {
+    this.invalidSecretHandler?.();
   }
 }
 
@@ -96,6 +123,18 @@ test("forwards issued host secret to callback", () => {
   assert.deepEqual(receivedHostSecrets, ["issued-host-secret"]);
 });
 
+test("reclaims host control when server reports an invalid secret", () => {
+  const socket = new MockHostControlSocket();
+
+  wireHostControlClaim(socket as unknown as HostControlSocket, () => {
+    // No-op callback for this test.
+  });
+
+  socket.triggerHostSecretInvalid();
+
+  assert.equal(socket.hostClaimRequests, 1);
+});
+
 test("cleanup unregisters host control listeners", () => {
   const socket = new MockHostControlSocket();
   const receivedHostSecrets: string[] = [];
@@ -109,6 +148,7 @@ test("cleanup unregisters host control listeners", () => {
 
   cleanup();
   socket.triggerConnect();
+  socket.triggerHostSecretInvalid();
   socket.triggerHostSecretIssued({ hostSecret: "issued-after-cleanup" });
 
   assert.equal(socket.hostClaimRequests, 0);

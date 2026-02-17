@@ -1,12 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Phase, type RoomState } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  Phase,
+  SERVER_TO_CLIENT_EVENTS,
+  type RoomState
+} from "@wingnight/shared";
 
 import { wireRoomStateRehydration } from "./index";
 
 type RoomStateSocketEvents = {
-  "server:stateSnapshot": (roomState: RoomState) => void;
+  [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (roomState: RoomState) => void;
 };
 type RoomStateSocket = Parameters<typeof wireRoomStateRehydration>[0];
 
@@ -32,18 +37,18 @@ class MockRoomStateSocket {
     }
   }
 
-  public emit(event: "client:requestState"): void {
-    if (event === "client:requestState") {
+  public emit(event: typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE): void {
+    if (event === CLIENT_TO_SERVER_EVENTS.REQUEST_STATE) {
       this.requestedStateEvents += 1;
     }
   }
 
   public triggerSnapshot(roomState: RoomState): void {
-    this.handlers["server:stateSnapshot"]?.(roomState);
+    this.handlers[SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]?.(roomState);
   }
 
   public hasSnapshotHandler(): boolean {
-    return this.handlers["server:stateSnapshot"] !== undefined;
+    return this.handlers[SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT] !== undefined;
   }
 }
 
@@ -82,6 +87,7 @@ test("forwards server snapshots to callback", () => {
   const snapshot: RoomState = {
     phase: Phase.SETUP,
     currentRound: 0,
+    totalRounds: 3,
     players: [{ id: "p1", name: "Player One" }],
     teams: [{ id: "t1", name: "Spice Team", playerIds: ["p1"], totalScore: 0 }]
   };

@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint";
 
 import componentEntryFileName from "../rules/component-entry-file-name.mjs";
 import noHardcodedComponentJsxText from "../rules/no-hardcoded-component-jsx-text.mjs";
+import noHardcodedHexColorsInStyles from "../rules/no-hardcoded-hex-colors-in-styles.mjs";
 import noInlineStyleProp from "../rules/no-inline-style-prop.mjs";
 import requireStylesImportInComponentEntry from "../rules/require-styles-import-in-component-entry.mjs";
 import socketEventNameFormat from "../rules/socket-event-name-format.mjs";
@@ -98,13 +99,18 @@ test("socket-event-name-format", () => {
     valid: [
       {
         filename: "/repo/packages/shared/src/socketEvents/index.ts",
-        code: "export type Events = { 'client:requestState': () => void; 'game:nextPhase': () => void; };"
+        code: "const CLIENT_TO_SERVER_EVENTS = { REQUEST_STATE: 'client:requestState', NEXT_PHASE: 'game:nextPhase' } as const; export type Events = { [CLIENT_TO_SERVER_EVENTS.REQUEST_STATE]: () => void; [CLIENT_TO_SERVER_EVENTS.NEXT_PHASE]: () => void; };"
       }
     ],
     invalid: [
       {
         filename: "/repo/packages/shared/src/socketEvents/index.ts",
         code: "export type Events = { 'invalid-name': () => void; };",
+        errors: [{ messageId: "invalidEventName" }]
+      },
+      {
+        filename: "/repo/packages/shared/src/socketEvents/index.ts",
+        code: "const SERVER_TO_CLIENT_EVENTS = { BAD: 'invalid-name' } as const;",
         errors: [{ messageId: "invalidEventName" }]
       }
     ]
@@ -153,4 +159,35 @@ test("utility-entry-file-name", () => {
       }
     ]
   });
+});
+
+test("no-hardcoded-hex-colors-in-styles", () => {
+  ruleTester.run(
+    "no-hardcoded-hex-colors-in-styles",
+    noHardcodedHexColorsInStyles,
+    {
+      valid: [
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const className = 'bg-bg text-gold border-primary/20';"
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/index.tsx",
+          code: "export const Example = () => <main className='bg-[#121212]' />;"
+        }
+      ],
+      invalid: [
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const className = 'bg-[#121212] text-white';",
+          errors: [{ messageId: "noHardcodedHexColor" }]
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const className = `text-[#FBBF24]`;",
+          errors: [{ messageId: "noHardcodedHexColor" }]
+        }
+      ]
+    }
+  );
 });
