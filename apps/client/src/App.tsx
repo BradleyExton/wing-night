@@ -9,6 +9,7 @@ import { saveHostSecret } from "./utils/hostSecretStorage";
 import { requestAssignPlayer } from "./utils/requestAssignPlayer";
 import { requestCreateTeam } from "./utils/requestCreateTeam";
 import { requestNextPhase } from "./utils/requestNextPhase";
+import { requestSetWingParticipation } from "./utils/requestSetWingParticipation";
 import { resolveClientRoute } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
@@ -47,6 +48,15 @@ export const App = (): JSX.Element => {
     });
   };
 
+  const handleSetWingParticipation = (
+    playerId: string,
+    didEat: boolean
+  ): void => {
+    requestSetWingParticipation(roomSocket, playerId, didEat, () => {
+      roomSocket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
+    });
+  };
+
   if (route === "HOST") {
     return (
       <HostPlaceholder
@@ -54,6 +64,7 @@ export const App = (): JSX.Element => {
         onNextPhase={handleNextPhase}
         onCreateTeam={handleCreateTeam}
         onAssignPlayer={handleAssignPlayer}
+        onSetWingParticipation={handleSetWingParticipation}
       />
     );
   }

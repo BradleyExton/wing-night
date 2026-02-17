@@ -10,6 +10,8 @@ export const hostCopy = {
   createTeamButtonLabel: "Create Team",
   playersSectionTitle: "Players",
   teamsSectionTitle: "Teams",
+  eatingParticipationDescription:
+    "Mark each player who finished their wing this round.",
   loadingStateLabel: "Waiting for room state...",
   setupLockedLabel: "Team setup is locked after the game starts.",
   unassignedOptionLabel: "Unassigned",
@@ -17,6 +19,11 @@ export const hostCopy = {
     `Assign ${playerName} to a team`,
   noPlayersLabel: "No players available.",
   noTeamsLabel: "No teams created yet.",
+  noAssignedTeamLabel: "No team assigned",
+  assignedTeamLabel: (teamName: string): string => `Team: ${teamName}`,
+  ateWingLabel: "Ate wing",
+  wingParticipationToggleLabel: (playerName: string): string =>
+    `Mark ${playerName} as ate wing`,
   teamMembersLabel: (memberCount: number): string =>
     `${memberCount} player${memberCount === 1 ? "" : "s"}`
 } as const;

@@ -30,6 +30,7 @@ export type {
   ClientToServerEventName,
   ClientToServerEvents,
   HostSecretPayload,
+  ScoringSetWingParticipationPayload,
   ServerToClientEventName,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload,

@@ -11,11 +11,16 @@ export const hostPlaceholderCopy = {
   createTeamButtonLabel: hostCopy.createTeamButtonLabel,
   playersSectionTitle: hostCopy.playersSectionTitle,
   teamsSectionTitle: hostCopy.teamsSectionTitle,
+  eatingParticipationDescription: hostCopy.eatingParticipationDescription,
   loadingStateLabel: hostCopy.loadingStateLabel,
   setupLockedLabel: hostCopy.setupLockedLabel,
   unassignedOptionLabel: hostCopy.unassignedOptionLabel,
   assignmentSelectLabel: hostCopy.assignmentSelectLabel,
   noPlayersLabel: hostCopy.noPlayersLabel,
   noTeamsLabel: hostCopy.noTeamsLabel,
+  noAssignedTeamLabel: hostCopy.noAssignedTeamLabel,
+  assignedTeamLabel: hostCopy.assignedTeamLabel,
+  ateWingLabel: hostCopy.ateWingLabel,
+  wingParticipationToggleLabel: hostCopy.wingParticipationToggleLabel,
   teamMembersLabel: hostCopy.teamMembersLabel
 } as const;

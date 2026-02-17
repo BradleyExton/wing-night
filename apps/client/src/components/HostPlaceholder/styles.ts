@@ -53,3 +53,13 @@ export const assignmentSelectClassName =
 export const teamNameClassName = "text-sm font-semibold text-white";
 
 export const teamMetaClassName = "text-xs text-white/70";
+
+export const participationControlClassName =
+  "h-4 w-4 rounded border-white/30 bg-surface text-primary focus-visible:ring-primary";
+
+export const participationLabelClassName =
+  "flex items-center gap-2 text-sm font-medium text-white/90";
+
+export const playerMetaClassName = "text-xs text-white/70";
+
+export const participationRowClassName = "flex items-center gap-3";

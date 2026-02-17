@@ -5,13 +5,17 @@ export type SetupCreateTeamPayload = HostSecretPayload & Record<"name", string>;
 export type SetupAssignPlayerPayload = HostSecretPayload &
   Record<"playerId", string> &
   Record<"teamId", string | null>;
+export type ScoringSetWingParticipationPayload = HostSecretPayload &
+  Record<"playerId", string> &
+  Record<"didEat", boolean>;
 
 export const CLIENT_TO_SERVER_EVENTS = {
   REQUEST_STATE: "client:requestState",
   CLAIM_CONTROL: "host:claimControl",
   NEXT_PHASE: "game:nextPhase",
   CREATE_TEAM: "setup:createTeam",
-  ASSIGN_PLAYER: "setup:assignPlayer"
+  ASSIGN_PLAYER: "setup:assignPlayer",
+  SET_WING_PARTICIPATION: "scoring:setWingParticipation"
 } as const;
 
 export const SERVER_TO_CLIENT_EVENTS = {
@@ -35,6 +39,9 @@ export type ClientToServerEvents = {
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER]: (
     payload: SetupAssignPlayerPayload
+  ) => void;
+  [CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION]: (
+    payload: ScoringSetWingParticipationPayload
   ) => void;
 };
 

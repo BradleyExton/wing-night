@@ -15,7 +15,8 @@ import {
   advanceRoomStatePhase,
   assignPlayerToTeam,
   createTeam,
-  getRoomStateSnapshot
+  getRoomStateSnapshot,
+  setWingParticipation
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
@@ -74,6 +75,10 @@ export const attachSocketServer = (
         },
         onAuthorizedAssignPlayer: (playerId, teamId) => {
           const updatedSnapshot = assignPlayerToTeam(playerId, teamId);
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedSetWingParticipation: (playerId, didEat) => {
+          const updatedSnapshot = setWingParticipation(playerId, didEat);
           socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
         }
       },

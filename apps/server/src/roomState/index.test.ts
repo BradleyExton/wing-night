@@ -11,6 +11,7 @@ import {
   getRoomStateSnapshot,
   resetRoomState,
   setRoomStateGameConfig,
+  setWingParticipation,
   setRoomStatePlayers
 } from "./index.js";
 
@@ -56,6 +57,12 @@ const setupValidTeamsAndAssignments = (): void => {
   assignPlayerToTeam("player-2", "team-2");
 };
 
+const advanceToEatingPhase = (): void => {
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+};
+
 test("createInitialRoomState returns setup defaults", () => {
   assert.deepEqual(createInitialRoomState(), {
     phase: Phase.SETUP,
@@ -64,7 +71,9 @@ test("createInitialRoomState returns setup defaults", () => {
     players: [],
     teams: [],
     gameConfig: null,
-    currentRoundConfig: null
+    currentRoundConfig: null,
+    wingParticipationByPlayerId: {},
+    pendingWingPointsByTeamId: {}
   });
 });
 
@@ -307,6 +316,95 @@ test("assignPlayerToTeam ignores unknown players and unknown teams", () => {
   const snapshot = getRoomStateSnapshot();
 
   assert.deepEqual(snapshot.teams[0].playerIds, []);
+});
+
+test("setWingParticipation computes pending wing points per team during EATING", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.wingParticipationByPlayerId["player-1"], true);
+  assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 2);
+  assert.equal(snapshot.pendingWingPointsByTeamId["team-2"], 0);
+
+  setWingParticipation("player-2", true);
+
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 2);
+  assert.equal(snapshot.pendingWingPointsByTeamId["team-2"], 2);
+});
+
+test("setWingParticipation recomputes totals when a player is unchecked", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+  setWingParticipation("player-1", false);
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.wingParticipationByPlayerId["player-1"], false);
+  assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 0);
+});
+
+test("setWingParticipation ignores invalid mutations", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  setWingParticipation("player-1", true);
+  let snapshot = getRoomStateSnapshot();
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+
+  advanceToEatingPhase();
+  setWingParticipation("missing-player", true);
+  snapshot = getRoomStateSnapshot();
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+});
+
+test("setWingParticipation ignores updates for players not assigned to a team", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" },
+    { id: "player-3", name: "Player Three" }
+  ]);
+  advanceToEatingPhase();
+  const beforeMutation = getRoomStateSnapshot();
+
+  setWingParticipation("player-3", true);
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.wingParticipationByPlayerId["player-3"], undefined);
+  assert.deepEqual(
+    snapshot.pendingWingPointsByTeamId,
+    beforeMutation.pendingWingPointsByTeamId
+  );
+});
+
+test("entering EATING clears wing participation from the previous round", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.EATING);
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
 });
 
 test("createTeam is locked after leaving setup", () => {
