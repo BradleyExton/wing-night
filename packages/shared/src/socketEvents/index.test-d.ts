@@ -2,6 +2,7 @@ import type {
   CLIENT_TO_SERVER_EVENTS,
   ClientToServerEvents,
   HostSecretPayload,
+  ScoringSetWingParticipationPayload,
   RoomState,
   SERVER_TO_CLIENT_EVENTS,
   SetupAssignPlayerPayload,
@@ -52,6 +53,15 @@ export type AssignPlayerPayloadCheck = Assert<
   >
 >;
 
+export type SetWingParticipationPayloadCheck = Assert<
+  Equal<
+    Parameters<
+      ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION]
+    >,
+    [ScoringSetWingParticipationPayload]
+  >
+>;
+
 export type SnapshotRoomStateArgCheck = Assert<
   Equal<
     Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]>,
@@ -90,6 +100,9 @@ export type InvalidCreateTeamNoPayloadCheck = Assert<Equal<Parameters<ClientToSe
 
 // @ts-expect-error setup:assignPlayer must accept host secret + player assignment payload.
 export type InvalidAssignPlayerNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER]>, []>>;
+
+// @ts-expect-error scoring:setWingParticipation must accept host secret + player participation payload.
+export type InvalidSetWingParticipationNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION]>, []>>;
 
 // @ts-expect-error host:secretIssued must emit host secret payload.
 export type InvalidSecretIssuedPayloadCheck = Assert<Equal<Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED]>, [string]>>;

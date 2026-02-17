@@ -14,4 +14,6 @@ export type RoomState = {
   teams: Team[];
   gameConfig: GameConfigFile | null;
   currentRoundConfig: GameConfigRound | null;
+  wingParticipationByPlayerId: Record<string, boolean>;
+  pendingWingPointsByTeamId: Record<string, number>;
 };

@@ -4,6 +4,7 @@ import {
 } from "@wingnight/shared";
 import type {
   HostSecretPayload,
+  ScoringSetWingParticipationPayload,
   RoomState,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload
@@ -21,6 +22,7 @@ type RoomStateSocket = {
     (event: typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, listener: (payload: unknown) => void): void;
   };
 };
 
@@ -33,6 +35,7 @@ type AuthorizedSetupMutationHandlers = {
   onAuthorizedNextPhase: () => void;
   onAuthorizedCreateTeam: (name: string) => void;
   onAuthorizedAssignPlayer: (playerId: string, teamId: string | null) => void;
+  onAuthorizedSetWingParticipation: (playerId: string, didEat: boolean) => void;
 };
 
 const isHostSecretPayload = (payload: unknown): payload is HostSecretPayload => {
@@ -73,6 +76,24 @@ const isSetupAssignPlayerPayload = (
   }
 
   return payload.teamId === null || typeof payload.teamId === "string";
+};
+
+const isScoringSetWingParticipationPayload = (
+  payload: unknown
+): payload is ScoringSetWingParticipationPayload => {
+  if (!isHostSecretPayload(payload)) {
+    return false;
+  }
+
+  if (!("playerId" in payload) || typeof payload.playerId !== "string") {
+    return false;
+  }
+
+  if (!("didEat" in payload) || typeof payload.didEat !== "boolean") {
+    return false;
+  }
+
+  return true;
 };
 
 export const registerRoomStateHandlers = (
@@ -139,6 +160,21 @@ export const registerRoomStateHandlers = (
     mutationHandlers.onAuthorizedAssignPlayer(payload.playerId, payload.teamId);
   };
 
+  const handleSetWingParticipation = (payload: unknown): void => {
+    if (!isScoringSetWingParticipationPayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedSetWingParticipation(payload.playerId, payload.didEat);
+  };
+
   emitSnapshot();
 
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, emitSnapshot);
@@ -146,4 +182,8 @@ export const registerRoomStateHandlers = (
   socket.on(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, handleNextPhase);
   socket.on(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, handleCreateTeam);
   socket.on(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, handleAssignPlayer);
+  socket.on(
+    CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
+    handleSetWingParticipation
+  );
 };

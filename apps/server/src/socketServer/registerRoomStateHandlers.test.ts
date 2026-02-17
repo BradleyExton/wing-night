@@ -24,6 +24,7 @@ type SocketHarness = {
   triggerNextPhase: (payload: unknown) => void;
   triggerCreateTeam: (payload: unknown) => void;
   triggerAssignPlayer: (payload: unknown) => void;
+  triggerSetWingParticipation: (payload: unknown) => void;
 };
 
 const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
@@ -34,7 +35,9 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     players: [],
     teams: [],
     gameConfig: null,
-    currentRoundConfig: null
+    currentRoundConfig: null,
+    wingParticipationByPlayerId: {},
+    pendingWingPointsByTeamId: {}
   };
 };
 
@@ -68,6 +71,11 @@ const createSocketHarness = (): SocketHarness => {
       `Expected ${CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER} handler to be registered.`
     );
   };
+  let setWingParticipationHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION} handler to be registered.`
+    );
+  };
 
   const socket = {
     emit: (
@@ -95,7 +103,8 @@ const createSocketHarness = (): SocketHarness => {
         | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL
         | typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE
         | typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM
-        | typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
+        | typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER
+        | typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
       listener: (() => void) | ((payload: unknown) => void)
     ): void => {
       if (event === CLIENT_TO_SERVER_EVENTS.REQUEST_STATE) {
@@ -118,7 +127,12 @@ const createSocketHarness = (): SocketHarness => {
         return;
       }
 
-      assignPlayerHandler = listener as (payload: unknown) => void;
+      if (event === CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER) {
+        assignPlayerHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      setWingParticipationHandler = listener as (payload: unknown) => void;
     }
   } as unknown as SocketUnderTest;
 
@@ -143,6 +157,9 @@ const createSocketHarness = (): SocketHarness => {
     },
     triggerAssignPlayer: (payload: unknown): void => {
       assignPlayerHandler(payload);
+    },
+    triggerSetWingParticipation: (payload: unknown): void => {
+      setWingParticipationHandler(payload);
     }
   };
 };
@@ -158,6 +175,9 @@ const createMutationHandlers = (
       // no-op
     },
     onAuthorizedAssignPlayer: () => {
+      // no-op
+    },
+    onAuthorizedSetWingParticipation: () => {
       // no-op
     },
     ...overrides
@@ -386,5 +406,51 @@ test("ignores malformed and unauthorized assign-player payloads", () => {
   });
 
   assert.deepEqual(assignmentCalls, [{ playerId: "player-1", teamId: null }]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
+test("ignores malformed and unauthorized wing-participation payloads", () => {
+  const socketHarness = createSocketHarness();
+  const participationCalls: Array<{ playerId: string; didEat: boolean }> = [];
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.SETUP),
+    createMutationHandlers({
+      onAuthorizedSetWingParticipation: (playerId, didEat) => {
+        participationCalls.push({ playerId, didEat });
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerSetWingParticipation(undefined);
+    socketHarness.triggerSetWingParticipation({});
+    socketHarness.triggerSetWingParticipation({ hostSecret: "valid-host-secret" });
+    socketHarness.triggerSetWingParticipation({
+      hostSecret: "valid-host-secret",
+      playerId: 10,
+      didEat: true
+    });
+    socketHarness.triggerSetWingParticipation({
+      hostSecret: "valid-host-secret",
+      playerId: "player-1",
+      didEat: "yes"
+    });
+    socketHarness.triggerSetWingParticipation({
+      hostSecret: "invalid-host-secret",
+      playerId: "player-1",
+      didEat: true
+    });
+    socketHarness.triggerSetWingParticipation({
+      hostSecret: "valid-host-secret",
+      playerId: "player-2",
+      didEat: false
+    });
+  });
+
+  assert.deepEqual(participationCalls, [{ playerId: "player-2", didEat: false }]);
   assert.equal(socketHarness.invalidSecretEvents, 1);
 });

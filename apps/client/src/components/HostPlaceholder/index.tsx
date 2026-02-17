@@ -13,7 +13,11 @@ import {
   listClassName,
   listRowClassName,
   panelClassName,
+  participationControlClassName,
+  participationLabelClassName,
+  participationRowClassName,
   playersCardClassName,
+  playerMetaClassName,
   playerNameClassName,
   primaryButtonClassName,
   sectionDescriptionClassName,
@@ -34,13 +38,15 @@ type HostPlaceholderProps = {
   onNextPhase?: () => void;
   onCreateTeam?: (name: string) => void;
   onAssignPlayer?: (playerId: string, teamId: string | null) => void;
+  onSetWingParticipation?: (playerId: string, didEat: boolean) => void;
 };
 
 export const HostPlaceholder = ({
   roomState,
   onNextPhase,
   onCreateTeam,
-  onAssignPlayer
+  onAssignPlayer,
+  onSetWingParticipation
 }: HostPlaceholderProps): JSX.Element => {
   const [nextTeamName, setNextTeamName] = useState("");
 
@@ -60,11 +66,29 @@ export const HostPlaceholder = ({
     return map;
   }, [roomState]);
 
+  const teamNameByTeamId = useMemo(() => {
+    const map = new Map<string, string>();
+
+    if (!roomState) {
+      return map;
+    }
+
+    for (const team of roomState.teams) {
+      map.set(team.id, team.name);
+    }
+
+    return map;
+  }, [roomState]);
+
   const players = roomState?.players ?? [];
   const teams = roomState?.teams ?? [];
   const isSetupPhase = roomState?.phase === Phase.SETUP;
+  const isEatingPhase = roomState?.phase === Phase.EATING;
+  const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
   const setupMutationsDisabled = onCreateTeam === undefined || !isSetupPhase;
   const assignmentDisabled = onAssignPlayer === undefined || !isSetupPhase;
+  const participationDisabled =
+    onSetWingParticipation === undefined || !isEatingPhase;
 
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -93,6 +117,17 @@ export const HostPlaceholder = ({
 
     const selectedTeamId = event.target.value;
     onAssignPlayer(playerId, selectedTeamId.length === 0 ? null : selectedTeamId);
+  };
+
+  const handleWingParticipationChange = (
+    playerId: string,
+    didEat: boolean
+  ): void => {
+    if (!onSetWingParticipation || !isEatingPhase) {
+      return;
+    }
+
+    onSetWingParticipation(playerId, didEat);
   };
 
   return (
@@ -186,6 +221,11 @@ export const HostPlaceholder = ({
           <h2 className={sectionHeadingClassName}>
             {hostPlaceholderCopy.playersSectionTitle}
           </h2>
+          {isEatingPhase && (
+            <p className={sectionDescriptionClassName}>
+              {hostPlaceholderCopy.eatingParticipationDescription}
+            </p>
+          )}
           {players.length === 0 && (
             <p className={sectionDescriptionClassName}>
               {hostPlaceholderCopy.noPlayersLabel}
@@ -199,26 +239,58 @@ export const HostPlaceholder = ({
                 return (
                   <li key={player.id} className={listRowClassName}>
                     <span className={playerNameClassName}>{player.name}</span>
-                    <select
-                      aria-label={hostPlaceholderCopy.assignmentSelectLabel(player.name)}
-                      className={assignmentSelectClassName}
-                      value={assignedTeamId}
-                      onChange={(event): void => {
-                        handleAssignmentChange(event, player.id);
-                      }}
-                      disabled={assignmentDisabled}
-                    >
-                      <option value="">
-                        {hostPlaceholderCopy.unassignedOptionLabel}
-                      </option>
-                      {teams.map((team) => {
-                        return (
-                          <option key={team.id} value={team.id}>
-                            {team.name}
-                          </option>
-                        );
-                      })}
-                    </select>
+                    {isSetupPhase && (
+                      <select
+                        aria-label={hostPlaceholderCopy.assignmentSelectLabel(player.name)}
+                        className={assignmentSelectClassName}
+                        value={assignedTeamId}
+                        onChange={(event): void => {
+                          handleAssignmentChange(event, player.id);
+                        }}
+                        disabled={assignmentDisabled}
+                      >
+                        <option value="">
+                          {hostPlaceholderCopy.unassignedOptionLabel}
+                        </option>
+                        {teams.map((team) => {
+                          return (
+                            <option key={team.id} value={team.id}>
+                              {team.name}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    )}
+                    {isEatingPhase && (
+                      <div className={participationRowClassName}>
+                        <span className={playerMetaClassName}>
+                          {assignedTeamId.length > 0
+                            ? hostPlaceholderCopy.assignedTeamLabel(
+                                teamNameByTeamId.get(assignedTeamId) ??
+                                  hostPlaceholderCopy.noAssignedTeamLabel
+                              )
+                            : hostPlaceholderCopy.noAssignedTeamLabel}
+                        </span>
+                        <label className={participationLabelClassName}>
+                          <input
+                            className={participationControlClassName}
+                            type="checkbox"
+                            checked={wingParticipationByPlayerId[player.id] === true}
+                            onChange={(event): void => {
+                              handleWingParticipationChange(
+                                player.id,
+                                event.target.checked
+                              );
+                            }}
+                            disabled={participationDisabled}
+                            aria-label={hostPlaceholderCopy.wingParticipationToggleLabel(
+                              player.name
+                            )}
+                          />
+                          <span>{hostPlaceholderCopy.ateWingLabel}</span>
+                        </label>
+                      </div>
+                    )}
                   </li>
                 );
               })}

@@ -26,7 +26,9 @@ export const createInitialRoomState = (): RoomState => {
     players: [],
     teams: [],
     gameConfig: null,
-    currentRoundConfig: null
+    currentRoundConfig: null,
+    wingParticipationByPlayerId: {},
+    pendingWingPointsByTeamId: {}
   };
 };
 
@@ -62,6 +64,31 @@ export const setRoomStateGameConfig = (
   roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
 
   return getRoomStateSnapshot();
+};
+
+const recomputePendingWingPoints = (state: RoomState): void => {
+  if (!state.currentRoundConfig) {
+    state.pendingWingPointsByTeamId = {};
+    return;
+  }
+
+  const pointsPerPlayer = state.currentRoundConfig.pointsPerPlayer;
+  const nextPendingPointsByTeamId: Record<string, number> = {};
+
+  for (const team of state.teams) {
+    const ateCount = team.playerIds.reduce((count, playerId) => {
+      return state.wingParticipationByPlayerId[playerId] === true ? count + 1 : count;
+    }, 0);
+
+    nextPendingPointsByTeamId[team.id] = ateCount * pointsPerPlayer;
+  }
+
+  state.pendingWingPointsByTeamId = nextPendingPointsByTeamId;
+};
+
+const resetRoundWingParticipation = (state: RoomState): void => {
+  state.wingParticipationByPlayerId = {};
+  state.pendingWingPointsByTeamId = {};
 };
 
 export const createTeam = (name: string): RoomState => {
@@ -119,6 +146,38 @@ export const assignPlayerToTeam = (
   }
 
   targetTeam.playerIds.push(playerId);
+
+  return getRoomStateSnapshot();
+};
+
+export const setWingParticipation = (
+  playerId: string,
+  didEat: boolean
+): RoomState => {
+  if (roomState.phase !== Phase.EATING) {
+    return getRoomStateSnapshot();
+  }
+
+  if (!roomState.currentRoundConfig) {
+    return getRoomStateSnapshot();
+  }
+
+  const playerExists = roomState.players.some((player) => player.id === playerId);
+
+  if (!playerExists) {
+    return getRoomStateSnapshot();
+  }
+
+  const playerAssignedToTeam = roomState.teams.some((team) =>
+    team.playerIds.includes(playerId)
+  );
+
+  if (!playerAssignedToTeam) {
+    return getRoomStateSnapshot();
+  }
+
+  roomState.wingParticipationByPlayerId[playerId] = didEat;
+  recomputePendingWingPoints(roomState);
 
   return getRoomStateSnapshot();
 };
@@ -191,6 +250,10 @@ export const advanceRoomStatePhase = (): RoomState => {
     roomState.currentRoundConfig = null;
   } else {
     roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
+  }
+
+  if (nextPhase === Phase.EATING) {
+    resetRoundWingParticipation(roomState);
   }
 
   logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);
