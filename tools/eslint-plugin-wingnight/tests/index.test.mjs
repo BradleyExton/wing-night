@@ -3,9 +3,11 @@ import { RuleTester } from "eslint";
 import tseslint from "typescript-eslint";
 
 import componentEntryFileName from "../rules/component-entry-file-name.mjs";
+import noClassNameSuffixInStylesExports from "../rules/no-class-name-suffix-in-styles-exports.mjs";
 import noHardcodedComponentJsxText from "../rules/no-hardcoded-component-jsx-text.mjs";
 import noHardcodedHexColorsInStyles from "../rules/no-hardcoded-hex-colors-in-styles.mjs";
 import noInlineStyleProp from "../rules/no-inline-style-prop.mjs";
+import noNonsemanticColorTokensInStyles from "../rules/no-nonsemantic-color-tokens-in-styles.mjs";
 import requireStylesImportInComponentEntry from "../rules/require-styles-import-in-component-entry.mjs";
 import socketEventNameFormat from "../rules/socket-event-name-format.mjs";
 import utilityEntryFileName from "../rules/utility-entry-file-name.mjs";
@@ -35,7 +37,7 @@ test("require-styles-import-in-component-entry", () => {
       valid: [
         {
           filename: "/repo/apps/client/src/components/Example/index.tsx",
-          code: "import { containerClassName } from './styles'; export const Example = () => <main className={containerClassName} />;"
+          code: "import * as styles from './styles'; export const Example = () => <main className={styles.container} />;"
         }
       ],
       invalid: [
@@ -43,6 +45,16 @@ test("require-styles-import-in-component-entry", () => {
           filename: "/repo/apps/client/src/components/Example/index.tsx",
           code: "export const Example = () => <main />;",
           errors: [{ messageId: "missingStylesImport" }]
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/index.tsx",
+          code: "import { container } from './styles'; export const Example = () => <main className={container} />;",
+          errors: [{ messageId: "invalidStylesImport" }]
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/index.tsx",
+          code: "import * as componentStyles from './styles'; export const Example = () => <main className={componentStyles.container} />;",
+          errors: [{ messageId: "invalidStylesImport" }]
         }
       ]
     }
@@ -186,6 +198,64 @@ test("no-hardcoded-hex-colors-in-styles", () => {
           filename: "/repo/apps/client/src/components/Example/styles.ts",
           code: "export const className = `text-[#FBBF24]`;",
           errors: [{ messageId: "noHardcodedHexColor" }]
+        }
+      ]
+    }
+  );
+});
+
+test("no-class-name-suffix-in-styles-exports", () => {
+  ruleTester.run(
+    "no-class-name-suffix-in-styles-exports",
+    noClassNameSuffixInStylesExports,
+    {
+      valid: [
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const container = 'bg-bg'; export const heading = 'text-gold';"
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/index.tsx",
+          code: "export const containerClassName = 'bg-bg';"
+        }
+      ],
+      invalid: [
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const containerClassName = 'bg-bg';",
+          errors: [{ messageId: "noClassNameSuffix" }]
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "const container = 'bg-bg'; export { container as containerClassName };",
+          errors: [{ messageId: "noClassNameSuffix" }]
+        }
+      ]
+    }
+  );
+});
+
+test("no-nonsemantic-color-tokens-in-styles", () => {
+  ruleTester.run(
+    "no-nonsemantic-color-tokens-in-styles",
+    noNonsemanticColorTokensInStyles,
+    {
+      valid: [
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const container = 'bg-bg text-text border-primary/40'; export const label = 'text-muted';"
+        }
+      ],
+      invalid: [
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const container = 'bg-black text-white border-zinc-500';",
+          errors: [{ messageId: "noNonsemanticColorToken" }]
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const container = `placeholder:text-gray-400`;",
+          errors: [{ messageId: "noNonsemanticColorToken" }]
         }
       ]
     }
