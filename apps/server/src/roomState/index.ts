@@ -1,11 +1,4 @@
 import {
-  createTriviaStateWithPendingPoints,
-  isTriviaMinigameState,
-  type TriviaMinigameAction,
-  type TriviaMinigameContext,
-  type TriviaMinigameState
-} from "@wingnight/minigames-trivia";
-import {
   Phase,
   type GameConfigFile,
   type Player,
@@ -14,11 +7,14 @@ import {
 } from "@wingnight/shared";
 
 import { logPhaseTransition, logScoreMutation } from "../logger/index.js";
-import { resolveMinigameModule } from "../minigames/registry/index.js";
 import {
-  clearTriviaProjectionFromRoomState,
-  projectTriviaHostViewToRoomState
-} from "../minigames/triviaProjection/index.js";
+  clearTriviaRuntimeState,
+  initializeTriviaRuntimeState,
+  reduceTriviaAttempt,
+  resetTriviaRuntimeState,
+  syncTriviaRuntimeWithPendingPoints,
+  syncTriviaRuntimeWithPrompts
+} from "../minigames/triviaRuntime/index.js";
 import { getNextPhase } from "../utils/getNextPhase/index.js";
 
 const DEFAULT_TOTAL_ROUNDS = 3;
@@ -50,8 +46,6 @@ const resolveMinigamePointsMax = (state: RoomState): number | null => {
   return state.gameConfig.minigameScoring.defaultMax;
 };
 
-const triviaModule = resolveMinigameModule("TRIVIA");
-
 export const createInitialRoomState = (): RoomState => {
   return {
     phase: Phase.SETUP,
@@ -75,7 +69,6 @@ export const createInitialRoomState = (): RoomState => {
 // This module-scoped state is intentionally single-process for the MVP.
 // If the server is scaled across workers/processes, migrate to shared storage.
 const roomState = createInitialRoomState();
-let triviaMinigameState: TriviaMinigameState | null = null;
 
 const overwriteRoomState = (nextState: RoomState): void => {
   Object.assign(roomState, nextState);
@@ -87,32 +80,9 @@ export const getRoomStateSnapshot = (): RoomState => {
 
 export const resetRoomState = (): RoomState => {
   overwriteRoomState(createInitialRoomState());
-  triviaMinigameState = null;
+  resetTriviaRuntimeState();
 
   return getRoomStateSnapshot();
-};
-
-const resolveTriviaMinigameContext = (
-  state: RoomState
-): TriviaMinigameContext => {
-  return {
-    prompts: state.triviaPrompts
-  };
-};
-
-const projectTriviaMinigameStateToRoomState = (
-  state: RoomState,
-  currentTriviaMinigameState: TriviaMinigameState
-): void => {
-  if (!triviaModule) {
-    return;
-  }
-
-  const hostView = triviaModule.selectHostView({
-    state: currentTriviaMinigameState,
-    context: resolveTriviaMinigameContext(state)
-  });
-  projectTriviaHostViewToRoomState(state, hostView);
 };
 
 export const setRoomStatePlayers = (players: Player[]): RoomState => {
@@ -135,79 +105,27 @@ export const setRoomStateTriviaPrompts = (
   triviaPrompts: TriviaPrompt[]
 ): RoomState => {
   roomState.triviaPrompts = structuredClone(triviaPrompts);
-
-  if (isTriviaMinigamePlayState(roomState) && roomState.triviaPrompts.length > 0) {
-    const nextCursor =
-      roomState.triviaPromptCursor % roomState.triviaPrompts.length;
-
-    if (triviaMinigameState && isTriviaMinigameState(triviaMinigameState)) {
-      triviaMinigameState = {
-        turnOrderTeamIds: [...triviaMinigameState.turnOrderTeamIds],
-        activeTurnIndex: triviaMinigameState.activeTurnIndex,
-        promptCursor: nextCursor,
-        pendingPointsByTeamId: {
-          ...triviaMinigameState.pendingPointsByTeamId
-        }
-      };
-      projectTriviaMinigameStateToRoomState(roomState, triviaMinigameState);
-    } else {
-      roomState.triviaPromptCursor = nextCursor;
-      roomState.currentTriviaPrompt = roomState.triviaPrompts[nextCursor] ?? null;
-    }
-  }
+  syncTriviaRuntimeWithPrompts(roomState);
 
   return getRoomStateSnapshot();
 };
 
-const initializeTriviaTurnState = (state: RoomState): void => {
-  if (!triviaModule) {
-    clearTriviaProjectionFromRoomState(state);
-    triviaMinigameState = null;
+const initializeActiveMinigameTurnState = (state: RoomState): void => {
+  const minigameType = state.currentRoundConfig?.minigame;
+
+  if (minigameType !== "TRIVIA") {
+    clearTriviaRuntimeState(state);
     return;
   }
 
   const minigamePointsMax = resolveMinigamePointsMax(state);
 
   if (minigamePointsMax === null) {
-    clearTriviaProjectionFromRoomState(state);
-    triviaMinigameState = null;
+    clearTriviaRuntimeState(state);
     return;
   }
 
-  if (state.turnOrderTeamIds.length === 0) {
-    state.turnOrderTeamIds = state.teams.map((team) => team.id);
-  }
-
-  const nextTriviaMinigameState = triviaModule.init({
-    teamIds: state.turnOrderTeamIds,
-    pointsMax: minigamePointsMax,
-    context: resolveTriviaMinigameContext(state)
-  });
-  triviaMinigameState = nextTriviaMinigameState;
-  projectTriviaMinigameStateToRoomState(state, nextTriviaMinigameState);
-};
-
-const clearTriviaTurnState = (state: RoomState): void => {
-  clearTriviaProjectionFromRoomState(state);
-  triviaMinigameState = null;
-};
-
-const initializeActiveMinigameTurnState = (state: RoomState): void => {
-  const minigameType = state.currentRoundConfig?.minigame;
-
-  if (!minigameType) {
-    clearTriviaTurnState(state);
-    return;
-  }
-
-  const minigameModule = resolveMinigameModule(minigameType);
-
-  if (!minigameModule || minigameModule.id !== "TRIVIA") {
-    clearTriviaTurnState(state);
-    return;
-  }
-
-  initializeTriviaTurnState(state);
+  initializeTriviaRuntimeState(state, minigamePointsMax);
 };
 
 const recomputePendingWingPoints = (state: RoomState): void => {
@@ -367,16 +285,11 @@ export const setPendingMinigamePoints = (
 
   roomState.pendingMinigamePointsByTeamId = nextPendingMinigamePointsByTeamId;
 
-  if (
-    isTriviaMinigamePlayState(roomState) &&
-    triviaMinigameState !== null &&
-    isTriviaMinigameState(triviaMinigameState)
-  ) {
-    triviaMinigameState = createTriviaStateWithPendingPoints(
-      triviaMinigameState,
+  if (isTriviaMinigamePlayState(roomState)) {
+    syncTriviaRuntimeWithPendingPoints(
+      roomState,
       nextPendingMinigamePointsByTeamId
     );
-    projectTriviaMinigameStateToRoomState(roomState, triviaMinigameState);
   }
 
   return getRoomStateSnapshot();
@@ -387,38 +300,13 @@ export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
     return getRoomStateSnapshot();
   }
 
-  if (!triviaModule) {
-    return getRoomStateSnapshot();
-  }
-
   const minigamePointsMax = resolveMinigamePointsMax(roomState);
 
   if (minigamePointsMax === null) {
     return getRoomStateSnapshot();
   }
 
-  if (triviaMinigameState === null || !isTriviaMinigameState(triviaMinigameState)) {
-    initializeTriviaTurnState(roomState);
-  }
-
-  if (triviaMinigameState === null || !isTriviaMinigameState(triviaMinigameState)) {
-    return getRoomStateSnapshot();
-  }
-
-  const action: TriviaMinigameAction = {
-    type: "recordAttempt",
-    isCorrect
-  };
-
-  const nextTriviaMinigameState = triviaModule.reduce({
-    teamIds: roomState.turnOrderTeamIds,
-    pointsMax: minigamePointsMax,
-    context: resolveTriviaMinigameContext(roomState),
-    state: triviaMinigameState,
-    action
-  });
-  triviaMinigameState = nextTriviaMinigameState;
-  projectTriviaMinigameStateToRoomState(roomState, nextTriviaMinigameState);
+  reduceTriviaAttempt(roomState, isCorrect, minigamePointsMax);
 
   return getRoomStateSnapshot();
 };
@@ -498,7 +386,7 @@ export const advanceRoomStatePhase = (): RoomState => {
   }
 
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase !== Phase.MINIGAME_PLAY) {
-    clearTriviaTurnState(roomState);
+    clearTriviaRuntimeState(roomState);
   }
 
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.ROUND_RESULTS) {

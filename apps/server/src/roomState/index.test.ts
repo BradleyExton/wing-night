@@ -523,6 +523,29 @@ test("recordTriviaAttempt applies points, rotates team turns, and wraps prompts"
   assert.equal(snapshot.triviaPromptCursor, 0);
 });
 
+test("setRoomStateTriviaPrompts reprojects trivia state through runtime adapter during play", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+  recordTriviaAttempt(true);
+
+  setRoomStateTriviaPrompts([
+    {
+      id: "prompt-replacement",
+      question: "Replacement question?",
+      answer: "Replacement answer"
+    }
+  ]);
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.activeTurnTeamId, "team-2");
+  assert.equal(snapshot.triviaPromptCursor, 0);
+  assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-replacement");
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 1);
+});
+
 test("trivia turn order remains fixed across rounds", () => {
   resetRoomState();
   const allTriviaRoundsConfig: GameConfigFile = {

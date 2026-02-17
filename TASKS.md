@@ -10,7 +10,8 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- (none)
+- [-] 8.6 Trivia Migration to Module Boundary
+  - Branch: `phase-8-6-trivia-migration-module-boundary`
 
 Completed:
 - [x] 8.2 Display Countdown Render
@@ -129,8 +130,8 @@ Backlog status:
 - [x] 8.2 Display Countdown Render
 - [x] 8.3 Host Phase-Focused Layout (Non-Game)
 - [x] 8.4 Host Compact Phase Views (Non-Game)
-- [ ] 8.5 Minigame Module Boundary (Architecture)
-- [ ] 8.6 Trivia Migration to Module Boundary
+- [x] 8.5 Minigame Module Boundary (Architecture)
+- [-] 8.6 Trivia Migration to Module Boundary
 - [ ] 8.7 Host/Display Minigame Surface Shell
 - [ ] 8.8 Timer `endsAt` Contract Reconciliation
 - [ ] 8.9 Host Timer Controls (Pause/Extend)
