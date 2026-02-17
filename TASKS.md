@@ -141,6 +141,8 @@ Backlog status:
 - [ ] D2 README Architecture Alignment (after 8.5)
 - [ ] D3 AGENTS Guardrail Update (after boundary stabilizes)
 - [ ] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
+- [ ] D5 SPEC Team-Turn Flow Alignment (after 8.12)
+- [ ] D6 README Team-Turn Flow Alignment (after 8.12)
 - [ ] R1 Host UI Decomposition Pass (`HostPlaceholder` phase-surface extraction + remove `Placeholder` naming)
 - [ ] R2 Display UI Decomposition Pass (`DisplayPlaceholder` stage/standings extraction + remove `Placeholder` naming)
 - [ ] 9.1 Playwright Host/Display Sync
@@ -483,6 +485,16 @@ Verification:
 
 -   Update `DESIGN.md` only when host/display surface rules diverge from current guidance
 -   Trigger: minigame surface UI rules require new canonical design constraints
+
+## D5 SPEC Team-Turn Flow Alignment (after 8.12)
+
+-   Update `SPEC.md` round flow and phase definitions to match per-team turn execution (`EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` per team)
+-   Trigger: team-turn flow tasks (`8.10`, `8.11`, `8.12`) merged
+
+## D6 README Team-Turn Flow Alignment (after 8.12)
+
+-   Update `README.md` architecture/flow summary to match implemented team-turn round execution
+-   Trigger: team-turn flow tasks (`8.10`, `8.11`, `8.12`) merged
 
 ------------------------------------------------------------------------
 
