@@ -1,5 +1,6 @@
 import {
   Phase,
+  type ActiveTimer,
   type GameConfigFile,
   type Player,
   type RoomState,
@@ -10,6 +11,19 @@ import { logPhaseTransition, logScoreMutation } from "../logger/index.js";
 import { getNextPhase } from "../utils/getNextPhase/index.js";
 
 const DEFAULT_TOTAL_ROUNDS = 3;
+const EATING_TIMER_KIND: ActiveTimer["kind"] = "EATING";
+const TRIVIA_TURN_TIMER_KIND: ActiveTimer["kind"] = "TRIVIA_TURN";
+const ONE_SECOND_IN_MILLISECONDS = 1000;
+
+let nowProvider = (): number => Date.now();
+
+export const setRoomStateNowProvider = (provider: () => number): void => {
+  nowProvider = provider;
+};
+
+export const resetRoomStateNowProvider = (): void => {
+  nowProvider = (): number => Date.now();
+};
 
 const resolveCurrentRoundConfig = (state: RoomState): RoomState["currentRoundConfig"] => {
   if (!state.gameConfig || state.currentRound <= 0) {
@@ -53,10 +67,52 @@ export const createInitialRoomState = (): RoomState => {
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
     isPassAndPlayLocked: false,
+    activeTimer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
   };
+};
+
+const startTimer = (
+  state: RoomState,
+  kind: ActiveTimer["kind"],
+  durationSeconds: number
+): void => {
+  const startsAt = nowProvider();
+
+  state.activeTimer = {
+    kind,
+    startsAt,
+    endsAt: startsAt + durationSeconds * ONE_SECOND_IN_MILLISECONDS,
+    durationSeconds
+  };
+};
+
+const startEatingTimer = (state: RoomState): void => {
+  const durationSeconds = state.gameConfig?.timers.eatingSeconds;
+
+  if (durationSeconds === undefined) {
+    state.activeTimer = null;
+    return;
+  }
+
+  startTimer(state, EATING_TIMER_KIND, durationSeconds);
+};
+
+const startTriviaTurnTimer = (state: RoomState): void => {
+  const durationSeconds = state.gameConfig?.timers.triviaSeconds;
+
+  if (durationSeconds === undefined) {
+    state.activeTimer = null;
+    return;
+  }
+
+  startTimer(state, TRIVIA_TURN_TIMER_KIND, durationSeconds);
+};
+
+const clearActiveTimer = (state: RoomState): void => {
+  state.activeTimer = null;
 };
 
 // This module-scoped state is intentionally single-process for the MVP.
@@ -320,6 +376,7 @@ export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
 
   const nextTurnIndex = (activeTurnIndex + 1) % roomState.turnOrderTeamIds.length;
   roomState.activeTurnTeamId = roomState.turnOrderTeamIds[nextTurnIndex] ?? null;
+  startTriviaTurnTimer(roomState);
 
   if (roomState.triviaPrompts.length === 0) {
     roomState.currentTriviaPrompt = null;
@@ -453,6 +510,14 @@ export const advanceRoomStatePhase = (): RoomState => {
 
   if (nextPhase === Phase.EATING) {
     resetRoundWingParticipation(roomState);
+  }
+
+  if (nextPhase === Phase.EATING) {
+    startEatingTimer(roomState);
+  } else if (isTriviaMinigamePlayState(roomState)) {
+    startTriviaTurnTimer(roomState);
+  } else {
+    clearActiveTimer(roomState);
   }
 
   logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);

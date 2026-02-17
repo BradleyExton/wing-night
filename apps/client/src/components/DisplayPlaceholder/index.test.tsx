@@ -52,6 +52,7 @@ const buildSnapshot = (
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
     isPassAndPlayLocked: false,
+    activeTimer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
