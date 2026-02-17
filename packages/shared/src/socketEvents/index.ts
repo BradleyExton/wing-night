@@ -10,6 +10,7 @@ export type ScoringSetWingParticipationPayload = HostSecretPayload &
   Record<"didEat", boolean>;
 export type MinigameRecordTriviaAttemptPayload = HostSecretPayload &
   Record<"isCorrect", boolean>;
+export type MinigameTogglePassAndPlayLockPayload = HostSecretPayload;
 
 export const CLIENT_TO_SERVER_EVENTS = {
   REQUEST_STATE: "client:requestState",
@@ -18,7 +19,8 @@ export const CLIENT_TO_SERVER_EVENTS = {
   CREATE_TEAM: "setup:createTeam",
   ASSIGN_PLAYER: "setup:assignPlayer",
   SET_WING_PARTICIPATION: "scoring:setWingParticipation",
-  RECORD_TRIVIA_ATTEMPT: "minigame:recordTriviaAttempt"
+  RECORD_TRIVIA_ATTEMPT: "minigame:recordTriviaAttempt",
+  TOGGLE_PASS_AND_PLAY_LOCK: "minigame:togglePassAndPlayLock"
 } as const;
 
 export const SERVER_TO_CLIENT_EVENTS = {
@@ -48,6 +50,9 @@ export type ClientToServerEvents = {
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]: (
     payload: MinigameRecordTriviaAttemptPayload
+  ) => void;
+  [CLIENT_TO_SERVER_EVENTS.TOGGLE_PASS_AND_PLAY_LOCK]: (
+    payload: MinigameTogglePassAndPlayLockPayload
   ) => void;
 };
 

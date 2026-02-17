@@ -17,6 +17,7 @@ import {
   createTeam,
   getRoomStateSnapshot,
   recordTriviaAttempt,
+  togglePassAndPlayLock,
   setWingParticipation
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
@@ -84,6 +85,10 @@ export const attachSocketServer = (
         },
         onAuthorizedRecordTriviaAttempt: (isCorrect) => {
           const updatedSnapshot = recordTriviaAttempt(isCorrect);
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedTogglePassAndPlayLock: () => {
+          const updatedSnapshot = togglePassAndPlayLock();
           socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
         }
       },

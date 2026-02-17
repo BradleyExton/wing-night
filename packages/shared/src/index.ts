@@ -39,6 +39,7 @@ export type {
   ClientToServerEvents,
   HostSecretPayload,
   MinigameRecordTriviaAttemptPayload,
+  MinigameTogglePassAndPlayLockPayload,
   ScoringSetWingParticipationPayload,
   ServerToClientEventName,
   SetupAssignPlayerPayload,

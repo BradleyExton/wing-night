@@ -26,6 +26,7 @@ type SocketHarness = {
   triggerAssignPlayer: (payload: unknown) => void;
   triggerSetWingParticipation: (payload: unknown) => void;
   triggerRecordTriviaAttempt: (payload: unknown) => void;
+  triggerTogglePassAndPlayLock: (payload: unknown) => void;
 };
 
 const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
@@ -42,6 +43,7 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
+    isPassAndPlayLocked: false,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
@@ -88,6 +90,11 @@ const createSocketHarness = (): SocketHarness => {
       `Expected ${CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT} handler to be registered.`
     );
   };
+  let togglePassAndPlayLockHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.TOGGLE_PASS_AND_PLAY_LOCK} handler to be registered.`
+    );
+  };
 
   const socket = {
     emit: (
@@ -117,7 +124,8 @@ const createSocketHarness = (): SocketHarness => {
         | typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM
         | typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER
         | typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION
-        | typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
+        | typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT
+        | typeof CLIENT_TO_SERVER_EVENTS.TOGGLE_PASS_AND_PLAY_LOCK,
       listener: (() => void) | ((payload: unknown) => void)
     ): void => {
       if (event === CLIENT_TO_SERVER_EVENTS.REQUEST_STATE) {
@@ -150,7 +158,12 @@ const createSocketHarness = (): SocketHarness => {
         return;
       }
 
-      recordTriviaAttemptHandler = listener as (payload: unknown) => void;
+      if (event === CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT) {
+        recordTriviaAttemptHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      togglePassAndPlayLockHandler = listener as (payload: unknown) => void;
     }
   } as unknown as SocketUnderTest;
 
@@ -181,6 +194,9 @@ const createSocketHarness = (): SocketHarness => {
     },
     triggerRecordTriviaAttempt: (payload: unknown): void => {
       recordTriviaAttemptHandler(payload);
+    },
+    triggerTogglePassAndPlayLock: (payload: unknown): void => {
+      togglePassAndPlayLockHandler(payload);
     }
   };
 };
@@ -202,6 +218,9 @@ const createMutationHandlers = (
       // no-op
     },
     onAuthorizedRecordTriviaAttempt: () => {
+      // no-op
+    },
+    onAuthorizedTogglePassAndPlayLock: () => {
       // no-op
     },
     ...overrides
@@ -514,5 +533,37 @@ test("ignores malformed and unauthorized trivia-attempt payloads", () => {
   });
 
   assert.deepEqual(triviaAttemptCalls, [false]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
+test("ignores malformed and unauthorized pass-and-play-lock payloads", () => {
+  const socketHarness = createSocketHarness();
+  let toggleCalls = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.SETUP),
+    createMutationHandlers({
+      onAuthorizedTogglePassAndPlayLock: () => {
+        toggleCalls += 1;
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerTogglePassAndPlayLock(undefined);
+    socketHarness.triggerTogglePassAndPlayLock({});
+    socketHarness.triggerTogglePassAndPlayLock({ hostSecret: 42 });
+    socketHarness.triggerTogglePassAndPlayLock({
+      hostSecret: "invalid-host-secret"
+    });
+    socketHarness.triggerTogglePassAndPlayLock({
+      hostSecret: "valid-host-secret"
+    });
+  });
+
+  assert.equal(toggleCalls, 1);
   assert.equal(socketHarness.invalidSecretEvents, 1);
 });

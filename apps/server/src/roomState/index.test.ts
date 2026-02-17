@@ -14,6 +14,7 @@ import {
   setPendingMinigamePoints,
   setRoomStateGameConfig,
   setRoomStateTriviaPrompts,
+  togglePassAndPlayLock,
   setWingParticipation,
   setRoomStatePlayers
 } from "./index.js";
@@ -110,6 +111,7 @@ test("createInitialRoomState returns setup defaults", () => {
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
+    isPassAndPlayLocked: false,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
@@ -476,6 +478,7 @@ test("initializes trivia turn state on MINIGAME_INTRO -> MINIGAME_PLAY", () => {
   assert.equal(snapshot.activeTurnTeamId, "team-1");
   assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-1");
   assert.equal(snapshot.triviaPromptCursor, 0);
+  assert.equal(snapshot.isPassAndPlayLocked, true);
 });
 
 test("recordTriviaAttempt applies points, rotates team turns, and wraps prompts", () => {
@@ -542,6 +545,36 @@ test("recordTriviaAttempt enforces minigame scoring cap", () => {
   const snapshot = getRoomStateSnapshot();
 
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 15);
+});
+
+test("togglePassAndPlayLock only mutates during TRIVIA MINIGAME_PLAY", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.isPassAndPlayLocked, false);
+
+  togglePassAndPlayLock();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.isPassAndPlayLocked, false);
+
+  advanceToMinigamePlayPhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.isPassAndPlayLocked, true);
+
+  togglePassAndPlayLock();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.isPassAndPlayLocked, false);
+
+  togglePassAndPlayLock();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.isPassAndPlayLocked, true);
+
+  advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(snapshot.isPassAndPlayLocked, false);
 });
 
 test("recordTriviaAttempt ignores calls outside TRIVIA MINIGAME_PLAY", () => {

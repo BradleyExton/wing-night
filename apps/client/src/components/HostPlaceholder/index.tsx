@@ -1,5 +1,5 @@
 import type { ChangeEvent, FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Phase, type RoomState } from "@wingnight/shared";
 
 import {
@@ -9,6 +9,8 @@ import {
   containerClassName,
   controlsRowClassName,
   headingClassName,
+  holdToUnlockButtonActiveClassName,
+  holdToUnlockButtonClassName,
   lockNoticeClassName,
   listClassName,
   listRowClassName,
@@ -20,6 +22,9 @@ import {
   playerMetaClassName,
   playerNameClassName,
   primaryButtonClassName,
+  passAndPlayLockedStatusClassName,
+  passAndPlayStatusClassName,
+  passAndPlayUnlockedStatusClassName,
   sectionDescriptionClassName,
   sectionGridClassName,
   sectionHeadingClassName,
@@ -36,6 +41,9 @@ import {
   teamNameClassName
 } from "./styles";
 import { hostPlaceholderCopy } from "./copy";
+import { createPressAndHoldHandlers } from "./createPressAndHoldHandlers";
+
+const PASS_AND_PLAY_HOLD_DURATION_MS = 800;
 
 type HostPlaceholderProps = {
   roomState: RoomState | null;
@@ -44,6 +52,7 @@ type HostPlaceholderProps = {
   onAssignPlayer?: (playerId: string, teamId: string | null) => void;
   onSetWingParticipation?: (playerId: string, didEat: boolean) => void;
   onRecordTriviaAttempt?: (isCorrect: boolean) => void;
+  onTogglePassAndPlayLock?: () => void;
 };
 
 export const HostPlaceholder = ({
@@ -52,9 +61,11 @@ export const HostPlaceholder = ({
   onCreateTeam,
   onAssignPlayer,
   onSetWingParticipation,
-  onRecordTriviaAttempt
+  onRecordTriviaAttempt,
+  onTogglePassAndPlayLock
 }: HostPlaceholderProps): JSX.Element => {
   const [nextTeamName, setNextTeamName] = useState("");
+  const [isUnlockHoldActive, setIsUnlockHoldActive] = useState(false);
 
   const assignedTeamByPlayerId = useMemo(() => {
     const map = new Map<string, string>();
@@ -96,6 +107,7 @@ export const HostPlaceholder = ({
   const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
   const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
+  const isPassAndPlayLocked = roomState?.isPassAndPlayLocked === true;
   const activeTurnTeamName =
     activeTurnTeamId !== null
       ? (teamNameByTeamId.get(activeTurnTeamId) ??
@@ -107,9 +119,12 @@ export const HostPlaceholder = ({
     onSetWingParticipation === undefined || !isEatingPhase;
   const triviaAttemptDisabled =
     onRecordTriviaAttempt === undefined ||
+    isPassAndPlayLocked ||
     !isTriviaMinigamePlayPhase ||
     activeTurnTeamId === null ||
     currentTriviaPrompt === null;
+  const passAndPlayToggleDisabled =
+    onTogglePassAndPlayLock === undefined || !isTriviaMinigamePlayPhase;
 
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -158,6 +173,36 @@ export const HostPlaceholder = ({
 
     onRecordTriviaAttempt(isCorrect);
   };
+
+  const handleTogglePassAndPlayLock = useCallback((): void => {
+    if (!onTogglePassAndPlayLock || !isTriviaMinigamePlayPhase) {
+      return;
+    }
+
+    onTogglePassAndPlayLock();
+  }, [isTriviaMinigamePlayPhase, onTogglePassAndPlayLock]);
+
+  const holdToUnlockHandlers = useMemo(() => {
+    return createPressAndHoldHandlers({
+      holdDurationMs: PASS_AND_PLAY_HOLD_DURATION_MS,
+      onHoldComplete: () => {
+        setIsUnlockHoldActive(false);
+        handleTogglePassAndPlayLock();
+      }
+    });
+  }, [handleTogglePassAndPlayLock]);
+
+  useEffect(() => {
+    return () => {
+      holdToUnlockHandlers.cancel();
+    };
+  }, [holdToUnlockHandlers]);
+
+  useEffect(() => {
+    if (!isPassAndPlayLocked && isUnlockHoldActive) {
+      setIsUnlockHoldActive(false);
+    }
+  }, [isPassAndPlayLocked, isUnlockHoldActive]);
 
   return (
     <main className={containerClassName}>
@@ -258,7 +303,20 @@ export const HostPlaceholder = ({
           {isTriviaMinigamePlayPhase && (
             <>
               <p className={sectionDescriptionClassName}>
-                {hostPlaceholderCopy.triviaSectionDescription}
+                {isPassAndPlayLocked
+                  ? hostPlaceholderCopy.triviaLockedDescription
+                  : hostPlaceholderCopy.triviaUnlockedDescription}
+              </p>
+              <p
+                className={`${passAndPlayStatusClassName} ${
+                  isPassAndPlayLocked
+                    ? passAndPlayLockedStatusClassName
+                    : passAndPlayUnlockedStatusClassName
+                }`}
+              >
+                {isPassAndPlayLocked
+                  ? hostPlaceholderCopy.passAndPlayLockedStateLabel
+                  : hostPlaceholderCopy.passAndPlayUnlockedStateLabel}
               </p>
               <div className={triviaMetaClassName}>
                 <div>
@@ -276,38 +334,89 @@ export const HostPlaceholder = ({
                         {currentTriviaPrompt.question}
                       </p>
                     </div>
-                    <div>
-                      <p className={triviaLabelClassName}>
-                        {hostPlaceholderCopy.triviaAnswerLabel}
-                      </p>
-                      <p className={triviaValueClassName}>
-                        {currentTriviaPrompt.answer}
-                      </p>
-                    </div>
+                    {!isPassAndPlayLocked && (
+                      <div>
+                        <p className={triviaLabelClassName}>
+                          {hostPlaceholderCopy.triviaAnswerLabel}
+                        </p>
+                        <p className={triviaValueClassName}>
+                          {currentTriviaPrompt.answer}
+                        </p>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
               <div className={triviaActionsClassName}>
-                <button
-                  className={actionButtonClassName}
-                  type="button"
-                  disabled={triviaAttemptDisabled}
-                  onClick={(): void => {
-                    handleRecordTriviaAttempt(true);
-                  }}
-                >
-                  {hostPlaceholderCopy.triviaCorrectButtonLabel}
-                </button>
-                <button
-                  className={actionButtonClassName}
-                  type="button"
-                  disabled={triviaAttemptDisabled}
-                  onClick={(): void => {
-                    handleRecordTriviaAttempt(false);
-                  }}
-                >
-                  {hostPlaceholderCopy.triviaIncorrectButtonLabel}
-                </button>
+                {isPassAndPlayLocked ? (
+                  <>
+                    <button
+                      className={`${holdToUnlockButtonClassName} ${
+                        isUnlockHoldActive ? holdToUnlockButtonActiveClassName : ""
+                      }`}
+                      type="button"
+                      disabled={passAndPlayToggleDisabled}
+                      onPointerDown={(): void => {
+                        if (passAndPlayToggleDisabled) {
+                          return;
+                        }
+
+                        setIsUnlockHoldActive(true);
+                        holdToUnlockHandlers.start();
+                      }}
+                      onPointerUp={(): void => {
+                        setIsUnlockHoldActive(false);
+                        holdToUnlockHandlers.cancel();
+                      }}
+                      onPointerLeave={(): void => {
+                        setIsUnlockHoldActive(false);
+                        holdToUnlockHandlers.cancel();
+                      }}
+                      onPointerCancel={(): void => {
+                        setIsUnlockHoldActive(false);
+                        holdToUnlockHandlers.cancel();
+                      }}
+                    >
+                      {hostPlaceholderCopy.passAndPlayHoldToUnlockButtonLabel}
+                    </button>
+                    {isUnlockHoldActive && (
+                      <span className={playerMetaClassName}>
+                        {hostPlaceholderCopy.passAndPlayHoldInProgressLabel}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className={actionButtonClassName}
+                      type="button"
+                      disabled={triviaAttemptDisabled}
+                      onClick={(): void => {
+                        handleRecordTriviaAttempt(true);
+                      }}
+                    >
+                      {hostPlaceholderCopy.triviaCorrectButtonLabel}
+                    </button>
+                    <button
+                      className={actionButtonClassName}
+                      type="button"
+                      disabled={triviaAttemptDisabled}
+                      onClick={(): void => {
+                        handleRecordTriviaAttempt(false);
+                      }}
+                    >
+                      {hostPlaceholderCopy.triviaIncorrectButtonLabel}
+                    </button>
+                    <button
+                      className={actionButtonClassName}
+                      type="button"
+                      disabled={passAndPlayToggleDisabled}
+                      onClick={handleTogglePassAndPlayLock}
+                    >
+                      {hostPlaceholderCopy.passAndPlayRelockButtonLabel}
+                    </button>
+                  </>
+                )}
               </div>
             </>
           )}

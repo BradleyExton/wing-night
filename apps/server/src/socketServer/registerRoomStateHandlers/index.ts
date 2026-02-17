@@ -5,6 +5,7 @@ import {
 import type {
   HostSecretPayload,
   MinigameRecordTriviaAttemptPayload,
+  MinigameTogglePassAndPlayLockPayload,
   ScoringSetWingParticipationPayload,
   RoomState,
   SetupAssignPlayerPayload,
@@ -25,6 +26,7 @@ type RoomStateSocket = {
     (event: typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.TOGGLE_PASS_AND_PLAY_LOCK, listener: (payload: unknown) => void): void;
   };
 };
 
@@ -39,6 +41,7 @@ type AuthorizedSetupMutationHandlers = {
   onAuthorizedAssignPlayer: (playerId: string, teamId: string | null) => void;
   onAuthorizedSetWingParticipation: (playerId: string, didEat: boolean) => void;
   onAuthorizedRecordTriviaAttempt: (isCorrect: boolean) => void;
+  onAuthorizedTogglePassAndPlayLock: () => void;
 };
 
 const isHostSecretPayload = (payload: unknown): payload is HostSecretPayload => {
@@ -111,6 +114,12 @@ const isMinigameRecordTriviaAttemptPayload = (
   }
 
   return true;
+};
+
+const isMinigameTogglePassAndPlayLockPayload = (
+  payload: unknown
+): payload is MinigameTogglePassAndPlayLockPayload => {
+  return isHostSecretPayload(payload);
 };
 
 export const registerRoomStateHandlers = (
@@ -207,6 +216,21 @@ export const registerRoomStateHandlers = (
     mutationHandlers.onAuthorizedRecordTriviaAttempt(payload.isCorrect);
   };
 
+  const handleTogglePassAndPlayLock = (payload: unknown): void => {
+    if (!isMinigameTogglePassAndPlayLockPayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedTogglePassAndPlayLock();
+  };
+
   emitSnapshot();
 
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, emitSnapshot);
@@ -221,5 +245,9 @@ export const registerRoomStateHandlers = (
   socket.on(
     CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
     handleRecordTriviaAttempt
+  );
+  socket.on(
+    CLIENT_TO_SERVER_EVENTS.TOGGLE_PASS_AND_PLAY_LOCK,
+    handleTogglePassAndPlayLock
   );
 };
