@@ -90,6 +90,45 @@ test("throws when local trivia content exists but is invalid", () => {
   );
 });
 
+test("throws when trivia content has duplicate prompt IDs", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "local/trivia.json",
+    JSON.stringify({
+      prompts: [
+        { id: "duplicate", question: "Q1?", answer: "A1" },
+        { id: "duplicate", question: "Q2?", answer: "A2" }
+      ]
+    })
+  );
+
+  assert.throws(
+    () => {
+      loadTrivia({ contentRootDir: contentRoot });
+    },
+    /Invalid trivia content/
+  );
+});
+
+test("throws when trivia content has empty prompts array", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "local/trivia.json",
+    JSON.stringify({ prompts: [] })
+  );
+
+  assert.throws(
+    () => {
+      loadTrivia({ contentRootDir: contentRoot });
+    },
+    /Invalid trivia content/
+  );
+});
+
 test("throws parse error when trivia content file is invalid JSON", () => {
   const contentRoot = createContentRoot();
 

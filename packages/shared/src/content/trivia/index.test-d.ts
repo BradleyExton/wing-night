@@ -17,5 +17,8 @@ export type MissingPromptIdCheck = Assert<IsAssignable<{ question: string; answe
 // @ts-expect-error Trivia prompt requires an answer.
 export type MissingPromptAnswerCheck = Assert<IsAssignable<{ id: string; question: string }, TriviaPrompt>>;
 
+// @ts-expect-error Trivia prompt requires a question.
+export type MissingPromptQuestionCheck = Assert<IsAssignable<{ id: string; answer: string }, TriviaPrompt>>;
+
 // @ts-expect-error prompts must be an array.
 export type InvalidPromptsCollectionCheck = Assert<IsAssignable<{ prompts: string }, TriviaContentFile>>;
