@@ -1,0 +1,36 @@
+{
+  "name": "House Party Pack",
+  "rounds": [
+    {
+      "round": 1,
+      "label": "Warm Up",
+      "sauce": "Frank's",
+      "pointsPerPlayer": 2,
+      "minigame": "TRIVIA"
+    },
+    {
+      "round": 2,
+      "label": "Second Heat",
+      "sauce": "Classic Buffalo",
+      "pointsPerPlayer": 3,
+      "minigame": "GEO"
+    },
+    {
+      "round": 3,
+      "label": "Final Fire",
+      "sauce": "Ghost Pepper",
+      "pointsPerPlayer": 4,
+      "minigame": "DRAWING"
+    }
+  ],
+  "minigameScoring": {
+    "defaultMax": 15,
+    "finalRoundMax": 20
+  },
+  "timers": {
+    "eatingSeconds": 120,
+    "triviaSeconds": 30,
+    "geoSeconds": 45,
+    "drawingSeconds": 60
+  }
+}

@@ -1,4 +1,9 @@
-import { Phase, type Player, type RoomState } from "@wingnight/shared";
+import {
+  Phase,
+  type GameConfigFile,
+  type Player,
+  type RoomState
+} from "@wingnight/shared";
 
 import { logPhaseTransition } from "../logger/index.js";
 import { getNextPhase } from "../utils/getNextPhase/index.js";
@@ -11,7 +16,8 @@ export const createInitialRoomState = (): RoomState => {
     currentRound: 0,
     totalRounds: DEFAULT_TOTAL_ROUNDS,
     players: [],
-    teams: []
+    teams: [],
+    gameConfig: null
   };
 };
 
@@ -35,6 +41,15 @@ export const resetRoomState = (): RoomState => {
 
 export const setRoomStatePlayers = (players: Player[]): RoomState => {
   roomState.players = structuredClone(players);
+
+  return getRoomStateSnapshot();
+};
+
+export const setRoomStateGameConfig = (
+  gameConfig: GameConfigFile
+): RoomState => {
+  roomState.gameConfig = structuredClone(gameConfig);
+  roomState.totalRounds = gameConfig.rounds.length;
 
   return getRoomStateSnapshot();
 };

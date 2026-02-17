@@ -1,4 +1,10 @@
-import { type Phase, type Player, type RoomState, type Team } from "../index.js";
+import {
+  type GameConfigFile,
+  type Phase,
+  type Player,
+  type RoomState,
+  type Team
+} from "../index.js";
 
 type IsAssignable<From, To> = From extends To ? true : false;
 type Assert<T extends true> = T;
@@ -34,6 +40,7 @@ export type ValidRoomStateCheck = Assert<
       totalRounds: number;
       players: Player[];
       teams: Team[];
+      gameConfig: GameConfigFile | null;
     },
     RoomState
   >

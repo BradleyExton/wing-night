@@ -32,7 +32,8 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     currentRound,
     totalRounds: 3,
     players: [],
-    teams: []
+    teams: [],
+    gameConfig: null
   };
 };
 
