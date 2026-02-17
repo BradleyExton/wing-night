@@ -27,14 +27,7 @@ export const displayCopy = {
   triviaQuestionLabel: "Question",
   activeTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,
   eatingTimerLabel: "Round Timer",
-  eatingTimerValue: (eatingSeconds: number): string => {
-    const minutes = Math.floor(eatingSeconds / 60);
-    const seconds = eatingSeconds % 60;
-
-    return `${minutes.toString().padStart(2, "0")}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
-  },
+  triviaTurnTimerLabel: "Turn Timer",
   standingsTitle: "Standings",
   standingsEmptyLabel: "No teams have joined yet.",
   standingScoreLabel: (score: number): string => `${score} pts`

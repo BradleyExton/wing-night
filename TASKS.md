@@ -10,20 +10,56 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] 4.3 Lock Teams on Start
-  - Branch: `phase-4-3-lock-teams-on-start`
-  - PR: [#15](https://github.com/BradleyExton/wing-night/pull/15)
-  - Notes: server-authoritative setup lock after `SETUP` + host UI read-only gating
-- [-] 4.2 Team Creation UI
-  - Branch: `phase-4-2-team-creation-ui`
-  - PR: [#14](https://github.com/BradleyExton/wing-night/pull/14)
-  - Notes: host-only setup mutation flow for create/assign with guarded payloads
-- [-] 4.1 Content Loader
-  - Branch: `phase-4-1-content-loader`
-  - PR: [#13](https://github.com/BradleyExton/wing-night/pull/13)
-  - Notes: local-first players loader + strict validation + startup bootstrap
+- [-] 8.2 Display Countdown Render
+  - Branch: `phase-8-2-display-countdown-render`
+  - PR: [#25](https://github.com/BradleyExton/wing-night/pull/25)
+  - Notes: display countdown derived from authoritative `activeTimer.endsAt`
+- [-] 8.1 Server-Based Timer
+  - Branch: `phase-8-1-server-based-timer`
+  - PR: [#24](https://github.com/BradleyExton/wing-night/pull/24)
+  - Notes: server-owned timer lifecycle with snapshot `activeTimer`
+- [-] 7.3 PASS_AND_PLAY Mode
+  - Branch: `phase-7-3-pass-and-play-mode`
+  - PR: [#23](https://github.com/BradleyExton/wing-night/pull/23)
+  - Notes: lock/unlock trivia host controls with press-and-hold + keyboard support
+- [-] 7.2 Turn-Based Trivia Logic
+  - Branch: `phase-7-2-turn-based-trivia-logic`
+  - PR: [#22](https://github.com/BradleyExton/wing-night/pull/22)
+  - Notes: server-authoritative trivia turns, prompt cursor, and attempt scoring
+- [-] 7.1 Trivia Content Loader
+  - Branch: `phase-7-1-trivia-content-loader`
+  - PR: [#21](https://github.com/BradleyExton/wing-night/pull/21)
+  - Notes: local-first trivia content loading + validation + startup wiring
 
 Completed:
+- [x] 6.2 Apply Points in ROUND_RESULTS
+  - Branch: `phase-6-2-apply-points-round-results`
+  - PR: [#19](https://github.com/BradleyExton/wing-night/pull/19)
+  - Merge timestamp: `2026-02-17T04:46:34Z`
+- [x] 6.1 Wing Participation Recording
+  - Branch: `phase-6-1-wing-participation-recording`
+  - PR: [#18](https://github.com/BradleyExton/wing-night/pull/18)
+  - Merge timestamp: `2026-02-17T04:45:55Z`
+- [x] 5.2 Round Scheduling
+  - Branch: `phase-5-2-round-scheduling`
+  - PR: [#20](https://github.com/BradleyExton/wing-night/pull/20)
+  - Merge timestamp: `2026-02-17T04:45:18Z`
+- [x] 5.1 Load gameConfig
+  - Branch: `phase-5-1-load-game-config`
+  - PR: [#16](https://github.com/BradleyExton/wing-night/pull/16)
+  - Merge timestamp: `2026-02-17T04:43:05Z`
+- [x] 4.3 Lock Teams on Start
+  - Branch: `phase-4-3-lock-teams-on-start`
+  - PR: [#15](https://github.com/BradleyExton/wing-night/pull/15)
+  - Merge timestamp: `2026-02-17T02:54:28Z`
+- [x] 4.2 Team Creation UI
+  - Branch: `phase-4-2-team-creation-ui`
+  - PR: [#14](https://github.com/BradleyExton/wing-night/pull/14)
+  - Merge timestamp: `2026-02-17T02:55:34Z`
+- [x] 4.1 Content Loader
+  - Branch: `phase-4-1-content-loader`
+  - PR: [#13](https://github.com/BradleyExton/wing-night/pull/13)
+  - Merge timestamp: `2026-02-17T02:56:18Z`
 - [x] 3.2 Host Next Phase Button
   - Branch: `phase-3-2-host-next-phase-button`
   - PR: [#11](https://github.com/BradleyExton/wing-night/pull/11)
@@ -77,18 +113,18 @@ Backlog status:
 - [x] 2.3 Host Mutation Protection
 - [x] 3.1 Phase Transition Logic
 - [x] 3.2 Host Next Phase Button
-- [-] 4.1 Content Loader
-- [-] 4.2 Team Creation UI
-- [-] 4.3 Lock Teams on Start
-- [ ] 5.1 Load gameConfig
-- [ ] 5.2 Round Scheduling
-- [ ] 6.1 Wing Participation Recording
-- [ ] 6.2 Apply Points in ROUND_RESULTS
-- [ ] 7.1 Trivia Content Loader
-- [ ] 7.2 Turn-Based Trivia Logic
-- [ ] 7.3 PASS_AND_PLAY Mode
-- [ ] 8.1 Server-Based Timer
-- [ ] 8.2 Display Countdown Render
+- [x] 4.1 Content Loader
+- [x] 4.2 Team Creation UI
+- [x] 4.3 Lock Teams on Start
+- [x] 5.1 Load gameConfig
+- [x] 5.2 Round Scheduling
+- [x] 6.1 Wing Participation Recording
+- [x] 6.2 Apply Points in ROUND_RESULTS
+- [-] 7.1 Trivia Content Loader
+- [-] 7.2 Turn-Based Trivia Logic
+- [-] 7.3 PASS_AND_PLAY Mode
+- [-] 8.1 Server-Based Timer
+- [-] 8.2 Display Countdown Render
 - [ ] 9.1 Playwright Host/Display Sync
 - [ ] 9.2 Playwright Refresh Rehydrate
 - [ ] 10.1 Manual Round Escape Hatch
