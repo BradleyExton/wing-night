@@ -282,7 +282,9 @@ export const HostPlaceholder = ({
                                 event.target.checked
                               );
                             }}
-                            disabled={participationDisabled}
+                            disabled={
+                              participationDisabled || assignedTeamId.length === 0
+                            }
                             aria-label={hostPlaceholderCopy.wingParticipationToggleLabel(
                               player.name
                             )}

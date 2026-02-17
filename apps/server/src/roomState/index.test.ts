@@ -365,6 +365,28 @@ test("setWingParticipation ignores invalid mutations", () => {
   assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
 });
 
+test("setWingParticipation ignores updates for players not assigned to a team", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" },
+    { id: "player-3", name: "Player Three" }
+  ]);
+  advanceToEatingPhase();
+  const beforeMutation = getRoomStateSnapshot();
+
+  setWingParticipation("player-3", true);
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.wingParticipationByPlayerId["player-3"], undefined);
+  assert.deepEqual(
+    snapshot.pendingWingPointsByTeamId,
+    beforeMutation.pendingWingPointsByTeamId
+  );
+});
+
 test("entering EATING clears wing participation from the previous round", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
