@@ -42,6 +42,7 @@ import {
 } from "./styles";
 import { hostPlaceholderCopy } from "./copy";
 import { createPressAndHoldHandlers } from "./createPressAndHoldHandlers";
+import { isPassAndPlayHoldKey } from "./isPassAndPlayHoldKey";
 
 const PASS_AND_PLAY_HOLD_DURATION_MS = 800;
 
@@ -373,6 +374,36 @@ export const HostPlaceholder = ({
                         holdToUnlockHandlers.cancel();
                       }}
                       onPointerCancel={(): void => {
+                        setIsUnlockHoldActive(false);
+                        holdToUnlockHandlers.cancel();
+                      }}
+                      onKeyDown={(event): void => {
+                        if (
+                          passAndPlayToggleDisabled ||
+                          !isPassAndPlayHoldKey(event.key)
+                        ) {
+                          return;
+                        }
+
+                        event.preventDefault();
+
+                        if (isUnlockHoldActive) {
+                          return;
+                        }
+
+                        setIsUnlockHoldActive(true);
+                        holdToUnlockHandlers.start();
+                      }}
+                      onKeyUp={(event): void => {
+                        if (!isPassAndPlayHoldKey(event.key)) {
+                          return;
+                        }
+
+                        event.preventDefault();
+                        setIsUnlockHoldActive(false);
+                        holdToUnlockHandlers.cancel();
+                      }}
+                      onBlur={(): void => {
                         setIsUnlockHoldActive(false);
                         holdToUnlockHandlers.cancel();
                       }}
