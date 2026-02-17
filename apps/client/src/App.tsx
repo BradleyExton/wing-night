@@ -59,7 +59,7 @@ export const App = (): JSX.Element => {
   }
 
   if (route === "DISPLAY") {
-    return <DisplayPlaceholder />;
+    return <DisplayPlaceholder roomState={roomState} />;
   }
 
   return <RouteNotFound />;

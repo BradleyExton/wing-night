@@ -10,6 +10,14 @@ import { getNextPhase } from "../utils/getNextPhase/index.js";
 
 const DEFAULT_TOTAL_ROUNDS = 3;
 
+const resolveCurrentRoundConfig = (state: RoomState): RoomState["currentRoundConfig"] => {
+  if (!state.gameConfig || state.currentRound <= 0) {
+    return null;
+  }
+
+  return state.gameConfig.rounds[state.currentRound - 1] ?? null;
+};
+
 export const createInitialRoomState = (): RoomState => {
   return {
     phase: Phase.SETUP,
@@ -17,7 +25,8 @@ export const createInitialRoomState = (): RoomState => {
     totalRounds: DEFAULT_TOTAL_ROUNDS,
     players: [],
     teams: [],
-    gameConfig: null
+    gameConfig: null,
+    currentRoundConfig: null
   };
 };
 
@@ -50,6 +59,7 @@ export const setRoomStateGameConfig = (
 ): RoomState => {
   roomState.gameConfig = structuredClone(gameConfig);
   roomState.totalRounds = gameConfig.rounds.length;
+  roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
 
   return getRoomStateSnapshot();
 };
@@ -114,6 +124,10 @@ export const assignPlayerToTeam = (
 };
 
 const isSetupReadyToStart = (state: RoomState): boolean => {
+  if (state.gameConfig === null) {
+    return false;
+  }
+
   if (state.players.length === 0) {
     return false;
   }
@@ -171,6 +185,12 @@ export const advanceRoomStatePhase = (): RoomState => {
 
   if (previousPhase === Phase.ROUND_RESULTS && nextPhase === Phase.ROUND_INTRO) {
     roomState.currentRound += 1;
+  }
+
+  if (nextPhase === Phase.FINAL_RESULTS) {
+    roomState.currentRoundConfig = null;
+  } else {
+    roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
   }
 
   logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);
