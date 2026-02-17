@@ -6,6 +6,8 @@ export type RoomState = {
   phase: Phase;
   // 0 means pre-round state; rounds in progress are 1..N.
   currentRound: number;
+  // Total rounds scheduled for the active game.
+  totalRounds: number;
   players: Player[];
   teams: Team[];
 };

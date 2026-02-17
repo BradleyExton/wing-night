@@ -1,5 +1,5 @@
 export const containerClassName =
-  "min-h-[100dvh] grid place-items-center p-6 bg-[#121212] text-white text-center";
+  "min-h-[100dvh] grid place-items-center p-6 bg-bg text-white text-center";
 
 export const headingClassName = "m-0 text-3xl font-bold";
 

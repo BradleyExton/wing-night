@@ -2,6 +2,7 @@ import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import {
   CLIENT_ROLES,
+  SERVER_TO_CLIENT_EVENTS,
   isSocketClientRole,
   type SocketClientRole
 } from "@wingnight/shared";
@@ -12,6 +13,8 @@ import type {
 } from "../socketContracts/index.js";
 import {
   advanceRoomStatePhase,
+  assignPlayerToTeam,
+  createTeam,
   getRoomStateSnapshot
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
@@ -60,9 +63,19 @@ export const attachSocketServer = (
     registerRoomStateHandlers(
       socket,
       getRoomStateSnapshot,
-      () => {
-        const updatedSnapshot = advanceRoomStatePhase();
-        socketServer.emit("server:stateSnapshot", updatedSnapshot);
+      {
+        onAuthorizedNextPhase: () => {
+          const updatedSnapshot = advanceRoomStatePhase();
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedCreateTeam: (name) => {
+          const updatedSnapshot = createTeam(name);
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedAssignPlayer: (playerId, teamId) => {
+          const updatedSnapshot = assignPlayerToTeam(playerId, teamId);
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        }
       },
       socketClientRole === CLIENT_ROLES.HOST,
       {

@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { HostSecretPayload } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  type HostSecretPayload
+} from "@wingnight/shared";
 
 import { requestNextPhase } from "./index";
 
@@ -10,8 +13,11 @@ type NextPhaseSocket = Parameters<typeof requestNextPhase>[0];
 class MockNextPhaseSocket {
   public emittedPayloads: HostSecretPayload[] = [];
 
-  public emit(event: "game:nextPhase", payload: HostSecretPayload): void {
-    if (event === "game:nextPhase") {
+  public emit(
+    event: typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE,
+    payload: HostSecretPayload
+  ): void {
+    if (event === CLIENT_TO_SERVER_EVENTS.NEXT_PHASE) {
       this.emittedPayloads.push(payload);
     }
   }
