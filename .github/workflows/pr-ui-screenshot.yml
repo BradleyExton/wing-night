@@ -1,0 +1,76 @@
+name: PR UI Screenshot
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+
+concurrency:
+  group: pr-ui-screenshot-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshot-required:
+    name: screenshot-required
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    timeout-minutes: 5
+    steps:
+      - name: Require screenshot for UI changes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pullRequest = context.payload.pull_request;
+            if (!pullRequest) {
+              core.info("No pull request payload found.");
+              return;
+            }
+
+            const changedFiles = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullRequest.number,
+                per_page: 100
+              }
+            );
+
+            const uiPatterns = [
+              /^apps\/client\/src\/.*\.tsx$/,
+              /^apps\/client\/src\/.*\/styles\.ts$/,
+              /^apps\/client\/src\/copy\/.*\.ts$/,
+              /^apps\/client\/public\//
+            ];
+
+            const changedUiFiles = changedFiles
+              .map(({ filename }) => filename)
+              .filter((filename) => uiPatterns.some((pattern) => pattern.test(filename)));
+
+            if (changedUiFiles.length === 0) {
+              core.info("No UI file changes detected. Screenshot requirement skipped.");
+              return;
+            }
+
+            const body = pullRequest.body ?? "";
+            const markdownImagePattern = /!\[[^\]]*]\((?:https?:\/\/|\/|\.\/|\.\.\/|data:image\/)[^)]+\)/i;
+            const htmlImagePattern = /<img\s+[^>]*src=["'][^"']+["'][^>]*>/i;
+            const hasScreenshot = markdownImagePattern.test(body) || htmlImagePattern.test(body);
+
+            if (hasScreenshot) {
+              core.info("Screenshot detected in PR description.");
+              return;
+            }
+
+            core.error("UI files changed:");
+            for (const filename of changedUiFiles) {
+              core.error(`- ${filename}`);
+            }
+
+            core.setFailed(
+              "This PR changes UI files in apps/client but no screenshot was found in the PR description. Add at least one image before merge."
+            );

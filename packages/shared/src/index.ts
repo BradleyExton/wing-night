@@ -12,8 +12,16 @@ export type {
 } from "./content/players/index.js";
 export { CLIENT_ROLES, isSocketClientRole } from "./socketClientRole/index.js";
 export type { SocketClientRole } from "./socketClientRole/index.js";
+export {
+  CLIENT_TO_SERVER_EVENTS,
+  SERVER_TO_CLIENT_EVENTS
+} from "./socketEvents/index.js";
 export type {
+  ClientToServerEventName,
   ClientToServerEvents,
   HostSecretPayload,
+  ServerToClientEventName,
+  SetupAssignPlayerPayload,
+  SetupCreateTeamPayload,
   ServerToClientEvents
 } from "./socketEvents/index.js";

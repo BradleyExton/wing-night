@@ -31,6 +31,7 @@ export type ValidRoomStateCheck = Assert<
     {
       phase: Phase;
       currentRound: number;
+      totalRounds: number;
       players: Player[];
       teams: Team[];
     },

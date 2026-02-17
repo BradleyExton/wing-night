@@ -1,4 +1,7 @@
-import { CLIENT_TO_SERVER_EVENTS, type HostSecretPayload } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  type SetupAssignPlayerPayload
+} from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
 import type {
@@ -7,13 +10,15 @@ import type {
 } from "../../socketContracts/index";
 import { readHostSecret } from "../hostSecretStorage";
 
-type NextPhaseSocket = Pick<
+type AssignPlayerSocket = Pick<
   Socket<InboundSocketEvents, OutboundSocketEvents>,
   "emit"
 >;
 
-export const requestNextPhase = (
-  socket: NextPhaseSocket,
+export const requestAssignPlayer = (
+  socket: AssignPlayerSocket,
+  playerId: string,
+  teamId: string | null,
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
@@ -24,8 +29,12 @@ export const requestNextPhase = (
     return false;
   }
 
-  const payload: HostSecretPayload = { hostSecret };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, payload);
+  const payload: SetupAssignPlayerPayload = {
+    hostSecret,
+    playerId,
+    teamId
+  };
+  socket.emit(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, payload);
 
   return true;
 };
