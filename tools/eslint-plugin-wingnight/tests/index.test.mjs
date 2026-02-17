@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint";
 
 import componentEntryFileName from "../rules/component-entry-file-name.mjs";
 import noHardcodedComponentJsxText from "../rules/no-hardcoded-component-jsx-text.mjs";
+import noHardcodedHexColorsInStyles from "../rules/no-hardcoded-hex-colors-in-styles.mjs";
 import noInlineStyleProp from "../rules/no-inline-style-prop.mjs";
 import requireStylesImportInComponentEntry from "../rules/require-styles-import-in-component-entry.mjs";
 import socketEventNameFormat from "../rules/socket-event-name-format.mjs";
@@ -153,4 +154,35 @@ test("utility-entry-file-name", () => {
       }
     ]
   });
+});
+
+test("no-hardcoded-hex-colors-in-styles", () => {
+  ruleTester.run(
+    "no-hardcoded-hex-colors-in-styles",
+    noHardcodedHexColorsInStyles,
+    {
+      valid: [
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const className = 'bg-bg text-gold border-primary/20';"
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/index.tsx",
+          code: "export const Example = () => <main className='bg-[#121212]' />;"
+        }
+      ],
+      invalid: [
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const className = 'bg-[#121212] text-white';",
+          errors: [{ messageId: "noHardcodedHexColor" }]
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const className = `text-[#FBBF24]`;",
+          errors: [{ messageId: "noHardcodedHexColor" }]
+        }
+      ]
+    }
+  );
 });

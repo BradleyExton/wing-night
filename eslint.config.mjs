@@ -116,6 +116,15 @@ export default [
     }
   },
   {
+    files: ["apps/client/src/components/**/styles.ts"],
+    plugins: {
+      wingnight
+    },
+    rules: {
+      "wingnight/no-hardcoded-hex-colors-in-styles": "error"
+    }
+  },
+  {
     files: ["packages/shared/src/socketEvents/**/*.ts"],
     plugins: {
       wingnight

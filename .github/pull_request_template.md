@@ -8,6 +8,12 @@
 - [ ] `pnpm test`
 - [ ] `pnpm typecheck`
 
+## Design Checklist (required for UI changes)
+
+- [ ] I reviewed `DESIGN.md` for this UI change.
+- [ ] I used Tailwind theme token classes for color styling.
+- [ ] I did not add hardcoded hex colors in `apps/client/src/components/**/styles.ts`.
+
 ## UI Screenshot (required for UI changes)
 
 <!--
