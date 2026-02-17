@@ -73,3 +73,18 @@ export const triviaLabelClassName =
 export const triviaValueClassName = "mt-1 text-lg font-semibold text-white";
 
 export const triviaActionsClassName = "mt-4 flex flex-wrap gap-3";
+
+export const passAndPlayStatusClassName =
+  "mt-3 inline-flex rounded-md border px-3 py-2 text-sm font-semibold";
+
+export const passAndPlayLockedStatusClassName =
+  "border-heat/70 bg-heat/15 text-white";
+
+export const passAndPlayUnlockedStatusClassName =
+  "border-primary/70 bg-primary/15 text-white";
+
+export const holdToUnlockButtonClassName =
+  "min-h-11 rounded-md border border-heat/70 bg-heat/20 px-4 text-base font-semibold text-white transition hover:bg-heat/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-heat disabled:cursor-not-allowed disabled:opacity-50";
+
+export const holdToUnlockButtonActiveClassName =
+  "border-heat bg-heat/35";

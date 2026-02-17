@@ -11,6 +11,7 @@ import { requestCreateTeam } from "./utils/requestCreateTeam";
 import { requestNextPhase } from "./utils/requestNextPhase";
 import { requestRecordTriviaAttempt } from "./utils/requestRecordTriviaAttempt";
 import { requestSetWingParticipation } from "./utils/requestSetWingParticipation";
+import { requestTogglePassAndPlayLock } from "./utils/requestTogglePassAndPlayLock";
 import { resolveClientRoute } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
@@ -64,6 +65,12 @@ export const App = (): JSX.Element => {
     });
   };
 
+  const handleTogglePassAndPlayLock = (): void => {
+    requestTogglePassAndPlayLock(roomSocket, () => {
+      roomSocket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
+    });
+  };
+
   if (route === "HOST") {
     return (
       <HostPlaceholder
@@ -73,6 +80,7 @@ export const App = (): JSX.Element => {
         onAssignPlayer={handleAssignPlayer}
         onSetWingParticipation={handleSetWingParticipation}
         onRecordTriviaAttempt={handleRecordTriviaAttempt}
+        onTogglePassAndPlayLock={handleTogglePassAndPlayLock}
       />
     );
   }

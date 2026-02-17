@@ -20,6 +20,7 @@ export type RoomState = {
   activeTurnTeamId: string | null;
   currentTriviaPrompt: TriviaPrompt | null;
   triviaPromptCursor: number;
+  isPassAndPlayLocked: boolean;
   wingParticipationByPlayerId: Record<string, boolean>;
   pendingWingPointsByTeamId: Record<string, number>;
   pendingMinigamePointsByTeamId: Record<string, number>;

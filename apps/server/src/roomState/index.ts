@@ -52,6 +52,7 @@ export const createInitialRoomState = (): RoomState => {
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
+    isPassAndPlayLocked: false,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
@@ -116,12 +117,14 @@ const initializeTriviaTurnState = (state: RoomState): void => {
   state.triviaPromptCursor = 0;
   state.currentTriviaPrompt =
     state.triviaPrompts.length > 0 ? state.triviaPrompts[0] : null;
+  state.isPassAndPlayLocked = true;
 };
 
 const clearTriviaTurnState = (state: RoomState): void => {
   state.activeTurnTeamId = null;
   state.currentTriviaPrompt = null;
   state.triviaPromptCursor = 0;
+  state.isPassAndPlayLocked = false;
 };
 
 const recomputePendingWingPoints = (state: RoomState): void => {
@@ -327,6 +330,16 @@ export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
     (roomState.triviaPromptCursor + 1) % roomState.triviaPrompts.length;
   roomState.currentTriviaPrompt =
     roomState.triviaPrompts[roomState.triviaPromptCursor] ?? null;
+
+  return getRoomStateSnapshot();
+};
+
+export const togglePassAndPlayLock = (): RoomState => {
+  if (!isTriviaMinigamePlayState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  roomState.isPassAndPlayLocked = !roomState.isPassAndPlayLocked;
 
   return getRoomStateSnapshot();
 };

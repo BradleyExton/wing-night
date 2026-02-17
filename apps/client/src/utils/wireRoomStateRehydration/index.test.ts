@@ -97,6 +97,7 @@ test("forwards server snapshots to callback", () => {
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
+    isPassAndPlayLocked: false,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}

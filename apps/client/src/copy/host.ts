@@ -26,7 +26,16 @@ export const hostCopy = {
     `Mark ${playerName} as ate wing`,
   triviaSectionDescription:
     "Mark the active team's answer as correct or incorrect.",
+  triviaLockedDescription:
+    "Pass-and-play is locked. Hold to unlock host-only controls.",
+  triviaUnlockedDescription:
+    "Host controls are unlocked. Mark the answer, then relock before passing.",
   triviaActiveTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,
+  passAndPlayLockedStateLabel: "Pass-and-Play: Locked",
+  passAndPlayUnlockedStateLabel: "Pass-and-Play: Unlocked",
+  passAndPlayHoldToUnlockButtonLabel: "Hold to Unlock",
+  passAndPlayHoldInProgressLabel: "Keep holding to unlock...",
+  passAndPlayRelockButtonLabel: "Relock Pass-and-Play",
   triviaQuestionLabel: "Question",
   triviaAnswerLabel: "Answer",
   triviaCorrectButtonLabel: "Correct",
