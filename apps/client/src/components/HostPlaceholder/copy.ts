@@ -22,5 +22,11 @@ export const hostPlaceholderCopy = {
   assignedTeamLabel: hostCopy.assignedTeamLabel,
   ateWingLabel: hostCopy.ateWingLabel,
   wingParticipationToggleLabel: hostCopy.wingParticipationToggleLabel,
+  triviaSectionDescription: hostCopy.triviaSectionDescription,
+  triviaActiveTeamLabel: hostCopy.triviaActiveTeamLabel,
+  triviaQuestionLabel: hostCopy.triviaQuestionLabel,
+  triviaAnswerLabel: hostCopy.triviaAnswerLabel,
+  triviaCorrectButtonLabel: hostCopy.triviaCorrectButtonLabel,
+  triviaIncorrectButtonLabel: hostCopy.triviaIncorrectButtonLabel,
   teamMembersLabel: hostCopy.teamMembersLabel
 } as const;

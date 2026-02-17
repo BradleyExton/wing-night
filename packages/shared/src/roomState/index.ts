@@ -16,6 +16,10 @@ export type RoomState = {
   gameConfig: GameConfigFile | null;
   triviaPrompts: TriviaPrompt[];
   currentRoundConfig: GameConfigRound | null;
+  turnOrderTeamIds: string[];
+  activeTurnTeamId: string | null;
+  currentTriviaPrompt: TriviaPrompt | null;
+  triviaPromptCursor: number;
   wingParticipationByPlayerId: Record<string, boolean>;
   pendingWingPointsByTeamId: Record<string, number>;
   pendingMinigamePointsByTeamId: Record<string, number>;

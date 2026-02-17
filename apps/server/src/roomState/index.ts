@@ -19,6 +19,13 @@ const resolveCurrentRoundConfig = (state: RoomState): RoomState["currentRoundCon
   return state.gameConfig.rounds[state.currentRound - 1] ?? null;
 };
 
+const isTriviaMinigamePlayState = (state: RoomState): boolean => {
+  return (
+    state.phase === Phase.MINIGAME_PLAY &&
+    state.currentRoundConfig?.minigame === "TRIVIA"
+  );
+};
+
 const resolveMinigamePointsMax = (state: RoomState): number | null => {
   if (!state.gameConfig || state.currentRound <= 0) {
     return null;
@@ -41,6 +48,10 @@ export const createInitialRoomState = (): RoomState => {
     gameConfig: null,
     triviaPrompts: [],
     currentRoundConfig: null,
+    turnOrderTeamIds: [],
+    activeTurnTeamId: null,
+    currentTriviaPrompt: null,
+    triviaPromptCursor: 0,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
@@ -86,7 +97,31 @@ export const setRoomStateTriviaPrompts = (
 ): RoomState => {
   roomState.triviaPrompts = structuredClone(triviaPrompts);
 
+  if (isTriviaMinigamePlayState(roomState) && roomState.triviaPrompts.length > 0) {
+    const nextCursor =
+      roomState.triviaPromptCursor % roomState.triviaPrompts.length;
+    roomState.triviaPromptCursor = nextCursor;
+    roomState.currentTriviaPrompt = roomState.triviaPrompts[nextCursor] ?? null;
+  }
+
   return getRoomStateSnapshot();
+};
+
+const initializeTriviaTurnState = (state: RoomState): void => {
+  if (state.turnOrderTeamIds.length === 0) {
+    state.turnOrderTeamIds = state.teams.map((team) => team.id);
+  }
+
+  state.activeTurnTeamId = state.turnOrderTeamIds[0] ?? null;
+  state.triviaPromptCursor = 0;
+  state.currentTriviaPrompt =
+    state.triviaPrompts.length > 0 ? state.triviaPrompts[0] : null;
+};
+
+const clearTriviaTurnState = (state: RoomState): void => {
+  state.activeTurnTeamId = null;
+  state.currentTriviaPrompt = null;
+  state.triviaPromptCursor = 0;
 };
 
 const recomputePendingWingPoints = (state: RoomState): void => {
@@ -249,6 +284,53 @@ export const setPendingMinigamePoints = (
   return getRoomStateSnapshot();
 };
 
+export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
+  if (!isTriviaMinigamePlayState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  const activeTurnTeamId = roomState.activeTurnTeamId;
+
+  if (!activeTurnTeamId || roomState.turnOrderTeamIds.length === 0) {
+    return getRoomStateSnapshot();
+  }
+
+  const activeTurnIndex = roomState.turnOrderTeamIds.indexOf(activeTurnTeamId);
+
+  if (activeTurnIndex < 0) {
+    return getRoomStateSnapshot();
+  }
+
+  const minigamePointsMax = resolveMinigamePointsMax(roomState);
+
+  if (minigamePointsMax === null) {
+    return getRoomStateSnapshot();
+  }
+
+  if (isCorrect) {
+    const previousPoints = roomState.pendingMinigamePointsByTeamId[activeTurnTeamId] ?? 0;
+    roomState.pendingMinigamePointsByTeamId[activeTurnTeamId] = Math.min(
+      minigamePointsMax,
+      previousPoints + 1
+    );
+  }
+
+  const nextTurnIndex = (activeTurnIndex + 1) % roomState.turnOrderTeamIds.length;
+  roomState.activeTurnTeamId = roomState.turnOrderTeamIds[nextTurnIndex] ?? null;
+
+  if (roomState.triviaPrompts.length === 0) {
+    roomState.currentTriviaPrompt = null;
+    return getRoomStateSnapshot();
+  }
+
+  roomState.triviaPromptCursor =
+    (roomState.triviaPromptCursor + 1) % roomState.triviaPrompts.length;
+  roomState.currentTriviaPrompt =
+    roomState.triviaPrompts[roomState.triviaPromptCursor] ?? null;
+
+  return getRoomStateSnapshot();
+};
+
 const isSetupReadyToStart = (state: RoomState): boolean => {
   if (state.gameConfig === null) {
     return false;
@@ -317,6 +399,18 @@ export const advanceRoomStatePhase = (): RoomState => {
     roomState.currentRoundConfig = null;
   } else {
     roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
+  }
+
+  if (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.MINIGAME_PLAY) {
+    if (roomState.currentRoundConfig?.minigame === "TRIVIA") {
+      initializeTriviaTurnState(roomState);
+    } else {
+      clearTriviaTurnState(roomState);
+    }
+  }
+
+  if (previousPhase === Phase.MINIGAME_PLAY && nextPhase !== Phase.MINIGAME_PLAY) {
+    clearTriviaTurnState(roomState);
   }
 
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.ROUND_RESULTS) {

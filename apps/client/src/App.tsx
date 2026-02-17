@@ -9,6 +9,7 @@ import { saveHostSecret } from "./utils/hostSecretStorage";
 import { requestAssignPlayer } from "./utils/requestAssignPlayer";
 import { requestCreateTeam } from "./utils/requestCreateTeam";
 import { requestNextPhase } from "./utils/requestNextPhase";
+import { requestRecordTriviaAttempt } from "./utils/requestRecordTriviaAttempt";
 import { requestSetWingParticipation } from "./utils/requestSetWingParticipation";
 import { resolveClientRoute } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
@@ -57,6 +58,12 @@ export const App = (): JSX.Element => {
     });
   };
 
+  const handleRecordTriviaAttempt = (isCorrect: boolean): void => {
+    requestRecordTriviaAttempt(roomSocket, isCorrect, () => {
+      roomSocket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
+    });
+  };
+
   if (route === "HOST") {
     return (
       <HostPlaceholder
@@ -65,6 +72,7 @@ export const App = (): JSX.Element => {
         onCreateTeam={handleCreateTeam}
         onAssignPlayer={handleAssignPlayer}
         onSetWingParticipation={handleSetWingParticipation}
+        onRecordTriviaAttempt={handleRecordTriviaAttempt}
       />
     );
   }

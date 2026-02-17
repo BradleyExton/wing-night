@@ -64,3 +64,12 @@ export const playerMetaClassName = "text-sm text-white/70";
 
 export const participationRowClassName =
   "flex flex-wrap items-center justify-end gap-2";
+
+export const triviaMetaClassName = "mt-4 space-y-3";
+
+export const triviaLabelClassName =
+  "m-0 text-xs font-semibold uppercase tracking-wide text-white/70";
+
+export const triviaValueClassName = "mt-1 text-lg font-semibold text-white";
+
+export const triviaActionsClassName = "mt-4 flex flex-wrap gap-3";

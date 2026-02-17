@@ -57,9 +57,21 @@ export const DisplayPlaceholder = ({
   const phase = roomState?.phase ?? null;
   const isRoundIntroPhase = roomState?.phase === Phase.ROUND_INTRO;
   const isEatingPhase = roomState?.phase === Phase.EATING;
+  const isTriviaTurnPhase =
+    roomState?.phase === Phase.MINIGAME_PLAY &&
+    roomState.currentRoundConfig?.minigame === "TRIVIA";
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
+  const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
+  const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
   const eatingSeconds = roomState?.gameConfig?.timers.eatingSeconds ?? null;
   const shouldRenderEatingTimer = isEatingPhase && eatingSeconds !== null;
+  const activeTurnTeamName =
+    activeTurnTeamId !== null
+      ? (roomState?.teams.find((team) => team.id === activeTurnTeamId)?.name ??
+        null)
+      : null;
+  const shouldRenderTriviaTurn =
+    isTriviaTurnPhase && currentTriviaPrompt !== null && activeTurnTeamName !== null;
   const leadingTeamId = standings[0]?.id ?? null;
 
   const roundMetaLabel = roomState
@@ -140,7 +152,30 @@ export const DisplayPlaceholder = ({
               </>
             )}
 
-            {!shouldRenderRoundDetails && !shouldRenderEatingTimer && (
+            {shouldRenderTriviaTurn && (
+              <>
+                <h2 className={stageTitleClassName}>
+                  {displayPlaceholderCopy.triviaTurnTitle}
+                </h2>
+                <p className={fallbackTextClassName}>
+                  {displayPlaceholderCopy.activeTeamLabel(activeTurnTeamName)}
+                </p>
+                <div className={stageMetaGridClassName}>
+                  <div className={stageMetaItemClassName}>
+                    <p className={stageMetaLabelClassName}>
+                      {displayPlaceholderCopy.triviaQuestionLabel}
+                    </p>
+                    <p className={stageMetaValueClassName}>
+                      {currentTriviaPrompt.question}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!shouldRenderRoundDetails &&
+              !shouldRenderEatingTimer &&
+              !shouldRenderTriviaTurn && (
               <>
                 <h2 className={stageTitleClassName}>
                   {displayPlaceholderCopy.phaseContextTitle(phaseLabel)}

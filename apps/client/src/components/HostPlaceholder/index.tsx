@@ -24,6 +24,10 @@ import {
   sectionGridClassName,
   sectionHeadingClassName,
   subtextClassName,
+  triviaActionsClassName,
+  triviaLabelClassName,
+  triviaMetaClassName,
+  triviaValueClassName,
   teamCreateFormClassName,
   teamInputClassName,
   teamInputGroupClassName,
@@ -39,6 +43,7 @@ type HostPlaceholderProps = {
   onCreateTeam?: (name: string) => void;
   onAssignPlayer?: (playerId: string, teamId: string | null) => void;
   onSetWingParticipation?: (playerId: string, didEat: boolean) => void;
+  onRecordTriviaAttempt?: (isCorrect: boolean) => void;
 };
 
 export const HostPlaceholder = ({
@@ -46,7 +51,8 @@ export const HostPlaceholder = ({
   onNextPhase,
   onCreateTeam,
   onAssignPlayer,
-  onSetWingParticipation
+  onSetWingParticipation,
+  onRecordTriviaAttempt
 }: HostPlaceholderProps): JSX.Element => {
   const [nextTeamName, setNextTeamName] = useState("");
 
@@ -84,11 +90,26 @@ export const HostPlaceholder = ({
   const teams = roomState?.teams ?? [];
   const isSetupPhase = roomState?.phase === Phase.SETUP;
   const isEatingPhase = roomState?.phase === Phase.EATING;
+  const isTriviaMinigamePlayPhase =
+    roomState?.phase === Phase.MINIGAME_PLAY &&
+    roomState.currentRoundConfig?.minigame === "TRIVIA";
   const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
+  const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
+  const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
+  const activeTurnTeamName =
+    activeTurnTeamId !== null
+      ? (teamNameByTeamId.get(activeTurnTeamId) ??
+        hostPlaceholderCopy.noAssignedTeamLabel)
+      : hostPlaceholderCopy.noAssignedTeamLabel;
   const setupMutationsDisabled = onCreateTeam === undefined || !isSetupPhase;
   const assignmentDisabled = onAssignPlayer === undefined || !isSetupPhase;
   const participationDisabled =
     onSetWingParticipation === undefined || !isEatingPhase;
+  const triviaAttemptDisabled =
+    onRecordTriviaAttempt === undefined ||
+    !isTriviaMinigamePlayPhase ||
+    activeTurnTeamId === null ||
+    currentTriviaPrompt === null;
 
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -128,6 +149,14 @@ export const HostPlaceholder = ({
     }
 
     onSetWingParticipation(playerId, didEat);
+  };
+
+  const handleRecordTriviaAttempt = (isCorrect: boolean): void => {
+    if (!onRecordTriviaAttempt || !isTriviaMinigamePlayPhase) {
+      return;
+    }
+
+    onRecordTriviaAttempt(isCorrect);
   };
 
   return (
@@ -225,6 +254,62 @@ export const HostPlaceholder = ({
             <p className={sectionDescriptionClassName}>
               {hostPlaceholderCopy.eatingParticipationDescription}
             </p>
+          )}
+          {isTriviaMinigamePlayPhase && (
+            <>
+              <p className={sectionDescriptionClassName}>
+                {hostPlaceholderCopy.triviaSectionDescription}
+              </p>
+              <div className={triviaMetaClassName}>
+                <div>
+                  <p className={triviaLabelClassName}>
+                    {hostPlaceholderCopy.triviaActiveTeamLabel(activeTurnTeamName)}
+                  </p>
+                </div>
+                {currentTriviaPrompt && (
+                  <>
+                    <div>
+                      <p className={triviaLabelClassName}>
+                        {hostPlaceholderCopy.triviaQuestionLabel}
+                      </p>
+                      <p className={triviaValueClassName}>
+                        {currentTriviaPrompt.question}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={triviaLabelClassName}>
+                        {hostPlaceholderCopy.triviaAnswerLabel}
+                      </p>
+                      <p className={triviaValueClassName}>
+                        {currentTriviaPrompt.answer}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className={triviaActionsClassName}>
+                <button
+                  className={actionButtonClassName}
+                  type="button"
+                  disabled={triviaAttemptDisabled}
+                  onClick={(): void => {
+                    handleRecordTriviaAttempt(true);
+                  }}
+                >
+                  {hostPlaceholderCopy.triviaCorrectButtonLabel}
+                </button>
+                <button
+                  className={actionButtonClassName}
+                  type="button"
+                  disabled={triviaAttemptDisabled}
+                  onClick={(): void => {
+                    handleRecordTriviaAttempt(false);
+                  }}
+                >
+                  {hostPlaceholderCopy.triviaIncorrectButtonLabel}
+                </button>
+              </div>
+            </>
           )}
           {players.length === 0 && (
             <p className={sectionDescriptionClassName}>

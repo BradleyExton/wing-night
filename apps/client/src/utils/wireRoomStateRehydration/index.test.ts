@@ -93,6 +93,10 @@ test("forwards server snapshots to callback", () => {
     gameConfig: null,
     triviaPrompts: [],
     currentRoundConfig: null,
+    turnOrderTeamIds: [],
+    activeTurnTeamId: null,
+    currentTriviaPrompt: null,
+    triviaPromptCursor: 0,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
