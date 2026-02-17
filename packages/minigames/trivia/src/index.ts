@@ -218,7 +218,11 @@ export const isTriviaMinigameState = (
 
   const pendingPointsValues = Object.values(typedValue.pendingPointsByTeamId);
 
-  if (!pendingPointsValues.every((points) => typeof points === "number")) {
+  if (
+    !pendingPointsValues.every(
+      (points) => typeof points === "number" && Number.isFinite(points)
+    )
+  ) {
     return false;
   }
 

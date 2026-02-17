@@ -59,10 +59,12 @@ test("clearTriviaProjectionFromRoomState clears active trivia projection fields"
     question: "Question 1?",
     answer: "Answer 1"
   };
+  roomState.pendingMinigamePointsByTeamId = { "team-1": 5 };
 
   clearTriviaProjectionFromRoomState(roomState);
 
   assert.equal(roomState.activeTurnTeamId, null);
   assert.equal(roomState.triviaPromptCursor, 0);
   assert.equal(roomState.currentTriviaPrompt, null);
+  assert.equal(roomState.pendingMinigamePointsByTeamId["team-1"], 5);
 });

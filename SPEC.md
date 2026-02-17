@@ -6,7 +6,7 @@
 
 Wing Night is a host-led, in-person party game inspired by spicy wing challenges and game-show mini-games.
 
-Teams eat progressively hotter wings across multiple rounds. In each round, teams take turns: one team eats, then that same team immediately plays the mini-game before the next team begins.
+Teams eat progressively hotter wings across multiple rounds. Immediately after eating, teams compete in a turn-based mini-game while dealing with the spice.
 
 The experience is:
 - Social-first
@@ -37,7 +37,7 @@ If it is not defined in this document, it is not MVP scope.
 - All devices run on the same local Wi-Fi network (LAN-first)
 - Server holds authoritative state (in-memory only)
 - Host-driven phase progression (never auto-advance)
-- Turn-based team turns only (eat then play, one team at a time)
+- Turn-based mini-games only (one team at a time)
 - Escape hatches always available (skip, redo, manual scoring)
 
 Out of Scope (MVP):
@@ -172,12 +172,6 @@ Global Phases:
 
 Rounds 1–N repeat phases 3–7.
 
-Round turn model (within each round):
-- ROUND_INTRO runs once.
-- For each team in fixed turn order: `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY`.
-- Each `EATING` and `MINIGAME_PLAY` phase is scoped to one active team.
-- ROUND_RESULTS runs only after all teams complete their eat+play turn for that round.
-
 ---
 
 ## 5) Phase Definitions
@@ -207,8 +201,8 @@ Host advances → EATING
 
 ### EATING
 Host:
-- Record participation for the active team only
-- Mark active team all-ate
+- Record per-player participation
+- Mark all ate (per team)
 - Pause/extend timer
 
 Wing points calculated but NOT applied yet.
@@ -224,7 +218,7 @@ Display:
 
 ### MINIGAME_PLAY (Turn-Based)
 
-- One team at a time (same active team that just completed EATING)
+- One team at a time
 - Fixed turn order for entire game
 - PASS_AND_PLAY hides host controls
 - Host unlock via press-and-hold
@@ -238,7 +232,7 @@ Display:
 - Updated totals
 
 At this phase:
-- Apply all accumulated team-turn points for the round to total scores
+- Apply round points to total scores
 
 ---
 
