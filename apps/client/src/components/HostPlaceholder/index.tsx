@@ -13,6 +13,7 @@ import {
   listClassName,
   listRowClassName,
   panelClassName,
+  playersCardClassName,
   playerNameClassName,
   primaryButtonClassName,
   sectionDescriptionClassName,
@@ -181,7 +182,7 @@ export const HostPlaceholder = ({
           </div>
         </section>
 
-        <section className={cardClassName}>
+        <section className={`${cardClassName} ${playersCardClassName}`}>
           <h2 className={sectionHeadingClassName}>
             {hostPlaceholderCopy.playersSectionTitle}
           </h2>

@@ -19,6 +19,8 @@ export const sectionGridClassName = "mt-8 grid gap-6 md:grid-cols-2";
 export const cardClassName =
   "rounded-lg border border-white/10 bg-[#242424] p-4 text-left";
 
+export const playersCardClassName = "mt-6";
+
 export const sectionHeadingClassName = "m-0 text-xl font-semibold text-white";
 
 export const sectionDescriptionClassName = "mt-2 text-sm text-white/75";
