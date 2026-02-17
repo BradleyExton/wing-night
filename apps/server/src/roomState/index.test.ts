@@ -11,8 +11,10 @@ import {
   getRoomStateSnapshot,
   recordTriviaAttempt,
   resetRoomState,
+  resetRoomStateNowProvider,
   setPendingMinigamePoints,
   setRoomStateGameConfig,
+  setRoomStateNowProvider,
   setRoomStateTriviaPrompts,
   togglePassAndPlayLock,
   setWingParticipation,
@@ -112,6 +114,7 @@ test("createInitialRoomState returns setup defaults", () => {
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
     isPassAndPlayLocked: false,
+    activeTimer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
@@ -575,6 +578,84 @@ test("togglePassAndPlayLock only mutates during TRIVIA MINIGAME_PLAY", () => {
   snapshot = getRoomStateSnapshot();
   assert.equal(snapshot.phase, Phase.ROUND_RESULTS);
   assert.equal(snapshot.isPassAndPlayLocked, false);
+});
+
+test("starts and clears activeTimer across phase transitions", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  const now = 1_700_000_000_000;
+  setRoomStateNowProvider(() => now);
+
+  try {
+    advanceToEatingPhase();
+    let snapshot = getRoomStateSnapshot();
+    assert.deepEqual(snapshot.activeTimer, {
+      kind: "EATING",
+      startsAt: now,
+      endsAt: now + 120_000,
+      durationSeconds: 120
+    });
+
+    advanceRoomStatePhase();
+    snapshot = getRoomStateSnapshot();
+    assert.equal(snapshot.phase, Phase.MINIGAME_INTRO);
+    assert.equal(snapshot.activeTimer, null);
+  } finally {
+    resetRoomStateNowProvider();
+  }
+});
+
+test("restarts trivia turn timer on each recordTriviaAttempt call", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+
+  let now = 1_700_000_000_000;
+  setRoomStateNowProvider(() => now);
+
+  try {
+    advanceToMinigamePlayPhase();
+
+    let snapshot = getRoomStateSnapshot();
+    assert.deepEqual(snapshot.activeTimer, {
+      kind: "TRIVIA_TURN",
+      startsAt: now,
+      endsAt: now + 30_000,
+      durationSeconds: 30
+    });
+
+    now += 5_000;
+    recordTriviaAttempt(false);
+
+    snapshot = getRoomStateSnapshot();
+    assert.deepEqual(snapshot.activeTimer, {
+      kind: "TRIVIA_TURN",
+      startsAt: now,
+      endsAt: now + 30_000,
+      durationSeconds: 30
+    });
+  } finally {
+    resetRoomStateNowProvider();
+  }
+});
+
+test("keeps activeTimer null in non-trivia minigame play", () => {
+  resetRoomState();
+  const nonTriviaConfig: GameConfigFile = {
+    ...gameConfigFixture,
+    rounds: [
+      { ...gameConfigFixture.rounds[0], minigame: "GEO" },
+      gameConfigFixture.rounds[1]
+    ]
+  };
+  setupValidTeamsAndAssignments(nonTriviaConfig);
+  advanceToMinigamePlayPhase();
+
+  const snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.MINIGAME_PLAY);
+  assert.equal(snapshot.currentRoundConfig?.minigame, "GEO");
+  assert.equal(snapshot.activeTimer, null);
 });
 
 test("recordTriviaAttempt ignores calls outside TRIVIA MINIGAME_PLAY", () => {

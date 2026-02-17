@@ -4,6 +4,7 @@ import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
 import type { Team } from "../team/index.js";
+import type { ActiveTimer } from "../timer/index.js";
 
 export type RoomState = {
   phase: Phase;
@@ -21,6 +22,7 @@ export type RoomState = {
   currentTriviaPrompt: TriviaPrompt | null;
   triviaPromptCursor: number;
   isPassAndPlayLocked: boolean;
+  activeTimer: ActiveTimer | null;
   wingParticipationByPlayerId: Record<string, boolean>;
   pendingWingPointsByTeamId: Record<string, number>;
   pendingMinigamePointsByTeamId: Record<string, number>;

@@ -65,6 +65,7 @@ const buildTriviaRoomState = (isPassAndPlayLocked: boolean): RoomState => {
     },
     triviaPromptCursor: 0,
     isPassAndPlayLocked,
+    activeTimer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}

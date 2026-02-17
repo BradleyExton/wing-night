@@ -1,4 +1,5 @@
 import {
+  type ActiveTimer,
   type GameConfigFile,
   type GameConfigRound,
   type Phase,
@@ -50,6 +51,7 @@ export type ValidRoomStateCheck = Assert<
       currentTriviaPrompt: TriviaPrompt | null;
       triviaPromptCursor: number;
       isPassAndPlayLocked: boolean;
+      activeTimer: ActiveTimer | null;
       wingParticipationByPlayerId: Record<string, boolean>;
       pendingWingPointsByTeamId: Record<string, number>;
       pendingMinigamePointsByTeamId: Record<string, number>;
