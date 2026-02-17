@@ -440,6 +440,74 @@ test("setPendingMinigamePoints enforces default-round scoring cap", () => {
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 15);
 });
 
+test("setPendingMinigamePoints is ignored outside MINIGAME_PLAY", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToMinigamePlayPhase();
+
+  setPendingMinigamePoints({ "team-1": 4, "team-2": 2 });
+  advanceRoomStatePhase();
+
+  const snapshotBeforeInvalidCall = getRoomStateSnapshot();
+
+  setPendingMinigamePoints({ "team-1": 8, "team-2": 8 });
+  const snapshotAfterInvalidCall = getRoomStateSnapshot();
+
+  assert.deepEqual(
+    snapshotAfterInvalidCall.pendingMinigamePointsByTeamId,
+    snapshotBeforeInvalidCall.pendingMinigamePointsByTeamId
+  );
+});
+
+test("setPendingMinigamePoints rejects negative values", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToMinigamePlayPhase();
+
+  setPendingMinigamePoints({ "team-1": 4, "team-2": 2 });
+  const snapshotWithValidValues = getRoomStateSnapshot();
+
+  setPendingMinigamePoints({ "team-1": -1, "team-2": 2 });
+  const snapshotAfterInvalidCall = getRoomStateSnapshot();
+
+  assert.deepEqual(
+    snapshotAfterInvalidCall.pendingMinigamePointsByTeamId,
+    snapshotWithValidValues.pendingMinigamePointsByTeamId
+  );
+});
+
+test("setPendingMinigamePoints rejects non-finite values", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToMinigamePlayPhase();
+
+  setPendingMinigamePoints({ "team-1": 3, "team-2": 2 });
+  const snapshotWithValidValues = getRoomStateSnapshot();
+
+  setPendingMinigamePoints({
+    "team-1": Number.NaN,
+    "team-2": Number.POSITIVE_INFINITY
+  });
+  const snapshotAfterInvalidCall = getRoomStateSnapshot();
+
+  assert.deepEqual(
+    snapshotAfterInvalidCall.pendingMinigamePointsByTeamId,
+    snapshotWithValidValues.pendingMinigamePointsByTeamId
+  );
+});
+
+test("setPendingMinigamePoints fills missing teams with zero", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToMinigamePlayPhase();
+
+  setPendingMinigamePoints({ "team-1": 6 });
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 6);
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-2"], 0);
+});
+
 test("setPendingMinigamePoints enforces final-round scoring cap", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
