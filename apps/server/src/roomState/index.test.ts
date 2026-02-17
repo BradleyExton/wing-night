@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Phase, type GameConfigFile } from "@wingnight/shared";
+import { Phase, type GameConfigFile, type TriviaPrompt } from "@wingnight/shared";
 
 import {
   advanceRoomStatePhase,
@@ -12,6 +12,7 @@ import {
   resetRoomState,
   setPendingMinigamePoints,
   setRoomStateGameConfig,
+  setRoomStateTriviaPrompts,
   setWingParticipation,
   setRoomStatePlayers
 } from "./index.js";
@@ -45,6 +46,19 @@ const gameConfigFixture: GameConfigFile = {
     drawingSeconds: 60
   }
 };
+
+const triviaPromptFixture: TriviaPrompt[] = [
+  {
+    id: "prompt-1",
+    question: "Question 1?",
+    answer: "Answer 1"
+  },
+  {
+    id: "prompt-2",
+    question: "Question 2?",
+    answer: "Answer 2"
+  }
+];
 
 const setupValidTeamsAndAssignments = (): void => {
   setRoomStateGameConfig(gameConfigFixture);
@@ -87,6 +101,7 @@ test("createInitialRoomState returns setup defaults", () => {
     players: [],
     teams: [],
     gameConfig: null,
+    triviaPrompts: [],
     currentRoundConfig: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
@@ -276,6 +291,20 @@ test("setRoomStateGameConfig stores a safe clone and updates totalRounds", () =>
   assert.equal(persistedSnapshot.gameConfig?.rounds.length, 2);
   assert.equal(persistedSnapshot.currentRoundConfig, null);
   assert.deepEqual(persistedSnapshot.pendingMinigamePointsByTeamId, {});
+});
+
+test("setRoomStateTriviaPrompts stores a safe clone of trivia prompts", () => {
+  resetRoomState();
+
+  const nextPrompts = structuredClone(triviaPromptFixture);
+  const updatedSnapshot = setRoomStateTriviaPrompts(nextPrompts);
+
+  assert.deepEqual(updatedSnapshot.triviaPrompts, triviaPromptFixture);
+
+  nextPrompts[0].question = "Changed Locally";
+  const persistedSnapshot = getRoomStateSnapshot();
+
+  assert.equal(persistedSnapshot.triviaPrompts[0]?.question, "Question 1?");
 });
 
 test("createTeam trims team names and ignores empty values", () => {

@@ -2,9 +2,14 @@ import { createServer } from "node:http";
 
 import { createApp } from "./createApp/index.js";
 import { loadGameConfig } from "./contentLoader/loadGameConfig/index.js";
+import { loadTrivia } from "./contentLoader/loadTrivia/index.js";
 import { logError, logInfo } from "./logger/index.js";
 import { loadPlayers } from "./contentLoader/loadPlayers/index.js";
-import { setRoomStateGameConfig, setRoomStatePlayers } from "./roomState/index.js";
+import {
+  setRoomStateGameConfig,
+  setRoomStatePlayers,
+  setRoomStateTriviaPrompts
+} from "./roomState/index.js";
 import { attachSocketServer } from "./socketServer/index.js";
 
 const parsedPort = Number(process.env.PORT);
@@ -15,8 +20,10 @@ const httpServer = createServer(app);
 try {
   const players = loadPlayers();
   const gameConfig = loadGameConfig();
+  const triviaPrompts = loadTrivia();
   setRoomStatePlayers(players);
   setRoomStateGameConfig(gameConfig);
+  setRoomStateTriviaPrompts(triviaPrompts);
 } catch (error) {
   logError("server:contentLoadFailed", error);
   process.exit(1);

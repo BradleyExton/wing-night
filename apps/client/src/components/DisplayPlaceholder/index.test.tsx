@@ -44,6 +44,7 @@ const buildSnapshot = (
     players: [],
     teams,
     gameConfig: gameConfigFixture,
+    triviaPrompts: [],
     currentRoundConfig: gameConfigFixture.rounds[0],
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},

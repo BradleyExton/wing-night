@@ -2,7 +2,8 @@ import {
   Phase,
   type GameConfigFile,
   type Player,
-  type RoomState
+  type RoomState,
+  type TriviaPrompt
 } from "@wingnight/shared";
 
 import { logPhaseTransition, logScoreMutation } from "../logger/index.js";
@@ -38,6 +39,7 @@ export const createInitialRoomState = (): RoomState => {
     players: [],
     teams: [],
     gameConfig: null,
+    triviaPrompts: [],
     currentRoundConfig: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
@@ -75,6 +77,14 @@ export const setRoomStateGameConfig = (
   roomState.gameConfig = structuredClone(gameConfig);
   roomState.totalRounds = gameConfig.rounds.length;
   roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
+
+  return getRoomStateSnapshot();
+};
+
+export const setRoomStateTriviaPrompts = (
+  triviaPrompts: TriviaPrompt[]
+): RoomState => {
+  roomState.triviaPrompts = structuredClone(triviaPrompts);
 
   return getRoomStateSnapshot();
 };
