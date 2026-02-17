@@ -134,12 +134,15 @@ Backlog status:
 - [ ] 8.7 Host/Display Minigame Surface Shell
 - [ ] 8.8 Timer `endsAt` Contract Reconciliation
 - [ ] 8.9 Host Timer Controls (Pause/Extend)
+- [ ] 8.10 Team-Turn State Machine Realignment
+- [ ] 8.11 Active-Team Eating + Scoring Gating
+- [ ] 8.12 Host/Display Team-Turn Surfaces
 - [ ] D1 SPEC Architecture Alignment (after 8.5)
 - [ ] D2 README Architecture Alignment (after 8.5)
 - [ ] D3 AGENTS Guardrail Update (after boundary stabilizes)
 - [ ] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
-- [ ] R1 Host UI Decomposition Pass (`HostPlaceholder` phase-surface extraction)
-- [ ] R2 Display UI Decomposition Pass (`DisplayPlaceholder` stage/standings extraction)
+- [ ] R1 Host UI Decomposition Pass (`HostPlaceholder` phase-surface extraction + remove `Placeholder` naming)
+- [ ] R2 Display UI Decomposition Pass (`DisplayPlaceholder` stage/standings extraction + remove `Placeholder` naming)
 - [ ] 9.1 Playwright Host/Display Sync
 - [ ] 9.2 Playwright Refresh Rehydrate
 - [ ] 10.1 Manual Round Escape Hatch
@@ -158,6 +161,7 @@ UI task addendum (required for new client UI tasks):
 - Include a component decomposition note in the task output (parent + subcomponents created/updated).
 - Avoid expanding over-cap component files; extract first, then add new UI behavior.
 - Prefer phase-surface subcomponents for host/display views (`Setup`, `Eating`, `RoundResults`, etc.).
+- When touching placeholder-era components, rename them to stable production names (remove `Placeholder` suffix).
 
 ------------------------------------------------------------------------
 
@@ -425,6 +429,36 @@ Verification:
 Verification:
 -   Socket handler tests verify host authorization and payload validation
 -   Host component tests cover enabled/disabled timer controls by phase
+
+------------------------------------------------------------------------
+
+# Phase 8E --- Team-Turn Flow Realignment
+
+## 8.10 Team-Turn State Machine Realignment
+
+-   Add per-round active-team turn cursor and completion tracking
+-   Repeat `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` per team before `ROUND_RESULTS`
+-   Keep round advancement tied to final team turn completion
+Verification:
+-   Room-state tests cover first/middle/last team transitions and round boundary transitions
+
+## 8.11 Active-Team Eating + Scoring Gating
+
+-   Restrict EATING participation updates to players on the active team
+-   Accumulate wing + minigame points by team turn until `ROUND_RESULTS`
+-   Keep server authoritative and escape-hatch compatible for skip/redo/override follow-ups
+Verification:
+-   Unit tests reject non-active-team mutations
+-   Unit tests verify full-round score totals across all team turns
+
+## 8.12 Host/Display Team-Turn Surfaces
+
+-   Render active team context in EATING and MINIGAME phases on host and display
+-   Render round turn progress (for example, Team 2 of 4)
+-   Preserve reconnect rehydrate correctness for active team turn context
+Verification:
+-   Host/display component tests cover active team + turn progress rendering
+-   `pnpm playwright test` covers host/display sync across team-turn transitions
 
 ------------------------------------------------------------------------
 

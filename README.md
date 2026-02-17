@@ -3,9 +3,9 @@
 Wing Night is a host-led, in-person party game inspired by spicy wing
 challenges and game-show mini-games.
 
-Teams eat progressively hotter wings across multiple rounds. Immediately
-after eating, teams compete in turn-based mini-games while dealing with
-the spice.
+Teams eat progressively hotter wings across multiple rounds. In each
+round, teams take turns: one team eats, then that same team immediately
+plays the mini-game before the next team begins.
 
 This repository contains the **engine** only.\
 Custom prompts, sauces, player names, and images are loaded locally and
@@ -28,6 +28,14 @@ Core principles:
 -   Full state snapshot on reconnect
 -   In-memory state only (MVP)
 -   Engine/content separation
+
+Round execution model:
+
+-   `ROUND_INTRO` runs once per round.
+-   Team turns then run in fixed order:
+    `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY`.
+-   `ROUND_RESULTS` runs after all teams complete their turn for that
+    round.
 
 The game runs entirely on a local Wi-Fi network with no internet
 required.
