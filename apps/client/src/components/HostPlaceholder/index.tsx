@@ -90,8 +90,9 @@ export const HostPlaceholder = ({
   const teams = roomState?.teams ?? [];
   const isSetupPhase = roomState?.phase === Phase.SETUP;
   const isEatingPhase = roomState?.phase === Phase.EATING;
+  const isMinigamePlayPhase = roomState?.phase === Phase.MINIGAME_PLAY;
   const isTriviaMinigamePlayPhase =
-    roomState?.phase === Phase.MINIGAME_PLAY &&
+    isMinigamePlayPhase &&
     roomState.currentRoundConfig?.minigame === "TRIVIA";
   const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
   const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
@@ -110,6 +111,9 @@ export const HostPlaceholder = ({
     !isTriviaMinigamePlayPhase ||
     activeTurnTeamId === null ||
     currentTriviaPrompt === null;
+  const shouldRenderSetupSections = isSetupPhase;
+  const shouldRenderPlayersSection =
+    isSetupPhase || isEatingPhase || isMinigamePlayPhase;
 
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -183,207 +187,213 @@ export const HostPlaceholder = ({
           <p className={lockNoticeClassName}>{hostPlaceholderCopy.setupLockedLabel}</p>
         )}
 
-        <section className={sectionGridClassName}>
-          <div className={cardClassName}>
-            <h2 className={sectionHeadingClassName}>
-              {hostPlaceholderCopy.teamSetupTitle}
-            </h2>
-            <p className={sectionDescriptionClassName}>
-              {hostPlaceholderCopy.teamSetupDescription}
-            </p>
-            <form
-              className={teamCreateFormClassName}
-              onSubmit={handleCreateTeamSubmit}
-            >
-              <div className={teamInputGroupClassName}>
-                <label className={teamInputLabelClassName} htmlFor="team-name-input">
-                  {hostPlaceholderCopy.teamNameInputLabel}
-                </label>
-                <input
-                  id="team-name-input"
-                  className={teamInputClassName}
-                  value={nextTeamName}
-                  disabled={setupMutationsDisabled}
-                  onChange={(event): void => {
-                    setNextTeamName(event.target.value);
-                  }}
-                  placeholder={hostPlaceholderCopy.teamNameInputPlaceholder}
-                />
-              </div>
-              <button
-                className={actionButtonClassName}
-                type="submit"
-                disabled={setupMutationsDisabled}
-              >
-                {hostPlaceholderCopy.createTeamButtonLabel}
-              </button>
-            </form>
-          </div>
-
-          <div className={cardClassName}>
-            <h2 className={sectionHeadingClassName}>
-              {hostPlaceholderCopy.teamsSectionTitle}
-            </h2>
-            {teams.length === 0 && (
+        {shouldRenderSetupSections && (
+          <section className={sectionGridClassName}>
+            <div className={cardClassName}>
+              <h2 className={sectionHeadingClassName}>
+                {hostPlaceholderCopy.teamSetupTitle}
+              </h2>
               <p className={sectionDescriptionClassName}>
-                {hostPlaceholderCopy.noTeamsLabel}
+                {hostPlaceholderCopy.teamSetupDescription}
+              </p>
+              <form
+                className={teamCreateFormClassName}
+                onSubmit={handleCreateTeamSubmit}
+              >
+                <div className={teamInputGroupClassName}>
+                  <label className={teamInputLabelClassName} htmlFor="team-name-input">
+                    {hostPlaceholderCopy.teamNameInputLabel}
+                  </label>
+                  <input
+                    id="team-name-input"
+                    className={teamInputClassName}
+                    value={nextTeamName}
+                    disabled={setupMutationsDisabled}
+                    onChange={(event): void => {
+                      setNextTeamName(event.target.value);
+                    }}
+                    placeholder={hostPlaceholderCopy.teamNameInputPlaceholder}
+                  />
+                </div>
+                <button
+                  className={actionButtonClassName}
+                  type="submit"
+                  disabled={setupMutationsDisabled}
+                >
+                  {hostPlaceholderCopy.createTeamButtonLabel}
+                </button>
+              </form>
+            </div>
+
+            <div className={cardClassName}>
+              <h2 className={sectionHeadingClassName}>
+                {hostPlaceholderCopy.teamsSectionTitle}
+              </h2>
+              {teams.length === 0 && (
+                <p className={sectionDescriptionClassName}>
+                  {hostPlaceholderCopy.noTeamsLabel}
+                </p>
+              )}
+              {teams.length > 0 && (
+                <ul className={listClassName}>
+                  {teams.map((team) => {
+                    return (
+                      <li className={listRowClassName} key={team.id}>
+                        <span className={teamNameClassName}>{team.name}</span>
+                        <span className={teamMetaClassName}>
+                          {hostPlaceholderCopy.teamMembersLabel(team.playerIds.length)}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </section>
+        )}
+
+        {shouldRenderPlayersSection && (
+          <section className={`${cardClassName} ${playersCardClassName}`}>
+            <h2 className={sectionHeadingClassName}>
+              {hostPlaceholderCopy.playersSectionTitle}
+            </h2>
+            {isEatingPhase && (
+              <p className={sectionDescriptionClassName}>
+                {hostPlaceholderCopy.eatingParticipationDescription}
               </p>
             )}
-            {teams.length > 0 && (
+            {isTriviaMinigamePlayPhase && (
+              <>
+                <p className={sectionDescriptionClassName}>
+                  {hostPlaceholderCopy.triviaSectionDescription}
+                </p>
+                <div className={triviaMetaClassName}>
+                  <div>
+                    <p className={triviaLabelClassName}>
+                      {hostPlaceholderCopy.triviaActiveTeamLabel(activeTurnTeamName)}
+                    </p>
+                  </div>
+                  {currentTriviaPrompt && (
+                    <>
+                      <div>
+                        <p className={triviaLabelClassName}>
+                          {hostPlaceholderCopy.triviaQuestionLabel}
+                        </p>
+                        <p className={triviaValueClassName}>
+                          {currentTriviaPrompt.question}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={triviaLabelClassName}>
+                          {hostPlaceholderCopy.triviaAnswerLabel}
+                        </p>
+                        <p className={triviaValueClassName}>
+                          {currentTriviaPrompt.answer}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className={triviaActionsClassName}>
+                  <button
+                    className={actionButtonClassName}
+                    type="button"
+                    disabled={triviaAttemptDisabled}
+                    onClick={(): void => {
+                      handleRecordTriviaAttempt(true);
+                    }}
+                  >
+                    {hostPlaceholderCopy.triviaCorrectButtonLabel}
+                  </button>
+                  <button
+                    className={actionButtonClassName}
+                    type="button"
+                    disabled={triviaAttemptDisabled}
+                    onClick={(): void => {
+                      handleRecordTriviaAttempt(false);
+                    }}
+                  >
+                    {hostPlaceholderCopy.triviaIncorrectButtonLabel}
+                  </button>
+                </div>
+              </>
+            )}
+            {players.length === 0 && (
+              <p className={sectionDescriptionClassName}>
+                {hostPlaceholderCopy.noPlayersLabel}
+              </p>
+            )}
+            {players.length > 0 && (
               <ul className={listClassName}>
-                {teams.map((team) => {
+                {players.map((player) => {
+                  const assignedTeamId = assignedTeamByPlayerId.get(player.id) ?? "";
+
                   return (
-                    <li className={listRowClassName} key={team.id}>
-                      <span className={teamNameClassName}>{team.name}</span>
-                      <span className={teamMetaClassName}>
-                        {hostPlaceholderCopy.teamMembersLabel(team.playerIds.length)}
-                      </span>
+                    <li key={player.id} className={listRowClassName}>
+                      <span className={playerNameClassName}>{player.name}</span>
+                      {isSetupPhase && (
+                        <select
+                          aria-label={hostPlaceholderCopy.assignmentSelectLabel(
+                            player.name
+                          )}
+                          className={assignmentSelectClassName}
+                          value={assignedTeamId}
+                          onChange={(event): void => {
+                            handleAssignmentChange(event, player.id);
+                          }}
+                          disabled={assignmentDisabled}
+                        >
+                          <option value="">
+                            {hostPlaceholderCopy.unassignedOptionLabel}
+                          </option>
+                          {teams.map((team) => {
+                            return (
+                              <option key={team.id} value={team.id}>
+                                {team.name}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      )}
+                      {isEatingPhase && (
+                        <div className={participationRowClassName}>
+                          <span className={playerMetaClassName}>
+                            {assignedTeamId.length > 0
+                              ? hostPlaceholderCopy.assignedTeamLabel(
+                                  teamNameByTeamId.get(assignedTeamId) ??
+                                    hostPlaceholderCopy.noAssignedTeamLabel
+                                )
+                              : hostPlaceholderCopy.noAssignedTeamLabel}
+                          </span>
+                          <label className={participationLabelClassName}>
+                            <input
+                              className={participationControlClassName}
+                              type="checkbox"
+                              checked={wingParticipationByPlayerId[player.id] === true}
+                              onChange={(event): void => {
+                                handleWingParticipationChange(
+                                  player.id,
+                                  event.target.checked
+                                );
+                              }}
+                              disabled={
+                                participationDisabled || assignedTeamId.length === 0
+                              }
+                              aria-label={hostPlaceholderCopy.wingParticipationToggleLabel(
+                                player.name
+                              )}
+                            />
+                            <span>{hostPlaceholderCopy.ateWingLabel}</span>
+                          </label>
+                        </div>
+                      )}
                     </li>
                   );
                 })}
               </ul>
             )}
-          </div>
-        </section>
-
-        <section className={`${cardClassName} ${playersCardClassName}`}>
-          <h2 className={sectionHeadingClassName}>
-            {hostPlaceholderCopy.playersSectionTitle}
-          </h2>
-          {isEatingPhase && (
-            <p className={sectionDescriptionClassName}>
-              {hostPlaceholderCopy.eatingParticipationDescription}
-            </p>
-          )}
-          {isTriviaMinigamePlayPhase && (
-            <>
-              <p className={sectionDescriptionClassName}>
-                {hostPlaceholderCopy.triviaSectionDescription}
-              </p>
-              <div className={triviaMetaClassName}>
-                <div>
-                  <p className={triviaLabelClassName}>
-                    {hostPlaceholderCopy.triviaActiveTeamLabel(activeTurnTeamName)}
-                  </p>
-                </div>
-                {currentTriviaPrompt && (
-                  <>
-                    <div>
-                      <p className={triviaLabelClassName}>
-                        {hostPlaceholderCopy.triviaQuestionLabel}
-                      </p>
-                      <p className={triviaValueClassName}>
-                        {currentTriviaPrompt.question}
-                      </p>
-                    </div>
-                    <div>
-                      <p className={triviaLabelClassName}>
-                        {hostPlaceholderCopy.triviaAnswerLabel}
-                      </p>
-                      <p className={triviaValueClassName}>
-                        {currentTriviaPrompt.answer}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className={triviaActionsClassName}>
-                <button
-                  className={actionButtonClassName}
-                  type="button"
-                  disabled={triviaAttemptDisabled}
-                  onClick={(): void => {
-                    handleRecordTriviaAttempt(true);
-                  }}
-                >
-                  {hostPlaceholderCopy.triviaCorrectButtonLabel}
-                </button>
-                <button
-                  className={actionButtonClassName}
-                  type="button"
-                  disabled={triviaAttemptDisabled}
-                  onClick={(): void => {
-                    handleRecordTriviaAttempt(false);
-                  }}
-                >
-                  {hostPlaceholderCopy.triviaIncorrectButtonLabel}
-                </button>
-              </div>
-            </>
-          )}
-          {players.length === 0 && (
-            <p className={sectionDescriptionClassName}>
-              {hostPlaceholderCopy.noPlayersLabel}
-            </p>
-          )}
-          {players.length > 0 && (
-            <ul className={listClassName}>
-              {players.map((player) => {
-                const assignedTeamId = assignedTeamByPlayerId.get(player.id) ?? "";
-
-                return (
-                  <li key={player.id} className={listRowClassName}>
-                    <span className={playerNameClassName}>{player.name}</span>
-                    {isSetupPhase && (
-                      <select
-                        aria-label={hostPlaceholderCopy.assignmentSelectLabel(player.name)}
-                        className={assignmentSelectClassName}
-                        value={assignedTeamId}
-                        onChange={(event): void => {
-                          handleAssignmentChange(event, player.id);
-                        }}
-                        disabled={assignmentDisabled}
-                      >
-                        <option value="">
-                          {hostPlaceholderCopy.unassignedOptionLabel}
-                        </option>
-                        {teams.map((team) => {
-                          return (
-                            <option key={team.id} value={team.id}>
-                              {team.name}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    )}
-                    {isEatingPhase && (
-                      <div className={participationRowClassName}>
-                        <span className={playerMetaClassName}>
-                          {assignedTeamId.length > 0
-                            ? hostPlaceholderCopy.assignedTeamLabel(
-                                teamNameByTeamId.get(assignedTeamId) ??
-                                  hostPlaceholderCopy.noAssignedTeamLabel
-                              )
-                            : hostPlaceholderCopy.noAssignedTeamLabel}
-                        </span>
-                        <label className={participationLabelClassName}>
-                          <input
-                            className={participationControlClassName}
-                            type="checkbox"
-                            checked={wingParticipationByPlayerId[player.id] === true}
-                            onChange={(event): void => {
-                              handleWingParticipationChange(
-                                player.id,
-                                event.target.checked
-                              );
-                            }}
-                            disabled={
-                              participationDisabled || assignedTeamId.length === 0
-                            }
-                            aria-label={hostPlaceholderCopy.wingParticipationToggleLabel(
-                              player.name
-                            )}
-                          />
-                          <span>{hostPlaceholderCopy.ateWingLabel}</span>
-                        </label>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+          </section>
+        )}
       </div>
     </main>
   );
