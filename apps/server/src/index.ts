@@ -1,10 +1,8 @@
 import { createServer } from "node:http";
 
 import { createApp } from "./createApp/index.js";
-import { loadGameConfig } from "./contentLoader/loadGameConfig/index.js";
-import { loadTrivia } from "./contentLoader/loadTrivia/index.js";
+import { loadContent } from "./contentLoader/index.js";
 import { logError, logInfo } from "./logger/index.js";
-import { loadPlayers } from "./contentLoader/loadPlayers/index.js";
 import {
   setRoomStateGameConfig,
   setRoomStatePlayers,
@@ -18,9 +16,7 @@ const app = createApp();
 const httpServer = createServer(app);
 
 try {
-  const players = loadPlayers();
-  const gameConfig = loadGameConfig();
-  const triviaPrompts = loadTrivia();
+  const { players, gameConfig, triviaPrompts } = loadContent();
   setRoomStatePlayers(players);
   setRoomStateGameConfig(gameConfig);
   setRoomStateTriviaPrompts(triviaPrompts);

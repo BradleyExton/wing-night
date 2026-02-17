@@ -1,6 +1,6 @@
-export const containerClassName =
-  "min-h-[100dvh] grid place-items-center p-6 bg-bg text-white text-center";
+export const container =
+  "min-h-[100dvh] grid place-items-center bg-bg p-6 text-center text-text";
 
-export const headingClassName = "m-0 text-3xl font-bold";
+export const heading = "m-0 text-3xl font-bold";
 
-export const subtextClassName = "mt-3 text-base text-white/90";
+export const subtext = "mt-3 text-base text-text/90";

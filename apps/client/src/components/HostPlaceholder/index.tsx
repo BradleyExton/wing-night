@@ -2,49 +2,7 @@ import type { ChangeEvent, FormEvent } from "react";
 import { useMemo, useState } from "react";
 import { Phase, type RoomState } from "@wingnight/shared";
 
-import {
-  actionButtonClassName,
-  assignmentSelectClassName,
-  cardClassName,
-  compactGridClassName,
-  compactHintClassName,
-  compactLeaderLabelClassName,
-  compactLeaderRowClassName,
-  compactMetaListClassName,
-  compactPhaseBadgeClassName,
-  compactScoreClassName,
-  compactStandingsListClassName,
-  compactStandingsMetaClassName,
-  compactStandingsRowClassName,
-  containerClassName,
-  controlsRowClassName,
-  headingClassName,
-  lockNoticeClassName,
-  listClassName,
-  listRowClassName,
-  panelClassName,
-  participationControlClassName,
-  participationLabelClassName,
-  participationRowClassName,
-  playersCardClassName,
-  playerMetaClassName,
-  playerNameClassName,
-  primaryButtonClassName,
-  sectionDescriptionClassName,
-  sectionGridClassName,
-  sectionHeadingClassName,
-  subtextClassName,
-  triviaActionsClassName,
-  triviaLabelClassName,
-  triviaMetaClassName,
-  triviaValueClassName,
-  teamCreateFormClassName,
-  teamInputClassName,
-  teamInputGroupClassName,
-  teamInputLabelClassName,
-  teamMetaClassName,
-  teamNameClassName
-} from "./styles";
+import * as styles from "./styles";
 import { hostPlaceholderCopy } from "./copy";
 
 type HostPlaceholderProps = {
@@ -193,14 +151,14 @@ export const HostPlaceholder = ({
   };
 
   return (
-    <main className={containerClassName}>
-      <div className={panelClassName}>
-        <h1 className={headingClassName}>{hostPlaceholderCopy.title}</h1>
-        <p className={subtextClassName}>{hostPlaceholderCopy.description}</p>
+    <main className={styles.container}>
+      <div className={styles.panel}>
+        <h1 className={styles.heading}>{hostPlaceholderCopy.title}</h1>
+        <p className={styles.subtext}>{hostPlaceholderCopy.description}</p>
 
-        <div className={controlsRowClassName}>
+        <div className={styles.controlsRow}>
           <button
-            className={primaryButtonClassName}
+            className={styles.primaryButton}
             type="button"
             onClick={onNextPhase}
             disabled={onNextPhase === undefined}
@@ -210,32 +168,32 @@ export const HostPlaceholder = ({
         </div>
 
         {!roomState && (
-          <p className={subtextClassName}>{hostPlaceholderCopy.loadingStateLabel}</p>
+          <p className={styles.subtext}>{hostPlaceholderCopy.loadingStateLabel}</p>
         )}
         {roomState && !isSetupPhase && (
-          <p className={lockNoticeClassName}>{hostPlaceholderCopy.setupLockedLabel}</p>
+          <p className={styles.lockNotice}>{hostPlaceholderCopy.setupLockedLabel}</p>
         )}
 
         {isCompactSummaryPhase && roomState && phase !== null && (
-          <section className={compactGridClassName}>
-            <div className={cardClassName}>
-              <h2 className={sectionHeadingClassName}>
+          <section className={styles.compactGrid}>
+            <div className={styles.card}>
+              <h2 className={styles.sectionHeading}>
                 {hostPlaceholderCopy.compactPhaseStatusTitle}
               </h2>
-              <p className={compactPhaseBadgeClassName}>
+              <p className={styles.compactPhaseBadge}>
                 {hostPlaceholderCopy.compactPhaseLabel(phase)}
               </p>
-              <p className={sectionDescriptionClassName}>
+              <p className={styles.sectionDescription}>
                 {hostPlaceholderCopy.compactPhaseDescription(phase)}
               </p>
             </div>
 
-            <div className={cardClassName}>
-              <h2 className={sectionHeadingClassName}>
+            <div className={styles.card}>
+              <h2 className={styles.sectionHeading}>
                 {hostPlaceholderCopy.compactRoundContextTitle}
               </h2>
               {currentRoundConfig && (
-                <ul className={compactMetaListClassName}>
+                <ul className={styles.compactMetaList}>
                   <li>
                     {hostPlaceholderCopy.compactRoundProgressLabel(
                       roomState.currentRound,
@@ -252,36 +210,36 @@ export const HostPlaceholder = ({
                 </ul>
               )}
               {!currentRoundConfig && (
-                <p className={sectionDescriptionClassName}>
+                <p className={styles.sectionDescription}>
                   {hostPlaceholderCopy.compactNoRoundContextLabel}
                 </p>
               )}
             </div>
 
-            <div className={cardClassName}>
-              <h2 className={sectionHeadingClassName}>
+            <div className={styles.card}>
+              <h2 className={styles.sectionHeading}>
                 {hostPlaceholderCopy.compactStandingsTitle}
               </h2>
               {sortedStandings.length > 0 && (
-                <ul className={compactStandingsListClassName}>
+                <ul className={styles.compactStandingsList}>
                   {sortedStandings.map((team, index) => {
                     const isLeader = index === 0;
 
                     return (
                       <li
-                        className={`${compactStandingsRowClassName} ${
-                          isLeader ? compactLeaderRowClassName : ""
+                        className={`${styles.compactStandingsRow} ${
+                          isLeader ? styles.compactLeaderRow : ""
                         }`}
                         key={team.id}
                       >
-                        <span className={teamNameClassName}>{team.name}</span>
-                        <div className={compactStandingsMetaClassName}>
+                        <span className={styles.teamName}>{team.name}</span>
+                        <div className={styles.compactStandingsMeta}>
                           {isLeader && (
-                            <span className={compactLeaderLabelClassName}>
+                            <span className={styles.compactLeaderLabel}>
                               {hostPlaceholderCopy.compactLeaderLabel}
                             </span>
                           )}
-                          <span className={compactScoreClassName}>
+                          <span className={styles.compactScore}>
                             {hostPlaceholderCopy.compactScoreLabel(team.totalScore)}
                           </span>
                         </div>
@@ -291,17 +249,17 @@ export const HostPlaceholder = ({
                 </ul>
               )}
               {sortedStandings.length === 0 && (
-                <p className={sectionDescriptionClassName}>
+                <p className={styles.sectionDescription}>
                   {hostPlaceholderCopy.compactNoStandingsLabel}
                 </p>
               )}
             </div>
 
-            <div className={cardClassName}>
-              <h2 className={sectionHeadingClassName}>
+            <div className={styles.card}>
+              <h2 className={styles.sectionHeading}>
                 {hostPlaceholderCopy.compactNextActionTitle}
               </h2>
-              <p className={compactHintClassName}>
+              <p className={styles.compactHint}>
                 {hostPlaceholderCopy.compactNextActionHint(phase)}
               </p>
             </div>
@@ -311,25 +269,25 @@ export const HostPlaceholder = ({
         {!isCompactSummaryPhase && (
           <>
             {shouldRenderSetupSections && (
-              <section className={sectionGridClassName}>
-                <div className={cardClassName}>
-                  <h2 className={sectionHeadingClassName}>
+              <section className={styles.sectionGrid}>
+                <div className={styles.card}>
+                  <h2 className={styles.sectionHeading}>
                     {hostPlaceholderCopy.teamSetupTitle}
                   </h2>
-                  <p className={sectionDescriptionClassName}>
+                  <p className={styles.sectionDescription}>
                     {hostPlaceholderCopy.teamSetupDescription}
                   </p>
                   <form
-                    className={teamCreateFormClassName}
+                    className={styles.teamCreateForm}
                     onSubmit={handleCreateTeamSubmit}
                   >
-                    <div className={teamInputGroupClassName}>
-                      <label className={teamInputLabelClassName} htmlFor="team-name-input">
+                    <div className={styles.teamInputGroup}>
+                      <label className={styles.teamInputLabel} htmlFor="team-name-input">
                         {hostPlaceholderCopy.teamNameInputLabel}
                       </label>
                       <input
                         id="team-name-input"
-                        className={teamInputClassName}
+                        className={styles.teamInput}
                         value={nextTeamName}
                         disabled={setupMutationsDisabled}
                         onChange={(event): void => {
@@ -339,7 +297,7 @@ export const HostPlaceholder = ({
                       />
                     </div>
                     <button
-                      className={actionButtonClassName}
+                      className={styles.actionButton}
                       type="submit"
                       disabled={setupMutationsDisabled}
                     >
@@ -348,22 +306,22 @@ export const HostPlaceholder = ({
                   </form>
                 </div>
 
-                <div className={cardClassName}>
-                  <h2 className={sectionHeadingClassName}>
+                <div className={styles.card}>
+                  <h2 className={styles.sectionHeading}>
                     {hostPlaceholderCopy.teamsSectionTitle}
                   </h2>
                   {teams.length === 0 && (
-                    <p className={sectionDescriptionClassName}>
+                    <p className={styles.sectionDescription}>
                       {hostPlaceholderCopy.noTeamsLabel}
                     </p>
                   )}
                   {teams.length > 0 && (
-                    <ul className={listClassName}>
+                    <ul className={styles.list}>
                       {teams.map((team) => {
                         return (
-                          <li className={listRowClassName} key={team.id}>
-                            <span className={teamNameClassName}>{team.name}</span>
-                            <span className={teamMetaClassName}>
+                          <li className={styles.listRow} key={team.id}>
+                            <span className={styles.teamName}>{team.name}</span>
+                            <span className={styles.teamMeta}>
                               {hostPlaceholderCopy.teamMembersLabel(team.playerIds.length)}
                             </span>
                           </li>
@@ -376,50 +334,50 @@ export const HostPlaceholder = ({
             )}
 
             {shouldRenderPlayersSection && (
-              <section className={`${cardClassName} ${playersCardClassName}`}>
-                <h2 className={sectionHeadingClassName}>
+              <section className={`${styles.card} ${styles.playersCard}`}>
+                <h2 className={styles.sectionHeading}>
                   {hostPlaceholderCopy.playersSectionTitle}
                 </h2>
                 {isEatingPhase && (
-                  <p className={sectionDescriptionClassName}>
+                  <p className={styles.sectionDescription}>
                     {hostPlaceholderCopy.eatingParticipationDescription}
                   </p>
                 )}
                 {isTriviaMinigamePlayPhase && (
                   <>
-                    <p className={sectionDescriptionClassName}>
+                    <p className={styles.sectionDescription}>
                       {hostPlaceholderCopy.triviaSectionDescription}
                     </p>
-                    <div className={triviaMetaClassName}>
+                    <div className={styles.triviaMeta}>
                       <div>
-                        <p className={triviaLabelClassName}>
+                        <p className={styles.triviaLabel}>
                           {hostPlaceholderCopy.triviaActiveTeamLabel(activeTurnTeamName)}
                         </p>
                       </div>
                       {currentTriviaPrompt && (
                         <>
                           <div>
-                            <p className={triviaLabelClassName}>
+                            <p className={styles.triviaLabel}>
                               {hostPlaceholderCopy.triviaQuestionLabel}
                             </p>
-                            <p className={triviaValueClassName}>
+                            <p className={styles.triviaValue}>
                               {currentTriviaPrompt.question}
                             </p>
                           </div>
                           <div>
-                            <p className={triviaLabelClassName}>
+                            <p className={styles.triviaLabel}>
                               {hostPlaceholderCopy.triviaAnswerLabel}
                             </p>
-                            <p className={triviaValueClassName}>
+                            <p className={styles.triviaValue}>
                               {currentTriviaPrompt.answer}
                             </p>
                           </div>
                         </>
                       )}
                     </div>
-                    <div className={triviaActionsClassName}>
+                    <div className={styles.triviaActions}>
                       <button
-                        className={actionButtonClassName}
+                        className={styles.actionButton}
                         type="button"
                         disabled={triviaAttemptDisabled}
                         onClick={(): void => {
@@ -429,7 +387,7 @@ export const HostPlaceholder = ({
                         {hostPlaceholderCopy.triviaCorrectButtonLabel}
                       </button>
                       <button
-                        className={actionButtonClassName}
+                        className={styles.actionButton}
                         type="button"
                         disabled={triviaAttemptDisabled}
                         onClick={(): void => {
@@ -442,24 +400,24 @@ export const HostPlaceholder = ({
                   </>
                 )}
                 {players.length === 0 && (
-                  <p className={sectionDescriptionClassName}>
+                  <p className={styles.sectionDescription}>
                     {hostPlaceholderCopy.noPlayersLabel}
                   </p>
                 )}
                 {players.length > 0 && (
-                  <ul className={listClassName}>
+                  <ul className={styles.list}>
                     {players.map((player) => {
                       const assignedTeamId = assignedTeamByPlayerId.get(player.id) ?? "";
 
                       return (
-                        <li key={player.id} className={listRowClassName}>
-                          <span className={playerNameClassName}>{player.name}</span>
+                        <li key={player.id} className={styles.listRow}>
+                          <span className={styles.playerName}>{player.name}</span>
                           {isSetupPhase && (
                             <select
                               aria-label={hostPlaceholderCopy.assignmentSelectLabel(
                                 player.name
                               )}
-                              className={assignmentSelectClassName}
+                              className={styles.assignmentSelect}
                               value={assignedTeamId}
                               onChange={(event): void => {
                                 handleAssignmentChange(event, player.id);
@@ -479,8 +437,8 @@ export const HostPlaceholder = ({
                             </select>
                           )}
                           {isEatingPhase && (
-                            <div className={participationRowClassName}>
-                              <span className={playerMetaClassName}>
+                            <div className={styles.participationRow}>
+                              <span className={styles.playerMeta}>
                                 {assignedTeamId.length > 0
                                   ? hostPlaceholderCopy.assignedTeamLabel(
                                       teamNameByTeamId.get(assignedTeamId) ??
@@ -488,9 +446,9 @@ export const HostPlaceholder = ({
                                     )
                                   : hostPlaceholderCopy.noAssignedTeamLabel}
                               </span>
-                              <label className={participationLabelClassName}>
+                              <label className={styles.participationLabel}>
                                 <input
-                                  className={participationControlClassName}
+                                  className={styles.participationControl}
                                   type="checkbox"
                                   checked={wingParticipationByPlayerId[player.id] === true}
                                   onChange={(event): void => {

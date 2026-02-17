@@ -109,10 +109,23 @@ export default [
       wingnight
     },
     rules: {
+      "max-lines": [
+        "error",
+        { max: 260, skipBlankLines: true, skipComments: true }
+      ],
       "wingnight/require-styles-import-in-component-entry": "error",
       "wingnight/no-inline-style-prop": "error",
       "wingnight/no-hardcoded-component-jsx-text": "error",
       "no-restricted-imports": ["error", { patterns: ["**/*.json"] }]
+    }
+  },
+  {
+    files: ["apps/client/src/components/HostPlaceholder/index.tsx"],
+    rules: {
+      "max-lines": [
+        "error",
+        { max: 550, skipBlankLines: true, skipComments: true }
+      ]
     }
   },
   {
@@ -121,7 +134,13 @@ export default [
       wingnight
     },
     rules: {
-      "wingnight/no-hardcoded-hex-colors-in-styles": "error"
+      "max-lines": [
+        "error",
+        { max: 140, skipBlankLines: true, skipComments: true }
+      ],
+      "wingnight/no-class-name-suffix-in-styles-exports": "error",
+      "wingnight/no-hardcoded-hex-colors-in-styles": "error",
+      "wingnight/no-nonsemantic-color-tokens-in-styles": "error"
     }
   },
   {

@@ -127,27 +127,37 @@ Backlog status:
 - [x] 7.3 PASS_AND_PLAY Mode
 - [x] 8.1 Server-Based Timer
 - [x] 8.2 Display Countdown Render
-- [ ] 8.3 Host Phase-Focused Layout (Non-Game)
-- [ ] 8.4 Host Compact Phase Views (Non-Game)
+- [x] 8.3 Host Phase-Focused Layout (Non-Game)
+- [x] 8.4 Host Compact Phase Views (Non-Game)
 - [ ] 8.5 Minigame Module Boundary (Architecture)
 - [ ] 8.6 Trivia Migration to Module Boundary
 - [ ] 8.7 Host/Display Minigame Surface Shell
+- [ ] 8.8 Timer `endsAt` Contract Reconciliation
+- [ ] 8.9 Host Timer Controls (Pause/Extend)
 - [ ] D1 SPEC Architecture Alignment (after 8.5)
 - [ ] D2 README Architecture Alignment (after 8.5)
 - [ ] D3 AGENTS Guardrail Update (after boundary stabilizes)
 - [ ] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
+- [ ] R1 Host UI Decomposition Pass (`HostPlaceholder` phase-surface extraction)
+- [ ] R2 Display UI Decomposition Pass (`DisplayPlaceholder` stage/standings extraction)
 - [ ] 9.1 Playwright Host/Display Sync
 - [ ] 9.2 Playwright Refresh Rehydrate
 - [ ] 10.1 Manual Round Escape Hatch
 - [ ] 10.2 Score Override UI
 - [ ] 10.3 Game Reset Flow
 - [ ] 10.4 Basic Error Screen for Invalid Content
+- [ ] 10.5 Redo Escape Hatch (Host)
 
 This roadmap is optimized for: - 4 hours per week - Small, verifiable
 tasks - Codex execution loops - Stable incremental progress
 
 Each task should: 1. Be small (\< 60 minutes). 2. Have a clear output
 artifact. 3. Include verification steps. 4. End in a working state.
+
+UI task addendum (required for new client UI tasks):
+- Include a component decomposition note in the task output (parent + subcomponents created/updated).
+- Avoid expanding over-cap component files; extract first, then add new UI behavior.
+- Prefer phase-surface subcomponents for host/display views (`Setup`, `Eating`, `RoundResults`, etc.).
 
 ------------------------------------------------------------------------
 
@@ -396,6 +406,28 @@ Verification:
 
 ------------------------------------------------------------------------
 
+# Phase 8D --- Timer Contract Completion
+
+## 8.8 Timer `endsAt` Contract Reconciliation
+
+-   Add explicit server-authored timer state to shared `RoomState` (including `endsAt`)
+-   Start/clear timer state on phase transitions where timing is active
+-   Ensure display countdown renders from snapshot timer state, not static config seconds
+Verification:
+-   Unit tests cover timer lifecycle during phase transitions
+-   Display countdown remains correct after refresh/reconnect
+
+## 8.9 Host Timer Controls (Pause/Extend)
+
+-   Add host-authorized timer mutation events for pause/resume/extend in EATING
+-   Ensure server remains source of truth for remaining time
+-   Keep controls host-only and deny unauthorized clients
+Verification:
+-   Socket handler tests verify host authorization and payload validation
+-   Host component tests cover enabled/disabled timer controls by phase
+
+------------------------------------------------------------------------
+
 # Docs Alignment Follow-Ups
 
 ## D1 SPEC Architecture Alignment (after 8.5)
@@ -439,11 +471,40 @@ Verification:
 
 ## 10.1 Manual Round Escape Hatch
 
+-   Host can skip forward to the next safe phase/round boundary
+-   Preserve score consistency when skipping
+Verification:
+-   Phase transition tests include skip-path assertions without score corruption
+
 ## 10.2 Score Override UI
+
+-   Host can set explicit per-team score adjustments
+-   Adjustments are logged and reflected immediately in snapshots
+Verification:
+-   Room state tests cover override validation and cumulative totals
+-   Host tests verify override controls are host-only
 
 ## 10.3 Game Reset Flow
 
+-   Host can reset the game to SETUP from an in-progress game
+-   Reset clears phase/round/minigame/transient scoring state safely
+Verification:
+-   Room reset tests cover mid-round and final-results reset paths
+
 ## 10.4 Basic Error Screen for Invalid Content
+
+-   Client renders a clear fatal-state screen when server content boot fails
+-   Include actionable next-step guidance for host/operator
+Verification:
+-   Client component tests cover fatal error rendering states
+
+## 10.5 Redo Escape Hatch (Host)
+
+-   Host can redo the last minigame/round scoring action when correction is needed
+-   Redo is bounded to prevent corrupting unrelated earlier rounds
+Verification:
+-   Room state tests verify redo behavior and guardrails
+-   Host controls only show redo where action history allows it
 
 ------------------------------------------------------------------------
 

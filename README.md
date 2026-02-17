@@ -164,6 +164,17 @@ pnpm playwright test
 
 ------------------------------------------------------------------------
 
+# 🎨 Component Styling Convention
+
+-   Keep component styles in colocated `styles.ts` files.
+-   In component entry files (`index.tsx`), import styles as namespace:
+    `import * as styles from "./styles"`.
+-   Use semantic style export keys like `container`, `heading`, `card` and
+    reference them as `styles.container`.
+-   Do not suffix exported style identifiers with `ClassName`.
+
+------------------------------------------------------------------------
+
 # 🤖 CI (PR Checks)
 
 GitHub Actions runs PR checks on every pull request targeting `main`.

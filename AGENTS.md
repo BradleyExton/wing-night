@@ -64,10 +64,24 @@ Run:
 - Use `index.ts` for utilities.
 - Tests live alongside implementation as `index.test.ts` or `index.test.tsx`.
 - Styles must be in `styles.ts` and imported into components.
+- Component entry files must import styles via namespace: `import * as styles from "./styles"`.
+- Export semantic style keys from `styles.ts` (for example `container`, `heading`, `card`), not `*ClassName`-suffixed names.
 - If a util is only used by one component, it may live inside that component’s folder.
 - Subcomponents follow the same modular structure.
 
 Everything must remain modular and composable.
+
+## 4.1 UI Decomposition Guardrails (Required)
+
+- `index.tsx` files under `apps/client/src/components/**` should stay under ~220 lines; hard cap is 260 lines unless explicitly allowlisted in lint config.
+- `styles.ts` files under `apps/client/src/components/**` should stay under 140 lines.
+- If a component renders phase-specific surfaces (for example setup/eating/results), each phase surface should be extracted to a subcomponent once the parent file approaches the cap.
+- New UI tasks must not add another major section into an already over-cap component without an accompanying extraction.
+- When touching a large component, leave it more modular than you found it (extract at least one coherent subcomponent when practical).
+
+PR expectation for UI changes:
+- Include a short "Component map" in the PR description listing parent component + extracted subcomponents.
+- Add/adjust tests at the extracted component boundary (not only at the monolithic parent).
 
 ---
 
