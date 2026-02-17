@@ -24,6 +24,13 @@ export const hostCopy = {
   ateWingLabel: "Ate wing",
   wingParticipationToggleLabel: (playerName: string): string =>
     `Mark ${playerName} as ate wing`,
+  triviaSectionDescription:
+    "Mark the active team's answer as correct or incorrect.",
+  triviaActiveTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,
+  triviaQuestionLabel: "Question",
+  triviaAnswerLabel: "Answer",
+  triviaCorrectButtonLabel: "Correct",
+  triviaIncorrectButtonLabel: "Incorrect",
   teamMembersLabel: (memberCount: number): string =>
     `${memberCount} player${memberCount === 1 ? "" : "s"}`
 } as const;

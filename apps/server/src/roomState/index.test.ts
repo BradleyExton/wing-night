@@ -9,6 +9,7 @@ import {
   createTeam,
   createInitialRoomState,
   getRoomStateSnapshot,
+  recordTriviaAttempt,
   resetRoomState,
   setPendingMinigamePoints,
   setRoomStateGameConfig,
@@ -60,8 +61,10 @@ const triviaPromptFixture: TriviaPrompt[] = [
   }
 ];
 
-const setupValidTeamsAndAssignments = (): void => {
-  setRoomStateGameConfig(gameConfigFixture);
+const setupValidTeamsAndAssignments = (
+  gameConfig: GameConfigFile = gameConfigFixture
+): void => {
+  setRoomStateGameConfig(gameConfig);
   setRoomStatePlayers([
     { id: "player-1", name: "Player One" },
     { id: "player-2", name: "Player Two" }
@@ -103,6 +106,10 @@ test("createInitialRoomState returns setup defaults", () => {
     gameConfig: null,
     triviaPrompts: [],
     currentRoundConfig: null,
+    turnOrderTeamIds: [],
+    activeTurnTeamId: null,
+    currentTriviaPrompt: null,
+    triviaPromptCursor: 0,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
@@ -453,6 +460,107 @@ test("entering EATING clears wing participation from the previous round", () => 
   assert.equal(snapshot.phase, Phase.EATING);
   assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
   assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+});
+
+test("initializes trivia turn state on MINIGAME_INTRO -> MINIGAME_PLAY", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+
+  advanceToMinigamePlayPhase();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.MINIGAME_PLAY);
+  assert.deepEqual(snapshot.turnOrderTeamIds, ["team-1", "team-2"]);
+  assert.equal(snapshot.activeTurnTeamId, "team-1");
+  assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-1");
+  assert.equal(snapshot.triviaPromptCursor, 0);
+});
+
+test("recordTriviaAttempt applies points, rotates team turns, and wraps prompts", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+
+  recordTriviaAttempt(true);
+
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 1);
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-2"], undefined);
+  assert.equal(snapshot.activeTurnTeamId, "team-2");
+  assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-2");
+  assert.equal(snapshot.triviaPromptCursor, 1);
+
+  recordTriviaAttempt(false);
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 1);
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-2"], undefined);
+  assert.equal(snapshot.activeTurnTeamId, "team-1");
+  assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-1");
+  assert.equal(snapshot.triviaPromptCursor, 0);
+});
+
+test("trivia turn order remains fixed across rounds", () => {
+  resetRoomState();
+  const allTriviaRoundsConfig: GameConfigFile = {
+    ...gameConfigFixture,
+    rounds: [
+      { ...gameConfigFixture.rounds[0], minigame: "TRIVIA" },
+      { ...gameConfigFixture.rounds[1], minigame: "TRIVIA" }
+    ]
+  };
+  setupValidTeamsAndAssignments(allTriviaRoundsConfig);
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+
+  let snapshot = getRoomStateSnapshot();
+  assert.deepEqual(snapshot.turnOrderTeamIds, ["team-1", "team-2"]);
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.MINIGAME_PLAY);
+  assert.deepEqual(snapshot.turnOrderTeamIds, ["team-1", "team-2"]);
+  assert.equal(snapshot.activeTurnTeamId, "team-1");
+});
+
+test("recordTriviaAttempt enforces minigame scoring cap", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+  setPendingMinigamePoints({ "team-1": 15, "team-2": 0 });
+
+  recordTriviaAttempt(true);
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 15);
+});
+
+test("recordTriviaAttempt ignores calls outside TRIVIA MINIGAME_PLAY", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+
+  const setupSnapshot = getRoomStateSnapshot();
+  recordTriviaAttempt(true);
+  let snapshot = getRoomStateSnapshot();
+  assert.deepEqual(snapshot.pendingMinigamePointsByTeamId, setupSnapshot.pendingMinigamePointsByTeamId);
+  assert.equal(snapshot.activeTurnTeamId, null);
+  assert.equal(snapshot.currentTriviaPrompt, null);
+
+  advanceToEatingPhase();
+  recordTriviaAttempt(true);
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.EATING);
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], undefined);
 });
 
 test("setPendingMinigamePoints enforces default-round scoring cap", () => {

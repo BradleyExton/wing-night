@@ -4,6 +4,7 @@ import {
 } from "@wingnight/shared";
 import type {
   HostSecretPayload,
+  MinigameRecordTriviaAttemptPayload,
   ScoringSetWingParticipationPayload,
   RoomState,
   SetupAssignPlayerPayload,
@@ -23,6 +24,7 @@ type RoomStateSocket = {
     (event: typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, listener: (payload: unknown) => void): void;
   };
 };
 
@@ -36,6 +38,7 @@ type AuthorizedSetupMutationHandlers = {
   onAuthorizedCreateTeam: (name: string) => void;
   onAuthorizedAssignPlayer: (playerId: string, teamId: string | null) => void;
   onAuthorizedSetWingParticipation: (playerId: string, didEat: boolean) => void;
+  onAuthorizedRecordTriviaAttempt: (isCorrect: boolean) => void;
 };
 
 const isHostSecretPayload = (payload: unknown): payload is HostSecretPayload => {
@@ -90,6 +93,20 @@ const isScoringSetWingParticipationPayload = (
   }
 
   if (!("didEat" in payload) || typeof payload.didEat !== "boolean") {
+    return false;
+  }
+
+  return true;
+};
+
+const isMinigameRecordTriviaAttemptPayload = (
+  payload: unknown
+): payload is MinigameRecordTriviaAttemptPayload => {
+  if (!isHostSecretPayload(payload)) {
+    return false;
+  }
+
+  if (!("isCorrect" in payload) || typeof payload.isCorrect !== "boolean") {
     return false;
   }
 
@@ -175,6 +192,21 @@ export const registerRoomStateHandlers = (
     mutationHandlers.onAuthorizedSetWingParticipation(payload.playerId, payload.didEat);
   };
 
+  const handleRecordTriviaAttempt = (payload: unknown): void => {
+    if (!isMinigameRecordTriviaAttemptPayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedRecordTriviaAttempt(payload.isCorrect);
+  };
+
   emitSnapshot();
 
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, emitSnapshot);
@@ -185,5 +217,9 @@ export const registerRoomStateHandlers = (
   socket.on(
     CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
     handleSetWingParticipation
+  );
+  socket.on(
+    CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
+    handleRecordTriviaAttempt
   );
 };
