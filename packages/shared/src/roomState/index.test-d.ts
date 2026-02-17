@@ -1,5 +1,6 @@
 import {
   type GameConfigFile,
+  type GameConfigRound,
   type Phase,
   type Player,
   type RoomState,
@@ -41,6 +42,7 @@ export type ValidRoomStateCheck = Assert<
       players: Player[];
       teams: Team[];
       gameConfig: GameConfigFile | null;
+      currentRoundConfig: GameConfigRound | null;
     },
     RoomState
   >

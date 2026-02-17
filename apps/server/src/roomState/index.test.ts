@@ -45,6 +45,7 @@ const gameConfigFixture: GameConfigFile = {
 };
 
 const setupValidTeamsAndAssignments = (): void => {
+  setRoomStateGameConfig(gameConfigFixture);
   setRoomStatePlayers([
     { id: "player-1", name: "Player One" },
     { id: "player-2", name: "Player Two" }
@@ -62,7 +63,8 @@ test("createInitialRoomState returns setup defaults", () => {
     totalRounds: 3,
     players: [],
     teams: [],
-    gameConfig: null
+    gameConfig: null,
+    currentRoundConfig: null
   });
 });
 
@@ -96,6 +98,7 @@ test("advanceRoomStatePhase sets currentRound to 1 on INTRO -> ROUND_INTRO", () 
 
   assert.equal(nextState.phase, Phase.ROUND_INTRO);
   assert.equal(nextState.currentRound, 1);
+  assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[0]);
 });
 
 test("advanceRoomStatePhase preserves currentRound after round intro", () => {
@@ -108,6 +111,7 @@ test("advanceRoomStatePhase preserves currentRound after round intro", () => {
 
   assert.equal(nextState.phase, Phase.EATING);
   assert.equal(nextState.currentRound, 1);
+  assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[0]);
 });
 
 test("advanceRoomStatePhase is idempotent at FINAL_RESULTS", () => {
@@ -121,11 +125,13 @@ test("advanceRoomStatePhase is idempotent at FINAL_RESULTS", () => {
   const finalSnapshot = getRoomStateSnapshot();
 
   assert.equal(finalSnapshot.phase, Phase.FINAL_RESULTS);
-  assert.equal(finalSnapshot.currentRound, 3);
+  assert.equal(finalSnapshot.currentRound, 2);
+  assert.equal(finalSnapshot.currentRoundConfig, null);
 });
 
 test("advanceRoomStatePhase blocks SETUP -> INTRO until setup is valid", () => {
   resetRoomState();
+  setRoomStateGameConfig(gameConfigFixture);
   setRoomStatePlayers([
     { id: "player-1", name: "Player One" },
     { id: "player-2", name: "Player Two" }
@@ -137,6 +143,24 @@ test("advanceRoomStatePhase blocks SETUP -> INTRO until setup is valid", () => {
 
   assert.equal(blockedSnapshot.phase, Phase.SETUP);
   assert.equal(blockedSnapshot.currentRound, 0);
+});
+
+test("advanceRoomStatePhase blocks SETUP -> INTRO when game config is missing", () => {
+  resetRoomState();
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" }
+  ]);
+  createTeam("Team Alpha");
+  createTeam("Team Beta");
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-2", "team-2");
+
+  const blockedSnapshot = advanceRoomStatePhase();
+
+  assert.equal(blockedSnapshot.phase, Phase.SETUP);
+  assert.equal(blockedSnapshot.currentRound, 0);
+  assert.equal(blockedSnapshot.currentRoundConfig, null);
 });
 
 test("advanceRoomStatePhase increments round after ROUND_RESULTS when rounds remain", () => {
@@ -153,6 +177,7 @@ test("advanceRoomStatePhase increments round after ROUND_RESULTS when rounds rem
 
   assert.equal(nextState.phase, Phase.ROUND_INTRO);
   assert.equal(nextState.currentRound, 2);
+  assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[1]);
 });
 
 test("advanceRoomStatePhase logs transition metadata", () => {
@@ -206,6 +231,7 @@ test("setRoomStateGameConfig stores a safe clone and updates totalRounds", () =>
 
   assert.equal(updatedSnapshot.gameConfig?.name, gameConfigFixture.name);
   assert.equal(updatedSnapshot.totalRounds, 2);
+  assert.equal(updatedSnapshot.currentRoundConfig, null);
 
   nextConfig.name = "Changed Locally";
   nextConfig.rounds.push({
@@ -221,6 +247,7 @@ test("setRoomStateGameConfig stores a safe clone and updates totalRounds", () =>
   assert.equal(persistedSnapshot.gameConfig?.name, gameConfigFixture.name);
   assert.equal(persistedSnapshot.totalRounds, 2);
   assert.equal(persistedSnapshot.gameConfig?.rounds.length, 2);
+  assert.equal(persistedSnapshot.currentRoundConfig, null);
 });
 
 test("createTeam trims team names and ignores empty values", () => {
