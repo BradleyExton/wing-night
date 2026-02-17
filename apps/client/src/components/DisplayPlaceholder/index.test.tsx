@@ -35,7 +35,8 @@ const gameConfigFixture: GameConfigFile = {
 
 const buildSnapshot = (
   phase: Phase,
-  teams: Team[] = []
+  teams: Team[] = [],
+  overrides: Partial<RoomState> = {}
 ): RoomState => {
   return {
     phase,
@@ -46,9 +47,14 @@ const buildSnapshot = (
     gameConfig: gameConfigFixture,
     triviaPrompts: [],
     currentRoundConfig: gameConfigFixture.rounds[0],
+    turnOrderTeamIds: [],
+    activeTurnTeamId: null,
+    currentTriviaPrompt: null,
+    triviaPromptCursor: 0,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {}
+    pendingMinigamePointsByTeamId: {},
+    ...overrides
   };
 };
 
@@ -101,4 +107,32 @@ test("renders standings in descending score order", () => {
   );
 
   assert.ok(html.indexOf("Team Beta") < html.indexOf("Team Alpha"));
+});
+
+test("renders trivia turn question and active team during MINIGAME_PLAY", () => {
+  const teams: Team[] = [
+    {
+      id: "team-alpha",
+      name: "Team Alpha",
+      playerIds: [],
+      totalScore: 3
+    }
+  ];
+  const html = renderToStaticMarkup(
+    <DisplayPlaceholder
+      roomState={buildSnapshot(Phase.MINIGAME_PLAY, teams, {
+        activeTurnTeamId: "team-alpha",
+        currentTriviaPrompt: {
+          id: "prompt-1",
+          question: "Which scale measures pepper heat?",
+          answer: "Scoville"
+        }
+      })}
+    />
+  );
+
+  assert.match(html, /Trivia Turn/);
+  assert.match(html, /Active Team: Team Alpha/);
+  assert.match(html, /Which scale measures pepper heat\?/);
+  assert.doesNotMatch(html, /Scoville/);
 });

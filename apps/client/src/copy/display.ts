@@ -23,6 +23,9 @@ export const displayCopy = {
   roundSauceSummary: (sauce: string): string => `Sauce: ${sauce}`,
   roundMinigameSummary: (minigame: MinigameType): string =>
     `Mini-Game: ${minigame}`,
+  triviaTurnTitle: "Trivia Turn",
+  triviaQuestionLabel: "Question",
+  activeTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,
   eatingTimerLabel: "Round Timer",
   eatingTimerValue: (eatingSeconds: number): string => {
     const minutes = Math.floor(eatingSeconds / 60);

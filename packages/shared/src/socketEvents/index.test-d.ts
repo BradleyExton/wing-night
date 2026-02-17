@@ -2,6 +2,7 @@ import type {
   CLIENT_TO_SERVER_EVENTS,
   ClientToServerEvents,
   HostSecretPayload,
+  MinigameRecordTriviaAttemptPayload,
   ScoringSetWingParticipationPayload,
   RoomState,
   SERVER_TO_CLIENT_EVENTS,
@@ -62,6 +63,15 @@ export type SetWingParticipationPayloadCheck = Assert<
   >
 >;
 
+export type RecordTriviaAttemptPayloadCheck = Assert<
+  Equal<
+    Parameters<
+      ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]
+    >,
+    [MinigameRecordTriviaAttemptPayload]
+  >
+>;
+
 export type SnapshotRoomStateArgCheck = Assert<
   Equal<
     Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]>,
@@ -103,6 +113,9 @@ export type InvalidAssignPlayerNoPayloadCheck = Assert<Equal<Parameters<ClientTo
 
 // @ts-expect-error scoring:setWingParticipation must accept host secret + player participation payload.
 export type InvalidSetWingParticipationNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION]>, []>>;
+
+// @ts-expect-error minigame:recordTriviaAttempt must accept host secret + correctness payload.
+export type InvalidRecordTriviaAttemptNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]>, []>>;
 
 // @ts-expect-error host:secretIssued must emit host secret payload.
 export type InvalidSecretIssuedPayloadCheck = Assert<Equal<Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED]>, [string]>>;

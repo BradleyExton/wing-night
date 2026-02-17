@@ -25,6 +25,7 @@ type SocketHarness = {
   triggerCreateTeam: (payload: unknown) => void;
   triggerAssignPlayer: (payload: unknown) => void;
   triggerSetWingParticipation: (payload: unknown) => void;
+  triggerRecordTriviaAttempt: (payload: unknown) => void;
 };
 
 const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
@@ -37,6 +38,10 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     gameConfig: null,
     triviaPrompts: [],
     currentRoundConfig: null,
+    turnOrderTeamIds: [],
+    activeTurnTeamId: null,
+    currentTriviaPrompt: null,
+    triviaPromptCursor: 0,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
@@ -78,6 +83,11 @@ const createSocketHarness = (): SocketHarness => {
       `Expected ${CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION} handler to be registered.`
     );
   };
+  let recordTriviaAttemptHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT} handler to be registered.`
+    );
+  };
 
   const socket = {
     emit: (
@@ -106,7 +116,8 @@ const createSocketHarness = (): SocketHarness => {
         | typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE
         | typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM
         | typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER
-        | typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
+        | typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION
+        | typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
       listener: (() => void) | ((payload: unknown) => void)
     ): void => {
       if (event === CLIENT_TO_SERVER_EVENTS.REQUEST_STATE) {
@@ -134,7 +145,12 @@ const createSocketHarness = (): SocketHarness => {
         return;
       }
 
-      setWingParticipationHandler = listener as (payload: unknown) => void;
+      if (event === CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION) {
+        setWingParticipationHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      recordTriviaAttemptHandler = listener as (payload: unknown) => void;
     }
   } as unknown as SocketUnderTest;
 
@@ -162,6 +178,9 @@ const createSocketHarness = (): SocketHarness => {
     },
     triggerSetWingParticipation: (payload: unknown): void => {
       setWingParticipationHandler(payload);
+    },
+    triggerRecordTriviaAttempt: (payload: unknown): void => {
+      recordTriviaAttemptHandler(payload);
     }
   };
 };
@@ -180,6 +199,9 @@ const createMutationHandlers = (
       // no-op
     },
     onAuthorizedSetWingParticipation: () => {
+      // no-op
+    },
+    onAuthorizedRecordTriviaAttempt: () => {
       // no-op
     },
     ...overrides
@@ -454,5 +476,43 @@ test("ignores malformed and unauthorized wing-participation payloads", () => {
   });
 
   assert.deepEqual(participationCalls, [{ playerId: "player-2", didEat: false }]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
+test("ignores malformed and unauthorized trivia-attempt payloads", () => {
+  const socketHarness = createSocketHarness();
+  const triviaAttemptCalls: boolean[] = [];
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.SETUP),
+    createMutationHandlers({
+      onAuthorizedRecordTriviaAttempt: (isCorrect) => {
+        triviaAttemptCalls.push(isCorrect);
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerRecordTriviaAttempt(undefined);
+    socketHarness.triggerRecordTriviaAttempt({});
+    socketHarness.triggerRecordTriviaAttempt({ hostSecret: "valid-host-secret" });
+    socketHarness.triggerRecordTriviaAttempt({
+      hostSecret: "valid-host-secret",
+      isCorrect: "yes"
+    });
+    socketHarness.triggerRecordTriviaAttempt({
+      hostSecret: "invalid-host-secret",
+      isCorrect: true
+    });
+    socketHarness.triggerRecordTriviaAttempt({
+      hostSecret: "valid-host-secret",
+      isCorrect: false
+    });
+  });
+
+  assert.deepEqual(triviaAttemptCalls, [false]);
   assert.equal(socketHarness.invalidSecretEvents, 1);
 });
