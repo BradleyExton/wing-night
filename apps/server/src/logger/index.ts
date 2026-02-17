@@ -35,3 +35,20 @@ export const logPhaseTransition = (
     currentRound
   });
 };
+
+export const logScoreMutation = (
+  teamId: string,
+  currentRound: number,
+  wingPoints: number,
+  minigamePoints: number,
+  totalScore: number
+): void => {
+  logInfo("server:scoreMutation", {
+    teamId,
+    currentRound,
+    wingPoints,
+    minigamePoints,
+    roundPoints: wingPoints + minigamePoints,
+    totalScore
+  });
+};

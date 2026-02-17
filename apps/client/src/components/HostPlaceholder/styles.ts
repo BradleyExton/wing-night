@@ -12,7 +12,7 @@ export const controlsRowClassName =
   "mt-6 flex flex-wrap items-center gap-3 border-t border-white/10 pt-6";
 
 export const primaryButtonClassName =
-  "rounded-md border border-white/70 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:cursor-not-allowed disabled:opacity-50";
+  "min-h-11 rounded-md border border-primary bg-primary px-5 text-lg font-bold text-bg transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
 
 export const sectionGridClassName = "mt-8 grid gap-6 md:grid-cols-2";
 
@@ -35,31 +35,32 @@ export const teamInputGroupClassName = "flex min-w-[220px] flex-1 flex-col gap-2
 export const teamInputLabelClassName = "text-xs font-semibold uppercase tracking-wide text-white/75";
 
 export const teamInputClassName =
-  "h-11 rounded-md border border-white/30 bg-bg px-3 text-sm text-white placeholder:text-white/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "h-11 rounded-md border border-white/30 bg-bg px-3 text-base text-white placeholder:text-white/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
 export const actionButtonClassName =
-  "h-11 rounded-md border border-primary/70 bg-primary/20 px-4 text-sm font-semibold text-white transition hover:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
+  "h-11 rounded-md border border-primary/70 bg-primary/20 px-4 text-base font-semibold text-white transition hover:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
 
 export const listClassName = "mt-4 space-y-2";
 
 export const listRowClassName =
-  "flex items-center justify-between gap-4 rounded-md border border-white/10 bg-bg px-3 py-2";
+  "flex items-center justify-between gap-4 rounded-md border border-white/10 bg-bg px-3 py-3";
 
-export const playerNameClassName = "text-sm font-medium text-white";
+export const playerNameClassName = "text-lg font-semibold text-white";
 
 export const assignmentSelectClassName =
-  "h-9 min-w-[170px] rounded-md border border-white/30 bg-surface px-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
+  "h-11 min-w-[170px] rounded-md border border-white/30 bg-surface px-3 text-lg text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
 
-export const teamNameClassName = "text-sm font-semibold text-white";
+export const teamNameClassName = "text-lg font-semibold text-white";
 
-export const teamMetaClassName = "text-xs text-white/70";
+export const teamMetaClassName = "text-sm text-white/70";
 
 export const participationControlClassName =
-  "h-4 w-4 rounded border-white/30 bg-surface text-primary focus-visible:ring-primary";
+  "h-5 w-5 rounded border-white/30 bg-surface text-primary focus-visible:ring-primary";
 
 export const participationLabelClassName =
-  "flex items-center gap-2 text-sm font-medium text-white/90";
+  "flex min-h-11 items-center gap-2 rounded-md border border-white/15 px-3 text-lg font-medium text-white/90";
 
-export const playerMetaClassName = "text-xs text-white/70";
+export const playerMetaClassName = "text-sm text-white/70";
 
-export const participationRowClassName = "flex items-center gap-3";
+export const participationRowClassName =
+  "flex flex-wrap items-center justify-end gap-2";

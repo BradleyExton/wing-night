@@ -16,4 +16,5 @@ export type RoomState = {
   currentRoundConfig: GameConfigRound | null;
   wingParticipationByPlayerId: Record<string, boolean>;
   pendingWingPointsByTeamId: Record<string, number>;
+  pendingMinigamePointsByTeamId: Record<string, number>;
 };

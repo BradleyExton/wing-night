@@ -93,7 +93,8 @@ test("forwards server snapshots to callback", () => {
     gameConfig: null,
     currentRoundConfig: null,
     wingParticipationByPlayerId: {},
-    pendingWingPointsByTeamId: {}
+    pendingWingPointsByTeamId: {},
+    pendingMinigamePointsByTeamId: {}
   };
 
   mockSocket.triggerSnapshot(snapshot);

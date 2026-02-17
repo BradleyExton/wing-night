@@ -37,7 +37,8 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     gameConfig: null,
     currentRoundConfig: null,
     wingParticipationByPlayerId: {},
-    pendingWingPointsByTeamId: {}
+    pendingWingPointsByTeamId: {},
+    pendingMinigamePointsByTeamId: {}
   };
 };
 
