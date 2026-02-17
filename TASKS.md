@@ -10,20 +10,58 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] 4.3 Lock Teams on Start
-  - Branch: `phase-4-3-lock-teams-on-start`
-  - PR: [#15](https://github.com/BradleyExton/wing-night/pull/15)
-  - Notes: server-authoritative setup lock after `SETUP` + host UI read-only gating
-- [-] 4.2 Team Creation UI
-  - Branch: `phase-4-2-team-creation-ui`
-  - PR: [#14](https://github.com/BradleyExton/wing-night/pull/14)
-  - Notes: host-only setup mutation flow for create/assign with guarded payloads
-- [-] 4.1 Content Loader
-  - Branch: `phase-4-1-content-loader`
-  - PR: [#13](https://github.com/BradleyExton/wing-night/pull/13)
-  - Notes: local-first players loader + strict validation + startup bootstrap
+- (none)
 
 Completed:
+- [x] 8.2 Display Countdown Render
+  - Branch: `phase-8-2-display-countdown-render`
+  - PR: [#25](https://github.com/BradleyExton/wing-night/pull/25)
+  - Merge timestamp: `2026-02-17T18:31:25Z`
+- [x] 8.1 Server-Based Timer
+  - Branch: `phase-8-1-server-based-timer`
+  - PR: [#24](https://github.com/BradleyExton/wing-night/pull/24)
+  - Merge timestamp: `2026-02-17T18:31:11Z`
+- [x] 7.3 PASS_AND_PLAY Mode
+  - Branch: `phase-7-3-pass-and-play-mode`
+  - PR: [#23](https://github.com/BradleyExton/wing-night/pull/23)
+  - Merge timestamp: `2026-02-17T18:31:01Z`
+- [x] 7.2 Turn-Based Trivia Logic
+  - Branch: `phase-7-2-turn-based-trivia-logic`
+  - PR: [#26](https://github.com/BradleyExton/wing-night/pull/26)
+  - Notes: replacement PR after #22 was closed during stack restack
+  - Merge timestamp: `2026-02-17T18:30:44Z`
+- [x] 7.1 Trivia Content Loader
+  - Branch: `phase-7-1-trivia-content-loader`
+  - PR: [#21](https://github.com/BradleyExton/wing-night/pull/21)
+  - Merge timestamp: `2026-02-17T18:27:28Z`
+- [x] 6.2 Apply Points in ROUND_RESULTS
+  - Branch: `phase-6-2-apply-points-round-results`
+  - PR: [#19](https://github.com/BradleyExton/wing-night/pull/19)
+  - Merge timestamp: `2026-02-17T04:46:34Z`
+- [x] 6.1 Wing Participation Recording
+  - Branch: `phase-6-1-wing-participation-recording`
+  - PR: [#18](https://github.com/BradleyExton/wing-night/pull/18)
+  - Merge timestamp: `2026-02-17T04:45:55Z`
+- [x] 5.2 Round Scheduling
+  - Branch: `phase-5-2-round-scheduling`
+  - PR: [#20](https://github.com/BradleyExton/wing-night/pull/20)
+  - Merge timestamp: `2026-02-17T04:45:18Z`
+- [x] 5.1 Load gameConfig
+  - Branch: `phase-5-1-load-game-config`
+  - PR: [#16](https://github.com/BradleyExton/wing-night/pull/16)
+  - Merge timestamp: `2026-02-17T04:43:05Z`
+- [x] 4.3 Lock Teams on Start
+  - Branch: `phase-4-3-lock-teams-on-start`
+  - PR: [#15](https://github.com/BradleyExton/wing-night/pull/15)
+  - Merge timestamp: `2026-02-17T02:54:28Z`
+- [x] 4.2 Team Creation UI
+  - Branch: `phase-4-2-team-creation-ui`
+  - PR: [#14](https://github.com/BradleyExton/wing-night/pull/14)
+  - Merge timestamp: `2026-02-17T02:55:34Z`
+- [x] 4.1 Content Loader
+  - Branch: `phase-4-1-content-loader`
+  - PR: [#13](https://github.com/BradleyExton/wing-night/pull/13)
+  - Merge timestamp: `2026-02-17T02:56:18Z`
 - [x] 3.2 Host Next Phase Button
   - Branch: `phase-3-2-host-next-phase-button`
   - PR: [#11](https://github.com/BradleyExton/wing-night/pull/11)
@@ -77,18 +115,27 @@ Backlog status:
 - [x] 2.3 Host Mutation Protection
 - [x] 3.1 Phase Transition Logic
 - [x] 3.2 Host Next Phase Button
-- [-] 4.1 Content Loader
-- [-] 4.2 Team Creation UI
-- [-] 4.3 Lock Teams on Start
-- [ ] 5.1 Load gameConfig
-- [ ] 5.2 Round Scheduling
-- [ ] 6.1 Wing Participation Recording
-- [ ] 6.2 Apply Points in ROUND_RESULTS
-- [ ] 7.1 Trivia Content Loader
-- [ ] 7.2 Turn-Based Trivia Logic
-- [ ] 7.3 PASS_AND_PLAY Mode
-- [ ] 8.1 Server-Based Timer
-- [ ] 8.2 Display Countdown Render
+- [x] 4.1 Content Loader
+- [x] 4.2 Team Creation UI
+- [x] 4.3 Lock Teams on Start
+- [x] 5.1 Load gameConfig
+- [x] 5.2 Round Scheduling
+- [x] 6.1 Wing Participation Recording
+- [x] 6.2 Apply Points in ROUND_RESULTS
+- [x] 7.1 Trivia Content Loader
+- [x] 7.2 Turn-Based Trivia Logic
+- [x] 7.3 PASS_AND_PLAY Mode
+- [x] 8.1 Server-Based Timer
+- [x] 8.2 Display Countdown Render
+- [ ] 8.3 Host Phase-Focused Layout (Non-Game)
+- [ ] 8.4 Host Compact Phase Views (Non-Game)
+- [ ] 8.5 Minigame Module Boundary (Architecture)
+- [ ] 8.6 Trivia Migration to Module Boundary
+- [ ] 8.7 Host/Display Minigame Surface Shell
+- [ ] D1 SPEC Architecture Alignment (after 8.5)
+- [ ] D2 README Architecture Alignment (after 8.5)
+- [ ] D3 AGENTS Guardrail Update (after boundary stabilizes)
+- [ ] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
 - [ ] 9.1 Playwright Host/Display Sync
 - [ ] 9.2 Playwright Refresh Rehydrate
 - [ ] 10.1 Manual Round Escape Hatch
@@ -291,6 +338,85 @@ Verification:
 
 -   Client calculates remaining time from endsAt Verification:
 -   Refresh maintains correct time
+
+------------------------------------------------------------------------
+
+# Phase 8B --- Host UI Focus (Non-Game)
+
+## 8.3 Host Phase-Focused Layout (Non-Game)
+
+-   SETUP shows team setup + player assignment UI only
+-   EATING shows wing participation UI only (+ phase controls)
+-   MINIGAME phases keep existing trivia behavior for now (no new gameplay behavior)
+-   No server state or socket contract changes in this task
+Verification:
+-   Host component tests assert phase-based visibility for setup and eating cards
+-   Existing trivia/pass-and-play tests continue passing
+
+## 8.4 Host Compact Phase Views (Non-Game)
+
+-   INTRO / ROUND_INTRO / ROUND_RESULTS / FINAL_RESULTS render compact status + next action
+-   Remove setup-style card clutter outside setup/eating contexts
+-   Keep escape hatches and host phase controls visible where currently supported
+Verification:
+-   Host component tests cover compact rendering per non-game phase
+-   `pnpm lint`, `pnpm typecheck`, `pnpm test`
+
+------------------------------------------------------------------------
+
+# Phase 8C --- Minigame Architecture
+
+## 8.5 Minigame Module Boundary (Architecture)
+
+-   Introduce minigame package boundary under `packages/minigames/*`
+-   Define engine-facing contract for init/reduce/selectors with serializable state
+-   Keep server authoritative for lifecycle, timers, and score application
+-   Keep npm extraction out of scope for this phase
+Verification:
+-   At least one minigame can be mounted through the boundary without behavior regression
+-   No client-side score/timer truth is introduced
+
+## 8.6 Trivia Migration to Module Boundary
+
+-   Move trivia-specific gameplay logic behind the new minigame module interface
+-   Preserve existing trivia behavior, scoring rules, and pass-and-play semantics
+-   Keep host/display mutation authorization flow unchanged
+Verification:
+-   Existing trivia tests pass with minimal fixture updates
+-   Round scoring and phase transitions remain server-authoritative
+
+## 8.7 Host/Display Minigame Surface Shell
+
+-   Render minigame phases via dedicated host/display minigame surface modules
+-   Feed minigame-specific `hostView` and `displayView` from server snapshot
+-   Keep non-minigame phase layouts separate from minigame surfaces
+Verification:
+-   Host and display render trivia through the minigame surface shell
+-   Pass-and-play privacy still prevents answer leakage to display view
+
+------------------------------------------------------------------------
+
+# Docs Alignment Follow-Ups
+
+## D1 SPEC Architecture Alignment (after 8.5)
+
+-   Update `SPEC.md` to reflect minigame module boundary and host/display view model split
+-   Trigger: first architecture PR (8.5) merged
+
+## D2 README Architecture Alignment (after 8.5)
+
+-   Update `README.md` monorepo structure and architecture section for minigame modules
+-   Trigger: first architecture PR (8.5) merged
+
+## D3 AGENTS Guardrail Update (after boundary stabilizes)
+
+-   Add explicit implementation guardrails for minigame package boundaries and contracts
+-   Trigger: architecture boundary is accepted as a stable repo rule
+
+## D4 DESIGN Surface Rule Update (only if host/display rules materially change)
+
+-   Update `DESIGN.md` only when host/display surface rules diverge from current guidance
+-   Trigger: minigame surface UI rules require new canonical design constraints
 
 ------------------------------------------------------------------------
 
