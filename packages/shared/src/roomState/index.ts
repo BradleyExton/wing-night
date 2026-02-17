@@ -1,3 +1,4 @@
+import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
 import type { Team } from "../team/index.js";
@@ -10,4 +11,5 @@ export type RoomState = {
   totalRounds: number;
   players: Player[];
   teams: Team[];
+  gameConfig: GameConfigFile | null;
 };

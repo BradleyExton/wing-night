@@ -89,7 +89,8 @@ test("forwards server snapshots to callback", () => {
     currentRound: 0,
     totalRounds: 3,
     players: [{ id: "p1", name: "Player One" }],
-    teams: [{ id: "t1", name: "Spice Team", playerIds: ["p1"], totalScore: 0 }]
+    teams: [{ id: "t1", name: "Spice Team", playerIds: ["p1"], totalScore: 0 }],
+    gameConfig: null
   };
 
   mockSocket.triggerSnapshot(snapshot);

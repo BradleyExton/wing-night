@@ -1,10 +1,11 @@
 import { createServer } from "node:http";
 
 import { createApp } from "./createApp/index.js";
+import { loadGameConfig } from "./contentLoader/loadGameConfig/index.js";
 import { logError, logInfo } from "./logger/index.js";
-import { setRoomStatePlayers } from "./roomState/index.js";
-import { attachSocketServer } from "./socketServer/index.js";
 import { loadPlayers } from "./contentLoader/loadPlayers/index.js";
+import { setRoomStateGameConfig, setRoomStatePlayers } from "./roomState/index.js";
+import { attachSocketServer } from "./socketServer/index.js";
 
 const parsedPort = Number(process.env.PORT);
 const port = Number.isInteger(parsedPort) && parsedPort > 0 ? parsedPort : 3000;
@@ -13,9 +14,11 @@ const httpServer = createServer(app);
 
 try {
   const players = loadPlayers();
+  const gameConfig = loadGameConfig();
   setRoomStatePlayers(players);
+  setRoomStateGameConfig(gameConfig);
 } catch (error) {
-  logError("server:playersContentLoadFailed", error);
+  logError("server:contentLoadFailed", error);
   process.exit(1);
 }
 

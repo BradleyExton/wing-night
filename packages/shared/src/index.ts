@@ -3,6 +3,16 @@ export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export type { RoomState } from "./roomState/index.js";
 export {
+  isGameConfigFile
+} from "./content/gameConfig/index.js";
+export type {
+  GameConfigFile,
+  GameConfigRound,
+  GameConfigScoring,
+  GameConfigTimers,
+  MinigameType
+} from "./content/gameConfig/index.js";
+export {
   isPlayersContentEntry,
   isPlayersContentFile
 } from "./content/players/index.js";

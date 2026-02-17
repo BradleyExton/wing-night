@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Phase } from "@wingnight/shared";
+import { Phase, type GameConfigFile } from "@wingnight/shared";
 
 import {
   advanceRoomStatePhase,
@@ -10,8 +10,39 @@ import {
   createInitialRoomState,
   getRoomStateSnapshot,
   resetRoomState,
+  setRoomStateGameConfig,
   setRoomStatePlayers
 } from "./index.js";
+
+const gameConfigFixture: GameConfigFile = {
+  name: "Fixture Config",
+  rounds: [
+    {
+      round: 1,
+      label: "Warm Up",
+      sauce: "Frank's",
+      pointsPerPlayer: 2,
+      minigame: "TRIVIA"
+    },
+    {
+      round: 2,
+      label: "Medium",
+      sauce: "Buffalo",
+      pointsPerPlayer: 3,
+      minigame: "GEO"
+    }
+  ],
+  minigameScoring: {
+    defaultMax: 15,
+    finalRoundMax: 20
+  },
+  timers: {
+    eatingSeconds: 120,
+    triviaSeconds: 30,
+    geoSeconds: 45,
+    drawingSeconds: 60
+  }
+};
 
 const setupValidTeamsAndAssignments = (): void => {
   setRoomStatePlayers([
@@ -30,7 +61,8 @@ test("createInitialRoomState returns setup defaults", () => {
     currentRound: 0,
     totalRounds: 3,
     players: [],
-    teams: []
+    teams: [],
+    gameConfig: null
   });
 });
 
@@ -164,6 +196,31 @@ test("setRoomStatePlayers stores a safe clone of player records", () => {
   const persistedSnapshot = getRoomStateSnapshot();
 
   assert.equal(persistedSnapshot.players[0].name, "Player One");
+});
+
+test("setRoomStateGameConfig stores a safe clone and updates totalRounds", () => {
+  resetRoomState();
+
+  const nextConfig = structuredClone(gameConfigFixture);
+  const updatedSnapshot = setRoomStateGameConfig(nextConfig);
+
+  assert.equal(updatedSnapshot.gameConfig?.name, gameConfigFixture.name);
+  assert.equal(updatedSnapshot.totalRounds, 2);
+
+  nextConfig.name = "Changed Locally";
+  nextConfig.rounds.push({
+    round: 3,
+    label: "Hot",
+    sauce: "Ghost",
+    pointsPerPlayer: 4,
+    minigame: "DRAWING"
+  });
+
+  const persistedSnapshot = getRoomStateSnapshot();
+
+  assert.equal(persistedSnapshot.gameConfig?.name, gameConfigFixture.name);
+  assert.equal(persistedSnapshot.totalRounds, 2);
+  assert.equal(persistedSnapshot.gameConfig?.rounds.length, 2);
 });
 
 test("createTeam trims team names and ignores empty values", () => {
