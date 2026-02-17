@@ -1,0 +1,19 @@
+{
+  "prompts": [
+    {
+      "id": "spice-origin",
+      "question": "What country is widely credited as the origin of hot sauce?",
+      "answer": "Mexico"
+    },
+    {
+      "id": "capsaicin-source",
+      "question": "What compound gives chili peppers their heat?",
+      "answer": "Capsaicin"
+    },
+    {
+      "id": "scoville-name",
+      "question": "What scale is used to measure pepper heat?",
+      "answer": "Scoville scale"
+    }
+  ]
+}

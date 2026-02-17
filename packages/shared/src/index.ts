@@ -20,6 +20,14 @@ export type {
   PlayersContentEntry,
   PlayersContentFile
 } from "./content/players/index.js";
+export {
+  isTriviaContentFile,
+  isTriviaPrompt
+} from "./content/trivia/index.js";
+export type {
+  TriviaContentFile,
+  TriviaPrompt
+} from "./content/trivia/index.js";
 export { CLIENT_ROLES, isSocketClientRole } from "./socketClientRole/index.js";
 export type { SocketClientRole } from "./socketClientRole/index.js";
 export {

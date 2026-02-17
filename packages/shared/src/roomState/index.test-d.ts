@@ -4,6 +4,7 @@ import {
   type Phase,
   type Player,
   type RoomState,
+  type TriviaPrompt,
   type Team
 } from "../index.js";
 
@@ -42,6 +43,7 @@ export type ValidRoomStateCheck = Assert<
       players: Player[];
       teams: Team[];
       gameConfig: GameConfigFile | null;
+      triviaPrompts: TriviaPrompt[];
       currentRoundConfig: GameConfigRound | null;
       wingParticipationByPlayerId: Record<string, boolean>;
       pendingWingPointsByTeamId: Record<string, number>;
