@@ -64,6 +64,21 @@ const advanceToEatingPhase = (): void => {
   advanceRoomStatePhase();
 };
 
+const advanceToMinigamePlayPhase = (): void => {
+  advanceToEatingPhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+};
+
+const advanceToFinalRoundMinigamePlayPhase = (): void => {
+  advanceToMinigamePlayPhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+};
+
 test("createInitialRoomState returns setup defaults", () => {
   assert.deepEqual(createInitialRoomState(), {
     phase: Phase.SETUP,
@@ -409,6 +424,36 @@ test("entering EATING clears wing participation from the previous round", () => 
   assert.equal(snapshot.phase, Phase.EATING);
   assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
   assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+});
+
+test("setPendingMinigamePoints enforces default-round scoring cap", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToMinigamePlayPhase();
+
+  setPendingMinigamePoints({ "team-1": 15 });
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 15);
+
+  setPendingMinigamePoints({ "team-1": 16 });
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 15);
+});
+
+test("setPendingMinigamePoints enforces final-round scoring cap", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToFinalRoundMinigamePlayPhase();
+
+  assert.equal(getRoomStateSnapshot().currentRound, 2);
+
+  setPendingMinigamePoints({ "team-1": 20 });
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 20);
+
+  setPendingMinigamePoints({ "team-1": 21 });
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 20);
 });
 
 test("applies wing and minigame points on MINIGAME_PLAY -> ROUND_RESULTS", () => {

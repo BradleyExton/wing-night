@@ -18,6 +18,18 @@ const resolveCurrentRoundConfig = (state: RoomState): RoomState["currentRoundCon
   return state.gameConfig.rounds[state.currentRound - 1] ?? null;
 };
 
+const resolveMinigamePointsMax = (state: RoomState): number | null => {
+  if (!state.gameConfig || state.currentRound <= 0) {
+    return null;
+  }
+
+  if (state.currentRound === state.totalRounds) {
+    return state.gameConfig.minigameScoring.finalRoundMax;
+  }
+
+  return state.gameConfig.minigameScoring.defaultMax;
+};
+
 export const createInitialRoomState = (): RoomState => {
   return {
     phase: Phase.SETUP,
@@ -195,6 +207,12 @@ export const setPendingMinigamePoints = (
     return getRoomStateSnapshot();
   }
 
+  const minigamePointsMax = resolveMinigamePointsMax(roomState);
+
+  if (minigamePointsMax === null) {
+    return getRoomStateSnapshot();
+  }
+
   const nextPendingMinigamePointsByTeamId: Record<string, number> = {};
 
   for (const team of roomState.teams) {
@@ -205,7 +223,11 @@ export const setPendingMinigamePoints = (
       continue;
     }
 
-    if (!Number.isFinite(nextPoints) || nextPoints < 0) {
+    if (
+      !Number.isFinite(nextPoints) ||
+      nextPoints < 0 ||
+      nextPoints > minigamePointsMax
+    ) {
       return getRoomStateSnapshot();
     }
 
