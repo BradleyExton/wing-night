@@ -1,4 +1,4 @@
-import { type RoomState } from "@wingnight/shared";
+import { CLIENT_TO_SERVER_EVENTS, type RoomState } from "@wingnight/shared";
 import { useEffect, useState } from "react";
 
 import { DisplayPlaceholder } from "./components/DisplayPlaceholder";
@@ -31,19 +31,19 @@ export const App = (): JSX.Element => {
 
   const handleNextPhase = (): void => {
     requestNextPhase(roomSocket, () => {
-      roomSocket.emit("host:claimControl");
+      roomSocket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
     });
   };
 
   const handleCreateTeam = (name: string): void => {
     requestCreateTeam(roomSocket, name, () => {
-      roomSocket.emit("host:claimControl");
+      roomSocket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
     });
   };
 
   const handleAssignPlayer = (playerId: string, teamId: string | null): void => {
     requestAssignPlayer(roomSocket, playerId, teamId, () => {
-      roomSocket.emit("host:claimControl");
+      roomSocket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
     });
   };
 

@@ -1,4 +1,4 @@
-import type { HostSecretPayload } from "@wingnight/shared";
+import { CLIENT_TO_SERVER_EVENTS, type HostSecretPayload } from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
 import type {
@@ -25,7 +25,7 @@ export const requestNextPhase = (
   }
 
   const payload: HostSecretPayload = { hostSecret };
-  socket.emit("game:nextPhase", payload);
+  socket.emit(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, payload);
 
   return true;
 };

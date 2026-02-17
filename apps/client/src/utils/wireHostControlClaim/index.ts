@@ -1,4 +1,8 @@
-import type { HostSecretPayload } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  SERVER_TO_CLIENT_EVENTS,
+  type HostSecretPayload
+} from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
 import type {
@@ -18,15 +22,15 @@ export const wireHostControlClaim = (
   // Host clients intentionally re-claim on connect/reconnect.
   // Server-side role checks ensure non-host clients cannot receive a host secret.
   const requestHostControl = (): void => {
-    socket.emit("host:claimControl");
+    socket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
   };
 
   const handleHostSecretIssued = (payload: HostSecretPayload): void => {
     onHostSecretIssued(payload.hostSecret);
   };
 
-  socket.on("host:secretIssued", handleHostSecretIssued);
-  socket.on("host:secretInvalid", requestHostControl);
+  socket.on(SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, handleHostSecretIssued);
+  socket.on(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID, requestHostControl);
   socket.on("connect", requestHostControl);
 
   if (socket.connected) {
@@ -34,8 +38,8 @@ export const wireHostControlClaim = (
   }
 
   return (): void => {
-    socket.off("host:secretIssued", handleHostSecretIssued);
-    socket.off("host:secretInvalid", requestHostControl);
+    socket.off(SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, handleHostSecretIssued);
+    socket.off(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID, requestHostControl);
     socket.off("connect", requestHostControl);
   };
 };

@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { SetupCreateTeamPayload } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  type SetupCreateTeamPayload
+} from "@wingnight/shared";
 
 import { requestCreateTeam } from "./index";
 
@@ -10,8 +13,11 @@ type CreateTeamSocket = Parameters<typeof requestCreateTeam>[0];
 class MockCreateTeamSocket {
   public emittedPayloads: SetupCreateTeamPayload[] = [];
 
-  public emit(event: "setup:createTeam", payload: SetupCreateTeamPayload): void {
-    if (event === "setup:createTeam") {
+  public emit(
+    event: typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM,
+    payload: SetupCreateTeamPayload
+  ): void {
+    if (event === CLIENT_TO_SERVER_EVENTS.CREATE_TEAM) {
       this.emittedPayloads.push(payload);
     }
   }

@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Phase, type HostSecretPayload, type RoomState } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  Phase,
+  SERVER_TO_CLIENT_EVENTS,
+  type HostSecretPayload,
+  type RoomState
+} from "@wingnight/shared";
 
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
@@ -36,32 +42,45 @@ const createSocketHarness = (): SocketHarness => {
   const invalidSecretEvents = { count: 0 };
 
   let requestStateHandler = (): void => {
-    assert.fail("Expected client:requestState handler to be registered.");
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.REQUEST_STATE} handler to be registered.`
+    );
   };
   let hostClaimHandler = (): void => {
-    assert.fail("Expected host:claimControl handler to be registered.");
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL} handler to be registered.`
+    );
   };
   let nextPhaseHandler = (_payload: unknown): void => {
-    assert.fail("Expected game:nextPhase handler to be registered.");
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.NEXT_PHASE} handler to be registered.`
+    );
   };
   let createTeamHandler = (_payload: unknown): void => {
-    assert.fail("Expected setup:createTeam handler to be registered.");
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.CREATE_TEAM} handler to be registered.`
+    );
   };
   let assignPlayerHandler = (_payload: unknown): void => {
-    assert.fail("Expected setup:assignPlayer handler to be registered.");
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER} handler to be registered.`
+    );
   };
 
   const socket = {
     emit: (
-      event: "server:stateSnapshot" | "host:secretIssued" | "host:secretInvalid",
+      event:
+        | typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT
+        | typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED
+        | typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID,
       payload: RoomState | HostSecretPayload
     ): void => {
-      if (event === "server:stateSnapshot") {
+      if (event === SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT) {
         emittedSnapshots.push(payload as RoomState);
         return;
       }
 
-      if (event === "host:secretInvalid") {
+      if (event === SERVER_TO_CLIENT_EVENTS.SECRET_INVALID) {
         invalidSecretEvents.count += 1;
         return;
       }
@@ -70,29 +89,29 @@ const createSocketHarness = (): SocketHarness => {
     },
     on: (
       event:
-        | "client:requestState"
-        | "host:claimControl"
-        | "game:nextPhase"
-        | "setup:createTeam"
-        | "setup:assignPlayer",
+        | typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE
+        | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL
+        | typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE
+        | typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM
+        | typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
       listener: (() => void) | ((payload: unknown) => void)
     ): void => {
-      if (event === "client:requestState") {
+      if (event === CLIENT_TO_SERVER_EVENTS.REQUEST_STATE) {
         requestStateHandler = listener as () => void;
         return;
       }
 
-      if (event === "host:claimControl") {
+      if (event === CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL) {
         hostClaimHandler = listener as () => void;
         return;
       }
 
-      if (event === "game:nextPhase") {
+      if (event === CLIENT_TO_SERVER_EVENTS.NEXT_PHASE) {
         nextPhaseHandler = listener as (payload: unknown) => void;
         return;
       }
 
-      if (event === "setup:createTeam") {
+      if (event === CLIENT_TO_SERVER_EVENTS.CREATE_TEAM) {
         createTeamHandler = listener as (payload: unknown) => void;
         return;
       }

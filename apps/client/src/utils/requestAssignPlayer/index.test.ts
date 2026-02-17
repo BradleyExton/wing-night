@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { SetupAssignPlayerPayload } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  type SetupAssignPlayerPayload
+} from "@wingnight/shared";
 
 import { requestAssignPlayer } from "./index";
 
@@ -10,8 +13,11 @@ type AssignPlayerSocket = Parameters<typeof requestAssignPlayer>[0];
 class MockAssignPlayerSocket {
   public emittedPayloads: SetupAssignPlayerPayload[] = [];
 
-  public emit(event: "setup:assignPlayer", payload: SetupAssignPlayerPayload): void {
-    if (event === "setup:assignPlayer") {
+  public emit(
+    event: typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
+    payload: SetupAssignPlayerPayload
+  ): void {
+    if (event === CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER) {
       this.emittedPayloads.push(payload);
     }
   }

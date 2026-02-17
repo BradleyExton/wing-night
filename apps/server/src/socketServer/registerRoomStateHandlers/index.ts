@@ -1,3 +1,7 @@
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  SERVER_TO_CLIENT_EVENTS
+} from "@wingnight/shared";
 import type {
   HostSecretPayload,
   RoomState,
@@ -7,16 +11,16 @@ import type {
 
 type RoomStateSocket = {
   emit: {
-    (event: "server:stateSnapshot", roomState: RoomState): void;
-    (event: "host:secretIssued", payload: HostSecretPayload): void;
-    (event: "host:secretInvalid"): void;
+    (event: typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, roomState: RoomState): void;
+    (event: typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, payload: HostSecretPayload): void;
+    (event: typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID): void;
   };
   on: {
-    (event: "client:requestState", listener: () => void): void;
-    (event: "host:claimControl", listener: () => void): void;
-    (event: "game:nextPhase", listener: (payload: unknown) => void): void;
-    (event: "setup:createTeam", listener: (payload: unknown) => void): void;
-    (event: "setup:assignPlayer", listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, listener: () => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL, listener: () => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, listener: (payload: unknown) => void): void;
   };
 };
 
@@ -79,7 +83,7 @@ export const registerRoomStateHandlers = (
   hostAuth: HostAuth
 ): void => {
   const emitSnapshot = (): void => {
-    socket.emit("server:stateSnapshot", getSnapshot());
+    socket.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, getSnapshot());
   };
 
   const handleHostClaim = (): void => {
@@ -87,7 +91,7 @@ export const registerRoomStateHandlers = (
       return;
     }
 
-    socket.emit("host:secretIssued", hostAuth.issueHostSecret());
+    socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, hostAuth.issueHostSecret());
   };
 
   const handleNextPhase = (payload: unknown): void => {
@@ -97,7 +101,7 @@ export const registerRoomStateHandlers = (
 
     if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
       if (canClaimControl) {
-        socket.emit("host:secretInvalid");
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
       }
       return;
     }
@@ -112,7 +116,7 @@ export const registerRoomStateHandlers = (
 
     if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
       if (canClaimControl) {
-        socket.emit("host:secretInvalid");
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
       }
       return;
     }
@@ -127,7 +131,7 @@ export const registerRoomStateHandlers = (
 
     if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
       if (canClaimControl) {
-        socket.emit("host:secretInvalid");
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
       }
       return;
     }
@@ -137,9 +141,9 @@ export const registerRoomStateHandlers = (
 
   emitSnapshot();
 
-  socket.on("client:requestState", emitSnapshot);
-  socket.on("host:claimControl", handleHostClaim);
-  socket.on("game:nextPhase", handleNextPhase);
-  socket.on("setup:createTeam", handleCreateTeam);
-  socket.on("setup:assignPlayer", handleAssignPlayer);
+  socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, emitSnapshot);
+  socket.on(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL, handleHostClaim);
+  socket.on(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, handleNextPhase);
+  socket.on(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, handleCreateTeam);
+  socket.on(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, handleAssignPlayer);
 };

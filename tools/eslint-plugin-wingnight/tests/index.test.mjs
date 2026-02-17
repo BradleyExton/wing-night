@@ -99,13 +99,18 @@ test("socket-event-name-format", () => {
     valid: [
       {
         filename: "/repo/packages/shared/src/socketEvents/index.ts",
-        code: "export type Events = { 'client:requestState': () => void; 'game:nextPhase': () => void; };"
+        code: "const CLIENT_TO_SERVER_EVENTS = { REQUEST_STATE: 'client:requestState', NEXT_PHASE: 'game:nextPhase' } as const; export type Events = { [CLIENT_TO_SERVER_EVENTS.REQUEST_STATE]: () => void; [CLIENT_TO_SERVER_EVENTS.NEXT_PHASE]: () => void; };"
       }
     ],
     invalid: [
       {
         filename: "/repo/packages/shared/src/socketEvents/index.ts",
         code: "export type Events = { 'invalid-name': () => void; };",
+        errors: [{ messageId: "invalidEventName" }]
+      },
+      {
+        filename: "/repo/packages/shared/src/socketEvents/index.ts",
+        code: "const SERVER_TO_CLIENT_EVENTS = { BAD: 'invalid-name' } as const;",
         errors: [{ messageId: "invalidEventName" }]
       }
     ]

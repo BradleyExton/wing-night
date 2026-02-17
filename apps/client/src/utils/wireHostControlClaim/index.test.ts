@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { HostSecretPayload } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  SERVER_TO_CLIENT_EVENTS,
+  type HostSecretPayload
+} from "@wingnight/shared";
 
 import { wireHostControlClaim } from "./index";
 
@@ -17,7 +21,10 @@ class MockHostControlSocket {
     null;
 
   public on(
-    event: "connect" | "host:secretIssued" | "host:secretInvalid",
+    event:
+      | "connect"
+      | typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED
+      | typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID,
     listener: (() => void) | ((payload: HostSecretPayload) => void)
   ): void {
     if (event === "connect") {
@@ -25,7 +32,7 @@ class MockHostControlSocket {
       return;
     }
 
-    if (event === "host:secretInvalid") {
+    if (event === SERVER_TO_CLIENT_EVENTS.SECRET_INVALID) {
       this.invalidSecretHandler = listener as () => void;
       return;
     }
@@ -34,7 +41,10 @@ class MockHostControlSocket {
   }
 
   public off(
-    event: "connect" | "host:secretIssued" | "host:secretInvalid",
+    event:
+      | "connect"
+      | typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED
+      | typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID,
     listener: (() => void) | ((payload: HostSecretPayload) => void)
   ): void {
     if (event === "connect") {
@@ -44,7 +54,7 @@ class MockHostControlSocket {
       return;
     }
 
-    if (event === "host:secretInvalid") {
+    if (event === SERVER_TO_CLIENT_EVENTS.SECRET_INVALID) {
       if (this.invalidSecretHandler === listener) {
         this.invalidSecretHandler = null;
       }
@@ -56,8 +66,8 @@ class MockHostControlSocket {
     }
   }
 
-  public emit(event: "host:claimControl"): void {
-    if (event === "host:claimControl") {
+  public emit(event: typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL): void {
+    if (event === CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL) {
       this.hostClaimRequests += 1;
     }
   }
