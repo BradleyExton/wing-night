@@ -38,7 +38,8 @@ const buildSnapshot = (phase: Phase): RoomState => {
     gameConfig: gameConfigFixture,
     currentRoundConfig: gameConfigFixture.rounds[0],
     wingParticipationByPlayerId: {},
-    pendingWingPointsByTeamId: {}
+    pendingWingPointsByTeamId: {},
+    pendingMinigamePointsByTeamId: {}
   };
 };
 

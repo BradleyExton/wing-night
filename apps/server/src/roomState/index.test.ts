@@ -10,6 +10,7 @@ import {
   createInitialRoomState,
   getRoomStateSnapshot,
   resetRoomState,
+  setPendingMinigamePoints,
   setRoomStateGameConfig,
   setWingParticipation,
   setRoomStatePlayers
@@ -73,7 +74,8 @@ test("createInitialRoomState returns setup defaults", () => {
     gameConfig: null,
     currentRoundConfig: null,
     wingParticipationByPlayerId: {},
-    pendingWingPointsByTeamId: {}
+    pendingWingPointsByTeamId: {},
+    pendingMinigamePointsByTeamId: {}
   });
 });
 
@@ -241,6 +243,7 @@ test("setRoomStateGameConfig stores a safe clone and updates totalRounds", () =>
   assert.equal(updatedSnapshot.gameConfig?.name, gameConfigFixture.name);
   assert.equal(updatedSnapshot.totalRounds, 2);
   assert.equal(updatedSnapshot.currentRoundConfig, null);
+  assert.deepEqual(updatedSnapshot.pendingMinigamePointsByTeamId, {});
 
   nextConfig.name = "Changed Locally";
   nextConfig.rounds.push({
@@ -257,6 +260,7 @@ test("setRoomStateGameConfig stores a safe clone and updates totalRounds", () =>
   assert.equal(persistedSnapshot.totalRounds, 2);
   assert.equal(persistedSnapshot.gameConfig?.rounds.length, 2);
   assert.equal(persistedSnapshot.currentRoundConfig, null);
+  assert.deepEqual(persistedSnapshot.pendingMinigamePointsByTeamId, {});
 });
 
 test("createTeam trims team names and ignores empty values", () => {
@@ -405,6 +409,130 @@ test("entering EATING clears wing participation from the previous round", () => 
   assert.equal(snapshot.phase, Phase.EATING);
   assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
   assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+});
+
+test("applies wing and minigame points on MINIGAME_PLAY -> ROUND_RESULTS", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({
+    "team-1": 5,
+    "team-2": 3
+  });
+  advanceRoomStatePhase();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(snapshot.teams[0].totalScore, 7);
+  assert.equal(snapshot.teams[1].totalScore, 3);
+});
+
+test("does not double apply round points after leaving ROUND_RESULTS", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-1": 4 });
+  advanceRoomStatePhase();
+  const scoreAtRoundResults = getRoomStateSnapshot().teams[0].totalScore;
+
+  advanceRoomStatePhase();
+  const scoreAfterNextPhase = getRoomStateSnapshot().teams[0].totalScore;
+
+  assert.equal(scoreAtRoundResults, 6);
+  assert.equal(scoreAfterNextPhase, 6);
+});
+
+test("clears pending round score maps after leaving ROUND_RESULTS", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-1": 2 });
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.ROUND_INTRO);
+  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+  assert.deepEqual(snapshot.pendingMinigamePointsByTeamId, {});
+});
+
+test("applies scores cumulatively across rounds", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  advanceToEatingPhase();
+  setWingParticipation("player-1", true);
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-1": 3 });
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+
+  advanceRoomStatePhase();
+  setWingParticipation("player-1", true);
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-1": 4 });
+  advanceRoomStatePhase();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(snapshot.teams[0].totalScore, 12);
+});
+
+test("logs score mutation metadata when applying round points", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-1": 6 });
+
+  const originalConsoleWarn = console.warn;
+  const logCalls: unknown[][] = [];
+
+  console.warn = ((...args: unknown[]): void => {
+    logCalls.push(args);
+  }) as typeof console.warn;
+
+  try {
+    advanceRoomStatePhase();
+  } finally {
+    console.warn = originalConsoleWarn;
+  }
+
+  const scoreMutationLog = logCalls.find((args) => args[0] === "server:scoreMutation");
+
+  assert.ok(scoreMutationLog);
+  assert.deepEqual(scoreMutationLog[1], {
+    teamId: "team-1",
+    currentRound: 1,
+    wingPoints: 2,
+    minigamePoints: 6,
+    roundPoints: 8,
+    totalScore: 8
+  });
 });
 
 test("createTeam is locked after leaving setup", () => {

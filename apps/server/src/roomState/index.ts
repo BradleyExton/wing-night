@@ -5,7 +5,7 @@ import {
   type RoomState
 } from "@wingnight/shared";
 
-import { logPhaseTransition } from "../logger/index.js";
+import { logPhaseTransition, logScoreMutation } from "../logger/index.js";
 import { getNextPhase } from "../utils/getNextPhase/index.js";
 
 const DEFAULT_TOTAL_ROUNDS = 3;
@@ -28,7 +28,8 @@ export const createInitialRoomState = (): RoomState => {
     gameConfig: null,
     currentRoundConfig: null,
     wingParticipationByPlayerId: {},
-    pendingWingPointsByTeamId: {}
+    pendingWingPointsByTeamId: {},
+    pendingMinigamePointsByTeamId: {}
   };
 };
 
@@ -89,6 +90,11 @@ const recomputePendingWingPoints = (state: RoomState): void => {
 const resetRoundWingParticipation = (state: RoomState): void => {
   state.wingParticipationByPlayerId = {};
   state.pendingWingPointsByTeamId = {};
+};
+
+const clearPendingRoundScores = (state: RoomState): void => {
+  state.pendingWingPointsByTeamId = {};
+  state.pendingMinigamePointsByTeamId = {};
 };
 
 export const createTeam = (name: string): RoomState => {
@@ -182,6 +188,35 @@ export const setWingParticipation = (
   return getRoomStateSnapshot();
 };
 
+export const setPendingMinigamePoints = (
+  pointsByTeamId: Record<string, number>
+): RoomState => {
+  if (roomState.phase !== Phase.MINIGAME_PLAY) {
+    return getRoomStateSnapshot();
+  }
+
+  const nextPendingMinigamePointsByTeamId: Record<string, number> = {};
+
+  for (const team of roomState.teams) {
+    const nextPoints = pointsByTeamId[team.id];
+
+    if (nextPoints === undefined) {
+      nextPendingMinigamePointsByTeamId[team.id] = 0;
+      continue;
+    }
+
+    if (!Number.isFinite(nextPoints) || nextPoints < 0) {
+      return getRoomStateSnapshot();
+    }
+
+    nextPendingMinigamePointsByTeamId[team.id] = nextPoints;
+  }
+
+  roomState.pendingMinigamePointsByTeamId = nextPendingMinigamePointsByTeamId;
+
+  return getRoomStateSnapshot();
+};
+
 const isSetupReadyToStart = (state: RoomState): boolean => {
   if (state.gameConfig === null) {
     return false;
@@ -250,6 +285,31 @@ export const advanceRoomStatePhase = (): RoomState => {
     roomState.currentRoundConfig = null;
   } else {
     roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
+  }
+
+  if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.ROUND_RESULTS) {
+    for (const team of roomState.teams) {
+      const wingPoints = roomState.pendingWingPointsByTeamId[team.id] ?? 0;
+      const minigamePoints = roomState.pendingMinigamePointsByTeamId[team.id] ?? 0;
+      const roundPoints = wingPoints + minigamePoints;
+
+      if (roundPoints === 0) {
+        continue;
+      }
+
+      team.totalScore += roundPoints;
+      logScoreMutation(
+        team.id,
+        roomState.currentRound,
+        wingPoints,
+        minigamePoints,
+        team.totalScore
+      );
+    }
+  }
+
+  if (previousPhase === Phase.ROUND_RESULTS) {
+    clearPendingRoundScores(roomState);
   }
 
   if (nextPhase === Phase.EATING) {
