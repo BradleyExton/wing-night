@@ -186,6 +186,14 @@ Never remove escape hatches.
 
 ---
 
+# 16) UI Theme Rules
+
+- For any client UI styling change, read `DESIGN.md` first and use its canonical semantic color tokens.
+- Use Tailwind theme token classes from `apps/client/tailwind.config.ts` in component `styles.ts` files.
+- Do not hardcode hex colors in `apps/client/src/components/**/styles.ts`.
+
+---
+
 Wing Night is optimized for real-world playtesting.
 
 Stability > cleverness.  

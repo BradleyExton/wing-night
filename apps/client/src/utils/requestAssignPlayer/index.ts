@@ -1,4 +1,7 @@
-import type { SetupAssignPlayerPayload } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  type SetupAssignPlayerPayload
+} from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
 import type {
@@ -31,7 +34,7 @@ export const requestAssignPlayer = (
     playerId,
     teamId
   };
-  socket.emit("setup:assignPlayer", payload);
+  socket.emit(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, payload);
 
   return true;
 };

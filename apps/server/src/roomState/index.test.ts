@@ -13,10 +13,22 @@ import {
   setRoomStatePlayers
 } from "./index.js";
 
+const setupValidTeamsAndAssignments = (): void => {
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" }
+  ]);
+  createTeam("Team Alpha");
+  createTeam("Team Beta");
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-2", "team-2");
+};
+
 test("createInitialRoomState returns setup defaults", () => {
   assert.deepEqual(createInitialRoomState(), {
     phase: Phase.SETUP,
     currentRound: 0,
+    totalRounds: 3,
     players: [],
     teams: []
   });
@@ -35,6 +47,7 @@ test("getRoomStateSnapshot returns a safe clone", () => {
 
 test("advanceRoomStatePhase transitions setup to intro", () => {
   resetRoomState();
+  setupValidTeamsAndAssignments();
 
   const nextState = advanceRoomStatePhase();
 
@@ -44,6 +57,7 @@ test("advanceRoomStatePhase transitions setup to intro", () => {
 
 test("advanceRoomStatePhase sets currentRound to 1 on INTRO -> ROUND_INTRO", () => {
   resetRoomState();
+  setupValidTeamsAndAssignments();
 
   advanceRoomStatePhase();
   const nextState = advanceRoomStatePhase();
@@ -54,6 +68,7 @@ test("advanceRoomStatePhase sets currentRound to 1 on INTRO -> ROUND_INTRO", () 
 
 test("advanceRoomStatePhase preserves currentRound after round intro", () => {
   resetRoomState();
+  setupValidTeamsAndAssignments();
 
   advanceRoomStatePhase();
   advanceRoomStatePhase();
@@ -65,19 +80,52 @@ test("advanceRoomStatePhase preserves currentRound after round intro", () => {
 
 test("advanceRoomStatePhase is idempotent at FINAL_RESULTS", () => {
   resetRoomState();
+  setupValidTeamsAndAssignments();
 
-  for (let step = 0; step < 10; step += 1) {
+  for (let step = 0; step < 25; step += 1) {
     advanceRoomStatePhase();
   }
 
   const finalSnapshot = getRoomStateSnapshot();
 
   assert.equal(finalSnapshot.phase, Phase.FINAL_RESULTS);
-  assert.equal(finalSnapshot.currentRound, 1);
+  assert.equal(finalSnapshot.currentRound, 3);
+});
+
+test("advanceRoomStatePhase blocks SETUP -> INTRO until setup is valid", () => {
+  resetRoomState();
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" }
+  ]);
+  createTeam("Team Alpha");
+  assignPlayerToTeam("player-1", "team-1");
+
+  const blockedSnapshot = advanceRoomStatePhase();
+
+  assert.equal(blockedSnapshot.phase, Phase.SETUP);
+  assert.equal(blockedSnapshot.currentRound, 0);
+});
+
+test("advanceRoomStatePhase increments round after ROUND_RESULTS when rounds remain", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  const nextState = advanceRoomStatePhase();
+
+  assert.equal(nextState.phase, Phase.ROUND_INTRO);
+  assert.equal(nextState.currentRound, 2);
 });
 
 test("advanceRoomStatePhase logs transition metadata", () => {
   resetRoomState();
+  setupValidTeamsAndAssignments();
 
   const originalConsoleWarn = console.warn;
   const logCalls: unknown[][] = [];
@@ -175,4 +223,31 @@ test("assignPlayerToTeam ignores unknown players and unknown teams", () => {
   const snapshot = getRoomStateSnapshot();
 
   assert.deepEqual(snapshot.teams[0].playerIds, []);
+});
+
+test("createTeam is locked after leaving setup", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceRoomStatePhase();
+  const teamsBeforeCreate = getRoomStateSnapshot().teams.length;
+
+  createTeam("Team Alpha");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.INTRO);
+  assert.equal(snapshot.teams.length, teamsBeforeCreate);
+});
+
+test("assignPlayerToTeam is locked after leaving setup", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceRoomStatePhase();
+
+  assignPlayerToTeam("player-1", "team-1");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.INTRO);
+  assert.deepEqual(snapshot.teams[0].playerIds, ["player-1"]);
 });

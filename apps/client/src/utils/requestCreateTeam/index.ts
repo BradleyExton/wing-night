@@ -1,4 +1,7 @@
-import type { SetupCreateTeamPayload } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  type SetupCreateTeamPayload
+} from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
 import type {
@@ -34,7 +37,7 @@ export const requestCreateTeam = (
     hostSecret,
     name: normalizedName
   };
-  socket.emit("setup:createTeam", payload);
+  socket.emit(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, payload);
 
   return true;
 };

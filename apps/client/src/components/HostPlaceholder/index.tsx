@@ -1,6 +1,6 @@
 import type { ChangeEvent, FormEvent } from "react";
 import { useMemo, useState } from "react";
-import type { RoomState } from "@wingnight/shared";
+import { Phase, type RoomState } from "@wingnight/shared";
 
 import {
   actionButtonClassName,
@@ -9,9 +9,11 @@ import {
   containerClassName,
   controlsRowClassName,
   headingClassName,
+  lockNoticeClassName,
   listClassName,
   listRowClassName,
   panelClassName,
+  playersCardClassName,
   playerNameClassName,
   primaryButtonClassName,
   sectionDescriptionClassName,
@@ -58,10 +60,16 @@ export const HostPlaceholder = ({
     return map;
   }, [roomState]);
 
+  const players = roomState?.players ?? [];
+  const teams = roomState?.teams ?? [];
+  const isSetupPhase = roomState?.phase === Phase.SETUP;
+  const setupMutationsDisabled = onCreateTeam === undefined || !isSetupPhase;
+  const assignmentDisabled = onAssignPlayer === undefined || !isSetupPhase;
+
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
 
-    if (!onCreateTeam) {
+    if (!onCreateTeam || !isSetupPhase) {
       return;
     }
 
@@ -79,16 +87,13 @@ export const HostPlaceholder = ({
     event: ChangeEvent<HTMLSelectElement>,
     playerId: string
   ): void => {
-    if (!onAssignPlayer) {
+    if (!onAssignPlayer || !isSetupPhase) {
       return;
     }
 
     const selectedTeamId = event.target.value;
     onAssignPlayer(playerId, selectedTeamId.length === 0 ? null : selectedTeamId);
   };
-
-  const players = roomState?.players ?? [];
-  const teams = roomState?.teams ?? [];
 
   return (
     <main className={containerClassName}>
@@ -109,6 +114,9 @@ export const HostPlaceholder = ({
 
         {!roomState && (
           <p className={subtextClassName}>{hostPlaceholderCopy.loadingStateLabel}</p>
+        )}
+        {roomState && !isSetupPhase && (
+          <p className={lockNoticeClassName}>{hostPlaceholderCopy.setupLockedLabel}</p>
         )}
 
         <section className={sectionGridClassName}>
@@ -131,6 +139,7 @@ export const HostPlaceholder = ({
                   id="team-name-input"
                   className={teamInputClassName}
                   value={nextTeamName}
+                  disabled={setupMutationsDisabled}
                   onChange={(event): void => {
                     setNextTeamName(event.target.value);
                   }}
@@ -140,7 +149,7 @@ export const HostPlaceholder = ({
               <button
                 className={actionButtonClassName}
                 type="submit"
-                disabled={onCreateTeam === undefined}
+                disabled={setupMutationsDisabled}
               >
                 {hostPlaceholderCopy.createTeamButtonLabel}
               </button>
@@ -173,7 +182,7 @@ export const HostPlaceholder = ({
           </div>
         </section>
 
-        <section className={cardClassName}>
+        <section className={`${cardClassName} ${playersCardClassName}`}>
           <h2 className={sectionHeadingClassName}>
             {hostPlaceholderCopy.playersSectionTitle}
           </h2>
@@ -197,7 +206,7 @@ export const HostPlaceholder = ({
                       onChange={(event): void => {
                         handleAssignmentChange(event, player.id);
                       }}
-                      disabled={onAssignPlayer === undefined}
+                      disabled={assignmentDisabled}
                     >
                       <option value="">
                         {hostPlaceholderCopy.unassignedOptionLabel}
