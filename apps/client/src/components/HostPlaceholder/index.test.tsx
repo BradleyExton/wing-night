@@ -124,3 +124,71 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
   assert.match(html, /Correct/);
   assert.match(html, /Incorrect/);
 });
+
+test("renders compact status cards during INTRO", () => {
+  const html = renderToStaticMarkup(
+    <HostPlaceholder roomState={buildSnapshot(Phase.INTRO)} />
+  );
+
+  assert.match(html, /Phase Status/);
+  assert.match(html, /Round Context/);
+  assert.match(html, /Standings Snapshot/);
+  assert.match(html, /Next Action/);
+  assert.doesNotMatch(html, /Team Setup/);
+});
+
+test("renders round context details in compact ROUND_INTRO view", () => {
+  const html = renderToStaticMarkup(
+    <HostPlaceholder roomState={buildSnapshot(Phase.ROUND_INTRO)} />
+  );
+
+  assert.match(html, /Round 1 of 1/);
+  assert.match(html, /Label: Warm Up/);
+  assert.match(html, /Sauce: Frank&#x27;s/);
+  assert.match(html, /Mini-game: TRIVIA/);
+});
+
+test("renders standings snapshot in score-descending order during ROUND_RESULTS", () => {
+  const html = renderToStaticMarkup(
+    <HostPlaceholder
+      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
+        teams: [
+          {
+            id: "team-alpha",
+            name: "Team Alpha",
+            playerIds: ["player-1"],
+            totalScore: 6
+          },
+          {
+            id: "team-beta",
+            name: "Team Beta",
+            playerIds: ["player-2"],
+            totalScore: 14
+          }
+        ]
+      })}
+    />
+  );
+
+  assert.match(html, /Standings Snapshot/);
+  assert.ok(html.indexOf("Team Beta") < html.indexOf("Team Alpha"));
+});
+
+test("renders completion guidance in compact FINAL_RESULTS view", () => {
+  const html = renderToStaticMarkup(
+    <HostPlaceholder roomState={buildSnapshot(Phase.FINAL_RESULTS)} />
+  );
+
+  assert.match(html, /Game complete\./);
+  assert.match(html, /Final Results/);
+});
+
+test("keeps MINIGAME_INTRO on detailed host view", () => {
+  const html = renderToStaticMarkup(
+    <HostPlaceholder roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
+  );
+
+  assert.match(html, /Team Setup/);
+  assert.match(html, /Players/);
+  assert.doesNotMatch(html, /Phase Status/);
+});

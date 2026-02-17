@@ -19,6 +19,30 @@ export const sectionGridClassName = "mt-8 grid gap-6 md:grid-cols-2";
 export const cardClassName =
   "rounded-lg border border-white/10 bg-surfaceAlt p-4 text-left";
 
+export const compactGridClassName = "mt-8 grid gap-4 md:grid-cols-2";
+
+export const compactPhaseBadgeClassName =
+  "mt-3 inline-flex min-h-11 items-center rounded-md border border-primary/70 bg-primary/20 px-3 text-base font-semibold text-primary";
+
+export const compactMetaListClassName = "mt-3 space-y-2 text-base text-white";
+
+export const compactStandingsListClassName = "mt-3 space-y-2";
+
+export const compactStandingsRowClassName =
+  "flex items-center justify-between gap-3 rounded-md border border-white/10 bg-bg px-3 py-3";
+
+export const compactStandingsMetaClassName = "flex items-center gap-2";
+
+export const compactLeaderRowClassName = "border-gold/60";
+
+export const compactLeaderLabelClassName =
+  "rounded-md bg-gold/15 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gold";
+
+export const compactScoreClassName = "text-lg font-semibold text-white";
+
+export const compactHintClassName =
+  "mt-2 rounded-md border border-white/10 bg-bg px-3 py-3 text-base text-white/90";
+
 export const playersCardClassName = "mt-6";
 
 export const sectionHeadingClassName = "m-0 text-xl font-semibold text-white";
