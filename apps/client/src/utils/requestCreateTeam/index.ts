@@ -8,6 +8,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
+import { resolveHostSecretRequest } from "../emitHostSecretRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type CreateTeamSocket = Pick<
@@ -21,15 +22,15 @@ export const requestCreateTeam = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = getHostSecret();
   const normalizedName = name.trim();
 
-  if (!hostSecret) {
-    onMissingHostSecret?.();
-    return false;
-  }
+  const hostSecret = resolveHostSecretRequest({
+    getHostSecret,
+    onMissingHostSecret,
+    canEmit: () => normalizedName.length > 0
+  });
 
-  if (normalizedName.length === 0) {
+  if (hostSecret === null) {
     return false;
   }
 

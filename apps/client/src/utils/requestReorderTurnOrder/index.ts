@@ -8,6 +8,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
+import { resolveHostSecretRequest } from "../emitHostSecretRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type ReorderTurnOrderSocket = Pick<
@@ -39,14 +40,13 @@ export const requestReorderTurnOrder = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = getHostSecret();
+  const hostSecret = resolveHostSecretRequest({
+    getHostSecret,
+    onMissingHostSecret,
+    canEmit: () => isValidTeamIdList(teamIds)
+  });
 
-  if (!hostSecret) {
-    onMissingHostSecret?.();
-    return false;
-  }
-
-  if (!isValidTeamIdList(teamIds)) {
+  if (hostSecret === null) {
     return false;
   }
 

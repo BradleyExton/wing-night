@@ -9,6 +9,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
+import { resolveHostSecretRequest } from "../emitHostSecretRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type ExtendTimerSocket = Pick<Socket<InboundSocketEvents, OutboundSocketEvents>, "emit">;
@@ -27,10 +28,12 @@ export const requestExtendTimer = (
     return false;
   }
 
-  const hostSecret = getHostSecret();
+  const hostSecret = resolveHostSecretRequest({
+    getHostSecret,
+    onMissingHostSecret
+  });
 
-  if (!hostSecret) {
-    onMissingHostSecret?.();
+  if (hostSecret === null) {
     return false;
   }
 

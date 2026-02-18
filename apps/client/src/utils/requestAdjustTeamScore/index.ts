@@ -8,6 +8,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
+import { resolveHostSecretRequest } from "../emitHostSecretRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type AdjustTeamScoreSocket = Pick<
@@ -22,14 +23,13 @@ export const requestAdjustTeamScore = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = getHostSecret();
+  const hostSecret = resolveHostSecretRequest({
+    getHostSecret,
+    onMissingHostSecret,
+    canEmit: () => Number.isInteger(delta) && delta !== 0 && teamId.trim().length > 0
+  });
 
-  if (!hostSecret) {
-    onMissingHostSecret?.();
-    return false;
-  }
-
-  if (!Number.isInteger(delta) || delta === 0 || teamId.trim().length === 0) {
+  if (hostSecret === null) {
     return false;
   }
 

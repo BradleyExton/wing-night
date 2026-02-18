@@ -8,6 +8,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
+import { resolveHostSecretRequest } from "../emitHostSecretRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type SetWingParticipationSocket = Pick<
@@ -22,10 +23,12 @@ export const requestSetWingParticipation = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = getHostSecret();
+  const hostSecret = resolveHostSecretRequest({
+    getHostSecret,
+    onMissingHostSecret
+  });
 
-  if (!hostSecret) {
-    onMissingHostSecret?.();
+  if (hostSecret === null) {
     return false;
   }
 
