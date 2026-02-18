@@ -1,6 +1,8 @@
 import type { RoomState } from "../roomState/index.js";
 
 export type HostSecretPayload = Record<"hostSecret", string>;
+export type GameReorderTurnOrderPayload = HostSecretPayload &
+  Record<"teamIds", string[]>;
 export type SetupCreateTeamPayload = HostSecretPayload & Record<"name", string>;
 export type SetupAssignPlayerPayload = HostSecretPayload &
   Record<"playerId", string> &
@@ -8,6 +10,9 @@ export type SetupAssignPlayerPayload = HostSecretPayload &
 export type ScoringSetWingParticipationPayload = HostSecretPayload &
   Record<"playerId", string> &
   Record<"didEat", boolean>;
+export type ScoringAdjustTeamScorePayload = HostSecretPayload &
+  Record<"teamId", string> &
+  Record<"delta", number>;
 export type MinigameRecordTriviaAttemptPayload = HostSecretPayload &
   Record<"isCorrect", boolean>;
 export type TimerExtendPayload = HostSecretPayload &
@@ -18,9 +23,14 @@ export const CLIENT_TO_SERVER_EVENTS = {
   REQUEST_STATE: "client:requestState",
   CLAIM_CONTROL: "host:claimControl",
   NEXT_PHASE: "game:nextPhase",
+  SKIP_TURN_BOUNDARY: "game:skipTurnBoundary",
+  REORDER_TURN_ORDER: "game:reorderTurnOrder",
+  RESET: "game:reset",
   CREATE_TEAM: "setup:createTeam",
   ASSIGN_PLAYER: "setup:assignPlayer",
   SET_WING_PARTICIPATION: "scoring:setWingParticipation",
+  ADJUST_TEAM_SCORE: "scoring:adjustTeamScore",
+  REDO_LAST_MUTATION: "scoring:redoLastMutation",
   RECORD_TRIVIA_ATTEMPT: "minigame:recordTriviaAttempt",
   TIMER_PAUSE: "timer:pause",
   TIMER_RESUME: "timer:resume",
@@ -43,6 +53,13 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.REQUEST_STATE]: () => void;
   [CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL]: () => void;
   [CLIENT_TO_SERVER_EVENTS.NEXT_PHASE]: (payload: HostSecretPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY]: (
+    payload: HostSecretPayload
+  ) => void;
+  [CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER]: (
+    payload: GameReorderTurnOrderPayload
+  ) => void;
+  [CLIENT_TO_SERVER_EVENTS.RESET]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.CREATE_TEAM]: (
     payload: SetupCreateTeamPayload
   ) => void;
@@ -51,6 +68,12 @@ export type ClientToServerEvents = {
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION]: (
     payload: ScoringSetWingParticipationPayload
+  ) => void;
+  [CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE]: (
+    payload: ScoringAdjustTeamScorePayload
+  ) => void;
+  [CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION]: (
+    payload: HostSecretPayload
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]: (
     payload: MinigameRecordTriviaAttemptPayload

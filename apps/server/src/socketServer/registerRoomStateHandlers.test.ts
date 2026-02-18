@@ -22,9 +22,14 @@ type SocketHarness = {
   triggerRequestState: () => void;
   triggerHostClaim: () => void;
   triggerNextPhase: (payload: unknown) => void;
+  triggerSkipTurnBoundary: (payload: unknown) => void;
+  triggerReorderTurnOrder: (payload: unknown) => void;
+  triggerResetGame: (payload: unknown) => void;
   triggerCreateTeam: (payload: unknown) => void;
   triggerAssignPlayer: (payload: unknown) => void;
   triggerSetWingParticipation: (payload: unknown) => void;
+  triggerAdjustTeamScore: (payload: unknown) => void;
+  triggerRedoLastMutation: (payload: unknown) => void;
   triggerRecordTriviaAttempt: (payload: unknown) => void;
   triggerTimerPause: (payload: unknown) => void;
   triggerTimerResume: (payload: unknown) => void;
@@ -53,7 +58,9 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {}
+    pendingMinigamePointsByTeamId: {},
+    fatalError: null,
+    canRedoScoringMutation: false
   };
 };
 
@@ -77,6 +84,21 @@ const createSocketHarness = (): SocketHarness => {
       `Expected ${CLIENT_TO_SERVER_EVENTS.NEXT_PHASE} handler to be registered.`
     );
   };
+  let skipTurnBoundaryHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY} handler to be registered.`
+    );
+  };
+  let reorderTurnOrderHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER} handler to be registered.`
+    );
+  };
+  let resetGameHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.RESET} handler to be registered.`
+    );
+  };
   let createTeamHandler = (_payload: unknown): void => {
     assert.fail(
       `Expected ${CLIENT_TO_SERVER_EVENTS.CREATE_TEAM} handler to be registered.`
@@ -90,6 +112,16 @@ const createSocketHarness = (): SocketHarness => {
   let setWingParticipationHandler = (_payload: unknown): void => {
     assert.fail(
       `Expected ${CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION} handler to be registered.`
+    );
+  };
+  let adjustTeamScoreHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE} handler to be registered.`
+    );
+  };
+  let redoLastMutationHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION} handler to be registered.`
     );
   };
   let recordTriviaAttemptHandler = (_payload: unknown): void => {
@@ -138,9 +170,14 @@ const createSocketHarness = (): SocketHarness => {
         | typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE
         | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL
         | typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE
+        | typeof CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY
+        | typeof CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER
+        | typeof CLIENT_TO_SERVER_EVENTS.RESET
         | typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM
         | typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER
         | typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION
+        | typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE
+        | typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION
         | typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT
         | typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE
         | typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME
@@ -162,6 +199,21 @@ const createSocketHarness = (): SocketHarness => {
         return;
       }
 
+      if (event === CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY) {
+        skipTurnBoundaryHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      if (event === CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER) {
+        reorderTurnOrderHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      if (event === CLIENT_TO_SERVER_EVENTS.RESET) {
+        resetGameHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
       if (event === CLIENT_TO_SERVER_EVENTS.CREATE_TEAM) {
         createTeamHandler = listener as (payload: unknown) => void;
         return;
@@ -174,6 +226,16 @@ const createSocketHarness = (): SocketHarness => {
 
       if (event === CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION) {
         setWingParticipationHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      if (event === CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE) {
+        adjustTeamScoreHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      if (event === CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION) {
+        redoLastMutationHandler = listener as (payload: unknown) => void;
         return;
       }
 
@@ -214,6 +276,15 @@ const createSocketHarness = (): SocketHarness => {
     triggerNextPhase: (payload: unknown): void => {
       nextPhaseHandler(payload);
     },
+    triggerSkipTurnBoundary: (payload: unknown): void => {
+      skipTurnBoundaryHandler(payload);
+    },
+    triggerReorderTurnOrder: (payload: unknown): void => {
+      reorderTurnOrderHandler(payload);
+    },
+    triggerResetGame: (payload: unknown): void => {
+      resetGameHandler(payload);
+    },
     triggerCreateTeam: (payload: unknown): void => {
       createTeamHandler(payload);
     },
@@ -222,6 +293,12 @@ const createSocketHarness = (): SocketHarness => {
     },
     triggerSetWingParticipation: (payload: unknown): void => {
       setWingParticipationHandler(payload);
+    },
+    triggerAdjustTeamScore: (payload: unknown): void => {
+      adjustTeamScoreHandler(payload);
+    },
+    triggerRedoLastMutation: (payload: unknown): void => {
+      redoLastMutationHandler(payload);
     },
     triggerRecordTriviaAttempt: (payload: unknown): void => {
       recordTriviaAttemptHandler(payload);
@@ -245,6 +322,15 @@ const createMutationHandlers = (
     onAuthorizedNextPhase: () => {
       // no-op
     },
+    onAuthorizedSkipTurnBoundary: () => {
+      // no-op
+    },
+    onAuthorizedReorderTurnOrder: () => {
+      // no-op
+    },
+    onAuthorizedResetGame: () => {
+      // no-op
+    },
     onAuthorizedCreateTeam: () => {
       // no-op
     },
@@ -252,6 +338,12 @@ const createMutationHandlers = (
       // no-op
     },
     onAuthorizedSetWingParticipation: () => {
+      // no-op
+    },
+    onAuthorizedAdjustTeamScore: () => {
+      // no-op
+    },
+    onAuthorizedRedoLastMutation: () => {
       // no-op
     },
     onAuthorizedRecordTriviaAttempt: () => {
@@ -428,6 +520,102 @@ test("runs authorized next phase callback without per-socket snapshot emit", () 
   assert.deepEqual(broadcastSnapshots, [advancedState]);
 });
 
+test("ignores malformed and unauthorized skip-turn-boundary payloads", () => {
+  const socketHarness = createSocketHarness();
+  let skipCalls = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.EATING),
+    createMutationHandlers({
+      onAuthorizedSkipTurnBoundary: () => {
+        skipCalls += 1;
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerSkipTurnBoundary(undefined);
+    socketHarness.triggerSkipTurnBoundary({});
+    socketHarness.triggerSkipTurnBoundary({ hostSecret: "invalid-host-secret" });
+    socketHarness.triggerSkipTurnBoundary({ hostSecret: "valid-host-secret" });
+  });
+
+  assert.equal(skipCalls, 1);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
+test("ignores malformed and unauthorized reorder-turn-order payloads", () => {
+  const socketHarness = createSocketHarness();
+  const reorderCalls: string[][] = [];
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.ROUND_INTRO),
+    createMutationHandlers({
+      onAuthorizedReorderTurnOrder: (teamIds) => {
+        reorderCalls.push(teamIds);
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerReorderTurnOrder(undefined);
+    socketHarness.triggerReorderTurnOrder({});
+    socketHarness.triggerReorderTurnOrder({ hostSecret: "valid-host-secret" });
+    socketHarness.triggerReorderTurnOrder({
+      hostSecret: "valid-host-secret",
+      teamIds: "team-1"
+    });
+    socketHarness.triggerReorderTurnOrder({
+      hostSecret: "valid-host-secret",
+      teamIds: ["team-1", 3]
+    });
+    socketHarness.triggerReorderTurnOrder({
+      hostSecret: "invalid-host-secret",
+      teamIds: ["team-1", "team-2"]
+    });
+    socketHarness.triggerReorderTurnOrder({
+      hostSecret: "valid-host-secret",
+      teamIds: ["team-2", "team-1"]
+    });
+  });
+
+  assert.deepEqual(reorderCalls, [["team-2", "team-1"]]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
+test("ignores malformed and unauthorized reset payloads", () => {
+  const socketHarness = createSocketHarness();
+  let resetCalls = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.ROUND_RESULTS),
+    createMutationHandlers({
+      onAuthorizedResetGame: () => {
+        resetCalls += 1;
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerResetGame(undefined);
+    socketHarness.triggerResetGame({});
+    socketHarness.triggerResetGame({ hostSecret: "invalid-host-secret" });
+    socketHarness.triggerResetGame({ hostSecret: "valid-host-secret" });
+  });
+
+  assert.equal(resetCalls, 1);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
 test("runs authorized create-team callback and ignores unauthorized payloads", () => {
   const socketHarness = createSocketHarness();
   let createTeamCalls = 0;
@@ -538,6 +726,79 @@ test("ignores malformed and unauthorized wing-participation payloads", () => {
   });
 
   assert.deepEqual(participationCalls, [{ playerId: "player-2", didEat: false }]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
+test("ignores malformed and unauthorized adjust-team-score payloads", () => {
+  const socketHarness = createSocketHarness();
+  const adjustmentCalls: Array<{ teamId: string; delta: number }> = [];
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.ROUND_RESULTS),
+    createMutationHandlers({
+      onAuthorizedAdjustTeamScore: (teamId, delta) => {
+        adjustmentCalls.push({ teamId, delta });
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerAdjustTeamScore(undefined);
+    socketHarness.triggerAdjustTeamScore({});
+    socketHarness.triggerAdjustTeamScore({ hostSecret: "valid-host-secret" });
+    socketHarness.triggerAdjustTeamScore({
+      hostSecret: "valid-host-secret",
+      teamId: "team-1",
+      delta: 0
+    });
+    socketHarness.triggerAdjustTeamScore({
+      hostSecret: "valid-host-secret",
+      teamId: 1,
+      delta: 3
+    });
+    socketHarness.triggerAdjustTeamScore({
+      hostSecret: "invalid-host-secret",
+      teamId: "team-1",
+      delta: 3
+    });
+    socketHarness.triggerAdjustTeamScore({
+      hostSecret: "valid-host-secret",
+      teamId: "team-1",
+      delta: -2
+    });
+  });
+
+  assert.deepEqual(adjustmentCalls, [{ teamId: "team-1", delta: -2 }]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
+test("ignores malformed and unauthorized redo-last-mutation payloads", () => {
+  const socketHarness = createSocketHarness();
+  let redoCalls = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.ROUND_RESULTS),
+    createMutationHandlers({
+      onAuthorizedRedoLastMutation: () => {
+        redoCalls += 1;
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerRedoLastMutation(undefined);
+    socketHarness.triggerRedoLastMutation({});
+    socketHarness.triggerRedoLastMutation({ hostSecret: "invalid-host-secret" });
+    socketHarness.triggerRedoLastMutation({ hostSecret: "valid-host-secret" });
+  });
+
+  assert.equal(redoCalls, 1);
   assert.equal(socketHarness.invalidSecretEvents, 1);
 });
 

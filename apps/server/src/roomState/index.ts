@@ -3,23 +3,35 @@ import {
   TIMER_EXTEND_MAX_SECONDS,
   type GameConfigFile,
   type Player,
+  type RoomFatalError,
   type RoomState,
   type RoomTimerState,
   type TriviaPrompt
 } from "@wingnight/shared";
 
-import { logPhaseTransition, logScoreMutation } from "../logger/index.js";
 import {
+  logManualScoreAdjustment,
+  logPhaseTransition,
+  logScoreMutation
+} from "../logger/index.js";
+import {
+  captureTriviaRuntimeStateSnapshot,
   clearTriviaRuntimeState,
   initializeTriviaRuntimeState,
   reduceTriviaAttempt,
   resetTriviaRuntimeState,
+  restoreTriviaRuntimeStateSnapshot,
   syncTriviaRuntimeWithPendingPoints,
-  syncTriviaRuntimeWithPrompts
+  syncTriviaRuntimeWithPrompts,
+  type TriviaRuntimeStateSnapshot
 } from "../minigames/triviaRuntime/index.js";
 import { getNextPhase } from "../utils/getNextPhase/index.js";
 
 const DEFAULT_TOTAL_ROUNDS = 3;
+
+const isRoomInFatalState = (state: RoomState): boolean => {
+  return state.fatalError !== null;
+};
 
 const resolveCurrentRoundConfig = (state: RoomState): RoomState["currentRoundConfig"] => {
   if (!state.gameConfig || state.currentRound <= 0) {
@@ -104,16 +116,37 @@ export const createInitialRoomState = (): RoomState => {
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {}
+    pendingMinigamePointsByTeamId: {},
+    fatalError: null,
+    canRedoScoringMutation: false
   };
 };
 
 // This module-scoped state is intentionally single-process for the MVP.
 // If the server is scaled across workers/processes, migrate to shared storage.
 const roomState = createInitialRoomState();
+type ScoringMutationUndoSnapshot = {
+  round: number;
+  roomStateSnapshot: RoomState;
+  triviaRuntimeSnapshot: TriviaRuntimeStateSnapshot;
+};
+let scoringMutationUndoSnapshot: ScoringMutationUndoSnapshot | null = null;
 
 const overwriteRoomState = (nextState: RoomState): void => {
   Object.assign(roomState, nextState);
+};
+
+const clearScoringMutationUndoState = (state: RoomState): void => {
+  scoringMutationUndoSnapshot = null;
+  state.canRedoScoringMutation = false;
+};
+
+const captureScoringMutationUndoState = (state: RoomState): void => {
+  scoringMutationUndoSnapshot = {
+    round: state.currentRound,
+    roomStateSnapshot: structuredClone(state),
+    triviaRuntimeSnapshot: captureTriviaRuntimeStateSnapshot()
+  };
 };
 
 export const getRoomStateSnapshot = (): RoomState => {
@@ -123,6 +156,51 @@ export const getRoomStateSnapshot = (): RoomState => {
 export const resetRoomState = (): RoomState => {
   overwriteRoomState(createInitialRoomState());
   resetTriviaRuntimeState();
+  clearScoringMutationUndoState(roomState);
+
+  return getRoomStateSnapshot();
+};
+
+export const resetGameToSetup = (): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  const preservedPlayers = structuredClone(roomState.players);
+  const preservedGameConfig = structuredClone(roomState.gameConfig);
+  const preservedTriviaPrompts = structuredClone(roomState.triviaPrompts);
+  const nextState = createInitialRoomState();
+
+  nextState.players = preservedPlayers;
+  nextState.gameConfig = preservedGameConfig;
+  nextState.triviaPrompts = preservedTriviaPrompts;
+  nextState.totalRounds =
+    preservedGameConfig === null ? nextState.totalRounds : preservedGameConfig.rounds.length;
+  nextState.currentRoundConfig = null;
+
+  overwriteRoomState(nextState);
+  resetTriviaRuntimeState();
+  clearScoringMutationUndoState(roomState);
+
+  return getRoomStateSnapshot();
+};
+
+export const setRoomStateFatalError = (message: string): RoomState => {
+  overwriteRoomState(createInitialRoomState());
+  resetTriviaRuntimeState();
+  clearScoringMutationUndoState(roomState);
+
+  const normalizedMessage =
+    message.trim().length > 0
+      ? message.trim()
+      : "Unable to load content. Check local and sample content files.";
+
+  const fatalError: RoomFatalError = {
+    code: "CONTENT_LOAD_FAILED",
+    message: normalizedMessage
+  };
+
+  roomState.fatalError = fatalError;
 
   return getRoomStateSnapshot();
 };
@@ -200,6 +278,35 @@ const clearPendingRoundScores = (state: RoomState): void => {
   state.pendingMinigamePointsByTeamId = {};
 };
 
+const arePointsByTeamIdEqual = (
+  left: Record<string, number>,
+  right: Record<string, number>
+): boolean => {
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+
+  if (leftKeys.length !== rightKeys.length) {
+    return false;
+  }
+
+  return leftKeys.every((key) => left[key] === right[key]);
+};
+
+const applyPendingRoundScoresToTotals = (state: RoomState): void => {
+  for (const team of state.teams) {
+    const wingPoints = state.pendingWingPointsByTeamId[team.id] ?? 0;
+    const minigamePoints = state.pendingMinigamePointsByTeamId[team.id] ?? 0;
+    const roundPoints = wingPoints + minigamePoints;
+
+    if (roundPoints === 0) {
+      continue;
+    }
+
+    team.totalScore += roundPoints;
+    logScoreMutation(team.id, state.currentRound, wingPoints, minigamePoints, team.totalScore);
+  }
+};
+
 const resolveTeamIdByPlayerId = (
   state: RoomState,
   playerId: string
@@ -229,6 +336,28 @@ const initializeRoundTurnState = (state: RoomState): void => {
     state.roundTurnCursor === -1
       ? null
       : state.turnOrderTeamIds[state.roundTurnCursor] ?? null;
+};
+
+const isExactTeamIdSet = (
+  teamIds: string[],
+  teams: RoomState["teams"]
+): boolean => {
+  if (teamIds.length !== teams.length) {
+    return false;
+  }
+
+  const expectedTeamIds = new Set(teams.map((team) => team.id));
+  const seenTeamIds = new Set<string>();
+
+  for (const teamId of teamIds) {
+    if (!expectedTeamIds.has(teamId) || seenTeamIds.has(teamId)) {
+      return false;
+    }
+
+    seenTeamIds.add(teamId);
+  }
+
+  return seenTeamIds.size === expectedTeamIds.size;
 };
 
 const finalizeActiveRoundTurn = (state: RoomState): void => {
@@ -264,6 +393,10 @@ const resolveNextPhase = (state: RoomState, previousPhase: Phase): Phase => {
 };
 
 export const createTeam = (name: string): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
   if (roomState.phase !== Phase.SETUP) {
     return getRoomStateSnapshot();
   }
@@ -289,6 +422,10 @@ export const assignPlayerToTeam = (
   playerId: string,
   teamId: string | null
 ): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
   if (roomState.phase !== Phase.SETUP) {
     return getRoomStateSnapshot();
   }
@@ -322,10 +459,42 @@ export const assignPlayerToTeam = (
   return getRoomStateSnapshot();
 };
 
+export const reorderTurnOrder = (teamIds: string[]): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  if (roomState.phase !== Phase.ROUND_INTRO) {
+    return getRoomStateSnapshot();
+  }
+
+  if (!Array.isArray(teamIds) || !teamIds.every((teamId) => typeof teamId === "string")) {
+    return getRoomStateSnapshot();
+  }
+
+  if (!isExactTeamIdSet(teamIds, roomState.teams)) {
+    return getRoomStateSnapshot();
+  }
+
+  roomState.turnOrderTeamIds = [...teamIds];
+  roomState.roundTurnCursor = teamIds.length > 0 ? 0 : -1;
+  roomState.completedRoundTurnTeamIds = [];
+  roomState.activeRoundTeamId =
+    roomState.roundTurnCursor === -1
+      ? null
+      : roomState.turnOrderTeamIds[roomState.roundTurnCursor] ?? null;
+
+  return getRoomStateSnapshot();
+};
+
 export const setWingParticipation = (
   playerId: string,
   didEat: boolean
 ): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
   if (roomState.phase !== Phase.EATING) {
     return getRoomStateSnapshot();
   }
@@ -353,8 +522,53 @@ export const setWingParticipation = (
     return getRoomStateSnapshot();
   }
 
+  if (roomState.wingParticipationByPlayerId[playerId] === didEat) {
+    return getRoomStateSnapshot();
+  }
+
+  captureScoringMutationUndoState(roomState);
   roomState.wingParticipationByPlayerId[playerId] = didEat;
   recomputePendingWingPoints(roomState);
+  roomState.canRedoScoringMutation = true;
+
+  return getRoomStateSnapshot();
+};
+
+export const adjustTeamScore = (teamId: string, delta: number): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  if (roomState.phase === Phase.SETUP) {
+    return getRoomStateSnapshot();
+  }
+
+  if (!Number.isInteger(delta) || delta === 0) {
+    return getRoomStateSnapshot();
+  }
+
+  const targetTeam = roomState.teams.find((team) => team.id === teamId);
+
+  if (!targetTeam) {
+    return getRoomStateSnapshot();
+  }
+
+  const nextTotalScore = targetTeam.totalScore + delta;
+
+  if (nextTotalScore < 0) {
+    return getRoomStateSnapshot();
+  }
+
+  captureScoringMutationUndoState(roomState);
+  targetTeam.totalScore = nextTotalScore;
+  roomState.canRedoScoringMutation = true;
+  logManualScoreAdjustment(
+    targetTeam.id,
+    delta,
+    targetTeam.totalScore,
+    roomState.currentRound,
+    roomState.phase
+  );
 
   return getRoomStateSnapshot();
 };
@@ -362,6 +576,10 @@ export const setWingParticipation = (
 export const setPendingMinigamePoints = (
   pointsByTeamId: Record<string, number>
 ): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
   if (roomState.phase !== Phase.MINIGAME_PLAY) {
     return getRoomStateSnapshot();
   }
@@ -405,7 +623,18 @@ export const setPendingMinigamePoints = (
     }
   }
 
+  if (
+    arePointsByTeamIdEqual(
+      roomState.pendingMinigamePointsByTeamId,
+      nextPendingMinigamePointsByTeamId
+    )
+  ) {
+    return getRoomStateSnapshot();
+  }
+
+  captureScoringMutationUndoState(roomState);
   roomState.pendingMinigamePointsByTeamId = nextPendingMinigamePointsByTeamId;
+  roomState.canRedoScoringMutation = true;
 
   if (isTriviaMinigamePlayState(roomState)) {
     syncTriviaRuntimeWithPendingPoints(
@@ -418,6 +647,10 @@ export const setPendingMinigamePoints = (
 };
 
 export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
   if (!isTriviaMinigamePlayState(roomState)) {
     return getRoomStateSnapshot();
   }
@@ -428,12 +661,40 @@ export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
     return getRoomStateSnapshot();
   }
 
+  captureScoringMutationUndoState(roomState);
   reduceTriviaAttempt(roomState, isCorrect, minigamePointsMax);
+  roomState.canRedoScoringMutation = true;
+
+  return getRoomStateSnapshot();
+};
+
+export const redoLastScoringMutation = (): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  if (scoringMutationUndoSnapshot === null) {
+    return getRoomStateSnapshot();
+  }
+
+  if (scoringMutationUndoSnapshot.round !== roomState.currentRound) {
+    clearScoringMutationUndoState(roomState);
+    return getRoomStateSnapshot();
+  }
+
+  const snapshotToRestore = scoringMutationUndoSnapshot;
+  overwriteRoomState(structuredClone(snapshotToRestore.roomStateSnapshot));
+  restoreTriviaRuntimeStateSnapshot(roomState, snapshotToRestore.triviaRuntimeSnapshot);
+  clearScoringMutationUndoState(roomState);
 
   return getRoomStateSnapshot();
 };
 
 export const pauseRoomTimer = (): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
   const currentTimer = roomState.timer;
 
   if (
@@ -459,6 +720,10 @@ export const pauseRoomTimer = (): RoomState => {
 };
 
 export const resumeRoomTimer = (): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
   const currentTimer = roomState.timer;
 
   if (
@@ -483,6 +748,10 @@ export const resumeRoomTimer = (): RoomState => {
 };
 
 export const extendRoomTimer = (additionalSeconds: number): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
   const currentTimer = roomState.timer;
 
   if (
@@ -517,6 +786,52 @@ export const extendRoomTimer = (additionalSeconds: number): RoomState => {
     durationMs: currentTimer.durationMs + additionalMs,
     remainingMs: Math.max(0, nextEndsAt - now)
   };
+
+  return getRoomStateSnapshot();
+};
+
+export const skipTurnBoundary = (): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  const previousPhase = roomState.phase;
+  const canSkipTurn =
+    previousPhase === Phase.EATING ||
+    previousPhase === Phase.MINIGAME_INTRO ||
+    previousPhase === Phase.MINIGAME_PLAY;
+
+  if (!canSkipTurn) {
+    return getRoomStateSnapshot();
+  }
+
+  const hasNextRoundTurn =
+    roomState.roundTurnCursor + 1 < roomState.turnOrderTeamIds.length;
+  finalizeActiveRoundTurn(roomState);
+
+  const nextPhase = hasNextRoundTurn ? Phase.EATING : Phase.ROUND_RESULTS;
+  roomState.phase = nextPhase;
+  roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
+
+  if (previousPhase === Phase.MINIGAME_PLAY) {
+    clearTriviaRuntimeState(roomState);
+  }
+
+  if (nextPhase === Phase.ROUND_RESULTS) {
+    applyPendingRoundScoresToTotals(roomState);
+  }
+
+  if (nextPhase === Phase.EATING) {
+    const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
+    roomState.timer =
+      eatingSeconds === null
+        ? null
+        : createRunningTimer(Phase.EATING, eatingSeconds);
+  } else {
+    roomState.timer = null;
+  }
+
+  logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);
 
   return getRoomStateSnapshot();
 };
@@ -559,7 +874,12 @@ const isSetupReadyToStart = (state: RoomState): boolean => {
 };
 
 export const advanceRoomStatePhase = (): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
   const previousPhase = roomState.phase;
+  const previousRound = roomState.currentRound;
 
   if (previousPhase === Phase.SETUP && !isSetupReadyToStart(roomState)) {
     return getRoomStateSnapshot();
@@ -604,24 +924,7 @@ export const advanceRoomStatePhase = (): RoomState => {
   }
 
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.ROUND_RESULTS) {
-    for (const team of roomState.teams) {
-      const wingPoints = roomState.pendingWingPointsByTeamId[team.id] ?? 0;
-      const minigamePoints = roomState.pendingMinigamePointsByTeamId[team.id] ?? 0;
-      const roundPoints = wingPoints + minigamePoints;
-
-      if (roundPoints === 0) {
-        continue;
-      }
-
-      team.totalScore += roundPoints;
-      logScoreMutation(
-        team.id,
-        roomState.currentRound,
-        wingPoints,
-        minigamePoints,
-        team.totalScore
-      );
-    }
+    applyPendingRoundScoresToTotals(roomState);
   }
 
   if (previousPhase === Phase.ROUND_RESULTS) {
@@ -643,6 +946,10 @@ export const advanceRoomStatePhase = (): RoomState => {
         : createRunningTimer(Phase.MINIGAME_PLAY, minigameSeconds);
   } else {
     roomState.timer = null;
+  }
+
+  if (roomState.currentRound !== previousRound) {
+    clearScoringMutationUndoState(roomState);
   }
 
   logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);

@@ -2,6 +2,7 @@ import { type RoomState } from "@wingnight/shared";
 import { useMemo } from "react";
 
 import { displayBoardCopy } from "./copy";
+import { ContentFatalState } from "../ContentFatalState";
 import { StageSurface } from "./StageSurface";
 import { StandingsSurface } from "./StandingsSurface";
 import * as styles from "./styles";
@@ -11,6 +12,7 @@ type DisplayBoardProps = {
 };
 
 export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
+  const fatalError = roomState?.fatalError ?? null;
   const standings = useMemo(() => {
     if (!roomState) {
       return [];
@@ -34,6 +36,10 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
     phase === null
       ? displayBoardCopy.waitingPhaseLabel
       : displayBoardCopy.phaseLabel(phase);
+
+  if (fatalError !== null) {
+    return <ContentFatalState fatalError={fatalError} />;
+  }
 
   return (
     <main className={styles.container}>

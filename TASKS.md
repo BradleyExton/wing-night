@@ -237,11 +237,12 @@ Backlog status:
 - [x] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
 - [ ] 9.1 Playwright Host/Display Sync
 - [ ] 9.2 Playwright Refresh Rehydrate
-- [ ] 10.1 Manual Round Escape Hatch
-- [ ] 10.2 Score Override UI
-- [ ] 10.3 Game Reset Flow
-- [ ] 10.4 Basic Error Screen for Invalid Content
-- [ ] 10.5 Redo Escape Hatch (Host)
+- [x] 10.1 Manual Round Escape Hatch
+- [x] 10.2 Score Override UI
+- [x] 10.3 Game Reset Flow
+- [x] 10.4 Basic Error Screen for Invalid Content
+- [x] 10.5 Redo Escape Hatch (Host)
+- [x] 10.6 Host Turn Order Reorder
 
 This roadmap is optimized for: - 4 hours per week - Small, verifiable
 tasks - Codex execution loops - Stable incremental progress
@@ -643,6 +644,14 @@ Verification:
 Verification:
 -   Room state tests verify redo behavior and guardrails
 -   Host controls only show redo where action history allows it
+
+## 10.6 Host Turn Order Reorder
+
+-   Host can reorder team turn order during `ROUND_INTRO`
+-   Reordered turn order carries forward until changed again
+Verification:
+-   Room state tests verify reorder validation and cross-round persistence
+-   Host tests verify reorder controls render only in `ROUND_INTRO`
 
 ------------------------------------------------------------------------
 

@@ -58,6 +58,8 @@ export type ValidRoomStateCheck = Assert<
       wingParticipationByPlayerId: Record<string, boolean>;
       pendingWingPointsByTeamId: Record<string, number>;
       pendingMinigamePointsByTeamId: Record<string, number>;
+      fatalError: RoomState["fatalError"];
+      canRedoScoringMutation: boolean;
     },
     RoomState
   >

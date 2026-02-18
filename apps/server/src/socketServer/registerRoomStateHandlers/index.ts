@@ -4,8 +4,10 @@ import {
   SERVER_TO_CLIENT_EVENTS
 } from "@wingnight/shared";
 import type {
+  GameReorderTurnOrderPayload,
   HostSecretPayload,
   MinigameRecordTriviaAttemptPayload,
+  ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   RoomState,
   TimerExtendPayload,
@@ -23,9 +25,14 @@ type RoomStateSocket = {
     (event: typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, listener: () => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL, listener: () => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.RESET, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, listener: (payload: unknown) => void): void;
@@ -40,9 +47,14 @@ type HostAuth = {
 
 type AuthorizedSetupMutationHandlers = {
   onAuthorizedNextPhase: () => void;
+  onAuthorizedSkipTurnBoundary: () => void;
+  onAuthorizedReorderTurnOrder: (teamIds: string[]) => void;
+  onAuthorizedResetGame: () => void;
   onAuthorizedCreateTeam: (name: string) => void;
   onAuthorizedAssignPlayer: (playerId: string, teamId: string | null) => void;
   onAuthorizedSetWingParticipation: (playerId: string, didEat: boolean) => void;
+  onAuthorizedAdjustTeamScore: (teamId: string, delta: number) => void;
+  onAuthorizedRedoLastMutation: () => void;
   onAuthorizedRecordTriviaAttempt: (isCorrect: boolean) => void;
   onAuthorizedPauseTimer: () => void;
   onAuthorizedResumeTimer: () => void;
@@ -69,6 +81,20 @@ const isSetupCreateTeamPayload = (
   }
 
   return "name" in payload && typeof payload.name === "string";
+};
+
+const isGameReorderTurnOrderPayload = (
+  payload: unknown
+): payload is GameReorderTurnOrderPayload => {
+  if (!isHostSecretPayload(payload)) {
+    return false;
+  }
+
+  if (!("teamIds" in payload) || !Array.isArray(payload.teamIds)) {
+    return false;
+  }
+
+  return payload.teamIds.every((teamId) => typeof teamId === "string");
 };
 
 const isSetupAssignPlayerPayload = (
@@ -105,6 +131,24 @@ const isScoringSetWingParticipationPayload = (
   }
 
   return true;
+};
+
+const isScoringAdjustTeamScorePayload = (
+  payload: unknown
+): payload is ScoringAdjustTeamScorePayload => {
+  if (!isHostSecretPayload(payload)) {
+    return false;
+  }
+
+  if (!("teamId" in payload) || typeof payload.teamId !== "string") {
+    return false;
+  }
+
+  if (!("delta" in payload) || typeof payload.delta !== "number") {
+    return false;
+  }
+
+  return Number.isInteger(payload.delta) && payload.delta !== 0;
 };
 
 const isMinigameRecordTriviaAttemptPayload = (
@@ -174,6 +218,51 @@ export const registerRoomStateHandlers = (
     mutationHandlers.onAuthorizedNextPhase();
   };
 
+  const handleReorderTurnOrder = (payload: unknown): void => {
+    if (!isGameReorderTurnOrderPayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedReorderTurnOrder(payload.teamIds);
+  };
+
+  const handleSkipTurnBoundary = (payload: unknown): void => {
+    if (!isHostSecretPayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedSkipTurnBoundary();
+  };
+
+  const handleResetGame = (payload: unknown): void => {
+    if (!isHostSecretPayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedResetGame();
+  };
+
   const handleCreateTeam = (payload: unknown): void => {
     if (!isSetupCreateTeamPayload(payload)) {
       return;
@@ -217,6 +306,36 @@ export const registerRoomStateHandlers = (
     }
 
     mutationHandlers.onAuthorizedSetWingParticipation(payload.playerId, payload.didEat);
+  };
+
+  const handleAdjustTeamScore = (payload: unknown): void => {
+    if (!isScoringAdjustTeamScorePayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedAdjustTeamScore(payload.teamId, payload.delta);
+  };
+
+  const handleRedoLastMutation = (payload: unknown): void => {
+    if (!isHostSecretPayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedRedoLastMutation();
   };
 
   const handleRecordTriviaAttempt = (payload: unknown): void => {
@@ -284,12 +403,17 @@ export const registerRoomStateHandlers = (
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, emitSnapshot);
   socket.on(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL, handleHostClaim);
   socket.on(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, handleNextPhase);
+  socket.on(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, handleSkipTurnBoundary);
+  socket.on(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, handleReorderTurnOrder);
+  socket.on(CLIENT_TO_SERVER_EVENTS.RESET, handleResetGame);
   socket.on(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, handleCreateTeam);
   socket.on(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, handleAssignPlayer);
   socket.on(
     CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
     handleSetWingParticipation
   );
+  socket.on(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, handleAdjustTeamScore);
+  socket.on(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, handleRedoLastMutation);
   socket.on(
     CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
     handleRecordTriviaAttempt

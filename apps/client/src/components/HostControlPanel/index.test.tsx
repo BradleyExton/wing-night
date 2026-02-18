@@ -71,7 +71,9 @@ const buildSnapshot = (
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {}
+    pendingMinigamePointsByTeamId: {},
+    fatalError: null,
+    canRedoScoringMutation: false
   };
 
   return { ...snapshot, ...overrides };
@@ -83,6 +85,24 @@ test("renders loading copy when room state is missing", () => {
   assert.match(html, /Waiting for room state/);
   assert.match(html, /Host controls will update when the latest snapshot arrives\./);
   assert.match(html, /Pre-game/);
+});
+
+test("renders fatal content state when snapshot reports content load failure", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.SETUP, {
+        fatalError: {
+          code: "CONTENT_LOAD_FAILED",
+          message: "Invalid game config content."
+        }
+      })}
+    />
+  );
+
+  assert.match(html, /Content Load Error/);
+  assert.match(html, /CONTENT_LOAD_FAILED/);
+  assert.match(html, /Invalid game config content\./);
+  assert.doesNotMatch(html, /Next Phase/);
 });
 
 test("renders setup sections and assignment controls during SETUP", () => {
@@ -105,6 +125,8 @@ test("renders setup sections and assignment controls during SETUP", () => {
   assert.doesNotMatch(html, /Pause Timer/);
   assert.doesNotMatch(html, /Mark each player who finished their wing this round/);
   assert.doesNotMatch(html, /Ate wing/);
+  assert.doesNotMatch(html, /Score Override/);
+  assert.doesNotMatch(html, /Reset Game/);
 });
 
 test("renders eating participation controls and hides setup sections during EATING", () => {
@@ -140,6 +162,10 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.doesNotMatch(html, /Team setup is locked after the game starts\./);
   assert.match(html, /Timer Controls/);
   assert.match(html, /Pause Timer/);
+  assert.match(html, /Skip Turn/);
+  assert.match(html, /Reset Game/);
+  assert.match(html, /Score Override/);
+  assert.doesNotMatch(html, /Undo Last Score/);
   assert.match(html, /Ate wing/);
   assert.doesNotMatch(html, /Team Setup/);
   assert.doesNotMatch(html, /Assign Alex to a team/);
@@ -185,9 +211,15 @@ test("renders standings snapshot only during INTRO compact view", () => {
   assert.match(html, /Intro/);
   assert.match(html, /Confirm teams are ready before starting the first round\./);
   assert.match(html, /Standings Snapshot/);
+  assert.match(html, /Score Override/);
+  assert.match(html, /Reset Game/);
+  assert.doesNotMatch(html, /Undo Last Score/);
+  assert.match(html, /Apply/);
   assert.doesNotMatch(html, /Phase Status/);
   assert.doesNotMatch(html, /Round Context/);
   assert.doesNotMatch(html, /Next Action/);
+  assert.doesNotMatch(html, /Skip Turn/);
+  assert.doesNotMatch(html, /Turn Order/);
   assert.doesNotMatch(html, /Team Setup/);
 });
 
@@ -201,6 +233,9 @@ test("renders standings snapshot in compact ROUND_INTRO view", () => {
   assert.match(html, /Frank&#x27;s/);
   assert.match(html, /Mini-game/);
   assert.match(html, /TRIVIA/);
+  assert.match(html, /Turn Order/);
+  assert.match(html, /Move Up/);
+  assert.match(html, /Move Down/);
   assert.match(html, /Standings Snapshot/);
   assert.doesNotMatch(html, /Phase Status/);
   assert.doesNotMatch(html, /Round Context/);
@@ -241,6 +276,18 @@ test("renders completion guidance in compact FINAL_RESULTS view", () => {
 
   assert.match(html, /Game complete\./);
   assert.match(html, /Final Results/);
+});
+
+test("shows redo action when scoring mutation history is available", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
+        canRedoScoringMutation: true
+      })}
+    />
+  );
+
+  assert.match(html, /Undo Last Score/);
 });
 
 test("keeps MINIGAME_INTRO on streamlined host view", () => {

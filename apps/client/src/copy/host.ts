@@ -66,6 +66,21 @@ export const hostCopy = {
     "Host controls will update when the latest snapshot arrives.",
   headerPhaseDescription: phaseDescription,
   nextPhaseButtonLabel: "Next Phase",
+  skipTurnBoundaryButtonLabel: "Skip Turn",
+  redoLastMutationButtonLabel: "Undo Last Score",
+  resetGameButtonLabel: "Reset Game",
+  resetGameConfirmButtonLabel: "Confirm Reset",
+  resetGameCancelButtonLabel: "Cancel",
+  resetGameArmedMessage:
+    "Confirm reset to return to setup. Teams and scores will be cleared.",
+  scoreOverrideSectionTitle: "Score Override",
+  scoreOverrideDescription:
+    "Apply integer score deltas when manual correction is needed.",
+  scoreOverrideTeamLabel: "Team",
+  scoreOverrideDeltaLabel: "Score Delta",
+  scoreOverrideDeltaPlaceholder: "e.g. +2 or -1",
+  scoreOverrideApplyButtonLabel: "Apply",
+  scoreOverrideNoTeamsLabel: "No teams available for score adjustments.",
   teamSetupTitle: "Team Setup",
   teamSetupDescription:
     "Add teams and map players before moving the game forward.",
@@ -126,5 +141,13 @@ export const hostCopy = {
     `Round ${Math.max(currentRound, 1)} of ${totalRounds}`,
   compactScoreLabel: (score: number): string => `${score} pts`,
   teamMembersLabel: (memberCount: number): string =>
-    `${memberCount} player${memberCount === 1 ? "" : "s"}`
+    `${memberCount} player${memberCount === 1 ? "" : "s"}`,
+  turnOrderSectionTitle: "Turn Order",
+  turnOrderDescription:
+    "Adjust team order before the round begins. This order carries into later rounds until changed.",
+  turnOrderEmptyLabel: "Turn order will appear when teams are available.",
+  turnOrderPositionLabel: (index: number, total: number): string =>
+    `Team ${index + 1} of ${total}`,
+  turnOrderMoveUpButtonLabel: "Move Up",
+  turnOrderMoveDownButtonLabel: "Move Down"
 } as const;

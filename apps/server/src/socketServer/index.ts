@@ -13,12 +13,17 @@ import type {
 } from "../socketContracts/index.js";
 import {
   advanceRoomStatePhase,
+  adjustTeamScore,
   assignPlayerToTeam,
   createTeam,
   extendRoomTimer,
   getRoomStateSnapshot,
   pauseRoomTimer,
   recordTriviaAttempt,
+  redoLastScoringMutation,
+  reorderTurnOrder,
+  resetGameToSetup,
+  skipTurnBoundary,
   resumeRoomTimer,
   setWingParticipation
 } from "../roomState/index.js";
@@ -73,6 +78,18 @@ export const attachSocketServer = (
           const updatedSnapshot = advanceRoomStatePhase();
           socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
         },
+        onAuthorizedSkipTurnBoundary: () => {
+          const updatedSnapshot = skipTurnBoundary();
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedReorderTurnOrder: (teamIds) => {
+          const updatedSnapshot = reorderTurnOrder(teamIds);
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedResetGame: () => {
+          const updatedSnapshot = resetGameToSetup();
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
         onAuthorizedCreateTeam: (name) => {
           const updatedSnapshot = createTeam(name);
           socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
@@ -83,6 +100,14 @@ export const attachSocketServer = (
         },
         onAuthorizedSetWingParticipation: (playerId, didEat) => {
           const updatedSnapshot = setWingParticipation(playerId, didEat);
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedAdjustTeamScore: (teamId, delta) => {
+          const updatedSnapshot = adjustTeamScore(teamId, delta);
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedRedoLastMutation: () => {
+          const updatedSnapshot = redoLastScoringMutation();
           socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
         },
         onAuthorizedRecordTriviaAttempt: (isCorrect) => {
