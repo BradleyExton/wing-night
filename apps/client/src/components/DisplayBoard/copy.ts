@@ -14,6 +14,8 @@ export const displayBoardCopy = {
   minigameLabel: displayCopy.minigameLabel,
   roundSauceSummary: displayCopy.roundSauceSummary,
   roundMinigameSummary: displayCopy.roundMinigameSummary,
+  minigameSectionTitle: displayCopy.minigameSectionTitle,
+  minigameIntroDescription: displayCopy.minigameIntroDescription,
   triviaTurnTitle: displayCopy.triviaTurnTitle,
   triviaQuestionLabel: displayCopy.triviaQuestionLabel,
   activeTeamLabel: displayCopy.activeTeamLabel,

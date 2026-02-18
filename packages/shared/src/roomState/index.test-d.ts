@@ -52,6 +52,9 @@ export type ValidRoomStateCheck = Assert<
       activeTurnTeamId: string | null;
       currentTriviaPrompt: TriviaPrompt | null;
       triviaPromptCursor: number;
+      minigameHostView: RoomState["minigameHostView"];
+      minigameDisplayView: RoomState["minigameDisplayView"];
+      timer: RoomState["timer"];
       wingParticipationByPlayerId: Record<string, boolean>;
       pendingWingPointsByTeamId: Record<string, number>;
       pendingMinigamePointsByTeamId: Record<string, number>;

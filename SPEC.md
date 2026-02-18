@@ -155,6 +155,16 @@ Images may reference:
 - Local static paths (preferred)
 - External URLs (allowed)
 
+### 3.4 Mini-Game Module Boundary
+
+- Mini-game rules run behind a module boundary under `packages/minigames/*`.
+- The room engine drives phase lifecycle, timers, and score application.
+- Mini-game modules provide serializable state reducers/selectors only.
+- Server projects module selectors into snapshot-safe views:
+  - `minigameHostView` for host interaction context.
+  - `minigameDisplayView` for display-safe context (no answer payloads).
+- Host and display surfaces render from projected view models, not client-derived mini-game logic.
+
 ---
 
 ## 4) Game Flow (State Machine)
@@ -226,6 +236,7 @@ Display:
 - Mini-game scoring mutations are accepted for the active team only
 - PASS_AND_PLAY hides host controls
 - Host unlock via press-and-hold
+- Server snapshot carries `minigameHostView` and `minigameDisplayView` for this phase.
 
 ---
 
@@ -276,6 +287,7 @@ Tie → Sudden death trivia.
   - `roundTurnCursor`
   - `activeRoundTeamId`
   - `completedRoundTurnTeamIds`
+- RoomState includes projected mini-game host/display view models.
 - WebSockets (Socket.IO) for realtime sync
 - Full state snapshot on reconnect
 - In-memory state only

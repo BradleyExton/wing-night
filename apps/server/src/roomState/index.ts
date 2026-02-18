@@ -3,6 +3,7 @@ import {
   type GameConfigFile,
   type Player,
   type RoomState,
+  type RoomTimerState,
   type TriviaPrompt
 } from "@wingnight/shared";
 
@@ -46,6 +47,38 @@ const resolveMinigamePointsMax = (state: RoomState): number | null => {
   return state.gameConfig.minigameScoring.defaultMax;
 };
 
+const resolveMinigameTimerSeconds = (state: RoomState): number | null => {
+  if (!state.gameConfig || !state.currentRoundConfig) {
+    return null;
+  }
+
+  switch (state.currentRoundConfig.minigame) {
+    case "TRIVIA":
+      return state.gameConfig.timers.triviaSeconds;
+    case "GEO":
+      return state.gameConfig.timers.geoSeconds;
+    case "DRAWING":
+      return state.gameConfig.timers.drawingSeconds;
+    default:
+      return null;
+  }
+};
+
+const createRunningTimer = (
+  phase: Phase,
+  durationSeconds: number
+): RoomTimerState => {
+  const startedAt = Date.now();
+  const durationMs = durationSeconds * 1000;
+
+  return {
+    phase,
+    startedAt,
+    endsAt: startedAt + durationMs,
+    durationMs
+  };
+};
+
 export const createInitialRoomState = (): RoomState => {
   return {
     phase: Phase.SETUP,
@@ -63,6 +96,9 @@ export const createInitialRoomState = (): RoomState => {
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
+    minigameHostView: null,
+    minigameDisplayView: null,
+    timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
@@ -503,6 +539,19 @@ export const advanceRoomStatePhase = (): RoomState => {
 
   if (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.EATING) {
     resetRoundWingParticipation(roomState);
+    const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
+    roomState.timer =
+      eatingSeconds === null
+        ? null
+        : createRunningTimer(Phase.EATING, eatingSeconds);
+  } else if (nextPhase === Phase.MINIGAME_PLAY) {
+    const minigameSeconds = resolveMinigameTimerSeconds(roomState);
+    roomState.timer =
+      minigameSeconds === null
+        ? null
+        : createRunningTimer(Phase.MINIGAME_PLAY, minigameSeconds);
+  } else {
+    roomState.timer = null;
   }
 
   logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);

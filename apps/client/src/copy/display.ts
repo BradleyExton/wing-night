@@ -23,6 +23,9 @@ export const displayCopy = {
   roundSauceSummary: (sauce: string): string => `Sauce: ${sauce}`,
   roundMinigameSummary: (minigame: MinigameType): string =>
     `Mini-Game: ${minigame}`,
+  minigameSectionTitle: "Mini-Game",
+  minigameIntroDescription: (minigame: MinigameType): string =>
+    `${minigame} is up next.`,
   triviaTurnTitle: "Trivia Turn",
   triviaQuestionLabel: "Question",
   activeTeamLabel: "Active Team",
