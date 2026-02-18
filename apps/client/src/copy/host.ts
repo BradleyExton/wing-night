@@ -57,7 +57,7 @@ export const hostCopy = {
       case Phase.MINIGAME_PLAY:
         return "Record outcomes for the active team turn.";
       case Phase.ROUND_RESULTS:
-        return "Review score updates before moving to the next round.";
+        return "Review score updates and confirm the next round flow.";
       case Phase.FINAL_RESULTS:
         return "Final standings are locked for this game.";
       default:

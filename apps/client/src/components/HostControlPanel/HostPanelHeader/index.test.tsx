@@ -255,6 +255,40 @@ test("hides unavailable turn context while keeping round context visible", () =>
   assert.doesNotMatch(html, /Active Team/);
 });
 
+test("hides turn context in non-turn phases even when turn data is valid", () => {
+  const nonTurnPhases = [
+    Phase.SETUP,
+    Phase.INTRO,
+    Phase.ROUND_INTRO,
+    Phase.ROUND_RESULTS,
+    Phase.FINAL_RESULTS
+  ];
+
+  for (const phase of nonTurnPhases) {
+    const html = renderToStaticMarkup(
+      <HostPanelHeader
+        roomState={buildSnapshot(phase, {
+          roundTurnCursor: 0,
+          turnOrderTeamIds: ["team-alpha", "team-beta"]
+        })}
+        teamNameByTeamId={teamNameByTeamId}
+      />
+    );
+
+    assert.doesNotMatch(
+      html,
+      /Team 1 of 2/,
+      `${phase} should not show turn progress`
+    );
+    assert.doesNotMatch(html, /Turn/, `${phase} should not show Turn label`);
+    assert.doesNotMatch(
+      html,
+      /Active Team/,
+      `${phase} should not show Active Team`
+    );
+  }
+});
+
 test("does not render trivia prompt or answer payloads in header", () => {
   const html = renderToStaticMarkup(
     <HostPanelHeader
