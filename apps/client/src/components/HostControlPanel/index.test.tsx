@@ -3,7 +3,7 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Phase, type GameConfigFile, type RoomState, type Team } from "@wingnight/shared";
 
-import { HostPlaceholder } from "./index";
+import { HostControlPanel } from "./index";
 
 const gameConfigFixture: GameConfigFile = {
   name: "Fixture Config",
@@ -71,14 +71,14 @@ const buildSnapshot = (
 };
 
 test("renders loading copy when room state is missing", () => {
-  const html = renderToStaticMarkup(<HostPlaceholder roomState={null} />);
+  const html = renderToStaticMarkup(<HostControlPanel roomState={null} />);
 
   assert.match(html, /Waiting for room state/);
 });
 
 test("renders setup sections and assignment controls during SETUP", () => {
   const html = renderToStaticMarkup(
-    <HostPlaceholder roomState={buildSnapshot(Phase.SETUP)} />
+    <HostControlPanel roomState={buildSnapshot(Phase.SETUP)} />
   );
 
   assert.match(html, /Team Setup/);
@@ -90,7 +90,7 @@ test("renders setup sections and assignment controls during SETUP", () => {
 
 test("renders eating participation controls and hides setup sections during EATING", () => {
   const html = renderToStaticMarkup(
-    <HostPlaceholder
+    <HostControlPanel
       roomState={buildSnapshot(Phase.EATING, {
         wingParticipationByPlayerId: { "player-1": true }
       })}
@@ -105,7 +105,7 @@ test("renders eating participation controls and hides setup sections during EATI
 
 test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
   const html = renderToStaticMarkup(
-    <HostPlaceholder
+    <HostControlPanel
       roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
         activeTurnTeamId: "team-alpha",
         currentTriviaPrompt: {
@@ -127,7 +127,7 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
 
 test("renders compact status cards during INTRO", () => {
   const html = renderToStaticMarkup(
-    <HostPlaceholder roomState={buildSnapshot(Phase.INTRO)} />
+    <HostControlPanel roomState={buildSnapshot(Phase.INTRO)} />
   );
 
   assert.match(html, /Phase Status/);
@@ -139,7 +139,7 @@ test("renders compact status cards during INTRO", () => {
 
 test("renders round context details in compact ROUND_INTRO view", () => {
   const html = renderToStaticMarkup(
-    <HostPlaceholder roomState={buildSnapshot(Phase.ROUND_INTRO)} />
+    <HostControlPanel roomState={buildSnapshot(Phase.ROUND_INTRO)} />
   );
 
   assert.match(html, /Round 1 of 1/);
@@ -150,7 +150,7 @@ test("renders round context details in compact ROUND_INTRO view", () => {
 
 test("renders standings snapshot in score-descending order during ROUND_RESULTS", () => {
   const html = renderToStaticMarkup(
-    <HostPlaceholder
+    <HostControlPanel
       roomState={buildSnapshot(Phase.ROUND_RESULTS, {
         teams: [
           {
@@ -176,7 +176,7 @@ test("renders standings snapshot in score-descending order during ROUND_RESULTS"
 
 test("renders completion guidance in compact FINAL_RESULTS view", () => {
   const html = renderToStaticMarkup(
-    <HostPlaceholder roomState={buildSnapshot(Phase.FINAL_RESULTS)} />
+    <HostControlPanel roomState={buildSnapshot(Phase.FINAL_RESULTS)} />
   );
 
   assert.match(html, /Game complete\./);
@@ -185,7 +185,7 @@ test("renders completion guidance in compact FINAL_RESULTS view", () => {
 
 test("keeps MINIGAME_INTRO on detailed host view", () => {
   const html = renderToStaticMarkup(
-    <HostPlaceholder roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
+    <HostControlPanel roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
   assert.match(html, /Team Setup/);

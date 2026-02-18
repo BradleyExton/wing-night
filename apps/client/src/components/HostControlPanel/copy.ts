@@ -1,6 +1,6 @@
 import { hostCopy } from "../../copy/host";
 
-export const hostPlaceholderCopy = {
+export const hostControlPanelCopy = {
   title: hostCopy.placeholderTitle,
   description: hostCopy.placeholderDescription,
   nextPhaseButtonLabel: hostCopy.nextPhaseButtonLabel,
