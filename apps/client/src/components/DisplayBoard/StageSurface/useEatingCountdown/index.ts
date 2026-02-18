@@ -2,6 +2,7 @@ import type { RoomState } from "@wingnight/shared";
 import { useEffect, useState } from "react";
 
 import type { StageRenderMode } from "../resolveStageViewModel";
+import { resolveRemainingTimerSeconds } from "../../../../utils/resolveRemainingTimerSeconds";
 
 type UseEatingCountdownOptions = {
   stageMode: StageRenderMode;
@@ -31,9 +32,7 @@ export const useEatingCountdown = ({
   }, [stageMode, eatingTimerSnapshot]);
 
   if (eatingTimerSnapshot !== null) {
-    return eatingTimerSnapshot.isPaused
-      ? Math.max(0, Math.ceil(eatingTimerSnapshot.remainingMs / 1000))
-      : Math.max(0, Math.ceil((eatingTimerSnapshot.endsAt - nowTimestampMs) / 1000));
+    return resolveRemainingTimerSeconds(eatingTimerSnapshot, nowTimestampMs);
   }
 
   return fallbackEatingSeconds;
