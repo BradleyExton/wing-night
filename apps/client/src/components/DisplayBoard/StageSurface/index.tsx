@@ -1,209 +1,83 @@
-import { Phase, type GameConfigRound, type RoomState } from "@wingnight/shared";
-import { useEffect, useState } from "react";
+import { type RoomState } from "@wingnight/shared";
 
-import { displayBoardCopy } from "../copy";
+import { EatingStageBody } from "./EatingStageBody";
+import { FallbackStageBody } from "./FallbackStageBody";
+import { MinigameStageBody } from "./MinigameStageBody";
+import { resolveStageViewModel, type StageRenderMode } from "./resolveStageViewModel";
+import { RoundIntroStageBody } from "./RoundIntroStageBody";
 import * as styles from "./styles";
+import { useEatingCountdown } from "./useEatingCountdown";
 
 type StageSurfaceProps = {
   roomState: RoomState | null;
   phaseLabel: string;
 };
 
-type StageRenderMode = "round_intro" | "eating" | "minigame" | "fallback";
-
 const assertUnreachable = (value: never): never => {
   throw new Error(`Unhandled value: ${String(value)}`);
-};
-
-const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
-  switch (phase) {
-    case Phase.ROUND_INTRO:
-      return "round_intro";
-    case Phase.EATING:
-      return "eating";
-    case Phase.MINIGAME_INTRO:
-    case Phase.MINIGAME_PLAY:
-      return "minigame";
-    case null:
-    case Phase.SETUP:
-    case Phase.INTRO:
-    case Phase.ROUND_RESULTS:
-    case Phase.FINAL_RESULTS:
-      return "fallback";
-    default:
-      return assertUnreachable(phase);
-  }
 };
 
 export const StageSurface = ({
   roomState,
   phaseLabel
 }: StageSurfaceProps): JSX.Element => {
-  const [nowTimestampMs, setNowTimestampMs] = useState(() => Date.now());
+  const stageViewModel = resolveStageViewModel(roomState);
 
-  const phase = roomState?.phase ?? null;
-  const stageMode = resolveStageRenderMode(phase);
-  const currentRoundConfig = roomState?.currentRoundConfig ?? null;
-  const isMinigamePlayPhase = phase === Phase.MINIGAME_PLAY;
-  const isTriviaTurnPhase =
-    isMinigamePlayPhase && currentRoundConfig?.minigame === "TRIVIA";
+  const liveEatingRemainingSeconds = useEatingCountdown({
+    stageMode: stageViewModel.stageMode,
+    eatingTimerSnapshot: stageViewModel.eatingTimerSnapshot,
+    fallbackEatingSeconds: stageViewModel.fallbackEatingSeconds
+  });
 
-  const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
-  const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
-  const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
-  const activeRoundTeamName =
-    activeRoundTeamId !== null
-      ? (roomState?.teams.find((team) => team.id === activeRoundTeamId)?.name ?? null)
-      : null;
-  const activeTurnTeamName =
-    activeTurnTeamId !== null
-      ? (roomState?.teams.find((team) => team.id === activeTurnTeamId)?.name ?? null)
-      : null;
-  const activeTeamName = activeRoundTeamName ?? activeTurnTeamName;
-  const shouldRenderTriviaPrompt = isTriviaTurnPhase && currentTriviaPrompt !== null;
-
-  const eatingTimerSnapshot =
-    stageMode === "eating" && roomState?.timer?.phase === Phase.EATING ? roomState.timer : null;
-  const fallbackEatingSeconds = roomState?.gameConfig?.timers.eatingSeconds ?? null;
-  const liveEatingRemainingSeconds =
-    eatingTimerSnapshot !== null
-      ? eatingTimerSnapshot.isPaused
-        ? Math.max(0, Math.ceil(eatingTimerSnapshot.remainingMs / 1000))
-        : Math.max(0, Math.ceil((eatingTimerSnapshot.endsAt - nowTimestampMs) / 1000))
-      : fallbackEatingSeconds;
-
-  useEffect(() => {
-    if (stageMode !== "eating" || eatingTimerSnapshot === null || eatingTimerSnapshot.isPaused) {
-      return;
-    }
-
-    const timerId = window.setInterval(() => {
-      setNowTimestampMs(Date.now());
-    }, 250);
-
-    return () => {
-      window.clearInterval(timerId);
-    };
-  }, [stageMode, eatingTimerSnapshot]);
-  const shouldRenderTeamTurnContext =
-    activeTeamName !== null && (stageMode === "eating" || stageMode === "minigame");
-
-  const renderFallback = (): JSX.Element => {
-    return (
-      <>
-        <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
-        <p className={styles.fallbackText}>
-          {roomState ? displayBoardCopy.roundFallbackLabel : displayBoardCopy.waitingForStateLabel}
-        </p>
-      </>
-    );
-  };
-
-  const renderStageBody = (): JSX.Element => {
+  const renderStageBody = (stageMode: StageRenderMode): JSX.Element => {
     switch (stageMode) {
       case "round_intro":
-        return currentRoundConfig !== null ? (
-          <RoundIntroSurface currentRoundConfig={currentRoundConfig} />
+        return stageViewModel.currentRoundConfig !== null ? (
+          <RoundIntroStageBody currentRoundConfig={stageViewModel.currentRoundConfig} />
         ) : (
-          renderFallback()
+          <FallbackStageBody
+            phaseLabel={phaseLabel}
+            hasRoomState={stageViewModel.hasRoomState}
+          />
         );
       case "eating":
         return liveEatingRemainingSeconds !== null ? (
-          <>
-            <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
-            <p className={styles.fallbackText}>
-              {currentRoundConfig
-                ? displayBoardCopy.roundSauceSummary(currentRoundConfig.sauce)
-                : displayBoardCopy.roundFallbackLabel}
-            </p>
-            {shouldRenderTeamTurnContext && (
-              <TurnMeta activeTeamName={activeTeamName} />
-            )}
-            <div className={styles.timerWrap}>
-              <p className={styles.timerLabel}>{displayBoardCopy.eatingTimerLabel}</p>
-              <p className={styles.timerValue}>
-                {displayBoardCopy.eatingTimerValue(liveEatingRemainingSeconds)}
-              </p>
-            </div>
-          </>
+          <EatingStageBody
+            phaseLabel={phaseLabel}
+            currentRoundConfig={stageViewModel.currentRoundConfig}
+            shouldRenderTeamTurnContext={stageViewModel.shouldRenderTeamTurnContext}
+            activeTeamName={stageViewModel.activeTeamName}
+            liveEatingRemainingSeconds={liveEatingRemainingSeconds}
+          />
         ) : (
-          renderFallback()
+          <FallbackStageBody
+            phaseLabel={phaseLabel}
+            hasRoomState={stageViewModel.hasRoomState}
+          />
         );
       case "minigame":
         return (
-          <>
-            <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
-            <p className={styles.fallbackText}>
-              {currentRoundConfig
-                ? displayBoardCopy.roundMinigameSummary(currentRoundConfig.minigame)
-                : displayBoardCopy.roundFallbackLabel}
-            </p>
-            {shouldRenderTeamTurnContext && (
-              <TurnMeta activeTeamName={activeTeamName} />
-            )}
-            {shouldRenderTriviaPrompt && (
-              <div className={styles.metaGrid}>
-                <div className={styles.metaItem}>
-                  <p className={styles.metaLabel}>{displayBoardCopy.triviaQuestionLabel}</p>
-                  <p className={styles.metaValue}>{currentTriviaPrompt.question}</p>
-                </div>
-              </div>
-            )}
-            {isTriviaTurnPhase && !shouldRenderTriviaPrompt && (
-              <p className={styles.fallbackText}>{displayBoardCopy.triviaTurnTitle}</p>
-            )}
-          </>
+          <MinigameStageBody
+            phaseLabel={phaseLabel}
+            currentRoundConfig={stageViewModel.currentRoundConfig}
+            shouldRenderTeamTurnContext={stageViewModel.shouldRenderTeamTurnContext}
+            activeTeamName={stageViewModel.activeTeamName}
+            isTriviaTurnPhase={stageViewModel.isTriviaTurnPhase}
+            shouldRenderTriviaPrompt={stageViewModel.shouldRenderTriviaPrompt}
+            currentTriviaPrompt={stageViewModel.currentTriviaPrompt}
+          />
         );
       case "fallback":
-        return renderFallback();
+        return (
+          <FallbackStageBody
+            phaseLabel={phaseLabel}
+            hasRoomState={stageViewModel.hasRoomState}
+          />
+        );
       default:
         return assertUnreachable(stageMode);
     }
   };
 
-  return (
-    <article className={styles.card}>
-      {renderStageBody()}
-    </article>
-  );
-};
-
-type RoundIntroSurfaceProps = {
-  currentRoundConfig: GameConfigRound;
-};
-
-type TurnMetaProps = {
-  activeTeamName: string;
-};
-
-const RoundIntroSurface = ({ currentRoundConfig }: RoundIntroSurfaceProps): JSX.Element => {
-  return (
-    <>
-      <h2 className={styles.title}>
-        {displayBoardCopy.roundIntroTitle(
-          currentRoundConfig.round,
-          currentRoundConfig.label
-        )}
-      </h2>
-      <div className={styles.metaGrid}>
-        <div className={styles.metaItem}>
-          <p className={styles.metaLabel}>{displayBoardCopy.sauceLabel}</p>
-          <p className={styles.metaValue}>{currentRoundConfig.sauce}</p>
-        </div>
-        <div className={styles.metaItem}>
-          <p className={styles.metaLabel}>{displayBoardCopy.minigameLabel}</p>
-          <p className={styles.metaValue}>{currentRoundConfig.minigame}</p>
-        </div>
-      </div>
-    </>
-  );
-};
-
-const TurnMeta = ({ activeTeamName }: TurnMetaProps): JSX.Element => {
-  return (
-    <div className={styles.turnMeta}>
-      <p className={styles.turnLabel}>{displayBoardCopy.activeTeamLabel}</p>
-      <p className={styles.turnValue}>{displayBoardCopy.activeTeamValue(activeTeamName)}</p>
-    </div>
-  );
+  return <article className={styles.card}>{renderStageBody(stageViewModel.stageMode)}</article>;
 };
