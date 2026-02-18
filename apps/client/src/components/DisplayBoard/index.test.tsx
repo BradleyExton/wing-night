@@ -59,7 +59,7 @@ const buildSnapshot = (
     pendingMinigamePointsByTeamId: {}
   };
 
-  return { ...snapshot, ...overrides } as RoomState;
+  return { ...snapshot, ...overrides };
 };
 
 test("renders waiting copy when room state is missing", () => {
