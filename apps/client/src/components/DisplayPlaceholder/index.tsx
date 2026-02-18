@@ -3,6 +3,7 @@ import { useMemo } from "react";
 
 import * as styles from "./styles";
 import { displayPlaceholderCopy } from "./copy";
+import { MinigameSurface } from "./MinigameSurface";
 
 type DisplayPlaceholderProps = {
   roomState: RoomState | null;
@@ -28,12 +29,12 @@ export const DisplayPlaceholder = ({
   const phase = roomState?.phase ?? null;
   const isRoundIntroPhase = roomState?.phase === Phase.ROUND_INTRO;
   const isEatingPhase = roomState?.phase === Phase.EATING;
-  const isTriviaTurnPhase =
-    roomState?.phase === Phase.MINIGAME_PLAY &&
-    roomState.currentRoundConfig?.minigame === "TRIVIA";
+  const isMinigamePhase =
+    roomState?.phase === Phase.MINIGAME_INTRO ||
+    roomState?.phase === Phase.MINIGAME_PLAY;
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
-  const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
-  const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
+  const minigameDisplayView = roomState?.minigameDisplayView ?? null;
+  const activeTurnTeamId = minigameDisplayView?.activeTurnTeamId ?? null;
   const eatingSeconds = roomState?.gameConfig?.timers.eatingSeconds ?? null;
   const shouldRenderEatingTimer = isEatingPhase && eatingSeconds !== null;
   const activeTurnTeamName =
@@ -41,8 +42,6 @@ export const DisplayPlaceholder = ({
       ? (roomState?.teams.find((team) => team.id === activeTurnTeamId)?.name ??
         null)
       : null;
-  const shouldRenderTriviaTurn =
-    isTriviaTurnPhase && currentTriviaPrompt !== null && activeTurnTeamName !== null;
   const leadingTeamId = standings[0]?.id ?? null;
 
   const roundMetaLabel = roomState
@@ -123,30 +122,18 @@ export const DisplayPlaceholder = ({
               </>
             )}
 
-            {shouldRenderTriviaTurn && (
-              <>
-                <h2 className={styles.stageTitle}>
-                  {displayPlaceholderCopy.triviaTurnTitle}
-                </h2>
-                <p className={styles.fallbackText}>
-                  {displayPlaceholderCopy.activeTeamLabel(activeTurnTeamName)}
-                </p>
-                <div className={styles.stageMetaGrid}>
-                  <div className={styles.stageMetaItem}>
-                    <p className={styles.stageMetaLabel}>
-                      {displayPlaceholderCopy.triviaQuestionLabel}
-                    </p>
-                    <p className={styles.stageMetaValue}>
-                      {currentTriviaPrompt.question}
-                    </p>
-                  </div>
-                </div>
-              </>
+            {isMinigamePhase && phase !== null && (
+              <MinigameSurface
+                phase={phase}
+                minigameType={currentRoundConfig?.minigame ?? null}
+                minigameDisplayView={minigameDisplayView}
+                activeTurnTeamName={activeTurnTeamName}
+              />
             )}
 
             {!shouldRenderRoundDetails &&
               !shouldRenderEatingTimer &&
-              !shouldRenderTriviaTurn && (
+              !isMinigamePhase && (
               <>
                 <h2 className={styles.stageTitle}>
                   {displayPlaceholderCopy.phaseContextTitle(phaseLabel)}

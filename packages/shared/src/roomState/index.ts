@@ -1,9 +1,26 @@
 import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
+import type { MinigameType } from "../content/gameConfig/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
 import type { Team } from "../team/index.js";
+
+export type MinigameHostView = {
+  minigame: MinigameType;
+  activeTurnTeamId: string | null;
+  promptCursor: number;
+  pendingPointsByTeamId: Record<string, number>;
+  currentPrompt: TriviaPrompt | null;
+};
+
+export type MinigameDisplayView = {
+  minigame: MinigameType;
+  activeTurnTeamId: string | null;
+  promptCursor: number;
+  pendingPointsByTeamId: Record<string, number>;
+  currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
+};
 
 export type RoomState = {
   phase: Phase;
@@ -20,6 +37,8 @@ export type RoomState = {
   activeTurnTeamId: string | null;
   currentTriviaPrompt: TriviaPrompt | null;
   triviaPromptCursor: number;
+  minigameHostView: MinigameHostView | null;
+  minigameDisplayView: MinigameDisplayView | null;
   wingParticipationByPlayerId: Record<string, boolean>;
   pendingWingPointsByTeamId: Record<string, number>;
   pendingMinigamePointsByTeamId: Record<string, number>;
