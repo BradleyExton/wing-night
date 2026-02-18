@@ -8,7 +8,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../emitHostSecretRequest";
+import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type ReorderTurnOrderSocket = Pick<
