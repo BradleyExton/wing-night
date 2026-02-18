@@ -106,7 +106,9 @@ test("renders expired eating timer as 00:00", () => {
             phase: Phase.EATING,
             startedAt: 1_000,
             endsAt: 121_000,
-            durationMs: 120_000
+            durationMs: 120_000,
+            isPaused: false,
+            remainingMs: 120_000
           }
         })}
       />
