@@ -83,25 +83,61 @@ const setupValidTeamsAndAssignments = (
   assignPlayerToTeam("player-2", "team-2");
 };
 
-const advanceToEatingPhase = (): void => {
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+const setupThreeTeamsAndAssignments = (): void => {
+  setRoomStateGameConfig({
+    ...gameConfigFixture,
+    rounds: [{ ...gameConfigFixture.rounds[0] }]
+  });
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" },
+    { id: "player-3", name: "Player Three" }
+  ]);
+  createTeam("Team Alpha");
+  createTeam("Team Beta");
+  createTeam("Team Gamma");
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-2", "team-2");
+  assignPlayerToTeam("player-3", "team-3");
 };
 
-const advanceToMinigamePlayPhase = (): void => {
-  advanceToEatingPhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+const advanceUntil = (
+  targetPhase: Phase,
+  targetRound: number,
+  maxSteps = 64
+): void => {
+  for (let step = 0; step < maxSteps; step += 1) {
+    const snapshot = getRoomStateSnapshot();
+
+    if (
+      snapshot.phase === targetPhase &&
+      snapshot.currentRound === targetRound
+    ) {
+      return;
+    }
+
+    advanceRoomStatePhase();
+  }
+
+  assert.fail(
+    `Unable to reach phase ${targetPhase} in round ${targetRound} within ${maxSteps} steps`
+  );
+};
+
+const advanceToEatingPhase = (round = 1): void => {
+  advanceUntil(Phase.EATING, round);
+};
+
+const advanceToMinigamePlayPhase = (round = 1): void => {
+  advanceUntil(Phase.MINIGAME_PLAY, round);
 };
 
 const advanceToFinalRoundMinigamePlayPhase = (): void => {
-  advanceToMinigamePlayPhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+  advanceUntil(Phase.MINIGAME_PLAY, 2);
+};
+
+const advanceToRoundResultsPhase = (round: number): void => {
+  advanceUntil(Phase.ROUND_RESULTS, round);
 };
 
 test("createInitialRoomState returns setup defaults", () => {
@@ -115,6 +151,9 @@ test("createInitialRoomState returns setup defaults", () => {
     triviaPrompts: [],
     currentRoundConfig: null,
     turnOrderTeamIds: [],
+    roundTurnCursor: -1,
+    completedRoundTurnTeamIds: [],
+    activeRoundTeamId: null,
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
@@ -158,6 +197,10 @@ test("advanceRoomStatePhase sets currentRound to 1 on INTRO -> ROUND_INTRO", () 
   assert.equal(nextState.phase, Phase.ROUND_INTRO);
   assert.equal(nextState.currentRound, 1);
   assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[0]);
+  assert.deepEqual(nextState.turnOrderTeamIds, ["team-1", "team-2"]);
+  assert.equal(nextState.roundTurnCursor, 0);
+  assert.equal(nextState.activeRoundTeamId, "team-1");
+  assert.deepEqual(nextState.completedRoundTurnTeamIds, []);
 });
 
 test("advanceRoomStatePhase preserves currentRound after round intro", () => {
@@ -410,17 +453,65 @@ test("advanceRoomStatePhase increments round after ROUND_RESULTS when rounds rem
   resetRoomState();
   setupValidTeamsAndAssignments();
 
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+  advanceUntil(Phase.ROUND_RESULTS, 1);
   const nextState = advanceRoomStatePhase();
 
   assert.equal(nextState.phase, Phase.ROUND_INTRO);
   assert.equal(nextState.currentRound, 2);
   assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[1]);
+  assert.equal(nextState.roundTurnCursor, 0);
+  assert.equal(nextState.activeRoundTeamId, "team-1");
+  assert.deepEqual(nextState.completedRoundTurnTeamIds, []);
+});
+
+test("advanceRoomStatePhase loops team turns before round results", () => {
+  resetRoomState();
+  setupThreeTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+
+  advanceUntil(Phase.MINIGAME_PLAY, 1);
+
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.activeRoundTeamId, "team-1");
+  assert.equal(snapshot.roundTurnCursor, 0);
+  assert.deepEqual(snapshot.completedRoundTurnTeamIds, []);
+
+  advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.EATING);
+  assert.equal(snapshot.activeRoundTeamId, "team-2");
+  assert.equal(snapshot.roundTurnCursor, 1);
+  assert.deepEqual(snapshot.completedRoundTurnTeamIds, ["team-1"]);
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.MINIGAME_PLAY);
+  assert.equal(snapshot.activeRoundTeamId, "team-2");
+
+  advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.EATING);
+  assert.equal(snapshot.activeRoundTeamId, "team-3");
+  assert.equal(snapshot.roundTurnCursor, 2);
+  assert.deepEqual(snapshot.completedRoundTurnTeamIds, ["team-1", "team-2"]);
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(snapshot.activeRoundTeamId, "team-3");
+  assert.equal(snapshot.roundTurnCursor, 2);
+  assert.deepEqual(snapshot.completedRoundTurnTeamIds, [
+    "team-1",
+    "team-2",
+    "team-3"
+  ]);
+
+  advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.FINAL_RESULTS);
 });
 
 test("advanceRoomStatePhase logs transition metadata", () => {
@@ -618,12 +709,12 @@ test("setWingParticipation ignores invalid mutations", () => {
 test("setWingParticipation ignores updates for players not assigned to a team", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
   setRoomStatePlayers([
     { id: "player-1", name: "Player One" },
     { id: "player-2", name: "Player Two" },
     { id: "player-3", name: "Player Three" }
   ]);
-  advanceToEatingPhase();
   const beforeMutation = getRoomStateSnapshot();
 
   setWingParticipation("player-3", true);
@@ -644,9 +735,7 @@ test("entering EATING clears wing participation from the previous round", () => 
 
   setWingParticipation("player-1", true);
 
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+  advanceToRoundResultsPhase(1);
   advanceRoomStatePhase();
   advanceRoomStatePhase();
 
@@ -694,7 +783,7 @@ test("does not initialize trivia projection for non-trivia minigame rounds", () 
   assert.equal(snapshot.triviaPromptCursor, 0);
 });
 
-test("recordTriviaAttempt applies points, rotates team turns, and wraps prompts", () => {
+test("recordTriviaAttempt applies points for active round team and wraps prompts", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
@@ -705,7 +794,7 @@ test("recordTriviaAttempt applies points, rotates team turns, and wraps prompts"
   let snapshot = getRoomStateSnapshot();
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 1);
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-2"], undefined);
-  assert.equal(snapshot.activeTurnTeamId, "team-2");
+  assert.equal(snapshot.activeTurnTeamId, "team-1");
   assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-2");
   assert.equal(snapshot.triviaPromptCursor, 1);
 
@@ -735,7 +824,7 @@ test("setRoomStateTriviaPrompts reprojects trivia state through runtime adapter 
 
   const snapshot = getRoomStateSnapshot();
 
-  assert.equal(snapshot.activeTurnTeamId, "team-2");
+  assert.equal(snapshot.activeTurnTeamId, "team-1");
   assert.equal(snapshot.triviaPromptCursor, 0);
   assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-replacement");
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 1);
@@ -757,11 +846,8 @@ test("trivia turn order remains fixed across rounds", () => {
   let snapshot = getRoomStateSnapshot();
   assert.deepEqual(snapshot.turnOrderTeamIds, ["team-1", "team-2"]);
 
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+  advanceToRoundResultsPhase(1);
+  advanceUntil(Phase.MINIGAME_PLAY, 2);
 
   snapshot = getRoomStateSnapshot();
   assert.equal(snapshot.phase, Phase.MINIGAME_PLAY);
@@ -913,7 +999,7 @@ test("applies wing and minigame points on MINIGAME_PLAY -> ROUND_RESULTS", () =>
     "team-1": 5,
     "team-2": 3
   });
-  advanceRoomStatePhase();
+  advanceToRoundResultsPhase(1);
 
   const snapshot = getRoomStateSnapshot();
 
@@ -932,7 +1018,7 @@ test("does not double apply round points after leaving ROUND_RESULTS", () => {
   advanceRoomStatePhase();
   advanceRoomStatePhase();
   setPendingMinigamePoints({ "team-1": 4 });
-  advanceRoomStatePhase();
+  advanceToRoundResultsPhase(1);
   const scoreAtRoundResults = getRoomStateSnapshot().teams[0].totalScore;
 
   advanceRoomStatePhase();
@@ -952,7 +1038,7 @@ test("clears pending round score maps after leaving ROUND_RESULTS", () => {
   advanceRoomStatePhase();
   advanceRoomStatePhase();
   setPendingMinigamePoints({ "team-1": 2 });
-  advanceRoomStatePhase();
+  advanceToRoundResultsPhase(1);
   advanceRoomStatePhase();
 
   const snapshot = getRoomStateSnapshot();
@@ -968,18 +1054,16 @@ test("applies scores cumulatively across rounds", () => {
 
   advanceToEatingPhase();
   setWingParticipation("player-1", true);
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+  advanceToMinigamePlayPhase(1);
   setPendingMinigamePoints({ "team-1": 3 });
-  advanceRoomStatePhase();
+  advanceToRoundResultsPhase(1);
   advanceRoomStatePhase();
 
-  advanceRoomStatePhase();
+  advanceToEatingPhase(2);
   setWingParticipation("player-1", true);
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+  advanceToMinigamePlayPhase(2);
   setPendingMinigamePoints({ "team-1": 4 });
-  advanceRoomStatePhase();
+  advanceToRoundResultsPhase(2);
 
   const snapshot = getRoomStateSnapshot();
 
@@ -1006,7 +1090,7 @@ test("logs score mutation metadata when applying round points", () => {
   }) as typeof console.warn;
 
   try {
-    advanceRoomStatePhase();
+    advanceToRoundResultsPhase(1);
   } finally {
     console.warn = originalConsoleWarn;
   }
