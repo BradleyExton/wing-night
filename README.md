@@ -31,6 +31,7 @@ Core principles:
 -   Fixed per-round team turn order (`EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` per team)
 -   Active-team-only scoring mutations during EATING and mini-game play
 -   Round totals applied once at `ROUND_RESULTS`
+-   Host/display EATING and minigame surfaces show active team + turn progress from snapshot turn fields
 -   Mini-games run behind a module boundary (`packages/minigames/<minigameId>`)
 -   Authoritative engine snapshots (from server-side minigame selectors)
     project dedicated mini-game view models:
@@ -51,8 +52,9 @@ Each round executes as:
 3. `ROUND_RESULTS` (apply accumulated wing + mini-game points)
 
 Room snapshots carry team-turn context (`turnOrderTeamIds`,
-`roundTurnCursor`, `activeRoundTeamId`, `completedRoundTurnTeamIds`) so
-host/display surfaces rehydrate correctly after refresh/reconnect.
+`roundTurnCursor`, `activeRoundTeamId`, `completedRoundTurnTeamIds`,
+`activeTurnTeamId`) so host/display surfaces rehydrate correctly after
+refresh/reconnect.
 
 ------------------------------------------------------------------------
 
