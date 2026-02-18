@@ -2,6 +2,7 @@ import { Phase, type RoomState } from "@wingnight/shared";
 import { useEffect, useState } from "react";
 
 import { hostControlPanelCopy } from "../copy";
+import { resolveRemainingTimerSeconds } from "../../../utils/resolveRemainingTimerSeconds";
 import * as styles from "./styles";
 
 type TimerControlsSurfaceProps = {
@@ -33,9 +34,7 @@ export const TimerControlsSurface = ({
     return <></>;
   }
 
-  const remainingSeconds = timer.isPaused
-    ? Math.max(0, Math.ceil(timer.remainingMs / 1000))
-    : Math.max(0, Math.ceil((timer.endsAt - nowTimestampMs) / 1000));
+  const remainingSeconds = resolveRemainingTimerSeconds(timer, nowTimestampMs);
   const canPause = onPauseTimer !== undefined && !timer.isPaused;
   const canResume = onResumeTimer !== undefined && timer.isPaused;
   const canExtend = onExtendTimer !== undefined;
