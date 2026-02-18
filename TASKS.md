@@ -13,25 +13,29 @@ Current in-progress work:
 - None currently tracked.
 
 Completed:
+- [x] Tracker Sync for 8.12 + D Tasks
+  - Branch: `phase-d-task-tracker-sync`
+  - PR: [#56](https://github.com/BradleyExton/wing-night/pull/56)
+  - Merge timestamp: `2026-02-18T03:56:48Z`
 - [x] D6 README Team-Turn Flow Alignment
-  - Branch: `(squash merged; source branch deleted)`
+  - Branch: `phase-d6-readme-team-turn-flow-alignment`
   - PR: [#53](https://github.com/BradleyExton/wing-night/pull/53)
   - Merge timestamp: `2026-02-18T03:55:03Z`
 - [x] D5 SPEC Team-Turn Flow Alignment
-  - Branch: `(squash merged; source branch deleted)`
+  - Branch: `phase-d5-spec-team-turn-flow-alignment`
   - PR: [#54](https://github.com/BradleyExton/wing-night/pull/54)
   - Merge timestamp: `2026-02-18T03:55:00Z`
 - [x] D4 DESIGN Surface Rule Update
-  - Branch: `(squash merged; source branch deleted)`
+  - Branch: `phase-d4-design-surface-rule-audit`
   - PR: [#55](https://github.com/BradleyExton/wing-night/pull/55)
   - Notes: no `DESIGN.md` change required (no material divergence from current surface rules)
   - Merge timestamp: `2026-02-18T03:54:58Z`
 - [x] D3 AGENTS Guardrail Update
-  - Branch: `(squash merged; source branch deleted)`
+  - Branch: `phase-d3-agents-guardrail-update`
   - PR: [#57](https://github.com/BradleyExton/wing-night/pull/57)
   - Merge timestamp: `2026-02-18T03:54:55Z`
 - [x] 8.12 Host/Display Team-Turn Surfaces
-  - Branch: `(squash merged; source branch deleted)`
+  - Branch: `phase-8-12-host-display-team-turn-surfaces`
   - PR: [#58](https://github.com/BradleyExton/wing-night/pull/58)
   - Notes: manual host/display smoke run completed (sync + refresh rehydrate across team turns)
   - Merge timestamp: `2026-02-18T03:54:53Z`
