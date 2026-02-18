@@ -10,6 +10,8 @@ export type RoomTimerState = {
   startedAt: number;
   endsAt: number;
   durationMs: number;
+  isPaused: boolean;
+  remainingMs: number;
 };
 
 export type RoomState = {

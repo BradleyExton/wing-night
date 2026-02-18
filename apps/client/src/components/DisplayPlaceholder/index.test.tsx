@@ -79,7 +79,9 @@ test("renders eating timer view from snapshot timer endsAt", () => {
             phase: Phase.EATING,
             startedAt: 1_000,
             endsAt: 121_000,
-            durationMs: 120_000
+            durationMs: 120_000,
+            isPaused: false,
+            remainingMs: 120_000
           }
         })}
       />

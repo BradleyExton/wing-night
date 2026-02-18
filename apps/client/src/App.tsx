@@ -8,8 +8,11 @@ import { roomSocket } from "./socket/createRoomSocket";
 import { saveHostSecret } from "./utils/hostSecretStorage";
 import { requestAssignPlayer } from "./utils/requestAssignPlayer";
 import { requestCreateTeam } from "./utils/requestCreateTeam";
+import { requestExtendTimer } from "./utils/requestExtendTimer";
 import { requestNextPhase } from "./utils/requestNextPhase";
+import { requestPauseTimer } from "./utils/requestPauseTimer";
 import { requestRecordTriviaAttempt } from "./utils/requestRecordTriviaAttempt";
+import { requestResumeTimer } from "./utils/requestResumeTimer";
 import { requestSetWingParticipation } from "./utils/requestSetWingParticipation";
 import { resolveClientRoute } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
@@ -64,6 +67,24 @@ export const App = (): JSX.Element => {
     });
   };
 
+  const handlePauseTimer = (): void => {
+    requestPauseTimer(roomSocket, () => {
+      roomSocket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
+    });
+  };
+
+  const handleResumeTimer = (): void => {
+    requestResumeTimer(roomSocket, () => {
+      roomSocket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
+    });
+  };
+
+  const handleExtendTimer = (additionalSeconds: number): void => {
+    requestExtendTimer(roomSocket, additionalSeconds, () => {
+      roomSocket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
+    });
+  };
+
   if (route === "HOST") {
     return (
       <HostControlPanel
@@ -73,6 +94,9 @@ export const App = (): JSX.Element => {
         onAssignPlayer={handleAssignPlayer}
         onSetWingParticipation={handleSetWingParticipation}
         onRecordTriviaAttempt={handleRecordTriviaAttempt}
+        onPauseTimer={handlePauseTimer}
+        onResumeTimer={handleResumeTimer}
+        onExtendTimer={handleExtendTimer}
       />
     );
   }

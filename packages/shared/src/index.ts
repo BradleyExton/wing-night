@@ -40,6 +40,7 @@ export type {
   HostSecretPayload,
   MinigameRecordTriviaAttemptPayload,
   ScoringSetWingParticipationPayload,
+  TimerExtendPayload,
   ServerToClientEventName,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload,

@@ -15,8 +15,11 @@ import {
   advanceRoomStatePhase,
   assignPlayerToTeam,
   createTeam,
+  extendRoomTimer,
   getRoomStateSnapshot,
+  pauseRoomTimer,
   recordTriviaAttempt,
+  resumeRoomTimer,
   setWingParticipation
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
@@ -84,6 +87,18 @@ export const attachSocketServer = (
         },
         onAuthorizedRecordTriviaAttempt: (isCorrect) => {
           const updatedSnapshot = recordTriviaAttempt(isCorrect);
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedPauseTimer: () => {
+          const updatedSnapshot = pauseRoomTimer();
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedResumeTimer: () => {
+          const updatedSnapshot = resumeRoomTimer();
+          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+        },
+        onAuthorizedExtendTimer: (additionalSeconds) => {
+          const updatedSnapshot = extendRoomTimer(additionalSeconds);
           socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
         }
       },

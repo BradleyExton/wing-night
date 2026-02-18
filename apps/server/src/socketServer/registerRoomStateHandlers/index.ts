@@ -7,6 +7,7 @@ import type {
   MinigameRecordTriviaAttemptPayload,
   ScoringSetWingParticipationPayload,
   RoomState,
+  TimerExtendPayload,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload
 } from "@wingnight/shared";
@@ -25,6 +26,9 @@ type RoomStateSocket = {
     (event: typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, listener: (payload: unknown) => void): void;
   };
 };
 
@@ -39,6 +43,9 @@ type AuthorizedSetupMutationHandlers = {
   onAuthorizedAssignPlayer: (playerId: string, teamId: string | null) => void;
   onAuthorizedSetWingParticipation: (playerId: string, didEat: boolean) => void;
   onAuthorizedRecordTriviaAttempt: (isCorrect: boolean) => void;
+  onAuthorizedPauseTimer: () => void;
+  onAuthorizedResumeTimer: () => void;
+  onAuthorizedExtendTimer: (additionalSeconds: number) => void;
 };
 
 const isHostSecretPayload = (payload: unknown): payload is HostSecretPayload => {
@@ -111,6 +118,22 @@ const isMinigameRecordTriviaAttemptPayload = (
   }
 
   return true;
+};
+
+const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload => {
+  if (!isHostSecretPayload(payload)) {
+    return false;
+  }
+
+  if (
+    !("additionalSeconds" in payload) ||
+    typeof payload.additionalSeconds !== "number" ||
+    !Number.isInteger(payload.additionalSeconds)
+  ) {
+    return false;
+  }
+
+  return payload.additionalSeconds > 0 && payload.additionalSeconds <= 600;
 };
 
 export const registerRoomStateHandlers = (
@@ -207,6 +230,51 @@ export const registerRoomStateHandlers = (
     mutationHandlers.onAuthorizedRecordTriviaAttempt(payload.isCorrect);
   };
 
+  const handleTimerPause = (payload: unknown): void => {
+    if (!isHostSecretPayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedPauseTimer();
+  };
+
+  const handleTimerResume = (payload: unknown): void => {
+    if (!isHostSecretPayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedResumeTimer();
+  };
+
+  const handleTimerExtend = (payload: unknown): void => {
+    if (!isTimerExtendPayload(payload)) {
+      return;
+    }
+
+    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
+      if (canClaimControl) {
+        socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+      }
+      return;
+    }
+
+    mutationHandlers.onAuthorizedExtendTimer(payload.additionalSeconds);
+  };
+
   emitSnapshot();
 
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, emitSnapshot);
@@ -222,4 +290,7 @@ export const registerRoomStateHandlers = (
     CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
     handleRecordTriviaAttempt
   );
+  socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, handleTimerPause);
+  socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, handleTimerResume);
+  socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, handleTimerExtend);
 };

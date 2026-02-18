@@ -47,10 +47,17 @@ export const DisplayPlaceholder = ({
   const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
   const timer = roomState?.timer;
-  const eatingTimerRemainingSeconds =
-    timer?.phase === Phase.EATING
-      ? Math.max(0, Math.ceil((timer.endsAt - nowTimestampMs) / 1000))
-      : null;
+  const eatingTimerRemainingSeconds = (() => {
+    if (timer?.phase !== Phase.EATING) {
+      return null;
+    }
+
+    if (timer.isPaused) {
+      return Math.max(0, Math.ceil(timer.remainingMs / 1000));
+    }
+
+    return Math.max(0, Math.ceil((timer.endsAt - nowTimestampMs) / 1000));
+  })();
   const shouldRenderEatingTimer =
     isEatingPhase && eatingTimerRemainingSeconds !== null;
   const activeTurnTeamName =

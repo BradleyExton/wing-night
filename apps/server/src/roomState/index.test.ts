@@ -8,9 +8,12 @@ import {
   assignPlayerToTeam,
   createTeam,
   createInitialRoomState,
+  extendRoomTimer,
   getRoomStateSnapshot,
+  pauseRoomTimer,
   recordTriviaAttempt,
   resetRoomState,
+  resumeRoomTimer,
   setPendingMinigamePoints,
   setRoomStateGameConfig,
   setRoomStateTriviaPrompts,
@@ -180,7 +183,9 @@ test("advanceRoomStatePhase starts an EATING timer with endsAt", () => {
       phase: Phase.EATING,
       startedAt: 50_000,
       endsAt: 170_000,
-      durationMs: 120_000
+      durationMs: 120_000,
+      isPaused: false,
+      remainingMs: 120_000
     });
   } finally {
     Date.now = originalDateNow;
@@ -220,8 +225,90 @@ test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
       phase: Phase.MINIGAME_PLAY,
       startedAt: 90_000,
       endsAt: 120_000,
-      durationMs: 30_000
+      durationMs: 30_000,
+      isPaused: false,
+      remainingMs: 30_000
     });
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
+test("pauseRoomTimer pauses EATING timer and captures remaining time", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  const originalDateNow = Date.now;
+  Date.now = (): number => 100_000;
+
+  try {
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+  } finally {
+    Date.now = originalDateNow;
+  }
+
+  Date.now = (): number => 130_000;
+
+  try {
+    const pausedSnapshot = pauseRoomTimer();
+    assert.equal(pausedSnapshot.timer?.isPaused, true);
+    assert.equal(pausedSnapshot.timer?.remainingMs, 90_000);
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
+test("resumeRoomTimer resumes paused EATING timer with recomputed endsAt", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  const originalDateNow = Date.now;
+  Date.now = (): number => 100_000;
+
+  try {
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+  } finally {
+    Date.now = originalDateNow;
+  }
+
+  Date.now = (): number => 130_000;
+  pauseRoomTimer();
+
+  Date.now = (): number => 140_000;
+  try {
+    const resumedSnapshot = resumeRoomTimer();
+    assert.equal(resumedSnapshot.timer?.isPaused, false);
+    assert.equal(resumedSnapshot.timer?.startedAt, 140_000);
+    assert.equal(resumedSnapshot.timer?.endsAt, 230_000);
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
+test("extendRoomTimer extends EATING timer while running", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  const originalDateNow = Date.now;
+  Date.now = (): number => 100_000;
+
+  try {
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+  } finally {
+    Date.now = originalDateNow;
+  }
+
+  Date.now = (): number => 110_000;
+  try {
+    const extendedSnapshot = extendRoomTimer(30);
+    assert.equal(extendedSnapshot.timer?.endsAt, 250_000);
+    assert.equal(extendedSnapshot.timer?.durationMs, 150_000);
   } finally {
     Date.now = originalDateNow;
   }
