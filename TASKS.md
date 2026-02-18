@@ -10,10 +10,14 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] R1 Host UI Decomposition Pass
-  - Branch: `phase-r1-host-ui-decomposition-pass`
+- [-] Phase 8 + Docs stacked execution (A/B/C wave)
+  - Branch: `docs-tracker-phase8-batch-start`
 
 Completed:
+- [x] R1 Host UI Decomposition Pass
+  - Branch: `phase-r1-host-ui-decomposition-pass`
+  - PR: [#33](https://github.com/BradleyExton/wing-night/pull/33)
+  - Merge timestamp: `2026-02-18T00:46:00Z`
 - [x] 8.6 Trivia Migration to Module Boundary
   - Branch: `phase-8-6-trivia-migration-module-boundary`
   - PR: [#32](https://github.com/BradleyExton/wing-night/pull/32)
@@ -148,7 +152,7 @@ Backlog status:
 - [x] 8.4 Host Compact Phase Views (Non-Game)
 - [x] 8.5 Minigame Module Boundary (Architecture)
 - [x] 8.6 Trivia Migration to Module Boundary
-- [-] R1 Host UI Decomposition Pass (`HostPlaceholder` phase-surface extraction + remove `Placeholder` naming)
+- [x] R1 Host UI Decomposition Pass (`HostPlaceholder` phase-surface extraction + remove `Placeholder` naming)
 - [ ] 8.7 Host/Display Minigame Surface Shell
 - [ ] 8.10 Team-Turn State Machine Realignment
 - [ ] 8.11 Active-Team Eating + Scoring Gating
