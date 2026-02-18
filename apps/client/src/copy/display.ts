@@ -3,7 +3,6 @@ import type { Phase } from "@wingnight/shared";
 
 export const displayCopy = {
   placeholderTitle: "Wing Night",
-  placeholderDescription: "The broadcast board follows the server snapshot.",
   roundFallbackLabel: "Round context will appear on the next phase update.",
   waitingForStateLabel: "Waiting for room state...",
   waitingPhaseLabel: "Connecting",
