@@ -1,5 +1,5 @@
 import { Phase, type RoomState } from "@wingnight/shared";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import * as styles from "./styles";
 import { displayPlaceholderCopy } from "./copy";
@@ -11,6 +11,18 @@ type DisplayPlaceholderProps = {
 export const DisplayPlaceholder = ({
   roomState
 }: DisplayPlaceholderProps): JSX.Element => {
+  const [nowTimestampMs, setNowTimestampMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      setNowTimestampMs(Date.now());
+    }, 250);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, []);
+
   const standings = useMemo(() => {
     if (!roomState) {
       return [];
@@ -34,8 +46,14 @@ export const DisplayPlaceholder = ({
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
-  const eatingSeconds = roomState?.gameConfig?.timers.eatingSeconds ?? null;
-  const shouldRenderEatingTimer = isEatingPhase && eatingSeconds !== null;
+  const eatingTimerRemainingSeconds =
+    roomState?.timer !== null &&
+    roomState?.timer !== undefined &&
+    roomState.timer.phase === Phase.EATING
+      ? Math.max(0, Math.ceil((roomState.timer.endsAt - nowTimestampMs) / 1000))
+      : null;
+  const shouldRenderEatingTimer =
+    isEatingPhase && eatingTimerRemainingSeconds !== null;
   const activeTurnTeamName =
     activeTurnTeamId !== null
       ? (roomState?.teams.find((team) => team.id === activeTurnTeamId)?.name ??
@@ -117,7 +135,9 @@ export const DisplayPlaceholder = ({
                     {displayPlaceholderCopy.eatingTimerLabel}
                   </p>
                   <p className={styles.timerValue}>
-                    {displayPlaceholderCopy.eatingTimerValue(eatingSeconds)}
+                    {displayPlaceholderCopy.eatingTimerValue(
+                      eatingTimerRemainingSeconds
+                    )}
                   </p>
                 </div>
               </>

@@ -5,6 +5,13 @@ import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
 import type { Team } from "../team/index.js";
 
+export type RoomTimerState = {
+  phase: Phase;
+  startedAt: number;
+  endsAt: number;
+  durationMs: number;
+};
+
 export type RoomState = {
   phase: Phase;
   // 0 means pre-round state; rounds in progress are 1..N.
@@ -20,6 +27,7 @@ export type RoomState = {
   activeTurnTeamId: string | null;
   currentTriviaPrompt: TriviaPrompt | null;
   triviaPromptCursor: number;
+  timer: RoomTimerState | null;
   wingParticipationByPlayerId: Record<string, boolean>;
   pendingWingPointsByTeamId: Record<string, number>;
   pendingMinigamePointsByTeamId: Record<string, number>;
