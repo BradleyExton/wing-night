@@ -96,6 +96,8 @@ export const createInitialRoomState = (): RoomState => {
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
+    minigameHostView: null,
+    minigameDisplayView: null,
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},

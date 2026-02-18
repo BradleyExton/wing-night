@@ -118,6 +118,8 @@ test("createInitialRoomState returns setup defaults", () => {
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
+    minigameHostView: null,
+    minigameDisplayView: null,
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},

@@ -44,6 +44,11 @@ export const hostCopy = {
     `Mark ${playerName} as ate wing`,
   triviaSectionDescription:
     "Mark the active team's answer as correct or incorrect.",
+  minigameSectionTitle: "Mini-Game",
+  minigameIntroDescription: (minigame: MinigameType): string =>
+    `${minigame} is queued. Advance when players are ready to begin.`,
+  minigameFallbackType: "TRIVIA" as MinigameType,
+  waitingStateLabel: "Waiting for room state...",
   triviaActiveTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,
   triviaQuestionLabel: "Question",
   triviaAnswerLabel: "Answer",
