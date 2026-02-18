@@ -5,6 +5,7 @@ import { Phase, type RoomState } from "@wingnight/shared";
 import { CompactSummarySurface } from "./CompactSummarySurface";
 import { HostPanelHeader } from "./HostPanelHeader";
 import { hostControlPanelCopy } from "./copy";
+import { MinigameSurface } from "./MinigameSurface";
 import { PlayersSurface } from "./PlayersSurface";
 import * as styles from "./styles";
 import { TeamSetupSurface } from "./TeamSetupSurface";
@@ -73,8 +74,10 @@ export const HostControlPanel = ({
     phase === Phase.ROUND_INTRO ||
     phase === Phase.ROUND_RESULTS ||
     phase === Phase.FINAL_RESULTS;
+  const minigameType = roomState?.currentRoundConfig?.minigame ?? null;
+  const minigameHostView = roomState?.minigameHostView ?? null;
   const isTriviaMinigamePlayPhase =
-    isMinigamePlayPhase && roomState?.currentRoundConfig?.minigame === "TRIVIA";
+    isMinigamePlayPhase && minigameHostView?.minigame === "TRIVIA";
 
   const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
@@ -92,8 +95,10 @@ export const HostControlPanel = ({
           roomState.turnOrderTeamIds.length
         )
       : null;
-  const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
-  const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
+  const currentTriviaPrompt =
+    minigameHostView?.currentPrompt ?? roomState?.currentTriviaPrompt ?? null;
+  const activeTurnTeamId =
+    minigameHostView?.activeTurnTeamId ?? roomState?.activeTurnTeamId ?? null;
   const activeTurnTeamName =
     activeTurnTeamId !== null
       ? (teamNameByTeamId.get(activeTurnTeamId) ??
@@ -110,7 +115,7 @@ export const HostControlPanel = ({
     currentTriviaPrompt === null;
 
   const shouldRenderSetupSections = isSetupPhase;
-  const shouldRenderPlayersSection = isSetupPhase || isEatingPhase || isMinigamePlayPhase;
+  const shouldRenderPlayersSection = isSetupPhase || isEatingPhase;
 
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const sortedStandings = useMemo(() => {
@@ -229,6 +234,17 @@ export const HostControlPanel = ({
                 triviaAttemptDisabled={triviaAttemptDisabled}
                 onAssignPlayer={handleAssignmentChange}
                 onSetWingParticipation={handleWingParticipationChange}
+                onRecordTriviaAttempt={handleRecordTriviaAttempt}
+              />
+            )}
+
+            {roomState && isMinigamePlayPhase && (
+              <MinigameSurface
+                phase={roomState.phase}
+                minigameType={minigameType}
+                minigameHostView={minigameHostView}
+                teamNameByTeamId={teamNameByTeamId}
+                triviaAttemptDisabled={triviaAttemptDisabled}
                 onRecordTriviaAttempt={handleRecordTriviaAttempt}
               />
             )}

@@ -149,11 +149,18 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
-        activeTurnTeamId: "team-alpha",
-        currentTriviaPrompt: {
-          id: "prompt-1",
-          question: "Which scale measures pepper heat?",
-          answer: "Scoville"
+        minigameHostView: {
+          minigame: "TRIVIA",
+          activeTurnTeamId: "team-alpha",
+          promptCursor: 0,
+          pendingPointsByTeamId: {
+            "team-alpha": 0
+          },
+          currentPrompt: {
+            id: "prompt-1",
+            question: "Which scale measures pepper heat?",
+            answer: "Scoville"
+          }
         }
       })}
     />
@@ -161,12 +168,13 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
 
   assert.match(html, /Mark the active team&#x27;s answer as correct or incorrect/);
   assert.match(html, /Active Team: Team Alpha/);
-  assert.match(html, /Turn Progress/);
-  assert.match(html, /Team 1 of 2/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.match(html, /Scoville/);
   assert.match(html, /Correct/);
   assert.match(html, /Incorrect/);
+  assert.doesNotMatch(html, /Players/);
+  assert.doesNotMatch(html, /Alex/);
+  assert.doesNotMatch(html, /Morgan/);
 });
 
 test("renders compact status cards during INTRO", () => {
