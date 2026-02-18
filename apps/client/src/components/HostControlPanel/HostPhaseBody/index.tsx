@@ -45,8 +45,6 @@ const assertUnreachable = (value: never): never => {
   throw new Error(`Unhandled value: ${String(value)}`);
 };
 
-void styles;
-
 export const HostPhaseBody = ({
   hostMode,
   phase,
@@ -82,7 +80,7 @@ export const HostPhaseBody = ({
       return null;
     case "setup":
       return (
-        <>
+        <div className={styles.surfaceGroup}>
           <TeamSetupSurface
             nextTeamName={nextTeamName}
             setupMutationsDisabled={setupMutationsDisabled}
@@ -98,15 +96,14 @@ export const HostPhaseBody = ({
             assignmentDisabled={assignmentDisabled}
             onAssignPlayer={onAssignPlayer}
           />
-        </>
+        </div>
       );
     case "eating":
       return (
-        <>
+        <div className={styles.surfaceGroup}>
           <PlayersSurface
             mode="eating"
             players={players}
-            teams={teams}
             assignedTeamByPlayerId={assignedTeamByPlayerId}
             teamNameByTeamId={teamNameByTeamId}
             wingParticipationByPlayerId={wingParticipationByPlayerId}
@@ -121,7 +118,7 @@ export const HostPhaseBody = ({
             onResumeTimer={onResumeTimer}
             onExtendTimer={onExtendTimer}
           />
-        </>
+        </div>
       );
     case "minigame_intro":
       return null;
@@ -136,7 +133,7 @@ export const HostPhaseBody = ({
       );
     case "compact":
       return roomState && phase !== null ? (
-        <>
+        <div className={styles.surfaceGroup}>
           {phase === Phase.ROUND_INTRO && (
             <TurnOrderSurface
               orderedTeams={orderedTeams}
@@ -144,7 +141,7 @@ export const HostPhaseBody = ({
             />
           )}
           <CompactSummarySurface sortedStandings={sortedStandings} />
-        </>
+        </div>
       ) : null;
     default:
       return assertUnreachable(hostMode);
