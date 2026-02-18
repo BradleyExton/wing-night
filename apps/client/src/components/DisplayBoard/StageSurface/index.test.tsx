@@ -64,6 +64,18 @@ test("renders round intro metadata", () => {
   assert.match(html, /TRIVIA/);
 });
 
+test("falls back to generic context when ROUND_INTRO is missing round config", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{ ...buildSnapshot(Phase.ROUND_INTRO), currentRoundConfig: null }}
+      phaseLabel="Round Intro"
+    />
+  );
+
+  assert.match(html, /Round Intro in progress/);
+  assert.match(html, /Round context will appear on the next phase update\./);
+});
+
 test("renders trivia question without answer leakage", () => {
   const html = renderToStaticMarkup(
     <StageSurface

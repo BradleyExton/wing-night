@@ -5,7 +5,6 @@ import { hostControlPanelCopy } from "../copy";
 import * as styles from "./styles";
 
 type TimerControlsSurfaceProps = {
-  isEatingPhase: boolean;
   timer: RoomState["timer"];
   onPauseTimer?: () => void;
   onResumeTimer?: () => void;
@@ -13,7 +12,6 @@ type TimerControlsSurfaceProps = {
 };
 
 export const TimerControlsSurface = ({
-  isEatingPhase,
   timer,
   onPauseTimer,
   onResumeTimer,
@@ -31,7 +29,7 @@ export const TimerControlsSurface = ({
     };
   }, []);
 
-  if (!isEatingPhase || timer === null || timer.phase !== Phase.EATING) {
+  if (timer === null || timer.phase !== Phase.EATING) {
     return <></>;
   }
 

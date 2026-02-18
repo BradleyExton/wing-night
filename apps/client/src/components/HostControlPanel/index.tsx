@@ -24,6 +24,39 @@ type HostControlPanelProps = {
 };
 
 const EMPTY_TEAMS: RoomState["teams"] = [];
+type HostRenderMode =
+  | "waiting"
+  | "setup"
+  | "eating"
+  | "minigame_intro"
+  | "minigame_play"
+  | "compact";
+
+const assertUnreachable = (value: never): never => {
+  throw new Error(`Unhandled value: ${String(value)}`);
+};
+
+const resolveHostRenderMode = (phase: Phase | null): HostRenderMode => {
+  switch (phase) {
+    case null:
+      return "waiting";
+    case Phase.SETUP:
+      return "setup";
+    case Phase.EATING:
+      return "eating";
+    case Phase.MINIGAME_INTRO:
+      return "minigame_intro";
+    case Phase.MINIGAME_PLAY:
+      return "minigame_play";
+    case Phase.INTRO:
+    case Phase.ROUND_INTRO:
+    case Phase.ROUND_RESULTS:
+    case Phase.FINAL_RESULTS:
+      return "compact";
+    default:
+      return assertUnreachable(phase);
+  }
+};
 
 export const HostControlPanel = ({
   roomState,
@@ -65,19 +98,10 @@ export const HostControlPanel = ({
   const players = roomState?.players ?? [];
   const teams = roomState?.teams ?? EMPTY_TEAMS;
   const phase = roomState?.phase ?? null;
-  const isSetupPhase = phase === Phase.SETUP;
-  const isEatingPhase = phase === Phase.EATING;
-  const isMinigameIntroPhase = phase === Phase.MINIGAME_INTRO;
-  const isMinigamePlayPhase = phase === Phase.MINIGAME_PLAY;
-  const isCompactSummaryPhase =
-    phase === Phase.INTRO ||
-    phase === Phase.ROUND_INTRO ||
-    phase === Phase.ROUND_RESULTS ||
-    phase === Phase.FINAL_RESULTS;
-  const minigameType = roomState?.currentRoundConfig?.minigame ?? null;
+  const hostMode = resolveHostRenderMode(phase);
   const minigameHostView = roomState?.minigameHostView ?? null;
   const isTriviaMinigamePlayPhase =
-    isMinigamePlayPhase && minigameHostView?.minigame === "TRIVIA";
+    hostMode === "minigame_play" && minigameHostView?.minigame === "TRIVIA";
 
   const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
@@ -99,23 +123,15 @@ export const HostControlPanel = ({
     minigameHostView?.currentPrompt ?? roomState?.currentTriviaPrompt ?? null;
   const activeTurnTeamId =
     minigameHostView?.activeTurnTeamId ?? roomState?.activeTurnTeamId ?? null;
-  const activeTurnTeamName =
-    activeTurnTeamId !== null
-      ? (teamNameByTeamId.get(activeTurnTeamId) ??
-        hostControlPanelCopy.noAssignedTeamLabel)
-      : hostControlPanelCopy.noAssignedTeamLabel;
 
-  const setupMutationsDisabled = onCreateTeam === undefined || !isSetupPhase;
-  const assignmentDisabled = onAssignPlayer === undefined || !isSetupPhase;
-  const participationDisabled = onSetWingParticipation === undefined || !isEatingPhase;
+  const setupMutationsDisabled = onCreateTeam === undefined || hostMode !== "setup";
+  const assignmentDisabled = onAssignPlayer === undefined || hostMode !== "setup";
+  const participationDisabled = onSetWingParticipation === undefined || hostMode !== "eating";
   const triviaAttemptDisabled =
     onRecordTriviaAttempt === undefined ||
     !isTriviaMinigamePlayPhase ||
     activeTurnTeamId === null ||
     currentTriviaPrompt === null;
-
-  const shouldRenderSetupSections = isSetupPhase;
-  const shouldRenderPlayersSection = isSetupPhase || isEatingPhase;
 
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const sortedStandings = useMemo(() => {
@@ -133,7 +149,7 @@ export const HostControlPanel = ({
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
 
-    if (!onCreateTeam || !isSetupPhase) {
+    if (!onCreateTeam || hostMode !== "setup") {
       return;
     }
 
@@ -148,7 +164,7 @@ export const HostControlPanel = ({
   };
 
   const handleAssignmentChange = (playerId: string, selectedTeamId: string): void => {
-    if (!onAssignPlayer || !isSetupPhase) {
+    if (!onAssignPlayer || hostMode !== "setup") {
       return;
     }
 
@@ -156,7 +172,7 @@ export const HostControlPanel = ({
   };
 
   const handleWingParticipationChange = (playerId: string, didEat: boolean): void => {
-    if (!onSetWingParticipation || !isEatingPhase) {
+    if (!onSetWingParticipation || hostMode !== "eating") {
       return;
     }
 
@@ -169,6 +185,80 @@ export const HostControlPanel = ({
     }
 
     onRecordTriviaAttempt(isCorrect);
+  };
+
+  const renderPhaseBody = (): JSX.Element | null => {
+    switch (hostMode) {
+      case "waiting":
+        return null;
+      case "setup":
+        return (
+          <>
+            <TeamSetupSurface
+              nextTeamName={nextTeamName}
+              setupMutationsDisabled={setupMutationsDisabled}
+              teams={teams}
+              onNextTeamNameChange={setNextTeamName}
+              onCreateTeamSubmit={handleCreateTeamSubmit}
+            />
+            <PlayersSurface
+              mode="setup"
+              players={players}
+              teams={teams}
+              assignedTeamByPlayerId={assignedTeamByPlayerId}
+              assignmentDisabled={assignmentDisabled}
+              onAssignPlayer={handleAssignmentChange}
+            />
+          </>
+        );
+      case "eating":
+        return (
+          <>
+            <PlayersSurface
+              mode="eating"
+              players={players}
+              teams={teams}
+              assignedTeamByPlayerId={assignedTeamByPlayerId}
+              teamNameByTeamId={teamNameByTeamId}
+              wingParticipationByPlayerId={wingParticipationByPlayerId}
+              activeRoundTeamId={activeRoundTeamId}
+              activeRoundTeamName={activeRoundTeamName}
+              turnProgressLabel={turnProgressLabel}
+              participationDisabled={participationDisabled}
+              onSetWingParticipation={handleWingParticipationChange}
+            />
+            <TimerControlsSurface
+              timer={roomState?.timer ?? null}
+              onPauseTimer={onPauseTimer}
+              onResumeTimer={onResumeTimer}
+              onExtendTimer={onExtendTimer}
+            />
+          </>
+        );
+      case "minigame_intro":
+        return null;
+      case "minigame_play":
+        return (
+          <MinigameSurface
+            minigameHostView={minigameHostView}
+            teamNameByTeamId={teamNameByTeamId}
+            triviaAttemptDisabled={triviaAttemptDisabled}
+            onRecordTriviaAttempt={handleRecordTriviaAttempt}
+          />
+        );
+      case "compact":
+        return roomState && phase !== null ? (
+          <CompactSummarySurface
+            phase={phase}
+            currentRound={roomState.currentRound}
+            totalRounds={roomState.totalRounds}
+            currentRoundConfig={currentRoundConfig}
+            sortedStandings={sortedStandings}
+          />
+        ) : null;
+      default:
+        return assertUnreachable(hostMode);
+    }
   };
 
   return (
@@ -187,79 +277,11 @@ export const HostControlPanel = ({
           </button>
         </div>
 
-        {roomState && phaseAdvanceHint !== null && phase !== Phase.SETUP && (
+        {roomState && phaseAdvanceHint !== null && hostMode !== "setup" && (
           <p className={styles.phaseNotice}>{phaseAdvanceHint}</p>
         )}
 
-        {isCompactSummaryPhase && roomState && phase !== null && (
-          <CompactSummarySurface
-            phase={phase}
-            currentRound={roomState.currentRound}
-            totalRounds={roomState.totalRounds}
-            currentRoundConfig={currentRoundConfig}
-            sortedStandings={sortedStandings}
-          />
-        )}
-
-        {!isCompactSummaryPhase && (
-          <>
-            {shouldRenderSetupSections && (
-              <TeamSetupSurface
-                nextTeamName={nextTeamName}
-                setupMutationsDisabled={setupMutationsDisabled}
-                teams={teams}
-                onNextTeamNameChange={setNextTeamName}
-                onCreateTeamSubmit={handleCreateTeamSubmit}
-              />
-            )}
-
-            {shouldRenderPlayersSection && (
-              <PlayersSurface
-                players={players}
-                teams={teams}
-                assignedTeamByPlayerId={assignedTeamByPlayerId}
-                teamNameByTeamId={teamNameByTeamId}
-                isSetupPhase={isSetupPhase}
-                isEatingPhase={isEatingPhase}
-                isMinigameIntroPhase={isMinigameIntroPhase}
-                isTriviaMinigamePlayPhase={isTriviaMinigamePlayPhase}
-                wingParticipationByPlayerId={wingParticipationByPlayerId}
-                currentTriviaPrompt={currentTriviaPrompt}
-                activeRoundTeamId={activeRoundTeamId}
-                activeRoundTeamName={activeRoundTeamName}
-                turnProgressLabel={turnProgressLabel}
-                activeTurnTeamName={activeTurnTeamName}
-                assignmentDisabled={assignmentDisabled}
-                participationDisabled={participationDisabled}
-                triviaAttemptDisabled={triviaAttemptDisabled}
-                onAssignPlayer={handleAssignmentChange}
-                onSetWingParticipation={handleWingParticipationChange}
-                onRecordTriviaAttempt={handleRecordTriviaAttempt}
-              />
-            )}
-
-            {roomState && isMinigamePlayPhase && (
-              <MinigameSurface
-                phase={roomState.phase}
-                minigameType={minigameType}
-                minigameHostView={minigameHostView}
-                teamNameByTeamId={teamNameByTeamId}
-                triviaAttemptDisabled={triviaAttemptDisabled}
-                onRecordTriviaAttempt={handleRecordTriviaAttempt}
-              />
-            )}
-
-            {isEatingPhase && (
-              <TimerControlsSurface
-                isEatingPhase={isEatingPhase}
-                timer={roomState?.timer ?? null}
-                onPauseTimer={onPauseTimer}
-                onResumeTimer={onResumeTimer}
-                onExtendTimer={onExtendTimer}
-              />
-            )}
-          </>
-        )}
+        {renderPhaseBody()}
       </div>
     </main>
   );

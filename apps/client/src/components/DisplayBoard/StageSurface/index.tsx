@@ -9,6 +9,32 @@ type StageSurfaceProps = {
   phaseLabel: string;
 };
 
+type StageRenderMode = "round_intro" | "eating" | "minigame" | "fallback";
+
+const assertUnreachable = (value: never): never => {
+  throw new Error(`Unhandled value: ${String(value)}`);
+};
+
+const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
+  switch (phase) {
+    case Phase.ROUND_INTRO:
+      return "round_intro";
+    case Phase.EATING:
+      return "eating";
+    case Phase.MINIGAME_INTRO:
+    case Phase.MINIGAME_PLAY:
+      return "minigame";
+    case null:
+    case Phase.SETUP:
+    case Phase.INTRO:
+    case Phase.ROUND_RESULTS:
+    case Phase.FINAL_RESULTS:
+      return "fallback";
+    default:
+      return assertUnreachable(phase);
+  }
+};
+
 export const StageSurface = ({
   roomState,
   phaseLabel
@@ -16,12 +42,9 @@ export const StageSurface = ({
   const [nowTimestampMs, setNowTimestampMs] = useState(() => Date.now());
 
   const phase = roomState?.phase ?? null;
+  const stageMode = resolveStageRenderMode(phase);
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
-  const isRoundIntroPhase = phase === Phase.ROUND_INTRO;
-  const isEatingPhase = phase === Phase.EATING;
-  const isMinigameIntroPhase = phase === Phase.MINIGAME_INTRO;
   const isMinigamePlayPhase = phase === Phase.MINIGAME_PLAY;
-  const isMinigamePhase = isMinigameIntroPhase || isMinigamePlayPhase;
   const isTriviaTurnPhase =
     isMinigamePlayPhase && currentRoundConfig?.minigame === "TRIVIA";
 
@@ -40,7 +63,7 @@ export const StageSurface = ({
   const shouldRenderTriviaPrompt = isTriviaTurnPhase && currentTriviaPrompt !== null;
 
   const eatingTimerSnapshot =
-    isEatingPhase && roomState?.timer?.phase === Phase.EATING ? roomState.timer : null;
+    stageMode === "eating" && roomState?.timer?.phase === Phase.EATING ? roomState.timer : null;
   const fallbackEatingSeconds = roomState?.gameConfig?.timers.eatingSeconds ?? null;
   const liveEatingRemainingSeconds =
     eatingTimerSnapshot !== null
@@ -48,14 +71,9 @@ export const StageSurface = ({
         ? Math.max(0, Math.ceil(eatingTimerSnapshot.remainingMs / 1000))
         : Math.max(0, Math.ceil((eatingTimerSnapshot.endsAt - nowTimestampMs) / 1000))
       : fallbackEatingSeconds;
-  const shouldRenderEatingTimer = isEatingPhase && liveEatingRemainingSeconds !== null;
 
   useEffect(() => {
-    if (
-      !isEatingPhase ||
-      eatingTimerSnapshot === null ||
-      eatingTimerSnapshot.isPaused
-    ) {
+    if (stageMode !== "eating" || eatingTimerSnapshot === null || eatingTimerSnapshot.isPaused) {
       return;
     }
 
@@ -66,8 +84,7 @@ export const StageSurface = ({
     return () => {
       window.clearInterval(timerId);
     };
-  }, [isEatingPhase, eatingTimerSnapshot]);
-  const shouldRenderRoundDetails = isRoundIntroPhase && currentRoundConfig !== null;
+  }, [stageMode, eatingTimerSnapshot]);
   const turnNumber =
     roomState && roomState.roundTurnCursor >= 0
       ? roomState.roundTurnCursor + 1
@@ -78,71 +95,84 @@ export const StageSurface = ({
       ? displayBoardCopy.turnProgressLabel(turnNumber, totalTurns)
       : null;
   const shouldRenderTeamTurnContext =
-    activeTeamName !== null && (isEatingPhase || isMinigamePhase);
+    activeTeamName !== null && (stageMode === "eating" || stageMode === "minigame");
+
+  const renderFallback = (): JSX.Element => {
+    return (
+      <>
+        <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
+        <p className={styles.fallbackText}>
+          {roomState ? displayBoardCopy.roundFallbackLabel : displayBoardCopy.waitingForStateLabel}
+        </p>
+      </>
+    );
+  };
+
+  const renderStageBody = (): JSX.Element => {
+    switch (stageMode) {
+      case "round_intro":
+        return currentRoundConfig !== null ? (
+          <RoundIntroSurface currentRoundConfig={currentRoundConfig} />
+        ) : (
+          renderFallback()
+        );
+      case "eating":
+        return liveEatingRemainingSeconds !== null ? (
+          <>
+            <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
+            <p className={styles.fallbackText}>
+              {currentRoundConfig
+                ? displayBoardCopy.roundSauceSummary(currentRoundConfig.sauce)
+                : displayBoardCopy.roundFallbackLabel}
+            </p>
+            {shouldRenderTeamTurnContext && (
+              <TurnMeta activeTeamName={activeTeamName} turnProgressLabel={turnProgressLabel} />
+            )}
+            <div className={styles.timerWrap}>
+              <p className={styles.timerLabel}>{displayBoardCopy.eatingTimerLabel}</p>
+              <p className={styles.timerValue}>
+                {displayBoardCopy.eatingTimerValue(liveEatingRemainingSeconds)}
+              </p>
+            </div>
+          </>
+        ) : (
+          renderFallback()
+        );
+      case "minigame":
+        return (
+          <>
+            <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
+            <p className={styles.fallbackText}>
+              {currentRoundConfig
+                ? displayBoardCopy.roundMinigameSummary(currentRoundConfig.minigame)
+                : displayBoardCopy.roundFallbackLabel}
+            </p>
+            {shouldRenderTeamTurnContext && (
+              <TurnMeta activeTeamName={activeTeamName} turnProgressLabel={turnProgressLabel} />
+            )}
+            {shouldRenderTriviaPrompt && (
+              <div className={styles.metaGrid}>
+                <div className={styles.metaItem}>
+                  <p className={styles.metaLabel}>{displayBoardCopy.triviaQuestionLabel}</p>
+                  <p className={styles.metaValue}>{currentTriviaPrompt.question}</p>
+                </div>
+              </div>
+            )}
+            {isTriviaTurnPhase && !shouldRenderTriviaPrompt && (
+              <p className={styles.fallbackText}>{displayBoardCopy.triviaTurnTitle}</p>
+            )}
+          </>
+        );
+      case "fallback":
+        return renderFallback();
+      default:
+        return assertUnreachable(stageMode);
+    }
+  };
 
   return (
     <article className={styles.card}>
-      {shouldRenderRoundDetails && (
-        <RoundIntroSurface currentRoundConfig={currentRoundConfig} />
-      )}
-
-      {shouldRenderEatingTimer && (
-        <>
-          <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
-          <p className={styles.fallbackText}>
-            {currentRoundConfig
-              ? displayBoardCopy.roundSauceSummary(currentRoundConfig.sauce)
-              : displayBoardCopy.roundFallbackLabel}
-          </p>
-          {shouldRenderTeamTurnContext && (
-            <TurnMeta activeTeamName={activeTeamName} turnProgressLabel={turnProgressLabel} />
-          )}
-          <div className={styles.timerWrap}>
-            <p className={styles.timerLabel}>{displayBoardCopy.eatingTimerLabel}</p>
-            <p className={styles.timerValue}>
-              {displayBoardCopy.eatingTimerValue(liveEatingRemainingSeconds ?? 0)}
-            </p>
-          </div>
-        </>
-      )}
-
-      {isMinigamePhase && (
-        <>
-          <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
-          <p className={styles.fallbackText}>
-            {currentRoundConfig
-              ? displayBoardCopy.roundMinigameSummary(currentRoundConfig.minigame)
-              : displayBoardCopy.roundFallbackLabel}
-          </p>
-          {shouldRenderTeamTurnContext && (
-            <TurnMeta activeTeamName={activeTeamName} turnProgressLabel={turnProgressLabel} />
-          )}
-          {shouldRenderTriviaPrompt && (
-            <div className={styles.metaGrid}>
-              <div className={styles.metaItem}>
-                <p className={styles.metaLabel}>{displayBoardCopy.triviaQuestionLabel}</p>
-                <p className={styles.metaValue}>{currentTriviaPrompt.question}</p>
-              </div>
-            </div>
-          )}
-          {isTriviaTurnPhase && !shouldRenderTriviaPrompt && (
-            <p className={styles.fallbackText}>{displayBoardCopy.triviaTurnTitle}</p>
-          )}
-        </>
-      )}
-
-      {!shouldRenderRoundDetails &&
-        !shouldRenderEatingTimer &&
-        !isMinigamePhase && (
-        <>
-          <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
-          <p className={styles.fallbackText}>
-            {roomState
-              ? displayBoardCopy.roundFallbackLabel
-              : displayBoardCopy.waitingForStateLabel}
-          </p>
-        </>
-      )}
+      {renderStageBody()}
     </article>
   );
 };

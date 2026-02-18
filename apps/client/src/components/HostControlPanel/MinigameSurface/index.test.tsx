@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Phase, type MinigameHostView } from "@wingnight/shared";
+import type { MinigameHostView } from "@wingnight/shared";
 
 import { MinigameSurface } from "./index";
 
@@ -19,29 +19,9 @@ const triviaHostViewFixture: MinigameHostView = {
   }
 };
 
-test("renders intro shell for MINIGAME_INTRO", () => {
-  const html = renderToStaticMarkup(
-    <MinigameSurface
-      phase={Phase.MINIGAME_INTRO}
-      minigameType="TRIVIA"
-      minigameHostView={null}
-      teamNameByTeamId={teamNameByTeamId}
-      triviaAttemptDisabled
-      onRecordTriviaAttempt={(): void => {
-        return;
-      }}
-    />
-  );
-
-  assert.match(html, /Mini-Game/);
-  assert.match(html, /TRIVIA is queued/);
-});
-
 test("renders trivia controls from minigame host view during MINIGAME_PLAY", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
-      phase={Phase.MINIGAME_PLAY}
-      minigameType="TRIVIA"
       minigameHostView={triviaHostViewFixture}
       teamNameByTeamId={teamNameByTeamId}
       triviaAttemptDisabled={false}
@@ -56,4 +36,38 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
   assert.match(html, /Scoville/);
   assert.match(html, /Correct/);
   assert.match(html, /Incorrect/);
+});
+
+test("renders waiting fallback when host view is unavailable", () => {
+  const html = renderToStaticMarkup(
+    <MinigameSurface
+      minigameHostView={null}
+      teamNameByTeamId={teamNameByTeamId}
+      triviaAttemptDisabled
+      onRecordTriviaAttempt={(): void => {
+        return;
+      }}
+    />
+  );
+
+  assert.match(html, /Waiting for room state/);
+});
+
+test("renders waiting fallback for non-trivia minigame payloads", () => {
+  const html = renderToStaticMarkup(
+    <MinigameSurface
+      minigameHostView={{
+        ...triviaHostViewFixture,
+        minigame: "GEO"
+      }}
+      teamNameByTeamId={teamNameByTeamId}
+      triviaAttemptDisabled
+      onRecordTriviaAttempt={(): void => {
+        return;
+      }}
+    />
+  );
+
+  assert.match(html, /Waiting for room state/);
+  assert.doesNotMatch(html, /Which scale measures pepper heat/);
 });

@@ -1,135 +1,63 @@
-import type { TriviaPrompt } from "@wingnight/shared";
 import type { Player, Team } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
 import * as styles from "./styles";
 
-type PlayersSurfaceProps = {
+type PlayersSurfaceBaseProps = {
   players: Player[];
   teams: Team[];
   assignedTeamByPlayerId: Map<string, string>;
+};
+
+type SetupPlayersSurfaceProps = PlayersSurfaceBaseProps & {
+  mode: "setup";
+  assignmentDisabled: boolean;
+  onAssignPlayer: (playerId: string, selectedTeamId: string) => void;
+};
+
+type EatingPlayersSurfaceProps = PlayersSurfaceBaseProps & {
+  mode: "eating";
   teamNameByTeamId: Map<string, string>;
-  isSetupPhase: boolean;
-  isEatingPhase: boolean;
-  isMinigameIntroPhase: boolean;
-  isTriviaMinigamePlayPhase: boolean;
   wingParticipationByPlayerId: Record<string, boolean>;
-  currentTriviaPrompt: TriviaPrompt | null;
   activeRoundTeamId: string | null;
   activeRoundTeamName: string;
   turnProgressLabel: string | null;
-  activeTurnTeamName: string;
-  assignmentDisabled: boolean;
   participationDisabled: boolean;
-  triviaAttemptDisabled: boolean;
-  onAssignPlayer: (playerId: string, selectedTeamId: string) => void;
   onSetWingParticipation: (playerId: string, didEat: boolean) => void;
-  onRecordTriviaAttempt: (isCorrect: boolean) => void;
 };
 
-export const PlayersSurface = ({
-  players,
-  teams,
-  assignedTeamByPlayerId,
-  teamNameByTeamId,
-  isSetupPhase,
-  isEatingPhase,
-  isMinigameIntroPhase,
-  isTriviaMinigamePlayPhase,
-  wingParticipationByPlayerId,
-  currentTriviaPrompt,
-  activeRoundTeamId,
-  activeRoundTeamName,
-  turnProgressLabel,
-  activeTurnTeamName,
-  assignmentDisabled,
-  participationDisabled,
-  triviaAttemptDisabled,
-  onAssignPlayer,
-  onSetWingParticipation,
-  onRecordTriviaAttempt
-}: PlayersSurfaceProps): JSX.Element => {
-  const shouldRenderTurnContext =
-    activeRoundTeamId !== null &&
-    (isEatingPhase || isMinigameIntroPhase || isTriviaMinigamePlayPhase);
-  const visiblePlayers = isEatingPhase
-    ? players.filter((player) => assignedTeamByPlayerId.get(player.id) === activeRoundTeamId)
-    : players;
+type PlayersSurfaceProps = SetupPlayersSurfaceProps | EatingPlayersSurfaceProps;
+
+export const PlayersSurface = (props: PlayersSurfaceProps): JSX.Element => {
+  const { players, teams, assignedTeamByPlayerId } = props;
+  const visiblePlayers =
+    props.mode === "eating"
+      ? players.filter((player) => assignedTeamByPlayerId.get(player.id) === props.activeRoundTeamId)
+      : players;
   const emptyPlayersLabel =
-    isEatingPhase && activeRoundTeamId !== null
+    props.mode === "eating" && props.activeRoundTeamId !== null
       ? hostControlPanelCopy.activeTeamNoPlayersLabel
       : hostControlPanelCopy.noPlayersLabel;
+  const shouldRenderTurnContext = props.mode === "eating" && props.activeRoundTeamId !== null;
 
   return (
     <section className={`${styles.card} ${styles.playersCard}`}>
       <h2 className={styles.sectionHeading}>{hostControlPanelCopy.playersSectionTitle}</h2>
-      {isEatingPhase && (
+      {props.mode === "eating" && (
         <p className={styles.sectionDescription}>
           {hostControlPanelCopy.eatingParticipationDescription}
         </p>
-      )}
-      {isTriviaMinigamePlayPhase && (
-        <>
-          <p className={styles.sectionDescription}>
-            {hostControlPanelCopy.triviaSectionDescription}
-          </p>
-          <div className={styles.triviaMeta}>
-            <div>
-              <p className={styles.triviaLabel}>
-                {hostControlPanelCopy.triviaActiveTeamLabel(activeTurnTeamName)}
-              </p>
-            </div>
-            {currentTriviaPrompt && (
-              <>
-                <div>
-                  <p className={styles.triviaLabel}>
-                    {hostControlPanelCopy.triviaQuestionLabel}
-                  </p>
-                  <p className={styles.triviaValue}>{currentTriviaPrompt.question}</p>
-                </div>
-                <div>
-                  <p className={styles.triviaLabel}>
-                    {hostControlPanelCopy.triviaAnswerLabel}
-                  </p>
-                  <p className={styles.triviaValue}>{currentTriviaPrompt.answer}</p>
-                </div>
-              </>
-            )}
-          </div>
-          <div className={styles.triviaActions}>
-            <button
-              className={styles.actionButton}
-              type="button"
-              disabled={triviaAttemptDisabled}
-              onClick={(): void => {
-                onRecordTriviaAttempt(true);
-              }}
-            >
-              {hostControlPanelCopy.triviaCorrectButtonLabel}
-            </button>
-            <button
-              className={styles.actionButton}
-              type="button"
-              disabled={triviaAttemptDisabled}
-              onClick={(): void => {
-                onRecordTriviaAttempt(false);
-              }}
-            >
-              {hostControlPanelCopy.triviaIncorrectButtonLabel}
-            </button>
-          </div>
-        </>
       )}
       {shouldRenderTurnContext && (
         <div className={styles.turnMeta}>
           <p className={styles.turnTitle}>{hostControlPanelCopy.activeRoundTeamTitle}</p>
           <p className={styles.turnValue}>
-            {hostControlPanelCopy.activeRoundTeamValue(activeRoundTeamName)}
+            {hostControlPanelCopy.activeRoundTeamValue(props.activeRoundTeamName)}
           </p>
-          {turnProgressLabel !== null && (
+          {props.turnProgressLabel !== null && (
             <>
               <p className={styles.turnTitle}>{hostControlPanelCopy.turnProgressTitle}</p>
-              <p className={styles.turnValue}>{turnProgressLabel}</p>
+              <p className={styles.turnValue}>{props.turnProgressLabel}</p>
             </>
           )}
         </div>
@@ -146,15 +74,15 @@ export const PlayersSurface = ({
             return (
               <li key={player.id} className={styles.listRow}>
                 <span className={styles.playerName}>{player.name}</span>
-                {isSetupPhase && (
+                {props.mode === "setup" && (
                   <select
                     aria-label={hostControlPanelCopy.assignmentSelectLabel(player.name)}
                     className={styles.assignmentSelect}
                     value={assignedTeamId}
                     onChange={(event): void => {
-                      onAssignPlayer(player.id, event.target.value);
+                      props.onAssignPlayer(player.id, event.target.value);
                     }}
-                    disabled={assignmentDisabled}
+                    disabled={props.assignmentDisabled}
                   >
                     <option value="">{hostControlPanelCopy.unassignedOptionLabel}</option>
                     {teams.map((team) => {
@@ -166,12 +94,12 @@ export const PlayersSurface = ({
                     })}
                   </select>
                 )}
-                {isEatingPhase && (
+                {props.mode === "eating" && (
                   <div className={styles.participationRow}>
                     <span className={styles.playerMeta}>
                       {assignedTeamId.length > 0
                         ? hostControlPanelCopy.assignedTeamLabel(
-                            teamNameByTeamId.get(assignedTeamId) ??
+                            props.teamNameByTeamId.get(assignedTeamId) ??
                               hostControlPanelCopy.noAssignedTeamLabel
                           )
                         : hostControlPanelCopy.noAssignedTeamLabel}
@@ -180,19 +108,17 @@ export const PlayersSurface = ({
                       <input
                         className={styles.participationControl}
                         type="checkbox"
-                        checked={wingParticipationByPlayerId[player.id] === true}
+                        checked={props.wingParticipationByPlayerId[player.id] === true}
                         onChange={(event): void => {
-                          onSetWingParticipation(player.id, event.target.checked);
+                          props.onSetWingParticipation(player.id, event.target.checked);
                         }}
                         disabled={
-                          participationDisabled ||
+                          props.participationDisabled ||
                           assignedTeamId.length === 0 ||
-                          (activeRoundTeamId !== null &&
-                            assignedTeamId !== activeRoundTeamId)
+                          (props.activeRoundTeamId !== null &&
+                            assignedTeamId !== props.activeRoundTeamId)
                         }
-                        aria-label={hostControlPanelCopy.wingParticipationToggleLabel(
-                          player.name
-                        )}
+                        aria-label={hostControlPanelCopy.wingParticipationToggleLabel(player.name)}
                       />
                       <span>{hostControlPanelCopy.ateWingLabel}</span>
                     </label>
