@@ -38,9 +38,13 @@ test("renders assignment controls during setup", () => {
       teamNameByTeamId={teamNameByTeamId}
       isSetupPhase
       isEatingPhase={false}
+      isMinigameIntroPhase={false}
       isTriviaMinigamePlayPhase={false}
       wingParticipationByPlayerId={{}}
       currentTriviaPrompt={null}
+      activeRoundTeamId={null}
+      activeRoundTeamName="No team assigned"
+      turnProgressLabel={null}
       activeTurnTeamName="No team assigned"
       assignmentDisabled={false}
       participationDisabled
@@ -74,6 +78,7 @@ test("renders trivia host controls during trivia minigame play", () => {
       teamNameByTeamId={teamNameByTeamId}
       isSetupPhase={false}
       isEatingPhase={false}
+      isMinigameIntroPhase={false}
       isTriviaMinigamePlayPhase
       wingParticipationByPlayerId={{}}
       currentTriviaPrompt={{
@@ -81,6 +86,9 @@ test("renders trivia host controls during trivia minigame play", () => {
         question: "Which scale measures pepper heat?",
         answer: "Scoville"
       }}
+      activeRoundTeamId="team-alpha"
+      activeRoundTeamName="Team Alpha"
+      turnProgressLabel="Team 1 of 2"
       activeTurnTeamName="Team Alpha"
       assignmentDisabled
       participationDisabled

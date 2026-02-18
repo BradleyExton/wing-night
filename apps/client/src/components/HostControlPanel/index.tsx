@@ -69,6 +69,21 @@ export const HostControlPanel = ({
     isMinigamePlayPhase && roomState?.currentRoundConfig?.minigame === "TRIVIA";
 
   const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
+  const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
+  const activeRoundTeamName =
+    activeRoundTeamId !== null
+      ? (teamNameByTeamId.get(activeRoundTeamId) ??
+        hostControlPanelCopy.noAssignedTeamLabel)
+      : hostControlPanelCopy.noAssignedTeamLabel;
+  const turnProgressLabel =
+    roomState &&
+    roomState.roundTurnCursor >= 0 &&
+    roomState.turnOrderTeamIds.length > 0
+      ? hostControlPanelCopy.turnProgressLabel(
+          roomState.roundTurnCursor + 1,
+          roomState.turnOrderTeamIds.length
+        )
+      : null;
   const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
   const activeTurnTeamName =
@@ -196,9 +211,13 @@ export const HostControlPanel = ({
                 teamNameByTeamId={teamNameByTeamId}
                 isSetupPhase={isSetupPhase}
                 isEatingPhase={isEatingPhase}
+                isMinigameIntroPhase={isMinigameIntroPhase}
                 isTriviaMinigamePlayPhase={isTriviaMinigamePlayPhase}
                 wingParticipationByPlayerId={wingParticipationByPlayerId}
                 currentTriviaPrompt={currentTriviaPrompt}
+                activeRoundTeamId={activeRoundTeamId}
+                activeRoundTeamName={activeRoundTeamName}
+                turnProgressLabel={turnProgressLabel}
                 activeTurnTeamName={activeTurnTeamName}
                 assignmentDisabled={assignmentDisabled}
                 participationDisabled={participationDisabled}

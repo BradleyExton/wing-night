@@ -170,7 +170,10 @@ Global Phases:
 7. ROUND_RESULTS
 8. FINAL_RESULTS
 
-Rounds 1–N repeat phases 3–7.
+Rounds 1–N repeat phases 3–7 with a per-team loop:
+- `ROUND_INTRO` (once per round)
+- `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` (once per team, in fixed turn order)
+- `ROUND_RESULTS` (once after the last team turn in the round)
 
 ---
 
@@ -201,11 +204,10 @@ Host advances → EATING
 
 ### EATING
 Host:
-- Record per-player participation
-- Mark all ate (per team)
+- Record per-player participation for the active team only
 - Pause/extend timer
 
-Wing points calculated but NOT applied yet.
+Wing points are accumulated in pending round totals but NOT applied yet.
 
 ---
 
@@ -213,13 +215,15 @@ Wing points calculated but NOT applied yet.
 Display:
 - Mini-game title
 - Short instructions
+- Active team + turn progress (for example, Team 2 of 4)
 
 ---
 
 ### MINIGAME_PLAY (Turn-Based)
 
-- One team at a time
-- Fixed turn order for entire game
+- One active team turn at a time
+- Fixed round turn order for the game
+- Mini-game scoring mutations are accepted for the active team only
 - PASS_AND_PLAY hides host controls
 - Host unlock via press-and-hold
 
@@ -232,7 +236,7 @@ Display:
 - Updated totals
 
 At this phase:
-- Apply round points to total scores
+- Apply accumulated round points (wing + mini-game) to total scores
 
 ---
 
@@ -267,6 +271,11 @@ Tie → Sudden death trivia.
   - Phase
   - Timers
   - Scoring
+- RoomState snapshots include turn context:
+  - `turnOrderTeamIds`
+  - `roundTurnCursor`
+  - `activeRoundTeamId`
+  - `completedRoundTurnTeamIds`
 - WebSockets (Socket.IO) for realtime sync
 - Full state snapshot on reconnect
 - In-memory state only

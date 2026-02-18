@@ -25,7 +25,11 @@ export const displayCopy = {
     `Mini-Game: ${minigame}`,
   triviaTurnTitle: "Trivia Turn",
   triviaQuestionLabel: "Question",
-  activeTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,
+  activeTeamLabel: "Active Team",
+  activeTeamValue: (teamName: string): string => teamName,
+  turnProgressTitle: "Turn Progress",
+  turnProgressLabel: (turnNumber: number, totalTurns: number): string =>
+    `Team ${turnNumber} of ${totalTurns}`,
   eatingTimerLabel: "Round Timer",
   eatingTimerValue: (eatingSeconds: number): string => {
     const minutes = Math.floor(eatingSeconds / 60);
