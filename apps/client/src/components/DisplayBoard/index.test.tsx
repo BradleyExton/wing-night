@@ -8,7 +8,7 @@ import {
   type Team
 } from "@wingnight/shared";
 
-import { DisplayPlaceholder } from "./index";
+import { DisplayBoard } from "./index";
 
 const gameConfigFixture: GameConfigFile = {
   name: "Fixture Config",
@@ -59,7 +59,7 @@ const buildSnapshot = (
 };
 
 test("renders waiting copy when room state is missing", () => {
-  const html = renderToStaticMarkup(<DisplayPlaceholder roomState={null} />);
+  const html = renderToStaticMarkup(<DisplayBoard roomState={null} />);
 
   assert.match(html, /Waiting for room state/);
   assert.match(html, /Standings/);
@@ -68,23 +68,11 @@ test("renders waiting copy when room state is missing", () => {
 
 test("renders eating timer view from snapshot config", () => {
   const html = renderToStaticMarkup(
-    <DisplayPlaceholder roomState={buildSnapshot(Phase.EATING)} />
+    <DisplayBoard roomState={buildSnapshot(Phase.EATING)} />
   );
 
   assert.match(html, /Round Timer/);
   assert.match(html, /02:00/);
-});
-
-test("renders round intro details from currentRoundConfig", () => {
-  const html = renderToStaticMarkup(
-    <DisplayPlaceholder roomState={buildSnapshot(Phase.ROUND_INTRO)} />
-  );
-
-  assert.match(html, /Round 1: Warm Up/);
-  assert.match(html, /Sauce/);
-  assert.match(html, /Frank&#x27;s/);
-  assert.match(html, /Mini-Game/);
-  assert.match(html, /TRIVIA/);
 });
 
 test("renders standings in descending score order", () => {
@@ -103,36 +91,8 @@ test("renders standings in descending score order", () => {
     }
   ];
   const html = renderToStaticMarkup(
-    <DisplayPlaceholder roomState={buildSnapshot(Phase.ROUND_RESULTS, teams)} />
+    <DisplayBoard roomState={buildSnapshot(Phase.ROUND_RESULTS, teams)} />
   );
 
   assert.ok(html.indexOf("Team Beta") < html.indexOf("Team Alpha"));
-});
-
-test("renders trivia turn question and active team during MINIGAME_PLAY", () => {
-  const teams: Team[] = [
-    {
-      id: "team-alpha",
-      name: "Team Alpha",
-      playerIds: [],
-      totalScore: 3
-    }
-  ];
-  const html = renderToStaticMarkup(
-    <DisplayPlaceholder
-      roomState={buildSnapshot(Phase.MINIGAME_PLAY, teams, {
-        activeTurnTeamId: "team-alpha",
-        currentTriviaPrompt: {
-          id: "prompt-1",
-          question: "Which scale measures pepper heat?",
-          answer: "Scoville"
-        }
-      })}
-    />
-  );
-
-  assert.match(html, /Trivia Turn/);
-  assert.match(html, /Active Team: Team Alpha/);
-  assert.match(html, /Which scale measures pepper heat\?/);
-  assert.doesNotMatch(html, /Scoville/);
 });

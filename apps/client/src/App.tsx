@@ -1,7 +1,7 @@
 import { CLIENT_TO_SERVER_EVENTS, type RoomState } from "@wingnight/shared";
 import { useEffect, useState } from "react";
 
-import { DisplayPlaceholder } from "./components/DisplayPlaceholder";
+import { DisplayBoard } from "./components/DisplayBoard";
 import { HostControlPanel } from "./components/HostControlPanel";
 import { RouteNotFound } from "./components/RouteNotFound";
 import { roomSocket } from "./socket/createRoomSocket";
@@ -78,7 +78,7 @@ export const App = (): JSX.Element => {
   }
 
   if (route === "DISPLAY") {
-    return <DisplayPlaceholder roomState={roomState} />;
+    return <DisplayBoard roomState={roomState} />;
   }
 
   return <RouteNotFound />;
