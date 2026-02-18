@@ -1,12 +1,5 @@
 import { Phase, type MinigameType } from "@wingnight/shared";
-
-const formatPhaseLabel = (phase: Phase): string => {
-  return phase
-    .toLowerCase()
-    .split("_")
-    .map((segment) => `${segment[0]?.toUpperCase() ?? ""}${segment.slice(1)}`)
-    .join(" ");
-};
+import { formatClockSeconds, formatPhaseLabel } from "./formatters";
 
 const phaseAdvanceHint = (phase: Phase): string => {
   switch (phase) {
@@ -99,14 +92,7 @@ export const hostCopy = {
   timerResumeButtonLabel: "Resume Timer",
   timerExtendFifteenButtonLabel: "+15s",
   timerExtendThirtyButtonLabel: "+30s",
-  timerValue: (remainingSeconds: number): string => {
-    const minutes = Math.floor(remainingSeconds / 60);
-    const seconds = remainingSeconds % 60;
-
-    return `${minutes.toString().padStart(2, "0")}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
-  },
+  timerValue: formatClockSeconds,
   phaseAdvanceHint,
   unassignedOptionLabel: "Unassigned",
   assignmentSelectLabel: (playerName: string): string =>
