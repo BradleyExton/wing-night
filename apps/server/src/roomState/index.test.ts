@@ -882,6 +882,27 @@ test("setWingParticipation recomputes totals when a player is unchecked", () => 
   assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 0);
 });
 
+test("setWingParticipation idempotent updates do not replace redo snapshot", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.canRedoScoringMutation, true);
+
+  setWingParticipation("player-1", true);
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.wingParticipationByPlayerId["player-1"], true);
+  assert.equal(snapshot.canRedoScoringMutation, true);
+
+  redoLastScoringMutation();
+  snapshot = getRoomStateSnapshot();
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+  assert.equal(snapshot.canRedoScoringMutation, false);
+});
+
 test("setWingParticipation ignores invalid mutations", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
@@ -1596,6 +1617,11 @@ test("fatal room state blocks host mutations", () => {
   resumeRoomTimer();
   extendRoomTimer(15);
   advanceRoomStatePhase();
+  skipTurnBoundary();
+  reorderTurnOrder(["team-1", "team-2"]);
+  adjustTeamScore("team-1", 2);
+  redoLastScoringMutation();
+  resetGameToSetup();
 
   const afterMutation = getRoomStateSnapshot();
 
