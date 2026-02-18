@@ -69,62 +69,52 @@ export const attachSocketServer = (
 
   socketServer.on("connection", (socket) => {
     const socketClientRole = resolveSocketClientRole(socket.handshake.auth);
+    const broadcastAfter = (runMutation: () => ReturnType<typeof getRoomStateSnapshot>): void => {
+      socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, runMutation());
+    };
 
     registerRoomStateHandlers(
       socket,
       getRoomStateSnapshot,
       {
         onAuthorizedNextPhase: () => {
-          const updatedSnapshot = advanceRoomStatePhase();
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => advanceRoomStatePhase());
         },
         onAuthorizedSkipTurnBoundary: () => {
-          const updatedSnapshot = skipTurnBoundary();
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => skipTurnBoundary());
         },
         onAuthorizedReorderTurnOrder: (teamIds) => {
-          const updatedSnapshot = reorderTurnOrder(teamIds);
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => reorderTurnOrder(teamIds));
         },
         onAuthorizedResetGame: () => {
-          const updatedSnapshot = resetGameToSetup();
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => resetGameToSetup());
         },
         onAuthorizedCreateTeam: (name) => {
-          const updatedSnapshot = createTeam(name);
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => createTeam(name));
         },
         onAuthorizedAssignPlayer: (playerId, teamId) => {
-          const updatedSnapshot = assignPlayerToTeam(playerId, teamId);
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => assignPlayerToTeam(playerId, teamId));
         },
         onAuthorizedSetWingParticipation: (playerId, didEat) => {
-          const updatedSnapshot = setWingParticipation(playerId, didEat);
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => setWingParticipation(playerId, didEat));
         },
         onAuthorizedAdjustTeamScore: (teamId, delta) => {
-          const updatedSnapshot = adjustTeamScore(teamId, delta);
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => adjustTeamScore(teamId, delta));
         },
         onAuthorizedRedoLastMutation: () => {
-          const updatedSnapshot = redoLastScoringMutation();
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => redoLastScoringMutation());
         },
         onAuthorizedRecordTriviaAttempt: (isCorrect) => {
-          const updatedSnapshot = recordTriviaAttempt(isCorrect);
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => recordTriviaAttempt(isCorrect));
         },
         onAuthorizedPauseTimer: () => {
-          const updatedSnapshot = pauseRoomTimer();
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => pauseRoomTimer());
         },
         onAuthorizedResumeTimer: () => {
-          const updatedSnapshot = resumeRoomTimer();
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => resumeRoomTimer());
         },
         onAuthorizedExtendTimer: (additionalSeconds) => {
-          const updatedSnapshot = extendRoomTimer(additionalSeconds);
-          socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, updatedSnapshot);
+          broadcastAfter(() => extendRoomTimer(additionalSeconds));
         }
       },
       socketClientRole === CLIENT_ROLES.HOST,
