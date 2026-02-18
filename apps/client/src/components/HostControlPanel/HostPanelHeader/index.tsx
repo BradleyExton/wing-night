@@ -43,6 +43,7 @@ export const HostPanelHeader = ({
   const turnOrderCount = roomState?.turnOrderTeamIds.length ?? 0;
   const roundTurnCursor = roomState?.roundTurnCursor ?? -1;
   const hasValidTurnProgress =
+    isTurnContextPhase &&
     roundTurnCursor >= 0 &&
     turnOrderCount > 0 &&
     roundTurnCursor < turnOrderCount;
