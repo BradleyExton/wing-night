@@ -10,6 +10,7 @@ import { Phase, type RoomState } from "@wingnight/shared";
 import { resolveMinigameModule } from "../registry/index.js";
 import {
   clearTriviaProjectionFromRoomState,
+  projectTriviaDisplayViewToRoomState,
   projectTriviaHostViewToRoomState
 } from "../triviaProjection/index.js";
 
@@ -42,7 +43,13 @@ const projectTriviaRuntimeStateToRoomState = (
     state: currentTriviaRuntimeState,
     context: resolveTriviaMinigameContext(state)
   });
+  const displayView = triviaModule.selectDisplayView({
+    state: currentTriviaRuntimeState,
+    context: resolveTriviaMinigameContext(state)
+  });
+
   projectTriviaHostViewToRoomState(state, hostView);
+  projectTriviaDisplayViewToRoomState(state, displayView);
 };
 
 const resolveActiveTriviaRuntimeState = (): TriviaMinigameState | null => {

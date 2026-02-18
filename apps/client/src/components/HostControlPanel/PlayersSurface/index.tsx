@@ -1,4 +1,3 @@
-import type { TriviaPrompt } from "@wingnight/shared";
 import type { Player, Team } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
@@ -11,16 +10,11 @@ type PlayersSurfaceProps = {
   teamNameByTeamId: Map<string, string>;
   isSetupPhase: boolean;
   isEatingPhase: boolean;
-  isTriviaMinigamePlayPhase: boolean;
   wingParticipationByPlayerId: Record<string, boolean>;
-  currentTriviaPrompt: TriviaPrompt | null;
-  activeTurnTeamName: string;
   assignmentDisabled: boolean;
   participationDisabled: boolean;
-  triviaAttemptDisabled: boolean;
   onAssignPlayer: (playerId: string, selectedTeamId: string) => void;
   onSetWingParticipation: (playerId: string, didEat: boolean) => void;
-  onRecordTriviaAttempt: (isCorrect: boolean) => void;
 };
 
 export const PlayersSurface = ({
@@ -30,16 +24,11 @@ export const PlayersSurface = ({
   teamNameByTeamId,
   isSetupPhase,
   isEatingPhase,
-  isTriviaMinigamePlayPhase,
   wingParticipationByPlayerId,
-  currentTriviaPrompt,
-  activeTurnTeamName,
   assignmentDisabled,
   participationDisabled,
-  triviaAttemptDisabled,
   onAssignPlayer,
-  onSetWingParticipation,
-  onRecordTriviaAttempt
+  onSetWingParticipation
 }: PlayersSurfaceProps): JSX.Element => {
   return (
     <section className={`${styles.card} ${styles.playersCard}`}>
@@ -49,59 +38,6 @@ export const PlayersSurface = ({
           {hostControlPanelCopy.eatingParticipationDescription}
         </p>
       )}
-      {isTriviaMinigamePlayPhase && (
-        <>
-          <p className={styles.sectionDescription}>
-            {hostControlPanelCopy.triviaSectionDescription}
-          </p>
-          <div className={styles.triviaMeta}>
-            <div>
-              <p className={styles.triviaLabel}>
-                {hostControlPanelCopy.triviaActiveTeamLabel(activeTurnTeamName)}
-              </p>
-            </div>
-            {currentTriviaPrompt && (
-              <>
-                <div>
-                  <p className={styles.triviaLabel}>
-                    {hostControlPanelCopy.triviaQuestionLabel}
-                  </p>
-                  <p className={styles.triviaValue}>{currentTriviaPrompt.question}</p>
-                </div>
-                <div>
-                  <p className={styles.triviaLabel}>
-                    {hostControlPanelCopy.triviaAnswerLabel}
-                  </p>
-                  <p className={styles.triviaValue}>{currentTriviaPrompt.answer}</p>
-                </div>
-              </>
-            )}
-          </div>
-          <div className={styles.triviaActions}>
-            <button
-              className={styles.actionButton}
-              type="button"
-              disabled={triviaAttemptDisabled}
-              onClick={(): void => {
-                onRecordTriviaAttempt(true);
-              }}
-            >
-              {hostControlPanelCopy.triviaCorrectButtonLabel}
-            </button>
-            <button
-              className={styles.actionButton}
-              type="button"
-              disabled={triviaAttemptDisabled}
-              onClick={(): void => {
-                onRecordTriviaAttempt(false);
-              }}
-            >
-              {hostControlPanelCopy.triviaIncorrectButtonLabel}
-            </button>
-          </div>
-        </>
-      )}
-
       {players.length === 0 && (
         <p className={styles.sectionDescription}>{hostControlPanelCopy.noPlayersLabel}</p>
       )}
