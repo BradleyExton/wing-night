@@ -66,18 +66,7 @@ export const StageSurface = ({
               : displayBoardCopy.roundFallbackLabel}
           </p>
           {shouldRenderTeamTurnContext && (
-            <div className={styles.turnMeta}>
-              <p className={styles.turnLabel}>{displayBoardCopy.activeTeamLabel}</p>
-              <p className={styles.turnValue}>
-                {displayBoardCopy.activeTeamValue(activeTeamName)}
-              </p>
-              {turnProgressLabel !== null && (
-                <>
-                  <p className={styles.turnLabel}>{displayBoardCopy.turnProgressTitle}</p>
-                  <p className={styles.turnValue}>{turnProgressLabel}</p>
-                </>
-              )}
-            </div>
+            <TurnMeta activeTeamName={activeTeamName} turnProgressLabel={turnProgressLabel} />
           )}
           <div className={styles.timerWrap}>
             <p className={styles.timerLabel}>{displayBoardCopy.eatingTimerLabel}</p>
@@ -97,18 +86,7 @@ export const StageSurface = ({
               : displayBoardCopy.roundFallbackLabel}
           </p>
           {shouldRenderTeamTurnContext && (
-            <div className={styles.turnMeta}>
-              <p className={styles.turnLabel}>{displayBoardCopy.activeTeamLabel}</p>
-              <p className={styles.turnValue}>
-                {displayBoardCopy.activeTeamValue(activeTeamName)}
-              </p>
-              {turnProgressLabel !== null && (
-                <>
-                  <p className={styles.turnLabel}>{displayBoardCopy.turnProgressTitle}</p>
-                  <p className={styles.turnValue}>{turnProgressLabel}</p>
-                </>
-              )}
-            </div>
+            <TurnMeta activeTeamName={activeTeamName} turnProgressLabel={turnProgressLabel} />
           )}
           {shouldRenderTriviaPrompt && (
             <div className={styles.metaGrid}>
@@ -144,6 +122,11 @@ type RoundIntroSurfaceProps = {
   currentRoundConfig: GameConfigRound;
 };
 
+type TurnMetaProps = {
+  activeTeamName: string;
+  turnProgressLabel: string | null;
+};
+
 const RoundIntroSurface = ({ currentRoundConfig }: RoundIntroSurfaceProps): JSX.Element => {
   return (
     <>
@@ -164,5 +147,20 @@ const RoundIntroSurface = ({ currentRoundConfig }: RoundIntroSurfaceProps): JSX.
         </div>
       </div>
     </>
+  );
+};
+
+const TurnMeta = ({ activeTeamName, turnProgressLabel }: TurnMetaProps): JSX.Element => {
+  return (
+    <div className={styles.turnMeta}>
+      <p className={styles.turnLabel}>{displayBoardCopy.activeTeamLabel}</p>
+      <p className={styles.turnValue}>{displayBoardCopy.activeTeamValue(activeTeamName)}</p>
+      {turnProgressLabel !== null && (
+        <>
+          <p className={styles.turnLabel}>{displayBoardCopy.turnProgressTitle}</p>
+          <p className={styles.turnValue}>{turnProgressLabel}</p>
+        </>
+      )}
+    </div>
   );
 };
