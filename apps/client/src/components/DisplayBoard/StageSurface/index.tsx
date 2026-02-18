@@ -16,21 +16,40 @@ export const StageSurface = ({
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const isRoundIntroPhase = phase === Phase.ROUND_INTRO;
   const isEatingPhase = phase === Phase.EATING;
+  const isMinigameIntroPhase = phase === Phase.MINIGAME_INTRO;
+  const isMinigamePlayPhase = phase === Phase.MINIGAME_PLAY;
+  const isMinigamePhase = isMinigameIntroPhase || isMinigamePlayPhase;
   const isTriviaTurnPhase =
-    phase === Phase.MINIGAME_PLAY && currentRoundConfig?.minigame === "TRIVIA";
+    isMinigamePlayPhase && currentRoundConfig?.minigame === "TRIVIA";
 
+  const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
   const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
+  const activeRoundTeamName =
+    activeRoundTeamId !== null
+      ? (roomState?.teams.find((team) => team.id === activeRoundTeamId)?.name ?? null)
+      : null;
   const activeTurnTeamName =
     activeTurnTeamId !== null
       ? (roomState?.teams.find((team) => team.id === activeTurnTeamId)?.name ?? null)
       : null;
-  const shouldRenderTriviaTurn =
-    isTriviaTurnPhase && currentTriviaPrompt !== null && activeTurnTeamName !== null;
+  const activeTeamName = activeRoundTeamName ?? activeTurnTeamName;
+  const shouldRenderTriviaPrompt = isTriviaTurnPhase && currentTriviaPrompt !== null;
 
   const eatingSeconds = roomState?.gameConfig?.timers.eatingSeconds ?? null;
   const shouldRenderEatingTimer = isEatingPhase && eatingSeconds !== null;
   const shouldRenderRoundDetails = isRoundIntroPhase && currentRoundConfig !== null;
+  const turnNumber =
+    roomState && roomState.roundTurnCursor >= 0
+      ? roomState.roundTurnCursor + 1
+      : null;
+  const totalTurns = roomState?.turnOrderTeamIds.length ?? 0;
+  const turnProgressLabel =
+    turnNumber !== null && totalTurns > 0
+      ? displayBoardCopy.turnProgressLabel(turnNumber, totalTurns)
+      : null;
+  const shouldRenderTeamTurnContext =
+    activeTeamName !== null && (isEatingPhase || isMinigamePhase);
 
   return (
     <article className={styles.card}>
@@ -46,6 +65,20 @@ export const StageSurface = ({
               ? displayBoardCopy.roundSauceSummary(currentRoundConfig.sauce)
               : displayBoardCopy.roundFallbackLabel}
           </p>
+          {shouldRenderTeamTurnContext && (
+            <div className={styles.turnMeta}>
+              <p className={styles.turnLabel}>{displayBoardCopy.activeTeamLabel}</p>
+              <p className={styles.turnValue}>
+                {displayBoardCopy.activeTeamValue(activeTeamName)}
+              </p>
+              {turnProgressLabel !== null && (
+                <>
+                  <p className={styles.turnLabel}>{displayBoardCopy.turnProgressTitle}</p>
+                  <p className={styles.turnValue}>{turnProgressLabel}</p>
+                </>
+              )}
+            </div>
+          )}
           <div className={styles.timerWrap}>
             <p className={styles.timerLabel}>{displayBoardCopy.eatingTimerLabel}</p>
             <p className={styles.timerValue}>
@@ -55,22 +88,45 @@ export const StageSurface = ({
         </>
       )}
 
-      {shouldRenderTriviaTurn && (
+      {isMinigamePhase && (
         <>
-          <h2 className={styles.title}>{displayBoardCopy.triviaTurnTitle}</h2>
+          <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
           <p className={styles.fallbackText}>
-            {displayBoardCopy.activeTeamLabel(activeTurnTeamName)}
+            {currentRoundConfig
+              ? displayBoardCopy.roundMinigameSummary(currentRoundConfig.minigame)
+              : displayBoardCopy.roundFallbackLabel}
           </p>
-          <div className={styles.metaGrid}>
-            <div className={styles.metaItem}>
-              <p className={styles.metaLabel}>{displayBoardCopy.triviaQuestionLabel}</p>
-              <p className={styles.metaValue}>{currentTriviaPrompt.question}</p>
+          {shouldRenderTeamTurnContext && (
+            <div className={styles.turnMeta}>
+              <p className={styles.turnLabel}>{displayBoardCopy.activeTeamLabel}</p>
+              <p className={styles.turnValue}>
+                {displayBoardCopy.activeTeamValue(activeTeamName)}
+              </p>
+              {turnProgressLabel !== null && (
+                <>
+                  <p className={styles.turnLabel}>{displayBoardCopy.turnProgressTitle}</p>
+                  <p className={styles.turnValue}>{turnProgressLabel}</p>
+                </>
+              )}
             </div>
-          </div>
+          )}
+          {shouldRenderTriviaPrompt && (
+            <div className={styles.metaGrid}>
+              <div className={styles.metaItem}>
+                <p className={styles.metaLabel}>{displayBoardCopy.triviaQuestionLabel}</p>
+                <p className={styles.metaValue}>{currentTriviaPrompt.question}</p>
+              </div>
+            </div>
+          )}
+          {isTriviaTurnPhase && !shouldRenderTriviaPrompt && (
+            <p className={styles.fallbackText}>{displayBoardCopy.triviaTurnTitle}</p>
+          )}
         </>
       )}
 
-      {!shouldRenderRoundDetails && !shouldRenderEatingTimer && !shouldRenderTriviaTurn && (
+      {!shouldRenderRoundDetails &&
+        !shouldRenderEatingTimer &&
+        !isMinigamePhase && (
         <>
           <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
           <p className={styles.fallbackText}>

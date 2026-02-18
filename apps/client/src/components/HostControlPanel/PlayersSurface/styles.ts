@@ -7,6 +7,14 @@ export const sectionHeading = "m-0 text-xl font-semibold text-text";
 
 export const sectionDescription = "mt-2 text-sm text-muted";
 
+export const turnMeta =
+  "mt-3 grid gap-2 rounded-md border border-text/10 bg-surface px-3 py-3 md:grid-cols-2";
+
+export const turnTitle =
+  "m-0 text-xs font-semibold uppercase tracking-wide text-muted";
+
+export const turnValue = "m-0 text-lg font-semibold text-text";
+
 export const triviaMeta = "mt-4 space-y-3";
 
 export const triviaLabel =

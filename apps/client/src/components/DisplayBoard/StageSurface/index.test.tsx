@@ -38,10 +38,10 @@ const buildSnapshot = (phase: Phase): RoomState => {
     gameConfig: gameConfigFixture,
     triviaPrompts: [],
     currentRoundConfig: gameConfigFixture.rounds[0],
-    turnOrderTeamIds: [],
-    roundTurnCursor: -1,
+    turnOrderTeamIds: ["team-1"],
+    roundTurnCursor: 0,
     completedRoundTurnTeamIds: [],
-    activeRoundTeamId: null,
+    activeRoundTeamId: "team-1",
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
@@ -77,7 +77,19 @@ test("renders trivia question without answer leakage", () => {
     />
   );
 
-  assert.match(html, /Trivia Turn/);
+  assert.match(html, /Active Team/);
+  assert.match(html, /Team 1 of 1/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.doesNotMatch(html, /Scoville/);
+});
+
+test("renders active team and turn progress during eating", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.EATING)} phaseLabel="Eating" />
+  );
+
+  assert.match(html, /Active Team/);
+  assert.match(html, /Team One/);
+  assert.match(html, /Team 1 of 1/);
+  assert.match(html, /Round Timer/);
 });

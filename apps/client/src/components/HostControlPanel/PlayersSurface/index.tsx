@@ -11,9 +11,13 @@ type PlayersSurfaceProps = {
   teamNameByTeamId: Map<string, string>;
   isSetupPhase: boolean;
   isEatingPhase: boolean;
+  isMinigameIntroPhase: boolean;
   isTriviaMinigamePlayPhase: boolean;
   wingParticipationByPlayerId: Record<string, boolean>;
   currentTriviaPrompt: TriviaPrompt | null;
+  activeRoundTeamId: string | null;
+  activeRoundTeamName: string;
+  turnProgressLabel: string | null;
   activeTurnTeamName: string;
   assignmentDisabled: boolean;
   participationDisabled: boolean;
@@ -30,9 +34,13 @@ export const PlayersSurface = ({
   teamNameByTeamId,
   isSetupPhase,
   isEatingPhase,
+  isMinigameIntroPhase,
   isTriviaMinigamePlayPhase,
   wingParticipationByPlayerId,
   currentTriviaPrompt,
+  activeRoundTeamId,
+  activeRoundTeamName,
+  turnProgressLabel,
   activeTurnTeamName,
   assignmentDisabled,
   participationDisabled,
@@ -41,6 +49,10 @@ export const PlayersSurface = ({
   onSetWingParticipation,
   onRecordTriviaAttempt
 }: PlayersSurfaceProps): JSX.Element => {
+  const shouldRenderTurnContext =
+    activeRoundTeamId !== null &&
+    (isEatingPhase || isMinigameIntroPhase || isTriviaMinigamePlayPhase);
+
   return (
     <section className={`${styles.card} ${styles.playersCard}`}>
       <h2 className={styles.sectionHeading}>{hostControlPanelCopy.playersSectionTitle}</h2>
@@ -101,6 +113,20 @@ export const PlayersSurface = ({
           </div>
         </>
       )}
+      {shouldRenderTurnContext && (
+        <div className={styles.turnMeta}>
+          <p className={styles.turnTitle}>{hostControlPanelCopy.activeRoundTeamTitle}</p>
+          <p className={styles.turnValue}>
+            {hostControlPanelCopy.activeRoundTeamValue(activeRoundTeamName)}
+          </p>
+          {turnProgressLabel !== null && (
+            <>
+              <p className={styles.turnTitle}>{hostControlPanelCopy.turnProgressTitle}</p>
+              <p className={styles.turnValue}>{turnProgressLabel}</p>
+            </>
+          )}
+        </div>
+      )}
 
       {players.length === 0 && (
         <p className={styles.sectionDescription}>{hostControlPanelCopy.noPlayersLabel}</p>
@@ -151,7 +177,12 @@ export const PlayersSurface = ({
                         onChange={(event): void => {
                           onSetWingParticipation(player.id, event.target.checked);
                         }}
-                        disabled={participationDisabled || assignedTeamId.length === 0}
+                        disabled={
+                          participationDisabled ||
+                          assignedTeamId.length === 0 ||
+                          (activeRoundTeamId !== null &&
+                            assignedTeamId !== activeRoundTeamId)
+                        }
                         aria-label={hostControlPanelCopy.wingParticipationToggleLabel(
                           player.name
                         )}

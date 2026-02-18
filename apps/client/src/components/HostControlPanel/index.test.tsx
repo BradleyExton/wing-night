@@ -102,6 +102,9 @@ test("renders eating participation controls and hides setup sections during EATI
   );
 
   assert.match(html, /Mark each player who finished their wing this round/);
+  assert.match(html, /Active Team/);
+  assert.match(html, /Team Alpha/);
+  assert.match(html, /Team 1 of 2/);
   assert.match(html, /Ate wing/);
   assert.doesNotMatch(html, /Team Setup/);
   assert.doesNotMatch(html, /Assign Alex to a team/);
@@ -123,6 +126,8 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
 
   assert.match(html, /Mark the active team&#x27;s answer as correct or incorrect/);
   assert.match(html, /Active Team: Team Alpha/);
+  assert.match(html, /Turn Progress/);
+  assert.match(html, /Team 1 of 2/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.match(html, /Scoville/);
   assert.match(html, /Correct/);
@@ -194,5 +199,7 @@ test("keeps MINIGAME_INTRO on detailed host view", () => {
 
   assert.match(html, /Team Setup/);
   assert.match(html, /Players/);
+  assert.match(html, /Active Team/);
+  assert.match(html, /Team 1 of 2/);
   assert.doesNotMatch(html, /Phase Status/);
 });

@@ -16,6 +16,14 @@ export const metaValue = "mt-2 text-2xl font-semibold text-text";
 export const timerWrap =
   "mt-6 rounded-xl border border-primary/40 bg-primary/10 px-5 py-6 text-center";
 
+export const turnMeta =
+  "mt-5 grid gap-2 rounded-xl border border-text/10 bg-surface px-4 py-4 md:grid-cols-2";
+
+export const turnLabel =
+  "m-0 text-xs font-semibold uppercase tracking-[0.16em] text-muted";
+
+export const turnValue = "m-0 text-lg font-semibold text-text";
+
 export const timerLabel =
   "m-0 text-xs font-semibold uppercase tracking-[0.18em] text-primary/90";
 
