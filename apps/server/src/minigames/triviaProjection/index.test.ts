@@ -30,7 +30,9 @@ const buildRoomState = (): RoomState => {
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {}
+    pendingMinigamePointsByTeamId: {},
+    fatalError: null,
+    canRedoScoringMutation: false
   };
 };
 

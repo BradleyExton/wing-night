@@ -4,6 +4,7 @@ import { createApp } from "./createApp/index.js";
 import { loadContent } from "./contentLoader/index.js";
 import { logError, logInfo } from "./logger/index.js";
 import {
+  setRoomStateFatalError,
   setRoomStateGameConfig,
   setRoomStatePlayers,
   setRoomStateTriviaPrompts
@@ -22,7 +23,8 @@ try {
   setRoomStateTriviaPrompts(triviaPrompts);
 } catch (error) {
   logError("server:contentLoadFailed", error);
-  process.exit(1);
+  const failureReason = error instanceof Error ? error.message : String(error);
+  setRoomStateFatalError(failureReason);
 }
 
 attachSocketServer(httpServer);

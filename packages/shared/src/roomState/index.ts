@@ -31,6 +31,11 @@ export type MinigameDisplayView = {
   currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
 };
 
+export type RoomFatalError = {
+  code: "CONTENT_LOAD_FAILED";
+  message: string;
+};
+
 export type RoomState = {
   phase: Phase;
   // 0 means pre-round state; rounds in progress are 1..N.
@@ -55,4 +60,6 @@ export type RoomState = {
   wingParticipationByPlayerId: Record<string, boolean>;
   pendingWingPointsByTeamId: Record<string, number>;
   pendingMinigamePointsByTeamId: Record<string, number>;
+  fatalError: RoomFatalError | null;
+  canRedoScoringMutation: boolean;
 };

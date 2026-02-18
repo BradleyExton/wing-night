@@ -3,8 +3,10 @@ import test from "node:test";
 import { Phase, type RoomState, type TriviaPrompt } from "@wingnight/shared";
 
 import {
+  captureTriviaRuntimeStateSnapshot,
   initializeTriviaRuntimeState,
   reduceTriviaAttempt,
+  restoreTriviaRuntimeStateSnapshot,
   resetTriviaRuntimeState,
   syncTriviaRuntimeWithPendingPoints,
   syncTriviaRuntimeWithPrompts
@@ -80,7 +82,9 @@ const buildRoomState = (prompts: TriviaPrompt[] = triviaPromptFixture): RoomStat
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {}
+    pendingMinigamePointsByTeamId: {},
+    fatalError: null,
+    canRedoScoringMutation: false
   };
 };
 
@@ -160,5 +164,38 @@ test("syncTriviaRuntimeWithPendingPoints updates pending points without changing
     assert.equal(roomState.activeTurnTeamId, "team-1");
     assert.equal(roomState.triviaPromptCursor, 1);
     assert.equal(roomState.currentTriviaPrompt?.id, "prompt-2");
+  });
+});
+
+test("capture/restore runtime snapshot rewinds trivia prompt and pending points", () => {
+  withRuntimeReset(() => {
+    const roomState = buildRoomState();
+    initializeTriviaRuntimeState(roomState, 15);
+    reduceTriviaAttempt(roomState, true, 15);
+    const runtimeSnapshot = captureTriviaRuntimeStateSnapshot();
+
+    reduceTriviaAttempt(roomState, false, 15);
+    assert.equal(roomState.currentTriviaPrompt?.id, "prompt-1");
+
+    restoreTriviaRuntimeStateSnapshot(roomState, runtimeSnapshot);
+    assert.equal(roomState.pendingMinigamePointsByTeamId["team-1"], 1);
+    assert.equal(roomState.activeTurnTeamId, "team-1");
+    assert.equal(roomState.triviaPromptCursor, 1);
+    assert.equal(roomState.currentTriviaPrompt?.id, "prompt-2");
+  });
+});
+
+test("restoring null runtime snapshot clears trivia projection fields", () => {
+  withRuntimeReset(() => {
+    const roomState = buildRoomState();
+    initializeTriviaRuntimeState(roomState, 15);
+
+    restoreTriviaRuntimeStateSnapshot(roomState, null);
+
+    assert.equal(roomState.activeTurnTeamId, null);
+    assert.equal(roomState.currentTriviaPrompt, null);
+    assert.equal(roomState.triviaPromptCursor, 0);
+    assert.equal(roomState.minigameHostView, null);
+    assert.equal(roomState.minigameDisplayView, null);
   });
 });

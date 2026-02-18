@@ -10,6 +10,7 @@ import {
 
 import {
   advanceRoomStatePhase,
+  adjustTeamScore,
   assignPlayerToTeam,
   createTeam,
   createInitialRoomState,
@@ -17,13 +18,18 @@ import {
   getRoomStateSnapshot,
   pauseRoomTimer,
   recordTriviaAttempt,
+  redoLastScoringMutation,
+  reorderTurnOrder,
+  resetGameToSetup,
   resetRoomState,
   resumeRoomTimer,
   setPendingMinigamePoints,
+  setRoomStateFatalError,
   setRoomStateGameConfig,
   setRoomStateTriviaPrompts,
   setWingParticipation,
-  setRoomStatePlayers
+  setRoomStatePlayers,
+  skipTurnBoundary
 } from "./index.js";
 
 const gameConfigFixture: GameConfigFile = {
@@ -162,7 +168,9 @@ test("createInitialRoomState returns setup defaults", () => {
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {}
+    pendingMinigamePointsByTeamId: {},
+    fatalError: null,
+    canRedoScoringMutation: false
   });
 });
 
@@ -464,6 +472,87 @@ test("advanceRoomStatePhase increments round after ROUND_RESULTS when rounds rem
   assert.deepEqual(nextState.completedRoundTurnTeamIds, []);
 });
 
+test("reorderTurnOrder updates round-intro turn order and active team", () => {
+  resetRoomState();
+  setupThreeTeamsAndAssignments();
+  advanceUntil(Phase.ROUND_INTRO, 1);
+
+  const reorderedSnapshot = reorderTurnOrder(["team-3", "team-1", "team-2"]);
+
+  assert.equal(reorderedSnapshot.phase, Phase.ROUND_INTRO);
+  assert.deepEqual(reorderedSnapshot.turnOrderTeamIds, [
+    "team-3",
+    "team-1",
+    "team-2"
+  ]);
+  assert.equal(reorderedSnapshot.roundTurnCursor, 0);
+  assert.equal(reorderedSnapshot.activeRoundTeamId, "team-3");
+  assert.deepEqual(reorderedSnapshot.completedRoundTurnTeamIds, []);
+});
+
+test("reorderTurnOrder is ignored outside ROUND_INTRO", () => {
+  resetRoomState();
+  setupThreeTeamsAndAssignments();
+  advanceToEatingPhase();
+  const beforeMutation = getRoomStateSnapshot();
+
+  reorderTurnOrder(["team-2", "team-1", "team-3"]);
+
+  const afterMutation = getRoomStateSnapshot();
+
+  assert.deepEqual(afterMutation.turnOrderTeamIds, beforeMutation.turnOrderTeamIds);
+  assert.equal(afterMutation.activeRoundTeamId, beforeMutation.activeRoundTeamId);
+});
+
+test("reorderTurnOrder persists into later rounds and rejects invalid sets", () => {
+  resetRoomState();
+  setRoomStateGameConfig({
+    ...gameConfigFixture,
+    rounds: [
+      { ...gameConfigFixture.rounds[0] },
+      {
+        ...gameConfigFixture.rounds[0],
+        round: 2,
+        label: "Round Two",
+        sauce: "Hotter"
+      }
+    ]
+  });
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" },
+    { id: "player-3", name: "Player Three" }
+  ]);
+  createTeam("Team Alpha");
+  createTeam("Team Beta");
+  createTeam("Team Gamma");
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-2", "team-2");
+  assignPlayerToTeam("player-3", "team-3");
+  advanceUntil(Phase.ROUND_INTRO, 1);
+  reorderTurnOrder(["team-2", "team-3", "team-1"]);
+  const orderedSnapshot = getRoomStateSnapshot();
+
+  reorderTurnOrder(["team-2", "team-3"]);
+  reorderTurnOrder(["team-2", "team-3", "team-3"]);
+  reorderTurnOrder(["team-2", "team-3", "team-4"]);
+  const invalidMutationSnapshot = getRoomStateSnapshot();
+
+  assert.deepEqual(invalidMutationSnapshot.turnOrderTeamIds, orderedSnapshot.turnOrderTeamIds);
+
+  advanceToRoundResultsPhase(1);
+  advanceRoomStatePhase();
+  const nextRoundIntroSnapshot = getRoomStateSnapshot();
+
+  assert.equal(nextRoundIntroSnapshot.phase, Phase.ROUND_INTRO);
+  assert.deepEqual(nextRoundIntroSnapshot.turnOrderTeamIds, [
+    "team-2",
+    "team-3",
+    "team-1"
+  ]);
+  assert.equal(nextRoundIntroSnapshot.activeRoundTeamId, "team-2");
+});
+
 test("advanceRoomStatePhase loops team turns before round results", () => {
   resetRoomState();
   setupThreeTeamsAndAssignments();
@@ -512,6 +601,98 @@ test("advanceRoomStatePhase loops team turns before round results", () => {
   advanceRoomStatePhase();
   snapshot = getRoomStateSnapshot();
   assert.equal(snapshot.phase, Phase.FINAL_RESULTS);
+});
+
+test("skipTurnBoundary advances to next team EATING from EATING and preserves captured points", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+  const skippedSnapshot = skipTurnBoundary();
+
+  assert.equal(skippedSnapshot.phase, Phase.EATING);
+  assert.equal(skippedSnapshot.activeRoundTeamId, "team-2");
+  assert.equal(skippedSnapshot.roundTurnCursor, 1);
+  assert.deepEqual(skippedSnapshot.completedRoundTurnTeamIds, ["team-1"]);
+  assert.equal(skippedSnapshot.pendingWingPointsByTeamId["team-1"], 2);
+  assert.equal(skippedSnapshot.pendingWingPointsByTeamId["team-2"], 0);
+  assert.equal(skippedSnapshot.timer?.phase, Phase.EATING);
+});
+
+test("skipTurnBoundary advances from MINIGAME_INTRO to next team EATING", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+  advanceRoomStatePhase();
+  const introSnapshot = getRoomStateSnapshot();
+  assert.equal(introSnapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(introSnapshot.activeRoundTeamId, "team-1");
+
+  const skippedSnapshot = skipTurnBoundary();
+
+  assert.equal(skippedSnapshot.phase, Phase.EATING);
+  assert.equal(skippedSnapshot.activeRoundTeamId, "team-2");
+  assert.deepEqual(skippedSnapshot.completedRoundTurnTeamIds, ["team-1"]);
+});
+
+test("skipTurnBoundary from last-team MINIGAME_PLAY lands on ROUND_RESULTS without score corruption", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-1": 4 });
+  skipTurnBoundary();
+
+  setWingParticipation("player-2", true);
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-2": 3 });
+  const skippedSnapshot = skipTurnBoundary();
+
+  assert.equal(skippedSnapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(skippedSnapshot.teams[0].totalScore, 6);
+  assert.equal(skippedSnapshot.teams[1].totalScore, 5);
+  assert.deepEqual(skippedSnapshot.completedRoundTurnTeamIds, ["team-1", "team-2"]);
+});
+
+test("skipTurnBoundary is ignored outside turn phases", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceUntil(Phase.ROUND_INTRO, 1);
+  const beforeSkip = getRoomStateSnapshot();
+
+  skipTurnBoundary();
+  const afterSkip = getRoomStateSnapshot();
+
+  assert.deepEqual(afterSkip, beforeSkip);
+});
+
+test("skipTurnBoundary clears redo history when landing on ROUND_RESULTS", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  skipTurnBoundary();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-2": 3 });
+  assert.equal(getRoomStateSnapshot().canRedoScoringMutation, true);
+
+  const roundResultsSnapshot = skipTurnBoundary();
+
+  assert.equal(roundResultsSnapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(roundResultsSnapshot.teams[1].totalScore, 3);
+  assert.equal(roundResultsSnapshot.canRedoScoringMutation, false);
+
+  redoLastScoringMutation();
+  const afterRedoSnapshot = getRoomStateSnapshot();
+
+  assert.equal(afterRedoSnapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(afterRedoSnapshot.teams[1].totalScore, 3);
 });
 
 test("advanceRoomStatePhase logs transition metadata", () => {
@@ -699,6 +880,27 @@ test("setWingParticipation recomputes totals when a player is unchecked", () => 
 
   assert.equal(snapshot.wingParticipationByPlayerId["player-1"], false);
   assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 0);
+});
+
+test("setWingParticipation idempotent updates do not replace redo snapshot", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.canRedoScoringMutation, true);
+
+  setWingParticipation("player-1", true);
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.wingParticipationByPlayerId["player-1"], true);
+  assert.equal(snapshot.canRedoScoringMutation, true);
+
+  redoLastScoringMutation();
+  snapshot = getRoomStateSnapshot();
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+  assert.equal(snapshot.canRedoScoringMutation, false);
 });
 
 test("setWingParticipation ignores invalid mutations", () => {
@@ -1133,6 +1335,231 @@ test("logs score mutation metadata when applying round points", () => {
   });
 });
 
+test("adjustTeamScore applies integer deltas outside SETUP", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceRoomStatePhase();
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.INTRO);
+
+  adjustTeamScore("team-1", 5);
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.teams[0].totalScore, 5);
+
+  advanceToRoundResultsPhase(1);
+  adjustTeamScore("team-1", -2);
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(snapshot.teams[0].totalScore, 3);
+});
+
+test("adjustTeamScore rejects invalid mutations", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  const setupSnapshot = getRoomStateSnapshot();
+
+  adjustTeamScore("team-1", 4);
+  let snapshot = getRoomStateSnapshot();
+  assert.deepEqual(snapshot.teams, setupSnapshot.teams);
+
+  advanceRoomStatePhase();
+  adjustTeamScore("missing-team", 4);
+  adjustTeamScore("team-1", 0);
+  adjustTeamScore("team-1", 2.5);
+  adjustTeamScore("team-1", -1);
+  snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.teams[0].totalScore, 0);
+});
+
+test("redoLastScoringMutation undoes the latest wing participation mutation", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.wingParticipationByPlayerId["player-1"], true);
+  assert.equal(snapshot.canRedoScoringMutation, true);
+
+  redoLastScoringMutation();
+  snapshot = getRoomStateSnapshot();
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+  assert.equal(snapshot.canRedoScoringMutation, false);
+});
+
+test("redoLastScoringMutation restores scoring fields without rewinding phase or timer", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+  advanceRoomStatePhase();
+
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(snapshot.timer, null);
+  assert.equal(snapshot.canRedoScoringMutation, true);
+
+  redoLastScoringMutation();
+  snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(snapshot.timer, null);
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+  assert.equal(snapshot.canRedoScoringMutation, false);
+});
+
+test("redoLastScoringMutation restores trivia runtime prompt and points", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+  const beforeAttemptSnapshot = getRoomStateSnapshot();
+  assert.equal(beforeAttemptSnapshot.currentTriviaPrompt?.id, "prompt-1");
+
+  recordTriviaAttempt(true);
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-2");
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 1);
+  assert.equal(snapshot.canRedoScoringMutation, true);
+
+  redoLastScoringMutation();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-1");
+  assert.equal(snapshot.triviaPromptCursor, 0);
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], undefined);
+  assert.equal(snapshot.canRedoScoringMutation, false);
+});
+
+test("redoLastScoringMutation undoes manual score override", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceRoomStatePhase();
+  adjustTeamScore("team-1", 6);
+  assert.equal(getRoomStateSnapshot().teams[0].totalScore, 6);
+
+  redoLastScoringMutation();
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.teams[0].totalScore, 0);
+  assert.equal(snapshot.canRedoScoringMutation, false);
+});
+
+test("redo scoring history clears on round change", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceRoomStatePhase();
+  adjustTeamScore("team-1", 3);
+  assert.equal(getRoomStateSnapshot().canRedoScoringMutation, true);
+
+  advanceRoomStatePhase();
+  const roundIntroSnapshot = getRoomStateSnapshot();
+
+  assert.equal(roundIntroSnapshot.phase, Phase.ROUND_INTRO);
+  assert.equal(roundIntroSnapshot.currentRound, 1);
+  assert.equal(roundIntroSnapshot.canRedoScoringMutation, false);
+
+  redoLastScoringMutation();
+  assert.equal(getRoomStateSnapshot().teams[0].totalScore, 3);
+});
+
+test("redo scoring history clears on MINIGAME_PLAY -> ROUND_RESULTS", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  skipTurnBoundary();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-2": 2 });
+  assert.equal(getRoomStateSnapshot().canRedoScoringMutation, true);
+
+  const roundResultsSnapshot = advanceRoomStatePhase();
+
+  assert.equal(roundResultsSnapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(roundResultsSnapshot.teams[1].totalScore, 2);
+  assert.equal(roundResultsSnapshot.canRedoScoringMutation, false);
+
+  redoLastScoringMutation();
+  assert.equal(getRoomStateSnapshot().teams[1].totalScore, 2);
+});
+
+test("redo scoring history clears on resetGameToSetup", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceRoomStatePhase();
+  adjustTeamScore("team-1", 4);
+  assert.equal(getRoomStateSnapshot().canRedoScoringMutation, true);
+
+  resetGameToSetup();
+  const resetSnapshot = getRoomStateSnapshot();
+
+  assert.equal(resetSnapshot.canRedoScoringMutation, false);
+  redoLastScoringMutation();
+  assert.equal(getRoomStateSnapshot().canRedoScoringMutation, false);
+});
+
+test("resetGameToSetup clears transient game state and preserves loaded content from mid-round", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToEatingPhase();
+  setWingParticipation("player-1", true);
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-1": 4 });
+
+  const resetSnapshot = resetGameToSetup();
+
+  assert.equal(resetSnapshot.phase, Phase.SETUP);
+  assert.equal(resetSnapshot.currentRound, 0);
+  assert.equal(resetSnapshot.currentRoundConfig, null);
+  assert.equal(resetSnapshot.totalRounds, gameConfigFixture.rounds.length);
+  assert.equal(resetSnapshot.timer, null);
+  assert.equal(resetSnapshot.teams.length, 0);
+  assert.deepEqual(resetSnapshot.players, [
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" }
+  ]);
+  assert.deepEqual(resetSnapshot.gameConfig, gameConfigFixture);
+  assert.deepEqual(resetSnapshot.triviaPrompts, triviaPromptFixture);
+  assert.deepEqual(resetSnapshot.turnOrderTeamIds, []);
+  assert.equal(resetSnapshot.roundTurnCursor, -1);
+  assert.equal(resetSnapshot.activeRoundTeamId, null);
+  assert.equal(resetSnapshot.activeTurnTeamId, null);
+  assert.deepEqual(resetSnapshot.completedRoundTurnTeamIds, []);
+  assert.deepEqual(resetSnapshot.wingParticipationByPlayerId, {});
+  assert.deepEqual(resetSnapshot.pendingWingPointsByTeamId, {});
+  assert.deepEqual(resetSnapshot.pendingMinigamePointsByTeamId, {});
+  assert.equal(resetSnapshot.minigameHostView, null);
+  assert.equal(resetSnapshot.minigameDisplayView, null);
+  assert.equal(resetSnapshot.fatalError, null);
+});
+
+test("resetGameToSetup clears final-results scores while keeping content payloads", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToRoundResultsPhase(1);
+  advanceRoomStatePhase();
+  advanceToRoundResultsPhase(2);
+  advanceRoomStatePhase();
+  const finalSnapshot = getRoomStateSnapshot();
+  assert.equal(finalSnapshot.phase, Phase.FINAL_RESULTS);
+
+  const resetSnapshot = resetGameToSetup();
+
+  assert.equal(resetSnapshot.phase, Phase.SETUP);
+  assert.equal(resetSnapshot.currentRound, 0);
+  assert.equal(resetSnapshot.teams.length, 0);
+  assert.deepEqual(resetSnapshot.players, finalSnapshot.players);
+  assert.deepEqual(resetSnapshot.gameConfig, finalSnapshot.gameConfig);
+  assert.deepEqual(resetSnapshot.triviaPrompts, finalSnapshot.triviaPrompts);
+});
+
 test("createTeam is locked after leaving setup", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
@@ -1158,4 +1585,45 @@ test("assignPlayerToTeam is locked after leaving setup", () => {
 
   assert.equal(snapshot.phase, Phase.INTRO);
   assert.deepEqual(snapshot.teams[0].playerIds, ["player-1"]);
+});
+
+test("setRoomStateFatalError stores fatal snapshot and clears round state", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  const snapshot = setRoomStateFatalError("Invalid game config content.");
+
+  assert.equal(snapshot.phase, Phase.SETUP);
+  assert.equal(snapshot.currentRound, 0);
+  assert.equal(snapshot.fatalError?.code, "CONTENT_LOAD_FAILED");
+  assert.equal(snapshot.fatalError?.message, "Invalid game config content.");
+  assert.equal(snapshot.canRedoScoringMutation, false);
+  assert.equal(snapshot.teams.length, 0);
+  assert.equal(snapshot.timer, null);
+});
+
+test("fatal room state blocks host mutations", () => {
+  resetRoomState();
+  setRoomStateFatalError("Invalid content.");
+  const beforeMutation = getRoomStateSnapshot();
+
+  createTeam("Blocked Team");
+  assignPlayerToTeam("player-1", "team-1");
+  setWingParticipation("player-1", true);
+  setPendingMinigamePoints({ "team-1": 3 });
+  recordTriviaAttempt(true);
+  pauseRoomTimer();
+  resumeRoomTimer();
+  extendRoomTimer(15);
+  advanceRoomStatePhase();
+  skipTurnBoundary();
+  reorderTurnOrder(["team-1", "team-2"]);
+  adjustTeamScore("team-1", 2);
+  redoLastScoringMutation();
+  resetGameToSetup();
+
+  const afterMutation = getRoomStateSnapshot();
+
+  assert.deepEqual(afterMutation, beforeMutation);
 });

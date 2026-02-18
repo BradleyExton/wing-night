@@ -1,8 +1,10 @@
 import type {
   CLIENT_TO_SERVER_EVENTS,
   ClientToServerEvents,
+  GameReorderTurnOrderPayload,
   HostSecretPayload,
   MinigameRecordTriviaAttemptPayload,
+  ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   RoomState,
   SERVER_TO_CLIENT_EVENTS,
@@ -39,6 +41,31 @@ export type NextPhaseHostSecretPayloadCheck = Assert<
   >
 >;
 
+export type SkipTurnBoundaryPayloadCheck = Assert<
+  Equal<
+    Parameters<
+      ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY]
+    >,
+    [HostSecretPayload]
+  >
+>;
+
+export type ReorderTurnOrderPayloadCheck = Assert<
+  Equal<
+    Parameters<
+      ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER]
+    >,
+    [GameReorderTurnOrderPayload]
+  >
+>;
+
+export type ResetPayloadCheck = Assert<
+  Equal<
+    Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.RESET]>,
+    [HostSecretPayload]
+  >
+>;
+
 export type CreateTeamPayloadCheck = Assert<
   Equal<
     Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM]>,
@@ -61,6 +88,24 @@ export type SetWingParticipationPayloadCheck = Assert<
       ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION]
     >,
     [ScoringSetWingParticipationPayload]
+  >
+>;
+
+export type AdjustTeamScorePayloadCheck = Assert<
+  Equal<
+    Parameters<
+      ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE]
+    >,
+    [ScoringAdjustTeamScorePayload]
+  >
+>;
+
+export type RedoLastMutationPayloadCheck = Assert<
+  Equal<
+    Parameters<
+      ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION]
+    >,
+    [HostSecretPayload]
   >
 >;
 
@@ -127,6 +172,15 @@ export type InvalidClaimControlArgsCheck = Assert<Equal<Parameters<ClientToServe
 // @ts-expect-error game:nextPhase must accept host secret payload.
 export type InvalidNextPhaseNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE]>, []>>;
 
+// @ts-expect-error game:skipTurnBoundary must accept host secret payload.
+export type InvalidSkipTurnBoundaryNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY]>, []>>;
+
+// @ts-expect-error game:reorderTurnOrder must accept host secret + teamIds payload.
+export type InvalidReorderTurnOrderNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER]>, []>>;
+
+// @ts-expect-error game:reset must accept host secret payload.
+export type InvalidResetNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.RESET]>, []>>;
+
 // @ts-expect-error setup:createTeam must accept host secret + name payload.
 export type InvalidCreateTeamNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM]>, []>>;
 
@@ -135,6 +189,12 @@ export type InvalidAssignPlayerNoPayloadCheck = Assert<Equal<Parameters<ClientTo
 
 // @ts-expect-error scoring:setWingParticipation must accept host secret + player participation payload.
 export type InvalidSetWingParticipationNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION]>, []>>;
+
+// @ts-expect-error scoring:adjustTeamScore must accept host secret + teamId + delta payload.
+export type InvalidAdjustTeamScoreNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE]>, []>>;
+
+// @ts-expect-error scoring:redoLastMutation must accept host secret payload.
+export type InvalidRedoLastMutationNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION]>, []>>;
 
 // @ts-expect-error minigame:recordTriviaAttempt must accept host secret + correctness payload.
 export type InvalidRecordTriviaAttemptNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]>, []>>;

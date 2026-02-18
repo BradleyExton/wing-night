@@ -4,6 +4,7 @@ export type { Team } from "./team/index.js";
 export type {
   MinigameDisplayView,
   MinigameHostView,
+  RoomFatalError,
   RoomState,
   RoomTimerState
 } from "./roomState/index.js";
@@ -43,8 +44,10 @@ export {
 export type {
   ClientToServerEventName,
   ClientToServerEvents,
+  GameReorderTurnOrderPayload,
   HostSecretPayload,
   MinigameRecordTriviaAttemptPayload,
+  ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   TimerExtendPayload,
   ServerToClientEventName,

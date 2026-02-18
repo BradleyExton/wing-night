@@ -59,7 +59,9 @@ const buildSnapshot = (
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {}
+    pendingMinigamePointsByTeamId: {},
+    fatalError: null,
+    canRedoScoringMutation: false
   };
 
   return { ...snapshot, ...overrides };
@@ -71,6 +73,24 @@ test("renders waiting copy when room state is missing", () => {
   assert.match(html, /Waiting for room state/);
   assert.match(html, /Standings/);
   assert.match(html, /No teams have joined yet/);
+});
+
+test("renders fatal content state when snapshot reports content load failure", () => {
+  const html = renderToStaticMarkup(
+    <DisplayBoard
+      roomState={buildSnapshot(Phase.SETUP, [], {
+        fatalError: {
+          code: "CONTENT_LOAD_FAILED",
+          message: "Missing players content file."
+        }
+      })}
+    />
+  );
+
+  assert.match(html, /Content Load Error/);
+  assert.match(html, /CONTENT_LOAD_FAILED/);
+  assert.match(html, /Missing players content file\./);
+  assert.doesNotMatch(html, /Standings/);
 });
 
 test("renders eating timer view from snapshot config", () => {

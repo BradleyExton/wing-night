@@ -1,16 +1,20 @@
 import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
 import { Phase, type RoomState } from "@wingnight/shared";
-
 import { CompactSummarySurface } from "./CompactSummarySurface";
+import { ContentFatalState } from "../ContentFatalState";
+import { HostActionBarSurface } from "./HostActionBarSurface";
 import { HostPanelHeader } from "./HostPanelHeader";
 import { hostControlPanelCopy } from "./copy";
 import { MinigameSurface } from "./MinigameSurface";
 import { PlayersSurface } from "./PlayersSurface";
+import { resolveHostRenderMode } from "./resolveHostRenderMode";
+import { resolveOrderedTeams, resolveSortedStandings } from "./roomTeamSelectors";
+import { ScoreOverrideSurface } from "./ScoreOverrideSurface";
 import * as styles from "./styles";
 import { TeamSetupSurface } from "./TeamSetupSurface";
 import { TimerControlsSurface } from "./TimerControlsSurface";
-
+import { TurnOrderSurface } from "./TurnOrderSurface";
 type HostControlPanelProps = {
   roomState: RoomState | null;
   onNextPhase?: () => void;
@@ -21,43 +25,17 @@ type HostControlPanelProps = {
   onPauseTimer?: () => void;
   onResumeTimer?: () => void;
   onExtendTimer?: (additionalSeconds: number) => void;
+  onReorderTurnOrder?: (teamIds: string[]) => void;
+  onSkipTurnBoundary?: () => void;
+  onAdjustTeamScore?: (teamId: string, delta: number) => void;
+  onResetGame?: () => void;
+  onRedoLastMutation?: () => void;
 };
 
 const EMPTY_TEAMS: RoomState["teams"] = [];
-type HostRenderMode =
-  | "waiting"
-  | "setup"
-  | "eating"
-  | "minigame_intro"
-  | "minigame_play"
-  | "compact";
-
 const assertUnreachable = (value: never): never => {
   throw new Error(`Unhandled value: ${String(value)}`);
 };
-
-const resolveHostRenderMode = (phase: Phase | null): HostRenderMode => {
-  switch (phase) {
-    case null:
-      return "waiting";
-    case Phase.SETUP:
-      return "setup";
-    case Phase.EATING:
-      return "eating";
-    case Phase.MINIGAME_INTRO:
-      return "minigame_intro";
-    case Phase.MINIGAME_PLAY:
-      return "minigame_play";
-    case Phase.INTRO:
-    case Phase.ROUND_INTRO:
-    case Phase.ROUND_RESULTS:
-    case Phase.FINAL_RESULTS:
-      return "compact";
-    default:
-      return assertUnreachable(phase);
-  }
-};
-
 export const HostControlPanel = ({
   roomState,
   onNextPhase,
@@ -67,10 +45,14 @@ export const HostControlPanel = ({
   onRecordTriviaAttempt,
   onPauseTimer,
   onResumeTimer,
-  onExtendTimer
+  onExtendTimer,
+  onReorderTurnOrder,
+  onSkipTurnBoundary,
+  onAdjustTeamScore,
+  onResetGame,
+  onRedoLastMutation
 }: HostControlPanelProps): JSX.Element => {
   const [nextTeamName, setNextTeamName] = useState("");
-
   const assignedTeamByPlayerId = useMemo(() => {
     const map = new Map<string, string>();
     if (!roomState) {
@@ -83,7 +65,6 @@ export const HostControlPanel = ({
     }
     return map;
   }, [roomState]);
-
   const teamNameByTeamId = useMemo(() => {
     const map = new Map<string, string>();
     if (!roomState) {
@@ -94,10 +75,11 @@ export const HostControlPanel = ({
     }
     return map;
   }, [roomState]);
-
   const players = roomState?.players ?? [];
   const teams = roomState?.teams ?? EMPTY_TEAMS;
   const phase = roomState?.phase ?? null;
+  const canRedoScoringMutation = roomState?.canRedoScoringMutation === true;
+  const fatalError = roomState?.fatalError ?? null;
   const hostMode = resolveHostRenderMode(phase);
   const minigameHostView = roomState?.minigameHostView ?? null;
   const isTriviaMinigamePlayPhase =
@@ -124,31 +106,26 @@ export const HostControlPanel = ({
     activeTurnTeamId === null ||
     currentTriviaPrompt === null;
 
-  const sortedStandings = useMemo(() => {
-    return [...teams].sort((leftTeam, rightTeam) => {
-      if (rightTeam.totalScore !== leftTeam.totalScore) {
-        return rightTeam.totalScore - leftTeam.totalScore;
-      }
-
-      return leftTeam.name.localeCompare(rightTeam.name);
-    });
-  }, [teams]);
+  const sortedStandings = useMemo(() => resolveSortedStandings(teams), [teams]);
+  const orderedTeams = useMemo(() => resolveOrderedTeams(roomState), [roomState]);
   const phaseAdvanceHint =
     phase !== null ? hostControlPanelCopy.phaseAdvanceHint(phase) : null;
+  const showSkipTurnBoundaryAction =
+    phase === Phase.EATING ||
+    phase === Phase.MINIGAME_INTRO ||
+    phase === Phase.MINIGAME_PLAY;
+  const showScoreOverrideSurface =
+    phase !== null && phase !== Phase.SETUP;
 
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-
     if (!onCreateTeam || hostMode !== "setup") {
       return;
     }
-
     const normalizedTeamName = nextTeamName.trim();
-
     if (normalizedTeamName.length === 0) {
       return;
     }
-
     onCreateTeam(normalizedTeamName);
     setNextTeamName("");
   };
@@ -157,7 +134,6 @@ export const HostControlPanel = ({
     if (!onAssignPlayer || hostMode !== "setup") {
       return;
     }
-
     onAssignPlayer(playerId, selectedTeamId.length === 0 ? null : selectedTeamId);
   };
 
@@ -165,7 +141,6 @@ export const HostControlPanel = ({
     if (!onSetWingParticipation || hostMode !== "eating") {
       return;
     }
-
     onSetWingParticipation(playerId, didEat);
   };
 
@@ -173,7 +148,6 @@ export const HostControlPanel = ({
     if (!onRecordTriviaAttempt || !isTriviaMinigamePlayPhase) {
       return;
     }
-
     onRecordTriviaAttempt(isCorrect);
   };
 
@@ -237,36 +211,49 @@ export const HostControlPanel = ({
         );
       case "compact":
         return roomState && phase !== null ? (
-          <CompactSummarySurface
-            sortedStandings={sortedStandings}
-          />
+          <>
+            {phase === Phase.ROUND_INTRO && (
+              <TurnOrderSurface
+                orderedTeams={orderedTeams}
+                onReorderTurnOrder={onReorderTurnOrder}
+              />
+            )}
+            <CompactSummarySurface sortedStandings={sortedStandings} />
+          </>
         ) : null;
       default:
         return assertUnreachable(hostMode);
     }
   };
 
+  if (fatalError !== null) {
+    return <ContentFatalState fatalError={fatalError} />;
+  }
+
   return (
     <main className={styles.container}>
       <div className={styles.panel}>
         <HostPanelHeader roomState={roomState} teamNameByTeamId={teamNameByTeamId} />
 
-        <div className={styles.controlsRow}>
-          <button
-            className={styles.primaryButton}
-            type="button"
-            onClick={onNextPhase}
-            disabled={onNextPhase === undefined}
-          >
-            {hostControlPanelCopy.nextPhaseButtonLabel}
-          </button>
-        </div>
+        <HostActionBarSurface
+          onNextPhase={onNextPhase}
+          onSkipTurnBoundary={onSkipTurnBoundary}
+          showSkipTurnBoundaryAction={showSkipTurnBoundaryAction}
+          onRedoLastMutation={onRedoLastMutation}
+          showRedoLastMutationAction={canRedoScoringMutation}
+          onResetGame={onResetGame}
+          showResetGameAction={phase !== null && phase !== Phase.SETUP}
+        />
 
         {roomState && phaseAdvanceHint !== null && hostMode !== "setup" && (
           <p className={styles.phaseNotice}>{phaseAdvanceHint}</p>
         )}
 
         {renderPhaseBody()}
+
+        {showScoreOverrideSurface && (
+          <ScoreOverrideSurface teams={teams} onAdjustTeamScore={onAdjustTeamScore} />
+        )}
       </div>
     </main>
   );

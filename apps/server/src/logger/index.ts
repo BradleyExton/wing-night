@@ -52,3 +52,19 @@ export const logScoreMutation = (
     totalScore
   });
 };
+
+export const logManualScoreAdjustment = (
+  teamId: string,
+  delta: number,
+  totalScore: number,
+  currentRound: number,
+  phase: Phase
+): void => {
+  logInfo("server:manualScoreAdjustment", {
+    teamId,
+    delta,
+    totalScore,
+    currentRound,
+    phase
+  });
+};

@@ -17,6 +17,7 @@ import {
 const triviaModule = resolveMinigameModule("TRIVIA");
 
 let triviaRuntimeState: TriviaMinigameState | null = null;
+export type TriviaRuntimeStateSnapshot = TriviaMinigameState | null;
 
 const resolveTriviaMinigameContext = (state: RoomState): TriviaMinigameContext => {
   return {
@@ -58,6 +59,26 @@ const resolveActiveTriviaRuntimeState = (): TriviaMinigameState | null => {
   }
 
   return triviaRuntimeState;
+};
+
+export const captureTriviaRuntimeStateSnapshot = (): TriviaRuntimeStateSnapshot => {
+  const currentRuntimeState = resolveActiveTriviaRuntimeState();
+
+  return currentRuntimeState === null ? null : structuredClone(currentRuntimeState);
+};
+
+export const restoreTriviaRuntimeStateSnapshot = (
+  state: RoomState,
+  snapshot: TriviaRuntimeStateSnapshot
+): void => {
+  if (snapshot === null || !isTriviaMinigamePlayState(state) || !triviaModule) {
+    clearTriviaProjectionFromRoomState(state);
+    triviaRuntimeState = null;
+    return;
+  }
+
+  triviaRuntimeState = structuredClone(snapshot);
+  projectTriviaRuntimeStateToRoomState(state, triviaRuntimeState);
 };
 
 export const resetTriviaRuntimeState = (): void => {
