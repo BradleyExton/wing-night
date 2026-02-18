@@ -26,6 +26,9 @@ type SocketHarness = {
   triggerAssignPlayer: (payload: unknown) => void;
   triggerSetWingParticipation: (payload: unknown) => void;
   triggerRecordTriviaAttempt: (payload: unknown) => void;
+  triggerTimerPause: (payload: unknown) => void;
+  triggerTimerResume: (payload: unknown) => void;
+  triggerTimerExtend: (payload: unknown) => void;
 };
 
 const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
@@ -94,6 +97,21 @@ const createSocketHarness = (): SocketHarness => {
       `Expected ${CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT} handler to be registered.`
     );
   };
+  let timerPauseHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE} handler to be registered.`
+    );
+  };
+  let timerResumeHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.TIMER_RESUME} handler to be registered.`
+    );
+  };
+  let timerExtendHandler = (_payload: unknown): void => {
+    assert.fail(
+      `Expected ${CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND} handler to be registered.`
+    );
+  };
 
   const socket = {
     emit: (
@@ -123,7 +141,10 @@ const createSocketHarness = (): SocketHarness => {
         | typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM
         | typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER
         | typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION
-        | typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
+        | typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT
+        | typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE
+        | typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME
+        | typeof CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND,
       listener: (() => void) | ((payload: unknown) => void)
     ): void => {
       if (event === CLIENT_TO_SERVER_EVENTS.REQUEST_STATE) {
@@ -156,7 +177,24 @@ const createSocketHarness = (): SocketHarness => {
         return;
       }
 
-      recordTriviaAttemptHandler = listener as (payload: unknown) => void;
+      if (event === CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT) {
+        recordTriviaAttemptHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      if (event === CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE) {
+        timerPauseHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      if (event === CLIENT_TO_SERVER_EVENTS.TIMER_RESUME) {
+        timerResumeHandler = listener as (payload: unknown) => void;
+        return;
+      }
+
+      if (event === CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND) {
+        timerExtendHandler = listener as (payload: unknown) => void;
+      }
     }
   } as unknown as SocketUnderTest;
 
@@ -187,6 +225,15 @@ const createSocketHarness = (): SocketHarness => {
     },
     triggerRecordTriviaAttempt: (payload: unknown): void => {
       recordTriviaAttemptHandler(payload);
+    },
+    triggerTimerPause: (payload: unknown): void => {
+      timerPauseHandler(payload);
+    },
+    triggerTimerResume: (payload: unknown): void => {
+      timerResumeHandler(payload);
+    },
+    triggerTimerExtend: (payload: unknown): void => {
+      timerExtendHandler(payload);
     }
   };
 };
@@ -208,6 +255,15 @@ const createMutationHandlers = (
       // no-op
     },
     onAuthorizedRecordTriviaAttempt: () => {
+      // no-op
+    },
+    onAuthorizedPauseTimer: () => {
+      // no-op
+    },
+    onAuthorizedResumeTimer: () => {
+      // no-op
+    },
+    onAuthorizedExtendTimer: () => {
       // no-op
     },
     ...overrides
@@ -520,5 +576,87 @@ test("ignores malformed and unauthorized trivia-attempt payloads", () => {
   });
 
   assert.deepEqual(triviaAttemptCalls, [false]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
+test("ignores malformed and unauthorized timer pause/resume payloads", () => {
+  const socketHarness = createSocketHarness();
+  let pauseCalls = 0;
+  let resumeCalls = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.EATING),
+    createMutationHandlers({
+      onAuthorizedPauseTimer: () => {
+        pauseCalls += 1;
+      },
+      onAuthorizedResumeTimer: () => {
+        resumeCalls += 1;
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerTimerPause(undefined);
+    socketHarness.triggerTimerPause({});
+    socketHarness.triggerTimerPause({ hostSecret: "invalid-host-secret" });
+    socketHarness.triggerTimerPause({ hostSecret: "valid-host-secret" });
+    socketHarness.triggerTimerResume(undefined);
+    socketHarness.triggerTimerResume({});
+    socketHarness.triggerTimerResume({ hostSecret: "invalid-host-secret" });
+    socketHarness.triggerTimerResume({ hostSecret: "valid-host-secret" });
+  });
+
+  assert.equal(pauseCalls, 1);
+  assert.equal(resumeCalls, 1);
+  assert.equal(socketHarness.invalidSecretEvents, 2);
+});
+
+test("ignores malformed and unauthorized timer extend payloads", () => {
+  const socketHarness = createSocketHarness();
+  const timerExtendCalls: number[] = [];
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.EATING),
+    createMutationHandlers({
+      onAuthorizedExtendTimer: (additionalSeconds) => {
+        timerExtendCalls.push(additionalSeconds);
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerTimerExtend(undefined);
+    socketHarness.triggerTimerExtend({});
+    socketHarness.triggerTimerExtend({ hostSecret: "valid-host-secret" });
+    socketHarness.triggerTimerExtend({
+      hostSecret: "valid-host-secret",
+      additionalSeconds: "15"
+    });
+    socketHarness.triggerTimerExtend({
+      hostSecret: "valid-host-secret",
+      additionalSeconds: -5
+    });
+    socketHarness.triggerTimerExtend({
+      hostSecret: "valid-host-secret",
+      additionalSeconds: 601
+    });
+    socketHarness.triggerTimerExtend({
+      hostSecret: "invalid-host-secret",
+      additionalSeconds: 15
+    });
+    socketHarness.triggerTimerExtend({
+      hostSecret: "valid-host-secret",
+      additionalSeconds: 15
+    });
+  });
+
+  assert.deepEqual(timerExtendCalls, [15]);
   assert.equal(socketHarness.invalidSecretEvents, 1);
 });

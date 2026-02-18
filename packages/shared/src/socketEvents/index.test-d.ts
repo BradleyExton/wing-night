@@ -6,6 +6,7 @@ import type {
   ScoringSetWingParticipationPayload,
   RoomState,
   SERVER_TO_CLIENT_EVENTS,
+  TimerExtendPayload,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload,
   ServerToClientEvents
@@ -72,6 +73,27 @@ export type RecordTriviaAttemptPayloadCheck = Assert<
   >
 >;
 
+export type TimerPausePayloadCheck = Assert<
+  Equal<
+    Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]>,
+    [HostSecretPayload]
+  >
+>;
+
+export type TimerResumePayloadCheck = Assert<
+  Equal<
+    Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME]>,
+    [HostSecretPayload]
+  >
+>;
+
+export type TimerExtendPayloadCheck = Assert<
+  Equal<
+    Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND]>,
+    [TimerExtendPayload]
+  >
+>;
+
 export type SnapshotRoomStateArgCheck = Assert<
   Equal<
     Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]>,
@@ -116,6 +138,15 @@ export type InvalidSetWingParticipationNoPayloadCheck = Assert<Equal<Parameters<
 
 // @ts-expect-error minigame:recordTriviaAttempt must accept host secret + correctness payload.
 export type InvalidRecordTriviaAttemptNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]>, []>>;
+
+// @ts-expect-error timer:pause must accept host secret payload.
+export type InvalidTimerPauseNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]>, []>>;
+
+// @ts-expect-error timer:resume must accept host secret payload.
+export type InvalidTimerResumeNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME]>, []>>;
+
+// @ts-expect-error timer:extend must accept host secret + additional seconds payload.
+export type InvalidTimerExtendNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND]>, []>>;
 
 // @ts-expect-error host:secretIssued must emit host secret payload.
 export type InvalidSecretIssuedPayloadCheck = Assert<Equal<Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED]>, [string]>>;

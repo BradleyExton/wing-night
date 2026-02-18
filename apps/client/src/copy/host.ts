@@ -14,6 +14,22 @@ export const hostCopy = {
   teamsSectionTitle: "Teams",
   eatingParticipationDescription:
     "Mark each player who finished their wing this round.",
+  timerSectionTitle: "Timer Controls",
+  timerRunningLabel: "Running",
+  timerPausedLabel: "Paused",
+  timerRemainingLabel: "Time Remaining",
+  timerPauseButtonLabel: "Pause Timer",
+  timerResumeButtonLabel: "Resume Timer",
+  timerExtendFifteenButtonLabel: "+15s",
+  timerExtendThirtyButtonLabel: "+30s",
+  timerValue: (remainingSeconds: number): string => {
+    const minutes = Math.floor(remainingSeconds / 60);
+    const seconds = remainingSeconds % 60;
+
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  },
   loadingStateLabel: "Waiting for room state...",
   setupLockedLabel: "Team setup is locked after the game starts.",
   unassignedOptionLabel: "Unassigned",
