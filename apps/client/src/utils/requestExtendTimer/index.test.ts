@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   CLIENT_TO_SERVER_EVENTS,
+  TIMER_EXTEND_MAX_SECONDS,
   type TimerExtendPayload
 } from "@wingnight/shared";
 
@@ -50,6 +51,15 @@ test("returns false and emits nothing for invalid extension seconds", () => {
   );
   assert.equal(
     requestExtendTimer(socket as unknown as ExtendTimerSocket, -5, undefined, () => "secret"),
+    false
+  );
+  assert.equal(
+    requestExtendTimer(
+      socket as unknown as ExtendTimerSocket,
+      TIMER_EXTEND_MAX_SECONDS + 1,
+      undefined,
+      () => "secret"
+    ),
     false
   );
   assert.equal(socket.emittedPayloads.length, 0);

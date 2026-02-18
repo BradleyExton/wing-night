@@ -1,5 +1,6 @@
 import {
   Phase,
+  TIMER_EXTEND_MAX_SECONDS,
   type GameConfigFile,
   type Player,
   type RoomState,
@@ -403,7 +404,9 @@ export const extendRoomTimer = (additionalSeconds: number): RoomState => {
     roomState.phase !== Phase.EATING ||
     currentTimer === null ||
     currentTimer.phase !== Phase.EATING ||
-    additionalSeconds <= 0
+    !Number.isInteger(additionalSeconds) ||
+    additionalSeconds <= 0 ||
+    additionalSeconds > TIMER_EXTEND_MAX_SECONDS
   ) {
     return getRoomStateSnapshot();
   }

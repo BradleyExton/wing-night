@@ -12,6 +12,7 @@ export type MinigameRecordTriviaAttemptPayload = HostSecretPayload &
   Record<"isCorrect", boolean>;
 export type TimerExtendPayload = HostSecretPayload &
   Record<"additionalSeconds", number>;
+export const TIMER_EXTEND_MAX_SECONDS = 600;
 
 export const CLIENT_TO_SERVER_EVENTS = {
   REQUEST_STATE: "client:requestState",

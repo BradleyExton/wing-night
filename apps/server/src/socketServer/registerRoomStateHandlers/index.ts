@@ -1,5 +1,6 @@
 import {
   CLIENT_TO_SERVER_EVENTS,
+  TIMER_EXTEND_MAX_SECONDS,
   SERVER_TO_CLIENT_EVENTS
 } from "@wingnight/shared";
 import type {
@@ -133,7 +134,10 @@ const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload =
     return false;
   }
 
-  return payload.additionalSeconds > 0 && payload.additionalSeconds <= 600;
+  return (
+    payload.additionalSeconds > 0 &&
+    payload.additionalSeconds <= TIMER_EXTEND_MAX_SECONDS
+  );
 };
 
 export const registerRoomStateHandlers = (

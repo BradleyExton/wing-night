@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Phase, type GameConfigFile, type TriviaPrompt } from "@wingnight/shared";
+import {
+  Phase,
+  TIMER_EXTEND_MAX_SECONDS,
+  type GameConfigFile,
+  type TriviaPrompt
+} from "@wingnight/shared";
 
 import {
   advanceRoomStatePhase,
@@ -309,6 +314,42 @@ test("extendRoomTimer extends EATING timer while running", () => {
     const extendedSnapshot = extendRoomTimer(30);
     assert.equal(extendedSnapshot.timer?.endsAt, 250_000);
     assert.equal(extendedSnapshot.timer?.durationMs, 150_000);
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
+test("extendRoomTimer ignores non-integer and over-limit extension values", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  const originalDateNow = Date.now;
+  Date.now = (): number => 100_000;
+
+  try {
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+  } finally {
+    Date.now = originalDateNow;
+  }
+
+  Date.now = (): number => 110_000;
+  try {
+    const beforeSnapshot = getRoomStateSnapshot();
+    const oversizedSnapshot = extendRoomTimer(TIMER_EXTEND_MAX_SECONDS + 1);
+    const fractionalSnapshot = extendRoomTimer(2.5);
+
+    assert.equal(oversizedSnapshot.timer?.endsAt, beforeSnapshot.timer?.endsAt);
+    assert.equal(fractionalSnapshot.timer?.endsAt, beforeSnapshot.timer?.endsAt);
+    assert.equal(
+      oversizedSnapshot.timer?.durationMs,
+      beforeSnapshot.timer?.durationMs
+    );
+    assert.equal(
+      fractionalSnapshot.timer?.durationMs,
+      beforeSnapshot.timer?.durationMs
+    );
   } finally {
     Date.now = originalDateNow;
   }
