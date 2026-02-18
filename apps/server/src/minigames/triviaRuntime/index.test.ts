@@ -68,7 +68,10 @@ const buildRoomState = (prompts: TriviaPrompt[] = triviaPromptFixture): RoomStat
       pointsPerPlayer: 2,
       minigame: "TRIVIA"
     },
-    turnOrderTeamIds: [],
+    turnOrderTeamIds: ["team-1", "team-2"],
+    roundTurnCursor: 0,
+    completedRoundTurnTeamIds: [],
+    activeRoundTeamId: "team-1",
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
@@ -92,14 +95,14 @@ test("initializeTriviaRuntimeState sets turn order and projected trivia fields",
   });
 });
 
-test("reduceTriviaAttempt rotates teams and wraps prompt cursor", () => {
+test("reduceTriviaAttempt keeps active round team and wraps prompt cursor", () => {
   withRuntimeReset(() => {
     const roomState = buildRoomState();
     initializeTriviaRuntimeState(roomState, 15);
 
     reduceTriviaAttempt(roomState, true, 15);
     assert.equal(roomState.pendingMinigamePointsByTeamId["team-1"], 1);
-    assert.equal(roomState.activeTurnTeamId, "team-2");
+    assert.equal(roomState.activeTurnTeamId, "team-1");
     assert.equal(roomState.triviaPromptCursor, 1);
     assert.equal(roomState.currentTriviaPrompt?.id, "prompt-2");
 
@@ -123,7 +126,7 @@ test("reduceTriviaAttempt enforces points cap", () => {
   });
 });
 
-test("syncTriviaRuntimeWithPrompts preserves turn state and normalizes cursor on prompt replacement", () => {
+test("syncTriviaRuntimeWithPrompts preserves active round team and normalizes cursor on prompt replacement", () => {
   withRuntimeReset(() => {
     const roomState = buildRoomState();
     initializeTriviaRuntimeState(roomState, 15);
@@ -132,13 +135,13 @@ test("syncTriviaRuntimeWithPrompts preserves turn state and normalizes cursor on
     roomState.triviaPrompts = [replacementPromptFixture];
     syncTriviaRuntimeWithPrompts(roomState);
 
-    assert.equal(roomState.activeTurnTeamId, "team-2");
+    assert.equal(roomState.activeTurnTeamId, "team-1");
     assert.equal(roomState.triviaPromptCursor, 0);
     assert.equal(roomState.currentTriviaPrompt?.id, replacementPromptFixture.id);
   });
 });
 
-test("syncTriviaRuntimeWithPendingPoints updates pending points without changing turn position", () => {
+test("syncTriviaRuntimeWithPendingPoints updates pending points without changing active team", () => {
   withRuntimeReset(() => {
     const roomState = buildRoomState();
     initializeTriviaRuntimeState(roomState, 15);
@@ -151,7 +154,7 @@ test("syncTriviaRuntimeWithPendingPoints updates pending points without changing
 
     assert.equal(roomState.pendingMinigamePointsByTeamId["team-1"], 8);
     assert.equal(roomState.pendingMinigamePointsByTeamId["team-2"], 3);
-    assert.equal(roomState.activeTurnTeamId, "team-2");
+    assert.equal(roomState.activeTurnTeamId, "team-1");
     assert.equal(roomState.triviaPromptCursor, 1);
     assert.equal(roomState.currentTriviaPrompt?.id, "prompt-2");
   });

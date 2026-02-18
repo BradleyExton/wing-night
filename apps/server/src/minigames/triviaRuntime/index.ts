@@ -67,15 +67,17 @@ export const initializeTriviaRuntimeState = (
     return;
   }
 
-  if (state.turnOrderTeamIds.length === 0) {
-    state.turnOrderTeamIds = state.teams.map((team) => team.id);
-  }
-
-  const nextTriviaRuntimeState = triviaModule.init({
-    teamIds: state.turnOrderTeamIds,
-    pointsMax,
-    context: resolveTriviaMinigameContext(state)
-  });
+  const activeRoundTeamId = state.activeRoundTeamId;
+  const runtimeTeamIds =
+    activeRoundTeamId === null ? state.turnOrderTeamIds : [activeRoundTeamId];
+  const nextTriviaRuntimeState = createTriviaStateWithPendingPoints(
+    triviaModule.init({
+      teamIds: runtimeTeamIds,
+      pointsMax,
+      context: resolveTriviaMinigameContext(state)
+    }),
+    state.pendingMinigamePointsByTeamId
+  );
   triviaRuntimeState = nextTriviaRuntimeState;
   projectTriviaRuntimeStateToRoomState(state, nextTriviaRuntimeState);
 };

@@ -57,6 +57,9 @@ export const createInitialRoomState = (): RoomState => {
     triviaPrompts: [],
     currentRoundConfig: null,
     turnOrderTeamIds: [],
+    roundTurnCursor: -1,
+    completedRoundTurnTeamIds: [],
+    activeRoundTeamId: null,
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
@@ -156,6 +159,56 @@ const resetRoundWingParticipation = (state: RoomState): void => {
 const clearPendingRoundScores = (state: RoomState): void => {
   state.pendingWingPointsByTeamId = {};
   state.pendingMinigamePointsByTeamId = {};
+};
+
+const ensureTurnOrderTeamIds = (state: RoomState): void => {
+  if (state.turnOrderTeamIds.length > 0) {
+    return;
+  }
+
+  state.turnOrderTeamIds = state.teams.map((team) => team.id);
+};
+
+const initializeRoundTurnState = (state: RoomState): void => {
+  ensureTurnOrderTeamIds(state);
+  state.roundTurnCursor = state.turnOrderTeamIds.length > 0 ? 0 : -1;
+  state.completedRoundTurnTeamIds = [];
+  state.activeRoundTeamId =
+    state.roundTurnCursor === -1
+      ? null
+      : state.turnOrderTeamIds[state.roundTurnCursor] ?? null;
+};
+
+const finalizeActiveRoundTurn = (state: RoomState): void => {
+  const activeRoundTeamId = state.activeRoundTeamId;
+
+  if (activeRoundTeamId !== null) {
+    state.completedRoundTurnTeamIds = [
+      ...state.completedRoundTurnTeamIds,
+      activeRoundTeamId
+    ];
+  }
+
+  const nextRoundTurnCursor = state.roundTurnCursor + 1;
+  const hasNextRoundTurn = nextRoundTurnCursor < state.turnOrderTeamIds.length;
+
+  if (!hasNextRoundTurn) {
+    return;
+  }
+
+  state.roundTurnCursor = nextRoundTurnCursor;
+  state.activeRoundTeamId = state.turnOrderTeamIds[nextRoundTurnCursor] ?? null;
+};
+
+const resolveNextPhase = (state: RoomState, previousPhase: Phase): Phase => {
+  if (previousPhase === Phase.MINIGAME_PLAY) {
+    const hasNextRoundTurn =
+      state.roundTurnCursor + 1 < state.turnOrderTeamIds.length;
+
+    return hasNextRoundTurn ? Phase.EATING : Phase.ROUND_RESULTS;
+  }
+
+  return getNextPhase(previousPhase, state.currentRound, state.totalRounds);
 };
 
 export const createTeam = (name: string): RoomState => {
@@ -355,11 +408,11 @@ export const advanceRoomStatePhase = (): RoomState => {
     return getRoomStateSnapshot();
   }
 
-  const nextPhase = getNextPhase(
-    previousPhase,
-    roomState.currentRound,
-    roomState.totalRounds
-  );
+  const nextPhase = resolveNextPhase(roomState, previousPhase);
+
+  if (previousPhase === Phase.MINIGAME_PLAY) {
+    finalizeActiveRoundTurn(roomState);
+  }
 
   roomState.phase = nextPhase;
 
@@ -379,6 +432,10 @@ export const advanceRoomStatePhase = (): RoomState => {
     roomState.currentRoundConfig = null;
   } else {
     roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
+  }
+
+  if (nextPhase === Phase.ROUND_INTRO) {
+    initializeRoundTurnState(roomState);
   }
 
   if (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.MINIGAME_PLAY) {
@@ -414,7 +471,7 @@ export const advanceRoomStatePhase = (): RoomState => {
     clearPendingRoundScores(roomState);
   }
 
-  if (nextPhase === Phase.EATING) {
+  if (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.EATING) {
     resetRoundWingParticipation(roomState);
   }
 

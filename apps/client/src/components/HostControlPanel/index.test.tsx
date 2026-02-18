@@ -47,7 +47,7 @@ const buildSnapshot = (
   phase: Phase,
   overrides: Partial<RoomState> = {}
 ): RoomState => {
-  return {
+  const snapshot: RoomState = {
     phase,
     currentRound: 1,
     totalRounds: gameConfigFixture.rounds.length,
@@ -60,14 +60,18 @@ const buildSnapshot = (
     triviaPrompts: [],
     currentRoundConfig: gameConfigFixture.rounds[0],
     turnOrderTeamIds: teamsFixture.map((team) => team.id),
+    roundTurnCursor: 0,
+    completedRoundTurnTeamIds: [],
+    activeRoundTeamId: teamsFixture[0]?.id ?? null,
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {},
-    ...overrides
+    pendingMinigamePointsByTeamId: {}
   };
+
+  return { ...snapshot, ...overrides } as RoomState;
 };
 
 test("renders loading copy when room state is missing", () => {

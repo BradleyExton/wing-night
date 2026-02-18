@@ -17,6 +17,9 @@ export type RoomState = {
   triviaPrompts: TriviaPrompt[];
   currentRoundConfig: GameConfigRound | null;
   turnOrderTeamIds: string[];
+  roundTurnCursor: number;
+  completedRoundTurnTeamIds: string[];
+  activeRoundTeamId: string | null;
   activeTurnTeamId: string | null;
   currentTriviaPrompt: TriviaPrompt | null;
   triviaPromptCursor: number;
