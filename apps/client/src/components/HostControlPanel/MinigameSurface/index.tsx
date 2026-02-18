@@ -1,11 +1,9 @@
-import { Phase, type MinigameHostView, type MinigameType } from "@wingnight/shared";
+import { type MinigameHostView } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
 import * as styles from "./styles";
 
 type MinigameSurfaceProps = {
-  phase: Phase;
-  minigameType: MinigameType | null;
   minigameHostView: MinigameHostView | null;
   teamNameByTeamId: Map<string, string>;
   triviaAttemptDisabled: boolean;
@@ -27,26 +25,11 @@ const resolveActiveTeamName = (
 };
 
 export const MinigameSurface = ({
-  phase,
-  minigameType,
   minigameHostView,
   teamNameByTeamId,
   triviaAttemptDisabled,
   onRecordTriviaAttempt
 }: MinigameSurfaceProps): JSX.Element => {
-  if (phase === Phase.MINIGAME_INTRO) {
-    return (
-      <section className={styles.card}>
-        <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>
-        <p className={styles.sectionDescription}>
-          {hostControlPanelCopy.minigameIntroDescription(
-            minigameType ?? hostControlPanelCopy.minigameFallbackType
-          )}
-        </p>
-      </section>
-    );
-  }
-
   if (minigameHostView === null || minigameHostView.minigame !== "TRIVIA") {
     return (
       <section className={styles.card}>

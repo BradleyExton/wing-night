@@ -2,7 +2,6 @@ import { displayCopy } from "../../copy/display";
 
 export const displayBoardCopy = {
   title: displayCopy.placeholderTitle,
-  description: displayCopy.placeholderDescription,
   roundFallbackLabel: displayCopy.roundFallbackLabel,
   waitingForStateLabel: displayCopy.waitingForStateLabel,
   waitingPhaseLabel: displayCopy.waitingPhaseLabel,

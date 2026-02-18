@@ -81,6 +81,8 @@ test("renders loading copy when room state is missing", () => {
   const html = renderToStaticMarkup(<HostControlPanel roomState={null} />);
 
   assert.match(html, /Waiting for room state/);
+  assert.match(html, /Host controls will update when the latest snapshot arrives\./);
+  assert.match(html, /Pre-game/);
 });
 
 test("renders setup sections and assignment controls during SETUP", () => {
@@ -88,9 +90,18 @@ test("renders setup sections and assignment controls during SETUP", () => {
     <HostControlPanel roomState={buildSnapshot(Phase.SETUP)} />
   );
 
+  assert.match(html, /Host/);
+  assert.match(html, /Setup/);
+  assert.match(html, /Create teams and assign players before starting the game\./);
+  assert.doesNotMatch(html, /Host Control Panel/);
+  assert.doesNotMatch(html, /Create teams, assign players, and advance phases\./);
   assert.match(html, /Team Setup/);
   assert.match(html, /Teams/);
   assert.match(html, /Assign Alex to a team/);
+  assert.doesNotMatch(
+    html,
+    /Advance when teams are assigned and the room is ready to start\./
+  );
   assert.doesNotMatch(html, /Pause Timer/);
   assert.doesNotMatch(html, /Mark each player who finished their wing this round/);
   assert.doesNotMatch(html, /Ate wing/);
@@ -113,10 +124,20 @@ test("renders eating participation controls and hides setup sections during EATI
     />
   );
 
-  assert.match(html, /Mark each player who finished their wing this round/);
+  assert.match(html, /Eating/);
+  assert.match(html, /Track wing participation and manage the active turn timer\./);
+  assert.match(html, /Round 1 of 1/);
+  assert.match(html, /Team 1 of 2/);
   assert.match(html, /Active Team/);
   assert.match(html, /Team Alpha/);
-  assert.match(html, /Team 1 of 2/);
+  assert.match(html, /Alex/);
+  assert.doesNotMatch(html, /Morgan/);
+  assert.match(html, /Mark each player who finished their wing this round/);
+  assert.match(
+    html,
+    /Advance when eating participation is captured for the active team\./
+  );
+  assert.doesNotMatch(html, /Team setup is locked after the game starts\./);
   assert.match(html, /Timer Controls/);
   assert.match(html, /Pause Timer/);
   assert.match(html, /Ate wing/);
@@ -128,11 +149,18 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
-        activeTurnTeamId: "team-alpha",
-        currentTriviaPrompt: {
-          id: "prompt-1",
-          question: "Which scale measures pepper heat?",
-          answer: "Scoville"
+        minigameHostView: {
+          minigame: "TRIVIA",
+          activeTurnTeamId: "team-alpha",
+          promptCursor: 0,
+          pendingPointsByTeamId: {
+            "team-alpha": 0
+          },
+          currentPrompt: {
+            id: "prompt-1",
+            question: "Which scale measures pepper heat?",
+            answer: "Scoville"
+          }
         }
       })}
     />
@@ -140,12 +168,13 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
 
   assert.match(html, /Mark the active team&#x27;s answer as correct or incorrect/);
   assert.match(html, /Active Team: Team Alpha/);
-  assert.match(html, /Turn Progress/);
-  assert.match(html, /Team 1 of 2/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.match(html, /Scoville/);
   assert.match(html, /Correct/);
   assert.match(html, /Incorrect/);
+  assert.doesNotMatch(html, /Players/);
+  assert.doesNotMatch(html, /Alex/);
+  assert.doesNotMatch(html, /Morgan/);
 });
 
 test("renders compact status cards during INTRO", () => {
@@ -153,6 +182,8 @@ test("renders compact status cards during INTRO", () => {
     <HostControlPanel roomState={buildSnapshot(Phase.INTRO)} />
   );
 
+  assert.match(html, /Intro/);
+  assert.match(html, /Confirm teams are ready before starting the first round\./);
   assert.match(html, /Phase Status/);
   assert.match(html, /Round Context/);
   assert.match(html, /Standings Snapshot/);
@@ -166,9 +197,15 @@ test("renders round context details in compact ROUND_INTRO view", () => {
   );
 
   assert.match(html, /Round 1 of 1/);
-  assert.match(html, /Label: Warm Up/);
-  assert.match(html, /Sauce: Frank&#x27;s/);
-  assert.match(html, /Mini-game: TRIVIA/);
+  assert.match(html, /Sauce/);
+  assert.match(html, /Frank&#x27;s/);
+  assert.match(html, /Mini-game/);
+  assert.match(html, /TRIVIA/);
+  assert.match(html, /Standings Snapshot/);
+  assert.doesNotMatch(html, /Phase Status/);
+  assert.doesNotMatch(html, /Round Context/);
+  assert.doesNotMatch(html, /Next Action/);
+  assert.match(html, /Advance when players are ready to begin eating\./);
 });
 
 test("renders standings snapshot in score-descending order during ROUND_RESULTS", () => {
@@ -206,13 +243,13 @@ test("renders completion guidance in compact FINAL_RESULTS view", () => {
   assert.match(html, /Final Results/);
 });
 
-test("keeps MINIGAME_INTRO on detailed host view", () => {
+test("keeps MINIGAME_INTRO on streamlined host view", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
-  assert.match(html, /Team Setup/);
-  assert.match(html, /Players/);
+  assert.doesNotMatch(html, /Team Setup/);
+  assert.doesNotMatch(html, /Players/);
   assert.match(html, /Active Team/);
   assert.match(html, /Team 1 of 2/);
   assert.doesNotMatch(html, /Phase Status/);

@@ -43,7 +43,6 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
           <p className={styles.phaseBadge}>{phaseLabel}</p>
         </div>
         <h1 className={styles.heading}>{displayBoardCopy.title}</h1>
-        <p className={styles.subtext}>{displayBoardCopy.description}</p>
       </header>
 
       <section className={styles.main}>

@@ -10,7 +10,15 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- None currently tracked.
+- [-] R3 Host Header Dynamic Context Refactor
+  - Branch: `phase-r3-host-header-dynamic-context`
+  - PR: `(pending)`
+  - Manual host-flow checklist:
+    - [ ] SETUP shows dynamic phase header + pre-game round context.
+    - [ ] EATING shows round context, active team, and turn progress in header.
+    - [ ] MINIGAME_PLAY resolves active team from turn context fallback.
+    - [ ] INTRO/ROUND_RESULTS/FINAL_RESULTS keep compact cards + dynamic header context.
+    - [ ] Null snapshot shows waiting fallback without blank header.
 
 Completed:
 - [x] Tracker Sync for 8.12 + D Tasks

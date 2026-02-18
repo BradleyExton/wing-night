@@ -15,8 +15,6 @@ export const phaseBadge =
 export const heading =
   "mt-5 text-5xl font-black leading-none text-text md:text-6xl lg:text-7xl";
 
-export const subtext = "mt-3 text-lg text-text/85";
-
 export const main = "flex flex-1 items-center justify-center px-6 py-8 md:px-10";
 
 export const content = "w-full max-w-6xl";

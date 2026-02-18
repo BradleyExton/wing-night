@@ -64,6 +64,18 @@ test("renders round intro metadata", () => {
   assert.match(html, /TRIVIA/);
 });
 
+test("falls back to generic context when ROUND_INTRO is missing round config", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{ ...buildSnapshot(Phase.ROUND_INTRO), currentRoundConfig: null }}
+      phaseLabel="Round Intro"
+    />
+  );
+
+  assert.match(html, /Round Intro in progress/);
+  assert.match(html, /Round context will appear on the next phase update\./);
+});
+
 test("renders trivia question without answer leakage", () => {
   const html = renderToStaticMarkup(
     <StageSurface
@@ -95,6 +107,86 @@ test("renders active team and turn progress during eating", () => {
   assert.match(html, /Team One/);
   assert.match(html, /Team 1 of 1/);
   assert.match(html, /Round Timer/);
+});
+
+test("uses running EATING timer snapshot instead of static config seconds", () => {
+  const now = Date.now();
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.EATING),
+        gameConfig: {
+          ...gameConfigFixture,
+          timers: {
+            ...gameConfigFixture.timers,
+            eatingSeconds: 999
+          }
+        },
+        timer: {
+          phase: Phase.EATING,
+          startedAt: now,
+          endsAt: now + 120_000,
+          durationMs: 120_000,
+          isPaused: false,
+          remainingMs: 120_000
+        }
+      }}
+      phaseLabel="Eating"
+    />
+  );
+
+  assert.match(html, /02:00/);
+  assert.doesNotMatch(html, /16:39/);
+});
+
+test("uses paused EATING timer snapshot remainingMs and freezes countdown", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.EATING),
+        gameConfig: {
+          ...gameConfigFixture,
+          timers: {
+            ...gameConfigFixture.timers,
+            eatingSeconds: 999
+          }
+        },
+        timer: {
+          phase: Phase.EATING,
+          startedAt: 0,
+          endsAt: 10_000,
+          durationMs: 120_000,
+          isPaused: true,
+          remainingMs: 45_000
+        }
+      }}
+      phaseLabel="Eating"
+    />
+  );
+
+  assert.match(html, /00:45/);
+  assert.doesNotMatch(html, /16:39/);
+});
+
+test("falls back to static config timer when EATING timer snapshot is unavailable", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.EATING),
+        gameConfig: {
+          ...gameConfigFixture,
+          timers: {
+            ...gameConfigFixture.timers,
+            eatingSeconds: 125
+          }
+        },
+        timer: null
+      }}
+      phaseLabel="Eating"
+    />
+  );
+
+  assert.match(html, /02:05/);
 });
 
 test("renders active team and turn progress during minigame intro", () => {
