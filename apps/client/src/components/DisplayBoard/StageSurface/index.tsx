@@ -1,4 +1,5 @@
 import { Phase, type GameConfigRound, type RoomState } from "@wingnight/shared";
+import { useEffect, useState } from "react";
 
 import { displayBoardCopy } from "../copy";
 import * as styles from "./styles";
@@ -12,6 +13,8 @@ export const StageSurface = ({
   roomState,
   phaseLabel
 }: StageSurfaceProps): JSX.Element => {
+  const [nowTimestampMs, setNowTimestampMs] = useState(() => Date.now());
+
   const phase = roomState?.phase ?? null;
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const isRoundIntroPhase = phase === Phase.ROUND_INTRO;
@@ -36,8 +39,34 @@ export const StageSurface = ({
   const activeTeamName = activeRoundTeamName ?? activeTurnTeamName;
   const shouldRenderTriviaPrompt = isTriviaTurnPhase && currentTriviaPrompt !== null;
 
-  const eatingSeconds = roomState?.gameConfig?.timers.eatingSeconds ?? null;
-  const shouldRenderEatingTimer = isEatingPhase && eatingSeconds !== null;
+  const eatingTimerSnapshot =
+    isEatingPhase && roomState?.timer?.phase === Phase.EATING ? roomState.timer : null;
+  const fallbackEatingSeconds = roomState?.gameConfig?.timers.eatingSeconds ?? null;
+  const liveEatingRemainingSeconds =
+    eatingTimerSnapshot !== null
+      ? eatingTimerSnapshot.isPaused
+        ? Math.max(0, Math.ceil(eatingTimerSnapshot.remainingMs / 1000))
+        : Math.max(0, Math.ceil((eatingTimerSnapshot.endsAt - nowTimestampMs) / 1000))
+      : fallbackEatingSeconds;
+  const shouldRenderEatingTimer = isEatingPhase && liveEatingRemainingSeconds !== null;
+
+  useEffect(() => {
+    if (
+      !isEatingPhase ||
+      eatingTimerSnapshot === null ||
+      eatingTimerSnapshot.isPaused
+    ) {
+      return;
+    }
+
+    const timerId = window.setInterval(() => {
+      setNowTimestampMs(Date.now());
+    }, 250);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [isEatingPhase, eatingTimerSnapshot]);
   const shouldRenderRoundDetails = isRoundIntroPhase && currentRoundConfig !== null;
   const turnNumber =
     roomState && roomState.roundTurnCursor >= 0
@@ -71,7 +100,7 @@ export const StageSurface = ({
           <div className={styles.timerWrap}>
             <p className={styles.timerLabel}>{displayBoardCopy.eatingTimerLabel}</p>
             <p className={styles.timerValue}>
-              {displayBoardCopy.eatingTimerValue(eatingSeconds)}
+              {displayBoardCopy.eatingTimerValue(liveEatingRemainingSeconds ?? 0)}
             </p>
           </div>
         </>

@@ -52,6 +52,13 @@ export const PlayersSurface = ({
   const shouldRenderTurnContext =
     activeRoundTeamId !== null &&
     (isEatingPhase || isMinigameIntroPhase || isTriviaMinigamePlayPhase);
+  const visiblePlayers = isEatingPhase
+    ? players.filter((player) => assignedTeamByPlayerId.get(player.id) === activeRoundTeamId)
+    : players;
+  const emptyPlayersLabel =
+    isEatingPhase && activeRoundTeamId !== null
+      ? hostControlPanelCopy.activeTeamNoPlayersLabel
+      : hostControlPanelCopy.noPlayersLabel;
 
   return (
     <section className={`${styles.card} ${styles.playersCard}`}>
@@ -128,12 +135,12 @@ export const PlayersSurface = ({
         </div>
       )}
 
-      {players.length === 0 && (
-        <p className={styles.sectionDescription}>{hostControlPanelCopy.noPlayersLabel}</p>
+      {visiblePlayers.length === 0 && (
+        <p className={styles.sectionDescription}>{emptyPlayersLabel}</p>
       )}
-      {players.length > 0 && (
+      {visiblePlayers.length > 0 && (
         <ul className={styles.list}>
-          {players.map((player) => {
+          {visiblePlayers.map((player) => {
             const assignedTeamId = assignedTeamByPlayerId.get(player.id) ?? "";
 
             return (

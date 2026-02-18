@@ -96,6 +96,7 @@ export const hostCopy = {
   assignmentSelectLabel: (playerName: string): string =>
     `Assign ${playerName} to a team`,
   noPlayersLabel: "No players available.",
+  activeTeamNoPlayersLabel: "No players assigned to the active team.",
   noTeamsLabel: "No teams created yet.",
   noAssignedTeamLabel: "No team assigned",
   assignedTeamLabel: (teamName: string): string => `Team: ${teamName}`,

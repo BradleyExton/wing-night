@@ -33,6 +33,7 @@ export const hostControlPanelCopy = {
   unassignedOptionLabel: hostCopy.unassignedOptionLabel,
   assignmentSelectLabel: hostCopy.assignmentSelectLabel,
   noPlayersLabel: hostCopy.noPlayersLabel,
+  activeTeamNoPlayersLabel: hostCopy.activeTeamNoPlayersLabel,
   noTeamsLabel: hostCopy.noTeamsLabel,
   noAssignedTeamLabel: hostCopy.noAssignedTeamLabel,
   assignedTeamLabel: hostCopy.assignedTeamLabel,

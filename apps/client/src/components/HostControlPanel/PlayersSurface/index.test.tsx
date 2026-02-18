@@ -111,3 +111,83 @@ test("renders trivia host controls during trivia minigame play", () => {
   assert.match(html, /Correct/);
   assert.match(html, /Incorrect/);
 });
+
+test("renders only active-team players during eating", () => {
+  const html = renderToStaticMarkup(
+    <PlayersSurface
+      players={[...playersFixture]}
+      teams={[...teamsFixture]}
+      assignedTeamByPlayerId={new Map([
+        ["player-1", "team-alpha"],
+        ["player-2", "team-beta"]
+      ])}
+      teamNameByTeamId={teamNameByTeamId}
+      isSetupPhase={false}
+      isEatingPhase
+      isMinigameIntroPhase={false}
+      isTriviaMinigamePlayPhase={false}
+      wingParticipationByPlayerId={{ "player-1": true }}
+      currentTriviaPrompt={null}
+      activeRoundTeamId="team-alpha"
+      activeRoundTeamName="Team Alpha"
+      turnProgressLabel="Team 1 of 2"
+      activeTurnTeamName="Team Alpha"
+      assignmentDisabled
+      participationDisabled={false}
+      triviaAttemptDisabled
+      onAssignPlayer={(): void => {
+        return;
+      }}
+      onSetWingParticipation={(): void => {
+        return;
+      }}
+      onRecordTriviaAttempt={(): void => {
+        return;
+      }}
+    />
+  );
+
+  assert.match(html, /Alex/);
+  assert.doesNotMatch(html, /Morgan/);
+  assert.match(html, /Ate wing/);
+});
+
+test("renders active-team empty state during eating when no players are assigned", () => {
+  const html = renderToStaticMarkup(
+    <PlayersSurface
+      players={[...playersFixture]}
+      teams={[...teamsFixture]}
+      assignedTeamByPlayerId={new Map([
+        ["player-1", "team-alpha"],
+        ["player-2", "team-beta"]
+      ])}
+      teamNameByTeamId={teamNameByTeamId}
+      isSetupPhase={false}
+      isEatingPhase
+      isMinigameIntroPhase={false}
+      isTriviaMinigamePlayPhase={false}
+      wingParticipationByPlayerId={{}}
+      currentTriviaPrompt={null}
+      activeRoundTeamId="team-gamma"
+      activeRoundTeamName="No team assigned"
+      turnProgressLabel="Team 1 of 2"
+      activeTurnTeamName="No team assigned"
+      assignmentDisabled
+      participationDisabled={false}
+      triviaAttemptDisabled
+      onAssignPlayer={(): void => {
+        return;
+      }}
+      onSetWingParticipation={(): void => {
+        return;
+      }}
+      onRecordTriviaAttempt={(): void => {
+        return;
+      }}
+    />
+  );
+
+  assert.match(html, /No players assigned to the active team\./);
+  assert.doesNotMatch(html, /Alex/);
+  assert.doesNotMatch(html, /Morgan/);
+});

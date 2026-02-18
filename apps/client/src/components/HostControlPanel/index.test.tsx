@@ -130,6 +130,8 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.match(html, /Team 1 of 2/);
   assert.match(html, /Active Team/);
   assert.match(html, /Team Alpha/);
+  assert.match(html, /Alex/);
+  assert.doesNotMatch(html, /Morgan/);
   assert.match(html, /Mark each player who finished their wing this round/);
   assert.match(
     html,
