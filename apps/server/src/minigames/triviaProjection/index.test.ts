@@ -4,6 +4,7 @@ import { Phase, type RoomState } from "@wingnight/shared";
 
 import {
   clearTriviaProjectionFromRoomState,
+  projectTriviaDisplayViewToRoomState,
   projectTriviaHostViewToRoomState
 } from "./index.js";
 
@@ -21,6 +22,8 @@ const buildRoomState = (): RoomState => {
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
+    minigameHostView: null,
+    minigameDisplayView: null,
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
@@ -48,6 +51,31 @@ test("projectTriviaHostViewToRoomState applies projected trivia fields", () => {
   assert.equal(roomState.triviaPromptCursor, 3);
   assert.equal(roomState.currentTriviaPrompt?.answer, "Answer 1");
   assert.equal(roomState.pendingMinigamePointsByTeamId["team-1"], 5);
+  assert.equal(roomState.minigameHostView?.currentPrompt?.answer, "Answer 1");
+  assert.equal(roomState.minigameDisplayView, null);
+});
+
+test("projectTriviaDisplayViewToRoomState stores redacted prompt for display", () => {
+  const roomState = buildRoomState();
+
+  projectTriviaDisplayViewToRoomState(roomState, {
+    activeTurnTeamId: "team-1",
+    promptCursor: 2,
+    currentPrompt: {
+      id: "prompt-2",
+      question: "Question 2?"
+    },
+    pendingPointsByTeamId: {
+      "team-1": 4
+    }
+  });
+
+  assert.equal(roomState.minigameDisplayView?.currentPrompt?.question, "Question 2?");
+  assert.equal(
+    roomState.minigameDisplayView?.currentPrompt &&
+      "answer" in roomState.minigameDisplayView.currentPrompt,
+    false
+  );
 });
 
 test("clearTriviaProjectionFromRoomState clears active trivia projection fields", () => {
@@ -67,5 +95,7 @@ test("clearTriviaProjectionFromRoomState clears active trivia projection fields"
   assert.equal(roomState.activeTurnTeamId, null);
   assert.equal(roomState.triviaPromptCursor, 0);
   assert.equal(roomState.currentTriviaPrompt, null);
+  assert.equal(roomState.minigameHostView, null);
+  assert.equal(roomState.minigameDisplayView, null);
   assert.equal(roomState.pendingMinigamePointsByTeamId["team-1"], 5);
 });

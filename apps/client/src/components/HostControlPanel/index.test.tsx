@@ -63,6 +63,8 @@ const buildSnapshot = (
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
+    minigameHostView: null,
+    minigameDisplayView: null,
     timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
@@ -104,15 +106,20 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.doesNotMatch(html, /Assign Alex to a team/);
 });
 
-test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
+test("renders trivia controls from minigame host view during TRIVIA MINIGAME_PLAY", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
-        activeTurnTeamId: "team-alpha",
-        currentTriviaPrompt: {
-          id: "prompt-1",
-          question: "Which scale measures pepper heat?",
-          answer: "Scoville"
+        minigameHostView: {
+          minigame: "TRIVIA",
+          activeTurnTeamId: "team-alpha",
+          promptCursor: 0,
+          pendingPointsByTeamId: { "team-alpha": 0 },
+          currentPrompt: {
+            id: "prompt-1",
+            question: "Which scale measures pepper heat?",
+            answer: "Scoville"
+          }
         }
       })}
     />
@@ -184,12 +191,13 @@ test("renders completion guidance in compact FINAL_RESULTS view", () => {
   assert.match(html, /Final Results/);
 });
 
-test("keeps MINIGAME_INTRO on detailed host view", () => {
+test("renders dedicated minigame intro surface", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
-  assert.match(html, /Team Setup/);
-  assert.match(html, /Players/);
+  assert.match(html, /Mini-Game/);
+  assert.match(html, /TRIVIA is queued/);
+  assert.doesNotMatch(html, /Team Setup/);
   assert.doesNotMatch(html, /Phase Status/);
 });
