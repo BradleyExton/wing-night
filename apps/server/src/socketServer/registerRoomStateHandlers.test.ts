@@ -44,6 +44,7 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
+    timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}

@@ -4,7 +4,8 @@ export type { Team } from "./team/index.js";
 export type {
   MinigameDisplayView,
   MinigameHostView,
-  RoomState
+  RoomState,
+  RoomTimerState
 } from "./roomState/index.js";
 export {
   isGameConfigFile
