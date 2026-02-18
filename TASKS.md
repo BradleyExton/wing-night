@@ -10,34 +10,28 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] R3 Host Header Dynamic Context Refactor
-  - Branch: `phase-r3-host-header-dynamic-context`
-  - PR: `(pending)`
-  - Manual host-flow checklist:
-    - [ ] SETUP shows dynamic phase header + pre-game round context.
-    - [ ] EATING shows round context, active team, and turn progress in header.
-    - [ ] MINIGAME_PLAY resolves active team from turn context fallback.
-    - [ ] INTRO/ROUND_RESULTS/FINAL_RESULTS keep compact cards + dynamic header context.
-    - [ ] Null snapshot shows waiting fallback without blank header.
-- [-] R4 DRY Readability Epic
+- (none)
+
+Completed:
+- [x] R4 DRY Readability Epic
   - Branch: `refactor/host-display-decomposition`
+  - PRs: [#65](https://github.com/BradleyExton/wing-night/pull/65) -> [#72](https://github.com/BradleyExton/wing-night/pull/72)
   - ADR: `docs/adr/ADR-0002-dry-readability-epic.md`
   - Verification:
     - [x] `pnpm test`
     - [x] `pnpm lint`
     - [x] `pnpm typecheck`
-    - [-] `pnpm playwright test` (blocked: `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "playwright" not found`)
-  - PR slices:
-    - [x] R4.1 Epic Spec + Tracker Wiring
-    - [x] R4.2 Client Host-Secret Request Helper
-    - [x] R4.3 Server Authorized Mutation Gate Helper
-    - [x] R4.4 Server Broadcast Wrapper
-    - [x] R4.5 Content Loader Base Utility
-    - [x] R4.6 Copy Simplification
-    - [x] R4.7 Countdown Math + Dead Style Cleanup
-    - [-] R4.8 Epic Hardening + Final Regression Gate
-
-Completed:
+    - [x] `pnpm playwright test` (smoke baseline)
+  - Notes:
+    - R4.8 hardening is complete.
+    - Phase 9 Playwright scenario tasks remain deferred and tracked separately (`9.1`, `9.2`).
+- [x] R3 Host Header Dynamic Context Refactor (audited against `main`)
+  - Branch: `phase-r3-host-header-dynamic-context`
+  - PR: [#59](https://github.com/BradleyExton/wing-night/pull/59)
+  - Audit evidence:
+    - `HostPanelHeader` dynamic phase + round context coverage in `apps/client/src/components/HostControlPanel/HostPanelHeader/index.test.tsx`.
+    - Active-team context for `EATING`/`MINIGAME_*` follows SPEC team-name-only contract (no turn-progress label).
+    - Compact non-game host surfaces remain covered in `apps/client/src/components/HostControlPanel/index.test.tsx`.
 - [x] Tracker Sync for 8.12 + D Tasks
   - Branch: `phase-d-task-tracker-sync`
   - PR: [#56](https://github.com/BradleyExton/wing-night/pull/56)
@@ -218,7 +212,7 @@ Backlog status:
 - [x] R4.5 Content Loader Base Utility
 - [x] R4.6 Copy Simplification
 - [x] R4.7 Countdown Math + Dead Style Cleanup
-- [-] R4.8 Epic Hardening + Final Regression Gate
+- [x] R4.8 Epic Hardening + Final Regression Gate
 - [x] 0.2 Basic Server
 - [x] 0.3 Basic Client
 - [x] 0.5 CI PR Checks (GitHub Actions)
@@ -574,10 +568,10 @@ Verification:
 
 -   Pre-req: complete `R2 Display UI Decomposition Pass` before expanding display team-turn surfaces
 -   Render active team context in EATING and MINIGAME phases on host and display
--   Render round turn progress (for example, Team 2 of 4)
+-   Render active-team context only (team name; no turn-progress label)
 -   Preserve reconnect rehydrate correctness for active team turn context
 Verification:
--   Host/display component tests cover active team + turn progress rendering
+-   Host/display component tests cover active-team context rendering
 -   `pnpm playwright test` covers host/display sync across team-turn transitions
 
 ------------------------------------------------------------------------

@@ -83,8 +83,8 @@ Timer must be the most visually dominant element during EATING.
 
 -   During `EATING`, `MINIGAME_INTRO`, and `MINIGAME_PLAY`, both host and display must show:
     -   Active team name
-    -   Turn progress (for example, "Team 2 of 4")
 -   Team-turn context should remain visible without scrolling and without requiring interaction.
+-   Team-turn context in these phases is active-team only (no turn-progress label).
 -   Display context is informational only; it must not expose host-only answer data.
 
 ------------------------------------------------------------------------
