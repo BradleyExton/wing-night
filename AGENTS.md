@@ -54,6 +54,13 @@ Run:
 - Client and server must import types from `packages/shared`.
 - Do not duplicate state types in client or server.
 
+## 3.1 Minigame Boundary Rules
+
+- Minigame engine contracts live in `packages/minigames/core`.
+- Concrete minigames live in subdirectories of `packages/minigames` other than `core` (for example `packages/minigames/<minigameId>`) and must be framework-agnostic.
+- Server adapters/projections for minigames live under `apps/server/src/minigames/**`.
+- Display-facing minigame view contracts (for example `selectDisplayView`) must never include answer/secret fields; only host views may include privileged fields. Do not add answer fields to shared snapshot display-view contracts until host-only filtering or secret channels are implemented.
+
 ---
 
 # 4) Component & Utility Structure
@@ -103,6 +110,13 @@ Prefer `type` over `interface` unless declaration merging is required.
 - Client stores only snapshot + local UI state.
 - No recalculating scores client-side.
 - No hidden derived state.
+
+## 6.1 Team-Turn Contract
+
+- Round execution is per-team: `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` repeats for each team before `ROUND_RESULTS`.
+- `RoomState` team-turn fields (`turnOrderTeamIds`, `roundTurnCursor`, `activeRoundTeamId`, `completedRoundTurnTeamIds`, `activeTurnTeamId`) are server-authored snapshot contract fields. `activeTurnTeamId` is minigame turn state used by minigame UI surfaces and must never be client-authored.
+- EATING participation and minigame score mutations must be accepted for the active team only.
+- Round points are accumulated across team turns and applied once when entering `ROUND_RESULTS`.
 
 ---
 
