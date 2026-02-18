@@ -74,6 +74,7 @@ const buildRoomState = (prompts: TriviaPrompt[] = triviaPromptFixture): RoomStat
     triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
+    timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}

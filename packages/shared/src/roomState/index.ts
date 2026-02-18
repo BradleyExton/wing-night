@@ -6,6 +6,13 @@ import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
 import type { Team } from "../team/index.js";
 
+export type RoomTimerState = {
+  phase: Phase;
+  startedAt: number;
+  endsAt: number;
+  durationMs: number;
+};
+
 export type MinigameHostView = {
   minigame: MinigameType;
   activeTurnTeamId: string | null;
@@ -37,6 +44,7 @@ export type RoomState = {
   activeTurnTeamId: string | null;
   currentTriviaPrompt: TriviaPrompt | null;
   triviaPromptCursor: number;
+  timer: RoomTimerState | null;
   minigameHostView: MinigameHostView | null;
   minigameDisplayView: MinigameDisplayView | null;
   wingParticipationByPlayerId: Record<string, boolean>;

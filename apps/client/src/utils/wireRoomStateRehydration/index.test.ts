@@ -99,6 +99,7 @@ test("forwards server snapshots to callback", () => {
     triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
+    timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}

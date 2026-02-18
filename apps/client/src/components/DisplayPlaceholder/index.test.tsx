@@ -53,6 +53,7 @@ const buildSnapshot = (
     triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
+    timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
@@ -68,13 +69,54 @@ test("renders waiting copy when room state is missing", () => {
   assert.match(html, /No teams have joined yet/);
 });
 
-test("renders eating timer view from snapshot config", () => {
-  const html = renderToStaticMarkup(
-    <DisplayPlaceholder roomState={buildSnapshot(Phase.EATING)} />
-  );
+test("renders eating timer view from snapshot timer endsAt", () => {
+  const originalDateNow = Date.now;
+  Date.now = (): number => 1_000;
 
-  assert.match(html, /Round Timer/);
-  assert.match(html, /02:00/);
+  try {
+    const html = renderToStaticMarkup(
+      <DisplayPlaceholder
+        roomState={buildSnapshot(Phase.EATING, [], {
+          timer: {
+            phase: Phase.EATING,
+            startedAt: 1_000,
+            endsAt: 121_000,
+            durationMs: 120_000
+          }
+        })}
+      />
+    );
+
+    assert.match(html, /Round Timer/);
+    assert.match(html, /02:00/);
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
+test("renders expired eating timer as 00:00", () => {
+  const originalDateNow = Date.now;
+  Date.now = (): number => 122_000;
+
+  try {
+    const html = renderToStaticMarkup(
+      <DisplayPlaceholder
+        roomState={buildSnapshot(Phase.EATING, [], {
+          timer: {
+            phase: Phase.EATING,
+            startedAt: 1_000,
+            endsAt: 121_000,
+            durationMs: 120_000
+          }
+        })}
+      />
+    );
+
+    assert.match(html, /Round Timer/);
+    assert.match(html, /00:00/);
+  } finally {
+    Date.now = originalDateNow;
+  }
 });
 
 test("renders round intro details from currentRoundConfig", () => {

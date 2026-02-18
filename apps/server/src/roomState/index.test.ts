@@ -112,6 +112,7 @@ test("createInitialRoomState returns setup defaults", () => {
     triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
+    timer: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {}
@@ -162,6 +163,70 @@ test("advanceRoomStatePhase preserves currentRound after round intro", () => {
   assert.equal(nextState.phase, Phase.EATING);
   assert.equal(nextState.currentRound, 1);
   assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[0]);
+});
+
+test("advanceRoomStatePhase starts an EATING timer with endsAt", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  const originalDateNow = Date.now;
+  Date.now = (): number => 50_000;
+
+  try {
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+    const eatingState = advanceRoomStatePhase();
+
+    assert.equal(eatingState.phase, Phase.EATING);
+    assert.deepEqual(eatingState.timer, {
+      phase: Phase.EATING,
+      startedAt: 50_000,
+      endsAt: 170_000,
+      durationMs: 120_000
+    });
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
+test("advanceRoomStatePhase clears timer when leaving EATING", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+
+  const nextState = advanceRoomStatePhase();
+
+  assert.equal(nextState.phase, Phase.MINIGAME_INTRO);
+  assert.equal(nextState.timer, null);
+});
+
+test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+
+  const originalDateNow = Date.now;
+  Date.now = (): number => 90_000;
+
+  try {
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
+    const minigamePlayState = advanceRoomStatePhase();
+
+    assert.equal(minigamePlayState.phase, Phase.MINIGAME_PLAY);
+    assert.deepEqual(minigamePlayState.timer, {
+      phase: Phase.MINIGAME_PLAY,
+      startedAt: 90_000,
+      endsAt: 120_000,
+      durationMs: 30_000
+    });
+  } finally {
+    Date.now = originalDateNow;
+  }
 });
 
 test("advanceRoomStatePhase is idempotent at FINAL_RESULTS", () => {
