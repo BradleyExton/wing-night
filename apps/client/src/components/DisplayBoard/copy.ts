@@ -1,6 +1,6 @@
 import { displayCopy } from "../../copy/display";
 
-export const displayPlaceholderCopy = {
+export const displayBoardCopy = {
   title: displayCopy.placeholderTitle,
   description: displayCopy.placeholderDescription,
   roundFallbackLabel: displayCopy.roundFallbackLabel,
