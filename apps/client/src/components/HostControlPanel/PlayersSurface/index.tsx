@@ -21,7 +21,6 @@ type EatingPlayersSurfaceProps = PlayersSurfaceBaseProps & {
   wingParticipationByPlayerId: Record<string, boolean>;
   activeRoundTeamId: string | null;
   activeRoundTeamName: string;
-  turnProgressLabel: string | null;
   participationDisabled: boolean;
   onSetWingParticipation: (playerId: string, didEat: boolean) => void;
 };
@@ -54,12 +53,6 @@ export const PlayersSurface = (props: PlayersSurfaceProps): JSX.Element => {
           <p className={styles.turnValue}>
             {hostControlPanelCopy.activeRoundTeamValue(props.activeRoundTeamName)}
           </p>
-          {props.turnProgressLabel !== null && (
-            <>
-              <p className={styles.turnTitle}>{hostControlPanelCopy.turnProgressTitle}</p>
-              <p className={styles.turnValue}>{props.turnProgressLabel}</p>
-            </>
-          )}
         </div>
       )}
 

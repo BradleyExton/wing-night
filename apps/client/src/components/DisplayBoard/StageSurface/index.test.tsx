@@ -93,19 +93,20 @@ test("renders trivia question without answer leakage", () => {
   );
 
   assert.match(html, /Active Team/);
-  assert.match(html, /Team 1 of 1/);
+  assert.match(html, /Team One/);
+  assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.doesNotMatch(html, /Scoville/);
 });
 
-test("renders active team and turn progress during eating", () => {
+test("renders active team without turn progress during eating", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.EATING)} phaseLabel="Eating" />
   );
 
   assert.match(html, /Active Team/);
   assert.match(html, /Team One/);
-  assert.match(html, /Team 1 of 1/);
+  assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Round Timer/);
 });
 
@@ -189,13 +190,13 @@ test("falls back to static config timer when EATING timer snapshot is unavailabl
   assert.match(html, /02:05/);
 });
 
-test("renders active team and turn progress during minigame intro", () => {
+test("renders active team without turn progress during minigame intro", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.MINIGAME_INTRO)} phaseLabel="Minigame Intro" />
   );
 
   assert.match(html, /Active Team/);
   assert.match(html, /Team One/);
-  assert.match(html, /Team 1 of 1/);
+  assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Mini-Game: TRIVIA/);
 });

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { Phase, type Team } from "@wingnight/shared";
+import type { Team } from "@wingnight/shared";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { CompactSummarySurface } from "./index";
@@ -20,19 +20,9 @@ const standingsFixture: Team[] = [
   }
 ];
 
-test("renders only standings snapshot during ROUND_INTRO", () => {
+test("renders standings snapshot during ROUND_INTRO", () => {
   const html = renderToStaticMarkup(
     <CompactSummarySurface
-      phase={Phase.ROUND_INTRO}
-      currentRound={2}
-      totalRounds={4}
-      currentRoundConfig={{
-        round: 2,
-        label: "Medium",
-        sauce: "Buffalo",
-        pointsPerPlayer: 3,
-        minigame: "TRIVIA"
-      }}
       sortedStandings={standingsFixture}
     />
   );
@@ -45,17 +35,12 @@ test("renders only standings snapshot during ROUND_INTRO", () => {
   assert.match(html, /Team Alpha/);
 });
 
-test("renders fallback labels when round context and standings are unavailable", () => {
+test("renders fallback label when standings are unavailable", () => {
   const html = renderToStaticMarkup(
     <CompactSummarySurface
-      phase={Phase.INTRO}
-      currentRound={0}
-      totalRounds={4}
-      currentRoundConfig={null}
       sortedStandings={[]}
     />
   );
 
-  assert.match(html, /Round details are not available for this phase yet\./);
   assert.match(html, /No teams available for standings yet\./);
 });

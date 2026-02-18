@@ -62,7 +62,6 @@ test("renders only active-team players during eating", () => {
       wingParticipationByPlayerId={{ "player-1": true }}
       activeRoundTeamId="team-alpha"
       activeRoundTeamName="Team Alpha"
-      turnProgressLabel="Team 1 of 2"
       participationDisabled={false}
       onSetWingParticipation={(): void => {
         return;
@@ -74,7 +73,6 @@ test("renders only active-team players during eating", () => {
   assert.doesNotMatch(html, /Morgan/);
   assert.match(html, /Ate wing/);
   assert.match(html, /Active Team/);
-  assert.match(html, /Team 1 of 2/);
 });
 
 test("renders active-team empty state during eating when no players are assigned", () => {
@@ -91,7 +89,6 @@ test("renders active-team empty state during eating when no players are assigned
       wingParticipationByPlayerId={{}}
       activeRoundTeamId="team-gamma"
       activeRoundTeamName="No team assigned"
-      turnProgressLabel="Team 1 of 2"
       participationDisabled={false}
       onSetWingParticipation={(): void => {
         return;

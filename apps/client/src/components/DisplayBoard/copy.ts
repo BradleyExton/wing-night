@@ -19,8 +19,6 @@ export const displayBoardCopy = {
   triviaQuestionLabel: displayCopy.triviaQuestionLabel,
   activeTeamLabel: displayCopy.activeTeamLabel,
   activeTeamValue: displayCopy.activeTeamValue,
-  turnProgressTitle: displayCopy.turnProgressTitle,
-  turnProgressLabel: displayCopy.turnProgressLabel,
   eatingTimerLabel: displayCopy.eatingTimerLabel,
   eatingTimerValue: displayCopy.eatingTimerValue,
   standingsTitle: displayCopy.standingsTitle,

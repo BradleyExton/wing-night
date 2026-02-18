@@ -5,12 +5,7 @@ export const card =
 
 export const sectionHeading = "m-0 text-xl font-semibold text-text";
 
-export const compactPhaseBadge =
-  "mt-3 inline-flex min-h-11 items-center rounded-md border border-primary/70 bg-primary/20 px-3 text-base font-semibold text-primary";
-
 export const sectionDescription = "mt-2 text-sm text-muted";
-
-export const compactMetaList = "mt-3 space-y-2 text-base text-text";
 
 export const compactStandingsList = "mt-3 space-y-2";
 
@@ -27,6 +22,3 @@ export const compactLeaderLabel =
   "rounded-md bg-gold/15 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gold";
 
 export const compactScore = "text-lg font-semibold text-text";
-
-export const compactHint =
-  "mt-2 rounded-md border border-text/10 bg-bg px-3 py-3 text-base text-text/90";

@@ -13,7 +13,7 @@ export const HostPanelHeader = ({
   teamNameByTeamId
 }: HostPanelHeaderProps): JSX.Element => {
   const phase = roomState?.phase ?? null;
-  const isTurnContextPhase =
+  const isActiveTeamContextPhase =
     phase === Phase.EATING ||
     phase === Phase.MINIGAME_INTRO ||
     phase === Phase.MINIGAME_PLAY;
@@ -40,22 +40,11 @@ export const HostPanelHeader = ({
       ? (roomState?.currentRoundConfig?.minigame ?? null)
       : null;
 
-  const turnOrderCount = roomState?.turnOrderTeamIds.length ?? 0;
-  const roundTurnCursor = roomState?.roundTurnCursor ?? -1;
-  const hasValidTurnProgress =
-    isTurnContextPhase &&
-    roundTurnCursor >= 0 &&
-    turnOrderCount > 0 &&
-    roundTurnCursor < turnOrderCount;
-  const turnProgressLabel = isTurnContextPhase && hasValidTurnProgress
-    ? hostControlPanelCopy.turnProgressLabel(roundTurnCursor + 1, turnOrderCount)
-    : null;
-
   const activeTeamId = selectActiveTeamId(roomState);
   const activeTeamName =
-    isTurnContextPhase && activeTeamId !== null
+    isActiveTeamContextPhase && activeTeamId !== null
       ? (teamNameByTeamId.get(activeTeamId) ?? hostControlPanelCopy.noAssignedTeamLabel)
-      : isTurnContextPhase
+      : isActiveTeamContextPhase
         ? hostControlPanelCopy.noAssignedTeamLabel
         : null;
 
@@ -80,12 +69,6 @@ export const HostPanelHeader = ({
           <ContextPill
             label={hostControlPanelCopy.headerMinigameContextTitle}
             value={roundIntroMinigame}
-          />
-        )}
-        {turnProgressLabel !== null && (
-          <ContextPill
-            label={hostControlPanelCopy.headerTurnContextTitle}
-            value={turnProgressLabel}
           />
         )}
         {activeTeamName !== null && (

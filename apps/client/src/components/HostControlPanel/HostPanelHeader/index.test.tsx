@@ -168,41 +168,27 @@ test("hides round-intro-only context pills outside ROUND_INTRO", () => {
   assert.doesNotMatch(html, /Mini-game/);
 });
 
-test("renders turn progress only when cursor and turn order are valid", () => {
-  const validHtml = renderToStaticMarkup(
-    <HostPanelHeader
-      roomState={buildSnapshot(Phase.EATING, { roundTurnCursor: 1 })}
-      teamNameByTeamId={teamNameByTeamId}
-    />
-  );
-  assert.match(validHtml, /Team 2 of 2/);
+test("does not render turn progress even when cursor and turn order are valid", () => {
+  const phasesWithoutTurnProgress = [
+    Phase.EATING,
+    Phase.MINIGAME_INTRO,
+    Phase.MINIGAME_PLAY
+  ];
 
-  const missingTurnOrderHtml = renderToStaticMarkup(
-    <HostPanelHeader
-      roomState={buildSnapshot(Phase.EATING, {
-        roundTurnCursor: 0,
-        turnOrderTeamIds: []
-      })}
-      teamNameByTeamId={teamNameByTeamId}
-    />
-  );
-  assert.doesNotMatch(missingTurnOrderHtml, /Team 1 of/);
+  for (const phase of phasesWithoutTurnProgress) {
+    const html = renderToStaticMarkup(
+      <HostPanelHeader
+        roomState={buildSnapshot(phase, {
+          roundTurnCursor: 1,
+          turnOrderTeamIds: ["team-alpha", "team-beta"]
+        })}
+        teamNameByTeamId={teamNameByTeamId}
+      />
+    );
 
-  const negativeCursorHtml = renderToStaticMarkup(
-    <HostPanelHeader
-      roomState={buildSnapshot(Phase.EATING, { roundTurnCursor: -1 })}
-      teamNameByTeamId={teamNameByTeamId}
-    />
-  );
-  assert.doesNotMatch(negativeCursorHtml, /Team 0 of/);
-
-  const overflowCursorHtml = renderToStaticMarkup(
-    <HostPanelHeader
-      roomState={buildSnapshot(Phase.EATING, { roundTurnCursor: 5 })}
-      teamNameByTeamId={teamNameByTeamId}
-    />
-  );
-  assert.doesNotMatch(overflowCursorHtml, /Team 6 of/);
+    assert.doesNotMatch(html, /Team 2 of 2/, `${phase} should not show turn progress`);
+    assert.doesNotMatch(html, /Turn/, `${phase} should not show Turn label`);
+  }
 });
 
 test("resolves active team using phase rules and fallback labels", () => {
