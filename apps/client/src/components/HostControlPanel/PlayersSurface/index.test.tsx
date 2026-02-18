@@ -47,7 +47,6 @@ test("delegates eating mode to eating players surface", () => {
     <PlayersSurface
       mode="eating"
       players={[...playersFixture]}
-      teams={[...teamsFixture]}
       assignedTeamByPlayerId={new Map([
         ["player-1", "team-alpha"],
         ["player-2", "team-beta"]

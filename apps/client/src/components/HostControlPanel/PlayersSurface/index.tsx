@@ -6,12 +6,12 @@ import * as styles from "./styles";
 
 type PlayersSurfaceBaseProps = {
   players: Player[];
-  teams: Team[];
   assignedTeamByPlayerId: Map<string, string>;
 };
 
 export type SetupPlayersSurfaceProps = PlayersSurfaceBaseProps & {
   mode: "setup";
+  teams: Team[];
   assignmentDisabled: boolean;
   onAssignPlayer: (playerId: string, selectedTeamId: string) => void;
 };
@@ -28,12 +28,18 @@ export type EatingPlayersSurfaceProps = PlayersSurfaceBaseProps & {
 
 type PlayersSurfaceProps = SetupPlayersSurfaceProps | EatingPlayersSurfaceProps;
 
-void styles;
-
 export const PlayersSurface = (props: PlayersSurfaceProps): JSX.Element => {
   if (props.mode === "setup") {
-    return <SetupPlayersSurface {...props} />;
+    return (
+      <div className={styles.surfaceRoot}>
+        <SetupPlayersSurface {...props} />
+      </div>
+    );
   }
 
-  return <EatingPlayersSurface {...props} />;
+  return (
+    <div className={styles.surfaceRoot}>
+      <EatingPlayersSurface {...props} />
+    </div>
+  );
 };

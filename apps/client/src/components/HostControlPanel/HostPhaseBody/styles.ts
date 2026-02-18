@@ -1,1 +1,1 @@
-export const noopClass = "";
+export const surfaceGroup = "contents";

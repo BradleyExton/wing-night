@@ -9,21 +9,6 @@ const playersFixture = [
   { id: "player-2", name: "Morgan" }
 ];
 
-const teamsFixture = [
-  {
-    id: "team-alpha",
-    name: "Team Alpha",
-    playerIds: ["player-1"],
-    totalScore: 10
-  },
-  {
-    id: "team-beta",
-    name: "Team Beta",
-    playerIds: ["player-2"],
-    totalScore: 8
-  }
-];
-
 const teamNameByTeamId = new Map<string, string>([
   ["team-alpha", "Team Alpha"],
   ["team-beta", "Team Beta"]
@@ -34,7 +19,6 @@ test("renders only active-team players during eating", () => {
     <EatingPlayersSurface
       mode="eating"
       players={[...playersFixture]}
-      teams={[...teamsFixture]}
       assignedTeamByPlayerId={new Map([
         ["player-1", "team-alpha"],
         ["player-2", "team-beta"]
@@ -61,7 +45,6 @@ test("renders active-team empty state during eating when no players are assigned
     <EatingPlayersSurface
       mode="eating"
       players={[...playersFixture]}
-      teams={[...teamsFixture]}
       assignedTeamByPlayerId={new Map([
         ["player-1", "team-alpha"],
         ["player-2", "team-beta"]
