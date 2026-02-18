@@ -38,13 +38,24 @@ test("renders assignment controls during setup", () => {
       teamNameByTeamId={teamNameByTeamId}
       isSetupPhase
       isEatingPhase={false}
+      isMinigameIntroPhase={false}
+      isTriviaMinigamePlayPhase={false}
       wingParticipationByPlayerId={{}}
+      currentTriviaPrompt={null}
+      activeRoundTeamId={null}
+      activeRoundTeamName="No team assigned"
+      turnProgressLabel={null}
+      activeTurnTeamName="No team assigned"
       assignmentDisabled={false}
       participationDisabled
+      triviaAttemptDisabled
       onAssignPlayer={(): void => {
         return;
       }}
       onSetWingParticipation={(): void => {
+        return;
+      }}
+      onRecordTriviaAttempt={(): void => {
         return;
       }}
     />
@@ -55,7 +66,7 @@ test("renders assignment controls during setup", () => {
   assert.match(html, /Team Alpha/);
 });
 
-test("renders participation controls during EATING", () => {
+test("renders trivia host controls during trivia minigame play", () => {
   const html = renderToStaticMarkup(
     <PlayersSurface
       players={[...playersFixture]}
@@ -66,19 +77,37 @@ test("renders participation controls during EATING", () => {
       ])}
       teamNameByTeamId={teamNameByTeamId}
       isSetupPhase={false}
-      isEatingPhase
-      wingParticipationByPlayerId={{ "player-1": true }}
+      isEatingPhase={false}
+      isMinigameIntroPhase={false}
+      isTriviaMinigamePlayPhase
+      wingParticipationByPlayerId={{}}
+      currentTriviaPrompt={{
+        id: "prompt-1",
+        question: "Which scale measures pepper heat?",
+        answer: "Scoville"
+      }}
+      activeRoundTeamId="team-alpha"
+      activeRoundTeamName="Team Alpha"
+      turnProgressLabel="Team 1 of 2"
+      activeTurnTeamName="Team Alpha"
       assignmentDisabled
-      participationDisabled={false}
+      participationDisabled
+      triviaAttemptDisabled={false}
       onAssignPlayer={(): void => {
         return;
       }}
       onSetWingParticipation={(): void => {
         return;
       }}
+      onRecordTriviaAttempt={(): void => {
+        return;
+      }}
     />
   );
 
-  assert.match(html, /Ate wing/);
-  assert.match(html, /Team: Team Alpha/);
+  assert.match(html, /Active Team: Team Alpha/);
+  assert.match(html, /Which scale measures pepper heat\?/);
+  assert.match(html, /Scoville/);
+  assert.match(html, /Correct/);
+  assert.match(html, /Incorrect/);
 });

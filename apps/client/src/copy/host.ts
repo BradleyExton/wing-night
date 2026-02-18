@@ -42,6 +42,11 @@ export const hostCopy = {
   ateWingLabel: "Ate wing",
   wingParticipationToggleLabel: (playerName: string): string =>
     `Mark ${playerName} as ate wing`,
+  activeRoundTeamTitle: "Active Team",
+  activeRoundTeamValue: (teamName: string): string => teamName,
+  turnProgressTitle: "Turn Progress",
+  turnProgressLabel: (turnNumber: number, totalTurns: number): string =>
+    `Team ${turnNumber} of ${totalTurns}`,
   triviaSectionDescription:
     "Mark the active team's answer as correct or incorrect.",
   minigameSectionTitle: "Mini-Game",

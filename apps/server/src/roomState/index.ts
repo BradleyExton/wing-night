@@ -200,6 +200,19 @@ const clearPendingRoundScores = (state: RoomState): void => {
   state.pendingMinigamePointsByTeamId = {};
 };
 
+const resolveTeamIdByPlayerId = (
+  state: RoomState,
+  playerId: string
+): string | null => {
+  for (const team of state.teams) {
+    if (team.playerIds.includes(playerId)) {
+      return team.id;
+    }
+  }
+
+  return null;
+};
+
 const ensureTurnOrderTeamIds = (state: RoomState): void => {
   if (state.turnOrderTeamIds.length > 0) {
     return;
@@ -327,11 +340,16 @@ export const setWingParticipation = (
     return getRoomStateSnapshot();
   }
 
-  const playerAssignedToTeam = roomState.teams.some((team) =>
-    team.playerIds.includes(playerId)
-  );
+  const playerTeamId = resolveTeamIdByPlayerId(roomState, playerId);
 
-  if (!playerAssignedToTeam) {
+  if (playerTeamId === null) {
+    return getRoomStateSnapshot();
+  }
+
+  if (
+    roomState.activeRoundTeamId === null ||
+    playerTeamId !== roomState.activeRoundTeamId
+  ) {
     return getRoomStateSnapshot();
   }
 
@@ -354,25 +372,37 @@ export const setPendingMinigamePoints = (
     return getRoomStateSnapshot();
   }
 
-  const nextPendingMinigamePointsByTeamId: Record<string, number> = {};
+  const activeRoundTeamId = roomState.activeRoundTeamId;
 
-  for (const team of roomState.teams) {
-    const nextPoints = pointsByTeamId[team.id];
+  if (activeRoundTeamId === null) {
+    return getRoomStateSnapshot();
+  }
 
-    if (nextPoints === undefined) {
-      nextPendingMinigamePointsByTeamId[team.id] = 0;
-      continue;
-    }
-
-    if (
-      !Number.isFinite(nextPoints) ||
-      nextPoints < 0 ||
-      nextPoints > minigamePointsMax
-    ) {
+  for (const teamId of Object.keys(pointsByTeamId)) {
+    if (teamId !== activeRoundTeamId) {
       return getRoomStateSnapshot();
     }
+  }
 
-    nextPendingMinigamePointsByTeamId[team.id] = nextPoints;
+  const nextPoints = pointsByTeamId[activeRoundTeamId] ?? 0;
+
+  if (
+    !Number.isFinite(nextPoints) ||
+    nextPoints < 0 ||
+    nextPoints > minigamePointsMax
+  ) {
+    return getRoomStateSnapshot();
+  }
+
+  const nextPendingMinigamePointsByTeamId: Record<string, number> = {
+    ...roomState.pendingMinigamePointsByTeamId,
+    [activeRoundTeamId]: nextPoints
+  };
+
+  for (const team of roomState.teams) {
+    if (nextPendingMinigamePointsByTeamId[team.id] === undefined) {
+      nextPendingMinigamePointsByTeamId[team.id] = 0;
+    }
   }
 
   roomState.pendingMinigamePointsByTeamId = nextPendingMinigamePointsByTeamId;

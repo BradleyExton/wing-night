@@ -659,7 +659,7 @@ test("assignPlayerToTeam ignores unknown players and unknown teams", () => {
   assert.deepEqual(snapshot.teams[0].playerIds, []);
 });
 
-test("setWingParticipation computes pending wing points per team during EATING", () => {
+test("setWingParticipation only accepts active-team players and accumulates by turn", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
@@ -671,6 +671,15 @@ test("setWingParticipation computes pending wing points per team during EATING",
   assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 2);
   assert.equal(snapshot.pendingWingPointsByTeamId["team-2"], 0);
 
+  setWingParticipation("player-2", true);
+
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 2);
+  assert.equal(snapshot.pendingWingPointsByTeamId["team-2"], 0);
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
   setWingParticipation("player-2", true);
 
   snapshot = getRoomStateSnapshot();
@@ -860,7 +869,7 @@ test("recordTriviaAttempt enforces minigame scoring cap", () => {
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToMinigamePlayPhase();
-  setPendingMinigamePoints({ "team-1": 15, "team-2": 0 });
+  setPendingMinigamePoints({ "team-1": 15 });
 
   recordTriviaAttempt(true);
 
@@ -907,7 +916,7 @@ test("setPendingMinigamePoints is ignored outside MINIGAME_PLAY", () => {
   setupValidTeamsAndAssignments();
   advanceToMinigamePlayPhase();
 
-  setPendingMinigamePoints({ "team-1": 4, "team-2": 2 });
+  setPendingMinigamePoints({ "team-1": 4 });
   advanceRoomStatePhase();
 
   const snapshotBeforeInvalidCall = getRoomStateSnapshot();
@@ -926,10 +935,10 @@ test("setPendingMinigamePoints rejects negative values", () => {
   setupValidTeamsAndAssignments();
   advanceToMinigamePlayPhase();
 
-  setPendingMinigamePoints({ "team-1": 4, "team-2": 2 });
+  setPendingMinigamePoints({ "team-1": 4 });
   const snapshotWithValidValues = getRoomStateSnapshot();
 
-  setPendingMinigamePoints({ "team-1": -1, "team-2": 2 });
+  setPendingMinigamePoints({ "team-1": -1 });
   const snapshotAfterInvalidCall = getRoomStateSnapshot();
 
   assert.deepEqual(
@@ -943,13 +952,10 @@ test("setPendingMinigamePoints rejects non-finite values", () => {
   setupValidTeamsAndAssignments();
   advanceToMinigamePlayPhase();
 
-  setPendingMinigamePoints({ "team-1": 3, "team-2": 2 });
+  setPendingMinigamePoints({ "team-1": 3 });
   const snapshotWithValidValues = getRoomStateSnapshot();
 
-  setPendingMinigamePoints({
-    "team-1": Number.NaN,
-    "team-2": Number.POSITIVE_INFINITY
-  });
+  setPendingMinigamePoints({ "team-1": Number.NaN });
   const snapshotAfterInvalidCall = getRoomStateSnapshot();
 
   assert.deepEqual(
@@ -968,6 +974,23 @@ test("setPendingMinigamePoints fills missing teams with zero", () => {
 
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 6);
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-2"], 0);
+});
+
+test("setPendingMinigamePoints rejects non-active team score mutations", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToMinigamePlayPhase();
+
+  setPendingMinigamePoints({ "team-1": 4 });
+  const snapshotWithValidValues = getRoomStateSnapshot();
+
+  setPendingMinigamePoints({ "team-2": 7 });
+  const snapshotAfterInvalidCall = getRoomStateSnapshot();
+
+  assert.deepEqual(
+    snapshotAfterInvalidCall.pendingMinigamePointsByTeamId,
+    snapshotWithValidValues.pendingMinigamePointsByTeamId
+  );
 });
 
 test("setPendingMinigamePoints enforces final-round scoring cap", () => {
@@ -995,17 +1018,19 @@ test("applies wing and minigame points on MINIGAME_PLAY -> ROUND_RESULTS", () =>
 
   advanceRoomStatePhase();
   advanceRoomStatePhase();
-  setPendingMinigamePoints({
-    "team-1": 5,
-    "team-2": 3
-  });
+  setPendingMinigamePoints({ "team-1": 5 });
+  advanceRoomStatePhase();
+  setWingParticipation("player-2", true);
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-2": 3 });
   advanceToRoundResultsPhase(1);
 
   const snapshot = getRoomStateSnapshot();
 
   assert.equal(snapshot.phase, Phase.ROUND_RESULTS);
   assert.equal(snapshot.teams[0].totalScore, 7);
-  assert.equal(snapshot.teams[1].totalScore, 3);
+  assert.equal(snapshot.teams[1].totalScore, 5);
 });
 
 test("does not double apply round points after leaving ROUND_RESULTS", () => {
