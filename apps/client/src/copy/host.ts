@@ -31,6 +31,29 @@ const phaseAdvanceHint = (phase: Phase): string => {
   }
 };
 
+const phaseDescription = (phase: Phase): string => {
+  switch (phase) {
+    case Phase.SETUP:
+      return "Create teams and assign players before starting the game.";
+    case Phase.INTRO:
+      return "Confirm teams are ready before starting the first round.";
+    case Phase.ROUND_INTRO:
+      return "Review this round and confirm players are ready to eat.";
+    case Phase.EATING:
+      return "Track wing participation and manage the active turn timer.";
+    case Phase.MINIGAME_INTRO:
+      return "Confirm the active team before minigame play begins.";
+    case Phase.MINIGAME_PLAY:
+      return "Record outcomes for the active team turn.";
+    case Phase.ROUND_RESULTS:
+      return "Review score updates before moving to the next round.";
+    case Phase.FINAL_RESULTS:
+      return "Final standings are locked for this game.";
+    default:
+      return "Review the current game state.";
+  }
+};
+
 export const hostCopy = {
   headerKickerLabel: "Host",
   headerRoundContextTitle: "Round",
@@ -42,28 +65,7 @@ export const hostCopy = {
   headerWaitingTitle: "Waiting for room state",
   headerWaitingDescription:
     "Host controls will update when the latest snapshot arrives.",
-  headerPhaseDescription: (phase: Phase): string => {
-    switch (phase) {
-      case Phase.SETUP:
-        return "Create teams and assign players before starting the game.";
-      case Phase.INTRO:
-        return "Confirm teams are ready before starting the first round.";
-      case Phase.ROUND_INTRO:
-        return "Review this round and confirm players are ready to eat.";
-      case Phase.EATING:
-        return "Track wing participation and manage the active turn timer.";
-      case Phase.MINIGAME_INTRO:
-        return "Confirm the active team before minigame play begins.";
-      case Phase.MINIGAME_PLAY:
-        return "Record outcomes for the active team turn.";
-      case Phase.ROUND_RESULTS:
-        return "Review score updates and confirm the next round flow.";
-      case Phase.FINAL_RESULTS:
-        return "Final standings are locked for this game.";
-      default:
-        return "Review the current game state.";
-    }
-  },
+  headerPhaseDescription: phaseDescription,
   nextPhaseButtonLabel: "Next Phase",
   teamSetupTitle: "Team Setup",
   teamSetupDescription:
@@ -128,20 +130,7 @@ export const hostCopy = {
   compactNoStandingsLabel: "No teams available for standings yet.",
   compactLeaderLabel: "Leader",
   compactPhaseLabel: formatPhaseLabel,
-  compactPhaseDescription: (phase: Phase): string => {
-    switch (phase) {
-      case Phase.INTRO:
-        return "Confirm teams are ready before starting the first round.";
-      case Phase.ROUND_INTRO:
-        return "Review the upcoming round and confirm everyone is ready.";
-      case Phase.ROUND_RESULTS:
-        return "Review score updates and confirm the next round flow.";
-      case Phase.FINAL_RESULTS:
-        return "Final standings are locked for this game.";
-      default:
-        return "Review the current game state.";
-    }
-  },
+  compactPhaseDescription: phaseDescription,
   compactNextActionHint: phaseAdvanceHint,
   compactRoundProgressLabel: (currentRound: number, totalRounds: number): string =>
     `Round ${Math.max(currentRound, 1)} of ${totalRounds}`,

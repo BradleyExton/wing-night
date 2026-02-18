@@ -47,7 +47,7 @@ export const HostPanelHeader = ({
     roundTurnCursor >= 0 &&
     turnOrderCount > 0 &&
     roundTurnCursor < turnOrderCount;
-  const turnProgressLabel = hasValidTurnProgress
+  const turnProgressLabel = isTurnContextPhase && hasValidTurnProgress
     ? hostControlPanelCopy.turnProgressLabel(roundTurnCursor + 1, turnOrderCount)
     : null;
 
