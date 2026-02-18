@@ -28,9 +28,26 @@ Core principles:
 -   Full state snapshot on reconnect
 -   In-memory state only (MVP)
 -   Engine/content separation
+-   Fixed per-round team turn order (`EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` per team)
+-   Active-team-only scoring mutations during EATING and mini-game play
+-   Round totals applied once at `ROUND_RESULTS`
 
 The game runs entirely on a local Wi-Fi network with no internet
 required.
+
+------------------------------------------------------------------------
+
+# 🔁 Round Flow
+
+Each round executes as:
+
+1. `ROUND_INTRO` (once)
+2. `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` (repeat for each team turn)
+3. `ROUND_RESULTS` (apply accumulated wing + mini-game points)
+
+Room snapshots carry team-turn context (`turnOrderTeamIds`,
+`roundTurnCursor`, `activeRoundTeamId`, `completedRoundTurnTeamIds`) so
+host/display surfaces rehydrate correctly after refresh/reconnect.
 
 ------------------------------------------------------------------------
 
