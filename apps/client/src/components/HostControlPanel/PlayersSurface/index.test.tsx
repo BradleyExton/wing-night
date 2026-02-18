@@ -24,12 +24,7 @@ const teamsFixture = [
   }
 ];
 
-const teamNameByTeamId = new Map<string, string>([
-  ["team-alpha", "Team Alpha"],
-  ["team-beta", "Team Beta"]
-]);
-
-test("renders assignment controls during setup", () => {
+test("delegates setup mode to setup players surface", () => {
   const html = renderToStaticMarkup(
     <PlayersSurface
       mode="setup"
@@ -45,10 +40,9 @@ test("renders assignment controls during setup", () => {
 
   assert.match(html, /Assign Alex to a team/);
   assert.match(html, /Unassigned/);
-  assert.match(html, /Team Alpha/);
 });
 
-test("renders only active-team players during eating", () => {
+test("delegates eating mode to eating players surface", () => {
   const html = renderToStaticMarkup(
     <PlayersSurface
       mode="eating"
@@ -58,7 +52,12 @@ test("renders only active-team players during eating", () => {
         ["player-1", "team-alpha"],
         ["player-2", "team-beta"]
       ])}
-      teamNameByTeamId={teamNameByTeamId}
+      teamNameByTeamId={
+        new Map<string, string>([
+          ["team-alpha", "Team Alpha"],
+          ["team-beta", "Team Beta"]
+        ])
+      }
       wingParticipationByPlayerId={{ "player-1": true }}
       activeRoundTeamId="team-alpha"
       activeRoundTeamName="Team Alpha"
@@ -69,34 +68,6 @@ test("renders only active-team players during eating", () => {
     />
   );
 
-  assert.match(html, /Alex/);
-  assert.doesNotMatch(html, /Morgan/);
   assert.match(html, /Ate wing/);
   assert.match(html, /Active Team/);
-});
-
-test("renders active-team empty state during eating when no players are assigned", () => {
-  const html = renderToStaticMarkup(
-    <PlayersSurface
-      mode="eating"
-      players={[...playersFixture]}
-      teams={[...teamsFixture]}
-      assignedTeamByPlayerId={new Map([
-        ["player-1", "team-alpha"],
-        ["player-2", "team-beta"]
-      ])}
-      teamNameByTeamId={teamNameByTeamId}
-      wingParticipationByPlayerId={{}}
-      activeRoundTeamId="team-gamma"
-      activeRoundTeamName="No team assigned"
-      participationDisabled={false}
-      onSetWingParticipation={(): void => {
-        return;
-      }}
-    />
-  );
-
-  assert.match(html, /No players assigned to the active team\./);
-  assert.doesNotMatch(html, /Alex/);
-  assert.doesNotMatch(html, /Morgan/);
 });

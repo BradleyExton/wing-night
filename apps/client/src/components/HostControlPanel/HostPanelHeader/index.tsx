@@ -1,6 +1,7 @@
-import { Phase, type RoomState } from "@wingnight/shared";
+import type { RoomState } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
+import { selectHeaderContext } from "./selectHeaderContext";
 import * as styles from "./styles";
 
 type HostPanelHeaderProps = {
@@ -12,69 +13,35 @@ export const HostPanelHeader = ({
   roomState,
   teamNameByTeamId
 }: HostPanelHeaderProps): JSX.Element => {
-  const phase = roomState?.phase ?? null;
-  const isActiveTeamContextPhase =
-    phase === Phase.EATING ||
-    phase === Phase.MINIGAME_INTRO ||
-    phase === Phase.MINIGAME_PLAY;
-
-  const phaseTitle =
-    phase === null
-      ? hostControlPanelCopy.headerWaitingTitle
-      : hostControlPanelCopy.compactPhaseLabel(phase);
-  const phaseDescription =
-    phase === null
-      ? hostControlPanelCopy.headerWaitingDescription
-      : hostControlPanelCopy.headerPhaseDescription(phase);
-
-  const currentRound = roomState?.currentRound ?? 0;
-  const totalRounds = roomState?.totalRounds ?? 0;
-  const roundLabel =
-    currentRound > 0 && totalRounds > 0
-      ? hostControlPanelCopy.compactRoundProgressLabel(currentRound, totalRounds)
-      : hostControlPanelCopy.headerPreGameLabel;
-  const roundIntroSauce =
-    phase === Phase.ROUND_INTRO ? (roomState?.currentRoundConfig?.sauce ?? null) : null;
-  const roundIntroMinigame =
-    phase === Phase.ROUND_INTRO
-      ? (roomState?.currentRoundConfig?.minigame ?? null)
-      : null;
-
-  const activeTeamId = selectActiveTeamId(roomState);
-  const activeTeamName =
-    isActiveTeamContextPhase && activeTeamId !== null
-      ? (teamNameByTeamId.get(activeTeamId) ?? hostControlPanelCopy.noAssignedTeamLabel)
-      : isActiveTeamContextPhase
-        ? hostControlPanelCopy.noAssignedTeamLabel
-        : null;
+  const headerContext = selectHeaderContext(roomState, teamNameByTeamId);
 
   return (
     <header className={styles.container}>
       <p className={styles.kicker}>{hostControlPanelCopy.headerKickerLabel}</p>
-      <h1 className={styles.heading}>{phaseTitle}</h1>
-      <p className={styles.subtext}>{phaseDescription}</p>
+      <h1 className={styles.heading}>{headerContext.phaseTitle}</h1>
+      <p className={styles.subtext}>{headerContext.phaseDescription}</p>
 
       <div className={styles.contextRow}>
         <ContextPill
           label={hostControlPanelCopy.headerRoundContextTitle}
-          value={roundLabel}
+          value={headerContext.roundLabel}
         />
-        {roundIntroSauce !== null && (
+        {headerContext.roundIntroSauce !== null && (
           <ContextPill
             label={hostControlPanelCopy.headerSauceContextTitle}
-            value={roundIntroSauce}
+            value={headerContext.roundIntroSauce}
           />
         )}
-        {roundIntroMinigame !== null && (
+        {headerContext.roundIntroMinigame !== null && (
           <ContextPill
             label={hostControlPanelCopy.headerMinigameContextTitle}
-            value={roundIntroMinigame}
+            value={headerContext.roundIntroMinigame}
           />
         )}
-        {activeTeamName !== null && (
+        {headerContext.activeTeamName !== null && (
           <ContextPill
             label={hostControlPanelCopy.headerActiveTeamContextTitle}
-            value={activeTeamName}
+            value={headerContext.activeTeamName}
           />
         )}
       </div>
@@ -94,20 +61,4 @@ const ContextPill = ({ label, value }: ContextPillProps): JSX.Element => {
       <span className={styles.contextValue}>{value}</span>
     </p>
   );
-};
-
-const selectActiveTeamId = (roomState: RoomState | null): string | null => {
-  if (!roomState) {
-    return null;
-  }
-
-  if (roomState.phase === Phase.MINIGAME_PLAY) {
-    return roomState.activeTurnTeamId ?? roomState.activeRoundTeamId;
-  }
-
-  if (roomState.phase === Phase.EATING || roomState.phase === Phase.MINIGAME_INTRO) {
-    return roomState.activeRoundTeamId;
-  }
-
-  return null;
 };
