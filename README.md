@@ -28,6 +28,11 @@ Core principles:
 -   Full state snapshot on reconnect
 -   In-memory state only (MVP)
 -   Engine/content separation
+-   Mini-games run behind a module boundary (`packages/minigames/<minigameId>`)
+-   Authoritative engine snapshots (from server-side minigame selectors)
+    project dedicated mini-game view models:
+    -   `minigameHostView` for host controls
+    -   `minigameDisplayView` for display-safe rendering
 
 The game runs entirely on a local Wi-Fi network with no internet
 required.
@@ -42,6 +47,8 @@ Wing Night uses a pnpm workspace monorepo.
 Express + Socket.IO server
 
 packages/ shared/ \# Shared types, schemas, socket contracts
+packages/minigames/core/ \# Generic minigame contract
+packages/minigames/trivia/ \# Trivia implementation behind the contract
 
 content/ sample/ \# Safe, committed sample content local/ \# Custom
 content (gitignored)
