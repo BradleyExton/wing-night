@@ -1,8 +1,8 @@
-import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { isGameConfigFile, type GameConfigFile } from "@wingnight/shared";
+import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 
 type LoadGameConfigOptions = {
   contentRootDir?: string;
@@ -37,27 +37,14 @@ const parseGameConfig = (
   return parsedContent;
 };
 
-const readGameConfigFromFile = (contentFilePath: string): GameConfigFile => {
-  const fileContents = readFileSync(contentFilePath, "utf8");
-  return parseGameConfig(fileContents, contentFilePath);
-};
-
 export const loadGameConfig = (
   options: LoadGameConfigOptions = {}
 ): GameConfigFile => {
   const contentRootDir = options.contentRootDir ?? defaultContentRootDir;
-  const localConfigPath = resolve(contentRootDir, "local", "gameConfig.json");
-  const sampleConfigPath = resolve(contentRootDir, "sample", "gameConfig.json");
-
-  if (existsSync(localConfigPath)) {
-    return readGameConfigFromFile(localConfigPath);
-  }
-
-  if (!existsSync(sampleConfigPath)) {
-    throw new Error(
-      `Missing game config content file. Checked "${localConfigPath}" and "${sampleConfigPath}".`
-    );
-  }
-
-  return readGameConfigFromFile(sampleConfigPath);
+  return loadContentFileWithFallback({
+    contentRootDir,
+    contentFileName: "gameConfig.json",
+    contentLabel: "game config",
+    parseFileContent: parseGameConfig
+  });
 };

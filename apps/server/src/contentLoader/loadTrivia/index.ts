@@ -1,8 +1,8 @@
-import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { isTriviaContentFile, type TriviaPrompt } from "@wingnight/shared";
+import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 
 type LoadTriviaOptions = {
   contentRootDir?: string;
@@ -37,25 +37,12 @@ const parseTriviaPrompts = (
   return parsedContent.prompts;
 };
 
-const readTriviaFromFile = (contentFilePath: string): TriviaPrompt[] => {
-  const fileContents = readFileSync(contentFilePath, "utf8");
-  return parseTriviaPrompts(fileContents, contentFilePath);
-};
-
 export const loadTrivia = (options: LoadTriviaOptions = {}): TriviaPrompt[] => {
   const contentRootDir = options.contentRootDir ?? defaultContentRootDir;
-  const localTriviaPath = resolve(contentRootDir, "local", "trivia.json");
-  const sampleTriviaPath = resolve(contentRootDir, "sample", "trivia.json");
-
-  if (existsSync(localTriviaPath)) {
-    return readTriviaFromFile(localTriviaPath);
-  }
-
-  if (!existsSync(sampleTriviaPath)) {
-    throw new Error(
-      `Missing trivia content file. Checked "${localTriviaPath}" and "${sampleTriviaPath}".`
-    );
-  }
-
-  return readTriviaFromFile(sampleTriviaPath);
+  return loadContentFileWithFallback({
+    contentRootDir,
+    contentFileName: "trivia.json",
+    contentLabel: "trivia",
+    parseFileContent: parseTriviaPrompts
+  });
 };

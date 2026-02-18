@@ -1,4 +1,3 @@
-import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -7,6 +6,7 @@ import {
   type Player,
   type PlayersContentEntry
 } from "@wingnight/shared";
+import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 
 type LoadPlayersOptions = {
   contentRootDir?: string;
@@ -59,27 +59,14 @@ const buildPlayer = (entry: PlayersContentEntry, index: number): Player => {
   };
 };
 
-const readPlayersFromFile = (contentFilePath: string): Player[] => {
-  const fileContents = readFileSync(contentFilePath, "utf8");
-  const entries = parsePlayersEntries(fileContents, contentFilePath);
-
-  return entries.map((entry, index) => buildPlayer(entry, index));
-};
-
 export const loadPlayers = (options: LoadPlayersOptions = {}): Player[] => {
   const contentRootDir = options.contentRootDir ?? defaultContentRootDir;
-  const localPlayersPath = resolve(contentRootDir, "local", "players.json");
-  const samplePlayersPath = resolve(contentRootDir, "sample", "players.json");
+  const entries = loadContentFileWithFallback({
+    contentRootDir,
+    contentFileName: "players.json",
+    contentLabel: "players",
+    parseFileContent: parsePlayersEntries
+  });
 
-  if (existsSync(localPlayersPath)) {
-    return readPlayersFromFile(localPlayersPath);
-  }
-
-  if (!existsSync(samplePlayersPath)) {
-    throw new Error(
-      `Missing players content file. Checked "${localPlayersPath}" and "${samplePlayersPath}".`
-    );
-  }
-
-  return readPlayersFromFile(samplePlayersPath);
+  return entries.map((entry, index) => buildPlayer(entry, index));
 };
