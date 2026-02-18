@@ -235,13 +235,13 @@ test("renders completion guidance in compact FINAL_RESULTS view", () => {
   assert.match(html, /Final Results/);
 });
 
-test("keeps MINIGAME_INTRO on detailed host view", () => {
+test("keeps MINIGAME_INTRO on streamlined host view", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
-  assert.match(html, /Team Setup/);
-  assert.match(html, /Players/);
+  assert.doesNotMatch(html, /Team Setup/);
+  assert.doesNotMatch(html, /Players/);
   assert.match(html, /Active Team/);
   assert.match(html, /Team 1 of 2/);
   assert.doesNotMatch(html, /Phase Status/);

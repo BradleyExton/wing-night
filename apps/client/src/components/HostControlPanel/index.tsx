@@ -109,9 +109,8 @@ export const HostControlPanel = ({
     activeTurnTeamId === null ||
     currentTriviaPrompt === null;
 
-  const shouldRenderSetupSections = isSetupPhase || isMinigameIntroPhase;
-  const shouldRenderPlayersSection =
-    shouldRenderSetupSections || isEatingPhase || isMinigamePlayPhase;
+  const shouldRenderSetupSections = isSetupPhase;
+  const shouldRenderPlayersSection = isSetupPhase || isEatingPhase || isMinigamePlayPhase;
 
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const sortedStandings = useMemo(() => {
