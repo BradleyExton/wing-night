@@ -123,6 +123,8 @@ export const HostControlPanel = ({
       return leftTeam.name.localeCompare(rightTeam.name);
     });
   }, [teams]);
+  const phaseAdvanceHint =
+    phase !== null ? hostControlPanelCopy.phaseAdvanceHint(phase) : null;
 
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -181,8 +183,8 @@ export const HostControlPanel = ({
           </button>
         </div>
 
-        {roomState && !isSetupPhase && (
-          <p className={styles.lockNotice}>{hostControlPanelCopy.setupLockedLabel}</p>
+        {roomState && phaseAdvanceHint !== null && phase !== Phase.SETUP && (
+          <p className={styles.phaseNotice}>{phaseAdvanceHint}</p>
         )}
 
         {isCompactSummaryPhase && roomState && phase !== null && (

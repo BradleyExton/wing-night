@@ -20,7 +20,7 @@ const standingsFixture: Team[] = [
   }
 ];
 
-test("renders compact round context and standings", () => {
+test("renders only standings snapshot during ROUND_INTRO", () => {
   const html = renderToStaticMarkup(
     <CompactSummarySurface
       phase={Phase.ROUND_INTRO}
@@ -37,10 +37,10 @@ test("renders compact round context and standings", () => {
     />
   );
 
-  assert.match(html, /Round 2 of 4/);
-  assert.match(html, /Label: Medium/);
-  assert.match(html, /Sauce: Buffalo/);
-  assert.match(html, /Mini-game: TRIVIA/);
+  assert.match(html, /Standings Snapshot/);
+  assert.doesNotMatch(html, /Phase Status/);
+  assert.doesNotMatch(html, /Round Context/);
+  assert.doesNotMatch(html, /Next Action/);
   assert.match(html, /Leader/);
   assert.match(html, /Team Alpha/);
 });

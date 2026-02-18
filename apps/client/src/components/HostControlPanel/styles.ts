@@ -45,7 +45,7 @@ export const sectionHeading = "m-0 text-xl font-semibold text-text";
 
 export const sectionDescription = "mt-2 text-sm text-muted";
 
-export const lockNotice =
+export const phaseNotice =
   "mt-3 text-sm font-medium text-gold";
 
 export const teamCreateForm = "mt-4 flex flex-wrap items-end gap-3";

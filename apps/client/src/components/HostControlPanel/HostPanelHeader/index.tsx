@@ -33,6 +33,12 @@ export const HostPanelHeader = ({
     currentRound > 0 && totalRounds > 0
       ? hostControlPanelCopy.compactRoundProgressLabel(currentRound, totalRounds)
       : hostControlPanelCopy.headerPreGameLabel;
+  const roundIntroSauce =
+    phase === Phase.ROUND_INTRO ? (roomState?.currentRoundConfig?.sauce ?? null) : null;
+  const roundIntroMinigame =
+    phase === Phase.ROUND_INTRO
+      ? (roomState?.currentRoundConfig?.minigame ?? null)
+      : null;
 
   const turnOrderCount = roomState?.turnOrderTeamIds.length ?? 0;
   const roundTurnCursor = roomState?.roundTurnCursor ?? -1;
@@ -63,6 +69,18 @@ export const HostPanelHeader = ({
           label={hostControlPanelCopy.headerRoundContextTitle}
           value={roundLabel}
         />
+        {roundIntroSauce !== null && (
+          <ContextPill
+            label={hostControlPanelCopy.headerSauceContextTitle}
+            value={roundIntroSauce}
+          />
+        )}
+        {roundIntroMinigame !== null && (
+          <ContextPill
+            label={hostControlPanelCopy.headerMinigameContextTitle}
+            value={roundIntroMinigame}
+          />
+        )}
         {turnProgressLabel !== null && (
           <ContextPill
             label={hostControlPanelCopy.headerTurnContextTitle}

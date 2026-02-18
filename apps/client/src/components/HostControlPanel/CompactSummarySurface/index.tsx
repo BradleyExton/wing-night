@@ -1,4 +1,4 @@
-import { type GameConfigRound, type Phase, type Team } from "@wingnight/shared";
+import { Phase, type GameConfigRound, type Team } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
 import * as styles from "./styles";
@@ -18,47 +18,53 @@ export const CompactSummarySurface = ({
   currentRoundConfig,
   sortedStandings
 }: CompactSummarySurfaceProps): JSX.Element => {
+  const isRoundIntroPhase = phase === Phase.ROUND_INTRO;
+
   return (
     <section className={styles.compactGrid}>
-      <div className={styles.card}>
-        <h2 className={styles.sectionHeading}>
-          {hostControlPanelCopy.compactPhaseStatusTitle}
-        </h2>
-        <p className={styles.compactPhaseBadge}>
-          {hostControlPanelCopy.compactPhaseLabel(phase)}
-        </p>
-        <p className={styles.sectionDescription}>
-          {hostControlPanelCopy.compactPhaseDescription(phase)}
-        </p>
-      </div>
-
-      <div className={styles.card}>
-        <h2 className={styles.sectionHeading}>
-          {hostControlPanelCopy.compactRoundContextTitle}
-        </h2>
-        {currentRoundConfig && (
-          <ul className={styles.compactMetaList}>
-            <li>
-              {hostControlPanelCopy.compactRoundProgressLabel(
-                currentRound,
-                totalRounds
-              )}
-            </li>
-            <li>{hostControlPanelCopy.compactRoundLabel(currentRoundConfig.label)}</li>
-            <li>{hostControlPanelCopy.compactSauceLabel(currentRoundConfig.sauce)}</li>
-            <li>
-              {hostControlPanelCopy.compactMinigameLabel(
-                currentRoundConfig.minigame
-              )}
-            </li>
-          </ul>
-        )}
-        {!currentRoundConfig && (
-          <p className={styles.sectionDescription}>
-            {hostControlPanelCopy.compactNoRoundContextLabel}
+      {!isRoundIntroPhase && (
+        <div className={styles.card}>
+          <h2 className={styles.sectionHeading}>
+            {hostControlPanelCopy.compactPhaseStatusTitle}
+          </h2>
+          <p className={styles.compactPhaseBadge}>
+            {hostControlPanelCopy.compactPhaseLabel(phase)}
           </p>
-        )}
-      </div>
+          <p className={styles.sectionDescription}>
+            {hostControlPanelCopy.compactPhaseDescription(phase)}
+          </p>
+        </div>
+      )}
+
+      {!isRoundIntroPhase && (
+        <div className={styles.card}>
+          <h2 className={styles.sectionHeading}>
+            {hostControlPanelCopy.compactRoundContextTitle}
+          </h2>
+          {currentRoundConfig && (
+            <ul className={styles.compactMetaList}>
+              <li>
+                {hostControlPanelCopy.compactRoundProgressLabel(
+                  currentRound,
+                  totalRounds
+                )}
+              </li>
+              <li>{hostControlPanelCopy.compactRoundLabel(currentRoundConfig.label)}</li>
+              <li>{hostControlPanelCopy.compactSauceLabel(currentRoundConfig.sauce)}</li>
+              <li>
+                {hostControlPanelCopy.compactMinigameLabel(
+                  currentRoundConfig.minigame
+                )}
+              </li>
+            </ul>
+          )}
+          {!currentRoundConfig && (
+            <p className={styles.sectionDescription}>
+              {hostControlPanelCopy.compactNoRoundContextLabel}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className={styles.card}>
         <h2 className={styles.sectionHeading}>
@@ -99,14 +105,16 @@ export const CompactSummarySurface = ({
         )}
       </div>
 
-      <div className={styles.card}>
-        <h2 className={styles.sectionHeading}>
-          {hostControlPanelCopy.compactNextActionTitle}
-        </h2>
-        <p className={styles.compactHint}>
-          {hostControlPanelCopy.compactNextActionHint(phase)}
-        </p>
-      </div>
+      {!isRoundIntroPhase && (
+        <div className={styles.card}>
+          <h2 className={styles.sectionHeading}>
+            {hostControlPanelCopy.compactNextActionTitle}
+          </h2>
+          <p className={styles.compactHint}>
+            {hostControlPanelCopy.compactNextActionHint(phase)}
+          </p>
+        </div>
+      )}
     </section>
   );
 };

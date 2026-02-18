@@ -1,10 +1,43 @@
 import { Phase, type MinigameType } from "@wingnight/shared";
 
+const formatPhaseLabel = (phase: Phase): string => {
+  return phase
+    .toLowerCase()
+    .split("_")
+    .map((segment) => `${segment[0]?.toUpperCase() ?? ""}${segment.slice(1)}`)
+    .join(" ");
+};
+
+const phaseAdvanceHint = (phase: Phase): string => {
+  switch (phase) {
+    case Phase.SETUP:
+      return "Advance when teams are assigned and the room is ready to start.";
+    case Phase.INTRO:
+      return "Advance when the room is ready for Round 1.";
+    case Phase.ROUND_INTRO:
+      return "Advance when players are ready to begin eating.";
+    case Phase.EATING:
+      return "Advance when eating participation is captured for the active team.";
+    case Phase.MINIGAME_INTRO:
+      return "Advance when the active team is ready to start the mini-game.";
+    case Phase.MINIGAME_PLAY:
+      return "Advance when the active team turn has been scored.";
+    case Phase.ROUND_RESULTS:
+      return "Advance to continue to the next round or final results.";
+    case Phase.FINAL_RESULTS:
+      return "Game complete. Use reset controls when ready for a new game.";
+    default:
+      return "Use host controls to continue.";
+  }
+};
+
 export const hostCopy = {
   headerKickerLabel: "Host",
   headerRoundContextTitle: "Round",
   headerTurnContextTitle: "Turn",
   headerActiveTeamContextTitle: "Active Team",
+  headerSauceContextTitle: "Sauce",
+  headerMinigameContextTitle: "Mini-game",
   headerPreGameLabel: "Pre-game",
   headerWaitingTitle: "Waiting for room state",
   headerWaitingDescription:
@@ -58,7 +91,7 @@ export const hostCopy = {
       .toString()
       .padStart(2, "0")}`;
   },
-  setupLockedLabel: "Team setup is locked after the game starts.",
+  phaseAdvanceHint,
   unassignedOptionLabel: "Unassigned",
   assignmentSelectLabel: (playerName: string): string =>
     `Assign ${playerName} to a team`,
@@ -93,12 +126,7 @@ export const hostCopy = {
   compactNoRoundContextLabel: "Round details are not available for this phase yet.",
   compactNoStandingsLabel: "No teams available for standings yet.",
   compactLeaderLabel: "Leader",
-  compactPhaseLabel: (phase: Phase): string =>
-    phase
-      .toLowerCase()
-      .split("_")
-      .map((segment) => `${segment[0]?.toUpperCase() ?? ""}${segment.slice(1)}`)
-      .join(" "),
+  compactPhaseLabel: formatPhaseLabel,
   compactPhaseDescription: (phase: Phase): string => {
     switch (phase) {
       case Phase.INTRO:
@@ -113,20 +141,7 @@ export const hostCopy = {
         return "Review the current game state.";
     }
   },
-  compactNextActionHint: (phase: Phase): string => {
-    switch (phase) {
-      case Phase.INTRO:
-        return "Advance when the room is ready for Round 1.";
-      case Phase.ROUND_INTRO:
-        return "Advance when players are ready to begin eating.";
-      case Phase.ROUND_RESULTS:
-        return "Advance to continue to the next round or final results.";
-      case Phase.FINAL_RESULTS:
-        return "Game complete. Use reset controls when ready for a new game.";
-      default:
-        return "Use host controls to continue.";
-    }
-  },
+  compactNextActionHint: phaseAdvanceHint,
   compactRoundProgressLabel: (currentRound: number, totalRounds: number): string =>
     `Round ${Math.max(currentRound, 1)} of ${totalRounds}`,
   compactRoundLabel: (label: string): string => `Label: ${label}`,

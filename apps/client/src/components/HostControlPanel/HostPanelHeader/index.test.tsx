@@ -150,6 +150,22 @@ test("renders round progress when round metadata is valid", () => {
   );
 
   assert.match(html, /Round 2 of 5/);
+  assert.match(html, /Sauce/);
+  assert.match(html, /Frank&#x27;s/);
+  assert.match(html, /Mini-game/);
+  assert.match(html, /TRIVIA/);
+});
+
+test("hides round-intro-only context pills outside ROUND_INTRO", () => {
+  const html = renderToStaticMarkup(
+    <HostPanelHeader
+      roomState={buildSnapshot(Phase.EATING)}
+      teamNameByTeamId={teamNameByTeamId}
+    />
+  );
+
+  assert.doesNotMatch(html, /Sauce/);
+  assert.doesNotMatch(html, /Mini-game/);
 });
 
 test("renders turn progress only when cursor and turn order are valid", () => {

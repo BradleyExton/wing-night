@@ -98,6 +98,10 @@ test("renders setup sections and assignment controls during SETUP", () => {
   assert.match(html, /Team Setup/);
   assert.match(html, /Teams/);
   assert.match(html, /Assign Alex to a team/);
+  assert.doesNotMatch(
+    html,
+    /Advance when teams are assigned and the room is ready to start\./
+  );
   assert.doesNotMatch(html, /Pause Timer/);
   assert.doesNotMatch(html, /Mark each player who finished their wing this round/);
   assert.doesNotMatch(html, /Ate wing/);
@@ -127,6 +131,11 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.match(html, /Active Team/);
   assert.match(html, /Team Alpha/);
   assert.match(html, /Mark each player who finished their wing this round/);
+  assert.match(
+    html,
+    /Advance when eating participation is captured for the active team\./
+  );
+  assert.doesNotMatch(html, /Team setup is locked after the game starts\./);
   assert.match(html, /Timer Controls/);
   assert.match(html, /Pause Timer/);
   assert.match(html, /Ate wing/);
@@ -178,9 +187,15 @@ test("renders round context details in compact ROUND_INTRO view", () => {
   );
 
   assert.match(html, /Round 1 of 1/);
-  assert.match(html, /Label: Warm Up/);
-  assert.match(html, /Sauce: Frank&#x27;s/);
-  assert.match(html, /Mini-game: TRIVIA/);
+  assert.match(html, /Sauce/);
+  assert.match(html, /Frank&#x27;s/);
+  assert.match(html, /Mini-game/);
+  assert.match(html, /TRIVIA/);
+  assert.match(html, /Standings Snapshot/);
+  assert.doesNotMatch(html, /Phase Status/);
+  assert.doesNotMatch(html, /Round Context/);
+  assert.doesNotMatch(html, /Next Action/);
+  assert.match(html, /Advance when players are ready to begin eating\./);
 });
 
 test("renders standings snapshot in score-descending order during ROUND_RESULTS", () => {
