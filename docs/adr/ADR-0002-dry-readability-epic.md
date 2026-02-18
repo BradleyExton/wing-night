@@ -84,14 +84,15 @@ Completed slices:
 5. `R4.5 Content Loader Base Utility`
 6. `R4.6 Copy Simplification`
 7. `R4.7 Countdown Math + Dead Style Cleanup`
+8. `R4.8 Epic Hardening + Final Regression Gate`
 
 Verification outcomes:
 
 1. `pnpm test`: pass
 2. `pnpm lint`: pass
 3. `pnpm typecheck`: pass
-4. `pnpm playwright test`: blocked (`ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "playwright" not found`)
+4. `pnpm playwright test`: pass (smoke baseline)
 
 Residual risk:
 
-1. End-to-end regression parity is unverified in this workspace until Playwright is wired as an executable command and tests are present/configured.
+1. End-to-end command wiring is now available, but full host/display sync and reconnect E2E scenarios are intentionally deferred to Phase 9 (`9.1`, `9.2`).

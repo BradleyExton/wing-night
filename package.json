@@ -11,11 +11,13 @@
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test && pnpm test:lint-rules",
+    "test:e2e": "playwright test",
     "test:lint-rules": "node --test tools/eslint-plugin-wingnight/tests/index.test.mjs",
     "lint": "pnpm -r --if-present lint"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
+    "@playwright/test": "^1.58.2",
     "eslint": "^9.19.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "globals": "^15.14.0",

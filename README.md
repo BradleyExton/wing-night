@@ -31,7 +31,7 @@ Core principles:
 -   Fixed per-round team turn order (`EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` per team)
 -   Active-team-only scoring mutations during EATING and mini-game play
 -   Round totals applied once at `ROUND_RESULTS`
--   Host/display EATING and minigame surfaces show active team + turn progress from snapshot turn fields
+-   Host/display EATING and minigame surfaces show active team context (team name only) from snapshot turn fields
 -   Mini-games run behind a module boundary (`packages/minigames/<minigameId>`)
 -   Authoritative engine snapshots (from server-side minigame selectors)
     project dedicated mini-game view models:
@@ -186,6 +186,10 @@ pnpm test
 
 E2E tests:
 
+pnpm test:e2e
+
+or
+
 pnpm playwright test
 
 ------------------------------------------------------------------------
@@ -208,6 +212,7 @@ GitHub Actions runs PR checks on every pull request targeting `main`.
 Workflow:
 - `.github/workflows/pr-checks.yml`
 - `.github/workflows/pr-ui-screenshot.yml`
+- `.github/workflows/playwright-smoke.yml` (non-blocking smoke visibility)
 - Node: `22`
 - Package manager: `pnpm@10.0.0`
 - Install command: `pnpm install --frozen-lockfile`
