@@ -1,8 +1,6 @@
-type TimerSnapshot = {
-  isPaused: boolean;
-  remainingMs: number;
-  endsAt: number;
-};
+import type { RoomTimerState } from "@wingnight/shared";
+
+type TimerSnapshot = Pick<RoomTimerState, "isPaused" | "remainingMs" | "endsAt">;
 
 export const resolveRemainingTimerSeconds = (
   timerSnapshot: TimerSnapshot,
