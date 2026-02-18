@@ -19,6 +19,18 @@ Current in-progress work:
     - [ ] MINIGAME_PLAY resolves active team from turn context fallback.
     - [ ] INTRO/ROUND_RESULTS/FINAL_RESULTS keep compact cards + dynamic header context.
     - [ ] Null snapshot shows waiting fallback without blank header.
+- [-] R4 DRY Readability Epic
+  - Branch: `refactor/host-display-decomposition`
+  - ADR: `docs/adr/ADR-0002-dry-readability-epic.md`
+  - PR slices:
+    - [ ] R4.1 Epic Spec + Tracker Wiring
+    - [ ] R4.2 Client Host-Secret Request Helper
+    - [ ] R4.3 Server Authorized Mutation Gate Helper
+    - [ ] R4.4 Server Broadcast Wrapper
+    - [ ] R4.5 Content Loader Base Utility
+    - [ ] R4.6 Copy Simplification
+    - [ ] R4.7 Countdown Math + Dead Style Cleanup
+    - [ ] R4.8 Epic Hardening + Final Regression Gate
 
 Completed:
 - [x] Tracker Sync for 8.12 + D Tasks
@@ -194,6 +206,14 @@ Completed:
   - Merge commit: `26615d9`
 
 Backlog status:
+- [ ] R4.1 Epic Spec + Tracker Wiring
+- [ ] R4.2 Client Host-Secret Request Helper
+- [ ] R4.3 Server Authorized Mutation Gate Helper
+- [ ] R4.4 Server Broadcast Wrapper
+- [ ] R4.5 Content Loader Base Utility
+- [ ] R4.6 Copy Simplification
+- [ ] R4.7 Countdown Math + Dead Style Cleanup
+- [ ] R4.8 Epic Hardening + Final Regression Gate
 - [x] 0.2 Basic Server
 - [x] 0.3 Basic Client
 - [x] 0.5 CI PR Checks (GitHub Actions)
