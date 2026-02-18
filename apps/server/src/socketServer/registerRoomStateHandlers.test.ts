@@ -467,6 +467,33 @@ test("ignores malformed game:nextPhase payloads", () => {
   assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
 });
 
+test("does not validate host secret for malformed game:nextPhase payloads", () => {
+  const socketHarness = createSocketHarness();
+  let hostSecretValidationCalls = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.SETUP),
+    createMutationHandlers(),
+    true,
+    {
+      issueHostSecret: () => ({ hostSecret: "issued-host-secret" }),
+      isValidHostSecret: () => {
+        hostSecretValidationCalls += 1;
+        return false;
+      }
+    }
+  );
+
+  socketHarness.triggerNextPhase(undefined);
+  socketHarness.triggerNextPhase(null);
+  socketHarness.triggerNextPhase({});
+  socketHarness.triggerNextPhase({ hostSecret: 1234 });
+
+  assert.equal(hostSecretValidationCalls, 0);
+  assert.equal(socketHarness.invalidSecretEvents, 0);
+});
+
 test("ignores unauthorized game:nextPhase requests", () => {
   const socketHarness = createSocketHarness();
   const initialState = buildRoomState(Phase.SETUP);
@@ -490,6 +517,28 @@ test("ignores unauthorized game:nextPhase requests", () => {
   assert.equal(socketHarness.invalidSecretEvents, 1);
   assert.equal(socketHarness.emittedSnapshots.length, 1);
   assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
+});
+
+test("does not emit invalid-secret event when client cannot claim control", () => {
+  const socketHarness = createSocketHarness();
+  let authorizedCallCount = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => buildRoomState(Phase.SETUP),
+    createMutationHandlers({
+      onAuthorizedNextPhase: () => {
+        authorizedCallCount += 1;
+      }
+    }),
+    false,
+    hostAuth
+  );
+
+  socketHarness.triggerNextPhase({ hostSecret: "invalid-host-secret" });
+
+  assert.equal(authorizedCallCount, 0);
+  assert.equal(socketHarness.invalidSecretEvents, 0);
 });
 
 test("runs authorized next phase callback without per-socket snapshot emit", () => {
