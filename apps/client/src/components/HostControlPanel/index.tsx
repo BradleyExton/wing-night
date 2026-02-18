@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Phase, type RoomState } from "@wingnight/shared";
 
 import { CompactSummarySurface } from "./CompactSummarySurface";
+import { HostPanelHeader } from "./HostPanelHeader";
 import { hostControlPanelCopy } from "./copy";
 import { PlayersSurface } from "./PlayersSurface";
 import * as styles from "./styles";
@@ -167,8 +168,7 @@ export const HostControlPanel = ({
   return (
     <main className={styles.container}>
       <div className={styles.panel}>
-        <h1 className={styles.heading}>{hostControlPanelCopy.title}</h1>
-        <p className={styles.subtext}>{hostControlPanelCopy.description}</p>
+        <HostPanelHeader roomState={roomState} teamNameByTeamId={teamNameByTeamId} />
 
         <div className={styles.controlsRow}>
           <button
@@ -181,9 +181,6 @@ export const HostControlPanel = ({
           </button>
         </div>
 
-        {!roomState && (
-          <p className={styles.subtext}>{hostControlPanelCopy.loadingStateLabel}</p>
-        )}
         {roomState && !isSetupPhase && (
           <p className={styles.lockNotice}>{hostControlPanelCopy.setupLockedLabel}</p>
         )}

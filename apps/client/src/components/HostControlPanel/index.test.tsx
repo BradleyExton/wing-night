@@ -81,6 +81,8 @@ test("renders loading copy when room state is missing", () => {
   const html = renderToStaticMarkup(<HostControlPanel roomState={null} />);
 
   assert.match(html, /Waiting for room state/);
+  assert.match(html, /Host controls will update when the latest snapshot arrives\./);
+  assert.match(html, /Pre-game/);
 });
 
 test("renders setup sections and assignment controls during SETUP", () => {
@@ -88,6 +90,11 @@ test("renders setup sections and assignment controls during SETUP", () => {
     <HostControlPanel roomState={buildSnapshot(Phase.SETUP)} />
   );
 
+  assert.match(html, /Host/);
+  assert.match(html, /Setup/);
+  assert.match(html, /Create teams and assign players before starting the game\./);
+  assert.doesNotMatch(html, /Host Control Panel/);
+  assert.doesNotMatch(html, /Create teams, assign players, and advance phases\./);
   assert.match(html, /Team Setup/);
   assert.match(html, /Teams/);
   assert.match(html, /Assign Alex to a team/);
@@ -113,10 +120,13 @@ test("renders eating participation controls and hides setup sections during EATI
     />
   );
 
-  assert.match(html, /Mark each player who finished their wing this round/);
+  assert.match(html, /Eating/);
+  assert.match(html, /Track wing participation and manage the active turn timer\./);
+  assert.match(html, /Round 1 of 1/);
+  assert.match(html, /Team 1 of 2/);
   assert.match(html, /Active Team/);
   assert.match(html, /Team Alpha/);
-  assert.match(html, /Team 1 of 2/);
+  assert.match(html, /Mark each player who finished their wing this round/);
   assert.match(html, /Timer Controls/);
   assert.match(html, /Pause Timer/);
   assert.match(html, /Ate wing/);
@@ -153,6 +163,8 @@ test("renders compact status cards during INTRO", () => {
     <HostControlPanel roomState={buildSnapshot(Phase.INTRO)} />
   );
 
+  assert.match(html, /Intro/);
+  assert.match(html, /Confirm teams are ready before starting the first round\./);
   assert.match(html, /Phase Status/);
   assert.match(html, /Round Context/);
   assert.match(html, /Standings Snapshot/);

@@ -4,10 +4,6 @@ export const container =
 export const panel =
   "mx-auto w-full max-w-5xl rounded-xl border border-text/10 bg-surface p-6";
 
-export const heading = "m-0 text-3xl font-bold";
-
-export const subtext = "mt-2 text-base text-text/85";
-
 export const controlsRow =
   "mt-6 flex flex-wrap items-center gap-3 border-t border-text/10 pt-6";
 

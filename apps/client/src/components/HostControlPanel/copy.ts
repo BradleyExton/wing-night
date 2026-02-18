@@ -1,8 +1,14 @@
 import { hostCopy } from "../../copy/host";
 
 export const hostControlPanelCopy = {
-  title: hostCopy.placeholderTitle,
-  description: hostCopy.placeholderDescription,
+  headerKickerLabel: hostCopy.headerKickerLabel,
+  headerRoundContextTitle: hostCopy.headerRoundContextTitle,
+  headerTurnContextTitle: hostCopy.headerTurnContextTitle,
+  headerActiveTeamContextTitle: hostCopy.headerActiveTeamContextTitle,
+  headerPreGameLabel: hostCopy.headerPreGameLabel,
+  headerWaitingTitle: hostCopy.headerWaitingTitle,
+  headerWaitingDescription: hostCopy.headerWaitingDescription,
+  headerPhaseDescription: hostCopy.headerPhaseDescription,
   nextPhaseButtonLabel: hostCopy.nextPhaseButtonLabel,
   teamSetupTitle: hostCopy.teamSetupTitle,
   teamSetupDescription: hostCopy.teamSetupDescription,
@@ -21,7 +27,6 @@ export const hostControlPanelCopy = {
   timerExtendFifteenButtonLabel: hostCopy.timerExtendFifteenButtonLabel,
   timerExtendThirtyButtonLabel: hostCopy.timerExtendThirtyButtonLabel,
   timerValue: hostCopy.timerValue,
-  loadingStateLabel: hostCopy.loadingStateLabel,
   setupLockedLabel: hostCopy.setupLockedLabel,
   unassignedOptionLabel: hostCopy.unassignedOptionLabel,
   assignmentSelectLabel: hostCopy.assignmentSelectLabel,

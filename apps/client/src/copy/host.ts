@@ -1,8 +1,36 @@
 import { Phase, type MinigameType } from "@wingnight/shared";
 
 export const hostCopy = {
-  placeholderTitle: "Host Control Panel",
-  placeholderDescription: "Create teams, assign players, and advance phases.",
+  headerKickerLabel: "Host",
+  headerRoundContextTitle: "Round",
+  headerTurnContextTitle: "Turn",
+  headerActiveTeamContextTitle: "Active Team",
+  headerPreGameLabel: "Pre-game",
+  headerWaitingTitle: "Waiting for room state",
+  headerWaitingDescription:
+    "Host controls will update when the latest snapshot arrives.",
+  headerPhaseDescription: (phase: Phase): string => {
+    switch (phase) {
+      case Phase.SETUP:
+        return "Create teams and assign players before starting the game.";
+      case Phase.INTRO:
+        return "Confirm teams are ready before starting the first round.";
+      case Phase.ROUND_INTRO:
+        return "Review this round and confirm players are ready to eat.";
+      case Phase.EATING:
+        return "Track wing participation and manage the active turn timer.";
+      case Phase.MINIGAME_INTRO:
+        return "Confirm the active team before minigame play begins.";
+      case Phase.MINIGAME_PLAY:
+        return "Record outcomes for the active team turn.";
+      case Phase.ROUND_RESULTS:
+        return "Review score updates before moving to the next round.";
+      case Phase.FINAL_RESULTS:
+        return "Final standings are locked for this game.";
+      default:
+        return "Review the current game state.";
+    }
+  },
   nextPhaseButtonLabel: "Next Phase",
   teamSetupTitle: "Team Setup",
   teamSetupDescription:
@@ -30,7 +58,6 @@ export const hostCopy = {
       .toString()
       .padStart(2, "0")}`;
   },
-  loadingStateLabel: "Waiting for room state...",
   setupLockedLabel: "Team setup is locked after the game starts.",
   unassignedOptionLabel: "Unassigned",
   assignmentSelectLabel: (playerName: string): string =>
