@@ -14,6 +14,18 @@ Current in-progress work:
   - Branch: `phase-8-6-trivia-migration-module-boundary`
 
 Completed:
+- [x] 8.5 Minigame Module Boundary (Architecture)
+  - Branch: `phase-8-5-minigame-module-boundary`
+  - PR: [#31](https://github.com/BradleyExton/wing-night/pull/31)
+  - Merge timestamp: `2026-02-17T23:43:53Z`
+- [x] 8.4 Host Compact Phase Views (Non-Game)
+  - Branch: `phase-8-4-host-compact-phase-views`
+  - PR: [#29](https://github.com/BradleyExton/wing-night/pull/29)
+  - Merge timestamp: `2026-02-17T20:36:10Z`
+- [x] 8.3 Host Phase-Focused Layout (Non-Game)
+  - Branch: `phase-8-3-host-phase-focused-layout`
+  - PR: [#28](https://github.com/BradleyExton/wing-night/pull/28)
+  - Merge timestamp: `2026-02-17T20:35:14Z`
 - [x] 8.2 Display Countdown Render
   - Branch: `phase-8-2-display-countdown-render`
   - PR: [#25](https://github.com/BradleyExton/wing-night/pull/25)
@@ -132,20 +144,20 @@ Backlog status:
 - [x] 8.4 Host Compact Phase Views (Non-Game)
 - [x] 8.5 Minigame Module Boundary (Architecture)
 - [-] 8.6 Trivia Migration to Module Boundary
+- [ ] R1 Host UI Decomposition Pass (`HostPlaceholder` phase-surface extraction + remove `Placeholder` naming)
 - [ ] 8.7 Host/Display Minigame Surface Shell
-- [ ] 8.8 Timer `endsAt` Contract Reconciliation
-- [ ] 8.9 Host Timer Controls (Pause/Extend)
 - [ ] 8.10 Team-Turn State Machine Realignment
 - [ ] 8.11 Active-Team Eating + Scoring Gating
+- [ ] 8.8 Timer `endsAt` Contract Reconciliation
+- [ ] 8.9 Host Timer Controls (Pause/Extend)
+- [ ] R2 Display UI Decomposition Pass (`DisplayPlaceholder` stage/standings extraction + remove `Placeholder` naming)
 - [ ] 8.12 Host/Display Team-Turn Surfaces
-- [ ] D1 SPEC Architecture Alignment (after 8.5)
-- [ ] D2 README Architecture Alignment (after 8.5)
-- [ ] D3 AGENTS Guardrail Update (after boundary stabilizes)
-- [ ] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
+- [ ] D1 SPEC Architecture Alignment (after 8.7)
+- [ ] D2 README Architecture Alignment (after 8.7)
 - [ ] D5 SPEC Team-Turn Flow Alignment (after 8.12)
 - [ ] D6 README Team-Turn Flow Alignment (after 8.12)
-- [ ] R1 Host UI Decomposition Pass (`HostPlaceholder` phase-surface extraction + remove `Placeholder` naming)
-- [ ] R2 Display UI Decomposition Pass (`DisplayPlaceholder` stage/standings extraction + remove `Placeholder` naming)
+- [ ] D3 AGENTS Guardrail Update (after boundary stabilizes)
+- [ ] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
 - [ ] 9.1 Playwright Host/Display Sync
 - [ ] 9.2 Playwright Refresh Rehydrate
 - [ ] 10.1 Manual Round Escape Hatch
@@ -404,6 +416,7 @@ Verification:
 
 ## 8.7 Host/Display Minigame Surface Shell
 
+-   Pre-req: complete `R1 Host UI Decomposition Pass` before adding new minigame host surfaces
 -   Render minigame phases via dedicated host/display minigame surface modules
 -   Feed minigame-specific `hostView` and `displayView` from server snapshot
 -   Keep non-minigame phase layouts separate from minigame surfaces
@@ -456,6 +469,7 @@ Verification:
 
 ## 8.12 Host/Display Team-Turn Surfaces
 
+-   Pre-req: complete `R2 Display UI Decomposition Pass` before expanding display team-turn surfaces
 -   Render active team context in EATING and MINIGAME phases on host and display
 -   Render round turn progress (for example, Team 2 of 4)
 -   Preserve reconnect rehydrate correctness for active team turn context
@@ -467,15 +481,15 @@ Verification:
 
 # Docs Alignment Follow-Ups
 
-## D1 SPEC Architecture Alignment (after 8.5)
+## D1 SPEC Architecture Alignment (after 8.7)
 
 -   Update `SPEC.md` to reflect minigame module boundary and host/display view model split
--   Trigger: first architecture PR (8.5) merged
+-   Trigger: first architecture + minigame surface PR (`8.7`) merged
 
-## D2 README Architecture Alignment (after 8.5)
+## D2 README Architecture Alignment (after 8.7)
 
 -   Update `README.md` monorepo structure and architecture section for minigame modules
--   Trigger: first architecture PR (8.5) merged
+-   Trigger: first architecture + minigame surface PR (`8.7`) merged
 
 ## D3 AGENTS Guardrail Update (after boundary stabilizes)
 
@@ -557,7 +571,7 @@ Verification:
 
 # Definition of MVP Complete
 
--   Full 8-round game runs without restart
+-   Full multi-round game runs without restart
 -   Display rehydrates after refresh
 -   Host retains control after refresh
 -   Wing points tracked per player
