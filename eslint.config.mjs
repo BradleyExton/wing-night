@@ -120,15 +120,6 @@ export default [
     }
   },
   {
-    files: ["apps/client/src/components/HostPlaceholder/index.tsx"],
-    rules: {
-      "max-lines": [
-        "error",
-        { max: 550, skipBlankLines: true, skipComments: true }
-      ]
-    }
-  },
-  {
     files: ["apps/client/src/components/**/styles.ts"],
     plugins: {
       wingnight

@@ -2,7 +2,7 @@ import { CLIENT_TO_SERVER_EVENTS, type RoomState } from "@wingnight/shared";
 import { useEffect, useState } from "react";
 
 import { DisplayPlaceholder } from "./components/DisplayPlaceholder";
-import { HostPlaceholder } from "./components/HostPlaceholder";
+import { HostControlPanel } from "./components/HostControlPanel";
 import { RouteNotFound } from "./components/RouteNotFound";
 import { roomSocket } from "./socket/createRoomSocket";
 import { saveHostSecret } from "./utils/hostSecretStorage";
@@ -66,7 +66,7 @@ export const App = (): JSX.Element => {
 
   if (route === "HOST") {
     return (
-      <HostPlaceholder
+      <HostControlPanel
         roomState={roomState}
         onNextPhase={handleNextPhase}
         onCreateTeam={handleCreateTeam}
