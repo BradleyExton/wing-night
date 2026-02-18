@@ -1,71 +1,17 @@
-import { Phase, type GameConfigRound, type Team } from "@wingnight/shared";
+import type { Team } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
 import * as styles from "./styles";
 
 type CompactSummarySurfaceProps = {
-  phase: Phase;
-  currentRound: number;
-  totalRounds: number;
-  currentRoundConfig: GameConfigRound | null;
   sortedStandings: Team[];
 };
 
 export const CompactSummarySurface = ({
-  phase,
-  currentRound,
-  totalRounds,
-  currentRoundConfig,
   sortedStandings
 }: CompactSummarySurfaceProps): JSX.Element => {
-  const isRoundIntroPhase = phase === Phase.ROUND_INTRO;
-
   return (
     <section className={styles.compactGrid}>
-      {!isRoundIntroPhase && (
-        <div className={styles.card}>
-          <h2 className={styles.sectionHeading}>
-            {hostControlPanelCopy.compactPhaseStatusTitle}
-          </h2>
-          <p className={styles.compactPhaseBadge}>
-            {hostControlPanelCopy.compactPhaseLabel(phase)}
-          </p>
-          <p className={styles.sectionDescription}>
-            {hostControlPanelCopy.compactPhaseDescription(phase)}
-          </p>
-        </div>
-      )}
-
-      {!isRoundIntroPhase && (
-        <div className={styles.card}>
-          <h2 className={styles.sectionHeading}>
-            {hostControlPanelCopy.compactRoundContextTitle}
-          </h2>
-          {currentRoundConfig && (
-            <ul className={styles.compactMetaList}>
-              <li>
-                {hostControlPanelCopy.compactRoundProgressLabel(
-                  currentRound,
-                  totalRounds
-                )}
-              </li>
-              <li>{hostControlPanelCopy.compactRoundLabel(currentRoundConfig.label)}</li>
-              <li>{hostControlPanelCopy.compactSauceLabel(currentRoundConfig.sauce)}</li>
-              <li>
-                {hostControlPanelCopy.compactMinigameLabel(
-                  currentRoundConfig.minigame
-                )}
-              </li>
-            </ul>
-          )}
-          {!currentRoundConfig && (
-            <p className={styles.sectionDescription}>
-              {hostControlPanelCopy.compactNoRoundContextLabel}
-            </p>
-          )}
-        </div>
-      )}
-
       <div className={styles.card}>
         <h2 className={styles.sectionHeading}>
           {hostControlPanelCopy.compactStandingsTitle}
@@ -104,17 +50,6 @@ export const CompactSummarySurface = ({
           </p>
         )}
       </div>
-
-      {!isRoundIntroPhase && (
-        <div className={styles.card}>
-          <h2 className={styles.sectionHeading}>
-            {hostControlPanelCopy.compactNextActionTitle}
-          </h2>
-          <p className={styles.compactHint}>
-            {hostControlPanelCopy.compactNextActionHint(phase)}
-          </p>
-        </div>
-      )}
     </section>
   );
 };

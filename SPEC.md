@@ -216,10 +216,10 @@ Host advances → EATING
 Host:
 - Record per-player participation for the active team only
 - Pause/extend timer
-- Active team + turn progress (for example, Team 2 of 4)
+- Active team (team name only; no turn-progress label)
 
 Display:
-- Active team + turn progress (for example, Team 2 of 4)
+- Active team (team name only; no turn-progress label)
 - Dominant eating timer countdown
 
 Wing points are accumulated in pending round totals but NOT applied yet.
@@ -230,7 +230,7 @@ Wing points are accumulated in pending round totals but NOT applied yet.
 Display:
 - Mini-game title
 - Short instructions
-- Active team + turn progress (for example, Team 2 of 4)
+- Active team (team name only; no turn-progress label)
 
 ---
 
@@ -242,7 +242,7 @@ Display:
 - PASS_AND_PLAY hides host controls
 - Host unlock via press-and-hold
 - Server snapshot carries `minigameHostView` and `minigameDisplayView` for this phase.
-- Host and display surfaces show active team + turn progress based on snapshot turn-context fields (`activeRoundTeamId`, `roundTurnCursor`, `turnOrderTeamIds`).
+- Host and display surfaces show active team context (team name only) based on snapshot active-team fields (`activeRoundTeamId`, `activeTurnTeamId`).
 - Display surface remains answer-safe (no secret answer payloads).
 
 ---

@@ -57,7 +57,6 @@ const phaseDescription = (phase: Phase): string => {
 export const hostCopy = {
   headerKickerLabel: "Host",
   headerRoundContextTitle: "Round",
-  headerTurnContextTitle: "Turn",
   headerActiveTeamContextTitle: "Active Team",
   headerSauceContextTitle: "Sauce",
   headerMinigameContextTitle: "Mini-game",
@@ -107,9 +106,6 @@ export const hostCopy = {
     `Mark ${playerName} as ate wing`,
   activeRoundTeamTitle: "Active Team",
   activeRoundTeamValue: (teamName: string): string => teamName,
-  turnProgressTitle: "Turn Progress",
-  turnProgressLabel: (turnNumber: number, totalTurns: number): string =>
-    `Team ${turnNumber} of ${totalTurns}`,
   triviaSectionDescription:
     "Mark the active team's answer as correct or incorrect.",
   minigameSectionTitle: "Mini-Game",
@@ -122,22 +118,12 @@ export const hostCopy = {
   triviaAnswerLabel: "Answer",
   triviaCorrectButtonLabel: "Correct",
   triviaIncorrectButtonLabel: "Incorrect",
-  compactPhaseStatusTitle: "Phase Status",
-  compactRoundContextTitle: "Round Context",
   compactStandingsTitle: "Standings Snapshot",
-  compactNextActionTitle: "Next Action",
-  compactNoRoundContextLabel: "Round details are not available for this phase yet.",
   compactNoStandingsLabel: "No teams available for standings yet.",
   compactLeaderLabel: "Leader",
   compactPhaseLabel: formatPhaseLabel,
-  compactPhaseDescription: phaseDescription,
-  compactNextActionHint: phaseAdvanceHint,
   compactRoundProgressLabel: (currentRound: number, totalRounds: number): string =>
     `Round ${Math.max(currentRound, 1)} of ${totalRounds}`,
-  compactRoundLabel: (label: string): string => `Label: ${label}`,
-  compactSauceLabel: (sauce: string): string => `Sauce: ${sauce}`,
-  compactMinigameLabel: (minigame: MinigameType): string =>
-    `Mini-game: ${minigame}`,
   compactScoreLabel: (score: number): string => `${score} pts`,
   teamMembersLabel: (memberCount: number): string =>
     `${memberCount} player${memberCount === 1 ? "" : "s"}`

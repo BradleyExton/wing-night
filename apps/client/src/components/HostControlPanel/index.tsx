@@ -110,15 +110,6 @@ export const HostControlPanel = ({
       ? (teamNameByTeamId.get(activeRoundTeamId) ??
         hostControlPanelCopy.noAssignedTeamLabel)
       : hostControlPanelCopy.noAssignedTeamLabel;
-  const turnProgressLabel =
-    roomState &&
-    roomState.roundTurnCursor >= 0 &&
-    roomState.turnOrderTeamIds.length > 0
-      ? hostControlPanelCopy.turnProgressLabel(
-          roomState.roundTurnCursor + 1,
-          roomState.turnOrderTeamIds.length
-        )
-      : null;
   const currentTriviaPrompt =
     minigameHostView?.currentPrompt ?? roomState?.currentTriviaPrompt ?? null;
   const activeTurnTeamId =
@@ -133,7 +124,6 @@ export const HostControlPanel = ({
     activeTurnTeamId === null ||
     currentTriviaPrompt === null;
 
-  const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const sortedStandings = useMemo(() => {
     return [...teams].sort((leftTeam, rightTeam) => {
       if (rightTeam.totalScore !== leftTeam.totalScore) {
@@ -223,7 +213,6 @@ export const HostControlPanel = ({
               wingParticipationByPlayerId={wingParticipationByPlayerId}
               activeRoundTeamId={activeRoundTeamId}
               activeRoundTeamName={activeRoundTeamName}
-              turnProgressLabel={turnProgressLabel}
               participationDisabled={participationDisabled}
               onSetWingParticipation={handleWingParticipationChange}
             />
@@ -249,10 +238,6 @@ export const HostControlPanel = ({
       case "compact":
         return roomState && phase !== null ? (
           <CompactSummarySurface
-            phase={phase}
-            currentRound={roomState.currentRound}
-            totalRounds={roomState.totalRounds}
-            currentRoundConfig={currentRoundConfig}
             sortedStandings={sortedStandings}
           />
         ) : null;

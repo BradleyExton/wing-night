@@ -85,15 +85,6 @@ export const StageSurface = ({
       window.clearInterval(timerId);
     };
   }, [stageMode, eatingTimerSnapshot]);
-  const turnNumber =
-    roomState && roomState.roundTurnCursor >= 0
-      ? roomState.roundTurnCursor + 1
-      : null;
-  const totalTurns = roomState?.turnOrderTeamIds.length ?? 0;
-  const turnProgressLabel =
-    turnNumber !== null && totalTurns > 0
-      ? displayBoardCopy.turnProgressLabel(turnNumber, totalTurns)
-      : null;
   const shouldRenderTeamTurnContext =
     activeTeamName !== null && (stageMode === "eating" || stageMode === "minigame");
 
@@ -126,7 +117,7 @@ export const StageSurface = ({
                 : displayBoardCopy.roundFallbackLabel}
             </p>
             {shouldRenderTeamTurnContext && (
-              <TurnMeta activeTeamName={activeTeamName} turnProgressLabel={turnProgressLabel} />
+              <TurnMeta activeTeamName={activeTeamName} />
             )}
             <div className={styles.timerWrap}>
               <p className={styles.timerLabel}>{displayBoardCopy.eatingTimerLabel}</p>
@@ -148,7 +139,7 @@ export const StageSurface = ({
                 : displayBoardCopy.roundFallbackLabel}
             </p>
             {shouldRenderTeamTurnContext && (
-              <TurnMeta activeTeamName={activeTeamName} turnProgressLabel={turnProgressLabel} />
+              <TurnMeta activeTeamName={activeTeamName} />
             )}
             {shouldRenderTriviaPrompt && (
               <div className={styles.metaGrid}>
@@ -183,7 +174,6 @@ type RoundIntroSurfaceProps = {
 
 type TurnMetaProps = {
   activeTeamName: string;
-  turnProgressLabel: string | null;
 };
 
 const RoundIntroSurface = ({ currentRoundConfig }: RoundIntroSurfaceProps): JSX.Element => {
@@ -209,17 +199,11 @@ const RoundIntroSurface = ({ currentRoundConfig }: RoundIntroSurfaceProps): JSX.
   );
 };
 
-const TurnMeta = ({ activeTeamName, turnProgressLabel }: TurnMetaProps): JSX.Element => {
+const TurnMeta = ({ activeTeamName }: TurnMetaProps): JSX.Element => {
   return (
     <div className={styles.turnMeta}>
       <p className={styles.turnLabel}>{displayBoardCopy.activeTeamLabel}</p>
       <p className={styles.turnValue}>{displayBoardCopy.activeTeamValue(activeTeamName)}</p>
-      {turnProgressLabel !== null && (
-        <>
-          <p className={styles.turnLabel}>{displayBoardCopy.turnProgressTitle}</p>
-          <p className={styles.turnValue}>{turnProgressLabel}</p>
-        </>
-      )}
     </div>
   );
 };
