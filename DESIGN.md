@@ -79,6 +79,14 @@ Display UI (TV-first, spectator-first)
 
 Timer must be the most visually dominant element during EATING.
 
+## 2.3 Team-Turn Context (Host + Display)
+
+-   During `EATING`, `MINIGAME_INTRO`, and `MINIGAME_PLAY`, both host and display must show:
+    -   Active team name
+    -   Turn progress (for example, "Team 2 of 4")
+-   Team-turn context should remain visible without scrolling and without requiring interaction.
+-   Display context is informational only; it must not expose host-only answer data.
+
 ------------------------------------------------------------------------
 
 # 3) Layout System
