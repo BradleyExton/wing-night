@@ -8,6 +8,7 @@ import { MinigameSurface } from "./MinigameSurface";
 import { PlayersSurface } from "./PlayersSurface";
 import * as styles from "./styles";
 import { TeamSetupSurface } from "./TeamSetupSurface";
+import { TimerControlsSurface } from "./TimerControlsSurface";
 
 type HostControlPanelProps = {
   roomState: RoomState | null;
@@ -16,6 +17,9 @@ type HostControlPanelProps = {
   onAssignPlayer?: (playerId: string, teamId: string | null) => void;
   onSetWingParticipation?: (playerId: string, didEat: boolean) => void;
   onRecordTriviaAttempt?: (isCorrect: boolean) => void;
+  onPauseTimer?: () => void;
+  onResumeTimer?: () => void;
+  onExtendTimer?: (additionalSeconds: number) => void;
 };
 
 const EMPTY_TEAMS: RoomState["teams"] = [];
@@ -26,7 +30,10 @@ export const HostControlPanel = ({
   onCreateTeam,
   onAssignPlayer,
   onSetWingParticipation,
-  onRecordTriviaAttempt
+  onRecordTriviaAttempt,
+  onPauseTimer,
+  onResumeTimer,
+  onExtendTimer
 }: HostControlPanelProps): JSX.Element => {
   const [nextTeamName, setNextTeamName] = useState("");
 
@@ -206,6 +213,16 @@ export const HostControlPanel = ({
                 teamNameByTeamId={teamNameByTeamId}
                 triviaAttemptDisabled={triviaAttemptDisabled}
                 onRecordTriviaAttempt={handleRecordTriviaAttempt}
+              />
+            )}
+
+            {isEatingPhase && (
+              <TimerControlsSurface
+                isEatingPhase={isEatingPhase}
+                timer={roomState?.timer ?? null}
+                onPauseTimer={onPauseTimer}
+                onResumeTimer={onResumeTimer}
+                onExtendTimer={onExtendTimer}
               />
             )}
           </>

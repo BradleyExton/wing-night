@@ -1,5 +1,6 @@
 import {
   Phase,
+  TIMER_EXTEND_MAX_SECONDS,
   type GameConfigFile,
   type Player,
   type RoomState,
@@ -75,7 +76,9 @@ const createRunningTimer = (
     phase,
     startedAt,
     endsAt: startedAt + durationMs,
-    durationMs
+    durationMs,
+    isPaused: false,
+    remainingMs: durationMs
   };
 };
 
@@ -396,6 +399,94 @@ export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
   }
 
   reduceTriviaAttempt(roomState, isCorrect, minigamePointsMax);
+
+  return getRoomStateSnapshot();
+};
+
+export const pauseRoomTimer = (): RoomState => {
+  const currentTimer = roomState.timer;
+
+  if (
+    roomState.phase !== Phase.EATING ||
+    currentTimer === null ||
+    currentTimer.phase !== Phase.EATING ||
+    currentTimer.isPaused
+  ) {
+    return getRoomStateSnapshot();
+  }
+
+  const now = Date.now();
+  const remainingMs = Math.max(0, currentTimer.endsAt - now);
+
+  roomState.timer = {
+    ...currentTimer,
+    isPaused: true,
+    remainingMs,
+    endsAt: now + remainingMs
+  };
+
+  return getRoomStateSnapshot();
+};
+
+export const resumeRoomTimer = (): RoomState => {
+  const currentTimer = roomState.timer;
+
+  if (
+    roomState.phase !== Phase.EATING ||
+    currentTimer === null ||
+    currentTimer.phase !== Phase.EATING ||
+    !currentTimer.isPaused
+  ) {
+    return getRoomStateSnapshot();
+  }
+
+  const now = Date.now();
+
+  roomState.timer = {
+    ...currentTimer,
+    startedAt: now,
+    endsAt: now + currentTimer.remainingMs,
+    isPaused: false
+  };
+
+  return getRoomStateSnapshot();
+};
+
+export const extendRoomTimer = (additionalSeconds: number): RoomState => {
+  const currentTimer = roomState.timer;
+
+  if (
+    roomState.phase !== Phase.EATING ||
+    currentTimer === null ||
+    currentTimer.phase !== Phase.EATING ||
+    !Number.isInteger(additionalSeconds) ||
+    additionalSeconds <= 0 ||
+    additionalSeconds > TIMER_EXTEND_MAX_SECONDS
+  ) {
+    return getRoomStateSnapshot();
+  }
+  const additionalMs = additionalSeconds * 1000;
+  const now = Date.now();
+
+  if (currentTimer.isPaused) {
+    const nextRemainingMs = currentTimer.remainingMs + additionalMs;
+    roomState.timer = {
+      ...currentTimer,
+      remainingMs: nextRemainingMs,
+      durationMs: currentTimer.durationMs + additionalMs,
+      endsAt: now + nextRemainingMs
+    };
+
+    return getRoomStateSnapshot();
+  }
+
+  const nextEndsAt = currentTimer.endsAt + additionalMs;
+  roomState.timer = {
+    ...currentTimer,
+    endsAt: nextEndsAt,
+    durationMs: currentTimer.durationMs + additionalMs,
+    remainingMs: Math.max(0, nextEndsAt - now)
+  };
 
   return getRoomStateSnapshot();
 };

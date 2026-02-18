@@ -91,6 +91,7 @@ test("renders setup sections and assignment controls during SETUP", () => {
   assert.match(html, /Team Setup/);
   assert.match(html, /Teams/);
   assert.match(html, /Assign Alex to a team/);
+  assert.doesNotMatch(html, /Pause Timer/);
   assert.doesNotMatch(html, /Mark each player who finished their wing this round/);
   assert.doesNotMatch(html, /Ate wing/);
 });
@@ -99,12 +100,22 @@ test("renders eating participation controls and hides setup sections during EATI
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.EATING, {
+        timer: {
+          phase: Phase.EATING,
+          startedAt: 0,
+          endsAt: 120_000,
+          durationMs: 120_000,
+          isPaused: false,
+          remainingMs: 120_000
+        },
         wingParticipationByPlayerId: { "player-1": true }
       })}
     />
   );
 
   assert.match(html, /Mark each player who finished their wing this round/);
+  assert.match(html, /Timer Controls/);
+  assert.match(html, /Pause Timer/);
   assert.match(html, /Ate wing/);
   assert.doesNotMatch(html, /Team Setup/);
   assert.doesNotMatch(html, /Assign Alex to a team/);
