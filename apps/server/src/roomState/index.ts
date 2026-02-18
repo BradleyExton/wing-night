@@ -450,9 +450,6 @@ export const advanceRoomStatePhase = (): RoomState => {
 
   if (nextPhase === Phase.EATING) {
     resetRoundWingParticipation(roomState);
-  }
-
-  if (nextPhase === Phase.EATING) {
     const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
     roomState.timer =
       eatingSeconds === null

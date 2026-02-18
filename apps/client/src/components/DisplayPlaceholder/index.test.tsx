@@ -92,6 +92,31 @@ test("renders eating timer view from snapshot timer endsAt", () => {
   }
 });
 
+test("renders expired eating timer as 00:00", () => {
+  const originalDateNow = Date.now;
+  Date.now = (): number => 122_000;
+
+  try {
+    const html = renderToStaticMarkup(
+      <DisplayPlaceholder
+        roomState={buildSnapshot(Phase.EATING, [], {
+          timer: {
+            phase: Phase.EATING,
+            startedAt: 1_000,
+            endsAt: 121_000,
+            durationMs: 120_000
+          }
+        })}
+      />
+    );
+
+    assert.match(html, /Round Timer/);
+    assert.match(html, /00:00/);
+  } finally {
+    Date.now = originalDateNow;
+  }
+});
+
 test("renders round intro details from currentRoundConfig", () => {
   const html = renderToStaticMarkup(
     <DisplayPlaceholder roomState={buildSnapshot(Phase.ROUND_INTRO)} />

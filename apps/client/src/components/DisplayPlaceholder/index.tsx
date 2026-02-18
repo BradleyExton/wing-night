@@ -16,7 +16,7 @@ export const DisplayPlaceholder = ({
   useEffect(() => {
     const timerId = window.setInterval(() => {
       setNowTimestampMs(Date.now());
-    }, 250);
+    }, 1_000);
 
     return () => {
       window.clearInterval(timerId);
@@ -46,11 +46,10 @@ export const DisplayPlaceholder = ({
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const currentTriviaPrompt = roomState?.currentTriviaPrompt ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
+  const timer = roomState?.timer;
   const eatingTimerRemainingSeconds =
-    roomState?.timer !== null &&
-    roomState?.timer !== undefined &&
-    roomState.timer.phase === Phase.EATING
-      ? Math.max(0, Math.ceil((roomState.timer.endsAt - nowTimestampMs) / 1000))
+    timer?.phase === Phase.EATING
+      ? Math.max(0, Math.ceil((timer.endsAt - nowTimestampMs) / 1000))
       : null;
   const shouldRenderEatingTimer =
     isEatingPhase && eatingTimerRemainingSeconds !== null;
