@@ -51,6 +51,8 @@ const buildSnapshot = (
     activeTurnTeamId: null,
     currentTriviaPrompt: null,
     triviaPromptCursor: 0,
+    minigameHostView: null,
+    minigameDisplayView: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
@@ -109,7 +111,7 @@ test("renders standings in descending score order", () => {
   assert.ok(html.indexOf("Team Beta") < html.indexOf("Team Alpha"));
 });
 
-test("renders trivia turn question and active team during MINIGAME_PLAY", () => {
+test("renders trivia turn question from minigame display view during MINIGAME_PLAY", () => {
   const teams: Team[] = [
     {
       id: "team-alpha",
@@ -121,11 +123,15 @@ test("renders trivia turn question and active team during MINIGAME_PLAY", () => 
   const html = renderToStaticMarkup(
     <DisplayPlaceholder
       roomState={buildSnapshot(Phase.MINIGAME_PLAY, teams, {
-        activeTurnTeamId: "team-alpha",
-        currentTriviaPrompt: {
-          id: "prompt-1",
-          question: "Which scale measures pepper heat?",
-          answer: "Scoville"
+        minigameDisplayView: {
+          minigame: "TRIVIA",
+          activeTurnTeamId: "team-alpha",
+          promptCursor: 0,
+          pendingPointsByTeamId: { "team-alpha": 0 },
+          currentPrompt: {
+            id: "prompt-1",
+            question: "Which scale measures pepper heat?"
+          }
         }
       })}
     />

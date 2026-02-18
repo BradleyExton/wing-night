@@ -38,20 +38,13 @@ test("renders assignment controls during setup", () => {
       teamNameByTeamId={teamNameByTeamId}
       isSetupPhase
       isEatingPhase={false}
-      isTriviaMinigamePlayPhase={false}
       wingParticipationByPlayerId={{}}
-      currentTriviaPrompt={null}
-      activeTurnTeamName="No team assigned"
       assignmentDisabled={false}
       participationDisabled
-      triviaAttemptDisabled
       onAssignPlayer={(): void => {
         return;
       }}
       onSetWingParticipation={(): void => {
-        return;
-      }}
-      onRecordTriviaAttempt={(): void => {
         return;
       }}
     />
@@ -62,7 +55,7 @@ test("renders assignment controls during setup", () => {
   assert.match(html, /Team Alpha/);
 });
 
-test("renders trivia host controls during trivia minigame play", () => {
+test("renders participation controls during EATING", () => {
   const html = renderToStaticMarkup(
     <PlayersSurface
       players={[...playersFixture]}
@@ -73,33 +66,19 @@ test("renders trivia host controls during trivia minigame play", () => {
       ])}
       teamNameByTeamId={teamNameByTeamId}
       isSetupPhase={false}
-      isEatingPhase={false}
-      isTriviaMinigamePlayPhase
-      wingParticipationByPlayerId={{}}
-      currentTriviaPrompt={{
-        id: "prompt-1",
-        question: "Which scale measures pepper heat?",
-        answer: "Scoville"
-      }}
-      activeTurnTeamName="Team Alpha"
+      isEatingPhase
+      wingParticipationByPlayerId={{ "player-1": true }}
       assignmentDisabled
-      participationDisabled
-      triviaAttemptDisabled={false}
+      participationDisabled={false}
       onAssignPlayer={(): void => {
         return;
       }}
       onSetWingParticipation={(): void => {
         return;
       }}
-      onRecordTriviaAttempt={(): void => {
-        return;
-      }}
     />
   );
 
-  assert.match(html, /Active Team: Team Alpha/);
-  assert.match(html, /Which scale measures pepper heat\?/);
-  assert.match(html, /Scoville/);
-  assert.match(html, /Correct/);
-  assert.match(html, /Incorrect/);
+  assert.match(html, /Ate wing/);
+  assert.match(html, /Team: Team Alpha/);
 });
