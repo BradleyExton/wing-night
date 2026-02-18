@@ -1,5 +1,6 @@
 import type { MinigameType } from "@wingnight/shared";
 import type { Phase } from "@wingnight/shared";
+import { formatClockSeconds, formatPhaseLabel } from "./formatters";
 
 export const displayCopy = {
   placeholderTitle: "Wing Night",
@@ -8,12 +9,7 @@ export const displayCopy = {
   waitingPhaseLabel: "Connecting",
   currentRoundLabel: (currentRound: number, totalRounds: number): string =>
     `Round ${currentRound} of ${totalRounds}`,
-  phaseLabel: (phase: Phase): string =>
-    phase
-      .toLowerCase()
-      .split("_")
-      .map((word) => `${word[0]?.toUpperCase() ?? ""}${word.slice(1)}`)
-      .join(" "),
+  phaseLabel: (phase: Phase): string => formatPhaseLabel(phase),
   roundIntroTitle: (roundNumber: number, label: string): string =>
     `Round ${roundNumber}: ${label}`,
   phaseContextTitle: (phaseLabel: string): string => `${phaseLabel} in progress`,
@@ -30,14 +26,7 @@ export const displayCopy = {
   activeTeamLabel: "Active Team",
   activeTeamValue: (teamName: string): string => teamName,
   eatingTimerLabel: "Round Timer",
-  eatingTimerValue: (eatingSeconds: number): string => {
-    const minutes = Math.floor(eatingSeconds / 60);
-    const seconds = eatingSeconds % 60;
-
-    return `${minutes.toString().padStart(2, "0")}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
-  },
+  eatingTimerValue: formatClockSeconds,
   standingsTitle: "Standings",
   standingsEmptyLabel: "No teams have joined yet.",
   standingScoreLabel: (score: number): string => `${score} pts`
