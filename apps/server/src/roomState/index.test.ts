@@ -671,6 +671,30 @@ test("skipTurnBoundary is ignored outside turn phases", () => {
   assert.deepEqual(afterSkip, beforeSkip);
 });
 
+test("skipTurnBoundary clears redo history when landing on ROUND_RESULTS", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  skipTurnBoundary();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-2": 3 });
+  assert.equal(getRoomStateSnapshot().canRedoScoringMutation, true);
+
+  const roundResultsSnapshot = skipTurnBoundary();
+
+  assert.equal(roundResultsSnapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(roundResultsSnapshot.teams[1].totalScore, 3);
+  assert.equal(roundResultsSnapshot.canRedoScoringMutation, false);
+
+  redoLastScoringMutation();
+  const afterRedoSnapshot = getRoomStateSnapshot();
+
+  assert.equal(afterRedoSnapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(afterRedoSnapshot.teams[1].totalScore, 3);
+});
+
 test("advanceRoomStatePhase logs transition metadata", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
@@ -1344,6 +1368,29 @@ test("redoLastScoringMutation undoes the latest wing participation mutation", ()
   assert.equal(snapshot.canRedoScoringMutation, false);
 });
 
+test("redoLastScoringMutation restores scoring fields without rewinding phase or timer", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+  advanceRoomStatePhase();
+
+  let snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(snapshot.timer, null);
+  assert.equal(snapshot.canRedoScoringMutation, true);
+
+  redoLastScoringMutation();
+  snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(snapshot.timer, null);
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+  assert.equal(snapshot.canRedoScoringMutation, false);
+});
+
 test("redoLastScoringMutation restores trivia runtime prompt and points", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
@@ -1396,6 +1443,27 @@ test("redo scoring history clears on round change", () => {
 
   redoLastScoringMutation();
   assert.equal(getRoomStateSnapshot().teams[0].totalScore, 3);
+});
+
+test("redo scoring history clears on MINIGAME_PLAY -> ROUND_RESULTS", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  skipTurnBoundary();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setPendingMinigamePoints({ "team-2": 2 });
+  assert.equal(getRoomStateSnapshot().canRedoScoringMutation, true);
+
+  const roundResultsSnapshot = advanceRoomStatePhase();
+
+  assert.equal(roundResultsSnapshot.phase, Phase.ROUND_RESULTS);
+  assert.equal(roundResultsSnapshot.teams[1].totalScore, 2);
+  assert.equal(roundResultsSnapshot.canRedoScoringMutation, false);
+
+  redoLastScoringMutation();
+  assert.equal(getRoomStateSnapshot().teams[1].totalScore, 2);
 });
 
 test("redo scoring history clears on resetGameToSetup", () => {

@@ -127,7 +127,10 @@ export const createInitialRoomState = (): RoomState => {
 const roomState = createInitialRoomState();
 type ScoringMutationUndoSnapshot = {
   round: number;
-  roomStateSnapshot: RoomState;
+  teamTotalScoreById: Record<string, number>;
+  wingParticipationByPlayerId: Record<string, boolean>;
+  pendingWingPointsByTeamId: Record<string, number>;
+  pendingMinigamePointsByTeamId: Record<string, number>;
   triviaRuntimeSnapshot: TriviaRuntimeStateSnapshot;
 };
 let scoringMutationUndoSnapshot: ScoringMutationUndoSnapshot | null = null;
@@ -141,12 +144,51 @@ const clearScoringMutationUndoState = (state: RoomState): void => {
   state.canRedoScoringMutation = false;
 };
 
+const captureTeamTotalScoreById = (
+  state: RoomState
+): Record<string, number> => {
+  const teamTotalScoreById: Record<string, number> = {};
+
+  for (const team of state.teams) {
+    teamTotalScoreById[team.id] = team.totalScore;
+  }
+
+  return teamTotalScoreById;
+};
+
 const captureScoringMutationUndoState = (state: RoomState): void => {
   scoringMutationUndoSnapshot = {
     round: state.currentRound,
-    roomStateSnapshot: structuredClone(state),
+    teamTotalScoreById: captureTeamTotalScoreById(state),
+    wingParticipationByPlayerId: structuredClone(state.wingParticipationByPlayerId),
+    pendingWingPointsByTeamId: structuredClone(state.pendingWingPointsByTeamId),
+    pendingMinigamePointsByTeamId: structuredClone(state.pendingMinigamePointsByTeamId),
     triviaRuntimeSnapshot: captureTriviaRuntimeStateSnapshot()
   };
+};
+
+const restoreScoringMutationUndoState = (
+  state: RoomState,
+  snapshot: ScoringMutationUndoSnapshot
+): void => {
+  for (const team of state.teams) {
+    const snapshotScore = snapshot.teamTotalScoreById[team.id];
+
+    if (typeof snapshotScore === "number") {
+      team.totalScore = snapshotScore;
+    }
+  }
+
+  state.wingParticipationByPlayerId = structuredClone(
+    snapshot.wingParticipationByPlayerId
+  );
+  state.pendingWingPointsByTeamId = structuredClone(
+    snapshot.pendingWingPointsByTeamId
+  );
+  state.pendingMinigamePointsByTeamId = structuredClone(
+    snapshot.pendingMinigamePointsByTeamId
+  );
+  restoreTriviaRuntimeStateSnapshot(state, snapshot.triviaRuntimeSnapshot);
 };
 
 export const getRoomStateSnapshot = (): RoomState => {
@@ -683,8 +725,7 @@ export const redoLastScoringMutation = (): RoomState => {
   }
 
   const snapshotToRestore = scoringMutationUndoSnapshot;
-  overwriteRoomState(structuredClone(snapshotToRestore.roomStateSnapshot));
-  restoreTriviaRuntimeStateSnapshot(roomState, snapshotToRestore.triviaRuntimeSnapshot);
+  restoreScoringMutationUndoState(roomState, snapshotToRestore);
   clearScoringMutationUndoState(roomState);
 
   return getRoomStateSnapshot();
@@ -818,6 +859,7 @@ export const skipTurnBoundary = (): RoomState => {
   }
 
   if (nextPhase === Phase.ROUND_RESULTS) {
+    clearScoringMutationUndoState(roomState);
     applyPendingRoundScoresToTotals(roomState);
   }
 
@@ -924,6 +966,7 @@ export const advanceRoomStatePhase = (): RoomState => {
   }
 
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.ROUND_RESULTS) {
+    clearScoringMutationUndoState(roomState);
     applyPendingRoundScoresToTotals(roomState);
   }
 
