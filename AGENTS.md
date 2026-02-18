@@ -61,6 +61,12 @@ Run:
 - Server adapters/projections for minigames live under `apps/server/src/minigames/**`.
 - Display-facing minigame view contracts (for example `selectDisplayView`) must never include answer/secret fields; only host views may include privileged fields. Do not add answer fields to shared snapshot display-view contracts until host-only filtering or secret channels are implemented.
 
+## 3.2 Minigame Projection Guardrails
+
+- Server-owned projections are the only source for `minigameHostView` and `minigameDisplayView` snapshot fields; clients must not assemble or derive these view models.
+- Host-only answer/secret payloads must stay in server runtime state and host projections only; never copy privileged fields into display-facing snapshot contracts.
+- Any minigame projection change must include tests asserting display-safe payloads remain answer-free.
+
 ---
 
 # 4) Component & Utility Structure
