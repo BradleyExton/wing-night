@@ -96,3 +96,14 @@ test("renders active team and turn progress during eating", () => {
   assert.match(html, /Team 1 of 1/);
   assert.match(html, /Round Timer/);
 });
+
+test("renders active team and turn progress during minigame intro", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_INTRO)} phaseLabel="Minigame Intro" />
+  );
+
+  assert.match(html, /Active Team/);
+  assert.match(html, /Team One/);
+  assert.match(html, /Team 1 of 1/);
+  assert.match(html, /Mini-Game: TRIVIA/);
+});
