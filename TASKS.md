@@ -10,10 +10,67 @@ Status keys:
 - [x] Merged to main
 
 Current in-progress work:
-- [-] Phase 8 + Docs stacked execution (A/B/C wave)
-  - Branch: `docs-tracker-phase8-batch-start`
+- None currently tracked.
 
 Completed:
+- [x] D6 README Team-Turn Flow Alignment
+  - Branch: `(squash merged; source branch deleted)`
+  - PR: [#53](https://github.com/BradleyExton/wing-night/pull/53)
+  - Merge timestamp: `2026-02-18T03:55:03Z`
+- [x] D5 SPEC Team-Turn Flow Alignment
+  - Branch: `(squash merged; source branch deleted)`
+  - PR: [#54](https://github.com/BradleyExton/wing-night/pull/54)
+  - Merge timestamp: `2026-02-18T03:55:00Z`
+- [x] D4 DESIGN Surface Rule Update
+  - Branch: `(squash merged; source branch deleted)`
+  - PR: [#55](https://github.com/BradleyExton/wing-night/pull/55)
+  - Notes: no `DESIGN.md` change required (no material divergence from current surface rules)
+  - Merge timestamp: `2026-02-18T03:54:58Z`
+- [x] D3 AGENTS Guardrail Update
+  - Branch: `(squash merged; source branch deleted)`
+  - PR: [#57](https://github.com/BradleyExton/wing-night/pull/57)
+  - Merge timestamp: `2026-02-18T03:54:55Z`
+- [x] 8.12 Host/Display Team-Turn Surfaces
+  - Branch: `(squash merged; source branch deleted)`
+  - PR: [#58](https://github.com/BradleyExton/wing-night/pull/58)
+  - Notes: manual host/display smoke run completed (sync + refresh rehydrate across team turns)
+  - Merge timestamp: `2026-02-18T03:54:53Z`
+- [x] 8.11 Active-Team Eating + Scoring Gating
+  - Branch: `(squash merged; source branch deleted)`
+  - PR: [#52](https://github.com/BradleyExton/wing-night/pull/52)
+  - Merge timestamp: `2026-02-18T02:57:16Z`
+- [x] 8.9 Host Timer Controls (Pause/Extend)
+  - Branch: `(squash merged; source branch deleted)`
+  - PR: [#49](https://github.com/BradleyExton/wing-night/pull/49)
+  - Merge timestamp: `2026-02-18T02:55:36Z`
+- [x] D2 README Architecture Alignment
+  - Branch: `phase-d2-readme-architecture-alignment`
+  - PR: [#51](https://github.com/BradleyExton/wing-night/pull/51)
+  - Merge timestamp: `2026-02-18T02:50:44Z`
+- [x] 8.10 Team-Turn State Machine Realignment
+  - Branch: `phase-8-10-team-turn-state-machine-realignment`
+  - PR: [#50](https://github.com/BradleyExton/wing-night/pull/50)
+  - Merge timestamp: `2026-02-18T02:47:08Z`
+- [x] D1 SPEC Architecture Alignment
+  - Branch: `phase-d1-spec-architecture-alignment`
+  - PR: [#48](https://github.com/BradleyExton/wing-night/pull/48)
+  - Merge timestamp: `2026-02-18T02:47:05Z`
+- [x] R2 Display UI Decomposition Pass
+  - Branch: `phase-r2-display-ui-decomposition-pass`
+  - PR: [#40](https://github.com/BradleyExton/wing-night/pull/40)
+  - Merge timestamp: `2026-02-18T02:45:17Z`
+- [x] 8.8 Timer `endsAt` Contract Reconciliation
+  - Branch: `phase-8-8-timer-endsat-contract-reconciliation`
+  - PR: [#38](https://github.com/BradleyExton/wing-night/pull/38)
+  - Merge timestamp: `2026-02-18T02:40:59Z`
+- [x] 8.7 Host/Display Minigame Surface Shell
+  - Branch: `phase-8-7-host-display-minigame-surface-shell`
+  - PR: [#35](https://github.com/BradleyExton/wing-night/pull/35)
+  - Merge timestamp: `2026-02-18T02:32:59Z`
+- [x] Phase 8 + Docs stacked execution (A/B/C wave kickoff tracker)
+  - Branch: `docs-tracker-phase8-batch-start`
+  - PR: [#34](https://github.com/BradleyExton/wing-night/pull/34)
+  - Merge timestamp: `2026-02-18T02:32:52Z`
 - [x] R1 Host UI Decomposition Pass
   - Branch: `phase-r1-host-ui-decomposition-pass`
   - PR: [#33](https://github.com/BradleyExton/wing-night/pull/33)
@@ -153,19 +210,19 @@ Backlog status:
 - [x] 8.5 Minigame Module Boundary (Architecture)
 - [x] 8.6 Trivia Migration to Module Boundary
 - [x] R1 Host UI Decomposition Pass (`HostPlaceholder` phase-surface extraction + remove `Placeholder` naming)
-- [ ] 8.7 Host/Display Minigame Surface Shell
-- [ ] 8.10 Team-Turn State Machine Realignment
-- [ ] 8.11 Active-Team Eating + Scoring Gating
-- [ ] 8.8 Timer `endsAt` Contract Reconciliation
-- [ ] 8.9 Host Timer Controls (Pause/Extend)
-- [ ] R2 Display UI Decomposition Pass (`DisplayPlaceholder` stage/standings extraction + remove `Placeholder` naming)
-- [ ] 8.12 Host/Display Team-Turn Surfaces
-- [ ] D1 SPEC Architecture Alignment (after 8.7)
-- [ ] D2 README Architecture Alignment (after 8.7)
-- [ ] D5 SPEC Team-Turn Flow Alignment (after 8.12)
-- [ ] D6 README Team-Turn Flow Alignment (after 8.12)
-- [ ] D3 AGENTS Guardrail Update (after boundary stabilizes)
-- [ ] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
+- [x] 8.7 Host/Display Minigame Surface Shell
+- [x] 8.10 Team-Turn State Machine Realignment
+- [x] 8.11 Active-Team Eating + Scoring Gating
+- [x] 8.8 Timer `endsAt` Contract Reconciliation
+- [x] 8.9 Host Timer Controls (Pause/Extend)
+- [x] R2 Display UI Decomposition Pass (`DisplayPlaceholder` stage/standings extraction + remove `Placeholder` naming)
+- [x] 8.12 Host/Display Team-Turn Surfaces
+- [x] D1 SPEC Architecture Alignment (after 8.7)
+- [x] D2 README Architecture Alignment (after 8.7)
+- [x] D5 SPEC Team-Turn Flow Alignment (after 8.12)
+- [x] D6 README Team-Turn Flow Alignment (after 8.12)
+- [x] D3 AGENTS Guardrail Update (after boundary stabilizes)
+- [x] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
 - [ ] 9.1 Playwright Host/Display Sync
 - [ ] 9.2 Playwright Refresh Rehydrate
 - [ ] 10.1 Manual Round Escape Hatch
