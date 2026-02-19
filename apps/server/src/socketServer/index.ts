@@ -72,51 +72,34 @@ export const attachSocketServer = (
     const broadcastAfter = (runMutation: () => ReturnType<typeof getRoomStateSnapshot>): void => {
       socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, runMutation());
     };
+    const withBroadcast =
+      <TArgs extends unknown[]>(
+        mutation: (...args: TArgs) => ReturnType<typeof getRoomStateSnapshot>
+      ) =>
+      (...args: TArgs): void => {
+        broadcastAfter(() => mutation(...args));
+      };
+
+    const authorizedMutationHandlers = {
+      onAuthorizedNextPhase: withBroadcast(advanceRoomStatePhase),
+      onAuthorizedSkipTurnBoundary: withBroadcast(skipTurnBoundary),
+      onAuthorizedReorderTurnOrder: withBroadcast(reorderTurnOrder),
+      onAuthorizedResetGame: withBroadcast(resetGameToSetup),
+      onAuthorizedCreateTeam: withBroadcast(createTeam),
+      onAuthorizedAssignPlayer: withBroadcast(assignPlayerToTeam),
+      onAuthorizedSetWingParticipation: withBroadcast(setWingParticipation),
+      onAuthorizedAdjustTeamScore: withBroadcast(adjustTeamScore),
+      onAuthorizedRedoLastMutation: withBroadcast(redoLastScoringMutation),
+      onAuthorizedRecordTriviaAttempt: withBroadcast(recordTriviaAttempt),
+      onAuthorizedPauseTimer: withBroadcast(pauseRoomTimer),
+      onAuthorizedResumeTimer: withBroadcast(resumeRoomTimer),
+      onAuthorizedExtendTimer: withBroadcast(extendRoomTimer)
+    };
 
     registerRoomStateHandlers(
       socket,
       getRoomStateSnapshot,
-      {
-        onAuthorizedNextPhase: () => {
-          broadcastAfter(() => advanceRoomStatePhase());
-        },
-        onAuthorizedSkipTurnBoundary: () => {
-          broadcastAfter(() => skipTurnBoundary());
-        },
-        onAuthorizedReorderTurnOrder: (teamIds) => {
-          broadcastAfter(() => reorderTurnOrder(teamIds));
-        },
-        onAuthorizedResetGame: () => {
-          broadcastAfter(() => resetGameToSetup());
-        },
-        onAuthorizedCreateTeam: (name) => {
-          broadcastAfter(() => createTeam(name));
-        },
-        onAuthorizedAssignPlayer: (playerId, teamId) => {
-          broadcastAfter(() => assignPlayerToTeam(playerId, teamId));
-        },
-        onAuthorizedSetWingParticipation: (playerId, didEat) => {
-          broadcastAfter(() => setWingParticipation(playerId, didEat));
-        },
-        onAuthorizedAdjustTeamScore: (teamId, delta) => {
-          broadcastAfter(() => adjustTeamScore(teamId, delta));
-        },
-        onAuthorizedRedoLastMutation: () => {
-          broadcastAfter(() => redoLastScoringMutation());
-        },
-        onAuthorizedRecordTriviaAttempt: (isCorrect) => {
-          broadcastAfter(() => recordTriviaAttempt(isCorrect));
-        },
-        onAuthorizedPauseTimer: () => {
-          broadcastAfter(() => pauseRoomTimer());
-        },
-        onAuthorizedResumeTimer: () => {
-          broadcastAfter(() => resumeRoomTimer());
-        },
-        onAuthorizedExtendTimer: (additionalSeconds) => {
-          broadcastAfter(() => extendRoomTimer(additionalSeconds));
-        }
-      },
+      authorizedMutationHandlers,
       socketClientRole === CLIENT_ROLES.HOST,
       {
         issueHostSecret,

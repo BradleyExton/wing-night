@@ -50,14 +50,17 @@ export const resolveStageViewModel = (roomState: RoomState | null): StageViewMod
 
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
+  const teamNameByTeamId = new Map(
+    (roomState?.teams ?? []).map((team) => [team.id, team.name])
+  );
 
   const activeRoundTeamName =
     activeRoundTeamId !== null
-      ? (roomState?.teams.find((team) => team.id === activeRoundTeamId)?.name ?? null)
+      ? (teamNameByTeamId.get(activeRoundTeamId) ?? null)
       : null;
   const activeTurnTeamName =
     activeTurnTeamId !== null
-      ? (roomState?.teams.find((team) => team.id === activeTurnTeamId)?.name ?? null)
+      ? (teamNameByTeamId.get(activeTurnTeamId) ?? null)
       : null;
 
   const activeTeamName = activeRoundTeamName ?? activeTurnTeamName;

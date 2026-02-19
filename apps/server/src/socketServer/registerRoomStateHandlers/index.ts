@@ -192,6 +192,20 @@ export const registerRoomStateHandlers = (
   hostAuth: HostAuth
 ): void => {
   type AuthorizedPayload = { hostSecret: string };
+  type AuthorizedMutationEvent =
+    | typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE
+    | typeof CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY
+    | typeof CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER
+    | typeof CLIENT_TO_SERVER_EVENTS.RESET
+    | typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM
+    | typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER
+    | typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION
+    | typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE
+    | typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION
+    | typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT
+    | typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE
+    | typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME
+    | typeof CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND;
 
   const emitSnapshot = (): void => {
     socket.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, getSnapshot());
@@ -230,92 +244,18 @@ export const registerRoomStateHandlers = (
     socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, hostAuth.issueHostSecret());
   };
 
-  const handleNextPhase = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isHostSecretPayload, () => {
-      mutationHandlers.onAuthorizedNextPhase();
-    });
-  };
+  const registerAuthorizedMutationListener = <TPayload extends AuthorizedPayload>(
+    event: AuthorizedMutationEvent,
+    isPayload: (candidate: unknown) => candidate is TPayload,
+    onAuthorized: (typedPayload: TPayload) => void
+  ): void => {
+    const onAuthorizedEvent = socket.on.bind(socket) as (
+      nextEvent: AuthorizedMutationEvent,
+      listener: (payload: unknown) => void
+    ) => void;
 
-  const handleReorderTurnOrder = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isGameReorderTurnOrderPayload, (typedPayload) => {
-      mutationHandlers.onAuthorizedReorderTurnOrder(typedPayload.teamIds);
-    });
-  };
-
-  const handleSkipTurnBoundary = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isHostSecretPayload, () => {
-      mutationHandlers.onAuthorizedSkipTurnBoundary();
-    });
-  };
-
-  const handleResetGame = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isHostSecretPayload, () => {
-      mutationHandlers.onAuthorizedResetGame();
-    });
-  };
-
-  const handleCreateTeam = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isSetupCreateTeamPayload, (typedPayload) => {
-      mutationHandlers.onAuthorizedCreateTeam(typedPayload.name);
-    });
-  };
-
-  const handleAssignPlayer = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isSetupAssignPlayerPayload, (typedPayload) => {
-      mutationHandlers.onAuthorizedAssignPlayer(typedPayload.playerId, typedPayload.teamId);
-    });
-  };
-
-  const handleSetWingParticipation = (payload: unknown): void => {
-    runAuthorizedMutation(
-      payload,
-      isScoringSetWingParticipationPayload,
-      (typedPayload) => {
-        mutationHandlers.onAuthorizedSetWingParticipation(
-          typedPayload.playerId,
-          typedPayload.didEat
-        );
-      }
-    );
-  };
-
-  const handleAdjustTeamScore = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isScoringAdjustTeamScorePayload, (typedPayload) => {
-      mutationHandlers.onAuthorizedAdjustTeamScore(typedPayload.teamId, typedPayload.delta);
-    });
-  };
-
-  const handleRedoLastMutation = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isHostSecretPayload, () => {
-      mutationHandlers.onAuthorizedRedoLastMutation();
-    });
-  };
-
-  const handleRecordTriviaAttempt = (payload: unknown): void => {
-    runAuthorizedMutation(
-      payload,
-      isMinigameRecordTriviaAttemptPayload,
-      (typedPayload) => {
-        mutationHandlers.onAuthorizedRecordTriviaAttempt(typedPayload.isCorrect);
-      }
-    );
-  };
-
-  const handleTimerPause = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isHostSecretPayload, () => {
-      mutationHandlers.onAuthorizedPauseTimer();
-    });
-  };
-
-  const handleTimerResume = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isHostSecretPayload, () => {
-      mutationHandlers.onAuthorizedResumeTimer();
-    });
-  };
-
-  const handleTimerExtend = (payload: unknown): void => {
-    runAuthorizedMutation(payload, isTimerExtendPayload, (typedPayload) => {
-      mutationHandlers.onAuthorizedExtendTimer(typedPayload.additionalSeconds);
+    onAuthorizedEvent(event, (payload: unknown) => {
+      runAuthorizedMutation(payload, isPayload, onAuthorized);
     });
   };
 
@@ -323,23 +263,86 @@ export const registerRoomStateHandlers = (
 
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, emitSnapshot);
   socket.on(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL, handleHostClaim);
-  socket.on(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, handleNextPhase);
-  socket.on(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, handleSkipTurnBoundary);
-  socket.on(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, handleReorderTurnOrder);
-  socket.on(CLIENT_TO_SERVER_EVENTS.RESET, handleResetGame);
-  socket.on(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, handleCreateTeam);
-  socket.on(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, handleAssignPlayer);
-  socket.on(
+  registerAuthorizedMutationListener(
+    CLIENT_TO_SERVER_EVENTS.NEXT_PHASE,
+    isHostSecretPayload,
+    () => {
+      mutationHandlers.onAuthorizedNextPhase();
+    }
+  );
+  registerAuthorizedMutationListener(
+    CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY,
+    isHostSecretPayload,
+    () => {
+      mutationHandlers.onAuthorizedSkipTurnBoundary();
+    }
+  );
+  registerAuthorizedMutationListener(
+    CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER,
+    isGameReorderTurnOrderPayload,
+    (typedPayload) => {
+      mutationHandlers.onAuthorizedReorderTurnOrder(typedPayload.teamIds);
+    }
+  );
+  registerAuthorizedMutationListener(CLIENT_TO_SERVER_EVENTS.RESET, isHostSecretPayload, () => {
+    mutationHandlers.onAuthorizedResetGame();
+  });
+  registerAuthorizedMutationListener(
+    CLIENT_TO_SERVER_EVENTS.CREATE_TEAM,
+    isSetupCreateTeamPayload,
+    (typedPayload) => {
+      mutationHandlers.onAuthorizedCreateTeam(typedPayload.name);
+    }
+  );
+  registerAuthorizedMutationListener(
+    CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
+    isSetupAssignPlayerPayload,
+    (typedPayload) => {
+      mutationHandlers.onAuthorizedAssignPlayer(typedPayload.playerId, typedPayload.teamId);
+    }
+  );
+  registerAuthorizedMutationListener(
     CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
-    handleSetWingParticipation
+    isScoringSetWingParticipationPayload,
+    (typedPayload) => {
+      mutationHandlers.onAuthorizedSetWingParticipation(
+        typedPayload.playerId,
+        typedPayload.didEat
+      );
+    }
   );
-  socket.on(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, handleAdjustTeamScore);
-  socket.on(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, handleRedoLastMutation);
-  socket.on(
+  registerAuthorizedMutationListener(
+    CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE,
+    isScoringAdjustTeamScorePayload,
+    (typedPayload) => {
+      mutationHandlers.onAuthorizedAdjustTeamScore(typedPayload.teamId, typedPayload.delta);
+    }
+  );
+  registerAuthorizedMutationListener(
+    CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION,
+    isHostSecretPayload,
+    () => {
+      mutationHandlers.onAuthorizedRedoLastMutation();
+    }
+  );
+  registerAuthorizedMutationListener(
     CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
-    handleRecordTriviaAttempt
+    isMinigameRecordTriviaAttemptPayload,
+    (typedPayload) => {
+      mutationHandlers.onAuthorizedRecordTriviaAttempt(typedPayload.isCorrect);
+    }
   );
-  socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, handleTimerPause);
-  socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, handleTimerResume);
-  socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, handleTimerExtend);
+  registerAuthorizedMutationListener(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, isHostSecretPayload, () => {
+    mutationHandlers.onAuthorizedPauseTimer();
+  });
+  registerAuthorizedMutationListener(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, isHostSecretPayload, () => {
+    mutationHandlers.onAuthorizedResumeTimer();
+  });
+  registerAuthorizedMutationListener(
+    CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND,
+    isTimerExtendPayload,
+    (typedPayload) => {
+      mutationHandlers.onAuthorizedExtendTimer(typedPayload.additionalSeconds);
+    }
+  );
 };
