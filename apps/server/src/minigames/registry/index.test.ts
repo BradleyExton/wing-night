@@ -15,14 +15,19 @@ test("returns trivia registry descriptor with runtime adapter metadata and capab
   ]);
   assert.equal(descriptor.hasRuntimeAdapter, true);
   assert.notEqual(descriptor.runtimeAdapter, null);
+  assert.equal(typeof descriptor.loadContent, "function");
 });
 
 test("returns geo descriptor as registry-known without runtime adapter", () => {
   const descriptor = getMinigameRegistryDescriptor("GEO");
+  const loadedContent = descriptor.loadContent();
 
   assert.equal(descriptor.minigameId, "GEO");
   assert.equal(descriptor.minigameApiVersion, 1);
   assert.deepEqual(descriptor.capabilityFlags, []);
   assert.equal(descriptor.hasRuntimeAdapter, false);
   assert.equal(descriptor.runtimeAdapter, null);
+  assert.equal(loadedContent.minigameId, "GEO");
+  assert.deepEqual(loadedContent.triviaPrompts, []);
+  assert.equal(loadedContent.placeholderState, "No required content yet.");
 });

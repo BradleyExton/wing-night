@@ -17,10 +17,10 @@ const app = createApp();
 const httpServer = createServer(app);
 
 try {
-  const { players, gameConfig, triviaPrompts } = loadContent();
+  const { players, gameConfig, minigameContentById } = loadContent();
   setRoomStatePlayers(players);
   setRoomStateGameConfig(gameConfig);
-  setRoomStateTriviaPrompts(triviaPrompts);
+  setRoomStateTriviaPrompts(minigameContentById.TRIVIA?.triviaPrompts ?? []);
 } catch (error) {
   logError("server:contentLoadFailed", error);
   const failureReason = error instanceof Error ? error.message : String(error);

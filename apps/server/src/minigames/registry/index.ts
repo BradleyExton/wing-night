@@ -3,7 +3,8 @@ import {
   MINIGAME_CONTRACT_METADATA_BY_ID,
   type MinigameActionEnvelopePayload,
   type MinigameType,
-  type RoomState
+  type RoomState,
+  type TriviaPrompt
 } from "@wingnight/shared";
 
 import {
@@ -17,8 +18,19 @@ import {
   syncTriviaRuntimeWithPrompts,
   type TriviaRuntimeStateSnapshot
 } from "../triviaRuntime/index.js";
+import { loadTrivia } from "../../contentLoader/loadTrivia/index.js";
 
 type RuntimeActionEnvelope = Omit<MinigameActionEnvelopePayload, "hostSecret">;
+
+export type MinigameContentLoaderOptions = {
+  contentRootDir?: string;
+};
+
+export type MinigameLoadedContent = {
+  minigameId: MinigameType;
+  triviaPrompts: TriviaPrompt[];
+  placeholderState: string | null;
+};
 
 export type MinigameRuntimeAdapterDispatchInput = {
   state: RoomState;
@@ -47,6 +59,17 @@ export type MinigameRegistryDescriptor = {
   capabilityFlags: string[];
   hasRuntimeAdapter: boolean;
   runtimeAdapter: MinigameRuntimeAdapter | null;
+  loadContent: (options?: MinigameContentLoaderOptions) => MinigameLoadedContent;
+};
+
+const createNoRequiredContentPlaceholder = (
+  minigameId: MinigameType
+): MinigameLoadedContent => {
+  return {
+    minigameId,
+    triviaPrompts: [],
+    placeholderState: "No required content yet."
+  };
 };
 
 const isTriviaAttemptActionPayload = (
@@ -111,21 +134,37 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistryDescriptor> = {
     minigameApiVersion: MINIGAME_CONTRACT_METADATA_BY_ID.TRIVIA.minigameApiVersion,
     capabilityFlags: [...MINIGAME_CONTRACT_METADATA_BY_ID.TRIVIA.capabilityFlags],
     hasRuntimeAdapter: true,
-    runtimeAdapter: triviaRuntimeAdapter
+    runtimeAdapter: triviaRuntimeAdapter,
+    loadContent: (options = {}) => {
+      try {
+        return {
+          minigameId: "TRIVIA",
+          triviaPrompts: loadTrivia(options),
+          placeholderState: null
+        };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `Failed minigame content load (minigameId=TRIVIA): ${errorMessage}`
+        );
+      }
+    }
   },
   GEO: {
     minigameId: "GEO",
     minigameApiVersion: MINIGAME_CONTRACT_METADATA_BY_ID.GEO.minigameApiVersion,
     capabilityFlags: [...MINIGAME_CONTRACT_METADATA_BY_ID.GEO.capabilityFlags],
     hasRuntimeAdapter: false,
-    runtimeAdapter: null
+    runtimeAdapter: null,
+    loadContent: () => createNoRequiredContentPlaceholder("GEO")
   },
   DRAWING: {
     minigameId: "DRAWING",
     minigameApiVersion: MINIGAME_CONTRACT_METADATA_BY_ID.DRAWING.minigameApiVersion,
     capabilityFlags: [...MINIGAME_CONTRACT_METADATA_BY_ID.DRAWING.capabilityFlags],
     hasRuntimeAdapter: false,
-    runtimeAdapter: null
+    runtimeAdapter: null,
+    loadContent: () => createNoRequiredContentPlaceholder("DRAWING")
   }
 };
 
@@ -139,7 +178,8 @@ export const getMinigameRegistryDescriptor = (
     minigameApiVersion: descriptor.minigameApiVersion,
     capabilityFlags: [...descriptor.capabilityFlags],
     hasRuntimeAdapter: descriptor.hasRuntimeAdapter,
-    runtimeAdapter: descriptor.runtimeAdapter
+    runtimeAdapter: descriptor.runtimeAdapter,
+    loadContent: descriptor.loadContent
   };
 };
 
