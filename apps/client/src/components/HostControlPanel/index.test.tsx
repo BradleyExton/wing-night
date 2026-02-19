@@ -227,6 +227,7 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
     />
   );
 
+  assert.match(html, /data-host-minigame-takeover="play"/);
   assert.match(html, /Mark the active team&#x27;s answer as correct or incorrect/);
   assert.match(html, /Active Team: Team Alpha/);
   assert.match(html, /Which scale measures pepper heat\?/);
@@ -377,10 +378,12 @@ test("keeps MINIGAME_INTRO on streamlined host view", () => {
     <HostControlPanel roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
+  assert.match(html, /data-host-minigame-takeover="intro"/);
   assert.doesNotMatch(html, /Team Setup/);
   assert.doesNotMatch(html, /Players/);
   assert.match(html, /Active Team/);
   assert.match(html, /Team Alpha/);
+  assert.match(html, /TRIVIA is queued\. Advance when players are ready to begin\./);
   assert.doesNotMatch(html, /Team 1 of 2/);
   assert.doesNotMatch(html, /Phase Status/);
 });

@@ -180,15 +180,18 @@ test("renders eating surfaces in eating mode", () => {
   assert.doesNotMatch(html, /Morgan/);
 });
 
-test("renders no phase body in minigame intro mode", () => {
+test("renders minigame takeover shell in minigame intro mode", () => {
   const html = renderToStaticMarkup(
     <HostPhaseBody {...buildProps("minigame_intro", Phase.MINIGAME_INTRO)} />
   );
 
-  assert.equal(html, "");
+  assert.match(html, /data-host-minigame-takeover="intro"/);
+  assert.match(html, /TRIVIA is queued\. Advance when players are ready to begin\./);
+  assert.match(html, /Active Team/);
+  assert.match(html, /Team Alpha/);
 });
 
-test("renders minigame surface in minigame play mode", () => {
+test("renders minigame takeover shell in minigame play mode", () => {
   const triviaHostView: MinigameHostView = {
     minigame: "TRIVIA",
     minigameApiVersion: 1,
@@ -216,6 +219,7 @@ test("renders minigame surface in minigame play mode", () => {
     />
   );
 
+  assert.match(html, /data-host-minigame-takeover="play"/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.match(html, /Scoville/);
   assert.match(html, /Correct/);
