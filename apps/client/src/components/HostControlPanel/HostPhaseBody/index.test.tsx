@@ -85,7 +85,8 @@ const buildRoomState = (
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
-    canRedoScoringMutation: false
+    canRedoScoringMutation: false,
+    canAdvancePhase: true
   };
 
   return { ...snapshot, ...overrides };
@@ -191,6 +192,7 @@ test("renders minigame surface in minigame play mode", () => {
   const triviaHostView: MinigameHostView = {
     minigame: "TRIVIA",
     activeTurnTeamId: "team-alpha",
+    attemptsRemaining: 1,
     promptCursor: 0,
     pendingPointsByTeamId: {
       "team-alpha": 0

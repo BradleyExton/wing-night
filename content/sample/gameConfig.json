@@ -27,6 +27,11 @@
     "defaultMax": 15,
     "finalRoundMax": 20
   },
+  "minigameRules": {
+    "trivia": {
+      "questionsPerTurn": 1
+    }
+  },
   "timers": {
     "eatingSeconds": 120,
     "triviaSeconds": 30,

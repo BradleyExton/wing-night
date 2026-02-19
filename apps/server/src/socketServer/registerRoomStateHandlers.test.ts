@@ -60,7 +60,8 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
-    canRedoScoringMutation: false
+    canRedoScoringMutation: false,
+    canAdvancePhase: true
   };
 };
 

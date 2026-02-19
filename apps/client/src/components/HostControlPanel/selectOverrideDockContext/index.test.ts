@@ -73,7 +73,8 @@ const buildSnapshot = (
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
-    canRedoScoringMutation: false
+    canRedoScoringMutation: false,
+    canAdvancePhase: true
   };
 
   return { ...snapshot, ...overrides };

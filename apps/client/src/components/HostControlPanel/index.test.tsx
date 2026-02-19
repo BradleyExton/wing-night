@@ -73,7 +73,8 @@ const buildSnapshot = (
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
-    canRedoScoringMutation: false
+    canRedoScoringMutation: false,
+    canAdvancePhase: true
   };
 
   return { ...snapshot, ...overrides };
@@ -173,6 +174,33 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.doesNotMatch(html, /Assign Alex to a team/);
 });
 
+test("disables Next Phase during SETUP when server marks canAdvancePhase false", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.SETUP, {
+        canAdvancePhase: false
+      })}
+      onNextPhase={(): void => {}}
+    />
+  );
+
+  assert.match(html, /<button[^>]*disabled=""[^>]*>Next Phase<\/button>/);
+});
+
+test("enables Next Phase during SETUP when server marks canAdvancePhase true", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.SETUP, {
+        canAdvancePhase: true
+      })}
+      onNextPhase={(): void => {}}
+    />
+  );
+
+  assert.match(html, /<button[^>]*>Next Phase<\/button>/);
+  assert.doesNotMatch(html, /<button[^>]*disabled=""[^>]*>Next Phase<\/button>/);
+});
+
 test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
@@ -180,6 +208,7 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
         minigameHostView: {
           minigame: "TRIVIA",
           activeTurnTeamId: "team-alpha",
+          attemptsRemaining: 1,
           promptCursor: 0,
           pendingPointsByTeamId: {
             "team-alpha": 0
@@ -203,6 +232,33 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
   assert.doesNotMatch(html, /Players/);
   assert.doesNotMatch(html, /Alex/);
   assert.doesNotMatch(html, /Morgan/);
+});
+
+test("disables trivia attempt controls when attemptsRemaining is exhausted", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
+        minigameHostView: {
+          minigame: "TRIVIA",
+          activeTurnTeamId: "team-alpha",
+          attemptsRemaining: 0,
+          promptCursor: 0,
+          pendingPointsByTeamId: {
+            "team-alpha": 0
+          },
+          currentPrompt: {
+            id: "prompt-1",
+            question: "Which scale measures pepper heat?",
+            answer: "Scoville"
+          }
+        }
+      })}
+      onRecordTriviaAttempt={(): void => {}}
+    />
+  );
+
+  assert.match(html, /<button[^>]*disabled=""[^>]*>Correct<\/button>/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*>Incorrect<\/button>/);
 });
 
 test("renders standings snapshot only during INTRO compact view", () => {

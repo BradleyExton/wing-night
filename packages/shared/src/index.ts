@@ -16,7 +16,9 @@ export type {
   GameConfigRound,
   GameConfigScoring,
   GameConfigTimers,
-  MinigameType
+  MinigameType,
+  MinigameRules,
+  TriviaMinigameRules
 } from "./content/gameConfig/index.js";
 export {
   isPlayersContentEntry,

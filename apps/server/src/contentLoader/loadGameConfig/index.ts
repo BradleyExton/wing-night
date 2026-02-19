@@ -30,7 +30,7 @@ const parseGameConfig = (
 
   if (!isGameConfigFile(parsedContent)) {
     throw new Error(
-      `Invalid game config content at "${contentFilePath}": expected { name, rounds, minigameScoring, timers }.`
+      `Invalid game config content at "${contentFilePath}": expected { name, rounds, minigameScoring, timers, minigameRules? }.`
     );
   }
 

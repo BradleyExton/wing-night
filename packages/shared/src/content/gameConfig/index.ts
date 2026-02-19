@@ -30,11 +30,20 @@ export type GameConfigTimers = {
   drawingSeconds: number;
 };
 
+export type TriviaMinigameRules = {
+  questionsPerTurn: number;
+};
+
+export type MinigameRules = {
+  trivia?: TriviaMinigameRules;
+};
+
 export type GameConfigFile = {
   name: string;
   rounds: GameConfigRound[];
   minigameScoring: GameConfigScoring;
   timers: GameConfigTimers;
+  minigameRules?: MinigameRules;
 };
 
 const isMinigameType = (value: unknown): value is MinigameType => {
@@ -119,6 +128,39 @@ const isGameConfigTimers = (value: unknown): value is GameConfigTimers => {
   return true;
 };
 
+const isTriviaMinigameRules = (
+  value: unknown
+): value is TriviaMinigameRules => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  if (
+    !("questionsPerTurn" in value) ||
+    !isPositiveInteger(value.questionsPerTurn)
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
+const isMinigameRules = (value: unknown): value is MinigameRules => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  if (
+    "trivia" in value &&
+    value.trivia !== undefined &&
+    !isTriviaMinigameRules(value.trivia)
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
 export const isGameConfigFile = (value: unknown): value is GameConfigFile => {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -150,6 +192,14 @@ export const isGameConfigFile = (value: unknown): value is GameConfigFile => {
   }
 
   if (!("timers" in value) || !isGameConfigTimers(value.timers)) {
+    return false;
+  }
+
+  if (
+    "minigameRules" in value &&
+    value.minigameRules !== undefined &&
+    !isMinigameRules(value.minigameRules)
+  ) {
     return false;
   }
 

@@ -107,7 +107,8 @@ test("forwards server snapshots to callback", () => {
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
-    canRedoScoringMutation: false
+    canRedoScoringMutation: false,
+    canAdvancePhase: true
   };
 
   mockSocket.triggerSnapshot(snapshot);

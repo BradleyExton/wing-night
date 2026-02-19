@@ -10,6 +10,7 @@ const teamNameByTeamId = new Map<string, string>([["team-alpha", "Team Alpha"]])
 const triviaHostViewFixture: MinigameHostView = {
   minigame: "TRIVIA",
   activeTurnTeamId: "team-alpha",
+  attemptsRemaining: 1,
   promptCursor: 1,
   pendingPointsByTeamId: { "team-alpha": 3 },
   currentPrompt: {

@@ -3,10 +3,12 @@ import * as styles from "./styles";
 
 type HostActionBarSurfaceProps = {
   onNextPhase?: () => void;
+  nextPhaseDisabled: boolean;
 };
 
 export const HostActionBarSurface = ({
-  onNextPhase
+  onNextPhase,
+  nextPhaseDisabled
 }: HostActionBarSurfaceProps): JSX.Element => {
   return (
     <div className={styles.controlsRow}>
@@ -14,7 +16,7 @@ export const HostActionBarSurface = ({
         className={styles.primaryButton}
         type="button"
         onClick={onNextPhase}
-        disabled={onNextPhase === undefined}
+        disabled={nextPhaseDisabled}
       >
         {hostControlPanelCopy.nextPhaseButtonLabel}
       </button>

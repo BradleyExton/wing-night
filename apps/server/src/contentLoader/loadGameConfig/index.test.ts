@@ -26,7 +26,10 @@ const writeContentFile = (
   writeFileSync(fullPath, content, "utf8");
 };
 
-const createValidConfig = (name: string): string => {
+const createValidConfig = (
+  name: string,
+  questionsPerTurn?: number
+): string => {
   return JSON.stringify({
     name,
     rounds: [
@@ -42,6 +45,15 @@ const createValidConfig = (name: string): string => {
       defaultMax: 15,
       finalRoundMax: 20
     },
+    ...(questionsPerTurn === undefined
+      ? {}
+      : {
+          minigameRules: {
+            trivia: {
+              questionsPerTurn
+            }
+          }
+        }),
     timers: {
       eatingSeconds: 120,
       triviaSeconds: 30,
@@ -131,5 +143,62 @@ test("throws when both local and sample game config content files are missing", 
       loadGameConfig({ contentRootDir: contentRoot });
     },
     /Missing game config content file/
+  );
+});
+
+test("accepts optional trivia minigame rules in game config", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "sample/gameConfig.json",
+    createValidConfig("Sample", 3)
+  );
+
+  const gameConfig = loadGameConfig({ contentRootDir: contentRoot });
+
+  assert.equal(gameConfig.minigameRules?.trivia?.questionsPerTurn, 3);
+});
+
+test("throws when trivia minigame rules are invalid", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "sample/gameConfig.json",
+    JSON.stringify({
+      name: "Invalid Trivia Rules",
+      rounds: [
+        {
+          round: 1,
+          label: "Warm Up",
+          sauce: "Frank's",
+          pointsPerPlayer: 2,
+          minigame: "TRIVIA"
+        }
+      ],
+      minigameScoring: {
+        defaultMax: 15,
+        finalRoundMax: 20
+      },
+      minigameRules: {
+        trivia: {
+          questionsPerTurn: 0
+        }
+      },
+      timers: {
+        eatingSeconds: 120,
+        triviaSeconds: 30,
+        geoSeconds: 45,
+        drawingSeconds: 60
+      }
+    })
+  );
+
+  assert.throws(
+    () => {
+      loadGameConfig({ contentRootDir: contentRoot });
+    },
+    /Invalid game config content/
   );
 });

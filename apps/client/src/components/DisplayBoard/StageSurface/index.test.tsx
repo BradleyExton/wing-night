@@ -52,7 +52,8 @@ const buildSnapshot = (phase: Phase): RoomState => {
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
-    canRedoScoringMutation: false
+    canRedoScoringMutation: false,
+    canAdvancePhase: true
   };
 };
 

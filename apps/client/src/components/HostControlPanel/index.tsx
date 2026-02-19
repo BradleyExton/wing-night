@@ -88,7 +88,10 @@ export const HostControlPanel = ({
     onRecordTriviaAttempt === undefined ||
     !isTriviaMinigamePlayPhase ||
     activeTurnTeamId === null ||
-    currentTriviaPrompt === null;
+    currentTriviaPrompt === null ||
+    (minigameHostView?.attemptsRemaining ?? 0) <= 0;
+  const nextPhaseDisabled =
+    onNextPhase === undefined || roomState?.canAdvancePhase !== true;
 
   const sortedStandings = useMemo(() => resolveSortedStandings(teams), [teams]);
   const orderedTeams = useMemo(() => resolveOrderedTeams(roomState), [roomState]);
@@ -155,7 +158,10 @@ export const HostControlPanel = ({
       <div className={styles.panel}>
         <HostPanelHeader roomState={roomState} teamNameByTeamId={teamNameByTeamId} />
 
-        <HostActionBarSurface onNextPhase={onNextPhase} />
+        <HostActionBarSurface
+          onNextPhase={onNextPhase}
+          nextPhaseDisabled={nextPhaseDisabled}
+        />
 
         {roomState && phaseAdvanceHint !== null && hostMode !== "setup" && (
           <p className={styles.phaseNotice}>{phaseAdvanceHint}</p>
