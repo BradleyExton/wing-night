@@ -210,3 +210,12 @@ test("renders active team without turn progress during minigame intro", () => {
   assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Mini-Game: TRIVIA/);
 });
+
+test("renders stable minigame fallback when display payload is absent", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_PLAY)} phaseLabel="Minigame Play" />
+  );
+
+  assert.match(html, /Mini-Game: TRIVIA/);
+  assert.match(html, /Trivia Turn/);
+});

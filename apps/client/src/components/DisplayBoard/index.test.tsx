@@ -103,6 +103,56 @@ test("renders eating timer view from snapshot config", () => {
   assert.match(html, /02:00/);
 });
 
+test("renders takeover shell during MINIGAME_INTRO", () => {
+  const html = renderToStaticMarkup(
+    <DisplayBoard
+      roomState={buildSnapshot(Phase.MINIGAME_INTRO, [], {
+        activeRoundTeamId: "team-alpha",
+        teams: [{ id: "team-alpha", name: "Team Alpha", playerIds: [], totalScore: 0 }]
+      })}
+    />
+  );
+
+  assert.match(html, /data-display-minigame-takeover="intro"/);
+  assert.match(html, /TRIVIA is up next\./);
+  assert.match(html, /Active Team/);
+  assert.match(html, /Team Alpha/);
+  assert.doesNotMatch(html, /Standings/);
+});
+
+test("renders takeover shell during MINIGAME_PLAY using display-safe prompt fields", () => {
+  const html = renderToStaticMarkup(
+    <DisplayBoard
+      roomState={buildSnapshot(Phase.MINIGAME_PLAY, [], {
+        activeRoundTeamId: "team-alpha",
+        teams: [{ id: "team-alpha", name: "Team Alpha", playerIds: [], totalScore: 0 }],
+        minigameDisplayView: {
+          minigame: "TRIVIA",
+          minigameApiVersion: 1,
+          capabilityFlags: ["recordAttempt"],
+          activeTurnTeamId: "team-alpha",
+          promptCursor: 0,
+          pendingPointsByTeamId: {},
+          currentPrompt: {
+            id: "prompt-1",
+            question: "Which scale measures pepper heat?"
+          }
+        },
+        currentTriviaPrompt: {
+          id: "prompt-1",
+          question: "Which scale measures pepper heat?",
+          answer: "Scoville"
+        }
+      })}
+    />
+  );
+
+  assert.match(html, /data-display-minigame-takeover="play"/);
+  assert.match(html, /Which scale measures pepper heat\?/);
+  assert.doesNotMatch(html, /Scoville/);
+  assert.doesNotMatch(html, /Standings/);
+});
+
 test("renders standings in descending score order", () => {
   const teams: Team[] = [
     {
