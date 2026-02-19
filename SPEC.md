@@ -267,6 +267,45 @@ Tie → Sudden death trivia.
 
 ---
 
+### Host Override Access (Tablet UX)
+
+Goal:
+- Keep escape hatches immediately reachable without permanently occupying primary phase layouts.
+
+Entry Point:
+- Host UI exposes a persistent `Overrides` trigger in the bottom-right corner.
+- Trigger remains visible in all host gameplay phases (`ROUND_INTRO`, `EATING`, `MINIGAME_INTRO`, `MINIGAME_PLAY`, `ROUND_RESULTS`, `FINAL_RESULTS`).
+- Trigger shows a visible active-state indicator when any override has pending or non-default state.
+
+Surface Behavior:
+- Default override surface is a right-anchored slide-in panel (non-blocking to the main host context).
+- On tablet and larger host layouts, panel opens as a side sheet over the current phase view.
+- On narrower host layouts, override surface may switch to a full-height sheet while preserving identical controls and behavior.
+- Modal dialogs are reserved for high-risk confirmations only (for example redo/skip/reset confirmation), not for the full override workspace.
+
+Override Contents:
+- Score override controls
+- Turn-order override controls
+- Existing and future escape-hatch actions (skip, redo, manual score override)
+- Any new host override control must be added through this override surface rather than as always-visible inline phase chrome.
+
+Interaction and Accessibility:
+- Trigger and panel controls must meet minimum touch target sizing (44px or larger).
+- Panel supports keyboard navigation and escape-to-close behavior.
+- Opening the panel must not pause or mutate server state by itself; only explicit override actions mutate state.
+
+Architecture/Safety:
+- Override actions continue to use server-authoritative mutations and shared contracts.
+- Display remains read-only and never receives host-only override control state.
+- PASS_AND_PLAY control-lock behavior remains intact; override controls must not bypass host unlock constraints.
+
+Testing Expectations:
+- Component tests cover trigger visibility/state indicator and panel open/close behavior.
+- Component/integration tests cover phase availability and PASS_AND_PLAY lock behavior.
+- Playwright coverage includes at least one end-to-end path proving override actions remain reachable and host/display sync stays correct.
+
+---
+
 ## 6) Scoring
 
 ### Wing Points

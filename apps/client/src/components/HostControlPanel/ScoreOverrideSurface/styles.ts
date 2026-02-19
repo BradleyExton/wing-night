@@ -1,4 +1,4 @@
-export const card = "mt-6 rounded-lg border border-text/10 bg-surfaceAlt p-4";
+export const card = "rounded-lg border border-text/10 bg-surfaceAlt p-4";
 
 export const sectionHeading = "text-xl font-semibold text-text";
 

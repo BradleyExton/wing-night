@@ -127,6 +127,7 @@ test("renders setup sections and assignment controls during SETUP", () => {
   assert.doesNotMatch(html, /Ate wing/);
   assert.doesNotMatch(html, /Score Override/);
   assert.doesNotMatch(html, /Reset Game/);
+  assert.doesNotMatch(html, /Overrides/);
 });
 
 test("renders eating participation controls and hides setup sections during EATING", () => {
@@ -162,9 +163,10 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.doesNotMatch(html, /Team setup is locked after the game starts\./);
   assert.match(html, /Timer Controls/);
   assert.match(html, /Pause Timer/);
-  assert.match(html, /Skip Turn/);
-  assert.match(html, /Reset Game/);
-  assert.match(html, /Score Override/);
+  assert.match(html, /Overrides/);
+  assert.doesNotMatch(html, /Skip Turn/);
+  assert.doesNotMatch(html, /Reset Game/);
+  assert.doesNotMatch(html, /Score Override/);
   assert.doesNotMatch(html, /Undo Last Score/);
   assert.match(html, /Ate wing/);
   assert.doesNotMatch(html, /Team Setup/);
@@ -211,10 +213,10 @@ test("renders standings snapshot only during INTRO compact view", () => {
   assert.match(html, /Intro/);
   assert.match(html, /Confirm teams are ready before starting the first round\./);
   assert.match(html, /Standings Snapshot/);
-  assert.match(html, /Score Override/);
-  assert.match(html, /Reset Game/);
+  assert.doesNotMatch(html, /Overrides/);
+  assert.doesNotMatch(html, /Score Override/);
+  assert.doesNotMatch(html, /Reset Game/);
   assert.doesNotMatch(html, /Undo Last Score/);
-  assert.match(html, /Apply/);
   assert.doesNotMatch(html, /Phase Status/);
   assert.doesNotMatch(html, /Round Context/);
   assert.doesNotMatch(html, /Next Action/);
@@ -233,9 +235,11 @@ test("renders standings snapshot in compact ROUND_INTRO view", () => {
   assert.match(html, /Frank&#x27;s/);
   assert.match(html, /Mini-game/);
   assert.match(html, /TRIVIA/);
-  assert.match(html, /Turn Order/);
-  assert.match(html, /Move Up/);
-  assert.match(html, /Move Down/);
+  assert.match(html, /Overrides/);
+  assert.doesNotMatch(html, /Turn Order/);
+  assert.doesNotMatch(html, /Move Up/);
+  assert.doesNotMatch(html, /Move Down/);
+  assert.doesNotMatch(html, /Score Override/);
   assert.match(html, /Standings Snapshot/);
   assert.doesNotMatch(html, /Phase Status/);
   assert.doesNotMatch(html, /Round Context/);
@@ -287,7 +291,21 @@ test("shows redo action when scoring mutation history is available", () => {
     />
   );
 
-  assert.match(html, /Undo Last Score/);
+  assert.match(html, /Overrides/);
+  assert.match(html, /Needs Review/);
+});
+
+test("shows override badge when turn order differs from default team order", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
+        turnOrderTeamIds: ["team-beta", "team-alpha"]
+      })}
+    />
+  );
+
+  assert.match(html, /Overrides/);
+  assert.match(html, /Needs Review/);
 });
 
 test("keeps MINIGAME_INTRO on streamlined host view", () => {
