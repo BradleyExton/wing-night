@@ -12,6 +12,11 @@ Status keys:
 Current in-progress work:
 - (none)
 
+Audit snapshot (2026-02-19):
+- Verified against local tree at `dd0b155` and current test inventory under `tests/e2e/*`.
+- `9.1` and `9.2` remain intentionally open; current E2E coverage includes shell smoke + override sync, but not explicit phase-advance sync and refresh-rehydrate milestone assertions.
+- Phase 11/12 tasks are post-MVP platformization work for full-screen minigame takeover and cross-title reuse.
+
 Completed:
 - [x] R4 DRY Readability Epic
   - Branch: `refactor/host-display-decomposition`
@@ -262,6 +267,21 @@ Backlog status:
 - [x] 10.4 Basic Error Screen for Invalid Content
 - [x] 10.5 Redo Escape Hatch (Host)
 - [x] 10.6 Host Turn Order Reorder
+- [ ] 11.1 Role-Scoped Snapshot Contract (Host vs Display)
+- [ ] 11.2 Generic Minigame Action Envelope + Socket Event
+- [ ] 11.3 Server Minigame Runtime Orchestrator
+- [ ] 11.4 Minigame Plugin Content Loader Contract
+- [ ] 11.5 Host Full-Screen Minigame Shell (Takeover)
+- [ ] 11.6 Display Full-Screen Minigame Shell (Takeover)
+- [ ] 11.7 Shell-Level Override Overlay During Minigame Takeover
+- [ ] 11.8 TRIVIA Full-Screen Plugin Migration + GEO/DRAWING Unsupported States
+- [ ] 11.9 Rehydrate/Recovery Hardening for Full-Screen Takeover
+- [ ] 12.1 Cross-Title Game Shell Contract ADR
+- [ ] 12.2 Extract Reusable Orchestrator Package Boundary (Monorepo-Local)
+- [ ] 12.3 Minigame Authoring Guide + Example Scaffold
+- [ ] D7 SPEC Full-Screen Minigame Takeover Alignment (after 11.x)
+- [ ] D8 README Plugin + Reuse Architecture Alignment (after 12.x)
+- [ ] D9 AGENTS Guardrail Update for Plugin API + Snapshot Privacy
 
 This roadmap is optimized for: - 4 hours per week - Small, verifiable
 tasks - Codex execution loops - Stable incremental progress
@@ -671,6 +691,150 @@ Verification:
 Verification:
 -   Room state tests verify reorder validation and cross-round persistence
 -   Host tests verify reorder controls render only in `ROUND_INTRO`
+
+------------------------------------------------------------------------
+
+# Phase 11 --- Full-Screen Minigame Platformization
+
+## 11.1 Role-Scoped Snapshot Contract (Host vs Display)
+
+-   Split server snapshot projection into host-safe and display-safe payloads keyed by client role
+-   Display snapshots must never include host-only answer/secret fields
+-   Preserve reconnect rehydrate behavior for both `/host` and `/display` using full role-scoped snapshots
+-   Define explicit behavior when transport recovery is unavailable (`socket.recovered === false`): request/emit full role-scoped snapshot immediately
+Verification:
+-   Socket server tests assert role-scoped snapshot payload shape
+-   Tests assert display snapshots exclude answer-bearing fields
+-   Rehydrate tests cover recovered and non-recovered reconnect paths
+
+## 11.2 Generic Minigame Action Envelope + Socket Event
+
+-   Replace trivia-only mutation event path with a generic minigame action envelope (`minigameId`, `actionType`, `actionPayload`)
+-   Validate that incoming action envelopes match the currently active minigame turn
+-   Keep host authorization requirements unchanged
+-   Add minigame contract metadata (`minigameApiVersion`, capability flags) so shell and plugins can negotiate compatibility safely
+Verification:
+-   Socket validation tests reject malformed, unauthorized, and wrong-minigame actions
+-   Trivia scoring path remains green through generic action dispatch
+-   Version/capability mismatch paths fail safely with clear host-facing fallback messaging
+
+## 11.3 Server Minigame Runtime Orchestrator
+
+-   Introduce a registry-driven runtime adapter for init/reduce/select/project/clear operations
+-   Remove direct trivia runtime coupling from room-state phase transition flow
+-   Keep room engine authoritative for phase lifecycle, timers, and score application timing
+-   Isolate plugin runtime failures so a minigame exception cannot crash the room process
+Verification:
+-   Room-state transition/scoring tests remain green
+-   Unknown minigame IDs fail safely (no crash, clear fallback behavior)
+-   Runtime failure path degrades to safe shell state + log entry without data corruption
+
+## 11.4 Minigame Plugin Content Loader Contract
+
+-   Move from hardcoded `loadTrivia` boot behavior to minigame-declared content loader hooks
+-   Each minigame declares required content files and validation logic
+-   Boot fails fast with clear error messaging when active minigame content is invalid/missing
+Verification:
+-   Content-loader tests cover local -> sample fallback under plugin loader flow
+-   Invalid minigame content blocks start with explicit error context
+
+## 11.5 Host Full-Screen Minigame Shell (Takeover)
+
+-   During `MINIGAME_INTRO` and `MINIGAME_PLAY`, host route renders a full-screen minigame shell instead of in-panel minigame cards
+-   Keep global phase controls available where contract allows
+-   Preserve tablet/mobile ergonomics without vertical-scroll regressions
+Verification:
+-   Host component tests assert full-screen takeover in minigame phases
+-   Non-minigame phases still render existing host panel structure
+
+## 11.6 Display Full-Screen Minigame Shell (Takeover)
+
+-   During `MINIGAME_INTRO` and `MINIGAME_PLAY`, display route renders full-screen minigame surfaces from `minigameDisplayView`
+-   Remove display dependence on host-only/legacy trivia fields
+-   Provide a stable fallback surface for unsupported minigames
+Verification:
+-   Display component tests assert takeover rendering and unsupported fallback behavior
+-   Display tests assert no answer/secret field dependency
+
+## 11.7 Shell-Level Override Overlay During Minigame Takeover
+
+-   Move override trigger/panel ownership to shell-level so overrides stay reachable over full-screen minigame surfaces
+-   Preserve existing skip/redo/manual-score escape hatches
+-   Keep PASS_AND_PLAY lock behavior intact (overlay must not bypass host unlock constraints)
+Verification:
+-   Host tests cover override visibility and action reachability during minigame takeover
+-   Playwright path proves override actions remain reachable without host/display sync drift
+
+## 11.8 TRIVIA Full-Screen Plugin Migration + GEO/DRAWING Unsupported States
+
+-   Migrate trivia host/display rendering into minigame plugin renderer modules
+-   Register trivia plugin on both server and client minigame registries
+-   Add explicit unsupported-state surfaces for `GEO` and `DRAWING` until implementations exist
+Verification:
+-   Registry tests cover TRIVIA happy path and GEO/DRAWING fallback path
+-   Existing trivia gameplay/scoring tests remain green
+
+## 11.9 Rehydrate/Recovery Hardening for Full-Screen Takeover
+
+-   Validate reconnect/refresh behavior mid `MINIGAME_INTRO` and mid `MINIGAME_PLAY`
+-   Ensure active team context, timer state, and pending score projections survive rehydrate
+-   Ensure host control claim/reclaim works while minigame takeover is active
+-   Add adapter-compatibility note for connection-state recovery if transport/scaling architecture changes later
+Verification:
+-   Playwright coverage includes minigame-phase refresh/reconnect paths for host + display
+-   No team-turn ordering regressions after recovery
+-   Recovery tests assert fallback full-snapshot rehydrate when connection-state recovery is not available
+
+------------------------------------------------------------------------
+
+# Phase 12 --- Cross-Title Reuse (Wing Night-Like Games)
+
+## 12.1 Cross-Title Game Shell Contract ADR
+
+-   Define boundary between reusable party-game orchestration and wing-night-specific gameplay logic
+-   Document package targets, ownership, and migration sequence
+-   Keep explicit non-goals for this phase (no persistence/network architecture changes)
+-   Define compatibility/versioning policy between shell and minigame plugins
+Verification:
+-   ADR accepted with target module map and phased migration checkpoints
+-   ADR includes compatibility matrix and deprecation policy for plugin contract changes
+
+## 12.2 Extract Reusable Orchestrator Package Boundary (Monorepo-Local)
+
+-   Move generic orchestration helpers into a monorepo-local reusable package boundary
+-   Keep wing-night-specific scoring/phase adapters inside app/server modules
+-   Preserve behavior while changing dependency direction
+Verification:
+-   `pnpm test` and `pnpm typecheck` pass after extraction
+-   Socket contract behavior and room-state invariants remain unchanged
+
+## 12.3 Minigame Authoring Guide + Example Scaffold
+
+-   Add a minigame authoring guide for module contract, server adapter, client renderer, and test expectations
+-   Include security checklist for host-only vs display-safe payload boundaries
+-   Add scaffold/template for the next minigame (GEO) using plugin architecture contracts
+Verification:
+-   Scaffold compiles and typechecks
+-   Docs and scaffold referenced from `README.md`
+
+------------------------------------------------------------------------
+
+# Docs Alignment Follow-Ups (Post 11/12)
+
+## D7 SPEC Full-Screen Minigame Takeover Alignment (after 11.x)
+
+-   Update `SPEC.md` host/display minigame sections for full-screen takeover architecture
+-   Clarify role-scoped snapshot behavior and minigame action envelope contract
+
+## D8 README Plugin + Reuse Architecture Alignment (after 12.x)
+
+-   Update `README.md` architecture + monorepo sections for plugin-based minigame runtime and cross-title reuse boundary
+-   Document new minigame authoring flow
+
+## D9 AGENTS Guardrail Update for Plugin API + Snapshot Privacy
+
+-   Add guardrails for generic minigame event envelopes, role-scoped snapshots, and full-screen takeover shell rules
+-   Require regression tests for display-safe payload guarantees
 
 ------------------------------------------------------------------------
 
