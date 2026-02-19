@@ -6,7 +6,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 import { DisplayBoard } from "./components/DisplayBoard";
-import { HostControlPanel } from "./components/HostControlPanel";
+import { HostRouteShell } from "./components/HostControlPanel/HostRouteShell";
 import { RouteNotFound } from "./components/RouteNotFound";
 import { roomSocket } from "./socket/createRoomSocket";
 import { saveHostSecret } from "./utils/hostSecretStorage";
@@ -63,7 +63,7 @@ export const App = (): JSX.Element => {
   }, [route]);
 
   if (route === "HOST") {
-    return <HostControlPanel roomState={hostRoomState} {...hostControlPanelHandlers} />;
+    return <HostRouteShell roomState={hostRoomState} {...hostControlPanelHandlers} />;
   }
 
   if (route === "DISPLAY") {

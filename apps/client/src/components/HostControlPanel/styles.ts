@@ -11,5 +11,3 @@ export const takeoverPanel =
 
 export const phaseNotice =
   "mt-3 text-sm font-medium text-gold";
-
-export const overridePanelContent = "space-y-4";

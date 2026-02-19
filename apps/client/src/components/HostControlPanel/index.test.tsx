@@ -164,7 +164,7 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.doesNotMatch(html, /Team setup is locked after the game starts\./);
   assert.match(html, /Timer Controls/);
   assert.match(html, /Pause Timer/);
-  assert.match(html, /Overrides/);
+  assert.doesNotMatch(html, /Overrides/);
   assert.doesNotMatch(html, /Skip Turn/);
   assert.doesNotMatch(html, /Reset Game/);
   assert.doesNotMatch(html, /Score Override/);
@@ -300,7 +300,7 @@ test("renders standings snapshot in compact ROUND_INTRO view", () => {
   assert.match(html, /Frank&#x27;s/);
   assert.match(html, /Mini-game/);
   assert.match(html, /TRIVIA/);
-  assert.match(html, /Overrides/);
+  assert.doesNotMatch(html, /Overrides/);
   assert.doesNotMatch(html, /Turn Order/);
   assert.doesNotMatch(html, /Move Up/);
   assert.doesNotMatch(html, /Move Down/);
@@ -345,32 +345,6 @@ test("renders completion guidance in compact FINAL_RESULTS view", () => {
 
   assert.match(html, /Game complete\./);
   assert.match(html, /Final Results/);
-});
-
-test("shows redo action when scoring mutation history is available", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
-        canRedoScoringMutation: true
-      })}
-    />
-  );
-
-  assert.match(html, /Overrides/);
-  assert.match(html, /Needs Review/);
-});
-
-test("shows override badge when turn order differs from default team order", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
-        turnOrderTeamIds: ["team-beta", "team-alpha"]
-      })}
-    />
-  );
-
-  assert.match(html, /Overrides/);
-  assert.match(html, /Needs Review/);
 });
 
 test("keeps MINIGAME_INTRO on streamlined host view", () => {
