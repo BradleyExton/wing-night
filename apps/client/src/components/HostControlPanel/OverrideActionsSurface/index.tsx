@@ -69,6 +69,8 @@ export const OverrideActionsSurface = ({
       if (!showResetGameAction || onResetGame === undefined) {
         dispatchPendingAction({ type: "clear" });
       }
+
+      return;
     }
   }, [
     onRedoLastMutation,
@@ -174,4 +176,3 @@ export const OverrideActionsSurface = ({
     </section>
   );
 };
-

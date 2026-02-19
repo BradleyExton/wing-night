@@ -141,7 +141,6 @@ test("override dock score updates sync to display and panel closes on escape/scr
   await ensureTeamExists(hostPage, "Team Two");
 
   await assignPlayers(hostPage);
-  await assignPlayers(hostPage);
 
   await advanceUntilHeading(hostPage, /^Intro$/i);
   await advanceUntilHeading(hostPage, /^Round Intro$/i);

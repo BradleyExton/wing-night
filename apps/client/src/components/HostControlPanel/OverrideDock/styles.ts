@@ -16,7 +16,7 @@ export const overlay = "fixed inset-0 z-40";
 
 export const overlayClosed = "pointer-events-none";
 
-export const overlayOpen = "pointer-events-auto";
+export const overlayOpen = "pointer-events-auto md:pointer-events-none";
 
 export const scrim =
   "absolute inset-y-0 left-0 w-12 bg-bg/70 transition-opacity duration-200 md:hidden";
@@ -26,7 +26,7 @@ export const scrimClosed = "opacity-0";
 export const scrimOpen = "opacity-100";
 
 export const panel =
-  "absolute inset-y-0 left-12 right-0 flex flex-col border-l border-text/20 bg-surface shadow-2xl transition-transform duration-200 ease-out md:bottom-4 md:left-auto md:right-0 md:top-4 md:w-[420px] md:rounded-xl md:border";
+  "pointer-events-auto absolute inset-y-0 left-12 right-0 flex flex-col border-l border-text/20 bg-surface shadow-2xl transition-transform duration-200 ease-out md:bottom-4 md:left-auto md:right-0 md:top-4 md:w-[420px] md:rounded-xl md:border";
 
 export const panelClosed = "translate-x-full";
 
