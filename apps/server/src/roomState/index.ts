@@ -20,16 +20,16 @@ import {
   logScoreMutation
 } from "../logger/index.js";
 import {
-  captureTriviaRuntimeStateSnapshot,
-  clearTriviaRuntimeState,
-  initializeTriviaRuntimeState,
-  reduceTriviaAttempt,
-  resetTriviaRuntimeState,
-  restoreTriviaRuntimeStateSnapshot,
-  syncTriviaRuntimeWithPendingPoints,
-  syncTriviaRuntimeWithPrompts,
-  type TriviaRuntimeStateSnapshot
-} from "../minigames/triviaRuntime/index.js";
+  captureMinigameRuntimeSnapshot,
+  clearMinigameRuntime,
+  dispatchMinigameRuntimeAction,
+  initializeMinigameRuntime,
+  resetMinigameRuntimeState,
+  restoreMinigameRuntimeSnapshot,
+  syncMinigameRuntimeContent,
+  syncMinigameRuntimePendingPoints,
+  type MinigameRuntimeSnapshotEnvelope
+} from "../minigames/orchestrator/index.js";
 import { getNextPhase } from "../utils/getNextPhase/index.js";
 
 const DEFAULT_TOTAL_ROUNDS = 3;
@@ -51,13 +51,6 @@ const resolveCurrentRoundConfig = (state: RoomState): RoomState["currentRoundCon
   }
 
   return state.gameConfig.rounds[state.currentRound - 1] ?? null;
-};
-
-const isTriviaMinigamePlayState = (state: RoomState): boolean => {
-  return (
-    state.phase === Phase.MINIGAME_PLAY &&
-    state.currentRoundConfig?.minigame === "TRIVIA"
-  );
 };
 
 const resolveMinigamePointsMax = (state: RoomState): number | null => {
@@ -171,7 +164,7 @@ type ScoringMutationUndoSnapshot = {
   wingParticipationByPlayerId: Record<string, boolean>;
   pendingWingPointsByTeamId: Record<string, number>;
   pendingMinigamePointsByTeamId: Record<string, number>;
-  triviaRuntimeSnapshot: TriviaRuntimeStateSnapshot;
+  minigameRuntimeSnapshot: MinigameRuntimeSnapshotEnvelope;
 };
 let scoringMutationUndoSnapshot: ScoringMutationUndoSnapshot | null = null;
 let minigameCompatibilityStatus: MinigameContractCompatibilityStatus = "COMPATIBLE";
@@ -231,7 +224,7 @@ const createScoringMutationUndoSnapshot = (
     wingParticipationByPlayerId: structuredClone(state.wingParticipationByPlayerId),
     pendingWingPointsByTeamId: structuredClone(state.pendingWingPointsByTeamId),
     pendingMinigamePointsByTeamId: structuredClone(state.pendingMinigamePointsByTeamId),
-    triviaRuntimeSnapshot: captureTriviaRuntimeStateSnapshot()
+    minigameRuntimeSnapshot: captureMinigameRuntimeSnapshot(state)
   };
 };
 
@@ -260,7 +253,7 @@ const restoreScoringMutationUndoState = (
   state.pendingMinigamePointsByTeamId = structuredClone(
     snapshot.pendingMinigamePointsByTeamId
   );
-  restoreTriviaRuntimeStateSnapshot(state, snapshot.triviaRuntimeSnapshot);
+  restoreMinigameRuntimeSnapshot(state, snapshot.minigameRuntimeSnapshot);
 };
 
 export const getRoomStateSnapshot = (): RoomState => {
@@ -273,7 +266,7 @@ export const getRoomStateSnapshot = (): RoomState => {
 
 export const resetRoomState = (): RoomState => {
   overwriteRoomState(createInitialRoomState());
-  resetTriviaRuntimeState();
+  resetMinigameRuntimeState();
   markMinigameContractCompatible();
   clearScoringMutationUndoState(roomState);
 
@@ -298,7 +291,7 @@ export const resetGameToSetup = (): RoomState => {
   nextState.currentRoundConfig = null;
 
   overwriteRoomState(nextState);
-  resetTriviaRuntimeState();
+  resetMinigameRuntimeState();
   markMinigameContractCompatible();
   clearScoringMutationUndoState(roomState);
 
@@ -307,7 +300,7 @@ export const resetGameToSetup = (): RoomState => {
 
 export const setRoomStateFatalError = (message: string): RoomState => {
   overwriteRoomState(createInitialRoomState());
-  resetTriviaRuntimeState();
+  resetMinigameRuntimeState();
   markMinigameContractCompatible();
   clearScoringMutationUndoState(roomState);
 
@@ -346,7 +339,7 @@ export const setRoomStateTriviaPrompts = (
   triviaPrompts: TriviaPrompt[]
 ): RoomState => {
   roomState.triviaPrompts = structuredClone(triviaPrompts);
-  syncTriviaRuntimeWithPrompts(roomState);
+  syncMinigameRuntimeContent(roomState);
 
   return getRoomStateSnapshot();
 };
@@ -355,23 +348,23 @@ const initializeActiveMinigameTurnState = (state: RoomState): void => {
   markMinigameContractCompatible();
   const minigameType = state.currentRoundConfig?.minigame;
 
-  if (minigameType !== "TRIVIA") {
-    clearTriviaRuntimeState(state);
+  if (minigameType === undefined) {
+    clearMinigameRuntime(state);
     return;
   }
 
   const minigamePointsMax = resolveMinigamePointsMax(state);
 
   if (minigamePointsMax === null) {
-    clearTriviaRuntimeState(state);
+    clearMinigameRuntime(state);
     return;
   }
 
-  initializeTriviaRuntimeState(
-    state,
-    minigamePointsMax,
-    resolveTriviaQuestionsPerTurn(state)
-  );
+  initializeMinigameRuntime(state, {
+    minigameId: minigameType,
+    pointsMax: minigamePointsMax,
+    questionsPerTurn: resolveTriviaQuestionsPerTurn(state)
+  });
 };
 
 const recomputePendingWingPoints = (state: RoomState): void => {
@@ -762,49 +755,22 @@ export const setPendingMinigamePoints = (
   roomState.pendingMinigamePointsByTeamId = nextPendingMinigamePointsByTeamId;
   roomState.canRedoScoringMutation = true;
 
-  if (isTriviaMinigamePlayState(roomState)) {
-    syncTriviaRuntimeWithPendingPoints(
-      roomState,
-      nextPendingMinigamePointsByTeamId
-    );
-  }
+  syncMinigameRuntimePendingPoints(roomState, nextPendingMinigamePointsByTeamId);
 
   return getRoomStateSnapshot();
 };
 
 export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
-  if (isRoomInFatalState(roomState)) {
-    return getRoomStateSnapshot();
-  }
-
-  if (!isTriviaMinigamePlayState(roomState)) {
-    return getRoomStateSnapshot();
-  }
-
-  const minigamePointsMax = resolveMinigamePointsMax(roomState);
-
-  if (minigamePointsMax === null) {
-    return getRoomStateSnapshot();
-  }
-
-  markMinigameContractCompatible();
-  const questionsPerTurn = resolveTriviaQuestionsPerTurn(roomState);
-  const nextUndoSnapshot = createScoringMutationUndoSnapshot(roomState);
-  const didRecordAttempt = reduceTriviaAttempt(
-    roomState,
-    isCorrect,
-    minigamePointsMax,
-    questionsPerTurn
-  );
-
-  if (!didRecordAttempt) {
-    return getRoomStateSnapshot();
-  }
-
-  scoringMutationUndoSnapshot = nextUndoSnapshot;
-  roomState.canRedoScoringMutation = true;
-
-  return getRoomStateSnapshot();
+  return dispatchMinigameAction({
+    hostSecret: "__server-runtime__",
+    minigameId: "TRIVIA",
+    minigameApiVersion: MINIGAME_CONTRACT_METADATA_BY_ID.TRIVIA.minigameApiVersion,
+    capabilityFlags: [...MINIGAME_CONTRACT_METADATA_BY_ID.TRIVIA.capabilityFlags],
+    actionType: TRIVIA_RECORD_ATTEMPT_ACTION_TYPE,
+    actionPayload: {
+      isCorrect
+    }
+  });
 };
 
 export const getActiveMinigameContract = (): ActiveMinigameContract | null => {
@@ -824,20 +790,6 @@ export const setMinigameCompatibilityMismatch = (message: string): RoomState => 
   return getRoomStateSnapshot();
 };
 
-const isTriviaAttemptActionPayload = (
-  value: unknown
-): value is { isCorrect: boolean } => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-
-  if (!("isCorrect" in value)) {
-    return false;
-  }
-
-  return typeof value.isCorrect === "boolean";
-};
-
 export const dispatchMinigameAction = (
   payload: MinigameActionEnvelopePayload
 ): RoomState => {
@@ -845,19 +797,42 @@ export const dispatchMinigameAction = (
     return getRoomStateSnapshot();
   }
 
-  if (!isTriviaMinigamePlayState(roomState)) {
-    return getRoomStateSnapshot();
-  }
-
   if (
-    payload.minigameId !== "TRIVIA" ||
-    payload.actionType !== TRIVIA_RECORD_ATTEMPT_ACTION_TYPE ||
-    !isTriviaAttemptActionPayload(payload.actionPayload)
+    roomState.phase !== Phase.MINIGAME_PLAY ||
+    roomState.currentRoundConfig === null ||
+    roomState.currentRoundConfig.minigame !== payload.minigameId
   ) {
     return getRoomStateSnapshot();
   }
 
-  return recordTriviaAttempt(payload.actionPayload.isCorrect);
+  const minigamePointsMax = resolveMinigamePointsMax(roomState);
+
+  if (minigamePointsMax === null) {
+    return getRoomStateSnapshot();
+  }
+
+  const nextUndoSnapshot = createScoringMutationUndoSnapshot(roomState);
+  const didDispatch = dispatchMinigameRuntimeAction(roomState, {
+    actionEnvelope: {
+      minigameId: payload.minigameId,
+      minigameApiVersion: payload.minigameApiVersion,
+      capabilityFlags: [...payload.capabilityFlags],
+      actionType: payload.actionType,
+      actionPayload: payload.actionPayload
+    },
+    pointsMax: minigamePointsMax,
+    questionsPerTurn: resolveTriviaQuestionsPerTurn(roomState)
+  });
+
+  if (!didDispatch) {
+    return getRoomStateSnapshot();
+  }
+
+  markMinigameContractCompatible();
+  scoringMutationUndoSnapshot = nextUndoSnapshot;
+  roomState.canRedoScoringMutation = true;
+
+  return getRoomStateSnapshot();
 };
 
 export const redoLastScoringMutation = (): RoomState => {
@@ -1005,7 +980,7 @@ export const skipTurnBoundary = (): RoomState => {
   roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
 
   if (previousPhase === Phase.MINIGAME_PLAY) {
-    clearTriviaRuntimeState(roomState);
+    clearMinigameRuntime(roomState);
     markMinigameContractCompatible();
   }
 
@@ -1113,7 +1088,7 @@ export const advanceRoomStatePhase = (): RoomState => {
   }
 
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase !== Phase.MINIGAME_PLAY) {
-    clearTriviaRuntimeState(roomState);
+    clearMinigameRuntime(roomState);
     markMinigameContractCompatible();
   }
 

@@ -1,20 +1,19 @@
 import {
   createTriviaStateWithPendingPoints,
   isTriviaMinigameState,
+  triviaMinigameModule,
   type TriviaMinigameAction,
   type TriviaMinigameContext,
   type TriviaMinigameState
 } from "@wingnight/minigames-trivia";
 import { Phase, type RoomState } from "@wingnight/shared";
-
-import { resolveMinigameModule } from "../registry/index.js";
 import {
   clearTriviaProjectionFromRoomState,
   projectTriviaDisplayViewToRoomState,
   projectTriviaHostViewToRoomState
 } from "../triviaProjection/index.js";
 
-const triviaModule = resolveMinigameModule("TRIVIA");
+const triviaModule = triviaMinigameModule;
 const DEFAULT_TRIVIA_QUESTIONS_PER_TURN = 1;
 
 let triviaRuntimeState: TriviaMinigameState | null = null;
