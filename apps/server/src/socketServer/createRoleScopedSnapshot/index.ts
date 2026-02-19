@@ -1,5 +1,6 @@
 import {
   CLIENT_ROLES,
+  DISPLAY_UNSAFE_ROOM_STATE_KEYS,
   type DisplayRoomStateSnapshot,
   type RoleScopedStateSnapshotEnvelope,
   type RoomState,
@@ -15,6 +16,14 @@ const createDisplayRoomStateSnapshot = (
     minigameHostView: _minigameHostView,
     ...displayRoomState
   } = roomState;
+
+  if (process.env.NODE_ENV !== "production") {
+    for (const unsafeKey of DISPLAY_UNSAFE_ROOM_STATE_KEYS) {
+      if (unsafeKey in displayRoomState) {
+        throw new Error(`Display snapshot leaked host-only field: ${unsafeKey}`);
+      }
+    }
+  }
 
   return displayRoomState;
 };

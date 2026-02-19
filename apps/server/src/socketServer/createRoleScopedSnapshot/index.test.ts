@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CLIENT_ROLES, Phase, type RoomState } from "@wingnight/shared";
+import {
+  CLIENT_ROLES,
+  DISPLAY_UNSAFE_ROOM_STATE_KEYS,
+  Phase,
+  type RoomState
+} from "@wingnight/shared";
 
 import { createRoleScopedSnapshot } from "./index.js";
 
@@ -87,8 +92,8 @@ test("returns display-safe snapshot envelope for DISPLAY clients", () => {
   const payload = createRoleScopedSnapshot(roomState, CLIENT_ROLES.DISPLAY);
 
   assert.equal(payload.clientRole, CLIENT_ROLES.DISPLAY);
-  assert.equal("triviaPrompts" in payload.roomState, false);
-  assert.equal("currentTriviaPrompt" in payload.roomState, false);
-  assert.equal("minigameHostView" in payload.roomState, false);
+  for (const unsafeKey of DISPLAY_UNSAFE_ROOM_STATE_KEYS) {
+    assert.equal(unsafeKey in payload.roomState, false);
+  }
   assert.equal(payload.roomState.minigameDisplayView?.currentPrompt?.question, "Question 1?");
 });

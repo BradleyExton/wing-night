@@ -1,5 +1,5 @@
 import type { Server as HttpServer } from "node:http";
-import { Server, type Socket } from "socket.io";
+import { Server } from "socket.io";
 import {
   CLIENT_ROLES,
   SERVER_TO_CLIENT_EVENTS,
@@ -73,22 +73,24 @@ export const attachSocketServer = (
   socketServer.on("connection", (socket) => {
     const socketClientRole = resolveSocketClientRole(socket.handshake.auth);
 
-    const emitRoleScopedSnapshot = (
-      targetSocket: Socket<IncomingSocketEvents, OutgoingSocketEvents>,
-      roomStateSnapshot: ReturnType<typeof getRoomStateSnapshot>
-    ): void => {
-      const targetRole = resolveSocketClientRole(targetSocket.handshake.auth);
-      targetSocket.emit(
-        SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT,
-        createRoleScopedSnapshot(roomStateSnapshot, targetRole)
-      );
-    };
-
     const broadcastRoleScopedSnapshot = (
       roomStateSnapshot: ReturnType<typeof getRoomStateSnapshot>
     ): void => {
+      const hostSnapshot = createRoleScopedSnapshot(
+        roomStateSnapshot,
+        CLIENT_ROLES.HOST
+      );
+      const displaySnapshot = createRoleScopedSnapshot(
+        roomStateSnapshot,
+        CLIENT_ROLES.DISPLAY
+      );
+
       for (const connectedSocket of socketServer.sockets.sockets.values()) {
-        emitRoleScopedSnapshot(connectedSocket, roomStateSnapshot);
+        const targetRole = resolveSocketClientRole(connectedSocket.handshake.auth);
+        connectedSocket.emit(
+          SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT,
+          targetRole === CLIENT_ROLES.HOST ? hostSnapshot : displaySnapshot
+        );
       }
     };
 

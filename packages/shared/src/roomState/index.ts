@@ -24,13 +24,10 @@ export type MinigameContractCompatibilityStatus = "COMPATIBLE" | "MISMATCH";
 
 export type MinigameContractMetadata = {
   minigameApiVersion: number;
-  capabilityFlags: string[];
+  capabilityFlags: readonly string[];
 };
 
-export const MINIGAME_CONTRACT_METADATA_BY_ID: Record<
-  MinigameType,
-  MinigameContractMetadata
-> = {
+export const MINIGAME_CONTRACT_METADATA_BY_ID = {
   TRIVIA: {
     minigameApiVersion: 1,
     capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT]
@@ -43,7 +40,7 @@ export const MINIGAME_CONTRACT_METADATA_BY_ID: Record<
     minigameApiVersion: 1,
     capabilityFlags: []
   }
-};
+} as const satisfies Record<MinigameType, MinigameContractMetadata>;
 
 export type MinigameHostView = {
   minigame: MinigameType;
@@ -103,13 +100,23 @@ export type RoomState = {
 };
 
 type DisplayUnsafeRoomStateKeys =
+  // Keep this list aligned with server role-scoped snapshot projection.
+  // Any answer-bearing or host-only RoomState field must be listed here.
   | "triviaPrompts"
   | "currentTriviaPrompt"
   | "minigameHostView";
 
+export const DISPLAY_UNSAFE_ROOM_STATE_KEYS = [
+  "triviaPrompts",
+  "currentTriviaPrompt",
+  "minigameHostView"
+] as const satisfies readonly DisplayUnsafeRoomStateKeys[];
+
+type DisplayUnsafeRoomStateKey = (typeof DISPLAY_UNSAFE_ROOM_STATE_KEYS)[number];
+
 export type HostRoomStateSnapshot = RoomState;
 
-export type DisplayRoomStateSnapshot = Omit<RoomState, DisplayUnsafeRoomStateKeys>;
+export type DisplayRoomStateSnapshot = Omit<RoomState, DisplayUnsafeRoomStateKey>;
 
 export type RoleScopedStateSnapshotEnvelope =
   | {

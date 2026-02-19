@@ -15,6 +15,7 @@ export type {
   RoomTimerState
 } from "./roomState/index.js";
 export {
+  DISPLAY_UNSAFE_ROOM_STATE_KEYS,
   MINIGAME_ACTION_TYPES,
   MINIGAME_CONTRACT_METADATA_BY_ID
 } from "./roomState/index.js";

@@ -25,7 +25,7 @@ type RoomStateSocket = Parameters<typeof wireRoomStateRehydration>[0];
 class MockRoomStateSocket {
   public requestedStateEvents = 0;
   public connected = false;
-  public recovered = false;
+  public recovered: boolean | undefined = false;
 
   private readonly handlers: Partial<RoomStateSocketEvents> = {};
 
@@ -155,6 +155,23 @@ test("takeover rehydrate requests snapshot immediately when connected with recov
 test("takeover rehydrate requests snapshot on connect when recovery is unavailable", () => {
   const mockSocket = new MockRoomStateSocket();
   mockSocket.recovered = false;
+
+  wireRoomStateRehydration(
+    mockSocket as unknown as RoomStateSocket,
+    CLIENT_ROLES.DISPLAY,
+    () => {
+      // No-op callback for this test.
+    }
+  );
+
+  mockSocket.triggerConnect();
+
+  assert.equal(mockSocket.requestedStateEvents, 1);
+});
+
+test("takeover rehydrate requests snapshot on connect when recovery flag is unavailable", () => {
+  const mockSocket = new MockRoomStateSocket();
+  mockSocket.recovered = undefined;
 
   wireRoomStateRehydration(
     mockSocket as unknown as RoomStateSocket,

@@ -210,6 +210,8 @@ const isMinigameActionEnvelopePayload = (
     return false;
   }
 
+  // Action-specific payload schema is validated by the active minigame runtime
+  // adapter. This envelope guard only validates socket-level transport/auth shape.
   return true;
 };
 
