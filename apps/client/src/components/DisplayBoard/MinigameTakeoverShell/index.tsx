@@ -1,17 +1,12 @@
-import { Phase, type DisplayRoomStateSnapshot, type MinigameType } from "@wingnight/shared";
+import { Phase, type DisplayRoomStateSnapshot } from "@wingnight/shared";
 
 import { displayBoardCopy } from "../copy";
+import { resolveClientMinigameRendererDescriptor } from "../../../minigames/registry";
 import * as styles from "./styles";
 
 type MinigameTakeoverShellProps = {
   roomState: DisplayRoomStateSnapshot | null;
   phaseLabel: string;
-};
-
-const resolveMinigameType = (
-  roomState: DisplayRoomStateSnapshot | null
-): MinigameType | null => {
-  return roomState?.minigameDisplayView?.minigame ?? roomState?.currentRoundConfig?.minigame ?? null;
 };
 
 const resolveActiveTeamName = (
@@ -39,59 +34,27 @@ export const MinigameTakeoverShell = ({
 }: MinigameTakeoverShellProps): JSX.Element => {
   const phase = roomState?.phase ?? null;
   const isMinigamePlayPhase = phase === Phase.MINIGAME_PLAY;
-  const minigameType = resolveMinigameType(roomState);
+  const minigameId =
+    roomState?.minigameDisplayView?.minigame ??
+    roomState?.currentRoundConfig?.minigame ??
+    displayBoardCopy.minigameFallbackType;
   const activeTeamName = resolveActiveTeamName(roomState);
-  const currentTriviaQuestion =
-    roomState?.minigameDisplayView?.minigame === "TRIVIA"
-      ? (roomState.minigameDisplayView.currentPrompt?.question ?? null)
-      : null;
-  const fallbackMessage =
-    roomState !== null
-      ? displayBoardCopy.roundFallbackLabel
-      : displayBoardCopy.waitingForStateLabel;
+  const rendererDescriptor = resolveClientMinigameRendererDescriptor(minigameId);
+  const DisplayTakeoverRenderer = rendererDescriptor.displayTakeoverRenderer;
 
   return (
-    <main
+    <section
       className={styles.container}
       data-display-minigame-takeover={isMinigamePlayPhase ? "play" : "intro"}
+      data-display-minigame-id={minigameId}
     >
-      <header className={styles.header}>
-        <p className={styles.phaseBadge}>{phaseLabel}</p>
-        <h1 className={styles.heading}>{displayBoardCopy.minigameSectionTitle}</h1>
-        <p className={styles.subtext}>
-          {minigameType !== null
-            ? displayBoardCopy.minigameIntroDescription(minigameType)
-            : fallbackMessage}
-        </p>
-      </header>
-
-      <section className={styles.body}>
-        {activeTeamName !== null && (
-          <div className={styles.contextCard}>
-            <p className={styles.contextLabel}>{displayBoardCopy.activeTeamLabel}</p>
-            <p className={styles.contextValue}>
-              {displayBoardCopy.activeTeamValue(activeTeamName)}
-            </p>
-          </div>
-        )}
-
-        {isMinigamePlayPhase ? (
-          currentTriviaQuestion !== null ? (
-            <div className={styles.questionCard}>
-              <p className={styles.questionLabel}>{displayBoardCopy.triviaQuestionLabel}</p>
-              <p className={styles.questionValue}>{currentTriviaQuestion}</p>
-            </div>
-          ) : (
-            <p className={styles.fallbackText}>{fallbackMessage}</p>
-          )
-        ) : (
-          <p className={styles.fallbackText}>
-            {minigameType !== null
-              ? displayBoardCopy.roundMinigameSummary(minigameType)
-              : fallbackMessage}
-          </p>
-        )}
-      </section>
-    </main>
+      <DisplayTakeoverRenderer
+        roomState={roomState}
+        phaseLabel={phaseLabel}
+        isMinigamePlayPhase={isMinigamePlayPhase}
+        minigameId={minigameId}
+        activeTeamName={activeTeamName}
+      />
+    </section>
   );
 };

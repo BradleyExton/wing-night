@@ -153,6 +153,23 @@ test("renders takeover shell during MINIGAME_PLAY using display-safe prompt fiel
   assert.doesNotMatch(html, /Standings/);
 });
 
+test("renders explicit unsupported takeover surface for GEO rounds", () => {
+  const html = renderToStaticMarkup(
+    <DisplayBoard
+      roomState={buildSnapshot(Phase.MINIGAME_INTRO, [], {
+        currentRoundConfig: {
+          ...gameConfigFixture.rounds[0],
+          minigame: "GEO"
+        }
+      })}
+    />
+  );
+
+  assert.match(html, /data-display-minigame-id="GEO"/);
+  assert.match(html, /GEO is not supported in this build\./);
+  assert.doesNotMatch(html, /Standings/);
+});
+
 test("renders standings in descending score order", () => {
   const teams: Team[] = [
     {

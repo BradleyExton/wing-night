@@ -79,3 +79,26 @@ test("renders compatibility mismatch warning during minigame intro", () => {
 
   assert.match(html, /Host minigame contract mismatch\./);
 });
+
+test("renders unsupported fallback surface for GEO takeover", () => {
+  const html = renderToStaticMarkup(
+    <MinigameTakeoverShell
+      hostMode="minigame_intro"
+      minigameHostView={{
+        ...triviaHostView,
+        minigame: "GEO"
+      }}
+      activeRoundTeamName="Team Alpha"
+      teamNameByTeamId={teamNameByTeamId}
+      triviaAttemptDisabled={false}
+      onRecordTriviaAttempt={(): void => undefined}
+    />
+  );
+
+  assert.match(html, /data-host-minigame-id="GEO"/);
+  assert.match(html, /GEO is not supported in this build\./);
+  assert.match(
+    html,
+    /Use host overrides to skip this turn while support is under construction\./
+  );
+});

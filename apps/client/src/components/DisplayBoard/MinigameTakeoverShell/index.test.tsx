@@ -105,3 +105,25 @@ test("renders stable fallback when display payload is missing in minigame play",
 
   assert.match(html, /Round context will appear on the next phase update\./);
 });
+
+test("renders explicit unsupported takeover for DRAWING", () => {
+  const html = renderToStaticMarkup(
+    <MinigameTakeoverShell
+      roomState={{
+        ...buildSnapshot(Phase.MINIGAME_INTRO),
+        currentRoundConfig: {
+          ...gameConfigFixture.rounds[0],
+          minigame: "DRAWING"
+        }
+      }}
+      phaseLabel="Minigame Intro"
+    />
+  );
+
+  assert.match(html, /data-display-minigame-id="DRAWING"/);
+  assert.match(html, /DRAWING is not supported in this build\./);
+  assert.match(
+    html,
+    /A fallback takeover surface is shown while this mini-game is in development\./
+  );
+});

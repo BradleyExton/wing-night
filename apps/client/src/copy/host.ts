@@ -136,6 +136,10 @@ export const hostCopy = {
   minigameIntroDescription: (minigame: MinigameType): string =>
     `${minigame} is queued. Advance when players are ready to begin.`,
   minigameFallbackType: "TRIVIA" as MinigameType,
+  minigameUnsupportedLabel: (minigame: MinigameType): string =>
+    `${minigame} is not supported in this build.`,
+  minigameUnsupportedDescription:
+    "Use host overrides to skip this turn while support is under construction.",
   minigameContractMismatchFallbackLabel:
     "Minigame contract mismatch detected. Refresh host and try again.",
   waitingStateLabel: "Waiting for room state...",
