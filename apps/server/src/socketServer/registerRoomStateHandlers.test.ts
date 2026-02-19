@@ -385,7 +385,6 @@ const validTriviaMinigameActionPayload: MinigameActionEnvelopePayload = {
   hostSecret: "valid-host-secret",
   minigameId: "TRIVIA",
   minigameApiVersion: 1,
-  capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT],
   actionType: MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT,
   actionPayload: {
     isCorrect: false
@@ -988,7 +987,7 @@ test("rejects minigame-action when api version mismatches active contract", () =
   ]);
 });
 
-test("rejects minigame-action when capabilities mismatch active contract", () => {
+test("rejects minigame-action when action type is unsupported by active contract", () => {
   const socketHarness = createSocketHarness();
   const mismatchMessages: string[] = [];
   let authorizedCalls = 0;
@@ -1011,12 +1010,12 @@ test("rejects minigame-action when capabilities mismatch active contract", () =>
 
   socketHarness.triggerMinigameAction({
     ...validTriviaMinigameActionPayload,
-    capabilityFlags: []
+    actionType: "trivia:unsupportedAction"
   });
 
   assert.equal(authorizedCalls, 0);
   assert.deepEqual(mismatchMessages, [
-    "Minigame capability mismatch. Refresh host and try again."
+    "Unsupported minigame action. Refresh host and try again."
   ]);
 });
 

@@ -1112,7 +1112,6 @@ test("dispatchMinigameAction routes trivia action envelope through trivia reduce
     hostSecret: "valid-host-secret",
     minigameId: "TRIVIA",
     minigameApiVersion: 1,
-    capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT],
     actionType: MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT,
     actionPayload: {
       isCorrect: true

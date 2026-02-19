@@ -765,7 +765,6 @@ export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
     hostSecret: "__server-runtime__",
     minigameId: "TRIVIA",
     minigameApiVersion: MINIGAME_CONTRACT_METADATA_BY_ID.TRIVIA.minigameApiVersion,
-    capabilityFlags: [...MINIGAME_CONTRACT_METADATA_BY_ID.TRIVIA.capabilityFlags],
     actionType: TRIVIA_RECORD_ATTEMPT_ACTION_TYPE,
     actionPayload: {
       isCorrect
@@ -816,7 +815,6 @@ export const dispatchMinigameAction = (
     actionEnvelope: {
       minigameId: payload.minigameId,
       minigameApiVersion: payload.minigameApiVersion,
-      capabilityFlags: [...payload.capabilityFlags],
       actionType: payload.actionType,
       actionPayload: payload.actionPayload
     },

@@ -17,7 +17,6 @@ export type ScoringAdjustTeamScorePayload = HostSecretPayload &
 export type MinigameActionEnvelopePayload = HostSecretPayload &
   Record<"minigameId", MinigameType> &
   Record<"minigameApiVersion", number> &
-  Record<"capabilityFlags", string[]> &
   Record<"actionType", string> &
   Record<"actionPayload", unknown>;
 export type TimerExtendPayload = HostSecretPayload &

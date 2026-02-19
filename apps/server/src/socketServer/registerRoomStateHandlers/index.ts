@@ -183,14 +183,6 @@ const isMinigameActionEnvelopePayload = (
   }
 
   if (
-    !("capabilityFlags" in payload) ||
-    !Array.isArray(payload.capabilityFlags) ||
-    !payload.capabilityFlags.every((flag) => typeof flag === "string")
-  ) {
-    return false;
-  }
-
-  if (
     !("actionType" in payload) ||
     typeof payload.actionType !== "string" ||
     payload.actionType.trim().length === 0
@@ -212,30 +204,6 @@ const isMinigameActionEnvelopePayload = (
 
   // Action-specific payload schema is validated by the active minigame runtime
   // adapter. This envelope guard only validates socket-level transport/auth shape.
-  return true;
-};
-
-const areCapabilityFlagsEqual = (
-  left: string[],
-  right: string[]
-): boolean => {
-  if (left.length !== right.length) {
-    return false;
-  }
-
-  const leftSet = new Set(left);
-  const rightSet = new Set(right);
-
-  if (leftSet.size !== rightSet.size) {
-    return false;
-  }
-
-  for (const capabilityFlag of leftSet) {
-    if (!rightSet.has(capabilityFlag)) {
-      return false;
-    }
-  }
-
   return true;
 };
 
@@ -393,19 +361,7 @@ export const registerRoomStateHandlers = <TSnapshot>(
           return;
         }
 
-        if (
-          !areCapabilityFlagsEqual(
-            typedPayload.capabilityFlags,
-            activeMinigameContract.capabilityFlags
-          )
-        ) {
-          mutationHandlers.onMinigameActionRejectedForCompatibility(
-            "Minigame capability mismatch. Refresh host and try again."
-          );
-          return;
-        }
-
-        if (!typedPayload.capabilityFlags.includes(typedPayload.actionType)) {
+        if (!activeMinigameContract.capabilityFlags.includes(typedPayload.actionType)) {
           mutationHandlers.onMinigameActionRejectedForCompatibility(
             "Unsupported minigame action. Refresh host and try again."
           );

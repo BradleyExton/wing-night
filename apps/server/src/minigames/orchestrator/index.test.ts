@@ -109,7 +109,6 @@ const triviaActionEnvelopePayload: MinigameActionEnvelopePayload = {
   hostSecret: "host-secret",
   minigameId: "TRIVIA",
   minigameApiVersion: 1,
-  capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT],
   actionType: MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT,
   actionPayload: {
     isCorrect: true

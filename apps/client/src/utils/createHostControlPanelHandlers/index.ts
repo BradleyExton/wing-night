@@ -104,9 +104,6 @@ export const createHostControlPanelHandlers = (
           minigameId: "TRIVIA",
           minigameApiVersion:
             MINIGAME_CONTRACT_METADATA_BY_ID.TRIVIA.minigameApiVersion,
-          capabilityFlags: [
-            ...MINIGAME_CONTRACT_METADATA_BY_ID.TRIVIA.capabilityFlags
-          ],
           actionType: MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT,
           actionPayload: {
             isCorrect

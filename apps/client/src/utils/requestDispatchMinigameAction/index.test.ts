@@ -29,7 +29,6 @@ class MockDispatchMinigameActionSocket {
 const triviaActionPayload = {
   minigameId: "TRIVIA" as const,
   minigameApiVersion: 1,
-  capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT],
   actionType: MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT,
   actionPayload: {
     isCorrect: false
@@ -70,7 +69,6 @@ test("emits minigame:action payload when host secret exists", () => {
       hostSecret: "host-secret",
       minigameId: "TRIVIA",
       minigameApiVersion: 1,
-      capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT],
       actionType: MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT,
       actionPayload: {
         isCorrect: false
