@@ -1,6 +1,7 @@
 import {
   type GameConfigFile,
   type GameConfigRound,
+  type MinigameHostView,
   type Phase,
   type Player,
   type RoomState,
@@ -34,6 +35,20 @@ export type ValidTeamCheck = Assert<
   >
 >;
 
+export type ValidMinigameHostViewCheck = Assert<
+  IsAssignable<
+    {
+      minigame: "TRIVIA";
+      activeTurnTeamId: string | null;
+      attemptsRemaining: number;
+      promptCursor: number;
+      pendingPointsByTeamId: Record<string, number>;
+      currentPrompt: TriviaPrompt | null;
+    },
+    MinigameHostView
+  >
+>;
+
 export type ValidRoomStateCheck = Assert<
   IsAssignable<
     {
@@ -60,6 +75,7 @@ export type ValidRoomStateCheck = Assert<
       pendingMinigamePointsByTeamId: Record<string, number>;
       fatalError: RoomState["fatalError"];
       canRedoScoringMutation: boolean;
+      canAdvancePhase: boolean;
     },
     RoomState
   >
@@ -70,6 +86,9 @@ export type InvalidPhaseCheck = Assert<IsAssignable<"NOT_A_PHASE", Phase>>;
 
 // @ts-expect-error Missing required Player.name.
 export type MissingPlayerNameCheck = Assert<IsAssignable<{ id: string }, Player>>;
+
+// @ts-expect-error MinigameHostView requires attemptsRemaining.
+export type MissingTriviaAttemptsRemainingCheck = Assert<IsAssignable<{ minigame: "TRIVIA"; activeTurnTeamId: string | null; promptCursor: number; pendingPointsByTeamId: Record<string, number>; currentPrompt: TriviaPrompt | null }, MinigameHostView>>;
 
 // @ts-expect-error Team.playerIds entries must be strings.
 export type InvalidPlayerIdsCheck = Assert<IsAssignable<{ id: string; name: string; playerIds: number[]; totalScore: number }, Team>>;

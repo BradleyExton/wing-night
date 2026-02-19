@@ -1,18 +1,21 @@
 import type { FormEvent } from "react";
-import { Phase, type MinigameHostView, type Player, type RoomState, type Team } from "@wingnight/shared";
+import {
+  type MinigameHostView,
+  type Player,
+  type RoomState,
+  type Team
+} from "@wingnight/shared";
 
 import { CompactSummarySurface } from "../CompactSummarySurface";
 import { MinigameSurface } from "../MinigameSurface";
 import { PlayersSurface } from "../PlayersSurface";
 import { TeamSetupSurface } from "../TeamSetupSurface";
 import { TimerControlsSurface } from "../TimerControlsSurface";
-import { TurnOrderSurface } from "../TurnOrderSurface";
 import type { HostRenderMode } from "../resolveHostRenderMode";
 import * as styles from "./styles";
 
 type HostPhaseBodyProps = {
   hostMode: HostRenderMode;
-  phase: Phase | null;
   roomState: RoomState | null;
   players: Player[];
   teams: Team[];
@@ -28,7 +31,6 @@ type HostPhaseBodyProps = {
   participationDisabled: boolean;
   triviaAttemptDisabled: boolean;
   sortedStandings: Team[];
-  orderedTeams: Team[];
   timer: RoomState["timer"];
   onNextTeamNameChange: (nextTeamName: string) => void;
   onCreateTeamSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -38,7 +40,6 @@ type HostPhaseBodyProps = {
   onResumeTimer?: () => void;
   onExtendTimer?: (additionalSeconds: number) => void;
   onRecordTriviaAttempt: (isCorrect: boolean) => void;
-  onReorderTurnOrder?: (teamIds: string[]) => void;
 };
 
 const assertUnreachable = (value: never): never => {
@@ -47,7 +48,6 @@ const assertUnreachable = (value: never): never => {
 
 export const HostPhaseBody = ({
   hostMode,
-  phase,
   roomState,
   players,
   teams,
@@ -63,7 +63,6 @@ export const HostPhaseBody = ({
   participationDisabled,
   triviaAttemptDisabled,
   sortedStandings,
-  orderedTeams,
   timer,
   onNextTeamNameChange,
   onCreateTeamSubmit,
@@ -72,8 +71,7 @@ export const HostPhaseBody = ({
   onPauseTimer,
   onResumeTimer,
   onExtendTimer,
-  onRecordTriviaAttempt,
-  onReorderTurnOrder
+  onRecordTriviaAttempt
 }: HostPhaseBodyProps): JSX.Element | null => {
   switch (hostMode) {
     case "waiting":
@@ -132,14 +130,8 @@ export const HostPhaseBody = ({
         />
       );
     case "compact":
-      return roomState && phase !== null ? (
+      return roomState ? (
         <div className={styles.surfaceGroup}>
-          {phase === Phase.ROUND_INTRO && (
-            <TurnOrderSurface
-              orderedTeams={orderedTeams}
-              onReorderTurnOrder={onReorderTurnOrder}
-            />
-          )}
           <CompactSummarySurface sortedStandings={sortedStandings} />
         </div>
       ) : null;

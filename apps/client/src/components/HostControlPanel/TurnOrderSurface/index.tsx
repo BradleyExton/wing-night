@@ -5,6 +5,7 @@ import * as styles from "./styles";
 
 type TurnOrderSurfaceProps = {
   orderedTeams: Team[];
+  isEditable: boolean;
   onReorderTurnOrder?: (teamIds: string[]) => void;
 };
 
@@ -26,15 +27,22 @@ const moveTeamId = (
 
 export const TurnOrderSurface = ({
   orderedTeams,
+  isEditable,
   onReorderTurnOrder
 }: TurnOrderSurfaceProps): JSX.Element => {
-  const canReorder = onReorderTurnOrder !== undefined;
+  const canReorder = isEditable && onReorderTurnOrder !== undefined;
   const orderedTeamIds = orderedTeams.map((team) => team.id);
+  const sectionDescription = isEditable
+    ? hostControlPanelCopy.turnOrderDescription
+    : hostControlPanelCopy.turnOrderLockedDescription;
 
   return (
     <section className={styles.card}>
       <h2 className={styles.sectionHeading}>{hostControlPanelCopy.turnOrderSectionTitle}</h2>
-      <p className={styles.sectionDescription}>{hostControlPanelCopy.turnOrderDescription}</p>
+      <p className={styles.sectionDescription}>{sectionDescription}</p>
+      {!isEditable && orderedTeams.length > 0 && (
+        <p className={styles.lockedLabel}>{hostControlPanelCopy.turnOrderLockedStatusLabel}</p>
+      )}
       {orderedTeams.length === 0 && (
         <p className={styles.emptyLabel}>{hostControlPanelCopy.turnOrderEmptyLabel}</p>
       )}

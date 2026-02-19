@@ -73,7 +73,8 @@ const buildSnapshot = (
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
-    canRedoScoringMutation: false
+    canRedoScoringMutation: false,
+    canAdvancePhase: true
   };
 
   return { ...snapshot, ...overrides };
@@ -127,6 +128,7 @@ test("renders setup sections and assignment controls during SETUP", () => {
   assert.doesNotMatch(html, /Ate wing/);
   assert.doesNotMatch(html, /Score Override/);
   assert.doesNotMatch(html, /Reset Game/);
+  assert.doesNotMatch(html, /Overrides/);
 });
 
 test("renders eating participation controls and hides setup sections during EATING", () => {
@@ -162,13 +164,41 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.doesNotMatch(html, /Team setup is locked after the game starts\./);
   assert.match(html, /Timer Controls/);
   assert.match(html, /Pause Timer/);
-  assert.match(html, /Skip Turn/);
-  assert.match(html, /Reset Game/);
-  assert.match(html, /Score Override/);
+  assert.match(html, /Overrides/);
+  assert.doesNotMatch(html, /Skip Turn/);
+  assert.doesNotMatch(html, /Reset Game/);
+  assert.doesNotMatch(html, /Score Override/);
   assert.doesNotMatch(html, /Undo Last Score/);
   assert.match(html, /Ate wing/);
   assert.doesNotMatch(html, /Team Setup/);
   assert.doesNotMatch(html, /Assign Alex to a team/);
+});
+
+test("disables Next Phase during SETUP when server marks canAdvancePhase false", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.SETUP, {
+        canAdvancePhase: false
+      })}
+      onNextPhase={(): void => {}}
+    />
+  );
+
+  assert.match(html, /<button[^>]*disabled=""[^>]*>Next Phase<\/button>/);
+});
+
+test("enables Next Phase during SETUP when server marks canAdvancePhase true", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.SETUP, {
+        canAdvancePhase: true
+      })}
+      onNextPhase={(): void => {}}
+    />
+  );
+
+  assert.match(html, /<button[^>]*>Next Phase<\/button>/);
+  assert.doesNotMatch(html, /<button[^>]*disabled=""[^>]*>Next Phase<\/button>/);
 });
 
 test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
@@ -178,6 +208,7 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
         minigameHostView: {
           minigame: "TRIVIA",
           activeTurnTeamId: "team-alpha",
+          attemptsRemaining: 1,
           promptCursor: 0,
           pendingPointsByTeamId: {
             "team-alpha": 0
@@ -203,6 +234,33 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
   assert.doesNotMatch(html, /Morgan/);
 });
 
+test("disables trivia attempt controls when attemptsRemaining is exhausted", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
+        minigameHostView: {
+          minigame: "TRIVIA",
+          activeTurnTeamId: "team-alpha",
+          attemptsRemaining: 0,
+          promptCursor: 0,
+          pendingPointsByTeamId: {
+            "team-alpha": 0
+          },
+          currentPrompt: {
+            id: "prompt-1",
+            question: "Which scale measures pepper heat?",
+            answer: "Scoville"
+          }
+        }
+      })}
+      onRecordTriviaAttempt={(): void => {}}
+    />
+  );
+
+  assert.match(html, /<button[^>]*disabled=""[^>]*>Correct<\/button>/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*>Incorrect<\/button>/);
+});
+
 test("renders standings snapshot only during INTRO compact view", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel roomState={buildSnapshot(Phase.INTRO)} />
@@ -211,10 +269,10 @@ test("renders standings snapshot only during INTRO compact view", () => {
   assert.match(html, /Intro/);
   assert.match(html, /Confirm teams are ready before starting the first round\./);
   assert.match(html, /Standings Snapshot/);
-  assert.match(html, /Score Override/);
-  assert.match(html, /Reset Game/);
+  assert.doesNotMatch(html, /Overrides/);
+  assert.doesNotMatch(html, /Score Override/);
+  assert.doesNotMatch(html, /Reset Game/);
   assert.doesNotMatch(html, /Undo Last Score/);
-  assert.match(html, /Apply/);
   assert.doesNotMatch(html, /Phase Status/);
   assert.doesNotMatch(html, /Round Context/);
   assert.doesNotMatch(html, /Next Action/);
@@ -233,9 +291,11 @@ test("renders standings snapshot in compact ROUND_INTRO view", () => {
   assert.match(html, /Frank&#x27;s/);
   assert.match(html, /Mini-game/);
   assert.match(html, /TRIVIA/);
-  assert.match(html, /Turn Order/);
-  assert.match(html, /Move Up/);
-  assert.match(html, /Move Down/);
+  assert.match(html, /Overrides/);
+  assert.doesNotMatch(html, /Turn Order/);
+  assert.doesNotMatch(html, /Move Up/);
+  assert.doesNotMatch(html, /Move Down/);
+  assert.doesNotMatch(html, /Score Override/);
   assert.match(html, /Standings Snapshot/);
   assert.doesNotMatch(html, /Phase Status/);
   assert.doesNotMatch(html, /Round Context/);
@@ -287,7 +347,21 @@ test("shows redo action when scoring mutation history is available", () => {
     />
   );
 
-  assert.match(html, /Undo Last Score/);
+  assert.match(html, /Overrides/);
+  assert.match(html, /Needs Review/);
+});
+
+test("shows override badge when turn order differs from default team order", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
+        turnOrderTeamIds: ["team-beta", "team-alpha"]
+      })}
+    />
+  );
+
+  assert.match(html, /Overrides/);
+  assert.match(html, /Needs Review/);
 });
 
 test("keeps MINIGAME_INTRO on streamlined host view", () => {

@@ -18,6 +18,7 @@ export type RoomTimerState = {
 export type MinigameHostView = {
   minigame: MinigameType;
   activeTurnTeamId: string | null;
+  attemptsRemaining: number;
   promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;
   currentPrompt: TriviaPrompt | null;
@@ -62,4 +63,5 @@ export type RoomState = {
   pendingMinigamePointsByTeamId: Record<string, number>;
   fatalError: RoomFatalError | null;
   canRedoScoringMutation: boolean;
+  canAdvancePhase: boolean;
 };

@@ -169,7 +169,8 @@ Defines rounds, sauces, scoring, timers, and scheduled mini-games.
 { "name": "House Party Pack", "rounds": \[ { "round": 1, "label": "Warm
 Up", "sauce": "Frank's", "pointsPerPlayer": 2, "minigame": "TRIVIA" }
 \], "minigameScoring": { "defaultMax": 15, "finalRoundMax": 20 },
-"timers": { "eatingSeconds": 120, "triviaSeconds": 30, "geoSeconds": 45,
+"minigameRules": { "trivia": { "questionsPerTurn": 1 } }, "timers": {
+"eatingSeconds": 120, "triviaSeconds": 30, "geoSeconds": 45,
 "drawingSeconds": 60 } }
 
 ------------------------------------------------------------------------

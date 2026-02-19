@@ -14,7 +14,8 @@ const clonePrompt = (prompt: TriviaPrompt): TriviaPrompt => {
 
 export const projectTriviaHostViewToRoomState = (
   state: RoomState,
-  hostView: TriviaHostView
+  hostView: TriviaHostView,
+  attemptsRemaining: number
 ): void => {
   state.activeTurnTeamId = hostView.activeTurnTeamId;
   state.triviaPromptCursor = hostView.promptCursor;
@@ -26,6 +27,7 @@ export const projectTriviaHostViewToRoomState = (
   state.minigameHostView = {
     minigame: "TRIVIA",
     activeTurnTeamId: hostView.activeTurnTeamId,
+    attemptsRemaining,
     promptCursor: hostView.promptCursor,
     pendingPointsByTeamId: {
       ...hostView.pendingPointsByTeamId

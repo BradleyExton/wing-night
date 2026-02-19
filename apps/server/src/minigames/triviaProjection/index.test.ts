@@ -32,7 +32,8 @@ const buildRoomState = (): RoomState => {
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
-    canRedoScoringMutation: false
+    canRedoScoringMutation: false,
+    canAdvancePhase: true
   };
 };
 
@@ -50,12 +51,13 @@ test("projectTriviaHostViewToRoomState applies projected trivia fields", () => {
     pendingPointsByTeamId: {
       "team-1": 5
     }
-  });
+  }, 2);
 
   assert.equal(roomState.activeTurnTeamId, "team-2");
   assert.equal(roomState.triviaPromptCursor, 3);
   assert.equal(roomState.currentTriviaPrompt?.answer, "Answer 1");
   assert.equal(roomState.pendingMinigamePointsByTeamId["team-1"], 5);
+  assert.equal(roomState.minigameHostView?.attemptsRemaining, 2);
   assert.equal(roomState.minigameHostView?.currentPrompt?.answer, "Answer 1");
   assert.equal(roomState.minigameDisplayView, null);
 });

@@ -85,7 +85,8 @@ const buildRoomState = (
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
-    canRedoScoringMutation: false
+    canRedoScoringMutation: false,
+    canAdvancePhase: true
   };
 
   return { ...snapshot, ...overrides };
@@ -110,7 +111,6 @@ const buildProps = (
 
   return {
     hostMode,
-    phase,
     roomState,
     players: playersFixture,
     teams: teamsFixture,
@@ -126,7 +126,6 @@ const buildProps = (
     participationDisabled: false,
     triviaAttemptDisabled: false,
     sortedStandings: teamsFixture,
-    orderedTeams: teamsFixture,
     timer: null,
     onNextTeamNameChange: () => undefined,
     onCreateTeamSubmit: () => undefined,
@@ -136,7 +135,6 @@ const buildProps = (
     onResumeTimer: () => undefined,
     onExtendTimer: () => undefined,
     onRecordTriviaAttempt: () => undefined,
-    onReorderTurnOrder: () => undefined,
     ...overrides
   };
 };
@@ -194,6 +192,7 @@ test("renders minigame surface in minigame play mode", () => {
   const triviaHostView: MinigameHostView = {
     minigame: "TRIVIA",
     activeTurnTeamId: "team-alpha",
+    attemptsRemaining: 1,
     promptCursor: 0,
     pendingPointsByTeamId: {
       "team-alpha": 0
@@ -224,6 +223,6 @@ test("renders compact round intro surfaces", () => {
     <HostPhaseBody {...buildProps("compact", Phase.ROUND_INTRO)} />
   );
 
-  assert.match(html, /Turn Order/);
   assert.match(html, /Standings Snapshot/);
+  assert.doesNotMatch(html, /Turn Order/);
 });

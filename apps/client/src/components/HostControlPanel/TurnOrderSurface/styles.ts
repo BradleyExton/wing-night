@@ -4,6 +4,8 @@ export const sectionHeading = "text-xl font-semibold text-text";
 
 export const sectionDescription = "mt-1 text-sm text-text/80";
 
+export const lockedLabel = "mt-2 text-xs font-semibold uppercase tracking-wide text-gold";
+
 export const emptyLabel = "mt-3 text-sm text-muted";
 
 export const list = "mt-4 space-y-2";

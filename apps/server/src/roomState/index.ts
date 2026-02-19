@@ -60,6 +60,21 @@ const resolveMinigamePointsMax = (state: RoomState): number | null => {
   return state.gameConfig.minigameScoring.defaultMax;
 };
 
+const resolveTriviaQuestionsPerTurn = (state: RoomState): number => {
+  const configuredQuestionsPerTurn =
+    state.gameConfig?.minigameRules?.trivia?.questionsPerTurn;
+
+  if (
+    typeof configuredQuestionsPerTurn !== "number" ||
+    !Number.isInteger(configuredQuestionsPerTurn) ||
+    configuredQuestionsPerTurn <= 0
+  ) {
+    return 1;
+  }
+
+  return configuredQuestionsPerTurn;
+};
+
 const resolveMinigameTimerSeconds = (state: RoomState): number | null => {
   if (!state.gameConfig || !state.currentRoundConfig) {
     return null;
@@ -118,7 +133,8 @@ export const createInitialRoomState = (): RoomState => {
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
-    canRedoScoringMutation: false
+    canRedoScoringMutation: false,
+    canAdvancePhase: false
   };
 };
 
@@ -156,8 +172,10 @@ const captureTeamTotalScoreById = (
   return teamTotalScoreById;
 };
 
-const captureScoringMutationUndoState = (state: RoomState): void => {
-  scoringMutationUndoSnapshot = {
+const createScoringMutationUndoSnapshot = (
+  state: RoomState
+): ScoringMutationUndoSnapshot => {
+  return {
     round: state.currentRound,
     teamTotalScoreById: captureTeamTotalScoreById(state),
     wingParticipationByPlayerId: structuredClone(state.wingParticipationByPlayerId),
@@ -165,6 +183,10 @@ const captureScoringMutationUndoState = (state: RoomState): void => {
     pendingMinigamePointsByTeamId: structuredClone(state.pendingMinigamePointsByTeamId),
     triviaRuntimeSnapshot: captureTriviaRuntimeStateSnapshot()
   };
+};
+
+const captureScoringMutationUndoState = (state: RoomState): void => {
+  scoringMutationUndoSnapshot = createScoringMutationUndoSnapshot(state);
 };
 
 const restoreScoringMutationUndoState = (
@@ -192,7 +214,10 @@ const restoreScoringMutationUndoState = (
 };
 
 export const getRoomStateSnapshot = (): RoomState => {
-  return structuredClone(roomState);
+  const snapshot = structuredClone(roomState);
+  snapshot.canAdvancePhase = resolveCanAdvancePhase(roomState);
+
+  return snapshot;
 };
 
 export const resetRoomState = (): RoomState => {
@@ -287,7 +312,11 @@ const initializeActiveMinigameTurnState = (state: RoomState): void => {
     return;
   }
 
-  initializeTriviaRuntimeState(state, minigamePointsMax);
+  initializeTriviaRuntimeState(
+    state,
+    minigamePointsMax,
+    resolveTriviaQuestionsPerTurn(state)
+  );
 };
 
 const recomputePendingWingPoints = (state: RoomState): void => {
@@ -703,8 +732,20 @@ export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
     return getRoomStateSnapshot();
   }
 
-  captureScoringMutationUndoState(roomState);
-  reduceTriviaAttempt(roomState, isCorrect, minigamePointsMax);
+  const questionsPerTurn = resolveTriviaQuestionsPerTurn(roomState);
+  const nextUndoSnapshot = createScoringMutationUndoSnapshot(roomState);
+  const didRecordAttempt = reduceTriviaAttempt(
+    roomState,
+    isCorrect,
+    minigamePointsMax,
+    questionsPerTurn
+  );
+
+  if (!didRecordAttempt) {
+    return getRoomStateSnapshot();
+  }
+
+  scoringMutationUndoSnapshot = nextUndoSnapshot;
   roomState.canRedoScoringMutation = true;
 
   return getRoomStateSnapshot();
@@ -981,6 +1022,12 @@ export const advanceRoomStatePhase = (): RoomState => {
       eatingSeconds === null
         ? null
         : createRunningTimer(Phase.EATING, eatingSeconds);
+  } else if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.EATING) {
+    const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
+    roomState.timer =
+      eatingSeconds === null
+        ? null
+        : createRunningTimer(Phase.EATING, eatingSeconds);
   } else if (nextPhase === Phase.MINIGAME_PLAY) {
     const minigameSeconds = resolveMinigameTimerSeconds(roomState);
     roomState.timer =
@@ -998,4 +1045,20 @@ export const advanceRoomStatePhase = (): RoomState => {
   logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);
 
   return getRoomStateSnapshot();
+};
+
+const resolveCanAdvancePhase = (state: RoomState): boolean => {
+  if (isRoomInFatalState(state)) {
+    return false;
+  }
+
+  if (state.phase === Phase.FINAL_RESULTS) {
+    return false;
+  }
+
+  if (state.phase === Phase.SETUP) {
+    return isSetupReadyToStart(state);
+  }
+
+  return true;
 };

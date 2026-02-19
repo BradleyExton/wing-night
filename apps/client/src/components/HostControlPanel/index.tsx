@@ -1,16 +1,20 @@
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
-import { Phase, type RoomState } from "@wingnight/shared";
+import { useEffect, useId, useMemo, useState } from "react";
+import { type RoomState } from "@wingnight/shared";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { HostActionBarSurface } from "./HostActionBarSurface";
 import { HostPanelHeader } from "./HostPanelHeader";
+import { OverrideActionsSurface } from "./OverrideActionsSurface";
+import { OverrideDock } from "./OverrideDock";
 import { hostControlPanelCopy } from "./copy";
 import { HostPhaseBody } from "./HostPhaseBody";
 import { resolveHostRenderMode } from "./resolveHostRenderMode";
 import { resolveOrderedTeams, resolveSortedStandings } from "./roomTeamSelectors";
 import { ScoreOverrideSurface } from "./ScoreOverrideSurface";
+import { selectOverrideDockContext } from "./selectOverrideDockContext";
 import { selectHostTeamMaps } from "./selectHostTeamMaps";
+import { TurnOrderSurface } from "./TurnOrderSurface";
 import * as styles from "./styles";
 
 type HostControlPanelProps = {
@@ -49,6 +53,8 @@ export const HostControlPanel = ({
   onRedoLastMutation
 }: HostControlPanelProps): JSX.Element => {
   const [nextTeamName, setNextTeamName] = useState("");
+  const [isOverrideDockOpen, setIsOverrideDockOpen] = useState(false);
+  const overrideDockPanelId = useId();
 
   const { assignedTeamByPlayerId, teamNameByTeamId } = useMemo(() => {
     return selectHostTeamMaps(roomState);
@@ -57,7 +63,6 @@ export const HostControlPanel = ({
   const players = roomState?.players ?? [];
   const teams = roomState?.teams ?? EMPTY_TEAMS;
   const phase = roomState?.phase ?? null;
-  const canRedoScoringMutation = roomState?.canRedoScoringMutation === true;
   const fatalError = roomState?.fatalError ?? null;
   const hostMode = resolveHostRenderMode(phase);
   const minigameHostView = roomState?.minigameHostView ?? null;
@@ -83,18 +88,25 @@ export const HostControlPanel = ({
     onRecordTriviaAttempt === undefined ||
     !isTriviaMinigamePlayPhase ||
     activeTurnTeamId === null ||
-    currentTriviaPrompt === null;
+    currentTriviaPrompt === null ||
+    (minigameHostView?.attemptsRemaining ?? 0) <= 0;
+  const nextPhaseDisabled =
+    onNextPhase === undefined || roomState?.canAdvancePhase !== true;
 
   const sortedStandings = useMemo(() => resolveSortedStandings(teams), [teams]);
   const orderedTeams = useMemo(() => resolveOrderedTeams(roomState), [roomState]);
+  const overrideDockContext = useMemo(() => {
+    return selectOverrideDockContext(roomState);
+  }, [roomState]);
 
   const phaseAdvanceHint =
     phase !== null ? hostControlPanelCopy.phaseAdvanceHint(phase) : null;
-  const showSkipTurnBoundaryAction =
-    phase === Phase.EATING ||
-    phase === Phase.MINIGAME_INTRO ||
-    phase === Phase.MINIGAME_PLAY;
-  const showScoreOverrideSurface = phase !== null && phase !== Phase.SETUP;
+
+  useEffect(() => {
+    if (!overrideDockContext.isVisible && isOverrideDockOpen) {
+      setIsOverrideDockOpen(false);
+    }
+  }, [isOverrideDockOpen, overrideDockContext.isVisible]);
 
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -148,12 +160,7 @@ export const HostControlPanel = ({
 
         <HostActionBarSurface
           onNextPhase={onNextPhase}
-          onSkipTurnBoundary={onSkipTurnBoundary}
-          showSkipTurnBoundaryAction={showSkipTurnBoundaryAction}
-          onRedoLastMutation={onRedoLastMutation}
-          showRedoLastMutationAction={canRedoScoringMutation}
-          onResetGame={onResetGame}
-          showResetGameAction={phase !== null && phase !== Phase.SETUP}
+          nextPhaseDisabled={nextPhaseDisabled}
         />
 
         {roomState && phaseAdvanceHint !== null && hostMode !== "setup" && (
@@ -162,7 +169,6 @@ export const HostControlPanel = ({
 
         <HostPhaseBody
           hostMode={hostMode}
-          phase={phase}
           roomState={roomState}
           players={players}
           teams={teams}
@@ -178,7 +184,6 @@ export const HostControlPanel = ({
           participationDisabled={participationDisabled}
           triviaAttemptDisabled={triviaAttemptDisabled}
           sortedStandings={sortedStandings}
-          orderedTeams={orderedTeams}
           timer={roomState?.timer ?? null}
           onNextTeamNameChange={setNextTeamName}
           onCreateTeamSubmit={handleCreateTeamSubmit}
@@ -188,13 +193,39 @@ export const HostControlPanel = ({
           onResumeTimer={onResumeTimer}
           onExtendTimer={onExtendTimer}
           onRecordTriviaAttempt={handleRecordTriviaAttempt}
-          onReorderTurnOrder={onReorderTurnOrder}
         />
-
-        {showScoreOverrideSurface && (
-          <ScoreOverrideSurface teams={teams} onAdjustTeamScore={onAdjustTeamScore} />
-        )}
       </div>
+
+      {overrideDockContext.isVisible && (
+        <OverrideDock
+          isOpen={isOverrideDockOpen}
+          showBadge={overrideDockContext.showBadge}
+          panelId={overrideDockPanelId}
+          onOpen={(): void => {
+            setIsOverrideDockOpen(true);
+          }}
+          onClose={(): void => {
+            setIsOverrideDockOpen(false);
+          }}
+        >
+          <div className={styles.overridePanelContent}>
+            <OverrideActionsSurface
+              onSkipTurnBoundary={onSkipTurnBoundary}
+              showSkipTurnBoundaryAction={overrideDockContext.showSkipTurnBoundaryAction}
+              onRedoLastMutation={onRedoLastMutation}
+              showRedoLastMutationAction={overrideDockContext.showRedoLastMutationAction}
+              onResetGame={onResetGame}
+              showResetGameAction={overrideDockContext.showResetGameAction}
+            />
+            <TurnOrderSurface
+              orderedTeams={orderedTeams}
+              isEditable={overrideDockContext.isTurnOrderEditable}
+              onReorderTurnOrder={onReorderTurnOrder}
+            />
+            <ScoreOverrideSurface teams={teams} onAdjustTeamScore={onAdjustTeamScore} />
+          </div>
+        </OverrideDock>
+      )}
     </main>
   );
 };

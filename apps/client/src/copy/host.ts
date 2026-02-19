@@ -66,6 +66,29 @@ export const hostCopy = {
   resetGameCancelButtonLabel: "Cancel",
   resetGameArmedMessage:
     "Confirm reset to return to setup. Teams and scores will be cleared.",
+  overridesTriggerButtonLabel: "Overrides",
+  overridesTriggerNeedsAttentionLabel: "Needs Review",
+  overridesTriggerOpenAriaLabel: "Open overrides panel",
+  overridesTriggerCloseAriaLabel: "Close overrides panel",
+  overridesPanelTitle: "Overrides",
+  overridesPanelDescription:
+    "Use manual controls for turn order, scoring, and escape-hatch actions.",
+  overridesCloseButtonLabel: "Close",
+  overridesScrimDismissAriaLabel: "Close overrides panel",
+  overridesActionsSectionTitle: "Escape Hatches",
+  overridesActionsDescription:
+    "Skip turn, undo last score, and reset game require confirmation.",
+  overrideConfirmButtonLabel: "Confirm",
+  overrideCancelButtonLabel: "Cancel",
+  overrideSkipTurnConfirmTitle: "Confirm Skip Turn",
+  overrideSkipTurnConfirmDescription:
+    "Skip turn advances the active team boundary immediately.",
+  overrideRedoMutationConfirmTitle: "Confirm Undo Last Score",
+  overrideRedoMutationConfirmDescription:
+    "Undo restores scoring fields to the previous scoring snapshot.",
+  overrideResetGameConfirmTitle: "Confirm Reset Game",
+  overrideResetGameConfirmDescription:
+    "Reset returns the game to setup and clears teams and scores.",
   scoreOverrideSectionTitle: "Score Override",
   scoreOverrideDescription:
     "Apply integer score deltas when manual correction is needed.",
@@ -131,6 +154,9 @@ export const hostCopy = {
   turnOrderSectionTitle: "Turn Order",
   turnOrderDescription:
     "Adjust team order before the round begins. This order carries into later rounds until changed.",
+  turnOrderLockedDescription:
+    "Turn order is locked outside Round Intro. Open during Round Intro to edit.",
+  turnOrderLockedStatusLabel: "Locked until Round Intro",
   turnOrderEmptyLabel: "Turn order will appear when teams are available.",
   turnOrderPositionLabel: (index: number, total: number): string =>
     `Team ${index + 1} of ${total}`,
