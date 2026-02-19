@@ -227,10 +227,16 @@ Wing points are accumulated in pending round totals but NOT applied yet.
 ---
 
 ### MINIGAME_INTRO
+Host:
+- Route switches to a full-screen mini-game takeover shell (`100dvh`, no vertical overflow).
+- Host shell renders plugin intro context from `minigameHostView`.
+- Shell-level escape hatches remain reachable via override overlay controls.
+
 Display:
-- Mini-game title
-- Short instructions
-- Active team (team name only; no turn-progress label)
+- Route switches to a full-screen mini-game takeover shell (`100dvh`, no vertical overflow).
+- Display plugin intro renders from `minigameDisplayView` only.
+- Active team context comes from snapshot active-team fields (`activeRoundTeamId`, `activeTurnTeamId`).
+- Unsupported mini-games render an explicit unsupported fallback surface.
 
 ---
 
@@ -241,6 +247,8 @@ Display:
 - Mini-game scoring mutations are accepted for the active team only
 - PASS_AND_PLAY hides host controls
 - Host unlock via press-and-hold
+- Host route stays in full-screen takeover shell and renders plugin gameplay from `minigameHostView`.
+- Display route stays in full-screen takeover shell and renders plugin gameplay from `minigameDisplayView`.
 - Server snapshot carries `minigameHostView` and `minigameDisplayView` for this phase.
 - Host and display surfaces show active team context (team name only) based on snapshot active-team fields (`activeRoundTeamId`, `activeTurnTeamId`).
 - Display surface remains answer-safe (no secret answer payloads).
@@ -335,7 +343,13 @@ Testing Expectations:
   - `completedRoundTurnTeamIds`
 - RoomState includes projected mini-game host/display view models.
 - WebSockets (Socket.IO) for realtime sync
-- Full state snapshot on reconnect
+- Role-scoped state snapshots on connect/reconnect:
+  - `server:stateSnapshot` emits `RoleScopedStateSnapshotEnvelope` with `clientRole` and role-safe `roomState`.
+  - Display-scoped snapshots never include host-only answer/secret fields.
+  - If transport recovery is unavailable (`socket.recovered === false`), client immediately requests a full role-scoped snapshot.
+- Generic mini-game mutation envelope:
+  - Host sends `minigame:action` payloads with `hostSecret`, `minigameId`, `minigameApiVersion`, `capabilityFlags`, `actionType`, and `actionPayload`.
+  - Server validates host authorization, active mini-game match, and contract compatibility before dispatch.
 - In-memory state only
 - LAN-first operation (no internet required)
 
