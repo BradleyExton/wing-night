@@ -9,6 +9,10 @@ const teamNameByTeamId = new Map<string, string>([["team-alpha", "Team Alpha"]])
 
 const triviaHostViewFixture: MinigameHostView = {
   minigame: "TRIVIA",
+  minigameApiVersion: 1,
+  capabilityFlags: ["recordAttempt"],
+  compatibilityStatus: "COMPATIBLE",
+  compatibilityMessage: null,
   activeTurnTeamId: "team-alpha",
   attemptsRemaining: 1,
   promptCursor: 1,
@@ -37,6 +41,27 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
   assert.match(html, /Scoville/);
   assert.match(html, /Correct/);
   assert.match(html, /Incorrect/);
+});
+
+test("renders compatibility mismatch fallback messaging for host view", () => {
+  const html = renderToStaticMarkup(
+    <MinigameSurface
+      minigameHostView={{
+        ...triviaHostViewFixture,
+        compatibilityStatus: "MISMATCH",
+        compatibilityMessage: "Host and server minigame contracts are out of sync."
+      }}
+      teamNameByTeamId={teamNameByTeamId}
+      triviaAttemptDisabled={false}
+      onRecordTriviaAttempt={(): void => {
+        return;
+      }}
+    />
+  );
+
+  assert.match(html, /Host and server minigame contracts are out of sync\./);
+  assert.doesNotMatch(html, /Correct/);
+  assert.doesNotMatch(html, /Incorrect/);
 });
 
 test("renders waiting fallback when host view is unavailable", () => {

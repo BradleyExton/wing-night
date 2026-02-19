@@ -16,8 +16,41 @@ export type RoomTimerState = {
   remainingMs: number;
 };
 
+export const MINIGAME_ACTION_TYPES = {
+  TRIVIA_RECORD_ATTEMPT: "recordAttempt"
+} as const;
+
+export type MinigameContractCompatibilityStatus = "COMPATIBLE" | "MISMATCH";
+
+export type MinigameContractMetadata = {
+  minigameApiVersion: number;
+  capabilityFlags: string[];
+};
+
+export const MINIGAME_CONTRACT_METADATA_BY_ID: Record<
+  MinigameType,
+  MinigameContractMetadata
+> = {
+  TRIVIA: {
+    minigameApiVersion: 1,
+    capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT]
+  },
+  GEO: {
+    minigameApiVersion: 1,
+    capabilityFlags: []
+  },
+  DRAWING: {
+    minigameApiVersion: 1,
+    capabilityFlags: []
+  }
+};
+
 export type MinigameHostView = {
   minigame: MinigameType;
+  minigameApiVersion: number;
+  capabilityFlags: string[];
+  compatibilityStatus: MinigameContractCompatibilityStatus;
+  compatibilityMessage: string | null;
   activeTurnTeamId: string | null;
   attemptsRemaining: number;
   promptCursor: number;
@@ -27,6 +60,8 @@ export type MinigameHostView = {
 
 export type MinigameDisplayView = {
   minigame: MinigameType;
+  minigameApiVersion: number;
+  capabilityFlags: string[];
   activeTurnTeamId: string | null;
   promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;

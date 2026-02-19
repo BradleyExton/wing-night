@@ -30,6 +30,21 @@ export const MinigameSurface = ({
   triviaAttemptDisabled,
   onRecordTriviaAttempt
 }: MinigameSurfaceProps): JSX.Element => {
+  if (
+    minigameHostView?.compatibilityStatus === "MISMATCH" &&
+    minigameHostView.minigame === "TRIVIA"
+  ) {
+    return (
+      <section className={styles.card}>
+        <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>
+        <p className={styles.sectionDescription}>
+          {minigameHostView.compatibilityMessage ??
+            hostControlPanelCopy.minigameContractMismatchFallbackLabel}
+        </p>
+      </section>
+    );
+  }
+
   if (minigameHostView === null || minigameHostView.minigame !== "TRIVIA") {
     return (
       <section className={styles.card}>

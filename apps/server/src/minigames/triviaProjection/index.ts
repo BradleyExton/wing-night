@@ -2,7 +2,13 @@ import type {
   TriviaDisplayView,
   TriviaHostView
 } from "@wingnight/minigames-trivia";
-import type { RoomState, TriviaPrompt } from "@wingnight/shared";
+import {
+  MINIGAME_CONTRACT_METADATA_BY_ID,
+  type RoomState,
+  type TriviaPrompt
+} from "@wingnight/shared";
+
+const triviaContractMetadata = MINIGAME_CONTRACT_METADATA_BY_ID.TRIVIA;
 
 const clonePrompt = (prompt: TriviaPrompt): TriviaPrompt => {
   return {
@@ -26,6 +32,10 @@ export const projectTriviaHostViewToRoomState = (
   };
   state.minigameHostView = {
     minigame: "TRIVIA",
+    minigameApiVersion: triviaContractMetadata.minigameApiVersion,
+    capabilityFlags: [...triviaContractMetadata.capabilityFlags],
+    compatibilityStatus: "COMPATIBLE",
+    compatibilityMessage: null,
     activeTurnTeamId: hostView.activeTurnTeamId,
     attemptsRemaining,
     promptCursor: hostView.promptCursor,
@@ -43,6 +53,8 @@ export const projectTriviaDisplayViewToRoomState = (
 ): void => {
   state.minigameDisplayView = {
     minigame: "TRIVIA",
+    minigameApiVersion: triviaContractMetadata.minigameApiVersion,
+    capabilityFlags: [...triviaContractMetadata.capabilityFlags],
     activeTurnTeamId: displayView.activeTurnTeamId,
     promptCursor: displayView.promptCursor,
     pendingPointsByTeamId: {

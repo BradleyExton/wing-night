@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  MINIGAME_ACTION_TYPES,
   Phase,
   TIMER_EXTEND_MAX_SECONDS,
   type GameConfigFile,
+  type MinigameActionEnvelopePayload,
   type TriviaPrompt
 } from "@wingnight/shared";
 
@@ -14,7 +16,9 @@ import {
   assignPlayerToTeam,
   createTeam,
   createInitialRoomState,
+  dispatchMinigameAction,
   extendRoomTimer,
+  getActiveMinigameContract,
   getRoomStateSnapshot,
   pauseRoomTimer,
   recordTriviaAttempt,
@@ -26,6 +30,7 @@ import {
   setPendingMinigamePoints,
   setRoomStateFatalError,
   setRoomStateGameConfig,
+  setMinigameCompatibilityMismatch,
   setRoomStateTriviaPrompts,
   setWingParticipation,
   setRoomStatePlayers,
@@ -1018,9 +1023,30 @@ test("initializes trivia turn state through the minigame module boundary", () =>
   assert.deepEqual(snapshot.turnOrderTeamIds, ["team-1", "team-2"]);
   assert.equal(snapshot.activeTurnTeamId, "team-1");
   assert.equal(snapshot.minigameHostView?.attemptsRemaining, 1);
+  assert.equal(snapshot.minigameHostView?.minigameApiVersion, 1);
+  assert.deepEqual(snapshot.minigameHostView?.capabilityFlags, ["recordAttempt"]);
+  assert.equal(snapshot.minigameHostView?.compatibilityStatus, "COMPATIBLE");
+  assert.equal(snapshot.minigameHostView?.compatibilityMessage, null);
+  assert.equal(snapshot.minigameDisplayView?.minigameApiVersion, 1);
+  assert.deepEqual(snapshot.minigameDisplayView?.capabilityFlags, ["recordAttempt"]);
   assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-1");
   assert.equal(snapshot.triviaPromptCursor, 0);
   assert.deepEqual(snapshot.pendingMinigamePointsByTeamId, {});
+});
+
+test("getActiveMinigameContract resolves active minigame metadata during MINIGAME_PLAY", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+
+  const activeMinigameContract = getActiveMinigameContract();
+
+  assert.deepEqual(activeMinigameContract, {
+    minigameId: "TRIVIA",
+    minigameApiVersion: 1,
+    capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT]
+  });
 });
 
 test("does not initialize trivia projection for non-trivia minigame rounds", () => {
@@ -1074,6 +1100,53 @@ test("recordTriviaAttempt applies points for active round team and wraps prompts
   assert.equal(snapshot.minigameHostView?.attemptsRemaining, 1);
   assert.equal(snapshot.currentTriviaPrompt?.id, "prompt-1");
   assert.equal(snapshot.triviaPromptCursor, 0);
+});
+
+test("dispatchMinigameAction routes trivia action envelope through trivia reducer path", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+
+  const payload: MinigameActionEnvelopePayload = {
+    hostSecret: "valid-host-secret",
+    minigameId: "TRIVIA",
+    minigameApiVersion: 1,
+    capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT],
+    actionType: MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT,
+    actionPayload: {
+      isCorrect: true
+    }
+  };
+
+  dispatchMinigameAction(payload);
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 1);
+  assert.equal(snapshot.minigameHostView?.compatibilityStatus, "COMPATIBLE");
+  assert.equal(snapshot.minigameHostView?.compatibilityMessage, null);
+});
+
+test("setMinigameCompatibilityMismatch surfaces fallback messaging in host projection", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+
+  setMinigameCompatibilityMismatch("Minigame API version mismatch. Refresh host.");
+  const mismatchSnapshot = getRoomStateSnapshot();
+
+  assert.equal(mismatchSnapshot.minigameHostView?.compatibilityStatus, "MISMATCH");
+  assert.equal(
+    mismatchSnapshot.minigameHostView?.compatibilityMessage,
+    "Minigame API version mismatch. Refresh host."
+  );
+
+  recordTriviaAttempt(true);
+  const afterSuccessfulTriviaAttempt = getRoomStateSnapshot();
+
+  assert.equal(afterSuccessfulTriviaAttempt.minigameHostView?.compatibilityStatus, "COMPATIBLE");
+  assert.equal(afterSuccessfulTriviaAttempt.minigameHostView?.compatibilityMessage, null);
 });
 
 test("recordTriviaAttempt defaults to one question per turn when minigameRules are not configured", () => {

@@ -1,7 +1,12 @@
 import {
+  MINIGAME_ACTION_TYPES,
+  MINIGAME_CONTRACT_METADATA_BY_ID,
   Phase,
   TIMER_EXTEND_MAX_SECONDS,
   type GameConfigFile,
+  type MinigameActionEnvelopePayload,
+  type MinigameContractCompatibilityStatus,
+  type MinigameType,
   type Player,
   type RoomFatalError,
   type RoomState,
@@ -28,6 +33,13 @@ import {
 import { getNextPhase } from "../utils/getNextPhase/index.js";
 
 const DEFAULT_TOTAL_ROUNDS = 3;
+const TRIVIA_RECORD_ATTEMPT_ACTION_TYPE = MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT;
+
+type ActiveMinigameContract = {
+  minigameId: MinigameType;
+  minigameApiVersion: number;
+  capabilityFlags: string[];
+};
 
 const isRoomInFatalState = (state: RoomState): boolean => {
   return state.fatalError !== null;
@@ -92,6 +104,18 @@ const resolveMinigameTimerSeconds = (state: RoomState): number | null => {
   }
 };
 
+const resolveMinigameContractMetadata = (
+  minigameId: MinigameType
+): ActiveMinigameContract => {
+  const metadata = MINIGAME_CONTRACT_METADATA_BY_ID[minigameId];
+
+  return {
+    minigameId,
+    minigameApiVersion: metadata.minigameApiVersion,
+    capabilityFlags: [...metadata.capabilityFlags]
+  };
+};
+
 const createRunningTimer = (
   phase: Phase,
   durationSeconds: number
@@ -150,6 +174,32 @@ type ScoringMutationUndoSnapshot = {
   triviaRuntimeSnapshot: TriviaRuntimeStateSnapshot;
 };
 let scoringMutationUndoSnapshot: ScoringMutationUndoSnapshot | null = null;
+let minigameCompatibilityStatus: MinigameContractCompatibilityStatus = "COMPATIBLE";
+let minigameCompatibilityMessage: string | null = null;
+
+const markMinigameContractCompatible = (): void => {
+  minigameCompatibilityStatus = "COMPATIBLE";
+  minigameCompatibilityMessage = null;
+};
+
+const markMinigameContractMismatch = (message: string): void => {
+  const normalizedMessage =
+    message.trim().length > 0
+      ? message.trim()
+      : "Minigame contract mismatch detected. Refresh host and try again.";
+
+  minigameCompatibilityStatus = "MISMATCH";
+  minigameCompatibilityMessage = normalizedMessage;
+};
+
+const applyMinigameCompatibilityToHostView = (state: RoomState): void => {
+  if (state.minigameHostView === null) {
+    return;
+  }
+
+  state.minigameHostView.compatibilityStatus = minigameCompatibilityStatus;
+  state.minigameHostView.compatibilityMessage = minigameCompatibilityMessage;
+};
 
 const overwriteRoomState = (nextState: RoomState): void => {
   Object.assign(roomState, nextState);
@@ -214,6 +264,7 @@ const restoreScoringMutationUndoState = (
 };
 
 export const getRoomStateSnapshot = (): RoomState => {
+  applyMinigameCompatibilityToHostView(roomState);
   const snapshot = structuredClone(roomState);
   snapshot.canAdvancePhase = resolveCanAdvancePhase(roomState);
 
@@ -223,6 +274,7 @@ export const getRoomStateSnapshot = (): RoomState => {
 export const resetRoomState = (): RoomState => {
   overwriteRoomState(createInitialRoomState());
   resetTriviaRuntimeState();
+  markMinigameContractCompatible();
   clearScoringMutationUndoState(roomState);
 
   return getRoomStateSnapshot();
@@ -247,6 +299,7 @@ export const resetGameToSetup = (): RoomState => {
 
   overwriteRoomState(nextState);
   resetTriviaRuntimeState();
+  markMinigameContractCompatible();
   clearScoringMutationUndoState(roomState);
 
   return getRoomStateSnapshot();
@@ -255,6 +308,7 @@ export const resetGameToSetup = (): RoomState => {
 export const setRoomStateFatalError = (message: string): RoomState => {
   overwriteRoomState(createInitialRoomState());
   resetTriviaRuntimeState();
+  markMinigameContractCompatible();
   clearScoringMutationUndoState(roomState);
 
   const normalizedMessage =
@@ -298,6 +352,7 @@ export const setRoomStateTriviaPrompts = (
 };
 
 const initializeActiveMinigameTurnState = (state: RoomState): void => {
+  markMinigameContractCompatible();
   const minigameType = state.currentRoundConfig?.minigame;
 
   if (minigameType !== "TRIVIA") {
@@ -732,6 +787,7 @@ export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
     return getRoomStateSnapshot();
   }
 
+  markMinigameContractCompatible();
   const questionsPerTurn = resolveTriviaQuestionsPerTurn(roomState);
   const nextUndoSnapshot = createScoringMutationUndoSnapshot(roomState);
   const didRecordAttempt = reduceTriviaAttempt(
@@ -749,6 +805,59 @@ export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
   roomState.canRedoScoringMutation = true;
 
   return getRoomStateSnapshot();
+};
+
+export const getActiveMinigameContract = (): ActiveMinigameContract | null => {
+  if (
+    roomState.phase !== Phase.MINIGAME_PLAY ||
+    roomState.currentRoundConfig === null
+  ) {
+    return null;
+  }
+
+  return resolveMinigameContractMetadata(roomState.currentRoundConfig.minigame);
+};
+
+export const setMinigameCompatibilityMismatch = (message: string): RoomState => {
+  markMinigameContractMismatch(message);
+
+  return getRoomStateSnapshot();
+};
+
+const isTriviaAttemptActionPayload = (
+  value: unknown
+): value is { isCorrect: boolean } => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  if (!("isCorrect" in value)) {
+    return false;
+  }
+
+  return typeof value.isCorrect === "boolean";
+};
+
+export const dispatchMinigameAction = (
+  payload: MinigameActionEnvelopePayload
+): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  if (!isTriviaMinigamePlayState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  if (
+    payload.minigameId !== "TRIVIA" ||
+    payload.actionType !== TRIVIA_RECORD_ATTEMPT_ACTION_TYPE ||
+    !isTriviaAttemptActionPayload(payload.actionPayload)
+  ) {
+    return getRoomStateSnapshot();
+  }
+
+  return recordTriviaAttempt(payload.actionPayload.isCorrect);
 };
 
 export const redoLastScoringMutation = (): RoomState => {
@@ -897,6 +1006,7 @@ export const skipTurnBoundary = (): RoomState => {
 
   if (previousPhase === Phase.MINIGAME_PLAY) {
     clearTriviaRuntimeState(roomState);
+    markMinigameContractCompatible();
   }
 
   if (nextPhase === Phase.ROUND_RESULTS) {
@@ -1004,6 +1114,7 @@ export const advanceRoomStatePhase = (): RoomState => {
 
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase !== Phase.MINIGAME_PLAY) {
     clearTriviaRuntimeState(roomState);
+    markMinigameContractCompatible();
   }
 
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.ROUND_RESULTS) {

@@ -136,6 +136,8 @@ export const hostCopy = {
   minigameIntroDescription: (minigame: MinigameType): string =>
     `${minigame} is queued. Advance when players are ready to begin.`,
   minigameFallbackType: "TRIVIA" as MinigameType,
+  minigameContractMismatchFallbackLabel:
+    "Minigame contract mismatch detected. Refresh host and try again.",
   waitingStateLabel: "Waiting for room state...",
   triviaActiveTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,
   triviaQuestionLabel: "Question",

@@ -16,13 +16,15 @@ import {
   adjustTeamScore,
   assignPlayerToTeam,
   createTeam,
+  dispatchMinigameAction,
   extendRoomTimer,
+  getActiveMinigameContract,
   getRoomStateSnapshot,
   pauseRoomTimer,
-  recordTriviaAttempt,
   redoLastScoringMutation,
   reorderTurnOrder,
   resetGameToSetup,
+  setMinigameCompatibilityMismatch,
   skipTurnBoundary,
   resumeRoomTimer,
   setWingParticipation
@@ -93,6 +95,7 @@ export const attachSocketServer = (
     registerRoomStateHandlers(
       socket,
       () => createRoleScopedSnapshot(getRoomStateSnapshot(), socketClientRole),
+      getActiveMinigameContract,
       {
         onAuthorizedNextPhase: () => {
           broadcastRoleScopedSnapshot(advanceRoomStatePhase());
@@ -121,8 +124,11 @@ export const attachSocketServer = (
         onAuthorizedRedoLastMutation: () => {
           broadcastRoleScopedSnapshot(redoLastScoringMutation());
         },
-        onAuthorizedRecordTriviaAttempt: (isCorrect) => {
-          broadcastRoleScopedSnapshot(recordTriviaAttempt(isCorrect));
+        onAuthorizedDispatchMinigameAction: (payload) => {
+          broadcastRoleScopedSnapshot(dispatchMinigameAction(payload));
+        },
+        onMinigameActionRejectedForCompatibility: (message) => {
+          broadcastRoleScopedSnapshot(setMinigameCompatibilityMismatch(message));
         },
         onAuthorizedPauseTimer: () => {
           broadcastRoleScopedSnapshot(pauseRoomTimer());

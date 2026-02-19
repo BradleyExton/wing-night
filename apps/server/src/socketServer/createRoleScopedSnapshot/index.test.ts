@@ -34,6 +34,10 @@ const buildRoomState = (): RoomState => {
     triviaPromptCursor: 0,
     minigameHostView: {
       minigame: "TRIVIA",
+      minigameApiVersion: 1,
+      capabilityFlags: ["recordAttempt"],
+      compatibilityStatus: "COMPATIBLE",
+      compatibilityMessage: null,
       activeTurnTeamId: "team-1",
       attemptsRemaining: 1,
       promptCursor: 0,
@@ -46,6 +50,8 @@ const buildRoomState = (): RoomState => {
     },
     minigameDisplayView: {
       minigame: "TRIVIA",
+      minigameApiVersion: 1,
+      capabilityFlags: ["recordAttempt"],
       activeTurnTeamId: "team-1",
       promptCursor: 0,
       pendingPointsByTeamId: {},

@@ -191,6 +191,10 @@ test("renders no phase body in minigame intro mode", () => {
 test("renders minigame surface in minigame play mode", () => {
   const triviaHostView: MinigameHostView = {
     minigame: "TRIVIA",
+    minigameApiVersion: 1,
+    capabilityFlags: ["recordAttempt"],
+    compatibilityStatus: "COMPATIBLE",
+    compatibilityMessage: null,
     activeTurnTeamId: "team-alpha",
     attemptsRemaining: 1,
     promptCursor: 0,

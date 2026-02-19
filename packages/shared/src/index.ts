@@ -4,6 +4,8 @@ export type { Team } from "./team/index.js";
 export type {
   DisplayRoomStateSnapshot,
   HostRoomStateSnapshot,
+  MinigameContractCompatibilityStatus,
+  MinigameContractMetadata,
   MinigameDisplayView,
   MinigameHostView,
   RoleScopedSnapshotByRole,
@@ -11,6 +13,10 @@ export type {
   RoomFatalError,
   RoomState,
   RoomTimerState
+} from "./roomState/index.js";
+export {
+  MINIGAME_ACTION_TYPES,
+  MINIGAME_CONTRACT_METADATA_BY_ID
 } from "./roomState/index.js";
 export {
   isGameConfigFile
@@ -52,7 +58,7 @@ export type {
   ClientToServerEvents,
   GameReorderTurnOrderPayload,
   HostSecretPayload,
-  MinigameRecordTriviaAttemptPayload,
+  MinigameActionEnvelopePayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   TimerExtendPayload,

@@ -207,6 +207,10 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
       roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
         minigameHostView: {
           minigame: "TRIVIA",
+          minigameApiVersion: 1,
+          capabilityFlags: ["recordAttempt"],
+          compatibilityStatus: "COMPATIBLE",
+          compatibilityMessage: null,
           activeTurnTeamId: "team-alpha",
           attemptsRemaining: 1,
           promptCursor: 0,
@@ -240,6 +244,10 @@ test("disables trivia attempt controls when attemptsRemaining is exhausted", () 
       roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
         minigameHostView: {
           minigame: "TRIVIA",
+          minigameApiVersion: 1,
+          capabilityFlags: ["recordAttempt"],
+          compatibilityStatus: "COMPATIBLE",
+          compatibilityMessage: null,
           activeTurnTeamId: "team-alpha",
           attemptsRemaining: 0,
           promptCursor: 0,

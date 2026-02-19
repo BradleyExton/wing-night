@@ -87,6 +87,8 @@ test("renders trivia question without answer leakage", () => {
         activeTurnTeamId: "team-1",
         minigameDisplayView: {
           minigame: "TRIVIA",
+          minigameApiVersion: 1,
+          capabilityFlags: ["recordAttempt"],
           activeTurnTeamId: "team-1",
           promptCursor: 0,
           pendingPointsByTeamId: {},
