@@ -37,6 +37,9 @@ export const wireRoomStateRehydration = <TRole extends SocketClientRole>(
   };
 
   const handleConnect = (): void => {
+    // Connection-state recovery is transport-dependent and may be unavailable in
+    // some deployment topologies. When recovery is not available, request a full
+    // snapshot so takeover shells can rehydrate from authoritative server state.
     if (socket.recovered === false) {
       requestLatestState();
     }

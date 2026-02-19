@@ -120,7 +120,7 @@ const displaySnapshotFixture: DisplayRoomStateSnapshot = {
   canAdvancePhase: hostSnapshotFixture.canAdvancePhase
 };
 
-test("requests latest state immediately when socket is connected and recovered is false", () => {
+test("takeover rehydrate requests full snapshot immediately when connected and unrecovered", () => {
   const mockSocket = new MockRoomStateSocket();
   mockSocket.connected = true;
   mockSocket.recovered = false;
@@ -136,7 +136,7 @@ test("requests latest state immediately when socket is connected and recovered i
   assert.equal(mockSocket.requestedStateEvents, 1);
 });
 
-test("requests state immediately when socket is connected with recovered transport", () => {
+test("takeover rehydrate requests snapshot immediately when connected with recovered transport", () => {
   const mockSocket = new MockRoomStateSocket();
   mockSocket.connected = true;
   mockSocket.recovered = true;
@@ -152,7 +152,7 @@ test("requests state immediately when socket is connected with recovered transpo
   assert.equal(mockSocket.requestedStateEvents, 1);
 });
 
-test("requests state on connect event when transport recovery is unavailable", () => {
+test("takeover rehydrate requests snapshot on connect when recovery is unavailable", () => {
   const mockSocket = new MockRoomStateSocket();
   mockSocket.recovered = false;
 
@@ -167,6 +167,23 @@ test("requests state on connect event when transport recovery is unavailable", (
   mockSocket.triggerConnect();
 
   assert.equal(mockSocket.requestedStateEvents, 1);
+});
+
+test("takeover rehydrate skips connect fallback request when recovery is available", () => {
+  const mockSocket = new MockRoomStateSocket();
+  mockSocket.recovered = true;
+
+  wireRoomStateRehydration(
+    mockSocket as unknown as RoomStateSocket,
+    CLIENT_ROLES.DISPLAY,
+    () => {
+      // No-op callback for this test.
+    }
+  );
+
+  mockSocket.triggerConnect();
+
+  assert.equal(mockSocket.requestedStateEvents, 0);
 });
 
 test("forwards only matching role snapshots to callback", () => {
