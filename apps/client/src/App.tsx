@@ -1,4 +1,8 @@
-import { type RoomState } from "@wingnight/shared";
+import {
+  CLIENT_ROLES,
+  type DisplayRoomStateSnapshot,
+  type HostRoomStateSnapshot
+} from "@wingnight/shared";
 import { useEffect, useMemo, useState } from "react";
 
 import { DisplayBoard } from "./components/DisplayBoard";
@@ -12,7 +16,9 @@ import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 
 export const App = (): JSX.Element => {
-  const [roomState, setRoomState] = useState<RoomState | null>(null);
+  const [roomState, setRoomState] = useState<
+    HostRoomStateSnapshot | DisplayRoomStateSnapshot | null
+  >(null);
   const route = resolveClientRoute(window.location.pathname);
 
   const hostControlPanelHandlers = useMemo(() => {
@@ -20,8 +26,30 @@ export const App = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    return wireRoomStateRehydration(roomSocket, setRoomState);
-  }, []);
+    setRoomState(null);
+
+    if (route === "HOST") {
+      return wireRoomStateRehydration(
+        roomSocket,
+        CLIENT_ROLES.HOST,
+        (snapshot) => {
+          setRoomState(snapshot);
+        }
+      );
+    }
+
+    if (route === "DISPLAY") {
+      return wireRoomStateRehydration(
+        roomSocket,
+        CLIENT_ROLES.DISPLAY,
+        (snapshot) => {
+          setRoomState(snapshot);
+        }
+      );
+    }
+
+    return;
+  }, [route]);
 
   useEffect(() => {
     if (route !== "HOST") {
@@ -32,11 +60,16 @@ export const App = (): JSX.Element => {
   }, [route]);
 
   if (route === "HOST") {
-    return <HostControlPanel roomState={roomState} {...hostControlPanelHandlers} />;
+    return (
+      <HostControlPanel
+        roomState={roomState as HostRoomStateSnapshot | null}
+        {...hostControlPanelHandlers}
+      />
+    );
   }
 
   if (route === "DISPLAY") {
-    return <DisplayBoard roomState={roomState} />;
+    return <DisplayBoard roomState={roomState as DisplayRoomStateSnapshot | null} />;
   }
 
   return <RouteNotFound />;

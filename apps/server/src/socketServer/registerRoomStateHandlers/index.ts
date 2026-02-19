@@ -9,15 +9,17 @@ import type {
   MinigameRecordTriviaAttemptPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
-  RoomState,
   TimerExtendPayload,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload
 } from "@wingnight/shared";
 
-type RoomStateSocket = {
+type RoomStateSocket<TSnapshot> = {
   emit: {
-    (event: typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, roomState: RoomState): void;
+    (
+      event: typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT,
+      roomState: TSnapshot
+    ): void;
     (event: typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, payload: HostSecretPayload): void;
     (event: typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID): void;
   };
@@ -184,9 +186,9 @@ const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload =
   );
 };
 
-export const registerRoomStateHandlers = (
-  socket: RoomStateSocket,
-  getSnapshot: () => RoomState,
+export const registerRoomStateHandlers = <TSnapshot>(
+  socket: RoomStateSocket<TSnapshot>,
+  getSnapshot: () => TSnapshot,
   mutationHandlers: AuthorizedSetupMutationHandlers,
   canClaimControl: boolean,
   hostAuth: HostAuth

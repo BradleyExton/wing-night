@@ -1,5 +1,5 @@
 import type { Server as HttpServer } from "node:http";
-import { Server } from "socket.io";
+import { Server, type Socket } from "socket.io";
 import {
   CLIENT_ROLES,
   SERVER_TO_CLIENT_EVENTS,
@@ -28,6 +28,7 @@ import {
   setWingParticipation
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
+import { createRoleScopedSnapshot } from "./createRoleScopedSnapshot/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
 export const attachSocketServer = (
@@ -69,52 +70,68 @@ export const attachSocketServer = (
 
   socketServer.on("connection", (socket) => {
     const socketClientRole = resolveSocketClientRole(socket.handshake.auth);
-    const broadcastAfter = (runMutation: () => ReturnType<typeof getRoomStateSnapshot>): void => {
-      socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, runMutation());
+
+    const emitRoleScopedSnapshot = (
+      targetSocket: Socket<IncomingSocketEvents, OutgoingSocketEvents>,
+      roomStateSnapshot: ReturnType<typeof getRoomStateSnapshot>
+    ): void => {
+      const targetRole = resolveSocketClientRole(targetSocket.handshake.auth);
+      targetSocket.emit(
+        SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT,
+        createRoleScopedSnapshot(roomStateSnapshot, targetRole)
+      );
+    };
+
+    const broadcastRoleScopedSnapshot = (
+      roomStateSnapshot: ReturnType<typeof getRoomStateSnapshot>
+    ): void => {
+      for (const connectedSocket of socketServer.sockets.sockets.values()) {
+        emitRoleScopedSnapshot(connectedSocket, roomStateSnapshot);
+      }
     };
 
     registerRoomStateHandlers(
       socket,
-      getRoomStateSnapshot,
+      () => createRoleScopedSnapshot(getRoomStateSnapshot(), socketClientRole),
       {
         onAuthorizedNextPhase: () => {
-          broadcastAfter(() => advanceRoomStatePhase());
+          broadcastRoleScopedSnapshot(advanceRoomStatePhase());
         },
         onAuthorizedSkipTurnBoundary: () => {
-          broadcastAfter(() => skipTurnBoundary());
+          broadcastRoleScopedSnapshot(skipTurnBoundary());
         },
         onAuthorizedReorderTurnOrder: (teamIds) => {
-          broadcastAfter(() => reorderTurnOrder(teamIds));
+          broadcastRoleScopedSnapshot(reorderTurnOrder(teamIds));
         },
         onAuthorizedResetGame: () => {
-          broadcastAfter(() => resetGameToSetup());
+          broadcastRoleScopedSnapshot(resetGameToSetup());
         },
         onAuthorizedCreateTeam: (name) => {
-          broadcastAfter(() => createTeam(name));
+          broadcastRoleScopedSnapshot(createTeam(name));
         },
         onAuthorizedAssignPlayer: (playerId, teamId) => {
-          broadcastAfter(() => assignPlayerToTeam(playerId, teamId));
+          broadcastRoleScopedSnapshot(assignPlayerToTeam(playerId, teamId));
         },
         onAuthorizedSetWingParticipation: (playerId, didEat) => {
-          broadcastAfter(() => setWingParticipation(playerId, didEat));
+          broadcastRoleScopedSnapshot(setWingParticipation(playerId, didEat));
         },
         onAuthorizedAdjustTeamScore: (teamId, delta) => {
-          broadcastAfter(() => adjustTeamScore(teamId, delta));
+          broadcastRoleScopedSnapshot(adjustTeamScore(teamId, delta));
         },
         onAuthorizedRedoLastMutation: () => {
-          broadcastAfter(() => redoLastScoringMutation());
+          broadcastRoleScopedSnapshot(redoLastScoringMutation());
         },
         onAuthorizedRecordTriviaAttempt: (isCorrect) => {
-          broadcastAfter(() => recordTriviaAttempt(isCorrect));
+          broadcastRoleScopedSnapshot(recordTriviaAttempt(isCorrect));
         },
         onAuthorizedPauseTimer: () => {
-          broadcastAfter(() => pauseRoomTimer());
+          broadcastRoleScopedSnapshot(pauseRoomTimer());
         },
         onAuthorizedResumeTimer: () => {
-          broadcastAfter(() => resumeRoomTimer());
+          broadcastRoleScopedSnapshot(resumeRoomTimer());
         },
         onAuthorizedExtendTimer: (additionalSeconds) => {
-          broadcastAfter(() => extendRoomTimer(additionalSeconds));
+          broadcastRoleScopedSnapshot(extendRoomTimer(additionalSeconds));
         }
       },
       socketClientRole === CLIENT_ROLES.HOST,

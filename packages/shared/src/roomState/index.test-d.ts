@@ -1,16 +1,22 @@
 import {
+  type DisplayRoomStateSnapshot,
   type GameConfigFile,
   type GameConfigRound,
+  type HostRoomStateSnapshot,
   type MinigameHostView,
   type Phase,
   type Player,
+  type RoleScopedSnapshotByRole,
+  type RoleScopedStateSnapshotEnvelope,
   type RoomState,
+  type SocketClientRole,
   type TriviaPrompt,
   type Team
 } from "../index.js";
 
 type IsAssignable<From, To> = From extends To ? true : false;
 type Assert<T extends true> = T;
+type HasKey<T, TKey extends PropertyKey> = TKey extends keyof T ? true : false;
 
 export type ValidPlayerCheck = Assert<
   IsAssignable<
@@ -78,6 +84,73 @@ export type ValidRoomStateCheck = Assert<
       canAdvancePhase: boolean;
     },
     RoomState
+  >
+>;
+
+export type HostSnapshotExtendsRoomStateCheck = Assert<
+  IsAssignable<RoomState, HostRoomStateSnapshot>
+>;
+
+export type DisplaySnapshotShapeCheck = Assert<
+  IsAssignable<
+    {
+      phase: Phase;
+      currentRound: number;
+      totalRounds: number;
+      players: Player[];
+      teams: Team[];
+      gameConfig: GameConfigFile | null;
+      currentRoundConfig: GameConfigRound | null;
+      turnOrderTeamIds: string[];
+      roundTurnCursor: number;
+      completedRoundTurnTeamIds: string[];
+      activeRoundTeamId: string | null;
+      activeTurnTeamId: string | null;
+      triviaPromptCursor: number;
+      minigameDisplayView: RoomState["minigameDisplayView"];
+      timer: RoomState["timer"];
+      wingParticipationByPlayerId: Record<string, boolean>;
+      pendingWingPointsByTeamId: Record<string, number>;
+      pendingMinigamePointsByTeamId: Record<string, number>;
+      fatalError: RoomState["fatalError"];
+      canRedoScoringMutation: boolean;
+      canAdvancePhase: boolean;
+    },
+    DisplayRoomStateSnapshot
+  >
+>;
+
+export type DisplaySnapshotHasNoTriviaPromptsCheck = Assert<
+  IsAssignable<HasKey<DisplayRoomStateSnapshot, "triviaPrompts">, false>
+>;
+
+export type DisplaySnapshotHasNoCurrentTriviaPromptCheck = Assert<
+  IsAssignable<HasKey<DisplayRoomStateSnapshot, "currentTriviaPrompt">, false>
+>;
+
+export type DisplaySnapshotHasNoMinigameHostViewCheck = Assert<
+  IsAssignable<HasKey<DisplayRoomStateSnapshot, "minigameHostView">, false>
+>;
+
+export type ValidRoleScopedSnapshotEnvelopeCheck = Assert<
+  IsAssignable<
+    | { clientRole: "HOST"; roomState: HostRoomStateSnapshot }
+    | { clientRole: "DISPLAY"; roomState: DisplayRoomStateSnapshot },
+    RoleScopedStateSnapshotEnvelope
+  >
+>;
+
+export type HostRoleScopedSnapshotLookupCheck = Assert<
+  IsAssignable<
+    RoleScopedSnapshotByRole<Extract<SocketClientRole, "HOST">>,
+    HostRoomStateSnapshot
+  >
+>;
+
+export type DisplayRoleScopedSnapshotLookupCheck = Assert<
+  IsAssignable<
+    RoleScopedSnapshotByRole<Extract<SocketClientRole, "DISPLAY">>,
+    DisplayRoomStateSnapshot
   >
 >;
 

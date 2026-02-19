@@ -1,4 +1,4 @@
-import type { RoomState } from "../roomState/index.js";
+import type { RoleScopedStateSnapshotEnvelope } from "../roomState/index.js";
 
 export type HostSecretPayload = Record<"hostSecret", string>;
 export type GameReorderTurnOrderPayload = HostSecretPayload &
@@ -84,7 +84,9 @@ export type ClientToServerEvents = {
 };
 
 export type ServerToClientEvents = {
-  [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (roomState: RoomState) => void;
+  [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (
+    payload: RoleScopedStateSnapshotEnvelope
+  ) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED]: (payload: HostSecretPayload) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_INVALID]: () => void;
 };

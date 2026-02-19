@@ -1,4 +1,4 @@
-import { type RoomState } from "@wingnight/shared";
+import { type DisplayRoomStateSnapshot } from "@wingnight/shared";
 import { useMemo } from "react";
 
 import { displayBoardCopy } from "./copy";
@@ -8,7 +8,7 @@ import { StandingsSurface } from "./StandingsSurface";
 import * as styles from "./styles";
 
 type DisplayBoardProps = {
-  roomState: RoomState | null;
+  roomState: DisplayRoomStateSnapshot | null;
 };
 
 export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {

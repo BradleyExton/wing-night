@@ -85,10 +85,15 @@ test("renders trivia question without answer leakage", () => {
       roomState={{
         ...buildSnapshot(Phase.MINIGAME_PLAY),
         activeTurnTeamId: "team-1",
-        currentTriviaPrompt: {
-          id: "prompt-1",
-          question: "Which scale measures pepper heat?",
-          answer: "Scoville"
+        minigameDisplayView: {
+          minigame: "TRIVIA",
+          activeTurnTeamId: "team-1",
+          promptCursor: 0,
+          pendingPointsByTeamId: {},
+          currentPrompt: {
+            id: "prompt-1",
+            question: "Which scale measures pepper heat?"
+          }
         }
       }}
       phaseLabel="Minigame Play"

@@ -4,6 +4,7 @@ import type { MinigameType } from "../content/gameConfig/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
+import type { SocketClientRole } from "../socketClientRole/index.js";
 import type { Team } from "../team/index.js";
 
 export type RoomTimerState = {
@@ -65,3 +66,27 @@ export type RoomState = {
   canRedoScoringMutation: boolean;
   canAdvancePhase: boolean;
 };
+
+type DisplayUnsafeRoomStateKeys =
+  | "triviaPrompts"
+  | "currentTriviaPrompt"
+  | "minigameHostView";
+
+export type HostRoomStateSnapshot = RoomState;
+
+export type DisplayRoomStateSnapshot = Omit<RoomState, DisplayUnsafeRoomStateKeys>;
+
+export type RoleScopedStateSnapshotEnvelope =
+  | {
+      clientRole: "HOST";
+      roomState: HostRoomStateSnapshot;
+    }
+  | {
+      clientRole: "DISPLAY";
+      roomState: DisplayRoomStateSnapshot;
+    };
+
+export type RoleScopedSnapshotByRole<TRole extends SocketClientRole> = Extract<
+  RoleScopedStateSnapshotEnvelope,
+  { clientRole: TRole }
+>["roomState"];

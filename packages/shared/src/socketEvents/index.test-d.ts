@@ -4,9 +4,9 @@ import type {
   GameReorderTurnOrderPayload,
   HostSecretPayload,
   MinigameRecordTriviaAttemptPayload,
+  RoleScopedStateSnapshotEnvelope,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
-  RoomState,
   SERVER_TO_CLIENT_EVENTS,
   TimerExtendPayload,
   SetupAssignPlayerPayload,
@@ -142,7 +142,7 @@ export type TimerExtendPayloadCheck = Assert<
 export type SnapshotRoomStateArgCheck = Assert<
   Equal<
     Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]>,
-    [RoomState]
+    [RoleScopedStateSnapshotEnvelope]
   >
 >;
 
@@ -160,7 +160,7 @@ export type SecretInvalidNoArgsCheck = Assert<
   >
 >;
 
-// @ts-expect-error server:stateSnapshot must accept RoomState.
+// @ts-expect-error server:stateSnapshot must accept role-scoped snapshot envelope.
 export type InvalidSnapshotPayloadCheck = Assert<Equal<Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]>, [string]>>;
 
 // @ts-expect-error client:requestState should not accept arguments.
