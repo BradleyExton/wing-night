@@ -43,7 +43,7 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
   assert.match(html, /Incorrect/);
 });
 
-test("renders compatibility mismatch fallback messaging for host view", () => {
+test("renders compatibility mismatch messaging without hiding trivia controls", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
       minigameHostView={{
@@ -60,8 +60,8 @@ test("renders compatibility mismatch fallback messaging for host view", () => {
   );
 
   assert.match(html, /Host and server minigame contracts are out of sync\./);
-  assert.doesNotMatch(html, /Correct/);
-  assert.doesNotMatch(html, /Incorrect/);
+  assert.match(html, /Correct/);
+  assert.match(html, /Incorrect/);
 });
 
 test("renders waiting fallback when host view is unavailable", () => {
@@ -96,4 +96,25 @@ test("renders waiting fallback for non-trivia minigame payloads", () => {
 
   assert.match(html, /Waiting for room state/);
   assert.doesNotMatch(html, /Which scale measures pepper heat/);
+});
+
+test("renders compatibility mismatch messaging for non-trivia minigames", () => {
+  const html = renderToStaticMarkup(
+    <MinigameSurface
+      minigameHostView={{
+        ...triviaHostViewFixture,
+        minigame: "GEO",
+        compatibilityStatus: "MISMATCH",
+        compatibilityMessage: "Host and server minigame contracts are out of sync."
+      }}
+      teamNameByTeamId={teamNameByTeamId}
+      triviaAttemptDisabled
+      onRecordTriviaAttempt={(): void => {
+        return;
+      }}
+    />
+  );
+
+  assert.match(html, /Host and server minigame contracts are out of sync\./);
+  assert.doesNotMatch(html, /Waiting for room state/);
 });

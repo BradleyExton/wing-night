@@ -16,9 +16,11 @@ import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 
 export const App = (): JSX.Element => {
-  const [roomState, setRoomState] = useState<
-    HostRoomStateSnapshot | DisplayRoomStateSnapshot | null
-  >(null);
+  const [hostRoomState, setHostRoomState] = useState<HostRoomStateSnapshot | null>(
+    null
+  );
+  const [displayRoomState, setDisplayRoomState] =
+    useState<DisplayRoomStateSnapshot | null>(null);
   const route = resolveClientRoute(window.location.pathname);
 
   const hostControlPanelHandlers = useMemo(() => {
@@ -26,14 +28,15 @@ export const App = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    setRoomState(null);
+    setHostRoomState(null);
+    setDisplayRoomState(null);
 
     if (route === "HOST") {
       return wireRoomStateRehydration(
         roomSocket,
         CLIENT_ROLES.HOST,
         (snapshot) => {
-          setRoomState(snapshot);
+          setHostRoomState(snapshot);
         }
       );
     }
@@ -43,7 +46,7 @@ export const App = (): JSX.Element => {
         roomSocket,
         CLIENT_ROLES.DISPLAY,
         (snapshot) => {
-          setRoomState(snapshot);
+          setDisplayRoomState(snapshot);
         }
       );
     }
@@ -60,16 +63,11 @@ export const App = (): JSX.Element => {
   }, [route]);
 
   if (route === "HOST") {
-    return (
-      <HostControlPanel
-        roomState={roomState as HostRoomStateSnapshot | null}
-        {...hostControlPanelHandlers}
-      />
-    );
+    return <HostControlPanel roomState={hostRoomState} {...hostControlPanelHandlers} />;
   }
 
   if (route === "DISPLAY") {
-    return <DisplayBoard roomState={roomState as DisplayRoomStateSnapshot | null} />;
+    return <DisplayBoard roomState={displayRoomState} />;
   }
 
   return <RouteNotFound />;
