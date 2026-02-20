@@ -36,15 +36,12 @@ const buildSnapshot = (phase: Phase): RoomState => {
     players: [],
     teams: [{ id: "team-1", name: "Team One", playerIds: [], totalScore: 0 }],
     gameConfig: gameConfigFixture,
-    triviaPrompts: [],
     currentRoundConfig: gameConfigFixture.rounds[0],
     turnOrderTeamIds: ["team-1"],
     roundTurnCursor: 0,
     completedRoundTurnTeamIds: [],
     activeRoundTeamId: "team-1",
     activeTurnTeamId: null,
-    currentTriviaPrompt: null,
-    triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
@@ -93,11 +90,6 @@ test("renders trivia question without answer leakage", () => {
             id: "prompt-1",
             question: "Which scale measures pepper heat?"
           }
-        },
-        currentTriviaPrompt: {
-          id: "prompt-1",
-          question: "Which scale measures pepper heat?",
-          answer: "Scoville"
         }
       }}
       phaseLabel="Minigame Play"

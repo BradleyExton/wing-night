@@ -50,7 +50,6 @@ export const buildSandboxRoomState = ({
       }
     ],
     gameConfig: null,
-    triviaPrompts: [],
     currentRoundConfig: {
       round: 1,
       label: "Sandbox",
@@ -63,21 +62,13 @@ export const buildSandboxRoomState = ({
     completedRoundTurnTeamIds: [],
     activeRoundTeamId: activeTeamId,
     activeTurnTeamId: minigameHostView?.activeTurnTeamId ?? activeTeamId,
-    currentTriviaPrompt:
-      minigameHostView?.minigame === "TRIVIA"
-        ? minigameHostView.currentPrompt
-        : null,
-    triviaPromptCursor:
-      minigameHostView?.minigame === "TRIVIA" ? minigameHostView.promptCursor : 0,
     timer: null,
     minigameHostView,
     minigameDisplayView,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId:
-      minigameHostView?.minigame === "TRIVIA"
-        ? { ...minigameHostView.pendingPointsByTeamId }
-        : {},
+      minigameHostView === null ? {} : { ...minigameHostView.pendingPointsByTeamId },
     fatalError: null,
     canRedoScoringMutation: false,
     canAdvancePhase: true

@@ -33,7 +33,6 @@ type SocketHarness = {
   triggerAdjustTeamScore: (payload: unknown) => void;
   triggerRedoLastMutation: (payload: unknown) => void;
   triggerMinigameAction: (payload: unknown) => void;
-  triggerRecordTriviaAttempt: (payload: unknown) => void;
   triggerTimerPause: (payload: unknown) => void;
   triggerTimerResume: (payload: unknown) => void;
   triggerTimerExtend: (payload: unknown) => void;
@@ -47,15 +46,12 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     players: [],
     teams: [],
     gameConfig: null,
-    triviaPrompts: [],
     currentRoundConfig: null,
     turnOrderTeamIds: [],
     roundTurnCursor: -1,
     completedRoundTurnTeamIds: [],
     activeRoundTeamId: null,
     activeTurnTeamId: null,
-    currentTriviaPrompt: null,
-    triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
@@ -133,11 +129,6 @@ const createSocketHarness = (): SocketHarness => {
       `Expected ${CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION} handler to be registered.`
     );
   };
-  let recordTriviaAttemptHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT} handler to be registered.`
-    );
-  };
   let timerPauseHandler = (_payload: unknown): void => {
     assert.fail(
       `Expected ${CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE} handler to be registered.`
@@ -188,7 +179,6 @@ const createSocketHarness = (): SocketHarness => {
         | typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE
         | typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION
         | typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION
-        | typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT
         | typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE
         | typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME
         | typeof CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND,
@@ -254,11 +244,6 @@ const createSocketHarness = (): SocketHarness => {
         return;
       }
 
-      if (event === CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT) {
-        recordTriviaAttemptHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
       if (event === CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE) {
         timerPauseHandler = listener as (payload: unknown) => void;
         return;
@@ -317,9 +302,6 @@ const createSocketHarness = (): SocketHarness => {
     },
     triggerMinigameAction: (payload: unknown): void => {
       minigameActionHandler(payload);
-    },
-    triggerRecordTriviaAttempt: (payload: unknown): void => {
-      recordTriviaAttemptHandler(payload);
     },
     triggerTimerPause: (payload: unknown): void => {
       timerPauseHandler(payload);
@@ -931,13 +913,18 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
         isCorrect: true
       }
     });
-    socketHarness.triggerRecordTriviaAttempt({
-      hostSecret: "valid-host-secret",
-      isCorrect: false
-    });
   });
 
   assert.deepEqual(minigameActionCalls, [
+    {
+      hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
+      minigameId: "TRIVIA",
+      actionType: "recordAttempt",
+      actionPayload: {
+        isCorrect: "yes"
+      }
+    },
     {
       hostSecret: "valid-host-secret",
       minigameApiVersion: MINIGAME_API_VERSION,
@@ -950,10 +937,10 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
     {
       hostSecret: "valid-host-secret",
       minigameApiVersion: MINIGAME_API_VERSION,
-      minigameId: "TRIVIA",
+      minigameId: "GEO",
       actionType: "recordAttempt",
       actionPayload: {
-        isCorrect: false
+        isCorrect: true
       }
     }
   ]);

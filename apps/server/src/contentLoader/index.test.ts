@@ -80,7 +80,11 @@ test("loads all content from local files when available", () => {
     })
   );
   writeContentFile(contentRoot, "local/gameConfig.json", createValidConfig("Local"));
-  writeContentFile(contentRoot, "local/trivia.json", createValidTrivia("Local"));
+  writeContentFile(
+    contentRoot,
+    "local/minigames/trivia.json",
+    createValidTrivia("Local")
+  );
 
   writeContentFile(
     contentRoot,
@@ -94,13 +98,20 @@ test("loads all content from local files when available", () => {
     "sample/gameConfig.json",
     createValidConfig("Sample")
   );
-  writeContentFile(contentRoot, "sample/trivia.json", createValidTrivia("Sample"));
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/trivia.json",
+    createValidTrivia("Sample")
+  );
 
   const content = loadContent({ contentRootDir: contentRoot });
 
   assert.equal(content.players[0]?.name, "Local Player");
   assert.equal(content.gameConfig.name, "Local");
-  assert.equal(content.triviaPrompts[0]?.id, "local-1");
+  const triviaContent = content.minigameContentById.TRIVIA as
+    | { prompts?: Array<{ id?: string }> }
+    | undefined;
+  assert.equal(triviaContent?.prompts?.[0]?.id, "local-1");
 });
 
 test("falls back to sample files when local files are missing", () => {
@@ -118,11 +129,18 @@ test("falls back to sample files when local files are missing", () => {
     "sample/gameConfig.json",
     createValidConfig("Sample")
   );
-  writeContentFile(contentRoot, "sample/trivia.json", createValidTrivia("Sample"));
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/trivia.json",
+    createValidTrivia("Sample")
+  );
 
   const content = loadContent({ contentRootDir: contentRoot });
 
   assert.equal(content.players[0]?.name, "Sample Player");
   assert.equal(content.gameConfig.name, "Sample");
-  assert.equal(content.triviaPrompts[0]?.id, "sample-1");
+  const triviaContent = content.minigameContentById.TRIVIA as
+    | { prompts?: Array<{ id?: string }> }
+    | undefined;
+  assert.equal(triviaContent?.prompts?.[0]?.id, "sample-1");
 });

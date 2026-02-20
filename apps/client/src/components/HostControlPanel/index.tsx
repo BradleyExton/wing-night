@@ -85,8 +85,7 @@ export const HostControlPanel = ({
       ? (teamNameByTeamId.get(activeRoundTeamId) ??
         hostControlPanelCopy.noAssignedTeamLabel)
       : hostControlPanelCopy.noAssignedTeamLabel;
-  const currentTriviaPrompt =
-    triviaHostView?.currentPrompt ?? roomState?.currentTriviaPrompt ?? null;
+  const currentTriviaPrompt = triviaHostView?.currentPrompt ?? null;
   const activeTurnTeamId =
     minigameHostView?.activeTurnTeamId ?? roomState?.activeTurnTeamId ?? null;
   const triviaAttemptsRemaining = triviaHostView?.attemptsRemaining ?? 0;
