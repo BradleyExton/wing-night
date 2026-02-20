@@ -2,6 +2,8 @@ import type { MinigameType } from "../content/gameConfig/index.js";
 import type { RoomState } from "../roomState/index.js";
 
 export type HostSecretPayload = Record<"hostSecret", string>;
+export const MINIGAME_API_VERSION = 1 as const;
+export type MinigameApiVersion = typeof MINIGAME_API_VERSION;
 export type GameReorderTurnOrderPayload = HostSecretPayload &
   Record<"teamIds", string[]>;
 export type SetupCreateTeamPayload = HostSecretPayload & Record<"name", string>;
@@ -16,16 +18,21 @@ export type ScoringAdjustTeamScorePayload = HostSecretPayload &
   Record<"delta", number>;
 export type MinigameRecordTriviaAttemptPayload = HostSecretPayload &
   Record<"isCorrect", boolean>;
-export type TriviaRecordAttemptMinigameActionPayload = HostSecretPayload &
-  Record<"minigameId", "TRIVIA"> &
-  Record<"actionType", "recordAttempt"> &
-  Record<"actionPayload", Record<"isCorrect", boolean>>;
-export type MinigameActionPayload = TriviaRecordAttemptMinigameActionPayload;
-export type MinigameActionType = MinigameActionPayload["actionType"];
 export type MinigameActionEnvelope = HostSecretPayload &
+  Record<"minigameApiVersion", MinigameApiVersion> &
   Record<"minigameId", MinigameType> &
   Record<"actionType", string> &
   Record<"actionPayload", unknown>;
+export type TriviaRecordAttemptMinigameActionPayload = MinigameActionEnvelope &
+  Record<"minigameId", "TRIVIA"> &
+  Record<"actionType", "recordAttempt"> &
+  Record<"actionPayload", Record<"isCorrect", boolean>>;
+export type GenericMinigameActionPayload = MinigameActionEnvelope &
+  Record<"minigameId", MinigameType>;
+export type MinigameActionPayload =
+  | TriviaRecordAttemptMinigameActionPayload
+  | GenericMinigameActionPayload;
+export type MinigameActionType = MinigameActionPayload["actionType"];
 export type TimerExtendPayload = HostSecretPayload &
   Record<"additionalSeconds", number>;
 export const TIMER_EXTEND_MAX_SECONDS = 600;

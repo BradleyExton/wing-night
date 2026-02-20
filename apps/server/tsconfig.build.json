@@ -8,6 +8,9 @@
       "@wingnight/minigames-trivia": [
         "../../packages/minigames/trivia/dist/index.d.ts"
       ],
+      "@wingnight/minigames-trivia/runtime": [
+        "../../packages/minigames/trivia/dist/runtime/index.d.ts"
+      ],
       "@wingnight/shared": ["../../packages/shared/dist/index.d.ts"]
     }
   }

@@ -253,7 +253,7 @@ test("disables trivia attempt controls when attemptsRemaining is exhausted", () 
           }
         }
       })}
-      onRecordTriviaAttempt={(): void => {}}
+      onDispatchMinigameAction={(): void => {}}
     />
   );
 

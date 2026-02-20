@@ -28,8 +28,8 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
       minigameHostView={triviaHostViewFixture}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
-      triviaAttemptDisabled={false}
-      onRecordTriviaAttempt={(): void => {
+      canDispatchAction
+      onDispatchAction={(): void => {
         return;
       }}
     />
@@ -50,8 +50,8 @@ test("renders waiting fallback when host view is unavailable", () => {
       minigameHostView={null}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
-      triviaAttemptDisabled
-      onRecordTriviaAttempt={(): void => {
+      canDispatchAction={false}
+      onDispatchAction={(): void => {
         return;
       }}
     />
@@ -66,20 +66,28 @@ test("renders GEO scaffold surface for configured geo minigame", () => {
       phase="play"
       minigameType="GEO"
       minigameHostView={{
-        ...triviaHostViewFixture,
-        minigame: "GEO"
+        minigame: "GEO",
+        activeTurnTeamId: "team-alpha",
+        attemptsRemaining: 0,
+        promptCursor: 0,
+        pendingPointsByTeamId: {
+          "team-alpha": 0
+        },
+        currentPrompt: null,
+        status: "UNSUPPORTED",
+        message: "GEO host UI is not implemented yet."
       }}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
-      triviaAttemptDisabled
-      onRecordTriviaAttempt={(): void => {
+      canDispatchAction={false}
+      onDispatchAction={(): void => {
         return;
       }}
     />
   );
 
-  assert.match(html, /GEO gameplay module is scaffolded/);
-  assert.match(html, /GEO host controls coming next/);
+  assert.match(html, /GEO is not implemented yet/);
+  assert.match(html, /Unsupported \(stub\)/);
 });
 
 test("renders intro surface for configured trivia minigame", () => {
@@ -90,8 +98,8 @@ test("renders intro surface for configured trivia minigame", () => {
       minigameHostView={null}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
-      triviaAttemptDisabled
-      onRecordTriviaAttempt={(): void => {
+      canDispatchAction={false}
+      onDispatchAction={(): void => {
         return;
       }}
     />

@@ -1,4 +1,6 @@
 import { CLIENT_TO_SERVER_EVENTS } from "@wingnight/shared";
+import type { MinigameType } from "@wingnight/shared";
+import type { SerializableValue } from "@wingnight/minigames-core";
 import type { Socket } from "socket.io-client";
 
 import type {
@@ -9,9 +11,9 @@ import { requestAdjustTeamScore } from "../requestAdjustTeamScore";
 import { requestAssignPlayer } from "../requestAssignPlayer";
 import { requestCreateTeam } from "../requestCreateTeam";
 import { requestExtendTimer } from "../requestExtendTimer";
+import { requestMinigameAction } from "../requestMinigameAction";
 import { requestNextPhase } from "../requestNextPhase";
 import { requestPauseTimer } from "../requestPauseTimer";
-import { requestRecordTriviaAttempt } from "../requestRecordTriviaAttempt";
 import { requestRedoLastMutation } from "../requestRedoLastMutation";
 import { requestReorderTurnOrder } from "../requestReorderTurnOrder";
 import { requestResetGame } from "../requestResetGame";
@@ -29,7 +31,11 @@ export type HostControlPanelHandlers = {
   onCreateTeam: (name: string) => void;
   onAssignPlayer: (playerId: string, teamId: string | null) => void;
   onSetWingParticipation: (playerId: string, didEat: boolean) => void;
-  onRecordTriviaAttempt: (isCorrect: boolean) => void;
+  onDispatchMinigameAction: (
+    minigameId: MinigameType,
+    actionType: string,
+    actionPayload: SerializableValue
+  ) => void;
   onPauseTimer: () => void;
   onResumeTimer: () => void;
   onExtendTimer: (additionalSeconds: number) => void;
@@ -45,7 +51,7 @@ type HostControlPanelRequestDependencies = {
   requestCreateTeam: typeof requestCreateTeam;
   requestAssignPlayer: typeof requestAssignPlayer;
   requestSetWingParticipation: typeof requestSetWingParticipation;
-  requestRecordTriviaAttempt: typeof requestRecordTriviaAttempt;
+  requestMinigameAction: typeof requestMinigameAction;
   requestPauseTimer: typeof requestPauseTimer;
   requestResumeTimer: typeof requestResumeTimer;
   requestExtendTimer: typeof requestExtendTimer;
@@ -61,7 +67,7 @@ const defaultDependencies: HostControlPanelRequestDependencies = {
   requestCreateTeam,
   requestAssignPlayer,
   requestSetWingParticipation,
-  requestRecordTriviaAttempt,
+  requestMinigameAction,
   requestPauseTimer,
   requestResumeTimer,
   requestExtendTimer,
@@ -93,8 +99,18 @@ export const createHostControlPanelHandlers = (
     onSetWingParticipation: (playerId: string, didEat: boolean): void => {
       dependencies.requestSetWingParticipation(socket, playerId, didEat, claimControl);
     },
-    onRecordTriviaAttempt: (isCorrect: boolean): void => {
-      dependencies.requestRecordTriviaAttempt(socket, isCorrect, claimControl);
+    onDispatchMinigameAction: (
+      minigameId: MinigameType,
+      actionType: string,
+      actionPayload: SerializableValue
+    ): void => {
+      dependencies.requestMinigameAction(
+        socket,
+        minigameId,
+        actionType,
+        actionPayload,
+        claimControl
+      );
     },
     onPauseTimer: (): void => {
       dependencies.requestPauseTimer(socket, claimControl);

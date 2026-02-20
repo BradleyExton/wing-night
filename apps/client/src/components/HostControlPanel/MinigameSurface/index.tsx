@@ -1,7 +1,10 @@
 import { type MinigameHostView, type MinigameType } from "@wingnight/shared";
+import type {
+  MinigameSurfacePhase,
+  SerializableValue
+} from "@wingnight/minigames-core";
 
-import { resolveMinigameRendererBundle } from "../../Minigames/registry";
-import type { MinigameSurfacePhase } from "../../Minigames/types";
+import { resolveMinigameRendererBundle } from "../../../minigames/registry";
 import { hostControlPanelCopy } from "../copy";
 import * as styles from "./styles";
 
@@ -11,8 +14,8 @@ type MinigameSurfaceProps = {
   minigameHostView: MinigameHostView | null;
   activeTeamName: string | null;
   teamNameByTeamId: Map<string, string>;
-  triviaAttemptDisabled: boolean;
-  onRecordTriviaAttempt: (isCorrect: boolean) => void;
+  canDispatchAction: boolean;
+  onDispatchAction: (actionType: string, actionPayload: SerializableValue) => void;
 };
 
 export const MinigameSurface = ({
@@ -21,8 +24,8 @@ export const MinigameSurface = ({
   minigameHostView,
   activeTeamName,
   teamNameByTeamId,
-  triviaAttemptDisabled,
-  onRecordTriviaAttempt
+  canDispatchAction,
+  onDispatchAction
 }: MinigameSurfaceProps): JSX.Element => {
   if (minigameType === null) {
     return (
@@ -74,8 +77,8 @@ export const MinigameSurface = ({
           minigameHostView={minigameHostView}
           activeTeamName={activeTeamName}
           teamNameByTeamId={teamNameByTeamId}
-          triviaAttemptDisabled={triviaAttemptDisabled}
-          onRecordTriviaAttempt={onRecordTriviaAttempt}
+          canDispatchAction={canDispatchAction}
+          onDispatchAction={onDispatchAction}
         />
       </div>
     </section>

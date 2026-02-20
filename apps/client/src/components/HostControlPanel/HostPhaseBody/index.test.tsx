@@ -125,7 +125,7 @@ const buildProps = (
     setupMutationsDisabled: false,
     assignmentDisabled: false,
     participationDisabled: false,
-    triviaAttemptDisabled: false,
+    canDispatchMinigameAction: true,
     sortedStandings: teamsFixture,
     timer: null,
     onNextTeamNameChange: () => undefined,
@@ -135,7 +135,7 @@ const buildProps = (
     onPauseTimer: () => undefined,
     onResumeTimer: () => undefined,
     onExtendTimer: () => undefined,
-    onRecordTriviaAttempt: () => undefined,
+    onDispatchMinigameAction: () => undefined,
     ...overrides
   };
 };

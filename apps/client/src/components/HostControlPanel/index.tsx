@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { type RoomState } from "@wingnight/shared";
+import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { HostActionBarSurface } from "./HostActionBarSurface";
@@ -23,7 +24,11 @@ type HostControlPanelProps = {
   onCreateTeam?: (name: string) => void;
   onAssignPlayer?: (playerId: string, teamId: string | null) => void;
   onSetWingParticipation?: (playerId: string, didEat: boolean) => void;
-  onRecordTriviaAttempt?: (isCorrect: boolean) => void;
+  onDispatchMinigameAction?: (
+    minigameId: NonNullable<RoomState["currentRoundConfig"]>["minigame"],
+    actionType: string,
+    actionPayload: SerializableValue
+  ) => void;
   onPauseTimer?: () => void;
   onResumeTimer?: () => void;
   onExtendTimer?: (additionalSeconds: number) => void;
@@ -42,7 +47,7 @@ export const HostControlPanel = ({
   onCreateTeam,
   onAssignPlayer,
   onSetWingParticipation,
-  onRecordTriviaAttempt,
+  onDispatchMinigameAction,
   onPauseTimer,
   onResumeTimer,
   onExtendTimer,
@@ -70,8 +75,8 @@ export const HostControlPanel = ({
   const minigameHostView = roomState?.minigameHostView ?? null;
   const minigameType =
     minigameHostView?.minigame ?? roomState?.currentRoundConfig?.minigame ?? null;
-  const isTriviaMinigamePlayPhase =
-    hostMode === "minigame_play" && minigameHostView?.minigame === "TRIVIA";
+  const triviaHostView =
+    minigameHostView?.minigame === "TRIVIA" ? minigameHostView : null;
 
   const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
@@ -81,19 +86,21 @@ export const HostControlPanel = ({
         hostControlPanelCopy.noAssignedTeamLabel)
       : hostControlPanelCopy.noAssignedTeamLabel;
   const currentTriviaPrompt =
-    minigameHostView?.currentPrompt ?? roomState?.currentTriviaPrompt ?? null;
+    triviaHostView?.currentPrompt ?? roomState?.currentTriviaPrompt ?? null;
   const activeTurnTeamId =
     minigameHostView?.activeTurnTeamId ?? roomState?.activeTurnTeamId ?? null;
+  const triviaAttemptsRemaining = triviaHostView?.attemptsRemaining ?? 0;
 
   const setupMutationsDisabled = onCreateTeam === undefined || hostMode !== "setup";
   const assignmentDisabled = onAssignPlayer === undefined || hostMode !== "setup";
   const participationDisabled = onSetWingParticipation === undefined || hostMode !== "eating";
-  const triviaAttemptDisabled =
-    onRecordTriviaAttempt === undefined ||
-    !isTriviaMinigamePlayPhase ||
-    activeTurnTeamId === null ||
-    currentTriviaPrompt === null ||
-    (minigameHostView?.attemptsRemaining ?? 0) <= 0;
+  const canDispatchMinigameAction =
+    onDispatchMinigameAction !== undefined &&
+    hostMode === "minigame_play" &&
+    minigameType !== null &&
+    activeTurnTeamId !== null &&
+    (minigameType !== "TRIVIA" ||
+      (currentTriviaPrompt !== null && triviaAttemptsRemaining > 0));
   const nextPhaseDisabled =
     onNextPhase === undefined || roomState?.canAdvancePhase !== true;
 
@@ -149,12 +156,19 @@ export const HostControlPanel = ({
     onSetWingParticipation(playerId, didEat);
   };
 
-  const handleRecordTriviaAttempt = (isCorrect: boolean): void => {
-    if (!onRecordTriviaAttempt || !isTriviaMinigamePlayPhase) {
+  const handleDispatchMinigameAction = (
+    actionType: string,
+    actionPayload: SerializableValue
+  ): void => {
+    if (
+      onDispatchMinigameAction === undefined ||
+      hostMode !== "minigame_play" ||
+      minigameType === null
+    ) {
       return;
     }
 
-    onRecordTriviaAttempt(isCorrect);
+    onDispatchMinigameAction(minigameType, actionType, actionPayload);
   };
 
   if (fatalError !== null) {
@@ -191,7 +205,7 @@ export const HostControlPanel = ({
           setupMutationsDisabled={setupMutationsDisabled}
           assignmentDisabled={assignmentDisabled}
           participationDisabled={participationDisabled}
-          triviaAttemptDisabled={triviaAttemptDisabled}
+          canDispatchMinigameAction={canDispatchMinigameAction}
           sortedStandings={sortedStandings}
           timer={roomState?.timer ?? null}
           onNextTeamNameChange={setNextTeamName}
@@ -201,7 +215,7 @@ export const HostControlPanel = ({
           onPauseTimer={onPauseTimer}
           onResumeTimer={onResumeTimer}
           onExtendTimer={onExtendTimer}
-          onRecordTriviaAttempt={handleRecordTriviaAttempt}
+          onDispatchMinigameAction={handleDispatchMinigameAction}
         />
       </div>
 

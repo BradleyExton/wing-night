@@ -14,6 +14,9 @@
       "@wingnight/minigames-trivia": [
         "../../packages/minigames/trivia/src/index.ts"
       ],
+      "@wingnight/minigames-trivia/runtime": [
+        "../../packages/minigames/trivia/src/runtime/index.ts"
+      ],
       "@wingnight/shared": ["../../packages/shared/src/index.ts"]
     }
   },

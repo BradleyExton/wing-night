@@ -4,6 +4,7 @@ import type {
   GameReorderTurnOrderPayload,
   HostSecretPayload,
   MinigameActionPayload,
+  MinigameActionEnvelope,
   MinigameRecordTriviaAttemptPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
@@ -117,6 +118,10 @@ export type MinigameActionPayloadCheck = Assert<
     >,
     [MinigameActionPayload]
   >
+>;
+
+export type MinigameActionEnvelopeCheck = Assert<
+  Equal<MinigameActionEnvelope["minigameApiVersion"], 1>
 >;
 
 export type RecordTriviaAttemptPayloadCheck = Assert<

@@ -1,4 +1,10 @@
-import type { MinigameType } from "@wingnight/shared";
+import type {
+  MinigameApiVersion,
+  MinigameDisplayView,
+  MinigameHostView,
+  MinigameType
+} from "@wingnight/shared";
+import type { ComponentType } from "react";
 
 export type SerializablePrimitive = null | boolean | number | string;
 
@@ -43,6 +49,7 @@ export type MinigameModule<
   TContext extends SerializableValue = SerializableRecord
 > = {
   id: MinigameType;
+  metadata?: MinigamePluginMetadata;
   init: (input: MinigameInitInput<TContext>) => TState;
   reduce: (input: MinigameReduceInput<TState, TAction, TContext>) => TState;
   selectHostView: (
@@ -51,6 +58,59 @@ export type MinigameModule<
   selectDisplayView: (
     input: MinigameSelectorInput<TState, TContext>
   ) => TDisplayView;
+};
+
+export type MinigamePluginMetadata = {
+  minigameApiVersion: MinigameApiVersion;
+  capabilities: {
+    supportsHostRenderer: boolean;
+    supportsDisplayRenderer: boolean;
+    supportsDevScenarios: boolean;
+  };
+};
+
+export type MinigameSurfacePhase = "intro" | "play";
+
+export type MinigameActionDispatch = (
+  actionType: string,
+  actionPayload: SerializableValue
+) => void;
+
+export type MinigameHostRendererProps = {
+  phase: MinigameSurfacePhase;
+  minigameType: MinigameType;
+  minigameHostView: MinigameHostView | null;
+  activeTeamName: string | null;
+  teamNameByTeamId: Map<string, string>;
+  canDispatchAction: boolean;
+  onDispatchAction: MinigameActionDispatch;
+};
+
+export type MinigameDisplayRendererProps = {
+  phase: MinigameSurfacePhase;
+  minigameType: MinigameType;
+  minigameDisplayView: MinigameDisplayView | null;
+  activeTeamName: string | null;
+};
+
+export type MinigameRendererBundle = {
+  HostSurface: ComponentType<MinigameHostRendererProps>;
+  DisplaySurface: ComponentType<MinigameDisplayRendererProps>;
+};
+
+export type MinigameDevScenario = {
+  id: string;
+  label: string;
+  phase: MinigameSurfacePhase;
+  activeTeamName: string | null;
+  teamNameByTeamId: Record<string, string>;
+  minigameHostView: MinigameHostView | null;
+  minigameDisplayView: MinigameDisplayView | null;
+};
+
+export type MinigameDevManifest = {
+  defaultScenarioId: string;
+  scenarios: MinigameDevScenario[];
 };
 
 const isSerializableRecord = (

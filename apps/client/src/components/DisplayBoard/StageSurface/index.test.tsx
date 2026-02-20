@@ -119,7 +119,7 @@ test("renders waiting fallback when MINIGAME_PLAY projection is not available ye
   assert.match(html, /Waiting for minigame display state from the server snapshot\./);
 });
 
-test("renders GEO scaffold in MINIGAME_PLAY without waiting on projected view", () => {
+test("renders GEO unsupported surface in MINIGAME_PLAY without waiting on projected view", () => {
   const html = renderToStaticMarkup(
     <StageSurface
       roomState={{
@@ -134,7 +134,7 @@ test("renders GEO scaffold in MINIGAME_PLAY without waiting on projected view", 
   );
 
   assert.match(html, /Mini-Game: GEO/);
-  assert.match(html, /GEO display module is scaffolded/);
+  assert.match(html, /GEO display surface is currently a stub/);
   assert.doesNotMatch(
     html,
     /Waiting for minigame display state from the server snapshot/

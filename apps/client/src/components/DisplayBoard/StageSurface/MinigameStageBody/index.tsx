@@ -1,6 +1,6 @@
 import type { MinigameType, RoomState } from "@wingnight/shared";
 
-import { resolveMinigameRendererBundle } from "../../../Minigames/registry";
+import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
 import { displayBoardCopy } from "../../copy";
 import * as styles from "./styles";
 

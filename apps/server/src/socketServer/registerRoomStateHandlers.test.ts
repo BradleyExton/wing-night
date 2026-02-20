@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   CLIENT_TO_SERVER_EVENTS,
+  MINIGAME_API_VERSION,
   Phase,
   SERVER_TO_CLIENT_EVENTS,
   type HostSecretPayload,
@@ -890,11 +891,13 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
     socketHarness.triggerMinigameAction({ hostSecret: "valid-host-secret" });
     socketHarness.triggerMinigameAction({
       hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "TRIVIA",
       actionType: "recordAttempt"
     });
     socketHarness.triggerMinigameAction({
       hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "TRIVIA",
       actionType: "recordAttempt",
       actionPayload: {
@@ -903,6 +906,7 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
     });
     socketHarness.triggerMinigameAction({
       hostSecret: "invalid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "TRIVIA",
       actionType: "recordAttempt",
       actionPayload: {
@@ -911,6 +915,7 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
     });
     socketHarness.triggerMinigameAction({
       hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "TRIVIA",
       actionType: "recordAttempt",
       actionPayload: {
@@ -919,6 +924,7 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
     });
     socketHarness.triggerMinigameAction({
       hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "GEO",
       actionType: "recordAttempt",
       actionPayload: {
@@ -934,6 +940,7 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
   assert.deepEqual(minigameActionCalls, [
     {
       hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "TRIVIA",
       actionType: "recordAttempt",
       actionPayload: {
@@ -942,6 +949,7 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
     },
     {
       hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "TRIVIA",
       actionType: "recordAttempt",
       actionPayload: {

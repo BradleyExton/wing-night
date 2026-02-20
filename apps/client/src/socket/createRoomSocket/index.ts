@@ -17,7 +17,7 @@ const resolveSocketServerUrl = (): string => {
   return `${window.location.protocol}//${window.location.hostname}:3000`;
 };
 
-const resolveSocketClientRole = (pathname: string): SocketClientRole => {
+export const resolveSocketClientRole = (pathname: string): SocketClientRole => {
   const route = resolveClientRoute(pathname);
 
   if (route === "HOST") {
@@ -27,11 +27,12 @@ const resolveSocketClientRole = (pathname: string): SocketClientRole => {
   return CLIENT_ROLES.DISPLAY;
 };
 
-export const roomSocket: Socket<InboundSocketEvents, OutboundSocketEvents> = io(
-  resolveSocketServerUrl(),
-  {
+export const createRoomSocket = (
+  pathname: string
+): Socket<InboundSocketEvents, OutboundSocketEvents> => {
+  return io(resolveSocketServerUrl(), {
     auth: {
-      clientRole: resolveSocketClientRole(window.location.pathname)
+      clientRole: resolveSocketClientRole(pathname)
     }
-  }
-);
+  });
+};

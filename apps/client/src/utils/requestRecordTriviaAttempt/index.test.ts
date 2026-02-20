@@ -55,6 +55,7 @@ test("emits minigame:action payload when host secret exists", () => {
   assert.deepEqual(socket.emittedPayloads, [
     {
       hostSecret: "host-secret",
+      minigameApiVersion: 1,
       minigameId: "TRIVIA",
       actionType: "recordAttempt",
       actionPayload: {

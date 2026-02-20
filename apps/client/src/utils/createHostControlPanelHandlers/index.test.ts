@@ -44,8 +44,16 @@ test("wires every host action and emits claim-control via missing-secret callbac
       onMissingHostSecret?.();
       return false;
     },
-    requestRecordTriviaAttempt: (_socket, isCorrect, onMissingHostSecret) => {
-      callLog.push(`trivia:${isCorrect}`);
+    requestMinigameAction: (
+      _socket,
+      minigameId,
+      actionType,
+      actionPayload,
+      onMissingHostSecret
+    ) => {
+      callLog.push(
+        `minigame:${minigameId}:${actionType}:${JSON.stringify(actionPayload)}`
+      );
       onMissingHostSecret?.();
       return false;
     },
@@ -100,7 +108,9 @@ test("wires every host action and emits claim-control via missing-secret callbac
   handlers.onCreateTeam("Team Ghost Pepper");
   handlers.onAssignPlayer("player-1", "team-alpha");
   handlers.onSetWingParticipation("player-1", true);
-  handlers.onRecordTriviaAttempt(false);
+  handlers.onDispatchMinigameAction("TRIVIA", "recordAttempt", {
+    isCorrect: false
+  });
   handlers.onPauseTimer();
   handlers.onResumeTimer();
   handlers.onExtendTimer(30);
@@ -115,7 +125,7 @@ test("wires every host action and emits claim-control via missing-secret callbac
     "create:Team Ghost Pepper",
     "assign:player-1:team-alpha",
     "wing:player-1:true",
-    "trivia:false",
+    "minigame:TRIVIA:recordAttempt:{\"isCorrect\":false}",
     "pause",
     "resume",
     "extend:30",

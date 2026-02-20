@@ -49,6 +49,22 @@ export type ValidMinigameHostViewCheck = Assert<
   >
 >;
 
+export type ValidUnsupportedMinigameHostViewCheck = Assert<
+  IsAssignable<
+    {
+      minigame: "GEO";
+      activeTurnTeamId: string | null;
+      attemptsRemaining: number;
+      promptCursor: number;
+      pendingPointsByTeamId: Record<string, number>;
+      currentPrompt: TriviaPrompt | null;
+      status: "UNSUPPORTED";
+      message: string;
+    },
+    MinigameHostView
+  >
+>;
+
 export type ValidRoomStateCheck = Assert<
   IsAssignable<
     {

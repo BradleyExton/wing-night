@@ -159,11 +159,13 @@ Images may reference:
 
 - Mini-game rules run behind a module boundary under `packages/minigames/*`.
 - The room engine drives phase lifecycle, timers, and score application.
-- Mini-game modules provide serializable state reducers/selectors only.
+- Mini-game modules provide serializable state reducers/selectors and package-owned host/display renderer surfaces.
 - Server projects module selectors into snapshot-safe views:
   - `minigameHostView` for host interaction context.
   - `minigameDisplayView` for display-safe context (no answer payloads).
 - Host and display surfaces render from projected view models, not client-derived mini-game logic.
+- For this iteration, minigame renderers are React-first and loaded from package client exports.
+- Minigame authoring/iteration uses `/dev/minigame/:minigameId` sandbox route to preview host/display surfaces without running full game flow.
 
 ---
 

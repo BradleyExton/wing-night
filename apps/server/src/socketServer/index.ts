@@ -2,6 +2,7 @@ import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import {
   CLIENT_ROLES,
+  MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS,
   isSocketClientRole,
   type SocketClientRole
@@ -28,6 +29,7 @@ import {
   setWingParticipation
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
+import { resolveMinigameDescriptor } from "../minigames/registry/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
 export const attachSocketServer = (
@@ -105,9 +107,22 @@ export const attachSocketServer = (
           broadcastAfter(() => redoLastScoringMutation());
         },
         onAuthorizedMinigameAction: (payload) => {
+          if (payload.minigameApiVersion !== MINIGAME_API_VERSION) {
+            return;
+          }
+
           if (
             payload.minigameId !== "TRIVIA" ||
             payload.actionType !== "recordAttempt"
+          ) {
+            return;
+          }
+
+          if (
+            typeof payload.actionPayload !== "object" ||
+            payload.actionPayload === null ||
+            !("isCorrect" in payload.actionPayload) ||
+            typeof payload.actionPayload.isCorrect !== "boolean"
           ) {
             return;
           }
@@ -118,7 +133,18 @@ export const attachSocketServer = (
             return;
           }
 
-          broadcastAfter(() => recordTriviaAttempt(payload.actionPayload.isCorrect));
+          const activeMinigameDescriptor = resolveMinigameDescriptor(payload.minigameId);
+
+          if (
+            activeMinigameDescriptor.metadata.minigameApiVersion !==
+            payload.minigameApiVersion
+          ) {
+            return;
+          }
+
+          const isCorrect = payload.actionPayload.isCorrect;
+
+          broadcastAfter(() => recordTriviaAttempt(isCorrect));
         },
         onAuthorizedPauseTimer: () => {
           broadcastAfter(() => pauseRoomTimer());

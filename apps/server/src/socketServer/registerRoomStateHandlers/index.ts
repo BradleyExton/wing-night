@@ -1,5 +1,6 @@
 import {
   CLIENT_TO_SERVER_EVENTS,
+  MINIGAME_API_VERSION,
   TIMER_EXTEND_MAX_SECONDS,
   SERVER_TO_CLIENT_EVENTS
 } from "@wingnight/shared";
@@ -9,6 +10,7 @@ import type {
   MinigameActionEnvelope,
   MinigameActionPayload,
   MinigameRecordTriviaAttemptPayload,
+  TriviaRecordAttemptMinigameActionPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   RoomState,
@@ -179,6 +181,13 @@ const isMinigameActionEnvelope = (
     return false;
   }
 
+  if (
+    !("minigameApiVersion" in payload) ||
+    payload.minigameApiVersion !== MINIGAME_API_VERSION
+  ) {
+    return false;
+  }
+
   if (!("actionType" in payload) || typeof payload.actionType !== "string") {
     return false;
   }
@@ -188,7 +197,7 @@ const isMinigameActionEnvelope = (
 
 const isTriviaRecordAttemptMinigameActionPayload = (
   payload: MinigameActionEnvelope
-): payload is MinigameActionPayload => {
+): payload is TriviaRecordAttemptMinigameActionPayload => {
   if (payload.minigameId !== "TRIVIA" || payload.actionType !== "recordAttempt") {
     return false;
   }
@@ -210,6 +219,7 @@ const createTriviaRecordAttemptMinigameActionPayload = (
 ): MinigameActionPayload => {
   return {
     hostSecret,
+    minigameApiVersion: MINIGAME_API_VERSION,
     minigameId: "TRIVIA",
     actionType: "recordAttempt",
     actionPayload: {

@@ -15,22 +15,51 @@ export type RoomTimerState = {
   remainingMs: number;
 };
 
-export type MinigameHostView = {
+type MinigameHostViewBase = {
   minigame: MinigameType;
   activeTurnTeamId: string | null;
-  attemptsRemaining: number;
   promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;
   currentPrompt: TriviaPrompt | null;
 };
 
-export type MinigameDisplayView = {
+export type TriviaMinigameHostView = MinigameHostViewBase & {
+  minigame: "TRIVIA";
+  attemptsRemaining: number;
+};
+
+export type UnsupportedMinigameHostView = MinigameHostViewBase & {
+  minigame: Exclude<MinigameType, "TRIVIA">;
+  attemptsRemaining: number;
+  status: "UNSUPPORTED";
+  message: string;
+};
+
+export type MinigameHostView =
+  | TriviaMinigameHostView
+  | UnsupportedMinigameHostView;
+
+type MinigameDisplayViewBase = {
   minigame: MinigameType;
   activeTurnTeamId: string | null;
   promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;
   currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
 };
+
+export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
+  minigame: "TRIVIA";
+};
+
+export type UnsupportedMinigameDisplayView = MinigameDisplayViewBase & {
+  minigame: Exclude<MinigameType, "TRIVIA">;
+  status: "UNSUPPORTED";
+  message: string;
+};
+
+export type MinigameDisplayView =
+  | TriviaMinigameDisplayView
+  | UnsupportedMinigameDisplayView;
 
 export type RoomFatalError = {
   code: "CONTENT_LOAD_FAILED";

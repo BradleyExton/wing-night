@@ -10,6 +10,7 @@ import {
 } from "@wingnight/shared";
 
 import {
+  logError,
   logManualScoreAdjustment,
   logPhaseTransition,
   logScoreMutation
@@ -734,12 +735,20 @@ export const recordTriviaAttempt = (isCorrect: boolean): RoomState => {
 
   const questionsPerTurn = resolveTriviaQuestionsPerTurn(roomState);
   const nextUndoSnapshot = createScoringMutationUndoSnapshot(roomState);
-  const didRecordAttempt = reduceTriviaAttempt(
-    roomState,
-    isCorrect,
-    minigamePointsMax,
-    questionsPerTurn
-  );
+  let didRecordAttempt = false;
+
+  try {
+    didRecordAttempt = reduceTriviaAttempt(
+      roomState,
+      isCorrect,
+      minigamePointsMax,
+      questionsPerTurn
+    );
+  } catch (error) {
+    logError("server:minigameRuntimeFailure", error);
+    clearTriviaRuntimeState(roomState);
+    return getRoomStateSnapshot();
+  }
 
   if (!didRecordAttempt) {
     return getRoomStateSnapshot();
