@@ -2,6 +2,8 @@ export { Phase } from "./phase/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export type {
+  MinigamePromptDisplayView,
+  MinigamePromptHostView,
   MinigameDisplayView,
   MinigameHostView,
   RoomFatalError,
@@ -58,8 +60,6 @@ export type {
   MinigameActionEnvelope,
   MinigameActionPayload,
   MinigameActionType,
-  MinigameRecordTriviaAttemptPayload,
-  TriviaRecordAttemptMinigameActionPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   TimerExtendPayload,

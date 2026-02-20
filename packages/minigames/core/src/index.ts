@@ -69,6 +69,70 @@ export type MinigamePluginMetadata = {
   };
 };
 
+export type MinigameRuntimeActionEnvelope = {
+  actionType: string;
+  actionPayload: SerializableValue;
+};
+
+export type MinigameRuntimeInitializationInput = {
+  teamIds: string[];
+  activeRoundTeamId: string | null;
+  pointsMax: number;
+  pendingPointsByTeamId: Record<string, number>;
+  rules: SerializableValue | null;
+  content: SerializableValue | null;
+};
+
+export type MinigameRuntimeReductionInput = {
+  state: SerializableValue;
+  envelope: MinigameRuntimeActionEnvelope;
+  pointsMax: number;
+  rules: SerializableValue | null;
+  content: SerializableValue | null;
+};
+
+export type MinigameRuntimeSyncPendingPointsInput = {
+  state: SerializableValue;
+  pendingPointsByTeamId: Record<string, number>;
+};
+
+export type MinigameRuntimeSyncContentInput = {
+  state: SerializableValue;
+  rules: SerializableValue | null;
+  content: SerializableValue | null;
+};
+
+export type MinigameRuntimeSelectorInput = {
+  state: SerializableValue;
+  rules: SerializableValue | null;
+  content: SerializableValue | null;
+};
+
+export type MinigameRuntimeReductionResult = {
+  state: SerializableValue;
+  didMutate: boolean;
+};
+
+export type MinigameRuntimeContentAdapter = {
+  fileName: string;
+  parseFileContent: (
+    rawContent: string,
+    contentFilePath: string
+  ) => SerializableValue;
+};
+
+export type MinigameRuntimePlugin = {
+  id: MinigameType;
+  metadata: MinigamePluginMetadata;
+  content?: MinigameRuntimeContentAdapter;
+  initialize: (input: MinigameRuntimeInitializationInput) => SerializableValue | null;
+  reduceAction: (input: MinigameRuntimeReductionInput) => MinigameRuntimeReductionResult;
+  syncPendingPoints?: (input: MinigameRuntimeSyncPendingPointsInput) => SerializableValue;
+  syncContent?: (input: MinigameRuntimeSyncContentInput) => SerializableValue;
+  selectHostView: (input: MinigameRuntimeSelectorInput) => MinigameHostView | null;
+  selectDisplayView: (input: MinigameRuntimeSelectorInput) => MinigameDisplayView | null;
+};
+
 export type MinigameSurfacePhase = "intro" | "play";
 
 export type MinigameActionDispatch = (

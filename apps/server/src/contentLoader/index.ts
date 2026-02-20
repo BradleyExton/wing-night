@@ -1,8 +1,9 @@
-import type { GameConfigFile, Player, TriviaPrompt } from "@wingnight/shared";
+import type { GameConfigFile, MinigameType, Player } from "@wingnight/shared";
+import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { loadGameConfig } from "./loadGameConfig/index.js";
+import { loadMinigameContent } from "./loadMinigameContent/index.js";
 import { loadPlayers } from "./loadPlayers/index.js";
-import { loadTrivia } from "./loadTrivia/index.js";
 
 type LoadContentOptions = {
   contentRootDir?: string;
@@ -11,7 +12,7 @@ type LoadContentOptions = {
 type LoadedContent = {
   players: Player[];
   gameConfig: GameConfigFile;
-  triviaPrompts: TriviaPrompt[];
+  minigameContentById: Partial<Record<MinigameType, SerializableValue>>;
 };
 
 export const loadContent = (
@@ -19,11 +20,11 @@ export const loadContent = (
 ): LoadedContent => {
   const players = loadPlayers(options);
   const gameConfig = loadGameConfig(options);
-  const triviaPrompts = loadTrivia(options);
+  const minigameContentById = loadMinigameContent(options);
 
   return {
     players,
     gameConfig,
-    triviaPrompts
+    minigameContentById
   };
 };

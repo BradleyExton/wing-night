@@ -1,7 +1,6 @@
 import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
-import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
 import type { Team } from "../team/index.js";
@@ -15,12 +14,23 @@ export type RoomTimerState = {
   remainingMs: number;
 };
 
+export type MinigamePromptHostView = {
+  id: string;
+  question: string;
+  answer: string;
+};
+
+export type MinigamePromptDisplayView = {
+  id: string;
+  question: string;
+};
+
 type MinigameHostViewBase = {
   minigame: MinigameType;
   activeTurnTeamId: string | null;
   promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;
-  currentPrompt: TriviaPrompt | null;
+  currentPrompt: MinigamePromptHostView | null;
 };
 
 export type TriviaMinigameHostView = MinigameHostViewBase & {
@@ -44,7 +54,7 @@ type MinigameDisplayViewBase = {
   activeTurnTeamId: string | null;
   promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;
-  currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
+  currentPrompt: MinigamePromptDisplayView | null;
 };
 
 export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
@@ -75,15 +85,12 @@ export type RoomState = {
   players: Player[];
   teams: Team[];
   gameConfig: GameConfigFile | null;
-  triviaPrompts: TriviaPrompt[];
   currentRoundConfig: GameConfigRound | null;
   turnOrderTeamIds: string[];
   roundTurnCursor: number;
   completedRoundTurnTeamIds: string[];
   activeRoundTeamId: string | null;
   activeTurnTeamId: string | null;
-  currentTriviaPrompt: TriviaPrompt | null;
-  triviaPromptCursor: number;
   timer: RoomTimerState | null;
   minigameHostView: MinigameHostView | null;
   minigameDisplayView: MinigameDisplayView | null;

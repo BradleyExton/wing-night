@@ -3,18 +3,19 @@ import test from "node:test";
 
 import { MINIGAME_API_VERSION } from "@wingnight/shared";
 
-import { resolveMinigameDescriptor, resolveMinigameModule } from "./index.js";
+import {
+  resolveMinigameDescriptor,
+  resolveMinigameRuntimePlugin
+} from "./index.js";
 
-test("resolveMinigameModule returns trivia module for TRIVIA", () => {
-  const module = resolveMinigameModule("TRIVIA");
+test("resolveMinigameRuntimePlugin resolves runtime plugin for each minigame", () => {
+  const triviaRuntimePlugin = resolveMinigameRuntimePlugin("TRIVIA");
+  const geoRuntimePlugin = resolveMinigameRuntimePlugin("GEO");
+  const drawingRuntimePlugin = resolveMinigameRuntimePlugin("DRAWING");
 
-  assert.ok(module);
-  assert.equal(module?.id, "TRIVIA");
-});
-
-test("resolveMinigameModule returns null for unimplemented minigames", () => {
-  assert.equal(resolveMinigameModule("GEO"), null);
-  assert.equal(resolveMinigameModule("DRAWING"), null);
+  assert.equal(triviaRuntimePlugin.id, "TRIVIA");
+  assert.equal(geoRuntimePlugin.id, "GEO");
+  assert.equal(drawingRuntimePlugin.id, "DRAWING");
 });
 
 test("resolveMinigameDescriptor exposes metadata for compatibility checks", () => {
@@ -23,4 +24,5 @@ test("resolveMinigameDescriptor exposes metadata for compatibility checks", () =
 
   assert.equal(triviaDescriptor.metadata.minigameApiVersion, MINIGAME_API_VERSION);
   assert.equal(geoDescriptor.metadata.minigameApiVersion, MINIGAME_API_VERSION);
+  assert.equal(triviaDescriptor.runtimePlugin.id, "TRIVIA");
 });

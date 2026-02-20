@@ -5,7 +5,6 @@ import type {
   HostSecretPayload,
   MinigameActionPayload,
   MinigameActionEnvelope,
-  MinigameRecordTriviaAttemptPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   RoomState,
@@ -124,15 +123,6 @@ export type MinigameActionEnvelopeCheck = Assert<
   Equal<MinigameActionEnvelope["minigameApiVersion"], 1>
 >;
 
-export type RecordTriviaAttemptPayloadCheck = Assert<
-  Equal<
-    Parameters<
-      ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]
-    >,
-    [MinigameRecordTriviaAttemptPayload]
-  >
->;
-
 export type TimerPausePayloadCheck = Assert<
   Equal<
     Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]>,
@@ -213,9 +203,6 @@ export type InvalidRedoLastMutationNoPayloadCheck = Assert<Equal<Parameters<Clie
 
 // @ts-expect-error minigame:action must accept minigame action payload.
 export type InvalidMinigameActionNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]>, []>>;
-
-// @ts-expect-error minigame:recordTriviaAttempt must accept host secret + correctness payload.
-export type InvalidRecordTriviaAttemptNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]>, []>>;
 
 // @ts-expect-error timer:pause must accept host secret payload.
 export type InvalidTimerPauseNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]>, []>>;

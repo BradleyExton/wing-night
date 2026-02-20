@@ -16,8 +16,6 @@ export type ScoringSetWingParticipationPayload = HostSecretPayload &
 export type ScoringAdjustTeamScorePayload = HostSecretPayload &
   Record<"teamId", string> &
   Record<"delta", number>;
-export type MinigameRecordTriviaAttemptPayload = HostSecretPayload &
-  Record<"isCorrect", boolean>;
 export type MinigameActionEnvelope = HostSecretPayload &
   Record<"minigameApiVersion", MinigameApiVersion> &
   Record<"minigameId", MinigameType> &
@@ -50,7 +48,6 @@ export const CLIENT_TO_SERVER_EVENTS = {
   ADJUST_TEAM_SCORE: "scoring:adjustTeamScore",
   REDO_LAST_MUTATION: "scoring:redoLastMutation",
   MINIGAME_ACTION: "minigame:action",
-  RECORD_TRIVIA_ATTEMPT: "minigame:recordTriviaAttempt",
   TIMER_PAUSE: "timer:pause",
   TIMER_RESUME: "timer:resume",
   TIMER_EXTEND: "timer:extend"
@@ -96,10 +93,6 @@ export type ClientToServerEvents = {
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]: (
     payload: MinigameActionPayload
-  ) => void;
-  // Legacy bridge for existing trivia callers.
-  [CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]: (
-    payload: MinigameRecordTriviaAttemptPayload
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_RESUME]: (payload: HostSecretPayload) => void;

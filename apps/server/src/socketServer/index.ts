@@ -1,5 +1,6 @@
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
+import type { SerializableValue } from "@wingnight/minigames-core";
 import {
   CLIENT_ROLES,
   MINIGAME_API_VERSION,
@@ -17,10 +18,10 @@ import {
   adjustTeamScore,
   assignPlayerToTeam,
   createTeam,
+  dispatchMinigameAction,
   extendRoomTimer,
   getRoomStateSnapshot,
   pauseRoomTimer,
-  recordTriviaAttempt,
   redoLastScoringMutation,
   reorderTurnOrder,
   resetGameToSetup,
@@ -111,22 +112,6 @@ export const attachSocketServer = (
             return;
           }
 
-          if (
-            payload.minigameId !== "TRIVIA" ||
-            payload.actionType !== "recordAttempt"
-          ) {
-            return;
-          }
-
-          if (
-            typeof payload.actionPayload !== "object" ||
-            payload.actionPayload === null ||
-            !("isCorrect" in payload.actionPayload) ||
-            typeof payload.actionPayload.isCorrect !== "boolean"
-          ) {
-            return;
-          }
-
           const currentSnapshot = getRoomStateSnapshot();
 
           if (currentSnapshot.currentRoundConfig?.minigame !== payload.minigameId) {
@@ -141,10 +126,13 @@ export const attachSocketServer = (
           ) {
             return;
           }
-
-          const isCorrect = payload.actionPayload.isCorrect;
-
-          broadcastAfter(() => recordTriviaAttempt(isCorrect));
+          broadcastAfter(() =>
+            dispatchMinigameAction(
+              payload.minigameId,
+              payload.actionType,
+              payload.actionPayload as SerializableValue
+            )
+          );
         },
         onAuthorizedPauseTimer: () => {
           broadcastAfter(() => pauseRoomTimer());

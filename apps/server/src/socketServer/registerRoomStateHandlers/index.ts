@@ -9,8 +9,6 @@ import type {
   HostSecretPayload,
   MinigameActionEnvelope,
   MinigameActionPayload,
-  MinigameRecordTriviaAttemptPayload,
-  TriviaRecordAttemptMinigameActionPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   RoomState,
@@ -38,7 +36,6 @@ type RoomStateSocket = {
     (event: typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, listener: (payload: unknown) => void): void;
-    (event: typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, listener: (payload: unknown) => void): void;
@@ -156,20 +153,6 @@ const isScoringAdjustTeamScorePayload = (
   return Number.isInteger(payload.delta) && payload.delta !== 0;
 };
 
-const isMinigameRecordTriviaAttemptPayload = (
-  payload: unknown
-): payload is MinigameRecordTriviaAttemptPayload => {
-  if (!isHostSecretPayload(payload)) {
-    return false;
-  }
-
-  if (!("isCorrect" in payload) || typeof payload.isCorrect !== "boolean") {
-    return false;
-  }
-
-  return true;
-};
-
 const isMinigameActionEnvelope = (
   payload: unknown
 ): payload is MinigameActionEnvelope => {
@@ -194,40 +177,6 @@ const isMinigameActionEnvelope = (
 
   return "actionPayload" in payload;
 };
-
-const isTriviaRecordAttemptMinigameActionPayload = (
-  payload: MinigameActionEnvelope
-): payload is TriviaRecordAttemptMinigameActionPayload => {
-  if (payload.minigameId !== "TRIVIA" || payload.actionType !== "recordAttempt") {
-    return false;
-  }
-
-  if (typeof payload.actionPayload !== "object" || payload.actionPayload === null) {
-    return false;
-  }
-
-  if (!("isCorrect" in payload.actionPayload)) {
-    return false;
-  }
-
-  return typeof payload.actionPayload.isCorrect === "boolean";
-};
-
-const createTriviaRecordAttemptMinigameActionPayload = (
-  hostSecret: string,
-  isCorrect: boolean
-): MinigameActionPayload => {
-  return {
-    hostSecret,
-    minigameApiVersion: MINIGAME_API_VERSION,
-    minigameId: "TRIVIA",
-    actionType: "recordAttempt",
-    actionPayload: {
-      isCorrect
-    }
-  };
-};
-
 const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload => {
   if (!isHostSecretPayload(payload)) {
     return false;
@@ -359,26 +308,7 @@ export const registerRoomStateHandlers = (
       payload,
       isMinigameActionEnvelope,
       (typedPayload) => {
-        if (!isTriviaRecordAttemptMinigameActionPayload(typedPayload)) {
-          return;
-        }
-
         mutationHandlers.onAuthorizedMinigameAction(typedPayload);
-      }
-    );
-  };
-
-  const handleLegacyRecordTriviaAttempt = (payload: unknown): void => {
-    runAuthorizedMutation(
-      payload,
-      isMinigameRecordTriviaAttemptPayload,
-      (typedPayload) => {
-        mutationHandlers.onAuthorizedMinigameAction(
-          createTriviaRecordAttemptMinigameActionPayload(
-            typedPayload.hostSecret,
-            typedPayload.isCorrect
-          )
-        );
       }
     );
   };
@@ -418,7 +348,6 @@ export const registerRoomStateHandlers = (
   socket.on(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, handleAdjustTeamScore);
   socket.on(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, handleRedoLastMutation);
   socket.on(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, handleMinigameAction);
-  socket.on(CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, handleLegacyRecordTriviaAttempt);
   socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, handleTimerPause);
   socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, handleTimerResume);
   socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, handleTimerExtend);
