@@ -119,6 +119,28 @@ test("renders waiting fallback when MINIGAME_PLAY projection is not available ye
   assert.match(html, /Waiting for minigame display state from the server snapshot\./);
 });
 
+test("renders GEO scaffold in MINIGAME_PLAY without waiting on projected view", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.MINIGAME_PLAY),
+        currentRoundConfig: {
+          ...gameConfigFixture.rounds[0],
+          minigame: "GEO"
+        }
+      }}
+      phaseLabel="Minigame Play"
+    />
+  );
+
+  assert.match(html, /Mini-Game: GEO/);
+  assert.match(html, /GEO display module is scaffolded/);
+  assert.doesNotMatch(
+    html,
+    /Waiting for minigame display state from the server snapshot/
+  );
+});
+
 test("renders active team without turn progress during eating", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.EATING)} phaseLabel="Eating" />

@@ -3,6 +3,7 @@ import type {
   ClientToServerEvents,
   GameReorderTurnOrderPayload,
   HostSecretPayload,
+  MinigameActionPayload,
   MinigameRecordTriviaAttemptPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
@@ -109,6 +110,15 @@ export type RedoLastMutationPayloadCheck = Assert<
   >
 >;
 
+export type MinigameActionPayloadCheck = Assert<
+  Equal<
+    Parameters<
+      ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]
+    >,
+    [MinigameActionPayload]
+  >
+>;
+
 export type RecordTriviaAttemptPayloadCheck = Assert<
   Equal<
     Parameters<
@@ -195,6 +205,9 @@ export type InvalidAdjustTeamScoreNoPayloadCheck = Assert<Equal<Parameters<Clien
 
 // @ts-expect-error scoring:redoLastMutation must accept host secret payload.
 export type InvalidRedoLastMutationNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION]>, []>>;
+
+// @ts-expect-error minigame:action must accept minigame action payload.
+export type InvalidMinigameActionNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]>, []>>;
 
 // @ts-expect-error minigame:recordTriviaAttempt must accept host secret + correctness payload.
 export type InvalidRecordTriviaAttemptNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]>, []>>;

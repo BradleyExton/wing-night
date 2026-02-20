@@ -104,8 +104,21 @@ export const attachSocketServer = (
         onAuthorizedRedoLastMutation: () => {
           broadcastAfter(() => redoLastScoringMutation());
         },
-        onAuthorizedRecordTriviaAttempt: (isCorrect) => {
-          broadcastAfter(() => recordTriviaAttempt(isCorrect));
+        onAuthorizedMinigameAction: (payload) => {
+          if (
+            payload.minigameId !== "TRIVIA" ||
+            payload.actionType !== "recordAttempt"
+          ) {
+            return;
+          }
+
+          const currentSnapshot = getRoomStateSnapshot();
+
+          if (currentSnapshot.currentRoundConfig?.minigame !== payload.minigameId) {
+            return;
+          }
+
+          broadcastAfter(() => recordTriviaAttempt(payload.actionPayload.isCorrect));
         },
         onAuthorizedPauseTimer: () => {
           broadcastAfter(() => pauseRoomTimer());

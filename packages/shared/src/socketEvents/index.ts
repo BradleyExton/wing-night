@@ -1,3 +1,4 @@
+import type { MinigameType } from "../content/gameConfig/index.js";
 import type { RoomState } from "../roomState/index.js";
 
 export type HostSecretPayload = Record<"hostSecret", string>;
@@ -15,6 +16,16 @@ export type ScoringAdjustTeamScorePayload = HostSecretPayload &
   Record<"delta", number>;
 export type MinigameRecordTriviaAttemptPayload = HostSecretPayload &
   Record<"isCorrect", boolean>;
+export type TriviaRecordAttemptMinigameActionPayload = HostSecretPayload &
+  Record<"minigameId", "TRIVIA"> &
+  Record<"actionType", "recordAttempt"> &
+  Record<"actionPayload", Record<"isCorrect", boolean>>;
+export type MinigameActionPayload = TriviaRecordAttemptMinigameActionPayload;
+export type MinigameActionType = MinigameActionPayload["actionType"];
+export type MinigameActionEnvelope = HostSecretPayload &
+  Record<"minigameId", MinigameType> &
+  Record<"actionType", string> &
+  Record<"actionPayload", unknown>;
 export type TimerExtendPayload = HostSecretPayload &
   Record<"additionalSeconds", number>;
 export const TIMER_EXTEND_MAX_SECONDS = 600;
@@ -31,6 +42,7 @@ export const CLIENT_TO_SERVER_EVENTS = {
   SET_WING_PARTICIPATION: "scoring:setWingParticipation",
   ADJUST_TEAM_SCORE: "scoring:adjustTeamScore",
   REDO_LAST_MUTATION: "scoring:redoLastMutation",
+  MINIGAME_ACTION: "minigame:action",
   RECORD_TRIVIA_ATTEMPT: "minigame:recordTriviaAttempt",
   TIMER_PAUSE: "timer:pause",
   TIMER_RESUME: "timer:resume",
@@ -75,6 +87,10 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION]: (
     payload: HostSecretPayload
   ) => void;
+  [CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]: (
+    payload: MinigameActionPayload
+  ) => void;
+  // Legacy bridge for existing trivia callers.
   [CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]: (
     payload: MinigameRecordTriviaAttemptPayload
   ) => void;

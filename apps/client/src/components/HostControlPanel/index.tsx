@@ -65,6 +65,8 @@ export const HostControlPanel = ({
   const phase = roomState?.phase ?? null;
   const fatalError = roomState?.fatalError ?? null;
   const hostMode = resolveHostRenderMode(phase);
+  const isMinigameTakeover =
+    hostMode === "minigame_intro" || hostMode === "minigame_play";
   const minigameHostView = roomState?.minigameHostView ?? null;
   const minigameType =
     minigameHostView?.minigame ?? roomState?.currentRoundConfig?.minigame ?? null;
@@ -103,6 +105,10 @@ export const HostControlPanel = ({
 
   const phaseAdvanceHint =
     phase !== null ? hostControlPanelCopy.phaseAdvanceHint(phase) : null;
+  const containerClassName = isMinigameTakeover
+    ? styles.takeoverContainer
+    : styles.container;
+  const panelClassName = isMinigameTakeover ? styles.takeoverPanel : styles.panel;
 
   useEffect(() => {
     if (!overrideDockContext.isVisible && isOverrideDockOpen) {
@@ -156,8 +162,8 @@ export const HostControlPanel = ({
   }
 
   return (
-    <main className={styles.container}>
-      <div className={styles.panel}>
+    <main className={containerClassName}>
+      <div className={panelClassName}>
         <HostPanelHeader roomState={roomState} teamNameByTeamId={teamNameByTeamId} />
 
         <HostActionBarSurface

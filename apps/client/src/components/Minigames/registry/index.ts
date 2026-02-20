@@ -1,5 +1,7 @@
 import type { MinigameType } from "@wingnight/shared";
 
+import { DisplayGeoSurface } from "../geo/DisplayGeoSurface";
+import { HostGeoSurface } from "../geo/HostGeoSurface";
 import { DisplayTriviaSurface } from "../trivia/DisplayTriviaSurface";
 import { HostTriviaSurface } from "../trivia/HostTriviaSurface";
 import type { MinigameRendererBundle } from "../types";
@@ -10,7 +12,10 @@ const minigameRendererByType: Record<MinigameType, MinigameRendererBundle | null
       HostSurface: HostTriviaSurface,
       DisplaySurface: DisplayTriviaSurface
     },
-    GEO: null,
+    GEO: {
+      HostSurface: HostGeoSurface,
+      DisplaySurface: DisplayGeoSurface
+    },
     DRAWING: null
   };
 

@@ -48,7 +48,7 @@ export const MinigameSurface = ({
     );
   }
 
-  if (phase === "play" && minigameHostView === null) {
+  if (phase === "play" && minigameType === "TRIVIA" && minigameHostView === null) {
     return (
       <section className={styles.shellCard}>
         <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>

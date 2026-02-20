@@ -3,7 +3,7 @@ import test from "node:test";
 
 import {
   CLIENT_TO_SERVER_EVENTS,
-  type MinigameRecordTriviaAttemptPayload
+  type MinigameActionPayload
 } from "@wingnight/shared";
 
 import { requestRecordTriviaAttempt } from "./index";
@@ -11,13 +11,13 @@ import { requestRecordTriviaAttempt } from "./index";
 type RecordTriviaAttemptSocket = Parameters<typeof requestRecordTriviaAttempt>[0];
 
 class MockRecordTriviaAttemptSocket {
-  public emittedPayloads: MinigameRecordTriviaAttemptPayload[] = [];
+  public emittedPayloads: MinigameActionPayload[] = [];
 
   public emit(
-    event: typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
-    payload: MinigameRecordTriviaAttemptPayload
+    event: typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION,
+    payload: MinigameActionPayload
   ): void {
-    if (event === CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT) {
+    if (event === CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION) {
       this.emittedPayloads.push(payload);
     }
   }
@@ -41,7 +41,7 @@ test("returns false and emits nothing when host secret is unavailable", () => {
   assert.deepEqual(socket.emittedPayloads, []);
 });
 
-test("emits minigame:recordTriviaAttempt payload when host secret exists", () => {
+test("emits minigame:action payload when host secret exists", () => {
   const socket = new MockRecordTriviaAttemptSocket();
 
   const didEmit = requestRecordTriviaAttempt(
@@ -55,7 +55,11 @@ test("emits minigame:recordTriviaAttempt payload when host secret exists", () =>
   assert.deepEqual(socket.emittedPayloads, [
     {
       hostSecret: "host-secret",
-      isCorrect: false
+      minigameId: "TRIVIA",
+      actionType: "recordAttempt",
+      actionPayload: {
+        isCorrect: false
+      }
     }
   ]);
 });

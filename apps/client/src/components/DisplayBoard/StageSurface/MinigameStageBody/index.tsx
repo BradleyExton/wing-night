@@ -63,7 +63,9 @@ export const MinigameStageBody = ({
           <p className={styles.fallbackText}>
             {displayBoardCopy.minigameRendererUnavailableLabel(minigameType)}
           </p>
-        ) : minigamePhase === "play" && minigameDisplayView === null ? (
+        ) : minigamePhase === "play" &&
+          minigameType === "TRIVIA" &&
+          minigameDisplayView === null ? (
           <p className={styles.fallbackText}>{displayBoardCopy.minigameWaitingForViewLabel}</p>
         ) : (
           <minigameRendererBundle.DisplaySurface

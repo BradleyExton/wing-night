@@ -6,6 +6,8 @@ import {
 import type {
   GameReorderTurnOrderPayload,
   HostSecretPayload,
+  MinigameActionEnvelope,
+  MinigameActionPayload,
   MinigameRecordTriviaAttemptPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
@@ -33,6 +35,7 @@ type RoomStateSocket = {
     (event: typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, listener: (payload: unknown) => void): void;
@@ -55,7 +58,7 @@ type AuthorizedSetupMutationHandlers = {
   onAuthorizedSetWingParticipation: (playerId: string, didEat: boolean) => void;
   onAuthorizedAdjustTeamScore: (teamId: string, delta: number) => void;
   onAuthorizedRedoLastMutation: () => void;
-  onAuthorizedRecordTriviaAttempt: (isCorrect: boolean) => void;
+  onAuthorizedMinigameAction: (payload: MinigameActionPayload) => void;
   onAuthorizedPauseTimer: () => void;
   onAuthorizedResumeTimer: () => void;
   onAuthorizedExtendTimer: (additionalSeconds: number) => void;
@@ -163,6 +166,56 @@ const isMinigameRecordTriviaAttemptPayload = (
   }
 
   return true;
+};
+
+const isMinigameActionEnvelope = (
+  payload: unknown
+): payload is MinigameActionEnvelope => {
+  if (!isHostSecretPayload(payload)) {
+    return false;
+  }
+
+  if (!("minigameId" in payload) || typeof payload.minigameId !== "string") {
+    return false;
+  }
+
+  if (!("actionType" in payload) || typeof payload.actionType !== "string") {
+    return false;
+  }
+
+  return "actionPayload" in payload;
+};
+
+const isTriviaRecordAttemptMinigameActionPayload = (
+  payload: MinigameActionEnvelope
+): payload is MinigameActionPayload => {
+  if (payload.minigameId !== "TRIVIA" || payload.actionType !== "recordAttempt") {
+    return false;
+  }
+
+  if (typeof payload.actionPayload !== "object" || payload.actionPayload === null) {
+    return false;
+  }
+
+  if (!("isCorrect" in payload.actionPayload)) {
+    return false;
+  }
+
+  return typeof payload.actionPayload.isCorrect === "boolean";
+};
+
+const createTriviaRecordAttemptMinigameActionPayload = (
+  hostSecret: string,
+  isCorrect: boolean
+): MinigameActionPayload => {
+  return {
+    hostSecret,
+    minigameId: "TRIVIA",
+    actionType: "recordAttempt",
+    actionPayload: {
+      isCorrect
+    }
+  };
 };
 
 const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload => {
@@ -291,12 +344,31 @@ export const registerRoomStateHandlers = (
     });
   };
 
-  const handleRecordTriviaAttempt = (payload: unknown): void => {
+  const handleMinigameAction = (payload: unknown): void => {
+    runAuthorizedMutation(
+      payload,
+      isMinigameActionEnvelope,
+      (typedPayload) => {
+        if (!isTriviaRecordAttemptMinigameActionPayload(typedPayload)) {
+          return;
+        }
+
+        mutationHandlers.onAuthorizedMinigameAction(typedPayload);
+      }
+    );
+  };
+
+  const handleLegacyRecordTriviaAttempt = (payload: unknown): void => {
     runAuthorizedMutation(
       payload,
       isMinigameRecordTriviaAttemptPayload,
       (typedPayload) => {
-        mutationHandlers.onAuthorizedRecordTriviaAttempt(typedPayload.isCorrect);
+        mutationHandlers.onAuthorizedMinigameAction(
+          createTriviaRecordAttemptMinigameActionPayload(
+            typedPayload.hostSecret,
+            typedPayload.isCorrect
+          )
+        );
       }
     );
   };
@@ -335,10 +407,8 @@ export const registerRoomStateHandlers = (
   );
   socket.on(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, handleAdjustTeamScore);
   socket.on(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, handleRedoLastMutation);
-  socket.on(
-    CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
-    handleRecordTriviaAttempt
-  );
+  socket.on(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, handleMinigameAction);
+  socket.on(CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, handleLegacyRecordTriviaAttempt);
   socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, handleTimerPause);
   socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, handleTimerResume);
   socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, handleTimerExtend);

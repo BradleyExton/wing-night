@@ -60,7 +60,7 @@ test("renders waiting fallback when host view is unavailable", () => {
   assert.match(html, /Waiting for minigame host state from the server snapshot\./);
 });
 
-test("renders unsupported fallback for minigames without a renderer", () => {
+test("renders GEO scaffold surface for configured geo minigame", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
       phase="play"
@@ -78,8 +78,8 @@ test("renders unsupported fallback for minigames without a renderer", () => {
     />
   );
 
-  assert.match(html, /GEO host surface is not available yet\./);
-  assert.doesNotMatch(html, /Which scale measures pepper heat/);
+  assert.match(html, /GEO gameplay module is scaffolded/);
+  assert.match(html, /GEO host controls coming next/);
 });
 
 test("renders intro surface for configured trivia minigame", () => {

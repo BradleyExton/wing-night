@@ -1,6 +1,6 @@
 import {
   CLIENT_TO_SERVER_EVENTS,
-  type MinigameRecordTriviaAttemptPayload
+  type MinigameActionPayload
 } from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
@@ -31,11 +31,15 @@ export const requestRecordTriviaAttempt = (
     return false;
   }
 
-  const payload: MinigameRecordTriviaAttemptPayload = {
+  const payload: MinigameActionPayload = {
     hostSecret,
-    isCorrect
+    minigameId: "TRIVIA",
+    actionType: "recordAttempt",
+    actionPayload: {
+      isCorrect
+    }
   };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, payload);
+  socket.emit(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, payload);
 
   return true;
 };

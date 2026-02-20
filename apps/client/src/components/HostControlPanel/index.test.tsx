@@ -369,6 +369,7 @@ test("keeps MINIGAME_INTRO on streamlined host view", () => {
     <HostControlPanel roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
+  assert.match(html, /max-w-\[1100px\]/);
   assert.doesNotMatch(html, /Team Setup/);
   assert.doesNotMatch(html, /Players/);
   assert.match(html, /Active Team/);
