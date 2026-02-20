@@ -23,7 +23,10 @@ const triviaHostViewFixture: MinigameHostView = {
 test("renders trivia controls from minigame host view during MINIGAME_PLAY", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      phase="play"
+      minigameType="TRIVIA"
       minigameHostView={triviaHostViewFixture}
+      activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
       triviaAttemptDisabled={false}
       onRecordTriviaAttempt={(): void => {
@@ -42,7 +45,10 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
 test("renders waiting fallback when host view is unavailable", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      phase="play"
+      minigameType="TRIVIA"
       minigameHostView={null}
+      activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
       triviaAttemptDisabled
       onRecordTriviaAttempt={(): void => {
@@ -51,16 +57,19 @@ test("renders waiting fallback when host view is unavailable", () => {
     />
   );
 
-  assert.match(html, /Waiting for room state/);
+  assert.match(html, /Waiting for minigame host state from the server snapshot\./);
 });
 
-test("renders waiting fallback for non-trivia minigame payloads", () => {
+test("renders unsupported fallback for minigames without a renderer", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      phase="play"
+      minigameType="GEO"
       minigameHostView={{
         ...triviaHostViewFixture,
         minigame: "GEO"
       }}
+      activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
       triviaAttemptDisabled
       onRecordTriviaAttempt={(): void => {
@@ -69,6 +78,25 @@ test("renders waiting fallback for non-trivia minigame payloads", () => {
     />
   );
 
-  assert.match(html, /Waiting for room state/);
+  assert.match(html, /GEO host surface is not available yet\./);
   assert.doesNotMatch(html, /Which scale measures pepper heat/);
+});
+
+test("renders intro surface for configured trivia minigame", () => {
+  const html = renderToStaticMarkup(
+    <MinigameSurface
+      phase="intro"
+      minigameType="TRIVIA"
+      minigameHostView={null}
+      activeTeamName="Team Alpha"
+      teamNameByTeamId={teamNameByTeamId}
+      triviaAttemptDisabled
+      onRecordTriviaAttempt={(): void => {
+        return;
+      }}
+    />
+  );
+
+  assert.match(html, /Review the active team, then advance to begin trivia play\./);
+  assert.match(html, /Active Team: Team Alpha/);
 });

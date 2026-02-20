@@ -21,6 +21,10 @@ export const displayCopy = {
   minigameSectionTitle: "Mini-Game",
   minigameIntroDescription: (minigame: MinigameType): string =>
     `${minigame} is up next.`,
+  minigameWaitingForViewLabel:
+    "Waiting for minigame display state from the server snapshot.",
+  minigameRendererUnavailableLabel: (minigame: MinigameType): string =>
+    `${minigame} display surface is not available yet.`,
   triviaTurnTitle: "Trivia Turn",
   triviaQuestionLabel: "Question",
   activeTeamLabel: "Active Team",

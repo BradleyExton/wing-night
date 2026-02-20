@@ -135,6 +135,12 @@ export const hostCopy = {
   minigameSectionTitle: "Mini-Game",
   minigameIntroDescription: (minigame: MinigameType): string =>
     `${minigame} is queued. Advance when players are ready to begin.`,
+  minigamePlayDescription: (minigame: MinigameType): string =>
+    `${minigame} is live for this team turn.`,
+  minigameWaitingForViewLabel:
+    "Waiting for minigame host state from the server snapshot.",
+  minigameRendererUnavailableLabel: (minigame: MinigameType): string =>
+    `${minigame} host surface is not available yet.`,
   minigameFallbackType: "TRIVIA" as MinigameType,
   waitingStateLabel: "Waiting for room state...",
   triviaActiveTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,

@@ -66,6 +66,8 @@ export const HostControlPanel = ({
   const fatalError = roomState?.fatalError ?? null;
   const hostMode = resolveHostRenderMode(phase);
   const minigameHostView = roomState?.minigameHostView ?? null;
+  const minigameType =
+    minigameHostView?.minigame ?? roomState?.currentRoundConfig?.minigame ?? null;
   const isTriviaMinigamePlayPhase =
     hostMode === "minigame_play" && minigameHostView?.minigame === "TRIVIA";
 
@@ -177,6 +179,7 @@ export const HostControlPanel = ({
           wingParticipationByPlayerId={wingParticipationByPlayerId}
           activeRoundTeamId={activeRoundTeamId}
           activeRoundTeamName={activeRoundTeamName}
+          minigameType={minigameType}
           minigameHostView={minigameHostView}
           nextTeamName={nextTeamName}
           setupMutationsDisabled={setupMutationsDisabled}

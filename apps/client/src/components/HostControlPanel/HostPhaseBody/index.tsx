@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import {
   type MinigameHostView,
+  type MinigameType,
   type Player,
   type RoomState,
   type Team
@@ -24,6 +25,7 @@ type HostPhaseBodyProps = {
   wingParticipationByPlayerId: Record<string, boolean>;
   activeRoundTeamId: string | null;
   activeRoundTeamName: string;
+  minigameType: MinigameType | null;
   minigameHostView: MinigameHostView | null;
   nextTeamName: string;
   setupMutationsDisabled: boolean;
@@ -56,6 +58,7 @@ export const HostPhaseBody = ({
   wingParticipationByPlayerId,
   activeRoundTeamId,
   activeRoundTeamName,
+  minigameType,
   minigameHostView,
   nextTeamName,
   setupMutationsDisabled,
@@ -119,11 +122,15 @@ export const HostPhaseBody = ({
         </div>
       );
     case "minigame_intro":
-      return null;
     case "minigame_play":
       return (
         <MinigameSurface
+          phase={hostMode === "minigame_intro" ? "intro" : "play"}
+          minigameType={minigameType}
           minigameHostView={minigameHostView}
+          activeTeamName={
+            activeRoundTeamId === null ? null : activeRoundTeamName
+          }
           teamNameByTeamId={teamNameByTeamId}
           triviaAttemptDisabled={triviaAttemptDisabled}
           onRecordTriviaAttempt={onRecordTriviaAttempt}

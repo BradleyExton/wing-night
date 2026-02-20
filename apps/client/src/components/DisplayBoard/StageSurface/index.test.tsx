@@ -84,7 +84,16 @@ test("renders trivia question without answer leakage", () => {
     <StageSurface
       roomState={{
         ...buildSnapshot(Phase.MINIGAME_PLAY),
-        activeTurnTeamId: "team-1",
+        minigameDisplayView: {
+          minigame: "TRIVIA",
+          activeTurnTeamId: "team-1",
+          promptCursor: 0,
+          pendingPointsByTeamId: {},
+          currentPrompt: {
+            id: "prompt-1",
+            question: "Which scale measures pepper heat?"
+          }
+        },
         currentTriviaPrompt: {
           id: "prompt-1",
           question: "Which scale measures pepper heat?",
@@ -100,6 +109,14 @@ test("renders trivia question without answer leakage", () => {
   assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.doesNotMatch(html, /Scoville/);
+});
+
+test("renders waiting fallback when MINIGAME_PLAY projection is not available yet", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_PLAY)} phaseLabel="Minigame Play" />
+  );
+
+  assert.match(html, /Waiting for minigame display state from the server snapshot\./);
 });
 
 test("renders active team without turn progress during eating", () => {

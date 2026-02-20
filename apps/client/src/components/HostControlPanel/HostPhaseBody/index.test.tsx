@@ -119,6 +119,7 @@ const buildProps = (
     wingParticipationByPlayerId: { "player-1": true },
     activeRoundTeamId: "team-alpha",
     activeRoundTeamName: "Team Alpha",
+    minigameType: roomState?.currentRoundConfig?.minigame ?? null,
     minigameHostView: null,
     nextTeamName: "",
     setupMutationsDisabled: false,
@@ -180,12 +181,14 @@ test("renders eating surfaces in eating mode", () => {
   assert.doesNotMatch(html, /Morgan/);
 });
 
-test("renders no phase body in minigame intro mode", () => {
+test("renders minigame surface in minigame intro mode", () => {
   const html = renderToStaticMarkup(
     <HostPhaseBody {...buildProps("minigame_intro", Phase.MINIGAME_INTRO)} />
   );
 
-  assert.equal(html, "");
+  assert.match(html, /Mini-Game/);
+  assert.match(html, /Review the active team, then advance to begin trivia play\./);
+  assert.match(html, /Active Team: Team Alpha/);
 });
 
 test("renders minigame surface in minigame play mode", () => {

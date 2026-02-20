@@ -59,12 +59,12 @@ export const StageSurface = ({
         return (
           <MinigameStageBody
             phaseLabel={phaseLabel}
+            minigamePhase={stageViewModel.minigamePhase}
+            minigameType={stageViewModel.minigameType}
             currentRoundConfig={stageViewModel.currentRoundConfig}
             shouldRenderTeamTurnContext={stageViewModel.shouldRenderTeamTurnContext}
             activeTeamName={stageViewModel.activeTeamName}
-            isTriviaTurnPhase={stageViewModel.isTriviaTurnPhase}
-            shouldRenderTriviaPrompt={stageViewModel.shouldRenderTriviaPrompt}
-            currentTriviaPrompt={stageViewModel.currentTriviaPrompt}
+            minigameDisplayView={stageViewModel.minigameDisplayView}
           />
         );
       case "fallback":
