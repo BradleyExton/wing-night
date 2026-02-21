@@ -87,6 +87,12 @@ importers:
       '@wingnight/minigames-core':
         specifier: workspace:*
         version: link:../../packages/minigames/core
+      '@wingnight/minigames-drawing':
+        specifier: workspace:*
+        version: link:../../packages/minigames/drawing
+      '@wingnight/minigames-geo':
+        specifier: workspace:*
+        version: link:../../packages/minigames/geo
       '@wingnight/minigames-trivia':
         specifier: workspace:*
         version: link:../../packages/minigames/trivia
