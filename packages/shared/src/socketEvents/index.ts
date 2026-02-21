@@ -1,5 +1,8 @@
 import type { MinigameType } from "../content/gameConfig/index.js";
-import type { RoomState } from "../roomState/index.js";
+import type {
+  RoleScopedStateSnapshotEnvelope,
+  RoomState
+} from "../roomState/index.js";
 
 export type HostSecretPayload = Record<"hostSecret", string>;
 export const MINIGAME_API_VERSION = 1 as const;
@@ -16,16 +19,18 @@ export type ScoringSetWingParticipationPayload = HostSecretPayload &
 export type ScoringAdjustTeamScorePayload = HostSecretPayload &
   Record<"teamId", string> &
   Record<"delta", number>;
-export type MinigameActionEnvelope = HostSecretPayload &
-  Record<"minigameApiVersion", MinigameApiVersion> &
+export type MinigameActionEnvelopePayload = HostSecretPayload &
   Record<"minigameId", MinigameType> &
+  Record<"minigameApiVersion", MinigameApiVersion> &
   Record<"actionType", string> &
   Record<"actionPayload", unknown>;
-export type TriviaRecordAttemptMinigameActionPayload = MinigameActionEnvelope &
-  Record<"minigameId", "TRIVIA"> &
-  Record<"actionType", "recordAttempt"> &
-  Record<"actionPayload", Record<"isCorrect", boolean>>;
-export type GenericMinigameActionPayload = MinigameActionEnvelope &
+export type MinigameActionEnvelope = MinigameActionEnvelopePayload;
+export type TriviaRecordAttemptMinigameActionPayload =
+  MinigameActionEnvelopePayload &
+    Record<"minigameId", "TRIVIA"> &
+    Record<"actionType", "recordAttempt"> &
+    Record<"actionPayload", Record<"isCorrect", boolean>>;
+export type GenericMinigameActionPayload = MinigameActionEnvelopePayload &
   Record<"minigameId", MinigameType>;
 export type MinigameActionPayload =
   | TriviaRecordAttemptMinigameActionPayload
@@ -92,7 +97,7 @@ export type ClientToServerEvents = {
     payload: HostSecretPayload
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]: (
-    payload: MinigameActionPayload
+    payload: MinigameActionEnvelopePayload
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_RESUME]: (payload: HostSecretPayload) => void;
@@ -100,7 +105,9 @@ export type ClientToServerEvents = {
 };
 
 export type ServerToClientEvents = {
-  [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (roomState: RoomState) => void;
+  [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (
+    payload: RoleScopedStateSnapshotEnvelope | RoomState
+  ) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED]: (payload: HostSecretPayload) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_INVALID]: () => void;
 };

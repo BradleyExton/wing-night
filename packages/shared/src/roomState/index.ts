@@ -1,8 +1,10 @@
 import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
+import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
+import type { SocketClientRole } from "../socketClientRole/index.js";
 import type { Team } from "../team/index.js";
 
 export type RoomTimerState = {
@@ -14,62 +16,58 @@ export type RoomTimerState = {
   remainingMs: number;
 };
 
-export type MinigamePromptHostView = {
-  id: string;
-  question: string;
-  answer: string;
+export const MINIGAME_ACTION_TYPES = {
+  TRIVIA_RECORD_ATTEMPT: "recordAttempt"
+} as const;
+
+export type MinigameContractCompatibilityStatus = "COMPATIBLE" | "MISMATCH";
+
+export type MinigameContractMetadata = {
+  minigameApiVersion: number;
+  capabilityFlags: readonly string[];
 };
 
-export type MinigamePromptDisplayView = {
-  id: string;
-  question: string;
-};
+export const MINIGAME_CONTRACT_METADATA_BY_ID = {
+  TRIVIA: {
+    minigameApiVersion: 1,
+    capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT]
+  },
+  GEO: {
+    minigameApiVersion: 1,
+    capabilityFlags: []
+  },
+  DRAWING: {
+    minigameApiVersion: 1,
+    capabilityFlags: []
+  }
+} as const satisfies Record<MinigameType, MinigameContractMetadata>;
 
-type MinigameHostViewBase = {
+export type MinigameHostView = {
   minigame: MinigameType;
+  minigameApiVersion?: number;
+  capabilityFlags?: string[];
+  compatibilityStatus?: MinigameContractCompatibilityStatus;
+  compatibilityMessage?: string | null;
+  activeTurnTeamId: string | null;
+  attemptsRemaining: number;
+  promptCursor: number;
+  pendingPointsByTeamId: Record<string, number>;
+  currentPrompt: TriviaPrompt | null;
+  status?: "UNSUPPORTED";
+  message?: string;
+};
+
+export type MinigameDisplayView = {
+  minigame: MinigameType;
+  minigameApiVersion?: number;
+  capabilityFlags?: string[];
   activeTurnTeamId: string | null;
   promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;
-  currentPrompt: MinigamePromptHostView | null;
+  currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
+  status?: "UNSUPPORTED";
+  message?: string;
 };
-
-export type TriviaMinigameHostView = MinigameHostViewBase & {
-  minigame: "TRIVIA";
-  attemptsRemaining: number;
-};
-
-export type UnsupportedMinigameHostView = MinigameHostViewBase & {
-  minigame: Exclude<MinigameType, "TRIVIA">;
-  attemptsRemaining: number;
-  status: "UNSUPPORTED";
-  message: string;
-};
-
-export type MinigameHostView =
-  | TriviaMinigameHostView
-  | UnsupportedMinigameHostView;
-
-type MinigameDisplayViewBase = {
-  minigame: MinigameType;
-  activeTurnTeamId: string | null;
-  promptCursor: number;
-  pendingPointsByTeamId: Record<string, number>;
-  currentPrompt: MinigamePromptDisplayView | null;
-};
-
-export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
-  minigame: "TRIVIA";
-};
-
-export type UnsupportedMinigameDisplayView = MinigameDisplayViewBase & {
-  minigame: Exclude<MinigameType, "TRIVIA">;
-  status: "UNSUPPORTED";
-  message: string;
-};
-
-export type MinigameDisplayView =
-  | TriviaMinigameDisplayView
-  | UnsupportedMinigameDisplayView;
 
 export type RoomFatalError = {
   code: "CONTENT_LOAD_FAILED";
@@ -85,12 +83,15 @@ export type RoomState = {
   players: Player[];
   teams: Team[];
   gameConfig: GameConfigFile | null;
+  triviaPrompts?: TriviaPrompt[];
   currentRoundConfig: GameConfigRound | null;
   turnOrderTeamIds: string[];
   roundTurnCursor: number;
   completedRoundTurnTeamIds: string[];
   activeRoundTeamId: string | null;
   activeTurnTeamId: string | null;
+  currentTriviaPrompt?: TriviaPrompt | null;
+  triviaPromptCursor?: number;
   timer: RoomTimerState | null;
   minigameHostView: MinigameHostView | null;
   minigameDisplayView: MinigameDisplayView | null;
@@ -101,3 +102,37 @@ export type RoomState = {
   canRedoScoringMutation: boolean;
   canAdvancePhase: boolean;
 };
+
+type DisplayUnsafeRoomStateKeys =
+  // Keep this list aligned with server role-scoped snapshot projection.
+  // Any answer-bearing or host-only RoomState field must be listed here.
+  | "triviaPrompts"
+  | "currentTriviaPrompt"
+  | "minigameHostView";
+
+export const DISPLAY_UNSAFE_ROOM_STATE_KEYS = [
+  "triviaPrompts",
+  "currentTriviaPrompt",
+  "minigameHostView"
+] as const satisfies readonly DisplayUnsafeRoomStateKeys[];
+
+type DisplayUnsafeRoomStateKey = (typeof DISPLAY_UNSAFE_ROOM_STATE_KEYS)[number];
+
+export type HostRoomStateSnapshot = RoomState;
+
+export type DisplayRoomStateSnapshot = Omit<RoomState, DisplayUnsafeRoomStateKey>;
+
+export type RoleScopedStateSnapshotEnvelope =
+  | {
+      clientRole: "HOST";
+      roomState: HostRoomStateSnapshot;
+    }
+  | {
+      clientRole: "DISPLAY";
+      roomState: DisplayRoomStateSnapshot;
+    };
+
+export type RoleScopedSnapshotByRole<TRole extends SocketClientRole> = Extract<
+  RoleScopedStateSnapshotEnvelope,
+  { clientRole: TRole }
+>["roomState"];

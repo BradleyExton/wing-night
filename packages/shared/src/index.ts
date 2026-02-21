@@ -2,17 +2,22 @@ export { Phase } from "./phase/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export type {
-  MinigamePromptDisplayView,
-  MinigamePromptHostView,
+  DisplayRoomStateSnapshot,
+  HostRoomStateSnapshot,
+  MinigameContractCompatibilityStatus,
+  MinigameContractMetadata,
   MinigameDisplayView,
   MinigameHostView,
+  RoleScopedSnapshotByRole,
+  RoleScopedStateSnapshotEnvelope,
   RoomFatalError,
   RoomState,
-  RoomTimerState,
-  TriviaMinigameDisplayView,
-  TriviaMinigameHostView,
-  UnsupportedMinigameDisplayView,
-  UnsupportedMinigameHostView
+  RoomTimerState
+} from "./roomState/index.js";
+export {
+  DISPLAY_UNSAFE_ROOM_STATE_KEYS,
+  MINIGAME_ACTION_TYPES,
+  MINIGAME_CONTRACT_METADATA_BY_ID
 } from "./roomState/index.js";
 export {
   isGameConfigFile
@@ -53,13 +58,14 @@ export {
 export type {
   ClientToServerEventName,
   ClientToServerEvents,
+  GenericMinigameActionPayload,
   GameReorderTurnOrderPayload,
   HostSecretPayload,
-  GenericMinigameActionPayload,
   MinigameApiVersion,
   MinigameActionEnvelope,
   MinigameActionPayload,
   MinigameActionType,
+  MinigameActionEnvelopePayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   TimerExtendPayload,

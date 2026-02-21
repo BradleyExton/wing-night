@@ -3,11 +3,11 @@ import type {
   ClientToServerEvents,
   GameReorderTurnOrderPayload,
   HostSecretPayload,
-  MinigameActionPayload,
-  MinigameActionEnvelope,
+  MinigameActionEnvelopePayload,
+  RoomState,
+  RoleScopedStateSnapshotEnvelope,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
-  RoomState,
   SERVER_TO_CLIENT_EVENTS,
   TimerExtendPayload,
   SetupAssignPlayerPayload,
@@ -115,12 +115,8 @@ export type MinigameActionPayloadCheck = Assert<
     Parameters<
       ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]
     >,
-    [MinigameActionPayload]
+    [MinigameActionEnvelopePayload]
   >
->;
-
-export type MinigameActionEnvelopeCheck = Assert<
-  Equal<MinigameActionEnvelope["minigameApiVersion"], 1>
 >;
 
 export type TimerPausePayloadCheck = Assert<
@@ -147,7 +143,7 @@ export type TimerExtendPayloadCheck = Assert<
 export type SnapshotRoomStateArgCheck = Assert<
   Equal<
     Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]>,
-    [RoomState]
+    [RoleScopedStateSnapshotEnvelope | RoomState]
   >
 >;
 
@@ -165,7 +161,7 @@ export type SecretInvalidNoArgsCheck = Assert<
   >
 >;
 
-// @ts-expect-error server:stateSnapshot must accept RoomState.
+// @ts-expect-error server:stateSnapshot must accept role-scoped snapshot envelope.
 export type InvalidSnapshotPayloadCheck = Assert<Equal<Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]>, [string]>>;
 
 // @ts-expect-error client:requestState should not accept arguments.
@@ -201,7 +197,7 @@ export type InvalidAdjustTeamScoreNoPayloadCheck = Assert<Equal<Parameters<Clien
 // @ts-expect-error scoring:redoLastMutation must accept host secret payload.
 export type InvalidRedoLastMutationNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION]>, []>>;
 
-// @ts-expect-error minigame:action must accept minigame action payload.
+// @ts-expect-error minigame:action must accept minigame action envelope payload.
 export type InvalidMinigameActionNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]>, []>>;
 
 // @ts-expect-error timer:pause must accept host secret payload.
