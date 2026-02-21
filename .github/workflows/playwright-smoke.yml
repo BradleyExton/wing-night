@@ -36,6 +36,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build shared and minigame packages
+        run: >
+          pnpm --filter @wingnight/shared
+          --filter @wingnight/minigames-core
+          --filter @wingnight/minigames-trivia
+          --filter @wingnight/minigames-geo
+          --filter @wingnight/minigames-drawing
+          build
+
       - name: Install Playwright browser
         run: pnpm exec playwright install --with-deps chromium
 
