@@ -1,6 +1,6 @@
 import {
   CLIENT_TO_SERVER_EVENTS,
-  type MinigameRecordTriviaAttemptPayload
+  type MinigameActionEnvelopePayload
 } from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
@@ -8,17 +8,22 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
 import { readHostSecret } from "../hostSecretStorage";
+import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
 
-type RecordTriviaAttemptSocket = Pick<
+type DispatchMinigameActionSocket = Pick<
   Socket<InboundSocketEvents, OutboundSocketEvents>,
   "emit"
 >;
 
-export const requestRecordTriviaAttempt = (
-  socket: RecordTriviaAttemptSocket,
-  isCorrect: boolean,
+type DispatchMinigameActionPayloadWithoutSecret = Omit<
+  MinigameActionEnvelopePayload,
+  "hostSecret"
+>;
+
+export const requestDispatchMinigameAction = (
+  socket: DispatchMinigameActionSocket,
+  payload: DispatchMinigameActionPayloadWithoutSecret,
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
@@ -31,11 +36,10 @@ export const requestRecordTriviaAttempt = (
     return false;
   }
 
-  const payload: MinigameRecordTriviaAttemptPayload = {
+  socket.emit(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, {
     hostSecret,
-    isCorrect
-  };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, payload);
+    ...payload
+  });
 
   return true;
 };

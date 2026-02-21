@@ -85,10 +85,17 @@ test("renders trivia question without answer leakage", () => {
       roomState={{
         ...buildSnapshot(Phase.MINIGAME_PLAY),
         activeTurnTeamId: "team-1",
-        currentTriviaPrompt: {
-          id: "prompt-1",
-          question: "Which scale measures pepper heat?",
-          answer: "Scoville"
+        minigameDisplayView: {
+          minigame: "TRIVIA",
+          minigameApiVersion: 1,
+          capabilityFlags: ["recordAttempt"],
+          activeTurnTeamId: "team-1",
+          promptCursor: 0,
+          pendingPointsByTeamId: {},
+          currentPrompt: {
+            id: "prompt-1",
+            question: "Which scale measures pepper heat?"
+          }
         }
       }}
       phaseLabel="Minigame Play"
@@ -202,4 +209,13 @@ test("renders active team without turn progress during minigame intro", () => {
   assert.match(html, /Team One/);
   assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Mini-Game: TRIVIA/);
+});
+
+test("renders stable minigame fallback when display payload is absent", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_PLAY)} phaseLabel="Minigame Play" />
+  );
+
+  assert.match(html, /Mini-Game: TRIVIA/);
+  assert.match(html, /Trivia Turn/);
 });

@@ -1,23 +1,18 @@
 import type { FormEvent } from "react";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { type RoomState } from "@wingnight/shared";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { HostActionBarSurface } from "./HostActionBarSurface";
 import { HostPanelHeader } from "./HostPanelHeader";
-import { OverrideActionsSurface } from "./OverrideActionsSurface";
-import { OverrideDock } from "./OverrideDock";
 import { hostControlPanelCopy } from "./copy";
 import { HostPhaseBody } from "./HostPhaseBody";
 import { resolveHostRenderMode } from "./resolveHostRenderMode";
-import { resolveOrderedTeams, resolveSortedStandings } from "./roomTeamSelectors";
-import { ScoreOverrideSurface } from "./ScoreOverrideSurface";
-import { selectOverrideDockContext } from "./selectOverrideDockContext";
+import { resolveSortedStandings } from "./roomTeamSelectors";
 import { selectHostTeamMaps } from "./selectHostTeamMaps";
-import { TurnOrderSurface } from "./TurnOrderSurface";
 import * as styles from "./styles";
 
-type HostControlPanelProps = {
+export type HostControlPanelProps = {
   roomState: RoomState | null;
   onNextPhase?: () => void;
   onCreateTeam?: (name: string) => void;
@@ -27,11 +22,6 @@ type HostControlPanelProps = {
   onPauseTimer?: () => void;
   onResumeTimer?: () => void;
   onExtendTimer?: (additionalSeconds: number) => void;
-  onReorderTurnOrder?: (teamIds: string[]) => void;
-  onSkipTurnBoundary?: () => void;
-  onAdjustTeamScore?: (teamId: string, delta: number) => void;
-  onResetGame?: () => void;
-  onRedoLastMutation?: () => void;
 };
 
 const EMPTY_TEAMS: RoomState["teams"] = [];
@@ -45,16 +35,9 @@ export const HostControlPanel = ({
   onRecordTriviaAttempt,
   onPauseTimer,
   onResumeTimer,
-  onExtendTimer,
-  onReorderTurnOrder,
-  onSkipTurnBoundary,
-  onAdjustTeamScore,
-  onResetGame,
-  onRedoLastMutation
+  onExtendTimer
 }: HostControlPanelProps): JSX.Element => {
   const [nextTeamName, setNextTeamName] = useState("");
-  const [isOverrideDockOpen, setIsOverrideDockOpen] = useState(false);
-  const overrideDockPanelId = useId();
 
   const { assignedTeamByPlayerId, teamNameByTeamId } = useMemo(() => {
     return selectHostTeamMaps(roomState);
@@ -94,19 +77,11 @@ export const HostControlPanel = ({
     onNextPhase === undefined || roomState?.canAdvancePhase !== true;
 
   const sortedStandings = useMemo(() => resolveSortedStandings(teams), [teams]);
-  const orderedTeams = useMemo(() => resolveOrderedTeams(roomState), [roomState]);
-  const overrideDockContext = useMemo(() => {
-    return selectOverrideDockContext(roomState);
-  }, [roomState]);
 
   const phaseAdvanceHint =
     phase !== null ? hostControlPanelCopy.phaseAdvanceHint(phase) : null;
-
-  useEffect(() => {
-    if (!overrideDockContext.isVisible && isOverrideDockOpen) {
-      setIsOverrideDockOpen(false);
-    }
-  }, [isOverrideDockOpen, overrideDockContext.isVisible]);
+  const isMinigameTakeoverMode =
+    hostMode === "minigame_intro" || hostMode === "minigame_play";
 
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -154,8 +129,8 @@ export const HostControlPanel = ({
   }
 
   return (
-    <main className={styles.container}>
-      <div className={styles.panel}>
+    <main className={isMinigameTakeoverMode ? styles.takeoverContainer : styles.container}>
+      <div className={isMinigameTakeoverMode ? styles.takeoverPanel : styles.panel}>
         <HostPanelHeader roomState={roomState} teamNameByTeamId={teamNameByTeamId} />
 
         <HostActionBarSurface
@@ -195,37 +170,6 @@ export const HostControlPanel = ({
           onRecordTriviaAttempt={handleRecordTriviaAttempt}
         />
       </div>
-
-      {overrideDockContext.isVisible && (
-        <OverrideDock
-          isOpen={isOverrideDockOpen}
-          showBadge={overrideDockContext.showBadge}
-          panelId={overrideDockPanelId}
-          onOpen={(): void => {
-            setIsOverrideDockOpen(true);
-          }}
-          onClose={(): void => {
-            setIsOverrideDockOpen(false);
-          }}
-        >
-          <div className={styles.overridePanelContent}>
-            <OverrideActionsSurface
-              onSkipTurnBoundary={onSkipTurnBoundary}
-              showSkipTurnBoundaryAction={overrideDockContext.showSkipTurnBoundaryAction}
-              onRedoLastMutation={onRedoLastMutation}
-              showRedoLastMutationAction={overrideDockContext.showRedoLastMutationAction}
-              onResetGame={onResetGame}
-              showResetGameAction={overrideDockContext.showResetGameAction}
-            />
-            <TurnOrderSurface
-              orderedTeams={orderedTeams}
-              isEditable={overrideDockContext.isTurnOrderEditable}
-              onReorderTurnOrder={onReorderTurnOrder}
-            />
-            <ScoreOverrideSurface teams={teams} onAdjustTeamScore={onAdjustTeamScore} />
-          </div>
-        </OverrideDock>
-      )}
     </main>
   );
 };

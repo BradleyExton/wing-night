@@ -1,7 +1,9 @@
 import {
   CLIENT_TO_SERVER_EVENTS,
   SERVER_TO_CLIENT_EVENTS,
-  type RoomState
+  type RoleScopedSnapshotByRole,
+  type RoleScopedStateSnapshotEnvelope,
+  type SocketClientRole
 } from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
@@ -13,26 +15,45 @@ import type {
 type RoomStateSocket = Pick<
   Socket<InboundSocketEvents, OutboundSocketEvents>,
   "on" | "off" | "emit" | "connected"
->;
+> & {
+  recovered?: boolean;
+};
 
-export const wireRoomStateRehydration = (
+export const wireRoomStateRehydration = <TRole extends SocketClientRole>(
   socket: RoomStateSocket,
-  onSnapshot: (roomState: RoomState) => void
+  expectedRole: TRole,
+  onSnapshot: (roomState: RoleScopedSnapshotByRole<TRole>) => void
 ): (() => void) => {
   const requestLatestState = (): void => {
     socket.emit(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE);
   };
 
-  const handleSnapshot = (roomState: RoomState): void => {
-    onSnapshot(roomState);
+  const handleSnapshot = (payload: RoleScopedStateSnapshotEnvelope): void => {
+    if (payload.clientRole !== expectedRole) {
+      return;
+    }
+
+    onSnapshot(payload.roomState as RoleScopedSnapshotByRole<TRole>);
+  };
+
+  const handleConnect = (): void => {
+    // Connection-state recovery is transport-dependent and may be unavailable in
+    // some deployment topologies. When recovery is not available, request a full
+    // snapshot so takeover shells can rehydrate from authoritative server state.
+    if (socket.recovered !== true) {
+      requestLatestState();
+    }
   };
 
   socket.on(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, handleSnapshot);
+  socket.on("connect", handleConnect);
+
   if (socket.connected) {
     requestLatestState();
   }
 
   return (): void => {
     socket.off(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, handleSnapshot);
+    socket.off("connect", handleConnect);
   };
 };

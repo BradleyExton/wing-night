@@ -6,18 +6,20 @@ import {
 import type {
   GameReorderTurnOrderPayload,
   HostSecretPayload,
-  MinigameRecordTriviaAttemptPayload,
+  MinigameActionEnvelopePayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
-  RoomState,
   TimerExtendPayload,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload
 } from "@wingnight/shared";
 
-type RoomStateSocket = {
+type RoomStateSocket<TSnapshot> = {
   emit: {
-    (event: typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, roomState: RoomState): void;
+    (
+      event: typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT,
+      roomState: TSnapshot
+    ): void;
     (event: typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, payload: HostSecretPayload): void;
     (event: typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID): void;
   };
@@ -33,7 +35,7 @@ type RoomStateSocket = {
     (event: typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, listener: (payload: unknown) => void): void;
-    (event: typeof CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT, listener: (payload: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, listener: (payload: unknown) => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, listener: (payload: unknown) => void): void;
@@ -43,6 +45,12 @@ type RoomStateSocket = {
 type HostAuth = {
   issueHostSecret: () => HostSecretPayload;
   isValidHostSecret: (hostSecret: string) => boolean;
+};
+
+type ActiveMinigameContract = {
+  minigameId: MinigameActionEnvelopePayload["minigameId"];
+  minigameApiVersion: number;
+  capabilityFlags: string[];
 };
 
 type AuthorizedSetupMutationHandlers = {
@@ -55,7 +63,10 @@ type AuthorizedSetupMutationHandlers = {
   onAuthorizedSetWingParticipation: (playerId: string, didEat: boolean) => void;
   onAuthorizedAdjustTeamScore: (teamId: string, delta: number) => void;
   onAuthorizedRedoLastMutation: () => void;
-  onAuthorizedRecordTriviaAttempt: (isCorrect: boolean) => void;
+  onAuthorizedDispatchMinigameAction: (
+    payload: MinigameActionEnvelopePayload
+  ) => void;
+  onMinigameActionRejectedForCompatibility: (message: string) => void;
   onAuthorizedPauseTimer: () => void;
   onAuthorizedResumeTimer: () => void;
   onAuthorizedExtendTimer: (additionalSeconds: number) => void;
@@ -151,17 +162,48 @@ const isScoringAdjustTeamScorePayload = (
   return Number.isInteger(payload.delta) && payload.delta !== 0;
 };
 
-const isMinigameRecordTriviaAttemptPayload = (
+const isMinigameActionEnvelopePayload = (
   payload: unknown
-): payload is MinigameRecordTriviaAttemptPayload => {
+): payload is MinigameActionEnvelopePayload => {
   if (!isHostSecretPayload(payload)) {
     return false;
   }
 
-  if (!("isCorrect" in payload) || typeof payload.isCorrect !== "boolean") {
+  if (!("minigameId" in payload) || typeof payload.minigameId !== "string") {
     return false;
   }
 
+  if (
+    !("minigameApiVersion" in payload) ||
+    typeof payload.minigameApiVersion !== "number" ||
+    !Number.isInteger(payload.minigameApiVersion) ||
+    payload.minigameApiVersion <= 0
+  ) {
+    return false;
+  }
+
+  if (
+    !("actionType" in payload) ||
+    typeof payload.actionType !== "string" ||
+    payload.actionType.trim().length === 0
+  ) {
+    return false;
+  }
+
+  if (!("actionPayload" in payload)) {
+    return false;
+  }
+
+  if (
+    typeof payload.actionPayload !== "object" ||
+    payload.actionPayload === null ||
+    Array.isArray(payload.actionPayload)
+  ) {
+    return false;
+  }
+
+  // Action-specific payload schema is validated by the active minigame runtime
+  // adapter. This envelope guard only validates socket-level transport/auth shape.
   return true;
 };
 
@@ -184,9 +226,10 @@ const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload =
   );
 };
 
-export const registerRoomStateHandlers = (
-  socket: RoomStateSocket,
-  getSnapshot: () => RoomState,
+export const registerRoomStateHandlers = <TSnapshot>(
+  socket: RoomStateSocket<TSnapshot>,
+  getSnapshot: () => TSnapshot,
+  resolveActiveMinigameContract: () => ActiveMinigameContract | null,
   mutationHandlers: AuthorizedSetupMutationHandlers,
   canClaimControl: boolean,
   hostAuth: HostAuth
@@ -291,12 +334,41 @@ export const registerRoomStateHandlers = (
     });
   };
 
-  const handleRecordTriviaAttempt = (payload: unknown): void => {
+  const handleMinigameAction = (payload: unknown): void => {
     runAuthorizedMutation(
       payload,
-      isMinigameRecordTriviaAttemptPayload,
+      isMinigameActionEnvelopePayload,
       (typedPayload) => {
-        mutationHandlers.onAuthorizedRecordTriviaAttempt(typedPayload.isCorrect);
+        const activeMinigameContract = resolveActiveMinigameContract();
+
+        if (
+          activeMinigameContract === null ||
+          typedPayload.minigameId !== activeMinigameContract.minigameId
+        ) {
+          mutationHandlers.onMinigameActionRejectedForCompatibility(
+            "Active minigame changed. Refresh host and try again."
+          );
+          return;
+        }
+
+        if (
+          typedPayload.minigameApiVersion !==
+          activeMinigameContract.minigameApiVersion
+        ) {
+          mutationHandlers.onMinigameActionRejectedForCompatibility(
+            "Minigame API version mismatch. Refresh host and try again."
+          );
+          return;
+        }
+
+        if (!activeMinigameContract.capabilityFlags.includes(typedPayload.actionType)) {
+          mutationHandlers.onMinigameActionRejectedForCompatibility(
+            "Unsupported minigame action. Refresh host and try again."
+          );
+          return;
+        }
+
+        mutationHandlers.onAuthorizedDispatchMinigameAction(typedPayload);
       }
     );
   };
@@ -335,10 +407,7 @@ export const registerRoomStateHandlers = (
   );
   socket.on(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, handleAdjustTeamScore);
   socket.on(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, handleRedoLastMutation);
-  socket.on(
-    CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT,
-    handleRecordTriviaAttempt
-  );
+  socket.on(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, handleMinigameAction);
   socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, handleTimerPause);
   socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, handleTimerResume);
   socket.on(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, handleTimerExtend);

@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CLIENT_TO_SERVER_EVENTS } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  MINIGAME_ACTION_TYPES
+} from "@wingnight/shared";
 
 import { createHostControlPanelHandlers } from "./index";
 
@@ -44,8 +47,14 @@ test("wires every host action and emits claim-control via missing-secret callbac
       onMissingHostSecret?.();
       return false;
     },
-    requestRecordTriviaAttempt: (_socket, isCorrect, onMissingHostSecret) => {
-      callLog.push(`trivia:${isCorrect}`);
+    requestDispatchMinigameAction: (
+      _socket,
+      payload,
+      onMissingHostSecret
+    ) => {
+      callLog.push(
+        `trivia:${payload.minigameId}:${payload.actionType}:${String((payload.actionPayload as { isCorrect: boolean }).isCorrect)}`
+      );
       onMissingHostSecret?.();
       return false;
     },
@@ -115,7 +124,7 @@ test("wires every host action and emits claim-control via missing-secret callbac
     "create:Team Ghost Pepper",
     "assign:player-1:team-alpha",
     "wing:player-1:true",
-    "trivia:false",
+    `trivia:TRIVIA:${MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT}:false`,
     "pause",
     "resume",
     "extend:30",

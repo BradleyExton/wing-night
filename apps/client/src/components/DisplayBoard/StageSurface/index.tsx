@@ -1,4 +1,4 @@
-import { type RoomState } from "@wingnight/shared";
+import { type DisplayRoomStateSnapshot } from "@wingnight/shared";
 
 import { EatingStageBody } from "./EatingStageBody";
 import { FallbackStageBody } from "./FallbackStageBody";
@@ -9,7 +9,7 @@ import * as styles from "./styles";
 import { useEatingCountdown } from "./useEatingCountdown";
 
 type StageSurfaceProps = {
-  roomState: RoomState | null;
+  roomState: DisplayRoomStateSnapshot | null;
   phaseLabel: string;
 };
 
@@ -64,7 +64,7 @@ export const StageSurface = ({
             activeTeamName={stageViewModel.activeTeamName}
             isTriviaTurnPhase={stageViewModel.isTriviaTurnPhase}
             shouldRenderTriviaPrompt={stageViewModel.shouldRenderTriviaPrompt}
-            currentTriviaPrompt={stageViewModel.currentTriviaPrompt}
+            currentTriviaQuestion={stageViewModel.currentTriviaQuestion}
           />
         );
       case "fallback":
