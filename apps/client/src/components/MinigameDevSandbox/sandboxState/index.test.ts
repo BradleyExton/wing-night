@@ -61,10 +61,9 @@ const withWindowSearch = (search: string, callback: () => void): void => {
   } finally {
     if (originalWindow === undefined) {
       delete globalScope.window;
-      return;
+    } else {
+      globalScope.window = originalWindow;
     }
-
-    globalScope.window = originalWindow;
   }
 };
 
