@@ -1,36 +1,25 @@
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
 import {
   isPlayersContentFile,
   type Player,
   type PlayersContentEntry
 } from "@wingnight/shared";
 import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
+import {
+  parseContentJson,
+  resolveDefaultContentRootDir
+} from "../contentLoaderUtils/index.js";
 
 type LoadPlayersOptions = {
   contentRootDir?: string;
 };
 
-const defaultContentRootDir = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../../../content"
-);
+const defaultContentRootDir = resolveDefaultContentRootDir(import.meta.url);
 
 const parsePlayersEntries = (
   rawContent: string,
   contentFilePath: string
 ): PlayersContentEntry[] => {
-  let parsedContent: unknown;
-
-  try {
-    parsedContent = JSON.parse(rawContent);
-  } catch (error) {
-    const parseReason = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Failed to parse players content at "${contentFilePath}": ${parseReason}`
-    );
-  }
+  const parsedContent = parseContentJson(rawContent, contentFilePath, "players");
 
   if (!isPlayersContentFile(parsedContent)) {
     throw new Error(

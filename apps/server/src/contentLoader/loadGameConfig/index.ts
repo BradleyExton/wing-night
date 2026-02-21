@@ -1,32 +1,21 @@
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { isGameConfigFile, type GameConfigFile } from "@wingnight/shared";
+import {
+  parseContentJson,
+  resolveDefaultContentRootDir
+} from "../contentLoaderUtils/index.js";
 import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 
 type LoadGameConfigOptions = {
   contentRootDir?: string;
 };
 
-const defaultContentRootDir = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../../../content"
-);
+const defaultContentRootDir = resolveDefaultContentRootDir(import.meta.url);
 
 const parseGameConfig = (
   rawContent: string,
   contentFilePath: string
 ): GameConfigFile => {
-  let parsedContent: unknown;
-
-  try {
-    parsedContent = JSON.parse(rawContent);
-  } catch (error) {
-    const parseReason = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Failed to parse game config content at "${contentFilePath}": ${parseReason}`
-    );
-  }
+  const parsedContent = parseContentJson(rawContent, contentFilePath, "game config");
 
   if (!isGameConfigFile(parsedContent)) {
     throw new Error(
