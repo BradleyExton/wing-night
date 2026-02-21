@@ -1,4 +1,8 @@
-import { CLIENT_TO_SERVER_EVENTS } from "@wingnight/shared";
+import {
+  CLIENT_TO_SERVER_EVENTS,
+  MINIGAME_ACTION_TYPES,
+  MINIGAME_CONTRACT_METADATA_BY_ID
+} from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
 import type {
@@ -11,7 +15,7 @@ import { requestCreateTeam } from "../requestCreateTeam";
 import { requestExtendTimer } from "../requestExtendTimer";
 import { requestNextPhase } from "../requestNextPhase";
 import { requestPauseTimer } from "../requestPauseTimer";
-import { requestRecordTriviaAttempt } from "../requestRecordTriviaAttempt";
+import { requestDispatchMinigameAction } from "../requestDispatchMinigameAction";
 import { requestRedoLastMutation } from "../requestRedoLastMutation";
 import { requestReorderTurnOrder } from "../requestReorderTurnOrder";
 import { requestResetGame } from "../requestResetGame";
@@ -45,7 +49,7 @@ type HostControlPanelRequestDependencies = {
   requestCreateTeam: typeof requestCreateTeam;
   requestAssignPlayer: typeof requestAssignPlayer;
   requestSetWingParticipation: typeof requestSetWingParticipation;
-  requestRecordTriviaAttempt: typeof requestRecordTriviaAttempt;
+  requestDispatchMinigameAction: typeof requestDispatchMinigameAction;
   requestPauseTimer: typeof requestPauseTimer;
   requestResumeTimer: typeof requestResumeTimer;
   requestExtendTimer: typeof requestExtendTimer;
@@ -61,7 +65,7 @@ const defaultDependencies: HostControlPanelRequestDependencies = {
   requestCreateTeam,
   requestAssignPlayer,
   requestSetWingParticipation,
-  requestRecordTriviaAttempt,
+  requestDispatchMinigameAction,
   requestPauseTimer,
   requestResumeTimer,
   requestExtendTimer,
@@ -94,7 +98,19 @@ export const createHostControlPanelHandlers = (
       dependencies.requestSetWingParticipation(socket, playerId, didEat, claimControl);
     },
     onRecordTriviaAttempt: (isCorrect: boolean): void => {
-      dependencies.requestRecordTriviaAttempt(socket, isCorrect, claimControl);
+      dependencies.requestDispatchMinigameAction(
+        socket,
+        {
+          minigameId: "TRIVIA",
+          minigameApiVersion:
+            MINIGAME_CONTRACT_METADATA_BY_ID.TRIVIA.minigameApiVersion,
+          actionType: MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT,
+          actionPayload: {
+            isCorrect
+          }
+        },
+        claimControl
+      );
     },
     onPauseTimer: (): void => {
       dependencies.requestPauseTimer(socket, claimControl);

@@ -291,15 +291,15 @@ Backlog status:
 - [ ] 11.2 Generic Minigame Action Envelope + Socket Event
 - [ ] 11.3 Server Minigame Runtime Orchestrator
 - [ ] 11.4 Minigame Plugin Content Loader Contract
-- [ ] 11.5 Host Full-Screen Minigame Shell (Takeover)
-- [ ] 11.6 Display Full-Screen Minigame Shell (Takeover)
-- [ ] 11.7 Shell-Level Override Overlay During Minigame Takeover
-- [ ] 11.8 TRIVIA Full-Screen Plugin Migration + GEO/DRAWING Unsupported States
-- [ ] 11.9 Rehydrate/Recovery Hardening for Full-Screen Takeover
+- [x] 11.5 Host Full-Screen Minigame Shell (Takeover)
+- [x] 11.6 Display Full-Screen Minigame Shell (Takeover)
+- [x] 11.7 Shell-Level Override Overlay During Minigame Takeover
+- [x] 11.8 TRIVIA Full-Screen Plugin Migration + GEO/DRAWING Unsupported States
+- [x] 11.9 Rehydrate/Recovery Hardening for Full-Screen Takeover
 - [ ] 12.1 Cross-Title Game Shell Contract ADR
 - [ ] 12.2 Extract Reusable Orchestrator Package Boundary (Monorepo-Local)
 - [ ] 12.3 Minigame Authoring Guide + Example Scaffold
-- [ ] D7 SPEC Full-Screen Minigame Takeover Alignment (after 11.x)
+- [x] D7 SPEC Full-Screen Minigame Takeover Alignment (after 11.x)
 - [ ] D8 README Plugin + Reuse Architecture Alignment (after 12.x)
 - [ ] D9 AGENTS Guardrail Update for Plugin API + Snapshot Privacy
 

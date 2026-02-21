@@ -7,7 +7,7 @@ import {
 } from "@wingnight/shared";
 
 import { CompactSummarySurface } from "../CompactSummarySurface";
-import { MinigameSurface } from "../MinigameSurface";
+import { MinigameTakeoverShell } from "../MinigameTakeoverShell";
 import { PlayersSurface } from "../PlayersSurface";
 import { TeamSetupSurface } from "../TeamSetupSurface";
 import { TimerControlsSurface } from "../TimerControlsSurface";
@@ -119,15 +119,30 @@ export const HostPhaseBody = ({
         </div>
       );
     case "minigame_intro":
-      return null;
+      return (
+        <div className={styles.takeoverShell}>
+          <MinigameTakeoverShell
+            hostMode="minigame_intro"
+            minigameHostView={minigameHostView}
+            activeRoundTeamName={activeRoundTeamName}
+            teamNameByTeamId={teamNameByTeamId}
+            triviaAttemptDisabled={triviaAttemptDisabled}
+            onRecordTriviaAttempt={onRecordTriviaAttempt}
+          />
+        </div>
+      );
     case "minigame_play":
       return (
-        <MinigameSurface
-          minigameHostView={minigameHostView}
-          teamNameByTeamId={teamNameByTeamId}
-          triviaAttemptDisabled={triviaAttemptDisabled}
-          onRecordTriviaAttempt={onRecordTriviaAttempt}
-        />
+        <div className={styles.takeoverShell}>
+          <MinigameTakeoverShell
+            hostMode="minigame_play"
+            minigameHostView={minigameHostView}
+            activeRoundTeamName={activeRoundTeamName}
+            teamNameByTeamId={teamNameByTeamId}
+            triviaAttemptDisabled={triviaAttemptDisabled}
+            onRecordTriviaAttempt={onRecordTriviaAttempt}
+          />
+        </div>
       );
     case "compact":
       return roomState ? (

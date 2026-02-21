@@ -1,4 +1,5 @@
-import type { RoomState } from "../roomState/index.js";
+import type { MinigameType } from "../content/gameConfig/index.js";
+import type { RoleScopedStateSnapshotEnvelope } from "../roomState/index.js";
 
 export type HostSecretPayload = Record<"hostSecret", string>;
 export type GameReorderTurnOrderPayload = HostSecretPayload &
@@ -13,8 +14,11 @@ export type ScoringSetWingParticipationPayload = HostSecretPayload &
 export type ScoringAdjustTeamScorePayload = HostSecretPayload &
   Record<"teamId", string> &
   Record<"delta", number>;
-export type MinigameRecordTriviaAttemptPayload = HostSecretPayload &
-  Record<"isCorrect", boolean>;
+export type MinigameActionEnvelopePayload = HostSecretPayload &
+  Record<"minigameId", MinigameType> &
+  Record<"minigameApiVersion", number> &
+  Record<"actionType", string> &
+  Record<"actionPayload", unknown>;
 export type TimerExtendPayload = HostSecretPayload &
   Record<"additionalSeconds", number>;
 export const TIMER_EXTEND_MAX_SECONDS = 600;
@@ -31,7 +35,7 @@ export const CLIENT_TO_SERVER_EVENTS = {
   SET_WING_PARTICIPATION: "scoring:setWingParticipation",
   ADJUST_TEAM_SCORE: "scoring:adjustTeamScore",
   REDO_LAST_MUTATION: "scoring:redoLastMutation",
-  RECORD_TRIVIA_ATTEMPT: "minigame:recordTriviaAttempt",
+  MINIGAME_ACTION: "minigame:action",
   TIMER_PAUSE: "timer:pause",
   TIMER_RESUME: "timer:resume",
   TIMER_EXTEND: "timer:extend"
@@ -75,8 +79,8 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION]: (
     payload: HostSecretPayload
   ) => void;
-  [CLIENT_TO_SERVER_EVENTS.RECORD_TRIVIA_ATTEMPT]: (
-    payload: MinigameRecordTriviaAttemptPayload
+  [CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]: (
+    payload: MinigameActionEnvelopePayload
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_RESUME]: (payload: HostSecretPayload) => void;
@@ -84,7 +88,9 @@ export type ClientToServerEvents = {
 };
 
 export type ServerToClientEvents = {
-  [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (roomState: RoomState) => void;
+  [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (
+    payload: RoleScopedStateSnapshotEnvelope
+  ) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED]: (payload: HostSecretPayload) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_INVALID]: () => void;
 };

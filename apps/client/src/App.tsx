@@ -1,8 +1,12 @@
-import { type RoomState } from "@wingnight/shared";
+import {
+  CLIENT_ROLES,
+  type DisplayRoomStateSnapshot,
+  type HostRoomStateSnapshot
+} from "@wingnight/shared";
 import { useEffect, useMemo, useState } from "react";
 
 import { DisplayBoard } from "./components/DisplayBoard";
-import { HostControlPanel } from "./components/HostControlPanel";
+import { HostRouteShell } from "./components/HostControlPanel/HostRouteShell";
 import { RouteNotFound } from "./components/RouteNotFound";
 import { roomSocket } from "./socket/createRoomSocket";
 import { saveHostSecret } from "./utils/hostSecretStorage";
@@ -12,7 +16,11 @@ import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 
 export const App = (): JSX.Element => {
-  const [roomState, setRoomState] = useState<RoomState | null>(null);
+  const [hostRoomState, setHostRoomState] = useState<HostRoomStateSnapshot | null>(
+    null
+  );
+  const [displayRoomState, setDisplayRoomState] =
+    useState<DisplayRoomStateSnapshot | null>(null);
   const route = resolveClientRoute(window.location.pathname);
 
   const hostControlPanelHandlers = useMemo(() => {
@@ -20,8 +28,31 @@ export const App = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    return wireRoomStateRehydration(roomSocket, setRoomState);
-  }, []);
+    setHostRoomState(null);
+    setDisplayRoomState(null);
+
+    if (route === "HOST") {
+      return wireRoomStateRehydration(
+        roomSocket,
+        CLIENT_ROLES.HOST,
+        (snapshot) => {
+          setHostRoomState(snapshot);
+        }
+      );
+    }
+
+    if (route === "DISPLAY") {
+      return wireRoomStateRehydration(
+        roomSocket,
+        CLIENT_ROLES.DISPLAY,
+        (snapshot) => {
+          setDisplayRoomState(snapshot);
+        }
+      );
+    }
+
+    return;
+  }, [route]);
 
   useEffect(() => {
     if (route !== "HOST") {
@@ -32,11 +63,11 @@ export const App = (): JSX.Element => {
   }, [route]);
 
   if (route === "HOST") {
-    return <HostControlPanel roomState={roomState} {...hostControlPanelHandlers} />;
+    return <HostRouteShell roomState={hostRoomState} {...hostControlPanelHandlers} />;
   }
 
   if (route === "DISPLAY") {
-    return <DisplayBoard roomState={roomState} />;
+    return <DisplayBoard roomState={displayRoomState} />;
   }
 
   return <RouteNotFound />;

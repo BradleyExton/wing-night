@@ -1,14 +1,15 @@
-import { type RoomState } from "@wingnight/shared";
+import { Phase, type DisplayRoomStateSnapshot } from "@wingnight/shared";
 import { useMemo } from "react";
 
 import { displayBoardCopy } from "./copy";
 import { ContentFatalState } from "../ContentFatalState";
+import { MinigameTakeoverShell } from "./MinigameTakeoverShell";
 import { StageSurface } from "./StageSurface";
 import { StandingsSurface } from "./StandingsSurface";
 import * as styles from "./styles";
 
 type DisplayBoardProps = {
-  roomState: RoomState | null;
+  roomState: DisplayRoomStateSnapshot | null;
 };
 
 export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
@@ -36,9 +37,15 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
     phase === null
       ? displayBoardCopy.waitingPhaseLabel
       : displayBoardCopy.phaseLabel(phase);
+  const isMinigameTakeoverPhase =
+    phase === Phase.MINIGAME_INTRO || phase === Phase.MINIGAME_PLAY;
 
   if (fatalError !== null) {
     return <ContentFatalState fatalError={fatalError} />;
+  }
+
+  if (isMinigameTakeoverPhase) {
+    return <MinigameTakeoverShell roomState={roomState} phaseLabel={phaseLabel} />;
   }
 
   return (

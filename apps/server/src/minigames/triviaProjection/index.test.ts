@@ -59,6 +59,10 @@ test("projectTriviaHostViewToRoomState applies projected trivia fields", () => {
   assert.equal(roomState.pendingMinigamePointsByTeamId["team-1"], 5);
   assert.equal(roomState.minigameHostView?.attemptsRemaining, 2);
   assert.equal(roomState.minigameHostView?.currentPrompt?.answer, "Answer 1");
+  assert.equal(roomState.minigameHostView?.minigameApiVersion, 1);
+  assert.deepEqual(roomState.minigameHostView?.capabilityFlags, ["recordAttempt"]);
+  assert.equal(roomState.minigameHostView?.compatibilityStatus, "COMPATIBLE");
+  assert.equal(roomState.minigameHostView?.compatibilityMessage, null);
   assert.equal(roomState.minigameDisplayView, null);
 });
 
@@ -78,6 +82,8 @@ test("projectTriviaDisplayViewToRoomState stores redacted prompt for display", (
   });
 
   assert.equal(roomState.minigameDisplayView?.currentPrompt?.question, "Question 2?");
+  assert.equal(roomState.minigameDisplayView?.minigameApiVersion, 1);
+  assert.deepEqual(roomState.minigameDisplayView?.capabilityFlags, ["recordAttempt"]);
   assert.equal(
     roomState.minigameDisplayView?.currentPrompt &&
       "answer" in roomState.minigameDisplayView.currentPrompt,

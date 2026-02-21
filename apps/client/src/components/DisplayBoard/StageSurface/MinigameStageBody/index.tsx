@@ -1,16 +1,16 @@
-import type { RoomState } from "@wingnight/shared";
+import type { DisplayRoomStateSnapshot } from "@wingnight/shared";
 
 import { displayBoardCopy } from "../../copy";
 import * as styles from "./styles";
 
 type MinigameStageBodyProps = {
   phaseLabel: string;
-  currentRoundConfig: RoomState["currentRoundConfig"];
+  currentRoundConfig: DisplayRoomStateSnapshot["currentRoundConfig"];
   shouldRenderTeamTurnContext: boolean;
   activeTeamName: string | null;
   isTriviaTurnPhase: boolean;
   shouldRenderTriviaPrompt: boolean;
-  currentTriviaPrompt: RoomState["currentTriviaPrompt"];
+  currentTriviaQuestion: string | null;
 };
 
 type TurnMetaProps = {
@@ -33,7 +33,7 @@ export const MinigameStageBody = ({
   activeTeamName,
   isTriviaTurnPhase,
   shouldRenderTriviaPrompt,
-  currentTriviaPrompt
+  currentTriviaQuestion
 }: MinigameStageBodyProps): JSX.Element => {
   return (
     <>
@@ -46,11 +46,11 @@ export const MinigameStageBody = ({
       {shouldRenderTeamTurnContext && activeTeamName !== null && (
         <TurnMeta activeTeamName={activeTeamName} />
       )}
-      {shouldRenderTriviaPrompt && currentTriviaPrompt !== null && (
+      {shouldRenderTriviaPrompt && currentTriviaQuestion !== null && (
         <div className={styles.metaGrid}>
           <div className={styles.metaItem}>
             <p className={styles.metaLabel}>{displayBoardCopy.triviaQuestionLabel}</p>
-            <p className={styles.metaValue}>{currentTriviaPrompt.question}</p>
+            <p className={styles.metaValue}>{currentTriviaQuestion}</p>
           </div>
         </div>
       )}
