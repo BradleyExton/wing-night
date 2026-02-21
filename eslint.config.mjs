@@ -96,6 +96,12 @@ export default [
     }
   },
   {
+    files: ["apps/server/src/**/*.test.ts"],
+    rules: {
+      "max-lines": "off"
+    }
+  },
+  {
     files: ["apps/client/src/components/**/*.tsx"],
     plugins: {
       wingnight
