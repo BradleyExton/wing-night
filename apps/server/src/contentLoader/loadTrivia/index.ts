@@ -1,32 +1,21 @@
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { isTriviaContentFile, type TriviaPrompt } from "@wingnight/shared";
+import {
+  parseContentJson,
+  resolveDefaultContentRootDir
+} from "../contentLoaderUtils/index.js";
 import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 
 type LoadTriviaOptions = {
   contentRootDir?: string;
 };
 
-const defaultContentRootDir = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../../../content"
-);
+const defaultContentRootDir = resolveDefaultContentRootDir(import.meta.url);
 
 const parseTriviaPrompts = (
   rawContent: string,
   contentFilePath: string
 ): TriviaPrompt[] => {
-  let parsedContent: unknown;
-
-  try {
-    parsedContent = JSON.parse(rawContent);
-  } catch (error) {
-    const parseReason = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Failed to parse trivia content at "${contentFilePath}": ${parseReason}`
-    );
-  }
+  const parsedContent = parseContentJson(rawContent, contentFilePath, "trivia");
 
   if (!isTriviaContentFile(parsedContent)) {
     throw new Error(

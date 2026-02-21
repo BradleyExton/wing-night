@@ -18,6 +18,15 @@ Audit snapshot (2026-02-19):
 - Phase 11/12 tasks are post-MVP platformization work for full-screen minigame takeover and cross-title reuse.
 
 Completed:
+- [x] R5 Readability/DRY Refactor Epic
+  - ADR: `docs/adr/ADR-0003-readability-refactor-epic.md`
+  - Scope: readability + DRY only (no gameplay/contract behavior changes)
+  - Slices: `R5.1` -> `R5.11`
+  - Verification:
+    - [x] `pnpm test`
+    - [x] `pnpm lint`
+    - [x] `pnpm typecheck`
+    - [x] `CI=1 pnpm playwright test`
 - [x] R4 DRY Readability Epic
   - Branch: `refactor/host-display-decomposition`
   - PRs: [#65](https://github.com/BradleyExton/wing-night/pull/65) -> [#72](https://github.com/BradleyExton/wing-night/pull/72)
@@ -210,6 +219,17 @@ Completed:
   - Merge commit: `26615d9`
 
 Backlog status:
+- [x] R5.1 Epic Wiring
+- [x] R5.2 RoomState Domain Split
+- [x] R5.3 RoomState Guard/Mutation Wrapper
+- [x] R5.4 Phase Side-Effect Extraction
+- [x] R5.5 Socket Handler Registration Cleanup
+- [x] R5.6 HostControlPanel Decomposition
+- [x] R5.7 Display Stage Selector Cleanup
+- [x] R5.8 Content Loader Parse/Root Helper
+- [x] R5.9 Test Suite Decomposition
+- [x] R5.10 Server Complexity Guardrails
+- [x] R5.11 Epic Hardening Gate
 - [x] R4.1 Epic Spec + Tracker Wiring
 - [x] R4.2 Client Host-Secret Request Helper
 - [x] R4.3 Server Authorized Mutation Gate Helper

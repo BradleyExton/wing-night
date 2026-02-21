@@ -86,6 +86,22 @@ export default [
     }
   },
   {
+    files: ["apps/server/src/**/*.ts"],
+    rules: {
+      complexity: ["warn", 20],
+      "max-lines": [
+        "warn",
+        { max: 400, skipBlankLines: true, skipComments: true }
+      ]
+    }
+  },
+  {
+    files: ["apps/server/src/**/*.test.ts"],
+    rules: {
+      "max-lines": "off"
+    }
+  },
+  {
     files: ["apps/client/src/components/**/*.tsx"],
     plugins: {
       wingnight
