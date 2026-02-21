@@ -14,6 +14,7 @@ export const minigameDevSandboxCopy = {
   hostPreviewLabel: "Host Preview",
   displayPreviewLabel: "Display Preview",
   noScenarioLabel: "No sandbox scenario is available.",
+  noRendererLabel: "No renderer bundle is available for this minigame.",
   introPhaseLabel: "Intro",
   playPhaseLabel: "Play"
 } as const;

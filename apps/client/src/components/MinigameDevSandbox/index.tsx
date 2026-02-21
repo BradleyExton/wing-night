@@ -5,11 +5,11 @@ import type {
 } from "@wingnight/minigames-core";
 import type { MinigameType } from "@wingnight/shared";
 
-import { DisplayBoard } from "../DisplayBoard";
-import { HostControlPanel } from "../HostControlPanel";
-import { resolveMinigameDevManifest } from "../../minigames/registry";
+import {
+  resolveMinigameDevManifest,
+  resolveMinigameRendererBundle
+} from "../../minigames/registry";
 import { SandboxControls } from "./SandboxControls";
-import { buildSandboxRoomState } from "./buildSandboxRoomState";
 import { minigameDevSandboxCopy } from "./copy";
 import {
   resolveInitialKnobsState,
@@ -66,6 +66,7 @@ const resolveSandboxModel = (
   devManifest: MinigameDevManifest,
   knobsState: SandboxKnobsState
 ): {
+  activeScenario: MinigameDevScenario;
   scenarioHostView: MinigameDevScenario["minigameHostView"];
   scenarioDisplayView: MinigameDevScenario["minigameDisplayView"];
 } => {
@@ -76,6 +77,7 @@ const resolveSandboxModel = (
   applyTriviaKnobs(scenarioHostView, scenarioDisplayView, knobsState);
 
   return {
+    activeScenario,
     scenarioHostView,
     scenarioDisplayView
   };
@@ -85,6 +87,7 @@ export const MinigameDevSandbox = ({
   minigameType
 }: MinigameDevSandboxProps): JSX.Element => {
   const devManifest = resolveMinigameDevManifest(minigameType);
+  const rendererBundle = resolveMinigameRendererBundle(minigameType);
 
   const initialState = useMemo(() => {
     if (!devManifest || devManifest.scenarios.length === 0) {
@@ -124,29 +127,31 @@ export const MinigameDevSandbox = ({
     syncSandboxSearchParams(knobsState);
   }, [devManifest, knobsState]);
 
-  if (!devManifest || devManifest.scenarios.length === 0) {
+  if (!devManifest || devManifest.scenarios.length === 0 || rendererBundle === null) {
     return (
       <main className={styles.container}>
         <div className={styles.headingBlock}>
           <h1 className={styles.heading}>{minigameDevSandboxCopy.title}</h1>
-          <p className={styles.description}>{minigameDevSandboxCopy.noScenarioLabel}</p>
+          <p className={styles.description}>
+            {rendererBundle === null
+              ? minigameDevSandboxCopy.noRendererLabel
+              : minigameDevSandboxCopy.noScenarioLabel}
+          </p>
         </div>
       </main>
     );
   }
 
-  const { scenarioHostView, scenarioDisplayView } = resolveSandboxModel(
+  const { activeScenario, scenarioHostView, scenarioDisplayView } = resolveSandboxModel(
     devManifest,
     knobsState
   );
-
-  const previewRoomState = buildSandboxRoomState({
-    minigameType,
-    minigamePhase: knobsState.phase,
-    activeTeamName: knobsState.activeTeamName,
-    minigameHostView: scenarioHostView,
-    minigameDisplayView: scenarioDisplayView
-  });
+  const activeTeamName =
+    knobsState.activeTeamName.trim().length > 0
+      ? knobsState.activeTeamName
+      : activeScenario.activeTeamName;
+  const teamNameByTeamId = new Map(Object.entries(activeScenario.teamNameByTeamId));
+  const { HostSurface, DisplaySurface } = rendererBundle;
 
   return (
     <main className={styles.container}>
@@ -169,13 +174,28 @@ export const MinigameDevSandbox = ({
           <header className={styles.previewHeader}>
             {minigameDevSandboxCopy.hostPreviewLabel}
           </header>
-          <HostControlPanel roomState={previewRoomState} />
+          <HostSurface
+            phase={knobsState.phase}
+            minigameType={minigameType}
+            minigameHostView={scenarioHostView}
+            activeTeamName={activeTeamName}
+            teamNameByTeamId={teamNameByTeamId}
+            canDispatchAction={false}
+            onDispatchAction={(): void => {
+              return;
+            }}
+          />
         </div>
         <div className={styles.previewCard}>
           <header className={styles.previewHeader}>
             {minigameDevSandboxCopy.displayPreviewLabel}
           </header>
-          <DisplayBoard roomState={previewRoomState} />
+          <DisplaySurface
+            phase={knobsState.phase}
+            minigameType={minigameType}
+            minigameDisplayView={scenarioDisplayView}
+            activeTeamName={activeTeamName}
+          />
         </div>
       </section>
     </main>

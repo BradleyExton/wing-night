@@ -23,7 +23,20 @@ const parseIntegerSearchParam = (
     return fallback;
   }
 
-  return parsedValue;
+  return Math.max(0, parsedValue);
+};
+
+const resolvePhaseSearchParam = (
+  searchParams: URLSearchParams,
+  fallback: MinigameSurfacePhase
+): MinigameSurfacePhase => {
+  const phaseSearchParam = searchParams.get("phase");
+
+  if (phaseSearchParam === "intro" || phaseSearchParam === "play") {
+    return phaseSearchParam;
+  }
+
+  return fallback;
 };
 
 export const resolveScenarioById = (
@@ -53,9 +66,7 @@ export const resolveInitialKnobsState = (
 
   return {
     scenarioId: initialScenario.id,
-    phase:
-      (searchParams.get("phase") as MinigameSurfacePhase | null) ??
-      initialScenario.phase,
+    phase: resolvePhaseSearchParam(searchParams, initialScenario.phase),
     activeTeamName: searchParams.get("team") ?? initialScenario.activeTeamName ?? "",
     promptVisible:
       searchParams.get("prompt") === null

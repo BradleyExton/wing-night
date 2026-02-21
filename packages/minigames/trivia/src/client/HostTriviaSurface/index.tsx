@@ -3,8 +3,6 @@ import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import { hostTriviaSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
-const NO_ASSIGNED_TEAM_LABEL = "No assigned team";
-
 const resolveActiveTeamName = ({
   minigameHostView,
   teamNameByTeamId,
@@ -16,11 +14,11 @@ const resolveActiveTeamName = ({
   if (minigameHostView?.activeTurnTeamId) {
     return (
       teamNameByTeamId.get(minigameHostView.activeTurnTeamId) ??
-      NO_ASSIGNED_TEAM_LABEL
+      hostTriviaSurfaceCopy.noAssignedTeamLabel
     );
   }
 
-  return activeTeamName ?? NO_ASSIGNED_TEAM_LABEL;
+  return activeTeamName ?? hostTriviaSurfaceCopy.noAssignedTeamLabel;
 };
 
 export const HostTriviaSurface = ({
@@ -54,7 +52,7 @@ export const HostTriviaSurface = ({
         </p>
         <div className={styles.meta}>
           <div className={styles.metaBlock}>
-            <p className={styles.metaLabel}>Active Team</p>
+            <p className={styles.metaLabel}>{hostTriviaSurfaceCopy.activeTeamMetaLabel}</p>
             <p className={styles.metaValue}>
               {hostTriviaSurfaceCopy.activeTeamLabel(resolvedActiveTeamName)}
             </p>

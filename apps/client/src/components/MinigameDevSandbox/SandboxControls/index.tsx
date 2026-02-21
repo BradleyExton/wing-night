@@ -2,6 +2,7 @@ import type {
   MinigameDevManifest,
   MinigameSurfacePhase
 } from "@wingnight/minigames-core";
+import type { MinigameType } from "@wingnight/shared";
 
 import { minigameDevSandboxCopy } from "../copy";
 import { resolveScenarioById } from "../sandboxState";
@@ -9,7 +10,7 @@ import type { SandboxKnobsState } from "../types";
 import * as styles from "./styles";
 
 type SandboxControlsProps = {
-  minigameType: string;
+  minigameType: MinigameType;
   devManifest: MinigameDevManifest;
   knobsState: SandboxKnobsState;
   onKnobsStateChange: (updater: (previousState: SandboxKnobsState) => SandboxKnobsState) => void;
