@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@wingnight/minigames-core": "workspace:*",
+    "@wingnight/minigames-drawing": "workspace:*",
+    "@wingnight/minigames-geo": "workspace:*",
     "@wingnight/minigames-trivia": "workspace:*",
     "@wingnight/shared": "workspace:*",
     "express": "^4.21.2",

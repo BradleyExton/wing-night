@@ -1,4 +1,4 @@
-import { type DisplayRoomStateSnapshot } from "@wingnight/shared";
+import { type RoomState } from "@wingnight/shared";
 
 import { EatingStageBody } from "./EatingStageBody";
 import { FallbackStageBody } from "./FallbackStageBody";
@@ -9,7 +9,7 @@ import * as styles from "./styles";
 import { useEatingCountdown } from "./useEatingCountdown";
 
 type StageSurfaceProps = {
-  roomState: DisplayRoomStateSnapshot | null;
+  roomState: RoomState | null;
   phaseLabel: string;
 };
 
@@ -59,12 +59,12 @@ export const StageSurface = ({
         return (
           <MinigameStageBody
             phaseLabel={phaseLabel}
+            minigamePhase={stageViewModel.minigamePhase}
+            minigameType={stageViewModel.minigameType}
             currentRoundConfig={stageViewModel.currentRoundConfig}
             shouldRenderTeamTurnContext={stageViewModel.shouldRenderTeamTurnContext}
             activeTeamName={stageViewModel.activeTeamName}
-            isTriviaTurnPhase={stageViewModel.isTriviaTurnPhase}
-            shouldRenderTriviaPrompt={stageViewModel.shouldRenderTriviaPrompt}
-            currentTriviaQuestion={stageViewModel.currentTriviaQuestion}
+            minigameDisplayView={stageViewModel.minigameDisplayView}
           />
         );
       case "fallback":

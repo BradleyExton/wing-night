@@ -44,25 +44,29 @@ export const MINIGAME_CONTRACT_METADATA_BY_ID = {
 
 export type MinigameHostView = {
   minigame: MinigameType;
-  minigameApiVersion: number;
-  capabilityFlags: string[];
-  compatibilityStatus: MinigameContractCompatibilityStatus;
-  compatibilityMessage: string | null;
+  minigameApiVersion?: number;
+  capabilityFlags?: string[];
+  compatibilityStatus?: MinigameContractCompatibilityStatus;
+  compatibilityMessage?: string | null;
   activeTurnTeamId: string | null;
   attemptsRemaining: number;
   promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;
   currentPrompt: TriviaPrompt | null;
+  status?: "UNSUPPORTED";
+  message?: string;
 };
 
 export type MinigameDisplayView = {
   minigame: MinigameType;
-  minigameApiVersion: number;
-  capabilityFlags: string[];
+  minigameApiVersion?: number;
+  capabilityFlags?: string[];
   activeTurnTeamId: string | null;
   promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;
   currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
+  status?: "UNSUPPORTED";
+  message?: string;
 };
 
 export type RoomFatalError = {
@@ -79,15 +83,15 @@ export type RoomState = {
   players: Player[];
   teams: Team[];
   gameConfig: GameConfigFile | null;
-  triviaPrompts: TriviaPrompt[];
+  triviaPrompts?: TriviaPrompt[];
   currentRoundConfig: GameConfigRound | null;
   turnOrderTeamIds: string[];
   roundTurnCursor: number;
   completedRoundTurnTeamIds: string[];
   activeRoundTeamId: string | null;
   activeTurnTeamId: string | null;
-  currentTriviaPrompt: TriviaPrompt | null;
-  triviaPromptCursor: number;
+  currentTriviaPrompt?: TriviaPrompt | null;
+  triviaPromptCursor?: number;
   timer: RoomTimerState | null;
   minigameHostView: MinigameHostView | null;
   minigameDisplayView: MinigameDisplayView | null;

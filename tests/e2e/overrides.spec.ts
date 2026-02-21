@@ -124,7 +124,7 @@ const advanceUntilHeading = async (
   await expect(phaseHeading).toHaveCount(1);
 };
 
-test("override dock score updates sync to display and stays reachable during takeover", async ({
+test("override dock score updates sync to display and panel closes on escape/scrim", async ({
   browser
 }) => {
   const context = await browser.newContext();
@@ -167,18 +167,6 @@ test("override dock score updates sync to display and stays reachable during tak
     .locator("button[aria-label='Close overrides panel']")
     .last();
   await scrimDismissButton.click();
-  await expect(hostPage.getByRole("dialog")).toHaveCount(0);
-
-  await hostPage.getByRole("button", { name: "Next Phase" }).click();
-  await expect(hostPage.locator("h1").filter({ hasText: /^Eating$/i })).toHaveCount(1);
-
-  const takeoverShell = hostPage.locator("[data-host-minigame-takeover='intro']");
-  await hostPage.getByRole("button", { name: "Next Phase" }).click();
-  await expect(takeoverShell).toHaveCount(1);
-  await expect(hostPage.getByRole("button", { name: /open overrides panel/i })).toBeVisible();
-  await hostPage.getByRole("button", { name: /open overrides panel/i }).click();
-  await expect(hostPage.getByRole("dialog")).toHaveCount(1);
-  await hostPage.getByRole("dialog").getByRole("button", { name: /^Close$/ }).click();
   await expect(hostPage.getByRole("dialog")).toHaveCount(0);
 
   await context.close();

@@ -1,9 +1,8 @@
 import {
   CLIENT_TO_SERVER_EVENTS,
   SERVER_TO_CLIENT_EVENTS,
-  type RoleScopedSnapshotByRole,
   type RoleScopedStateSnapshotEnvelope,
-  type SocketClientRole
+  type RoomState
 } from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
@@ -15,45 +14,33 @@ import type {
 type RoomStateSocket = Pick<
   Socket<InboundSocketEvents, OutboundSocketEvents>,
   "on" | "off" | "emit" | "connected"
-> & {
-  recovered?: boolean;
-};
+>;
 
-export const wireRoomStateRehydration = <TRole extends SocketClientRole>(
+export const wireRoomStateRehydration = (
   socket: RoomStateSocket,
-  expectedRole: TRole,
-  onSnapshot: (roomState: RoleScopedSnapshotByRole<TRole>) => void
+  onSnapshot: (roomState: RoomState) => void
 ): (() => void) => {
   const requestLatestState = (): void => {
     socket.emit(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE);
   };
 
-  const handleSnapshot = (payload: RoleScopedStateSnapshotEnvelope): void => {
-    if (payload.clientRole !== expectedRole) {
+  const handleSnapshot = (
+    payload: RoomState | RoleScopedStateSnapshotEnvelope
+  ): void => {
+    if (typeof payload === "object" && payload !== null && "clientRole" in payload) {
+      onSnapshot(payload.roomState as RoomState);
       return;
     }
 
-    onSnapshot(payload.roomState as RoleScopedSnapshotByRole<TRole>);
-  };
-
-  const handleConnect = (): void => {
-    // Connection-state recovery is transport-dependent and may be unavailable in
-    // some deployment topologies. When recovery is not available, request a full
-    // snapshot so takeover shells can rehydrate from authoritative server state.
-    if (socket.recovered !== true) {
-      requestLatestState();
-    }
+    onSnapshot(payload);
   };
 
   socket.on(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, handleSnapshot);
-  socket.on("connect", handleConnect);
-
   if (socket.connected) {
     requestLatestState();
   }
 
   return (): void => {
     socket.off(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, handleSnapshot);
-    socket.off("connect", handleConnect);
   };
 };

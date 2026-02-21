@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveClientRoute } from "./index";
+import { resolveClientRoute, resolveDevMinigameSlug } from "./index";
 
 test("resolves /host and /host/ to HOST", () => {
   assert.equal(resolveClientRoute("/host"), "HOST");
@@ -13,7 +13,15 @@ test("resolves /display and /display/ to DISPLAY", () => {
   assert.equal(resolveClientRoute("/display/"), "DISPLAY");
 });
 
+test("resolves /dev/minigame/:slug routes to DEV_MINIGAME", () => {
+  assert.equal(resolveClientRoute("/dev/minigame/trivia"), "DEV_MINIGAME");
+  assert.equal(resolveClientRoute("/dev/minigame/trivia/"), "DEV_MINIGAME");
+  assert.equal(resolveDevMinigameSlug("/dev/minigame/trivia"), "trivia");
+  assert.equal(resolveDevMinigameSlug("/dev/minigame/GEO/"), "geo");
+});
+
 test("resolves unknown routes to NOT_FOUND", () => {
   assert.equal(resolveClientRoute("/"), "NOT_FOUND");
   assert.equal(resolveClientRoute("/anything-else"), "NOT_FOUND");
+  assert.equal(resolveClientRoute("/dev/minigame"), "NOT_FOUND");
 });

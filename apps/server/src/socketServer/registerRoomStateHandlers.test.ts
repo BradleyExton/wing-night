@@ -3,18 +3,18 @@ import test from "node:test";
 
 import {
   CLIENT_TO_SERVER_EVENTS,
-  MINIGAME_ACTION_TYPES,
+  MINIGAME_API_VERSION,
   Phase,
   SERVER_TO_CLIENT_EVENTS,
   type HostSecretPayload,
-  type MinigameActionEnvelopePayload,
+  type MinigameActionPayload,
   type RoomState
 } from "@wingnight/shared";
 
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
 type SocketUnderTest = Parameters<typeof registerRoomStateHandlers>[0];
-type MutationHandlersUnderTest = Parameters<typeof registerRoomStateHandlers>[3];
+type MutationHandlersUnderTest = Parameters<typeof registerRoomStateHandlers>[2];
 
 type SocketHarness = {
   socket: SocketUnderTest;
@@ -46,15 +46,12 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     players: [],
     teams: [],
     gameConfig: null,
-    triviaPrompts: [],
     currentRoundConfig: null,
     turnOrderTeamIds: [],
     roundTurnCursor: -1,
     completedRoundTurnTeamIds: [],
     activeRoundTeamId: null,
     activeTurnTeamId: null,
-    currentTriviaPrompt: null,
-    triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
@@ -349,10 +346,7 @@ const createMutationHandlers = (
     onAuthorizedRedoLastMutation: () => {
       // no-op
     },
-    onAuthorizedDispatchMinigameAction: () => {
-      // no-op
-    },
-    onMinigameActionRejectedForCompatibility: () => {
+    onAuthorizedMinigameAction: () => {
       // no-op
     },
     onAuthorizedPauseTimer: () => {
@@ -373,24 +367,6 @@ const hostAuth = {
   isValidHostSecret: (hostSecret: string) => hostSecret === "valid-host-secret"
 };
 
-const defaultActiveMinigameContract = () => {
-  return {
-    minigameId: "TRIVIA" as const,
-    minigameApiVersion: 1,
-    capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT]
-  };
-};
-
-const validTriviaMinigameActionPayload: MinigameActionEnvelopePayload = {
-  hostSecret: "valid-host-secret",
-  minigameId: "TRIVIA",
-  minigameApiVersion: 1,
-  actionType: MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT,
-  actionPayload: {
-    isCorrect: false
-  }
-};
-
 test("emits state snapshot immediately and on client request", () => {
   const socketHarness = createSocketHarness();
   const firstState = buildRoomState(Phase.SETUP, 0);
@@ -398,7 +374,6 @@ test("emits state snapshot immediately and on client request", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => firstState,
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         assert.fail("next phase callback should not be called in this test");
@@ -423,7 +398,6 @@ test("emits host secret when host claims control and socket is authorized", () =
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.SETUP),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         assert.fail("next phase callback should not be called in this test");
@@ -449,7 +423,6 @@ test("does not emit host secret when socket is not allowed to claim control", ()
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.SETUP),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         assert.fail("next phase callback should not be called in this test");
@@ -472,7 +445,6 @@ test("ignores malformed game:nextPhase payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => initialState,
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         authorizedCallCount += 1;
@@ -502,7 +474,6 @@ test("does not validate host secret for malformed game:nextPhase payloads", () =
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.SETUP),
-    defaultActiveMinigameContract,
     createMutationHandlers(),
     true,
     {
@@ -531,7 +502,6 @@ test("ignores unauthorized game:nextPhase requests", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => initialState,
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         authorizedCallCount += 1;
@@ -556,7 +526,6 @@ test("does not emit invalid-secret event when client cannot claim control", () =
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.SETUP),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         authorizedCallCount += 1;
@@ -582,7 +551,6 @@ test("runs authorized next phase callback without per-socket snapshot emit", () 
   registerRoomStateHandlers(
     socketHarness.socket,
     () => initialState,
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         authorizedCallCount += 1;
@@ -608,7 +576,6 @@ test("ignores malformed and unauthorized skip-turn-boundary payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.EATING),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedSkipTurnBoundary: () => {
         skipCalls += 1;
@@ -636,7 +603,6 @@ test("ignores malformed and unauthorized reorder-turn-order payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.ROUND_INTRO),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedReorderTurnOrder: (teamIds) => {
         reorderCalls.push(teamIds);
@@ -679,7 +645,6 @@ test("ignores malformed and unauthorized reset payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.ROUND_RESULTS),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedResetGame: () => {
         resetCalls += 1;
@@ -708,7 +673,6 @@ test("runs authorized create-team callback and ignores unauthorized payloads", (
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.SETUP),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedCreateTeam: (name) => {
         createTeamCalls += 1;
@@ -734,7 +698,6 @@ test("ignores malformed and unauthorized assign-player payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.SETUP),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedAssignPlayer: (playerId, teamId) => {
         assignmentCalls.push({ playerId, teamId });
@@ -776,7 +739,6 @@ test("ignores malformed and unauthorized wing-participation payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.SETUP),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedSetWingParticipation: (playerId, didEat) => {
         participationCalls.push({ playerId, didEat });
@@ -823,7 +785,6 @@ test("ignores malformed and unauthorized adjust-team-score payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.ROUND_RESULTS),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedAdjustTeamScore: (teamId, delta) => {
         adjustmentCalls.push({ teamId, delta });
@@ -870,7 +831,6 @@ test("ignores malformed and unauthorized redo-last-mutation payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.ROUND_RESULTS),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedRedoLastMutation: () => {
         redoCalls += 1;
@@ -893,15 +853,14 @@ test("ignores malformed and unauthorized redo-last-mutation payloads", () => {
 
 test("ignores malformed and unauthorized minigame-action payloads", () => {
   const socketHarness = createSocketHarness();
-  const actionPayloads: MinigameActionEnvelopePayload[] = [];
+  const minigameActionCalls: MinigameActionPayload[] = [];
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.MINIGAME_PLAY),
-    defaultActiveMinigameContract,
+    () => buildRoomState(Phase.SETUP),
     createMutationHandlers({
-      onAuthorizedDispatchMinigameAction: (payload) => {
-        actionPayloads.push(payload);
+      onAuthorizedMinigameAction: (payload) => {
+        minigameActionCalls.push(payload);
       }
     }),
     true,
@@ -913,110 +872,79 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
     socketHarness.triggerMinigameAction({});
     socketHarness.triggerMinigameAction({ hostSecret: "valid-host-secret" });
     socketHarness.triggerMinigameAction({
-      ...validTriviaMinigameActionPayload,
-      actionPayload: "invalid-payload"
+      hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
+      minigameId: "TRIVIA",
+      actionType: "recordAttempt"
     });
     socketHarness.triggerMinigameAction({
-      ...validTriviaMinigameActionPayload,
-      hostSecret: "invalid-host-secret"
+      hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
+      minigameId: "TRIVIA",
+      actionType: "recordAttempt",
+      actionPayload: {
+        isCorrect: "yes"
+      }
     });
-    socketHarness.triggerMinigameAction(validTriviaMinigameActionPayload);
-  });
-
-  assert.deepEqual(actionPayloads, [validTriviaMinigameActionPayload]);
-  assert.equal(socketHarness.invalidSecretEvents, 1);
-});
-
-test("rejects minigame-action when active minigame does not match payload", () => {
-  const socketHarness = createSocketHarness();
-  const mismatchMessages: string[] = [];
-  let authorizedCalls = 0;
-
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => buildRoomState(Phase.MINIGAME_PLAY),
-    () => ({
+    socketHarness.triggerMinigameAction({
+      hostSecret: "invalid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
+      minigameId: "TRIVIA",
+      actionType: "recordAttempt",
+      actionPayload: {
+        isCorrect: true
+      }
+    });
+    socketHarness.triggerMinigameAction({
+      hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
+      minigameId: "TRIVIA",
+      actionType: "recordAttempt",
+      actionPayload: {
+        isCorrect: false
+      }
+    });
+    socketHarness.triggerMinigameAction({
+      hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "GEO",
-      minigameApiVersion: 1,
-      capabilityFlags: []
-    }),
-    createMutationHandlers({
-      onAuthorizedDispatchMinigameAction: () => {
-        authorizedCalls += 1;
-      },
-      onMinigameActionRejectedForCompatibility: (message) => {
-        mismatchMessages.push(message);
+      actionType: "recordAttempt",
+      actionPayload: {
+        isCorrect: true
       }
-    }),
-    true,
-    hostAuth
-  );
-
-  socketHarness.triggerMinigameAction(validTriviaMinigameActionPayload);
-
-  assert.equal(authorizedCalls, 0);
-  assert.deepEqual(mismatchMessages, [
-    "Active minigame changed. Refresh host and try again."
-  ]);
-});
-
-test("rejects minigame-action when api version mismatches active contract", () => {
-  const socketHarness = createSocketHarness();
-  const mismatchMessages: string[] = [];
-
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => buildRoomState(Phase.MINIGAME_PLAY),
-    defaultActiveMinigameContract,
-    createMutationHandlers({
-      onMinigameActionRejectedForCompatibility: (message) => {
-        mismatchMessages.push(message);
-      }
-    }),
-    true,
-    hostAuth
-  );
-
-  socketHarness.triggerMinigameAction({
-    ...validTriviaMinigameActionPayload,
-    minigameApiVersion: 2
+    });
   });
 
-  assert.deepEqual(mismatchMessages, [
-    "Minigame API version mismatch. Refresh host and try again."
-  ]);
-});
-
-test("rejects minigame-action when action type is unsupported by active contract", () => {
-  const socketHarness = createSocketHarness();
-  const mismatchMessages: string[] = [];
-  let authorizedCalls = 0;
-
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => buildRoomState(Phase.MINIGAME_PLAY),
-    defaultActiveMinigameContract,
-    createMutationHandlers({
-      onAuthorizedDispatchMinigameAction: () => {
-        authorizedCalls += 1;
-      },
-      onMinigameActionRejectedForCompatibility: (message) => {
-        mismatchMessages.push(message);
+  assert.deepEqual(minigameActionCalls, [
+    {
+      hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
+      minigameId: "TRIVIA",
+      actionType: "recordAttempt",
+      actionPayload: {
+        isCorrect: "yes"
       }
-    }),
-    true,
-    hostAuth
-  );
-
-  socketHarness.triggerMinigameAction({
-    ...validTriviaMinigameActionPayload,
-    actionType: "trivia:unsupportedAction"
-  });
-
-  assert.equal(authorizedCalls, 0);
-  assert.deepEqual(mismatchMessages, [
-    "Unsupported minigame action. Refresh host and try again."
+    },
+    {
+      hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
+      minigameId: "TRIVIA",
+      actionType: "recordAttempt",
+      actionPayload: {
+        isCorrect: false
+      }
+    },
+    {
+      hostSecret: "valid-host-secret",
+      minigameApiVersion: MINIGAME_API_VERSION,
+      minigameId: "GEO",
+      actionType: "recordAttempt",
+      actionPayload: {
+        isCorrect: true
+      }
+    }
   ]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
 });
 
 test("ignores malformed and unauthorized timer pause/resume payloads", () => {
@@ -1027,7 +955,6 @@ test("ignores malformed and unauthorized timer pause/resume payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.EATING),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedPauseTimer: () => {
         pauseCalls += 1;
@@ -1063,7 +990,6 @@ test("ignores malformed and unauthorized timer extend payloads", () => {
   registerRoomStateHandlers(
     socketHarness.socket,
     () => buildRoomState(Phase.EATING),
-    defaultActiveMinigameContract,
     createMutationHandlers({
       onAuthorizedExtendTimer: (additionalSeconds) => {
         timerExtendCalls.push(additionalSeconds);

@@ -36,15 +36,12 @@ const buildSnapshot = (phase: Phase): RoomState => {
     players: [],
     teams: [{ id: "team-1", name: "Team One", playerIds: [], totalScore: 0 }],
     gameConfig: gameConfigFixture,
-    triviaPrompts: [],
     currentRoundConfig: gameConfigFixture.rounds[0],
     turnOrderTeamIds: ["team-1"],
     roundTurnCursor: 0,
     completedRoundTurnTeamIds: [],
     activeRoundTeamId: "team-1",
     activeTurnTeamId: null,
-    currentTriviaPrompt: null,
-    triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
@@ -84,11 +81,8 @@ test("renders trivia question without answer leakage", () => {
     <StageSurface
       roomState={{
         ...buildSnapshot(Phase.MINIGAME_PLAY),
-        activeTurnTeamId: "team-1",
         minigameDisplayView: {
           minigame: "TRIVIA",
-          minigameApiVersion: 1,
-          capabilityFlags: ["recordAttempt"],
           activeTurnTeamId: "team-1",
           promptCursor: 0,
           pendingPointsByTeamId: {},
@@ -107,6 +101,36 @@ test("renders trivia question without answer leakage", () => {
   assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.doesNotMatch(html, /Scoville/);
+});
+
+test("renders waiting fallback when MINIGAME_PLAY projection is not available yet", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_PLAY)} phaseLabel="Minigame Play" />
+  );
+
+  assert.match(html, /Waiting for minigame display state from the server snapshot\./);
+});
+
+test("renders GEO unsupported surface in MINIGAME_PLAY without waiting on projected view", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.MINIGAME_PLAY),
+        currentRoundConfig: {
+          ...gameConfigFixture.rounds[0],
+          minigame: "GEO"
+        }
+      }}
+      phaseLabel="Minigame Play"
+    />
+  );
+
+  assert.match(html, /Mini-Game: GEO/);
+  assert.match(html, /GEO display surface is currently a stub/);
+  assert.doesNotMatch(
+    html,
+    /Waiting for minigame display state from the server snapshot/
+  );
 });
 
 test("renders active team without turn progress during eating", () => {
@@ -209,13 +233,4 @@ test("renders active team without turn progress during minigame intro", () => {
   assert.match(html, /Team One/);
   assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Mini-Game: TRIVIA/);
-});
-
-test("renders stable minigame fallback when display payload is absent", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_PLAY)} phaseLabel="Minigame Play" />
-  );
-
-  assert.match(html, /Mini-Game: TRIVIA/);
-  assert.match(html, /Trivia Turn/);
 });

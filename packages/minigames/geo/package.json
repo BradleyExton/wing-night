@@ -1,0 +1,45 @@
+{
+  "name": "@wingnight/minigames-geo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/runtime/index.js",
+  "types": "dist/runtime/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
+    },
+    "./dev": {
+      "types": "./dist/dev/index.d.ts",
+      "default": "./dist/dev/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src/**/*.{ts,tsx}",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
+    "test": "tsx --test src/**/*.test.ts src/**/*.test.tsx"
+  },
+  "dependencies": {
+    "@wingnight/minigames-core": "workspace:*",
+    "@wingnight/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/react": "^18.3.12",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1"
+  }
+}

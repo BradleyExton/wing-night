@@ -69,15 +69,12 @@ const buildRoomState = (
     players: playersFixture,
     teams: teamsFixture,
     gameConfig: gameConfigFixture,
-    triviaPrompts: [],
     currentRoundConfig: gameConfigFixture.rounds[0],
     turnOrderTeamIds: teamsFixture.map((team) => team.id),
     roundTurnCursor: 0,
     completedRoundTurnTeamIds: [],
     activeRoundTeamId: teamsFixture[0]?.id ?? null,
     activeTurnTeamId: null,
-    currentTriviaPrompt: null,
-    triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
@@ -119,12 +116,13 @@ const buildProps = (
     wingParticipationByPlayerId: { "player-1": true },
     activeRoundTeamId: "team-alpha",
     activeRoundTeamName: "Team Alpha",
+    minigameType: roomState?.currentRoundConfig?.minigame ?? null,
     minigameHostView: null,
     nextTeamName: "",
     setupMutationsDisabled: false,
     assignmentDisabled: false,
     participationDisabled: false,
-    triviaAttemptDisabled: false,
+    canDispatchMinigameAction: true,
     sortedStandings: teamsFixture,
     timer: null,
     onNextTeamNameChange: () => undefined,
@@ -134,7 +132,7 @@ const buildProps = (
     onPauseTimer: () => undefined,
     onResumeTimer: () => undefined,
     onExtendTimer: () => undefined,
-    onRecordTriviaAttempt: () => undefined,
+    onDispatchMinigameAction: () => undefined,
     ...overrides
   };
 };
@@ -180,24 +178,19 @@ test("renders eating surfaces in eating mode", () => {
   assert.doesNotMatch(html, /Morgan/);
 });
 
-test("renders minigame takeover shell in minigame intro mode", () => {
+test("renders minigame surface in minigame intro mode", () => {
   const html = renderToStaticMarkup(
     <HostPhaseBody {...buildProps("minigame_intro", Phase.MINIGAME_INTRO)} />
   );
 
-  assert.match(html, /data-host-minigame-takeover="intro"/);
-  assert.match(html, /TRIVIA is queued\. Advance when players are ready to begin\./);
-  assert.match(html, /Active Team/);
-  assert.match(html, /Team Alpha/);
+  assert.match(html, /Mini-Game/);
+  assert.match(html, /Review the active team, then advance to begin trivia play\./);
+  assert.match(html, /Active Team: Team Alpha/);
 });
 
-test("renders minigame takeover shell in minigame play mode", () => {
+test("renders minigame surface in minigame play mode", () => {
   const triviaHostView: MinigameHostView = {
     minigame: "TRIVIA",
-    minigameApiVersion: 1,
-    capabilityFlags: ["recordAttempt"],
-    compatibilityStatus: "COMPATIBLE",
-    compatibilityMessage: null,
     activeTurnTeamId: "team-alpha",
     attemptsRemaining: 1,
     promptCursor: 0,
@@ -219,7 +212,6 @@ test("renders minigame takeover shell in minigame play mode", () => {
     />
   );
 
-  assert.match(html, /data-host-minigame-takeover="play"/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.match(html, /Scoville/);
   assert.match(html, /Correct/);

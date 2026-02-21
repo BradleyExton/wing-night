@@ -1,17 +1,17 @@
-import { Phase, type DisplayRoomStateSnapshot } from "@wingnight/shared";
+import { Phase, type MinigameType, type RoomState } from "@wingnight/shared";
 
 export type StageRenderMode = "round_intro" | "eating" | "minigame" | "fallback";
 
 export type StageViewModel = {
   phase: Phase | null;
   stageMode: StageRenderMode;
-  currentRoundConfig: DisplayRoomStateSnapshot["currentRoundConfig"];
-  isTriviaTurnPhase: boolean;
+  currentRoundConfig: RoomState["currentRoundConfig"];
+  minigameType: MinigameType | null;
+  minigamePhase: "intro" | "play" | null;
   activeTeamName: string | null;
   shouldRenderTeamTurnContext: boolean;
-  currentTriviaQuestion: string | null;
-  shouldRenderTriviaPrompt: boolean;
-  eatingTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
+  minigameDisplayView: RoomState["minigameDisplayView"];
+  eatingTimerSnapshot: NonNullable<RoomState["timer"]> | null;
   fallbackEatingSeconds: number | null;
   hasRoomState: boolean;
 };
@@ -40,21 +40,17 @@ const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
   }
 };
 
-export const resolveStageViewModel = (
-  roomState: DisplayRoomStateSnapshot | null
-): StageViewModel => {
+export const resolveStageViewModel = (roomState: RoomState | null): StageViewModel => {
   const phase = roomState?.phase ?? null;
   const stageMode = resolveStageRenderMode(phase);
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
-  const isMinigamePlayPhase = phase === Phase.MINIGAME_PLAY;
-  const isTriviaTurnPhase =
-    isMinigamePlayPhase && currentRoundConfig?.minigame === "TRIVIA";
+  const minigameType =
+    roomState?.minigameDisplayView?.minigame ?? currentRoundConfig?.minigame ?? null;
+  const minigamePhase =
+    phase === Phase.MINIGAME_INTRO ? "intro" : phase === Phase.MINIGAME_PLAY ? "play" : null;
 
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
-  const activeTurnTeamId =
-    roomState?.minigameDisplayView?.activeTurnTeamId ??
-    roomState?.activeTurnTeamId ??
-    null;
+  const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
 
   const activeRoundTeamName =
     activeRoundTeamId !== null
@@ -69,12 +65,7 @@ export const resolveStageViewModel = (
   const shouldRenderTeamTurnContext =
     activeTeamName !== null && (stageMode === "eating" || stageMode === "minigame");
 
-  const currentTriviaQuestion =
-    roomState?.minigameDisplayView?.minigame === "TRIVIA"
-      ? (roomState.minigameDisplayView.currentPrompt?.question ?? null)
-      : null;
-  const shouldRenderTriviaPrompt =
-    isTriviaTurnPhase && currentTriviaQuestion !== null;
+  const minigameDisplayView = roomState?.minigameDisplayView ?? null;
 
   const eatingTimerSnapshot =
     stageMode === "eating" && roomState?.timer?.phase === Phase.EATING
@@ -85,11 +76,11 @@ export const resolveStageViewModel = (
     phase,
     stageMode,
     currentRoundConfig,
-    isTriviaTurnPhase,
+    minigameType,
+    minigamePhase,
     activeTeamName,
     shouldRenderTeamTurnContext,
-    currentTriviaQuestion,
-    shouldRenderTriviaPrompt,
+    minigameDisplayView,
     eatingTimerSnapshot,
     fallbackEatingSeconds: roomState?.gameConfig?.timers.eatingSeconds ?? null,
     hasRoomState: roomState !== null

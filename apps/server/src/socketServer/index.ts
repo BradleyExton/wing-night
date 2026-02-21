@@ -1,7 +1,9 @@
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
+import type { SerializableValue } from "@wingnight/minigames-core";
 import {
   CLIENT_ROLES,
+  MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS,
   isSocketClientRole,
   type SocketClientRole
@@ -18,19 +20,17 @@ import {
   createTeam,
   dispatchMinigameAction,
   extendRoomTimer,
-  getActiveMinigameContract,
   getRoomStateSnapshot,
   pauseRoomTimer,
   redoLastScoringMutation,
   reorderTurnOrder,
   resetGameToSetup,
-  setMinigameCompatibilityMismatch,
   skipTurnBoundary,
   resumeRoomTimer,
   setWingParticipation
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
-import { createRoleScopedSnapshot } from "./createRoleScopedSnapshot/index.js";
+import { resolveMinigameDescriptor } from "../minigames/registry/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
 export const attachSocketServer = (
@@ -72,74 +72,76 @@ export const attachSocketServer = (
 
   socketServer.on("connection", (socket) => {
     const socketClientRole = resolveSocketClientRole(socket.handshake.auth);
-
-    const broadcastRoleScopedSnapshot = (
-      roomStateSnapshot: ReturnType<typeof getRoomStateSnapshot>
-    ): void => {
-      const hostSnapshot = createRoleScopedSnapshot(
-        roomStateSnapshot,
-        CLIENT_ROLES.HOST
-      );
-      const displaySnapshot = createRoleScopedSnapshot(
-        roomStateSnapshot,
-        CLIENT_ROLES.DISPLAY
-      );
-
-      for (const connectedSocket of socketServer.sockets.sockets.values()) {
-        const targetRole = resolveSocketClientRole(connectedSocket.handshake.auth);
-        connectedSocket.emit(
-          SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT,
-          targetRole === CLIENT_ROLES.HOST ? hostSnapshot : displaySnapshot
-        );
-      }
+    const broadcastAfter = (runMutation: () => ReturnType<typeof getRoomStateSnapshot>): void => {
+      socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, runMutation());
     };
 
     registerRoomStateHandlers(
       socket,
-      () => createRoleScopedSnapshot(getRoomStateSnapshot(), socketClientRole),
-      getActiveMinigameContract,
+      getRoomStateSnapshot,
       {
         onAuthorizedNextPhase: () => {
-          broadcastRoleScopedSnapshot(advanceRoomStatePhase());
+          broadcastAfter(() => advanceRoomStatePhase());
         },
         onAuthorizedSkipTurnBoundary: () => {
-          broadcastRoleScopedSnapshot(skipTurnBoundary());
+          broadcastAfter(() => skipTurnBoundary());
         },
         onAuthorizedReorderTurnOrder: (teamIds) => {
-          broadcastRoleScopedSnapshot(reorderTurnOrder(teamIds));
+          broadcastAfter(() => reorderTurnOrder(teamIds));
         },
         onAuthorizedResetGame: () => {
-          broadcastRoleScopedSnapshot(resetGameToSetup());
+          broadcastAfter(() => resetGameToSetup());
         },
         onAuthorizedCreateTeam: (name) => {
-          broadcastRoleScopedSnapshot(createTeam(name));
+          broadcastAfter(() => createTeam(name));
         },
         onAuthorizedAssignPlayer: (playerId, teamId) => {
-          broadcastRoleScopedSnapshot(assignPlayerToTeam(playerId, teamId));
+          broadcastAfter(() => assignPlayerToTeam(playerId, teamId));
         },
         onAuthorizedSetWingParticipation: (playerId, didEat) => {
-          broadcastRoleScopedSnapshot(setWingParticipation(playerId, didEat));
+          broadcastAfter(() => setWingParticipation(playerId, didEat));
         },
         onAuthorizedAdjustTeamScore: (teamId, delta) => {
-          broadcastRoleScopedSnapshot(adjustTeamScore(teamId, delta));
+          broadcastAfter(() => adjustTeamScore(teamId, delta));
         },
         onAuthorizedRedoLastMutation: () => {
-          broadcastRoleScopedSnapshot(redoLastScoringMutation());
+          broadcastAfter(() => redoLastScoringMutation());
         },
-        onAuthorizedDispatchMinigameAction: (payload) => {
-          broadcastRoleScopedSnapshot(dispatchMinigameAction(payload));
-        },
-        onMinigameActionRejectedForCompatibility: (message) => {
-          broadcastRoleScopedSnapshot(setMinigameCompatibilityMismatch(message));
+        onAuthorizedMinigameAction: (payload) => {
+          if (payload.minigameApiVersion !== MINIGAME_API_VERSION) {
+            return;
+          }
+
+          const currentSnapshot = getRoomStateSnapshot();
+
+          if (currentSnapshot.currentRoundConfig?.minigame !== payload.minigameId) {
+            return;
+          }
+
+          const activeMinigameDescriptor = resolveMinigameDescriptor(payload.minigameId);
+
+          if (
+            activeMinigameDescriptor.metadata.minigameApiVersion !==
+            payload.minigameApiVersion
+          ) {
+            return;
+          }
+          broadcastAfter(() =>
+            dispatchMinigameAction(
+              payload.minigameId,
+              payload.actionType,
+              payload.actionPayload as SerializableValue
+            )
+          );
         },
         onAuthorizedPauseTimer: () => {
-          broadcastRoleScopedSnapshot(pauseRoomTimer());
+          broadcastAfter(() => pauseRoomTimer());
         },
         onAuthorizedResumeTimer: () => {
-          broadcastRoleScopedSnapshot(resumeRoomTimer());
+          broadcastAfter(() => resumeRoomTimer());
         },
         onAuthorizedExtendTimer: (additionalSeconds) => {
-          broadcastRoleScopedSnapshot(extendRoomTimer(additionalSeconds));
+          broadcastAfter(() => extendRoomTimer(additionalSeconds));
         }
       },
       socketClientRole === CLIENT_ROLES.HOST,

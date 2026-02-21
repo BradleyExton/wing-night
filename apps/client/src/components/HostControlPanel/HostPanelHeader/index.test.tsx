@@ -62,15 +62,12 @@ const buildSnapshot = (
     ],
     teams: teamsFixture,
     gameConfig: gameConfigFixture,
-    triviaPrompts: [],
     currentRoundConfig: gameConfigFixture.rounds[0],
     turnOrderTeamIds: teamsFixture.map((team) => team.id),
     roundTurnCursor: 0,
     completedRoundTurnTeamIds: [],
     activeRoundTeamId: teamsFixture[0]?.id ?? null,
     activeTurnTeamId: null,
-    currentTriviaPrompt: null,
-    triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
@@ -281,13 +278,7 @@ test("hides turn context in non-turn phases even when turn data is valid", () =>
 test("does not render trivia prompt or answer payloads in header", () => {
   const html = renderToStaticMarkup(
     <HostPanelHeader
-      roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
-        currentTriviaPrompt: {
-          id: "prompt-1",
-          question: "Which scale measures pepper heat?",
-          answer: "Scoville"
-        }
-      })}
+      roomState={buildSnapshot(Phase.MINIGAME_PLAY)}
       teamNameByTeamId={teamNameByTeamId}
     />
   );

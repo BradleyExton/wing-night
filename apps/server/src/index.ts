@@ -1,4 +1,6 @@
 import { createServer } from "node:http";
+import type { MinigameType } from "@wingnight/shared";
+import { isSerializableValue } from "@wingnight/minigames-core";
 
 import { createApp } from "./createApp/index.js";
 import { loadContent } from "./contentLoader/index.js";
@@ -6,8 +8,8 @@ import { logError, logInfo } from "./logger/index.js";
 import {
   setRoomStateFatalError,
   setRoomStateGameConfig,
+  setRoomStateMinigameContent,
   setRoomStatePlayers,
-  setRoomStateTriviaPrompts
 } from "./roomState/index.js";
 import { attachSocketServer } from "./socketServer/index.js";
 
@@ -20,7 +22,16 @@ try {
   const { players, gameConfig, minigameContentById } = loadContent();
   setRoomStatePlayers(players);
   setRoomStateGameConfig(gameConfig);
-  setRoomStateTriviaPrompts(minigameContentById.TRIVIA?.triviaPrompts ?? []);
+
+  for (const [minigameId, minigameContent] of Object.entries(
+    minigameContentById
+  ) as [MinigameType, unknown][]) {
+    if (minigameContent === undefined || !isSerializableValue(minigameContent)) {
+      continue;
+    }
+
+    setRoomStateMinigameContent(minigameId, minigameContent);
+  }
 } catch (error) {
   logError("server:contentLoadFailed", error);
   const failureReason = error instanceof Error ? error.message : String(error);

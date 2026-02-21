@@ -5,8 +5,17 @@
       "@wingnight/minigames-core": [
         "../../packages/minigames/core/dist/index.d.ts"
       ],
+      "@wingnight/minigames-drawing/runtime": [
+        "../../packages/minigames/drawing/dist/runtime/index.d.ts"
+      ],
+      "@wingnight/minigames-geo/runtime": [
+        "../../packages/minigames/geo/dist/runtime/index.d.ts"
+      ],
       "@wingnight/minigames-trivia": [
         "../../packages/minigames/trivia/dist/index.d.ts"
+      ],
+      "@wingnight/minigames-trivia/runtime": [
+        "../../packages/minigames/trivia/dist/runtime/index.d.ts"
       ],
       "@wingnight/shared": ["../../packages/shared/dist/index.d.ts"]
     }

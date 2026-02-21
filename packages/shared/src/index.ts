@@ -51,14 +51,20 @@ export { CLIENT_ROLES, isSocketClientRole } from "./socketClientRole/index.js";
 export type { SocketClientRole } from "./socketClientRole/index.js";
 export {
   CLIENT_TO_SERVER_EVENTS,
+  MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS,
   TIMER_EXTEND_MAX_SECONDS
 } from "./socketEvents/index.js";
 export type {
   ClientToServerEventName,
   ClientToServerEvents,
+  GenericMinigameActionPayload,
   GameReorderTurnOrderPayload,
   HostSecretPayload,
+  MinigameApiVersion,
+  MinigameActionEnvelope,
+  MinigameActionPayload,
+  MinigameActionType,
   MinigameActionEnvelopePayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,

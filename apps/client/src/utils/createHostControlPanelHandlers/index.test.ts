@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  CLIENT_TO_SERVER_EVENTS,
-  MINIGAME_ACTION_TYPES
-} from "@wingnight/shared";
+import { CLIENT_TO_SERVER_EVENTS } from "@wingnight/shared";
 
 import { createHostControlPanelHandlers } from "./index";
 
@@ -47,13 +44,15 @@ test("wires every host action and emits claim-control via missing-secret callbac
       onMissingHostSecret?.();
       return false;
     },
-    requestDispatchMinigameAction: (
+    requestMinigameAction: (
       _socket,
-      payload,
+      minigameId,
+      actionType,
+      actionPayload,
       onMissingHostSecret
     ) => {
       callLog.push(
-        `trivia:${payload.minigameId}:${payload.actionType}:${String((payload.actionPayload as { isCorrect: boolean }).isCorrect)}`
+        `minigame:${minigameId}:${actionType}:${JSON.stringify(actionPayload)}`
       );
       onMissingHostSecret?.();
       return false;
@@ -109,7 +108,9 @@ test("wires every host action and emits claim-control via missing-secret callbac
   handlers.onCreateTeam("Team Ghost Pepper");
   handlers.onAssignPlayer("player-1", "team-alpha");
   handlers.onSetWingParticipation("player-1", true);
-  handlers.onRecordTriviaAttempt(false);
+  handlers.onDispatchMinigameAction("TRIVIA", "recordAttempt", {
+    isCorrect: false
+  });
   handlers.onPauseTimer();
   handlers.onResumeTimer();
   handlers.onExtendTimer(30);
@@ -124,7 +125,7 @@ test("wires every host action and emits claim-control via missing-secret callbac
     "create:Team Ghost Pepper",
     "assign:player-1:team-alpha",
     "wing:player-1:true",
-    `trivia:TRIVIA:${MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT}:false`,
+    "minigame:TRIVIA:recordAttempt:{\"isCorrect\":false}",
     "pause",
     "resume",
     "extend:30",

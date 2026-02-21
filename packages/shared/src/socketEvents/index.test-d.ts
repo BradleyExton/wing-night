@@ -4,6 +4,7 @@ import type {
   GameReorderTurnOrderPayload,
   HostSecretPayload,
   MinigameActionEnvelopePayload,
+  RoomState,
   RoleScopedStateSnapshotEnvelope,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
@@ -142,7 +143,7 @@ export type TimerExtendPayloadCheck = Assert<
 export type SnapshotRoomStateArgCheck = Assert<
   Equal<
     Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]>,
-    [RoleScopedStateSnapshotEnvelope]
+    [RoleScopedStateSnapshotEnvelope | RoomState]
   >
 >;
 

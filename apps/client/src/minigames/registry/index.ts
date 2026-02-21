@@ -1,69 +1,65 @@
 import type {
-  DisplayRoomStateSnapshot,
-  MinigameHostView,
-  MinigameType
-} from "@wingnight/shared";
+  MinigameDevManifest,
+  MinigameRendererBundle
+} from "@wingnight/minigames-core";
+import { drawingRendererBundle } from "@wingnight/minigames-drawing/client";
+import { drawingDevManifest } from "@wingnight/minigames-drawing/dev";
+import { geoRendererBundle } from "@wingnight/minigames-geo/client";
+import { geoDevManifest } from "@wingnight/minigames-geo/dev";
+import { triviaRendererBundle } from "@wingnight/minigames-trivia/client";
+import { triviaDevManifest } from "@wingnight/minigames-trivia/dev";
+import type { MinigameType } from "@wingnight/shared";
 
-import { DisplayTakeoverRenderer as TriviaDisplayTakeoverRenderer } from "../trivia/DisplayTakeoverRenderer";
-import { HostTakeoverRenderer as TriviaHostTakeoverRenderer } from "../trivia/HostTakeoverRenderer";
-import { DisplayUnsupportedRenderer } from "../unsupported/DisplayUnsupportedRenderer";
-import { HostUnsupportedRenderer } from "../unsupported/HostUnsupportedRenderer";
-
-export type HostTakeoverRendererProps = {
-  hostMode: "minigame_intro" | "minigame_play";
-  minigameId: MinigameType;
-  minigameHostView: MinigameHostView | null;
-  activeRoundTeamName: string;
-  teamNameByTeamId: Map<string, string>;
-  triviaAttemptDisabled: boolean;
-  onRecordTriviaAttempt: (isCorrect: boolean) => void;
+const minigameRendererByType: Record<MinigameType, MinigameRendererBundle> = {
+  TRIVIA: triviaRendererBundle,
+  GEO: geoRendererBundle,
+  DRAWING: drawingRendererBundle
 };
 
-export type DisplayTakeoverRendererProps = {
-  roomState: DisplayRoomStateSnapshot | null;
-  phaseLabel: string;
-  isMinigamePlayPhase: boolean;
-  minigameId: MinigameType;
-  activeTeamName: string | null;
+const minigameDevManifestByType: Record<MinigameType, MinigameDevManifest> = {
+  TRIVIA: triviaDevManifest,
+  GEO: geoDevManifest,
+  DRAWING: drawingDevManifest
 };
 
-type HostTakeoverRenderer = (props: HostTakeoverRendererProps) => JSX.Element;
-
-type DisplayTakeoverRenderer = (
-  props: DisplayTakeoverRendererProps
-) => JSX.Element;
-
-export type ClientMinigameRendererDescriptor = {
-  minigameId: MinigameType;
-  hostTakeoverRenderer: HostTakeoverRenderer;
-  displayTakeoverRenderer: DisplayTakeoverRenderer;
-  supportsGameplayRenderer: boolean;
+const minigameTypeBySlug: Record<string, MinigameType> = {
+  trivia: "TRIVIA",
+  geo: "GEO",
+  drawing: "DRAWING"
 };
 
-const unsupportedDescriptor = (
-  minigameId: MinigameType
-): ClientMinigameRendererDescriptor => {
-  return {
-    minigameId,
-    hostTakeoverRenderer: HostUnsupportedRenderer,
-    displayTakeoverRenderer: DisplayUnsupportedRenderer,
-    supportsGameplayRenderer: false
-  };
+export const resolveMinigameRendererBundle = (
+  minigameType: MinigameType
+): MinigameRendererBundle | null => {
+  return minigameRendererByType[minigameType] ?? null;
 };
 
-export const CLIENT_MINIGAME_RENDERER_REGISTRY = {
-  TRIVIA: {
-    minigameId: "TRIVIA",
-    hostTakeoverRenderer: TriviaHostTakeoverRenderer,
-    displayTakeoverRenderer: TriviaDisplayTakeoverRenderer,
-    supportsGameplayRenderer: true
-  },
-  GEO: unsupportedDescriptor("GEO"),
-  DRAWING: unsupportedDescriptor("DRAWING")
-} satisfies Record<MinigameType, ClientMinigameRendererDescriptor>;
+export const resolveMinigameDevManifest = (
+  minigameType: MinigameType
+): MinigameDevManifest | null => {
+  return minigameDevManifestByType[minigameType] ?? null;
+};
 
-export const resolveClientMinigameRendererDescriptor = (
-  minigameId: MinigameType
-): ClientMinigameRendererDescriptor => {
-  return CLIENT_MINIGAME_RENDERER_REGISTRY[minigameId];
+export const resolveMinigameTypeFromSlug = (
+  slug: string
+): MinigameType | null => {
+  const normalizedSlug = slug.trim().toLowerCase();
+
+  if (normalizedSlug.length === 0) {
+    return null;
+  }
+
+  return minigameTypeBySlug[normalizedSlug] ?? null;
+};
+
+export const resolveMinigameSlug = (minigameType: MinigameType): string => {
+  if (minigameType === "TRIVIA") {
+    return "trivia";
+  }
+
+  if (minigameType === "GEO") {
+    return "geo";
+  }
+
+  return "drawing";
 };

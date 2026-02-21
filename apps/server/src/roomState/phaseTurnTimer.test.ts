@@ -22,7 +22,7 @@ import {
   resumeRoomTimer,
   setPendingMinigamePoints,
   setRoomStateGameConfig,
-  setRoomStateTriviaPrompts,
+  setRoomStateMinigameContent,
   setWingParticipation,
   setRoomStatePlayers,
   skipTurnBoundary
@@ -146,15 +146,12 @@ test("createInitialRoomState returns setup defaults", () => {
     players: [],
     teams: [],
     gameConfig: null,
-    triviaPrompts: [],
     currentRoundConfig: null,
     turnOrderTeamIds: [],
     roundTurnCursor: -1,
     completedRoundTurnTeamIds: [],
     activeRoundTeamId: null,
     activeTurnTeamId: null,
-    currentTriviaPrompt: null,
-    triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
@@ -288,7 +285,9 @@ test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
 test("advanceRoomStatePhase starts an EATING timer on MINIGAME_PLAY -> EATING team transitions", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
-  setRoomStateTriviaPrompts(triviaPromptFixture);
+  setRoomStateMinigameContent("TRIVIA", {
+    prompts: triviaPromptFixture
+  });
   advanceToMinigamePlayPhase();
 
   const originalDateNow = Date.now;
@@ -596,7 +595,9 @@ test("reorderTurnOrder persists into later rounds and rejects invalid sets", () 
 test("advanceRoomStatePhase loops team turns before round results", () => {
   resetRoomState();
   setupThreeTeamsAndAssignments();
-  setRoomStateTriviaPrompts(triviaPromptFixture);
+  setRoomStateMinigameContent("TRIVIA", {
+    prompts: triviaPromptFixture
+  });
 
   advanceUntil(Phase.MINIGAME_PLAY, 1);
 

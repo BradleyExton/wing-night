@@ -1,33 +1,28 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MINIGAME_ACTION_TYPES } from "@wingnight/shared";
+import { MINIGAME_API_VERSION } from "@wingnight/shared";
 
-import { getMinigameRegistryDescriptor } from "./index.js";
+import {
+  resolveMinigameDescriptor,
+  resolveMinigameRuntimePlugin
+} from "./index.js";
 
-test("returns trivia registry descriptor with runtime adapter metadata and capabilities", () => {
-  const descriptor = getMinigameRegistryDescriptor("TRIVIA");
+test("resolveMinigameRuntimePlugin resolves runtime plugin for each minigame", () => {
+  const triviaRuntimePlugin = resolveMinigameRuntimePlugin("TRIVIA");
+  const geoRuntimePlugin = resolveMinigameRuntimePlugin("GEO");
+  const drawingRuntimePlugin = resolveMinigameRuntimePlugin("DRAWING");
 
-  assert.equal(descriptor.minigameId, "TRIVIA");
-  assert.equal(descriptor.minigameApiVersion, 1);
-  assert.deepEqual(descriptor.capabilityFlags, [
-    MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT
-  ]);
-  assert.equal(descriptor.hasRuntimeAdapter, true);
-  assert.notEqual(descriptor.runtimeAdapter, null);
-  assert.equal(typeof descriptor.loadContent, "function");
+  assert.equal(triviaRuntimePlugin.id, "TRIVIA");
+  assert.equal(geoRuntimePlugin.id, "GEO");
+  assert.equal(drawingRuntimePlugin.id, "DRAWING");
 });
 
-test("returns geo descriptor as registry-known without runtime adapter", () => {
-  const descriptor = getMinigameRegistryDescriptor("GEO");
-  const loadedContent = descriptor.loadContent();
+test("resolveMinigameDescriptor exposes metadata for compatibility checks", () => {
+  const triviaDescriptor = resolveMinigameDescriptor("TRIVIA");
+  const geoDescriptor = resolveMinigameDescriptor("GEO");
 
-  assert.equal(descriptor.minigameId, "GEO");
-  assert.equal(descriptor.minigameApiVersion, 1);
-  assert.deepEqual(descriptor.capabilityFlags, []);
-  assert.equal(descriptor.hasRuntimeAdapter, false);
-  assert.equal(descriptor.runtimeAdapter, null);
-  assert.equal(loadedContent.minigameId, "GEO");
-  assert.deepEqual(loadedContent.triviaPrompts, []);
-  assert.equal(loadedContent.placeholderState, "No required content yet.");
+  assert.equal(triviaDescriptor.metadata.minigameApiVersion, MINIGAME_API_VERSION);
+  assert.equal(geoDescriptor.metadata.minigameApiVersion, MINIGAME_API_VERSION);
+  assert.equal(triviaDescriptor.runtimePlugin.id, "TRIVIA");
 });

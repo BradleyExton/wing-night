@@ -1,27 +1,42 @@
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { type RoomState } from "@wingnight/shared";
+import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { HostActionBarSurface } from "./HostActionBarSurface";
 import { HostPanelHeader } from "./HostPanelHeader";
+import { OverrideActionsSurface } from "./OverrideActionsSurface";
+import { OverrideDock } from "./OverrideDock";
 import { hostControlPanelCopy } from "./copy";
 import { HostPhaseBody } from "./HostPhaseBody";
 import { resolveHostRenderMode } from "./resolveHostRenderMode";
-import { resolveSortedStandings } from "./roomTeamSelectors";
+import { resolveOrderedTeams, resolveSortedStandings } from "./roomTeamSelectors";
+import { ScoreOverrideSurface } from "./ScoreOverrideSurface";
+import { selectOverrideDockContext } from "./selectOverrideDockContext";
 import { selectHostTeamMaps } from "./selectHostTeamMaps";
+import { TurnOrderSurface } from "./TurnOrderSurface";
 import * as styles from "./styles";
 
-export type HostControlPanelProps = {
+type HostControlPanelProps = {
   roomState: RoomState | null;
   onNextPhase?: () => void;
   onCreateTeam?: (name: string) => void;
   onAssignPlayer?: (playerId: string, teamId: string | null) => void;
   onSetWingParticipation?: (playerId: string, didEat: boolean) => void;
-  onRecordTriviaAttempt?: (isCorrect: boolean) => void;
+  onDispatchMinigameAction?: (
+    minigameId: NonNullable<RoomState["currentRoundConfig"]>["minigame"],
+    actionType: string,
+    actionPayload: SerializableValue
+  ) => void;
   onPauseTimer?: () => void;
   onResumeTimer?: () => void;
   onExtendTimer?: (additionalSeconds: number) => void;
+  onReorderTurnOrder?: (teamIds: string[]) => void;
+  onSkipTurnBoundary?: () => void;
+  onAdjustTeamScore?: (teamId: string, delta: number) => void;
+  onResetGame?: () => void;
+  onRedoLastMutation?: () => void;
 };
 
 const EMPTY_TEAMS: RoomState["teams"] = [];
@@ -32,12 +47,19 @@ export const HostControlPanel = ({
   onCreateTeam,
   onAssignPlayer,
   onSetWingParticipation,
-  onRecordTriviaAttempt,
+  onDispatchMinigameAction,
   onPauseTimer,
   onResumeTimer,
-  onExtendTimer
+  onExtendTimer,
+  onReorderTurnOrder,
+  onSkipTurnBoundary,
+  onAdjustTeamScore,
+  onResetGame,
+  onRedoLastMutation
 }: HostControlPanelProps): JSX.Element => {
   const [nextTeamName, setNextTeamName] = useState("");
+  const [isOverrideDockOpen, setIsOverrideDockOpen] = useState(false);
+  const overrideDockPanelId = useId();
 
   const { assignedTeamByPlayerId, teamNameByTeamId } = useMemo(() => {
     return selectHostTeamMaps(roomState);
@@ -48,9 +70,13 @@ export const HostControlPanel = ({
   const phase = roomState?.phase ?? null;
   const fatalError = roomState?.fatalError ?? null;
   const hostMode = resolveHostRenderMode(phase);
+  const isMinigameTakeover =
+    hostMode === "minigame_intro" || hostMode === "minigame_play";
   const minigameHostView = roomState?.minigameHostView ?? null;
-  const isTriviaMinigamePlayPhase =
-    hostMode === "minigame_play" && minigameHostView?.minigame === "TRIVIA";
+  const minigameType =
+    minigameHostView?.minigame ?? roomState?.currentRoundConfig?.minigame ?? null;
+  const triviaHostView =
+    minigameHostView?.minigame === "TRIVIA" ? minigameHostView : null;
 
   const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
@@ -59,29 +85,42 @@ export const HostControlPanel = ({
       ? (teamNameByTeamId.get(activeRoundTeamId) ??
         hostControlPanelCopy.noAssignedTeamLabel)
       : hostControlPanelCopy.noAssignedTeamLabel;
-  const currentTriviaPrompt =
-    minigameHostView?.currentPrompt ?? roomState?.currentTriviaPrompt ?? null;
+  const currentTriviaPrompt = triviaHostView?.currentPrompt ?? null;
   const activeTurnTeamId =
     minigameHostView?.activeTurnTeamId ?? roomState?.activeTurnTeamId ?? null;
+  const triviaAttemptsRemaining = triviaHostView?.attemptsRemaining ?? 0;
 
   const setupMutationsDisabled = onCreateTeam === undefined || hostMode !== "setup";
   const assignmentDisabled = onAssignPlayer === undefined || hostMode !== "setup";
   const participationDisabled = onSetWingParticipation === undefined || hostMode !== "eating";
-  const triviaAttemptDisabled =
-    onRecordTriviaAttempt === undefined ||
-    !isTriviaMinigamePlayPhase ||
-    activeTurnTeamId === null ||
-    currentTriviaPrompt === null ||
-    (minigameHostView?.attemptsRemaining ?? 0) <= 0;
+  const canDispatchMinigameAction =
+    onDispatchMinigameAction !== undefined &&
+    hostMode === "minigame_play" &&
+    minigameType !== null &&
+    activeTurnTeamId !== null &&
+    (minigameType !== "TRIVIA" ||
+      (currentTriviaPrompt !== null && triviaAttemptsRemaining > 0));
   const nextPhaseDisabled =
     onNextPhase === undefined || roomState?.canAdvancePhase !== true;
 
   const sortedStandings = useMemo(() => resolveSortedStandings(teams), [teams]);
+  const orderedTeams = useMemo(() => resolveOrderedTeams(roomState), [roomState]);
+  const overrideDockContext = useMemo(() => {
+    return selectOverrideDockContext(roomState);
+  }, [roomState]);
 
   const phaseAdvanceHint =
     phase !== null ? hostControlPanelCopy.phaseAdvanceHint(phase) : null;
-  const isMinigameTakeoverMode =
-    hostMode === "minigame_intro" || hostMode === "minigame_play";
+  const containerClassName = isMinigameTakeover
+    ? styles.takeoverContainer
+    : styles.container;
+  const panelClassName = isMinigameTakeover ? styles.takeoverPanel : styles.panel;
+
+  useEffect(() => {
+    if (!overrideDockContext.isVisible && isOverrideDockOpen) {
+      setIsOverrideDockOpen(false);
+    }
+  }, [isOverrideDockOpen, overrideDockContext.isVisible]);
 
   const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -116,12 +155,19 @@ export const HostControlPanel = ({
     onSetWingParticipation(playerId, didEat);
   };
 
-  const handleRecordTriviaAttempt = (isCorrect: boolean): void => {
-    if (!onRecordTriviaAttempt || !isTriviaMinigamePlayPhase) {
+  const handleDispatchMinigameAction = (
+    actionType: string,
+    actionPayload: SerializableValue
+  ): void => {
+    if (
+      onDispatchMinigameAction === undefined ||
+      hostMode !== "minigame_play" ||
+      minigameType === null
+    ) {
       return;
     }
 
-    onRecordTriviaAttempt(isCorrect);
+    onDispatchMinigameAction(minigameType, actionType, actionPayload);
   };
 
   if (fatalError !== null) {
@@ -129,8 +175,8 @@ export const HostControlPanel = ({
   }
 
   return (
-    <main className={isMinigameTakeoverMode ? styles.takeoverContainer : styles.container}>
-      <div className={isMinigameTakeoverMode ? styles.takeoverPanel : styles.panel}>
+    <main className={containerClassName}>
+      <div className={panelClassName}>
         <HostPanelHeader roomState={roomState} teamNameByTeamId={teamNameByTeamId} />
 
         <HostActionBarSurface
@@ -152,12 +198,13 @@ export const HostControlPanel = ({
           wingParticipationByPlayerId={wingParticipationByPlayerId}
           activeRoundTeamId={activeRoundTeamId}
           activeRoundTeamName={activeRoundTeamName}
+          minigameType={minigameType}
           minigameHostView={minigameHostView}
           nextTeamName={nextTeamName}
           setupMutationsDisabled={setupMutationsDisabled}
           assignmentDisabled={assignmentDisabled}
           participationDisabled={participationDisabled}
-          triviaAttemptDisabled={triviaAttemptDisabled}
+          canDispatchMinigameAction={canDispatchMinigameAction}
           sortedStandings={sortedStandings}
           timer={roomState?.timer ?? null}
           onNextTeamNameChange={setNextTeamName}
@@ -167,9 +214,40 @@ export const HostControlPanel = ({
           onPauseTimer={onPauseTimer}
           onResumeTimer={onResumeTimer}
           onExtendTimer={onExtendTimer}
-          onRecordTriviaAttempt={handleRecordTriviaAttempt}
+          onDispatchMinigameAction={handleDispatchMinigameAction}
         />
       </div>
+
+      {overrideDockContext.isVisible && (
+        <OverrideDock
+          isOpen={isOverrideDockOpen}
+          showBadge={overrideDockContext.showBadge}
+          panelId={overrideDockPanelId}
+          onOpen={(): void => {
+            setIsOverrideDockOpen(true);
+          }}
+          onClose={(): void => {
+            setIsOverrideDockOpen(false);
+          }}
+        >
+          <div className={styles.overridePanelContent}>
+            <OverrideActionsSurface
+              onSkipTurnBoundary={onSkipTurnBoundary}
+              showSkipTurnBoundaryAction={overrideDockContext.showSkipTurnBoundaryAction}
+              onRedoLastMutation={onRedoLastMutation}
+              showRedoLastMutationAction={overrideDockContext.showRedoLastMutationAction}
+              onResetGame={onResetGame}
+              showResetGameAction={overrideDockContext.showResetGameAction}
+            />
+            <TurnOrderSurface
+              orderedTeams={orderedTeams}
+              isEditable={overrideDockContext.isTurnOrderEditable}
+              onReorderTurnOrder={onReorderTurnOrder}
+            />
+            <ScoreOverrideSurface teams={teams} onAdjustTeamScore={onAdjustTeamScore} />
+          </div>
+        </OverrideDock>
+      )}
     </main>
   );
 };

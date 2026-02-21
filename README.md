@@ -33,6 +33,7 @@ Core principles:
 -   Round totals applied once at `ROUND_RESULTS`
 -   Host/display EATING and minigame surfaces show active team context (team name only) from snapshot turn fields
 -   Mini-games run behind a module boundary (`packages/minigames/<minigameId>`)
+-   Minigame host/display renderer surfaces are owned by their package modules (React-first in this iteration)
 -   Authoritative engine snapshots (from server-side minigame selectors)
     project dedicated mini-game view models:
     -   `minigameHostView` for host controls
@@ -62,12 +63,14 @@ refresh/reconnect.
 
 Wing Night uses a pnpm workspace monorepo.
 
-/ apps/ client/ \# React app (routes: /host, /display) server/ \#
+/ apps/ client/ \# React app (routes: /host, /display, /dev/minigame/:minigameId) server/ \#
 Express + Socket.IO server
 
 packages/ shared/ \# Shared types, schemas, socket contracts
 packages/minigames/core/ \# Generic minigame contract
-packages/minigames/trivia/ \# Trivia implementation behind the contract
+packages/minigames/trivia/ \# Trivia runtime + host/display renderer + sandbox scenarios
+packages/minigames/geo/ \# GEO unsupported renderer/runtime scaffold
+packages/minigames/drawing/ \# DRAWING unsupported renderer/runtime scaffold
 
 content/ sample/ \# Safe, committed sample content local/ \# Custom
 content (gitignored)
@@ -78,6 +81,10 @@ SPEC.md AGENTS.md TASKS.md README.md pnpm-workspace.yaml
 
 Shared types and validation schemas must live in `packages/shared` and
 be imported by both client and server.
+
+For fast minigame iteration, use `/dev/minigame/trivia` (or `geo`,
+`drawing`) to preview host + display surfaces with scenario presets and
+interactive knobs.
 
 ------------------------------------------------------------------------
 

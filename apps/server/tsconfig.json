@@ -11,12 +11,21 @@
       "@wingnight/minigames-core": [
         "../../packages/minigames/core/src/index.ts"
       ],
+      "@wingnight/minigames-drawing/runtime": [
+        "../../packages/minigames/drawing/src/runtime/index.ts"
+      ],
+      "@wingnight/minigames-geo/runtime": [
+        "../../packages/minigames/geo/src/runtime/index.ts"
+      ],
       "@wingnight/minigames-trivia": [
         "../../packages/minigames/trivia/src/index.ts"
+      ],
+      "@wingnight/minigames-trivia/runtime": [
+        "../../packages/minigames/trivia/src/runtime/index.ts"
       ],
       "@wingnight/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": ["src"],
-  "exclude": ["src/socketContracts/**"]
+  "exclude": ["src/socketContracts/**", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }

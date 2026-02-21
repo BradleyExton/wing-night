@@ -19,13 +19,12 @@ export const displayCopy = {
   roundMinigameSummary: (minigame: MinigameType): string =>
     `Mini-Game: ${minigame}`,
   minigameSectionTitle: "Mini-Game",
-  minigameFallbackType: "TRIVIA" as MinigameType,
   minigameIntroDescription: (minigame: MinigameType): string =>
     `${minigame} is up next.`,
-  minigameUnsupportedLabel: (minigame: MinigameType): string =>
-    `${minigame} is not supported in this build.`,
-  minigameUnsupportedDescription:
-    "A fallback takeover surface is shown while this mini-game is in development.",
+  minigameWaitingForViewLabel:
+    "Waiting for minigame display state from the server snapshot.",
+  minigameRendererUnavailableLabel: (minigame: MinigameType): string =>
+    `${minigame} display surface is not available yet.`,
   triviaTurnTitle: "Trivia Turn",
   triviaQuestionLabel: "Question",
   activeTeamLabel: "Active Team",

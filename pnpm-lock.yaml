@@ -29,6 +29,18 @@ importers:
 
   apps/client:
     dependencies:
+      '@wingnight/minigames-core':
+        specifier: workspace:*
+        version: link:../../packages/minigames/core
+      '@wingnight/minigames-drawing':
+        specifier: workspace:*
+        version: link:../../packages/minigames/drawing
+      '@wingnight/minigames-geo':
+        specifier: workspace:*
+        version: link:../../packages/minigames/geo
+      '@wingnight/minigames-trivia':
+        specifier: workspace:*
+        version: link:../../packages/minigames/trivia
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -75,6 +87,12 @@ importers:
       '@wingnight/minigames-core':
         specifier: workspace:*
         version: link:../../packages/minigames/core
+      '@wingnight/minigames-drawing':
+        specifier: workspace:*
+        version: link:../../packages/minigames/drawing
+      '@wingnight/minigames-geo':
+        specifier: workspace:*
+        version: link:../../packages/minigames/geo
       '@wingnight/minigames-trivia':
         specifier: workspace:*
         version: link:../../packages/minigames/trivia
@@ -106,10 +124,66 @@ importers:
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
     devDependencies:
       '@types/node':
         specifier: ^22.10.1
         version: 22.19.11
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.28
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/minigames/drawing:
+    dependencies:
+      '@wingnight/minigames-core':
+        specifier: workspace:*
+        version: link:../core
+      '@wingnight/shared':
+        specifier: workspace:*
+        version: link:../../shared
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.1
+        version: 22.19.11
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.28
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/minigames/geo:
+    dependencies:
+      '@wingnight/minigames-core':
+        specifier: workspace:*
+        version: link:../core
+      '@wingnight/shared':
+        specifier: workspace:*
+        version: link:../../shared
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.1
+        version: 22.19.11
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.28
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -125,10 +199,16 @@ importers:
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
     devDependencies:
       '@types/node':
         specifier: ^22.10.1
         version: 22.19.11
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.28
       tsx:
         specifier: ^4.19.2
         version: 4.21.0

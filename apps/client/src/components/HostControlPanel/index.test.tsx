@@ -57,15 +57,12 @@ const buildSnapshot = (
     ],
     teams: teamsFixture,
     gameConfig: gameConfigFixture,
-    triviaPrompts: [],
     currentRoundConfig: gameConfigFixture.rounds[0],
     turnOrderTeamIds: teamsFixture.map((team) => team.id),
     roundTurnCursor: 0,
     completedRoundTurnTeamIds: [],
     activeRoundTeamId: teamsFixture[0]?.id ?? null,
     activeTurnTeamId: null,
-    currentTriviaPrompt: null,
-    triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
@@ -164,7 +161,7 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.doesNotMatch(html, /Team setup is locked after the game starts\./);
   assert.match(html, /Timer Controls/);
   assert.match(html, /Pause Timer/);
-  assert.doesNotMatch(html, /Overrides/);
+  assert.match(html, /Overrides/);
   assert.doesNotMatch(html, /Skip Turn/);
   assert.doesNotMatch(html, /Reset Game/);
   assert.doesNotMatch(html, /Score Override/);
@@ -207,10 +204,6 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
       roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
         minigameHostView: {
           minigame: "TRIVIA",
-          minigameApiVersion: 1,
-          capabilityFlags: ["recordAttempt"],
-          compatibilityStatus: "COMPATIBLE",
-          compatibilityMessage: null,
           activeTurnTeamId: "team-alpha",
           attemptsRemaining: 1,
           promptCursor: 0,
@@ -227,7 +220,6 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
     />
   );
 
-  assert.match(html, /data-host-minigame-takeover="play"/);
   assert.match(html, /Mark the active team&#x27;s answer as correct or incorrect/);
   assert.match(html, /Active Team: Team Alpha/);
   assert.match(html, /Which scale measures pepper heat\?/);
@@ -245,10 +237,6 @@ test("disables trivia attempt controls when attemptsRemaining is exhausted", () 
       roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
         minigameHostView: {
           minigame: "TRIVIA",
-          minigameApiVersion: 1,
-          capabilityFlags: ["recordAttempt"],
-          compatibilityStatus: "COMPATIBLE",
-          compatibilityMessage: null,
           activeTurnTeamId: "team-alpha",
           attemptsRemaining: 0,
           promptCursor: 0,
@@ -262,7 +250,7 @@ test("disables trivia attempt controls when attemptsRemaining is exhausted", () 
           }
         }
       })}
-      onRecordTriviaAttempt={(): void => {}}
+      onDispatchMinigameAction={(): void => {}}
     />
   );
 
@@ -300,7 +288,7 @@ test("renders standings snapshot in compact ROUND_INTRO view", () => {
   assert.match(html, /Frank&#x27;s/);
   assert.match(html, /Mini-game/);
   assert.match(html, /TRIVIA/);
-  assert.doesNotMatch(html, /Overrides/);
+  assert.match(html, /Overrides/);
   assert.doesNotMatch(html, /Turn Order/);
   assert.doesNotMatch(html, /Move Up/);
   assert.doesNotMatch(html, /Move Down/);
@@ -347,17 +335,42 @@ test("renders completion guidance in compact FINAL_RESULTS view", () => {
   assert.match(html, /Final Results/);
 });
 
+test("shows redo action when scoring mutation history is available", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
+        canRedoScoringMutation: true
+      })}
+    />
+  );
+
+  assert.match(html, /Overrides/);
+  assert.match(html, /Needs Review/);
+});
+
+test("shows override badge when turn order differs from default team order", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
+        turnOrderTeamIds: ["team-beta", "team-alpha"]
+      })}
+    />
+  );
+
+  assert.match(html, /Overrides/);
+  assert.match(html, /Needs Review/);
+});
+
 test("keeps MINIGAME_INTRO on streamlined host view", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
-  assert.match(html, /data-host-minigame-takeover="intro"/);
+  assert.match(html, /max-w-\[1100px\]/);
   assert.doesNotMatch(html, /Team Setup/);
   assert.doesNotMatch(html, /Players/);
   assert.match(html, /Active Team/);
   assert.match(html, /Team Alpha/);
-  assert.match(html, /TRIVIA is queued\. Advance when players are ready to begin\./);
   assert.doesNotMatch(html, /Team 1 of 2/);
   assert.doesNotMatch(html, /Phase Status/);
 });

@@ -1,13 +1,15 @@
 import type { FormEvent } from "react";
+import type { SerializableValue } from "@wingnight/minigames-core";
 import {
   type MinigameHostView,
+  type MinigameType,
   type Player,
   type RoomState,
   type Team
 } from "@wingnight/shared";
 
 import { CompactSummarySurface } from "../CompactSummarySurface";
-import { MinigameTakeoverShell } from "../MinigameTakeoverShell";
+import { MinigameSurface } from "../MinigameSurface";
 import { PlayersSurface } from "../PlayersSurface";
 import { TeamSetupSurface } from "../TeamSetupSurface";
 import { TimerControlsSurface } from "../TimerControlsSurface";
@@ -24,12 +26,13 @@ type HostPhaseBodyProps = {
   wingParticipationByPlayerId: Record<string, boolean>;
   activeRoundTeamId: string | null;
   activeRoundTeamName: string;
+  minigameType: MinigameType | null;
   minigameHostView: MinigameHostView | null;
   nextTeamName: string;
   setupMutationsDisabled: boolean;
   assignmentDisabled: boolean;
   participationDisabled: boolean;
-  triviaAttemptDisabled: boolean;
+  canDispatchMinigameAction: boolean;
   sortedStandings: Team[];
   timer: RoomState["timer"];
   onNextTeamNameChange: (nextTeamName: string) => void;
@@ -39,7 +42,10 @@ type HostPhaseBodyProps = {
   onPauseTimer?: () => void;
   onResumeTimer?: () => void;
   onExtendTimer?: (additionalSeconds: number) => void;
-  onRecordTriviaAttempt: (isCorrect: boolean) => void;
+  onDispatchMinigameAction: (
+    actionType: string,
+    actionPayload: SerializableValue
+  ) => void;
 };
 
 const assertUnreachable = (value: never): never => {
@@ -56,12 +62,13 @@ export const HostPhaseBody = ({
   wingParticipationByPlayerId,
   activeRoundTeamId,
   activeRoundTeamName,
+  minigameType,
   minigameHostView,
   nextTeamName,
   setupMutationsDisabled,
   assignmentDisabled,
   participationDisabled,
-  triviaAttemptDisabled,
+  canDispatchMinigameAction,
   sortedStandings,
   timer,
   onNextTeamNameChange,
@@ -71,7 +78,7 @@ export const HostPhaseBody = ({
   onPauseTimer,
   onResumeTimer,
   onExtendTimer,
-  onRecordTriviaAttempt
+  onDispatchMinigameAction
 }: HostPhaseBodyProps): JSX.Element | null => {
   switch (hostMode) {
     case "waiting":
@@ -119,30 +126,19 @@ export const HostPhaseBody = ({
         </div>
       );
     case "minigame_intro":
-      return (
-        <div className={styles.takeoverShell}>
-          <MinigameTakeoverShell
-            hostMode="minigame_intro"
-            minigameHostView={minigameHostView}
-            activeRoundTeamName={activeRoundTeamName}
-            teamNameByTeamId={teamNameByTeamId}
-            triviaAttemptDisabled={triviaAttemptDisabled}
-            onRecordTriviaAttempt={onRecordTriviaAttempt}
-          />
-        </div>
-      );
     case "minigame_play":
       return (
-        <div className={styles.takeoverShell}>
-          <MinigameTakeoverShell
-            hostMode="minigame_play"
-            minigameHostView={minigameHostView}
-            activeRoundTeamName={activeRoundTeamName}
-            teamNameByTeamId={teamNameByTeamId}
-            triviaAttemptDisabled={triviaAttemptDisabled}
-            onRecordTriviaAttempt={onRecordTriviaAttempt}
-          />
-        </div>
+        <MinigameSurface
+          phase={hostMode === "minigame_intro" ? "intro" : "play"}
+          minigameType={minigameType}
+          minigameHostView={minigameHostView}
+          activeTeamName={
+            activeRoundTeamId === null ? null : activeRoundTeamName
+          }
+          teamNameByTeamId={teamNameByTeamId}
+          canDispatchAction={canDispatchMinigameAction}
+          onDispatchAction={onDispatchMinigameAction}
+        />
       );
     case "compact":
       return roomState ? (

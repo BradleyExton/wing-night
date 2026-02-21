@@ -135,13 +135,13 @@ export const hostCopy = {
   minigameSectionTitle: "Mini-Game",
   minigameIntroDescription: (minigame: MinigameType): string =>
     `${minigame} is queued. Advance when players are ready to begin.`,
+  minigamePlayDescription: (minigame: MinigameType): string =>
+    `${minigame} is live for this team turn.`,
+  minigameWaitingForViewLabel:
+    "Waiting for minigame host state from the server snapshot.",
+  minigameRendererUnavailableLabel: (minigame: MinigameType): string =>
+    `${minigame} host surface is not available yet.`,
   minigameFallbackType: "TRIVIA" as MinigameType,
-  minigameUnsupportedLabel: (minigame: MinigameType): string =>
-    `${minigame} is not supported in this build.`,
-  minigameUnsupportedDescription:
-    "Use host overrides to skip this turn while support is under construction.",
-  minigameContractMismatchFallbackLabel:
-    "Minigame contract mismatch detected. Refresh host and try again.",
   waitingStateLabel: "Waiting for room state...",
   triviaActiveTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,
   triviaQuestionLabel: "Question",

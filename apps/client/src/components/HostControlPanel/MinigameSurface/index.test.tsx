@@ -9,10 +9,6 @@ const teamNameByTeamId = new Map<string, string>([["team-alpha", "Team Alpha"]])
 
 const triviaHostViewFixture: MinigameHostView = {
   minigame: "TRIVIA",
-  minigameApiVersion: 1,
-  capabilityFlags: ["recordAttempt"],
-  compatibilityStatus: "COMPATIBLE",
-  compatibilityMessage: null,
   activeTurnTeamId: "team-alpha",
   attemptsRemaining: 1,
   promptCursor: 1,
@@ -27,10 +23,13 @@ const triviaHostViewFixture: MinigameHostView = {
 test("renders trivia controls from minigame host view during MINIGAME_PLAY", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      phase="play"
+      minigameType="TRIVIA"
       minigameHostView={triviaHostViewFixture}
+      activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
-      triviaAttemptDisabled={false}
-      onRecordTriviaAttempt={(): void => {
+      canDispatchAction
+      onDispatchAction={(): void => {
         return;
       }}
     />
@@ -43,78 +42,69 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
   assert.match(html, /Incorrect/);
 });
 
-test("renders compatibility mismatch messaging without hiding trivia controls", () => {
-  const html = renderToStaticMarkup(
-    <MinigameSurface
-      minigameHostView={{
-        ...triviaHostViewFixture,
-        compatibilityStatus: "MISMATCH",
-        compatibilityMessage: "Host and server minigame contracts are out of sync."
-      }}
-      teamNameByTeamId={teamNameByTeamId}
-      triviaAttemptDisabled={false}
-      onRecordTriviaAttempt={(): void => {
-        return;
-      }}
-    />
-  );
-
-  assert.match(html, /Host and server minigame contracts are out of sync\./);
-  assert.match(html, /Correct/);
-  assert.match(html, /Incorrect/);
-});
-
 test("renders waiting fallback when host view is unavailable", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      phase="play"
+      minigameType="TRIVIA"
       minigameHostView={null}
+      activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
-      triviaAttemptDisabled
-      onRecordTriviaAttempt={(): void => {
+      canDispatchAction={false}
+      onDispatchAction={(): void => {
         return;
       }}
     />
   );
 
-  assert.match(html, /Waiting for room state/);
+  assert.match(html, /Waiting for minigame host state from the server snapshot\./);
 });
 
-test("renders waiting fallback for non-trivia minigame payloads", () => {
+test("renders GEO scaffold surface for configured geo minigame", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      phase="play"
+      minigameType="GEO"
       minigameHostView={{
-        ...triviaHostViewFixture,
-        minigame: "GEO"
-      }}
-      teamNameByTeamId={teamNameByTeamId}
-      triviaAttemptDisabled
-      onRecordTriviaAttempt={(): void => {
-        return;
-      }}
-    />
-  );
-
-  assert.match(html, /Waiting for room state/);
-  assert.doesNotMatch(html, /Which scale measures pepper heat/);
-});
-
-test("renders compatibility mismatch messaging for non-trivia minigames", () => {
-  const html = renderToStaticMarkup(
-    <MinigameSurface
-      minigameHostView={{
-        ...triviaHostViewFixture,
         minigame: "GEO",
-        compatibilityStatus: "MISMATCH",
-        compatibilityMessage: "Host and server minigame contracts are out of sync."
+        activeTurnTeamId: "team-alpha",
+        attemptsRemaining: 0,
+        promptCursor: 0,
+        pendingPointsByTeamId: {
+          "team-alpha": 0
+        },
+        currentPrompt: null,
+        status: "UNSUPPORTED",
+        message: "GEO host UI is not implemented yet."
       }}
+      activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
-      triviaAttemptDisabled
-      onRecordTriviaAttempt={(): void => {
+      canDispatchAction={false}
+      onDispatchAction={(): void => {
         return;
       }}
     />
   );
 
-  assert.match(html, /Host and server minigame contracts are out of sync\./);
-  assert.doesNotMatch(html, /Waiting for room state/);
+  assert.match(html, /GEO is not implemented yet/);
+  assert.match(html, /Unsupported \(stub\)/);
+});
+
+test("renders intro surface for configured trivia minigame", () => {
+  const html = renderToStaticMarkup(
+    <MinigameSurface
+      phase="intro"
+      minigameType="TRIVIA"
+      minigameHostView={null}
+      activeTeamName="Team Alpha"
+      teamNameByTeamId={teamNameByTeamId}
+      canDispatchAction={false}
+      onDispatchAction={(): void => {
+        return;
+      }}
+    />
+  );
+
+  assert.match(html, /Review the active team, then advance to begin trivia play\./);
+  assert.match(html, /Active Team: Team Alpha/);
 });

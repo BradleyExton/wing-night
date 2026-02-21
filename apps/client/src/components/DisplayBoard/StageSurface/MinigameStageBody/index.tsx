@@ -1,16 +1,17 @@
-import type { DisplayRoomStateSnapshot } from "@wingnight/shared";
+import type { MinigameType, RoomState } from "@wingnight/shared";
 
+import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
 import { displayBoardCopy } from "../../copy";
 import * as styles from "./styles";
 
 type MinigameStageBodyProps = {
   phaseLabel: string;
-  currentRoundConfig: DisplayRoomStateSnapshot["currentRoundConfig"];
+  minigamePhase: "intro" | "play" | null;
+  minigameType: MinigameType | null;
+  currentRoundConfig: RoomState["currentRoundConfig"];
   shouldRenderTeamTurnContext: boolean;
   activeTeamName: string | null;
-  isTriviaTurnPhase: boolean;
-  shouldRenderTriviaPrompt: boolean;
-  currentTriviaQuestion: string | null;
+  minigameDisplayView: RoomState["minigameDisplayView"];
 };
 
 type TurnMetaProps = {
@@ -28,13 +29,24 @@ const TurnMeta = ({ activeTeamName }: TurnMetaProps): JSX.Element => {
 
 export const MinigameStageBody = ({
   phaseLabel,
+  minigamePhase,
+  minigameType,
   currentRoundConfig,
   shouldRenderTeamTurnContext,
   activeTeamName,
-  isTriviaTurnPhase,
-  shouldRenderTriviaPrompt,
-  currentTriviaQuestion
+  minigameDisplayView
 }: MinigameStageBodyProps): JSX.Element => {
+  if (minigameType === null || minigamePhase === null) {
+    return (
+      <>
+        <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
+        <p className={styles.fallbackText}>{displayBoardCopy.roundFallbackLabel}</p>
+      </>
+    );
+  }
+
+  const minigameRendererBundle = resolveMinigameRendererBundle(minigameType);
+
   return (
     <>
       <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
@@ -46,17 +58,24 @@ export const MinigameStageBody = ({
       {shouldRenderTeamTurnContext && activeTeamName !== null && (
         <TurnMeta activeTeamName={activeTeamName} />
       )}
-      {shouldRenderTriviaPrompt && currentTriviaQuestion !== null && (
-        <div className={styles.metaGrid}>
-          <div className={styles.metaItem}>
-            <p className={styles.metaLabel}>{displayBoardCopy.triviaQuestionLabel}</p>
-            <p className={styles.metaValue}>{currentTriviaQuestion}</p>
-          </div>
-        </div>
-      )}
-      {isTriviaTurnPhase && !shouldRenderTriviaPrompt && (
-        <p className={styles.fallbackText}>{displayBoardCopy.triviaTurnTitle}</p>
-      )}
+      <div className={styles.minigameShell}>
+        {minigameRendererBundle === null ? (
+          <p className={styles.fallbackText}>
+            {displayBoardCopy.minigameRendererUnavailableLabel(minigameType)}
+          </p>
+        ) : minigamePhase === "play" &&
+          minigameType === "TRIVIA" &&
+          minigameDisplayView === null ? (
+          <p className={styles.fallbackText}>{displayBoardCopy.minigameWaitingForViewLabel}</p>
+        ) : (
+          <minigameRendererBundle.DisplaySurface
+            phase={minigamePhase}
+            minigameType={minigameType}
+            minigameDisplayView={minigameDisplayView}
+            activeTeamName={activeTeamName}
+          />
+        )}
+      </div>
     </>
   );
 };

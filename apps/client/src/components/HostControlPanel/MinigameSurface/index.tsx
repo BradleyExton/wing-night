@@ -1,107 +1,85 @@
-import { type MinigameHostView } from "@wingnight/shared";
+import { type MinigameHostView, type MinigameType } from "@wingnight/shared";
+import type {
+  MinigameSurfacePhase,
+  SerializableValue
+} from "@wingnight/minigames-core";
 
+import { resolveMinigameRendererBundle } from "../../../minigames/registry";
 import { hostControlPanelCopy } from "../copy";
 import * as styles from "./styles";
 
 type MinigameSurfaceProps = {
+  phase: MinigameSurfacePhase;
+  minigameType: MinigameType | null;
   minigameHostView: MinigameHostView | null;
+  activeTeamName: string | null;
   teamNameByTeamId: Map<string, string>;
-  triviaAttemptDisabled: boolean;
-  onRecordTriviaAttempt: (isCorrect: boolean) => void;
-};
-
-const resolveActiveTeamName = (
-  minigameHostView: MinigameHostView,
-  teamNameByTeamId: Map<string, string>
-): string => {
-  if (minigameHostView.activeTurnTeamId === null) {
-    return hostControlPanelCopy.noAssignedTeamLabel;
-  }
-
-  return (
-    teamNameByTeamId.get(minigameHostView.activeTurnTeamId) ??
-    hostControlPanelCopy.noAssignedTeamLabel
-  );
+  canDispatchAction: boolean;
+  onDispatchAction: (actionType: string, actionPayload: SerializableValue) => void;
 };
 
 export const MinigameSurface = ({
+  phase,
+  minigameType,
   minigameHostView,
+  activeTeamName,
   teamNameByTeamId,
-  triviaAttemptDisabled,
-  onRecordTriviaAttempt
+  canDispatchAction,
+  onDispatchAction
 }: MinigameSurfaceProps): JSX.Element => {
-  const compatibilityMismatchMessage =
-    minigameHostView?.compatibilityStatus === "MISMATCH"
-      ? (minigameHostView.compatibilityMessage ??
-        hostControlPanelCopy.minigameContractMismatchFallbackLabel)
-      : null;
-
-  if (minigameHostView === null || minigameHostView.minigame !== "TRIVIA") {
+  if (minigameType === null) {
     return (
-      <section className={styles.card}>
+      <section className={styles.shellCard}>
         <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>
         <p className={styles.sectionDescription}>
-          {compatibilityMismatchMessage ?? hostControlPanelCopy.waitingStateLabel}
+          {hostControlPanelCopy.waitingStateLabel}
         </p>
       </section>
     );
   }
 
-  const activeTurnTeamName = resolveActiveTeamName(minigameHostView, teamNameByTeamId);
+  const minigameRendererBundle = resolveMinigameRendererBundle(minigameType);
+
+  if (minigameRendererBundle === null) {
+    return (
+      <section className={styles.shellCard}>
+        <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>
+        <p className={styles.sectionDescription}>
+          {hostControlPanelCopy.minigameRendererUnavailableLabel(minigameType)}
+        </p>
+      </section>
+    );
+  }
+
+  if (phase === "play" && minigameType === "TRIVIA" && minigameHostView === null) {
+    return (
+      <section className={styles.shellCard}>
+        <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>
+        <p className={styles.sectionDescription}>
+          {hostControlPanelCopy.minigameWaitingForViewLabel}
+        </p>
+      </section>
+    );
+  }
 
   return (
-    <section className={styles.card}>
+    <section className={styles.shellCard}>
       <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>
-      {compatibilityMismatchMessage !== null && (
-        <p className={styles.sectionDescription}>{compatibilityMismatchMessage}</p>
-      )}
       <p className={styles.sectionDescription}>
-        {hostControlPanelCopy.triviaSectionDescription}
+        {phase === "intro"
+          ? hostControlPanelCopy.minigameIntroDescription(minigameType)
+          : hostControlPanelCopy.minigamePlayDescription(minigameType)}
       </p>
-      <div className={styles.triviaMeta}>
-        <div>
-          <p className={styles.triviaLabel}>
-            {hostControlPanelCopy.triviaActiveTeamLabel(activeTurnTeamName)}
-          </p>
-        </div>
-        {minigameHostView.currentPrompt && (
-          <>
-            <div>
-              <p className={styles.triviaLabel}>
-                {hostControlPanelCopy.triviaQuestionLabel}
-              </p>
-              <p className={styles.triviaValue}>{minigameHostView.currentPrompt.question}</p>
-            </div>
-            <div>
-              <p className={styles.triviaLabel}>
-                {hostControlPanelCopy.triviaAnswerLabel}
-              </p>
-              <p className={styles.triviaValue}>{minigameHostView.currentPrompt.answer}</p>
-            </div>
-          </>
-        )}
-      </div>
-      <div className={styles.triviaActions}>
-        <button
-          className={styles.actionButton}
-          type="button"
-          disabled={triviaAttemptDisabled}
-          onClick={(): void => {
-            onRecordTriviaAttempt(true);
-          }}
-        >
-          {hostControlPanelCopy.triviaCorrectButtonLabel}
-        </button>
-        <button
-          className={styles.actionButton}
-          type="button"
-          disabled={triviaAttemptDisabled}
-          onClick={(): void => {
-            onRecordTriviaAttempt(false);
-          }}
-        >
-          {hostControlPanelCopy.triviaIncorrectButtonLabel}
-        </button>
+      <div className={styles.shellBody}>
+        <minigameRendererBundle.HostSurface
+          phase={phase}
+          minigameType={minigameType}
+          minigameHostView={minigameHostView}
+          activeTeamName={activeTeamName}
+          teamNameByTeamId={teamNameByTeamId}
+          canDispatchAction={canDispatchAction}
+          onDispatchAction={onDispatchAction}
+        />
       </div>
     </section>
   );

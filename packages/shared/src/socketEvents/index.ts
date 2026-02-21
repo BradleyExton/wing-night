@@ -1,7 +1,12 @@
 import type { MinigameType } from "../content/gameConfig/index.js";
-import type { RoleScopedStateSnapshotEnvelope } from "../roomState/index.js";
+import type {
+  RoleScopedStateSnapshotEnvelope,
+  RoomState
+} from "../roomState/index.js";
 
 export type HostSecretPayload = Record<"hostSecret", string>;
+export const MINIGAME_API_VERSION = 1 as const;
+export type MinigameApiVersion = typeof MINIGAME_API_VERSION;
 export type GameReorderTurnOrderPayload = HostSecretPayload &
   Record<"teamIds", string[]>;
 export type SetupCreateTeamPayload = HostSecretPayload & Record<"name", string>;
@@ -16,9 +21,21 @@ export type ScoringAdjustTeamScorePayload = HostSecretPayload &
   Record<"delta", number>;
 export type MinigameActionEnvelopePayload = HostSecretPayload &
   Record<"minigameId", MinigameType> &
-  Record<"minigameApiVersion", number> &
+  Record<"minigameApiVersion", MinigameApiVersion> &
   Record<"actionType", string> &
   Record<"actionPayload", unknown>;
+export type MinigameActionEnvelope = MinigameActionEnvelopePayload;
+export type TriviaRecordAttemptMinigameActionPayload =
+  MinigameActionEnvelopePayload &
+    Record<"minigameId", "TRIVIA"> &
+    Record<"actionType", "recordAttempt"> &
+    Record<"actionPayload", Record<"isCorrect", boolean>>;
+export type GenericMinigameActionPayload = MinigameActionEnvelopePayload &
+  Record<"minigameId", MinigameType>;
+export type MinigameActionPayload =
+  | TriviaRecordAttemptMinigameActionPayload
+  | GenericMinigameActionPayload;
+export type MinigameActionType = MinigameActionPayload["actionType"];
 export type TimerExtendPayload = HostSecretPayload &
   Record<"additionalSeconds", number>;
 export const TIMER_EXTEND_MAX_SECONDS = 600;
@@ -89,7 +106,7 @@ export type ClientToServerEvents = {
 
 export type ServerToClientEvents = {
   [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (
-    payload: RoleScopedStateSnapshotEnvelope
+    payload: RoleScopedStateSnapshotEnvelope | RoomState
   ) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED]: (payload: HostSecretPayload) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_INVALID]: () => void;

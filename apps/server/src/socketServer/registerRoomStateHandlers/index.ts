@@ -1,25 +1,25 @@
 import {
   CLIENT_TO_SERVER_EVENTS,
+  MINIGAME_API_VERSION,
   TIMER_EXTEND_MAX_SECONDS,
   SERVER_TO_CLIENT_EVENTS
 } from "@wingnight/shared";
 import type {
   GameReorderTurnOrderPayload,
   HostSecretPayload,
-  MinigameActionEnvelopePayload,
+  MinigameActionEnvelope,
+  MinigameActionPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
+  RoomState,
   TimerExtendPayload,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload
 } from "@wingnight/shared";
 
-type RoomStateSocket<TSnapshot> = {
+type RoomStateSocket = {
   emit: {
-    (
-      event: typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT,
-      roomState: TSnapshot
-    ): void;
+    (event: typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, roomState: RoomState): void;
     (event: typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, payload: HostSecretPayload): void;
     (event: typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID): void;
   };
@@ -47,12 +47,6 @@ type HostAuth = {
   isValidHostSecret: (hostSecret: string) => boolean;
 };
 
-type ActiveMinigameContract = {
-  minigameId: MinigameActionEnvelopePayload["minigameId"];
-  minigameApiVersion: number;
-  capabilityFlags: string[];
-};
-
 type AuthorizedSetupMutationHandlers = {
   onAuthorizedNextPhase: () => void;
   onAuthorizedSkipTurnBoundary: () => void;
@@ -63,10 +57,7 @@ type AuthorizedSetupMutationHandlers = {
   onAuthorizedSetWingParticipation: (playerId: string, didEat: boolean) => void;
   onAuthorizedAdjustTeamScore: (teamId: string, delta: number) => void;
   onAuthorizedRedoLastMutation: () => void;
-  onAuthorizedDispatchMinigameAction: (
-    payload: MinigameActionEnvelopePayload
-  ) => void;
-  onMinigameActionRejectedForCompatibility: (message: string) => void;
+  onAuthorizedMinigameAction: (payload: MinigameActionPayload) => void;
   onAuthorizedPauseTimer: () => void;
   onAuthorizedResumeTimer: () => void;
   onAuthorizedExtendTimer: (additionalSeconds: number) => void;
@@ -162,9 +153,9 @@ const isScoringAdjustTeamScorePayload = (
   return Number.isInteger(payload.delta) && payload.delta !== 0;
 };
 
-const isMinigameActionEnvelopePayload = (
+const isMinigameActionEnvelope = (
   payload: unknown
-): payload is MinigameActionEnvelopePayload => {
+): payload is MinigameActionEnvelope => {
   if (!isHostSecretPayload(payload)) {
     return false;
   }
@@ -175,38 +166,17 @@ const isMinigameActionEnvelopePayload = (
 
   if (
     !("minigameApiVersion" in payload) ||
-    typeof payload.minigameApiVersion !== "number" ||
-    !Number.isInteger(payload.minigameApiVersion) ||
-    payload.minigameApiVersion <= 0
+    payload.minigameApiVersion !== MINIGAME_API_VERSION
   ) {
     return false;
   }
 
-  if (
-    !("actionType" in payload) ||
-    typeof payload.actionType !== "string" ||
-    payload.actionType.trim().length === 0
-  ) {
+  if (!("actionType" in payload) || typeof payload.actionType !== "string") {
     return false;
   }
 
-  if (!("actionPayload" in payload)) {
-    return false;
-  }
-
-  if (
-    typeof payload.actionPayload !== "object" ||
-    payload.actionPayload === null ||
-    Array.isArray(payload.actionPayload)
-  ) {
-    return false;
-  }
-
-  // Action-specific payload schema is validated by the active minigame runtime
-  // adapter. This envelope guard only validates socket-level transport/auth shape.
-  return true;
+  return "actionPayload" in payload;
 };
-
 const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload => {
   if (!isHostSecretPayload(payload)) {
     return false;
@@ -226,10 +196,9 @@ const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload =
   );
 };
 
-export const registerRoomStateHandlers = <TSnapshot>(
-  socket: RoomStateSocket<TSnapshot>,
-  getSnapshot: () => TSnapshot,
-  resolveActiveMinigameContract: () => ActiveMinigameContract | null,
+export const registerRoomStateHandlers = (
+  socket: RoomStateSocket,
+  getSnapshot: () => RoomState,
   mutationHandlers: AuthorizedSetupMutationHandlers,
   canClaimControl: boolean,
   hostAuth: HostAuth
@@ -337,38 +306,9 @@ export const registerRoomStateHandlers = <TSnapshot>(
   const handleMinigameAction = (payload: unknown): void => {
     runAuthorizedMutation(
       payload,
-      isMinigameActionEnvelopePayload,
+      isMinigameActionEnvelope,
       (typedPayload) => {
-        const activeMinigameContract = resolveActiveMinigameContract();
-
-        if (
-          activeMinigameContract === null ||
-          typedPayload.minigameId !== activeMinigameContract.minigameId
-        ) {
-          mutationHandlers.onMinigameActionRejectedForCompatibility(
-            "Active minigame changed. Refresh host and try again."
-          );
-          return;
-        }
-
-        if (
-          typedPayload.minigameApiVersion !==
-          activeMinigameContract.minigameApiVersion
-        ) {
-          mutationHandlers.onMinigameActionRejectedForCompatibility(
-            "Minigame API version mismatch. Refresh host and try again."
-          );
-          return;
-        }
-
-        if (!activeMinigameContract.capabilityFlags.includes(typedPayload.actionType)) {
-          mutationHandlers.onMinigameActionRejectedForCompatibility(
-            "Unsupported minigame action. Refresh host and try again."
-          );
-          return;
-        }
-
-        mutationHandlers.onAuthorizedDispatchMinigameAction(typedPayload);
+        mutationHandlers.onAuthorizedMinigameAction(typedPayload);
       }
     );
   };

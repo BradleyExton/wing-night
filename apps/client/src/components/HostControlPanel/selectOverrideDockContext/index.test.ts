@@ -57,15 +57,12 @@ const buildSnapshot = (
       }
     ],
     gameConfig: gameConfigFixture,
-    triviaPrompts: [],
     currentRoundConfig: gameConfigFixture.rounds[0],
     turnOrderTeamIds: ["team-alpha", "team-beta"],
     roundTurnCursor: 0,
     completedRoundTurnTeamIds: [],
     activeRoundTeamId: "team-alpha",
     activeTurnTeamId: null,
-    currentTriviaPrompt: null,
-    triviaPromptCursor: 0,
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
@@ -122,20 +119,6 @@ test("turn-order editability is round-intro only", () => {
     true
   );
   assert.equal(selectOverrideDockContext(buildSnapshot(Phase.EATING)).isTurnOrderEditable, false);
-});
-
-test("takeover phases keep overrides reachable without enabling turn-order edits", () => {
-  const introContext = selectOverrideDockContext(buildSnapshot(Phase.MINIGAME_INTRO));
-  const playContext = selectOverrideDockContext(buildSnapshot(Phase.MINIGAME_PLAY));
-
-  assert.equal(introContext.isVisible, true);
-  assert.equal(playContext.isVisible, true);
-  assert.equal(introContext.isTurnOrderEditable, false);
-  assert.equal(playContext.isTurnOrderEditable, false);
-  assert.equal(introContext.showSkipTurnBoundaryAction, true);
-  assert.equal(playContext.showSkipTurnBoundaryAction, true);
-  assert.equal(introContext.showResetGameAction, true);
-  assert.equal(playContext.showResetGameAction, true);
 });
 
 test("badge turns on for redo availability", () => {
