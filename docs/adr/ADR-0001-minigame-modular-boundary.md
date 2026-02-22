@@ -16,7 +16,7 @@ NPM extraction is explicitly deferred in this phase. The goal now is modular bou
 1. Minigames are implemented as separate packages under `packages/minigames/*`.
 2. The server remains authoritative for room lifecycle, timers, host authorization, phase transitions, and score application timing.
 3. Minigames return pending round results; the main app applies totals at phase boundaries (for example, on `MINIGAME_PLAY -> ROUND_RESULTS`).
-4. Host and display consume separate minigame-derived views: `hostView` and `displayView`.
+4. Host and display consume separate minigame-derived views: `minigameHostView` and `minigameDisplayView`.
 5. Host handoff mode is supported via locked/unlocked host interaction modes:
    - Locked mode: player-safe controls only.
    - Unlocked mode: host-only controls (scoring/admin/override) visible.
@@ -53,7 +53,7 @@ Implementation will follow the task sequence in `TASKS.md`:
 
 Documentation follow-ups are intentionally tracked separately in `TASKS.md`:
 
-1. `D1 SPEC Architecture Alignment (after 8.5)`
-2. `D2 README Architecture Alignment (after 8.5)`
+1. `D1 SPEC Architecture Alignment (after 8.7)`
+2. `D2 README Architecture Alignment (after 8.7)`
 3. `D3 AGENTS Guardrail Update (after boundary stabilizes)`
 4. `D4 DESIGN Surface Rule Update (only if host/display rules materially change)`

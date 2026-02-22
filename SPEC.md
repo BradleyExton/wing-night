@@ -143,13 +143,19 @@ Rules:
 
 ### 3.3 Mini-Game Content
 
-Prompts load from:
-- `trivia.json`
-- `geo.json`
-- `drawing.json`
+Minigame content files are plugin-declared and loaded from:
+- `content/local/<plugin-file>.json`
+- fallback: `content/sample/<plugin-file>.json`
+
+Current built-in content-backed minigame:
+- `TRIVIA` → `minigames/trivia.json`
+
+Current built-in unsupported runtime placeholders:
+- `GEO` (no content file required yet)
+- `DRAWING` (no content file required yet)
 
 Local static assets:
-- `client/public/local-assets/` (gitignored)
+- `apps/client/public/local-assets/` (gitignored)
 
 Images may reference:
 - Local static paths (preferred)
@@ -345,12 +351,11 @@ Testing Expectations:
   - `completedRoundTurnTeamIds`
 - RoomState includes projected mini-game host/display view models.
 - WebSockets (Socket.IO) for realtime sync
-- Role-scoped state snapshots on connect/reconnect:
-  - `server:stateSnapshot` emits `RoleScopedStateSnapshotEnvelope` with `clientRole` and role-safe `roomState`.
-  - Display-scoped snapshots never include host-only answer/secret fields.
-  - If transport recovery is unavailable (`socket.recovered === false`), client immediately requests a full role-scoped snapshot.
+- Snapshot rehydrate behavior:
+  - Clients request latest state with `client:requestState` on connect.
+  - `server:stateSnapshot` currently emits `RoomState` (role-scoped envelope types are defined for compatibility work).
 - Generic mini-game mutation envelope:
-  - Host sends `minigame:action` payloads with `hostSecret`, `minigameId`, `minigameApiVersion`, `capabilityFlags`, `actionType`, and `actionPayload`.
+  - Host sends `minigame:action` payloads with `hostSecret`, `minigameId`, `minigameApiVersion`, `actionType`, and `actionPayload`.
   - Server validates host authorization, active mini-game match, and contract compatibility before dispatch.
 - In-memory state only
 - LAN-first operation (no internet required)
