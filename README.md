@@ -63,19 +63,24 @@ refresh/reconnect.
 
 Wing Night uses a pnpm workspace monorepo.
 
-/ apps/ client/ \# React app (routes: /host, /display, /dev/minigame/:minigameId) server/ \#
-Express + Socket.IO server
+```text
+apps/
+  client/                         # React app (routes: /host, /display, /dev/minigame/:minigameId)
+  server/                         # Express + Socket.IO server
 
-packages/ shared/ \# Shared types, schemas, socket contracts
-packages/minigames/core/ \# Generic minigame contract
-packages/minigames/trivia/ \# Trivia runtime + host/display renderer + sandbox scenarios
-packages/minigames/geo/ \# GEO unsupported renderer/runtime scaffold
-packages/minigames/drawing/ \# DRAWING unsupported renderer/runtime scaffold
+packages/
+  shared/                         # Shared types, schemas, socket contracts
+  minigames/core/                 # Generic minigame contract
+  minigames/trivia/               # Trivia runtime + host/display renderer + sandbox scenarios
+  minigames/geo/                  # GEO unsupported renderer/runtime scaffold
+  minigames/drawing/              # DRAWING unsupported renderer/runtime scaffold
 
-content/ sample/ \# Safe, committed sample content local/ \# Custom
-content (gitignored)
+content/
+  sample/                         # Safe, committed sample content
+  local/                          # Custom content (gitignored)
 
-client/public/local-assets/ \# Images (gitignored)
+apps/client/public/local-assets/  # Images (gitignored)
+```
 
 SPEC.md AGENTS.md TASKS.md README.md pnpm-workspace.yaml
 
@@ -130,9 +135,9 @@ pnpm --filter @wingnight/client dev
 
 6)  Open on devices (same Wi-Fi):
 
-Host: http://`<your-ip>`{=html}:5173/host
+Host: http://`<your-ip>`:5173/host
 
-Display: http://`<your-ip>`{=html}:5173/display
+Display: http://`<your-ip>`:5173/display
 
 ------------------------------------------------------------------------
 

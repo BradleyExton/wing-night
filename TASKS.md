@@ -12,8 +12,8 @@ Status keys:
 Current in-progress work:
 - (none)
 
-Audit snapshot (2026-02-19):
-- Verified against local tree at `dd0b155` and current test inventory under `tests/e2e/*`.
+Audit snapshot (2026-02-22):
+- Verified against local tree at `8af7cbd` and current test inventory under `tests/e2e/*`.
 - `9.1` and `9.2` remain intentionally open; current E2E coverage includes shell smoke + override sync, but not explicit phase-advance sync and refresh-rehydrate milestone assertions.
 - Phase 11/12 tasks are post-MVP platformization work for full-screen minigame takeover and cross-title reuse.
 
@@ -347,10 +347,10 @@ UI task addendum (required for new client UI tasks):
 
 -   Add GitHub Actions workflow for pull requests to `main`
 -   Use Node 22 + pnpm frozen lockfile install
--   Run lint, tests, typecheck, and build in a single deterministic job
+-   Run lint, tests, typecheck, and build in deterministic CI jobs
 -   Configure concurrency cancellation for repeated pushes to the same PR
 Verification:
--   Open PR to `main` and confirm `PR Checks / verify` runs
+-   Open PR to `main` and confirm `PR Checks / lint`, `PR Checks / test`, `PR Checks / typecheck`, and `PR Checks / build` run
 -   Confirm commands: `pnpm lint`, `pnpm test`, `pnpm typecheck`, `pnpm build`
 
 ------------------------------------------------------------------------
@@ -555,7 +555,7 @@ Verification:
 
 -   Pre-req: complete `R1 Host UI Decomposition Pass` before adding new minigame host surfaces
 -   Render minigame phases via dedicated host/display minigame surface modules
--   Feed minigame-specific `hostView` and `displayView` from server snapshot
+-   Feed minigame-specific `minigameHostView` and `minigameDisplayView` from server snapshot
 -   Keep non-minigame phase layouts separate from minigame surfaces
 Verification:
 -   Host and display render trivia through the minigame surface shell
