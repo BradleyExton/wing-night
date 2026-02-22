@@ -1,6 +1,6 @@
 # Wing Night Core Flow + UI Reference
 
-_Last updated: February 19, 2026_
+_Last updated: February 22, 2026_
 
 ## Purpose
 This document gives a single, end-to-end reference for the core Wing Night game lifecycle so someone can analyze all major host/display UI states without stepping through the live game manually.
