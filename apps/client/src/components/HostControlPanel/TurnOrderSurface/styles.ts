@@ -1,8 +1,14 @@
-export const card = "rounded-lg border border-text/10 bg-surfaceAlt p-4";
+import {
+  cardBase,
+  sectionDescriptionDefault as sectionDescriptionDefaultToken,
+  sectionHeading as sectionHeadingToken
+} from "../styleTokens";
 
-export const sectionHeading = "text-xl font-semibold text-text";
+export const card = cardBase;
 
-export const sectionDescription = "mt-1 text-sm text-text/80";
+export const sectionHeading = sectionHeadingToken;
+
+export const sectionDescription = sectionDescriptionDefaultToken;
 
 export const lockedLabel = "mt-2 text-xs font-semibold uppercase tracking-wide text-gold";
 

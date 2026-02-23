@@ -7,44 +7,39 @@ import {
 } from "@wingnight/shared";
 
 import { requestMinigameAction } from "./index";
+import {
+  createMissingHostSecretTracker,
+  createRequestSocketHarness
+} from "../requestTestHarness";
 
 type RequestMinigameActionSocket = Parameters<typeof requestMinigameAction>[0];
 
-class MockRequestMinigameActionSocket {
-  public emittedPayloads: MinigameActionPayload[] = [];
-
-  public emit(
-    event: typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION,
-    payload: MinigameActionPayload
-  ): void {
-    if (event === CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION) {
-      this.emittedPayloads.push(payload);
-    }
-  }
-}
-
 test("returns false and emits nothing when host secret is unavailable", () => {
-  const socket = new MockRequestMinigameActionSocket();
-  let missingSecretCalls = 0;
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION,
+    MinigameActionPayload
+  >(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION);
+  const missingHostSecretTracker = createMissingHostSecretTracker();
 
   const didEmit = requestMinigameAction(
     socket as unknown as RequestMinigameActionSocket,
     "TRIVIA",
     "recordAttempt",
     { isCorrect: true },
-    () => {
-      missingSecretCalls += 1;
-    },
+    missingHostSecretTracker.onMissingHostSecret,
     () => null
   );
 
   assert.equal(didEmit, false);
-  assert.equal(missingSecretCalls, 1);
-  assert.deepEqual(socket.emittedPayloads, []);
+  assert.equal(missingHostSecretTracker.readCallCount(), 1);
+  assert.deepEqual(emittedPayloads, []);
 });
 
 test("emits minigame:action payload when host secret exists", () => {
-  const socket = new MockRequestMinigameActionSocket();
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION,
+    MinigameActionPayload
+  >(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION);
 
   const didEmit = requestMinigameAction(
     socket as unknown as RequestMinigameActionSocket,
@@ -56,7 +51,7 @@ test("emits minigame:action payload when host secret exists", () => {
   );
 
   assert.equal(didEmit, true);
-  assert.deepEqual(socket.emittedPayloads, [
+  assert.deepEqual(emittedPayloads, [
     {
       hostSecret: "host-secret",
       minigameApiVersion: 1,

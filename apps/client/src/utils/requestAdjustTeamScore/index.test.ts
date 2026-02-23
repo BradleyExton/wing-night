@@ -7,43 +7,38 @@ import {
 } from "@wingnight/shared";
 
 import { requestAdjustTeamScore } from "./index";
+import {
+  createMissingHostSecretTracker,
+  createRequestSocketHarness
+} from "../requestTestHarness";
 
 type AdjustTeamScoreSocket = Parameters<typeof requestAdjustTeamScore>[0];
 
-class MockAdjustTeamScoreSocket {
-  public emittedPayloads: ScoringAdjustTeamScorePayload[] = [];
-
-  public emit(
-    event: typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE,
-    payload: ScoringAdjustTeamScorePayload
-  ): void {
-    if (event === CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE) {
-      this.emittedPayloads.push(payload);
-    }
-  }
-}
-
 test("returns false and emits nothing when host secret is unavailable", () => {
-  const socket = new MockAdjustTeamScoreSocket();
-  let missingHostSecretCallbackCount = 0;
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE,
+    ScoringAdjustTeamScorePayload
+  >(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE);
+  const missingHostSecretTracker = createMissingHostSecretTracker();
 
   const wasRequested = requestAdjustTeamScore(
     socket as unknown as AdjustTeamScoreSocket,
     "team-1",
     3,
-    () => {
-      missingHostSecretCallbackCount += 1;
-    },
+    missingHostSecretTracker.onMissingHostSecret,
     () => null
   );
 
   assert.equal(wasRequested, false);
-  assert.equal(missingHostSecretCallbackCount, 1);
-  assert.equal(socket.emittedPayloads.length, 0);
+  assert.equal(missingHostSecretTracker.readCallCount(), 1);
+  assert.equal(emittedPayloads.length, 0);
 });
 
 test("returns false and emits nothing for invalid payloads", () => {
-  const socket = new MockAdjustTeamScoreSocket();
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE,
+    ScoringAdjustTeamScorePayload
+  >(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE);
 
   assert.equal(
     requestAdjustTeamScore(
@@ -76,11 +71,14 @@ test("returns false and emits nothing for invalid payloads", () => {
     false
   );
 
-  assert.deepEqual(socket.emittedPayloads, []);
+  assert.deepEqual(emittedPayloads, []);
 });
 
 test("emits scoring:adjustTeamScore payload when host secret exists", () => {
-  const socket = new MockAdjustTeamScoreSocket();
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE,
+    ScoringAdjustTeamScorePayload
+  >(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE);
 
   const wasRequested = requestAdjustTeamScore(
     socket as unknown as AdjustTeamScoreSocket,
@@ -91,7 +89,7 @@ test("emits scoring:adjustTeamScore payload when host secret exists", () => {
   );
 
   assert.equal(wasRequested, true);
-  assert.deepEqual(socket.emittedPayloads, [
+  assert.deepEqual(emittedPayloads, [
     {
       hostSecret: "valid-host-secret",
       teamId: "team-1",

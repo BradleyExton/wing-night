@@ -5,6 +5,7 @@ import { displayBoardCopy } from "./copy";
 import { ContentFatalState } from "../ContentFatalState";
 import { StageSurface } from "./StageSurface";
 import { StandingsSurface } from "./StandingsSurface";
+import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
 import * as styles from "./styles";
 
 type DisplayBoardProps = {
@@ -18,13 +19,7 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
       return [];
     }
 
-    return [...roomState.teams].sort((firstTeam, secondTeam) => {
-      if (firstTeam.totalScore === secondTeam.totalScore) {
-        return firstTeam.name.localeCompare(secondTeam.name);
-      }
-
-      return secondTeam.totalScore - firstTeam.totalScore;
-    });
+    return resolveSortedStandings(roomState.teams);
   }, [roomState]);
 
   const phase = roomState?.phase ?? null;

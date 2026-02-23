@@ -7,41 +7,36 @@ import {
 } from "@wingnight/shared";
 
 import { requestResumeTimer } from "./index";
+import {
+  createMissingHostSecretTracker,
+  createRequestSocketHarness
+} from "../requestTestHarness";
 
 type ResumeTimerSocket = Parameters<typeof requestResumeTimer>[0];
 
-class MockResumeTimerSocket {
-  public emittedPayloads: HostSecretPayload[] = [];
-
-  public emit(
-    event: typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME,
-    payload: HostSecretPayload
-  ): void {
-    if (event === CLIENT_TO_SERVER_EVENTS.TIMER_RESUME) {
-      this.emittedPayloads.push(payload);
-    }
-  }
-}
-
 test("returns false and emits nothing when host secret is unavailable", () => {
-  const socket = new MockResumeTimerSocket();
-  let missingHostSecretCallbackCount = 0;
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME,
+    HostSecretPayload
+  >(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME);
+  const missingHostSecretTracker = createMissingHostSecretTracker();
 
   const wasRequested = requestResumeTimer(
     socket as unknown as ResumeTimerSocket,
-    () => {
-      missingHostSecretCallbackCount += 1;
-    },
+    missingHostSecretTracker.onMissingHostSecret,
     () => null
   );
 
   assert.equal(wasRequested, false);
-  assert.equal(missingHostSecretCallbackCount, 1);
-  assert.equal(socket.emittedPayloads.length, 0);
+  assert.equal(missingHostSecretTracker.readCallCount(), 1);
+  assert.equal(emittedPayloads.length, 0);
 });
 
 test("emits timer:resume payload when host secret exists", () => {
-  const socket = new MockResumeTimerSocket();
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME,
+    HostSecretPayload
+  >(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME);
 
   const wasRequested = requestResumeTimer(
     socket as unknown as ResumeTimerSocket,
@@ -50,5 +45,5 @@ test("emits timer:resume payload when host secret exists", () => {
   );
 
   assert.equal(wasRequested, true);
-  assert.deepEqual(socket.emittedPayloads, [{ hostSecret: "valid-host-secret" }]);
+  assert.deepEqual(emittedPayloads, [{ hostSecret: "valid-host-secret" }]);
 });

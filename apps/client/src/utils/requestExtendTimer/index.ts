@@ -9,7 +9,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
+import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type ExtendTimerSocket = Pick<Socket<InboundSocketEvents, OutboundSocketEvents>, "emit">;
@@ -20,28 +20,18 @@ export const requestExtendTimer = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  if (
-    !Number.isInteger(additionalSeconds) ||
-    additionalSeconds <= 0 ||
-    additionalSeconds > TIMER_EXTEND_MAX_SECONDS
-  ) {
-    return false;
-  }
-
-  const hostSecret = resolveHostSecretRequest({
+  return emitHostAuthorizedRequest({
+    socket,
+    event: CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND,
+    onMissingHostSecret,
     getHostSecret,
-    onMissingHostSecret
+    canEmit: () =>
+      Number.isInteger(additionalSeconds) &&
+      additionalSeconds > 0 &&
+      additionalSeconds <= TIMER_EXTEND_MAX_SECONDS,
+    createPayload: (hostSecret): TimerExtendPayload => ({
+      hostSecret,
+      additionalSeconds
+    })
   });
-
-  if (hostSecret === null) {
-    return false;
-  }
-
-  const payload: TimerExtendPayload = {
-    hostSecret,
-    additionalSeconds
-  };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, payload);
-
-  return true;
 };

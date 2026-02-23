@@ -8,7 +8,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
+import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type AdjustTeamScoreSocket = Pick<
@@ -23,22 +23,16 @@ export const requestAdjustTeamScore = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = resolveHostSecretRequest({
-    getHostSecret,
+  return emitHostAuthorizedRequest({
+    socket,
+    event: CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE,
     onMissingHostSecret,
-    canEmit: () => Number.isInteger(delta) && delta !== 0 && teamId.trim().length > 0
+    getHostSecret,
+    canEmit: () => Number.isInteger(delta) && delta !== 0 && teamId.trim().length > 0,
+    createPayload: (hostSecret): ScoringAdjustTeamScorePayload => ({
+      hostSecret,
+      teamId,
+      delta
+    })
   });
-
-  if (hostSecret === null) {
-    return false;
-  }
-
-  const payload: ScoringAdjustTeamScorePayload = {
-    hostSecret,
-    teamId,
-    delta
-  };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, payload);
-
-  return true;
 };

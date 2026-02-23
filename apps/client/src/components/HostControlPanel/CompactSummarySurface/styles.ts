@@ -1,11 +1,16 @@
+import {
+  cardBaseTextLeft,
+  sectionDescriptionMuted,
+  sectionHeadingReset
+} from "../styleTokens";
+
 export const compactGrid = "mt-8 grid gap-4 md:grid-cols-2";
 
-export const card =
-  "rounded-lg border border-text/10 bg-surfaceAlt p-4 text-left";
+export const card = cardBaseTextLeft;
 
-export const sectionHeading = "m-0 text-xl font-semibold text-text";
+export const sectionHeading = sectionHeadingReset;
 
-export const sectionDescription = "mt-2 text-sm text-muted";
+export const sectionDescription = sectionDescriptionMuted;
 
 export const compactStandingsList = "mt-3 space-y-2";
 
