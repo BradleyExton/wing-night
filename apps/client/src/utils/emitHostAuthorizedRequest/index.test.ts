@@ -67,3 +67,30 @@ test("returns true and emits event payload once when checks pass", () => {
   assert.equal(didEmit, true);
   assert.deepEqual(emittedPayloads, [{ hostSecret: "valid-host-secret" }]);
 });
+
+test("emits with socket method context intact", () => {
+  const emittedPayloads: HostSecretPayload[] = [];
+  const socket = {
+    isSocket: true,
+    emit(
+      this: { isSocket: boolean },
+      event: typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE,
+      payload: HostSecretPayload
+    ): void {
+      assert.equal(this.isSocket, true);
+      if (event === CLIENT_TO_SERVER_EVENTS.NEXT_PHASE) {
+        emittedPayloads.push(payload);
+      }
+    }
+  };
+
+  const didEmit = emitHostAuthorizedRequest({
+    socket: socket as unknown as EmitHostAuthorizedRequestSocket,
+    event: CLIENT_TO_SERVER_EVENTS.NEXT_PHASE,
+    createPayload: (hostSecret) => ({ hostSecret }),
+    getHostSecret: () => "valid-host-secret"
+  });
+
+  assert.equal(didEmit, true);
+  assert.deepEqual(emittedPayloads, [{ hostSecret: "valid-host-secret" }]);
+});

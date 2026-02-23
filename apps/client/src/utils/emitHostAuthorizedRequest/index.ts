@@ -56,6 +56,7 @@ export const emitHostAuthorizedRequest = <EventName extends PayloadEventName>({
     payload: EventPayload<EventName>
   ) => void;
 
-  emitEvent(event, createPayload(hostSecret));
+  // Preserve socket method context for socket.io-client internals.
+  emitEvent.call(socket, event, createPayload(hostSecret));
   return true;
 };
