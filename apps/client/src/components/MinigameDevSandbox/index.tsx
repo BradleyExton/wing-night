@@ -170,32 +170,50 @@ export const MinigameDevSandbox = ({
       />
 
       <section className={styles.previewGrid}>
-        <div className={styles.previewCard}>
+        <div className={`${styles.previewCard} ${styles.hostPreviewCard}`}>
           <header className={styles.previewHeader}>
-            {minigameDevSandboxCopy.hostPreviewLabel}
+            <span className={styles.previewHeaderLabel}>
+              {minigameDevSandboxCopy.hostPreviewLabel}
+            </span>
+            <span className={styles.previewHeaderMeta}>
+              {minigameDevSandboxCopy.hostPreviewMetaLabel}
+            </span>
           </header>
-          <HostSurface
-            phase={knobsState.phase}
-            minigameType={minigameType}
-            minigameHostView={scenarioHostView}
-            activeTeamName={activeTeamName}
-            teamNameByTeamId={teamNameByTeamId}
-            canDispatchAction={false}
-            onDispatchAction={(): void => {
-              return;
-            }}
-          />
+          <div className={styles.hostViewport}>
+            <div className={styles.hostViewportSurface}>
+              <HostSurface
+                phase={knobsState.phase}
+                minigameType={minigameType}
+                minigameHostView={scenarioHostView}
+                activeTeamName={activeTeamName}
+                teamNameByTeamId={teamNameByTeamId}
+                canDispatchAction={false}
+                onDispatchAction={(): void => {
+                  return;
+                }}
+              />
+            </div>
+          </div>
         </div>
-        <div className={styles.previewCard}>
+        <div className={`${styles.previewCard} ${styles.displayPreviewCard}`}>
           <header className={styles.previewHeader}>
-            {minigameDevSandboxCopy.displayPreviewLabel}
+            <span className={styles.previewHeaderLabel}>
+              {minigameDevSandboxCopy.displayPreviewLabel}
+            </span>
+            <span className={styles.previewHeaderMeta}>
+              {minigameDevSandboxCopy.displayPreviewMetaLabel}
+            </span>
           </header>
-          <DisplaySurface
-            phase={knobsState.phase}
-            minigameType={minigameType}
-            minigameDisplayView={scenarioDisplayView}
-            activeTeamName={activeTeamName}
-          />
+          <div className={styles.displayViewport}>
+            <div className={styles.displayViewportSurface}>
+              <DisplaySurface
+                phase={knobsState.phase}
+                minigameType={minigameType}
+                minigameDisplayView={scenarioDisplayView}
+                activeTeamName={activeTeamName}
+              />
+            </div>
+          </div>
         </div>
       </section>
     </main>
