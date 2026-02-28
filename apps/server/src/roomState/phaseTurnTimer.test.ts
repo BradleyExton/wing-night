@@ -800,3 +800,35 @@ test("advanceRoomStatePhase logs transition metadata", () => {
     currentRound: 0
   });
 });
+
+test("revertLastPhaseTransition logs transition metadata", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceUntil(Phase.ROUND_INTRO, 1);
+  advanceRoomStatePhase();
+  assert.equal(getRoomStateSnapshot().phase, Phase.EATING);
+
+  const originalConsoleWarn = console.warn;
+  const logCalls: unknown[][] = [];
+
+  console.warn = ((...args: unknown[]): void => {
+    logCalls.push(args);
+  }) as typeof console.warn;
+
+  try {
+    revertLastPhaseTransition();
+  } finally {
+    console.warn = originalConsoleWarn;
+  }
+
+  const transitionLog = logCalls.find(
+    (args) => args[0] === "server:phaseTransition"
+  );
+
+  assert.ok(transitionLog);
+  assert.deepEqual(transitionLog[1], {
+    previousPhase: Phase.EATING,
+    nextPhase: Phase.ROUND_INTRO,
+    currentRound: 1
+  });
+});

@@ -867,8 +867,10 @@ export const revertLastPhaseTransition = (): RoomState => {
     return getRoomStateSnapshot();
   }
 
+  const previousPhase = roomState.phase;
   const snapshotToRestore = phaseTransitionUndoSnapshot;
   restorePhaseTransitionUndoState(roomState, snapshotToRestore);
+  logPhaseTransition(previousPhase, roomState.phase, roomState.currentRound);
   clearPhaseTransitionUndoState(roomState);
 
   return getRoomStateSnapshot();
