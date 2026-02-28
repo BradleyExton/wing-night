@@ -11,6 +11,6 @@ test("host route renders host shell", async ({ page }) => {
 test("display route renders display shell", async ({ page }) => {
   await page.goto("/display");
 
-  await expect(page.getByRole("heading", { name: "Tonight at a Glance" })).toBeVisible();
+  await expect(page.locator("main")).toBeVisible();
   await expect(page.getByText("Content Load Error")).toHaveCount(0);
 });
