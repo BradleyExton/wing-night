@@ -65,6 +65,99 @@ test("renders round intro metadata", () => {
   assert.match(html, /TRIVIA/);
 });
 
+test("renders setup intro with flow illustrations and minigame icon placeholders", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.SETUP)} phaseLabel="Setup" />
+  );
+
+  assert.match(html, /Tonight at a Glance/);
+  assert.match(html, /display\/setup\/hero\.svg/);
+  assert.match(html, /display\/setup\/texture\.svg/);
+  assert.match(html, /Live Setup/);
+  assert.match(html, /Pack: Fixture Config/);
+  assert.match(html, /1 Round/);
+  assert.match(html, /Round Flow/);
+  assert.match(html, /Mini-Game Intro/);
+  assert.match(html, /display\/setup\/flow-eat-wings\.svg/);
+  assert.match(html, /display\/setup\/flow-minigame-play\.svg/);
+  assert.match(html, /Round Lineup/);
+  assert.match(html, /Round 1: Warm Up/);
+  assert.match(html, /display\/minigames\/trivia-icon\.svg/);
+  assert.match(html, /Frank&#x27;s \| TRIVIA \| 2 pts\/player/);
+  assert.match(html, /Ready to Start/);
+});
+
+test("renders setup flow in intro-before-eating order", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.SETUP)} phaseLabel="Setup" />
+  );
+
+  const introIndex = html.indexOf("Mini-Game Intro");
+  const eatingIndex = html.indexOf("Eat Wings");
+  const playIndex = html.indexOf("Mini-Game Play");
+
+  assert.ok(introIndex >= 0);
+  assert.ok(eatingIndex >= 0);
+  assert.ok(playIndex >= 0);
+  assert.ok(introIndex < eatingIndex);
+  assert.ok(eatingIndex < playIndex);
+});
+
+test("limits setup lineup cards and shows hidden round count for dense configs", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.SETUP),
+        gameConfig: {
+          ...gameConfigFixture,
+          rounds: [
+            gameConfigFixture.rounds[0],
+            {
+              ...gameConfigFixture.rounds[0],
+              round: 2,
+              label: "Hotter"
+            },
+            {
+              ...gameConfigFixture.rounds[0],
+              round: 3,
+              label: "Spicy"
+            },
+            {
+              ...gameConfigFixture.rounds[0],
+              round: 4,
+              label: "Inferno"
+            }
+          ]
+        }
+      }}
+      phaseLabel="Setup"
+    />
+  );
+
+  assert.match(html, /Round 1: Warm Up/);
+  assert.match(html, /Round 2: Hotter/);
+  assert.match(html, /Round 3: Spicy/);
+  assert.doesNotMatch(html, /Round 4: Inferno/);
+  assert.match(html, /\+1 more rounds/);
+});
+
+test("renders setup fallback when game config is unavailable", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.SETUP),
+        gameConfig: null
+      }}
+      phaseLabel="Setup"
+    />
+  );
+
+  assert.match(html, /House Rules/);
+  assert.match(html, /One team is active at a time during each round\./);
+  assert.match(html, /Pack: \.\.\./);
+  assert.match(html, /0 Rounds/);
+});
+
 test("falls back to generic context when ROUND_INTRO is missing round config", () => {
   const html = renderToStaticMarkup(
     <StageSurface
@@ -225,7 +318,7 @@ test("falls back to static config timer when EATING timer snapshot is unavailabl
   assert.match(html, /02:05/);
 });
 
-test("renders active team without turn progress during minigame intro", () => {
+test("renders minigame intro metadata and active team context", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.MINIGAME_INTRO)} phaseLabel="Minigame Intro" />
   );
@@ -233,5 +326,10 @@ test("renders active team without turn progress during minigame intro", () => {
   assert.match(html, /Active Team/);
   assert.match(html, /Team One/);
   assert.doesNotMatch(html, /Team 1 of 1/);
-  assert.match(html, /Mini-Game: TRIVIA/);
+  assert.match(html, /Up Next: Trivia Sprint/);
+  assert.match(html, /Objective/);
+  assert.match(html, /How to Play/);
+  assert.match(html, /Win Condition/);
+  assert.match(html, /Quick Tip/);
+  assert.match(html, /display\/minigames\/trivia-icon\.svg/);
 });
