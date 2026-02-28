@@ -515,7 +515,7 @@ const resolveNextPhase = (state: RoomState, previousPhase: Phase): Phase => {
     const hasNextRoundTurn =
       state.roundTurnCursor + 1 < state.turnOrderTeamIds.length;
 
-    return hasNextRoundTurn ? Phase.EATING : Phase.ROUND_RESULTS;
+    return hasNextRoundTurn ? Phase.MINIGAME_INTRO : Phase.ROUND_RESULTS;
   }
 
   return getNextPhase(previousPhase, state.currentRound, state.totalRounds);
@@ -993,7 +993,7 @@ export const skipTurnBoundary = (): RoomState => {
 
   const hasNextRoundTurn =
     roomState.roundTurnCursor + 1 < roomState.turnOrderTeamIds.length;
-  const nextPhase = hasNextRoundTurn ? Phase.EATING : Phase.ROUND_RESULTS;
+  const nextPhase = hasNextRoundTurn ? Phase.MINIGAME_INTRO : Phase.ROUND_RESULTS;
 
   if (canCapturePhaseTransitionUndoSnapshot(previousPhase, nextPhase)) {
     capturePhaseTransitionUndoState(roomState);
@@ -1005,8 +1005,10 @@ export const skipTurnBoundary = (): RoomState => {
   roomState.phase = nextPhase;
   roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
 
-  if (previousPhase === Phase.MINIGAME_PLAY) {
-    clearActiveMinigameRuntimeState(roomState);
+  clearActiveMinigameRuntimeState(roomState);
+
+  if (nextPhase === Phase.MINIGAME_INTRO) {
+    initializeActiveMinigameTurnState(roomState);
   }
 
   if (nextPhase === Phase.ROUND_RESULTS) {
@@ -1014,15 +1016,7 @@ export const skipTurnBoundary = (): RoomState => {
     applyPendingRoundScoresToTotals(roomState);
   }
 
-  if (nextPhase === Phase.EATING) {
-    const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
-    roomState.timer =
-      eatingSeconds === null
-        ? null
-        : createRunningTimer(Phase.EATING, eatingSeconds);
-  } else {
-    roomState.timer = null;
-  }
+  roomState.timer = null;
 
   logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);
 
@@ -1114,7 +1108,7 @@ export const advanceRoomStatePhase = (): RoomState => {
     initializeRoundTurnState(roomState);
   }
 
-  if (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.MINIGAME_PLAY) {
+  if (nextPhase === Phase.MINIGAME_INTRO) {
     initializeActiveMinigameTurnState(roomState);
   }
 
@@ -1131,14 +1125,10 @@ export const advanceRoomStatePhase = (): RoomState => {
     clearPendingRoundScores(roomState);
   }
 
-  if (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.EATING) {
-    resetRoundWingParticipation(roomState);
-    const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
-    roomState.timer =
-      eatingSeconds === null
-        ? null
-        : createRunningTimer(Phase.EATING, eatingSeconds);
-  } else if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.EATING) {
+  if (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.EATING) {
+    if (roomState.completedRoundTurnTeamIds.length === 0) {
+      resetRoundWingParticipation(roomState);
+    }
     const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
     roomState.timer =
       eatingSeconds === null
