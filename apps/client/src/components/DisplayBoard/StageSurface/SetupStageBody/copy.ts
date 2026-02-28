@@ -15,8 +15,10 @@ export const setupStageCopy = {
   setupStatusTitle: "Live Setup",
   setupReadyLabel: "Ready to Start",
   setupInProgressLabel: "In Progress",
-  teamCountChipLabel: (teamCount: number): string => `${teamCount} Teams`,
-  playerCountChipLabel: (playerCount: number): string => `${playerCount} Players`,
+  teamCountChipLabel: (teamCount: number): string =>
+    `${teamCount} ${teamCount === 1 ? "Team" : "Teams"}`,
+  playerCountChipLabel: (playerCount: number): string =>
+    `${playerCount} ${playerCount === 1 ? "Player" : "Players"}`,
   packChipLabel: (packName: string): string => `Pack: ${packName}`,
   packUnavailableChipLabel: "Pack: ...",
   roundsChipLabel: (roundCount: number): string =>
@@ -32,7 +34,7 @@ export const setupStageCopy = {
     `${stepLabel} illustration`,
   roundLineupTitle: "Round Lineup",
   additionalRoundsLabel: (hiddenRoundCount: number): string =>
-    `+${hiddenRoundCount} more rounds`,
+    `+${hiddenRoundCount} more ${hiddenRoundCount === 1 ? "round" : "rounds"}`,
   roundTitle: (round: number, label: string): string => `Round ${round}: ${label}`,
   roundSummaryValue: (
     sauce: string,

@@ -75,6 +75,8 @@ test("renders setup intro with flow illustrations and minigame icon placeholders
   assert.match(html, /display\/setup\/texture\.svg/);
   assert.match(html, /Live Setup/);
   assert.match(html, /Pack: Fixture Config/);
+  assert.match(html, /1 Team/);
+  assert.match(html, /0 Players/);
   assert.match(html, /1 Round/);
   assert.match(html, /Round Flow/);
   assert.match(html, /Mini-Game Intro/);
@@ -138,7 +140,7 @@ test("limits setup lineup cards and shows hidden round count for dense configs",
   assert.match(html, /Round 2: Hotter/);
   assert.match(html, /Round 3: Spicy/);
   assert.doesNotMatch(html, /Round 4: Inferno/);
-  assert.match(html, /\+1 more rounds/);
+  assert.match(html, /\+1 more round/);
 });
 
 test("renders setup fallback when game config is unavailable", () => {
