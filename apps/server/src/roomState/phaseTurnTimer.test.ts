@@ -796,6 +796,27 @@ test("revertLastPhaseTransition is unavailable after non-reversible boundaries",
   assert.equal(afterRevertAttempt.activeRoundTeamId, "team-2");
 });
 
+test("first EATING after skipping first intro still clears previous-round wing participation", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+
+  advanceToRoundResultsPhase(1);
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  skipTurnBoundary();
+  advanceRoomStatePhase();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.EATING);
+  assert.equal(snapshot.activeRoundTeamId, "team-2");
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+});
+
 test("advanceRoomStatePhase logs transition metadata", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();

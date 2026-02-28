@@ -1052,6 +1052,27 @@ test("entering EATING clears wing participation from the previous round", () => 
   assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
 });
 
+test("first EATING after skipping first intro still clears previous-round wing participation", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  setWingParticipation("player-1", true);
+
+  advanceToRoundResultsPhase(1);
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  skipTurnBoundary();
+  advanceRoomStatePhase();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.EATING);
+  assert.equal(snapshot.activeRoundTeamId, "team-2");
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
+});
+
 test("initializes trivia turn state through the minigame module boundary", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();

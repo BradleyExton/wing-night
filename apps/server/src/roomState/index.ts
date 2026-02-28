@@ -1108,6 +1108,10 @@ export const advanceRoomStatePhase = (): RoomState => {
     initializeRoundTurnState(roomState);
   }
 
+  if (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.MINIGAME_INTRO) {
+    resetRoundWingParticipation(roomState);
+  }
+
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase !== Phase.MINIGAME_PLAY) {
     clearActiveMinigameRuntimeState(roomState);
   }
@@ -1126,9 +1130,6 @@ export const advanceRoomStatePhase = (): RoomState => {
   }
 
   if (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.EATING) {
-    if (roomState.completedRoundTurnTeamIds.length === 0) {
-      resetRoundWingParticipation(roomState);
-    }
     const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
     roomState.timer =
       eatingSeconds === null
