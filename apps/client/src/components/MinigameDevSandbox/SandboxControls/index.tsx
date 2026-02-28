@@ -109,8 +109,10 @@ export const SandboxControls = ({
         </div>
 
         <div className={styles.controlBlock}>
-          <p className={styles.controlLabel}>{minigameDevSandboxCopy.minigameLabel}</p>
-          <input className={styles.input} value={minigameType} disabled />
+          <label className={styles.controlLabel} htmlFor="minigame-type">
+            {minigameDevSandboxCopy.minigameLabel}
+          </label>
+          <input id="minigame-type" className={styles.input} value={minigameType} disabled />
         </div>
 
         <div className={styles.controlBlock}>
