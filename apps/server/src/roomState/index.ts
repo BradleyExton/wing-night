@@ -526,10 +526,10 @@ const canCapturePhaseTransitionUndoSnapshot = (
   nextPhase: Phase
 ): boolean => {
   return (
-    (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.EATING) ||
-    (previousPhase === Phase.EATING && nextPhase === Phase.MINIGAME_INTRO) ||
-    (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.MINIGAME_PLAY) ||
-    (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.EATING)
+    (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.MINIGAME_INTRO) ||
+    (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.EATING) ||
+    (previousPhase === Phase.EATING && nextPhase === Phase.MINIGAME_PLAY) ||
+    (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.MINIGAME_INTRO)
   );
 };
 

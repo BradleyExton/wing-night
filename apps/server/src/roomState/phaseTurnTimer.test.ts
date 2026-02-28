@@ -770,9 +770,9 @@ test("revertLastPhaseTransition rewinds an eligible next-phase transition", () =
   const roundIntroSnapshot = getRoomStateSnapshot();
   assert.equal(roundIntroSnapshot.canRevertPhaseTransition, false);
 
-  const eatingSnapshot = advanceRoomStatePhase();
-  assert.equal(eatingSnapshot.phase, Phase.EATING);
-  assert.equal(eatingSnapshot.canRevertPhaseTransition, true);
+  const introSnapshot = advanceRoomStatePhase();
+  assert.equal(introSnapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(introSnapshot.canRevertPhaseTransition, true);
 
   const revertedSnapshot = revertLastPhaseTransition();
   assert.equal(revertedSnapshot.phase, Phase.ROUND_INTRO);
@@ -788,11 +788,11 @@ test("revertLastPhaseTransition is unavailable after non-reversible boundaries",
 
   skipTurnBoundary();
   const afterSkipSnapshot = getRoomStateSnapshot();
-  assert.equal(afterSkipSnapshot.phase, Phase.EATING);
+  assert.equal(afterSkipSnapshot.phase, Phase.MINIGAME_INTRO);
   assert.equal(afterSkipSnapshot.canRevertPhaseTransition, false);
 
   const afterRevertAttempt = revertLastPhaseTransition();
-  assert.equal(afterRevertAttempt.phase, Phase.EATING);
+  assert.equal(afterRevertAttempt.phase, Phase.MINIGAME_INTRO);
   assert.equal(afterRevertAttempt.activeRoundTeamId, "team-2");
 });
 
@@ -851,7 +851,7 @@ test("revertLastPhaseTransition logs transition metadata", () => {
   setupValidTeamsAndAssignments();
   advanceUntil(Phase.ROUND_INTRO, 1);
   advanceRoomStatePhase();
-  assert.equal(getRoomStateSnapshot().phase, Phase.EATING);
+  assert.equal(getRoomStateSnapshot().phase, Phase.MINIGAME_INTRO);
 
   const originalConsoleWarn = console.warn;
   const logCalls: unknown[][] = [];
@@ -872,7 +872,7 @@ test("revertLastPhaseTransition logs transition metadata", () => {
 
   assert.ok(transitionLog);
   assert.deepEqual(transitionLog[1], {
-    previousPhase: Phase.EATING,
+    previousPhase: Phase.MINIGAME_INTRO,
     nextPhase: Phase.ROUND_INTRO,
     currentRound: 1
   });
