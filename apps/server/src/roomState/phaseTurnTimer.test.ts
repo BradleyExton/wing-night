@@ -17,6 +17,7 @@ import {
   getRoomStateSnapshot,
   pauseRoomTimer,
   redoLastScoringMutation,
+  revertLastPhaseTransition,
   reorderTurnOrder,
   resetRoomState,
   resumeRoomTimer,
@@ -160,6 +161,7 @@ test("createInitialRoomState returns setup defaults", () => {
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
+    canRevertPhaseTransition: false,
     canAdvancePhase: false
   });
 });
@@ -734,6 +736,40 @@ test("skipTurnBoundary clears redo history when landing on ROUND_RESULTS", () =>
 
   assert.equal(afterRedoSnapshot.phase, Phase.ROUND_RESULTS);
   assert.equal(afterRedoSnapshot.teams[1].totalScore, 3);
+});
+
+test("revertLastPhaseTransition rewinds an eligible next-phase transition", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceUntil(Phase.ROUND_INTRO, 1);
+
+  const roundIntroSnapshot = getRoomStateSnapshot();
+  assert.equal(roundIntroSnapshot.canRevertPhaseTransition, false);
+
+  const eatingSnapshot = advanceRoomStatePhase();
+  assert.equal(eatingSnapshot.phase, Phase.EATING);
+  assert.equal(eatingSnapshot.canRevertPhaseTransition, true);
+
+  const revertedSnapshot = revertLastPhaseTransition();
+  assert.equal(revertedSnapshot.phase, Phase.ROUND_INTRO);
+  assert.equal(revertedSnapshot.currentRound, 1);
+  assert.equal(revertedSnapshot.activeRoundTeamId, "team-1");
+  assert.equal(revertedSnapshot.canRevertPhaseTransition, false);
+});
+
+test("revertLastPhaseTransition is unavailable after non-reversible boundaries", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceToEatingPhase();
+
+  skipTurnBoundary();
+  const afterSkipSnapshot = getRoomStateSnapshot();
+  assert.equal(afterSkipSnapshot.phase, Phase.EATING);
+  assert.equal(afterSkipSnapshot.canRevertPhaseTransition, false);
+
+  const afterRevertAttempt = revertLastPhaseTransition();
+  assert.equal(afterRevertAttempt.phase, Phase.EATING);
+  assert.equal(afterRevertAttempt.activeRoundTeamId, "team-2");
 });
 
 test("advanceRoomStatePhase logs transition metadata", () => {

@@ -133,6 +133,7 @@ export const createInitialRoomState = (): RoomState => {
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
+    canRevertPhaseTransition: false,
     canAdvancePhase: false
   };
 };
@@ -149,6 +150,12 @@ type ScoringMutationUndoSnapshot = {
   minigameRuntimeSnapshot: MinigameRuntimeStateSnapshot;
 };
 let scoringMutationUndoSnapshot: ScoringMutationUndoSnapshot | null = null;
+type PhaseTransitionUndoSnapshot = {
+  roomStateSnapshot: RoomState;
+  scoringMutationUndoSnapshot: ScoringMutationUndoSnapshot | null;
+  minigameRuntimeSnapshot: MinigameRuntimeStateSnapshot;
+};
+let phaseTransitionUndoSnapshot: PhaseTransitionUndoSnapshot | null = null;
 
 const overwriteRoomState = (nextState: RoomState): void => {
   Object.assign(roomState, nextState);
@@ -157,6 +164,11 @@ const overwriteRoomState = (nextState: RoomState): void => {
 const clearScoringMutationUndoState = (state: RoomState): void => {
   scoringMutationUndoSnapshot = null;
   state.canRedoScoringMutation = false;
+};
+
+const clearPhaseTransitionUndoState = (state: RoomState): void => {
+  phaseTransitionUndoSnapshot = null;
+  state.canRevertPhaseTransition = false;
 };
 
 const captureTeamTotalScoreById = (
@@ -188,6 +200,23 @@ const captureScoringMutationUndoState = (state: RoomState): void => {
   scoringMutationUndoSnapshot = createScoringMutationUndoSnapshot(state);
 };
 
+const cloneScoringMutationUndoSnapshot = (
+  snapshot: ScoringMutationUndoSnapshot | null
+): ScoringMutationUndoSnapshot | null => {
+  return snapshot === null ? null : structuredClone(snapshot);
+};
+
+const capturePhaseTransitionUndoState = (state: RoomState): void => {
+  phaseTransitionUndoSnapshot = {
+    roomStateSnapshot: structuredClone(state),
+    scoringMutationUndoSnapshot: cloneScoringMutationUndoSnapshot(
+      scoringMutationUndoSnapshot
+    ),
+    minigameRuntimeSnapshot: captureMinigameRuntimeStateSnapshot()
+  };
+  state.canRevertPhaseTransition = true;
+};
+
 const restoreScoringMutationUndoState = (
   state: RoomState,
   snapshot: ScoringMutationUndoSnapshot
@@ -217,6 +246,25 @@ const restoreScoringMutationUndoState = (
   );
 };
 
+const restorePhaseTransitionUndoState = (
+  state: RoomState,
+  snapshot: PhaseTransitionUndoSnapshot
+): void => {
+  overwriteRoomState(structuredClone(snapshot.roomStateSnapshot));
+  scoringMutationUndoSnapshot = cloneScoringMutationUndoSnapshot(
+    snapshot.scoringMutationUndoSnapshot
+  );
+  state.canRedoScoringMutation = scoringMutationUndoSnapshot !== null;
+  state.canRevertPhaseTransition = true;
+
+  const minigameType = state.currentRoundConfig?.minigame ?? null;
+  restoreMinigameRuntimeStateSnapshot(
+    state,
+    snapshot.minigameRuntimeSnapshot,
+    minigameType === null ? null : resolveMinigameRules(state, minigameType)
+  );
+};
+
 export const getRoomStateSnapshot = (): RoomState => {
   const snapshot = structuredClone(roomState);
   snapshot.canAdvancePhase = resolveCanAdvancePhase(roomState);
@@ -228,6 +276,7 @@ export const resetRoomState = (): RoomState => {
   overwriteRoomState(createInitialRoomState());
   resetMinigameRuntimeState();
   clearScoringMutationUndoState(roomState);
+  clearPhaseTransitionUndoState(roomState);
 
   return getRoomStateSnapshot();
 };
@@ -250,6 +299,7 @@ export const resetGameToSetup = (): RoomState => {
   overwriteRoomState(nextState);
   resetMinigameRuntimeState();
   clearScoringMutationUndoState(roomState);
+  clearPhaseTransitionUndoState(roomState);
 
   return getRoomStateSnapshot();
 };
@@ -258,6 +308,7 @@ export const setRoomStateFatalError = (message: string): RoomState => {
   overwriteRoomState(createInitialRoomState());
   resetMinigameRuntimeState();
   clearScoringMutationUndoState(roomState);
+  clearPhaseTransitionUndoState(roomState);
 
   const normalizedMessage =
     message.trim().length > 0
@@ -468,6 +519,18 @@ const resolveNextPhase = (state: RoomState, previousPhase: Phase): Phase => {
   }
 
   return getNextPhase(previousPhase, state.currentRound, state.totalRounds);
+};
+
+const canCapturePhaseTransitionUndoSnapshot = (
+  previousPhase: Phase,
+  nextPhase: Phase
+): boolean => {
+  return (
+    (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.EATING) ||
+    (previousPhase === Phase.EATING && nextPhase === Phase.MINIGAME_INTRO) ||
+    (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.MINIGAME_PLAY) ||
+    (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.EATING)
+  );
 };
 
 export const createTeam = (name: string): RoomState => {
@@ -795,6 +858,22 @@ export const redoLastScoringMutation = (): RoomState => {
   return getRoomStateSnapshot();
 };
 
+export const revertLastPhaseTransition = (): RoomState => {
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  if (phaseTransitionUndoSnapshot === null) {
+    return getRoomStateSnapshot();
+  }
+
+  const snapshotToRestore = phaseTransitionUndoSnapshot;
+  restorePhaseTransitionUndoState(roomState, snapshotToRestore);
+  clearPhaseTransitionUndoState(roomState);
+
+  return getRoomStateSnapshot();
+};
+
 export const pauseRoomTimer = (): RoomState => {
   if (isRoomInFatalState(roomState)) {
     return getRoomStateSnapshot();
@@ -912,9 +991,15 @@ export const skipTurnBoundary = (): RoomState => {
 
   const hasNextRoundTurn =
     roomState.roundTurnCursor + 1 < roomState.turnOrderTeamIds.length;
-  finalizeActiveRoundTurn(roomState);
-
   const nextPhase = hasNextRoundTurn ? Phase.EATING : Phase.ROUND_RESULTS;
+
+  if (canCapturePhaseTransitionUndoSnapshot(previousPhase, nextPhase)) {
+    capturePhaseTransitionUndoState(roomState);
+  } else {
+    clearPhaseTransitionUndoState(roomState);
+  }
+
+  finalizeActiveRoundTurn(roomState);
   roomState.phase = nextPhase;
   roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
 
@@ -992,6 +1077,12 @@ export const advanceRoomStatePhase = (): RoomState => {
   }
 
   const nextPhase = resolveNextPhase(roomState, previousPhase);
+
+  if (canCapturePhaseTransitionUndoSnapshot(previousPhase, nextPhase)) {
+    capturePhaseTransitionUndoState(roomState);
+  } else {
+    clearPhaseTransitionUndoState(roomState);
+  }
 
   if (previousPhase === Phase.MINIGAME_PLAY) {
     finalizeActiveRoundTurn(roomState);

@@ -76,6 +76,7 @@ const buildSnapshot = (
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
+    canRevertPhaseTransition: false,
     canAdvancePhase: true
   };
 

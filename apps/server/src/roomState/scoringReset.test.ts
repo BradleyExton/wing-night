@@ -188,6 +188,7 @@ test("createInitialRoomState returns setup defaults", () => {
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
+    canRevertPhaseTransition: false,
     canAdvancePhase: false
   });
 });

@@ -50,6 +50,7 @@ const buildSnapshot = (phase: Phase): RoomState => {
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
+    canRevertPhaseTransition: false,
     canAdvancePhase: true
   };
 };
