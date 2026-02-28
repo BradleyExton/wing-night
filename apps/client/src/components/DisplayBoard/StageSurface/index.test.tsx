@@ -57,31 +57,44 @@ const buildSnapshot = (phase: Phase): RoomState => {
 
 test("renders round intro metadata", () => {
   const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.ROUND_INTRO)} phaseLabel="Round Intro" />
+    <StageSurface roomState={buildSnapshot(Phase.ROUND_INTRO)} />
   );
 
   assert.match(html, /Round 1: Warm Up/);
+  assert.match(html, /Round 1 of 1/);
+  assert.match(html, /Round Intro/);
   assert.match(html, /Frank&#x27;s/);
   assert.match(html, /TRIVIA/);
 });
 
 test("renders setup intro with flow illustrations and minigame icon placeholders", () => {
   const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.SETUP)} phaseLabel="Setup" />
+    <StageSurface roomState={buildSnapshot(Phase.SETUP)} />
   );
 
   assert.match(html, /Tonight at a Glance/);
-  assert.match(html, /display\/setup\/hero\.svg/);
-  assert.match(html, /display\/setup\/texture\.svg/);
+  assert.match(html, /Wing Night/);
+  assert.match(html, /Display Setup/);
+  assert.match(html, /display\/setup\/hero\.png/);
   assert.match(html, /Live Setup/);
   assert.match(html, /Pack: Fixture Config/);
   assert.match(html, /1 Team/);
   assert.match(html, /0 Players/);
   assert.match(html, /1 Round/);
   assert.match(html, /Round Flow/);
+  assert.match(html, /Only one team is active at a time\./);
+  assert.match(html, /Round Start/);
+  assert.match(html, /Team Turn Loop/);
+  assert.match(html, /Repeats 1 time this round/);
+  assert.match(html, /Turn Order This Round/);
+  assert.match(html, /1\. Team One/);
+  assert.match(html, /Round End/);
+  assert.match(html, /Round Intro/);
   assert.match(html, /Mini-Game Intro/);
+  assert.match(html, /display\/setup\/flow-minigame-intro\.svg/);
   assert.match(html, /display\/setup\/flow-eat-wings\.svg/);
   assert.match(html, /display\/setup\/flow-minigame-play\.svg/);
+  assert.match(html, /display\/setup\/flow-round-results\.svg/);
   assert.match(html, /Round Lineup/);
   assert.match(html, /Round 1: Warm Up/);
   assert.match(html, /display\/minigames\/trivia-icon\.svg/);
@@ -89,20 +102,26 @@ test("renders setup intro with flow illustrations and minigame icon placeholders
   assert.match(html, /Ready to Start/);
 });
 
-test("renders setup flow in intro-before-eating order", () => {
+test("renders setup flow as round start, per-team loop, and round end", () => {
   const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.SETUP)} phaseLabel="Setup" />
+    <StageSurface roomState={buildSnapshot(Phase.SETUP)} />
   );
 
+  const roundStartIndex = html.indexOf("Round Intro");
   const introIndex = html.indexOf("Mini-Game Intro");
   const eatingIndex = html.indexOf("Eat Wings");
   const playIndex = html.indexOf("Mini-Game Play");
+  const roundEndIndex = html.indexOf("Round Results");
 
+  assert.ok(roundStartIndex >= 0);
   assert.ok(introIndex >= 0);
   assert.ok(eatingIndex >= 0);
   assert.ok(playIndex >= 0);
+  assert.ok(roundEndIndex >= 0);
+  assert.ok(roundStartIndex < introIndex);
   assert.ok(introIndex < eatingIndex);
   assert.ok(eatingIndex < playIndex);
+  assert.ok(playIndex < roundEndIndex);
 });
 
 test("limits setup lineup cards and shows hidden round count for dense configs", () => {
@@ -132,7 +151,6 @@ test("limits setup lineup cards and shows hidden round count for dense configs",
           ]
         }
       }}
-      phaseLabel="Setup"
     />
   );
 
@@ -150,7 +168,6 @@ test("renders setup fallback when game config is unavailable", () => {
         ...buildSnapshot(Phase.SETUP),
         gameConfig: null
       }}
-      phaseLabel="Setup"
     />
   );
 
@@ -164,7 +181,6 @@ test("falls back to generic context when ROUND_INTRO is missing round config", (
   const html = renderToStaticMarkup(
     <StageSurface
       roomState={{ ...buildSnapshot(Phase.ROUND_INTRO), currentRoundConfig: null }}
-      phaseLabel="Round Intro"
     />
   );
 
@@ -188,7 +204,6 @@ test("renders trivia question without answer leakage", () => {
           }
         }
       }}
-      phaseLabel="Minigame Play"
     />
   );
 
@@ -201,7 +216,7 @@ test("renders trivia question without answer leakage", () => {
 
 test("renders waiting fallback when MINIGAME_PLAY projection is not available yet", () => {
   const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_PLAY)} phaseLabel="Minigame Play" />
+    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_PLAY)} />
   );
 
   assert.match(html, /Waiting for minigame display state from the server snapshot\./);
@@ -217,7 +232,6 @@ test("renders GEO unsupported surface in MINIGAME_PLAY without waiting on projec
           minigame: "GEO"
         }
       }}
-      phaseLabel="Minigame Play"
     />
   );
 
@@ -231,7 +245,7 @@ test("renders GEO unsupported surface in MINIGAME_PLAY without waiting on projec
 
 test("renders active team without turn progress during eating", () => {
   const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.EATING)} phaseLabel="Eating" />
+    <StageSurface roomState={buildSnapshot(Phase.EATING)} />
   );
 
   assert.match(html, /Active Team/);
@@ -262,7 +276,6 @@ test("uses running EATING timer snapshot instead of static config seconds", () =
           remainingMs: 120_000
         }
       }}
-      phaseLabel="Eating"
     />
   );
 
@@ -291,7 +304,6 @@ test("uses paused EATING timer snapshot remainingMs and freezes countdown", () =
           remainingMs: 45_000
         }
       }}
-      phaseLabel="Eating"
     />
   );
 
@@ -313,7 +325,6 @@ test("falls back to static config timer when EATING timer snapshot is unavailabl
         },
         timer: null
       }}
-      phaseLabel="Eating"
     />
   );
 
@@ -322,7 +333,7 @@ test("falls back to static config timer when EATING timer snapshot is unavailabl
 
 test("renders minigame intro metadata and active team context", () => {
   const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_INTRO)} phaseLabel="Minigame Intro" />
+    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
   assert.match(html, /Active Team/);

@@ -1,7 +1,6 @@
 import { type RoomState } from "@wingnight/shared";
 import { useMemo } from "react";
 
-import { displayBoardCopy } from "./copy";
 import { ContentFatalState } from "../ContentFatalState";
 import { StageSurface } from "./StageSurface";
 import { StandingsSurface } from "./StandingsSurface";
@@ -23,14 +22,6 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
   }, [roomState]);
 
   const phase = roomState?.phase ?? null;
-  const roundMetaLabel = roomState
-    ? displayBoardCopy.currentRoundLabel(roomState.currentRound, roomState.totalRounds)
-    : displayBoardCopy.waitingForStateLabel;
-
-  const phaseLabel =
-    phase === null
-      ? displayBoardCopy.waitingPhaseLabel
-      : displayBoardCopy.phaseLabel(phase);
 
   if (fatalError !== null) {
     return <ContentFatalState fatalError={fatalError} />;
@@ -38,17 +29,9 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
 
   return (
     <main className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerTopRow}>
-          <p className={styles.roundMeta}>{roundMetaLabel}</p>
-          <p className={styles.phaseBadge}>{phaseLabel}</p>
-        </div>
-        <h1 className={styles.heading}>{displayBoardCopy.title}</h1>
-      </header>
-
       <section className={styles.main}>
         <div className={styles.content}>
-          <StageSurface roomState={roomState} phaseLabel={phaseLabel} />
+          <StageSurface roomState={roomState} />
         </div>
       </section>
 

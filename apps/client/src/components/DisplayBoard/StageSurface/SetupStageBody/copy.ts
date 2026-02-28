@@ -1,17 +1,17 @@
-export const setupFlowStepIds = [
+export const teamTurnLoopStepIds = [
   "MINIGAME_INTRO",
   "EAT_WINGS",
-  "MINIGAME_PLAY",
-  "ROUND_RESULTS"
+  "MINIGAME_PLAY"
 ] as const;
 
-export type SetupFlowStepId = (typeof setupFlowStepIds)[number];
+export type TeamTurnLoopStepId = (typeof teamTurnLoopStepIds)[number];
 
 export const setupStageCopy = {
+  brandLabel: "Wing Night",
+  brandSubLabel: "Display Setup",
   title: "Tonight at a Glance",
   subtitle: "Setup is in progress. Here is what everyone can expect before round one starts.",
   heroIllustrationAlt: "Wing Night setup hero illustration",
-  textureIllustrationAlt: "Wing Night setup texture overlay",
   setupStatusTitle: "Live Setup",
   setupReadyLabel: "Ready to Start",
   setupInProgressLabel: "In Progress",
@@ -24,12 +24,23 @@ export const setupStageCopy = {
   roundsChipLabel: (roundCount: number): string =>
     `${roundCount} ${roundCount === 1 ? "Round" : "Rounds"}`,
   roundFlowTitle: "Round Flow",
-  roundFlowSteps: [
+  roundStartTitle: "Round Start",
+  roundStartLabel: "Round Intro",
+  teamTurnLoopTitle: "Team Turn Loop",
+  teamTurnLoopRepeatLabel: (teamCount: number): string =>
+    `Repeats ${teamCount} ${teamCount === 1 ? "time" : "times"} this round`,
+  teamTurnLoopSteps: [
     { id: "MINIGAME_INTRO", label: "Mini-Game Intro" },
     { id: "EAT_WINGS", label: "Eat Wings" },
-    { id: "MINIGAME_PLAY", label: "Mini-Game Play" },
-    { id: "ROUND_RESULTS", label: "Round Results" }
-  ] as const satisfies readonly { id: SetupFlowStepId; label: string }[],
+    { id: "MINIGAME_PLAY", label: "Mini-Game Play" }
+  ] as const satisfies readonly { id: TeamTurnLoopStepId; label: string }[],
+  roundEndTitle: "Round End",
+  roundEndLabel: "Round Results",
+  singleActiveTeamRule: "Only one team is active at a time.",
+  turnOrderPreviewTitle: "Turn Order This Round",
+  turnOrderFallbackLabel: "Teams appear here once setup assignments are complete.",
+  turnOrderTeamChipLabel: (position: number, teamName: string): string =>
+    `${position}. ${teamName}`,
   flowIllustrationAlt: (stepLabel: string): string =>
     `${stepLabel} illustration`,
   roundLineupTitle: "Round Lineup",
@@ -49,10 +60,11 @@ export const setupStageCopy = {
     "Host controls pacing and can use skip or redo when needed."
   ]
 } as const satisfies {
+  readonly brandLabel: string;
+  readonly brandSubLabel: string;
   readonly title: string;
   readonly subtitle: string;
   readonly heroIllustrationAlt: string;
-  readonly textureIllustrationAlt: string;
   readonly setupStatusTitle: string;
   readonly setupReadyLabel: string;
   readonly setupInProgressLabel: string;
@@ -62,7 +74,17 @@ export const setupStageCopy = {
   readonly packUnavailableChipLabel: string;
   readonly roundsChipLabel: (roundCount: number) => string;
   readonly roundFlowTitle: string;
-  readonly roundFlowSteps: readonly { id: SetupFlowStepId; label: string }[];
+  readonly roundStartTitle: string;
+  readonly roundStartLabel: string;
+  readonly teamTurnLoopTitle: string;
+  readonly teamTurnLoopRepeatLabel: (teamCount: number) => string;
+  readonly teamTurnLoopSteps: readonly { id: TeamTurnLoopStepId; label: string }[];
+  readonly roundEndTitle: string;
+  readonly roundEndLabel: string;
+  readonly singleActiveTeamRule: string;
+  readonly turnOrderPreviewTitle: string;
+  readonly turnOrderFallbackLabel: string;
+  readonly turnOrderTeamChipLabel: (position: number, teamName: string) => string;
   readonly flowIllustrationAlt: (stepLabel: string) => string;
   readonly roundLineupTitle: string;
   readonly additionalRoundsLabel: (hiddenRoundCount: number) => string;

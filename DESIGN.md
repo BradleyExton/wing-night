@@ -72,10 +72,12 @@ Display UI (TV-first, spectator-first)
 -   Never vertically scroll
 -   Must fill viewport (`min-h-[100dvh]`)
 -   Root: flex column layout
--   Header and footer fixed
+-   No global fixed header block on display
+-   Footer standings remains fixed
 -   Main area flexible but no overflow
 -   Extremely high contrast
 -   Read-only surface
+-   Phase/round orientation should be lightweight and rendered inside stage surfaces
 
 Timer must be the most visually dominant element during EATING.
 
@@ -105,9 +107,7 @@ Maintain 8px spacing rhythm.
 
 Root: - min-h-\[100dvh\] - flex flex-col - overflow-hidden
 
-Header: - Round info - Sauce - Phase label
-
-Main: - flex-1 min-h-0 - Centered content
+Main: - flex-1 min-h-0 - Centered content - Stage-local context row (round + phase) when needed
 
 Footer: - Standings snapshot
 
