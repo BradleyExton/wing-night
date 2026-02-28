@@ -1,5 +1,6 @@
 import { type RoomState } from "@wingnight/shared";
 
+import { displayBoardCopy } from "../copy";
 import { EatingStageBody } from "./EatingStageBody";
 import { FallbackStageBody } from "./FallbackStageBody";
 import { MinigameIntroStageBody } from "./MinigameIntroStageBody";
@@ -12,7 +13,6 @@ import { useEatingCountdown } from "./useEatingCountdown";
 
 type StageSurfaceProps = {
   roomState: RoomState | null;
-  phaseLabel: string;
 };
 
 const assertUnreachable = (value: never): never => {
@@ -20,10 +20,16 @@ const assertUnreachable = (value: never): never => {
 };
 
 export const StageSurface = ({
-  roomState,
-  phaseLabel
+  roomState
 }: StageSurfaceProps): JSX.Element => {
   const stageViewModel = resolveStageViewModel(roomState);
+  const phaseLabel =
+    stageViewModel.phase === null
+      ? displayBoardCopy.waitingPhaseLabel
+      : displayBoardCopy.phaseLabel(stageViewModel.phase);
+  const roundMetaLabel = roomState
+    ? displayBoardCopy.currentRoundLabel(roomState.currentRound, roomState.totalRounds)
+    : displayBoardCopy.waitingForStateLabel;
 
   const liveEatingRemainingSeconds = useEatingCountdown({
     stageMode: stageViewModel.stageMode,
@@ -39,6 +45,7 @@ export const StageSurface = ({
             gameConfig={stageViewModel.gameConfig}
             teamCount={stageViewModel.teamCount}
             playerCount={stageViewModel.playerCount}
+            teamNames={stageViewModel.teamNames}
             canAdvancePhase={stageViewModel.canAdvancePhase}
           />
         );
@@ -102,6 +109,17 @@ export const StageSurface = ({
 
   const surfaceClassName =
     stageViewModel.stageMode === "setup" ? styles.setupCard : styles.card;
+  const shouldRenderSurfaceContext = stageViewModel.stageMode !== "setup";
 
-  return <article className={surfaceClassName}>{renderStageBody(stageViewModel.stageMode)}</article>;
+  return (
+    <article className={surfaceClassName}>
+      {shouldRenderSurfaceContext && (
+        <div className={styles.surfaceContextRow}>
+          <p className={styles.surfaceContextMeta}>{roundMetaLabel}</p>
+          <p className={styles.surfaceContextBadge}>{phaseLabel}</p>
+        </div>
+      )}
+      {renderStageBody(stageViewModel.stageMode)}
+    </article>
+  );
 };

@@ -3,6 +3,14 @@ export const card =
 
 export const setupCard = "h-full max-h-full overflow-hidden text-left";
 
+export const surfaceContextRow = "mb-3 flex items-center justify-between gap-3";
+
+export const surfaceContextMeta =
+  "m-0 text-xs font-semibold uppercase tracking-[0.16em] text-muted";
+
+export const surfaceContextBadge =
+  "inline-flex rounded-full border border-primary/50 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-primary";
+
 export const title = "m-0 text-4xl font-bold text-text md:text-5xl";
 
 export const metaGrid = "mt-5 grid gap-3 md:grid-cols-2";

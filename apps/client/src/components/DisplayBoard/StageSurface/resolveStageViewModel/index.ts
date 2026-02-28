@@ -20,6 +20,7 @@ export type StageViewModel = {
   minigameIntroMetadata: MinigameIntroMetadata | null;
   teamCount: number;
   playerCount: number;
+  teamNames: string[];
   canAdvancePhase: boolean | null;
   activeTeamName: string | null;
   shouldRenderTeamTurnContext: boolean;
@@ -98,6 +99,7 @@ export const resolveStageViewModel = (roomState: RoomState | null): StageViewMod
     minigameIntroMetadata,
     teamCount: roomState?.teams.length ?? 0,
     playerCount: roomState?.players.length ?? 0,
+    teamNames: roomState?.teams.map((team) => team.name) ?? [],
     canAdvancePhase: roomState?.canAdvancePhase ?? null,
     activeTeamName,
     shouldRenderTeamTurnContext,

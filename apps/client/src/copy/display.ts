@@ -3,7 +3,6 @@ import type { Phase } from "@wingnight/shared";
 import { formatClockSeconds, formatPhaseLabel } from "./formatters";
 
 export const displayCopy = {
-  placeholderTitle: "Wing Night",
   roundFallbackLabel: "Round context will appear on the next phase update.",
   waitingForStateLabel: "Waiting for room state...",
   waitingPhaseLabel: "Connecting",

@@ -97,8 +97,12 @@ test("renders eating timer view from snapshot config", () => {
     <DisplayBoard roomState={buildSnapshot(Phase.EATING)} />
   );
 
+  assert.match(html, /Round 1 of 1/);
+  assert.match(html, /Eating/);
   assert.match(html, /Round Timer/);
   assert.match(html, /02:00/);
+  assert.doesNotMatch(html, /<header/);
+  assert.doesNotMatch(html, /Wing Night/);
 });
 
 test("renders standings in descending score order", () => {
