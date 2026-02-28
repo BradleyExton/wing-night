@@ -108,10 +108,10 @@ State: - In-memory authoritative server state - No database in MVP
 
 # 🚀 Development Setup
 
-1)  Use Node 22:
+1)  Use Node 25:
 
-nvm install 22
-nvm use 22
+nvm install 25
+nvm use 25
 
 2)  Enable Corepack and pnpm:
 
@@ -226,7 +226,7 @@ Workflow:
 - `.github/workflows/pr-checks.yml`
 - `.github/workflows/pr-ui-screenshot.yml`
 - `.github/workflows/playwright-smoke.yml` (non-blocking smoke visibility)
-- Node: `22`
+- Node: `25`
 - Package manager: `pnpm@10.0.0`
 - Install command: `pnpm install --frozen-lockfile`
 - Concurrency: cancels in-progress runs for the same PR branch

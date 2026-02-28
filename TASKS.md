@@ -346,7 +346,7 @@ UI task addendum (required for new client UI tasks):
 ## 0.5 CI PR Checks (GitHub Actions)
 
 -   Add GitHub Actions workflow for pull requests to `main`
--   Use Node 22 + pnpm frozen lockfile install
+-   Use Node 25 + pnpm frozen lockfile install
 -   Run lint, tests, typecheck, and build in deterministic CI jobs
 -   Configure concurrency cancellation for repeated pushes to the same PR
 Verification:
