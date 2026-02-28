@@ -8,7 +8,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
+import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type ReorderTurnOrderSocket = Pick<
@@ -40,21 +40,15 @@ export const requestReorderTurnOrder = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = resolveHostSecretRequest({
-    getHostSecret,
+  return emitHostAuthorizedRequest({
+    socket,
+    event: CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER,
     onMissingHostSecret,
-    canEmit: () => isValidTeamIdList(teamIds)
+    getHostSecret,
+    canEmit: () => isValidTeamIdList(teamIds),
+    createPayload: (hostSecret): GameReorderTurnOrderPayload => ({
+      hostSecret,
+      teamIds: [...teamIds]
+    })
   });
-
-  if (hostSecret === null) {
-    return false;
-  }
-
-  const payload: GameReorderTurnOrderPayload = {
-    hostSecret,
-    teamIds: [...teamIds]
-  };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, payload);
-
-  return true;
 };

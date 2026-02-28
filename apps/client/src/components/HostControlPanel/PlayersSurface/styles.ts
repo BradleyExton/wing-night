@@ -1,13 +1,19 @@
+import {
+  cardBaseTextLeft,
+  sectionDescriptionMuted,
+  sectionHeadingReset
+} from "../styleTokens";
+
 export const card =
-  "rounded-lg border border-text/10 bg-surfaceAlt p-4 text-left";
+  cardBaseTextLeft;
 
 export const surfaceRoot = "contents";
 
 export const playersCard = "mt-6";
 
-export const sectionHeading = "m-0 text-xl font-semibold text-text";
+export const sectionHeading = sectionHeadingReset;
 
-export const sectionDescription = "mt-2 text-sm text-muted";
+export const sectionDescription = sectionDescriptionMuted;
 
 export const turnMeta =
   "mt-3 grid gap-2 rounded-md border border-text/10 bg-surface px-3 py-3 md:grid-cols-2";

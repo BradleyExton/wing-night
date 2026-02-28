@@ -8,7 +8,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
+import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type AssignPlayerSocket = Pick<
@@ -23,21 +23,15 @@ export const requestAssignPlayer = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = resolveHostSecretRequest({
+  return emitHostAuthorizedRequest({
+    socket,
+    event: CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
+    onMissingHostSecret,
     getHostSecret,
-    onMissingHostSecret
+    createPayload: (hostSecret): SetupAssignPlayerPayload => ({
+      hostSecret,
+      playerId,
+      teamId
+    })
   });
-
-  if (hostSecret === null) {
-    return false;
-  }
-
-  const payload: SetupAssignPlayerPayload = {
-    hostSecret,
-    playerId,
-    teamId
-  };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, payload);
-
-  return true;
 };

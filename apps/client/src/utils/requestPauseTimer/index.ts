@@ -5,7 +5,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
+import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type PauseTimerSocket = Pick<Socket<InboundSocketEvents, OutboundSocketEvents>, "emit">;
@@ -15,17 +15,11 @@ export const requestPauseTimer = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = resolveHostSecretRequest({
+  return emitHostAuthorizedRequest({
+    socket,
+    event: CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE,
+    onMissingHostSecret,
     getHostSecret,
-    onMissingHostSecret
+    createPayload: (hostSecret): HostSecretPayload => ({ hostSecret })
   });
-
-  if (hostSecret === null) {
-    return false;
-  }
-
-  const payload: HostSecretPayload = { hostSecret };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, payload);
-
-  return true;
 };

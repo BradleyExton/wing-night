@@ -5,7 +5,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
+import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type RedoLastMutationSocket = Pick<
@@ -18,17 +18,11 @@ export const requestRedoLastMutation = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = resolveHostSecretRequest({
+  return emitHostAuthorizedRequest({
+    socket,
+    event: CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION,
+    onMissingHostSecret,
     getHostSecret,
-    onMissingHostSecret
+    createPayload: (hostSecret): HostSecretPayload => ({ hostSecret })
   });
-
-  if (hostSecret === null) {
-    return false;
-  }
-
-  const payload: HostSecretPayload = { hostSecret };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, payload);
-
-  return true;
 };

@@ -7,43 +7,38 @@ import {
 } from "@wingnight/shared";
 
 import { requestSetWingParticipation } from "./index";
+import {
+  createMissingHostSecretTracker,
+  createRequestSocketHarness
+} from "../requestTestHarness";
 
 type SetWingParticipationSocket = Parameters<typeof requestSetWingParticipation>[0];
 
-class MockSetWingParticipationSocket {
-  public emittedPayloads: ScoringSetWingParticipationPayload[] = [];
-
-  public emit(
-    event: typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
-    payload: ScoringSetWingParticipationPayload
-  ): void {
-    if (event === CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION) {
-      this.emittedPayloads.push(payload);
-    }
-  }
-}
-
 test("returns false and emits nothing when host secret is unavailable", () => {
-  const socket = new MockSetWingParticipationSocket();
-  let missingSecretCalls = 0;
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
+    ScoringSetWingParticipationPayload
+  >(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION);
+  const missingHostSecretTracker = createMissingHostSecretTracker();
 
   const didEmit = requestSetWingParticipation(
     socket as unknown as SetWingParticipationSocket,
     "player-1",
     true,
-    () => {
-      missingSecretCalls += 1;
-    },
+    missingHostSecretTracker.onMissingHostSecret,
     () => null
   );
 
   assert.equal(didEmit, false);
-  assert.equal(missingSecretCalls, 1);
-  assert.deepEqual(socket.emittedPayloads, []);
+  assert.equal(missingHostSecretTracker.readCallCount(), 1);
+  assert.deepEqual(emittedPayloads, []);
 });
 
 test("emits scoring:setWingParticipation payload when host secret exists", () => {
-  const socket = new MockSetWingParticipationSocket();
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
+    ScoringSetWingParticipationPayload
+  >(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION);
 
   const didEmit = requestSetWingParticipation(
     socket as unknown as SetWingParticipationSocket,
@@ -54,7 +49,7 @@ test("emits scoring:setWingParticipation payload when host secret exists", () =>
   );
 
   assert.equal(didEmit, true);
-  assert.deepEqual(socket.emittedPayloads, [
+  assert.deepEqual(emittedPayloads, [
     {
       hostSecret: "host-secret",
       playerId: "player-7",

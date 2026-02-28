@@ -5,7 +5,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
+import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type SkipTurnBoundarySocket = Pick<
@@ -18,17 +18,11 @@ export const requestSkipTurnBoundary = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = resolveHostSecretRequest({
+  return emitHostAuthorizedRequest({
+    socket,
+    event: CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY,
+    onMissingHostSecret,
     getHostSecret,
-    onMissingHostSecret
+    createPayload: (hostSecret): HostSecretPayload => ({ hostSecret })
   });
-
-  if (hostSecret === null) {
-    return false;
-  }
-
-  const payload: HostSecretPayload = { hostSecret };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, payload);
-
-  return true;
 };

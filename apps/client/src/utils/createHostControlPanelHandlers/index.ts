@@ -86,55 +86,69 @@ export const createHostControlPanelHandlers = (
     socket.emit(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
   };
 
+  const invokeWithoutArgs = (
+    request: (
+      socket: HostControlPanelSocket,
+      onMissingHostSecret?: () => void
+    ) => boolean
+  ): (() => void) => {
+    return (): void => {
+      request(socket, claimControl);
+    };
+  };
+
+  const invokeWithOneArg = <TArg>(
+    request: (
+      socket: HostControlPanelSocket,
+      arg: TArg,
+      onMissingHostSecret?: () => void
+    ) => boolean
+  ): ((arg: TArg) => void) => {
+    return (arg: TArg): void => {
+      request(socket, arg, claimControl);
+    };
+  };
+
+  const invokeWithTwoArgs = <TFirstArg, TSecondArg>(
+    request: (
+      socket: HostControlPanelSocket,
+      firstArg: TFirstArg,
+      secondArg: TSecondArg,
+      onMissingHostSecret?: () => void
+    ) => boolean
+  ): ((firstArg: TFirstArg, secondArg: TSecondArg) => void) => {
+    return (firstArg: TFirstArg, secondArg: TSecondArg): void => {
+      request(socket, firstArg, secondArg, claimControl);
+    };
+  };
+
+  const invokeWithThreeArgs = <TFirstArg, TSecondArg, TThirdArg>(
+    request: (
+      socket: HostControlPanelSocket,
+      firstArg: TFirstArg,
+      secondArg: TSecondArg,
+      thirdArg: TThirdArg,
+      onMissingHostSecret?: () => void
+    ) => boolean
+  ): ((firstArg: TFirstArg, secondArg: TSecondArg, thirdArg: TThirdArg) => void) => {
+    return (firstArg: TFirstArg, secondArg: TSecondArg, thirdArg: TThirdArg): void => {
+      request(socket, firstArg, secondArg, thirdArg, claimControl);
+    };
+  };
+
   return {
-    onNextPhase: (): void => {
-      dependencies.requestNextPhase(socket, claimControl);
-    },
-    onCreateTeam: (name: string): void => {
-      dependencies.requestCreateTeam(socket, name, claimControl);
-    },
-    onAssignPlayer: (playerId: string, teamId: string | null): void => {
-      dependencies.requestAssignPlayer(socket, playerId, teamId, claimControl);
-    },
-    onSetWingParticipation: (playerId: string, didEat: boolean): void => {
-      dependencies.requestSetWingParticipation(socket, playerId, didEat, claimControl);
-    },
-    onDispatchMinigameAction: (
-      minigameId: MinigameType,
-      actionType: string,
-      actionPayload: SerializableValue
-    ): void => {
-      dependencies.requestMinigameAction(
-        socket,
-        minigameId,
-        actionType,
-        actionPayload,
-        claimControl
-      );
-    },
-    onPauseTimer: (): void => {
-      dependencies.requestPauseTimer(socket, claimControl);
-    },
-    onResumeTimer: (): void => {
-      dependencies.requestResumeTimer(socket, claimControl);
-    },
-    onExtendTimer: (additionalSeconds: number): void => {
-      dependencies.requestExtendTimer(socket, additionalSeconds, claimControl);
-    },
-    onReorderTurnOrder: (teamIds: string[]): void => {
-      dependencies.requestReorderTurnOrder(socket, teamIds, claimControl);
-    },
-    onSkipTurnBoundary: (): void => {
-      dependencies.requestSkipTurnBoundary(socket, claimControl);
-    },
-    onAdjustTeamScore: (teamId: string, delta: number): void => {
-      dependencies.requestAdjustTeamScore(socket, teamId, delta, claimControl);
-    },
-    onResetGame: (): void => {
-      dependencies.requestResetGame(socket, claimControl);
-    },
-    onRedoLastMutation: (): void => {
-      dependencies.requestRedoLastMutation(socket, claimControl);
-    }
+    onNextPhase: invokeWithoutArgs(dependencies.requestNextPhase),
+    onCreateTeam: invokeWithOneArg(dependencies.requestCreateTeam),
+    onAssignPlayer: invokeWithTwoArgs(dependencies.requestAssignPlayer),
+    onSetWingParticipation: invokeWithTwoArgs(dependencies.requestSetWingParticipation),
+    onDispatchMinigameAction: invokeWithThreeArgs(dependencies.requestMinigameAction),
+    onPauseTimer: invokeWithoutArgs(dependencies.requestPauseTimer),
+    onResumeTimer: invokeWithoutArgs(dependencies.requestResumeTimer),
+    onExtendTimer: invokeWithOneArg(dependencies.requestExtendTimer),
+    onReorderTurnOrder: invokeWithOneArg(dependencies.requestReorderTurnOrder),
+    onSkipTurnBoundary: invokeWithoutArgs(dependencies.requestSkipTurnBoundary),
+    onAdjustTeamScore: invokeWithTwoArgs(dependencies.requestAdjustTeamScore),
+    onResetGame: invokeWithoutArgs(dependencies.requestResetGame),
+    onRedoLastMutation: invokeWithoutArgs(dependencies.requestRedoLastMutation)
   };
 };

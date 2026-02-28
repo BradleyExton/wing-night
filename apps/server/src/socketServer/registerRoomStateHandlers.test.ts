@@ -69,80 +69,41 @@ const createSocketHarness = (): SocketHarness => {
   const emittedSecretPayloads: HostSecretPayload[] = [];
   const invalidSecretEvents = { count: 0 };
 
-  let requestStateHandler = (): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.REQUEST_STATE} handler to be registered.`
-    );
+  type ClientEventName =
+    (typeof CLIENT_TO_SERVER_EVENTS)[keyof typeof CLIENT_TO_SERVER_EVENTS];
+  type EventListener = (() => void) | ((payload: unknown) => void);
+
+  const listeners = new Map<ClientEventName, EventListener>();
+
+  const resolveListener = (event: ClientEventName): EventListener => {
+    const listener = listeners.get(event);
+
+    if (!listener) {
+      assert.fail(`Expected ${event} handler to be registered.`);
+    }
+
+    return listener;
   };
-  let hostClaimHandler = (): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL} handler to be registered.`
-    );
+
+  const triggerNoPayloadEvent = (
+    event:
+      | typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE
+      | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL
+  ): void => {
+    const listener = resolveListener(event) as () => void;
+    listener();
   };
-  let nextPhaseHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.NEXT_PHASE} handler to be registered.`
-    );
-  };
-  let skipTurnBoundaryHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY} handler to be registered.`
-    );
-  };
-  let reorderTurnOrderHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER} handler to be registered.`
-    );
-  };
-  let resetGameHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.RESET} handler to be registered.`
-    );
-  };
-  let createTeamHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.CREATE_TEAM} handler to be registered.`
-    );
-  };
-  let assignPlayerHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER} handler to be registered.`
-    );
-  };
-  let setWingParticipationHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION} handler to be registered.`
-    );
-  };
-  let adjustTeamScoreHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE} handler to be registered.`
-    );
-  };
-  let redoLastMutationHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION} handler to be registered.`
-    );
-  };
-  let minigameActionHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION} handler to be registered.`
-    );
-  };
-  let timerPauseHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE} handler to be registered.`
-    );
-  };
-  let timerResumeHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.TIMER_RESUME} handler to be registered.`
-    );
-  };
-  let timerExtendHandler = (_payload: unknown): void => {
-    assert.fail(
-      `Expected ${CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND} handler to be registered.`
-    );
+
+  const triggerPayloadEvent = (
+    event: Exclude<
+      ClientEventName,
+      | typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE
+      | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL
+    >,
+    payload: unknown
+  ): void => {
+    const listener = resolveListener(event) as (payload: unknown) => void;
+    listener(payload);
   };
 
   const socket = {
@@ -165,98 +126,8 @@ const createSocketHarness = (): SocketHarness => {
 
       emittedSecretPayloads.push(payload as HostSecretPayload);
     },
-    on: (
-      event:
-        | typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE
-        | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL
-        | typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE
-        | typeof CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY
-        | typeof CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER
-        | typeof CLIENT_TO_SERVER_EVENTS.RESET
-        | typeof CLIENT_TO_SERVER_EVENTS.CREATE_TEAM
-        | typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER
-        | typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION
-        | typeof CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE
-        | typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION
-        | typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION
-        | typeof CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE
-        | typeof CLIENT_TO_SERVER_EVENTS.TIMER_RESUME
-        | typeof CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND,
-      listener: (() => void) | ((payload: unknown) => void)
-    ): void => {
-      if (event === CLIENT_TO_SERVER_EVENTS.REQUEST_STATE) {
-        requestStateHandler = listener as () => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL) {
-        hostClaimHandler = listener as () => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.NEXT_PHASE) {
-        nextPhaseHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY) {
-        skipTurnBoundaryHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER) {
-        reorderTurnOrderHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.RESET) {
-        resetGameHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.CREATE_TEAM) {
-        createTeamHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER) {
-        assignPlayerHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION) {
-        setWingParticipationHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE) {
-        adjustTeamScoreHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION) {
-        redoLastMutationHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION) {
-        minigameActionHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE) {
-        timerPauseHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.TIMER_RESUME) {
-        timerResumeHandler = listener as (payload: unknown) => void;
-        return;
-      }
-
-      if (event === CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND) {
-        timerExtendHandler = listener as (payload: unknown) => void;
-      }
+    on: (event: ClientEventName, listener: EventListener): void => {
+      listeners.set(event, listener);
     }
   } as unknown as SocketUnderTest;
 
@@ -268,49 +139,49 @@ const createSocketHarness = (): SocketHarness => {
       return invalidSecretEvents.count;
     },
     triggerRequestState: (): void => {
-      requestStateHandler();
+      triggerNoPayloadEvent(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE);
     },
     triggerHostClaim: (): void => {
-      hostClaimHandler();
+      triggerNoPayloadEvent(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL);
     },
     triggerNextPhase: (payload: unknown): void => {
-      nextPhaseHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, payload);
     },
     triggerSkipTurnBoundary: (payload: unknown): void => {
-      skipTurnBoundaryHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, payload);
     },
     triggerReorderTurnOrder: (payload: unknown): void => {
-      reorderTurnOrderHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, payload);
     },
     triggerResetGame: (payload: unknown): void => {
-      resetGameHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.RESET, payload);
     },
     triggerCreateTeam: (payload: unknown): void => {
-      createTeamHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, payload);
     },
     triggerAssignPlayer: (payload: unknown): void => {
-      assignPlayerHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, payload);
     },
     triggerSetWingParticipation: (payload: unknown): void => {
-      setWingParticipationHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, payload);
     },
     triggerAdjustTeamScore: (payload: unknown): void => {
-      adjustTeamScoreHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, payload);
     },
     triggerRedoLastMutation: (payload: unknown): void => {
-      redoLastMutationHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, payload);
     },
     triggerMinigameAction: (payload: unknown): void => {
-      minigameActionHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, payload);
     },
     triggerTimerPause: (payload: unknown): void => {
-      timerPauseHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, payload);
     },
     triggerTimerResume: (payload: unknown): void => {
-      timerResumeHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, payload);
     },
     triggerTimerExtend: (payload: unknown): void => {
-      timerExtendHandler(payload);
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, payload);
     }
   };
 };

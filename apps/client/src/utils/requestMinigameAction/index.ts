@@ -11,7 +11,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
+import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type RequestMinigameActionSocket = Pick<
@@ -27,24 +27,17 @@ export const requestMinigameAction = (
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  const hostSecret = resolveHostSecretRequest({
+  return emitHostAuthorizedRequest({
+    socket,
+    event: CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION,
+    onMissingHostSecret,
     getHostSecret,
-    onMissingHostSecret
+    createPayload: (hostSecret): MinigameActionPayload => ({
+      hostSecret,
+      minigameApiVersion: MINIGAME_API_VERSION,
+      minigameId,
+      actionType,
+      actionPayload
+    })
   });
-
-  if (hostSecret === null) {
-    return false;
-  }
-
-  const payload: MinigameActionPayload = {
-    hostSecret,
-    minigameApiVersion: MINIGAME_API_VERSION,
-    minigameId,
-    actionType,
-    actionPayload
-  };
-
-  socket.emit(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, payload);
-
-  return true;
 };

@@ -7,41 +7,36 @@ import {
 } from "@wingnight/shared";
 
 import { requestSkipTurnBoundary } from "./index";
+import {
+  createMissingHostSecretTracker,
+  createRequestSocketHarness
+} from "../requestTestHarness";
 
 type SkipTurnBoundarySocket = Parameters<typeof requestSkipTurnBoundary>[0];
 
-class MockSkipTurnBoundarySocket {
-  public emittedPayloads: HostSecretPayload[] = [];
-
-  public emit(
-    event: typeof CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY,
-    payload: HostSecretPayload
-  ): void {
-    if (event === CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY) {
-      this.emittedPayloads.push(payload);
-    }
-  }
-}
-
 test("returns false and emits nothing when host secret is unavailable", () => {
-  const socket = new MockSkipTurnBoundarySocket();
-  let missingHostSecretCallbackCount = 0;
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY,
+    HostSecretPayload
+  >(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY);
+  const missingHostSecretTracker = createMissingHostSecretTracker();
 
   const wasRequested = requestSkipTurnBoundary(
     socket as unknown as SkipTurnBoundarySocket,
-    () => {
-      missingHostSecretCallbackCount += 1;
-    },
+    missingHostSecretTracker.onMissingHostSecret,
     () => null
   );
 
   assert.equal(wasRequested, false);
-  assert.equal(missingHostSecretCallbackCount, 1);
-  assert.equal(socket.emittedPayloads.length, 0);
+  assert.equal(missingHostSecretTracker.readCallCount(), 1);
+  assert.equal(emittedPayloads.length, 0);
 });
 
 test("emits game:skipTurnBoundary payload when host secret exists", () => {
-  const socket = new MockSkipTurnBoundarySocket();
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY,
+    HostSecretPayload
+  >(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY);
 
   const wasRequested = requestSkipTurnBoundary(
     socket as unknown as SkipTurnBoundarySocket,
@@ -50,5 +45,5 @@ test("emits game:skipTurnBoundary payload when host secret exists", () => {
   );
 
   assert.equal(wasRequested, true);
-  assert.deepEqual(socket.emittedPayloads, [{ hostSecret: "valid-host-secret" }]);
+  assert.deepEqual(emittedPayloads, [{ hostSecret: "valid-host-secret" }]);
 });

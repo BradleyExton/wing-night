@@ -7,41 +7,36 @@ import {
 } from "@wingnight/shared";
 
 import { requestNextPhase } from "./index";
+import {
+  createMissingHostSecretTracker,
+  createRequestSocketHarness
+} from "../requestTestHarness";
 
 type NextPhaseSocket = Parameters<typeof requestNextPhase>[0];
 
-class MockNextPhaseSocket {
-  public emittedPayloads: HostSecretPayload[] = [];
-
-  public emit(
-    event: typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE,
-    payload: HostSecretPayload
-  ): void {
-    if (event === CLIENT_TO_SERVER_EVENTS.NEXT_PHASE) {
-      this.emittedPayloads.push(payload);
-    }
-  }
-}
-
 test("returns false and emits nothing when host secret is unavailable", () => {
-  const socket = new MockNextPhaseSocket();
-  let missingHostSecretCallbackCount = 0;
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE,
+    HostSecretPayload
+  >(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE);
+  const missingHostSecretTracker = createMissingHostSecretTracker();
 
   const wasRequested = requestNextPhase(
     socket as unknown as NextPhaseSocket,
-    () => {
-      missingHostSecretCallbackCount += 1;
-    },
+    missingHostSecretTracker.onMissingHostSecret,
     () => null
   );
 
   assert.equal(wasRequested, false);
-  assert.equal(missingHostSecretCallbackCount, 1);
-  assert.equal(socket.emittedPayloads.length, 0);
+  assert.equal(missingHostSecretTracker.readCallCount(), 1);
+  assert.equal(emittedPayloads.length, 0);
 });
 
 test("emits game:nextPhase payload when host secret exists", () => {
-  const socket = new MockNextPhaseSocket();
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE,
+    HostSecretPayload
+  >(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE);
 
   const wasRequested = requestNextPhase(
     socket as unknown as NextPhaseSocket,
@@ -50,5 +45,5 @@ test("emits game:nextPhase payload when host secret exists", () => {
   );
 
   assert.equal(wasRequested, true);
-  assert.deepEqual(socket.emittedPayloads, [{ hostSecret: "valid-host-secret" }]);
+  assert.deepEqual(emittedPayloads, [{ hostSecret: "valid-host-secret" }]);
 });

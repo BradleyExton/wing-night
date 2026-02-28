@@ -7,41 +7,36 @@ import {
 } from "@wingnight/shared";
 
 import { requestRedoLastMutation } from "./index";
+import {
+  createMissingHostSecretTracker,
+  createRequestSocketHarness
+} from "../requestTestHarness";
 
 type RedoLastMutationSocket = Parameters<typeof requestRedoLastMutation>[0];
 
-class MockRedoLastMutationSocket {
-  public emittedPayloads: HostSecretPayload[] = [];
-
-  public emit(
-    event: typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION,
-    payload: HostSecretPayload
-  ): void {
-    if (event === CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION) {
-      this.emittedPayloads.push(payload);
-    }
-  }
-}
-
 test("returns false and emits nothing when host secret is unavailable", () => {
-  const socket = new MockRedoLastMutationSocket();
-  let missingHostSecretCallbackCount = 0;
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION,
+    HostSecretPayload
+  >(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION);
+  const missingHostSecretTracker = createMissingHostSecretTracker();
 
   const wasRequested = requestRedoLastMutation(
     socket as unknown as RedoLastMutationSocket,
-    () => {
-      missingHostSecretCallbackCount += 1;
-    },
+    missingHostSecretTracker.onMissingHostSecret,
     () => null
   );
 
   assert.equal(wasRequested, false);
-  assert.equal(missingHostSecretCallbackCount, 1);
-  assert.equal(socket.emittedPayloads.length, 0);
+  assert.equal(missingHostSecretTracker.readCallCount(), 1);
+  assert.equal(emittedPayloads.length, 0);
 });
 
 test("emits scoring:redoLastMutation payload when host secret exists", () => {
-  const socket = new MockRedoLastMutationSocket();
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION,
+    HostSecretPayload
+  >(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION);
 
   const wasRequested = requestRedoLastMutation(
     socket as unknown as RedoLastMutationSocket,
@@ -50,5 +45,5 @@ test("emits scoring:redoLastMutation payload when host secret exists", () => {
   );
 
   assert.equal(wasRequested, true);
-  assert.deepEqual(socket.emittedPayloads, [{ hostSecret: "valid-host-secret" }]);
+  assert.deepEqual(emittedPayloads, [{ hostSecret: "valid-host-secret" }]);
 });

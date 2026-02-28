@@ -1,4 +1,5 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
+import { resolveUnsupportedActiveTeamName } from "@wingnight/minigames-core";
 
 import { hostDrawingSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -10,10 +11,12 @@ export const HostDrawingSurface = ({
   minigameHostView,
   teamNameByTeamId
 }: MinigameHostRendererProps): JSX.Element => {
-  const resolvedTeamName =
-    minigameHostView?.activeTurnTeamId === null || minigameHostView?.activeTurnTeamId === undefined
-      ? (activeTeamName ?? NO_ASSIGNED_TEAM_LABEL)
-      : (teamNameByTeamId.get(minigameHostView.activeTurnTeamId) ?? NO_ASSIGNED_TEAM_LABEL);
+  const resolvedTeamName = resolveUnsupportedActiveTeamName({
+    activeTeamName,
+    minigameHostView,
+    teamNameByTeamId,
+    fallbackLabel: NO_ASSIGNED_TEAM_LABEL
+  });
 
   return (
     <div className={styles.container}>

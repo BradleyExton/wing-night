@@ -8,7 +8,7 @@ import type {
   InboundSocketEvents,
   OutboundSocketEvents
 } from "../../socketContracts/index";
-import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
+import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type CreateTeamSocket = Pick<
@@ -24,21 +24,15 @@ export const requestCreateTeam = (
 ): boolean => {
   const normalizedName = name.trim();
 
-  const hostSecret = resolveHostSecretRequest({
-    getHostSecret,
+  return emitHostAuthorizedRequest({
+    socket,
+    event: CLIENT_TO_SERVER_EVENTS.CREATE_TEAM,
     onMissingHostSecret,
-    canEmit: () => normalizedName.length > 0
+    getHostSecret,
+    canEmit: () => normalizedName.length > 0,
+    createPayload: (hostSecret): SetupCreateTeamPayload => ({
+      hostSecret,
+      name: normalizedName
+    })
   });
-
-  if (hostSecret === null) {
-    return false;
-  }
-
-  const payload: SetupCreateTeamPayload = {
-    hostSecret,
-    name: normalizedName
-  };
-  socket.emit(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, payload);
-
-  return true;
 };

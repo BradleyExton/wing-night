@@ -7,43 +7,38 @@ import {
 } from "@wingnight/shared";
 
 import { requestAssignPlayer } from "./index";
+import {
+  createMissingHostSecretTracker,
+  createRequestSocketHarness
+} from "../requestTestHarness";
 
 type AssignPlayerSocket = Parameters<typeof requestAssignPlayer>[0];
 
-class MockAssignPlayerSocket {
-  public emittedPayloads: SetupAssignPlayerPayload[] = [];
-
-  public emit(
-    event: typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
-    payload: SetupAssignPlayerPayload
-  ): void {
-    if (event === CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER) {
-      this.emittedPayloads.push(payload);
-    }
-  }
-}
-
 test("returns false and emits nothing when host secret is unavailable", () => {
-  const socket = new MockAssignPlayerSocket();
-  let missingSecretCalls = 0;
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
+    SetupAssignPlayerPayload
+  >(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER);
+  const missingHostSecretTracker = createMissingHostSecretTracker();
 
   const didEmit = requestAssignPlayer(
     socket as unknown as AssignPlayerSocket,
     "player-1",
     "team-1",
-    () => {
-      missingSecretCalls += 1;
-    },
+    missingHostSecretTracker.onMissingHostSecret,
     () => null
   );
 
   assert.equal(didEmit, false);
-  assert.equal(missingSecretCalls, 1);
-  assert.deepEqual(socket.emittedPayloads, []);
+  assert.equal(missingHostSecretTracker.readCallCount(), 1);
+  assert.deepEqual(emittedPayloads, []);
 });
 
 test("emits setup:assignPlayer payload when host secret exists", () => {
-  const socket = new MockAssignPlayerSocket();
+  const { socket, emittedPayloads } = createRequestSocketHarness<
+    typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
+    SetupAssignPlayerPayload
+  >(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER);
 
   const didEmit = requestAssignPlayer(
     socket as unknown as AssignPlayerSocket,
@@ -54,7 +49,7 @@ test("emits setup:assignPlayer payload when host secret exists", () => {
   );
 
   assert.equal(didEmit, true);
-  assert.deepEqual(socket.emittedPayloads, [
+  assert.deepEqual(emittedPayloads, [
     { hostSecret: "host-secret", playerId: "player-1", teamId: null }
   ]);
 });
