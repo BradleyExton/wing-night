@@ -9,7 +9,7 @@ export const setupBrandLabel =
 export const setupBrandSubLabel =
   "m-0 text-xs font-semibold uppercase tracking-[0.16em] text-muted";
 
-export const setupTitle = "mt-1 m-0 text-4xl font-black leading-tight text-text md:text-5xl";
+export const setupTitle = "m-0 mt-1 text-4xl font-black leading-tight text-text md:text-5xl";
 
 export const setupSubtitle =
   "mt-2 text-base text-text/85 md:text-lg [@media(max-height:850px)]:hidden";
