@@ -1,11 +1,8 @@
 import type {
   MinigameDisplayView,
-  MinigameHostView,
-  MinigameType
+  MinigameHostView
 } from "@wingnight/shared";
-import { MINIGAME_API_VERSION } from "@wingnight/shared";
 import type {
-  MinigamePluginMetadata,
   MinigameRuntimePlugin,
   SerializableValue
 } from "@wingnight/minigames-core";
@@ -18,6 +15,7 @@ import {
   type TriviaMinigameContext,
   type TriviaMinigameState
 } from "../index.js";
+import { triviaMinigameId, triviaMinigameMetadata } from "../metadata.js";
 
 type TriviaPrompt = {
   id: string;
@@ -43,16 +41,7 @@ type TriviaRuntimeState = {
 
 const DEFAULT_TRIVIA_QUESTIONS_PER_TURN = 1;
 
-export const triviaMinigameId: MinigameType = "TRIVIA";
-
-export const triviaMinigameMetadata: MinigamePluginMetadata = {
-  minigameApiVersion: MINIGAME_API_VERSION,
-  capabilities: {
-    supportsHostRenderer: true,
-    supportsDisplayRenderer: true,
-    supportsDevScenarios: true
-  }
-};
+export { triviaMinigameId, triviaMinigameMetadata };
 
 const cloneTriviaPrompt = (prompt: TriviaPrompt): TriviaPrompt => {
   return {

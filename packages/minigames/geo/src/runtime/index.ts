@@ -1,21 +1,11 @@
 import {
-  createUnsupportedMinigameRuntimePlugin,
-  type MinigamePluginMetadata
+  createUnsupportedMinigameRuntimePlugin
 } from "@wingnight/minigames-core";
-import { MINIGAME_API_VERSION, type MinigameType } from "@wingnight/shared";
+import { geoMinigameId, geoMinigameMetadata } from "../metadata.js";
 
 const DEFAULT_UNSUPPORTED_MESSAGE = "GEO gameplay runtime is not implemented yet.";
 
-export const geoMinigameMetadata: MinigamePluginMetadata = {
-  minigameApiVersion: MINIGAME_API_VERSION,
-  capabilities: {
-    supportsHostRenderer: true,
-    supportsDisplayRenderer: true,
-    supportsDevScenarios: true
-  }
-};
-
-export const geoMinigameId: MinigameType = "GEO";
+export { geoMinigameId, geoMinigameMetadata };
 
 export const geoRuntimePlugin = createUnsupportedMinigameRuntimePlugin({
   minigameId: geoMinigameId,

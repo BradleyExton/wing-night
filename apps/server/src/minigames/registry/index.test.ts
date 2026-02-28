@@ -24,5 +24,7 @@ test("resolveMinigameDescriptor exposes metadata for compatibility checks", () =
 
   assert.equal(triviaDescriptor.metadata.minigameApiVersion, MINIGAME_API_VERSION);
   assert.equal(geoDescriptor.metadata.minigameApiVersion, MINIGAME_API_VERSION);
+  assert.equal(triviaDescriptor.metadata.intro.displayName, "Trivia Sprint");
+  assert.ok(triviaDescriptor.metadata.intro.howToPlay.length > 0);
   assert.equal(triviaDescriptor.runtimePlugin.id, "TRIVIA");
 });

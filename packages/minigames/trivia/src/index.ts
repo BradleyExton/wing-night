@@ -1,8 +1,7 @@
 import type { MinigameModule, MinigameSelectorInput } from "@wingnight/minigames-core";
-import {
-  MINIGAME_API_VERSION,
-  type TriviaPrompt
-} from "@wingnight/shared";
+import { type TriviaPrompt } from "@wingnight/shared";
+
+import { triviaMinigameMetadata } from "./metadata.js";
 
 export type TriviaMinigameState = {
   turnOrderTeamIds: string[];
@@ -110,14 +109,7 @@ export const triviaMinigameModule: MinigameModule<
   TriviaMinigameContext
 > = {
   id: "TRIVIA",
-  metadata: {
-    minigameApiVersion: MINIGAME_API_VERSION,
-    capabilities: {
-      supportsHostRenderer: true,
-      supportsDisplayRenderer: true,
-      supportsDevScenarios: true
-    }
-  },
+  metadata: triviaMinigameMetadata,
   init: ({ teamIds }) => {
     return {
       turnOrderTeamIds: [...teamIds],
