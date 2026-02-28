@@ -12,7 +12,7 @@ export const description = "mt-4 max-w-2xl text-base text-text/85 md:text-lg";
 export const actionGrid = "mt-8 grid gap-4 md:grid-cols-2";
 
 export const actionCardBase =
-  "flex min-h-32 flex-col justify-between rounded-xl border px-5 py-5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "flex min-h-[8rem] flex-col justify-between rounded-xl border px-5 py-5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
 export const actionCardPrimary =
   "border-primary/50 bg-primary/10 hover:border-primary hover:bg-primary/15";
