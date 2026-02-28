@@ -3,7 +3,7 @@ import { type RoomState } from "@wingnight/shared";
 import { EatingStageBody } from "./EatingStageBody";
 import { FallbackStageBody } from "./FallbackStageBody";
 import { MinigameIntroStageBody } from "./MinigameIntroStageBody";
-import { MinigameStageBody } from "./MinigameStageBody";
+import { MinigamePlayStageBody } from "./MinigamePlayStageBody";
 import { resolveStageViewModel, type StageRenderMode } from "./resolveStageViewModel";
 import { RoundIntroStageBody } from "./RoundIntroStageBody";
 import { SetupStageBody } from "./SetupStageBody";
@@ -79,7 +79,7 @@ export const StageSurface = ({
         );
       case "minigame_play":
         return (
-          <MinigameStageBody
+          <MinigamePlayStageBody
             phaseLabel={phaseLabel}
             minigameType={stageViewModel.minigameType}
             currentRoundConfig={stageViewModel.currentRoundConfig}

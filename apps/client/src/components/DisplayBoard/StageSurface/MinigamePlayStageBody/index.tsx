@@ -5,7 +5,7 @@ import { displayBoardCopy } from "../../copy";
 import { TurnMeta } from "../TurnMeta";
 import * as styles from "./styles";
 
-type MinigameStageBodyProps = {
+type MinigamePlayStageBodyProps = {
   phaseLabel: string;
   minigameType: MinigameType | null;
   currentRoundConfig: RoomState["currentRoundConfig"];
@@ -14,14 +14,14 @@ type MinigameStageBodyProps = {
   minigameDisplayView: RoomState["minigameDisplayView"];
 };
 
-export const MinigameStageBody = ({
+export const MinigamePlayStageBody = ({
   phaseLabel,
   minigameType,
   currentRoundConfig,
   shouldRenderTeamTurnContext,
   activeTeamName,
   minigameDisplayView
-}: MinigameStageBodyProps): JSX.Element => {
+}: MinigamePlayStageBodyProps): JSX.Element => {
   if (minigameType === null) {
     return (
       <>
