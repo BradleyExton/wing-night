@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "packageManager": "pnpm@10.0.0",
   "engines": {
-    "node": "22.x"
+    "node": "25.x"
   },
   "scripts": {
     "dev": "pnpm --filter @wingnight/shared build && pnpm -r --parallel --filter @wingnight/shared --filter @wingnight/server --filter @wingnight/client dev",
