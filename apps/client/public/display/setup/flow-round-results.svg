@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-label="Round results flow placeholder">
+  <rect width="320" height="180" rx="12" fill="#1c1c1c" />
+  <path d="M160 36 L184 70 L224 70 L192 96 L204 136 L160 112 L116 136 L128 96 L96 70 L136 70 Z" fill="#fbbf24" fill-opacity="0.92" />
+  <rect x="86" y="142" width="148" height="10" rx="5" fill="#f97316" fill-opacity="0.42" />
+</svg>

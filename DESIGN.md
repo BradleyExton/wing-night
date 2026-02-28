@@ -165,6 +165,14 @@ or subtle glow - No excessive decoration
 Timer Component: - Accepts `endsAt` - Renders remaining - Uses large
 typography - Visual escalation only when necessary
 
+## 6.1 Container Depth Limit (Required)
+
+-   Display screens should target one primary surface frame plus content groups.
+-   Hard limit: no more than 2 visual container levels at once (for example: screen frame -> item cards).
+-   Do not wrap section cards inside another decorative card surface.
+-   Use spacing, type hierarchy, and dividers before adding another bordered container.
+-   Exception: repeatable list/grid items may use lightweight cards if their parent section is not card-styled.
+
 ------------------------------------------------------------------------
 
 # 7) Accessibility & Ergonomics
