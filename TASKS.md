@@ -12,10 +12,11 @@ Status keys:
 Current in-progress work:
 - (none)
 
-Audit snapshot (2026-02-22):
-- Verified against local tree at `8af7cbd` and current test inventory under `tests/e2e/*`.
-- `9.1` and `9.2` remain intentionally open; current E2E coverage includes shell smoke + override sync, but not explicit phase-advance sync and refresh-rehydrate milestone assertions.
-- Phase 11/12 tasks are post-MVP platformization work for full-screen minigame takeover and cross-title reuse.
+Audit snapshot (2026-02-28):
+- Verified against local tree at `1c5d52a` and current test inventory under `tests/e2e/*`.
+- `9.1` and `9.2` remain intentionally open; current E2E coverage includes shell smoke + override sync + minigame sandbox flows, but not explicit phase-advance sync and refresh-rehydrate milestone assertions.
+- `11.2`, `11.3`, and `11.4` are now merged in `main` and marked complete in this tracker.
+- Phase 12 tasks (and 11.1) remain post-MVP platformization work for full-screen minigame takeover and cross-title reuse.
 
 Completed:
 - [x] R5 Readability/DRY Refactor Epic
@@ -288,9 +289,9 @@ Backlog status:
 - [x] 10.5 Redo Escape Hatch (Host)
 - [x] 10.6 Host Turn Order Reorder
 - [ ] 11.1 Role-Scoped Snapshot Contract (Host vs Display)
-- [ ] 11.2 Generic Minigame Action Envelope + Socket Event
-- [ ] 11.3 Server Minigame Runtime Orchestrator
-- [ ] 11.4 Minigame Plugin Content Loader Contract
+- [x] 11.2 Generic Minigame Action Envelope + Socket Event
+- [x] 11.3 Server Minigame Runtime Orchestrator
+- [x] 11.4 Minigame Plugin Content Loader Contract
 - [x] 11.5 Host Full-Screen Minigame Shell (Takeover)
 - [x] 11.6 Display Full-Screen Minigame Shell (Takeover)
 - [x] 11.7 Shell-Level Override Overlay During Minigame Takeover
