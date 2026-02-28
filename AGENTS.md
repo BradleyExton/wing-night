@@ -95,6 +95,9 @@ Everything must remain modular and composable.
 PR expectation for UI changes:
 - Include a short "Component map" in the PR description listing parent component + extracted subcomponents.
 - Add/adjust tests at the extracted component boundary (not only at the monolithic parent).
+- Include "UI Evidence" in the PR description:
+  - attach at least one screenshot/GIF for visible UI changes, or
+  - explicitly mark `UI Evidence: N/A` with a brief reason when there is no visual delta.
 
 ---
 
