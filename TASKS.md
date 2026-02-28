@@ -16,7 +16,7 @@ Audit snapshot (2026-02-28):
 - Verified against local tree at `1c5d52a` and current test inventory under `tests/e2e/*`.
 - `9.1` and `9.2` remain intentionally open; current E2E coverage includes shell smoke + override sync + minigame sandbox flows, but not explicit phase-advance sync and refresh-rehydrate milestone assertions.
 - `11.2`, `11.3`, and `11.4` are now merged in `main` and marked complete in this tracker.
-- Phase 11/12 tasks remain post-MVP platformization work for full-screen minigame takeover and cross-title reuse.
+- Phase 12 tasks (and 11.1) remain post-MVP platformization work for full-screen minigame takeover and cross-title reuse.
 
 Completed:
 - [x] R5 Readability/DRY Refactor Epic
