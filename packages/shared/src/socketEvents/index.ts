@@ -44,6 +44,7 @@ export const CLIENT_TO_SERVER_EVENTS = {
   REQUEST_STATE: "client:requestState",
   CLAIM_CONTROL: "host:claimControl",
   NEXT_PHASE: "game:nextPhase",
+  PREVIOUS_PHASE: "game:previousPhase",
   SKIP_TURN_BOUNDARY: "game:skipTurnBoundary",
   REORDER_TURN_ORDER: "game:reorderTurnOrder",
   RESET: "game:reset",
@@ -74,6 +75,9 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.REQUEST_STATE]: () => void;
   [CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL]: () => void;
   [CLIENT_TO_SERVER_EVENTS.NEXT_PHASE]: (payload: HostSecretPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.PREVIOUS_PHASE]: (
+    payload: HostSecretPayload
+  ) => void;
   [CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY]: (
     payload: HostSecretPayload
   ) => void;

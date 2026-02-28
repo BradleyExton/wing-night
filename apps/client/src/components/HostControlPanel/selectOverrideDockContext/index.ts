@@ -3,6 +3,7 @@ import { Phase, type RoomState } from "@wingnight/shared";
 type OverrideDockContext = {
   isVisible: boolean;
   isTurnOrderEditable: boolean;
+  showPreviousPhaseAction: boolean;
   showSkipTurnBoundaryAction: boolean;
   showRedoLastMutationAction: boolean;
   showResetGameAction: boolean;
@@ -44,15 +45,20 @@ export const hasCustomTurnOrder = (roomState: RoomState | null): boolean => {
 export const selectOverrideDockContext = (roomState: RoomState | null): OverrideDockContext => {
   const phase = roomState?.phase ?? null;
   const isVisible = phase !== null && OVERRIDE_DOCK_PHASES.has(phase);
+  const showPreviousPhaseAction =
+    isVisible && roomState?.canRevertPhaseTransition === true;
   const showRedoLastMutationAction = isVisible && roomState?.canRedoScoringMutation === true;
 
   return {
     isVisible,
     isTurnOrderEditable: phase === Phase.ROUND_INTRO,
+    showPreviousPhaseAction,
     showSkipTurnBoundaryAction: phase !== null && SKIP_TURN_PHASES.has(phase),
     showRedoLastMutationAction,
     showResetGameAction: isVisible,
-    showBadge: showRedoLastMutationAction || hasCustomTurnOrder(roomState)
+    showBadge:
+      showPreviousPhaseAction ||
+      showRedoLastMutationAction ||
+      hasCustomTurnOrder(roomState)
   };
 };
-

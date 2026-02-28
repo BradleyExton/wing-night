@@ -105,6 +105,7 @@ test("forwards server snapshots to callback", () => {
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
+    canRevertPhaseTransition: false,
     canAdvancePhase: true
   };
 
