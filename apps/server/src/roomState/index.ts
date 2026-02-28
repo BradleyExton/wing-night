@@ -1108,12 +1108,12 @@ export const advanceRoomStatePhase = (): RoomState => {
     initializeRoundTurnState(roomState);
   }
 
-  if (nextPhase === Phase.MINIGAME_INTRO) {
-    initializeActiveMinigameTurnState(roomState);
-  }
-
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase !== Phase.MINIGAME_PLAY) {
     clearActiveMinigameRuntimeState(roomState);
+  }
+
+  if (nextPhase === Phase.MINIGAME_INTRO) {
+    initializeActiveMinigameTurnState(roomState);
   }
 
   if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.ROUND_RESULTS) {

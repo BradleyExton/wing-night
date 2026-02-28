@@ -319,6 +319,22 @@ test("advanceRoomStatePhase moves MINIGAME_PLAY -> MINIGAME_INTRO then starts EA
   }
 });
 
+test("advanceRoomStatePhase keeps next-team minigame projection when MINIGAME_PLAY -> MINIGAME_INTRO", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  setRoomStateMinigameContent("TRIVIA", {
+    prompts: triviaPromptFixture
+  });
+  advanceToMinigamePlayPhase();
+
+  const introState = advanceRoomStatePhase();
+
+  assert.equal(introState.phase, Phase.MINIGAME_INTRO);
+  assert.equal(introState.activeRoundTeamId, "team-2");
+  assert.equal(introState.minigameHostView?.minigame, "TRIVIA");
+  assert.notEqual(introState.minigameHostView?.currentPrompt, null);
+});
+
 test("pauseRoomTimer pauses EATING timer and captures remaining time", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
