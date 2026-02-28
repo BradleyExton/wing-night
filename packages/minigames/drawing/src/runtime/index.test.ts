@@ -12,6 +12,8 @@ import {
 test("drawing runtime metadata advertises expected API version", () => {
   assert.equal(drawingMinigameId, "DRAWING");
   assert.equal(drawingMinigameMetadata.minigameApiVersion, MINIGAME_API_VERSION);
+  assert.equal(drawingMinigameMetadata.intro.displayName, "Sketch Relay");
+  assert.ok(drawingMinigameMetadata.intro.howToPlay.length > 0);
 });
 
 test("drawing runtime plugin projects unsupported host and display views", () => {

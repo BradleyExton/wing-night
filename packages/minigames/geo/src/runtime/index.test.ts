@@ -8,6 +8,8 @@ import { geoMinigameId, geoMinigameMetadata, geoRuntimePlugin } from "./index.js
 test("geo runtime metadata advertises expected API version", () => {
   assert.equal(geoMinigameId, "GEO");
   assert.equal(geoMinigameMetadata.minigameApiVersion, MINIGAME_API_VERSION);
+  assert.equal(geoMinigameMetadata.intro.displayName, "Geo Dash");
+  assert.ok(geoMinigameMetadata.intro.howToPlay.length > 0);
 });
 
 test("geo runtime plugin projects unsupported host and display views", () => {
