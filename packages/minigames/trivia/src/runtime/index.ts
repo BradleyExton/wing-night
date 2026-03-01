@@ -1,9 +1,13 @@
-import type {
-  MinigameDisplayView,
-  MinigameHostView,
-  MinigameType
+import {
+  MINIGAME_API_VERSION,
+  isTriviaContentFile,
+  isTriviaPrompt,
+  type MinigameDisplayView,
+  type MinigameHostView,
+  type MinigameType,
+  type TriviaContentFile,
+  type TriviaPrompt
 } from "@wingnight/shared";
-import { MINIGAME_API_VERSION } from "@wingnight/shared";
 import type {
   MinigamePluginMetadata,
   MinigameRuntimePlugin,
@@ -18,16 +22,6 @@ import {
   type TriviaMinigameContext,
   type TriviaMinigameState
 } from "../index.js";
-
-type TriviaPrompt = {
-  id: string;
-  question: string;
-  answer: string;
-};
-
-type TriviaContentFile = {
-  prompts: TriviaPrompt[];
-};
 
 type TriviaRuntimeContent = TriviaContentFile;
 
@@ -60,55 +54,6 @@ const cloneTriviaPrompt = (prompt: TriviaPrompt): TriviaPrompt => {
     question: prompt.question,
     answer: prompt.answer
   };
-};
-
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
-
-const isTriviaPrompt = (value: unknown): value is TriviaPrompt => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  if (!("id" in value) || !isNonEmptyString(value.id)) {
-    return false;
-  }
-
-  if (!("question" in value) || !isNonEmptyString(value.question)) {
-    return false;
-  }
-
-  if (!("answer" in value) || !isNonEmptyString(value.answer)) {
-    return false;
-  }
-
-  return true;
-};
-
-const hasUniquePromptIds = (prompts: TriviaPrompt[]): boolean => {
-  const ids = new Set(prompts.map((prompt) => prompt.id));
-  return ids.size === prompts.length;
-};
-
-const isTriviaContentFile = (value: unknown): value is TriviaContentFile => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  if (!("prompts" in value) || !Array.isArray(value.prompts)) {
-    return false;
-  }
-
-  if (value.prompts.length === 0) {
-    return false;
-  }
-
-  if (!value.prompts.every((prompt) => isTriviaPrompt(prompt))) {
-    return false;
-  }
-
-  return hasUniquePromptIds(value.prompts);
 };
 
 export const parseTriviaContentFile = (

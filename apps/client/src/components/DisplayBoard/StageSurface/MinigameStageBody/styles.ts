@@ -1,9 +1,6 @@
 export {
   fallbackText,
-  title,
-  turnLabel,
-  turnMeta,
-  turnValue
+  title
 } from "../styles";
 
 export const minigameShell = "mt-5";

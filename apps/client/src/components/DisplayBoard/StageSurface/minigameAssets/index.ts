@@ -1,7 +1,5 @@
 import type { MinigameType } from "@wingnight/shared";
 
-import { resolveMinigameTypeFromSlug } from "../../../../minigames/registry";
-
 const DISPLAY_ASSET_ROOT = "/display/minigames";
 
 const minigameIconPathByType: Record<MinigameType, string> = {
@@ -12,13 +10,4 @@ const minigameIconPathByType: Record<MinigameType, string> = {
 
 export const resolveMinigameIconPath = (minigameType: MinigameType): string => {
   return minigameIconPathByType[minigameType];
-};
-
-export const resolveMinigameIconPathFromKey = (
-  iconKey: string,
-  fallbackMinigameType: MinigameType
-): string => {
-  const minigameType = resolveMinigameTypeFromSlug(iconKey) ?? fallbackMinigameType;
-
-  return resolveMinigameIconPath(minigameType);
 };

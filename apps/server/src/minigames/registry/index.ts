@@ -8,8 +8,8 @@ import type {
   MinigameRuntimePlugin
 } from "@wingnight/minigames-core";
 
-export type ResolvedMinigameRuntimePlugin = MinigameRuntimePlugin;
-export type ResolvedMinigameDescriptor = {
+type ResolvedMinigameRuntimePlugin = MinigameRuntimePlugin;
+type ResolvedMinigameDescriptor = {
   runtimePlugin: ResolvedMinigameRuntimePlugin;
   metadata: MinigamePluginMetadata;
 };

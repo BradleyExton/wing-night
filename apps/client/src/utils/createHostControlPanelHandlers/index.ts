@@ -26,7 +26,7 @@ type HostControlPanelSocket = Pick<
   "emit"
 >;
 
-export type HostControlPanelHandlers = {
+type HostControlPanelHandlers = {
   onNextPhase: () => void;
   onCreateTeam: (name: string) => void;
   onAssignPlayer: (playerId: string, teamId: string | null) => void;

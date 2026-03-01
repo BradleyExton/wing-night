@@ -2,7 +2,7 @@ type EmitSocket<EventName extends string, Payload> = {
   emit: (event: EventName, payload: Payload) => void;
 };
 
-export type RequestSocketHarness<EventName extends string, Payload> = {
+type RequestSocketHarness<EventName extends string, Payload> = {
   socket: EmitSocket<EventName, Payload>;
   emittedPayloads: Payload[];
 };
@@ -27,7 +27,7 @@ export const createRequestSocketHarness = <
   };
 };
 
-export type MissingHostSecretTracker = {
+type MissingHostSecretTracker = {
   onMissingHostSecret: () => void;
   readCallCount: () => number;
 };

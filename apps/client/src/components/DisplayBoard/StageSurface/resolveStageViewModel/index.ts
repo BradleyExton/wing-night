@@ -2,7 +2,7 @@ import { Phase, type MinigameType, type RoomState } from "@wingnight/shared";
 
 export type StageRenderMode = "setup" | "round_intro" | "eating" | "minigame" | "fallback";
 
-export type StageViewModel = {
+type StageViewModel = {
   phase: Phase | null;
   stageMode: StageRenderMode;
   gameConfig: RoomState["gameConfig"];

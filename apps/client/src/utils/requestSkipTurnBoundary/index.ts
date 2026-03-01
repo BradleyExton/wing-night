@@ -1,28 +1,20 @@
-import { CLIENT_TO_SERVER_EVENTS, type HostSecretPayload } from "@wingnight/shared";
-import type { Socket } from "socket.io-client";
+import { CLIENT_TO_SERVER_EVENTS } from "@wingnight/shared";
 
-import type {
-  InboundSocketEvents,
-  OutboundSocketEvents
-} from "../../socketContracts/index";
-import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
-
-type SkipTurnBoundarySocket = Pick<
-  Socket<InboundSocketEvents, OutboundSocketEvents>,
-  "emit"
->;
+import {
+  requestHostSecretOnly,
+  type HostSecretOnlyRequestSocket
+} from "../requestHostSecretOnly";
 
 export const requestSkipTurnBoundary = (
-  socket: SkipTurnBoundarySocket,
+  socket: HostSecretOnlyRequestSocket,
   onMissingHostSecret?: () => void,
   getHostSecret: () => string | null = readHostSecret
 ): boolean => {
-  return emitHostAuthorizedRequest({
+  return requestHostSecretOnly({
     socket,
     event: CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY,
     onMissingHostSecret,
-    getHostSecret,
-    createPayload: (hostSecret): HostSecretPayload => ({ hostSecret })
+    getHostSecret
   });
 };

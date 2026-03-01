@@ -51,15 +51,3 @@ export const resolveMinigameTypeFromSlug = (
 
   return minigameTypeBySlug[normalizedSlug] ?? null;
 };
-
-export const resolveMinigameSlug = (minigameType: MinigameType): string => {
-  if (minigameType === "TRIVIA") {
-    return "trivia";
-  }
-
-  if (minigameType === "GEO") {
-    return "geo";
-  }
-
-  return "drawing";
-};
