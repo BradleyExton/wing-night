@@ -3,8 +3,5 @@ export {
   timerLabel,
   timerValue,
   timerWrap,
-  title,
-  turnLabel,
-  turnMeta,
-  turnValue
+  title
 } from "../styles";

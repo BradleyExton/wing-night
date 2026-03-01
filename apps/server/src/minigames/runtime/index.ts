@@ -76,12 +76,6 @@ export const setMinigameContent = (
   };
 };
 
-export const getMinigameContent = (
-  minigameId: MinigameType
-): SerializableValue | null => {
-  return minigameContentById[minigameId] ?? null;
-};
-
 export const resetMinigameRuntimeState = (): void => {
   activeMinigameRuntimeState = null;
 };

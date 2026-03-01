@@ -7,7 +7,7 @@ import type {
 import { readHostSecret } from "../hostSecretStorage";
 import { resolveHostSecretRequest } from "../resolveHostSecretRequest";
 
-export type HostAuthorizedRequestSocket = Pick<
+type HostAuthorizedRequestSocket = Pick<
   Socket<InboundSocketEvents, OutboundSocketEvents>,
   "emit"
 >;
