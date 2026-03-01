@@ -1,10 +1,9 @@
 import type { HostSecretPayload } from "@wingnight/shared";
+import type { Socket } from "socket.io-client";
 
+import type { InboundSocketEvents } from "../../socketContracts/index";
 import type { OutboundSocketEvents } from "../../socketContracts/index";
-import {
-  emitHostAuthorizedRequest,
-  type HostAuthorizedRequestSocket
-} from "../emitHostAuthorizedRequest";
+import { emitHostAuthorizedRequest } from "../emitHostAuthorizedRequest";
 import { readHostSecret } from "../hostSecretStorage";
 
 type HostSecretOnlyEventName = {
@@ -15,7 +14,10 @@ type HostSecretOnlyEventName = {
     : never;
 }[keyof OutboundSocketEvents];
 
-export type HostSecretOnlyRequestSocket = HostAuthorizedRequestSocket;
+export type HostSecretOnlyRequestSocket = Pick<
+  Socket<InboundSocketEvents, OutboundSocketEvents>,
+  "emit"
+>;
 
 type RequestHostSecretOnlyOptions = {
   socket: HostSecretOnlyRequestSocket;
