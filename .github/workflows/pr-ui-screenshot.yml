@@ -60,17 +60,9 @@ jobs:
             const markdownImagePattern = /!\[[^\]]*]\((?:https?:\/\/|\/|\.\/|\.\.\/|data:image\/)[^)]+\)/i;
             const htmlImagePattern = /<img\s+[^>]*src=["'][^"']+["'][^>]*>/i;
             const hasScreenshot = markdownImagePattern.test(body) || htmlImagePattern.test(body);
-            const hasNoVisualDeltaOverride =
-              /ui evidence:\s*n\/a\b/i.test(body) ||
-              /ui screenshot:\s*n\/a\b/i.test(body);
 
             if (hasScreenshot) {
               core.info("Screenshot detected in PR description.");
-              return;
-            }
-
-            if (hasNoVisualDeltaOverride) {
-              core.info("UI Evidence marked as N/A in PR description.");
               return;
             }
 
@@ -80,5 +72,5 @@ jobs:
             }
 
             core.setFailed(
-              "This PR changes UI files in apps/client but no UI evidence was found in the PR description. Add at least one screenshot/image or set `UI Evidence: N/A - <reason>`."
+              "This PR changes UI files in apps/client but no screenshot was found in the PR description. Add at least one image before merge."
             );

@@ -36,15 +36,6 @@ export const resolveMinigameDescriptor = (
       supportsHostRenderer: true,
       supportsDisplayRenderer: true,
       supportsDevScenarios: true
-    },
-    intro: {
-      displayName: minigameType,
-      shortTagline: `${minigameType} metadata fallback.`,
-      objective: "Metadata fallback should not be shown in normal runtime usage.",
-      howToPlay: ["Metadata fallback should not be shown in normal runtime usage."],
-      winCondition: "Metadata fallback should not be shown in normal runtime usage.",
-      quickTip: "Metadata fallback should not be shown in normal runtime usage.",
-      iconKey: minigameType.toLowerCase()
     }
   };
 

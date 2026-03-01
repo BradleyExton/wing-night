@@ -13,7 +13,6 @@ import { requestCreateTeam } from "../requestCreateTeam";
 import { requestExtendTimer } from "../requestExtendTimer";
 import { requestMinigameAction } from "../requestMinigameAction";
 import { requestNextPhase } from "../requestNextPhase";
-import { requestPreviousPhase } from "../requestPreviousPhase";
 import { requestPauseTimer } from "../requestPauseTimer";
 import { requestRedoLastMutation } from "../requestRedoLastMutation";
 import { requestReorderTurnOrder } from "../requestReorderTurnOrder";
@@ -29,7 +28,6 @@ type HostControlPanelSocket = Pick<
 
 export type HostControlPanelHandlers = {
   onNextPhase: () => void;
-  onPreviousPhase: () => void;
   onCreateTeam: (name: string) => void;
   onAssignPlayer: (playerId: string, teamId: string | null) => void;
   onSetWingParticipation: (playerId: string, didEat: boolean) => void;
@@ -50,7 +48,6 @@ export type HostControlPanelHandlers = {
 
 type HostControlPanelRequestDependencies = {
   requestNextPhase: typeof requestNextPhase;
-  requestPreviousPhase: typeof requestPreviousPhase;
   requestCreateTeam: typeof requestCreateTeam;
   requestAssignPlayer: typeof requestAssignPlayer;
   requestSetWingParticipation: typeof requestSetWingParticipation;
@@ -67,7 +64,6 @@ type HostControlPanelRequestDependencies = {
 
 const defaultDependencies: HostControlPanelRequestDependencies = {
   requestNextPhase,
-  requestPreviousPhase,
   requestCreateTeam,
   requestAssignPlayer,
   requestSetWingParticipation,
@@ -142,7 +138,6 @@ export const createHostControlPanelHandlers = (
 
   return {
     onNextPhase: invokeWithoutArgs(dependencies.requestNextPhase),
-    onPreviousPhase: invokeWithoutArgs(dependencies.requestPreviousPhase),
     onCreateTeam: invokeWithOneArg(dependencies.requestCreateTeam),
     onAssignPlayer: invokeWithTwoArgs(dependencies.requestAssignPlayer),
     onSetWingParticipation: invokeWithTwoArgs(dependencies.requestSetWingParticipation),

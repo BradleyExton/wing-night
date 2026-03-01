@@ -1,5 +1,5 @@
 export const setupRoot =
-  "grid h-full grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-3 [@media(max-height:850px)]:gap-2";
+  "grid h-full grid-rows-[auto_minmax(0,1fr)_auto] gap-3 [@media(max-height:850px)]:gap-2";
 
 export const setupBrandRow = "flex items-center gap-2";
 
@@ -25,18 +25,7 @@ export const heroIllustrationSlot =
 
 export const heroIllustrationMedia = "h-full w-full object-contain";
 
-export const setupStatusBand =
-  "px-1 py-1";
-
 export const sectionTitle = "m-0 text-xs font-semibold uppercase tracking-[0.16em] text-muted";
-
-export const statusChipRow = "mt-2 flex flex-wrap gap-2";
-
-export const primaryStatusChip =
-  "rounded-full border border-primary/60 bg-primary/15 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary [@media(max-height:850px)]:py-1";
-
-export const statusChip =
-  "rounded-full border border-text/15 bg-surfaceAlt px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-text/85 [@media(max-height:850px)]:py-1";
 
 export const flowBand = "min-h-0 px-1 py-1";
 

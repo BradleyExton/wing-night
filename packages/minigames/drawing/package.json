@@ -18,10 +18,6 @@
       "types": "./dist/client/index.d.ts",
       "default": "./dist/client/index.js"
     },
-    "./metadata": {
-      "types": "./dist/metadata.d.ts",
-      "default": "./dist/metadata.js"
-    },
     "./dev": {
       "types": "./dist/dev/index.d.ts",
       "default": "./dist/dev/index.js"

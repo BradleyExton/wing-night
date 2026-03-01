@@ -23,7 +23,6 @@ import {
   getRoomStateSnapshot,
   pauseRoomTimer,
   redoLastScoringMutation,
-  revertLastPhaseTransition,
   reorderTurnOrder,
   resetGameToSetup,
   skipTurnBoundary,
@@ -83,9 +82,6 @@ export const attachSocketServer = (
       {
         onAuthorizedNextPhase: () => {
           broadcastAfter(() => advanceRoomStatePhase());
-        },
-        onAuthorizedPreviousPhase: () => {
-          broadcastAfter(() => revertLastPhaseTransition());
         },
         onAuthorizedSkipTurnBoundary: () => {
           broadcastAfter(() => skipTurnBoundary());

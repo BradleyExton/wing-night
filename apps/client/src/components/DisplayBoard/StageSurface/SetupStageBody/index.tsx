@@ -13,25 +13,14 @@ import * as styles from "./styles";
 type SetupStageBodyProps = {
   gameConfig: RoomState["gameConfig"];
   teamCount: number;
-  playerCount: number;
   teamNames: readonly string[];
-  canAdvancePhase: boolean | null;
 };
 
 export const SetupStageBody = ({
   gameConfig,
   teamCount,
-  playerCount,
-  teamNames,
-  canAdvancePhase
+  teamNames
 }: SetupStageBodyProps): JSX.Element => {
-  const setupStatusLabel = canAdvancePhase
-    ? setupStageCopy.setupReadyLabel
-    : setupStageCopy.setupInProgressLabel;
-
-  const packChipLabel = gameConfig
-    ? setupStageCopy.packChipLabel(gameConfig.name)
-    : setupStageCopy.packUnavailableChipLabel;
   const visibleRounds = gameConfig?.rounds.slice(0, 3) ?? [];
   const hiddenRoundCount = Math.max((gameConfig?.rounds.length ?? 0) - visibleRounds.length, 0);
 
@@ -45,19 +34,6 @@ export const SetupStageBody = ({
         <h2 className={styles.setupTitle}>{setupStageCopy.title}</h2>
         <p className={styles.setupSubtitle}>{setupStageCopy.subtitle}</p>
       </header>
-
-      <section className={styles.setupStatusBand}>
-        <h3 className={styles.sectionTitle}>{setupStageCopy.setupStatusTitle}</h3>
-        <div className={styles.statusChipRow}>
-          <p className={styles.primaryStatusChip}>{setupStatusLabel}</p>
-          <p className={styles.statusChip}>{setupStageCopy.teamCountChipLabel(teamCount)}</p>
-          <p className={styles.statusChip}>{setupStageCopy.playerCountChipLabel(playerCount)}</p>
-          <p className={styles.statusChip}>{packChipLabel}</p>
-          <p className={styles.statusChip}>
-            {setupStageCopy.roundsChipLabel(gameConfig?.rounds.length ?? 0)}
-          </p>
-        </div>
-      </section>
 
       <div className={styles.contentGrid}>
         <section className={styles.heroBand}>

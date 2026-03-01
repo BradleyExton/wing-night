@@ -59,7 +59,6 @@ export const hostCopy = {
     "Host controls will update when the latest snapshot arrives.",
   headerPhaseDescription: phaseDescription,
   nextPhaseButtonLabel: "Next Phase",
-  previousPhaseButtonLabel: "Back One Step",
   skipTurnBoundaryButtonLabel: "Skip Turn",
   redoLastMutationButtonLabel: "Undo Last Score",
   resetGameButtonLabel: "Reset Game",
@@ -78,12 +77,9 @@ export const hostCopy = {
   overridesScrimDismissAriaLabel: "Close overrides panel",
   overridesActionsSectionTitle: "Escape Hatches",
   overridesActionsDescription:
-    "Back one step, skip turn, undo last score, and reset game require confirmation.",
+    "Skip turn, undo last score, and reset game require confirmation.",
   overrideConfirmButtonLabel: "Confirm",
   overrideCancelButtonLabel: "Cancel",
-  overridePreviousPhaseConfirmTitle: "Confirm Back One Step",
-  overridePreviousPhaseConfirmDescription:
-    "Back restores the previous reversible turn-loop phase snapshot.",
   overrideSkipTurnConfirmTitle: "Confirm Skip Turn",
   overrideSkipTurnConfirmDescription:
     "Skip turn advances the active team boundary immediately.",

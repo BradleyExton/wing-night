@@ -22,7 +22,6 @@ import * as styles from "./styles";
 type HostControlPanelProps = {
   roomState: RoomState | null;
   onNextPhase?: () => void;
-  onPreviousPhase?: () => void;
   onCreateTeam?: (name: string) => void;
   onAssignPlayer?: (playerId: string, teamId: string | null) => void;
   onSetWingParticipation?: (playerId: string, didEat: boolean) => void;
@@ -46,7 +45,6 @@ const EMPTY_TEAMS: RoomState["teams"] = [];
 export const HostControlPanel = ({
   roomState,
   onNextPhase,
-  onPreviousPhase,
   onCreateTeam,
   onAssignPlayer,
   onSetWingParticipation,
@@ -235,8 +233,6 @@ export const HostControlPanel = ({
         >
           <div className={styles.overridePanelContent}>
             <OverrideActionsSurface
-              onPreviousPhase={onPreviousPhase}
-              showPreviousPhaseAction={overrideDockContext.showPreviousPhaseAction}
               onSkipTurnBoundary={onSkipTurnBoundary}
               showSkipTurnBoundaryAction={overrideDockContext.showSkipTurnBoundaryAction}
               onRedoLastMutation={onRedoLastMutation}

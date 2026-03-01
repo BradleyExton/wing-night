@@ -24,7 +24,6 @@ type SocketHarness = {
   triggerRequestState: () => void;
   triggerHostClaim: () => void;
   triggerNextPhase: (payload: unknown) => void;
-  triggerPreviousPhase: (payload: unknown) => void;
   triggerSkipTurnBoundary: (payload: unknown) => void;
   triggerReorderTurnOrder: (payload: unknown) => void;
   triggerResetGame: (payload: unknown) => void;
@@ -61,7 +60,6 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
-    canRevertPhaseTransition: false,
     canAdvancePhase: true
   };
 };
@@ -149,9 +147,6 @@ const createSocketHarness = (): SocketHarness => {
     triggerNextPhase: (payload: unknown): void => {
       triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, payload);
     },
-    triggerPreviousPhase: (payload: unknown): void => {
-      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.PREVIOUS_PHASE, payload);
-    },
     triggerSkipTurnBoundary: (payload: unknown): void => {
       triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, payload);
     },
@@ -196,9 +191,6 @@ const createMutationHandlers = (
 ): MutationHandlersUnderTest => {
   return {
     onAuthorizedNextPhase: () => {
-      // no-op
-    },
-    onAuthorizedPreviousPhase: () => {
       // no-op
     },
     onAuthorizedSkipTurnBoundary: () => {
@@ -446,33 +438,6 @@ test("runs authorized next phase callback without per-socket snapshot emit", () 
   assert.equal(socketHarness.emittedSnapshots.length, 1);
   assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
   assert.deepEqual(broadcastSnapshots, [advancedState]);
-});
-
-test("ignores malformed and unauthorized previous-phase payloads", () => {
-  const socketHarness = createSocketHarness();
-  let previousPhaseCalls = 0;
-
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => buildRoomState(Phase.EATING),
-    createMutationHandlers({
-      onAuthorizedPreviousPhase: () => {
-        previousPhaseCalls += 1;
-      }
-    }),
-    true,
-    hostAuth
-  );
-
-  assert.doesNotThrow(() => {
-    socketHarness.triggerPreviousPhase(undefined);
-    socketHarness.triggerPreviousPhase({});
-    socketHarness.triggerPreviousPhase({ hostSecret: "invalid-host-secret" });
-    socketHarness.triggerPreviousPhase({ hostSecret: "valid-host-secret" });
-  });
-
-  assert.equal(previousPhaseCalls, 1);
-  assert.equal(socketHarness.invalidSecretEvents, 1);
 });
 
 test("ignores malformed and unauthorized skip-turn-boundary payloads", () => {

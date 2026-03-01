@@ -14,12 +14,7 @@
 - [ ] I used Tailwind theme token classes for color styling.
 - [ ] I did not add hardcoded hex colors in `apps/client/src/components/**/styles.ts`.
 
-## UI Evidence (required for UI changes)
-
-- [ ] Added screenshot/GIF for visible UI changes.
-- [ ] `UI Evidence: N/A` (no visible UI changes; include reason).
-
-UI Evidence: <!-- Add image markdown or `N/A - <reason>` -->
+## UI Screenshot (required for UI changes)
 
 <!--
 Required when this PR changes UI files in apps/client.
@@ -30,5 +25,5 @@ export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 "$PWCLI" open http://127.0.0.1:5173/host --headed
 "$PWCLI" screenshot --filename output/playwright/pr-host.png
 
-Then drag/drop the screenshot into this PR description or link to a committed image asset.
+Then drag/drop the screenshot into this PR description.
 -->

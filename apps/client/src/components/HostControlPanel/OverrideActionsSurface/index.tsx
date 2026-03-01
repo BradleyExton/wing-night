@@ -4,19 +4,13 @@ import { hostControlPanelCopy } from "../copy";
 import { OverrideConfirmDialog } from "../OverrideConfirmDialog";
 import * as styles from "./styles";
 
-type PendingConfirmationAction =
-  | "previous_phase"
-  | "skip_turn_boundary"
-  | "redo_last_mutation"
-  | "reset_game";
+type PendingConfirmationAction = "skip_turn_boundary" | "redo_last_mutation" | "reset_game";
 
 type PendingConfirmationEvent =
   | { type: "arm"; action: PendingConfirmationAction }
   | { type: "clear" };
 
 type OverrideActionsSurfaceProps = {
-  onPreviousPhase?: () => void;
-  showPreviousPhaseAction: boolean;
   onSkipTurnBoundary?: () => void;
   showSkipTurnBoundaryAction: boolean;
   onRedoLastMutation?: () => void;
@@ -41,8 +35,6 @@ export const reducePendingConfirmation = (
 };
 
 export const OverrideActionsSurface = ({
-  onPreviousPhase,
-  showPreviousPhaseAction,
   onSkipTurnBoundary,
   showSkipTurnBoundaryAction,
   onRedoLastMutation,
@@ -57,14 +49,6 @@ export const OverrideActionsSurface = ({
   );
 
   useEffect(() => {
-    if (pendingAction === "previous_phase") {
-      if (!showPreviousPhaseAction || onPreviousPhase === undefined) {
-        dispatchPendingAction({ type: "clear" });
-      }
-
-      return;
-    }
-
     if (pendingAction === "skip_turn_boundary") {
       if (!showSkipTurnBoundaryAction || onSkipTurnBoundary === undefined) {
         dispatchPendingAction({ type: "clear" });
@@ -89,24 +73,16 @@ export const OverrideActionsSurface = ({
       return;
     }
   }, [
-    onPreviousPhase,
     onRedoLastMutation,
     onResetGame,
     onSkipTurnBoundary,
     pendingAction,
-    showPreviousPhaseAction,
     showRedoLastMutationAction,
     showResetGameAction,
     showSkipTurnBoundaryAction
   ]);
 
   const handleConfirm = (): void => {
-    if (pendingAction === "previous_phase") {
-      onPreviousPhase?.();
-      dispatchPendingAction({ type: "clear" });
-      return;
-    }
-
     if (pendingAction === "skip_turn_boundary") {
       onSkipTurnBoundary?.();
       dispatchPendingAction({ type: "clear" });
@@ -126,9 +102,7 @@ export const OverrideActionsSurface = ({
   };
 
   const confirmTitle =
-    pendingAction === "previous_phase"
-      ? hostControlPanelCopy.overridePreviousPhaseConfirmTitle
-      : pendingAction === "skip_turn_boundary"
+    pendingAction === "skip_turn_boundary"
       ? hostControlPanelCopy.overrideSkipTurnConfirmTitle
       : pendingAction === "redo_last_mutation"
         ? hostControlPanelCopy.overrideRedoMutationConfirmTitle
@@ -137,9 +111,7 @@ export const OverrideActionsSurface = ({
           : null;
 
   const confirmDescription =
-    pendingAction === "previous_phase"
-      ? hostControlPanelCopy.overridePreviousPhaseConfirmDescription
-      : pendingAction === "skip_turn_boundary"
+    pendingAction === "skip_turn_boundary"
       ? hostControlPanelCopy.overrideSkipTurnConfirmDescription
       : pendingAction === "redo_last_mutation"
         ? hostControlPanelCopy.overrideRedoMutationConfirmDescription
@@ -152,18 +124,6 @@ export const OverrideActionsSurface = ({
       <h2 className={styles.sectionHeading}>{hostControlPanelCopy.overridesActionsSectionTitle}</h2>
       <p className={styles.sectionDescription}>{hostControlPanelCopy.overridesActionsDescription}</p>
       <div className={styles.actionRow}>
-        {showPreviousPhaseAction && (
-          <button
-            className={styles.actionButton}
-            type="button"
-            disabled={onPreviousPhase === undefined}
-            onClick={(): void => {
-              dispatchPendingAction({ type: "arm", action: "previous_phase" });
-            }}
-          >
-            {hostControlPanelCopy.previousPhaseButtonLabel}
-          </button>
-        )}
         {showSkipTurnBoundaryAction && (
           <button
             className={styles.actionButton}

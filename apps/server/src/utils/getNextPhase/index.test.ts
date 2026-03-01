@@ -8,9 +8,9 @@ import { getNextPhase } from "./index.js";
 test("maps each phase to the expected next phase", () => {
   assert.equal(getNextPhase(Phase.SETUP, 0, 3), Phase.INTRO);
   assert.equal(getNextPhase(Phase.INTRO, 0, 3), Phase.ROUND_INTRO);
-  assert.equal(getNextPhase(Phase.ROUND_INTRO, 1, 3), Phase.MINIGAME_INTRO);
-  assert.equal(getNextPhase(Phase.MINIGAME_INTRO, 1, 3), Phase.EATING);
-  assert.equal(getNextPhase(Phase.EATING, 1, 3), Phase.MINIGAME_PLAY);
+  assert.equal(getNextPhase(Phase.ROUND_INTRO, 1, 3), Phase.EATING);
+  assert.equal(getNextPhase(Phase.EATING, 1, 3), Phase.MINIGAME_INTRO);
+  assert.equal(getNextPhase(Phase.MINIGAME_INTRO, 1, 3), Phase.MINIGAME_PLAY);
   assert.equal(getNextPhase(Phase.MINIGAME_PLAY, 1, 3), Phase.ROUND_RESULTS);
 });
 

@@ -3,8 +3,7 @@ import { type RoomState } from "@wingnight/shared";
 import { displayBoardCopy } from "../copy";
 import { EatingStageBody } from "./EatingStageBody";
 import { FallbackStageBody } from "./FallbackStageBody";
-import { MinigameIntroStageBody } from "./MinigameIntroStageBody";
-import { MinigamePlayStageBody } from "./MinigamePlayStageBody";
+import { MinigameStageBody } from "./MinigameStageBody";
 import { resolveStageViewModel, type StageRenderMode } from "./resolveStageViewModel";
 import { RoundIntroStageBody } from "./RoundIntroStageBody";
 import { SetupStageBody } from "./SetupStageBody";
@@ -44,9 +43,7 @@ export const StageSurface = ({
           <SetupStageBody
             gameConfig={stageViewModel.gameConfig}
             teamCount={stageViewModel.teamCount}
-            playerCount={stageViewModel.playerCount}
             teamNames={stageViewModel.teamNames}
-            canAdvancePhase={stageViewModel.canAdvancePhase}
           />
         );
       case "round_intro":
@@ -73,21 +70,11 @@ export const StageSurface = ({
             hasRoomState={stageViewModel.hasRoomState}
           />
         );
-      case "minigame_intro":
+      case "minigame":
         return (
-          <MinigameIntroStageBody
+          <MinigameStageBody
             phaseLabel={phaseLabel}
-            minigameType={stageViewModel.minigameType}
-            minigameIntroMetadata={stageViewModel.minigameIntroMetadata}
-            currentRoundConfig={stageViewModel.currentRoundConfig}
-            shouldRenderTeamTurnContext={stageViewModel.shouldRenderTeamTurnContext}
-            activeTeamName={stageViewModel.activeTeamName}
-          />
-        );
-      case "minigame_play":
-        return (
-          <MinigamePlayStageBody
-            phaseLabel={phaseLabel}
+            minigamePhase={stageViewModel.minigamePhase}
             minigameType={stageViewModel.minigameType}
             currentRoundConfig={stageViewModel.currentRoundConfig}
             shouldRenderTeamTurnContext={stageViewModel.shouldRenderTeamTurnContext}

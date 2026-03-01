@@ -10,19 +10,8 @@ export const setupStageCopy = {
   brandLabel: "Wing Night",
   brandSubLabel: "Display Setup",
   title: "Tonight at a Glance",
-  subtitle: "Setup is in progress. Here is what everyone can expect before round one starts.",
+  subtitle: "Here is what everyone can expect before round one starts.",
   heroIllustrationAlt: "Wing Night setup hero illustration",
-  setupStatusTitle: "Live Setup",
-  setupReadyLabel: "Ready to Start",
-  setupInProgressLabel: "In Progress",
-  teamCountChipLabel: (teamCount: number): string =>
-    `${teamCount} ${teamCount === 1 ? "Team" : "Teams"}`,
-  playerCountChipLabel: (playerCount: number): string =>
-    `${playerCount} ${playerCount === 1 ? "Player" : "Players"}`,
-  packChipLabel: (packName: string): string => `Pack: ${packName}`,
-  packUnavailableChipLabel: "Pack: ...",
-  roundsChipLabel: (roundCount: number): string =>
-    `${roundCount} ${roundCount === 1 ? "Round" : "Rounds"}`,
   roundFlowTitle: "Round Flow",
   roundStartTitle: "Round Start",
   roundStartLabel: "Round Intro",
@@ -65,14 +54,6 @@ export const setupStageCopy = {
   readonly title: string;
   readonly subtitle: string;
   readonly heroIllustrationAlt: string;
-  readonly setupStatusTitle: string;
-  readonly setupReadyLabel: string;
-  readonly setupInProgressLabel: string;
-  readonly teamCountChipLabel: (teamCount: number) => string;
-  readonly playerCountChipLabel: (playerCount: number) => string;
-  readonly packChipLabel: (packName: string) => string;
-  readonly packUnavailableChipLabel: string;
-  readonly roundsChipLabel: (roundCount: number) => string;
   readonly roundFlowTitle: string;
   readonly roundStartTitle: string;
   readonly roundStartLabel: string;

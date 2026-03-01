@@ -10,18 +10,15 @@ import {
 test("renders escape-hatch actions based on availability", () => {
   const html = renderToStaticMarkup(
     <OverrideActionsSurface
-      showPreviousPhaseAction={true}
       showSkipTurnBoundaryAction={true}
       showRedoLastMutationAction={false}
       showResetGameAction={true}
-      onPreviousPhase={() => undefined}
       onSkipTurnBoundary={() => undefined}
       onResetGame={() => undefined}
     />
   );
 
   assert.match(html, /Escape Hatches/);
-  assert.match(html, /Back One Step/);
   assert.match(html, /Skip Turn/);
   assert.doesNotMatch(html, /Undo Last Score/);
   assert.match(html, /Reset Game/);
@@ -30,7 +27,6 @@ test("renders escape-hatch actions based on availability", () => {
 test("renders confirmation dialog when pending action exists", () => {
   const html = renderToStaticMarkup(
     <OverrideActionsSurface
-      showPreviousPhaseAction={false}
       showSkipTurnBoundaryAction={true}
       showRedoLastMutationAction={true}
       showResetGameAction={true}
@@ -52,3 +48,4 @@ test("confirmation reducer clears pending action on cancel", () => {
 
   assert.equal(nextState, null);
 });
+
