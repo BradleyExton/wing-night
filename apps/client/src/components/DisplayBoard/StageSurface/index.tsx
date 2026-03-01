@@ -1,4 +1,4 @@
-import { Phase, type RoomState } from "@wingnight/shared";
+import { type RoomState } from "@wingnight/shared";
 
 import { displayBoardCopy } from "../copy";
 import { EatingStageBody } from "./EatingStageBody";
@@ -6,6 +6,7 @@ import { FallbackStageBody } from "./FallbackStageBody";
 import { MinigameStageBody } from "./MinigameStageBody";
 import { resolveStageViewModel, type StageRenderMode } from "./resolveStageViewModel";
 import { RoundIntroStageBody } from "./RoundIntroStageBody";
+import { SetupStageBody } from "./SetupStageBody";
 import * as styles from "./styles";
 import { useEatingCountdown } from "./useEatingCountdown";
 
@@ -34,10 +35,17 @@ export const StageSurface = ({
     eatingTimerSnapshot: stageViewModel.eatingTimerSnapshot,
     fallbackEatingSeconds: stageViewModel.fallbackEatingSeconds
   });
-  const isSetupPhase = stageViewModel.phase === Phase.SETUP;
 
   const renderStageBody = (stageMode: StageRenderMode): JSX.Element => {
     switch (stageMode) {
+      case "setup":
+        return (
+          <SetupStageBody
+            gameConfig={stageViewModel.gameConfig}
+            teamCount={stageViewModel.teamCount}
+            teamNames={stageViewModel.teamNames}
+          />
+        );
       case "round_intro":
         return stageViewModel.currentRoundConfig !== null ? (
           <RoundIntroStageBody currentRoundConfig={stageViewModel.currentRoundConfig} />
@@ -45,7 +53,6 @@ export const StageSurface = ({
           <FallbackStageBody
             phaseLabel={phaseLabel}
             hasRoomState={stageViewModel.hasRoomState}
-            isSetupPhase={isSetupPhase}
           />
         );
       case "eating":
@@ -61,7 +68,6 @@ export const StageSurface = ({
           <FallbackStageBody
             phaseLabel={phaseLabel}
             hasRoomState={stageViewModel.hasRoomState}
-            isSetupPhase={isSetupPhase}
           />
         );
       case "minigame":
@@ -81,7 +87,6 @@ export const StageSurface = ({
           <FallbackStageBody
             phaseLabel={phaseLabel}
             hasRoomState={stageViewModel.hasRoomState}
-            isSetupPhase={isSetupPhase}
           />
         );
       default:
@@ -89,12 +94,18 @@ export const StageSurface = ({
     }
   };
 
+  const surfaceClassName =
+    stageViewModel.stageMode === "setup" ? styles.setupCard : styles.card;
+  const shouldRenderSurfaceContext = stageViewModel.stageMode !== "setup";
+
   return (
-    <article className={styles.card}>
-      <div className={styles.surfaceContextRow}>
-        <p className={styles.surfaceContextMeta}>{roundMetaLabel}</p>
-        <p className={styles.surfaceContextBadge}>{phaseLabel}</p>
-      </div>
+    <article className={surfaceClassName}>
+      {shouldRenderSurfaceContext && (
+        <div className={styles.surfaceContextRow}>
+          <p className={styles.surfaceContextMeta}>{roundMetaLabel}</p>
+          <p className={styles.surfaceContextBadge}>{phaseLabel}</p>
+        </div>
+      )}
       {renderStageBody(stageViewModel.stageMode)}
     </article>
   );

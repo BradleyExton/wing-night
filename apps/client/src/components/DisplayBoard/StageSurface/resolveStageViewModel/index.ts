@@ -1,13 +1,16 @@
 import { Phase, type MinigameType, type RoomState } from "@wingnight/shared";
 
-export type StageRenderMode = "round_intro" | "eating" | "minigame" | "fallback";
+export type StageRenderMode = "setup" | "round_intro" | "eating" | "minigame" | "fallback";
 
 export type StageViewModel = {
   phase: Phase | null;
   stageMode: StageRenderMode;
+  gameConfig: RoomState["gameConfig"];
   currentRoundConfig: RoomState["currentRoundConfig"];
   minigameType: MinigameType | null;
   minigamePhase: "intro" | "play" | null;
+  teamCount: number;
+  teamNames: string[];
   activeTeamName: string | null;
   shouldRenderTeamTurnContext: boolean;
   minigameDisplayView: RoomState["minigameDisplayView"];
@@ -22,6 +25,8 @@ const assertUnreachable = (value: never): never => {
 
 const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
   switch (phase) {
+    case Phase.SETUP:
+      return "setup";
     case Phase.ROUND_INTRO:
       return "round_intro";
     case Phase.EATING:
@@ -30,7 +35,6 @@ const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
     case Phase.MINIGAME_PLAY:
       return "minigame";
     case null:
-    case Phase.SETUP:
     case Phase.INTRO:
     case Phase.ROUND_RESULTS:
     case Phase.FINAL_RESULTS:
@@ -43,6 +47,7 @@ const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
 export const resolveStageViewModel = (roomState: RoomState | null): StageViewModel => {
   const phase = roomState?.phase ?? null;
   const stageMode = resolveStageRenderMode(phase);
+  const gameConfig = roomState?.gameConfig ?? null;
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const minigameType =
     roomState?.minigameDisplayView?.minigame ?? currentRoundConfig?.minigame ?? null;
@@ -75,9 +80,12 @@ export const resolveStageViewModel = (roomState: RoomState | null): StageViewMod
   return {
     phase,
     stageMode,
+    gameConfig,
     currentRoundConfig,
     minigameType,
     minigamePhase,
+    teamCount: roomState?.teams.length ?? 0,
+    teamNames: roomState?.teams.map((team) => team.name) ?? [],
     activeTeamName,
     shouldRenderTeamTurnContext,
     minigameDisplayView,

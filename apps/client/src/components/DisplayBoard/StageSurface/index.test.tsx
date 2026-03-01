@@ -66,14 +66,20 @@ test("renders round intro metadata", () => {
   assert.match(html, /TRIVIA/);
 });
 
-test("renders setup idle title without live setup status details", () => {
+test("renders setup hero and flow without live setup status chips", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.SETUP)} />
   );
 
-  assert.match(html, /Waiting for host to start/);
-  assert.doesNotMatch(html, /Setup in progress/);
+  assert.match(html, /Tonight at a Glance/);
+  assert.match(html, /display\/setup\/hero\.png/);
+  assert.match(html, /Round Flow/);
+  assert.match(html, /Round Intro/);
+  assert.match(html, /Mini-Game Intro/);
+  assert.match(html, /display\/setup\/flow-minigame-intro\.svg/);
   assert.doesNotMatch(html, /Pack:/);
+  assert.doesNotMatch(html, /Live Setup/);
+  assert.doesNotMatch(html, /In Progress/);
 });
 
 test("falls back to generic context when ROUND_INTRO is missing round config", () => {

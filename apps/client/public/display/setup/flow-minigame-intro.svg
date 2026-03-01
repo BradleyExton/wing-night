@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-label="Mini-game intro flow placeholder">
+  <rect width="320" height="180" rx="12" fill="#1c1c1c" />
+  <rect x="74" y="40" width="172" height="102" rx="10" fill="#242424" stroke="#f97316" stroke-width="4" />
+  <rect x="98" y="64" width="124" height="18" rx="9" fill="#f97316" fill-opacity="0.4" />
+  <rect x="98" y="92" width="84" height="14" rx="7" fill="#a3a3a3" fill-opacity="0.35" />
+  <rect x="98" y="112" width="104" height="10" rx="5" fill="#a3a3a3" fill-opacity="0.25" />
+</svg>
