@@ -5,7 +5,6 @@ import {
   CLIENT_ROLES,
   MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS,
-  isSocketClientRole,
   toRoleScopedSnapshotEnvelope,
   type RoomState,
   type SocketClientRole
@@ -33,6 +32,10 @@ import {
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
 import { resolveMinigameDescriptor } from "../minigames/registry/index.js";
+import {
+  resolveAuthorizedSocketClientRole,
+  resolveConfiguredHostControlToken
+} from "./resolveAuthorizedSocketClientRole/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
 const ROOM_BY_CLIENT_ROLE = {
@@ -48,6 +51,9 @@ export const attachSocketServer = (
     configuredCorsOrigin && configuredCorsOrigin.trim().length > 0
       ? configuredCorsOrigin.trim()
       : true;
+  const configuredHostControlToken = resolveConfiguredHostControlToken(
+    process.env.HOST_CONTROL_TOKEN
+  );
 
   const socketServer = new Server<IncomingSocketEvents, OutgoingSocketEvents>(
     httpServer,
@@ -59,26 +65,12 @@ export const attachSocketServer = (
     }
   );
 
-  const resolveSocketClientRole = (authPayload: unknown): SocketClientRole => {
-    if (typeof authPayload !== "object" || authPayload === null) {
-      return CLIENT_ROLES.DISPLAY;
-    }
-
-    if (!("clientRole" in authPayload)) {
-      return CLIENT_ROLES.DISPLAY;
-    }
-
-    const { clientRole } = authPayload;
-
-    if (!isSocketClientRole(clientRole)) {
-      return CLIENT_ROLES.DISPLAY;
-    }
-
-    return clientRole;
-  };
-
   socketServer.on("connection", (socket) => {
-    const socketClientRole = resolveSocketClientRole(socket.handshake.auth);
+    const socketClientRole = resolveAuthorizedSocketClientRole(
+      socket.handshake.auth,
+      socket.handshake.address,
+      configuredHostControlToken
+    );
     socket.join(ROOM_BY_CLIENT_ROLE[socketClientRole]);
 
     const emitRoleScopedSnapshotToRoom = (

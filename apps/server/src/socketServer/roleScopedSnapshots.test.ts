@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Phase, toRoleScopedSnapshotEnvelope, type RoomState } from "@wingnight/shared";
+import {
+  DISPLAY_UNSAFE_ROOM_STATE_KEYS,
+  Phase,
+  toDisplayRoomStateSnapshot,
+  toRoleScopedSnapshotEnvelope,
+  type RoomState
+} from "@wingnight/shared";
 
 const createRoomStateFixture = (): RoomState => {
   return {
@@ -52,4 +58,13 @@ test("toRoleScopedSnapshotEnvelope removes host payload for display role", () =>
 
   assert.equal(snapshot.clientRole, "DISPLAY");
   assert.equal("minigameHostView" in snapshot.roomState, false);
+});
+
+test("toDisplayRoomStateSnapshot removes every display-unsafe room-state key", () => {
+  const roomState = createRoomStateFixture();
+  const displaySnapshot = toDisplayRoomStateSnapshot(roomState);
+
+  for (const unsafeKey of DISPLAY_UNSAFE_ROOM_STATE_KEYS) {
+    assert.equal(unsafeKey in displaySnapshot, false);
+  }
 });

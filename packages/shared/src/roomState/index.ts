@@ -111,6 +111,10 @@ export const DISPLAY_UNSAFE_ROOM_STATE_KEYS = [
 
 type DisplayUnsafeRoomStateKey = (typeof DISPLAY_UNSAFE_ROOM_STATE_KEYS)[number];
 
+const DISPLAY_UNSAFE_ROOM_STATE_KEY_SET = new Set<DisplayUnsafeRoomStateKey>(
+  DISPLAY_UNSAFE_ROOM_STATE_KEYS
+);
+
 export type HostRoomStateSnapshot = RoomState;
 
 export type DisplayRoomStateSnapshot = Omit<RoomState, DisplayUnsafeRoomStateKey>;
@@ -133,8 +137,11 @@ export type RoleScopedSnapshotByRole<TRole extends SocketClientRole> = Extract<
 export const toDisplayRoomStateSnapshot = (
   roomState: RoomState
 ): DisplayRoomStateSnapshot => {
-  const { minigameHostView: _omittedMinigameHostView, ...displaySnapshot } = roomState;
-  return displaySnapshot;
+  const safeEntries = Object.entries(roomState).filter(([key]) => {
+    return !DISPLAY_UNSAFE_ROOM_STATE_KEY_SET.has(key as DisplayUnsafeRoomStateKey);
+  });
+
+  return Object.fromEntries(safeEntries) as DisplayRoomStateSnapshot;
 };
 
 export function toRoleScopedSnapshotEnvelope(
