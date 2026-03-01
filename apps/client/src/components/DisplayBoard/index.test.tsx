@@ -73,6 +73,16 @@ test("renders waiting copy when room state is missing", () => {
   assert.match(html, /No teams have joined yet/);
 });
 
+test("keeps setup display idle without rendering stage context", () => {
+  const html = renderToStaticMarkup(
+    <DisplayBoard roomState={buildSnapshot(Phase.SETUP)} />
+  );
+
+  assert.doesNotMatch(html, /Setup in progress/);
+  assert.doesNotMatch(html, /Round 1 of 1/);
+  assert.match(html, /Standings/);
+});
+
 test("renders fatal content state when snapshot reports content load failure", () => {
   const html = renderToStaticMarkup(
     <DisplayBoard
