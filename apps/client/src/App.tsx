@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DisplayBoard } from "./components/DisplayBoard";
 import { HostControlPanel } from "./components/HostControlPanel";
 import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
+import { RootRouteLanding } from "./components/RootRouteLanding";
 import { RouteNotFound } from "./components/RouteNotFound";
 import { createRoomSocket } from "./socket/createRoomSocket";
 import { shouldCreateRoomSocket } from "./socket/shouldCreateRoomSocket";
@@ -77,6 +78,10 @@ export const App = (): JSX.Element => {
 
   if (route === "DISPLAY") {
     return <DisplayBoard roomState={displayRoomState} />;
+  }
+
+  if (route === "ROOT") {
+    return <RootRouteLanding />;
   }
 
   if (route === "DEV_MINIGAME" && devMinigameType !== null) {

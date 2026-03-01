@@ -1,4 +1,4 @@
-export type ClientRoute = "HOST" | "DISPLAY" | "DEV_MINIGAME" | "NOT_FOUND";
+export type ClientRoute = "ROOT" | "HOST" | "DISPLAY" | "DEV_MINIGAME" | "NOT_FOUND";
 
 const DEV_MINIGAME_ROUTE_PREFIX = "/dev/minigame/";
 
@@ -12,6 +12,10 @@ const normalizePathname = (pathname: string): string => {
 
 export const resolveClientRoute = (pathname: string): ClientRoute => {
   const normalizedPathname = normalizePathname(pathname);
+
+  if (normalizedPathname === "/") {
+    return "ROOT";
+  }
 
   if (normalizedPathname === "/host") {
     return "HOST";

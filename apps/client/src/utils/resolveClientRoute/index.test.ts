@@ -21,7 +21,10 @@ test("resolves /dev/minigame/:slug routes to DEV_MINIGAME", () => {
 });
 
 test("resolves unknown routes to NOT_FOUND", () => {
-  assert.equal(resolveClientRoute("/"), "NOT_FOUND");
   assert.equal(resolveClientRoute("/anything-else"), "NOT_FOUND");
   assert.equal(resolveClientRoute("/dev/minigame"), "NOT_FOUND");
+});
+
+test("resolves / to ROOT", () => {
+  assert.equal(resolveClientRoute("/"), "ROOT");
 });
