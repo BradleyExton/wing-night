@@ -1,20 +1,15 @@
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
 import type { MinigameType } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { resolveMinigameRuntimePlugin } from "../../minigames/registry/index.js";
+import { resolveDefaultContentRootDir } from "../contentLoaderUtils/index.js";
 import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 
 type LoadMinigameContentOptions = {
   contentRootDir?: string;
 };
 
-const defaultContentRootDir = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../../../content"
-);
+const defaultContentRootDir = resolveDefaultContentRootDir(import.meta.url);
 
 const MINIGAME_TYPES: MinigameType[] = ["TRIVIA", "GEO", "DRAWING"];
 
