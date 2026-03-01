@@ -1,4 +1,4 @@
-import { type RoomState } from "@wingnight/shared";
+import { Phase, type RoomState } from "@wingnight/shared";
 
 import { displayBoardCopy } from "../copy";
 import { EatingStageBody } from "./EatingStageBody";
@@ -34,6 +34,7 @@ export const StageSurface = ({
     eatingTimerSnapshot: stageViewModel.eatingTimerSnapshot,
     fallbackEatingSeconds: stageViewModel.fallbackEatingSeconds
   });
+  const isSetupPhase = stageViewModel.phase === Phase.SETUP;
 
   const renderStageBody = (stageMode: StageRenderMode): JSX.Element => {
     switch (stageMode) {
@@ -44,6 +45,7 @@ export const StageSurface = ({
           <FallbackStageBody
             phaseLabel={phaseLabel}
             hasRoomState={stageViewModel.hasRoomState}
+            isSetupPhase={isSetupPhase}
           />
         );
       case "eating":
@@ -59,6 +61,7 @@ export const StageSurface = ({
           <FallbackStageBody
             phaseLabel={phaseLabel}
             hasRoomState={stageViewModel.hasRoomState}
+            isSetupPhase={isSetupPhase}
           />
         );
       case "minigame":
@@ -78,6 +81,7 @@ export const StageSurface = ({
           <FallbackStageBody
             phaseLabel={phaseLabel}
             hasRoomState={stageViewModel.hasRoomState}
+            isSetupPhase={isSetupPhase}
           />
         );
       default:

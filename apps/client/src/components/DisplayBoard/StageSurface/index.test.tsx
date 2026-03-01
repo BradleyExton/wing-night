@@ -66,6 +66,16 @@ test("renders round intro metadata", () => {
   assert.match(html, /TRIVIA/);
 });
 
+test("renders setup idle title without live setup status details", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.SETUP)} />
+  );
+
+  assert.match(html, /Waiting for host to start/);
+  assert.doesNotMatch(html, /Setup in progress/);
+  assert.doesNotMatch(html, /Pack:/);
+});
+
 test("falls back to generic context when ROUND_INTRO is missing round config", () => {
   const html = renderToStaticMarkup(
     <StageSurface

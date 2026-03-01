@@ -12,6 +12,7 @@ export const displayCopy = {
   roundIntroTitle: (roundNumber: number, label: string): string =>
     `Round ${roundNumber}: ${label}`,
   phaseContextTitle: (phaseLabel: string): string => `${phaseLabel} in progress`,
+  setupIdleTitle: "Waiting for host to start",
   sauceLabel: "Sauce",
   minigameLabel: "Mini-Game",
   roundSauceSummary: (sauce: string): string => `Sauce: ${sauce}`,
