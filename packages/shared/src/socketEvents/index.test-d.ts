@@ -42,15 +42,6 @@ export type NextPhaseHostSecretPayloadCheck = Assert<
   >
 >;
 
-export type PreviousPhasePayloadCheck = Assert<
-  Equal<
-    Parameters<
-      ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.PREVIOUS_PHASE]
-    >,
-    [HostSecretPayload]
-  >
->;
-
 export type SkipTurnBoundaryPayloadCheck = Assert<
   Equal<
     Parameters<
@@ -181,9 +172,6 @@ export type InvalidClaimControlArgsCheck = Assert<Equal<Parameters<ClientToServe
 
 // @ts-expect-error game:nextPhase must accept host secret payload.
 export type InvalidNextPhaseNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.NEXT_PHASE]>, []>>;
-
-// @ts-expect-error game:previousPhase must accept host secret payload.
-export type InvalidPreviousPhaseNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.PREVIOUS_PHASE]>, []>>;
 
 // @ts-expect-error game:skipTurnBoundary must accept host secret payload.
 export type InvalidSkipTurnBoundaryNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY]>, []>>;

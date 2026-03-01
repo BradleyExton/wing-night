@@ -182,15 +182,15 @@ Global Phases:
 1. SETUP
 2. INTRO
 3. ROUND_INTRO
-4. MINIGAME_INTRO
-5. EATING
+4. EATING
+5. MINIGAME_INTRO
 6. MINIGAME_PLAY
 7. ROUND_RESULTS
 8. FINAL_RESULTS
 
 Rounds 1–N repeat phases 3–7 with a per-team loop:
 - `ROUND_INTRO` (once per round)
-- `MINIGAME_INTRO -> EATING -> MINIGAME_PLAY` (once per team, in fixed turn order)
+- `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` (once per team, in fixed turn order)
 - `ROUND_RESULTS` (once after the last team turn in the round)
 
 ---
@@ -216,21 +216,7 @@ Display:
 - Sauce
 - Standings
 
-Host advances → MINIGAME_INTRO
-
----
-
-### MINIGAME_INTRO
-Host:
-- Route switches to a full-screen mini-game takeover shell (`100dvh`, no vertical overflow).
-- Host shell renders plugin intro context from `minigameHostView`.
-- Shell-level escape hatches remain reachable via override overlay controls.
-
-Display:
-- Route switches to a full-screen mini-game takeover shell (`100dvh`, no vertical overflow).
-- Display plugin intro renders from `minigameDisplayView` only.
-- Active team context comes from snapshot active-team fields (`activeRoundTeamId`, `activeTurnTeamId`).
-- Unsupported mini-games render an explicit unsupported fallback surface.
+Host advances → EATING
 
 ---
 
@@ -245,6 +231,20 @@ Display:
 - Dominant eating timer countdown
 
 Wing points are accumulated in pending round totals but NOT applied yet.
+
+---
+
+### MINIGAME_INTRO
+Host:
+- Route switches to a full-screen mini-game takeover shell (`100dvh`, no vertical overflow).
+- Host shell renders plugin intro context from `minigameHostView`.
+- Shell-level escape hatches remain reachable via override overlay controls.
+
+Display:
+- Route switches to a full-screen mini-game takeover shell (`100dvh`, no vertical overflow).
+- Display plugin intro renders from `minigameDisplayView` only.
+- Active team context comes from snapshot active-team fields (`activeRoundTeamId`, `activeTurnTeamId`).
+- Unsupported mini-games render an explicit unsupported fallback surface.
 
 ---
 

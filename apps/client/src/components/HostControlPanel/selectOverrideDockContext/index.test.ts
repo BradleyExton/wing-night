@@ -71,7 +71,6 @@ const buildSnapshot = (
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
-    canRevertPhaseTransition: false,
     canAdvancePhase: true
   };
 
@@ -114,16 +113,6 @@ test("skip-turn action is limited to turn phases", () => {
   );
 });
 
-test("previous-phase action requires a server-provided reversible transition", () => {
-  const unavailableContext = selectOverrideDockContext(buildSnapshot(Phase.EATING));
-  assert.equal(unavailableContext.showPreviousPhaseAction, false);
-
-  const availableContext = selectOverrideDockContext(
-    buildSnapshot(Phase.MINIGAME_INTRO, { canRevertPhaseTransition: true })
-  );
-  assert.equal(availableContext.showPreviousPhaseAction, true);
-});
-
 test("turn-order editability is round-intro only", () => {
   assert.equal(
     selectOverrideDockContext(buildSnapshot(Phase.ROUND_INTRO)).isTurnOrderEditable,
@@ -138,14 +127,6 @@ test("badge turns on for redo availability", () => {
   );
 
   assert.equal(context.showRedoLastMutationAction, true);
-  assert.equal(context.showBadge, true);
-});
-
-test("badge turns on for previous-phase availability", () => {
-  const context = selectOverrideDockContext(
-    buildSnapshot(Phase.MINIGAME_INTRO, { canRevertPhaseTransition: true })
-  );
-
   assert.equal(context.showBadge, true);
 });
 

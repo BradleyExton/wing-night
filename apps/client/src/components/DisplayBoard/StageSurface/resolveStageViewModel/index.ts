@@ -1,27 +1,13 @@
 import { Phase, type MinigameType, type RoomState } from "@wingnight/shared";
-import { type MinigameIntroMetadata } from "@wingnight/minigames-core";
 
-import { resolveMinigameMetadata } from "../../../../minigames/registry";
-
-export type StageRenderMode =
-  | "setup"
-  | "round_intro"
-  | "eating"
-  | "minigame_intro"
-  | "minigame_play"
-  | "fallback";
+export type StageRenderMode = "round_intro" | "eating" | "minigame" | "fallback";
 
 export type StageViewModel = {
   phase: Phase | null;
   stageMode: StageRenderMode;
-  gameConfig: RoomState["gameConfig"];
   currentRoundConfig: RoomState["currentRoundConfig"];
   minigameType: MinigameType | null;
-  minigameIntroMetadata: MinigameIntroMetadata | null;
-  teamCount: number;
-  playerCount: number;
-  teamNames: string[];
-  canAdvancePhase: boolean | null;
+  minigamePhase: "intro" | "play" | null;
   activeTeamName: string | null;
   shouldRenderTeamTurnContext: boolean;
   minigameDisplayView: RoomState["minigameDisplayView"];
@@ -36,17 +22,15 @@ const assertUnreachable = (value: never): never => {
 
 const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
   switch (phase) {
-    case Phase.SETUP:
-      return "setup";
     case Phase.ROUND_INTRO:
       return "round_intro";
     case Phase.EATING:
       return "eating";
     case Phase.MINIGAME_INTRO:
-      return "minigame_intro";
     case Phase.MINIGAME_PLAY:
-      return "minigame_play";
+      return "minigame";
     case null:
+    case Phase.SETUP:
     case Phase.INTRO:
     case Phase.ROUND_RESULTS:
     case Phase.FINAL_RESULTS:
@@ -59,12 +43,11 @@ const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
 export const resolveStageViewModel = (roomState: RoomState | null): StageViewModel => {
   const phase = roomState?.phase ?? null;
   const stageMode = resolveStageRenderMode(phase);
-  const gameConfig = roomState?.gameConfig ?? null;
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const minigameType =
     roomState?.minigameDisplayView?.minigame ?? currentRoundConfig?.minigame ?? null;
-  const minigameIntroMetadata =
-    minigameType === null ? null : (resolveMinigameMetadata(minigameType)?.intro ?? null);
+  const minigamePhase =
+    phase === Phase.MINIGAME_INTRO ? "intro" : phase === Phase.MINIGAME_PLAY ? "play" : null;
 
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
@@ -80,8 +63,7 @@ export const resolveStageViewModel = (roomState: RoomState | null): StageViewMod
 
   const activeTeamName = activeRoundTeamName ?? activeTurnTeamName;
   const shouldRenderTeamTurnContext =
-    activeTeamName !== null &&
-    (stageMode === "eating" || stageMode === "minigame_intro" || stageMode === "minigame_play");
+    activeTeamName !== null && (stageMode === "eating" || stageMode === "minigame");
 
   const minigameDisplayView = roomState?.minigameDisplayView ?? null;
 
@@ -93,14 +75,9 @@ export const resolveStageViewModel = (roomState: RoomState | null): StageViewMod
   return {
     phase,
     stageMode,
-    gameConfig,
     currentRoundConfig,
     minigameType,
-    minigameIntroMetadata,
-    teamCount: roomState?.teams.length ?? 0,
-    playerCount: roomState?.players.length ?? 0,
-    teamNames: roomState?.teams.map((team) => team.name) ?? [],
-    canAdvancePhase: roomState?.canAdvancePhase ?? null,
+    minigamePhase,
     activeTeamName,
     shouldRenderTeamTurnContext,
     minigameDisplayView,

@@ -97,7 +97,6 @@ export type ValidRoomStateCheck = Assert<
       pendingMinigamePointsByTeamId: Record<string, number>;
       fatalError: RoomState["fatalError"];
       canRedoScoringMutation: boolean;
-      canRevertPhaseTransition: boolean;
       canAdvancePhase: boolean;
     },
     RoomState
@@ -131,7 +130,6 @@ export type DisplaySnapshotShapeCheck = Assert<
       pendingMinigamePointsByTeamId: Record<string, number>;
       fatalError: RoomState["fatalError"];
       canRedoScoringMutation: boolean;
-      canRevertPhaseTransition: boolean;
       canAdvancePhase: boolean;
     },
     DisplayRoomStateSnapshot

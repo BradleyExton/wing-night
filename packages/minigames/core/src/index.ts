@@ -67,17 +67,6 @@ export type MinigamePluginMetadata = {
     supportsDisplayRenderer: boolean;
     supportsDevScenarios: boolean;
   };
-  intro: MinigameIntroMetadata;
-};
-
-export type MinigameIntroMetadata = {
-  displayName: string;
-  shortTagline: string;
-  objective: string;
-  howToPlay: readonly string[];
-  winCondition: string;
-  quickTip: string;
-  iconKey: string;
 };
 
 export type MinigameRuntimeActionEnvelope = {

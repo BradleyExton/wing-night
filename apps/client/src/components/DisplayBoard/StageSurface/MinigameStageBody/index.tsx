@@ -5,8 +5,9 @@ import { displayBoardCopy } from "../../copy";
 import { TurnMeta } from "../TurnMeta";
 import * as styles from "./styles";
 
-type MinigamePlayStageBodyProps = {
+type MinigameStageBodyProps = {
   phaseLabel: string;
+  minigamePhase: "intro" | "play" | null;
   minigameType: MinigameType | null;
   currentRoundConfig: RoomState["currentRoundConfig"];
   shouldRenderTeamTurnContext: boolean;
@@ -14,15 +15,16 @@ type MinigamePlayStageBodyProps = {
   minigameDisplayView: RoomState["minigameDisplayView"];
 };
 
-export const MinigamePlayStageBody = ({
+export const MinigameStageBody = ({
   phaseLabel,
+  minigamePhase,
   minigameType,
   currentRoundConfig,
   shouldRenderTeamTurnContext,
   activeTeamName,
   minigameDisplayView
-}: MinigamePlayStageBodyProps): JSX.Element => {
-  if (minigameType === null) {
+}: MinigameStageBodyProps): JSX.Element => {
+  if (minigameType === null || minigamePhase === null) {
     return (
       <>
         <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
@@ -49,11 +51,13 @@ export const MinigamePlayStageBody = ({
           <p className={styles.fallbackText}>
             {displayBoardCopy.minigameRendererUnavailableLabel(minigameType)}
           </p>
-        ) : minigameType === "TRIVIA" && minigameDisplayView === null ? (
+        ) : minigamePhase === "play" &&
+          minigameType === "TRIVIA" &&
+          minigameDisplayView === null ? (
           <p className={styles.fallbackText}>{displayBoardCopy.minigameWaitingForViewLabel}</p>
         ) : (
           <minigameRendererBundle.DisplaySurface
-            phase="play"
+            phase={minigamePhase}
             minigameType={minigameType}
             minigameDisplayView={minigameDisplayView}
             activeTeamName={activeTeamName}

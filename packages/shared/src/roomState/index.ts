@@ -100,7 +100,6 @@ export type RoomState = {
   pendingMinigamePointsByTeamId: Record<string, number>;
   fatalError: RoomFatalError | null;
   canRedoScoringMutation: boolean;
-  canRevertPhaseTransition: boolean;
   canAdvancePhase: boolean;
 };
 

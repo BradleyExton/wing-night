@@ -39,7 +39,6 @@ type HostAuth = {
 
 type AuthorizedSetupMutationHandlers = {
   onAuthorizedNextPhase: () => void;
-  onAuthorizedPreviousPhase: () => void;
   onAuthorizedSkipTurnBoundary: () => void;
   onAuthorizedReorderTurnOrder: (teamIds: string[]) => void;
   onAuthorizedResetGame: () => void;
@@ -128,14 +127,6 @@ export const registerRoomStateHandlers = (
     isHostSecretPayload,
     () => {
       mutationHandlers.onAuthorizedNextPhase();
-    }
-  );
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.PREVIOUS_PHASE,
-    isHostSecretPayload,
-    () => {
-      mutationHandlers.onAuthorizedPreviousPhase();
     }
   );
 

@@ -124,9 +124,3 @@ test("selectDisplayView omits prompt answer while host view includes it", () => 
     question: "Question 1?"
   });
 });
-
-test("module metadata includes intro payload for Wing Night core surfaces", () => {
-  assert.equal(triviaMinigameModule.metadata?.intro.displayName, "Trivia Sprint");
-  assert.ok((triviaMinigameModule.metadata?.intro.howToPlay.length ?? 0) > 0);
-  assert.equal(triviaMinigameModule.metadata?.intro.iconKey, "trivia");
-});

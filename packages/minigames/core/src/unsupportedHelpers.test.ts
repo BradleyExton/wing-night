@@ -16,15 +16,6 @@ const metadata: MinigamePluginMetadata = {
     supportsHostRenderer: true,
     supportsDisplayRenderer: true,
     supportsDevScenarios: true
-  },
-  intro: {
-    displayName: "Unsupported",
-    shortTagline: "Fallback metadata fixture.",
-    objective: "Validate unsupported helper behavior.",
-    howToPlay: ["Advance phases using host controls."],
-    winCondition: "This fixture does not define scoring.",
-    quickTip: "Use fixture data only for tests.",
-    iconKey: "unsupported"
   }
 };
 

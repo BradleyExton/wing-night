@@ -95,9 +95,6 @@ Everything must remain modular and composable.
 PR expectation for UI changes:
 - Include a short "Component map" in the PR description listing parent component + extracted subcomponents.
 - Add/adjust tests at the extracted component boundary (not only at the monolithic parent).
-- Include "UI Evidence" in the PR description:
-  - attach at least one screenshot/GIF for visible UI changes, or
-  - explicitly mark `UI Evidence: N/A` with a brief reason when there is no visual delta.
 
 ---
 
@@ -122,7 +119,7 @@ Prefer `type` over `interface` unless declaration merging is required.
 
 ## 6.1 Team-Turn Contract
 
-- Round execution is per-team: `MINIGAME_INTRO -> EATING -> MINIGAME_PLAY` repeats for each team before `ROUND_RESULTS`.
+- Round execution is per-team: `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` repeats for each team before `ROUND_RESULTS`.
 - `RoomState` team-turn fields (`turnOrderTeamIds`, `roundTurnCursor`, `activeRoundTeamId`, `completedRoundTurnTeamIds`, `activeTurnTeamId`) are server-authored snapshot contract fields. `activeTurnTeamId` is minigame turn state used by minigame UI surfaces and must never be client-authored.
 - EATING participation and minigame score mutations must be accepted for the active team only.
 - Round points are accumulated across team turns and applied once when entering `ROUND_RESULTS`.

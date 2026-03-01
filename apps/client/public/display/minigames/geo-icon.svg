@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Geo icon placeholder">
-  <rect x="8" y="8" width="48" height="48" rx="10" fill="#1c1c1c" stroke="#f97316" stroke-width="4" />
-  <circle cx="32" cy="28" r="10" stroke="#f97316" stroke-width="4" fill="none" />
-  <path d="M32 18v20M22 28h20" stroke="#f97316" stroke-width="3" />
-  <path d="M32 52c8-9 12-14 12-20a12 12 0 10-24 0c0 6 4 11 12 20z" fill="#f97316" fill-opacity="0.25" />
-</svg>
