@@ -111,6 +111,26 @@ const createRunningTimer = (
   };
 };
 
+const setTimerForPhase = (state: RoomState, nextPhase: Phase): void => {
+  if (nextPhase === Phase.EATING) {
+    const eatingSeconds = state.gameConfig?.timers.eatingSeconds ?? null;
+    state.timer =
+      eatingSeconds === null ? null : createRunningTimer(Phase.EATING, eatingSeconds);
+    return;
+  }
+
+  if (nextPhase === Phase.MINIGAME_PLAY) {
+    const minigameSeconds = resolveMinigameTimerSeconds(state);
+    state.timer =
+      minigameSeconds === null
+        ? null
+        : createRunningTimer(Phase.MINIGAME_PLAY, minigameSeconds);
+    return;
+  }
+
+  state.timer = null;
+};
+
 export const createInitialRoomState = (): RoomState => {
   return {
     phase: Phase.SETUP,
@@ -354,6 +374,49 @@ const resetRoundWingParticipation = (state: RoomState): void => {
 const clearPendingRoundScores = (state: RoomState): void => {
   state.pendingWingPointsByTeamId = {};
   state.pendingMinigamePointsByTeamId = {};
+};
+
+type ApplyPhaseTransitionEffectsOptions = {
+  applyRoundResultScoresFromAnyTurnBoundary?: boolean;
+};
+
+const applyPhaseTransitionEffects = (
+  state: RoomState,
+  previousPhase: Phase,
+  nextPhase: Phase,
+  options: ApplyPhaseTransitionEffectsOptions = {}
+): void => {
+  if (nextPhase === Phase.ROUND_INTRO) {
+    initializeRoundTurnState(state);
+  }
+
+  if (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.MINIGAME_PLAY) {
+    initializeActiveMinigameTurnState(state);
+  }
+
+  if (previousPhase === Phase.MINIGAME_PLAY && nextPhase !== Phase.MINIGAME_PLAY) {
+    clearActiveMinigameRuntimeState(state);
+  }
+
+  const shouldApplyRoundResultScores =
+    nextPhase === Phase.ROUND_RESULTS &&
+    (options.applyRoundResultScoresFromAnyTurnBoundary === true ||
+      previousPhase === Phase.MINIGAME_PLAY);
+
+  if (shouldApplyRoundResultScores) {
+    clearScoringMutationUndoState(state);
+    applyPendingRoundScoresToTotals(state);
+  }
+
+  if (previousPhase === Phase.ROUND_RESULTS) {
+    clearPendingRoundScores(state);
+  }
+
+  if (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.EATING) {
+    resetRoundWingParticipation(state);
+  }
+
+  setTimerForPhase(state, nextPhase);
 };
 
 const arePointsByTeamIdEqual = (
@@ -918,24 +981,11 @@ export const skipTurnBoundary = (): RoomState => {
   roomState.phase = nextPhase;
   roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
 
-  if (previousPhase === Phase.MINIGAME_PLAY) {
-    clearActiveMinigameRuntimeState(roomState);
-  }
-
-  if (nextPhase === Phase.ROUND_RESULTS) {
-    clearScoringMutationUndoState(roomState);
-    applyPendingRoundScoresToTotals(roomState);
-  }
-
-  if (nextPhase === Phase.EATING) {
-    const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
-    roomState.timer =
-      eatingSeconds === null
-        ? null
-        : createRunningTimer(Phase.EATING, eatingSeconds);
-  } else {
-    roomState.timer = null;
-  }
+  // Score application is intentionally broad for skip boundaries:
+  // skipping from EATING/MINIGAME_INTRO still finalizes accumulated round points.
+  applyPhaseTransitionEffects(roomState, previousPhase, nextPhase, {
+    applyRoundResultScoresFromAnyTurnBoundary: true
+  });
 
   logPhaseTransition(previousPhase, nextPhase, roomState.currentRound);
 
@@ -1016,50 +1066,7 @@ export const advanceRoomStatePhase = (): RoomState => {
   } else {
     roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
   }
-
-  if (nextPhase === Phase.ROUND_INTRO) {
-    initializeRoundTurnState(roomState);
-  }
-
-  if (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.MINIGAME_PLAY) {
-    initializeActiveMinigameTurnState(roomState);
-  }
-
-  if (previousPhase === Phase.MINIGAME_PLAY && nextPhase !== Phase.MINIGAME_PLAY) {
-    clearActiveMinigameRuntimeState(roomState);
-  }
-
-  if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.ROUND_RESULTS) {
-    clearScoringMutationUndoState(roomState);
-    applyPendingRoundScoresToTotals(roomState);
-  }
-
-  if (previousPhase === Phase.ROUND_RESULTS) {
-    clearPendingRoundScores(roomState);
-  }
-
-  if (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.EATING) {
-    resetRoundWingParticipation(roomState);
-    const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
-    roomState.timer =
-      eatingSeconds === null
-        ? null
-        : createRunningTimer(Phase.EATING, eatingSeconds);
-  } else if (previousPhase === Phase.MINIGAME_PLAY && nextPhase === Phase.EATING) {
-    const eatingSeconds = roomState.gameConfig?.timers.eatingSeconds ?? null;
-    roomState.timer =
-      eatingSeconds === null
-        ? null
-        : createRunningTimer(Phase.EATING, eatingSeconds);
-  } else if (nextPhase === Phase.MINIGAME_PLAY) {
-    const minigameSeconds = resolveMinigameTimerSeconds(roomState);
-    roomState.timer =
-      minigameSeconds === null
-        ? null
-        : createRunningTimer(Phase.MINIGAME_PLAY, minigameSeconds);
-  } else {
-    roomState.timer = null;
-  }
+  applyPhaseTransitionEffects(roomState, previousPhase, nextPhase);
 
   if (roomState.currentRound !== previousRound) {
     clearScoringMutationUndoState(roomState);

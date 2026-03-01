@@ -6,6 +6,8 @@ import {
   MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS,
   isSocketClientRole,
+  toRoleScopedSnapshotEnvelope,
+  type RoomState,
   type SocketClientRole
 } from "@wingnight/shared";
 
@@ -32,6 +34,11 @@ import {
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
 import { resolveMinigameDescriptor } from "../minigames/registry/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
+
+const ROOM_BY_CLIENT_ROLE = {
+  HOST: "role:host",
+  DISPLAY: "role:display"
+} as const satisfies Record<SocketClientRole, string>;
 
 export const attachSocketServer = (
   httpServer: HttpServer
@@ -72,13 +79,35 @@ export const attachSocketServer = (
 
   socketServer.on("connection", (socket) => {
     const socketClientRole = resolveSocketClientRole(socket.handshake.auth);
-    const broadcastAfter = (runMutation: () => ReturnType<typeof getRoomStateSnapshot>): void => {
-      socketServer.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, runMutation());
+    socket.join(ROOM_BY_CLIENT_ROLE[socketClientRole]);
+
+    const emitRoleScopedSnapshotToRoom = (
+      clientRole: SocketClientRole,
+      roomState: RoomState
+    ): void => {
+      socketServer
+        .to(ROOM_BY_CLIENT_ROLE[clientRole])
+        .emit(
+          SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT,
+          toRoleScopedSnapshotEnvelope(clientRole, roomState)
+        );
+    };
+
+    const broadcastSnapshot = (roomState: RoomState): void => {
+      emitRoleScopedSnapshotToRoom(CLIENT_ROLES.HOST, roomState);
+      emitRoleScopedSnapshotToRoom(CLIENT_ROLES.DISPLAY, roomState);
+    };
+
+    const broadcastAfter = (runMutation: () => RoomState): void => {
+      broadcastSnapshot(runMutation());
     };
 
     registerRoomStateHandlers(
       socket,
-      getRoomStateSnapshot,
+      () => {
+        const roomState = getRoomStateSnapshot();
+        return toRoleScopedSnapshotEnvelope(socketClientRole, roomState);
+      },
       {
         onAuthorizedNextPhase: () => {
           broadcastAfter(() => advanceRoomStatePhase());
