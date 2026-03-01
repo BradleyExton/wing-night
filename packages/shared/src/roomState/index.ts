@@ -83,15 +83,12 @@ export type RoomState = {
   players: Player[];
   teams: Team[];
   gameConfig: GameConfigFile | null;
-  triviaPrompts?: TriviaPrompt[];
   currentRoundConfig: GameConfigRound | null;
   turnOrderTeamIds: string[];
   roundTurnCursor: number;
   completedRoundTurnTeamIds: string[];
   activeRoundTeamId: string | null;
   activeTurnTeamId: string | null;
-  currentTriviaPrompt?: TriviaPrompt | null;
-  triviaPromptCursor?: number;
   timer: RoomTimerState | null;
   minigameHostView: MinigameHostView | null;
   minigameDisplayView: MinigameDisplayView | null;
@@ -106,13 +103,9 @@ export type RoomState = {
 type DisplayUnsafeRoomStateKeys =
   // Keep this list aligned with server role-scoped snapshot projection.
   // Any answer-bearing or host-only RoomState field must be listed here.
-  | "triviaPrompts"
-  | "currentTriviaPrompt"
   | "minigameHostView";
 
 export const DISPLAY_UNSAFE_ROOM_STATE_KEYS = [
-  "triviaPrompts",
-  "currentTriviaPrompt",
   "minigameHostView"
 ] as const satisfies readonly DisplayUnsafeRoomStateKeys[];
 
@@ -136,3 +129,39 @@ export type RoleScopedSnapshotByRole<TRole extends SocketClientRole> = Extract<
   RoleScopedStateSnapshotEnvelope,
   { clientRole: TRole }
 >["roomState"];
+
+export const toDisplayRoomStateSnapshot = (
+  roomState: RoomState
+): DisplayRoomStateSnapshot => {
+  const { minigameHostView: _omittedMinigameHostView, ...displaySnapshot } = roomState;
+  return displaySnapshot;
+};
+
+export function toRoleScopedSnapshotEnvelope(
+  clientRole: "HOST",
+  roomState: RoomState
+): { clientRole: "HOST"; roomState: HostRoomStateSnapshot };
+export function toRoleScopedSnapshotEnvelope(
+  clientRole: "DISPLAY",
+  roomState: RoomState
+): { clientRole: "DISPLAY"; roomState: DisplayRoomStateSnapshot };
+export function toRoleScopedSnapshotEnvelope(
+  clientRole: SocketClientRole,
+  roomState: RoomState
+): RoleScopedStateSnapshotEnvelope;
+export function toRoleScopedSnapshotEnvelope(
+  clientRole: SocketClientRole,
+  roomState: RoomState
+): RoleScopedStateSnapshotEnvelope {
+  if (clientRole === "HOST") {
+    return {
+      clientRole: "HOST",
+      roomState
+    };
+  }
+
+  return {
+    clientRole: "DISPLAY",
+    roomState: toDisplayRoomStateSnapshot(roomState)
+  };
+}

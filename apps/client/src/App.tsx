@@ -1,4 +1,4 @@
-import { type RoomState } from "@wingnight/shared";
+import { type RoleScopedStateSnapshotEnvelope } from "@wingnight/shared";
 import { useEffect, useMemo, useState } from "react";
 
 import { DisplayBoard } from "./components/DisplayBoard";
@@ -16,7 +16,8 @@ import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 
 export const App = (): JSX.Element => {
   const pathname = window.location.pathname;
-  const [roomState, setRoomState] = useState<RoomState | null>(null);
+  const [roomStateEnvelope, setRoomStateEnvelope] =
+    useState<RoleScopedStateSnapshotEnvelope | null>(null);
   const route = resolveClientRoute(pathname);
   const devMinigameSlug = resolveDevMinigameSlug(pathname);
   const devMinigameType =
@@ -42,7 +43,7 @@ export const App = (): JSX.Element => {
       return;
     }
 
-    return wireRoomStateRehydration(roomSocket, setRoomState);
+    return wireRoomStateRehydration(roomSocket, setRoomStateEnvelope);
   }, [roomSocket]);
 
   useEffect(() => {
@@ -63,14 +64,19 @@ export const App = (): JSX.Element => {
     };
   }, [roomSocket]);
 
+  const hostRoomState =
+    roomStateEnvelope?.clientRole === "HOST" ? roomStateEnvelope.roomState : null;
+  const displayRoomState =
+    roomStateEnvelope?.clientRole === "DISPLAY" ? roomStateEnvelope.roomState : null;
+
   if (route === "HOST") {
     return (
-      <HostControlPanel roomState={roomState} {...(hostControlPanelHandlers ?? {})} />
+      <HostControlPanel roomState={hostRoomState} {...(hostControlPanelHandlers ?? {})} />
     );
   }
 
   if (route === "DISPLAY") {
-    return <DisplayBoard roomState={roomState} />;
+    return <DisplayBoard roomState={displayRoomState} />;
   }
 
   if (route === "DEV_MINIGAME" && devMinigameType !== null) {

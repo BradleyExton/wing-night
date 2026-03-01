@@ -1,4 +1,4 @@
-import { type RoomState } from "@wingnight/shared";
+import type { DisplayRoomStateSnapshot } from "@wingnight/shared";
 
 import { displayBoardCopy } from "../copy";
 import { EatingStageBody } from "./EatingStageBody";
@@ -11,7 +11,7 @@ import * as styles from "./styles";
 import { useEatingCountdown } from "./useEatingCountdown";
 
 type StageSurfaceProps = {
-  roomState: RoomState | null;
+  roomState: DisplayRoomStateSnapshot | null;
 };
 
 const assertUnreachable = (value: never): never => {
