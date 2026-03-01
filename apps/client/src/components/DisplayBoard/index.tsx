@@ -1,4 +1,4 @@
-import { Phase, type RoomState } from "@wingnight/shared";
+import { type RoomState } from "@wingnight/shared";
 import { useMemo } from "react";
 
 import { ContentFatalState } from "../ContentFatalState";
@@ -22,7 +22,6 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
   }, [roomState]);
 
   const phase = roomState?.phase ?? null;
-  const shouldRenderStageSurface = phase !== Phase.SETUP;
 
   if (fatalError !== null) {
     return <ContentFatalState fatalError={fatalError} />;
@@ -32,7 +31,7 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
     <main className={styles.container}>
       <section className={styles.main}>
         <div className={styles.content}>
-          {shouldRenderStageSurface && <StageSurface roomState={roomState} />}
+          <StageSurface roomState={roomState} />
         </div>
       </section>
 
