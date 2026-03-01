@@ -3,9 +3,7 @@ import test from "node:test";
 
 import {
   Phase,
-  TIMER_EXTEND_MAX_SECONDS,
-  type GameConfigFile,
-  type TriviaPrompt
+  TIMER_EXTEND_MAX_SECONDS
 } from "@wingnight/shared";
 
 import {
@@ -27,116 +25,16 @@ import {
   setRoomStatePlayers,
   skipTurnBoundary
 } from "./index.js";
-
-const gameConfigFixture: GameConfigFile = {
-  name: "Fixture Config",
-  rounds: [
-    {
-      round: 1,
-      label: "Warm Up",
-      sauce: "Frank's",
-      pointsPerPlayer: 2,
-      minigame: "TRIVIA"
-    },
-    {
-      round: 2,
-      label: "Medium",
-      sauce: "Buffalo",
-      pointsPerPlayer: 3,
-      minigame: "GEO"
-    }
-  ],
-  minigameScoring: {
-    defaultMax: 15,
-    finalRoundMax: 20
-  },
-  timers: {
-    eatingSeconds: 120,
-    triviaSeconds: 30,
-    geoSeconds: 45,
-    drawingSeconds: 60
-  }
-};
-
-const triviaPromptFixture: TriviaPrompt[] = [
-  {
-    id: "prompt-1",
-    question: "Question 1?",
-    answer: "Answer 1"
-  },
-  {
-    id: "prompt-2",
-    question: "Question 2?",
-    answer: "Answer 2"
-  }
-];
-
-const setupValidTeamsAndAssignments = (
-  gameConfig: GameConfigFile = gameConfigFixture
-): void => {
-  setRoomStateGameConfig(gameConfig);
-  setRoomStatePlayers([
-    { id: "player-1", name: "Player One" },
-    { id: "player-2", name: "Player Two" }
-  ]);
-  createTeam("Team Alpha");
-  createTeam("Team Beta");
-  assignPlayerToTeam("player-1", "team-1");
-  assignPlayerToTeam("player-2", "team-2");
-};
-
-const setupThreeTeamsAndAssignments = (): void => {
-  setRoomStateGameConfig({
-    ...gameConfigFixture,
-    rounds: [{ ...gameConfigFixture.rounds[0] }]
-  });
-  setRoomStatePlayers([
-    { id: "player-1", name: "Player One" },
-    { id: "player-2", name: "Player Two" },
-    { id: "player-3", name: "Player Three" }
-  ]);
-  createTeam("Team Alpha");
-  createTeam("Team Beta");
-  createTeam("Team Gamma");
-  assignPlayerToTeam("player-1", "team-1");
-  assignPlayerToTeam("player-2", "team-2");
-  assignPlayerToTeam("player-3", "team-3");
-};
-
-const advanceUntil = (
-  targetPhase: Phase,
-  targetRound: number,
-  maxSteps = 64
-): void => {
-  for (let step = 0; step < maxSteps; step += 1) {
-    const snapshot = getRoomStateSnapshot();
-
-    if (
-      snapshot.phase === targetPhase &&
-      snapshot.currentRound === targetRound
-    ) {
-      return;
-    }
-
-    advanceRoomStatePhase();
-  }
-
-  assert.fail(
-    `Unable to reach phase ${targetPhase} in round ${targetRound} within ${maxSteps} steps`
-  );
-};
-
-const advanceToEatingPhase = (round = 1): void => {
-  advanceUntil(Phase.EATING, round);
-};
-
-const advanceToMinigamePlayPhase = (round = 1): void => {
-  advanceUntil(Phase.MINIGAME_PLAY, round);
-};
-
-const advanceToRoundResultsPhase = (round: number): void => {
-  advanceUntil(Phase.ROUND_RESULTS, round);
-};
+import {
+  advanceToEatingPhase,
+  advanceToMinigamePlayPhase,
+  advanceToRoundResultsPhase,
+  advanceUntil,
+  gameConfigFixture,
+  setupThreeTeamsAndAssignments,
+  setupValidTeamsAndAssignments,
+  triviaPromptFixture
+} from "./testHarness.js";
 
 test("createInitialRoomState returns setup defaults", () => {
   assert.deepEqual(createInitialRoomState(), {

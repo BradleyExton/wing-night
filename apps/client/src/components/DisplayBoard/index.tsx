@@ -1,4 +1,4 @@
-import { type RoomState } from "@wingnight/shared";
+import type { DisplayRoomStateSnapshot } from "@wingnight/shared";
 import { useMemo } from "react";
 
 import { ContentFatalState } from "../ContentFatalState";
@@ -8,7 +8,7 @@ import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
 import * as styles from "./styles";
 
 type DisplayBoardProps = {
-  roomState: RoomState | null;
+  roomState: DisplayRoomStateSnapshot | null;
 };
 
 export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {

@@ -3,15 +3,19 @@ import test from "node:test";
 
 import {
   CLIENT_TO_SERVER_EVENTS,
+  CLIENT_ROLES,
   Phase,
   SERVER_TO_CLIENT_EVENTS,
+  type RoleScopedStateSnapshotEnvelope,
   type RoomState
 } from "@wingnight/shared";
 
 import { wireRoomStateRehydration } from "./index";
 
 type RoomStateSocketEvents = {
-  [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (roomState: RoomState) => void;
+  [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (
+    payload: RoleScopedStateSnapshotEnvelope
+  ) => void;
 };
 type RoomStateSocket = Parameters<typeof wireRoomStateRehydration>[0];
 
@@ -43,8 +47,8 @@ class MockRoomStateSocket {
     }
   }
 
-  public triggerSnapshot(roomState: RoomState): void {
-    this.handlers[SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]?.(roomState);
+  public triggerSnapshot(payload: RoleScopedStateSnapshotEnvelope): void {
+    this.handlers[SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]?.(payload);
   }
 
   public hasSnapshotHandler(): boolean {
@@ -75,7 +79,7 @@ test("does not request state while disconnected during initial wiring", () => {
 
 test("forwards server snapshots to callback", () => {
   const mockSocket = new MockRoomStateSocket();
-  const receivedSnapshots: RoomState[] = [];
+  const receivedSnapshots: RoleScopedStateSnapshotEnvelope[] = [];
 
   wireRoomStateRehydration(
     mockSocket as unknown as RoomStateSocket,
@@ -108,9 +112,14 @@ test("forwards server snapshots to callback", () => {
     canAdvancePhase: true
   };
 
-  mockSocket.triggerSnapshot(snapshot);
+  const envelope: RoleScopedStateSnapshotEnvelope = {
+    clientRole: CLIENT_ROLES.HOST,
+    roomState: snapshot
+  };
 
-  assert.deepEqual(receivedSnapshots, [snapshot]);
+  mockSocket.triggerSnapshot(envelope);
+
+  assert.deepEqual(receivedSnapshots, [envelope]);
 });
 
 test("cleanup unregisters snapshot listener", () => {

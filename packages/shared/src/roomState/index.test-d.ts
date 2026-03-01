@@ -80,15 +80,12 @@ export type ValidRoomStateCheck = Assert<
       players: Player[];
       teams: Team[];
       gameConfig: GameConfigFile | null;
-      triviaPrompts: TriviaPrompt[];
       currentRoundConfig: GameConfigRound | null;
       turnOrderTeamIds: string[];
       roundTurnCursor: number;
       completedRoundTurnTeamIds: string[];
       activeRoundTeamId: string | null;
       activeTurnTeamId: string | null;
-      currentTriviaPrompt: TriviaPrompt | null;
-      triviaPromptCursor: number;
       minigameHostView: RoomState["minigameHostView"];
       minigameDisplayView: RoomState["minigameDisplayView"];
       timer: RoomState["timer"];
@@ -122,7 +119,6 @@ export type DisplaySnapshotShapeCheck = Assert<
       completedRoundTurnTeamIds: string[];
       activeRoundTeamId: string | null;
       activeTurnTeamId: string | null;
-      triviaPromptCursor: number;
       minigameDisplayView: RoomState["minigameDisplayView"];
       timer: RoomState["timer"];
       wingParticipationByPlayerId: Record<string, boolean>;
@@ -142,6 +138,10 @@ export type DisplaySnapshotHasNoTriviaPromptsCheck = Assert<
 
 export type DisplaySnapshotHasNoCurrentTriviaPromptCheck = Assert<
   IsAssignable<HasKey<DisplayRoomStateSnapshot, "currentTriviaPrompt">, false>
+>;
+
+export type DisplaySnapshotHasNoTriviaPromptCursorCheck = Assert<
+  IsAssignable<HasKey<DisplayRoomStateSnapshot, "triviaPromptCursor">, false>
 >;
 
 export type DisplaySnapshotHasNoMinigameHostViewCheck = Assert<

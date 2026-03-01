@@ -3,11 +3,13 @@ import test from "node:test";
 
 import {
   CLIENT_TO_SERVER_EVENTS,
+  CLIENT_ROLES,
   MINIGAME_API_VERSION,
   Phase,
   SERVER_TO_CLIENT_EVENTS,
   type HostSecretPayload,
   type MinigameActionPayload,
+  type RoleScopedStateSnapshotEnvelope,
   type RoomState
 } from "@wingnight/shared";
 
@@ -18,7 +20,7 @@ type MutationHandlersUnderTest = Parameters<typeof registerRoomStateHandlers>[2]
 
 type SocketHarness = {
   socket: SocketUnderTest;
-  emittedSnapshots: RoomState[];
+  emittedSnapshots: RoleScopedStateSnapshotEnvelope[];
   emittedSecretPayloads: HostSecretPayload[];
   invalidSecretEvents: number;
   triggerRequestState: () => void;
@@ -65,7 +67,7 @@ const buildRoomState = (phase: Phase, currentRound = 0): RoomState => {
 };
 
 const createSocketHarness = (): SocketHarness => {
-  const emittedSnapshots: RoomState[] = [];
+  const emittedSnapshots: RoleScopedStateSnapshotEnvelope[] = [];
   const emittedSecretPayloads: HostSecretPayload[] = [];
   const invalidSecretEvents = { count: 0 };
 
@@ -112,10 +114,10 @@ const createSocketHarness = (): SocketHarness => {
         | typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT
         | typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED
         | typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID,
-      payload: RoomState | HostSecretPayload
+      payload: RoleScopedStateSnapshotEnvelope | HostSecretPayload
     ): void => {
       if (event === SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT) {
-        emittedSnapshots.push(payload as RoomState);
+        emittedSnapshots.push(payload as RoleScopedStateSnapshotEnvelope);
         return;
       }
 
@@ -186,6 +188,15 @@ const createSocketHarness = (): SocketHarness => {
   };
 };
 
+const toHostSnapshotEnvelope = (
+  roomState: RoomState
+): RoleScopedStateSnapshotEnvelope => {
+  return {
+    clientRole: CLIENT_ROLES.HOST,
+    roomState
+  };
+};
+
 const createMutationHandlers = (
   overrides: Partial<MutationHandlersUnderTest> = {}
 ): MutationHandlersUnderTest => {
@@ -244,7 +255,7 @@ test("emits state snapshot immediately and on client request", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => firstState,
+    () => toHostSnapshotEnvelope(firstState),
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         assert.fail("next phase callback should not be called in this test");
@@ -255,12 +266,12 @@ test("emits state snapshot immediately and on client request", () => {
   );
 
   assert.equal(socketHarness.emittedSnapshots.length, 1);
-  assert.deepEqual(socketHarness.emittedSnapshots[0], firstState);
+  assert.deepEqual(socketHarness.emittedSnapshots[0], toHostSnapshotEnvelope(firstState));
 
   socketHarness.triggerRequestState();
 
   assert.equal(socketHarness.emittedSnapshots.length, 2);
-  assert.deepEqual(socketHarness.emittedSnapshots[1], firstState);
+  assert.deepEqual(socketHarness.emittedSnapshots[1], toHostSnapshotEnvelope(firstState));
 });
 
 test("emits host secret when host claims control and socket is authorized", () => {
@@ -268,7 +279,7 @@ test("emits host secret when host claims control and socket is authorized", () =
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.SETUP),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         assert.fail("next phase callback should not be called in this test");
@@ -293,7 +304,7 @@ test("does not emit host secret when socket is not allowed to claim control", ()
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.SETUP),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         assert.fail("next phase callback should not be called in this test");
@@ -315,7 +326,7 @@ test("ignores malformed game:nextPhase payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => initialState,
+    () => toHostSnapshotEnvelope(initialState),
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         authorizedCallCount += 1;
@@ -335,7 +346,7 @@ test("ignores malformed game:nextPhase payloads", () => {
 
   assert.equal(authorizedCallCount, 0);
   assert.equal(socketHarness.emittedSnapshots.length, 1);
-  assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
+  assert.deepEqual(socketHarness.emittedSnapshots[0], toHostSnapshotEnvelope(initialState));
 });
 
 test("does not validate host secret for malformed game:nextPhase payloads", () => {
@@ -344,7 +355,7 @@ test("does not validate host secret for malformed game:nextPhase payloads", () =
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.SETUP),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
     createMutationHandlers(),
     true,
     {
@@ -372,7 +383,7 @@ test("ignores unauthorized game:nextPhase requests", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => initialState,
+    () => toHostSnapshotEnvelope(initialState),
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         authorizedCallCount += 1;
@@ -387,7 +398,7 @@ test("ignores unauthorized game:nextPhase requests", () => {
   assert.equal(authorizedCallCount, 0);
   assert.equal(socketHarness.invalidSecretEvents, 1);
   assert.equal(socketHarness.emittedSnapshots.length, 1);
-  assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
+  assert.deepEqual(socketHarness.emittedSnapshots[0], toHostSnapshotEnvelope(initialState));
 });
 
 test("does not emit invalid-secret event when client cannot claim control", () => {
@@ -396,7 +407,7 @@ test("does not emit invalid-secret event when client cannot claim control", () =
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.SETUP),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         authorizedCallCount += 1;
@@ -421,7 +432,7 @@ test("runs authorized next phase callback without per-socket snapshot emit", () 
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => initialState,
+    () => toHostSnapshotEnvelope(initialState),
     createMutationHandlers({
       onAuthorizedNextPhase: () => {
         authorizedCallCount += 1;
@@ -436,7 +447,7 @@ test("runs authorized next phase callback without per-socket snapshot emit", () 
 
   assert.equal(authorizedCallCount, 1);
   assert.equal(socketHarness.emittedSnapshots.length, 1);
-  assert.deepEqual(socketHarness.emittedSnapshots[0], initialState);
+  assert.deepEqual(socketHarness.emittedSnapshots[0], toHostSnapshotEnvelope(initialState));
   assert.deepEqual(broadcastSnapshots, [advancedState]);
 });
 
@@ -446,7 +457,7 @@ test("ignores malformed and unauthorized skip-turn-boundary payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.EATING),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.EATING)),
     createMutationHandlers({
       onAuthorizedSkipTurnBoundary: () => {
         skipCalls += 1;
@@ -473,7 +484,7 @@ test("ignores malformed and unauthorized reorder-turn-order payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.ROUND_INTRO),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.ROUND_INTRO)),
     createMutationHandlers({
       onAuthorizedReorderTurnOrder: (teamIds) => {
         reorderCalls.push(teamIds);
@@ -515,7 +526,7 @@ test("ignores malformed and unauthorized reset payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.ROUND_RESULTS),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.ROUND_RESULTS)),
     createMutationHandlers({
       onAuthorizedResetGame: () => {
         resetCalls += 1;
@@ -543,7 +554,7 @@ test("runs authorized create-team callback and ignores unauthorized payloads", (
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.SETUP),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
     createMutationHandlers({
       onAuthorizedCreateTeam: (name) => {
         createTeamCalls += 1;
@@ -568,7 +579,7 @@ test("ignores malformed and unauthorized assign-player payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.SETUP),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
     createMutationHandlers({
       onAuthorizedAssignPlayer: (playerId, teamId) => {
         assignmentCalls.push({ playerId, teamId });
@@ -609,7 +620,7 @@ test("ignores malformed and unauthorized wing-participation payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.SETUP),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
     createMutationHandlers({
       onAuthorizedSetWingParticipation: (playerId, didEat) => {
         participationCalls.push({ playerId, didEat });
@@ -655,7 +666,7 @@ test("ignores malformed and unauthorized adjust-team-score payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.ROUND_RESULTS),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.ROUND_RESULTS)),
     createMutationHandlers({
       onAuthorizedAdjustTeamScore: (teamId, delta) => {
         adjustmentCalls.push({ teamId, delta });
@@ -701,7 +712,7 @@ test("ignores malformed and unauthorized redo-last-mutation payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.ROUND_RESULTS),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.ROUND_RESULTS)),
     createMutationHandlers({
       onAuthorizedRedoLastMutation: () => {
         redoCalls += 1;
@@ -728,7 +739,7 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.SETUP),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
     createMutationHandlers({
       onAuthorizedMinigameAction: (payload) => {
         minigameActionCalls.push(payload);
@@ -825,7 +836,7 @@ test("ignores malformed and unauthorized timer pause/resume payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.EATING),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.EATING)),
     createMutationHandlers({
       onAuthorizedPauseTimer: () => {
         pauseCalls += 1;
@@ -860,7 +871,7 @@ test("ignores malformed and unauthorized timer extend payloads", () => {
 
   registerRoomStateHandlers(
     socketHarness.socket,
-    () => buildRoomState(Phase.EATING),
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.EATING)),
     createMutationHandlers({
       onAuthorizedExtendTimer: (additionalSeconds) => {
         timerExtendCalls.push(additionalSeconds);

@@ -17,7 +17,9 @@ export type {
 export {
   DISPLAY_UNSAFE_ROOM_STATE_KEYS,
   MINIGAME_ACTION_TYPES,
-  MINIGAME_CONTRACT_METADATA_BY_ID
+  MINIGAME_CONTRACT_METADATA_BY_ID,
+  toDisplayRoomStateSnapshot,
+  toRoleScopedSnapshotEnvelope
 } from "./roomState/index.js";
 export {
   isGameConfigFile

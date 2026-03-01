@@ -5,7 +5,7 @@ import {
 import type {
   HostSecretPayload,
   MinigameActionPayload,
-  RoomState
+  RoleScopedStateSnapshotEnvelope
 } from "@wingnight/shared";
 
 import {
@@ -21,7 +21,10 @@ import {
 
 type RoomStateSocket = {
   emit: {
-    (event: typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, roomState: RoomState): void;
+    (
+      event: typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT,
+      roomState: RoleScopedStateSnapshotEnvelope
+    ): void;
     (event: typeof SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, payload: HostSecretPayload): void;
     (event: typeof SERVER_TO_CLIENT_EVENTS.SECRET_INVALID): void;
   };
@@ -63,7 +66,7 @@ type AuthorizedEventName = Exclude<
 
 export const registerRoomStateHandlers = (
   socket: RoomStateSocket,
-  getSnapshot: () => RoomState,
+  getSnapshot: () => RoleScopedStateSnapshotEnvelope,
   mutationHandlers: AuthorizedSetupMutationHandlers,
   canClaimControl: boolean,
   hostAuth: HostAuth

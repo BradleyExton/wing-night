@@ -7,6 +7,11 @@ import type {
 } from "../../socketContracts/index";
 import { resolveClientRoute } from "../../utils/resolveClientRoute";
 
+type SocketAuthPayload = {
+  clientRole: SocketClientRole;
+  hostControlToken?: string;
+};
+
 const resolveSocketServerUrl = (): string => {
   const configuredUrl = import.meta.env.VITE_SOCKET_SERVER_URL;
 
@@ -27,12 +32,44 @@ export const resolveSocketClientRole = (pathname: string): SocketClientRole => {
   return CLIENT_ROLES.DISPLAY;
 };
 
+const resolveHostControlToken = (): string | null => {
+  const configuredToken = import.meta.env.VITE_HOST_CONTROL_TOKEN;
+
+  if (typeof configuredToken !== "string") {
+    return null;
+  }
+
+  const trimmedToken = configuredToken.trim();
+
+  if (trimmedToken.length === 0) {
+    return null;
+  }
+
+  return trimmedToken;
+};
+
+export const resolveSocketAuthPayload = (
+  pathname: string,
+  configuredHostControlToken: string | null = resolveHostControlToken()
+): SocketAuthPayload => {
+  const clientRole = resolveSocketClientRole(pathname);
+
+  if (clientRole !== CLIENT_ROLES.HOST || configuredHostControlToken === null) {
+    return {
+      clientRole
+    };
+  }
+
+  return {
+    clientRole,
+    hostControlToken: configuredHostControlToken
+  };
+};
+
 export const createRoomSocket = (
   pathname: string
 ): Socket<InboundSocketEvents, OutboundSocketEvents> => {
   return io(resolveSocketServerUrl(), {
-    auth: {
-      clientRole: resolveSocketClientRole(pathname)
-    }
+    auth: resolveSocketAuthPayload(pathname)
   });
 };

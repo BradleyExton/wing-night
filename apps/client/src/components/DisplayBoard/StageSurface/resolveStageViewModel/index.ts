@@ -1,20 +1,24 @@
-import { Phase, type MinigameType, type RoomState } from "@wingnight/shared";
+import {
+  Phase,
+  type DisplayRoomStateSnapshot,
+  type MinigameType
+} from "@wingnight/shared";
 
 export type StageRenderMode = "setup" | "round_intro" | "eating" | "minigame" | "fallback";
 
 type StageViewModel = {
   phase: Phase | null;
   stageMode: StageRenderMode;
-  gameConfig: RoomState["gameConfig"];
-  currentRoundConfig: RoomState["currentRoundConfig"];
+  gameConfig: DisplayRoomStateSnapshot["gameConfig"];
+  currentRoundConfig: DisplayRoomStateSnapshot["currentRoundConfig"];
   minigameType: MinigameType | null;
   minigamePhase: "intro" | "play" | null;
   teamCount: number;
   teamNames: string[];
   activeTeamName: string | null;
   shouldRenderTeamTurnContext: boolean;
-  minigameDisplayView: RoomState["minigameDisplayView"];
-  eatingTimerSnapshot: NonNullable<RoomState["timer"]> | null;
+  minigameDisplayView: DisplayRoomStateSnapshot["minigameDisplayView"];
+  eatingTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
   fallbackEatingSeconds: number | null;
   hasRoomState: boolean;
 };
@@ -44,7 +48,9 @@ const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
   }
 };
 
-export const resolveStageViewModel = (roomState: RoomState | null): StageViewModel => {
+export const resolveStageViewModel = (
+  roomState: DisplayRoomStateSnapshot | null
+): StageViewModel => {
   const phase = roomState?.phase ?? null;
   const stageMode = resolveStageRenderMode(phase);
   const gameConfig = roomState?.gameConfig ?? null;

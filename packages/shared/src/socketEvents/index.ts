@@ -1,7 +1,6 @@
 import type { MinigameType } from "../content/gameConfig/index.js";
 import type {
-  RoleScopedStateSnapshotEnvelope,
-  RoomState
+  RoleScopedStateSnapshotEnvelope
 } from "../roomState/index.js";
 
 export type HostSecretPayload = Record<"hostSecret", string>;
@@ -106,7 +105,7 @@ export type ClientToServerEvents = {
 
 export type ServerToClientEvents = {
   [SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]: (
-    payload: RoleScopedStateSnapshotEnvelope | RoomState
+    payload: RoleScopedStateSnapshotEnvelope
   ) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED]: (payload: HostSecretPayload) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_INVALID]: () => void;

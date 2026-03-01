@@ -1,8 +1,7 @@
 import {
   CLIENT_TO_SERVER_EVENTS,
   SERVER_TO_CLIENT_EVENTS,
-  type RoleScopedStateSnapshotEnvelope,
-  type RoomState
+  type RoleScopedStateSnapshotEnvelope
 } from "@wingnight/shared";
 import type { Socket } from "socket.io-client";
 
@@ -18,20 +17,13 @@ type RoomStateSocket = Pick<
 
 export const wireRoomStateRehydration = (
   socket: RoomStateSocket,
-  onSnapshot: (roomState: RoomState) => void
+  onSnapshot: (payload: RoleScopedStateSnapshotEnvelope) => void
 ): (() => void) => {
   const requestLatestState = (): void => {
     socket.emit(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE);
   };
 
-  const handleSnapshot = (
-    payload: RoomState | RoleScopedStateSnapshotEnvelope
-  ): void => {
-    if (typeof payload === "object" && payload !== null && "clientRole" in payload) {
-      onSnapshot(payload.roomState as RoomState);
-      return;
-    }
-
+  const handleSnapshot = (payload: RoleScopedStateSnapshotEnvelope): void => {
     onSnapshot(payload);
   };
 

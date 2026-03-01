@@ -3,6 +3,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_SOCKET_SERVER_URL?: string;
+  readonly VITE_HOST_CONTROL_TOKEN?: string;
 }
 
 interface ImportMeta {
