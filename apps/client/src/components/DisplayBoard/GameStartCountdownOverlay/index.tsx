@@ -9,7 +9,7 @@ export const GameStartCountdownOverlay = ({
   remainingSeconds
 }: GameStartCountdownOverlayProps): JSX.Element => {
   return (
-    <div className={styles.overlay} aria-live="polite" aria-atomic>
+    <div className={styles.overlay}>
       <section className={styles.countdownCard}>
         <p className={styles.kicker}>{gameStartCountdownOverlayCopy.kickerLabel}</p>
         <p className={styles.countValue}>

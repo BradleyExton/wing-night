@@ -35,7 +35,6 @@ export const displayCopy = {
   standingsTitle: "Standings",
   standingsEmptyLabel: "No teams have joined yet.",
   standingScoreLabel: (score: number): string => `${score} pts`,
-  standingRosterEmptyLabel: STANDING_ROSTER_EMPTY_LABEL,
   standingRosterValue: (
     visiblePlayerNames: string[],
     hiddenPlayerCount: number

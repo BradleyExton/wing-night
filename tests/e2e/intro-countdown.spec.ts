@@ -32,13 +32,14 @@ const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
             .filter((value) => value.length > 0);
         });
 
+      if (teamOptionValues.length === 0) {
+        await hostPage.waitForTimeout(200);
+        continue;
+      }
+
       for (let index = 0; index < playerNames.length; index += 1) {
         const playerName = playerNames[index];
         const teamValue = teamOptionValues[index % teamOptionValues.length];
-
-        if (teamValue === undefined) {
-          return;
-        }
 
         const assignmentSelect = hostPage.getByLabel(`Assign ${playerName} to a team`);
 

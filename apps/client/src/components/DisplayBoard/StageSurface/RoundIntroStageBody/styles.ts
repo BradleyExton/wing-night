@@ -41,10 +41,10 @@ export const sparkField =
   "pointer-events-none absolute inset-x-[14%] bottom-[14%] z-20 h-[38%]";
 
 export const sparkGlow =
-  "absolute left-1/2 bottom-[14%] h-[clamp(0.7rem,1vw,1.25rem)] w-[clamp(3.4rem,7vw,8.2rem)] -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-gold/35 to-transparent blur-[2px]";
+  "absolute left-1/2 bottom-[14%] h-[clamp(0.7rem,1vw,1.25rem)] w-[clamp(3.4rem,7vw,8.2rem)] -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-primary/35 to-transparent blur-[2px]";
 
 export const spark =
-  "absolute rounded-full bg-gold/75 [will-change:transform,opacity] motion-reduce:[animation:none] motion-reduce:opacity-30";
+  "absolute rounded-full bg-primary/75 [will-change:transform,opacity] motion-reduce:[animation:none] motion-reduce:opacity-30";
 
 export const sparkOne =
   "left-[38%] bottom-[16%] h-[clamp(0.2rem,0.3vw,0.4rem)] w-[clamp(0.2rem,0.3vw,0.4rem)] [--spark-drift:-0.35rem] [--spark-rise:3.3rem] [animation:sparkFloat_3.6s_cubic-bezier(0.24,0.66,0.25,1)_200ms_infinite]";
@@ -53,7 +53,7 @@ export const sparkTwo =
   "left-[58%] bottom-[13%] h-[clamp(0.2rem,0.3vw,0.4rem)] w-[clamp(0.2rem,0.3vw,0.4rem)] [--spark-drift:0.3rem] [--spark-rise:3.7rem] [animation:sparkFloat_3.2s_cubic-bezier(0.24,0.66,0.25,1)_900ms_infinite]";
 
 export const sparkTrail =
-  "absolute w-[2px] rounded-full bg-gradient-to-t from-primary/0 via-gold/55 to-primary/0 opacity-60 [will-change:transform,opacity] motion-reduce:[animation:none] motion-reduce:opacity-25";
+  "absolute w-[2px] rounded-full bg-gradient-to-t from-primary/0 via-primary/55 to-primary/0 opacity-60 [will-change:transform,opacity] motion-reduce:[animation:none] motion-reduce:opacity-25";
 
 export const sparkTrailOne =
   "left-[45%] bottom-[16%] h-[clamp(0.52rem,0.75vw,0.85rem)] -rotate-[14deg] [--spark-drift:0.26rem] [--spark-rise:3.75rem] [animation:sparkTrailFloat_4s_cubic-bezier(0.28,0.68,0.3,1)_300ms_infinite]";

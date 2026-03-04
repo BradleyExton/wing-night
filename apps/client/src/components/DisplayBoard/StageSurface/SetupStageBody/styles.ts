@@ -1,7 +1,7 @@
 export const setupRoot =
   "relative isolate grid h-full grid-rows-[auto_minmax(0,1fr)_auto] gap-[clamp(0.5rem,1vh,1.5rem)] overflow-hidden [@media(max-height:850px)]:gap-1.5";
 export const atmosphereLayer =
-  "pointer-events-none absolute -inset-[22%] z-0 rounded-full bg-gradient-to-br from-primary/20 via-transparent to-primary/10 opacity-50 blur-3xl [animation:spin_90s_linear_infinite] motion-reduce:[animation:none]";
+  "pointer-events-none absolute inset-0 z-0 rounded-none bg-gradient-to-br from-primary/20 via-transparent to-primary/10 opacity-50 blur-3xl [animation:spin_90s_linear_infinite] motion-reduce:[animation:none]";
 export const setupHeader =
   "relative z-10 px-4 pt-[clamp(0.5rem,1vh,1.25rem)] md:px-8 2xl:px-12";
 export const setupTitle =
@@ -53,9 +53,9 @@ export const flowIllustrationSlot =
 export const sparkField =
   "pointer-events-none absolute inset-x-[7%] bottom-[calc(18%+45px)] z-30 h-[46%]";
 export const sparkGlow =
-  "absolute left-1/2 bottom-[10%] h-[clamp(0.8rem,1.4vw,1.8rem)] w-[clamp(4.2rem,10vw,11.5rem)] -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-gold/25 to-transparent blur-[2px] opacity-45 motion-reduce:opacity-20";
+  "absolute left-1/2 bottom-[10%] h-[clamp(0.8rem,1.4vw,1.8rem)] w-[clamp(4.2rem,10vw,11.5rem)] -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-primary/25 to-transparent blur-[2px] opacity-45 motion-reduce:opacity-20";
 export const spark =
-  "absolute rounded-full bg-gold/80 opacity-75 shadow-[0_0_8px_rgba(251,191,36,0.38)] [will-change:transform,opacity] motion-reduce:[animation:none] motion-reduce:opacity-30";
+  "absolute rounded-full bg-primary/80 opacity-75 shadow-[0_0_8px_rgba(249,115,22,0.3)] [will-change:transform,opacity] motion-reduce:[animation:none] motion-reduce:opacity-30";
 export const sparkOne =
   "left-[32%] bottom-[12%] h-[clamp(0.24rem,0.4vw,0.58rem)] w-[clamp(0.24rem,0.4vw,0.58rem)] [--spark-drift:-0.45rem] [--spark-rise:4.2rem] [animation:sparkFloat_3.4s_cubic-bezier(0.24,0.66,0.25,1)_0ms_infinite]";
 export const sparkTwo =
@@ -63,7 +63,7 @@ export const sparkTwo =
 export const sparkThree =
   "left-[68%] bottom-[10%] h-[clamp(0.2rem,0.34vw,0.5rem)] w-[clamp(0.2rem,0.34vw,0.5rem)] [--spark-drift:-0.25rem] [--spark-rise:4.9rem] [animation:sparkFloat_3.8s_cubic-bezier(0.24,0.66,0.25,1)_1300ms_infinite]";
 export const sparkTrail =
-  "absolute w-[2px] rounded-full bg-gradient-to-t from-primary/0 via-gold/55 to-primary/0 opacity-48 shadow-[0_0_8px_rgba(249,115,22,0.3)] [will-change:transform,opacity] motion-reduce:[animation:none] motion-reduce:opacity-25";
+  "absolute w-[2px] rounded-full bg-gradient-to-t from-primary/0 via-primary/55 to-primary/0 opacity-48 shadow-[0_0_8px_rgba(249,115,22,0.3)] [will-change:transform,opacity] motion-reduce:[animation:none] motion-reduce:opacity-25";
 export const sparkTrailOne =
   "left-[41%] bottom-[15%] h-[clamp(0.68rem,1.05vw,1.25rem)] -rotate-[16deg] [--spark-drift:0.4rem] [--spark-rise:5.1rem] [animation:sparkTrailFloat_4.1s_cubic-bezier(0.28,0.68,0.3,1)_320ms_infinite]";
 export const sparkTrailTwo =

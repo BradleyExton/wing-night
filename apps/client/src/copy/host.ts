@@ -194,7 +194,6 @@ export const hostCopy = {
   compactStandingsTitle: "Standings Snapshot",
   compactNoStandingsLabel: "No teams available for standings yet.",
   compactLeaderLabel: "Leader",
-  compactRosterEmptyLabel: COMPACT_ROSTER_EMPTY_LABEL,
   compactRosterValue: (
     visiblePlayerNames: string[],
     hiddenPlayerCount: number
@@ -215,7 +214,6 @@ export const hostCopy = {
   compactScoreLabel: (score: number): string => `${score} pts`,
   teamMembersLabel: (memberCount: number): string =>
     `${memberCount} player${memberCount === 1 ? "" : "s"}`,
-  teamRosterEmptyLabel: TEAM_ROSTER_EMPTY_LABEL,
   teamRosterValue: (
     visiblePlayerNames: string[],
     hiddenPlayerCount: number
