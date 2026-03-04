@@ -89,6 +89,7 @@ export const HostPhaseBody = ({
           <TeamSetupSurface
             nextTeamName={nextTeamName}
             setupMutationsDisabled={setupMutationsDisabled}
+            players={players}
             teams={teams}
             onNextTeamNameChange={onNextTeamNameChange}
             onCreateTeamSubmit={onCreateTeamSubmit}
@@ -143,7 +144,7 @@ export const HostPhaseBody = ({
     case "compact":
       return roomState ? (
         <div className={styles.surfaceGroup}>
-          <CompactSummarySurface sortedStandings={sortedStandings} />
+          <CompactSummarySurface sortedStandings={sortedStandings} players={players} />
         </div>
       ) : null;
     default:

@@ -1,5 +1,6 @@
 {
   "name": "House Party Pack",
+  "setupPreviewRoundSlots": 8,
   "rounds": [
     {
       "round": 1,

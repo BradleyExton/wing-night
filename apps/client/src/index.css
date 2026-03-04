@@ -15,3 +15,49 @@ body {
   margin: 0;
   min-height: 100dvh;
 }
+
+@keyframes sparkFloat {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.62);
+    opacity: 0;
+  }
+
+  14% {
+    opacity: 0.72;
+  }
+
+  52% {
+    opacity: 0.54;
+  }
+
+  78% {
+    opacity: 0.28;
+  }
+
+  100% {
+    transform: translate3d(var(--spark-drift, 0px), calc(-1 * var(--spark-rise, 2.4rem)), 0)
+      scale(1.06);
+    opacity: 0;
+  }
+}
+
+@keyframes sparkTrailFloat {
+  0% {
+    transform: translate3d(0, 0, 0) scaleY(0.66);
+    opacity: 0;
+  }
+
+  16% {
+    opacity: 0.5;
+  }
+
+  68% {
+    opacity: 0.24;
+  }
+
+  100% {
+    transform: translate3d(var(--spark-drift, 0px), calc(-1 * var(--spark-rise, 3rem)), 0)
+      scaleY(1.15);
+    opacity: 0;
+  }
+}

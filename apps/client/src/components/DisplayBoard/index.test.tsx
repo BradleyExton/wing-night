@@ -109,19 +109,29 @@ test("renders standings in descending score order", () => {
     {
       id: "team-alpha",
       name: "Team Alpha",
-      playerIds: [],
+      playerIds: ["player-1", "player-2", "player-3"],
       totalScore: 8
     },
     {
       id: "team-beta",
       name: "Team Beta",
-      playerIds: [],
+      playerIds: ["player-4"],
       totalScore: 12
     }
   ];
+  const players = [
+    { id: "player-1", name: "Alex" },
+    { id: "player-2", name: "Morgan" },
+    { id: "player-3", name: "Sam" },
+    { id: "player-4", name: "Jules" }
+  ];
   const html = renderToStaticMarkup(
-    <DisplayBoard roomState={buildSnapshot(Phase.ROUND_RESULTS, teams)} />
+    <DisplayBoard
+      roomState={buildSnapshot(Phase.ROUND_RESULTS, teams, { players })}
+    />
   );
 
   assert.ok(html.indexOf("Team Beta") < html.indexOf("Team Alpha"));
+  assert.match(html, /Jules/);
+  assert.match(html, /Alex, Morgan, Sam/);
 });

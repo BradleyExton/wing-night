@@ -42,8 +42,6 @@ export const StageSurface = ({
         return (
           <SetupStageBody
             gameConfig={stageViewModel.gameConfig}
-            teamCount={stageViewModel.teamCount}
-            teamNames={stageViewModel.teamNames}
           />
         );
       case "round_intro":

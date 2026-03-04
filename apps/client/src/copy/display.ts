@@ -32,5 +32,20 @@ export const displayCopy = {
   eatingTimerValue: formatClockSeconds,
   standingsTitle: "Standings",
   standingsEmptyLabel: "No teams have joined yet.",
-  standingScoreLabel: (score: number): string => `${score} pts`
+  standingScoreLabel: (score: number): string => `${score} pts`,
+  standingRosterEmptyLabel: "No players assigned.",
+  standingRosterValue: (
+    visiblePlayerNames: string[],
+    hiddenPlayerCount: number
+  ): string => {
+    if (visiblePlayerNames.length === 0) {
+      return "No players assigned.";
+    }
+
+    if (hiddenPlayerCount > 0) {
+      return `${visiblePlayerNames.join(", ")} +${hiddenPlayerCount}`;
+    }
+
+    return visiblePlayerNames.join(", ");
+  }
 } as const;

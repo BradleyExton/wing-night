@@ -13,6 +13,7 @@ type DisplayBoardProps = {
 
 export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
   const fatalError = roomState?.fatalError ?? null;
+  const players = roomState?.players ?? [];
   const standings = useMemo(() => {
     if (!roomState) {
       return [];
@@ -35,7 +36,7 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
         </div>
       </section>
 
-      <StandingsSurface phase={phase} standings={standings} />
+      <StandingsSurface phase={phase} standings={standings} players={players} />
     </main>
   );
 };

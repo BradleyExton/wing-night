@@ -60,6 +60,7 @@ export type ValidGameConfigFileCheck = Assert<
       minigameScoring: GameConfigScoring;
       timers: GameConfigTimers;
       minigameRules?: MinigameRules;
+      setupPreviewRoundSlots?: number;
     },
     GameConfigFile
   >

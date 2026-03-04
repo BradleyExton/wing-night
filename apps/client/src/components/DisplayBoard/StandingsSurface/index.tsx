@@ -1,15 +1,23 @@
-import { Phase, type Team } from "@wingnight/shared";
+import { Phase, type Player, type Team } from "@wingnight/shared";
 
 import { displayBoardCopy } from "../copy";
+import { resolveTeamColorVariant } from "../../../utils/resolveTeamColorVariant";
+import { resolveTeamRosterPreview } from "../../../utils/resolveTeamRosterPreview";
 import * as styles from "./styles";
 
 type StandingsSurfaceProps = {
   phase: Phase | null;
   standings: Team[];
+  players: Player[];
 };
 
-export const StandingsSurface = ({ phase, standings }: StandingsSurfaceProps): JSX.Element => {
+export const StandingsSurface = ({
+  phase,
+  standings,
+  players
+}: StandingsSurfaceProps): JSX.Element => {
   const leadingTeamId = standings[0]?.id ?? null;
+  const playerById = new Map(players.map((player) => [player.id, player] as const));
 
   return (
     <footer className={styles.footer}>
@@ -27,12 +35,31 @@ export const StandingsSurface = ({ phase, standings }: StandingsSurfaceProps): J
               : isLeader
                 ? styles.leadingStandingCard
                 : styles.standingCard;
+            const teamColorVariant = resolveTeamColorVariant(team.id);
+            const teamRosterPreview = resolveTeamRosterPreview(team, playerById, 3);
 
             return (
-              <li key={team.id} className={standingCardClassName}>
-                <p className={styles.teamName}>{team.name}</p>
-                <p className={styles.score}>
-                  {displayBoardCopy.standingScoreLabel(team.totalScore)}
+              <li
+                key={team.id}
+                className={`${standingCardClassName} ${styles.teamColorEdge} ${teamColorVariant.borderAccentClassName}`}
+              >
+                <div className={styles.teamRow}>
+                  <div className={styles.teamIdentity}>
+                    <span
+                      className={`${styles.teamAccentDot} ${teamColorVariant.dotAccentClassName}`}
+                      aria-hidden
+                    />
+                    <p className={styles.teamName}>{team.name}</p>
+                  </div>
+                  <p className={styles.score}>
+                    {displayBoardCopy.standingScoreLabel(team.totalScore)}
+                  </p>
+                </div>
+                <p className={styles.teamRoster}>
+                  {displayBoardCopy.standingRosterValue(
+                    teamRosterPreview.visiblePlayerNames,
+                    teamRosterPreview.hiddenPlayerCount
+                  )}
                 </p>
               </li>
             );

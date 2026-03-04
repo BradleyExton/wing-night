@@ -151,12 +151,42 @@ export const hostCopy = {
   compactStandingsTitle: "Standings Snapshot",
   compactNoStandingsLabel: "No teams available for standings yet.",
   compactLeaderLabel: "Leader",
+  compactRosterEmptyLabel: "No players assigned.",
+  compactRosterValue: (
+    visiblePlayerNames: string[],
+    hiddenPlayerCount: number
+  ): string => {
+    if (visiblePlayerNames.length === 0) {
+      return "No players assigned.";
+    }
+
+    if (hiddenPlayerCount > 0) {
+      return `${visiblePlayerNames.join(", ")} +${hiddenPlayerCount}`;
+    }
+
+    return visiblePlayerNames.join(", ");
+  },
   compactPhaseLabel: formatPhaseLabel,
   compactRoundProgressLabel: (currentRound: number, totalRounds: number): string =>
     `Round ${Math.max(currentRound, 1)} of ${totalRounds}`,
   compactScoreLabel: (score: number): string => `${score} pts`,
   teamMembersLabel: (memberCount: number): string =>
     `${memberCount} player${memberCount === 1 ? "" : "s"}`,
+  teamRosterEmptyLabel: "No players assigned yet.",
+  teamRosterValue: (
+    visiblePlayerNames: string[],
+    hiddenPlayerCount: number
+  ): string => {
+    if (visiblePlayerNames.length === 0) {
+      return "No players assigned yet.";
+    }
+
+    if (hiddenPlayerCount > 0) {
+      return `${visiblePlayerNames.join(", ")} +${hiddenPlayerCount}`;
+    }
+
+    return visiblePlayerNames.join(", ");
+  },
   turnOrderSectionTitle: "Turn Order",
   turnOrderDescription:
     "Adjust team order before the round begins. This order carries into later rounds until changed.",

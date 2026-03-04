@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Phase, type Team } from "@wingnight/shared";
+import { Phase, type Player, type Team } from "@wingnight/shared";
 
 import { StandingsSurface } from "./index";
 
@@ -9,28 +9,42 @@ const teamsFixture: Team[] = [
   {
     id: "team-beta",
     name: "Team Beta",
-    playerIds: [],
+    playerIds: ["player-1", "player-2", "player-3", "player-4"],
     totalScore: 12
   },
   {
     id: "team-alpha",
     name: "Team Alpha",
-    playerIds: [],
+    playerIds: ["player-5"],
     totalScore: 8
   }
 ];
 
+const playersFixture: Player[] = [
+  { id: "player-1", name: "Alex" },
+  { id: "player-2", name: "Morgan" },
+  { id: "player-3", name: "Sam" },
+  { id: "player-4", name: "Jules" },
+  { id: "player-5", name: "Taylor" }
+];
+
 test("renders standings in descending order", () => {
   const html = renderToStaticMarkup(
-    <StandingsSurface phase={Phase.ROUND_RESULTS} standings={teamsFixture} />
+    <StandingsSurface
+      phase={Phase.ROUND_RESULTS}
+      standings={teamsFixture}
+      players={playersFixture}
+    />
   );
 
   assert.ok(html.indexOf("Team Beta") < html.indexOf("Team Alpha"));
+  assert.match(html, /Alex, Morgan, Sam \+1/);
+  assert.match(html, /Taylor/);
 });
 
 test("renders empty state when standings are missing", () => {
   const html = renderToStaticMarkup(
-    <StandingsSurface phase={Phase.SETUP} standings={[]} />
+    <StandingsSurface phase={Phase.SETUP} standings={[]} players={[]} />
   );
 
   assert.match(html, /No teams have joined yet/);

@@ -14,7 +14,15 @@ const config: Config = {
         heat: "#ef4444",
         success: "#22c55e",
         danger: "#dc2626",
-        gold: "#fbbf24"
+        gold: "#fbbf24",
+        teamA: "#f97316",
+        teamB: "#06b6d4",
+        teamC: "#84cc16",
+        teamD: "#f43f5e",
+        teamE: "#facc15",
+        teamF: "#14b8a6",
+        teamG: "#60a5fa",
+        teamH: "#fb7185"
       }
     }
   },

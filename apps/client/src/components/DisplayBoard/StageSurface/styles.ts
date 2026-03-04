@@ -2,7 +2,7 @@ export const card =
   "rounded-2xl border border-text/10 bg-surfaceAlt px-6 py-6 text-left shadow-2xl md:px-8 md:py-8";
 
 export const setupCard =
-  "h-full max-h-full overflow-hidden px-2 py-2 text-left md:px-3 md:py-3 [@media(max-height:850px)]:px-1 [@media(max-height:850px)]:py-1";
+  "h-full max-h-full overflow-hidden -mx-4 -my-3 text-left md:-mx-8 md:-my-4 [@media(max-height:850px)]:-my-2";
 
 export const surfaceContextRow = "mb-3 flex items-center justify-between gap-3";
 

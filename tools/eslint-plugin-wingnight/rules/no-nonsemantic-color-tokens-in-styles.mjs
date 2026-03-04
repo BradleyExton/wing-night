@@ -25,7 +25,7 @@ export default {
     schema: [],
     messages: {
       noNonsemanticColorToken:
-        "Use semantic Wing Night color tokens in styles.ts (bg, surface, surfaceAlt, text, muted, primary, heat, success, danger, gold) instead of raw Tailwind palette colors."
+        "Use semantic Wing Night color tokens in styles.ts (bg, surface, surfaceAlt, text, muted, primary, heat, success, danger, gold, teamA-teamH) instead of raw Tailwind palette colors."
     }
   },
   create(context) {

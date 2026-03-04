@@ -34,6 +34,8 @@ If it is not defined in this document, it is not MVP scope.
   - Be read-only
   - Never scroll vertically
   - Fill the viewport (`100dvh` / no overflow)
+  - Be optimized for a 4K living-room TV first, while remaining usable at 1080p/720p
+  - Keep critical phase/round context legible from across a room
 - All devices run on the same local Wi-Fi network (LAN-first)
 - Server holds authoritative state (in-memory only)
 - Host-driven phase progression (never auto-advance)
@@ -59,7 +61,7 @@ Out of Scope (MVP):
 - Teams are formed live at the party
 - Team sizes are locked once the game starts
 
-Display runs on a laptop connected to a TV via HDMI and must remain full-screen and scroll-free.
+Display runs on a laptop connected to a TV via HDMI and must remain full-screen, scroll-free, and distance-readable on a 4K TV.
 
 ---
 
@@ -112,6 +114,7 @@ Example:
 
 {
   "name": "House Party Pack",
+  "setupPreviewRoundSlots": 8,
   "rounds": [
     {
       "round": 1,
@@ -138,6 +141,7 @@ Rules:
 - Each round must define `minigame`
 - Config locks once game starts
 - Invalid config blocks start
+- `setupPreviewRoundSlots` is optional and controls setup-screen lineup preview slots (filler cards render when slots exceed configured rounds)
 
 ---
 

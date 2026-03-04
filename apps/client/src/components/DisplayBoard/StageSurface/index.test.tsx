@@ -66,20 +66,40 @@ test("renders round intro metadata", () => {
   assert.match(html, /TRIVIA/);
 });
 
-test("renders setup hero and flow without live setup status chips", () => {
+test("renders setup flow-first layout without live setup status chips", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.SETUP)} />
   );
 
-  assert.match(html, /Tonight at a Glance/);
-  assert.match(html, /display\/setup\/hero\.png/);
-  assert.match(html, /Round Flow/);
-  assert.match(html, /Round Intro/);
+  assert.match(html, /Wing Night/);
+  assert.match(html, /display\/setup\/flow-round-intro\.png/);
+  assert.match(html, /Round Start/);
   assert.match(html, /Mini-Game Intro/);
-  assert.match(html, /display\/setup\/flow-minigame-intro\.svg/);
+  assert.match(html, /display\/setup\/flow-minigame-intro\.png/);
+  assert.doesNotMatch(html, /Tonight at a Glance/);
+  assert.doesNotMatch(html, /display\/setup\/hero\.png/);
   assert.doesNotMatch(html, /Pack:/);
   assert.doesNotMatch(html, /Live Setup/);
   assert.doesNotMatch(html, /In Progress/);
+  assert.doesNotMatch(html, /Open Slot/);
+});
+
+test("renders setup preview filler cards when setup preview slots are configured", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.SETUP),
+        gameConfig: {
+          ...gameConfigFixture,
+          setupPreviewRoundSlots: 8
+        }
+      }}
+    />
+  );
+
+  assert.match(html, /Round 8: Open Slot/);
+  assert.match(html, /Choose sauce and mini-game to lock this round\./);
+  assert.doesNotMatch(html, /\+7 more rounds/);
 });
 
 test("falls back to generic context when ROUND_INTRO is missing round config", () => {

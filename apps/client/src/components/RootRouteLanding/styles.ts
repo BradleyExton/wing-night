@@ -3,6 +3,8 @@ export const container = "min-h-[100dvh] grid place-items-center bg-bg px-6 py-8
 export const panel =
   "mx-auto w-full max-w-5xl rounded-2xl border border-text/10 bg-surface p-6 shadow-2xl md:p-10";
 
+export const panelLayout = "grid items-center gap-8 lg:grid-cols-[1fr_1.1fr]";
+
 export const eyebrow = "text-xs font-semibold uppercase tracking-[0.24em] text-primary/90";
 
 export const title = "mt-3 text-4xl font-black leading-tight md:text-5xl";
@@ -23,3 +25,8 @@ export const actionCardSecondary =
 export const actionLabel = "text-lg font-semibold text-text";
 
 export const actionDetail = "mt-2 text-sm text-text/80";
+
+export const heroFrame =
+  "mx-auto w-full max-w-[36rem] overflow-hidden rounded-2xl border border-text/10 bg-surfaceAlt/35 p-3";
+
+export const heroMedia = "h-full w-full object-cover";
