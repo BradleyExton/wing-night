@@ -13,7 +13,8 @@ import {
   getRoomStateSnapshot,
   setRoomStateGameConfig,
   setRoomStateMinigameContent,
-  setRoomStatePlayers
+  setRoomStatePlayers,
+  setWingParticipation
 } from "./index.js";
 
 export const gameConfigFixture: GameConfigFile = {
@@ -120,6 +121,20 @@ export const advanceUntil = (
       snapshot.currentRound === targetRound
     ) {
       return;
+    }
+
+    if (snapshot.phase === Phase.EATING && targetPhase !== Phase.EATING) {
+      const activeTeam = snapshot.teams.find((team) => {
+        return team.id === snapshot.activeRoundTeamId;
+      });
+
+      for (const playerId of activeTeam?.playerIds ?? []) {
+        if (Object.hasOwn(snapshot.wingParticipationByPlayerId, playerId)) {
+          continue;
+        }
+
+        setWingParticipation(playerId, false);
+      }
     }
 
     advanceRoomStatePhase();

@@ -390,7 +390,7 @@ const applyPhaseTransitionEffects = (
     initializeRoundTurnState(state);
   }
 
-  if (previousPhase === Phase.MINIGAME_INTRO && nextPhase === Phase.MINIGAME_PLAY) {
+  if (previousPhase === Phase.EATING && nextPhase === Phase.MINIGAME_PLAY) {
     initializeActiveMinigameTurnState(state);
   }
 
@@ -401,7 +401,7 @@ const applyPhaseTransitionEffects = (
   const shouldApplyRoundResultScores =
     nextPhase === Phase.ROUND_RESULTS &&
     (options.applyRoundResultScoresFromAnyTurnBoundary === true ||
-      previousPhase === Phase.MINIGAME_PLAY);
+      previousPhase === Phase.TURN_RESULTS);
 
   if (shouldApplyRoundResultScores) {
     clearScoringMutationUndoState(state);
@@ -412,7 +412,7 @@ const applyPhaseTransitionEffects = (
     clearPendingRoundScores(state);
   }
 
-  if (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.EATING) {
+  if (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.MINIGAME_INTRO) {
     resetRoundWingParticipation(state);
   }
 
@@ -524,10 +524,14 @@ const finalizeActiveRoundTurn = (state: RoomState): void => {
 
 const resolveNextPhase = (state: RoomState, previousPhase: Phase): Phase => {
   if (previousPhase === Phase.MINIGAME_PLAY) {
+    return Phase.TURN_RESULTS;
+  }
+
+  if (previousPhase === Phase.TURN_RESULTS) {
     const hasNextRoundTurn =
       state.roundTurnCursor + 1 < state.turnOrderTeamIds.length;
 
-    return hasNextRoundTurn ? Phase.EATING : Phase.ROUND_RESULTS;
+    return hasNextRoundTurn ? Phase.MINIGAME_INTRO : Phase.ROUND_RESULTS;
   }
 
   return getNextPhase(previousPhase, state.currentRound, state.totalRounds);
@@ -977,12 +981,12 @@ export const skipTurnBoundary = (): RoomState => {
     roomState.roundTurnCursor + 1 < roomState.turnOrderTeamIds.length;
   finalizeActiveRoundTurn(roomState);
 
-  const nextPhase = hasNextRoundTurn ? Phase.EATING : Phase.ROUND_RESULTS;
+  const nextPhase = hasNextRoundTurn ? Phase.MINIGAME_INTRO : Phase.ROUND_RESULTS;
   roomState.phase = nextPhase;
   roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
 
   // Score application is intentionally broad for skip boundaries:
-  // skipping from EATING/MINIGAME_INTRO still finalizes accumulated round points.
+  // skipping from EATING/MINIGAME_INTRO/MINIGAME_PLAY still finalizes round points.
   applyPhaseTransitionEffects(roomState, previousPhase, nextPhase, {
     applyRoundResultScoresFromAnyTurnBoundary: true
   });
@@ -1037,13 +1041,13 @@ export const advanceRoomStatePhase = (): RoomState => {
   const previousPhase = roomState.phase;
   const previousRound = roomState.currentRound;
 
-  if (previousPhase === Phase.SETUP && !isSetupReadyToStart(roomState)) {
+  if (!resolveCanAdvancePhase(roomState)) {
     return getRoomStateSnapshot();
   }
 
   const nextPhase = resolveNextPhase(roomState, previousPhase);
 
-  if (previousPhase === Phase.MINIGAME_PLAY) {
+  if (previousPhase === Phase.TURN_RESULTS) {
     finalizeActiveRoundTurn(roomState);
   }
 
@@ -1088,6 +1092,26 @@ const resolveCanAdvancePhase = (state: RoomState): boolean => {
 
   if (state.phase === Phase.SETUP) {
     return isSetupReadyToStart(state);
+  }
+
+  if (state.phase === Phase.MINIGAME_INTRO) {
+    return state.activeRoundTeamId !== null;
+  }
+
+  if (state.phase === Phase.EATING) {
+    if (state.activeRoundTeamId === null) {
+      return false;
+    }
+
+    const activeTeam = state.teams.find((team) => team.id === state.activeRoundTeamId);
+
+    if (!activeTeam || activeTeam.playerIds.length === 0) {
+      return false;
+    }
+
+    return activeTeam.playerIds.every((playerId) => {
+      return Object.hasOwn(state.wingParticipationByPlayerId, playerId);
+    });
   }
 
   return true;

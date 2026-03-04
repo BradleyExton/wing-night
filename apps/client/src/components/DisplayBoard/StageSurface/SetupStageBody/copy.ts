@@ -1,7 +1,8 @@
 export const teamTurnLoopStepIds = [
   "MINIGAME_INTRO",
   "EAT_WINGS",
-  "MINIGAME_PLAY"
+  "MINIGAME_PLAY",
+  "TURN_RESULTS"
 ] as const;
 
 export type TeamTurnLoopStepId = (typeof teamTurnLoopStepIds)[number];
@@ -13,11 +14,12 @@ export const setupStageCopy = {
   roundStartLabel: "Round Start",
   teamTurnLoopTitle: "Round Flow",
   teamTurnLoopSubtitle:
-    "Each selected hot sauce is a round. In each round, every team runs the full cycle of Mini-Game Intro → Eat Wings → Mini-Game Play, then the Round Results are calculated.",
+    "Each selected hot sauce is a round. In each round, every team runs the full cycle of Mini-Game Intro → Eat Wings → Mini-Game Play → Turn Results, then the Round Results are calculated.",
   teamTurnLoopSteps: [
     { id: "MINIGAME_INTRO", label: "Mini-Game Intro" },
     { id: "EAT_WINGS", label: "Eat Wings" },
-    { id: "MINIGAME_PLAY", label: "Mini-Game Play" }
+    { id: "MINIGAME_PLAY", label: "Mini-Game Play" },
+    { id: "TURN_RESULTS", label: "Turn Results" }
   ] as const satisfies readonly { id: TeamTurnLoopStepId; label: string }[],
   roundEndLabel: "Round Results",
   flowIllustrationAlt: (stepLabel: string): string =>

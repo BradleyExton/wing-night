@@ -28,6 +28,7 @@ export const resolveHostRenderMode = (phase: Phase | null): HostRenderMode => {
     case Phase.MINIGAME_PLAY:
       return "minigame_play";
     case Phase.ROUND_INTRO:
+    case Phase.TURN_RESULTS:
     case Phase.ROUND_RESULTS:
     case Phase.FINAL_RESULTS:
       return "compact";

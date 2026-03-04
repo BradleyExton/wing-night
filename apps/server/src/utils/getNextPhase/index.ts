@@ -3,10 +3,11 @@ import { Phase } from "@wingnight/shared";
 const phaseTransitionMap: Record<Phase, Phase> = {
   [Phase.SETUP]: Phase.INTRO,
   [Phase.INTRO]: Phase.ROUND_INTRO,
-  [Phase.ROUND_INTRO]: Phase.EATING,
-  [Phase.EATING]: Phase.MINIGAME_INTRO,
-  [Phase.MINIGAME_INTRO]: Phase.MINIGAME_PLAY,
-  [Phase.MINIGAME_PLAY]: Phase.ROUND_RESULTS,
+  [Phase.ROUND_INTRO]: Phase.MINIGAME_INTRO,
+  [Phase.MINIGAME_INTRO]: Phase.EATING,
+  [Phase.EATING]: Phase.MINIGAME_PLAY,
+  [Phase.MINIGAME_PLAY]: Phase.TURN_RESULTS,
+  [Phase.TURN_RESULTS]: Phase.ROUND_RESULTS,
   [Phase.ROUND_RESULTS]: Phase.FINAL_RESULTS,
   [Phase.FINAL_RESULTS]: Phase.FINAL_RESULTS
 };

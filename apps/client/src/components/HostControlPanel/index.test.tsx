@@ -146,7 +146,7 @@ test("renders eating participation controls and hides setup sections during EATI
   );
 
   assert.match(html, /Eating/);
-  assert.match(html, /Track wing participation and manage the active turn timer\./);
+  assert.match(html, /Track wing participation for the active team and run the eating timer\./);
   assert.match(html, /Round 1 of 1/);
   assert.doesNotMatch(html, /Team 1 of 2/);
   assert.match(html, /Active Team/);
@@ -156,7 +156,7 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.match(html, /Mark each player who finished their wing this round/);
   assert.match(
     html,
-    /Advance when eating participation is captured for the active team\./
+    /Advance only after each active-team player is marked ate or did not eat\./
   );
   assert.doesNotMatch(html, /Team setup is locked after the game starts\./);
   assert.match(html, /Timer Controls/);
@@ -171,7 +171,7 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.doesNotMatch(html, /Assign Alex to a team/);
 });
 
-test("disables Next Phase during SETUP when server marks canAdvancePhase false", () => {
+test("disables setup primary action during SETUP when server marks canAdvancePhase false", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.SETUP, {
@@ -181,10 +181,13 @@ test("disables Next Phase during SETUP when server marks canAdvancePhase false",
     />
   );
 
-  assert.match(html, /<button[^>]*disabled=""[^>]*>Next Phase<\/button>/);
+  assert.match(
+    html,
+    /<button[^>]*disabled=""[^>]*>Lock Teams &amp; Continue<\/button>/
+  );
 });
 
-test("enables Next Phase during SETUP when server marks canAdvancePhase true", () => {
+test("enables setup primary action during SETUP when server marks canAdvancePhase true", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.SETUP, {
@@ -194,8 +197,11 @@ test("enables Next Phase during SETUP when server marks canAdvancePhase true", (
     />
   );
 
-  assert.match(html, /<button[^>]*>Next Phase<\/button>/);
-  assert.doesNotMatch(html, /<button[^>]*disabled=""[^>]*>Next Phase<\/button>/);
+  assert.match(html, /<button[^>]*>Lock Teams &amp; Continue<\/button>/);
+  assert.doesNotMatch(
+    html,
+    /<button[^>]*disabled=""[^>]*>Lock Teams &amp; Continue<\/button>/
+  );
 });
 
 test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
@@ -306,7 +312,7 @@ test("renders standings snapshot in compact ROUND_INTRO view", () => {
   assert.doesNotMatch(html, /Phase Status/);
   assert.doesNotMatch(html, /Round Context/);
   assert.doesNotMatch(html, /Next Action/);
-  assert.match(html, /Advance when players are ready to begin eating\./);
+  assert.match(html, /Advance when the first team is gathered for the round briefing\./);
 });
 
 test("renders standings snapshot in score-descending order during ROUND_RESULTS", () => {

@@ -47,6 +47,7 @@ const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
     case Phase.MINIGAME_PLAY:
       return "minigame";
     case null:
+    case Phase.TURN_RESULTS:
     case Phase.ROUND_RESULTS:
     case Phase.FINAL_RESULTS:
       return "fallback";

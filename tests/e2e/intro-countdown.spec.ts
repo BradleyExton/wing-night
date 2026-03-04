@@ -1,14 +1,20 @@
 import { expect, test, type Page } from "@playwright/test";
 
+const HOST_PRIMARY_ACTION_LABEL = /Lock Teams & Continue|Start Game|Open Team Briefing|Start Eating|Start Mini-Game|End Team Turn|Prepare Next Team|Show Round Results|Start Next Round|Show Final Results|Next Phase/;
+
 const hasHeading = async (hostPage: Page, headingPattern: RegExp): Promise<boolean> => {
   const heading = hostPage.locator("h1").filter({ hasText: headingPattern });
   return (await heading.count()) > 0;
 };
 
+const clickHostPrimaryAction = async (hostPage: Page): Promise<void> => {
+  await hostPage.getByRole("button", { name: HOST_PRIMARY_ACTION_LABEL }).click();
+};
+
 const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
   const playerNames = ["Alex", "Jordan", "Taylor", "Casey"] as const;
 
-  for (let attempt = 0; attempt < 8; attempt += 1) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
     if (
       (await hasHeading(hostPage, /^Setup$/i)) &&
       (await hostPage.getByText("No teams created yet.", { exact: true }).count()) > 0
@@ -34,20 +40,36 @@ const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
           return;
         }
 
-        await hostPage.getByLabel(`Assign ${playerName} to a team`).selectOption(teamValue);
+        const assignmentSelect = hostPage.getByLabel(`Assign ${playerName} to a team`);
+
+        for (let assignmentAttempt = 0; assignmentAttempt < 4; assignmentAttempt += 1) {
+          await assignmentSelect.selectOption(teamValue);
+          await hostPage.waitForTimeout(120);
+
+          if ((await assignmentSelect.inputValue()) === teamValue) {
+            break;
+          }
+        }
       }
 
-      await hostPage.getByRole("button", { name: "Next Phase" }).click();
+      const primaryActionButton = hostPage.getByRole("button", {
+        name: HOST_PRIMARY_ACTION_LABEL
+      });
+
+      if (!(await primaryActionButton.isEnabled())) {
+        await hostPage.waitForTimeout(200);
+        continue;
+      }
+
+      await clickHostPrimaryAction(hostPage);
       await hostPage.waitForTimeout(250);
       continue;
     }
 
-    const openOverridesPanelButton = hostPage.getByRole("button", {
-      name: /open overrides panel/i
-    });
+    const openOverridesPanelButton = hostPage.getByRole("button", { name: /overrides/i });
 
     if ((await openOverridesPanelButton.count()) > 0) {
-      await openOverridesPanelButton.click();
+      await openOverridesPanelButton.first().click();
       const resetGameButton = hostPage.getByRole("button", { name: "Reset Game" });
 
       if ((await resetGameButton.count()) > 0) {
@@ -63,7 +85,7 @@ const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
       }
     }
 
-    await hostPage.getByRole("button", { name: "Next Phase" }).click();
+    await clickHostPrimaryAction(hostPage);
     await hostPage.waitForTimeout(250);
   }
 
@@ -71,19 +93,52 @@ const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
 };
 
 const ensureTeamExists = async (hostPage: Page, teamName: string): Promise<void> => {
-  const teamMatches = hostPage.getByText(teamName, { exact: true });
+  const teamOption = hostPage
+    .getByLabel("Assign Alex to a team")
+    .locator("option")
+    .filter({ hasText: teamName });
 
-  if ((await teamMatches.count()) > 0) {
+  if ((await teamOption.count()) > 0) {
     return;
   }
 
   const teamNameInput = hostPage.getByLabel("Team Name");
   const createTeamButton = hostPage.getByRole("button", { name: "Create Team" });
 
-  await teamNameInput.fill(teamName);
-  await createTeamButton.click();
-  await hostPage.waitForTimeout(250);
-  await expect(teamMatches.first()).toBeVisible();
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    await teamNameInput.fill(teamName);
+    await createTeamButton.click();
+    await hostPage.waitForTimeout(250);
+
+    if ((await teamOption.count()) > 0) {
+      return;
+    }
+  }
+
+  await expect(teamOption).toHaveCount(1);
+};
+
+const assignPlayerToTeam = async (
+  hostPage: Page,
+  playerName: string,
+  teamName: string
+): Promise<void> => {
+  const assignmentSelect = hostPage.getByLabel(`Assign ${playerName} to a team`);
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    await assignmentSelect.selectOption({ label: teamName });
+    await hostPage.waitForTimeout(120);
+
+    const selectedTeamName = (
+      await assignmentSelect.locator("option:checked").textContent()
+    )?.trim();
+
+    if (selectedTeamName === teamName) {
+      return;
+    }
+  }
+
+  await expect(assignmentSelect.locator("option:checked")).toHaveText(teamName);
 };
 
 const assignPlayers = async (hostPage: Page): Promise<void> => {
@@ -95,7 +150,7 @@ const assignPlayers = async (hostPage: Page): Promise<void> => {
   ];
 
   for (const [playerName, teamName] of assignments) {
-    await hostPage.getByLabel(`Assign ${playerName} to a team`).selectOption({ label: teamName });
+    await assignPlayerToTeam(hostPage, playerName, teamName);
   }
 };
 
@@ -114,7 +169,7 @@ test("intro lock screen transitions to round-intro countdown on display", async 
   await ensureTeamExists(hostPage, "Team Two");
   await assignPlayers(hostPage);
 
-  await hostPage.getByRole("button", { name: "Next Phase" }).click();
+  await clickHostPrimaryAction(hostPage);
   await expect(hostPage.locator("h1").filter({ hasText: /^Intro$/i })).toHaveCount(1);
   await expect(hostPage.getByText("Game Locked In")).toBeVisible();
   await expect(hostPage.getByRole("button", { name: "Start Game" })).toBeVisible();
@@ -125,7 +180,7 @@ test("intro lock screen transitions to round-intro countdown on display", async 
   await hostPage.getByRole("button", { name: "Start Game" }).click();
 
   await expect(hostPage.locator("h1").filter({ hasText: /^Round Intro$/i })).toHaveCount(1);
-  await expect(hostPage.getByRole("button", { name: "Next Phase" })).toBeVisible();
+  await expect(hostPage.getByRole("button", { name: "Open Team Briefing" })).toBeVisible();
   await expect(hostPage.getByText("Game Starts In")).toHaveCount(0);
 
   await expect(displayPage.getByText("Game Starts In")).toBeVisible();
@@ -135,8 +190,8 @@ test("intro lock screen transitions to round-intro countdown on display", async 
 
   await expect(displayPage.getByText("Round 1: Warm Up")).toBeVisible();
   await expect(displayPage.getByText("Game Starts In")).toHaveCount(0);
-  await expect(displayPage.getByText("Sauce")).toBeVisible();
-  await expect(displayPage.getByText("Mini-Game")).toBeVisible();
+  await expect(displayPage.getByText("Sauce", { exact: true })).toBeVisible();
+  await expect(displayPage.getByText("Mini-Game", { exact: true })).toBeVisible();
 
   await context.close();
 });

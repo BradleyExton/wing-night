@@ -46,7 +46,7 @@ export const roundLineupSubtitle =
 export const roundLineupTitleRow =
   "relative mx-auto flex w-full max-w-[38ch] items-center justify-center gap-[clamp(0.4rem,0.8vw,1rem)]";
 export const flowLoopSteps =
-  "grid min-h-0 items-start gap-[clamp(0.35rem,0.65vw,0.9rem)] md:grid-cols-3";
+  "grid min-h-0 items-start gap-[clamp(0.35rem,0.65vw,0.9rem)] md:grid-cols-2 xl:grid-cols-4";
 export const flowLoopStepSlot = "contents";
 export const flowIllustrationSlot =
   "relative flex h-[clamp(9.5rem,22vh,26rem)] w-full items-center justify-center overflow-hidden";

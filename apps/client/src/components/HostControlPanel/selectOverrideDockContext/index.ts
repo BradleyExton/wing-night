@@ -14,6 +14,7 @@ const OVERRIDE_DOCK_PHASES = new Set<Phase>([
   Phase.EATING,
   Phase.MINIGAME_INTRO,
   Phase.MINIGAME_PLAY,
+  Phase.TURN_RESULTS,
   Phase.ROUND_RESULTS,
   Phase.FINAL_RESULTS
 ]);
@@ -55,4 +56,3 @@ export const selectOverrideDockContext = (roomState: RoomState | null): Override
     showBadge: showRedoLastMutationAction || hasCustomTurnOrder(roomState)
   };
 };
-

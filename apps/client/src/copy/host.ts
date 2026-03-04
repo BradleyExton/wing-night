@@ -4,6 +4,39 @@ import { formatClockSeconds, formatPhaseLabel } from "./formatters";
 const COMPACT_ROSTER_EMPTY_LABEL = "No players assigned.";
 const TEAM_ROSTER_EMPTY_LABEL = "No players assigned yet.";
 
+type PrimaryActionContext = {
+  hasNextRoundTurn: boolean;
+  hasAdditionalRounds: boolean;
+};
+
+const primaryActionLabel = (
+  phase: Phase,
+  context: PrimaryActionContext
+): string => {
+  switch (phase) {
+    case Phase.SETUP:
+      return "Lock Teams & Continue";
+    case Phase.INTRO:
+      return "Start Game";
+    case Phase.ROUND_INTRO:
+      return "Open Team Briefing";
+    case Phase.MINIGAME_INTRO:
+      return "Start Eating";
+    case Phase.EATING:
+      return "Start Mini-Game";
+    case Phase.MINIGAME_PLAY:
+      return "End Team Turn";
+    case Phase.TURN_RESULTS:
+      return context.hasNextRoundTurn ? "Prepare Next Team" : "Show Round Results";
+    case Phase.ROUND_RESULTS:
+      return context.hasAdditionalRounds ? "Start Next Round" : "Show Final Results";
+    case Phase.FINAL_RESULTS:
+      return "Game Complete";
+    default:
+      return "Continue";
+  }
+};
+
 const phaseAdvanceHint = (phase: Phase): string => {
   switch (phase) {
     case Phase.SETUP:
@@ -11,13 +44,15 @@ const phaseAdvanceHint = (phase: Phase): string => {
     case Phase.INTRO:
       return "Start game when teams are locked and everyone is ready for Round 1.";
     case Phase.ROUND_INTRO:
-      return "Advance when players are ready to begin eating.";
-    case Phase.EATING:
-      return "Advance when eating participation is captured for the active team.";
+      return "Advance when the first team is gathered for the round briefing.";
     case Phase.MINIGAME_INTRO:
-      return "Advance when the active team is ready to start the mini-game.";
+      return "Explain the mini-game to this team, then start eating when they are ready.";
+    case Phase.EATING:
+      return "Advance only after each active-team player is marked ate or did not eat.";
     case Phase.MINIGAME_PLAY:
       return "Advance when the active team turn has been scored.";
+    case Phase.TURN_RESULTS:
+      return "Advance when the next team is gathered and ready for a briefing.";
     case Phase.ROUND_RESULTS:
       return "Advance to continue to the next round or final results.";
     case Phase.FINAL_RESULTS:
@@ -34,13 +69,15 @@ const phaseDescription = (phase: Phase): string => {
     case Phase.INTRO:
       return "Review locked teams and start the game when the room is ready.";
     case Phase.ROUND_INTRO:
-      return "Review this round and confirm players are ready to eat.";
-    case Phase.EATING:
-      return "Track wing participation and manage the active turn timer.";
+      return "Review this round before the first team briefing.";
     case Phase.MINIGAME_INTRO:
-      return "Confirm the active team before minigame play begins.";
+      return "Brief the active team on the mini-game before they eat.";
+    case Phase.EATING:
+      return "Track wing participation for the active team and run the eating timer.";
     case Phase.MINIGAME_PLAY:
       return "Record outcomes for the active team turn.";
+    case Phase.TURN_RESULTS:
+      return "Pause between team turns so the next team can get set.";
     case Phase.ROUND_RESULTS:
       return "Review score updates before moving to the next round.";
     case Phase.FINAL_RESULTS:
@@ -61,6 +98,7 @@ export const hostCopy = {
   headerWaitingDescription:
     "Host controls will update when the latest snapshot arrives.",
   headerPhaseDescription: phaseDescription,
+  primaryActionLabel,
   nextPhaseButtonLabel: "Next Phase",
   startGameButtonLabel: "Start Game",
   setupLockedNoticeLabel: "Game Locked In",
@@ -139,7 +177,7 @@ export const hostCopy = {
     "Mark the active team's answer as correct or incorrect.",
   minigameSectionTitle: "Mini-Game",
   minigameIntroDescription: (minigame: MinigameType): string =>
-    `${minigame} is queued. Advance when players are ready to begin.`,
+    `${minigame} is queued. Explain it now, then start eating when the team is ready.`,
   minigamePlayDescription: (minigame: MinigameType): string =>
     `${minigame} is live for this team turn.`,
   minigameWaitingForViewLabel:
