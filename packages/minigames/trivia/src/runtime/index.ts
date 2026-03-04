@@ -1,17 +1,10 @@
 import {
   MINIGAME_API_VERSION,
-  isTriviaContentFile,
-  isTriviaPrompt,
-  type MinigameDisplayView,
-  type MinigameHostView,
-  type MinigameType,
-  type TriviaContentFile,
-  type TriviaPrompt
+  type MinigameType
 } from "@wingnight/shared";
 import type {
   MinigamePluginMetadata,
-  MinigameRuntimePlugin,
-  SerializableValue
+  MinigameRuntimePlugin
 } from "@wingnight/minigames-core";
 
 import {
@@ -22,20 +15,16 @@ import {
   type TriviaMinigameContext,
   type TriviaMinigameState
 } from "../index.js";
-
-type TriviaRuntimeContent = TriviaContentFile;
-
-type TriviaRuntimeRules = {
-  questionsPerTurn: number;
-};
-
-type TriviaRuntimeState = {
-  runtimeState: TriviaMinigameState;
-  attemptsUsedThisTurn: number;
-  questionsPerTurnLimit: number;
-};
-
-const DEFAULT_TRIVIA_QUESTIONS_PER_TURN = 1;
+import {
+  parseTriviaContentFile,
+  resolveTriviaContent
+} from "./content/index.js";
+import {
+  isRecordAttemptPayload,
+  isTriviaRuntimeState
+} from "./guards/index.js";
+import { resolveTriviaRules } from "./rules/index.js";
+import { toTriviaDisplayView, toTriviaHostView, resolveAttemptsRemaining, resolveTriviaContext } from "./views/index.js";
 
 export const triviaMinigameId: MinigameType = "TRIVIA";
 
@@ -46,198 +35,6 @@ export const triviaMinigameMetadata: MinigamePluginMetadata = {
     supportsDisplayRenderer: true,
     supportsDevScenarios: true
   }
-};
-
-const cloneTriviaPrompt = (prompt: TriviaPrompt): TriviaPrompt => {
-  return {
-    id: prompt.id,
-    question: prompt.question,
-    answer: prompt.answer
-  };
-};
-
-export const parseTriviaContentFile = (
-  rawContent: string,
-  contentFilePath: string
-): TriviaRuntimeContent => {
-  let parsedContent: unknown;
-
-  try {
-    parsedContent = JSON.parse(rawContent);
-  } catch (error) {
-    const parseReason = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Failed to parse trivia content at "${contentFilePath}": ${parseReason}`
-    );
-  }
-
-  if (!isTriviaContentFile(parsedContent)) {
-    throw new Error(
-      `Invalid trivia content at "${contentFilePath}": expected { prompts: [{ id, question, answer }] }.`
-    );
-  }
-
-  return {
-    prompts: parsedContent.prompts.map(cloneTriviaPrompt)
-  };
-};
-
-const resolveTriviaContent = (content: SerializableValue | null): TriviaRuntimeContent => {
-  if (typeof content !== "object" || content === null) {
-    return { prompts: [] };
-  }
-
-  if (!("prompts" in content) || !Array.isArray(content.prompts)) {
-    return { prompts: [] };
-  }
-
-  const prompts = content.prompts.filter((prompt): prompt is TriviaPrompt => {
-    return isTriviaPrompt(prompt);
-  });
-
-  return {
-    prompts: prompts.map(cloneTriviaPrompt)
-  };
-};
-
-const normalizeQuestionsPerTurn = (questionsPerTurn: unknown): number => {
-  if (
-    typeof questionsPerTurn !== "number" ||
-    !Number.isInteger(questionsPerTurn) ||
-    questionsPerTurn <= 0
-  ) {
-    return DEFAULT_TRIVIA_QUESTIONS_PER_TURN;
-  }
-
-  return questionsPerTurn;
-};
-
-const resolveTriviaRules = (rules: SerializableValue | null): TriviaRuntimeRules => {
-  if (typeof rules !== "object" || rules === null) {
-    return {
-      questionsPerTurn: DEFAULT_TRIVIA_QUESTIONS_PER_TURN
-    };
-  }
-
-  const parsedRules = rules as Partial<TriviaRuntimeRules>;
-
-  return {
-    questionsPerTurn: normalizeQuestionsPerTurn(parsedRules.questionsPerTurn)
-  };
-};
-
-const isTriviaRuntimeState = (value: SerializableValue): value is TriviaRuntimeState => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  const runtimeState = value as Partial<TriviaRuntimeState>;
-
-  if (
-    runtimeState.runtimeState === undefined ||
-    !isTriviaMinigameState(runtimeState.runtimeState)
-  ) {
-    return false;
-  }
-
-  if (
-    typeof runtimeState.attemptsUsedThisTurn !== "number" ||
-    !Number.isInteger(runtimeState.attemptsUsedThisTurn) ||
-    runtimeState.attemptsUsedThisTurn < 0
-  ) {
-    return false;
-  }
-
-  if (
-    typeof runtimeState.questionsPerTurnLimit !== "number" ||
-    !Number.isInteger(runtimeState.questionsPerTurnLimit) ||
-    runtimeState.questionsPerTurnLimit <= 0
-  ) {
-    return false;
-  }
-
-  return true;
-};
-
-const isRecordAttemptPayload = (
-  actionPayload: SerializableValue
-): actionPayload is Record<"isCorrect", boolean> => {
-  if (typeof actionPayload !== "object" || actionPayload === null) {
-    return false;
-  }
-
-  if (!("isCorrect" in actionPayload)) {
-    return false;
-  }
-
-  return typeof actionPayload.isCorrect === "boolean";
-};
-
-const resolveTriviaContext = (
-  content: TriviaRuntimeContent
-): TriviaMinigameContext => {
-  return {
-    prompts: content.prompts
-  };
-};
-
-const resolveAttemptsRemaining = (state: TriviaRuntimeState): number => {
-  return Math.max(0, state.questionsPerTurnLimit - state.attemptsUsedThisTurn);
-};
-
-const resolveCurrentPrompt = (
-  state: TriviaRuntimeState,
-  content: TriviaRuntimeContent
-): TriviaPrompt | null => {
-  if (content.prompts.length === 0) {
-    return null;
-  }
-
-  const promptIndex = state.runtimeState.promptCursor % content.prompts.length;
-  const currentPrompt = content.prompts[promptIndex];
-
-  if (currentPrompt === undefined) {
-    return null;
-  }
-
-  return cloneTriviaPrompt(currentPrompt);
-};
-
-const toTriviaHostView = (
-  state: TriviaRuntimeState,
-  content: TriviaRuntimeContent
-): MinigameHostView => {
-  return {
-    minigame: "TRIVIA",
-    activeTurnTeamId:
-      state.runtimeState.turnOrderTeamIds[state.runtimeState.activeTurnIndex] ?? null,
-    attemptsRemaining: resolveAttemptsRemaining(state),
-    promptCursor: state.runtimeState.promptCursor,
-    pendingPointsByTeamId: { ...state.runtimeState.pendingPointsByTeamId },
-    currentPrompt: resolveCurrentPrompt(state, content)
-  };
-};
-
-const toTriviaDisplayView = (
-  state: TriviaRuntimeState,
-  content: TriviaRuntimeContent
-): MinigameDisplayView => {
-  const currentPrompt = resolveCurrentPrompt(state, content);
-
-  return {
-    minigame: "TRIVIA",
-    activeTurnTeamId:
-      state.runtimeState.turnOrderTeamIds[state.runtimeState.activeTurnIndex] ?? null,
-    promptCursor: state.runtimeState.promptCursor,
-    pendingPointsByTeamId: { ...state.runtimeState.pendingPointsByTeamId },
-    currentPrompt:
-      currentPrompt === null
-        ? null
-        : {
-            id: currentPrompt.id,
-            question: currentPrompt.question
-          }
-  };
 };
 
 export const triviaRuntimePlugin: MinigameRuntimePlugin = {

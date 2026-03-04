@@ -9,8 +9,8 @@ import {
 import {
   advanceRoomStatePhase,
   assignPlayerToTeam,
-  createTeam,
   createInitialRoomState,
+  createTeam,
   extendRoomTimer,
   getRoomStateSnapshot,
   pauseRoomTimer,
@@ -20,9 +20,8 @@ import {
   resumeRoomTimer,
   setPendingMinigamePoints,
   setRoomStateGameConfig,
-  setRoomStateMinigameContent,
-  setWingParticipation,
   setRoomStatePlayers,
+  setWingParticipation,
   skipTurnBoundary
 } from "./index.js";
 import {
@@ -31,6 +30,7 @@ import {
   advanceToRoundResultsPhase,
   advanceUntil,
   gameConfigFixture,
+  setRoomStateTriviaPrompts,
   setupThreeTeamsAndAssignments,
   setupValidTeamsAndAssignments,
   triviaPromptFixture
@@ -187,9 +187,7 @@ test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
 test("advanceRoomStatePhase starts next-team EATING timer after TURN_RESULTS -> MINIGAME_INTRO", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
-  setRoomStateMinigameContent("TRIVIA", {
-    prompts: triviaPromptFixture
-  });
+  setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToMinigamePlayPhase();
 
   const originalDateNow = Date.now;
@@ -500,9 +498,7 @@ test("reorderTurnOrder persists into later rounds and rejects invalid sets", () 
 test("advanceRoomStatePhase loops team turns before round results", () => {
   resetRoomState();
   setupThreeTeamsAndAssignments();
-  setRoomStateMinigameContent("TRIVIA", {
-    prompts: triviaPromptFixture
-  });
+  setRoomStateTriviaPrompts(triviaPromptFixture);
 
   advanceUntil(Phase.MINIGAME_PLAY, 1);
 
