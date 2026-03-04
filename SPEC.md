@@ -186,15 +186,16 @@ Global Phases:
 1. SETUP
 2. INTRO
 3. ROUND_INTRO
-4. EATING
-5. MINIGAME_INTRO
+4. MINIGAME_INTRO
+5. EATING
 6. MINIGAME_PLAY
-7. ROUND_RESULTS
-8. FINAL_RESULTS
+7. TURN_RESULTS
+8. ROUND_RESULTS
+9. FINAL_RESULTS
 
-Rounds 1–N repeat phases 3–7 with a per-team loop:
+Rounds 1–N repeat phases 3–8 with a per-team loop:
 - `ROUND_INTRO` (once per round)
-- `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` (once per team, in fixed turn order)
+- `MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS` (once per team, in fixed turn order)
 - `ROUND_RESULTS` (once after the last team turn in the round)
 
 ---
@@ -231,7 +232,7 @@ Display:
 - Sauce
 - Standings
 
-Host advances → EATING
+Host advances → MINIGAME_INTRO
 
 ---
 
@@ -278,6 +279,16 @@ Display:
 
 ---
 
+### TURN_RESULTS
+Display:
+- Team-turn transition state while the next team gets ready
+- Standings snapshot before the next team briefing or round totals
+
+At this phase:
+- No cumulative score application yet; pending round totals remain buffered until `ROUND_RESULTS`
+
+---
+
 ### ROUND_RESULTS
 Display:
 - Wing points
@@ -305,7 +316,7 @@ Goal:
 
 Entry Point:
 - Host UI exposes a persistent `Overrides` trigger in the bottom-right corner.
-- Trigger remains visible in all host gameplay phases (`ROUND_INTRO`, `EATING`, `MINIGAME_INTRO`, `MINIGAME_PLAY`, `ROUND_RESULTS`, `FINAL_RESULTS`).
+- Trigger remains visible in all host gameplay phases (`ROUND_INTRO`, `MINIGAME_INTRO`, `EATING`, `MINIGAME_PLAY`, `TURN_RESULTS`, `ROUND_RESULTS`, `FINAL_RESULTS`).
 - Trigger shows a visible active-state indicator when any override has pending or non-default state.
 
 Surface Behavior:

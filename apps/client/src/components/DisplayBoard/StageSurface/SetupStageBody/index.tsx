@@ -58,7 +58,6 @@ export const SetupStageBody = ({
   const hiddenRoundCount = Math.max(configuredRounds.length - visibleRounds.length, 0);
   return (
     <div className={styles.setupRoot}>
-      <span className={styles.atmosphereLayer} aria-hidden />
       <header className={styles.setupHeader}>
         <h2 className={styles.setupTitle}>{setupStageCopy.brandLabel}</h2>
       </header>

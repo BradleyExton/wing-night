@@ -1,6 +1,6 @@
 # Wing Night Core Flow + UI Reference
 
-_Last updated: February 19, 2026_
+_Last updated: March 3, 2026_
 
 ## Purpose
 This document gives a single, end-to-end reference for the core Wing Night game lifecycle so someone can analyze all major host/display UI states without stepping through the live game manually.
@@ -20,17 +20,18 @@ Excluded:
 flowchart TD
   A["SETUP"] --> B["INTRO"]
   B --> C["ROUND_INTRO"]
-  C --> D["EATING (Team n)"]
-  D --> E["MINIGAME_INTRO (Team n)"]
+  C --> D["MINIGAME_INTRO (Team n)"]
+  D --> E["EATING (Team n)"]
   E --> F["MINIGAME_PLAY (Team n)"]
-  F --> G{"More teams in round?"}
-  G -- Yes --> D
-  G -- No --> H["ROUND_RESULTS"]
-  H --> I{"More rounds?"}
-  I -- Yes --> C
-  I -- No --> J["FINAL_RESULTS"]
-  J --> K["Reset Game (Override)"]
-  K --> A
+  F --> G["TURN_RESULTS (Team n)"]
+  G --> H{"More teams in round?"}
+  H -- Yes --> D
+  H -- No --> I["ROUND_RESULTS"]
+  I --> J{"More rounds?"}
+  J -- Yes --> C
+  J -- No --> K["FINAL_RESULTS"]
+  K --> L["Reset Game (Override)"]
+  L --> A
 ```
 
 ## Phase/UI Matrix
@@ -38,12 +39,13 @@ flowchart TD
 | --- | --- | --- | --- | --- |
 | `SETUP` | Team setup + player assignment surfaces | Setup flow stage + standings | Create team, assign players | Hidden |
 | `INTRO` | Locked setup surfaces (read-only) + `Start Game` action | Locked setup flow stage (`Game Locked In`) + standings | `Start Game` | Hidden |
-| `ROUND_INTRO` | Compact standings snapshot + round context pills | Round intro stage (round/sauce/minigame metadata) + standings | `Next Phase` | Visible, turn-order editable |
-| `EATING` | Active-team players + timer controls | Eating stage (active team + timer) + standings | Wing participation, pause/resume/extend timer, `Next Phase` | Visible, `Skip Turn` available |
-| `MINIGAME_INTRO` | Header-only context (no phase body) | Minigame stage intro context + standings | `Next Phase` | Visible, `Skip Turn` available |
-| `MINIGAME_PLAY` | Minigame surface (or waiting fallback for non-trivia host view) | Minigame stage play context + standings | `Next Phase`; trivia rounds also show scoring actions | Visible, `Skip Turn` available |
-| `ROUND_RESULTS` | Compact standings snapshot | Fallback stage (`Round Results in progress`) + updated standings | `Next Phase` | Visible, score override / undo / reset |
-| `FINAL_RESULTS` | Compact standings snapshot | Fallback stage (`Final Results in progress`) + winner-highlighted standings | `Next Phase` disabled | Visible, reset |
+| `ROUND_INTRO` | Compact standings snapshot + round context pills | Round intro stage (round/sauce/minigame metadata) + standings | `Open Team Briefing` | Visible, turn-order editable |
+| `MINIGAME_INTRO` | Minigame briefing context for active team | Minigame stage intro context + standings | `Start Eating` | Visible, `Skip Turn` available |
+| `EATING` | Active-team players + timer controls | Eating stage (active team + timer) + standings | Wing participation, pause/resume/extend timer, `Start Mini-Game` | Visible, `Skip Turn` available |
+| `MINIGAME_PLAY` | Minigame surface (or waiting fallback for non-trivia host view) | Minigame stage play context + standings | `End Team Turn`; trivia rounds also show scoring actions | Visible, `Skip Turn` available |
+| `TURN_RESULTS` | Compact standings snapshot between team turns | Transitional turn-results context + standings | `Prepare Next Team` or `Show Round Results` | Visible, score override / undo / reset |
+| `ROUND_RESULTS` | Compact standings snapshot | Fallback stage (`Round Results in progress`) + updated standings | `Start Next Round` or `Show Final Results` | Visible, score override / undo / reset |
+| `FINAL_RESULTS` | Compact standings snapshot | Fallback stage (`Final Results in progress`) + winner-highlighted standings | Primary action disabled (`Game Complete`) | Visible, reset |
 
 ## Captured Core States
 All screenshots below were captured with Playwright MCP against local sample content (`Team One`, `Team Two`; rounds `TRIVIA`, `GEO`, `DRAWING`).
@@ -169,12 +171,12 @@ All screenshots below were captured with Playwright MCP against local sample con
 | ![24 host](screenshots/core-flows/24-reset-to-setup-host.png) | ![24 display](screenshots/core-flows/24-reset-to-setup-display.png) |
 
 ## Coverage Checklist
-- Global phases covered in captures: `SETUP`, `INTRO`, `ROUND_INTRO`, `EATING`, `MINIGAME_INTRO`, `MINIGAME_PLAY`, `ROUND_RESULTS`, `FINAL_RESULTS`.
-- Team-turn loop shown: first-team and second-team turn states in `EATING`, `MINIGAME_INTRO`, and `MINIGAME_PLAY`.
+- Global phases covered in captures: `SETUP`, `INTRO`, `ROUND_INTRO`, `MINIGAME_INTRO`, `EATING`, `MINIGAME_PLAY`, `TURN_RESULTS`, `ROUND_RESULTS`, `FINAL_RESULTS`.
+- Team-turn loop shown: first-team and second-team turn states in `MINIGAME_INTRO`, `EATING`, `MINIGAME_PLAY`, and `TURN_RESULTS`.
 - Override/escape hatch states shown: overrides panel open in `ROUND_INTRO`, `ROUND_RESULTS`, `MINIGAME_PLAY`, and `FINAL_RESULTS`; `Skip Turn` path; score override path; reset-to-setup path.
 - Host/display pairing coverage: each numbered state includes both host and display screenshots.
 
 ## Notes for Analysis
 - The display route keeps setup visuals for both `SETUP` and `INTRO`, with `INTRO` adding locked-state confirmation and a game-start countdown before round intro context.
 - The host override dock is the consistent escape-hatch surface in all gameplay phases except `SETUP` and `INTRO`.
-- Round flow repeats a per-team turn loop (`EATING -> MINIGAME_INTRO -> MINIGAME_PLAY`) before aggregating at `ROUND_RESULTS`.
+- Round flow repeats a per-team turn loop (`MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS`) before aggregating at `ROUND_RESULTS`.

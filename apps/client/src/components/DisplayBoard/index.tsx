@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { ContentFatalState } from "../ContentFatalState";
 import { GameStartCountdownOverlay } from "./GameStartCountdownOverlay";
 import { StageSurface } from "./StageSurface";
+import { resolveStageViewModel } from "./StageSurface/resolveStageViewModel";
 import { StandingsSurface } from "./StandingsSurface";
 import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
 import { useGameStartCountdown } from "./useGameStartCountdown";
@@ -29,6 +30,9 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
     phase,
     currentRound: roomState?.currentRound ?? null
   });
+  const stageViewModel = resolveStageViewModel(roomState);
+  const shouldRenderSetupAtmosphere =
+    stageViewModel.stageMode === "setup" || stageViewModel.stageMode === "setup_locked";
 
   if (fatalError !== null) {
     return <ContentFatalState fatalError={fatalError} />;
@@ -36,6 +40,7 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
 
   return (
     <main className={styles.container}>
+      {shouldRenderSetupAtmosphere && <div className={styles.setupAtmosphere} aria-hidden />}
       <section className={styles.main}>
         <div className={styles.content}>
           <div className={styles.stageShell}>

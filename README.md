@@ -28,7 +28,7 @@ Core principles:
 -   Full state snapshot on reconnect
 -   In-memory state only (MVP)
 -   Engine/content separation
--   Fixed per-round team turn order (`EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` per team)
+-   Fixed per-round team turn order (`MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS` per team)
 -   Active-team-only scoring mutations during EATING and mini-game play
 -   Round totals applied once at `ROUND_RESULTS`
 -   Host/display EATING and minigame surfaces show active team context (team name only) from snapshot turn fields
@@ -49,8 +49,8 @@ required.
 Each round executes as:
 
 1. `ROUND_INTRO` (once)
-2. `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` (repeat for each team turn)
-3. `ROUND_RESULTS` (apply accumulated wing + mini-game points)
+2. `MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS` (repeat for each team turn)
+3. `ROUND_RESULTS` (apply accumulated wing + mini-game points once per round)
 
 Room snapshots carry team-turn context (`turnOrderTeamIds`,
 `roundTurnCursor`, `activeRoundTeamId`, `completedRoundTurnTeamIds`,

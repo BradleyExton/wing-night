@@ -5,7 +5,7 @@ export const atmosphereLayer =
 export const setupHeader =
   "relative z-10 px-4 pt-[clamp(0.5rem,1vh,1.25rem)] md:px-8 2xl:px-12";
 export const setupTitle =
-  "m-0 text-[clamp(2.5rem,2.8vw,5rem)] font-black uppercase leading-[0.95] tracking-[0.08em] text-text";
+  "m-0 text-[clamp(2.1rem,2.1vw,3.5rem)] font-black leading-[1] tracking-[0.06em] text-primary/85";
 export const lockedStatusRow =
   "relative z-10 mx-4 mt-1 flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-primary/12 px-4 py-2 md:mx-8 md:px-6 2xl:mx-12";
 export const lockedStatusLabel =
@@ -26,7 +26,7 @@ export const roundLineupTitle =
   "m-0 text-center text-[clamp(1.125rem,1.25vw,2.5rem)] font-black uppercase leading-none tracking-[0.1em] text-primary";
 export const flowBand = "min-h-0 px-4 py-0.5 md:px-8 2xl:px-12";
 export const flowLayout =
-  "grid min-h-0 items-start gap-[clamp(0.5rem,0.9vh,1.25rem)] lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.7fr)_auto_minmax(0,1fr)] lg:items-end lg:gap-[clamp(1rem,2vw,2.5rem)]";
+  "grid min-h-0 items-start gap-[clamp(0.5rem,0.9vh,1.25rem)] lg:items-end";
 export const flowPhase =
   "grid min-h-0 content-start justify-items-center gap-[clamp(0.5rem,0.9vh,1.25rem)]";
 export const majorArrow =

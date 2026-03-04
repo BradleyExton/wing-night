@@ -11,17 +11,15 @@ export const setupStageCopy = {
   brandLabel: "Wing Night",
   lockedStatusLabel: "Game Locked In",
   lockedStatusDescription: "Host is about to start Round 1.",
-  roundStartLabel: "Round Start",
   teamTurnLoopTitle: "Round Flow",
   teamTurnLoopSubtitle:
-    "Each selected hot sauce is a round. In each round, every team runs the full cycle of Mini-Game Intro → Eat Wings → Mini-Game Play → Turn Results, then the Round Results are calculated.",
+    "Each selected hot sauce is a round. In each round, every team runs the full cycle of Mini-Game Intro → Eat Wings → Mini-Game Play → Turn Results, then scores are finalized for the round.",
   teamTurnLoopSteps: [
     { id: "MINIGAME_INTRO", label: "Mini-Game Intro" },
     { id: "EAT_WINGS", label: "Eat Wings" },
     { id: "MINIGAME_PLAY", label: "Mini-Game Play" },
     { id: "TURN_RESULTS", label: "Turn Results" }
   ] as const satisfies readonly { id: TeamTurnLoopStepId; label: string }[],
-  roundEndLabel: "Round Results",
   flowIllustrationAlt: (stepLabel: string): string =>
     `${stepLabel} illustration`,
   roundLineupTitle: "Round Lineup",
@@ -46,11 +44,9 @@ export const setupStageCopy = {
   readonly brandLabel: string;
   readonly lockedStatusLabel: string;
   readonly lockedStatusDescription: string;
-  readonly roundStartLabel: string;
   readonly teamTurnLoopTitle: string;
   readonly teamTurnLoopSubtitle: string;
   readonly teamTurnLoopSteps: readonly { id: TeamTurnLoopStepId; label: string }[];
-  readonly roundEndLabel: string;
   readonly flowIllustrationAlt: (stepLabel: string) => string;
   readonly roundLineupTitle: string;
   readonly additionalRoundsLabel: (hiddenRoundCount: number) => string;

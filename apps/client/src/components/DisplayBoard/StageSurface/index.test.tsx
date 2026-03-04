@@ -80,16 +80,22 @@ test("renders setup flow-first layout without live setup status chips", () => {
   );
 
   assert.match(html, /Wing Night/);
-  assert.match(html, /display\/setup\/flow-round-intro\.png/);
-  assert.match(html, /Round Start/);
   assert.match(html, /Mini-Game Intro/);
+  assert.match(html, /Eat Wings/);
+  assert.match(html, /Mini-Game Play/);
+  assert.match(html, /Turn Results/);
   assert.match(html, /display\/setup\/flow-minigame-intro\.png/);
+  assert.match(html, /display\/setup\/flow-eat-wings\.png/);
+  assert.match(html, /display\/setup\/flow-minigame-play\.png/);
+  assert.match(html, /display\/setup\/flow-round-results\.png/);
   assert.doesNotMatch(html, /Tonight at a Glance/);
   assert.doesNotMatch(html, /display\/setup\/hero\.png/);
   assert.doesNotMatch(html, /Pack:/);
   assert.doesNotMatch(html, /Live Setup/);
   assert.doesNotMatch(html, /In Progress/);
   assert.doesNotMatch(html, /Open Slot/);
+  assert.doesNotMatch(html, /Round Start/);
+  assert.doesNotMatch(html, /Round Results/);
 });
 
 test("renders locked setup surface during INTRO", () => {
