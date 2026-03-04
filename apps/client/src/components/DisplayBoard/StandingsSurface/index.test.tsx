@@ -49,3 +49,16 @@ test("renders empty state when standings are missing", () => {
 
   assert.match(html, /No teams have joined yet/);
 });
+
+test("uses gold winner accent during FINAL_RESULTS", () => {
+  const html = renderToStaticMarkup(
+    <StandingsSurface
+      phase={Phase.FINAL_RESULTS}
+      standings={teamsFixture}
+      players={playersFixture}
+    />
+  );
+
+  assert.match(html, /border-l-gold\/85/);
+  assert.match(html, /bg-gold\/90/);
+});

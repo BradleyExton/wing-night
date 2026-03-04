@@ -47,6 +47,8 @@ export type GameConfigFile = {
   setupPreviewRoundSlots?: number;
 };
 
+export const SETUP_PREVIEW_ROUND_SLOTS_MAX = 24;
+
 const isMinigameType = (value: unknown): value is MinigameType => {
   return typeof value === "string" && MINIGAMES.includes(value as MinigameType);
 };
@@ -163,7 +165,7 @@ const isMinigameRules = (value: unknown): value is MinigameRules => {
 };
 
 const isSetupPreviewRoundSlots = (value: unknown): value is number => {
-  return isPositiveInteger(value);
+  return isPositiveInteger(value) && value <= SETUP_PREVIEW_ROUND_SLOTS_MAX;
 };
 
 export const isGameConfigFile = (value: unknown): value is GameConfigFile => {

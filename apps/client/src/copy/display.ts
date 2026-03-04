@@ -2,8 +2,10 @@ import type { MinigameType } from "@wingnight/shared";
 import type { Phase } from "@wingnight/shared";
 import { formatClockSeconds, formatPhaseLabel } from "./formatters";
 
+const STANDING_ROSTER_EMPTY_LABEL = "No players assigned.";
+
 export const displayCopy = {
-  roundFallbackLabel: "Round context will appear on the next phase update.",
+  roundFallbackLabel: "Phase details will appear on the next update.",
   waitingForStateLabel: "Waiting for room state...",
   waitingPhaseLabel: "Connecting",
   currentRoundLabel: (currentRound: number, totalRounds: number): string =>
@@ -33,13 +35,13 @@ export const displayCopy = {
   standingsTitle: "Standings",
   standingsEmptyLabel: "No teams have joined yet.",
   standingScoreLabel: (score: number): string => `${score} pts`,
-  standingRosterEmptyLabel: "No players assigned.",
+  standingRosterEmptyLabel: STANDING_ROSTER_EMPTY_LABEL,
   standingRosterValue: (
     visiblePlayerNames: string[],
     hiddenPlayerCount: number
   ): string => {
     if (visiblePlayerNames.length === 0) {
-      return "No players assigned.";
+      return STANDING_ROSTER_EMPTY_LABEL;
     }
 
     if (hiddenPlayerCount > 0) {

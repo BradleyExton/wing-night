@@ -18,6 +18,8 @@ export const leadingStandingCard = `${standingCardBase} border-primary/60 bg-pri
 export const winnerStandingCard = `${standingCardBase} border-gold/70 bg-gold/10`;
 
 export const teamColorEdge = "border-l-[0.35rem]";
+export const winnerTeamAccentBorder = "border-l-gold/85";
+export const winnerTeamAccentDot = "bg-gold/90";
 
 export const teamRow = "flex items-start justify-between gap-3";
 

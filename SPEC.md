@@ -206,10 +206,21 @@ Host:
 - Load players
 - Create teams
 - Assign players
-- Start game (disabled until valid)
+- Lock game (disabled until valid)
 
 Display:
 - Idle screen
+
+---
+
+### INTRO
+Host:
+- Setup surfaces stay visible in read-only/locked mode.
+- Primary action changes to `Start Game`.
+
+Display:
+- Setup flow surface remains visible in locked mode (`Game Locked In`).
+- On host start action, display runs a local 3-second countdown (`3 → 2 → 1`) before revealing round intro context.
 
 ---
 

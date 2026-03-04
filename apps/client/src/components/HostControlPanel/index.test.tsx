@@ -258,14 +258,23 @@ test("disables trivia attempt controls when attemptsRemaining is exhausted", () 
   assert.match(html, /<button[^>]*disabled=""[^>]*>Incorrect<\/button>/);
 });
 
-test("renders standings snapshot only during INTRO compact view", () => {
+test("renders locked setup surface during INTRO with start-game CTA", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel roomState={buildSnapshot(Phase.INTRO)} />
   );
 
   assert.match(html, /Intro/);
-  assert.match(html, /Confirm teams are ready before starting the first round\./);
-  assert.match(html, /Standings Snapshot/);
+  assert.match(html, /Review locked teams and start the game when the room is ready\./);
+  assert.match(html, /Game Locked In/);
+  assert.match(html, /Start Game/);
+  assert.match(
+    html,
+    /Start game when teams are locked and everyone is ready for Round 1\./
+  );
+  assert.match(html, /Team Setup/);
+  assert.match(html, /Assign Alex to a team/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*>Create Team<\/button>/);
+  assert.match(html, /<select[^>]*disabled=""/);
   assert.doesNotMatch(html, /Overrides/);
   assert.doesNotMatch(html, /Score Override/);
   assert.doesNotMatch(html, /Reset Game/);
@@ -275,7 +284,7 @@ test("renders standings snapshot only during INTRO compact view", () => {
   assert.doesNotMatch(html, /Next Action/);
   assert.doesNotMatch(html, /Skip Turn/);
   assert.doesNotMatch(html, /Turn Order/);
-  assert.doesNotMatch(html, /Team Setup/);
+  assert.doesNotMatch(html, /Standings Snapshot/);
 });
 
 test("renders standings snapshot in compact ROUND_INTRO view", () => {

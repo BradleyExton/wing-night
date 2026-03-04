@@ -8,6 +8,8 @@ export type TeamTurnLoopStepId = (typeof teamTurnLoopStepIds)[number];
 
 export const setupStageCopy = {
   brandLabel: "Wing Night",
+  lockedStatusLabel: "Game Locked In",
+  lockedStatusDescription: "Host is about to start Round 1.",
   roundStartLabel: "Round Start",
   teamTurnLoopTitle: "Round Flow",
   teamTurnLoopSubtitle:
@@ -18,10 +20,6 @@ export const setupStageCopy = {
     { id: "MINIGAME_PLAY", label: "Mini-Game Play" }
   ] as const satisfies readonly { id: TeamTurnLoopStepId; label: string }[],
   roundEndLabel: "Round Results",
-  turnOrderPreviewTitle: "Turn Order This Round",
-  turnOrderFallbackLabel: "Teams appear here once setup assignments are complete.",
-  turnOrderTeamChipLabel: (position: number, teamName: string): string =>
-    `${position}. ${teamName}`,
   flowIllustrationAlt: (stepLabel: string): string =>
     `${stepLabel} illustration`,
   roundLineupTitle: "Round Lineup",
@@ -44,14 +42,13 @@ export const setupStageCopy = {
   ]
 } as const satisfies {
   readonly brandLabel: string;
+  readonly lockedStatusLabel: string;
+  readonly lockedStatusDescription: string;
   readonly roundStartLabel: string;
   readonly teamTurnLoopTitle: string;
   readonly teamTurnLoopSubtitle: string;
   readonly teamTurnLoopSteps: readonly { id: TeamTurnLoopStepId; label: string }[];
   readonly roundEndLabel: string;
-  readonly turnOrderPreviewTitle: string;
-  readonly turnOrderFallbackLabel: string;
-  readonly turnOrderTeamChipLabel: (position: number, teamName: string) => string;
   readonly flowIllustrationAlt: (stepLabel: string) => string;
   readonly roundLineupTitle: string;
   readonly additionalRoundsLabel: (hiddenRoundCount: number) => string;

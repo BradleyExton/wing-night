@@ -1,4 +1,7 @@
-import type { RoomState } from "@wingnight/shared";
+import {
+  SETUP_PREVIEW_ROUND_SLOTS_MAX,
+  type RoomState
+} from "@wingnight/shared";
 import { ArrowRight, Flame } from "lucide-react";
 import {
   setupRoundEndIllustrationPath,
@@ -10,6 +13,7 @@ import { resolveMinigameIconPath } from "../minigameAssets";
 import * as styles from "./styles";
 type SetupStageBodyProps = {
   gameConfig: RoomState["gameConfig"];
+  isLocked?: boolean;
 };
 const DEFAULT_SETUP_PREVIEW_ROUND_SLOTS = 3;
 const resolveSetupPreviewRoundSlotCount = (gameConfig: RoomState["gameConfig"]): number => {
@@ -19,7 +23,7 @@ const resolveSetupPreviewRoundSlotCount = (gameConfig: RoomState["gameConfig"]):
     Number.isInteger(configuredPreviewRoundSlots) &&
     configuredPreviewRoundSlots > 0
   ) {
-    return configuredPreviewRoundSlots;
+    return Math.min(configuredPreviewRoundSlots, SETUP_PREVIEW_ROUND_SLOTS_MAX);
   }
   return DEFAULT_SETUP_PREVIEW_ROUND_SLOTS;
 };
@@ -40,7 +44,10 @@ const IllustrationSparks = (): JSX.Element => (
     <span className={`${styles.sparkTrail} ${styles.sparkTrailTwo}`} data-spark-trail="two" />
   </div>
 );
-export const SetupStageBody = ({ gameConfig }: SetupStageBodyProps): JSX.Element => {
+export const SetupStageBody = ({
+  gameConfig,
+  isLocked = false
+}: SetupStageBodyProps): JSX.Element => {
   const shouldRenderRoundFillers = hasConfiguredSetupPreviewRoundSlots(gameConfig);
   const previewRoundSlotCount = resolveSetupPreviewRoundSlotCount(gameConfig);
   const configuredRounds = gameConfig?.rounds ?? [];
@@ -55,6 +62,14 @@ export const SetupStageBody = ({ gameConfig }: SetupStageBodyProps): JSX.Element
       <header className={styles.setupHeader}>
         <h2 className={styles.setupTitle}>{setupStageCopy.brandLabel}</h2>
       </header>
+      {isLocked && (
+        <div className={styles.lockedStatusRow}>
+          <p className={styles.lockedStatusLabel}>{setupStageCopy.lockedStatusLabel}</p>
+          <p className={styles.lockedStatusDescription}>
+            {setupStageCopy.lockedStatusDescription}
+          </p>
+        </div>
+      )}
       <div className={styles.contentGrid}>
         <section className={styles.flowBand}>
           <div className={styles.flowLayout}>

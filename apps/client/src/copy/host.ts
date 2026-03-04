@@ -1,12 +1,15 @@
 import { Phase, type MinigameType } from "@wingnight/shared";
 import { formatClockSeconds, formatPhaseLabel } from "./formatters";
 
+const COMPACT_ROSTER_EMPTY_LABEL = "No players assigned.";
+const TEAM_ROSTER_EMPTY_LABEL = "No players assigned yet.";
+
 const phaseAdvanceHint = (phase: Phase): string => {
   switch (phase) {
     case Phase.SETUP:
       return "Advance when teams are assigned and the room is ready to start.";
     case Phase.INTRO:
-      return "Advance when the room is ready for Round 1.";
+      return "Start game when teams are locked and everyone is ready for Round 1.";
     case Phase.ROUND_INTRO:
       return "Advance when players are ready to begin eating.";
     case Phase.EATING:
@@ -29,7 +32,7 @@ const phaseDescription = (phase: Phase): string => {
     case Phase.SETUP:
       return "Create teams and assign players before starting the game.";
     case Phase.INTRO:
-      return "Confirm teams are ready before starting the first round.";
+      return "Review locked teams and start the game when the room is ready.";
     case Phase.ROUND_INTRO:
       return "Review this round and confirm players are ready to eat.";
     case Phase.EATING:
@@ -59,6 +62,8 @@ export const hostCopy = {
     "Host controls will update when the latest snapshot arrives.",
   headerPhaseDescription: phaseDescription,
   nextPhaseButtonLabel: "Next Phase",
+  startGameButtonLabel: "Start Game",
+  setupLockedNoticeLabel: "Game Locked In",
   skipTurnBoundaryButtonLabel: "Skip Turn",
   redoLastMutationButtonLabel: "Undo Last Score",
   resetGameButtonLabel: "Reset Game",
@@ -151,13 +156,13 @@ export const hostCopy = {
   compactStandingsTitle: "Standings Snapshot",
   compactNoStandingsLabel: "No teams available for standings yet.",
   compactLeaderLabel: "Leader",
-  compactRosterEmptyLabel: "No players assigned.",
+  compactRosterEmptyLabel: COMPACT_ROSTER_EMPTY_LABEL,
   compactRosterValue: (
     visiblePlayerNames: string[],
     hiddenPlayerCount: number
   ): string => {
     if (visiblePlayerNames.length === 0) {
-      return "No players assigned.";
+      return COMPACT_ROSTER_EMPTY_LABEL;
     }
 
     if (hiddenPlayerCount > 0) {
@@ -172,13 +177,13 @@ export const hostCopy = {
   compactScoreLabel: (score: number): string => `${score} pts`,
   teamMembersLabel: (memberCount: number): string =>
     `${memberCount} player${memberCount === 1 ? "" : "s"}`,
-  teamRosterEmptyLabel: "No players assigned yet.",
+  teamRosterEmptyLabel: TEAM_ROSTER_EMPTY_LABEL,
   teamRosterValue: (
     visiblePlayerNames: string[],
     hiddenPlayerCount: number
   ): string => {
     if (visiblePlayerNames.length === 0) {
-      return "No players assigned yet.";
+      return TEAM_ROSTER_EMPTY_LABEL;
     }
 
     if (hiddenPlayerCount > 0) {

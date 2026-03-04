@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import { useEffect, useId, useMemo, useState } from "react";
-import { type RoomState } from "@wingnight/shared";
+import { Phase, type RoomState } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { ContentFatalState } from "../ContentFatalState";
@@ -112,6 +112,10 @@ export const HostControlPanel = ({
 
   const phaseAdvanceHint =
     phase !== null ? hostControlPanelCopy.phaseAdvanceHint(phase) : null;
+  const primaryButtonLabel =
+    phase === Phase.INTRO
+      ? hostControlPanelCopy.startGameButtonLabel
+      : hostControlPanelCopy.nextPhaseButtonLabel;
   const containerClassName = isMinigameTakeover
     ? styles.takeoverContainer
     : styles.container;
@@ -183,6 +187,7 @@ export const HostControlPanel = ({
         <HostActionBarSurface
           onNextPhase={onNextPhase}
           nextPhaseDisabled={nextPhaseDisabled}
+          primaryButtonLabel={primaryButtonLabel}
         />
 
         {roomState && phaseAdvanceHint !== null && hostMode !== "setup" && (

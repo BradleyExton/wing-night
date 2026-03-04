@@ -39,11 +39,9 @@ export const StageSurface = ({
   const renderStageBody = (stageMode: StageRenderMode): JSX.Element => {
     switch (stageMode) {
       case "setup":
-        return (
-          <SetupStageBody
-            gameConfig={stageViewModel.gameConfig}
-          />
-        );
+        return <SetupStageBody gameConfig={stageViewModel.gameConfig} />;
+      case "setup_locked":
+        return <SetupStageBody gameConfig={stageViewModel.gameConfig} isLocked />;
       case "round_intro":
         return stageViewModel.currentRoundConfig !== null ? (
           <RoundIntroStageBody currentRoundConfig={stageViewModel.currentRoundConfig} />
@@ -93,8 +91,11 @@ export const StageSurface = ({
   };
 
   const surfaceClassName =
-    stageViewModel.stageMode === "setup" ? styles.setupCard : styles.card;
-  const shouldRenderSurfaceContext = stageViewModel.stageMode !== "setup";
+    stageViewModel.stageMode === "setup" || stageViewModel.stageMode === "setup_locked"
+      ? styles.setupCard
+      : styles.card;
+  const shouldRenderSurfaceContext =
+    stageViewModel.stageMode !== "setup" && stageViewModel.stageMode !== "setup_locked";
 
   return (
     <article className={surfaceClassName}>

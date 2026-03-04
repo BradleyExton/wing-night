@@ -36,8 +36,8 @@ flowchart TD
 ## Phase/UI Matrix
 | Phase | Host UI mode | Display UI mode | Key controls | Override dock |
 | --- | --- | --- | --- | --- |
-| `SETUP` | Team setup + player assignment surfaces | Fallback stage (`Setup in progress`) + standings | Create team, assign players | Hidden |
-| `INTRO` | Compact standings snapshot | Fallback stage (`Intro in progress`) + standings | `Next Phase` | Hidden |
+| `SETUP` | Team setup + player assignment surfaces | Setup flow stage + standings | Create team, assign players | Hidden |
+| `INTRO` | Locked setup surfaces (read-only) + `Start Game` action | Locked setup flow stage (`Game Locked In`) + standings | `Start Game` | Hidden |
 | `ROUND_INTRO` | Compact standings snapshot + round context pills | Round intro stage (round/sauce/minigame metadata) + standings | `Next Phase` | Visible, turn-order editable |
 | `EATING` | Active-team players + timer controls | Eating stage (active team + timer) + standings | Wing participation, pause/resume/extend timer, `Next Phase` | Visible, `Skip Turn` available |
 | `MINIGAME_INTRO` | Header-only context (no phase body) | Minigame stage intro context + standings | `Next Phase` | Visible, `Skip Turn` available |
@@ -175,6 +175,6 @@ All screenshots below were captured with Playwright MCP against local sample con
 - Host/display pairing coverage: each numbered state includes both host and display screenshots.
 
 ## Notes for Analysis
-- The display route intentionally collapses multiple phases (`SETUP`, `INTRO`, `ROUND_RESULTS`, `FINAL_RESULTS`) into the fallback stage body while preserving phase badge and standings context.
+- The display route keeps setup visuals for both `SETUP` and `INTRO`, with `INTRO` adding locked-state confirmation and a game-start countdown before round intro context.
 - The host override dock is the consistent escape-hatch surface in all gameplay phases except `SETUP` and `INTRO`.
 - Round flow repeats a per-team turn loop (`EATING -> MINIGAME_INTRO -> MINIGAME_PLAY`) before aggregating at `ROUND_RESULTS`.

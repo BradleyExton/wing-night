@@ -154,6 +154,21 @@ test("renders setup surfaces in setup mode", () => {
   assert.match(html, /Assign Alex to a team/);
 });
 
+test("renders setup lock notice in setup_locked mode", () => {
+  const html = renderToStaticMarkup(
+    <HostPhaseBody
+      {...buildProps("setup_locked", Phase.INTRO, {
+        setupMutationsDisabled: true,
+        assignmentDisabled: true
+      })}
+    />
+  );
+
+  assert.match(html, /Game Locked In/);
+  assert.match(html, /Team Setup/);
+  assert.match(html, /Assign Alex to a team/);
+});
+
 test("renders eating surfaces in eating mode", () => {
   const eatingTimer: NonNullable<RoomState["timer"]> = {
     phase: Phase.EATING,

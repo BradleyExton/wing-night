@@ -36,17 +36,23 @@ export const StandingsSurface = ({
                 ? styles.leadingStandingCard
                 : styles.standingCard;
             const teamColorVariant = resolveTeamColorVariant(team.id);
+            const borderAccentClassName = isFinalResultsLeader
+              ? styles.winnerTeamAccentBorder
+              : teamColorVariant.borderAccentClassName;
+            const dotAccentClassName = isFinalResultsLeader
+              ? styles.winnerTeamAccentDot
+              : teamColorVariant.dotAccentClassName;
             const teamRosterPreview = resolveTeamRosterPreview(team, playerById, 3);
 
             return (
               <li
                 key={team.id}
-                className={`${standingCardClassName} ${styles.teamColorEdge} ${teamColorVariant.borderAccentClassName}`}
+                className={`${standingCardClassName} ${styles.teamColorEdge} ${borderAccentClassName}`}
               >
                 <div className={styles.teamRow}>
                   <div className={styles.teamIdentity}>
                     <span
-                      className={`${styles.teamAccentDot} ${teamColorVariant.dotAccentClassName}`}
+                      className={`${styles.teamAccentDot} ${dotAccentClassName}`}
                       aria-hidden
                     />
                     <p className={styles.teamName}>{team.name}</p>
