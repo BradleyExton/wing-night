@@ -40,6 +40,8 @@ test("renders standings in descending order", () => {
   assert.ok(html.indexOf("Team Beta") < html.indexOf("Team Alpha"));
   assert.match(html, /Alex, Morgan, Sam \+1/);
   assert.match(html, /Taylor/);
+  assert.match(html, /#1/);
+  assert.match(html, /Leading/);
 });
 
 test("renders empty state when standings are missing", () => {
@@ -61,4 +63,5 @@ test("uses gold winner accent during FINAL_RESULTS", () => {
 
   assert.match(html, /border-l-gold\/85/);
   assert.match(html, /bg-gold\/90/);
+  assert.match(html, /Winner/);
 });
