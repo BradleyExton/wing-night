@@ -44,7 +44,10 @@ export type GameConfigFile = {
   minigameScoring: GameConfigScoring;
   timers: GameConfigTimers;
   minigameRules?: MinigameRules;
+  setupPreviewRoundSlots?: number;
 };
+
+export const SETUP_PREVIEW_ROUND_SLOTS_MAX = 24;
 
 const isMinigameType = (value: unknown): value is MinigameType => {
   return typeof value === "string" && MINIGAMES.includes(value as MinigameType);
@@ -161,6 +164,10 @@ const isMinigameRules = (value: unknown): value is MinigameRules => {
   return true;
 };
 
+const isSetupPreviewRoundSlots = (value: unknown): value is number => {
+  return isPositiveInteger(value) && value <= SETUP_PREVIEW_ROUND_SLOTS_MAX;
+};
+
 export const isGameConfigFile = (value: unknown): value is GameConfigFile => {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -199,6 +206,14 @@ export const isGameConfigFile = (value: unknown): value is GameConfigFile => {
     "minigameRules" in value &&
     value.minigameRules !== undefined &&
     !isMinigameRules(value.minigameRules)
+  ) {
+    return false;
+  }
+
+  if (
+    "setupPreviewRoundSlots" in value &&
+    value.setupPreviewRoundSlots !== undefined &&
+    !isSetupPreviewRoundSlots(value.setupPreviewRoundSlots)
   ) {
     return false;
   }

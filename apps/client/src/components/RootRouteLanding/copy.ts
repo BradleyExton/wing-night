@@ -3,6 +3,8 @@ export const rootRouteLandingCopy = {
   title: "Choose Your Screen",
   description:
     "Open Host Controls on the tablet and Display Board on the TV or projector.",
+  heroIllustrationPath: "/display/setup/hero.png",
+  heroIllustrationAlt: "Wing Night hero illustration",
   actions: [
     {
       href: "/host",

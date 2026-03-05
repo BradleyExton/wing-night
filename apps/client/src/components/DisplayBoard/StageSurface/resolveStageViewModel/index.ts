@@ -4,7 +4,13 @@ import {
   type MinigameType
 } from "@wingnight/shared";
 
-export type StageRenderMode = "setup" | "round_intro" | "eating" | "minigame" | "fallback";
+export type StageRenderMode =
+  | "setup"
+  | "setup_locked"
+  | "round_intro"
+  | "eating"
+  | "minigame"
+  | "fallback";
 
 type StageViewModel = {
   phase: Phase | null;
@@ -31,6 +37,8 @@ const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
   switch (phase) {
     case Phase.SETUP:
       return "setup";
+    case Phase.INTRO:
+      return "setup_locked";
     case Phase.ROUND_INTRO:
       return "round_intro";
     case Phase.EATING:
@@ -39,7 +47,7 @@ const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
     case Phase.MINIGAME_PLAY:
       return "minigame";
     case null:
-    case Phase.INTRO:
+    case Phase.TURN_RESULTS:
     case Phase.ROUND_RESULTS:
     case Phase.FINAL_RESULTS:
       return "fallback";

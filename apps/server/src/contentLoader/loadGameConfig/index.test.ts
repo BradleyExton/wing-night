@@ -28,7 +28,8 @@ const writeContentFile = (
 
 const createValidConfig = (
   name: string,
-  questionsPerTurn?: number
+  questionsPerTurn?: number,
+  setupPreviewRoundSlots?: number
 ): string => {
   return JSON.stringify({
     name,
@@ -53,6 +54,11 @@ const createValidConfig = (
               questionsPerTurn
             }
           }
+        }),
+    ...(setupPreviewRoundSlots === undefined
+      ? {}
+      : {
+          setupPreviewRoundSlots
         }),
     timers: {
       eatingSeconds: 120,
@@ -160,6 +166,20 @@ test("accepts optional trivia minigame rules in game config", () => {
   assert.equal(gameConfig.minigameRules?.trivia?.questionsPerTurn, 3);
 });
 
+test("accepts optional setup preview round slot count in game config", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "sample/gameConfig.json",
+    createValidConfig("Sample", undefined, 8)
+  );
+
+  const gameConfig = loadGameConfig({ contentRootDir: contentRoot });
+
+  assert.equal(gameConfig.setupPreviewRoundSlots, 8);
+});
+
 test("throws when trivia minigame rules are invalid", () => {
   const contentRoot = createContentRoot();
 
@@ -186,6 +206,84 @@ test("throws when trivia minigame rules are invalid", () => {
           questionsPerTurn: 0
         }
       },
+      timers: {
+        eatingSeconds: 120,
+        triviaSeconds: 30,
+        geoSeconds: 45,
+        drawingSeconds: 60
+      }
+    })
+  );
+
+  assert.throws(
+    () => {
+      loadGameConfig({ contentRootDir: contentRoot });
+    },
+    /Invalid game config content/
+  );
+});
+
+test("throws when setup preview round slot count is invalid", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "sample/gameConfig.json",
+    JSON.stringify({
+      name: "Invalid Preview Slot Count",
+      rounds: [
+        {
+          round: 1,
+          label: "Warm Up",
+          sauce: "Frank's",
+          pointsPerPlayer: 2,
+          minigame: "TRIVIA"
+        }
+      ],
+      minigameScoring: {
+        defaultMax: 15,
+        finalRoundMax: 20
+      },
+      setupPreviewRoundSlots: 0,
+      timers: {
+        eatingSeconds: 120,
+        triviaSeconds: 30,
+        geoSeconds: 45,
+        drawingSeconds: 60
+      }
+    })
+  );
+
+  assert.throws(
+    () => {
+      loadGameConfig({ contentRootDir: contentRoot });
+    },
+    /Invalid game config content/
+  );
+});
+
+test("throws when setup preview round slot count exceeds the maximum", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "sample/gameConfig.json",
+    JSON.stringify({
+      name: "Too Many Preview Slots",
+      rounds: [
+        {
+          round: 1,
+          label: "Warm Up",
+          sauce: "Frank's",
+          pointsPerPlayer: 2,
+          minigame: "TRIVIA"
+        }
+      ],
+      minigameScoring: {
+        defaultMax: 15,
+        finalRoundMax: 20
+      },
+      setupPreviewRoundSlots: 1000,
       timers: {
         eatingSeconds: 120,
         triviaSeconds: 30,

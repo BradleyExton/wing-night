@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Phase, type GameConfigFile, type RoomState } from "@wingnight/shared";
+import {
+  Phase,
+  SETUP_PREVIEW_ROUND_SLOTS_MAX,
+  type GameConfigFile,
+  type RoomState
+} from "@wingnight/shared";
 
 import { StageSurface } from "./index";
 
@@ -54,7 +59,7 @@ const buildSnapshot = (phase: Phase): RoomState => {
   };
 };
 
-test("renders round intro metadata", () => {
+test("renders round intro hero metadata", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.ROUND_INTRO)} />
   );
@@ -62,24 +67,88 @@ test("renders round intro metadata", () => {
   assert.match(html, /Round 1: Warm Up/);
   assert.match(html, /Round 1 of 1/);
   assert.match(html, /Round Intro/);
+  assert.match(html, /Sauce is locked\. Mini-game is up next\./);
   assert.match(html, /Frank&#x27;s/);
   assert.match(html, /TRIVIA/);
+  assert.match(html, /display\/setup\/flow-round-intro\.png/);
+  assert.match(html, /Round intro hero illustration/);
 });
 
-test("renders setup hero and flow without live setup status chips", () => {
+test("renders setup flow-first layout without live setup status chips", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.SETUP)} />
   );
 
-  assert.match(html, /Tonight at a Glance/);
-  assert.match(html, /display\/setup\/hero\.png/);
-  assert.match(html, /Round Flow/);
-  assert.match(html, /Round Intro/);
+  assert.match(html, /Wing Night/);
   assert.match(html, /Mini-Game Intro/);
-  assert.match(html, /display\/setup\/flow-minigame-intro\.svg/);
+  assert.match(html, /Eat Wings/);
+  assert.match(html, /Mini-Game Play/);
+  assert.match(html, /Turn Results/);
+  assert.match(html, /display\/setup\/flow-minigame-intro\.png/);
+  assert.match(html, /display\/setup\/flow-eat-wings\.png/);
+  assert.match(html, /display\/setup\/flow-minigame-play\.png/);
+  assert.match(html, /display\/setup\/flow-round-results\.png/);
+  assert.doesNotMatch(html, /Tonight at a Glance/);
+  assert.doesNotMatch(html, /display\/setup\/hero\.png/);
   assert.doesNotMatch(html, /Pack:/);
   assert.doesNotMatch(html, /Live Setup/);
   assert.doesNotMatch(html, /In Progress/);
+  assert.doesNotMatch(html, /Open Slot/);
+  assert.doesNotMatch(html, /Round Start/);
+  assert.doesNotMatch(html, /Round Results/);
+});
+
+test("renders locked setup surface during INTRO", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.INTRO)} />
+  );
+
+  assert.match(html, /Wing Night/);
+  assert.match(html, /Game Locked In/);
+  assert.match(html, /Host is about to start Round 1\./);
+  assert.doesNotMatch(html, /Intro in progress/);
+  assert.doesNotMatch(html, /Phase details will appear on the next update\./);
+});
+
+test("renders setup preview filler cards when setup preview slots are configured", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.SETUP),
+        gameConfig: {
+          ...gameConfigFixture,
+          setupPreviewRoundSlots: 8
+        }
+      }}
+    />
+  );
+
+  assert.match(html, /Round 8: Open Slot/);
+  assert.match(html, /Choose sauce and mini-game to lock this round\./);
+  assert.doesNotMatch(html, /\+7 more rounds/);
+});
+
+test("clamps setup preview filler cards to the shared maximum", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.SETUP),
+        gameConfig: {
+          ...gameConfigFixture,
+          setupPreviewRoundSlots: SETUP_PREVIEW_ROUND_SLOTS_MAX + 50
+        }
+      }}
+    />
+  );
+
+  assert.match(
+    html,
+    new RegExp(`Round ${SETUP_PREVIEW_ROUND_SLOTS_MAX}: Open Slot`)
+  );
+  assert.doesNotMatch(
+    html,
+    new RegExp(`Round ${SETUP_PREVIEW_ROUND_SLOTS_MAX + 1}: Open Slot`)
+  );
 });
 
 test("falls back to generic context when ROUND_INTRO is missing round config", () => {
@@ -90,7 +159,7 @@ test("falls back to generic context when ROUND_INTRO is missing round config", (
   );
 
   assert.match(html, /Round Intro in progress/);
-  assert.match(html, /Round context will appear on the next phase update\./);
+  assert.match(html, /Phase details will appear on the next update\./);
 });
 
 test("renders trivia question without answer leakage", () => {

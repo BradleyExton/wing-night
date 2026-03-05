@@ -146,7 +146,7 @@ test("renders eating participation controls and hides setup sections during EATI
   );
 
   assert.match(html, /Eating/);
-  assert.match(html, /Track wing participation and manage the active turn timer\./);
+  assert.match(html, /Track wing participation for the active team and run the eating timer\./);
   assert.match(html, /Round 1 of 1/);
   assert.doesNotMatch(html, /Team 1 of 2/);
   assert.match(html, /Active Team/);
@@ -156,7 +156,7 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.match(html, /Mark each player who finished their wing this round/);
   assert.match(
     html,
-    /Advance when eating participation is captured for the active team\./
+    /Advance only after each active-team player is marked ate or did not eat\./
   );
   assert.doesNotMatch(html, /Team setup is locked after the game starts\./);
   assert.match(html, /Timer Controls/);
@@ -171,7 +171,7 @@ test("renders eating participation controls and hides setup sections during EATI
   assert.doesNotMatch(html, /Assign Alex to a team/);
 });
 
-test("disables Next Phase during SETUP when server marks canAdvancePhase false", () => {
+test("disables setup primary action during SETUP when server marks canAdvancePhase false", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.SETUP, {
@@ -181,10 +181,13 @@ test("disables Next Phase during SETUP when server marks canAdvancePhase false",
     />
   );
 
-  assert.match(html, /<button[^>]*disabled=""[^>]*>Next Phase<\/button>/);
+  assert.match(
+    html,
+    /<button[^>]*disabled=""[^>]*>Lock Teams &amp; Continue<\/button>/
+  );
 });
 
-test("enables Next Phase during SETUP when server marks canAdvancePhase true", () => {
+test("enables setup primary action during SETUP when server marks canAdvancePhase true", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.SETUP, {
@@ -194,8 +197,11 @@ test("enables Next Phase during SETUP when server marks canAdvancePhase true", (
     />
   );
 
-  assert.match(html, /<button[^>]*>Next Phase<\/button>/);
-  assert.doesNotMatch(html, /<button[^>]*disabled=""[^>]*>Next Phase<\/button>/);
+  assert.match(html, /<button[^>]*>Lock Teams &amp; Continue<\/button>/);
+  assert.doesNotMatch(
+    html,
+    /<button[^>]*disabled=""[^>]*>Lock Teams &amp; Continue<\/button>/
+  );
 });
 
 test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
@@ -258,14 +264,23 @@ test("disables trivia attempt controls when attemptsRemaining is exhausted", () 
   assert.match(html, /<button[^>]*disabled=""[^>]*>Incorrect<\/button>/);
 });
 
-test("renders standings snapshot only during INTRO compact view", () => {
+test("renders locked setup surface during INTRO with start-game CTA", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel roomState={buildSnapshot(Phase.INTRO)} />
   );
 
   assert.match(html, /Intro/);
-  assert.match(html, /Confirm teams are ready before starting the first round\./);
-  assert.match(html, /Standings Snapshot/);
+  assert.match(html, /Review locked teams and start the game when the room is ready\./);
+  assert.match(html, /Game Locked In/);
+  assert.match(html, /Start Game/);
+  assert.match(
+    html,
+    /Start game when teams are locked and everyone is ready for Round 1\./
+  );
+  assert.match(html, /Team Setup/);
+  assert.match(html, /Assign Alex to a team/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*>Create Team<\/button>/);
+  assert.match(html, /<select[^>]*disabled=""/);
   assert.doesNotMatch(html, /Overrides/);
   assert.doesNotMatch(html, /Score Override/);
   assert.doesNotMatch(html, /Reset Game/);
@@ -275,7 +290,7 @@ test("renders standings snapshot only during INTRO compact view", () => {
   assert.doesNotMatch(html, /Next Action/);
   assert.doesNotMatch(html, /Skip Turn/);
   assert.doesNotMatch(html, /Turn Order/);
-  assert.doesNotMatch(html, /Team Setup/);
+  assert.doesNotMatch(html, /Standings Snapshot/);
 });
 
 test("renders standings snapshot in compact ROUND_INTRO view", () => {
@@ -297,7 +312,7 @@ test("renders standings snapshot in compact ROUND_INTRO view", () => {
   assert.doesNotMatch(html, /Phase Status/);
   assert.doesNotMatch(html, /Round Context/);
   assert.doesNotMatch(html, /Next Action/);
-  assert.match(html, /Advance when players are ready to begin eating\./);
+  assert.match(html, /Advance when the first team is gathered for the round briefing\./);
 });
 
 test("renders standings snapshot in score-descending order during ROUND_RESULTS", () => {

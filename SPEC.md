@@ -34,6 +34,8 @@ If it is not defined in this document, it is not MVP scope.
   - Be read-only
   - Never scroll vertically
   - Fill the viewport (`100dvh` / no overflow)
+  - Be optimized for a 4K living-room TV first, while remaining usable at 1080p/720p
+  - Keep critical phase/round context legible from across a room
 - All devices run on the same local Wi-Fi network (LAN-first)
 - Server holds authoritative state (in-memory only)
 - Host-driven phase progression (never auto-advance)
@@ -59,7 +61,7 @@ Out of Scope (MVP):
 - Teams are formed live at the party
 - Team sizes are locked once the game starts
 
-Display runs on a laptop connected to a TV via HDMI and must remain full-screen and scroll-free.
+Display runs on a laptop connected to a TV via HDMI and must remain full-screen, scroll-free, and distance-readable on a 4K TV.
 
 ---
 
@@ -112,6 +114,7 @@ Example:
 
 {
   "name": "House Party Pack",
+  "setupPreviewRoundSlots": 8,
   "rounds": [
     {
       "round": 1,
@@ -138,6 +141,7 @@ Rules:
 - Each round must define `minigame`
 - Config locks once game starts
 - Invalid config blocks start
+- `setupPreviewRoundSlots` is optional and controls setup-screen lineup preview slots (filler cards render when slots exceed configured rounds)
 
 ---
 
@@ -182,15 +186,16 @@ Global Phases:
 1. SETUP
 2. INTRO
 3. ROUND_INTRO
-4. EATING
-5. MINIGAME_INTRO
+4. MINIGAME_INTRO
+5. EATING
 6. MINIGAME_PLAY
-7. ROUND_RESULTS
-8. FINAL_RESULTS
+7. TURN_RESULTS
+8. ROUND_RESULTS
+9. FINAL_RESULTS
 
-Rounds 1–N repeat phases 3–7 with a per-team loop:
+Rounds 1–N repeat phases 3–8 with a per-team loop:
 - `ROUND_INTRO` (once per round)
-- `EATING -> MINIGAME_INTRO -> MINIGAME_PLAY` (once per team, in fixed turn order)
+- `MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS` (once per team, in fixed turn order)
 - `ROUND_RESULTS` (once after the last team turn in the round)
 
 ---
@@ -202,10 +207,21 @@ Host:
 - Load players
 - Create teams
 - Assign players
-- Start game (disabled until valid)
+- Lock game (disabled until valid)
 
 Display:
 - Idle screen
+
+---
+
+### INTRO
+Host:
+- Setup surfaces stay visible in read-only/locked mode.
+- Primary action changes to `Start Game`.
+
+Display:
+- Setup flow surface remains visible in locked mode (`Game Locked In`).
+- On host start action, display runs a local 3-second countdown (`3 → 2 → 1`) before revealing round intro context.
 
 ---
 
@@ -216,7 +232,7 @@ Display:
 - Sauce
 - Standings
 
-Host advances → EATING
+Host advances → MINIGAME_INTRO
 
 ---
 
@@ -263,6 +279,16 @@ Display:
 
 ---
 
+### TURN_RESULTS
+Display:
+- Team-turn transition state while the next team gets ready
+- Standings snapshot before the next team briefing or round totals
+
+At this phase:
+- No cumulative score application yet; pending round totals remain buffered until `ROUND_RESULTS`
+
+---
+
 ### ROUND_RESULTS
 Display:
 - Wing points
@@ -290,7 +316,7 @@ Goal:
 
 Entry Point:
 - Host UI exposes a persistent `Overrides` trigger in the bottom-right corner.
-- Trigger remains visible in all host gameplay phases (`ROUND_INTRO`, `EATING`, `MINIGAME_INTRO`, `MINIGAME_PLAY`, `ROUND_RESULTS`, `FINAL_RESULTS`).
+- Trigger remains visible in all host gameplay phases (`ROUND_INTRO`, `MINIGAME_INTRO`, `EATING`, `MINIGAME_PLAY`, `TURN_RESULTS`, `ROUND_RESULTS`, `FINAL_RESULTS`).
 - Trigger shows a visible active-state indicator when any override has pending or non-default state.
 
 Surface Behavior:

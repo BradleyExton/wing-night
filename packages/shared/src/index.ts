@@ -22,7 +22,8 @@ export {
   toRoleScopedSnapshotEnvelope
 } from "./roomState/index.js";
 export {
-  isGameConfigFile
+  isGameConfigFile,
+  SETUP_PREVIEW_ROUND_SLOTS_MAX
 } from "./content/gameConfig/index.js";
 export type {
   GameConfigFile,

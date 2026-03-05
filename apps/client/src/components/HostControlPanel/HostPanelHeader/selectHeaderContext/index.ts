@@ -20,7 +20,11 @@ const selectActiveTeamId = (roomState: RoomState | null): string | null => {
     return roomState.activeTurnTeamId ?? roomState.activeRoundTeamId;
   }
 
-  if (roomState.phase === Phase.EATING || roomState.phase === Phase.MINIGAME_INTRO) {
+  if (
+    roomState.phase === Phase.EATING ||
+    roomState.phase === Phase.MINIGAME_INTRO ||
+    roomState.phase === Phase.TURN_RESULTS
+  ) {
     return roomState.activeRoundTeamId;
   }
 
@@ -57,7 +61,8 @@ export const selectHeaderContext = (
   const isActiveTeamContextPhase =
     phase === Phase.EATING ||
     phase === Phase.MINIGAME_INTRO ||
-    phase === Phase.MINIGAME_PLAY;
+    phase === Phase.MINIGAME_PLAY ||
+    phase === Phase.TURN_RESULTS;
   const activeTeamId = selectActiveTeamId(roomState);
 
   const activeTeamName =

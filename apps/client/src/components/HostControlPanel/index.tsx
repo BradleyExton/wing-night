@@ -112,6 +112,18 @@ export const HostControlPanel = ({
 
   const phaseAdvanceHint =
     phase !== null ? hostControlPanelCopy.phaseAdvanceHint(phase) : null;
+  const hasNextRoundTurn =
+    roomState !== null &&
+    roomState.roundTurnCursor + 1 < roomState.turnOrderTeamIds.length;
+  const hasAdditionalRounds =
+    roomState !== null && roomState.currentRound < roomState.totalRounds;
+  const primaryButtonLabel =
+    phase === null
+      ? hostControlPanelCopy.nextPhaseButtonLabel
+      : hostControlPanelCopy.primaryActionLabel(phase, {
+          hasNextRoundTurn,
+          hasAdditionalRounds
+        });
   const containerClassName = isMinigameTakeover
     ? styles.takeoverContainer
     : styles.container;
@@ -183,6 +195,7 @@ export const HostControlPanel = ({
         <HostActionBarSurface
           onNextPhase={onNextPhase}
           nextPhaseDisabled={nextPhaseDisabled}
+          primaryButtonLabel={primaryButtonLabel}
         />
 
         {roomState && phaseAdvanceHint !== null && hostMode !== "setup" && (

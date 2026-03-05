@@ -37,12 +37,25 @@ primary #F97316 (burnt orange)\
 heat #EF4444 (intense red)\
 success #22C55E\
 danger #DC2626\
-gold #FBBF24
+gold #FBBF24\
+teamA #F97316\
+teamB #06B6D4\
+teamC #84CC16\
+teamD #F43F5E\
+teamE #FACC15\
+teamF #14B8A6\
+teamG #60A5FA\
+teamH #FB7185
 
 Rules: - Never use more than 2 accent colors on a single screen. -
 primary (orange) is the default emphasis color. - heat (red) is reserved
 for urgency or escalation. - gold is reserved for winner moments or
 celebration. - success/danger are functional only (never decorative).
+
+Team accent rules: - `teamA` through `teamH` are identity accents for
+team cards and standings rows only (left border + small dot). - Team
+tokens must not be used for timers, status states, CTA buttons, or
+winner celebrations.
 
 ------------------------------------------------------------------------
 
@@ -72,12 +85,15 @@ Display UI (TV-first, spectator-first)
 -   Never vertically scroll
 -   Must fill viewport (`min-h-[100dvh]`)
 -   Root: flex column layout
+-   Primary display target is a 4K TV (typically 65-75") viewed from across a living room
 -   No global fixed header block on display
 -   Footer standings remains fixed
 -   Main area flexible but no overflow
 -   Extremely high contrast
 -   Read-only surface
 -   Phase/round orientation should be lightweight and rendered inside stage surfaces
+-   Typography and key visual surfaces must use fluid scaling (`clamp`) so 4K remains legible while 1080p/720p still fit
+-   Avoid tiny informational text on display surfaces; critical game context should remain readable at distance
 
 Timer must be the most visually dominant element during EATING.
 
@@ -116,9 +132,20 @@ Footer: - Standings snapshot
 # 4) Typography
 
 Display: - Round headline: text-5xl to text-7xl - Timer: text-7xl or
-larger - Use tabular or monospace numerals for timers - Avoid paragraphs
+larger - Use tabular or monospace numerals for timers - Keep supporting
+copy concise and scan-friendly
 
 Host: - Section titles: text-xl to text-2xl - Interactive rows: text-lg+
+
+## 4.1 4K Display Baseline (TV-First)
+
+-   For 4K display routes, treat these as practical minimums:
+    -   Section titles: ~36px+
+    -   Step labels / phase labels: ~22px+
+    -   Card titles: ~24px+
+    -   Supporting card metadata: ~18px+
+-   Use `clamp(min, viewport-scaling, max)` for display typography and key media sizes.
+-   The 4K baseline should drive sizing decisions; lower resolutions should scale down without clipping or overlap.
 
 ------------------------------------------------------------------------
 
@@ -181,7 +208,10 @@ typography - Visual escalation only when necessary
 Use motion sparingly.
 
 Allowed: - Subtle fade transitions between phases - Light pulse for low
-timer - Small highlight animation when scores update
+timer - Small highlight animation when scores update - Subtle low-frequency
+ambient motion on setup/idle display surfaces when it improves perceived
+liveliness and avoids distraction
+-   Display surfaces with ambient motion must provide a reduced-motion fallback (`prefers-reduced-motion`) that disables non-essential infinite animations.
 
 Avoid: - Constant motion - Background animations - Long transitions
 

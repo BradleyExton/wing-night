@@ -9,8 +9,8 @@ import {
 import {
   advanceRoomStatePhase,
   assignPlayerToTeam,
-  createTeam,
   createInitialRoomState,
+  createTeam,
   extendRoomTimer,
   getRoomStateSnapshot,
   pauseRoomTimer,
@@ -20,9 +20,8 @@ import {
   resumeRoomTimer,
   setPendingMinigamePoints,
   setRoomStateGameConfig,
-  setRoomStateMinigameContent,
-  setWingParticipation,
   setRoomStatePlayers,
+  setWingParticipation,
   skipTurnBoundary
 } from "./index.js";
 import {
@@ -31,6 +30,7 @@ import {
   advanceToRoundResultsPhase,
   advanceUntil,
   gameConfigFixture,
+  setRoomStateTriviaPrompts,
   setupThreeTeamsAndAssignments,
   setupValidTeamsAndAssignments,
   triviaPromptFixture
@@ -107,7 +107,7 @@ test("advanceRoomStatePhase preserves currentRound after round intro", () => {
   advanceRoomStatePhase();
   const nextState = advanceRoomStatePhase();
 
-  assert.equal(nextState.phase, Phase.EATING);
+  assert.equal(nextState.phase, Phase.MINIGAME_INTRO);
   assert.equal(nextState.currentRound, 1);
   assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[0]);
 });
@@ -120,6 +120,7 @@ test("advanceRoomStatePhase starts an EATING timer with endsAt", () => {
   Date.now = (): number => 50_000;
 
   try {
+    advanceRoomStatePhase();
     advanceRoomStatePhase();
     advanceRoomStatePhase();
     const eatingState = advanceRoomStatePhase();
@@ -138,18 +139,20 @@ test("advanceRoomStatePhase starts an EATING timer with endsAt", () => {
   }
 });
 
-test("advanceRoomStatePhase clears timer when leaving EATING", () => {
+test("advanceRoomStatePhase replaces EATING timer when leaving EATING", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
 
   advanceRoomStatePhase();
   advanceRoomStatePhase();
   advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setWingParticipation("player-1", false);
 
   const nextState = advanceRoomStatePhase();
 
-  assert.equal(nextState.phase, Phase.MINIGAME_INTRO);
-  assert.equal(nextState.timer, null);
+  assert.equal(nextState.phase, Phase.MINIGAME_PLAY);
+  assert.equal(nextState.timer?.phase, Phase.MINIGAME_PLAY);
 });
 
 test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
@@ -164,6 +167,7 @@ test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
     advanceRoomStatePhase();
     advanceRoomStatePhase();
     advanceRoomStatePhase();
+    setWingParticipation("player-1", false);
     const minigamePlayState = advanceRoomStatePhase();
 
     assert.equal(minigamePlayState.phase, Phase.MINIGAME_PLAY);
@@ -180,18 +184,18 @@ test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
   }
 });
 
-test("advanceRoomStatePhase starts an EATING timer on MINIGAME_PLAY -> EATING team transitions", () => {
+test("advanceRoomStatePhase starts next-team EATING timer after TURN_RESULTS -> MINIGAME_INTRO", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
-  setRoomStateMinigameContent("TRIVIA", {
-    prompts: triviaPromptFixture
-  });
+  setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToMinigamePlayPhase();
 
   const originalDateNow = Date.now;
   Date.now = (): number => 125_000;
 
   try {
+    advanceRoomStatePhase();
+    advanceRoomStatePhase();
     const nextState = advanceRoomStatePhase();
 
     assert.equal(nextState.phase, Phase.EATING);
@@ -220,6 +224,7 @@ test("pauseRoomTimer pauses EATING timer and captures remaining time", () => {
     advanceRoomStatePhase();
     advanceRoomStatePhase();
     advanceRoomStatePhase();
+    advanceRoomStatePhase();
   } finally {
     Date.now = originalDateNow;
   }
@@ -243,6 +248,7 @@ test("resumeRoomTimer resumes paused EATING timer with recomputed endsAt", () =>
   Date.now = (): number => 100_000;
 
   try {
+    advanceRoomStatePhase();
     advanceRoomStatePhase();
     advanceRoomStatePhase();
     advanceRoomStatePhase();
@@ -275,6 +281,7 @@ test("extendRoomTimer extends EATING timer while running", () => {
     advanceRoomStatePhase();
     advanceRoomStatePhase();
     advanceRoomStatePhase();
+    advanceRoomStatePhase();
   } finally {
     Date.now = originalDateNow;
   }
@@ -297,6 +304,7 @@ test("extendRoomTimer ignores non-integer and over-limit extension values", () =
   Date.now = (): number => 100_000;
 
   try {
+    advanceRoomStatePhase();
     advanceRoomStatePhase();
     advanceRoomStatePhase();
     advanceRoomStatePhase();
@@ -329,11 +337,8 @@ test("advanceRoomStatePhase is idempotent at FINAL_RESULTS", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
 
-  for (let step = 0; step < 25; step += 1) {
-    advanceRoomStatePhase();
-  }
-
-  const finalSnapshot = getRoomStateSnapshot();
+  advanceUntil(Phase.FINAL_RESULTS, 2);
+  const finalSnapshot = advanceRoomStatePhase();
 
   assert.equal(finalSnapshot.phase, Phase.FINAL_RESULTS);
   assert.equal(finalSnapshot.currentRound, 2);
@@ -493,9 +498,7 @@ test("reorderTurnOrder persists into later rounds and rejects invalid sets", () 
 test("advanceRoomStatePhase loops team turns before round results", () => {
   resetRoomState();
   setupThreeTeamsAndAssignments();
-  setRoomStateMinigameContent("TRIVIA", {
-    prompts: triviaPromptFixture
-  });
+  setRoomStateTriviaPrompts(triviaPromptFixture);
 
   advanceUntil(Phase.MINIGAME_PLAY, 1);
 
@@ -506,16 +509,42 @@ test("advanceRoomStatePhase loops team turns before round results", () => {
 
   advanceRoomStatePhase();
   snapshot = getRoomStateSnapshot();
-  assert.equal(snapshot.phase, Phase.EATING);
+  assert.equal(snapshot.phase, Phase.TURN_RESULTS);
+  assert.equal(snapshot.activeRoundTeamId, "team-1");
+  assert.equal(snapshot.roundTurnCursor, 0);
+  assert.deepEqual(snapshot.completedRoundTurnTeamIds, []);
+
+  advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.MINIGAME_INTRO);
   assert.equal(snapshot.activeRoundTeamId, "team-2");
   assert.equal(snapshot.roundTurnCursor, 1);
   assert.deepEqual(snapshot.completedRoundTurnTeamIds, ["team-1"]);
 
   advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.EATING);
+  assert.equal(snapshot.activeRoundTeamId, "team-2");
+  assert.equal(snapshot.roundTurnCursor, 1);
+  assert.deepEqual(snapshot.completedRoundTurnTeamIds, ["team-1"]);
+
+  setWingParticipation("player-2", false);
   advanceRoomStatePhase();
   snapshot = getRoomStateSnapshot();
   assert.equal(snapshot.phase, Phase.MINIGAME_PLAY);
   assert.equal(snapshot.activeRoundTeamId, "team-2");
+
+  advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.TURN_RESULTS);
+  assert.equal(snapshot.activeRoundTeamId, "team-2");
+
+  advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(snapshot.activeRoundTeamId, "team-3");
+  assert.equal(snapshot.roundTurnCursor, 2);
+  assert.deepEqual(snapshot.completedRoundTurnTeamIds, ["team-1", "team-2"]);
 
   advanceRoomStatePhase();
   snapshot = getRoomStateSnapshot();
@@ -524,8 +553,15 @@ test("advanceRoomStatePhase loops team turns before round results", () => {
   assert.equal(snapshot.roundTurnCursor, 2);
   assert.deepEqual(snapshot.completedRoundTurnTeamIds, ["team-1", "team-2"]);
 
+  setWingParticipation("player-3", false);
   advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.MINIGAME_PLAY);
+
   advanceRoomStatePhase();
+  snapshot = getRoomStateSnapshot();
+  assert.equal(snapshot.phase, Phase.TURN_RESULTS);
+
   advanceRoomStatePhase();
   snapshot = getRoomStateSnapshot();
   assert.equal(snapshot.phase, Phase.ROUND_RESULTS);
@@ -542,7 +578,7 @@ test("advanceRoomStatePhase loops team turns before round results", () => {
   assert.equal(snapshot.phase, Phase.FINAL_RESULTS);
 });
 
-test("skipTurnBoundary advances to next team EATING from EATING and preserves captured points", () => {
+test("skipTurnBoundary advances to next team MINIGAME_INTRO from EATING and preserves captured points", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
@@ -550,27 +586,26 @@ test("skipTurnBoundary advances to next team EATING from EATING and preserves ca
   setWingParticipation("player-1", true);
   const skippedSnapshot = skipTurnBoundary();
 
-  assert.equal(skippedSnapshot.phase, Phase.EATING);
+  assert.equal(skippedSnapshot.phase, Phase.MINIGAME_INTRO);
   assert.equal(skippedSnapshot.activeRoundTeamId, "team-2");
   assert.equal(skippedSnapshot.roundTurnCursor, 1);
   assert.deepEqual(skippedSnapshot.completedRoundTurnTeamIds, ["team-1"]);
   assert.equal(skippedSnapshot.pendingWingPointsByTeamId["team-1"], 2);
   assert.equal(skippedSnapshot.pendingWingPointsByTeamId["team-2"], 0);
-  assert.equal(skippedSnapshot.timer?.phase, Phase.EATING);
+  assert.equal(skippedSnapshot.timer, null);
 });
 
-test("skipTurnBoundary advances from MINIGAME_INTRO to next team EATING", () => {
+test("skipTurnBoundary advances from MINIGAME_INTRO to next team MINIGAME_INTRO", () => {
   resetRoomState();
   setupValidTeamsAndAssignments();
-  advanceToEatingPhase();
-  advanceRoomStatePhase();
+  advanceUntil(Phase.MINIGAME_INTRO, 1);
   const introSnapshot = getRoomStateSnapshot();
   assert.equal(introSnapshot.phase, Phase.MINIGAME_INTRO);
   assert.equal(introSnapshot.activeRoundTeamId, "team-1");
 
   const skippedSnapshot = skipTurnBoundary();
 
-  assert.equal(skippedSnapshot.phase, Phase.EATING);
+  assert.equal(skippedSnapshot.phase, Phase.MINIGAME_INTRO);
   assert.equal(skippedSnapshot.activeRoundTeamId, "team-2");
   assert.deepEqual(skippedSnapshot.completedRoundTurnTeamIds, ["team-1"]);
 });
@@ -582,12 +617,11 @@ test("skipTurnBoundary from last-team MINIGAME_PLAY lands on ROUND_RESULTS witho
 
   setWingParticipation("player-1", true);
   advanceRoomStatePhase();
-  advanceRoomStatePhase();
   setPendingMinigamePoints({ "team-1": 4 });
   skipTurnBoundary();
 
-  setWingParticipation("player-2", true);
   advanceRoomStatePhase();
+  setWingParticipation("player-2", true);
   advanceRoomStatePhase();
   setPendingMinigamePoints({ "team-2": 3 });
   const skippedSnapshot = skipTurnBoundary();
@@ -617,6 +651,7 @@ test("skipTurnBoundary clears redo history when landing on ROUND_RESULTS", () =>
 
   skipTurnBoundary();
   advanceRoomStatePhase();
+  setWingParticipation("player-2", false);
   advanceRoomStatePhase();
   setPendingMinigamePoints({ "team-2": 3 });
   assert.equal(getRoomStateSnapshot().canRedoScoringMutation, true);

@@ -13,6 +13,7 @@ import { MinigameSurface } from "../MinigameSurface";
 import { PlayersSurface } from "../PlayersSurface";
 import { TeamSetupSurface } from "../TeamSetupSurface";
 import { TimerControlsSurface } from "../TimerControlsSurface";
+import { hostControlPanelCopy } from "../copy";
 import type { HostRenderMode } from "../resolveHostRenderMode";
 import * as styles from "./styles";
 
@@ -84,11 +85,16 @@ export const HostPhaseBody = ({
     case "waiting":
       return null;
     case "setup":
+    case "setup_locked":
       return (
         <div className={styles.surfaceGroup}>
+          {hostMode === "setup_locked" && (
+            <p className={styles.lockNotice}>{hostControlPanelCopy.setupLockedNoticeLabel}</p>
+          )}
           <TeamSetupSurface
             nextTeamName={nextTeamName}
             setupMutationsDisabled={setupMutationsDisabled}
+            players={players}
             teams={teams}
             onNextTeamNameChange={onNextTeamNameChange}
             onCreateTeamSubmit={onCreateTeamSubmit}
@@ -143,7 +149,7 @@ export const HostPhaseBody = ({
     case "compact":
       return roomState ? (
         <div className={styles.surfaceGroup}>
-          <CompactSummarySurface sortedStandings={sortedStandings} />
+          <CompactSummarySurface sortedStandings={sortedStandings} players={players} />
         </div>
       ) : null;
     default:
