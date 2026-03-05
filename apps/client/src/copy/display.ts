@@ -12,7 +12,7 @@ export const displayCopy = {
     `Round ${currentRound} of ${totalRounds}`,
   phaseLabel: (phase: Phase): string => formatPhaseLabel(phase),
   stageContextPhaseLabel: (phaseLabel: string): string => `Phase: ${phaseLabel}`,
-  stageContextRoundLabel: (roundMetaLabel: string): string => roundMetaLabel,
+  stageContextRoundLabel: (roundMetaLabel: string): string => `Round: ${roundMetaLabel}`,
   stageContextTeamLabel: (teamName: string): string => `Team Up: ${teamName}`,
   roundIntroTitle: (roundNumber: number, label: string): string =>
     `Round ${roundNumber}: ${label}`,

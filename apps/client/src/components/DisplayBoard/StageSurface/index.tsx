@@ -4,7 +4,6 @@ import { displayBoardCopy } from "../copy";
 import { EatingStageBody } from "./EatingStageBody";
 import { FallbackStageBody } from "./FallbackStageBody";
 import { FinalResultsStageBody } from "./FinalResultsStageBody";
-import { MinigameIntroStageBody } from "./MinigameIntroStageBody";
 import { MinigameStageBody } from "./MinigameStageBody";
 import { resolveStageViewModel, type StageRenderMode } from "./resolveStageViewModel";
 import { RoundResultsStageBody } from "./RoundResultsStageBody";
@@ -44,7 +43,12 @@ export const StageSurface = ({
   });
   const totalTurnCount = roomState?.turnOrderTeamIds.length ?? roomState?.teams.length ?? 0;
   const completedTurnCount = roomState?.completedRoundTurnTeamIds.length ?? 0;
-  const hasNextTurn = totalTurnCount > 0 && completedTurnCount < totalTurnCount;
+  const effectiveCompletedTurnCount =
+    stageViewModel.stageMode === "turn_results" && stageViewModel.activeTeamName !== null
+      ? Math.min(completedTurnCount + 1, totalTurnCount)
+      : completedTurnCount;
+  const hasNextTurn =
+    totalTurnCount > 0 && effectiveCompletedTurnCount < totalTurnCount;
   const wingPointsByTeamId = roomState?.pendingWingPointsByTeamId ?? {};
   const minigamePointsByTeamId = roomState?.pendingMinigamePointsByTeamId ?? {};
   const roundWingPoints = Object.values(wingPointsByTeamId).reduce((sum, points) => {
@@ -87,15 +91,20 @@ export const StageSurface = ({
         );
       case "minigame_intro":
         return (
-          <MinigameIntroStageBody
+          <MinigameStageBody
+            phase="intro"
+            phaseLabel={phaseLabel}
             minigameType={stageViewModel.minigameType}
-            sauceName={stageViewModel.currentRoundConfig?.sauce ?? null}
+            currentRoundConfig={stageViewModel.currentRoundConfig}
+            shouldRenderTeamTurnContext={stageViewModel.shouldRenderTeamTurnContext}
             activeTeamName={stageViewModel.activeTeamName}
+            minigameDisplayView={stageViewModel.minigameDisplayView}
           />
         );
       case "minigame_play":
         return (
           <MinigameStageBody
+            phase="play"
             phaseLabel={phaseLabel}
             minigameType={stageViewModel.minigameType}
             currentRoundConfig={stageViewModel.currentRoundConfig}
@@ -108,7 +117,7 @@ export const StageSurface = ({
         return (
           <TurnResultsStageBody
             activeTeamName={stageViewModel.activeTeamName}
-            completedTurnCount={completedTurnCount}
+            completedTurnCount={effectiveCompletedTurnCount}
             totalTurnCount={totalTurnCount}
             hasNextTurn={hasNextTurn}
           />
@@ -152,8 +161,7 @@ export const StageSurface = ({
     stageViewModel.stageMode !== "setup_locked" &&
     stageViewModel.stageMode !== "minigame_play";
   const shouldRenderSurfaceContext = stageViewModel.stageMode === "minigame_play";
-  const shouldRenderTeamContextPill =
-    stageViewModel.shouldRenderTeamTurnContext && stageViewModel.activeTeamName !== null;
+  const shouldRenderTeamContextPill = stageViewModel.shouldRenderTeamTurnContext;
 
   return (
     <article className={surfaceClassName}>

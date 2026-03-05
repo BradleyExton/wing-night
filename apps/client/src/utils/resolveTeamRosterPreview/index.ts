@@ -1,6 +1,6 @@
 import type { Player, Team } from "@wingnight/shared";
 
-export type TeamRosterPreview = {
+type TeamRosterPreview = {
   visiblePlayerNames: string[];
   hiddenPlayerCount: number;
 };

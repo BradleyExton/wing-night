@@ -1,4 +1,4 @@
-export type TeamColorVariant = {
+type TeamColorVariant = {
   borderAccentClassName: string;
   dotAccentClassName: string;
 };

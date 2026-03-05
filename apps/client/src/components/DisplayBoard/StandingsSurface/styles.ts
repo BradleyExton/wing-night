@@ -13,7 +13,7 @@ export const emptyLabel = "mt-3 text-[clamp(0.95rem,1vw,1.55rem)] text-muted";
 
 export const standingsList = "mt-3 grid gap-[clamp(0.5rem,0.8vw,1rem)] md:grid-cols-3";
 
-export const standingCardBase =
+const standingCardBase =
   "relative overflow-hidden rounded-[clamp(0.4rem,0.8vw,0.85rem)] border bg-surfaceAlt/95 px-[clamp(0.6rem,1vw,1.15rem)] py-[clamp(0.5rem,0.9vh,1rem)] shadow-[0_10px_30px_rgba(0,0,0,0.2)]";
 
 export const standingCard = `${standingCardBase} border-text/10`;

@@ -1,7 +1,5 @@
 export const setupRoot =
   "relative isolate grid h-full grid-rows-[auto_minmax(0,1fr)_auto] gap-[clamp(0.5rem,1vh,1.5rem)] overflow-hidden [@media(max-height:850px)]:gap-1.5";
-export const atmosphereLayer =
-  "pointer-events-none absolute inset-0 z-0 rounded-none bg-gradient-to-br from-primary/20 via-transparent to-primary/10 opacity-50 blur-3xl [animation:spin_90s_linear_infinite] motion-reduce:[animation:none]";
 export const setupHeader =
   "relative z-10 flex items-center gap-[clamp(0.5rem,0.8vw,1rem)] px-4 pt-[clamp(0.5rem,1vh,1.25rem)] md:px-8 2xl:px-12";
 export const brandMark =
@@ -31,12 +29,6 @@ export const flowLayout =
   "grid min-h-0 items-start gap-[clamp(0.5rem,0.9vh,1.25rem)] lg:items-end";
 export const flowPhase =
   "grid min-h-0 content-start justify-items-center gap-[clamp(0.65rem,1.05vh,1.6rem)] [@media(max-height:850px)]:gap-[clamp(0.45rem,0.75vh,0.95rem)]";
-export const majorArrow =
-  "flex items-center justify-center text-primary/80 lg:self-center";
-export const majorArrowBeforeLoop = "lg:-translate-x-14";
-export const majorArrowAfterLoop = "lg:translate-x-14";
-export const majorArrowIcon =
-  "h-[clamp(2.5rem,3.2vw,5.5rem)] w-[clamp(2.5rem,3.2vw,5.5rem)] rotate-90 lg:rotate-0";
 export const flowLoopShell =
   "grid min-h-0 content-start gap-[clamp(0.5rem,0.9vh,1.25rem)] px-[clamp(0.5rem,1.3vw,1.5rem)] pb-[clamp(0.5rem,0.9vh,1.2rem)]";
 export const flowLoopTitle =
@@ -70,9 +62,6 @@ export const sparkTrailOne =
   "left-[41%] bottom-[15%] h-[clamp(0.68rem,1.05vw,1.25rem)] -rotate-[16deg] [--spark-drift:0.4rem] [--spark-rise:5.1rem] [animation:sparkTrailFloat_4.1s_cubic-bezier(0.28,0.68,0.3,1)_320ms_infinite]";
 export const sparkTrailTwo =
   "left-[59%] bottom-[18%] h-[clamp(0.6rem,0.95vw,1.15rem)] rotate-[12deg] [--spark-drift:-0.35rem] [--spark-rise:4.8rem] [animation:sparkTrailFloat_4.2s_cubic-bezier(0.28,0.68,0.3,1)_1500ms_infinite]";
-export const flowIllustrationMedia = "relative z-10 h-full w-full object-contain";
-export const flowRoundResultsIllustrationMedia =
-  "relative z-10 h-[120%] w-[120%] max-w-none object-contain";
 export const flowLoopIllustrationMedia = "relative z-10 h-[136%] w-[136%] max-w-none object-contain";
 export const flowLoopIllustrationMediaMinigameIntro =
   "h-[133%] w-[133%] translate-y-[1%]";

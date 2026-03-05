@@ -1,4 +1,5 @@
 import type { MinigameType, RoomState } from "@wingnight/shared";
+import type { MinigameSurfacePhase } from "@wingnight/minigames-core";
 
 import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
 import { displayBoardCopy } from "../../copy";
@@ -6,6 +7,7 @@ import { TurnMeta } from "../TurnMeta";
 import * as styles from "./styles";
 
 type MinigameStageBodyProps = {
+  phase: MinigameSurfacePhase;
   phaseLabel: string;
   minigameType: MinigameType | null;
   currentRoundConfig: RoomState["currentRoundConfig"];
@@ -15,6 +17,7 @@ type MinigameStageBodyProps = {
 };
 
 export const MinigameStageBody = ({
+  phase,
   phaseLabel,
   minigameType,
   currentRoundConfig,
@@ -49,11 +52,11 @@ export const MinigameStageBody = ({
           <p className={styles.fallbackText}>
             {displayBoardCopy.minigameRendererUnavailableLabel(minigameType)}
           </p>
-        ) : minigameType === "TRIVIA" && minigameDisplayView === null ? (
+        ) : phase === "play" && minigameType === "TRIVIA" && minigameDisplayView === null ? (
           <p className={styles.fallbackText}>{displayBoardCopy.minigameWaitingForViewLabel}</p>
         ) : (
           <minigameRendererBundle.DisplaySurface
-            phase="play"
+            phase={phase}
             minigameType={minigameType}
             minigameDisplayView={minigameDisplayView}
             activeTeamName={activeTeamName}

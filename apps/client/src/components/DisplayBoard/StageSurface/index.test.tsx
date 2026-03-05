@@ -66,6 +66,7 @@ test("renders round intro hero metadata", () => {
 
   assert.match(html, /Round 1: Warm Up/);
   assert.match(html, /Round 1 of 1/);
+  assert.match(html, /Round: Round 1 of 1/);
   assert.match(html, /Round Intro/);
   assert.match(html, /Phase: Round Intro/);
   assert.match(html, /Wing Night logo/);
@@ -314,15 +315,11 @@ test("renders active team without turn progress during minigame intro", () => {
   );
 
   assert.match(html, /Phase: Minigame Intro/);
-  assert.match(html, /Team Briefing/);
-  assert.match(html, /Team One: Get Ready to Eat &amp; Play/);
-  assert.match(html, /Mini-Game/);
-  assert.match(html, /TRIVIA/);
-  assert.match(html, /Hot Sauce/);
-  assert.match(html, /Frank&#x27;s/);
-  assert.match(html, /Rules/);
-  assert.match(html, /Host marks each attempt as correct or incorrect\./);
-  assert.match(html, /display\/setup\/flow-minigame-intro\.png/);
+  assert.match(html, /Round: Round 1 of 1/);
+  assert.match(html, /Minigame Intro in progress/);
+  assert.match(html, /Mini-Game: TRIVIA/);
+  assert.match(html, /Get ready for the next trivia prompt\./);
+  assert.match(html, /Waiting for trivia prompt\.\.\./);
   assert.match(html, /Team One/);
   assert.match(html, /Team Up: Team One/);
   assert.doesNotMatch(html, /Team 1 of 1/);
@@ -337,9 +334,9 @@ test("renders turn-results transition context with active team and turn progress
   assert.match(html, /Completed Team/);
   assert.match(html, /Team One/);
   assert.match(html, /Turn Progress/);
-  assert.match(html, /0\/1 teams complete/);
+  assert.match(html, /1\/1 teams complete/);
   assert.match(html, /Next Step/);
-  assert.match(html, /Brief the next team/);
+  assert.match(html, /Show round results/);
   assert.match(html, /Team Up: Team One/);
 });
 

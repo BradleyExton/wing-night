@@ -21,7 +21,7 @@ import {
 } from "../scoringState/index.js";
 import { initializeRoundTurnState } from "../turnState/index.js";
 
-export type ApplyPhaseTransitionEffectsOptions = {
+type ApplyPhaseTransitionEffectsOptions = {
   applyRoundResultScoresFromAnyTurnBoundary?: boolean;
 };
 
