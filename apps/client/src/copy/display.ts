@@ -34,6 +34,9 @@ export const displayCopy = {
   eatingTimerValue: formatClockSeconds,
   standingsTitle: "Standings",
   standingsEmptyLabel: "No teams have joined yet.",
+  standingLeaderLabel: "Leading",
+  standingWinnerLabel: "Winner",
+  standingRankLabel: (rank: number): string => `#${rank}`,
   standingScoreLabel: (score: number): string => `${score} pts`,
   standingRosterValue: (
     visiblePlayerNames: string[],

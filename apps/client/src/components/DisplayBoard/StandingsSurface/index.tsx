@@ -21,13 +21,17 @@ export const StandingsSurface = ({
 
   return (
     <footer className={styles.footer}>
-      <h2 className={styles.heading}>{displayBoardCopy.standingsTitle}</h2>
+      <div className={styles.headingRow}>
+        <span className={styles.headingAccentLine} aria-hidden />
+        <h2 className={styles.heading}>{displayBoardCopy.standingsTitle}</h2>
+        <span className={styles.headingAccentLine} aria-hidden />
+      </div>
       {standings.length === 0 && (
         <p className={styles.emptyLabel}>{displayBoardCopy.standingsEmptyLabel}</p>
       )}
       {standings.length > 0 && (
         <ul className={styles.standingsList}>
-          {standings.map((team) => {
+          {standings.map((team, index) => {
             const isLeader = leadingTeamId !== null && team.id === leadingTeamId;
             const isFinalResultsLeader = phase === Phase.FINAL_RESULTS && isLeader;
             const standingCardClassName = isFinalResultsLeader
@@ -35,6 +39,14 @@ export const StandingsSurface = ({
               : isLeader
                 ? styles.leadingStandingCard
                 : styles.standingCard;
+            const statusLabel = isFinalResultsLeader
+              ? displayBoardCopy.standingWinnerLabel
+              : isLeader
+                ? displayBoardCopy.standingLeaderLabel
+                : null;
+            const statusClassName = isFinalResultsLeader
+              ? styles.winnerStatusLabel
+              : styles.leadingStatusLabel;
             const teamColorVariant = resolveTeamColorVariant(team.id);
             const borderAccentClassName = isFinalResultsLeader
               ? styles.winnerTeamAccentBorder
@@ -49,24 +61,35 @@ export const StandingsSurface = ({
                 key={team.id}
                 className={`${standingCardClassName} ${styles.teamColorEdge} ${borderAccentClassName}`}
               >
+                <span className={styles.cardGlow} aria-hidden />
                 <div className={styles.teamRow}>
                   <div className={styles.teamIdentity}>
-                    <span
-                      className={`${styles.teamAccentDot} ${dotAccentClassName}`}
-                      aria-hidden
-                    />
-                    <p className={styles.teamName}>{team.name}</p>
+                    <p className={styles.rankBadge}>
+                      {displayBoardCopy.standingRankLabel(index + 1)}
+                    </p>
+                    <div className={styles.teamIdentityBody}>
+                      <div className={styles.teamNameRow}>
+                        <span
+                          className={`${styles.teamAccentDot} ${dotAccentClassName}`}
+                          aria-hidden
+                        />
+                        <p className={styles.teamName}>{team.name}</p>
+                        {statusLabel !== null && (
+                          <span className={statusClassName}>{statusLabel}</span>
+                        )}
+                      </div>
+                      <p className={styles.teamRoster}>
+                        {displayBoardCopy.standingRosterValue(
+                          teamRosterPreview.visiblePlayerNames,
+                          teamRosterPreview.hiddenPlayerCount
+                        )}
+                      </p>
+                    </div>
                   </div>
                   <p className={styles.score}>
                     {displayBoardCopy.standingScoreLabel(team.totalScore)}
                   </p>
                 </div>
-                <p className={styles.teamRoster}>
-                  {displayBoardCopy.standingRosterValue(
-                    teamRosterPreview.visiblePlayerNames,
-                    teamRosterPreview.hiddenPlayerCount
-                  )}
-                </p>
               </li>
             );
           })}
