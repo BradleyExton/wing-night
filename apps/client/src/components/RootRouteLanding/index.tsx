@@ -4,41 +4,55 @@ import * as styles from "./styles";
 export const RootRouteLanding = (): JSX.Element => {
   return (
     <main className={styles.container}>
-      <section className={styles.panel}>
-        <div className={styles.panelLayout}>
-          <div>
-            <p className={styles.eyebrow}>{rootRouteLandingCopy.eyebrow}</p>
-            <h1 className={styles.title}>{rootRouteLandingCopy.title}</h1>
-            <p className={styles.description}>{rootRouteLandingCopy.description}</p>
-            <nav className={styles.actionGrid} aria-label="Role routes">
-              {rootRouteLandingCopy.actions.map((action) => {
-                const toneClassName =
-                  action.tone === "PRIMARY"
-                    ? styles.actionCardPrimary
-                    : styles.actionCardSecondary;
+      <div className={styles.atmosphere} aria-hidden />
+      <div className={styles.atmosphereGlowPrimary} aria-hidden />
+      <div className={styles.atmosphereGlowHeat} aria-hidden />
+      <figure className={styles.heroBackdrop} aria-hidden>
+        <img
+          className={styles.heroMedia}
+          src={rootRouteLandingCopy.heroIllustrationPath}
+          alt={rootRouteLandingCopy.heroIllustrationAlt}
+        />
+      </figure>
 
-                return (
-                  <a
-                    key={action.href}
-                    href={action.href}
-                    className={`${styles.actionCardBase} ${toneClassName}`}
-                  >
-                    <span className={styles.actionLabel}>{action.label}</span>
-                    <span className={styles.actionDetail}>{action.detail}</span>
-                  </a>
-                );
-              })}
-            </nav>
-          </div>
+      <section className={styles.content}>
+        <header className={styles.brandRow}>
+          <img
+            className={styles.brandMark}
+            src={rootRouteLandingCopy.brandMarkPath}
+            alt={rootRouteLandingCopy.brandMarkAlt}
+          />
+          <span className={styles.brandLabel}>{rootRouteLandingCopy.brandLabel}</span>
+        </header>
 
-          <div className={styles.heroFrame}>
-            <img
-              className={styles.heroMedia}
-              src={rootRouteLandingCopy.heroIllustrationPath}
-              alt={rootRouteLandingCopy.heroIllustrationAlt}
-            />
-          </div>
-        </div>
+        <p className={styles.eyebrow}>{rootRouteLandingCopy.eyebrow}</p>
+        <h1 className={styles.title}>{rootRouteLandingCopy.title}</h1>
+        <p className={styles.description}>{rootRouteLandingCopy.description}</p>
+        <p className={styles.selectionLabel}>{rootRouteLandingCopy.selectionLabel}</p>
+
+        <nav className={styles.roleRail} aria-label="Role routes">
+          {rootRouteLandingCopy.actions.map((action) => {
+            const toneClassName =
+              action.tone === "PRIMARY"
+                ? styles.roleActionPrimary
+                : styles.roleActionSecondary;
+
+            return (
+              <a
+                key={action.href}
+                href={action.href}
+                className={`${styles.roleActionBase} ${toneClassName}`}
+              >
+                <div className={styles.roleActionHeaderRow}>
+                  <span className={styles.roleActionLabel}>{action.label}</span>
+                  <span className={styles.roleActionRoute}>{action.href}</span>
+                </div>
+                <span className={styles.roleActionDetail}>{action.detail}</span>
+                <span className={styles.roleActionTarget}>{action.targetDevice}</span>
+              </a>
+            );
+          })}
+        </nav>
       </section>
     </main>
   );

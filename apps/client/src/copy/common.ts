@@ -1,4 +1,7 @@
 export const commonCopy = {
+  brandLabel: "Wing Night",
+  brandMarkPath: "/favicon.svg",
+  brandMarkAlt: "Wing Night flame logo",
   routeNotFoundTitle: "Route Placeholder Not Found",
   routeNotFoundDescription:
     "Use /host, /display, or /dev/minigame/trivia.",

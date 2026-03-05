@@ -1,3 +1,5 @@
+import { commonCopy } from "../../../../copy/common";
+
 export const teamTurnLoopStepIds = [
   "MINIGAME_INTRO",
   "EAT_WINGS",
@@ -8,7 +10,9 @@ export const teamTurnLoopStepIds = [
 export type TeamTurnLoopStepId = (typeof teamTurnLoopStepIds)[number];
 
 export const setupStageCopy = {
-  brandLabel: "Wing Night",
+  brandLabel: commonCopy.brandLabel,
+  brandMarkPath: commonCopy.brandMarkPath,
+  brandMarkAlt: commonCopy.brandMarkAlt,
   lockedStatusLabel: "Game Locked In",
   lockedStatusDescription: "Host is about to start Round 1.",
   teamTurnLoopTitle: "Round Flow",
@@ -42,6 +46,8 @@ export const setupStageCopy = {
   ]
 } as const satisfies {
   readonly brandLabel: string;
+  readonly brandMarkPath: string;
+  readonly brandMarkAlt: string;
   readonly lockedStatusLabel: string;
   readonly lockedStatusDescription: string;
   readonly teamTurnLoopTitle: string;

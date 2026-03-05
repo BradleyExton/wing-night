@@ -57,6 +57,11 @@ export const SetupStageBody = ({
   return (
     <div className={styles.setupRoot}>
       <header className={styles.setupHeader}>
+        <img
+          className={styles.brandMark}
+          src={setupStageCopy.brandMarkPath}
+          alt={setupStageCopy.brandMarkAlt}
+        />
         <h2 className={styles.setupTitle}>{setupStageCopy.brandLabel}</h2>
       </header>
       {isLocked && (
