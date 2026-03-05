@@ -1,6 +1,6 @@
 import type { RoomState } from "@wingnight/shared";
 
-export const ensureTurnOrderTeamIds = (state: RoomState): void => {
+const ensureTurnOrderTeamIds = (state: RoomState): void => {
   if (state.turnOrderTeamIds.length > 0) {
     return;
   }

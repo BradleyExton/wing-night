@@ -4,6 +4,12 @@ export const card =
 export const setupCard =
   "h-full max-h-full overflow-hidden -mx-4 -my-3 text-left md:-mx-8 md:-my-4 [@media(max-height:850px)]:-my-2";
 
+export const stageCanvas =
+  "relative isolate h-full max-h-full overflow-hidden text-left";
+
+export const stageBody =
+  "relative z-10 h-full min-h-0 px-4 pb-3 pt-1 md:px-8 md:pb-4 2xl:px-12";
+
 export const surfaceContextRow = "mb-3 flex items-center justify-between gap-3";
 
 export const surfaceContextMeta =
@@ -13,16 +19,6 @@ export const surfaceContextBadge =
   "inline-flex rounded-full border border-primary/50 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-primary";
 
 export const title = "m-0 text-4xl font-bold text-text md:text-5xl";
-
-export const metaGrid = "mt-5 grid gap-3 md:grid-cols-2";
-
-export const metaItem =
-  "rounded-xl border border-text/10 bg-surface px-4 py-4";
-
-export const metaLabel =
-  "m-0 text-xs font-semibold uppercase tracking-[0.16em] text-muted";
-
-export const metaValue = "mt-2 text-2xl font-semibold text-text";
 
 export const timerWrap =
   "mt-6 rounded-xl border border-primary/40 bg-primary/10 px-5 py-6 text-center";

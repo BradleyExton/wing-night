@@ -1,4 +1,5 @@
 import type { MinigameType, RoomState } from "@wingnight/shared";
+import type { MinigameSurfacePhase } from "@wingnight/minigames-core";
 
 import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
 import { displayBoardCopy } from "../../copy";
@@ -6,8 +7,8 @@ import { TurnMeta } from "../TurnMeta";
 import * as styles from "./styles";
 
 type MinigameStageBodyProps = {
+  phase: MinigameSurfacePhase;
   phaseLabel: string;
-  minigamePhase: "intro" | "play" | null;
   minigameType: MinigameType | null;
   currentRoundConfig: RoomState["currentRoundConfig"];
   shouldRenderTeamTurnContext: boolean;
@@ -16,15 +17,15 @@ type MinigameStageBodyProps = {
 };
 
 export const MinigameStageBody = ({
+  phase,
   phaseLabel,
-  minigamePhase,
   minigameType,
   currentRoundConfig,
   shouldRenderTeamTurnContext,
   activeTeamName,
   minigameDisplayView
 }: MinigameStageBodyProps): JSX.Element => {
-  if (minigameType === null || minigamePhase === null) {
+  if (minigameType === null) {
     return (
       <>
         <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
@@ -51,13 +52,11 @@ export const MinigameStageBody = ({
           <p className={styles.fallbackText}>
             {displayBoardCopy.minigameRendererUnavailableLabel(minigameType)}
           </p>
-        ) : minigamePhase === "play" &&
-          minigameType === "TRIVIA" &&
-          minigameDisplayView === null ? (
+        ) : phase === "play" && minigameType === "TRIVIA" && minigameDisplayView === null ? (
           <p className={styles.fallbackText}>{displayBoardCopy.minigameWaitingForViewLabel}</p>
         ) : (
           <minigameRendererBundle.DisplaySurface
-            phase={minigamePhase}
+            phase={phase}
             minigameType={minigameType}
             minigameDisplayView={minigameDisplayView}
             activeTeamName={activeTeamName}

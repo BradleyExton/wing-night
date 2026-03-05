@@ -1,5 +1,5 @@
 export const footer =
-  "relative isolate shrink-0 border-t border-primary/20 bg-gradient-to-b from-surfaceAlt/85 to-surface px-[clamp(1rem,2.2vw,3rem)] py-[clamp(0.8rem,1.2vh,1.5rem)]";
+  "relative z-10 isolate shrink-0 border-t border-primary/20 bg-gradient-to-b from-surfaceAlt/85 to-surface px-[clamp(1rem,2.2vw,3rem)] py-[clamp(0.8rem,1.2vh,1.5rem)]";
 
 export const headingRow = "relative z-10 flex items-center gap-[clamp(0.5rem,0.9vw,1rem)]";
 
@@ -13,7 +13,7 @@ export const emptyLabel = "mt-3 text-[clamp(0.95rem,1vw,1.55rem)] text-muted";
 
 export const standingsList = "mt-3 grid gap-[clamp(0.5rem,0.8vw,1rem)] md:grid-cols-3";
 
-export const standingCardBase =
+const standingCardBase =
   "relative overflow-hidden rounded-[clamp(0.4rem,0.8vw,0.85rem)] border bg-surfaceAlt/95 px-[clamp(0.6rem,1vw,1.15rem)] py-[clamp(0.5rem,0.9vh,1rem)] shadow-[0_10px_30px_rgba(0,0,0,0.2)]";
 
 export const standingCard = `${standingCardBase} border-text/10`;

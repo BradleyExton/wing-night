@@ -71,6 +71,9 @@ test("renders waiting copy when room state is missing", () => {
   assert.match(html, /Waiting for room state/);
   assert.match(html, /Standings/);
   assert.match(html, /No teams have joined yet/);
+  assert.match(html, /data-display-atmosphere/);
+  assert.match(html, /h-\[100dvh\]/);
+  assert.match(html, /w-screen/);
 });
 
 test("renders fatal content state when snapshot reports content load failure", () => {
@@ -101,7 +104,7 @@ test("renders eating timer view from snapshot config", () => {
   assert.match(html, /Round Timer/);
   assert.match(html, /02:00/);
   assert.doesNotMatch(html, /<header/);
-  assert.doesNotMatch(html, /Wing Night/);
+  assert.match(html, /Wing Night logo/);
 });
 
 test("renders standings in descending score order", () => {

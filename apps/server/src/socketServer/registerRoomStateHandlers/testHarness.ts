@@ -14,7 +14,7 @@ import { registerRoomStateHandlers } from "./index.js";
 type SocketUnderTest = Parameters<typeof registerRoomStateHandlers>[0];
 type MutationHandlersUnderTest = Parameters<typeof registerRoomStateHandlers>[2];
 
-export type SocketHarness = {
+type SocketHarness = {
   socket: SocketUnderTest;
   emittedSnapshots: RoleScopedStateSnapshotEnvelope[];
   emittedSecretPayloads: HostSecretPayload[];
