@@ -3,7 +3,9 @@ export const setupRoot =
 export const atmosphereLayer =
   "pointer-events-none absolute inset-0 z-0 rounded-none bg-gradient-to-br from-primary/20 via-transparent to-primary/10 opacity-50 blur-3xl [animation:spin_90s_linear_infinite] motion-reduce:[animation:none]";
 export const setupHeader =
-  "relative z-10 px-4 pt-[clamp(0.5rem,1vh,1.25rem)] md:px-8 2xl:px-12";
+  "relative z-10 flex items-center gap-[clamp(0.5rem,0.8vw,1rem)] px-4 pt-[clamp(0.5rem,1vh,1.25rem)] md:px-8 2xl:px-12";
+export const brandMark =
+  "h-[clamp(1.7rem,1.9vw,3rem)] w-[clamp(1.7rem,1.9vw,3rem)] rounded-md bg-bg/70 p-1 ring-1 ring-primary/40";
 export const setupTitle =
   "m-0 text-[clamp(2.1rem,2.1vw,3.5rem)] font-black leading-[1] tracking-[0.06em] text-primary/85";
 export const lockedStatusRow =
