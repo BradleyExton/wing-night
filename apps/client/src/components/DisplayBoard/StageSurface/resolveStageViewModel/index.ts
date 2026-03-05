@@ -9,7 +9,11 @@ export type StageRenderMode =
   | "setup_locked"
   | "round_intro"
   | "eating"
-  | "minigame"
+  | "minigame_intro"
+  | "minigame_play"
+  | "turn_results"
+  | "round_results"
+  | "final_results"
   | "fallback";
 
 type StageViewModel = {
@@ -18,7 +22,6 @@ type StageViewModel = {
   gameConfig: DisplayRoomStateSnapshot["gameConfig"];
   currentRoundConfig: DisplayRoomStateSnapshot["currentRoundConfig"];
   minigameType: MinigameType | null;
-  minigamePhase: "intro" | "play" | null;
   teamCount: number;
   teamNames: string[];
   activeTeamName: string | null;
@@ -44,12 +47,16 @@ const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
     case Phase.EATING:
       return "eating";
     case Phase.MINIGAME_INTRO:
+      return "minigame_intro";
     case Phase.MINIGAME_PLAY:
-      return "minigame";
-    case null:
+      return "minigame_play";
     case Phase.TURN_RESULTS:
+      return "turn_results";
     case Phase.ROUND_RESULTS:
+      return "round_results";
     case Phase.FINAL_RESULTS:
+      return "final_results";
+    case null:
       return "fallback";
     default:
       return assertUnreachable(phase);
@@ -65,8 +72,6 @@ export const resolveStageViewModel = (
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const minigameType =
     roomState?.minigameDisplayView?.minigame ?? currentRoundConfig?.minigame ?? null;
-  const minigamePhase =
-    phase === Phase.MINIGAME_INTRO ? "intro" : phase === Phase.MINIGAME_PLAY ? "play" : null;
 
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
@@ -82,7 +87,11 @@ export const resolveStageViewModel = (
 
   const activeTeamName = activeRoundTeamName ?? activeTurnTeamName;
   const shouldRenderTeamTurnContext =
-    activeTeamName !== null && (stageMode === "eating" || stageMode === "minigame");
+    activeTeamName !== null &&
+    (stageMode === "eating" ||
+      stageMode === "minigame_intro" ||
+      stageMode === "minigame_play" ||
+      stageMode === "turn_results");
 
   const minigameDisplayView = roomState?.minigameDisplayView ?? null;
 
@@ -97,7 +106,6 @@ export const resolveStageViewModel = (
     gameConfig,
     currentRoundConfig,
     minigameType,
-    minigamePhase,
     teamCount: roomState?.teams.length ?? 0,
     teamNames: roomState?.teams.map((team) => team.name) ?? [],
     activeTeamName,

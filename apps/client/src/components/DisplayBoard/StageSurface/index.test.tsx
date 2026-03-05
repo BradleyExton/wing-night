@@ -67,6 +67,8 @@ test("renders round intro hero metadata", () => {
   assert.match(html, /Round 1: Warm Up/);
   assert.match(html, /Round 1 of 1/);
   assert.match(html, /Round Intro/);
+  assert.match(html, /Phase: Round Intro/);
+  assert.match(html, /Wing Night logo/);
   assert.match(html, /Sauce is locked\. Mini-game is up next\./);
   assert.match(html, /Frank&#x27;s/);
   assert.match(html, /TRIVIA/);
@@ -224,6 +226,7 @@ test("renders active team without turn progress during eating", () => {
 
   assert.match(html, /Active Team/);
   assert.match(html, /Team One/);
+  assert.match(html, /Team Up: Team One/);
   assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Round Timer/);
 });
@@ -310,8 +313,77 @@ test("renders active team without turn progress during minigame intro", () => {
     <StageSurface roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
-  assert.match(html, /Active Team/);
+  assert.match(html, /Phase: Minigame Intro/);
+  assert.match(html, /Team Briefing/);
+  assert.match(html, /Team One: Get Ready to Eat &amp; Play/);
+  assert.match(html, /Mini-Game/);
+  assert.match(html, /TRIVIA/);
+  assert.match(html, /Hot Sauce/);
+  assert.match(html, /Frank&#x27;s/);
+  assert.match(html, /Rules/);
+  assert.match(html, /Host marks each attempt as correct or incorrect\./);
+  assert.match(html, /display\/setup\/flow-minigame-intro\.png/);
   assert.match(html, /Team One/);
+  assert.match(html, /Team Up: Team One/);
   assert.doesNotMatch(html, /Team 1 of 1/);
-  assert.match(html, /Mini-Game: TRIVIA/);
+});
+
+test("renders turn-results transition context with active team and turn progress", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.TURN_RESULTS)} />
+  );
+
+  assert.match(html, /Team Turn Complete/);
+  assert.match(html, /Completed Team/);
+  assert.match(html, /Team One/);
+  assert.match(html, /Turn Progress/);
+  assert.match(html, /0\/1 teams complete/);
+  assert.match(html, /Next Step/);
+  assert.match(html, /Brief the next team/);
+  assert.match(html, /Team Up: Team One/);
+});
+
+test("renders round-results points summary from pending score buckets", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.ROUND_RESULTS),
+        pendingWingPointsByTeamId: {
+          "team-1": 5
+        },
+        pendingMinigamePointsByTeamId: {
+          "team-1": 7
+        }
+      }}
+    />
+  );
+
+  assert.match(html, /Round Scores Applied/);
+  assert.match(html, /Wing Points/);
+  assert.match(html, /\+5 pts/);
+  assert.match(html, /Mini-Game Points/);
+  assert.match(html, /\+7 pts/);
+  assert.match(html, /Round Total/);
+  assert.match(html, /\+12 pts/);
+});
+
+test("renders final-results winner callout from standings order", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.FINAL_RESULTS),
+        teams: [
+          { id: "team-1", name: "Team One", playerIds: [], totalScore: 9 },
+          { id: "team-2", name: "Team Two", playerIds: [], totalScore: 15 }
+        ]
+      }}
+    />
+  );
+
+  assert.match(html, /Final Results/);
+  assert.match(html, /Champion/);
+  assert.match(html, /Team Two/);
+  assert.match(html, /15 pts/);
+  assert.match(html, /2 teams competed/);
+  assert.doesNotMatch(html, /Team Up:/);
 });

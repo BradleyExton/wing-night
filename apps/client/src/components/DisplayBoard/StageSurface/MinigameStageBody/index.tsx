@@ -7,7 +7,6 @@ import * as styles from "./styles";
 
 type MinigameStageBodyProps = {
   phaseLabel: string;
-  minigamePhase: "intro" | "play" | null;
   minigameType: MinigameType | null;
   currentRoundConfig: RoomState["currentRoundConfig"];
   shouldRenderTeamTurnContext: boolean;
@@ -17,14 +16,13 @@ type MinigameStageBodyProps = {
 
 export const MinigameStageBody = ({
   phaseLabel,
-  minigamePhase,
   minigameType,
   currentRoundConfig,
   shouldRenderTeamTurnContext,
   activeTeamName,
   minigameDisplayView
 }: MinigameStageBodyProps): JSX.Element => {
-  if (minigameType === null || minigamePhase === null) {
+  if (minigameType === null) {
     return (
       <>
         <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
@@ -51,13 +49,11 @@ export const MinigameStageBody = ({
           <p className={styles.fallbackText}>
             {displayBoardCopy.minigameRendererUnavailableLabel(minigameType)}
           </p>
-        ) : minigamePhase === "play" &&
-          minigameType === "TRIVIA" &&
-          minigameDisplayView === null ? (
+        ) : minigameType === "TRIVIA" && minigameDisplayView === null ? (
           <p className={styles.fallbackText}>{displayBoardCopy.minigameWaitingForViewLabel}</p>
         ) : (
           <minigameRendererBundle.DisplaySurface
-            phase={minigamePhase}
+            phase="play"
             minigameType={minigameType}
             minigameDisplayView={minigameDisplayView}
             activeTeamName={activeTeamName}

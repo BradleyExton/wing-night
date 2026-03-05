@@ -1,5 +1,5 @@
 export const footer =
-  "relative isolate shrink-0 border-t border-primary/20 bg-gradient-to-b from-surfaceAlt/85 to-surface px-[clamp(1rem,2.2vw,3rem)] py-[clamp(0.8rem,1.2vh,1.5rem)]";
+  "relative z-10 isolate shrink-0 border-t border-primary/20 bg-gradient-to-b from-surfaceAlt/85 to-surface px-[clamp(1rem,2.2vw,3rem)] py-[clamp(0.8rem,1.2vh,1.5rem)]";
 
 export const headingRow = "relative z-10 flex items-center gap-[clamp(0.5rem,0.9vw,1rem)]";
 

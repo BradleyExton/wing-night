@@ -11,6 +11,9 @@ export const displayCopy = {
   currentRoundLabel: (currentRound: number, totalRounds: number): string =>
     `Round ${currentRound} of ${totalRounds}`,
   phaseLabel: (phase: Phase): string => formatPhaseLabel(phase),
+  stageContextPhaseLabel: (phaseLabel: string): string => `Phase: ${phaseLabel}`,
+  stageContextRoundLabel: (roundMetaLabel: string): string => roundMetaLabel,
+  stageContextTeamLabel: (teamName: string): string => `Team Up: ${teamName}`,
   roundIntroTitle: (roundNumber: number, label: string): string =>
     `Round ${roundNumber}: ${label}`,
   phaseContextTitle: (phaseLabel: string): string => `${phaseLabel} in progress`,

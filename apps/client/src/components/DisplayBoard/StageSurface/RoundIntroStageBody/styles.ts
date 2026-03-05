@@ -1,4 +1,4 @@
-export const root = "relative isolate overflow-hidden";
+export const root = "relative isolate grid h-full min-h-0 content-center overflow-hidden";
 
 export const atmosphereLayer =
   "pointer-events-none absolute -inset-x-[8%] -inset-y-[18%] z-0 rounded-full bg-gradient-to-br from-primary/20 via-transparent to-primary/10 blur-3xl [animation:spin_90s_linear_infinite] motion-reduce:[animation:none]";
@@ -20,7 +20,7 @@ export const summary =
 export const metaGrid = "grid gap-[clamp(0.65rem,1vw,1rem)] sm:grid-cols-2";
 
 export const metaCard =
-  "rounded-[clamp(0.7rem,1vw,1rem)] border border-primary/35 bg-surface/75 px-[clamp(0.75rem,1vw,1.2rem)] py-[clamp(0.7rem,1vh,1.05rem)]";
+  "border-l-[3px] border-primary/45 bg-surface/30 px-[clamp(0.75rem,1vw,1.2rem)] py-[clamp(0.7rem,1vh,1.05rem)]";
 
 export const metaLabel =
   "m-0 text-[clamp(0.7rem,0.75vw,1rem)] font-semibold uppercase tracking-[0.16em] text-muted";
@@ -29,7 +29,7 @@ export const metaValue =
   "mt-[clamp(0.35rem,0.6vh,0.65rem)] m-0 text-[clamp(1.35rem,1.45vw,2.3rem)] font-black uppercase leading-tight text-text";
 
 export const heroIllustrationShell =
-  "relative m-0 flex min-h-[clamp(12rem,30vh,21rem)] items-center justify-center overflow-hidden rounded-[clamp(0.75rem,1.2vw,1.2rem)] border border-primary/30 bg-surfaceAlt/55 p-[clamp(0.65rem,1.1vw,1.25rem)] shadow-2xl";
+  "relative m-0 flex min-h-[clamp(12rem,30vh,21rem)] items-center justify-center overflow-hidden p-[clamp(0.65rem,1.1vw,1.25rem)]";
 
 export const heroIllustrationGlow =
   "pointer-events-none absolute inset-x-[18%] bottom-[14%] h-[clamp(1.5rem,2.4vw,3.2rem)] rounded-full bg-primary/25 blur-xl [animation:pulse_8s_ease-in-out_infinite] motion-reduce:[animation:none]";

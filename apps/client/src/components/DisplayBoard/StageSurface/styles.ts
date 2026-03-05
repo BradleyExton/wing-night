@@ -4,6 +4,12 @@ export const card =
 export const setupCard =
   "h-full max-h-full overflow-hidden -mx-4 -my-3 text-left md:-mx-8 md:-my-4 [@media(max-height:850px)]:-my-2";
 
+export const stageCanvas =
+  "relative isolate h-full max-h-full overflow-hidden text-left";
+
+export const stageBody =
+  "relative z-10 h-full min-h-0 px-4 pb-3 pt-1 md:px-8 md:pb-4 2xl:px-12";
+
 export const surfaceContextRow = "mb-3 flex items-center justify-between gap-3";
 
 export const surfaceContextMeta =
