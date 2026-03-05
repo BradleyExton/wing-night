@@ -28,7 +28,7 @@ export const flowBand = "min-h-0 px-4 py-0.5 md:px-8 2xl:px-12";
 export const flowLayout =
   "grid min-h-0 items-start gap-[clamp(0.5rem,0.9vh,1.25rem)] lg:items-end";
 export const flowPhase =
-  "grid min-h-0 content-start justify-items-center gap-[clamp(0.5rem,0.9vh,1.25rem)]";
+  "grid min-h-0 content-start justify-items-center gap-[clamp(0.65rem,1.05vh,1.6rem)] [@media(max-height:850px)]:gap-[clamp(0.45rem,0.75vh,0.95rem)]";
 export const majorArrow =
   "flex items-center justify-center text-primary/80 lg:self-center";
 export const majorArrowBeforeLoop = "lg:-translate-x-14";
@@ -40,16 +40,16 @@ export const flowLoopShell =
 export const flowLoopTitle =
   "m-0 text-center text-[clamp(1.125rem,1.25vw,2.5rem)] font-black uppercase leading-none tracking-[0.1em] text-primary";
 export const flowLoopTitleRow =
-  "relative mx-auto flex w-full max-w-[42ch] items-center justify-center gap-[clamp(0.4rem,0.8vw,1rem)] pb-[clamp(0.5rem,1vh,1.4rem)]";
+  "relative mx-auto flex w-full max-w-[42ch] items-center justify-center gap-[clamp(0.4rem,0.8vw,1rem)] pb-[clamp(0.8rem,1.35vh,2rem)]";
 export const roundLineupSubtitle =
-  "mx-auto mt-1 mb-1 max-w-[80ch] text-center text-[clamp(0.95rem,0.85vw,1.5rem)] leading-[1.45] text-muted/95";
+  "mx-auto mt-[clamp(0.35rem,0.65vh,0.9rem)] mb-[clamp(0.7rem,1vh,1.45rem)] max-w-[80ch] text-center text-[clamp(0.95rem,0.85vw,1.5rem)] leading-[1.45] text-muted/95";
 export const roundLineupTitleRow =
-  "relative mx-auto flex w-full max-w-[38ch] items-center justify-center gap-[clamp(0.4rem,0.8vw,1rem)]";
+  "relative mx-auto flex w-full max-w-[38ch] items-center justify-center gap-[clamp(0.4rem,0.8vw,1rem)] pb-[clamp(0.35rem,0.7vh,0.95rem)]";
 export const flowLoopSteps =
-  "grid min-h-0 items-start gap-[clamp(0.35rem,0.65vw,0.9rem)] md:grid-cols-2 xl:grid-cols-4";
+  "grid min-h-0 items-start gap-[clamp(0.5rem,0.85vw,1.2rem)] md:grid-cols-2 xl:grid-cols-4";
 export const flowLoopStepSlot = "contents";
 export const flowIllustrationSlot =
-  "relative flex h-[clamp(9.5rem,22vh,26rem)] w-full items-center justify-center overflow-hidden";
+  "relative flex h-[clamp(9.6rem,22vh,26rem)] w-full items-center justify-center overflow-hidden";
 export const sparkField =
   "pointer-events-none absolute inset-x-[7%] bottom-[calc(18%+45px)] z-30 h-[46%]";
 export const sparkGlow =
@@ -71,14 +71,22 @@ export const sparkTrailTwo =
 export const flowIllustrationMedia = "relative z-10 h-full w-full object-contain";
 export const flowRoundResultsIllustrationMedia =
   "relative z-10 h-[120%] w-[120%] max-w-none object-contain";
-export const flowLoopIllustrationMedia = "relative z-10 h-[145%] w-[145%] max-w-none object-contain";
+export const flowLoopIllustrationMedia = "relative z-10 h-[136%] w-[136%] max-w-none object-contain";
+export const flowLoopIllustrationMediaMinigameIntro =
+  "h-[133%] w-[133%] translate-y-[1%]";
+export const flowLoopIllustrationMediaEatWings =
+  "h-[122%] w-[122%] translate-y-[0.5%]";
+export const flowLoopIllustrationMediaMinigamePlay =
+  "h-[130%] w-[130%] translate-y-[3.5%]";
+export const flowLoopIllustrationMediaTurnResults =
+  "h-[166%] w-[166%] translate-y-[2%]";
 export const flowStepLabel =
   "m-0 text-center text-[clamp(0.95rem,0.8vw,1.6rem)] font-bold uppercase tracking-[0.12em] text-text/95";
 export const bottomBand = "relative z-10 px-4 pt-1 pb-0.5 md:px-8 2xl:px-12";
 export const sectionDivider =
   "relative z-10 mx-auto h-px w-[86%] bg-gradient-to-r from-transparent via-primary/30 to-transparent [animation:pulse_12s_ease-in-out_infinite] motion-reduce:[animation:none]";
 export const lineupGrid =
-  "mt-1.5 grid gap-[clamp(0.5rem,0.8vw,1rem)] sm:grid-cols-2 xl:grid-cols-4";
+  "mt-[clamp(0.7rem,1.05vh,1.55rem)] grid gap-[clamp(0.5rem,0.8vw,1rem)] sm:grid-cols-2 xl:grid-cols-4";
 export const roundCard =
   "relative grid grid-cols-[clamp(2.8rem,3.8vw,4.75rem)_minmax(0,1fr)] items-center gap-[clamp(0.5rem,0.9vw,1.2rem)] overflow-hidden rounded-[clamp(0.375rem,0.8vw,0.9rem)] border border-primary/25 bg-surfaceAlt/35 px-[clamp(0.5rem,1vw,1rem)] py-[clamp(0.5rem,0.95vh,1.1rem)]";
 export const roundCardPlaceholder = "border-primary/20 bg-surface/35";

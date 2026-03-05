@@ -6,7 +6,10 @@ import { Flame } from "lucide-react";
 import {
   teamTurnLoopIllustrationPathByStepId
 } from "./assetPaths";
-import { setupStageCopy } from "./copy";
+import {
+  setupStageCopy,
+  type TeamTurnLoopStepId
+} from "./copy";
 import { resolveMinigameIconPath } from "../minigameAssets";
 import * as styles from "./styles";
 type SetupStageBodyProps = {
@@ -42,6 +45,15 @@ const IllustrationSparks = (): JSX.Element => (
     <span className={`${styles.sparkTrail} ${styles.sparkTrailTwo}`} data-spark-trail="two" />
   </div>
 );
+const flowLoopIllustrationMediaClassNameByStepId: Record<TeamTurnLoopStepId, string> = {
+  MINIGAME_INTRO: `${styles.flowLoopIllustrationMedia} ${styles.flowLoopIllustrationMediaMinigameIntro}`,
+  EAT_WINGS: `${styles.flowLoopIllustrationMedia} ${styles.flowLoopIllustrationMediaEatWings}`,
+  MINIGAME_PLAY: `${styles.flowLoopIllustrationMedia} ${styles.flowLoopIllustrationMediaMinigamePlay}`,
+  TURN_RESULTS: `${styles.flowLoopIllustrationMedia} ${styles.flowLoopIllustrationMediaTurnResults}`
+};
+const resolveFlowLoopIllustrationMediaClassName = (stepId: TeamTurnLoopStepId): string => {
+  return flowLoopIllustrationMediaClassNameByStepId[stepId];
+};
 export const SetupStageBody = ({
   gameConfig,
   isLocked = false
@@ -90,7 +102,7 @@ export const SetupStageBody = ({
                       <div className={styles.flowIllustrationSlot}>
                         <IllustrationSparks />
                         <img
-                          className={styles.flowLoopIllustrationMedia}
+                          className={resolveFlowLoopIllustrationMediaClassName(step.id)}
                           src={teamTurnLoopIllustrationPathByStepId[step.id]}
                           alt={setupStageCopy.flowIllustrationAlt(step.label)}
                         />
