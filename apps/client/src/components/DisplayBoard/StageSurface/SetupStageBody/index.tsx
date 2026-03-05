@@ -2,10 +2,8 @@ import {
   SETUP_PREVIEW_ROUND_SLOTS_MAX,
   type RoomState
 } from "@wingnight/shared";
-import { ArrowRight, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import {
-  setupRoundEndIllustrationPath,
-  setupRoundStartIllustrationPath,
   teamTurnLoopIllustrationPathByStepId
 } from "./assetPaths";
 import { setupStageCopy } from "./copy";
@@ -72,20 +70,6 @@ export const SetupStageBody = ({
       <div className={styles.contentGrid}>
         <section className={styles.flowBand}>
           <div className={styles.flowLayout}>
-            <article className={styles.flowPhase}>
-              <p className={styles.flowStepLabel}>{setupStageCopy.roundStartLabel}</p>
-              <div className={styles.flowIllustrationSlot}>
-                <IllustrationSparks />
-                <img
-                  className={styles.flowIllustrationMedia}
-                  src={setupRoundStartIllustrationPath}
-                  alt={setupStageCopy.flowIllustrationAlt(setupStageCopy.roundStartLabel)}
-                />
-              </div>
-            </article>
-            <div className={`${styles.majorArrow} ${styles.majorArrowBeforeLoop}`} aria-hidden>
-              <ArrowRight className={styles.majorArrowIcon} strokeWidth={3.25} />
-            </div>
             <article className={styles.flowLoopShell}>
               <div className={styles.flowLoopTitleRow}>
                 <span className={styles.titleAccentLine} aria-hidden />
@@ -114,20 +98,6 @@ export const SetupStageBody = ({
                     </article>
                   </div>
                 ))}
-              </div>
-            </article>
-            <div className={`${styles.majorArrow} ${styles.majorArrowAfterLoop}`} aria-hidden>
-              <ArrowRight className={styles.majorArrowIcon} strokeWidth={3.25} />
-            </div>
-            <article className={styles.flowPhase}>
-              <p className={styles.flowStepLabel}>{setupStageCopy.roundEndLabel}</p>
-              <div className={styles.flowIllustrationSlot}>
-                <IllustrationSparks />
-                <img
-                  className={styles.flowRoundResultsIllustrationMedia}
-                  src={setupRoundEndIllustrationPath}
-                  alt={setupStageCopy.flowIllustrationAlt(setupStageCopy.roundEndLabel)}
-                />
               </div>
             </article>
           </div>
