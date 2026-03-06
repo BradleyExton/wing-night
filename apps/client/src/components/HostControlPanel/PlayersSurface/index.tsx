@@ -13,7 +13,9 @@ export type SetupPlayersSurfaceProps = PlayersSurfaceBaseProps & {
   mode: "setup";
   teams: Team[];
   assignmentDisabled: boolean;
+  addPlayerDisabled: boolean;
   onAssignPlayer: (playerId: string, selectedTeamId: string) => void;
+  onAddPlayer: (name: string) => void;
 };
 
 export type EatingPlayersSurfaceProps = PlayersSurfaceBaseProps & {

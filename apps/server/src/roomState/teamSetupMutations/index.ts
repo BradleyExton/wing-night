@@ -7,6 +7,52 @@ import {
 } from "../selectors/index.js";
 import { getRoomState } from "../stateStore/index.js";
 
+const resolveNextPlayerId = (existingPlayerIds: string[]): string => {
+  const maxExistingSuffix = existingPlayerIds.reduce((maxSuffix, playerId) => {
+    const match = /^player-(\d+)$/.exec(playerId);
+
+    if (!match) {
+      return maxSuffix;
+    }
+
+    const parsedSuffix = Number(match[1]);
+
+    if (!Number.isInteger(parsedSuffix) || parsedSuffix <= maxSuffix) {
+      return maxSuffix;
+    }
+
+    return parsedSuffix;
+  }, 0);
+
+  return `player-${maxExistingSuffix + 1}`;
+};
+
+export const addPlayer = (name: string): RoomState => {
+  const roomState = getRoomState();
+
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  if (roomState.phase !== Phase.SETUP) {
+    return getRoomStateSnapshot();
+  }
+
+  const normalizedName = name.trim();
+
+  if (normalizedName.length === 0) {
+    return getRoomStateSnapshot();
+  }
+
+  const nextPlayerId = resolveNextPlayerId(roomState.players.map((player) => player.id));
+  roomState.players.push({
+    id: nextPlayerId,
+    name: normalizedName
+  });
+
+  return getRoomStateSnapshot();
+};
+
 export const createTeam = (name: string): RoomState => {
   const roomState = getRoomState();
 
@@ -74,6 +120,55 @@ export const assignPlayerToTeam = (
   }
 
   targetTeam.playerIds.push(playerId);
+
+  return getRoomStateSnapshot();
+};
+
+export const autoAssignRemainingPlayers = (): RoomState => {
+  const roomState = getRoomState();
+
+  if (isRoomInFatalState(roomState)) {
+    return getRoomStateSnapshot();
+  }
+
+  if (roomState.phase !== Phase.SETUP) {
+    return getRoomStateSnapshot();
+  }
+
+  if (roomState.teams.length === 0 || roomState.players.length === 0) {
+    return getRoomStateSnapshot();
+  }
+
+  const assignedPlayerIdSet = new Set<string>();
+
+  for (const team of roomState.teams) {
+    for (const playerId of team.playerIds) {
+      assignedPlayerIdSet.add(playerId);
+    }
+  }
+
+  const unassignedPlayerIds = roomState.players
+    .map((player) => player.id)
+    .filter((playerId) => !assignedPlayerIdSet.has(playerId));
+
+  for (const playerId of unassignedPlayerIds) {
+    let targetTeamIndex = 0;
+
+    for (let teamIndex = 1; teamIndex < roomState.teams.length; teamIndex += 1) {
+      const targetTeam = roomState.teams[targetTeamIndex];
+      const candidateTeam = roomState.teams[teamIndex];
+
+      if (!targetTeam || !candidateTeam) {
+        continue;
+      }
+
+      if (candidateTeam.playerIds.length < targetTeam.playerIds.length) {
+        targetTeamIndex = teamIndex;
+      }
+    }
+
+    roomState.teams[targetTeamIndex]?.playerIds.push(playerId);
+  }
 
   return getRoomStateSnapshot();
 };

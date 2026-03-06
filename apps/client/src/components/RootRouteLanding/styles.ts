@@ -1,5 +1,5 @@
 export const container =
-  "relative isolate min-h-[100dvh] overflow-hidden bg-bg px-5 py-8 text-text sm:px-8";
+  "relative isolate min-h-[100dvh] overflow-hidden bg-bg text-text";
 
 export const atmosphere =
   "pointer-events-none absolute inset-0 -z-20 bg-gradient-to-br from-bg via-surface to-bg";
@@ -16,7 +16,7 @@ export const heroBackdrop =
 export const heroMedia = "h-auto w-full object-contain [filter:saturate(112%)]";
 
 export const content =
-  "relative z-10 mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-3xl flex-col justify-center";
+  "relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col justify-center px-5 py-8 sm:px-8";
 
 export const brandRow = "inline-flex items-center gap-3";
 

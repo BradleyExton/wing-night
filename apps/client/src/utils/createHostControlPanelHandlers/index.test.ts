@@ -34,8 +34,18 @@ test("wires every host action and emits claim-control via missing-secret callbac
       onMissingHostSecret?.();
       return false;
     },
+    requestAddPlayer: (_socket, name, onMissingHostSecret) => {
+      callLog.push(`add-player:${name}`);
+      onMissingHostSecret?.();
+      return false;
+    },
     requestAssignPlayer: (_socket, playerId, teamId, onMissingHostSecret) => {
       callLog.push(`assign:${playerId}:${teamId}`);
+      onMissingHostSecret?.();
+      return false;
+    },
+    requestAutoAssignRemainingPlayers: (_socket, onMissingHostSecret) => {
+      callLog.push("auto-assign");
       onMissingHostSecret?.();
       return false;
     },
@@ -106,7 +116,9 @@ test("wires every host action and emits claim-control via missing-secret callbac
 
   handlers.onNextPhase();
   handlers.onCreateTeam("Team Ghost Pepper");
+  handlers.onAddPlayer("Sam");
   handlers.onAssignPlayer("player-1", "team-alpha");
+  handlers.onAutoAssignRemainingPlayers();
   handlers.onSetWingParticipation("player-1", true);
   handlers.onDispatchMinigameAction("TRIVIA", "recordAttempt", {
     isCorrect: false
@@ -123,7 +135,9 @@ test("wires every host action and emits claim-control via missing-secret callbac
   assert.deepEqual(callLog, [
     "next",
     "create:Team Ghost Pepper",
+    "add-player:Sam",
     "assign:player-1:team-alpha",
+    "auto-assign",
     "wing:player-1:true",
     "minigame:TRIVIA:recordAttempt:{\"isCorrect\":false}",
     "pause",
@@ -136,7 +150,7 @@ test("wires every host action and emits claim-control via missing-secret callbac
     "redo"
   ]);
 
-  assert.equal(socket.claimControlEvents.length, 13);
+  assert.equal(socket.claimControlEvents.length, 15);
   assert.ok(
     socket.claimControlEvents.every((event) => event === CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL)
   );

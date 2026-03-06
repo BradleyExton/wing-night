@@ -32,7 +32,11 @@ test("delegates setup mode to setup players surface", () => {
       teams={[...teamsFixture]}
       assignedTeamByPlayerId={new Map()}
       assignmentDisabled={false}
+      addPlayerDisabled={false}
       onAssignPlayer={(): void => {
+        return;
+      }}
+      onAddPlayer={(): void => {
         return;
       }}
     />

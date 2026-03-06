@@ -40,19 +40,14 @@ test("drawing runtime plugin projects unsupported host and display views", () =>
   assert.deepEqual(hostView, {
     minigame: "DRAWING",
     activeTurnTeamId: "team-alpha",
-    attemptsRemaining: 0,
-    promptCursor: 0,
     pendingPointsByTeamId: { "team-alpha": 2 },
-    currentPrompt: null,
     status: "UNSUPPORTED",
     message: "DRAWING gameplay runtime is not implemented yet."
   });
   assert.deepEqual(displayView, {
     minigame: "DRAWING",
     activeTurnTeamId: "team-alpha",
-    promptCursor: 0,
     pendingPointsByTeamId: { "team-alpha": 2 },
-    currentPrompt: null,
     status: "UNSUPPORTED",
     message: "DRAWING gameplay runtime is not implemented yet."
   });

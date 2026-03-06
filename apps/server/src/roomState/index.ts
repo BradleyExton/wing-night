@@ -6,11 +6,14 @@ export {
   resetGameToSetup,
   setRoomStateFatalError,
   setRoomStatePlayers,
+  setRoomStateTeams,
   setRoomStateGameConfig,
   setRoomStateMinigameContent
 } from "./baseMutations/index.js";
 
 export {
+  addPlayer,
+  autoAssignRemainingPlayers,
   createTeam,
   assignPlayerToTeam,
   reorderTurnOrder
@@ -34,3 +37,8 @@ export {
   skipTurnBoundary,
   advanceRoomStatePhase
 } from "./phaseMutations/index.js";
+
+export {
+  applyRoomStateMutation,
+  type RoomStateMutationResult
+} from "./mutationResult/index.js";

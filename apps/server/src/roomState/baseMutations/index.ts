@@ -3,7 +3,8 @@ import {
   type MinigameType,
   type Player,
   type RoomFatalError,
-  type RoomState
+  type RoomState,
+  type Team
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
@@ -20,7 +21,40 @@ import {
   resolveCurrentRoundConfig,
   resolveMinigameRules
 } from "../selectors/index.js";
-import { getRoomState, overwriteRoomState } from "../stateStore/index.js";
+import {
+  getRoomState,
+  getSetupBaselineSnapshot,
+  overwriteRoomState,
+  setSetupBaselineSnapshot
+} from "../stateStore/index.js";
+
+const normalizeBaselineTeams = (teams: Team[]): Team[] => {
+  return teams.map((team) => ({
+    id: team.id,
+    name: team.name,
+    playerIds: [],
+    totalScore: 0
+  }));
+};
+
+const syncSetupBaselineSnapshot = (
+  partialSnapshot: Partial<{
+    players: Player[];
+    teams: Team[];
+    gameConfig: GameConfigFile | null;
+  }>
+): void => {
+  const baselineSnapshot = getSetupBaselineSnapshot();
+
+  setSetupBaselineSnapshot({
+    players: partialSnapshot.players ?? baselineSnapshot.players,
+    teams: partialSnapshot.teams ?? baselineSnapshot.teams,
+    gameConfig:
+      partialSnapshot.gameConfig === undefined
+        ? baselineSnapshot.gameConfig
+        : partialSnapshot.gameConfig
+  });
+};
 
 export const getRoomStateSnapshot = (): RoomState => {
   const roomState = getRoomState();
@@ -34,6 +68,11 @@ export const resetRoomState = (): RoomState => {
   const roomState = getRoomState();
 
   overwriteRoomState(createInitialRoomState());
+  setSetupBaselineSnapshot({
+    players: [],
+    teams: [],
+    gameConfig: null
+  });
   resetMinigameRuntimeState();
   clearScoringMutationUndoState(roomState);
 
@@ -47,14 +86,17 @@ export const resetGameToSetup = (): RoomState => {
     return getRoomStateSnapshot();
   }
 
-  const preservedPlayers = structuredClone(roomState.players);
-  const preservedGameConfig = structuredClone(roomState.gameConfig);
+  const setupBaselineSnapshot = getSetupBaselineSnapshot();
+  const restoredPlayers = structuredClone(setupBaselineSnapshot.players);
+  const restoredTeams = normalizeBaselineTeams(setupBaselineSnapshot.teams);
+  const restoredGameConfig = structuredClone(setupBaselineSnapshot.gameConfig);
   const nextState = createInitialRoomState();
 
-  nextState.players = preservedPlayers;
-  nextState.gameConfig = preservedGameConfig;
+  nextState.players = restoredPlayers;
+  nextState.teams = restoredTeams;
+  nextState.gameConfig = restoredGameConfig;
   nextState.totalRounds =
-    preservedGameConfig === null ? nextState.totalRounds : preservedGameConfig.rounds.length;
+    restoredGameConfig === null ? nextState.totalRounds : restoredGameConfig.rounds.length;
   nextState.currentRoundConfig = null;
 
   overwriteRoomState(nextState);
@@ -88,18 +130,36 @@ export const setRoomStateFatalError = (message: string): RoomState => {
 
 export const setRoomStatePlayers = (players: Player[]): RoomState => {
   const roomState = getRoomState();
+  const nextPlayers = structuredClone(players);
 
-  roomState.players = structuredClone(players);
+  roomState.players = nextPlayers;
+  syncSetupBaselineSnapshot({ players: nextPlayers });
+
+  return getRoomStateSnapshot();
+};
+
+export const setRoomStateTeams = (teams: Team[]): RoomState => {
+  const roomState = getRoomState();
+  const nextTeams = structuredClone(teams);
+
+  roomState.teams = nextTeams;
+  syncSetupBaselineSnapshot({
+    teams: normalizeBaselineTeams(nextTeams)
+  });
 
   return getRoomStateSnapshot();
 };
 
 export const setRoomStateGameConfig = (gameConfig: GameConfigFile): RoomState => {
   const roomState = getRoomState();
+  const nextGameConfig = structuredClone(gameConfig);
 
-  roomState.gameConfig = structuredClone(gameConfig);
-  roomState.totalRounds = gameConfig.rounds.length;
+  roomState.gameConfig = nextGameConfig;
+  roomState.totalRounds = nextGameConfig.rounds.length;
   roomState.currentRoundConfig = resolveCurrentRoundConfig(roomState);
+  syncSetupBaselineSnapshot({
+    gameConfig: nextGameConfig
+  });
 
   return getRoomStateSnapshot();
 };

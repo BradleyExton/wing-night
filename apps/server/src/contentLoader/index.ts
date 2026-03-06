@@ -1,9 +1,10 @@
-import type { GameConfigFile, MinigameType, Player } from "@wingnight/shared";
+import type { GameConfigFile, MinigameType, Player, Team } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { loadGameConfig } from "./loadGameConfig/index.js";
 import { loadMinigameContent } from "./loadMinigameContent/index.js";
 import { loadPlayers } from "./loadPlayers/index.js";
+import { loadTeams } from "./loadTeams/index.js";
 
 type LoadContentOptions = {
   contentRootDir?: string;
@@ -11,6 +12,7 @@ type LoadContentOptions = {
 
 type LoadedContent = {
   players: Player[];
+  teams: Team[];
   gameConfig: GameConfigFile;
   minigameContentById: Partial<Record<MinigameType, SerializableValue>>;
 };
@@ -19,11 +21,13 @@ export const loadContent = (
   options: LoadContentOptions = {}
 ): LoadedContent => {
   const players = loadPlayers(options);
+  const teams = loadTeams(options);
   const gameConfig = loadGameConfig(options);
   const minigameContentById = loadMinigameContent(options);
 
   return {
     players,
+    teams,
     gameConfig,
     minigameContentById
   };

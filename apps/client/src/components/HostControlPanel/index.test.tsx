@@ -115,6 +115,8 @@ test("renders setup sections and assignment controls during SETUP", () => {
   assert.doesNotMatch(html, /Create teams, assign players, and advance phases\./);
   assert.match(html, /Team Setup/);
   assert.match(html, /Teams/);
+  assert.match(html, /Auto-Assign Remaining Players/);
+  assert.match(html, /Add Player/);
   assert.match(html, /Assign Alex to a team/);
   assert.doesNotMatch(
     html,
@@ -280,6 +282,11 @@ test("renders locked setup surface during INTRO with start-game CTA", () => {
   assert.match(html, /Team Setup/);
   assert.match(html, /Assign Alex to a team/);
   assert.match(html, /<button[^>]*disabled=""[^>]*>Create Team<\/button>/);
+  assert.match(
+    html,
+    /<button[^>]*disabled=""[^>]*>Auto-Assign Remaining Players<\/button>/
+  );
+  assert.match(html, /<button[^>]*disabled=""[^>]*>Add Player<\/button>/);
   assert.match(html, /<select[^>]*disabled=""/);
   assert.doesNotMatch(html, /Overrides/);
   assert.doesNotMatch(html, /Score Override/);

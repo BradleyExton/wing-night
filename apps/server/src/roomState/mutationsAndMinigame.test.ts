@@ -7,8 +7,10 @@ import {
 } from "@wingnight/shared";
 
 import {
+  addPlayer,
   advanceRoomStatePhase,
   assignPlayerToTeam,
+  autoAssignRemainingPlayers,
   createTeam,
   dispatchMinigameAction,
   getRoomStateSnapshot,
@@ -17,6 +19,7 @@ import {
   setPendingMinigamePoints,
   setRoomStateGameConfig,
   setRoomStateMinigameContent,
+  setRoomStateTeams,
   setRoomStatePlayers,
   setWingParticipation
 } from "./index.js";
@@ -27,6 +30,7 @@ import {
   advanceToRoundResultsPhase,
   advanceUntil,
   gameConfigFixture,
+  resolveTriviaHostView,
   resolveHostPromptCursor,
   resolveHostPromptId,
   setRoomStateTriviaPrompts,
@@ -50,6 +54,22 @@ test("setRoomStatePlayers stores a safe clone of player records", () => {
   const persistedSnapshot = getRoomStateSnapshot();
 
   assert.equal(persistedSnapshot.players[0].name, "Player One");
+});
+
+test("setRoomStateTeams stores a safe clone of team records", () => {
+  resetRoomState();
+
+  const nextTeams = [
+    { id: "team-1", name: "Team One", playerIds: ["player-1"], totalScore: 0 }
+  ];
+  const updatedSnapshot = setRoomStateTeams(nextTeams);
+
+  assert.deepEqual(updatedSnapshot.teams, nextTeams);
+
+  nextTeams[0].name = "Changed Locally";
+  const persistedSnapshot = getRoomStateSnapshot();
+
+  assert.equal(persistedSnapshot.teams[0].name, "Team One");
 });
 
 test("setRoomStateGameConfig stores a safe clone and updates totalRounds", () => {
@@ -96,7 +116,7 @@ test("setRoomStateMinigameContent stores a safe clone of trivia prompts", () => 
 
   assert.equal(resolveHostPromptId(persistedSnapshot), "prompt-1");
   assert.equal(
-    persistedSnapshot.minigameHostView?.currentPrompt?.question,
+    resolveTriviaHostView(persistedSnapshot.minigameHostView)?.currentPrompt?.question,
     "Question 1?"
   );
 });
@@ -114,6 +134,36 @@ test("createTeam trims team names and ignores empty values", () => {
   assert.equal(snapshot.teams[0].name, "Team Alpha");
   assert.deepEqual(snapshot.teams[0].playerIds, []);
   assert.equal(snapshot.teams[0].totalScore, 0);
+});
+
+test("addPlayer trims names and allocates the next player id", () => {
+  resetRoomState();
+
+  setRoomStatePlayers([{ id: "player-2", name: "Existing Player" }]);
+
+  addPlayer("  New Player  ");
+  addPlayer("   ");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.players.length, 2);
+  assert.deepEqual(snapshot.players[1], {
+    id: "player-3",
+    name: "New Player"
+  });
+});
+
+test("addPlayer ignores updates outside setup", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceRoomStatePhase();
+
+  addPlayer("Late Player");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.INTRO);
+  assert.equal(snapshot.players.some((player) => player.name === "Late Player"), false);
 });
 
 test("assignPlayerToTeam reassigns a player to only one team at a time", () => {
@@ -158,6 +208,41 @@ test("assignPlayerToTeam ignores unknown players and unknown teams", () => {
   const snapshot = getRoomStateSnapshot();
 
   assert.deepEqual(snapshot.teams[0].playerIds, []);
+});
+
+test("autoAssignRemainingPlayers balances only unassigned players across teams", () => {
+  resetRoomState();
+
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" },
+    { id: "player-3", name: "Player Three" },
+    { id: "player-4", name: "Player Four" },
+    { id: "player-5", name: "Player Five" }
+  ]);
+  createTeam("Team Alpha");
+  createTeam("Team Beta");
+  assignPlayerToTeam("player-1", "team-1");
+
+  autoAssignRemainingPlayers();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.deepEqual(snapshot.teams[0]?.playerIds, ["player-1", "player-3", "player-5"]);
+  assert.deepEqual(snapshot.teams[1]?.playerIds, ["player-2", "player-4"]);
+});
+
+test("autoAssignRemainingPlayers ignores updates outside setup", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceRoomStatePhase();
+  const beforeAutoAssign = getRoomStateSnapshot();
+
+  autoAssignRemainingPlayers();
+
+  const afterAutoAssign = getRoomStateSnapshot();
+
+  assert.deepEqual(afterAutoAssign.teams, beforeAutoAssign.teams);
 });
 
 test("setWingParticipation only accepts active-team players and accumulates by turn", () => {
@@ -291,7 +376,7 @@ test("initializes trivia turn state through the minigame module boundary", () =>
   assert.equal(snapshot.phase, Phase.MINIGAME_PLAY);
   assert.deepEqual(snapshot.turnOrderTeamIds, ["team-1", "team-2"]);
   assert.equal(snapshot.activeTurnTeamId, "team-1");
-  assert.equal(snapshot.minigameHostView?.attemptsRemaining, 1);
+  assert.equal(resolveTriviaHostView(snapshot.minigameHostView)?.attemptsRemaining, 1);
   assert.equal(resolveHostPromptId(snapshot), "prompt-1");
   assert.equal(resolveHostPromptCursor(snapshot), 0);
   assert.deepEqual(snapshot.pendingMinigamePointsByTeamId, {});
@@ -314,8 +399,11 @@ test("does not initialize trivia projection for non-trivia minigame rounds", () 
   assert.equal(snapshot.currentRoundConfig?.minigame, "GEO");
   assert.equal(snapshot.activeTurnTeamId, "team-1");
   assert.equal(snapshot.minigameHostView?.minigame, "GEO");
-  assert.equal(snapshot.minigameHostView?.currentPrompt, null);
-  assert.equal(resolveHostPromptCursor(snapshot), 0);
+  assert.equal(
+    "currentPrompt" in (snapshot.minigameHostView ?? {}),
+    false
+  );
+  assert.equal(resolveHostPromptCursor(snapshot), null);
 });
 
 test("recordTriviaAttempt applies points for active round team and wraps prompts", () => {
@@ -337,7 +425,7 @@ test("recordTriviaAttempt applies points for active round team and wraps prompts
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 1);
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-2"], undefined);
   assert.equal(snapshot.activeTurnTeamId, "team-1");
-  assert.equal(snapshot.minigameHostView?.attemptsRemaining, 2);
+  assert.equal(resolveTriviaHostView(snapshot.minigameHostView)?.attemptsRemaining, 2);
   assert.equal(resolveHostPromptId(snapshot), "prompt-2");
   assert.equal(resolveHostPromptCursor(snapshot), 1);
 
@@ -346,7 +434,7 @@ test("recordTriviaAttempt applies points for active round team and wraps prompts
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 1);
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-2"], undefined);
   assert.equal(snapshot.activeTurnTeamId, "team-1");
-  assert.equal(snapshot.minigameHostView?.attemptsRemaining, 1);
+  assert.equal(resolveTriviaHostView(snapshot.minigameHostView)?.attemptsRemaining, 1);
   assert.equal(resolveHostPromptId(snapshot), "prompt-1");
   assert.equal(resolveHostPromptCursor(snapshot), 0);
 });
@@ -366,7 +454,10 @@ test("recordTriviaAttempt defaults to one question per turn when minigameRules a
   recordTriviaAttempt(true);
   const afterSecondAttempt = getRoomStateSnapshot();
 
-  assert.equal(afterSecondAttempt.minigameHostView?.attemptsRemaining, 0);
+  assert.equal(
+    resolveTriviaHostView(afterSecondAttempt.minigameHostView)?.attemptsRemaining,
+    0
+  );
   assert.equal(resolveHostPromptId(afterSecondAttempt), promptAfterFirstAttempt);
   assert.equal(
     afterSecondAttempt.pendingMinigamePointsByTeamId["team-1"] ?? 0,
@@ -413,7 +504,7 @@ test("blocked trivia attempts do not mutate runtime projection or redo snapshot"
   assert.equal(afterRedo.pendingMinigamePointsByTeamId["team-1"] ?? 0, 0);
   assert.equal(resolveHostPromptCursor(afterRedo), 0);
   assert.equal(resolveHostPromptId(afterRedo), "prompt-1");
-  assert.equal(afterRedo.minigameHostView?.attemptsRemaining, 1);
+  assert.equal(resolveTriviaHostView(afterRedo.minigameHostView)?.attemptsRemaining, 1);
 });
 
 test("recordTriviaAttempt enforces configured trivia questions-per-turn limits", () => {
@@ -440,7 +531,7 @@ test("recordTriviaAttempt enforces configured trivia questions-per-turn limits",
   recordTriviaAttempt(true);
   const afterFourthAttempt = getRoomStateSnapshot();
 
-  assert.equal(afterThirdAttempt.minigameHostView?.attemptsRemaining, 0);
+  assert.equal(resolveTriviaHostView(afterThirdAttempt.minigameHostView)?.attemptsRemaining, 0);
   assert.equal(resolveHostPromptId(afterFourthAttempt), promptAfterThirdAttempt);
   assert.equal(
     afterFourthAttempt.pendingMinigamePointsByTeamId["team-1"] ?? 0,

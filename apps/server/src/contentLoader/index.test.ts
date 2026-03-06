@@ -79,6 +79,13 @@ test("loads all content from local files when available", () => {
       players: [{ name: "Local Player" }]
     })
   );
+  writeContentFile(
+    contentRoot,
+    "local/teams.json",
+    JSON.stringify({
+      teams: [{ name: "Local Team" }]
+    })
+  );
   writeContentFile(contentRoot, "local/gameConfig.json", createValidConfig("Local"));
   writeContentFile(
     contentRoot,
@@ -95,6 +102,13 @@ test("loads all content from local files when available", () => {
   );
   writeContentFile(
     contentRoot,
+    "sample/teams.json",
+    JSON.stringify({
+      teams: [{ name: "Sample Team" }]
+    })
+  );
+  writeContentFile(
+    contentRoot,
     "sample/gameConfig.json",
     createValidConfig("Sample")
   );
@@ -107,6 +121,7 @@ test("loads all content from local files when available", () => {
   const content = loadContent({ contentRootDir: contentRoot });
 
   assert.equal(content.players[0]?.name, "Local Player");
+  assert.equal(content.teams[0]?.name, "Local Team");
   assert.equal(content.gameConfig.name, "Local");
   const triviaContent = content.minigameContentById.TRIVIA as
     | { prompts?: Array<{ id?: string }> }
@@ -114,7 +129,7 @@ test("loads all content from local files when available", () => {
   assert.equal(triviaContent?.prompts?.[0]?.id, "local-1");
 });
 
-test("falls back to sample files when local files are missing", () => {
+test("falls back to sample files except optional team presets when local files are missing", () => {
   const contentRoot = createContentRoot();
 
   writeContentFile(
@@ -122,6 +137,13 @@ test("falls back to sample files when local files are missing", () => {
     "sample/players.json",
     JSON.stringify({
       players: [{ name: "Sample Player" }]
+    })
+  );
+  writeContentFile(
+    contentRoot,
+    "sample/teams.json",
+    JSON.stringify({
+      teams: [{ name: "Sample Team" }]
     })
   );
   writeContentFile(
@@ -138,6 +160,7 @@ test("falls back to sample files when local files are missing", () => {
   const content = loadContent({ contentRootDir: contentRoot });
 
   assert.equal(content.players[0]?.name, "Sample Player");
+  assert.deepEqual(content.teams, []);
   assert.equal(content.gameConfig.name, "Sample");
   const triviaContent = content.minigameContentById.TRIVIA as
     | { prompts?: Array<{ id?: string }> }

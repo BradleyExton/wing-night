@@ -146,7 +146,11 @@ export const hostCopy = {
   teamNameInputLabel: "Team Name",
   teamNameInputPlaceholder: "Enter a team name",
   createTeamButtonLabel: "Create Team",
+  autoAssignRemainingPlayersButtonLabel: "Auto-Assign Remaining Players",
   playersSectionTitle: "Players",
+  playerNameInputLabel: "Player Name",
+  playerNameInputPlaceholder: "Enter a player name",
+  addPlayerButtonLabel: "Add Player",
   teamsSectionTitle: "Teams",
   eatingParticipationDescription:
     "Mark each player who finished their wing this round.",

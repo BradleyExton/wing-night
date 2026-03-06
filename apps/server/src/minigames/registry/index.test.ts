@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MINIGAME_API_VERSION } from "@wingnight/shared";
+import { MINIGAME_API_VERSION, MINIGAME_TYPES } from "@wingnight/shared";
 
 import {
   resolveMinigameDescriptor,
@@ -9,13 +9,10 @@ import {
 } from "./index.js";
 
 test("resolveMinigameRuntimePlugin resolves runtime plugin for each minigame", () => {
-  const triviaRuntimePlugin = resolveMinigameRuntimePlugin("TRIVIA");
-  const geoRuntimePlugin = resolveMinigameRuntimePlugin("GEO");
-  const drawingRuntimePlugin = resolveMinigameRuntimePlugin("DRAWING");
-
-  assert.equal(triviaRuntimePlugin.id, "TRIVIA");
-  assert.equal(geoRuntimePlugin.id, "GEO");
-  assert.equal(drawingRuntimePlugin.id, "DRAWING");
+  for (const minigameType of MINIGAME_TYPES) {
+    const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
+    assert.equal(runtimePlugin.id, minigameType);
+  }
 });
 
 test("resolveMinigameDescriptor exposes metadata for compatibility checks", () => {
@@ -25,4 +22,12 @@ test("resolveMinigameDescriptor exposes metadata for compatibility checks", () =
   assert.equal(triviaDescriptor.metadata.minigameApiVersion, MINIGAME_API_VERSION);
   assert.equal(geoDescriptor.metadata.minigameApiVersion, MINIGAME_API_VERSION);
   assert.equal(triviaDescriptor.runtimePlugin.id, "TRIVIA");
+});
+
+test("server runtime registry covers every shared minigame definition", () => {
+  for (const minigameType of MINIGAME_TYPES) {
+    assert.doesNotThrow(() => {
+      resolveMinigameRuntimePlugin(minigameType);
+    });
+  }
 });

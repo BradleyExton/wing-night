@@ -6,6 +6,7 @@ import {
   type MinigameActionEnvelope,
   type ScoringAdjustTeamScorePayload,
   type ScoringSetWingParticipationPayload,
+  type SetupAddPlayerPayload,
   type SetupAssignPlayerPayload,
   type SetupCreateTeamPayload,
   type TimerExtendPayload
@@ -26,6 +27,16 @@ export const isHostSecretPayload = (payload: unknown): payload is HostSecretPayl
 export const isSetupCreateTeamPayload = (
   payload: unknown
 ): payload is SetupCreateTeamPayload => {
+  if (!isHostSecretPayload(payload)) {
+    return false;
+  }
+
+  return "name" in payload && typeof payload.name === "string";
+};
+
+export const isSetupAddPlayerPayload = (
+  payload: unknown
+): payload is SetupAddPlayerPayload => {
   if (!isHostSecretPayload(payload)) {
     return false;
   }

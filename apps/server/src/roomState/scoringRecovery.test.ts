@@ -19,6 +19,9 @@ import {
   resumeRoomTimer,
   setPendingMinigamePoints,
   setRoomStateFatalError,
+  setRoomStateGameConfig,
+  setRoomStatePlayers,
+  setRoomStateTeams,
   setWingParticipation,
   skipTurnBoundary
 } from "./index.js";
@@ -332,7 +335,17 @@ test("redo scoring history clears on resetGameToSetup", () => {
 
 test("resetGameToSetup clears transient game state and preserves loaded content from mid-round", () => {
   resetRoomState();
-  setupValidTeamsAndAssignments();
+  setRoomStateGameConfig(gameConfigFixture);
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" }
+  ]);
+  setRoomStateTeams([
+    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
+  ]);
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-2", "team-2");
   setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToEatingPhase();
   setWingParticipation("player-1", true);
@@ -347,7 +360,10 @@ test("resetGameToSetup clears transient game state and preserves loaded content 
   assert.equal(resetSnapshot.currentRoundConfig, null);
   assert.equal(resetSnapshot.totalRounds, gameConfigFixture.rounds.length);
   assert.equal(resetSnapshot.timer, null);
-  assert.equal(resetSnapshot.teams.length, 0);
+  assert.deepEqual(resetSnapshot.teams, [
+    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
+  ]);
   assert.deepEqual(resetSnapshot.players, [
     { id: "player-1", name: "Player One" },
     { id: "player-2", name: "Player Two" }
@@ -368,7 +384,17 @@ test("resetGameToSetup clears transient game state and preserves loaded content 
 
 test("resetGameToSetup clears final-results scores while keeping content payloads", () => {
   resetRoomState();
-  setupValidTeamsAndAssignments();
+  setRoomStateGameConfig(gameConfigFixture);
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" }
+  ]);
+  setRoomStateTeams([
+    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
+  ]);
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-2", "team-2");
   setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToRoundResultsPhase(1);
   advanceRoomStatePhase();
@@ -381,10 +407,14 @@ test("resetGameToSetup clears final-results scores while keeping content payload
 
   assert.equal(resetSnapshot.phase, Phase.SETUP);
   assert.equal(resetSnapshot.currentRound, 0);
-  assert.equal(resetSnapshot.teams.length, 0);
+  assert.deepEqual(resetSnapshot.teams, [
+    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
+  ]);
   assert.deepEqual(resetSnapshot.players, finalSnapshot.players);
   assert.deepEqual(resetSnapshot.gameConfig, finalSnapshot.gameConfig);
-  setupValidTeamsAndAssignments();
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-2", "team-2");
   advanceToMinigamePlayPhase();
   assert.equal(resolveHostPromptId(getRoomStateSnapshot()), "prompt-1");
 });

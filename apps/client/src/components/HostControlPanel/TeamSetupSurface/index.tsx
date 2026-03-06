@@ -9,19 +9,23 @@ import * as styles from "./styles";
 type TeamSetupSurfaceProps = {
   nextTeamName: string;
   setupMutationsDisabled: boolean;
+  autoAssignDisabled: boolean;
   players: Player[];
   teams: Team[];
   onNextTeamNameChange: (nextTeamName: string) => void;
   onCreateTeamSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onAutoAssignRemainingPlayers: () => void;
 };
 
 export const TeamSetupSurface = ({
   nextTeamName,
   setupMutationsDisabled,
+  autoAssignDisabled,
   players,
   teams,
   onNextTeamNameChange,
-  onCreateTeamSubmit
+  onCreateTeamSubmit,
+  onAutoAssignRemainingPlayers
 }: TeamSetupSurfaceProps): JSX.Element => {
   const playerById = new Map(players.map((player) => [player.id, player] as const));
 
@@ -56,6 +60,14 @@ export const TeamSetupSurface = ({
             {hostControlPanelCopy.createTeamButtonLabel}
           </button>
         </form>
+        <button
+          className={styles.autoAssignButton}
+          type="button"
+          disabled={autoAssignDisabled}
+          onClick={onAutoAssignRemainingPlayers}
+        >
+          {hostControlPanelCopy.autoAssignRemainingPlayersButtonLabel}
+        </button>
       </div>
 
       <div className={styles.card}>

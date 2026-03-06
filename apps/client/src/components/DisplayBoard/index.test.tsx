@@ -73,7 +73,7 @@ test("renders waiting copy when room state is missing", () => {
   assert.match(html, /No teams have joined yet/);
   assert.match(html, /data-display-atmosphere/);
   assert.match(html, /h-\[100dvh\]/);
-  assert.match(html, /w-screen/);
+  assert.match(html, /w-full/);
 });
 
 test("renders fatal content state when snapshot reports content load failure", () => {

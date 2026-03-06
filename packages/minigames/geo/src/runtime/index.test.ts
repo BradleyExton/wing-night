@@ -36,19 +36,14 @@ test("geo runtime plugin projects unsupported host and display views", () => {
   assert.deepEqual(hostView, {
     minigame: "GEO",
     activeTurnTeamId: "team-alpha",
-    attemptsRemaining: 0,
-    promptCursor: 0,
     pendingPointsByTeamId: { "team-alpha": 4 },
-    currentPrompt: null,
     status: "UNSUPPORTED",
     message: "GEO gameplay runtime is not implemented yet."
   });
   assert.deepEqual(displayView, {
     minigame: "GEO",
     activeTurnTeamId: "team-alpha",
-    promptCursor: 0,
     pendingPointsByTeamId: { "team-alpha": 4 },
-    currentPrompt: null,
     status: "UNSUPPORTED",
     message: "GEO gameplay runtime is not implemented yet."
   });

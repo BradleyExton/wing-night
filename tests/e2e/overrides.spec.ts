@@ -53,6 +53,15 @@ const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
         }
       }
 
+      const autoAssignButton = hostPage.getByRole("button", {
+        name: "Auto-Assign Remaining Players"
+      });
+
+      if ((await autoAssignButton.count()) > 0 && (await autoAssignButton.isEnabled())) {
+        await autoAssignButton.click();
+        await hostPage.waitForTimeout(200);
+      }
+
       const primaryActionButton = hostPage.getByRole("button", {
         name: HOST_PRIMARY_ACTION_LABEL
       });
@@ -73,8 +82,12 @@ const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
       await openOverridesPanelButton.first().click();
 
       const resetGameButton = hostPage.getByRole("button", { name: "Reset Game" });
+      const resetGameButtonVisible = await resetGameButton
+        .waitFor({ state: "visible", timeout: 750 })
+        .then(() => true)
+        .catch(() => false);
 
-      if ((await resetGameButton.count()) > 0) {
+      if (resetGameButtonVisible) {
         await resetGameButton.click();
         const confirmButton = hostPage.getByRole("button", { name: "Confirm" });
 
@@ -82,8 +95,15 @@ const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
           await confirmButton.click();
         }
 
-        await hostPage.waitForTimeout(300);
-        continue;
+        await expect(hostPage.locator("h1").filter({ hasText: /^Setup$/i })).toHaveCount(1);
+        return;
+      }
+
+      const closeOverridesPanelButton = hostPage.getByRole("button", {
+        name: /close overrides panel/i
+      });
+      if ((await closeOverridesPanelButton.count()) > 0) {
+        await closeOverridesPanelButton.first().click();
       }
     }
 
@@ -156,6 +176,25 @@ const assignPlayers = async (hostPage: Page): Promise<void> => {
   }
 };
 
+const ensureSetupReadyToLock = async (hostPage: Page): Promise<void> => {
+  const primaryActionButton = hostPage.getByRole("button", {
+    name: HOST_PRIMARY_ACTION_LABEL
+  });
+  const autoAssignButton = hostPage.getByRole("button", {
+    name: "Auto-Assign Remaining Players"
+  });
+
+  if (await primaryActionButton.isEnabled()) {
+    return;
+  }
+
+  if ((await autoAssignButton.count()) > 0 && (await autoAssignButton.isEnabled())) {
+    await autoAssignButton.click();
+  }
+
+  await expect(primaryActionButton).toBeEnabled({ timeout: 2_000 });
+};
+
 const advanceUntilHeading = async (
   hostPage: Page,
   phaseHeadingPattern: RegExp
@@ -191,6 +230,7 @@ test("override dock score updates sync to display and panel closes on escape/scr
   await ensureTeamExists(hostPage, "Team Two");
 
   await assignPlayers(hostPage);
+  await ensureSetupReadyToLock(hostPage);
 
   await advanceUntilHeading(hostPage, /^Intro$/i);
   await advanceUntilHeading(hostPage, /^Round Intro$/i);

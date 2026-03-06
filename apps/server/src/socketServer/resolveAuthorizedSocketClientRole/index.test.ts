@@ -50,7 +50,7 @@ test("requires valid host control token when HOST_CONTROL_TOKEN is configured", 
   assert.equal(unauthorizedRole, CLIENT_ROLES.DISPLAY);
 });
 
-test("falls back to loopback-only host authorization when token is not configured", () => {
+test("defaults to LAN host authorization when token is not configured", () => {
   const localHostRole = resolveAuthorizedSocketClientRole(
     {
       clientRole: CLIENT_ROLES.HOST
@@ -68,7 +68,7 @@ test("falls back to loopback-only host authorization when token is not configure
   );
 
   assert.equal(localHostRole, CLIENT_ROLES.HOST);
-  assert.equal(remoteHostRole, CLIENT_ROLES.DISPLAY);
+  assert.equal(remoteHostRole, CLIENT_ROLES.HOST);
 });
 
 test("treats malformed auth payloads as display clients", () => {
@@ -79,6 +79,6 @@ test("treats malformed auth payloads as display clients", () => {
   );
   assert.equal(
     resolveAuthorizedSocketClientRole({ clientRole: CLIENT_ROLES.HOST }, undefined, null),
-    CLIENT_ROLES.DISPLAY
+    CLIENT_ROLES.HOST
   );
 });

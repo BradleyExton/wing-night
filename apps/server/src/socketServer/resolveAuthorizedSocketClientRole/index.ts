@@ -9,8 +9,6 @@ type SocketAuthPayload = {
   hostControlToken?: unknown;
 };
 
-const LOOPBACK_ADDRESSES = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
-
 const isSocketAuthPayload = (value: unknown): value is SocketAuthPayload => {
   return typeof value === "object" && value !== null;
 };
@@ -38,10 +36,6 @@ const hasValidHostControlToken = (
   return authPayload.hostControlToken === expectedHostControlToken;
 };
 
-const isLoopbackAddress = (remoteAddress: string): boolean => {
-  return LOOPBACK_ADDRESSES.has(remoteAddress);
-};
-
 export const resolveConfiguredHostControlToken = (
   configuredHostControlToken: string | undefined
 ): string | null => {
@@ -60,7 +54,7 @@ export const resolveConfiguredHostControlToken = (
 
 export const resolveAuthorizedSocketClientRole = (
   authPayload: unknown,
-  remoteAddress: string | undefined,
+  _remoteAddress: string | undefined,
   configuredHostControlToken: string | null
 ): SocketClientRole => {
   const requestedClientRole = resolveRequestedClientRole(authPayload);
@@ -74,10 +68,5 @@ export const resolveAuthorizedSocketClientRole = (
       ? CLIENT_ROLES.HOST
       : CLIENT_ROLES.DISPLAY;
   }
-
-  if (typeof remoteAddress !== "string") {
-    return CLIENT_ROLES.DISPLAY;
-  }
-
-  return isLoopbackAddress(remoteAddress) ? CLIENT_ROLES.HOST : CLIENT_ROLES.DISPLAY;
+  return CLIENT_ROLES.HOST;
 };

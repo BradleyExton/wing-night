@@ -14,15 +14,16 @@ import type {
   SerializableValue
 } from "../index.js";
 
+type UnsupportedMinigameType = Exclude<MinigameType, "TRIVIA">;
+
 type UnsupportedMinigameRuntimeState = {
   activeTurnTeamId: string | null;
-  promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;
   message: string;
 };
 
 type CreateUnsupportedMinigameRuntimePluginOptions = {
-  minigameId: MinigameType;
+  minigameId: UnsupportedMinigameType;
   metadata: MinigamePluginMetadata;
   unsupportedMessage: string;
 };
@@ -39,14 +40,6 @@ const isUnsupportedMinigameRuntimeState = (
   if (
     typedValue.activeTurnTeamId !== null &&
     typeof typedValue.activeTurnTeamId !== "string"
-  ) {
-    return false;
-  }
-
-  if (
-    typeof typedValue.promptCursor !== "number" ||
-    !Number.isInteger(typedValue.promptCursor) ||
-    typedValue.promptCursor < 0
   ) {
     return false;
   }
@@ -70,31 +63,26 @@ const isUnsupportedMinigameRuntimeState = (
 };
 
 const toUnsupportedHostView = (
-  minigameId: MinigameType,
+  minigameId: UnsupportedMinigameType,
   state: UnsupportedMinigameRuntimeState
 ): MinigameHostView => {
   return {
     minigame: minigameId,
     activeTurnTeamId: state.activeTurnTeamId,
-    attemptsRemaining: 0,
-    promptCursor: state.promptCursor,
     pendingPointsByTeamId: { ...state.pendingPointsByTeamId },
-    currentPrompt: null,
     status: "UNSUPPORTED",
     message: state.message
   };
 };
 
 const toUnsupportedDisplayView = (
-  minigameId: MinigameType,
+  minigameId: UnsupportedMinigameType,
   state: UnsupportedMinigameRuntimeState
 ): MinigameDisplayView => {
   return {
     minigame: minigameId,
     activeTurnTeamId: state.activeTurnTeamId,
-    promptCursor: state.promptCursor,
     pendingPointsByTeamId: { ...state.pendingPointsByTeamId },
-    currentPrompt: null,
     status: "UNSUPPORTED",
     message: state.message
   };
@@ -111,7 +99,6 @@ export const createUnsupportedMinigameRuntimePlugin = ({
     initialize: (input: MinigameRuntimeInitializationInput) => {
       return {
         activeTurnTeamId: input.activeRoundTeamId,
-        promptCursor: 0,
         pendingPointsByTeamId: { ...input.pendingPointsByTeamId },
         message: unsupportedMessage
       };

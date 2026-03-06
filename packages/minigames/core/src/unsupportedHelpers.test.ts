@@ -41,10 +41,7 @@ test("createUnsupportedMinigameRuntimePlugin projects unsupported host/display v
     {
       minigame: "GEO",
       activeTurnTeamId: "team-1",
-      attemptsRemaining: 0,
-      promptCursor: 0,
       pendingPointsByTeamId: { "team-1": 3 },
-      currentPrompt: null,
       status: "UNSUPPORTED",
       message: "Unavailable"
     }
@@ -54,9 +51,7 @@ test("createUnsupportedMinigameRuntimePlugin projects unsupported host/display v
     {
       minigame: "GEO",
       activeTurnTeamId: "team-1",
-      promptCursor: 0,
       pendingPointsByTeamId: { "team-1": 3 },
-      currentPrompt: null,
       status: "UNSUPPORTED",
       message: "Unavailable"
     }
@@ -82,10 +77,7 @@ test("resolveUnsupportedActiveTeamName prefers active turn team id when availabl
     minigameHostView: {
       minigame: "GEO",
       activeTurnTeamId: "team-2",
-      attemptsRemaining: 0,
-      promptCursor: 0,
-      pendingPointsByTeamId: {},
-      currentPrompt: null
+      pendingPointsByTeamId: {}
     },
     teamNameByTeamId: new Map([["team-2", "Active Team"]]),
     fallbackLabel: "No team"
