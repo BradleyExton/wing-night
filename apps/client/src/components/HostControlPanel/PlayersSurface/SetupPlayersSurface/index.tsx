@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useId, useState } from "react";
 
 import { hostControlPanelCopy } from "../../copy";
 import type { SetupPlayersSurfaceProps } from "../index";
@@ -14,6 +14,7 @@ export const SetupPlayersSurface = ({
   onAddPlayer
 }: SetupPlayersSurfaceProps): JSX.Element => {
   const [nextPlayerName, setNextPlayerName] = useState("");
+  const playerNameInputId = useId();
 
   const handleAddPlayerSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -33,11 +34,11 @@ export const SetupPlayersSurface = ({
       <h2 className={styles.sectionHeading}>{hostControlPanelCopy.playersSectionTitle}</h2>
       <form className={styles.playerCreateForm} onSubmit={handleAddPlayerSubmit}>
         <div className={styles.playerInputGroup}>
-          <label className={styles.playerInputLabel} htmlFor="player-name-input">
+          <label className={styles.playerInputLabel} htmlFor={playerNameInputId}>
             {hostControlPanelCopy.playerNameInputLabel}
           </label>
           <input
-            id="player-name-input"
+            id={playerNameInputId}
             className={styles.playerInput}
             value={nextPlayerName}
             disabled={addPlayerDisabled}

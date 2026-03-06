@@ -183,20 +183,15 @@ const ensureSetupReadyToLock = async (hostPage: Page): Promise<void> => {
     name: "Auto-Assign Remaining Players"
   });
 
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    if (await primaryActionButton.isEnabled()) {
-      return;
-    }
-
-    if ((await autoAssignButton.count()) > 0 && (await autoAssignButton.isEnabled())) {
-      await autoAssignButton.click();
-      await hostPage.waitForTimeout(250);
-    } else {
-      await hostPage.waitForTimeout(150);
-    }
+  if (await primaryActionButton.isEnabled()) {
+    return;
   }
 
-  await expect(primaryActionButton).toBeEnabled();
+  if ((await autoAssignButton.count()) > 0 && (await autoAssignButton.isEnabled())) {
+    await autoAssignButton.click();
+  }
+
+  await expect(primaryActionButton).toBeEnabled({ timeout: 2_000 });
 };
 
 test("intro lock screen transitions to round-intro countdown on display", async ({

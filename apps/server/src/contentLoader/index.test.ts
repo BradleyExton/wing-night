@@ -129,7 +129,7 @@ test("loads all content from local files when available", () => {
   assert.equal(triviaContent?.prompts?.[0]?.id, "local-1");
 });
 
-test("falls back to sample files when local files are missing", () => {
+test("falls back to sample files except optional team presets when local files are missing", () => {
   const contentRoot = createContentRoot();
 
   writeContentFile(
@@ -160,7 +160,7 @@ test("falls back to sample files when local files are missing", () => {
   const content = loadContent({ contentRootDir: contentRoot });
 
   assert.equal(content.players[0]?.name, "Sample Player");
-  assert.equal(content.teams[0]?.name, "Sample Team");
+  assert.deepEqual(content.teams, []);
   assert.equal(content.gameConfig.name, "Sample");
   const triviaContent = content.minigameContentById.TRIVIA as
     | { prompts?: Array<{ id?: string }> }
