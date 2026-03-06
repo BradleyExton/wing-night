@@ -106,6 +106,7 @@ Rules:
 Loaded from:
 
 - `content/local/teams.json`
+- fallback: `content/sample/teams.json`
 
 Format:
 
@@ -119,7 +120,8 @@ Format:
 Rules:
 - `name` required
 - Team rosters start empty in SETUP
-- Missing `teams.json` means no preset teams are loaded
+- Preset teams are empty setup scaffolding only; player assignments still happen in the host UI
+- Missing local `teams.json` falls back to sample preset teams
 - Host can still add teams manually in SETUP
 - Teams lock when game starts
 

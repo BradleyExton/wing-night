@@ -333,7 +333,7 @@ test("redo scoring history clears on resetGameToSetup", () => {
   assert.equal(getRoomStateSnapshot().canRedoScoringMutation, false);
 });
 
-test("resetGameToSetup clears transient game state and preserves loaded content from mid-round", () => {
+test("resetGameToSetup restores preset team shells and clears transient round state", () => {
   resetRoomState();
   setRoomStateGameConfig(gameConfigFixture);
   setRoomStatePlayers([
@@ -382,7 +382,7 @@ test("resetGameToSetup clears transient game state and preserves loaded content 
   assert.equal(resetSnapshot.fatalError, null);
 });
 
-test("resetGameToSetup clears final-results scores while keeping content payloads", () => {
+test("resetGameToSetup clears final-results scores while keeping preset content payloads", () => {
   resetRoomState();
   setRoomStateGameConfig(gameConfigFixture);
   setRoomStatePlayers([
