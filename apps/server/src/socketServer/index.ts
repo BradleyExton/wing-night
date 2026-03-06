@@ -15,6 +15,7 @@ import type {
   OutgoingSocketEvents
 } from "../socketContracts/index.js";
 import {
+  applyRoomStateMutation,
   addPlayer,
   advanceRoomStatePhase,
   adjustTeamScore,
@@ -93,7 +94,13 @@ export const attachSocketServer = (
     };
 
     const broadcastAfter = (runMutation: () => RoomState): void => {
-      broadcastSnapshot(runMutation());
+      const mutationResult = applyRoomStateMutation(runMutation);
+
+      if (!mutationResult.didMutate) {
+        return;
+      }
+
+      broadcastSnapshot(mutationResult.roomState);
     };
 
     registerRoomStateHandlers(

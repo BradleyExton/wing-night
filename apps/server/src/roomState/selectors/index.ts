@@ -1,5 +1,6 @@
 import {
   Phase,
+  resolveMinigameDefinition,
   type MinigameType,
   type RoomState,
   type RoomTimerState
@@ -46,11 +47,13 @@ export const resolveMinigameRules = (
   state: RoomState,
   minigameType: MinigameType
 ): SerializableValue | null => {
-  if (minigameType === "TRIVIA") {
-    return state.gameConfig?.minigameRules?.trivia ?? null;
+  const minigameDefinition = resolveMinigameDefinition(minigameType);
+
+  if (minigameDefinition.rulesKey === null) {
+    return null;
   }
 
-  return null;
+  return state.gameConfig?.minigameRules?.[minigameDefinition.rulesKey] ?? null;
 };
 
 export const resolveMinigameTimerSeconds = (state: RoomState): number | null => {
@@ -58,16 +61,9 @@ export const resolveMinigameTimerSeconds = (state: RoomState): number | null => 
     return null;
   }
 
-  switch (state.currentRoundConfig.minigame) {
-    case "TRIVIA":
-      return state.gameConfig.timers.triviaSeconds;
-    case "GEO":
-      return state.gameConfig.timers.geoSeconds;
-    case "DRAWING":
-      return state.gameConfig.timers.drawingSeconds;
-    default:
-      return null;
-  }
+  const minigameDefinition = resolveMinigameDefinition(state.currentRoundConfig.minigame);
+
+  return state.gameConfig.timers[minigameDefinition.timerKey] ?? null;
 };
 
 export const createRunningTimer = (

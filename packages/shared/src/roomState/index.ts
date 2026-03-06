@@ -1,6 +1,7 @@
 import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
+import { MINIGAME_DEFINITIONS } from "../content/gameConfig/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
@@ -28,46 +29,69 @@ export type MinigameContractMetadata = {
 };
 
 export const MINIGAME_CONTRACT_METADATA_BY_ID = {
-  TRIVIA: {
-    minigameApiVersion: 1,
-    capabilityFlags: [MINIGAME_ACTION_TYPES.TRIVIA_RECORD_ATTEMPT]
-  },
-  GEO: {
-    minigameApiVersion: 1,
-    capabilityFlags: []
-  },
-  DRAWING: {
-    minigameApiVersion: 1,
-    capabilityFlags: []
-  }
+  TRIVIA: MINIGAME_DEFINITIONS.TRIVIA.contractMetadata,
+  GEO: MINIGAME_DEFINITIONS.GEO.contractMetadata,
+  DRAWING: MINIGAME_DEFINITIONS.DRAWING.contractMetadata
 } as const satisfies Record<MinigameType, MinigameContractMetadata>;
 
-export type MinigameHostView = {
+type MinigameViewMetadata = {
   minigame: MinigameType;
   minigameApiVersion?: number;
   capabilityFlags?: string[];
   compatibilityStatus?: MinigameContractCompatibilityStatus;
   compatibilityMessage?: string | null;
-  activeTurnTeamId: string | null;
-  attemptsRemaining: number;
-  promptCursor: number;
-  pendingPointsByTeamId: Record<string, number>;
-  currentPrompt: TriviaPrompt | null;
   status?: "UNSUPPORTED";
   message?: string;
 };
 
-export type MinigameDisplayView = {
-  minigame: MinigameType;
-  minigameApiVersion?: number;
-  capabilityFlags?: string[];
+type MinigameHostViewBase = MinigameViewMetadata & {
   activeTurnTeamId: string | null;
-  promptCursor: number;
   pendingPointsByTeamId: Record<string, number>;
-  currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
-  status?: "UNSUPPORTED";
-  message?: string;
 };
+
+type MinigameDisplayViewBase = MinigameViewMetadata & {
+  activeTurnTeamId: string | null;
+  pendingPointsByTeamId: Record<string, number>;
+};
+
+export type TriviaMinigameHostView = MinigameHostViewBase & {
+  minigame: "TRIVIA";
+  attemptsRemaining: number;
+  promptCursor: number;
+  currentPrompt: TriviaPrompt | null;
+};
+
+export type GeoMinigameHostView = MinigameHostViewBase & {
+  minigame: "GEO";
+};
+
+export type DrawingMinigameHostView = MinigameHostViewBase & {
+  minigame: "DRAWING";
+};
+
+export type MinigameHostView =
+  | TriviaMinigameHostView
+  | GeoMinigameHostView
+  | DrawingMinigameHostView;
+
+export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
+  minigame: "TRIVIA";
+  promptCursor: number;
+  currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
+};
+
+export type GeoMinigameDisplayView = MinigameDisplayViewBase & {
+  minigame: "GEO";
+};
+
+export type DrawingMinigameDisplayView = MinigameDisplayViewBase & {
+  minigame: "DRAWING";
+};
+
+export type MinigameDisplayView =
+  | TriviaMinigameDisplayView
+  | GeoMinigameDisplayView
+  | DrawingMinigameDisplayView;
 
 export type RoomFatalError = {
   code: "CONTENT_LOAD_FAILED";
@@ -100,24 +124,56 @@ export type RoomState = {
   canAdvancePhase: boolean;
 };
 
-type DisplayUnsafeRoomStateKeys =
-  // Keep this list aligned with server role-scoped snapshot projection.
-  // Any answer-bearing or host-only RoomState field must be listed here.
-  | "minigameHostView";
+type DisplaySafeRoomStateKeys =
+  | "phase"
+  | "currentRound"
+  | "totalRounds"
+  | "players"
+  | "teams"
+  | "gameConfig"
+  | "currentRoundConfig"
+  | "turnOrderTeamIds"
+  | "roundTurnCursor"
+  | "completedRoundTurnTeamIds"
+  | "activeRoundTeamId"
+  | "activeTurnTeamId"
+  | "timer"
+  | "minigameDisplayView"
+  | "wingParticipationByPlayerId"
+  | "pendingWingPointsByTeamId"
+  | "pendingMinigamePointsByTeamId"
+  | "fatalError"
+  | "canRedoScoringMutation"
+  | "canAdvancePhase";
 
-export const DISPLAY_UNSAFE_ROOM_STATE_KEYS = [
-  "minigameHostView"
-] as const satisfies readonly DisplayUnsafeRoomStateKeys[];
+export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
+  "phase",
+  "currentRound",
+  "totalRounds",
+  "players",
+  "teams",
+  "gameConfig",
+  "currentRoundConfig",
+  "turnOrderTeamIds",
+  "roundTurnCursor",
+  "completedRoundTurnTeamIds",
+  "activeRoundTeamId",
+  "activeTurnTeamId",
+  "timer",
+  "minigameDisplayView",
+  "wingParticipationByPlayerId",
+  "pendingWingPointsByTeamId",
+  "pendingMinigamePointsByTeamId",
+  "fatalError",
+  "canRedoScoringMutation",
+  "canAdvancePhase"
+] as const satisfies readonly DisplaySafeRoomStateKeys[];
 
-type DisplayUnsafeRoomStateKey = (typeof DISPLAY_UNSAFE_ROOM_STATE_KEYS)[number];
-
-const DISPLAY_UNSAFE_ROOM_STATE_KEY_SET = new Set<DisplayUnsafeRoomStateKey>(
-  DISPLAY_UNSAFE_ROOM_STATE_KEYS
-);
+type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
 
 export type HostRoomStateSnapshot = RoomState;
 
-export type DisplayRoomStateSnapshot = Omit<RoomState, DisplayUnsafeRoomStateKey>;
+export type DisplayRoomStateSnapshot = Pick<RoomState, DisplaySafeRoomStateKey>;
 
 export type RoleScopedStateSnapshotEnvelope =
   | {
@@ -137,11 +193,30 @@ export type RoleScopedSnapshotByRole<TRole extends SocketClientRole> = Extract<
 export const toDisplayRoomStateSnapshot = (
   roomState: RoomState
 ): DisplayRoomStateSnapshot => {
-  const safeEntries = Object.entries(roomState).filter(([key]) => {
-    return !DISPLAY_UNSAFE_ROOM_STATE_KEY_SET.has(key as DisplayUnsafeRoomStateKey);
-  });
+  const displaySnapshot = {
+    phase: roomState.phase,
+    currentRound: roomState.currentRound,
+    totalRounds: roomState.totalRounds,
+    players: roomState.players,
+    teams: roomState.teams,
+    gameConfig: roomState.gameConfig,
+    currentRoundConfig: roomState.currentRoundConfig,
+    turnOrderTeamIds: roomState.turnOrderTeamIds,
+    roundTurnCursor: roomState.roundTurnCursor,
+    completedRoundTurnTeamIds: roomState.completedRoundTurnTeamIds,
+    activeRoundTeamId: roomState.activeRoundTeamId,
+    activeTurnTeamId: roomState.activeTurnTeamId,
+    timer: roomState.timer,
+    minigameDisplayView: roomState.minigameDisplayView,
+    wingParticipationByPlayerId: roomState.wingParticipationByPlayerId,
+    pendingWingPointsByTeamId: roomState.pendingWingPointsByTeamId,
+    pendingMinigamePointsByTeamId: roomState.pendingMinigamePointsByTeamId,
+    fatalError: roomState.fatalError,
+    canRedoScoringMutation: roomState.canRedoScoringMutation,
+    canAdvancePhase: roomState.canAdvancePhase
+  } satisfies DisplayRoomStateSnapshot;
 
-  return Object.fromEntries(safeEntries) as DisplayRoomStateSnapshot;
+  return displaySnapshot;
 };
 
 export function toRoleScopedSnapshotEnvelope(

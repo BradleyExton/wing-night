@@ -1,4 +1,7 @@
-import type { MinigameType } from "@wingnight/shared";
+import {
+  MINIGAME_TYPES,
+  type MinigameType
+} from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { resolveMinigameRuntimePlugin } from "../../minigames/registry/index.js";
@@ -10,8 +13,6 @@ type LoadMinigameContentOptions = {
 };
 
 const defaultContentRootDir = resolveDefaultContentRootDir(import.meta.url);
-
-const MINIGAME_TYPES: MinigameType[] = ["TRIVIA", "GEO", "DRAWING"];
 
 export const loadMinigameContent = (
   options: LoadMinigameContentOptions = {}

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   Phase,
   type GameConfigFile,
+  type MinigameHostView,
   type TriviaPrompt
 } from "@wingnight/shared";
 
@@ -99,13 +100,25 @@ export const setRoomStateTriviaPrompts = (prompts: TriviaPrompt[]): void => {
 export const resolveHostPromptId = (
   snapshot: ReturnType<typeof getRoomStateSnapshot>
 ): string | null => {
-  return snapshot.minigameHostView?.currentPrompt?.id ?? null;
+  const triviaHostView = resolveTriviaHostView(snapshot.minigameHostView);
+  return triviaHostView?.currentPrompt?.id ?? null;
 };
 
 export const resolveHostPromptCursor = (
   snapshot: ReturnType<typeof getRoomStateSnapshot>
 ): number | null => {
-  return snapshot.minigameHostView?.promptCursor ?? null;
+  const triviaHostView = resolveTriviaHostView(snapshot.minigameHostView);
+  return triviaHostView?.promptCursor ?? null;
+};
+
+export const resolveTriviaHostView = (
+  minigameHostView: MinigameHostView | null
+): Extract<MinigameHostView, { minigame: "TRIVIA" }> | null => {
+  if (minigameHostView?.minigame !== "TRIVIA") {
+    return null;
+  }
+
+  return minigameHostView;
 };
 
 export const advanceUntil = (

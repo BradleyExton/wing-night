@@ -2,7 +2,11 @@ export { Phase } from "./phase/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export type {
+  DrawingMinigameDisplayView,
+  DrawingMinigameHostView,
   DisplayRoomStateSnapshot,
+  GeoMinigameDisplayView,
+  GeoMinigameHostView,
   HostRoomStateSnapshot,
   MinigameContractCompatibilityStatus,
   MinigameContractMetadata,
@@ -12,10 +16,12 @@ export type {
   RoleScopedStateSnapshotEnvelope,
   RoomFatalError,
   RoomState,
-  RoomTimerState
+  RoomTimerState,
+  TriviaMinigameDisplayView,
+  TriviaMinigameHostView
 } from "./roomState/index.js";
 export {
-  DISPLAY_UNSAFE_ROOM_STATE_KEYS,
+  DISPLAY_SAFE_ROOM_STATE_KEYS,
   MINIGAME_ACTION_TYPES,
   MINIGAME_CONTRACT_METADATA_BY_ID,
   toDisplayRoomStateSnapshot,
@@ -23,6 +29,11 @@ export {
 } from "./roomState/index.js";
 export {
   isGameConfigFile,
+  MINIGAME_DEFINITIONS,
+  MINIGAME_TYPE_BY_SLUG,
+  MINIGAME_TYPES,
+  resolveMinigameDefinition,
+  resolveMinigameTypeFromSlug,
   SETUP_PREVIEW_ROUND_SLOTS_MAX
 } from "./content/gameConfig/index.js";
 export type {
@@ -30,6 +41,10 @@ export type {
   GameConfigRound,
   GameConfigScoring,
   GameConfigTimers,
+  MinigameContractMetadataDefaults,
+  MinigameDefinition,
+  MinigameRulesKey,
+  MinigameTimerKey,
   MinigameType,
   MinigameRules,
   TriviaMinigameRules

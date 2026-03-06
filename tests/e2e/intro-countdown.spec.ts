@@ -81,8 +81,12 @@ const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
     if ((await openOverridesPanelButton.count()) > 0) {
       await openOverridesPanelButton.first().click();
       const resetGameButton = hostPage.getByRole("button", { name: "Reset Game" });
+      const resetGameButtonVisible = await resetGameButton
+        .waitFor({ state: "visible", timeout: 750 })
+        .then(() => true)
+        .catch(() => false);
 
-      if ((await resetGameButton.count()) > 0) {
+      if (resetGameButtonVisible) {
         await resetGameButton.click();
         const confirmButton = hostPage.getByRole("button", { name: "Confirm" });
 
@@ -90,8 +94,15 @@ const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
           await confirmButton.click();
         }
 
-        await hostPage.waitForTimeout(300);
-        continue;
+        await expect(hostPage.locator("h1").filter({ hasText: /^Setup$/i })).toHaveCount(1);
+        return;
+      }
+
+      const closeOverridesPanelButton = hostPage.getByRole("button", {
+        name: /close overrides panel/i
+      });
+      if ((await closeOverridesPanelButton.count()) > 0) {
+        await closeOverridesPanelButton.first().click();
       }
     }
 

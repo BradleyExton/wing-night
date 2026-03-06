@@ -2,6 +2,7 @@ import {
   type MinigameContractCompatibilityStatus,
   type MinigameContractMetadata,
   type DisplayRoomStateSnapshot,
+  type GeoMinigameHostView,
   type GameConfigFile,
   type GameConfigRound,
   type HostRoomStateSnapshot,
@@ -58,6 +59,19 @@ export type ValidMinigameHostViewCheck = Assert<
       currentPrompt: TriviaPrompt | null;
     },
     MinigameHostView
+  >
+>;
+
+export type ValidGeoMinigameHostViewCheck = Assert<
+  IsAssignable<
+    {
+      minigame: "GEO";
+      activeTurnTeamId: string | null;
+      pendingPointsByTeamId: Record<string, number>;
+      status?: "UNSUPPORTED";
+      message?: string;
+    },
+    GeoMinigameHostView
   >
 >;
 
@@ -176,7 +190,7 @@ export type InvalidPhaseCheck = Assert<IsAssignable<"NOT_A_PHASE", Phase>>;
 // @ts-expect-error Missing required Player.name.
 export type MissingPlayerNameCheck = Assert<IsAssignable<{ id: string }, Player>>;
 
-// @ts-expect-error MinigameHostView requires attemptsRemaining + contract metadata.
+// @ts-expect-error TRIVIA host view requires attemptsRemaining.
 export type MissingTriviaAttemptsRemainingCheck = Assert<IsAssignable<{ minigame: "TRIVIA"; activeTurnTeamId: string | null; promptCursor: number; pendingPointsByTeamId: Record<string, number>; currentPrompt: TriviaPrompt | null }, MinigameHostView>>;
 
 // @ts-expect-error Team.playerIds entries must be strings.

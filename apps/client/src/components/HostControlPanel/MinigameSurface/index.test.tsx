@@ -68,12 +68,9 @@ test("renders GEO scaffold surface for configured geo minigame", () => {
       minigameHostView={{
         minigame: "GEO",
         activeTurnTeamId: "team-alpha",
-        attemptsRemaining: 0,
-        promptCursor: 0,
         pendingPointsByTeamId: {
           "team-alpha": 0
         },
-        currentPrompt: null,
         status: "UNSUPPORTED",
         message: "GEO host UI is not implemented yet."
       }}

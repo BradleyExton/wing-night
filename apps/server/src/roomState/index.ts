@@ -37,3 +37,8 @@ export {
   skipTurnBoundary,
   advanceRoomStatePhase
 } from "./phaseMutations/index.js";
+
+export {
+  applyRoomStateMutation,
+  type RoomStateMutationResult
+} from "./mutationResult/index.js";

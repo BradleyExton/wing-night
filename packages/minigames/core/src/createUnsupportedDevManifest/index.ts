@@ -2,8 +2,10 @@ import type { MinigameType } from "@wingnight/shared";
 
 import type { MinigameDevManifest } from "../index.js";
 
+type UnsupportedMinigameType = Exclude<MinigameType, "TRIVIA">;
+
 type CreateUnsupportedDevManifestOptions = {
-  minigameId: MinigameType;
+  minigameId: UnsupportedMinigameType;
   hostUnsupportedMessage: string;
   displayUnsupportedMessage: string;
 };
@@ -30,23 +32,18 @@ export const createUnsupportedDevManifest = ({
         minigameHostView: {
           minigame: minigameId,
           activeTurnTeamId: DEFAULT_TEAM_ID,
-          attemptsRemaining: 0,
-          promptCursor: 0,
           pendingPointsByTeamId: {
             [DEFAULT_TEAM_ID]: 0
           },
-          currentPrompt: null,
           status: "UNSUPPORTED",
           message: hostUnsupportedMessage
         },
         minigameDisplayView: {
           minigame: minigameId,
           activeTurnTeamId: DEFAULT_TEAM_ID,
-          promptCursor: 0,
           pendingPointsByTeamId: {
             [DEFAULT_TEAM_ID]: 0
           },
-          currentPrompt: null,
           status: "UNSUPPORTED",
           message: displayUnsupportedMessage
         }

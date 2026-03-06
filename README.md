@@ -148,6 +148,8 @@ Display: http://`<your-ip>`:5173/display
 -   All mutating socket events require it.
 -   Display is strictly read-only.
 -   One implicit room only.
+-   Default LAN mode: if `HOST_CONTROL_TOKEN` is not configured, any `/host` client can claim host control.
+-   Optional hardened mode: set both `HOST_CONTROL_TOKEN` (server) and `VITE_HOST_CONTROL_TOKEN` (client) to require a matching host control token before host role is granted.
 
 ------------------------------------------------------------------------
 

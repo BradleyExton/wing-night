@@ -6,22 +6,7 @@ const isNonEmptyString = (value: unknown): value is string => {
   return typeof value === "string" && value.trim().length > 0;
 };
 
-const MINIGAMES = ["TRIVIA", "GEO", "DRAWING"] as const;
-
-export type MinigameType = (typeof MINIGAMES)[number];
-
-export type GameConfigRound = {
-  round: number;
-  label: string;
-  sauce: string;
-  pointsPerPlayer: number;
-  minigame: MinigameType;
-};
-
-export type GameConfigScoring = {
-  defaultMax: number;
-  finalRoundMax: number;
-};
+const MINIGAME_API_VERSION = 1;
 
 export type GameConfigTimers = {
   eatingSeconds: number;
@@ -38,6 +23,100 @@ export type MinigameRules = {
   trivia?: TriviaMinigameRules;
 };
 
+export type MinigameTimerKey = keyof GameConfigTimers;
+export type MinigameRulesKey = keyof MinigameRules;
+
+export type MinigameContractMetadataDefaults = {
+  minigameApiVersion: number;
+  capabilityFlags: readonly string[];
+};
+
+export type MinigameDefinition = {
+  id: string;
+  slug: string;
+  timerKey: MinigameTimerKey;
+  rulesKey: MinigameRulesKey | null;
+  contractMetadata: MinigameContractMetadataDefaults;
+};
+
+export const MINIGAME_DEFINITIONS = {
+  TRIVIA: {
+    id: "TRIVIA",
+    slug: "trivia",
+    timerKey: "triviaSeconds",
+    rulesKey: "trivia",
+    contractMetadata: {
+      minigameApiVersion: MINIGAME_API_VERSION,
+      capabilityFlags: ["recordAttempt"]
+    }
+  },
+  GEO: {
+    id: "GEO",
+    slug: "geo",
+    timerKey: "geoSeconds",
+    rulesKey: null,
+    contractMetadata: {
+      minigameApiVersion: MINIGAME_API_VERSION,
+      capabilityFlags: []
+    }
+  },
+  DRAWING: {
+    id: "DRAWING",
+    slug: "drawing",
+    timerKey: "drawingSeconds",
+    rulesKey: null,
+    contractMetadata: {
+      minigameApiVersion: MINIGAME_API_VERSION,
+      capabilityFlags: []
+    }
+  }
+} as const satisfies Record<string, MinigameDefinition>;
+
+export type MinigameType = keyof typeof MINIGAME_DEFINITIONS;
+
+export const MINIGAME_TYPES = Object.freeze(
+  Object.keys(MINIGAME_DEFINITIONS) as MinigameType[]
+);
+
+export const MINIGAME_TYPE_BY_SLUG: Readonly<Record<string, MinigameType>> =
+  Object.freeze(
+    MINIGAME_TYPES.reduce<Record<string, MinigameType>>((slugMap, minigameType) => {
+      slugMap[MINIGAME_DEFINITIONS[minigameType].slug] = minigameType;
+      return slugMap;
+    }, {})
+  );
+
+export const resolveMinigameTypeFromSlug = (
+  slug: string
+): MinigameType | null => {
+  const normalizedSlug = slug.trim().toLowerCase();
+
+  if (normalizedSlug.length === 0) {
+    return null;
+  }
+
+  return MINIGAME_TYPE_BY_SLUG[normalizedSlug] ?? null;
+};
+
+export const resolveMinigameDefinition = (
+  minigameType: MinigameType
+): (typeof MINIGAME_DEFINITIONS)[MinigameType] => {
+  return MINIGAME_DEFINITIONS[minigameType];
+};
+
+export type GameConfigRound = {
+  round: number;
+  label: string;
+  sauce: string;
+  pointsPerPlayer: number;
+  minigame: MinigameType;
+};
+
+export type GameConfigScoring = {
+  defaultMax: number;
+  finalRoundMax: number;
+};
+
 export type GameConfigFile = {
   name: string;
   rounds: GameConfigRound[];
@@ -50,7 +129,7 @@ export type GameConfigFile = {
 export const SETUP_PREVIEW_ROUND_SLOTS_MAX = 24;
 
 const isMinigameType = (value: unknown): value is MinigameType => {
-  return typeof value === "string" && MINIGAMES.includes(value as MinigameType);
+  return typeof value === "string" && MINIGAME_TYPES.includes(value as MinigameType);
 };
 
 const isGameConfigRound = (value: unknown): value is GameConfigRound => {

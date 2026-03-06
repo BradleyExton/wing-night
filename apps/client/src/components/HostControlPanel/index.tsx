@@ -1,6 +1,5 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { type RoomState } from "@wingnight/shared";
-import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { HostActionBarSurface } from "./HostActionBarSurface";
@@ -17,29 +16,9 @@ import { selectOverrideDockContext } from "./selectOverrideDockContext";
 import { selectHostTeamMaps } from "./selectHostTeamMaps";
 import { createMinigameHandlers, createSetupHandlers } from "./setupHandlers";
 import { TurnOrderSurface } from "./TurnOrderSurface";
+import type { HostControlPanelProps } from "./types";
 import * as styles from "./styles";
-type HostControlPanelProps = {
-  roomState: RoomState | null;
-  onNextPhase?: () => void;
-  onCreateTeam?: (name: string) => void;
-  onAddPlayer?: (name: string) => void;
-  onAssignPlayer?: (playerId: string, teamId: string | null) => void;
-  onAutoAssignRemainingPlayers?: () => void;
-  onSetWingParticipation?: (playerId: string, didEat: boolean) => void;
-  onDispatchMinigameAction?: (
-    minigameId: NonNullable<RoomState["currentRoundConfig"]>["minigame"],
-    actionType: string,
-    actionPayload: SerializableValue
-  ) => void;
-  onPauseTimer?: () => void;
-  onResumeTimer?: () => void;
-  onExtendTimer?: (additionalSeconds: number) => void;
-  onReorderTurnOrder?: (teamIds: string[]) => void;
-  onSkipTurnBoundary?: () => void;
-  onAdjustTeamScore?: (teamId: string, delta: number) => void;
-  onResetGame?: () => void;
-  onRedoLastMutation?: () => void;
-};
+
 const EMPTY_TEAMS: RoomState["teams"] = [];
 
 export const HostControlPanel = ({

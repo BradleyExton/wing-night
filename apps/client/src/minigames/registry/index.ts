@@ -8,7 +8,10 @@ import { geoRendererBundle } from "@wingnight/minigames-geo/client";
 import { geoDevManifest } from "@wingnight/minigames-geo/dev";
 import { triviaRendererBundle } from "@wingnight/minigames-trivia/client";
 import { triviaDevManifest } from "@wingnight/minigames-trivia/dev";
-import type { MinigameType } from "@wingnight/shared";
+import {
+  resolveMinigameTypeFromSlug as resolveSharedMinigameTypeFromSlug,
+  type MinigameType
+} from "@wingnight/shared";
 
 const minigameRendererByType: Record<MinigameType, MinigameRendererBundle> = {
   TRIVIA: triviaRendererBundle,
@@ -20,12 +23,6 @@ const minigameDevManifestByType: Record<MinigameType, MinigameDevManifest> = {
   TRIVIA: triviaDevManifest,
   GEO: geoDevManifest,
   DRAWING: drawingDevManifest
-};
-
-const minigameTypeBySlug: Record<string, MinigameType> = {
-  trivia: "TRIVIA",
-  geo: "GEO",
-  drawing: "DRAWING"
 };
 
 export const resolveMinigameRendererBundle = (
@@ -43,11 +40,5 @@ export const resolveMinigameDevManifest = (
 export const resolveMinigameTypeFromSlug = (
   slug: string
 ): MinigameType | null => {
-  const normalizedSlug = slug.trim().toLowerCase();
-
-  if (normalizedSlug.length === 0) {
-    return null;
-  }
-
-  return minigameTypeBySlug[normalizedSlug] ?? null;
+  return resolveSharedMinigameTypeFromSlug(slug);
 };
