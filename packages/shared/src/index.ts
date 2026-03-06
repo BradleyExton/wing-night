@@ -43,6 +43,14 @@ export type {
   PlayersContentFile
 } from "./content/players/index.js";
 export {
+  isTeamsContentEntry,
+  isTeamsContentFile
+} from "./content/teams/index.js";
+export type {
+  TeamsContentEntry,
+  TeamsContentFile
+} from "./content/teams/index.js";
+export {
   isTriviaContentFile,
   isTriviaPrompt
 } from "./content/trivia/index.js";
@@ -73,6 +81,7 @@ export type {
   ScoringSetWingParticipationPayload,
   TimerExtendPayload,
   ServerToClientEventName,
+  SetupAddPlayerPayload,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload,
   ServerToClientEvents

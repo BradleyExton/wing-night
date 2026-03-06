@@ -26,7 +26,9 @@ type SocketHarness = {
   triggerReorderTurnOrder: (payload: unknown) => void;
   triggerResetGame: (payload: unknown) => void;
   triggerCreateTeam: (payload: unknown) => void;
+  triggerAddPlayer: (payload: unknown) => void;
   triggerAssignPlayer: (payload: unknown) => void;
+  triggerAutoAssignRemainingPlayers: (payload: unknown) => void;
   triggerSetWingParticipation: (payload: unknown) => void;
   triggerAdjustTeamScore: (payload: unknown) => void;
   triggerRedoLastMutation: (payload: unknown) => void;
@@ -157,8 +159,14 @@ export const createSocketHarness = (): SocketHarness => {
     triggerCreateTeam: (payload: unknown): void => {
       triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, payload);
     },
+    triggerAddPlayer: (payload: unknown): void => {
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.ADD_PLAYER, payload);
+    },
     triggerAssignPlayer: (payload: unknown): void => {
       triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, payload);
+    },
+    triggerAutoAssignRemainingPlayers: (payload: unknown): void => {
+      triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS, payload);
     },
     triggerSetWingParticipation: (payload: unknown): void => {
       triggerPayloadEvent(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, payload);
@@ -212,7 +220,13 @@ export const createMutationHandlers = (
     onAuthorizedCreateTeam: () => {
       // no-op
     },
+    onAuthorizedAddPlayer: () => {
+      // no-op
+    },
     onAuthorizedAssignPlayer: () => {
+      // no-op
+    },
+    onAuthorizedAutoAssignRemainingPlayers: () => {
       // no-op
     },
     onAuthorizedSetWingParticipation: () => {

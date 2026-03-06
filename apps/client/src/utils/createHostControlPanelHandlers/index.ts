@@ -8,7 +8,9 @@ import type {
   OutboundSocketEvents
 } from "../../socketContracts/index";
 import { requestAdjustTeamScore } from "../requestAdjustTeamScore";
+import { requestAddPlayer } from "../requestAddPlayer";
 import { requestAssignPlayer } from "../requestAssignPlayer";
+import { requestAutoAssignRemainingPlayers } from "../requestAutoAssignRemainingPlayers";
 import { requestCreateTeam } from "../requestCreateTeam";
 import { requestExtendTimer } from "../requestExtendTimer";
 import { requestMinigameAction } from "../requestMinigameAction";
@@ -29,7 +31,9 @@ type HostControlPanelSocket = Pick<
 type HostControlPanelHandlers = {
   onNextPhase: () => void;
   onCreateTeam: (name: string) => void;
+  onAddPlayer: (name: string) => void;
   onAssignPlayer: (playerId: string, teamId: string | null) => void;
+  onAutoAssignRemainingPlayers: () => void;
   onSetWingParticipation: (playerId: string, didEat: boolean) => void;
   onDispatchMinigameAction: (
     minigameId: MinigameType,
@@ -49,7 +53,9 @@ type HostControlPanelHandlers = {
 type HostControlPanelRequestDependencies = {
   requestNextPhase: typeof requestNextPhase;
   requestCreateTeam: typeof requestCreateTeam;
+  requestAddPlayer: typeof requestAddPlayer;
   requestAssignPlayer: typeof requestAssignPlayer;
+  requestAutoAssignRemainingPlayers: typeof requestAutoAssignRemainingPlayers;
   requestSetWingParticipation: typeof requestSetWingParticipation;
   requestMinigameAction: typeof requestMinigameAction;
   requestPauseTimer: typeof requestPauseTimer;
@@ -65,7 +71,9 @@ type HostControlPanelRequestDependencies = {
 const defaultDependencies: HostControlPanelRequestDependencies = {
   requestNextPhase,
   requestCreateTeam,
+  requestAddPlayer,
   requestAssignPlayer,
+  requestAutoAssignRemainingPlayers,
   requestSetWingParticipation,
   requestMinigameAction,
   requestPauseTimer,
@@ -139,7 +147,11 @@ export const createHostControlPanelHandlers = (
   return {
     onNextPhase: invokeWithoutArgs(dependencies.requestNextPhase),
     onCreateTeam: invokeWithOneArg(dependencies.requestCreateTeam),
+    onAddPlayer: invokeWithOneArg(dependencies.requestAddPlayer),
     onAssignPlayer: invokeWithTwoArgs(dependencies.requestAssignPlayer),
+    onAutoAssignRemainingPlayers: invokeWithoutArgs(
+      dependencies.requestAutoAssignRemainingPlayers
+    ),
     onSetWingParticipation: invokeWithTwoArgs(dependencies.requestSetWingParticipation),
     onDispatchMinigameAction: invokeWithThreeArgs(dependencies.requestMinigameAction),
     onPauseTimer: invokeWithoutArgs(dependencies.requestPauseTimer),

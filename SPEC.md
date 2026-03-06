@@ -98,12 +98,34 @@ Rules:
 - `name` required
 - `avatarSrc` optional
 - Missing avatar → initials fallback
-- Teams formed in SETUP
+
+---
+
+### 3.2 Teams Preset
+
+Loaded from:
+
+- `content/local/teams.json`
+- fallback: `content/sample/teams.json`
+
+Format:
+
+{
+  "teams": [
+    { "name": "Team A" },
+    { "name": "Team B" }
+  ]
+}
+
+Rules:
+- `name` required
+- Team rosters start empty in SETUP
+- Host can still add teams manually in SETUP
 - Teams lock when game starts
 
 ---
 
-### 3.2 Game Configuration (Data-Driven Rounds)
+### 3.3 Game Configuration (Data-Driven Rounds)
 
 Loaded from:
 
@@ -205,8 +227,11 @@ Rounds 1–N repeat phases 3–8 with a per-team loop:
 ### SETUP
 Host:
 - Load players
-- Create teams
+- Load teams
+- Create/add teams
+- Add players
 - Assign players
+- Auto-assign remaining players (host action)
 - Lock game (disabled until valid)
 
 Display:

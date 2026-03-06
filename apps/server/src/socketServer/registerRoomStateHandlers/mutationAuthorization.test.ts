@@ -134,6 +134,32 @@ test("runs authorized create-team callback and ignores unauthorized payloads", (
   assert.equal(socketHarness.invalidSecretEvents, 1);
 });
 
+test("runs authorized add-player callback and ignores unauthorized payloads", () => {
+  const socketHarness = createSocketHarness();
+  let addPlayerCalls = 0;
+  let addedPlayerName = "";
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
+    createMutationHandlers({
+      onAuthorizedAddPlayer: (name) => {
+        addPlayerCalls += 1;
+        addedPlayerName = name;
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  socketHarness.triggerAddPlayer({ hostSecret: "invalid-host-secret", name: "Player One" });
+  socketHarness.triggerAddPlayer({ hostSecret: "valid-host-secret", name: "Player Two" });
+
+  assert.equal(addPlayerCalls, 1);
+  assert.equal(addedPlayerName, "Player Two");
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
 test("ignores malformed and unauthorized assign-player payloads", () => {
   const socketHarness = createSocketHarness();
   const assignmentCalls: Array<{ playerId: string; teamId: string | null }> = [];
@@ -172,6 +198,33 @@ test("ignores malformed and unauthorized assign-player payloads", () => {
   });
 
   assert.deepEqual(assignmentCalls, [{ playerId: "player-1", teamId: null }]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
+test("ignores malformed and unauthorized auto-assign payloads", () => {
+  const socketHarness = createSocketHarness();
+  let autoAssignCalls = 0;
+
+  registerRoomStateHandlers(
+    socketHarness.socket,
+    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
+    createMutationHandlers({
+      onAuthorizedAutoAssignRemainingPlayers: () => {
+        autoAssignCalls += 1;
+      }
+    }),
+    true,
+    hostAuth
+  );
+
+  assert.doesNotThrow(() => {
+    socketHarness.triggerAutoAssignRemainingPlayers(undefined);
+    socketHarness.triggerAutoAssignRemainingPlayers({});
+    socketHarness.triggerAutoAssignRemainingPlayers({ hostSecret: "invalid-host-secret" });
+    socketHarness.triggerAutoAssignRemainingPlayers({ hostSecret: "valid-host-secret" });
+  });
+
+  assert.equal(autoAssignCalls, 1);
   assert.equal(socketHarness.invalidSecretEvents, 1);
 });
 

@@ -6,11 +6,14 @@ export {
   resetGameToSetup,
   setRoomStateFatalError,
   setRoomStatePlayers,
+  setRoomStateTeams,
   setRoomStateGameConfig,
   setRoomStateMinigameContent
 } from "./baseMutations/index.js";
 
 export {
+  addPlayer,
+  autoAssignRemainingPlayers,
   createTeam,
   assignPlayerToTeam,
   reorderTurnOrder

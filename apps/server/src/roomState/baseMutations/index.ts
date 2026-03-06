@@ -3,7 +3,8 @@ import {
   type MinigameType,
   type Player,
   type RoomFatalError,
-  type RoomState
+  type RoomState,
+  type Team
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
@@ -90,6 +91,14 @@ export const setRoomStatePlayers = (players: Player[]): RoomState => {
   const roomState = getRoomState();
 
   roomState.players = structuredClone(players);
+
+  return getRoomStateSnapshot();
+};
+
+export const setRoomStateTeams = (teams: Team[]): RoomState => {
+  const roomState = getRoomState();
+
+  roomState.teams = structuredClone(teams);
 
   return getRoomStateSnapshot();
 };

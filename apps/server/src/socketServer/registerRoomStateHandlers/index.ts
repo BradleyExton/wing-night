@@ -14,6 +14,7 @@ import {
   isMinigameActionEnvelope,
   isScoringAdjustTeamScorePayload,
   isScoringSetWingParticipationPayload,
+  isSetupAddPlayerPayload,
   isSetupAssignPlayerPayload,
   isSetupCreateTeamPayload,
   isTimerExtendPayload
@@ -46,7 +47,9 @@ type AuthorizedSetupMutationHandlers = {
   onAuthorizedReorderTurnOrder: (teamIds: string[]) => void;
   onAuthorizedResetGame: () => void;
   onAuthorizedCreateTeam: (name: string) => void;
+  onAuthorizedAddPlayer: (name: string) => void;
   onAuthorizedAssignPlayer: (playerId: string, teamId: string | null) => void;
+  onAuthorizedAutoAssignRemainingPlayers: () => void;
   onAuthorizedSetWingParticipation: (playerId: string, didEat: boolean) => void;
   onAuthorizedAdjustTeamScore: (teamId: string, delta: number) => void;
   onAuthorizedRedoLastMutation: () => void;
@@ -162,10 +165,26 @@ export const registerRoomStateHandlers = (
   );
 
   registerAuthorizedMutation(
+    CLIENT_TO_SERVER_EVENTS.ADD_PLAYER,
+    isSetupAddPlayerPayload,
+    (typedPayload) => {
+      mutationHandlers.onAuthorizedAddPlayer(typedPayload.name);
+    }
+  );
+
+  registerAuthorizedMutation(
     CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
     isSetupAssignPlayerPayload,
     (typedPayload) => {
       mutationHandlers.onAuthorizedAssignPlayer(typedPayload.playerId, typedPayload.teamId);
+    }
+  );
+
+  registerAuthorizedMutation(
+    CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS,
+    isHostSecretPayload,
+    () => {
+      mutationHandlers.onAuthorizedAutoAssignRemainingPlayers();
     }
   );
 

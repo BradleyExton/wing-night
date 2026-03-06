@@ -1,3 +1,5 @@
+import { type FormEvent, useState } from "react";
+
 import { hostControlPanelCopy } from "../../copy";
 import type { SetupPlayersSurfaceProps } from "../index";
 import * as styles from "./styles";
@@ -7,11 +9,48 @@ export const SetupPlayersSurface = ({
   teams,
   assignedTeamByPlayerId,
   assignmentDisabled,
-  onAssignPlayer
+  addPlayerDisabled,
+  onAssignPlayer,
+  onAddPlayer
 }: SetupPlayersSurfaceProps): JSX.Element => {
+  const [nextPlayerName, setNextPlayerName] = useState("");
+
+  const handleAddPlayerSubmit = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+
+    const normalizedPlayerName = nextPlayerName.trim();
+
+    if (normalizedPlayerName.length === 0) {
+      return;
+    }
+
+    onAddPlayer(normalizedPlayerName);
+    setNextPlayerName("");
+  };
+
   return (
     <section className={`${styles.card} ${styles.playersCard}`}>
       <h2 className={styles.sectionHeading}>{hostControlPanelCopy.playersSectionTitle}</h2>
+      <form className={styles.playerCreateForm} onSubmit={handleAddPlayerSubmit}>
+        <div className={styles.playerInputGroup}>
+          <label className={styles.playerInputLabel} htmlFor="player-name-input">
+            {hostControlPanelCopy.playerNameInputLabel}
+          </label>
+          <input
+            id="player-name-input"
+            className={styles.playerInput}
+            value={nextPlayerName}
+            disabled={addPlayerDisabled}
+            onChange={(event): void => {
+              setNextPlayerName(event.target.value);
+            }}
+            placeholder={hostControlPanelCopy.playerNameInputPlaceholder}
+          />
+        </div>
+        <button className={styles.actionButton} type="submit" disabled={addPlayerDisabled}>
+          {hostControlPanelCopy.addPlayerButtonLabel}
+        </button>
+      </form>
 
       {players.length === 0 && (
         <p className={styles.sectionDescription}>{hostControlPanelCopy.noPlayersLabel}</p>

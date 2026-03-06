@@ -9,6 +9,7 @@ export type MinigameApiVersion = typeof MINIGAME_API_VERSION;
 export type GameReorderTurnOrderPayload = HostSecretPayload &
   Record<"teamIds", string[]>;
 export type SetupCreateTeamPayload = HostSecretPayload & Record<"name", string>;
+export type SetupAddPlayerPayload = HostSecretPayload & Record<"name", string>;
 export type SetupAssignPlayerPayload = HostSecretPayload &
   Record<"playerId", string> &
   Record<"teamId", string | null>;
@@ -47,7 +48,9 @@ export const CLIENT_TO_SERVER_EVENTS = {
   REORDER_TURN_ORDER: "game:reorderTurnOrder",
   RESET: "game:reset",
   CREATE_TEAM: "setup:createTeam",
+  ADD_PLAYER: "setup:addPlayer",
   ASSIGN_PLAYER: "setup:assignPlayer",
+  AUTO_ASSIGN_REMAINING_PLAYERS: "setup:autoAssignRemainingPlayers",
   SET_WING_PARTICIPATION: "scoring:setWingParticipation",
   ADJUST_TEAM_SCORE: "scoring:adjustTeamScore",
   REDO_LAST_MUTATION: "scoring:redoLastMutation",
@@ -83,8 +86,12 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.CREATE_TEAM]: (
     payload: SetupCreateTeamPayload
   ) => void;
+  [CLIENT_TO_SERVER_EVENTS.ADD_PLAYER]: (payload: SetupAddPlayerPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER]: (
     payload: SetupAssignPlayerPayload
+  ) => void;
+  [CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS]: (
+    payload: HostSecretPayload
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION]: (
     payload: ScoringSetWingParticipationPayload

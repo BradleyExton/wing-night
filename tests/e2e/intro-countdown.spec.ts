@@ -53,6 +53,15 @@ const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
         }
       }
 
+      const autoAssignButton = hostPage.getByRole("button", {
+        name: "Auto-Assign Remaining Players"
+      });
+
+      if ((await autoAssignButton.count()) > 0 && (await autoAssignButton.isEnabled())) {
+        await autoAssignButton.click();
+        await hostPage.waitForTimeout(200);
+      }
+
       const primaryActionButton = hostPage.getByRole("button", {
         name: HOST_PRIMARY_ACTION_LABEL
       });
@@ -155,6 +164,30 @@ const assignPlayers = async (hostPage: Page): Promise<void> => {
   }
 };
 
+const ensureSetupReadyToLock = async (hostPage: Page): Promise<void> => {
+  const primaryActionButton = hostPage.getByRole("button", {
+    name: HOST_PRIMARY_ACTION_LABEL
+  });
+  const autoAssignButton = hostPage.getByRole("button", {
+    name: "Auto-Assign Remaining Players"
+  });
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    if (await primaryActionButton.isEnabled()) {
+      return;
+    }
+
+    if ((await autoAssignButton.count()) > 0 && (await autoAssignButton.isEnabled())) {
+      await autoAssignButton.click();
+      await hostPage.waitForTimeout(250);
+    } else {
+      await hostPage.waitForTimeout(150);
+    }
+  }
+
+  await expect(primaryActionButton).toBeEnabled();
+};
+
 test("intro lock screen transitions to round-intro countdown on display", async ({
   browser
 }) => {
@@ -169,6 +202,7 @@ test("intro lock screen transitions to round-intro countdown on display", async 
   await ensureTeamExists(hostPage, "Team One");
   await ensureTeamExists(hostPage, "Team Two");
   await assignPlayers(hostPage);
+  await ensureSetupReadyToLock(hostPage);
 
   await clickHostPrimaryAction(hostPage);
   await expect(hostPage.locator("h1").filter({ hasText: /^Intro$/i })).toHaveCount(1);

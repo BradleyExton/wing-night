@@ -15,9 +15,11 @@ import type {
   OutgoingSocketEvents
 } from "../socketContracts/index.js";
 import {
+  addPlayer,
   advanceRoomStatePhase,
   adjustTeamScore,
   assignPlayerToTeam,
+  autoAssignRemainingPlayers,
   createTeam,
   dispatchMinigameAction,
   extendRoomTimer,
@@ -116,8 +118,14 @@ export const attachSocketServer = (
         onAuthorizedCreateTeam: (name) => {
           broadcastAfter(() => createTeam(name));
         },
+        onAuthorizedAddPlayer: (name) => {
+          broadcastAfter(() => addPlayer(name));
+        },
         onAuthorizedAssignPlayer: (playerId, teamId) => {
           broadcastAfter(() => assignPlayerToTeam(playerId, teamId));
+        },
+        onAuthorizedAutoAssignRemainingPlayers: () => {
+          broadcastAfter(() => autoAssignRemainingPlayers());
         },
         onAuthorizedSetWingParticipation: (playerId, didEat) => {
           broadcastAfter(() => setWingParticipation(playerId, didEat));

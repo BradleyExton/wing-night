@@ -7,8 +7,10 @@ import {
 } from "@wingnight/shared";
 
 import {
+  addPlayer,
   advanceRoomStatePhase,
   assignPlayerToTeam,
+  autoAssignRemainingPlayers,
   createTeam,
   dispatchMinigameAction,
   getRoomStateSnapshot,
@@ -17,6 +19,7 @@ import {
   setPendingMinigamePoints,
   setRoomStateGameConfig,
   setRoomStateMinigameContent,
+  setRoomStateTeams,
   setRoomStatePlayers,
   setWingParticipation
 } from "./index.js";
@@ -50,6 +53,22 @@ test("setRoomStatePlayers stores a safe clone of player records", () => {
   const persistedSnapshot = getRoomStateSnapshot();
 
   assert.equal(persistedSnapshot.players[0].name, "Player One");
+});
+
+test("setRoomStateTeams stores a safe clone of team records", () => {
+  resetRoomState();
+
+  const nextTeams = [
+    { id: "team-1", name: "Team One", playerIds: ["player-1"], totalScore: 0 }
+  ];
+  const updatedSnapshot = setRoomStateTeams(nextTeams);
+
+  assert.deepEqual(updatedSnapshot.teams, nextTeams);
+
+  nextTeams[0].name = "Changed Locally";
+  const persistedSnapshot = getRoomStateSnapshot();
+
+  assert.equal(persistedSnapshot.teams[0].name, "Team One");
 });
 
 test("setRoomStateGameConfig stores a safe clone and updates totalRounds", () => {
@@ -116,6 +135,36 @@ test("createTeam trims team names and ignores empty values", () => {
   assert.equal(snapshot.teams[0].totalScore, 0);
 });
 
+test("addPlayer trims names and allocates the next player id", () => {
+  resetRoomState();
+
+  setRoomStatePlayers([{ id: "player-2", name: "Existing Player" }]);
+
+  addPlayer("  New Player  ");
+  addPlayer("   ");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.players.length, 2);
+  assert.deepEqual(snapshot.players[1], {
+    id: "player-3",
+    name: "New Player"
+  });
+});
+
+test("addPlayer ignores updates outside setup", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceRoomStatePhase();
+
+  addPlayer("Late Player");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.phase, Phase.INTRO);
+  assert.equal(snapshot.players.some((player) => player.name === "Late Player"), false);
+});
+
 test("assignPlayerToTeam reassigns a player to only one team at a time", () => {
   resetRoomState();
   setRoomStatePlayers([
@@ -158,6 +207,41 @@ test("assignPlayerToTeam ignores unknown players and unknown teams", () => {
   const snapshot = getRoomStateSnapshot();
 
   assert.deepEqual(snapshot.teams[0].playerIds, []);
+});
+
+test("autoAssignRemainingPlayers balances only unassigned players across teams", () => {
+  resetRoomState();
+
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" },
+    { id: "player-3", name: "Player Three" },
+    { id: "player-4", name: "Player Four" },
+    { id: "player-5", name: "Player Five" }
+  ]);
+  createTeam("Team Alpha");
+  createTeam("Team Beta");
+  assignPlayerToTeam("player-1", "team-1");
+
+  autoAssignRemainingPlayers();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.deepEqual(snapshot.teams[0]?.playerIds, ["player-1", "player-3", "player-5"]);
+  assert.deepEqual(snapshot.teams[1]?.playerIds, ["player-2", "player-4"]);
+});
+
+test("autoAssignRemainingPlayers ignores updates outside setup", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments();
+  advanceRoomStatePhase();
+  const beforeAutoAssign = getRoomStateSnapshot();
+
+  autoAssignRemainingPlayers();
+
+  const afterAutoAssign = getRoomStateSnapshot();
+
+  assert.deepEqual(afterAutoAssign.teams, beforeAutoAssign.teams);
 });
 
 test("setWingParticipation only accepts active-team players and accumulates by turn", () => {

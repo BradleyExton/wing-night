@@ -31,14 +31,18 @@ type HostPhaseBodyProps = {
   minigameHostView: MinigameHostView | null;
   nextTeamName: string;
   setupMutationsDisabled: boolean;
+  autoAssignDisabled: boolean;
   assignmentDisabled: boolean;
+  addPlayerDisabled: boolean;
   participationDisabled: boolean;
   canDispatchMinigameAction: boolean;
   sortedStandings: Team[];
   timer: RoomState["timer"];
   onNextTeamNameChange: (nextTeamName: string) => void;
   onCreateTeamSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onAddPlayer: (name: string) => void;
   onAssignPlayer: (playerId: string, selectedTeamId: string) => void;
+  onAutoAssignRemainingPlayers: () => void;
   onSetWingParticipation: (playerId: string, didEat: boolean) => void;
   onPauseTimer?: () => void;
   onResumeTimer?: () => void;
@@ -67,14 +71,18 @@ export const HostPhaseBody = ({
   minigameHostView,
   nextTeamName,
   setupMutationsDisabled,
+  autoAssignDisabled,
   assignmentDisabled,
+  addPlayerDisabled,
   participationDisabled,
   canDispatchMinigameAction,
   sortedStandings,
   timer,
   onNextTeamNameChange,
   onCreateTeamSubmit,
+  onAddPlayer,
   onAssignPlayer,
+  onAutoAssignRemainingPlayers,
   onSetWingParticipation,
   onPauseTimer,
   onResumeTimer,
@@ -94,10 +102,12 @@ export const HostPhaseBody = ({
           <TeamSetupSurface
             nextTeamName={nextTeamName}
             setupMutationsDisabled={setupMutationsDisabled}
+            autoAssignDisabled={autoAssignDisabled}
             players={players}
             teams={teams}
             onNextTeamNameChange={onNextTeamNameChange}
             onCreateTeamSubmit={onCreateTeamSubmit}
+            onAutoAssignRemainingPlayers={onAutoAssignRemainingPlayers}
           />
           <PlayersSurface
             mode="setup"
@@ -105,7 +115,9 @@ export const HostPhaseBody = ({
             teams={teams}
             assignedTeamByPlayerId={assignedTeamByPlayerId}
             assignmentDisabled={assignmentDisabled}
+            addPlayerDisabled={addPlayerDisabled}
             onAssignPlayer={onAssignPlayer}
+            onAddPlayer={onAddPlayer}
           />
         </div>
       );

@@ -22,12 +22,18 @@ test("renders assignment controls during setup", () => {
       ]}
       assignedTeamByPlayerId={new Map()}
       assignmentDisabled={false}
+      addPlayerDisabled={false}
       onAssignPlayer={(): void => {
+        return;
+      }}
+      onAddPlayer={(): void => {
         return;
       }}
     />
   );
 
+  assert.match(html, /Player Name/);
+  assert.match(html, /Add Player/);
   assert.match(html, /Assign Alex to a team/);
   assert.match(html, /Unassigned/);
   assert.match(html, /Team Alpha/);

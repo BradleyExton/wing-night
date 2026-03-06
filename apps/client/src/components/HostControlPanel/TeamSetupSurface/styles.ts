@@ -24,6 +24,7 @@ export const teamInputLabel = fieldLabel;
 export const teamInput = inputBase;
 
 export const actionButton = actionButtonPrimary;
+export const autoAssignButton = `${actionButtonPrimary} mt-3`;
 
 export const list = "mt-4 space-y-2";
 

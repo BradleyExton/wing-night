@@ -8,6 +8,7 @@ import type {
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   SERVER_TO_CLIENT_EVENTS,
+  SetupAddPlayerPayload,
   TimerExtendPayload,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload,
@@ -79,6 +80,22 @@ export type AssignPlayerPayloadCheck = Assert<
       ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER]
     >,
     [SetupAssignPlayerPayload]
+  >
+>;
+
+export type AddPlayerPayloadCheck = Assert<
+  Equal<
+    Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.ADD_PLAYER]>,
+    [SetupAddPlayerPayload]
+  >
+>;
+
+export type AutoAssignRemainingPlayersPayloadCheck = Assert<
+  Equal<
+    Parameters<
+      ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS]
+    >,
+    [HostSecretPayload]
   >
 >;
 
@@ -186,6 +203,12 @@ export type InvalidCreateTeamNoPayloadCheck = Assert<Equal<Parameters<ClientToSe
 
 // @ts-expect-error setup:assignPlayer must accept host secret + player assignment payload.
 export type InvalidAssignPlayerNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER]>, []>>;
+
+// @ts-expect-error setup:addPlayer must accept host secret + name payload.
+export type InvalidAddPlayerNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.ADD_PLAYER]>, []>>;
+
+// @ts-expect-error setup:autoAssignRemainingPlayers must accept host secret payload.
+export type InvalidAutoAssignRemainingPlayersNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS]>, []>>;
 
 // @ts-expect-error scoring:setWingParticipation must accept host secret + player participation payload.
 export type InvalidSetWingParticipationNoPayloadCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION]>, []>>;

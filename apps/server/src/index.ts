@@ -10,6 +10,7 @@ import {
   setRoomStateGameConfig,
   setRoomStateMinigameContent,
   setRoomStatePlayers,
+  setRoomStateTeams,
 } from "./roomState/index.js";
 import { attachSocketServer } from "./socketServer/index.js";
 
@@ -19,8 +20,9 @@ const app = createApp();
 const httpServer = createServer(app);
 
 try {
-  const { players, gameConfig, minigameContentById } = loadContent();
+  const { players, teams, gameConfig, minigameContentById } = loadContent();
   setRoomStatePlayers(players);
+  setRoomStateTeams(teams);
   setRoomStateGameConfig(gameConfig);
 
   for (const [minigameId, minigameContent] of Object.entries(

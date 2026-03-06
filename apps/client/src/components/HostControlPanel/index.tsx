@@ -1,4 +1,3 @@
-import type { FormEvent } from "react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { type RoomState } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
@@ -16,14 +15,16 @@ import { resolveOrderedTeams } from "./roomTeamSelectors";
 import { ScoreOverrideSurface } from "./ScoreOverrideSurface";
 import { selectOverrideDockContext } from "./selectOverrideDockContext";
 import { selectHostTeamMaps } from "./selectHostTeamMaps";
+import { createMinigameHandlers, createSetupHandlers } from "./setupHandlers";
 import { TurnOrderSurface } from "./TurnOrderSurface";
 import * as styles from "./styles";
-
 type HostControlPanelProps = {
   roomState: RoomState | null;
   onNextPhase?: () => void;
   onCreateTeam?: (name: string) => void;
+  onAddPlayer?: (name: string) => void;
   onAssignPlayer?: (playerId: string, teamId: string | null) => void;
+  onAutoAssignRemainingPlayers?: () => void;
   onSetWingParticipation?: (playerId: string, didEat: boolean) => void;
   onDispatchMinigameAction?: (
     minigameId: NonNullable<RoomState["currentRoundConfig"]>["minigame"],
@@ -39,14 +40,15 @@ type HostControlPanelProps = {
   onResetGame?: () => void;
   onRedoLastMutation?: () => void;
 };
-
 const EMPTY_TEAMS: RoomState["teams"] = [];
 
 export const HostControlPanel = ({
   roomState,
   onNextPhase,
   onCreateTeam,
+  onAddPlayer,
   onAssignPlayer,
+  onAutoAssignRemainingPlayers,
   onSetWingParticipation,
   onDispatchMinigameAction,
   onPauseTimer,
@@ -61,11 +63,9 @@ export const HostControlPanel = ({
   const [nextTeamName, setNextTeamName] = useState("");
   const [isOverrideDockOpen, setIsOverrideDockOpen] = useState(false);
   const overrideDockPanelId = useId();
-
   const { assignedTeamByPlayerId, teamNameByTeamId } = useMemo(() => {
     return selectHostTeamMaps(roomState);
   }, [roomState]);
-
   const players = roomState?.players ?? [];
   const teams = roomState?.teams ?? EMPTY_TEAMS;
   const phase = roomState?.phase ?? null;
@@ -78,7 +78,6 @@ export const HostControlPanel = ({
     minigameHostView?.minigame ?? roomState?.currentRoundConfig?.minigame ?? null;
   const triviaHostView =
     minigameHostView?.minigame === "TRIVIA" ? minigameHostView : null;
-
   const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
   const activeRoundTeamName =
@@ -90,9 +89,11 @@ export const HostControlPanel = ({
   const activeTurnTeamId =
     minigameHostView?.activeTurnTeamId ?? roomState?.activeTurnTeamId ?? null;
   const triviaAttemptsRemaining = triviaHostView?.attemptsRemaining ?? 0;
-
   const setupMutationsDisabled = onCreateTeam === undefined || hostMode !== "setup";
+  const addPlayerDisabled = onAddPlayer === undefined || hostMode !== "setup";
   const assignmentDisabled = onAssignPlayer === undefined || hostMode !== "setup";
+  const autoAssignDisabled =
+    onAutoAssignRemainingPlayers === undefined || hostMode !== "setup";
   const participationDisabled = onSetWingParticipation === undefined || hostMode !== "eating";
   const canDispatchMinigameAction =
     onDispatchMinigameAction !== undefined &&
@@ -103,13 +104,11 @@ export const HostControlPanel = ({
       (currentTriviaPrompt !== null && triviaAttemptsRemaining > 0));
   const nextPhaseDisabled =
     onNextPhase === undefined || roomState?.canAdvancePhase !== true;
-
   const sortedStandings = useMemo(() => resolveSortedStandings(teams), [teams]);
   const orderedTeams = useMemo(() => resolveOrderedTeams(roomState), [roomState]);
   const overrideDockContext = useMemo(() => {
     return selectOverrideDockContext(roomState);
   }, [roomState]);
-
   const phaseAdvanceHint =
     phase !== null ? hostControlPanelCopy.phaseAdvanceHint(phase) : null;
   const hasNextRoundTurn =
@@ -128,61 +127,32 @@ export const HostControlPanel = ({
     ? styles.takeoverContainer
     : styles.container;
   const panelClassName = isMinigameTakeover ? styles.takeoverPanel : styles.panel;
-
   useEffect(() => {
     if (!overrideDockContext.isVisible && isOverrideDockOpen) {
       setIsOverrideDockOpen(false);
     }
   }, [isOverrideDockOpen, overrideDockContext.isVisible]);
-
-  const handleCreateTeamSubmit = (event: FormEvent<HTMLFormElement>): void => {
-    event.preventDefault();
-
-    if (!onCreateTeam || hostMode !== "setup") {
-      return;
-    }
-
-    const normalizedTeamName = nextTeamName.trim();
-
-    if (normalizedTeamName.length === 0) {
-      return;
-    }
-
-    onCreateTeam(normalizedTeamName);
-    setNextTeamName("");
-  };
-
-  const handleAssignmentChange = (playerId: string, selectedTeamId: string): void => {
-    if (!onAssignPlayer || hostMode !== "setup") {
-      return;
-    }
-
-    onAssignPlayer(playerId, selectedTeamId.length === 0 ? null : selectedTeamId);
-  };
-
-  const handleWingParticipationChange = (playerId: string, didEat: boolean): void => {
-    if (!onSetWingParticipation || hostMode !== "eating") {
-      return;
-    }
-
-    onSetWingParticipation(playerId, didEat);
-  };
-
-  const handleDispatchMinigameAction = (
-    actionType: string,
-    actionPayload: SerializableValue
-  ): void => {
-    if (
-      onDispatchMinigameAction === undefined ||
-      hostMode !== "minigame_play" ||
-      minigameType === null
-    ) {
-      return;
-    }
-
-    onDispatchMinigameAction(minigameType, actionType, actionPayload);
-  };
-
+  const {
+    handleCreateTeamSubmit,
+    handleAssignmentChange,
+    handleAddPlayer,
+    handleAutoAssignRemainingPlayers
+  } = createSetupHandlers({
+    hostMode,
+    nextTeamName,
+    onCreateTeam,
+    onAddPlayer,
+    onAssignPlayer,
+    onAutoAssignRemainingPlayers,
+    setNextTeamName
+  });
+  const { handleWingParticipationChange, handleDispatchMinigameAction } =
+    createMinigameHandlers({
+      hostMode,
+      minigameType,
+      onDispatchMinigameAction,
+      onSetWingParticipation
+    });
   if (fatalError !== null) {
     return <ContentFatalState fatalError={fatalError} />;
   }
@@ -216,14 +186,18 @@ export const HostControlPanel = ({
           minigameHostView={minigameHostView}
           nextTeamName={nextTeamName}
           setupMutationsDisabled={setupMutationsDisabled}
+          autoAssignDisabled={autoAssignDisabled}
           assignmentDisabled={assignmentDisabled}
+          addPlayerDisabled={addPlayerDisabled}
           participationDisabled={participationDisabled}
           canDispatchMinigameAction={canDispatchMinigameAction}
           sortedStandings={sortedStandings}
           timer={roomState?.timer ?? null}
           onNextTeamNameChange={setNextTeamName}
           onCreateTeamSubmit={handleCreateTeamSubmit}
+          onAddPlayer={handleAddPlayer}
           onAssignPlayer={handleAssignmentChange}
+          onAutoAssignRemainingPlayers={handleAutoAssignRemainingPlayers}
           onSetWingParticipation={handleWingParticipationChange}
           onPauseTimer={onPauseTimer}
           onResumeTimer={onResumeTimer}
