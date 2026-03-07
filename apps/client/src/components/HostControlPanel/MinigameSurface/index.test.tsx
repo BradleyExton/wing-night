@@ -102,6 +102,6 @@ test("renders intro surface for configured trivia minigame", () => {
     />
   );
 
-  assert.match(html, /Review the active team, then advance to begin trivia play\./);
+  assert.match(html, /Call the team up, explain it, then start eating once they are set\./);
   assert.match(html, /Active Team: Team Alpha/);
 });

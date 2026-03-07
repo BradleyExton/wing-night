@@ -99,7 +99,7 @@ test("renders dynamic phase title for core game phases", () => {
     { phase: Phase.INTRO, label: "Intro" },
     { phase: Phase.ROUND_INTRO, label: "Round Intro" },
     { phase: Phase.EATING, label: "Eating" },
-    { phase: Phase.MINIGAME_INTRO, label: "Minigame Intro" },
+    { phase: Phase.MINIGAME_INTRO, label: "Team Round Intro" },
     { phase: Phase.MINIGAME_PLAY, label: "Minigame Play" },
     { phase: Phase.ROUND_RESULTS, label: "Round Results" },
     { phase: Phase.FINAL_RESULTS, label: "Final Results" }
@@ -115,6 +115,17 @@ test("renders dynamic phase title for core game phases", () => {
 
     assert.match(html, new RegExp(phaseCase.label));
   }
+});
+
+test("uses team-arrival guidance during team round intro", () => {
+  const html = renderToStaticMarkup(
+    <HostPanelHeader
+      roomState={buildSnapshot(Phase.MINIGAME_INTRO)}
+      teamNameByTeamId={teamNameByTeamId}
+    />
+  );
+
+  assert.match(html, /Call up the active team and brief them before their turn begins\./);
 });
 
 test("renders pre-game round context when round metadata is not in progress", () => {

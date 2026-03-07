@@ -146,10 +146,9 @@ export const SetupStageBody = ({
                   }`}
                   aria-hidden
                 />
-                <span className={styles.roundCardBadge}>{round.round}</span>
-                <div className={styles.roundIconSlot}>
+                <div className={styles.roundArtworkShell}>
                   <img
-                    className={styles.roundIconMedia}
+                    className={styles.roundArtwork}
                     src={resolveMinigameCardAssetPath(round.minigame)}
                     alt={setupStageCopy.minigameArtworkAlt(round.minigame)}
                   />
@@ -181,8 +180,9 @@ export const SetupStageBody = ({
                     className={`${styles.roundCardShine} ${shineTiming}`}
                     aria-hidden
                   />
-                  <span className={styles.roundCardBadge}>{previewRoundNumber}</span>
-                  <div className={styles.roundIconSlot}>
+                  <div
+                    className={`${styles.roundArtworkShell} ${styles.roundArtworkShellPlaceholder}`}
+                  >
                     <Flame className={styles.roundPlaceholderIcon} aria-hidden />
                   </div>
                   <h4 className={styles.roundCardTitle}>

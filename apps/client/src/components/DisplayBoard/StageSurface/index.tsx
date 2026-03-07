@@ -4,6 +4,7 @@ import { displayBoardCopy } from "../copy";
 import { EatingStageBody } from "./EatingStageBody";
 import { FallbackStageBody } from "./FallbackStageBody";
 import { FinalResultsStageBody } from "./FinalResultsStageBody";
+import { MinigameIntroStageBody } from "./MinigameIntroStageBody";
 import { MinigameStageBody } from "./MinigameStageBody";
 import { resolveStageViewModel, type StageRenderMode } from "./resolveStageViewModel";
 import { RoundResultsStageBody } from "./RoundResultsStageBody";
@@ -32,9 +33,6 @@ export const StageSurface = ({
     stageViewModel.phase === null
       ? displayBoardCopy.waitingPhaseLabel
       : displayBoardCopy.phaseLabel(stageViewModel.phase);
-  const roundMetaLabel = roomState
-    ? displayBoardCopy.currentRoundLabel(roomState.currentRound, roomState.totalRounds)
-    : displayBoardCopy.waitingForStateLabel;
 
   const liveEatingRemainingSeconds = useEatingCountdown({
     stageMode: stageViewModel.stageMode,
@@ -91,14 +89,13 @@ export const StageSurface = ({
         );
       case "minigame_intro":
         return (
-          <MinigameStageBody
-            phase="intro"
+          <MinigameIntroStageBody
             phaseLabel={phaseLabel}
-            minigameType={stageViewModel.minigameType}
-            currentRoundConfig={stageViewModel.currentRoundConfig}
-            shouldRenderTeamTurnContext={stageViewModel.shouldRenderTeamTurnContext}
+            briefingContent={stageViewModel.minigameBriefingContent}
+            sauceName={stageViewModel.currentRoundConfig?.sauce ?? null}
+            activeTeamId={stageViewModel.activeTeamId}
             activeTeamName={stageViewModel.activeTeamName}
-            minigameDisplayView={stageViewModel.minigameDisplayView}
+            activeTeamPlayerNames={stageViewModel.activeTeamPlayerNames}
           />
         );
       case "minigame_play":
@@ -158,29 +155,13 @@ export const StageSurface = ({
         : styles.stageCanvas;
   const shouldRenderStageContextHeader =
     stageViewModel.stageMode !== "setup" &&
-    stageViewModel.stageMode !== "setup_locked" &&
-    stageViewModel.stageMode !== "minigame_play";
-  const shouldRenderSurfaceContext = stageViewModel.stageMode === "minigame_play";
-  const shouldRenderTeamContextPill = stageViewModel.shouldRenderTeamTurnContext;
+    stageViewModel.stageMode !== "setup_locked";
+  const shouldWrapStageBody = shouldRenderStageContextHeader;
 
   return (
     <article className={surfaceClassName}>
-      {shouldRenderStageContextHeader && (
-        <StageContextHeader
-          phaseLabel={phaseLabel}
-          roundMetaLabel={roundMetaLabel}
-          activeTeamName={
-            shouldRenderTeamContextPill ? stageViewModel.activeTeamName : null
-          }
-        />
-      )}
-      {shouldRenderSurfaceContext && (
-        <div className={styles.surfaceContextRow}>
-          <p className={styles.surfaceContextMeta}>{roundMetaLabel}</p>
-          <p className={styles.surfaceContextBadge}>{phaseLabel}</p>
-        </div>
-      )}
-      {shouldRenderStageContextHeader ? (
+      {shouldRenderStageContextHeader && <StageContextHeader />}
+      {shouldWrapStageBody ? (
         <div className={styles.stageBody}>{renderStageBody(stageViewModel.stageMode)}</div>
       ) : (
         renderStageBody(stageViewModel.stageMode)

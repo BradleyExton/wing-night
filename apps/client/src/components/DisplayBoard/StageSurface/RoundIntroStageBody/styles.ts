@@ -4,9 +4,20 @@ export const atmosphereLayer =
   "pointer-events-none absolute -inset-x-[8%] -inset-y-[18%] z-0 rounded-full bg-gradient-to-br from-primary/20 via-transparent to-primary/10 blur-3xl [animation:spin_90s_linear_infinite] motion-reduce:[animation:none]";
 
 export const heroGrid =
-  "relative z-10 grid gap-[clamp(1rem,1.8vw,2rem)] xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] xl:items-center";
+  "relative z-10 grid gap-[clamp(1.2rem,1.9vw,2.2rem)] xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] xl:items-center";
 
-export const heroCopy = "grid content-start gap-[clamp(0.65rem,1.1vh,1.2rem)]";
+export const heroCopy = "grid content-start gap-[clamp(0.7rem,1.15vh,1.25rem)]";
+
+export const titleRow =
+  "relative flex max-w-[36rem] items-center gap-[clamp(0.4rem,0.8vw,0.95rem)]";
+
+export const titleLine =
+  "h-px flex-1 bg-gradient-to-r from-transparent via-primary/45 to-transparent [animation:pulse_9s_ease-in-out_infinite] motion-reduce:[animation:none]";
+
+export const titleIcon =
+  "h-[clamp(0.95rem,1.15vw,1.5rem)] w-[clamp(0.95rem,1.15vw,1.5rem)] text-primary/75 [animation:pulse_7.5s_ease-in-out_infinite] motion-reduce:[animation:none]";
+
+export const titleIconTrailing = "[animation-delay:1400ms]";
 
 export const eyebrow =
   "m-0 text-[clamp(0.88rem,0.9vw,1.3rem)] font-semibold uppercase tracking-[0.18em] text-primary/90";
@@ -17,10 +28,13 @@ export const title =
 export const summary =
   "m-0 max-w-[38ch] text-[clamp(1.05rem,1.02vw,1.55rem)] leading-[1.4] text-text/85";
 
-export const metaGrid = "grid gap-[clamp(0.65rem,1vw,1rem)] sm:grid-cols-2";
+export const metaRail =
+  "flex flex-wrap items-start gap-[clamp(0.9rem,1.3vw,1.5rem)] border-y border-primary/20 py-[clamp(0.9rem,1.15vh,1.2rem)]";
 
-export const metaCard =
-  "border-l-[3px] border-primary/45 bg-surface/30 px-[clamp(0.75rem,1vw,1.2rem)] py-[clamp(0.7rem,1vh,1.05rem)]";
+export const metaItem = "grid gap-[clamp(0.25rem,0.45vh,0.5rem)]";
+
+export const metaDivider =
+  "my-auto hidden h-[clamp(2.4rem,4vh,3.6rem)] w-px bg-gradient-to-b from-transparent via-primary/35 to-transparent sm:block";
 
 export const metaLabel =
   "m-0 text-[clamp(0.7rem,0.75vw,1rem)] font-semibold uppercase tracking-[0.16em] text-muted";

@@ -1,4 +1,5 @@
 import type { GameConfigRound } from "@wingnight/shared";
+import { Flame } from "lucide-react";
 
 import { roundIntroStageCopy } from "./copy";
 import * as styles from "./styles";
@@ -25,7 +26,13 @@ export const RoundIntroStageBody = ({
       <span className={styles.atmosphereLayer} aria-hidden />
       <div className={styles.heroGrid}>
         <section className={styles.heroCopy}>
-          <p className={styles.eyebrow}>{roundIntroStageCopy.phaseEyebrow}</p>
+          <div className={styles.titleRow}>
+            <span className={styles.titleLine} aria-hidden />
+            <Flame className={styles.titleIcon} aria-hidden />
+            <p className={styles.eyebrow}>{roundIntroStageCopy.phaseEyebrow}</p>
+            <Flame className={`${styles.titleIcon} ${styles.titleIconTrailing}`} aria-hidden />
+            <span className={styles.titleLine} aria-hidden />
+          </div>
           <h2 className={styles.title}>
             {roundIntroStageCopy.headline(
               currentRoundConfig.round,
@@ -33,12 +40,13 @@ export const RoundIntroStageBody = ({
             )}
           </h2>
           <p className={styles.summary}>{roundIntroStageCopy.summary}</p>
-          <div className={styles.metaGrid}>
-            <article className={styles.metaCard}>
+          <div className={styles.metaRail}>
+            <article className={styles.metaItem}>
               <p className={styles.metaLabel}>{roundIntroStageCopy.sauceLabel}</p>
               <p className={styles.metaValue}>{currentRoundConfig.sauce}</p>
             </article>
-            <article className={styles.metaCard}>
+            <span className={styles.metaDivider} aria-hidden />
+            <article className={styles.metaItem}>
               <p className={styles.metaLabel}>{roundIntroStageCopy.minigameLabel}</p>
               <p className={styles.metaValue}>{currentRoundConfig.minigame}</p>
             </article>

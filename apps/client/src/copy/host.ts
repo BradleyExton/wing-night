@@ -46,7 +46,7 @@ const phaseAdvanceHint = (phase: Phase): string => {
     case Phase.ROUND_INTRO:
       return "Advance when the first team is gathered for the round briefing.";
     case Phase.MINIGAME_INTRO:
-      return "Explain the mini-game to this team, then start eating when they are ready.";
+      return "Call up the active team, brief them, then start eating once they are in place.";
     case Phase.EATING:
       return "Advance only after each active-team player is marked ate or did not eat.";
     case Phase.MINIGAME_PLAY:
@@ -71,7 +71,7 @@ const phaseDescription = (phase: Phase): string => {
     case Phase.ROUND_INTRO:
       return "Review this round before the first team briefing.";
     case Phase.MINIGAME_INTRO:
-      return "Brief the active team on the mini-game before they eat.";
+      return "Call up the active team and brief them before their turn begins.";
     case Phase.EATING:
       return "Track wing participation for the active team and run the eating timer.";
     case Phase.MINIGAME_PLAY:
@@ -181,7 +181,7 @@ export const hostCopy = {
     "Mark the active team's answer as correct or incorrect.",
   minigameSectionTitle: "Mini-Game",
   minigameIntroDescription: (minigame: MinigameType): string =>
-    `${minigame} is queued. Explain it now, then start eating when the team is ready.`,
+    `${minigame} is queued. Call the team up, explain it, then start eating once they are set.`,
   minigamePlayDescription: (minigame: MinigameType): string =>
     `${minigame} is live for this team turn.`,
   minigameWaitingForViewLabel:

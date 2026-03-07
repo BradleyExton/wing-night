@@ -30,6 +30,11 @@ const gameConfigFixture: GameConfigFile = {
     triviaSeconds: 30,
     geoSeconds: 45,
     drawingSeconds: 60
+  },
+  minigameRules: {
+    trivia: {
+      questionsPerTurn: 1
+    }
   }
 };
 
@@ -38,8 +43,18 @@ const buildSnapshot = (phase: Phase): RoomState => {
     phase,
     currentRound: 1,
     totalRounds: 1,
-    players: [],
-    teams: [{ id: "team-1", name: "Team One", playerIds: [], totalScore: 0 }],
+    players: [
+      { id: "player-1", name: "Alex" },
+      { id: "player-2", name: "Morgan" }
+    ],
+    teams: [
+      {
+        id: "team-1",
+        name: "Team One",
+        playerIds: ["player-1", "player-2"],
+        totalScore: 0
+      }
+    ],
     gameConfig: gameConfigFixture,
     currentRoundConfig: gameConfigFixture.rounds[0],
     turnOrderTeamIds: ["team-1"],
@@ -65,16 +80,16 @@ test("renders round intro hero metadata", () => {
   );
 
   assert.match(html, /Round 1: Warm Up/);
-  assert.match(html, /Round 1 of 1/);
-  assert.match(html, /Round: Round 1 of 1/);
+  assert.match(html, /Wing Night/);
   assert.match(html, /Round Intro/);
-  assert.match(html, /Phase: Round Intro/);
   assert.match(html, /Wing Night logo/);
   assert.match(html, /Sauce is locked\. Mini-game is up next\./);
   assert.match(html, /Frank&#x27;s/);
   assert.match(html, /TRIVIA/);
   assert.match(html, /display\/setup\/flow-round-intro\.png/);
   assert.match(html, /Round intro hero illustration/);
+  assert.doesNotMatch(html, /Round: Round 1 of 1/);
+  assert.doesNotMatch(html, /Phase: Round Intro/);
 });
 
 test("renders setup flow-first layout without live setup status chips", () => {
@@ -91,7 +106,9 @@ test("renders setup flow-first layout without live setup status chips", () => {
   assert.match(html, /display\/setup\/flow-eat-wings\.png/);
   assert.match(html, /display\/setup\/flow-minigame-play\.png/);
   assert.match(html, /display\/setup\/flow-round-results\.png/);
-  assert.match(html, /display\/minigames\/trivia-illustration\.png/);
+  assert.match(html, /display\/minigames\/trivia-illustration\.svg/);
+  assert.doesNotMatch(html, /bg-primary\/90/);
+  assert.doesNotMatch(html, /border-text\/8/);
   assert.doesNotMatch(html, /Tonight at a Glance/);
   assert.doesNotMatch(html, /display\/setup\/hero\.png/);
   assert.doesNotMatch(html, /Pack:/);
@@ -260,9 +277,10 @@ test("renders active team without turn progress during eating", () => {
 
   assert.match(html, /Active Team/);
   assert.match(html, /Team One/);
-  assert.match(html, /Team Up: Team One/);
   assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Round Timer/);
+  assert.doesNotMatch(html, /Phase:/);
+  assert.doesNotMatch(html, /Round:/);
 });
 
 test("uses running EATING timer snapshot instead of static config seconds", () => {
@@ -347,15 +365,41 @@ test("renders active team without turn progress during minigame intro", () => {
     <StageSurface roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
-  assert.match(html, /Phase: Minigame Intro/);
-  assert.match(html, /Round: Round 1 of 1/);
-  assert.match(html, /Minigame Intro in progress/);
-  assert.match(html, /Mini-Game: TRIVIA/);
-  assert.match(html, /Get ready for the next trivia prompt\./);
-  assert.match(html, /Waiting for trivia prompt\.\.\./);
+  assert.match(html, /Team Round Intro/);
   assert.match(html, /Team One/);
-  assert.match(html, /Team Up: Team One/);
+  assert.match(html, /You&#x27;re up now\./);
+  assert.match(html, /Head to the board and get set\./);
+  assert.match(html, /Team Roster/);
+  assert.match(html, /Alex/);
+  assert.match(html, /Morgan/);
+  assert.match(html, /Trivia/);
+  assert.match(html, /Quick-fire questions start once your team is in position\./);
+  assert.match(html, /You&#x27;ll get 1 question this turn\./);
+  assert.match(html, /display\/minigames\/trivia-illustration\.svg/);
+  assert.doesNotMatch(html, /Phase:/);
+  assert.doesNotMatch(html, /Round:/);
+  assert.doesNotMatch(html, /Team Up:/);
   assert.doesNotMatch(html, /Team 1 of 1/);
+});
+
+test("renders configured trivia question count on the minigame intro surface", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.MINIGAME_INTRO),
+        gameConfig: {
+          ...gameConfigFixture,
+          minigameRules: {
+            trivia: {
+              questionsPerTurn: 3
+            }
+          }
+        }
+      }}
+    />
+  );
+
+  assert.match(html, /You&#x27;ll get 3 questions this turn\./);
 });
 
 test("renders turn-results transition context with active team and turn progress", () => {
@@ -370,7 +414,8 @@ test("renders turn-results transition context with active team and turn progress
   assert.match(html, /1\/1 teams complete/);
   assert.match(html, /Next Step/);
   assert.match(html, /Show round results/);
-  assert.match(html, /Team Up: Team One/);
+  assert.doesNotMatch(html, /Phase:/);
+  assert.doesNotMatch(html, /Round:/);
 });
 
 test("renders round-results points summary from pending score buckets", () => {
@@ -415,5 +460,6 @@ test("renders final-results winner callout from standings order", () => {
   assert.match(html, /Team Two/);
   assert.match(html, /15 pts/);
   assert.match(html, /2 teams competed/);
-  assert.doesNotMatch(html, /Team Up:/);
+  assert.doesNotMatch(html, /Phase:/);
+  assert.doesNotMatch(html, /Round:/);
 });
