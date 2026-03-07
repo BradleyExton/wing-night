@@ -91,6 +91,7 @@ test("renders setup flow-first layout without live setup status chips", () => {
   assert.match(html, /display\/setup\/flow-eat-wings\.png/);
   assert.match(html, /display\/setup\/flow-minigame-play\.png/);
   assert.match(html, /display\/setup\/flow-round-results\.png/);
+  assert.match(html, /display\/minigames\/trivia-illustration\.png/);
   assert.doesNotMatch(html, /Tonight at a Glance/);
   assert.doesNotMatch(html, /display\/setup\/hero\.png/);
   assert.doesNotMatch(html, /Pack:/);
@@ -99,6 +100,38 @@ test("renders setup flow-first layout without live setup status chips", () => {
   assert.doesNotMatch(html, /Open Slot/);
   assert.doesNotMatch(html, /Round Start/);
   assert.doesNotMatch(html, /Round Results/);
+});
+
+test("renders GEO card artwork when a setup round uses GEO", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.SETUP),
+        gameConfig: {
+          ...gameConfigFixture,
+          rounds: [
+            {
+              round: 1,
+              label: "Map Heat",
+              sauce: "Los Calientes",
+              pointsPerPlayer: 3,
+              minigame: "GEO"
+            }
+          ]
+        },
+        currentRoundConfig: {
+          round: 1,
+          label: "Map Heat",
+          sauce: "Los Calientes",
+          pointsPerPlayer: 3,
+          minigame: "GEO"
+        }
+      }}
+    />
+  );
+
+  assert.match(html, /display\/minigames\/geo-illustration\.png/);
+  assert.match(html, /GEO mini-game artwork/);
 });
 
 test("renders locked setup surface during INTRO", () => {

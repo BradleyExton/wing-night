@@ -10,7 +10,7 @@ import {
   setupStageCopy,
   type TeamTurnLoopStepId
 } from "./copy";
-import { resolveMinigameIconPath } from "../minigameAssets";
+import { resolveMinigameCardAssetPath } from "../minigameAssets";
 import * as styles from "./styles";
 type SetupStageBodyProps = {
   gameConfig: RoomState["gameConfig"];
@@ -150,8 +150,8 @@ export const SetupStageBody = ({
                 <div className={styles.roundIconSlot}>
                   <img
                     className={styles.roundIconMedia}
-                    src={resolveMinigameIconPath(round.minigame)}
-                    alt={setupStageCopy.minigameIconAlt(round.minigame)}
+                    src={resolveMinigameCardAssetPath(round.minigame)}
+                    alt={setupStageCopy.minigameArtworkAlt(round.minigame)}
                   />
                 </div>
                 <h4 className={styles.roundCardTitle}>
