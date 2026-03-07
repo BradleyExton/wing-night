@@ -79,7 +79,7 @@ export const sectionDivider =
 export const lineupGrid =
   "mt-[clamp(0.7rem,1.05vh,1.55rem)] grid gap-[clamp(0.5rem,0.8vw,1rem)] sm:grid-cols-2 xl:grid-cols-4";
 export const roundCard =
-  "relative grid grid-cols-[clamp(2.8rem,3.8vw,4.75rem)_minmax(0,1fr)] items-center gap-[clamp(0.5rem,0.9vw,1.2rem)] overflow-hidden rounded-[clamp(0.375rem,0.8vw,0.9rem)] border border-primary/25 bg-surfaceAlt/35 px-[clamp(0.5rem,1vw,1rem)] py-[clamp(0.5rem,0.95vh,1.1rem)]";
+  "relative grid grid-cols-[clamp(4.6rem,7vw,8rem)_minmax(0,1fr)] items-center gap-[clamp(0.5rem,0.9vw,1.2rem)] overflow-hidden rounded-[clamp(0.375rem,0.8vw,0.9rem)] border border-primary/25 bg-surfaceAlt/35 px-[clamp(0.5rem,1vw,1rem)] py-[clamp(0.5rem,0.95vh,1.1rem)]";
 export const roundCardPlaceholder = "border-primary/20 bg-surface/35";
 export const roundCardShine =
   "pointer-events-none absolute top-0 right-[-24px] h-full w-16 rotate-12 bg-gradient-to-l from-transparent to-primary/25 opacity-0 [animation:pulse_12s_ease-in-out_infinite] motion-reduce:[animation:none]";
@@ -91,9 +91,9 @@ export const roundCardShineTimingByIndex = [
 export const roundCardBadge =
   "absolute left-[clamp(0.3rem,0.45vw,0.75rem)] top-[clamp(0.3rem,0.45vw,0.75rem)] grid h-[clamp(1rem,1.3vw,1.7rem)] w-[clamp(1rem,1.3vw,1.7rem)] place-items-center rounded-full bg-primary/90 text-[clamp(0.55rem,0.65vw,0.9rem)] font-black leading-none text-text";
 export const roundIconSlot =
-  "row-span-2 flex h-[clamp(2.3rem,3.1vw,4.2rem)] items-center justify-center";
+  "row-span-2 flex h-[clamp(3.1rem,4.3vw,4.9rem)] w-[clamp(4.2rem,6.4vw,7.6rem)] items-center justify-center overflow-hidden rounded-[clamp(0.35rem,0.6vw,0.8rem)] border border-text/8 bg-bg/45";
 export const roundIconMedia =
-  "h-[clamp(1.9rem,2.6vw,3.4rem)] w-[clamp(1.9rem,2.6vw,3.4rem)] object-contain";
+  "h-full w-full object-contain";
 export const roundPlaceholderIcon =
   "h-[clamp(1.7rem,2.4vw,3.15rem)] w-[clamp(1.7rem,2.4vw,3.15rem)] text-primary/70";
 export const roundCardTitle =

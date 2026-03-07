@@ -8,6 +8,15 @@ const minigameIconPathByType: Record<MinigameType, string> = {
   DRAWING: `${DISPLAY_ASSET_ROOT}/drawing-icon.svg`
 };
 
+const minigameCardAssetPathByType: Partial<Record<MinigameType, string>> = {
+  TRIVIA: `${DISPLAY_ASSET_ROOT}/trivia-illustration.png`,
+  GEO: `${DISPLAY_ASSET_ROOT}/geo-illustration.png`
+};
+
 export const resolveMinigameIconPath = (minigameType: MinigameType): string => {
   return minigameIconPathByType[minigameType];
+};
+
+export const resolveMinigameCardAssetPath = (minigameType: MinigameType): string => {
+  return minigameCardAssetPathByType[minigameType] ?? minigameIconPathByType[minigameType];
 };

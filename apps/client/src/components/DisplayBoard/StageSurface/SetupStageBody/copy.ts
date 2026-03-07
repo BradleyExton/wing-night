@@ -37,7 +37,7 @@ export const setupStageCopy = {
     minigame: string,
     pointsPerPlayer: number
   ): string => `${sauce} | ${minigame} | ${pointsPerPlayer} pts/player`,
-  minigameIconAlt: (minigame: string): string => `${minigame} mini-game icon`,
+  minigameArtworkAlt: (minigame: string): string => `${minigame} mini-game artwork`,
   expectationTitle: "House Rules",
   expectations: [
     "One team is active at a time during each round.",
@@ -64,7 +64,7 @@ export const setupStageCopy = {
     minigame: string,
     pointsPerPlayer: number
   ) => string;
-  readonly minigameIconAlt: (minigame: string) => string;
+  readonly minigameArtworkAlt: (minigame: string) => string;
   readonly expectationTitle: string;
   readonly expectations: readonly string[];
 };
