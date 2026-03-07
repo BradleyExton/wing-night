@@ -176,6 +176,22 @@ Example:
 
 ------------------------------------------------------------------------
 
+## teams.json
+
+content/local/teams.json
+
+fallback: content/sample/teams.json
+
+Optional preset team shells for setup.
+
+{ "teams": \[ { "name": "Team A" }, { "name": "Team B" } \] }
+
+Preset teams start empty, still allow manual team creation in setup, and
+work with the existing player assignment and auto-assign controls. Local
+teams override sample teams when present.
+
+------------------------------------------------------------------------
+
 ## gameConfig.json
 
 Defines rounds, sauces, scoring, timers, and scheduled mini-games.

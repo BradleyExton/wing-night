@@ -142,7 +142,7 @@ export const hostCopy = {
   scoreOverrideNoTeamsLabel: "No teams available for score adjustments.",
   teamSetupTitle: "Team Setup",
   teamSetupDescription:
-    "Add teams and map players before moving the game forward.",
+    "Preset teams load here, and you can still add teams and map players before moving the game forward.",
   teamNameInputLabel: "Team Name",
   teamNameInputPlaceholder: "Enter a team name",
   createTeamButtonLabel: "Create Team",

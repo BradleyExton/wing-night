@@ -136,6 +136,24 @@ test("createTeam trims team names and ignores empty values", () => {
   assert.equal(snapshot.teams[0].totalScore, 0);
 });
 
+test("createTeam appends after preset team shells", () => {
+  resetRoomState();
+  setRoomStateTeams([
+    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
+  ]);
+
+  createTeam("Late Add Team");
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.deepEqual(snapshot.teams, [
+    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 },
+    { id: "team-3", name: "Late Add Team", playerIds: [], totalScore: 0 }
+  ]);
+});
+
 test("addPlayer trims names and allocates the next player id", () => {
   resetRoomState();
 
@@ -230,6 +248,39 @@ test("autoAssignRemainingPlayers balances only unassigned players across teams",
 
   assert.deepEqual(snapshot.teams[0]?.playerIds, ["player-1", "player-3", "player-5"]);
   assert.deepEqual(snapshot.teams[1]?.playerIds, ["player-2", "player-4"]);
+});
+
+test("assignment setup helpers work with preset team shells", () => {
+  resetRoomState();
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" },
+    { id: "player-3", name: "Player Three" }
+  ]);
+  setRoomStateTeams([
+    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
+  ]);
+
+  assignPlayerToTeam("player-1", "team-1");
+  autoAssignRemainingPlayers();
+
+  const snapshot = getRoomStateSnapshot();
+
+  assert.deepEqual(snapshot.teams, [
+    {
+      id: "team-1",
+      name: "Preset Team One",
+      playerIds: ["player-1", "player-3"],
+      totalScore: 0
+    },
+    {
+      id: "team-2",
+      name: "Preset Team Two",
+      playerIds: ["player-2"],
+      totalScore: 0
+    }
+  ]);
 });
 
 test("autoAssignRemainingPlayers ignores updates outside setup", () => {

@@ -1,11 +1,10 @@
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import {
   isTeamsContentFile,
   type Team,
   type TeamsContentEntry
 } from "@wingnight/shared";
 
+import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 import {
   parseContentJson,
   resolveDefaultContentRootDir
@@ -43,16 +42,12 @@ const buildTeam = (entry: TeamsContentEntry, index: number): Team => {
 
 export const loadTeams = (options: LoadTeamsOptions = {}): Team[] => {
   const contentRootDir = options.contentRootDir ?? defaultContentRootDir;
-  const localTeamsFilePath = resolve(contentRootDir, "local", "teams.json");
-
-  if (!existsSync(localTeamsFilePath)) {
-    return [];
-  }
-
-  const entries = parseTeamsEntries(
-    readFileSync(localTeamsFilePath, "utf8"),
-    localTeamsFilePath
-  );
+  const entries = loadContentFileWithFallback({
+    contentRootDir,
+    contentFileName: "teams.json",
+    contentLabel: "teams",
+    parseFileContent: parseTeamsEntries
+  });
 
   return entries.map((entry, index) => buildTeam(entry, index));
 };

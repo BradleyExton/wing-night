@@ -32,7 +32,7 @@ test.after(() => {
   }
 });
 
-test("loads local teams content before sample fallback", () => {
+test("loads local preset teams with generated ids and empty rosters", () => {
   const contentRoot = createContentRoot();
 
   writeContentFile(
@@ -42,6 +42,17 @@ test("loads local teams content before sample fallback", () => {
       teams: [{ name: "Local Team A" }, { name: "Local Team B" }]
     })
   );
+  const teams = loadTeams({ contentRootDir: contentRoot });
+
+  assert.deepEqual(teams, [
+    { id: "team-1", name: "Local Team A", playerIds: [], totalScore: 0 },
+    { id: "team-2", name: "Local Team B", playerIds: [], totalScore: 0 }
+  ]);
+});
+
+test("falls back to sample teams when local teams content is missing", () => {
+  const contentRoot = createContentRoot();
+
   writeContentFile(
     contentRoot,
     "sample/teams.json",
@@ -53,28 +64,11 @@ test("loads local teams content before sample fallback", () => {
   const teams = loadTeams({ contentRootDir: contentRoot });
 
   assert.deepEqual(teams, [
-    { id: "team-1", name: "Local Team A", playerIds: [], totalScore: 0 },
-    { id: "team-2", name: "Local Team B", playerIds: [], totalScore: 0 }
+    { id: "team-1", name: "Sample Team", playerIds: [], totalScore: 0 }
   ]);
 });
 
-test("returns no preset teams when local teams content is missing", () => {
-  const contentRoot = createContentRoot();
-
-  writeContentFile(
-    contentRoot,
-    "sample/teams.json",
-    JSON.stringify({
-      teams: [{ name: "Sample Team" }]
-    })
-  );
-
-  const teams = loadTeams({ contentRootDir: contentRoot });
-
-  assert.deepEqual(teams, []);
-});
-
-test("throws when local teams content exists but is invalid", () => {
+test("throws when local preset teams content exists but is invalid", () => {
   const contentRoot = createContentRoot();
 
   writeContentFile(
@@ -84,14 +78,6 @@ test("throws when local teams content exists but is invalid", () => {
       teams: [{ label: "Missing Name" }]
     })
   );
-  writeContentFile(
-    contentRoot,
-    "sample/teams.json",
-    JSON.stringify({
-      teams: [{ name: "Valid Sample Team" }]
-    })
-  );
-
   assert.throws(
     () => {
       loadTeams({ contentRootDir: contentRoot });
@@ -113,8 +99,13 @@ test("throws parse error when local teams content file is invalid JSON", () => {
   );
 });
 
-test("returns no preset teams when both local and sample teams content files are missing", () => {
+test("throws when both local and sample teams content files are missing", () => {
   const contentRoot = createContentRoot();
 
-  assert.deepEqual(loadTeams({ contentRootDir: contentRoot }), []);
+  assert.throws(
+    () => {
+      loadTeams({ contentRootDir: contentRoot });
+    },
+    /Missing teams content file/
+  );
 });

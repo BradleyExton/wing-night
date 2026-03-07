@@ -1,8 +1,8 @@
 {
   "teams": [
-    { "name": "Team A" },
-    { "name": "Team B" },
-    { "name": "Team C" },
-    { "name": "Team D" }
+    { "name": "Scorch Squad" },
+    { "name": "Blaze Brigade" },
+    { "name": "Inferno Crew" },
+    { "name": "Pepper Riot" }
   ]
 }
