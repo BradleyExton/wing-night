@@ -108,6 +108,18 @@ test("renders eating timer view from snapshot config", () => {
   assert.doesNotMatch(html, /Round:/);
 });
 
+test("renders a full-screen locked overlay during INTRO", () => {
+  const html = renderToStaticMarkup(
+    <DisplayBoard roomState={buildSnapshot(Phase.INTRO)} />
+  );
+
+  assert.match(html, /Game Locked In/);
+  assert.match(html, /Host is ready to launch the round\./);
+  assert.match(html, /fixed inset-0/);
+  assert.match(html, /Mini-Game Intro/);
+  assert.doesNotMatch(html, /Sauce is locked\. Mini-game is up next\./);
+});
+
 test("renders standings in descending score order", () => {
   const teams: Team[] = [
     {

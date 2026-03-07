@@ -18,6 +18,7 @@ import { resolveSortedStandings } from "../../../utils/resolveSortedStandings";
 
 type StageSurfaceProps = {
   roomState: DisplayRoomStateSnapshot | null;
+  showSetupPreview?: boolean;
 };
 
 const assertUnreachable = (value: never): never => {
@@ -25,9 +26,14 @@ const assertUnreachable = (value: never): never => {
 };
 
 export const StageSurface = ({
-  roomState
+  roomState,
+  showSetupPreview = false
 }: StageSurfaceProps): JSX.Element => {
   const stageViewModel = resolveStageViewModel(roomState);
+  const effectiveStageMode =
+    showSetupPreview || stageViewModel.stageMode === "setup_locked"
+      ? "setup"
+      : stageViewModel.stageMode;
   const sortedStandings = roomState ? resolveSortedStandings(roomState.teams) : [];
   const phaseLabel =
     stageViewModel.phase === null
@@ -60,9 +66,8 @@ export const StageSurface = ({
   const renderStageBody = (stageMode: StageRenderMode): JSX.Element => {
     switch (stageMode) {
       case "setup":
-        return <SetupStageBody gameConfig={stageViewModel.gameConfig} />;
       case "setup_locked":
-        return <SetupStageBody gameConfig={stageViewModel.gameConfig} isLocked />;
+        return <SetupStageBody gameConfig={stageViewModel.gameConfig} />;
       case "round_intro":
         return stageViewModel.currentRoundConfig !== null ? (
           <RoundIntroStageBody currentRoundConfig={stageViewModel.currentRoundConfig} />
@@ -148,23 +153,22 @@ export const StageSurface = ({
   };
 
   const surfaceClassName =
-    stageViewModel.stageMode === "setup" || stageViewModel.stageMode === "setup_locked"
+    effectiveStageMode === "setup"
       ? styles.setupCard
-      : stageViewModel.stageMode === "minigame_play"
+      : effectiveStageMode === "minigame_play"
         ? styles.card
         : styles.stageCanvas;
   const shouldRenderStageContextHeader =
-    stageViewModel.stageMode !== "setup" &&
-    stageViewModel.stageMode !== "setup_locked";
+    effectiveStageMode !== "setup";
   const shouldWrapStageBody = shouldRenderStageContextHeader;
 
   return (
     <article className={surfaceClassName}>
       {shouldRenderStageContextHeader && <StageContextHeader />}
       {shouldWrapStageBody ? (
-        <div className={styles.stageBody}>{renderStageBody(stageViewModel.stageMode)}</div>
+        <div className={styles.stageBody}>{renderStageBody(effectiveStageMode)}</div>
       ) : (
-        renderStageBody(stageViewModel.stageMode)
+        renderStageBody(effectiveStageMode)
       )}
     </article>
   );

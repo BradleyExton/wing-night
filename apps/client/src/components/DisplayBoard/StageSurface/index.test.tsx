@@ -157,10 +157,21 @@ test("renders locked setup surface during INTRO", () => {
   );
 
   assert.match(html, /Wing Night/);
-  assert.match(html, /Game Locked In/);
-  assert.match(html, /Host is about to start Round 1\./);
-  assert.doesNotMatch(html, /Intro in progress/);
-  assert.doesNotMatch(html, /Phase details will appear on the next update\./);
+  assert.match(html, /Mini-Game Intro/);
+  assert.doesNotMatch(html, /Game Locked In/);
+  assert.doesNotMatch(html, /Host is ready to launch the round\./);
+});
+
+test("keeps rendering the setup surface while round intro is locally counting down", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface roomState={buildSnapshot(Phase.ROUND_INTRO)} showSetupPreview />
+  );
+
+  assert.match(html, /Wing Night/);
+  assert.match(html, /Mini-Game Intro/);
+  assert.match(html, /Turn Results/);
+  assert.doesNotMatch(html, /Sauce is locked\. Mini-game is up next\./);
+  assert.doesNotMatch(html, /Round Intro/);
 });
 
 test("renders setup preview filler cards when setup preview slots are configured", () => {
