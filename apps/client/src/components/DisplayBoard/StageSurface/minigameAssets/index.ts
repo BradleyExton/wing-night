@@ -9,7 +9,7 @@ const minigameIconPathByType: Record<MinigameType, string> = {
 };
 
 const minigameCardAssetPathByType: Partial<Record<MinigameType, string>> = {
-  TRIVIA: `${DISPLAY_ASSET_ROOT}/trivia-illustration.png`,
+  TRIVIA: `${DISPLAY_ASSET_ROOT}/trivia-illustration.svg`,
   GEO: `${DISPLAY_ASSET_ROOT}/geo-illustration.png`
 };
 

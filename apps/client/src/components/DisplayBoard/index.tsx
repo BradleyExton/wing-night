@@ -1,8 +1,8 @@
-import type { DisplayRoomStateSnapshot } from "@wingnight/shared";
+import { Phase, type DisplayRoomStateSnapshot } from "@wingnight/shared";
 import { useMemo } from "react";
 
 import { ContentFatalState } from "../ContentFatalState";
-import { GameStartCountdownOverlay } from "./GameStartCountdownOverlay";
+import { GameLockedOverlay } from "./GameLockedOverlay";
 import { StageSurface } from "./StageSurface";
 import { StandingsSurface } from "./StandingsSurface";
 import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
@@ -29,6 +29,8 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
     phase,
     currentRound: roomState?.currentRound ?? null
   });
+  const shouldShowGameLockedOverlay =
+    phase === Phase.INTRO || gameStartCountdownRemainingSeconds !== null;
 
   if (fatalError !== null) {
     return <ContentFatalState fatalError={fatalError} />;
@@ -40,17 +42,18 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
       <section className={styles.main}>
         <div className={styles.content}>
           <div className={styles.stageShell}>
-            <StageSurface roomState={roomState} />
-            {gameStartCountdownRemainingSeconds !== null && (
-              <GameStartCountdownOverlay
-                remainingSeconds={gameStartCountdownRemainingSeconds}
-              />
-            )}
+            <StageSurface
+              roomState={roomState}
+              showSetupPreview={shouldShowGameLockedOverlay}
+            />
           </div>
         </div>
       </section>
 
       <StandingsSurface phase={phase} standings={standings} players={players} />
+      {shouldShowGameLockedOverlay && (
+        <GameLockedOverlay remainingSeconds={gameStartCountdownRemainingSeconds} />
+      )}
     </main>
   );
 };

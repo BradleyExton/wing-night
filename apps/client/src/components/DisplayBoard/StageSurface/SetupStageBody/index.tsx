@@ -14,7 +14,6 @@ import { resolveMinigameCardAssetPath } from "../minigameAssets";
 import * as styles from "./styles";
 type SetupStageBodyProps = {
   gameConfig: RoomState["gameConfig"];
-  isLocked?: boolean;
 };
 const DEFAULT_SETUP_PREVIEW_ROUND_SLOTS = 3;
 const resolveSetupPreviewRoundSlotCount = (gameConfig: RoomState["gameConfig"]): number => {
@@ -55,8 +54,7 @@ const resolveFlowLoopIllustrationMediaClassName = (stepId: TeamTurnLoopStepId): 
   return flowLoopIllustrationMediaClassNameByStepId[stepId];
 };
 export const SetupStageBody = ({
-  gameConfig,
-  isLocked = false
+  gameConfig
 }: SetupStageBodyProps): JSX.Element => {
   const shouldRenderRoundFillers = hasConfiguredSetupPreviewRoundSlots(gameConfig);
   const previewRoundSlotCount = resolveSetupPreviewRoundSlotCount(gameConfig);
@@ -76,14 +74,6 @@ export const SetupStageBody = ({
         />
         <h2 className={styles.setupTitle}>{setupStageCopy.brandLabel}</h2>
       </header>
-      {isLocked && (
-        <div className={styles.lockedStatusRow}>
-          <p className={styles.lockedStatusLabel}>{setupStageCopy.lockedStatusLabel}</p>
-          <p className={styles.lockedStatusDescription}>
-            {setupStageCopy.lockedStatusDescription}
-          </p>
-        </div>
-      )}
       <div className={styles.contentGrid}>
         <section className={styles.flowBand}>
           <div className={styles.flowLayout}>
@@ -146,10 +136,9 @@ export const SetupStageBody = ({
                   }`}
                   aria-hidden
                 />
-                <span className={styles.roundCardBadge}>{round.round}</span>
-                <div className={styles.roundIconSlot}>
+                <div className={styles.roundArtworkShell}>
                   <img
-                    className={styles.roundIconMedia}
+                    className={styles.roundArtwork}
                     src={resolveMinigameCardAssetPath(round.minigame)}
                     alt={setupStageCopy.minigameArtworkAlt(round.minigame)}
                   />
@@ -181,8 +170,9 @@ export const SetupStageBody = ({
                     className={`${styles.roundCardShine} ${shineTiming}`}
                     aria-hidden
                   />
-                  <span className={styles.roundCardBadge}>{previewRoundNumber}</span>
-                  <div className={styles.roundIconSlot}>
+                  <div
+                    className={`${styles.roundArtworkShell} ${styles.roundArtworkShellPlaceholder}`}
+                  >
                     <Flame className={styles.roundPlaceholderIcon} aria-hidden />
                   </div>
                   <h4 className={styles.roundCardTitle}>

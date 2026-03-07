@@ -6,12 +6,6 @@ export const brandMark =
   "h-[clamp(1.7rem,1.9vw,3rem)] w-[clamp(1.7rem,1.9vw,3rem)] rounded-md bg-bg/70 p-1 ring-1 ring-primary/40";
 export const setupTitle =
   "m-0 text-[clamp(2.1rem,2.1vw,3.5rem)] font-black leading-[1] tracking-[0.06em] text-primary/85";
-export const lockedStatusRow =
-  "relative z-10 mx-4 mt-1 flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-primary/12 px-4 py-2 md:mx-8 md:px-6 2xl:mx-12";
-export const lockedStatusLabel =
-  "m-0 text-[clamp(0.75rem,0.72vw,1.15rem)] font-black uppercase tracking-[0.12em] text-primary";
-export const lockedStatusDescription =
-  "m-0 text-[clamp(0.72rem,0.66vw,1.05rem)] font-semibold uppercase tracking-[0.08em] text-text/88";
 export const titleAccentLine =
   "h-px w-[clamp(2rem,4vw,5rem)] flex-1 bg-gradient-to-r from-transparent via-primary/45 to-transparent [animation:pulse_8.5s_ease-in-out_infinite] [animation-delay:500ms] motion-reduce:[animation:none]";
 export const titleAccentIcon =
@@ -79,7 +73,7 @@ export const sectionDivider =
 export const lineupGrid =
   "mt-[clamp(0.7rem,1.05vh,1.55rem)] grid gap-[clamp(0.5rem,0.8vw,1rem)] sm:grid-cols-2 xl:grid-cols-4";
 export const roundCard =
-  "relative grid grid-cols-[clamp(4.6rem,7vw,8rem)_minmax(0,1fr)] items-center gap-[clamp(0.5rem,0.9vw,1.2rem)] overflow-hidden rounded-[clamp(0.375rem,0.8vw,0.9rem)] border border-primary/25 bg-surfaceAlt/35 px-[clamp(0.5rem,1vw,1rem)] py-[clamp(0.5rem,0.95vh,1.1rem)]";
+  "relative grid grid-cols-[clamp(5rem,7.8vw,9rem)_minmax(0,1fr)] items-center gap-[clamp(0.5rem,0.95vw,1.25rem)] overflow-hidden rounded-[clamp(0.375rem,0.8vw,0.9rem)] border border-primary/25 bg-surfaceAlt/35 px-[clamp(0.5rem,1vw,1rem)] py-[clamp(0.5rem,0.95vh,1.1rem)]";
 export const roundCardPlaceholder = "border-primary/20 bg-surface/35";
 export const roundCardShine =
   "pointer-events-none absolute top-0 right-[-24px] h-full w-16 rotate-12 bg-gradient-to-l from-transparent to-primary/25 opacity-0 [animation:pulse_12s_ease-in-out_infinite] motion-reduce:[animation:none]";
@@ -88,14 +82,14 @@ export const roundCardShineTimingByIndex = [
   "[animation-delay:2200ms] [animation-duration:13.5s]",
   "[animation-delay:4100ms] [animation-duration:12.8s]"
 ] as const;
-export const roundCardBadge =
-  "absolute left-[clamp(0.3rem,0.45vw,0.75rem)] top-[clamp(0.3rem,0.45vw,0.75rem)] grid h-[clamp(1rem,1.3vw,1.7rem)] w-[clamp(1rem,1.3vw,1.7rem)] place-items-center rounded-full bg-primary/90 text-[clamp(0.55rem,0.65vw,0.9rem)] font-black leading-none text-text";
-export const roundIconSlot =
-  "row-span-2 flex h-[clamp(3.1rem,4.3vw,4.9rem)] w-[clamp(4.2rem,6.4vw,7.6rem)] items-center justify-center overflow-hidden rounded-[clamp(0.35rem,0.6vw,0.8rem)] border border-text/8 bg-bg/45";
-export const roundIconMedia =
-  "h-full w-full object-contain";
+export const roundArtworkShell =
+  "row-span-2 flex h-[clamp(3.5rem,4.9vw,5.9rem)] w-[clamp(5rem,7.4vw,8.8rem)] items-center justify-center overflow-visible";
+export const roundArtworkShellPlaceholder =
+  "rounded-[clamp(0.5rem,0.7vw,0.9rem)] bg-primary/6";
+export const roundArtwork =
+  "h-full w-full object-contain drop-shadow-[0_12px_26px_rgba(15,23,42,0.18)]";
 export const roundPlaceholderIcon =
-  "h-[clamp(1.7rem,2.4vw,3.15rem)] w-[clamp(1.7rem,2.4vw,3.15rem)] text-primary/70";
+  "h-[clamp(1.9rem,2.6vw,3.3rem)] w-[clamp(1.9rem,2.6vw,3.3rem)] text-primary/70";
 export const roundCardTitle =
   "m-0 pr-[clamp(0.4rem,0.7vw,1rem)] text-[clamp(0.95rem,0.9vw,1.85rem)] font-bold leading-tight text-text";
 export const roundMetaLine =

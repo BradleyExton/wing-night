@@ -4,6 +4,11 @@ import {
   type MinigameType
 } from "@wingnight/shared";
 
+import {
+  resolveMinigameBriefingContent,
+  type MinigameBriefingContent
+} from "../../../../copy/minigameBriefings";
+
 export type StageRenderMode =
   | "setup"
   | "setup_locked"
@@ -25,7 +30,9 @@ type StageViewModel = {
   teamCount: number;
   teamNames: string[];
   activeTeamName: string | null;
+  activeTeamPlayerNames: string[];
   shouldRenderTeamTurnContext: boolean;
+  minigameBriefingContent: MinigameBriefingContent | null;
   minigameDisplayView: DisplayRoomStateSnapshot["minigameDisplayView"];
   eatingTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
   fallbackEatingSeconds: number | null;
@@ -85,7 +92,19 @@ export const resolveStageViewModel = (
       ? (roomState?.teams.find((team) => team.id === activeTurnTeamId)?.name ?? null)
       : null;
 
+  const activeTeamId = activeRoundTeamId ?? activeTurnTeamId;
   const activeTeamName = activeRoundTeamName ?? activeTurnTeamName;
+  const activeTeam =
+    activeTeamId !== null
+      ? (roomState?.teams.find((team) => team.id === activeTeamId) ?? null)
+      : null;
+  const playerNameByPlayerId = new Map(
+    (roomState?.players ?? []).map((player) => [player.id, player.name] as const)
+  );
+  const activeTeamPlayerNames =
+    activeTeam?.playerIds
+      .map((playerId) => playerNameByPlayerId.get(playerId) ?? null)
+      .filter((playerName): playerName is string => playerName !== null) ?? [];
   const shouldRenderTeamTurnContext =
     activeTeamName !== null &&
     (stageMode === "eating" ||
@@ -94,6 +113,7 @@ export const resolveStageViewModel = (
       stageMode === "turn_results");
 
   const minigameDisplayView = roomState?.minigameDisplayView ?? null;
+  const minigameBriefingContent = resolveMinigameBriefingContent(minigameType, gameConfig);
 
   const eatingTimerSnapshot =
     stageMode === "eating" && roomState?.timer?.phase === Phase.EATING
@@ -109,7 +129,9 @@ export const resolveStageViewModel = (
     teamCount: roomState?.teams.length ?? 0,
     teamNames: roomState?.teams.map((team) => team.name) ?? [],
     activeTeamName,
+    activeTeamPlayerNames,
     shouldRenderTeamTurnContext,
+    minigameBriefingContent,
     minigameDisplayView,
     eatingTimerSnapshot,
     fallbackEatingSeconds: roomState?.gameConfig?.timers.eatingSeconds ?? null,

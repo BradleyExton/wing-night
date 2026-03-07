@@ -13,8 +13,6 @@ export const setupStageCopy = {
   brandLabel: commonCopy.brandLabel,
   brandMarkPath: commonCopy.brandMarkPath,
   brandMarkAlt: commonCopy.brandMarkAlt,
-  lockedStatusLabel: "Game Locked In",
-  lockedStatusDescription: "Host is about to start Round 1.",
   teamTurnLoopTitle: "Round Flow",
   teamTurnLoopSubtitle:
     "Each selected hot sauce is a round. In each round, every team runs the full cycle of Mini-Game Intro → Eat Wings → Mini-Game Play → Turn Results, then scores are finalized for the round.",
@@ -48,8 +46,6 @@ export const setupStageCopy = {
   readonly brandLabel: string;
   readonly brandMarkPath: string;
   readonly brandMarkAlt: string;
-  readonly lockedStatusLabel: string;
-  readonly lockedStatusDescription: string;
   readonly teamTurnLoopTitle: string;
   readonly teamTurnLoopSubtitle: string;
   readonly teamTurnLoopSteps: readonly { id: TeamTurnLoopStepId; label: string }[];
