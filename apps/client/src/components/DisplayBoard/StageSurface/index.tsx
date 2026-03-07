@@ -98,7 +98,6 @@ export const StageSurface = ({
             phaseLabel={phaseLabel}
             briefingContent={stageViewModel.minigameBriefingContent}
             sauceName={stageViewModel.currentRoundConfig?.sauce ?? null}
-            activeTeamId={stageViewModel.activeTeamId}
             activeTeamName={stageViewModel.activeTeamName}
             activeTeamPlayerNames={stageViewModel.activeTeamPlayerNames}
           />

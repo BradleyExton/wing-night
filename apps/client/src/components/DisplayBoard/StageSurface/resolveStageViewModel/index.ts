@@ -29,7 +29,6 @@ type StageViewModel = {
   minigameType: MinigameType | null;
   teamCount: number;
   teamNames: string[];
-  activeTeamId: string | null;
   activeTeamName: string | null;
   activeTeamPlayerNames: string[];
   shouldRenderTeamTurnContext: boolean;
@@ -129,7 +128,6 @@ export const resolveStageViewModel = (
     minigameType,
     teamCount: roomState?.teams.length ?? 0,
     teamNames: roomState?.teams.map((team) => team.name) ?? [],
-    activeTeamId,
     activeTeamName,
     activeTeamPlayerNames,
     shouldRenderTeamTurnContext,

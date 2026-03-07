@@ -1,7 +1,7 @@
-import type { Phase } from "@wingnight/shared";
+import { Phase } from "@wingnight/shared";
 
 export const formatPhaseLabel = (phase: Phase): string => {
-  if (phase === "MINIGAME_INTRO") {
+  if (phase === Phase.MINIGAME_INTRO) {
     return "Team Round Intro";
   }
 

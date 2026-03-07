@@ -1,6 +1,5 @@
 import type { MinigameBriefingContent } from "../../../../copy/minigameBriefings";
 import { Flame } from "lucide-react";
-import { resolveTeamColorVariant } from "../../../../utils/resolveTeamColorVariant";
 
 import { minigameIntroStageCopy } from "./copy";
 import * as styles from "./styles";
@@ -9,7 +8,6 @@ type MinigameIntroStageBodyProps = {
   phaseLabel: string;
   briefingContent: MinigameBriefingContent | null;
   sauceName: string | null;
-  activeTeamId: string | null;
   activeTeamName: string | null;
   activeTeamPlayerNames: string[];
 };
@@ -18,7 +16,6 @@ export const MinigameIntroStageBody = ({
   phaseLabel,
   briefingContent,
   sauceName,
-  activeTeamId,
   activeTeamName,
   activeTeamPlayerNames
 }: MinigameIntroStageBodyProps): JSX.Element => {
@@ -26,16 +23,6 @@ export const MinigameIntroStageBody = ({
   const resolvedBriefingContent =
     briefingContent ?? minigameIntroStageCopy.fallbackBriefingContent;
   const resolvedSauceName = sauceName ?? minigameIntroStageCopy.fallbackSauceLabel;
-  const teamColorVariant =
-    activeTeamId === null ? null : resolveTeamColorVariant(activeTeamId);
-  const teamHeroClassName =
-    teamColorVariant === null
-      ? styles.teamHero
-      : `${styles.teamHero} ${teamColorVariant.borderAccentClassName}`;
-  const arrivalSignalClassName =
-    teamColorVariant === null
-      ? styles.arrivalSignalDot
-      : `${styles.arrivalSignalDot} ${teamColorVariant.dotAccentClassName}`;
 
   return (
     <div className={styles.root}>
@@ -46,14 +33,14 @@ export const MinigameIntroStageBody = ({
           <div className={styles.titleRow}>
             <span className={styles.titleLine} aria-hidden />
             <div className={styles.arrivalSignal}>
-              <span className={arrivalSignalClassName} aria-hidden />
+              <span className={styles.arrivalSignalDot} aria-hidden />
               <p className={styles.arrivalSignalLabel}>
                 {minigameIntroStageCopy.calloutLabel}
               </p>
             </div>
             <span className={styles.titleLine} aria-hidden />
           </div>
-          <div className={teamHeroClassName}>
+          <div className={styles.teamHero}>
             <p className={styles.phaseLabel}>{phaseLabel}</p>
             <h2 className={styles.teamName}>{minigameIntroStageCopy.title(resolvedTeamName)}</h2>
             <p className={styles.arrivalTitle}>{minigameIntroStageCopy.arrivalTitle}</p>
@@ -76,8 +63,8 @@ export const MinigameIntroStageBody = ({
             <p className={styles.rosterTitle}>{minigameIntroStageCopy.rosterLabel}</p>
             {activeTeamPlayerNames.length > 0 ? (
               <div className={styles.rosterList}>
-                {activeTeamPlayerNames.map((playerName) => (
-                  <span key={playerName} className={styles.rosterPill}>
+                {activeTeamPlayerNames.map((playerName, index) => (
+                  <span key={`${playerName}-${index}`} className={styles.rosterPill}>
                     {playerName}
                   </span>
                 ))}
@@ -110,7 +97,7 @@ export const MinigameIntroStageBody = ({
               </div>
               <ul className={styles.rulesList}>
                 {resolvedBriefingContent.steps.map((item, index) => (
-                  <li key={item} className={styles.rulesItem}>
+                  <li key={`${item}-${index}`} className={styles.rulesItem}>
                     <span className={styles.ruleStep}>{index + 1}</span>
                     <span>{item}</span>
                   </li>

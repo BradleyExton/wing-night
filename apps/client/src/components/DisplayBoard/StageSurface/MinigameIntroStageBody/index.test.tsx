@@ -23,7 +23,6 @@ test("renders team-first intro surface with roster and briefing details", () => 
       phaseLabel="Team Round Intro"
       briefingContent={briefingContentFixture}
       sauceName="Classic Buffalo"
-      activeTeamId="team-heat"
       activeTeamName="Team Heat"
       activeTeamPlayerNames={["Alex", "Morgan", "Chris"]}
     />
@@ -53,7 +52,6 @@ test("renders fallback team and briefing content when intro data is unavailable"
       phaseLabel="Team Round Intro"
       briefingContent={null}
       sauceName={null}
-      activeTeamId={null}
       activeTeamName={null}
       activeTeamPlayerNames={[]}
     />
