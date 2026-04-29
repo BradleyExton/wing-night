@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MINIGAME_INTRO — 01 Team Spotlight</title>
+    <style>
+      :root {
+        --bg: #0d0d0d; --text: #fff; --muted: #5e5e5e; --muted2: #a3a3a3;
+        --primary: #f97316; --heat: #ef4444; --gold: #fbbf24;
+        --teamA: #f97316; --teamB: #06b6d4; --teamC: #84cc16; --teamD: #f43f5e;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .stage { height: 100dvh; display: grid; grid-template-rows: 1fr auto; }
+      .body {
+        position: relative;
+        display: grid; grid-template-rows: auto 1fr;
+        padding: clamp(2rem, 4vw, 4rem);
+        overflow: hidden;
+      }
+      .body::before {
+        content: ""; position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse at 50% 50%, rgba(249, 115, 22, 0.15) 0%, transparent 50%);
+        pointer-events: none;
+      }
+      .meta-row {
+        position: relative;
+        display: flex; justify-content: space-between; align-items: flex-start;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.15rem);
+        color: var(--muted2); font-weight: 600;
+      }
+      .chip {
+        display: inline-flex; align-items: center; gap: 0.55em;
+        padding: 0.5em 0.9em;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+      }
+      .chip .label { color: var(--muted); }
+      .chip .value { color: var(--text); }
+
+      .center {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: clamp(1rem, 2.5vw, 3rem);
+        text-align: center;
+      }
+      .eyebrow {
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(1rem, 1.4vw, 1.6rem);
+        font-weight: 700; color: var(--muted2);
+      }
+      .team-name {
+        margin: 0;
+        font-size: clamp(4rem, 12vw, 14rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 0.9;
+        color: var(--primary);
+        text-shadow: 0 0 80px rgba(249, 115, 22, 0.45);
+      }
+      .underline {
+        height: 6px;
+        width: clamp(120px, 14vw, 240px);
+        background: var(--primary);
+        border-radius: 999px;
+      }
+      .roster {
+        display: flex; flex-wrap: wrap; justify-content: center;
+        gap: clamp(0.6rem, 1vw, 1rem);
+        max-width: 60vw;
+      }
+      .roster .pill {
+        padding: 0.55em 1.1em;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        font-size: clamp(1rem, 1.3vw, 1.5rem);
+        font-weight: 700;
+        color: var(--text);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      footer.splits {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 2px; background: rgba(255,255,255,0.04);
+        border-top: 1px solid rgba(255,255,255,0.06);
+      }
+      .col {
+        --tint: var(--teamA);
+        position: relative;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 14%, transparent) 0%, color-mix(in srgb, var(--tint) 4%, transparent) 100%), var(--bg);
+        padding: clamp(0.85rem, 1.3vh, 1.5rem) clamp(1rem, 1.6vw, 2.25rem);
+        display: flex; align-items: center; justify-content: space-between;
+        gap: clamp(0.85rem, 1.4vw, 2rem); overflow: hidden;
+      }
+      .col.t-a { --tint: var(--teamA); }
+      .col.t-b { --tint: var(--teamB); }
+      .col.t-c { --tint: var(--teamC); }
+      .col.t-d { --tint: var(--teamD); }
+      .col.lead {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 30%, transparent) 0%, color-mix(in srgb, var(--tint) 10%, transparent) 100%), var(--bg);
+      }
+      .col::before {
+        content: ""; position: absolute; inset: 0 auto 0 0;
+        width: 3px; background: var(--tint); opacity: 0.55;
+      }
+      .col.lead::before { opacity: 1; }
+      .left { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+      .nm {
+        font-size: clamp(0.95rem, 1.15vw, 1.4rem);
+        font-weight: 800; color: var(--text);
+        text-transform: uppercase; letter-spacing: 0.06em;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .mt {
+        display: inline-flex; align-items: center; gap: 0.4em;
+        font-size: clamp(0.7rem, 0.85vw, 0.95rem);
+        text-transform: uppercase; letter-spacing: 0.18em;
+        color: var(--muted2); font-weight: 600;
+      }
+      .col.lead .mt { color: var(--gold); }
+      .pts {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(1.8rem, 2.6vw, 3.2rem);
+        font-weight: 900; color: var(--text);
+        font-variant-numeric: tabular-nums; letter-spacing: -0.04em;
+      }
+      .col.lead .pts { color: var(--gold); }
+      .flame { width: 1.1em; height: 1.1em;
+        filter: drop-shadow(0 0 6px rgba(251,191,36,0.5));
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="body">
+        <div class="meta-row">
+          <span class="chip"><span class="label">round</span><span class="value">01 · Warm Up</span></span>
+          <span class="chip"><span class="label">minigame</span><span class="value">Trivia</span></span>
+        </div>
+        <div class="center">
+          <p class="eyebrow">You're up now</p>
+          <p class="team-name">Team Heat</p>
+          <span class="underline"></span>
+          <div class="roster">
+            <span class="pill">Brad</span>
+            <span class="pill">Mike</span>
+            <span class="pill">Sarah</span>
+            <span class="pill">Jess</span>
+          </div>
+        </div>
+      </div>
+      <footer class="splits">
+        <div class="col t-a lead">
+          <div class="left">
+            <span class="mt">Leading <svg class="flame" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 0.67s.74 1.94.74 3.5c0 1.5-.98 2.71-2.48 2.71-1.51 0-2.65-1.21-2.65-2.71l.02-.27C7.66 5.85 6 8.78 6 12c0 4.42 3.58 8 8 8s8-3.58 8-8c0-5.39-2.59-10.21-6.5-13.33zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg></span>
+            <span class="nm">Team Heat</span>
+          </div>
+          <span class="pts">14</span>
+        </div>
+        <div class="col t-b"><div class="left"><span class="mt">2nd</span><span class="nm">Cool Cats</span></div><span class="pts">11</span></div>
+        <div class="col t-c"><div class="left"><span class="mt">3rd</span><span class="nm">Spice Lords</span></div><span class="pts">9</span></div>
+        <div class="col t-d"><div class="left"><span class="mt">4th</span><span class="nm">Mild Sauce</span></div><span class="pts">6</span></div>
+      </footer>
+    </div>
+  </body>
+</html>

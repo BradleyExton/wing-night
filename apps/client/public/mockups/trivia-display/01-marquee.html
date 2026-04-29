@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trivia Display — 01 Broadcast Studio</title>
+    <style>
+      :root {
+        --bg: #121212;
+        --surface: #1c1c1c;
+        --surface-alt: #242424;
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --heat: #ef4444;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+        --teamB: #06b6d4;
+        --teamC: #84cc16;
+        --teamD: #f43f5e;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100dvh;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse at top, #1f1207 0%, var(--bg) 55%, #0a0a0a 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      .stage {
+        height: 100dvh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        padding: clamp(1.5rem, 2.5vw, 3rem);
+        gap: clamp(1rem, 2vw, 2rem);
+      }
+      header.bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+      }
+      .round-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: clamp(1rem, 1.4vw, 1.5rem);
+        font-weight: 700;
+      }
+      .round-chip .num {
+        color: var(--primary);
+        font-size: clamp(1.4rem, 2.2vw, 2.4rem);
+        letter-spacing: 0;
+      }
+      .round-chip .sauce {
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .live {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+        font-weight: 700;
+        color: var(--heat);
+      }
+      .live .dot {
+        width: 0.7em;
+        height: 0.7em;
+        border-radius: 50%;
+        background: var(--heat);
+        box-shadow: 0 0 12px var(--heat);
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.55; transform: scale(0.9); }
+      }
+      main.main {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: clamp(1.5rem, 2.5vw, 3rem);
+        min-height: 0;
+      }
+      .question-card {
+        position: relative;
+        background:
+          linear-gradient(180deg, var(--surface-alt) 0%, var(--surface) 100%);
+        border: 1px solid #2c2c2c;
+        border-radius: 18px;
+        padding: clamp(2rem, 3vw, 3.5rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: clamp(1.5rem, 2vw, 2.5rem);
+        overflow: hidden;
+      }
+      .question-card::before, .question-card::after {
+        content: "";
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border: 3px solid var(--gold);
+        opacity: 0.85;
+      }
+      .question-card::before {
+        top: 18px;
+        left: 18px;
+        border-right: none;
+        border-bottom: none;
+      }
+      .question-card::after {
+        bottom: 18px;
+        right: 18px;
+        border-left: none;
+        border-top: none;
+      }
+      .q-label {
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        font-size: clamp(0.9rem, 1.2vw, 1.2rem);
+        color: var(--gold);
+        font-weight: 700;
+        margin: 0;
+      }
+      .q-text {
+        font-size: clamp(2.2rem, 3.8vw, 4.6rem);
+        font-weight: 800;
+        line-height: 1.1;
+        margin: 0;
+        text-wrap: balance;
+      }
+      .right-col {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: clamp(1rem, 1.5vw, 1.75rem);
+      }
+      .team-banner {
+        background: var(--surface);
+        border-left: 6px solid var(--teamA);
+        border-radius: 14px;
+        padding: clamp(1rem, 1.5vw, 1.5rem) clamp(1.25rem, 2vw, 2rem);
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      .team-banner .label {
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--muted);
+        font-size: clamp(0.75rem, 1vw, 1rem);
+      }
+      .team-banner .name {
+        font-size: clamp(1.6rem, 2.6vw, 3rem);
+        font-weight: 800;
+      }
+      .timer-box {
+        background: var(--surface);
+        border: 1px solid #2c2c2c;
+        border-radius: 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        position: relative;
+      }
+      .timer-box .timer-label {
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        color: var(--muted);
+        font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+      }
+      .timer-box .timer {
+        font-family: ui-monospace, "Menlo", "Consolas", monospace;
+        font-size: clamp(5rem, 11vw, 14rem);
+        font-weight: 800;
+        color: var(--primary);
+        line-height: 1;
+        letter-spacing: -0.04em;
+        font-variant-numeric: tabular-nums;
+      }
+      .timer-box.urgent .timer { color: var(--heat); animation: heatpulse 0.7s ease-in-out infinite; }
+      @keyframes heatpulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.04); }
+      }
+      footer.standings {
+        background: var(--surface);
+        border-radius: 14px;
+        padding: clamp(0.85rem, 1.2vw, 1.25rem) clamp(1.25rem, 2vw, 2rem);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: clamp(0.75rem, 1vw, 1.25rem);
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+      }
+      .row .swatch {
+        width: 0.85em;
+        height: 0.85em;
+        border-radius: 3px;
+        flex-shrink: 0;
+      }
+      .row .nm {
+        font-size: clamp(1rem, 1.3vw, 1.4rem);
+        font-weight: 600;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .row .pts {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(1.1rem, 1.5vw, 1.65rem);
+        font-weight: 800;
+        color: var(--primary);
+        font-variant-numeric: tabular-nums;
+      }
+      .row.lead .nm { color: var(--gold); }
+      .row.lead .pts { color: var(--gold); }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="bar">
+        <div class="round-chip">
+          <span class="num">R1</span>
+          <span>Warm Up</span>
+          <span class="sauce">· Frank's</span>
+        </div>
+        <div class="live"><span class="dot"></span><span>Trivia · Live</span></div>
+      </header>
+      <main class="main">
+        <section class="question-card">
+          <p class="q-label">Question</p>
+          <p class="q-text">What compound gives chili peppers their heat?</p>
+        </section>
+        <div class="right-col">
+          <div class="team-banner">
+            <span class="label">On the Wings</span>
+            <span class="name">Team Heat</span>
+          </div>
+          <div class="timer-box" id="timerBox">
+            <span class="timer-label">Time</span>
+            <span class="timer" id="timer">28</span>
+          </div>
+        </div>
+      </main>
+      <footer class="standings">
+        <div class="row lead"><span class="swatch" style="background: var(--teamA)"></span><span class="nm">Team Heat</span><span class="pts">14</span></div>
+        <div class="row"><span class="swatch" style="background: var(--teamB)"></span><span class="nm">Cool Cats</span><span class="pts">11</span></div>
+        <div class="row"><span class="swatch" style="background: var(--teamC)"></span><span class="nm">Spice Lords</span><span class="pts">9</span></div>
+        <div class="row"><span class="swatch" style="background: var(--teamD)"></span><span class="nm">Mild Sauce</span><span class="pts">6</span></div>
+      </footer>
+    </div>
+    <script>
+      const t = document.getElementById('timer');
+      const box = document.getElementById('timerBox');
+      let n = 28;
+      setInterval(() => {
+        n = n > 0 ? n - 1 : 30;
+        t.textContent = n;
+        if (n <= 10) box.classList.add('urgent'); else box.classList.remove('urgent');
+      }, 1000);
+    </script>
+  </body>
+</html>

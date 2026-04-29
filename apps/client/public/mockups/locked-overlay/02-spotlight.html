@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GameLockedOverlay — 02 Countdown Spotlight</title>
+    <style>
+      :root {
+        --bg: #0a0606; --text: #fff; --muted: #6b6157; --muted2: #b3a89a;
+        --primary: #f97316; --heat: #ef4444; --gold: #fbbf24; --ember: #ffb35a;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+
+      .behind {
+        position: fixed; inset: 0; z-index: 0; opacity: 0.35;
+        background:
+          radial-gradient(ellipse 70% 60% at 50% 80%, rgba(249, 115, 22, 0.25) 0%, transparent 60%),
+          radial-gradient(ellipse 50% 40% at 50% 100%, rgba(239, 68, 68, 0.22) 0%, transparent 55%);
+      }
+
+      .overlay {
+        position: fixed; inset: 0; z-index: 30;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: rgba(10, 6, 6, 0.85);
+        backdrop-filter: blur(16px);
+        padding: clamp(1.5rem, 3vw, 3rem);
+        gap: clamp(1.5rem, 3vw, 2.5rem);
+      }
+
+      .eyebrow {
+        text-transform: uppercase; letter-spacing: 0.42em;
+        font-size: clamp(1rem, 1.4vw, 1.6rem);
+        font-weight: 800; color: var(--muted2);
+        display: inline-flex; align-items: center; gap: 0.7em;
+        opacity: 0;
+        animation: fade-in 600ms ease forwards;
+        animation-delay: 100ms;
+      }
+      .eyebrow .dot {
+        width: 0.7em; height: 0.7em; border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 12px var(--primary), 0 0 24px rgba(249, 115, 22, 0.6);
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(0.85); }
+      }
+
+      .countdown {
+        font-family: ui-monospace, "Menlo", "Consolas", monospace;
+        font-size: clamp(12rem, 36vw, 48rem);
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.08em;
+        line-height: 0.78;
+        color: var(--primary);
+        margin: 0;
+        text-shadow:
+          0 0 60px rgba(249, 115, 22, 0.55),
+          0 0 180px rgba(249, 115, 22, 0.30);
+        animation: tick 1s ease-out infinite;
+        opacity: 0;
+        animation-name: tick, fade-in;
+        animation-duration: 1s, 600ms;
+        animation-delay: 0s, 600ms;
+        animation-timing-function: ease-out, ease;
+        animation-iteration-count: infinite, 1;
+        animation-fill-mode: none, forwards;
+      }
+      @keyframes tick {
+        0%   { transform: scale(1); }
+        15%  { transform: scale(1.08); }
+        45%  { transform: scale(1); }
+        100% { transform: scale(1); }
+      }
+      @keyframes fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+
+      .footer-line {
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.95rem, 1.3vw, 1.5rem);
+        font-weight: 800; color: var(--muted);
+        opacity: 0;
+        animation: fade-in 600ms ease forwards;
+        animation-delay: 1300ms;
+      }
+      .footer-line .accent { color: var(--text); margin-left: 0.4em; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .eyebrow, .footer-line { animation: none; opacity: 1; }
+        .countdown { animation: none; opacity: 1; transform: none; }
+        .eyebrow .dot { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="behind"></div>
+    <div class="overlay">
+      <span class="eyebrow"><span class="dot"></span>Round 1 · Stand by</span>
+      <p class="countdown" id="num">3</p>
+      <p class="footer-line">Starting in <span class="accent" id="word">three</span></p>
+    </div>
+    <script>
+      const num = document.getElementById('num');
+      const word = document.getElementById('word');
+      const words = { 1: 'one', 2: 'two', 3: 'three' };
+      let n = 3;
+      setInterval(() => {
+        n = n > 1 ? n - 1 : 3;
+        num.textContent = n;
+        word.textContent = words[n];
+      }, 1000);
+    </script>
+  </body>
+</html>

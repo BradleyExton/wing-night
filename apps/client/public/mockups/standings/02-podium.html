@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Standings — 02 Podium Cards</title>
+    <style>
+      :root {
+        --bg: #0d0d0d;
+        --surface: #1c1c1c;
+        --surface-alt: #242424;
+        --text: #ffffff;
+        --muted: #5e5e5e;
+        --muted2: #a3a3a3;
+        --primary: #f97316;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+        --teamB: #06b6d4;
+        --teamC: #84cc16;
+        --teamD: #f43f5e;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .stage { height: 100dvh; display: grid; grid-template-rows: 1fr auto; }
+      .spotlight {
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; gap: clamp(1.5rem, 3vw, 3rem);
+        text-align: center; padding: clamp(2rem, 4vw, 4rem);
+      }
+      .question {
+        font-size: clamp(2.8rem, 6.5vw, 8rem); font-weight: 900;
+        line-height: 1.05; letter-spacing: -0.02em; margin: 0;
+        max-width: 22ch; text-wrap: balance; opacity: 0.35;
+      }
+      .underline {
+        display: inline-block; height: 6px;
+        width: clamp(120px, 14vw, 240px); background: var(--primary);
+        border-radius: 999px; opacity: 0.35;
+      }
+      .active-team {
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(1rem, 1.4vw, 1.4rem); font-weight: 700;
+        opacity: 0.35;
+      }
+      .active-team .label { color: var(--muted2); font-weight: 500; margin-right: 0.7em; }
+
+      footer.podium {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding: clamp(0.85rem, 1.4vh, 1.5rem) clamp(1rem, 2.2vw, 3rem);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: clamp(0.6rem, 1vw, 1.25rem);
+      }
+      .card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: clamp(0.7rem, 1.2vw, 1.4rem);
+        padding: clamp(0.6rem, 0.9vw, 1rem) clamp(0.85rem, 1.3vw, 1.5rem);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+        border-left: 4px solid var(--surface-alt);
+      }
+      .card.t-a { border-left-color: var(--teamA); }
+      .card.t-b { border-left-color: var(--teamB); }
+      .card.t-c { border-left-color: var(--teamC); }
+      .card.t-d { border-left-color: var(--teamD); }
+      .card.lead {
+        background: linear-gradient(90deg, rgba(251, 191, 36, 0.07) 0%, transparent 60%);
+      }
+      .rank {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(1.1rem, 1.4vw, 1.7rem);
+        font-weight: 800;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        min-width: 1.5em;
+        text-align: center;
+      }
+      .card.lead .rank { color: var(--gold); }
+      .name {
+        font-size: clamp(1rem, 1.25vw, 1.55rem);
+        font-weight: 700;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.1;
+      }
+      .pts {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(1.4rem, 1.9vw, 2.4rem);
+        font-weight: 800;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .card.lead .pts { color: var(--gold); }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="spotlight">
+        <p class="question">What compound gives chili peppers their heat?</p>
+        <span class="underline"></span>
+        <p class="active-team"><span class="label">on the wings</span>Team Heat</p>
+      </div>
+      <footer class="podium">
+        <div class="card t-a lead">
+          <span class="rank">1</span>
+          <span class="name">Team Heat</span>
+          <span class="pts">14</span>
+        </div>
+        <div class="card t-b">
+          <span class="rank">2</span>
+          <span class="name">Cool Cats</span>
+          <span class="pts">11</span>
+        </div>
+        <div class="card t-c">
+          <span class="rank">3</span>
+          <span class="name">Spice Lords</span>
+          <span class="pts">9</span>
+        </div>
+        <div class="card t-d">
+          <span class="rank">4</span>
+          <span class="name">Mild Sauce</span>
+          <span class="pts">6</span>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

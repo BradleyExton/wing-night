@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trivia Display — 02 Question Spotlight</title>
+    <style>
+      :root {
+        --bg: #0d0d0d;
+        --surface: #1c1c1c;
+        --text: #ffffff;
+        --muted: #5e5e5e;
+        --primary: #f97316;
+        --heat: #ef4444;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+        --teamB: #06b6d4;
+        --teamC: #84cc16;
+        --teamD: #f43f5e;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100dvh;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      .stage {
+        height: 100dvh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        padding: clamp(2rem, 4vw, 4rem);
+      }
+      header.meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        text-transform: uppercase;
+        letter-spacing: 0.28em;
+        font-size: clamp(0.85rem, 1.1vw, 1.15rem);
+        color: var(--muted);
+        font-weight: 600;
+      }
+      header.meta .left {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      header.meta .left .round-num {
+        color: var(--primary);
+        font-size: clamp(1rem, 1.4vw, 1.5rem);
+        letter-spacing: 0.2em;
+      }
+      header.meta .right {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.4rem;
+      }
+      .timer {
+        font-family: ui-monospace, "Menlo", "Consolas", monospace;
+        font-size: clamp(2.4rem, 3.6vw, 4rem);
+        color: var(--primary);
+        letter-spacing: -0.05em;
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .timer.urgent { color: var(--heat); }
+      main.center {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        gap: clamp(1.5rem, 3vw, 3rem);
+        min-height: 0;
+      }
+      .question {
+        font-size: clamp(2.8rem, 6.5vw, 8rem);
+        font-weight: 900;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        margin: 0;
+        max-width: 22ch;
+        text-wrap: balance;
+      }
+      .underline {
+        display: inline-block;
+        height: 6px;
+        width: clamp(120px, 14vw, 240px);
+        background: var(--primary);
+        border-radius: 999px;
+      }
+      .active-team {
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        font-size: clamp(1rem, 1.4vw, 1.4rem);
+        color: var(--text);
+        font-weight: 700;
+      }
+      .active-team .label {
+        color: var(--muted);
+        font-weight: 500;
+        margin-right: 0.7em;
+      }
+      footer.bottom {
+        display: flex;
+        justify-content: center;
+        gap: clamp(1.5rem, 3vw, 3rem);
+        padding-top: clamp(1rem, 2vw, 2rem);
+        border-top: 1px solid #1a1a1a;
+        opacity: 0.92;
+      }
+      .standing {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: clamp(0.95rem, 1.2vw, 1.25rem);
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .standing .dot {
+        width: 0.55em;
+        height: 0.55em;
+        border-radius: 50%;
+      }
+      .standing .pts {
+        font-family: ui-monospace, "Menlo", monospace;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+      }
+      .standing.lead { color: var(--text); }
+      .standing.lead .pts { color: var(--gold); }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="meta">
+        <div class="left">
+          <span class="round-num">Round 1</span>
+          <span>Warm Up · Frank's</span>
+        </div>
+        <div class="right">
+          <span id="timer" class="timer">28</span>
+          <span>seconds</span>
+        </div>
+      </header>
+      <main class="center">
+        <p class="question">What compound gives chili peppers their heat?</p>
+        <span class="underline"></span>
+        <p class="active-team"><span class="label">on the wings</span>Team Heat</p>
+      </main>
+      <footer class="bottom">
+        <span class="standing lead"><span class="dot" style="background: var(--teamA)"></span>Team Heat <span class="pts">14</span></span>
+        <span class="standing"><span class="dot" style="background: var(--teamB)"></span>Cool Cats <span class="pts">11</span></span>
+        <span class="standing"><span class="dot" style="background: var(--teamC)"></span>Spice Lords <span class="pts">9</span></span>
+        <span class="standing"><span class="dot" style="background: var(--teamD)"></span>Mild Sauce <span class="pts">6</span></span>
+      </footer>
+    </div>
+    <script>
+      const t = document.getElementById('timer');
+      let n = 28;
+      setInterval(() => {
+        n = n > 0 ? n - 1 : 30;
+        t.textContent = n;
+        if (n <= 10) t.classList.add('urgent'); else t.classList.remove('urgent');
+      }, 1000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Standings — 01 Ticker Strip</title>
+    <style>
+      :root {
+        --bg: #0d0d0d;
+        --surface: #1c1c1c;
+        --text: #ffffff;
+        --muted: #5e5e5e;
+        --muted2: #a3a3a3;
+        --primary: #f97316;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+        --teamB: #06b6d4;
+        --teamC: #84cc16;
+        --teamD: #f43f5e;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .stage { height: 100dvh; display: grid; grid-template-rows: 1fr auto; }
+      .spotlight {
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; gap: clamp(1.5rem, 3vw, 3rem);
+        text-align: center; padding: clamp(2rem, 4vw, 4rem);
+      }
+      .question {
+        font-size: clamp(2.8rem, 6.5vw, 8rem); font-weight: 900;
+        line-height: 1.05; letter-spacing: -0.02em; margin: 0;
+        max-width: 22ch; text-wrap: balance; opacity: 0.35;
+      }
+      .underline {
+        display: inline-block; height: 6px;
+        width: clamp(120px, 14vw, 240px); background: var(--primary);
+        border-radius: 999px; opacity: 0.35;
+      }
+      .active-team {
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(1rem, 1.4vw, 1.4rem); font-weight: 700;
+        opacity: 0.35;
+      }
+      .active-team .label { color: var(--muted2); font-weight: 500; margin-right: 0.7em; }
+
+      footer.ticker {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding: clamp(0.75rem, 1.2vh, 1.4rem) clamp(1rem, 2.2vw, 3rem);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: clamp(1rem, 2.5vw, 3rem);
+        flex-wrap: nowrap;
+        overflow: hidden;
+      }
+      .entry {
+        display: inline-flex; align-items: baseline; gap: 0.7rem;
+        font-size: clamp(1rem, 1.3vw, 1.6rem);
+        color: var(--muted2); font-weight: 600;
+        white-space: nowrap;
+      }
+      .entry .dot {
+        width: 0.55em; height: 0.55em; border-radius: 50%;
+        align-self: center; flex-shrink: 0;
+      }
+      .entry .name { letter-spacing: 0.02em; }
+      .entry .pts {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-variant-numeric: tabular-nums;
+        font-weight: 800; color: var(--text);
+      }
+      .entry.lead { color: var(--text); }
+      .entry.lead .pts { color: var(--gold); }
+      .entry.lead .crown {
+        color: var(--gold); font-size: 0.85em;
+        margin-right: -0.3em;
+      }
+      .divider {
+        width: 4px; height: 4px; border-radius: 50%;
+        background: rgba(255, 255, 255, 0.18);
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="spotlight">
+        <p class="question">What compound gives chili peppers their heat?</p>
+        <span class="underline"></span>
+        <p class="active-team"><span class="label">on the wings</span>Team Heat</p>
+      </div>
+      <footer class="ticker">
+        <span class="entry lead">
+          <span class="crown">▲</span>
+          <span class="dot" style="background: var(--teamA)"></span>
+          <span class="name">Team Heat</span>
+          <span class="pts">14</span>
+        </span>
+        <span class="divider"></span>
+        <span class="entry">
+          <span class="dot" style="background: var(--teamB)"></span>
+          <span class="name">Cool Cats</span>
+          <span class="pts">11</span>
+        </span>
+        <span class="divider"></span>
+        <span class="entry">
+          <span class="dot" style="background: var(--teamC)"></span>
+          <span class="name">Spice Lords</span>
+          <span class="pts">9</span>
+        </span>
+        <span class="divider"></span>
+        <span class="entry">
+          <span class="dot" style="background: var(--teamD)"></span>
+          <span class="name">Mild Sauce</span>
+          <span class="pts">6</span>
+        </span>
+      </footer>
+    </div>
+  </body>
+</html>

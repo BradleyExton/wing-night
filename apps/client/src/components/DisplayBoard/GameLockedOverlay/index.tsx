@@ -1,3 +1,5 @@
+import { Lock } from "lucide-react";
+
 import { gameLockedOverlayCopy } from "./copy";
 import * as styles from "./styles";
 
@@ -11,26 +13,35 @@ export const GameLockedOverlay = ({
   const isCountdownVisible = remainingSeconds !== null;
 
   return (
-    <div className={styles.overlay}>
-      <section className={styles.panel} aria-live={isCountdownVisible ? "polite" : undefined}>
-        <p className={styles.brand}>{gameLockedOverlayCopy.brandLabel}</p>
-        <h2 className={styles.title}>{gameLockedOverlayCopy.title}</h2>
-        <p className={styles.description}>
-          {isCountdownVisible
-            ? gameLockedOverlayCopy.countdownDescription
-            : gameLockedOverlayCopy.lockedDescription}
-        </p>
-        {isCountdownVisible && (
-          <div className={styles.countdownStack}>
-            <p className={styles.countdownLabel}>
-              {gameLockedOverlayCopy.countdownLabel}
-            </p>
-            <p className={styles.countValue}>
-              {gameLockedOverlayCopy.countLabel(remainingSeconds)}
+    <div className={styles.overlay} aria-live={isCountdownVisible ? "polite" : undefined}>
+      <div className={styles.lockFrame}>
+        <span className={styles.lockIcon}>
+          <Lock aria-hidden />
+        </span>
+      </div>
+      <h2 className={styles.heading}>
+        {gameLockedOverlayCopy.headingLead}{" "}
+        <span className={styles.headingAccent}>
+          {gameLockedOverlayCopy.headingAccent}
+        </span>
+      </h2>
+      {isCountdownVisible ? (
+        <>
+          <div className={styles.ringFrame}>
+            <p className={styles.countdownNumber}>
+              {gameLockedOverlayCopy.formatCountdownNumber(remainingSeconds)}
             </p>
           </div>
-        )}
-      </section>
+          <p className={styles.countdownLine}>
+            <span className={styles.countdownLineLabel}>
+              {gameLockedOverlayCopy.countdownPrefix}
+            </span>
+            {gameLockedOverlayCopy.formatCountdownWord(remainingSeconds)}
+          </p>
+        </>
+      ) : (
+        <p className={styles.readyLabel}>{gameLockedOverlayCopy.readyLabel}</p>
+      )}
     </div>
   );
 };

@@ -21,6 +21,22 @@ export type StageRenderMode =
   | "final_results"
   | "fallback";
 
+export type TurnTileStatus = "done" | "just-done" | "upcoming";
+
+export type TurnTile = {
+  teamId: string;
+  teamName: string;
+  status: TurnTileStatus;
+};
+
+export type RoundResultsRow = {
+  teamId: string;
+  teamName: string;
+  wingPoints: number;
+  minigamePoints: number;
+  totalPoints: number;
+};
+
 type StageViewModel = {
   phase: Phase | null;
   stageMode: StageRenderMode;
@@ -36,6 +52,10 @@ type StageViewModel = {
   minigameDisplayView: DisplayRoomStateSnapshot["minigameDisplayView"];
   eatingTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
   fallbackEatingSeconds: number | null;
+  turnTiles: TurnTile[];
+  nextTurnTeamName: string | null;
+  roundResultsRows: RoundResultsRow[];
+  roundResultsTopTeamId: string | null;
   hasRoomState: boolean;
 };
 
@@ -120,6 +140,67 @@ export const resolveStageViewModel = (
       ? roomState.timer
       : null;
 
+  const turnOrderTeamIds = roomState?.turnOrderTeamIds ?? [];
+  const completedRoundTurnTeamIds = roomState?.completedRoundTurnTeamIds ?? [];
+  const completedSet = new Set(completedRoundTurnTeamIds);
+  const teamNameByTeamId = new Map(
+    (roomState?.teams ?? []).map((team) => [team.id, team.name] as const)
+  );
+
+  const turnTiles: TurnTile[] = turnOrderTeamIds.map((teamId) => {
+    const status: TurnTileStatus =
+      stageMode === "turn_results" && teamId === activeTeamId
+        ? "just-done"
+        : completedSet.has(teamId)
+          ? "done"
+          : "upcoming";
+    return {
+      teamId,
+      teamName: teamNameByTeamId.get(teamId) ?? teamId,
+      status
+    };
+  });
+
+  const activeTeamIndex =
+    activeTeamId !== null ? turnOrderTeamIds.indexOf(activeTeamId) : -1;
+  let nextTurnTeamName: string | null = null;
+  for (
+    let cursor = activeTeamIndex + 1;
+    cursor < turnOrderTeamIds.length;
+    cursor += 1
+  ) {
+    const candidateTeamId = turnOrderTeamIds[cursor];
+    if (!completedSet.has(candidateTeamId)) {
+      nextTurnTeamName = teamNameByTeamId.get(candidateTeamId) ?? null;
+      break;
+    }
+  }
+
+  const wingPointsByTeamId = roomState?.pendingWingPointsByTeamId ?? {};
+  const minigamePointsByTeamId = roomState?.pendingMinigamePointsByTeamId ?? {};
+  const roundResultsRows: RoundResultsRow[] = (roomState?.teams ?? [])
+    .map((team) => {
+      const wingPoints = wingPointsByTeamId[team.id] ?? 0;
+      const minigamePoints = minigamePointsByTeamId[team.id] ?? 0;
+      return {
+        teamId: team.id,
+        teamName: team.name,
+        wingPoints,
+        minigamePoints,
+        totalPoints: wingPoints + minigamePoints
+      };
+    })
+    .sort((a, b) => {
+      if (b.totalPoints !== a.totalPoints) {
+        return b.totalPoints - a.totalPoints;
+      }
+      return a.teamName.localeCompare(b.teamName);
+    });
+  const roundResultsTopTeamId =
+    roundResultsRows.length > 0 && roundResultsRows[0].totalPoints > 0
+      ? roundResultsRows[0].teamId
+      : null;
+
   return {
     phase,
     stageMode,
@@ -135,6 +216,10 @@ export const resolveStageViewModel = (
     minigameDisplayView,
     eatingTimerSnapshot,
     fallbackEatingSeconds: roomState?.gameConfig?.timers.eatingSeconds ?? null,
+    turnTiles,
+    nextTurnTeamName,
+    roundResultsRows,
+    roundResultsTopTeamId,
     hasRoomState: roomState !== null
   };
 };

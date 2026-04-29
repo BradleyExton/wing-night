@@ -35,11 +35,20 @@ export const displayCopy = {
   activeTeamValue: (teamName: string): string => teamName,
   eatingTimerLabel: "Round Timer",
   eatingTimerValue: formatClockSeconds,
+  eatingActiveTeamLabel: "on the wings",
+  eatingPhaseLabel: (sauce: string): string => `Eating · ${sauce}`,
+  eatingPhaseFallbackLabel: "Eating",
+  roundChipLabel: (round: number): string => `Round ${round}`,
   standingsTitle: "Standings",
   standingsEmptyLabel: "No teams have joined yet.",
   standingLeaderLabel: "Leading",
   standingWinnerLabel: "Winner",
   standingRankLabel: (rank: number): string => `#${rank}`,
+  standingRankOrdinalLabel: (rank: number): string => {
+    if (rank === 2) return "2nd";
+    if (rank === 3) return "3rd";
+    return `${rank}th`;
+  },
   standingScoreLabel: (score: number): string => `${score} pts`,
   standingRosterValue: (
     visiblePlayerNames: string[],

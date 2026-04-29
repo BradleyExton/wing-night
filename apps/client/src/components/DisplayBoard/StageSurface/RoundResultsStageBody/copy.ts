@@ -1,8 +1,14 @@
 export const roundResultsStageCopy = {
-  title: "Round Scores Applied",
-  summary: "Wing and mini-game points are now locked into total standings.",
-  wingPointsLabel: "Wing Points",
-  minigamePointsLabel: "Mini-Game Points",
-  roundPointsLabel: "Round Total",
-  pointsValue: (points: number): string => `+${points} pts`
+  eyebrow: "Scores locked",
+  headingPrefix: "Round",
+  headingSuffix: "Done",
+  fallbackRoundNumber: "—",
+  formatRoundNumber: (roundNumber: number): string =>
+    String(roundNumber).padStart(2, "0"),
+  teamColumnLabel: "Team",
+  wingsColumnLabel: "Wings",
+  gameColumnLabel: "Game",
+  thisRoundColumnLabel: "+ This Round",
+  formatPointsDelta: (points: number): string => `+${points}`,
+  emptyLabel: "No teams to display."
 } as const;

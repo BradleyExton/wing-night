@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Host Control Panel — Mockup Variants</title>
+    <style>
+      :root {
+        --bg: #121212; --surface: #1c1c1c; --surfaceAlt: #242424;
+        --text: #ffffff; --muted: #a3a3a3; --mutedDim: #5e5e5e;
+        --primary: #f97316; --heat: #ef4444; --gold: #fbbf24;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; min-height: 100dvh;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap {
+        max-width: 1100px; margin: 0 auto;
+        padding: clamp(2rem, 5vw, 4rem) clamp(1.25rem, 4vw, 2.5rem);
+      }
+      .eyebrow {
+        font-size: 0.85rem;
+        text-transform: uppercase; letter-spacing: 0.34em;
+        color: var(--primary); font-weight: 800;
+      }
+      h1 {
+        font-size: clamp(2.5rem, 5vw, 3.75rem);
+        font-weight: 900; line-height: 1;
+        letter-spacing: -0.03em;
+        margin: 0.4rem 0 1rem;
+      }
+      h1 .accent { color: var(--primary); }
+      .lede {
+        color: var(--muted);
+        font-size: clamp(1rem, 1.15vw, 1.15rem);
+        max-width: 60ch;
+        line-height: 1.6;
+        margin: 0 0 2.5rem;
+      }
+      .lede strong { color: var(--text); }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+      @media (min-width: 880px) {
+        .grid { grid-template-columns: 1fr 1fr 1fr; }
+      }
+
+      .card {
+        display: flex; flex-direction: column;
+        text-decoration: none; color: inherit;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 1rem;
+        background: var(--surface);
+        overflow: hidden;
+        transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      }
+      .card:hover {
+        transform: translateY(-3px);
+        border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+        box-shadow: 0 16px 40px -16px rgba(249,115,22,0.4);
+      }
+      .preview {
+        aspect-ratio: 16 / 10;
+        background: var(--bg);
+        position: relative;
+        overflow: hidden;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      .preview::before {
+        content: ""; position: absolute; inset: 0;
+        background: var(--bg-img, transparent);
+      }
+
+      /* Variant 1 preview - broadcast */
+      .p1 {
+        display: grid; grid-template-rows: auto 1fr auto;
+      }
+      .p1 .rail {
+        height: 22px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        position: relative;
+      }
+      .p1 .rail::after {
+        content: ""; position: absolute; left: 0; right: 0; bottom: -1px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      }
+      .p1 .body {
+        display: grid; grid-template-columns: 1.5fr 1fr;
+      }
+      .p1 .hero {
+        padding: 1rem;
+        position: relative; isolation: isolate;
+        display: flex; flex-direction: column; justify-content: center;
+      }
+      .p1 .hero::before {
+        content: ""; position: absolute; inset: 0;
+        background: radial-gradient(ellipse at 30% 50%, rgba(249,115,22,0.18), transparent 60%);
+        z-index: -1;
+      }
+      .p1 .timer {
+        font-family: ui-monospace, monospace;
+        font-size: 2.5rem; font-weight: 900; color: var(--primary);
+        letter-spacing: -0.05em;
+      }
+      .p1 .heatbar {
+        height: 4px; background: rgba(255,255,255,0.06); border-radius: 999px;
+        margin-top: 0.4rem;
+      }
+      .p1 .heatfill {
+        width: 70%; height: 100%; border-radius: 999px;
+        background: linear-gradient(90deg, var(--gold), var(--primary), var(--heat));
+      }
+      .p1 .deck {
+        background: linear-gradient(180deg, var(--surface), var(--bg));
+        padding: 0.5rem;
+        display: flex; flex-direction: column; gap: 0.3rem;
+        border-left: 1px solid rgba(255,255,255,0.06);
+      }
+      .p1 .chip {
+        height: 14px; border-radius: 0.3rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.06);
+      }
+      .p1 .chip.on {
+        border-color: var(--primary);
+        background: color-mix(in srgb, var(--primary) 14%, transparent);
+      }
+      .p1 .cta {
+        height: 32px;
+        background: var(--primary);
+      }
+
+      /* Variant 2 preview - console */
+      .p2 {
+        display: grid; grid-template-rows: auto 1fr auto;
+      }
+      .p2 .sb {
+        height: 28px;
+        background: var(--surface);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        display: flex; align-items: center; gap: 6px;
+        padding: 0 8px;
+      }
+      .p2 .sb-tile {
+        width: 26px; height: 14px;
+        border-left: 1px solid rgba(255,255,255,0.08);
+      }
+      .p2 .sb-tile:first-child { border-left: 0; }
+      .p2 .sb-tile.on { background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--primary) 30%, transparent)); }
+      .p2 .body {
+        display: grid; grid-template-columns: 1fr 1fr;
+        background: var(--bg);
+      }
+      .p2 .stage {
+        padding: 0.7rem;
+        border-right: 1px solid rgba(255,255,255,0.06);
+      }
+      .p2 .meter {
+        height: 60%;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 0.5rem;
+        background: linear-gradient(180deg, rgba(36,36,36,0.6), rgba(28,28,28,0.6));
+        display: flex; align-items: center; justify-content: center;
+        font-family: ui-monospace, monospace;
+        font-size: 1.5rem; font-weight: 900; color: var(--primary);
+        position: relative; overflow: hidden;
+        margin-top: 0.4rem;
+      }
+      .p2 .meter::before {
+        content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      }
+      .p2 .modules {
+        padding: 0.5rem;
+        display: flex; flex-direction: column; gap: 0.3rem;
+      }
+      .p2 .mod {
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 0.3rem;
+        background: var(--surface);
+        height: 26px;
+      }
+      .p2 .cta {
+        height: 26px;
+        background: var(--surface);
+        border-top: 1px solid rgba(255,255,255,0.08);
+        display: flex; align-items: center; justify-content: flex-end;
+        padding: 0 6px; gap: 4px;
+      }
+      .p2 .cta-ghost {
+        width: 30px; height: 14px;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 4px;
+      }
+      .p2 .cta-primary {
+        width: 60px; height: 14px;
+        background: var(--primary); border-radius: 4px;
+      }
+
+      /* Variant 3 preview - stage */
+      .p3 {
+        display: grid; grid-template-rows: 1fr auto;
+      }
+      .p3 .body {
+        display: grid; grid-template-columns: 1.85fr 1fr;
+      }
+      .p3 .stage {
+        position: relative; isolation: isolate;
+        padding: 0.7rem;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .p3 .stage::before {
+        content: ""; position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse at 25% 35%, rgba(249,115,22,0.22), transparent 55%),
+          radial-gradient(ellipse at 70% 75%, rgba(239,68,68,0.1), transparent 60%);
+        z-index: -1;
+      }
+      .p3 .timer {
+        font-family: ui-monospace, monospace;
+        font-size: 3.5rem; font-weight: 900; color: var(--primary);
+        letter-spacing: -0.06em;
+        text-shadow: 0 0 20px rgba(249,115,22,0.4);
+      }
+      .p3 .deck {
+        padding: 0.4rem;
+        background: rgba(0,0,0,0.2);
+        border-left: 1px solid rgba(255,255,255,0.05);
+        display: flex; flex-direction: column; gap: 0.25rem;
+      }
+      .p3 .row {
+        height: 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+      }
+      .p3 .row.on {
+        background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 14%, transparent), transparent);
+        border-left: 2px solid var(--primary);
+      }
+      .p3 .strip {
+        height: 5px;
+        background: linear-gradient(90deg, var(--gold), var(--primary), var(--heat));
+      }
+      .p3 .cta {
+        height: 32px;
+        background: var(--primary);
+      }
+
+      .meta {
+        padding: clamp(1rem, 1.5vw, 1.25rem);
+        display: flex; flex-direction: column; gap: 0.5rem;
+      }
+      .label {
+        font-size: 0.7rem;
+        text-transform: uppercase; letter-spacing: 0.28em;
+        color: var(--mutedDim); font-weight: 800;
+      }
+      .name {
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin: 0;
+      }
+      .desc {
+        font-size: 0.92rem;
+        color: var(--muted);
+        line-height: 1.5;
+        margin: 0;
+      }
+      .feel {
+        margin-top: 0.5rem;
+        display: flex; flex-wrap: wrap; gap: 0.3rem;
+      }
+      .tag {
+        font-size: 0.65rem;
+        text-transform: uppercase; letter-spacing: 0.2em;
+        font-weight: 700;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--muted);
+      }
+
+      .footnote {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+      .footnote strong { color: var(--text); }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <span class="eyebrow">Host Control Panel</span>
+      <h1>Three cockpits.<br/><span class="accent">Pick one.</span></h1>
+      <p class="lede">All three are variants of the <strong>Cockpit direction</strong>: 60–65 / 35–50 split with a dramatic left side, a control deck on the right, and a primary CTA pinned to the bottom. They differ in how dramatic the left side leans, how the control surface is structured, and how prominent the chrome is. Each shows <strong>EATING</strong> + <strong>SETUP</strong> phases — flip between them with the pill in the corner.</p>
+
+      <div class="grid">
+        <a class="card" href="01-broadcast.html">
+          <div class="preview">
+            <div class="p1" style="height:100%">
+              <div class="rail"></div>
+              <div class="body">
+                <div class="hero">
+                  <div class="timer">1:24</div>
+                  <div class="heatbar"><div class="heatfill"></div></div>
+                </div>
+                <div class="deck">
+                  <div class="chip on"></div>
+                  <div class="chip on"></div>
+                  <div class="chip on"></div>
+                  <div class="chip"></div>
+                  <div class="chip"></div>
+                </div>
+              </div>
+              <div class="cta"></div>
+            </div>
+          </div>
+          <div class="meta">
+            <span class="label">Variant 01</span>
+            <h2 class="name">Broadcast</h2>
+            <p class="desc">Thin lower-third context rail, 60/40 split, big Display-faithful hero on the left, dark control cards on the right, full-bleed primary-orange CTA. Heaviest commitment to Display continuity.</p>
+            <div class="feel">
+              <span class="tag">Dramatic</span>
+              <span class="tag">Display-faithful</span>
+              <span class="tag">Full-bleed CTA</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="card" href="02-console.html">
+          <div class="preview">
+            <div class="p2" style="height:100%">
+              <div class="sb">
+                <div class="sb-tile on"></div>
+                <div class="sb-tile"></div>
+                <div class="sb-tile on"></div>
+                <div class="sb-tile"></div>
+              </div>
+              <div class="body">
+                <div class="stage">
+                  <div class="meter">1:24</div>
+                </div>
+                <div class="modules">
+                  <div class="mod"></div>
+                  <div class="mod"></div>
+                </div>
+              </div>
+              <div class="cta">
+                <div class="cta-ghost"></div>
+                <div class="cta-primary"></div>
+              </div>
+            </div>
+          </div>
+          <div class="meta">
+            <span class="label">Variant 02</span>
+            <h2 class="name">Console</h2>
+            <p class="desc">Status-bar chrome with multi-stat readout up top, 50/50 split, framed "meter" panel as the live datum on the left, modular control panels on the right, floating CTA with a ghost secondary action.</p>
+            <div class="feel">
+              <span class="tag">Info-dense</span>
+              <span class="tag">DJ deck</span>
+              <span class="tag">Floating CTA</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="card" href="03-stage.html">
+          <div class="preview">
+            <div class="p3" style="height:100%">
+              <div class="body">
+                <div class="stage">
+                  <div class="timer">1:24</div>
+                </div>
+                <div class="deck">
+                  <div class="row on"></div>
+                  <div class="row on"></div>
+                  <div class="row on"></div>
+                  <div class="row"></div>
+                  <div class="row"></div>
+                </div>
+              </div>
+              <div>
+                <div class="strip"></div>
+                <div class="cta"></div>
+              </div>
+            </div>
+          </div>
+          <div class="meta">
+            <span class="label">Variant 03</span>
+            <h2 class="name">Stage</h2>
+            <p class="desc">Asymmetric 65/35 with no top chrome — phase eyebrow lives in the hero. Most dramatic typography of the three. Borderless tappable rows on the right (no card chrome). Pulsing heat strip above the CTA adds energy.</p>
+            <div class="feel">
+              <span class="tag">Maximally dramatic</span>
+              <span class="tag">No top chrome</span>
+              <span class="tag">Heat strip CTA</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="footnote">
+        <strong>What's not in these mockups yet:</strong> MINIGAME_INTRO (handoff to team), TURN/ROUND/FINAL_RESULTS surfaces, takeover transition. Once a winner is picked I'll port to the real component and design the remaining phases in the same language. Each variant's phase switcher (top corner) flips between EATING and SETUP — those are the two highest-density cases that prove the layout.
+      </div>
+    </main>
+  </body>
+</html>

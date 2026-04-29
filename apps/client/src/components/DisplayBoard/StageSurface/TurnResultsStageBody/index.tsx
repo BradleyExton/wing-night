@@ -1,50 +1,63 @@
+import { Check } from "lucide-react";
+
+import type { TurnTile } from "../resolveStageViewModel";
 import { turnResultsStageCopy } from "./copy";
 import * as styles from "./styles";
 
 type TurnResultsStageBodyProps = {
-  activeTeamName: string | null;
-  completedTurnCount: number;
-  totalTurnCount: number;
-  hasNextTurn: boolean;
+  justFinishedTeamName: string | null;
+  turnTiles: TurnTile[];
+  nextTeamName: string | null;
+};
+
+const resolveDotClassName = (status: TurnTile["status"]): string => {
+  if (status === "just-done") {
+    return `${styles.dotBase} ${styles.dotJustDone}`;
+  }
+  if (status === "done") {
+    return `${styles.dotBase} ${styles.dotDone}`;
+  }
+  return styles.dotBase;
 };
 
 export const TurnResultsStageBody = ({
-  activeTeamName,
-  completedTurnCount,
-  totalTurnCount,
-  hasNextTurn
+  justFinishedTeamName,
+  turnTiles,
+  nextTeamName
 }: TurnResultsStageBodyProps): JSX.Element => {
-  const safeTotalTurnCount = Math.max(totalTurnCount, 1);
+  const resolvedTeamName =
+    justFinishedTeamName ?? turnResultsStageCopy.fallbackTeamName;
+  const nextLineText =
+    nextTeamName !== null
+      ? `${turnResultsStageCopy.nextLabelPrefix}${turnResultsStageCopy.nextLabelSeparator} ${nextTeamName}`
+      : turnResultsStageCopy.roundWrapLabel;
 
   return (
-    <div className={styles.root}>
-      <h2 className={styles.title}>{turnResultsStageCopy.title}</h2>
-      <p className={styles.summary}>{turnResultsStageCopy.summary}</p>
-      <div className={styles.contextGrid}>
-        <article className={styles.contextItem}>
-          <p className={styles.contextLabel}>{turnResultsStageCopy.activeTeamLabel}</p>
-          <p className={styles.contextValue}>
-            {activeTeamName ?? turnResultsStageCopy.noActiveTeamLabel}
-          </p>
-        </article>
-        <article className={styles.contextItem}>
-          <p className={styles.contextLabel}>{turnResultsStageCopy.turnProgressLabel}</p>
-          <p className={styles.contextValue}>
-            {turnResultsStageCopy.turnProgressValue(
-              completedTurnCount,
-              safeTotalTurnCount
-            )}
-          </p>
-        </article>
-        <article className={styles.contextItem}>
-          <p className={styles.contextLabel}>{turnResultsStageCopy.nextStepLabel}</p>
-          <p className={styles.contextValue}>
-            {hasNextTurn
-              ? turnResultsStageCopy.nextTeamStepValue
-              : turnResultsStageCopy.roundWrapStepValue}
-          </p>
-        </article>
-      </div>
+    <div className={styles.container}>
+      <span className={styles.ambient} aria-hidden />
+      <span className={`${styles.beatBase} ${styles.beatDelay1} ${styles.eyebrow}`}>
+        <Check className={styles.eyebrowIcon} aria-hidden />
+        {turnResultsStageCopy.eyebrow}
+      </span>
+      <p className={`${styles.beatBase} ${styles.beatDelay2} ${styles.teamName}`}>
+        {resolvedTeamName}
+        <span className={styles.strikethrough} aria-hidden />
+      </p>
+      {turnTiles.length > 0 && (
+        <span className={`${styles.beatBase} ${styles.beatDelay3} ${styles.dotsRow}`}>
+          {turnTiles.map((tile) => (
+            <span
+              key={tile.teamId}
+              className={resolveDotClassName(tile.status)}
+              aria-label={tile.teamName}
+            />
+          ))}
+        </span>
+      )}
+      <p className={`${styles.beatBase} ${styles.beatDelay4} ${styles.next}`}>
+        <span className={styles.nextArrow}>→</span>
+        {nextLineText}
+      </p>
     </div>
   );
 };

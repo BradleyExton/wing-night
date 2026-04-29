@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TURN_RESULTS — 03 Score Reveal</title>
+    <style>
+      :root {
+        --bg: #0d0d0d; --text: #fff; --muted: #5e5e5e; --muted2: #a3a3a3;
+        --primary: #f97316; --heat: #ef4444; --gold: #fbbf24;
+        --teamA: #f97316; --teamB: #06b6d4; --teamC: #84cc16; --teamD: #f43f5e;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .stage { height: 100dvh; display: grid; grid-template-rows: 1fr auto; }
+      .body {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: clamp(0.75rem, 1.6vw, 2rem);
+        padding: clamp(2rem, 4vw, 4rem);
+        overflow: hidden;
+        text-align: center;
+      }
+      .body::before {
+        content: ""; position: absolute; inset: -10%;
+        background:
+          radial-gradient(ellipse at center, rgba(251, 191, 36, 0.10) 0%, transparent 50%),
+          radial-gradient(ellipse at 25% 70%, rgba(249, 115, 22, 0.10) 0%, transparent 45%);
+        pointer-events: none;
+      }
+
+      .beat {
+        position: relative;
+        opacity: 0;
+        animation: reveal 600ms ease forwards;
+      }
+      .beat.one { animation-delay: 100ms; }
+      .beat.two { animation-delay: 600ms; }
+      .beat.three { animation-delay: 1400ms; }
+      .beat.four { animation-delay: 1900ms; }
+      @keyframes reveal {
+        from { opacity: 0; transform: translateY(0.6rem); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .eyebrow {
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 700; color: var(--muted);
+      }
+
+      .points {
+        margin: 0;
+        display: inline-flex; align-items: baseline;
+        gap: 0.2em;
+        line-height: 0.85;
+      }
+      .points .plus {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(3rem, 8vw, 9rem);
+        font-weight: 900;
+        color: var(--gold);
+        opacity: 0.85;
+      }
+      .points .num {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(8rem, 22vw, 26rem);
+        font-weight: 900;
+        color: var(--gold);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.06em;
+        text-shadow:
+          0 0 80px rgba(251, 191, 36, 0.45),
+          0 0 200px rgba(251, 191, 36, 0.2);
+        animation: countpulse 600ms ease;
+      }
+      .points .unit {
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-size: clamp(1.5rem, 3vw, 3.6rem);
+        font-weight: 800;
+        color: var(--gold);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-left: 0.3em;
+        opacity: 0.85;
+      }
+      @keyframes countpulse {
+        0% { transform: scale(0.9); }
+        60% { transform: scale(1.06); }
+        100% { transform: scale(1); }
+      }
+
+      .team-line {
+        margin: 0;
+        font-size: clamp(1.4rem, 3vw, 3.2rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text);
+      }
+      .team-line .label {
+        color: var(--muted);
+        font-weight: 700;
+        margin-right: 0.5em;
+      }
+
+      .next {
+        margin: 0;
+        font-size: clamp(0.95rem, 1.3vw, 1.5rem);
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        font-weight: 700;
+        color: var(--muted2);
+      }
+      .next .arrow { color: var(--primary); margin-right: 0.5em; }
+      .next .accent { color: var(--text); }
+
+      footer.splits {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 2px; background: rgba(255,255,255,0.04);
+        border-top: 1px solid rgba(255,255,255,0.06);
+      }
+      .col {
+        --tint: var(--teamA);
+        position: relative;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 14%, transparent) 0%, color-mix(in srgb, var(--tint) 4%, transparent) 100%), var(--bg);
+        padding: clamp(0.85rem, 1.3vh, 1.5rem) clamp(1rem, 1.6vw, 2.25rem);
+        display: flex; align-items: center; justify-content: space-between;
+        gap: clamp(0.85rem, 1.4vw, 2rem); overflow: hidden;
+      }
+      .col.t-a { --tint: var(--teamA); }
+      .col.t-b { --tint: var(--teamB); }
+      .col.t-c { --tint: var(--teamC); }
+      .col.t-d { --tint: var(--teamD); }
+      .col.lead {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 30%, transparent) 0%, color-mix(in srgb, var(--tint) 10%, transparent) 100%), var(--bg);
+      }
+      .col::before {
+        content: ""; position: absolute; inset: 0 auto 0 0;
+        width: 3px; background: var(--tint); opacity: 0.55;
+      }
+      .col.lead::before { opacity: 1; }
+      .left { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+      .nm-c {
+        font-size: clamp(0.95rem, 1.15vw, 1.4rem);
+        font-weight: 800; color: var(--text);
+        text-transform: uppercase; letter-spacing: 0.06em;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .mt {
+        display: inline-flex; align-items: center; gap: 0.4em;
+        font-size: clamp(0.7rem, 0.85vw, 0.95rem);
+        text-transform: uppercase; letter-spacing: 0.18em;
+        color: var(--muted2); font-weight: 600;
+      }
+      .col.lead .mt { color: var(--gold); }
+      .pts {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(1.8rem, 2.6vw, 3.2rem);
+        font-weight: 900; color: var(--text);
+        font-variant-numeric: tabular-nums; letter-spacing: -0.04em;
+      }
+      .col.lead .pts { color: var(--gold); }
+      .flame { width: 1.1em; height: 1.1em;
+        filter: drop-shadow(0 0 6px rgba(251,191,36,0.5));
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="body">
+        <span class="beat one eyebrow">turn earned</span>
+        <p class="beat two points" id="points">
+          <span class="plus">+</span><span class="num" id="num">5</span><span class="unit">pts</span>
+        </p>
+        <p class="beat three team-line"><span class="label">for</span>Team Heat</p>
+        <p class="beat four next"><span class="arrow">→</span><span class="label">up next</span><span class="accent">Cool Cats</span></p>
+      </div>
+      <footer class="splits">
+        <div class="col t-a lead">
+          <div class="left">
+            <span class="mt">Leading <svg class="flame" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 0.67s.74 1.94.74 3.5c0 1.5-.98 2.71-2.48 2.71-1.51 0-2.65-1.21-2.65-2.71l.02-.27C7.66 5.85 6 8.78 6 12c0 4.42 3.58 8 8 8s8-3.58 8-8c0-5.39-2.59-10.21-6.5-13.33zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg></span>
+            <span class="nm-c">Team Heat</span>
+          </div>
+          <span class="pts">14</span>
+        </div>
+        <div class="col t-b"><div class="left"><span class="mt">2nd</span><span class="nm-c">Cool Cats</span></div><span class="pts">11</span></div>
+        <div class="col t-c"><div class="left"><span class="mt">3rd</span><span class="nm-c">Spice Lords</span></div><span class="pts">9</span></div>
+        <div class="col t-d"><div class="left"><span class="mt">4th</span><span class="nm-c">Mild Sauce</span></div><span class="pts">6</span></div>
+      </footer>
+    </div>
+    <script>
+      // Count up animation: 0 -> 5 over ~700ms after the points beat reveals
+      const num = document.getElementById('num');
+      const target = 5;
+      let cur = 0;
+      setTimeout(() => {
+        const step = setInterval(() => {
+          cur += 1;
+          num.textContent = cur;
+          if (cur >= target) clearInterval(step);
+        }, 110);
+      }, 800);
+    </script>
+  </body>
+</html>

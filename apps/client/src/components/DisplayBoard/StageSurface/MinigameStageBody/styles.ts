@@ -1,6 +1,3 @@
-export {
-  fallbackText,
-  title
-} from "../styles";
+export { fallbackText } from "../styles";
 
-export const minigameShell = "mt-5";
+export const minigameShell = "h-full";

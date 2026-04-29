@@ -28,7 +28,7 @@ const playersFixture: Player[] = [
   { id: "player-5", name: "Taylor" }
 ];
 
-test("renders standings in descending order", () => {
+test("renders standings in descending order with ordinal labels", () => {
   const html = renderToStaticMarkup(
     <StandingsSurface
       phase={Phase.ROUND_RESULTS}
@@ -38,10 +38,8 @@ test("renders standings in descending order", () => {
   );
 
   assert.ok(html.indexOf("Team Beta") < html.indexOf("Team Alpha"));
-  assert.match(html, /Alex, Morgan, Sam \+1/);
-  assert.match(html, /Taylor/);
-  assert.match(html, /#1/);
   assert.match(html, /Leading/);
+  assert.match(html, /2nd/);
 });
 
 test("renders empty state when standings are missing", () => {
@@ -52,7 +50,7 @@ test("renders empty state when standings are missing", () => {
   assert.match(html, /No teams have joined yet/);
 });
 
-test("uses gold winner accent during FINAL_RESULTS", () => {
+test("uses gold accent and trophy for the leader during FINAL_RESULTS", () => {
   const html = renderToStaticMarkup(
     <StandingsSurface
       phase={Phase.FINAL_RESULTS}
@@ -61,7 +59,19 @@ test("uses gold winner accent during FINAL_RESULTS", () => {
     />
   );
 
-  assert.match(html, /border-l-gold\/85/);
-  assert.match(html, /bg-gold\/90/);
   assert.match(html, /Winner/);
+  assert.match(html, /text-gold/);
+});
+
+test("uses flame icon glow class for the leader outside FINAL_RESULTS", () => {
+  const html = renderToStaticMarkup(
+    <StandingsSurface
+      phase={Phase.MINIGAME_PLAY}
+      standings={teamsFixture}
+      players={playersFixture}
+    />
+  );
+
+  assert.match(html, /Leading/);
+  assert.match(html, /drop-shadow/);
 });

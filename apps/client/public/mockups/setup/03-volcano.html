@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SETUP — Hearth · Turbulent</title>
+    <style>
+      :root {
+        --bg: #0a0606; --text: #fff; --muted: #6b6157; --muted2: #b3a89a;
+        --primary: #f97316; --heat: #ef4444; --gold: #fbbf24; --ember: #ffb35a;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .stage { height: 100dvh; display: grid; grid-template-rows: 1fr auto; }
+      .body {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center; justify-content: space-evenly;
+        padding: clamp(1.5rem, 3vw, 3rem) clamp(2rem, 4vw, 4rem);
+        overflow: hidden;
+        text-align: center;
+      }
+      .body::before {
+        content: ""; position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse 70% 60% at 50% 80%, rgba(249, 115, 22, 0.22) 0%, transparent 60%),
+          radial-gradient(ellipse 50% 40% at 50% 100%, rgba(239, 68, 68, 0.25) 0%, transparent 55%),
+          radial-gradient(ellipse 80% 60% at 50% 20%, rgba(20, 10, 5, 0.4) 0%, transparent 60%);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* Turbulent — single flame with feTurbulence + feDisplacementMap */
+      .hero-flame {
+        position: absolute;
+        inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 0;
+        pointer-events: none;
+      }
+      .hero-flame svg.flame {
+        width: clamp(420px, 56vw, 900px);
+        height: auto;
+        filter: drop-shadow(0 0 80px rgba(249, 115, 22, 0.45));
+      }
+      .flame-outer { fill: rgba(239, 68, 68, 0.30); }
+      .flame-mid   { fill: rgba(249, 115, 22, 0.45); }
+      .flame-inner { fill: rgba(251, 191, 36, 0.55); }
+      .flame-core  { fill: rgba(255, 240, 200, 0.70); }
+
+      /* Animate the turbulence to make edges waver organically */
+      .turb-anim {
+        animation: turb-shift 5s linear infinite;
+      }
+      @keyframes turb-shift {
+        0%   { baseFrequency: 0.018 0.026; }
+        50%  { baseFrequency: 0.024 0.020; }
+        100% { baseFrequency: 0.018 0.026; }
+      }
+      /* Note: SMIL animations on feTurbulence baseFrequency are widely supported. CSS keyframes on SVG attributes are not — using <animate> in SVG instead. */
+
+      .embers {
+        position: absolute; inset: 0;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+      }
+      .ember {
+        position: absolute;
+        bottom: -2vh;
+        width: 4px; height: 4px;
+        border-radius: 50%;
+        background: var(--ember);
+        box-shadow: 0 0 8px var(--ember), 0 0 16px rgba(251, 191, 36, 0.6);
+        opacity: 0;
+        animation: rise linear infinite;
+      }
+      .ember.s2 { width: 3px; height: 3px; }
+      .ember.s3 { width: 6px; height: 6px; box-shadow: 0 0 10px var(--ember), 0 0 22px rgba(251, 191, 36, 0.7); }
+      @keyframes rise {
+        0%   { transform: translate3d(0, 0, 0) scale(0.6); opacity: 0; }
+        12%  { opacity: 0.95; }
+        85%  { opacity: 0.6; }
+        100% { transform: translate3d(var(--drift, 20px), -110vh, 0) scale(0.8); opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) { .ember { animation: none; opacity: 0; } }
+
+      .header {
+        position: relative;
+        z-index: 2;
+        display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      }
+      .eyebrow {
+        text-transform: uppercase; letter-spacing: 0.42em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 800; color: var(--muted2);
+      }
+      .heading {
+        margin: 0;
+        font-size: clamp(3.5rem, 9vw, 12rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 0.9;
+        color: #fff;
+        text-shadow:
+          0 0 40px rgba(251, 191, 36, 0.35),
+          0 0 100px rgba(249, 115, 22, 0.25);
+      }
+      .pack-name {
+        margin: 0;
+        font-size: clamp(0.95rem, 1.3vw, 1.5rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        color: var(--muted2);
+      }
+
+      .rounds {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: clamp(0.5rem, 1vw, 1.25rem) clamp(0.6rem, 1.2vw, 1.5rem);
+        width: 100%;
+        max-width: 1300px;
+      }
+      .round {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center;
+        padding: clamp(0.85rem, 1.4vw, 1.4rem) clamp(0.7rem, 1vw, 1rem);
+        background: rgba(20, 10, 5, 0.55);
+        border-top: 1px solid rgba(249, 115, 22, 0.35);
+        backdrop-filter: blur(2px);
+        text-align: center;
+      }
+      .round-num {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(0.7rem, 0.95vw, 1.05rem);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        color: var(--primary);
+      }
+      .round-label {
+        margin: 0.25rem 0 0.5rem;
+        font-size: clamp(0.75rem, 1vw, 1.15rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--muted2);
+      }
+      .sauce {
+        margin: 0;
+        font-size: clamp(1.2rem, 2vw, 2.4rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.005em;
+        line-height: 0.95;
+        color: #fff;
+        text-shadow: 0 0 18px rgba(249, 115, 22, 0.4);
+      }
+      .minigame {
+        margin-top: 0.5rem;
+        font-size: clamp(0.7rem, 0.95vw, 1rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: var(--muted2);
+      }
+      .minigame .label { color: var(--muted); margin-right: 0.4em; }
+
+      .waiting {
+        position: relative;
+        z-index: 2;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 700;
+        color: var(--muted2);
+        display: inline-flex; align-items: center; gap: 0.7em;
+      }
+      .pulse-dot {
+        width: 0.7em; height: 0.7em; border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 12px var(--primary), 0 0 24px rgba(249, 115, 22, 0.6);
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(0.85); }
+      }
+      @media (prefers-reduced-motion: reduce) { .pulse-dot { animation: none; } }
+
+      footer.splits {
+        position: relative;
+        z-index: 3;
+        display: grid; grid-template-columns: 1fr;
+        background: rgba(20, 10, 5, 0.7);
+        border-top: 1px solid rgba(249, 115, 22, 0.25);
+      }
+      .empty {
+        padding: clamp(0.85rem, 1.4vh, 1.5rem) clamp(1rem, 2.2vw, 3rem);
+        text-align: center;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 700;
+        color: var(--muted2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="body">
+        <div class="hero-flame" aria-hidden>
+          <svg class="flame" viewBox="0 0 200 380" preserveAspectRatio="xMidYMax meet">
+            <defs>
+              <filter id="turb-outer" x="-20%" y="-20%" width="140%" height="140%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.015 0.022" numOctaves="2" seed="2" result="noise">
+                  <animate attributeName="baseFrequency" dur="9s" values="0.015 0.022;0.020 0.018;0.015 0.022" repeatCount="indefinite"/>
+                </feTurbulence>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="22"/>
+              </filter>
+              <filter id="turb-mid" x="-20%" y="-20%" width="140%" height="140%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.022 0.030" numOctaves="2" seed="5" result="noise">
+                  <animate attributeName="baseFrequency" dur="6s" values="0.022 0.030;0.028 0.024;0.022 0.030" repeatCount="indefinite"/>
+                </feTurbulence>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="14"/>
+              </filter>
+              <filter id="turb-inner" x="-20%" y="-20%" width="140%" height="140%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.030 0.038" numOctaves="2" seed="7" result="noise">
+                  <animate attributeName="baseFrequency" dur="4s" values="0.030 0.038;0.036 0.032;0.030 0.038" repeatCount="indefinite"/>
+                </feTurbulence>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="9"/>
+              </filter>
+              <filter id="turb-core" x="-20%" y="-20%" width="140%" height="140%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.040 0.048" numOctaves="2" seed="11" result="noise">
+                  <animate attributeName="baseFrequency" dur="2.6s" values="0.040 0.048;0.046 0.040;0.040 0.048" repeatCount="indefinite"/>
+                </feTurbulence>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="5"/>
+              </filter>
+            </defs>
+            <path class="flame-outer" filter="url(#turb-outer)" d="M 100 380 C 30 360 0 300 10 230 C 20 180 40 150 50 110 C 55 80 50 60 60 30 C 70 60 90 70 100 50 C 110 70 130 60 140 30 C 150 60 145 80 150 110 C 160 150 180 180 190 230 C 200 300 170 360 100 380 Z"/>
+            <path class="flame-mid"   filter="url(#turb-mid)"   d="M 100 370 C 50 355 25 305 35 245 C 45 195 65 170 75 130 C 80 100 75 80 85 50 C 95 75 100 65 100 50 C 100 65 105 75 115 50 C 125 80 120 100 125 130 C 135 170 155 195 165 245 C 175 305 150 355 100 370 Z"/>
+            <path class="flame-inner" filter="url(#turb-inner)" d="M 100 358 C 65 345 50 305 60 255 C 70 215 85 195 92 160 C 96 130 92 110 100 90 C 108 110 104 130 108 160 C 115 195 130 215 140 255 C 150 305 135 345 100 358 Z"/>
+            <path class="flame-core"  filter="url(#turb-core)"  d="M 100 340 C 80 330 75 295 82 260 C 88 230 96 210 100 180 C 104 210 112 230 118 260 C 125 295 120 330 100 340 Z"/>
+          </svg>
+        </div>
+
+        <div class="embers" aria-hidden>
+          <span class="ember"    style="left: 5%;  --drift: 30px;  animation-duration: 9s;  animation-delay: 0s;"></span>
+          <span class="ember s2" style="left: 12%; --drift: -20px; animation-duration: 11s; animation-delay: 1.5s;"></span>
+          <span class="ember"    style="left: 18%; --drift: 40px;  animation-duration: 8s;  animation-delay: 3s;"></span>
+          <span class="ember s3" style="left: 27%; --drift: 15px;  animation-duration: 12s; animation-delay: 0.8s;"></span>
+          <span class="ember s2" style="left: 35%; --drift: -35px; animation-duration: 10s; animation-delay: 2.2s;"></span>
+          <span class="ember"    style="left: 43%; --drift: 25px;  animation-duration: 9s;  animation-delay: 4s;"></span>
+          <span class="ember s3" style="left: 52%; --drift: -10px; animation-duration: 11s; animation-delay: 1s;"></span>
+          <span class="ember s2" style="left: 61%; --drift: 30px;  animation-duration: 13s; animation-delay: 2.5s;"></span>
+          <span class="ember"    style="left: 70%; --drift: -25px; animation-duration: 10s; animation-delay: 3.5s;"></span>
+          <span class="ember s3" style="left: 78%; --drift: 20px;  animation-duration: 9s;  animation-delay: 0.4s;"></span>
+          <span class="ember s2" style="left: 86%; --drift: -15px; animation-duration: 12s; animation-delay: 2s;"></span>
+          <span class="ember"    style="left: 93%; --drift: 35px;  animation-duration: 11s; animation-delay: 4.5s;"></span>
+        </div>
+
+        <div class="header">
+          <span class="eyebrow">tonight</span>
+          <h2 class="heading">Wing Night</h2>
+          <p class="pack-name">House Party Pack</p>
+        </div>
+        <div class="rounds">
+          <article class="round"><span class="round-num">Round 01</span><p class="round-label">Warm Up</p><p class="sauce">Frank's</p><p class="minigame"><span class="label">→</span>Trivia</p></article>
+          <article class="round"><span class="round-num">Round 02</span><p class="round-label">Second Heat</p><p class="sauce">Classic Buffalo</p><p class="minigame"><span class="label">→</span>Geo</p></article>
+          <article class="round"><span class="round-num">Round 03</span><p class="round-label">Third Wind</p><p class="sauce">Sriracha</p><p class="minigame"><span class="label">→</span>Drawing</p></article>
+          <article class="round"><span class="round-num">Round 04</span><p class="round-label">Mid Burn</p><p class="sauce">Korean BBQ</p><p class="minigame"><span class="label">→</span>Trivia</p></article>
+          <article class="round"><span class="round-num">Round 05</span><p class="round-label">Half Time</p><p class="sauce">Mango Habanero</p><p class="minigame"><span class="label">→</span>Geo</p></article>
+          <article class="round"><span class="round-num">Round 06</span><p class="round-label">Sweat Run</p><p class="sauce">Reaper Sauce</p><p class="minigame"><span class="label">→</span>Drawing</p></article>
+          <article class="round"><span class="round-num">Round 07</span><p class="round-label">Inferno</p><p class="sauce">Ghost Pepper</p><p class="minigame"><span class="label">→</span>Trivia</p></article>
+          <article class="round"><span class="round-num">Round 08</span><p class="round-label">Final Fire</p><p class="sauce">Carolina Reaper</p><p class="minigame"><span class="label">→</span>Geo</p></article>
+        </div>
+        <p class="waiting"><span class="pulse-dot"></span>Waiting for teams</p>
+      </div>
+      <footer class="splits">
+        <p class="empty">No teams have joined yet.</p>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,41 +1,70 @@
 import type { RoomState } from "@wingnight/shared";
 
 import { displayBoardCopy } from "../../copy";
-import { TurnMeta } from "../TurnMeta";
 import * as styles from "./styles";
 
 type EatingStageBodyProps = {
-  phaseLabel: string;
   currentRoundConfig: RoomState["currentRoundConfig"];
-  shouldRenderTeamTurnContext: boolean;
   activeTeamName: string | null;
   liveEatingRemainingSeconds: number;
+  totalEatingSeconds: number | null;
 };
 
+const URGENT_THRESHOLD_SECONDS = 10;
+
 export const EatingStageBody = ({
-  phaseLabel,
   currentRoundConfig,
-  shouldRenderTeamTurnContext,
   activeTeamName,
-  liveEatingRemainingSeconds
+  liveEatingRemainingSeconds,
+  totalEatingSeconds
 }: EatingStageBodyProps): JSX.Element => {
+  const isUrgent = liveEatingRemainingSeconds <= URGENT_THRESHOLD_SECONDS;
+  const heatFillPercent =
+    totalEatingSeconds !== null && totalEatingSeconds > 0
+      ? Math.max(0, Math.min(100, (liveEatingRemainingSeconds / totalEatingSeconds) * 100))
+      : 100;
+  const timerLabelText =
+    currentRoundConfig !== null
+      ? displayBoardCopy.eatingPhaseLabel(currentRoundConfig.sauce)
+      : displayBoardCopy.eatingPhaseFallbackLabel;
+
   return (
-    <>
-      <h2 className={styles.title}>{displayBoardCopy.phaseContextTitle(phaseLabel)}</h2>
-      <p className={styles.fallbackText}>
-        {currentRoundConfig
-          ? displayBoardCopy.roundSauceSummary(currentRoundConfig.sauce)
-          : displayBoardCopy.roundFallbackLabel}
-      </p>
-      {shouldRenderTeamTurnContext && activeTeamName !== null && (
-        <TurnMeta activeTeamName={activeTeamName} />
-      )}
-      <div className={styles.timerWrap}>
-        <p className={styles.timerLabel}>{displayBoardCopy.eatingTimerLabel}</p>
-        <p className={styles.timerValue}>
+    <div className={styles.container}>
+      <div className={styles.metaRow}>
+        <div className={styles.metaCol}>
+          {currentRoundConfig !== null && (
+            <>
+              <span className={styles.metaAccent}>
+                {displayBoardCopy.roundChipLabel(currentRoundConfig.round)}
+              </span>
+              <span>
+                {currentRoundConfig.label} · {currentRoundConfig.sauce}
+              </span>
+            </>
+          )}
+        </div>
+        <div className={`${styles.metaCol} ${styles.metaColRight}`}>
+          {activeTeamName !== null && (
+            <>
+              <span>{displayBoardCopy.eatingActiveTeamLabel}</span>
+              <span className={styles.metaAccentTeam}>{activeTeamName}</span>
+            </>
+          )}
+        </div>
+      </div>
+      <div className={styles.timerArea}>
+        <p className={`${styles.timer} ${isUrgent ? styles.timerUrgent : ""}`.trim()}>
           {displayBoardCopy.eatingTimerValue(liveEatingRemainingSeconds)}
         </p>
+        <p className={styles.timerLabel}>{timerLabelText}</p>
       </div>
-    </>
+      <div className={styles.heatTrack}>
+        <div
+          className={styles.heatFill}
+          style={{ width: `${heatFillPercent}%` }}
+          aria-hidden
+        />
+      </div>
+    </div>
   );
 };
