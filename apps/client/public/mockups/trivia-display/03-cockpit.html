@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trivia Display — 03 Heat Cockpit</title>
+    <style>
+      :root {
+        --bg: #121212;
+        --surface: #1c1c1c;
+        --surface-alt: #242424;
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --heat: #ef4444;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+        --teamB: #06b6d4;
+        --teamC: #84cc16;
+        --teamD: #f43f5e;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100dvh;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 8% 0%, rgba(249, 115, 22, 0.18) 0%, transparent 35%),
+          radial-gradient(circle at 92% 100%, rgba(239, 68, 68, 0.18) 0%, transparent 35%),
+          var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      .stage {
+        height: 100dvh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: clamp(1rem, 1.6vw, 1.8rem);
+        padding: clamp(1.25rem, 2vw, 2.25rem);
+      }
+      header.top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .round-block {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: var(--surface);
+        border: 1px solid #2c2c2c;
+        border-left: 5px solid var(--primary);
+        padding: 0.85rem 1.5rem;
+        border-radius: 10px;
+      }
+      .flame {
+        font-size: clamp(1.5rem, 2.4vw, 2.5rem);
+        line-height: 1;
+        filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.6));
+      }
+      .round-block .text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+      }
+      .round-block .num {
+        text-transform: uppercase;
+        font-weight: 800;
+        letter-spacing: 0.25em;
+        font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+        color: var(--primary);
+      }
+      .round-block .label {
+        font-size: clamp(1.1rem, 1.5vw, 1.5rem);
+        font-weight: 700;
+      }
+      .game-tag {
+        text-transform: uppercase;
+        letter-spacing: 0.35em;
+        font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .game-tag b {
+        color: var(--text);
+        margin-right: 0.4em;
+      }
+      main.body {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: clamp(1rem, 1.6vw, 1.75rem);
+        min-height: 0;
+      }
+      .left-col {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: clamp(1rem, 1.5vw, 1.5rem);
+        min-height: 0;
+      }
+      .team-panel {
+        background: linear-gradient(90deg, var(--teamA) 0%, rgba(249, 115, 22, 0.05) 100%);
+        border-radius: 12px;
+        padding: clamp(1rem, 1.5vw, 1.5rem) clamp(1.5rem, 2vw, 2rem);
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .team-panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent 60%, rgba(0,0,0,0.45) 100%);
+      }
+      .team-panel .pre {
+        position: relative;
+        text-transform: uppercase;
+        letter-spacing: 0.3em;
+        color: rgba(0,0,0,0.55);
+        font-weight: 800;
+        font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+      }
+      .team-panel .nm {
+        position: relative;
+        font-size: clamp(1.6rem, 2.6vw, 3rem);
+        font-weight: 900;
+        color: #1a0f04;
+        letter-spacing: -0.01em;
+      }
+      .question-card {
+        background: var(--surface);
+        border: 2px solid #2c2c2c;
+        border-radius: 18px;
+        padding: clamp(1.75rem, 3vw, 3.25rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: clamp(1.25rem, 1.8vw, 2rem);
+        position: relative;
+        overflow: hidden;
+      }
+      .ribbon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: var(--primary);
+        color: #1a0f04;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.3em;
+        font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+        padding: 0.55rem 1.4rem 0.6rem;
+        border-bottom-right-radius: 14px;
+      }
+      .q-text {
+        font-size: clamp(2.2rem, 3.8vw, 4.6rem);
+        font-weight: 800;
+        line-height: 1.08;
+        margin: 0;
+        text-wrap: balance;
+        margin-top: 1.2rem;
+      }
+      .heat-bar {
+        background: var(--surface);
+        border: 1px solid #2c2c2c;
+        border-radius: 18px;
+        padding: clamp(1.25rem, 1.6vw, 1.75rem);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        width: clamp(180px, 18vw, 280px);
+      }
+      .heat-bar .label {
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .heat-track {
+        flex: 1;
+        width: clamp(60px, 5vw, 80px);
+        background: var(--surface-alt);
+        border-radius: 999px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #2c2c2c;
+      }
+      .heat-fill {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        background: linear-gradient(180deg, var(--heat) 0%, var(--primary) 60%, var(--gold) 100%);
+        border-radius: 999px;
+        transition: height 1s linear;
+      }
+      .heat-bar .secs {
+        font-family: ui-monospace, "Menlo", "Consolas", monospace;
+        font-size: clamp(2.2rem, 3.5vw, 4rem);
+        font-weight: 800;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .heat-bar.urgent .secs { color: var(--heat); animation: heatpulse 0.7s ease-in-out infinite; }
+      @keyframes heatpulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.06); }
+      }
+      footer.scoreboard {
+        background: var(--surface);
+        border: 1px solid #2c2c2c;
+        border-radius: 14px;
+        padding: clamp(0.85rem, 1.2vw, 1.25rem) clamp(1rem, 1.5vw, 1.75rem);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: clamp(0.75rem, 1.2vw, 1.5rem);
+      }
+      .score {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding-left: 0.6rem;
+        border-left: 4px solid var(--surface-alt);
+      }
+      .score.t-a { border-left-color: var(--teamA); }
+      .score.t-b { border-left-color: var(--teamB); }
+      .score.t-c { border-left-color: var(--teamC); }
+      .score.t-d { border-left-color: var(--teamD); }
+      .score .nm {
+        font-size: clamp(1rem, 1.3vw, 1.4rem);
+        font-weight: 700;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .score .pts {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(1.2rem, 1.6vw, 1.8rem);
+        font-weight: 800;
+        color: var(--primary);
+        font-variant-numeric: tabular-nums;
+      }
+      .score.lead .nm { color: var(--gold); }
+      .score.lead .pts { color: var(--gold); }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="top">
+        <div class="round-block">
+          <span class="flame">🔥</span>
+          <div class="text">
+            <span class="num">Round 1</span>
+            <span class="label">Warm Up · Frank's</span>
+          </div>
+        </div>
+        <div class="game-tag"><b>Trivia</b>5 questions · 30s each</div>
+      </header>
+      <main class="body">
+        <div class="left-col">
+          <div class="team-panel">
+            <span class="pre">on the wings</span>
+            <span class="nm">Team Heat</span>
+          </div>
+          <div class="question-card">
+            <span class="ribbon">Question 2 of 5</span>
+            <p class="q-text">What compound gives chili peppers their heat?</p>
+          </div>
+        </div>
+        <div class="heat-bar" id="heatBar">
+          <span class="label">Heat</span>
+          <div class="heat-track">
+            <div class="heat-fill" id="heatFill" style="height: 93%"></div>
+          </div>
+          <span class="secs" id="secs">28</span>
+        </div>
+      </main>
+      <footer class="scoreboard">
+        <div class="score t-a lead"><span class="nm">Team Heat</span><span class="pts">14</span></div>
+        <div class="score t-b"><span class="nm">Cool Cats</span><span class="pts">11</span></div>
+        <div class="score t-c"><span class="nm">Spice Lords</span><span class="pts">9</span></div>
+        <div class="score t-d"><span class="nm">Mild Sauce</span><span class="pts">6</span></div>
+      </footer>
+    </div>
+    <script>
+      const secs = document.getElementById('secs');
+      const fill = document.getElementById('heatFill');
+      const bar = document.getElementById('heatBar');
+      const max = 30;
+      let n = 28;
+      setInterval(() => {
+        n = n > 0 ? n - 1 : max;
+        secs.textContent = n;
+        fill.style.height = (n / max * 100) + '%';
+        if (n <= 10) bar.classList.add('urgent'); else bar.classList.remove('urgent');
+      }, 1000);
+    </script>
+  </body>
+</html>

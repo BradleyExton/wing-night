@@ -35,6 +35,134 @@ body {
   }
 }
 
+@keyframes heatpulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes strikethrough {
+  from {
+    transform: translateY(-50%) scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(-50%) scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.6);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.95;
+  }
+  85% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate3d(var(--ember-drift, 20px), -110vh, 0) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes tick {
+  0% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.heat-locked-lock-halo {
+  position: relative;
+}
+.heat-locked-lock-halo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(251, 191, 36, 0.7) 60deg,
+    transparent 120deg,
+    transparent 360deg
+  );
+  animation: spin 4s linear infinite;
+  filter: blur(2px);
+}
+.heat-locked-lock-halo::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: rgba(10, 6, 6, 0.95);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+@media (prefers-reduced-motion: reduce) {
+  .heat-locked-lock-halo::before {
+    animation: none;
+  }
+}
+
+.heat-locked-ring {
+  position: relative;
+}
+.heat-locked-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from -90deg,
+    #fbbf24 0deg,
+    #f97316 120deg,
+    #ef4444 240deg,
+    #fbbf24 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  padding: 4px;
+  animation: spin 6s linear infinite;
+  filter: drop-shadow(0 0 14px rgba(249, 115, 22, 0.55));
+}
+@media (prefers-reduced-motion: reduce) {
+  .heat-locked-ring::before {
+    animation: none;
+  }
+}
+
 @keyframes sparkFloat {
   0% {
     transform: translate3d(0, 0, 0) scale(0.62);

@@ -1,35 +1,38 @@
+import { Trophy } from "lucide-react";
+
 import { finalResultsStageCopy } from "./copy";
 import * as styles from "./styles";
 
 type FinalResultsStageBodyProps = {
   winnerTeamName: string | null;
   winnerScore: number | null;
-  teamCount: number;
 };
 
 export const FinalResultsStageBody = ({
   winnerTeamName,
-  winnerScore,
-  teamCount
+  winnerScore
 }: FinalResultsStageBodyProps): JSX.Element => {
+  const resolvedTeamName = winnerTeamName ?? finalResultsStageCopy.noWinnerLabel;
+
   return (
-    <div className={styles.root}>
-      <h2 className={styles.title}>{finalResultsStageCopy.title}</h2>
-      <p className={styles.subtitle}>{finalResultsStageCopy.subtitle}</p>
-      <article className={styles.winnerPanel}>
-        <p className={styles.winnerLabel}>{finalResultsStageCopy.winnerLabel}</p>
-        <p className={styles.winnerName}>
-          {winnerTeamName ?? finalResultsStageCopy.noWinnerLabel}
-        </p>
-        {winnerScore !== null && (
-          <p className={styles.winnerScore}>
-            {finalResultsStageCopy.scoreLabel(winnerScore)}
-          </p>
-        )}
-      </article>
-      <p className={styles.teamsCompeted}>
-        {finalResultsStageCopy.teamsCompetedLabel(teamCount)}
+    <div className={styles.container}>
+      <span className={styles.ambient} aria-hidden />
+      <span className={`${styles.beatBase} ${styles.beatDelay1} ${styles.gameOver}`}>
+        {finalResultsStageCopy.gameOverLabel}
+      </span>
+      <span className={`${styles.beatBase} ${styles.beatDelay2} ${styles.champion}`}>
+        <Trophy className={styles.championIcon} aria-hidden />
+        {finalResultsStageCopy.championLabel}
+      </span>
+      <p className={`${styles.beatBase} ${styles.beatDelay3} ${styles.teamName}`}>
+        {resolvedTeamName}
       </p>
+      {winnerScore !== null && (
+        <p className={`${styles.beatBase} ${styles.beatDelay4} ${styles.score}`}>
+          <span className={styles.scoreNum}>{winnerScore}</span>
+          <span className={styles.scoreUnit}>{finalResultsStageCopy.pointsUnitLabel}</span>
+        </p>
+      )}
     </div>
   );
 };

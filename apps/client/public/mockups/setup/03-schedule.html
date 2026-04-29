@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SETUP — 03 Schedule Strip</title>
+    <style>
+      :root {
+        --bg: #0d0d0d; --text: #fff; --muted: #5e5e5e; --muted2: #a3a3a3;
+        --primary: #f97316; --heat: #ef4444; --gold: #fbbf24;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .stage { height: 100dvh; display: grid; grid-template-rows: 1fr auto; }
+      .body {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: clamp(1.5rem, 3vw, 2.75rem);
+        padding: clamp(2rem, 4vw, 4rem);
+        overflow: hidden;
+        text-align: center;
+      }
+      .body::before {
+        content: ""; position: absolute; inset: -10%;
+        background:
+          radial-gradient(ellipse at 50% 30%, rgba(249, 115, 22, 0.10) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      .header {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+      }
+      .eyebrow {
+        text-transform: uppercase; letter-spacing: 0.42em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 800; color: var(--muted);
+      }
+      .heading {
+        margin: 0;
+        font-size: clamp(2.5rem, 6.4vw, 7.5rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+        line-height: 0.9;
+        color: var(--text);
+      }
+      .heading .accent { color: var(--primary); }
+
+      .schedule {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 clamp(1.5rem, 3vw, 4rem);
+        width: 100%;
+        max-width: 1500px;
+      }
+      .row {
+        position: relative;
+        display: grid;
+        grid-template-columns: clamp(2.5rem, 4vw, 4.5rem) 1fr;
+        align-items: baseline;
+        gap: clamp(1rem, 1.8vw, 2rem);
+        padding: clamp(0.6rem, 1.2vh, 1.1rem) clamp(0.4rem, 1vw, 1rem);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .row.last { border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+
+      .row-num {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(1.5rem, 2.6vw, 3rem);
+        font-weight: 900;
+        color: var(--primary);
+        letter-spacing: -0.05em;
+        line-height: 1;
+        text-align: right;
+      }
+
+      .row-text {
+        display: flex; flex-direction: column; gap: 0.25rem;
+        text-align: left;
+        min-width: 0;
+      }
+      .row-title {
+        margin: 0;
+        font-size: clamp(1.1rem, 2vw, 2.4rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+        line-height: 0.95;
+        color: var(--text);
+      }
+      .row-meta {
+        margin: 0;
+        font-size: clamp(0.75rem, 1vw, 1.15rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--muted2);
+        display: inline-flex; align-items: center; gap: 0.6em;
+        flex-wrap: wrap;
+      }
+      .row-meta .sep { color: var(--muted); }
+      .row-meta .game { color: var(--primary); }
+
+      .waiting {
+        position: relative;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 700;
+        color: var(--muted);
+        display: inline-flex; align-items: center; gap: 0.7em;
+      }
+      .pulse-dot {
+        width: 0.7em; height: 0.7em; border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 10px var(--primary);
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(0.85); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .pulse-dot { animation: none; }
+      }
+
+      footer.splits {
+        display: grid; grid-template-columns: 1fr;
+        background: rgba(255,255,255,0.04);
+        border-top: 1px solid rgba(255,255,255,0.06);
+      }
+      .empty {
+        padding: clamp(0.85rem, 1.4vh, 1.5rem) clamp(1rem, 2.2vw, 3rem);
+        text-align: center;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 700;
+        color: var(--muted2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="body">
+        <div class="header">
+          <span class="eyebrow">tonight</span>
+          <h2 class="heading">House <span class="accent">Party</span> Pack</h2>
+        </div>
+        <div class="schedule">
+          <div class="row"><span class="row-num">01</span><div class="row-text"><h3 class="row-title">Warm Up</h3><p class="row-meta"><span>Frank's</span><span class="sep">·</span><span class="game">Trivia</span></p></div></div>
+          <div class="row"><span class="row-num">02</span><div class="row-text"><h3 class="row-title">Second Heat</h3><p class="row-meta"><span>Classic Buffalo</span><span class="sep">·</span><span class="game">Geo</span></p></div></div>
+          <div class="row"><span class="row-num">03</span><div class="row-text"><h3 class="row-title">Third Wind</h3><p class="row-meta"><span>Sriracha</span><span class="sep">·</span><span class="game">Drawing</span></p></div></div>
+          <div class="row"><span class="row-num">04</span><div class="row-text"><h3 class="row-title">Mid Burn</h3><p class="row-meta"><span>Korean BBQ</span><span class="sep">·</span><span class="game">Trivia</span></p></div></div>
+          <div class="row"><span class="row-num">05</span><div class="row-text"><h3 class="row-title">Half Time</h3><p class="row-meta"><span>Mango Habanero</span><span class="sep">·</span><span class="game">Geo</span></p></div></div>
+          <div class="row"><span class="row-num">06</span><div class="row-text"><h3 class="row-title">Sweat Run</h3><p class="row-meta"><span>Reaper Sauce</span><span class="sep">·</span><span class="game">Drawing</span></p></div></div>
+          <div class="row last"><span class="row-num">07</span><div class="row-text"><h3 class="row-title">Inferno</h3><p class="row-meta"><span>Ghost Pepper</span><span class="sep">·</span><span class="game">Trivia</span></p></div></div>
+          <div class="row last"><span class="row-num">08</span><div class="row-text"><h3 class="row-title">Final Fire</h3><p class="row-meta"><span>Carolina Reaper</span><span class="sep">·</span><span class="game">Geo</span></p></div></div>
+        </div>
+        <p class="waiting"><span class="pulse-dot"></span>Waiting for teams</p>
+      </div>
+      <footer class="splits">
+        <p class="empty">No teams have joined yet.</p>
+      </footer>
+    </div>
+  </body>
+</html>

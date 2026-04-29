@@ -45,22 +45,6 @@ export const StageSurface = ({
     eatingTimerSnapshot: stageViewModel.eatingTimerSnapshot,
     fallbackEatingSeconds: stageViewModel.fallbackEatingSeconds
   });
-  const totalTurnCount = roomState?.turnOrderTeamIds.length ?? roomState?.teams.length ?? 0;
-  const completedTurnCount = roomState?.completedRoundTurnTeamIds.length ?? 0;
-  const effectiveCompletedTurnCount =
-    stageViewModel.stageMode === "turn_results" && stageViewModel.activeTeamName !== null
-      ? Math.min(completedTurnCount + 1, totalTurnCount)
-      : completedTurnCount;
-  const hasNextTurn =
-    totalTurnCount > 0 && effectiveCompletedTurnCount < totalTurnCount;
-  const wingPointsByTeamId = roomState?.pendingWingPointsByTeamId ?? {};
-  const minigamePointsByTeamId = roomState?.pendingMinigamePointsByTeamId ?? {};
-  const roundWingPoints = Object.values(wingPointsByTeamId).reduce((sum, points) => {
-    return sum + points;
-  }, 0);
-  const roundMinigamePoints = Object.values(minigamePointsByTeamId).reduce((sum, points) => {
-    return sum + points;
-  }, 0);
   const winnerTeam = sortedStandings[0] ?? null;
 
   const renderStageBody = (stageMode: StageRenderMode): JSX.Element => {
@@ -80,11 +64,14 @@ export const StageSurface = ({
       case "eating":
         return liveEatingRemainingSeconds !== null ? (
           <EatingStageBody
-            phaseLabel={phaseLabel}
             currentRoundConfig={stageViewModel.currentRoundConfig}
-            shouldRenderTeamTurnContext={stageViewModel.shouldRenderTeamTurnContext}
             activeTeamName={stageViewModel.activeTeamName}
             liveEatingRemainingSeconds={liveEatingRemainingSeconds}
+            totalEatingSeconds={
+              stageViewModel.eatingTimerSnapshot !== null
+                ? Math.round(stageViewModel.eatingTimerSnapshot.durationMs / 1000)
+                : stageViewModel.fallbackEatingSeconds
+            }
           />
         ) : (
           <FallbackStageBody
@@ -95,21 +82,16 @@ export const StageSurface = ({
       case "minigame_intro":
         return (
           <MinigameIntroStageBody
-            phaseLabel={phaseLabel}
-            briefingContent={stageViewModel.minigameBriefingContent}
-            sauceName={stageViewModel.currentRoundConfig?.sauce ?? null}
             activeTeamName={stageViewModel.activeTeamName}
             activeTeamPlayerNames={stageViewModel.activeTeamPlayerNames}
+            minigameType={stageViewModel.minigameType}
           />
         );
       case "minigame_play":
         return (
           <MinigameStageBody
             phase="play"
-            phaseLabel={phaseLabel}
             minigameType={stageViewModel.minigameType}
-            currentRoundConfig={stageViewModel.currentRoundConfig}
-            shouldRenderTeamTurnContext={stageViewModel.shouldRenderTeamTurnContext}
             activeTeamName={stageViewModel.activeTeamName}
             minigameDisplayView={stageViewModel.minigameDisplayView}
           />
@@ -117,18 +99,17 @@ export const StageSurface = ({
       case "turn_results":
         return (
           <TurnResultsStageBody
-            activeTeamName={stageViewModel.activeTeamName}
-            completedTurnCount={effectiveCompletedTurnCount}
-            totalTurnCount={totalTurnCount}
-            hasNextTurn={hasNextTurn}
+            justFinishedTeamName={stageViewModel.activeTeamName}
+            turnTiles={stageViewModel.turnTiles}
+            nextTeamName={stageViewModel.nextTurnTeamName}
           />
         );
       case "round_results":
         return (
           <RoundResultsStageBody
-            wingPoints={roundWingPoints}
-            minigamePoints={roundMinigamePoints}
-            totalRoundPoints={roundWingPoints + roundMinigamePoints}
+            roundNumber={stageViewModel.currentRoundConfig?.round ?? null}
+            teamRows={stageViewModel.roundResultsRows}
+            topTeamId={stageViewModel.roundResultsTopTeamId}
           />
         );
       case "final_results":
@@ -136,7 +117,6 @@ export const StageSurface = ({
           <FinalResultsStageBody
             winnerTeamName={winnerTeam?.name ?? null}
             winnerScore={winnerTeam?.totalScore ?? null}
-            teamCount={sortedStandings.length}
           />
         );
       case "fallback":
@@ -152,14 +132,19 @@ export const StageSurface = ({
   };
 
   const surfaceClassName =
-    effectiveStageMode === "setup"
-      ? styles.setupCard
-      : effectiveStageMode === "minigame_play"
-        ? styles.card
-        : styles.stageCanvas;
+    effectiveStageMode === "setup" ? styles.setupCard : styles.stageCanvas;
+  const isFullStageMode =
+    effectiveStageMode === "minigame_play" ||
+    effectiveStageMode === "eating" ||
+    effectiveStageMode === "round_intro" ||
+    effectiveStageMode === "minigame_intro" ||
+    effectiveStageMode === "turn_results" ||
+    effectiveStageMode === "round_results" ||
+    effectiveStageMode === "final_results";
   const shouldRenderStageContextHeader =
-    effectiveStageMode !== "setup";
-  const shouldWrapStageBody = shouldRenderStageContextHeader;
+    effectiveStageMode !== "setup" && !isFullStageMode;
+  const shouldWrapStageBody =
+    effectiveStageMode !== "setup" && !isFullStageMode;
 
   return (
     <article className={surfaceClassName}>

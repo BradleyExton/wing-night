@@ -13,20 +13,25 @@ const roundFixture: GameConfigRound = {
   minigame: "GEO"
 };
 
-test("renders round intro hero headline and metadata", () => {
+test("renders the three-beat reveal with round, sauce, and minigame", () => {
   const html = renderToStaticMarkup(
     <RoundIntroStageBody currentRoundConfig={roundFixture} />
   );
 
-  assert.match(html, /Round Intro/);
-  assert.match(html, /Round 2: Second Heat/);
-  assert.match(html, /Sauce is locked\. Mini-game is up next\./);
-  assert.match(html, /Sauce/);
+  assert.match(html, /Coming up/);
+  assert.match(html, /02/);
+  assert.match(html, /Second Heat/);
   assert.match(html, /Classic Buffalo/);
-  assert.match(html, /Mini-Game/);
+  assert.match(html, /followed by/);
   assert.match(html, /GEO/);
-  assert.match(html, /display\/setup\/flow-round-intro\.png/);
-  assert.match(html, /Round intro hero illustration/);
+});
+
+test("zero-pads single-digit round numbers", () => {
+  const html = renderToStaticMarkup(
+    <RoundIntroStageBody currentRoundConfig={{ ...roundFixture, round: 1 }} />
+  );
+
+  assert.match(html, />01</);
 });
 
 test("renders long copy values without dropping metadata", () => {
@@ -41,8 +46,7 @@ test("renders long copy values without dropping metadata", () => {
     />
   );
 
-  assert.match(html, /Round 9: Inferno Invitational Championship/);
+  assert.match(html, /Inferno Invitational Championship/);
   assert.match(html, /Smoked Honey Habanero Ghost Pepper Reserve/);
-  assert.match(html, /Mini-Game/);
   assert.match(html, /GEO/);
 });

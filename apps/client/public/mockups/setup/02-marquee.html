@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SETUP — 02 Marquee Cards</title>
+    <style>
+      :root {
+        --bg: #0d0d0d; --text: #fff; --muted: #5e5e5e; --muted2: #a3a3a3;
+        --primary: #f97316; --heat: #ef4444; --gold: #fbbf24;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .stage { height: 100dvh; display: grid; grid-template-rows: 1fr auto; }
+      .body {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: clamp(1.5rem, 3vw, 3rem);
+        padding: clamp(2rem, 4vw, 4rem);
+        overflow: hidden;
+        text-align: center;
+      }
+      .body::before {
+        content: ""; position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse at 50% 20%, rgba(249, 115, 22, 0.14) 0%, transparent 55%),
+          radial-gradient(ellipse at 50% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      .header {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+      }
+      .eyebrow {
+        text-transform: uppercase; letter-spacing: 0.42em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 800; color: var(--gold);
+      }
+      .heading {
+        margin: 0;
+        font-size: clamp(2.5rem, 6.4vw, 7.5rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+        line-height: 0.9;
+        color: var(--text);
+      }
+
+      .marquee {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: clamp(0.6rem, 1.1vw, 1.2rem);
+        width: 100%;
+        max-width: 1400px;
+      }
+
+      .card {
+        position: relative;
+        display: flex; flex-direction: column;
+        gap: clamp(0.4rem, 0.65vw, 0.7rem);
+        padding: clamp(0.9rem, 1.4vw, 1.5rem) clamp(0.85rem, 1.3vw, 1.4rem);
+        background:
+          linear-gradient(180deg, rgba(249, 115, 22, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 3px solid var(--primary);
+        text-align: left;
+        opacity: 0;
+        animation: card-rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      }
+      .card:nth-child(1) { animation-delay: 100ms; }
+      .card:nth-child(2) { animation-delay: 220ms; }
+      .card:nth-child(3) { animation-delay: 340ms; }
+      .card:nth-child(4) { animation-delay: 460ms; }
+      .card:nth-child(5) { animation-delay: 580ms; }
+      .card:nth-child(6) { animation-delay: 700ms; }
+      .card:nth-child(7) { animation-delay: 820ms; }
+      .card:nth-child(8) { animation-delay: 940ms; }
+      @keyframes card-rise {
+        from { opacity: 0; transform: translateY(1.5rem); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .card { animation: none; opacity: 1; transform: none; }
+      }
+
+      .card-num {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(1.4rem, 2vw, 2.4rem);
+        font-weight: 900;
+        line-height: 1;
+        color: var(--primary);
+        letter-spacing: -0.04em;
+      }
+      .card-title {
+        margin: 0;
+        font-size: clamp(1rem, 1.5vw, 1.8rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.005em;
+        line-height: 0.95;
+        color: var(--text);
+      }
+      .card-row {
+        display: flex; align-items: baseline; gap: 0.4em;
+        font-size: clamp(0.7rem, 0.95vw, 1.05rem);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .card-row .label { color: var(--muted); flex-shrink: 0; }
+      .card-row .value { color: var(--text); }
+      .card-row.minigame .value { color: var(--primary); }
+
+      .waiting {
+        position: relative;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 700;
+        color: var(--muted);
+        display: inline-flex; align-items: center; gap: 0.7em;
+      }
+      .pulse-dot {
+        width: 0.7em; height: 0.7em; border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 10px var(--primary);
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(0.85); }
+      }
+
+      footer.splits {
+        display: grid; grid-template-columns: 1fr;
+        background: rgba(255,255,255,0.04);
+        border-top: 1px solid rgba(255,255,255,0.06);
+      }
+      .empty {
+        padding: clamp(0.85rem, 1.4vh, 1.5rem) clamp(1rem, 2.2vw, 3rem);
+        text-align: center;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 700;
+        color: var(--muted2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="body">
+        <div class="header">
+          <span class="eyebrow">tonight's lineup</span>
+          <h2 class="heading">House Party Pack</h2>
+        </div>
+        <div class="marquee">
+          <article class="card"><span class="card-num">01</span><h3 class="card-title">Warm Up</h3><p class="card-row"><span class="label">sauce</span><span class="value">Frank's</span></p><p class="card-row minigame"><span class="label">game</span><span class="value">Trivia</span></p></article>
+          <article class="card"><span class="card-num">02</span><h3 class="card-title">Second Heat</h3><p class="card-row"><span class="label">sauce</span><span class="value">Classic Buffalo</span></p><p class="card-row minigame"><span class="label">game</span><span class="value">Geo</span></p></article>
+          <article class="card"><span class="card-num">03</span><h3 class="card-title">Third Wind</h3><p class="card-row"><span class="label">sauce</span><span class="value">Sriracha</span></p><p class="card-row minigame"><span class="label">game</span><span class="value">Drawing</span></p></article>
+          <article class="card"><span class="card-num">04</span><h3 class="card-title">Mid Burn</h3><p class="card-row"><span class="label">sauce</span><span class="value">Korean BBQ</span></p><p class="card-row minigame"><span class="label">game</span><span class="value">Trivia</span></p></article>
+          <article class="card"><span class="card-num">05</span><h3 class="card-title">Half Time</h3><p class="card-row"><span class="label">sauce</span><span class="value">Mango Habanero</span></p><p class="card-row minigame"><span class="label">game</span><span class="value">Geo</span></p></article>
+          <article class="card"><span class="card-num">06</span><h3 class="card-title">Sweat Run</h3><p class="card-row"><span class="label">sauce</span><span class="value">Reaper Sauce</span></p><p class="card-row minigame"><span class="label">game</span><span class="value">Drawing</span></p></article>
+          <article class="card"><span class="card-num">07</span><h3 class="card-title">Inferno</h3><p class="card-row"><span class="label">sauce</span><span class="value">Ghost Pepper</span></p><p class="card-row minigame"><span class="label">game</span><span class="value">Trivia</span></p></article>
+          <article class="card"><span class="card-num">08</span><h3 class="card-title">Final Fire</h3><p class="card-row"><span class="label">sauce</span><span class="value">Carolina Reaper</span></p><p class="card-row minigame"><span class="label">game</span><span class="value">Geo</span></p></article>
+        </div>
+        <p class="waiting"><span class="pulse-dot"></span>Waiting for teams</p>
+      </div>
+      <footer class="splits">
+        <p class="empty">No teams have joined yet.</p>
+      </footer>
+    </div>
+  </body>
+</html>

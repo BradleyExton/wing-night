@@ -5,27 +5,41 @@ import * as styles from "./styles.js";
 
 export const DisplayTriviaSurface = ({
   phase,
-  minigameDisplayView
+  minigameDisplayView,
+  activeTeamName
 }: MinigameDisplayRendererProps): JSX.Element => {
   const triviaDisplayView =
     minigameDisplayView?.minigame === "TRIVIA" ? minigameDisplayView : null;
   const currentPrompt = triviaDisplayView?.currentPrompt ?? null;
   const isPlayPhase = phase === "play";
 
+  if (!isPlayPhase) {
+    return (
+      <div className={styles.introContainer}>
+        <p className={styles.introText}>{displayTriviaSurfaceCopy.introMessage}</p>
+      </div>
+    );
+  }
+
+  if (currentPrompt === null) {
+    return (
+      <div className={styles.introContainer}>
+        <p className={styles.fallbackTitle}>{displayTriviaSurfaceCopy.waitingMessage}</p>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
-      <p className={styles.description}>
-        {isPlayPhase
-          ? displayTriviaSurfaceCopy.playDescription
-          : displayTriviaSurfaceCopy.introDescription}
-      </p>
-      {currentPrompt !== null ? (
-        <div className={styles.promptBlock}>
-          <p className={styles.promptLabel}>{displayTriviaSurfaceCopy.questionLabel}</p>
-          <p className={styles.promptValue}>{currentPrompt.question}</p>
-        </div>
-      ) : (
-        <p className={styles.fallbackTitle}>{displayTriviaSurfaceCopy.triviaTurnTitle}</p>
+      <p className={styles.question}>{currentPrompt.question}</p>
+      <span className={styles.underline} aria-hidden="true" />
+      {activeTeamName !== null && (
+        <p className={styles.activeTeam}>
+          <span className={styles.activeTeamLabel}>
+            {displayTriviaSurfaceCopy.activeTeamLabel}
+          </span>
+          {activeTeamName}
+        </p>
       )}
     </div>
   );

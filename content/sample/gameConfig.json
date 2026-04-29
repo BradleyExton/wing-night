@@ -30,7 +30,7 @@
   },
   "minigameRules": {
     "trivia": {
-      "questionsPerTurn": 1
+      "questionsPerTurn": 5
     }
   },
   "timers": {

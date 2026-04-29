@@ -74,90 +74,46 @@ const buildSnapshot = (phase: Phase): RoomState => {
   };
 };
 
-test("renders round intro hero metadata", () => {
+test("renders round intro three-beat reveal with metadata", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.ROUND_INTRO)} />
   );
 
-  assert.match(html, /Round 1: Warm Up/);
-  assert.match(html, /Wing Night/);
-  assert.match(html, /Round Intro/);
-  assert.match(html, /Wing Night logo/);
-  assert.match(html, /Sauce is locked\. Mini-game is up next\./);
+  assert.match(html, /Coming up/);
+  assert.match(html, />01</);
+  assert.match(html, /Warm Up/);
   assert.match(html, /Frank&#x27;s/);
+  assert.match(html, /followed by/);
   assert.match(html, /TRIVIA/);
-  assert.match(html, /display\/setup\/flow-round-intro\.png/);
-  assert.match(html, /Round intro hero illustration/);
+  assert.doesNotMatch(html, /Wing Night logo/);
   assert.doesNotMatch(html, /Round: Round 1 of 1/);
   assert.doesNotMatch(html, /Phase: Round Intro/);
 });
 
-test("renders setup flow-first layout without live setup status chips", () => {
+test("renders Cinematic Inferno setup with rounds preview and waiting indicator", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.SETUP)} />
   );
 
   assert.match(html, /Wing Night/);
-  assert.match(html, /Mini-Game Intro/);
-  assert.match(html, /Eat Wings/);
-  assert.match(html, /Mini-Game Play/);
-  assert.match(html, /Turn Results/);
-  assert.match(html, /display\/setup\/flow-minigame-intro\.png/);
-  assert.match(html, /display\/setup\/flow-eat-wings\.png/);
-  assert.match(html, /display\/setup\/flow-minigame-play\.png/);
-  assert.match(html, /display\/setup\/flow-round-results\.png/);
-  assert.match(html, /display\/minigames\/trivia-illustration\.svg/);
-  assert.doesNotMatch(html, /bg-primary\/90/);
-  assert.doesNotMatch(html, /border-text\/8/);
+  assert.match(html, /Tonight/);
+  assert.match(html, /Frank&#x27;s/);
+  assert.match(html, /Waiting for teams/);
+  assert.doesNotMatch(html, /display\/setup\/flow-minigame-intro\.png/);
+  assert.doesNotMatch(html, /display\/minigames\/trivia-illustration\.svg/);
   assert.doesNotMatch(html, /Tonight at a Glance/);
-  assert.doesNotMatch(html, /display\/setup\/hero\.png/);
   assert.doesNotMatch(html, /Pack:/);
   assert.doesNotMatch(html, /Live Setup/);
-  assert.doesNotMatch(html, /In Progress/);
-  assert.doesNotMatch(html, /Open Slot/);
-  assert.doesNotMatch(html, /Round Start/);
-  assert.doesNotMatch(html, /Round Results/);
 });
 
-test("renders GEO card artwork when a setup round uses GEO", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.SETUP),
-        gameConfig: {
-          ...gameConfigFixture,
-          rounds: [
-            {
-              round: 1,
-              label: "Map Heat",
-              sauce: "Los Calientes",
-              pointsPerPlayer: 3,
-              minigame: "GEO"
-            }
-          ]
-        },
-        currentRoundConfig: {
-          round: 1,
-          label: "Map Heat",
-          sauce: "Los Calientes",
-          pointsPerPlayer: 3,
-          minigame: "GEO"
-        }
-      }}
-    />
-  );
-
-  assert.match(html, /display\/minigames\/geo-illustration\.png/);
-  assert.match(html, /GEO mini-game artwork/);
-});
-
-test("renders locked setup surface during INTRO", () => {
+test("renders waiting Cinematic Inferno setup during INTRO with same chrome", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.INTRO)} />
   );
 
   assert.match(html, /Wing Night/);
-  assert.match(html, /Mini-Game Intro/);
+  assert.match(html, /Tonight/);
+  assert.match(html, /Waiting for teams/);
   assert.doesNotMatch(html, /Game Locked In/);
   assert.doesNotMatch(html, /Host is ready to launch the round\./);
 });
@@ -168,10 +124,9 @@ test("keeps rendering the setup surface while round intro is locally counting do
   );
 
   assert.match(html, /Wing Night/);
-  assert.match(html, /Mini-Game Intro/);
-  assert.match(html, /Turn Results/);
+  assert.match(html, /Tonight/);
+  assert.match(html, /Waiting for teams/);
   assert.doesNotMatch(html, /Sauce is locked\. Mini-game is up next\./);
-  assert.doesNotMatch(html, /Round Intro/);
 });
 
 test("renders setup preview filler cards when setup preview slots are configured", () => {
@@ -187,7 +142,7 @@ test("renders setup preview filler cards when setup preview slots are configured
     />
   );
 
-  assert.match(html, /Round 8: Open Slot/);
+  assert.match(html, /Round 08: Open Slot/);
   assert.match(html, /Choose sauce and mini-game to lock this round\./);
   assert.doesNotMatch(html, /\+7 more rounds/);
 });
@@ -205,14 +160,10 @@ test("clamps setup preview filler cards to the shared maximum", () => {
     />
   );
 
-  assert.match(
-    html,
-    new RegExp(`Round ${SETUP_PREVIEW_ROUND_SLOTS_MAX}: Open Slot`)
-  );
-  assert.doesNotMatch(
-    html,
-    new RegExp(`Round ${SETUP_PREVIEW_ROUND_SLOTS_MAX + 1}: Open Slot`)
-  );
+  const paddedMax = String(SETUP_PREVIEW_ROUND_SLOTS_MAX).padStart(2, "0");
+  const paddedOver = String(SETUP_PREVIEW_ROUND_SLOTS_MAX + 1).padStart(2, "0");
+  assert.match(html, new RegExp(`Round ${paddedMax}: Open Slot`));
+  assert.doesNotMatch(html, new RegExp(`Round ${paddedOver}: Open Slot`));
 });
 
 test("falls back to generic context when ROUND_INTRO is missing round config", () => {
@@ -245,19 +196,18 @@ test("renders trivia question without answer leakage", () => {
     />
   );
 
-  assert.match(html, /Active Team/);
   assert.match(html, /Team One/);
   assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.doesNotMatch(html, /Scoville/);
 });
 
-test("renders waiting fallback when MINIGAME_PLAY projection is not available yet", () => {
+test("renders trivia waiting state when MINIGAME_PLAY projection is not available yet", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.MINIGAME_PLAY)} />
   );
 
-  assert.match(html, /Waiting for minigame display state from the server snapshot\./);
+  assert.match(html, /Waiting for trivia prompt/);
 });
 
 test("renders GEO unsupported surface in MINIGAME_PLAY without waiting on projected view", () => {
@@ -273,25 +223,19 @@ test("renders GEO unsupported surface in MINIGAME_PLAY without waiting on projec
     />
   );
 
-  assert.match(html, /Mini-Game: GEO/);
   assert.match(html, /GEO display surface is currently a stub/);
-  assert.doesNotMatch(
-    html,
-    /Waiting for minigame display state from the server snapshot/
-  );
 });
 
-test("renders active team without turn progress during eating", () => {
+test("renders active team and round meta during eating", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.EATING)} />
   );
 
-  assert.match(html, /Active Team/);
   assert.match(html, /Team One/);
+  assert.match(html, /Round 1/);
+  assert.match(html, /Eating ·/);
   assert.doesNotMatch(html, /Team 1 of 1/);
-  assert.match(html, /Round Timer/);
   assert.doesNotMatch(html, /Phase:/);
-  assert.doesNotMatch(html, /Round:/);
 });
 
 test("uses running EATING timer snapshot instead of static config seconds", () => {
@@ -371,46 +315,21 @@ test("falls back to static config timer when EATING timer snapshot is unavailabl
   assert.match(html, /02:05/);
 });
 
-test("renders active team without turn progress during minigame intro", () => {
+test("renders the team-first three-beat reveal during minigame intro", () => {
   const html = renderToStaticMarkup(
     <StageSurface roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
-  assert.match(html, /Team Round Intro/);
+  assert.match(html, /on the wings/);
   assert.match(html, /Team One/);
-  assert.match(html, /You&#x27;re up now\./);
-  assert.match(html, /Head to the board and get set\./);
-  assert.match(html, /Team Roster/);
   assert.match(html, /Alex/);
   assert.match(html, /Morgan/);
-  assert.match(html, /Trivia/);
-  assert.match(html, /Quick-fire questions start once your team is in position\./);
-  assert.match(html, /You&#x27;ll get 1 question this turn\./);
-  assert.match(html, /display\/minigames\/trivia-illustration\.svg/);
+  assert.match(html, /playing/);
+  assert.match(html, /TRIVIA/);
   assert.doesNotMatch(html, /Phase:/);
   assert.doesNotMatch(html, /Round:/);
   assert.doesNotMatch(html, /Team Up:/);
   assert.doesNotMatch(html, /Team 1 of 1/);
-});
-
-test("renders configured trivia question count on the minigame intro surface", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.MINIGAME_INTRO),
-        gameConfig: {
-          ...gameConfigFixture,
-          minigameRules: {
-            trivia: {
-              questionsPerTurn: 3
-            }
-          }
-        }
-      }}
-    />
-  );
-
-  assert.match(html, /You&#x27;ll get 3 questions this turn\./);
 });
 
 test("renders turn-results transition context with active team and turn progress", () => {
@@ -418,13 +337,9 @@ test("renders turn-results transition context with active team and turn progress
     <StageSurface roomState={buildSnapshot(Phase.TURN_RESULTS)} />
   );
 
-  assert.match(html, /Team Turn Complete/);
-  assert.match(html, /Completed Team/);
+  assert.match(html, /Turn Complete/);
   assert.match(html, /Team One/);
-  assert.match(html, /Turn Progress/);
-  assert.match(html, /1\/1 teams complete/);
-  assert.match(html, /Next Step/);
-  assert.match(html, /Show round results/);
+  assert.match(html, /Round wrap/);
   assert.doesNotMatch(html, /Phase:/);
   assert.doesNotMatch(html, /Round:/);
 });
@@ -444,13 +359,13 @@ test("renders round-results points summary from pending score buckets", () => {
     />
   );
 
-  assert.match(html, /Round Scores Applied/);
-  assert.match(html, /Wing Points/);
-  assert.match(html, /\+5 pts/);
-  assert.match(html, /Mini-Game Points/);
-  assert.match(html, /\+7 pts/);
-  assert.match(html, /Round Total/);
-  assert.match(html, /\+12 pts/);
+  assert.match(html, /Scores locked/);
+  assert.match(html, />01</);
+  assert.match(html, /Done/);
+  assert.match(html, /Team One/);
+  assert.match(html, />\+5</);
+  assert.match(html, />\+7</);
+  assert.match(html, />\+12</);
 });
 
 test("renders final-results winner callout from standings order", () => {
@@ -466,11 +381,11 @@ test("renders final-results winner callout from standings order", () => {
     />
   );
 
-  assert.match(html, /Final Results/);
+  assert.match(html, /Game Over/);
   assert.match(html, /Champion/);
   assert.match(html, /Team Two/);
-  assert.match(html, /15 pts/);
-  assert.match(html, /2 teams competed/);
+  assert.match(html, />15</);
+  assert.match(html, /pts/);
   assert.doesNotMatch(html, /Phase:/);
   assert.doesNotMatch(html, /Round:/);
 });

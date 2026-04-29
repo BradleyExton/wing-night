@@ -1,112 +1,50 @@
-import type { MinigameBriefingContent } from "../../../../copy/minigameBriefings";
-import { Flame } from "lucide-react";
+import { Fragment } from "react";
+import type { MinigameType } from "@wingnight/shared";
 
 import { minigameIntroStageCopy } from "./copy";
 import * as styles from "./styles";
 
 type MinigameIntroStageBodyProps = {
-  phaseLabel: string;
-  briefingContent: MinigameBriefingContent | null;
-  sauceName: string | null;
   activeTeamName: string | null;
   activeTeamPlayerNames: string[];
+  minigameType: MinigameType | null;
 };
 
 export const MinigameIntroStageBody = ({
-  phaseLabel,
-  briefingContent,
-  sauceName,
   activeTeamName,
-  activeTeamPlayerNames
+  activeTeamPlayerNames,
+  minigameType
 }: MinigameIntroStageBodyProps): JSX.Element => {
   const resolvedTeamName = activeTeamName ?? minigameIntroStageCopy.fallbackTeamName;
-  const resolvedBriefingContent =
-    briefingContent ?? minigameIntroStageCopy.fallbackBriefingContent;
-  const resolvedSauceName = sauceName ?? minigameIntroStageCopy.fallbackSauceLabel;
+  const resolvedMinigameLabel = minigameType ?? minigameIntroStageCopy.fallbackMinigameLabel;
 
   return (
-    <div className={styles.root}>
-      <span className={styles.backdropGlowPrimary} aria-hidden />
-      <span className={styles.backdropGlowHeat} aria-hidden />
-      <div className={styles.heroGrid}>
-        <section className={styles.heroCopy}>
-          <div className={styles.titleRow}>
-            <span className={styles.titleLine} aria-hidden />
-            <div className={styles.arrivalSignal}>
-              <span className={styles.arrivalSignalDot} aria-hidden />
-              <p className={styles.arrivalSignalLabel}>
-                {minigameIntroStageCopy.calloutLabel}
-              </p>
-            </div>
-            <span className={styles.titleLine} aria-hidden />
-          </div>
-          <div className={styles.teamHero}>
-            <p className={styles.phaseLabel}>{phaseLabel}</p>
-            <h2 className={styles.teamName}>{minigameIntroStageCopy.title(resolvedTeamName)}</h2>
-            <p className={styles.arrivalTitle}>{minigameIntroStageCopy.arrivalTitle}</p>
-            <p className={styles.arrivalSummary}>{minigameIntroStageCopy.arrivalSummary}</p>
-          </div>
-          <div className={styles.contextRail}>
-            <article className={styles.contextItem}>
-              <p className={styles.contextLabel}>{minigameIntroStageCopy.minigameLabel}</p>
-              <p className={styles.contextValue}>
-                {resolvedBriefingContent.displayName ?? minigameIntroStageCopy.fallbackMinigameLabel}
-              </p>
-            </article>
-            <span className={styles.contextDivider} aria-hidden />
-            <article className={styles.contextItem}>
-              <p className={styles.contextLabel}>{minigameIntroStageCopy.sauceLabel}</p>
-              <p className={styles.contextValue}>{resolvedSauceName}</p>
-            </article>
-          </div>
-          <article className={styles.rosterBand}>
-            <p className={styles.rosterTitle}>{minigameIntroStageCopy.rosterLabel}</p>
-            {activeTeamPlayerNames.length > 0 ? (
-              <div className={styles.rosterList}>
-                {activeTeamPlayerNames.map((playerName, index) => (
-                  <span key={`${playerName}-${index}`} className={styles.rosterPill}>
-                    {playerName}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className={styles.rosterEmpty}>{minigameIntroStageCopy.emptyRosterLabel}</p>
-            )}
-          </article>
-        </section>
-        <section className={styles.briefingStage}>
-          <figure className={styles.heroIllustrationShell}>
-            <span className={styles.heroIllustrationGlow} aria-hidden />
-            <img
-              className={styles.heroIllustration}
-              src={resolvedBriefingContent.illustrationPath}
-              alt={resolvedBriefingContent.illustrationAlt}
-            />
-          </figure>
-          <div className={styles.briefingBody}>
-            <div className={styles.summaryBlock}>
-              <p className={styles.summary}>{resolvedBriefingContent.summary}</p>
-            </div>
-            <article className={styles.rulesBand}>
-              <div className={styles.rulesHeader}>
-                <span className={styles.titleLine} aria-hidden />
-                <Flame className={styles.rulesIcon} aria-hidden />
-                <p className={styles.rulesTitle}>{minigameIntroStageCopy.rulesTitle}</p>
-                <Flame className={`${styles.rulesIcon} ${styles.rulesIconTrailing}`} aria-hidden />
-                <span className={styles.titleLine} aria-hidden />
-              </div>
-              <ul className={styles.rulesList}>
-                {resolvedBriefingContent.steps.map((item, index) => (
-                  <li key={`${item}-${index}`} className={styles.rulesItem}>
-                    <span className={styles.ruleStep}>{index + 1}</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          </div>
-        </section>
-      </div>
+    <div className={styles.container}>
+      <span className={styles.ambient} aria-hidden />
+      <span className={`${styles.beatBase} ${styles.beatDelay1} ${styles.eyebrow}`}>
+        {minigameIntroStageCopy.eyebrow}
+      </span>
+      <p className={`${styles.beatBase} ${styles.beatDelay2} ${styles.teamName}`}>
+        {resolvedTeamName}
+      </p>
+      {activeTeamPlayerNames.length > 0 && (
+        <p className={`${styles.beatBase} ${styles.beatDelay3} ${styles.rosterLine}`}>
+          {activeTeamPlayerNames.map((playerName, index) => (
+            <Fragment key={`${playerName}-${index}`}>
+              {index > 0 && (
+                <span className={styles.rosterSeparator} aria-hidden>
+                  {minigameIntroStageCopy.rosterSeparator}
+                </span>
+              )}
+              {playerName}
+            </Fragment>
+          ))}
+        </p>
+      )}
+      <p className={`${styles.beatBase} ${styles.beatDelay4} ${styles.post}`}>
+        <span className={styles.postLabel}>{minigameIntroStageCopy.playingLabel}</span>
+        {resolvedMinigameLabel}
+      </p>
     </div>
   );
 };

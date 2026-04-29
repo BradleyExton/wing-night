@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SETUP — Hearth · Halo</title>
+    <style>
+      :root {
+        --bg: #0a0606; --text: #fff; --muted: #6b6157; --muted2: #b3a89a;
+        --primary: #f97316; --heat: #ef4444; --gold: #fbbf24; --ember: #ffb35a;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .stage { height: 100dvh; display: grid; grid-template-rows: 1fr auto; }
+      .body {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center; justify-content: space-evenly;
+        padding: clamp(1.5rem, 3vw, 3rem) clamp(2rem, 4vw, 4rem);
+        overflow: hidden;
+        text-align: center;
+      }
+      .body::before {
+        content: ""; position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse 70% 60% at 50% 50%, rgba(249, 115, 22, 0.18) 0%, transparent 60%),
+          radial-gradient(ellipse 80% 60% at 50% 0%, rgba(20, 10, 5, 0.4) 0%, transparent 50%),
+          radial-gradient(ellipse 80% 40% at 50% 100%, rgba(20, 10, 5, 0.5) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* Halo — radial sunburst */
+      .hero-flame {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .halo {
+        position: relative;
+        width: clamp(420px, 65vw, 950px);
+        aspect-ratio: 1;
+        filter: drop-shadow(0 0 80px rgba(249, 115, 22, 0.45));
+      }
+      .halo svg {
+        position: absolute;
+        inset: 0;
+        width: 100%; height: 100%;
+      }
+      /* Rotating spokes layer */
+      .halo .spokes-outer { animation: rotate 60s linear infinite; transform-origin: center; }
+      .halo .spokes-inner { animation: rotate 38s linear infinite reverse; transform-origin: center; }
+      @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+      }
+      /* Pulsing concentric rings */
+      .halo .ring-1 { animation: ring-pulse 4.5s ease-in-out infinite; transform-origin: center; }
+      .halo .ring-2 { animation: ring-pulse 4.5s ease-in-out infinite -1.5s; transform-origin: center; }
+      .halo .ring-3 { animation: ring-pulse 4.5s ease-in-out infinite -3.0s; transform-origin: center; }
+      @keyframes ring-pulse {
+        0%   { transform: scale(0.6); opacity: 0; }
+        20%  { opacity: 0.85; }
+        100% { transform: scale(1.4); opacity: 0; }
+      }
+      .halo .core-glow { animation: core-breathe 3.5s ease-in-out infinite; transform-origin: center; }
+      @keyframes core-breathe {
+        0%, 100% { transform: scale(1); opacity: 0.85; }
+        50%      { transform: scale(1.06); opacity: 1; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .halo .spokes-outer, .halo .spokes-inner,
+        .halo .ring-1, .halo .ring-2, .halo .ring-3,
+        .halo .core-glow { animation: none; }
+      }
+
+      .embers {
+        position: absolute; inset: 0;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+      }
+      .ember {
+        position: absolute;
+        bottom: -2vh;
+        width: 4px; height: 4px;
+        border-radius: 50%;
+        background: var(--ember);
+        box-shadow: 0 0 8px var(--ember), 0 0 16px rgba(251, 191, 36, 0.6);
+        opacity: 0;
+        animation: rise linear infinite;
+      }
+      .ember.s2 { width: 3px; height: 3px; }
+      .ember.s3 { width: 6px; height: 6px; box-shadow: 0 0 10px var(--ember), 0 0 22px rgba(251, 191, 36, 0.7); }
+      @keyframes rise {
+        0%   { transform: translate3d(0, 0, 0) scale(0.6); opacity: 0; }
+        12%  { opacity: 0.95; }
+        85%  { opacity: 0.6; }
+        100% { transform: translate3d(var(--drift, 20px), -110vh, 0) scale(0.8); opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) { .ember { animation: none; opacity: 0; } }
+
+      .header {
+        position: relative;
+        z-index: 2;
+        display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      }
+      .eyebrow {
+        text-transform: uppercase; letter-spacing: 0.42em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 800; color: var(--muted2);
+      }
+      .heading {
+        margin: 0;
+        font-size: clamp(3.5rem, 9vw, 12rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 0.9;
+        color: #fff;
+        text-shadow:
+          0 0 40px rgba(251, 191, 36, 0.35),
+          0 0 100px rgba(249, 115, 22, 0.25);
+      }
+      .pack-name {
+        margin: 0;
+        font-size: clamp(0.95rem, 1.3vw, 1.5rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        color: var(--muted2);
+      }
+
+      .rounds {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: clamp(0.5rem, 1vw, 1.25rem) clamp(0.6rem, 1.2vw, 1.5rem);
+        width: 100%;
+        max-width: 1300px;
+      }
+      .round {
+        position: relative;
+        display: flex; flex-direction: column; align-items: center;
+        padding: clamp(0.85rem, 1.4vw, 1.4rem) clamp(0.7rem, 1vw, 1rem);
+        background: rgba(20, 10, 5, 0.55);
+        border-top: 1px solid rgba(249, 115, 22, 0.35);
+        backdrop-filter: blur(2px);
+        text-align: center;
+      }
+      .round-num {
+        font-family: ui-monospace, "Menlo", monospace;
+        font-size: clamp(0.7rem, 0.95vw, 1.05rem);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        color: var(--primary);
+      }
+      .round-label {
+        margin: 0.25rem 0 0.5rem;
+        font-size: clamp(0.75rem, 1vw, 1.15rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--muted2);
+      }
+      .sauce {
+        margin: 0;
+        font-size: clamp(1.2rem, 2vw, 2.4rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.005em;
+        line-height: 0.95;
+        color: #fff;
+        text-shadow: 0 0 18px rgba(249, 115, 22, 0.4);
+      }
+      .minigame {
+        margin-top: 0.5rem;
+        font-size: clamp(0.7rem, 0.95vw, 1rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: var(--muted2);
+      }
+      .minigame .label { color: var(--muted); margin-right: 0.4em; }
+
+      .waiting {
+        position: relative;
+        z-index: 2;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 700;
+        color: var(--muted2);
+        display: inline-flex; align-items: center; gap: 0.7em;
+      }
+      .pulse-dot {
+        width: 0.7em; height: 0.7em; border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 12px var(--primary), 0 0 24px rgba(249, 115, 22, 0.6);
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(0.85); }
+      }
+      @media (prefers-reduced-motion: reduce) { .pulse-dot { animation: none; } }
+
+      footer.splits {
+        position: relative;
+        z-index: 3;
+        display: grid; grid-template-columns: 1fr;
+        background: rgba(20, 10, 5, 0.7);
+        border-top: 1px solid rgba(249, 115, 22, 0.25);
+      }
+      .empty {
+        padding: clamp(0.85rem, 1.4vh, 1.5rem) clamp(1rem, 2.2vw, 3rem);
+        text-align: center;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+        font-weight: 700;
+        color: var(--muted2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="body">
+        <div class="hero-flame" aria-hidden>
+          <div class="halo">
+            <!-- Outer slow-rotating spokes -->
+            <svg viewBox="0 0 200 200">
+              <g class="spokes-outer">
+                <g stroke="rgba(249, 115, 22, 0.35)" stroke-width="0.8" stroke-linecap="round">
+                  <line x1="100" y1="20" x2="100" y2="50"/>
+                  <line x1="100" y1="180" x2="100" y2="150"/>
+                  <line x1="20" y1="100" x2="50" y2="100"/>
+                  <line x1="180" y1="100" x2="150" y2="100"/>
+                  <line x1="44" y1="44" x2="64" y2="64"/>
+                  <line x1="156" y1="156" x2="136" y2="136"/>
+                  <line x1="44" y1="156" x2="64" y2="136"/>
+                  <line x1="156" y1="44" x2="136" y2="64"/>
+                  <line x1="100" y1="32" x2="100" y2="44"/>
+                  <line x1="100" y1="168" x2="100" y2="156"/>
+                  <line x1="32" y1="100" x2="44" y2="100"/>
+                  <line x1="168" y1="100" x2="156" y2="100"/>
+                </g>
+              </g>
+            </svg>
+            <!-- Inner faster counter-rotating spokes -->
+            <svg viewBox="0 0 200 200">
+              <g class="spokes-inner">
+                <g stroke="rgba(251, 191, 36, 0.45)" stroke-width="0.6" stroke-linecap="round">
+                  <line x1="100" y1="60" x2="100" y2="78"/>
+                  <line x1="100" y1="140" x2="100" y2="122"/>
+                  <line x1="60" y1="100" x2="78" y2="100"/>
+                  <line x1="140" y1="100" x2="122" y2="100"/>
+                  <line x1="72" y1="72" x2="84" y2="84"/>
+                  <line x1="128" y1="128" x2="116" y2="116"/>
+                  <line x1="72" y1="128" x2="84" y2="116"/>
+                  <line x1="128" y1="72" x2="116" y2="84"/>
+                </g>
+              </g>
+            </svg>
+            <!-- Pulsing rings -->
+            <svg viewBox="0 0 200 200">
+              <circle class="ring-1" cx="100" cy="100" r="50" fill="none" stroke="rgba(249, 115, 22, 0.7)" stroke-width="1.2"/>
+              <circle class="ring-2" cx="100" cy="100" r="50" fill="none" stroke="rgba(251, 191, 36, 0.55)" stroke-width="1"/>
+              <circle class="ring-3" cx="100" cy="100" r="50" fill="none" stroke="rgba(239, 68, 68, 0.55)" stroke-width="1"/>
+            </svg>
+            <!-- Core glow -->
+            <svg viewBox="0 0 200 200">
+              <defs>
+                <radialGradient id="halo-core" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%"  stop-color="rgba(255,240,200,0.85)"/>
+                  <stop offset="35%" stop-color="rgba(251,191,36,0.55)"/>
+                  <stop offset="70%" stop-color="rgba(249,115,22,0.25)"/>
+                  <stop offset="100%" stop-color="rgba(249,115,22,0)"/>
+                </radialGradient>
+              </defs>
+              <circle class="core-glow" cx="100" cy="100" r="55" fill="url(#halo-core)"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="embers" aria-hidden>
+          <span class="ember"    style="left: 5%;  --drift: 30px;  animation-duration: 9s;  animation-delay: 0s;"></span>
+          <span class="ember s2" style="left: 12%; --drift: -20px; animation-duration: 11s; animation-delay: 1.5s;"></span>
+          <span class="ember"    style="left: 18%; --drift: 40px;  animation-duration: 8s;  animation-delay: 3s;"></span>
+          <span class="ember s3" style="left: 27%; --drift: 15px;  animation-duration: 12s; animation-delay: 0.8s;"></span>
+          <span class="ember s2" style="left: 35%; --drift: -35px; animation-duration: 10s; animation-delay: 2.2s;"></span>
+          <span class="ember"    style="left: 43%; --drift: 25px;  animation-duration: 9s;  animation-delay: 4s;"></span>
+          <span class="ember s3" style="left: 52%; --drift: -10px; animation-duration: 11s; animation-delay: 1s;"></span>
+          <span class="ember s2" style="left: 61%; --drift: 30px;  animation-duration: 13s; animation-delay: 2.5s;"></span>
+          <span class="ember"    style="left: 70%; --drift: -25px; animation-duration: 10s; animation-delay: 3.5s;"></span>
+          <span class="ember s3" style="left: 78%; --drift: 20px;  animation-duration: 9s;  animation-delay: 0.4s;"></span>
+          <span class="ember s2" style="left: 86%; --drift: -15px; animation-duration: 12s; animation-delay: 2s;"></span>
+          <span class="ember"    style="left: 93%; --drift: 35px;  animation-duration: 11s; animation-delay: 4.5s;"></span>
+        </div>
+
+        <div class="header">
+          <span class="eyebrow">tonight</span>
+          <h2 class="heading">Wing Night</h2>
+          <p class="pack-name">House Party Pack</p>
+        </div>
+        <div class="rounds">
+          <article class="round"><span class="round-num">Round 01</span><p class="round-label">Warm Up</p><p class="sauce">Frank's</p><p class="minigame"><span class="label">→</span>Trivia</p></article>
+          <article class="round"><span class="round-num">Round 02</span><p class="round-label">Second Heat</p><p class="sauce">Classic Buffalo</p><p class="minigame"><span class="label">→</span>Geo</p></article>
+          <article class="round"><span class="round-num">Round 03</span><p class="round-label">Third Wind</p><p class="sauce">Sriracha</p><p class="minigame"><span class="label">→</span>Drawing</p></article>
+          <article class="round"><span class="round-num">Round 04</span><p class="round-label">Mid Burn</p><p class="sauce">Korean BBQ</p><p class="minigame"><span class="label">→</span>Trivia</p></article>
+          <article class="round"><span class="round-num">Round 05</span><p class="round-label">Half Time</p><p class="sauce">Mango Habanero</p><p class="minigame"><span class="label">→</span>Geo</p></article>
+          <article class="round"><span class="round-num">Round 06</span><p class="round-label">Sweat Run</p><p class="sauce">Reaper Sauce</p><p class="minigame"><span class="label">→</span>Drawing</p></article>
+          <article class="round"><span class="round-num">Round 07</span><p class="round-label">Inferno</p><p class="sauce">Ghost Pepper</p><p class="minigame"><span class="label">→</span>Trivia</p></article>
+          <article class="round"><span class="round-num">Round 08</span><p class="round-label">Final Fire</p><p class="sauce">Carolina Reaper</p><p class="minigame"><span class="label">→</span>Geo</p></article>
+        </div>
+        <p class="waiting"><span class="pulse-dot"></span>Waiting for teams</p>
+      </div>
+      <footer class="splits">
+        <p class="empty">No teams have joined yet.</p>
+      </footer>
+    </div>
+  </body>
+</html>
