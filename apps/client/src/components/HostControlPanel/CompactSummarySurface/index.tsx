@@ -17,61 +17,56 @@ export const CompactSummarySurface = ({
   const playerById = new Map(players.map((player) => [player.id, player] as const));
 
   return (
-    <section className={styles.compactGrid}>
-      <div className={styles.card}>
-        <h2 className={styles.sectionHeading}>
-          {hostControlPanelCopy.compactStandingsTitle}
-        </h2>
-        {sortedStandings.length > 0 && (
-          <ul className={styles.compactStandingsList}>
-            {sortedStandings.map((team, index) => {
-              const isLeader = index === 0;
-              const teamColorVariant = resolveTeamColorVariant(team.id);
-              const teamRosterPreview = resolveTeamRosterPreview(team, playerById, 2);
-
-              return (
-                <li
-                  className={`${styles.compactStandingsRow} ${
-                    isLeader ? styles.compactLeaderRow : ""
-                  } ${teamColorVariant.borderAccentClassName}`}
-                  key={team.id}
-                >
-                  <div className={styles.teamIdentity}>
-                    <span
-                      className={`${styles.teamAccentDot} ${teamColorVariant.dotAccentClassName}`}
-                      aria-hidden
-                    />
-                    <div>
-                      <span className={styles.teamName}>{team.name}</span>
-                      <p className={styles.teamRoster}>
-                        {hostControlPanelCopy.compactRosterValue(
-                          teamRosterPreview.visiblePlayerNames,
-                          teamRosterPreview.hiddenPlayerCount
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className={styles.compactStandingsMeta}>
-                    {isLeader && (
-                      <span className={styles.compactLeaderLabel}>
-                        {hostControlPanelCopy.compactLeaderLabel}
-                      </span>
-                    )}
-                    <span className={styles.compactScore}>
-                      {hostControlPanelCopy.compactScoreLabel(team.totalScore)}
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        {sortedStandings.length === 0 && (
-          <p className={styles.sectionDescription}>
-            {hostControlPanelCopy.compactNoStandingsLabel}
-          </p>
-        )}
+    <section className={styles.group}>
+      <div className={styles.groupHead}>
+        <span>{hostControlPanelCopy.compactStandingsTitle}</span>
       </div>
+
+      {sortedStandings.length === 0 && (
+        <div className={styles.row}>
+          <span className={styles.rowMeta}>
+            {hostControlPanelCopy.compactNoStandingsLabel}
+          </span>
+        </div>
+      )}
+
+      {sortedStandings.map((team, index) => {
+        const isLeader = index === 0;
+        const teamColorVariant = resolveTeamColorVariant(team.id);
+        const teamRosterPreview = resolveTeamRosterPreview(team, playerById, 2);
+        const rowClassName = `${styles.row} ${isLeader ? styles.leaderRow : ""}`;
+        const scoreClassName = `${styles.score} ${isLeader ? styles.scoreLeader : ""}`;
+
+        return (
+          <div key={team.id} className={rowClassName}>
+            <div className="min-w-0">
+              <span className={styles.rowName}>
+                <span
+                  className={`${styles.teamDot} ${teamColorVariant.dotAccentClassName}`}
+                  aria-hidden
+                />
+                {team.name}
+              </span>
+              <span className={styles.rosterMeta}>
+                {hostControlPanelCopy.compactRosterValue(
+                  teamRosterPreview.visiblePlayerNames,
+                  teamRosterPreview.hiddenPlayerCount
+                )}
+              </span>
+            </div>
+            <div className={styles.metaCluster}>
+              {isLeader && (
+                <span className={styles.leaderLabel}>
+                  {hostControlPanelCopy.compactLeaderLabel}
+                </span>
+              )}
+              <span className={scoreClassName}>
+                {hostControlPanelCopy.compactScoreLabel(team.totalScore)}
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </section>
   );
 };

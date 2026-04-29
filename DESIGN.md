@@ -71,6 +71,17 @@ Display UI (TV-first, spectator-first)
 
 # 2) Surface Rules
 
+## 2.0A Host Surface Anatomy
+
+The Host shell is a single-canvas tablet controller. Every phase composes the same six pieces. Future Host surfaces should reuse this language instead of inventing parallel shapes — the utility classes live in `apps/client/src/components/HostControlPanel/styleTokens/index.ts`.
+
+-   **Mini-rail** — the top strip of every stage hero. Tiny inline rail showing round number, sauce, minigame, and the active-team color pill. Replaces the older kicker + title + description chrome; rail is data, not navigation.
+-   **Stage hero** — left ~65% of the canvas. Dramatic eyebrow + headline + meta, or a live datum like a timer or score. Subtle radial-gradient glow backdrop. Phases pick their own glow variant (default vs eating).
+-   **Control deck** — right ~35% of the canvas. Vertical stack of deck-groups: small uppercase group head + tappable rows + inline create form. No card chrome — rows are separated by 1px dividers, not borders.
+-   **CTA + heat strip** — full-bleed bottom row of the viewport. Primary action button always visible per §2.1. A heat-color shimmer strip sits across the top of the bar to add energy without competing with the button.
+-   **Override entry** — a `⋯ Overrides` button lives at the foot of the deck. It opens the floating override dock. Override actions are never inline in the deck flow — they're an escape hatch, not a primary path.
+-   **Takeover** — during `MINIGAME_PLAY`, the deck collapses and the minigame package owns the full canvas. The CTA bar stays pinned. The shell steps out of the way; the minigame's own surface owns the "we're done" trigger.
+
 ## 2.1 Host UI (Tablet Optimized)
 
 -   Touch targets ≥ 44x44 CSS px

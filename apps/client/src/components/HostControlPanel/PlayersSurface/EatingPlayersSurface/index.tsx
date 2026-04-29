@@ -1,86 +1,83 @@
+import { Check } from "lucide-react";
+
 import { hostControlPanelCopy } from "../../copy";
+import { resolveTeamColorVariant } from "../../../../utils/resolveTeamColorVariant";
 import type { EatingPlayersSurfaceProps } from "../index";
 import * as styles from "./styles";
 
 export const EatingPlayersSurface = ({
   players,
   assignedTeamByPlayerId,
-  teamNameByTeamId,
-  wingParticipationByPlayerId,
   activeRoundTeamId,
-  activeRoundTeamName,
   participationDisabled,
+  wingParticipationByPlayerId,
   onSetWingParticipation
 }: EatingPlayersSurfaceProps): JSX.Element => {
   const visiblePlayers = players.filter((player) => {
     return assignedTeamByPlayerId.get(player.id) === activeRoundTeamId;
   });
 
-  const emptyPlayersLabel =
+  const emptyLabel =
     activeRoundTeamId !== null
       ? hostControlPanelCopy.activeTeamNoPlayersLabel
       : hostControlPanelCopy.noPlayersLabel;
 
-  return (
-    <section className={`${styles.card} ${styles.playersCard}`}>
-      <h2 className={styles.sectionHeading}>{hostControlPanelCopy.playersSectionTitle}</h2>
-      <p className={styles.sectionDescription}>
-        {hostControlPanelCopy.eatingParticipationDescription}
-      </p>
+  const completedCount = visiblePlayers.reduce((count, player) => {
+    return wingParticipationByPlayerId[player.id] === true ? count + 1 : count;
+  }, 0);
 
-      {activeRoundTeamId !== null && (
-        <div className={styles.turnMeta}>
-          <p className={styles.turnTitle}>{hostControlPanelCopy.activeRoundTeamTitle}</p>
-          <p className={styles.turnValue}>
-            {hostControlPanelCopy.activeRoundTeamValue(activeRoundTeamName)}
-          </p>
+  return (
+    <section className={styles.group}>
+      <div className={styles.groupHead}>
+        <span>{hostControlPanelCopy.playersSectionTitle}</span>
+        <span className={styles.groupCount}>
+          {completedCount} / {visiblePlayers.length}
+        </span>
+      </div>
+
+      {visiblePlayers.length === 0 && (
+        <div className={styles.row}>
+          <span className={styles.rowMeta}>{emptyLabel}</span>
         </div>
       )}
 
-      {visiblePlayers.length === 0 && (
-        <p className={styles.sectionDescription}>{emptyPlayersLabel}</p>
-      )}
+      {visiblePlayers.map((player) => {
+        const isSelected = wingParticipationByPlayerId[player.id] === true;
+        const assignedTeamId = assignedTeamByPlayerId.get(player.id) ?? "";
+        const teamColorVariant =
+          assignedTeamId.length > 0 ? resolveTeamColorVariant(assignedTeamId) : null;
+        const rowClassName = `${styles.row} ${isSelected ? styles.rowSelected : ""}`;
+        const checkClassName = `${styles.rowCheck} ${
+          isSelected ? styles.rowCheckActive : ""
+        }`;
 
-      {visiblePlayers.length > 0 && (
-        <ul className={styles.list}>
-          {visiblePlayers.map((player) => {
-            const assignedTeamId = assignedTeamByPlayerId.get(player.id) ?? "";
-
-            return (
-              <li key={player.id} className={styles.listRow}>
-                <span className={styles.playerName}>{player.name}</span>
-                <div className={styles.participationRow}>
-                  <span className={styles.playerMeta}>
-                    {assignedTeamId.length > 0
-                      ? hostControlPanelCopy.assignedTeamLabel(
-                          teamNameByTeamId.get(assignedTeamId) ??
-                            hostControlPanelCopy.noAssignedTeamLabel
-                        )
-                      : hostControlPanelCopy.noAssignedTeamLabel}
-                  </span>
-                  <label className={styles.participationLabel}>
-                    <input
-                      className={styles.participationControl}
-                      type="checkbox"
-                      checked={wingParticipationByPlayerId[player.id] === true}
-                      onChange={(event): void => {
-                        onSetWingParticipation(player.id, event.target.checked);
-                      }}
-                      disabled={
-                        participationDisabled ||
-                        assignedTeamId.length === 0 ||
-                        (activeRoundTeamId !== null && assignedTeamId !== activeRoundTeamId)
-                      }
-                      aria-label={hostControlPanelCopy.wingParticipationToggleLabel(player.name)}
-                    />
-                    <span>{hostControlPanelCopy.ateWingLabel}</span>
-                  </label>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+        return (
+          <button
+            key={player.id}
+            type="button"
+            className={rowClassName}
+            disabled={participationDisabled}
+            aria-pressed={isSelected}
+            aria-label={hostControlPanelCopy.wingParticipationToggleLabel(player.name)}
+            onClick={(): void => {
+              onSetWingParticipation(player.id, !isSelected);
+            }}
+          >
+            <span className={styles.rowName}>
+              {teamColorVariant !== null && (
+                <span
+                  className={`${styles.teamDot} ${teamColorVariant.dotAccentClassName}`}
+                  aria-hidden
+                />
+              )}
+              {player.name}
+            </span>
+            <span className={checkClassName} aria-hidden>
+              {isSelected && <Check className={styles.rowCheckIcon} strokeWidth={3} />}
+            </span>
+          </button>
+        );
+      })}
     </section>
   );
 };

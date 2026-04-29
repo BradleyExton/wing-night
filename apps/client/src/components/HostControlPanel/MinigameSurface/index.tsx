@@ -27,13 +27,16 @@ export const MinigameSurface = ({
   canDispatchAction,
   onDispatchAction
 }: MinigameSurfaceProps): JSX.Element => {
+  const isTakeover = phase === "play";
+  const containerClassName = isTakeover ? styles.takeoverCanvas : styles.group;
+
   if (minigameType === null) {
     return (
-      <section className={styles.shellCard}>
-        <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>
-        <p className={styles.sectionDescription}>
-          {hostControlPanelCopy.waitingStateLabel}
-        </p>
+      <section className={containerClassName}>
+        <div className={styles.groupHead}>
+          <span>{hostControlPanelCopy.minigameSectionTitle}</span>
+        </div>
+        <p className={styles.description}>{hostControlPanelCopy.waitingStateLabel}</p>
       </section>
     );
   }
@@ -42,9 +45,11 @@ export const MinigameSurface = ({
 
   if (minigameRendererBundle === null) {
     return (
-      <section className={styles.shellCard}>
-        <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>
-        <p className={styles.sectionDescription}>
+      <section className={containerClassName}>
+        <div className={styles.groupHead}>
+          <span>{hostControlPanelCopy.minigameSectionTitle}</span>
+        </div>
+        <p className={styles.description}>
           {hostControlPanelCopy.minigameRendererUnavailableLabel(minigameType)}
         </p>
       </section>
@@ -53,24 +58,44 @@ export const MinigameSurface = ({
 
   if (phase === "play" && minigameType === "TRIVIA" && minigameHostView === null) {
     return (
-      <section className={styles.shellCard}>
-        <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>
-        <p className={styles.sectionDescription}>
+      <section className={containerClassName}>
+        <div className={styles.groupHead}>
+          <span>{hostControlPanelCopy.minigameSectionTitle}</span>
+        </div>
+        <p className={styles.description}>
           {hostControlPanelCopy.minigameWaitingForViewLabel}
         </p>
       </section>
     );
   }
 
+  if (isTakeover) {
+    return (
+      <section className={containerClassName}>
+        <div className={styles.takeoverInner}>
+          <minigameRendererBundle.HostSurface
+            phase={phase}
+            minigameType={minigameType}
+            minigameHostView={minigameHostView}
+            activeTeamName={activeTeamName}
+            teamNameByTeamId={teamNameByTeamId}
+            canDispatchAction={canDispatchAction}
+            onDispatchAction={onDispatchAction}
+          />
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className={styles.shellCard}>
-      <h2 className={styles.sectionHeading}>{hostControlPanelCopy.minigameSectionTitle}</h2>
-      <p className={styles.sectionDescription}>
-        {phase === "intro"
-          ? hostControlPanelCopy.minigameIntroDescription(minigameType)
-          : hostControlPanelCopy.minigamePlayDescription(minigameType)}
+    <section className={containerClassName}>
+      <div className={styles.groupHead}>
+        <span>{hostControlPanelCopy.minigameSectionTitle}</span>
+      </div>
+      <p className={styles.description}>
+        {hostControlPanelCopy.minigameIntroDescription(minigameType)}
       </p>
-      <div className={styles.shellBody}>
+      <div className={styles.body}>
         <minigameRendererBundle.HostSurface
           phase={phase}
           minigameType={minigameType}

@@ -77,11 +77,10 @@ const buildSnapshot = (
   return { ...snapshot, ...overrides };
 };
 
-test("renders loading copy when room state is missing", () => {
+test("renders waiting hero when room state is missing", () => {
   const html = renderToStaticMarkup(<HostControlPanel roomState={null} />);
 
   assert.match(html, /Waiting for room state/);
-  assert.match(html, /Host controls will update when the latest snapshot arrives\./);
   assert.match(html, /Pre-game/);
 });
 
@@ -103,34 +102,30 @@ test("renders fatal content state when snapshot reports content load failure", (
   assert.doesNotMatch(html, /Next Phase/);
 });
 
-test("renders setup sections and assignment controls during SETUP", () => {
+test("renders setup deck and assignment controls during SETUP", () => {
+  // Snapshot with one player not assigned so auto-assign button renders.
   const html = renderToStaticMarkup(
-    <HostControlPanel roomState={buildSnapshot(Phase.SETUP)} />
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.SETUP, {
+        players: [
+          { id: "player-1", name: "Alex" },
+          { id: "player-2", name: "Morgan" },
+          { id: "player-3", name: "Jamie" }
+        ]
+      })}
+    />
   );
 
-  assert.match(html, /Host/);
-  assert.match(html, /Setup/);
-  assert.match(html, /Create teams and assign players before starting the game\./);
-  assert.doesNotMatch(html, /Host Control Panel/);
-  assert.doesNotMatch(html, /Create teams, assign players, and advance phases\./);
-  assert.match(html, /Team Setup/);
+  assert.match(html, /Build the/);
   assert.match(html, /Teams/);
   assert.match(html, /Auto-Assign Remaining Players/);
   assert.match(html, /Add Player/);
   assert.match(html, /Assign Alex to a team/);
-  assert.doesNotMatch(
-    html,
-    /Advance when teams are assigned and the room is ready to start\./
-  );
   assert.doesNotMatch(html, /Pause Timer/);
-  assert.doesNotMatch(html, /Mark each player who finished their wing this round/);
-  assert.doesNotMatch(html, /Ate wing/);
   assert.doesNotMatch(html, /Score Override/);
-  assert.doesNotMatch(html, /Reset Game/);
-  assert.doesNotMatch(html, /Overrides/);
 });
 
-test("renders eating participation controls and hides setup sections during EATING", () => {
+test("renders eating timer hero and participation deck during EATING", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.EATING, {
@@ -147,33 +142,19 @@ test("renders eating participation controls and hides setup sections during EATI
     />
   );
 
-  assert.match(html, /Eating/);
-  assert.match(html, /Track wing participation for the active team and run the eating timer\./);
+  assert.match(html, /Time Remaining/);
   assert.match(html, /Round 1 of 1/);
-  assert.doesNotMatch(html, /Team 1 of 2/);
-  assert.match(html, /Active Team/);
   assert.match(html, /Team Alpha/);
   assert.match(html, /Alex/);
   assert.doesNotMatch(html, /Morgan/);
   assert.match(html, /Mark each player who finished their wing this round/);
-  assert.match(
-    html,
-    /Advance only after each active-team player is marked ate or did not eat\./
-  );
-  assert.doesNotMatch(html, /Team setup is locked after the game starts\./);
   assert.match(html, /Timer Controls/);
   assert.match(html, /Pause Timer/);
   assert.match(html, /Overrides/);
-  assert.doesNotMatch(html, /Skip Turn/);
-  assert.doesNotMatch(html, /Reset Game/);
-  assert.doesNotMatch(html, /Score Override/);
-  assert.doesNotMatch(html, /Undo Last Score/);
-  assert.match(html, /Ate wing/);
-  assert.doesNotMatch(html, /Team Setup/);
-  assert.doesNotMatch(html, /Assign Alex to a team/);
+  assert.match(html, /Mark Alex as ate wing/);
 });
 
-test("disables setup primary action during SETUP when server marks canAdvancePhase false", () => {
+test("disables setup primary action when canAdvancePhase is false", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.SETUP, {
@@ -189,7 +170,7 @@ test("disables setup primary action during SETUP when server marks canAdvancePha
   );
 });
 
-test("enables setup primary action during SETUP when server marks canAdvancePhase true", () => {
+test("enables setup primary action when canAdvancePhase is true", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.SETUP, {
@@ -199,7 +180,7 @@ test("enables setup primary action during SETUP when server marks canAdvancePhas
     />
   );
 
-  assert.match(html, /<button[^>]*>Lock Teams &amp; Continue<\/button>/);
+  assert.match(html, /Lock Teams &amp; Continue/);
   assert.doesNotMatch(
     html,
     /<button[^>]*disabled=""[^>]*>Lock Teams &amp; Continue<\/button>/
@@ -228,15 +209,10 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
     />
   );
 
-  assert.match(html, /Mark the active team&#x27;s answer as correct or incorrect/);
-  assert.match(html, /Active Team: Team Alpha/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.match(html, /Scoville/);
   assert.match(html, /Correct/);
   assert.match(html, /Incorrect/);
-  assert.doesNotMatch(html, /Players/);
-  assert.doesNotMatch(html, /Alex/);
-  assert.doesNotMatch(html, /Morgan/);
 });
 
 test("disables trivia attempt controls when attemptsRemaining is exhausted", () => {
@@ -266,38 +242,17 @@ test("disables trivia attempt controls when attemptsRemaining is exhausted", () 
   assert.match(html, /<button[^>]*disabled=""[^>]*>Incorrect<\/button>/);
 });
 
-test("renders locked setup surface during INTRO with start-game CTA", () => {
+test("renders locked setup deck during INTRO with start-game CTA", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel roomState={buildSnapshot(Phase.INTRO)} />
   );
 
-  assert.match(html, /Intro/);
-  assert.match(html, /Review locked teams and start the game when the room is ready\./);
   assert.match(html, /Game Locked In/);
   assert.match(html, /Start Game/);
-  assert.match(
-    html,
-    /Start game when teams are locked and everyone is ready for Round 1\./
-  );
-  assert.match(html, /Team Setup/);
+  assert.match(html, /Teams/);
   assert.match(html, /Assign Alex to a team/);
   assert.match(html, /<button[^>]*disabled=""[^>]*>Create Team<\/button>/);
-  assert.match(
-    html,
-    /<button[^>]*disabled=""[^>]*>Auto-Assign Remaining Players<\/button>/
-  );
   assert.match(html, /<button[^>]*disabled=""[^>]*>Add Player<\/button>/);
-  assert.match(html, /<select[^>]*disabled=""/);
-  assert.doesNotMatch(html, /Overrides/);
-  assert.doesNotMatch(html, /Score Override/);
-  assert.doesNotMatch(html, /Reset Game/);
-  assert.doesNotMatch(html, /Undo Last Score/);
-  assert.doesNotMatch(html, /Phase Status/);
-  assert.doesNotMatch(html, /Round Context/);
-  assert.doesNotMatch(html, /Next Action/);
-  assert.doesNotMatch(html, /Skip Turn/);
-  assert.doesNotMatch(html, /Turn Order/);
-  assert.doesNotMatch(html, /Standings Snapshot/);
 });
 
 test("renders standings snapshot in compact ROUND_INTRO view", () => {
@@ -306,20 +261,10 @@ test("renders standings snapshot in compact ROUND_INTRO view", () => {
   );
 
   assert.match(html, /Round 1 of 1/);
-  assert.match(html, /Sauce/);
   assert.match(html, /Frank&#x27;s/);
-  assert.match(html, /Mini-game/);
   assert.match(html, /TRIVIA/);
   assert.match(html, /Overrides/);
-  assert.doesNotMatch(html, /Turn Order/);
-  assert.doesNotMatch(html, /Move Up/);
-  assert.doesNotMatch(html, /Move Down/);
-  assert.doesNotMatch(html, /Score Override/);
   assert.match(html, /Standings Snapshot/);
-  assert.doesNotMatch(html, /Phase Status/);
-  assert.doesNotMatch(html, /Round Context/);
-  assert.doesNotMatch(html, /Next Action/);
-  assert.match(html, /Advance when the first team is gathered for the round briefing\./);
 });
 
 test("renders standings snapshot in score-descending order during ROUND_RESULTS", () => {
@@ -348,13 +293,13 @@ test("renders standings snapshot in score-descending order during ROUND_RESULTS"
   assert.ok(html.indexOf("Team Beta") < html.indexOf("Team Alpha"));
 });
 
-test("renders completion guidance in compact FINAL_RESULTS view", () => {
+test("renders game-complete CTA in FINAL_RESULTS view", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel roomState={buildSnapshot(Phase.FINAL_RESULTS)} />
   );
 
-  assert.match(html, /Game complete\./);
-  assert.match(html, /Final Results/);
+  assert.match(html, /Game Complete/);
+  assert.match(html, /Standings Snapshot/);
 });
 
 test("shows redo action when scoring mutation history is available", () => {
@@ -367,10 +312,9 @@ test("shows redo action when scoring mutation history is available", () => {
   );
 
   assert.match(html, /Overrides/);
-  assert.match(html, /Needs Review/);
 });
 
-test("shows override badge when turn order differs from default team order", () => {
+test("shows override button when turn order differs from default team order", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.ROUND_RESULTS, {
@@ -380,19 +324,14 @@ test("shows override badge when turn order differs from default team order", () 
   );
 
   assert.match(html, /Overrides/);
-  assert.match(html, /Needs Review/);
 });
 
-test("keeps MINIGAME_INTRO on streamlined host view", () => {
+test("renders MINIGAME_INTRO with team callout and intro deck", () => {
   const html = renderToStaticMarkup(
     <HostControlPanel roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
   );
 
-  assert.match(html, /max-w-\[1100px\]/);
-  assert.doesNotMatch(html, /Team Setup/);
-  assert.doesNotMatch(html, /Players/);
-  assert.match(html, /Active Team/);
   assert.match(html, /Team Alpha/);
-  assert.doesNotMatch(html, /Team 1 of 2/);
-  assert.doesNotMatch(html, /Phase Status/);
+  assert.match(html, /TRIVIA/);
+  assert.doesNotMatch(html, /Teams/);
 });

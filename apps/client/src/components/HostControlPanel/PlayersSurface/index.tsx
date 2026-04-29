@@ -2,7 +2,6 @@ import type { Player, Team } from "@wingnight/shared";
 
 import { EatingPlayersSurface } from "./EatingPlayersSurface";
 import { SetupPlayersSurface } from "./SetupPlayersSurface";
-import * as styles from "./styles";
 
 type PlayersSurfaceBaseProps = {
   players: Player[];
@@ -32,16 +31,8 @@ type PlayersSurfaceProps = SetupPlayersSurfaceProps | EatingPlayersSurfaceProps;
 
 export const PlayersSurface = (props: PlayersSurfaceProps): JSX.Element => {
   if (props.mode === "setup") {
-    return (
-      <div className={styles.surfaceRoot}>
-        <SetupPlayersSurface {...props} />
-      </div>
-    );
+    return <SetupPlayersSurface {...props} />;
   }
 
-  return (
-    <div className={styles.surfaceRoot}>
-      <EatingPlayersSurface {...props} />
-    </div>
-  );
+  return <EatingPlayersSurface {...props} />;
 };

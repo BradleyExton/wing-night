@@ -8,12 +8,12 @@ import {
   type Team
 } from "@wingnight/shared";
 
-import { CompactSummarySurface } from "../CompactSummarySurface";
-import { MinigameSurface } from "../MinigameSurface";
-import { PlayersSurface } from "../PlayersSurface";
-import { TeamSetupSurface } from "../TeamSetupSurface";
-import { TimerControlsSurface } from "../TimerControlsSurface";
-import { hostControlPanelCopy } from "../copy";
+import { CompactStage } from "./CompactStage";
+import { EatingStage } from "./EatingStage";
+import { MinigameIntroStage } from "./MinigameIntroStage";
+import { MinigamePlayTakeover } from "./MinigamePlayTakeover";
+import { SetupStage } from "./SetupStage";
+import { WaitingStage } from "./WaitingStage";
 import type { HostRenderMode } from "../resolveHostRenderMode";
 import * as styles from "./styles";
 
@@ -38,6 +38,9 @@ type HostPhaseBodyProps = {
   canDispatchMinigameAction: boolean;
   sortedStandings: Team[];
   timer: RoomState["timer"];
+  showOverridesButton: boolean;
+  overridesShowBadge: boolean;
+  onOpenOverrides: () => void;
   onNextTeamNameChange: (nextTeamName: string) => void;
   onCreateTeamSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onAddPlayer: (name: string) => void;
@@ -57,114 +60,127 @@ const assertUnreachable = (value: never): never => {
   throw new Error(`Unhandled value: ${String(value)}`);
 };
 
-export const HostPhaseBody = ({
-  hostMode,
-  roomState,
-  players,
-  teams,
-  assignedTeamByPlayerId,
-  teamNameByTeamId,
-  wingParticipationByPlayerId,
-  activeRoundTeamId,
-  activeRoundTeamName,
-  minigameType,
-  minigameHostView,
-  nextTeamName,
-  setupMutationsDisabled,
-  autoAssignDisabled,
-  assignmentDisabled,
-  addPlayerDisabled,
-  participationDisabled,
-  canDispatchMinigameAction,
-  sortedStandings,
-  timer,
-  onNextTeamNameChange,
-  onCreateTeamSubmit,
-  onAddPlayer,
-  onAssignPlayer,
-  onAutoAssignRemainingPlayers,
-  onSetWingParticipation,
-  onPauseTimer,
-  onResumeTimer,
-  onExtendTimer,
-  onDispatchMinigameAction
-}: HostPhaseBodyProps): JSX.Element | null => {
-  switch (hostMode) {
+export const HostPhaseBody = (props: HostPhaseBodyProps): JSX.Element | null => {
+  switch (props.hostMode) {
     case "waiting":
-      return null;
+      return (
+        <div className={styles.mainSplit}>
+          <WaitingStage
+            roomState={props.roomState}
+            teamNameByTeamId={props.teamNameByTeamId}
+            showOverridesButton={props.showOverridesButton}
+            overridesShowBadge={props.overridesShowBadge}
+            onOpenOverrides={props.onOpenOverrides}
+          />
+        </div>
+      );
+
     case "setup":
     case "setup_locked":
       return (
-        <div className={styles.surfaceGroup}>
-          {hostMode === "setup_locked" && (
-            <p className={styles.lockNotice}>{hostControlPanelCopy.setupLockedNoticeLabel}</p>
-          )}
-          <TeamSetupSurface
-            nextTeamName={nextTeamName}
-            setupMutationsDisabled={setupMutationsDisabled}
-            autoAssignDisabled={autoAssignDisabled}
-            players={players}
-            teams={teams}
-            onNextTeamNameChange={onNextTeamNameChange}
-            onCreateTeamSubmit={onCreateTeamSubmit}
-            onAutoAssignRemainingPlayers={onAutoAssignRemainingPlayers}
-          />
-          <PlayersSurface
-            mode="setup"
-            players={players}
-            teams={teams}
-            assignedTeamByPlayerId={assignedTeamByPlayerId}
-            assignmentDisabled={assignmentDisabled}
-            addPlayerDisabled={addPlayerDisabled}
-            onAssignPlayer={onAssignPlayer}
-            onAddPlayer={onAddPlayer}
+        <div className={styles.mainSplit}>
+          <SetupStage
+            isLocked={props.hostMode === "setup_locked"}
+            roomState={props.roomState}
+            players={props.players}
+            teams={props.teams}
+            assignedTeamByPlayerId={props.assignedTeamByPlayerId}
+            teamNameByTeamId={props.teamNameByTeamId}
+            nextTeamName={props.nextTeamName}
+            setupMutationsDisabled={props.setupMutationsDisabled}
+            autoAssignDisabled={props.autoAssignDisabled}
+            assignmentDisabled={props.assignmentDisabled}
+            addPlayerDisabled={props.addPlayerDisabled}
+            showOverridesButton={props.showOverridesButton}
+            overridesShowBadge={props.overridesShowBadge}
+            onOpenOverrides={props.onOpenOverrides}
+            onNextTeamNameChange={props.onNextTeamNameChange}
+            onCreateTeamSubmit={props.onCreateTeamSubmit}
+            onAddPlayer={props.onAddPlayer}
+            onAssignPlayer={props.onAssignPlayer}
+            onAutoAssignRemainingPlayers={props.onAutoAssignRemainingPlayers}
           />
         </div>
       );
+
     case "eating":
       return (
-        <div className={styles.surfaceGroup}>
-          <PlayersSurface
-            mode="eating"
-            players={players}
-            assignedTeamByPlayerId={assignedTeamByPlayerId}
-            teamNameByTeamId={teamNameByTeamId}
-            wingParticipationByPlayerId={wingParticipationByPlayerId}
-            activeRoundTeamId={activeRoundTeamId}
-            activeRoundTeamName={activeRoundTeamName}
-            participationDisabled={participationDisabled}
-            onSetWingParticipation={onSetWingParticipation}
-          />
-          <TimerControlsSurface
-            timer={timer}
-            onPauseTimer={onPauseTimer}
-            onResumeTimer={onResumeTimer}
-            onExtendTimer={onExtendTimer}
+        <div className={styles.mainSplit}>
+          <EatingStage
+            roomState={props.roomState}
+            players={props.players}
+            assignedTeamByPlayerId={props.assignedTeamByPlayerId}
+            teamNameByTeamId={props.teamNameByTeamId}
+            wingParticipationByPlayerId={props.wingParticipationByPlayerId}
+            activeRoundTeamId={props.activeRoundTeamId}
+            activeRoundTeamName={props.activeRoundTeamName}
+            participationDisabled={props.participationDisabled}
+            timer={props.timer}
+            showOverridesButton={props.showOverridesButton}
+            overridesShowBadge={props.overridesShowBadge}
+            onOpenOverrides={props.onOpenOverrides}
+            onSetWingParticipation={props.onSetWingParticipation}
+            onPauseTimer={props.onPauseTimer}
+            onResumeTimer={props.onResumeTimer}
+            onExtendTimer={props.onExtendTimer}
           />
         </div>
       );
+
     case "minigame_intro":
+      return (
+        <div className={styles.mainSplit}>
+          <MinigameIntroStage
+            roomState={props.roomState}
+            teamNameByTeamId={props.teamNameByTeamId}
+            minigameType={props.minigameType}
+            minigameHostView={props.minigameHostView}
+            activeRoundTeamId={props.activeRoundTeamId}
+            activeRoundTeamName={props.activeRoundTeamName}
+            canDispatchMinigameAction={props.canDispatchMinigameAction}
+            showOverridesButton={props.showOverridesButton}
+            overridesShowBadge={props.overridesShowBadge}
+            onOpenOverrides={props.onOpenOverrides}
+            onDispatchMinigameAction={props.onDispatchMinigameAction}
+          />
+        </div>
+      );
+
     case "minigame_play":
       return (
-        <MinigameSurface
-          phase={hostMode === "minigame_intro" ? "intro" : "play"}
-          minigameType={minigameType}
-          minigameHostView={minigameHostView}
-          activeTeamName={
-            activeRoundTeamId === null ? null : activeRoundTeamName
-          }
-          teamNameByTeamId={teamNameByTeamId}
-          canDispatchAction={canDispatchMinigameAction}
-          onDispatchAction={onDispatchMinigameAction}
-        />
-      );
-    case "compact":
-      return roomState ? (
-        <div className={styles.surfaceGroup}>
-          <CompactSummarySurface sortedStandings={sortedStandings} players={players} />
+        <div className={styles.takeoverMain}>
+          <MinigamePlayTakeover
+            minigameType={props.minigameType}
+            minigameHostView={props.minigameHostView}
+            activeRoundTeamId={props.activeRoundTeamId}
+            activeRoundTeamName={props.activeRoundTeamName}
+            teamNameByTeamId={props.teamNameByTeamId}
+            canDispatchMinigameAction={props.canDispatchMinigameAction}
+            onDispatchMinigameAction={props.onDispatchMinigameAction}
+          />
         </div>
-      ) : null;
+      );
+
+    case "compact":
+      if (props.roomState === null) {
+        return null;
+      }
+
+      return (
+        <div className={styles.mainSplit}>
+          <CompactStage
+            roomState={props.roomState}
+            teamNameByTeamId={props.teamNameByTeamId}
+            players={props.players}
+            sortedStandings={props.sortedStandings}
+            showOverridesButton={props.showOverridesButton}
+            overridesShowBadge={props.overridesShowBadge}
+            onOpenOverrides={props.onOpenOverrides}
+          />
+        </div>
+      );
+
     default:
-      return assertUnreachable(hostMode);
+      return assertUnreachable(props.hostMode);
   }
 };

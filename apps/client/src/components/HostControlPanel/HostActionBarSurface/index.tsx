@@ -13,14 +13,19 @@ export const HostActionBarSurface = ({
 }: HostActionBarSurfaceProps): JSX.Element => {
   return (
     <div className={styles.controlsRow}>
-      <button
-        className={styles.primaryButton}
-        type="button"
-        onClick={onNextPhase}
-        disabled={nextPhaseDisabled}
-      >
-        {primaryButtonLabel}
-      </button>
+      <div className={styles.heatStrip} aria-hidden>
+        <span className={styles.heatStripShimmer} />
+      </div>
+      <div className={styles.ctaBar}>
+        <button
+          className={styles.primaryButton}
+          type="button"
+          onClick={onNextPhase}
+          disabled={nextPhaseDisabled}
+        >
+          {primaryButtonLabel}
+        </button>
+      </div>
     </div>
   );
 };

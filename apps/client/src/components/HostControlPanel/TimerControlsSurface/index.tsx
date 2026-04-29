@@ -1,8 +1,7 @@
+import { Pause, Play } from "lucide-react";
 import { Phase, type RoomState } from "@wingnight/shared";
-import { useEffect, useState } from "react";
 
 import { hostControlPanelCopy } from "../copy";
-import { resolveRemainingTimerSeconds } from "../../../utils/resolveRemainingTimerSeconds";
 import * as styles from "./styles";
 
 type TimerControlsSurfaceProps = {
@@ -18,62 +17,44 @@ export const TimerControlsSurface = ({
   onResumeTimer,
   onExtendTimer
 }: TimerControlsSurfaceProps): JSX.Element => {
-  const [nowTimestampMs, setNowTimestampMs] = useState(() => Date.now());
-
-  useEffect(() => {
-    const timerId = window.setInterval(() => {
-      setNowTimestampMs(Date.now());
-    }, 250);
-
-    return () => {
-      window.clearInterval(timerId);
-    };
-  }, []);
-
   if (timer === null || timer.phase !== Phase.EATING) {
     return <></>;
   }
 
-  const remainingSeconds = resolveRemainingTimerSeconds(timer, nowTimestampMs);
   const canPause = onPauseTimer !== undefined && !timer.isPaused;
   const canResume = onResumeTimer !== undefined && timer.isPaused;
   const canExtend = onExtendTimer !== undefined;
+  const statusLabel = timer.isPaused
+    ? hostControlPanelCopy.timerPausedLabel
+    : hostControlPanelCopy.timerRunningLabel;
+  const pauseResumeLabel = timer.isPaused
+    ? hostControlPanelCopy.timerResumeButtonLabel
+    : hostControlPanelCopy.timerPauseButtonLabel;
+  const handlePauseResume = timer.isPaused ? onResumeTimer : onPauseTimer;
+  const pauseResumeDisabled = timer.isPaused ? !canResume : !canPause;
 
   return (
-    <section className={styles.card}>
-      <h2 className={styles.sectionHeading}>{hostControlPanelCopy.timerSectionTitle}</h2>
-      <div className={styles.statusRow}>
-        <span className={styles.statusLabel}>
-          {timer.isPaused
-            ? hostControlPanelCopy.timerPausedLabel
-            : hostControlPanelCopy.timerRunningLabel}
-        </span>
+    <section className={styles.group}>
+      <div className={styles.groupHead}>
+        <span>{hostControlPanelCopy.timerSectionTitle}</span>
+        <span className={styles.groupCount}>{statusLabel}</span>
       </div>
-      <div className={styles.timerMeta}>
-        <p className={styles.timerMetaLabel}>{hostControlPanelCopy.timerRemainingLabel}</p>
-        <p className={styles.timerValue}>
-          {hostControlPanelCopy.timerValue(remainingSeconds)}
-        </p>
-      </div>
-      <div className={styles.actionRow}>
+      <div className={styles.controls}>
         <button
-          className={styles.actionButton}
+          className={styles.button}
           type="button"
-          onClick={onPauseTimer}
-          disabled={!canPause}
+          onClick={handlePauseResume}
+          disabled={pauseResumeDisabled}
         >
-          {hostControlPanelCopy.timerPauseButtonLabel}
+          {timer.isPaused ? (
+            <Play strokeWidth={2.4} className="h-[1.05rem] w-[1.05rem]" />
+          ) : (
+            <Pause strokeWidth={2.4} className="h-[1.05rem] w-[1.05rem]" />
+          )}
+          {pauseResumeLabel}
         </button>
         <button
-          className={styles.actionButton}
-          type="button"
-          onClick={onResumeTimer}
-          disabled={!canResume}
-        >
-          {hostControlPanelCopy.timerResumeButtonLabel}
-        </button>
-        <button
-          className={styles.actionButton}
+          className={styles.button}
           type="button"
           onClick={(): void => {
             onExtendTimer?.(15);
@@ -83,7 +64,7 @@ export const TimerControlsSurface = ({
           {hostControlPanelCopy.timerExtendFifteenButtonLabel}
         </button>
         <button
-          className={styles.actionButton}
+          className={styles.button}
           type="button"
           onClick={(): void => {
             onExtendTimer?.(30);

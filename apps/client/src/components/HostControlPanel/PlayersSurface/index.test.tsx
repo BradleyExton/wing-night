@@ -43,7 +43,7 @@ test("delegates setup mode to setup players surface", () => {
   );
 
   assert.match(html, /Assign Alex to a team/);
-  assert.match(html, /Unassigned/);
+  assert.match(html, /Add Player/);
 });
 
 test("delegates eating mode to eating players surface", () => {
@@ -71,6 +71,6 @@ test("delegates eating mode to eating players surface", () => {
     />
   );
 
-  assert.match(html, /Ate wing/);
-  assert.match(html, /Active Team/);
+  assert.match(html, /Mark Alex as ate wing/);
+  assert.match(html, /Players/);
 });

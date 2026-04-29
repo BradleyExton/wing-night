@@ -225,6 +225,7 @@ Never remove escape hatches.
 - For any client UI styling change, read `DESIGN.md` first and use its canonical semantic color tokens.
 - Use Tailwind theme token classes from `apps/client/tailwind.config.ts` in component `styles.ts` files.
 - Do not hardcode hex colors in `apps/client/src/components/**/styles.ts`.
+- For Host surfaces, prefer the Host language utilities exported from `apps/client/src/components/HostControlPanel/styleTokens/index.ts` (mini-rail, stage hero, deck row, CTA + heat strip) over re-implementing the same shapes. See `DESIGN.md` §2.0A for surface anatomy.
 
 ---
 

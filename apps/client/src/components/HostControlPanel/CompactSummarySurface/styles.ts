@@ -1,35 +1,24 @@
-import {
-  cardBaseTextLeft,
-  sectionDescriptionMuted,
-  sectionHeadingReset
+export {
+  deckGroupRoot as group,
+  deckGroupHead as groupHead,
+  deckRow as row,
+  deckRowName as rowName,
+  deckRowMeta as rowMeta,
+  teamDot
 } from "../styleTokens";
 
-export const compactGrid = "mt-8 grid gap-4 md:grid-cols-2";
+export const leaderRow =
+  "border-l-[3px] border-l-primary/70 bg-gradient-to-r from-primary/10 to-transparent";
 
-export const card = cardBaseTextLeft;
+export const leaderLabel =
+  "text-[0.65rem] font-extrabold uppercase tracking-[0.32em] text-gold";
 
-export const sectionHeading = sectionHeadingReset;
+export const score =
+  "font-mono text-[clamp(1.05rem,1.4vw,1.4rem)] font-black tabular-nums tracking-[-0.03em] text-text";
 
-export const sectionDescription = sectionDescriptionMuted;
+export const scoreLeader = "text-gold";
 
-export const compactStandingsList = "mt-3 space-y-2";
+export const rosterMeta =
+  "mt-0.5 block text-[clamp(0.7rem,0.85vw,0.82rem)] font-medium text-muted/85 normal-case tracking-normal";
 
-export const compactStandingsRow =
-  "flex items-start justify-between gap-3 rounded-md border border-text/10 border-l-[0.35rem] bg-bg px-3 py-3";
-
-export const compactLeaderRow = "border-gold/60";
-
-export const teamIdentity = "flex min-w-0 items-start gap-2.5";
-
-export const teamAccentDot = "mt-1 h-2.5 w-2.5 shrink-0 rounded-full";
-
-export const teamName = "text-lg font-semibold text-text";
-
-export const teamRoster = "mt-0.5 text-sm leading-tight text-text/76";
-
-export const compactStandingsMeta = "flex items-center gap-2";
-
-export const compactLeaderLabel =
-  "rounded-md bg-gold/15 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gold";
-
-export const compactScore = "text-lg font-semibold text-text";
+export const metaCluster = "flex items-center gap-2";

@@ -3,7 +3,6 @@ import { type RoomState } from "@wingnight/shared";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { HostActionBarSurface } from "./HostActionBarSurface";
-import { HostPanelHeader } from "./HostPanelHeader";
 import { OverrideActionsSurface } from "./OverrideActionsSurface";
 import { OverrideDock } from "./OverrideDock";
 import { hostControlPanelCopy } from "./copy";
@@ -88,8 +87,6 @@ export const HostControlPanel = ({
   const overrideDockContext = useMemo(() => {
     return selectOverrideDockContext(roomState);
   }, [roomState]);
-  const phaseAdvanceHint =
-    phase !== null ? hostControlPanelCopy.phaseAdvanceHint(phase) : null;
   const hasNextRoundTurn =
     roomState !== null &&
     roomState.roundTurnCursor + 1 < roomState.turnOrderTeamIds.length;
@@ -105,7 +102,6 @@ export const HostControlPanel = ({
   const containerClassName = isMinigameTakeover
     ? styles.takeoverContainer
     : styles.container;
-  const panelClassName = isMinigameTakeover ? styles.takeoverPanel : styles.panel;
   useEffect(() => {
     if (!overrideDockContext.isVisible && isOverrideDockOpen) {
       setIsOverrideDockOpen(false);
@@ -138,52 +134,49 @@ export const HostControlPanel = ({
 
   return (
     <main className={containerClassName}>
-      <div className={panelClassName}>
-        <HostPanelHeader roomState={roomState} teamNameByTeamId={teamNameByTeamId} />
+      <HostPhaseBody
+        hostMode={hostMode}
+        roomState={roomState}
+        players={players}
+        teams={teams}
+        assignedTeamByPlayerId={assignedTeamByPlayerId}
+        teamNameByTeamId={teamNameByTeamId}
+        wingParticipationByPlayerId={wingParticipationByPlayerId}
+        activeRoundTeamId={activeRoundTeamId}
+        activeRoundTeamName={activeRoundTeamName}
+        minigameType={minigameType}
+        minigameHostView={minigameHostView}
+        nextTeamName={nextTeamName}
+        setupMutationsDisabled={setupMutationsDisabled}
+        autoAssignDisabled={autoAssignDisabled}
+        assignmentDisabled={assignmentDisabled}
+        addPlayerDisabled={addPlayerDisabled}
+        participationDisabled={participationDisabled}
+        canDispatchMinigameAction={canDispatchMinigameAction}
+        sortedStandings={sortedStandings}
+        timer={roomState?.timer ?? null}
+        showOverridesButton={overrideDockContext.isVisible}
+        overridesShowBadge={overrideDockContext.showBadge}
+        onOpenOverrides={(): void => {
+          setIsOverrideDockOpen(true);
+        }}
+        onNextTeamNameChange={setNextTeamName}
+        onCreateTeamSubmit={handleCreateTeamSubmit}
+        onAddPlayer={handleAddPlayer}
+        onAssignPlayer={handleAssignmentChange}
+        onAutoAssignRemainingPlayers={handleAutoAssignRemainingPlayers}
+        onSetWingParticipation={handleWingParticipationChange}
+        onPauseTimer={onPauseTimer}
+        onResumeTimer={onResumeTimer}
+        onExtendTimer={onExtendTimer}
+        onDispatchMinigameAction={handleDispatchMinigameAction}
+      />
 
-        <HostActionBarSurface
-          onNextPhase={onNextPhase}
-          nextPhaseDisabled={nextPhaseDisabled}
-          primaryButtonLabel={primaryButtonLabel}
-        />
-
-        {roomState && phaseAdvanceHint !== null && hostMode !== "setup" && (
-          <p className={styles.phaseNotice}>{phaseAdvanceHint}</p>
-        )}
-
-        <HostPhaseBody
-          hostMode={hostMode}
-          roomState={roomState}
-          players={players}
-          teams={teams}
-          assignedTeamByPlayerId={assignedTeamByPlayerId}
-          teamNameByTeamId={teamNameByTeamId}
-          wingParticipationByPlayerId={wingParticipationByPlayerId}
-          activeRoundTeamId={activeRoundTeamId}
-          activeRoundTeamName={activeRoundTeamName}
-          minigameType={minigameType}
-          minigameHostView={minigameHostView}
-          nextTeamName={nextTeamName}
-          setupMutationsDisabled={setupMutationsDisabled}
-          autoAssignDisabled={autoAssignDisabled}
-          assignmentDisabled={assignmentDisabled}
-          addPlayerDisabled={addPlayerDisabled}
-          participationDisabled={participationDisabled}
-          canDispatchMinigameAction={canDispatchMinigameAction}
-          sortedStandings={sortedStandings}
-          timer={roomState?.timer ?? null}
-          onNextTeamNameChange={setNextTeamName}
-          onCreateTeamSubmit={handleCreateTeamSubmit}
-          onAddPlayer={handleAddPlayer}
-          onAssignPlayer={handleAssignmentChange}
-          onAutoAssignRemainingPlayers={handleAutoAssignRemainingPlayers}
-          onSetWingParticipation={handleWingParticipationChange}
-          onPauseTimer={onPauseTimer}
-          onResumeTimer={onResumeTimer}
-          onExtendTimer={onExtendTimer}
-          onDispatchMinigameAction={handleDispatchMinigameAction}
-        />
-      </div>
+      <HostActionBarSurface
+        onNextPhase={onNextPhase}
+        nextPhaseDisabled={nextPhaseDisabled}
+        primaryButtonLabel={primaryButtonLabel}
+      />
 
       {overrideDockContext.isVisible && (
         <OverrideDock

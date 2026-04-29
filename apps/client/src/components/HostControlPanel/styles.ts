@@ -1,16 +1,18 @@
+// Stage shell — the controller occupies the full viewport, no max-width or rounded card.
+// Top-level grid: main split (1fr) + CTA area (auto).
 export const container =
-  "min-h-[100dvh] bg-bg p-6 pb-24 text-text";
+  "grid h-[100dvh] grid-rows-[minmax(0,1fr)_auto] overflow-hidden bg-bg text-text";
 
+// Minigame takeover collapses the shell — minigame package owns the canvas.
 export const takeoverContainer =
-  "min-h-[100dvh] bg-bg p-4 pb-24 text-text md:p-6 md:pb-24";
+  "grid h-[100dvh] grid-rows-[minmax(0,1fr)_auto] overflow-hidden bg-bg text-text";
 
-export const panel =
-  "mx-auto w-full max-w-5xl rounded-xl border border-text/10 bg-surface p-6";
+// Main split — asymmetric 65/35 (stage on left, deck on right).
+export const mainSplit =
+  "grid min-h-0 grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]";
 
-export const takeoverPanel =
-  "mx-auto flex min-h-[calc(100dvh-7rem)] w-full max-w-[1100px] flex-col rounded-xl border border-primary/30 bg-surface p-5 shadow-2xl md:p-6";
+// During minigame takeover, the deck collapses and minigame fills the canvas.
+export const takeoverMain = "flex min-h-0 flex-col";
 
-export const phaseNotice =
-  "mt-3 text-sm font-medium text-gold";
-
+// Override panel content layout (inside the floating dock — unchanged).
 export const overridePanelContent = "space-y-4";

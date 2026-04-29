@@ -127,6 +127,9 @@ const buildProps = (
     canDispatchMinigameAction: true,
     sortedStandings: teamsFixture,
     timer: null,
+    showOverridesButton: false,
+    overridesShowBadge: false,
+    onOpenOverrides: () => undefined,
     onNextTeamNameChange: () => undefined,
     onCreateTeamSubmit: () => undefined,
     onAddPlayer: () => undefined,
@@ -141,12 +144,12 @@ const buildProps = (
   };
 };
 
-test("renders no phase body in waiting mode", () => {
+test("renders waiting hero in waiting mode", () => {
   const html = renderToStaticMarkup(
     <HostPhaseBody {...buildProps("waiting", null)} />
   );
 
-  assert.equal(html, "");
+  assert.match(html, /Waiting for room state/);
 });
 
 test("renders setup surfaces in setup mode", () => {
@@ -154,7 +157,7 @@ test("renders setup surfaces in setup mode", () => {
     <HostPhaseBody {...buildProps("setup", Phase.SETUP)} />
   );
 
-  assert.match(html, /Team Setup/);
+  assert.match(html, /Teams/);
   assert.match(html, /Assign Alex to a team/);
 });
 
@@ -169,7 +172,7 @@ test("renders setup lock notice in setup_locked mode", () => {
   );
 
   assert.match(html, /Game Locked In/);
-  assert.match(html, /Team Setup/);
+  assert.match(html, /Teams/);
   assert.match(html, /Assign Alex to a team/);
 });
 
@@ -204,7 +207,8 @@ test("renders minigame surface in minigame intro mode", () => {
 
   assert.match(html, /Mini-Game/);
   assert.match(html, /Call the team up, explain it, then start eating once they are set\./);
-  assert.match(html, /Active Team: Team Alpha/);
+  assert.match(html, /Team Up/);
+  assert.match(html, /Team Alpha/);
 });
 
 test("renders minigame surface in minigame play mode", () => {

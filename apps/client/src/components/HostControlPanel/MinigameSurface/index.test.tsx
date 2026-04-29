@@ -35,7 +35,9 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
     />
   );
 
-  assert.match(html, /Active Team: Team Alpha/);
+  assert.match(html, /Team Up/);
+  assert.match(html, /Team Alpha/);
+  assert.match(html, /1 question left/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.match(html, /Scoville/);
   assert.match(html, /Correct/);
@@ -103,5 +105,6 @@ test("renders intro surface for configured trivia minigame", () => {
   );
 
   assert.match(html, /Call the team up, explain it, then start eating once they are set\./);
-  assert.match(html, /Active Team: Team Alpha/);
+  assert.match(html, /Team Up/);
+  assert.match(html, /Team Alpha/);
 });

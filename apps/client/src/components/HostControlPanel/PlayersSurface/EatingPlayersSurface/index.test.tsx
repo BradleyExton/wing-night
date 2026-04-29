@@ -36,8 +36,7 @@ test("renders only active-team players during eating", () => {
 
   assert.match(html, /Alex/);
   assert.doesNotMatch(html, /Morgan/);
-  assert.match(html, /Ate wing/);
-  assert.match(html, /Active Team/);
+  assert.match(html, /Mark Alex as ate wing/);
 });
 
 test("renders active-team empty state during eating when no players are assigned", () => {
