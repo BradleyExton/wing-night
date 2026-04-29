@@ -34,8 +34,6 @@ export const miniRail =
 
 export const miniRailStrong = "text-text";
 
-export const miniRailAccent = "text-primary";
-
 export const miniRailDivider = "h-1.5 w-1.5 rounded-full bg-text/20";
 
 export const miniRailTeamPill =

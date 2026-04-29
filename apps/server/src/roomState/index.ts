@@ -38,7 +38,4 @@ export {
   advanceRoomStatePhase
 } from "./phaseMutations/index.js";
 
-export {
-  applyRoomStateMutation,
-  type RoomStateMutationResult
-} from "./mutationResult/index.js";
+export { applyRoomStateMutation } from "./mutationResult/index.js";

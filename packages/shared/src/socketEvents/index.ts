@@ -25,7 +25,7 @@ export type MinigameActionEnvelopePayload = HostSecretPayload &
   Record<"actionType", string> &
   Record<"actionPayload", unknown>;
 export type MinigameActionEnvelope = MinigameActionEnvelopePayload;
-export type TriviaRecordAttemptMinigameActionPayload =
+type TriviaRecordAttemptMinigameActionPayload =
   MinigameActionEnvelopePayload &
     Record<"minigameId", "TRIVIA"> &
     Record<"actionType", "recordAttempt"> &

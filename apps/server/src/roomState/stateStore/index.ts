@@ -17,7 +17,7 @@ export type ScoringMutationUndoSnapshot = {
   minigameRuntimeSnapshot: MinigameRuntimeStateSnapshot;
 };
 
-export type SetupBaselineSnapshot = {
+type SetupBaselineSnapshot = {
   players: Player[];
   teams: Team[];
   gameConfig: GameConfigFile | null;

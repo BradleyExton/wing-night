@@ -31,8 +31,6 @@ export const displayCopy = {
     `${minigame} display surface is not available yet.`,
   triviaTurnTitle: "Trivia Turn",
   triviaQuestionLabel: "Question",
-  activeTeamLabel: "Active Team",
-  activeTeamValue: (teamName: string): string => teamName,
   eatingTimerLabel: "Round Timer",
   eatingTimerValue: formatClockSeconds,
   eatingActiveTeamLabel: "on the wings",
