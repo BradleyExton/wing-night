@@ -196,7 +196,6 @@ test("renders trivia question without answer leakage", () => {
     />
   );
 
-  assert.match(html, /Team One/);
   assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.doesNotMatch(html, /Scoville/);

@@ -149,9 +149,10 @@ export const resolveCanAdvancePhase = (state: RoomState): boolean => {
       return false;
     }
 
-    return activeTeam.playerIds.every((playerId) => {
-      return Object.hasOwn(state.wingParticipationByPlayerId, playerId);
-    });
+    // Untapped players are treated as "didn't eat" — scoring already requires
+    // an explicit `=== true`, so absent is semantically equivalent to false.
+    // Host can advance whenever they're done marking the eaters.
+    return true;
   }
 
   return true;

@@ -48,7 +48,7 @@ const phaseAdvanceHint = (phase: Phase): string => {
     case Phase.MINIGAME_INTRO:
       return "Call up the active team, brief them, then start eating once they are in place.";
     case Phase.EATING:
-      return "Advance only after each active-team player is marked ate or did not eat.";
+      return "Tap each player who ate. Untapped players count as did-not-eat. Advance when ready.";
     case Phase.MINIGAME_PLAY:
       return "Advance when the active team turn has been scored.";
     case Phase.TURN_RESULTS:
