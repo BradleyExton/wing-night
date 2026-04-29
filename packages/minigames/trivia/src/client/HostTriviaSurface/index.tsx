@@ -41,6 +41,7 @@ export const HostTriviaSurface = ({
   const attemptsExhausted = attemptsRemaining <= 0;
   const disableAttemptButtons =
     !isPlayPhase || !canDispatchAction || attemptsExhausted || currentPrompt === null;
+  const shouldRenderQuestionsLeft = isPlayPhase && currentPrompt !== null;
 
   return (
     <div className={styles.container}>
@@ -53,28 +54,41 @@ export const HostTriviaSurface = ({
         <div className={styles.meta}>
           <div className={styles.metaBlock}>
             <p className={styles.metaLabel}>{hostTriviaSurfaceCopy.activeTeamMetaLabel}</p>
-            <p className={styles.metaValue}>
-              {hostTriviaSurfaceCopy.activeTeamLabel(resolvedActiveTeamName)}
-            </p>
+            <p className={styles.metaValue}>{resolvedActiveTeamName}</p>
           </div>
-          {currentPrompt !== null && (
-            <>
-              <div className={styles.metaBlock}>
-                <p className={styles.metaLabel}>{hostTriviaSurfaceCopy.questionLabel}</p>
-                <p className={styles.metaValue}>{currentPrompt.question}</p>
-              </div>
-              <div className={styles.metaBlock}>
-                <p className={styles.metaLabel}>{hostTriviaSurfaceCopy.answerLabel}</p>
-                <p className={styles.metaValue}>{currentPrompt.answer}</p>
-              </div>
-            </>
+          {shouldRenderQuestionsLeft && (
+            <div className={styles.metaBlock}>
+              <p className={styles.metaLabel}>
+                {hostTriviaSurfaceCopy.questionsLeftMetaLabel}
+              </p>
+              <p className={styles.metaValue}>
+                {hostTriviaSurfaceCopy.questionsLeftLabel(attemptsRemaining)}
+              </p>
+            </div>
           )}
         </div>
       </div>
+      {currentPrompt !== null ? (
+        <div className={styles.promptShell}>
+          <div className={styles.promptSection}>
+            <p className={styles.promptLabel}>{hostTriviaSurfaceCopy.questionLabel}</p>
+            <p className={styles.promptValue}>{currentPrompt.question}</p>
+          </div>
+          <div className={styles.answerSection}>
+            <p className={styles.answerLabel}>{hostTriviaSurfaceCopy.answerLabel}</p>
+            <p className={styles.answerValue}>{currentPrompt.answer}</p>
+          </div>
+        </div>
+      ) : (
+        <p className={styles.statusNote}>{hostTriviaSurfaceCopy.waitingPromptLabel}</p>
+      )}
+      {isPlayPhase && attemptsExhausted && (
+        <p className={styles.statusNote}>{hostTriviaSurfaceCopy.turnCompleteLabel}</p>
+      )}
       {isPlayPhase && (
         <div className={styles.actions}>
           <button
-            className={styles.actionButton}
+            className={styles.correctButton}
             type="button"
             disabled={disableAttemptButtons}
             onClick={(): void => {
@@ -84,7 +98,7 @@ export const HostTriviaSurface = ({
             {hostTriviaSurfaceCopy.correctButtonLabel}
           </button>
           <button
-            className={styles.actionButton}
+            className={styles.incorrectButton}
             type="button"
             disabled={disableAttemptButtons}
             onClick={(): void => {

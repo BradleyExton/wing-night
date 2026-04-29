@@ -15,7 +15,7 @@ export const triviaDevManifest: MinigameDevManifest = {
       minigameHostView: {
         minigame: "TRIVIA",
         activeTurnTeamId: "team-alpha",
-        attemptsRemaining: 1,
+        attemptsRemaining: 3,
         promptCursor: 0,
         pendingPointsByTeamId: {
           "team-alpha": 0,
@@ -53,7 +53,7 @@ export const triviaDevManifest: MinigameDevManifest = {
       minigameHostView: {
         minigame: "TRIVIA",
         activeTurnTeamId: "team-alpha",
-        attemptsRemaining: 1,
+        attemptsRemaining: 2,
         promptCursor: 0,
         pendingPointsByTeamId: {
           "team-alpha": 3,
