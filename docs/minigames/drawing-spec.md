@@ -2,23 +2,32 @@
 
 Status: Draft for implementation
 
-Last updated: 2026-02-23
+Last updated: 2026-04-29
 
 ## 1) Goals
 
 - Ship a full `DRAWING` minigame that fits the existing Wing Night turn loop.
 - Keep server authoritative for minigame state and scoring.
-- Provide high-quality drawing feel on host devices.
+- Provide high-quality drawing feel on the host tablet.
 - Keep display answer-safe during active drawing.
-- Show the prompt text on display briefly after host marks correct or incorrect.
+- Show the prompt text on display briefly after the tablet marks correct or incorrect.
 
 ## 2) Locked Product Decisions
 
 - Scoring: `+1` point per correct prompt.
-- Multiple prompts run in a single team turn.
-- Prompt count per turn is configured in `gameConfig`.
+- Multiple prompts run in a single team turn; the phase timer is the only turn constraint.
 - Prompt catalog is content-driven (JSON files), not entered in-app.
-- Display reveals prompt text briefly after host clicks `Correct` or `Incorrect`.
+- Prompts are shuffled on `initialize` and stepped through sequentially (no repeats until list exhausted).
+- Display reveals prompt text briefly after tablet marks `Correct` or `Incorrect`.
+- Reveal window is display-client-driven (`now < expiresAtMs`); server state is cleared on the next result action or `beginStroke`.
+- A teammate is selected to draw and physically holds the host tablet.
+- Prompt text is always visible on the tablet while drawing; the TV display never shows it during active drawing.
+- Coordinates are stored normalized (0–1); tablet normalizes on capture, display scales to its own canvas size.
+- Fixed color palette (~6 colors) and 3 brush sizes, hardcoded in the UI.
+- Undo removes exactly one stroke; clear canvas removes all strokes.
+- Strokes hold only the current prompt's drawing; canvas clears on every result action.
+- `DrawingHostView | DrawingDisplayView` are added as new discriminated union members; trivia and geo types are untouched.
+- Sample content ships with ~60 playable prompts, flat catalog, no difficulty field.
 
 ## 3) Non-Goals (MVP)
 
@@ -26,52 +35,35 @@ Last updated: 2026-02-23
 - No AI judging.
 - No persistent drawing history across rounds.
 - No player device drawing input.
+- No per-turn prompt count limit (`promptsPerTurn` is not used).
 
 ## 4) Game Flow In MINIGAME_PLAY
 
 For the active team turn:
 
-1. Runtime loads `promptsPerTurn` and the drawing prompt list.
-2. Host sees the current prompt and canvas.
-3. Host/player draws on host canvas.
-4. Host clicks `Correct` or `Incorrect`.
-5. Runtime briefly reveals resolved prompt text on display.
-6. Runtime clears canvas and advances to next prompt.
-7. Turn continues until `promptsUsedThisTurn === promptsPerTurn`.
-8. At limit, drawing actions remain available (undo/clear), but result actions are disabled.
-9. Host advances phase using existing phase controls.
+1. Runtime shuffles the prompt list and loads the drawing content.
+2. Team selects a teammate to draw; that person holds the host tablet.
+3. Tablet shows the current prompt text and canvas.
+4. Drawer draws on the tablet canvas; strokes appear in real time on the TV display.
+5. Tablet operator taps `Correct` or `Incorrect`.
+6. Runtime briefly reveals the resolved prompt text on the TV display.
+7. Runtime clears the canvas and advances to the next prompt.
+8. Turn continues until the phase timer fires; host advances phase using existing phase controls.
+9. `skipPrompt` advances to the next prompt with no score change and no reveal.
 
 ## 5) Config And Content Contracts
 
-## 5.1 `gameConfig.json` additions
+## 5.1 `gameConfig.json`
 
-File: `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/packages/shared/src/content/gameConfig/index.ts`
-
-Add drawing rules:
-
-```ts
-export type DrawingMinigameRules = {
-  promptsPerTurn: number; // positive integer
-};
-
-export type MinigameRules = {
-  trivia?: TriviaMinigameRules;
-  drawing?: DrawingMinigameRules;
-};
-```
-
-Validation rules:
-
-- `promptsPerTurn` required when `DRAWING` appears in any round.
-- `promptsPerTurn` must be a positive integer.
+No drawing-specific rules are required. `DrawingMinigameRules` type is not added.
+`MinigameRules` requires no `drawing` key.
 
 Example `gameConfig.json`:
 
 ```json
 {
   "minigameRules": {
-    "trivia": { "questionsPerTurn": 1 },
-    "drawing": { "promptsPerTurn": 3 }
+    "trivia": { "questionsPerTurn": 1 }
   }
 }
 ```
@@ -80,11 +72,11 @@ Example `gameConfig.json`:
 
 Add shared content schema:
 
-- `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/packages/shared/src/content/drawing/index.ts`
+- `packages/shared/src/content/drawing/index.ts`
 
 Add sample content:
 
-- `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/content/sample/minigames/drawing.json`
+- `content/sample/minigames/drawing.json`
 
 Schema:
 
@@ -106,6 +98,8 @@ Validation rules:
 - Each prompt must include non-empty `id` and `prompt`.
 - Prompt ids must be unique.
 
+Sample content ships with ~60 prompts covering a range of topics (food, animals, objects, actions).
+
 Example:
 
 ```json
@@ -120,22 +114,22 @@ Example:
 
 ## 5.3 Loader integration
 
-File: `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/apps/server/src/contentLoader/loadMinigameContent/index.ts`
+File: `apps/server/src/contentLoader/loadMinigameContent/index.ts`
 
 - Drawing runtime plugin declares `content.fileName = "minigames/drawing.json"`.
 - Existing plugin content loading path remains unchanged.
 
 ## 6) Runtime Contract
 
-File: `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/packages/minigames/drawing/src/runtime/index.ts`
+File: `packages/minigames/drawing/src/runtime/index.ts`
 
 ## 6.1 State model
 
 ```ts
 type DrawingPoint = {
-  x: number;
-  y: number;
-  t: number;
+  x: number; // normalized 0–1
+  y: number; // normalized 0–1
+  t: number; // timestamp ms
 };
 
 type DrawingStroke = {
@@ -156,8 +150,7 @@ type PromptReveal = {
 type DrawingRuntimeState = {
   activeTurnTeamId: string | null;
   promptCursor: number;
-  promptsUsedThisTurn: number;
-  promptsPerTurn: number;
+  shuffledPromptIds: string[];
   pendingPointsByTeamId: Record<string, number>;
   strokes: DrawingStroke[];
   activeStrokeId: string | null;
@@ -168,8 +161,8 @@ type DrawingRuntimeState = {
 Constants:
 
 - `PROMPT_REVEAL_MS = 2000`
-- `MAX_STROKES = 120`
-- `MAX_POINTS_PER_STROKE = 2000`
+- `MAX_STROKES = 60`
+- `MAX_POINTS_PER_STROKE = 500`
 - `MAX_APPEND_POINTS_PER_ACTION = 64`
 
 ## 6.2 Action types
@@ -210,90 +203,82 @@ type EndStrokePayload = {
 ## 6.3 Reducer rules
 
 - Ignore actions when runtime state is invalid.
-- Ignore drawing mutation when turn prompt limit reached.
-- `beginStroke` creates new stroke if limits allow.
-- `appendStrokePoints` appends sanitized points to active stroke.
+- `beginStroke`:
+  - Clears `reveal` if present.
+  - Creates new stroke if `strokes.length < MAX_STROKES`.
+- `appendStrokePoints` appends sanitized points to active stroke (capped at `MAX_POINTS_PER_STROKE`, batch capped at `MAX_APPEND_POINTS_PER_ACTION`).
 - `endStroke` clears `activeStrokeId`.
 - `undoStroke` removes last stroke.
-- `clearCanvas` removes all strokes and active stroke.
+- `clearCanvas` removes all strokes and clears `activeStrokeId`.
 - `markCorrect`:
-  - Increment active team pending points by 1.
-  - Clamp to `pointsMax`.
-  - Emit prompt reveal with `outcome = CORRECT`.
-  - Advance prompt cursor and prompts used.
+  - Increment active team pending points by 1, clamp to `pointsMax`.
+  - Emit prompt reveal with `outcome = CORRECT`, `expiresAtMs = now + PROMPT_REVEAL_MS`.
+  - Advance `promptCursor`.
   - Clear canvas.
 - `markIncorrect`:
   - No score change.
-  - Emit prompt reveal with `outcome = INCORRECT`.
-  - Advance prompt cursor and prompts used.
+  - Emit prompt reveal with `outcome = INCORRECT`, `expiresAtMs = now + PROMPT_REVEAL_MS`.
+  - Advance `promptCursor`.
   - Clear canvas.
 - `skipPrompt`:
   - No score change.
   - No reveal.
-  - Advance prompt cursor and prompts used.
+  - Advance `promptCursor`.
   - Clear canvas.
 
 ## 6.4 Prompt rotation
 
-- Prompt index wraps by `content.prompts.length`.
+- `promptCursor` indexes into `shuffledPromptIds`, wrapping by list length.
+- `shuffledPromptIds` is populated on `initialize` by shuffling `content.prompts`.
 - If prompt list is empty at runtime, reducer accepts drawing actions but blocks result actions.
 
 ## 7) Host And Display Projection
-
-Rule source: `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/AGENTS.md`
 
 - Server projections remain the only source for `minigameHostView` and `minigameDisplayView`.
 - Display payload must remain answer-safe.
 
 ## 7.1 Contract update strategy
 
-Current shared minigame view types are trivia-shaped.
+Add `DrawingHostView` and `DrawingDisplayView` as new discriminated union members in:
 
-File: `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/packages/shared/src/roomState/index.ts`
+`packages/shared/src/roomState/index.ts`
 
-Refactor to discriminated unions by minigame type:
-
-- `TriviaHostView | GeoHostView | DrawingHostView`
-- `TriviaDisplayView | GeoDisplayView | DrawingDisplayView`
-
-This avoids shoehorning drawing canvas/reveal fields into trivia fields.
+Trivia and geo view types are not changed.
 
 ## 7.2 Drawing host view
 
-Host view includes:
+```ts
+type DrawingHostView = {
+  minigame: "DRAWING";
+  activeTurnTeamId: string | null;
+  promptCursor: number;
+  currentPrompt: { id: string; prompt: string } | null;
+  pendingPointsByTeamId: Record<string, number>;
+  strokes: DrawingStroke[];
+  activeStrokeId: string | null;
+  reveal: PromptReveal | null;
+};
+```
 
-- `minigame: "DRAWING"`
-- `activeTurnTeamId`
-- `promptCursor`
-- `promptsUsedThisTurn`
-- `promptsPerTurn`
-- `currentPrompt: { id, prompt } | null`
-- `pendingPointsByTeamId`
-- `strokes`
-- `activeStrokeId`
-- `reveal`
+Host view includes `currentPrompt` (the prompt text visible on the tablet). It is never sent to the display.
 
 ## 7.3 Drawing display view
 
-Display view includes:
+```ts
+type DrawingDisplayView = {
+  minigame: "DRAWING";
+  activeTurnTeamId: string | null;
+  pendingPointsByTeamId: Record<string, number>;
+  strokes: DrawingStroke[];
+  reveal: PromptReveal | null;
+};
+```
 
-- `minigame: "DRAWING"`
-- `activeTurnTeamId`
-- `promptCursor`
-- `promptsUsedThisTurn`
-- `promptsPerTurn`
-- `pendingPointsByTeamId`
-- `strokes`
-- `reveal`
-
-Display view excludes:
-
-- Future prompt text while still active.
-- Any hidden/host-only data.
+Display view excludes `currentPrompt`, `activeStrokeId`, and `promptCursor`.
 
 Display behavior:
 
-- If `reveal !== null` and now < `expiresAtMs`, show `reveal.promptText` with outcome badge.
+- If `reveal !== null` and `now < reveal.expiresAtMs`, show `reveal.promptText` with outcome badge.
 - Otherwise, hide prompt text.
 
 ## 8) Client Rendering Spec
@@ -305,6 +290,10 @@ Use:
 - Native `<canvas>`.
 - Pointer Events for input capture.
 - `perfect-freehand` for stroke smoothing and pressure-like feel.
+
+Coordinate capture:
+
+- Normalize pointer `x` and `y` to 0–1 relative to canvas dimensions at capture time.
 
 Render strategy:
 
@@ -320,6 +309,7 @@ Batching rules:
 ## 8.2 Display rendering
 
 - Render server-projected strokes only.
+- Scale normalized coordinates to display canvas dimensions on render.
 - No local prediction needed.
 - Maintain no-scroll, viewport-safe layout.
 
@@ -327,17 +317,19 @@ Batching rules:
 
 Files under:
 
-- `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/packages/minigames/drawing/src/client/HostDrawingSurface/`
-- `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/packages/minigames/drawing/src/client/DisplayDrawingSurface/`
+- `packages/minigames/drawing/src/client/HostDrawingSurface/`
+- `packages/minigames/drawing/src/client/DisplayDrawingSurface/`
 
 Required controls on host play surface:
 
+- Prompt text (always visible)
 - Correct button
 - Incorrect button
 - Skip button
 - Undo stroke button
 - Clear canvas button
-- Prompt progress label (`X / promptsPerTurn`)
+- Color palette (~6 colors)
+- Brush size selector (3 sizes)
 
 Intro surface:
 
@@ -345,7 +337,7 @@ Intro surface:
 
 ## 9) Dev Sandbox Requirements
 
-File: `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/packages/minigames/drawing/src/dev/index.ts`
+File: `packages/minigames/drawing/src/dev/index.ts`
 
 Add scenarios:
 
@@ -354,7 +346,6 @@ Add scenarios:
 - Play in-progress drawing
 - Play resolved-correct reveal
 - Play resolved-incorrect reveal
-- Play prompt-limit reached
 
 ## 10) Server And Socket Integration
 
@@ -362,9 +353,9 @@ Existing envelopes already support generic action dispatch.
 
 Key paths:
 
-- `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/apps/server/src/socketServer/index.ts`
-- `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/apps/server/src/roomState/index.ts`
-- `/Users/bradleyexton/.codex/worktrees/c8b1/wing-night/apps/server/src/minigames/runtime/index.ts`
+- `apps/server/src/socketServer/index.ts`
+- `apps/server/src/roomState/index.ts`
+- `apps/server/src/minigames/runtime/index.ts`
 
 No new socket event names are required.
 
@@ -388,41 +379,40 @@ Not selected for MVP:
 Add/extend tests for:
 
 - Drawing content validation.
-- Game config drawing rules validation.
 - Drawing runtime reducer action behavior.
 - Points clamping per active team.
-- Prompt progression and per-turn limits.
-- Display-safe projection (no hidden prompt leakage before resolve).
+- Prompt shuffle and progression.
+- Display-safe projection (no prompt text leakage before resolve).
 
 ## 12.2 Component tests
 
-- Host surface actions disabled/enabled by phase and prompt limit.
+- Host surface controls render correctly for each state (empty canvas, in-progress, reveal).
 - Display reveal lifecycle rendering.
 
 ## 12.3 E2E tests (Playwright)
 
 Cover:
 
-- Host draws and display syncs.
-- Host marks correct and score updates.
+- Drawer draws on tablet and display syncs strokes.
+- Tablet marks correct and score updates.
 - Prompt briefly appears on display, then hides.
-- Refresh/reconnect rehydrate preserves canonical canvas state.
+- Refresh/reconnect rehydrates current canvas state.
 
 ## 13) Acceptance Criteria
 
 - DRAWING runtime no longer returns unsupported stub state.
-- Host can run multiple prompts in one team turn.
+- Team selects a drawer who holds the tablet; prompt is visible on tablet, hidden on display.
 - Correct answers add exactly `+1` pending point.
-- `promptsPerTurn` is enforced from config.
+- Phase timer governs turn length; no prompt count gate.
 - Display only shows prompt text during brief post-result reveal window.
-- Display never receives host-only secret fields.
+- Display never receives `currentPrompt` or any host-only field.
+- Strokes use normalized 0–1 coordinates and render correctly on both tablet and TV.
 - Existing test suites pass, plus new drawing coverage.
 
 ## 14) Incremental Delivery Steps
 
-1. Shared contracts and validators (game config + drawing content).
+1. Shared contracts and content schema (drawing content file + validators).
 2. Drawing runtime reducer with tests.
-3. Host/display surfaces with smoothing and controls.
+3. Host/display surfaces with smoothing, color palette, and controls.
 4. Dev sandbox scenarios for drawing.
 5. E2E sync/rehydrate coverage.
-
