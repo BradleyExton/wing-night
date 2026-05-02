@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drawing Host — 02 Heat Console</title>
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --surface: #141414;
+        --surface-alt: #1c1c1c;
+        --grid: #1a1a1a;
+        --text: #ffffff;
+        --muted: #8d8d8d;
+        --primary: #f97316;
+        --heat: #ef4444;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none;
+      }
+      .stage {
+        height: 100dvh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: clamp(0.6rem, 0.9vw, 0.9rem);
+        padding: clamp(0.6rem, 0.9vw, 0.9rem);
+      }
+      /* Top readout */
+      header.bar {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 1rem;
+        background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+        border: 1px solid #262626; border-radius: 10px;
+        padding: 0.75rem 1.25rem;
+        font-family: ui-monospace, "Menlo", "Consolas", monospace;
+      }
+      .meta-l, .meta-r {
+        display: flex; align-items: center; gap: 1.25rem;
+        text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.78rem;
+      }
+      .meta-r { justify-content: flex-end; }
+      .meta-l .live::before, .meta-l .ch::before {
+        content: ""; display: inline-block; width: 8px; height: 8px;
+        border-radius: 50%; margin-right: 0.5rem; vertical-align: middle;
+      }
+      .meta-l .live { color: var(--heat); }
+      .meta-l .live::before { background: var(--heat); box-shadow: 0 0 10px var(--heat); }
+      .meta-l .ch { color: var(--muted); }
+      .meta-l .ch::before { background: #2c2c2c; }
+      .turn-pill {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        padding: 0.3rem 0.65rem; border-radius: 6px;
+        background: rgba(249, 115, 22, 0.12);
+        border: 1px solid rgba(249, 115, 22, 0.4);
+        color: var(--primary); font-weight: 700;
+      }
+      .turn-pill .pts {
+        font-family: ui-monospace, monospace; color: var(--gold);
+      }
+      .prompt-frame {
+        text-align: center;
+        padding: 0.4rem 1.5rem;
+        border-left: 1px solid #262626; border-right: 1px solid #262626;
+        position: relative;
+      }
+      .prompt-frame .label {
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: 0.62rem; color: var(--muted);
+        font-family: ui-monospace, monospace;
+      }
+      .prompt-frame .text {
+        font-size: clamp(1.5rem, 2.4vw, 2.4rem);
+        font-weight: 800; letter-spacing: -0.01em; margin-top: 0.1rem;
+      }
+      .prompt-frame::before {
+        content: "DRAWER ONLY";
+        position: absolute; top: -0.55rem; left: 50%;
+        transform: translateX(-50%);
+        background: var(--bg); color: var(--gold);
+        font-size: 0.55rem; letter-spacing: 0.32em;
+        font-family: ui-monospace, monospace;
+        padding: 0 0.5rem;
+      }
+
+      /* Canvas */
+      main.canvas-wrap {
+        position: relative;
+        background:
+          linear-gradient(0deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+          radial-gradient(ellipse at center, #1a1a1a 0%, #0a0a0a 80%);
+        background-size: 32px 32px, 32px 32px, 100% 100%;
+        border: 1px solid #1f1f1f;
+        border-radius: 10px;
+        box-shadow: inset 0 0 60px rgba(249,115,22,0.05);
+        overflow: hidden;
+      }
+      main.canvas-wrap::before, main.canvas-wrap::after {
+        content: "";
+        position: absolute; width: 24px; height: 24px;
+        border: 2px solid var(--primary); opacity: 0.7;
+      }
+      main.canvas-wrap::before {
+        top: 12px; left: 12px;
+        border-right: none; border-bottom: none;
+      }
+      main.canvas-wrap::after {
+        bottom: 12px; right: 12px;
+        border-left: none; border-top: none;
+      }
+      main.canvas-wrap svg { display: block; width: 100%; height: 100%; }
+      .stroke-glow { filter: drop-shadow(0 0 6px currentColor); }
+      .telem {
+        position: absolute; top: 12px; right: 16px;
+        font-family: ui-monospace, monospace; font-size: 0.7rem;
+        color: var(--muted); text-align: right; letter-spacing: 0.1em;
+      }
+      .telem strong { color: var(--primary); font-weight: 700; }
+      .crosshair {
+        position: absolute;
+        bottom: 12px; left: 16px;
+        font-family: ui-monospace, monospace; font-size: 0.7rem;
+        color: var(--muted); letter-spacing: 0.1em;
+      }
+
+      /* Bottom dock */
+      .dock {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: clamp(0.6rem, 0.9vw, 0.9rem);
+        align-items: stretch;
+      }
+      .dock-tools {
+        display: flex; align-items: center; gap: 1.5rem;
+        padding: 0.85rem 1.25rem;
+        background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+        border: 1px solid #262626; border-radius: 10px;
+      }
+      .group { display: flex; flex-direction: column; gap: 0.3rem; }
+      .group .heading {
+        text-transform: uppercase; letter-spacing: 0.2em;
+        font-size: 0.6rem; color: var(--muted);
+        font-family: ui-monospace, monospace;
+      }
+      .pucks { display: flex; gap: 0.5rem; }
+      .puck {
+        width: 38px; height: 38px; border-radius: 8px;
+        border: 1px solid #2c2c2c;
+        background: var(--surface);
+        display: grid; place-items: center; cursor: pointer;
+        position: relative;
+      }
+      .puck .led {
+        width: 22px; height: 22px; border-radius: 50%;
+        box-shadow: 0 0 14px currentColor;
+      }
+      .puck.active {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25);
+      }
+      .puck.active::after {
+        content: "•"; position: absolute; bottom: 1px; right: 4px;
+        color: var(--gold); font-size: 14px; line-height: 1;
+      }
+      .brushes { display: flex; gap: 0.45rem; }
+      .brush {
+        width: 38px; height: 38px; border-radius: 8px;
+        border: 1px solid #2c2c2c; background: var(--surface);
+        display: grid; place-items: center; cursor: pointer;
+      }
+      .brush.active { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(251,191,36,0.25); }
+      .brush .nib { background: var(--primary); border-radius: 999px; }
+      .brush.s .nib { width: 5px; height: 5px; }
+      .brush.m .nib { width: 11px; height: 11px; }
+      .brush.l .nib { width: 18px; height: 18px; }
+      .util {
+        display: flex; gap: 0.45rem; margin-left: auto;
+      }
+      .util button {
+        background: var(--surface); color: var(--text);
+        border: 1px solid #2c2c2c; border-radius: 8px;
+        font-family: ui-monospace, monospace;
+        font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase;
+        padding: 0 1rem; cursor: pointer; height: 38px;
+      }
+      .util button:hover { border-color: var(--primary); color: var(--primary); }
+
+      .dock-results {
+        display: grid; grid-template-rows: 1fr 1fr; gap: 0.5rem;
+      }
+      .result-btn {
+        min-width: 220px;
+        padding: 0 1.5rem;
+        font-family: inherit; font-weight: 800;
+        font-size: 1.4rem; letter-spacing: 0.02em;
+        text-transform: uppercase;
+        border-radius: 10px; cursor: pointer;
+        display: grid; grid-template-columns: auto 1fr auto;
+        align-items: center; gap: 0.75rem;
+        border: 1px solid;
+      }
+      .result-btn.correct {
+        background: linear-gradient(180deg, #14431f 0%, #0a2a14 100%);
+        border-color: #2a7a45; color: #d6ffe2;
+      }
+      .result-btn.incorrect {
+        background: linear-gradient(180deg, #4a1818 0%, #2a0e0e 100%);
+        border-color: #8a3535; color: #ffd6d6;
+      }
+      .result-btn .icon { font-size: 1.6rem; }
+      .result-btn .meta {
+        font-size: 0.7rem; letter-spacing: 0.18em; opacity: 0.8;
+        font-family: ui-monospace, monospace; font-weight: 600;
+      }
+      .skip {
+        position: absolute; bottom: 12px; right: 16px;
+        background: transparent; border: none;
+        color: var(--muted); font-family: ui-monospace, monospace;
+        font-size: 0.72rem; letter-spacing: 0.18em;
+        text-transform: uppercase; cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="bar">
+        <div class="meta-l">
+          <span class="live">LIVE · DRAWING</span>
+          <span class="ch">CH 03 / WARM</span>
+        </div>
+        <div class="prompt-frame">
+          <div class="label">Prompt</div>
+          <div class="text">Pizza slice</div>
+        </div>
+        <div class="meta-r">
+          <span>TURN</span>
+          <span class="turn-pill">Team Heat <span class="pts">+2</span></span>
+          <span>01:24</span>
+        </div>
+      </header>
+
+      <main class="canvas-wrap">
+        <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+          <g class="stroke-glow" color="#f97316">
+            <path d="M 250 180 L 950 180 L 600 700 Z"
+                  stroke="#f97316" stroke-width="9" fill="none"
+                  stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+          <g class="stroke-glow" color="#fbbf24">
+            <path d="M 270 180 Q 290 150 320 180 Q 350 150 380 180 Q 410 150 440 180 Q 470 150 500 180 Q 530 150 560 180 Q 590 150 620 180 Q 650 150 680 180 Q 710 150 740 180 Q 770 150 800 180 Q 830 150 860 180 Q 890 150 920 180"
+                  stroke="#fbbf24" stroke-width="10" fill="none"
+                  stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+          <g class="stroke-glow" color="#ef4444">
+            <circle cx="480" cy="290" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+            <circle cx="700" cy="320" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+            <circle cx="560" cy="450" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+            <path d="M 720 470 a 34 34 0 1 1 -10 -30"
+                  stroke="#ef4444" stroke-width="8" fill="none" stroke-linecap="round" />
+          </g>
+        </svg>
+        <div class="telem">
+          STROKES <strong>07</strong> / 60<br/>
+          POINTS <strong>284</strong> / 500
+        </div>
+        <div class="crosshair">x: 0.598 · y: 0.589</div>
+        <button class="skip">Skip ›</button>
+      </main>
+
+      <div class="dock">
+        <div class="dock-tools">
+          <div class="group">
+            <span class="heading">Color</span>
+            <div class="pucks">
+              <div class="puck"><span class="led" style="color:#ffffff;background:#ffffff"></span></div>
+              <div class="puck active"><span class="led" style="color:#f97316;background:#f97316"></span></div>
+              <div class="puck"><span class="led" style="color:#ef4444;background:#ef4444"></span></div>
+              <div class="puck"><span class="led" style="color:#fbbf24;background:#fbbf24"></span></div>
+              <div class="puck"><span class="led" style="color:#06b6d4;background:#06b6d4"></span></div>
+              <div class="puck"><span class="led" style="color:#84cc16;background:#84cc16"></span></div>
+            </div>
+          </div>
+          <div class="group">
+            <span class="heading">Brush</span>
+            <div class="brushes">
+              <div class="brush s"><span class="nib"></span></div>
+              <div class="brush m active"><span class="nib"></span></div>
+              <div class="brush l"><span class="nib"></span></div>
+            </div>
+          </div>
+          <div class="util">
+            <button>↶ Undo</button>
+            <button>⌫ Clear</button>
+          </div>
+        </div>
+        <div></div>
+        <div class="dock-results">
+          <button class="result-btn correct">
+            <span class="icon">✓</span>
+            <span>Correct</span>
+            <span class="meta">+1</span>
+          </button>
+          <button class="result-btn incorrect">
+            <span class="icon">✗</span>
+            <span>Incorrect</span>
+            <span class="meta">+0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

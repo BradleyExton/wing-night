@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drawing Display — 01 Sketchpad Studio</title>
+    <style>
+      :root {
+        --bg: #121212;
+        --surface: #1c1c1c;
+        --surface-alt: #242424;
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --heat: #ef4444;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+        --teamB: #06b6d4;
+        --teamC: #84cc16;
+        --teamD: #f43f5e;
+        --paper: #f5ede0;
+        --paper-line: #e5d9c4;
+        --ink: #2a1f12;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: radial-gradient(ellipse at top, #1f1207 0%, var(--bg) 55%, #0a0a0a 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      .stage {
+        height: 100dvh; display: grid;
+        grid-template-rows: auto 1fr;
+        gap: clamp(1rem, 1.6vw, 2rem);
+        padding: clamp(1rem, 1.8vw, 2.4rem);
+      }
+      header.bar {
+        display: flex; align-items: center; justify-content: space-between;
+        text-transform: uppercase; letter-spacing: 0.18em;
+      }
+      .round-chip {
+        display: inline-flex; align-items: center; gap: 1rem;
+        font-size: clamp(1rem, 1.4vw, 1.4rem); font-weight: 700;
+      }
+      .round-chip .num {
+        color: var(--primary); font-size: clamp(1.4rem, 2.2vw, 2.2rem); letter-spacing: 0;
+      }
+      .round-chip .sauce { color: var(--muted); font-weight: 500; }
+      .live {
+        display: inline-flex; align-items: center; gap: 0.6rem;
+        font-size: clamp(0.85rem, 1.1vw, 1.1rem); font-weight: 700; color: var(--heat);
+      }
+      .live .dot {
+        width: 0.7em; height: 0.7em; border-radius: 50%; background: var(--heat);
+        box-shadow: 0 0 12px var(--heat); animation: pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.55; transform: scale(0.9); }
+      }
+
+      main.main {
+        display: grid;
+        grid-template-columns: 1fr 2.5fr 1fr;
+        gap: clamp(1rem, 2vw, 2.4rem);
+        min-height: 0; align-items: stretch;
+      }
+      .side-panel {
+        display: flex; flex-direction: column; gap: 1.5rem;
+        justify-content: center;
+      }
+      .turn-card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: clamp(1rem, 1.5vw, 1.75rem);
+        border-left: 6px solid var(--teamA);
+      }
+      .turn-card .label {
+        text-transform: uppercase; letter-spacing: 0.22em;
+        color: var(--muted); font-size: clamp(0.7rem, 0.95vw, 0.95rem);
+      }
+      .turn-card .name {
+        font-size: clamp(1.6rem, 2.6vw, 2.8rem); font-weight: 800;
+        margin-top: 0.2rem;
+      }
+      .turn-card .pts {
+        margin-top: 0.5rem;
+        font-family: ui-monospace, monospace;
+        font-weight: 800; font-size: clamp(1.1rem, 1.5vw, 1.5rem);
+        color: var(--gold);
+      }
+      .drawer {
+        background: var(--surface-alt); border-radius: 14px;
+        padding: 1rem 1.25rem; text-align: center;
+      }
+      .drawer .label {
+        text-transform: uppercase; letter-spacing: 0.22em;
+        color: var(--muted); font-size: clamp(0.7rem, 0.95vw, 0.9rem);
+      }
+      .drawer .name {
+        font-size: clamp(1.1rem, 1.6vw, 1.6rem); font-weight: 700;
+        margin-top: 0.2rem;
+      }
+
+      /* Easel */
+      .easel-wrap {
+        position: relative;
+        display: grid; place-items: center;
+      }
+      .easel {
+        position: relative;
+        width: 100%; height: 100%;
+        background: var(--paper);
+        border-radius: 14px;
+        box-shadow:
+          0 24px 50px rgba(0,0,0,0.6),
+          0 0 0 14px #2a1d10,
+          0 0 0 16px #3a2a18;
+        overflow: hidden;
+        background-image:
+          linear-gradient(0deg, rgba(0,0,0,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,0,0,0.025) 1px, transparent 1px);
+        background-size: 36px 36px;
+      }
+      .easel::before {
+        content: ""; position: absolute; inset: 0;
+        background:
+          radial-gradient(circle at 20% 15%, rgba(0,0,0,0.04) 0%, transparent 40%),
+          radial-gradient(circle at 80% 85%, rgba(0,0,0,0.04) 0%, transparent 40%);
+        pointer-events: none;
+      }
+      .easel svg { width: 100%; height: 100%; display: block; }
+
+      .corner-tag {
+        position: absolute; bottom: -12px; left: -12px;
+        background: var(--surface);
+        border: 1px solid #3a2a18;
+        border-radius: 999px;
+        padding: 0.5rem 1rem;
+        display: inline-flex; align-items: center; gap: 0.6rem;
+        font-size: clamp(0.8rem, 1vw, 1rem); font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.2em;
+        color: var(--muted);
+      }
+      .corner-tag .swatch {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: var(--teamA); box-shadow: 0 0 8px var(--teamA);
+      }
+
+      /* Right panel: timer */
+      .timer-card {
+        background: var(--surface); border-radius: 16px;
+        padding: clamp(1rem, 1.5vw, 1.5rem);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 0.5rem;
+      }
+      .timer-card .lbl {
+        text-transform: uppercase; letter-spacing: 0.32em;
+        color: var(--muted); font-size: clamp(0.75rem, 1vw, 1rem);
+      }
+      .timer-card .val {
+        font-family: ui-monospace, monospace;
+        font-size: clamp(3.5rem, 7vw, 7rem); font-weight: 800;
+        color: var(--primary); line-height: 1; letter-spacing: -0.04em;
+        font-variant-numeric: tabular-nums;
+      }
+      .stroke-badge {
+        background: var(--surface-alt); border-radius: 12px;
+        padding: 0.85rem 1rem; text-align: center;
+      }
+      .stroke-badge .lbl {
+        text-transform: uppercase; letter-spacing: 0.22em;
+        color: var(--muted); font-size: clamp(0.7rem, 0.9vw, 0.9rem);
+      }
+      .stroke-badge .val {
+        font-family: ui-monospace, monospace; color: var(--text);
+        font-weight: 800; font-size: clamp(1.3rem, 1.8vw, 1.8rem);
+      }
+
+      /* Standings footer */
+      footer.standings {
+        background: var(--surface);
+        border-radius: 14px;
+        padding: clamp(0.85rem, 1.2vw, 1.25rem) clamp(1.25rem, 2vw, 2rem);
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: clamp(0.75rem, 1vw, 1.25rem);
+      }
+      .row { display: flex; align-items: center; gap: 0.85rem; }
+      .row .swatch {
+        width: 0.85em; height: 0.85em; border-radius: 3px; flex-shrink: 0;
+      }
+      .row .nm {
+        font-size: clamp(1rem, 1.3vw, 1.4rem); font-weight: 600; flex: 1;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .row .pts {
+        font-family: ui-monospace, monospace;
+        font-size: clamp(1.1rem, 1.5vw, 1.65rem); font-weight: 800;
+        color: var(--primary); font-variant-numeric: tabular-nums;
+      }
+      .row.lead .nm { color: var(--gold); }
+      .row.lead .pts { color: var(--gold); }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="bar">
+        <div class="round-chip">
+          <span class="num">R3</span>
+          <span>Drawing</span>
+          <span class="sauce">· Frank's</span>
+        </div>
+        <div class="live"><span class="dot"></span><span>Drawing · Live</span></div>
+      </header>
+
+      <main class="main">
+        <aside class="side-panel">
+          <div class="turn-card">
+            <div class="label">On the Wings</div>
+            <div class="name">Team Heat</div>
+            <div class="pts">+2 pending</div>
+          </div>
+          <div class="drawer">
+            <div class="label">Drawer</div>
+            <div class="name">Maria</div>
+          </div>
+        </aside>
+
+        <div class="easel-wrap">
+          <div class="easel">
+            <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+              <path d="M 250 180 L 950 180 L 600 700 Z"
+                    stroke="#2a1f12" stroke-width="9" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M 270 180 Q 290 150 320 180 Q 350 150 380 180 Q 410 150 440 180 Q 470 150 500 180 Q 530 150 560 180 Q 590 150 620 180 Q 650 150 680 180 Q 710 150 740 180 Q 770 150 800 180 Q 830 150 860 180 Q 890 150 920 180"
+                    stroke="#fbbf24" stroke-width="11" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="480" cy="290" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+              <circle cx="700" cy="320" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+              <circle cx="560" cy="450" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+              <path d="M 720 470 a 34 34 0 1 1 -10 -30"
+                    stroke="#ef4444" stroke-width="8" fill="none" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div class="corner-tag">
+            <span class="swatch"></span><span>Team Heat is drawing…</span>
+          </div>
+        </div>
+
+        <aside class="side-panel">
+          <div class="timer-card">
+            <span class="lbl">Turn</span>
+            <span class="val">1:24</span>
+          </div>
+          <div class="stroke-badge">
+            <div class="lbl">Strokes</div>
+            <div class="val">7</div>
+          </div>
+        </aside>
+      </main>
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drawing Host — 01 Sketchpad Studio</title>
+    <style>
+      :root {
+        --bg: #121212;
+        --surface: #1c1c1c;
+        --surface-alt: #242424;
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --heat: #ef4444;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+        --paper: #f5ede0;
+        --paper-line: #e5d9c4;
+        --ink: #2a1f12;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: radial-gradient(ellipse at top, #1f1207 0%, var(--bg) 55%, #0a0a0a 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none;
+      }
+      .stage {
+        height: 100dvh;
+        display: grid;
+        grid-template-columns: 110px 1fr 220px;
+        grid-template-rows: auto 1fr auto;
+        gap: clamp(0.75rem, 1vw, 1rem);
+        padding: clamp(0.75rem, 1vw, 1rem);
+      }
+      header.bar {
+        grid-column: 1 / -1;
+        display: grid; grid-template-columns: auto 1fr auto;
+        align-items: center; gap: 1rem;
+        background: var(--surface); border-radius: 14px;
+        padding: 0.85rem 1.25rem;
+        border: 1px solid #2c2c2c;
+      }
+      .round-chip {
+        display: inline-flex; align-items: center; gap: 0.65rem;
+        text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700;
+        font-size: 0.95rem;
+      }
+      .round-chip .num { color: var(--primary); font-size: 1.4rem; letter-spacing: 0; }
+      .prompt {
+        text-align: center;
+      }
+      .prompt .label {
+        color: var(--gold); text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: 0.7rem; font-weight: 700;
+      }
+      .prompt .text {
+        font-size: clamp(1.6rem, 2.4vw, 2.4rem); font-weight: 800;
+        line-height: 1.05; margin-top: 0.15rem;
+      }
+      .turn {
+        display: inline-flex; align-items: center; gap: 0.55rem;
+        text-transform: uppercase; letter-spacing: 0.18em;
+        font-size: 0.8rem; font-weight: 700;
+      }
+      .turn .swatch {
+        width: 14px; height: 14px; border-radius: 3px; background: var(--teamA);
+      }
+      .turn .pts { color: var(--primary); font-size: 1rem; letter-spacing: 0; }
+      /* Left tray — palette + brushes */
+      .tray {
+        background: linear-gradient(180deg, #2a1d10 0%, #1c130a 100%);
+        border: 1px solid #3a2a18; border-radius: 16px;
+        padding: 1rem 0.65rem;
+        display: flex; flex-direction: column; gap: 1rem;
+      }
+      .tray .heading {
+        color: var(--muted); text-transform: uppercase; letter-spacing: 0.2em;
+        font-size: 0.62rem; font-weight: 700; text-align: center;
+      }
+      .palette {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem;
+        padding: 0.5rem 0.25rem;
+      }
+      .dab {
+        width: 36px; height: 36px; border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.08);
+        box-shadow: inset -3px -4px 6px rgba(0,0,0,0.35),
+                    inset 3px 3px 6px rgba(255,255,255,0.18),
+                    0 2px 6px rgba(0,0,0,0.4);
+        cursor: pointer; justify-self: center;
+        position: relative;
+      }
+      .dab.active {
+        outline: 3px solid var(--gold); outline-offset: 3px;
+      }
+      .brushes {
+        display: flex; flex-direction: column; gap: 0.5rem;
+        align-items: center;
+      }
+      .brush {
+        width: 60px; height: 36px; border-radius: 10px;
+        background: var(--surface); border: 1px solid #2c2c2c;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+      }
+      .brush.active { border-color: var(--gold); background: var(--surface-alt); }
+      .brush .nib {
+        background: var(--paper); border-radius: 999px;
+      }
+      .brush.s .nib { width: 6px; height: 6px; }
+      .brush.m .nib { width: 12px; height: 12px; }
+      .brush.l .nib { width: 20px; height: 20px; }
+      /* Canvas */
+      .canvas-wrap {
+        position: relative;
+        background: var(--paper);
+        border-radius: 18px;
+        box-shadow: 0 16px 30px rgba(0,0,0,0.55), 0 0 0 1px #3a2a18;
+        overflow: hidden;
+        background-image:
+          linear-gradient(0deg, rgba(0,0,0,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,0,0,0.025) 1px, transparent 1px);
+        background-size: 28px 28px;
+      }
+      .canvas-wrap::before {
+        content: ""; position: absolute; inset: 0;
+        background:
+          radial-gradient(circle at 20% 15%, rgba(0,0,0,0.04) 0%, transparent 40%),
+          radial-gradient(circle at 80% 85%, rgba(0,0,0,0.04) 0%, transparent 40%);
+        pointer-events: none;
+      }
+      .canvas-wrap svg { display: block; width: 100%; height: 100%; }
+      /* Right rail — actions */
+      .rail {
+        display: grid;
+        grid-template-rows: 1fr 1fr auto auto auto;
+        gap: 0.65rem;
+      }
+      .btn {
+        background: var(--surface); border: 1px solid #2c2c2c;
+        border-radius: 14px; color: var(--text);
+        font-family: inherit; font-weight: 800; letter-spacing: 0.06em;
+        text-transform: uppercase; cursor: pointer;
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; gap: 0.25rem;
+        font-size: 0.95rem; padding: 0.75rem 0.5rem;
+      }
+      .btn .sub { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.18em; font-weight: 600; }
+      .btn.primary {
+        background: linear-gradient(180deg, #1c4d2c 0%, #0f3a1f 100%);
+        border-color: #2a7a45; color: #d6ffe2;
+        font-size: 1.4rem;
+      }
+      .btn.primary .sub { color: #5fb780; }
+      .btn.danger {
+        background: linear-gradient(180deg, #4d1f1f 0%, #3a1414 100%);
+        border-color: #7a3a3a; color: #ffd6d6;
+        font-size: 1.4rem;
+      }
+      .btn.danger .sub { color: #c47878; }
+      .btn.ghost { font-size: 0.8rem; padding: 0.55rem; }
+      /* Footer (undo / clear) */
+      footer.foot {
+        grid-column: 1 / -1;
+        display: grid; grid-template-columns: auto 1fr auto auto;
+        align-items: center; gap: 0.75rem;
+        padding: 0.5rem 0.5rem 0.25rem;
+      }
+      .stroke-count {
+        color: var(--muted); font-size: 0.85rem; letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+      .stroke-count strong {
+        color: var(--text); font-family: ui-monospace, monospace;
+        font-weight: 800; letter-spacing: 0;
+      }
+      .timer {
+        font-family: ui-monospace, monospace; font-size: 1.6rem; font-weight: 800;
+        color: var(--primary); letter-spacing: -0.04em;
+        font-variant-numeric: tabular-nums;
+      }
+      .timer .lbl { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.2em;
+        margin-right: 0.5rem; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="bar">
+        <div class="round-chip"><span class="num">R3</span><span>Drawing</span></div>
+        <div class="prompt">
+          <div class="label">Prompt · Visible to drawer only</div>
+          <div class="text">Pizza slice</div>
+        </div>
+        <div class="turn"><span class="swatch"></span><span>Team Heat</span><span class="pts">+2</span></div>
+      </header>
+
+      <aside class="tray">
+        <div>
+          <div class="heading">Palette</div>
+          <div class="palette">
+            <div class="dab active" style="background:#2a1f12"></div>
+            <div class="dab" style="background:#f97316"></div>
+            <div class="dab" style="background:#ef4444"></div>
+            <div class="dab" style="background:#fbbf24"></div>
+            <div class="dab" style="background:#06b6d4"></div>
+            <div class="dab" style="background:#84cc16"></div>
+          </div>
+        </div>
+        <div>
+          <div class="heading">Brush</div>
+          <div class="brushes">
+            <div class="brush s"><span class="nib" style="background:#2a1f12"></span></div>
+            <div class="brush m active"><span class="nib" style="background:#2a1f12"></span></div>
+            <div class="brush l"><span class="nib" style="background:#2a1f12"></span></div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="canvas-wrap">
+        <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+          <!-- Pizza slice triangle -->
+          <path d="M 250 180 L 950 180 L 600 700 Z"
+                stroke="#2a1f12" stroke-width="9" fill="none"
+                stroke-linecap="round" stroke-linejoin="round" />
+          <!-- Crust scallops along the top -->
+          <path d="M 270 180 Q 290 150 320 180 Q 350 150 380 180 Q 410 150 440 180 Q 470 150 500 180 Q 530 150 560 180 Q 590 150 620 180 Q 650 150 680 180 Q 710 150 740 180 Q 770 150 800 180 Q 830 150 860 180 Q 890 150 920 180"
+                stroke="#fbbf24" stroke-width="11" fill="none"
+                stroke-linecap="round" stroke-linejoin="round" />
+          <!-- Pepperoni in progress -->
+          <circle cx="480" cy="290" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+          <circle cx="700" cy="320" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+          <circle cx="560" cy="450" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+          <!-- Active stroke: half-drawn pepperoni -->
+          <path d="M 720 470 a 34 34 0 1 1 -10 -30"
+                stroke="#ef4444" stroke-width="8" fill="none" stroke-linecap="round" />
+        </svg>
+      </section>
+
+      <aside class="rail">
+        <button class="btn primary">✓<span class="sub">Correct · +1</span></button>
+        <button class="btn danger">✗<span class="sub">Incorrect</span></button>
+        <button class="btn ghost">Skip prompt →</button>
+        <button class="btn ghost">↶ Undo stroke</button>
+        <button class="btn ghost">⌫ Clear canvas</button>
+      </aside>
+
+      <footer class="foot">
+        <span class="stroke-count">Strokes <strong>7</strong> / 60</span>
+        <span></span>
+        <span class="timer"><span class="lbl">Turn</span>1:24</span>
+        <span class="stroke-count">Tap <strong>↶</strong> to undo last stroke</span>
+      </footer>
+    </div>
+  </body>
+</html>

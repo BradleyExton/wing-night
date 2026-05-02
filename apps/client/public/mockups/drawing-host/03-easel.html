@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drawing Host — 03 Showtime Easel</title>
+    <style>
+      :root {
+        --bg: #121212;
+        --surface: #1c1c1c;
+        --surface-alt: #242424;
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --heat: #ef4444;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+        --board: #0e2624;
+        --chalk: #f3eee2;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background:
+          radial-gradient(ellipse at top, #2a1306 0%, #0f0a08 60%, #050505 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none;
+      }
+      .stage {
+        height: 100dvh; display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: clamp(0.7rem, 1vw, 1rem);
+        padding: clamp(0.7rem, 1vw, 1rem);
+      }
+
+      /* Marquee banner — just the prompt, centered */
+      .marquee {
+        background: linear-gradient(180deg, #3a1d09 0%, #1a0c04 100%);
+        border: 2px solid var(--gold);
+        border-radius: 14px;
+        padding: 0.85rem 1.25rem;
+        text-align: center;
+        box-shadow: 0 0 30px rgba(251,191,36,0.18) inset, 0 6px 18px rgba(0,0,0,0.5);
+      }
+      .marquee .label {
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: 0.7rem; color: var(--gold); font-weight: 800;
+      }
+      .marquee .text {
+        font-size: clamp(1.7rem, 2.8vw, 2.8rem);
+        font-family: "Georgia", serif;
+        font-weight: 700; font-style: italic;
+        margin-top: 0.1rem;
+        text-shadow: 0 0 14px rgba(251,191,36,0.35);
+      }
+
+      /* Center stage: easel only */
+      main.middle {
+        display: grid; grid-template-columns: 1fr;
+        min-height: 0;
+      }
+      .easel-wrap {
+        position: relative;
+        display: grid; place-items: center;
+        padding: 0.5rem;
+      }
+      .easel {
+        position: relative;
+        width: 100%; height: 100%;
+        background: linear-gradient(180deg, #5a3318 0%, #2c1808 100%);
+        border-radius: 12px;
+        padding: 14px;
+        box-shadow: 0 12px 28px rgba(0,0,0,0.55), inset 0 0 0 2px #6a3d1a;
+      }
+      .easel::before, .easel::after {
+        content: "";
+        position: absolute; top: 100%; width: 14px; height: 56px;
+        background: linear-gradient(180deg, #5a3318, #2c1808);
+        border-radius: 0 0 4px 4px;
+        box-shadow: inset 0 0 0 1px #6a3d1a;
+      }
+      .easel::before { left: 18%; transform: rotate(8deg); }
+      .easel::after  { right: 18%; transform: rotate(-8deg); }
+      .board {
+        width: 100%; height: 100%;
+        background:
+          linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+          radial-gradient(ellipse at 50% 30%, #14302d 0%, var(--board) 70%, #06181a 100%);
+        background-size: 30px 30px, 30px 30px, 100% 100%;
+        border-radius: 6px;
+        position: relative; overflow: hidden;
+        box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+      }
+      .board svg { width: 100%; height: 100%; display: block; }
+      .stroke-soft { filter: drop-shadow(0 0 1.5px rgba(255,255,255,0.4)); }
+
+      .skip-corner {
+        position: absolute;
+        top: 24px; right: 28px;
+        background: rgba(0,0,0,0.55);
+        border: 1px solid rgba(251,191,36,0.35);
+        color: var(--muted);
+        font-family: inherit; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.18em;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.85rem;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+      .skip-corner:hover { color: var(--gold); border-color: var(--gold); }
+
+      /* Footer dock */
+      footer.foot {
+        display: grid;
+        grid-template-columns: auto auto 1fr auto auto;
+        align-items: center; gap: clamp(0.75rem, 1.2vw, 1.25rem);
+        background: linear-gradient(180deg, #1a0e05 0%, #0a0604 100%);
+        border: 1px solid #3a200d;
+        border-radius: 14px;
+        padding: 0.75rem 1.25rem;
+      }
+      .palette-lights {
+        display: flex; gap: 0.65rem; align-items: center;
+      }
+      .light {
+        width: 44px; height: 44px; border-radius: 50%;
+        position: relative;
+        box-shadow:
+          inset 0 -4px 8px rgba(0,0,0,0.45),
+          inset 0 4px 8px rgba(255,255,255,0.18),
+          0 0 14px currentColor;
+        cursor: pointer;
+        border: 2px solid rgba(0,0,0,0.5);
+      }
+      .light.active {
+        outline: 3px solid var(--gold); outline-offset: 4px;
+      }
+      .util {
+        display: flex; gap: 0.5rem;
+      }
+      .util button {
+        background: var(--surface); border: 1px solid #3a200d;
+        color: var(--text); border-radius: 10px;
+        font-family: inherit; font-weight: 800; cursor: pointer;
+        padding: 0.6rem 1rem; text-transform: uppercase;
+        letter-spacing: 0.16em; font-size: 0.78rem;
+      }
+      .util button:hover { border-color: var(--gold); color: var(--gold); }
+      .timer-pill {
+        justify-self: center;
+        font-family: ui-monospace, monospace;
+        font-weight: 800; font-size: 1.2rem;
+        color: var(--primary); letter-spacing: -0.04em;
+        font-variant-numeric: tabular-nums;
+      }
+      .timer-pill .lbl {
+        color: var(--muted); font-size: 0.65rem;
+        letter-spacing: 0.2em; margin-right: 0.5rem; font-weight: 700;
+      }
+      .result-btn {
+        position: relative;
+        border: 2px solid;
+        cursor: pointer;
+        font-family: inherit; font-weight: 900;
+        text-transform: uppercase; letter-spacing: 0.06em;
+        border-radius: 12px;
+        display: flex; align-items: center; gap: 0.65rem;
+        font-size: 1.05rem; padding: 0.7rem 1.4rem;
+        box-shadow: 0 4px 0 rgba(0,0,0,0.45), 0 6px 14px rgba(0,0,0,0.35);
+      }
+      .result-btn .icon { font-size: 1.5rem; line-height: 1; }
+      .result-btn .sub {
+        font-size: 0.65rem; letter-spacing: 0.2em; font-weight: 700;
+        opacity: 0.75; margin-left: 0.25rem;
+      }
+      .result-btn.correct {
+        background: radial-gradient(ellipse at top, #2fb86c 0%, #0e6a36 100%);
+        color: #061a0c; border-color: #5fe093;
+      }
+      .result-btn.incorrect {
+        background: radial-gradient(ellipse at top, #f04040 0%, #800f0f 100%);
+        color: #1c0303; border-color: #ff8a8a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="marquee">
+        <div class="label">★ Tonight's Prompt ★</div>
+        <div class="text">Pizza slice</div>
+      </div>
+
+      <main class="middle">
+        <div class="easel-wrap">
+          <div class="easel">
+            <button class="skip-corner">Skip prompt →</button>
+            <div class="board">
+              <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+                <g class="stroke-soft">
+                  <path d="M 250 180 L 950 180 L 600 700 Z"
+                        stroke="#f3eee2" stroke-width="9" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M 270 180 Q 290 150 320 180 Q 350 150 380 180 Q 410 150 440 180 Q 470 150 500 180 Q 530 150 560 180 Q 590 150 620 180 Q 650 150 680 180 Q 710 150 740 180 Q 770 150 800 180 Q 830 150 860 180 Q 890 150 920 180"
+                        stroke="#fbbf24" stroke-width="10" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="480" cy="290" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+                  <circle cx="700" cy="320" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+                  <circle cx="560" cy="450" r="34" stroke="#ef4444" stroke-width="8" fill="none" />
+                  <path d="M 720 470 a 34 34 0 1 1 -10 -30"
+                        stroke="#ef4444" stroke-width="8" fill="none" stroke-linecap="round" />
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="foot">
+        <div class="palette-lights">
+          <div class="light" style="background:#f3eee2;color:#f3eee2"></div>
+          <div class="light active" style="background:#f97316;color:#f97316"></div>
+          <div class="light" style="background:#ef4444;color:#ef4444"></div>
+          <div class="light" style="background:#fbbf24;color:#fbbf24"></div>
+          <div class="light" style="background:#06b6d4;color:#06b6d4"></div>
+          <div class="light" style="background:#84cc16;color:#84cc16"></div>
+        </div>
+        <div class="util">
+          <button>↶ Undo</button>
+          <button>⌫ Clear</button>
+        </div>
+        <div class="timer-pill"><span class="lbl">Turn</span>1:24</div>
+        <button class="result-btn incorrect">
+          <span class="icon">✗</span>
+          <span>Nope</span>
+        </button>
+        <button class="result-btn correct">
+          <span class="icon">✓</span>
+          <span>Correct</span>
+          <span class="sub">+1</span>
+        </button>
+      </footer>
+    </div>
+  </body>
+</html>

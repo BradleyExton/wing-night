@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drawing Host (Tablet) — Mockups</title>
+    <style>
+      :root {
+        --bg: #121212;
+        --surface: #1c1c1c;
+        --surface-alt: #242424;
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+      }
+      html, body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        min-height: 100dvh;
+      }
+      main { max-width: 980px; margin: 0 auto; padding: 4rem 2rem; }
+      h1 { font-size: clamp(2rem, 4vw, 3.25rem); margin: 0 0 0.5rem; }
+      p.lede {
+        color: var(--muted); font-size: 1.125rem; line-height: 1.5; margin: 0 0 3rem;
+      }
+      p.note {
+        color: var(--muted); font-size: 0.95rem; margin: 0 0 2rem;
+        padding: 0.85rem 1rem; background: var(--surface-alt);
+        border-left: 3px solid var(--primary); border-radius: 6px;
+      }
+      .grid { display: grid; gap: 1.5rem; }
+      a.card {
+        display: block; text-decoration: none; color: inherit;
+        background: var(--surface); border: 1px solid #333;
+        border-radius: 12px; padding: 1.5rem 1.75rem;
+        transition: transform 120ms ease, border-color 120ms ease;
+      }
+      a.card:hover, a.card:focus {
+        border-color: var(--primary); transform: translateY(-2px);
+      }
+      .index {
+        display: inline-block; background: var(--primary); color: #1a0f04;
+        font-weight: 800; font-size: 0.75rem; letter-spacing: 0.1em;
+        padding: 0.25rem 0.5rem; border-radius: 4px; margin-bottom: 0.75rem;
+      }
+      h2 { font-size: 1.5rem; margin: 0 0 0.5rem; }
+      .desc { color: var(--muted); line-height: 1.5; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Drawing Host (Tablet) — Mockups</h1>
+      <p class="lede">
+        Three takes on the Samsung-tablet host surface for the DRAWING minigame.
+        All show mid-drawing state — prompt visible, a few strokes in, palette and
+        brush selected, Correct/Incorrect/Skip/Undo/Clear all reachable. Built for
+        ~16:10 landscape.
+      </p>
+      <p class="note">
+        Open in a browser at roughly 1600×1000 (or full-screen) for a
+        tablet-accurate preview. All three share the Spicy Broadcast tokens.
+      </p>
+      <div class="grid">
+        <a class="card" href="01-sketchpad.html">
+          <span class="index">01</span>
+          <h2>Sketchpad Studio</h2>
+          <p class="desc">
+            Warm cream canvas inside the dark Spicy Broadcast chrome. Tools laid
+            out like a real art tray — paint-dab palette, brush silhouettes,
+            chunky tactile buttons. Handcrafted and inviting.
+          </p>
+        </a>
+        <a class="card" href="02-console.html">
+          <span class="index">02</span>
+          <h2>Heat Console</h2>
+          <p class="desc">
+            Pure dark with neon-orange stroke glow on a matte graph-paper canvas.
+            Industrial control-dock toolbar with LED-style color pucks. Drawer
+            feels like they're at a mission console.
+          </p>
+        </a>
+        <a class="card" href="03-easel.html">
+          <span class="index">03</span>
+          <h2>Showtime Easel</h2>
+          <p class="desc">
+            Game-show theatrics. Marquee prompt banner up top, framed chalkboard
+            easel canvas, illuminated palette lights along the footer. Most
+            playful and characterful.
+          </p>
+        </a>
+      </div>
+    </main>
+  </body>
+</html>
