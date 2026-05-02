@@ -23,7 +23,7 @@ Last updated: 2026-04-29
 - A teammate is selected to draw and physically holds the host tablet.
 - Prompt text is always visible on the tablet while drawing; the TV display never shows it during active drawing.
 - Coordinates are stored normalized (0–1); tablet normalizes on capture, display scales to its own canvas size.
-- Fixed color palette (~6 colors) and 3 brush sizes, hardcoded in the UI.
+- Fixed color palette (~6 colors) and a single fixed brush size, hardcoded in the UI.
 - Undo removes exactly one stroke; clear canvas removes all strokes.
 - Strokes hold only the current prompt's drawing; canvas clears on every result action.
 - `DrawingHostView | DrawingDisplayView` are added as new discriminated union members; trivia and geo types are untouched.
@@ -329,7 +329,6 @@ Required controls on host play surface:
 - Undo stroke button
 - Clear canvas button
 - Color palette (~6 colors)
-- Brush size selector (3 sizes)
 
 Intro surface:
 
