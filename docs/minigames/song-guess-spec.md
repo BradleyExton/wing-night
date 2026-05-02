@@ -53,7 +53,79 @@ After all songs are scored, host presses **End Round** → display shows final r
 
 ### 5.1 `gameConfig.json`
 
-No `SONG_GUESS`-specific fields are added to `gameConfig.json`. `songsPerRound` lives in the minigame content file.
+Add `songGuess` to `MinigameRules` so per-round tunables live alongside trivia/geo:
+
+```ts
+type SongGuessMinigameRules = {
+  songsPerRound: number;
+};
+
+type MinigameRules = {
+  trivia?: TriviaMinigameRules;
+  geo?: GeoMinigameRules;
+  songGuess?: SongGuessMinigameRules;
+};
+```
+
+Wire `MINIGAME_DEFINITIONS.SONG_GUESS.rulesKey = "songGuess"`.
+
+Example `gameConfig.json`:
+
+```json
+{
+  "minigameRules": {
+    "songGuess": { "songsPerRound": 4 }
+  }
+}
+```
+
+#### Timer model change
+
+`SONG_GUESS` is host-paced with no phase timer. The current shared schema requires every minigame to have a `timerKey` mapped to a required field on `GameConfigTimers`:
+
+```ts
+// Today
+type GameConfigTimers = {
+  eatingSeconds: number;
+  triviaSeconds: number;
+  geoSeconds: number;
+  drawingSeconds: number;
+};
+
+type MinigameDefinition = {
+  // ...
+  timerKey: MinigameTimerKey; // required
+};
+```
+
+Change to make timer optional per-minigame:
+
+```ts
+// Target
+type GameConfigTimers = {
+  eatingSeconds: number;
+  triviaSeconds?: number;   // present iff TRIVIA scheduled
+  geoSeconds?: number;
+  drawingSeconds?: number;
+};
+
+type MinigameDefinition = {
+  // ...
+  timerKey: MinigameTimerKey | null;
+};
+
+// In MINIGAME_DEFINITIONS:
+SONG_GUESS: {
+  // ...
+  timerKey: null, // host-paced
+}
+```
+
+Validator updates:
+- `gameConfig.json` validator must require a timer field iff the corresponding minigame appears in any scheduled round AND its `timerKey !== null`.
+- `MINIGAME_PLAY` phase entry skips timer setup when `currentRoundConfig.minigame.timerKey === null` and ends solely on host action (`endRound`).
+
+This change unblocks future host-paced minigames without per-game vestigial timer fields.
 
 ### 5.2 Song guess content file
 
@@ -81,15 +153,14 @@ type SongGuessEntry = {
 };
 
 type SongGuessContentFile = {
-  songsPerRound: number;
   songs: SongGuessEntry[];
 };
 ```
 
 Validation rules:
 
-- `songsPerRound` required, must be a positive integer, must not exceed `songs.length`.
 - `songs` required, at least 1 entry.
+- `minigameRules.songGuess.songsPerRound` (validated in `gameConfig.json`) must not exceed `songs.length` at runtime; surface a `fatalError` if it does.
 - Each song must have non-empty `id`, `file`, `correctTitle`, `correctArtist`.
 - `clipStart < clipEnd`, both non-negative.
 - `revealStart` non-negative.
@@ -99,7 +170,6 @@ Example:
 
 ```json
 {
-  "songsPerRound": 4,
   "songs": [
     {
       "id": "smells-like-teen-spirit",
@@ -222,9 +292,11 @@ type MarkTeamArtistPayload = {
 
 ### 6.4 Song selection
 
-- On `initialize`, randomly select `songsPerRound` songs from `content.songs` without replacement.
+- On `initialize`, read `songsPerRound` from `rules.songGuess.songsPerRound` (defaults to 4 if absent).
+- Randomly select that many songs from `content.songs` without replacement.
 - Store their IDs in `selectedSongIds` in the selected order.
 - `songCursor` starts at 0.
+- If `songsPerRound > content.songs.length`, the runtime returns `null` from `initialize` and a `fatalError` is surfaced.
 
 ## 7) Host And Display Projection
 
@@ -313,7 +385,19 @@ Display client controls:
 - When `phase` transitions to `clip_paused` or `reveal` with a new song: pause or seek as appropriate.
 - When `reveal` becomes non-null: seek to `revealStart`, call `.play()`.
 
-Both clients handle autoplay restrictions gracefully (e.g. require a prior user interaction before audio plays — the host's first button press satisfies this).
+#### Display-side autoplay gate
+
+The display screen (TV browser) has had no user interaction by the time the first phase transition arrives, so `audio.play()` will be silently rejected by Chrome/Safari autoplay policy. The host's button press satisfies the host's autoplay gate but not the display's.
+
+Add an explicit display-side gate:
+
+- On `MINIGAME_INTRO` for a `SONG_GUESS` round, the display surface renders a full-screen "Tap to enable audio" overlay.
+- The overlay clears once the user taps the screen (any pointer event); a flag on the display client (`audioUnlocked: true`) is then set in component state and persists for the rest of the session.
+- A muted `audio.play().then(() => audio.pause())` primer call runs on the unlock event so the element is "user-activated" for the rest of the session.
+- If the user advances to `MINIGAME_PLAY` without unlocking, the display falls back to silent visuals — the host audio remains the primary source. The overlay re-renders the next time `MINIGAME_INTRO` fires for a `SONG_GUESS` round.
+- The host client never shows this overlay; the host's first button press primes its `<audio>` element naturally.
+
+This is the only minigame today that triggers display-side audio. Document the pattern in the authoring guide so future audio/video minigames reuse the same primer flow.
 
 ### 8.2 Host surface components
 

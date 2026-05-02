@@ -33,6 +33,17 @@ Per-prompt flow:
 8. Host advances to the next prompt explicitly (same control pattern as trivia).
 9. After all 3 prompts, the turn ends.
 
+### Phase timer expiry
+
+The `MINIGAME_PLAY` phase timer (`minigameRules.geo.timerSeconds` via the existing `geoSeconds` field) is a hard wall, not a per-prompt soft cap.
+
+If the timer expires mid-turn:
+- If the active sub-state is `guessing` with no submitted guess, the in-progress prompt is **abandoned** — no points awarded, no result reveal, and the turn ends immediately.
+- If the active sub-state is `submitted` (result currently visible), the turn ends after the existing reveal completes its render (server emits the standard `MINIGAME_PLAY → ROUND_RESULTS` transition).
+- Remaining unplayed prompts in the turn are skipped — `promptsCompletedThisTurn` does not advance for them.
+
+Rationale: prompts are independent score units (max 5 pts each, awarded on submit). Mid-prompt time-cuts cleanly map to "prompt skipped, no score" without partial-credit ambiguity.
+
 ## 3) Data and Content
 
 ### 3.1 Content Files
@@ -115,10 +126,12 @@ Tuned for city-scale use (local landmarks and frequented spots):
 
 ### 5.1 Runtime Actions
 
-Two actions (down from three — `geo:clearGuess` dropped, `geo:setGuess` overwrites in place):
+Two actions (down from three — `clearGuess` dropped, `setGuess` overwrites in place):
 
-- `geo:setGuess` — payload `{ lat: number, lng: number }`. Valid only in `guessing` sub-state. Overwrites any previous marker position.
-- `geo:submitGuess` — payload `{}`. Valid only in `guessing` sub-state. Transitions to `submitted`. Locks guess and triggers scoring. All further actions silently dropped until next prompt.
+- `setGuess` — payload `{ lat: number, lng: number }`. Valid only in `guessing` sub-state. Overwrites any previous marker position.
+- `submitGuess` — payload `{}`. Valid only in `guessing` sub-state. Transitions to `submitted`. Locks guess and triggers scoring. All further actions silently dropped until next prompt.
+
+Action names are bare (unprefixed) to match the trivia convention; plugin reducers narrow on their own state shape before reading `actionType`, so cross-plugin collisions are a non-issue.
 
 ### 5.2 Turn Sub-States
 
@@ -169,33 +182,34 @@ type GeoRuntimeState = {
 ```
 
 **`GeoMinigameDisplayView`** (answer-safe — no coords until submitted):
-```ts
-// guessing variant
-{
-  minigame: "GEO";
-  activeTurnTeamId: string | null;
-  pendingPointsByTeamId: Record<string, number>;
-  status: "guessing";
-  currentPrompt: { id: string; title: string; imageSrc: string; hint?: string } | null;
-}
 
-// submitted variant
-{
+Single union member with an internal `status` discriminant. This matches the established flat-union pattern in `MinigameDisplayView` (one outer member per minigame) and lets clients narrow with a single switch on `status` after the existing `minigame === "GEO"` check:
+
+```ts
+type GeoMinigameDisplayView = {
   minigame: "GEO";
   activeTurnTeamId: string | null;
   pendingPointsByTeamId: Record<string, number>;
-  status: "submitted";
   currentPrompt: { id: string; title: string; imageSrc: string; hint?: string } | null;
-  result: {
-    guessLat: number;
-    guessLng: number;
-    answerLat: number;
-    answerLng: number;
-    distanceKm: number;
-    pointsAwarded: number;
-  };
-}
+} & (
+  | {
+      status: "guessing";
+    }
+  | {
+      status: "submitted";
+      result: {
+        guessLat: number;
+        guessLng: number;
+        answerLat: number;
+        answerLng: number;
+        distanceKm: number;
+        pointsAwarded: number;
+      };
+    }
+);
 ```
+
+Do **not** add separate `GeoMinigameDisplayViewGuessing` / `GeoMinigameDisplayViewSubmitted` members to the outer `MinigameDisplayView` union — that pattern multiplies as we add more minigames with internal phases (song-guess, drawing). One outer member per minigame, internal discriminant where needed.
 
 `DisplayRoomStateSnapshot` already omits `minigameHostView` entirely — display client never sees the host view.
 

@@ -54,6 +54,28 @@ Rules:
 - `selectDisplayView` must be answer-safe.
 - Runtime state must be serializable.
 - `reduceAction` must be no-op for invalid payloads.
+- Action names are bare (unprefixed), e.g. `recordAttempt`, `setGuess`, not `geo:setGuess`. Plugin reducers narrow on their own state shape before reading `actionType`, so collisions across plugins are not a concern.
+
+### Display view shape: one outer-union member, internal discriminant
+
+`MinigameDisplayView` is a flat union — exactly one member per `MinigameType`. If your minigame has internal phases (e.g. guessing/submitted, idle/playing/reveal/done) where the display payload shape differs, model the variation with an **internal discriminant** on a single outer member, not by adding multiple members to the outer union:
+
+```ts
+// Yes — single outer member, internal discriminant
+type GeoMinigameDisplayView = {
+  minigame: "GEO";
+  // shared fields
+} & (
+  | { status: "guessing" /* ... */ }
+  | { status: "submitted"; result: { /* ... */ } }
+);
+
+// No — do not split into separate outer-union members
+type GeoMinigameDisplayViewGuessing = { minigame: "GEO"; status: "guessing"; /* ... */ };
+type GeoMinigameDisplayViewSubmitted = { minigame: "GEO"; status: "submitted"; /* ... */ };
+```
+
+Same rule applies to host views. Keeps `MinigameDisplayView` and `MinigameHostView` size = number of minigames.
 
 ## 4) Implement Renderer Bundle + Dev Manifest
 
@@ -123,6 +145,24 @@ Schedule in sample config:
 
 - `content/sample/gameConfig.json` round `minigame` field
 - Matching timer/rules fields
+
+### 8.1 Asset hosting
+
+Two patterns, pick by asset profile:
+
+- **Small static images, sample/local both possible** → `apps/client/public/local-assets/<slug>/`. Reference as `/local-assets/<slug>/foo.jpg`. Used by GEO. Bundled by Next.js — no server route needed. Local overrides ship via `apps/client/public/local-assets/<slug>/` being gitignored.
+- **Large or many event-specific assets (audio, video)** → Express static route. Add `app.use("/minigame-assets/<slug>", express.static("content/local/minigames/<slug>/assets"))` in `apps/server/src/index.ts`. Files live under `content/local/minigames/<slug>/assets/`. Used by Song Guess.
+
+Server-served assets do not get bundled with the client; they stream on demand. Use this when the content is event-night-specific and shouldn't bloat the client bundle.
+
+### 8.2 Display-side audio/video autoplay
+
+If the display surface plays audio or video, the TV browser has had no user interaction by the time the first phase fires — `audio.play()` will be silently rejected. Pattern:
+
+- During `MINIGAME_INTRO`, render a full-screen "Tap to enable audio" overlay on the display surface.
+- On any pointer event, call `media.play().then(() => media.pause())` to prime the element, set `audioUnlocked: true` in component state, and clear the overlay.
+- The host surface never needs this — its first button press is the user gesture.
+- See `song-guess-spec.md` §8.1 for the canonical implementation reference.
 
 ## 9) Test Requirements
 
