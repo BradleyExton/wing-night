@@ -157,6 +157,8 @@ Schedule in sample config:
 Two patterns, pick by asset profile:
 
 - **Small static images, sample/local both possible** → `apps/client/public/local-assets/<slug>/`. Reference as `/local-assets/<slug>/foo.jpg`. Used by GEO. Bundled by Next.js — no server route needed. Local overrides ship via `apps/client/public/local-assets/<slug>/` being gitignored.
+
+For GEO, `pnpm import:geo <photo-folder>` turns GPS-tagged JPEGs into prompts: it reads each photo's EXIF location as the answer, writes a resized metadata-stripped copy to `local-assets/geo/`, and appends entries to `content/local/minigames/geo.json` (edit titles/hints there afterwards).
 - **Large or many event-specific assets (audio, video)** → Express static route. Add `app.use("/minigame-assets/<slug>", express.static("content/local/minigames/<slug>/assets"))` in `apps/server/src/index.ts`. Files live under `content/local/minigames/<slug>/assets/`. Used by Song Guess.
 
 Server-served assets do not get bundled with the client; they stream on demand. Use this when the content is event-night-specific and shouldn't bloat the client bundle.
