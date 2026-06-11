@@ -2,6 +2,7 @@ import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
 import { MINIGAME_DEFINITIONS } from "../content/gameConfig/index.js";
+import type { GeoPrompt } from "../content/geo/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
@@ -18,7 +19,10 @@ export type RoomTimerState = {
 };
 
 export const MINIGAME_ACTION_TYPES = {
-  TRIVIA_RECORD_ATTEMPT: "recordAttempt"
+  TRIVIA_RECORD_ATTEMPT: "recordAttempt",
+  GEO_SET_GUESS: "setGuess",
+  GEO_SUBMIT_GUESS: "submitGuess",
+  GEO_NEXT_PROMPT: "nextPrompt"
 } as const;
 
 export type MinigameContractCompatibilityStatus = "COMPATIBLE" | "MISMATCH";
@@ -40,6 +44,11 @@ type MinigameViewMetadata = {
   capabilityFlags?: string[];
   compatibilityStatus?: MinigameContractCompatibilityStatus;
   compatibilityMessage?: string | null;
+};
+
+// Only unsupported (stub) minigames carry these fields; supported minigames
+// own their view shape entirely (GEO uses `status` as its own discriminant).
+type UnsupportedMinigameViewFields = {
   status?: "UNSUPPORTED";
   message?: string;
 };
@@ -61,13 +70,67 @@ export type TriviaMinigameHostView = MinigameHostViewBase & {
   currentPrompt: TriviaPrompt | null;
 };
 
-export type GeoMinigameHostView = MinigameHostViewBase & {
-  minigame: "GEO";
+export type GeoMinigameSubState = "guessing" | "submitted";
+
+export type GeoGuessCoordinates = {
+  lat: number;
+  lng: number;
 };
 
-export type DrawingMinigameHostView = MinigameHostViewBase & {
-  minigame: "DRAWING";
+export type GeoPromptResult = {
+  promptId: string;
+  guessLat: number;
+  guessLng: number;
+  distanceKm: number;
+  pointsAwarded: number;
 };
+
+export type GeoMinigameHostPrompt = Pick<
+  GeoPrompt,
+  "id" | "title" | "imageSrc" | "hint"
+> & {
+  answerLat: number;
+  answerLng: number;
+};
+
+export type GeoMinigameDisplayPrompt = Pick<
+  GeoPrompt,
+  "id" | "title" | "imageSrc" | "hint"
+>;
+
+export type GeoMinigameHostView = MinigameHostViewBase & {
+  minigame: "GEO";
+  promptsPerTurn: number;
+  promptsCompletedThisTurn: number;
+  currentSubState: GeoMinigameSubState;
+  currentGuess: GeoGuessCoordinates | null;
+  currentPrompt: GeoMinigameHostPrompt | null;
+  lastResult: GeoPromptResult | null;
+};
+
+export type GeoMinigameDisplayResult = {
+  guessLat: number;
+  guessLng: number;
+  answerLat: number;
+  answerLng: number;
+  distanceKm: number;
+  pointsAwarded: number;
+};
+
+export type GeoMinigameDisplayView = MinigameDisplayViewBase & {
+  minigame: "GEO";
+  promptsPerTurn: number;
+  promptsCompletedThisTurn: number;
+  currentPrompt: GeoMinigameDisplayPrompt | null;
+} & (
+    | { status: "guessing" }
+    | { status: "submitted"; result: GeoMinigameDisplayResult }
+  );
+
+export type DrawingMinigameHostView = MinigameHostViewBase &
+  UnsupportedMinigameViewFields & {
+    minigame: "DRAWING";
+  };
 
 export type MinigameHostView =
   | TriviaMinigameHostView
@@ -80,13 +143,10 @@ export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
   currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
 };
 
-export type GeoMinigameDisplayView = MinigameDisplayViewBase & {
-  minigame: "GEO";
-};
-
-export type DrawingMinigameDisplayView = MinigameDisplayViewBase & {
-  minigame: "DRAWING";
-};
+export type DrawingMinigameDisplayView = MinigameDisplayViewBase &
+  UnsupportedMinigameViewFields & {
+    minigame: "DRAWING";
+  };
 
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView

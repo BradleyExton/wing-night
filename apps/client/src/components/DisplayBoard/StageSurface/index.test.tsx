@@ -209,7 +209,7 @@ test("renders trivia waiting state when MINIGAME_PLAY projection is not availabl
   assert.match(html, /Waiting for trivia prompt/);
 });
 
-test("renders GEO unsupported surface in MINIGAME_PLAY without waiting on projected view", () => {
+test("renders GEO waiting state in MINIGAME_PLAY before the projected view arrives", () => {
   const html = renderToStaticMarkup(
     <StageSurface
       roomState={{
@@ -222,7 +222,82 @@ test("renders GEO unsupported surface in MINIGAME_PLAY without waiting on projec
     />
   );
 
-  assert.match(html, /GEO display surface is currently a stub/);
+  assert.match(html, /Waiting for the next location/);
+});
+
+test("renders GEO guessing surface without leaking answer coordinates", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.MINIGAME_PLAY),
+        currentRoundConfig: {
+          ...gameConfigFixture.rounds[0],
+          minigame: "GEO"
+        },
+        activeTurnTeamId: "team-1",
+        minigameDisplayView: {
+          minigame: "GEO",
+          activeTurnTeamId: "team-1",
+          pendingPointsByTeamId: { "team-1": 0 },
+          promptsPerTurn: 3,
+          promptsCompletedThisTurn: 0,
+          currentPrompt: {
+            id: "geo-prompt-1",
+            title: "Eiffel Tower",
+            imageSrc: "/sample-assets/geo/eiffel-tower.svg",
+            hint: "Iron lady of a European capital"
+          },
+          status: "guessing"
+        }
+      }}
+    />
+  );
+
+  assert.match(html, /Eiffel Tower/);
+  assert.match(html, /Hint: Iron lady of a European capital/);
+  assert.match(html, /is placing their guess/);
+  assert.doesNotMatch(html, /48\.85837/);
+  assert.doesNotMatch(html, /answerLat/);
+});
+
+test("renders GEO reveal stats after the guess is submitted", () => {
+  const html = renderToStaticMarkup(
+    <StageSurface
+      roomState={{
+        ...buildSnapshot(Phase.MINIGAME_PLAY),
+        currentRoundConfig: {
+          ...gameConfigFixture.rounds[0],
+          minigame: "GEO"
+        },
+        activeTurnTeamId: "team-1",
+        minigameDisplayView: {
+          minigame: "GEO",
+          activeTurnTeamId: "team-1",
+          pendingPointsByTeamId: { "team-1": 2 },
+          promptsPerTurn: 3,
+          promptsCompletedThisTurn: 1,
+          currentPrompt: {
+            id: "geo-prompt-1",
+            title: "Eiffel Tower",
+            imageSrc: "/sample-assets/geo/eiffel-tower.svg"
+          },
+          status: "submitted",
+          result: {
+            guessLat: 48.8,
+            guessLng: 2.35,
+            answerLat: 48.85837,
+            answerLng: 2.294481,
+            distanceKm: 7.7,
+            pointsAwarded: 2
+          }
+        }
+      }}
+    />
+  );
+
+  assert.match(html, /Eiffel Tower/);
+  assert.match(html, /7\.7 km/);
+  assert.match(html, /\+2 points/);
 });
 
 test("renders active team and round meta during eating", () => {

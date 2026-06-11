@@ -2,7 +2,7 @@ import type { MinigameType } from "@wingnight/shared";
 
 import type { MinigameDevManifest } from "../index.js";
 
-type UnsupportedMinigameType = Exclude<MinigameType, "TRIVIA">;
+type UnsupportedMinigameType = Exclude<MinigameType, "TRIVIA" | "GEO">;
 
 type CreateUnsupportedDevManifestOptions = {
   minigameId: UnsupportedMinigameType;

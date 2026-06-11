@@ -21,7 +21,7 @@ const metadata: MinigamePluginMetadata = {
 
 test("createUnsupportedMinigameRuntimePlugin projects unsupported host/display views", () => {
   const plugin = createUnsupportedMinigameRuntimePlugin({
-    minigameId: "GEO",
+    minigameId: "DRAWING",
     metadata,
     unsupportedMessage: "Unavailable"
   });
@@ -39,7 +39,7 @@ test("createUnsupportedMinigameRuntimePlugin projects unsupported host/display v
   assert.deepEqual(
     plugin.selectHostView({ state: runtimeState, rules: null, content: null }),
     {
-      minigame: "GEO",
+      minigame: "DRAWING",
       activeTurnTeamId: "team-1",
       pendingPointsByTeamId: { "team-1": 3 },
       status: "UNSUPPORTED",
@@ -49,7 +49,7 @@ test("createUnsupportedMinigameRuntimePlugin projects unsupported host/display v
   assert.deepEqual(
     plugin.selectDisplayView({ state: runtimeState, rules: null, content: null }),
     {
-      minigame: "GEO",
+      minigame: "DRAWING",
       activeTurnTeamId: "team-1",
       pendingPointsByTeamId: { "team-1": 3 },
       status: "UNSUPPORTED",
@@ -67,15 +67,25 @@ test("createUnsupportedDevManifest builds the default unsupported scenario", () 
 
   assert.equal(manifest.defaultScenarioId, "unsupported");
   assert.equal(manifest.scenarios.length, 1);
-  assert.equal(manifest.scenarios[0]?.minigameHostView?.status, "UNSUPPORTED");
-  assert.equal(manifest.scenarios[0]?.minigameDisplayView?.status, "UNSUPPORTED");
+
+  const hostView = manifest.scenarios[0]?.minigameHostView;
+  const displayView = manifest.scenarios[0]?.minigameDisplayView;
+
+  assert.equal(
+    hostView?.minigame === "DRAWING" ? hostView.status : null,
+    "UNSUPPORTED"
+  );
+  assert.equal(
+    displayView?.minigame === "DRAWING" ? displayView.status : null,
+    "UNSUPPORTED"
+  );
 });
 
 test("resolveUnsupportedActiveTeamName prefers active turn team id when available", () => {
   const resolvedTeamName = resolveUnsupportedActiveTeamName({
     activeTeamName: "Fallback Team",
     minigameHostView: {
-      minigame: "GEO",
+      minigame: "DRAWING",
       activeTurnTeamId: "team-2",
       pendingPointsByTeamId: {}
     },

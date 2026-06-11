@@ -1,0 +1,60 @@
+{
+  "prompts": [
+    {
+      "id": "geo-eiffel-tower",
+      "title": "Eiffel Tower",
+      "imageSrc": "/sample-assets/geo/eiffel-tower.svg",
+      "hint": "Iron lady of a European capital",
+      "answer": { "lat": 48.85837, "lng": 2.294481 }
+    },
+    {
+      "id": "geo-statue-of-liberty",
+      "title": "Statue of Liberty",
+      "imageSrc": "/sample-assets/geo/statue-of-liberty.svg",
+      "hint": "A harbor gift from France",
+      "answer": { "lat": 40.689247, "lng": -74.044502 }
+    },
+    {
+      "id": "geo-sydney-opera-house",
+      "title": "Sydney Opera House",
+      "imageSrc": "/sample-assets/geo/sydney-opera-house.svg",
+      "hint": "Sails by a southern harbour",
+      "answer": { "lat": -33.856784, "lng": 151.215297 }
+    },
+    {
+      "id": "geo-great-pyramid",
+      "title": "Great Pyramid of Giza",
+      "imageSrc": "/sample-assets/geo/great-pyramid.svg",
+      "hint": "The last ancient wonder still standing",
+      "answer": { "lat": 29.979235, "lng": 31.134202 }
+    },
+    {
+      "id": "geo-christ-the-redeemer",
+      "title": "Christ the Redeemer",
+      "imageSrc": "/sample-assets/geo/christ-the-redeemer.svg",
+      "hint": "Arms wide above a carnival city",
+      "answer": { "lat": -22.951916, "lng": -43.210487 }
+    },
+    {
+      "id": "geo-colosseum",
+      "title": "Colosseum",
+      "imageSrc": "/sample-assets/geo/colosseum.svg",
+      "hint": "Gladiators once fought here",
+      "answer": { "lat": 41.890251, "lng": 12.492373 }
+    },
+    {
+      "id": "geo-golden-gate-bridge",
+      "title": "Golden Gate Bridge",
+      "imageSrc": "/sample-assets/geo/golden-gate-bridge.svg",
+      "hint": "International orange over a foggy strait",
+      "answer": { "lat": 37.819929, "lng": -122.478255 }
+    },
+    {
+      "id": "geo-machu-picchu",
+      "title": "Machu Picchu",
+      "imageSrc": "/sample-assets/geo/machu-picchu.svg",
+      "hint": "A lost city high in the Andes",
+      "answer": { "lat": -13.163141, "lng": -72.544963 }
+    }
+  ]
+}

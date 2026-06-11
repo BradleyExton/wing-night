@@ -19,8 +19,19 @@ export type TriviaMinigameRules = {
   questionsPerTurn: number;
 };
 
+export type GeoScoreBand = {
+  maxKm: number;
+  points: number;
+};
+
+export type GeoMinigameRules = {
+  promptsPerTurn?: number;
+  scoreBandsKm?: GeoScoreBand[];
+};
+
 export type MinigameRules = {
   trivia?: TriviaMinigameRules;
+  geo?: GeoMinigameRules;
 };
 
 export type MinigameTimerKey = keyof GameConfigTimers;
@@ -54,10 +65,10 @@ export const MINIGAME_DEFINITIONS = {
     id: "GEO",
     slug: "geo",
     timerKey: "geoSeconds",
-    rulesKey: null,
+    rulesKey: "geo",
     contractMetadata: {
       minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: []
+      capabilityFlags: ["setGuess", "submitGuess", "nextPrompt"]
     }
   },
   DRAWING: {
@@ -227,6 +238,58 @@ const isTriviaMinigameRules = (
   return true;
 };
 
+const isGeoScoreBand = (value: unknown): value is GeoScoreBand => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  if (
+    !("maxKm" in value) ||
+    typeof value.maxKm !== "number" ||
+    !Number.isFinite(value.maxKm) ||
+    value.maxKm <= 0
+  ) {
+    return false;
+  }
+
+  if (
+    !("points" in value) ||
+    typeof value.points !== "number" ||
+    !Number.isInteger(value.points) ||
+    value.points < 0
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
+const isGeoMinigameRules = (value: unknown): value is GeoMinigameRules => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  if (
+    "promptsPerTurn" in value &&
+    value.promptsPerTurn !== undefined &&
+    !isPositiveInteger(value.promptsPerTurn)
+  ) {
+    return false;
+  }
+
+  if ("scoreBandsKm" in value && value.scoreBandsKm !== undefined) {
+    if (!Array.isArray(value.scoreBandsKm) || value.scoreBandsKm.length === 0) {
+      return false;
+    }
+
+    if (!value.scoreBandsKm.every((band) => isGeoScoreBand(band))) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const isMinigameRules = (value: unknown): value is MinigameRules => {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -236,6 +299,14 @@ const isMinigameRules = (value: unknown): value is MinigameRules => {
     "trivia" in value &&
     value.trivia !== undefined &&
     !isTriviaMinigameRules(value.trivia)
+  ) {
+    return false;
+  }
+
+  if (
+    "geo" in value &&
+    value.geo !== undefined &&
+    !isGeoMinigameRules(value.geo)
   ) {
     return false;
   }

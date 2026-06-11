@@ -1,5 +1,6 @@
 import ReactDOM from "react-dom/client";
 import { App } from "./App";
+import "leaflet/dist/leaflet.css";
 import "./index.css";
 
 const container = document.getElementById("root");

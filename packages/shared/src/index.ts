@@ -5,8 +5,14 @@ export type {
   DrawingMinigameDisplayView,
   DrawingMinigameHostView,
   DisplayRoomStateSnapshot,
+  GeoGuessCoordinates,
+  GeoMinigameDisplayPrompt,
+  GeoMinigameDisplayResult,
   GeoMinigameDisplayView,
+  GeoMinigameHostPrompt,
   GeoMinigameHostView,
+  GeoMinigameSubState,
+  GeoPromptResult,
   HostRoomStateSnapshot,
   MinigameContractCompatibilityStatus,
   MinigameContractMetadata,
@@ -41,6 +47,8 @@ export type {
   GameConfigRound,
   GameConfigScoring,
   GameConfigTimers,
+  GeoMinigameRules,
+  GeoScoreBand,
   MinigameContractMetadataDefaults,
   MinigameDefinition,
   MinigameRulesKey,
@@ -65,6 +73,16 @@ export type {
   TeamsContentEntry,
   TeamsContentFile
 } from "./content/teams/index.js";
+export {
+  isGeoContentFile,
+  isGeoCoordinates,
+  isGeoPrompt
+} from "./content/geo/index.js";
+export type {
+  GeoContentFile,
+  GeoCoordinates,
+  GeoPrompt
+} from "./content/geo/index.js";
 export {
   isTriviaContentFile,
   isTriviaPrompt

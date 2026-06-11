@@ -62,7 +62,7 @@ test("renders waiting fallback when host view is unavailable", () => {
   assert.match(html, /Waiting for minigame host state from the server snapshot\./);
 });
 
-test("renders GEO scaffold surface for configured geo minigame", () => {
+test("renders GEO guessing surface for configured geo minigame", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
       phase="play"
@@ -73,8 +73,19 @@ test("renders GEO scaffold surface for configured geo minigame", () => {
         pendingPointsByTeamId: {
           "team-alpha": 0
         },
-        status: "UNSUPPORTED",
-        message: "GEO host UI is not implemented yet."
+        promptsPerTurn: 3,
+        promptsCompletedThisTurn: 0,
+        currentSubState: "guessing",
+        currentGuess: null,
+        currentPrompt: {
+          id: "geo-prompt-1",
+          title: "Eiffel Tower",
+          imageSrc: "/sample-assets/geo/eiffel-tower.svg",
+          hint: "Iron lady of a European capital",
+          answerLat: 48.85837,
+          answerLng: 2.294481
+        },
+        lastResult: null
       }}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
@@ -85,8 +96,54 @@ test("renders GEO scaffold surface for configured geo minigame", () => {
     />
   );
 
-  assert.match(html, /GEO is not implemented yet/);
-  assert.match(html, /Unsupported \(stub\)/);
+  assert.match(html, /Eiffel Tower/);
+  assert.match(html, /1 of 3/);
+  assert.match(html, /Hint: Iron lady of a European capital/);
+  assert.match(html, /Submit Guess/);
+});
+
+test("renders GEO result card after a submitted guess", () => {
+  const html = renderToStaticMarkup(
+    <MinigameSurface
+      phase="play"
+      minigameType="GEO"
+      minigameHostView={{
+        minigame: "GEO",
+        activeTurnTeamId: "team-alpha",
+        pendingPointsByTeamId: {
+          "team-alpha": 2
+        },
+        promptsPerTurn: 3,
+        promptsCompletedThisTurn: 1,
+        currentSubState: "submitted",
+        currentGuess: { lat: 48.8, lng: 2.35 },
+        currentPrompt: {
+          id: "geo-prompt-1",
+          title: "Eiffel Tower",
+          imageSrc: "/sample-assets/geo/eiffel-tower.svg",
+          answerLat: 48.85837,
+          answerLng: 2.294481
+        },
+        lastResult: {
+          promptId: "geo-prompt-1",
+          guessLat: 48.8,
+          guessLng: 2.35,
+          distanceKm: 7.7,
+          pointsAwarded: 2
+        }
+      }}
+      activeTeamName="Team Alpha"
+      teamNameByTeamId={teamNameByTeamId}
+      canDispatchAction={false}
+      onDispatchAction={(): void => {
+        return;
+      }}
+    />
+  );
+
+  assert.match(html, /7\.7 km away/);
+  assert.match(html, /\+2 points/);
+  assert.match(html, /Next Prompt/);
 });
 
 test("renders intro surface for configured trivia minigame", () => {

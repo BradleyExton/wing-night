@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" fill="#1C1C1C"/>
+  <rect x="24" y="24" width="752" height="402" fill="none" stroke="#2E2E2E" stroke-width="2" rx="16"/>
+  <circle cx="400" cy="150" r="56" fill="none" stroke="#F97316" stroke-width="6"/>
+  <path d="M400 118 L400 182 M368 150 L432 150" stroke="#F97316" stroke-width="6" stroke-linecap="round"/>
+  <text x="400" y="280" text-anchor="middle" fill="#FFFFFF" font-family="sans-serif" font-size="48" font-weight="700">Golden Gate Bridge</text>
+  <text x="400" y="330" text-anchor="middle" fill="#A3A3A3" font-family="sans-serif" font-size="24">Sample placeholder — add real photos in content/local</text>
+</svg>

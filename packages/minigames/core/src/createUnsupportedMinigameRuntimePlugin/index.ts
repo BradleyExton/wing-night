@@ -14,7 +14,7 @@ import type {
   SerializableValue
 } from "../index.js";
 
-type UnsupportedMinigameType = Exclude<MinigameType, "TRIVIA">;
+type UnsupportedMinigameType = Exclude<MinigameType, "TRIVIA" | "GEO">;
 
 type UnsupportedMinigameRuntimeState = {
   activeTurnTeamId: string | null;

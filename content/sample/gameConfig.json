@@ -31,6 +31,9 @@
   "minigameRules": {
     "trivia": {
       "questionsPerTurn": 5
+    },
+    "geo": {
+      "promptsPerTurn": 3
     }
   },
   "timers": {

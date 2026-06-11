@@ -63,6 +63,19 @@ const createValidTrivia = (prefix: string): string => {
   });
 };
 
+const createValidGeo = (prefix: string): string => {
+  return JSON.stringify({
+    prompts: [
+      {
+        id: `${prefix.toLowerCase()}-geo-1`,
+        title: `${prefix} Landmark`,
+        imageSrc: `/sample-assets/geo/${prefix.toLowerCase()}.svg`,
+        answer: { lat: 48.85837, lng: 2.294481 }
+      }
+    ]
+  });
+};
+
 test.after(() => {
   for (const dirPath of createdDirs) {
     rmSync(dirPath, { recursive: true, force: true });
@@ -92,6 +105,7 @@ test("loads all content from local files when available", () => {
     "local/minigames/trivia.json",
     createValidTrivia("Local")
   );
+  writeContentFile(contentRoot, "local/minigames/geo.json", createValidGeo("Local"));
 
   writeContentFile(
     contentRoot,
@@ -117,6 +131,11 @@ test("loads all content from local files when available", () => {
     "sample/minigames/trivia.json",
     createValidTrivia("Sample")
   );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/geo.json",
+    createValidGeo("Sample")
+  );
 
   const content = loadContent({ contentRootDir: contentRoot });
 
@@ -127,6 +146,10 @@ test("loads all content from local files when available", () => {
     | { prompts?: Array<{ id?: string }> }
     | undefined;
   assert.equal(triviaContent?.prompts?.[0]?.id, "local-1");
+  const geoContent = content.minigameContentById.GEO as
+    | { prompts?: Array<{ id?: string }> }
+    | undefined;
+  assert.equal(geoContent?.prompts?.[0]?.id, "local-geo-1");
 });
 
 test("falls back to sample files when local files are missing", () => {
@@ -156,6 +179,11 @@ test("falls back to sample files when local files are missing", () => {
     "sample/minigames/trivia.json",
     createValidTrivia("Sample")
   );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/geo.json",
+    createValidGeo("Sample")
+  );
 
   const content = loadContent({ contentRootDir: contentRoot });
 
@@ -168,4 +196,8 @@ test("falls back to sample files when local files are missing", () => {
     | { prompts?: Array<{ id?: string }> }
     | undefined;
   assert.equal(triviaContent?.prompts?.[0]?.id, "sample-1");
+  const geoContent = content.minigameContentById.GEO as
+    | { prompts?: Array<{ id?: string }> }
+    | undefined;
+  assert.equal(geoContent?.prompts?.[0]?.id, "sample-geo-1");
 });

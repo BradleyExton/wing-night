@@ -2,6 +2,7 @@ import {
   type MinigameContractCompatibilityStatus,
   type MinigameContractMetadata,
   type DisplayRoomStateSnapshot,
+  type GeoMinigameDisplayView,
   type GeoMinigameHostView,
   type GameConfigFile,
   type GameConfigRound,
@@ -68,10 +69,65 @@ export type ValidGeoMinigameHostViewCheck = Assert<
       minigame: "GEO";
       activeTurnTeamId: string | null;
       pendingPointsByTeamId: Record<string, number>;
-      status?: "UNSUPPORTED";
-      message?: string;
+      promptsPerTurn: number;
+      promptsCompletedThisTurn: number;
+      currentSubState: "guessing";
+      currentGuess: { lat: number; lng: number } | null;
+      currentPrompt: {
+        id: string;
+        title: string;
+        imageSrc: string;
+        answerLat: number;
+        answerLng: number;
+      } | null;
+      lastResult: null;
     },
     GeoMinigameHostView
+  >
+>;
+
+export type ValidGeoMinigameDisplayGuessingViewCheck = Assert<
+  IsAssignable<
+    {
+      minigame: "GEO";
+      activeTurnTeamId: string | null;
+      pendingPointsByTeamId: Record<string, number>;
+      promptsPerTurn: number;
+      promptsCompletedThisTurn: number;
+      currentPrompt: { id: string; title: string; imageSrc: string } | null;
+      status: "guessing";
+    },
+    GeoMinigameDisplayView
+  >
+>;
+
+export type ValidGeoMinigameDisplaySubmittedViewCheck = Assert<
+  IsAssignable<
+    {
+      minigame: "GEO";
+      activeTurnTeamId: string | null;
+      pendingPointsByTeamId: Record<string, number>;
+      promptsPerTurn: number;
+      promptsCompletedThisTurn: number;
+      currentPrompt: { id: string; title: string; imageSrc: string } | null;
+      status: "submitted";
+      result: {
+        guessLat: number;
+        guessLng: number;
+        answerLat: number;
+        answerLng: number;
+        distanceKm: number;
+        pointsAwarded: number;
+      };
+    },
+    GeoMinigameDisplayView
+  >
+>;
+
+export type GeoGuessingDisplayViewHasNoResultCheck = Assert<
+  IsAssignable<
+    HasKey<Extract<GeoMinigameDisplayView, { status: "guessing" }>, "result">,
+    false
   >
 >;
 
@@ -192,6 +248,9 @@ export type MissingPlayerNameCheck = Assert<IsAssignable<{ id: string }, Player>
 
 // @ts-expect-error TRIVIA host view requires attemptsRemaining.
 export type MissingTriviaAttemptsRemainingCheck = Assert<IsAssignable<{ minigame: "TRIVIA"; activeTurnTeamId: string | null; promptCursor: number; pendingPointsByTeamId: Record<string, number>; currentPrompt: TriviaPrompt | null }, MinigameHostView>>;
+
+// @ts-expect-error GEO submitted display view requires a result.
+export type MissingGeoSubmittedResultCheck = Assert<IsAssignable<{ minigame: "GEO"; activeTurnTeamId: string | null; pendingPointsByTeamId: Record<string, number>; promptsPerTurn: number; promptsCompletedThisTurn: number; currentPrompt: null; status: "submitted" }, GeoMinigameDisplayView>>;
 
 // @ts-expect-error Team.playerIds entries must be strings.
 export type InvalidPlayerIdsCheck = Assert<IsAssignable<{ id: string; name: string; playerIds: number[]; totalScore: number }, Team>>;

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   Phase,
   type GameConfigFile,
+  type GeoPrompt,
   type MinigameHostView,
   type TriviaPrompt
 } from "@wingnight/shared";
@@ -95,6 +96,47 @@ export const setupThreeTeamsAndAssignments = (): void => {
 
 export const setRoomStateTriviaPrompts = (prompts: TriviaPrompt[]): void => {
   setRoomStateMinigameContent("TRIVIA", { prompts });
+};
+
+export const geoPromptFixture: GeoPrompt[] = [
+  {
+    id: "geo-prompt-1",
+    title: "Landmark One",
+    imageSrc: "/sample-assets/geo/eiffel-tower.svg",
+    hint: "Hint 1",
+    answer: { lat: 48.85837, lng: 2.294481 }
+  },
+  {
+    id: "geo-prompt-2",
+    title: "Landmark Two",
+    imageSrc: "/sample-assets/geo/colosseum.svg",
+    answer: { lat: 41.890251, lng: 12.492373 }
+  },
+  {
+    id: "geo-prompt-3",
+    title: "Landmark Three",
+    imageSrc: "/sample-assets/geo/machu-picchu.svg",
+    answer: { lat: -13.163141, lng: -72.544963 }
+  }
+];
+
+export const setRoomStateGeoPrompts = (prompts: GeoPrompt[]): void => {
+  setRoomStateMinigameContent("GEO", {
+    prompts: prompts.map((prompt) => ({
+      ...prompt,
+      answer: { ...prompt.answer }
+    }))
+  });
+};
+
+export const resolveGeoHostView = (
+  minigameHostView: MinigameHostView | null
+): Extract<MinigameHostView, { minigame: "GEO" }> | null => {
+  if (minigameHostView?.minigame !== "GEO") {
+    return null;
+  }
+
+  return minigameHostView;
 };
 
 export const resolveHostPromptId = (

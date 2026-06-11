@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   Phase,
+  toDisplayRoomStateSnapshot,
   type GameConfigFile
 } from "@wingnight/shared";
 
@@ -30,9 +31,12 @@ import {
   advanceToRoundResultsPhase,
   advanceUntil,
   gameConfigFixture,
+  geoPromptFixture,
+  resolveGeoHostView,
   resolveTriviaHostView,
   resolveHostPromptCursor,
   resolveHostPromptId,
+  setRoomStateGeoPrompts,
   setRoomStateTriviaPrompts,
   setupValidTeamsAndAssignments,
   triviaPromptFixture
@@ -450,11 +454,159 @@ test("does not initialize trivia projection for non-trivia minigame rounds", () 
   assert.equal(snapshot.currentRoundConfig?.minigame, "GEO");
   assert.equal(snapshot.activeTurnTeamId, "team-1");
   assert.equal(snapshot.minigameHostView?.minigame, "GEO");
-  assert.equal(
-    "currentPrompt" in (snapshot.minigameHostView ?? {}),
-    false
-  );
   assert.equal(resolveHostPromptCursor(snapshot), null);
+
+  const geoHostView = resolveGeoHostView(snapshot.minigameHostView);
+
+  assert.equal(geoHostView?.currentSubState, "guessing");
+  assert.equal(geoHostView?.currentPrompt, null);
+});
+
+test("GEO runtime scores submitted guesses for the active team only", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments({
+    ...gameConfigFixture,
+    rounds: [{ ...gameConfigFixture.rounds[0], minigame: "GEO" }],
+    minigameRules: {
+      geo: {
+        promptsPerTurn: 2
+      }
+    }
+  });
+  setRoomStateGeoPrompts(geoPromptFixture);
+  advanceToEatingPhase();
+  setWingParticipation("player-1", false);
+  advanceRoomStatePhase();
+
+  let geoHostView = resolveGeoHostView(getRoomStateSnapshot().minigameHostView);
+
+  assert.equal(geoHostView?.currentSubState, "guessing");
+  assert.equal(geoHostView?.currentPrompt?.id, "geo-prompt-1");
+  assert.equal(geoHostView?.promptsPerTurn, 2);
+  assert.equal(geoHostView?.currentGuess, null);
+
+  dispatchMinigameAction("GEO", "setGuess", { lat: 48.85837, lng: 2.294481 });
+
+  geoHostView = resolveGeoHostView(getRoomStateSnapshot().minigameHostView);
+
+  assert.deepEqual(geoHostView?.currentGuess, { lat: 48.85837, lng: 2.294481 });
+
+  dispatchMinigameAction("GEO", "submitGuess", {});
+
+  const snapshot = getRoomStateSnapshot();
+  geoHostView = resolveGeoHostView(snapshot.minigameHostView);
+
+  assert.equal(geoHostView?.currentSubState, "submitted");
+  assert.equal(geoHostView?.promptsCompletedThisTurn, 1);
+  // An exact-coordinate guess lands in the closest score band (5 points).
+  assert.equal(geoHostView?.lastResult?.pointsAwarded, 5);
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 5);
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-2"], undefined);
+
+  dispatchMinigameAction("GEO", "nextPrompt", {});
+
+  geoHostView = resolveGeoHostView(getRoomStateSnapshot().minigameHostView);
+
+  assert.equal(geoHostView?.currentSubState, "guessing");
+  assert.equal(geoHostView?.currentPrompt?.id, "geo-prompt-2");
+  assert.equal(geoHostView?.currentGuess, null);
+});
+
+test("GEO display view stays answer-safe until the guess is submitted", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments({
+    ...gameConfigFixture,
+    rounds: [{ ...gameConfigFixture.rounds[0], minigame: "GEO" }]
+  });
+  setRoomStateGeoPrompts(geoPromptFixture);
+  advanceToEatingPhase();
+  setWingParticipation("player-1", false);
+  advanceRoomStatePhase();
+
+  const guessingSnapshot = getRoomStateSnapshot();
+  const guessingDisplayView = guessingSnapshot.minigameDisplayView;
+
+  assert.equal(guessingDisplayView?.minigame, "GEO");
+
+  const serializedGuessingView = JSON.stringify(guessingDisplayView);
+
+  assert.equal(serializedGuessingView.includes("answerLat"), false);
+  assert.equal(serializedGuessingView.includes("answerLng"), false);
+  assert.equal(serializedGuessingView.includes("48.85837"), false);
+  assert.equal(
+    guessingDisplayView?.minigame === "GEO" ? guessingDisplayView.status : null,
+    "guessing"
+  );
+
+  dispatchMinigameAction("GEO", "setGuess", { lat: 40, lng: 2 });
+
+  const placedSnapshot = JSON.stringify(getRoomStateSnapshot().minigameDisplayView);
+
+  assert.equal(placedSnapshot.includes("answerLat"), false);
+
+  dispatchMinigameAction("GEO", "submitGuess", {});
+
+  const submittedDisplayView = getRoomStateSnapshot().minigameDisplayView;
+
+  assert.equal(submittedDisplayView?.minigame, "GEO");
+
+  if (submittedDisplayView?.minigame === "GEO") {
+    assert.equal(submittedDisplayView.status, "submitted");
+
+    if (submittedDisplayView.status === "submitted") {
+      assert.equal(submittedDisplayView.result.answerLat, 48.85837);
+      assert.equal(submittedDisplayView.result.answerLng, 2.294481);
+      assert.equal(submittedDisplayView.result.guessLat, 40);
+    }
+  }
+
+  const displaySnapshot = toDisplayRoomStateSnapshot(getRoomStateSnapshot());
+
+  assert.equal("minigameHostView" in displaySnapshot, false);
+});
+
+test("GEO actions are dropped outside their valid sub-states", () => {
+  resetRoomState();
+  setupValidTeamsAndAssignments({
+    ...gameConfigFixture,
+    rounds: [{ ...gameConfigFixture.rounds[0], minigame: "GEO" }]
+  });
+  setRoomStateGeoPrompts(geoPromptFixture);
+  advanceToEatingPhase();
+  setWingParticipation("player-1", false);
+  advanceRoomStatePhase();
+
+  // Submit without a placed guess is ignored.
+  dispatchMinigameAction("GEO", "submitGuess", {});
+
+  let geoHostView = resolveGeoHostView(getRoomStateSnapshot().minigameHostView);
+
+  assert.equal(geoHostView?.currentSubState, "guessing");
+  assert.equal(geoHostView?.promptsCompletedThisTurn, 0);
+
+  // nextPrompt while guessing is ignored.
+  dispatchMinigameAction("GEO", "nextPrompt", {});
+
+  geoHostView = resolveGeoHostView(getRoomStateSnapshot().minigameHostView);
+
+  assert.equal(geoHostView?.currentPrompt?.id, "geo-prompt-1");
+
+  // Out-of-range payloads are ignored.
+  dispatchMinigameAction("GEO", "setGuess", { lat: 999, lng: 2 });
+
+  geoHostView = resolveGeoHostView(getRoomStateSnapshot().minigameHostView);
+
+  assert.equal(geoHostView?.currentGuess, null);
+
+  // setGuess after submit is ignored.
+  dispatchMinigameAction("GEO", "setGuess", { lat: 10, lng: 10 });
+  dispatchMinigameAction("GEO", "submitGuess", {});
+  dispatchMinigameAction("GEO", "setGuess", { lat: 20, lng: 20 });
+
+  geoHostView = resolveGeoHostView(getRoomStateSnapshot().minigameHostView);
+
+  assert.equal(geoHostView?.currentSubState, "submitted");
+  assert.deepEqual(geoHostView?.currentGuess, { lat: 10, lng: 10 });
 });
 
 test("recordTriviaAttempt applies points for active round team and wraps prompts", () => {
