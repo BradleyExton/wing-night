@@ -162,7 +162,10 @@ export type MinigameRendererBundle = {
   DisplaySurface: ComponentType<MinigameDisplayRendererProps>;
 };
 
-export type MinigameDevLiveFixture = {
+// Everything the dev sandbox needs to boot a minigame's runtime plugin with
+// fake teams: the same inputs the server passes to initialize(), supplied by
+// each package because the browser cannot read content/sample/.
+export type MinigameDevManifest = {
   teamIds: string[];
   teamNameByTeamId: Record<string, string>;
   activeRoundTeamId: string | null;
@@ -170,19 +173,6 @@ export type MinigameDevLiveFixture = {
   pendingPointsByTeamId: Record<string, number>;
   rules: SerializableValue | null;
   content: SerializableValue | null;
-};
-
-export type MinigameDevScenario = {
-  id: string;
-  label: string;
-  phase: MinigameSurfacePhase;
-  setupActions?: MinigameRuntimeActionEnvelope[];
-};
-
-export type MinigameDevManifest = {
-  defaultScenarioId: string;
-  live: MinigameDevLiveFixture;
-  scenarios: MinigameDevScenario[];
 };
 
 const isSerializableRecord = (

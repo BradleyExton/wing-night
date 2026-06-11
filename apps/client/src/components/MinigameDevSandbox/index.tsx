@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type {
+  MinigameDevManifest,
+  MinigameRuntimePlugin,
   MinigameSurfacePhase,
   SerializableValue
 } from "@wingnight/minigames-core";
@@ -12,20 +14,26 @@ import {
 } from "../../minigames/registry";
 import { SandboxControls } from "./SandboxControls";
 import { minigameDevSandboxCopy } from "./copy";
-import {
-  createSandboxRuntimeState,
-  reduceSandboxRuntimeState
-} from "./runtimeSession";
-import {
-  resolveInitialViewState,
-  resolveScenarioById,
-  syncSandboxSearchParams
-} from "./sandboxState";
-import type { SandboxViewState } from "./types";
 import * as styles from "./styles";
 
 type MinigameDevSandboxProps = {
   minigameType: MinigameType;
+};
+
+// Boots the same pure runtime plugin the server drives during a real game,
+// seeded with the package's dev fixture (fake teams + sample content).
+const initializeRuntimeState = (
+  runtimePlugin: MinigameRuntimePlugin,
+  devManifest: MinigameDevManifest
+): SerializableValue => {
+  return runtimePlugin.initialize({
+    teamIds: [...devManifest.teamIds],
+    activeRoundTeamId: devManifest.activeRoundTeamId,
+    pointsMax: devManifest.pointsMax,
+    pendingPointsByTeamId: { ...devManifest.pendingPointsByTeamId },
+    rules: devManifest.rules,
+    content: devManifest.content
+  });
 };
 
 export const MinigameDevSandbox = ({
@@ -34,111 +42,58 @@ export const MinigameDevSandbox = ({
   const devManifest = resolveMinigameDevManifest(minigameType);
   const rendererBundle = resolveMinigameRendererBundle(minigameType);
   const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
-  const hasScenarios = devManifest !== null && devManifest.scenarios.length > 0;
 
-  const [viewState, setViewState] = useState<SandboxViewState>(() => {
-    if (devManifest === null || !hasScenarios) {
-      return { scenarioId: "", phase: "play" };
-    }
-
-    return resolveInitialViewState(devManifest);
-  });
-
+  const [phase, setPhase] = useState<MinigameSurfacePhase>("play");
   const [runtimeState, setRuntimeState] = useState<SerializableValue>(() => {
-    if (devManifest === null || runtimePlugin === null || !hasScenarios) {
+    if (devManifest === null || runtimePlugin === null) {
       return null;
     }
 
-    return createSandboxRuntimeState(
-      runtimePlugin,
-      devManifest.live,
-      resolveScenarioById(devManifest.scenarios, viewState.scenarioId)
-    );
+    return initializeRuntimeState(runtimePlugin, devManifest);
   });
 
-  useEffect(() => {
-    if (devManifest === null) {
-      return;
-    }
-
-    syncSandboxSearchParams(viewState);
-  }, [devManifest, viewState]);
-
-  if (
-    devManifest === null ||
-    !hasScenarios ||
-    rendererBundle === null ||
-    runtimePlugin === null
-  ) {
-    const unavailableLabel =
-      rendererBundle === null
-        ? minigameDevSandboxCopy.noRendererLabel
-        : runtimePlugin === null
-          ? minigameDevSandboxCopy.noRuntimeLabel
-          : minigameDevSandboxCopy.noScenarioLabel;
-
+  if (devManifest === null || rendererBundle === null || runtimePlugin === null) {
     return (
       <main className={styles.container}>
         <div className={styles.headingBlock}>
           <h1 className={styles.heading}>{minigameDevSandboxCopy.title}</h1>
-          <p className={styles.description}>{unavailableLabel}</p>
+          <p className={styles.description}>
+            {rendererBundle === null
+              ? minigameDevSandboxCopy.noRendererLabel
+              : minigameDevSandboxCopy.noRuntimeLabel}
+          </p>
         </div>
       </main>
     );
   }
-
-  const liveFixture = devManifest.live;
-  const activeScenario = resolveScenarioById(
-    devManifest.scenarios,
-    viewState.scenarioId
-  );
-
-  const handleScenarioChange = (scenarioId: string): void => {
-    const nextScenario = resolveScenarioById(devManifest.scenarios, scenarioId);
-
-    setViewState({ scenarioId: nextScenario.id, phase: nextScenario.phase });
-    setRuntimeState(
-      createSandboxRuntimeState(runtimePlugin, liveFixture, nextScenario)
-    );
-  };
-
-  const handlePhaseChange = (phase: MinigameSurfacePhase): void => {
-    setViewState((previousState) => ({ ...previousState, phase }));
-  };
-
-  const handleReset = (): void => {
-    setRuntimeState(
-      createSandboxRuntimeState(runtimePlugin, liveFixture, activeScenario)
-    );
-  };
 
   const handleDispatchAction = (
     actionType: string,
     actionPayload: SerializableValue
   ): void => {
     setRuntimeState((previousState) =>
-      reduceSandboxRuntimeState(
-        runtimePlugin,
-        liveFixture,
-        previousState,
-        actionType,
-        actionPayload
-      )
+      runtimePlugin.reduceAction({
+        state: previousState,
+        envelope: { actionType, actionPayload },
+        pointsMax: devManifest.pointsMax,
+        rules: devManifest.rules,
+        content: devManifest.content
+      }).state
     );
   };
 
   const selectorInput = {
     state: runtimeState,
-    rules: liveFixture.rules,
-    content: liveFixture.content
+    rules: devManifest.rules,
+    content: devManifest.content
   };
   const minigameHostView = runtimePlugin.selectHostView(selectorInput);
   const minigameDisplayView = runtimePlugin.selectDisplayView(selectorInput);
   const activeTeamName =
-    liveFixture.activeRoundTeamId === null
+    devManifest.activeRoundTeamId === null
       ? null
-      : (liveFixture.teamNameByTeamId[liveFixture.activeRoundTeamId] ?? null);
-  const teamNameByTeamId = new Map(Object.entries(liveFixture.teamNameByTeamId));
+      : (devManifest.teamNameByTeamId[devManifest.activeRoundTeamId] ?? null);
+  const teamNameByTeamId = new Map(Object.entries(devManifest.teamNameByTeamId));
   const { HostSurface, DisplaySurface } = rendererBundle;
 
   return (
@@ -150,11 +105,11 @@ export const MinigameDevSandbox = ({
 
       <SandboxControls
         minigameType={minigameType}
-        devManifest={devManifest}
-        viewState={viewState}
-        onScenarioChange={handleScenarioChange}
-        onPhaseChange={handlePhaseChange}
-        onReset={handleReset}
+        phase={phase}
+        onPhaseChange={setPhase}
+        onReset={(): void => {
+          setRuntimeState(initializeRuntimeState(runtimePlugin, devManifest));
+        }}
       />
 
       <section className={styles.previewGrid}>
@@ -170,7 +125,7 @@ export const MinigameDevSandbox = ({
           <div className={styles.hostViewport}>
             <div className={styles.hostViewportSurface}>
               <HostSurface
-                phase={viewState.phase}
+                phase={phase}
                 minigameType={minigameType}
                 minigameHostView={minigameHostView}
                 activeTeamName={activeTeamName}
@@ -193,7 +148,7 @@ export const MinigameDevSandbox = ({
           <div className={styles.displayViewport}>
             <div className={styles.displayViewportSurface}>
               <DisplaySurface
-                phase={viewState.phase}
+                phase={phase}
                 minigameType={minigameType}
                 minigameDisplayView={minigameDisplayView}
                 activeTeamName={activeTeamName}

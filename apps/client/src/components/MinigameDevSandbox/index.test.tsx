@@ -10,7 +10,7 @@ test("renders the trivia sandbox from the live runtime plugin", () => {
   assert.match(html, /Minigame Dev Sandbox/);
   assert.match(html, /Host Preview/);
   assert.match(html, /Display Preview/);
-  assert.match(html, /Reset Scenario/);
+  assert.match(html, /Reset/);
   // The first sample prompt comes from the runtime plugin, not static views.
   assert.match(
     html,

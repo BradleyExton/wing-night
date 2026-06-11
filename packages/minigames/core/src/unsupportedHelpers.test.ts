@@ -58,16 +58,13 @@ test("createUnsupportedMinigameRuntimePlugin projects unsupported host/display v
   );
 });
 
-test("createUnsupportedDevManifest builds a live fixture with one stub scenario", () => {
+test("createUnsupportedDevManifest builds an initialization fixture", () => {
   const manifest = createUnsupportedDevManifest();
 
-  assert.equal(manifest.defaultScenarioId, "unsupported");
-  assert.equal(manifest.scenarios.length, 1);
-  assert.equal(manifest.scenarios[0]?.phase, "play");
-  assert.deepEqual(manifest.live.teamIds, ["team-alpha"]);
-  assert.equal(manifest.live.activeRoundTeamId, "team-alpha");
-  assert.equal(manifest.live.content, null);
-  assert.equal(manifest.live.rules, null);
+  assert.deepEqual(manifest.teamIds, ["team-alpha"]);
+  assert.equal(manifest.activeRoundTeamId, "team-alpha");
+  assert.equal(manifest.content, null);
+  assert.equal(manifest.rules, null);
 });
 
 test("unsupported runtime plugin renders views from the unsupported dev manifest fixture", () => {
@@ -79,20 +76,20 @@ test("unsupported runtime plugin renders views from the unsupported dev manifest
   const manifest = createUnsupportedDevManifest();
 
   const runtimeState = plugin.initialize({
-    teamIds: manifest.live.teamIds,
-    activeRoundTeamId: manifest.live.activeRoundTeamId,
-    pointsMax: manifest.live.pointsMax,
-    pendingPointsByTeamId: manifest.live.pendingPointsByTeamId,
-    rules: manifest.live.rules,
-    content: manifest.live.content
+    teamIds: manifest.teamIds,
+    activeRoundTeamId: manifest.activeRoundTeamId,
+    pointsMax: manifest.pointsMax,
+    pendingPointsByTeamId: manifest.pendingPointsByTeamId,
+    rules: manifest.rules,
+    content: manifest.content
   });
 
   assert.notEqual(runtimeState, null);
 
   const hostView = plugin.selectHostView({
     state: runtimeState,
-    rules: manifest.live.rules,
-    content: manifest.live.content
+    rules: manifest.rules,
+    content: manifest.content
   });
 
   assert.equal(

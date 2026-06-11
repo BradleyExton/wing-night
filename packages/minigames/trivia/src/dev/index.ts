@@ -1,12 +1,4 @@
-import type {
-  MinigameDevManifest,
-  MinigameRuntimeActionEnvelope
-} from "@wingnight/minigames-core";
-
-const TEAM_NAME_BY_TEAM_ID = {
-  "team-alpha": "Team Alpha",
-  "team-beta": "Team Beta"
-} as const;
+import type { MinigameDevManifest } from "@wingnight/minigames-core";
 
 // Mirrors content/sample/minigames/trivia.json so sandbox play matches a
 // real night.
@@ -30,56 +22,18 @@ const DEV_CONTENT = {
   ]
 };
 
-const CORRECT_ATTEMPT_ACTION: MinigameRuntimeActionEnvelope = {
-  actionType: "recordAttempt",
-  actionPayload: { isCorrect: true }
-};
-
-const INCORRECT_ATTEMPT_ACTION: MinigameRuntimeActionEnvelope = {
-  actionType: "recordAttempt",
-  actionPayload: { isCorrect: false }
-};
-
 export const triviaDevManifest: MinigameDevManifest = {
-  defaultScenarioId: "play-default",
-  live: {
-    teamIds: ["team-alpha", "team-beta"],
-    teamNameByTeamId: TEAM_NAME_BY_TEAM_ID,
-    activeRoundTeamId: "team-alpha",
-    pointsMax: 15,
-    pendingPointsByTeamId: {
-      "team-alpha": 0,
-      "team-beta": 0
-    },
-    rules: { questionsPerTurn: 3 },
-    content: DEV_CONTENT
+  teamIds: ["team-alpha", "team-beta"],
+  teamNameByTeamId: {
+    "team-alpha": "Team Alpha",
+    "team-beta": "Team Beta"
   },
-  scenarios: [
-    {
-      id: "intro-default",
-      label: "Intro",
-      phase: "intro"
-    },
-    {
-      id: "play-default",
-      label: "Play",
-      phase: "play"
-    },
-    {
-      id: "play-mid-turn",
-      label: "Play (Mid Turn)",
-      phase: "play",
-      setupActions: [CORRECT_ATTEMPT_ACTION]
-    },
-    {
-      id: "play-turn-complete",
-      label: "Play (Turn Complete)",
-      phase: "play",
-      setupActions: [
-        CORRECT_ATTEMPT_ACTION,
-        INCORRECT_ATTEMPT_ACTION,
-        CORRECT_ATTEMPT_ACTION
-      ]
-    }
-  ]
+  activeRoundTeamId: "team-alpha",
+  pointsMax: 15,
+  pendingPointsByTeamId: {
+    "team-alpha": 0,
+    "team-beta": 0
+  },
+  rules: { questionsPerTurn: 3 },
+  content: DEV_CONTENT
 };

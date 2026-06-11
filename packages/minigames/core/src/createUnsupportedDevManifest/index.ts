@@ -6,29 +6,19 @@ const DEFAULT_POINTS_MAX = 15;
 
 // The unsupported message is owned by the runtime plugin created via
 // createUnsupportedMinigameRuntimePlugin; the dev manifest only supplies the
-// live initialization fixture and a single stub scenario.
+// initialization fixture.
 export const createUnsupportedDevManifest = (): MinigameDevManifest => {
   return {
-    defaultScenarioId: "unsupported",
-    live: {
-      teamIds: [DEFAULT_TEAM_ID],
-      teamNameByTeamId: {
-        [DEFAULT_TEAM_ID]: DEFAULT_TEAM_NAME
-      },
-      activeRoundTeamId: DEFAULT_TEAM_ID,
-      pointsMax: DEFAULT_POINTS_MAX,
-      pendingPointsByTeamId: {
-        [DEFAULT_TEAM_ID]: 0
-      },
-      rules: null,
-      content: null
+    teamIds: [DEFAULT_TEAM_ID],
+    teamNameByTeamId: {
+      [DEFAULT_TEAM_ID]: DEFAULT_TEAM_NAME
     },
-    scenarios: [
-      {
-        id: "unsupported",
-        label: "Unsupported Stub",
-        phase: "play"
-      }
-    ]
+    activeRoundTeamId: DEFAULT_TEAM_ID,
+    pointsMax: DEFAULT_POINTS_MAX,
+    pendingPointsByTeamId: {
+      [DEFAULT_TEAM_ID]: 0
+    },
+    rules: null,
+    content: null
   };
 };

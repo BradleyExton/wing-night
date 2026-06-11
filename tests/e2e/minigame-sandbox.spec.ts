@@ -79,8 +79,8 @@ test("geo sandbox plays guess, submit, reveal, and next prompt live", async ({
   await page.getByRole("button", { name: "Next Prompt" }).click();
   await expect(page.getByText("Statue of Liberty")).toHaveCount(2);
 
-  // Reset restores the scenario's starting state.
-  await page.getByRole("button", { name: "Reset Scenario" }).click();
+  // Reset restores the freshly initialized state.
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
   await expect(page.getByText("Eiffel Tower")).toHaveCount(2);
   await expect(submitButton).toBeDisabled();
 
