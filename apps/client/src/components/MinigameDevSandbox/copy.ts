@@ -7,7 +7,7 @@ export const minigameDevSandboxCopy = {
   sessionLabel: "Session",
   resetButtonLabel: "Reset",
   hostPreviewLabel: "Host Preview",
-  hostPreviewMetaLabel: "Tablet 4:3",
+  hostPreviewMetaLabel: "Tablet",
   displayPreviewLabel: "Display Preview",
   displayPreviewMetaLabel: "TV 16:9",
   noRendererLabel: "No renderer bundle is available for this minigame.",

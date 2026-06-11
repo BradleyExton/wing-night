@@ -19,14 +19,14 @@ export const input =
   "h-10 w-full rounded-md border border-text/15 bg-surfaceAlt px-3 text-sm text-text outline-none focus:border-primary/60";
 
 export const previewGrid =
-  "mx-auto mt-5 grid w-full max-w-[2200px] gap-4 xl:grid-cols-12 xl:items-start 2xl:gap-5";
+  "mx-auto mt-5 flex w-full max-w-[2200px] flex-col gap-4 2xl:gap-5";
 
 export const previewCard =
   "overflow-hidden rounded-xl border border-text/10 bg-surfaceAlt shadow-xl";
 
-export const hostPreviewCard = "xl:col-span-5 2xl:col-span-4";
+export const hostPreviewCard = "w-full max-w-3xl";
 
-export const displayPreviewCard = "xl:col-span-7 2xl:col-span-8";
+export const displayPreviewCard = "w-full";
 
 export const previewHeader =
   "flex items-center justify-between border-b border-text/10 bg-surface px-4 py-3";
@@ -35,10 +35,10 @@ export const previewHeaderLabel = "text-xs font-semibold uppercase tracking-[0.1
 
 export const previewHeaderMeta = "text-xs text-muted";
 
-export const hostViewport = "aspect-[4/3] w-full bg-bg/60";
+export const hostViewport = "w-full";
 
 export const displayViewport = "aspect-video w-full bg-bg/60";
 
-export const hostViewportSurface = "h-full w-full overflow-auto bg-surfaceAlt";
+export const hostViewportSurface = "w-full p-4 md:p-6";
 
 export const displayViewportSurface = "h-full w-full overflow-hidden bg-surfaceAlt";
