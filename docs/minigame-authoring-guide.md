@@ -85,7 +85,14 @@ In `packages/minigames/<slug>/src/client/index.ts`:
 
 In `packages/minigames/<slug>/src/dev/index.ts`:
 
-- Export `MinigameDevManifest` scenarios for `/dev/minigame/:minigameId`.
+- Export a `MinigameDevManifest` for `/dev/minigame/:minigameId`.
+- The sandbox plays your real runtime plugin: supply a `live` fixture
+  (`teamIds`, `teamNameByTeamId`, `activeRoundTeamId`, `pointsMax`,
+  `pendingPointsByTeamId`, `rules`, `content`) that mirrors
+  `content/sample/` so sandbox play matches a real night.
+- Scenarios are starting states: each is `initialize(live)` plus optional
+  `setupActions` replayed through `reduceAction`. Do not hand-author view
+  models; unreachable states cannot be represented and that is intentional.
 
 ## 5) Wire Shared Contracts
 
