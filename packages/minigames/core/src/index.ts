@@ -162,18 +162,26 @@ export type MinigameRendererBundle = {
   DisplaySurface: ComponentType<MinigameDisplayRendererProps>;
 };
 
+export type MinigameDevLiveFixture = {
+  teamIds: string[];
+  teamNameByTeamId: Record<string, string>;
+  activeRoundTeamId: string | null;
+  pointsMax: number;
+  pendingPointsByTeamId: Record<string, number>;
+  rules: SerializableValue | null;
+  content: SerializableValue | null;
+};
+
 export type MinigameDevScenario = {
   id: string;
   label: string;
   phase: MinigameSurfacePhase;
-  activeTeamName: string | null;
-  teamNameByTeamId: Record<string, string>;
-  minigameHostView: MinigameHostView | null;
-  minigameDisplayView: MinigameDisplayView | null;
+  setupActions?: MinigameRuntimeActionEnvelope[];
 };
 
 export type MinigameDevManifest = {
   defaultScenarioId: string;
+  live: MinigameDevLiveFixture;
   scenarios: MinigameDevScenario[];
 };
 

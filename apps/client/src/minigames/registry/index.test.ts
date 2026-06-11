@@ -9,6 +9,7 @@ import {
 import {
   resolveMinigameDevManifest,
   resolveMinigameRendererBundle,
+  resolveMinigameRuntimePlugin,
   resolveMinigameTypeFromSlug
 } from "./index";
 
@@ -21,6 +22,12 @@ test("resolves renderer bundles for all minigame types", () => {
 test("resolves dev manifests for all minigame types", () => {
   for (const minigameType of MINIGAME_TYPES) {
     assert.ok(resolveMinigameDevManifest(minigameType));
+  }
+});
+
+test("resolves runtime plugins matching each minigame type", () => {
+  for (const minigameType of MINIGAME_TYPES) {
+    assert.equal(resolveMinigameRuntimePlugin(minigameType)?.id, minigameType);
   }
 });
 

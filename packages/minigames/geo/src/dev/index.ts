@@ -1,8 +1,7 @@
-import type { MinigameDevManifest } from "@wingnight/minigames-core";
 import type {
-  GeoMinigameDisplayPrompt,
-  GeoMinigameHostPrompt
-} from "@wingnight/shared";
+  MinigameDevManifest,
+  MinigameRuntimeActionEnvelope
+} from "@wingnight/minigames-core";
 
 const TEAM_NAME_BY_TEAM_ID = {
   "team-alpha": "Team Alpha",
@@ -14,185 +13,97 @@ const PENDING_POINTS_BY_TEAM_ID = {
   "team-beta": 2
 };
 
-const HOST_PROMPT: GeoMinigameHostPrompt = {
-  id: "geo-eiffel-tower",
-  title: "Eiffel Tower",
-  imageSrc: "/sample-assets/geo/eiffel-tower.svg",
-  hint: "Iron lady of a European capital",
-  answerLat: 48.85837,
-  answerLng: 2.294481
+// Mirrors content/sample/minigames/geo.json so sandbox play matches a real
+// night; images resolve from the client's public sample assets.
+const DEV_CONTENT = {
+  prompts: [
+    {
+      id: "geo-eiffel-tower",
+      title: "Eiffel Tower",
+      imageSrc: "/sample-assets/geo/eiffel-tower.svg",
+      hint: "Iron lady of a European capital",
+      answer: { lat: 48.85837, lng: 2.294481 }
+    },
+    {
+      id: "geo-statue-of-liberty",
+      title: "Statue of Liberty",
+      imageSrc: "/sample-assets/geo/statue-of-liberty.svg",
+      hint: "A harbor gift from France",
+      answer: { lat: 40.689247, lng: -74.044502 }
+    },
+    {
+      id: "geo-sydney-opera-house",
+      title: "Sydney Opera House",
+      imageSrc: "/sample-assets/geo/sydney-opera-house.svg",
+      hint: "Sails by a southern harbour",
+      answer: { lat: -33.856784, lng: 151.215297 }
+    }
+  ]
 };
 
-const DISPLAY_PROMPT: GeoMinigameDisplayPrompt = {
-  id: HOST_PROMPT.id,
-  title: HOST_PROMPT.title,
-  imageSrc: HOST_PROMPT.imageSrc,
-  hint: HOST_PROMPT.hint
+const SAMPLE_GUESS_ACTION: MinigameRuntimeActionEnvelope = {
+  actionType: "setGuess",
+  actionPayload: { lat: 48.5, lng: 2.6 }
 };
 
-const SAMPLE_GUESS = { lat: 48.5, lng: 2.6 };
+const SUBMIT_GUESS_ACTION: MinigameRuntimeActionEnvelope = {
+  actionType: "submitGuess",
+  actionPayload: {}
+};
 
-const SAMPLE_RESULT = {
-  promptId: HOST_PROMPT.id,
-  guessLat: SAMPLE_GUESS.lat,
-  guessLng: SAMPLE_GUESS.lng,
-  distanceKm: 45.7,
-  pointsAwarded: 1
+const NEXT_PROMPT_ACTION: MinigameRuntimeActionEnvelope = {
+  actionType: "nextPrompt",
+  actionPayload: {}
 };
 
 export const geoDevManifest: MinigameDevManifest = {
   defaultScenarioId: "play-guessing",
+  live: {
+    teamIds: ["team-alpha", "team-beta"],
+    teamNameByTeamId: TEAM_NAME_BY_TEAM_ID,
+    activeRoundTeamId: "team-alpha",
+    pointsMax: 15,
+    pendingPointsByTeamId: PENDING_POINTS_BY_TEAM_ID,
+    rules: { promptsPerTurn: 3 },
+    content: DEV_CONTENT
+  },
   scenarios: [
     {
       id: "intro-default",
       label: "Intro",
-      phase: "intro",
-      activeTeamName: "Team Alpha",
-      teamNameByTeamId: TEAM_NAME_BY_TEAM_ID,
-      minigameHostView: {
-        minigame: "GEO",
-        activeTurnTeamId: "team-alpha",
-        pendingPointsByTeamId: { ...PENDING_POINTS_BY_TEAM_ID },
-        promptsPerTurn: 3,
-        promptsCompletedThisTurn: 0,
-        currentSubState: "guessing",
-        currentGuess: null,
-        currentPrompt: HOST_PROMPT,
-        lastResult: null
-      },
-      minigameDisplayView: {
-        minigame: "GEO",
-        activeTurnTeamId: "team-alpha",
-        pendingPointsByTeamId: { ...PENDING_POINTS_BY_TEAM_ID },
-        promptsPerTurn: 3,
-        promptsCompletedThisTurn: 0,
-        currentPrompt: DISPLAY_PROMPT,
-        status: "guessing"
-      }
+      phase: "intro"
     },
     {
       id: "play-guessing",
       label: "Play (Guessing)",
-      phase: "play",
-      activeTeamName: "Team Alpha",
-      teamNameByTeamId: TEAM_NAME_BY_TEAM_ID,
-      minigameHostView: {
-        minigame: "GEO",
-        activeTurnTeamId: "team-alpha",
-        pendingPointsByTeamId: { ...PENDING_POINTS_BY_TEAM_ID },
-        promptsPerTurn: 3,
-        promptsCompletedThisTurn: 0,
-        currentSubState: "guessing",
-        currentGuess: null,
-        currentPrompt: HOST_PROMPT,
-        lastResult: null
-      },
-      minigameDisplayView: {
-        minigame: "GEO",
-        activeTurnTeamId: "team-alpha",
-        pendingPointsByTeamId: { ...PENDING_POINTS_BY_TEAM_ID },
-        promptsPerTurn: 3,
-        promptsCompletedThisTurn: 0,
-        currentPrompt: DISPLAY_PROMPT,
-        status: "guessing"
-      }
+      phase: "play"
     },
     {
       id: "play-guess-placed",
       label: "Play (Guess Placed)",
       phase: "play",
-      activeTeamName: "Team Alpha",
-      teamNameByTeamId: TEAM_NAME_BY_TEAM_ID,
-      minigameHostView: {
-        minigame: "GEO",
-        activeTurnTeamId: "team-alpha",
-        pendingPointsByTeamId: { ...PENDING_POINTS_BY_TEAM_ID },
-        promptsPerTurn: 3,
-        promptsCompletedThisTurn: 1,
-        currentSubState: "guessing",
-        currentGuess: { ...SAMPLE_GUESS },
-        currentPrompt: HOST_PROMPT,
-        lastResult: null
-      },
-      minigameDisplayView: {
-        minigame: "GEO",
-        activeTurnTeamId: "team-alpha",
-        pendingPointsByTeamId: { ...PENDING_POINTS_BY_TEAM_ID },
-        promptsPerTurn: 3,
-        promptsCompletedThisTurn: 1,
-        currentPrompt: DISPLAY_PROMPT,
-        status: "guessing"
-      }
+      setupActions: [SAMPLE_GUESS_ACTION]
     },
     {
       id: "play-submitted",
       label: "Play (Submitted)",
       phase: "play",
-      activeTeamName: "Team Alpha",
-      teamNameByTeamId: TEAM_NAME_BY_TEAM_ID,
-      minigameHostView: {
-        minigame: "GEO",
-        activeTurnTeamId: "team-alpha",
-        pendingPointsByTeamId: { "team-alpha": 5, "team-beta": 2 },
-        promptsPerTurn: 3,
-        promptsCompletedThisTurn: 1,
-        currentSubState: "submitted",
-        currentGuess: { ...SAMPLE_GUESS },
-        currentPrompt: HOST_PROMPT,
-        lastResult: { ...SAMPLE_RESULT }
-      },
-      minigameDisplayView: {
-        minigame: "GEO",
-        activeTurnTeamId: "team-alpha",
-        pendingPointsByTeamId: { "team-alpha": 5, "team-beta": 2 },
-        promptsPerTurn: 3,
-        promptsCompletedThisTurn: 1,
-        currentPrompt: DISPLAY_PROMPT,
-        status: "submitted",
-        result: {
-          guessLat: SAMPLE_RESULT.guessLat,
-          guessLng: SAMPLE_RESULT.guessLng,
-          answerLat: HOST_PROMPT.answerLat,
-          answerLng: HOST_PROMPT.answerLng,
-          distanceKm: SAMPLE_RESULT.distanceKm,
-          pointsAwarded: SAMPLE_RESULT.pointsAwarded
-        }
-      }
+      setupActions: [SAMPLE_GUESS_ACTION, SUBMIT_GUESS_ACTION]
     },
     {
       id: "play-turn-complete",
       label: "Play (Turn Complete)",
       phase: "play",
-      activeTeamName: "Team Alpha",
-      teamNameByTeamId: TEAM_NAME_BY_TEAM_ID,
-      minigameHostView: {
-        minigame: "GEO",
-        activeTurnTeamId: "team-alpha",
-        pendingPointsByTeamId: { "team-alpha": 8, "team-beta": 2 },
-        promptsPerTurn: 3,
-        promptsCompletedThisTurn: 3,
-        currentSubState: "submitted",
-        currentGuess: { ...SAMPLE_GUESS },
-        currentPrompt: HOST_PROMPT,
-        lastResult: { ...SAMPLE_RESULT }
-      },
-      minigameDisplayView: {
-        minigame: "GEO",
-        activeTurnTeamId: "team-alpha",
-        pendingPointsByTeamId: { "team-alpha": 8, "team-beta": 2 },
-        promptsPerTurn: 3,
-        promptsCompletedThisTurn: 3,
-        currentPrompt: DISPLAY_PROMPT,
-        status: "submitted",
-        result: {
-          guessLat: SAMPLE_RESULT.guessLat,
-          guessLng: SAMPLE_RESULT.guessLng,
-          answerLat: HOST_PROMPT.answerLat,
-          answerLng: HOST_PROMPT.answerLng,
-          distanceKm: SAMPLE_RESULT.distanceKm,
-          pointsAwarded: SAMPLE_RESULT.pointsAwarded
-        }
-      }
+      setupActions: [
+        SAMPLE_GUESS_ACTION,
+        SUBMIT_GUESS_ACTION,
+        NEXT_PROMPT_ACTION,
+        SAMPLE_GUESS_ACTION,
+        SUBMIT_GUESS_ACTION,
+        NEXT_PROMPT_ACTION,
+        SAMPLE_GUESS_ACTION,
+        SUBMIT_GUESS_ACTION
+      ]
     }
   ]
 };

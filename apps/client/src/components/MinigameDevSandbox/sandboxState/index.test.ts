@@ -1,43 +1,36 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { MinigameDevScenario } from "@wingnight/minigames-core";
+import type { MinigameDevManifest } from "@wingnight/minigames-core";
 
-import { resolveInitialKnobsState } from "./index";
+import { resolveInitialViewState, resolveScenarioById } from "./index";
 
-const triviaScenarioFixture: MinigameDevScenario = {
-  id: "play-default",
-  label: "Play",
-  phase: "play",
-  activeTeamName: "Team Alpha",
-  teamNameByTeamId: {
-    "team-alpha": "Team Alpha"
-  },
-  minigameHostView: {
-    minigame: "TRIVIA",
-    activeTurnTeamId: "team-alpha",
-    attemptsRemaining: 1,
-    promptCursor: 0,
-    pendingPointsByTeamId: {
-      "team-alpha": 2
+const devManifestFixture: MinigameDevManifest = {
+  defaultScenarioId: "play-default",
+  live: {
+    teamIds: ["team-alpha"],
+    teamNameByTeamId: {
+      "team-alpha": "Team Alpha"
     },
-    currentPrompt: {
-      id: "prompt-1",
-      question: "Question?",
-      answer: "Answer"
-    }
-  },
-  minigameDisplayView: {
-    minigame: "TRIVIA",
-    activeTurnTeamId: "team-alpha",
-    promptCursor: 0,
+    activeRoundTeamId: "team-alpha",
+    pointsMax: 15,
     pendingPointsByTeamId: {
-      "team-alpha": 2
+      "team-alpha": 0
     },
-    currentPrompt: {
-      id: "prompt-1",
-      question: "Question?"
+    rules: null,
+    content: null
+  },
+  scenarios: [
+    {
+      id: "intro-default",
+      label: "Intro",
+      phase: "intro"
+    },
+    {
+      id: "play-default",
+      label: "Play",
+      phase: "play"
     }
-  }
+  ]
 };
 
 const withWindowSearch = (search: string, callback: () => void): void => {
@@ -67,22 +60,43 @@ const withWindowSearch = (search: string, callback: () => void): void => {
   }
 };
 
-test("resolveInitialKnobsState falls back to scenario phase for invalid phase query params", () => {
-  const introScenario = {
-    ...triviaScenarioFixture,
-    phase: "intro" as const
-  };
-
-  withWindowSearch("?phase=unsupported", () => {
-    const knobsState = resolveInitialKnobsState(introScenario);
-    assert.equal(knobsState.phase, "intro");
+test("resolveInitialViewState uses the manifest default scenario without query params", () => {
+  withWindowSearch("", () => {
+    const viewState = resolveInitialViewState(devManifestFixture);
+    assert.equal(viewState.scenarioId, "play-default");
+    assert.equal(viewState.phase, "play");
   });
 });
 
-test("resolveInitialKnobsState clamps negative numeric search params to zero", () => {
-  withWindowSearch("?attempts=-5&pending=-10", () => {
-    const knobsState = resolveInitialKnobsState(triviaScenarioFixture);
-    assert.equal(knobsState.attemptsRemaining, 0);
-    assert.equal(knobsState.pendingPointsForActiveTeam, 0);
+test("resolveInitialViewState honors scenario and phase query params", () => {
+  withWindowSearch("?scenario=intro-default&phase=play", () => {
+    const viewState = resolveInitialViewState(devManifestFixture);
+    assert.equal(viewState.scenarioId, "intro-default");
+    assert.equal(viewState.phase, "play");
   });
+});
+
+test("resolveInitialViewState falls back to scenario phase for invalid phase query params", () => {
+  withWindowSearch("?scenario=intro-default&phase=unsupported", () => {
+    const viewState = resolveInitialViewState(devManifestFixture);
+    assert.equal(viewState.phase, "intro");
+  });
+});
+
+test("resolveInitialViewState falls back to the first scenario for unknown scenario ids", () => {
+  withWindowSearch("?scenario=missing", () => {
+    const viewState = resolveInitialViewState(devManifestFixture);
+    assert.equal(viewState.scenarioId, "intro-default");
+  });
+});
+
+test("resolveInitialViewState stays SSR-safe without a window global", () => {
+  const viewState = resolveInitialViewState(devManifestFixture);
+  assert.equal(viewState.scenarioId, "play-default");
+  assert.equal(viewState.phase, "play");
+});
+
+test("resolveScenarioById returns the first scenario for unknown ids", () => {
+  const scenario = resolveScenarioById(devManifestFixture.scenarios, "missing");
+  assert.equal(scenario.id, "intro-default");
 });

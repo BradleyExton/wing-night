@@ -18,8 +18,6 @@ export const controlLabel = "text-xs font-semibold uppercase tracking-[0.12em] t
 export const input =
   "h-10 w-full rounded-md border border-text/15 bg-surfaceAlt px-3 text-sm text-text outline-none focus:border-primary/60";
 
-export const checkboxRow = "flex items-center gap-2 pt-2";
-
 export const previewGrid =
   "mx-auto mt-5 grid w-full max-w-[2200px] gap-4 xl:grid-cols-12 xl:items-start 2xl:gap-5";
 

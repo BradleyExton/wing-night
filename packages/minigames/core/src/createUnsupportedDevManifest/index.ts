@@ -1,52 +1,33 @@
-import type { MinigameType } from "@wingnight/shared";
-
 import type { MinigameDevManifest } from "../index.js";
-
-type UnsupportedMinigameType = Exclude<MinigameType, "TRIVIA" | "GEO">;
-
-type CreateUnsupportedDevManifestOptions = {
-  minigameId: UnsupportedMinigameType;
-  hostUnsupportedMessage: string;
-  displayUnsupportedMessage: string;
-};
 
 const DEFAULT_TEAM_ID = "team-alpha";
 const DEFAULT_TEAM_NAME = "Team Alpha";
+const DEFAULT_POINTS_MAX = 15;
 
-export const createUnsupportedDevManifest = ({
-  minigameId,
-  hostUnsupportedMessage,
-  displayUnsupportedMessage
-}: CreateUnsupportedDevManifestOptions): MinigameDevManifest => {
+// The unsupported message is owned by the runtime plugin created via
+// createUnsupportedMinigameRuntimePlugin; the dev manifest only supplies the
+// live initialization fixture and a single stub scenario.
+export const createUnsupportedDevManifest = (): MinigameDevManifest => {
   return {
     defaultScenarioId: "unsupported",
+    live: {
+      teamIds: [DEFAULT_TEAM_ID],
+      teamNameByTeamId: {
+        [DEFAULT_TEAM_ID]: DEFAULT_TEAM_NAME
+      },
+      activeRoundTeamId: DEFAULT_TEAM_ID,
+      pointsMax: DEFAULT_POINTS_MAX,
+      pendingPointsByTeamId: {
+        [DEFAULT_TEAM_ID]: 0
+      },
+      rules: null,
+      content: null
+    },
     scenarios: [
       {
         id: "unsupported",
         label: "Unsupported Stub",
-        phase: "play",
-        activeTeamName: DEFAULT_TEAM_NAME,
-        teamNameByTeamId: {
-          [DEFAULT_TEAM_ID]: DEFAULT_TEAM_NAME
-        },
-        minigameHostView: {
-          minigame: minigameId,
-          activeTurnTeamId: DEFAULT_TEAM_ID,
-          pendingPointsByTeamId: {
-            [DEFAULT_TEAM_ID]: 0
-          },
-          status: "UNSUPPORTED",
-          message: hostUnsupportedMessage
-        },
-        minigameDisplayView: {
-          minigame: minigameId,
-          activeTurnTeamId: DEFAULT_TEAM_ID,
-          pendingPointsByTeamId: {
-            [DEFAULT_TEAM_ID]: 0
-          },
-          status: "UNSUPPORTED",
-          message: displayUnsupportedMessage
-        }
+        phase: "play"
       }
     ]
   };

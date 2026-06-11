@@ -58,25 +58,45 @@ test("createUnsupportedMinigameRuntimePlugin projects unsupported host/display v
   );
 });
 
-test("createUnsupportedDevManifest builds the default unsupported scenario", () => {
-  const manifest = createUnsupportedDevManifest({
-    minigameId: "DRAWING",
-    hostUnsupportedMessage: "Host unsupported",
-    displayUnsupportedMessage: "Display unsupported"
-  });
+test("createUnsupportedDevManifest builds a live fixture with one stub scenario", () => {
+  const manifest = createUnsupportedDevManifest();
 
   assert.equal(manifest.defaultScenarioId, "unsupported");
   assert.equal(manifest.scenarios.length, 1);
+  assert.equal(manifest.scenarios[0]?.phase, "play");
+  assert.deepEqual(manifest.live.teamIds, ["team-alpha"]);
+  assert.equal(manifest.live.activeRoundTeamId, "team-alpha");
+  assert.equal(manifest.live.content, null);
+  assert.equal(manifest.live.rules, null);
+});
 
-  const hostView = manifest.scenarios[0]?.minigameHostView;
-  const displayView = manifest.scenarios[0]?.minigameDisplayView;
+test("unsupported runtime plugin renders views from the unsupported dev manifest fixture", () => {
+  const plugin = createUnsupportedMinigameRuntimePlugin({
+    minigameId: "DRAWING",
+    metadata,
+    unsupportedMessage: "Unavailable"
+  });
+  const manifest = createUnsupportedDevManifest();
+
+  const runtimeState = plugin.initialize({
+    teamIds: manifest.live.teamIds,
+    activeRoundTeamId: manifest.live.activeRoundTeamId,
+    pointsMax: manifest.live.pointsMax,
+    pendingPointsByTeamId: manifest.live.pendingPointsByTeamId,
+    rules: manifest.live.rules,
+    content: manifest.live.content
+  });
+
+  assert.notEqual(runtimeState, null);
+
+  const hostView = plugin.selectHostView({
+    state: runtimeState,
+    rules: manifest.live.rules,
+    content: manifest.live.content
+  });
 
   assert.equal(
     hostView?.minigame === "DRAWING" ? hostView.status : null,
-    "UNSUPPORTED"
-  );
-  assert.equal(
-    displayView?.minigame === "DRAWING" ? displayView.status : null,
     "UNSUPPORTED"
   );
 });

@@ -1,86 +1,31 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type {
-  MinigameDevManifest,
-  MinigameDevScenario
+  MinigameSurfacePhase,
+  SerializableValue
 } from "@wingnight/minigames-core";
 import type { MinigameType } from "@wingnight/shared";
 
 import {
   resolveMinigameDevManifest,
-  resolveMinigameRendererBundle
+  resolveMinigameRendererBundle,
+  resolveMinigameRuntimePlugin
 } from "../../minigames/registry";
 import { SandboxControls } from "./SandboxControls";
 import { minigameDevSandboxCopy } from "./copy";
 import {
-  resolveInitialKnobsState,
-  resolveInitialScenario,
+  createSandboxRuntimeState,
+  reduceSandboxRuntimeState
+} from "./runtimeSession";
+import {
+  resolveInitialViewState,
   resolveScenarioById,
   syncSandboxSearchParams
 } from "./sandboxState";
-import type { SandboxKnobsState } from "./types";
+import type { SandboxViewState } from "./types";
 import * as styles from "./styles";
 
 type MinigameDevSandboxProps = {
   minigameType: MinigameType;
-};
-
-const applyTriviaKnobs = (
-  scenarioHostView: MinigameDevScenario["minigameHostView"],
-  scenarioDisplayView: MinigameDevScenario["minigameDisplayView"],
-  knobsState: SandboxKnobsState
-): void => {
-  if (scenarioHostView?.minigame === "TRIVIA") {
-    const activeTeamId = scenarioHostView.activeTurnTeamId ?? "team-alpha";
-
-    scenarioHostView.attemptsRemaining = Math.max(0, knobsState.attemptsRemaining);
-    scenarioHostView.pendingPointsByTeamId[activeTeamId] = Math.max(
-      0,
-      knobsState.pendingPointsForActiveTeam
-    );
-    scenarioHostView.currentPrompt = knobsState.promptVisible
-      ? {
-          id: scenarioHostView.currentPrompt?.id ?? "sandbox-trivia",
-          question: knobsState.promptQuestion,
-          answer: knobsState.promptAnswer
-        }
-      : null;
-  }
-
-  if (scenarioDisplayView?.minigame === "TRIVIA") {
-    const activeTeamId = scenarioDisplayView.activeTurnTeamId ?? "team-alpha";
-
-    scenarioDisplayView.pendingPointsByTeamId[activeTeamId] = Math.max(
-      0,
-      knobsState.pendingPointsForActiveTeam
-    );
-    scenarioDisplayView.currentPrompt = knobsState.promptVisible
-      ? {
-          id: scenarioDisplayView.currentPrompt?.id ?? "sandbox-trivia",
-          question: knobsState.promptQuestion
-        }
-      : null;
-  }
-};
-
-const resolveSandboxModel = (
-  devManifest: MinigameDevManifest,
-  knobsState: SandboxKnobsState
-): {
-  activeScenario: MinigameDevScenario;
-  scenarioHostView: MinigameDevScenario["minigameHostView"];
-  scenarioDisplayView: MinigameDevScenario["minigameDisplayView"];
-} => {
-  const activeScenario = resolveScenarioById(devManifest.scenarios, knobsState.scenarioId);
-  const scenarioHostView = structuredClone(activeScenario.minigameHostView);
-  const scenarioDisplayView = structuredClone(activeScenario.minigameDisplayView);
-
-  applyTriviaKnobs(scenarioHostView, scenarioDisplayView, knobsState);
-
-  return {
-    activeScenario,
-    scenarioHostView,
-    scenarioDisplayView
-  };
 };
 
 export const MinigameDevSandbox = ({
@@ -88,35 +33,27 @@ export const MinigameDevSandbox = ({
 }: MinigameDevSandboxProps): JSX.Element => {
   const devManifest = resolveMinigameDevManifest(minigameType);
   const rendererBundle = resolveMinigameRendererBundle(minigameType);
+  const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
+  const hasScenarios = devManifest !== null && devManifest.scenarios.length > 0;
 
-  const initialState = useMemo(() => {
-    if (!devManifest || devManifest.scenarios.length === 0) {
+  const [viewState, setViewState] = useState<SandboxViewState>(() => {
+    if (devManifest === null || !hasScenarios) {
+      return { scenarioId: "", phase: "play" };
+    }
+
+    return resolveInitialViewState(devManifest);
+  });
+
+  const [runtimeState, setRuntimeState] = useState<SerializableValue>(() => {
+    if (devManifest === null || runtimePlugin === null || !hasScenarios) {
       return null;
     }
 
-    const initialScenario = resolveInitialScenario(devManifest);
-
-    return {
-      initialScenario,
-      initialKnobsState: resolveInitialKnobsState(initialScenario)
-    };
-  }, [devManifest]);
-
-  const [knobsState, setKnobsState] = useState<SandboxKnobsState>(() => {
-    if (initialState === null) {
-      return {
-        scenarioId: "",
-        phase: "play",
-        activeTeamName: "",
-        promptVisible: false,
-        promptQuestion: "",
-        promptAnswer: "",
-        attemptsRemaining: 0,
-        pendingPointsForActiveTeam: 0
-      };
-    }
-
-    return initialState.initialKnobsState;
+    return createSandboxRuntimeState(
+      runtimePlugin,
+      devManifest.live,
+      resolveScenarioById(devManifest.scenarios, viewState.scenarioId)
+    );
   });
 
   useEffect(() => {
@@ -124,33 +61,84 @@ export const MinigameDevSandbox = ({
       return;
     }
 
-    syncSandboxSearchParams(knobsState);
-  }, [devManifest, knobsState]);
+    syncSandboxSearchParams(viewState);
+  }, [devManifest, viewState]);
 
-  if (!devManifest || devManifest.scenarios.length === 0 || rendererBundle === null) {
+  if (
+    devManifest === null ||
+    !hasScenarios ||
+    rendererBundle === null ||
+    runtimePlugin === null
+  ) {
+    const unavailableLabel =
+      rendererBundle === null
+        ? minigameDevSandboxCopy.noRendererLabel
+        : runtimePlugin === null
+          ? minigameDevSandboxCopy.noRuntimeLabel
+          : minigameDevSandboxCopy.noScenarioLabel;
+
     return (
       <main className={styles.container}>
         <div className={styles.headingBlock}>
           <h1 className={styles.heading}>{minigameDevSandboxCopy.title}</h1>
-          <p className={styles.description}>
-            {rendererBundle === null
-              ? minigameDevSandboxCopy.noRendererLabel
-              : minigameDevSandboxCopy.noScenarioLabel}
-          </p>
+          <p className={styles.description}>{unavailableLabel}</p>
         </div>
       </main>
     );
   }
 
-  const { activeScenario, scenarioHostView, scenarioDisplayView } = resolveSandboxModel(
-    devManifest,
-    knobsState
+  const liveFixture = devManifest.live;
+  const activeScenario = resolveScenarioById(
+    devManifest.scenarios,
+    viewState.scenarioId
   );
+
+  const handleScenarioChange = (scenarioId: string): void => {
+    const nextScenario = resolveScenarioById(devManifest.scenarios, scenarioId);
+
+    setViewState({ scenarioId: nextScenario.id, phase: nextScenario.phase });
+    setRuntimeState(
+      createSandboxRuntimeState(runtimePlugin, liveFixture, nextScenario)
+    );
+  };
+
+  const handlePhaseChange = (phase: MinigameSurfacePhase): void => {
+    setViewState((previousState) => ({ ...previousState, phase }));
+  };
+
+  const handleReset = (): void => {
+    setRuntimeState(
+      createSandboxRuntimeState(runtimePlugin, liveFixture, activeScenario)
+    );
+  };
+
+  const handleDispatchAction = (
+    actionType: string,
+    actionPayload: SerializableValue
+  ): void => {
+    setRuntimeState((previousState) =>
+      reduceSandboxRuntimeState(
+        runtimePlugin,
+        liveFixture,
+        previousState,
+        actionType,
+        actionPayload
+      )
+    );
+  };
+
+  const selectorInput = {
+    state: runtimeState,
+    rules: liveFixture.rules,
+    content: liveFixture.content
+  };
+  const minigameHostView = runtimePlugin.selectHostView(selectorInput);
+  const minigameDisplayView = runtimePlugin.selectDisplayView(selectorInput);
   const activeTeamName =
-    knobsState.activeTeamName.trim().length > 0
-      ? knobsState.activeTeamName
-      : activeScenario.activeTeamName;
-  const teamNameByTeamId = new Map(Object.entries(activeScenario.teamNameByTeamId));
+    liveFixture.activeRoundTeamId === null
+      ? null
+      : (liveFixture.teamNameByTeamId[liveFixture.activeRoundTeamId] ?? null);
+  const teamNameByTeamId = new Map(Object.entries(liveFixture.teamNameByTeamId));
   const { HostSurface, DisplaySurface } = rendererBundle;
 
   return (
@@ -163,10 +151,10 @@ export const MinigameDevSandbox = ({
       <SandboxControls
         minigameType={minigameType}
         devManifest={devManifest}
-        knobsState={knobsState}
-        onKnobsStateChange={(updater): void => {
-          setKnobsState((previousState) => updater(previousState));
-        }}
+        viewState={viewState}
+        onScenarioChange={handleScenarioChange}
+        onPhaseChange={handlePhaseChange}
+        onReset={handleReset}
       />
 
       <section className={styles.previewGrid}>
@@ -182,15 +170,13 @@ export const MinigameDevSandbox = ({
           <div className={styles.hostViewport}>
             <div className={styles.hostViewportSurface}>
               <HostSurface
-                phase={knobsState.phase}
+                phase={viewState.phase}
                 minigameType={minigameType}
-                minigameHostView={scenarioHostView}
+                minigameHostView={minigameHostView}
                 activeTeamName={activeTeamName}
                 teamNameByTeamId={teamNameByTeamId}
-                canDispatchAction={false}
-                onDispatchAction={(): void => {
-                  return;
-                }}
+                canDispatchAction
+                onDispatchAction={handleDispatchAction}
               />
             </div>
           </div>
@@ -207,9 +193,9 @@ export const MinigameDevSandbox = ({
           <div className={styles.displayViewport}>
             <div className={styles.displayViewportSurface}>
               <DisplaySurface
-                phase={knobsState.phase}
+                phase={viewState.phase}
                 minigameType={minigameType}
-                minigameDisplayView={scenarioDisplayView}
+                minigameDisplayView={minigameDisplayView}
                 activeTeamName={activeTeamName}
               />
             </div>
