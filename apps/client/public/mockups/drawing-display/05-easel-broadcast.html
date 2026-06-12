@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drawing Display — 05 Broadcast Easel (click to toggle reveal)</title>
+    <style>
+      :root {
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --heat: #ef4444;
+        --gold: #fbbf24;
+        --green: #2fb86c;
+        --teamA: #f97316;
+        --board: #0e2624;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: radial-gradient(ellipse at top, #2a1306 0%, #0f0a08 60%, #050505 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none; cursor: pointer;
+      }
+      .stage {
+        height: 100dvh;
+        display: grid; grid-template-rows: auto 1fr;
+        gap: clamp(0.6rem, 1vh, 1rem);
+        padding: clamp(0.8rem, 1.4vw, 1.6rem);
+      }
+
+      /* Thin broadcast rail */
+      .rail {
+        display: flex; align-items: center; gap: clamp(1rem, 2vw, 2rem);
+        font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.24em;
+        font-size: clamp(0.78rem, 1vw, 1.05rem);
+        color: var(--muted);
+        padding: 0.4rem 0.6rem;
+      }
+      .rail .live {
+        color: var(--heat);
+        display: inline-flex; align-items: center; gap: 0.5rem;
+      }
+      .rail .live::before {
+        content: ""; width: 10px; height: 10px; border-radius: 50%;
+        background: var(--heat); box-shadow: 0 0 10px var(--heat);
+        animation: blink 1.6s ease-in-out infinite;
+      }
+      @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+      .rail .round { color: var(--primary); }
+      .rail .team {
+        display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text);
+      }
+      .rail .team::before {
+        content: ""; width: 10px; height: 10px; border-radius: 50%;
+        background: var(--teamA); box-shadow: 0 0 8px var(--teamA);
+      }
+      .rail .timer {
+        margin-left: auto;
+        font-family: ui-monospace, monospace;
+        font-size: clamp(1.2rem, 1.8vw, 1.9rem);
+        color: var(--primary); font-variant-numeric: tabular-nums;
+        letter-spacing: 0;
+      }
+
+      main.center { position: relative; min-height: 0; display: grid; place-items: center; }
+      .easel {
+        position: relative; width: 100%; height: 100%;
+        background: linear-gradient(180deg, #5a3318 0%, #2c1808 100%);
+        border-radius: 14px; padding: clamp(12px, 1.2vw, 18px);
+        box-shadow: 0 16px 36px rgba(0,0,0,0.6), inset 0 0 0 2px #6a3d1a;
+      }
+      .board {
+        width: 100%; height: 100%;
+        background:
+          linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+          radial-gradient(ellipse at 50% 30%, #14302d 0%, var(--board) 70%, #06181a 100%);
+        background-size: 30px 30px, 30px 30px, 100% 100%;
+        border-radius: 8px; position: relative; overflow: hidden;
+        box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+      }
+      .board svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transition: opacity 0.3s; }
+      .stroke-soft { filter: drop-shadow(0 0 1.5px rgba(255,255,255,0.4)); }
+
+      /* Lower-third reveal banner sliding across the board */
+      .lower-third { display: none; }
+      body.revealed .board svg { opacity: 0.3; }
+      body.revealed .lower-third { display: grid; }
+      .lower-third {
+        position: absolute; left: 0; right: 0; bottom: 10%; z-index: 5;
+        grid-template-columns: auto 1fr auto;
+        align-items: center; gap: clamp(1.2rem, 2.4vw, 2.4rem);
+        background: linear-gradient(90deg, #0e2a14 0%, #1c4d28 35%, #0e2a14 100%);
+        border-top: 3px solid var(--green);
+        border-bottom: 3px solid var(--green);
+        padding: clamp(0.9rem, 1.6vh, 1.5rem) clamp(1.6rem, 3vw, 3.2rem);
+        box-shadow: 0 0 50px rgba(47,184,108,0.3);
+        animation: slide 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      @keyframes slide {
+        0% { transform: translateX(-6%); opacity: 0; }
+        100% { transform: translateX(0); opacity: 1; }
+      }
+      .lower-third .verdict {
+        font-weight: 900; text-transform: uppercase;
+        letter-spacing: 0.2em; color: var(--green);
+        font-size: clamp(1rem, 1.6vw, 1.7rem);
+        display: inline-flex; align-items: center; gap: 0.7rem;
+      }
+      .lower-third .verdict .check { font-size: 1.6em; line-height: 1; }
+      .lower-third .answer {
+        font-family: "Georgia", serif; font-weight: 700; font-style: italic;
+        font-size: clamp(2.1rem, 3.6vw, 3.8rem); line-height: 1.05;
+      }
+      .lower-third .answer .lbl {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-style: normal; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.3em;
+        font-size: clamp(0.66rem, 0.9vw, 0.95rem);
+        color: var(--muted); margin-bottom: 0.25rem;
+      }
+      .lower-third .award {
+        font-family: ui-monospace, monospace; text-align: right;
+        font-weight: 900; color: var(--gold);
+        font-size: clamp(2.2rem, 3.4vw, 3.6rem); line-height: 1;
+        text-shadow: 0 0 18px rgba(251,191,36,0.5);
+      }
+      .lower-third .award .for {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        text-transform: uppercase; letter-spacing: 0.26em;
+        font-size: clamp(0.66rem, 0.9vw, 0.95rem);
+        color: var(--muted); font-weight: 700; margin-top: 0.3rem;
+      }
+
+      .status-line {
+        position: absolute; bottom: 2.4%; left: 50%;
+        transform: translateX(-50%);
+        font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.26em; color: var(--primary);
+        font-size: clamp(0.78rem, 1.1vw, 1.2rem);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="rail">
+        <span class="live">Live</span>
+        <span class="round">Round 3</span>
+        <span>Ghost Pepper</span>
+        <span>Drawing</span>
+        <span class="team">Team Heat · +2 pending</span>
+        <span class="timer">1:24</span>
+      </div>
+
+      <main class="center">
+        <div class="easel">
+          <div class="board">
+            <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+              <g class="stroke-soft">
+                <path d="M 250 180 L 950 180 L 600 700 Z"
+                      stroke="#f3eee2" stroke-width="10" fill="none"
+                      stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M 270 180 Q 290 150 320 180 Q 350 150 380 180 Q 410 150 440 180 Q 470 150 500 180 Q 530 150 560 180 Q 590 150 620 180 Q 650 150 680 180 Q 710 150 740 180 Q 770 150 800 180 Q 830 150 860 180 Q 890 150 920 180"
+                      stroke="#fbbf24" stroke-width="12" fill="none"
+                      stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="480" cy="290" r="34" stroke="#ef4444" stroke-width="9" fill="none" />
+                <circle cx="700" cy="320" r="34" stroke="#ef4444" stroke-width="9" fill="none" />
+                <circle cx="560" cy="450" r="34" stroke="#ef4444" stroke-width="9" fill="none" />
+                <path d="M 720 470 a 34 34 0 1 1 -10 -30"
+                      stroke="#ef4444" stroke-width="9" fill="none" stroke-linecap="round" />
+              </g>
+            </svg>
+            <div class="lower-third">
+              <span class="verdict"><span class="check">✓</span>Correct</span>
+              <div class="answer">
+                <span class="lbl">The answer was</span>
+                Pizza slice
+              </div>
+              <div class="award">
+                +1
+                <span class="for">Team Heat</span>
+              </div>
+            </div>
+            <div class="status-line">Team Heat is drawing…</div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>
+      document.addEventListener("click", () => {
+        document.body.classList.toggle("revealed");
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drawing Display — 06 Grand Marquee Easel (click to toggle reveal)</title>
+    <style>
+      :root {
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --gold: #fbbf24;
+        --green: #2fb86c;
+        --board: #0e2624;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: radial-gradient(ellipse at top, #2a1306 0%, #0f0a08 60%, #050505 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none; cursor: pointer;
+      }
+      .stage {
+        height: 100dvh;
+        display: grid; grid-template-rows: auto 1fr;
+        gap: clamp(0.7rem, 1.2vh, 1.2rem);
+        padding: clamp(0.8rem, 1.4vw, 1.6rem);
+      }
+
+      /* Grand bulb marquee: team / show title / timer */
+      .marquee {
+        position: relative;
+        display: grid; grid-template-columns: 1fr auto 1fr;
+        align-items: center; gap: 1.5rem;
+        background: linear-gradient(180deg, #3a1d09 0%, #1a0c04 100%);
+        border: 2px solid var(--gold);
+        border-radius: 16px;
+        padding: clamp(0.8rem, 1.4vh, 1.3rem) clamp(1.4rem, 2.4vw, 2.4rem);
+        box-shadow: 0 0 36px rgba(251,191,36,0.2) inset, 0 8px 20px rgba(0,0,0,0.55);
+      }
+      .marquee .bulbs {
+        position: absolute; inset: 7px; border-radius: 12px;
+        border: 4px dotted rgba(251,191,36,0.45); pointer-events: none;
+      }
+      .team-block .name {
+        font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em;
+        font-size: clamp(1.2rem, 2vw, 2.1rem);
+      }
+      .team-block .pts {
+        margin-left: 0.8rem; color: var(--gold);
+        font-family: ui-monospace, monospace; font-weight: 800;
+        font-size: clamp(0.95rem, 1.4vw, 1.5rem);
+      }
+      .show-title {
+        text-align: center;
+        text-transform: uppercase; letter-spacing: 0.34em;
+        color: var(--gold); font-weight: 800;
+        font-size: clamp(0.8rem, 1.2vw, 1.3rem);
+      }
+      .timer-block {
+        text-align: right;
+        font-family: ui-monospace, monospace; font-weight: 800;
+        font-size: clamp(1.5rem, 2.4vw, 2.6rem); color: var(--primary);
+        font-variant-numeric: tabular-nums;
+      }
+      .timer-block .lbl {
+        color: var(--muted); font-size: 0.45em;
+        letter-spacing: 0.26em; margin-right: 0.6rem; font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      main.center { position: relative; min-height: 0; display: grid; place-items: center; padding: 0 clamp(1rem, 6vw, 6rem); }
+      .easel {
+        position: relative; width: 100%; height: 100%;
+        background: linear-gradient(180deg, #5a3318 0%, #2c1808 100%);
+        border-radius: 14px; padding: clamp(12px, 1.2vw, 18px);
+        box-shadow: 0 16px 36px rgba(0,0,0,0.6), inset 0 0 0 2px #6a3d1a;
+      }
+      .easel::before, .easel::after {
+        content: ""; position: absolute; top: 100%; width: 16px; height: 56px;
+        background: linear-gradient(180deg, #5a3318, #2c1808);
+        border-radius: 0 0 4px 4px; box-shadow: inset 0 0 0 1px #6a3d1a;
+      }
+      .easel::before { left: 17%; transform: rotate(8deg); }
+      .easel::after  { right: 17%; transform: rotate(-8deg); }
+      .board {
+        width: 100%; height: 100%;
+        background:
+          linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+          radial-gradient(ellipse at 50% 30%, #14302d 0%, var(--board) 70%, #06181a 100%);
+        background-size: 30px 30px, 30px 30px, 100% 100%;
+        border-radius: 8px; position: relative; overflow: hidden;
+        box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+      }
+      .board svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transition: opacity 0.3s; }
+      .stroke-soft { filter: drop-shadow(0 0 1.5px rgba(255,255,255,0.4)); }
+
+      .status-line {
+        position: absolute; bottom: -0.4rem; left: 50%;
+        transform: translateX(-50%);
+        font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.26em; color: var(--primary);
+        font-size: clamp(0.78rem, 1.1vw, 1.2rem);
+        white-space: nowrap;
+      }
+
+      /* Centered reveal plaque, gold-framed to match the marquee */
+      .reveal, .spark { display: none; }
+      body.revealed .board svg { opacity: 0.3; }
+      body.revealed .reveal { display: grid; }
+      body.revealed .spark { display: block; }
+      .reveal {
+        position: absolute; left: 50%; top: 50%; z-index: 5;
+        transform: translate(-50%, -50%);
+        min-width: 64%;
+        background: linear-gradient(180deg, #2a4d1f 0%, #0e2a14 100%);
+        border: 3px solid var(--green);
+        border-radius: 18px;
+        padding: clamp(1.2rem, 2vh, 2rem) clamp(1.8rem, 3vw, 3rem);
+        box-shadow: 0 0 70px rgba(47,184,108,0.4), 0 14px 32px rgba(0,0,0,0.6);
+        grid-template-columns: auto 1fr auto;
+        align-items: center; gap: clamp(1.2rem, 2.4vw, 2.4rem);
+        animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      }
+      @keyframes pop {
+        0% { transform: translate(-50%, -46%) scale(0.92); opacity: 0; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      }
+      .reveal .check {
+        font-size: clamp(2.8rem, 4.4vw, 4.4rem); font-weight: 900;
+        color: var(--green); line-height: 1;
+        text-shadow: 0 0 24px rgba(47,184,108,0.6);
+      }
+      .reveal .text {
+        font-family: "Georgia", serif; font-weight: 700; font-style: italic;
+        font-size: clamp(2.2rem, 3.8vw, 4rem); line-height: 1.05;
+      }
+      .reveal .text .lbl {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-style: normal; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.72rem, 1vw, 1rem);
+        color: var(--green); margin-bottom: 0.35rem;
+      }
+      .reveal .award { text-align: right; font-family: ui-monospace, monospace; }
+      .reveal .award .pts {
+        font-size: clamp(2.6rem, 4vw, 4rem); font-weight: 900;
+        color: var(--gold); line-height: 1;
+        text-shadow: 0 0 18px rgba(251,191,36,0.5);
+      }
+      .reveal .award .for {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        text-transform: uppercase; letter-spacing: 0.28em;
+        font-size: clamp(0.72rem, 0.95vw, 0.95rem);
+        color: var(--muted); font-weight: 700; margin-top: 0.35rem;
+      }
+      .spark {
+        position: absolute; z-index: 4;
+        font-size: 1.3rem; color: var(--gold); opacity: 0.85;
+        text-shadow: 0 0 10px var(--gold);
+        animation: twinkle 1.4s ease-in-out infinite;
+      }
+      .spark.s1 { top: 8%; left: 12%; animation-delay: 0s; }
+      .spark.s2 { top: 16%; right: 14%; animation-delay: 0.3s; }
+      .spark.s3 { bottom: 18%; left: 22%; animation-delay: 0.6s; }
+      .spark.s4 { bottom: 12%; right: 28%; animation-delay: 0.9s; }
+      @keyframes twinkle {
+        0%,100% { transform: scale(0.7); opacity: 0.4; }
+        50% { transform: scale(1.1); opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="marquee">
+        <span class="bulbs"></span>
+        <div class="team-block">
+          <span class="name">Team Heat</span>
+          <span class="pts">+2 pending</span>
+        </div>
+        <div class="show-title">★ Live Sketch ★</div>
+        <div class="timer-block"><span class="lbl">Turn</span>1:24</div>
+      </header>
+
+      <main class="center">
+        <div class="easel">
+          <div class="board">
+            <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+              <g class="stroke-soft">
+                <path d="M 250 180 L 950 180 L 600 700 Z"
+                      stroke="#f3eee2" stroke-width="10" fill="none"
+                      stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M 270 180 Q 290 150 320 180 Q 350 150 380 180 Q 410 150 440 180 Q 470 150 500 180 Q 530 150 560 180 Q 590 150 620 180 Q 650 150 680 180 Q 710 150 740 180 Q 770 150 800 180 Q 830 150 860 180 Q 890 150 920 180"
+                      stroke="#fbbf24" stroke-width="12" fill="none"
+                      stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="480" cy="290" r="34" stroke="#ef4444" stroke-width="9" fill="none" />
+                <circle cx="700" cy="320" r="34" stroke="#ef4444" stroke-width="9" fill="none" />
+                <circle cx="560" cy="450" r="34" stroke="#ef4444" stroke-width="9" fill="none" />
+                <path d="M 720 470 a 34 34 0 1 1 -10 -30"
+                      stroke="#ef4444" stroke-width="9" fill="none" stroke-linecap="round" />
+              </g>
+            </svg>
+            <span class="spark s1">✦</span>
+            <span class="spark s2">✦</span>
+            <span class="spark s3">✧</span>
+            <span class="spark s4">✧</span>
+            <div class="reveal">
+              <span class="check">✓</span>
+              <div class="text">
+                <span class="lbl">The answer was</span>
+                Pizza slice
+              </div>
+              <div class="award">
+                <span class="pts">+1</span>
+                <span class="for">Team Heat</span>
+              </div>
+            </div>
+          </div>
+          <div class="status-line">Team Heat is drawing…</div>
+        </div>
+      </main>
+    </div>
+    <script>
+      document.addEventListener("click", () => {
+        document.body.classList.toggle("revealed");
+      });
+    </script>
+  </body>
+</html>

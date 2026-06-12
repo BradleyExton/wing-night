@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drawing Display — 04 Spotlight Easel (click to toggle reveal)</title>
+    <style>
+      :root {
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --gold: #fbbf24;
+        --green: #2fb86c;
+        --board: #0e2624;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background:
+          radial-gradient(ellipse 70% 55% at 50% 40%, #31180a 0%, #120a06 55%, #040404 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none; cursor: pointer;
+      }
+      .stage {
+        height: 100dvh; position: relative;
+        display: grid; place-items: center;
+        padding: clamp(1rem, 3vh, 2rem) clamp(2rem, 10vw, 9rem) clamp(2.4rem, 6vh, 4rem);
+      }
+      .spotlight {
+        position: absolute; inset: -10% -20% 0;
+        background:
+          radial-gradient(ellipse 44% 60% at 50% 44%, rgba(251,191,36,0.14) 0%, transparent 70%);
+        pointer-events: none;
+      }
+
+      /* Floating corner chips instead of a chrome bar */
+      .chip {
+        position: absolute; z-index: 3;
+        background: rgba(10,6,4,0.8);
+        border: 1px solid rgba(251,191,36,0.4);
+        border-radius: 999px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+        font-size: clamp(0.8rem, 1.1vw, 1.15rem);
+        box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+      }
+      .chip.team { top: 1.2rem; left: 1.4rem; }
+      .chip.team .pts { color: var(--gold); margin-left: 0.6rem; }
+      .chip.timer {
+        top: 1.2rem; right: 1.4rem;
+        font-family: ui-monospace, monospace;
+        color: var(--primary); font-variant-numeric: tabular-nums;
+        font-size: clamp(1.1rem, 1.6vw, 1.7rem); letter-spacing: 0;
+      }
+      .chip.timer .lbl {
+        color: var(--muted); font-size: 0.62em;
+        letter-spacing: 0.22em; margin-right: 0.5rem;
+      }
+      .chip.status {
+        bottom: 1.1rem; left: 50%; transform: translateX(-50%);
+        color: var(--primary); border-color: rgba(249,115,22,0.45);
+      }
+
+      .easel {
+        position: relative; width: 100%; height: 100%;
+        background: linear-gradient(180deg, #5a3318 0%, #2c1808 100%);
+        border-radius: 14px; padding: clamp(12px, 1.2vw, 18px);
+        box-shadow: 0 24px 50px rgba(0,0,0,0.7), inset 0 0 0 2px #6a3d1a;
+      }
+      .easel::before, .easel::after {
+        content: ""; position: absolute; top: 100%; width: 16px; height: 60px;
+        background: linear-gradient(180deg, #5a3318, #2c1808);
+        border-radius: 0 0 4px 4px; box-shadow: inset 0 0 0 1px #6a3d1a;
+      }
+      .easel::before { left: 16%; transform: rotate(8deg); }
+      .easel::after  { right: 16%; transform: rotate(-8deg); }
+      .board {
+        width: 100%; height: 100%;
+        background:
+          linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+          radial-gradient(ellipse at 50% 30%, #14302d 0%, var(--board) 70%, #06181a 100%);
+        background-size: 30px 30px, 30px 30px, 100% 100%;
+        border-radius: 8px; position: relative; overflow: hidden;
+        box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+      }
+      .board svg { width: 100%; height: 100%; display: block; transition: opacity 0.3s; }
+      .stroke-soft { filter: drop-shadow(0 0 1.5px rgba(255,255,255,0.4)); }
+
+      /* Reveal plaque + sparkles, toggled by clicking anywhere */
+      .reveal, .spark { display: none; }
+      body.revealed .board svg { opacity: 0.35; }
+      body.revealed .spark { display: block; }
+      body.revealed .reveal { display: grid; }
+      .reveal {
+        position: absolute; left: 50%; bottom: 9%; z-index: 5;
+        transform: translateX(-50%);
+        min-width: 62%;
+        background: linear-gradient(180deg, #2a4d1f 0%, #0e2a14 100%);
+        border: 3px solid var(--green);
+        border-radius: 16px;
+        padding: clamp(1rem, 1.6vw, 1.6rem) clamp(1.5rem, 2.5vw, 2.5rem);
+        box-shadow: 0 0 60px rgba(47,184,108,0.35), 0 12px 28px rgba(0,0,0,0.55);
+        grid-template-columns: auto 1fr auto;
+        align-items: center; gap: clamp(1rem, 2vw, 2rem);
+        animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      }
+      @keyframes pop {
+        0% { transform: translate(-50%, 12px) scale(0.92); opacity: 0; }
+        100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+      }
+      .reveal .check {
+        font-size: clamp(2.6rem, 4vw, 4rem); font-weight: 900;
+        color: var(--green); line-height: 1;
+        text-shadow: 0 0 24px rgba(47,184,108,0.6);
+      }
+      .reveal .text {
+        font-family: "Georgia", serif; font-weight: 700; font-style: italic;
+        font-size: clamp(2rem, 3.4vw, 3.4rem); line-height: 1;
+      }
+      .reveal .text .lbl {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-style: normal; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.32em;
+        font-size: clamp(0.7rem, 0.95vw, 0.95rem);
+        color: var(--green); margin-bottom: 0.3rem;
+      }
+      .reveal .award { text-align: right; font-family: ui-monospace, monospace; }
+      .reveal .award .pts {
+        font-size: clamp(2.4rem, 3.6vw, 3.6rem); font-weight: 900;
+        color: var(--gold); line-height: 1;
+        text-shadow: 0 0 18px rgba(251,191,36,0.5);
+      }
+      .reveal .award .for {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        text-transform: uppercase; letter-spacing: 0.28em;
+        font-size: clamp(0.7rem, 0.9vw, 0.9rem);
+        color: var(--muted); font-weight: 700; margin-top: 0.3rem;
+      }
+      .spark {
+        position: absolute; z-index: 4;
+        font-size: 1.3rem; color: var(--gold); opacity: 0.85;
+        text-shadow: 0 0 10px var(--gold);
+        animation: twinkle 1.4s ease-in-out infinite;
+      }
+      .spark.s1 { top: 8%; left: 12%; animation-delay: 0s; }
+      .spark.s2 { top: 16%; right: 14%; animation-delay: 0.3s; }
+      .spark.s3 { top: 26%; left: 28%; animation-delay: 0.6s; }
+      .spark.s4 { top: 10%; right: 32%; animation-delay: 0.9s; }
+      @keyframes twinkle {
+        0%,100% { transform: scale(0.7); opacity: 0.4; }
+        50% { transform: scale(1.1); opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="spotlight"></div>
+      <div class="chip team">Team Heat<span class="pts">+2 pending</span></div>
+      <div class="chip timer"><span class="lbl">Turn</span>1:24</div>
+      <div class="chip status">Team Heat is drawing…</div>
+
+      <div class="easel">
+        <div class="board">
+          <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+            <g class="stroke-soft">
+              <path d="M 250 180 L 950 180 L 600 700 Z"
+                    stroke="#f3eee2" stroke-width="10" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M 270 180 Q 290 150 320 180 Q 350 150 380 180 Q 410 150 440 180 Q 470 150 500 180 Q 530 150 560 180 Q 590 150 620 180 Q 650 150 680 180 Q 710 150 740 180 Q 770 150 800 180 Q 830 150 860 180 Q 890 150 920 180"
+                    stroke="#fbbf24" stroke-width="12" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="480" cy="290" r="34" stroke="#ef4444" stroke-width="9" fill="none" />
+              <circle cx="700" cy="320" r="34" stroke="#ef4444" stroke-width="9" fill="none" />
+              <circle cx="560" cy="450" r="34" stroke="#ef4444" stroke-width="9" fill="none" />
+              <path d="M 720 470 a 34 34 0 1 1 -10 -30"
+                    stroke="#ef4444" stroke-width="9" fill="none" stroke-linecap="round" />
+            </g>
+          </svg>
+          <span class="spark s1">✦</span>
+          <span class="spark s2">✦</span>
+          <span class="spark s3">✧</span>
+          <span class="spark s4">✧</span>
+          <div class="reveal">
+            <span class="check">✓</span>
+            <div class="text">
+              <span class="lbl">The answer was</span>
+              Pizza slice
+            </div>
+            <div class="award">
+              <span class="pts">+1</span>
+              <span class="for">Team Heat</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("click", () => {
+        document.body.classList.toggle("revealed");
+      });
+    </script>
+  </body>
+</html>

@@ -116,6 +116,61 @@ Timer must be the most visually dominant element during EATING.
 -   Team-turn context in these phases is active-team only (no turn-progress label).
 -   Display context is informational only; it must not expose host-only answer data.
 
+## 2.4 GEO Minigame Surface Language ("Field Journal")
+
+The GEO minigame's host and display surfaces use a vintage-expedition
+"Field Journal" look, distinct from the broadcast shell that frames them:
+
+-   Serif typography throughout GEO surfaces (Tailwind `font-serif`);
+    hints render as italic quoted field notes.
+-   `gold` is permitted on GEO surfaces as the dossier framing accent
+    (double-rule frames, header rules, postmark, points seal). This is a
+    scoped exception to the §0.1 "winner moments only" rule; outside GEO
+    surfaces the §0.1 rule stands.
+-   `primary` is the rubber-stamp accent (distance "off course" stamp).
+    Together with gold that is the 2-accent budget; no heat/team tokens
+    inside GEO surfaces.
+-   Photos and reveal maps sit in white-bordered, slightly rotated
+    postcard/polaroid frames. Map tiles are sepia-filtered to match.
+-   Reveal stats are stamps, not stat cards: rotated bordered distance
+    stamp + circular gold points seal.
+
+## 2.5 DRAWING Minigame Surface Language ("Showtime Easel")
+
+The DRAWING surfaces follow the "Showtime Easel" prototype direction
+(`apps/client/public/mockups/drawing-host/05-easel-deck.html` and
+`drawing-display/06-easel-grand.html`): a wood-framed chalkboard easel
+under game-show marquee chrome.
+
+-   Materials: easel wood gradient (`#5A3318` → `#2C1808`, edge
+    `#6A3D1A`), chalkboard board (`#0E2624` family with a faint 30px
+    grid), marquee/prompt-card panels (`#3A1D09` → `#1A0C04` behind a
+    `gold` border). These are scoped material colors for DRAWING
+    surfaces only.
+-   `gold` is the marquee/framing accent (prompt card, bulb-dotted
+    marquee, pending-points chips, palette frame) — a scoped exception
+    to the §0.1 "winner moments only" rule, like GEO's §2.4 exception.
+-   Verdict controls are green/red gradient buttons with check/cross
+    icons (host) and matching reveal plaques (display) — functional
+    success/danger usage per §0.1.
+-   Host layout reuses the §2.0A shell language: mini-rail strip on top,
+    full-height easel canvas left, control deck column right (prompt
+    card → Correct/Nope verdicts → undo/clear/skip row → palette grid).
+    No control overlaps the drawing canvas.
+-   Display layout: grand bulb marquee (team, "Live Sketch" title,
+    pending points), easel with splayed legs, status line beneath.
+-   Ink palette is drawing content, not UI chrome, and is exempt from
+    the 2-accent budget: chalk `#F3EEE2`, plus `#F97316` (primary),
+    `#EF4444` (heat), `#FBBF24` (gold), `#06B6D4` (teamB), `#84CC16`
+    (teamC). Strokes render with a soft same-color glow.
+-   Both canvases keep a fixed 16:10 aspect ratio (JS letterbox fit, not
+    CSS `aspect-ratio`) so normalized strokes render identically on
+    tablet and TV.
+-   The TV canvas is read-only and answer-safe: prompt text appears only
+    in the post-result reveal plaque. During the reveal the display
+    holds the finished sketch on the board, dimmed, until the reveal
+    window expires.
+
 ------------------------------------------------------------------------
 
 # 3) Layout System
