@@ -3,7 +3,12 @@ export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export type {
   DrawingMinigameDisplayView,
+  DrawingMinigameHostPrompt,
   DrawingMinigameHostView,
+  DrawingPoint,
+  DrawingPromptOutcome,
+  DrawingPromptReveal,
+  DrawingStroke,
   DisplayRoomStateSnapshot,
   GeoGuessCoordinates,
   GeoMinigameDisplayPrompt,
@@ -73,6 +78,14 @@ export type {
   TeamsContentEntry,
   TeamsContentFile
 } from "./content/teams/index.js";
+export {
+  isDrawingContentFile,
+  isDrawingPrompt
+} from "./content/drawing/index.js";
+export type {
+  DrawingContentFile,
+  DrawingPrompt
+} from "./content/drawing/index.js";
 export {
   isGeoContentFile,
   isGeoCoordinates,

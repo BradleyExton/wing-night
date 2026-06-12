@@ -1,3 +1,4 @@
+import type { DrawingPrompt } from "../content/drawing/index.js";
 import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
@@ -22,7 +23,15 @@ export const MINIGAME_ACTION_TYPES = {
   TRIVIA_RECORD_ATTEMPT: "recordAttempt",
   GEO_SET_GUESS: "setGuess",
   GEO_SUBMIT_GUESS: "submitGuess",
-  GEO_NEXT_PROMPT: "nextPrompt"
+  GEO_NEXT_PROMPT: "nextPrompt",
+  DRAWING_BEGIN_STROKE: "beginStroke",
+  DRAWING_APPEND_STROKE_POINTS: "appendStrokePoints",
+  DRAWING_END_STROKE: "endStroke",
+  DRAWING_UNDO_STROKE: "undoStroke",
+  DRAWING_CLEAR_CANVAS: "clearCanvas",
+  DRAWING_MARK_CORRECT: "markCorrect",
+  DRAWING_MARK_INCORRECT: "markIncorrect",
+  DRAWING_SKIP_PROMPT: "skipPrompt"
 } as const;
 
 export type MinigameContractCompatibilityStatus = "COMPATIBLE" | "MISMATCH";
@@ -44,13 +53,6 @@ type MinigameViewMetadata = {
   capabilityFlags?: string[];
   compatibilityStatus?: MinigameContractCompatibilityStatus;
   compatibilityMessage?: string | null;
-};
-
-// Only unsupported (stub) minigames carry these fields; supported minigames
-// own their view shape entirely (GEO uses `status` as its own discriminant).
-type UnsupportedMinigameViewFields = {
-  status?: "UNSUPPORTED";
-  message?: string;
 };
 
 type MinigameHostViewBase = MinigameViewMetadata & {
@@ -127,10 +129,42 @@ export type GeoMinigameDisplayView = MinigameDisplayViewBase & {
     | { status: "submitted"; result: GeoMinigameDisplayResult }
   );
 
-export type DrawingMinigameHostView = MinigameHostViewBase &
-  UnsupportedMinigameViewFields & {
-    minigame: "DRAWING";
-  };
+export type DrawingPoint = {
+  // Normalized 0–1 coordinates; the capture surface and the display canvas
+  // each scale to their own pixel dimensions.
+  x: number;
+  y: number;
+  t: number;
+};
+
+export type DrawingStroke = {
+  strokeId: string;
+  points: DrawingPoint[];
+  color: string;
+  // Brush size normalized against canvas height, like point coordinates.
+  size: number;
+};
+
+export type DrawingPromptOutcome = "CORRECT" | "INCORRECT";
+
+export type DrawingPromptReveal = {
+  promptId: string;
+  promptText: string;
+  outcome: DrawingPromptOutcome;
+  revealedAtMs: number;
+  expiresAtMs: number;
+};
+
+export type DrawingMinigameHostPrompt = Pick<DrawingPrompt, "id" | "prompt">;
+
+export type DrawingMinigameHostView = MinigameHostViewBase & {
+  minigame: "DRAWING";
+  promptCursor: number;
+  currentPrompt: DrawingMinigameHostPrompt | null;
+  strokes: DrawingStroke[];
+  activeStrokeId: string | null;
+  reveal: DrawingPromptReveal | null;
+};
 
 export type MinigameHostView =
   | TriviaMinigameHostView
@@ -143,10 +177,13 @@ export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
   currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
 };
 
-export type DrawingMinigameDisplayView = MinigameDisplayViewBase &
-  UnsupportedMinigameViewFields & {
-    minigame: "DRAWING";
-  };
+// Answer-safe: the display never receives the current prompt; prompt text
+// only appears via `reveal` after the tablet resolves the prompt.
+export type DrawingMinigameDisplayView = MinigameDisplayViewBase & {
+  minigame: "DRAWING";
+  strokes: DrawingStroke[];
+  reveal: DrawingPromptReveal | null;
+};
 
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView

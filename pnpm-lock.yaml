@@ -155,6 +155,9 @@ importers:
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
+      perfect-freehand:
+        specifier: ^1.2.2
+        version: 1.2.3
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1525,6 +1528,9 @@ packages:
 
   path-to-regexp@0.1.12:
     resolution: {integrity: sha512-RA1GjUVMnvYFxuqovrEqZoxxW5NUZqbwKtYz/Tt7nXerk0LbLblQmrsgdeOxV5SFHf0UDggjS/bSeOZwt1pmEQ==}
+
+  perfect-freehand@1.2.3:
+    resolution: {integrity: sha512-bHZSfqDHGNlPpgH2yxXgPHlQSPpEbo+qg7li0M78J9vNAi2yjwLeA4x79BEQhX44lEWpCLSFCeRZwpw0niiXPA==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -3089,6 +3095,8 @@ snapshots:
   path-parse@1.0.7: {}
 
   path-to-regexp@0.1.12: {}
+
+  perfect-freehand@1.2.3: {}
 
   picocolors@1.1.1: {}
 

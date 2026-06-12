@@ -31,7 +31,8 @@
   },
   "dependencies": {
     "@wingnight/minigames-core": "workspace:*",
-    "@wingnight/shared": "workspace:*"
+    "@wingnight/shared": "workspace:*",
+    "perfect-freehand": "^1.2.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

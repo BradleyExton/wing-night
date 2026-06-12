@@ -78,7 +78,16 @@ export const MINIGAME_DEFINITIONS = {
     rulesKey: null,
     contractMetadata: {
       minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: []
+      capabilityFlags: [
+        "beginStroke",
+        "appendStrokePoints",
+        "endStroke",
+        "undoStroke",
+        "clearCanvas",
+        "markCorrect",
+        "markIncorrect",
+        "skipPrompt"
+      ]
     }
   }
 } as const satisfies Record<string, MinigameDefinition>;
