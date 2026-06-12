@@ -32,26 +32,28 @@ const resolveActiveTeamName = ({
   return activeTeamName ?? hostGeoSurfaceCopy.noAssignedTeamLabel;
 };
 
-const GeoPromptCard = ({
+const GeoPromptRow = ({
   currentPrompt
 }: {
   currentPrompt: NonNullable<GeoMinigameHostView["currentPrompt"]>;
 }): JSX.Element => {
   return (
-    <div className={styles.promptShell}>
-      <img
-        className={styles.promptImage}
-        src={currentPrompt.imageSrc}
-        alt={currentPrompt.title}
-      />
-      <div className={styles.promptBody}>
-        <p className={styles.promptTitle}>{currentPrompt.title}</p>
-        {currentPrompt.hint !== undefined && (
+    <div className={styles.promptRow}>
+      <div className={styles.polaroid}>
+        <img
+          className={styles.polaroidPhoto}
+          src={currentPrompt.imageSrc}
+          alt={currentPrompt.title}
+        />
+        <p className={styles.polaroidCaption}>{currentPrompt.title}</p>
+      </div>
+      {currentPrompt.hint !== undefined && (
+        <div className={styles.promptDetails}>
           <p className={styles.promptHint}>
             {hostGeoSurfaceCopy.hintLabel(currentPrompt.hint)}
           </p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -70,7 +72,7 @@ const GeoGuessSection = ({
 
   return (
     <>
-      <div className={styles.mapShell}>
+      <div className={styles.mapFrame}>
         {isBrowser ? (
           <Suspense fallback={mapFallback}>
             <GeoGuessMap
@@ -128,39 +130,26 @@ export const HostGeoSurface = ({
 
   return (
     <div className={styles.container}>
-      <div>
-        <p className={styles.description}>
-          {isPlayPhase
-            ? hostGeoSurfaceCopy.playDescription
-            : hostGeoSurfaceCopy.introDescription}
-        </p>
-        <div className={styles.meta}>
-          <div className={styles.metaBlock}>
-            <p className={styles.metaLabel}>
-              {hostGeoSurfaceCopy.activeTeamMetaLabel}
-            </p>
-            <p className={styles.metaValue}>{resolvedActiveTeamName}</p>
-          </div>
-          {isPlayPhase && promptsPerTurn > 0 && (
-            <div className={styles.metaBlock}>
-              <p className={styles.metaLabel}>
-                {hostGeoSurfaceCopy.promptProgressMetaLabel}
-              </p>
-              <p className={styles.metaValue}>
-                {hostGeoSurfaceCopy.promptProgressLabel(
-                  promptNumber,
-                  promptsPerTurn
-                )}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+      <header className={styles.header}>
+        <p className={styles.headerTitle}>{hostGeoSurfaceCopy.logTitle}</p>
+        {isPlayPhase && promptsPerTurn > 0 && (
+          <p className={styles.headerMeta}>
+            {hostGeoSurfaceCopy.exhibitLabel(promptNumber, promptsPerTurn)}
+          </p>
+        )}
+      </header>
+      <p className={styles.teamLine}>
+        {hostGeoSurfaceCopy.teamPrefix}
+        <span className={styles.teamName}>{resolvedActiveTeamName}</span>
+      </p>
+      {!isPlayPhase && (
+        <p className={styles.statusNote}>{hostGeoSurfaceCopy.introDescription}</p>
+      )}
       {isPlayPhase && currentPrompt === null && (
         <p className={styles.statusNote}>{hostGeoSurfaceCopy.waitingPromptLabel}</p>
       )}
       {isPlayPhase && currentPrompt !== null && (
-        <GeoPromptCard currentPrompt={currentPrompt} />
+        <GeoPromptRow currentPrompt={currentPrompt} />
       )}
       {shouldRenderGuessSection && geoHostView !== null && (
         <GeoGuessSection
@@ -170,27 +159,20 @@ export const HostGeoSurface = ({
         />
       )}
       {isPlayPhase && isSubmitted && geoHostView?.lastResult != null && (
-        <div className={styles.resultCard}>
-          <div className={styles.resultBlock}>
-            <p className={styles.resultLabel}>
-              {hostGeoSurfaceCopy.resultDistanceLabel}
-            </p>
-            <p className={styles.resultValue}>
-              {hostGeoSurfaceCopy.resultDistanceValue(
-                geoHostView.lastResult.distanceKm
-              )}
-            </p>
-          </div>
-          <div className={styles.resultBlock}>
-            <p className={styles.resultLabel}>
-              {hostGeoSurfaceCopy.resultPointsLabel}
-            </p>
-            <p className={styles.resultValue}>
-              {hostGeoSurfaceCopy.resultPointsValue(
+        <div className={styles.resultRow}>
+          <span className={styles.distanceStamp}>
+            {hostGeoSurfaceCopy.distanceStamp(geoHostView.lastResult.distanceKm)}
+          </span>
+          <span className={styles.pointsSeal}>
+            <span className={styles.pointsSealValue}>
+              {hostGeoSurfaceCopy.pointsSealValue(
                 geoHostView.lastResult.pointsAwarded
               )}
-            </p>
-          </div>
+            </span>
+            <span className={styles.pointsSealLabel}>
+              {hostGeoSurfaceCopy.pointsSealLabel}
+            </span>
+          </span>
         </div>
       )}
       {isPlayPhase && isSubmitted && !isTurnComplete && (

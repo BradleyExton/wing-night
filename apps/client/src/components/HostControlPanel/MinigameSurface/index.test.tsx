@@ -97,9 +97,9 @@ test("renders GEO guessing surface for configured geo minigame", () => {
   );
 
   assert.match(html, /Eiffel Tower/);
-  assert.match(html, /1 of 3/);
-  assert.match(html, /Hint: Iron lady of a European capital/);
-  assert.match(html, /Submit Guess/);
+  assert.match(html, /Exhibit 1 of 3/);
+  assert.match(html, /“Iron lady of a European capital”/);
+  assert.match(html, /Stamp the Guess/);
 });
 
 test("renders GEO result card after a submitted guess", () => {
@@ -141,9 +141,9 @@ test("renders GEO result card after a submitted guess", () => {
     />
   );
 
-  assert.match(html, /7\.7 km away/);
-  assert.match(html, /\+2 points/);
-  assert.match(html, /Next Prompt/);
+  assert.match(html, /7\.7 km off course/);
+  assert.match(html, /\+2/);
+  assert.match(html, /Turn the Page/);
 });
 
 test("renders intro surface for configured trivia minigame", () => {

@@ -222,7 +222,7 @@ test("renders GEO waiting state in MINIGAME_PLAY before the projected view arriv
     />
   );
 
-  assert.match(html, /Waiting for the next location/);
+  assert.match(html, /Awaiting the next dispatch from the field/);
 });
 
 test("renders GEO guessing surface without leaking answer coordinates", () => {
@@ -254,8 +254,8 @@ test("renders GEO guessing surface without leaking answer coordinates", () => {
   );
 
   assert.match(html, /Eiffel Tower/);
-  assert.match(html, /Hint: Iron lady of a European capital/);
-  assert.match(html, /is placing their guess/);
+  assert.match(html, /“Iron lady of a European capital”/);
+  assert.match(html, /expedition is plotting coordinates/);
   assert.doesNotMatch(html, /48\.85837/);
   assert.doesNotMatch(html, /answerLat/);
 });
@@ -296,8 +296,8 @@ test("renders GEO reveal stats after the guess is submitted", () => {
   );
 
   assert.match(html, /Eiffel Tower/);
-  assert.match(html, /7\.7 km/);
-  assert.match(html, /\+2 points/);
+  assert.match(html, /7\.7 km off course/);
+  assert.match(html, /\+2/);
 });
 
 test("renders active team and round meta during eating", () => {

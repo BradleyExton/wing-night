@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-import { ensureSetupPhase, lockTeamsFromSetup, startGameFromIntro } from "./hostShell";
+import {
+  ensureSetupPhase,
+  lockTeamsFromSetup,
+  openOverridesPanelButton,
+  startGameFromIntro
+} from "./hostShell";
 
 test("override dock score updates sync to display and panel closes on escape/scrim", async ({
   browser
@@ -16,7 +21,7 @@ test("override dock score updates sync to display and panel closes on escape/scr
   await lockTeamsFromSetup(hostPage);
   await startGameFromIntro(hostPage);
 
-  await hostPage.getByRole("button", { name: "Open overrides panel" }).click();
+  await openOverridesPanelButton(hostPage).click();
   await expect(hostPage.getByRole("dialog")).toHaveCount(1);
 
   await hostPage
@@ -34,12 +39,10 @@ test("override dock score updates sync to display and panel closes on escape/scr
 
   await hostPage.keyboard.press("Escape");
   await expect(hostPage.getByRole("dialog")).toHaveCount(0);
-  await expect(
-    hostPage.getByRole("button", { name: "Open overrides panel" })
-  ).toBeVisible();
+  await expect(openOverridesPanelButton(hostPage)).toBeVisible();
 
   await hostPage.setViewportSize({ width: 390, height: 844 });
-  await hostPage.getByRole("button", { name: "Open overrides panel" }).click();
+  await openOverridesPanelButton(hostPage).click();
   await expect(hostPage.getByRole("dialog")).toHaveCount(1);
 
   const scrimDismissButton = hostPage
