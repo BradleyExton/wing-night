@@ -72,8 +72,8 @@ packages/
   shared/                         # Shared types, schemas, socket contracts
   minigames/core/                 # Generic minigame contract
   minigames/trivia/               # Trivia runtime + host/display renderer + sandbox scenarios
-  minigames/geo/                  # GEO unsupported renderer/runtime scaffold
-  minigames/drawing/              # DRAWING unsupported renderer/runtime scaffold
+  minigames/geo/                  # GEO runtime + host/display renderer + sample content
+  minigames/drawing/              # DRAWING runtime + host/display renderer + sample content
 
 content/
   sample/                         # Safe, committed sample content

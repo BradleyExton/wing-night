@@ -2,7 +2,7 @@
 
 Index of every minigame — shipped, building, spec'd, or still just a sketch.
 
-Last updated: 2026-06-11
+Last updated: 2026-06-25
 
 ## Stages
 
@@ -16,12 +16,13 @@ Last updated: 2026-06-11
 | Game | Stage | Confidence | Doc |
 |---|---|---|---|
 | Trivia | shipped | — | [packages/minigames/trivia/](../../packages/minigames/trivia/) |
-| Drawing | spec | ready | [drawing-spec.md](drawing-spec.md) |
 | Geo | shipped | — | [packages/minigames/geo/](../../packages/minigames/geo/) ([spec](geo-spec.md)) |
+| Drawing | shipped | — | [packages/minigames/drawing/](../../packages/minigames/drawing/) ([spec](drawing-spec.md)) |
 | Who's That Song | spec | ready | [song-guess-spec.md](song-guess-spec.md) |
 | Emoji Charades | spec | ready | [emoji-charades-spec.md](emoji-charades-spec.md) |
+| PETMON | spec | ready | [petmon-design.md](../petmon-design.md) (design + mockups; runtime not started) |
 
-Target: **at least 8 games**. Current: 2 shipped, 3 spec'd → need ~3 more concepts.
+Target: **at least 8 games**. Current: 3 shipped, 3 spec'd → need ~2 more concepts.
 
 ## Adding an idea
 
