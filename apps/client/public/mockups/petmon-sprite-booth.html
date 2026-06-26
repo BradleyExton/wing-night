@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PETMON Sprite Booth — photo → Game Boy sprite</title>
+    <style>
+      :root {
+        --bg: #121212;
+        --surface: #1c1c1c;
+        --surface-alt: #242424;
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --dmg-0: #0f380f;
+        --dmg-1: #306230;
+        --dmg-2: #8bac0f;
+        --dmg-3: #9bbc0f;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; min-height: 100dvh; background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main { max-width: 1060px; margin: 0 auto; padding: 2.5rem 2rem 4rem; }
+      h1 { font-size: clamp(1.6rem, 3vw, 2.4rem); margin: 0 0 0.4rem; }
+      p.lede { color: var(--muted); margin: 0 0 1.8rem; line-height: 1.5; }
+      .booth { display: grid; grid-template-columns: 1fr 320px; gap: 1.4rem; align-items: start; }
+
+      .drop {
+        position: relative; border: 2px dashed #3a3a3a; border-radius: 14px;
+        background: var(--surface); min-height: 430px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 1.2rem; padding: 1.4rem; text-align: center;
+      }
+      .drop.armed { border-color: var(--primary); }
+      .drop .hint { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+      .drop input[type="file"] { display: none; }
+      .pickbtn {
+        background: var(--primary); color: #1a0f04; border: 0; border-radius: 10px;
+        font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        padding: 0.8rem 1.4rem; font-size: 0.9rem; cursor: pointer;
+      }
+      .previews { display: none; gap: 1.6rem; align-items: center; justify-content: center; flex-wrap: wrap; }
+      .booth.loaded .previews { display: flex; }
+      .booth.loaded .hint, .booth.loaded .pickbtn.initial { display: none; }
+      .stagecard { text-align: center; }
+      .stagecard .lbl {
+        color: var(--muted); font-size: 0.7rem; font-weight: 700;
+        letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.6rem;
+      }
+      .screenbg {
+        background: var(--dmg-3); border-radius: 10px; padding: 1.2rem;
+        box-shadow: inset 0 0 0 3px var(--dmg-0);
+      }
+      #big { width: 280px; height: 280px; image-rendering: pixelated; display: block; }
+      #small { width: 112px; height: 112px; image-rendering: pixelated; display: block; }
+
+      .panel {
+        background: var(--surface); border: 1px solid #333; border-radius: 14px;
+        padding: 1.2rem 1.3rem; display: flex; flex-direction: column; gap: 0.9rem;
+      }
+      .panel h2 {
+        font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--muted); margin: 0;
+      }
+      label.ctl { display: block; font-size: 0.82rem; color: var(--muted); }
+      label.ctl .val { float: right; color: var(--text); font-variant-numeric: tabular-nums; }
+      input[type="range"] { width: 100%; accent-color: var(--primary); margin-top: 0.3rem; }
+      .row { display: flex; gap: 0.7rem; align-items: center; }
+      select, input[type="text"] {
+        background: var(--surface-alt); color: var(--text); border: 1px solid #3a3a3a;
+        border-radius: 8px; padding: 0.5rem 0.6rem; font-size: 0.9rem; width: 100%;
+      }
+      .check { display: flex; gap: 0.6rem; align-items: center; font-size: 0.85rem; color: var(--muted); }
+      .check input { accent-color: var(--primary); }
+      .dl {
+        background: var(--primary); color: #1a0f04; border: 0; border-radius: 10px;
+        font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        padding: 0.85rem; font-size: 0.9rem; cursor: pointer; width: 100%;
+      }
+      .dl:disabled { background: var(--surface-alt); color: #555; cursor: default; }
+      .swap { background: none; border: 1px solid #3a3a3a; color: var(--muted);
+        border-radius: 8px; padding: 0.5rem 0.8rem; font-size: 0.8rem; cursor: pointer; }
+      .note { color: var(--muted); font-size: 0.78rem; line-height: 1.5; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>PETMON Sprite Booth</h1>
+      <p class="lede">
+        Drop a pet photo or friend headshot, frame it, download a dithered
+        Game Boy sprite PNG. Everything runs in this page — nothing is uploaded
+        anywhere. Save results to
+        <code>apps/client/public/local-assets/petmon/</code> (gitignored).
+      </p>
+
+      <div class="booth" id="booth">
+        <div class="drop" id="drop">
+          <p class="hint">
+            Drag &amp; drop an image here, paste from the clipboard,<br />
+            or pick a file. Square-ish crops work best.
+          </p>
+          <button class="pickbtn initial" id="pick">Choose a photo</button>
+          <input type="file" id="file" accept="image/*" />
+          <div class="previews">
+            <div class="stagecard">
+              <div class="lbl">Sprite</div>
+              <div class="screenbg"><canvas id="big"></canvas></div>
+            </div>
+            <div class="stagecard">
+              <div class="lbl">At battle scale</div>
+              <div class="screenbg"><canvas id="small"></canvas></div>
+            </div>
+            <button class="swap" id="swapBtn">Load a different photo</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Controls</h2>
+          <div class="row">
+            <label class="ctl" style="flex: 1">Sprite size
+              <select id="size">
+                <option value="64">64 × 64 (chunky, classic sprite)</option>
+                <option value="96" selected>96 × 96 (pet front)</option>
+                <option value="128">128 × 128 (pet back, GB Camera res)</option>
+                <option value="160">160 × 160 (gym leader portrait)</option>
+              </select>
+            </label>
+          </div>
+          <label class="ctl">Zoom <span class="val" id="zoomV">1.0×</span>
+            <input type="range" id="zoom" min="100" max="300" value="100" />
+          </label>
+          <label class="ctl">Pan X <span class="val" id="panxV">0</span>
+            <input type="range" id="panx" min="-50" max="50" value="0" />
+          </label>
+          <label class="ctl">Pan Y <span class="val" id="panyV">0</span>
+            <input type="range" id="pany" min="-50" max="50" value="0" />
+          </label>
+          <label class="ctl">Brightness <span class="val" id="brightV">0</span>
+            <input type="range" id="bright" min="-80" max="80" value="0" />
+          </label>
+          <label class="ctl">Contrast <span class="val" id="contrastV">1.2</span>
+            <input type="range" id="contrast" min="50" max="250" value="120" />
+          </label>
+          <label class="ctl">Dither <span class="val" id="ditherV">0.55</span>
+            <input type="range" id="dither" min="0" max="100" value="55" />
+          </label>
+          <div class="check">
+            <input type="checkbox" id="knockout" />
+            <label for="knockout">Lightest shade → transparent (light backgrounds)</label>
+          </div>
+          <label class="ctl">File name
+            <input type="text" id="fname" value="pet-front" spellcheck="false" />
+          </label>
+          <button class="dl" id="download" disabled>Download PNG</button>
+          <p class="note">
+            Tip: crop tight on the face, then push contrast until the dither
+            pattern shows clear darks and lights. Generate front + back per
+            pet, front only per gym leader.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const DMG = ["#0f380f", "#306230", "#8bac0f", "#9bbc0f"];
+      const DMG_RGB = DMG.map((hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
+      const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+
+      const $ = (id) => document.getElementById(id);
+      const booth = $("booth"), drop = $("drop");
+      const big = $("big"), small = $("small");
+      const out = document.createElement("canvas"); // true-size sprite for download
+
+      let source = null; // HTMLImageElement
+
+      const params = () => ({
+        size: +$("size").value,
+        zoom: +$("zoom").value / 100,
+        panx: +$("panx").value / 100,
+        pany: +$("pany").value / 100,
+        bright: +$("bright").value / 255,
+        contrast: +$("contrast").value / 100,
+        dither: +$("dither").value / 100,
+        knockout: $("knockout").checked
+      });
+
+      function render() {
+        if (!source) return;
+        const p = params();
+        out.width = out.height = p.size;
+        const g = out.getContext("2d", { willReadFrequently: true });
+        g.clearRect(0, 0, p.size, p.size);
+
+        // cover-crop with zoom + pan
+        const cover = Math.max(p.size / source.width, p.size / source.height) * p.zoom;
+        const w = source.width * cover, h = source.height * cover;
+        g.drawImage(source, (p.size - w) / 2 + p.panx * p.size, (p.size - h) / 2 + p.pany * p.size, w, h);
+
+        const img = g.getImageData(0, 0, p.size, p.size);
+        const d = img.data;
+        for (let y = 0; y < p.size; y++) {
+          for (let x = 0; x < p.size; x++) {
+            const i = (y * p.size + x) * 4;
+            if (d[i + 3] < 120) { d[i + 3] = 0; continue; }
+            let lum = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255;
+            lum = (lum - 0.5) * p.contrast + 0.5 + p.bright;
+            const noise = (BAYER[y % 4][x % 4] / 16 - 0.5) * p.dither;
+            const level = Math.max(0, Math.min(3, Math.floor((lum + noise) * 4)));
+            if (level === 3 && p.knockout) { d[i + 3] = 0; continue; }
+            const [r, gg, b] = DMG_RGB[level];
+            d[i] = r; d[i + 1] = gg; d[i + 2] = b; d[i + 3] = 255;
+          }
+        }
+        g.putImageData(img, 0, 0);
+
+        for (const view of [big, small]) {
+          view.width = view.height = p.size;
+          const vg = view.getContext("2d");
+          vg.imageSmoothingEnabled = false;
+          vg.clearRect(0, 0, p.size, p.size);
+          vg.drawImage(out, 0, 0);
+        }
+        $("download").disabled = false;
+      }
+
+      function loadBlobOrUrl(src) {
+        const img = new Image();
+        img.onload = () => {
+          source = img;
+          booth.classList.add("loaded");
+          render();
+        };
+        img.onerror = () => alert("Could not read that image.");
+        img.src = typeof src === "string" ? src : URL.createObjectURL(src);
+      }
+
+      // input wiring
+      $("pick").addEventListener("click", () => $("file").click());
+      $("swapBtn").addEventListener("click", () => $("file").click());
+      $("file").addEventListener("change", (e) => {
+        if (e.target.files[0]) loadBlobOrUrl(e.target.files[0]);
+      });
+      drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("armed"); });
+      drop.addEventListener("dragleave", () => drop.classList.remove("armed"));
+      drop.addEventListener("drop", (e) => {
+        e.preventDefault(); drop.classList.remove("armed");
+        const f = e.dataTransfer.files[0];
+        if (f && f.type.startsWith("image/")) loadBlobOrUrl(f);
+      });
+      window.addEventListener("paste", (e) => {
+        const item = [...e.clipboardData.items].find((it) => it.type.startsWith("image/"));
+        if (item) loadBlobOrUrl(item.getAsFile());
+      });
+
+      for (const id of ["size", "zoom", "panx", "pany", "bright", "contrast", "dither", "knockout"]) {
+        $(id).addEventListener("input", () => {
+          $("zoomV").textContent = (+$("zoom").value / 100).toFixed(1) + "×";
+          $("panxV").textContent = $("panx").value;
+          $("panyV").textContent = $("pany").value;
+          $("brightV").textContent = $("bright").value;
+          $("contrastV").textContent = (+$("contrast").value / 100).toFixed(1);
+          $("ditherV").textContent = (+$("dither").value / 100).toFixed(2);
+          render();
+        });
+      }
+
+      $("download").addEventListener("click", () => {
+        out.toBlob((blob) => {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = ($("fname").value || "sprite") + ".png";
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }, "image/png");
+      });
+
+      // dev convenience: ?src=/path/to/image loads straight away
+      const src = new URLSearchParams(location.search).get("src");
+      if (src) loadBlobOrUrl(src);
+    </script>
+  </body>
+</html>
