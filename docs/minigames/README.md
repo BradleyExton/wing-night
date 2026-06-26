@@ -21,8 +21,9 @@ Last updated: 2026-06-25
 | Who's That Song | spec | ready | [song-guess-spec.md](song-guess-spec.md) |
 | Emoji Charades | spec | ready | [emoji-charades-spec.md](emoji-charades-spec.md) |
 | PETMON | spec | ready | [petmon-design.md](../petmon-design.md) (design + mockups; runtime not started) |
+| Read the Room | idea | promising | [ideas/read-the-room.md](ideas/read-the-room.md) |
 
-Target: **at least 8 games**. Current: 3 shipped, 3 spec'd → need ~2 more concepts.
+Target: **at least 8 games**. Current: 3 shipped, 3 spec'd, 1 idea → need ~1 more concept.
 
 ## Adding an idea
 
