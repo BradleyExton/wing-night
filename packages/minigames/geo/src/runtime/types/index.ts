@@ -1,10 +1,11 @@
-import type {
-  GeoContentFile,
-  GeoPromptResult,
-  GeoScoreBand
-} from "@wingnight/shared";
+import type { GeoContentFile, GeoPromptResult } from "@wingnight/shared";
 
 export type GeoRuntimeContent = GeoContentFile;
+
+export type GeoScoreBand = {
+  maxKm: number;
+  points: number;
+};
 
 export type GeoRuntimeRules = {
   promptsPerTurn: number;

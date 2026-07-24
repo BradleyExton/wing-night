@@ -1,11 +1,16 @@
 import type { TriviaContentFile } from "@wingnight/shared";
 
-import type { TriviaMinigameState } from "../../index.js";
-
 export type TriviaRuntimeContent = TriviaContentFile;
 
 export type TriviaRuntimeRules = {
   questionsPerTurn: number;
+};
+
+export type TriviaMinigameState = {
+  turnOrderTeamIds: string[];
+  activeTurnIndex: number;
+  promptCursor: number;
+  pendingPointsByTeamId: Record<string, number>;
 };
 
 export type TriviaRuntimeState = {

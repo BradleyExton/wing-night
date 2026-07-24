@@ -20,7 +20,6 @@ export type {
   GeoPromptResult,
   HostRoomStateSnapshot,
   MinigameContractCompatibilityStatus,
-  MinigameContractMetadata,
   MinigameDisplayView,
   MinigameHostView,
   RoleScopedSnapshotByRole,
@@ -33,8 +32,6 @@ export type {
 } from "./roomState/index.js";
 export {
   DISPLAY_SAFE_ROOM_STATE_KEYS,
-  MINIGAME_ACTION_TYPES,
-  MINIGAME_CONTRACT_METADATA_BY_ID,
   toDisplayRoomStateSnapshot,
   toRoleScopedSnapshotEnvelope
 } from "./roomState/index.js";
@@ -52,15 +49,13 @@ export type {
   GameConfigRound,
   GameConfigScoring,
   GameConfigTimers,
-  GeoMinigameRules,
-  GeoScoreBand,
   MinigameContractMetadataDefaults,
   MinigameDefinition,
+  MinigameRuleRecord,
+  MinigameRules,
   MinigameRulesKey,
   MinigameTimerKey,
-  MinigameType,
-  MinigameRules,
-  TriviaMinigameRules
+  MinigameType
 } from "./content/gameConfig/index.js";
 export {
   isPlayersContentEntry,

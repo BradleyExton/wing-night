@@ -1,6 +1,5 @@
 import {
   type MinigameContractCompatibilityStatus,
-  type MinigameContractMetadata,
   type DisplayRoomStateSnapshot,
   type GeoMinigameDisplayView,
   type GeoMinigameHostView,
@@ -128,16 +127,6 @@ export type GeoGuessingDisplayViewHasNoResultCheck = Assert<
   IsAssignable<
     HasKey<Extract<GeoMinigameDisplayView, { status: "guessing" }>, "result">,
     false
-  >
->;
-
-export type ValidMinigameContractMetadataCheck = Assert<
-  IsAssignable<
-    {
-      minigameApiVersion: number;
-      capabilityFlags: string[];
-    },
-    MinigameContractMetadata
   >
 >;
 

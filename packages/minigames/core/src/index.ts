@@ -1,5 +1,4 @@
 import type {
-  MinigameApiVersion,
   MinigameDisplayView,
   MinigameHostView,
   MinigameType
@@ -14,60 +13,6 @@ export type SerializableValue =
   | { [key: string]: SerializableValue };
 
 export type SerializableRecord = { [key: string]: SerializableValue };
-
-type MinigameBaseInput<TContext extends SerializableValue> = {
-  teamIds: string[];
-  pointsMax: number;
-  context: TContext;
-};
-
-export type MinigameInitInput<TContext extends SerializableValue> =
-  MinigameBaseInput<TContext>;
-
-export type MinigameReduceInput<
-  TState extends SerializableValue,
-  TAction,
-  TContext extends SerializableValue
-> = MinigameBaseInput<TContext> & {
-  state: TState;
-  action: TAction;
-};
-
-export type MinigameSelectorInput<
-  TState extends SerializableValue,
-  TContext extends SerializableValue
-> = {
-  state: TState;
-  context: TContext;
-};
-
-export type MinigameModule<
-  TState extends SerializableValue,
-  TAction,
-  THostView extends SerializableValue,
-  TDisplayView extends SerializableValue,
-  TContext extends SerializableValue = SerializableRecord
-> = {
-  id: MinigameType;
-  metadata?: MinigamePluginMetadata;
-  init: (input: MinigameInitInput<TContext>) => TState;
-  reduce: (input: MinigameReduceInput<TState, TAction, TContext>) => TState;
-  selectHostView: (
-    input: MinigameSelectorInput<TState, TContext>
-  ) => THostView;
-  selectDisplayView: (
-    input: MinigameSelectorInput<TState, TContext>
-  ) => TDisplayView;
-};
-
-export type MinigamePluginMetadata = {
-  minigameApiVersion: MinigameApiVersion;
-  capabilities: {
-    supportsHostRenderer: boolean;
-    supportsDisplayRenderer: boolean;
-    supportsDevScenarios: boolean;
-  };
-};
 
 export type MinigameRuntimeActionEnvelope = {
   actionType: string;
@@ -123,8 +68,11 @@ export type MinigameRuntimeContentAdapter = {
 
 export type MinigameRuntimePlugin = {
   id: MinigameType;
-  metadata: MinigamePluginMetadata;
   content?: MinigameRuntimeContentAdapter;
+  // Optional config-load-time validation for this game's minigameRules block.
+  // The server content loader calls it (when defined) so invalid rules still
+  // fail fast at startup with a clear error.
+  isRules?: (value: unknown) => boolean;
   initialize: (input: MinigameRuntimeInitializationInput) => SerializableValue | null;
   reduceAction: (input: MinigameRuntimeReductionInput) => MinigameRuntimeReductionResult;
   syncPendingPoints?: (input: MinigameRuntimeSyncPendingPointsInput) => SerializableValue;
@@ -173,6 +121,131 @@ export type MinigameDevManifest = {
   pendingPointsByTeamId: Record<string, number>;
   rules: SerializableValue | null;
   content: SerializableValue | null;
+};
+
+export type CreateDevManifestInput = {
+  rules: SerializableValue | null;
+  content: SerializableValue | null;
+  pointsMax?: number;
+};
+
+// Standard two-team sandbox fixture shared by every minigame package; only
+// the game-specific rules/content (and optionally pointsMax) vary per game.
+export const createDevManifest = ({
+  rules,
+  content,
+  pointsMax = 15
+}: CreateDevManifestInput): MinigameDevManifest => {
+  return {
+    teamIds: ["team-alpha", "team-beta"],
+    teamNameByTeamId: {
+      "team-alpha": "Team Alpha",
+      "team-beta": "Team Beta"
+    },
+    activeRoundTeamId: "team-alpha",
+    pointsMax,
+    pendingPointsByTeamId: {
+      "team-alpha": 0,
+      "team-beta": 0
+    },
+    rules,
+    content
+  };
+};
+
+export type PromptContentFile<TPrompt> = {
+  prompts: TPrompt[];
+};
+
+export type PromptContentAdapter<TPrompt> = {
+  fileName: string;
+  clonePrompt: (prompt: TPrompt) => TPrompt;
+  parseFileContent: (
+    rawContent: string,
+    contentFilePath: string
+  ) => PromptContentFile<TPrompt>;
+  resolveContent: (
+    content: SerializableValue | null
+  ) => PromptContentFile<TPrompt>;
+};
+
+export type CreatePromptContentAdapterInput<TPrompt> = {
+  // Lowercase name used in error messages, e.g. "trivia".
+  label: string;
+  // Content file path relative to the content root, e.g. "minigames/trivia.json".
+  fileName: string;
+  // Shape hint appended to the invalid-content error, e.g.
+  // "expected { prompts: [{ id, question, answer }] }.".
+  invalidContentHint: string;
+  isContentFile: (value: unknown) => value is PromptContentFile<TPrompt>;
+  isPrompt: (value: unknown) => value is TPrompt;
+  clonePrompt: (prompt: TPrompt) => TPrompt;
+};
+
+// Shared prompt-bank content pipeline: strict parse (used by the server
+// content loader, throws with file context) plus a lenient resolve (used at
+// runtime, drops anything malformed).
+export const createPromptContentAdapter = <TPrompt>({
+  label,
+  fileName,
+  invalidContentHint,
+  isContentFile,
+  isPrompt,
+  clonePrompt
+}: CreatePromptContentAdapterInput<TPrompt>): PromptContentAdapter<TPrompt> => {
+  const parseFileContent = (
+    rawContent: string,
+    contentFilePath: string
+  ): PromptContentFile<TPrompt> => {
+    let parsedContent: unknown;
+
+    try {
+      parsedContent = JSON.parse(rawContent);
+    } catch (error) {
+      const parseReason = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to parse ${label} content at "${contentFilePath}": ${parseReason}`
+      );
+    }
+
+    if (!isContentFile(parsedContent)) {
+      throw new Error(
+        `Invalid ${label} content at "${contentFilePath}": ${invalidContentHint}`
+      );
+    }
+
+    return {
+      prompts: parsedContent.prompts.map(clonePrompt)
+    };
+  };
+
+  const resolveContent = (
+    content: SerializableValue | null
+  ): PromptContentFile<TPrompt> => {
+    if (typeof content !== "object" || content === null) {
+      return { prompts: [] };
+    }
+
+    if (!("prompts" in content) || !Array.isArray(content.prompts)) {
+      return { prompts: [] };
+    }
+
+    const candidatePrompts: unknown[] = content.prompts;
+    const prompts = candidatePrompts.filter((prompt): prompt is TPrompt => {
+      return isPrompt(prompt);
+    });
+
+    return {
+      prompts: prompts.map(clonePrompt)
+    };
+  };
+
+  return {
+    fileName,
+    clonePrompt,
+    parseFileContent,
+    resolveContent
+  };
 };
 
 const isSerializableRecord = (

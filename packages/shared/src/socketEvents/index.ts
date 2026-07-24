@@ -1,11 +1,12 @@
-import type { MinigameType } from "../content/gameConfig/index.js";
+import type { MinigameApiVersion, MinigameType } from "../content/gameConfig/index.js";
 import type {
   RoleScopedStateSnapshotEnvelope
 } from "../roomState/index.js";
 
+export { MINIGAME_API_VERSION } from "../content/gameConfig/index.js";
+export type { MinigameApiVersion } from "../content/gameConfig/index.js";
+
 export type HostSecretPayload = Record<"hostSecret", string>;
-export const MINIGAME_API_VERSION = 1 as const;
-export type MinigameApiVersion = typeof MINIGAME_API_VERSION;
 export type GameReorderTurnOrderPayload = HostSecretPayload &
   Record<"teamIds", string[]>;
 export type SetupCreateTeamPayload = HostSecretPayload & Record<"name", string>;

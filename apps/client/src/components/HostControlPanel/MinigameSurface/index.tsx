@@ -56,7 +56,9 @@ export const MinigameSurface = ({
     );
   }
 
-  if (phase === "play" && minigameType === "TRIVIA" && minigameHostView === null) {
+  // Minigame-agnostic loading state: during play the host view can be null
+  // for a beat while the server snapshot catches up after (re)connection.
+  if (phase === "play" && minigameHostView === null) {
     return (
       <section className={containerClassName}>
         <div className={styles.groupHead}>

@@ -2,7 +2,6 @@ import type { DrawingPrompt } from "../content/drawing/index.js";
 import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
-import { MINIGAME_DEFINITIONS } from "../content/gameConfig/index.js";
 import type { GeoPrompt } from "../content/geo/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { Phase } from "../phase/index.js";
@@ -19,33 +18,7 @@ export type RoomTimerState = {
   remainingMs: number;
 };
 
-export const MINIGAME_ACTION_TYPES = {
-  TRIVIA_RECORD_ATTEMPT: "recordAttempt",
-  GEO_SET_GUESS: "setGuess",
-  GEO_SUBMIT_GUESS: "submitGuess",
-  GEO_NEXT_PROMPT: "nextPrompt",
-  DRAWING_BEGIN_STROKE: "beginStroke",
-  DRAWING_APPEND_STROKE_POINTS: "appendStrokePoints",
-  DRAWING_END_STROKE: "endStroke",
-  DRAWING_UNDO_STROKE: "undoStroke",
-  DRAWING_CLEAR_CANVAS: "clearCanvas",
-  DRAWING_MARK_CORRECT: "markCorrect",
-  DRAWING_MARK_INCORRECT: "markIncorrect",
-  DRAWING_SKIP_PROMPT: "skipPrompt"
-} as const;
-
 export type MinigameContractCompatibilityStatus = "COMPATIBLE" | "MISMATCH";
-
-export type MinigameContractMetadata = {
-  minigameApiVersion: number;
-  capabilityFlags: readonly string[];
-};
-
-export const MINIGAME_CONTRACT_METADATA_BY_ID = {
-  TRIVIA: MINIGAME_DEFINITIONS.TRIVIA.contractMetadata,
-  GEO: MINIGAME_DEFINITIONS.GEO.contractMetadata,
-  DRAWING: MINIGAME_DEFINITIONS.DRAWING.contractMetadata
-} as const satisfies Record<MinigameType, MinigameContractMetadata>;
 
 type MinigameViewMetadata = {
   minigame: MinigameType;

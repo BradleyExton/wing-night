@@ -4,8 +4,7 @@ import type {
   GameConfigRound,
   GameConfigScoring,
   GameConfigTimers,
-  MinigameType,
-  TriviaMinigameRules
+  MinigameType
 } from "../../index.js";
 
 type Assert<T extends true> = T;
@@ -44,12 +43,20 @@ export type ValidGameConfigTimersCheck = Assert<
   >
 >;
 
-export type ValidTriviaMinigameRulesCheck = Assert<
-  IsAssignable<{ questionsPerTurn: number }, TriviaMinigameRules>
+export type ValidMinigameRulesCheck = Assert<
+  IsAssignable<{ trivia?: { questionsPerTurn: number } }, MinigameRules>
 >;
 
-export type ValidMinigameRulesCheck = Assert<
-  IsAssignable<{ trivia?: TriviaMinigameRules }, MinigameRules>
+export type ValidGeoMinigameRulesCheck = Assert<
+  IsAssignable<
+    {
+      geo?: {
+        promptsPerTurn: number;
+        scoreBandsKm: { maxKm: number; points: number }[];
+      };
+    },
+    MinigameRules
+  >
 >;
 
 export type ValidGameConfigFileCheck = Assert<
@@ -75,5 +82,5 @@ export type MissingRoundMinigameCheck = Assert<IsAssignable<{ round: number; lab
 // @ts-expect-error timers must include drawingSeconds.
 export type MissingTimerFieldCheck = Assert<IsAssignable<{ eatingSeconds: number; triviaSeconds: number; geoSeconds: number }, GameConfigTimers>>;
 
-// @ts-expect-error Trivia rules require questionsPerTurn.
-export type MissingTriviaQuestionLimitCheck = Assert<IsAssignable<Record<string, never>, TriviaMinigameRules>>;
+// @ts-expect-error Rules entries must be records, not primitives.
+export type NonRecordRulesEntryCheck = Assert<IsAssignable<{ trivia: number }, MinigameRules>>;

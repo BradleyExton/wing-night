@@ -1,4 +1,6 @@
-import type { GeoCoordinates, GeoScoreBand } from "@wingnight/shared";
+import type { GeoCoordinates } from "@wingnight/shared";
+
+import type { GeoScoreBand } from "../types/index.js";
 
 const EARTH_RADIUS_KM = 6371;
 

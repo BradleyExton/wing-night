@@ -6,36 +6,8 @@ const isNonEmptyString = (value: unknown): value is string => {
   return typeof value === "string" && value.trim().length > 0;
 };
 
-const MINIGAME_API_VERSION = 1;
-
-export type GameConfigTimers = {
-  eatingSeconds: number;
-  triviaSeconds: number;
-  geoSeconds: number;
-  drawingSeconds: number;
-};
-
-export type TriviaMinigameRules = {
-  questionsPerTurn: number;
-};
-
-export type GeoScoreBand = {
-  maxKm: number;
-  points: number;
-};
-
-export type GeoMinigameRules = {
-  promptsPerTurn?: number;
-  scoreBandsKm?: GeoScoreBand[];
-};
-
-export type MinigameRules = {
-  trivia?: TriviaMinigameRules;
-  geo?: GeoMinigameRules;
-};
-
-export type MinigameTimerKey = keyof GameConfigTimers;
-export type MinigameRulesKey = keyof MinigameRules;
+export const MINIGAME_API_VERSION = 1 as const;
+export type MinigameApiVersion = typeof MINIGAME_API_VERSION;
 
 export type MinigameContractMetadataDefaults = {
   minigameApiVersion: number;
@@ -45,11 +17,13 @@ export type MinigameContractMetadataDefaults = {
 export type MinigameDefinition = {
   id: string;
   slug: string;
-  timerKey: MinigameTimerKey;
-  rulesKey: MinigameRulesKey | null;
+  timerKey: string;
+  rulesKey: string | null;
   contractMetadata: MinigameContractMetadataDefaults;
 };
 
+// Single registration point for shared contracts: adding a game here brings
+// its slug, timer key, and optional rules key into every derived type below.
 export const MINIGAME_DEFINITIONS = {
   TRIVIA: {
     id: "TRIVIA",
@@ -94,6 +68,13 @@ export const MINIGAME_DEFINITIONS = {
 
 export type MinigameType = keyof typeof MINIGAME_DEFINITIONS;
 
+export type MinigameTimerKey =
+  (typeof MINIGAME_DEFINITIONS)[MinigameType]["timerKey"];
+
+export type MinigameRulesKey = NonNullable<
+  (typeof MINIGAME_DEFINITIONS)[MinigameType]["rulesKey"]
+>;
+
 export const MINIGAME_TYPES = Object.freeze(
   Object.keys(MINIGAME_DEFINITIONS) as MinigameType[]
 );
@@ -123,6 +104,28 @@ export const resolveMinigameDefinition = (
 ): (typeof MINIGAME_DEFINITIONS)[MinigameType] => {
   return MINIGAME_DEFINITIONS[minigameType];
 };
+
+// Every minigame's timer comes from its definition's timerKey; only the
+// eating timer is a fixed, game-independent field.
+export type GameConfigTimers = { eatingSeconds: number } & Record<
+  MinigameTimerKey,
+  number
+>;
+
+type MinigameRuleValue =
+  | null
+  | boolean
+  | number
+  | string
+  | MinigameRuleValue[]
+  | { [key: string]: MinigameRuleValue };
+
+export type MinigameRuleRecord = { [key: string]: MinigameRuleValue };
+
+// Per-game rules schemas are owned by each minigame package (validated via
+// the runtime plugin's isRules hook at content-load time); shared contracts
+// only pin the outer keyed-by-rulesKey shape.
+export type MinigameRules = Partial<Record<MinigameRulesKey, MinigameRuleRecord>>;
 
 export type GameConfigRound = {
   round: number;
@@ -203,124 +206,38 @@ const isGameConfigScoring = (value: unknown): value is GameConfigScoring => {
   return true;
 };
 
+const REQUIRED_TIMER_KEYS: readonly string[] = [
+  "eatingSeconds",
+  ...MINIGAME_TYPES.map((minigameType) => MINIGAME_DEFINITIONS[minigameType].timerKey)
+];
+
 const isGameConfigTimers = (value: unknown): value is GameConfigTimers => {
   if (typeof value !== "object" || value === null) {
     return false;
   }
 
-  if (!("eatingSeconds" in value) || !isPositiveInteger(value.eatingSeconds)) {
-    return false;
-  }
+  const timers = value as Record<string, unknown>;
 
-  if (!("triviaSeconds" in value) || !isPositiveInteger(value.triviaSeconds)) {
-    return false;
-  }
-
-  if (!("geoSeconds" in value) || !isPositiveInteger(value.geoSeconds)) {
-    return false;
-  }
-
-  if (
-    !("drawingSeconds" in value) ||
-    !isPositiveInteger(value.drawingSeconds)
-  ) {
-    return false;
-  }
-
-  return true;
+  return REQUIRED_TIMER_KEYS.every((timerKey) =>
+    isPositiveInteger(timers[timerKey])
+  );
 };
 
-const isTriviaMinigameRules = (
-  value: unknown
-): value is TriviaMinigameRules => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  if (
-    !("questionsPerTurn" in value) ||
-    !isPositiveInteger(value.questionsPerTurn)
-  ) {
-    return false;
-  }
-
-  return true;
-};
-
-const isGeoScoreBand = (value: unknown): value is GeoScoreBand => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  if (
-    !("maxKm" in value) ||
-    typeof value.maxKm !== "number" ||
-    !Number.isFinite(value.maxKm) ||
-    value.maxKm <= 0
-  ) {
-    return false;
-  }
-
-  if (
-    !("points" in value) ||
-    typeof value.points !== "number" ||
-    !Number.isInteger(value.points) ||
-    value.points < 0
-  ) {
-    return false;
-  }
-
-  return true;
-};
-
-const isGeoMinigameRules = (value: unknown): value is GeoMinigameRules => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  if (
-    "promptsPerTurn" in value &&
-    value.promptsPerTurn !== undefined &&
-    !isPositiveInteger(value.promptsPerTurn)
-  ) {
-    return false;
-  }
-
-  if ("scoreBandsKm" in value && value.scoreBandsKm !== undefined) {
-    if (!Array.isArray(value.scoreBandsKm) || value.scoreBandsKm.length === 0) {
-      return false;
-    }
-
-    if (!value.scoreBandsKm.every((band) => isGeoScoreBand(band))) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
+// Outer shape only: each configured rules entry must be a plain record. The
+// per-game schema is validated by the owning plugin's isRules hook.
 const isMinigameRules = (value: unknown): value is MinigameRules => {
   if (typeof value !== "object" || value === null) {
     return false;
   }
 
-  if (
-    "trivia" in value &&
-    value.trivia !== undefined &&
-    !isTriviaMinigameRules(value.trivia)
-  ) {
-    return false;
-  }
-
-  if (
-    "geo" in value &&
-    value.geo !== undefined &&
-    !isGeoMinigameRules(value.geo)
-  ) {
-    return false;
-  }
-
-  return true;
+  return Object.values(value).every((rulesEntry) => {
+    return (
+      rulesEntry === undefined ||
+      (typeof rulesEntry === "object" &&
+        rulesEntry !== null &&
+        !Array.isArray(rulesEntry))
+    );
+  });
 };
 
 const isSetupPreviewRoundSlots = (value: unknown): value is number => {

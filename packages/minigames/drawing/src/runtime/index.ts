@@ -1,16 +1,14 @@
-import {
-  MINIGAME_API_VERSION,
-  type DrawingPromptOutcome,
-  type DrawingStroke,
-  type MinigameType
+import type {
+  DrawingPromptOutcome,
+  DrawingStroke,
+  MinigameType
 } from "@wingnight/shared";
 import type {
-  MinigamePluginMetadata,
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult
 } from "@wingnight/minigames-core";
 
-import { parseDrawingContentFile, resolveDrawingContent } from "./content/index.js";
+import { drawingContentAdapter, resolveDrawingContent } from "./content/index.js";
 import {
   isAppendStrokePointsPayload,
   isBeginStrokePayload,
@@ -32,15 +30,6 @@ import {
 } from "./views/index.js";
 
 export const drawingMinigameId: MinigameType = "DRAWING";
-
-export const drawingMinigameMetadata: MinigamePluginMetadata = {
-  minigameApiVersion: MINIGAME_API_VERSION,
-  capabilities: {
-    supportsHostRenderer: true,
-    supportsDisplayRenderer: true,
-    supportsDevScenarios: true
-  }
-};
 
 const shufflePromptIds = (promptIds: string[]): string[] => {
   const shuffled = [...promptIds];
@@ -71,11 +60,7 @@ const resolveResultOutcome = (
 
 export const drawingRuntimePlugin: MinigameRuntimePlugin = {
   id: "DRAWING",
-  metadata: drawingMinigameMetadata,
-  content: {
-    fileName: "minigames/drawing.json",
-    parseFileContent: parseDrawingContentFile
-  },
+  content: drawingContentAdapter,
   initialize: (input) => {
     const drawingContent = resolveDrawingContent(input.content);
 

@@ -1,4 +1,4 @@
-import type { MinigameDevManifest } from "@wingnight/minigames-core";
+import { createDevManifest } from "@wingnight/minigames-core";
 
 // Mirrors a slice of content/sample/minigames/drawing.json so sandbox play
 // matches a real night without filesystem access from the browser.
@@ -13,18 +13,7 @@ const DEV_CONTENT = {
   ]
 };
 
-export const drawingDevManifest: MinigameDevManifest = {
-  teamIds: ["team-alpha", "team-beta"],
-  teamNameByTeamId: {
-    "team-alpha": "Team Alpha",
-    "team-beta": "Team Beta"
-  },
-  activeRoundTeamId: "team-alpha",
-  pointsMax: 15,
-  pendingPointsByTeamId: {
-    "team-alpha": 0,
-    "team-beta": 0
-  },
+export const drawingDevManifest = createDevManifest({
   rules: null,
   content: DEV_CONTENT
-};
+});

@@ -1,4 +1,7 @@
-import { type RoleScopedStateSnapshotEnvelope } from "@wingnight/shared";
+import {
+  resolveMinigameTypeFromSlug,
+  type RoleScopedStateSnapshotEnvelope
+} from "@wingnight/shared";
 import { useEffect, useMemo, useState } from "react";
 
 import { DisplayBoard } from "./components/DisplayBoard";
@@ -10,7 +13,6 @@ import { HostHandlersProvider } from "./context/HostHandlersContext";
 import { RoomStateProvider } from "./context/RoomStateContext";
 import { createRoomSocket } from "./socket/createRoomSocket";
 import { shouldCreateRoomSocket } from "./socket/shouldCreateRoomSocket";
-import { resolveMinigameTypeFromSlug } from "./minigames/registry";
 import { saveHostSecret } from "./utils/hostSecretStorage";
 import { createHostRequestHandlers } from "./utils/hostRequests";
 import { resolveClientRoute, resolveDevMinigameSlug } from "./utils/resolveClientRoute";

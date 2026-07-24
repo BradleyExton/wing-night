@@ -29,7 +29,6 @@ import {
   setWingParticipation,
   skipTurnBoundary
 } from "../../roomState/index.js";
-import { resolveMinigameDescriptor } from "../../minigames/registry/index.js";
 import {
   isGameReorderTurnOrderPayload,
   isHostSecretPayload,
@@ -172,14 +171,6 @@ const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
       const currentSnapshot = getRoomStateSnapshot();
 
       if (currentSnapshot.currentRoundConfig?.minigame !== payload.minigameId) {
-        return currentSnapshot;
-      }
-
-      const activeMinigameDescriptor = resolveMinigameDescriptor(payload.minigameId);
-
-      if (
-        activeMinigameDescriptor.metadata.minigameApiVersion !== payload.minigameApiVersion
-      ) {
         return currentSnapshot;
       }
 

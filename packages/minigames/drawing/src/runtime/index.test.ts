@@ -1,20 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  MINIGAME_API_VERSION,
-  type DrawingContentFile,
-  type DrawingMinigameDisplayView,
-  type DrawingMinigameHostView,
-  type DrawingPoint
+import type {
+  DrawingContentFile,
+  DrawingMinigameDisplayView,
+  DrawingMinigameHostView,
+  DrawingPoint
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import {
-  drawingMinigameId,
-  drawingMinigameMetadata,
-  drawingRuntimePlugin
-} from "./index.js";
+import { drawingMinigameId, drawingRuntimePlugin } from "./index.js";
 import { parseDrawingContentFile } from "./content/index.js";
 import {
   MAX_APPEND_POINTS_PER_ACTION,
@@ -95,10 +90,9 @@ const beginStroke = (
   return result.state as DrawingRuntimeState;
 };
 
-test("drawing runtime metadata advertises expected API version", () => {
+test("drawing runtime plugin declares its minigame id", () => {
   assert.equal(drawingMinigameId, "DRAWING");
-  assert.equal(drawingMinigameMetadata.minigameApiVersion, MINIGAME_API_VERSION);
-  assert.equal(drawingMinigameMetadata.capabilities.supportsHostRenderer, true);
+  assert.equal(drawingRuntimePlugin.id, "DRAWING");
 });
 
 test("runtime plugin declares the drawing content file", () => {

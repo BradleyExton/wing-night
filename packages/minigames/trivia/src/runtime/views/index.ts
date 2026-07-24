@@ -4,17 +4,8 @@ import type {
   TriviaPrompt
 } from "@wingnight/shared";
 
-import type { TriviaMinigameContext } from "../../index.js";
 import { cloneTriviaPrompt } from "../content/index.js";
 import type { TriviaRuntimeContent, TriviaRuntimeState } from "../types/index.js";
-
-export const resolveTriviaContext = (
-  content: TriviaRuntimeContent
-): TriviaMinigameContext => {
-  return {
-    prompts: content.prompts
-  };
-};
 
 export const resolveAttemptsRemaining = (state: TriviaRuntimeState): number => {
   return Math.max(0, state.questionsPerTurnLimit - state.attemptsUsedThisTurn);

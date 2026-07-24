@@ -3,14 +3,13 @@ import test from "node:test";
 import {
   MINIGAME_DEFINITIONS,
   MINIGAME_TYPES,
-  resolveMinigameTypeFromSlug as resolveSharedMinigameTypeFromSlug
+  resolveMinigameTypeFromSlug
 } from "@wingnight/shared";
 
 import {
   resolveMinigameDevManifest,
   resolveMinigameRendererBundle,
-  resolveMinigameRuntimePlugin,
-  resolveMinigameTypeFromSlug
+  resolveMinigameRuntimePlugin
 } from "./index";
 
 test("resolves renderer bundles for all minigame types", () => {
@@ -31,17 +30,12 @@ test("resolves runtime plugins matching each minigame type", () => {
   }
 });
 
-test("maps route slugs to minigame types", () => {
-  assert.equal(resolveMinigameTypeFromSlug("trivia"), "TRIVIA");
-  assert.equal(resolveMinigameTypeFromSlug("geo"), "GEO");
-  assert.equal(resolveMinigameTypeFromSlug("drawing"), "DRAWING");
-  assert.equal(resolveMinigameTypeFromSlug("unknown"), null);
-});
-
-test("client registry slug resolution stays aligned with shared definitions", () => {
+test("shared slug resolution reaches every registered minigame", () => {
   for (const minigameType of MINIGAME_TYPES) {
     const slug = MINIGAME_DEFINITIONS[minigameType].slug;
     assert.equal(resolveMinigameTypeFromSlug(slug), minigameType);
-    assert.equal(resolveSharedMinigameTypeFromSlug(slug), minigameType);
+    assert.ok(resolveMinigameRendererBundle(minigameType));
   }
+
+  assert.equal(resolveMinigameTypeFromSlug("unknown"), null);
 });

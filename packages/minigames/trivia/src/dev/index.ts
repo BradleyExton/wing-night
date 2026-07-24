@@ -1,4 +1,4 @@
-import type { MinigameDevManifest } from "@wingnight/minigames-core";
+import { createDevManifest } from "@wingnight/minigames-core";
 
 // Mirrors content/sample/minigames/trivia.json so sandbox play matches a
 // real night.
@@ -22,18 +22,7 @@ const DEV_CONTENT = {
   ]
 };
 
-export const triviaDevManifest: MinigameDevManifest = {
-  teamIds: ["team-alpha", "team-beta"],
-  teamNameByTeamId: {
-    "team-alpha": "Team Alpha",
-    "team-beta": "Team Beta"
-  },
-  activeRoundTeamId: "team-alpha",
-  pointsMax: 15,
-  pendingPointsByTeamId: {
-    "team-alpha": 0,
-    "team-beta": 0
-  },
+export const triviaDevManifest = createDevManifest({
   rules: { questionsPerTurn: 3 },
   content: DEV_CONTENT
-};
+});

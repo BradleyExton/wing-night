@@ -2,18 +2,10 @@ import { drawingRuntimePlugin } from "@wingnight/minigames-drawing/runtime";
 import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
 import { triviaRuntimePlugin } from "@wingnight/minigames-trivia/runtime";
 import type { MinigameType } from "@wingnight/shared";
-import { MINIGAME_API_VERSION } from "@wingnight/shared";
-import type {
-  MinigamePluginMetadata,
-  MinigameRuntimePlugin
-} from "@wingnight/minigames-core";
+import type { MinigameRuntimePlugin } from "@wingnight/minigames-core";
 
-type ResolvedMinigameRuntimePlugin = MinigameRuntimePlugin;
-type ResolvedMinigameDescriptor = {
-  runtimePlugin: ResolvedMinigameRuntimePlugin;
-  metadata: MinigamePluginMetadata;
-};
-
+// Keyed by MinigameType so adding a new game to MINIGAME_DEFINITIONS fails to
+// compile until its runtime plugin is registered here.
 const runtimePluginByMinigameType: Record<MinigameType, MinigameRuntimePlugin> = {
   TRIVIA: triviaRuntimePlugin,
   GEO: geoRuntimePlugin,
@@ -22,25 +14,6 @@ const runtimePluginByMinigameType: Record<MinigameType, MinigameRuntimePlugin> =
 
 export const resolveMinigameRuntimePlugin = (
   minigameType: MinigameType
-): ResolvedMinigameRuntimePlugin => {
+): MinigameRuntimePlugin => {
   return runtimePluginByMinigameType[minigameType];
-};
-
-export const resolveMinigameDescriptor = (
-  minigameType: MinigameType
-): ResolvedMinigameDescriptor => {
-  const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
-  const metadata = runtimePlugin.metadata ?? {
-    minigameApiVersion: MINIGAME_API_VERSION,
-    capabilities: {
-      supportsHostRenderer: true,
-      supportsDisplayRenderer: true,
-      supportsDevScenarios: true
-    }
-  };
-
-  return {
-    runtimePlugin,
-    metadata
-  };
 };

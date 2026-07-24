@@ -12,49 +12,48 @@ import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
 import { triviaRendererBundle } from "@wingnight/minigames-trivia/client";
 import { triviaDevManifest } from "@wingnight/minigames-trivia/dev";
 import { triviaRuntimePlugin } from "@wingnight/minigames-trivia/runtime";
-import {
-  resolveMinigameTypeFromSlug as resolveSharedMinigameTypeFromSlug,
-  type MinigameType
-} from "@wingnight/shared";
+import type { MinigameType } from "@wingnight/shared";
 
-const minigameRendererByType: Record<MinigameType, MinigameRendererBundle> = {
-  TRIVIA: triviaRendererBundle,
-  GEO: geoRendererBundle,
-  DRAWING: drawingRendererBundle
+type MinigameRegistration = {
+  rendererBundle: MinigameRendererBundle;
+  devManifest: MinigameDevManifest;
+  runtimePlugin: MinigameRuntimePlugin;
 };
 
-const minigameDevManifestByType: Record<MinigameType, MinigameDevManifest> = {
-  TRIVIA: triviaDevManifest,
-  GEO: geoDevManifest,
-  DRAWING: drawingDevManifest
-};
-
-const minigameRuntimePluginByType: Record<MinigameType, MinigameRuntimePlugin> = {
-  TRIVIA: triviaRuntimePlugin,
-  GEO: geoRuntimePlugin,
-  DRAWING: drawingRuntimePlugin
+// Keyed by MinigameType so adding a new game to MINIGAME_DEFINITIONS fails to
+// compile until its bundle, dev manifest, and runtime plugin are registered.
+const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
+  TRIVIA: {
+    rendererBundle: triviaRendererBundle,
+    devManifest: triviaDevManifest,
+    runtimePlugin: triviaRuntimePlugin
+  },
+  GEO: {
+    rendererBundle: geoRendererBundle,
+    devManifest: geoDevManifest,
+    runtimePlugin: geoRuntimePlugin
+  },
+  DRAWING: {
+    rendererBundle: drawingRendererBundle,
+    devManifest: drawingDevManifest,
+    runtimePlugin: drawingRuntimePlugin
+  }
 };
 
 export const resolveMinigameRendererBundle = (
   minigameType: MinigameType
 ): MinigameRendererBundle | null => {
-  return minigameRendererByType[minigameType] ?? null;
+  return MINIGAME_REGISTRY[minigameType]?.rendererBundle ?? null;
 };
 
 export const resolveMinigameDevManifest = (
   minigameType: MinigameType
 ): MinigameDevManifest | null => {
-  return minigameDevManifestByType[minigameType] ?? null;
+  return MINIGAME_REGISTRY[minigameType]?.devManifest ?? null;
 };
 
 export const resolveMinigameRuntimePlugin = (
   minigameType: MinigameType
 ): MinigameRuntimePlugin | null => {
-  return minigameRuntimePluginByType[minigameType] ?? null;
-};
-
-export const resolveMinigameTypeFromSlug = (
-  slug: string
-): MinigameType | null => {
-  return resolveSharedMinigameTypeFromSlug(slug);
+  return MINIGAME_REGISTRY[minigameType]?.runtimePlugin ?? null;
 };

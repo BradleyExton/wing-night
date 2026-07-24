@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MINIGAME_API_VERSION, type GeoContentFile } from "@wingnight/shared";
+import { type GeoContentFile } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { geoMinigameId, geoMinigameMetadata, geoRuntimePlugin } from "./index.js";
+import { geoMinigameId, geoRuntimePlugin } from "./index.js";
 import { parseGeoContentFile } from "./content/index.js";
-import { resolveGeoRules } from "./rules/index.js";
+import { isGeoRules, resolveGeoRules } from "./rules/index.js";
 import { haversineDistanceKm, resolvePointsForDistance } from "./scoring/index.js";
 import { DEFAULT_GEO_SCORE_BANDS_KM, type GeoRuntimeState } from "./types/index.js";
 
@@ -79,9 +79,16 @@ const reduce = (
   });
 };
 
-test("geo runtime metadata advertises expected API version", () => {
+test("geo runtime plugin declares its id, content file, and rules guard", () => {
   assert.equal(geoMinigameId, "GEO");
-  assert.equal(geoMinigameMetadata.minigameApiVersion, MINIGAME_API_VERSION);
+  assert.equal(geoRuntimePlugin.id, "GEO");
+  assert.equal(geoRuntimePlugin.content?.fileName, "minigames/geo.json");
+  assert.equal(isGeoRules({ promptsPerTurn: 3 }), true);
+  assert.equal(isGeoRules({}), true);
+  assert.equal(isGeoRules({ promptsPerTurn: 0 }), false);
+  assert.equal(isGeoRules({ scoreBandsKm: [] }), false);
+  assert.equal(isGeoRules({ scoreBandsKm: [{ maxKm: 1, points: 2 }] }), true);
+  assert.equal(isGeoRules({ scoreBandsKm: [{ maxKm: -1, points: 2 }] }), false);
 });
 
 test("initialize seeds a single-team turn in guessing sub-state", () => {

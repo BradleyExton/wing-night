@@ -5,16 +5,21 @@ import {
   type TriviaRuntimeRules
 } from "../types/index.js";
 
-const normalizeQuestionsPerTurn = (questionsPerTurn: unknown): number => {
-  if (
-    typeof questionsPerTurn !== "number" ||
-    !Number.isInteger(questionsPerTurn) ||
-    questionsPerTurn <= 0
-  ) {
-    return DEFAULT_TRIVIA_QUESTIONS_PER_TURN;
+const isQuestionsPerTurn = (questionsPerTurn: unknown): questionsPerTurn is number => {
+  return (
+    typeof questionsPerTurn === "number" &&
+    Number.isInteger(questionsPerTurn) &&
+    questionsPerTurn > 0
+  );
+};
+
+// Config-load-time schema check for gameConfig.minigameRules.trivia.
+export const isTriviaRules = (value: unknown): boolean => {
+  if (typeof value !== "object" || value === null) {
+    return false;
   }
 
-  return questionsPerTurn;
+  return "questionsPerTurn" in value && isQuestionsPerTurn(value.questionsPerTurn);
 };
 
 export const resolveTriviaRules = (
@@ -29,6 +34,8 @@ export const resolveTriviaRules = (
   const parsedRules = rules as Partial<TriviaRuntimeRules>;
 
   return {
-    questionsPerTurn: normalizeQuestionsPerTurn(parsedRules.questionsPerTurn)
+    questionsPerTurn: isQuestionsPerTurn(parsedRules.questionsPerTurn)
+      ? parsedRules.questionsPerTurn
+      : DEFAULT_TRIVIA_QUESTIONS_PER_TURN
   };
 };

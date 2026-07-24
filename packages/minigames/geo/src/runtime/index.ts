@@ -1,16 +1,9 @@
-import {
-  MINIGAME_API_VERSION,
-  type GeoPromptResult,
-  type MinigameType
-} from "@wingnight/shared";
-import type {
-  MinigamePluginMetadata,
-  MinigameRuntimePlugin
-} from "@wingnight/minigames-core";
+import type { GeoPromptResult, MinigameType } from "@wingnight/shared";
+import type { MinigameRuntimePlugin } from "@wingnight/minigames-core";
 
-import { parseGeoContentFile, resolveGeoContent } from "./content/index.js";
+import { geoContentAdapter, resolveGeoContent } from "./content/index.js";
 import { isGeoRuntimeState, isSetGuessPayload } from "./guards/index.js";
-import { resolveGeoRules } from "./rules/index.js";
+import { isGeoRules, resolveGeoRules } from "./rules/index.js";
 import { haversineDistanceKm, resolvePointsForDistance } from "./scoring/index.js";
 import type { GeoRuntimeState } from "./types/index.js";
 import {
@@ -20,15 +13,6 @@ import {
 } from "./views/index.js";
 
 export const geoMinigameId: MinigameType = "GEO";
-
-export const geoMinigameMetadata: MinigamePluginMetadata = {
-  minigameApiVersion: MINIGAME_API_VERSION,
-  capabilities: {
-    supportsHostRenderer: true,
-    supportsDisplayRenderer: true,
-    supportsDevScenarios: true
-  }
-};
 
 const resolveSeededPromptCursor = (
   teamIds: string[],
@@ -48,11 +32,8 @@ const resolveSeededPromptCursor = (
 
 export const geoRuntimePlugin: MinigameRuntimePlugin = {
   id: "GEO",
-  metadata: geoMinigameMetadata,
-  content: {
-    fileName: "minigames/geo.json",
-    parseFileContent: parseGeoContentFile
-  },
+  content: geoContentAdapter,
+  isRules: isGeoRules,
   initialize: (input) => {
     const geoContent = resolveGeoContent(input.content);
     const geoRules = resolveGeoRules(input.rules);

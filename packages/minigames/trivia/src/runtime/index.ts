@@ -1,113 +1,111 @@
-import {
-  MINIGAME_API_VERSION,
-  type MinigameType
-} from "@wingnight/shared";
-import type {
-  MinigamePluginMetadata,
-  MinigameRuntimePlugin
-} from "@wingnight/minigames-core";
+import type { MinigameType } from "@wingnight/shared";
+import type { MinigameRuntimePlugin } from "@wingnight/minigames-core";
 
-import {
-  createTriviaStateWithPendingPoints,
-  isTriviaMinigameState,
-  triviaMinigameModule,
-  type TriviaMinigameAction,
-  type TriviaMinigameContext,
-  type TriviaMinigameState
-} from "../index.js";
-import {
-  parseTriviaContentFile,
-  resolveTriviaContent
-} from "./content/index.js";
+import { resolveTriviaContent, triviaContentAdapter } from "./content/index.js";
 import {
   isRecordAttemptPayload,
+  isTriviaMinigameState,
   isTriviaRuntimeState
 } from "./guards/index.js";
-import { resolveTriviaRules } from "./rules/index.js";
-import { toTriviaDisplayView, toTriviaHostView, resolveAttemptsRemaining, resolveTriviaContext } from "./views/index.js";
+import { isTriviaRules, resolveTriviaRules } from "./rules/index.js";
+import type { TriviaMinigameState, TriviaRuntimeState } from "./types/index.js";
+import {
+  resolveAttemptsRemaining,
+  toTriviaDisplayView,
+  toTriviaHostView
+} from "./views/index.js";
 
 export const triviaMinigameId: MinigameType = "TRIVIA";
 
-export const triviaMinigameMetadata: MinigamePluginMetadata = {
-  minigameApiVersion: MINIGAME_API_VERSION,
-  capabilities: {
-    supportsHostRenderer: true,
-    supportsDisplayRenderer: true,
-    supportsDevScenarios: true
-  }
+const clonePendingPoints = (
+  pendingPointsByTeamId: Record<string, number>
+): Record<string, number> => {
+  return { ...pendingPointsByTeamId };
+};
+
+export const createTriviaStateWithPendingPoints = (
+  state: TriviaMinigameState,
+  pendingPointsByTeamId: Record<string, number>
+): TriviaMinigameState => {
+  return {
+    turnOrderTeamIds: [...state.turnOrderTeamIds],
+    activeTurnIndex: state.activeTurnIndex,
+    promptCursor: state.promptCursor,
+    pendingPointsByTeamId: clonePendingPoints(pendingPointsByTeamId)
+  };
 };
 
 export const triviaRuntimePlugin: MinigameRuntimePlugin = {
   id: "TRIVIA",
-  metadata: triviaMinigameMetadata,
-  content: {
-    fileName: "minigames/trivia.json",
-    parseFileContent: parseTriviaContentFile
-  },
+  content: triviaContentAdapter,
+  isRules: isTriviaRules,
   initialize: (input) => {
-    const triviaContent = resolveTriviaContent(input.content);
     const triviaRules = resolveTriviaRules(input.rules);
     const runtimeTeamIds =
       input.activeRoundTeamId === null ? input.teamIds : [input.activeRoundTeamId];
-    const initializedState = triviaMinigameModule.init({
-      teamIds: runtimeTeamIds,
-      pointsMax: input.pointsMax,
-      context: resolveTriviaContext(triviaContent)
-    });
 
-    return {
-      runtimeState: createTriviaStateWithPendingPoints(
-        initializedState,
-        input.pendingPointsByTeamId
-      ),
+    const initialState: TriviaRuntimeState = {
+      runtimeState: {
+        turnOrderTeamIds: [...runtimeTeamIds],
+        activeTurnIndex: 0,
+        promptCursor: 0,
+        pendingPointsByTeamId: clonePendingPoints(input.pendingPointsByTeamId)
+      },
       attemptsUsedThisTurn: 0,
       questionsPerTurnLimit: triviaRules.questionsPerTurn
     };
+
+    return initialState;
   },
   reduceAction: (input) => {
+    const unchanged = { state: input.state, didMutate: false };
+
     if (!isTriviaRuntimeState(input.state)) {
-      return {
-        state: input.state,
-        didMutate: false
-      };
+      return unchanged;
     }
 
     if (input.envelope.actionType !== "recordAttempt") {
-      return {
-        state: input.state,
-        didMutate: false
-      };
+      return unchanged;
     }
 
     if (!isRecordAttemptPayload(input.envelope.actionPayload)) {
-      return {
-        state: input.state,
-        didMutate: false
-      };
+      return unchanged;
     }
 
     if (resolveAttemptsRemaining(input.state) <= 0) {
-      return {
-        state: input.state,
-        didMutate: false
-      };
+      return unchanged;
     }
 
-    const triviaContent = resolveTriviaContent(input.content);
-    const nextRuntimeState = triviaMinigameModule.reduce({
-      state: input.state.runtimeState,
-      action: {
-        type: "recordAttempt",
-        isCorrect: input.envelope.actionPayload.isCorrect
-      } satisfies TriviaMinigameAction,
-      pointsMax: input.pointsMax,
-      teamIds: input.state.runtimeState.turnOrderTeamIds,
-      context: resolveTriviaContext(triviaContent)
-    });
+    const state = input.state.runtimeState;
+    const activeTurnTeamId = state.turnOrderTeamIds[state.activeTurnIndex] ?? null;
+
+    if (activeTurnTeamId === null) {
+      return unchanged;
+    }
+
+    const prompts = resolveTriviaContent(input.content).prompts;
+    const nextPendingPointsByTeamId = clonePendingPoints(state.pendingPointsByTeamId);
+
+    if (input.envelope.actionPayload.isCorrect) {
+      const previousPoints = nextPendingPointsByTeamId[activeTurnTeamId] ?? 0;
+      nextPendingPointsByTeamId[activeTurnTeamId] = Math.min(
+        input.pointsMax,
+        previousPoints + 1
+      );
+    }
 
     return {
       state: {
-        runtimeState: nextRuntimeState,
+        runtimeState: {
+          turnOrderTeamIds: [...state.turnOrderTeamIds],
+          activeTurnIndex:
+            (state.activeTurnIndex + 1) % state.turnOrderTeamIds.length,
+          promptCursor:
+            prompts.length === 0
+              ? state.promptCursor
+              : (state.promptCursor + 1) % prompts.length,
+          pendingPointsByTeamId: nextPendingPointsByTeamId
+        },
         attemptsUsedThisTurn: Math.min(
           input.state.questionsPerTurnLimit,
           input.state.attemptsUsedThisTurn + 1
@@ -167,11 +165,5 @@ export const triviaRuntimePlugin: MinigameRuntimePlugin = {
   }
 };
 
-export {
-  createTriviaStateWithPendingPoints,
-  isTriviaMinigameState,
-  triviaMinigameModule,
-  type TriviaMinigameAction,
-  type TriviaMinigameContext,
-  type TriviaMinigameState
-};
+export { isTriviaMinigameState };
+export type { TriviaMinigameState, TriviaRuntimeState };
