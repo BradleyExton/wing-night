@@ -11,20 +11,21 @@ export default [
       "**/dist/**",
       "**/coverage/**",
       "**/.cache/**",
-      "**/.turbo/**"
+      "**/.turbo/**",
+      "**/playwright-report/**",
+      "**/test-results/**"
     ]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    plugins: {
+      "react-hooks": reactHooks,
+      wingnight
+    }
+  },
+  {
     files: ["**/*.{ts,tsx,mts,cts}"],
-    languageOptions: {
-      parser: tseslint.parser,
-      parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module"
-      }
-    },
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-unused-vars": [
@@ -63,13 +64,25 @@ export default [
     }
   },
   {
+    files: ["**/*.cjs"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: globals.node
+    }
+  },
+  {
+    files: ["tools/**/*.mjs", "tests/**/*.ts", "playwright.config.ts"],
+    languageOptions: {
+      globals: globals.node
+    },
+    rules: {
+      "no-console": "off"
+    }
+  },
+  {
     files: ["apps/client/src/**/*.{ts,tsx}"],
     languageOptions: {
       globals: globals.browser
-    },
-    plugins: {
-      "react-hooks": reactHooks,
-      wingnight
     },
     rules: {
       "react-hooks/rules-of-hooks": "error",
@@ -80,9 +93,6 @@ export default [
     files: ["apps/server/src/**/*.ts", "packages/shared/src/**/*.ts"],
     languageOptions: {
       globals: globals.node
-    },
-    plugins: {
-      wingnight
     }
   },
   {
@@ -103,27 +113,18 @@ export default [
   },
   {
     files: ["apps/client/src/components/**/*.tsx"],
-    plugins: {
-      wingnight
-    },
     rules: {
       "wingnight/component-entry-file-name": "error"
     }
   },
   {
     files: ["apps/**/src/utils/**/*.ts"],
-    plugins: {
-      wingnight
-    },
     rules: {
       "wingnight/utility-entry-file-name": "error"
     }
   },
   {
     files: ["apps/client/src/components/**/index.tsx"],
-    plugins: {
-      wingnight
-    },
     rules: {
       "max-lines": [
         "error",
@@ -137,9 +138,6 @@ export default [
   },
   {
     files: ["apps/client/src/components/**/styles.ts"],
-    plugins: {
-      wingnight
-    },
     rules: {
       "max-lines": [
         "error",
@@ -152,9 +150,6 @@ export default [
   },
   {
     files: ["packages/shared/src/socketEvents/**/*.ts"],
-    plugins: {
-      wingnight
-    },
     rules: {
       "wingnight/socket-event-name-format": "error"
     }

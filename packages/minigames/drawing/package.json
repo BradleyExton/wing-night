@@ -24,7 +24,6 @@
     }
   },
   "scripts": {
-    "lint": "eslint src/**/*.{ts,tsx}",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "tsx --test src/**/*.test.ts src/**/*.test.tsx"
   },
@@ -34,12 +33,12 @@
     "perfect-freehand": "^1.2.2"
   },
   "devDependencies": {
-    "@types/node": "^22.10.1",
-    "@types/react": "^18.3.12",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
-    "react": "^18.3.1"
+    "react": "catalog:"
   }
 }

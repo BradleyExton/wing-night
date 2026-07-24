@@ -7,7 +7,6 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src/**/*.{ts,tsx}",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "tsx --tsconfig ../../tsconfig.tsx-runtime.json --test src/**/*.test.ts src/**/*.test.tsx"
   },
@@ -19,19 +18,19 @@
     "@wingnight/shared": "workspace:*",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.576.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
-    "@types/node": "^22.10.1",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
     "vite": "^5.4.11"
   }
 }

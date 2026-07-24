@@ -9,7 +9,7 @@ import {
   type RoomState
 } from "@wingnight/shared";
 
-import { registerRoomStateHandlers } from "./index.js";
+import type { registerRoomStateHandlers } from "./index.js";
 
 type SocketUnderTest = Parameters<typeof registerRoomStateHandlers>[0];
 type MutationHandlersUnderTest = Parameters<typeof registerRoomStateHandlers>[2];

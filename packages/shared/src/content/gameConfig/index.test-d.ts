@@ -76,4 +76,4 @@ export type MissingRoundMinigameCheck = Assert<IsAssignable<{ round: number; lab
 export type MissingTimerFieldCheck = Assert<IsAssignable<{ eatingSeconds: number; triviaSeconds: number; geoSeconds: number }, GameConfigTimers>>;
 
 // @ts-expect-error Trivia rules require questionsPerTurn.
-export type MissingTriviaQuestionLimitCheck = Assert<IsAssignable<{}, TriviaMinigameRules>>;
+export type MissingTriviaQuestionLimitCheck = Assert<IsAssignable<Record<string, never>, TriviaMinigameRules>>;
