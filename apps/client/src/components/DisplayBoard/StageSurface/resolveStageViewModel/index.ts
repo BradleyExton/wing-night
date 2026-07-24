@@ -51,6 +51,7 @@ type StageViewModel = {
   minigameBriefingContent: MinigameBriefingContent | null;
   minigameDisplayView: DisplayRoomStateSnapshot["minigameDisplayView"];
   eatingTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
+  minigameTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
   fallbackEatingSeconds: number | null;
   turnTiles: TurnTile[];
   nextTurnTeamName: string | null;
@@ -140,6 +141,11 @@ export const resolveStageViewModel = (
       ? roomState.timer
       : null;
 
+  const minigameTimerSnapshot =
+    stageMode === "minigame_play" && roomState?.timer?.phase === Phase.MINIGAME_PLAY
+      ? roomState.timer
+      : null;
+
   const turnOrderTeamIds = roomState?.turnOrderTeamIds ?? [];
   const completedRoundTurnTeamIds = roomState?.completedRoundTurnTeamIds ?? [];
   const completedSet = new Set(completedRoundTurnTeamIds);
@@ -215,6 +221,7 @@ export const resolveStageViewModel = (
     minigameBriefingContent,
     minigameDisplayView,
     eatingTimerSnapshot,
+    minigameTimerSnapshot,
     fallbackEatingSeconds: roomState?.gameConfig?.timers.eatingSeconds ?? null,
     turnTiles,
     nextTurnTeamName,

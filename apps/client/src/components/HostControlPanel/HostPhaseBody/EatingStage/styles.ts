@@ -1,7 +1,9 @@
 export {
   stageEyebrow as eyebrow,
+  stageEyebrowTimeUp as eyebrowTimeUp,
   stageTimer as timer,
   stageTimerUrgent as timerUrgent,
+  stageTimerTimeUp as timerTimeUp,
   stageTimerCap as timerCap,
   stageGlowEating as glowEating
 } from "../../styleTokens";

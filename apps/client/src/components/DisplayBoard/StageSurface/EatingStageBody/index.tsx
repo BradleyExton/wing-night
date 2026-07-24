@@ -19,12 +19,14 @@ export const EatingStageBody = ({
   totalEatingSeconds
 }: EatingStageBodyProps): JSX.Element => {
   const isUrgent = liveEatingRemainingSeconds <= URGENT_THRESHOLD_SECONDS;
+  const isTimeUp = liveEatingRemainingSeconds <= 0;
   const heatFillPercent =
     totalEatingSeconds !== null && totalEatingSeconds > 0
       ? Math.max(0, Math.min(100, (liveEatingRemainingSeconds / totalEatingSeconds) * 100))
       : 100;
-  const timerLabelText =
-    currentRoundConfig !== null
+  const timerLabelText = isTimeUp
+    ? displayBoardCopy.eatingTimesUpLabel
+    : currentRoundConfig !== null
       ? displayBoardCopy.eatingPhaseLabel(currentRoundConfig.sauce)
       : displayBoardCopy.eatingPhaseFallbackLabel;
 
@@ -56,7 +58,9 @@ export const EatingStageBody = ({
         <p className={`${styles.timer} ${isUrgent ? styles.timerUrgent : ""}`.trim()}>
           {displayBoardCopy.eatingTimerValue(liveEatingRemainingSeconds)}
         </p>
-        <p className={styles.timerLabel}>{timerLabelText}</p>
+        <p className={isTimeUp ? styles.timerLabelTimeUp : styles.timerLabel}>
+          {timerLabelText}
+        </p>
       </div>
       <div className={styles.heatTrack}>
         <div

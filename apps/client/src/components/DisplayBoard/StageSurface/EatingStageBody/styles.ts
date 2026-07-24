@@ -25,6 +25,9 @@ export const timerUrgent = "text-heat animate-[heatpulse_0.65s_ease-in-out_infin
 export const timerLabel =
   "text-[clamp(1rem,1.4vw,1.6rem)] font-bold uppercase tracking-[0.32em] text-muted";
 
+export const timerLabelTimeUp =
+  "text-[clamp(1rem,1.4vw,1.6rem)] font-bold uppercase tracking-[0.32em] text-heat animate-[heatpulse_1.2s_ease-in-out_infinite]";
+
 export const heatTrack =
   "relative h-[clamp(8px,1vh,14px)] overflow-hidden rounded-full bg-text/[0.06]";
 

@@ -16,6 +16,7 @@ import { selectHostTeamMaps } from "./selectHostTeamMaps";
 import { createMinigameHandlers, createSetupHandlers } from "./setupHandlers";
 import { TurnOrderSurface } from "./TurnOrderSurface";
 import type { HostControlPanelProps } from "./types";
+import { useHostWakeLock } from "./useHostWakeLock";
 import * as styles from "./styles";
 
 const EMPTY_TEAMS: RoomState["teams"] = [];
@@ -38,6 +39,7 @@ export const HostControlPanel = ({
   onResetGame,
   onRedoLastMutation
 }: HostControlPanelProps): JSX.Element => {
+  useHostWakeLock();
   const [nextTeamName, setNextTeamName] = useState("");
   const [isOverrideDockOpen, setIsOverrideDockOpen] = useState(false);
   const overrideDockPanelId = useId();

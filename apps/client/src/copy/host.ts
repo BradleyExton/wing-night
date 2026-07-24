@@ -105,10 +105,6 @@ export const hostCopy = {
   skipTurnBoundaryButtonLabel: "Skip Turn",
   redoLastMutationButtonLabel: "Undo Last Score",
   resetGameButtonLabel: "Reset Game",
-  resetGameConfirmButtonLabel: "Confirm Reset",
-  resetGameCancelButtonLabel: "Cancel",
-  resetGameArmedMessage:
-    "Confirm reset to return to setup. Teams and scores will be cleared.",
   overridesTriggerButtonLabel: "Overrides",
   overridesTriggerNeedsAttentionLabel: "Needs Review",
   overridesTriggerOpenAriaLabel: "Open overrides panel",
@@ -158,6 +154,7 @@ export const hostCopy = {
   timerRunningLabel: "Running",
   timerPausedLabel: "Paused",
   timerRemainingLabel: "Time Remaining",
+  timerTimesUpLabel: "Time's Up",
   timerPauseButtonLabel: "Pause Timer",
   timerResumeButtonLabel: "Resume Timer",
   timerExtendFifteenButtonLabel: "+15s",
@@ -198,6 +195,8 @@ export const hostCopy = {
   compactStandingsTitle: "Standings Snapshot",
   compactNoStandingsLabel: "No teams available for standings yet.",
   compactLeaderLabel: "Leader",
+  compactLeadSuffix: "leads.",
+  compactTiedLeadSuffix: "tied.",
   compactRosterValue: (
     visiblePlayerNames: string[],
     hiddenPlayerCount: number

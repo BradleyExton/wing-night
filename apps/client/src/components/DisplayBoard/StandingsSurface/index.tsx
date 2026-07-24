@@ -32,7 +32,13 @@ export const StandingsSurface = ({
   return (
     <footer className={styles.footer} style={gridStyle}>
       {standings.map((team, index) => {
-        const isLeader = leadingTeamId !== null && team.id === leadingTeamId;
+        const topScore = standings[0]?.totalScore ?? null;
+        // At FINAL_RESULTS every team tied at the top score is a winner —
+        // never crown only the alphabetically-first of a tie.
+        const isLeader =
+          phase === Phase.FINAL_RESULTS
+            ? topScore !== null && team.totalScore === topScore
+            : leadingTeamId !== null && team.id === leadingTeamId;
         const isWinner = isLeader && phase === Phase.FINAL_RESULTS;
         const teamColorVariant = resolveTeamColorVariant(team.id);
         const columnBgClassName = isLeader

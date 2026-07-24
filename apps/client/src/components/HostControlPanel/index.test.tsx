@@ -126,13 +126,14 @@ test("renders setup deck and assignment controls during SETUP", () => {
 });
 
 test("renders eating timer hero and participation deck during EATING", () => {
+  const timerStartedAt = Date.now();
   const html = renderToStaticMarkup(
     <HostControlPanel
       roomState={buildSnapshot(Phase.EATING, {
         timer: {
           phase: Phase.EATING,
-          startedAt: 0,
-          endsAt: 120_000,
+          startedAt: timerStartedAt,
+          endsAt: timerStartedAt + 120_000,
           durationMs: 120_000,
           isPaused: false,
           remainingMs: 120_000
@@ -152,6 +153,27 @@ test("renders eating timer hero and participation deck during EATING", () => {
   assert.match(html, /Pause Timer/);
   assert.match(html, /Overrides/);
   assert.match(html, /Mark Alex as ate wing/);
+});
+
+test("renders time's-up state when the eating timer has expired", () => {
+  const html = renderToStaticMarkup(
+    <HostControlPanel
+      roomState={buildSnapshot(Phase.EATING, {
+        timer: {
+          phase: Phase.EATING,
+          startedAt: 0,
+          endsAt: 120_000,
+          durationMs: 120_000,
+          isPaused: false,
+          remainingMs: 0
+        },
+        wingParticipationByPlayerId: { "player-1": true }
+      })}
+    />
+  );
+
+  assert.match(html, /Time(&#x27;|')s Up/);
+  assert.doesNotMatch(html, /Time Remaining/);
 });
 
 test("disables setup primary action when canAdvancePhase is false", () => {

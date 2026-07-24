@@ -1,5 +1,5 @@
 export const displayTriviaSurfaceCopy = {
   introMessage: "Get ready",
-  activeTeamLabel: "on the wings",
+  activeTeamLabel: "On the clock:",
   waitingMessage: "Waiting for trivia prompt..."
 } as const;

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import type { Player, RoomState } from "@wingnight/shared";
 
 import { ControlDeck } from "../ControlDeck";
@@ -6,26 +5,12 @@ import { StageHero } from "../StageHero";
 import { PlayersSurface } from "../../PlayersSurface";
 import { TimerControlsSurface } from "../../TimerControlsSurface";
 import { hostControlPanelCopy } from "../../copy";
+import { useNowTickMs } from "../../useNowTickMs";
+import { useTimesUpChime } from "../../useTimesUpChime";
 import { resolveRemainingTimerSeconds } from "../../../../utils/resolveRemainingTimerSeconds";
 import * as styles from "./styles";
 
 const URGENT_THRESHOLD_SECONDS = 10;
-
-const useNowTickMs = (): number => {
-  const [now, setNow] = useState<number>(() => Date.now());
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setNow(Date.now());
-    }, 250);
-
-    return (): void => {
-      window.clearInterval(intervalId);
-    };
-  }, []);
-
-  return now;
-};
 
 type EatingStageProps = {
   roomState: RoomState | null;
@@ -67,6 +52,7 @@ export const EatingStage = ({
   const nowTimestampMs = useNowTickMs();
   const remainingSeconds =
     timer !== null ? resolveRemainingTimerSeconds(timer, nowTimestampMs) : 0;
+  const isTimeUp = timer !== null && !timer.isPaused && remainingSeconds <= 0;
   const isUrgent = remainingSeconds <= URGENT_THRESHOLD_SECONDS;
   const totalDurationSeconds =
     timer !== null ? Math.max(timer.durationMs / 1000, 1) : 1;
@@ -74,7 +60,11 @@ export const EatingStage = ({
     0,
     Math.min(100, (remainingSeconds / totalDurationSeconds) * 100)
   );
-  const timerClassName = `${styles.timer} ${isUrgent ? styles.timerUrgent : ""}`;
+  const timerClassName = `${styles.timer} ${
+    isTimeUp ? styles.timerTimeUp : isUrgent ? styles.timerUrgent : ""
+  }`;
+
+  useTimesUpChime(timer === null ? null : remainingSeconds);
 
   return (
     <>
@@ -83,9 +73,10 @@ export const EatingStage = ({
         teamNameByTeamId={teamNameByTeamId}
         glowClassName={styles.glowEating}
       >
-        <span className={styles.eyebrow}>
-          {hostControlPanelCopy.timerSectionTitle} ·{" "}
-          {hostControlPanelCopy.timerRemainingLabel}
+        <span className={isTimeUp ? styles.eyebrowTimeUp : styles.eyebrow}>
+          {isTimeUp
+            ? hostControlPanelCopy.timerTimesUpLabel
+            : `${hostControlPanelCopy.timerSectionTitle} · ${hostControlPanelCopy.timerRemainingLabel}`}
         </span>
         <p className={timerClassName}>
           {hostControlPanelCopy.timerValue(remainingSeconds)}

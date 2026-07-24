@@ -1,6 +1,10 @@
 import { Phase, type RoomState } from "@wingnight/shared";
 
-import { getRoomStateSnapshot } from "../baseMutations/index.js";
+import {
+  getRoomStateSnapshot,
+  syncSetupBaselinePlayersFromState,
+  syncSetupBaselineTeamsFromState
+} from "../baseMutations/index.js";
 import {
   isExactTeamIdSet,
   isRoomInFatalState
@@ -49,6 +53,7 @@ export const addPlayer = (name: string): RoomState => {
     id: nextPlayerId,
     name: normalizedName
   });
+  syncSetupBaselinePlayersFromState(roomState);
 
   return getRoomStateSnapshot();
 };
@@ -77,6 +82,7 @@ export const createTeam = (name: string): RoomState => {
     playerIds: [],
     totalScore: 0
   });
+  syncSetupBaselineTeamsFromState(roomState);
 
   return getRoomStateSnapshot();
 };

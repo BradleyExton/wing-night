@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { SerializableValue } from "@wingnight/minigames-core";
+
 import {
   createTriviaStateWithPendingPoints,
   triviaMinigameModule,
   type TriviaMinigameContext,
   type TriviaMinigameState
 } from "./index.js";
+import { triviaRuntimePlugin } from "./runtime/index.js";
+import type { TriviaRuntimeState } from "./runtime/types/index.js";
 
 const triviaContext: TriviaMinigameContext = {
   prompts: [
@@ -123,4 +127,39 @@ test("selectDisplayView omits prompt answer while host view includes it", () => 
     id: "prompt-1",
     question: "Question 1?"
   });
+});
+
+test("runtime initialize seeds the prompt cursor by team index so later teams get fresh questions", () => {
+  const seededContent = {
+    prompts: [
+      { id: "prompt-1", question: "Question 1?", answer: "Answer 1" },
+      { id: "prompt-2", question: "Question 2?", answer: "Answer 2" },
+      { id: "prompt-3", question: "Question 3?", answer: "Answer 3" },
+      { id: "prompt-4", question: "Question 4?", answer: "Answer 4" },
+      { id: "prompt-5", question: "Question 5?", answer: "Answer 5" }
+    ]
+  };
+  const initializeForTeam = (
+    activeRoundTeamId: string | null,
+    content: SerializableValue = seededContent
+  ): TriviaRuntimeState => {
+    const state = triviaRuntimePlugin.initialize({
+      teamIds: ["team-1", "team-2", "team-3"],
+      activeRoundTeamId,
+      pointsMax: 15,
+      pendingPointsByTeamId: {},
+      rules: { questionsPerTurn: 2 },
+      content
+    });
+
+    return state as TriviaRuntimeState;
+  };
+
+  assert.equal(initializeForTeam("team-1").runtimeState.promptCursor, 0);
+  assert.equal(initializeForTeam("team-2").runtimeState.promptCursor, 2);
+  assert.equal(initializeForTeam("team-3").runtimeState.promptCursor, 4);
+  assert.equal(
+    initializeForTeam("team-1", { prompts: [] }).runtimeState.promptCursor,
+    0
+  );
 });

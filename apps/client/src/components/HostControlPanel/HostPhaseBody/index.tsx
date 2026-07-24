@@ -156,6 +156,7 @@ export const HostPhaseBody = (props: HostPhaseBodyProps): JSX.Element | null => 
             activeRoundTeamName={props.activeRoundTeamName}
             teamNameByTeamId={props.teamNameByTeamId}
             canDispatchMinigameAction={props.canDispatchMinigameAction}
+            timer={props.timer}
             onDispatchMinigameAction={props.onDispatchMinigameAction}
           />
         </div>

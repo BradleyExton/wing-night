@@ -14,6 +14,8 @@ import { SetupStageBody } from "./SetupStageBody";
 import { TurnResultsStageBody } from "./TurnResultsStageBody";
 import * as styles from "./styles";
 import { useEatingCountdown } from "./useEatingCountdown";
+import { useMinigameCountdown } from "./useMinigameCountdown";
+import { resolveLeadingTeams } from "../../../utils/resolveLeadingTeams";
 import { resolveSortedStandings } from "../../../utils/resolveSortedStandings";
 
 type StageSurfaceProps = {
@@ -45,7 +47,11 @@ export const StageSurface = ({
     eatingTimerSnapshot: stageViewModel.eatingTimerSnapshot,
     fallbackEatingSeconds: stageViewModel.fallbackEatingSeconds
   });
-  const winnerTeam = sortedStandings[0] ?? null;
+  const liveMinigameRemainingSeconds = useMinigameCountdown({
+    stageMode: stageViewModel.stageMode,
+    minigameTimerSnapshot: stageViewModel.minigameTimerSnapshot
+  });
+  const leadingTeams = resolveLeadingTeams(sortedStandings);
 
   const renderStageBody = (stageMode: StageRenderMode): JSX.Element => {
     switch (stageMode) {
@@ -94,6 +100,7 @@ export const StageSurface = ({
             minigameType={stageViewModel.minigameType}
             activeTeamName={stageViewModel.activeTeamName}
             minigameDisplayView={stageViewModel.minigameDisplayView}
+            remainingTimerSeconds={liveMinigameRemainingSeconds}
           />
         );
       case "turn_results":
@@ -115,8 +122,8 @@ export const StageSurface = ({
       case "final_results":
         return (
           <FinalResultsStageBody
-            winnerTeamName={winnerTeam?.name ?? null}
-            winnerScore={winnerTeam?.totalScore ?? null}
+            winnerTeamNames={leadingTeams.map((team) => team.name)}
+            winnerScore={leadingTeams[0]?.totalScore ?? null}
           />
         );
       case "fallback":

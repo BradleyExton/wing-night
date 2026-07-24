@@ -78,6 +78,12 @@ export const stageTimer =
 export const stageTimerUrgent =
   "text-heat [text-shadow:0_0_60px_rgba(239,68,68,0.4)] motion-safe:[animation:pulse_0.7s_ease-in-out_infinite]";
 
+export const stageTimerTimeUp =
+  "text-heat [text-shadow:0_0_80px_rgba(239,68,68,0.55)] motion-safe:[animation:pulse_1.2s_ease-in-out_infinite]";
+
+export const stageEyebrowTimeUp =
+  "text-[clamp(0.85rem,1.05vw,1.1rem)] font-extrabold uppercase tracking-[0.34em] text-heat motion-safe:[animation:pulse_1.2s_ease-in-out_infinite]";
+
 export const stageTimerCap =
   "text-[clamp(0.85rem,1.05vw,1.1rem)] font-bold uppercase tracking-[0.34em] text-muted";
 

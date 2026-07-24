@@ -5,6 +5,7 @@ import { StageHero } from "../StageHero";
 import { CompactSummarySurface } from "../../CompactSummarySurface";
 import { hostControlPanelCopy } from "../../copy";
 import { selectHeaderContext } from "../../HostMiniRail/selectHeaderContext";
+import { resolveLeadingTeams } from "../../../../utils/resolveLeadingTeams";
 import * as styles from "./styles";
 
 type CompactStageProps = {
@@ -27,7 +28,9 @@ export const CompactStage = ({
   onOpenOverrides
 }: CompactStageProps): JSX.Element => {
   const headerContext = selectHeaderContext(roomState, teamNameByTeamId);
-  const leader = sortedStandings[0] ?? null;
+  const leadingTeams = resolveLeadingTeams(sortedStandings);
+  const leader = leadingTeams[0] ?? null;
+  const isTiedLead = leadingTeams.length > 1;
 
   return (
     <>
@@ -36,7 +39,12 @@ export const CompactStage = ({
         <h1 className={styles.headline}>
           {leader !== null ? (
             <>
-              <span className={styles.headlineAccent}>{leader.name}</span> leads.
+              <span className={styles.headlineAccent}>
+                {leadingTeams.map((team) => team.name).join(" & ")}
+              </span>{" "}
+              {isTiedLead
+                ? hostControlPanelCopy.compactTiedLeadSuffix
+                : hostControlPanelCopy.compactLeadSuffix}
             </>
           ) : (
             hostControlPanelCopy.compactStandingsTitle
