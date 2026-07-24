@@ -4,49 +4,23 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   Phase,
   SETUP_PREVIEW_ROUND_SLOTS_MAX,
-  type GameConfigFile,
   type RoomState
 } from "@wingnight/shared";
 
+import { buildGameConfig, buildRoomState } from "../../../testSupport/roomStateFixtures";
 import { StageSurface } from "./index";
 
-const gameConfigFixture: GameConfigFile = {
-  name: "Fixture Config",
-  rounds: [
-    {
-      round: 1,
-      label: "Warm Up",
-      sauce: "Frank's",
-      pointsPerPlayer: 2,
-      minigame: "TRIVIA"
-    }
-  ],
-  minigameScoring: {
-    defaultMax: 15,
-    finalRoundMax: 20
-  },
-  timers: {
-    eatingSeconds: 120,
-    triviaSeconds: 30,
-    geoSeconds: 45,
-    drawingSeconds: 60
-  },
+const gameConfigFixture = buildGameConfig({
   minigameRules: {
     trivia: {
       questionsPerTurn: 1
     }
   }
-};
+});
 
 const buildSnapshot = (phase: Phase): RoomState => {
-  return {
+  return buildRoomState({
     phase,
-    currentRound: 1,
-    totalRounds: 1,
-    players: [
-      { id: "player-1", name: "Alex" },
-      { id: "player-2", name: "Morgan" }
-    ],
     teams: [
       {
         id: "team-1",
@@ -56,22 +30,9 @@ const buildSnapshot = (phase: Phase): RoomState => {
       }
     ],
     gameConfig: gameConfigFixture,
-    currentRoundConfig: gameConfigFixture.rounds[0],
     turnOrderTeamIds: ["team-1"],
-    roundTurnCursor: 0,
-    completedRoundTurnTeamIds: [],
-    activeRoundTeamId: "team-1",
-    activeTurnTeamId: null,
-    minigameHostView: null,
-    minigameDisplayView: null,
-    timer: null,
-    wingParticipationByPlayerId: {},
-    pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {},
-    fatalError: null,
-    canRedoScoringMutation: false,
-    canAdvancePhase: true
-  };
+    activeRoundTeamId: "team-1"
+  });
 };
 
 test("renders round intro three-beat reveal with metadata", () => {

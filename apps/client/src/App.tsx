@@ -10,7 +10,7 @@ import { createRoomSocket } from "./socket/createRoomSocket";
 import { shouldCreateRoomSocket } from "./socket/shouldCreateRoomSocket";
 import { resolveMinigameTypeFromSlug } from "./minigames/registry";
 import { saveHostSecret } from "./utils/hostSecretStorage";
-import { createHostControlPanelHandlers } from "./utils/createHostControlPanelHandlers";
+import { createHostRequestHandlers } from "./utils/hostRequests";
 import { resolveClientRoute, resolveDevMinigameSlug } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
@@ -36,7 +36,7 @@ export const App = (): JSX.Element => {
       return null;
     }
 
-    return createHostControlPanelHandlers(roomSocket);
+    return createHostRequestHandlers(roomSocket);
   }, [roomSocket, route]);
 
   useEffect(() => {

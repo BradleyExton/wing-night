@@ -10,6 +10,7 @@ import {
   type RoomState
 } from "@wingnight/shared";
 
+import { buildRoomState } from "../../testSupport/roomStateFixtures";
 import { wireRoomStateRehydration } from "./index";
 
 type RoomStateSocketEvents = {
@@ -88,29 +89,17 @@ test("forwards server snapshots to callback", () => {
     }
   );
 
-  const snapshot: RoomState = {
+  const snapshot: RoomState = buildRoomState({
     phase: Phase.SETUP,
     currentRound: 0,
     totalRounds: 3,
     players: [{ id: "p1", name: "Player One" }],
     teams: [{ id: "t1", name: "Spice Team", playerIds: ["p1"], totalScore: 0 }],
     gameConfig: null,
-    currentRoundConfig: null,
     turnOrderTeamIds: [],
     roundTurnCursor: -1,
-    completedRoundTurnTeamIds: [],
-    activeRoundTeamId: null,
-    activeTurnTeamId: null,
-    minigameHostView: null,
-    minigameDisplayView: null,
-    timer: null,
-    wingParticipationByPlayerId: {},
-    pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {},
-    fatalError: null,
-    canRedoScoringMutation: false,
-    canAdvancePhase: true
-  };
+    activeRoundTeamId: null
+  });
 
   const envelope: RoleScopedStateSnapshotEnvelope = {
     clientRole: CLIENT_ROLES.HOST,

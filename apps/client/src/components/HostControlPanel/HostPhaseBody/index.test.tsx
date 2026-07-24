@@ -3,90 +3,28 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   Phase,
-  type GameConfigFile,
   type MinigameHostView,
-  type Player,
-  type RoomState,
-  type Team
+  type RoomState
 } from "@wingnight/shared";
 
+import {
+  buildRoomState as buildRoomStateFixture,
+  fixturePlayers,
+  fixtureTeams
+} from "../../../testSupport/roomStateFixtures";
 import { HostPhaseBody } from "./index";
 import type { HostRenderMode } from "../resolveHostRenderMode";
 
 type HostPhaseBodyProps = Parameters<typeof HostPhaseBody>[0];
 
-const gameConfigFixture: GameConfigFile = {
-  name: "Fixture Config",
-  rounds: [
-    {
-      round: 1,
-      label: "Warm Up",
-      sauce: "Frank's",
-      pointsPerPlayer: 2,
-      minigame: "TRIVIA"
-    }
-  ],
-  minigameScoring: {
-    defaultMax: 15,
-    finalRoundMax: 20
-  },
-  timers: {
-    eatingSeconds: 120,
-    triviaSeconds: 30,
-    geoSeconds: 45,
-    drawingSeconds: 60
-  }
-};
-
-const teamsFixture: Team[] = [
-  {
-    id: "team-alpha",
-    name: "Team Alpha",
-    playerIds: ["player-1"],
-    totalScore: 10
-  },
-  {
-    id: "team-beta",
-    name: "Team Beta",
-    playerIds: ["player-2"],
-    totalScore: 8
-  }
-];
-
-const playersFixture: Player[] = [
-  { id: "player-1", name: "Alex" },
-  { id: "player-2", name: "Morgan" }
-];
+const teamsFixture = fixtureTeams;
+const playersFixture = fixturePlayers;
 
 const buildRoomState = (
   phase: Phase,
   overrides: Partial<RoomState> = {}
 ): RoomState => {
-  const snapshot: RoomState = {
-    phase,
-    currentRound: 1,
-    totalRounds: gameConfigFixture.rounds.length,
-    players: playersFixture,
-    teams: teamsFixture,
-    gameConfig: gameConfigFixture,
-    currentRoundConfig: gameConfigFixture.rounds[0],
-    turnOrderTeamIds: teamsFixture.map((team) => team.id),
-    roundTurnCursor: 0,
-    completedRoundTurnTeamIds: [],
-    activeRoundTeamId: teamsFixture[0]?.id ?? null,
-    activeTurnTeamId: null,
-    minigameHostView: null,
-    minigameDisplayView: null,
-    timer: null,
-    wingParticipationByPlayerId: {},
-    pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {},
-    fatalError: null,
-    canRedoScoringMutation: false,
-    canAdvancePhase: true
-  };
-
-  return { ...snapshot, ...overrides };
+  return buildRoomStateFixture({ phase, ...overrides });
 };
 
 const assignedTeamByPlayerId = new Map<string, string>([

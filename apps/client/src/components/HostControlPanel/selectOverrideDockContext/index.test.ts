@@ -1,80 +1,25 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { Phase, type GameConfigFile, type RoomState } from "@wingnight/shared";
+import { Phase, type RoomState } from "@wingnight/shared";
 
+import { buildRoomState } from "../../../testSupport/roomStateFixtures";
 import {
   hasCustomTurnOrder,
   selectOverrideDockContext
 } from "./index";
 
-const gameConfigFixture: GameConfigFile = {
-  name: "Fixture Config",
-  rounds: [
-    {
-      round: 1,
-      label: "Warm Up",
-      sauce: "Frank's",
-      pointsPerPlayer: 2,
-      minigame: "TRIVIA"
-    }
-  ],
-  minigameScoring: {
-    defaultMax: 15,
-    finalRoundMax: 20
-  },
-  timers: {
-    eatingSeconds: 120,
-    triviaSeconds: 30,
-    geoSeconds: 45,
-    drawingSeconds: 60
-  }
-};
-
 const buildSnapshot = (
   phase: Phase,
   overrides: Partial<RoomState> = {}
 ): RoomState => {
-  const snapshot: RoomState = {
+  return buildRoomState({
     phase,
-    currentRound: 1,
-    totalRounds: 1,
     players: [
       { id: "player-1", name: "Alex" },
       { id: "player-2", name: "Jordan" }
     ],
-    teams: [
-      {
-        id: "team-alpha",
-        name: "Team Alpha",
-        playerIds: ["player-1"],
-        totalScore: 10
-      },
-      {
-        id: "team-beta",
-        name: "Team Beta",
-        playerIds: ["player-2"],
-        totalScore: 8
-      }
-    ],
-    gameConfig: gameConfigFixture,
-    currentRoundConfig: gameConfigFixture.rounds[0],
-    turnOrderTeamIds: ["team-alpha", "team-beta"],
-    roundTurnCursor: 0,
-    completedRoundTurnTeamIds: [],
-    activeRoundTeamId: "team-alpha",
-    activeTurnTeamId: null,
-    minigameHostView: null,
-    minigameDisplayView: null,
-    timer: null,
-    wingParticipationByPlayerId: {},
-    pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {},
-    fatalError: null,
-    canRedoScoringMutation: false,
-    canAdvancePhase: true
-  };
-
-  return { ...snapshot, ...overrides };
+    ...overrides
+  });
 };
 
 test("dock is visible only in gameplay phases", () => {

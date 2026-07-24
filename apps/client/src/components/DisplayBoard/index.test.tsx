@@ -1,68 +1,25 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import {
-  Phase,
-  type GameConfigFile,
-  type RoomState,
-  type Team
-} from "@wingnight/shared";
+import { Phase, type RoomState, type Team } from "@wingnight/shared";
 
+import { buildRoomState } from "../../testSupport/roomStateFixtures";
 import { DisplayBoard } from "./index";
-
-const gameConfigFixture: GameConfigFile = {
-  name: "Fixture Config",
-  rounds: [
-    {
-      round: 1,
-      label: "Warm Up",
-      sauce: "Frank's",
-      pointsPerPlayer: 2,
-      minigame: "TRIVIA"
-    }
-  ],
-  minigameScoring: {
-    defaultMax: 15,
-    finalRoundMax: 20
-  },
-  timers: {
-    eatingSeconds: 120,
-    triviaSeconds: 30,
-    geoSeconds: 45,
-    drawingSeconds: 60
-  }
-};
 
 const buildSnapshot = (
   phase: Phase,
   teams: Team[] = [],
   overrides: Partial<RoomState> = {}
 ): RoomState => {
-  const snapshot: RoomState = {
+  return buildRoomState({
     phase,
-    currentRound: 1,
-    totalRounds: gameConfigFixture.rounds.length,
-    players: [],
     teams,
-    gameConfig: gameConfigFixture,
-    currentRoundConfig: gameConfigFixture.rounds[0],
+    players: [],
     turnOrderTeamIds: [],
     roundTurnCursor: -1,
-    completedRoundTurnTeamIds: [],
     activeRoundTeamId: null,
-    activeTurnTeamId: null,
-    minigameHostView: null,
-    minigameDisplayView: null,
-    timer: null,
-    wingParticipationByPlayerId: {},
-    pendingWingPointsByTeamId: {},
-    pendingMinigamePointsByTeamId: {},
-    fatalError: null,
-    canRedoScoringMutation: false,
-    canAdvancePhase: true
-  };
-
-  return { ...snapshot, ...overrides };
+    ...overrides
+  });
 };
 
 test("renders waiting copy when room state is missing", () => {
