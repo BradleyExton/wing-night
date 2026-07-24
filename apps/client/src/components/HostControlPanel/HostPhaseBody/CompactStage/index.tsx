@@ -1,37 +1,29 @@
-import type { Player, RoomState, Team } from "@wingnight/shared";
-
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
 import { CompactSummarySurface } from "../../CompactSummarySurface";
 import { hostControlPanelCopy } from "../../copy";
 import { selectHeaderContext } from "../../HostMiniRail/selectHeaderContext";
+import { selectHostTeamMaps } from "../../selectHostTeamMaps";
+import { useHostRoomState } from "../../../../context/RoomStateContext";
+import { resolveSortedStandings } from "../../../../utils/resolveSortedStandings";
 import * as styles from "./styles";
 
-type CompactStageProps = {
-  roomState: RoomState;
-  teamNameByTeamId: Map<string, string>;
-  players: Player[];
-  sortedStandings: Team[];
-  showOverridesButton: boolean;
-  overridesShowBadge: boolean;
-  onOpenOverrides: () => void;
-};
+export const CompactStage = (): JSX.Element | null => {
+  const roomState = useHostRoomState();
+  const { teamNameByTeamId } = selectHostTeamMaps(roomState);
 
-export const CompactStage = ({
-  roomState,
-  teamNameByTeamId,
-  players,
-  sortedStandings,
-  showOverridesButton,
-  overridesShowBadge,
-  onOpenOverrides
-}: CompactStageProps): JSX.Element => {
+  if (roomState === null) {
+    return null;
+  }
+
   const headerContext = selectHeaderContext(roomState, teamNameByTeamId);
+  const players = roomState.players;
+  const sortedStandings = resolveSortedStandings(roomState.teams);
   const leader = sortedStandings[0] ?? null;
 
   return (
     <>
-      <StageHero roomState={roomState} teamNameByTeamId={teamNameByTeamId}>
+      <StageHero>
         <span className={styles.eyebrow}>{headerContext.phaseTitle}</span>
         <h1 className={styles.headline}>
           {leader !== null ? (
@@ -46,11 +38,7 @@ export const CompactStage = ({
           {hostControlPanelCopy.headerPhaseDescription(roomState.phase)}
         </p>
       </StageHero>
-      <ControlDeck
-        showOverridesButton={showOverridesButton}
-        overridesShowBadge={overridesShowBadge}
-        onOpenOverrides={onOpenOverrides}
-      >
+      <ControlDeck>
         <CompactSummarySurface
           sortedStandings={sortedStandings}
           players={players}

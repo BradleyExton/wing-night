@@ -1,19 +1,17 @@
-import { Phase, type DisplayRoomStateSnapshot } from "@wingnight/shared";
+import { Phase } from "@wingnight/shared";
 import { useMemo } from "react";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { GameLockedOverlay } from "./GameLockedOverlay";
 import { StageSurface } from "./StageSurface";
 import { StandingsSurface } from "./StandingsSurface";
+import { useDisplayRoomState } from "../../context/RoomStateContext";
 import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
 import { useGameStartCountdown } from "./useGameStartCountdown";
 import * as styles from "./styles";
 
-type DisplayBoardProps = {
-  roomState: DisplayRoomStateSnapshot | null;
-};
-
-export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
+export const DisplayBoard = (): JSX.Element => {
+  const roomState = useDisplayRoomState();
   const fatalError = roomState?.fatalError ?? null;
   const players = roomState?.players ?? [];
   const standings = useMemo(() => {
@@ -42,10 +40,7 @@ export const DisplayBoard = ({ roomState }: DisplayBoardProps): JSX.Element => {
       <section className={styles.main}>
         <div className={styles.content}>
           <div className={styles.stageShell}>
-            <StageSurface
-              roomState={roomState}
-              showSetupPreview={shouldShowGameLockedOverlay}
-            />
+            <StageSurface showSetupPreview={shouldShowGameLockedOverlay} />
           </div>
         </div>
       </section>

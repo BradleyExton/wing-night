@@ -1,30 +1,17 @@
-import type { SerializableValue } from "@wingnight/minigames-core";
-import type { MinigameHostView, MinigameType } from "@wingnight/shared";
-
 import { MinigameSurface } from "../../MinigameSurface";
+import { useMinigameHostContext } from "../../useMinigameHostContext";
 
-type MinigamePlayTakeoverProps = {
-  minigameType: MinigameType | null;
-  minigameHostView: MinigameHostView | null;
-  activeRoundTeamId: string | null;
-  activeRoundTeamName: string;
-  teamNameByTeamId: Map<string, string>;
-  canDispatchMinigameAction: boolean;
-  onDispatchMinigameAction: (
-    actionType: string,
-    actionPayload: SerializableValue
-  ) => void;
-};
+export const MinigamePlayTakeover = (): JSX.Element => {
+  const {
+    teamNameByTeamId,
+    minigameType,
+    minigameHostView,
+    activeRoundTeamId,
+    activeRoundTeamName,
+    canDispatchMinigameAction,
+    handleDispatchMinigameAction
+  } = useMinigameHostContext("minigame_play");
 
-export const MinigamePlayTakeover = ({
-  minigameType,
-  minigameHostView,
-  activeRoundTeamId,
-  activeRoundTeamName,
-  teamNameByTeamId,
-  canDispatchMinigameAction,
-  onDispatchMinigameAction
-}: MinigamePlayTakeoverProps): JSX.Element => {
   return (
     <MinigameSurface
       phase="play"
@@ -33,7 +20,7 @@ export const MinigamePlayTakeover = ({
       activeTeamName={activeRoundTeamId === null ? null : activeRoundTeamName}
       teamNameByTeamId={teamNameByTeamId}
       canDispatchAction={canDispatchMinigameAction}
-      onDispatchAction={onDispatchMinigameAction}
+      onDispatchAction={handleDispatchMinigameAction}
     />
   );
 };

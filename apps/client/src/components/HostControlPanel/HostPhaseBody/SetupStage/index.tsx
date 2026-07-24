@@ -1,5 +1,4 @@
-import type { FormEvent } from "react";
-import type { Player, RoomState, Team } from "@wingnight/shared";
+import { useState } from "react";
 
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
@@ -7,51 +6,42 @@ import { PlayersSurface } from "../../PlayersSurface";
 import { TeamSetupSurface } from "../../TeamSetupSurface";
 import { hostControlPanelCopy } from "../../copy";
 import { selectHeaderContext } from "../../HostMiniRail/selectHeaderContext";
+import { selectHostTeamMaps } from "../../selectHostTeamMaps";
+import { createSetupHandlers } from "../../setupHandlers";
+import { useHostHandlers } from "../../../../context/HostHandlersContext";
+import { useHostRoomState } from "../../../../context/RoomStateContext";
 import * as styles from "./styles";
 
 type SetupStageProps = {
   isLocked: boolean;
-  roomState: RoomState | null;
-  players: Player[];
-  teams: Team[];
-  assignedTeamByPlayerId: Map<string, string>;
-  teamNameByTeamId: Map<string, string>;
-  nextTeamName: string;
-  setupMutationsDisabled: boolean;
-  autoAssignDisabled: boolean;
-  assignmentDisabled: boolean;
-  addPlayerDisabled: boolean;
-  showOverridesButton: boolean;
-  overridesShowBadge: boolean;
-  onOpenOverrides: () => void;
-  onNextTeamNameChange: (nextTeamName: string) => void;
-  onCreateTeamSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onAddPlayer: (name: string) => void;
-  onAssignPlayer: (playerId: string, selectedTeamId: string) => void;
-  onAutoAssignRemainingPlayers: () => void;
 };
 
-export const SetupStage = ({
-  isLocked,
-  roomState,
-  players,
-  teams,
-  assignedTeamByPlayerId,
-  teamNameByTeamId,
-  nextTeamName,
-  setupMutationsDisabled,
-  autoAssignDisabled,
-  assignmentDisabled,
-  addPlayerDisabled,
-  showOverridesButton,
-  overridesShowBadge,
-  onOpenOverrides,
-  onNextTeamNameChange,
-  onCreateTeamSubmit,
-  onAddPlayer,
-  onAssignPlayer,
-  onAutoAssignRemainingPlayers
-}: SetupStageProps): JSX.Element => {
+export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
+  const roomState = useHostRoomState();
+  const handlers = useHostHandlers();
+  const [nextTeamName, setNextTeamName] = useState("");
+  const { assignedTeamByPlayerId, teamNameByTeamId } = selectHostTeamMaps(roomState);
+  const players = roomState?.players ?? [];
+  const teams = roomState?.teams ?? [];
+  const setupMutationsDisabled = handlers.onCreateTeam === undefined || isLocked;
+  const addPlayerDisabled = handlers.onAddPlayer === undefined || isLocked;
+  const assignmentDisabled = handlers.onAssignPlayer === undefined || isLocked;
+  const autoAssignDisabled =
+    handlers.onAutoAssignRemainingPlayers === undefined || isLocked;
+  const {
+    handleCreateTeamSubmit,
+    handleAssignmentChange,
+    handleAddPlayer,
+    handleAutoAssignRemainingPlayers
+  } = createSetupHandlers({
+    hostMode: isLocked ? "setup_locked" : "setup",
+    nextTeamName,
+    onCreateTeam: handlers.onCreateTeam,
+    onAddPlayer: handlers.onAddPlayer,
+    onAssignPlayer: handlers.onAssignPlayer,
+    onAutoAssignRemainingPlayers: handlers.onAutoAssignRemainingPlayers,
+    setNextTeamName
+  });
   const headerContext = selectHeaderContext(roomState, teamNameByTeamId);
   const totalPlayers = players.length;
   const assignedPlayers = players.filter((player) => {
@@ -61,7 +51,7 @@ export const SetupStage = ({
 
   return (
     <>
-      <StageHero roomState={roomState} teamNameByTeamId={teamNameByTeamId}>
+      <StageHero>
         {isLocked && (
           <span className={styles.lockBadge}>
             {hostControlPanelCopy.setupLockedNoticeLabel}
@@ -95,24 +85,20 @@ export const SetupStage = ({
               type="button"
               className={styles.actionButton}
               disabled={autoAssignDisabled}
-              onClick={onAutoAssignRemainingPlayers}
+              onClick={handleAutoAssignRemainingPlayers}
             >
               {hostControlPanelCopy.autoAssignRemainingPlayersButtonLabel}
             </button>
           </div>
         )}
       </StageHero>
-      <ControlDeck
-        showOverridesButton={showOverridesButton}
-        overridesShowBadge={overridesShowBadge}
-        onOpenOverrides={onOpenOverrides}
-      >
+      <ControlDeck>
         <TeamSetupSurface
           nextTeamName={nextTeamName}
           setupMutationsDisabled={setupMutationsDisabled}
           teams={teams}
-          onNextTeamNameChange={onNextTeamNameChange}
-          onCreateTeamSubmit={onCreateTeamSubmit}
+          onNextTeamNameChange={setNextTeamName}
+          onCreateTeamSubmit={handleCreateTeamSubmit}
         />
         <PlayersSurface
           mode="setup"
@@ -121,8 +107,8 @@ export const SetupStage = ({
           assignedTeamByPlayerId={assignedTeamByPlayerId}
           assignmentDisabled={assignmentDisabled}
           addPlayerDisabled={addPlayerDisabled}
-          onAssignPlayer={onAssignPlayer}
-          onAddPlayer={onAddPlayer}
+          onAssignPlayer={handleAssignmentChange}
+          onAddPlayer={handleAddPlayer}
         />
       </ControlDeck>
     </>

@@ -9,30 +9,18 @@ export type HostRenderMode =
   | "minigame_play"
   | "compact";
 
-const assertUnreachable = (value: never): never => {
-  throw new Error(`Unhandled value: ${String(value)}`);
+const HOST_RENDER_MODE_BY_PHASE: Record<Phase, HostRenderMode> = {
+  [Phase.SETUP]: "setup",
+  [Phase.INTRO]: "setup_locked",
+  [Phase.ROUND_INTRO]: "compact",
+  [Phase.EATING]: "eating",
+  [Phase.MINIGAME_INTRO]: "minigame_intro",
+  [Phase.MINIGAME_PLAY]: "minigame_play",
+  [Phase.TURN_RESULTS]: "compact",
+  [Phase.ROUND_RESULTS]: "compact",
+  [Phase.FINAL_RESULTS]: "compact"
 };
 
 export const resolveHostRenderMode = (phase: Phase | null): HostRenderMode => {
-  switch (phase) {
-    case null:
-      return "waiting";
-    case Phase.SETUP:
-      return "setup";
-    case Phase.INTRO:
-      return "setup_locked";
-    case Phase.EATING:
-      return "eating";
-    case Phase.MINIGAME_INTRO:
-      return "minigame_intro";
-    case Phase.MINIGAME_PLAY:
-      return "minigame_play";
-    case Phase.ROUND_INTRO:
-    case Phase.TURN_RESULTS:
-    case Phase.ROUND_RESULTS:
-    case Phase.FINAL_RESULTS:
-      return "compact";
-    default:
-      return assertUnreachable(phase);
-  }
+  return phase === null ? "waiting" : HOST_RENDER_MODE_BY_PHASE[phase];
 };

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renderToStaticMarkup } from "react-dom/server";
 import { Phase, type RoomState } from "@wingnight/shared";
 
+import { renderHostMarkup } from "../../testSupport/renderWithProviders";
 import { buildRoomState } from "../../testSupport/roomStateFixtures";
 import { HostControlPanel } from "./index";
 
@@ -14,23 +14,21 @@ const buildSnapshot = (
 };
 
 test("renders waiting hero when room state is missing", () => {
-  const html = renderToStaticMarkup(<HostControlPanel roomState={null} />);
+  const html = renderHostMarkup(<HostControlPanel />);
 
   assert.match(html, /Waiting for room state/);
   assert.match(html, /Pre-game/);
 });
 
 test("renders fatal content state when snapshot reports content load failure", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.SETUP, {
-        fatalError: {
-          code: "CONTENT_LOAD_FAILED",
-          message: "Invalid game config content."
-        }
-      })}
-    />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.SETUP, {
+      fatalError: {
+        code: "CONTENT_LOAD_FAILED",
+        message: "Invalid game config content."
+      }
+    })
+  });
 
   assert.match(html, /Content Load Error/);
   assert.match(html, /CONTENT_LOAD_FAILED/);
@@ -40,17 +38,15 @@ test("renders fatal content state when snapshot reports content load failure", (
 
 test("renders setup deck and assignment controls during SETUP", () => {
   // Snapshot with one player not assigned so auto-assign button renders.
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.SETUP, {
-        players: [
-          { id: "player-1", name: "Alex" },
-          { id: "player-2", name: "Morgan" },
-          { id: "player-3", name: "Jamie" }
-        ]
-      })}
-    />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.SETUP, {
+      players: [
+        { id: "player-1", name: "Alex" },
+        { id: "player-2", name: "Morgan" },
+        { id: "player-3", name: "Jamie" }
+      ]
+    })
+  });
 
   assert.match(html, /Build the/);
   assert.match(html, /Teams/);
@@ -62,21 +58,19 @@ test("renders setup deck and assignment controls during SETUP", () => {
 });
 
 test("renders eating timer hero and participation deck during EATING", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.EATING, {
-        timer: {
-          phase: Phase.EATING,
-          startedAt: 0,
-          endsAt: 120_000,
-          durationMs: 120_000,
-          isPaused: false,
-          remainingMs: 120_000
-        },
-        wingParticipationByPlayerId: { "player-1": true }
-      })}
-    />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.EATING, {
+      timer: {
+        phase: Phase.EATING,
+        startedAt: 0,
+        endsAt: 120_000,
+        durationMs: 120_000,
+        isPaused: false,
+        remainingMs: 120_000
+      },
+      wingParticipationByPlayerId: { "player-1": true }
+    })
+  });
 
   assert.match(html, /Time Remaining/);
   assert.match(html, /Round 1 of 1/);
@@ -91,14 +85,12 @@ test("renders eating timer hero and participation deck during EATING", () => {
 });
 
 test("disables setup primary action when canAdvancePhase is false", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.SETUP, {
-        canAdvancePhase: false
-      })}
-      onNextPhase={(): void => {}}
-    />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.SETUP, {
+      canAdvancePhase: false
+    }),
+    handlers: { onNextPhase: (): void => {} }
+  });
 
   assert.match(
     html,
@@ -107,14 +99,12 @@ test("disables setup primary action when canAdvancePhase is false", () => {
 });
 
 test("enables setup primary action when canAdvancePhase is true", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.SETUP, {
-        canAdvancePhase: true
-      })}
-      onNextPhase={(): void => {}}
-    />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.SETUP, {
+      canAdvancePhase: true
+    }),
+    handlers: { onNextPhase: (): void => {} }
+  });
 
   assert.match(html, /Lock Teams &amp; Continue/);
   assert.doesNotMatch(
@@ -124,26 +114,24 @@ test("enables setup primary action when canAdvancePhase is true", () => {
 });
 
 test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
-        minigameHostView: {
-          minigame: "TRIVIA",
-          activeTurnTeamId: "team-alpha",
-          attemptsRemaining: 1,
-          promptCursor: 0,
-          pendingPointsByTeamId: {
-            "team-alpha": 0
-          },
-          currentPrompt: {
-            id: "prompt-1",
-            question: "Which scale measures pepper heat?",
-            answer: "Scoville"
-          }
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.MINIGAME_PLAY, {
+      minigameHostView: {
+        minigame: "TRIVIA",
+        activeTurnTeamId: "team-alpha",
+        attemptsRemaining: 1,
+        promptCursor: 0,
+        pendingPointsByTeamId: {
+          "team-alpha": 0
+        },
+        currentPrompt: {
+          id: "prompt-1",
+          question: "Which scale measures pepper heat?",
+          answer: "Scoville"
         }
-      })}
-    />
-  );
+      }
+    })
+  });
 
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.match(html, /Scoville/);
@@ -152,36 +140,34 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
 });
 
 test("disables trivia attempt controls when attemptsRemaining is exhausted", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
-        minigameHostView: {
-          minigame: "TRIVIA",
-          activeTurnTeamId: "team-alpha",
-          attemptsRemaining: 0,
-          promptCursor: 0,
-          pendingPointsByTeamId: {
-            "team-alpha": 0
-          },
-          currentPrompt: {
-            id: "prompt-1",
-            question: "Which scale measures pepper heat?",
-            answer: "Scoville"
-          }
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.MINIGAME_PLAY, {
+      minigameHostView: {
+        minigame: "TRIVIA",
+        activeTurnTeamId: "team-alpha",
+        attemptsRemaining: 0,
+        promptCursor: 0,
+        pendingPointsByTeamId: {
+          "team-alpha": 0
+        },
+        currentPrompt: {
+          id: "prompt-1",
+          question: "Which scale measures pepper heat?",
+          answer: "Scoville"
         }
-      })}
-      onDispatchMinigameAction={(): void => {}}
-    />
-  );
+      }
+    }),
+    handlers: { onDispatchMinigameAction: (): void => {} }
+  });
 
   assert.match(html, /<button[^>]*disabled=""[^>]*>Correct<\/button>/);
   assert.match(html, /<button[^>]*disabled=""[^>]*>Incorrect<\/button>/);
 });
 
 test("renders locked setup deck during INTRO with start-game CTA", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel roomState={buildSnapshot(Phase.INTRO)} />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.INTRO)
+  });
 
   assert.match(html, /Game Locked In/);
   assert.match(html, /Start Game/);
@@ -192,9 +178,9 @@ test("renders locked setup deck during INTRO with start-game CTA", () => {
 });
 
 test("renders standings snapshot in compact ROUND_INTRO view", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel roomState={buildSnapshot(Phase.ROUND_INTRO)} />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.ROUND_INTRO)
+  });
 
   assert.match(html, /Round 1 of 1/);
   assert.match(html, /Frank&#x27;s/);
@@ -204,68 +190,62 @@ test("renders standings snapshot in compact ROUND_INTRO view", () => {
 });
 
 test("renders standings snapshot in score-descending order during ROUND_RESULTS", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
-        teams: [
-          {
-            id: "team-alpha",
-            name: "Team Alpha",
-            playerIds: ["player-1"],
-            totalScore: 6
-          },
-          {
-            id: "team-beta",
-            name: "Team Beta",
-            playerIds: ["player-2"],
-            totalScore: 14
-          }
-        ]
-      })}
-    />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.ROUND_RESULTS, {
+      teams: [
+        {
+          id: "team-alpha",
+          name: "Team Alpha",
+          playerIds: ["player-1"],
+          totalScore: 6
+        },
+        {
+          id: "team-beta",
+          name: "Team Beta",
+          playerIds: ["player-2"],
+          totalScore: 14
+        }
+      ]
+    })
+  });
 
   assert.match(html, /Standings Snapshot/);
   assert.ok(html.indexOf("Team Beta") < html.indexOf("Team Alpha"));
 });
 
 test("renders game-complete CTA in FINAL_RESULTS view", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel roomState={buildSnapshot(Phase.FINAL_RESULTS)} />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.FINAL_RESULTS)
+  });
 
   assert.match(html, /Game Complete/);
   assert.match(html, /Standings Snapshot/);
 });
 
 test("shows redo action when scoring mutation history is available", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
-        canRedoScoringMutation: true
-      })}
-    />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.ROUND_RESULTS, {
+      canRedoScoringMutation: true
+    })
+  });
 
   assert.match(html, /Overrides/);
 });
 
 test("shows override button when turn order differs from default team order", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel
-      roomState={buildSnapshot(Phase.ROUND_RESULTS, {
-        turnOrderTeamIds: ["team-beta", "team-alpha"]
-      })}
-    />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.ROUND_RESULTS, {
+      turnOrderTeamIds: ["team-beta", "team-alpha"]
+    })
+  });
 
   assert.match(html, /Overrides/);
 });
 
 test("renders MINIGAME_INTRO with team callout and intro deck", () => {
-  const html = renderToStaticMarkup(
-    <HostControlPanel roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
-  );
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.MINIGAME_INTRO)
+  });
 
   assert.match(html, /Team Alpha/);
   assert.match(html, /TRIVIA/);

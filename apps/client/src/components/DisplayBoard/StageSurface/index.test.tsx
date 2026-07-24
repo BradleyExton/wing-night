@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renderToStaticMarkup } from "react-dom/server";
 import {
   Phase,
   SETUP_PREVIEW_ROUND_SLOTS_MAX,
   type RoomState
 } from "@wingnight/shared";
 
+import { renderDisplayMarkup } from "../../../testSupport/renderWithProviders";
 import { buildGameConfig, buildRoomState } from "../../../testSupport/roomStateFixtures";
 import { StageSurface } from "./index";
 
@@ -35,10 +35,17 @@ const buildSnapshot = (phase: Phase): RoomState => {
   });
 };
 
+const renderStage = (
+  roomState: RoomState,
+  showSetupPreview = false
+): string => {
+  return renderDisplayMarkup(<StageSurface showSetupPreview={showSetupPreview} />, {
+    roomState
+  });
+};
+
 test("renders round intro three-beat reveal with metadata", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.ROUND_INTRO)} />
-  );
+  const html = renderStage(buildSnapshot(Phase.ROUND_INTRO));
 
   assert.match(html, /Coming up/);
   assert.match(html, />01</);
@@ -52,9 +59,7 @@ test("renders round intro three-beat reveal with metadata", () => {
 });
 
 test("renders Cinematic Inferno setup with rounds preview and waiting indicator", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.SETUP)} />
-  );
+  const html = renderStage(buildSnapshot(Phase.SETUP));
 
   assert.match(html, /Wing Night/);
   assert.match(html, /Tonight/);
@@ -68,9 +73,7 @@ test("renders Cinematic Inferno setup with rounds preview and waiting indicator"
 });
 
 test("renders waiting Cinematic Inferno setup during INTRO with same chrome", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.INTRO)} />
-  );
+  const html = renderStage(buildSnapshot(Phase.INTRO));
 
   assert.match(html, /Wing Night/);
   assert.match(html, /Tonight/);
@@ -80,9 +83,7 @@ test("renders waiting Cinematic Inferno setup during INTRO with same chrome", ()
 });
 
 test("keeps rendering the setup surface while round intro is locally counting down", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.ROUND_INTRO)} showSetupPreview />
-  );
+  const html = renderStage(buildSnapshot(Phase.ROUND_INTRO), true);
 
   assert.match(html, /Wing Night/);
   assert.match(html, /Tonight/);
@@ -91,17 +92,13 @@ test("keeps rendering the setup surface while round intro is locally counting do
 });
 
 test("renders setup preview filler cards when setup preview slots are configured", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.SETUP),
-        gameConfig: {
-          ...gameConfigFixture,
-          setupPreviewRoundSlots: 8
-        }
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.SETUP),
+    gameConfig: {
+      ...gameConfigFixture,
+      setupPreviewRoundSlots: 8
+    }
+  });
 
   assert.match(html, /Round 08: Open Slot/);
   assert.match(html, /Choose sauce and mini-game to lock this round\./);
@@ -109,17 +106,13 @@ test("renders setup preview filler cards when setup preview slots are configured
 });
 
 test("clamps setup preview filler cards to the shared maximum", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.SETUP),
-        gameConfig: {
-          ...gameConfigFixture,
-          setupPreviewRoundSlots: SETUP_PREVIEW_ROUND_SLOTS_MAX + 50
-        }
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.SETUP),
+    gameConfig: {
+      ...gameConfigFixture,
+      setupPreviewRoundSlots: SETUP_PREVIEW_ROUND_SLOTS_MAX + 50
+    }
+  });
 
   const paddedMax = String(SETUP_PREVIEW_ROUND_SLOTS_MAX).padStart(2, "0");
   const paddedOver = String(SETUP_PREVIEW_ROUND_SLOTS_MAX + 1).padStart(2, "0");
@@ -128,34 +121,29 @@ test("clamps setup preview filler cards to the shared maximum", () => {
 });
 
 test("falls back to generic context when ROUND_INTRO is missing round config", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{ ...buildSnapshot(Phase.ROUND_INTRO), currentRoundConfig: null }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.ROUND_INTRO),
+    currentRoundConfig: null
+  });
 
   assert.match(html, /Round Intro in progress/);
   assert.match(html, /Phase details will appear on the next update\./);
 });
 
 test("renders trivia question without answer leakage", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.MINIGAME_PLAY),
-        minigameDisplayView: {
-          minigame: "TRIVIA",
-          activeTurnTeamId: "team-1",
-          promptCursor: 0,
-          pendingPointsByTeamId: {},
-          currentPrompt: {
-            id: "prompt-1",
-            question: "Which scale measures pepper heat?"
-          }
-        }
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.MINIGAME_PLAY),
+    minigameDisplayView: {
+      minigame: "TRIVIA",
+      activeTurnTeamId: "team-1",
+      promptCursor: 0,
+      pendingPointsByTeamId: {},
+      currentPrompt: {
+        id: "prompt-1",
+        question: "Which scale measures pepper heat?"
+      }
+    }
+  });
 
   assert.doesNotMatch(html, /Team 1 of 1/);
   assert.match(html, /Which scale measures pepper heat\?/);
@@ -163,56 +151,46 @@ test("renders trivia question without answer leakage", () => {
 });
 
 test("renders trivia waiting state when MINIGAME_PLAY projection is not available yet", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_PLAY)} />
-  );
+  const html = renderStage(buildSnapshot(Phase.MINIGAME_PLAY));
 
   assert.match(html, /Waiting for trivia prompt/);
 });
 
 test("renders GEO waiting state in MINIGAME_PLAY before the projected view arrives", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.MINIGAME_PLAY),
-        currentRoundConfig: {
-          ...gameConfigFixture.rounds[0],
-          minigame: "GEO"
-        }
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.MINIGAME_PLAY),
+    currentRoundConfig: {
+      ...gameConfigFixture.rounds[0],
+      minigame: "GEO"
+    }
+  });
 
   assert.match(html, /Awaiting the next dispatch from the field/);
 });
 
 test("renders GEO guessing surface without leaking answer coordinates", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.MINIGAME_PLAY),
-        currentRoundConfig: {
-          ...gameConfigFixture.rounds[0],
-          minigame: "GEO"
-        },
-        activeTurnTeamId: "team-1",
-        minigameDisplayView: {
-          minigame: "GEO",
-          activeTurnTeamId: "team-1",
-          pendingPointsByTeamId: { "team-1": 0 },
-          promptsPerTurn: 3,
-          promptsCompletedThisTurn: 0,
-          currentPrompt: {
-            id: "geo-prompt-1",
-            title: "Eiffel Tower",
-            imageSrc: "/sample-assets/geo/eiffel-tower.svg",
-            hint: "Iron lady of a European capital"
-          },
-          status: "guessing"
-        }
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.MINIGAME_PLAY),
+    currentRoundConfig: {
+      ...gameConfigFixture.rounds[0],
+      minigame: "GEO"
+    },
+    activeTurnTeamId: "team-1",
+    minigameDisplayView: {
+      minigame: "GEO",
+      activeTurnTeamId: "team-1",
+      pendingPointsByTeamId: { "team-1": 0 },
+      promptsPerTurn: 3,
+      promptsCompletedThisTurn: 0,
+      currentPrompt: {
+        id: "geo-prompt-1",
+        title: "Eiffel Tower",
+        imageSrc: "/sample-assets/geo/eiffel-tower.svg",
+        hint: "Iron lady of a European capital"
+      },
+      status: "guessing"
+    }
+  });
 
   assert.match(html, /Eiffel Tower/);
   assert.match(html, /“Iron lady of a European capital”/);
@@ -222,39 +200,35 @@ test("renders GEO guessing surface without leaking answer coordinates", () => {
 });
 
 test("renders GEO reveal stats after the guess is submitted", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.MINIGAME_PLAY),
-        currentRoundConfig: {
-          ...gameConfigFixture.rounds[0],
-          minigame: "GEO"
-        },
-        activeTurnTeamId: "team-1",
-        minigameDisplayView: {
-          minigame: "GEO",
-          activeTurnTeamId: "team-1",
-          pendingPointsByTeamId: { "team-1": 2 },
-          promptsPerTurn: 3,
-          promptsCompletedThisTurn: 1,
-          currentPrompt: {
-            id: "geo-prompt-1",
-            title: "Eiffel Tower",
-            imageSrc: "/sample-assets/geo/eiffel-tower.svg"
-          },
-          status: "submitted",
-          result: {
-            guessLat: 48.8,
-            guessLng: 2.35,
-            answerLat: 48.85837,
-            answerLng: 2.294481,
-            distanceKm: 7.7,
-            pointsAwarded: 2
-          }
-        }
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.MINIGAME_PLAY),
+    currentRoundConfig: {
+      ...gameConfigFixture.rounds[0],
+      minigame: "GEO"
+    },
+    activeTurnTeamId: "team-1",
+    minigameDisplayView: {
+      minigame: "GEO",
+      activeTurnTeamId: "team-1",
+      pendingPointsByTeamId: { "team-1": 2 },
+      promptsPerTurn: 3,
+      promptsCompletedThisTurn: 1,
+      currentPrompt: {
+        id: "geo-prompt-1",
+        title: "Eiffel Tower",
+        imageSrc: "/sample-assets/geo/eiffel-tower.svg"
+      },
+      status: "submitted",
+      result: {
+        guessLat: 48.8,
+        guessLng: 2.35,
+        answerLat: 48.85837,
+        answerLng: 2.294481,
+        distanceKm: 7.7,
+        pointsAwarded: 2
+      }
+    }
+  });
 
   assert.match(html, /Eiffel Tower/);
   assert.match(html, /7\.7 km off course/);
@@ -262,9 +236,7 @@ test("renders GEO reveal stats after the guess is submitted", () => {
 });
 
 test("renders active team and round meta during eating", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.EATING)} />
-  );
+  const html = renderStage(buildSnapshot(Phase.EATING));
 
   assert.match(html, /Team One/);
   assert.match(html, /Round 1/);
@@ -275,85 +247,71 @@ test("renders active team and round meta during eating", () => {
 
 test("uses running EATING timer snapshot instead of static config seconds", () => {
   const now = Date.now();
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.EATING),
-        gameConfig: {
-          ...gameConfigFixture,
-          timers: {
-            ...gameConfigFixture.timers,
-            eatingSeconds: 999
-          }
-        },
-        timer: {
-          phase: Phase.EATING,
-          startedAt: now,
-          endsAt: now + 120_000,
-          durationMs: 120_000,
-          isPaused: false,
-          remainingMs: 120_000
-        }
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.EATING),
+    gameConfig: {
+      ...gameConfigFixture,
+      timers: {
+        ...gameConfigFixture.timers,
+        eatingSeconds: 999
+      }
+    },
+    timer: {
+      phase: Phase.EATING,
+      startedAt: now,
+      endsAt: now + 120_000,
+      durationMs: 120_000,
+      isPaused: false,
+      remainingMs: 120_000
+    }
+  });
 
   assert.match(html, /02:00/);
   assert.doesNotMatch(html, /16:39/);
 });
 
 test("uses paused EATING timer snapshot remainingMs and freezes countdown", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.EATING),
-        gameConfig: {
-          ...gameConfigFixture,
-          timers: {
-            ...gameConfigFixture.timers,
-            eatingSeconds: 999
-          }
-        },
-        timer: {
-          phase: Phase.EATING,
-          startedAt: 0,
-          endsAt: 10_000,
-          durationMs: 120_000,
-          isPaused: true,
-          remainingMs: 45_000
-        }
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.EATING),
+    gameConfig: {
+      ...gameConfigFixture,
+      timers: {
+        ...gameConfigFixture.timers,
+        eatingSeconds: 999
+      }
+    },
+    timer: {
+      phase: Phase.EATING,
+      startedAt: 0,
+      endsAt: 10_000,
+      durationMs: 120_000,
+      isPaused: true,
+      remainingMs: 45_000
+    }
+  });
 
   assert.match(html, /00:45/);
   assert.doesNotMatch(html, /16:39/);
 });
 
 test("falls back to static config timer when EATING timer snapshot is unavailable", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.EATING),
-        gameConfig: {
-          ...gameConfigFixture,
-          timers: {
-            ...gameConfigFixture.timers,
-            eatingSeconds: 125
-          }
-        },
-        timer: null
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.EATING),
+    gameConfig: {
+      ...gameConfigFixture,
+      timers: {
+        ...gameConfigFixture.timers,
+        eatingSeconds: 125
+      }
+    },
+    timer: null
+  });
 
   assert.match(html, /02:05/);
 });
 
 test("renders the team-first three-beat reveal during minigame intro", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.MINIGAME_INTRO)} />
-  );
+  const html = renderStage(buildSnapshot(Phase.MINIGAME_INTRO));
 
   assert.match(html, /on the wings/);
   assert.match(html, /Team One/);
@@ -368,9 +326,7 @@ test("renders the team-first three-beat reveal during minigame intro", () => {
 });
 
 test("renders turn-results transition context with active team and turn progress", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface roomState={buildSnapshot(Phase.TURN_RESULTS)} />
-  );
+  const html = renderStage(buildSnapshot(Phase.TURN_RESULTS));
 
   assert.match(html, /Turn Complete/);
   assert.match(html, /Team One/);
@@ -380,19 +336,15 @@ test("renders turn-results transition context with active team and turn progress
 });
 
 test("renders round-results points summary from pending score buckets", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.ROUND_RESULTS),
-        pendingWingPointsByTeamId: {
-          "team-1": 5
-        },
-        pendingMinigamePointsByTeamId: {
-          "team-1": 7
-        }
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.ROUND_RESULTS),
+    pendingWingPointsByTeamId: {
+      "team-1": 5
+    },
+    pendingMinigamePointsByTeamId: {
+      "team-1": 7
+    }
+  });
 
   assert.match(html, /Scores locked/);
   assert.match(html, />01</);
@@ -404,17 +356,13 @@ test("renders round-results points summary from pending score buckets", () => {
 });
 
 test("renders final-results winner callout from standings order", () => {
-  const html = renderToStaticMarkup(
-    <StageSurface
-      roomState={{
-        ...buildSnapshot(Phase.FINAL_RESULTS),
-        teams: [
-          { id: "team-1", name: "Team One", playerIds: [], totalScore: 9 },
-          { id: "team-2", name: "Team Two", playerIds: [], totalScore: 15 }
-        ]
-      }}
-    />
-  );
+  const html = renderStage({
+    ...buildSnapshot(Phase.FINAL_RESULTS),
+    teams: [
+      { id: "team-1", name: "Team One", playerIds: [], totalScore: 9 },
+      { id: "team-2", name: "Team Two", playerIds: [], totalScore: 15 }
+    ]
+  });
 
   assert.match(html, /Game Over/);
   assert.match(html, /Champion/);

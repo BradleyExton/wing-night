@@ -6,6 +6,8 @@ import { HostControlPanel } from "./components/HostControlPanel";
 import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
 import { RootRouteLanding } from "./components/RootRouteLanding";
 import { RouteNotFound } from "./components/RouteNotFound";
+import { HostHandlersProvider } from "./context/HostHandlersContext";
+import { RoomStateProvider } from "./context/RoomStateContext";
 import { createRoomSocket } from "./socket/createRoomSocket";
 import { shouldCreateRoomSocket } from "./socket/shouldCreateRoomSocket";
 import { resolveMinigameTypeFromSlug } from "./minigames/registry";
@@ -14,6 +16,29 @@ import { createHostRequestHandlers } from "./utils/hostRequests";
 import { resolveClientRoute, resolveDevMinigameSlug } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
+
+const resolveRouteContent = (
+  route: ReturnType<typeof resolveClientRoute>,
+  devMinigameType: ReturnType<typeof resolveMinigameTypeFromSlug> | null
+): JSX.Element => {
+  if (route === "HOST") {
+    return <HostControlPanel />;
+  }
+
+  if (route === "DISPLAY") {
+    return <DisplayBoard />;
+  }
+
+  if (route === "ROOT") {
+    return <RootRouteLanding />;
+  }
+
+  if (route === "DEV_MINIGAME" && devMinigameType !== null) {
+    return <MinigameDevSandbox minigameType={devMinigameType} />;
+  }
+
+  return <RouteNotFound />;
+};
 
 export const App = (): JSX.Element => {
   const pathname = window.location.pathname;
@@ -31,7 +56,7 @@ export const App = (): JSX.Element => {
     return createRoomSocket(pathname);
   }, [pathname, route]);
 
-  const hostControlPanelHandlers = useMemo(() => {
+  const hostHandlers = useMemo(() => {
     if (route !== "HOST" || roomSocket === null) {
       return null;
     }
@@ -65,28 +90,11 @@ export const App = (): JSX.Element => {
     };
   }, [roomSocket]);
 
-  const hostRoomState =
-    roomStateEnvelope?.clientRole === "HOST" ? roomStateEnvelope.roomState : null;
-  const displayRoomState =
-    roomStateEnvelope?.clientRole === "DISPLAY" ? roomStateEnvelope.roomState : null;
-
-  if (route === "HOST") {
-    return (
-      <HostControlPanel roomState={hostRoomState} {...(hostControlPanelHandlers ?? {})} />
-    );
-  }
-
-  if (route === "DISPLAY") {
-    return <DisplayBoard roomState={displayRoomState} />;
-  }
-
-  if (route === "ROOT") {
-    return <RootRouteLanding />;
-  }
-
-  if (route === "DEV_MINIGAME" && devMinigameType !== null) {
-    return <MinigameDevSandbox minigameType={devMinigameType} />;
-  }
-
-  return <RouteNotFound />;
+  return (
+    <RoomStateProvider value={roomStateEnvelope}>
+      <HostHandlersProvider value={hostHandlers}>
+        {resolveRouteContent(route, devMinigameType)}
+      </HostHandlersProvider>
+    </RoomStateProvider>
+  );
 };

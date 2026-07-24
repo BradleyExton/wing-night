@@ -1,15 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renderToStaticMarkup } from "react-dom/server";
 import { Phase, type RoomState } from "@wingnight/shared";
 
+import { renderHostMarkup } from "../../../testSupport/renderWithProviders";
 import { buildRoomState } from "../../../testSupport/roomStateFixtures";
 import { HostMiniRail } from "./index";
-
-const teamNameByTeamId = new Map<string, string>([
-  ["team-alpha", "Team Alpha"],
-  ["team-beta", "Team Beta"]
-]);
 
 const buildSnapshot = (
   phase: Phase,
@@ -18,20 +13,19 @@ const buildSnapshot = (
   return buildRoomState({ phase, ...overrides });
 };
 
+const renderMiniRail = (roomState: RoomState | null): string => {
+  return renderHostMarkup(<HostMiniRail />, { roomState });
+};
+
 test("renders pre-game label when room state is missing", () => {
-  const html = renderToStaticMarkup(
-    <HostMiniRail roomState={null} teamNameByTeamId={teamNameByTeamId} />
-  );
+  const html = renderMiniRail(null);
 
   assert.match(html, /Pre-game/);
 });
 
 test("renders round progress when round metadata is valid", () => {
-  const html = renderToStaticMarkup(
-    <HostMiniRail
-      roomState={buildSnapshot(Phase.ROUND_INTRO, { currentRound: 2, totalRounds: 5 })}
-      teamNameByTeamId={teamNameByTeamId}
-    />
+  const html = renderMiniRail(
+    buildSnapshot(Phase.ROUND_INTRO, { currentRound: 2, totalRounds: 5 })
   );
 
   assert.match(html, /Round 2 of 5/);
@@ -40,11 +34,8 @@ test("renders round progress when round metadata is valid", () => {
 });
 
 test("renders pre-game when round metadata is not in progress", () => {
-  const html = renderToStaticMarkup(
-    <HostMiniRail
-      roomState={buildSnapshot(Phase.SETUP, { currentRound: 0, totalRounds: 3 })}
-      teamNameByTeamId={teamNameByTeamId}
-    />
+  const html = renderMiniRail(
+    buildSnapshot(Phase.SETUP, { currentRound: 0, totalRounds: 3 })
   );
 
   assert.match(html, /Pre-game/);
@@ -52,11 +43,8 @@ test("renders pre-game when round metadata is not in progress", () => {
 });
 
 test("renders pre-game when total rounds metadata is invalid", () => {
-  const html = renderToStaticMarkup(
-    <HostMiniRail
-      roomState={buildSnapshot(Phase.SETUP, { currentRound: 1, totalRounds: 0 })}
-      teamNameByTeamId={teamNameByTeamId}
-    />
+  const html = renderMiniRail(
+    buildSnapshot(Phase.SETUP, { currentRound: 1, totalRounds: 0 })
   );
 
   assert.match(html, /Pre-game/);
@@ -64,47 +52,33 @@ test("renders pre-game when total rounds metadata is invalid", () => {
 });
 
 test("hides round-intro-only sauce and minigame outside ROUND_INTRO", () => {
-  const html = renderToStaticMarkup(
-    <HostMiniRail
-      roomState={buildSnapshot(Phase.EATING)}
-      teamNameByTeamId={teamNameByTeamId}
-    />
-  );
+  const html = renderMiniRail(buildSnapshot(Phase.EATING));
 
   assert.doesNotMatch(html, /Frank/);
   assert.doesNotMatch(html, /TRIVIA/);
 });
 
 test("resolves active team using phase rules and fallback labels", () => {
-  const minigamePlayFallbackHtml = renderToStaticMarkup(
-    <HostMiniRail
-      roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
-        activeRoundTeamId: "team-beta",
-        activeTurnTeamId: null
-      })}
-      teamNameByTeamId={teamNameByTeamId}
-    />
+  const minigamePlayFallbackHtml = renderMiniRail(
+    buildSnapshot(Phase.MINIGAME_PLAY, {
+      activeRoundTeamId: "team-beta",
+      activeTurnTeamId: null
+    })
   );
   assert.match(minigamePlayFallbackHtml, /Team Beta/);
 
-  const minigamePlayPriorityHtml = renderToStaticMarkup(
-    <HostMiniRail
-      roomState={buildSnapshot(Phase.MINIGAME_PLAY, {
-        activeRoundTeamId: "team-beta",
-        activeTurnTeamId: "team-alpha"
-      })}
-      teamNameByTeamId={teamNameByTeamId}
-    />
+  const minigamePlayPriorityHtml = renderMiniRail(
+    buildSnapshot(Phase.MINIGAME_PLAY, {
+      activeRoundTeamId: "team-beta",
+      activeTurnTeamId: "team-alpha"
+    })
   );
   assert.match(minigamePlayPriorityHtml, /Team Alpha/);
 
-  const unknownTeamHtml = renderToStaticMarkup(
-    <HostMiniRail
-      roomState={buildSnapshot(Phase.EATING, {
-        activeRoundTeamId: "missing-team-id"
-      })}
-      teamNameByTeamId={teamNameByTeamId}
-    />
+  const unknownTeamHtml = renderMiniRail(
+    buildSnapshot(Phase.EATING, {
+      activeRoundTeamId: "missing-team-id"
+    })
   );
   assert.match(unknownTeamHtml, /No team assigned/);
 });
@@ -119,14 +93,11 @@ test("hides active-team rail data in non-turn phases", () => {
   ];
 
   for (const phase of nonTurnPhases) {
-    const html = renderToStaticMarkup(
-      <HostMiniRail
-        roomState={buildSnapshot(phase, {
-          roundTurnCursor: 0,
-          turnOrderTeamIds: ["team-alpha", "team-beta"]
-        })}
-        teamNameByTeamId={teamNameByTeamId}
-      />
+    const html = renderMiniRail(
+      buildSnapshot(phase, {
+        roundTurnCursor: 0,
+        turnOrderTeamIds: ["team-alpha", "team-beta"]
+      })
     );
 
     assert.doesNotMatch(html, /Team Alpha/, `${phase} should not show active team`);
@@ -134,12 +105,7 @@ test("hides active-team rail data in non-turn phases", () => {
 });
 
 test("does not render trivia prompt or answer payloads in rail", () => {
-  const html = renderToStaticMarkup(
-    <HostMiniRail
-      roomState={buildSnapshot(Phase.MINIGAME_PLAY)}
-      teamNameByTeamId={teamNameByTeamId}
-    />
-  );
+  const html = renderMiniRail(buildSnapshot(Phase.MINIGAME_PLAY));
 
   assert.doesNotMatch(html, /Which scale measures pepper heat/);
   assert.doesNotMatch(html, /Scoville/);

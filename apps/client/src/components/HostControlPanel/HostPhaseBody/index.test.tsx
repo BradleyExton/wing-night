@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renderToStaticMarkup } from "react-dom/server";
 import {
   Phase,
   type MinigameHostView,
@@ -8,17 +7,11 @@ import {
 } from "@wingnight/shared";
 
 import {
-  buildRoomState as buildRoomStateFixture,
-  fixturePlayers,
-  fixtureTeams
-} from "../../../testSupport/roomStateFixtures";
+  buildNoopHostHandlers,
+  renderHostMarkup
+} from "../../../testSupport/renderWithProviders";
+import { buildRoomState as buildRoomStateFixture } from "../../../testSupport/roomStateFixtures";
 import { HostPhaseBody } from "./index";
-import type { HostRenderMode } from "../resolveHostRenderMode";
-
-type HostPhaseBodyProps = Parameters<typeof HostPhaseBody>[0];
-
-const teamsFixture = fixtureTeams;
-const playersFixture = fixturePlayers;
 
 const buildRoomState = (
   phase: Phase,
@@ -27,87 +20,28 @@ const buildRoomState = (
   return buildRoomStateFixture({ phase, ...overrides });
 };
 
-const assignedTeamByPlayerId = new Map<string, string>([
-  ["player-1", "team-alpha"],
-  ["player-2", "team-beta"]
-]);
-
-const teamNameByTeamId = new Map<string, string>([
-  ["team-alpha", "Team Alpha"],
-  ["team-beta", "Team Beta"]
-]);
-
-const buildProps = (
-  hostMode: HostRenderMode,
-  phase: Phase | null,
-  overrides: Partial<HostPhaseBodyProps> = {}
-): HostPhaseBodyProps => {
-  const roomState = phase === null ? null : buildRoomState(phase);
-
-  return {
-    hostMode,
+const renderPhaseBody = (roomState: RoomState | null): string => {
+  return renderHostMarkup(<HostPhaseBody />, {
     roomState,
-    players: playersFixture,
-    teams: teamsFixture,
-    assignedTeamByPlayerId,
-    teamNameByTeamId,
-    wingParticipationByPlayerId: { "player-1": true },
-    activeRoundTeamId: "team-alpha",
-    activeRoundTeamName: "Team Alpha",
-    minigameType: roomState?.currentRoundConfig?.minigame ?? null,
-    minigameHostView: null,
-    nextTeamName: "",
-    setupMutationsDisabled: false,
-    autoAssignDisabled: false,
-    assignmentDisabled: false,
-    addPlayerDisabled: false,
-    participationDisabled: false,
-    canDispatchMinigameAction: true,
-    sortedStandings: teamsFixture,
-    timer: null,
-    showOverridesButton: false,
-    overridesShowBadge: false,
-    onOpenOverrides: () => undefined,
-    onNextTeamNameChange: () => undefined,
-    onCreateTeamSubmit: () => undefined,
-    onAddPlayer: () => undefined,
-    onAssignPlayer: () => undefined,
-    onAutoAssignRemainingPlayers: () => undefined,
-    onSetWingParticipation: () => undefined,
-    onPauseTimer: () => undefined,
-    onResumeTimer: () => undefined,
-    onExtendTimer: () => undefined,
-    onDispatchMinigameAction: () => undefined,
-    ...overrides
-  };
+    handlers: buildNoopHostHandlers()
+  });
 };
 
 test("renders waiting hero in waiting mode", () => {
-  const html = renderToStaticMarkup(
-    <HostPhaseBody {...buildProps("waiting", null)} />
-  );
+  const html = renderPhaseBody(null);
 
   assert.match(html, /Waiting for room state/);
 });
 
 test("renders setup surfaces in setup mode", () => {
-  const html = renderToStaticMarkup(
-    <HostPhaseBody {...buildProps("setup", Phase.SETUP)} />
-  );
+  const html = renderPhaseBody(buildRoomState(Phase.SETUP));
 
   assert.match(html, /Teams/);
   assert.match(html, /Assign Alex to a team/);
 });
 
 test("renders setup lock notice in setup_locked mode", () => {
-  const html = renderToStaticMarkup(
-    <HostPhaseBody
-      {...buildProps("setup_locked", Phase.INTRO, {
-        setupMutationsDisabled: true,
-        assignmentDisabled: true
-      })}
-    />
-  );
+  const html = renderPhaseBody(buildRoomState(Phase.INTRO));
 
   assert.match(html, /Game Locked In/);
   assert.match(html, /Teams/);
@@ -124,14 +58,7 @@ test("renders eating surfaces in eating mode", () => {
     remainingMs: 60_000
   };
 
-  const html = renderToStaticMarkup(
-    <HostPhaseBody
-      {...buildProps("eating", Phase.EATING, {
-        roomState: buildRoomState(Phase.EATING, { timer: eatingTimer }),
-        timer: eatingTimer
-      })}
-    />
-  );
+  const html = renderPhaseBody(buildRoomState(Phase.EATING, { timer: eatingTimer }));
 
   assert.match(html, /Timer Controls/);
   assert.match(html, /Alex/);
@@ -139,9 +66,7 @@ test("renders eating surfaces in eating mode", () => {
 });
 
 test("renders minigame surface in minigame intro mode", () => {
-  const html = renderToStaticMarkup(
-    <HostPhaseBody {...buildProps("minigame_intro", Phase.MINIGAME_INTRO)} />
-  );
+  const html = renderPhaseBody(buildRoomState(Phase.MINIGAME_INTRO));
 
   assert.match(html, /Mini-Game/);
   assert.match(html, /Call the team up, explain it, then start eating once they are set\./);
@@ -165,12 +90,10 @@ test("renders minigame surface in minigame play mode", () => {
     }
   };
 
-  const html = renderToStaticMarkup(
-    <HostPhaseBody
-      {...buildProps("minigame_play", Phase.MINIGAME_PLAY, {
-        minigameHostView: triviaHostView
-      })}
-    />
+  const html = renderPhaseBody(
+    buildRoomState(Phase.MINIGAME_PLAY, {
+      minigameHostView: triviaHostView
+    })
   );
 
   assert.match(html, /Which scale measures pepper heat\?/);
@@ -180,9 +103,7 @@ test("renders minigame surface in minigame play mode", () => {
 });
 
 test("renders compact round intro surfaces", () => {
-  const html = renderToStaticMarkup(
-    <HostPhaseBody {...buildProps("compact", Phase.ROUND_INTRO)} />
-  );
+  const html = renderPhaseBody(buildRoomState(Phase.ROUND_INTRO));
 
   assert.match(html, /Standings Snapshot/);
   assert.doesNotMatch(html, /Turn Order/);

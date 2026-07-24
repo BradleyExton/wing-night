@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renderToStaticMarkup } from "react-dom/server";
 import { Phase, type RoomState, type Team } from "@wingnight/shared";
 
+import { renderDisplayMarkup } from "../../testSupport/renderWithProviders";
 import { buildRoomState } from "../../testSupport/roomStateFixtures";
 import { DisplayBoard } from "./index";
 
@@ -23,7 +23,7 @@ const buildSnapshot = (
 };
 
 test("renders waiting copy when room state is missing", () => {
-  const html = renderToStaticMarkup(<DisplayBoard roomState={null} />);
+  const html = renderDisplayMarkup(<DisplayBoard />);
 
   assert.match(html, /Waiting for room state/);
   assert.match(html, /No teams have joined yet/);
@@ -33,16 +33,14 @@ test("renders waiting copy when room state is missing", () => {
 });
 
 test("renders fatal content state when snapshot reports content load failure", () => {
-  const html = renderToStaticMarkup(
-    <DisplayBoard
-      roomState={buildSnapshot(Phase.SETUP, [], {
-        fatalError: {
-          code: "CONTENT_LOAD_FAILED",
-          message: "Missing players content file."
-        }
-      })}
-    />
-  );
+  const html = renderDisplayMarkup(<DisplayBoard />, {
+    roomState: buildSnapshot(Phase.SETUP, [], {
+      fatalError: {
+        code: "CONTENT_LOAD_FAILED",
+        message: "Missing players content file."
+      }
+    })
+  });
 
   assert.match(html, /Content Load Error/);
   assert.match(html, /CONTENT_LOAD_FAILED/);
@@ -51,9 +49,9 @@ test("renders fatal content state when snapshot reports content load failure", (
 });
 
 test("renders eating timer view from snapshot config", () => {
-  const html = renderToStaticMarkup(
-    <DisplayBoard roomState={buildSnapshot(Phase.EATING)} />
-  );
+  const html = renderDisplayMarkup(<DisplayBoard />, {
+    roomState: buildSnapshot(Phase.EATING)
+  });
 
   assert.match(html, /02:00/);
   assert.match(html, /Eating ·/);
@@ -63,9 +61,9 @@ test("renders eating timer view from snapshot config", () => {
 });
 
 test("renders a full-screen locked overlay during INTRO", () => {
-  const html = renderToStaticMarkup(
-    <DisplayBoard roomState={buildSnapshot(Phase.INTRO)} />
-  );
+  const html = renderDisplayMarkup(<DisplayBoard />, {
+    roomState: buildSnapshot(Phase.INTRO)
+  });
 
   assert.match(html, /Locked/);
   assert.match(html, /Host is ready to launch the round\./);
@@ -95,11 +93,9 @@ test("renders standings in descending score order", () => {
     { id: "player-3", name: "Sam" },
     { id: "player-4", name: "Jules" }
   ];
-  const html = renderToStaticMarkup(
-    <DisplayBoard
-      roomState={buildSnapshot(Phase.ROUND_RESULTS, teams, { players })}
-    />
-  );
+  const html = renderDisplayMarkup(<DisplayBoard />, {
+    roomState: buildSnapshot(Phase.ROUND_RESULTS, teams, { players })
+  });
 
   assert.match(html, /Team Beta/);
   assert.match(html, /Team Alpha/);

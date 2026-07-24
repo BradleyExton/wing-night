@@ -37,7 +37,7 @@ export type RoundResultsRow = {
   totalPoints: number;
 };
 
-type StageViewModel = {
+export type StageViewModel = {
   phase: Phase | null;
   stageMode: StageRenderMode;
   gameConfig: DisplayRoomStateSnapshot["gameConfig"];
@@ -59,35 +59,20 @@ type StageViewModel = {
   hasRoomState: boolean;
 };
 
-const assertUnreachable = (value: never): never => {
-  throw new Error(`Unhandled value: ${String(value)}`);
+const STAGE_RENDER_MODE_BY_PHASE: Record<Phase, StageRenderMode> = {
+  [Phase.SETUP]: "setup",
+  [Phase.INTRO]: "setup_locked",
+  [Phase.ROUND_INTRO]: "round_intro",
+  [Phase.EATING]: "eating",
+  [Phase.MINIGAME_INTRO]: "minigame_intro",
+  [Phase.MINIGAME_PLAY]: "minigame_play",
+  [Phase.TURN_RESULTS]: "turn_results",
+  [Phase.ROUND_RESULTS]: "round_results",
+  [Phase.FINAL_RESULTS]: "final_results"
 };
 
 const resolveStageRenderMode = (phase: Phase | null): StageRenderMode => {
-  switch (phase) {
-    case Phase.SETUP:
-      return "setup";
-    case Phase.INTRO:
-      return "setup_locked";
-    case Phase.ROUND_INTRO:
-      return "round_intro";
-    case Phase.EATING:
-      return "eating";
-    case Phase.MINIGAME_INTRO:
-      return "minigame_intro";
-    case Phase.MINIGAME_PLAY:
-      return "minigame_play";
-    case Phase.TURN_RESULTS:
-      return "turn_results";
-    case Phase.ROUND_RESULTS:
-      return "round_results";
-    case Phase.FINAL_RESULTS:
-      return "final_results";
-    case null:
-      return "fallback";
-    default:
-      return assertUnreachable(phase);
-  }
+  return phase === null ? "fallback" : STAGE_RENDER_MODE_BY_PHASE[phase];
 };
 
 export const resolveStageViewModel = (

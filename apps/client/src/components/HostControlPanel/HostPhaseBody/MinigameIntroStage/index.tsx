@@ -1,52 +1,27 @@
-import type { SerializableValue } from "@wingnight/minigames-core";
-import type {
-  MinigameHostView,
-  MinigameType,
-  RoomState
-} from "@wingnight/shared";
-
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
 import { MinigameSurface } from "../../MinigameSurface";
 import { hostControlPanelCopy } from "../../copy";
 import { selectHeaderContext } from "../../HostMiniRail/selectHeaderContext";
+import { useMinigameHostContext } from "../../useMinigameHostContext";
 import * as styles from "./styles";
 
-type MinigameIntroStageProps = {
-  roomState: RoomState | null;
-  teamNameByTeamId: Map<string, string>;
-  minigameType: MinigameType | null;
-  minigameHostView: MinigameHostView | null;
-  activeRoundTeamId: string | null;
-  activeRoundTeamName: string;
-  canDispatchMinigameAction: boolean;
-  showOverridesButton: boolean;
-  overridesShowBadge: boolean;
-  onOpenOverrides: () => void;
-  onDispatchMinigameAction: (
-    actionType: string,
-    actionPayload: SerializableValue
-  ) => void;
-};
-
-export const MinigameIntroStage = ({
-  roomState,
-  teamNameByTeamId,
-  minigameType,
-  minigameHostView,
-  activeRoundTeamId,
-  activeRoundTeamName,
-  canDispatchMinigameAction,
-  showOverridesButton,
-  overridesShowBadge,
-  onOpenOverrides,
-  onDispatchMinigameAction
-}: MinigameIntroStageProps): JSX.Element => {
+export const MinigameIntroStage = (): JSX.Element => {
+  const {
+    roomState,
+    teamNameByTeamId,
+    minigameType,
+    minigameHostView,
+    activeRoundTeamId,
+    activeRoundTeamName,
+    canDispatchMinigameAction,
+    handleDispatchMinigameAction
+  } = useMinigameHostContext("minigame_intro");
   const headerContext = selectHeaderContext(roomState, teamNameByTeamId);
 
   return (
     <>
-      <StageHero roomState={roomState} teamNameByTeamId={teamNameByTeamId}>
+      <StageHero>
         <span className={styles.eyebrow}>{headerContext.phaseTitle}</span>
         <h1 className={styles.headline}>
           {minigameType ?? hostControlPanelCopy.minigameSectionTitle}
@@ -57,11 +32,7 @@ export const MinigameIntroStage = ({
             : hostControlPanelCopy.headerWaitingDescription}
         </p>
       </StageHero>
-      <ControlDeck
-        showOverridesButton={showOverridesButton}
-        overridesShowBadge={overridesShowBadge}
-        onOpenOverrides={onOpenOverrides}
-      >
+      <ControlDeck>
         <MinigameSurface
           phase="intro"
           minigameType={minigameType}
@@ -69,7 +40,7 @@ export const MinigameIntroStage = ({
           activeTeamName={activeRoundTeamId === null ? null : activeRoundTeamName}
           teamNameByTeamId={teamNameByTeamId}
           canDispatchAction={canDispatchMinigameAction}
-          onDispatchAction={onDispatchMinigameAction}
+          onDispatchAction={handleDispatchMinigameAction}
         />
       </ControlDeck>
     </>

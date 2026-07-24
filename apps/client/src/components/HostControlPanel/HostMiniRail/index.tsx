@@ -1,17 +1,11 @@
-import type { RoomState } from "@wingnight/shared";
-
+import { useHostRoomState } from "../../../context/RoomStateContext";
+import { selectHostTeamMaps } from "../selectHostTeamMaps";
 import { selectHeaderContext } from "./selectHeaderContext";
 import * as styles from "./styles";
 
-type HostMiniRailProps = {
-  roomState: RoomState | null;
-  teamNameByTeamId: Map<string, string>;
-};
-
-export const HostMiniRail = ({
-  roomState,
-  teamNameByTeamId
-}: HostMiniRailProps): JSX.Element => {
+export const HostMiniRail = (): JSX.Element => {
+  const roomState = useHostRoomState();
+  const { teamNameByTeamId } = selectHostTeamMaps(roomState);
   const headerContext = selectHeaderContext(roomState, teamNameByTeamId);
 
   return (

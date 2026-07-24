@@ -1,22 +1,18 @@
 import type { ReactNode } from "react";
 import { Settings2 } from "lucide-react";
 
+import { useHostOverridesUi } from "../../../../context/HostOverridesUiContext";
 import { hostControlPanelCopy } from "../../copy";
 import * as styles from "./styles";
 
 type ControlDeckProps = {
-  showOverridesButton: boolean;
-  overridesShowBadge: boolean;
-  onOpenOverrides: () => void;
   children: ReactNode;
 };
 
-export const ControlDeck = ({
-  showOverridesButton,
-  overridesShowBadge,
-  onOpenOverrides,
-  children
-}: ControlDeckProps): JSX.Element => {
+export const ControlDeck = ({ children }: ControlDeckProps): JSX.Element => {
+  const { showOverridesButton, overridesShowBadge, onOpenOverrides } =
+    useHostOverridesUi();
+
   return (
     <aside className={styles.root}>
       {children}

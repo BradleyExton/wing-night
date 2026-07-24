@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import type { Player, RoomState } from "@wingnight/shared";
 
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
 import { PlayersSurface } from "../../PlayersSurface";
 import { TimerControlsSurface } from "../../TimerControlsSurface";
 import { hostControlPanelCopy } from "../../copy";
+import { selectHostTeamMaps } from "../../selectHostTeamMaps";
+import { createMinigameHandlers } from "../../setupHandlers";
+import { useHostHandlers } from "../../../../context/HostHandlersContext";
+import { useHostRoomState } from "../../../../context/RoomStateContext";
 import { resolveRemainingTimerSeconds } from "../../../../utils/resolveRemainingTimerSeconds";
 import * as styles from "./styles";
 
@@ -27,43 +30,26 @@ const useNowTickMs = (): number => {
   return now;
 };
 
-type EatingStageProps = {
-  roomState: RoomState | null;
-  players: Player[];
-  assignedTeamByPlayerId: Map<string, string>;
-  teamNameByTeamId: Map<string, string>;
-  wingParticipationByPlayerId: Record<string, boolean>;
-  activeRoundTeamId: string | null;
-  activeRoundTeamName: string;
-  participationDisabled: boolean;
-  timer: RoomState["timer"];
-  showOverridesButton: boolean;
-  overridesShowBadge: boolean;
-  onOpenOverrides: () => void;
-  onSetWingParticipation: (playerId: string, didEat: boolean) => void;
-  onPauseTimer?: () => void;
-  onResumeTimer?: () => void;
-  onExtendTimer?: (additionalSeconds: number) => void;
-};
-
-export const EatingStage = ({
-  roomState,
-  players,
-  assignedTeamByPlayerId,
-  teamNameByTeamId,
-  wingParticipationByPlayerId,
-  activeRoundTeamId,
-  activeRoundTeamName,
-  participationDisabled,
-  timer,
-  showOverridesButton,
-  overridesShowBadge,
-  onOpenOverrides,
-  onSetWingParticipation,
-  onPauseTimer,
-  onResumeTimer,
-  onExtendTimer
-}: EatingStageProps): JSX.Element => {
+export const EatingStage = (): JSX.Element => {
+  const roomState = useHostRoomState();
+  const handlers = useHostHandlers();
+  const { assignedTeamByPlayerId, teamNameByTeamId } = selectHostTeamMaps(roomState);
+  const players = roomState?.players ?? [];
+  const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
+  const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
+  const activeRoundTeamName =
+    activeRoundTeamId !== null
+      ? (teamNameByTeamId.get(activeRoundTeamId) ??
+        hostControlPanelCopy.noAssignedTeamLabel)
+      : hostControlPanelCopy.noAssignedTeamLabel;
+  const participationDisabled = handlers.onSetWingParticipation === undefined;
+  const timer = roomState?.timer ?? null;
+  const { handleWingParticipationChange } = createMinigameHandlers({
+    hostMode: "eating",
+    minigameType: null,
+    onDispatchMinigameAction: handlers.onDispatchMinigameAction,
+    onSetWingParticipation: handlers.onSetWingParticipation
+  });
   const nowTimestampMs = useNowTickMs();
   const remainingSeconds =
     timer !== null ? resolveRemainingTimerSeconds(timer, nowTimestampMs) : 0;
@@ -78,11 +64,7 @@ export const EatingStage = ({
 
   return (
     <>
-      <StageHero
-        roomState={roomState}
-        teamNameByTeamId={teamNameByTeamId}
-        glowClassName={styles.glowEating}
-      >
+      <StageHero glowClassName={styles.glowEating}>
         <span className={styles.eyebrow}>
           {hostControlPanelCopy.timerSectionTitle} ·{" "}
           {hostControlPanelCopy.timerRemainingLabel}
@@ -97,11 +79,7 @@ export const EatingStage = ({
           {hostControlPanelCopy.eatingParticipationDescription}
         </p>
       </StageHero>
-      <ControlDeck
-        showOverridesButton={showOverridesButton}
-        overridesShowBadge={overridesShowBadge}
-        onOpenOverrides={onOpenOverrides}
-      >
+      <ControlDeck>
         <PlayersSurface
           mode="eating"
           players={players}
@@ -111,13 +89,13 @@ export const EatingStage = ({
           activeRoundTeamId={activeRoundTeamId}
           activeRoundTeamName={activeRoundTeamName}
           participationDisabled={participationDisabled}
-          onSetWingParticipation={onSetWingParticipation}
+          onSetWingParticipation={handleWingParticipationChange}
         />
         <TimerControlsSurface
           timer={timer}
-          onPauseTimer={onPauseTimer}
-          onResumeTimer={onResumeTimer}
-          onExtendTimer={onExtendTimer}
+          onPauseTimer={handlers.onPauseTimer}
+          onResumeTimer={handlers.onResumeTimer}
+          onExtendTimer={handlers.onExtendTimer}
         />
       </ControlDeck>
     </>
