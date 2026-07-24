@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { beforeEach } from "node:test";
 
 import {
   Phase,
@@ -36,6 +36,10 @@ import {
   triviaPromptFixture
 } from "./testHarness.js";
 
+beforeEach(() => {
+  resetRoomState();
+});
+
 test("createInitialRoomState returns setup defaults", () => {
   assert.deepEqual(createInitialRoomState(), {
     phase: Phase.SETUP,
@@ -63,8 +67,6 @@ test("createInitialRoomState returns setup defaults", () => {
 });
 
 test("getRoomStateSnapshot returns a safe clone", () => {
-  resetRoomState();
-
   const firstSnapshot = getRoomStateSnapshot();
   firstSnapshot.players.push({ id: "p1", name: "Player One" });
 
@@ -74,7 +76,6 @@ test("getRoomStateSnapshot returns a safe clone", () => {
 });
 
 test("advanceRoomStatePhase transitions setup to intro", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   const nextState = advanceRoomStatePhase();
@@ -84,7 +85,6 @@ test("advanceRoomStatePhase transitions setup to intro", () => {
 });
 
 test("advanceRoomStatePhase sets currentRound to 1 on INTRO -> ROUND_INTRO", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   advanceRoomStatePhase();
@@ -100,7 +100,6 @@ test("advanceRoomStatePhase sets currentRound to 1 on INTRO -> ROUND_INTRO", () 
 });
 
 test("advanceRoomStatePhase preserves currentRound after round intro", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   advanceRoomStatePhase();
@@ -113,7 +112,6 @@ test("advanceRoomStatePhase preserves currentRound after round intro", () => {
 });
 
 test("advanceRoomStatePhase starts an EATING timer with endsAt", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   const originalDateNow = Date.now;
@@ -140,7 +138,6 @@ test("advanceRoomStatePhase starts an EATING timer with endsAt", () => {
 });
 
 test("advanceRoomStatePhase replaces EATING timer when leaving EATING", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   advanceRoomStatePhase();
@@ -156,7 +153,6 @@ test("advanceRoomStatePhase replaces EATING timer when leaving EATING", () => {
 });
 
 test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   const originalDateNow = Date.now;
@@ -185,7 +181,6 @@ test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
 });
 
 test("advanceRoomStatePhase starts next-team EATING timer after TURN_RESULTS -> MINIGAME_INTRO", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToMinigamePlayPhase();
@@ -214,7 +209,6 @@ test("advanceRoomStatePhase starts next-team EATING timer after TURN_RESULTS -> 
 });
 
 test("pauseRoomTimer pauses EATING timer and captures remaining time", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   const originalDateNow = Date.now;
@@ -241,7 +235,6 @@ test("pauseRoomTimer pauses EATING timer and captures remaining time", () => {
 });
 
 test("resumeRoomTimer resumes paused EATING timer with recomputed endsAt", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   const originalDateNow = Date.now;
@@ -271,7 +264,6 @@ test("resumeRoomTimer resumes paused EATING timer with recomputed endsAt", () =>
 });
 
 test("extendRoomTimer extends EATING timer while running", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   const originalDateNow = Date.now;
@@ -297,7 +289,6 @@ test("extendRoomTimer extends EATING timer while running", () => {
 });
 
 test("extendRoomTimer ignores non-integer and over-limit extension values", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   const originalDateNow = Date.now;
@@ -334,7 +325,6 @@ test("extendRoomTimer ignores non-integer and over-limit extension values", () =
 });
 
 test("advanceRoomStatePhase is idempotent at FINAL_RESULTS", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   advanceUntil(Phase.FINAL_RESULTS, 2);
@@ -347,7 +337,6 @@ test("advanceRoomStatePhase is idempotent at FINAL_RESULTS", () => {
 });
 
 test("advanceRoomStatePhase blocks SETUP -> INTRO until setup is valid", () => {
-  resetRoomState();
   setRoomStateGameConfig(gameConfigFixture);
   setRoomStatePlayers([
     { id: "player-1", name: "Player One" },
@@ -363,8 +352,6 @@ test("advanceRoomStatePhase blocks SETUP -> INTRO until setup is valid", () => {
 });
 
 test("getRoomStateSnapshot marks setup as not advanceable when setup is invalid", () => {
-  resetRoomState();
-
   const snapshot = getRoomStateSnapshot();
 
   assert.equal(snapshot.phase, Phase.SETUP);
@@ -372,7 +359,6 @@ test("getRoomStateSnapshot marks setup as not advanceable when setup is invalid"
 });
 
 test("getRoomStateSnapshot marks setup as advanceable when setup is valid", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   const snapshot = getRoomStateSnapshot();
@@ -382,7 +368,6 @@ test("getRoomStateSnapshot marks setup as advanceable when setup is valid", () =
 });
 
 test("advanceRoomStatePhase blocks SETUP -> INTRO when game config is missing", () => {
-  resetRoomState();
   setRoomStatePlayers([
     { id: "player-1", name: "Player One" },
     { id: "player-2", name: "Player Two" }
@@ -400,7 +385,6 @@ test("advanceRoomStatePhase blocks SETUP -> INTRO when game config is missing", 
 });
 
 test("advanceRoomStatePhase increments round after ROUND_RESULTS when rounds remain", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   advanceUntil(Phase.ROUND_RESULTS, 1);
@@ -415,7 +399,6 @@ test("advanceRoomStatePhase increments round after ROUND_RESULTS when rounds rem
 });
 
 test("reorderTurnOrder updates round-intro turn order and active team", () => {
-  resetRoomState();
   setupThreeTeamsAndAssignments();
   advanceUntil(Phase.ROUND_INTRO, 1);
 
@@ -433,7 +416,6 @@ test("reorderTurnOrder updates round-intro turn order and active team", () => {
 });
 
 test("reorderTurnOrder is ignored outside ROUND_INTRO", () => {
-  resetRoomState();
   setupThreeTeamsAndAssignments();
   advanceToEatingPhase();
   const beforeMutation = getRoomStateSnapshot();
@@ -447,7 +429,6 @@ test("reorderTurnOrder is ignored outside ROUND_INTRO", () => {
 });
 
 test("reorderTurnOrder persists into later rounds and rejects invalid sets", () => {
-  resetRoomState();
   setRoomStateGameConfig({
     ...gameConfigFixture,
     rounds: [
@@ -496,7 +477,6 @@ test("reorderTurnOrder persists into later rounds and rejects invalid sets", () 
 });
 
 test("advanceRoomStatePhase loops team turns before round results", () => {
-  resetRoomState();
   setupThreeTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
 
@@ -579,7 +559,6 @@ test("advanceRoomStatePhase loops team turns before round results", () => {
 });
 
 test("skipTurnBoundary advances to next team MINIGAME_INTRO from EATING and preserves captured points", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -596,7 +575,6 @@ test("skipTurnBoundary advances to next team MINIGAME_INTRO from EATING and pres
 });
 
 test("skipTurnBoundary advances from MINIGAME_INTRO to next team MINIGAME_INTRO", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceUntil(Phase.MINIGAME_INTRO, 1);
   const introSnapshot = getRoomStateSnapshot();
@@ -611,7 +589,6 @@ test("skipTurnBoundary advances from MINIGAME_INTRO to next team MINIGAME_INTRO"
 });
 
 test("skipTurnBoundary from last-team MINIGAME_PLAY lands on ROUND_RESULTS without score corruption", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -633,7 +610,6 @@ test("skipTurnBoundary from last-team MINIGAME_PLAY lands on ROUND_RESULTS witho
 });
 
 test("skipTurnBoundary is ignored outside turn phases", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceUntil(Phase.ROUND_INTRO, 1);
   const beforeSkip = getRoomStateSnapshot();
@@ -645,7 +621,6 @@ test("skipTurnBoundary is ignored outside turn phases", () => {
 });
 
 test("skipTurnBoundary clears redo history when landing on ROUND_RESULTS", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -670,7 +645,6 @@ test("skipTurnBoundary clears redo history when landing on ROUND_RESULTS", () =>
 });
 
 test("advanceRoomStatePhase logs transition metadata", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   const originalConsoleWarn = console.warn;

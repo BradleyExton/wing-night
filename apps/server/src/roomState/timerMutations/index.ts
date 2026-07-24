@@ -1,115 +1,98 @@
-import {
-  Phase,
-  TIMER_EXTEND_MAX_SECONDS,
-  type RoomState
-} from "@wingnight/shared";
+import { Phase, TIMER_EXTEND_MAX_SECONDS } from "@wingnight/shared";
+import type { RoomTimerState } from "@wingnight/shared";
 
-import { getRoomStateSnapshot } from "../baseMutations/index.js";
-import { isRoomInFatalState } from "../selectors/index.js";
-import { getRoomState } from "../stateStore/index.js";
+import { defineRoomMutation } from "../defineRoomMutation/index.js";
 
-export const pauseRoomTimer = (): RoomState => {
-  const roomState = getRoomState();
-
-  if (isRoomInFatalState(roomState)) {
-    return getRoomStateSnapshot();
+const resolveEatingTimer = (timer: RoomTimerState | null): RoomTimerState | null => {
+  if (timer === null || timer.phase !== Phase.EATING) {
+    return null;
   }
 
-  const currentTimer = roomState.timer;
-
-  if (
-    roomState.phase !== Phase.EATING ||
-    currentTimer === null ||
-    currentTimer.phase !== Phase.EATING ||
-    currentTimer.isPaused
-  ) {
-    return getRoomStateSnapshot();
-  }
-
-  const now = Date.now();
-  const remainingMs = Math.max(0, currentTimer.endsAt - now);
-
-  roomState.timer = {
-    ...currentTimer,
-    isPaused: true,
-    remainingMs,
-    endsAt: now + remainingMs
-  };
-
-  return getRoomStateSnapshot();
+  return timer;
 };
 
-export const resumeRoomTimer = (): RoomState => {
-  const roomState = getRoomState();
+export const pauseRoomTimer = defineRoomMutation({
+  requiredPhase: Phase.EATING,
+  run: (roomState): boolean => {
+    const currentTimer = resolveEatingTimer(roomState.timer);
 
-  if (isRoomInFatalState(roomState)) {
-    return getRoomStateSnapshot();
-  }
+    if (currentTimer === null || currentTimer.isPaused) {
+      return false;
+    }
 
-  const currentTimer = roomState.timer;
+    const now = Date.now();
+    const remainingMs = Math.max(0, currentTimer.endsAt - now);
 
-  if (
-    roomState.phase !== Phase.EATING ||
-    currentTimer === null ||
-    currentTimer.phase !== Phase.EATING ||
-    !currentTimer.isPaused
-  ) {
-    return getRoomStateSnapshot();
-  }
-
-  const now = Date.now();
-
-  roomState.timer = {
-    ...currentTimer,
-    startedAt: now,
-    endsAt: now + currentTimer.remainingMs,
-    isPaused: false
-  };
-
-  return getRoomStateSnapshot();
-};
-
-export const extendRoomTimer = (additionalSeconds: number): RoomState => {
-  const roomState = getRoomState();
-
-  if (isRoomInFatalState(roomState)) {
-    return getRoomStateSnapshot();
-  }
-
-  const currentTimer = roomState.timer;
-
-  if (
-    roomState.phase !== Phase.EATING ||
-    currentTimer === null ||
-    currentTimer.phase !== Phase.EATING ||
-    !Number.isInteger(additionalSeconds) ||
-    additionalSeconds <= 0 ||
-    additionalSeconds > TIMER_EXTEND_MAX_SECONDS
-  ) {
-    return getRoomStateSnapshot();
-  }
-  const additionalMs = additionalSeconds * 1000;
-  const now = Date.now();
-
-  if (currentTimer.isPaused) {
-    const nextRemainingMs = currentTimer.remainingMs + additionalMs;
     roomState.timer = {
       ...currentTimer,
-      remainingMs: nextRemainingMs,
-      durationMs: currentTimer.durationMs + additionalMs,
-      endsAt: now + nextRemainingMs
+      isPaused: true,
+      remainingMs,
+      endsAt: now + remainingMs
     };
 
-    return getRoomStateSnapshot();
+    return true;
   }
+});
 
-  const nextEndsAt = currentTimer.endsAt + additionalMs;
-  roomState.timer = {
-    ...currentTimer,
-    endsAt: nextEndsAt,
-    durationMs: currentTimer.durationMs + additionalMs,
-    remainingMs: Math.max(0, nextEndsAt - now)
-  };
+export const resumeRoomTimer = defineRoomMutation({
+  requiredPhase: Phase.EATING,
+  run: (roomState): boolean => {
+    const currentTimer = resolveEatingTimer(roomState.timer);
 
-  return getRoomStateSnapshot();
-};
+    if (currentTimer === null || !currentTimer.isPaused) {
+      return false;
+    }
+
+    const now = Date.now();
+
+    roomState.timer = {
+      ...currentTimer,
+      startedAt: now,
+      endsAt: now + currentTimer.remainingMs,
+      isPaused: false
+    };
+
+    return true;
+  }
+});
+
+export const extendRoomTimer = defineRoomMutation({
+  requiredPhase: Phase.EATING,
+  run: (roomState, additionalSeconds: number): boolean => {
+    const currentTimer = resolveEatingTimer(roomState.timer);
+
+    if (
+      currentTimer === null ||
+      !Number.isInteger(additionalSeconds) ||
+      additionalSeconds <= 0 ||
+      additionalSeconds > TIMER_EXTEND_MAX_SECONDS
+    ) {
+      return false;
+    }
+
+    const additionalMs = additionalSeconds * 1000;
+    const now = Date.now();
+
+    if (currentTimer.isPaused) {
+      const nextRemainingMs = currentTimer.remainingMs + additionalMs;
+      roomState.timer = {
+        ...currentTimer,
+        remainingMs: nextRemainingMs,
+        durationMs: currentTimer.durationMs + additionalMs,
+        endsAt: now + nextRemainingMs
+      };
+
+      return true;
+    }
+
+    const nextEndsAt = currentTimer.endsAt + additionalMs;
+    roomState.timer = {
+      ...currentTimer,
+      endsAt: nextEndsAt,
+      durationMs: currentTimer.durationMs + additionalMs,
+      remainingMs: Math.max(0, nextEndsAt - now)
+    };
+
+    return true;
+  }
+});

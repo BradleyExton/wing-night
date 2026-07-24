@@ -148,33 +148,67 @@ export const initializeActiveMinigameRuntimeState = (
   projectActiveRuntimeStateToRoomState(state, rules);
 };
 
+type ActiveRuntimeContext = {
+  minigameId: MinigameType;
+  runtimeState: SerializableValue;
+  runtimePlugin: ReturnType<typeof resolveMinigameRuntimePlugin>;
+  content: SerializableValue | null;
+};
+
+// Shared preamble for operations against the active runtime: null-check the
+// active state, match the expected minigame, resolve the plugin and content,
+// derive the next runtime state, then reproject it onto room state. A `null`
+// result from `deriveNextRuntimeState` leaves everything untouched.
+const withActiveRuntime = (
+  state: RoomState,
+  rules: SerializableValue | null,
+  deriveNextRuntimeState: (context: ActiveRuntimeContext) => SerializableValue | null,
+  expectedMinigameId?: MinigameType
+): boolean => {
+  if (activeMinigameRuntimeState === null) {
+    return false;
+  }
+
+  const expected =
+    expectedMinigameId ?? state.currentRoundConfig?.minigame ?? null;
+
+  if (expected !== activeMinigameRuntimeState.minigameId) {
+    return false;
+  }
+
+  const { minigameId, runtimeState } = activeMinigameRuntimeState;
+  const nextRuntimeState = deriveNextRuntimeState({
+    minigameId,
+    runtimeState,
+    runtimePlugin: resolveMinigameRuntimePlugin(minigameId),
+    content: minigameContentById[minigameId] ?? null
+  });
+
+  if (nextRuntimeState === null) {
+    return false;
+  }
+
+  activeMinigameRuntimeState = { minigameId, runtimeState: nextRuntimeState };
+  projectActiveRuntimeStateToRoomState(state, rules);
+
+  return true;
+};
+
 export const syncActiveMinigameRuntimeWithPendingPoints = (
   state: RoomState,
   pendingPointsByTeamId: Record<string, number>,
   rules: SerializableValue | null
 ): void => {
-  if (activeMinigameRuntimeState === null) {
-    return;
-  }
+  withActiveRuntime(state, rules, ({ runtimePlugin, runtimeState }) => {
+    if (!runtimePlugin.syncPendingPoints) {
+      return null;
+    }
 
-  if (state.currentRoundConfig?.minigame !== activeMinigameRuntimeState.minigameId) {
-    return;
-  }
-
-  const runtimePlugin = resolveMinigameRuntimePlugin(activeMinigameRuntimeState.minigameId);
-
-  if (!runtimePlugin.syncPendingPoints) {
-    return;
-  }
-
-  activeMinigameRuntimeState = {
-    ...activeMinigameRuntimeState,
-    runtimeState: runtimePlugin.syncPendingPoints({
-      state: activeMinigameRuntimeState.runtimeState,
+    return runtimePlugin.syncPendingPoints({
+      state: runtimeState,
       pendingPointsByTeamId
-    })
-  };
-  projectActiveRuntimeStateToRoomState(state, rules);
+    });
+  });
 };
 
 export const syncActiveMinigameRuntimeWithContent = (
@@ -182,25 +216,22 @@ export const syncActiveMinigameRuntimeWithContent = (
   minigameId: MinigameType,
   rules: SerializableValue | null
 ): void => {
-  if (activeMinigameRuntimeState === null || activeMinigameRuntimeState.minigameId !== minigameId) {
-    return;
-  }
+  withActiveRuntime(
+    state,
+    rules,
+    ({ runtimePlugin, runtimeState, content }) => {
+      if (!runtimePlugin.syncContent) {
+        return null;
+      }
 
-  const runtimePlugin = resolveMinigameRuntimePlugin(minigameId);
-
-  if (!runtimePlugin.syncContent) {
-    return;
-  }
-
-  activeMinigameRuntimeState = {
-    ...activeMinigameRuntimeState,
-    runtimeState: runtimePlugin.syncContent({
-      state: activeMinigameRuntimeState.runtimeState,
-      rules,
-      content: minigameContentById[minigameId] ?? null
-    })
-  };
-  projectActiveRuntimeStateToRoomState(state, rules);
+      return runtimePlugin.syncContent({
+        state: runtimeState,
+        rules,
+        content
+      });
+    },
+    minigameId
+  );
 };
 
 export const dispatchActiveMinigameRuntimeAction = (
@@ -209,32 +240,15 @@ export const dispatchActiveMinigameRuntimeAction = (
   pointsMax: number,
   rules: SerializableValue | null
 ): boolean => {
-  if (activeMinigameRuntimeState === null) {
-    return false;
-  }
+  return withActiveRuntime(state, rules, ({ runtimePlugin, runtimeState, content }) => {
+    const reductionResult = runtimePlugin.reduceAction({
+      state: runtimeState,
+      envelope,
+      pointsMax,
+      rules,
+      content
+    });
 
-  if (state.currentRoundConfig?.minigame !== activeMinigameRuntimeState.minigameId) {
-    return false;
-  }
-
-  const runtimePlugin = resolveMinigameRuntimePlugin(activeMinigameRuntimeState.minigameId);
-  const reductionResult = runtimePlugin.reduceAction({
-    state: activeMinigameRuntimeState.runtimeState,
-    envelope,
-    pointsMax,
-    rules,
-    content: minigameContentById[activeMinigameRuntimeState.minigameId] ?? null
+    return reductionResult.didMutate ? reductionResult.state : null;
   });
-
-  if (!reductionResult.didMutate) {
-    return false;
-  }
-
-  activeMinigameRuntimeState = {
-    ...activeMinigameRuntimeState,
-    runtimeState: reductionResult.state
-  };
-  projectActiveRuntimeStateToRoomState(state, rules);
-
-  return true;
 };

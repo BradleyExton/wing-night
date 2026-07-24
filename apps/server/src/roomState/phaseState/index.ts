@@ -9,8 +9,7 @@ import {
   createRunningTimer,
   isRoomInFatalState,
   isSetupReadyToStart,
-  resolveMinigamePointsMax,
-  resolveMinigameRules,
+  resolveMinigameContext,
   resolveMinigameTimerSeconds
 } from "../selectors/index.js";
 import {
@@ -27,23 +26,18 @@ type ApplyPhaseTransitionEffectsOptions = {
 
 const initializeActiveMinigameTurnState = (state: RoomState): void => {
   const minigameType = state.currentRoundConfig?.minigame ?? null;
+  const minigameContext =
+    minigameType === null ? null : resolveMinigameContext(state, minigameType);
 
-  if (minigameType === null) {
-    clearActiveMinigameRuntimeState(state);
-    return;
-  }
-
-  const minigamePointsMax = resolveMinigamePointsMax(state);
-
-  if (minigamePointsMax === null) {
+  if (minigameContext === null) {
     clearActiveMinigameRuntimeState(state);
     return;
   }
 
   initializeActiveMinigameRuntimeState(
     state,
-    minigamePointsMax,
-    resolveMinigameRules(state, minigameType)
+    minigameContext.minigamePointsMax,
+    minigameContext.minigameRules
   );
 };
 

@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from "node:util";
+
 import {
   type GameConfigFile,
   type MinigameType,
@@ -14,10 +16,10 @@ import {
   syncActiveMinigameRuntimeWithContent
 } from "../../minigames/runtime/index.js";
 import { createInitialRoomState } from "../createInitialRoomState/index.js";
-import { resolveCanAdvancePhase } from "../phaseState/index.js";
+import { defineRoomMutation } from "../defineRoomMutation/index.js";
+import { getRoomStateSnapshot } from "../getRoomStateSnapshot/index.js";
 import { clearScoringMutationUndoState } from "../scoringState/index.js";
 import {
-  isRoomInFatalState,
   resolveCurrentRoundConfig,
   resolveMinigameRules
 } from "../selectors/index.js";
@@ -56,13 +58,7 @@ const syncSetupBaselineSnapshot = (
   });
 };
 
-export const getRoomStateSnapshot = (): RoomState => {
-  const roomState = getRoomState();
-  const snapshot = structuredClone(roomState);
-  snapshot.canAdvancePhase = resolveCanAdvancePhase(roomState);
-
-  return snapshot;
-};
+export { getRoomStateSnapshot } from "../getRoomStateSnapshot/index.js";
 
 export const resetRoomState = (): RoomState => {
   const roomState = getRoomState();
@@ -79,32 +75,29 @@ export const resetRoomState = (): RoomState => {
   return getRoomStateSnapshot();
 };
 
-export const resetGameToSetup = (): RoomState => {
-  const roomState = getRoomState();
+export const resetGameToSetup = defineRoomMutation({
+  run: (roomState): boolean => {
+    const previousSnapshot = getRoomStateSnapshot();
+    const setupBaselineSnapshot = getSetupBaselineSnapshot();
+    const restoredPlayers = structuredClone(setupBaselineSnapshot.players);
+    const restoredTeams = normalizeBaselineTeams(setupBaselineSnapshot.teams);
+    const restoredGameConfig = structuredClone(setupBaselineSnapshot.gameConfig);
+    const nextState = createInitialRoomState();
 
-  if (isRoomInFatalState(roomState)) {
-    return getRoomStateSnapshot();
+    nextState.players = restoredPlayers;
+    nextState.teams = restoredTeams;
+    nextState.gameConfig = restoredGameConfig;
+    nextState.totalRounds =
+      restoredGameConfig === null ? nextState.totalRounds : restoredGameConfig.rounds.length;
+    nextState.currentRoundConfig = null;
+
+    overwriteRoomState(nextState);
+    resetMinigameRuntimeState();
+    clearScoringMutationUndoState(roomState);
+
+    return !isDeepStrictEqual(previousSnapshot, getRoomStateSnapshot());
   }
-
-  const setupBaselineSnapshot = getSetupBaselineSnapshot();
-  const restoredPlayers = structuredClone(setupBaselineSnapshot.players);
-  const restoredTeams = normalizeBaselineTeams(setupBaselineSnapshot.teams);
-  const restoredGameConfig = structuredClone(setupBaselineSnapshot.gameConfig);
-  const nextState = createInitialRoomState();
-
-  nextState.players = restoredPlayers;
-  nextState.teams = restoredTeams;
-  nextState.gameConfig = restoredGameConfig;
-  nextState.totalRounds =
-    restoredGameConfig === null ? nextState.totalRounds : restoredGameConfig.rounds.length;
-  nextState.currentRoundConfig = null;
-
-  overwriteRoomState(nextState);
-  resetMinigameRuntimeState();
-  clearScoringMutationUndoState(roomState);
-
-  return getRoomStateSnapshot();
-};
+});
 
 export const setRoomStateFatalError = (message: string): RoomState => {
   const roomState = getRoomState();

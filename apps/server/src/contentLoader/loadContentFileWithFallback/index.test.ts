@@ -1,36 +1,8 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { tmpdir } from "node:os";
 import test from "node:test";
 
 import { loadContentFileWithFallback } from "./index.js";
-
-const createdDirs: string[] = [];
-
-const createContentRoot = (): string => {
-  const contentRoot = mkdtempSync(join(tmpdir(), "wingnight-content-"));
-  createdDirs.push(contentRoot);
-  return contentRoot;
-};
-
-const writeContentFile = (
-  contentRoot: string,
-  relativePath: string,
-  content: string
-): void => {
-  const fullPath = join(contentRoot, relativePath);
-  const directoryPath = dirname(fullPath);
-
-  mkdirSync(directoryPath, { recursive: true });
-  writeFileSync(fullPath, content, "utf8");
-};
-
-test.after(() => {
-  for (const dirPath of createdDirs) {
-    rmSync(dirPath, { recursive: true, force: true });
-  }
-});
+import { createContentRoot, writeContentFile } from "../testHarness.js";
 
 test("loads local content file when present", () => {
   const contentRoot = createContentRoot();

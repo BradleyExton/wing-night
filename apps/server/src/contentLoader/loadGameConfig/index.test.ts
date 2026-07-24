@@ -1,88 +1,21 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { tmpdir } from "node:os";
 import test from "node:test";
 
 import { loadGameConfig } from "./index.js";
-
-const createdDirs: string[] = [];
-
-const createContentRoot = (): string => {
-  const contentRoot = mkdtempSync(join(tmpdir(), "wingnight-content-"));
-  createdDirs.push(contentRoot);
-  return contentRoot;
-};
-
-const writeContentFile = (
-  contentRoot: string,
-  relativePath: string,
-  content: string
-): void => {
-  const fullPath = join(contentRoot, relativePath);
-  const directoryPath = dirname(fullPath);
-
-  mkdirSync(directoryPath, { recursive: true });
-  writeFileSync(fullPath, content, "utf8");
-};
-
-const createValidConfig = (
-  name: string,
-  questionsPerTurn?: number,
-  setupPreviewRoundSlots?: number
-): string => {
-  return JSON.stringify({
-    name,
-    rounds: [
-      {
-        round: 1,
-        label: "Warm Up",
-        sauce: "Frank's",
-        pointsPerPlayer: 2,
-        minigame: "TRIVIA"
-      }
-    ],
-    minigameScoring: {
-      defaultMax: 15,
-      finalRoundMax: 20
-    },
-    ...(questionsPerTurn === undefined
-      ? {}
-      : {
-          minigameRules: {
-            trivia: {
-              questionsPerTurn
-            }
-          }
-        }),
-    ...(setupPreviewRoundSlots === undefined
-      ? {}
-      : {
-          setupPreviewRoundSlots
-        }),
-    timers: {
-      eatingSeconds: 120,
-      triviaSeconds: 30,
-      geoSeconds: 45,
-      drawingSeconds: 60
-    }
-  });
-};
-
-test.after(() => {
-  for (const dirPath of createdDirs) {
-    rmSync(dirPath, { recursive: true, force: true });
-  }
-});
+import {
+  createContentRoot,
+  createValidGameConfigJson,
+  writeContentFile
+} from "../testHarness.js";
 
 test("loads local game config content before sample fallback", () => {
   const contentRoot = createContentRoot();
 
-  writeContentFile(contentRoot, "local/gameConfig.json", createValidConfig("Local"));
+  writeContentFile(contentRoot, "local/gameConfig.json", createValidGameConfigJson("Local"));
   writeContentFile(
     contentRoot,
     "sample/gameConfig.json",
-    createValidConfig("Sample")
+    createValidGameConfigJson("Sample")
   );
 
   const gameConfig = loadGameConfig({ contentRootDir: contentRoot });
@@ -96,7 +29,7 @@ test("falls back to sample game config content when local file is missing", () =
   writeContentFile(
     contentRoot,
     "sample/gameConfig.json",
-    createValidConfig("Sample")
+    createValidGameConfigJson("Sample")
   );
 
   const gameConfig = loadGameConfig({ contentRootDir: contentRoot });
@@ -117,7 +50,7 @@ test("throws when local game config content exists but is invalid", () => {
   writeContentFile(
     contentRoot,
     "sample/gameConfig.json",
-    createValidConfig("Sample")
+    createValidGameConfigJson("Sample")
   );
 
   assert.throws(
@@ -158,7 +91,7 @@ test("accepts optional trivia minigame rules in game config", () => {
   writeContentFile(
     contentRoot,
     "sample/gameConfig.json",
-    createValidConfig("Sample", 3)
+    createValidGameConfigJson("Sample", { questionsPerTurn: 3 })
   );
 
   const gameConfig = loadGameConfig({ contentRootDir: contentRoot });
@@ -172,7 +105,7 @@ test("accepts optional setup preview round slot count in game config", () => {
   writeContentFile(
     contentRoot,
     "sample/gameConfig.json",
-    createValidConfig("Sample", undefined, 8)
+    createValidGameConfigJson("Sample", { setupPreviewRoundSlots: 8 })
   );
 
   const gameConfig = loadGameConfig({ contentRootDir: contentRoot });

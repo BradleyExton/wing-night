@@ -56,6 +56,27 @@ export const resolveMinigameRules = (
   return state.gameConfig?.minigameRules?.[minigameDefinition.rulesKey] ?? null;
 };
 
+export type MinigameContext = {
+  minigamePointsMax: number;
+  minigameRules: SerializableValue | null;
+};
+
+export const resolveMinigameContext = (
+  state: RoomState,
+  minigameType: MinigameType
+): MinigameContext | null => {
+  const minigamePointsMax = resolveMinigamePointsMax(state);
+
+  if (minigamePointsMax === null) {
+    return null;
+  }
+
+  return {
+    minigamePointsMax,
+    minigameRules: resolveMinigameRules(state, minigameType)
+  };
+};
+
 export const resolveMinigameTimerSeconds = (state: RoomState): number | null => {
   if (!state.gameConfig || !state.currentRoundConfig) {
     return null;

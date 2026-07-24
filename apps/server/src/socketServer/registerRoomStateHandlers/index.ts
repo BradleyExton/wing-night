@@ -1,13 +1,35 @@
 import {
   CLIENT_TO_SERVER_EVENTS,
+  MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS
 } from "@wingnight/shared";
 import type {
+  ClientToServerEvents,
   HostSecretPayload,
-  MinigameActionPayload,
-  RoleScopedStateSnapshotEnvelope
+  RoleScopedStateSnapshotEnvelope,
+  RoomState
 } from "@wingnight/shared";
+import type { SerializableValue } from "@wingnight/minigames-core";
 
+import {
+  addPlayer,
+  adjustTeamScore,
+  advanceRoomStatePhase,
+  assignPlayerToTeam,
+  autoAssignRemainingPlayers,
+  createTeam,
+  dispatchMinigameAction,
+  extendRoomTimer,
+  getRoomStateSnapshot,
+  pauseRoomTimer,
+  redoLastScoringMutation,
+  reorderTurnOrder,
+  resetGameToSetup,
+  resumeRoomTimer,
+  setWingParticipation,
+  skipTurnBoundary
+} from "../../roomState/index.js";
+import { resolveMinigameDescriptor } from "../../minigames/registry/index.js";
 import {
   isGameReorderTurnOrderPayload,
   isHostSecretPayload,
@@ -41,41 +63,151 @@ type HostAuth = {
   isValidHostSecret: (hostSecret: string) => boolean;
 };
 
-type AuthorizedSetupMutationHandlers = {
-  onAuthorizedNextPhase: () => void;
-  onAuthorizedSkipTurnBoundary: () => void;
-  onAuthorizedReorderTurnOrder: (teamIds: string[]) => void;
-  onAuthorizedResetGame: () => void;
-  onAuthorizedCreateTeam: (name: string) => void;
-  onAuthorizedAddPlayer: (name: string) => void;
-  onAuthorizedAssignPlayer: (playerId: string, teamId: string | null) => void;
-  onAuthorizedAutoAssignRemainingPlayers: () => void;
-  onAuthorizedSetWingParticipation: (playerId: string, didEat: boolean) => void;
-  onAuthorizedAdjustTeamScore: (teamId: string, delta: number) => void;
-  onAuthorizedRedoLastMutation: () => void;
-  onAuthorizedMinigameAction: (payload: MinigameActionPayload) => void;
-  onAuthorizedPauseTimer: () => void;
-  onAuthorizedResumeTimer: () => void;
-  onAuthorizedExtendTimer: (additionalSeconds: number) => void;
-};
-
 type ClientEventName =
   (typeof CLIENT_TO_SERVER_EVENTS)[keyof typeof CLIENT_TO_SERVER_EVENTS];
 
-type AuthorizedEventName = Exclude<
+export type AuthorizedEventName = Exclude<
   ClientEventName,
   typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL
 >;
 
+export type AuthorizedEventPayloadByName = {
+  [TEvent in AuthorizedEventName]: Parameters<ClientToServerEvents[TEvent]>[0];
+};
+
+// Invoked once a payload has passed its shape guard and host authorization.
+// Production wraps `runMutation` in broadcast-after logic; test harnesses can
+// observe `event` and `payload` instead.
+export type AuthorizedMutationDispatch = <TEvent extends AuthorizedEventName>(
+  event: TEvent,
+  payload: AuthorizedEventPayloadByName[TEvent],
+  runMutation: () => RoomState
+) => void;
+
+type AuthorizedEventContext = {
+  isValidHostSecret: (hostSecret: string) => boolean;
+  emitSecretInvalid: () => void;
+  dispatchAuthorizedMutation: AuthorizedMutationDispatch;
+};
+
+type AuthorizedEventRegistration = {
+  event: AuthorizedEventName;
+  createListener: (context: AuthorizedEventContext) => (payload: unknown) => void;
+};
+
+const defineAuthorizedEvent = <TEvent extends AuthorizedEventName>(
+  event: TEvent,
+  isPayload: (payload: unknown) => payload is AuthorizedEventPayloadByName[TEvent],
+  runMutation: (payload: AuthorizedEventPayloadByName[TEvent]) => RoomState
+): AuthorizedEventRegistration => {
+  return {
+    event,
+    createListener: (context) => (payload) => {
+      if (!isPayload(payload)) {
+        return;
+      }
+
+      if (!context.isValidHostSecret(payload.hostSecret)) {
+        context.emitSecretInvalid();
+        return;
+      }
+
+      context.dispatchAuthorizedMutation(event, payload, () => runMutation(payload));
+    }
+  };
+};
+
+const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, isHostSecretPayload, () =>
+    advanceRoomStatePhase()
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, isHostSecretPayload, () =>
+    skipTurnBoundary()
+  ),
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER,
+    isGameReorderTurnOrderPayload,
+    (payload) => reorderTurnOrder(payload.teamIds)
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.RESET, isHostSecretPayload, () =>
+    resetGameToSetup()
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, isSetupCreateTeamPayload, (payload) =>
+    createTeam(payload.name)
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.ADD_PLAYER, isSetupAddPlayerPayload, (payload) =>
+    addPlayer(payload.name)
+  ),
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
+    isSetupAssignPlayerPayload,
+    (payload) => assignPlayerToTeam(payload.playerId, payload.teamId)
+  ),
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS,
+    isHostSecretPayload,
+    () => autoAssignRemainingPlayers()
+  ),
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
+    isScoringSetWingParticipationPayload,
+    (payload) => setWingParticipation(payload.playerId, payload.didEat)
+  ),
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE,
+    isScoringAdjustTeamScorePayload,
+    (payload) => adjustTeamScore(payload.teamId, payload.delta)
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, isHostSecretPayload, () =>
+    redoLastScoringMutation()
+  ),
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION,
+    isMinigameActionEnvelope,
+    (payload) => {
+      if (payload.minigameApiVersion !== MINIGAME_API_VERSION) {
+        return getRoomStateSnapshot();
+      }
+
+      const currentSnapshot = getRoomStateSnapshot();
+
+      if (currentSnapshot.currentRoundConfig?.minigame !== payload.minigameId) {
+        return currentSnapshot;
+      }
+
+      const activeMinigameDescriptor = resolveMinigameDescriptor(payload.minigameId);
+
+      if (
+        activeMinigameDescriptor.metadata.minigameApiVersion !== payload.minigameApiVersion
+      ) {
+        return currentSnapshot;
+      }
+
+      return dispatchMinigameAction(
+        payload.minigameId,
+        payload.actionType,
+        payload.actionPayload as SerializableValue
+      );
+    }
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, isHostSecretPayload, () =>
+    pauseRoomTimer()
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, isHostSecretPayload, () =>
+    resumeRoomTimer()
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, isTimerExtendPayload, (payload) =>
+    extendRoomTimer(payload.additionalSeconds)
+  )
+];
+
 export const registerRoomStateHandlers = (
   socket: RoomStateSocket,
   getSnapshot: () => RoleScopedStateSnapshotEnvelope,
-  mutationHandlers: AuthorizedSetupMutationHandlers,
+  dispatchAuthorizedMutation: AuthorizedMutationDispatch,
   canClaimControl: boolean,
   hostAuth: HostAuth
 ): void => {
-  type AuthorizedPayload = { hostSecret: string };
-
   const emitSnapshot = (): void => {
     socket.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, getSnapshot());
   };
@@ -86,33 +218,6 @@ export const registerRoomStateHandlers = (
     }
 
     socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
-  };
-
-  const runAuthorizedMutation = <TPayload extends AuthorizedPayload>(
-    payload: unknown,
-    isPayload: (candidate: unknown) => candidate is TPayload,
-    onAuthorized: (typedPayload: TPayload) => void
-  ): void => {
-    if (!isPayload(payload)) {
-      return;
-    }
-
-    if (!hostAuth.isValidHostSecret(payload.hostSecret)) {
-      emitSecretInvalid();
-      return;
-    }
-
-    onAuthorized(payload);
-  };
-
-  const registerAuthorizedMutation = <TPayload extends AuthorizedPayload>(
-    event: AuthorizedEventName,
-    isPayload: (candidate: unknown) => candidate is TPayload,
-    onAuthorized: (typedPayload: TPayload) => void
-  ): void => {
-    socket.on(event, (payload: unknown): void => {
-      runAuthorizedMutation(payload, isPayload, onAuthorized);
-    });
   };
 
   const handleHostClaim = (): void => {
@@ -128,114 +233,13 @@ export const registerRoomStateHandlers = (
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, emitSnapshot);
   socket.on(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL, handleHostClaim);
 
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.NEXT_PHASE,
-    isHostSecretPayload,
-    () => {
-      mutationHandlers.onAuthorizedNextPhase();
-    }
-  );
+  const authorizedEventContext: AuthorizedEventContext = {
+    isValidHostSecret: hostAuth.isValidHostSecret,
+    emitSecretInvalid,
+    dispatchAuthorizedMutation
+  };
 
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY,
-    isHostSecretPayload,
-    () => {
-      mutationHandlers.onAuthorizedSkipTurnBoundary();
-    }
-  );
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER,
-    isGameReorderTurnOrderPayload,
-    (typedPayload) => {
-      mutationHandlers.onAuthorizedReorderTurnOrder(typedPayload.teamIds);
-    }
-  );
-
-  registerAuthorizedMutation(CLIENT_TO_SERVER_EVENTS.RESET, isHostSecretPayload, () => {
-    mutationHandlers.onAuthorizedResetGame();
-  });
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.CREATE_TEAM,
-    isSetupCreateTeamPayload,
-    (typedPayload) => {
-      mutationHandlers.onAuthorizedCreateTeam(typedPayload.name);
-    }
-  );
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.ADD_PLAYER,
-    isSetupAddPlayerPayload,
-    (typedPayload) => {
-      mutationHandlers.onAuthorizedAddPlayer(typedPayload.name);
-    }
-  );
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER,
-    isSetupAssignPlayerPayload,
-    (typedPayload) => {
-      mutationHandlers.onAuthorizedAssignPlayer(typedPayload.playerId, typedPayload.teamId);
-    }
-  );
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS,
-    isHostSecretPayload,
-    () => {
-      mutationHandlers.onAuthorizedAutoAssignRemainingPlayers();
-    }
-  );
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION,
-    isScoringSetWingParticipationPayload,
-    (typedPayload) => {
-      mutationHandlers.onAuthorizedSetWingParticipation(
-        typedPayload.playerId,
-        typedPayload.didEat
-      );
-    }
-  );
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE,
-    isScoringAdjustTeamScorePayload,
-    (typedPayload) => {
-      mutationHandlers.onAuthorizedAdjustTeamScore(typedPayload.teamId, typedPayload.delta);
-    }
-  );
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION,
-    isHostSecretPayload,
-    () => {
-      mutationHandlers.onAuthorizedRedoLastMutation();
-    }
-  );
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION,
-    isMinigameActionEnvelope,
-    (typedPayload) => {
-      mutationHandlers.onAuthorizedMinigameAction(typedPayload);
-    }
-  );
-
-  registerAuthorizedMutation(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, isHostSecretPayload, () => {
-    mutationHandlers.onAuthorizedPauseTimer();
-  });
-
-  registerAuthorizedMutation(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, isHostSecretPayload, () => {
-    mutationHandlers.onAuthorizedResumeTimer();
-  });
-
-  registerAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND,
-    isTimerExtendPayload,
-    (typedPayload) => {
-      mutationHandlers.onAuthorizedExtendTimer(typedPayload.additionalSeconds);
-    }
-  );
+  for (const authorizedEvent of AUTHORIZED_EVENTS) {
+    socket.on(authorizedEvent.event, authorizedEvent.createListener(authorizedEventContext));
+  }
 };

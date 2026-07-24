@@ -2,47 +2,39 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  CLIENT_TO_SERVER_EVENTS,
   MINIGAME_API_VERSION,
   Phase,
   type MinigameActionPayload
 } from "@wingnight/shared";
 
-import { registerRoomStateHandlers } from "./index.js";
-import {
-  buildRoomState,
-  createMutationHandlers,
-  createSocketHarness,
-  hostAuth,
-  toHostSnapshotEnvelope
-} from "./testHarness.js";
+import { setupHandlers } from "./testHarness.js";
 
 test("ignores malformed and unauthorized minigame-action payloads", () => {
-  const socketHarness = createSocketHarness();
   const minigameActionCalls: MinigameActionPayload[] = [];
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
-    createMutationHandlers({
-      onAuthorizedMinigameAction: (payload) => {
+  const socketHarness = setupHandlers({
+    phase: Phase.SETUP,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]: (payload) => {
         minigameActionCalls.push(payload);
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerMinigameAction(undefined);
-    socketHarness.triggerMinigameAction({});
-    socketHarness.triggerMinigameAction({ hostSecret: "valid-host-secret" });
-    socketHarness.triggerMinigameAction({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, {
+      hostSecret: "valid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, {
       hostSecret: "valid-host-secret",
       minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "TRIVIA",
       actionType: "recordAttempt"
     });
-    socketHarness.triggerMinigameAction({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, {
       hostSecret: "valid-host-secret",
       minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "TRIVIA",
@@ -51,7 +43,7 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
         isCorrect: "yes"
       }
     });
-    socketHarness.triggerMinigameAction({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, {
       hostSecret: "invalid-host-secret",
       minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "TRIVIA",
@@ -60,7 +52,7 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
         isCorrect: true
       }
     });
-    socketHarness.triggerMinigameAction({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, {
       hostSecret: "valid-host-secret",
       minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "TRIVIA",
@@ -69,7 +61,7 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
         isCorrect: false
       }
     });
-    socketHarness.triggerMinigameAction({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION, {
       hostSecret: "valid-host-secret",
       minigameApiVersion: MINIGAME_API_VERSION,
       minigameId: "GEO",
@@ -113,34 +105,38 @@ test("ignores malformed and unauthorized minigame-action payloads", () => {
 });
 
 test("ignores malformed and unauthorized timer pause/resume payloads", () => {
-  const socketHarness = createSocketHarness();
   let pauseCalls = 0;
   let resumeCalls = 0;
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.EATING)),
-    createMutationHandlers({
-      onAuthorizedPauseTimer: () => {
+  const socketHarness = setupHandlers({
+    phase: Phase.EATING,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]: () => {
         pauseCalls += 1;
       },
-      onAuthorizedResumeTimer: () => {
+      [CLIENT_TO_SERVER_EVENTS.TIMER_RESUME]: () => {
         resumeCalls += 1;
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerTimerPause(undefined);
-    socketHarness.triggerTimerPause({});
-    socketHarness.triggerTimerPause({ hostSecret: "invalid-host-secret" });
-    socketHarness.triggerTimerPause({ hostSecret: "valid-host-secret" });
-    socketHarness.triggerTimerResume(undefined);
-    socketHarness.triggerTimerResume({});
-    socketHarness.triggerTimerResume({ hostSecret: "invalid-host-secret" });
-    socketHarness.triggerTimerResume({ hostSecret: "valid-host-secret" });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, {
+      hostSecret: "invalid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, {
+      hostSecret: "valid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, {
+      hostSecret: "invalid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_RESUME, {
+      hostSecret: "valid-host-secret"
+    });
   });
 
   assert.equal(pauseCalls, 1);
@@ -149,42 +145,40 @@ test("ignores malformed and unauthorized timer pause/resume payloads", () => {
 });
 
 test("ignores malformed and unauthorized timer extend payloads", () => {
-  const socketHarness = createSocketHarness();
   const timerExtendCalls: number[] = [];
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.EATING)),
-    createMutationHandlers({
-      onAuthorizedExtendTimer: (additionalSeconds) => {
-        timerExtendCalls.push(additionalSeconds);
+  const socketHarness = setupHandlers({
+    phase: Phase.EATING,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND]: (payload) => {
+        timerExtendCalls.push(payload.additionalSeconds);
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerTimerExtend(undefined);
-    socketHarness.triggerTimerExtend({});
-    socketHarness.triggerTimerExtend({ hostSecret: "valid-host-secret" });
-    socketHarness.triggerTimerExtend({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, {
+      hostSecret: "valid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, {
       hostSecret: "valid-host-secret",
       additionalSeconds: "15"
     });
-    socketHarness.triggerTimerExtend({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, {
       hostSecret: "valid-host-secret",
       additionalSeconds: -5
     });
-    socketHarness.triggerTimerExtend({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, {
       hostSecret: "valid-host-secret",
       additionalSeconds: 601
     });
-    socketHarness.triggerTimerExtend({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, {
       hostSecret: "invalid-host-secret",
       additionalSeconds: 15
     });
-    socketHarness.triggerTimerExtend({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, {
       hostSecret: "valid-host-secret",
       additionalSeconds: 15
     });

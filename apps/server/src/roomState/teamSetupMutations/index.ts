@@ -1,11 +1,7 @@
-import { Phase, type RoomState } from "@wingnight/shared";
+import { Phase } from "@wingnight/shared";
 
-import { getRoomStateSnapshot } from "../baseMutations/index.js";
-import {
-  isExactTeamIdSet,
-  isRoomInFatalState
-} from "../selectors/index.js";
-import { getRoomState } from "../stateStore/index.js";
+import { defineRoomMutation } from "../defineRoomMutation/index.js";
+import { isExactTeamIdSet } from "../selectors/index.js";
 
 const resolveNextPlayerId = (existingPlayerIds: string[]): string => {
   const maxExistingSuffix = existingPlayerIds.reduce((maxSuffix, playerId) => {
@@ -27,178 +23,144 @@ const resolveNextPlayerId = (existingPlayerIds: string[]): string => {
   return `player-${maxExistingSuffix + 1}`;
 };
 
-export const addPlayer = (name: string): RoomState => {
-  const roomState = getRoomState();
+export const addPlayer = defineRoomMutation({
+  requiredPhase: Phase.SETUP,
+  run: (roomState, name: string): boolean => {
+    const normalizedName = name.trim();
 
-  if (isRoomInFatalState(roomState)) {
-    return getRoomStateSnapshot();
-  }
-
-  if (roomState.phase !== Phase.SETUP) {
-    return getRoomStateSnapshot();
-  }
-
-  const normalizedName = name.trim();
-
-  if (normalizedName.length === 0) {
-    return getRoomStateSnapshot();
-  }
-
-  const nextPlayerId = resolveNextPlayerId(roomState.players.map((player) => player.id));
-  roomState.players.push({
-    id: nextPlayerId,
-    name: normalizedName
-  });
-
-  return getRoomStateSnapshot();
-};
-
-export const createTeam = (name: string): RoomState => {
-  const roomState = getRoomState();
-
-  if (isRoomInFatalState(roomState)) {
-    return getRoomStateSnapshot();
-  }
-
-  if (roomState.phase !== Phase.SETUP) {
-    return getRoomStateSnapshot();
-  }
-
-  const normalizedName = name.trim();
-
-  if (normalizedName.length === 0) {
-    return getRoomStateSnapshot();
-  }
-
-  const nextTeamIndex = roomState.teams.length + 1;
-  roomState.teams.push({
-    id: `team-${nextTeamIndex}`,
-    name: normalizedName,
-    playerIds: [],
-    totalScore: 0
-  });
-
-  return getRoomStateSnapshot();
-};
-
-export const assignPlayerToTeam = (
-  playerId: string,
-  teamId: string | null
-): RoomState => {
-  const roomState = getRoomState();
-
-  if (isRoomInFatalState(roomState)) {
-    return getRoomStateSnapshot();
-  }
-
-  if (roomState.phase !== Phase.SETUP) {
-    return getRoomStateSnapshot();
-  }
-
-  const playerExists = roomState.players.some((player) => player.id === playerId);
-
-  if (!playerExists) {
-    return getRoomStateSnapshot();
-  }
-
-  if (teamId !== null && !roomState.teams.some((team) => team.id === teamId)) {
-    return getRoomStateSnapshot();
-  }
-
-  for (const team of roomState.teams) {
-    team.playerIds = team.playerIds.filter((id) => id !== playerId);
-  }
-
-  if (teamId === null) {
-    return getRoomStateSnapshot();
-  }
-
-  const targetTeam = roomState.teams.find((team) => team.id === teamId);
-
-  if (!targetTeam) {
-    return getRoomStateSnapshot();
-  }
-
-  targetTeam.playerIds.push(playerId);
-
-  return getRoomStateSnapshot();
-};
-
-export const autoAssignRemainingPlayers = (): RoomState => {
-  const roomState = getRoomState();
-
-  if (isRoomInFatalState(roomState)) {
-    return getRoomStateSnapshot();
-  }
-
-  if (roomState.phase !== Phase.SETUP) {
-    return getRoomStateSnapshot();
-  }
-
-  if (roomState.teams.length === 0 || roomState.players.length === 0) {
-    return getRoomStateSnapshot();
-  }
-
-  const assignedPlayerIdSet = new Set<string>();
-
-  for (const team of roomState.teams) {
-    for (const playerId of team.playerIds) {
-      assignedPlayerIdSet.add(playerId);
+    if (normalizedName.length === 0) {
+      return false;
     }
+
+    const nextPlayerId = resolveNextPlayerId(roomState.players.map((player) => player.id));
+    roomState.players.push({
+      id: nextPlayerId,
+      name: normalizedName
+    });
+
+    return true;
   }
+});
 
-  const unassignedPlayerIds = roomState.players
-    .map((player) => player.id)
-    .filter((playerId) => !assignedPlayerIdSet.has(playerId));
+export const createTeam = defineRoomMutation({
+  requiredPhase: Phase.SETUP,
+  run: (roomState, name: string): boolean => {
+    const normalizedName = name.trim();
 
-  for (const playerId of unassignedPlayerIds) {
-    let targetTeamIndex = 0;
+    if (normalizedName.length === 0) {
+      return false;
+    }
 
-    for (let teamIndex = 1; teamIndex < roomState.teams.length; teamIndex += 1) {
-      const targetTeam = roomState.teams[targetTeamIndex];
-      const candidateTeam = roomState.teams[teamIndex];
+    const nextTeamIndex = roomState.teams.length + 1;
+    roomState.teams.push({
+      id: `team-${nextTeamIndex}`,
+      name: normalizedName,
+      playerIds: [],
+      totalScore: 0
+    });
 
-      if (!targetTeam || !candidateTeam) {
-        continue;
-      }
+    return true;
+  }
+});
 
-      if (candidateTeam.playerIds.length < targetTeam.playerIds.length) {
-        targetTeamIndex = teamIndex;
+export const assignPlayerToTeam = defineRoomMutation({
+  requiredPhase: Phase.SETUP,
+  run: (roomState, playerId: string, teamId: string | null): boolean => {
+    const playerExists = roomState.players.some((player) => player.id === playerId);
+
+    if (!playerExists) {
+      return false;
+    }
+
+    if (teamId !== null && !roomState.teams.some((team) => team.id === teamId)) {
+      return false;
+    }
+
+    const previousTeamPlayerIds = roomState.teams.map((team) => [...team.playerIds]);
+
+    for (const team of roomState.teams) {
+      team.playerIds = team.playerIds.filter((id) => id !== playerId);
+    }
+
+    if (teamId !== null) {
+      roomState.teams.find((team) => team.id === teamId)?.playerIds.push(playerId);
+    }
+
+    return roomState.teams.some((team, teamIndex) => {
+      const previousPlayerIds = previousTeamPlayerIds[teamIndex] ?? [];
+
+      return (
+        team.playerIds.length !== previousPlayerIds.length ||
+        team.playerIds.some((id, playerIndex) => id !== previousPlayerIds[playerIndex])
+      );
+    });
+  }
+});
+
+export const autoAssignRemainingPlayers = defineRoomMutation({
+  requiredPhase: Phase.SETUP,
+  run: (roomState): boolean => {
+    if (roomState.teams.length === 0 || roomState.players.length === 0) {
+      return false;
+    }
+
+    const assignedPlayerIdSet = new Set<string>();
+
+    for (const team of roomState.teams) {
+      for (const playerId of team.playerIds) {
+        assignedPlayerIdSet.add(playerId);
       }
     }
 
-    roomState.teams[targetTeamIndex]?.playerIds.push(playerId);
+    const unassignedPlayerIds = roomState.players
+      .map((player) => player.id)
+      .filter((playerId) => !assignedPlayerIdSet.has(playerId));
+
+    for (const playerId of unassignedPlayerIds) {
+      let targetTeamIndex = 0;
+
+      for (let teamIndex = 1; teamIndex < roomState.teams.length; teamIndex += 1) {
+        const targetTeam = roomState.teams[targetTeamIndex];
+        const candidateTeam = roomState.teams[teamIndex];
+
+        if (!targetTeam || !candidateTeam) {
+          continue;
+        }
+
+        if (candidateTeam.playerIds.length < targetTeam.playerIds.length) {
+          targetTeamIndex = teamIndex;
+        }
+      }
+
+      roomState.teams[targetTeamIndex]?.playerIds.push(playerId);
+    }
+
+    return unassignedPlayerIds.length > 0;
   }
+});
 
-  return getRoomStateSnapshot();
-};
+export const reorderTurnOrder = defineRoomMutation({
+  requiredPhase: Phase.ROUND_INTRO,
+  run: (roomState, teamIds: string[]): boolean => {
+    if (!isExactTeamIdSet(teamIds, roomState.teams)) {
+      return false;
+    }
 
-export const reorderTurnOrder = (teamIds: string[]): RoomState => {
-  const roomState = getRoomState();
+    const nextRoundTurnCursor = teamIds.length > 0 ? 0 : -1;
+    const nextActiveRoundTeamId =
+      nextRoundTurnCursor === -1 ? null : teamIds[nextRoundTurnCursor] ?? null;
+    const didChange =
+      roomState.turnOrderTeamIds.length !== teamIds.length ||
+      roomState.turnOrderTeamIds.some((teamId, index) => teamId !== teamIds[index]) ||
+      roomState.roundTurnCursor !== nextRoundTurnCursor ||
+      roomState.completedRoundTurnTeamIds.length !== 0 ||
+      roomState.activeRoundTeamId !== nextActiveRoundTeamId;
 
-  if (isRoomInFatalState(roomState)) {
-    return getRoomStateSnapshot();
+    roomState.turnOrderTeamIds = [...teamIds];
+    roomState.roundTurnCursor = nextRoundTurnCursor;
+    roomState.completedRoundTurnTeamIds = [];
+    roomState.activeRoundTeamId = nextActiveRoundTeamId;
+
+    return didChange;
   }
-
-  if (roomState.phase !== Phase.ROUND_INTRO) {
-    return getRoomStateSnapshot();
-  }
-
-  if (!Array.isArray(teamIds) || !teamIds.every((teamId) => typeof teamId === "string")) {
-    return getRoomStateSnapshot();
-  }
-
-  if (!isExactTeamIdSet(teamIds, roomState.teams)) {
-    return getRoomStateSnapshot();
-  }
-
-  roomState.turnOrderTeamIds = [...teamIds];
-  roomState.roundTurnCursor = teamIds.length > 0 ? 0 : -1;
-  roomState.completedRoundTurnTeamIds = [];
-  roomState.activeRoundTeamId =
-    roomState.roundTurnCursor === -1
-      ? null
-      : roomState.turnOrderTeamIds[roomState.roundTurnCursor] ?? null;
-
-  return getRoomStateSnapshot();
-};
+});

@@ -12,146 +12,92 @@ import {
   type TimerExtendPayload
 } from "@wingnight/shared";
 
-export const isHostSecretPayload = (payload: unknown): payload is HostSecretPayload => {
+type FieldPredicate = (value: unknown) => boolean;
+
+const hasShape = (
+  payload: unknown,
+  shape: Record<string, FieldPredicate>
+): boolean => {
   if (typeof payload !== "object" || payload === null) {
     return false;
   }
 
-  if (!("hostSecret" in payload)) {
-    return false;
-  }
+  const record = payload as Record<string, unknown>;
 
-  return typeof payload.hostSecret === "string";
+  return Object.entries(shape).every(
+    ([key, isValidField]) => key in record && isValidField(record[key])
+  );
 };
+
+const isString: FieldPredicate = (value) => typeof value === "string";
+const isBoolean: FieldPredicate = (value) => typeof value === "boolean";
+const isPresent: FieldPredicate = () => true;
+const isStringArray: FieldPredicate = (value) =>
+  Array.isArray(value) && value.every((entry) => typeof entry === "string");
+
+export const isHostSecretPayload = (payload: unknown): payload is HostSecretPayload =>
+  hasShape(payload, { hostSecret: isString });
 
 export const isSetupCreateTeamPayload = (
   payload: unknown
-): payload is SetupCreateTeamPayload => {
-  if (!isHostSecretPayload(payload)) {
-    return false;
-  }
-
-  return "name" in payload && typeof payload.name === "string";
-};
+): payload is SetupCreateTeamPayload =>
+  hasShape(payload, { hostSecret: isString, name: isString });
 
 export const isSetupAddPlayerPayload = (
   payload: unknown
-): payload is SetupAddPlayerPayload => {
-  if (!isHostSecretPayload(payload)) {
-    return false;
-  }
-
-  return "name" in payload && typeof payload.name === "string";
-};
+): payload is SetupAddPlayerPayload =>
+  hasShape(payload, { hostSecret: isString, name: isString });
 
 export const isGameReorderTurnOrderPayload = (
   payload: unknown
-): payload is GameReorderTurnOrderPayload => {
-  if (!isHostSecretPayload(payload)) {
-    return false;
-  }
-
-  if (!("teamIds" in payload) || !Array.isArray(payload.teamIds)) {
-    return false;
-  }
-
-  return payload.teamIds.every((teamId) => typeof teamId === "string");
-};
+): payload is GameReorderTurnOrderPayload =>
+  hasShape(payload, { hostSecret: isString, teamIds: isStringArray });
 
 export const isSetupAssignPlayerPayload = (
   payload: unknown
-): payload is SetupAssignPlayerPayload => {
-  if (!isHostSecretPayload(payload)) {
-    return false;
-  }
-
-  if (!("playerId" in payload) || typeof payload.playerId !== "string") {
-    return false;
-  }
-
-  if (!("teamId" in payload)) {
-    return false;
-  }
-
-  return payload.teamId === null || typeof payload.teamId === "string";
-};
+): payload is SetupAssignPlayerPayload =>
+  hasShape(payload, {
+    hostSecret: isString,
+    playerId: isString,
+    teamId: (value) => value === null || typeof value === "string"
+  });
 
 export const isScoringSetWingParticipationPayload = (
   payload: unknown
-): payload is ScoringSetWingParticipationPayload => {
-  if (!isHostSecretPayload(payload)) {
-    return false;
-  }
-
-  if (!("playerId" in payload) || typeof payload.playerId !== "string") {
-    return false;
-  }
-
-  if (!("didEat" in payload) || typeof payload.didEat !== "boolean") {
-    return false;
-  }
-
-  return true;
-};
+): payload is ScoringSetWingParticipationPayload =>
+  hasShape(payload, {
+    hostSecret: isString,
+    playerId: isString,
+    didEat: isBoolean
+  });
 
 export const isScoringAdjustTeamScorePayload = (
   payload: unknown
-): payload is ScoringAdjustTeamScorePayload => {
-  if (!isHostSecretPayload(payload)) {
-    return false;
-  }
-
-  if (!("teamId" in payload) || typeof payload.teamId !== "string") {
-    return false;
-  }
-
-  if (!("delta" in payload) || typeof payload.delta !== "number") {
-    return false;
-  }
-
-  return Number.isInteger(payload.delta) && payload.delta !== 0;
-};
+): payload is ScoringAdjustTeamScorePayload =>
+  hasShape(payload, {
+    hostSecret: isString,
+    teamId: isString,
+    delta: (value) =>
+      typeof value === "number" && Number.isInteger(value) && value !== 0
+  });
 
 export const isMinigameActionEnvelope = (
   payload: unknown
-): payload is MinigameActionEnvelope => {
-  if (!isHostSecretPayload(payload)) {
-    return false;
-  }
+): payload is MinigameActionEnvelope =>
+  hasShape(payload, {
+    hostSecret: isString,
+    minigameId: isString,
+    minigameApiVersion: (value) => value === MINIGAME_API_VERSION,
+    actionType: isString,
+    actionPayload: isPresent
+  });
 
-  if (!("minigameId" in payload) || typeof payload.minigameId !== "string") {
-    return false;
-  }
-
-  if (
-    !("minigameApiVersion" in payload) ||
-    payload.minigameApiVersion !== MINIGAME_API_VERSION
-  ) {
-    return false;
-  }
-
-  if (!("actionType" in payload) || typeof payload.actionType !== "string") {
-    return false;
-  }
-
-  return "actionPayload" in payload;
-};
-
-export const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload => {
-  if (!isHostSecretPayload(payload)) {
-    return false;
-  }
-
-  if (
-    !("additionalSeconds" in payload) ||
-    typeof payload.additionalSeconds !== "number" ||
-    !Number.isInteger(payload.additionalSeconds)
-  ) {
-    return false;
-  }
-
-  return (
-    payload.additionalSeconds > 0 &&
-    payload.additionalSeconds <= TIMER_EXTEND_MAX_SECONDS
-  );
-};
+export const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload =>
+  hasShape(payload, {
+    hostSecret: isString,
+    additionalSeconds: (value) =>
+      typeof value === "number" &&
+      Number.isInteger(value) &&
+      value > 0 &&
+      value <= TIMER_EXTEND_MAX_SECONDS
+  });

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { beforeEach } from "node:test";
 
 import {
   Phase,
@@ -8,20 +8,12 @@ import {
 } from "@wingnight/shared";
 
 import {
-  addPlayer,
   advanceRoomStatePhase,
-  assignPlayerToTeam,
-  autoAssignRemainingPlayers,
-  createTeam,
   dispatchMinigameAction,
   getRoomStateSnapshot,
   redoLastScoringMutation,
   resetRoomState,
   setPendingMinigamePoints,
-  setRoomStateGameConfig,
-  setRoomStateMinigameContent,
-  setRoomStateTeams,
-  setRoomStatePlayers,
   setWingParticipation
 } from "./index.js";
 import {
@@ -46,381 +38,11 @@ const recordTriviaAttempt = (isCorrect: boolean): void => {
   dispatchMinigameAction("TRIVIA", "recordAttempt", { isCorrect });
 };
 
-test("setRoomStatePlayers stores a safe clone of player records", () => {
+beforeEach(() => {
   resetRoomState();
-
-  const nextPlayers = [{ id: "player-1", name: "Player One" }];
-  const updatedSnapshot = setRoomStatePlayers(nextPlayers);
-
-  assert.deepEqual(updatedSnapshot.players, nextPlayers);
-
-  nextPlayers[0].name = "Changed Locally";
-  const persistedSnapshot = getRoomStateSnapshot();
-
-  assert.equal(persistedSnapshot.players[0].name, "Player One");
-});
-
-test("setRoomStateTeams stores a safe clone of team records", () => {
-  resetRoomState();
-
-  const nextTeams = [
-    { id: "team-1", name: "Team One", playerIds: ["player-1"], totalScore: 0 }
-  ];
-  const updatedSnapshot = setRoomStateTeams(nextTeams);
-
-  assert.deepEqual(updatedSnapshot.teams, nextTeams);
-
-  nextTeams[0].name = "Changed Locally";
-  const persistedSnapshot = getRoomStateSnapshot();
-
-  assert.equal(persistedSnapshot.teams[0].name, "Team One");
-});
-
-test("setRoomStateGameConfig stores a safe clone and updates totalRounds", () => {
-  resetRoomState();
-
-  const nextConfig = structuredClone(gameConfigFixture);
-  const updatedSnapshot = setRoomStateGameConfig(nextConfig);
-
-  assert.equal(updatedSnapshot.gameConfig?.name, gameConfigFixture.name);
-  assert.equal(updatedSnapshot.totalRounds, 2);
-  assert.equal(updatedSnapshot.currentRoundConfig, null);
-  assert.deepEqual(updatedSnapshot.pendingMinigamePointsByTeamId, {});
-
-  nextConfig.name = "Changed Locally";
-  nextConfig.rounds.push({
-    round: 3,
-    label: "Hot",
-    sauce: "Ghost",
-    pointsPerPlayer: 4,
-    minigame: "DRAWING"
-  });
-
-  const persistedSnapshot = getRoomStateSnapshot();
-
-  assert.equal(persistedSnapshot.gameConfig?.name, gameConfigFixture.name);
-  assert.equal(persistedSnapshot.totalRounds, 2);
-  assert.equal(persistedSnapshot.gameConfig?.rounds.length, 2);
-  assert.equal(persistedSnapshot.currentRoundConfig, null);
-  assert.deepEqual(persistedSnapshot.pendingMinigamePointsByTeamId, {});
-});
-
-test("setRoomStateMinigameContent stores a safe clone of trivia prompts", () => {
-  resetRoomState();
-
-  const nextPrompts = structuredClone(triviaPromptFixture);
-  setRoomStateMinigameContent("TRIVIA", {
-    prompts: nextPrompts
-  });
-
-  nextPrompts[0].question = "Changed Locally";
-  setupValidTeamsAndAssignments();
-  advanceToMinigamePlayPhase();
-  const persistedSnapshot = getRoomStateSnapshot();
-
-  assert.equal(resolveHostPromptId(persistedSnapshot), "prompt-1");
-  assert.equal(
-    resolveTriviaHostView(persistedSnapshot.minigameHostView)?.currentPrompt?.question,
-    "Question 1?"
-  );
-});
-
-test("createTeam trims team names and ignores empty values", () => {
-  resetRoomState();
-
-  createTeam("  Team Alpha  ");
-  createTeam("   ");
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.equal(snapshot.teams.length, 1);
-  assert.equal(snapshot.teams[0].id, "team-1");
-  assert.equal(snapshot.teams[0].name, "Team Alpha");
-  assert.deepEqual(snapshot.teams[0].playerIds, []);
-  assert.equal(snapshot.teams[0].totalScore, 0);
-});
-
-test("createTeam appends after preset team shells", () => {
-  resetRoomState();
-  setRoomStateTeams([
-    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
-    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
-  ]);
-
-  createTeam("Late Add Team");
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.deepEqual(snapshot.teams, [
-    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
-    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 },
-    { id: "team-3", name: "Late Add Team", playerIds: [], totalScore: 0 }
-  ]);
-});
-
-test("addPlayer trims names and allocates the next player id", () => {
-  resetRoomState();
-
-  setRoomStatePlayers([{ id: "player-2", name: "Existing Player" }]);
-
-  addPlayer("  New Player  ");
-  addPlayer("   ");
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.equal(snapshot.players.length, 2);
-  assert.deepEqual(snapshot.players[1], {
-    id: "player-3",
-    name: "New Player"
-  });
-});
-
-test("addPlayer ignores updates outside setup", () => {
-  resetRoomState();
-  setupValidTeamsAndAssignments();
-  advanceRoomStatePhase();
-
-  addPlayer("Late Player");
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.equal(snapshot.phase, Phase.INTRO);
-  assert.equal(snapshot.players.some((player) => player.name === "Late Player"), false);
-});
-
-test("assignPlayerToTeam reassigns a player to only one team at a time", () => {
-  resetRoomState();
-  setRoomStatePlayers([
-    { id: "player-1", name: "Player One" },
-    { id: "player-2", name: "Player Two" }
-  ]);
-  createTeam("Team Alpha");
-  createTeam("Team Beta");
-
-  assignPlayerToTeam("player-1", "team-1");
-  assignPlayerToTeam("player-1", "team-2");
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.deepEqual(snapshot.teams[0].playerIds, []);
-  assert.deepEqual(snapshot.teams[1].playerIds, ["player-1"]);
-});
-
-test("assignPlayerToTeam supports unassigning via null teamId", () => {
-  resetRoomState();
-  setRoomStatePlayers([{ id: "player-1", name: "Player One" }]);
-  createTeam("Team Alpha");
-
-  assignPlayerToTeam("player-1", "team-1");
-  assignPlayerToTeam("player-1", null);
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.deepEqual(snapshot.teams[0].playerIds, []);
-});
-
-test("assignPlayerToTeam ignores unknown players and unknown teams", () => {
-  resetRoomState();
-  setRoomStatePlayers([{ id: "player-1", name: "Player One" }]);
-  createTeam("Team Alpha");
-
-  assignPlayerToTeam("missing-player", "team-1");
-  assignPlayerToTeam("player-1", "missing-team");
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.deepEqual(snapshot.teams[0].playerIds, []);
-});
-
-test("autoAssignRemainingPlayers balances only unassigned players across teams", () => {
-  resetRoomState();
-
-  setRoomStatePlayers([
-    { id: "player-1", name: "Player One" },
-    { id: "player-2", name: "Player Two" },
-    { id: "player-3", name: "Player Three" },
-    { id: "player-4", name: "Player Four" },
-    { id: "player-5", name: "Player Five" }
-  ]);
-  createTeam("Team Alpha");
-  createTeam("Team Beta");
-  assignPlayerToTeam("player-1", "team-1");
-
-  autoAssignRemainingPlayers();
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.deepEqual(snapshot.teams[0]?.playerIds, ["player-1", "player-3", "player-5"]);
-  assert.deepEqual(snapshot.teams[1]?.playerIds, ["player-2", "player-4"]);
-});
-
-test("assignment setup helpers work with preset team shells", () => {
-  resetRoomState();
-  setRoomStatePlayers([
-    { id: "player-1", name: "Player One" },
-    { id: "player-2", name: "Player Two" },
-    { id: "player-3", name: "Player Three" }
-  ]);
-  setRoomStateTeams([
-    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
-    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
-  ]);
-
-  assignPlayerToTeam("player-1", "team-1");
-  autoAssignRemainingPlayers();
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.deepEqual(snapshot.teams, [
-    {
-      id: "team-1",
-      name: "Preset Team One",
-      playerIds: ["player-1", "player-3"],
-      totalScore: 0
-    },
-    {
-      id: "team-2",
-      name: "Preset Team Two",
-      playerIds: ["player-2"],
-      totalScore: 0
-    }
-  ]);
-});
-
-test("autoAssignRemainingPlayers ignores updates outside setup", () => {
-  resetRoomState();
-  setupValidTeamsAndAssignments();
-  advanceRoomStatePhase();
-  const beforeAutoAssign = getRoomStateSnapshot();
-
-  autoAssignRemainingPlayers();
-
-  const afterAutoAssign = getRoomStateSnapshot();
-
-  assert.deepEqual(afterAutoAssign.teams, beforeAutoAssign.teams);
-});
-
-test("setWingParticipation only accepts active-team players and accumulates by turn", () => {
-  resetRoomState();
-  setupValidTeamsAndAssignments();
-  advanceToEatingPhase();
-
-  setWingParticipation("player-1", true);
-
-  let snapshot = getRoomStateSnapshot();
-  assert.equal(snapshot.wingParticipationByPlayerId["player-1"], true);
-  assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 2);
-  assert.equal(snapshot.pendingWingPointsByTeamId["team-2"], 0);
-
-  setWingParticipation("player-2", true);
-
-  snapshot = getRoomStateSnapshot();
-  assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 2);
-  assert.equal(snapshot.pendingWingPointsByTeamId["team-2"], 0);
-
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  setWingParticipation("player-2", true);
-
-  snapshot = getRoomStateSnapshot();
-  assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 2);
-  assert.equal(snapshot.pendingWingPointsByTeamId["team-2"], 2);
-});
-
-test("setWingParticipation recomputes totals when a player is unchecked", () => {
-  resetRoomState();
-  setupValidTeamsAndAssignments();
-  advanceToEatingPhase();
-
-  setWingParticipation("player-1", true);
-  setWingParticipation("player-1", false);
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.equal(snapshot.wingParticipationByPlayerId["player-1"], false);
-  assert.equal(snapshot.pendingWingPointsByTeamId["team-1"], 0);
-});
-
-test("setWingParticipation idempotent updates do not replace redo snapshot", () => {
-  resetRoomState();
-  setupValidTeamsAndAssignments();
-  advanceToEatingPhase();
-
-  setWingParticipation("player-1", true);
-  let snapshot = getRoomStateSnapshot();
-  assert.equal(snapshot.canRedoScoringMutation, true);
-
-  setWingParticipation("player-1", true);
-  snapshot = getRoomStateSnapshot();
-  assert.equal(snapshot.wingParticipationByPlayerId["player-1"], true);
-  assert.equal(snapshot.canRedoScoringMutation, true);
-
-  redoLastScoringMutation();
-  snapshot = getRoomStateSnapshot();
-  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
-  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
-  assert.equal(snapshot.canRedoScoringMutation, false);
-});
-
-test("setWingParticipation ignores invalid mutations", () => {
-  resetRoomState();
-  setupValidTeamsAndAssignments();
-
-  setWingParticipation("player-1", true);
-  let snapshot = getRoomStateSnapshot();
-  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
-
-  advanceToEatingPhase();
-  setWingParticipation("missing-player", true);
-  snapshot = getRoomStateSnapshot();
-  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
-});
-
-test("setWingParticipation ignores updates for players not assigned to a team", () => {
-  resetRoomState();
-  setupValidTeamsAndAssignments();
-  advanceToEatingPhase();
-  setRoomStatePlayers([
-    { id: "player-1", name: "Player One" },
-    { id: "player-2", name: "Player Two" },
-    { id: "player-3", name: "Player Three" }
-  ]);
-  const beforeMutation = getRoomStateSnapshot();
-
-  setWingParticipation("player-3", true);
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.equal(snapshot.wingParticipationByPlayerId["player-3"], undefined);
-  assert.deepEqual(
-    snapshot.pendingWingPointsByTeamId,
-    beforeMutation.pendingWingPointsByTeamId
-  );
-});
-
-test("entering EATING clears wing participation from the previous round", () => {
-  resetRoomState();
-  setupValidTeamsAndAssignments();
-  advanceToEatingPhase();
-
-  setWingParticipation("player-1", true);
-
-  advanceToRoundResultsPhase(1);
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-
-  const snapshot = getRoomStateSnapshot();
-
-  assert.equal(snapshot.phase, Phase.EATING);
-  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
-  assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
 });
 
 test("initializes trivia turn state through the minigame module boundary", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
 
@@ -438,7 +60,6 @@ test("initializes trivia turn state through the minigame module boundary", () =>
 });
 
 test("does not initialize trivia projection for non-trivia minigame rounds", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments({
     ...gameConfigFixture,
     rounds: [{ ...gameConfigFixture.rounds[0], minigame: "GEO" }]
@@ -463,7 +84,6 @@ test("does not initialize trivia projection for non-trivia minigame rounds", () 
 });
 
 test("GEO runtime scores submitted guesses for the active team only", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments({
     ...gameConfigFixture,
     rounds: [{ ...gameConfigFixture.rounds[0], minigame: "GEO" }],
@@ -513,7 +133,6 @@ test("GEO runtime scores submitted guesses for the active team only", () => {
 });
 
 test("GEO display view stays answer-safe until the guess is submitted", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments({
     ...gameConfigFixture,
     rounds: [{ ...gameConfigFixture.rounds[0], minigame: "GEO" }]
@@ -566,7 +185,6 @@ test("GEO display view stays answer-safe until the guess is submitted", () => {
 });
 
 test("GEO actions are dropped outside their valid sub-states", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments({
     ...gameConfigFixture,
     rounds: [{ ...gameConfigFixture.rounds[0], minigame: "GEO" }]
@@ -610,7 +228,6 @@ test("GEO actions are dropped outside their valid sub-states", () => {
 });
 
 test("recordTriviaAttempt applies points for active round team and wraps prompts", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments({
     ...gameConfigFixture,
     minigameRules: {
@@ -643,7 +260,6 @@ test("recordTriviaAttempt applies points for active round team and wraps prompts
 });
 
 test("recordTriviaAttempt defaults to one question per turn when minigameRules are not configured", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToMinigamePlayPhase();
@@ -669,7 +285,6 @@ test("recordTriviaAttempt defaults to one question per turn when minigameRules a
 });
 
 test("blocked trivia attempts do not mutate runtime projection or redo snapshot", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToMinigamePlayPhase();
@@ -711,7 +326,6 @@ test("blocked trivia attempts do not mutate runtime projection or redo snapshot"
 });
 
 test("recordTriviaAttempt enforces configured trivia questions-per-turn limits", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments({
     ...gameConfigFixture,
     minigameRules: {
@@ -743,7 +357,6 @@ test("recordTriviaAttempt enforces configured trivia questions-per-turn limits",
 });
 
 test("setRoomStateTriviaPrompts reprojects trivia state through runtime adapter during play", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToMinigamePlayPhase();
@@ -766,7 +379,6 @@ test("setRoomStateTriviaPrompts reprojects trivia state through runtime adapter 
 });
 
 test("trivia turn order remains fixed across rounds", () => {
-  resetRoomState();
   const allTriviaRoundsConfig: GameConfigFile = {
     ...gameConfigFixture,
     rounds: [
@@ -791,7 +403,6 @@ test("trivia turn order remains fixed across rounds", () => {
 });
 
 test("recordTriviaAttempt enforces minigame scoring cap", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToMinigamePlayPhase();
@@ -805,7 +416,6 @@ test("recordTriviaAttempt enforces minigame scoring cap", () => {
 });
 
 test("recordTriviaAttempt ignores calls outside TRIVIA MINIGAME_PLAY", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
 
@@ -824,7 +434,6 @@ test("recordTriviaAttempt ignores calls outside TRIVIA MINIGAME_PLAY", () => {
 });
 
 test("setPendingMinigamePoints enforces default-round scoring cap", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToMinigamePlayPhase();
 
@@ -838,7 +447,6 @@ test("setPendingMinigamePoints enforces default-round scoring cap", () => {
 });
 
 test("setPendingMinigamePoints is ignored outside MINIGAME_PLAY", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToMinigamePlayPhase();
 
@@ -857,7 +465,6 @@ test("setPendingMinigamePoints is ignored outside MINIGAME_PLAY", () => {
 });
 
 test("setPendingMinigamePoints rejects negative values", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToMinigamePlayPhase();
 
@@ -874,7 +481,6 @@ test("setPendingMinigamePoints rejects negative values", () => {
 });
 
 test("setPendingMinigamePoints rejects non-finite values", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToMinigamePlayPhase();
 
@@ -891,7 +497,6 @@ test("setPendingMinigamePoints rejects non-finite values", () => {
 });
 
 test("setPendingMinigamePoints fills missing teams with zero", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToMinigamePlayPhase();
 
@@ -903,7 +508,6 @@ test("setPendingMinigamePoints fills missing teams with zero", () => {
 });
 
 test("setPendingMinigamePoints rejects non-active team score mutations", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToMinigamePlayPhase();
 
@@ -920,7 +524,6 @@ test("setPendingMinigamePoints rejects non-active team score mutations", () => {
 });
 
 test("setPendingMinigamePoints enforces final-round scoring cap", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToFinalRoundMinigamePlayPhase();
 

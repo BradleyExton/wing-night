@@ -1,40 +1,20 @@
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
-import type { SerializableValue } from "@wingnight/minigames-core";
 import {
   CLIENT_ROLES,
-  MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS,
   toRoleScopedSnapshotEnvelope,
+  type ClientToServerEvents,
   type RoomState,
+  type ServerToClientEvents,
   type SocketClientRole
 } from "@wingnight/shared";
 
-import type {
-  IncomingSocketEvents,
-  OutgoingSocketEvents
-} from "../socketContracts/index.js";
 import {
   applyRoomStateMutation,
-  addPlayer,
-  advanceRoomStatePhase,
-  adjustTeamScore,
-  assignPlayerToTeam,
-  autoAssignRemainingPlayers,
-  createTeam,
-  dispatchMinigameAction,
-  extendRoomTimer,
-  getRoomStateSnapshot,
-  pauseRoomTimer,
-  redoLastScoringMutation,
-  reorderTurnOrder,
-  resetGameToSetup,
-  skipTurnBoundary,
-  resumeRoomTimer,
-  setWingParticipation
+  getRoomStateSnapshot
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
-import { resolveMinigameDescriptor } from "../minigames/registry/index.js";
 import {
   resolveAuthorizedSocketClientRole,
   resolveConfiguredHostControlToken
@@ -48,7 +28,7 @@ const ROOM_BY_CLIENT_ROLE = {
 
 export const attachSocketServer = (
   httpServer: HttpServer
-): Server<IncomingSocketEvents, OutgoingSocketEvents> => {
+): Server<ClientToServerEvents, ServerToClientEvents> => {
   const configuredCorsOrigin = process.env.SOCKET_IO_CORS_ORIGIN;
   const corsOrigin =
     configuredCorsOrigin && configuredCorsOrigin.trim().length > 0
@@ -58,7 +38,7 @@ export const attachSocketServer = (
     process.env.HOST_CONTROL_TOKEN
   );
 
-  const socketServer = new Server<IncomingSocketEvents, OutgoingSocketEvents>(
+  const socketServer = new Server<ClientToServerEvents, ServerToClientEvents>(
     httpServer,
     {
       cors: {
@@ -109,76 +89,8 @@ export const attachSocketServer = (
         const roomState = getRoomStateSnapshot();
         return toRoleScopedSnapshotEnvelope(socketClientRole, roomState);
       },
-      {
-        onAuthorizedNextPhase: () => {
-          broadcastAfter(() => advanceRoomStatePhase());
-        },
-        onAuthorizedSkipTurnBoundary: () => {
-          broadcastAfter(() => skipTurnBoundary());
-        },
-        onAuthorizedReorderTurnOrder: (teamIds) => {
-          broadcastAfter(() => reorderTurnOrder(teamIds));
-        },
-        onAuthorizedResetGame: () => {
-          broadcastAfter(() => resetGameToSetup());
-        },
-        onAuthorizedCreateTeam: (name) => {
-          broadcastAfter(() => createTeam(name));
-        },
-        onAuthorizedAddPlayer: (name) => {
-          broadcastAfter(() => addPlayer(name));
-        },
-        onAuthorizedAssignPlayer: (playerId, teamId) => {
-          broadcastAfter(() => assignPlayerToTeam(playerId, teamId));
-        },
-        onAuthorizedAutoAssignRemainingPlayers: () => {
-          broadcastAfter(() => autoAssignRemainingPlayers());
-        },
-        onAuthorizedSetWingParticipation: (playerId, didEat) => {
-          broadcastAfter(() => setWingParticipation(playerId, didEat));
-        },
-        onAuthorizedAdjustTeamScore: (teamId, delta) => {
-          broadcastAfter(() => adjustTeamScore(teamId, delta));
-        },
-        onAuthorizedRedoLastMutation: () => {
-          broadcastAfter(() => redoLastScoringMutation());
-        },
-        onAuthorizedMinigameAction: (payload) => {
-          if (payload.minigameApiVersion !== MINIGAME_API_VERSION) {
-            return;
-          }
-
-          const currentSnapshot = getRoomStateSnapshot();
-
-          if (currentSnapshot.currentRoundConfig?.minigame !== payload.minigameId) {
-            return;
-          }
-
-          const activeMinigameDescriptor = resolveMinigameDescriptor(payload.minigameId);
-
-          if (
-            activeMinigameDescriptor.metadata.minigameApiVersion !==
-            payload.minigameApiVersion
-          ) {
-            return;
-          }
-          broadcastAfter(() =>
-            dispatchMinigameAction(
-              payload.minigameId,
-              payload.actionType,
-              payload.actionPayload as SerializableValue
-            )
-          );
-        },
-        onAuthorizedPauseTimer: () => {
-          broadcastAfter(() => pauseRoomTimer());
-        },
-        onAuthorizedResumeTimer: () => {
-          broadcastAfter(() => resumeRoomTimer());
-        },
-        onAuthorizedExtendTimer: (additionalSeconds) => {
-          broadcastAfter(() => extendRoomTimer(additionalSeconds));
-        }
+      (_event, _payload, runMutation) => {
+        broadcastAfter(runMutation);
       },
       socketClientRole === CLIENT_ROLES.HOST,
       {

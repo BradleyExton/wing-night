@@ -1,38 +1,31 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Phase } from "@wingnight/shared";
+import { CLIENT_TO_SERVER_EVENTS, Phase } from "@wingnight/shared";
 
-import { registerRoomStateHandlers } from "./index.js";
-import {
-  buildRoomState,
-  createMutationHandlers,
-  createSocketHarness,
-  hostAuth,
-  toHostSnapshotEnvelope
-} from "./testHarness.js";
+import { setupHandlers } from "./testHarness.js";
 
 test("ignores malformed and unauthorized skip-turn-boundary payloads", () => {
-  const socketHarness = createSocketHarness();
   let skipCalls = 0;
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.EATING)),
-    createMutationHandlers({
-      onAuthorizedSkipTurnBoundary: () => {
+  const socketHarness = setupHandlers({
+    phase: Phase.EATING,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY]: () => {
         skipCalls += 1;
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerSkipTurnBoundary(undefined);
-    socketHarness.triggerSkipTurnBoundary({});
-    socketHarness.triggerSkipTurnBoundary({ hostSecret: "invalid-host-secret" });
-    socketHarness.triggerSkipTurnBoundary({ hostSecret: "valid-host-secret" });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, {
+      hostSecret: "invalid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, {
+      hostSecret: "valid-host-secret"
+    });
   });
 
   assert.equal(skipCalls, 1);
@@ -40,38 +33,36 @@ test("ignores malformed and unauthorized skip-turn-boundary payloads", () => {
 });
 
 test("ignores malformed and unauthorized reorder-turn-order payloads", () => {
-  const socketHarness = createSocketHarness();
   const reorderCalls: string[][] = [];
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.ROUND_INTRO)),
-    createMutationHandlers({
-      onAuthorizedReorderTurnOrder: (teamIds) => {
-        reorderCalls.push(teamIds);
+  const socketHarness = setupHandlers({
+    phase: Phase.ROUND_INTRO,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER]: (payload) => {
+        reorderCalls.push(payload.teamIds);
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerReorderTurnOrder(undefined);
-    socketHarness.triggerReorderTurnOrder({});
-    socketHarness.triggerReorderTurnOrder({ hostSecret: "valid-host-secret" });
-    socketHarness.triggerReorderTurnOrder({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, {
+      hostSecret: "valid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, {
       hostSecret: "valid-host-secret",
       teamIds: "team-1"
     });
-    socketHarness.triggerReorderTurnOrder({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, {
       hostSecret: "valid-host-secret",
       teamIds: ["team-1", 3]
     });
-    socketHarness.triggerReorderTurnOrder({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, {
       hostSecret: "invalid-host-secret",
       teamIds: ["team-1", "team-2"]
     });
-    socketHarness.triggerReorderTurnOrder({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER, {
       hostSecret: "valid-host-secret",
       teamIds: ["team-2", "team-1"]
     });
@@ -82,26 +73,26 @@ test("ignores malformed and unauthorized reorder-turn-order payloads", () => {
 });
 
 test("ignores malformed and unauthorized reset payloads", () => {
-  const socketHarness = createSocketHarness();
   let resetCalls = 0;
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.ROUND_RESULTS)),
-    createMutationHandlers({
-      onAuthorizedResetGame: () => {
+  const socketHarness = setupHandlers({
+    phase: Phase.ROUND_RESULTS,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.RESET]: () => {
         resetCalls += 1;
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerResetGame(undefined);
-    socketHarness.triggerResetGame({});
-    socketHarness.triggerResetGame({ hostSecret: "invalid-host-secret" });
-    socketHarness.triggerResetGame({ hostSecret: "valid-host-secret" });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.RESET, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.RESET, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.RESET, {
+      hostSecret: "invalid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.RESET, {
+      hostSecret: "valid-host-secret"
+    });
   });
 
   assert.equal(resetCalls, 1);
@@ -109,25 +100,27 @@ test("ignores malformed and unauthorized reset payloads", () => {
 });
 
 test("runs authorized create-team callback and ignores unauthorized payloads", () => {
-  const socketHarness = createSocketHarness();
   let createTeamCalls = 0;
   let createdTeamName = "";
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
-    createMutationHandlers({
-      onAuthorizedCreateTeam: (name) => {
+  const socketHarness = setupHandlers({
+    phase: Phase.SETUP,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.CREATE_TEAM]: (payload) => {
         createTeamCalls += 1;
-        createdTeamName = name;
+        createdTeamName = payload.name;
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
-  socketHarness.triggerCreateTeam({ hostSecret: "invalid-host-secret", name: "Team One" });
-  socketHarness.triggerCreateTeam({ hostSecret: "valid-host-secret", name: "Team Two" });
+  socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, {
+    hostSecret: "invalid-host-secret",
+    name: "Team One"
+  });
+  socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.CREATE_TEAM, {
+    hostSecret: "valid-host-secret",
+    name: "Team Two"
+  });
 
   assert.equal(createTeamCalls, 1);
   assert.equal(createdTeamName, "Team Two");
@@ -135,25 +128,27 @@ test("runs authorized create-team callback and ignores unauthorized payloads", (
 });
 
 test("runs authorized add-player callback and ignores unauthorized payloads", () => {
-  const socketHarness = createSocketHarness();
   let addPlayerCalls = 0;
   let addedPlayerName = "";
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
-    createMutationHandlers({
-      onAuthorizedAddPlayer: (name) => {
+  const socketHarness = setupHandlers({
+    phase: Phase.SETUP,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.ADD_PLAYER]: (payload) => {
         addPlayerCalls += 1;
-        addedPlayerName = name;
+        addedPlayerName = payload.name;
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
-  socketHarness.triggerAddPlayer({ hostSecret: "invalid-host-secret", name: "Player One" });
-  socketHarness.triggerAddPlayer({ hostSecret: "valid-host-secret", name: "Player Two" });
+  socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ADD_PLAYER, {
+    hostSecret: "invalid-host-secret",
+    name: "Player One"
+  });
+  socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ADD_PLAYER, {
+    hostSecret: "valid-host-secret",
+    name: "Player Two"
+  });
 
   assert.equal(addPlayerCalls, 1);
   assert.equal(addedPlayerName, "Player Two");
@@ -161,36 +156,34 @@ test("runs authorized add-player callback and ignores unauthorized payloads", ()
 });
 
 test("ignores malformed and unauthorized assign-player payloads", () => {
-  const socketHarness = createSocketHarness();
   const assignmentCalls: Array<{ playerId: string; teamId: string | null }> = [];
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
-    createMutationHandlers({
-      onAuthorizedAssignPlayer: (playerId, teamId) => {
-        assignmentCalls.push({ playerId, teamId });
+  const socketHarness = setupHandlers({
+    phase: Phase.SETUP,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER]: (payload) => {
+        assignmentCalls.push({ playerId: payload.playerId, teamId: payload.teamId });
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerAssignPlayer(undefined);
-    socketHarness.triggerAssignPlayer({});
-    socketHarness.triggerAssignPlayer({ hostSecret: "valid-host-secret" });
-    socketHarness.triggerAssignPlayer({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, {
+      hostSecret: "valid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, {
       hostSecret: "valid-host-secret",
       playerId: 10,
       teamId: "team-1"
     });
-    socketHarness.triggerAssignPlayer({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, {
       hostSecret: "invalid-host-secret",
       playerId: "player-1",
       teamId: "team-1"
     });
-    socketHarness.triggerAssignPlayer({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ASSIGN_PLAYER, {
       hostSecret: "valid-host-secret",
       playerId: "player-1",
       teamId: null
@@ -202,26 +195,26 @@ test("ignores malformed and unauthorized assign-player payloads", () => {
 });
 
 test("ignores malformed and unauthorized auto-assign payloads", () => {
-  const socketHarness = createSocketHarness();
   let autoAssignCalls = 0;
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
-    createMutationHandlers({
-      onAuthorizedAutoAssignRemainingPlayers: () => {
+  const socketHarness = setupHandlers({
+    phase: Phase.SETUP,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS]: () => {
         autoAssignCalls += 1;
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerAutoAssignRemainingPlayers(undefined);
-    socketHarness.triggerAutoAssignRemainingPlayers({});
-    socketHarness.triggerAutoAssignRemainingPlayers({ hostSecret: "invalid-host-secret" });
-    socketHarness.triggerAutoAssignRemainingPlayers({ hostSecret: "valid-host-secret" });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS, {
+      hostSecret: "invalid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.AUTO_ASSIGN_REMAINING_PLAYERS, {
+      hostSecret: "valid-host-secret"
+    });
   });
 
   assert.equal(autoAssignCalls, 1);
@@ -229,41 +222,39 @@ test("ignores malformed and unauthorized auto-assign payloads", () => {
 });
 
 test("ignores malformed and unauthorized wing-participation payloads", () => {
-  const socketHarness = createSocketHarness();
   const participationCalls: Array<{ playerId: string; didEat: boolean }> = [];
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.SETUP)),
-    createMutationHandlers({
-      onAuthorizedSetWingParticipation: (playerId, didEat) => {
-        participationCalls.push({ playerId, didEat });
+  const socketHarness = setupHandlers({
+    phase: Phase.SETUP,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION]: (payload) => {
+        participationCalls.push({ playerId: payload.playerId, didEat: payload.didEat });
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerSetWingParticipation(undefined);
-    socketHarness.triggerSetWingParticipation({});
-    socketHarness.triggerSetWingParticipation({ hostSecret: "valid-host-secret" });
-    socketHarness.triggerSetWingParticipation({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, {
+      hostSecret: "valid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, {
       hostSecret: "valid-host-secret",
       playerId: 10,
       didEat: true
     });
-    socketHarness.triggerSetWingParticipation({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, {
       hostSecret: "valid-host-secret",
       playerId: "player-1",
       didEat: "yes"
     });
-    socketHarness.triggerSetWingParticipation({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, {
       hostSecret: "invalid-host-secret",
       playerId: "player-1",
       didEat: true
     });
-    socketHarness.triggerSetWingParticipation({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SET_WING_PARTICIPATION, {
       hostSecret: "valid-host-secret",
       playerId: "player-2",
       didEat: false
@@ -275,41 +266,39 @@ test("ignores malformed and unauthorized wing-participation payloads", () => {
 });
 
 test("ignores malformed and unauthorized adjust-team-score payloads", () => {
-  const socketHarness = createSocketHarness();
   const adjustmentCalls: Array<{ teamId: string; delta: number }> = [];
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.ROUND_RESULTS)),
-    createMutationHandlers({
-      onAuthorizedAdjustTeamScore: (teamId, delta) => {
-        adjustmentCalls.push({ teamId, delta });
+  const socketHarness = setupHandlers({
+    phase: Phase.ROUND_RESULTS,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE]: (payload) => {
+        adjustmentCalls.push({ teamId: payload.teamId, delta: payload.delta });
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerAdjustTeamScore(undefined);
-    socketHarness.triggerAdjustTeamScore({});
-    socketHarness.triggerAdjustTeamScore({ hostSecret: "valid-host-secret" });
-    socketHarness.triggerAdjustTeamScore({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, {
+      hostSecret: "valid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, {
       hostSecret: "valid-host-secret",
       teamId: "team-1",
       delta: 0
     });
-    socketHarness.triggerAdjustTeamScore({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, {
       hostSecret: "valid-host-secret",
       teamId: 1,
       delta: 3
     });
-    socketHarness.triggerAdjustTeamScore({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, {
       hostSecret: "invalid-host-secret",
       teamId: "team-1",
       delta: 3
     });
-    socketHarness.triggerAdjustTeamScore({
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.ADJUST_TEAM_SCORE, {
       hostSecret: "valid-host-secret",
       teamId: "team-1",
       delta: -2
@@ -321,26 +310,26 @@ test("ignores malformed and unauthorized adjust-team-score payloads", () => {
 });
 
 test("ignores malformed and unauthorized redo-last-mutation payloads", () => {
-  const socketHarness = createSocketHarness();
   let redoCalls = 0;
 
-  registerRoomStateHandlers(
-    socketHarness.socket,
-    () => toHostSnapshotEnvelope(buildRoomState(Phase.ROUND_RESULTS)),
-    createMutationHandlers({
-      onAuthorizedRedoLastMutation: () => {
+  const socketHarness = setupHandlers({
+    phase: Phase.ROUND_RESULTS,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION]: () => {
         redoCalls += 1;
       }
-    }),
-    true,
-    hostAuth
-  );
+    }
+  });
 
   assert.doesNotThrow(() => {
-    socketHarness.triggerRedoLastMutation(undefined);
-    socketHarness.triggerRedoLastMutation({});
-    socketHarness.triggerRedoLastMutation({ hostSecret: "invalid-host-secret" });
-    socketHarness.triggerRedoLastMutation({ hostSecret: "valid-host-secret" });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, {});
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, {
+      hostSecret: "invalid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION, {
+      hostSecret: "valid-host-secret"
+    });
   });
 
   assert.equal(redoCalls, 1);

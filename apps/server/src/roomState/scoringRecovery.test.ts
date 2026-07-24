@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { beforeEach } from "node:test";
 
 import { Phase } from "@wingnight/shared";
 
@@ -37,12 +37,15 @@ import {
   triviaPromptFixture
 } from "./testHarness.js";
 
+beforeEach(() => {
+  resetRoomState();
+});
+
 const recordTriviaAttempt = (isCorrect: boolean): void => {
   dispatchMinigameAction("TRIVIA", "recordAttempt", { isCorrect });
 };
 
 test("applies wing and minigame points on MINIGAME_PLAY -> ROUND_RESULTS", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -66,7 +69,6 @@ test("applies wing and minigame points on MINIGAME_PLAY -> ROUND_RESULTS", () =>
 });
 
 test("does not double apply round points after leaving ROUND_RESULTS", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -85,7 +87,6 @@ test("does not double apply round points after leaving ROUND_RESULTS", () => {
 });
 
 test("clears pending round score maps after leaving ROUND_RESULTS", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -105,7 +106,6 @@ test("clears pending round score maps after leaving ROUND_RESULTS", () => {
 });
 
 test("applies scores cumulatively across rounds", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
 
   advanceToEatingPhase();
@@ -128,7 +128,6 @@ test("applies scores cumulatively across rounds", () => {
 });
 
 test("logs score mutation metadata when applying round points", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -164,7 +163,6 @@ test("logs score mutation metadata when applying round points", () => {
 });
 
 test("adjustTeamScore applies integer deltas outside SETUP", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceRoomStatePhase();
   let snapshot = getRoomStateSnapshot();
@@ -182,7 +180,6 @@ test("adjustTeamScore applies integer deltas outside SETUP", () => {
 });
 
 test("adjustTeamScore rejects invalid mutations", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   const setupSnapshot = getRoomStateSnapshot();
 
@@ -201,7 +198,6 @@ test("adjustTeamScore rejects invalid mutations", () => {
 });
 
 test("redoLastScoringMutation undoes the latest wing participation mutation", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -218,7 +214,6 @@ test("redoLastScoringMutation undoes the latest wing participation mutation", ()
 });
 
 test("redoLastScoringMutation restores scoring fields without rewinding phase or timer", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -241,7 +236,6 @@ test("redoLastScoringMutation restores scoring fields without rewinding phase or
 });
 
 test("redoLastScoringMutation restores trivia runtime prompt and points", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToMinigamePlayPhase();
@@ -263,7 +257,6 @@ test("redoLastScoringMutation restores trivia runtime prompt and points", () => 
 });
 
 test("redoLastScoringMutation undoes manual score override", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceRoomStatePhase();
   adjustTeamScore("team-1", 6);
@@ -277,7 +270,6 @@ test("redoLastScoringMutation undoes manual score override", () => {
 });
 
 test("redo scoring history clears on round change", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceRoomStatePhase();
   adjustTeamScore("team-1", 3);
@@ -295,7 +287,6 @@ test("redo scoring history clears on round change", () => {
 });
 
 test("redo scoring history clears on MINIGAME_PLAY -> ROUND_RESULTS", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -319,7 +310,6 @@ test("redo scoring history clears on MINIGAME_PLAY -> ROUND_RESULTS", () => {
 });
 
 test("redo scoring history clears on resetGameToSetup", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceRoomStatePhase();
   adjustTeamScore("team-1", 4);
@@ -334,7 +324,6 @@ test("redo scoring history clears on resetGameToSetup", () => {
 });
 
 test("resetGameToSetup restores preset team shells and clears transient round state", () => {
-  resetRoomState();
   setRoomStateGameConfig(gameConfigFixture);
   setRoomStatePlayers([
     { id: "player-1", name: "Player One" },
@@ -383,7 +372,6 @@ test("resetGameToSetup restores preset team shells and clears transient round st
 });
 
 test("resetGameToSetup clears final-results scores while keeping preset content payloads", () => {
-  resetRoomState();
   setRoomStateGameConfig(gameConfigFixture);
   setRoomStatePlayers([
     { id: "player-1", name: "Player One" },
@@ -420,7 +408,6 @@ test("resetGameToSetup clears final-results scores while keeping preset content 
 });
 
 test("createTeam is locked after leaving setup", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceRoomStatePhase();
   const teamsBeforeCreate = getRoomStateSnapshot().teams.length;
@@ -434,7 +421,6 @@ test("createTeam is locked after leaving setup", () => {
 });
 
 test("assignPlayerToTeam is locked after leaving setup", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceRoomStatePhase();
 
@@ -447,7 +433,6 @@ test("assignPlayerToTeam is locked after leaving setup", () => {
 });
 
 test("setRoomStateFatalError stores fatal snapshot and clears round state", () => {
-  resetRoomState();
   setupValidTeamsAndAssignments();
   advanceToEatingPhase();
 
@@ -463,7 +448,6 @@ test("setRoomStateFatalError stores fatal snapshot and clears round state", () =
 });
 
 test("fatal room state blocks host mutations", () => {
-  resetRoomState();
   setRoomStateFatalError("Invalid content.");
   const beforeMutation = getRoomStateSnapshot();
 
