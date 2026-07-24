@@ -2,7 +2,6 @@ import { defineConfig, devices } from "@playwright/test";
 
 const serverPort = 3000;
 const clientPort = 5173;
-const sharedBuildCommand = "pnpm --filter @wingnight/shared build";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -22,14 +21,14 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `${sharedBuildCommand} && pnpm --filter @wingnight/server dev`,
+      command: "pnpm --filter @wingnight/server dev",
       url: `http://127.0.0.1:${serverPort}/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000
     },
     {
       command:
-        `${sharedBuildCommand} && pnpm --filter @wingnight/client dev -- --host 127.0.0.1 --port 5173`,
+        "pnpm --filter @wingnight/client dev -- --host 127.0.0.1 --port 5173",
       url: `http://localhost:${clientPort}`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

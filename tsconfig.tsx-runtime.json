@@ -1,0 +1,9 @@
+{
+  // Passed to the tsx test runner via --tsconfig so the automatic JSX
+  // runtime applies to every workspace file, including .tsx sources
+  // imported from other packages (which fall outside the consuming
+  // package's own tsconfig include scope).
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  }
+}

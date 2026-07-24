@@ -111,6 +111,9 @@ importers:
       socket.io:
         specifier: ^4.8.1
         version: 4.8.3
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
@@ -118,9 +121,6 @@ importers:
       '@types/node':
         specifier: ^22.10.1
         version: 22.19.11
-      tsx:
-        specifier: ^4.19.2
-        version: 4.21.0
       typescript:
         specifier: ^5.7.2
         version: 5.9.3

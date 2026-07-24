@@ -7,10 +7,10 @@
     "node": "25.x"
   },
   "scripts": {
-    "dev": "pnpm --filter @wingnight/shared build && pnpm -r --parallel --filter @wingnight/shared --filter @wingnight/server --filter @wingnight/client dev",
+    "dev": "pnpm -r --parallel --filter @wingnight/server --filter @wingnight/client dev",
     "build": "pnpm -r --if-present build",
-    "typecheck": "pnpm --filter @wingnight/shared --filter @wingnight/minigames-core --filter @wingnight/minigames-trivia --filter @wingnight/minigames-geo --filter @wingnight/minigames-drawing build && pnpm -r --if-present typecheck",
-    "test": "pnpm --filter @wingnight/shared --filter @wingnight/minigames-core --filter @wingnight/minigames-trivia --filter @wingnight/minigames-geo --filter @wingnight/minigames-drawing build && pnpm -r --if-present test && pnpm test:lint-rules",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test && pnpm test:lint-rules",
     "test:e2e": "playwright test",
     "test:lint-rules": "node --test tools/eslint-plugin-wingnight/tests/index.test.mjs",
     "import:geo": "node tools/import-geo-photos/index.mjs",
