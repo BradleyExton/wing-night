@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
 import { PlayersSurface } from "../../PlayersSurface";
@@ -7,28 +5,14 @@ import { TimerControlsSurface } from "../../TimerControlsSurface";
 import { hostControlPanelCopy } from "../../copy";
 import { selectHostTeamMaps } from "../../selectHostTeamMaps";
 import { createMinigameHandlers } from "../../setupHandlers";
+import { useNowTickMs } from "../../useNowTickMs";
+import { useTimesUpChime } from "../../useTimesUpChime";
 import { useHostHandlers } from "../../../../context/HostHandlersContext";
 import { useHostRoomState } from "../../../../context/RoomStateContext";
 import { resolveRemainingTimerSeconds } from "../../../../utils/resolveRemainingTimerSeconds";
 import * as styles from "./styles";
 
 const URGENT_THRESHOLD_SECONDS = 10;
-
-const useNowTickMs = (): number => {
-  const [now, setNow] = useState<number>(() => Date.now());
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setNow(Date.now());
-    }, 250);
-
-    return (): void => {
-      window.clearInterval(intervalId);
-    };
-  }, []);
-
-  return now;
-};
 
 export const EatingStage = (): JSX.Element => {
   const roomState = useHostRoomState();
@@ -53,6 +37,7 @@ export const EatingStage = (): JSX.Element => {
   const nowTimestampMs = useNowTickMs();
   const remainingSeconds =
     timer !== null ? resolveRemainingTimerSeconds(timer, nowTimestampMs) : 0;
+  const isTimeUp = timer !== null && !timer.isPaused && remainingSeconds <= 0;
   const isUrgent = remainingSeconds <= URGENT_THRESHOLD_SECONDS;
   const totalDurationSeconds =
     timer !== null ? Math.max(timer.durationMs / 1000, 1) : 1;
@@ -60,14 +45,19 @@ export const EatingStage = (): JSX.Element => {
     0,
     Math.min(100, (remainingSeconds / totalDurationSeconds) * 100)
   );
-  const timerClassName = `${styles.timer} ${isUrgent ? styles.timerUrgent : ""}`;
+  const timerClassName = `${styles.timer} ${
+    isTimeUp ? styles.timerTimeUp : isUrgent ? styles.timerUrgent : ""
+  }`;
+
+  useTimesUpChime(timer === null ? null : remainingSeconds);
 
   return (
     <>
       <StageHero glowClassName={styles.glowEating}>
-        <span className={styles.eyebrow}>
-          {hostControlPanelCopy.timerSectionTitle} ·{" "}
-          {hostControlPanelCopy.timerRemainingLabel}
+        <span className={isTimeUp ? styles.eyebrowTimeUp : styles.eyebrow}>
+          {isTimeUp
+            ? hostControlPanelCopy.timerTimesUpLabel
+            : `${hostControlPanelCopy.timerSectionTitle} · ${hostControlPanelCopy.timerRemainingLabel}`}
         </span>
         <p className={timerClassName}>
           {hostControlPanelCopy.timerValue(remainingSeconds)}

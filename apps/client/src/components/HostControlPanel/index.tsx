@@ -16,11 +16,13 @@ import { useHostHandlers } from "../../context/HostHandlersContext";
 import { HostOverridesUiProvider } from "../../context/HostOverridesUiContext";
 import type { HostOverridesUi } from "../../context/HostOverridesUiContext";
 import { useHostRoomState } from "../../context/RoomStateContext";
+import { useHostWakeLock } from "./useHostWakeLock";
 import * as styles from "./styles";
 
 const EMPTY_TEAMS: RoomState["teams"] = [];
 
 export const HostControlPanel = (): JSX.Element => {
+  useHostWakeLock();
   const roomState = useHostRoomState();
   const handlers = useHostHandlers();
   const [isOverrideDockOpen, setIsOverrideDockOpen] = useState(false);

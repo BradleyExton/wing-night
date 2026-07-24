@@ -58,6 +58,16 @@ const syncSetupBaselineSnapshot = (
   });
 };
 
+// Players and teams added live during SETUP must survive "Reset Game" the
+// same way preset content does, so live setup mutations re-sync the baseline.
+export const syncSetupBaselinePlayersFromState = (state: RoomState): void => {
+  syncSetupBaselineSnapshot({ players: structuredClone(state.players) });
+};
+
+export const syncSetupBaselineTeamsFromState = (state: RoomState): void => {
+  syncSetupBaselineSnapshot({ teams: normalizeBaselineTeams(state.teams) });
+};
+
 export { getRoomStateSnapshot } from "../getRoomStateSnapshot/index.js";
 
 export const resetRoomState = (): RoomState => {

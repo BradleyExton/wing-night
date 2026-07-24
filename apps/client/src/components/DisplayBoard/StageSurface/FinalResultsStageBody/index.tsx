@@ -1,18 +1,23 @@
-import { Trophy } from "lucide-react";
+import { Swords, Trophy } from "lucide-react";
 
 import { finalResultsStageCopy } from "./copy";
 import * as styles from "./styles";
 
 type FinalResultsStageBodyProps = {
-  winnerTeamName: string | null;
+  winnerTeamNames: string[];
   winnerScore: number | null;
 };
 
 export const FinalResultsStageBody = ({
-  winnerTeamName,
+  winnerTeamNames,
   winnerScore
 }: FinalResultsStageBodyProps): JSX.Element => {
-  const resolvedTeamName = winnerTeamName ?? finalResultsStageCopy.noWinnerLabel;
+  const isTie = winnerTeamNames.length > 1;
+  const resolvedTeamName =
+    winnerTeamNames.length === 0
+      ? finalResultsStageCopy.noWinnerLabel
+      : winnerTeamNames.join(finalResultsStageCopy.tieNameJoiner);
+  const OutcomeIcon = isTie ? Swords : Trophy;
 
   return (
     <div className={styles.container}>
@@ -20,17 +25,29 @@ export const FinalResultsStageBody = ({
       <span className={`${styles.beatBase} ${styles.beatDelay1} ${styles.gameOver}`}>
         {finalResultsStageCopy.gameOverLabel}
       </span>
-      <span className={`${styles.beatBase} ${styles.beatDelay2} ${styles.champion}`}>
-        <Trophy className={styles.championIcon} aria-hidden />
-        {finalResultsStageCopy.championLabel}
+      <span
+        className={`${styles.beatBase} ${styles.beatDelay2} ${isTie ? styles.tie : styles.champion}`}
+      >
+        <OutcomeIcon
+          className={isTie ? styles.tieIcon : styles.championIcon}
+          aria-hidden
+        />
+        {isTie ? finalResultsStageCopy.tieLabel : finalResultsStageCopy.championLabel}
       </span>
-      <p className={`${styles.beatBase} ${styles.beatDelay3} ${styles.teamName}`}>
+      <p
+        className={`${styles.beatBase} ${styles.beatDelay3} ${isTie ? styles.tiedTeamNames : styles.teamName}`}
+      >
         {resolvedTeamName}
       </p>
       {winnerScore !== null && (
         <p className={`${styles.beatBase} ${styles.beatDelay4} ${styles.score}`}>
           <span className={styles.scoreNum}>{winnerScore}</span>
           <span className={styles.scoreUnit}>{finalResultsStageCopy.pointsUnitLabel}</span>
+        </p>
+      )}
+      {isTie && (
+        <p className={`${styles.beatBase} ${styles.beatDelay4} ${styles.tieHint}`}>
+          {finalResultsStageCopy.tieHintLabel}
         </p>
       )}
     </div>

@@ -232,3 +232,34 @@ test("parseTriviaContentFile rejects malformed content files", () => {
   assert.equal(parsed.prompts.length, 2);
   assert.equal(parsed.prompts[0].id, "prompt-1");
 });
+
+test("initialize seeds the prompt cursor by team index so later teams get fresh questions", () => {
+  const seededContent = {
+    prompts: [
+      { id: "prompt-1", question: "Question 1?", answer: "Answer 1" },
+      { id: "prompt-2", question: "Question 2?", answer: "Answer 2" },
+      { id: "prompt-3", question: "Question 3?", answer: "Answer 3" },
+      { id: "prompt-4", question: "Question 4?", answer: "Answer 4" },
+      { id: "prompt-5", question: "Question 5?", answer: "Answer 5" }
+    ]
+  };
+  const initializeForTeam = (
+    activeRoundTeamId: string | null,
+    content: SerializableValue = seededContent
+  ): TriviaRuntimeState => {
+    return initializeState({
+      teamIds: ["team-1", "team-2", "team-3"],
+      activeRoundTeamId,
+      rules: { questionsPerTurn: 2 },
+      content
+    });
+  };
+
+  assert.equal(initializeForTeam("team-1").runtimeState.promptCursor, 0);
+  assert.equal(initializeForTeam("team-2").runtimeState.promptCursor, 2);
+  assert.equal(initializeForTeam("team-3").runtimeState.promptCursor, 4);
+  assert.equal(
+    initializeForTeam("team-1", { prompts: [] }).runtimeState.promptCursor,
+    0
+  );
+});

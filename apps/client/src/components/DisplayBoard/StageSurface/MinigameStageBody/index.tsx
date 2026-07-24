@@ -10,13 +10,39 @@ type MinigameStageBodyProps = {
   minigameType: MinigameType | null;
   activeTeamName: string | null;
   minigameDisplayView: RoomState["minigameDisplayView"];
+  remainingTimerSeconds?: number | null;
+};
+
+const URGENT_THRESHOLD_SECONDS = 10;
+
+const MinigameTimerChip = ({
+  remainingSeconds
+}: {
+  remainingSeconds: number;
+}): JSX.Element => {
+  const isTimeUp = remainingSeconds <= 0;
+  const isUrgent = remainingSeconds <= URGENT_THRESHOLD_SECONDS;
+  const chipClassName = isTimeUp
+    ? styles.timerChipTimeUp
+    : isUrgent
+      ? styles.timerChipUrgent
+      : styles.timerChip;
+
+  return (
+    <div className={chipClassName}>
+      {isTimeUp
+        ? displayBoardCopy.minigameTimesUpLabel
+        : displayBoardCopy.minigameTimerValue(remainingSeconds)}
+    </div>
+  );
 };
 
 export const MinigameStageBody = ({
   phase,
   minigameType,
   activeTeamName,
-  minigameDisplayView
+  minigameDisplayView,
+  remainingTimerSeconds = null
 }: MinigameStageBodyProps): JSX.Element => {
   if (minigameType === null) {
     return (
@@ -40,6 +66,9 @@ export const MinigameStageBody = ({
 
   return (
     <div className={styles.minigameShell}>
+      {remainingTimerSeconds !== null && (
+        <MinigameTimerChip remainingSeconds={remainingTimerSeconds} />
+      )}
       <minigameRendererBundle.DisplaySurface
         phase={phase}
         minigameType={minigameType}

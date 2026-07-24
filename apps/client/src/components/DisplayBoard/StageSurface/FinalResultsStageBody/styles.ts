@@ -21,6 +21,18 @@ export const champion =
 export const championIcon =
   "h-[1.4em] w-[1.4em] [filter:drop-shadow(0_0_12px_rgba(251,191,36,0.7))]";
 
+export const tie =
+  "inline-flex items-center gap-[0.7em] text-[clamp(1rem,1.4vw,1.6rem)] font-extrabold uppercase tracking-[0.42em] text-heat";
+
+export const tieIcon =
+  "h-[1.4em] w-[1.4em] [filter:drop-shadow(0_0_12px_rgba(239,68,68,0.7))]";
+
+export const tiedTeamNames =
+  "m-0 text-[clamp(3rem,8vw,10rem)] font-black uppercase leading-[0.9] tracking-[-0.03em] text-heat [text-shadow:0_0_100px_rgba(239,68,68,0.45),0_0_240px_rgba(239,68,68,0.25)]";
+
+export const tieHint =
+  "m-0 text-[clamp(1.1rem,1.8vw,2.2rem)] font-extrabold uppercase tracking-[0.16em] text-muted";
+
 export const teamName =
   "m-0 text-[clamp(5rem,14vw,18rem)] font-black uppercase leading-[0.85] tracking-[-0.03em] text-gold [text-shadow:0_0_100px_rgba(251,191,36,0.55),0_0_240px_rgba(251,191,36,0.3)]";
 

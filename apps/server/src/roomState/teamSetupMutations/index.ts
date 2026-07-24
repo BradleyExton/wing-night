@@ -1,5 +1,9 @@
 import { Phase } from "@wingnight/shared";
 
+import {
+  syncSetupBaselinePlayersFromState,
+  syncSetupBaselineTeamsFromState
+} from "../baseMutations/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
 import { isExactTeamIdSet } from "../selectors/index.js";
 
@@ -37,6 +41,7 @@ export const addPlayer = defineRoomMutation({
       id: nextPlayerId,
       name: normalizedName
     });
+    syncSetupBaselinePlayersFromState(roomState);
 
     return true;
   }
@@ -58,6 +63,7 @@ export const createTeam = defineRoomMutation({
       playerIds: [],
       totalScore: 0
     });
+    syncSetupBaselineTeamsFromState(roomState);
 
     return true;
   }

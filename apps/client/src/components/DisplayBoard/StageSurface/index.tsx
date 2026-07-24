@@ -17,6 +17,8 @@ import { TurnResultsStageBody } from "./TurnResultsStageBody";
 import { useDisplayRoomState } from "../../../context/RoomStateContext";
 import * as styles from "./styles";
 import { useEatingCountdown } from "./useEatingCountdown";
+import { useMinigameCountdown } from "./useMinigameCountdown";
+import { resolveLeadingTeams } from "../../../utils/resolveLeadingTeams";
 import { resolveSortedStandings } from "../../../utils/resolveSortedStandings";
 
 type StageSurfaceProps = {
@@ -27,7 +29,8 @@ type StageBodyProps = {
   stageViewModel: StageViewModel;
   phaseLabel: string;
   liveEatingRemainingSeconds: number | null;
-  winnerTeam: Team | null;
+  liveMinigameRemainingSeconds: number | null;
+  leadingTeams: Team[];
 };
 
 const SetupBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
@@ -82,13 +85,17 @@ const MinigameIntroBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
   );
 };
 
-const MinigamePlayBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
+const MinigamePlayBody = ({
+  stageViewModel,
+  liveMinigameRemainingSeconds
+}: StageBodyProps): JSX.Element => {
   return (
     <MinigameStageBody
       phase="play"
       minigameType={stageViewModel.minigameType}
       activeTeamName={stageViewModel.activeTeamName}
       minigameDisplayView={stageViewModel.minigameDisplayView}
+      remainingTimerSeconds={liveMinigameRemainingSeconds}
     />
   );
 };
@@ -113,11 +120,11 @@ const RoundResultsBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
   );
 };
 
-const FinalResultsBody = ({ winnerTeam }: StageBodyProps): JSX.Element => {
+const FinalResultsBody = ({ leadingTeams }: StageBodyProps): JSX.Element => {
   return (
     <FinalResultsStageBody
-      winnerTeamName={winnerTeam?.name ?? null}
-      winnerScore={winnerTeam?.totalScore ?? null}
+      winnerTeamNames={leadingTeams.map((team) => team.name)}
+      winnerScore={leadingTeams[0]?.totalScore ?? null}
     />
   );
 };
@@ -165,7 +172,11 @@ export const StageSurface = ({
     eatingTimerSnapshot: stageViewModel.eatingTimerSnapshot,
     fallbackEatingSeconds: stageViewModel.fallbackEatingSeconds
   });
-  const winnerTeam = sortedStandings[0] ?? null;
+  const liveMinigameRemainingSeconds = useMinigameCountdown({
+    stageMode: stageViewModel.stageMode,
+    minigameTimerSnapshot: stageViewModel.minigameTimerSnapshot
+  });
+  const leadingTeams = resolveLeadingTeams(sortedStandings);
 
   const StageBody = STAGE_BODY_BY_MODE[effectiveStageMode];
   const stageBodyElement = (
@@ -173,7 +184,8 @@ export const StageSurface = ({
       stageViewModel={stageViewModel}
       phaseLabel={phaseLabel}
       liveEatingRemainingSeconds={liveEatingRemainingSeconds}
-      winnerTeam={winnerTeam}
+      liveMinigameRemainingSeconds={liveMinigameRemainingSeconds}
+      leadingTeams={leadingTeams}
     />
   );
 

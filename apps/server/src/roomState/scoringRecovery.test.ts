@@ -4,6 +4,7 @@ import test, { beforeEach } from "node:test";
 import { Phase } from "@wingnight/shared";
 
 import {
+  addPlayer,
   advanceRoomStatePhase,
   adjustTeamScore,
   assignPlayerToTeam,
@@ -369,6 +370,32 @@ test("resetGameToSetup restores preset team shells and clears transient round st
   assert.equal(resetSnapshot.minigameHostView, null);
   assert.equal(resetSnapshot.minigameDisplayView, null);
   assert.equal(resetSnapshot.fatalError, null);
+});
+
+test("resetGameToSetup keeps players and teams added live during setup", () => {
+  resetRoomState();
+  setRoomStateGameConfig(gameConfigFixture);
+  setRoomStatePlayers([{ id: "player-1", name: "Player One" }]);
+  setRoomStateTeams([
+    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 }
+  ]);
+  addPlayer("Late Arrival");
+  createTeam("Door Crashers");
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-2", "team-2");
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToEatingPhase();
+
+  const resetSnapshot = resetGameToSetup();
+
+  assert.deepEqual(resetSnapshot.players, [
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Late Arrival" }
+  ]);
+  assert.deepEqual(resetSnapshot.teams, [
+    { id: "team-1", name: "Preset Team One", playerIds: [], totalScore: 0 },
+    { id: "team-2", name: "Door Crashers", playerIds: [], totalScore: 0 }
+  ]);
 });
 
 test("resetGameToSetup clears final-results scores while keeping preset content payloads", () => {

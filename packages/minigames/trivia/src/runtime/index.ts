@@ -35,6 +35,24 @@ export const createTriviaStateWithPendingPoints = (
   };
 };
 
+// Seed each team's cursor into a distinct content slice so later teams never
+// replay a question an earlier team already answered aloud this round.
+const resolveSeededPromptCursor = (
+  teamIds: string[],
+  activeRoundTeamId: string | null,
+  questionsPerTurn: number,
+  promptCount: number
+): number => {
+  if (promptCount === 0) {
+    return 0;
+  }
+
+  const teamIndex =
+    activeRoundTeamId === null ? 0 : Math.max(0, teamIds.indexOf(activeRoundTeamId));
+
+  return (teamIndex * questionsPerTurn) % promptCount;
+};
+
 export const triviaRuntimePlugin: MinigameRuntimePlugin = {
   id: "TRIVIA",
   content: triviaContentAdapter,
@@ -43,12 +61,18 @@ export const triviaRuntimePlugin: MinigameRuntimePlugin = {
     const triviaRules = resolveTriviaRules(input.rules);
     const runtimeTeamIds =
       input.activeRoundTeamId === null ? input.teamIds : [input.activeRoundTeamId];
+    const triviaContent = resolveTriviaContent(input.content);
 
     const initialState: TriviaRuntimeState = {
       runtimeState: {
         turnOrderTeamIds: [...runtimeTeamIds],
         activeTurnIndex: 0,
-        promptCursor: 0,
+        promptCursor: resolveSeededPromptCursor(
+          input.teamIds,
+          input.activeRoundTeamId,
+          triviaRules.questionsPerTurn,
+          triviaContent.prompts.length
+        ),
         pendingPointsByTeamId: clonePendingPoints(input.pendingPointsByTeamId)
       },
       attemptsUsedThisTurn: 0,
