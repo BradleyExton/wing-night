@@ -1,0 +1,19 @@
+# Project manifest for wing-night's work-log (claude-dev-system SCHEMA §6).
+# First real testbed project (CDS-52 / DOGFOOD-1).
+id_prefix: WN                        # ticket ids: WN-<n>
+tickets_dir: .work/tickets
+landing: direct-main                 # party-night app, solo repo — land straight to main (no PRs)
+verify:                              # pnpm workspace scripts (root package.json)
+  lint:      "pnpm lint"
+  typecheck: "pnpm typecheck"
+  test:      "pnpm test"                       # unit tests (tsx --test) + lint-rule tests
+  e2e:       "CI=1 pnpm test:e2e"              # full Playwright suite — opt-in via --steps e2e
+  test_one:  "pnpm test:e2e {pattern}"         # single spec; Playwright boots its own servers
+src_globs:
+  - "apps/client/src/**/*.ts"
+  - "apps/client/src/**/*.tsx"
+  - "apps/server/src/**/*.ts"
+  - "packages/minigames/**/src/**/*.ts"
+  - "packages/shared/src/**/*.ts"
+  - "tests/e2e/**/*.ts"
+rules: [code-design, testing]

@@ -280,8 +280,8 @@ Backlog status:
 - [x] D6 README Team-Turn Flow Alignment (after 8.12)
 - [x] D3 AGENTS Guardrail Update (after boundary stabilizes)
 - [x] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
-- [ ] 9.1 Playwright Host/Display Sync
-- [ ] 9.2 Playwright Refresh Rehydrate
+- [ ] 9.1 Playwright Host/Display Sync (migrated to `.work/tickets/WN-1`)
+- [ ] 9.2 Playwright Refresh Rehydrate (migrated to `.work/tickets/WN-2`)
 - [x] 10.1 Manual Round Escape Hatch
 - [x] 10.2 Score Override UI
 - [x] 10.3 Game Reset Flow
