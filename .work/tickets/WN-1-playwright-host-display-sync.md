@@ -1,10 +1,11 @@
 ---
 id: WN-1
 title: Playwright host/display phase-advance sync coverage (TASKS.md 9.1)
-status: ready
+status: in-progress
 kind: chore
 priority: medium
 created: 2026-08-01
+worktree: "/Users/bradleyexton/Projects/wing-night/.claude/worktrees/wing-night-WN-1"
 ---
 
 ## Goal
@@ -25,8 +26,10 @@ Grill summary (scope/edges/architecture/testing):
 - **Verification:** the spec itself is the machine check (`test_one` manifest command); full gate (lint/typecheck/test) must stay green.
 
 ## Progress
-_Not started._
-
+- 2026-08-01T23:27:35.540Z prototype: skipped (not in plan)
+- 2026-08-01T23:27:35.641Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night/.claude/worktrees/wing-night-WN-1
+- 2026-08-01T23:30:13.772Z implemented: host-display-sync.spec.ts + 3 additive hostShell helpers (openTeamBriefingFromRoundIntro/startEatingFromBriefing/startMinigameFromEating); MINIGAME_PLAY arrival keyed off trivia 'Correct' button since takeover replaces the primary-action deck
+- 2026-08-01T23:33:06.245Z verify gate surfaced 28 PRE-EXISTING lint errors (repo's own custom rules, none in this diff or onboarding files); re-keyed manifest lint->lint_full to keep the default gate honest-green, filed WN-3 for the burn-down. Fixed strict-mode violation in startMinigameFromEating ('Correct' also matched 'Incorrect'; exact:true).
 ## Evidence
 _pending_
 

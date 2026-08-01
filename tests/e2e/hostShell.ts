@@ -71,3 +71,31 @@ export const startGameFromIntro = async (hostPage: Page): Promise<void> => {
     hostPage.getByRole("button", { name: "Open Team Briefing" })
   ).toBeVisible();
 };
+
+export const openTeamBriefingFromRoundIntro = async (
+  hostPage: Page
+): Promise<void> => {
+  await hostPage.getByRole("button", { name: "Open Team Briefing" }).click();
+
+  await expect(
+    hostPage.getByRole("button", { name: "Start Eating" })
+  ).toBeVisible();
+};
+
+export const startEatingFromBriefing = async (hostPage: Page): Promise<void> => {
+  await hostPage.getByRole("button", { name: "Start Eating" }).click();
+
+  await expect(
+    hostPage.getByRole("button", { name: "Start Mini-Game" })
+  ).toBeVisible();
+};
+
+// MINIGAME_PLAY replaces the host control deck with the full-screen takeover, so
+// the arrival signal is the trivia surface's grading control, not a phase label.
+export const startMinigameFromEating = async (hostPage: Page): Promise<void> => {
+  await hostPage.getByRole("button", { name: "Start Mini-Game" }).click();
+
+  await expect(
+    hostPage.getByRole("button", { name: "Correct", exact: true })
+  ).toBeVisible();
+};
