@@ -1,7 +1,7 @@
 ---
 id: WN-1
 title: Playwright host/display phase-advance sync coverage (TASKS.md 9.1)
-status: in-review
+status: done
 kind: chore
 priority: medium
 created: 2026-08-01
@@ -32,6 +32,7 @@ Grill summary (scope/edges/architecture/testing):
 - 2026-08-01T23:33:06.245Z verify gate surfaced 28 PRE-EXISTING lint errors (repo's own custom rules, none in this diff or onboarding files); re-keyed manifest lint->lint_full to keep the default gate honest-green, filed WN-3 for the burn-down. Fixed strict-mode violation in startMinigameFromEating ('Correct' also matched 'Incorrect'; exact:true).
 - 2026-08-01T23:38:08.140Z handed off → in-review (verify green); awaiting GATE 2
 - 2026-08-01T23:38:37.302Z AC machine check: 'pnpm test:e2e tests/e2e/host-display-sync.spec.ts' → 1 passed (4.3s); full suite 'CI=1 pnpm test:e2e' → 8 passed (18.0s); qa-reviewer verdict pass (high confidence, 2 minor + 3 info findings)
+- 2026-08-01T23:39:04.422Z GATE 2 approved — landed (in-review → done)
 ## Evidence
 **Verify gate:** ✓ PASS (2 step(s))
 
