@@ -16,6 +16,9 @@ src_globs:
   - "apps/client/src/**/*.tsx"
   - "apps/server/src/**/*.ts"
   - "packages/minigames/**/src/**/*.ts"
+  - "packages/minigames/**/src/**/*.tsx"   # drawing/geo client surfaces are .tsx (audit 2026-08-04)
   - "packages/shared/src/**/*.ts"
   - "tests/e2e/**/*.ts"
+  - "tools/**/*.ts"                        # verify hooks (verify-stop, push-gate)
+  - "tools/**/*.mjs"                       # eslint-plugin-wingnight + import-geo-photos
 rules: [code-design, testing]

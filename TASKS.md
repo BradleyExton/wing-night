@@ -2,6 +2,11 @@
 
 Wing Night -- Codex-First Build Plan
 
+> **FROZEN AS HISTORY (2026-08-04).** The tracker of record is now the `.work/` work-log
+> (`.work/tickets/` + `.work/INDEX.md`, prefix WN — see `.work/manifest.yml`). Every item
+> still open below carries a one-line pointer to the WN ticket that owns it; nothing new is
+> tracked here. Content is preserved unedited as the build-plan record.
+
 ## Execution Tracker
 
 Status keys:
@@ -280,8 +285,10 @@ Backlog status:
 - [x] D6 README Team-Turn Flow Alignment (after 8.12)
 - [x] D3 AGENTS Guardrail Update (after boundary stabilizes)
 - [x] D4 DESIGN Surface Rule Update (only if host/display rules materially change)
-- [ ] 9.1 Playwright Host/Display Sync (migrated to `.work/tickets/WN-1`)
+- [x] 9.1 Playwright Host/Display Sync (migrated to `.work/tickets/WN-1`)
+  - → landed via WN-1 on 2026-08-01 (`tests/e2e/host-display-sync.spec.ts`)
 - [ ] 9.2 Playwright Refresh Rehydrate (migrated to `.work/tickets/WN-2`)
+  - → owned by WN-2 (`.work/tickets/WN-2-playwright-refresh-rehydrate.md`, status: ready)
 - [x] 10.1 Manual Round Escape Hatch
 - [x] 10.2 Score Override UI
 - [x] 10.3 Game Reset Flow
@@ -289,6 +296,7 @@ Backlog status:
 - [x] 10.5 Redo Escape Hatch (Host)
 - [x] 10.6 Host Turn Order Reorder
 - [ ] 11.1 Role-Scoped Snapshot Contract (Host vs Display)
+  - → ~90% already shipped (role-scoped envelopes + tests); remainder owned by WN-4 (`.work/tickets/WN-4-*.md`)
 - [x] 11.2 Generic Minigame Action Envelope + Socket Event
 - [x] 11.3 Server Minigame Runtime Orchestrator
 - [x] 11.4 Minigame Plugin Content Loader Contract
@@ -298,11 +306,16 @@ Backlog status:
 - [x] 11.8 TRIVIA Full-Screen Plugin Migration + GEO/DRAWING Unsupported States
 - [x] 11.9 Rehydrate/Recovery Hardening for Full-Screen Takeover
 - [ ] 12.1 Cross-Title Game Shell Contract ADR
+  - → owned by WN-7 (`.work/tickets/WN-7-*.md`, status: needs-research)
 - [ ] 12.2 Extract Reusable Orchestrator Package Boundary (Monorepo-Local)
+  - → owned by WN-8 (`.work/tickets/WN-8-*.md`, needs-research, deps: WN-7)
 - [ ] 12.3 Minigame Authoring Guide + Example Scaffold
+  - → mostly shipped (`docs/minigame-authoring-guide.md` + full GEO implementation); README-reference remainder owned by WN-6
 - [x] D7 SPEC Full-Screen Minigame Takeover Alignment (after 11.x)
 - [ ] D8 README Plugin + Reuse Architecture Alignment (after 12.x)
+  - → owned by WN-6 (`.work/tickets/WN-6-*.md`)
 - [ ] D9 AGENTS Guardrail Update for Plugin API + Snapshot Privacy
+  - → partially absorbed by AGENTS.md (snapshot privacy done); envelope/takeover remainder owned by WN-6
 
 This roadmap is optimized for: - 4 hours per week - Small, verifiable
 tasks - Codex execution loops - Stable incremental progress
