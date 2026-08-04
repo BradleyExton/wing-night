@@ -2,7 +2,7 @@ export const container = "flex h-full min-h-0 flex-col gap-3";
 
 // Mini-rail strip, echoing the host shell anatomy (DESIGN.md §2.0A).
 export const rail =
-  "flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs font-extrabold uppercase tracking-[0.22em] text-muted";
+  "flex flex-wrap items-center gap-x-4 gap-y-1 px-1 pr-[clamp(9rem,15vw,12rem)] text-xs font-extrabold uppercase tracking-[0.22em] text-muted";
 
 export const railTitle = "text-primary";
 

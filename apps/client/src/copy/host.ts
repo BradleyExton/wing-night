@@ -196,7 +196,10 @@ export const hostCopy = {
   compactNoStandingsLabel: "No teams available for standings yet.",
   compactLeaderLabel: "Leader",
   compactLeadSuffix: "leads.",
+  compactWinsSuffix: "wins.",
   compactTiedLeadSuffix: "tied.",
+  compactTiedTeamsLabel: (teamCount: number): string => `${teamCount} teams`,
+  compactAllTiedLabel: "All teams",
   compactRosterValue: (
     visiblePlayerNames: string[],
     hiddenPlayerCount: number

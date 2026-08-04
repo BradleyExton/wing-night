@@ -1,8 +1,9 @@
 export const container =
   "space-y-4 border-2 border-double border-gold/40 bg-surfaceAlt p-5 font-serif";
 
+// Right padding keeps the header meta clear of the shell's absolute timer chip.
 export const header =
-  "flex flex-wrap items-baseline justify-between gap-2 border-b border-gold/30 pb-3";
+  "flex flex-wrap items-baseline justify-between gap-2 border-b border-gold/30 pb-3 pr-[clamp(9rem,15vw,12rem)]";
 
 export const headerTitle =
   "m-0 text-xl font-bold uppercase tracking-[0.25em] text-gold";

@@ -1,4 +1,7 @@
-export const container = "relative h-full";
+// Flex column so the minigame surface's flex-1 chain actually fills the
+// canvas; clamp padding gives every takeover surface a consistent gutter.
+export const container =
+  "relative flex h-full min-h-0 flex-col p-[clamp(1rem,2vw,1.75rem)]";
 
 const timerChipBase =
   "absolute right-[clamp(0.75rem,1.5vw,1.5rem)] top-[clamp(0.75rem,1.5vw,1.5rem)] z-10 rounded-full border border-text/10 bg-surface/90 px-[clamp(0.8rem,1.2vw,1.2rem)] py-[clamp(0.3rem,0.6vw,0.6rem)] font-mono text-[clamp(1rem,1.6vw,1.6rem)] font-black tabular-nums tracking-[-0.02em]";

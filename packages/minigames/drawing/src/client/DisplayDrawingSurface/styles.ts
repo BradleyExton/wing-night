@@ -15,8 +15,10 @@ export const marqueeTeamName =
 export const marqueeTitle =
   "text-center text-[clamp(0.8rem,1.2vw,1.3rem)] font-extrabold uppercase tracking-[0.34em] text-gold";
 
+// Right padding keeps the pending readout clear of the display's absolute
+// timer chip pinned to the stage's top-right corner.
 export const marqueePending =
-  "text-right font-mono text-[clamp(1.1rem,1.8vw,1.9rem)] font-extrabold text-gold";
+  "pr-[clamp(8rem,14vw,18rem)] text-right font-mono text-[clamp(1.1rem,1.8vw,1.9rem)] font-extrabold text-gold";
 
 export const canvasArea = "relative flex min-h-0 flex-1";
 

@@ -4,8 +4,9 @@ export const stage =
 export const frame =
   "flex h-full min-h-0 w-full flex-col gap-[clamp(0.75rem,1.5vw,1.5rem)] border-4 border-double border-gold/50 px-[clamp(1rem,2.5vw,2.5rem)] py-[clamp(0.75rem,2vw,2rem)]";
 
+// Right padding keeps the masthead meta clear of the display's absolute timer chip.
 export const header =
-  "flex flex-wrap items-baseline justify-between gap-4 border-b border-gold/30 pb-[clamp(0.5rem,1vw,1rem)] font-serif";
+  "flex flex-wrap items-baseline justify-between gap-4 border-b border-gold/30 pb-[clamp(0.5rem,1vw,1rem)] pr-[clamp(8rem,14vw,18rem)] font-serif";
 
 export const headerTitle =
   "m-0 text-[clamp(1.2rem,2vw,2.2rem)] font-bold uppercase tracking-[0.3em] text-gold";

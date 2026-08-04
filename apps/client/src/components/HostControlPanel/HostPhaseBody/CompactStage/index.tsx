@@ -1,3 +1,5 @@
+import { Phase } from "@wingnight/shared";
+
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
 import { CompactSummarySurface } from "../../CompactSummarySurface";
@@ -23,6 +25,15 @@ export const CompactStage = (): JSX.Element | null => {
   const leadingTeams = resolveLeadingTeams(sortedStandings);
   const leader = leadingTeams[0] ?? null;
   const isTiedLead = leadingTeams.length > 1;
+  const isFinalResults = roomState.phase === Phase.FINAL_RESULTS;
+  // Two-way ties keep both names; wider ties collapse so the headline stays
+  // readable instead of stacking every team name in hero type.
+  const tiedHeadlineAccent =
+    leadingTeams.length >= sortedStandings.length && sortedStandings.length > 2
+      ? hostControlPanelCopy.compactAllTiedLabel
+      : leadingTeams.length > 2
+        ? hostControlPanelCopy.compactTiedTeamsLabel(leadingTeams.length)
+        : leadingTeams.map((team) => team.name).join(" & ");
 
   return (
     <>
@@ -32,11 +43,13 @@ export const CompactStage = (): JSX.Element | null => {
           {leader !== null ? (
             <>
               <span className={styles.headlineAccent}>
-                {leadingTeams.map((team) => team.name).join(" & ")}
+                {isTiedLead ? tiedHeadlineAccent : leader.name}
               </span>{" "}
               {isTiedLead
                 ? hostControlPanelCopy.compactTiedLeadSuffix
-                : hostControlPanelCopy.compactLeadSuffix}
+                : isFinalResults
+                  ? hostControlPanelCopy.compactWinsSuffix
+                  : hostControlPanelCopy.compactLeadSuffix}
             </>
           ) : (
             hostControlPanelCopy.compactStandingsTitle

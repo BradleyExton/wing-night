@@ -45,7 +45,7 @@ export const HostTriviaSurface = ({
 
   return (
     <div className={styles.container}>
-      <div>
+      <div className={styles.header}>
         <p className={styles.description}>
           {isPlayPhase
             ? hostTriviaSurfaceCopy.playDescription
@@ -68,47 +68,49 @@ export const HostTriviaSurface = ({
           )}
         </div>
       </div>
-      {currentPrompt !== null ? (
-        <div className={styles.promptShell}>
-          <div className={styles.promptSection}>
-            <p className={styles.promptLabel}>{hostTriviaSurfaceCopy.questionLabel}</p>
-            <p className={styles.promptValue}>{currentPrompt.question}</p>
+      <div className={styles.playArea}>
+        {currentPrompt !== null ? (
+          <div className={styles.promptShell}>
+            <div className={styles.promptSection}>
+              <p className={styles.promptLabel}>{hostTriviaSurfaceCopy.questionLabel}</p>
+              <p className={styles.promptValue}>{currentPrompt.question}</p>
+            </div>
+            <div className={styles.answerSection}>
+              <p className={styles.answerLabel}>{hostTriviaSurfaceCopy.answerLabel}</p>
+              <p className={styles.answerValue}>{currentPrompt.answer}</p>
+            </div>
           </div>
-          <div className={styles.answerSection}>
-            <p className={styles.answerLabel}>{hostTriviaSurfaceCopy.answerLabel}</p>
-            <p className={styles.answerValue}>{currentPrompt.answer}</p>
+        ) : (
+          <p className={styles.statusNote}>{hostTriviaSurfaceCopy.waitingPromptLabel}</p>
+        )}
+        {isPlayPhase && attemptsExhausted && (
+          <p className={styles.statusNote}>{hostTriviaSurfaceCopy.turnCompleteLabel}</p>
+        )}
+        {isPlayPhase && (
+          <div className={styles.actions}>
+            <button
+              className={styles.correctButton}
+              type="button"
+              disabled={disableAttemptButtons}
+              onClick={(): void => {
+                onDispatchAction("recordAttempt", { isCorrect: true });
+              }}
+            >
+              {hostTriviaSurfaceCopy.correctButtonLabel}
+            </button>
+            <button
+              className={styles.incorrectButton}
+              type="button"
+              disabled={disableAttemptButtons}
+              onClick={(): void => {
+                onDispatchAction("recordAttempt", { isCorrect: false });
+              }}
+            >
+              {hostTriviaSurfaceCopy.incorrectButtonLabel}
+            </button>
           </div>
-        </div>
-      ) : (
-        <p className={styles.statusNote}>{hostTriviaSurfaceCopy.waitingPromptLabel}</p>
-      )}
-      {isPlayPhase && attemptsExhausted && (
-        <p className={styles.statusNote}>{hostTriviaSurfaceCopy.turnCompleteLabel}</p>
-      )}
-      {isPlayPhase && (
-        <div className={styles.actions}>
-          <button
-            className={styles.correctButton}
-            type="button"
-            disabled={disableAttemptButtons}
-            onClick={(): void => {
-              onDispatchAction("recordAttempt", { isCorrect: true });
-            }}
-          >
-            {hostTriviaSurfaceCopy.correctButtonLabel}
-          </button>
-          <button
-            className={styles.incorrectButton}
-            type="button"
-            disabled={disableAttemptButtons}
-            onClick={(): void => {
-              onDispatchAction("recordAttempt", { isCorrect: false });
-            }}
-          >
-            {hostTriviaSurfaceCopy.incorrectButtonLabel}
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
