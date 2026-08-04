@@ -16,7 +16,7 @@ export const GameLockedOverlay = ({
     <div className={styles.overlay} aria-live={isCountdownVisible ? "polite" : undefined}>
       <div className={styles.lockFrame}>
         <span className={styles.lockIcon}>
-          <Lock aria-hidden />
+          <Lock className={styles.lockIconSvg} aria-hidden />
         </span>
       </div>
       <h2 className={styles.heading}>

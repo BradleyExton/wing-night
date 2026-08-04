@@ -6,6 +6,10 @@ import * as styles from "./styles";
 type OverrideDockProps = {
   isOpen: boolean;
   showBadge: boolean;
+  // The floating trigger duplicates the deck-foot Overrides button, so it
+  // only shows when the deck is collapsed (minigame takeover). It always
+  // renders while the dock is open so aria-expanded/focus return still work.
+  showTrigger?: boolean;
   onOpen: () => void;
   onClose: () => void;
   panelId: string;
@@ -15,6 +19,7 @@ type OverrideDockProps = {
 export const OverrideDock = ({
   isOpen,
   showBadge,
+  showTrigger = true,
   onOpen,
   onClose,
   panelId,
@@ -60,6 +65,7 @@ export const OverrideDock = ({
 
   return (
     <div className={styles.layer}>
+      {(showTrigger || isOpen) && (
       <button
         ref={triggerRef}
         type="button"
@@ -76,6 +82,7 @@ export const OverrideDock = ({
           </span>
         )}
       </button>
+      )}
 
       {isOpen && (
         <div className={`${styles.overlay} ${styles.overlayOpen}`}>

@@ -103,8 +103,10 @@ export const deckGroupHead =
 
 export const deckGroupCount = "font-mono tracking-[0.12em] text-primary";
 
+// flex-wrap lets a long name push the trailing control group (team chips)
+// onto its own right-aligned line instead of clipping on narrow decks.
 export const deckRow =
-  "flex min-h-[60px] cursor-pointer items-center justify-between gap-3 border-b border-text/5 px-1.5 last:border-b-0";
+  "flex min-h-[60px] cursor-pointer flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-text/5 px-1.5 py-2 last:border-b-0";
 
 export const deckRowSelected =
   "border-l-[3px] border-l-primary bg-gradient-to-r from-primary/15 to-transparent pl-[calc(0.375rem-3px)]";
@@ -125,12 +127,12 @@ export const deckRowCheckIcon = "h-4 w-4 text-bg";
 export const deckAddRow = "mt-2 flex gap-1.5 px-1.5";
 
 export const deckInput =
-  "h-13 min-h-[52px] flex-1 rounded-md border border-text/10 bg-text/[0.04] px-3.5 text-[clamp(0.95rem,1.1vw,1.05rem)] text-text placeholder:text-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "h-13 min-h-[52px] min-w-0 flex-1 rounded-md border border-text/10 bg-text/[0.04] px-3.5 text-[clamp(0.95rem,1.1vw,1.05rem)] text-text placeholder:text-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
 export const deckAddButton =
   "min-h-[52px] rounded-md border border-primary/50 bg-primary/15 px-4 text-[clamp(0.85rem,1vw,0.95rem)] font-extrabold uppercase tracking-[0.18em] text-primary transition hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
 
-export const deckChipRow = "inline-flex gap-1.5";
+export const deckChipRow = "ml-auto inline-flex gap-1.5";
 
 export const deckChip =
   "inline-flex h-9 min-w-[36px] items-center justify-center gap-1.5 rounded-md border border-text/10 bg-text/[0.03] px-2 font-mono text-[clamp(0.7rem,0.85vw,0.85rem)] font-extrabold uppercase tracking-[0.14em] text-muted transition hover:border-text/25 disabled:cursor-not-allowed disabled:opacity-50";

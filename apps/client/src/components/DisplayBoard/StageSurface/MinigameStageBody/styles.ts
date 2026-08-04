@@ -7,6 +7,6 @@ const timerChipBase =
 
 export const timerChip = `${timerChipBase} text-primary`;
 
-export const timerChipUrgent = `${timerChipBase} text-heat animate-[heatpulse_0.65s_ease-in-out_infinite]`;
+export const timerChipUrgent = `${timerChipBase} text-heat motion-safe:animate-[heatpulse_0.65s_ease-in-out_infinite]`;
 
-export const timerChipTimeUp = `${timerChipBase} uppercase tracking-[0.12em] text-heat animate-[heatpulse_1.2s_ease-in-out_infinite]`;
+export const timerChipTimeUp = `${timerChipBase} uppercase tracking-[0.12em] text-heat motion-safe:animate-[heatpulse_1.2s_ease-in-out_infinite]`;

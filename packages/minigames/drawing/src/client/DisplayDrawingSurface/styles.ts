@@ -61,7 +61,7 @@ export const revealAwardTeam =
   "mt-1.5 block font-sans text-[clamp(0.72rem,0.95vw,0.95rem)] font-bold uppercase tracking-[0.28em] text-muted";
 
 export const spark =
-  "absolute z-10 animate-pulse text-xl text-gold [text-shadow:0_0_10px_#fbbf24]";
+  "absolute z-10 motion-safe:animate-pulse text-xl text-gold [text-shadow:0_0_10px_#fbbf24]";
 
 export const sparkOne = "left-[12%] top-[10%]";
 

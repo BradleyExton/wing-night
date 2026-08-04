@@ -63,8 +63,9 @@ export const minigameLabel = "mr-1 text-[#6b6157]";
 export const additionalRounds =
   "relative z-[2] mt-2 text-[clamp(0.85rem,1.1vw,1.2rem)] font-bold uppercase tracking-[0.28em] text-[#6b6157]";
 
+// Dark pill keeps the status legible where it crosses the flame's bright core.
 export const waiting =
-  "relative z-[2] inline-flex items-center gap-[0.7em] text-[clamp(0.85rem,1.1vw,1.2rem)] font-bold uppercase tracking-[0.32em] text-[#b3a89a]";
+  "relative z-[2] inline-flex items-center gap-[0.7em] rounded-full bg-bg/75 px-[1.4em] py-[0.6em] backdrop-blur-sm text-[clamp(0.85rem,1.1vw,1.2rem)] font-bold uppercase tracking-[0.32em] text-[#b3a89a]";
 
 export const waitingDot =
   "h-[0.7em] w-[0.7em] rounded-full bg-primary [box-shadow:0_0_12px_#f97316,0_0_24px_rgba(249,115,22,0.6)] [animation:pulse_1.4s_ease-in-out_infinite] motion-reduce:[animation:none]";

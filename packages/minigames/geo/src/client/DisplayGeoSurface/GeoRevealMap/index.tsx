@@ -29,13 +29,30 @@ const FitRevealBounds = ({ guess, answer }: GeoRevealMapProps): null => {
   const map = useMap();
 
   useEffect(() => {
-    map.fitBounds(
-      [
-        [guess.lat, guess.lng],
-        [answer.lat, answer.lng]
-      ],
-      { padding: REVEAL_FIT_PADDING, maxZoom: REVEAL_MAX_ZOOM }
-    );
+    const fitToPins = (): void => {
+      map.fitBounds(
+        [
+          [guess.lat, guess.lng],
+          [answer.lat, answer.lng]
+        ],
+        { padding: REVEAL_FIT_PADDING, maxZoom: REVEAL_MAX_ZOOM }
+      );
+    };
+
+    fitToPins();
+
+    // The reveal mounts during the display's phase fade, so Leaflet can
+    // capture a stale container size (unfilled gray tiles on large screens).
+    // Re-measure and re-fit once the postcard settles on its final size.
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize();
+      fitToPins();
+    });
+    resizeObserver.observe(map.getContainer());
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [map, guess.lat, guess.lng, answer.lat, answer.lng]);
 
   return null;

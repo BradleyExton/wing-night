@@ -88,6 +88,7 @@ export const HostControlPanel = (): JSX.Element => {
         <OverrideDock
           isOpen={isOverrideDockOpen}
           showBadge={overrideDockContext.showBadge}
+          showTrigger={hostMode === "minigame_play"}
           panelId={overrideDockPanelId}
           onOpen={(): void => {
             setIsOverrideDockOpen(true);

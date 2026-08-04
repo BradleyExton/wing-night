@@ -7,6 +7,10 @@ export const lockFrame =
 export const lockIcon =
   "relative z-[1] h-[60%] w-[60%] text-gold [filter:drop-shadow(0_0_16px_rgba(251,191,36,0.7))]";
 
+// The lucide SVG defaults to 24px; stretch it to fill the clamp-sized halo
+// so the lock reads at TV distance.
+export const lockIconSvg = "h-full w-full";
+
 export const heading =
   "m-0 text-[clamp(3rem,8vw,10rem)] font-black uppercase leading-[0.85] tracking-[-0.01em] text-text [text-shadow:0_0_40px_rgba(251,191,36,0.45),0_0_100px_rgba(249,115,22,0.25)]";
 

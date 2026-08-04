@@ -7,9 +7,11 @@ export const container =
 export const takeoverContainer =
   "grid h-[100dvh] grid-rows-[minmax(0,1fr)_auto] overflow-hidden bg-bg text-text";
 
-// Main split — asymmetric 65/35 (stage on left, deck on right).
+// Main split — asymmetric 65/35 (stage on left, deck on right). The deck
+// keeps a floor width so narrow/portrait tablets shrink the hero, not the
+// tappable rows.
 export const mainSplit =
-  "grid min-h-0 grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]";
+  "grid min-h-0 grid-cols-[minmax(0,1.85fr)_minmax(min(340px,45vw),1fr)]";
 
 // During minigame takeover, the deck collapses and minigame fills the canvas.
 export const takeoverMain = "flex min-h-0 flex-col";

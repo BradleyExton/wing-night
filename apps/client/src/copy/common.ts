@@ -2,9 +2,11 @@ export const commonCopy = {
   brandLabel: "Wing Night",
   brandMarkPath: "/favicon.svg",
   brandMarkAlt: "Wing Night logo",
-  routeNotFoundTitle: "Route Placeholder Not Found",
+  routeNotFoundKicker: "Off the menu",
+  routeNotFoundTitle: "This screen doesn't exist.",
   routeNotFoundDescription:
-    "Use /host, /display, or /dev/minigame/trivia.",
+    "Head back and pick a screen — the Host Controller runs the night, the Display Board shows it off.",
+  routeNotFoundHomeLinkLabel: "Pick Your Screen",
   contentFatalTitle: "Content Load Error",
   contentFatalDescription:
     "Wing Night could not load required content files. Fix content/local or content/sample data and restart the server.",
