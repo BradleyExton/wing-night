@@ -5,7 +5,7 @@ status: ready
 kind: chore
 priority: medium
 created: 2026-08-01
-deps: [WN-1]
+deps: [WN-1, WN-5]   # WN-5: test_one/e2e must boot isolated servers first — until then a Playwright green may be verifying a foreign dev server's code
 ---
 
 ## Goal

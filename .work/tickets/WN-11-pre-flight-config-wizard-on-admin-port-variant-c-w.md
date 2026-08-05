@@ -8,7 +8,8 @@ priority: medium
 created: 2026-08-05
 
 # ─── Optional (delete a line to take its default) ───────────────────────────
-deps: [WN-10]                 # list<id>; DAG edges; must all be `done` before the SELECTOR picks this; default []
+deps: [WN-10, WN-5]      # WN-5 gates the Playwright AC below: until test_one boots its own servers, that spec can go green against a foreign dev server's code
+
 blocked_by: []           # list<string>; external/manual waits (free text); non-empty => selector skips; default []
 # model: sonnet          # opus | sonnet | haiku; unset => global default-by-kind policy (SCHEMA §5)
 # thinking: medium       # low | medium | high; unset => policy
@@ -47,4 +48,4 @@ Grilled 2026-08-05 (plan-work session; user at the table).
 <test output + screenshot / preview URL, recorded before `done`>
 
 ## Links
-Deps: WN-10. Prototype answer recorded in auto-memory (config-setup-ui-direction) and this Plan. Lab: apps/client/src/components/HostControlPanel/ConfigSetupPrototype/ (uncommitted, dev-gated).
+Deps: WN-10 (config:* events), WN-5 (honest e2e gate). Prototype answer recorded in auto-memory (config-setup-ui-direction) and this Plan. Lab: apps/client/src/components/HostControlPanel/ConfigSetupPrototype/ — **committed** as of 9001a1f and dev-gated; delete it with `git rm -r` in this ticket's diff, along with its gate in HostControlPanel/index.tsx.
