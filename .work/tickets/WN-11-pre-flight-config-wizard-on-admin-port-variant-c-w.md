@@ -28,7 +28,8 @@ Ship the pre-flight config wizard as a production /admin route — a port-varian
 - [ ] The wizard seeds from `config:read` (merged disk content — not room state), edits a local draft, and Review's single action calls `config:apply`; success confirmation and post-apply refreshed snapshot render; a `CONFIG_LOCKED` rejection renders the locked state with the reset-game escape hatch named.
 - [ ] Validation issues returned from save/apply map inline to their fields via the issue `path` (e.g. `rounds[1].sauce` highlights that input); Review is blocked while local validation fails.
 - [ ] Prompt-pack scope (user-confirmed): trivia and drawing packs editable; geo shown as a read-only count with a `pnpm import:geo` pointer.
-- [ ] This is a proper rewrite composing HostControlPanel styleTokens + house component idiom (styles.ts siblings, copy module, sr-only labels) — NOT a verbatim lab copy; the `ConfigSetupPrototype/` folder and its gate in `HostControlPanel/index.tsx` are deleted in the same change.
+- [ ] This is a proper rewrite composing HostControlPanel styleTokens + house component idiom (styles.ts siblings, copy module, sr-only labels) — NOT a verbatim lab copy; the `ConfigSetupPrototype/` folder and its gate in `HostControlPanel/index.tsx` are deleted in the same change (`git rm -r` — the lab is committed as of 9001a1f).
+- [ ] The `ConfigSetupPrototype/**` entry WN-3 added to `eslint.config.mjs` `ignores` is removed in this same diff — the carve-out must not outlive the code it excluded, or it silently exempts whatever later occupies that path.
 - [ ] One Playwright spec covers the happy path (open /admin, edit a round label, apply, assert display/host see the new label) and the locked rejection; `pnpm test:e2e <that spec>` (manifest `test_one`) passes.
 - [ ] `pnpm typecheck` and `pnpm test` pass.
 
