@@ -2,7 +2,7 @@
 
 Index of every minigame — shipped, building, spec'd, or still just a sketch.
 
-Last updated: 2026-06-25
+Last updated: 2026-08-07
 
 ## Stages
 
@@ -22,8 +22,15 @@ Last updated: 2026-06-25
 | Emoji Charades | spec | ready | [emoji-charades-spec.md](emoji-charades-spec.md) |
 | PETMON | spec | ready | [petmon-design.md](../petmon-design.md) (design + mockups; runtime not started) |
 | Read the Room | idea | promising | [ideas/read-the-room.md](ideas/read-the-room.md) |
+| ANAMORPH | idea | promising | [ideas/anamorph.md](ideas/anamorph.md) |
+| CONTRAPTION | idea | promising | [ideas/contraption.md](ideas/contraption.md) |
 
-Target: **at least 8 games**. Current: 3 shipped, 3 spec'd, 1 idea → need ~1 more concept.
+Target: **at least 8 games**. Current: 3 shipped, 3 spec'd, 3 ideas → 9 concepts, target covered.
+
+ANAMORPH and CONTRAPTION were added to close a specific gap: every other game on this
+list is words, recall, or expression, and none of them make the TV do something the room
+gasps at. Both are procedural — the server sends a seed and the display renders, so the
+graphics cost nothing on the wire and survive reconnect.
 
 ## Adding an idea
 
