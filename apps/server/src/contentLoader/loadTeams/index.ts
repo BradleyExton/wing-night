@@ -7,14 +7,12 @@ import {
 import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 import {
   parseContentJson,
-  resolveDefaultContentRootDir
+  DEFAULT_CONTENT_ROOT_DIR
 } from "../contentLoaderUtils/index.js";
 
 type LoadTeamsOptions = {
   contentRootDir?: string;
 };
-
-const defaultContentRootDir = resolveDefaultContentRootDir(import.meta.url);
 
 const parseTeamsEntries = (
   rawContent: string,
@@ -41,7 +39,7 @@ const buildTeam = (entry: TeamsContentEntry, index: number): Team => {
 };
 
 export const loadTeams = (options: LoadTeamsOptions = {}): Team[] => {
-  const contentRootDir = options.contentRootDir ?? defaultContentRootDir;
+  const contentRootDir = options.contentRootDir ?? DEFAULT_CONTENT_ROOT_DIR;
   const entries = loadContentFileWithFallback({
     contentRootDir,
     contentFileName: "teams.json",

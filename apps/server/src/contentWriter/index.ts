@@ -13,7 +13,7 @@ import {
 } from "@wingnight/shared";
 
 import { isRulesValidForKey } from "../minigames/rulesValidation/index.js";
-import { resolveDefaultContentRootDir } from "../contentLoader/contentLoaderUtils/index.js";
+import { DEFAULT_CONTENT_ROOT_DIR } from "../contentLoader/contentLoaderUtils/index.js";
 
 type ContentWriterOptions = {
   contentRootDir?: string;
@@ -21,9 +21,8 @@ type ContentWriterOptions = {
 
 export type WriteContentFilesResult =
   | { ok: true }
-  | { ok: false; issues: ValidationIssue[] };
-
-const defaultContentRootDir = resolveDefaultContentRootDir(import.meta.url);
+  | { ok: false; reason: "invalid"; issues: ValidationIssue[] }
+  | { ok: false; reason: "writeFailed"; message: string };
 
 type ContentFileDescriptor = {
   fileName: string;
@@ -103,16 +102,28 @@ export const writeContentFiles = (
   );
 
   if (issues.length > 0) {
-    return { ok: false, issues };
+    return { ok: false, reason: "invalid", issues };
   }
 
-  const contentRootDir = options.contentRootDir ?? defaultContentRootDir;
+  const contentRootDir = options.contentRootDir ?? DEFAULT_CONTENT_ROOT_DIR;
 
-  for (const edit of edits) {
-    const { fileName } = DESCRIPTOR_BY_KEY[edit.key];
-    const filePath = resolve(contentRootDir, "local", fileName);
+  // A filesystem failure is reported, not thrown: this runs inside a socket
+  // listener, and it is a different failure from "your content is invalid" —
+  // the caller maps the two onto distinct error codes so the wizard can tell
+  // a rejected edit from an unwritable disk.
+  try {
+    for (const edit of edits) {
+      const { fileName } = DESCRIPTOR_BY_KEY[edit.key];
+      const filePath = resolve(contentRootDir, "local", fileName);
 
-    writeFileAtomically(filePath, `${JSON.stringify(edit.value, null, 2)}\n`);
+      writeFileAtomically(filePath, `${JSON.stringify(edit.value, null, 2)}\n`);
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      reason: "writeFailed",
+      message: error instanceof Error ? error.message : String(error)
+    };
   }
 
   return { ok: true };

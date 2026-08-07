@@ -63,7 +63,15 @@ export const createConfigService = (
       const writeResult = writeContentFiles(files, options);
 
       if (!writeResult.ok) {
-        return toInvalidResult(CONFIG_ACTIONS.SAVE, writeResult.issues);
+        return writeResult.reason === "invalid"
+          ? toInvalidResult(CONFIG_ACTIONS.SAVE, writeResult.issues)
+          : {
+              action: CONFIG_ACTIONS.SAVE,
+              ok: false,
+              code: CONFIG_ERROR_CODES.WRITE_FAILED,
+              message: writeResult.message,
+              issues: []
+            };
       }
 
       return { action: CONFIG_ACTIONS.SAVE, ok: true, content: null };

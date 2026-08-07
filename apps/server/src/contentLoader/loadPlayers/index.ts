@@ -6,14 +6,12 @@ import {
 import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 import {
   parseContentJson,
-  resolveDefaultContentRootDir
+  DEFAULT_CONTENT_ROOT_DIR
 } from "../contentLoaderUtils/index.js";
 
 type LoadPlayersOptions = {
   contentRootDir?: string;
 };
-
-const defaultContentRootDir = resolveDefaultContentRootDir(import.meta.url);
 
 const parsePlayersEntries = (
   rawContent: string,
@@ -49,7 +47,7 @@ const buildPlayer = (entry: PlayersContentEntry, index: number): Player => {
 };
 
 export const loadPlayers = (options: LoadPlayersOptions = {}): Player[] => {
-  const contentRootDir = options.contentRootDir ?? defaultContentRootDir;
+  const contentRootDir = options.contentRootDir ?? DEFAULT_CONTENT_ROOT_DIR;
   const entries = loadContentFileWithFallback({
     contentRootDir,
     contentFileName: "players.json",

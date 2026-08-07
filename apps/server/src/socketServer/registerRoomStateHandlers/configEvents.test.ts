@@ -270,6 +270,34 @@ test("config:apply from a fatal state clears it", () => {
   assert.equal(getRoomStateSnapshot().gameConfig?.name, "Repaired");
 });
 
+// The handler's own try/catch, isolated. The inner layers (readConfigContent,
+// reloadContentIntoRoomState) each catch for themselves, so deleting this
+// outer guard leaves the rest of the suite green — but it is the only thing
+// standing between a throw from any FUTURE config operation and an
+// uncaughtException that kills the server, because socket.io v4 dispatches
+// listeners inside process.nextTick with nothing above them.
+test("answers with an error rather than throwing when a config operation throws", () => {
+  const harness = setupHandlers({
+    configService: {
+      read: () => {
+        throw new Error("config service exploded");
+      },
+      save: () => assert.fail("save should not run"),
+      reload: () => assert.fail("reload should not run")
+    }
+  });
+
+  assert.doesNotThrow(() => {
+    harness.trigger(CLIENT_TO_SERVER_EVENTS.CONFIG_READ, {
+      hostSecret: VALID_SECRET
+    });
+  });
+
+  const result = lastResult(harness.emittedConfigResults);
+  assert.equal(result.ok, false);
+  assert.equal(!result.ok && result.message, "config service exploded");
+});
+
 test("a config event with an invalid host secret emits no config result", () => {
   const contentRoot = createContentRoot();
   const harness = setupConfigHarness(contentRoot);

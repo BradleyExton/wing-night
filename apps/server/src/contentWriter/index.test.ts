@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 
@@ -82,7 +82,7 @@ test("refuses a payload its shared validator rejects and writes nothing", () => 
 
   assert.equal(result.ok, false);
   assert.deepEqual(
-    result.ok ? [] : result.issues,
+    result.ok || result.reason !== "invalid" ? [] : result.issues,
     [{ path: "players.players[0].name", message: "must be a non-empty string" }]
   );
   assert.equal(existsSync(join(contentRoot, "local", "players.json")), false);
@@ -107,7 +107,7 @@ test("refuses a gameConfig whose minigameRules the owning plugin rejects", () =>
 
   assert.equal(result.ok, false);
   assert.deepEqual(
-    result.ok ? [] : result.issues,
+    result.ok || result.reason !== "invalid" ? [] : result.issues,
     [
       {
         path: "gameConfig.minigameRules.trivia",
@@ -148,6 +148,23 @@ test("writes nothing at all when one file in a batch is invalid", () => {
 
   assert.equal(result.ok, false);
   assert.equal(existsSync(join(contentRoot, "local", "teams.json")), false);
+});
+
+// A validation rejection and an unwritable disk are different failures and the
+// wizard shows them differently, so the writer distinguishes them rather than
+// collapsing both into "something went wrong".
+test("reports a write failure distinctly from a validation failure", () => {
+  const contentRoot = createContentRoot();
+  // A file where the `local` directory needs to be: mkdir fails with ENOTDIR.
+  writeFileSync(join(contentRoot, "local"), "not a directory", "utf8");
+
+  const result = writeContentFiles(
+    [{ key: "teams", value: { teams: [{ name: "Blocked" }] } }],
+    { contentRootDir: contentRoot }
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(result.ok ? "" : result.reason, "writeFailed");
 });
 
 test("creates nested content directories for a minigame pack", () => {

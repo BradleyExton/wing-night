@@ -10,15 +10,13 @@ import {
 } from "../../minigames/rulesValidation/index.js";
 import {
   parseContentJson,
-  resolveDefaultContentRootDir
+  DEFAULT_CONTENT_ROOT_DIR
 } from "../contentLoaderUtils/index.js";
 import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 
 type LoadGameConfigOptions = {
   contentRootDir?: string;
 };
-
-const defaultContentRootDir = resolveDefaultContentRootDir(import.meta.url);
 
 const MINIGAME_RULES_ISSUE_PREFIX = "minigameRules.";
 
@@ -69,7 +67,7 @@ const parseGameConfig = (
 export const loadGameConfig = (
   options: LoadGameConfigOptions = {}
 ): GameConfigFile => {
-  const contentRootDir = options.contentRootDir ?? defaultContentRootDir;
+  const contentRootDir = options.contentRootDir ?? DEFAULT_CONTENT_ROOT_DIR;
   return loadContentFileWithFallback({
     contentRootDir,
     contentFileName: "gameConfig.json",

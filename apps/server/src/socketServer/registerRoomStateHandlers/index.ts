@@ -8,6 +8,7 @@ import {
 } from "@wingnight/shared";
 import type {
   ClientToServerEvents,
+  ConfigReadPayload,
   ConfigResultPayload,
   ConfigSavePayload,
   HostSecretPayload,
@@ -238,10 +239,10 @@ const CONFIG_ACTION_BY_EVENT = {
 // `uncaughtException` handler. Without it, a `config:read` against a broken
 // local file would take the whole process down in exactly the situation the
 // config surface exists to repair.
-const defineConfigEvent = (
+const defineConfigEvent = <TPayload extends HostSecretPayload>(
   event: ConfigEventName,
-  isPayload: (payload: unknown) => payload is ConfigSavePayload,
-  handle: (payload: ConfigSavePayload, context: ConfigEventContext) => void
+  isPayload: (payload: unknown) => payload is TPayload,
+  handle: (payload: TPayload, context: ConfigEventContext) => void
 ): ConfigEventRegistration => {
   const action = CONFIG_ACTION_BY_EVENT[event];
 
@@ -335,10 +336,11 @@ const handleConfigApply = (
 const CONFIG_EVENTS: ConfigEventRegistration[] = [
   defineConfigEvent(
     CLIENT_TO_SERVER_EVENTS.CONFIG_READ,
-    // Read carries no files; the save guard accepts the host-secret envelope
-    // plus an absent-or-empty `files`, so it is reused rather than duplicated.
-    (payload): payload is ConfigSavePayload => isHostSecretPayload(payload),
-    (_payload, context) => {
+    // Read carries no files, so it is guarded — and typed — as exactly the
+    // host-secret envelope it is. Widening it to the save payload would hand
+    // the handler a `files` it never actually checked for.
+    isHostSecretPayload,
+    (_payload: ConfigReadPayload, context) => {
       context.emitConfigResult(context.configService.read());
     }
   ),

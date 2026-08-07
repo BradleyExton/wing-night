@@ -39,31 +39,35 @@ export type ReloadContentResult =
 export const reloadContentIntoRoomState = (
   options: ReloadContentOptions = {}
 ): ReloadContentResult => {
-  let loadedContent: ReturnType<typeof loadContent>;
-
+  // The catch spans the setters as well as the load, matching the boot
+  // sequence this replaced: the setters run minigame-runtime sync that can
+  // throw on content the validators let through, and a throw there would
+  // otherwise escape into a socket.io listener with no handler above it.
   try {
-    loadedContent = loadContent(options);
+    const { players, teams, gameConfig, minigameContentById } =
+      loadContent(options);
+
+    setRoomStatePlayers(players);
+    setRoomStateTeams(teams);
+    setRoomStateGameConfig(gameConfig);
+
+    for (const [minigameId, minigameContent] of Object.entries(
+      minigameContentById
+    ) as [MinigameType, unknown][]) {
+      if (
+        minigameContent === undefined ||
+        !isSerializableValue(minigameContent)
+      ) {
+        continue;
+      }
+
+      setRoomStateMinigameContent(minigameId, minigameContent);
+    }
   } catch (error) {
     return {
       ok: false,
       reason: error instanceof Error ? error.message : String(error)
     };
-  }
-
-  const { players, teams, gameConfig, minigameContentById } = loadedContent;
-
-  setRoomStatePlayers(players);
-  setRoomStateTeams(teams);
-  setRoomStateGameConfig(gameConfig);
-
-  for (const [minigameId, minigameContent] of Object.entries(
-    minigameContentById
-  ) as [MinigameType, unknown][]) {
-    if (minigameContent === undefined || !isSerializableValue(minigameContent)) {
-      continue;
-    }
-
-    setRoomStateMinigameContent(minigameId, minigameContent);
   }
 
   // A reload is the repair path, so it has to work FROM the fatal state.
