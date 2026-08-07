@@ -67,9 +67,76 @@ Pre-verified 2026-08-07: `sampleDraft.ts:8-15` (drawing modelled as a count),
 (b) BARE config:save — the wizard does NOT emit it. WN-11's Review makes apply the single action and nothing else calls save, so a bare save would have no caller. The server-side save path stays as-is: it is part of the wire contract, is covered by configEvents.test.ts:120,138, and removing it is not in scope.
 (c) Consequence decided here: apply emits only the files whose draft differs from the seeded baseline. Writing every file would promote untouched content/sample files into content/local/ (local wins over sample on every later read), silently converting a fallback into an override the host never asked for.
 - 2026-08-07T17:52:13.140Z Build complete, pre-e2e. Shape of the diff: (1) useConfigWizard generalized single-file -> multi-file — draft/baseline are now a ConfigDraft over all five writable keys, issues are exposed per file (issueMessagesByFile) because a step now edits two files at once and 'players.name' vs 'gameConfig.name' would collide on the bare field path, and editFile(key, transform) replaces editGameConfig. (2) New pure modules with colocated tests: contentDraft/ (toConfigDraft, selectDirtyEdits, selectDraftIssues, blank/next entry templates, setPlayerAvatarSrc) and entryListDraft/ (setEntry/addEntry/removeEntry, generic over any {listKey: Entry[]} file — the roster and both packs are four instances of one shape). (3) New surfaces: EntryListEditor/ (field-spec-driven list rows, shared by all four lists), RosterStep/, PromptPacksStep/; ReviewStep gains a prompt-packs row and the AC-1 overwrite warning, and its roster row lost the now-false 'edited on /host, not here'. (4) Lab deleted: git rm ConfigSetupPrototype/, the imports at index.tsx:5-8, the WN-3 typeof-window guard, the dispatch, and the eslint.config.mjs ignores entry. Grep confirms zero remaining references outside ticket prose. Gate so far: pnpm lint clean (exit 0), pnpm typecheck clean, pnpm test exit 0 — 677 assertions, fail 0.
+- 2026-08-07T17:57:13.675Z Anti-blind-spot sweep (work grep --since e86cb78): 170 touched symbols, 30 flagged names. Every flagged name is either a generic local (apply, baseline, snapshot, draft, prompt, player, suffix, url, timeoutId...) or a style token I re-exported without changing. The three that could actually have broken a caller, opened and checked by hand: (1) roundCard/roundHead — renamed in fieldTokens to entryCard/entryHead; the ONLY consumer is LineupStep, whose styles.ts now aliases them back, so LineupStep/index.tsx:41-42 resolves unchanged. (2) The deleted lab's runtime surface — grep for 'variant=' across apps/packages/tools/tests/README returns ZERO hits, so nothing reaches /host?variant=A|B|C any more. (3) AdminConfigWizard's only consumer is App.tsx:48 and its prop (socket) is unchanged. Also opened HostControlPanel/index.tsx post-deletion: imports, the WN-3 typeof-window guard and the dispatch are all gone and the component is back to a plain render. One gap the sweep surfaced and I closed rather than noted: the gameConfig prefix/strip round trip (previously toFileScopedIssues, now selectDraftIssues) had no direct assertion, so a regression would have shown as issues silently not landing on IdentityStep's bare 'name' path. Added contentDraft test 'prefixes a game config issue with its own key so the step's bare path still resolves'.
+- 2026-08-07T18:05:49.052Z browser-verify: RAN and passed, though the O-6 predicate said skip. The ticket's frontmatter is kind: feature, so readBrowserOutcome returns skip and no browser phase was required. I ran one anyway and recorded a pass verdict (.work/verdicts/WN-19.browser.json, sha 8958be1) because WN-11 — the spine this sits on — took the skip and named the residual gap out loud: 'nobody has LOOKED at the wizard, so a layout or contrast defect that does not break a role-based locator would survive both the spec and this skip.' This slice adds two more visible steps to that same unlooked-at surface, so the gap was compounding. Booted the e2e stack (seeded content root, server 3100, vite 5273) and drove a real Chromium over all six steps. Findings: every step renders correctly against the house idiom; the roster shows 16 player cards (name + optional avatar) and 4 team cards with the AC-1 overwrite hint; prompt packs shows trivia and drawing with the read-only id column present; geo renders as '8 photo prompts' + the pnpm import:geo pointer with no editor; Review carries the new prompt-packs row and the overwrite warning, and its roster row no longer claims 'edited on /host, not here'. Emptying a team name paints the danger border and renders 'must be a non-empty string' under the field, and Review then reads 'Fix the highlighted fields first' disabled — proving the gate reads the whole draft, not just the edited step. Zero pageerror and zero console.error across the whole pass. Screenshots at .work/verdicts/WN-19-browser/ (gitignored, per-run, beside the verdict). NO design comparison was possible and none is claimed — apps/client/public/mockups/ has no /admin entry, because the wizard's design lived in the ConfigSetupPrototype lab this ticket deletes; graded against the house idiom instead. Three INFO findings carried, none blocking and none in scope here: the drawing editor renders all 62 prompts as full cards (~10,600px tall), a read-only prompt id looks identical to an editable input, and single-field entries leave the two-column grid half empty. Recorded BEFORE the handoff so the attested tree and the landed tree are the same one.
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
+
+<!-- captured-evidence:start -->
+**Verify gate:** ✓ PASS (3 step(s))
+
+```
+✓ lint: pnpm lint
+✓ typecheck: pnpm typecheck
+✓ test: pnpm test
+```
+
+**Anti-blind-spot grep:** no touched symbols in the diff.
+
+**Screenshots:**
+- /Users/bradleyexton/Projects/wing-night/.work/verdicts/WN-19-browser/roster.png
+- /Users/bradleyexton/Projects/wing-night/.work/verdicts/WN-19-browser/prompt-packs.png
+- /Users/bradleyexton/Projects/wing-night/.work/verdicts/WN-19-browser/review.png
+- /Users/bradleyexton/Projects/wing-night/.work/verdicts/WN-19-browser/invalid-team-card.png
+- /Users/bradleyexton/Projects/wing-night/.work/verdicts/WN-19-browser/review-blocked.png
+- /Users/bradleyexton/Projects/wing-night/.work/verdicts/WN-19-browser/geo-card.png
+
+_Captured 2026-08-07T18:07:22.189Z._
+<!-- captured-evidence:end -->
+
+**Two corrections to the captured block above — read these, not it, on those two lines.**
+
+1. **"Anti-blind-spot grep: no touched symbols in the diff" is a FALSE EMPTY, not a clean sweep.**
+   `work evidence` runs the grep with no `--since`, so it diffed a committed, clean worktree and
+   found nothing to survey. The real sweep was `work grep --since e86cb78`: **170 touched symbols
+   across 30 flagged names**, run against the committed diff (untracked files are invisible to
+   git-grep, so an unstaged sweep would have produced exactly this same confident false clean). Its
+   findings and the three call-sites opened by hand are in `## Progress`.
+
+2. **The verify gate ran FOUR steps, not the three shown.** The captured block reflects the default
+   gate; the ticket's last AC also requires the full `e2e` key, and it was run —
+   `work verify --steps lint,typecheck,test,e2e` → all four green (`✓ lint ✓ typecheck ✓ test
+   ✓ e2e`), plus a standalone full-suite run of `CI=1 WN_E2E_SERVER_PORT=3100
+   WN_E2E_CLIENT_PORT=5273 pnpm test:e2e` → **14 passed (31.3s)**. The full key matters more than
+   `test_one` here for the same reason it did on WN-11: `admin-config-wizard.spec.ts` sorts first
+   under `workers: 1` / `fullyParallel: false`, so this spec's applied edits are visible to every
+   spec after it. They are, and the suite stays green — the rename was chosen over an add precisely
+   so `overrides.spec.ts` keeps "Scorch Squad" and the roster keeps its 16/4 shape.
+
+**Unit tests:** 677 assertions, `fail 0`, exit 0 across all 7 workspace projects.
+
+**port-variant outputs 2 and 3: SKIPPED-AND-SAID, pending WN-13 (per the Plan).** Output 1 —
+folding the picked direction into prod as a proper rewrite — is the substance of this ticket and
+was done. Outputs 2 (register the shipped component in `/design-system`) and 3 (publish the pick to
+`/designs/<id>`) are **not skipped because they do not apply**, but because **wing-night has not
+been given those routes yet**: `resolveClientRoute` defines `ROOT | HOST | ADMIN | DISPLAY |
+DEV_MINIGAME | DEV_LAB | NOT_FOUND` and nothing else, and `design/` in this repo is documentation,
+not a catalog app. That is the onboarding gap **WN-13** exists to close; it can backfill the
+catalog entries for `AdminConfigWizard`, `EntryListEditor`, `RosterStep` and `PromptPacksStep`
+afterwards. Same disposition WN-11 recorded, for the same reason — recorded here rather than
+inherited silently.
+
+**Browser-verify ran despite the predicate saying skip.** `kind: feature` routes this to skip, but
+WN-11 shipped the wizard with the gap named out loud ("nobody has LOOKED at the wizard"), and this
+slice adds two more steps to that surface. A real Chromium pass over all six steps is recorded at
+`.work/verdicts/WN-19.browser.json` (pass, sha 8958be1) with the screenshots above. **No
+screenshot-vs-design comparison was possible and none is claimed** — `apps/client/public/mockups/`
+has no `/admin` entry, because the wizard's design lived in the `ConfigSetupPrototype` lab this
+ticket deletes. Three INFO findings carried for post-merge review, none blocking and none in scope:
+the drawing editor renders all 62 prompts as full cards (~10,600px tall), a read-only prompt id is
+visually indistinguishable from an editable input, and single-field entries leave the two-column
+grid half empty.
 
 ## Links
 - Spine: WN-11 (dep). Auth hardening: WN-12. Onboarding gap for the catalog outputs: WN-13.
