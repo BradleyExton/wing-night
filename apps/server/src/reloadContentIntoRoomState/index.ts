@@ -26,10 +26,19 @@ export type ReloadContentResult =
 // shape: the loaders throw by design (fail-fast on bad content at boot), but
 // the two callers want opposite things from a failure. Boot wants the existing
 // destructive fatalError path — a server with unloadable content should not
-// pretend to be usable. Apply wants a typed error back and NOTHING touched,
-// because `setRoomStateFatalError` resets the room before flagging, which
-// would wipe rosters the host entered live in SETUP. Owning the reload here
+// pretend to be usable. Apply wants a typed error back and its live SETUP
+// rosters left alone, because `setRoomStateFatalError` resets the room before
+// flagging and would wipe what the host just typed in. Owning the reload here
 // and leaving the failure policy to each caller is what lets both be right.
+//
+// What a FAILED reload guarantees, precisely — it is not all-or-nothing. A
+// load failure touches nothing. A failure from one of the setters leaves the
+// earlier ones applied, so room state can be partially re-seeded. What is
+// guaranteed either way is that no CLIENT ever observes the partial state:
+// `reportRoomStateMutation()` is only reached on the success path, so
+// `didMutate` stays false, `broadcastAfter` returns early, and nothing is
+// emitted. Boot additionally erases any partial re-seed, because
+// `setRoomStateFatalError` overwrites the room wholesale.
 //
 // Which room-state fields a successful reload replaces: `players`, `teams`,
 // `gameConfig` (and the `totalRounds` / `currentRoundConfig` it derives), and

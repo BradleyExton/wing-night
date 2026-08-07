@@ -3,7 +3,6 @@ import { existsSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import test from "node:test";
 
-import { loadContent } from "../index.js";
 import { DEFAULT_CONTENT_ROOT_DIR } from "./index.js";
 
 // This root was previously re-derived inside every consumer from its own
@@ -23,12 +22,30 @@ test("resolves to the repo's own content directory", () => {
   );
 });
 
-// The read side, exercised through its real default rather than an injected
-// root — the writer resolves its target from this same constant, so a root
-// that loads here is the root that is written to.
-test("is a content root the loaders can actually load from by default", () => {
-  const content = loadContent();
+// Every file the loaders fall back to must be reachable from the shared root,
+// which is also the root the writer writes into — so a root that has these is
+// the root that gets written to.
+//
+// Asserts against sample/ rather than calling `loadContent()`, deliberately:
+// loadContent merges the gitignored, product-writable content/local/ on top,
+// so a developer who had exercised the config wizard (or reproduced this
+// ticket's own broken-local-content scenario) would get a red unit suite for
+// reasons having nothing to do with their change.
+test("has every content file the loaders fall back to", () => {
+  const sampleFileNames = [
+    "gameConfig.json",
+    "players.json",
+    "teams.json",
+    "minigames/trivia.json",
+    "minigames/geo.json",
+    "minigames/drawing.json"
+  ];
 
-  assert.ok(content.gameConfig.rounds.length > 0);
-  assert.ok(content.players.length > 0);
+  for (const fileName of sampleFileNames) {
+    assert.equal(
+      existsSync(resolve(DEFAULT_CONTENT_ROOT_DIR, "sample", fileName)),
+      true,
+      `expected sample/${fileName} under ${DEFAULT_CONTENT_ROOT_DIR}`
+    );
+  }
 });
