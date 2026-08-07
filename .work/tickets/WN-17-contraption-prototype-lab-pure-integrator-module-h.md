@@ -1,12 +1,13 @@
 ---
 id: WN-17
 title: "CONTRAPTION integrator module + keyframe byte measurement (headless half)"
-status: ready
+status: in-progress
 kind: spike
 priority: medium
 created: 2026-08-07
 deps: []
 blocked_by: []
+worktree: "/Users/bradleyexton/Projects/wing-night-WN-17"
 ---
 
 ## Goal
@@ -66,6 +67,8 @@ module does not touch them.
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-07T15:12:31.390Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night-WN-17
+- 2026-08-07T15:21:12.447Z Built packages/shared/src/contraption/: types.ts, simulate/ (position-Verlet, xorshift32 seed jitter, keyframe emission) + simulate/resolveSegmentContacts/ (circle-vs-static-segment, restitution + slip), measureTrackBytes/, benchmarkLayout/ (6 bodies, 7 segments), and the module entry re-exporting under Contraption* names from packages/shared/src/index.ts (so WN-18 can import from the package's single '.' export — the gate1 minor). 24 colocated tests pass. The transcendental scan proved non-vacuous on first run: it caught 'Math.random' written in a doc comment in simulate/index.ts, which I reworded rather than narrowing the scan.
 
 ## Evidence
 <test output + the byte measurement table (30fps / 20fps, JSON, body count, per-run basis)>

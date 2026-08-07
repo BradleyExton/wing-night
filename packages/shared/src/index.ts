@@ -1,4 +1,19 @@
 export { Phase } from "./phase/index.js";
+export {
+  CONTRAPTION_BENCHMARK_LAYOUT,
+  measureContraptionTrackBytes,
+  simulateContraption
+} from "./contraption/index.js";
+export type {
+  ContraptionCircleBody,
+  ContraptionKeyframe,
+  ContraptionLayout,
+  ContraptionRun,
+  ContraptionSegment,
+  ContraptionSimulateOptions,
+  ContraptionTrackBytes,
+  ContraptionVec2
+} from "./contraption/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export type {
