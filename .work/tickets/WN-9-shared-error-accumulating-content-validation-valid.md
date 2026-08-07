@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-9
 title: "Shared error-accumulating content validation (validateGameConfigFile + file validators)"
-status: in-review
+status: done
 kind: feature
 priority: medium
 created: 2026-08-05
@@ -18,6 +18,8 @@ blocked_by: []           # list<string>; external/manual waits (free text); non-
 # worktree:              # set by work-on on claim (collision guard); default null
 # parallel_safe:         # RESERVED for F-8 (post-MVP) — do not set
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-9"
+landed_range: 4195870c8a65db9d0b45ee5f3e1550601d475b98..efd844d85acc009f76f95f68a6635bca0e32995f
+review: pending
 ---
 
 ## Goal
@@ -74,6 +76,7 @@ code before answering, not taken on the critic's word:
 - 2026-08-07T05:07:43.754Z qa (qa-reviewer agent, fresh context, sonnet for model diversity vs the opus implementer): PASS — recorded at .work/verdicts/WN-9.qa.json (attempt 1), graded sha b00e29bb2f1e332c45feb92f58ddf8b81f8ce22c which matches worktree HEAD exactly. All 13 checks ok:true, confidence high. It independently re-ran work verify, the full suite, and work grep --since main rather than trusting the progress log, and hand-diffed all nine boolean delegates rule-by-rule against 'git show main:...' — the central false-accept/false-reject risk — finding parity in both directions, including the three documented-deliberate choices (array-permissive outer shape, avatarSrc in-presence, rules-key iteration domain). It also traced a case I had not explicitly reasoned about: with MULTIPLE rules keys failing at once, the new throw-loop reproduces the old code's 'first minigameType in registration order wins' ordering. Three advisory Rubric B findings ride into evidence rather than looping (per the work-on contract, minor/info quality findings do not block and are not loop fodder): MINOR — promptPack/ and validationIssue/ have no colocated index.test.ts, covered only indirectly through consumer tests (placement gap, not a correctness gap); MINOR — the one-line isObjectLike predicate is duplicated across six files when validationIssue/ already exists as a home for it; INFO — validateGameConfigFile/index.ts is 278 lines, past the ~150-line prompt, though defensible as one coherent schema module. All three are real and worth a follow-up; none changes behavior.
 - 2026-08-07T05:07:49.113Z browser-verify: skipped (non-UI) — ticket kind is 'feature' and the change is entirely non-visual (packages/shared validation modules + a server content-loader seam + package test wiring); no client surface is touched, so readBrowserOutcome routes to skip. Recorded BEFORE the handoff so the attested tree and the landed tree stay identical.
 - 2026-08-07T05:08:03.548Z handed off → in-review (verify green); awaiting land
+- 2026-08-07T05:09:02.476Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
