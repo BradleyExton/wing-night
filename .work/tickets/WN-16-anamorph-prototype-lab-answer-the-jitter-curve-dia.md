@@ -27,11 +27,26 @@ instead of stalling WN-14 mid-pipeline waiting for a person.
       `Record<MinigameType, …>` in the repo stops compiling until fully wired, so there is no
       throwaway half-state. The lab is a canvas, a point array and controls: no server, no teams,
       no scoring, no phases, no content pipeline.
-- [ ] **No bare `window` or `import.meta.env` at module or render scope.** WN-3 had to add a
-      `typeof window` guard because `ConfigSetupPrototype` crashed all 16 `HostControlPanel` tests
-      under `tsx --test` (no DOM, no Vite) — and that guard reddened the gate for every ticket until
-      it was fixed. Do not repeat it: gate on a prop or a route-level check that is inert under the
-      test runner, and confirm by running `pnpm test` with the lab present.
+- [ ] **No bare `window` or `import.meta.env` at module or render scope**, proven by a **colocated
+      unit test that imports the lab module**. WN-3 had to add a `typeof window` guard because
+      `ConfigSetupPrototype` crashed all 16 `HostControlPanel` tests under `tsx --test` (no DOM, no
+      Vite), reddening the gate for every ticket until fixed. But do **not** treat a green `pnpm test`
+      as the proof: nothing in `apps/client/src` imports `App` (`App.tsx:46` already reads bare
+      `window.location.pathname` at render scope), so an unimported lab module's bare `window` passes
+      green and the guard never fires — gate1 correctly called that "false comfort". The importing
+      test is the actual check.
+- [ ] **Lint is pre-authorized to be handled, not discovered.** The lab lands under
+      `apps/client/src/components/**`, where `eslint.config.mjs:113-155` enables the wingnight
+      component rules (`component-entry-file-name`, `no-hardcoded-component-jsx-text`,
+      `no-inline-style-prop`, `require-styles-import-in-component-entry`, `max-lines` 260). A
+      four-knob control lab is hardcoded labels and runtime style values by construction —
+      `ConfigSetupPrototype` scored 8 such errors. **Decision made here so the implementer does not
+      halt at the fork WN-3's agent halted at:** add a mirrored `ignores` entry for this lab's folder
+      in `eslint.config.mjs`, with an inline comment naming **WN-14** as the ticket that deletes both
+      the lab and the entry. A scope carve-out for throwaway code — not a rule disable, no rule
+      definition changes, no `eslint-disable` anywhere.
+- [ ] The new `resolveClientRoute` branch gets **the colocated test case its precedent already has**
+      (`utils/resolveClientRoute/index.test.ts`).
 - [ ] The lab makes all four of WN-14's questions **answerable by driving it**, each as a live
       control — not a code edit:
       1. **Jitter magnitude** — a slider across the plausible band.
@@ -45,8 +60,9 @@ instead of stalling WN-14 mid-pipeline waiting for a person.
       comparing settings are looking at the same object.
 - [ ] The lab writes nothing into prod paths and is deleted by WN-14 when it ports the answers —
       note the delete target in this ticket's Evidence so WN-14 can find it.
-- [ ] `pnpm typecheck` and `pnpm test` pass, **with the lab present** (that is the WN-3 regression
-      guard, not a formality).
+- [ ] **`pnpm lint`, `pnpm typecheck` and `pnpm test` all pass** — all three manifest verify keys,
+      with the lab present. `lint` has been in the default gate since WN-3 landed; naming only
+      typecheck+test is the exact defect that got this ticket rejected on 2026-08-07.
 
 ## Plan
 The output that survives this ticket is **numbers and a decision, not code** (WN-14 says so
@@ -65,6 +81,7 @@ registry import that rules that route out.
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-07T11:00:03.502Z gate1 REJECTED (product-owner, needs-changes, confidence high) — demoted ready→needs-planning, routing to plan-work. Verdict: .work/verdicts/WN-16.gate1.json. Bottom line: every pre-verified code claim in the Plan checks out and the scope/blast-radius is sound, but the ticket ignores the OTHER half of the WN-3 precedent it cites. MAJOR: the declared finish line (`pnpm typecheck` + `pnpm test`) is narrower than the gate that will actually run — the manifest's verify has three keys and `lint: pnpm lint` has been in the default gate since WN-3. The lab lands under apps/client/src/components/**, where eslint.config.mjs:120-155 enables the wingnight custom rules (component-entry-file-name, no-hardcoded-component-jsx-text, no-inline-style-prop, require-styles-import-in-component-entry, max-lines 260). A four-knob lab is hardcoded control labels + runtime style values by construction. Not speculative: the previous throwaway lab (ConfigSetupPrototype) scored 8 such errors and the resolution shipped as a permanent ignore entry at eslint.config.mjs:14-16 — and WN-3's Progress records the agent HALTING at exactly that fork rather than deciding it. Planning fix: add `pnpm lint` to the final AC and pre-authorize the mirrored ignore entry naming WN-14 as the deleter. MINOR 1: AC#3's proof method is false comfort — nothing in apps/client/src imports App (App.tsx:46 already reads bare window.location.pathname at render scope), so a bare `window` at the lab's module scope would pass `pnpm test` green and the AC's own guard would never fire; require one colocated unit test importing the lab module, or drop the claim. MINOR 2: AC#1 mandates a new resolveClientRoute branch but never asks for the colocated test case its precedent already has (utils/resolveClientRoute/index.test.ts). INFO: route-surface overlap with WN-13 (vendored /designs + /design-system dev-gating) — a Links line, not a dep edge.
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>

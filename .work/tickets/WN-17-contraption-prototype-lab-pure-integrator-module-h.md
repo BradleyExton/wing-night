@@ -1,6 +1,6 @@
 ---
 id: WN-17
-title: "CONTRAPTION prototype lab: pure integrator module + harness; settle readability, piece set, and keyframe byte cost"
+title: "CONTRAPTION integrator module + keyframe byte measurement (headless half)"
 status: ready
 kind: spike
 priority: medium
@@ -10,66 +10,67 @@ blocked_by: []
 ---
 
 ## Goal
-Build the lab that answers WN-15's feel questions **and produces the byte measurement its
-architecture decision is explicitly waiting on**. This ticket builds and measures; the judgement
-calls stay human, made by driving the harness afterwards.
+The **headless** half of the CONTRAPTION prototype: a pure, portable, deterministic integrator plus
+the keyframe byte measurement WN-15's architecture decision is explicitly waiting on. No React, no
+route, no canvas — the visual harness is WN-18.
+
+## Why this shape (re-planned 2026-08-07 after the gate1 rejection)
+gate1 rejected the combined ticket for bundling three separable deliverables, and was right: the
+module + measurement touch no React, no route, no `window`, and **no component lint rules**, while
+the harness exists only to serve questions that stay human anyway. This half is fully autonomous and
+carries the highest-value output. WN-18 takes the harness and depends on this.
 
 ## Acceptance Criteria
-- [ ] **A pure, portable integrator module with colocated unit tests.** Unlike WN-14's lab, WN-15
-      says what survives here is *a module* — it ends up running inside the server-side reducer, so
-      write it as the real thing behind a throwaway harness. It must not import anything
-      browser-only. Tests assert **determinism**: identical seed + identical layout ⇒ byte-identical
-      output across runs. That is the property the whole (a)-vs-(b) architecture question rests on.
-- [ ] **No transcendental functions in the integrator** (`Math.sin/cos/exp/pow`…). WN-15's option (b)
-      is sound only "with the transcendental ban above holding forever" — plain IEEE-754 double
-      arithmetic is fully specified, transcendentals are not cross-platform reproducible. Enforce it
-      with a test or a lint-style assertion over the module, not a comment.
-- [ ] **Measure the keyframe track byte cost and record the real number.** WN-15 leans option (a)
-      (server emits a keyframe track, display replays) but states outright: *"Needs a real byte count
-      before committing."* Serialize a representative ~4s run and record the actual size, at both
-      30fps and 20fps, in this ticket's Evidence. This is the deliverable that converts a leaning
-      into a decision — and it is fully machine-producible, no human judgement required.
-- [ ] A canvas harness over the integrator makes WN-15's questions answerable by driving it:
-      failure **readability** (can the room see *why* a run failed), the **piece set and count**
-      (smallest set that still allows a clever solution), **one shot vs best-of-N**, and **sim
-      length** against the ~4s watchable target. Note WN-15 is the skill's *logic* branch but
-      explicitly must NOT be a TUI — "do failures read as understandable" is a visual question.
-- [ ] **Scope guardrail (from WN-15):** no package under `packages/minigames/`, no
-      `MINIGAME_DEFINITIONS` entry, no registry changes — adding a `MinigameType` breaks every
-      `Record<MinigameType, …>` in the repo until fully wired. The harness reuses the dev-lab route
-      WN-16 adds if that has landed; otherwise it adds it the same way (see WN-16 AC1 for why
-      `/dev/minigame/<slug>` is unavailable).
-- [ ] **No bare `window` / `import.meta.env` at module or render scope** — the WN-3 crash class.
-      Confirm with `pnpm test` run with the harness present.
-- [ ] `pnpm typecheck` and `pnpm test` pass, with the integrator's determinism tests reported as
-      executed (not merely zero failures — the WN-9 lesson).
+- [ ] **Module home: `packages/shared/src/`.** That is the only workspace both a client harness and
+      the server-side reducer can reach (`packages/minigames/core` depends on `@wingnight/shared`,
+      not the reverse). It must import nothing browser-only. Note `packages/shared` gained a runtime
+      test runner in WN-9 (`tsc --noEmit -p tsconfig.test.json && tsx --test "src/**/*.test.ts"`), so
+      colocated `.test.ts` files here **do** execute — verify they are reported, per the WN-9 lesson.
+- [ ] A pure integrator with colocated determinism tests: identical seed + identical layout ⇒
+      byte-identical output across runs. **Do not claim this proves option (b)'s cross-engine
+      portability** — same-process reproducibility is a necessary but not sufficient condition, and
+      the previous ticket overstated it. State the limit in the test's name or a comment.
+- [ ] **No transcendental functions** (`Math.sin/cos/exp/pow`…) in the integrator — plain IEEE-754
+      double arithmetic is fully specified, transcendentals are not reproducible across engines.
+      Enforce with a **colocated unit test** that scans the module source for those identifiers. Do
+      NOT author a custom rule under `tools/eslint-plugin-wingnight/` — gate1 flagged that as the
+      expensive reading of "lint-style assertion"; the unit test is the intended default.
+- [ ] **The byte measurement is fully specified, because an under-specified number is worse than no
+      number.** Record, in `## Evidence`: the encoding (**JSON, matching how minigame runtime state
+      actually crosses socket.io as `SerializableValue`** — measure packed-binary only as a clearly
+      labelled secondary figure), the **body count** and layout used, and the basis (**per whole
+      ~4s run**, not per emit). Report at **both 30fps and 20fps**. WN-15 leans architecture (a) and
+      says outright it "needs a real byte count before committing" — so the number must be
+      apples-to-apples with the transport it is deciding about.
+- [ ] Scope guardrail: no package under `packages/minigames/`, no `MINIGAME_DEFINITIONS` entry, no
+      registry changes — adding a `MinigameType` breaks every `Record<MinigameType, …>` until fully
+      wired.
+- [ ] **`pnpm lint`, `pnpm typecheck` and `pnpm test` all pass** — all three manifest verify keys.
+      `lint` has been in the default gate since WN-3 landed; omitting it from the finish line is the
+      exact defect that got WN-16, WN-17 and WN-11 rejected on 2026-08-07. Lint risk here is low by
+      construction (the wingnight component rules are scoped to `apps/client/src/components/**`,
+      `eslint.config.mjs:113-146`, which this ticket does not touch) — but it is named, not assumed.
 
 ## Plan
-This one is genuinely different from WN-16 and should not be treated as its twin: WN-16 throws
-everything away and keeps numbers; **WN-17 keeps a module**. Write the integrator to production
-standard with real tests, and let only the harness around it be disposable.
+What survives this ticket is a **module**, not numbers — the integrator ends up inside the
+server-side reducer, so write it to production standard with real tests. The disposable part all
+lives in WN-18.
 
-The byte-count AC is the highest-value autonomous item across both labs — it settles a recorded
-architecture leaning with a measurement rather than an opinion, and needs no human at all.
+Sequence the byte measurement after the determinism tests: a measurement taken from a
+non-deterministic integrator is meaningless.
 
-No dep on WN-16 despite the shared route: if WN-16 lands first this reuses the route, otherwise it
-adds it. Forcing a dep would serialize two independent labs for a few lines of routing. If both run
-in the same batch and both touch `resolveClientRoute`, expect a small merge conflict there and
-resolve it in favour of one shared route.
-
-Pre-verified 2026-08-07: `MinigameDevSandbox/index.tsx:14` imports `../../minigames/registry` and
-`App.tsx:38` gates on `devMinigameType !== null`, so the existing dev route requires registration —
-confirming the guardrail's premise.
+Pre-verified 2026-08-07: `packages/shared/package.json` gained `tsx --test "src/**/*.test.ts"` in
+WN-9 (quoted glob — `/bin/sh` collapses an unquoted `**`); the wingnight component lint rules are
+scoped to `apps/client/src/components/**` at `eslint.config.mjs:113-146`, so a `packages/shared`
+module does not touch them.
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
 
 ## Evidence
-<test output + screenshot / preview URL, recorded before `done`>
+<test output + the byte measurement table (30fps / 20fps, JSON, body count, per-run basis)>
 
 ## Links
-- Answers + the byte number feed WN-15 (re-planned via plan-work Mode B after the human review).
-- Question source: WN-15's `**Why needs_prototype: true**` and `**Architecture decision to confirm
-  at GATE 1**` sections. Idea doc: `docs/minigames/ideas/contraption.md`.
-- Pattern precedent named by WN-15: `docs/minigames/drawing-spec.md` (server records, display
-  projects read-only).
+- Visual half: WN-18 (deps on this). Consumer: WN-15 (architecture decision (a) vs (b)).
+- Question source: WN-15's `**Architecture decision to confirm at GATE 1**` section.
+- Prior rejection: `.work/verdicts/WN-17.gate1.json` (three majors, all addressed above).

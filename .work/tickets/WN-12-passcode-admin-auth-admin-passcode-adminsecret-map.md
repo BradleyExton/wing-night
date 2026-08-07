@@ -27,7 +27,7 @@ Gate the /admin config wizard behind a server-side passcode: ADMIN_PASSCODE env 
 - [ ] A claim event (passcode → adminSecret) gates all `config:*` events, which switch from HostSecretPayload to the admin secret; /admin renders a passcode prompt when unclaimed; with `ADMIN_PASSCODE` unset the wizard stays open (LAN default, mirroring HOST_CONTROL_TOKEN's opt-in hardening).
 - [ ] The SocketClientRole type-level tripwire (`packages/shared/src/socketClientRole/index.test-d.ts`) is consciously updated if an ADMIN role is added — or the design keeps HOST-role sockets with admin-gated events and documents why (decide in-ticket; either is acceptable).
 - [ ] Unit tests: claim with right/wrong/absent passcode; admin claim does not invalidate host secret and vice versa; config events reject without a valid adminSecret when a passcode is configured.
-- [ ] `pnpm typecheck` and `pnpm test` pass.
+- [ ] **`pnpm lint`, `pnpm typecheck` and `pnpm test` all pass** — all three manifest verify keys. `lint` entered the default gate when WN-3 landed; naming only typecheck+test got WN-16/WN-17/WN-11 rejected at gate1 on 2026-08-07.
 
 ## Plan
 Grilled 2026-08-05 (plan-work session; user at the table).

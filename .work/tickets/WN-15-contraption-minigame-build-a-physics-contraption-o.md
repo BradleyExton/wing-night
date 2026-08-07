@@ -8,7 +8,7 @@ priority: medium
 created: 2026-08-07
 
 # ─── Optional (delete a line to take its default) ───────────────────────────
-deps: [WN-17]            # list<id>; DAG edges; must all be `done` before the SELECTOR picks this; default []
+deps: [WN-18]            # list<id>; DAG edges; must all be `done` before the SELECTOR picks this; default []
 blocked_by: []           # list<string>; external/manual waits (free text); non-empty => selector skips; default []
 # model: sonnet          # opus | sonnet | haiku; unset => global default-by-kind policy (SCHEMA §5)
 # thinking: medium       # low | medium | high; unset => policy
