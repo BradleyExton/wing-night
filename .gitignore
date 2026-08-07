@@ -18,3 +18,4 @@ test-results/
 .work/verify-gate.active
 .work/verify-gate.state.json
 .work/verdicts/
+.work/handoff-attestation.json

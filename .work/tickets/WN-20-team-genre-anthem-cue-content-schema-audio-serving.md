@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-20
 title: "Team genre anthem cue: content schema, audio serving, display playback at MINIGAME_INTRO"
-status: ready
+status: needs-planning
 kind: feature
 priority: medium
 created: 2026-08-07
@@ -22,7 +22,7 @@ Each team has a genre identity with anthem MP3s in the content pack; when a team
 - [ ] The display shows a "tap to enable audio" unlock overlay (docs/minigame-authoring-guide.md §5.2 / song-guess-spec §8.1 pattern) until tapped once; the unlocked state persists for the session.
 - [ ] When the room enters MINIGAME_INTRO for a team with anthems, the display plays `anthems[0]` (via the snapshot-diff one-shot idiom of useGameStartCountdown); playback stops when the phase advances. Audio is best-effort — a locked/blocked AudioContext or missing file never breaks the display (mirror useTimesUpChime's guard).
 - [ ] Teams without `anthems` behave exactly as today (no overlay interaction required to advance phases, no errors).
-- [ ] `pnpm typecheck` and `pnpm test` pass, including new unit tests for the teams content parsing (genre/anthems present, absent, and invalid) and the anthem-cue selector.
+- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, and the manifest's `e2e` suite pass — including new unit tests for the teams content parsing (genre/anthems present, absent, and invalid) and the anthem-cue selector, plus e2e coverage that the unlock overlay never obstructs SETUP interactions (extends the display specs from WN-1/WN-2).
 
 ## Plan
 Decisions resolved at planning (grilled 2026-08-07, user present):
@@ -42,6 +42,7 @@ Out of scope (parked): playlist rotation (WN-21), lobby music (WN-22), Spotify, 
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-07T22:12:30.397Z gate1 (product-owner critic, 2026-08-07): needs-changes — recorded at .work/verdicts/WN-20.gate1.json. Summary: every cited premise verifies against the code (TeamsContentEntry + the WN-9 error-accumulating validators, useGameStartCountdown's previous-value-ref diff, useTimesUpChime's try/catch guard, GameLockedOverlay, docs §5.1/§5.2 + song-guess §8.1, and 'teams' already in DISPLAY_SAFE_ROOM_STATE_KEYS so AC1's snapshot half is free) — but two premises are wrong in a way that would land GREEN AND BROKEN. MAJOR 1 (AC2/AC5, audio URL): client and server are always separate origins — there is no vite.config anywhere in the repo (no dev proxy) and createApp mounts only /health, so an <audio src="/team-audio/x.mp3"> resolves against the Vite origin (5173 dev / 5273 e2e) and 404s; it needs an absolute server-origin URL the way createRoomSocket's resolveSocketServerUrl builds one (module-private, not exported). No named check can catch a wrong base URL — no e2e plays audio, no unit test sees an origin — so the ticket must name the URL-resolution decision AND a check that goes red on a wrong URL. MAJOR 2 (AC3, round-trip): the wizard WRITE path the Plan sends the implementer to audit already preserves unknown fields (RosterStep spreads {...team, name}; contentWriter JSON.stringifies edit.value verbatim). The stripping is on the READ path — apps/server/src/readConfigContent/index.ts:52 'teams: teams.map((team) => ({ name: team.name }))', a fresh one-field literal, in a module the ticket never names and which has no test file. Auditing the named path yields a trivially-passing test at the wrong layer while any wizard team rename silently deletes genre/anthems. The players path at :19-29 shows the established re-add pattern to follow. MINORS: AC4's session-from-load overlay contradicts the per-MINIGAME_INTRO scoping of the §8.1 prior art it cites, and AC7's e2e is near-vacuous (the display has no interactive elements; no spec ever clicks it); §5.1's cwd-relative express.static example breaks under the server's cwd=apps/server and the env-overridable WN_CONTENT_ROOT_DIR, and createApp takes no options so a testable mount needs injection; validateTeamsContentFile is SHARED with the config writer, so loosening it for warn-and-drop also loosens the wizard's save gate; and house lint rules make the new overlay a three-file change (entry + copy + styles). Verdict routes ready -> needs-planning; re-plan via plan-work (do not re-prompt the critic). NOTE: the registered product-owner subagent type is not resolvable in this session (.claude/ symlinks skills into claude-dev-system but has no agents symlink), so the critic lens ran via a general-purpose subagent with the gate1 contract supplied explicitly — carried as an info finding on the verdict.
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
