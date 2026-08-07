@@ -107,6 +107,8 @@ Routing: status ready → needs-planning; next: plan-work WN-3.
 - 2026-08-07T01:57:50.303Z browser-verify: skipped (non-UI)
 - 2026-08-07T01:57:50.415Z qa-reviewer round 2 (re-grade at 9f66d85): PASS — 4 minor + 2 info, no blocker/major. Recorded to the O-2 transport in both the worktree and the canonical root (root-scoped per-run artifact is what work land reads). Reviewer independently reconstructed the pre-fix applier and confirmed the regression test fails against it; verified equivalence two ways (compiled Tailwind at both commits — zero changed declaration values — and static-markup renders of 9 surfaces); confirmed tools/ diff EMPTY, no eslint-disable, test diff additions-only, full client suite 194 pass / 0 fail. Advisory minors carried forward for post-merge review, not actioned: (1) the two heat appliers + their tests stay duplicated; (2) applyFooterColumns' correctness now rests on an unenforced 'every branch carries the ref' invariant — collapsing StandingsSurface to a single return would make the bug class unrepresentable; (3) the ref-wiring half of the fix is untestable without jsdom, which this project deliberately avoids; (4) three test titles state a premise they don't exercise.
 - 2026-08-07T01:57:56.517Z handed off → in-review (verify green); awaiting land
+- 2026-08-07T01:58:26.353Z re-attested at in-review (verify + qa re-run green) for 35b25c1d
+- 2026-08-07T01:59:04.855Z prototype: skipped (not in plan) — carried over from the pre-claim canonical-checkout copy, which was the correct writer at the time (the note predates work claim). Recorded here so the worktree copy is the complete record before the ff-merge.
 
 ## Evidence
 <!-- captured-evidence:start -->
@@ -143,7 +145,7 @@ Routing: status ready → needs-planning; next: plan-work WN-3.
 - **info** — The ref-applier mechanism itself (previously accepted; re-checked, nothing new). Replacing style props with imperative ref writes removes style= attributes from static markup, which is precisely the blind spot that let the original regression through. No production impact: the app is a client-only SPA (main.tsx uses createRoot, no hydrateRoot anywhere outside tests) and refs fire in the commit phase before paint. 9f66d85's three colocated styles.test.ts files are the correct mitigation and restore direct coverage of all three appliers. One theoretical timing asymmetry: the width is now set just after node insertion rather than just before, on an element carrying transition-[width] duration-1000 — both land before first paint, so no mount transition in practice.
     evidence: apps/client/src/main.tsx uses ReactDOM.createRoot; appliers at StandingsSurface/styles.ts:11-20, EatingStageBody/styles.ts:40-48, EatingStage/styles.ts:20-28. React pinned at 18.3.1 via pnpm-workspace.yaml catalog, where a changed callback-ref identity triggers detach(null)-then-attach(element) on every commit — and applyX(n) returns a fresh closure each render, so the current value is always rewritten.
 
-_Captured 2026-08-07T01:57:56.517Z._
+_Captured 2026-08-07T01:58:26.353Z._
 <!-- captured-evidence:end -->
 
 ## Links
