@@ -10,10 +10,11 @@
     "dev": "pnpm -r --parallel --filter @wingnight/server --filter @wingnight/client dev",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
-    "test": "pnpm -r --if-present test && pnpm test:lint-rules && pnpm test:playwright-ports",
+    "test": "pnpm -r --if-present test && pnpm test:lint-rules && pnpm test:playwright-ports && pnpm test:e2e-content-root",
     "test:e2e": "playwright test",
     "test:lint-rules": "node --test tools/eslint-plugin-wingnight/tests/index.test.mjs",
     "test:playwright-ports": "node --test tools/playwright-ports/index.test.mjs",
+    "test:e2e-content-root": "node --test tools/e2e-content-root/index.test.ts",
     "import:geo": "node tools/import-geo-photos/index.mjs",
     "lint": "eslint ."
   },

@@ -1,6 +1,7 @@
 export type ClientRoute =
   | "ROOT"
   | "HOST"
+  | "ADMIN"
   | "DISPLAY"
   | "DEV_MINIGAME"
   | "DEV_LAB"
@@ -27,6 +28,10 @@ export const resolveClientRoute = (pathname: string): ClientRoute => {
 
   if (normalizedPathname === "/host") {
     return "HOST";
+  }
+
+  if (normalizedPathname === "/admin") {
+    return "ADMIN";
   }
 
   if (normalizedPathname === "/display") {

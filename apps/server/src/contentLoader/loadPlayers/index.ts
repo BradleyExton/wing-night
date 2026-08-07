@@ -6,7 +6,7 @@ import {
 import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 import {
   parseContentJson,
-  DEFAULT_CONTENT_ROOT_DIR
+  resolveContentRootDir
 } from "../contentLoaderUtils/index.js";
 
 type LoadPlayersOptions = {
@@ -47,7 +47,7 @@ const buildPlayer = (entry: PlayersContentEntry, index: number): Player => {
 };
 
 export const loadPlayers = (options: LoadPlayersOptions = {}): Player[] => {
-  const contentRootDir = options.contentRootDir ?? DEFAULT_CONTENT_ROOT_DIR;
+  const contentRootDir = options.contentRootDir ?? resolveContentRootDir();
   const entries = loadContentFileWithFallback({
     contentRootDir,
     contentFileName: "players.json",

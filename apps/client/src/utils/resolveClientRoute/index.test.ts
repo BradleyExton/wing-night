@@ -8,6 +8,11 @@ test("resolves /host and /host/ to HOST", () => {
   assert.equal(resolveClientRoute("/host/"), "HOST");
 });
 
+test("resolves /admin and /admin/ to ADMIN", () => {
+  assert.equal(resolveClientRoute("/admin"), "ADMIN");
+  assert.equal(resolveClientRoute("/admin/"), "ADMIN");
+});
+
 test("resolves /display and /display/ to DISPLAY", () => {
   assert.equal(resolveClientRoute("/display"), "DISPLAY");
   assert.equal(resolveClientRoute("/display/"), "DISPLAY");

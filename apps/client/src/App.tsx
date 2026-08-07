@@ -4,6 +4,7 @@ import {
 } from "@wingnight/shared";
 import { useEffect, useMemo, useState } from "react";
 
+import { AdminConfigWizard } from "./components/AdminConfigWizard";
 import { AnamorphLab } from "./components/AnamorphLab";
 import { ContraptionLab } from "./components/ContraptionLab";
 import { DisplayBoard } from "./components/DisplayBoard";
@@ -34,10 +35,17 @@ const CONTRAPTION_LAB_NAME = "contraption";
 const resolveRouteContent = (
   route: ReturnType<typeof resolveClientRoute>,
   devMinigameType: ReturnType<typeof resolveMinigameTypeFromSlug> | null,
-  devLabName: string | null
+  devLabName: string | null,
+  roomSocket: ReturnType<typeof createRoomSocket> | null
 ): JSX.Element => {
   if (route === "HOST") {
     return <HostControlPanel />;
+  }
+
+  // The wizard talks to the server directly over `config:*` rather than through
+  // room state, so it takes the socket instead of reading a context.
+  if (route === "ADMIN") {
+    return <AdminConfigWizard socket={roomSocket} />;
   }
 
   if (route === "DISPLAY") {
@@ -96,8 +104,10 @@ export const App = (): JSX.Element => {
     return wireRoomStateRehydration(roomSocket, setRoomStateEnvelope);
   }, [roomSocket]);
 
+  // ADMIN claims host control too — `config:*` are host-authorized events, so
+  // without the claim the wizard never holds a secret to send with them.
   useEffect(() => {
-    if (route !== "HOST" || roomSocket === null) {
+    if ((route !== "HOST" && route !== "ADMIN") || roomSocket === null) {
       return;
     }
 
@@ -117,7 +127,7 @@ export const App = (): JSX.Element => {
   return (
     <RoomStateProvider value={roomStateEnvelope}>
       <HostHandlersProvider value={hostHandlers}>
-        {resolveRouteContent(route, devMinigameType, devLabName)}
+        {resolveRouteContent(route, devMinigameType, devLabName, roomSocket)}
       </HostHandlersProvider>
     </RoomStateProvider>
   );

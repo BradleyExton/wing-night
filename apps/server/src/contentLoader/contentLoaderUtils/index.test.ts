@@ -3,7 +3,11 @@ import { existsSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import test from "node:test";
 
-import { DEFAULT_CONTENT_ROOT_DIR } from "./index.js";
+import {
+  CONTENT_ROOT_DIR_ENV_KEY,
+  DEFAULT_CONTENT_ROOT_DIR,
+  resolveContentRootDir
+} from "./index.js";
 
 // This root was previously re-derived inside every consumer from its own
 // `import.meta.url` against a fixed five-level walk, so it only landed on the
@@ -48,4 +52,39 @@ test("has every content file the loaders fall back to", () => {
       `expected sample/${fileName} under ${DEFAULT_CONTENT_ROOT_DIR}`
     );
   }
+});
+
+// The override exists so the e2e suite can exercise `config:apply` — which
+// writes `<root>/local/` and PERSISTS across processes — without rewriting the
+// content the rest of the suite asserts on.
+test("resolves the configured root when the content-root env var is set", () => {
+  assert.equal(
+    resolveContentRootDir({ [CONTENT_ROOT_DIR_ENV_KEY]: "/tmp/wingnight-content" }),
+    "/tmp/wingnight-content"
+  );
+});
+
+// A relative override means "relative to where the server was started", which
+// is what a `WN_CONTENT_ROOT_DIR=.playwright/content` in a webServer env is.
+test("resolves a relative override against the working directory", () => {
+  assert.equal(
+    resolveContentRootDir({ [CONTENT_ROOT_DIR_ENV_KEY]: ".playwright/content" }),
+    resolve(".playwright/content")
+  );
+});
+
+test("falls back to the repo's content directory when the env var is unset", () => {
+  assert.equal(resolveContentRootDir({}), DEFAULT_CONTENT_ROOT_DIR);
+});
+
+// An empty or whitespace-only value is what an unset shell variable expands to
+// in a `WN_CONTENT_ROOT_DIR=$SOMETHING` invocation. Treating it as "configured"
+// would resolve the root to the working directory itself, so the loaders would
+// look for `./local/` and `./sample/`, find neither, and fatal the boot with a
+// message pointing at a directory nobody chose.
+test("falls back to the default when the env var is blank", () => {
+  assert.equal(
+    resolveContentRootDir({ [CONTENT_ROOT_DIR_ENV_KEY]: "   " }),
+    DEFAULT_CONTENT_ROOT_DIR
+  );
 });

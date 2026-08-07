@@ -13,7 +13,7 @@ import {
 } from "@wingnight/shared";
 
 import { isRulesValidForKey } from "../minigames/rulesValidation/index.js";
-import { DEFAULT_CONTENT_ROOT_DIR } from "../contentLoader/contentLoaderUtils/index.js";
+import { resolveContentRootDir } from "../contentLoader/contentLoaderUtils/index.js";
 
 type ContentWriterOptions = {
   contentRootDir?: string;
@@ -105,7 +105,7 @@ export const writeContentFiles = (
     return { ok: false, reason: "invalid", issues };
   }
 
-  const contentRootDir = options.contentRootDir ?? DEFAULT_CONTENT_ROOT_DIR;
+  const contentRootDir = options.contentRootDir ?? resolveContentRootDir();
 
   // A filesystem failure is reported, not thrown: this runs inside a socket
   // listener, and it is a different failure from "your content is invalid" —

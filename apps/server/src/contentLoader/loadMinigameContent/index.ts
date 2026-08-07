@@ -5,7 +5,7 @@ import {
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { resolveMinigameRuntimePlugin } from "../../minigames/registry/index.js";
-import { DEFAULT_CONTENT_ROOT_DIR } from "../contentLoaderUtils/index.js";
+import { resolveContentRootDir } from "../contentLoaderUtils/index.js";
 import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 
 type LoadMinigameContentOptions = {
@@ -15,7 +15,7 @@ type LoadMinigameContentOptions = {
 export const loadMinigameContent = (
   options: LoadMinigameContentOptions = {}
 ): Partial<Record<MinigameType, SerializableValue>> => {
-  const contentRootDir = options.contentRootDir ?? DEFAULT_CONTENT_ROOT_DIR;
+  const contentRootDir = options.contentRootDir ?? resolveContentRootDir();
   const minigameContentById: Partial<Record<MinigameType, SerializableValue>> = {};
 
   for (const minigameType of MINIGAME_TYPES) {

@@ -7,7 +7,7 @@ import {
 import { loadContentFileWithFallback } from "../loadContentFileWithFallback/index.js";
 import {
   parseContentJson,
-  DEFAULT_CONTENT_ROOT_DIR
+  resolveContentRootDir
 } from "../contentLoaderUtils/index.js";
 
 type LoadTeamsOptions = {
@@ -39,7 +39,7 @@ const buildTeam = (entry: TeamsContentEntry, index: number): Team => {
 };
 
 export const loadTeams = (options: LoadTeamsOptions = {}): Team[] => {
-  const contentRootDir = options.contentRootDir ?? DEFAULT_CONTENT_ROOT_DIR;
+  const contentRootDir = options.contentRootDir ?? resolveContentRootDir();
   const entries = loadContentFileWithFallback({
     contentRootDir,
     contentFileName: "teams.json",

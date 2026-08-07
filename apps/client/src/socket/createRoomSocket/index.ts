@@ -22,10 +22,16 @@ const resolveSocketServerUrl = (): string => {
   return `${window.location.protocol}//${window.location.hostname}:3000`;
 };
 
+// This — not the route table — is what decides `canClaimControl` on the server
+// (socketServer/index.ts passes `socketClientRole === CLIENT_ROLES.HOST`). An
+// ADMIN route left out of this list would connect as DISPLAY, never be issued a
+// host secret, and then get NO REPLY AT ALL to a `config:*` call rather than an
+// error: `emitSecretInvalid` early-returns for non-claimers, so the wizard would
+// sit forever on a request the server silently dropped.
 export const resolveSocketClientRole = (pathname: string): SocketClientRole => {
   const route = resolveClientRoute(pathname);
 
-  if (route === "HOST") {
+  if (route === "HOST" || route === "ADMIN") {
     return CLIENT_ROLES.HOST;
   }
 
