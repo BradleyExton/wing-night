@@ -40,6 +40,8 @@ export const displayCopy = {
   minigameTimerValue: formatClockSeconds,
   minigameTimesUpLabel: "Time!",
   roundChipLabel: (round: number): string => `Round ${round}`,
+  roundLabelSauceSummary: (label: string, sauce: string): string =>
+    `${label} · ${sauce}`,
   standingsTitle: "Standings",
   standingsEmptyLabel: "No teams have joined yet.",
   standingLeaderLabel: "Leading",

@@ -23,9 +23,9 @@ export const countdownNumber =
   "relative z-[1] m-0 font-mono text-[clamp(8rem,18vw,16rem)] font-black tabular-nums leading-none tracking-[-0.05em] text-primary [text-shadow:0_0_50px_rgba(249,115,22,0.6),0_0_120px_rgba(249,115,22,0.3)] [animation:tick_1s_ease-out_infinite] motion-reduce:[animation:none]";
 
 export const readyLabel =
-  "m-0 text-[clamp(0.95rem,1.3vw,1.5rem)] font-bold uppercase tracking-[0.32em] text-[#b3a89a]";
+  "m-0 text-[clamp(0.95rem,1.3vw,1.5rem)] font-bold uppercase tracking-[0.32em] text-mutedWarm";
 
 export const countdownLine =
   "m-0 text-[clamp(0.95rem,1.2vw,1.4rem)] font-bold uppercase tracking-[0.32em] text-gold";
 
-export const countdownLineLabel = "mr-2 text-[#b3a89a]";
+export const countdownLineLabel = "mr-2 text-mutedWarm";

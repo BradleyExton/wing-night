@@ -2,6 +2,7 @@ import type { Player, Team } from "@wingnight/shared";
 
 import { EatingPlayersSurface } from "./EatingPlayersSurface";
 import { SetupPlayersSurface } from "./SetupPlayersSurface";
+import * as styles from "./styles";
 
 type PlayersSurfaceBaseProps = {
   players: Player[];
@@ -29,10 +30,16 @@ export type EatingPlayersSurfaceProps = PlayersSurfaceBaseProps & {
 
 type PlayersSurfaceProps = SetupPlayersSurfaceProps | EatingPlayersSurfaceProps;
 
+// The deck-group shell is shared by both modes, so it lives here rather than being
+// duplicated in each variant; the variants render the head and rows for their mode.
 export const PlayersSurface = (props: PlayersSurfaceProps): JSX.Element => {
-  if (props.mode === "setup") {
-    return <SetupPlayersSurface {...props} />;
-  }
-
-  return <EatingPlayersSurface {...props} />;
+  return (
+    <section className={styles.group}>
+      {props.mode === "setup" ? (
+        <SetupPlayersSurface {...props} />
+      ) : (
+        <EatingPlayersSurface {...props} />
+      )}
+    </section>
+  );
 };

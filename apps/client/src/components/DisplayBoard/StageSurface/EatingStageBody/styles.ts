@@ -33,3 +33,16 @@ export const heatTrack =
 
 export const heatFill =
   "absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-gold via-primary to-heat shadow-[0_0_16px_rgba(249,115,22,0.4)] transition-[width] duration-1000 ease-linear";
+
+// The fill width tracks the countdown continuously, so it can't be a static utility class.
+// It is applied through a ref so the whole declaration stays here with the rest of the
+// styling rather than becoming an inline style prop in the entry file.
+export const applyHeatFillWidth =
+  (percent: number) =>
+  (element: HTMLDivElement | null): void => {
+    if (element === null) {
+      return;
+    }
+
+    element.style.width = `${percent}%`;
+  };

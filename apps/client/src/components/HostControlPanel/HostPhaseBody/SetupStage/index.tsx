@@ -59,7 +59,10 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
         )}
         <span className={styles.eyebrow}>{headerContext.phaseTitle}</span>
         <h1 className={styles.headline}>
-          Build the <span className={styles.headlineAccent}>lineup.</span>
+          {hostControlPanelCopy.setupHeadlineLead}{" "}
+          <span className={styles.headlineAccent}>
+            {hostControlPanelCopy.setupHeadlineAccent}
+          </span>
         </h1>
         <p className={styles.meta}>
           {totalPlayers === 0 ? (
@@ -67,13 +70,13 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
           ) : (
             <>
               <span className={styles.metaStrong}>{assignedPlayers}</span>
-              {" of "}
+              {hostControlPanelCopy.setupAssignedOfLabel}
               <span className={styles.metaStrong}>{totalPlayers}</span>
-              {" players assigned. "}
+              {hostControlPanelCopy.setupPlayersAssignedLabel}
               {unassignedPlayers > 0 && (
                 <>
                   <span className={styles.metaStrong}>{unassignedPlayers}</span>
-                  {" still need a home."}
+                  {hostControlPanelCopy.setupUnassignedRemainderLabel}
                 </>
               )}
             </>

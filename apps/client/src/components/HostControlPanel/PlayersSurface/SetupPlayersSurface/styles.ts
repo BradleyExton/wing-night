@@ -1,5 +1,4 @@
 export {
-  deckGroupRoot as group,
   deckGroupHead as groupHead,
   deckGroupCount as groupCount,
   deckRow as row,

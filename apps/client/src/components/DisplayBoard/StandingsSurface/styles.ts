@@ -1,6 +1,19 @@
 export const footer =
   "relative z-10 isolate shrink-0 grid gap-px border-t border-text/[0.06] bg-text/[0.04]";
 
+// One equal column per team, and the team count is only known at runtime, so the track
+// listing can't be a static utility class. It is applied through a ref so the declaration
+// stays here with the rest of the styling rather than becoming an inline style prop.
+export const applyFooterColumns =
+  (columnCount: number) =>
+  (element: HTMLElement | null): void => {
+    if (element === null) {
+      return;
+    }
+
+    element.style.gridTemplateColumns = `repeat(${columnCount}, minmax(0, 1fr))`;
+  };
+
 export const emptyLabel =
   "px-[clamp(1rem,2.2vw,3rem)] py-[clamp(0.85rem,1.4vh,1.5rem)] text-center text-[clamp(0.95rem,1vw,1.55rem)] text-muted";
 

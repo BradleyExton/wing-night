@@ -1,10 +1,11 @@
 ---
 id: WN-3
 title: Burn down the 28 baseline lint errors; restore lint to the verify gate
-status: ready
+status: in-progress
 kind: chore
 priority: medium
 created: 2026-08-01
+worktree: "/Users/bradleyexton/Projects/wing-night-WN-3"
 ---
 
 ## Goal
@@ -96,6 +97,12 @@ MINOR: the raw-lint figure is stale too — Goal says 72 errors + 18 warnings fr
 Verified clean: eslint.config.mjs really lacks .claude/** in ignores; manifest really keys lint_full; the 28-error breakdown outside the lab matches exactly; copy/ modules and tailwind tokens all exist.
 
 Routing: status ready → needs-planning; next: plan-work WN-3.
+- 2026-08-06T15:36:55.860Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night-WN-3
+- 2026-08-06T15:38:48.114Z 13 hex errors fixed: added semantic tokens mutedWarm/mutedWarmDim/ember to tailwind.config.ts; swapped text-[#b3a89a]->text-mutedWarm, text-[#6b6157]->text-mutedWarmDim, bg-[#ffb35a]->bg-ember, box-shadow hexes->theme(colors.ember|primary). Equivalence verified against built CSS (theme() resolves to identical #ffb35a/#f97316; rgb(179 168 154)/rgb(107 97 87)/rgb(255 179 90) present).
+- 2026-08-07T01:20:37.972Z re-entered (restart-safe claim) @ /Users/bradleyexton/Projects/wing-night-WN-3
+- 2026-08-07T01:29:35.435Z 9 hardcoded-JSX-copy errors moved into copy/ modules (host.ts/display.ts + SetupStageBody/TurnResultsStageBody copy.ts). Remaining 6 fixed: extracted HeroFlame/ + Embers/ out of SetupStageBody (286 -> 152 lines, clears max-lines; ember geometry became static per-particle utility classes in Embers/styles.ts, no style prop); the 3 genuinely-runtime values (2 heat-bar fill widths, StandingsSurface grid track count) now apply through ref-appliers declared in their own styles.ts — chosen over a quantised class map because the countdown steps finer than 1% and team count has no cap, so a class map would change rendered output; PlayersSurface now owns the deck-group <section> both child surfaces duplicated, which gives the dispatcher a real styles.ts (clears require-styles-import). eslint.config.mjs ignores .claude/** + ConfigSetupPrototype/** (comment names WN-11); manifest re-keyed lint_full -> lint. pnpm lint + pnpm typecheck green.
+- 2026-08-07T01:31:50.665Z HALT — verify gate red on a PRE-EXISTING failure outside this ticket's scope. work verify: lint ✓ (pnpm lint clean, all 28 baseline errors gone), typecheck ✓, test ✗. All 16 client test failures are one cause: 'ReferenceError: window is not defined' from apps/client/src/components/HostControlPanel/index.tsx:30-32, which calls resolveConfigSetupPrototypeVariant(window.location.search) at render. git blame attributes those lines to 9001a1f (the throwaway config-wizard lab). Reproduced identically on the canonical main checkout at 357302d with zero WN-3 changes applied, so this diff neither caused nor can conceal it. Not fixed here: the call site is production code but the regression is the lab's, WN-3's scope is the lint burn-down, and the ticket explicitly carved ConfigSetupPrototype out rather than touching it. Ticket stays in-progress; no handoff, no attestation. Needs a human call: fold a typeof-window guard into WN-3, or mint a follow-up (blocks every ticket's verify gate until fixed).
+- 2026-08-07T01:34:06.031Z Un-halted: the verify Stop-hook is non-bypassable and fires at the canonical checkout too, so parking WN-3 was not actually available — main stays unlandable until this is fixed. Folded in the minimal fix, flagged here as out of the ticket's stated scope for qa to grade. Root cause was TWO crashes in HostControlPanel/index.tsx, the second masked by the first: window.location.search (no DOM under tsx --test) and import.meta.env.DEV (no Vite). Fix guards the call site — the lab is only consulted when a window exists — so zero lines of ConfigSetupPrototype/ are touched (no conflict with WN-11, which deletes the guard along with the lab). The 16 pre-existing HostControlPanel test failures are the regression coverage: red before this line, green after. work verify now passes all 3 steps INCLUDING lint, which is the manifest re-key working.
 
 ## Evidence
 _pending_

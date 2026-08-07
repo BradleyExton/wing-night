@@ -139,6 +139,13 @@ export const hostCopy = {
   teamSetupTitle: "Team Setup",
   teamSetupDescription:
     "Preset teams load here, and you can still add teams and map players before moving the game forward.",
+  // The setup headline and assignment summary interleave copy with styled <span>s around
+  // the live counts, so each run of text is its own key rather than one interpolated string.
+  setupHeadlineLead: "Build the",
+  setupHeadlineAccent: "lineup.",
+  setupAssignedOfLabel: " of ",
+  setupPlayersAssignedLabel: " players assigned. ",
+  setupUnassignedRemainderLabel: " still need a home.",
   teamNameInputLabel: "Team Name",
   teamNameInputPlaceholder: "Enter a team name",
   createTeamButtonLabel: "Create Team",
@@ -150,6 +157,10 @@ export const hostCopy = {
   teamsSectionTitle: "Teams",
   eatingParticipationDescription:
     "Mark each player who finished their wing this round.",
+  eatingCompletionCountLabel: (
+    completedCount: number,
+    totalCount: number
+  ): string => `${completedCount} / ${totalCount}`,
   timerSectionTitle: "Timer Controls",
   timerRunningLabel: "Running",
   timerPausedLabel: "Paused",

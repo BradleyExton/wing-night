@@ -40,7 +40,10 @@ export const EatingStageBody = ({
                 {displayBoardCopy.roundChipLabel(currentRoundConfig.round)}
               </span>
               <span>
-                {currentRoundConfig.label} · {currentRoundConfig.sauce}
+                {displayBoardCopy.roundLabelSauceSummary(
+                  currentRoundConfig.label,
+                  currentRoundConfig.sauce
+                )}
               </span>
             </>
           )}
@@ -65,7 +68,7 @@ export const EatingStageBody = ({
       <div className={styles.heatTrack}>
         <div
           className={styles.heatFill}
-          style={{ width: `${heatFillPercent}%` }}
+          ref={styles.applyHeatFillWidth(heatFillPercent)}
           aria-hidden
         />
       </div>

@@ -12,6 +12,7 @@ export const setupStageCopy = {
   formatMinigame: (minigame: string): string => minigame,
   minigameArrow: "→",
   placeholderRoundLabel: "Open Slot",
+  placeholderRoundSeparator: ":",
   placeholderRoundDash: "—",
   placeholderRoundNumber: (round: number): string =>
     `Round ${String(round).padStart(2, "0")}`,

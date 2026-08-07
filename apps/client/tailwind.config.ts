@@ -14,6 +14,11 @@ const config: Config = {
         surfaceAlt: "#242424",
         text: "#ffffff",
         muted: "#a3a3a3",
+        // Warm-neutral counterparts to `muted`, for label text sitting on the flame-lit
+        // stage surfaces where a cool grey reads as wrong against the orange ambient.
+        mutedWarm: "#b3a89a",
+        mutedWarmDim: "#6b6157",
+        ember: "#ffb35a",
         primary: "#f97316",
         heat: "#ef4444",
         success: "#22c55e",

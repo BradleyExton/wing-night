@@ -55,7 +55,9 @@ export const TurnResultsStageBody = ({
         </span>
       )}
       <p className={`${styles.beatBase} ${styles.beatDelay4} ${styles.next}`}>
-        <span className={styles.nextArrow}>→</span>
+        <span className={styles.nextArrow}>
+          {turnResultsStageCopy.nextArrowGlyph}
+        </span>
         {nextLineText}
       </p>
     </div>

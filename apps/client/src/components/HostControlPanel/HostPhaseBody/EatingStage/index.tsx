@@ -63,7 +63,10 @@ export const EatingStage = (): JSX.Element => {
           {hostControlPanelCopy.timerValue(remainingSeconds)}
         </p>
         <div className={styles.heatTrack}>
-          <div className={styles.heatTrackFill} style={{ width: `${heatPercent}%` }} />
+          <div
+            className={styles.heatTrackFill}
+            ref={styles.applyHeatTrackFillWidth(heatPercent)}
+          />
         </div>
         <p className={styles.timerCap}>
           {hostControlPanelCopy.eatingParticipationDescription}

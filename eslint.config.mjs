@@ -8,6 +8,12 @@ export default [
   {
     ignores: [
       "**/node_modules/**",
+      // Agent worktrees are transient checkouts of this repo; linting them would let
+      // stale copies of already-fixed files redden the gate.
+      ".claude/**",
+      // Throwaway config-wizard variant lab (dev-gated, never shipped). WN-11 ports the
+      // picked variant into prod, then deletes both the folder and this entry.
+      "apps/client/src/components/HostControlPanel/ConfigSetupPrototype/**",
       "**/dist/**",
       "**/coverage/**",
       "**/.cache/**",

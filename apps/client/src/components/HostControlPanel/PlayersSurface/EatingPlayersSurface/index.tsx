@@ -27,11 +27,14 @@ export const EatingPlayersSurface = ({
   }, 0);
 
   return (
-    <section className={styles.group}>
+    <>
       <div className={styles.groupHead}>
         <span>{hostControlPanelCopy.playersSectionTitle}</span>
         <span className={styles.groupCount}>
-          {completedCount} / {visiblePlayers.length}
+          {hostControlPanelCopy.eatingCompletionCountLabel(
+            completedCount,
+            visiblePlayers.length
+          )}
         </span>
       </div>
 
@@ -78,6 +81,6 @@ export const EatingPlayersSurface = ({
           </button>
         );
       })}
-    </section>
+    </>
   );
 };

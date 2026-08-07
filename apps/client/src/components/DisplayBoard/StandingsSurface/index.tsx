@@ -25,12 +25,11 @@ export const StandingsSurface = ({
     );
   }
 
-  const gridStyle = {
-    gridTemplateColumns: `repeat(${standings.length}, minmax(0, 1fr))`
-  } as const;
-
   return (
-    <footer className={styles.footer} style={gridStyle}>
+    <footer
+      className={styles.footer}
+      ref={styles.applyFooterColumns(standings.length)}
+    >
       {standings.map((team, index) => {
         const topScore = standings[0]?.totalScore ?? null;
         // At FINAL_RESULTS every team tied at the top score is a winner —

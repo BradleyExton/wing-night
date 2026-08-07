@@ -27,9 +27,13 @@ const EMPTY_TEAMS: RoomState["teams"] = [];
 
 export const HostControlPanel = (): JSX.Element => {
   useHostWakeLock();
-  const configSetupPrototypeVariant = resolveConfigSetupPrototypeVariant(
-    window.location.search
-  );
+  // This panel also renders without a DOM (the unit tests render it to a string), where
+  // neither `window` nor Vite's `import.meta.env` exists — so the lab is only consulted in
+  // a browser. Goes away with the lab itself in WN-11.
+  const configSetupPrototypeVariant =
+    typeof window === "undefined"
+      ? null
+      : resolveConfigSetupPrototypeVariant(window.location.search);
   const roomState = useHostRoomState();
   const handlers = useHostHandlers();
   const [isOverrideDockOpen, setIsOverrideDockOpen] = useState(false);

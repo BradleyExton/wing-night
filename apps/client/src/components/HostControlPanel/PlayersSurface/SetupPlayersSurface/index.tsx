@@ -41,7 +41,7 @@ export const SetupPlayersSurface = ({
   };
 
   return (
-    <section className={styles.group}>
+    <>
       <div className={styles.groupHead}>
         <span>{hostControlPanelCopy.playersSectionTitle}</span>
         <span className={styles.groupCount}>{players.length}</span>
@@ -114,6 +114,6 @@ export const SetupPlayersSurface = ({
           {hostControlPanelCopy.addPlayerButtonLabel}
         </button>
       </form>
-    </section>
+    </>
   );
 };
