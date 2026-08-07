@@ -61,6 +61,8 @@ precedent; `App.tsx:46` bare `window.location.pathname`.
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-07T15:38:55.387Z gate1: pass (product-owner, attempt 1, confidence high). 3 minors + 4 infos, no blocker/major. Minors worth carrying into the build: (1) WN-16 already landed the generic /dev/lab/<name> route — AC 1's reuse branch fires, so route work is one dispatch branch in App.tsx next to ANAMORPH_LAB_NAME, not a new route; (2) the WN-17 integrator has NO success/failure predicate (types.ts models bodies/segments/gravity/keyframes only), so the harness must define its own lab-local outcome check for the readability + one-shot-vs-best-of-N questions — lab-local, not a fork of the integrator; (3) the piece-set question is the likely overrun — prefer a preset-palette switcher over 2-3 prebuilt Layouts to a full placement editor. Infos: line-citation drift from WN-16 landing (App.tsx:38 -> :47, App.tsx:46 -> :59, eslint.config.mjs:113-146 -> :126-150); eslint.config.mjs:17-22 is now an exact AnamorphLab precedent for the AC 4 carve-out; AnamorphLab/index.test.tsx is a working precedent for the AC 5 bare-window import test.
+- 2026-08-07T15:38:58.416Z prototype: skipped (not in plan) — needs_prototype is false; work ship-plan WN-18 --json emits select/gate1/implement/test/qa/browser/gate2/land with no prototype phase.
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
