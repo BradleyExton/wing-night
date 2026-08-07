@@ -58,6 +58,8 @@ Pre-verified 2026-08-07: `sampleDraft.ts:8-15` (drawing modelled as a count),
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-07T17:37:04.447Z gate1: PASS (product-owner, confidence high) — well-formed, machine-checkable finish (lint+typecheck+test+e2e), premises verified against the landed WN-11 code. Four minors carried to the implementer: (1) the biggest unnamed piece of work is generalizing useConfigWizard from single-file to a multi-file draft — GAME_CONFIG_KEY at useConfigWizard/index.ts:23, draft state, toFileScopedIssues, isDirty and the apply files[] are all scoped to one key today; (2) AC-3's open question resolves to 'no bare config:save caller' — the wizard emits only CONFIG_APPLY (useConfigWizard/index.ts:169-179); (3) AC-5's content-root override already exists suite-wide (playwright.config.ts:32,46) and admin-config-wizard.spec.ts:12-13,125 already pins/restores SETUP — do not re-plumb it; (4) the Plan's line anchors drifted: the typeof-window guard is HostControlPanel/index.tsx:34-37, the lab dispatch :88-90, the import opens at :5 — sampleDraft.ts:8-15 and eslint.config.mjs:13,16 are exact as claimed. Watch the 260-line cap on components/**/index.tsx (wizard entry is at 185) and wingnight/no-hardcoded-component-jsx-text (new step copy goes in copy/admin.ts).
+- 2026-08-07T17:37:07.716Z prototype: skipped (not in plan) — needs_prototype is false; `work ship-plan WN-19 --json` emits select→gate1→implement→test→qa→browser→gate2→land with no prototype phase.
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
