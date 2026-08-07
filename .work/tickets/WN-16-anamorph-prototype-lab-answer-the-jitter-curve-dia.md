@@ -1,13 +1,15 @@
 ---
 id: WN-16
 title: "ANAMORPH prototype lab: answer the jitter/curve/dial questions in a throwaway dev-route lab"
-status: in-review
+status: done
 kind: spike
 priority: medium
 created: 2026-08-07
 deps: []
 blocked_by: []
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-16"
+landed_range: 42043fb822ab29f254cb85aa386ea0794d0df181..d3e79209c05ae0ddcfd7623d6772d5f6308f7a91
+review: pending
 ---
 
 ## Goal
@@ -91,6 +93,7 @@ registry import that rules that route out.
 - 2026-08-07T15:04:04.264Z browser-verify: skipped (non-UI) — WN-16 is kind: spike, not kind: ui, so the O-6 routing predicate skips the browser phase. Recorded before the handoff so the landed tree matches the attested tree. Worth noting the skip is a routing outcome, not a coverage gap here: a browser drive was performed anyway during implementation because the deliverable is a visual instrument, and it caught two defects no test would have (grain-vs-shape at 2600 points, and the full-width tablet-preview card). Screenshots and the zero-console-error result are in Evidence.
 - 2026-08-07T15:04:04.373Z qa-reviewer PASS (fresh context, opus, confidence high) at sha 6ba8309 — recorded to .work/verdicts/WN-16.qa.json. The reviewer was explicitly pointed at the two test rewrites that have a reward-hack shape (I changed tests, not source, when two initially failed) and told to distrust my claim about the window guard. Both cleared on independently reproduced evidence, not on my say-so. On the metric swap it went further than I did: it measured the OLD silhouetteError at 60deg off with jitter forced to ZERO and got 0.3188 (parallel) / 0.3246 (eyeRay), both far above the old '> 0.1' threshold — proving the original assertion passed with the jitter feature entirely disabled, i.e. the metric I replaced was measuring foreshortening and could not have failed. It also re-ran the bare-window injection itself (ReferenceError, 1 test, 0 pass, 1 fail) and mutation-tested the math core: snap exponent 0.4->1 kills 1 test, dropped perspective divide kills 1, flipped world->camera yaw inverse kills 4, disabled jitter kills 5, trueAngle drawn after the points kills 1, flipped eyeRay depth sign kills 2 — every mutation caught. It independently confirmed AC#2 (no packages/minigames, no MINIGAME_DEFINITIONS, no registry touched), and confirmed the eslint carve-out hides nothing outside the lab by deleting the entry and re-running eslint (5 errors, all inside AnamorphLab, zero elsewhere) and that the ignore does not stop the lab's tests running (219/219 in the client suite, naming the lab test). Findings are advisory-only and ride to post-merge review per the Rubric B contract — NOT iterated on here: (1) resolvesAntipodally is an exported predicate with no production call-site, fails the deletion test; (2) the lab render test asserts ~13 copy literals instead of the copy.ts constants; (3) one 'and' title in the math suite; (4) shouldCreateRoomSocket's exhaustive union test was not extended with a DEV_LAB case (behaviour correct by allowlist construction, but unpinned); (5) info: the zero-jitter affine test is near-tautological and killed no mutation — the exactness claim is carried by the four silhouetteError < 1e-9 resolve tests, which do die; (6) info: anamorphCloud/index.ts is 287 lines — reviewer explicitly recommends NOT splitting throwaway code, flagged for WN-14; (7) info: the carve-out is wider than needed — with it removed the lab yields only 5 mechanical errors, and the hardcoded-JSX-text and inline-style-prop errors the ticket predicted did NOT occur, so WN-14's port is cheaper than the ticket implies.
 - 2026-08-07T15:05:13.854Z handed off → in-review (verify green); awaiting land
+- 2026-08-07T15:06:39.401Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 ### Delete targets for WN-14 (AC#8)
