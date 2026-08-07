@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-11
 title: "Pre-flight config wizard on /admin (port Variant C, wire to config:* events, delete lab)"
-status: in-review
+status: done
 kind: feature
 priority: medium
 created: 2026-08-05
@@ -19,6 +19,8 @@ blocked_by: []           # list<string>; external/manual waits (free text); non-
 # worktree:              # set by work-on on claim (collision guard); default null
 # parallel_safe:         # RESERVED for F-8 (post-MVP) — do not set
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-11"
+landed_range: 15d5282735a206983777ede88b4fa0403da60f2a..fb6d7a0bb946c971e385fdce5fb5fde5f4042253
+review: pending
 ---
 
 ## Goal
@@ -106,6 +108,7 @@ with its dispatch at `HostControlPanel/index.tsx:87-89`; the eslint carve-out is
 - 2026-08-07T17:23:37.088Z handed off → in-review (verify green); awaiting land
 - 2026-08-07T17:27:35.279Z Handoff round 1 captured a RED last-AC check and it is NOT a test failure — recording the diagnosis rather than quietly re-running until it went green. Output was 'server:startupFailed Error: listen EADDRINUSE: address already in use :::3100' before a single spec ran. Diagnosed rather than assumed: lsof -nP -i :3100 shows PID 82379, command 'next-server (v16.1.1)', started 13:26 today, and curl http://127.0.0.1:3100/health returns 404 serving a Next.js HTML document. That is a FOREIGN process — another project on this machine — not a leaked wing-night server, so killing it was never on the table. Note this is exactly the hazard WN-5 exists to prevent, arriving from the other direction: WN-5 pinned 3100/5273 so a gate run could never silently verify a foreign dev server's code, and the pin did its job here by failing LOUDLY on the collision instead of reusing the squatter (CI=1 disables reuseExistingServer). The manifest's own comment anticipates this: '3100/5273 were picked clear of 3000/3001/5173/5174; change them freely if they ever collide.' Re-running the last-AC check on WN_E2E_SERVER_PORT=3111 (5273 is still free but moving both keeps the pair legible), which satisfies AC 9's intent exactly — the point of the pin is that the suite boots its OWN stack, not that the number is literally 3100. Flagging for follow-up that the manifest's 3100 pin is now contested on this machine; that is a manifest edit, not something this ticket is chartered to make.
 - 2026-08-07T17:27:41.065Z re-attested at in-review (verify + qa re-run green) for 62f68778
+- 2026-08-07T17:29:31.480Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
