@@ -24,4 +24,4 @@ src_globs:
   - "tests/e2e/**/*.ts"
   - "tools/**/*.ts"                        # verify hooks (verify-stop, push-gate)
   - "tools/**/*.mjs"                       # eslint-plugin-wingnight + import-geo-photos
-rules: [code-design, testing]
+rules: [code-design, testing, verification]
