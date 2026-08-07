@@ -1,6 +1,14 @@
-export type ClientRoute = "ROOT" | "HOST" | "DISPLAY" | "DEV_MINIGAME" | "NOT_FOUND";
+export type ClientRoute =
+  | "ROOT"
+  | "HOST"
+  | "DISPLAY"
+  | "DEV_MINIGAME"
+  | "DEV_LAB"
+  | "NOT_FOUND";
 
 const DEV_MINIGAME_ROUTE_PREFIX = "/dev/minigame/";
+
+const DEV_LAB_ROUTE_PREFIX = "/dev/lab/";
 
 const normalizePathname = (pathname: string): string => {
   if (pathname.length > 1 && pathname.endsWith("/")) {
@@ -29,24 +37,35 @@ export const resolveClientRoute = (pathname: string): ClientRoute => {
     return "DEV_MINIGAME";
   }
 
+  if (resolveDevLabName(normalizedPathname) !== null) {
+    return "DEV_LAB";
+  }
+
   return "NOT_FOUND";
 };
 
-export const resolveDevMinigameSlug = (pathname: string): string | null => {
+// Both dev routes address a single lowercase segment under a fixed prefix, and
+// reject the bare prefix and any deeper path.
+const resolvePrefixedSegment = (pathname: string, prefix: string): string | null => {
   const normalizedPathname = normalizePathname(pathname);
 
-  if (!normalizedPathname.startsWith(DEV_MINIGAME_ROUTE_PREFIX)) {
+  if (!normalizedPathname.startsWith(prefix)) {
     return null;
   }
 
-  const slug = normalizedPathname
-    .slice(DEV_MINIGAME_ROUTE_PREFIX.length)
-    .trim()
-    .toLowerCase();
+  const segment = normalizedPathname.slice(prefix.length).trim().toLowerCase();
 
-  if (slug.length === 0 || slug.includes("/")) {
+  if (segment.length === 0 || segment.includes("/")) {
     return null;
   }
 
-  return slug;
+  return segment;
+};
+
+export const resolveDevMinigameSlug = (pathname: string): string | null => {
+  return resolvePrefixedSegment(pathname, DEV_MINIGAME_ROUTE_PREFIX);
+};
+
+export const resolveDevLabName = (pathname: string): string | null => {
+  return resolvePrefixedSegment(pathname, DEV_LAB_ROUTE_PREFIX);
 };

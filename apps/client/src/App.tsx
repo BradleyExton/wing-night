@@ -4,6 +4,7 @@ import {
 } from "@wingnight/shared";
 import { useEffect, useMemo, useState } from "react";
 
+import { AnamorphLab } from "./components/AnamorphLab";
 import { DisplayBoard } from "./components/DisplayBoard";
 import { HostControlPanel } from "./components/HostControlPanel";
 import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
@@ -15,13 +16,21 @@ import { createRoomSocket } from "./socket/createRoomSocket";
 import { shouldCreateRoomSocket } from "./socket/shouldCreateRoomSocket";
 import { saveHostSecret } from "./utils/hostSecretStorage";
 import { createHostRequestHandlers } from "./utils/hostRequests";
-import { resolveClientRoute, resolveDevMinigameSlug } from "./utils/resolveClientRoute";
+import {
+  resolveClientRoute,
+  resolveDevLabName,
+  resolveDevMinigameSlug
+} from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 
+// Deleted by WN-14 along with the lab itself.
+const ANAMORPH_LAB_NAME = "anamorph";
+
 const resolveRouteContent = (
   route: ReturnType<typeof resolveClientRoute>,
-  devMinigameType: ReturnType<typeof resolveMinigameTypeFromSlug> | null
+  devMinigameType: ReturnType<typeof resolveMinigameTypeFromSlug> | null,
+  devLabName: string | null
 ): JSX.Element => {
   if (route === "HOST") {
     return <HostControlPanel />;
@@ -39,6 +48,10 @@ const resolveRouteContent = (
     return <MinigameDevSandbox minigameType={devMinigameType} />;
   }
 
+  if (route === "DEV_LAB" && devLabName === ANAMORPH_LAB_NAME) {
+    return <AnamorphLab />;
+  }
+
   return <RouteNotFound />;
 };
 
@@ -50,6 +63,7 @@ export const App = (): JSX.Element => {
   const devMinigameSlug = resolveDevMinigameSlug(pathname);
   const devMinigameType =
     devMinigameSlug === null ? null : resolveMinigameTypeFromSlug(devMinigameSlug);
+  const devLabName = resolveDevLabName(pathname);
   const roomSocket = useMemo(() => {
     if (!shouldCreateRoomSocket(route)) {
       return null;
@@ -95,7 +109,7 @@ export const App = (): JSX.Element => {
   return (
     <RoomStateProvider value={roomStateEnvelope}>
       <HostHandlersProvider value={hostHandlers}>
-        {resolveRouteContent(route, devMinigameType)}
+        {resolveRouteContent(route, devMinigameType, devLabName)}
       </HostHandlersProvider>
     </RoomStateProvider>
   );

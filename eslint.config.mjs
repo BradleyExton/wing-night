@@ -14,6 +14,12 @@ export default [
       // Throwaway config-wizard variant lab (dev-gated, never shipped). WN-11 ports the
       // picked variant into prod, then deletes both the folder and this entry.
       "apps/client/src/components/HostControlPanel/ConfigSetupPrototype/**",
+      // Throwaway ANAMORPH feel lab behind /dev/lab/anamorph. A four-knob control lab is
+      // hardcoded labels and runtime style values by construction, which the wingnight
+      // component rules rightly reject in shipped code. Scope carve-out only — no rule is
+      // disabled and there is no eslint-disable in the lab. WN-14 records the answers,
+      // then deletes both the folder and this entry.
+      "apps/client/src/components/AnamorphLab/**",
       "**/dist/**",
       "**/coverage/**",
       "**/.cache/**",
