@@ -1,11 +1,13 @@
 ---
 id: WN-3
 title: Burn down the 28 baseline lint errors; restore lint to the verify gate
-status: in-review
+status: done
 kind: chore
 priority: medium
 created: 2026-08-01
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-3"
+landed_range: 08c3e424094d37b8ea9b9b1d29d6dbad2d2ae4bf..0255b802fa47799206e417725262cb5fa54d0f19
+review: pending
 ---
 
 ## Goal
@@ -109,6 +111,7 @@ Routing: status ready → needs-planning; next: plan-work WN-3.
 - 2026-08-07T01:57:56.517Z handed off → in-review (verify green); awaiting land
 - 2026-08-07T01:58:26.353Z re-attested at in-review (verify + qa re-run green) for 35b25c1d
 - 2026-08-07T01:59:04.855Z prototype: skipped (not in plan) — carried over from the pre-claim canonical-checkout copy, which was the correct writer at the time (the note predates work claim). Recorded here so the worktree copy is the complete record before the ff-merge.
+- 2026-08-07T01:59:29.261Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 <!-- captured-evidence:start -->
