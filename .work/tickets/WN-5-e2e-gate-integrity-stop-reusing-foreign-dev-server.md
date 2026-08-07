@@ -1,13 +1,15 @@
 ---
 id: WN-5
 title: "E2E gate integrity: stop reusing foreign dev servers; make test_one honest from a clean checkout"
-status: in-review
+status: done
 kind: chore
 priority: medium
 created: 2026-08-04
 deps: []
 blocked_by: []
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-5"
+landed_range: 3e5525ddd7aa3ca1bc6d6dc91d9a297076180b19..eb43abc17b4f4d3cf2dd8e7e4a5ee518fd2df566
+review: pending
 ---
 
 ## Goal
@@ -80,6 +82,7 @@ Grill summary:
 - 2026-08-07T02:26:37.402Z re-attested at in-review (verify + qa re-run green) for e983d333
 - 2026-08-07T02:27:21.848Z carried over from the pre-claim canonical checkout — prototype: skipped (not in plan) [recorded 2026-08-07T02:07:43Z]
 - 2026-08-07T02:27:21.956Z carried over from the pre-claim canonical checkout [recorded 2026-08-07T02:07:50Z] — gate1: product-owner PASS (confidence high). Two MINOR findings the Plan omits — carry into implementation: (1) the server webServer block has NO env at all, so WN_E2E_SERVER_PORT would never reach the server process; the server reads process.env.PORT (apps/server/src/index.ts:17-18), so the block needs env: { PORT: String(serverPort) }. (2) the client dev command hardcodes the port as a string literal (--port 5173) separately from the clientPort const, so it must ALSO be interpolated — changing only baseURL would point Playwright at 5273 while Vite binds 5173. Also noted (info): work verify --test-one substitutes test_one into the test slot, so pinning CI=1 there flips retries 0->1 and the reporter to github+html for every single-spec gate run.
+- 2026-08-07T02:28:02.379Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
