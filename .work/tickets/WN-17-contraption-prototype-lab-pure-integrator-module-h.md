@@ -67,11 +67,14 @@ module does not touch them.
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-07T15:12:11.161Z gate1: pass (attempt 2, --supersede). The verdict on disk graded the pre-split combined ticket (needs-changes, 3 majors); plan-work had already re-planned it into WN-17 headless + WN-18 harness, so the critic was re-invoked on the current ticket rather than the ticket being demoted again. Prior grade stays in .work/verdicts/journal.jsonl. New verdict: pass, confidence high, findings all minor/info (packages/shared entry re-export needed by WN-18; transcendental scan should cover all module files and exclude its own; measurement code has no stated home in-tree).
+- 2026-08-07T15:12:11.270Z prototype: skipped (not in plan)
 - 2026-08-07T15:12:31.390Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night-WN-17
 - 2026-08-07T15:21:12.447Z Built packages/shared/src/contraption/: types.ts, simulate/ (position-Verlet, xorshift32 seed jitter, keyframe emission) + simulate/resolveSegmentContacts/ (circle-vs-static-segment, restitution + slip), measureTrackBytes/, benchmarkLayout/ (6 bodies, 7 segments), and the module entry re-exporting under Contraption* names from packages/shared/src/index.ts (so WN-18 can import from the package's single '.' export — the gate1 minor). 24 colocated tests pass. The transcendental scan proved non-vacuous on first run: it caught 'Math.random' written in a doc comment in simulate/index.ts, which I reworded rather than narrowing the scan.
 - 2026-08-07T15:30:06.077Z qa: pass (qa-reviewer, sha a2920ee, confidence high) — recorded to .work/verdicts/WN-17.qa.json. Reviewer independently re-derived all six byte figures with its own script (Buffer.byteLength instead of TextEncoder) and got an exact match, and proved the transcendental scan non-vacuous by adding Math.pow to a nested source file in a /tmp copy and observing the red. Four advisory findings ride into evidence, none blocking: (1) Evidence still placeholder at the graded sha — written by this handoff; (2) one test title contains 'and' (testing.md one-behaviour rule); (3) the source-text regex cannot see computed/destructured Math access or a helper imported from outside the module — a recorded limit, not a present defect; (4) the sub-unit jitter assertion bounds at 0.01 vs the 0.0005 constant. Per work-on step 7 minors are not loop fodder and were not iterated on.
 - 2026-08-07T15:30:06.192Z browser-verify: skipped (non-UI)
 - 2026-08-07T15:30:34.587Z handed off → in-review (verify green); awaiting land
+- 2026-08-07T15:31:18.164Z re-attested at in-review (verify + qa re-run green) for fd257edd
 
 ## Evidence
 ### Keyframe byte measurement — the number WN-15 is waiting on
@@ -181,7 +184,7 @@ WN-18).
 - **info** — The 'sub-unit jitter' assertion uses a bound ~20x looser than the constant it guards: `JITTER_UNITS` is 0.0005 (so max displacement is 0.0005 per axis) but the test asserts `< 0.01`. It still fails if jitter ever grows past a hundredth of a unit, so it is not a weakened assertion — just a loose one relative to the invariant it names.
     evidence: packages/shared/src/contraption/simulate/index.ts:12 `JITTER_UNITS = 0.0005`; simulate/index.test.ts:63-64 `assert.ok(Math.abs(point.x - origin.x) < 0.01)`.
 
-_Captured 2026-08-07T15:30:34.587Z._
+_Captured 2026-08-07T15:31:18.164Z._
 <!-- captured-evidence:end -->
 
 ## Links
