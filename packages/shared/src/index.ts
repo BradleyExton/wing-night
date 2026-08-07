@@ -111,6 +111,20 @@ export type {
   TriviaContentFile,
   TriviaPrompt
 } from "./content/trivia/index.js";
+export {
+  CONFIG_ACTIONS,
+  CONFIG_ERROR_CODES,
+  CONFIG_FILE_KEYS,
+  isConfigFileKey
+} from "./config/index.js";
+export type {
+  ConfigAction,
+  ConfigContentSnapshot,
+  ConfigErrorCode,
+  ConfigFileEdit,
+  ConfigFileKey,
+  ConfigResultPayload
+} from "./config/index.js";
 export { CLIENT_ROLES, isSocketClientRole } from "./socketClientRole/index.js";
 export type { SocketClientRole } from "./socketClientRole/index.js";
 export {
@@ -122,6 +136,9 @@ export {
 export type {
   ClientToServerEventName,
   ClientToServerEvents,
+  ConfigApplyPayload,
+  ConfigReadPayload,
+  ConfigSavePayload,
   GenericMinigameActionPayload,
   GameReorderTurnOrderPayload,
   HostSecretPayload,

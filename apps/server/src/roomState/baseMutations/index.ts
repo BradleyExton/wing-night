@@ -131,6 +131,21 @@ export const setRoomStateFatalError = (message: string): RoomState => {
   return getRoomStateSnapshot();
 };
 
+// The inverse of `setRoomStateFatalError`, and deliberately NOT its mirror
+// image: that one resets the whole room before flagging the error, which is
+// right when content is broken at boot but wrong here. A successful reload has
+// just re-seeded live room state, so clearing the flag must touch the flag and
+// nothing else — otherwise repairing bad content would discard the rosters the
+// host entered while the server sat in its fatal state, and repairing bad
+// content is the entire point of the config surface.
+export const clearRoomStateFatalError = (): RoomState => {
+  const roomState = getRoomState();
+
+  roomState.fatalError = null;
+
+  return getRoomStateSnapshot();
+};
+
 export const setRoomStatePlayers = (players: Player[]): RoomState => {
   const roomState = getRoomState();
   const nextPlayers = structuredClone(players);

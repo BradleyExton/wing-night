@@ -1,13 +1,13 @@
 import {
   isGameConfigFile,
-  MINIGAME_DEFINITIONS,
-  MINIGAME_TYPES,
   validateGameConfigFile,
-  type GameConfigFile,
-  type MinigameType
+  type GameConfigFile
 } from "@wingnight/shared";
 
-import { resolveMinigameRuntimePlugin } from "../../minigames/registry/index.js";
+import {
+  isRulesValidForKey,
+  MINIGAME_TYPE_BY_RULES_KEY
+} from "../../minigames/rulesValidation/index.js";
 import {
   parseContentJson,
   resolveDefaultContentRootDir
@@ -21,43 +21,6 @@ type LoadGameConfigOptions = {
 const defaultContentRootDir = resolveDefaultContentRootDir(import.meta.url);
 
 const MINIGAME_RULES_ISSUE_PREFIX = "minigameRules.";
-
-// Inverse of the shared registry's rulesKey mapping. The shared validator
-// reports a rules failure at `minigameRules.<rulesKey>`; the fail-fast message
-// below names the minigame, so we have to get back from one to the other.
-const MINIGAME_TYPE_BY_RULES_KEY: Readonly<Record<string, MinigameType>> =
-  Object.freeze(
-    MINIGAME_TYPES.reduce<Record<string, MinigameType>>(
-      (typeByRulesKey, minigameType) => {
-        const { rulesKey } = MINIGAME_DEFINITIONS[minigameType];
-
-        if (rulesKey !== null) {
-          typeByRulesKey[rulesKey] = minigameType;
-        }
-
-        return typeByRulesKey;
-      },
-      {}
-    )
-  );
-
-// Per-game rules schemas are owned by each runtime plugin. `packages/shared`
-// cannot resolve a plugin (it has no dependencies, and the minigame packages
-// depend on IT), so the server supplies this as the validator's rules seam —
-// one implementation of the rule, injected from the side that can see plugins.
-const isRulesValidForKey = (rulesKey: string, rules: unknown): boolean => {
-  const minigameType = MINIGAME_TYPE_BY_RULES_KEY[rulesKey];
-
-  if (minigameType === undefined) {
-    return true;
-  }
-
-  const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
-
-  return (
-    runtimePlugin.isRules === undefined || runtimePlugin.isRules(rules)
-  );
-};
 
 // Keeps the fail-fast contract: invalid content blocks start at load time.
 const assertMinigameRulesAreValid = (

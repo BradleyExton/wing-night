@@ -1,6 +1,8 @@
 import {
+  isConfigFileKey,
   MINIGAME_API_VERSION,
   TIMER_EXTEND_MAX_SECONDS,
+  type ConfigSavePayload,
   type GameReorderTurnOrderPayload,
   type HostSecretPayload,
   type MinigameActionEnvelope,
@@ -90,6 +92,21 @@ export const isMinigameActionEnvelope = (
     minigameApiVersion: (value) => value === MINIGAME_API_VERSION,
     actionType: isString,
     actionPayload: isPresent
+  });
+
+// Only the envelope is checked here — each file's `value` stays `unknown` on
+// purpose, because the shared content validators own that judgement and their
+// `ValidationIssue[]` is what the wizard maps back to its fields. A guard that
+// rejected the payload wholesale would collapse those issues into silence.
+const isConfigFileEdit = (value: unknown): boolean =>
+  hasShape(value, { key: (key) => isConfigFileKey(key), value: isPresent });
+
+export const isConfigSavePayload = (
+  payload: unknown
+): payload is ConfigSavePayload =>
+  hasShape(payload, {
+    hostSecret: isString,
+    files: (value) => Array.isArray(value) && value.every(isConfigFileEdit)
   });
 
 export const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload =>

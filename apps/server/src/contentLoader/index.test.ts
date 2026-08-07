@@ -4,45 +4,12 @@ import test from "node:test";
 import { loadContent } from "./index.js";
 import {
   createContentRoot,
+  createValidDrawingJson as createValidDrawing,
   createValidGameConfigJson,
+  createValidGeoJson as createValidGeo,
+  createValidTriviaJson as createValidTrivia,
   writeContentFile
 } from "./testHarness.js";
-
-const createValidTrivia = (prefix: string): string => {
-  return JSON.stringify({
-    prompts: [
-      {
-        id: `${prefix.toLowerCase()}-1`,
-        question: `${prefix} question 1?`,
-        answer: `${prefix} answer 1`
-      }
-    ]
-  });
-};
-
-const createValidGeo = (prefix: string): string => {
-  return JSON.stringify({
-    prompts: [
-      {
-        id: `${prefix.toLowerCase()}-geo-1`,
-        title: `${prefix} Landmark`,
-        imageSrc: `/sample-assets/geo/${prefix.toLowerCase()}.svg`,
-        answer: { lat: 48.85837, lng: 2.294481 }
-      }
-    ]
-  });
-};
-
-const createValidDrawing = (prefix: string): string => {
-  return JSON.stringify({
-    prompts: [
-      {
-        id: `${prefix.toLowerCase()}-drawing-1`,
-        prompt: `${prefix} Doodle`
-      }
-    ]
-  });
-};
 
 test("loads all content from local files when available", () => {
   const contentRoot = createContentRoot();

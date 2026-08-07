@@ -1,6 +1,7 @@
 export { createInitialRoomState } from "./createInitialRoomState/index.js";
 
 export {
+  clearRoomStateFatalError,
   getRoomStateSnapshot,
   resetRoomState,
   resetGameToSetup,
@@ -38,4 +39,8 @@ export {
   advanceRoomStatePhase
 } from "./phaseMutations/index.js";
 
-export { applyRoomStateMutation } from "./mutationResult/index.js";
+export {
+  applyRoomStateMutation,
+  reportRoomStateMutation
+} from "./mutationResult/index.js";
+export type { RoomStateMutationResult } from "./mutationResult/index.js";

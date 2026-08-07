@@ -1,5 +1,9 @@
 import type { MinigameApiVersion, MinigameType } from "../content/gameConfig/index.js";
 import type {
+  ConfigFileEdit,
+  ConfigResultPayload
+} from "../config/index.js";
+import type {
   RoleScopedStateSnapshotEnvelope
 } from "../roomState/index.js";
 
@@ -41,6 +45,13 @@ export type TimerExtendPayload = HostSecretPayload &
   Record<"additionalSeconds", number>;
 export const TIMER_EXTEND_MAX_SECONDS = 600;
 
+// `config:read` needs no argument beyond authorization; save and apply carry
+// the edited files. Apply is save-then-reload, so it takes the same `files`.
+export type ConfigReadPayload = HostSecretPayload;
+export type ConfigSavePayload = HostSecretPayload &
+  Record<"files", ConfigFileEdit[]>;
+export type ConfigApplyPayload = ConfigSavePayload;
+
 export const CLIENT_TO_SERVER_EVENTS = {
   REQUEST_STATE: "client:requestState",
   CLAIM_CONTROL: "host:claimControl",
@@ -58,13 +69,17 @@ export const CLIENT_TO_SERVER_EVENTS = {
   MINIGAME_ACTION: "minigame:action",
   TIMER_PAUSE: "timer:pause",
   TIMER_RESUME: "timer:resume",
-  TIMER_EXTEND: "timer:extend"
+  TIMER_EXTEND: "timer:extend",
+  CONFIG_READ: "config:read",
+  CONFIG_SAVE: "config:save",
+  CONFIG_APPLY: "config:apply"
 } as const;
 
 export const SERVER_TO_CLIENT_EVENTS = {
   STATE_SNAPSHOT: "server:stateSnapshot",
   SECRET_ISSUED: "host:secretIssued",
-  SECRET_INVALID: "host:secretInvalid"
+  SECRET_INVALID: "host:secretInvalid",
+  CONFIG_RESULT: "config:result"
 } as const;
 
 export type ClientToServerEventName =
@@ -109,6 +124,9 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_RESUME]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND]: (payload: TimerExtendPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.CONFIG_READ]: (payload: ConfigReadPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.CONFIG_SAVE]: (payload: ConfigSavePayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.CONFIG_APPLY]: (payload: ConfigApplyPayload) => void;
 };
 
 export type ServerToClientEvents = {
@@ -117,4 +135,7 @@ export type ServerToClientEvents = {
   ) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED]: (payload: HostSecretPayload) => void;
   [SERVER_TO_CLIENT_EVENTS.SECRET_INVALID]: () => void;
+  [SERVER_TO_CLIENT_EVENTS.CONFIG_RESULT]: (
+    payload: ConfigResultPayload
+  ) => void;
 };
