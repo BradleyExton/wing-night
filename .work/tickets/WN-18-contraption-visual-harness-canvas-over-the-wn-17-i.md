@@ -67,6 +67,8 @@ precedent; `App.tsx:46` bare `window.location.pathname`.
 - 2026-08-07T15:40:33.531Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night-WN-18
 - 2026-08-07T15:43:17.008Z claimed + worktree /Users/bradleyexton/Projects/wing-night-WN-18 (branch WN-18-contraption-visual-harness), deps installed. Built runOutcome/ first — the lab-local success predicate gate1 minor 2 said the harness would have to define (the WN-17 integrator models bodies/segments/gravity/keyframes and deliberately has no goal, since scoring is the WN-15 reducer's business). It is lab-local, NOT a fork: reason codes landed|short|long|perched|restless, plus settleSeconds (the sim-length signal) and missX. 13 colocated tests green, every case driving the REAL simulateContraption rather than a hand-written track.
 - 2026-08-07T15:51:04.114Z pieceSets/ built + 10 tests green. Three nested solved routes (2/4/6 placed ramps on a shared frame) plus the WN-17 benchmark as control; each authored set is asserted to LAND and settle inside WN-15's 4s window (2.13s / 1.40s / 1.37s). Geometry was found by search against the real integrator, requiring the wing to touch EVERY piece — an untouched piece is scenery, not a route step. Three integrator findings fell out of the tuning and are recorded for WN-15: (1) the seed is functionally inert — 5 seeds of one layout differ only in the 5th decimal after 6s, so best-of-N cannot mean re-rolling a seed, it has to mean the team rebuilds; (2) slip is applied per integration STEP not per impact, so a body resting on a shallow ramp has tangential velocity multiplied by slip 240x/sec and creeps instead of sliding — a shelved wing takes 32s to reach the floor, nowhere near watchable, which is why every preset is free-fall-dominant deflectors; (3) routes are sensitive to sub-0.1-unit nudges — rounding a verified 6-piece route's coords to 1dp flipped it from landed to restless, which matters for WN-15's authored-levels plan.
+- 2026-08-07T16:14:46.170Z browser-verify: skipped (non-UI) — ticket kind is 'spike', not 'ui', so readBrowserOutcome routes to skip. Note recorded BEFORE the handoff per O-6. A Chromium drive was nonetheless run as evidence, because renderToStaticMarkup never executes the draw effect and nothing else in this diff proves the canvas paints: 7223 non-background pixels sampled via getImageData, zero pageerror/console-error, and both readings of the best-of-N control exercised live. Recorded in ## Evidence.
+- 2026-08-07T16:14:53.649Z qa: pass (qa-reviewer, attempt 1, confidence high, sha b7a4ae3). 5 minors + 2 infos, no blocker/major. The reviewer mutation-probed the load-bearing claim rather than trusting it: shifting each preset's last ramp 25 units out of the flight path drives the min contact distance from ~2.60 (true surface contact at radius 2.6) to 15.97/9.25/10.86 and the assertion fails loudly — so the contact guard genuinely fixes the earlier proximity-based revision rather than being relaxed to match. It also adjudicated the mid-run attemptsDiffer change as a legitimate sharpening (a whole-track comparison is a superset of the endpoint one at the same threshold), not a test bent to fit. Acted on ONE finding in-run — minor #2, that the ## Evidence blind-spot paste was captured pre-staging and so surveyed an empty diff; the real 200-symbol output and a review of every flagged call-site now replace it, per verification.md 'report faithfully'. The other four minors + two infos are advisory, are NOT loop fodder per the work-on contract, and ride into review; the three that change how the lab should be READ (generous rim LANDED grade, the benchmark control never settling, the dangling creepNote) are surfaced in ## Evidence for whoever drives it.
 
 ## Evidence
 
@@ -87,16 +89,39 @@ All three manifest verify keys, per the last AC. Client suite: **267 tests, 267 
 
 ```
 $ work grep --since b1b93b5
-grep: no touched symbols found in the diff (nothing to survey)
+grep: 200 touched symbol(s) via node-walk (since b1b93b5)
+  (skipped 5 low-signal name(s): body, context, first, xs, ys)
+  ⚠ BACKGROUND_FILL — 2 call-site(s) to review (not in the diff)
+  ⚠ DEFAULT_SETTINGS — 2 …   ⚠ FLOOR — 10 …   ⚠ FLOOR_Y — 4 …
+  ⚠ LabControls — 3 …   ⚠ LabControlsProps — 2 …   ⚠ LabSettings — 7 …
+  ⚠ Segmented — 6 …   ⚠ canvas / width / wing — …
+Open these before claiming done — anything you never opened is a blind spot (DESIGN §6.4).
 ```
 
-Genuinely empty rather than skipped: the diff adds files and makes two **additive** edits — a new
-`CONTRAPTION_LAB_NAME` dispatch arm in `App.tsx` and an `ignores` entry in `eslint.config.mjs`. No
-existing symbol changed signature or behaviour. Confirmed by hand with
-`grep -rn "DEV_LAB\|resolveDevLabName\|LAB_NAME"` over the manifest `src_globs`: the only consumers
-are `App.tsx`, `resolveClientRoute/index.ts` and its test, all of which were opened. Everything
-imported from `packages/shared` (`simulateContraption`, `measureContraptionTrackBytes`,
-`CONTRAPTION_BENCHMARK_LAYOUT`) is consumed read-only; nothing in `packages/` was modified.
+**Correction (qa-reviewer minor #2).** An earlier revision of this section pasted
+`no touched symbols found in the diff (nothing to survey)` and called the sweep empty. That output
+was real but was captured **before the new files were staged**, so the walk saw an empty diff — it
+did not survey this change at all. The true output is above; the claim has been replaced rather
+than re-worded, per `verification.md` ("Evidence, not assertion" / "Report faithfully").
+
+Every flagged call-site was opened, and all of them are **coincidental name collisions in unrelated
+modules**, not coupling:
+
+- `LabControls`, `LabControlsProps`, `LabSettings`, `Segmented`, `DEFAULT_SETTINGS`,
+  `BACKGROUND_FILL` — AnamorphLab's own module-local versions. Two labs each having a
+  `LabControls` is `code-design` §Naming working as intended (path-relative names, no module
+  prefix); neither imports the other.
+- `FLOOR`, `FLOOR_Y` — test-local constants inside `packages/shared`'s own contraption tests.
+- `canvas`, `width` — the drawing minigame's unrelated canvas code.
+- `wing` — the string appears as copy ("Ate wing") in the host panel, and as
+  `benchmarkLayout/index.ts:25 id: "wing"`. That last one is **not** incidental: it is exactly the
+  body-id convention `runOutcome`'s `WING_BODY_ID` depends on, read deliberately.
+
+No exported symbol changed signature or behaviour. The only edits to existing files are additive: a
+`CONTRAPTION_LAB_NAME` dispatch arm in `App.tsx`, one `ignores` entry in `eslint.config.mjs`, and
+one added route test case. Everything imported from `packages/shared` (`simulateContraption`,
+`measureContraptionTrackBytes`, `CONTRAPTION_BENCHMARK_LAYOUT`) is consumed read-only; `git diff
+--name-only` touches nothing under `packages/` at all.
 
 ### AC 5 — the bare-`window` guard is non-vacuous
 
@@ -151,6 +176,30 @@ inputs to WN-15's planning, not defects in this ticket.
 5. **Track weight is not the constraint.** A 4s 30Hz single-body run is **1571 bytes** of realistic
    JSON (flat, 2dp); the 6-body benchmark at the same settings is well under 10KB. WN-15's leaning
    toward option (a) — emit a keyframe track and replay it — is not threatened by size.
+
+### Known limits of the instrument (qa-reviewer advisory findings — read before driving)
+
+The qa pass returned **pass** with five minors and two infos, no blocker/major
+(`.work/verdicts/WN-18.qa.json`). Per the pipeline contract minor/info findings are advisory and
+are not iterated on in-run, but three of them change how the lab should be *read*, so they are
+surfaced here rather than left in the verdict file:
+
+1. **`LANDED` is graded generously at the rim.** `classify` checks `landed` before `perched` and
+   puts no lower bound on depth, so a wing wedged at the bucket mouth still reads `LANDED`. All
+   three presets settle within ~1.5 units of the mouth line (y 85.53 / 84.69 / 84.33 against
+   `topY` 84). Trust the canvas over the banner when judging a marginal landing.
+2. **The `WN-17 benchmark` control never produces a verdict.** `resolveSettleIndex` reduces over
+   *all* bodies, and the benchmark's five loose marbles keep rolling, so it grades `restless` at
+   every duration tried (4s / 6s / 12s). It is still useful as a visual control; it just will not
+   give you a landed/missed answer.
+3. **`creepNote` is a dangling reference.** `pieceSets/index.ts` says the slip-creep finding is
+   "carried up to the room" via `contraptionLabCopy.creepNote`, but no such copy key exists — that
+   finding lives only here and in `## Progress`, not on screen.
+
+The remaining two minors are code-quality nits scoped to throwaway code (`distanceToSegment`
+duplicated between `RunCanvas` and the `pieceSets` test; the benchmark test's reason-code assertion
+is tautological against its own union type), plus two infos (four lab files cross the ~150-line
+prompt; `index.test.tsx` asserts on copy). All are deleted with the lab in WN-15.
 
 ### How to reproduce
 
