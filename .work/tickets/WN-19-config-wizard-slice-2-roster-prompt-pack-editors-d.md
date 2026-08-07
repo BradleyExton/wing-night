@@ -1,13 +1,15 @@
 ---
 id: WN-19
 title: "Config wizard slice 2: Roster + prompt-pack editors, delete the lab and its eslint carve-out"
-status: in-review
+status: done
 kind: feature
 priority: medium
 created: 2026-08-07
 deps: [WN-11]
 blocked_by: []
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-19"
+landed_range: cb6a599ef9e283a01384ce1dc8916a445a73901f..7bcdc844d59917ec08a18552ba43b3d75f8130ba
+review: pending
 ---
 
 ## Goal
@@ -70,6 +72,7 @@ Pre-verified 2026-08-07: `sampleDraft.ts:8-15` (drawing modelled as a count),
 - 2026-08-07T17:57:13.675Z Anti-blind-spot sweep (work grep --since e86cb78): 170 touched symbols, 30 flagged names. Every flagged name is either a generic local (apply, baseline, snapshot, draft, prompt, player, suffix, url, timeoutId...) or a style token I re-exported without changing. The three that could actually have broken a caller, opened and checked by hand: (1) roundCard/roundHead — renamed in fieldTokens to entryCard/entryHead; the ONLY consumer is LineupStep, whose styles.ts now aliases them back, so LineupStep/index.tsx:41-42 resolves unchanged. (2) The deleted lab's runtime surface — grep for 'variant=' across apps/packages/tools/tests/README returns ZERO hits, so nothing reaches /host?variant=A|B|C any more. (3) AdminConfigWizard's only consumer is App.tsx:48 and its prop (socket) is unchanged. Also opened HostControlPanel/index.tsx post-deletion: imports, the WN-3 typeof-window guard and the dispatch are all gone and the component is back to a plain render. One gap the sweep surfaced and I closed rather than noted: the gameConfig prefix/strip round trip (previously toFileScopedIssues, now selectDraftIssues) had no direct assertion, so a regression would have shown as issues silently not landing on IdentityStep's bare 'name' path. Added contentDraft test 'prefixes a game config issue with its own key so the step's bare path still resolves'.
 - 2026-08-07T18:05:49.052Z browser-verify: RAN and passed, though the O-6 predicate said skip. The ticket's frontmatter is kind: feature, so readBrowserOutcome returns skip and no browser phase was required. I ran one anyway and recorded a pass verdict (.work/verdicts/WN-19.browser.json, sha 8958be1) because WN-11 — the spine this sits on — took the skip and named the residual gap out loud: 'nobody has LOOKED at the wizard, so a layout or contrast defect that does not break a role-based locator would survive both the spec and this skip.' This slice adds two more visible steps to that same unlooked-at surface, so the gap was compounding. Booted the e2e stack (seeded content root, server 3100, vite 5273) and drove a real Chromium over all six steps. Findings: every step renders correctly against the house idiom; the roster shows 16 player cards (name + optional avatar) and 4 team cards with the AC-1 overwrite hint; prompt packs shows trivia and drawing with the read-only id column present; geo renders as '8 photo prompts' + the pnpm import:geo pointer with no editor; Review carries the new prompt-packs row and the overwrite warning, and its roster row no longer claims 'edited on /host, not here'. Emptying a team name paints the danger border and renders 'must be a non-empty string' under the field, and Review then reads 'Fix the highlighted fields first' disabled — proving the gate reads the whole draft, not just the edited step. Zero pageerror and zero console.error across the whole pass. Screenshots at .work/verdicts/WN-19-browser/ (gitignored, per-run, beside the verdict). NO design comparison was possible and none is claimed — apps/client/public/mockups/ has no /admin entry, because the wizard's design lived in the ConfigSetupPrototype lab this ticket deletes; graded against the house idiom instead. Three INFO findings carried, none blocking and none in scope here: the drawing editor renders all 62 prompts as full cards (~10,600px tall), a read-only prompt id looks identical to an editable input, and single-field entries leave the two-column grid half empty. Recorded BEFORE the handoff so the attested tree and the landed tree are the same one.
 - 2026-08-07T18:08:04.791Z handed off → in-review (verify green); awaiting land
+- 2026-08-07T18:09:32.947Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
