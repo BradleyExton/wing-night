@@ -148,12 +148,64 @@ test("throws when trivia minigame rules are invalid", () => {
     })
   );
 
+  // Pins the whole message, not just the prefix: the generic shape-failure
+  // throw from the same function also starts "Invalid game config content", so
+  // a loose match would stay green if the rules half of it were dropped.
   assert.throws(
     () => {
       loadGameConfig({ contentRootDir: contentRoot });
     },
-    /Invalid game config content/
+    (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.match(
+        error.message,
+        /^Invalid game config content at ".+": minigameRules\.trivia failed TRIVIA rules validation\.$/
+      );
+      return true;
+    }
   );
+});
+
+// The rules seam walks the shared registry's own rules keys, never the config's.
+// If it walked the config's keys instead, this file would start failing to boot.
+test("ignores minigameRules entries that no minigame claims", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "sample/gameConfig.json",
+    JSON.stringify({
+      name: "Unknown Rules Key",
+      rounds: [
+        {
+          round: 1,
+          label: "Warm Up",
+          sauce: "Frank's",
+          pointsPerPlayer: 2,
+          minigame: "TRIVIA"
+        }
+      ],
+      minigameScoring: {
+        defaultMax: 15,
+        finalRoundMax: 20
+      },
+      minigameRules: {
+        bogus: {
+          anything: true
+        }
+      },
+      timers: {
+        eatingSeconds: 120,
+        triviaSeconds: 30,
+        geoSeconds: 45,
+        drawingSeconds: 60
+      }
+    })
+  );
+
+  const gameConfig = loadGameConfig({ contentRootDir: contentRoot });
+
+  assert.equal(gameConfig.name, "Unknown Rules Key");
 });
 
 test("throws when setup preview round slot count is invalid", () => {

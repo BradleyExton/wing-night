@@ -35,6 +35,7 @@ export {
   toDisplayRoomStateSnapshot,
   toRoleScopedSnapshotEnvelope
 } from "./roomState/index.js";
+export type { ValidationIssue } from "./content/validationIssue/index.js";
 export {
   isGameConfigFile,
   MINIGAME_DEFINITIONS,
@@ -42,7 +43,8 @@ export {
   MINIGAME_TYPES,
   resolveMinigameDefinition,
   resolveMinigameTypeFromSlug,
-  SETUP_PREVIEW_ROUND_SLOTS_MAX
+  SETUP_PREVIEW_ROUND_SLOTS_MAX,
+  validateGameConfigFile
 } from "./content/gameConfig/index.js";
 export type {
   GameConfigFile,
@@ -55,11 +57,15 @@ export type {
   MinigameRules,
   MinigameRulesKey,
   MinigameTimerKey,
-  MinigameType
+  MinigameType,
+  ValidateGameConfigFileOptions,
+  ValidateMinigameRules
 } from "./content/gameConfig/index.js";
 export {
   isPlayersContentEntry,
-  isPlayersContentFile
+  isPlayersContentFile,
+  validatePlayersContentEntry,
+  validatePlayersContentFile
 } from "./content/players/index.js";
 export type {
   PlayersContentEntry,
@@ -67,7 +73,9 @@ export type {
 } from "./content/players/index.js";
 export {
   isTeamsContentEntry,
-  isTeamsContentFile
+  isTeamsContentFile,
+  validateTeamsContentEntry,
+  validateTeamsContentFile
 } from "./content/teams/index.js";
 export type {
   TeamsContentEntry,
@@ -75,7 +83,9 @@ export type {
 } from "./content/teams/index.js";
 export {
   isDrawingContentFile,
-  isDrawingPrompt
+  isDrawingPrompt,
+  validateDrawingContentFile,
+  validateDrawingPrompt
 } from "./content/drawing/index.js";
 export type {
   DrawingContentFile,
@@ -93,7 +103,9 @@ export type {
 } from "./content/geo/index.js";
 export {
   isTriviaContentFile,
-  isTriviaPrompt
+  isTriviaPrompt,
+  validateTriviaContentFile,
+  validateTriviaPrompt
 } from "./content/trivia/index.js";
 export type {
   TriviaContentFile,

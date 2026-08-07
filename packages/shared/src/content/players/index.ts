@@ -1,3 +1,8 @@
+import {
+  prefixIssuePaths,
+  type ValidationIssue
+} from "../validationIssue/index.js";
+
 export type PlayersContentEntry = {
   name: string;
   avatarSrc?: string;
@@ -11,34 +16,59 @@ const isNonEmptyString = (value: unknown): value is string => {
   return typeof value === "string" && value.trim().length > 0;
 };
 
+const isObjectLike = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null;
+};
+
+export const validatePlayersContentEntry = (
+  value: unknown
+): ValidationIssue[] => {
+  if (!isObjectLike(value)) {
+    return [{ path: "", message: "must be an object" }];
+  }
+
+  const issues: ValidationIssue[] = [];
+
+  if (!isNonEmptyString(value.name)) {
+    issues.push({ path: "name", message: "must be a non-empty string" });
+  }
+
+  // Presence, not definedness: an explicit `avatarSrc: undefined` has always
+  // been rejected here, so the key test stays `in` rather than `!== undefined`.
+  if ("avatarSrc" in value && !isNonEmptyString(value.avatarSrc)) {
+    issues.push({
+      path: "avatarSrc",
+      message: "must be a non-empty string when present"
+    });
+  }
+
+  return issues;
+};
+
+export const validatePlayersContentFile = (
+  value: unknown
+): ValidationIssue[] => {
+  if (!isObjectLike(value)) {
+    return [{ path: "", message: "must be an object" }];
+  }
+
+  if (!Array.isArray(value.players)) {
+    return [{ path: "players", message: "must be an array" }];
+  }
+
+  return value.players.flatMap((entry, index) =>
+    prefixIssuePaths(validatePlayersContentEntry(entry), `players[${index}]`)
+  );
+};
+
 export const isPlayersContentEntry = (
   value: unknown
 ): value is PlayersContentEntry => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  if (!("name" in value) || !isNonEmptyString(value.name)) {
-    return false;
-  }
-
-  if (!("avatarSrc" in value)) {
-    return true;
-  }
-
-  return isNonEmptyString(value.avatarSrc);
+  return validatePlayersContentEntry(value).length === 0;
 };
 
 export const isPlayersContentFile = (
   value: unknown
 ): value is PlayersContentFile => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  if (!("players" in value) || !Array.isArray(value.players)) {
-    return false;
-  }
-
-  return value.players.every((entry) => isPlayersContentEntry(entry));
+  return validatePlayersContentFile(value).length === 0;
 };
