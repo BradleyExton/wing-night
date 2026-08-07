@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-10
 title: "Server config write + reload path (content/local writes, callable reload, config:* socket events)"
-status: in-review
+status: done
 kind: feature
 priority: medium
 created: 2026-08-05
@@ -18,6 +18,8 @@ blocked_by: []           # list<string>; external/manual waits (free text); non-
 # worktree:              # set by work-on on claim (collision guard); default null
 # parallel_safe:         # RESERVED for F-8 (post-MVP) — do not set
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-10"
+landed_range: d21dcf91bb4d7a5f006c7eb54ca6ce08d91e4df0..b07acf0b8d09b242d8e1787a83eb4388402ec583
+review: pending
 ---
 
 ## Goal
@@ -77,6 +79,7 @@ Grilled 2026-08-05 (plan-work session; user at the table).
 - 2026-08-07T11:59:06.486Z browser-verify: skipped (non-UI)
 - 2026-08-07T11:59:06.595Z qa-reviewer round 3 (re-grade of the minor-fix delta at 20f2b8d): PASS — recorded at .work/verdicts/WN-10.qa.json. Confirmed the reloadContentIntoRoomState change is mechanically comment-only, re-ran both mutation checks on the changed tests (swapping WRITE_FAILED->LOAD_FAILED turns the new configService mapping test red; shifting the content-root walk in EITHER direction turns the rewritten guard red, so the determinism rewrite did not trade away the blocker's coverage), and confirmed the determinism fix by running the suite green with a broken content/local present where the previous version went red. Full gate re-run by the reviewer: 517 tests pass / 0 fail across all packages, typecheck and lint exit 0. TWO ADVISORY MINORS RIDE INTO EVIDENCE (not fixed, deliberately — they are non-blocking and further iteration here would be self-play): (1) no unit test now loads the repo's REAL default content root through the loaders — the rewrite asserts the six sample files exist rather than that they parse, so a corrupted content/sample/*.json would stay green in unit tests and surface only at boot or e2e; (2) that test hardcodes the six fallback filenames, duplicating a set the loaders own, so a seventh content file would not be noticed. Both are worth a follow-up ticket if the sample content ever becomes something people hand-edit.
 - 2026-08-07T11:59:23.909Z handed off → in-review (verify green); awaiting land
+- 2026-08-07T12:01:18.941Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
