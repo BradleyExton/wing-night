@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-10
 title: "Server config write + reload path (content/local writes, callable reload, config:* socket events)"
-status: needs-planning   # idea | needs-research | needs-planning | ready | in-progress | in-review | done | blocked | superseded
+status: ready   # idea | needs-research | needs-planning | ready | in-progress | in-review | done | blocked | superseded
 kind: feature
 priority: medium
 created: 2026-08-05
@@ -23,14 +23,38 @@ blocked_by: []           # list<string>; external/manual waits (free text); non-
 Give the server a config write + reload path: atomic writes of edited content files into content/local/, loadContent extracted into a callable reload-and-re-seed operation, and authorized config:* socket events (read / save / apply) with an explicit SETUP-only apply lock.
 
 ## Acceptance Criteria
-- [ ] A server `contentWriter` module writes a content file to `content/local/` (creating dirs as needed) atomically — write temp file, rename — refusing any payload whose shared validator (WN-9) returns issues: invalid content never lands on disk.
+- [ ] A server `contentWriter` module writes a content file to `content/local/` (creating dirs as needed) atomically — write temp file, rename — refusing any payload whose shared validator (WN-9) returns issues: invalid content never lands on disk. It takes an injectable `contentRootDir` (the loaders already do), so tests never write into the real gitignored `content/local/`.
+- [ ] **The gameConfig write path supplies the plugin-rules seam.** WN-9 landed `validateGameConfigFile` with rules validation as an *injected* option — called bare, `minigameRules` are not checked at all. `isRulesValidForKey` is currently a private `const` in `loadGameConfig/index.ts:48`. Lift it into its own server module exported for both callers, and have `contentWriter` pass it exactly as `loadGameConfig/index.ts:68` does. Without this, a config whose rules a plugin rejects passes the writer, lands in `content/local/`, and fatals every subsequent boot — with the wizard's own read path unusable to undo it. Test: a plugin-rejected `minigameRules` payload is refused and no file is written.
 - [ ] The one-shot boot logic in `apps/server/src/index.ts` is extracted into a callable `reloadContentIntoRoomState()` operation (loadContent → setRoomStatePlayers/Teams/GameConfig/MinigameContent) used by both boot and apply; a reload failure surfaces through the existing fatalError path rather than crashing.
 - [ ] New authorized socket events following the existing defineAuthorizedEvent + HostSecretPayload pattern: `config:read` returns the current merged content (gameConfig, players, teams, trivia + drawing packs, geo count) as loaded from disk; `config:save` validates + writes files (allowed in any phase); `config:apply` saves then reloads-and-re-seeds, hard-rejecting with a typed `CONFIG_LOCKED` error payload when `phase !== SETUP` (user-confirmed: save-while-locked allowed, apply rejected; Reset Game is the escape hatch).
-- [ ] `config:apply` success broadcasts the refreshed role-scoped snapshots through the existing broadcast pipeline (host + display see the new config without refresh); a validation-rejected save/apply returns the ValidationIssue[] to the requesting socket.
+- [ ] **`config:apply` success actually broadcasts — the naive wiring is a silent no-op.** `socketServer/index.ts:79` returns early on `if (!mutationResult.didMutate)`, and `didMutate` is raised only by `reportRoomStateMutation()`, which only `defineRoomMutation` calls. The four re-seed setters in `roomState/baseMutations/index.ts` (`setRoomStatePlayers/Teams/GameConfig/MinigameContent`) are plain functions that never raise it, so host and display would NOT see the new config. **Do not fix this by wrapping the re-seed in `defineRoomMutation`** — it early-returns on `isRoomInFatalState` (`defineRoomMutation/index.ts:30-32`), which is precisely the broken-content case this feature exists to repair. Instead `reloadContentIntoRoomState()` calls the plain setters and then calls `reportRoomStateMutation()` itself, outside the fatal gate. Test asserts an actual broadcast reaches a host and a display socket after apply, not merely that room state changed.
+- [ ] **Apply from a fatal state clears it, without wiping live rosters.** A successful reload must clear `roomState.fatalError` — otherwise the server that booted fatal on bad content stays fatal forever and the wizard cannot repair anything, which is its whole purpose. Do NOT clear it via `overwriteRoomState(createInitialRoomState())`: that discards live SETUP rosters. Clear the field as part of the re-seed and state in the ticket which fields survive.
+- [ ] A validation-rejected save/apply returns the `ValidationIssue[]` to the requesting socket.
+- [ ] **No `config:*` handler can throw out of its socket.io listener.** The loaders throw by design (that is why boot wraps them), socket.io v4 dispatches listeners inside `process.nextTick` with no surrounding catch, and `apps/server` has no `process.on("uncaughtException")` anywhere — verified. So a `config:read` against a broken `content/local/` file takes the whole server down, in exactly the scenario the wizard is meant to fix. Every handler wraps its body and returns a typed error payload to the requesting socket instead. Test: with an unparseable local content file on disk, `config:read` returns an error response **and the process survives**.
+- [ ] The response shapes are named explicitly. `defineAuthorizedEvent` cannot express these events as-is (no ack arity; `runMutation` must return `RoomState`), so state which mechanism carries the reply — ack callback or a `config:result`-style emit — since WN-11 builds its wizard against whatever this ticket picks.
 - [ ] Server unit tests (contentLoader testHarness pattern) cover: atomic write + local-overrides-sample readback; apply rejected when locked; apply re-seeds room state (totalRounds recomputed); invalid payload rejected with issues and no file written.
 - [ ] `pnpm typecheck` and `pnpm test` pass.
 
 ## Plan
+Re-planned 2026-08-07 after the gate1 park (WN-10.gate1.json). All three majors were re-verified
+against the landed code before answering — every line reference below was read, not inferred:
+
+- **Broadcast no-op** — confirmed. `socketServer/index.ts:79` is the `didMutate` early return;
+  `reportRoomStateMutation` lives in `roomState/mutationResult/index.ts:13` and is called only from
+  `defineRoomMutation/index.ts:39`; the four setters in `baseMutations/index.ts:134-170` are plain
+  functions. The trap is real too: `defineRoomMutation/index.ts:30-32` early-returns on
+  `isRoomInFatalState`, so the obvious fix is unavailable. Hence the explicit
+  "call `reportRoomStateMutation()` from the reload, outside the fatal gate" instruction.
+- **Rules-validation hole** — confirmed. `isRulesValidForKey` is a private `const` at
+  `loadGameConfig/index.ts:48`, passed as `validateRules` at line 68. This is a direct consequence of
+  the injected seam WN-9 shipped: correct design, but the implication for the write path was never
+  carried into this ticket. Lifting it to a shared module is the fix.
+- **Listener crash** — confirmed. `grep uncaughtException apps/server/src` returns nothing.
+
+Root-cause note: all three are the same failure — ACs written against how the server was *imagined*
+rather than how it is *built*. The standing fix is to verify each AC against current code at
+planning time, not to discover it at gate1 one ticket per iteration.
+
 Grilled 2026-08-05 (plan-work session; user at the table).
 
 - Transport DECIDED: socket events, not HTTP — reuses HostSecretPayload + defineAuthorizedEvent + broadcast; no express.json/HTTP-auth surface. v1 rides the existing hostSecret (WN-12 later swaps the gate to adminSecret).
