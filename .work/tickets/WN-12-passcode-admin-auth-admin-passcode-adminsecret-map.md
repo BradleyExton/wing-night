@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-12
 title: "Passcode admin auth (ADMIN_PASSCODE + adminSecret map) for the config wizard"
-status: ready   # idea | needs-research | needs-planning | ready | in-progress | in-review | done | blocked | superseded
+status: needs-planning   # idea | needs-research | needs-planning | ready | in-progress | in-review | done | blocked | superseded
 kind: feature
 priority: low
 created: 2026-08-05
@@ -38,6 +38,7 @@ Grilled 2026-08-05 (plan-work session; user at the table).
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-07T18:16:07.558Z gate1 (product-owner critic, 2026-08-07): needs-changes — recorded at .work/verdicts/WN-12.gate1.json. Summary: premises all verify against the code and the goal is sound, but the finish line cannot detect this ticket's most likely regression — it rewires the one surface with a dedicated Playwright spec, and pnpm test provably excludes Playwright. MAJOR: the last AC omits the manifest e2e verify key; tests/e2e/admin-config-wizard.spec.ts is built on the exact host-secret ride-along this ticket removes (openWizard waits on config:read replying only after the host claim issues a secret; the spec sequences /host then /admin because the server keeps ONE host secret, last claim wins) — both premises are what WN-12 deletes, so the regression lands silently green. Precedent: WN-11, same surface, carried a dedicated AC naming the full e2e key. MINOR: no AC retires copy/admin.ts hostAuthCoexistenceWarning, which WN-11 scoped to live only until WN-12 lands. Verdict routes ready -> needs-planning; re-plan via plan-work (do not re-prompt).
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
