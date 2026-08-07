@@ -5,6 +5,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 import { AnamorphLab } from "./components/AnamorphLab";
+import { ContraptionLab } from "./components/ContraptionLab";
 import { DisplayBoard } from "./components/DisplayBoard";
 import { HostControlPanel } from "./components/HostControlPanel";
 import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
@@ -26,6 +27,9 @@ import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 
 // Deleted by WN-14 along with the lab itself.
 const ANAMORPH_LAB_NAME = "anamorph";
+
+// Deleted by WN-15 along with the lab itself.
+const CONTRAPTION_LAB_NAME = "contraption";
 
 const resolveRouteContent = (
   route: ReturnType<typeof resolveClientRoute>,
@@ -50,6 +54,10 @@ const resolveRouteContent = (
 
   if (route === "DEV_LAB" && devLabName === ANAMORPH_LAB_NAME) {
     return <AnamorphLab />;
+  }
+
+  if (route === "DEV_LAB" && devLabName === CONTRAPTION_LAB_NAME) {
+    return <ContraptionLab />;
   }
 
   return <RouteNotFound />;

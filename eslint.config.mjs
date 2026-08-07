@@ -20,6 +20,12 @@ export default [
       // disabled and there is no eslint-disable in the lab. WN-14 records the answers,
       // then deletes both the folder and this entry.
       "apps/client/src/components/AnamorphLab/**",
+      // Throwaway CONTRAPTION feel lab behind /dev/lab/contraption. A live-control harness over
+      // WN-17's integrator is hardcoded labels and runtime style values by construction, which the
+      // wingnight component rules rightly reject in shipped code. Scope carve-out only — no rule is
+      // disabled and there is no eslint-disable in the lab. WN-15 records the answers, then deletes
+      // both the folder and this entry.
+      "apps/client/src/components/ContraptionLab/**",
       "**/dist/**",
       "**/coverage/**",
       "**/.cache/**",

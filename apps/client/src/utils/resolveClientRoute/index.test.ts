@@ -27,6 +27,14 @@ test("resolves /dev/lab/:name routes to DEV_LAB", () => {
   assert.equal(resolveDevLabName("/dev/lab/ANAMORPH/"), "anamorph");
 });
 
+// WN-18's lab rides the generic route WN-16 added rather than adding a second one. Nothing in
+// apps/client/src imports App, so its dispatch branch is unreachable from a test — pinning the
+// name here is the half of that wiring a test CAN hold.
+test("resolves the contraption lab name to DEV_LAB", () => {
+  assert.equal(resolveClientRoute("/dev/lab/contraption"), "DEV_LAB");
+  assert.equal(resolveDevLabName("/dev/lab/contraption"), "contraption");
+});
+
 test("resolves the bare /dev/lab prefix to NOT_FOUND when no name follows", () => {
   assert.equal(resolveClientRoute("/dev/lab"), "NOT_FOUND");
   assert.equal(resolveClientRoute("/dev/lab/"), "NOT_FOUND");
