@@ -77,6 +77,9 @@ Grill summary:
 - 2026-08-07T02:25:54.026Z browser-verify: skipped (non-UI)
 - 2026-08-07T02:25:54.137Z qa: PASS (qa-reviewer, confidence high, sha 6b6f779). Reviewer independently re-ran the isolated suite (8 passed 17.5s with foreign servers live on 5173+3000) and mutation-tested the new unit tests (3 mutations, all caught). Two advisory MINORs left unaddressed per the minor/info non-blocking rule, carried for post-merge review: (1) the client webServer bypasses apps/client's own 'dev' script; the reviewer verified that simply DROPPING the literal '--' (i.e. 'pnpm --filter @wingnight/client dev --host ... --port ...') also forwards flags cleanly, which would fix the bug without duplicating the launch definition — a smaller diff worth adopting. (2) the config half of the fix (client command, --strictPort, server PORT env, pinned manifest ports) has no unit-level regression test; only resolvePort does. Plus one INFO: bare interactive 'pnpm test:e2e' still reuses 5173/3000 by design (Plan-sanctioned), and README does not mention the WN_E2E_* overrides.
 - 2026-08-07T02:25:58.862Z handed off → in-review (verify green); awaiting land
+- 2026-08-07T02:26:37.402Z re-attested at in-review (verify + qa re-run green) for e983d333
+- 2026-08-07T02:27:21.848Z carried over from the pre-claim canonical checkout — prototype: skipped (not in plan) [recorded 2026-08-07T02:07:43Z]
+- 2026-08-07T02:27:21.956Z carried over from the pre-claim canonical checkout [recorded 2026-08-07T02:07:50Z] — gate1: product-owner PASS (confidence high). Two MINOR findings the Plan omits — carry into implementation: (1) the server webServer block has NO env at all, so WN_E2E_SERVER_PORT would never reach the server process; the server reads process.env.PORT (apps/server/src/index.ts:17-18), so the block needs env: { PORT: String(serverPort) }. (2) the client dev command hardcodes the port as a string literal (--port 5173) separately from the clientPort const, so it must ALSO be interpolated — changing only baseURL would point Playwright at 5273 while Vite binds 5173. Also noted (info): work verify --test-one substitutes test_one into the test slot, so pinning CI=1 there flips retries 0->1 and the reporter to github+html for every single-spec gate run.
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
@@ -105,7 +108,7 @@ Grill summary:
 - **info** — The bare interactive `pnpm test:e2e` (no env, no CI) still reuses whatever holds 5173/3000, so the wrong-tree-reuse hazard remains reachable outside the gate — and README.md:220 documents exactly that invocation with no mention of the isolated form. This is NOT a deviation: the approved Plan explicitly chose it ("`reuseExistingServer` stays `!CI` there") and the ACs are scoped to the manifest commands. Flagged only so the residual is a known one; a one-line README note on the `WN_E2E_*` overrides would close it.
     evidence: playwright.config.ts:32,48 `reuseExistingServer: !process.env.CI` with defaults 3000/5173 (lines 9-10). Ticket Plan §Design mandates this. README.md:218-224 lists `pnpm test:e2e` / `pnpm playwright test` unqualified.
 
-_Captured 2026-08-07T02:25:58.862Z._
+_Captured 2026-08-07T02:26:37.402Z._
 <!-- captured-evidence:end -->
 
 ## Links
