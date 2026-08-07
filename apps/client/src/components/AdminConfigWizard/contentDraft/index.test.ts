@@ -122,6 +122,21 @@ test("prefixes an issue with its file key so it matches the server's coordinates
   ]);
 });
 
+// The gameConfig half of the same round trip, which predates the multi-file
+// draft: `IdentityStep` addresses its input as the bare "name", so the prefix
+// written here has to be exactly what `selectIssueMessages` strips back off.
+test("prefixes a game config issue with its own key so the step's bare path still resolves", () => {
+  const snapshot = buildSnapshot();
+  const draft = toConfigDraft({
+    ...snapshot,
+    gameConfig: { ...snapshot.gameConfig, name: "  " }
+  });
+
+  assert.deepEqual(selectDraftIssues(draft), [
+    { path: "gameConfig.name", message: "must be a non-empty string" }
+  ]);
+});
+
 test("keeps issues from different files apart when two files are invalid", () => {
   const draft = buildDraft({
     teams: [{ name: "" }],
