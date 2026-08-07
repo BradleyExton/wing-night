@@ -16,11 +16,18 @@ export const inputInvalid = "border-danger ring-1 ring-danger";
 
 export const issueText = "text-xs font-semibold text-danger";
 
-export const roundCard =
+// One numbered row of a list-shaped file — a lineup round, a roster player, a
+// prompt. Named for the shape rather than for rounds, because four surfaces
+// render it now.
+export const entryCard =
   "flex flex-col gap-3 rounded-lg border border-text/10 bg-surfaceAlt p-4";
 
-export const roundHead =
+export const entryHead =
   "flex items-center justify-between text-sm font-semibold uppercase tracking-wide text-muted";
+
+export const sectionRoot = "flex flex-col gap-3";
+
+export const sectionHint = "text-sm text-muted";
 
 export const removeButton =
   "rounded-md border border-text/20 px-2 py-1 text-xs text-muted transition hover:border-danger hover:text-danger disabled:cursor-not-allowed disabled:opacity-40";

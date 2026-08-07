@@ -26,6 +26,11 @@ const openWizard = async (page: Page): Promise<void> => {
   await expect(page.locator(`#admin-round-label-${EDITED_ROUND_INDEX}`)).toBeVisible();
 };
 
+const openWizardStep = async (page: Page, stepTitle: RegExp): Promise<void> => {
+  await expect(page.getByRole("button", { name: stepTitle })).toBeVisible();
+  await page.getByRole("button", { name: stepTitle }).click();
+};
+
 const editRoundLabelAndReview = async (
   page: Page,
   label: string
@@ -78,6 +83,108 @@ test("applies an edited round label from /admin and the display picks it up", as
   await expect(rehostPage.getByText("Content Load Error")).toHaveCount(0);
 
   await ensureSetupPhase(rehostPage);
+
+  await context.close();
+});
+
+// A rename rather than an add: the roster the rest of the suite runs against
+// keeps its 16 players and 4 teams, and `overrides.spec.ts` still finds
+// "Scorch Squad". Nothing else in the suite asserts on a player name or on a
+// trivia answer, so this pair is safe to leave applied for the specs that
+// follow — the seeded root is wiped and re-seeded at the start of every run.
+const EDITED_PLAYER_NAME = "Preflight Pat";
+const EDITED_TRIVIA_ANSWER = "Rewritten answer";
+
+test("applies edits to two content files in one apply and both survive a reload", async ({
+  browser
+}) => {
+  const context = await browser.newContext();
+
+  // Same one-secret sequencing as above: /host is closed before /admin claims.
+  const hostPage = await context.newPage();
+  await restoreSetupPhase(hostPage);
+  await hostPage.close();
+
+  const adminPage = await context.newPage();
+  await openWizard(adminPage);
+
+  // players.json and minigames/trivia.json — two DIFFERENT files, edited before
+  // a single apply. `selectDirtyEdits` has to send both and neither of the
+  // untouched three, which is the whole point of the multi-file draft.
+  await openWizardStep(adminPage, /Roster/);
+  await adminPage.locator("#admin-player-name-0").fill(EDITED_PLAYER_NAME);
+
+  await openWizardStep(adminPage, /Prompt Packs/);
+  await adminPage.locator("#admin-trivia-answer-0").fill(EDITED_TRIVIA_ANSWER);
+
+  await openWizardStep(adminPage, /Review/);
+  await adminPage.getByRole("button", { name: "Apply config & reload room" }).click();
+  await expect(adminPage.getByRole("button", { name: "Applied ✓" })).toBeVisible();
+
+  // Reloading re-reads from disk, so a value that survives the round trip was
+  // written to the content root rather than only held in the draft.
+  await adminPage.reload();
+  await openWizardStep(adminPage, /Roster/);
+  await expect(adminPage.locator("#admin-player-name-0")).toHaveValue(
+    EDITED_PLAYER_NAME
+  );
+
+  await openWizardStep(adminPage, /Prompt Packs/);
+  await expect(adminPage.locator("#admin-trivia-answer-0")).toHaveValue(
+    EDITED_TRIVIA_ANSWER
+  );
+
+  await adminPage.close();
+
+  // The room half: apply re-seeds room state from disk, so the renamed player
+  // is on the host's SETUP deck without anyone re-reading the file by hand.
+  const rehostPage = await context.newPage();
+  await rehostPage.goto("/host");
+
+  await expect(rehostPage.getByText(EDITED_PLAYER_NAME)).toBeVisible();
+  await expect(rehostPage.getByText("Content Load Error")).toHaveCount(0);
+
+  await ensureSetupPhase(rehostPage);
+
+  await context.close();
+});
+
+test("blocks the apply and names the offending field when a roster entry is emptied", async ({
+  browser
+}) => {
+  const context = await browser.newContext();
+
+  const hostPage = await context.newPage();
+  await restoreSetupPhase(hostPage);
+  await hostPage.close();
+
+  const adminPage = await context.newPage();
+  await openWizard(adminPage);
+
+  await openWizardStep(adminPage, /Roster/);
+  await adminPage.locator("#admin-team-name-0").fill("");
+
+  // The issue is raised against the emptied field itself, in the coordinates
+  // the shared validator reports — not as a banner detached from the input.
+  await expect(
+    adminPage.getByText("must be a non-empty string").first()
+  ).toBeVisible();
+
+  // An invalid file blocks the apply from ANY step, not only the one being
+  // edited: the Review gate reads the whole draft.
+  await openWizardStep(adminPage, /Review/);
+  const applyButton = adminPage.getByRole("button", {
+    name: "Fix the highlighted fields first"
+  });
+
+  await expect(applyButton).toBeVisible();
+  await expect(applyButton).toBeDisabled();
+
+  // Closing without applying leaves disk untouched, so nothing to restore.
+  await adminPage.close();
+
+  const restorePage = await context.newPage();
+  await restoreSetupPhase(restorePage);
 
   await context.close();
 });

@@ -1,10 +1,9 @@
 import {
   CLIENT_TO_SERVER_EVENTS,
+  CONFIG_FILE_KEYS,
   SERVER_TO_CLIENT_EVENTS,
-  validateGameConfigFile,
-  type ConfigContentSnapshot,
+  type ConfigFileKey,
   type ConfigResultPayload,
-  type GameConfigFile,
   type HostSecretPayload,
   type ValidationIssue
 } from "@wingnight/shared";
@@ -16,47 +15,62 @@ import type {
   OutboundSocketEvents
 } from "../../../socketContracts/index";
 import { readHostSecret } from "../../../utils/hostSecretStorage";
+import {
+  selectDirtyEdits,
+  selectDraftIssues,
+  toConfigDraft,
+  type ConfigDraft
+} from "../contentDraft";
 import { resolveConfigOutcome } from "../resolveConfigOutcome";
 import { selectIssueMessages, type IssueMessagesByPath } from "../selectIssueMessages";
-
-// The wizard edits exactly one content file. Roster and prompt packs are WN-19.
-const GAME_CONFIG_KEY = "gameConfig";
 
 type ConfigWizardSocket = Pick<
   Socket<InboundSocketEvents, OutboundSocketEvents>,
   "on" | "off" | "emit" | "connected"
 >;
 
+// One map per file rather than one map overall: a step edits two files at once
+// (roster is players + teams), and `players.name` and `gameConfig.name` would
+// otherwise collide on the bare `name` a field is addressed by.
+export type IssueMessagesByFile = Readonly<
+  Record<ConfigFileKey, IssueMessagesByPath>
+>;
+
 export type ConfigWizardApi = {
-  gameConfig: GameConfigFile | null;
-  roster: Pick<ConfigContentSnapshot, "players" | "teams"> | null;
-  issueMessagesByPath: IssueMessagesByPath;
+  draft: ConfigDraft | null;
+  // Read-only: geo content is produced by `pnpm import:geo`, so the snapshot
+  // carries a count and there is no write path to key.
+  geoPromptCount: number;
+  issueMessagesByFile: IssueMessagesByFile;
   hasBlockingIssues: boolean;
   isDirty: boolean;
   isLocked: boolean;
   didApply: boolean;
   errorMessage: string | null;
-  editGameConfig: (edit: (gameConfig: GameConfigFile) => GameConfigFile) => void;
+  editFile: <Key extends ConfigFileKey>(
+    key: Key,
+    edit: (file: ConfigDraft[Key]) => ConfigDraft[Key]
+  ) => void;
   apply: () => void;
 };
 
-// Lifted into the file's coordinates so a locally-detected issue and a
-// server-reported one address the same field. The server prefixes its issues
-// with the file key before they reach the wire (`contentWriter`), so without
-// this the two sets would be in different coordinate systems and only one would
-// ever land on an input.
-const toFileScopedIssues = (issues: ValidationIssue[]): ValidationIssue[] => {
-  return issues.map(({ path, message }) => ({
-    path: path.length === 0 ? GAME_CONFIG_KEY : `${GAME_CONFIG_KEY}.${path}`,
-    message
-  }));
+const selectIssueMessagesByFile = (
+  issues: ValidationIssue[]
+): IssueMessagesByFile => {
+  return Object.fromEntries(
+    CONFIG_FILE_KEYS.map((key) => [key, selectIssueMessages(issues, key)])
+  ) as IssueMessagesByFile;
 };
 
 export const useConfigWizard = (
   socket: ConfigWizardSocket | null
 ): ConfigWizardApi => {
-  const [snapshot, setSnapshot] = useState<ConfigContentSnapshot | null>(null);
-  const [draft, setDraft] = useState<GameConfigFile | null>(null);
+  // The draft the host is editing, and the disk state it was seeded from. Both
+  // are the WRITE shapes (see `contentDraft`), so the baseline can be diffed
+  // against the draft key-for-key and the difference IS the apply payload.
+  const [baseline, setBaseline] = useState<ConfigDraft | null>(null);
+  const [draft, setDraft] = useState<ConfigDraft | null>(null);
+  const [geoPromptCount, setGeoPromptCount] = useState(0);
   const [serverIssues, setServerIssues] = useState<ValidationIssue[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [didApply, setDidApply] = useState(false);
@@ -93,8 +107,11 @@ export const useConfigWizard = (
       // A successful read or apply is the freshest truth on disk, so it
       // re-seeds both the baseline and the draft — after an apply the two
       // agree, which is what makes the surface read "clean" again.
-      setSnapshot(outcome.content);
-      setDraft(outcome.content.gameConfig);
+      const nextDraft = toConfigDraft(outcome.content);
+
+      setBaseline(nextDraft);
+      setDraft(nextDraft);
+      setGeoPromptCount(outcome.content.geoPromptCount);
       setDidApply(outcome.didApply);
     };
 
@@ -133,35 +150,42 @@ export const useConfigWizard = (
     };
   }, [resolveHostSecret, socket]);
 
-  // Called bare, without the minigame-rules validator: `packages/shared` has no
-  // way to reach the runtime plugins, and neither does the client. The server
-  // injects its plugin-backed validator on the write path, so rules failures
-  // still come back as server issues — this is a pre-check, not a replacement.
+  // Every file is validated on every keystroke, not just the one being edited:
+  // the Review step's apply button is gated on the WHOLE draft, so an invalid
+  // roster has to block an apply the host started from the lineup step.
   const localIssues = useMemo(
-    () => (draft === null ? [] : validateGameConfigFile(draft)),
+    () => (draft === null ? [] : selectDraftIssues(draft)),
     [draft]
   );
 
-  const issueMessagesByPath = useMemo(
-    () =>
-      selectIssueMessages(
-        [...toFileScopedIssues(localIssues), ...serverIssues],
-        GAME_CONFIG_KEY
-      ),
+  const issueMessagesByFile = useMemo(
+    () => selectIssueMessagesByFile([...localIssues, ...serverIssues]),
     [localIssues, serverIssues]
   );
 
   const isDirty = useMemo(() => {
-    if (draft === null || snapshot === null) {
+    if (draft === null || baseline === null) {
       return false;
     }
 
-    return JSON.stringify(draft) !== JSON.stringify(snapshot.gameConfig);
-  }, [draft, snapshot]);
+    return selectDirtyEdits(draft, baseline).length > 0;
+  }, [baseline, draft]);
 
-  const editGameConfig = useCallback(
-    (edit: (gameConfig: GameConfigFile) => GameConfigFile): void => {
-      setDraft((previous) => (previous === null ? previous : edit(previous)));
+  const editFile = useCallback(
+    <Key extends ConfigFileKey>(
+      key: Key,
+      edit: (file: ConfigDraft[Key]) => ConfigDraft[Key]
+    ): void => {
+      setDraft((previous) => {
+        if (previous === null) {
+          return previous;
+        }
+
+        const nextDraft: ConfigDraft = { ...previous };
+        nextDraft[key] = edit(previous[key]);
+
+        return nextDraft;
+      });
       // The host is now typing past whatever the last apply reported, so the
       // confirmation stops being true.
       setDidApply(false);
@@ -169,30 +193,36 @@ export const useConfigWizard = (
     []
   );
 
+  // Apply is the wizard's ONLY write. A bare `config:save` exists on the wire
+  // and on the server, but nothing here calls it: the Review step makes apply
+  // the single action, so a save that did not also re-seed the room would only
+  // ever leave the two out of step.
   const apply = useCallback((): void => {
     const hostSecret = resolveHostSecret();
 
-    if (socket === null || draft === null || hostSecret === null) {
+    if (socket === null || draft === null || baseline === null || hostSecret === null) {
       return;
     }
 
-    socket.emit(CLIENT_TO_SERVER_EVENTS.CONFIG_APPLY, {
-      hostSecret,
-      // `ConfigFileEdit.value` is the file's WHOLE next contents, not a delta.
-      files: [{ key: GAME_CONFIG_KEY, value: draft }]
-    });
-  }, [draft, resolveHostSecret, socket]);
+    const files = selectDirtyEdits(draft, baseline);
+
+    if (files.length === 0) {
+      return;
+    }
+
+    socket.emit(CLIENT_TO_SERVER_EVENTS.CONFIG_APPLY, { hostSecret, files });
+  }, [baseline, draft, resolveHostSecret, socket]);
 
   return {
-    gameConfig: draft,
-    roster: snapshot,
-    issueMessagesByPath,
+    draft,
+    geoPromptCount,
+    issueMessagesByFile,
     hasBlockingIssues: localIssues.length > 0,
     isDirty,
     isLocked,
     didApply,
     errorMessage,
-    editGameConfig,
+    editFile,
     apply
   };
 };

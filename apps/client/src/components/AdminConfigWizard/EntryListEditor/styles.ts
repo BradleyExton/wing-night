@@ -1,18 +1,14 @@
 export {
   addRowButton,
-  chipRow,
   field,
   fieldGrid,
   inputInvalid,
-  numberInput,
-  removeButton,
-  entryCard as roundCard,
-  entryHead as roundHead
+  entryCard,
+  entryHead,
+  removeButton
 } from "../fieldTokens";
 
 export {
-  deckChip as chip,
-  deckChipActive as chipActive,
   fieldLabel as label,
   inputBase as input
 } from "../../HostControlPanel/styleTokens";

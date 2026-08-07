@@ -1,11 +1,10 @@
-import type { ConfigContentSnapshot, GameConfigFile } from "@wingnight/shared";
-
 import { adminCopy } from "../../../copy/admin";
+import type { ConfigDraft } from "../contentDraft";
 import * as styles from "./styles";
 
 type ReviewStepProps = {
-  gameConfig: GameConfigFile;
-  roster: Pick<ConfigContentSnapshot, "players" | "teams"> | null;
+  draft: ConfigDraft;
+  geoPromptCount: number;
   isLocked: boolean;
   isDirty: boolean;
   hasBlockingIssues: boolean;
@@ -30,14 +29,15 @@ const resolveApplyLabel = (
 };
 
 export const ReviewStep = ({
-  gameConfig,
-  roster,
+  draft,
+  geoPromptCount,
   isLocked,
   isDirty,
   hasBlockingIssues,
   didApply,
   onApply
 }: ReviewStepProps): JSX.Element => {
+  const { gameConfig } = draft;
   const rows: readonly { key: string; value: string }[] = [
     { key: adminCopy.reviewPackKey, value: gameConfig.name },
     {
@@ -62,8 +62,16 @@ export const ReviewStep = ({
     {
       key: adminCopy.reviewRosterKey,
       value: adminCopy.reviewRosterValue(
-        roster?.players.length ?? 0,
-        roster?.teams.length ?? 0
+        draft.players.players.length,
+        draft.teams.teams.length
+      )
+    },
+    {
+      key: adminCopy.reviewPromptsKey,
+      value: adminCopy.reviewPromptsValue(
+        draft.trivia.prompts.length,
+        draft.drawing.prompts.length,
+        geoPromptCount
       )
     }
   ];
@@ -78,6 +86,8 @@ export const ReviewStep = ({
           </div>
         ))}
       </div>
+
+      <p className={styles.warning}>{adminCopy.rosterOverwriteWarning}</p>
 
       <p className={styles.warning}>{adminCopy.hostAuthCoexistenceWarning}</p>
 

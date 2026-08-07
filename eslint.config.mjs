@@ -11,9 +11,6 @@ export default [
       // Agent worktrees are transient checkouts of this repo; linting them would let
       // stale copies of already-fixed files redden the gate.
       ".claude/**",
-      // Throwaway config-wizard variant lab (dev-gated, never shipped). WN-11 ports the
-      // picked variant into prod, then deletes both the folder and this entry.
-      "apps/client/src/components/HostControlPanel/ConfigSetupPrototype/**",
       // Throwaway ANAMORPH feel lab behind /dev/lab/anamorph. A four-knob control lab is
       // hardcoded labels and runtime style values by construction, which the wingnight
       // component rules rightly reject in shipped code. Scope carve-out only — no rule is

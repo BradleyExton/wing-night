@@ -2,10 +2,6 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { type RoomState } from "@wingnight/shared";
 
 import { ContentFatalState } from "../ContentFatalState";
-import {
-  ConfigSetupPrototypeLab,
-  resolveConfigSetupPrototypeVariant
-} from "./ConfigSetupPrototype";
 import { HostActionBarSurface } from "./HostActionBarSurface";
 import { OverrideActionsSurface } from "./OverrideActionsSurface";
 import { OverrideDock } from "./OverrideDock";
@@ -27,13 +23,6 @@ const EMPTY_TEAMS: RoomState["teams"] = [];
 
 export const HostControlPanel = (): JSX.Element => {
   useHostWakeLock();
-  // This panel also renders without a DOM (the unit tests render it to a string), where
-  // neither `window` nor Vite's `import.meta.env` exists — so the lab is only consulted in
-  // a browser. Goes away with the lab itself in WN-11.
-  const configSetupPrototypeVariant =
-    typeof window === "undefined"
-      ? null
-      : resolveConfigSetupPrototypeVariant(window.location.search);
   const roomState = useHostRoomState();
   const handlers = useHostHandlers();
   const [isOverrideDockOpen, setIsOverrideDockOpen] = useState(false);
@@ -81,12 +70,6 @@ export const HostControlPanel = (): JSX.Element => {
   }, [overrideDockContext.isVisible, overrideDockContext.showBadge]);
   if (fatalError !== null) {
     return <ContentFatalState fatalError={fatalError} />;
-  }
-
-  // PROTOTYPE gate (throwaway, dev-only): /host?variant=A|B|C renders the
-  // config-setup lab instead of the phase body. Delete with ConfigSetupPrototype/.
-  if (configSetupPrototypeVariant !== null) {
-    return <ConfigSetupPrototypeLab variant={configSetupPrototypeVariant} />;
   }
 
   return (

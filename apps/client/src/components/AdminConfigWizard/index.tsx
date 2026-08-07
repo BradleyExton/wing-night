@@ -17,7 +17,9 @@ import {
 } from "./gameConfigDraft";
 import { IdentityStep } from "./IdentityStep";
 import { LineupStep } from "./LineupStep";
+import { PromptPacksStep } from "./PromptPacksStep";
 import { ReviewStep } from "./ReviewStep";
+import { RosterStep } from "./RosterStep";
 import { useConfigWizard } from "./useConfigWizard";
 import * as styles from "./styles";
 
@@ -29,6 +31,8 @@ const STEP_TITLES = [
   adminCopy.identityStepTitle,
   adminCopy.lineupStepTitle,
   adminCopy.clocksStepTitle,
+  adminCopy.rosterStepTitle,
+  adminCopy.promptPacksStepTitle,
   adminCopy.reviewStepTitle
 ] as const;
 
@@ -39,7 +43,7 @@ export const AdminConfigWizard = ({
 }: AdminConfigWizardProps): JSX.Element => {
   const wizard = useConfigWizard(socket);
   const [stepIndex, setStepIndex] = useState(0);
-  const { gameConfig } = wizard;
+  const { draft, editFile, isLocked, issueMessagesByFile } = wizard;
 
   return (
     <div className={styles.root}>
@@ -73,7 +77,7 @@ export const AdminConfigWizard = ({
           ))}
         </nav>
 
-        {wizard.isLocked && (
+        {isLocked && (
           <p className={styles.lockBanner}>
             {adminCopy.lockedBannerTitle}
             <span className={styles.lockBannerHint}>
@@ -82,23 +86,23 @@ export const AdminConfigWizard = ({
           </p>
         )}
 
-        {wizard.errorMessage !== null && !wizard.isLocked && (
+        {wizard.errorMessage !== null && !isLocked && (
           <p className={styles.errorBanner} role="alert">
             {wizard.errorMessage}
           </p>
         )}
 
-        {gameConfig === null ? (
+        {draft === null ? (
           <p className={styles.status}>{adminCopy.loadingLabel}</p>
         ) : (
           <div className={styles.stepBody}>
             {stepIndex === 0 && (
               <IdentityStep
-                gameConfig={gameConfig}
-                issueMessagesByPath={wizard.issueMessagesByPath}
-                isLocked={wizard.isLocked}
+                gameConfig={draft.gameConfig}
+                issueMessagesByPath={issueMessagesByFile.gameConfig}
+                isLocked={isLocked}
                 onNameChange={(name): void => {
-                  wizard.editGameConfig((previous) =>
+                  editFile("gameConfig", (previous) =>
                     setGameConfigName(previous, name)
                   );
                 }}
@@ -107,19 +111,19 @@ export const AdminConfigWizard = ({
 
             {stepIndex === 1 && (
               <LineupStep
-                gameConfig={gameConfig}
-                issueMessagesByPath={wizard.issueMessagesByPath}
-                isLocked={wizard.isLocked}
+                gameConfig={draft.gameConfig}
+                issueMessagesByPath={issueMessagesByFile.gameConfig}
+                isLocked={isLocked}
                 onRoundChange={(roundIndex, edit): void => {
-                  wizard.editGameConfig((previous) =>
+                  editFile("gameConfig", (previous) =>
                     setRoundField(previous, roundIndex, edit)
                   );
                 }}
                 onAddRound={(): void => {
-                  wizard.editGameConfig(addRound);
+                  editFile("gameConfig", addRound);
                 }}
                 onRemoveRound={(roundIndex): void => {
-                  wizard.editGameConfig((previous) =>
+                  editFile("gameConfig", (previous) =>
                     removeRound(previous, roundIndex)
                   );
                 }}
@@ -128,25 +132,58 @@ export const AdminConfigWizard = ({
 
             {stepIndex === 2 && (
               <ClocksScoringStep
-                gameConfig={gameConfig}
-                issueMessagesByPath={wizard.issueMessagesByPath}
-                isLocked={wizard.isLocked}
+                gameConfig={draft.gameConfig}
+                issueMessagesByPath={issueMessagesByFile.gameConfig}
+                isLocked={isLocked}
                 onTimerChange={(timerKey, seconds): void => {
-                  wizard.editGameConfig((previous) =>
+                  editFile("gameConfig", (previous) =>
                     setTimer(previous, timerKey, seconds)
                   );
                 }}
                 onScoringChange={(edit): void => {
-                  wizard.editGameConfig((previous) => setScoring(previous, edit));
+                  editFile("gameConfig", (previous) => setScoring(previous, edit));
+                }}
+              />
+            )}
+
+            {stepIndex === 3 && (
+              <RosterStep
+                players={draft.players}
+                teams={draft.teams}
+                playerIssueMessagesByPath={issueMessagesByFile.players}
+                teamIssueMessagesByPath={issueMessagesByFile.teams}
+                isLocked={isLocked}
+                onPlayersChange={(players): void => {
+                  editFile("players", () => players);
+                }}
+                onTeamsChange={(teams): void => {
+                  editFile("teams", () => teams);
+                }}
+              />
+            )}
+
+            {stepIndex === 4 && (
+              <PromptPacksStep
+                trivia={draft.trivia}
+                drawing={draft.drawing}
+                geoPromptCount={wizard.geoPromptCount}
+                triviaIssueMessagesByPath={issueMessagesByFile.trivia}
+                drawingIssueMessagesByPath={issueMessagesByFile.drawing}
+                isLocked={isLocked}
+                onTriviaChange={(trivia): void => {
+                  editFile("trivia", () => trivia);
+                }}
+                onDrawingChange={(drawing): void => {
+                  editFile("drawing", () => drawing);
                 }}
               />
             )}
 
             {stepIndex === LAST_STEP_INDEX && (
               <ReviewStep
-                gameConfig={gameConfig}
-                roster={wizard.roster}
-                isLocked={wizard.isLocked}
+                draft={draft}
+                geoPromptCount={wizard.geoPromptCount}
+                isLocked={isLocked}
                 isDirty={wizard.isDirty}
                 hasBlockingIssues={wizard.hasBlockingIssues}
                 didApply={wizard.didApply}
