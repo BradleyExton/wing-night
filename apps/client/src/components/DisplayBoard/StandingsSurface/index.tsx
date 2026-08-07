@@ -19,7 +19,10 @@ export const StandingsSurface = ({
 
   if (standings.length === 0) {
     return (
-      <footer className={styles.footer}>
+      <footer
+        className={styles.footer}
+        ref={styles.applyFooterColumns(standings.length)}
+      >
         <p className={styles.emptyLabel}>{displayBoardCopy.standingsEmptyLabel}</p>
       </footer>
     );

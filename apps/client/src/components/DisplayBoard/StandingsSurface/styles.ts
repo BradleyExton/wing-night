@@ -4,6 +4,10 @@ export const footer =
 // One equal column per team, and the team count is only known at runtime, so the track
 // listing can't be a static utility class. It is applied through a ref so the declaration
 // stays here with the rest of the styling rather than becoming an inline style prop.
+//
+// Both render branches carry this ref and a zero count clears the listing, because React
+// reuses the same <footer> node across the empty/populated swap and does not diff a style
+// written imperatively — leaving it set would strand the empty state in a stale track.
 export const applyFooterColumns =
   (columnCount: number) =>
   (element: HTMLElement | null): void => {
@@ -11,7 +15,8 @@ export const applyFooterColumns =
       return;
     }
 
-    element.style.gridTemplateColumns = `repeat(${columnCount}, minmax(0, 1fr))`;
+    element.style.gridTemplateColumns =
+      columnCount > 0 ? `repeat(${columnCount}, minmax(0, 1fr))` : "";
   };
 
 export const emptyLabel =
