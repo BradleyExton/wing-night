@@ -1,13 +1,15 @@
 ---
 id: WN-17
 title: "CONTRAPTION integrator module + keyframe byte measurement (headless half)"
-status: in-review
+status: done
 kind: spike
 priority: medium
 created: 2026-08-07
 deps: []
 blocked_by: []
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-17"
+landed_range: 3ae17902aefe2ca718e10b81567655a049ef3587..46b49d10a97cb7df8d4bdfabed13403485c7287a
+review: pending
 ---
 
 ## Goal
@@ -75,6 +77,7 @@ module does not touch them.
 - 2026-08-07T15:30:06.192Z browser-verify: skipped (non-UI)
 - 2026-08-07T15:30:34.587Z handed off → in-review (verify green); awaiting land
 - 2026-08-07T15:31:18.164Z re-attested at in-review (verify + qa re-run green) for fd257edd
+- 2026-08-07T15:32:44.444Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 ### Keyframe byte measurement — the number WN-15 is waiting on
