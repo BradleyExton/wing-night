@@ -8,12 +8,12 @@ priority: medium
 created: 2026-08-07
 
 # ─── Optional (delete a line to take its default) ───────────────────────────
-deps: []                 # list<id>; DAG edges; must all be `done` before the SELECTOR picks this; default []
+deps: [WN-17]            # list<id>; DAG edges; must all be `done` before the SELECTOR picks this; default []
 blocked_by: []           # list<string>; external/manual waits (free text); non-empty => selector skips; default []
 # model: sonnet          # opus | sonnet | haiku; unset => global default-by-kind policy (SCHEMA §5)
 # thinking: medium       # low | medium | high; unset => policy
 # trust: checkpointed    # checkpointed | heads-down; default checkpointed
-needs_prototype: true    # logic-branch prototype: does the sim feel good to build for — see Plan
+needs_prototype: false   # the prototype is now its own ticket (WN-17), not an inline pipeline detour — see Plan
 # landing: preview-pr    # preview-pr | direct-main | feature-flag; unset => manifest default (SCHEMA §7)
 # worktree:              # set by work-on on claim (collision guard); default null
 # parallel_safe:         # RESERVED for F-8 (post-MVP) — do not set
