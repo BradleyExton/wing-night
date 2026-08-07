@@ -7,8 +7,13 @@ verify:                              # pnpm workspace scripts (root package.json
   lint:      "pnpm lint"                       # in the default gate since WN-3 burned the baseline down
   typecheck: "pnpm typecheck"
   test:      "pnpm test"                       # unit tests (tsx --test) + lint-rule tests
-  e2e:       "CI=1 pnpm test:e2e"              # full Playwright suite — opt-in via --steps e2e
-  test_one:  "pnpm test:e2e {pattern}"         # single spec; Playwright boots its own servers
+  # Gate runs pin CI=1 (disables reuseExistingServer) plus dedicated e2e ports, so Playwright
+  # always boots its own stack. 3000/5173 are routinely held on this machine — another project
+  # squats 3000, wing-night dev itself runs on PORT=3001 — and reusing one of those servers would
+  # verify a foreign worktree's code and report a green gate for it (WN-5). 3100/5273 were picked
+  # clear of 3000/3001/5173/5174; change them freely if they ever collide.
+  e2e:       "CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e"              # full Playwright suite — opt-in via --steps e2e
+  test_one:  "CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e {pattern}"    # single spec; isolated stack, never reuses a live dev server
 src_globs:
   - "apps/client/src/**/*.ts"
   - "apps/client/src/**/*.tsx"

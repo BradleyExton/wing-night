@@ -1,12 +1,13 @@
 ---
 id: WN-5
 title: "E2E gate integrity: stop reusing foreign dev servers; make test_one honest from a clean checkout"
-status: ready
+status: in-progress
 kind: chore
 priority: medium
 created: 2026-08-04
 deps: []
 blocked_by: []
+worktree: "/Users/bradleyexton/Projects/wing-night-WN-5"
 ---
 
 ## Goal
@@ -69,6 +70,10 @@ Grill summary:
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-07T02:08:34.968Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night-WN-5
+- 2026-08-07T02:11:47.230Z implemented: extracted resolvePort into tools/playwright-ports/index.mjs (env-overridable port with a fallback; a MALFORMED override throws instead of silently falling back — a typo'd port reverting to 5173 would reuse a live dev server, the exact dishonesty this ticket fights). playwright.config.ts now resolves WN_E2E_SERVER_PORT/WN_E2E_CLIENT_PORT (defaults 3000/5173), passes PORT to the server webServer env (gate1 finding 1), interpolates the client --port and adds --strictPort (gate1 finding 2). Manifest e2e/test_one pinned to CI=1 + 3100/5273 with a comment explaining the port choice. Root test script picks up the new colocated test via test:playwright-ports.
+- 2026-08-07T02:17:45.527Z verify green (lint/typecheck/test). e2e run surfaced a latent bug the ticket did not anticipate: 'pnpm --filter <pkg> dev -- --host ... --port ...' forwards a LITERAL '--' to vite, which then ignores every following flag — so the pre-existing '--port 5173' was inert and only appeared to work because 5173 is vite's default. Proof: vite logged 'Port 5173 is in use, trying another one...' and bound 5174 while Playwright polled 5273. Fixed by switching the client webServer to 'pnpm --filter @wingnight/client exec vite --host 127.0.0.1 --port <n> --strictPort', which hands flags straight to vite (verified: binds 5273, 200 on both 127.0.0.1 and localhost). Without this the whole client-side port override would have been inert.
+- 2026-08-07T02:17:52.145Z AC verification: manifest 'e2e' (CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e) → 8 passed (17.7s) with foreign dev servers deliberately holding [::1]:5173 and *:3000 throughout. manifest 'test_one' via 'work verify --test-one tests/e2e/smoke.spec.ts' → green on the same isolated ports. Interactive defaults unchanged (3000/5173, reuseExistingServer: !CI) so 'pnpm test:e2e' and the CI workflow ('pnpm playwright test') behave as before.
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
