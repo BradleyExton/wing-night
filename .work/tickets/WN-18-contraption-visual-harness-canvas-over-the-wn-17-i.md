@@ -1,13 +1,15 @@
 ---
 id: WN-18
 title: "CONTRAPTION visual harness: canvas over the WN-17 integrator for the readability/piece-set/length questions"
-status: in-review
+status: done
 kind: spike
 priority: medium
 created: 2026-08-07
 deps: [WN-17]
 blocked_by: []
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-18"
+landed_range: 32ebe6ecabb77dceac25ee4330285e2ce4546c7e..75024c126e4cd8c12854e6f4f7e32bb14d05e753
+review: pending
 ---
 
 ## Goal
@@ -70,6 +72,7 @@ precedent; `App.tsx:46` bare `window.location.pathname`.
 - 2026-08-07T16:14:46.170Z browser-verify: skipped (non-UI) — ticket kind is 'spike', not 'ui', so readBrowserOutcome routes to skip. Note recorded BEFORE the handoff per O-6. A Chromium drive was nonetheless run as evidence, because renderToStaticMarkup never executes the draw effect and nothing else in this diff proves the canvas paints: 7223 non-background pixels sampled via getImageData, zero pageerror/console-error, and both readings of the best-of-N control exercised live. Recorded in ## Evidence.
 - 2026-08-07T16:14:53.649Z qa: pass (qa-reviewer, attempt 1, confidence high, sha b7a4ae3). 5 minors + 2 infos, no blocker/major. The reviewer mutation-probed the load-bearing claim rather than trusting it: shifting each preset's last ramp 25 units out of the flight path drives the min contact distance from ~2.60 (true surface contact at radius 2.6) to 15.97/9.25/10.86 and the assertion fails loudly — so the contact guard genuinely fixes the earlier proximity-based revision rather than being relaxed to match. It also adjudicated the mid-run attemptsDiffer change as a legitimate sharpening (a whole-track comparison is a superset of the endpoint one at the same threshold), not a test bent to fit. Acted on ONE finding in-run — minor #2, that the ## Evidence blind-spot paste was captured pre-staging and so surveyed an empty diff; the real 200-symbol output and a review of every flagged call-site now replace it, per verification.md 'report faithfully'. The other four minors + two infos are advisory, are NOT loop fodder per the work-on contract, and ride into review; the three that change how the lab should be READ (generous rim LANDED grade, the benchmark control never settling, the dangling creepNote) are surfaced in ## Evidence for whoever drives it.
 - 2026-08-07T16:15:15.392Z handed off → in-review (verify green); awaiting land
+- 2026-08-07T16:16:36.928Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 ### Verify gate (worktree `/Users/bradleyexton/Projects/wing-night-WN-18`)
