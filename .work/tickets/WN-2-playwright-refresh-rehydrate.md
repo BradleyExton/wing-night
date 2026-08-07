@@ -1,12 +1,14 @@
 ---
 id: WN-2
 title: Playwright display refresh-rehydrate coverage (TASKS.md 9.2)
-status: in-review
+status: done
 kind: chore
 priority: medium
 created: 2026-08-01
 deps: [WN-1, WN-5]   # WN-5: test_one/e2e must boot isolated servers first — until then a Playwright green may be verifying a foreign dev server's code
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-2"
+landed_range: e142dadb2b63008313acb24744b97a7b34c05173..a66bb6805f87f2e69841bea06b2dcd6ddb2a9598
+review: pending
 ---
 
 ## Goal
@@ -49,6 +51,7 @@ Re-planned 2026-08-07 after the gate1 park (WN-2.gate1.json):
 - 2026-08-07T05:36:57.038Z Correction to the V-5 record: my first 'work grep --since main' ran pre-commit against a staged-only tree and reported 'no touched symbols (nothing to survey)'. The qa-reviewer flagged that as an inaccurate sweep record. Re-run post-commit it reports 7 touched symbols, warning on displayPage (29 call-sites) and hostPage (66). I opened all of them: tests/e2e/host-display-sync.spec.ts, intro-countdown.spec.ts, overrides.spec.ts, smoke.spec.ts, hostShell.ts. Both are local const names declared per-spec, not shared symbols — lexical false positives of the sweep. The new spec exports nothing, so no downstream call-site could need updating. No blind spot. qa-reviewer verdict: pass (b58162f), no blocker/major; it independently re-proved non-vacuity and teeth by its own mutation runs and cleared the ensureSetupPhase restoration as genuine fixture hygiene. Two advisory minors ride forward per the work-on contract (minor/info are not loop fodder): (1) restoration is a plain statement, not test.afterEach/finally, so a mid-test failure leaves the singleton dirty and can cascade a second failure into smoke.spec.ts — noise-on-red only, never a false green; (2) 'Eating - Frank's' / 'On the clock:' literals are duplicated from host-display-sync.spec.ts (pre-existing house idiom) and could be lifted into a shared module.
 - 2026-08-07T05:37:56.611Z browser-verify: skipped (non-UI — kind: chore; the deliverable is a Playwright spec, and its own e2e run is the browser evidence)
 - 2026-08-07T05:38:01.141Z handed off → in-review (verify green); awaiting land
+- 2026-08-07T05:38:58.034Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 <!-- captured-evidence:start -->
