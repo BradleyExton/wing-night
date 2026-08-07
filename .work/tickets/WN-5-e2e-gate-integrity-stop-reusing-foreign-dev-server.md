@@ -1,7 +1,7 @@
 ---
 id: WN-5
 title: "E2E gate integrity: stop reusing foreign dev servers; make test_one honest from a clean checkout"
-status: in-progress
+status: in-review
 kind: chore
 priority: medium
 created: 2026-08-04
@@ -74,9 +74,39 @@ Grill summary:
 - 2026-08-07T02:11:47.230Z implemented: extracted resolvePort into tools/playwright-ports/index.mjs (env-overridable port with a fallback; a MALFORMED override throws instead of silently falling back — a typo'd port reverting to 5173 would reuse a live dev server, the exact dishonesty this ticket fights). playwright.config.ts now resolves WN_E2E_SERVER_PORT/WN_E2E_CLIENT_PORT (defaults 3000/5173), passes PORT to the server webServer env (gate1 finding 1), interpolates the client --port and adds --strictPort (gate1 finding 2). Manifest e2e/test_one pinned to CI=1 + 3100/5273 with a comment explaining the port choice. Root test script picks up the new colocated test via test:playwright-ports.
 - 2026-08-07T02:17:45.527Z verify green (lint/typecheck/test). e2e run surfaced a latent bug the ticket did not anticipate: 'pnpm --filter <pkg> dev -- --host ... --port ...' forwards a LITERAL '--' to vite, which then ignores every following flag — so the pre-existing '--port 5173' was inert and only appeared to work because 5173 is vite's default. Proof: vite logged 'Port 5173 is in use, trying another one...' and bound 5174 while Playwright polled 5273. Fixed by switching the client webServer to 'pnpm --filter @wingnight/client exec vite --host 127.0.0.1 --port <n> --strictPort', which hands flags straight to vite (verified: binds 5273, 200 on both 127.0.0.1 and localhost). Without this the whole client-side port override would have been inert.
 - 2026-08-07T02:17:52.145Z AC verification: manifest 'e2e' (CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e) → 8 passed (17.7s) with foreign dev servers deliberately holding [::1]:5173 and *:3000 throughout. manifest 'test_one' via 'work verify --test-one tests/e2e/smoke.spec.ts' → green on the same isolated ports. Interactive defaults unchanged (3000/5173, reuseExistingServer: !CI) so 'pnpm test:e2e' and the CI workflow ('pnpm playwright test') behave as before.
+- 2026-08-07T02:25:54.026Z browser-verify: skipped (non-UI)
+- 2026-08-07T02:25:54.137Z qa: PASS (qa-reviewer, confidence high, sha 6b6f779). Reviewer independently re-ran the isolated suite (8 passed 17.5s with foreign servers live on 5173+3000) and mutation-tested the new unit tests (3 mutations, all caught). Two advisory MINORs left unaddressed per the minor/info non-blocking rule, carried for post-merge review: (1) the client webServer bypasses apps/client's own 'dev' script; the reviewer verified that simply DROPPING the literal '--' (i.e. 'pnpm --filter @wingnight/client dev --host ... --port ...') also forwards flags cleanly, which would fix the bug without duplicating the launch definition — a smaller diff worth adopting. (2) the config half of the fix (client command, --strictPort, server PORT env, pinned manifest ports) has no unit-level regression test; only resolvePort does. Plus one INFO: bare interactive 'pnpm test:e2e' still reuses 5173/3000 by design (Plan-sanctioned), and README does not mention the WN_E2E_* overrides.
+- 2026-08-07T02:25:58.862Z handed off → in-review (verify green); awaiting land
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
+
+<!-- captured-evidence:start -->
+**Verify gate:** ✓ PASS (3 step(s))
+
+```
+✓ lint: pnpm lint
+✓ typecheck: pnpm typecheck
+✓ test: pnpm test
+```
+
+**Anti-blind-spot grep:** 4 symbol(s) with external call-sites reviewed:
+
+- `env` → apps/client/src/components/HostControlPanel/ConfigSetupPrototype/index.tsx:23, apps/client/src/components/HostControlPanel/index.tsx:31, apps/client/src/socket/createRoomSocket/index.ts:16, apps/client/src/socket/createRoomSocket/index.ts:36, apps/client/src/vite-env.d.ts:10, apps/server/src/index.ts:17, apps/server/src/socketServer/index.ts:32, apps/server/src/socketServer/index.ts:38, … 1 more (run `work grep`)
+- `parsedPort` → apps/server/src/index.ts:17, apps/server/src/index.ts:18
+- `rawValue` → apps/client/src/components/HostControlPanel/ScoreOverrideSurface/index.tsx:12, apps/client/src/components/HostControlPanel/ScoreOverrideSurface/index.tsx:13
+- `resolve` → apps/client/src/components/HostControlPanel/MinigameSurface/styles.ts:16, apps/server/src/contentLoader/contentLoaderUtils/index.ts:1, apps/server/src/contentLoader/contentLoaderUtils/index.ts:5, apps/server/src/contentLoader/loadContentFileWithFallback/index.ts:2, apps/server/src/contentLoader/loadContentFileWithFallback/index.ts:16, apps/server/src/contentLoader/loadContentFileWithFallback/index.ts:17, apps/server/src/minigames/runtime/index.ts:159, apps/server/src/routes/health/index.test.ts:10, … 5 more (run `work grep`)
+
+**QA findings (advisory):** 3 finding(s) carried from the passing verdict:
+- **minor** — The client webServer bypasses the client package's own `dev` script (`pnpm --filter @wingnight/client exec vite ...`) when a strictly smaller fix was available: simply dropping the literal `--`. This duplicates the client's launch definition in two places (apps/client/package.json `"dev": "vite"` and playwright.config.ts:46), so if `dev` ever grows a flag, a wrapper, or a mode, the e2e stack silently stops launching what `pnpm dev` launches. code-design §Utilities/§Modules: a duplicated source-of-truth is the anti-pattern here; the seam should stay the package script, with env/flags as the variable part.
+    evidence: I reproduced the implementer's `--` claim in a scratch pnpm 10.33.4 workspace (/tmp/wn5-pnpm-probe): `pnpm --filter demo dev -- --host 127.0.0.1 --port 5273` yields ARGV `["--","--host","127.0.0.1","--port","5273"]` — the claim is CORRECT, the old flags were genuinely inert. But the same probe shows `pnpm --filter demo dev --host 127.0.0.1 --port 5273` (no `--`) yields ARGV `["--host","127.0.0.1","--port","5273"]` — clean forwarding through the package's own script, with neither flag swallowed by pnpm. That form fixes the bug without bypassing `dev`. Current behavior is correct, so this is advisory only.
+- **minor** — The substantive half of the fix ships without an automated regression test. `tools/playwright-ports/index.test.mjs` covers only the pure `resolvePort` helper; the actual gate-integrity changes — the client webServer command (the `dev -- <flags>` inert-flag bug fixed mid-implementation), `--strictPort`, the server `env: { PORT }` wiring, and the manifest's pinned 3100/5273 — have no test that would fail if reverted. testing.md §Test quality: "Bug fixes ship with a regression test that fails without the fix." A cheap guard (assert the resolved `webServer` commands/urls off the imported config, or assert the command does not match /\bdev\s+--\s/) would lock in the discovered bug.
+    evidence: Test diff covers resolvePort only (10 cases, all env-injection through the public interface). Calibrated to minor rather than major because a reversion fails LOUDLY, not silently: with the flags inert again, Vite binds its default 5173 while Playwright polls 5273 and the webServer block times out red — exactly the symptom the implementer logged at Progress 02:17:45. Separately, CI=1 alone closes the dishonest-green path (Playwright refuses to start when reuseExistingServer=false and the URL already answers), so a silent wrong-tree pass is not reachable even if this regressed.
+- **info** — The bare interactive `pnpm test:e2e` (no env, no CI) still reuses whatever holds 5173/3000, so the wrong-tree-reuse hazard remains reachable outside the gate — and README.md:220 documents exactly that invocation with no mention of the isolated form. This is NOT a deviation: the approved Plan explicitly chose it ("`reuseExistingServer` stays `!CI` there") and the ACs are scoped to the manifest commands. Flagged only so the residual is a known one; a one-line README note on the `WN_E2E_*` overrides would close it.
+    evidence: playwright.config.ts:32,48 `reuseExistingServer: !process.env.CI` with defaults 3000/5173 (lines 9-10). Ticket Plan §Design mandates this. README.md:218-224 lists `pnpm test:e2e` / `pnpm playwright test` unqualified.
+
+_Captured 2026-08-07T02:25:58.862Z._
+<!-- captured-evidence:end -->
 
 ## Links
 - `playwright.config.ts` (webServer blocks); `.work/manifest.yml` `verify:` keys
