@@ -27,7 +27,7 @@ export const contraptionUiLabCopy = {
     "Observation only. The aesthetic pick between drumette and wing bone stays with the human " +
     "reviewer, and nothing here adds rotation to the integrator.",
   scriptedSceneNote:
-    "Scripted scene, not a run of the real integrator: WN-23's friction fix is not landed yet, so " +
-    "a live run would creep to a dead stop and mislead the judgement. The fixed-orientation " +
-    "constraint IS faithfully reproduced — that is the part being judged."
+    "Scripted scene, not a run of the real integrator — this lab judges the picture, and WN-18's " +
+    "ContraptionLab is the harness over the real physics. The fixed-orientation constraint IS " +
+    "faithfully reproduced, because that is the part being judged."
 } as const;

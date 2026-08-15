@@ -19,8 +19,14 @@ const BYTE_MEASURE_OPTIONS = {
  * not reach a verdict at all. WN-24 assumes "the benchmark preset now reaches a verdict"; this is
  * the assertion that makes that true rather than hoped.
  *
- * It is a genuine red-before/green-after gate on the physics change, not a tautology: run against
- * the pre-WN-23 resolver it returns null and fails.
+ * What it does and does NOT guard, stated precisely because an earlier draft of this comment
+ * overclaimed and the QA pass measured it: this is a gate on the FIXTURE, not on the physics. Under
+ * the new physics a bad re-tune is caught — slip pairs 0/0, 0.1/0.1, 0.2/0.25 and 0.3/0.35 all
+ * return null here. But it is not red against the pre-WN-23 resolver, because the fixture was
+ * re-tuned in the same commit and the old creep physics also drags these bodies to a dead stop
+ * (old resolver + this fixture settles at index 28; old resolver + the OLD 0.86/0.9 fixture is the
+ * null the ticket describes). The physics change itself is red-before-guarded by the two
+ * behavioural pins in `simulate/index.test.ts`, which is where that proof belongs.
  */
 test("settles the benchmark layout within the run the byte figures are measured over", () => {
   const run = simulate(BENCHMARK_LAYOUT, BYTE_MEASURE_OPTIONS);
