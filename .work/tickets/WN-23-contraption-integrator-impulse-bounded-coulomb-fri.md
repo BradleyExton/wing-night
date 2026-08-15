@@ -179,7 +179,112 @@ AC-11 lab repair: re-found two/four/six by search against ALL THREE predicate se
 Whole ContraptionLab suite 47/47; packages/shared contraption suite 39/39.
 
 ## Evidence
-<test output + the re-recorded 30fps/20fps byte table, recorded before `done`>
+
+### Verify
+
+```
+$ work verify
+✓ lint: pnpm lint
+✓ typecheck: pnpm typecheck
+✓ test: pnpm test
+✓ verify passed (3 step(s))
+```
+
+Whole tree **746 tests, 0 fail, 0 skipped, 0 todo**. `packages/shared` contraption suite 39/39;
+`apps/client` 374/374 — including the five `pieceSets` tests this change would otherwise have turned
+red. AC-12's `verify_extra` `e2e` key was run by the QA pass at this sha: **14 Playwright specs
+passed**, regression coverage of /admin, /host, /display and the minigame sandbox, none of which
+reference the lab.
+
+### AC-3 — the sliding pin is red against the old implementation, proven by stashing
+
+Stashed **only** `resolveSegmentContacts/index.ts`, keeping the new tests, and ran them against the
+pre-WN-23 resolver:
+
+| pin | threshold | old resolver | verdict |
+|---|---|---|---|
+| slides a low-friction body down a shallow ramp | travel > 20 | **0.155** | RED — the creep-to-dead-stop defect |
+| brings a high-friction body to rest | travel < 5 | **67320** | RED — old semantics amplify tangential 5×/step |
+
+Restored via `git stash pop`; both green after. The QA pass independently reproduced this by
+restoring the base resolver into a scratch tree and found **8 tests red** — both re-specified slip
+tests, both new clamp cases, both pins, and both byte-figure tests.
+
+Travel is monotone in the coefficient (slip 0 → 50.2, 0.1 → 37.7, 0.3 → 12.7, ≥0.5 → 0.14), so both
+thresholds have a real failure band on either side rather than sitting at an extreme.
+
+### AC-10 — byte figures, re-recorded
+
+**WN-17's published table is SUPERSEDED, not extended.** The geometry's materials AND the contact
+physics both changed, so the two sets of numbers are not comparable and must not be diffed.
+
+Basis: `CONTRAPTION_BENCHMARK_LAYOUT`, **6 bodies**, seed 1234, `durationSeconds: 4`, `stepHz: 240`,
+measured **per whole run**, JSON serialised as UTF-8.
+
+| keyframeHz | keyframes | jsonObjectBytes | jsonFlatRoundedBytes | packedFloat32Bytes |
+|---|---|---|---|---|
+| 30 | 121 | 34068 | 8599 | 5808 |
+| 20 | 81 | 22794 | 5757 | 3888 |
+
+The QA pass re-derived every figure independently, without importing `measureTrackBytes`, and
+matched to the digit — confirming all coordinates finite, so the smaller JSON is not a degenerate or
+NaN run.
+
+### AC-9 — the benchmark now reaches a verdict
+
+Before this change the fixture **never settled** (`resolveSettleIndex` → `null`): the five marbles
+crept forever, so it could not be graded at all. Re-tuned consciously rather than carried, because
+`slip` inverted meaning — candidates measured at the byte-measure parameters:
+
+| wing / marble slip | settle |
+|---|---|
+| 0.86 / 0.9 (the pre-Coulomb values) | 0.90s — but as "very grippy", not the "nearly frictionless" they were authored as |
+| 0.2 / 0.25 | **never settles** |
+| 0.3 / 0.35 | **never settles** |
+| **0.4 / 0.45 (chosen)** | **1.20s** |
+| 0.5 / 0.5 | 0.90s |
+
+WN-24's assumption that "the benchmark preset now reaches a verdict" is true.
+
+### AC-11 — lab routes re-found
+
+Searched against all three predicate sets the gate actually runs, not just the `pieceSets` one: its
+own suite (landed + settle ≤ 4s + every ramp contacted at 240Hz), the component's default `two`-set
+landing, and `labRun`'s seed-invariance / rebuild-variance pair. **TWO** found in 2451 tries (0.4s),
+**FOUR** 408 (0.1s), **SIX** 219 (0.1s). Measured settles: two 2.3s, four 2.9s, six 3.17s — the
+hints now carry those figures.
+
+Nesting is preserved by construction, so the nesting test is untouched. **No standard was relaxed.**
+The QA pass mutation-probed the contact guard: shifting each of the 12 ramps by +25x turns it red
+every time, and baseline contacts are true resting contacts (`minDist − radius` ≈ 1e-15), so the
+0.05 slack is not load-bearing.
+
+### The clamp, verified exhaustively
+
+The QA pass swept **28,800 cases** — 4 segment orientations × penetrations × `slip` ∈ [0 … Infinity]
+× restitution × tangential/normal velocities — and found **0 direction reversals, 0 magnitude
+growth, 0 non-finite results**. Zero-tangent contacts with `slip: Infinity` return 0 rather than 0/0.
+
+### Verdicts
+
+- `gate1`: **pass** (attempt 2, superseding the pre-re-plan grade) — `.work/verdicts/WN-23.gate1.json`
+- `qa`: **pass** — `.work/verdicts/WN-23.qa.json`
+
+### Known-imperfect, recorded rather than fixed
+
+Acted on: a comment on the benchmark settle test that overclaimed red-before (it gates the fixture,
+not the physics — corrected to say so), and the ContraptionUiLab note that said WN-23 was unlanded.
+
+Left, all advisory and all surfaced for post-merge review:
+
+- The `0.05` settle epsilon is now duplicated between the lab and the shared module, and the lab's
+  local `resolveSettleIndex` is a pass-through wrapper.
+- `contraptionMaxDisplacement` and `CONTRAPTION_SETTLE_EPSILON_UNITS` are exported from the package
+  root with no consumer outside the new module's own test.
+- The re-tune guard asserts on literal values (`!slips.includes(0.86)`), so it is a revert tripwire
+  rather than a behavioural assertion. The load-bearing guard is the settle assertion above it.
+- `slip` remains a misleading name post-inversion. Deliberately deferred to WN-15 with the piece
+  vocabulary; every value site in the tree is re-tuned here so nothing is silently reinterpreted.
 
 ## Links
 Rationale + lab evidence: [WN-15](WN-15-contraption-minigame-build-a-physics-contraption-o.md) `## Plan`.
