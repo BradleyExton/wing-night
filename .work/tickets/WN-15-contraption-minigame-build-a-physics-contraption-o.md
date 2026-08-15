@@ -8,7 +8,7 @@ priority: medium
 created: 2026-08-07
 
 # ─── Optional (delete a line to take its default) ───────────────────────────
-deps: [WN-18]            # list<id>; DAG edges; must all be `done` before the SELECTOR picks this; default []
+deps: [WN-18, WN-24]     # list<id>; DAG edges; must all be `done` before the SELECTOR picks this; default []
 blocked_by: []           # list<string>; external/manual waits (free text); non-empty => selector skips; default []
 # model: sonnet          # opus | sonnet | haiku; unset => global default-by-kind policy (SCHEMA §5)
 # thinking: medium       # low | medium | high; unset => policy
@@ -35,6 +35,63 @@ Ship CONTRAPTION as a minigame package: the active team lays out a handful of ph
 
 ## Plan
 <filled at GATE 1 — not yet grilled; run plan-work on this ticket>
+
+### Prototype findings — WN-18 lab driven 2026-08-15
+
+Driven at `/dev/lab/contraption` against the WN-17 integrator. **Q1 is answered; Q2/Q3/Q4 are
+deliberately NOT, and must be re-driven after the friction fix (see below) — every preset was
+search-found against physics that is about to change, so any answer taken now would be void.**
+
+**Q1 — failure readability: ship `Trail`.** Graded on a real miss (6-piece set, attempt 3,
+`MISSED — settled past the bucket`, 2.58s) at 0.5× playback:
+
+| Aid level | Does the miss read? |
+| --- | --- |
+| Trail + contacts | Yes, completely — path plus the exact ramp that over-kicked it |
+| **Trail** | **Yes — trail kinks imply the contacts; the arc over the bucket is plain** |
+| Bare | Only if watching the exact instant; the settled frame explains nothing |
+
+`Trail` is the minimum level that still carries the *why*, which is the bar the lab sets. Bare fails
+it: after settle it is just a wing on the floor, and half the room is eating.
+
+**Architecture — decision (a), settled, not leaning.** WN-17 measured the keyframe track at
+**8,610 B @30fps / 5,770 B @20fps** (JSON, 6 bodies, whole ~4s run). The lab's own telemetry
+corroborates at real piece counts: **1,571 B** (2 and 4 pieces) and **1,655 B** (6 pieces) per run.
+Track weight is a non-issue at any piece count, so option (a) — server emits the track, display
+replays it, mirroring drawing — wins outright. Option (b) is struck as an unnecessary optimization
+that would have bound us to the transcendental ban forever.
+
+**Blocking finding — the integrator cannot slide, and it decides the piece question.**
+`resolveSegmentContacts/index.ts:88` multiplies tangential velocity by `slip` (0.86) on **every
+integration step in sustained contact**, not per impact. A body resting on a ramp is in contact at
+all 240 steps/s, and `0.86^240` is effectively zero — so the wing creeps to a dead stop instead of
+sliding. Every route is therefore free-fall plus glancing deflections. Combined with the existing
+segments-only contact model (circles pass through each other), the entire buildable vocabulary is
+*drop, bounce, deflect* — no slides, no knock-on chains.
+
+This is why Q2 could not be answered: the lab's sets **nest** (four = two + 2, six = four + 2) and
+every added ramp is a near-bucket deflector, so the runs barely differ —
+
+| Set | Settle | Track bytes | Miss from centre |
+| --- | --- | --- | --- |
+| 2 pieces | 1.27s | 1,571 | 6.40 |
+| 4 pieces | 1.27s | 1,571 | 5.20 |
+| 6 pieces | 1.23s | 1,655 | 5.08 |
+
+— byte-identical track from 2 → 4 pieces. There is not enough physics for a sixth piece to be
+clever with, so a piece count chosen now would be measuring the defect, not the game.
+
+**Decision (2026-08-15): fix friction in the WN-17 module BEFORE WN-15 is scoped** — see WN-23.
+The alternative considered and rejected was constraining the offered ramp angles so a shelf can
+never be built; rejected because it locks the game to pachinko and does not restore the
+ramp-and-track vocabulary the pitch rests on. The failure mode being bought off: a team places a
+shallow ramp expecting a slide, the wing dies on it, and that reads as a bug rather than a wrong
+decision — precisely the arbitrary-failure outcome this ticket says kills the game.
+
+**Lab defect noted in passing (dies with the lab in this ticket, no action):** the `pieceSets`
+docstring claims `contraptionLabCopy.creepNote` surfaces the creep caveat to the room, but
+`creepNote` does not exist in `copy.ts` — flagged by qa-reviewer at WN-18 review and still dangling,
+so nobody driving the lab learns why the routes look ballistic.
 
 **Why `needs_prototype: true`.** This is the *logic* branch of the prototype skill, not the UI branch — the question is whether the sim is any fun to build for, and that only answers by driving it by hand:
 
