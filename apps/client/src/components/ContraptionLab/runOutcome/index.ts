@@ -1,3 +1,4 @@
+import { resolveContraptionSettleIndex } from "@wingnight/shared";
 import type {
   ContraptionLayout,
   ContraptionRun,
@@ -88,39 +89,12 @@ export const resolveBucket = (layout: ContraptionLayout): BucketRegion | null =>
   };
 };
 
-const maxDisplacement = (
-  before: readonly ContraptionVec2[],
-  after: readonly ContraptionVec2[]
-): number => {
-  return after.reduce((largest, position, index) => {
-    const previous = before[index];
-
-    if (previous === undefined) {
-      return largest;
-    }
-
-    const deltaX = position.x - previous.x;
-    const deltaY = position.y - previous.y;
-
-    return Math.max(largest, Math.sqrt(deltaX * deltaX + deltaY * deltaY));
-  }, 0);
-};
-
-/**
- * The keyframe index after which nothing moves again — found by walking backwards to the LAST
- * frame carrying motion, so a body that stalls mid-run and then gets knocked loose still reports
- * the later settle. Motion in the final frame means the run never settled at all.
- */
+// Settling moved to @wingnight/shared in WN-23, so the benchmark fixture — which lives in that
+// package — can PROVE it settles rather than asserting it. The lab consumes the shared predicate
+// instead of keeping a second copy: two settle definitions would drift, and the lab's own need is
+// what the shared one was extracted from.
 const resolveSettleIndex = (run: ContraptionRun): number | null => {
-  const { keyframes } = run;
-
-  for (let index = keyframes.length - 1; index > 0; index -= 1) {
-    if (maxDisplacement(keyframes[index - 1], keyframes[index]) > SETTLE_EPSILON_UNITS) {
-      return index === keyframes.length - 1 ? null : index;
-    }
-  }
-
-  return 0;
+  return resolveContraptionSettleIndex(run, SETTLE_EPSILON_UNITS);
 };
 
 const classify = ({

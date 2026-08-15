@@ -1,7 +1,10 @@
 export { Phase } from "./phase/index.js";
 export {
   CONTRAPTION_BENCHMARK_LAYOUT,
+  CONTRAPTION_SETTLE_EPSILON_UNITS,
+  contraptionMaxDisplacement,
   measureContraptionTrackBytes,
+  resolveContraptionSettleIndex,
   simulateContraption
 } from "./contraption/index.js";
 export type {

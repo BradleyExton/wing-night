@@ -26,42 +26,42 @@ export const BENCHMARK_LAYOUT: Layout = {
       origin: { x: 10, y: 8 },
       radius: 2.6,
       restitution: 0.28,
-      slip: 0.86
+      slip: 0.4
     },
     {
       id: "marble-a",
       origin: { x: 20, y: 20 },
       radius: 1.8,
       restitution: 0.42,
-      slip: 0.9
+      slip: 0.45
     },
     {
       id: "marble-b",
       origin: { x: 34, y: 25 },
       radius: 1.8,
       restitution: 0.42,
-      slip: 0.9
+      slip: 0.45
     },
     {
       id: "marble-c",
       origin: { x: 46, y: 36 },
       radius: 1.8,
       restitution: 0.42,
-      slip: 0.9
+      slip: 0.45
     },
     {
       id: "marble-d",
       origin: { x: 70, y: 50 },
       radius: 1.8,
       restitution: 0.42,
-      slip: 0.9
+      slip: 0.45
     },
     {
       id: "marble-e",
       origin: { x: 58, y: 60 },
       radius: 1.8,
       restitution: 0.42,
-      slip: 0.9
+      slip: 0.45
     }
   ]
 };

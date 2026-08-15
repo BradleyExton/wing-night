@@ -36,20 +36,50 @@ test("reverses the approach velocity scaled by restitution when it hits a segmen
   assert.equal(resolved.y - resolved.previousY, -0.25);
 });
 
-test("keeps the circle sliding along a segment when slip is total", () => {
-  const step = falling({ x: 5, previousX: 4.5 });
-
-  const resolved = resolveSegmentContacts(step, material({ slip: 1 }), [FLOOR]);
-
-  assert.equal(resolved.x - resolved.previousX, 0.5);
-});
-
-test("drops the tangential velocity when slip is zero", () => {
+// The next two cases are DELIBERATELY RE-SPECIFIED, not weakened (WN-23 AC-5). They previously read
+// `slip` as a retention factor — slip 1 kept all tangential velocity, slip 0 dropped it. Under
+// impulse-bounded Coulomb, `slip` is a friction COEFFICIENT and the meaning inverts: 0 is
+// frictionless, and a large coefficient removes tangential motion up to the bound the normal
+// impulse pays for. Same two situations, same shape of assertion, opposite expected values —
+// because the model behind them is the one being replaced.
+test("keeps the circle sliding along a segment when the friction coefficient is zero", () => {
   const step = falling({ x: 5, previousX: 4.5 });
 
   const resolved = resolveSegmentContacts(step, material({ slip: 0 }), [FLOOR]);
 
+  assert.equal(resolved.x - resolved.previousX, 0.5);
+});
+
+// Tangential speed is 0.5 and the normal impulse is |-0.5| * (1 + 0.5) = 0.75, so a coefficient of
+// 1 buys a 0.75 reduction — more than the 0.5 available.
+test("drops the tangential velocity when the friction bound exceeds it", () => {
+  const step = falling({ x: 5, previousX: 4.5 });
+
+  const resolved = resolveSegmentContacts(step, material({ slip: 1 }), [FLOOR]);
+
   assert.equal(resolved.x - resolved.previousX, 0);
+});
+
+// The clamp, pinned on its own: an absurd coefficient must still only REMOVE tangential motion.
+// Without the `min` this returns a reversed (negative) tangential velocity.
+test("never reverses tangential direction however large the friction coefficient is", () => {
+  const step = falling({ x: 5, previousX: 4.5 });
+
+  const resolved = resolveSegmentContacts(step, material({ slip: 1000 }), [FLOOR]);
+
+  assert.equal(resolved.x - resolved.previousX, 0);
+});
+
+// The partial regime — the bound is smaller than the tangential speed, so friction takes a bite
+// rather than everything. This is where a body sliding down a ramp actually lives, and it is what
+// the flat per-step multiplier could never produce.
+test("removes only the bounded share of tangential velocity when friction is partial", () => {
+  const step = falling({ x: 5, previousX: 4.5 });
+
+  // Bound = 0.2 * 0.75 = 0.15, against a tangential speed of 0.5.
+  const resolved = resolveSegmentContacts(step, material({ slip: 0.2 }), [FLOOR]);
+
+  assert.ok(Math.abs(resolved.x - resolved.previousX - 0.35) < 1e-12);
 });
 
 test("adds no bounce when the overlapping circle is already moving away", () => {

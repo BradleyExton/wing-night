@@ -85,8 +85,26 @@ const resolveOne = (
 
   const tangentX = velocityX - approach * normal.x;
   const tangentY = velocityY - approach * normal.y;
-  const bouncedX = tangentX * material.slip - normal.x * approach * material.restitution;
-  const bouncedY = tangentY * material.slip - normal.y * approach * material.restitution;
+
+  // Impulse-bounded Coulomb friction. The tangential change is BOUNDED by the normal impulse this
+  // contact applies rather than being a flat per-step multiplier — a hard impact bites hard, and a
+  // body merely resting on a ramp gets only the small bite gravity's per-step impulse pays for, so
+  // it keeps sliding. The flat multiplier this replaces ran on every contacting step, and at 240Hz
+  // `0.86^240` is indistinguishable from zero, which is why nothing could slide.
+  //
+  // NOTE: this inverts what `slip` means. It is now a Coulomb coefficient — 0 is frictionless and
+  // larger values bite harder — where it used to be a retention factor. Every layout value in the
+  // tree is consciously re-tuned in this ticket rather than carried across; the rename is deferred
+  // to WN-15, where the piece vocabulary settles.
+  const tangentSpeed = Math.sqrt(tangentX * tangentX + tangentY * tangentY);
+  const normalImpulse = Math.abs(approach) * (1 + material.restitution);
+  // The `min` is the clamp: friction can only ever remove tangential motion, never reverse it,
+  // because the reduction is capped at the tangential speed itself.
+  const tangentReduction = Math.min(tangentSpeed, material.slip * normalImpulse);
+  const tangentScale = tangentSpeed === 0 ? 0 : (tangentSpeed - tangentReduction) / tangentSpeed;
+
+  const bouncedX = tangentX * tangentScale - normal.x * approach * material.restitution;
+  const bouncedY = tangentY * tangentScale - normal.y * approach * material.restitution;
   return { x, y, previousX: x - bouncedX, previousY: y - bouncedY };
 };
 

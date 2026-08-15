@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-23
 title: "CONTRAPTION integrator: impulse-bounded Coulomb friction so bodies can slide"
-status: ready
+status: in-progress
 kind: bug
 priority: medium
 created: 2026-08-15
@@ -10,6 +10,7 @@ created: 2026-08-15
 # ─── Optional (delete a line to take its default) ───────────────────────────
 deps: []
 blocked_by: []
+worktree: "/Users/bradleyexton/Projects/wing-night-WN-23"
 ---
 
 ## Goal
@@ -157,6 +158,25 @@ showcase, WN-25-direction geometry, hint re-framing — all WN-24.
 THREE MINORS TO CARRY INTO THE BUILD: (1) AC-11 names only the pieceSets predicate, but the re-found geometry must ALSO satisfy labRun/index.test.ts (seed-varied attempts within 0.1 units, a 0.6-unit nudge exceeding it; BASE pieceSetId 'four', seed 20260807) and the component test's default 'two' set landing ('LANDED — in the bucket'). Encode ALL THREE predicates in the search script from the start or the session iterates blind. (2) AC-8's re-point also needs a re-export from packages/shared/src/index.ts — @wingnight/shared exposes only the '.' subpath, so exporting via contraption/index.ts alone leaves the lab unable to import it (typecheck catches it, but loudly and late). (3) AC-11's 'CONTACTS every placed ramp at all 240 integration steps' is loose — the guard requires contact at SOME 240Hz-sampled frame, not every step; a literal reading sends the search after an impossible predicate.
 
 USEFUL: the benchmark ALREADY settles under the new model with its current values (settleIndex 27 patched vs null unpatched), so the AC-9 re-tune carries near-zero search cost while the new settle test is still genuinely discriminating red-before/green-after. Full verdict: .work/verdicts/WN-23.gate1.json
+- 2026-08-15T22:40:05.523Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night-WN-23
+- 2026-08-15T22:43:08.163Z AC-1/2/3/4/5 done. Coulomb model landed in resolveSegmentContacts: tangentSpeed=sqrt(tx^2+ty^2), normalImpulse=|approach|*(1+restitution), reduction=min(tangentSpeed, slip*normalImpulse), scale=(tangentSpeed-reduction)/tangentSpeed. The min IS the clamp — scale is in [0,1] so friction can only remove tangential motion, never reverse it. Zero-tangent guard avoids a 0/0. Uses sqrt/abs/min only, all outside BANNED_MEMBERS; noTranscendentals untouched. The approach>=0 early-return is KEPT per AC-2.
+
+AC-3 PROOF, by stashing not asserting — stashed ONLY resolveSegmentContacts/index.ts (keeping the new tests) and ran the pins against the old resolver: sliding pin travelled 0.155 units against a >20 threshold (RED — the creep-to-dead-stop defect exactly as described); friction pin travelled 67320 units against a <5 threshold (RED — under the old retention semantics slip:5 AMPLIFIES tangential 5x per step). Restored via stash pop, both green. Both pins are red against the current implementation, so neither is vacuous.
+
+AC-5: the two slip tests are re-specified, not deleted or weakened. Under Coulomb the field inverts, so the SAME two situations now assert the opposite values: 'keeps the circle sliding when the friction coefficient is zero' (was: when slip is total) and 'drops the tangential velocity when the friction bound exceeds it' (was: when slip is zero). Added two more cases the old model could not express: the clamp pinned alone (slip 1000 must still only remove, never reverse) and the partial regime (bound 0.15 against tangential 0.5 leaves 0.35) — the regime a body sliding down a ramp actually lives in.
+
+Also corrected the now-false CircleBody.slip doc comment in types.ts, which still read '0 grips, 1 slides frictionlessly' — exactly backwards under the new model and actively misleading if left.
+- 2026-08-15T22:49:58.459Z AC-8/9/10/11 done; full gate green (lint + typecheck + test).
+
+AC-8 settle extraction: new packages/shared/src/contraption/resolveSettleIndex/ (resolveSettleIndex + maxDisplacement + SETTLE_EPSILON_UNITS, 8 colocated tests incl. the walk-backwards case where a stalled body is knocked loose). Exported from contraption/index.ts under the Contraption* convention AND re-exported from packages/shared/src/index.ts — gate1 minor 2 was right that AC-8 omitted the root re-export, and @wingnight/shared exposes only the '.' subpath so the lab could not have imported it otherwise. The lab's runOutcome now delegates to the shared predicate instead of keeping a duplicate; its own tests pass unchanged.
+
+AC-9 benchmark: re-tuned CONSCIOUSLY, not carried. Probed the settle behaviour across candidates — wing/marble slip 0.2/0.25 and 0.3/0.35 NEVER settle in 4s, 0.4/0.45 settles at 1.20s, 0.5/0.5 at 0.90s. Chose 0.4 (wing) / 0.45 (marbles): mid-range, physically defensible, and meaningfully different from carrying 0.86/0.9 across the semantic inversion, which would have silently re-read 'nearly frictionless' as 'very grippy'. New colocated benchmarkLayout/index.test.ts asserts settle is non-null, lands in the first half of the run, and that the pre-Coulomb values have not crept back.
+
+AC-10 byte figures re-recorded from the re-tuned fixture: 30fps {jsonObjectBytes 34068, jsonFlatRoundedBytes 8599, packedFloat32Bytes 5808, keyframeCount 121}; 20fps {22794, 5757, 3888, keyframeCount 81}; bodyCount 6 both. The test's comment now states these SUPERSEDE WN-17's table rather than extending it.
+
+AC-11 lab repair: re-found two/four/six by search against ALL THREE predicate sets gate1 named — pieceSets (landed + settle<=4s + every ramp contacted at 240Hz, seed 7 / 6s), the component default ('two' lands at seed 20260807 / 4s), and labRun ('four' seed-invariant within 0.1 units but rebuild-variant under the 0.6 nudge). Encoding all three up front was the right call: TWO found in 2451 tries / 0.4s, FOUR 408 / 0.1s, SIX 219 / 0.1s. Nesting preserved by construction so the nesting test is untouched; no assertion relaxed anywhere. Measured settles: two 2.3s, four 2.9s, six 3.17s — hints updated to those figures. WING slip re-tuned 0.86 → 0.4 for the same inversion reason. The false creep commentary and its dangling creepNote reference are deleted and replaced with what is now true.
+
+Whole ContraptionLab suite 47/47; packages/shared contraption suite 39/39.
 
 ## Evidence
 <test output + the re-recorded 30fps/20fps byte table, recorded before `done`>

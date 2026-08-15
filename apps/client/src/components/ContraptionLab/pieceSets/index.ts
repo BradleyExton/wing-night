@@ -47,13 +47,20 @@ const FRAME: readonly ContraptionSegment[] = [
   }
 ];
 
-/** Materials copied from the WN-17 benchmark so sets stay comparable with the shipped fixture. */
+/**
+ * Materials copied from the WN-17 benchmark so sets stay comparable with the shipped fixture.
+ *
+ * `slip` is consciously re-chosen here, not carried: WN-23 turned it into a Coulomb friction
+ * coefficient, inverting its meaning. The 0.86 this used to hold was authored as "nearly
+ * frictionless" retention and would now read as "very grippy" — the same number describing the
+ * opposite material. 0.4 matches the re-tuned benchmark wing.
+ */
 const WING: ContraptionCircleBody = {
   id: "wing",
   origin: { x: 10, y: 8 },
   radius: 2.6,
   restitution: 0.28,
-  slip: 0.86
+  slip: 0.4
 };
 
 const ramp = (
@@ -94,47 +101,48 @@ export type LabPieceSet = {
  *
  * The sets nest: four extends two, six extends four, so the count is the only thing that varies.
  *
- * Ramps deflect rather than shelve, deliberately. The wing spends most of a run in free fall,
- * because `slip` is applied on every integration step rather than per impact — a body RESTING on a
- * shallow ramp has its tangential velocity multiplied by `slip` 240 times a second and creeps
- * instead of sliding. `contraptionLabCopy.creepNote` carries that up to the room.
+ * Re-found by search in WN-23 against the fixed physics. The routes these replace were found under
+ * the creep bug, where a body resting on a ramp had its tangential velocity multiplied by `slip`
+ * 240 times a second and stopped dead — so every route had to be free-fall-dominant and ramps could
+ * only deflect, never carry. Bodies can slide now, and WN-24 re-finds these properly against the
+ * picked visual direction; this set is the minimal repair that keeps the gate honestly green.
  */
 const TWO_PIECES: readonly ContraptionSegment[] = [
-  ramp("ramp-a", 7.4, 43.9, 26.0, 63.0),
-  ramp("ramp-b", 32.8, 73.9, 53.6, 87.4)
+  ramp("ramp-a", 6.8, 29.7, 16.6, 39.2),
+  ramp("ramp-b", 18, 45.9, 31.1, 51.7)
 ];
 
 const FOUR_PIECES: readonly ContraptionSegment[] = [
   ...TWO_PIECES,
-  ramp("ramp-c", 67.3, 77.4, 56.6, 83.7),
-  ramp("ramp-d", 27.7, 71.7, 45.6, 81.2)
+  ramp("ramp-c", 10.3, 36.1, 21.4, 38.5),
+  ramp("ramp-d", 19.9, 74.7, 41.4, 72.8)
 ];
 
 const SIX_PIECES: readonly ContraptionSegment[] = [
   ...FOUR_PIECES,
-  ramp("ramp-e", 28.6, 73.4, 53.0, 86.7),
-  ramp("ramp-f", 36.3, 76.1, 44.4, 83.6)
+  ramp("ramp-e", 47.4, 87.3, 66.6, 94),
+  ramp("ramp-f", 50.7, 81.9, 71, 84.6)
 ];
 
 export const LAB_PIECE_SETS: readonly LabPieceSet[] = [
   {
     id: "two",
     label: "2 pieces",
-    hint: "Solved route, settles ~1.3s. Two ramps is barely a route — is there a solution to find, or only one?",
+    hint: "Solved route, settles ~2.3s. Two ramps is barely a route — is there a solution to find, or only one?",
     pieceCount: TWO_PIECES.length,
     layout: buildLayout(TWO_PIECES)
   },
   {
     id: "four",
     label: "4 pieces",
-    hint: "Extends the 2-piece route; settles ~1.3s. Where alternatives appear — does a wrong piece read as a wrong decision?",
+    hint: "Extends the 2-piece route; settles ~2.9s. Where alternatives appear — does a wrong piece read as a wrong decision?",
     pieceCount: FOUR_PIECES.length,
     layout: buildLayout(FOUR_PIECES)
   },
   {
     id: "six",
     label: "6 pieces",
-    hint: "Extends the 4-piece route; settles ~1.2s. Does a sixth piece add cleverness, or just fiddling?",
+    hint: "Extends the 4-piece route; settles ~3.2s. Does a sixth piece add cleverness, or just fiddling?",
     pieceCount: SIX_PIECES.length,
     layout: buildLayout(SIX_PIECES)
   },

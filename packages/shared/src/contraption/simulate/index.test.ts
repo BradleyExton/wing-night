@@ -113,3 +113,66 @@ test("throws when durationSeconds is not positive", () => {
     RangeError
   );
 });
+
+// ── WN-23 behavioural pins ────────────────────────────────────────────────────────────────────
+// Two pins, because either alone is satisfiable by a degenerate model: "it slides" alone passes a
+// frictionless integrator, and "it stops" alone passes the creep bug this ticket fixes. Together
+// they fence both failure modes.
+//
+// BOTH ARE RED AGAINST THE PRE-WN-23 IMPLEMENTATION, confirmed by stashing the change and running
+// them — not by assertion. Under the old flat per-step multiplier `slip` was a retention factor, so
+// slip 0.1 multiplied tangential velocity by 0.1 on EVERY contacting step (0.1^240 ≈ 0) and the
+// body creeps to a dead stop instead of sliding.
+
+const RAMP_FROM = { x: 0, y: 10 };
+
+const RAMP_TO = { x: 60, y: 34 };
+
+/** A shallow ramp, and a body resting on it just below the top. */
+const rampTest = (slip: number): Layout => {
+  return {
+    gravity: { x: 0, y: 30 },
+    segments: [{ id: "ramp", from: RAMP_FROM, to: RAMP_TO }],
+    bodies: [
+      {
+        id: "slider",
+        origin: { x: 6, y: 11.5 },
+        radius: 1,
+        restitution: 0,
+        slip
+      }
+    ]
+  };
+};
+
+/** Distance the body covered along the ramp direction, first keyframe to last. */
+const travelAlongRamp = (run: ReturnType<typeof simulate>): number => {
+  const alongX = RAMP_TO.x - RAMP_FROM.x;
+  const alongY = RAMP_TO.y - RAMP_FROM.y;
+  const length = Math.sqrt(alongX * alongX + alongY * alongY);
+  const first = run.keyframes[0][0];
+  const last = run.keyframes[run.keyframes.length - 1][0];
+
+  return ((last.x - first.x) * alongX + (last.y - first.y) * alongY) / length;
+};
+
+test("slides a low-friction body a meaningful distance down a shallow ramp", () => {
+  const run = simulate(rampTest(0.1), options({ durationSeconds: 3 }));
+
+  // The whole point of the fix: a body released on a ramp travels ALONG it. The pre-WN-23
+  // implementation creeps to a stop within a few units.
+  assert.ok(
+    travelAlongRamp(run) > 20,
+    `expected a low-friction body to slide, travelled ${travelAlongRamp(run)}`
+  );
+});
+
+test("brings a high-friction body to rest instead of sliding forever", () => {
+  const run = simulate(rampTest(5), options({ durationSeconds: 3 }));
+
+  // Friction must still EXIST — without this pin, deleting friction entirely passes the slide pin.
+  assert.ok(
+    travelAlongRamp(run) < 5,
+    `expected a high-friction body to grip, travelled ${travelAlongRamp(run)}`
+  );
+});

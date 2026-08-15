@@ -45,17 +45,18 @@ test("counts UTF-8 bytes of the serialized payload rather than string length", (
   );
 });
 
-// These lock the exact figures recorded in WN-17's `## Evidence`. They are characterization
-// values read off the integrator, not independently derived — so a red here does not mean the
-// physics is wrong, it means the published byte counts are stale and must be re-recorded before
-// WN-15 leans on them.
+// These lock the exact figures recorded in WN-23's `## Evidence`, which SUPERSEDE WN-17's table
+// rather than extending it — the geometry's materials AND the contact physics both changed, so the
+// two sets of numbers are not comparable. They are characterization values read off the
+// integrator, not independently derived, so a red here does not mean the physics is wrong; it
+// means the published byte counts are stale and must be re-recorded before WN-15 leans on them.
 test("holds the recorded 30fps evidence figures for the benchmark layout", () => {
   assert.deepEqual(measureBenchmark(30), {
     keyframeHz: 30,
     bodyCount: 6,
     keyframeCount: 121,
-    jsonObjectBytes: 33978,
-    jsonFlatRoundedBytes: 8610,
+    jsonObjectBytes: 34068,
+    jsonFlatRoundedBytes: 8599,
     packedFloat32Bytes: 5808
   });
 });
@@ -65,8 +66,8 @@ test("holds the recorded 20fps evidence figures for the benchmark layout", () =>
     keyframeHz: 20,
     bodyCount: 6,
     keyframeCount: 81,
-    jsonObjectBytes: 22759,
-    jsonFlatRoundedBytes: 5770,
+    jsonObjectBytes: 22794,
+    jsonFlatRoundedBytes: 5757,
     packedFloat32Bytes: 3888
   });
 });

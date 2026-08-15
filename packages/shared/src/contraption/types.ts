@@ -18,7 +18,15 @@ export type CircleBody = {
   readonly radius: number;
   /** Normal velocity retained on contact: 0 lands dead, 1 bounces forever. */
   readonly restitution: number;
-  /** Tangential velocity retained on contact: 0 grips, 1 slides frictionlessly. */
+  /**
+   * Coulomb friction coefficient: 0 slides frictionlessly, larger values grip harder. The
+   * tangential velocity removed on a contact is bounded by `slip * normalImpulse`, so a body merely
+   * resting on a ramp keeps sliding while a hard impact bites.
+   *
+   * NOTE: this reading is INVERTED from the retention factor this field used to hold, where 1 meant
+   * frictionless. The name is kept deliberately until the piece vocabulary settles in WN-15 — see
+   * `simulate/resolveSegmentContacts`.
+   */
   readonly slip: number;
 };
 
