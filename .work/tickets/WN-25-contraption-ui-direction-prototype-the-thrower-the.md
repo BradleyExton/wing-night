@@ -95,9 +95,98 @@ position-only Verlet integrator) and wants its own ticket — do not silently ab
 - 2026-08-15T17:16:59.216Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night-WN-25
 - 2026-08-15T17:26:53.521Z Built the lab at apps/client/src/components/ContraptionUiLab/ behind /dev/lab/contraption-ui. Applied the gate1 compression lever: shared scene primitives (Thrower, ProjectileSprite, Ramp, TrashCan, Cleaner, EatingTimer, Floor) built once in scene/, composed differently by three sibling variant folders — no shared Layout. Pure modules extracted and colocated-tested: variants/ (resolveVariantId + the three structural axes), sequence/ (five beats, resolveSequencePosition, resolveVisibleBeats), projectile/ (both candidates + requiresAngularVelocity), scene/flightPath/ (waypoint-driven arc). Wired one App.tsx dispatch arm and one eslint ignores entry naming WN-15 as the deleter. Restored the resolveClientRoute name-pin test gate1 flagged as dropped (minor 3), using the hyphenated name so the segment matcher is exercised too. Followed gate1 minor 1: the likeness prop is avatarSrc (the landed players[] field), not the doc-only spriteSrc. Followed gate1 minor 4: projectile/ records the OBSERVATION and the physics implication; it does not make the pick. Deliberate call recorded for QA: the scene is SCRIPTED, not a run of the real integrator — WN-23's friction fix is not landed, so a live run would creep to a dead stop and actively mislead the judgement; the fixed-orientation constraint (no angular state in CircleBody) IS faithfully reproduced, which is the part AC-5 asks a human to judge. Gate green: lint + typecheck + test all pass (52/52 on the new and touched suites).
 - 2026-08-15T17:50:17.687Z qa attempt 1 on c916948: PASS (qa-reviewer, high confidence) — no reward-hacking (test diff is +0 deleted lines; the resolveClientRoute change is +9/-0), AC-2 scope guardrail held, AC-3 verified structurally distinct by reading all three variants, AC-9 proof non-vacuous, and the reviewer re-ran the gate itself. It also graded the scripted-scene judgement call SOUND. Acted on the advisory minors rather than only riding them into evidence, because the first one is a real AC gap: AC-6 says the cleaner PICKS IT UP, but the bone was pinned to the floor for the whole beat so the gag never completed. Fixed by extracting scene/cleanerWalk/ (walk-on → stoop → pick up → carry off, colocated-tested) which also kills the 3x copy-pasted walk interpolation the reviewer flagged; the projectile stops being drawn once she has it, pinned by a test that renders before/after pick-up. Also took: removed the lerpPoint dead no-op (and the now-unused lerp), removed the unused projectileLegend export, replaced the trivially-true /Throw/ assertion (a substring of 'Thrower') with assertions on the axis VALUES, added direct render coverage for the two variants only typecheck was exercising, and added resolveSequenceDuration(outcome) so a landed run no longer overruns onto a frame with no beat highlighted. Left as-is: the metadata-string distinctness test (structural check would need DOM diffing for throwaway code), the unexercised avatarSrc branch, and the two >150-line files (WN-15 deletes the folder wholesale). Verify re-run green after the fix.
+- 2026-08-15T18:00:29.748Z qa attempt 2 on d9c9185: PASS (qa-reviewer, high confidence), recorded with --supersede. Verified the AC-6 fix is real and falsifiable (under the old released-only guard the sprite still renders at cleanup progress 0.8, so the negative assertion would have failed), confirmed the modified assertion is strictly STRONGER not merely different, confirmed the settle-branch removal is value-identical with its test file untouched, and confirmed no TDZ on resolveSequenceDuration. It also corrected my previous note: resolveSequenceDuration does NOT fully remove the no-beat-highlighted frame on a landed run, it only shortens it — that overstatement is fixed in ## Evidence. browser-verify: PASS — drove all three variants at 1440x810, 14 screenshots in .work/verdicts/WN-25-browser/. Evidence written: dev route, the three-axis variant table, the screenshot index, the AC-5 observation + implication (drumette needs no new physics; a flat bone would need angular velocity and its own ticket), the verify paste (374/374 apps/client), and the known-imperfect list. Ready for the human pick — the lab does not choose.
 
 ## Evidence
-<variant screenshots + preview URL + the projectile/rotation answer, recorded before `done`>
+
+### The pick is still open — this is what you drive
+
+```
+pnpm --filter @wingnight/client dev
+http://localhost:5173/dev/lab/contraption-ui
+```
+
+`?variant=sidestage` · `?variant=arena` · `?variant=character-first`, or the floating switcher
+top-left of the stage. Panel controls: outcome (landed / missed), projectile (drumette / wing bone),
+and Replay. **Nothing here picks a variant — that is yours.**
+
+| Variant | Thrower | Throw | Target |
+|---|---|---|---|
+| A · Sidestage | Left edge, in profile, outside the field | Full-width traverse — the throw is the whole scene | Foregrounded: oversized, in front of the ramps |
+| B · Arena | Bottom-centre, small, camera pulled back | Short arc into a large field — the field dominates | Embedded: one object among the ramps |
+| C · Character-first | Foreground panel, large — the eat is the hero | Small — reads as an exit from the character's panel | Embedded at the far end of a backdrop strip |
+
+### Screenshots
+
+`.work/verdicts/WN-25-browser/` (1440×810, captured from the running route):
+
+- `sidestage-1-eating.png` · `arena-1-eating.png` · `character-first-1-eating.png` — the EATING
+  hand-off, timer dominant (AC-7)
+- `sidestage-2-flight.png` · `arena-2-flight.png` · `character-first-2-flight.png` — flight and
+  deflection
+- `sidestage-3-miss-cleanup.png` · `arena-3-miss-cleanup.png` ·
+  `character-first-3-miss-cleanup.png` — the cleaner stooping over the bone
+- `sidestage-4-miss-carried-off.png` — the miss beat completing: empty floor, she carries it off
+- `sidestage-landed.png` — the landed ending, for contrast
+- `projectile-drumette-flight.png` · `projectile-wingbone-flight.png` ·
+  `projectile-wingbone-settled.png` — the AC-5 comparison
+
+### AC-5 — the projectile question, answered as an observation
+
+**The observation, which is what the lab is qualified to give:**
+
+- **Drumette — reads correctly.** Roughly radially symmetric, so a fixed orientation is invisible.
+  Sliding without tumbling never contradicts the eye.
+- **Wing bone (flat) — reads broken.** It holds one angle the whole way and comes to rest on the
+  floor still tilted at its flight angle, looking pinned rather than tumbled. The longer the slide,
+  the more wrong it looks. See `projectile-wingbone-settled.png`.
+
+**The implication, stated but not decided:** the integrator models bodies as circles with position
+only — `CircleBody` is origin/radius/restitution/slip, and a grep for `angular|rotation|torque|omega`
+across `packages/shared/src/contraption/` returns nothing. So **if the flat bone is picked, angular
+velocity is new physics in the WN-23 module and needs its own ticket.** If the drumette is picked,
+no new physics is needed. Nothing in this change adds rotation to that module.
+
+**Why the scene is scripted rather than a run of the real integrator.** WN-23's friction fix has not
+landed, so a live run today creeps to a dead stop and would mislead exactly the judgement being made.
+The constraint AC-5 turns on — fixed sprite orientation, because there is no angular state — is
+reproduced faithfully, and that is the part a human is being asked to judge. WN-18's `ContraptionLab`
+remains the harness over the real integrator.
+
+### Verify
+
+```
+$ work verify
+✓ lint: pnpm lint
+✓ typecheck: pnpm typecheck
+✓ test: pnpm test
+✓ verify passed (3 step(s))
+```
+
+`apps/client`: **374 tests, 374 pass, 0 fail, 0 skipped, 0 todo** — including the four new colocated
+suites (`variants/`, `sequence/`, `projectile/`, `scene/flightPath/`, `scene/cleanerWalk/`), the lab
+entry suite, and the restored `resolveClientRoute` name pin.
+
+### Verdicts
+
+- `gate1`: **pass** — `.work/verdicts/WN-25.gate1.json` (4 minors, all acted on or recorded)
+- `qa`: **pass** (attempt 2, superseding attempt 1 on `c916948`) — `.work/verdicts/WN-25.qa.json`
+- `browser`: **pass** — `.work/verdicts/WN-25.browser.json`
+
+### Known-imperfect, recorded rather than fixed
+
+- `resolveSequenceDuration` is narrower than its docstring claims: a landed run now stops at 6300ms,
+  but the held final frame still highlights no beat chip. The artifact is shortened, not removed.
+  Cosmetic, outside every AC. (qa attempt 2, minor 1 — the earlier Progress note overstated this.)
+- `resolveSequenceDuration` has no direct colocated test.
+- `clampProgress` is duplicated between `scene/flightPath/` and `scene/cleanerWalk/`.
+- The carried bone is drawn as a round blob regardless of projectile kind.
+- The `avatarSrc` likeness branch is never exercised — every variant shows the placeholder head. The
+  prop follows the landed `players[].avatarSrc` field (not the doc-only PETMON `spriteSrc`), so the
+  convention question is answerable, but a broken href would not be caught.
+
+WN-15 deletes this folder and its eslint carve-out wholesale, which is why none of the above was
+worth more churn.
 
 ## Links
 Rationale: [WN-15](WN-15-contraption-minigame-build-a-physics-contraption-o.md) `## Plan`; idea doc [contraption.md](../../docs/minigames/ideas/contraption.md).
