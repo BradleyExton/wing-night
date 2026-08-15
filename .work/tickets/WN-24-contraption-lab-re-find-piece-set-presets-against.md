@@ -33,8 +33,10 @@ This ticket produces the presets; the judgements stay human.
 - [ ] At least one set exploits **sliding** — a route that is only solvable because a body now travels
       along a ramp instead of deflecting off it. Without this the ticket cannot demonstrate that
       WN-23 changed anything a player would notice.
-- [ ] Level geometry follows WN-25's picked direction (target placement, thrower position, scale)
-      rather than the current abstract bucket, so the routes are designing toward the real scene.
+- [ ] Level geometry follows WN-25's picked direction **as re-cut by WN-28** — Sidestage with a
+      seated, elevated thrower throwing backward, the contraption behind and below them (target
+      placement, thrower position, scale) — rather than the current abstract bucket, so the routes
+      are designing toward the real scene.
 - [ ] The lab's per-set `hint` copy is rewritten to ask the re-framed question honestly, as the
       current hints do ("does a sixth piece add cleverness, or just fiddling?").
 - [ ] No stale creep copy survives the hint rewrite. (WN-23 already deleted the obsolete creep
@@ -55,12 +57,15 @@ Grilled 2026-08-15 (plan-work Mode A). This is the `apps/client` half of the fri
 seam WN-17/WN-18 split on, and the same seam whose combined version gate1 rejected for bundling
 separable deliverables. WN-23 is the headless module half.
 
-**Why it waits on both deps.** WN-23 because every preset must be found against the fixed physics —
+**Why it waits on its deps.** WN-23 because every preset must be found against the fixed physics —
 note WN-23's own gate repair already re-found the three routes *minimally* (same scene, still
 nesting, purely to keep its verify gate green), so this ticket inherits a green suite and its job
 is the **design-driven** re-find, not repair. WN-25 (done 2026-08-15) because level geometry is a
 design question — where the target sits and how the scene is framed decide what a "route" even is,
-and re-finding presets against an abstract box means doing the work twice.
+and re-finding presets against an abstract box means doing the work twice. WN-28 because the human
+pick revised the Sidestage geometry (seated thrower above the field, backward throw) beyond what
+the landed lab renders — designing routes against the un-re-cut variant would be the same
+stale-picture double-work.
 
 **Handoff note (manifest `verify_extra`, 2026-08-15):** the diff touches `apps/client/src/**`, so
 the handoff's verify run includes the full `e2e` suite — expected green; no Playwright spec
@@ -88,5 +93,5 @@ anything into production.
 
 ## Links
 Rationale + the Q1 answer + the evidence table: [WN-15](WN-15-contraption-minigame-build-a-physics-contraption-o.md) `## Plan`.
-Physics dep: [WN-23](WN-23-contraption-integrator-impulse-bounded-coulomb-fri.md). Visual dep: [WN-25](WN-25-contraption-ui-direction-prototype-the-thrower-the.md).
+Physics dep: [WN-23](WN-23-contraption-integrator-impulse-bounded-coulomb-fri.md). Visual deps: [WN-25](WN-25-contraption-ui-direction-prototype-the-thrower-the.md) → [WN-28](WN-28-re-cut-the-picked-sidestage-variant-seated-at-tabl.md).
 Lab built by: [WN-18](WN-18-contraption-visual-harness-canvas-over-the-wn-17-i.md).
