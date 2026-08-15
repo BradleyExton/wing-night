@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-26
 title: "Native /dev/board glance board — dev endpoint shelling the work CLI + bucketed ticket list"
-status: needs-planning   # idea | needs-research | needs-planning | ready | in-progress | in-review | done | blocked | superseded
+status: ready            # idea | needs-research | needs-planning | ready | in-progress | in-review | done | blocked | superseded
 kind: feature
 priority: high
 created: 2026-08-15
@@ -26,22 +26,39 @@ glance (bucketed tickets, next-up starred), fed by a dev-only Express endpoint t
 
 ## Acceptance Criteria
 - [ ] `GET /api/dev/board` on the server returns `{ index, next }` where `index` is the parsed
-      output of `work index --json` and `next` of `work next --json`, both run with cwd at the repo
-      root. The CLI entry resolves from the `WORK_CLI` env var when set; the default is
-      `../claude-dev-system/tools/bin/work.ts` relative to the CANONICAL repo root — derived from
-      the parent of `git rev-parse --path-format=absolute --git-common-dir` — so the default also
-      resolves from `.claude/worktrees/*` checkouts, where a cwd-relative sibling path does not
-      (gate1 finding, 2026-08-15). (Both commands verified working against this repo during
+      output of `work index --json` and `next` of `work next --json`. The CLI entry resolves from
+      the `WORK_CLI` env var when set; the default is `../claude-dev-system/tools/bin/work.ts`
+      relative to the CANONICAL repo root — derived from the parent of
+      `git rev-parse --path-format=absolute --git-common-dir` — so the default also resolves from
+      `.claude/worktrees/*` checkouts, where a cwd-relative sibling path does not (gate1 finding,
+      2026-08-15). **The spawn's `cwd` is that SAME canonical root**, not `process.cwd()`: from a
+      build checkout the two are different directories with independently mutable `.work/tickets`
+      trees, so a cwd-relative spawn would render a different work-log than the one resolved
+      against (gate1 minor, 2026-08-15). (Both commands verified working against this repo during
       planning, 2026-08-14, from the dev-system checkout.)
-- [ ] The endpoint/router is only mounted when `NODE_ENV !== "production"` — `createApp`
-      (`apps/server/src/createApp/index.ts:4-10`, currently mounts only `/health`) keeps a
-      production app free of it, proven by a unit test asserting 404 under
-      `NODE_ENV=production`.
-- [ ] When the CLI path does not exist or the spawn fails, the endpoint responds 503 with a JSON
-      body naming the resolved path it tried — no hang, no stack-trace body.
+- [ ] The endpoint/router is mounted ONLY when the `WN_DEV_BOARD` env var is set to `1` —
+      `createApp` (`apps/server/src/createApp/index.ts:4-10`, currently mounts only `/health`)
+      leaves a default app free of it. **Fail-closed: env absent ⇒ not mounted ⇒ 404**, so the
+      party-night server is safe by default. `createApp` reads the env INSIDE the factory (not at
+      module scope) so a test can toggle it per call — the existing health test's idiom
+      (`createApp()` + `app.listen(0)` + real `fetch`,
+      `apps/server/src/routes/health/index.test.ts`) applies unchanged. Proven in BOTH directions
+      by unit tests: 404 for `/api/dev/board` with the env unset (the default boot), and a mounted,
+      non-404 route with `WN_DEV_BOARD=1`. `apps/server`'s `dev` script sets `WN_DEV_BOARD=1` so
+      dev stays zero-friction (inline env, the repo's established idiom — cf. the manifest's own
+      `CI=1 WN_E2E_SERVER_PORT=…` verify commands); `start` does not.
+- [ ] When the CLI path does not exist, the spawn fails, or the child exceeds a bounded timeout,
+      the endpoint responds 503 with a JSON body naming the resolved path it tried — no hang, no
+      stack-trace body. **The timeout is a named constant and is what makes "no hang" real**: a
+      child that starts but never exits (blocks on stdin, waits on a lock) would otherwise hold the
+      request open forever and never reach the 503, leaving that branch unreachable and untestable
+      (gate1 minor, 2026-08-15). A unit test drives the timeout branch.
 - [ ] `resolveClientRoute("/dev/board")` returns a new `BOARD` member of the `ClientRoute` union
-      (`apps/client/src/utils/resolveClientRoute/index.ts:1-8`), following the existing `/dev/*`
-      convention (`:10-12`); trailing-slash normalization covered like the other routes.
+      (`apps/client/src/utils/resolveClientRoute/index.ts:1-8`). `/dev/board` is a FIXED path, so
+      it takes the exact-equality branch (the `/admin` shape), not the prefixed-segment helper the
+      other two `/dev/*` routes use (`resolvePrefixedSegment`) — those address a variable segment,
+      this does not. Trailing-slash normalization comes free from the shared `normalizePathname`;
+      cover `/dev/board/` like the other routes.
 - [ ] The `BOARD` route renders a glance view with SIX buckets — in-progress · ready-pickable (the
       `next` ticket starred) · waiting-on-deps (ready but an un-done dep, naming the blocker) ·
       in-review (awaiting gate2) · blocked · funnel (idea / needs-research / needs-planning) — each
@@ -49,24 +66,39 @@ glance (bucketed tickets, next-up starred), fed by a dev-only Express endpoint t
       set. Bucketing is a pure TOTAL function over the endpoint payload with direct unit tests
       (per rules/testing.md: prefer pure selectors over rendered-output assertions), including a
       totality assertion: every status in the schema enum lands in exactly one bucket or the
-      excluded set — no status falls through silently.
+      excluded set — no status falls through silently. **The test pins the nine-value enum as an
+      explicit LOCAL constant** (`idea`, `needs-research`, `needs-planning`, `ready`,
+      `in-progress`, `in-review`, `blocked`, `done`, `superseded`) with a comment citing
+      claude-dev-system `docs/SCHEMA.md` §2 as its source — wing-night has no local copy to import.
+      Deriving the list from the bucketing function's own keys instead would make the assertion
+      tautological and it would never fail (gate1 minor, 2026-08-15).
 - [ ] The board view is lazy-loaded (`React.lazy` or equivalent dynamic import) so the party-night
       bundle does not grow; the server URL is resolved the same way `resolveSocketServerUrl` does
       (`apps/client/src/socket/createRoomSocket/index.ts:15-23`) — `VITE_SOCKET_SERVER_URL` first,
-      `window.location.hostname` fallback.
+      `window.location.hostname` fallback. **That resolution and the fetch both live INSIDE an
+      effect**, never at module or render scope: under `tsx --test` there is no DOM and no Vite, so
+      a bare `window` / `import.meta.env` read throws (the WN-3 crash class). Proven the way
+      `ContraptionUiLab` proves it (`apps/client/src/components/ContraptionUiLab/index.test.tsx:12-19`):
+      a test that imports the board entry with `globalThis.window` undefined, plus a
+      `renderToStaticMarkup` render asserting the pre-effect frame is the loading/empty state
+      rather than a crash.
 - [ ] `BOARD` is NOT added to the socket-creating routes (`shouldCreateRoomSocket`) — the board
       talks HTTP only; a negative test asserts no socket is created for it.
 - [ ] The real path is demonstrated once, not only the mocked seam: one live `GET /api/dev/board`
       response — dev server running, real CLI spawn against this repo's work-log, no mock — is
       captured into `## Evidence` (curl output or `work evidence --url`) showing actual `index` +
-      `next` data.
+      `next` data. The server must be booted with `WN_DEV_BOARD=1` for this (the `dev` script sets
+      it) — a 404 here means the flag is unset, not that the endpoint is broken.
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, and
       `CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e` pass (manifest
       `verify.lint` / `verify.typecheck` / `verify.test` / `verify.e2e`), with the new endpoint,
       route-resolution, bucketing, and component tests included. The e2e key is in the gate because
       this ticket adds a Suspense boundary to `App.tsx`, the render root of every Playwright-spec'd
-      surface, which has no unit coverage. (If port 3100 is squatted by a foreign next-server,
-      re-port — don't kill.)
+      surface, which has no unit coverage. Note the e2e harness boots the server via
+      `pnpm --filter @wingnight/server dev` (`playwright.config.ts:33`), so once the `dev` script
+      carries `WN_DEV_BOARD=1` the Playwright run has the board mounted — expected, and no spec
+      asserts its absence. (If port 3100 is squatted by a foreign next-server, re-port — don't
+      kill.)
 
 ## Plan
 Grilled interactively 2026-08-14 (plan-work, four lenses). Decisions of record:
@@ -108,11 +140,57 @@ Decisions of record from the amendment:
   only the starred `next` pick — the waiting-on-deps bucket re-derives dep-satisfaction
   client-side (trivial, accepted; don't go looking for a richer CLI seam).
 
+Re-planned again 2026-08-15 after a SECOND gate1 re-grade (needs-changes; full verdict:
+`.work/verdicts/WN-26.gate1.json`). That re-grade confirmed all four findings above are genuinely
+closed — verified against disk, not just against this prose — and raised exactly one new major.
+Decisions of record from this amendment:
+
+- **Dev-gating signal = an explicit `WN_DEV_BOARD=1` opt-in** (user-decided). This SUPERSEDES the
+  third bullet of the first amendment block ("the *server* endpoint is the gate: absent in
+  production") — that guard was inert. Nothing in wing-night ever sets `NODE_ENV`: `apps/server`'s
+  `start` is a bare `tsx src/index.ts`, `dev` is `tsx watch src/index.ts`, `apps/server/src/index.ts`
+  sets no env, and a repo-wide grep finds the name only in WN-26/WN-27 prose. Decisive detail: the
+  root package.json exposes **no `start` script at all** — only `dev` — so the realistic
+  party-night boot is `pnpm dev`, and a `NODE_ENV=production` guard placed in `start` would leave
+  the endpoint mounted on the exact path actually used. `WN_DEV_BOARD` inverts the default to
+  fail-closed (absent ⇒ 404), which is both safer and provable under the repo's REAL boot command
+  instead of a synthetic env. Cost: `apps/server/package.json` joins the blast radius (its `dev`
+  script carries the flag inline, the idiom the manifest's own verify commands already use).
+- **The guard is read inside the `createApp` factory, not at module scope** (self-decided,
+  mechanical): the health test's idiom constructs a fresh app per test
+  (`createApp()` + `app.listen(0)` + real `fetch`), so a factory-scope read is what lets one test
+  assert 404-when-unset and another assert mounted-when-set. A module-scope read would freeze the
+  first value and make the two-direction proof impossible.
+- **e2e runs with the board mounted** (consequence, recorded so it doesn't read as a defect): the
+  Playwright harness boots the server with `pnpm --filter @wingnight/server dev`
+  (`playwright.config.ts:33`), so the `dev` script's flag applies there too. Harmless — no spec
+  asserts the endpoint's absence — but it means the e2e run exercises the mounted app.
+- Minors folded into the ACs rather than left as prose (all self-decided, all small): spawn `cwd`
+  pinned to the same canonical root the CLI path resolves against; a named, bounded spawn timeout
+  so AC-3's "no hang" is real and its 503 branch is reachable; the totality test pins the
+  nine-value status enum as an explicit local constant citing CDS `SCHEMA.md` §2 (deriving it from
+  the bucketing function's own keys would be tautological); the board's URL resolution and fetch
+  stay inside an effect, proven the way `ContraptionUiLab` proves it.
+- Precision correction to AC-4: `/dev/board` is a FIXED path, so it takes the exact-equality branch
+  (the `/admin` shape) — NOT `resolvePrefixedSegment`, which the other two `/dev/*` routes use
+  because they address a variable segment. Trailing-slash handling still comes free from the shared
+  `normalizePathname`.
+- **Open inconsistency, deliberately NOT resolved here** (flagged for the implementer and for
+  WN-13, which reuses this mounting shape): AC-6 lazy-loads the board "so the party-night bundle
+  does not grow", but every existing dev surface — `MinigameDevSandbox`, `AnamorphLab`,
+  `ContraptionLab`, `ContraptionUiLab` — is statically imported in `App.tsx` today. So the bundle
+  already carries the dev surfaces, and this ticket pays for the codebase's first `React.lazy` +
+  Suspense boundary (which is what drags the slow e2e suite into the gate) to save bytes its
+  neighbours don't. Kept as-is because lazy-loading is a decision of record from the original grill
+  and WN-13 is scoped against it — but if a later slice makes the labs lazy too, revisit whether
+  this boundary is still earning the e2e cost.
+
 ## Progress
 <the executing agent appends here — the restart-safe log>
 - 2026-08-15T15:15:59.263Z gate1: needs-changes (product-owner, confidence high) — demoted ready → needs-planning; route to plan-work. Verdict summary: one blocker + three majors, all fixable in one plan-work amendment without re-decomposing the slice. (1) BLOCKER: last AC omits pnpm lint — verify.lint is in the default gate and is the only gate item reaching the seven wingnight component/styles ESLint rules the new board component must satisfy; amend last AC to lint → typecheck → test. (2) MAJOR: e2e key unnamed although React.lazy forces a Suspense boundary into App.tsx (render root of every Playwright-spec'd surface) and createApp gains a router; name the full e2e key (CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273) or add an App-level shell assertion. (3) MAJOR: AC-5 bucket enumeration drops in-review (the awaiting-gate2 state) — add an in-review bucket or an explicit excluded-set with a total-coverage assertion. (4) MAJOR: no AC exercises the real CLI spawn, and the WORK_CLI default ../claude-dev-system does not resolve from a .claude/worktrees build checkout (real CLI: /Users/bradleyexton/Projects/claude-dev-system/tools/bin/work.ts) — pin worktree-aware resolution and require one live payload demonstration. Minors (advisory): waiting-on-deps bucket re-derives dep-satisfaction client-side (parity claim overstated); scope at upper edge of one window (card chrome stays minimal; 260/140-line lint caps); component test must import the board entry directly — renderToStaticMarkup cannot resolve React.lazy. Full verdict: .work/verdicts/WN-26.gate1.json
 - 2026-08-15T15:46:58.703Z re-planned after gate1 rejection (plan-work Mode B, grilled 2026-08-15): last AC now names the full gate lint → typecheck → test → e2e; in-review bucket added with totality assertion (done/superseded the named excluded set); WORK_CLI default resolves from the canonical repo root via git common dir with env override; new live-payload AC proves the real CLI path once. needs-planning → ready.
 - 2026-08-15T21:31:25.652Z gate1 re-grade: needs-changes (product-owner, confidence high) — demoted ready → needs-planning; route to plan-work. The four prior findings are all confirmed CLOSED by the 2026-08-15 amendment (lint in the gate; exact e2e key; in-review bucket + totality over the nine-value enum; canonical-root WORK_CLI + live-payload AC) — do NOT re-open them. ONE new MAJOR, and it needs a decision of record, not an implementer call: AC-2 gates the dev router on NODE_ENV !== "production", but NOTHING in wing-night ever sets NODE_ENV (apps/server/package.json start is `tsx src/index.ts`; apps/server/src/index.ts sets no env; a repo-wide grep finds it only in WN-26/WN-27 prose and loop.log). So the guard is inert — /api/dev/board would mount on the party-night server, the exact opposite of the Plan decision "the server endpoint is the gate" — and AC-2 own proof (404 under NODE_ENV=production) goes green against an env the repo never produces, so the verify gate cannot catch it. WN-27 (ready, deps [WN-26]) inherits the same assumption verbatim. Pick one at re-plan: (a) make NODE_ENV=production part of this slice (add it to apps/server `start`, add apps/server/package.json to the blast radius, note it also flips express into production mode), or (b) gate on a signal the repo actually sets — an explicit WN_DEV_BOARD=1 opt-in, or the presence of a resolvable WORK_CLI. Either way AC-2 must be provable under the repo real boot command. Minors carried for the build: pin the spawn cwd to the canonical root too (AC-1 says only "the repo root"); name a spawn timeout so the 503 branch is reachable (AC-3 says "no hang" but bounds nothing); pin the status enum as an explicit local constant in the totality test citing CDS SCHEMA §2 (deriving it from the bucketing function keys makes the assertion tautological); keep the board URL resolution + fetch inside an effect (the WN-3 tsx --test crash class); scope is at the upper edge (~10 new files) so card chrome stays minimal under the real 260/140 lint caps, with copy.ts and styles.ts both mandatory. Full verdict: .work/verdicts/WN-26.gate1.json
+- 2026-08-15T22:36:47.036Z Re-planned after the second gate1 re-grade (plan-work Mode B, 2026-08-15). AC-2 rewritten: the dev router now mounts only on an explicit WN_DEV_BOARD=1 opt-in (fail-closed — env absent means 404), replacing the inert NODE_ENV guard; the flag goes in apps/server dev script (adding apps/server/package.json to the blast radius) and the env is read INSIDE the createApp factory so a unit test can prove both directions. Also folded in: spawn cwd pinned to the canonical root; a named bounded spawn timeout so AC-3 "no hang" is real and its 503 branch reachable; the totality test pins the nine-value status enum as an explicit local constant citing CDS SCHEMA §2; the board URL resolution + fetch stay inside an effect (WN-3 crash class), proven the ContraptionUiLab way; AC-4 corrected to the exact-equality route branch (/dev/board is a fixed path, not a prefixed segment). Recorded as an open inconsistency, deliberately not resolved: AC-6 lazy-loads for bundle size while all four existing dev surfaces are statically imported in App.tsx. work check-acceptance passes; pre-ready checklist (a)-(h) walked. needs-planning → ready.
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
