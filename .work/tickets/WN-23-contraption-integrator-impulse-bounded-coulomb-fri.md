@@ -177,6 +177,15 @@ AC-10 byte figures re-recorded from the re-tuned fixture: 30fps {jsonObjectBytes
 AC-11 lab repair: re-found two/four/six by search against ALL THREE predicate sets gate1 named — pieceSets (landed + settle<=4s + every ramp contacted at 240Hz, seed 7 / 6s), the component default ('two' lands at seed 20260807 / 4s), and labRun ('four' seed-invariant within 0.1 units but rebuild-variant under the 0.6 nudge). Encoding all three up front was the right call: TWO found in 2451 tries / 0.4s, FOUR 408 / 0.1s, SIX 219 / 0.1s. Nesting preserved by construction so the nesting test is untouched; no assertion relaxed anywhere. Measured settles: two 2.3s, four 2.9s, six 3.17s — hints updated to those figures. WING slip re-tuned 0.86 → 0.4 for the same inversion reason. The false creep commentary and its dangling creepNote reference are deleted and replaced with what is now true.
 
 Whole ContraptionLab suite 47/47; packages/shared contraption suite 39/39.
+- 2026-08-15T23:10:38.269Z qa: PASS (qa-reviewer, high confidence) at 3448f28, recorded. The reviewer verified rather than trusted at every point: a 28,800-case sweep over segment orientations x penetrations x slip in [0..Infinity] x restitution x velocities found ZERO direction reversals, zero magnitude growth, zero non-finite results (and zero-tangent with slip Infinity returns 0, no 0/0); it independently re-derived every byte figure WITHOUT importing measureTrackBytes and matched to the digit; it mutation-probed the contact guard (+25x on each of the 12 ramps turns it red every time, and baseline contacts are true resting contacts at minDist-radius ~1e-15, so the 0.05 slack is not load-bearing); and it reproduced the red-before proof by restoring the base resolver into a scratch tree, finding 8 tests red. It also ran the verify_extra e2e key itself: 14 specs pass.
+
+Acted on its one substantive finding before the re-grade: my comment on the benchmark settle test claimed red-before on the PHYSICS change, and that was false. Because the fixture was re-tuned in the same commit, the old resolver settles it too (index 28); the old resolver only returns null against the OLD 0.86/0.9 fixture. The test still discriminates a bad re-tune under the new physics (0/0, 0.1/0.1, 0.2/0.25, 0.3/0.35 all null) and the physics is red-before-guarded by the two pins, which is where that proof belongs — the comment now says exactly that. Also fixed the ContraptionUiLab on-screen note that told the room WN-23 was unlanded, which this commit falsifies. The re-grade confirmed the delta was genuinely documentation-only by comment-stripping both files and diffing the residue: byte-identical in the test, only the copy string changed.
+
+NOTE on its carried-forward Evidence finding: that was accurate at 3448f28 but is now stale — ## Evidence was filled at 21bbf28, the commit after the graded sha, and carries the verify paste, the superseded byte table with encoding/body-count/per-run basis, the stash-proven red-before figures, the settle-candidate matrix, the route-search results and the clamp sweep.
+
+Declined three advisory minors deliberately (duplicated 0.05 epsilon + the lab's pass-through wrapper, two unused package-root exports, the literal-valued re-tune tripwire). The reviewer explicitly agreed none should have blocked and said fixing them here would have widened a diff whose discipline is carrying exactly its own blast radius. All recorded in ## Evidence for post-merge review.
+
+NEW, not caused by this change: tests/e2e/intro-countdown.spec.ts is a pre-existing timing flake (2.5s window to catch one countdown tick; red once on a contended 1.1m run, green on 3 subsequent runs). Recorded in ## Evidence and flagged for its own ticket — the manifest routes every apps/client/src/** diff through the e2e key, so it can redden unrelated gates.
 
 ## Evidence
 
@@ -285,6 +294,20 @@ Left, all advisory and all surfaced for post-merge review:
   rather than a behavioural assertion. The load-bearing guard is the settle assertion above it.
 - `slip` remains a misleading name post-inversion. Deliberately deferred to WN-15 with the piece
   vocabulary; every value site in the tree is re-tuned here so nothing is silently reinterpreted.
+- A comment in the moved `resolveSettleIndex` test says skipping a body missing from the earlier
+  frame "keeps it from reading as zero motion", while the assertion is exactly that it reads as
+  zero. Behaviour is correct and unchanged from the lab original; only the rationale is wrong —
+  same class as the benchmark comment fixed here, worth the same treatment next pass.
+
+### Pre-existing flake, surfaced by this ticket's e2e run but NOT caused by it
+
+`tests/e2e/intro-countdown.spec.ts:31` asserts the display catches the "1" tick of a 3-2-1
+countdown inside a 2.5s window. The QA pass saw it go red once on a contended machine (that run took
+1.1m against the 24.3s a clean run takes), then pass on two isolated re-runs and a full clean
+re-run (14/14). `git diff 832d6eb..HEAD -- tests/` is empty — this ticket never touches the spec.
+
+Worth its own ticket rather than a retry habit: the manifest routes every `apps/client/src/**`
+change through the `e2e` key, so this flake can redden an unrelated gate on load.
 
 ## Links
 Rationale + lab evidence: [WN-15](WN-15-contraption-minigame-build-a-physics-contraption-o.md) `## Plan`.
