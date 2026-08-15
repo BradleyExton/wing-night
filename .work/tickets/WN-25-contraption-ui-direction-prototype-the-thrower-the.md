@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-25
 title: "CONTRAPTION UI direction prototype: the thrower, the throw, the target, and the miss beat"
-status: in-review
+status: done
 kind: ui
 priority: medium
 created: 2026-08-15
@@ -13,6 +13,8 @@ blocked_by: []
 needs_prototype: false   # this ticket IS the prototype — it builds the lab; the PICK stays human
                          # (WN-16/WN-18 precedent). Do not route it through a prototype detour.
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-25"
+landed_range: f67cbd8c96f0ae07f2f9caaef2edcff3b8225774..58cc04c6c548e1125eb0238827ea88bb3e951aef
+review: pending
 ---
 
 ## Goal
@@ -97,6 +99,7 @@ position-only Verlet integrator) and wants its own ticket — do not silently ab
 - 2026-08-15T17:50:17.687Z qa attempt 1 on c916948: PASS (qa-reviewer, high confidence) — no reward-hacking (test diff is +0 deleted lines; the resolveClientRoute change is +9/-0), AC-2 scope guardrail held, AC-3 verified structurally distinct by reading all three variants, AC-9 proof non-vacuous, and the reviewer re-ran the gate itself. It also graded the scripted-scene judgement call SOUND. Acted on the advisory minors rather than only riding them into evidence, because the first one is a real AC gap: AC-6 says the cleaner PICKS IT UP, but the bone was pinned to the floor for the whole beat so the gag never completed. Fixed by extracting scene/cleanerWalk/ (walk-on → stoop → pick up → carry off, colocated-tested) which also kills the 3x copy-pasted walk interpolation the reviewer flagged; the projectile stops being drawn once she has it, pinned by a test that renders before/after pick-up. Also took: removed the lerpPoint dead no-op (and the now-unused lerp), removed the unused projectileLegend export, replaced the trivially-true /Throw/ assertion (a substring of 'Thrower') with assertions on the axis VALUES, added direct render coverage for the two variants only typecheck was exercising, and added resolveSequenceDuration(outcome) so a landed run no longer overruns onto a frame with no beat highlighted. Left as-is: the metadata-string distinctness test (structural check would need DOM diffing for throwaway code), the unexercised avatarSrc branch, and the two >150-line files (WN-15 deletes the folder wholesale). Verify re-run green after the fix.
 - 2026-08-15T18:00:29.748Z qa attempt 2 on d9c9185: PASS (qa-reviewer, high confidence), recorded with --supersede. Verified the AC-6 fix is real and falsifiable (under the old released-only guard the sprite still renders at cleanup progress 0.8, so the negative assertion would have failed), confirmed the modified assertion is strictly STRONGER not merely different, confirmed the settle-branch removal is value-identical with its test file untouched, and confirmed no TDZ on resolveSequenceDuration. It also corrected my previous note: resolveSequenceDuration does NOT fully remove the no-beat-highlighted frame on a landed run, it only shortens it — that overstatement is fixed in ## Evidence. browser-verify: PASS — drove all three variants at 1440x810, 14 screenshots in .work/verdicts/WN-25-browser/. Evidence written: dev route, the three-axis variant table, the screenshot index, the AC-5 observation + implication (drumette needs no new physics; a flat bone would need angular velocity and its own ticket), the verify paste (374/374 apps/client), and the known-imperfect list. Ready for the human pick — the lab does not choose.
 - 2026-08-15T18:00:42.389Z handed off → in-review (verify green); awaiting land
+- 2026-08-15T18:02:06.050Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 ### The pick is still open — this is what you drive
