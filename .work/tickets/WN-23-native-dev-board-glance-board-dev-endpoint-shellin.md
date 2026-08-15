@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-23
 title: "Native /dev/board glance board — dev endpoint shelling the work CLI + bucketed ticket list"
-status: ready            # idea | needs-research | needs-planning | ready | in-progress | in-review | done | blocked | superseded
+status: needs-planning  # idea | needs-research | needs-planning | ready | in-progress | in-review | done | blocked | superseded
 kind: feature
 priority: high
 created: 2026-08-15
@@ -76,6 +76,7 @@ Grilled interactively 2026-08-14 (plan-work, four lenses). Decisions of record:
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-15T15:15:59.263Z gate1: needs-changes (product-owner, confidence high) — demoted ready → needs-planning; route to plan-work. Verdict summary: one blocker + three majors, all fixable in one plan-work amendment without re-decomposing the slice. (1) BLOCKER: last AC omits pnpm lint — verify.lint is in the default gate and is the only gate item reaching the seven wingnight component/styles ESLint rules the new board component must satisfy; amend last AC to lint → typecheck → test. (2) MAJOR: e2e key unnamed although React.lazy forces a Suspense boundary into App.tsx (render root of every Playwright-spec'd surface) and createApp gains a router; name the full e2e key (CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273) or add an App-level shell assertion. (3) MAJOR: AC-5 bucket enumeration drops in-review (the awaiting-gate2 state) — add an in-review bucket or an explicit excluded-set with a total-coverage assertion. (4) MAJOR: no AC exercises the real CLI spawn, and the WORK_CLI default ../claude-dev-system does not resolve from a .claude/worktrees build checkout (real CLI: /Users/bradleyexton/Projects/claude-dev-system/tools/bin/work.ts) — pin worktree-aware resolution and require one live payload demonstration. Minors (advisory): waiting-on-deps bucket re-derives dep-satisfaction client-side (parity claim overstated); scope at upper edge of one window (card chrome stays minimal; 260/140-line lint caps); component test must import the board entry directly — renderToStaticMarkup cannot resolve React.lazy. Full verdict: .work/verdicts/WN-23.gate1.json
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
