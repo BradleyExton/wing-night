@@ -20,14 +20,6 @@ export type FlightWaypoints = {
 
 export type RunOutcome = "landed" | "missed";
 
-const lerp = (from: number, to: number, t: number): number => {
-  return from + (to - from) * t;
-};
-
-const lerpPoint = (from: Point, to: Point, t: number): Point => {
-  return { x: lerp(from.x, to.x, t), y: lerp(from.y, to.y, t) };
-};
-
 /** Quadratic bezier, so a throw arcs instead of travelling in a straight line. */
 const arc = (from: Point, to: Point, apexLift: number, t: number): Point => {
   const control: Point = {
@@ -79,11 +71,6 @@ export const resolveProjectilePoint = (
     }
 
     return arc(waypoints.deflect, ending, 40, (t - 0.5) / 0.5);
-  }
-
-  if (beatId === "settle") {
-    // Already at the ending; a short settle keeps it from snapping to a dead stop.
-    return lerpPoint(ending, ending, t);
   }
 
   return ending;

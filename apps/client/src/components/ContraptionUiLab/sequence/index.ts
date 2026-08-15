@@ -21,6 +21,15 @@ export const BEATS: readonly Beat[] = [
 
 export const SEQUENCE_DURATION_MS = BEATS.reduce((total, beat) => total + beat.durationMs, 0);
 
+/**
+ * How long a run of the given outcome actually lasts. A landed run has no cleanup beat, so running
+ * it for the full SEQUENCE_DURATION_MS would leave it sitting on a static frame with no beat
+ * highlighted — the timeline and the visible beats have to agree.
+ */
+export const resolveSequenceDuration = (outcome: "landed" | "missed"): number => {
+  return resolveVisibleBeats(outcome).reduce((total, beat) => total + beat.durationMs, 0);
+};
+
 export type SequencePosition = {
   beat: Beat;
   index: number;

@@ -14,7 +14,7 @@ import {
 import type { VariantSceneProps } from "./scene";
 import type { RunOutcome } from "./scene/flightPath";
 import {
-  SEQUENCE_DURATION_MS,
+  resolveSequenceDuration,
   resolveSequencePosition,
   resolveVisibleBeats
 } from "./sequence";
@@ -64,7 +64,7 @@ export const ContraptionUiLab = (): JSX.Element => {
 
       setElapsedMs(next);
 
-      if (next < SEQUENCE_DURATION_MS) {
+      if (next < resolveSequenceDuration(outcome)) {
         frame = window.requestAnimationFrame(step);
       }
     };

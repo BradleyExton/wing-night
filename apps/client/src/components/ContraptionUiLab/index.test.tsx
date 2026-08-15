@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { VariantArena } from "./VariantArena";
+import { VariantCharacterFirst } from "./VariantCharacterFirst";
+import { VariantSidestage } from "./VariantSidestage";
 import { ContraptionUiLab } from "./index";
+import { resolveSequencePosition } from "./sequence";
 
 // AC#9's actual proof. Reaching this file at all means importing the prototype module under
 // `tsx --test` — no DOM, no Vite — so a bare `window` or `import.meta.env` read at module OR render
@@ -36,12 +40,14 @@ test("offers a switcher entry for every variant", () => {
   assert.match(html, /C · Character-first/);
 });
 
+// Asserted on the axis VALUES rather than the labels: "Throw" is a substring of "Thrower", so
+// matching the labels would pass even if the throw-scale row were deleted outright.
 test("names all three structural axes so the comparison is legible at the pick", () => {
   const html = renderToStaticMarkup(<ContraptionUiLab />);
 
-  assert.match(html, /Thrower/);
-  assert.match(html, /Throw/);
-  assert.match(html, /Target/);
+  assert.match(html, /Left edge, in profile, outside the field/);
+  assert.match(html, /Full-width traverse/);
+  assert.match(html, /the can sits in front of the ramps/);
 });
 
 // AC#5: both candidates present, and the physics implication stated rather than left to be
@@ -81,4 +87,43 @@ test("shows the cleanup beat because the default outcome is a miss", () => {
   const html = renderToStaticMarkup(<ContraptionUiLab />);
 
   assert.match(html, /she picks it up/);
+});
+
+// Only the default variant is reachable through the entry, so the other two are rendered directly
+// — otherwise a crash in either would be caught by nothing but a human opening the URL.
+const MID_FLIGHT = resolveSequencePosition(3400);
+
+test("renders the arena variant without a DOM", () => {
+  const html = renderToStaticMarkup(
+    <VariantArena position={MID_FLIGHT} outcome="missed" projectile="drumette" />
+  );
+
+  assert.match(html, /<svg/);
+});
+
+test("renders the character-first variant without a DOM", () => {
+  const html = renderToStaticMarkup(
+    <VariantCharacterFirst position={MID_FLIGHT} outcome="missed" projectile="drumette" />
+  );
+
+  assert.match(html, /<svg/);
+});
+
+// AC#6's completion, pinned where it can actually fail: once the cleaner has picked the bone up it
+// is no longer drawn on the floor, so the gag ends on an empty floor rather than on a bone the
+// cleaner is standing next to.
+test("stops drawing the projectile on the floor once the cleaner has picked it up", () => {
+  const beforePickUp = resolveSequencePosition(6300 + 2600 * 0.2);
+  const afterPickUp = resolveSequencePosition(6300 + 2600 * 0.8);
+
+  const before = renderToStaticMarkup(
+    <VariantSidestage position={beforePickUp} outcome="missed" projectile="wing-bone" />
+  );
+  const after = renderToStaticMarkup(
+    <VariantSidestage position={afterPickUp} outcome="missed" projectile="wing-bone" />
+  );
+
+  // The flat bone's 44-wide barrel is unique to the projectile sprite.
+  assert.match(before, /width="44"/);
+  assert.ok(!/width="44"/.test(after));
 });

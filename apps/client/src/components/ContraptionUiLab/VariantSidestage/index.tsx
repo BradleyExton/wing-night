@@ -8,7 +8,10 @@ import {
   TrashCan,
   type VariantSceneProps
 } from "../scene";
+import { hasPickedUp, isStooping, resolveCleanerX } from "../scene/cleanerWalk";
 import { type FlightWaypoints, hasReleased, resolveProjectilePoint } from "../scene/flightPath";
+
+const SCENE_WIDTH = 960;
 
 // A · Sidestage. Thrower parked on the left edge in profile, OUTSIDE the field; the throw traverses
 // the full width, so the flight itself is the scene; the can is foregrounded — oversized and in
@@ -34,7 +37,8 @@ export const VariantSidestage = ({
   );
   const released = hasReleased(position.beat.id);
   const isEating = position.beat.id === "eating";
-  const isCleanup = position.beat.id === "cleanup";
+  const isMissCleanup = position.beat.id === "cleanup" && outcome === "missed";
+  const pickedUp = isMissCleanup && hasPickedUp(position.progress);
 
   return (
     <svg viewBox="0 0 960 540" className="block h-full w-full" role="img">
@@ -64,17 +68,20 @@ export const VariantSidestage = ({
         </g>
       ) : null}
 
-      {released ? (
+      {released && !pickedUp ? (
         <g transform={`translate(${projectilePoint.x}, ${projectilePoint.y})`}>
           <ProjectileSprite kind={projectile} />
         </g>
       ) : null}
 
-      {isCleanup && outcome === "missed" ? (
+      {isMissCleanup ? (
         <g
-          transform={`translate(${960 - (960 - WAYPOINTS.floor.x - 70) * Math.min(1, position.progress / 0.45)}, 402)`}
+          transform={`translate(${resolveCleanerX(position.progress, SCENE_WIDTH, WAYPOINTS.floor.x + 70)}, 402)`}
         >
-          <Cleaner progress={position.progress} />
+          <Cleaner
+            stooping={isStooping(position.progress)}
+            carrying={hasPickedUp(position.progress)}
+          />
         </g>
       ) : null}
     </svg>

@@ -152,13 +152,13 @@ export const TrashCan = ({ scale = 1, foregrounded = false }: TrashCanProps): JS
 };
 
 export type CleanerProps = {
-  /** 0..1 across the cleanup beat: walks on, stoops, and carries it off. */
-  progress: number;
+  /** Bent over the projectile, mid-pick-up. */
+  stooping: boolean;
+  /** Holding the projectile — she has it, so the floor is empty from here on. */
+  carrying: boolean;
 };
 
-export const Cleaner = ({ progress }: CleanerProps): JSX.Element => {
-  const stooping = progress > 0.45;
-
+export const Cleaner = ({ stooping, carrying }: CleanerProps): JSX.Element => {
   return (
     <g>
       <rect x={-13} y={16} width={26} height={42} rx={9} fill={PALETTE.cleanerShirt} />
@@ -170,6 +170,7 @@ export const Cleaner = ({ progress }: CleanerProps): JSX.Element => {
       </g>
       <g transform={stooping ? "rotate(75, -10, 24)" : "rotate(15, -10, 24)"}>
         <rect x={-19} y={18} width={9} height={26} rx={4.5} fill={PALETTE.skin} />
+        {carrying ? <circle cx={-14.5} cy={46} r={6} fill={PALETTE.bone} /> : null}
       </g>
     </g>
   );

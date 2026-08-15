@@ -8,7 +8,10 @@ import {
   TrashCan,
   type VariantSceneProps
 } from "../scene";
+import { hasPickedUp, isStooping, resolveCleanerX } from "../scene/cleanerWalk";
 import { type FlightWaypoints, hasReleased, resolveProjectilePoint } from "../scene/flightPath";
+
+const SCENE_WIDTH = 960;
 
 // C · Character-first. The eat is the hero: the thrower fills a large foreground panel on the left,
 // and the contraption is demoted to a narrow backdrop strip along the top-right. The throw occupies
@@ -35,7 +38,8 @@ export const VariantCharacterFirst = ({
   );
   const released = hasReleased(position.beat.id);
   const isEating = position.beat.id === "eating";
-  const isCleanup = position.beat.id === "cleanup";
+  const isMissCleanup = position.beat.id === "cleanup" && outcome === "missed";
+  const pickedUp = isMissCleanup && hasPickedUp(position.progress);
 
   return (
     <svg viewBox="0 0 960 540" className="block h-full w-full" role="img">
@@ -72,17 +76,20 @@ export const VariantCharacterFirst = ({
         </g>
       ) : null}
 
-      {released ? (
+      {released && !pickedUp ? (
         <g transform={`translate(${projectilePoint.x}, ${projectilePoint.y})`}>
           <ProjectileSprite kind={projectile} scale={0.66} />
         </g>
       ) : null}
 
-      {isCleanup && outcome === "missed" ? (
+      {isMissCleanup ? (
         <g
-          transform={`translate(${960 - (960 - WAYPOINTS.floor.x - 44) * Math.min(1, position.progress / 0.45)}, 248) scale(0.5)`}
+          transform={`translate(${resolveCleanerX(position.progress, SCENE_WIDTH, WAYPOINTS.floor.x + 44)}, 248) scale(0.5)`}
         >
-          <Cleaner progress={position.progress} />
+          <Cleaner
+            stooping={isStooping(position.progress)}
+            carrying={hasPickedUp(position.progress)}
+          />
         </g>
       ) : null}
     </svg>

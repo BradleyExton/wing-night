@@ -4,7 +4,6 @@ export const contraptionUiLabCopy = {
     "Three structurally different readings of the same beat: the thrower, the throw, the target, " +
     "and the miss. Drive each one, then pick a direction — the pick is not made here.",
   variantLegend: "Variant",
-  projectileLegend: "Projectile",
   outcomeLegend: "Outcome",
   replay: "Replay",
   outcomeLabel: {
