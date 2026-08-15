@@ -8,7 +8,7 @@ priority: medium
 created: 2026-08-15
 
 # ─── Optional (delete a line to take its default) ───────────────────────────
-deps: [WN-23, WN-25]
+deps: [WN-23, WN-25, WN-28]
 blocked_by: []
 ---
 
