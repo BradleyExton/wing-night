@@ -10,7 +10,8 @@ created: 2026-08-15
 # ─── Optional (delete a line to take its default) ───────────────────────────
 deps: []
 blocked_by: []
-needs_prototype: true
+needs_prototype: false   # this ticket IS the prototype — it builds the lab; the PICK stays human
+                         # (WN-16/WN-18 precedent). Do not route it through a prototype detour.
 ---
 
 ## Goal
