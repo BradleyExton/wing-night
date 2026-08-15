@@ -19,7 +19,7 @@ Teams with multi-song playlists hear a different anthem each round (deterministi
 - [ ] A pure selector `resolveAnthemForRound(team, roundNumber)` picks `anthems[(roundNumber - 1) % anthems.length]` — deterministic, unit-tested directly (single-song, multi-song, wrap-around, empty cases). `useTeamAnthemCue` consumes it instead of hard-coding `anthems[0]`.
 - [ ] The MINIGAME_INTRO stage body (apps/client/src/components/DisplayBoard/StageSurface/MinigameIntroStageBody) renders the active team's `genre` label as part of the team spotlight when present, and renders identically to today when absent. Check apps/client/public/mockups/minigame-intro/ (01-team-spotlight) before styling.
 - [ ] Rotation is stable across snapshot re-derives and display refresh/rehydrate (same round → same track).
-- [ ] `pnpm typecheck` and `pnpm test` pass, including the new selector tests.
+- [ ] `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass, including the new selector tests.
 
 ## Plan
 Decisions resolved at planning (grilled 2026-08-07, user present):

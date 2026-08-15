@@ -23,10 +23,13 @@ This ticket produces the presets; the judgements stay human.
       the wing LANDS and physically CONTACTS every piece it was given, checked at every one of the
       240 integration steps rather than at the 30Hz display sampling. An uncontacted piece is
       scenery, and a set full of scenery makes the piece-count question unanswerable.
-- [ ] **The sets must stop nesting.** Today `four = two + 2` and `six = four + 2`, which is why 2 and
-      4 pieces produced a byte-identical track and an identical 1.27s settle — the added ramps were
-      near-bucket deflectors that barely altered the run. Each set is re-found independently so piece
-      count is a real variable rather than a suffix.
+- [ ] **The sets must stop nesting.** The original routes nested (`four = two + 2`, `six = four + 2`),
+      which is why 2 and 4 pieces produced a byte-identical track and an identical settle — the added
+      ramps were near-bucket deflectors that barely altered the run; WN-23's minimal repair
+      deliberately preserved that nesting. Each set is re-found independently here so piece count is
+      a real variable rather than a suffix — and the nesting test
+      (`pieceSets/index.test.ts`, "nests the smaller routes inside the larger ones") is
+      **deliberately re-specified** to the new non-nesting contract, not deleted.
 - [ ] At least one set exploits **sliding** — a route that is only solvable because a body now travels
       along a ramp instead of deflecting off it. Without this the ticket cannot demonstrate that
       WN-23 changed anything a player would notice.
@@ -34,13 +37,12 @@ This ticket produces the presets; the judgements stay human.
       rather than the current abstract bucket, so the routes are designing toward the real scene.
 - [ ] The lab's per-set `hint` copy is rewritten to ask the re-framed question honestly, as the
       current hints do ("does a sixth piece add cleverness, or just fiddling?").
-- [ ] The **creep caveat is either removed or made true.** `pieceSets/index.ts:98-100` documents the
-      per-step-slip creep and claims `contraptionLabCopy.creepNote` "carries that up to the room" —
-      but `creepNote` does not exist in `copy.ts` (qa-reviewer flagged this dangling reference at
-      WN-18 review). After WN-23 the caveat is obsolete anyway: delete it rather than wiring it up.
-- [ ] The benchmark preset entry still points at `CONTRAPTION_BENCHMARK_LAYOUT` and now reaches a
-      verdict, since WN-23 re-tunes that fixture to settle. Its lab hint stops describing it as a
-      control that never resolves.
+- [ ] No stale creep copy survives the hint rewrite. (WN-23 already deleted the obsolete creep
+      caveat and its dangling `creepNote` reference from `pieceSets/index.ts` — this AC is the
+      residual sweep of `copy.ts` and the hints, judgment-only.)
+- [ ] The benchmark preset entry still points at `CONTRAPTION_BENCHMARK_LAYOUT`, which reaches a
+      verdict since WN-23 re-tuned it to settle (machine-checked in packages/shared). Its lab hint
+      is re-framed to match — WN-23 only corrected the factual copy.
 - [ ] Existing colocated tests still hold: the contact-guard assertion that proves each preset's
       ramps are genuinely touched must be re-pointed at the new sets and must still **fail loudly**
       when a ramp is shifted out of the flight path (WN-18's QA pass mutation-probed exactly this —
@@ -53,10 +55,16 @@ Grilled 2026-08-15 (plan-work Mode A). This is the `apps/client` half of the fri
 seam WN-17/WN-18 split on, and the same seam whose combined version gate1 rejected for bundling
 separable deliverables. WN-23 is the headless module half.
 
-**Why it waits on both deps.** WN-23 because every current preset was search-found against physics
-that is about to change, so any route kept now is void. WN-25 because level geometry is a design
-question — where the target sits and how the scene is framed decide what a "route" even is, and
-re-finding presets against an abstract box means doing the work twice.
+**Why it waits on both deps.** WN-23 because every preset must be found against the fixed physics —
+note WN-23's own gate repair already re-found the three routes *minimally* (same scene, still
+nesting, purely to keep its verify gate green), so this ticket inherits a green suite and its job
+is the **design-driven** re-find, not repair. WN-25 (done 2026-08-15) because level geometry is a
+design question — where the target sits and how the scene is framed decide what a "route" even is,
+and re-finding presets against an abstract box means doing the work twice.
+
+**Handoff note (manifest `verify_extra`, 2026-08-15):** the diff touches `apps/client/src/**`, so
+the handoff's verify run includes the full `e2e` suite — expected green; no Playwright spec
+references the lab.
 
 **What this unblocks.** WN-15's questions 2 (piece set and count), 3 (one shot vs best-of-N) and 4
 (sim length) — none of which could be answered on 2026-08-15, because with no sliding and no

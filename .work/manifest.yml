@@ -14,6 +14,19 @@ verify:                              # pnpm workspace scripts (root package.json
   # clear of 3000/3001/5173/5174; change them freely if they ever collide.
   e2e:       "CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e"              # full Playwright suite — opt-in via --steps e2e
   test_one:  "CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e {pattern}"    # single spec; isolated stack, never reuses a live dev server
+verify_extra:                        # diff-scoped required verify steps at handoff (CDS-167; fails closed on unreadable/empty diff)
+  # pnpm test excludes Playwright, so a rewire of a spec'd surface can hand off green without its
+  # spec ever running (the WN-12 class). The specs exercise /admin, /host, /display
+  # (apps/client/src) AND the /dev/minigame/* sandbox, which renders each minigame package's
+  # client bundle — so minigame .tsx surfaces are spec'd surfaces too. Editing a spec itself must
+  # also prove the suite green at handoff. apps/server is deliberately out: e2e boots the server
+  # anyway, but requiring the suite for every server change would fire on nearly everything and
+  # server logic is unit-covered.
+  - globs:
+      - "apps/client/src/**"
+      - "packages/minigames/**/src/**/*.tsx"
+      - "tests/e2e/**"
+    keys: [e2e]
 src_globs:
   - "apps/client/src/**/*.ts"
   - "apps/client/src/**/*.tsx"

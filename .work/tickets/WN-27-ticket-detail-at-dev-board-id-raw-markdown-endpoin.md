@@ -44,8 +44,9 @@ dev-only endpoint that returns the ticket file's raw markdown.
       section-splitting/parsing helpers are pure functions with direct unit tests.
 - [ ] Board cards from WN-26 link to their detail pages, and the detail page links back to
       `/dev/board`.
-- [ ] `pnpm typecheck` and `pnpm test` pass (manifest `verify.typecheck` / `verify.test`) with the
-      new endpoint, route-resolution, and view tests included.
+- [ ] `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass (manifest `verify.lint` /
+      `verify.typecheck` / `verify.test`) with the new endpoint, route-resolution, and view tests
+      included.
 
 ## Plan
 Split out of the WN-26 grill (2026-08-14) to keep each slice one-context-sized — the user chose

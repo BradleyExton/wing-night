@@ -20,7 +20,7 @@ Party-arrival music: the display plays through a lobby playlist during the SETUP
 - [ ] During SETUP, once audio is unlocked (the WN-20 tap-to-enable gate), the display plays the playlist sequentially, advancing on track end and looping back to the first track after the last.
 - [ ] Lobby playback stops (with a short fade-out if trivially achievable via volume ramp, hard stop otherwise) when the phase leaves SETUP, and never plays again for the session — the WN-20 anthem cue owns audio from then on. The two must not overlap.
 - [ ] With no lobby tracks on disk, SETUP renders and behaves exactly as today.
-- [ ] `pnpm typecheck` and `pnpm test` pass, including unit tests for the lobby-track enumeration (populated, empty, missing dir) and the sequential-advance selector.
+- [ ] `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass, including unit tests for the lobby-track enumeration (populated, empty, missing dir) and the sequential-advance selector.
 
 ## Plan
 Decisions resolved at planning (grilled 2026-08-07, user present; this slice was added mid-grill by the user):

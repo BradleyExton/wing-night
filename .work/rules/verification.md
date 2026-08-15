@@ -9,13 +9,18 @@ it instead.
 
 ## Every change ends in a machine-checkable step
 
-- A unit of work isn't "done" until a **runnable command** confirms it: `lint` / `typecheck` /
-  `build` / a single fast `test`, or a scripted check. The last acceptance-criterion of a ticket
-  **must** be that step (SCHEMA §1.2).
+- A unit of work isn't "done" until a **runnable command** confirms it. The last
+  acceptance-criterion of a ticket **must** name the **complete default verify gate** from the
+  manifest — every present key of `lint` / `typecheck` / `build` / `test` (SCHEMA §1.2; `work
+  check-acceptance` hard-fails a ready ticket that omits one). A partial gate is how three
+  wing-night tickets landed at gate1 rejection in one day: "typecheck + test" reads finished and
+  silently skips the lint rules that only lint runs.
 - If a change has **no** runnable success check, it is **not** an autonomy candidate — flag it for a
   hands-on session rather than asserting success.
-- Prefer **fast** checks: a single-test run over the full suite, a fast typecheck, log-to-file. The
-  loop runs checks *repeatedly*; slow tools stall it.
+- Prefer **fast** checks *inside the loop*: a single-test run over the full suite, a fast
+  typecheck, log-to-file — as earlier ACs and iteration steps. The loop runs checks *repeatedly*;
+  slow tools stall it. The **finish line is different**: the last AC names the complete gate, and
+  manifest `verify_extra` surfaces add their mapped steps at handoff automatically.
 
 ## Evidence, not assertion
 
