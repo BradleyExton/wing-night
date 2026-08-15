@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-25
 title: "CONTRAPTION UI direction prototype: the thrower, the throw, the target, and the miss beat"
-status: ready
+status: in-progress
 kind: ui
 priority: medium
 created: 2026-08-15
@@ -12,6 +12,7 @@ deps: []
 blocked_by: []
 needs_prototype: false   # this ticket IS the prototype — it builds the lab; the PICK stays human
                          # (WN-16/WN-18 precedent). Do not route it through a prototype detour.
+worktree: "/Users/bradleyexton/Projects/wing-night-WN-25"
 ---
 
 ## Goal
@@ -91,6 +92,8 @@ position-only Verlet integrator) and wants its own ticket — do not silently ab
 ## Progress
 <the executing agent appends here — the restart-safe log>
 - 2026-08-15T17:16:23.902Z gate1: pass (product-owner, confidence high) — advancing to implement. Baseline verify chain confirmed green on HEAD (lint/typecheck/test all exit 0), so the WN-23 unsatisfiable-gate failure mode does not apply. e2e key correctly omitted: no spec in tests/e2e/ references /dev/lab, DEV_LAB or resolveClientRoute, and AC-1 forbids changing the route module. Blast radius verified additive past the 'does production import this' test: eslint.config.mjs has no test-bearing consumer in the repo-wide gate, and resolveClientRoute's two test-bearing consumers stay valid because the existing DEV_LAB route is reused rather than widened. Four minors carried to the implementer: (1) the likeness citation is doc-only — PETMON is unbuilt, so spriteSrc/leaders[] does not exist in code; the landed player-likeness field is avatarSrc on players[] (contentLoader/loadPlayers, AdminConfigWizard/RosterStep) — read both refs, the sprite-booth mockup half IS accurate; (2) largest of the three labs and the ticket omits its compression lever — build the scene primitives (thrower, projectile, ramps, can, cleaner) ONCE and vary composition, since AC-3's differences are placement/scene-share/foregrounding (shared sub-components are allowed, a shared Layout is not); (3) restore the colocated resolveClientRoute name-pin assert that WN-18 landed — nothing imports App, so a typo'd lab name passes the whole gate green; (4) AC-5 must record the OBSERVATION (flat bone slides without tumbling vs drumette reads round) and leave the aesthetic call to the human pick — do not manufacture a projectile decision. Full verdict: .work/verdicts/WN-25.gate1.json
+- 2026-08-15T17:16:59.216Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night-WN-25
+- 2026-08-15T17:26:53.521Z Built the lab at apps/client/src/components/ContraptionUiLab/ behind /dev/lab/contraption-ui. Applied the gate1 compression lever: shared scene primitives (Thrower, ProjectileSprite, Ramp, TrashCan, Cleaner, EatingTimer, Floor) built once in scene/, composed differently by three sibling variant folders — no shared Layout. Pure modules extracted and colocated-tested: variants/ (resolveVariantId + the three structural axes), sequence/ (five beats, resolveSequencePosition, resolveVisibleBeats), projectile/ (both candidates + requiresAngularVelocity), scene/flightPath/ (waypoint-driven arc). Wired one App.tsx dispatch arm and one eslint ignores entry naming WN-15 as the deleter. Restored the resolveClientRoute name-pin test gate1 flagged as dropped (minor 3), using the hyphenated name so the segment matcher is exercised too. Followed gate1 minor 1: the likeness prop is avatarSrc (the landed players[] field), not the doc-only spriteSrc. Followed gate1 minor 4: projectile/ records the OBSERVATION and the physics implication; it does not make the pick. Deliberate call recorded for QA: the scene is SCRIPTED, not a run of the real integrator — WN-23's friction fix is not landed, so a live run would creep to a dead stop and actively mislead the judgement; the fixed-orientation constraint (no angular state in CircleBody) IS faithfully reproduced, which is the part AC-5 asks a human to judge. Gate green: lint + typecheck + test all pass (52/52 on the new and touched suites).
 
 ## Evidence
 <variant screenshots + preview URL + the projectile/rotation answer, recorded before `done`>

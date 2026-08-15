@@ -23,6 +23,12 @@ export default [
       // disabled and there is no eslint-disable in the lab. WN-15 records the answers, then deletes
       // both the folder and this entry.
       "apps/client/src/components/ContraptionLab/**",
+      // Throwaway CONTRAPTION UI direction prototype behind /dev/lab/contraption-ui. A three-variant
+      // lab is hardcoded labels and runtime style values by construction, which the wingnight
+      // component rules rightly reject in shipped code. Scope carve-out only — no rule is disabled
+      // and there is no eslint-disable in the prototype. WN-15 records the pick, then deletes both
+      // the folder and this entry.
+      "apps/client/src/components/ContraptionUiLab/**",
       "**/dist/**",
       "**/coverage/**",
       "**/.cache/**",

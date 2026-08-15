@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminConfigWizard } from "./components/AdminConfigWizard";
 import { AnamorphLab } from "./components/AnamorphLab";
 import { ContraptionLab } from "./components/ContraptionLab";
+import { ContraptionUiLab } from "./components/ContraptionUiLab";
 import { DisplayBoard } from "./components/DisplayBoard";
 import { HostControlPanel } from "./components/HostControlPanel";
 import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
@@ -31,6 +32,9 @@ const ANAMORPH_LAB_NAME = "anamorph";
 
 // Deleted by WN-15 along with the lab itself.
 const CONTRAPTION_LAB_NAME = "contraption";
+
+// Deleted by WN-15 along with the prototype itself.
+const CONTRAPTION_UI_LAB_NAME = "contraption-ui";
 
 const resolveRouteContent = (
   route: ReturnType<typeof resolveClientRoute>,
@@ -66,6 +70,10 @@ const resolveRouteContent = (
 
   if (route === "DEV_LAB" && devLabName === CONTRAPTION_LAB_NAME) {
     return <ContraptionLab />;
+  }
+
+  if (route === "DEV_LAB" && devLabName === CONTRAPTION_UI_LAB_NAME) {
+    return <ContraptionUiLab />;
   }
 
   return <RouteNotFound />;

@@ -40,6 +40,15 @@ test("resolves the contraption lab name to DEV_LAB", () => {
   assert.equal(resolveDevLabName("/dev/lab/contraption"), "contraption");
 });
 
+// WN-25's prototype rides the same generic route. Same reasoning as above: the App dispatch arm is
+// unreachable from a test, so pinning the name is the half of that wiring a test CAN hold — and the
+// hyphenated name additionally proves the segment matcher does not choke on the hyphen.
+test("resolves the contraption-ui prototype name to DEV_LAB", () => {
+  assert.equal(resolveClientRoute("/dev/lab/contraption-ui"), "DEV_LAB");
+  assert.equal(resolveDevLabName("/dev/lab/contraption-ui"), "contraption-ui");
+  assert.equal(resolveDevLabName("/dev/lab/CONTRAPTION-UI/"), "contraption-ui");
+});
+
 test("resolves the bare /dev/lab prefix to NOT_FOUND when no name follows", () => {
   assert.equal(resolveClientRoute("/dev/lab"), "NOT_FOUND");
   assert.equal(resolveClientRoute("/dev/lab/"), "NOT_FOUND");
