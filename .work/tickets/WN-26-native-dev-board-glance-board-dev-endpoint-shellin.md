@@ -1,6 +1,6 @@
 ---
 # ─── Required ───────────────────────────────────────────────────────────────
-id: WN-23
+id: WN-26
 title: "Native /dev/board glance board — dev endpoint shelling the work CLI + bucketed ticket list"
 status: ready            # idea | needs-research | needs-planning | ready | in-progress | in-review | done | blocked | superseded
 kind: feature
@@ -77,7 +77,7 @@ Grilled interactively 2026-08-14 (plan-work, four lenses). Decisions of record:
   Wing-night's vendored `tools/` has only the two hooks, no CLI — hence the `WORK_CLI` env with the
   sibling-checkout default. The spawn boundary is the ONE thing tests mock.
 - **Scope — glance + detail across two slices** (user-decided). This slice is the glance board
-  end-to-end; WN-24 layers the ticket-detail view on top. Review tab, structure tab, and any write
+  end-to-end; WN-27 layers the ticket-detail view on top. Review tab, structure tab, and any write
   actions are explicitly out of scope for the native board — deep dives stay on the central board /
   Harvest.
 - **Dev-gating — follow the repo's own precedent** (self-decided, easily reversed): the client
@@ -89,7 +89,7 @@ Grilled interactively 2026-08-14 (plan-work, four lenses). Decisions of record:
   shell WN-13's `/designs` + `/design-system` reuse (WN-13 now depends on this ticket).
 - Component idiom: follow `AdminConfigWizard`'s testing/setup patterns (WN-11/19 precedent).
 
-Re-grilled 2026-08-15 after gate1 rejection (full verdict: `.work/verdicts/WN-23.gate1.json`).
+Re-grilled 2026-08-15 after gate1 rejection (full verdict: `.work/verdicts/WN-26.gate1.json`).
 Decisions of record from the amendment:
 
 - **Full verify gate incl. e2e** (user-decided): last AC names lint → typecheck → test → e2e. The
@@ -110,14 +110,14 @@ Decisions of record from the amendment:
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
-- 2026-08-15T15:15:59.263Z gate1: needs-changes (product-owner, confidence high) — demoted ready → needs-planning; route to plan-work. Verdict summary: one blocker + three majors, all fixable in one plan-work amendment without re-decomposing the slice. (1) BLOCKER: last AC omits pnpm lint — verify.lint is in the default gate and is the only gate item reaching the seven wingnight component/styles ESLint rules the new board component must satisfy; amend last AC to lint → typecheck → test. (2) MAJOR: e2e key unnamed although React.lazy forces a Suspense boundary into App.tsx (render root of every Playwright-spec'd surface) and createApp gains a router; name the full e2e key (CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273) or add an App-level shell assertion. (3) MAJOR: AC-5 bucket enumeration drops in-review (the awaiting-gate2 state) — add an in-review bucket or an explicit excluded-set with a total-coverage assertion. (4) MAJOR: no AC exercises the real CLI spawn, and the WORK_CLI default ../claude-dev-system does not resolve from a .claude/worktrees build checkout (real CLI: /Users/bradleyexton/Projects/claude-dev-system/tools/bin/work.ts) — pin worktree-aware resolution and require one live payload demonstration. Minors (advisory): waiting-on-deps bucket re-derives dep-satisfaction client-side (parity claim overstated); scope at upper edge of one window (card chrome stays minimal; 260/140-line lint caps); component test must import the board entry directly — renderToStaticMarkup cannot resolve React.lazy. Full verdict: .work/verdicts/WN-23.gate1.json
+- 2026-08-15T15:15:59.263Z gate1: needs-changes (product-owner, confidence high) — demoted ready → needs-planning; route to plan-work. Verdict summary: one blocker + three majors, all fixable in one plan-work amendment without re-decomposing the slice. (1) BLOCKER: last AC omits pnpm lint — verify.lint is in the default gate and is the only gate item reaching the seven wingnight component/styles ESLint rules the new board component must satisfy; amend last AC to lint → typecheck → test. (2) MAJOR: e2e key unnamed although React.lazy forces a Suspense boundary into App.tsx (render root of every Playwright-spec'd surface) and createApp gains a router; name the full e2e key (CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273) or add an App-level shell assertion. (3) MAJOR: AC-5 bucket enumeration drops in-review (the awaiting-gate2 state) — add an in-review bucket or an explicit excluded-set with a total-coverage assertion. (4) MAJOR: no AC exercises the real CLI spawn, and the WORK_CLI default ../claude-dev-system does not resolve from a .claude/worktrees build checkout (real CLI: /Users/bradleyexton/Projects/claude-dev-system/tools/bin/work.ts) — pin worktree-aware resolution and require one live payload demonstration. Minors (advisory): waiting-on-deps bucket re-derives dep-satisfaction client-side (parity claim overstated); scope at upper edge of one window (card chrome stays minimal; 260/140-line lint caps); component test must import the board entry directly — renderToStaticMarkup cannot resolve React.lazy. Full verdict: .work/verdicts/WN-26.gate1.json
 - 2026-08-15T15:46:58.703Z re-planned after gate1 rejection (plan-work Mode B, grilled 2026-08-15): last AC now names the full gate lint → typecheck → test → e2e; in-review bucket added with totality assertion (done/superseded the named excluded set); WORK_CLI default resolves from the canonical repo root via git common dir with env override; new live-payload AC proves the real CLI path once. needs-planning → ready.
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
 
 ## Links
-- WN-24 (ticket detail, depends on this) · WN-13 (vendored surfaces — reuses this mounting shape)
+- WN-27 (ticket detail, depends on this) · WN-13 (vendored surfaces — reuses this mounting shape)
 - claude-dev-system CDS-149 (`work index --json` / `work next --json` — the machine seam)
 - claude-dev-system `docs/DESIGN.md` §9.1 (board is a vendored, per-project surface; Harvest is the
   global view) · `docs/PROTOTYPING.md` §1 (surfaces table)

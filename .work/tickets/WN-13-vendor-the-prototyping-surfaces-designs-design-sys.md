@@ -8,7 +8,7 @@ priority: medium
 created: 2026-08-07
 
 # ─── Optional (delete a line to take its default) ───────────────────────────
-deps: [WN-23]            # list<id>; DAG edges; must all be `done` before the SELECTOR picks this; default []
+deps: [WN-26]            # list<id>; DAG edges; must all be `done` before the SELECTOR picks this; default []
 blocked_by: []           # list<string>; external/manual waits (free text); non-empty => selector skips; default []
 # model: sonnet          # opus | sonnet | haiku; unset => global default-by-kind policy (SCHEMA §5)
 # thinking: medium       # low | medium | high; unset => policy
@@ -43,10 +43,10 @@ blocked on this work, and this ticket can backfill the wizard's catalog entry af
 These need a grill — guessing them is the exact failure that produced four gate1 parks this week:
 
 1. **Shape.** ~~claude-dev-system's copy is a Next app… same files or same contract?~~
-   **RESOLVED 2026-08-14 (plan-work, WN-23 grill):** same *contract*, wing-night's own idiom.
-   WN-23 builds the native board shell — `ClientRoute` member + `/dev/*` path + lazy-loaded chunk +
+   **RESOLVED 2026-08-14 (plan-work, WN-26 grill):** same *contract*, wing-night's own idiom.
+   WN-26 builds the native board shell — `ClientRoute` member + `/dev/*` path + lazy-loaded chunk +
    dev-only Express router — and both surfaces here reuse that mounting shape (hence the new
-   `deps: [WN-23]`). No Next code is copied.
+   `deps: [WN-26]`). No Next code is copied.
 2. **Scope.** Both surfaces, or just `/design-system` (the persistent one output 2 needs)? `/designs`
    is ephemeral and GC'd at `done` by the ship tail (O-16/CDS-77) — check whether that GC step even
    exists here before vendoring a route that depends on it.
