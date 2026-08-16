@@ -69,3 +69,20 @@ test("resolves unknown routes to NOT_FOUND", () => {
 test("resolves / to ROOT", () => {
   assert.equal(resolveClientRoute("/"), "ROOT");
 });
+
+// A FIXED path, unlike the other two /dev/* routes — so it exercises the
+// equality branch rather than the prefixed-segment helper.
+test("resolves /dev/board and /dev/board/ to BOARD", () => {
+  assert.equal(resolveClientRoute("/dev/board"), "BOARD");
+  assert.equal(resolveClientRoute("/dev/board/"), "BOARD");
+});
+
+test("does not resolve a deeper path under /dev/board to BOARD", () => {
+  assert.equal(resolveClientRoute("/dev/board/WN-26"), "NOT_FOUND");
+});
+
+// The board is not a lab, so the lab helper must not claim it — otherwise
+// App would try to render a lab named "board".
+test("does not read /dev/board as a dev lab", () => {
+  assert.equal(resolveDevLabName("/dev/board"), null);
+});

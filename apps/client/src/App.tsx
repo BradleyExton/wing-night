@@ -2,7 +2,7 @@ import {
   resolveMinigameTypeFromSlug,
   type RoleScopedStateSnapshotEnvelope
 } from "@wingnight/shared";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 
 import { AdminConfigWizard } from "./components/AdminConfigWizard";
 import { AnamorphLab } from "./components/AnamorphLab";
@@ -26,6 +26,14 @@ import {
 } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
+
+// Lazy so the dev board — the only surface here that is never used on party
+// night — stays out of the bundle the TV loads.
+const DevBoard = lazy(async () => {
+  const boardModule = await import("./components/DevBoard");
+
+  return { default: boardModule.DevBoard };
+});
 
 // Deleted by WN-14 along with the lab itself.
 const ANAMORPH_LAB_NAME = "anamorph";
@@ -58,6 +66,15 @@ const resolveRouteContent = (
 
   if (route === "ROOT") {
     return <RootRouteLanding />;
+  }
+
+  // The only lazily-loaded route, so it is the only one needing a boundary.
+  if (route === "BOARD") {
+    return (
+      <Suspense fallback={null}>
+        <DevBoard />
+      </Suspense>
+    );
   }
 
   if (route === "DEV_MINIGAME" && devMinigameType !== null) {

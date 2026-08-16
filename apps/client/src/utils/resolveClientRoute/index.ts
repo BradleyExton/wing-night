@@ -5,6 +5,7 @@ export type ClientRoute =
   | "DISPLAY"
   | "DEV_MINIGAME"
   | "DEV_LAB"
+  | "BOARD"
   | "NOT_FOUND";
 
 const DEV_MINIGAME_ROUTE_PREFIX = "/dev/minigame/";
@@ -36,6 +37,13 @@ export const resolveClientRoute = (pathname: string): ClientRoute => {
 
   if (normalizedPathname === "/display") {
     return "DISPLAY";
+  }
+
+  // A FIXED path, so it takes the equality branch the way /admin does — not the
+  // prefixed-segment helper below, which exists for routes addressing a variable
+  // segment. Trailing slashes are already handled by normalizePathname.
+  if (normalizedPathname === "/dev/board") {
+    return "BOARD";
   }
 
   if (resolveDevMinigameSlug(normalizedPathname) !== null) {

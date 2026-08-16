@@ -15,3 +15,9 @@ test("creates socket for the room-connected routes", () => {
 test("creates socket for the admin route", () => {
   assert.equal(shouldCreateRoomSocket("ADMIN"), true);
 });
+
+// The board talks HTTP to the dev endpoint and nothing else. A socket here
+// would connect as a DISPLAY client and join the live room for no reason.
+test("does not create a socket for the board route", () => {
+  assert.equal(shouldCreateRoomSocket("BOARD"), false);
+});
