@@ -226,6 +226,7 @@ Live evidence, both directions, against real servers: WN_DEV_BOARD=1 PORT=3007 �
 Process note for the record: a `git stash push -- <one file>` I ran to prove the regression created no stash, so the following `git stash pop` popped a PRE-EXISTING unrelated stash (feat/minigame-sandbox-live-play), conflicting 18 unrelated files into the worktree and spilling 6 untracked ones. Fully unwound: all 18 restored to HEAD, the 6 untracked moved out of the repo into the session scratchpad (not deleted), and the stash itself was never dropped — it is still stash@{0}, intact. Verified the worktree is exactly this ticket diff afterwards, and re-ran the full gate green. The regression proof was then done by editing the source directly instead of using git.
 - 2026-08-16T01:09:11.500Z handed off → in-review (verify green); awaiting land
 - 2026-08-16T01:11:44.926Z browser-verify: skipped (non-UI) — the ticket is kind: feature, so readBrowserOutcome routes this phase to skip and no browser verdict is required for the land admission. Recorded for completeness rather than as a claim of no checking: a live browser pass WAS run during the build against the real endpoint, and it is what caught the CORS defect. Its screenshots-equivalent (rendered bucket counts, NEXT starring, per-card blocker naming, all reconciled against an independent re-derivation of the payload) is captured in ## Evidence.
+- 2026-08-16T01:13:30.947Z re-attested at in-review (verify + qa re-run green) for 19817a80
 
 ## Evidence
 ### AC#8 — the real path, un-mocked (the mocked seam is not the proof)
@@ -359,7 +360,7 @@ wing-night); the last AC sanctions re-porting rather than killing.
 
 - verify_extra: step `e2e` required — the diff touched `apps/client/src/App.tsx`
 
-_Captured 2026-08-16T01:09:11.500Z._
+_Captured 2026-08-16T01:13:30.947Z._
 <!-- captured-evidence:end -->
 
 ## Links
