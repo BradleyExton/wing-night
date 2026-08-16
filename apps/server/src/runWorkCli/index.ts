@@ -40,8 +40,18 @@ export const runWorkCli = ({
       { cwd, timeout: timeoutMs, maxBuffer: MAX_OUTPUT_BYTES },
       (error, stdout) => {
         if (error !== null) {
-          // `killed` is how Node reports the timeout kill, and it reads very
-          // differently from a CLI that exited non-zero on its own.
+          // Node sets `killed` for BOTH the timeout kill and a maxBuffer
+          // overflow, so `killed` alone would send an operator whose work-log
+          // outgrew the cap chasing a timeout. The code discriminates them.
+          const isOverflow =
+            (error as NodeJS.ErrnoException).code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER";
+
+          if (isOverflow) {
+            resolvePromise({ ok: false, reason: "work CLI output too large" });
+
+            return;
+          }
+
           resolvePromise({
             ok: false,
             reason: error.killed === true ? "work CLI timed out" : "work CLI failed"

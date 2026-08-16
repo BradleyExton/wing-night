@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import { once } from "node:events";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import type { Server } from "node:http";
-import test from "node:test";
 import type { AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
 
 import { createApp } from "../../createApp/index.js";
 
@@ -17,6 +20,22 @@ const closeServer = async (server: Server): Promise<void> => {
       resolve();
     });
   });
+};
+
+const withWorkCliEnv = async (value: string, run: () => Promise<void>): Promise<void> => {
+  const previous = process.env.WORK_CLI;
+
+  process.env.WORK_CLI = value;
+
+  try {
+    await run();
+  } finally {
+    if (previous === undefined) {
+      delete process.env.WORK_CLI;
+    } else {
+      process.env.WORK_CLI = previous;
+    }
+  }
 };
 
 const withMountedBoard = async (
@@ -57,48 +76,72 @@ test("sends an allow-origin header so a cross-origin client can read it", async 
   });
 });
 
-// The endpoint's contract, exercised against the real work CLI of whatever
-// checkout the suite runs in: either it relays both payloads, or it reports 503
-// naming the path it tried. A stack trace or a hang is neither.
-test("answers with either both payloads or a 503 naming the resolved path", async () => {
-  await withMountedBoard(async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/api/dev/board`);
-    const body = (await response.json()) as Record<string, unknown>;
+// Pinned against a FAKE CLI rather than whatever sibling checkout happens to
+// exist on the machine: branching on the environment would leave the relay shape
+// — the endpoint's actual contract — unexercised wherever the real CLI is absent.
+test("relays both CLI payloads under their own keys", async () => {
+  const directory = mkdtempSync(join(tmpdir(), "wn26-route-cli-"));
+  const cliPath = join(directory, "fake-work.mjs");
 
-    if (response.status === 200) {
-      assert.ok("index" in body, "a 200 carries the index payload");
-      assert.ok("next" in body, "a 200 carries the next payload");
+  writeFileSync(
+    cliPath,
+    'const command = process.argv[2];\n' +
+      'process.stdout.write(JSON.stringify({ ok: true, command }));\n',
+    "utf8"
+  );
 
-      return;
-    }
+  await withWorkCliEnv(cliPath, async () => {
+    await withMountedBoard(async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/api/dev/board`);
 
-    assert.equal(response.status, 503);
-    assert.equal(typeof body.error, "string");
-    assert.equal(typeof body.workCliPath, "string");
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), {
+        index: { ok: true, command: "index" },
+        next: { ok: true, command: "next" }
+      });
+    });
+  });
+});
+
+// One CLI call failing must fail the whole response rather than half-answering
+// with a null the client would have to guess at.
+test("reports 503 when only one of the two CLI calls fails", async () => {
+  const directory = mkdtempSync(join(tmpdir(), "wn26-route-half-"));
+  const cliPath = join(directory, "half-work.mjs");
+
+  writeFileSync(
+    cliPath,
+    'if (process.argv[2] === "next") { process.exit(4); }\n' +
+      'process.stdout.write(JSON.stringify({ ok: true }));\n',
+    "utf8"
+  );
+
+  await withWorkCliEnv(cliPath, async () => {
+    await withMountedBoard(async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/api/dev/board`);
+
+      assert.equal(response.status, 503);
+      assert.deepEqual(await response.json(), {
+        error: "work CLI failed",
+        workCliPath: cliPath
+      });
+    });
   });
 });
 
 // The diagnostic that matters when the sibling checkout isn't where the default
 // expects it: a 503 must say which path was tried.
 test("names the resolved CLI path when the CLI cannot be found", async () => {
-  const previousWorkCli = process.env.WORK_CLI;
+  const missingCliPath = "/tmp/wn26-definitely-not-a-real-work-cli.ts";
 
-  process.env.WORK_CLI = "/tmp/wn26-definitely-not-a-real-work-cli.ts";
-
-  try {
+  await withWorkCliEnv(missingCliPath, async () => {
     await withMountedBoard(async (baseUrl) => {
       const response = await fetch(`${baseUrl}/api/dev/board`);
       const body = (await response.json()) as { error?: string; workCliPath?: string };
 
       assert.equal(response.status, 503);
-      assert.equal(body.workCliPath, "/tmp/wn26-definitely-not-a-real-work-cli.ts");
+      assert.equal(body.workCliPath, missingCliPath);
       assert.match(String(body.error), /not found/);
     });
-  } finally {
-    if (previousWorkCli === undefined) {
-      delete process.env.WORK_CLI;
-    } else {
-      process.env.WORK_CLI = previousWorkCli;
-    }
-  }
+  });
 });

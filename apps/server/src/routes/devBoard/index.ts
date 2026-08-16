@@ -19,30 +19,49 @@ devBoardRouter.use((_request, response, next) => {
 // Relays the work CLI's two machine seams rather than re-parsing tickets here:
 // pickability is the drift-prone logic, and `--json` is the seam built for it.
 devBoardRouter.get("/", (_request, response) => {
-  const { cliPath, cwd } = resolveWorkCliTarget();
-
   // Naming the resolved path is the whole diagnostic on a failure — the usual
   // cause is a sibling checkout that isn't where the default expects it.
-  const respondUnavailable = (reason: string): void => {
-    response.status(503).json({ error: reason, workCliPath: cliPath });
+  const respondUnavailable = (reason: string, workCliPath: string | null): void => {
+    response.status(503).json({ error: reason, workCliPath });
   };
+
+  // `resolveWorkCliTarget` shells out to git, which THROWS outside a checkout
+  // or without git installed. Uncaught, express would answer with its default
+  // error page — a stack trace in the body, which AC#3 forbids.
+  let target: ReturnType<typeof resolveWorkCliTarget>;
+
+  try {
+    target = resolveWorkCliTarget();
+  } catch {
+    respondUnavailable("could not resolve the repo root", null);
+
+    return;
+  }
+
+  const { cliPath, cwd } = target;
 
   void Promise.all([
     runWorkCli({ cliPath, cwd, args: ["index", "--json"] }),
     runWorkCli({ cliPath, cwd, args: ["next", "--json"] })
-  ]).then(([index, next]) => {
-    if (!index.ok) {
-      respondUnavailable(index.reason);
+  ])
+    .then(([index, next]) => {
+      if (!index.ok) {
+        respondUnavailable(index.reason, cliPath);
 
-      return;
-    }
+        return;
+      }
 
-    if (!next.ok) {
-      respondUnavailable(next.reason);
+      if (!next.ok) {
+        respondUnavailable(next.reason, cliPath);
 
-      return;
-    }
+        return;
+      }
 
-    response.status(200).json({ index: index.value, next: next.value });
-  });
+      response.status(200).json({ index: index.value, next: next.value });
+    })
+    // Without this a throw in the handler above is an UNHANDLED REJECTION,
+    // which takes the whole server process down rather than failing one request.
+    .catch(() => {
+      respondUnavailable("work CLI relay failed", cliPath);
+    });
 });
