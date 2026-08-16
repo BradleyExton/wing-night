@@ -12,7 +12,7 @@ deps: []                 # list<id>; DAG edges; must all be `done` before the SE
 blocked_by: []           # list<string>; external/manual waits (free text); non-empty => selector skips; default []
 # model: sonnet          # opus | sonnet | haiku; unset => global default-by-kind policy (SCHEMA §5)
 # thinking: medium       # low | medium | high; unset => policy
-# trust: checkpointed    # checkpointed | heads-down; default checkpointed
+# trust: checkpointed    # checkpointed = opt-out brake (park for `work approve`); unset => auto-land
 # needs_prototype: false # true => prototype must complete before in-progress; default false
 # landing: preview-pr    # preview-pr | direct-main | feature-flag; unset => manifest default (SCHEMA §7)
 # worktree:              # set by work-on on claim (collision guard); default null
