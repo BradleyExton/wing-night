@@ -2,9 +2,17 @@ import { expect, type Page, test } from "@playwright/test";
 
 import { ensureSetupPhase, lockTeamsFromSetup } from "./hostShell";
 
-const COUNTDOWN_FRAMES_KEY = "__wnCountdownFrames";
+const COUNTDOWN_RECORD_KEY = "__wnCountdownRecord";
 
-type CountdownFrameWindow = Window & { [COUNTDOWN_FRAMES_KEY]?: string[] };
+// `labels` exists so the countdown prefix keeps a POSITIVE assertion. It renders
+// in a sibling node of the recorded digit, so the digit sequence alone cannot
+// detect its removal — and host-display-sync.spec.ts uses that same copy as its
+// countdown-settled sync gate, so losing it silently turns that spec into a race.
+type CountdownRecord = { values: string[]; labels: string[] };
+
+type CountdownRecordWindow = Window & {
+  [COUNTDOWN_RECORD_KEY]?: CountdownRecord;
+};
 
 // Polling for a countdown digit is a sampling strategy against a 1-second window:
 // each tick renders for COUNTDOWN_TICK_MS and never returns once passed, so one
@@ -16,36 +24,48 @@ type CountdownFrameWindow = Window & { [COUNTDOWN_FRAMES_KEY]?: string[] };
 //
 // Must be installed BEFORE the countdown starts; no countdown node exists during
 // INTRO, so the first read is a no-op and the array fills from the opening tick.
-const recordCountdownFrames = async (displayPage: Page): Promise<void> => {
-  await displayPage.evaluate((framesKey) => {
-    const frames: string[] = [];
-    (window as CountdownFrameWindow)[framesKey] = frames;
+const recordCountdownRenders = async (displayPage: Page): Promise<void> => {
+  await displayPage.evaluate((recordKey) => {
+    const record: CountdownRecord = { values: [], labels: [] };
+    (window as CountdownRecordWindow)[recordKey] = record;
 
-    const readCountdownValue = (): void => {
-      const value = document
-        .querySelector("[data-countdown-value]")
-        ?.textContent?.trim();
+    const appendIfChanged = (into: string[], selector: string): void => {
+      const text = document.querySelector(selector)?.textContent?.trim();
 
       // childList and characterData can both fire for a single commit.
-      if (value !== undefined && value !== frames[frames.length - 1]) {
-        frames.push(value);
+      if (text !== undefined && text !== into[into.length - 1]) {
+        into.push(text);
       }
     };
 
-    readCountdownValue();
-    // document.body, not the node itself: React unmounts and replaces it.
-    new MutationObserver(readCountdownValue).observe(document.body, {
+    // Reads the live DOM rather than the MutationRecords, so it samples on every
+    // commit rather than intrinsically recording one. Safe because the ticks are
+    // COUNTDOWN_TICK_MS (1s) apart — far wider than any coalescing window. If that
+    // cadence ever approached zero, two commits could coalesce into one sample and
+    // a dropped frame would read as green; record the MutationRecords if so.
+    const readCountdown = (): void => {
+      appendIfChanged(record.values, "[data-countdown-value]");
+      appendIfChanged(record.labels, "[data-countdown-label]");
+    };
+
+    readCountdown();
+    // document.body, not the nodes themselves: React unmounts and replaces them.
+    new MutationObserver(readCountdown).observe(document.body, {
       subtree: true,
       childList: true,
       characterData: true
     });
-  }, COUNTDOWN_FRAMES_KEY);
+  }, COUNTDOWN_RECORD_KEY);
 };
 
-const readCountdownFrames = async (displayPage: Page): Promise<string[]> => {
-  return displayPage.evaluate((framesKey) => {
-    return (window as CountdownFrameWindow)[framesKey] ?? [];
-  }, COUNTDOWN_FRAMES_KEY);
+const readCountdownRecord = async (
+  displayPage: Page
+): Promise<CountdownRecord> => {
+  return displayPage.evaluate((recordKey) => {
+    return (
+      (window as CountdownRecordWindow)[recordKey] ?? { values: [], labels: [] }
+    );
+  }, COUNTDOWN_RECORD_KEY);
 };
 
 test("intro lock screen transitions to round-intro countdown on display", async ({
@@ -69,17 +89,17 @@ test("intro lock screen transitions to round-intro countdown on display", async 
     displayPage.getByText("Host is ready to launch the round.")
   ).toBeVisible();
 
-  await recordCountdownFrames(displayPage);
+  await recordCountdownRenders(displayPage);
 
   await hostPage.getByRole("button", { name: "Start Game" }).click();
 
-  // The recorded frames are append-only, so polling them is race-free in a way
-  // polling the DOM is not: a poll that arrives after the countdown has finished
-  // still sees the whole history. This is the assertion that the countdown both
-  // started and counted down, in order.
+  // The record is append-only, so polling it is race-free in a way polling the
+  // DOM is not: a poll arriving after the countdown has finished still sees the
+  // whole history. This asserts the countdown started, rendered its prefix, and
+  // counted down in order.
   await expect
-    .poll(() => readCountdownFrames(displayPage), { timeout: 10_000 })
-    .toEqual(["3", "2", "1"]);
+    .poll(() => readCountdownRecord(displayPage), { timeout: 10_000 })
+    .toEqual({ values: ["3", "2", "1"], labels: ["Game starts in"] });
 
   // Terminal state, not a per-frame window. This bound is fail-safe: a countdown
   // that breaks either never terminates (red at any bound) or terminates without

@@ -65,9 +65,104 @@ Grill summary (scope/edges/architecture/testing). Empirical claims below were **
 - 2026-08-16T00:47:44.645Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night/.claude/worktrees/flamboyant-pasteur-d861ba
 - 2026-08-16T00:51:31.896Z implemented: data-countdown-value hook on GameLockedOverlay's number element + MutationObserver frame recorder inline in intro-countdown.spec.ts. Replaced the 3 transient-frame polls with expect.poll over the append-only frames array (race-free: a late poll still sees the full history) plus the fail-safe 10s terminal toHaveCount(0). Stability 3/3 green (11.3s/8.9s/9.2s). Teeth AC: hook regressed to 3->null went red on BOTH attempts naming the two missing frames; restored, green (8.4s).
 - 2026-08-16T00:51:55.654Z DELIBERATE ASSERTION REMOVAL, flagged for review: dropped 'await expect(displayPage.getByText("Game starts in")).toBeVisible()'. It was itself a poll against the same 3s window (the last sampling assertion in the file), and without a started-edge the terminal toHaveCount(0) could pass vacuously at t=0 — the frames poll now supplies that edge race-free. Not a weakening: the prefix and the digit render in the SAME isCountdownVisible branch of GameLockedOverlay, so proving the digit sequence rendered proves that branch rendered; 'Game starts in' is still asserted at toHaveCount(0) on both host and display. Net assertion strength is UP — frame ordering and totality are now checked, which three independent toBeVisible calls never could. testing.md ('assert stable structural signals, not incidental copy') backs the trade.
+- 2026-08-16T01:16:40.366Z qa-reviewer returned needs-changes (major). Reviewer was RIGHT and my earlier justification was factually wrong: the prefix renders in a SIBLING node of the recorded digit, not the same node, so the frames array could not detect its removal — and I had missed that host-display-sync.spec.ts:30 uses that copy as its countdown-settled SYNC GATE, so deleting it would have silently turned that spec into a race. Fixed by recording the prefix in the same observer: added data-countdown-label to the prefix span and a second append-only 'labels' array; the assertion is now toEqual({values:[3,2,1], labels:['Game starts in']}). Proved the closure: deleting the prefix now goes RED (labels: []) where it was GREEN before. Also addressed the minor (Evidence now holds pasted output, not summaries) and info-1 (comment on live-DOM sampling vs MutationRecords being safe at 1s cadence). Re-verified at the new shape: 3/3 stability (7.1/7.7/7.9s), both regressions red, full gate green, full suite 14/14 (28.7s).
 
 ## Evidence
-<test output + screenshot / preview URL, recorded before `done`>
+
+### AC6 — stability, 3 consecutive runs of the single spec
+`CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e tests/e2e/intro-countdown.spec.ts`
+
+```
+Running 1 test using 1 worker
+·
+  1 passed (7.1s)
+
+Running 1 test using 1 worker
+·
+  1 passed (7.7s)
+
+Running 1 test using 1 worker
+·
+  1 passed (7.9s)
+```
+
+### AC7 — teeth, part 1: countdown stops counting down
+`useGameStartCountdown`'s tick regressed to return `null` immediately (skipping 2 and 1). Red on the
+first attempt **and** the retry — deterministic red, not a flaky one:
+
+```
+Error: expect(received).toEqual(expected) // deep equality
+
+- Expected  - 2
++ Received  + 0
+
+@@ -2,9 +2,7 @@
+    "labels": Array [
+      "Game starts in",
+    ],
+    "values": Array [
+      "3",
+-     "2",
+-     "1",
+    ],
+  }
+
+Call Log:
+- Timeout 10000ms exceeded while waiting on the predicate
+
+  > 100 |   await expect
+        |   ^
+    101 |     .poll(() => readCountdownRecord(displayPage), { timeout: 10_000 })
+    102 |     .toEqual({ values: ["3", "2", "1"], labels: ["Game starts in"] });
+
+  1 failed
+```
+
+### AC7 — teeth, part 2: countdown prefix deleted
+Added after the qa-reviewer's major finding. The `countdownPrefix` span deleted from
+`GameLockedOverlay`. **This exact regression was GREEN before the `labels` array was added** — that
+was the hole the reviewer caught, and this is the proof it is closed:
+
+```
+- Expected  - 3
++ Received  + 1
+
+-   "labels": Array [
+-     "Game starts in",
+-   ],
++   "labels": Array [],
+
+    102 |     .toEqual({ values: ["3", "2", "1"], labels: ["Game starts in"] });
+```
+
+Both probes reverted; `git status` clean of them before handoff.
+
+### AC8 — full Playwright suite (forced by `verify_extra`)
+`CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e`
+
+```
+Running 14 tests using 1 worker
+···
+  14 passed (28.7s)
+```
+
+### AC9 — default verify gate
+```
+✓ lint: pnpm lint
+✓ typecheck: pnpm typecheck
+✓ test: pnpm test
+✓ verify passed (3 step(s))
+```
+
+### Anti-blind-spot sweep
+`work grep --since 9016a61` → 6 touched symbols. Only `frames` had external call-sites, all three in
+`packages/shared/src/contraption/resolveSettleIndex/` (physics keyframes from WN-23) — opened and
+confirmed a bare-name collision, not a real call-site. Symbol since renamed to `record`/`values`.
+
+### Baseline for comparison
+The pre-fix flake: one red run at 1.1m wall-clock against ~24.3s clean, which had **already consumed
+its `retries: 1`** — sustained contention defeats a retry, so widening the frame windows would not
+have been a reliable fix either.
 
 ## Links
 - The flake surfaced (not caused) by WN-23's e2e run, 2026-08-15.

@@ -36,7 +36,7 @@ export const GameLockedOverlay = ({
             </p>
           </div>
           <p className={styles.countdownLine}>
-            <span className={styles.countdownLineLabel}>
+            <span className={styles.countdownLineLabel} data-countdown-label>
               {gameLockedOverlayCopy.countdownPrefix}
             </span>
             {gameLockedOverlayCopy.formatCountdownWord(remainingSeconds)}
