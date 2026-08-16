@@ -40,9 +40,12 @@ export const runWorkCli = ({
       { cwd, timeout: timeoutMs, maxBuffer: MAX_OUTPUT_BYTES },
       (error, stdout) => {
         if (error !== null) {
-          // Node sets `killed` for BOTH the timeout kill and a maxBuffer
-          // overflow, so `killed` alone would send an operator whose work-log
-          // outgrew the cap chasing a timeout. The code discriminates them.
+          // Measured on node v24.16.0 with production's option shape: an
+          // overflow gives code ERR_CHILD_PROCESS_STDIO_MAXBUFFER with `killed`
+          // undefined, a timeout gives `killed` true with no code, and a plain
+          // non-zero exit gives the exit code. So `killed` alone would have
+          // filed an oversized work-log under the generic failure reason; the
+          // code is what tells an operator which problem they actually have.
           const isOverflow =
             (error as NodeJS.ErrnoException).code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER";
 
