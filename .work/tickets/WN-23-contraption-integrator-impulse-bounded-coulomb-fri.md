@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-23
 title: "CONTRAPTION integrator: impulse-bounded Coulomb friction so bodies can slide"
-status: in-review
+status: done
 kind: bug
 priority: medium
 created: 2026-08-15
@@ -11,6 +11,8 @@ created: 2026-08-15
 deps: []
 blocked_by: []
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-23"
+landed_range: 1775e077c2c1bb1524c3b693c703b2105c075fc2..5fa99ebce7de2dbfcf66468e39e7bca4b6ee0fab
+review: pending
 ---
 
 ## Goal
@@ -187,6 +189,7 @@ Declined three advisory minors deliberately (duplicated 0.05 epsilon + the lab's
 
 NEW, not caused by this change: tests/e2e/intro-countdown.spec.ts is a pre-existing timing flake (2.5s window to catch one countdown tick; red once on a contended 1.1m run, green on 3 subsequent runs). Recorded in ## Evidence and flagged for its own ticket — the manifest routes every apps/client/src/** diff through the e2e key, so it can redden unrelated gates.
 - 2026-08-15T23:10:46.486Z handed off → in-review (verify green); awaiting land
+- 2026-08-16T00:46:25.920Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 ### Verify
