@@ -226,7 +226,81 @@ Live evidence, both directions, against real servers: WN_DEV_BOARD=1 PORT=3007 �
 Process note for the record: a `git stash push -- <one file>` I ran to prove the regression created no stash, so the following `git stash pop` popped a PRE-EXISTING unrelated stash (feat/minigame-sandbox-live-play), conflicting 18 unrelated files into the worktree and spilling 6 untracked ones. Fully unwound: all 18 restored to HEAD, the 6 untracked moved out of the repo into the session scratchpad (not deleted), and the stash itself was never dropped — it is still stash@{0}, intact. Verified the worktree is exactly this ticket diff afterwards, and re-ran the full gate green. The regression proof was then done by editing the source directly instead of using git.
 
 ## Evidence
-<test output + screenshot / preview URL, recorded before `done`>
+
+### AC#8 — the real path, un-mocked (the mocked seam is not the proof)
+
+```
+$ WN_DEV_BOARD=1 PORT=3007 pnpm --filter @wingnight/server start
+$ curl -s http://127.0.0.1:3007/api/dev/board   # real CLI spawn, no mock
+HTTP 200 · 5319 bytes · 0.226s · Access-Control-Allow-Origin: *
+
+{
+  "index": { "ok": true, "tickets": [   // 28 real tickets
+    {"id":"WN-1","title":"Playwright host/display phase-advance sync coverage (TASKS…","status":"done","kind":"chore","priority":"medium","deps":[]},
+    {"id":"WN-10","title":"Server config write + reload path (content/local writes, c…","status":"done","kind":"feature","priority":"medium","deps":["WN-9"]},
+    {"id":"WN-11","title":"Pre-flight config wizard on /admin (port Variant C, wire t…","status":"done","kind":"feature","priority":"medium","deps":["WN-10","WN-5"]},
+    … 24 more …,
+    {"id":"WN-26","title":"Native /dev/board glance board — dev endpoint shelling the…","status":"ready","kind":"feature","priority":"high","deps":[]}
+  ], "counts": {"idea":0,"needs-research":2,"needs-planning":6,"ready":8,"in-progress":0,"in-review":0,"done":12,"blocked":0,"superseded":0}
+  },
+  "next": { "ok": true, "none": false, "reason": null,
+    "next": {"id":"WN-26","title":"Native /dev/board glance board — dev endpoint shelling the…","kind":"feature","priority":"high","deps":[]}
+  }
+}
+```
+
+The `next` pick and the starred card agree because the board relays the CLI's own selector rather
+than re-ranking client-side. Note the spawn ran with cwd at the CANONICAL root, so `WN-26` reads
+`ready` here: `work claim` writes `in-progress` into the claimed worktree's copy and leaves the
+canonical copy alone until land. That is the AC#1 property visible in live data.
+
+### AC#2 — the gate, proven in both directions against real boots
+
+```
+$ WN_DEV_BOARD=1 PORT=3007 pnpm --filter @wingnight/server start
+$ curl -o /dev/null -w '%{http_code}' http://127.0.0.1:3007/api/dev/board   ->  200
+$ curl -s http://127.0.0.1:3007/health                                       ->  {"status":"ok"}
+
+$ PORT=3008 pnpm --filter @wingnight/server start        # no flag — the party-night shape
+$ curl -o /dev/null -w '%{http_code}' http://127.0.0.1:3008/api/dev/board   ->  404
+$ curl -s http://127.0.0.1:3008/health                                       ->  {"status":"ok"}
+```
+
+Fail-closed confirmed: with no script carrying the flag, a plain boot has no board and a live
+`/health` — the endpoint is absent, not merely unreachable.
+
+### Board rendered against the live endpoint
+
+Six buckets, `NEXT` starred on WN-26, each waiting card naming its blocker. Counts matched an
+independent re-derivation from the raw payload (a second implementation of the bucketing rules,
+written in the shell rather than reusing the module):
+
+```
+inProgress      0
+readyPickable   4   WN-20 WN-23 WN-26(NEXT) WN-28
+waitingOnDeps   4   WN-21(on WN-20) WN-22(on WN-20) WN-24(on WN-23,WN-28) WN-27(on WN-26)
+inReview        0
+blocked         0
+funnel          8   WN-12 WN-13 WN-14 WN-15 WN-4 WN-6 WN-7 WN-8
+```
+
+16 live + 12 done/superseded excluded = 28 total, reconciling with the payload's own counts.
+
+### Defect found by the live check, not by the gate
+
+The first live render showed only the error panel: `Access to fetch at
+'http://127.0.0.1:3007/api/dev/board' from origin 'http://localhost:5199' has been blocked by CORS
+policy: No 'Access-Control-Allow-Origin' header is present`. Client and server are always separate
+origins in this repo, and every same-process server test passed regardless — so no unit test could
+have caught it. Fixed with a router-scoped allow-origin header; the regression test was confirmed
+to FAIL with the header removed and pass with it.
+
+### e2e
+
+`CI=1 WN_E2E_SERVER_PORT=3111 WN_E2E_CLIENT_PORT=5288 pnpm test:e2e` -> **14 passed**. Re-ported off
+3100/5273 because 3100 was squatted by a foreign server (200 at `/health` but an empty body, so not
+wing-night); the last AC sanctions re-porting rather than killing.
+
 
 ## Links
 - WN-27 (ticket detail, depends on this) · WN-13 (vendored surfaces — reuses this mounting shape)
