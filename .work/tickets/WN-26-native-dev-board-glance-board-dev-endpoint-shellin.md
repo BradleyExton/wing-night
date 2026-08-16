@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-26
 title: "Native /dev/board glance board — dev endpoint shelling the work CLI + bucketed ticket list"
-status: in-review
+status: done
 kind: feature
 priority: high
 created: 2026-08-15
@@ -18,6 +18,8 @@ blocked_by: []           # list<string>; external/manual waits (free text); non-
 # worktree:              # set by work-on on claim (collision guard); default null
 # parallel_safe:         # RESERVED for F-8 (post-MVP) — do not set
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-26"
+landed_range: 2871b2e21df68805202f0c9dd2bbc767a0ca76c6..ffcf53212f17bb3aa68f603adf4ab773469ced17
+review: pending
 ---
 
 ## Goal
@@ -227,6 +229,7 @@ Process note for the record: a `git stash push -- <one file>` I ran to prove the
 - 2026-08-16T01:09:11.500Z handed off → in-review (verify green); awaiting land
 - 2026-08-16T01:11:44.926Z browser-verify: skipped (non-UI) — the ticket is kind: feature, so readBrowserOutcome routes this phase to skip and no browser verdict is required for the land admission. Recorded for completeness rather than as a claim of no checking: a live browser pass WAS run during the build against the real endpoint, and it is what caught the CORS defect. Its screenshots-equivalent (rendered bucket counts, NEXT starring, per-card blocker naming, all reconciled against an independent re-derivation of the payload) is captured in ## Evidence.
 - 2026-08-16T01:13:30.947Z re-attested at in-review (verify + qa re-run green) for 19817a80
+- 2026-08-16T01:24:49.442Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 ### AC#8 — the real path, un-mocked (the mocked seam is not the proof)
