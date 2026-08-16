@@ -29,12 +29,16 @@ const parseTeamsEntries = (
   return parsedContent.teams;
 };
 
+// Optional fields are re-added by hand rather than spread wholesale, so a team
+// that declares neither carries neither key downstream.
 const buildTeam = (entry: TeamsContentEntry, index: number): Team => {
   return {
     id: `team-${index + 1}`,
     name: entry.name.trim(),
     playerIds: [],
-    totalScore: 0
+    totalScore: 0,
+    ...(entry.genre === undefined ? {} : { genre: entry.genre.trim() }),
+    ...(entry.anthems === undefined ? {} : { anthems: entry.anthems })
   };
 };
 

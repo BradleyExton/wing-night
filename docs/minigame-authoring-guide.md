@@ -139,7 +139,32 @@ Two patterns, pick by asset profile:
 - **Small static images, sample/local both possible** → `apps/client/public/local-assets/<slug>/`. Reference as `/local-assets/<slug>/foo.jpg`. Used by GEO. Bundled by the client build — no server route needed. Local overrides ship via `apps/client/public/local-assets/<slug>/` being gitignored.
 
 For GEO, `pnpm import:geo <photo-folder>` turns GPS-tagged JPEGs into prompts: it reads each photo's EXIF location as the answer, writes a resized metadata-stripped copy to `local-assets/geo/`, and appends entries to `content/local/minigames/geo.json` (edit titles/hints there afterwards).
-- **Large or many event-specific assets (audio, video)** → Express static route. Add `app.use("/minigame-assets/<slug>", express.static("content/local/minigames/<slug>/assets"))` in `apps/server/src/index.ts`. Files live under `content/local/minigames/<slug>/assets/`. Used by Song Guess.
+- **Large or many event-specific assets (audio, video)** → Express static route, mounted in **`apps/server/src/createApp`** (not `index.ts`), resolving **absolute** paths from the content root:
+
+  ```ts
+  // inside createApp, where `contentRootDir` is the injectable option that
+  // defaults to resolveContentRootDir()
+  app.use(
+    ASSET_ROUTE_PATH,
+    express.static(resolve(contentRootDir, "local", "teams", "audio"))
+  );
+  app.use(
+    ASSET_ROUTE_PATH,
+    express.static(resolve(contentRootDir, "sample", "teams", "audio"))
+  );
+  ```
+
+  Three things this gets right that a bare `express.static("content/...")` in `index.ts` does not:
+
+  - **Absolute, not cwd-relative.** The server's dev script is `tsx watch src/index.ts` run with cwd `apps/server`, so a relative string resolves to `apps/server/content/…` — the wrong tree.
+  - **Resolved from the content root at call time.** `resolveContentRootDir()` reads `WN_CONTENT_ROOT_DIR`, which the e2e stack points at its own seeded root; a hardcoded path serves the wrong content under the gate.
+  - **`createApp` has a test seam; `index.ts` does not.** Mounting there is what lets a colocated test boot on port 0 against a tmpdir root and assert the route actually serves.
+
+  Mount **local first, then sample**, mirroring `loadContentFileWithFallback`'s local-wins fallback: `express.static` defaults to `fallthrough: true`, so a miss — or an absent `local/` directory — falls through to the sample mount and then to a 404. Path traversal is handled for you.
+
+  Declare the route path as a constant in `packages/shared` and import it from **both** the mount and whatever builds the client-side URL, so the two cannot drift and a rename is a typecheck failure rather than a silent 404. Used by team anthems (`TEAM_AUDIO_ROUTE_PATH`) and Song Guess.
+
+  **The client-side URL must be absolute.** There is no `vite.config` anywhere in this repo, so there is no dev proxy and the client is always a different origin from the server — a root-relative `src="/team-audio/x.mp3"` resolves against the Vite origin (5173 dev, 5273 under the e2e gate) and 404s. Build it from `apps/client/src/utils/resolveServerOrigin`, and read the origin **inside an effect**, never at module or render scope, which `react-dom/server` cannot do.
 
 Server-served assets do not get bundled with the client; they stream on demand. Use this when the content is event-night-specific and shouldn't bloat the client bundle.
 

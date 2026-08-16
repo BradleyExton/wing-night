@@ -497,3 +497,38 @@ test("fatal room state blocks host mutations", () => {
 
   assert.deepEqual(afterMutation, beforeMutation);
 });
+
+// Regression: `normalizeBaselineTeams` rebuilt each team as a fresh four-field
+// literal, so a reset silently dropped the content-pack fields and the display
+// rendered no anthem element at all. Same defect class as the readConfigContent
+// strip this ticket also fixes.
+test("resetGameToSetup preserves genre and anthems on the restored team shells", () => {
+  setRoomStateGameConfig(gameConfigFixture);
+  setRoomStatePlayers([{ id: "player-1", name: "Player One" }]);
+  setRoomStateTeams([
+    {
+      id: "team-1",
+      name: "Preset Team One",
+      playerIds: [],
+      totalScore: 0,
+      genre: "metal",
+      anthems: ["blaze.mp3"]
+    },
+    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
+  ]);
+  assignPlayerToTeam("player-1", "team-1");
+
+  const resetSnapshot = resetGameToSetup();
+
+  assert.deepEqual(resetSnapshot.teams, [
+    {
+      id: "team-1",
+      name: "Preset Team One",
+      playerIds: [],
+      totalScore: 0,
+      genre: "metal",
+      anthems: ["blaze.mp3"]
+    },
+    { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
+  ]);
+});

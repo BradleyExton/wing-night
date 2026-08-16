@@ -3,7 +3,8 @@ import {
   isGeoContentFile,
   isTriviaContentFile,
   type ConfigContentSnapshot,
-  type Player
+  type Player,
+  type Team
 } from "@wingnight/shared";
 
 import { loadContent } from "../contentLoader/index.js";
@@ -28,6 +29,20 @@ const toPlayersContentEntries = (
   );
 };
 
+// Same shape, same reason: `loadTeams` derives ids positionally, so dropping
+// them is lossless. Every OTHER field must be re-added by hand — a bare
+// `{ name: team.name }` here is what silently deleted genre/anthems on the
+// wizard's next save, even though the write path preserves unknown fields.
+const toTeamsContentEntries = (
+  teams: Team[]
+): ConfigContentSnapshot["teams"] => {
+  return teams.map((team) => ({
+    name: team.name,
+    ...(team.genre === undefined ? {} : { genre: team.genre }),
+    ...(team.anthems === undefined ? {} : { anthems: team.anthems })
+  }));
+};
+
 // Reads the MERGED on-disk content (local wins over sample) rather than
 // echoing room state: the geo import CLI may have written local files the room
 // never saw, and the prompt packs are not in room state at all.
@@ -49,7 +64,7 @@ export const readConfigContent = (
       content: {
         gameConfig,
         players: toPlayersContentEntries(players),
-        teams: teams.map((team) => ({ name: team.name })),
+        teams: toTeamsContentEntries(teams),
         triviaPrompts: isTriviaContentFile(triviaContent)
           ? triviaContent.prompts
           : [],

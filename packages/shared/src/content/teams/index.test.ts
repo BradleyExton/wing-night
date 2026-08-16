@@ -44,6 +44,52 @@ test("reports the teams path when teams is not an array", () => {
   ]);
 });
 
+test("returns no issues when a team carries a valid genre and anthems", () => {
+  const content = {
+    teams: [{ name: "Hot Ones", genre: "metal", anthems: ["blaze.mp3"] }]
+  };
+
+  assert.deepEqual(validateTeamsContentFile(content), []);
+});
+
+test("returns no issues when a team omits genre and anthems entirely", () => {
+  assert.deepEqual(validateTeamsContentFile({ teams: [{ name: "Hot Ones" }] }), []);
+});
+
+test("reports the genre path when genre is present but not a string", () => {
+  const content = { teams: [{ name: "Hot Ones", genre: 42 }] };
+
+  assert.deepEqual(pathsOf(validateTeamsContentFile(content)), [
+    "teams[0].genre"
+  ]);
+});
+
+test("reports the anthems path when anthems is a bare string rather than an array", () => {
+  const content = { teams: [{ name: "Hot Ones", anthems: "blaze.mp3" }] };
+
+  assert.deepEqual(pathsOf(validateTeamsContentFile(content)), [
+    "teams[0].anthems"
+  ]);
+});
+
+test("reports the anthems path when anthems contains blank entries", () => {
+  const content = { teams: [{ name: "Hot Ones", anthems: ["", " "] }] };
+
+  assert.deepEqual(pathsOf(validateTeamsContentFile(content)), [
+    "teams[0].anthems"
+  ]);
+});
+
+test("accumulates every invalid optional field on one entry", () => {
+  const content = { teams: [{ name: "   ", genre: 42, anthems: ["ok.mp3", ""] }] };
+
+  assert.deepEqual(pathsOf(validateTeamsContentFile(content)), [
+    "teams[0].name",
+    "teams[0].genre",
+    "teams[0].anthems"
+  ]);
+});
+
 test("rejects via the predicate every value the validator reports issues for", () => {
   const rejected: unknown[] = [
     null,

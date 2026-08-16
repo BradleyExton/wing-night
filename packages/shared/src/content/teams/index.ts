@@ -5,6 +5,8 @@ import {
 
 export type TeamsContentEntry = {
   name: string;
+  genre?: string;
+  anthems?: string[];
 };
 
 export type TeamsContentFile = {
@@ -19,16 +21,39 @@ const isObjectLike = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null;
 };
 
+const isNonEmptyStringArray = (value: unknown): value is string[] => {
+  return Array.isArray(value) && value.every(isNonEmptyString);
+};
+
 export const validateTeamsContentEntry = (value: unknown): ValidationIssue[] => {
   if (!isObjectLike(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
+  const issues: ValidationIssue[] = [];
+
   if (!isNonEmptyString(value.name)) {
-    return [{ path: "name", message: "must be a non-empty string" }];
+    issues.push({ path: "name", message: "must be a non-empty string" });
   }
 
-  return [];
+  // Presence, not definedness — the same idiom `avatarSrc` uses in the players
+  // validator. This validator is shared with contentWriter's save gate, so an
+  // invalid value must fail identically on read and on write.
+  if ("genre" in value && !isNonEmptyString(value.genre)) {
+    issues.push({
+      path: "genre",
+      message: "must be a non-empty string when present"
+    });
+  }
+
+  if ("anthems" in value && !isNonEmptyStringArray(value.anthems)) {
+    issues.push({
+      path: "anthems",
+      message: "must be an array of non-empty strings when present"
+    });
+  }
+
+  return issues;
 };
 
 export const validateTeamsContentFile = (value: unknown): ValidationIssue[] => {

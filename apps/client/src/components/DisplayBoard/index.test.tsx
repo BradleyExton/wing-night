@@ -101,3 +101,80 @@ test("renders standings in descending score order", () => {
   assert.match(html, /Team Alpha/);
   assert.match(html, /Leading/);
 });
+
+const ANTHEM_TEAM: Team = {
+  id: "team-anthem",
+  name: "Hot Ones",
+  playerIds: [],
+  totalScore: 0,
+  genre: "metal",
+  anthems: ["blaze.mp3"]
+};
+
+const SILENT_TEAM: Team = {
+  id: "team-silent",
+  name: "Mild Bunch",
+  playerIds: [],
+  totalScore: 0
+};
+
+const renderAtPhase = (phase: Phase, team: Team): string => {
+  return renderDisplayMarkup(<DisplayBoard />, {
+    roomState: buildSnapshot(phase, [team], { activeRoundTeamId: team.id })
+  });
+};
+
+test("renders the audio unlock overlay at MINIGAME_INTRO for a team with anthems", () => {
+  const html = renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM);
+
+  assert.match(html, /data-audio-unlock-overlay/);
+  assert.match(html, /Tap the screen to turn on team anthems\./);
+});
+
+test("renders no audio unlock overlay at MINIGAME_INTRO for a team with no anthems", () => {
+  const html = renderAtPhase(Phase.MINIGAME_INTRO, SILENT_TEAM);
+
+  assert.doesNotMatch(html, /data-audio-unlock-overlay/);
+  assert.doesNotMatch(html, /Tap the screen to turn on team anthems\./);
+});
+
+// The overlay is scoped to MINIGAME_INTRO by construction, so these three
+// phases cannot show it however long the session has been running.
+test("renders no audio unlock overlay at SETUP", () => {
+  assert.doesNotMatch(
+    renderAtPhase(Phase.SETUP, ANTHEM_TEAM),
+    /data-audio-unlock-overlay/
+  );
+});
+
+test("renders no audio unlock overlay at INTRO", () => {
+  assert.doesNotMatch(
+    renderAtPhase(Phase.INTRO, ANTHEM_TEAM),
+    /data-audio-unlock-overlay/
+  );
+});
+
+test("renders no audio unlock overlay at ROUND_INTRO", () => {
+  assert.doesNotMatch(
+    renderAtPhase(Phase.ROUND_INTRO, ANTHEM_TEAM),
+    /data-audio-unlock-overlay/
+  );
+});
+
+test("renders an anthem audio element for a team with anthems", () => {
+  assert.match(renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM), /data-team-anthem/);
+});
+
+// AC7: a team with no anthems is exactly as the display was before this ticket.
+test("renders no anthem audio element for a team with no anthems", () => {
+  assert.doesNotMatch(
+    renderAtPhase(Phase.MINIGAME_INTRO, SILENT_TEAM),
+    /data-team-anthem/
+  );
+});
+
+// The element is keyed to the team, not the phase, so it is still mounted for
+// the cue to pause when the host advances out of MINIGAME_INTRO.
+test("keeps the anthem audio element mounted after the phase leaves MINIGAME_INTRO", () => {
+  assert.match(renderAtPhase(Phase.EATING, ANTHEM_TEAM), /data-team-anthem/);
+});

@@ -6,6 +6,7 @@ import {
   type BoardTicket,
   bucketBoardTickets
 } from "../../utils/bucketBoardTickets";
+import { resolveServerOrigin } from "../../utils/resolveServerOrigin";
 import { devBoardCopy } from "./copy";
 import * as styles from "./styles";
 
@@ -19,17 +20,11 @@ type BoardState =
   | { phase: "ready"; payload: BoardPayload }
   | { phase: "error" };
 
-// Same resolution `resolveSocketServerUrl` uses. Called only from the effect
-// below — a bare `window` / `import.meta.env` read at module or render scope
-// throws under `tsx --test`, where there is no DOM and no Vite.
+// Called only from the effect below — `resolveServerOrigin` reads `window` /
+// `import.meta.env`, and a bare read at module or render scope throws under
+// `tsx --test`, where there is no DOM and no Vite.
 const resolveBoardApiUrl = (): string => {
-  const configuredUrl = import.meta.env.VITE_SOCKET_SERVER_URL;
-  const origin =
-    configuredUrl && configuredUrl.trim().length > 0
-      ? configuredUrl.trim()
-      : `${window.location.protocol}//${window.location.hostname}:3000`;
-
-  return `${origin}/api/dev/board`;
+  return `${resolveServerOrigin()}/api/dev/board`;
 };
 
 const readPayload = (body: unknown): BoardPayload | null => {

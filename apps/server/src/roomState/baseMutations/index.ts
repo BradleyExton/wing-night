@@ -30,12 +30,19 @@ import {
   setSetupBaselineSnapshot
 } from "../stateStore/index.js";
 
+// Resets the per-game fields (roster, score) while preserving everything that
+// identifies the team. Optional content-pack fields are re-added by hand for the
+// same reason `toTeamsContentEntries` does it: a fresh literal here silently
+// drops anything not listed, and a reset to this baseline is what the display
+// then renders.
 const normalizeBaselineTeams = (teams: Team[]): Team[] => {
   return teams.map((team) => ({
     id: team.id,
     name: team.name,
     playerIds: [],
-    totalScore: 0
+    totalScore: 0,
+    ...(team.genre === undefined ? {} : { genre: team.genre }),
+    ...(team.anthems === undefined ? {} : { anthems: team.anthems })
   }));
 };
 

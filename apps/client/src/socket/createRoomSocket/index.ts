@@ -6,20 +6,11 @@ import type {
   OutboundSocketEvents
 } from "../../socketContracts/index";
 import { resolveClientRoute } from "../../utils/resolveClientRoute";
+import { resolveServerOrigin } from "../../utils/resolveServerOrigin";
 
 type SocketAuthPayload = {
   clientRole: SocketClientRole;
   hostControlToken?: string;
-};
-
-const resolveSocketServerUrl = (): string => {
-  const configuredUrl = import.meta.env.VITE_SOCKET_SERVER_URL;
-
-  if (configuredUrl && configuredUrl.trim().length > 0) {
-    return configuredUrl.trim();
-  }
-
-  return `${window.location.protocol}//${window.location.hostname}:3000`;
 };
 
 // This — not the route table — is what decides `canClaimControl` on the server
@@ -75,7 +66,7 @@ export const resolveSocketAuthPayload = (
 export const createRoomSocket = (
   pathname: string
 ): Socket<InboundSocketEvents, OutboundSocketEvents> => {
-  return io(resolveSocketServerUrl(), {
+  return io(resolveServerOrigin(), {
     auth: resolveSocketAuthPayload(pathname)
   });
 };

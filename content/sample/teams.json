@@ -1,8 +1,24 @@
 {
   "teams": [
-    { "name": "Scorch Squad" },
-    { "name": "Blaze Brigade" },
-    { "name": "Inferno Crew" },
-    { "name": "Pepper Riot" }
+    {
+      "name": "Scorch Squad",
+      "genre": "metal",
+      "anthems": ["scorch-squad-anthem.mp3"]
+    },
+    {
+      "name": "Blaze Brigade",
+      "genre": "hip hop",
+      "anthems": ["blaze-brigade-anthem.mp3"]
+    },
+    {
+      "name": "Inferno Crew",
+      "genre": "synthwave",
+      "anthems": ["inferno-crew-anthem.mp3"]
+    },
+    {
+      "name": "Pepper Riot",
+      "genre": "punk",
+      "anthems": ["pepper-riot-anthem.mp3"]
+    }
   ]
 }
