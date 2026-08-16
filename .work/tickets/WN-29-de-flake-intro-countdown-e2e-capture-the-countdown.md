@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-29
 title: "De-flake intro-countdown e2e: capture the countdown frame sequence instead of polling for transient frames"
-status: in-progress
+status: in-review
 kind: bug
 priority: medium
 created: 2026-08-16
@@ -66,9 +66,9 @@ Grill summary (scope/edges/architecture/testing). Empirical claims below were **
 - 2026-08-16T00:51:31.896Z implemented: data-countdown-value hook on GameLockedOverlay's number element + MutationObserver frame recorder inline in intro-countdown.spec.ts. Replaced the 3 transient-frame polls with expect.poll over the append-only frames array (race-free: a late poll still sees the full history) plus the fail-safe 10s terminal toHaveCount(0). Stability 3/3 green (11.3s/8.9s/9.2s). Teeth AC: hook regressed to 3->null went red on BOTH attempts naming the two missing frames; restored, green (8.4s).
 - 2026-08-16T00:51:55.654Z DELIBERATE ASSERTION REMOVAL, flagged for review: dropped 'await expect(displayPage.getByText("Game starts in")).toBeVisible()'. It was itself a poll against the same 3s window (the last sampling assertion in the file), and without a started-edge the terminal toHaveCount(0) could pass vacuously at t=0 — the frames poll now supplies that edge race-free. Not a weakening: the prefix and the digit render in the SAME isCountdownVisible branch of GameLockedOverlay, so proving the digit sequence rendered proves that branch rendered; 'Game starts in' is still asserted at toHaveCount(0) on both host and display. Net assertion strength is UP — frame ordering and totality are now checked, which three independent toBeVisible calls never could. testing.md ('assert stable structural signals, not incidental copy') backs the trade.
 - 2026-08-16T01:16:40.366Z qa-reviewer returned needs-changes (major). Reviewer was RIGHT and my earlier justification was factually wrong: the prefix renders in a SIBLING node of the recorded digit, not the same node, so the frames array could not detect its removal — and I had missed that host-display-sync.spec.ts:30 uses that copy as its countdown-settled SYNC GATE, so deleting it would have silently turned that spec into a race. Fixed by recording the prefix in the same observer: added data-countdown-label to the prefix span and a second append-only 'labels' array; the assertion is now toEqual({values:[3,2,1], labels:['Game starts in']}). Proved the closure: deleting the prefix now goes RED (labels: []) where it was GREEN before. Also addressed the minor (Evidence now holds pasted output, not summaries) and info-1 (comment on live-DOM sampling vs MutationRecords being safe at 1s cadence). Re-verified at the new shape: 3/3 stability (7.1/7.7/7.9s), both regressions red, full gate green, full suite 14/14 (28.7s).
+- 2026-08-16T01:22:10.921Z handed off → in-review (verify green); awaiting land
 
 ## Evidence
-
 ### AC6 — stability, 3 consecutive runs of the single spec
 `CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e tests/e2e/intro-countdown.spec.ts`
 
@@ -163,6 +163,33 @@ confirmed a bare-name collision, not a real call-site. Symbol since renamed to `
 The pre-fix flake: one red run at 1.1m wall-clock against ~24.3s clean, which had **already consumed
 its `retries: 1`** — sustained contention defeats a retry, so widening the frame windows would not
 have been a reliable fix either.
+
+<!-- captured-evidence:start -->
+**Verify gate:** ✓ PASS (4 step(s))
+
+```
+✓ lint: pnpm lint
+✓ typecheck: pnpm typecheck
+✓ test: pnpm test
+✓ e2e: CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e
+```
+
+**Anti-blind-spot grep:** 1 symbol(s) with external call-sites reviewed (1 low-signal name(s) skipped: text):
+
+- `record` → apps/client/src/components/AnamorphLab/copy.ts:4, apps/client/src/components/AnamorphLab/copy.ts:33, apps/client/src/components/ContraptionLab/copy.ts:4, apps/client/src/components/ContraptionLab/pieceSets/index.ts:13, apps/server/src/socketServer/registerRoomStateHandlers/payloadGuards/index.ts:27, apps/server/src/socketServer/registerRoomStateHandlers/payloadGuards/index.ts:30
+
+**QA findings (advisory):** 3 finding(s) carried from the passing verdict:
+- **info** — Residual delta vs the pre-diff baseline: the recorder proves the countdown nodes were COMMITTED to the DOM (textContent via MutationObserver), not that they were VISIBLE. The old toBeVisible calls on the digits and the prefix would have caught a display:none / zero-size regression on the countdown branch; nothing does now. Narrow: the overlay container's visibility is still proven at line 87 (getByText("Locked In")).toBeVisible() - the same overlay div - so only the inner countdown nodes are unproven, and styles.ts is plain Tailwind strings. Explicitly NOT worth fixing with a toBeVisible on the countdown node: that would reintroduce exactly the 3-second sampling window this ticket exists to remove. If it is ever wanted, the race-free form is to capture getBoundingClientRect().width > 0 inside the same appendIfChanged sample.
+    evidence: tests/e2e/intro-countdown.spec.ts:38-49 (appendIfChanged reads ?.textContent?.trim() only) vs the removed toBeVisible on /^3$/ in the same diff. Presence-only assertion; the overlay-level visibility check that remains is at :87.
+- **info** — The ticket's AC text is now slightly stale relative to the shipped diff, which is strictly additive: AC1 names only data-countdown-value on the number element and says 'no other production behaviour changes' (the diff also adds data-countdown-label to the prefix span), AC2 describes recording only [data-countdown-value] (also records labels), and AC3 says the spec asserts the sequence equals ["3","2","1"] (now an object superset). Every deviation is a non-behavioural test hook added at reviewer direction to close the major, and the ## Progress entry documents the change and the reasoning, so the audit trail is intact. Recorded only so the AC-vs-diff drift is on the record; no action required.
+    evidence: Ticket AC1/AC2/AC3 vs GameLockedOverlay/index.tsx:39 (data-countdown-label) and intro-countdown.spec.ts:48, :102.
+- **info** — Carried forward unchanged from the previous grade and correctly left as a residual: expect.poll(...).toEqual(...) passes on the first matching sample, so a countdown that continued past '1' could be caught mid-sequence. Still not reachable - useGameStartCountdown returns null at currentValue <= 1 so no '0' frame exists, and a lingering countdown is caught by the terminal toHaveCount(0). The new shape actually improves this: the recorded state is a FIXED POINT (the nodes unmount, so nothing more can be appended), so the poll now converges on a stable terminal value rather than a transient one.
+    evidence: tests/e2e/intro-countdown.spec.ts:100-102; apps/client/src/components/DisplayBoard/useGameStartCountdown/index.ts:60-62.
+
+- verify_extra: step `e2e` required — the diff touched `apps/client/src/components/DisplayBoard/GameLockedOverlay/index.tsx`
+
+_Captured 2026-08-16T01:22:10.921Z._
+<!-- captured-evidence:end -->
 
 ## Links
 - The flake surfaced (not caused) by WN-23's e2e run, 2026-08-15.
