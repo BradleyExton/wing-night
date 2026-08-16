@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-29
 title: "De-flake intro-countdown e2e: capture the countdown frame sequence instead of polling for transient frames"
-status: ready
+status: in-progress
 kind: bug
 priority: medium
 created: 2026-08-16
@@ -10,6 +10,7 @@ created: 2026-08-16
 # ─── Optional (delete a line to take its default) ───────────────────────────
 deps: []
 blocked_by: []
+worktree: "/Users/bradleyexton/Projects/wing-night/.claude/worktrees/flamboyant-pasteur-d861ba"
 ---
 
 ## Goal
@@ -61,6 +62,9 @@ Grill summary (scope/edges/architecture/testing). Empirical claims below were **
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-16T00:47:44.645Z claimed → in-progress @ /Users/bradleyexton/Projects/wing-night/.claude/worktrees/flamboyant-pasteur-d861ba
+- 2026-08-16T00:51:31.896Z implemented: data-countdown-value hook on GameLockedOverlay's number element + MutationObserver frame recorder inline in intro-countdown.spec.ts. Replaced the 3 transient-frame polls with expect.poll over the append-only frames array (race-free: a late poll still sees the full history) plus the fail-safe 10s terminal toHaveCount(0). Stability 3/3 green (11.3s/8.9s/9.2s). Teeth AC: hook regressed to 3->null went red on BOTH attempts naming the two missing frames; restored, green (8.4s).
+- 2026-08-16T00:51:55.654Z DELIBERATE ASSERTION REMOVAL, flagged for review: dropped 'await expect(displayPage.getByText("Game starts in")).toBeVisible()'. It was itself a poll against the same 3s window (the last sampling assertion in the file), and without a started-edge the terminal toHaveCount(0) could pass vacuously at t=0 — the frames poll now supplies that edge race-free. Not a weakening: the prefix and the digit render in the SAME isCountdownVisible branch of GameLockedOverlay, so proving the digit sequence rendered proves that branch rendered; 'Game starts in' is still asserted at toHaveCount(0) on both host and display. Net assertion strength is UP — frame ordering and totality are now checked, which three independent toBeVisible calls never could. testing.md ('assert stable structural signals, not incidental copy') backs the trade.
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>

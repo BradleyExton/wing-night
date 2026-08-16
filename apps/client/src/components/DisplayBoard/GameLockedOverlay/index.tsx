@@ -28,7 +28,10 @@ export const GameLockedOverlay = ({
       {isCountdownVisible ? (
         <>
           <div className={styles.ringFrame}>
-            <p className={styles.countdownNumber}>
+            {/* Stable hook for the e2e frame-sequence capture: the standings
+                surface renders bare team scores alongside this overlay, so a
+                text selector for a lone digit is ambiguous. */}
+            <p className={styles.countdownNumber} data-countdown-value>
               {gameLockedOverlayCopy.formatCountdownNumber(remainingSeconds)}
             </p>
           </div>
