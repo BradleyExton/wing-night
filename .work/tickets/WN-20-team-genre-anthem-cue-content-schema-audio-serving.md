@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-20
 title: "Team genre anthem cue: content schema, audio serving, display playback at MINIGAME_INTRO"
-status: in-review
+status: done
 kind: feature
 priority: medium
 created: 2026-08-07
@@ -11,6 +11,8 @@ created: 2026-08-07
 deps: []
 blocked_by: []
 worktree: "/Users/bradleyexton/Projects/wing-night-WN-20"
+landed_range: 1b288706992479d83af2d394b248e379ba906530..f0d0f027c81cb3a5989ab32c6fd435f2d51cc23a
+review: pending
 ---
 
 ## Goal
@@ -149,6 +151,7 @@ Should the repo eventually commit one tiny silent sample anthem under `content/s
 - 2026-08-16T21:16:04.628Z qa verdict: PASS (qa-reviewer, high confidence, sha 1f3d5b5, attempt 1) recorded at .work/verdicts/WN-20.qa.json. The reviewer RE-RAN the whole gate itself rather than trusting the report (lint clean, typecheck 7 projects, pnpm test 824/0, e2e 15 passed) and read the test diff first: 386 test insertions against exactly 2 deletions, both halves of the withApp signature line — WN-26's four WN_DEV_BOARD cases intact, no skips, no .only, nothing loosened. It independently confirmed the AC6 predicates are red-able against both wrong implementations, found NO fourth Team-construction site, and judged both beyond-text changes (DevBoard fold, normalizeBaselineTeams fix) as in-scope repair rather than creep. THREE MINORS + THREE INFOS, none blocking, all riding into review per the Rubric B rule: (1) the unlock tap's priming play().then(pause) RACES the cue's play() — the priming promise resolves only once playback actually begins, so its .then(pause) will commonly land AFTER the cue's play() and pause the anthem it just started, leaving the flagship FIRST anthem silent; unobservable by any harness here and unconfirmable by ear because D6 ships no audio bytes. Cheapest close named by the reviewer: skip the priming pause when a cue is already pending. (2) the e2e paused assertion stays near-vacuous because the seeded root ships no mp3 at all, so play() always rejects — this is a consequence of D6, and it is the cost side of the ticket's own open question about committing one tiny silent sample anthem. (3) the e2e title joins two behaviours with 'and'. INFOS: buildTeam trims genre but not anthem filenames; Evidence section still placeholder at the time of grading; the e2e re-declares TEAM_AUDIO_ROUTE_PATH locally (deliberate, tests/ is black-box).
 - 2026-08-16T21:16:12.932Z handed off → in-review (verify green); awaiting land
 - 2026-08-17T01:16:55.965Z Land decision (2026-08-16): landing with the three qa MINORS deferred to a follow-up rather than fixed in-slice. Rationale, recorded so review can judge it: minors (1) the unlock-tap priming race and (2) the near-vacuous e2e paused assertion share ONE root cause — Plan D6 ships no audio bytes, so no .mp3 exists anywhere in the repo. That means play() always rejects under the gate, so the race cannot be observed and the paused assertion cannot fail. Fixing the race now would therefore cost a fresh qa grade (CDS-120: any change to a ticket-owned file voids the binding) for a change nothing in this repo could PROVE works — the exact unfalsifiable-churn pattern this pipeline exists to avoid. The follow-up should answer the open question already parked at the bottom of this ticket (commit one tiny silent sample anthem under content/sample/teams/audio/), which makes BOTH minors testable in one stroke: the paused assertion becomes genuinely red-able and the priming race becomes observable. Minor (3), the e2e title joining two behaviours with 'and', rides along with it. qa verdict remains PASS with no blocker/major; nothing was weakened to land.
+- 2026-08-17T01:19:13.045Z auto-landed on green verdicts + attestation (in-review → done); review: pending
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
