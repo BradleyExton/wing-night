@@ -2,7 +2,7 @@
 # ─── Required ───────────────────────────────────────────────────────────────
 id: WN-21
 title: "Anthem playlist rotation per round + genre identity on the minigame intro screen"
-status: ready
+status: needs-planning
 kind: feature
 priority: medium
 created: 2026-08-07
@@ -36,6 +36,7 @@ Out of scope: per-phase ambient beds, genre shown on standings/results surfaces,
 
 ## Progress
 <the executing agent appends here — the restart-safe log>
+- 2026-08-19T23:00:23.896Z gate1 REJECTED (product-owner, needs-changes) — demoted ready → needs-planning, routed to plan-work. MAJOR 1: AC3 (rotation stable across re-derives + display refresh/rehydrate) names no proof and is unobservable from pnpm test — refresh/rehydrate lives in Playwright, which the default gate excludes. Pick a lane in the AC: name the e2e reload assertion, collapse it into AC1's determinism property, or mark it judgment-only. MAJOR 2: the Goal's per-round variety has no deliverable — content/sample/teams.json ships exactly ONE anthem per team (4 teams) and no content/sample/teams/audio dir exists, so rotation is unobservable end-to-end; either add an AC extending the sample pack to 2-4 songs/team or move sample content explicitly out of scope. MINORS: name the forced e2e step (apps/client/src/** maps to verify_extra e2e); Plan says 'roundNumber' but the display-safe field is currentRound (packages/shared/src/roomState/index.ts:199); Plan says 'the WN-20 selector' but the pick is the inline anthems?.[0] at useTeamAnthemCue/index.ts:63; AC1's signature takes a team while the hook's prop is anthems[] — state the input shape and the empty/degenerate return (null). Verdict: .work/verdicts/WN-21.gate1.json
 
 ## Evidence
 <test output + screenshot / preview URL, recorded before `done`>
