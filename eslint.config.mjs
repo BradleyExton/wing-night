@@ -14,20 +14,20 @@ export default [
       // Throwaway ANAMORPH feel lab behind /dev/lab/anamorph. A four-knob control lab is
       // hardcoded labels and runtime style values by construction, which the wingnight
       // component rules rightly reject in shipped code. Scope carve-out only — no rule is
-      // disabled and there is no eslint-disable in the lab. WN-14 records the answers,
-      // then deletes both the folder and this entry.
+      // disabled and there is no eslint-disable in the lab. Shipping the ANAMORPH
+      // minigame deletes both the folder and this entry (BACKLOG.md).
       "apps/client/src/components/AnamorphLab/**",
       // Throwaway CONTRAPTION feel lab behind /dev/lab/contraption. A live-control harness over
-      // WN-17's integrator is hardcoded labels and runtime style values by construction, which the
+      // the shared integrator is hardcoded labels and runtime style values by construction, which the
       // wingnight component rules rightly reject in shipped code. Scope carve-out only — no rule is
-      // disabled and there is no eslint-disable in the lab. WN-15 records the answers, then deletes
-      // both the folder and this entry.
+      // disabled and there is no eslint-disable in the lab. Shipping the CONTRAPTION minigame
+      // deletes both the folder and this entry (BACKLOG.md).
       "apps/client/src/components/ContraptionLab/**",
       // Throwaway CONTRAPTION UI direction prototype behind /dev/lab/contraption-ui. A three-variant
       // lab is hardcoded labels and runtime style values by construction, which the wingnight
       // component rules rightly reject in shipped code. Scope carve-out only — no rule is disabled
-      // and there is no eslint-disable in the prototype. WN-15 records the pick, then deletes both
-      // the folder and this entry.
+      // and there is no eslint-disable in the prototype. Shipping the CONTRAPTION minigame deletes
+      // both the folder and this entry (BACKLOG.md).
       "apps/client/src/components/ContraptionUiLab/**",
       "**/dist/**",
       "**/coverage/**",

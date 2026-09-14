@@ -2,7 +2,7 @@
  * Resolves the ports Playwright's `webServer` blocks bind to, from an env override with a
  * fallback to the conventional interactive default.
  *
- * The gate commands in `.work/manifest.yml` pin dedicated e2e ports so a Playwright run always
+ * The verify commands in CLAUDE.md pin dedicated e2e ports so a Playwright run always
  * boots its own servers. An unset override keeps the familiar 3000/5173 for interactive use.
  *
  * A *malformed* override throws rather than falling back: silently reverting to 5173 on a typo

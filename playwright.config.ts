@@ -4,9 +4,9 @@ import { E2E_CONTENT_ROOT_DIR } from "./tools/e2e-content-root/index.ts";
 import { resolvePort } from "./tools/playwright-ports/index.mjs";
 
 // Ports are env-overridable so a gate run can boot its own stack on dedicated ports instead of
-// reusing whatever dev server holds 3000/5173 — reuse silently tests a foreign worktree's code
-// (WN-5). Defaults keep interactive `pnpm test:e2e` and CI on the conventional ports; the gate
-// commands in `.work/manifest.yml` pin the dedicated ones.
+// reusing whatever dev server holds 3000/5173 — reuse silently tests a foreign worktree's code and
+// reports it green. Defaults keep interactive `pnpm test:e2e` and CI on the conventional ports; the
+// verify commands in CLAUDE.md pin the dedicated ones (3100/5273).
 const serverPort = resolvePort(process.env, "WN_E2E_SERVER_PORT", 3000);
 const clientPort = resolvePort(process.env, "WN_E2E_CLIENT_PORT", 5173);
 

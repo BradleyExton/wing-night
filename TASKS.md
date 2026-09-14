@@ -2,10 +2,10 @@
 
 Wing Night -- Codex-First Build Plan
 
-> **FROZEN AS HISTORY (2026-08-04).** The tracker of record is now the `.work/` work-log
-> (`.work/tickets/` + `.work/INDEX.md`, prefix WN — see `.work/manifest.yml`). Every item
-> still open below carries a one-line pointer to the WN ticket that owns it; nothing new is
-> tracked here. Content is preserved unedited as the build-plan record.
+> **FROZEN AS HISTORY (2026-08-04).** Nothing new is tracked here — open work lives in
+> `BACKLOG.md`. Content is preserved unedited as the build-plan record, so the `WN-nn` pointers
+> on still-open items below refer to a ticket log that was removed on 2026-09-14; read them as
+> historical breadcrumbs, not as links.
 
 ## Execution Tracker
 
