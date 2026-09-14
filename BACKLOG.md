@@ -154,13 +154,13 @@ minigame packages ship. Neither lab may create a package under `packages/minigam
 Kept deliberately unscoped — direction-setting work that wants a supervised session, not a
 pick-it-up-and-go ticket.
 
-> **Read `docs/grills/wing-night-v2-platform.md` first.** That note (2026-09-07, paused at Q12) is a
-> live grill on turning Wing Night into a hosted, paid, multi-title platform, and it supersedes much
-> of what follows — it already assesses what carries over (server-authoritative room state, the
-> plugin contract, engine/content separation) against what doesn't (the closed `MINIGAME_DEFINITIONS`
-> registry, plugins knowing Wing Night's scoring, two roles, `hostSecret`, in-memory-only state).
-> The two items below are the narrower in-repo versions of that question; settle the platform
-> direction before spending effort on either.
+> **A v2 platform grill exists and supersedes much of this.** It's a local, uncommitted note at
+> `docs/grills/wing-night-v2-platform.md` (2026-09-07, paused mid-session) working out what a hosted,
+> paid, multi-title Wing Night would take — including which parts of today's code survive the move
+> (server-authoritative room state, the plugin contract, engine/content separation) and which don't
+> (the closed `MINIGAME_DEFINITIONS` registry, plugins knowing Wing Night's scoring, two roles,
+> `hostSecret`, in-memory-only state). The two items below are the narrower in-repo versions of that
+> same question, so settle the platform direction before spending effort on either.
 
 ### Cross-title game shell contract (ADR)
 Define the boundary between reusable party-game orchestration and Wing Night-specific gameplay.
