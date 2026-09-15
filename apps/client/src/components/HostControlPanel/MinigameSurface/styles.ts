@@ -6,7 +6,9 @@ export {
 export const description =
   "px-1.5 text-[clamp(0.85rem,1.05vw,1rem)] leading-[1.4] text-muted";
 
-export const body = "mt-3 min-h-[40dvh]";
+// No forced minimum height: the intro deck holds a short briefing card, and
+// padding it out to 40dvh just left a hollow gap above the overrides button.
+export const body = "mt-3";
 
 // Takeover canvas — minigame fills the available space.
 export const takeoverCanvas =

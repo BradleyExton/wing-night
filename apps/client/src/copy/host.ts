@@ -98,6 +98,9 @@ export const hostCopy = {
   headerWaitingDescription:
     "Host controls will update when the latest snapshot arrives.",
   headerPhaseDescription: phaseDescription,
+  // ROUND_RESULTS after the last round has no "next round" to move to.
+  roundResultsFinalDescription:
+    "Review score updates before revealing the final results.",
   primaryActionLabel,
   nextPhaseButtonLabel: "Next Phase",
   startGameButtonLabel: "Start Game",
@@ -143,6 +146,10 @@ export const hostCopy = {
   // the live counts, so each run of text is its own key rather than one interpolated string.
   setupHeadlineLead: "Build the",
   setupHeadlineAccent: "lineup.",
+  // Once teams are locked (INTRO) the hero stops asking the host to build
+  // anything — the deck is read-only and the only job left is Start Game.
+  setupLockedHeadlineLead: "Lineup",
+  setupLockedHeadlineAccent: "locked.",
   setupAssignedOfLabel: " of ",
   setupPlayersAssignedLabel: " players assigned. ",
   setupUnassignedRemainderLabel: " still need a home.",
@@ -166,8 +173,10 @@ export const hostCopy = {
   timerPausedLabel: "Paused",
   timerRemainingLabel: "Time Remaining",
   timerTimesUpLabel: "Time's Up",
-  timerPauseButtonLabel: "Pause Timer",
-  timerResumeButtonLabel: "Resume Timer",
+  // The deck group is already headed "Timer Controls", so the buttons drop the
+  // noun — "Pause Timer" wrapped to two lines in the 1.4fr column on tablets.
+  timerPauseButtonLabel: "Pause",
+  timerResumeButtonLabel: "Resume",
   timerExtendFifteenButtonLabel: "+15s",
   timerExtendThirtyButtonLabel: "+30s",
   timerValue: formatClockSeconds,

@@ -91,12 +91,11 @@ export const MinigameSurface = ({
 
   return (
     <section className={containerClassName}>
+      {/* The hero already carries the "<minigame> is queued…" briefing, so the
+          deck goes straight to the minigame's own intro rather than repeating it. */}
       <div className={styles.groupHead}>
         <span>{hostControlPanelCopy.minigameSectionTitle}</span>
       </div>
-      <p className={styles.description}>
-        {hostControlPanelCopy.minigameIntroDescription(minigameType)}
-      </p>
       <div className={styles.body}>
         <minigameRendererBundle.HostSurface
           phase={phase}

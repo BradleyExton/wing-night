@@ -161,7 +161,11 @@ test("renders intro surface for configured trivia minigame", () => {
     />
   );
 
-  assert.match(html, /Call the team up, explain it, then start eating once they are set\./);
+  // The hero carries the "is queued…" briefing; the deck must not repeat it.
+  assert.doesNotMatch(html, /Call the team up, explain it, then start eating once they are set\./);
+  assert.match(html, /Review the active team, then advance to begin trivia play\./);
+  // No prompt exists yet in intro by design, so no "waiting" note either.
+  assert.doesNotMatch(html, /Waiting for the next trivia prompt/);
   assert.match(html, /Team Up/);
   assert.match(html, /Team Alpha/);
 });

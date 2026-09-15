@@ -57,7 +57,7 @@ export const EatingStage = (): JSX.Element => {
         <span className={isTimeUp ? styles.eyebrowTimeUp : styles.eyebrow}>
           {isTimeUp
             ? hostControlPanelCopy.timerTimesUpLabel
-            : `${hostControlPanelCopy.timerSectionTitle} · ${hostControlPanelCopy.timerRemainingLabel}`}
+            : hostControlPanelCopy.timerRemainingLabel}
         </span>
         <p className={timerClassName}>
           {hostControlPanelCopy.timerValue(remainingSeconds)}

@@ -1,14 +1,18 @@
-export const card = "mt-3 rounded-lg border border-gold/50 bg-gold/10 p-4";
+import { actionButtonSecondary } from "../styleTokens";
 
-export const title = "text-base font-semibold text-text";
+// Gold is the confirmation accent: this is the one dock surface that asks
+// "are you sure", and it should read as a distinct beat, not another group.
+export const card =
+  "mx-1.5 mt-4 rounded-md border border-gold/40 bg-gold/[0.08] p-4";
 
-export const description = "mt-1 text-sm text-text/85";
+export const title =
+  "m-0 text-[0.95rem] font-black uppercase tracking-[0.14em] text-gold";
+
+export const description = "mt-1.5 text-[0.9rem] leading-[1.45] text-text/85";
 
 export const actions = "mt-3 flex flex-wrap items-center gap-2";
 
 export const confirmButton =
-  "min-h-11 rounded-md border border-gold/70 bg-gold/20 px-4 text-sm font-semibold text-text transition hover:bg-gold/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold";
+  "inline-flex min-h-[48px] items-center justify-center rounded-md border border-gold/60 bg-gold/20 px-4 text-[0.85rem] font-extrabold uppercase tracking-[0.18em] text-gold transition hover:bg-gold/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold";
 
-export const cancelButton =
-  "min-h-11 rounded-md border border-text/20 bg-surfaceAlt px-4 text-sm font-semibold text-text transition hover:border-primary/70 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
-
+export const cancelButton = actionButtonSecondary;

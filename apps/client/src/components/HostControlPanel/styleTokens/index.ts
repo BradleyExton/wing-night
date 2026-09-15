@@ -3,26 +3,37 @@
 // TurnOrderSurface, OverrideActionsSurface) and inline forms.
 // =============================================================================
 
-export const fieldLabel = "text-xs font-semibold uppercase tracking-wide text-muted";
+// The dock speaks the same language as the control deck (§2.0A): uppercase
+// tracked group heads, 1px dividers instead of card chrome, and the deck's
+// input / button shapes — so opening it never feels like a different app.
+
+export const fieldLabel =
+  "text-[0.68rem] font-extrabold uppercase tracking-[0.28em] text-muted/80";
 
 export const inputBase =
-  "h-11 rounded-md border border-text/30 bg-bg px-3 text-base text-text placeholder:text-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "min-h-[48px] w-full rounded-md border border-text/10 bg-text/[0.04] px-3.5 text-base text-text placeholder:text-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
 export const selectBase =
-  "h-11 rounded-md border border-text/30 bg-bg px-3 text-base text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "min-h-[48px] w-full rounded-md border border-text/10 bg-text/[0.04] px-3.5 text-base text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
 export const actionButtonPrimary =
-  "h-11 rounded-md border border-primary/70 bg-primary/20 px-4 text-base font-semibold text-text transition hover:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-[48px] items-center justify-center rounded-md border border-primary/50 bg-primary/15 px-4 text-[0.85rem] font-extrabold uppercase tracking-[0.18em] text-primary transition hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
+
+export const actionButtonSecondary =
+  "inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-md border border-text/10 bg-text/[0.04] px-3.5 text-[0.85rem] font-extrabold uppercase tracking-[0.16em] text-text transition hover:bg-text/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40";
 
 // =============================================================================
-// Cards & section headings — used by the floating override dock content.
+// Dock groups — the floating override dock's sections. Same head / divider
+// rhythm as a deck group, no card chrome.
 // =============================================================================
 
-export const cardBase = "rounded-lg border border-text/10 bg-surfaceAlt p-4";
+export const cardBase = "flex flex-col border-b border-text/5 pb-5 last:border-b-0 last:pb-0";
 
-export const sectionHeading = "text-xl font-semibold text-text";
+export const sectionHeading =
+  "m-0 px-1.5 text-[0.72rem] font-extrabold uppercase tracking-[0.34em] text-muted/70";
 
-export const sectionDescriptionDefault = "mt-1 text-sm text-text/80";
+export const sectionDescriptionDefault =
+  "mt-2 px-1.5 text-[0.9rem] leading-[1.45] text-muted";
 
 // =============================================================================
 // Mini-rail — top of every stage hero; shows round / sauce / minigame /
@@ -143,7 +154,7 @@ export const deckChipActive =
 export const deckTimerControls = "grid grid-cols-[1.4fr_1fr_1fr] gap-1.5";
 
 export const deckCtrlButton =
-  "inline-flex min-h-[56px] items-center justify-center gap-1.5 rounded-md border border-text/10 bg-text/[0.04] px-3 text-[clamp(0.85rem,1.05vw,1rem)] font-extrabold uppercase tracking-[0.16em] text-text transition hover:bg-text/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-[56px] items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-text/10 bg-text/[0.04] px-3 text-[clamp(0.85rem,1.05vw,1rem)] font-extrabold uppercase tracking-[0.16em] text-text transition hover:bg-text/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
 
 export const deckFoot = "mt-auto flex justify-end pt-3";
 

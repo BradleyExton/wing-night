@@ -16,5 +16,6 @@ export const mainSplit =
 // During minigame takeover, the deck collapses and minigame fills the canvas.
 export const takeoverMain = "flex min-h-0 flex-col";
 
-// Override panel content layout (inside the floating dock — unchanged).
-export const overridePanelContent = "space-y-4";
+// Override panel content layout (inside the floating dock): stacked dock
+// groups separated by their own 1px dividers, so no extra gap between them.
+export const overridePanelContent = "flex flex-col gap-5";

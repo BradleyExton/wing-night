@@ -9,6 +9,7 @@ import {
   GUESS_PIN_COLOR,
   OSM_ATTRIBUTION,
   OSM_TILE_URL,
+  WORLD_BOUNDS,
   WORLD_CENTER,
   WORLD_ZOOM
 } from "../../leafletConstants/index.js";
@@ -36,7 +37,16 @@ export const GeoGuessMap = ({
   onSelectLocation
 }: GeoGuessMapProps): JSX.Element => {
   return (
-    <MapContainer center={WORLD_CENTER} zoom={WORLD_ZOOM} className={styles.map}>
+    // Pinned to one world: without bounds the chart could be dragged past the
+    // poles and show a bare grey band under the map, which read as broken.
+    <MapContainer
+      center={WORLD_CENTER}
+      zoom={WORLD_ZOOM}
+      minZoom={WORLD_ZOOM}
+      maxBounds={WORLD_BOUNDS}
+      maxBoundsViscosity={1}
+      className={styles.map}
+    >
       <TileLayer url={OSM_TILE_URL} attribution={OSM_ATTRIBUTION} />
       <MapClickHandler onSelectLocation={onSelectLocation} />
       {guess !== null && (

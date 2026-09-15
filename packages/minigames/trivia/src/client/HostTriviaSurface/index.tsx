@@ -58,9 +58,8 @@ export const HostTriviaSurface = ({
           </div>
           {shouldRenderQuestionsLeft && (
             <div className={styles.metaBlock}>
-              <p className={styles.metaLabel}>
-                {hostTriviaSurfaceCopy.questionsLeftMetaLabel}
-              </p>
+              {/* The value already reads "N questions left", so a "Questions
+                  Left" label in front of it just says it twice. */}
               <p className={styles.metaValue}>
                 {hostTriviaSurfaceCopy.questionsLeftLabel(attemptsRemaining)}
               </p>
@@ -69,6 +68,8 @@ export const HostTriviaSurface = ({
         </div>
       </div>
       <div className={styles.playArea}>
+        {/* In the intro phase there is no prompt yet by design — the
+            "waiting" note is only meaningful once play has started. */}
         {currentPrompt !== null ? (
           <div className={styles.promptShell}>
             <div className={styles.promptSection}>
@@ -80,9 +81,9 @@ export const HostTriviaSurface = ({
               <p className={styles.answerValue}>{currentPrompt.answer}</p>
             </div>
           </div>
-        ) : (
+        ) : isPlayPhase ? (
           <p className={styles.statusNote}>{hostTriviaSurfaceCopy.waitingPromptLabel}</p>
-        )}
+        ) : null}
         {isPlayPhase && attemptsExhausted && (
           <p className={styles.statusNote}>{hostTriviaSurfaceCopy.turnCompleteLabel}</p>
         )}

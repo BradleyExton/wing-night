@@ -30,7 +30,7 @@ test("renders paused timer controls", () => {
 
   assert.match(html, /Timer Controls/);
   assert.match(html, /Paused/);
-  assert.match(html, /Resume Timer/);
+  assert.match(html, /Resume<\/button>/);
   assert.match(html, /\+15s/);
   assert.match(html, /\+30s/);
 });
@@ -59,7 +59,7 @@ test("renders running timer controls", () => {
   );
 
   assert.match(html, /Running/);
-  assert.match(html, /Pause Timer/);
+  assert.match(html, /Pause<\/button>/);
 });
 
 test("renders nothing for non-eating timers", () => {

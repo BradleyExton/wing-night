@@ -15,6 +15,12 @@ export const WORLD_CENTER: [number, number] = [20, 0];
 
 export const WORLD_ZOOM = 2;
 
+// Web-Mercator clips at ±85°, so this is the whole drawable world.
+export const WORLD_BOUNDS: [[number, number], [number, number]] = [
+  [-85, -180],
+  [85, 180]
+];
+
 export const REVEAL_FIT_PADDING: [number, number] = [48, 48];
 
 export const REVEAL_MAX_ZOOM = 12;

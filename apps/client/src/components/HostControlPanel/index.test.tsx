@@ -53,7 +53,7 @@ test("renders setup deck and assignment controls during SETUP", () => {
   assert.match(html, /Auto-Assign Remaining Players/);
   assert.match(html, /Add Player/);
   assert.match(html, /Assign Alex to a team/);
-  assert.doesNotMatch(html, /Pause Timer/);
+  assert.doesNotMatch(html, /Timer Controls/);
   assert.doesNotMatch(html, /Score Override/);
 });
 
@@ -80,7 +80,7 @@ test("renders eating timer hero and participation deck during EATING", () => {
   assert.doesNotMatch(html, /Morgan/);
   assert.match(html, /Mark each player who finished their wing this round/);
   assert.match(html, /Timer Controls/);
-  assert.match(html, /Pause Timer/);
+  assert.match(html, /Pause<\/button>/);
   assert.match(html, /Overrides/);
   assert.match(html, /Mark Alex as ate wing/);
 });

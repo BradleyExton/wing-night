@@ -1,6 +1,7 @@
 import type { Player, Team } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
+import { resolveLeadingTeams } from "../../../utils/resolveLeadingTeams";
 import { resolveTeamColorVariant } from "../../../utils/resolveTeamColorVariant";
 import { resolveTeamRosterPreview } from "../../../utils/resolveTeamRosterPreview";
 import * as styles from "./styles";
@@ -15,6 +16,10 @@ export const CompactSummarySurface = ({
   players
 }: CompactSummarySurfaceProps): JSX.Element => {
   const playerById = new Map(players.map((player) => [player.id, player] as const));
+  // The leader row only lights up on a strict lead — while the top score is
+  // shared (every round-1 snapshot) the hero already says "tied", and a gold
+  // LEADER badge beside it contradicts that.
+  const hasStrictLeader = resolveLeadingTeams(sortedStandings).length === 1;
 
   return (
     <section className={styles.group}>
@@ -31,7 +36,7 @@ export const CompactSummarySurface = ({
       )}
 
       {sortedStandings.map((team, index) => {
-        const isLeader = index === 0;
+        const isLeader = index === 0 && hasStrictLeader;
         const teamColorVariant = resolveTeamColorVariant(team.id);
         const teamRosterPreview = resolveTeamRosterPreview(team, playerById, 2);
         const rowClassName = `${styles.row} ${isLeader ? styles.leaderRow : ""}`;

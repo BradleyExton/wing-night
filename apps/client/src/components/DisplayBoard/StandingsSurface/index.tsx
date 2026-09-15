@@ -15,7 +15,13 @@ export const StandingsSurface = ({
   phase,
   standings
 }: StandingsSurfaceProps): JSX.Element => {
-  const leadingTeamId = standings[0]?.id ?? null;
+  const topScore = standings[0]?.totalScore ?? null;
+  // A team only "leads" when it is strictly ahead. At 0-0-0-0 (setup, round 1)
+  // nobody is leading, so crowning the alphabetically-first team reads as a bug.
+  const tiedTopCount = standings.filter(
+    (team) => team.totalScore === topScore
+  ).length;
+  const hasStrictLeader = tiedTopCount === 1;
 
   if (standings.length === 0) {
     return (
@@ -34,13 +40,13 @@ export const StandingsSurface = ({
       ref={styles.applyFooterColumns(standings.length)}
     >
       {standings.map((team, index) => {
-        const topScore = standings[0]?.totalScore ?? null;
         // At FINAL_RESULTS every team tied at the top score is a winner —
         // never crown only the alphabetically-first of a tie.
+        const isTiedTop = topScore !== null && team.totalScore === topScore;
         const isLeader =
           phase === Phase.FINAL_RESULTS
-            ? topScore !== null && team.totalScore === topScore
-            : leadingTeamId !== null && team.id === leadingTeamId;
+            ? isTiedTop
+            : isTiedTop && hasStrictLeader;
         const isWinner = isLeader && phase === Phase.FINAL_RESULTS;
         const teamColorVariant = resolveTeamColorVariant(team.id);
         const columnBgClassName = isLeader
@@ -53,7 +59,9 @@ export const StandingsSurface = ({
           ? displayBoardCopy.standingWinnerLabel
           : isLeader
             ? displayBoardCopy.standingLeaderLabel
-            : displayBoardCopy.standingRankOrdinalLabel(index + 1);
+            : isTiedTop
+              ? displayBoardCopy.standingTiedLabel
+              : displayBoardCopy.standingRankOrdinalLabel(index + 1);
         const metaClassName = `${styles.columnMeta} ${isLeader ? styles.columnMetaLead : ""}`.trim();
         const scoreClassName = `${styles.columnScore} ${isLeader ? styles.columnScoreLead : ""}`.trim();
         const LeaderIcon = isWinner ? Trophy : Flame;

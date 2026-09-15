@@ -26,6 +26,9 @@ export const CompactStage = (): JSX.Element | null => {
   const leader = leadingTeams[0] ?? null;
   const isTiedLead = leadingTeams.length > 1;
   const isFinalResults = roomState.phase === Phase.FINAL_RESULTS;
+  const isLastRoundResults =
+    roomState.phase === Phase.ROUND_RESULTS &&
+    roomState.currentRound >= roomState.totalRounds;
   // Two-way ties keep both names; wider ties collapse so the headline stays
   // readable instead of stacking every team name in hero type.
   const tiedHeadlineAccent =
@@ -56,7 +59,9 @@ export const CompactStage = (): JSX.Element | null => {
           )}
         </h1>
         <p className={styles.meta}>
-          {hostControlPanelCopy.headerPhaseDescription(roomState.phase)}
+          {isLastRoundResults
+            ? hostControlPanelCopy.roundResultsFinalDescription
+            : hostControlPanelCopy.headerPhaseDescription(roomState.phase)}
         </p>
       </StageHero>
       <ControlDeck>

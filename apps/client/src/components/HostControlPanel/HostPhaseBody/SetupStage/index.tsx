@@ -1,3 +1,4 @@
+import { Phase } from "@wingnight/shared";
 import { useState } from "react";
 
 import { ControlDeck } from "../ControlDeck";
@@ -59,13 +60,19 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
         )}
         <span className={styles.eyebrow}>{headerContext.phaseTitle}</span>
         <h1 className={styles.headline}>
-          {hostControlPanelCopy.setupHeadlineLead}{" "}
+          {isLocked
+            ? hostControlPanelCopy.setupLockedHeadlineLead
+            : hostControlPanelCopy.setupHeadlineLead}{" "}
           <span className={styles.headlineAccent}>
-            {hostControlPanelCopy.setupHeadlineAccent}
+            {isLocked
+              ? hostControlPanelCopy.setupLockedHeadlineAccent
+              : hostControlPanelCopy.setupHeadlineAccent}
           </span>
         </h1>
         <p className={styles.meta}>
-          {totalPlayers === 0 ? (
+          {isLocked ? (
+            hostControlPanelCopy.headerPhaseDescription(Phase.INTRO)
+          ) : totalPlayers === 0 ? (
             hostControlPanelCopy.teamSetupDescription
           ) : (
             <>

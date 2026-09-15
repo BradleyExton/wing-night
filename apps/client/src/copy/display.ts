@@ -46,8 +46,10 @@ export const displayCopy = {
   standingsEmptyLabel: "No teams have joined yet.",
   standingLeaderLabel: "Leading",
   standingWinnerLabel: "Winner",
+  standingTiedLabel: "Tied",
   standingRankLabel: (rank: number): string => `#${rank}`,
   standingRankOrdinalLabel: (rank: number): string => {
+    if (rank === 1) return "1st";
     if (rank === 2) return "2nd";
     if (rank === 3) return "3rd";
     return `${rank}th`;
