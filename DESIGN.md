@@ -171,6 +171,64 @@ under game-show marquee chrome.
     holds the finished sketch on the board, dimmed, until the reveal
     window expires.
 
+## 2.6 EMOJI_CHARADES Minigame Surface Language ("Clue Board")
+
+The EMOJI_CHARADES surfaces follow the "Hybrid" host direction
+(`apps/client/public/mockups/emoji-charades-host/04-hybrid.html`) and the
+"Clue Board" display direction
+(`emoji-charades-display/02-clue-wall.html`): a fixed board of clue slots
+under the same bulb marquee DRAWING uses.
+
+-   **Emoji are content, not chrome.** They are full-colour unicode and
+    are exempt from the §0.1 two-accent budget, exactly as DRAWING's ink
+    palette is (§2.5). The chrome around them stays within budget:
+    `gold` frames (marquee, subject card, newest-slot ring) plus
+    `primary` for live data (timer, canvas caret, search focus ring).
+    Got It / Skip are green/red gradient buttons — functional
+    success/danger per §0.1, not decorative accents.
+-   `gold` as a framing accent on these surfaces is a scoped exception to
+    the §0.1 "winner moments only" rule, like GEO's §2.4 and DRAWING's
+    §2.5 exceptions. Outside these surfaces the §0.1 rule stands.
+-   The subject card reuses DRAWING's prompt-card treatment — serif
+    italic on a `#3A1D09` → `#1A0C04` panel inside a gold border — so the
+    two minigames read as the same show.
+
+**Host layout** reuses the §2.0A shell language: mini-rail on top, then a
+left picker column (clue canvas → persistent search field → category
+tabs → emoji grid) beside the standard control deck column (subject card
+→ Got It → Skip → back/clear).
+
+-   Search is **always visible but never permanently expensive**: it
+    occupies its own row only, and the keyboard is summoned on focus,
+    overlaying the grid and retracting on Done. The keyboard must never
+    permanently reserve height — the control deck and the verdict buttons
+    keep their full size at all times.
+-   The landing tab is **Top**, sectioned used-this-turn → used-tonight →
+    charades staples. Frequency ranking, not alphabetical or unicode
+    order, is what puts the likely next tap on the first screen.
+-   Emoji cells are ≥44px touch targets per §2.1 and the grid scrolls;
+    the bottom fade is the scroll affordance.
+
+**Display layout**: bulb marquee (active team + pending points, show
+title, turn timer), the clue board, then the standings footer per §3.2.
+
+-   The board is a fixed 6×5 grid of all `MAX_EMOJIS_PER_SUBJECT` slots,
+    letterboxed into whatever height the marquee and footer leave.
+-   **Emoji never scale with sequence length.** Cell size is a function
+    of available space alone, so a 3-emoji clue and a 28-emoji clue are
+    equally legible from across the room. This is the load-bearing
+    decision of the surface: shrink-to-fit was prototyped
+    (`01-hero-line.html`) and rejected for collapsing to unreadable
+    glyphs as a clue approaches the cap.
+-   Filled slots are lit; the remainder stay as dashed ghost slots, so
+    the room can always see how much clue is left to come.
+-   The newest slot carries a gold ring and a 420ms `pop` — the one beat
+    of drama, borrowed from the rejected `03-ribbon.html` direction.
+-   Answer-safe per §2.3: the display never receives subject text outside
+    the post-result reveal. During the reveal the board dims to 0.12
+    behind a centred check/cross, the resolved subject in serif italic,
+    and a gold award pill, until the reveal window expires.
+
 ------------------------------------------------------------------------
 
 # 3) Layout System
