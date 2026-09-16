@@ -2,6 +2,7 @@ import type { GameConfigFile, MinigameType } from "@wingnight/shared";
 
 const DISPLAY_ASSET_ROOT = "/display/minigames";
 const DEFAULT_TRIVIA_QUESTIONS_PER_TURN = 1;
+const DEFAULT_SONG_GUESS_SONGS_PER_TURN = 4;
 
 export type MinigameBriefingContent = {
   displayName: string;
@@ -46,11 +47,45 @@ const resolveTriviaBriefingContent = (
   };
 };
 
+const resolveSongGuessSongsPerTurn = (gameConfig: GameConfigFile | null): number => {
+  const configuredSongsPerTurn = gameConfig?.minigameRules?.songGuess?.songsPerTurn;
+
+  if (
+    typeof configuredSongsPerTurn !== "number" ||
+    !Number.isInteger(configuredSongsPerTurn) ||
+    configuredSongsPerTurn <= 0
+  ) {
+    return DEFAULT_SONG_GUESS_SONGS_PER_TURN;
+  }
+
+  return configuredSongsPerTurn;
+};
+
+const resolveSongGuessBriefingContent = (
+  gameConfig: GameConfigFile | null
+): MinigameBriefingContent => {
+  const songsPerTurn = resolveSongGuessSongsPerTurn(gameConfig);
+
+  return {
+    displayName: "Who's That Song",
+    illustrationPath: `${DISPLAY_ASSET_ROOT}/song-guess-illustration.svg`,
+    illustrationAlt: "Who's That Song mini-game artwork",
+    summary:
+      "Lounge covers of songs you already know. Name the song, name who did it first.",
+    steps: [
+      `You'll hear ${songsPerTurn} clip${songsPerTurn === 1 ? "" : "s"} this turn.`,
+      "Call out the title and the original artist.",
+      "One point each — the host is the judge."
+    ]
+  };
+};
+
 const minigameBriefingContentByType: Record<
   MinigameType,
   (gameConfig: GameConfigFile | null) => MinigameBriefingContent
 > = {
   TRIVIA: resolveTriviaBriefingContent,
+  SONG_GUESS: resolveSongGuessBriefingContent,
   GEO: () => {
     return {
       displayName: "Geo",

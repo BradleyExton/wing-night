@@ -1,7 +1,10 @@
 import { resolve } from "node:path";
 
 import express from "express";
-import { TEAM_AUDIO_ROUTE_PATH } from "@wingnight/shared";
+import {
+  SONG_GUESS_AUDIO_ROUTE_PATH,
+  TEAM_AUDIO_ROUTE_PATH
+} from "@wingnight/shared";
 
 import { resolveContentRootDir } from "../contentLoader/contentLoaderUtils/index.js";
 import { healthRouter } from "../routes/health/index.js";
@@ -30,6 +33,17 @@ export const createApp = (options: CreateAppOptions = {}): express.Express => {
   app.use(
     TEAM_AUDIO_ROUTE_PATH,
     express.static(resolve(contentRootDir, "sample", "teams", "audio"))
+  );
+
+  // Song Guess covers, same local-wins fallback. The pack ships as JSON only —
+  // the MP3s are event-night assets the host drops into `content/local/`.
+  app.use(
+    SONG_GUESS_AUDIO_ROUTE_PATH,
+    express.static(resolve(contentRootDir, "local", "minigames", "song-guess", "audio"))
+  );
+  app.use(
+    SONG_GUESS_AUDIO_ROUTE_PATH,
+    express.static(resolve(contentRootDir, "sample", "minigames", "song-guess", "audio"))
   );
 
   return app;

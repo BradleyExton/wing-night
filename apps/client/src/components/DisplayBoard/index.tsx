@@ -7,6 +7,7 @@ import { GameLockedOverlay } from "./GameLockedOverlay";
 import { StageSurface } from "./StageSurface";
 import { StandingsSurface } from "./StandingsSurface";
 import { useDisplayRoomState } from "../../context/RoomStateContext";
+import { resolveMinigameRendererBundle } from "../../minigames/registry";
 import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
 import { useGameStartCountdown } from "./useGameStartCountdown";
 import { useTeamAnthemCue } from "./useTeamAnthemCue";
@@ -84,9 +85,17 @@ export const DisplayBoard = (): JSX.Element => {
     mediaRef: anthemMediaRef
   });
 
+  // A game whose display surface is the room's speaker (Song Guess) needs the
+  // same tap even when the active team has no anthem — otherwise the first clip
+  // of the round is silently swallowed by the autoplay policy.
+  const roundMinigameType = roomState?.currentRoundConfig?.minigame ?? null;
+  const roundRequiresDisplayAudio =
+    roundMinigameType !== null &&
+    (resolveMinigameRendererBundle(roundMinigameType)?.requiresDisplayAudio ?? false);
+
   const shouldShowAudioUnlockOverlay =
     phase === Phase.MINIGAME_INTRO &&
-    activeTeamAnthems !== null &&
+    (activeTeamAnthems !== null || roundRequiresDisplayAudio) &&
     !audioUnlocked;
 
   if (fatalError !== null) {

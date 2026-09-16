@@ -46,6 +46,14 @@ export type {
   RoomFatalError,
   RoomState,
   RoomTimerState,
+  SongGuessMark,
+  SongGuessMinigameDisplayClip,
+  SongGuessMinigameDisplayReveal,
+  SongGuessMinigameDisplayView,
+  SongGuessMinigameHostSong,
+  SongGuessMinigameHostView,
+  SongGuessPhase,
+  SongGuessTeamScore,
   TriviaMinigameDisplayView,
   TriviaMinigameHostView
 } from "./roomState/index.js";
@@ -129,6 +137,19 @@ export type {
   GeoCoordinates,
   GeoPrompt
 } from "./content/geo/index.js";
+export {
+  isSongGuessContentFile,
+  isSongGuessPrompt,
+  SONG_GUESS_AUDIO_ROUTE_PATH,
+  SONG_GUESS_DIFFICULTIES,
+  validateSongGuessContentFile,
+  validateSongGuessPrompt
+} from "./content/songGuess/index.js";
+export type {
+  SongGuessContentFile,
+  SongGuessDifficulty,
+  SongGuessPrompt
+} from "./content/songGuess/index.js";
 export {
   isTriviaContentFile,
   isTriviaPrompt,

@@ -1,8 +1,73 @@
 # Song Guess Minigame Spec (MVP)
 
-Status: Draft for implementation
+Status: **Shipped** — `packages/minigames/song-guess/`
 
-Last updated: 2026-05-01
+Last updated: 2026-09-16
+
+> **Read §0 first.** This document is the 2026-05-01 draft, kept for its
+> reasoning. Where the build diverged from it, §0 is what actually shipped and
+> the body below is the superseded proposal.
+
+## 0) As built — where the shipped game differs from this draft
+
+- **Scoring is per-team-turn, not all-teams-per-song.** The draft had the host
+  mark every team on every song (§4 step 5, `scoresBySongByTeamId`). Wing Night's
+  round loop is per-team — `EATING → MINIGAME_PLAY → TURN_RESULTS` repeats once
+  per team (AGENTS.md §6.1) — so each team's turn now plays its own songs and the
+  host rules only on the active team. This also removes a hole the draft had:
+  answers are verbal, so simultaneous play lets the first team to shout spoil the
+  song for the room. Runtime state carries `scoresBySongId` for the active team,
+  and the actions are `markTitle` / `markArtist` with a `{ correct }` payload —
+  no `teamId`, because the turn already names the team.
+- **`songsPerRound` is `songsPerTurn`**, matching GEO's `promptsPerTurn`, since
+  the count is now per turn. Default 4.
+- **Song selection is seeded, not random.** Each team gets a contiguous slice of
+  the pack offset by its place in the turn order, so no two teams hear the same
+  song and a mid-turn reconnect rehydrates the same setlist. A random draw would
+  re-roll on re-entry; GEO's prompt cursor is seeded for the same reason.
+- **A short pack plays short rather than failing.** The draft surfaced a
+  `fatalError` when `songsPerRound > songs.length`; the runtime now plays what the
+  pack has and only returns `null` (no round) when the pack is empty. A dead round
+  mid-party is worse than a short one.
+- **The content file is `{ prompts: [...] }`, not `{ songs: [...] }`.** Every
+  content pack in the repo shares one shape, which buys Song Guess
+  `validatePromptPackFile` (unique ids, per-entry issue paths) and
+  `createPromptContentAdapter` for free rather than forking both for a key rename.
+- **The TV is the speaker; the host tablet is silent.** The draft had both
+  clients play. One room, two speakers is an echo, and the genre-anthem cue
+  already established the TV as the audio surface.
+- **The display view carries the audio filename, the server does not build a
+  URL.** The draft had the server resolve `audioUrl`. There is no dev proxy in
+  this repo, so the client is always a different origin from the server and only
+  the client knows the server origin — `resolveSongAudioSrc(fileName, origin)`
+  builds it, mirroring `resolveAnthemSrc`. The filename in the display view is the
+  same class of disclosure as GEO's `imageSrc`; the ANSWER fields stay host-only
+  until reveal, which is what the answer-safety tests pin.
+- **The autoplay gate already existed.** `DisplayBoard`'s `AudioUnlockOverlay`
+  (built for team anthems) now also fires for any round whose renderer bundle
+  declares `requiresDisplayAudio`, so no second primer flow was added.
+- **`playClip` from `clip_paused` resumes; `replayClip` restarts.** The draft
+  allowed both from `clip_paused` without distinguishing them, which would have
+  let the host hand out unlimited restarts and made the one-replay rule
+  decorative.
+- **No `endRound` action.** The turn ends through the host shell's normal phase
+  advance; a runtime action that changed no state earned nothing.
+- **Added `skipSong`**, an escape hatch for a song whose audio will not play
+  (AGENTS.md §11). It scores nothing and is refused once the answer is on screen.
+- **`timerKey` is now nullable** across `MINIGAME_DEFINITIONS`, so host-paced
+  games own no field in `GameConfigTimers`. Timers are still required for every
+  registered game that declares one, scheduled or not — the draft's
+  "required iff scheduled" rule was left alone as unrelated scope.
+- **Sample content ships as metadata only.** `content/sample/minigames/song-guess.json`
+  lists 12 songs and no audio is committed; drop MP3s into
+  `content/local/minigames/song-guess/audio/`. SONG_GUESS is deliberately NOT
+  scheduled in the sample `gameConfig.json`, so the default demo night is
+  unchanged — schedule it in your local config for a real run.
+- **E2E covers the surfaces through the dev sandbox**
+  (`tests/e2e/song-guess-sandbox.spec.ts`), not a live round: the suite's
+  convention is that no spec changes round scheduling, since the seeded content
+  root is shared across a run. Socket sync and refresh-rehydrate are
+  minigame-agnostic and covered by the existing specs.
 
 ## 1) Goals
 

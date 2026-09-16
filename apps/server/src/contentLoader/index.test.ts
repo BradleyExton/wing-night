@@ -7,6 +7,7 @@ import {
   createValidDrawingJson as createValidDrawing,
   createValidGameConfigJson,
   createValidGeoJson as createValidGeo,
+  createValidSongGuessJson as createValidSongGuess,
   createValidTriviaJson as createValidTrivia,
   writeContentFile
 } from "./testHarness.js";
@@ -39,6 +40,11 @@ test("loads all content from local files when available", () => {
     contentRoot,
     "local/minigames/drawing.json",
     createValidDrawing("Local")
+  );
+  writeContentFile(
+    contentRoot,
+    "local/minigames/song-guess.json",
+    createValidSongGuess("Local")
   );
 
   writeContentFile(
@@ -75,6 +81,11 @@ test("loads all content from local files when available", () => {
     "sample/minigames/drawing.json",
     createValidDrawing("Sample")
   );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/song-guess.json",
+    createValidSongGuess("Sample")
+  );
 
   const content = loadContent({ contentRootDir: contentRoot });
 
@@ -93,6 +104,10 @@ test("loads all content from local files when available", () => {
     | { prompts?: Array<{ id?: string }> }
     | undefined;
   assert.equal(drawingContent?.prompts?.[0]?.id, "local-drawing-1");
+  const songGuessContent = content.minigameContentById.SONG_GUESS as
+    | { prompts?: Array<{ id?: string }> }
+    | undefined;
+  assert.equal(songGuessContent?.prompts?.[0]?.id, "local-song-1");
 });
 
 test("falls back to sample files when local files are missing", () => {
@@ -132,6 +147,11 @@ test("falls back to sample files when local files are missing", () => {
     "sample/minigames/drawing.json",
     createValidDrawing("Sample")
   );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/song-guess.json",
+    createValidSongGuess("Sample")
+  );
 
   const content = loadContent({ contentRootDir: contentRoot });
 
@@ -152,4 +172,8 @@ test("falls back to sample files when local files are missing", () => {
     | { prompts?: Array<{ id?: string }> }
     | undefined;
   assert.equal(drawingContent?.prompts?.[0]?.id, "sample-drawing-1");
+  const songGuessContent = content.minigameContentById.SONG_GUESS as
+    | { prompts?: Array<{ id?: string }> }
+    | undefined;
+  assert.equal(songGuessContent?.prompts?.[0]?.id, "sample-song-1");
 });

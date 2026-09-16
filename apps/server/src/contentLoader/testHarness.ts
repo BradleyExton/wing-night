@@ -65,6 +65,22 @@ export const createValidDrawingJson = (prefix: string): string => {
   });
 };
 
+export const createValidSongGuessJson = (prefix: string): string => {
+  return JSON.stringify({
+    prompts: [
+      {
+        id: `${prefix.toLowerCase()}-song-1`,
+        file: `${prefix.toLowerCase()}-song-1.mp3`,
+        clipStart: 10,
+        clipEnd: 25,
+        revealStart: 40,
+        correctTitle: `${prefix} Title`,
+        correctArtist: `${prefix} Artist`
+      }
+    ]
+  });
+};
+
 type ValidGameConfigOptions = {
   questionsPerTurn?: number;
   setupPreviewRoundSlots?: number;
@@ -114,9 +130,10 @@ export const createValidGameConfigJson = (
 
 type ContentTreeScope = "local" | "sample";
 
-// Writes a complete, valid set of the six content files under one scope, so a
-// test that cares about ONE file does not have to hand-build the other five
-// just to get `loadContent` past them.
+// Writes a complete, valid set of content files under one scope, so a test
+// that cares about ONE file does not have to hand-build the rest just to get
+// `loadContent` past them. Every registered minigame needs an entry here: the
+// loader walks the plugin registry and throws on the first missing pack.
 export const writeValidContentTree = (
   contentRoot: string,
   scope: ContentTreeScope,
@@ -151,5 +168,10 @@ export const writeValidContentTree = (
     contentRoot,
     `${scope}/minigames/drawing.json`,
     createValidDrawingJson(prefix)
+  );
+  writeContentFile(
+    contentRoot,
+    `${scope}/minigames/song-guess.json`,
+    createValidSongGuessJson(prefix)
   );
 };

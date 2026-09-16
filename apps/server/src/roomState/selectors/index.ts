@@ -84,6 +84,12 @@ export const resolveMinigameTimerSeconds = (state: RoomState): number | null => 
 
   const minigameDefinition = resolveMinigameDefinition(state.currentRoundConfig.minigame);
 
+  // Host-paced minigames own no timer field; MINIGAME_PLAY then runs without a
+  // clock and ends on a host action.
+  if (minigameDefinition.timerKey === null) {
+    return null;
+  }
+
   return state.gameConfig.timers[minigameDefinition.timerKey] ?? null;
 };
 

@@ -1,0 +1,136 @@
+{
+  "prompts": [
+    {
+      "id": "song-teen-spirit",
+      "file": "smells-like-teen-spirit.mp3",
+      "clipStart": 12.5,
+      "clipEnd": 27,
+      "revealStart": 45,
+      "correctTitle": "Smells Like Teen Spirit",
+      "correctArtist": "Nirvana",
+      "difficulty": "easy",
+      "hint": "Grunge anthem that opened the nineties"
+    },
+    {
+      "id": "song-billie-jean",
+      "file": "billie-jean.mp3",
+      "clipStart": 8,
+      "clipEnd": 22,
+      "revealStart": 40,
+      "correctTitle": "Billie Jean",
+      "correctArtist": "Michael Jackson",
+      "difficulty": "easy",
+      "hint": "That bassline, and a lover who is not the one"
+    },
+    {
+      "id": "song-sweet-dreams",
+      "file": "sweet-dreams.mp3",
+      "clipStart": 5,
+      "clipEnd": 19,
+      "revealStart": 36,
+      "correctTitle": "Sweet Dreams (Are Made of This)",
+      "correctArtist": "Eurythmics",
+      "difficulty": "medium",
+      "hint": "Who am I to disagree?"
+    },
+    {
+      "id": "song-lose-yourself",
+      "file": "lose-yourself.mp3",
+      "clipStart": 26,
+      "clipEnd": 41,
+      "revealStart": 58,
+      "correctTitle": "Lose Yourself",
+      "correctArtist": "Eminem",
+      "difficulty": "medium",
+      "hint": "Palms are sweaty"
+    },
+    {
+      "id": "song-dont-stop-believin",
+      "file": "dont-stop-believin.mp3",
+      "clipStart": 3,
+      "clipEnd": 18,
+      "revealStart": 44,
+      "correctTitle": "Don't Stop Believin'",
+      "correctArtist": "Journey",
+      "difficulty": "easy",
+      "hint": "A small-town girl, a midnight train"
+    },
+    {
+      "id": "song-take-on-me",
+      "file": "take-on-me.mp3",
+      "clipStart": 10,
+      "clipEnd": 24,
+      "revealStart": 38,
+      "correctTitle": "Take On Me",
+      "correctArtist": "a-ha",
+      "difficulty": "easy",
+      "hint": "Pencil-sketch video, impossible high note"
+    },
+    {
+      "id": "song-wonderwall",
+      "file": "wonderwall.mp3",
+      "clipStart": 14,
+      "clipEnd": 28,
+      "revealStart": 52,
+      "correctTitle": "Wonderwall",
+      "correctArtist": "Oasis",
+      "difficulty": "easy",
+      "hint": "Every acoustic guitar at every party, ever"
+    },
+    {
+      "id": "song-baby-got-back",
+      "file": "baby-got-back.mp3",
+      "clipStart": 18,
+      "clipEnd": 32,
+      "revealStart": 47,
+      "correctTitle": "Baby Got Back",
+      "correctArtist": "Sir Mix-a-Lot",
+      "difficulty": "medium",
+      "hint": "The lounge treatment makes this one worse, somehow"
+    },
+    {
+      "id": "song-creep",
+      "file": "creep.mp3",
+      "clipStart": 22,
+      "clipEnd": 36,
+      "revealStart": 55,
+      "correctTitle": "Creep",
+      "correctArtist": "Radiohead",
+      "difficulty": "medium",
+      "hint": "Two crunching guitar stabs before the chorus"
+    },
+    {
+      "id": "song-livin-on-a-prayer",
+      "file": "livin-on-a-prayer.mp3",
+      "clipStart": 30,
+      "clipEnd": 45,
+      "revealStart": 60,
+      "correctTitle": "Livin' on a Prayer",
+      "correctArtist": "Bon Jovi",
+      "difficulty": "easy",
+      "hint": "Halfway there, apparently"
+    },
+    {
+      "id": "song-i-will-survive",
+      "file": "i-will-survive.mp3",
+      "clipStart": 16,
+      "clipEnd": 30,
+      "revealStart": 42,
+      "correctTitle": "I Will Survive",
+      "correctArtist": "Gloria Gaynor",
+      "difficulty": "easy",
+      "hint": "At first I was afraid"
+    },
+    {
+      "id": "song-song-2",
+      "file": "song-2.mp3",
+      "clipStart": 6,
+      "clipEnd": 20,
+      "revealStart": 33,
+      "correctTitle": "Song 2",
+      "correctArtist": "Blur",
+      "difficulty": "hard",
+      "hint": "Two minutes long, one enormous woo-hoo"
+    }
+  ]
+}

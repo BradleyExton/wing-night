@@ -3,6 +3,7 @@ import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
 import type { GeoPrompt } from "../content/geo/index.js";
+import type { SongGuessDifficulty } from "../content/songGuess/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
@@ -139,9 +140,49 @@ export type DrawingMinigameHostView = MinigameHostViewBase & {
   reveal: DrawingPromptReveal | null;
 };
 
+export type SongGuessPhase =
+  | "idle"
+  | "clip_playing"
+  | "clip_paused"
+  | "reveal"
+  | "done";
+
+// `null` means the host has not ruled on that half of the answer yet, which is
+// distinct from having ruled it wrong.
+export type SongGuessMark = boolean | null;
+
+export type SongGuessTeamScore = {
+  title: SongGuessMark;
+  artist: SongGuessMark;
+};
+
+export type SongGuessMinigameHostSong = {
+  id: string;
+  audioFileName: string;
+  clipStart: number;
+  clipEnd: number;
+  revealStart: number;
+  correctTitle: string;
+  correctArtist: string;
+  difficulty?: SongGuessDifficulty;
+  hint?: string;
+};
+
+export type SongGuessMinigameHostView = MinigameHostViewBase & {
+  minigame: "SONG_GUESS";
+  phase: SongGuessPhase;
+  songCursor: number;
+  songsTotal: number;
+  replayUsed: boolean;
+  currentSong: SongGuessMinigameHostSong | null;
+  currentScore: SongGuessTeamScore;
+  scoresBySongId: Record<string, SongGuessTeamScore>;
+};
+
 export type MinigameHostView =
   | TriviaMinigameHostView
   | GeoMinigameHostView
+  | SongGuessMinigameHostView
   | DrawingMinigameHostView;
 
 export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
@@ -158,9 +199,45 @@ export type DrawingMinigameDisplayView = MinigameDisplayViewBase & {
   reveal: DrawingPromptReveal | null;
 };
 
+// The clip the TV plays. Carrying the audio filename is the same class of
+// disclosure as GEO's `imageSrc`: an asset the display must fetch to render the
+// round at all. The ANSWER fields — title and artist — stay host-only until the
+// host triggers the reveal, which is what the answer-safety tests pin.
+export type SongGuessMinigameDisplayClip = {
+  audioFileName: string;
+  clipStart: number;
+  clipEnd: number;
+};
+
+export type SongGuessMinigameDisplayReveal = {
+  title: string;
+  artist: string;
+  audioFileName: string;
+  revealStart: number;
+};
+
+export type SongGuessMinigameDisplayView = MinigameDisplayViewBase & {
+  minigame: "SONG_GUESS";
+  songCursor: number;
+  songsTotal: number;
+  // Not an answer — the TV needs it to tell a replay (restart from the top)
+  // apart from a resume after the host paused mid-clip.
+  replayUsed: boolean;
+} & (
+    // `idle` carries the clip too so the TV can preload the file before the
+    // host presses play, rather than buffering into the first bar.
+    | {
+        phase: "idle" | "clip_playing" | "clip_paused";
+        clip: SongGuessMinigameDisplayClip;
+      }
+    | { phase: "reveal"; reveal: SongGuessMinigameDisplayReveal }
+    | { phase: "done" }
+  );
+
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView
   | GeoMinigameDisplayView
+  | SongGuessMinigameDisplayView
   | DrawingMinigameDisplayView;
 
 export type RoomFatalError = {

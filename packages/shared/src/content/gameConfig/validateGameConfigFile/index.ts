@@ -90,9 +90,13 @@ const isMinigameType = (value: unknown): value is MinigameType => {
   return typeof value === "string" && MINIGAME_TYPES.includes(value as MinigameType);
 };
 
+// Host-paced games declare `timerKey: null` and contribute no timers field,
+// so a config that schedules one is not asked for a vestigial duration.
 const REQUIRED_TIMER_KEYS: readonly string[] = [
   "eatingSeconds",
-  ...MINIGAME_TYPES.map((minigameType) => MINIGAME_DEFINITIONS[minigameType].timerKey)
+  ...MINIGAME_TYPES.map(
+    (minigameType) => MINIGAME_DEFINITIONS[minigameType].timerKey
+  ).filter((timerKey): timerKey is MinigameTimerKey => timerKey !== null)
 ];
 
 // The rules keys shared owns, in registration order. The seam offers only

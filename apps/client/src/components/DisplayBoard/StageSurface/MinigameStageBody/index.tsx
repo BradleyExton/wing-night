@@ -2,6 +2,7 @@ import type { MinigameType, RoomState } from "@wingnight/shared";
 import type { MinigameSurfacePhase } from "@wingnight/minigames-core";
 
 import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
+import { useServerOrigin } from "../../../../utils/useServerOrigin";
 import { displayBoardCopy } from "../../copy";
 import * as styles from "./styles";
 
@@ -44,6 +45,10 @@ export const MinigameStageBody = ({
   minigameDisplayView,
   remainingTimerSeconds = null
 }: MinigameStageBodyProps): JSX.Element => {
+  // Unconditional: the early returns below must not sit between the hook and
+  // the component's first render pass.
+  const serverOrigin = useServerOrigin();
+
   if (minigameType === null) {
     return (
       <div className={styles.minigameShell}>
@@ -74,6 +79,7 @@ export const MinigameStageBody = ({
         minigameType={minigameType}
         minigameDisplayView={minigameDisplayView}
         activeTeamName={activeTeamName}
+        serverOrigin={serverOrigin}
       />
     </div>
   );

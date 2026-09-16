@@ -107,11 +107,21 @@ export type MinigameDisplayRendererProps = {
   minigameType: MinigameType;
   minigameDisplayView: MinigameDisplayView | null;
   activeTeamName: string | null;
+  // Origin of the asset-serving Express app, for surfaces that fetch
+  // server-hosted media. There is no dev proxy in this repo, so the display is
+  // always a different origin from the server and a root-relative media URL
+  // would 404 against the Vite origin. `null` until the host app has resolved
+  // it — resolution reads `window`, so it happens in an effect.
+  serverOrigin: string | null;
 };
 
 export type MinigameRendererBundle = {
   HostSurface: ComponentType<MinigameHostRendererProps>;
   DisplaySurface: ComponentType<MinigameDisplayRendererProps>;
+  // Declares that the display surface is the room's speaker for this game, so
+  // the display shell knows to offer its tap-to-enable-audio overlay even when
+  // the active team has no anthem to play.
+  requiresDisplayAudio?: boolean;
 };
 
 // Everything the dev sandbox needs to boot a minigame's runtime plugin with

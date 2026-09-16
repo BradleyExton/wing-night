@@ -205,10 +205,24 @@ and future — gets this without touching its own `clonePrompt`.
 
 If the display surface plays audio or video, the TV browser has had no user interaction by the time the first phase fires — `audio.play()` will be silently rejected. Pattern:
 
-- During `MINIGAME_INTRO`, render a full-screen "Tap to enable audio" overlay on the display surface.
-- On any pointer event, call `media.play().then(() => media.pause())` to prime the element, set `audioUnlocked: true` in component state, and clear the overlay.
+- The overlay already exists: `DisplayBoard/AudioUnlockOverlay`, built for team
+  anthems. It renders during `MINIGAME_INTRO`, primes the element on any pointer
+  event (`media.play().then(() => media.pause())`), sets session-scoped
+  `audioUnlocked` state, and clears — once a night, not once a round.
+- To opt your game in, set `requiresDisplayAudio: true` on its
+  `MinigameRendererBundle`. `DisplayBoard` asks the registry, so the overlay also
+  appears for a round whose active team has no anthem. Do not add a second primer.
+- Your display surface owns its own `<audio>` element and drives it in effects.
+  Render the element for the whole surface lifetime, not per phase, so seeking
+  never has to re-create it mid-round. Every media call is best-effort — a
+  rejected `play()` must never throw or stall a phase advance.
+- The `src` must be absolute. Take the origin from the `serverOrigin` renderer
+  prop (the client app resolves it in an effect, so it is `null` on first paint)
+  and build the URL with a pure helper — see
+  `packages/minigames/song-guess/src/client/resolveSongAudioSrc`.
 - The host surface never needs this — its first button press is the user gesture.
-- See `song-guess-spec.md` §8.1 for the canonical implementation reference.
+- See `packages/minigames/song-guess/src/client/useSongAudioPlayback` for the
+  worked implementation, and `song-guess-spec.md` §0 for what it settled.
 
 ## 6) Test Requirements
 

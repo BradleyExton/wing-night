@@ -9,7 +9,9 @@ export type MinigameContractMetadataDefaults = {
 export type MinigameDefinition = {
   id: string;
   slug: string;
-  timerKey: string;
+  // `null` for host-paced games, which end on a host action rather than a
+  // clock and so own no field in `GameConfigTimers`.
+  timerKey: string | null;
   rulesKey: string | null;
   contractMetadata: MinigameContractMetadataDefaults;
 };
@@ -37,6 +39,27 @@ export const MINIGAME_DEFINITIONS = {
       capabilityFlags: ["setGuess", "submitGuess", "nextPrompt"]
     }
   },
+  SONG_GUESS: {
+    id: "SONG_GUESS",
+    slug: "song-guess",
+    // Host-paced: the turn ends when the host has worked through the songs,
+    // not when a clock runs out.
+    timerKey: null,
+    rulesKey: "songGuess",
+    contractMetadata: {
+      minigameApiVersion: MINIGAME_API_VERSION,
+      capabilityFlags: [
+        "playClip",
+        "pauseClip",
+        "replayClip",
+        "triggerReveal",
+        "markTitle",
+        "markArtist",
+        "nextSong",
+        "skipSong"
+      ]
+    }
+  },
   DRAWING: {
     id: "DRAWING",
     slug: "drawing",
@@ -60,8 +83,12 @@ export const MINIGAME_DEFINITIONS = {
 
 export type MinigameType = keyof typeof MINIGAME_DEFINITIONS;
 
-export type MinigameTimerKey =
-  (typeof MINIGAME_DEFINITIONS)[MinigameType]["timerKey"];
+// Host-paced games contribute `null`, which is not a timers field — excluding
+// it keeps `GameConfigTimers` exactly the set of keys a config must carry.
+export type MinigameTimerKey = Exclude<
+  (typeof MINIGAME_DEFINITIONS)[MinigameType]["timerKey"],
+  null
+>;
 
 export type MinigameRulesKey = NonNullable<
   (typeof MINIGAME_DEFINITIONS)[MinigameType]["rulesKey"]

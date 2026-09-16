@@ -12,6 +12,7 @@ import {
   resolveMinigameRendererBundle,
   resolveMinigameRuntimePlugin
 } from "../../minigames/registry";
+import { useServerOrigin } from "../../utils/useServerOrigin";
 import { SandboxControls } from "./SandboxControls";
 import { minigameDevSandboxCopy } from "./copy";
 import * as styles from "./styles";
@@ -43,6 +44,7 @@ export const MinigameDevSandbox = ({
   const rendererBundle = resolveMinigameRendererBundle(minigameType);
   const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
 
+  const serverOrigin = useServerOrigin();
   const [phase, setPhase] = useState<MinigameSurfacePhase>("play");
   const [runtimeState, setRuntimeState] = useState<SerializableValue>(() => {
     if (devManifest === null || runtimePlugin === null) {
@@ -152,6 +154,7 @@ export const MinigameDevSandbox = ({
                 minigameType={minigameType}
                 minigameDisplayView={minigameDisplayView}
                 activeTeamName={activeTeamName}
+                serverOrigin={serverOrigin}
               />
             </div>
           </div>

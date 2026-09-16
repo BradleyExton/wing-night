@@ -1,0 +1,124 @@
+import { useRef } from "react";
+import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import type { SongGuessMinigameDisplayView } from "@wingnight/shared";
+
+import { useSongAudioPlayback } from "../useSongAudioPlayback/index.js";
+import { displaySongGuessSurfaceCopy } from "./copy.js";
+import * as styles from "./styles.js";
+
+// Bar heights are a fixed visual motif, not data — the TV shows that something
+// is playing, it does not analyse the waveform.
+const EQUALIZER_BARS = [
+  { id: "bar-1", className: "h-6" },
+  { id: "bar-2", className: "h-12" },
+  { id: "bar-3", className: "h-16" },
+  { id: "bar-4", className: "h-10" },
+  { id: "bar-5", className: "h-14" }
+] as const;
+
+const SongEqualizer = (): JSX.Element => {
+  return (
+    <div className={styles.equalizer} aria-hidden="true">
+      {EQUALIZER_BARS.map((bar) => (
+        <span key={bar.id} className={`${styles.equalizerBar} ${bar.className}`} />
+      ))}
+    </div>
+  );
+};
+
+const SongGuessIntro = (): JSX.Element => {
+  return (
+    <div className={styles.container}>
+      <h2 className={styles.introTitle}>{displaySongGuessSurfaceCopy.introTitle}</h2>
+      <p className={styles.introDescription}>
+        {displaySongGuessSurfaceCopy.introDescription}
+      </p>
+    </div>
+  );
+};
+
+const SongGuessPlayBody = ({
+  view
+}: {
+  view: SongGuessMinigameDisplayView;
+}): JSX.Element => {
+  const songCounter = displaySongGuessSurfaceCopy.songCounter(
+    view.songCursor + 1,
+    view.songsTotal
+  );
+
+  if (view.phase === "done") {
+    return (
+      <div className={styles.container}>
+        <p className={styles.doneTitle}>{displaySongGuessSurfaceCopy.donePrompt}</p>
+        <p className={styles.hint}>{displaySongGuessSurfaceCopy.doneHint}</p>
+      </div>
+    );
+  }
+
+  if (view.phase === "reveal") {
+    return (
+      <div className={styles.container} data-song-guess-reveal>
+        <span className={styles.revealLabel}>
+          {displaySongGuessSurfaceCopy.revealLabel}
+        </span>
+        <p className={styles.revealTitle}>{view.reveal.title}</p>
+        <p className={styles.revealArtist}>
+          <span className={styles.revealArtistPrefix}>
+            {displaySongGuessSurfaceCopy.revealArtistPrefix}
+          </span>
+          {view.reveal.artist}
+        </p>
+      </div>
+    );
+  }
+
+  if (view.phase === "clip_paused") {
+    return (
+      <div className={styles.container} data-song-guess-lock-in>
+        <span className={styles.counter}>{songCounter}</span>
+        <p className={styles.prompt}>{displaySongGuessSurfaceCopy.lockInPrompt}</p>
+        <p className={styles.hint}>{displaySongGuessSurfaceCopy.lockInHint}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.container} data-song-guess-listening>
+      <span className={styles.counter}>{songCounter}</span>
+      <p className={styles.prompt}>{displaySongGuessSurfaceCopy.listenPrompt}</p>
+      {view.phase === "clip_playing" && <SongEqualizer />}
+    </div>
+  );
+};
+
+export const DisplaySongGuessSurface = ({
+  phase,
+  minigameDisplayView,
+  serverOrigin
+}: MinigameDisplayRendererProps): JSX.Element => {
+  const songGuessView =
+    minigameDisplayView?.minigame === "SONG_GUESS" ? minigameDisplayView : null;
+  const mediaRef = useRef<HTMLAudioElement | null>(null);
+
+  useSongAudioPlayback({ view: songGuessView, serverOrigin, mediaRef });
+
+  return (
+    <>
+      {phase !== "play" ? (
+        <SongGuessIntro />
+      ) : songGuessView === null ? (
+        <div className={styles.container}>
+          <p className={styles.hint}>{displaySongGuessSurfaceCopy.waitingLabel}</p>
+        </div>
+      ) : (
+        <SongGuessPlayBody view={songGuessView} />
+      )}
+      {/* Rendered for the whole surface lifetime, not per phase, so seeking
+          between clip and reveal never has to re-create the element. The `src`
+          is set in the playback effect — resolving it reads the server origin,
+          which react-dom/server cannot do. */}
+      <audio ref={mediaRef} data-song-guess-audio preload="auto" />
+    </>
+  );
+};
