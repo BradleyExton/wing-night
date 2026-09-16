@@ -1,3 +1,7 @@
+import {
+  hasMalformedFeaturedPlayers,
+  readFeaturedPlayers
+} from "@wingnight/shared";
 import type {
   MinigameDisplayView,
   MinigameHostView,
@@ -193,6 +197,22 @@ export const createPromptContentAdapter = <TPrompt>({
   isPrompt,
   clonePrompt
 }: CreatePromptContentAdapterInput<TPrompt>): PromptContentAdapter<TPrompt> => {
+  // Each minigame's `clonePrompt` re-adds its known fields BY HAND, on purpose
+  // — that is what stops an unknown key riding into room state. The roster tag
+  // is the one field every bank shares, so it is carried here instead of in
+  // three hand-written clones: a new prompt bank inherits tagging for free, and
+  // no bank can forget to copy it.
+  const clonePromptWithFeaturedPlayers = (prompt: TPrompt): TPrompt => {
+    const featuredPlayers = readFeaturedPlayers(prompt);
+    const clonedPrompt = clonePrompt(prompt);
+
+    if (featuredPlayers === null) {
+      return clonedPrompt;
+    }
+
+    return { ...clonedPrompt, featuredPlayers: [...featuredPlayers] };
+  };
+
   const parseFileContent = (
     rawContent: string,
     contentFilePath: string
@@ -214,8 +234,22 @@ export const createPromptContentAdapter = <TPrompt>({
       );
     }
 
+    // Checked AFTER `isContentFile`, so the shape error a pack author sees is
+    // the most specific one available: "prompt 3's tags are wrong", not
+    // "this file is wrong". Tags are hand-edited, so this is the likeliest
+    // mistake in the file and the one worth naming precisely.
+    const malformedTagIndex = parsedContent.prompts.findIndex((prompt) => {
+      return hasMalformedFeaturedPlayers(prompt);
+    });
+
+    if (malformedTagIndex !== -1) {
+      throw new Error(
+        `Invalid ${label} content at "${contentFilePath}": prompts[${malformedTagIndex}].featuredPlayers must be an array of player names.`
+      );
+    }
+
     return {
-      prompts: parsedContent.prompts.map(clonePrompt)
+      prompts: parsedContent.prompts.map(clonePromptWithFeaturedPlayers)
     };
   };
 
@@ -236,7 +270,7 @@ export const createPromptContentAdapter = <TPrompt>({
     });
 
     return {
-      prompts: prompts.map(clonePrompt)
+      prompts: prompts.map(clonePromptWithFeaturedPlayers)
     };
   };
 

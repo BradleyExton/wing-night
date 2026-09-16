@@ -263,6 +263,10 @@ for (const fileName of photoFileNames) {
     id: promptId,
     title: toTitle(slug),
     imageSrc: `/local-assets/geo/${slug}.jpg`,
+    // Emitted empty because no importer can see who is in a photo. Empty means
+    // "untagged", which the roster filter always keeps — so an unfinished
+    // tagging pass degrades to today's behaviour instead of an empty pack.
+    featuredPlayers: [],
     answer: {
       lat: Number(gpsPosition.lat.toFixed(6)),
       lng: Number(gpsPosition.lng.toFixed(6))
@@ -298,5 +302,11 @@ console.log(
 
 if (importedPrompts.length > 0) {
   console.log("Edit the titles (and add hints) there before game night.");
+  console.log(
+    'Fill in "featuredPlayers" with the names of whoever is in each photo —'
+  );
+  console.log(
+    "names must match content/*/players.json; untagged photos are shown to everyone."
+  );
   console.log("Restart the server to pick up the new content.");
 }

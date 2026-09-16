@@ -111,6 +111,15 @@ export type {
   DrawingPrompt
 } from "./content/drawing/index.js";
 export {
+  buildRosterNameSet,
+  findUnknownFeaturedPlayers,
+  hasMalformedFeaturedPlayers,
+  isFeaturedOnRoster,
+  isFeaturedPlayers,
+  readFeaturedPlayers
+} from "./content/featuredPlayers/index.js";
+export type { FeaturedPlayers } from "./content/featuredPlayers/index.js";
+export {
   isGeoContentFile,
   isGeoCoordinates,
   isGeoPrompt

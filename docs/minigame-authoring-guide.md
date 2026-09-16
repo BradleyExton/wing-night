@@ -138,7 +138,7 @@ Two patterns, pick by asset profile:
 
 - **Small static images, sample/local both possible** → `apps/client/public/local-assets/<slug>/`. Reference as `/local-assets/<slug>/foo.jpg`. Used by GEO. Bundled by the client build — no server route needed. Local overrides ship via `apps/client/public/local-assets/<slug>/` being gitignored.
 
-For GEO, `pnpm import:geo <photo-folder>` turns GPS-tagged JPEGs into prompts: it reads each photo's EXIF location as the answer, writes a resized metadata-stripped copy to `local-assets/geo/`, and appends entries to `content/local/minigames/geo.json` (edit titles/hints there afterwards).
+For GEO, `pnpm import:geo <photo-folder>` turns GPS-tagged JPEGs into prompts: it reads each photo's EXIF location as the answer, writes a resized metadata-stripped copy to `local-assets/geo/`, and appends entries to `content/local/minigames/geo.json` (edit titles/hints/`featuredPlayers` there afterwards — see 5.2).
 - **Large or many event-specific assets (audio, video)** → Express static route, mounted in **`apps/server/src/createApp`** (not `index.ts`), resolving **absolute** paths from the content root:
 
   ```ts
@@ -168,7 +168,40 @@ For GEO, `pnpm import:geo <photo-folder>` turns GPS-tagged JPEGs into prompts: i
 
 Server-served assets do not get bundled with the client; they stream on demand. Use this when the content is event-night-specific and shouldn't bloat the client bundle.
 
-### 5.2 Display-side audio/video autoplay
+### 5.2 Tagging prompts with the people in them
+
+Any prompt in any bank may carry `featuredPlayers` — the names of the people
+who appear in it:
+
+```json
+{ "id": "geo-back-deck", "title": "Back Deck", "imageSrc": "/local-assets/geo/back-deck.jpg",
+  "featuredPlayers": ["Alex", "Jordan"], "answer": { "lat": 43.65, "lng": -79.38 } }
+```
+
+`loadContent` drops prompts nobody on tonight's roster appears in, before room
+state or any runtime sees them. The rules:
+
+- **Names, not player ids.** `loadPlayers` derives ids positionally
+  (`player-${index + 1}`), so an id is a statement about an array position, not
+  a person — reordering `players.json` would silently re-point every tag.
+  Matching is case- and whitespace-insensitive against `players.json`.
+- **Any, not all.** A prompt survives if *one* tagged player is on the roster,
+  so a group photo still plays when one of four people didn't come.
+- **Untagged means always shown.** A missing or empty `featuredPlayers` is
+  never filtered — which is why `import:geo` can safely emit `[]` for a human
+  to fill in later, and why the sample packs are unaffected.
+- **Unknown names are warned about, not errors.** A name matching nobody is
+  either a no-show or a typo, and only the host can tell which; the loader
+  prints both the unknown names and the hidden-prompt count at boot. A pack
+  that filters to nothing warns loudly and still boots.
+- **Malformed tags fail the parse.** `featuredPlayers` that isn't an array of
+  names throws at load with the prompt index, rather than degrading into an
+  untagged prompt that survives every roster.
+
+Carried through `createPromptContentAdapter`, so every prompt bank — current
+and future — gets this without touching its own `clonePrompt`.
+
+### 5.3 Display-side audio/video autoplay
 
 If the display surface plays audio or video, the TV browser has had no user interaction by the time the first phase fires — `audio.play()` will be silently rejected. Pattern:
 

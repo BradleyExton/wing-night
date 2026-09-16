@@ -52,6 +52,25 @@ Music while people trickle in, fading out when the game starts.
 
 ---
 
+## Team-targeted prompts
+
+`featuredPlayers` tags already exist on every prompt bank, and `loadContent` filters packs down to
+prompts featuring someone on tonight's roster (see `docs/minigame-authoring-guide.md` 5.2). The
+deferred half is *targeting*: serving each team the prompts featuring **their own** members, so a
+photo of Jordan comes up on Jordan's team's turn.
+
+- Needs player data threaded into the runtimes. `createInitialState` currently takes `teamIds` and
+  nothing else about who those teams contain, and `Team.playerIds` is empty until team setup runs —
+  so this is runtime state, not something the content loader can pre-compute.
+- Collides with the seeded prompt cursor. Geo spaces teams out with
+  `resolveSeededPromptCursor(...) % prompts.length`; per-team pools mean that wrapping cursor has to
+  become a per-team selection instead, and the "same pack, different offsets" invariant goes away.
+- Decide the fallback before building: what a team with no photos of its members sees. Falling back
+  to the roster-filtered pack is probably right, but it means targeting is best-effort and the rule
+  needs stating in the host UI, not just the code.
+
+---
+
 ## Minigames
 
 Both of these are `MinigameRuntimePlugin` packages registered on server and client like
