@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emoji Charades Host — 02 Search First</title>
+    <style>
+      :root {
+        --bg: #121212;
+        --surface: #1c1c1c;
+        --surface-alt: #242424;
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --heat: #ef4444;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: radial-gradient(ellipse at top, #2a1306 0%, #0f0a08 60%, #050505 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none;
+      }
+      .stage {
+        height: 100dvh;
+        display: grid; grid-template-rows: auto auto auto auto 1fr auto;
+        gap: 0.5rem; padding: clamp(0.5rem, 0.9vw, 0.9rem);
+      }
+      .mini-rail {
+        display: flex; align-items: center; gap: 1rem; padding: 0.25rem 0.4rem;
+        font-size: 0.72rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.22em; color: var(--muted);
+      }
+      .mini-rail .round { color: var(--primary); }
+      .mini-rail .pill { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--text); }
+      .mini-rail .dot {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: var(--teamA); box-shadow: 0 0 8px var(--teamA);
+      }
+      .mini-rail .timer {
+        margin-left: auto; font-family: ui-monospace, monospace;
+        font-size: 1.05rem; color: var(--primary); font-variant-numeric: tabular-nums;
+      }
+
+      /* Subject banner — full width, no deck column */
+      .subject-bar {
+        display: flex; align-items: center; justify-content: center; gap: 1.2rem;
+        background: linear-gradient(180deg, #3a1d09 0%, #1a0c04 100%);
+        border: 2px solid var(--gold); border-radius: 12px;
+        padding: 0.5rem 1.2rem;
+        box-shadow: 0 0 24px rgba(251,191,36,0.16) inset;
+      }
+      .subject-bar .label {
+        text-transform: uppercase; letter-spacing: 0.3em;
+        font-size: 0.6rem; color: var(--gold); font-weight: 800;
+      }
+      .subject-bar .text {
+        font-family: "Georgia", serif; font-style: italic; font-weight: 700;
+        font-size: clamp(1.5rem, 2.6vw, 2.3rem);
+        text-shadow: 0 0 12px rgba(251,191,36,0.35);
+      }
+      .subject-bar .remaining {
+        margin-left: auto; font-size: 0.6rem; color: var(--muted);
+        text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700;
+      }
+
+      .canvas {
+        background: linear-gradient(180deg, #1a0e05 0%, #0a0604 100%);
+        border: 2px solid #3a200d; border-radius: 12px;
+        padding: 0.5rem 0.8rem; min-height: 78px;
+        display: flex; align-items: center; gap: 0.1rem; flex-wrap: wrap;
+        font-size: clamp(1.4rem, 2.6vw, 2.2rem);
+        box-shadow: inset 0 0 24px rgba(0,0,0,0.5);
+      }
+      .canvas .caret {
+        width: 3px; height: 1.5em; background: var(--primary);
+        animation: blink 1s steps(2) infinite; margin-left: 0.15rem;
+      }
+      @keyframes blink { 50% { opacity: 0; } }
+
+      /* Search is the primary affordance */
+      .search {
+        display: flex; align-items: center; gap: 0.8rem;
+        background: var(--surface-alt);
+        border: 2px solid var(--primary); border-radius: 12px;
+        padding: 0.6rem 1rem; min-height: 60px;
+        box-shadow: 0 0 22px rgba(249,115,22,0.22);
+      }
+      .search .ico { font-size: 1.4rem; opacity: 0.7; }
+      .search .typed {
+        font-size: clamp(1.2rem, 2vw, 1.7rem); font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      .search .cursor {
+        display: inline-block; width: 2px; height: 1.1em;
+        background: var(--primary); vertical-align: -0.15em;
+        animation: blink 1s steps(2) infinite;
+      }
+      .search .hint {
+        margin-left: auto; font-size: 0.62rem; color: var(--muted);
+        text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700;
+      }
+
+      /* Live results stream horizontally as you type */
+      .results {
+        display: flex; gap: 0.4rem; align-items: center;
+        background: var(--surface); border: 1px solid #3a200d;
+        border-radius: 12px; padding: 0.5rem 0.6rem; overflow: hidden;
+      }
+      .results .lbl {
+        font-size: 0.56rem; color: var(--muted); font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.18em;
+        writing-mode: vertical-rl; transform: rotate(180deg);
+        margin-right: 0.3rem; opacity: 0.8;
+      }
+      .results span.e {
+        display: grid; place-items: center; flex: 0 0 auto;
+        width: clamp(48px, 5.4vw, 70px); aspect-ratio: 1;
+        font-size: clamp(1.6rem, 3vw, 2.4rem);
+        background: rgba(255,255,255,0.04); border-radius: 10px; cursor: pointer;
+      }
+      .results span.e:first-of-type { box-shadow: inset 0 0 0 2px var(--gold); }
+      .results span.e:hover { background: rgba(251,191,36,0.18); }
+
+      /* On-screen keyboard eats the bottom half */
+      .keyboard {
+        display: grid; grid-template-rows: repeat(4, 1fr); gap: 0.4rem;
+        background: linear-gradient(180deg, #16100b 0%, #0a0705 100%);
+        border: 1px solid #3a200d; border-radius: 12px;
+        padding: 0.5rem; min-height: 0;
+      }
+      .krow { display: flex; gap: 0.35rem; justify-content: center; }
+      .krow button {
+        flex: 1 1 0; min-width: 0; min-height: 44px;
+        background: var(--surface-alt); border: 1px solid #3a200d;
+        color: var(--text); border-radius: 8px;
+        font-family: inherit; font-weight: 700;
+        font-size: clamp(0.85rem, 1.5vw, 1.15rem); cursor: pointer;
+      }
+      .krow button:hover { border-color: var(--gold); color: var(--gold); }
+      .krow button.wide { flex: 2 1 0; }
+      .krow button.space { flex: 6 1 0; }
+
+      /* CTA strip, full-bleed bottom */
+      .cta {
+        display: flex; gap: 0.6rem; position: relative;
+        padding-top: 0.45rem;
+      }
+      .cta::before {
+        content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, transparent, var(--heat), transparent);
+        opacity: 0.8;
+      }
+      .cta button {
+        flex: 1; min-height: 72px; border: 2px solid; border-radius: 14px;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        gap: 0.7rem; font-family: inherit; font-weight: 900;
+        text-transform: uppercase; letter-spacing: 0.1em;
+        font-size: clamp(1rem, 1.8vw, 1.4rem);
+        box-shadow: 0 4px 0 rgba(0,0,0,0.45), 0 6px 14px rgba(0,0,0,0.35);
+      }
+      .cta button .icon { font-size: 1.7rem; }
+      .cta button .sub {
+        font-size: 0.6rem; letter-spacing: 0.24em; opacity: 0.8; font-weight: 800;
+      }
+      .cta .got {
+        flex: 2;
+        background: radial-gradient(ellipse at top, #2fb86c 0%, #0e6a36 100%);
+        color: #061a0c; border-color: #5fe093;
+      }
+      .cta .skip {
+        background: radial-gradient(ellipse at top, #f04040 0%, #800f0f 100%);
+        color: #1c0303; border-color: #ff8a8a;
+      }
+      .cta .util {
+        flex: 0 0 auto; width: clamp(80px, 9vw, 120px);
+        background: var(--surface); color: var(--text); border-color: #3a200d;
+        font-size: 0.72rem; flex-direction: column; gap: 0.2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="mini-rail">
+        <span class="round">Round 2</span>
+        <span>Mango Habanero</span>
+        <span>Emoji Charades</span>
+        <span class="pill"><span class="dot"></span>Team Heat · +3 pending</span>
+        <span class="timer">0:41</span>
+      </div>
+
+      <div class="subject-bar">
+        <span class="label">Subject</span>
+        <span class="text">Jurassic Park</span>
+        <span class="remaining">14 left</span>
+      </div>
+
+      <div class="canvas">
+        <span>🦖</span><span>🌴</span><span>🏝️</span><span>🚙</span><span>⚡</span><span>🧬</span><span>🥼</span><span>👨‍🔬</span><span>🚨</span><span>🌧️</span><span>🦕</span><span>🥚</span><span>🔦</span><span>🚁</span><span>💨</span><span>😱</span><span>🌿</span><span>🔬</span><span>⛓️</span><span>🍫</span>
+        <span class="caret"></span>
+      </div>
+
+      <div class="search">
+        <span class="ico">🔍</span>
+        <span class="typed">dino<span class="cursor"></span></span>
+        <span class="hint">Tap a result to add</span>
+      </div>
+
+      <div class="results">
+        <span class="lbl">Results</span>
+        <span class="e">🦖</span><span class="e">🦕</span><span class="e">🐊</span><span class="e">🦎</span>
+        <span class="e">🐉</span><span class="e">🥚</span><span class="e">🦴</span><span class="e">🏝️</span>
+        <span class="e">🌋</span><span class="e">🔬</span><span class="e">🧬</span><span class="e">🦣</span>
+      </div>
+
+      <div class="keyboard">
+        <div class="krow">
+          <button>q</button><button>w</button><button>e</button><button>r</button><button>t</button>
+          <button>y</button><button>u</button><button>i</button><button>o</button><button>p</button>
+        </div>
+        <div class="krow">
+          <button>a</button><button>s</button><button>d</button><button>f</button><button>g</button>
+          <button>h</button><button>j</button><button>k</button><button>l</button>
+        </div>
+        <div class="krow">
+          <button class="wide">⇧</button>
+          <button>z</button><button>x</button><button>c</button><button>v</button>
+          <button>b</button><button>n</button><button>m</button>
+          <button class="wide">⌫</button>
+        </div>
+        <div class="krow">
+          <button class="wide">123</button>
+          <button class="space">space</button>
+          <button class="wide">clear</button>
+        </div>
+      </div>
+
+      <div class="cta">
+        <button class="util">⌫<span class="sub">Back</span></button>
+        <button class="got">
+          <span class="icon">✓</span>
+          <span>Got It <span class="sub">+1</span></span>
+        </button>
+        <button class="skip">
+          <span class="icon">↷</span>
+          <span>Skip</span>
+        </button>
+      </div>
+    </div>
+  </body>
+</html>

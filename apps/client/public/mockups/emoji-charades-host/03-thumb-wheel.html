@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emoji Charades Host — 03 Thumb Wheel</title>
+    <style>
+      :root {
+        --bg: #121212;
+        --surface: #1c1c1c;
+        --surface-alt: #242424;
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --heat: #ef4444;
+        --gold: #fbbf24;
+        --teamA: #f97316;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: radial-gradient(ellipse at top, #2a1306 0%, #0f0a08 60%, #050505 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none;
+      }
+      .stage { position: relative; height: 100dvh; padding: clamp(0.6rem, 1vw, 1rem); }
+
+      .mini-rail {
+        display: flex; align-items: center; gap: 1rem; padding: 0.25rem 0.4rem;
+        font-size: 0.72rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.22em; color: var(--muted);
+      }
+      .mini-rail .round { color: var(--primary); }
+      .mini-rail .pill { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--text); }
+      .mini-rail .dot {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: var(--teamA); box-shadow: 0 0 8px var(--teamA);
+      }
+      .mini-rail .timer {
+        margin-left: auto; font-family: ui-monospace, monospace;
+        font-size: 1.05rem; color: var(--primary); font-variant-numeric: tabular-nums;
+      }
+
+      /* Centre column: subject + canvas, clear of both thumb zones */
+      .center-col {
+        width: min(52%, 640px); margin: clamp(0.4rem, 1vh, 1rem) auto 0;
+        display: flex; flex-direction: column; gap: 0.7rem;
+      }
+      .subject-card {
+        background: linear-gradient(180deg, #3a1d09 0%, #1a0c04 100%);
+        border: 2px solid var(--gold); border-radius: 14px;
+        padding: 0.7rem 1rem; text-align: center;
+        box-shadow: 0 0 24px rgba(251,191,36,0.16) inset;
+      }
+      .subject-card .label {
+        text-transform: uppercase; letter-spacing: 0.3em;
+        font-size: 0.6rem; color: var(--gold); font-weight: 800;
+      }
+      .subject-card .text {
+        font-family: "Georgia", serif; font-style: italic; font-weight: 700;
+        font-size: clamp(1.5rem, 2.6vw, 2.3rem);
+        text-shadow: 0 0 12px rgba(251,191,36,0.35);
+      }
+      .subject-card .remaining {
+        margin-top: 0.25rem; font-size: 0.58rem; color: var(--muted);
+        text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700;
+      }
+      .canvas {
+        background: linear-gradient(180deg, #1a0e05 0%, #0a0604 100%);
+        border: 2px solid #3a200d; border-radius: 14px;
+        padding: 0.6rem 0.8rem; min-height: 96px;
+        display: flex; align-items: flex-start; align-content: flex-start;
+        gap: 0.1rem; flex-wrap: wrap;
+        font-size: clamp(1.3rem, 2.3vw, 2rem);
+        box-shadow: inset 0 0 24px rgba(0,0,0,0.5);
+      }
+      .canvas .caret {
+        width: 3px; height: 1.4em; background: var(--primary);
+        animation: blink 1s steps(2) infinite; margin-left: 0.15rem;
+      }
+      @keyframes blink { 50% { opacity: 0; } }
+      .util-row { display: flex; gap: 0.5rem; }
+      .util-row button {
+        flex: 1; background: var(--surface); border: 1px solid #3a200d;
+        color: var(--text); border-radius: 10px; min-height: 48px;
+        font-family: inherit; font-weight: 800; cursor: pointer;
+        text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.7rem;
+      }
+      .util-row button:hover { border-color: var(--gold); color: var(--gold); }
+
+      /* Thumb arcs, anchored to the bottom corners */
+      .pad {
+        position: absolute; bottom: 0; width: 1px; height: 1px;
+        pointer-events: none;
+      }
+      /* Origin sits above the corner verdicts so no ring can collide with them. */
+      .pad.left  { left: clamp(4rem, 7vw, 7rem);  bottom: clamp(10rem, 21vh, 15rem); }
+      .pad.right { right: clamp(4rem, 7vw, 7rem); bottom: clamp(10rem, 21vh, 15rem); }
+      .pad .e {
+        position: absolute; display: grid; place-items: center;
+        width: clamp(46px, 4.6vw, 62px); aspect-ratio: 1;
+        margin: calc(clamp(46px, 4.6vw, 62px) / -2);
+        font-size: clamp(1.4rem, 2.5vw, 2rem);
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 50%; cursor: pointer; pointer-events: auto;
+      }
+      .pad .e:hover { background: rgba(251,191,36,0.2); border-color: var(--gold); }
+      /* faint reach guides */
+      .pad .guide {
+        position: absolute; border: 1px dashed rgba(249,115,22,0.16);
+        border-radius: 50%; pointer-events: none;
+      }
+
+      /* The two verdicts sit right under the thumbs */
+      .verdict {
+        position: absolute; bottom: clamp(0.6rem, 1.2vh, 1rem);
+        width: clamp(150px, 15vw, 210px); min-height: 74px;
+        border: 2px solid; border-radius: 16px; cursor: pointer;
+        display: grid; place-items: center; align-content: center; gap: 0.15rem;
+        font-family: inherit; font-weight: 900; text-transform: uppercase;
+        letter-spacing: 0.1em; font-size: 1.05rem;
+        box-shadow: 0 4px 0 rgba(0,0,0,0.45), 0 6px 14px rgba(0,0,0,0.35);
+        z-index: 3;
+      }
+      .verdict .icon { font-size: 1.6rem; line-height: 1; }
+      .verdict .sub { font-size: 0.58rem; letter-spacing: 0.24em; opacity: 0.8; }
+      .verdict.got {
+        left: clamp(0.6rem, 1.2vw, 1rem);
+        background: radial-gradient(ellipse at top, #2fb86c 0%, #0e6a36 100%);
+        color: #061a0c; border-color: #5fe093;
+      }
+      .verdict.skip {
+        right: clamp(0.6rem, 1.2vw, 1rem);
+        background: radial-gradient(ellipse at top, #f04040 0%, #800f0f 100%);
+        color: #1c0303; border-color: #ff8a8a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="mini-rail">
+        <span class="round">Round 2</span>
+        <span>Mango Habanero</span>
+        <span>Emoji Charades</span>
+        <span class="pill"><span class="dot"></span>Team Heat · +3 pending</span>
+        <span class="timer">0:41</span>
+      </div>
+
+      <div class="center-col">
+        <div class="subject-card">
+          <div class="label">★ Your Subject ★</div>
+          <div class="text">Jurassic Park</div>
+          <div class="remaining">14 subjects left</div>
+        </div>
+        <div class="canvas">
+          <span>🦖</span><span>🌴</span><span>🏝️</span><span>🚙</span><span>⚡</span><span>🧬</span><span>🥼</span><span>👨‍🔬</span><span>🚨</span><span>🌧️</span><span>🦕</span><span>🥚</span><span>🔦</span><span>🚁</span><span>💨</span><span>😱</span><span>🌿</span><span>🔬</span><span>⛓️</span><span>🍫</span>
+          <span class="caret"></span>
+        </div>
+        <div class="util-row">
+          <button>⌫ Back</button>
+          <button>✕ Clear</button>
+        </div>
+      </div>
+
+      <div class="pad left"></div>
+      <div class="pad right"></div>
+
+      <button class="verdict got">
+        <span class="icon">✓</span>
+        <span>Got It</span>
+        <span class="sub">+1 point</span>
+      </button>
+      <button class="verdict skip">
+        <span class="icon">↷</span>
+        <span>Skip</span>
+        <span class="sub">no points</span>
+      </button>
+    </div>
+
+    <script>
+      // Flat, frequency-ranked charades set — no categories.
+      // Inner rings = most-reached-for emoji, outer rings = long tail.
+      const LEFT = [
+        ["😀","😱","😍","🤔","😭","😡"],
+        ["👨","👩","👶","👴","🧑‍🤝‍🧑","🕺","💃","🤰"],
+        ["🏃","🤸","🧗","🏊","🚶","🙋","🙅","🤷","👏","🙌"],
+        ["👀","👂","👃","🖐️","👊","🦵","🧠","❤️","💀","👅","🦷","🦶"]
+      ];
+      const RIGHT = [
+        ["🏠","🚗","📱","💡","🔑","⏰"],
+        ["🍕","🍔","🌮","🍺","☕","🎂","🥚","🍫"],
+        ["🌴","🌊","⛰️","🌋","🏝️","🌧️","⚡","🔥","❄️","🌙"],
+        ["🦖","🐶","🐱","🎬","🎵","⚽","🚁","🔬","🧬","⛓️","🔦","🚨"]
+      ];
+      const RADII = [86, 150, 214, 278];
+
+      function build(pad, rings, dir) {
+        // dir = +1 sweeps up-and-right from bottom-left, -1 mirrors it.
+        RADII.forEach((r) => {
+          const g = document.createElement("div");
+          g.className = "guide";
+          g.style.width = g.style.height = r * 2 + "px";
+          g.style.left = -r + "px";
+          g.style.top = -r + "px";
+          pad.appendChild(g);
+        });
+        rings.forEach((ring, ri) => {
+          const r = RADII[ri];
+          // Spread across the quarter-circle, inset from both edges.
+          const start = 14, end = 76;
+          ring.forEach((emoji, i) => {
+            const t = ring.length === 1 ? 0.5 : i / (ring.length - 1);
+            const deg = start + (end - start) * t;
+            const rad = (deg * Math.PI) / 180;
+            const x = Math.cos(rad) * r * dir;
+            const y = -Math.sin(rad) * r;
+            const el = document.createElement("span");
+            el.className = "e";
+            el.textContent = emoji;
+            el.style.left = x + "px";
+            el.style.top = y + "px";
+            pad.appendChild(el);
+          });
+        });
+      }
+
+      build(document.querySelector(".pad.left"), LEFT, 1);
+      build(document.querySelector(".pad.right"), RIGHT, -1);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emoji Charades Display — 01 Hero Line (click to toggle reveal)</title>
+    <style>
+      :root {
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --gold: #fbbf24;
+        --green: #2fb86c;
+        --teamA: #f97316;
+        --teamB: #06b6d4;
+        --teamC: #84cc16;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: radial-gradient(ellipse at top, #2a1306 0%, #0f0a08 60%, #050505 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none; cursor: pointer;
+      }
+      .stage {
+        height: 100dvh; display: grid; grid-template-rows: auto 1fr auto;
+        gap: clamp(0.7rem, 1.2vh, 1.2rem); padding: clamp(0.8rem, 1.4vw, 1.6rem);
+      }
+
+      .marquee {
+        position: relative; display: grid;
+        grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.5rem;
+        background: linear-gradient(180deg, #3a1d09 0%, #1a0c04 100%);
+        border: 2px solid var(--gold); border-radius: 16px;
+        padding: clamp(0.8rem, 1.4vh, 1.3rem) clamp(1.4rem, 2.4vw, 2.4rem);
+        box-shadow: 0 0 36px rgba(251,191,36,0.2) inset, 0 8px 20px rgba(0,0,0,0.55);
+      }
+      .marquee .bulbs {
+        position: absolute; inset: 7px; border-radius: 12px;
+        border: 4px dotted rgba(251,191,36,0.45); pointer-events: none;
+      }
+      .team-block .name {
+        font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em;
+        font-size: clamp(1.2rem, 2vw, 2.1rem);
+      }
+      .team-block .pts {
+        margin-left: 0.8rem; color: var(--gold);
+        font-family: ui-monospace, monospace; font-weight: 800;
+        font-size: clamp(0.95rem, 1.4vw, 1.5rem);
+      }
+      .show-title {
+        text-align: center; text-transform: uppercase; letter-spacing: 0.34em;
+        color: var(--gold); font-weight: 800;
+        font-size: clamp(0.8rem, 1.2vw, 1.3rem);
+      }
+      .timer-block {
+        text-align: right; font-family: ui-monospace, monospace; font-weight: 800;
+        font-size: clamp(1.5rem, 2.4vw, 2.6rem); color: var(--primary);
+        font-variant-numeric: tabular-nums;
+      }
+      .timer-block .lbl {
+        color: var(--muted); font-size: 0.45em; letter-spacing: 0.26em;
+        margin-right: 0.6rem; font-weight: 700; text-transform: uppercase;
+      }
+
+      /* THE QUESTION: one line, shrink-to-fit. 20 emoji is the stress case. */
+      main.center {
+        position: relative; min-height: 0;
+        display: grid; place-items: center;
+        padding: 0 clamp(1rem, 4vw, 4rem);
+      }
+      .clue {
+        display: flex; align-items: center; justify-content: center;
+        flex-wrap: nowrap; width: 100%;
+        /* the shrink: sized off viewport width ÷ count, capped */
+        font-size: min(13vh, calc(88vw / 20));
+        letter-spacing: 0.02em;
+        filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6));
+        transition: opacity 240ms ease;
+      }
+      .clue span { line-height: 1.15; }
+      .clue .caret {
+        width: 0.08em; height: 1em; background: var(--primary);
+        margin-left: 0.12em; border-radius: 2px;
+        animation: blink 1s steps(2) infinite; flex: 0 0 auto;
+      }
+      @keyframes blink { 50% { opacity: 0; } }
+
+      .status-line {
+        position: absolute; bottom: clamp(0.5rem, 1.5vh, 1.4rem);
+        left: 0; right: 0; text-align: center;
+        color: var(--muted); font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.24em;
+        font-size: clamp(0.72rem, 1.1vw, 1.1rem);
+      }
+
+      /* Reveal overlay (2s window) */
+      .reveal {
+        position: absolute; inset: 0; display: grid; place-items: center;
+        align-content: center; gap: clamp(0.6rem, 1.4vh, 1.4rem);
+        background: radial-gradient(ellipse at center, rgba(10,6,4,0.93) 0%, rgba(5,3,2,0.97) 100%);
+        border-radius: 18px; opacity: 0; pointer-events: none;
+        transition: opacity 200ms ease;
+      }
+      body.revealed .reveal { opacity: 1; }
+      body.revealed .clue { opacity: 0.12; }
+      .reveal .check {
+        font-size: clamp(3rem, 7vw, 6rem); color: var(--green);
+        filter: drop-shadow(0 0 26px rgba(47,184,108,0.55));
+      }
+      .reveal .lbl {
+        display: block; color: var(--muted); font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.3em;
+        font-size: clamp(0.72rem, 1.1vw, 1.1rem); margin-bottom: 0.3rem;
+      }
+      .reveal .answer {
+        font-family: "Georgia", serif; font-style: italic; font-weight: 700;
+        font-size: clamp(2.4rem, 6vw, 5.5rem); text-align: center;
+        text-shadow: 0 0 28px rgba(251,191,36,0.4);
+      }
+      .reveal .award {
+        display: inline-flex; align-items: baseline; gap: 0.7rem;
+        border: 2px solid var(--gold); border-radius: 999px;
+        padding: 0.4rem 1.6rem; margin-top: 0.4rem;
+      }
+      .reveal .award .p {
+        color: var(--gold); font-family: ui-monospace, monospace;
+        font-weight: 900; font-size: clamp(1.4rem, 2.6vw, 2.4rem);
+      }
+      .reveal .award .for {
+        text-transform: uppercase; letter-spacing: 0.2em;
+        font-weight: 800; font-size: clamp(0.8rem, 1.2vw, 1.2rem);
+      }
+
+      footer.standings {
+        display: flex; gap: clamp(0.6rem, 1.4vw, 1.4rem);
+        justify-content: center; align-items: stretch;
+      }
+      footer .row {
+        flex: 1; max-width: 420px; display: flex; align-items: center; gap: 0.8rem;
+        background: rgba(255,255,255,0.035); border-left: 5px solid var(--muted);
+        border-radius: 8px; padding: clamp(0.5rem, 1vh, 0.9rem) clamp(0.8rem, 1.4vw, 1.4rem);
+      }
+      footer .row.a { border-left-color: var(--teamA); }
+      footer .row.b { border-left-color: var(--teamB); }
+      footer .row.c { border-left-color: var(--teamC); }
+      footer .row .nm {
+        font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+        font-size: clamp(0.85rem, 1.3vw, 1.3rem);
+      }
+      footer .row .sc {
+        margin-left: auto; font-family: ui-monospace, monospace; font-weight: 900;
+        font-size: clamp(1.1rem, 1.8vw, 1.8rem); font-variant-numeric: tabular-nums;
+      }
+      footer .row.a .sc { color: var(--gold); }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="marquee">
+        <span class="bulbs"></span>
+        <div class="team-block">
+          <span class="name">Team Heat</span>
+          <span class="pts">+3 pending</span>
+        </div>
+        <div class="show-title">★ Emoji Charades ★</div>
+        <div class="timer-block"><span class="lbl">Turn</span>0:41</div>
+      </header>
+
+      <main class="center">
+        <div class="clue">
+          <span>🦖</span><span>🌴</span><span>🏝️</span><span>🚙</span><span>⚡</span><span>🧬</span><span>🥼</span><span>👨‍🔬</span><span>🚨</span><span>🌧️</span><span>🦕</span><span>🥚</span><span>🔦</span><span>🚁</span><span>💨</span><span>😱</span><span>🌿</span><span>🔬</span><span>⛓️</span><span>🍫</span>
+          <span class="caret"></span>
+        </div>
+        <div class="status-line">Team Heat is clueing…</div>
+
+        <div class="reveal">
+          <span class="check">✓</span>
+          <div>
+            <span class="lbl">The answer was</span>
+            <div class="answer">Jurassic Park</div>
+          </div>
+          <div class="award">
+            <span class="p">+1</span>
+            <span class="for">Team Heat</span>
+          </div>
+        </div>
+      </main>
+
+      <footer class="standings">
+        <div class="row a"><span class="nm">Team Heat</span><span class="sc">14</span></div>
+        <div class="row b"><span class="nm">Team Frost</span><span class="sc">11</span></div>
+        <div class="row c"><span class="nm">Team Zest</span><span class="sc">9</span></div>
+      </footer>
+    </div>
+    <script>
+      document.addEventListener("click", () => {
+        document.body.classList.toggle("revealed");
+      });
+    </script>
+  </body>
+</html>

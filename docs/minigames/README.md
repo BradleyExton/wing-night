@@ -19,7 +19,7 @@ Last updated: 2026-09-16
 | Geo | shipped | — | [packages/minigames/geo/](../../packages/minigames/geo/) ([spec](geo-spec.md)) |
 | Drawing | shipped | — | [packages/minigames/drawing/](../../packages/minigames/drawing/) ([spec](drawing-spec.md)) |
 | Who's That Song | shipped | — | [packages/minigames/song-guess/](../../packages/minigames/song-guess/) ([spec](song-guess-spec.md)) |
-| Emoji Charades | spec | ready | [emoji-charades-spec.md](emoji-charades-spec.md) |
+| Emoji Charades | spec | ready | [emoji-charades-spec.md](emoji-charades-spec.md) (+ [host](../../apps/client/public/mockups/emoji-charades-host/) / [display](../../apps/client/public/mockups/emoji-charades-display/) mockups; direction not yet picked) |
 | PETMON | spec | ready | [petmon-design.md](../petmon-design.md) (design + mockups; runtime not started) |
 | Read the Room | idea | promising | [ideas/read-the-room.md](ideas/read-the-room.md) |
 | ANAMORPH | idea | promising | [ideas/anamorph.md](ideas/anamorph.md) |

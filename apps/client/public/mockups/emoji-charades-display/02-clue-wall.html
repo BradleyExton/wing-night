@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emoji Charades Display — 02 Clue Wall (click to toggle reveal)</title>
+    <style>
+      :root {
+        --text: #ffffff;
+        --muted: #a3a3a3;
+        --primary: #f97316;
+        --gold: #fbbf24;
+        --green: #2fb86c;
+        --teamA: #f97316;
+        --teamB: #06b6d4;
+        --teamC: #84cc16;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden;
+        background: radial-gradient(ellipse at top, #2a1306 0%, #0f0a08 60%, #050505 100%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none; cursor: pointer;
+      }
+      .stage {
+        height: 100dvh; display: grid; grid-template-rows: auto 1fr auto;
+        gap: clamp(0.7rem, 1.2vh, 1.2rem); padding: clamp(0.8rem, 1.4vw, 1.6rem);
+      }
+      .marquee {
+        position: relative; display: grid;
+        grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.5rem;
+        background: linear-gradient(180deg, #3a1d09 0%, #1a0c04 100%);
+        border: 2px solid var(--gold); border-radius: 16px;
+        padding: clamp(0.8rem, 1.4vh, 1.3rem) clamp(1.4rem, 2.4vw, 2.4rem);
+        box-shadow: 0 0 36px rgba(251,191,36,0.2) inset, 0 8px 20px rgba(0,0,0,0.55);
+      }
+      .marquee .bulbs {
+        position: absolute; inset: 7px; border-radius: 12px;
+        border: 4px dotted rgba(251,191,36,0.45); pointer-events: none;
+      }
+      .team-block .name {
+        font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em;
+        font-size: clamp(1.2rem, 2vw, 2.1rem);
+      }
+      .team-block .pts {
+        margin-left: 0.8rem; color: var(--gold);
+        font-family: ui-monospace, monospace; font-weight: 800;
+        font-size: clamp(0.95rem, 1.4vw, 1.5rem);
+      }
+      .show-title {
+        text-align: center; text-transform: uppercase; letter-spacing: 0.34em;
+        color: var(--gold); font-weight: 800;
+        font-size: clamp(0.8rem, 1.2vw, 1.3rem);
+      }
+      .timer-block {
+        text-align: right; font-family: ui-monospace, monospace; font-weight: 800;
+        font-size: clamp(1.5rem, 2.4vw, 2.6rem); color: var(--primary);
+        font-variant-numeric: tabular-nums;
+      }
+      .timer-block .lbl {
+        color: var(--muted); font-size: 0.45em; letter-spacing: 0.26em;
+        margin-right: 0.6rem; font-weight: 700; text-transform: uppercase;
+      }
+
+      /* THE ANSWER HERE: constant emoji size, wrap into fixed slots.
+         All 30 slots always on screen — the clue fills a known board. */
+      main.center {
+        position: relative; min-height: 0;
+        display: grid; grid-template-rows: 1fr auto; justify-items: center;
+        gap: clamp(0.4rem, 1vh, 0.9rem); padding: 0 clamp(1rem, 3vw, 3rem);
+      }
+      .wall {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: repeat(5, 1fr);
+        gap: clamp(0.4rem, 0.9vw, 0.9rem);
+        /* 6x5 board, letterboxed into whatever space the HUD leaves. */
+        aspect-ratio: 6 / 5;
+        max-width: min(100%, 1500px); max-height: 100%;
+        transition: opacity 240ms ease;
+      }
+      .slot {
+        display: grid; place-items: center; min-width: 0; min-height: 0;
+        border-radius: 14px;
+        font-size: min(11vh, 6.4vw);
+        line-height: 1;
+        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+      }
+      .slot.filled { background: rgba(255,255,255,0.045); }
+      .slot.newest {
+        background: rgba(251,191,36,0.14);
+        box-shadow: inset 0 0 0 3px var(--gold), 0 0 26px rgba(251,191,36,0.25);
+      }
+      .slot.empty {
+        background: rgba(255,255,255,0.015);
+        border: 2px dashed rgba(255,255,255,0.06);
+      }
+      .status-line {
+        text-align: center; color: var(--muted); font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.24em;
+        font-size: clamp(0.72rem, 1.1vw, 1.1rem);
+      }
+      .status-line .count { color: var(--gold); font-family: ui-monospace, monospace; }
+
+      .reveal {
+        position: absolute; inset: 0; display: grid; place-items: center;
+        align-content: center; gap: clamp(0.6rem, 1.4vh, 1.4rem);
+        background: radial-gradient(ellipse at center, rgba(10,6,4,0.93) 0%, rgba(5,3,2,0.97) 100%);
+        border-radius: 18px; opacity: 0; pointer-events: none;
+        transition: opacity 200ms ease;
+      }
+      body.revealed .reveal { opacity: 1; }
+      body.revealed .wall { opacity: 0.12; }
+      .reveal .check {
+        font-size: clamp(3rem, 7vw, 6rem); color: var(--green);
+        filter: drop-shadow(0 0 26px rgba(47,184,108,0.55));
+      }
+      .reveal .lbl {
+        display: block; color: var(--muted); font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.3em;
+        font-size: clamp(0.72rem, 1.1vw, 1.1rem); margin-bottom: 0.3rem;
+      }
+      .reveal .answer {
+        font-family: "Georgia", serif; font-style: italic; font-weight: 700;
+        font-size: clamp(2.4rem, 6vw, 5.5rem); text-align: center;
+        text-shadow: 0 0 28px rgba(251,191,36,0.4);
+      }
+      .reveal .award {
+        display: inline-flex; align-items: baseline; gap: 0.7rem;
+        border: 2px solid var(--gold); border-radius: 999px;
+        padding: 0.4rem 1.6rem; margin-top: 0.4rem;
+      }
+      .reveal .award .p {
+        color: var(--gold); font-family: ui-monospace, monospace;
+        font-weight: 900; font-size: clamp(1.4rem, 2.6vw, 2.4rem);
+      }
+      .reveal .award .for {
+        text-transform: uppercase; letter-spacing: 0.2em;
+        font-weight: 800; font-size: clamp(0.8rem, 1.2vw, 1.2rem);
+      }
+
+      footer.standings {
+        display: flex; gap: clamp(0.6rem, 1.4vw, 1.4rem);
+        justify-content: center; align-items: stretch;
+      }
+      footer .row {
+        flex: 1; max-width: 420px; display: flex; align-items: center; gap: 0.8rem;
+        background: rgba(255,255,255,0.035); border-left: 5px solid var(--muted);
+        border-radius: 8px; padding: clamp(0.5rem, 1vh, 0.9rem) clamp(0.8rem, 1.4vw, 1.4rem);
+      }
+      footer .row.a { border-left-color: var(--teamA); }
+      footer .row.b { border-left-color: var(--teamB); }
+      footer .row.c { border-left-color: var(--teamC); }
+      footer .row .nm {
+        font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+        font-size: clamp(0.85rem, 1.3vw, 1.3rem);
+      }
+      footer .row .sc {
+        margin-left: auto; font-family: ui-monospace, monospace; font-weight: 900;
+        font-size: clamp(1.1rem, 1.8vw, 1.8rem); font-variant-numeric: tabular-nums;
+      }
+      footer .row.a .sc { color: var(--gold); }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="marquee">
+        <span class="bulbs"></span>
+        <div class="team-block">
+          <span class="name">Team Heat</span>
+          <span class="pts">+3 pending</span>
+        </div>
+        <div class="show-title">★ Emoji Charades ★</div>
+        <div class="timer-block"><span class="lbl">Turn</span>0:41</div>
+      </header>
+
+      <main class="center">
+        <div class="wall" id="wall"></div>
+        <div class="status-line">Team Heat is clueing… <span class="count">20 / 30</span></div>
+
+        <div class="reveal">
+          <span class="check">✓</span>
+          <div>
+            <span class="lbl">The answer was</span>
+            <div class="answer">Jurassic Park</div>
+          </div>
+          <div class="award">
+            <span class="p">+1</span>
+            <span class="for">Team Heat</span>
+          </div>
+        </div>
+      </main>
+
+      <footer class="standings">
+        <div class="row a"><span class="nm">Team Heat</span><span class="sc">14</span></div>
+        <div class="row b"><span class="nm">Team Frost</span><span class="sc">11</span></div>
+        <div class="row c"><span class="nm">Team Zest</span><span class="sc">9</span></div>
+      </footer>
+    </div>
+    <script>
+      const CLUE = ["🦖","🌴","🏝️","🚙","⚡","🧬","🥼","👨‍🔬","🚨","🌧️","🦕","🥚","🔦","🚁","💨","😱","🌿","🔬","⛓️","🍫"];
+      const MAX = 30;
+      const wall = document.getElementById("wall");
+      for (let i = 0; i < MAX; i++) {
+        const s = document.createElement("div");
+        if (i < CLUE.length) {
+          s.className = "slot filled" + (i === CLUE.length - 1 ? " newest" : "");
+          s.textContent = CLUE[i];
+        } else {
+          s.className = "slot empty";
+        }
+        wall.appendChild(s);
+      }
+      document.addEventListener("click", () => {
+        document.body.classList.toggle("revealed");
+      });
+    </script>
+  </body>
+</html>
