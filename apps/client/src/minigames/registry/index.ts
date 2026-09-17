@@ -12,6 +12,9 @@ import { emojiCharadesRuntimePlugin } from "@wingnight/minigames-emoji-charades/
 import { geoRendererBundle } from "@wingnight/minigames-geo/client";
 import { geoDevManifest } from "@wingnight/minigames-geo/dev";
 import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
+import { joustRendererBundle } from "@wingnight/minigames-joust/client";
+import { joustDevManifest } from "@wingnight/minigames-joust/dev";
+import { joustRuntimePlugin } from "@wingnight/minigames-joust/runtime";
 import { songGuessRendererBundle } from "@wingnight/minigames-song-guess/client";
 import { songGuessDevManifest } from "@wingnight/minigames-song-guess/dev";
 import { songGuessRuntimePlugin } from "@wingnight/minigames-song-guess/runtime";
@@ -43,6 +46,11 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
     rendererBundle: songGuessRendererBundle,
     devManifest: songGuessDevManifest,
     runtimePlugin: songGuessRuntimePlugin
+  },
+  JOUST: {
+    rendererBundle: joustRendererBundle,
+    devManifest: joustDevManifest,
+    runtimePlugin: joustRuntimePlugin
   },
   DRAWING: {
     rendererBundle: drawingRendererBundle,

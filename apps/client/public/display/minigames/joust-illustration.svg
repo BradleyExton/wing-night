@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Slingshlong mini-game artwork">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#160c2a" />
+      <stop offset="65%" stop-color="#4a1f3f" />
+      <stop offset="100%" stop-color="#c2582c" />
+    </linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d6ac63" />
+      <stop offset="100%" stop-color="#b58a45" />
+    </linearGradient>
+  </defs>
+  <rect width="240" height="180" fill="url(#sky)" />
+  <circle cx="196" cy="44" r="14" fill="#f9a51a" opacity="0.9" />
+  <ellipse cx="60" cy="140" rx="90" ry="16" fill="#7a4a30" />
+  <ellipse cx="190" cy="142" rx="100" ry="18" fill="#9c6238" />
+  <rect x="0" y="140" width="240" height="40" fill="url(#sand)" />
+  <line x1="0" y1="140" x2="240" y2="140" stroke="#6e4f26" stroke-width="1.5" />
+  <g>
+    <rect x="150" y="84" width="14" height="56" rx="7" fill="#3f9d55" stroke="#26683a" stroke-width="1.5" />
+    <rect x="138" y="100" width="12" height="9" rx="4.5" fill="#3f9d55" stroke="#26683a" stroke-width="1.5" />
+    <rect x="138" y="86" width="9" height="20" rx="4.5" fill="#3f9d55" stroke="#26683a" stroke-width="1.5" />
+  </g>
+  <g>
+    <rect x="46" y="92" width="6" height="48" rx="2" fill="#6b4423" stroke="#3d2411" />
+    <path d="M49 96 L40 82" stroke="#6b4423" stroke-width="5" stroke-linecap="round" />
+    <path d="M49 96 L58 82" stroke="#6b4423" stroke-width="5" stroke-linecap="round" />
+    <path d="M40 82 L22 104" stroke="#2a1b12" stroke-width="2.4" stroke-linecap="round" />
+    <path d="M58 82 L22 104" stroke="#2a1b12" stroke-width="2.4" stroke-linecap="round" />
+  </g>
+  <g>
+    <circle cx="16" cy="112" r="6" fill="#f97316" stroke="#b8410a" stroke-width="1.5" />
+    <circle cx="24" cy="116" r="6" fill="#f97316" stroke="#b8410a" stroke-width="1.5" />
+    <path d="M22 104 C34 92 48 78 66 62" fill="none" stroke="#b8410a" stroke-width="13" stroke-linecap="round" />
+    <path d="M22 104 C34 92 48 78 66 62" fill="none" stroke="#f97316" stroke-width="10" stroke-linecap="round" />
+    <circle cx="68" cy="60" r="8" fill="#f97316" stroke="#b8410a" stroke-width="1.5" />
+    <circle cx="70" cy="58" r="2.2" fill="#fff7ed" />
+    <circle cx="65" cy="58" r="2.2" fill="#fff7ed" />
+    <circle cx="70.6" cy="58.2" r="1" fill="#1c0d02" />
+    <circle cx="65.6" cy="58.2" r="1" fill="#1c0d02" />
+  </g>
+  <g>
+    <circle cx="204" cy="134" r="6" fill="#22c9e6" stroke="#0b7f97" stroke-width="1.5" />
+    <circle cx="216" cy="134" r="6" fill="#22c9e6" stroke="#0b7f97" stroke-width="1.5" />
+    <path d="M210 134 C212 118 206 104 210 90" fill="none" stroke="#0b7f97" stroke-width="13" stroke-linecap="round" />
+    <path d="M210 134 C212 118 206 104 210 90" fill="none" stroke="#22c9e6" stroke-width="10" stroke-linecap="round" />
+    <circle cx="210" cy="86" r="8" fill="#22c9e6" stroke="#0b7f97" stroke-width="1.5" />
+    <circle cx="207" cy="84" r="2.2" fill="#fff7ed" />
+    <circle cx="212" cy="84" r="2.2" fill="#fff7ed" />
+    <circle cx="206.4" cy="84.2" r="1" fill="#1c0d02" />
+    <circle cx="211.4" cy="84.2" r="1" fill="#1c0d02" />
+  </g>
+  <path d="M74 56 C110 30 150 34 190 70" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4 5" opacity="0.7" />
+</svg>

@@ -15,6 +15,7 @@
     "@wingnight/minigames-drawing": "workspace:*",
     "@wingnight/minigames-emoji-charades": "workspace:*",
     "@wingnight/minigames-geo": "workspace:*",
+    "@wingnight/minigames-joust": "workspace:*",
     "@wingnight/minigames-song-guess": "workspace:*",
     "@wingnight/minigames-trivia": "workspace:*",
     "@wingnight/shared": "workspace:*",

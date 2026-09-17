@@ -229,6 +229,33 @@ title, turn timer), the clue board, then the standings footer per §3.2.
     behind a centred check/cross, the resolved subject in serif italic,
     and a gold award pill, until the reveal window expires.
 
+## 2.7 JOUST Minigame Surface Language ("Dusk Desert")
+
+The JOUST (Slingshlong) surfaces put a side-on desert arena under the same
+marquee chrome the drawing easel uses:
+
+-   Scene materials are drawing content, not UI chrome, and are exempt
+    from the 2-accent budget like the drawing inks: dusk sky
+    (`#160c2a` → `#4a1f3f` → `#c2582c`), sand (`#d6ac63` / `#b58a45`),
+    cactus greens (`#3f9d55` family), slingshot wood (`#6b4423`). The
+    shooter is `primary` orange; the champ is a cyan (`#22c9e6`) chosen to
+    read as the opponent from across a room. Faces are two white eyes.
+-   `gold` is the marquee/framing accent (marquee border, pending points,
+    the impact burst, the result plaque) — a scoped exception to the §0.1
+    "winner moments only" rule, like GEO's §2.4 and DRAWING's §2.5.
+-   Host layout reuses the §2.0A shell language: mini-rail strip on top,
+    full-height arena left (the touch surface), control deck column right
+    (shot card → result → Next shot → skip/reset → shot chips → totals).
+-   Display layout: marquee (team, "Desert Duel", shot count + pending),
+    the arena, a status line beneath. The result plaque drops over the top
+    of the arena only once the replay has landed.
+-   The arena is an SVG with a fixed 160×90 viewBox and `xMidYMid meet`,
+    so the letterboxed scene maps identically on tablet and TV and the
+    tablet's pointer math is the inverse of the same fit.
+-   The replay is the game, not ambient decoration: §8's infinite-animation
+    rule does not bite. `prefers-reduced-motion` skips the flight and shows
+    the landing frame.
+
 ------------------------------------------------------------------------
 
 # 3) Layout System

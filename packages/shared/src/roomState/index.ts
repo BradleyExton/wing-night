@@ -3,6 +3,8 @@ import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
 import type { GeoPrompt } from "../content/geo/index.js";
+import type { JoustPrompt } from "../content/joust/index.js";
+import type { JoustAim, JoustHitZone } from "../joust/types.js";
 import type { SongGuessDifficulty } from "../content/songGuess/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { Phase } from "../phase/index.js";
@@ -226,10 +228,60 @@ export type EmojiCharadesMinigameHostView = MinigameHostViewBase & {
     | { status: "turn_complete" }
   );
 
+export type JoustPhase = "aiming" | "resolved" | "done";
+
+export type JoustShotResult = {
+  shotNumber: number;
+  hitZone: JoustHitZone | null;
+  points: number;
+};
+
+// The integrator's `JoustShotRun` with its readonly arrays relaxed: room state
+// is plain mutable JSON, and the runtime copies a run into this shape when it
+// stores one. Frames are flat `[x0, y0, x1, y1, ...]` in JOUST_BODIES order.
+export type JoustShotTrack = {
+  keyframeHz: number;
+  keyframes: number[][];
+  hitZone: JoustHitZone | null;
+  hitFrameIndex: number | null;
+};
+
+// The shot the TV is replaying (or has just replayed): its outcome plus the
+// server-simulated keyframe track. Only the latest shot carries a track, so
+// the snapshot never holds more than one.
+export type JoustMinigameShot = JoustShotResult & {
+  aim: JoustAim;
+  run: JoustShotTrack;
+};
+
+export type JoustMinigameArena = Pick<
+  JoustPrompt,
+  "id" | "name" | "targetX" | "obstacles"
+>;
+
+// Nothing about a joust is secret — the arena is on the TV by design — so the
+// host and display carry the same fields. Kept as two members of the outer
+// unions so each stays exactly one entry per minigame.
+type JoustMinigameViewFields = {
+  minigame: "JOUST";
+  phase: JoustPhase;
+  arena: JoustMinigameArena | null;
+  shotsPerTurn: number;
+  // 0-based index of the shot being aimed or just resolved.
+  shotIndex: number;
+  // The live pull on the band while aiming; a slack band is { x: 0, y: 0 }.
+  aim: JoustAim;
+  shots: JoustShotResult[];
+  lastShot: JoustMinigameShot | null;
+};
+
+export type JoustMinigameHostView = MinigameHostViewBase & JoustMinigameViewFields;
+
 export type MinigameHostView =
   | TriviaMinigameHostView
   | GeoMinigameHostView
   | SongGuessMinigameHostView
+  | JoustMinigameHostView
   | DrawingMinigameHostView
   | EmojiCharadesMinigameHostView;
 
@@ -299,10 +351,13 @@ export type EmojiCharadesMinigameDisplayView = MinigameDisplayViewBase & {
     | { status: "turn_complete" }
   );
 
+export type JoustMinigameDisplayView = MinigameDisplayViewBase & JoustMinigameViewFields;
+
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView
   | GeoMinigameDisplayView
   | SongGuessMinigameDisplayView
+  | JoustMinigameDisplayView
   | DrawingMinigameDisplayView
   | EmojiCharadesMinigameDisplayView;
 

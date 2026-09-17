@@ -17,6 +17,43 @@ export type {
   ContraptionTrackBytes,
   ContraptionVec2
 } from "./contraption/index.js";
+export {
+  JOUST_BODIES,
+  JOUST_BODY_COUNT,
+  JOUST_CHAMP_BALL_INDICES,
+  JOUST_CHAMP_BASE_INDEX,
+  JOUST_CHAMP_HEAD_INDEX,
+  JOUST_CHAMP_SHAFT_COUNT,
+  JOUST_SHOOTER_BALL_INDICES,
+  JOUST_SHOOTER_BODY_COUNT,
+  JOUST_SHOOTER_HEAD_INDEX,
+  JOUST_SHOOTER_SHAFT_COUNT,
+  JOUST_WORLD,
+  clampJoustAim,
+  readJoustFramePosition,
+  resolveChampRestPositions,
+  resolveJoustHeading,
+  resolveJoustLaunchVelocity,
+  resolveJoustRestFrame,
+  resolveJoustRestPositions,
+  resolveJoustSegments,
+  resolveShooterRestPositions,
+  simulateJoustShot,
+  toJoustFrame
+} from "./joust/index.js";
+export type {
+  JoustAim,
+  JoustArena,
+  JoustBodyDescriptor,
+  JoustBodyKind,
+  JoustFrame,
+  JoustHitZone,
+  JoustObstacle,
+  JoustSegment,
+  JoustShotRun,
+  JoustSimulateOptions,
+  JoustVec2
+} from "./joust/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
@@ -46,6 +83,13 @@ export type {
   GeoMinigameSubState,
   GeoPromptResult,
   HostRoomStateSnapshot,
+  JoustMinigameArena,
+  JoustMinigameDisplayView,
+  JoustMinigameHostView,
+  JoustMinigameShot,
+  JoustPhase,
+  JoustShotResult,
+  JoustShotTrack,
   MinigameContractCompatibilityStatus,
   MinigameDisplayView,
   MinigameHostView,
@@ -163,6 +207,19 @@ export type {
   GeoCoordinates,
   GeoPrompt
 } from "./content/geo/index.js";
+export {
+  isJoustContentFile,
+  isJoustPrompt,
+  JOUST_MAX_TARGET_X,
+  JOUST_MIN_TARGET_X,
+  validateJoustContentFile,
+  validateJoustObstacle,
+  validateJoustPrompt
+} from "./content/joust/index.js";
+export type {
+  JoustContentFile,
+  JoustPrompt
+} from "./content/joust/index.js";
 export {
   isSongGuessContentFile,
   isSongGuessPrompt,

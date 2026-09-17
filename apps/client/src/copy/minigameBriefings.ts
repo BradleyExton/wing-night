@@ -3,6 +3,7 @@ import type { GameConfigFile, MinigameType } from "@wingnight/shared";
 const DISPLAY_ASSET_ROOT = "/display/minigames";
 const DEFAULT_TRIVIA_QUESTIONS_PER_TURN = 1;
 const DEFAULT_SONG_GUESS_SONGS_PER_TURN = 4;
+const DEFAULT_JOUST_SHOTS_PER_TURN = 3;
 
 export type MinigameBriefingContent = {
   displayName: string;
@@ -80,6 +81,39 @@ const resolveSongGuessBriefingContent = (
   };
 };
 
+const resolveJoustShotsPerTurn = (gameConfig: GameConfigFile | null): number => {
+  const configuredShotsPerTurn = gameConfig?.minigameRules?.joust?.shotsPerTurn;
+
+  if (
+    typeof configuredShotsPerTurn !== "number" ||
+    !Number.isInteger(configuredShotsPerTurn) ||
+    configuredShotsPerTurn <= 0
+  ) {
+    return DEFAULT_JOUST_SHOTS_PER_TURN;
+  }
+
+  return configuredShotsPerTurn;
+};
+
+const resolveJoustBriefingContent = (
+  gameConfig: GameConfigFile | null
+): MinigameBriefingContent => {
+  const shotsPerTurn = resolveJoustShotsPerTurn(gameConfig);
+
+  return {
+    displayName: "Slingshlong",
+    illustrationPath: `${DISPLAY_ASSET_ROOT}/joust-illustration.svg`,
+    illustrationAlt: "Slingshlong mini-game artwork",
+    summary:
+      "Load the challenger into the slingshot, pull back, and try to land it on the champ.",
+    steps: [
+      `You get ${shotsPerTurn} shot${shotsPerTurn === 1 ? "" : "s"} this turn.`,
+      "Drag back on the tablet and let go. The TV shows the flight.",
+      "Headshot 3, body 2, low blow 5. A miss is a miss."
+    ]
+  };
+};
+
 const minigameBriefingContentByType: Record<
   MinigameType,
   (gameConfig: GameConfigFile | null) => MinigameBriefingContent
@@ -100,6 +134,7 @@ const minigameBriefingContentByType: Record<
       ]
     };
   },
+  JOUST: resolveJoustBriefingContent,
   GEO: () => {
     return {
       displayName: "Geo",

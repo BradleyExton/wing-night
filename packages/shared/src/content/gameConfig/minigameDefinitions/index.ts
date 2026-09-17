@@ -60,6 +60,18 @@ export const MINIGAME_DEFINITIONS = {
       ]
     }
   },
+  JOUST: {
+    id: "JOUST",
+    slug: "joust",
+    // Host-paced: the turn ends when the team has used its shots, not when a
+    // clock runs out.
+    timerKey: null,
+    rulesKey: "joust",
+    contractMetadata: {
+      minigameApiVersion: MINIGAME_API_VERSION,
+      capabilityFlags: ["setAim", "launch", "nextShot", "skipShot", "resetTurn"]
+    }
+  },
   DRAWING: {
     id: "DRAWING",
     slug: "drawing",

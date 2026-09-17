@@ -8,6 +8,7 @@ import {
   createValidEmojiCharadesJson as createValidEmojiCharades,
   createValidGameConfigJson,
   createValidGeoJson as createValidGeo,
+  createValidJoustJson as createValidJoust,
   createValidSongGuessJson as createValidSongGuess,
   createValidTriviaJson as createValidTrivia,
   writeContentFile
@@ -51,6 +52,11 @@ test("loads all content from local files when available", () => {
     contentRoot,
     "local/minigames/emoji-charades.json",
     createValidEmojiCharades("Local")
+  );
+  writeContentFile(
+    contentRoot,
+    "local/minigames/joust.json",
+    createValidJoust("Local")
   );
 
   writeContentFile(
@@ -96,6 +102,11 @@ test("loads all content from local files when available", () => {
     contentRoot,
     "sample/minigames/emoji-charades.json",
     createValidEmojiCharades("Sample")
+  );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/joust.json",
+    createValidJoust("Sample")
   );
 
   const content = loadContent({ contentRootDir: contentRoot });
@@ -168,6 +179,11 @@ test("falls back to sample files when local files are missing", () => {
     "sample/minigames/emoji-charades.json",
     createValidEmojiCharades("Sample")
   );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/joust.json",
+    createValidJoust("Sample")
+  );
 
   const content = loadContent({ contentRootDir: contentRoot });
 
@@ -226,6 +242,11 @@ const writeRosterContentRoot = (playersJson: string, teamsJson: string): string 
     contentRoot,
     "sample/minigames/emoji-charades.json",
     createValidEmojiCharades("Sample")
+  );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/joust.json",
+    createValidJoust("Sample")
   );
 
   return contentRoot;

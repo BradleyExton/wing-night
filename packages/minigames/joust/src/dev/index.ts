@@ -1,0 +1,43 @@
+import { createDevManifest } from "@wingnight/minigames-core";
+
+// Mirrors content/sample/minigames/joust.json so sandbox play matches a real
+// night: team-alpha fights in the first arena, team-beta in the second.
+const DEV_CONTENT = {
+  prompts: [
+    {
+      id: "arena-lone-saguaro",
+      name: "Lone Saguaro",
+      targetX: 126,
+      obstacles: [{ x: 80, y: 52, width: 7, height: 26 }]
+    },
+    {
+      id: "arena-open-range",
+      name: "Open Range",
+      targetX: 134,
+      obstacles: []
+    },
+    {
+      id: "arena-twin-peaks",
+      name: "Twin Peaks",
+      targetX: 122,
+      obstacles: [
+        { x: 66, y: 60, width: 6, height: 18 },
+        { x: 98, y: 46, width: 6, height: 32 }
+      ]
+    },
+    {
+      id: "arena-low-fence",
+      name: "Low Fence",
+      targetX: 140,
+      obstacles: [
+        { x: 90, y: 68, width: 5, height: 10 },
+        { x: 110, y: 68, width: 5, height: 10 }
+      ]
+    }
+  ]
+};
+
+export const joustDevManifest = createDevManifest({
+  rules: { shotsPerTurn: 3 },
+  content: DEV_CONTENT
+});

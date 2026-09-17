@@ -1,0 +1,30 @@
+// Scene materials for the "Dusk Desert" arena (DESIGN.md §2.7). These are
+// drawing content — the sand, the cacti, the two combatants — not UI chrome,
+// and are exempt from the two-accent budget the way the drawing inks are.
+export const joustPalette = {
+  skyTop: "#160c2a",
+  skyMid: "#4a1f3f",
+  horizon: "#c2582c",
+  sun: "#f9a51a",
+  duneFar: "#7a4a30",
+  duneNear: "#9c6238",
+  sand: "#d6ac63",
+  sandDark: "#b58a45",
+  sandLine: "#6e4f26",
+  cactus: "#3f9d55",
+  cactusDark: "#26683a",
+  cactusLight: "#7dcf8a",
+  post: "#6b4423",
+  postDark: "#3d2411",
+  band: "#2a1b12",
+  shooter: "#f97316",
+  shooterDark: "#b8410a",
+  shooterLight: "#fdba74",
+  champ: "#22c9e6",
+  champDark: "#0b7f97",
+  champLight: "#a5f3fc",
+  eye: "#fff7ed",
+  pupil: "#1c0d02",
+  burst: "#fbbf24",
+  burstCore: "#fff7ed"
+} as const;

@@ -19,13 +19,14 @@ Last updated: 2026-09-16
 | Geo | shipped | — | [packages/minigames/geo/](../../packages/minigames/geo/) ([spec](geo-spec.md)) |
 | Drawing | shipped | — | [packages/minigames/drawing/](../../packages/minigames/drawing/) ([spec](drawing-spec.md)) |
 | Who's That Song | shipped | — | [packages/minigames/song-guess/](../../packages/minigames/song-guess/) ([spec](song-guess-spec.md)) |
+| Slingshlong (JOUST) | shipped | — | [packages/minigames/joust/](../../packages/minigames/joust/) ([spec](joust-spec.md)) |
 | Emoji Charades | shipped | — | [packages/minigames/emoji-charades/](../../packages/minigames/emoji-charades/) ([spec](emoji-charades-spec.md)) — built and tested; not in the sample lineup yet |
 | PETMON | spec | ready | [petmon-design.md](../petmon-design.md) (design + mockups; runtime not started) |
 | Read the Room | idea | promising | [ideas/read-the-room.md](ideas/read-the-room.md) |
 | ANAMORPH | idea | promising | [ideas/anamorph.md](ideas/anamorph.md) |
 | CONTRAPTION | idea | promising | [ideas/contraption.md](ideas/contraption.md) |
 
-Target: **at least 8 games**. Current: 5 shipped, 1 spec'd, 3 ideas → 9 concepts, target covered.
+Target: **at least 8 games**. Current: 6 shipped, 1 spec'd, 3 ideas → 10 concepts, target covered.
 
 ANAMORPH and CONTRAPTION were added to close a specific gap: every other game on this
 list is words, recall, or expression, and none of them make the TV do something the room

@@ -95,6 +95,19 @@ export const createValidEmojiCharadesJson = (prefix: string): string => {
   });
 };
 
+export const createValidJoustJson = (prefix: string): string => {
+  return JSON.stringify({
+    prompts: [
+      {
+        id: `${prefix.toLowerCase()}-arena-1`,
+        name: `${prefix} Arena`,
+        targetX: 126,
+        obstacles: [{ x: 80, y: 52, width: 7, height: 26 }]
+      }
+    ]
+  });
+};
+
 type ValidGameConfigOptions = {
   questionsPerTurn?: number;
   setupPreviewRoundSlots?: number;
@@ -193,5 +206,10 @@ export const writeValidContentTree = (
     contentRoot,
     `${scope}/minigames/emoji-charades.json`,
     createValidEmojiCharadesJson(prefix)
+  );
+  writeContentFile(
+    contentRoot,
+    `${scope}/minigames/joust.json`,
+    createValidJoustJson(prefix)
   );
 };
