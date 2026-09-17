@@ -319,6 +319,10 @@ export type RoomState = {
   totalRounds: number;
   players: Player[];
   teams: Team[];
+  // Filenames under `content/local/audio/lobby/`, in playback order. Boot
+  // content, not gameplay state: it is seeded by the content load and then
+  // never mutated by a phase advance.
+  lobbyPlaylist: string[];
   gameConfig: GameConfigFile | null;
   currentRoundConfig: GameConfigRound | null;
   turnOrderTeamIds: string[];
@@ -343,6 +347,7 @@ type DisplaySafeRoomStateKeys =
   | "totalRounds"
   | "players"
   | "teams"
+  | "lobbyPlaylist"
   | "gameConfig"
   | "currentRoundConfig"
   | "turnOrderTeamIds"
@@ -365,6 +370,7 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "totalRounds",
   "players",
   "teams",
+  "lobbyPlaylist",
   "gameConfig",
   "currentRoundConfig",
   "turnOrderTeamIds",
@@ -412,6 +418,7 @@ export const toDisplayRoomStateSnapshot = (
     totalRounds: roomState.totalRounds,
     players: roomState.players,
     teams: roomState.teams,
+    lobbyPlaylist: roomState.lobbyPlaylist,
     gameConfig: roomState.gameConfig,
     currentRoundConfig: roomState.currentRoundConfig,
     turnOrderTeamIds: roomState.turnOrderTeamIds,

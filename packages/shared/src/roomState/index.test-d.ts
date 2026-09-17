@@ -138,6 +138,7 @@ export type ValidRoomStateCheck = Assert<
       totalRounds: number;
       players: Player[];
       teams: Team[];
+      lobbyPlaylist: string[];
       gameConfig: GameConfigFile | null;
       currentRoundConfig: GameConfigRound | null;
       turnOrderTeamIds: string[];
@@ -171,6 +172,7 @@ export type DisplaySnapshotShapeCheck = Assert<
       totalRounds: number;
       players: Player[];
       teams: Team[];
+      lobbyPlaylist: string[];
       gameConfig: GameConfigFile | null;
       currentRoundConfig: GameConfigRound | null;
       turnOrderTeamIds: string[];

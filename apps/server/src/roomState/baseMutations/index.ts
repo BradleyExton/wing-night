@@ -103,6 +103,11 @@ export const resetGameToSetup = defineRoomMutation({
 
     nextState.players = restoredPlayers;
     nextState.teams = restoredTeams;
+    // Carried across from the LIVE state rather than the setup baseline: the
+    // playlist is boot content that no mutation ever changes, and dropping it
+    // here would silence the lobby music at exactly the moment a reset returns
+    // the room to SETUP and people start milling around again.
+    nextState.lobbyPlaylist = structuredClone(previousSnapshot.lobbyPlaylist);
     nextState.gameConfig = restoredGameConfig;
     nextState.totalRounds =
       restoredGameConfig === null ? nextState.totalRounds : restoredGameConfig.rounds.length;
@@ -171,6 +176,16 @@ export const setRoomStateTeams = (teams: Team[]): RoomState => {
   syncSetupBaselineSnapshot({
     teams: normalizeBaselineTeams(nextTeams)
   });
+
+  return getRoomStateSnapshot();
+};
+
+// No setup-baseline sync: the playlist is not part of what "Reset Game"
+// restores, it is part of what a reset carries through untouched.
+export const setRoomStateLobbyPlaylist = (lobbyPlaylist: string[]): RoomState => {
+  const roomState = getRoomState();
+
+  roomState.lobbyPlaylist = structuredClone(lobbyPlaylist);
 
   return getRoomStateSnapshot();
 };

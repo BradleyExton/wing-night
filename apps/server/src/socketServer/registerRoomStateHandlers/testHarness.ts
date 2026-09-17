@@ -43,6 +43,7 @@ export const buildRoomState = (phase: RoomState["phase"], currentRound = 0): Roo
     totalRounds: 3,
     players: [],
     teams: [],
+    lobbyPlaylist: [],
     gameConfig: null,
     currentRoundConfig: null,
     turnOrderTeamIds: [],

@@ -1,6 +1,8 @@
 import { Phase } from "@wingnight/shared";
 import { useEffect, useRef, type RefObject } from "react";
 
+import { playQuietly, stopQuietly } from "../displayMediaPlayback";
+import { resolveAnthemForRound } from "../../../utils/resolveAnthemForRound";
 import { resolveAnthemSrc } from "../../../utils/resolveAnthemSrc";
 import { resolveServerOrigin } from "../../../utils/resolveServerOrigin";
 
@@ -28,31 +30,10 @@ export const shouldStopTeamAnthem = (currentPhase: Phase | null): boolean => {
   return currentPhase !== Phase.MINIGAME_INTRO;
 };
 
-// Every media call is best-effort, mirroring `useTimesUpChime`: a rejected
-// play(), a blocked autoplay policy or a 404 anthem must never throw and never
-// block a phase advance.
-const playQuietly = (media: HTMLAudioElement): void => {
-  try {
-    void media.play().catch(() => {
-      // Autoplay policy, or a missing file. Not our problem to surface.
-    });
-  } catch {
-    // Some engines throw synchronously rather than rejecting.
-  }
-};
-
-const stopQuietly = (media: HTMLAudioElement): void => {
-  try {
-    media.pause();
-    media.currentTime = 0;
-  } catch {
-    // Best-effort; a detached element must not break the phase advance.
-  }
-};
-
 type UseTeamAnthemCueProps = {
   phase: Phase | null;
   anthems: string[] | null;
+  currentRound: number | null;
   audioUnlocked: boolean;
   mediaRef: RefObject<HTMLAudioElement | null>;
 };
@@ -60,6 +41,7 @@ type UseTeamAnthemCueProps = {
 export const useTeamAnthemCue = ({
   phase,
   anthems,
+  currentRound,
   audioUnlocked,
   mediaRef
 }: UseTeamAnthemCueProps): void => {
@@ -70,7 +52,12 @@ export const useTeamAnthemCue = ({
   // MINIGAME_INTRO of the night would be silent, since `audioUnlocked` is false
   // at the moment of entry.
   const cuePendingRef = useRef(false);
-  const firstAnthem = anthems?.[0] ?? null;
+  // Which cue currently owns the shared `<audio>` element. See the stop branch.
+  const anthemPlayingRef = useRef(false);
+  // Rotation lives in a pure selector rather than inline here, for the same
+  // reason the phase predicates above do: an effect body is unobservable under
+  // `tsx --test`, so anything worth pinning has to be testable outside one.
+  const roundAnthem = resolveAnthemForRound(anthems, currentRound);
 
   // Setting the src is deliberately separate from playing it: the src is set
   // whenever an anthem is available, independent of unlock state, so the e2e can
@@ -80,12 +67,12 @@ export const useTeamAnthemCue = ({
   useEffect(() => {
     const media = mediaRef.current;
 
-    if (media === null || firstAnthem === null) {
+    if (media === null || roundAnthem === null || phase === Phase.SETUP) {
       return;
     }
 
     try {
-      const nextSrc = resolveAnthemSrc(firstAnthem, resolveServerOrigin());
+      const nextSrc = resolveAnthemSrc(roundAnthem, resolveServerOrigin());
 
       if (media.getAttribute("src") !== nextSrc) {
         media.setAttribute("src", nextSrc);
@@ -93,7 +80,7 @@ export const useTeamAnthemCue = ({
     } catch {
       // A missing origin must not break the display.
     }
-  }, [firstAnthem, mediaRef]);
+  }, [roundAnthem, phase, mediaRef]);
 
   useEffect(() => {
     const previousPhase = previousPhaseRef.current;
@@ -107,17 +94,27 @@ export const useTeamAnthemCue = ({
 
     if (shouldStopTeamAnthem(phase)) {
       cuePendingRef.current = false;
-      stopQuietly(media);
+
+      // Only ever stops what THIS cue started. The element is shared with the
+      // lobby playlist, which owns it at SETUP — an unconditional pause here
+      // would silence the lobby music on every re-render of the setup screen,
+      // most visibly at the moment the unlock tap flips `audioUnlocked`.
+      if (anthemPlayingRef.current) {
+        anthemPlayingRef.current = false;
+        stopQuietly(media);
+      }
+
       return;
     }
 
-    if (shouldStartTeamAnthem(previousPhase, phase, firstAnthem !== null)) {
+    if (shouldStartTeamAnthem(previousPhase, phase, roundAnthem !== null)) {
       cuePendingRef.current = true;
     }
 
     if (cuePendingRef.current && audioUnlocked) {
       cuePendingRef.current = false;
+      anthemPlayingRef.current = true;
       playQuietly(media);
     }
-  }, [phase, firstAnthem, audioUnlocked, mediaRef]);
+  }, [phase, roundAnthem, audioUnlocked, mediaRef]);
 };

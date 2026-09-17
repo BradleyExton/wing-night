@@ -128,14 +128,14 @@ test("renders the audio unlock overlay at MINIGAME_INTRO for a team with anthems
   const html = renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM);
 
   assert.match(html, /data-audio-unlock-overlay/);
-  assert.match(html, /Tap the screen to turn on team anthems\./);
+  assert.match(html, /Tap the screen to turn on the music\./);
 });
 
 test("renders no audio unlock overlay at MINIGAME_INTRO for a team with no anthems", () => {
   const html = renderAtPhase(Phase.MINIGAME_INTRO, SILENT_TEAM);
 
   assert.doesNotMatch(html, /data-audio-unlock-overlay/);
-  assert.doesNotMatch(html, /Tap the screen to turn on team anthems\./);
+  assert.doesNotMatch(html, /Tap the screen to turn on the music\./);
 });
 
 // The overlay is scoped to MINIGAME_INTRO by construction, so these three

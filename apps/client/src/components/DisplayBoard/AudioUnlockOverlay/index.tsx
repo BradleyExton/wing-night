@@ -7,9 +7,10 @@ type AudioUnlockOverlayProps = {
   onUnlock: () => void;
 };
 
-// Rendered only at MINIGAME_INTRO, for a team that has anthems, while audio is
-// still locked. The tap is the only moment a browser will let us prime a media
-// element, so this is the one place the anthem can be armed from.
+// Rendered while display audio is still locked and something wants to play: the
+// lobby playlist at SETUP, a team anthem or a Song Guess clip at MINIGAME_INTRO.
+// The tap is the only moment a browser will let us prime a media element, so
+// this is the one place any of them can be armed from.
 export const AudioUnlockOverlay = ({
   onUnlock
 }: AudioUnlockOverlayProps): JSX.Element => {

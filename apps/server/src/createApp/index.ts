@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 
 import express from "express";
 import {
+  LOBBY_AUDIO_ROUTE_PATH,
   SONG_GUESS_AUDIO_ROUTE_PATH,
   TEAM_AUDIO_ROUTE_PATH
 } from "@wingnight/shared";
@@ -33,6 +34,14 @@ export const createApp = (options: CreateAppOptions = {}): express.Express => {
   app.use(
     TEAM_AUDIO_ROUTE_PATH,
     express.static(resolve(contentRootDir, "sample", "teams", "audio"))
+  );
+
+  // Lobby music. Mounted ONCE, local only, matching `loadLobbyPlaylist`: the
+  // enumeration and the route have to agree about where the files live, or the
+  // TV gets a playlist of 404s.
+  app.use(
+    LOBBY_AUDIO_ROUTE_PATH,
+    express.static(resolve(contentRootDir, "local", "audio", "lobby"))
   );
 
   // Song Guess covers, same local-wins fallback. The pack ships as JSON only —

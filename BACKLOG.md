@@ -19,23 +19,6 @@ foreign dev server verifies someone else's code and reports it green.
 
 ## Audio / music
 
-### Anthem playlist rotation per round
-Teams with multi-song playlists hear a different anthem each round; the MINIGAME_INTRO screen shows
-the team's genre identity alongside the team spotlight.
-
-- Pure selector `resolveAnthemForRound` picking `anthems[(round - 1) % anthems.length]` —
-  deterministic rotation, not random. The display-safe field is `currentRound`
-  (`packages/shared/src/roomState/index.ts`), and today's pick is a hard-coded `anthems?.[0]` at
-  `apps/client/src/components/.../useTeamAnthemCue/index.ts`.
-- Genre label renders in `DisplayBoard/StageSurface/MinigameIntroStageBody`, identical to today when
-  absent. Check `apps/client/public/mockups/minigame-intro/` (01-team-spotlight) before styling.
-- **Known gap that sank this once:** `content/sample/teams.json` ships exactly one anthem per team
-  and there's no `content/sample/teams/audio` dir — so rotation is unobservable end to end. Either
-  extend the sample pack to 2–4 songs per team, or put sample content explicitly out of scope.
-- Decided at planning: small playlist per genre (2–4 songs); rotation keyed off round number so a
-  display refresh picks the same track. Out of scope: per-phase ambient beds, genre on
-  standings/results, host controls.
-
 ### Announcer voice (pre-rendered)
 A game-show announcer on the TV: it explains each minigame, calls the round and its sauce,
 introduces the teams, calls the lead after results, and closes the night. The host works the room in
@@ -56,18 +39,19 @@ scores, wing counts, "three players ate". Keep numbers on the screen and out of 
 first score that isn't 2 makes the announcer wrong.
 
 **The blocking design question, and it is not the audio files.** The display owns exactly ONE
-`<audio>` element — `data-team-anthem` in `DisplayBoard/index.tsx`, driven by
-`useTeamAnthemCue`. (`useTimesUpChime` is not a claimant: it is WebAudio, on the HOST, so it never
-touches the TV.) The announcer makes three cues want that one speaker — anthem, announcer, lobby
-playlist — and two of them fire at the SAME moment: the team intro line and the team anthem are both
-MINIGAME_INTRO. Settle this before writing a cue table:
+`<audio>` element — `data-team-anthem` in `DisplayBoard/index.tsx`, now driven by TWO cues:
+`useTeamAnthemCue` (MINIGAME_INTRO) and `useLobbyPlaylistCue` (SETUP). (`useTimesUpChime` is not a
+claimant: it is WebAudio, on the HOST, so it never touches the TV.) Those two coexist only because
+their phases are disjoint and each stops only audio it started — a rule that does NOT extend to the
+announcer, whose line and the team anthem fire at the SAME moment, both at MINIGAME_INTRO. Settle
+this before writing a cue table:
 - Sequence them (line, then anthem) on the single element — simplest, and it makes the anthem's start
   depend on a line's duration, which the client cannot know until the file loads.
 - Two elements with the voice ducking the anthem — the better party moment, and the reason the
-  lobby-playlist item's "no second `<audio>` lifecycle" rule needs restating rather than copying: the
-  rule exists to stop two PLAYLISTS competing, not to ban a voice channel over a music channel.
-- An audio director owning both, with the cues as data. Most work, and the only option that stays
-  sane once the lobby playlist lands too.
+  single-element rule needs restating rather than copying: it exists to stop two music cues
+  competing for the speaker, not to ban a voice channel over a music channel.
+- An audio director owning every cue, with the cues as data. Most work, and the only option that
+  stays sane now that the element already has two claimants.
 
 **Non-negotiables:**
 - A cue with no file is SILENT, never fatal and never a blocked phase transition. A party must not
@@ -77,6 +61,10 @@ MINIGAME_INTRO. Settle this before writing a cue table:
   display refresh mid-phase must replay the same line, not a different one.
 - The announcer never speaks host-only information, same snapshot-privacy rule as everything else on
   the display.
+
+The `playQuietly`/`stopQuietly` pair the two existing cues share lives in
+`DisplayBoard/displayMediaPlayback/`; a third claimant belongs there too rather than re-deriving
+best-effort playback.
 
 **Author-time tooling:** a `tools/` script rendering a lines file to MP3s, in the shape of
 `tools/import-geo-photos`. macOS `say -o` is offline and free and good enough to develop against; a
@@ -89,20 +77,6 @@ expensive to change later.
 
 **Out of scope:** live TTS, any spoken number, announcer volume UI, and a host "replay that line"
 control until someone actually wants one.
-
-### Lobby playlist during SETUP
-Music while people trickle in, fading out when the game starts.
-
-- Server enumerates `content/local/audio/lobby/*.mp3` at boot, sorted by filename, serves them
-  statically and exposes the list in the display-safe snapshot. Empty/missing dir → empty list, no
-  error.
-- Convention over configuration: the playlist is whatever MP3s are in the directory; `01-`, `02-`
-  filename prefixes are the ordering mechanism. No new content JSON to author or validate.
-- Sequential + loop, not shuffle (determinism). SETUP only — INTRO onward belongs to the game's own
-  moments.
-- Reuses the existing tap-to-enable unlock gate and audio element. Do not add a second `<audio>`
-  lifecycle; lobby playback must never overlap the anthem cue.
-- Out of scope: shuffle, host skip/next, volume UI, music during EATING/results.
 
 ---
 
@@ -286,8 +260,8 @@ anthem, and the only way to give it one is editing `teams.json` by hand.
 - `anthems` is a string array, which no `EntryFieldSpec` shape covers today — the interesting part
   is what a list-of-strings field looks like in `EntryListEditor` without turning it into a form
   builder. One filename per line in a textarea is the cheap answer.
-- Pairs naturally with the anthem playlist rotation work above, which is the reason to have more
-  than one anthem per team in the first place.
+- Round-keyed anthem rotation has shipped, so multi-anthem teams are now the normal case and the
+  wizard is the only thing that cannot author one.
 
 ### Passcode admin auth for the config wizard
 Gate `/admin` behind a server-side passcode: `ADMIN_PASSCODE` exchanged for an `adminSecret`,

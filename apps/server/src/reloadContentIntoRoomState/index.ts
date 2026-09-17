@@ -7,6 +7,7 @@ import {
   getRoomStateSnapshot,
   reportRoomStateMutation,
   setRoomStateGameConfig,
+  setRoomStateLobbyPlaylist,
   setRoomStateMinigameContent,
   setRoomStatePlayers,
   setRoomStateTeams
@@ -41,7 +42,7 @@ export type ReloadContentResult =
 // `setRoomStateFatalError` overwrites the room wholesale.
 //
 // Which room-state fields a successful reload replaces: `players`, `teams`,
-// `gameConfig` (and the `totalRounds` / `currentRoundConfig` it derives), and
+// `lobbyPlaylist`, `gameConfig` (and the `totalRounds` / `currentRoundConfig` it derives), and
 // each minigame's content — plus the setup baseline snapshot those setters
 // re-sync, so Reset Game stays consistent. It also clears `fatalError`.
 // Everything else — phase, scores, timer, turn order — survives untouched.
@@ -53,11 +54,12 @@ export const reloadContentIntoRoomState = (
   // throw on content the validators let through, and a throw there would
   // otherwise escape into a socket.io listener with no handler above it.
   try {
-    const { players, teams, gameConfig, minigameContentById } =
+    const { players, teams, lobbyPlaylist, gameConfig, minigameContentById } =
       loadContent(options);
 
     setRoomStatePlayers(players);
     setRoomStateTeams(teams);
+    setRoomStateLobbyPlaylist(lobbyPlaylist);
     setRoomStateGameConfig(gameConfig);
 
     for (const [minigameId, minigameContent] of Object.entries(

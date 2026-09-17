@@ -20,6 +20,7 @@ export type {
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
+export { LOBBY_AUDIO_ROUTE_PATH } from "./lobbyAudio/index.js";
 export type {
   DrawingMinigameDisplayView,
   DrawingMinigameHostPrompt,

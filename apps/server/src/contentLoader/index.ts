@@ -3,6 +3,7 @@ import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { filterPromptsByRoster } from "./filterPromptsByRoster/index.js";
 import { loadGameConfig } from "./loadGameConfig/index.js";
+import { loadLobbyPlaylist } from "./loadLobbyPlaylist/index.js";
 import { loadMinigameContent } from "./loadMinigameContent/index.js";
 import { loadPlayerEntries, toPlayers } from "./loadPlayers/index.js";
 import { loadTeams } from "./loadTeams/index.js";
@@ -15,6 +16,7 @@ type LoadContentOptions = {
 type LoadedContent = {
   players: Player[];
   teams: Team[];
+  lobbyPlaylist: string[];
   gameConfig: GameConfigFile;
   minigameContentById: Partial<Record<MinigameType, SerializableValue>>;
 };
@@ -33,6 +35,7 @@ export const loadContent = (
     teams: loadTeams(options)
   });
   const gameConfig = loadGameConfig(options);
+  const lobbyPlaylist = loadLobbyPlaylist(options);
   const minigameContentById = loadMinigameContent(options);
 
   // Applied HERE, at the one place that has both the roster and the prompt
@@ -43,6 +46,7 @@ export const loadContent = (
   return {
     players,
     teams,
+    lobbyPlaylist,
     gameConfig,
     minigameContentById: filterPromptsByRoster({ minigameContentById, players })
   };

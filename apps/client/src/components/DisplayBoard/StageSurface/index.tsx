@@ -79,6 +79,7 @@ const MinigameIntroBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
   return (
     <MinigameIntroStageBody
       activeTeamName={stageViewModel.activeTeamName}
+      activeTeamGenre={stageViewModel.activeTeamGenre}
       activeTeamPlayerNames={stageViewModel.activeTeamPlayerNames}
       minigameType={stageViewModel.minigameType}
     />

@@ -8,12 +8,14 @@ test("renders the team-first three-beat reveal with roster and minigame", () => 
   const html = renderToStaticMarkup(
     <MinigameIntroStageBody
       activeTeamName="Team Heat"
+      activeTeamGenre="metal"
       activeTeamPlayerNames={["Alex", "Morgan", "Chris"]}
       minigameType="TRIVIA"
     />
   );
 
   assert.match(html, /on the wings/);
+  assert.match(html, /metal/);
   assert.match(html, /Team Heat/);
   assert.match(html, /Alex/);
   assert.match(html, /Morgan/);
@@ -26,6 +28,7 @@ test("falls back to placeholder labels when team and minigame data are missing",
   const html = renderToStaticMarkup(
     <MinigameIntroStageBody
       activeTeamName={null}
+      activeTeamGenre={null}
       activeTeamPlayerNames={[]}
       minigameType={null}
     />
@@ -34,4 +37,19 @@ test("falls back to placeholder labels when team and minigame data are missing",
   assert.match(html, /Next Team/);
   assert.match(html, /Pending/);
   assert.doesNotMatch(html, /<p[^>]*roster/i);
+});
+
+// The "identical to today when absent" half of the genre line: a team with no
+// genre must not render a stray separator next to the eyebrow.
+test("renders the eyebrow alone for a team with no genre", () => {
+  const html = renderToStaticMarkup(
+    <MinigameIntroStageBody
+      activeTeamName="Team Heat"
+      activeTeamGenre={null}
+      activeTeamPlayerNames={[]}
+      minigameType="TRIVIA"
+    />
+  );
+
+  assert.match(html, /on the wings<\/span>/);
 });

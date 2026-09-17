@@ -8,6 +8,7 @@ export {
   setRoomStateFatalError,
   setRoomStatePlayers,
   setRoomStateTeams,
+  setRoomStateLobbyPlaylist,
   setRoomStateGameConfig,
   setRoomStateMinigameContent
 } from "./baseMutations/index.js";

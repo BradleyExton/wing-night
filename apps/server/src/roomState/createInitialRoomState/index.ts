@@ -9,6 +9,7 @@ export const createInitialRoomState = (): RoomState => {
     totalRounds: DEFAULT_TOTAL_ROUNDS,
     players: [],
     teams: [],
+    lobbyPlaylist: [],
     gameConfig: null,
     currentRoundConfig: null,
     turnOrderTeamIds: [],

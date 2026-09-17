@@ -15,6 +15,10 @@ export const beatDelay4 = "[animation-delay:1500ms]";
 export const eyebrow =
   "text-[clamp(0.85rem,1.1vw,1.2rem)] font-bold uppercase tracking-[0.32em] text-muted";
 
+export const eyebrowSeparator = "mx-[0.7em] text-muted/60";
+
+export const genre = "text-primary";
+
 export const teamName =
   "m-0 text-[clamp(4.5rem,12vw,14rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-primary [text-shadow:0_0_80px_rgba(249,115,22,0.4)]";
 

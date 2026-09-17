@@ -199,6 +199,36 @@ team creation, player assignment and auto-assign all still work on top of
 the preset seating until the game locks. Local teams override sample
 teams when present.
 
+A team may also declare `genre` (a label the TV shows on its spotlight
+screen) and `anthems` (filenames under content/local/teams/audio/):
+
+{ "teams": \[ { "name": "Molten Metal", "genre": "metal", "anthems":
+\["through-the-fire-and-flames.mp3", "highway-to-hell.mp3"\] } \] }
+
+------------------------------------------------------------------------
+
+## Party music
+
+Two directories, both gitignored, both convention over configuration —
+there is no music JSON to author.
+
+content/local/teams/audio/ — a team's anthems, named by teams.json.
+Served at /team-audio/<filename>, local overriding sample. The display
+plays one at MINIGAME_INTRO, rotating by round number: round 1 plays the
+first anthem, round 2 the second, wrapping when the rounds outlast the
+list. Deterministic, so a TV refreshed mid-screen comes back on the same
+track.
+
+content/local/audio/lobby/ — background music while people arrive.
+Served at /lobby-audio/<filename>. The playlist is simply whatever MP3s
+are in the directory, sorted by filename, so 01-, 02- prefixes are the
+ordering mechanism. It plays through SETUP only, sequentially, looping,
+and hands the speaker back the moment the game starts. No directory, or
+an empty one, means a silent setup screen — never an error.
+
+Both share the display's single audio element and the one-tap unlock
+overlay, so a tap while guests are still arriving covers the whole night.
+
 ------------------------------------------------------------------------
 
 ## gameConfig.json

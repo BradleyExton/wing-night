@@ -162,7 +162,7 @@ For GEO, `pnpm import:geo <photo-folder>` turns GPS-tagged JPEGs into prompts: i
 
   Mount **local first, then sample**, mirroring `loadContentFileWithFallback`'s local-wins fallback: `express.static` defaults to `fallthrough: true`, so a miss — or an absent `local/` directory — falls through to the sample mount and then to a 404. Path traversal is handled for you.
 
-  Declare the route path as a constant in `packages/shared` and import it from **both** the mount and whatever builds the client-side URL, so the two cannot drift and a rename is a typecheck failure rather than a silent 404. Used by team anthems (`TEAM_AUDIO_ROUTE_PATH`) and Song Guess.
+  Declare the route path as a constant in `packages/shared` and import it from **both** the mount and whatever builds the client-side URL, so the two cannot drift and a rename is a typecheck failure rather than a silent 404. Used by team anthems (`TEAM_AUDIO_ROUTE_PATH`), the lobby playlist (`LOBBY_AUDIO_ROUTE_PATH`) and Song Guess.
 
   **The client-side URL must be absolute.** There is no `vite.config` anywhere in this repo, so there is no dev proxy and the client is always a different origin from the server — a root-relative `src="/team-audio/x.mp3"` resolves against the Vite origin (5173 dev, 5273 under the e2e gate) and 404s. Build it from `apps/client/src/utils/resolveServerOrigin`, and read the origin **inside an effect**, never at module or render scope, which `react-dom/server` cannot do.
 
@@ -206,9 +206,12 @@ and future — gets this without touching its own `clonePrompt`.
 If the display surface plays audio or video, the TV browser has had no user interaction by the time the first phase fires — `audio.play()` will be silently rejected. Pattern:
 
 - The overlay already exists: `DisplayBoard/AudioUnlockOverlay`, built for team
-  anthems. It renders during `MINIGAME_INTRO`, primes the element on any pointer
-  event (`media.play().then(() => media.pause())`), sets session-scoped
-  `audioUnlocked` state, and clears — once a night, not once a round.
+  anthems and now also shown at `SETUP` when the lobby playlist has tracks. It
+  primes the element on any pointer event — `play()` followed by a SYNCHRONOUS
+  `pause()`, never one chained onto the play promise, or the priming pause lands
+  after the cue that same tap triggers and kills the music a beat after it
+  starts — sets session-scoped `audioUnlocked` state, and clears: once a night,
+  not once a round.
 - To opt your game in, set `requiresDisplayAudio: true` on its
   `MinigameRendererBundle`. `DisplayBoard` asks the registry, so the overlay also
   appears for a round whose active team has no anthem. Do not add a second primer.
