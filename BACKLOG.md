@@ -19,6 +19,51 @@ foreign dev server verifies someone else's code and reports it green.
 
 ## Audio / music
 
+### Now-playing UI and host music controls
+A music player on the TV showing what is playing, and host control over it from the tablet.
+Reverses this file's earlier "out of scope: host skip/next, volume UI" — decided with the user
+2026-09-16, after the lobby playlist and anthem rotation shipped and the music became real.
+
+**The crux, and it is not the UI.** Playback today is entirely CLIENT-LOCAL: the display derives
+what plays from `phase` and `currentRound` (`useLobbyPlaylistCue`, `useTeamAnthemCue`), and the
+server has no idea a track is playing. Host control inverts that — "pause" and "skip" are mutations,
+so which track is playing and whether it is playing become server-authoritative room state, exactly
+like `timer`. Settle this before any component gets drawn:
+- New display-safe room-state fields (roughly `musicPlayback: { trackIndex, isPlaying, source }`),
+  host-secret-gated `music:*` client→server events, and mutations in the usual
+  `defineRoomMutation` shape. The display stops deciding and starts obeying.
+- The cues become projections of that state rather than owners of it. `resolveAnthemForRound` stays
+  pure and keeps its determinism test; the LOBBY cursor stops being display-local.
+- **What a display refresh mid-track does.** Today it is deterministic by construction — same phase
+  and round, same track, from the top. Once the host can skip, position is real state. Either the
+  server tracks elapsed position the way `RoomTimerState` does (accurate resume, more machinery), or
+  a refresh restarts the current track (cheap, and a refresh mid-party is rare). Decide in-ticket;
+  do not leave it to fall out of the implementation.
+
+**Track titles are a content question, not a label.** `01-hot-in-herre.mp3` is not display copy. The
+lobby directory's whole point is convention over configuration, so deriving the title from the
+filename (strip the `NN-` prefix, hyphens to spaces, title case) keeps that promise and ships no new
+JSON. A sidecar metadata file would read better ("Hot in Herre — Nelly") at the cost of the thing
+that made the directory nice. Pick one before building the strip, because the UI is shaped by it.
+
+**Open scope questions:**
+- Which controls: play/pause and next are the obvious pair. Previous, scrub, pick-a-track and
+  volume each need a reason — and volume in particular competes with the TV's own remote, which is
+  what people actually reach for.
+- Whether host control covers the ANTHEM too, or only the lobby playlist. Pausing a team's entrance
+  music mid-spotlight is a different product decision from pausing background music.
+- Where it lives on the host tablet. The tablet is sauce-covered and thumb-driven (DESIGN.md), so
+  this is a big-target surface, not a media-player chrome strip.
+
+**Prerequisites and constraints:**
+- No mockup exists for a now-playing strip. `apps/client/public/mockups/setup/` has the SETUP
+  surface it would sit on; design it there first, per the repo's own convention.
+- The display's one `<audio>` element now has two cue claimants that coexist only because their
+  phases are disjoint. A host "play music during EATING" control breaks that, and lands on the same
+  audio-director decision the announcer item is already blocked on — read that item first.
+- Host-only information must stay out of the display snapshot as always; a track title is not
+  privileged, so this is a straightforward display-safe addition.
+
 ### Announcer voice (pre-rendered)
 A game-show announcer on the TV: it explains each minigame, calls the round and its sauce,
 introduces the teams, calls the lead after results, and closes the night. The host works the room in
