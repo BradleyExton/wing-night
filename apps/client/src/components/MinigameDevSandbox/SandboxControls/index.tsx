@@ -1,22 +1,47 @@
 import type { MinigameSurfacePhase } from "@wingnight/minigames-core";
-import type { MinigameType } from "@wingnight/shared";
+import {
+  MINIGAME_TYPES,
+  resolveMinigameDefinition,
+  resolveMinigameTypeFromSlug,
+  type MinigameType
+} from "@wingnight/shared";
 
+import { resolveMinigameBriefingContent } from "../../../copy/minigameBriefings";
 import { minigameDevSandboxCopy } from "../copy";
 import * as styles from "./styles";
 
 type SandboxControlsProps = {
   minigameType: MinigameType;
   phase: MinigameSurfacePhase;
+  onMinigameTypeChange: (minigameType: MinigameType) => void;
   onPhaseChange: (phase: MinigameSurfacePhase) => void;
   onReset: () => void;
+};
+
+// The option list is derived from MINIGAME_TYPES, and the option value is the
+// slug the sandbox route actually takes — so the switcher cannot offer a game
+// that has no sandbox, and cannot guess a slug wrong.
+const resolveMinigameOptions = (): { slug: string; label: string }[] => {
+  return MINIGAME_TYPES.map((minigameType) => {
+    const briefing = resolveMinigameBriefingContent(minigameType, null);
+
+    return {
+      slug: resolveMinigameDefinition(minigameType).slug,
+      label: briefing?.displayName ?? minigameType
+    };
+  });
 };
 
 export const SandboxControls = ({
   minigameType,
   phase,
+  onMinigameTypeChange,
   onPhaseChange,
   onReset
 }: SandboxControlsProps): JSX.Element => {
+  const minigameOptions = resolveMinigameOptions();
+  const activeSlug = resolveMinigameDefinition(minigameType).slug;
+
   return (
     <section className={styles.controlsCard}>
       <div className={styles.controlsGrid}>
@@ -24,7 +49,28 @@ export const SandboxControls = ({
           <label className={styles.controlLabel} htmlFor="minigame-type">
             {minigameDevSandboxCopy.minigameLabel}
           </label>
-          <input id="minigame-type" className={styles.input} value={minigameType} disabled />
+          <select
+            id="minigame-type"
+            className={styles.input}
+            value={activeSlug}
+            onChange={(event): void => {
+              const selectedMinigameType = resolveMinigameTypeFromSlug(event.target.value);
+
+              if (selectedMinigameType === null) {
+                return;
+              }
+
+              onMinigameTypeChange(selectedMinigameType);
+            }}
+          >
+            {minigameOptions.map((option) => {
+              return (
+                <option key={option.slug} value={option.slug}>
+                  {option.label}
+                </option>
+              );
+            })}
+          </select>
         </div>
 
         <div className={styles.controlBlock}>

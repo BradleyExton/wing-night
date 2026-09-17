@@ -3,6 +3,7 @@ export type ClientRoute =
   | "HOST"
   | "ADMIN"
   | "DISPLAY"
+  | "DEV_INDEX"
   | "DEV_MINIGAME"
   | "DEV_LAB"
   | "NOT_FOUND";
@@ -36,6 +37,12 @@ export const resolveClientRoute = (pathname: string): ClientRoute => {
 
   if (normalizedPathname === "/display") {
     return "DISPLAY";
+  }
+
+  // The bare prefix is the dev launcher; the two prefixed segment routes below
+  // already reject it, so this check cannot shadow them.
+  if (normalizedPathname === "/dev") {
+    return "DEV_INDEX";
   }
 
   if (resolveDevMinigameSlug(normalizedPathname) !== null) {

@@ -18,6 +18,19 @@ test("resolves /display and /display/ to DISPLAY", () => {
   assert.equal(resolveClientRoute("/display/"), "DISPLAY");
 });
 
+test("resolves /dev and /dev/ to DEV_INDEX", () => {
+  assert.equal(resolveClientRoute("/dev"), "DEV_INDEX");
+  assert.equal(resolveClientRoute("/dev/"), "DEV_INDEX");
+});
+
+// The launcher owns the bare prefix, so the two segment routes under it have to
+// keep matching as they did.
+test("keeps the dev launcher from swallowing the routes beneath it", () => {
+  assert.equal(resolveClientRoute("/dev/minigame/trivia"), "DEV_MINIGAME");
+  assert.equal(resolveClientRoute("/dev/lab/anamorph"), "DEV_LAB");
+  assert.equal(resolveClientRoute("/development"), "NOT_FOUND");
+});
+
 test("resolves /dev/minigame/:slug routes to DEV_MINIGAME", () => {
   assert.equal(resolveClientRoute("/dev/minigame/trivia"), "DEV_MINIGAME");
   assert.equal(resolveClientRoute("/dev/minigame/trivia/"), "DEV_MINIGAME");

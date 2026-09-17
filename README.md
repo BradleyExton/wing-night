@@ -87,9 +87,10 @@ SPEC.md AGENTS.md TASKS.md README.md pnpm-workspace.yaml
 Shared types and validation schemas must live in `packages/shared` and
 be imported by both client and server.
 
-For fast minigame iteration, use `/dev/minigame/trivia` (or `geo`,
-`drawing`) to preview host + display surfaces with scenario presets and
-interactive knobs.
+For fast minigame iteration, open `/dev` — it lists every minigame
+sandbox and dev lab by name, so you never have to remember a slug. Each
+sandbox (`/dev/minigame/<slug>`) previews the host + display surfaces
+against the real runtime, and its Minigame dropdown hops to any other.
 
 ------------------------------------------------------------------------
 

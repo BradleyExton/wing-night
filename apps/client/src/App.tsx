@@ -8,6 +8,7 @@ import { AdminConfigWizard } from "./components/AdminConfigWizard";
 import { AnamorphLab } from "./components/AnamorphLab";
 import { ContraptionLab } from "./components/ContraptionLab";
 import { ContraptionUiLab } from "./components/ContraptionUiLab";
+import { DevRouteIndex } from "./components/DevRouteIndex";
 import { DisplayBoard } from "./components/DisplayBoard";
 import { HostControlPanel } from "./components/HostControlPanel";
 import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
@@ -59,6 +60,10 @@ const resolveRouteContent = (
 
   if (route === "ROOT") {
     return <RootRouteLanding />;
+  }
+
+  if (route === "DEV_INDEX") {
+    return <DevRouteIndex />;
   }
 
   if (route === "DEV_MINIGAME" && devMinigameType !== null) {

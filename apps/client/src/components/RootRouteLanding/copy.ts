@@ -26,5 +26,9 @@ export const rootRouteLandingCopy = {
       targetDevice: "Best on the TV or projector display.",
       tone: "SECONDARY"
     }
-  ] as const
+  ] as const,
+  devLink: {
+    href: "/dev",
+    label: "Dev tools"
+  }
 } as const;

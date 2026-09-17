@@ -12,6 +12,8 @@ export const minigameDevSandboxCopy = {
   displayPreviewMetaLabel: "TV 16:9",
   noRendererLabel: "No renderer bundle is available for this minigame.",
   noRuntimeLabel: "No runtime plugin is available for this minigame.",
+  devIndexLinkHref: "/dev",
+  devIndexLinkLabel: "All sandboxes",
   introPhaseLabel: "Intro",
   playPhaseLabel: "Play"
 } as const;

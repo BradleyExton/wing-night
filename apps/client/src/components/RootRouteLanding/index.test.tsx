@@ -16,3 +16,13 @@ test("renders role picker landing with shared logo and hero image", () => {
   assert.match(html, /src="\/favicon\.svg"/);
   assert.match(html, /src="\/display\/setup\/hero\.png"/);
 });
+
+// The role picker is what a guest gets handed on party night, so the dev
+// launcher is one muted link rather than a third card.
+test("links the dev launcher without adding a third role card", () => {
+  const html = renderToStaticMarkup(<RootRouteLanding />);
+
+  assert.match(html, /href="\/dev"/);
+  assert.match(html, /Dev tools/);
+  assert.equal(html.match(/class="group relative overflow-hidden/g)?.length, 2);
+});

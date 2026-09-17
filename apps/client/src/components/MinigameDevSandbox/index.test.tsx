@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import { MINIGAME_TYPES, resolveMinigameDefinition } from "@wingnight/shared";
 
 import { MinigameDevSandbox } from "./index";
 
@@ -52,4 +53,22 @@ test("renders the drawing sandbox without leaking the prompt to the display", ()
     0
   );
   assert.equal(promptOccurrences, 1);
+});
+
+// The minigame used to be a disabled input you changed by editing the URL. The
+// switcher is only useful if it offers every sandbox and marks the live one.
+test("offers every registered minigame in the switcher", () => {
+  const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="JOUST" />);
+
+  for (const minigameType of MINIGAME_TYPES) {
+    const { slug } = resolveMinigameDefinition(minigameType);
+
+    assert.ok(
+      html.includes(`value="${slug}"`),
+      `missing switcher option for ${minigameType}`
+    );
+  }
+
+  assert.match(html, /<option value="joust" selected="">Slingshlong<\/option>/);
+  assert.match(html, /href="\/dev"/);
 });

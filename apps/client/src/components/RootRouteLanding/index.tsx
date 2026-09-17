@@ -53,6 +53,10 @@ export const RootRouteLanding = (): JSX.Element => {
             );
           })}
         </nav>
+
+        <a className={styles.devLink} href={rootRouteLandingCopy.devLink.href}>
+          {rootRouteLandingCopy.devLink.label}
+        </a>
       </section>
     </main>
   );

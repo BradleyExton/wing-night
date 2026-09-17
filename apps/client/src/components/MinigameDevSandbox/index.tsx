@@ -5,7 +5,7 @@ import type {
   MinigameSurfacePhase,
   SerializableValue
 } from "@wingnight/minigames-core";
-import type { MinigameType } from "@wingnight/shared";
+import { resolveMinigameDefinition, type MinigameType } from "@wingnight/shared";
 
 import {
   resolveMinigameDevManifest,
@@ -19,6 +19,15 @@ import * as styles from "./styles";
 
 type MinigameDevSandboxProps = {
   minigameType: MinigameType;
+};
+
+// The app has no router — App.tsx reads window.location.pathname once — so
+// switching games is a real navigation. The reload is the point: it re-seeds
+// the runtime from the target game's dev fixture.
+const navigateToMinigameSandbox = (minigameType: MinigameType): void => {
+  const { slug } = resolveMinigameDefinition(minigameType);
+
+  window.location.assign(`/dev/minigame/${slug}`);
 };
 
 // Boots the same pure runtime plugin the server drives during a real game,
@@ -101,13 +110,22 @@ export const MinigameDevSandbox = ({
   return (
     <main className={styles.container}>
       <div className={styles.headingBlock}>
-        <h1 className={styles.heading}>{minigameDevSandboxCopy.title}</h1>
+        <div className={styles.headingRow}>
+          <h1 className={styles.heading}>{minigameDevSandboxCopy.title}</h1>
+          <a
+            className={styles.devIndexLink}
+            href={minigameDevSandboxCopy.devIndexLinkHref}
+          >
+            {minigameDevSandboxCopy.devIndexLinkLabel}
+          </a>
+        </div>
         <p className={styles.description}>{minigameDevSandboxCopy.description}</p>
       </div>
 
       <SandboxControls
         minigameType={minigameType}
         phase={phase}
+        onMinigameTypeChange={navigateToMinigameSandbox}
         onPhaseChange={setPhase}
         onReset={(): void => {
           setRuntimeState(initializeRuntimeState(runtimePlugin, devManifest));

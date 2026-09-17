@@ -57,3 +57,5 @@ export const roleActionDetail =
 
 export const roleActionTarget =
   "mt-3 block text-xs font-semibold uppercase tracking-[0.08em] text-muted";
+export const devLink =
+  "mt-6 self-start text-xs font-semibold uppercase tracking-[0.12em] text-muted transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
