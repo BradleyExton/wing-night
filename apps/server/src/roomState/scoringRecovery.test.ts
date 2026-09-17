@@ -8,6 +8,7 @@ import {
   advanceRoomStatePhase,
   adjustTeamScore,
   assignPlayerToTeam,
+  autoAssignRemainingPlayers,
   createTeam,
   dispatchMinigameAction,
   extendRoomTimer,
@@ -530,5 +531,106 @@ test("resetGameToSetup preserves genre and anthems on the restored team shells",
       anthems: ["blaze.mp3"]
     },
     { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
+  ]);
+});
+
+// Preset seating (`players.json` → `team`) is content like a team's name or
+// genre, so "Reset Game" has to put it back. Before this it restored every team
+// empty, and the only way back to the preset rosters was an `/admin` apply or a
+// server restart.
+test("resetGameToSetup restores the preset seating and discards the host's live moves", () => {
+  setRoomStateGameConfig(gameConfigFixture);
+  setRoomStatePlayers([
+    { id: "player-1", name: "Drafted One" },
+    { id: "player-2", name: "Drafted Two" },
+    { id: "player-3", name: "Pool Guest" }
+  ]);
+  setRoomStateTeams([
+    { id: "team-1", name: "Preset Team One", playerIds: ["player-1"], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: ["player-2"], totalScore: 0 }
+  ]);
+
+  // Every way the host can rewrite the seating live: a move between teams, an
+  // unassign, and an auto-assign of whoever is left in the pool.
+  assignPlayerToTeam("player-1", "team-2");
+  assignPlayerToTeam("player-2", null);
+  autoAssignRemainingPlayers();
+
+  const resetSnapshot = resetGameToSetup();
+
+  assert.deepEqual(resetSnapshot.teams, [
+    { id: "team-1", name: "Preset Team One", playerIds: ["player-1"], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: ["player-2"], totalScore: 0 }
+  ]);
+});
+
+// The case that made preserving `playerIds` in `setRoomStateTeams` insufficient
+// on its own: `createTeam` re-syncs the whole team baseline, so reading rosters
+// from live state there would have wiped the preset seating the moment a host
+// added a team.
+test("resetGameToSetup restores the preset seating after a team is created live", () => {
+  setRoomStateGameConfig(gameConfigFixture);
+  setRoomStatePlayers([{ id: "player-1", name: "Drafted One" }]);
+  setRoomStateTeams([
+    { id: "team-1", name: "Preset Team One", playerIds: ["player-1"], totalScore: 0 }
+  ]);
+
+  assignPlayerToTeam("player-1", null);
+  createTeam("Door Crashers");
+  assignPlayerToTeam("player-1", "team-2");
+
+  const resetSnapshot = resetGameToSetup();
+
+  assert.deepEqual(resetSnapshot.teams, [
+    { id: "team-1", name: "Preset Team One", playerIds: ["player-1"], totalScore: 0 },
+    { id: "team-2", name: "Door Crashers", playerIds: [], totalScore: 0 }
+  ]);
+});
+
+// A guest who only exists because the host added them live is in no pack's
+// seating, so a reset leaves them in the room and unassigned — the same thing it
+// did before preset seating existed.
+test("resetGameToSetup leaves a live-added guest unassigned beside the restored seating", () => {
+  setRoomStateGameConfig(gameConfigFixture);
+  setRoomStatePlayers([{ id: "player-1", name: "Drafted One" }]);
+  setRoomStateTeams([
+    { id: "team-1", name: "Preset Team One", playerIds: ["player-1"], totalScore: 0 }
+  ]);
+
+  addPlayer("Late Arrival");
+  assignPlayerToTeam("player-2", "team-1");
+
+  const resetSnapshot = resetGameToSetup();
+
+  assert.deepEqual(resetSnapshot.players, [
+    { id: "player-1", name: "Drafted One" },
+    { id: "player-2", name: "Late Arrival" }
+  ]);
+  assert.deepEqual(resetSnapshot.teams, [
+    { id: "team-1", name: "Preset Team One", playerIds: ["player-1"], totalScore: 0 }
+  ]);
+});
+
+// Scores are per-game and the seating is not, so a reset from the end of a night
+// has to separate them: rosters back, totals to zero.
+test("resetGameToSetup zeroes scores on the restored preset rosters", () => {
+  setRoomStateGameConfig(gameConfigFixture);
+  setRoomStatePlayers([
+    { id: "player-1", name: "Drafted One" },
+    { id: "player-2", name: "Drafted Two" }
+  ]);
+  setRoomStateTeams([
+    { id: "team-1", name: "Preset Team One", playerIds: ["player-1"], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: ["player-2"], totalScore: 0 }
+  ]);
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToEatingPhase();
+  adjustTeamScore("team-1", 7);
+
+  const resetSnapshot = resetGameToSetup();
+
+  assert.deepEqual(resetSnapshot.teams, [
+    { id: "team-1", name: "Preset Team One", playerIds: ["player-1"], totalScore: 0 },
+    { id: "team-2", name: "Preset Team Two", playerIds: ["player-2"], totalScore: 0 }
   ]);
 });

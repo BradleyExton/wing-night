@@ -130,6 +130,8 @@ Rules:
   auto-assigns players in SETUP until the game locks
 - Missing local `teams.json` falls back to sample preset teams
 - Host can still add teams manually in SETUP
+- Reset Game restores the preset seating, discarding the live moves made on top of
+  it; teams and guests the host added live survive the reset with empty rosters
 - Teams lock when game starts
 
 ---
@@ -454,5 +456,5 @@ MVP complete when:
 - Wing participation tracked per player
 - Mini-game schedule follows config
 - Display never scrolls
-- Game resets cleanly to SETUP
+- Game resets cleanly to SETUP, with the preset seating restored
 - All tests pass
