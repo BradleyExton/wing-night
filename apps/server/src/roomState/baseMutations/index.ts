@@ -16,6 +16,7 @@ import {
   syncActiveMinigameRuntimeWithContent
 } from "../../minigames/runtime/index.js";
 import { createInitialRoomState } from "../createInitialRoomState/index.js";
+import { setMusicForPhase } from "../musicState/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
 import { getRoomStateSnapshot } from "../getRoomStateSnapshot/index.js";
 import { clearScoringMutationUndoState } from "../scoringState/index.js";
@@ -143,6 +144,10 @@ export const resetGameToSetup = defineRoomMutation({
     nextState.totalRounds =
       restoredGameConfig === null ? nextState.totalRounds : restoredGameConfig.rounds.length;
     nextState.currentRoundConfig = null;
+    // A reset lands the room back at SETUP with people milling around again,
+    // and `createInitialRoomState` left the music null. Same seeding the SETUP
+    // phase transition would have done.
+    setMusicForPhase(nextState, nextState.phase);
 
     overwriteRoomState(nextState);
     resetMinigameRuntimeState();
@@ -217,6 +222,11 @@ export const setRoomStateLobbyPlaylist = (lobbyPlaylist: string[]): RoomState =>
   const roomState = getRoomState();
 
   roomState.lobbyPlaylist = structuredClone(lobbyPlaylist);
+  // Boot seeds the playlist while the room is already sitting at SETUP, so no
+  // phase transition is coming to start the music. Re-resolving here is also
+  // what makes a mid-party content reload pick up a newly dropped track rather
+  // than leaving the cursor on a list that no longer matches.
+  setMusicForPhase(roomState, roomState.phase);
 
   return getRoomStateSnapshot();
 };

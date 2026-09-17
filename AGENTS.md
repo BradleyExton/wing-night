@@ -67,6 +67,27 @@ Run:
 - Host-only answer/secret payloads must stay in server runtime state and host projections only; never copy privileged fields into display-facing snapshot contracts.
 - Any minigame projection change must include tests asserting display-safe payloads remain answer-free.
 
+## 3.3 The One Display-Reported Event
+
+Every client→server event carries a `hostSecret` and runs a host-authorized mutation, with exactly
+one exception: `music:trackEnded`. The display owns the room's single `<audio>` element, so the
+display is the only client that can know a track finished — and the lobby playlist has to advance on
+its own or the music dies after track one.
+
+The rules that keep this from eroding "the display is read-only" (SPEC.md §1):
+
+- It is a REPORT, not a command. The payload names the `source` and `trackIndex` that just ended,
+  and `reportRoomMusicTrackEnded` ignores it unless that is still the track the room believes is
+  playing. A replay, a stale report from a reconnected display, and a second display reporting the
+  same track are all no-ops.
+- It may only ever touch `musicPlayback`. Nothing reachable from a display-reported event may
+  advance a phase, move a turn cursor or change a score.
+- It stays alone. A second display-reported event needs a decision in `AGENTS.md`, not a second
+  entry in `REPORTED_EVENTS` — the exception is defensible precisely because it is one.
+
+Music playback itself is server-authoritative like `timer`: the display renders `musicPlayback` and
+derives nothing. A cue that decides what should be playing from `phase` is a bug.
+
 ---
 
 # 4) Component & Utility Structure

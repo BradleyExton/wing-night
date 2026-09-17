@@ -229,3 +229,16 @@ body {
     transform: translateX(150%);
   }
 }
+
+/* Now-playing equalizer. The bars move only while the music is actually
+   playing, which is what makes the strip readable from across a room without
+   a pause glyph the TV has no business showing. */
+@keyframes equalize {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}

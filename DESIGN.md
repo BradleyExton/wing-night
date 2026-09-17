@@ -108,6 +108,24 @@ The Host shell is a single-canvas tablet controller. Every phase composes the sa
 
 Timer must be the most visually dominant element during EATING.
 
+### 2.2A Now-Playing Strip
+
+A single full-bleed row directly above the fixed standings footer, shown only on the phases that
+own music (SETUP's lobby playlist, MINIGAME_INTRO's team anthem). Mockup:
+`apps/client/public/mockups/now-playing/`.
+
+-   It borrows the standings footer's border and tint so the two read as one bottom edge rather than
+    two stacked bars competing for the same strip of screen.
+-   State is carried by a four-bar equalizer in `primary`, which animates only while the music is
+    actually playing (frozen and `muted` when paused). It honours `prefers-reduced-motion`.
+-   No transport glyphs, ever. The display is a read-only surface (§2.2) — pause and skip live on
+    the host tablet, and a pause icon on the TV would imply something the room can press.
+-   Track titles are derived from the filename, never authored: `01-hot-in-herre.mp3` renders as
+    "Hot In Herre". Only the first letter of each word is touched, so `TNT` survives as `TNT`.
+-   The lobby playlist shows its position ("3 / 12") and keeps its row through a host pause, because
+    a playlist is a standing thing. An anthem is a one-shot: no position, and the row leaves with
+    the music rather than sitting frozen as though paused.
+
 ## 2.3 Team-Turn Context (Host + Display)
 
 -   During `EATING`, `MINIGAME_INTRO`, and `MINIGAME_PLAY`, both host and display must show:

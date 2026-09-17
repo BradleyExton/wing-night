@@ -179,6 +179,20 @@ export const hostCopy = {
   timerResumeButtonLabel: "Resume",
   timerExtendFifteenButtonLabel: "+15s",
   timerExtendThirtyButtonLabel: "+30s",
+  musicSectionTitle: "Music",
+  musicLobbyStatusLabel: "Lobby",
+  musicAnthemStatusLabel: "Anthem",
+  musicPlayingStatusLabel: "Playing",
+  musicPausedStatusLabel: "Paused",
+  // Same reasoning as the timer buttons: the deck group is already headed
+  // "Music", so the buttons drop the noun and stay on one line on a tablet.
+  musicPauseButtonLabel: "Pause",
+  musicResumeButtonLabel: "Resume",
+  musicSkipButtonLabel: "Next",
+  musicStatusValue: (sourceLabel: string, stateLabel: string): string =>
+    `${sourceLabel} · ${stateLabel}`,
+  musicTrackPositionLabel: (trackIndex: number, trackCount: number): string =>
+    `Track ${trackIndex + 1} of ${trackCount}`,
   timerValue: formatClockSeconds,
   phaseAdvanceHint,
   unassignedOptionLabel: "Unassigned",

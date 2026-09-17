@@ -58,6 +58,7 @@ test("createInitialRoomState returns setup defaults", () => {
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
+    musicPlayback: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},

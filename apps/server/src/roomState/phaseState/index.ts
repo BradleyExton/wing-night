@@ -5,6 +5,7 @@ import {
   initializeActiveMinigameRuntimeState
 } from "../../minigames/runtime/index.js";
 import { getNextPhase } from "../../utils/getNextPhase/index.js";
+import { setMusicForPhase } from "../musicState/index.js";
 import {
   createRunningTimer,
   isRoomInFatalState,
@@ -98,6 +99,9 @@ export const applyPhaseTransitionEffects = (
   }
 
   setTimerForPhase(state, nextPhase);
+  // After the turn state above, never before it: the anthem is the ACTIVE
+  // team's, and `initializeRoundTurnState` is what decides who that is.
+  setMusicForPhase(state, nextPhase);
 };
 
 export const resolveNextPhase = (state: RoomState, previousPhase: Phase): Phase => {

@@ -54,6 +54,9 @@ type HostRequestArgs = {
   onPauseTimer: [];
   onResumeTimer: [];
   onExtendTimer: [additionalSeconds: number];
+  onPauseMusic: [];
+  onResumeMusic: [];
+  onSkipMusicTrack: [];
   onReorderTurnOrder: [teamIds: string[]];
   onSkipTurnBoundary: [];
   onAdjustTeamScore: [teamId: string, delta: number];
@@ -180,6 +183,18 @@ export const hostRequestTable: HostRequestTable = {
       additionalSeconds
     })
   },
+  onPauseMusic: {
+    event: CLIENT_TO_SERVER_EVENTS.MUSIC_PAUSE,
+    buildPayload: buildHostSecretPayload
+  },
+  onResumeMusic: {
+    event: CLIENT_TO_SERVER_EVENTS.MUSIC_RESUME,
+    buildPayload: buildHostSecretPayload
+  },
+  onSkipMusicTrack: {
+    event: CLIENT_TO_SERVER_EVENTS.MUSIC_SKIP,
+    buildPayload: buildHostSecretPayload
+  },
   onReorderTurnOrder: {
     event: CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER,
     canEmit: (teamIds): boolean => isValidTeamIdList(teamIds),
@@ -260,6 +275,9 @@ export const createHostRequestHandlers = (
     onPauseTimer: buildHandler("onPauseTimer"),
     onResumeTimer: buildHandler("onResumeTimer"),
     onExtendTimer: buildHandler("onExtendTimer"),
+    onPauseMusic: buildHandler("onPauseMusic"),
+    onResumeMusic: buildHandler("onResumeMusic"),
+    onSkipMusicTrack: buildHandler("onSkipMusicTrack"),
     onReorderTurnOrder: buildHandler("onReorderTurnOrder"),
     onSkipTurnBoundary: buildHandler("onSkipTurnBoundary"),
     onAdjustTeamScore: buildHandler("onAdjustTeamScore"),

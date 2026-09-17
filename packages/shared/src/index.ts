@@ -58,6 +58,17 @@ export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
 export { LOBBY_AUDIO_ROUTE_PATH } from "./lobbyAudio/index.js";
+export {
+  MUSIC_PLAYBACK_SOURCES,
+  resolveAnthemForRound,
+  resolveAnthemIndexForRound,
+  resolveNextTrackIndex,
+  resolveTrackTitle
+} from "./musicPlayback/index.js";
+export type {
+  MusicPlaybackSource,
+  RoomMusicPlaybackState
+} from "./musicPlayback/index.js";
 export type {
   DrawingMinigameDisplayView,
   DrawingMinigameHostPrompt,
@@ -279,6 +290,7 @@ export type {
   MinigameActionPayload,
   MinigameActionType,
   MinigameActionEnvelopePayload,
+  MusicTrackEndedPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   TimerExtendPayload,

@@ -129,6 +129,21 @@ const handlerInvocations: HandlerInvocation[] = [
     expectedPayload: { hostSecret: "valid-host-secret", additionalSeconds: 60 }
   },
   {
+    name: "onPauseMusic",
+    invoke: (handlers) => handlers.onPauseMusic(),
+    expectedPayload: { hostSecret: "valid-host-secret" }
+  },
+  {
+    name: "onResumeMusic",
+    invoke: (handlers) => handlers.onResumeMusic(),
+    expectedPayload: { hostSecret: "valid-host-secret" }
+  },
+  {
+    name: "onSkipMusicTrack",
+    invoke: (handlers) => handlers.onSkipMusicTrack(),
+    expectedPayload: { hostSecret: "valid-host-secret" }
+  },
+  {
     name: "onReorderTurnOrder",
     invoke: (handlers) => handlers.onReorderTurnOrder(["team-2", "team-1"]),
     expectedPayload: {

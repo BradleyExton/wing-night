@@ -6,6 +6,7 @@ import type {
 import type {
   RoleScopedStateSnapshotEnvelope
 } from "../roomState/index.js";
+import type { MusicPlaybackSource } from "../musicPlayback/index.js";
 
 export { MINIGAME_API_VERSION } from "../content/gameConfig/index.js";
 export type { MinigameApiVersion } from "../content/gameConfig/index.js";
@@ -45,6 +46,16 @@ export type TimerExtendPayload = HostSecretPayload &
   Record<"additionalSeconds", number>;
 export const TIMER_EXTEND_MAX_SECONDS = 600;
 
+// The ONE client event in this contract that carries no host secret, because
+// the DISPLAY is the only client that can send it: the TV owns the `<audio>`
+// element, so only the TV knows a track finished. It is a REPORT, not a
+// command — it names the track it just finished, and the mutation ignores it
+// unless that is still the track the room believes is playing. A replay, a
+// stale report from a display that reconnected, or a second display reporting
+// the same track is therefore a no-op, and nothing here can reach game state.
+export type MusicTrackEndedPayload = Record<"source", MusicPlaybackSource> &
+  Record<"trackIndex", number>;
+
 // `config:read` needs no argument beyond authorization; save and apply carry
 // the edited files. Apply is save-then-reload, so it takes the same `files`.
 export type ConfigReadPayload = HostSecretPayload;
@@ -70,6 +81,10 @@ export const CLIENT_TO_SERVER_EVENTS = {
   TIMER_PAUSE: "timer:pause",
   TIMER_RESUME: "timer:resume",
   TIMER_EXTEND: "timer:extend",
+  MUSIC_PAUSE: "music:pause",
+  MUSIC_RESUME: "music:resume",
+  MUSIC_SKIP: "music:skip",
+  MUSIC_TRACK_ENDED: "music:trackEnded",
   CONFIG_READ: "config:read",
   CONFIG_SAVE: "config:save",
   CONFIG_APPLY: "config:apply"
@@ -124,6 +139,12 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_RESUME]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND]: (payload: TimerExtendPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.MUSIC_PAUSE]: (payload: HostSecretPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.MUSIC_RESUME]: (payload: HostSecretPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.MUSIC_SKIP]: (payload: HostSecretPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED]: (
+    payload: MusicTrackEndedPayload
+  ) => void;
   [CLIENT_TO_SERVER_EVENTS.CONFIG_READ]: (payload: ConfigReadPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.CONFIG_SAVE]: (payload: ConfigSavePayload) => void;
   [CLIENT_TO_SERVER_EVENTS.CONFIG_APPLY]: (payload: ConfigApplyPayload) => void;

@@ -29,18 +29,23 @@ import {
   dispatchMinigameAction,
   extendRoomTimer,
   getRoomStateSnapshot,
+  pauseRoomMusic,
   pauseRoomTimer,
   redoLastScoringMutation,
   reorderTurnOrder,
+  reportRoomMusicTrackEnded,
   resetGameToSetup,
+  resumeRoomMusic,
   resumeRoomTimer,
   setWingParticipation,
+  skipRoomMusicTrack,
   skipTurnBoundary
 } from "../../roomState/index.js";
 import {
   isGameReorderTurnOrderPayload,
   isHostSecretPayload,
   isMinigameActionEnvelope,
+  isMusicTrackEndedPayload,
   isScoringAdjustTeamScorePayload,
   isScoringSetWingParticipationPayload,
   isSetupAddPlayerPayload,
@@ -78,9 +83,17 @@ type HostAuth = {
 type ClientEventName =
   (typeof CLIENT_TO_SERVER_EVENTS)[keyof typeof CLIENT_TO_SERVER_EVENTS];
 
+// Everything that runs a mutation and broadcasts. All but one member is gated
+// on the host secret; `MUSIC_TRACK_ENDED` is the exception, reported by the
+// display because only the display can know a track finished.
 export type AuthorizedEventName = Exclude<
   ClientEventName,
   typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL
+>;
+
+type HostSecretEventName = Exclude<
+  AuthorizedEventName,
+  typeof CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED
 >;
 
 export type AuthorizedEventPayloadByName = {
@@ -107,7 +120,7 @@ type AuthorizedEventRegistration = {
   createListener: (context: AuthorizedEventContext) => (payload: unknown) => void;
 };
 
-const defineAuthorizedEvent = <TEvent extends AuthorizedEventName>(
+const defineAuthorizedEvent = <TEvent extends HostSecretEventName>(
   event: TEvent,
   isPayload: (payload: unknown) => payload is AuthorizedEventPayloadByName[TEvent],
   runMutation: (payload: AuthorizedEventPayloadByName[TEvent]) => RoomState
@@ -202,7 +215,38 @@ const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
   ),
   defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.TIMER_EXTEND, isTimerExtendPayload, (payload) =>
     extendRoomTimer(payload.additionalSeconds)
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.MUSIC_PAUSE, isHostSecretPayload, () =>
+    pauseRoomMusic()
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.MUSIC_RESUME, isHostSecretPayload, () =>
+    resumeRoomMusic()
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.MUSIC_SKIP, isHostSecretPayload, () =>
+    skipRoomMusicTrack()
   )
+];
+
+// The display's track-ended report. It cannot go through
+// `defineAuthorizedEvent`: there is no secret to check, and there is no host to
+// emit `SECRET_INVALID` back to. A malformed payload is dropped in silence for
+// the same reason every other guard drops one — a party does not stall over
+// background music.
+const REPORTED_EVENTS: AuthorizedEventRegistration[] = [
+  {
+    event: CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED,
+    createListener: (context) => (payload) => {
+      if (!isMusicTrackEndedPayload(payload)) {
+        return;
+      }
+
+      context.dispatchAuthorizedMutation(
+        CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED,
+        payload,
+        () => reportRoomMusicTrackEnded(payload.source, payload.trackIndex)
+      );
+    }
+  }
 ];
 
 type ConfigEventContext = {
@@ -397,7 +441,7 @@ export const registerRoomStateHandlers = (
     dispatchAuthorizedMutation
   };
 
-  for (const authorizedEvent of AUTHORIZED_EVENTS) {
+  for (const authorizedEvent of [...AUTHORIZED_EVENTS, ...REPORTED_EVENTS]) {
     socket.on(authorizedEvent.event, authorizedEvent.createListener(authorizedEventContext));
   }
 

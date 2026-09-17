@@ -20,6 +20,7 @@ export const createInitialRoomState = (): RoomState => {
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
+    musicPlayback: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},

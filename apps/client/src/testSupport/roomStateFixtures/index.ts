@@ -78,6 +78,7 @@ export const buildRoomState = (
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
+    musicPlayback: null,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},

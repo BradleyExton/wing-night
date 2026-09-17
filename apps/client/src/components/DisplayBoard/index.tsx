@@ -1,20 +1,29 @@
-import { Phase } from "@wingnight/shared";
+import { Phase, type MusicPlaybackSource } from "@wingnight/shared";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { AudioUnlockOverlay } from "./AudioUnlockOverlay";
 import { GameLockedOverlay } from "./GameLockedOverlay";
+import { NowPlayingSurface } from "./NowPlayingSurface";
 import { StageSurface } from "./StageSurface";
 import { StandingsSurface } from "./StandingsSurface";
 import { useDisplayRoomState } from "../../context/RoomStateContext";
 import { resolveMinigameRendererBundle } from "../../minigames/registry";
 import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
 import { useGameStartCountdown } from "./useGameStartCountdown";
-import { useLobbyPlaylistCue } from "./useLobbyPlaylistCue";
-import { useTeamAnthemCue } from "./useTeamAnthemCue";
+import { useMusicPlaybackCue } from "./useMusicPlaybackCue";
 import * as styles from "./styles";
 
-export const DisplayBoard = (): JSX.Element => {
+type DisplayBoardProps = {
+  // Reporting a finished track is the display's ONE outbound message, and it
+  // stays optional: every harness that renders this board without a socket
+  // still gets a working screen, just one whose playlist waits on the host.
+  onMusicTrackEnded?: (source: MusicPlaybackSource, trackIndex: number) => void;
+};
+
+export const DisplayBoard = ({
+  onMusicTrackEnded
+}: DisplayBoardProps = {}): JSX.Element => {
   const roomState = useDisplayRoomState();
   const fatalError = roomState?.fatalError ?? null;
   const players = roomState?.players ?? [];
@@ -38,15 +47,12 @@ export const DisplayBoard = (): JSX.Element => {
   const activeTeamId =
     (roomState?.activeRoundTeamId ?? null) ??
     (roomState?.activeTurnTeamId ?? null);
-  const activeTeamAnthems = useMemo(() => {
+  const activeTeamName = useMemo(() => {
     if (activeTeamId === null) {
       return null;
     }
 
-    const activeTeam = roomState?.teams.find((team) => team.id === activeTeamId);
-    const anthems = activeTeam?.anthems ?? [];
-
-    return anthems.length > 0 ? anthems : null;
+    return roomState?.teams.find((team) => team.id === activeTeamId)?.name ?? null;
   }, [roomState, activeTeamId]);
 
   const displayMediaRef = useRef<HTMLAudioElement | null>(null);
@@ -85,23 +91,24 @@ export const DisplayBoard = (): JSX.Element => {
   }, []);
 
   const lobbyPlaylist = roomState?.lobbyPlaylist ?? [];
+  const musicPlayback = roomState?.musicPlayback ?? null;
 
-  useTeamAnthemCue({
-    phase,
-    anthems: activeTeamAnthems,
-    currentRound: roomState?.currentRound ?? null,
+  // ONE cue on the one element. It renders `musicPlayback` and decides nothing:
+  // which track, whether it is playing and where the playlist has got to are
+  // all the server's, so a refresh, a second display and a host tap cannot
+  // disagree about them.
+  useMusicPlaybackCue({
+    musicPlayback,
     audioUnlocked,
-    mediaRef: displayMediaRef
+    mediaRef: displayMediaRef,
+    onTrackEnded: onMusicTrackEnded
   });
-  // Both cues drive the ONE element above. They never overlap: the lobby
-  // playlist owns SETUP, the anthem owns MINIGAME_INTRO, and each only stops
-  // audio it started.
-  useLobbyPlaylistCue({
-    phase,
-    lobbyPlaylist,
-    audioUnlocked,
-    mediaRef: displayMediaRef
-  });
+
+  // Any source the night could ever play, which is what decides whether the
+  // element exists — distinct from `musicPlayback`, which is what is playing.
+  const hasAnyMusicSource =
+    lobbyPlaylist.length > 0 ||
+    (roomState?.teams ?? []).some((team) => (team.anthems ?? []).length > 0);
 
   // A game whose display surface is the room's speaker (Song Guess) needs the
   // same tap even when the active team has no anthem — otherwise the first clip
@@ -111,14 +118,16 @@ export const DisplayBoard = (): JSX.Element => {
     roundMinigameType !== null &&
     (resolveMinigameRendererBundle(roundMinigameType)?.requiresDisplayAudio ?? false);
 
-  // SETUP is included so the one tap of the night happens while people are
-  // still arriving — before it, the autoplay policy rejects the lobby playlist
-  // exactly as it rejects an anthem.
+  // Music the server is actually trying to PLAY is the condition, which covers
+  // SETUP's lobby playlist and MINIGAME_INTRO's anthem in one clause — and
+  // means the one tap of the night happens while people are still arriving,
+  // before the autoplay policy has anything to reject. `isPlaying` matters:
+  // asking a room to tap for an anthem that already finished, or for music the
+  // host deliberately paused, is asking them to fix nothing.
   const shouldShowAudioUnlockOverlay =
     !audioUnlocked &&
-    ((phase === Phase.MINIGAME_INTRO &&
-      (activeTeamAnthems !== null || roundRequiresDisplayAudio)) ||
-      (phase === Phase.SETUP && lobbyPlaylist.length > 0));
+    ((musicPlayback?.isPlaying ?? false) ||
+      (phase === Phase.MINIGAME_INTRO && roundRequiresDisplayAudio));
 
   if (fatalError !== null) {
     return <ContentFatalState fatalError={fatalError} />;
@@ -135,13 +144,18 @@ export const DisplayBoard = (): JSX.Element => {
         </div>
       </section>
 
+      <NowPlayingSurface
+        musicPlayback={musicPlayback}
+        anthemTeamName={activeTeamName}
+      />
       <StandingsSurface phase={phase} standings={standings} players={players} />
-      {/* Rendered on the has-audio condition rather than on the phase, so the
-          element survives the MINIGAME_INTRO → EATING advance and the cue still
-          has something to pause. The `src` is set by the cue effects, never
-          here: resolving it reads `window`, which react-dom/server cannot do.
-          One element, shared: see the cue calls above. */}
-      {(activeTeamAnthems !== null || lobbyPlaylist.length > 0) && (
+      {/* Mounted on whether the ROOM has music at all, not on whether any is
+          playing right now, so the element survives every phase advance and the
+          cue always has something to pause. The `src` is set by the cue effect,
+          never here: resolving it reads `window`, which react-dom/server cannot
+          do. `data-team-anthem` predates the lobby playlist and is kept because
+          the e2e suite locates the element by it. */}
+      {hasAnyMusicSource && (
         <audio ref={displayMediaRef} data-team-anthem preload="auto" />
       )}
       {shouldShowGameLockedOverlay && (

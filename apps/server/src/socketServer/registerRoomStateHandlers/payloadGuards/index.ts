@@ -1,11 +1,13 @@
 import {
   isConfigFileKey,
+  MUSIC_PLAYBACK_SOURCES,
   MINIGAME_API_VERSION,
   TIMER_EXTEND_MAX_SECONDS,
   type ConfigSavePayload,
   type GameReorderTurnOrderPayload,
   type HostSecretPayload,
   type MinigameActionEnvelope,
+  type MusicTrackEndedPayload,
   type ScoringAdjustTeamScorePayload,
   type ScoringSetWingParticipationPayload,
   type SetupAddPlayerPayload,
@@ -107,6 +109,21 @@ export const isConfigSavePayload = (
   hasShape(payload, {
     hostSecret: isString,
     files: (value) => Array.isArray(value) && value.every(isConfigFileEdit)
+  });
+
+// The one guard here with no `hostSecret` to check, because the display sends
+// it. `trackIndex` is bounded only by being a non-negative integer: the
+// mutation is what decides whether it names the track actually playing, and a
+// report that does not is a no-op rather than an error.
+export const isMusicTrackEndedPayload = (
+  payload: unknown
+): payload is MusicTrackEndedPayload =>
+  hasShape(payload, {
+    source: (value) =>
+      value === MUSIC_PLAYBACK_SOURCES.LOBBY ||
+      value === MUSIC_PLAYBACK_SOURCES.ANTHEM,
+    trackIndex: (value) =>
+      typeof value === "number" && Number.isInteger(value) && value >= 0
   });
 
 export const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload =>

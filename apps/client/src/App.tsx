@@ -19,6 +19,7 @@ import { RoomStateProvider } from "./context/RoomStateContext";
 import { createRoomSocket } from "./socket/createRoomSocket";
 import { shouldCreateRoomSocket } from "./socket/shouldCreateRoomSocket";
 import { saveHostSecret } from "./utils/hostSecretStorage";
+import { createDisplayReportHandlers } from "./utils/displayReports";
 import { createHostRequestHandlers } from "./utils/hostRequests";
 import {
   resolveClientRoute,
@@ -42,7 +43,8 @@ const resolveRouteContent = (
   route: ReturnType<typeof resolveClientRoute>,
   devMinigameType: ReturnType<typeof resolveMinigameTypeFromSlug> | null,
   devLabName: string | null,
-  roomSocket: ReturnType<typeof createRoomSocket> | null
+  roomSocket: ReturnType<typeof createRoomSocket> | null,
+  displayReports: ReturnType<typeof createDisplayReportHandlers> | null
 ): JSX.Element => {
   if (route === "HOST") {
     return <HostControlPanel />;
@@ -55,7 +57,10 @@ const resolveRouteContent = (
   }
 
   if (route === "DISPLAY") {
-    return <DisplayBoard />;
+    // The board takes the reporter as a prop rather than reading a context,
+    // because it is the only thing the display ever sends and a context for one
+    // callback is more machinery than the callback.
+    return <DisplayBoard onMusicTrackEnded={displayReports?.onMusicTrackEnded} />;
   }
 
   if (route === "ROOT") {
@@ -102,6 +107,14 @@ export const App = (): JSX.Element => {
     return createRoomSocket(pathname);
   }, [pathname, route]);
 
+  const displayReports = useMemo(() => {
+    if (route !== "DISPLAY" || roomSocket === null) {
+      return null;
+    }
+
+    return createDisplayReportHandlers(roomSocket);
+  }, [roomSocket, route]);
+
   const hostHandlers = useMemo(() => {
     if (route !== "HOST" || roomSocket === null) {
       return null;
@@ -141,7 +154,13 @@ export const App = (): JSX.Element => {
   return (
     <RoomStateProvider value={roomStateEnvelope}>
       <HostHandlersProvider value={hostHandlers}>
-        {resolveRouteContent(route, devMinigameType, devLabName, roomSocket)}
+        {resolveRouteContent(
+          route,
+          devMinigameType,
+          devLabName,
+          roomSocket,
+          displayReports
+        )}
       </HostHandlersProvider>
     </RoomStateProvider>
   );

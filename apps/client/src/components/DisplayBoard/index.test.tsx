@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { Phase, type RoomState, type Team } from "@wingnight/shared";
+import {
+  MUSIC_PLAYBACK_SOURCES,
+  Phase,
+  type RoomMusicPlaybackState,
+  type RoomState,
+  type Team
+} from "@wingnight/shared";
 
 import { renderDisplayMarkup } from "../../testSupport/renderWithProviders";
 import { buildRoomState } from "../../testSupport/roomStateFixtures";
@@ -118,35 +124,76 @@ const SILENT_TEAM: Team = {
   totalScore: 0
 };
 
-const renderAtPhase = (phase: Phase, team: Team): string => {
+// What the server puts in `musicPlayback` when a phase owns music. The display
+// no longer derives this from the phase and the team, so a test that wants the
+// music on has to say so — which is the point of the change.
+const ANTHEM_PLAYBACK: RoomMusicPlaybackState = {
+  source: MUSIC_PLAYBACK_SOURCES.ANTHEM,
+  trackFileName: "blaze.mp3",
+  trackIndex: 0,
+  trackCount: 1,
+  isPlaying: true
+};
+
+const LOBBY_PLAYBACK: RoomMusicPlaybackState = {
+  source: MUSIC_PLAYBACK_SOURCES.LOBBY,
+  trackFileName: "03-hot-in-herre.mp3",
+  trackIndex: 2,
+  trackCount: 12,
+  isPlaying: true
+};
+
+const renderAtPhase = (
+  phase: Phase,
+  team: Team,
+  overrides: Partial<RoomState> = {}
+): string => {
   return renderDisplayMarkup(<DisplayBoard />, {
-    roomState: buildSnapshot(phase, [team], { activeRoundTeamId: team.id })
+    roomState: buildSnapshot(phase, [team], {
+      activeRoundTeamId: team.id,
+      ...overrides
+    })
   });
 };
 
-test("renders the audio unlock overlay at MINIGAME_INTRO for a team with anthems", () => {
-  const html = renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM);
+test("renders the audio unlock overlay when the server has music queued", () => {
+  const html = renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM, {
+    musicPlayback: ANTHEM_PLAYBACK
+  });
 
   assert.match(html, /data-audio-unlock-overlay/);
   assert.match(html, /Tap the screen to turn on the music\./);
 });
 
-test("renders no audio unlock overlay at MINIGAME_INTRO for a team with no anthems", () => {
+test("renders no audio unlock overlay when the server queued no music", () => {
   const html = renderAtPhase(Phase.MINIGAME_INTRO, SILENT_TEAM);
 
   assert.doesNotMatch(html, /data-audio-unlock-overlay/);
   assert.doesNotMatch(html, /Tap the screen to turn on the music\./);
 });
 
-// The overlay is scoped to MINIGAME_INTRO by construction, so these three
-// phases cannot show it however long the session has been running.
-test("renders no audio unlock overlay at SETUP", () => {
-  assert.doesNotMatch(
-    renderAtPhase(Phase.SETUP, ANTHEM_TEAM),
-    /data-audio-unlock-overlay/
-  );
+// A display that reloads after the anthem finished, or while the host has the
+// lobby playlist paused, must not ask the room to tap to fix nothing.
+test("renders no audio unlock overlay when the queued music is not playing", () => {
+  const html = renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM, {
+    musicPlayback: { ...ANTHEM_PLAYBACK, isPlaying: false }
+  });
+
+  assert.doesNotMatch(html, /data-audio-unlock-overlay/);
 });
 
+// The finished anthem takes its row with it: frozen bars would read as paused,
+// which is not what a one-shot that ran to the end is.
+test("hides the now-playing strip once the anthem has finished", () => {
+  const html = renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM, {
+    musicPlayback: { ...ANTHEM_PLAYBACK, isPlaying: false }
+  });
+
+  assert.doesNotMatch(html, /data-now-playing/);
+});
+
+// The overlay follows the music rather than the phase, so a phase the server
+// queues nothing for cannot show it however long the session has been running.
 test("renders no audio unlock overlay at INTRO", () => {
   assert.doesNotMatch(
     renderAtPhase(Phase.INTRO, ANTHEM_TEAM),
@@ -161,20 +208,68 @@ test("renders no audio unlock overlay at ROUND_INTRO", () => {
   );
 });
 
-test("renders an anthem audio element for a team with anthems", () => {
+test("renders an audio element for a team with anthems", () => {
   assert.match(renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM), /data-team-anthem/);
 });
 
-// AC7: a team with no anthems is exactly as the display was before this ticket.
-test("renders no anthem audio element for a team with no anthems", () => {
+// A room with no music source at all is exactly as the display was before any
+// of this shipped.
+test("renders no audio element when the room has no music source", () => {
   assert.doesNotMatch(
     renderAtPhase(Phase.MINIGAME_INTRO, SILENT_TEAM),
     /data-team-anthem/
   );
 });
 
-// The element is keyed to the team, not the phase, so it is still mounted for
-// the cue to pause when the host advances out of MINIGAME_INTRO.
-test("keeps the anthem audio element mounted after the phase leaves MINIGAME_INTRO", () => {
+// The element is keyed to the ROOM having music, not to any playing, so it is
+// still mounted for the cue to pause when the host advances out of the phase.
+test("keeps the audio element mounted after the phase leaves MINIGAME_INTRO", () => {
   assert.match(renderAtPhase(Phase.EATING, ANTHEM_TEAM), /data-team-anthem/);
+});
+
+test("renders no now-playing strip when the phase owns no music", () => {
+  assert.doesNotMatch(renderAtPhase(Phase.EATING, ANTHEM_TEAM), /data-now-playing/);
+});
+
+test("names the team whose anthem is playing", () => {
+  const html = renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM, {
+    musicPlayback: ANTHEM_PLAYBACK
+  });
+
+  assert.match(html, /data-now-playing/);
+  assert.match(html, /Hot Ones anthem/);
+  assert.match(html, /Blaze/);
+});
+
+// An anthem is a one-shot cue with nowhere to be in, so it shows no position.
+test("shows no track position for an anthem", () => {
+  const html = renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM, {
+    musicPlayback: ANTHEM_PLAYBACK
+  });
+
+  assert.doesNotMatch(html, /1 \/ 1/);
+});
+
+test("titles a lobby track from its filename and shows its position", () => {
+  const html = renderAtPhase(Phase.SETUP, ANTHEM_TEAM, {
+    musicPlayback: LOBBY_PLAYBACK,
+    lobbyPlaylist: ["03-hot-in-herre.mp3"]
+  });
+
+  assert.match(html, /Now playing/);
+  assert.match(html, /Hot In Herre/);
+  assert.match(html, /3 \/ 12/);
+});
+
+// The row stays put when the host pauses — vanishing it would flicker the TV on
+// every tap — and says so instead.
+test("keeps the now-playing strip and labels it paused when the host pauses", () => {
+  const html = renderAtPhase(Phase.SETUP, ANTHEM_TEAM, {
+    musicPlayback: { ...LOBBY_PLAYBACK, isPlaying: false },
+    lobbyPlaylist: ["03-hot-in-herre.mp3"]
+  });
+
+  assert.match(html, /data-now-playing/);
+  assert.match(html, /Paused/);
+  assert.match(html, /Hot In Herre/);
 });

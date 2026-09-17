@@ -7,6 +7,7 @@ import type { JoustPrompt } from "../content/joust/index.js";
 import type { JoustAim, JoustHitZone } from "../joust/types.js";
 import type { SongGuessDifficulty } from "../content/songGuess/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
+import type { RoomMusicPlaybackState } from "../musicPlayback/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
 import type { SocketClientRole } from "../socketClientRole/index.js";
@@ -386,6 +387,10 @@ export type RoomState = {
   activeRoundTeamId: string | null;
   activeTurnTeamId: string | null;
   timer: RoomTimerState | null;
+  // What the TV's speaker is doing, and whether it is doing it. Server-owned
+  // for the same reason `timer` is: the host can pause and skip, so playback
+  // is a mutation target rather than something the display derives.
+  musicPlayback: RoomMusicPlaybackState | null;
   minigameHostView: MinigameHostView | null;
   minigameDisplayView: MinigameDisplayView | null;
   wingParticipationByPlayerId: Record<string, boolean>;
@@ -411,6 +416,7 @@ type DisplaySafeRoomStateKeys =
   | "activeRoundTeamId"
   | "activeTurnTeamId"
   | "timer"
+  | "musicPlayback"
   | "minigameDisplayView"
   | "wingParticipationByPlayerId"
   | "pendingWingPointsByTeamId"
@@ -434,6 +440,7 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "activeRoundTeamId",
   "activeTurnTeamId",
   "timer",
+  "musicPlayback",
   "minigameDisplayView",
   "wingParticipationByPlayerId",
   "pendingWingPointsByTeamId",
@@ -482,6 +489,9 @@ export const toDisplayRoomStateSnapshot = (
     activeRoundTeamId: roomState.activeRoundTeamId,
     activeTurnTeamId: roomState.activeTurnTeamId,
     timer: roomState.timer,
+    // A track title is not privileged information, so the whole of it goes to
+    // the display: the TV is the surface that has to render the strip.
+    musicPlayback: roomState.musicPlayback,
     minigameDisplayView: roomState.minigameDisplayView,
     wingParticipationByPlayerId: roomState.wingParticipationByPlayerId,
     pendingWingPointsByTeamId: roomState.pendingWingPointsByTeamId,

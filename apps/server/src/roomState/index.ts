@@ -36,6 +36,13 @@ export {
 } from "./timerMutations/index.js";
 
 export {
+  pauseRoomMusic,
+  reportRoomMusicTrackEnded,
+  resumeRoomMusic,
+  skipRoomMusicTrack
+} from "./musicMutations/index.js";
+
+export {
   skipTurnBoundary,
   advanceRoomStatePhase
 } from "./phaseMutations/index.js";

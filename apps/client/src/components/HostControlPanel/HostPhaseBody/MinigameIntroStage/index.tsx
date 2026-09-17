@@ -1,9 +1,11 @@
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
 import { MinigameSurface } from "../../MinigameSurface";
+import { MusicControlsSurface } from "../../MusicControlsSurface";
 import { hostControlPanelCopy } from "../../copy";
 import { selectHeaderContext } from "../../HostMiniRail/selectHeaderContext";
 import { useMinigameHostContext } from "../../useMinigameHostContext";
+import { useHostHandlers } from "../../../../context/HostHandlersContext";
 import * as styles from "./styles";
 
 export const MinigameIntroStage = (): JSX.Element => {
@@ -18,6 +20,7 @@ export const MinigameIntroStage = (): JSX.Element => {
     handleDispatchMinigameAction
   } = useMinigameHostContext("minigame_intro");
   const headerContext = selectHeaderContext(roomState, teamNameByTeamId);
+  const handlers = useHostHandlers();
 
   return (
     <>
@@ -41,6 +44,15 @@ export const MinigameIntroStage = (): JSX.Element => {
           teamNameByTeamId={teamNameByTeamId}
           canDispatchAction={canDispatchMinigameAction}
           onDispatchAction={handleDispatchMinigameAction}
+        />
+        {/* The anthem is playing right now on the TV, so the controls for it
+            belong on the phase that plays it — not parked on a settings screen
+            the host would have to leave the briefing to reach. */}
+        <MusicControlsSurface
+          musicPlayback={roomState?.musicPlayback ?? null}
+          onPauseMusic={handlers.onPauseMusic}
+          onResumeMusic={handlers.onResumeMusic}
+          onSkipMusicTrack={handlers.onSkipMusicTrack}
         />
       </ControlDeck>
     </>
