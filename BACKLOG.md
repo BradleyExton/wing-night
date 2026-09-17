@@ -36,6 +36,60 @@ the team's genre identity alongside the team spotlight.
   display refresh picks the same track. Out of scope: per-phase ambient beds, genre on
   standings/results, host controls.
 
+### Announcer voice (pre-rendered)
+A game-show announcer on the TV: it explains each minigame, calls the round and its sauce,
+introduces the teams, calls the lead after results, and closes the night. The host works the room in
+character (Price-is-Right framing, host plus helper), so the app is the ANNOUNCER, never the host.
+
+**Decided with the user (2026-09-16):**
+- **Pre-rendered MP3s, not live TTS.** Lines are written, rendered to audio ahead of time, and
+  enumerated from `content/local/audio/announcer/` at boot — the lobby-playlist convention, and the
+  same local-file pipeline as the anthems. No cloud call and no TTS engine in the party's critical
+  path, and every line is auditionable before guests arrive.
+- **Cue coverage:** how-to-play per minigame (MINIGAME_INTRO), round + sauce intro (ROUND_INTRO),
+  team intros and a post-results standings call, and a winner/finale line.
+
+**What pre-rendering can and cannot say.** Rosters and teams are AUTHORED content, known before the
+party — so per-team and even per-player lines are perfectly renderable, which is what makes "Scorch
+Squad takes the lead" a static file rather than a synthesis problem. Only live numbers are out:
+scores, wing counts, "three players ate". Keep numbers on the screen and out of the voice, or the
+first score that isn't 2 makes the announcer wrong.
+
+**The blocking design question, and it is not the audio files.** The display owns exactly ONE
+`<audio>` element — `data-team-anthem` in `DisplayBoard/index.tsx`, driven by
+`useTeamAnthemCue`. (`useTimesUpChime` is not a claimant: it is WebAudio, on the HOST, so it never
+touches the TV.) The announcer makes three cues want that one speaker — anthem, announcer, lobby
+playlist — and two of them fire at the SAME moment: the team intro line and the team anthem are both
+MINIGAME_INTRO. Settle this before writing a cue table:
+- Sequence them (line, then anthem) on the single element — simplest, and it makes the anthem's start
+  depend on a line's duration, which the client cannot know until the file loads.
+- Two elements with the voice ducking the anthem — the better party moment, and the reason the
+  lobby-playlist item's "no second `<audio>` lifecycle" rule needs restating rather than copying: the
+  rule exists to stop two PLAYLISTS competing, not to ban a voice channel over a music channel.
+- An audio director owning both, with the cues as data. Most work, and the only option that stays
+  sane once the lobby playlist lands too.
+
+**Non-negotiables:**
+- A cue with no file is SILENT, never fatal and never a blocked phase transition. A party must not
+  stall because one MP3 is missing, so this is a `playQuietly` best-effort path like every existing
+  media call — not a content validator that fatals the boot.
+- Cue → filename resolution is pure and deterministic, tested directly. No randomness anywhere: a
+  display refresh mid-phase must replay the same line, not a different one.
+- The announcer never speaks host-only information, same snapshot-privacy rule as everything else on
+  the display.
+
+**Author-time tooling:** a `tools/` script rendering a lines file to MP3s, in the shape of
+`tools/import-geo-photos`. macOS `say -o` is offline and free and good enough to develop against; a
+better voice later replaces the files without touching a line of app code, which is the point of
+pre-rendering.
+
+**Suggested first slice:** the three how-to-play cues only. One phase, three files, no dynamic
+content — and it still forces the single-speaker decision above, which is the part that will be
+expensive to change later.
+
+**Out of scope:** live TTS, any spoken number, announcer volume UI, and a host "replay that line"
+control until someone actually wants one.
+
 ### Lobby playlist during SETUP
 Music while people trickle in, fading out when the game starts.
 
@@ -205,6 +259,35 @@ unchanged.
 ---
 
 ## Smaller / housekeeping
+
+### Reset Game drops preset seating
+`players.json` can now seat players on teams at boot, but `Reset Game` still returns to empty
+rosters: `normalizeBaselineTeams` (`apps/server/src/roomState/baseMutations/index.ts`) clears
+`playerIds` on the way into the setup baseline, so a reset restores the players and teams but not
+who was on which team — the host re-taps Auto-assign.
+
+- Defensible as-is (rosters were always "formed live"), and deliberately left alone when preset
+  seating landed: changing it rewrites what `Reset Game` means and re-specifies the existing
+  baseline tests, which is a product call rather than a loose end.
+- The narrow version: have the CONTENT path (`setRoomStateTeams`) carry its seating into the
+  baseline while live setup mutations keep clearing it. Note the interaction that makes this only
+  half a fix — `createTeam`/`addPlayer` call `syncSetupBaselineTeamsFromState`, which re-normalizes
+  every team, so adding one team at the party would wipe the preset seating out of the baseline
+  again.
+- Decide what a reset means before coding either: back to the authored pack, or back to empty.
+
+### Team genre and anthems are unreachable from the wizard
+`TeamsContentEntry` has `genre` and `anthems`, and the anthem cue reads them, but the `/admin`
+Roster step's `TEAM_FIELDS` is name-only — so a team created in the wizard gets no genre and no
+anthem, and the only way to give it one is editing `teams.json` by hand.
+
+- Existing teams keep both fields through a wizard save (the field specs spread the whole entry, and
+  `toTeamsContentEntries` re-adds them), so this is a gap in authoring, not a data-loss bug.
+- `anthems` is a string array, which no `EntryFieldSpec` shape covers today — the interesting part
+  is what a list-of-strings field looks like in `EntryListEditor` without turning it into a form
+  builder. One filename per line in a textarea is the cheap answer.
+- Pairs naturally with the anthem playlist rotation work above, which is the reason to have more
+  than one anthem per team in the first place.
 
 ### Passcode admin auth for the config wizard
 Gate `/admin` behind a server-side passcode: `ADMIN_PASSCODE` exchanged for an `adminSecret`,

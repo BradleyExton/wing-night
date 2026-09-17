@@ -89,7 +89,7 @@ Format:
 
 {
   "players": [
-    { "name": "Brad", "avatarSrc": "/local-assets/avatars/brad.jpg" },
+    { "name": "Brad", "avatarSrc": "/local-assets/avatars/brad.jpg", "team": "Molten Metal" },
     { "name": "Mike" }
   ]
 }
@@ -98,6 +98,11 @@ Rules:
 - `name` required
 - `avatarSrc` optional
 - Missing avatar → initials fallback
+- `team` optional — the team this player starts the night on, by team NAME from
+  `teams.json` (matched ignoring case and surrounding whitespace)
+- A `team` naming no declared team is invalid content: the load fails with a clear
+  error rather than leaving the player unassigned
+- Missing `team` → player starts unassigned, exactly as before
 
 ---
 
@@ -119,8 +124,10 @@ Format:
 
 Rules:
 - `name` required
-- Team rosters start empty in SETUP
-- Preset teams are empty setup scaffolding only; player assignments still happen in the host UI
+- Team rosters are seated from `players.json` — a team holds the players whose `team`
+  names it, in `players.json` order, and is empty when none do
+- Preset seating is a starting point, not a lock: the host still adds, moves and
+  auto-assigns players in SETUP until the game locks
 - Missing local `teams.json` falls back to sample preset teams
 - Host can still add teams manually in SETUP
 - Teams lock when game starts
@@ -228,7 +235,7 @@ Rounds 1–N repeat phases 3–8 with a per-team loop:
 
 ### SETUP
 Host:
-- Load players
+- Load players (already seated on the teams their preset declares)
 - Load teams
 - Create/add teams
 - Add players

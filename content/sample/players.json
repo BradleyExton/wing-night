@@ -1,20 +1,18 @@
 {
   "players": [
-    { "name": "Alex" },
-    { "name": "Jordan" },
-    { "name": "Taylor" },
-    { "name": "Casey" },
-    { "name": "Morgan" },
-    { "name": "Avery" },
-    { "name": "Riley" },
-    { "name": "Drew" },
-    { "name": "Quinn" },
-    { "name": "Cameron" },
-    { "name": "Reese" },
-    { "name": "Parker" },
-    { "name": "Rowan" },
-    { "name": "Skyler" },
-    { "name": "Jamie" },
-    { "name": "Dakota" }
+    { "name": "Alex", "team": "Molten Metal" },
+    { "name": "Caitlin", "team": "Molten Metal" },
+    { "name": "Dan", "team": "Molten Metal" },
+    { "name": "Rosie", "team": "Molten Metal" },
+    { "name": "Darren", "team": "Spice Girls" },
+    { "name": "Steve B", "team": "Spice Girls" },
+    { "name": "Sarah", "team": "Spice Girls" },
+    { "name": "Jazz", "team": "Spice Girls" },
+    { "name": "Dylan", "team": "Honky Tonk Heat" },
+    { "name": "Samantha", "team": "Honky Tonk Heat" },
+    { "name": "Rob", "team": "Honky Tonk Heat" },
+    { "name": "Joleeza", "team": "Disco Inferno" },
+    { "name": "Steve C", "team": "Disco Inferno" },
+    { "name": "Tay", "team": "Disco Inferno" }
   ]
 }

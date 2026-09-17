@@ -24,15 +24,24 @@ test("override dock score updates sync to display and panel closes on escape/scr
   await openOverridesPanelButton(hostPage).click();
   await expect(hostPage.getByRole("dialog")).toHaveCount(1);
 
-  await hostPage
-    .getByLabel("Team", { exact: true })
-    .selectOption({ label: "Scorch Squad" });
+  // The team name is READ from the select rather than written in here. Team names
+  // are party content — `content/sample/teams.json` is the host's own pack and
+  // gets renamed whenever the party's genres do — so a literal here makes a
+  // content edit fail a spec that is really about override sync. The options are
+  // the teams themselves (value = id, label = name), with no placeholder row.
+  const teamSelect = hostPage.getByLabel("Team", { exact: true });
+  const adjustedTeamName =
+    (await teamSelect.locator("option").first().textContent())?.trim() ?? "";
+
+  expect(adjustedTeamName).not.toBe("");
+
+  await teamSelect.selectOption({ label: adjustedTeamName });
   await hostPage.getByLabel("Score Delta").fill("2");
   await hostPage.getByRole("button", { name: "Apply" }).click();
 
   const adjustedTeamColumn = displayPage
     .locator("footer > div")
-    .filter({ hasText: "Scorch Squad" });
+    .filter({ hasText: adjustedTeamName });
   await expect(adjustedTeamColumn).toHaveCount(1);
   await expect(adjustedTeamColumn.getByText("2", { exact: true })).toBeVisible();
   await expect(adjustedTeamColumn.getByText("Leading")).toBeVisible();

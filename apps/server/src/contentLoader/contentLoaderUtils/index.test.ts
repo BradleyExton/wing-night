@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import test from "node:test";
+
+import { validateRosterAssignments } from "@wingnight/shared";
 
 import {
   CONTENT_ROOT_DIR_ENV_KEY,
@@ -87,4 +89,26 @@ test("falls back to the default when the env var is blank", () => {
     resolveContentRootDir({ [CONTENT_ROOT_DIR_ENV_KEY]: "   " }),
     DEFAULT_CONTENT_ROOT_DIR
   );
+});
+
+// The committed pack is the party's default, and a player seated on a team that
+// sample/teams.json does not declare fatals the boot of every fresh clone and
+// worktree — where there is no content/local/ to mask it. Cheaper to catch here
+// than at the party.
+//
+// Reads the two sample files directly, for the reason the fallback test above
+// documents: `loadContent` merges a developer's gitignored local content and
+// would make this red for reasons unrelated to the change under test.
+test("seats every sample player on a team the sample pack declares", () => {
+  const readSampleJson = (fileName: string): unknown =>
+    JSON.parse(
+      readFileSync(resolve(DEFAULT_CONTENT_ROOT_DIR, "sample", fileName), "utf8")
+    ) as unknown;
+
+  const players = readSampleJson("players.json") as {
+    players: { name: string; team?: string }[];
+  };
+  const teams = readSampleJson("teams.json") as { teams: { name: string }[] };
+
+  assert.deepEqual(validateRosterAssignments(players, teams), []);
 });

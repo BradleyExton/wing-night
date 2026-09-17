@@ -172,7 +172,14 @@ content/local/players.json
 Example:
 
 { "players": \[ { "name": "Brad", "avatarSrc":
-"/local-assets/avatars/brad.jpg" }, { "name": "Mike" } \] }
+"/local-assets/avatars/brad.jpg", "team": "Molten Metal" }, { "name":
+"Mike" } \] }
+
+`team` is optional and names a team from teams.json, matched ignoring
+case and surrounding whitespace. A player who declares one starts the
+night already seated on that team; a player who declares none starts
+unassigned, for the host to seat in SETUP. A `team` that matches no
+declared team is invalid content and fails the load with a clear error.
 
 ------------------------------------------------------------------------
 
@@ -186,9 +193,11 @@ Optional preset team shells for setup.
 
 { "teams": \[ { "name": "Team A" }, { "name": "Team B" } \] }
 
-Preset teams start empty, still allow manual team creation in setup, and
-work with the existing player assignment and auto-assign controls. Local
-teams override sample teams when present.
+A team's roster is whichever players name it in players.json, in that
+file's order — so a pack can arrive with teams already formed. Manual
+team creation, player assignment and auto-assign all still work on top of
+the preset seating until the game locks. Local teams override sample
+teams when present.
 
 ------------------------------------------------------------------------
 

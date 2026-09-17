@@ -3,6 +3,7 @@ import {
   validateDrawingContentFile,
   validateGameConfigFile,
   validatePlayersContentFile,
+  validateRosterAssignments,
   validateTeamsContentFile,
   validateTriviaContentFile,
   type ConfigContentSnapshot,
@@ -82,17 +83,32 @@ const VALIDATE_BY_KEY: Readonly<
 // the two sets would be in different coordinate systems and only one would ever
 // land on an input.
 export const selectDraftIssues = (draft: ConfigDraft): ValidationIssue[] => {
-  return CONFIG_FILE_KEYS.flatMap((key) =>
+  const perFileIssues = CONFIG_FILE_KEYS.flatMap((key) =>
     VALIDATE_BY_KEY[key](draft[key]).map(({ path, message }) => ({
       path: path.length === 0 ? key : `${key}.${path}`,
       message
     }))
   );
+
+  // The one rule no single-file validator can see: a player's `team` must name a
+  // team the teams draft declares. Merged into the same list, under the same
+  // `players.` prefix, so it blocks apply and lands on the offending field
+  // exactly like a name or avatar issue — and so a typo is caught HERE rather
+  // than by `seatPresetRosters` on the reload that follows the write, which
+  // would leave the bad file on disk and the next boot fatal.
+  const rosterIssues = validateRosterAssignments(draft.players, draft.teams).map(
+    ({ path, message }) => ({ path: `players.${path}`, message })
+  );
+
+  return [...perFileIssues, ...rosterIssues];
 };
 
 // New rows arrive blank and therefore invalid, which is the same bargain
 // `addRound` already makes: the field is highlighted until the host types into
-// it, rather than the row being seeded with a plausible-looking lie.
+// it, rather than the row being seeded with a plausible-looking lie. A new
+// player carries no `team` for the same reason: seeding the first team would
+// quietly put someone on a roster the host never picked, and absent already
+// means "unassigned, seat them from the SETUP deck".
 export const blankPlayer = (): PlayersContentEntry => ({ name: "" });
 
 export const blankTeam = (): TeamsContentEntry => ({ name: "" });
@@ -147,4 +163,23 @@ export const setPlayerAvatarSrc = (
   }
 
   return { ...nextPlayer, avatarSrc };
+};
+
+// Same presence semantics, same reason: `team` is validated on `"team" in
+// value`, so clearing the field has to remove the key. Clearing it means "this
+// player starts unassigned", which is a legitimate choice — the host seats them
+// from the SETUP deck — not an error to highlight.
+export const setPlayerTeam = (
+  player: PlayersContentEntry,
+  team: string
+): PlayersContentEntry => {
+  const nextPlayer = { ...player };
+
+  if (team.trim().length === 0) {
+    delete nextPlayer.team;
+
+    return nextPlayer;
+  }
+
+  return { ...nextPlayer, team };
 };

@@ -4,8 +4,9 @@ import type { SerializableValue } from "@wingnight/minigames-core";
 import { filterPromptsByRoster } from "./filterPromptsByRoster/index.js";
 import { loadGameConfig } from "./loadGameConfig/index.js";
 import { loadMinigameContent } from "./loadMinigameContent/index.js";
-import { loadPlayers } from "./loadPlayers/index.js";
+import { loadPlayerEntries, toPlayers } from "./loadPlayers/index.js";
 import { loadTeams } from "./loadTeams/index.js";
+import { seatPresetRosters } from "./seatPresetRosters/index.js";
 
 type LoadContentOptions = {
   contentRootDir?: string;
@@ -21,8 +22,16 @@ type LoadedContent = {
 export const loadContent = (
   options: LoadContentOptions = {}
 ): LoadedContent => {
-  const players = loadPlayers(options);
-  const teams = loadTeams(options);
+  // The two roster files are loaded separately and joined here, because the
+  // join is the only place both are in hand: a player entry's `team` seats them
+  // on the matching team's `playerIds`.
+  const playerEntries = loadPlayerEntries(options);
+  const players = toPlayers(playerEntries);
+  const teams = seatPresetRosters({
+    playerEntries,
+    players,
+    teams: loadTeams(options)
+  });
   const gameConfig = loadGameConfig(options);
   const minigameContentById = loadMinigameContent(options);
 

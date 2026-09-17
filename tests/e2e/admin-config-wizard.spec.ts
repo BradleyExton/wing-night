@@ -88,10 +88,11 @@ test("applies an edited round label from /admin and the display picks it up", as
 });
 
 // A rename rather than an add: the roster the rest of the suite runs against
-// keeps its 16 players and 4 teams, and `overrides.spec.ts` still finds
-// "Scorch Squad". Nothing else in the suite asserts on a player name or on a
-// trivia answer, so this pair is safe to leave applied for the specs that
-// follow — the seeded root is wiped and re-seeded at the start of every run.
+// keeps its player and team COUNT, and no spec pins a team name any more
+// (`overrides.spec.ts` reads whichever team the select offers first). Nothing
+// else in the suite asserts on a player name or on a trivia answer, so this pair
+// is safe to leave applied for the specs that follow — the seeded root is wiped
+// and re-seeded at the start of every run.
 const EDITED_PLAYER_NAME = "Preflight Pat";
 const EDITED_TRIVIA_ANSWER = "Rewritten answer";
 

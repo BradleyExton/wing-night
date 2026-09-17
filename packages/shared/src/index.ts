@@ -99,6 +99,11 @@ export type {
   PlayersContentFile
 } from "./content/players/index.js";
 export {
+  resolveTeamIndexByName,
+  toTeamMatchKey,
+  validateRosterAssignments
+} from "./content/rosterAssignment/index.js";
+export {
   isTeamsContentEntry,
   isTeamsContentFile,
   validateTeamsContentEntry,

@@ -37,6 +37,11 @@ export const adminCopy = {
   playerHeading: (playerIndex: number): string => `Player ${playerIndex + 1}`,
   playerNameFieldLabel: "Name",
   playerAvatarFieldLabel: "Avatar URL (optional)",
+  // Names a team from the Teams list below, and an unrecognised name blocks
+  // apply rather than seating nobody — so the label says where the value has to
+  // come from, and "optional" says that leaving it blank is a real choice
+  // (unassigned, seated from the SETUP deck) and not an unfinished row.
+  playerTeamFieldLabel: "Starting team (optional)",
   removePlayerLabel: (playerIndex: number): string =>
     `Remove player ${playerIndex + 1}`,
   addPlayerLabel: "+ Add a player",
@@ -52,6 +57,10 @@ export const adminCopy = {
   // in Review, because that is where they are when the rule bites.
   rosterOverwriteHint:
     "Applying replaces the whole roster on disk — including players and teams added from the SETUP deck tonight.",
+  // The reason a starting team is worth filling in at all: it is the difference
+  // between arriving to seated teams and re-forming them while guests watch.
+  rosterStartingTeamHint:
+    "A player's starting team must match a team name below. Players seated here arrive already on their team; leave it blank and the host seats them in SETUP.",
 
   promptIdFieldLabel: "Id",
   triviaSectionTitle: "Trivia",

@@ -8,6 +8,7 @@ import {
   selectDraftIssues,
   selectDirtyEdits,
   setPlayerAvatarSrc,
+  setPlayerTeam,
   toConfigDraft,
   type ConfigDraft
 } from "./index";
@@ -204,4 +205,52 @@ test("writes the key when an avatar is set to a non-empty value", () => {
     name: "Alex",
     avatarSrc: "/alex.png"
   });
+});
+
+test("removes the key rather than writing an empty string when a starting team is cleared", () => {
+  const player = setPlayerTeam({ name: "Alex", team: "Scorch Squad" }, "  ");
+
+  assert.equal("team" in player, false);
+  assert.deepEqual(player, { name: "Alex" });
+});
+
+test("writes the key when a starting team is set to a non-empty value", () => {
+  assert.deepEqual(setPlayerTeam({ name: "Alex" }, "Scorch Squad"), {
+    name: "Alex",
+    team: "Scorch Squad"
+  });
+});
+
+test("reports no issues when a player's starting team names a team in the draft", () => {
+  const draft = buildDraft({
+    players: [{ name: "Alex", team: "scorch squad" }],
+    teams: [{ name: "Scorch Squad" }]
+  });
+
+  assert.deepEqual(selectDraftIssues(draft), []);
+});
+
+// The cross-file rule has to land in `players.` coordinates, or the Roster
+// step's player field would never show it.
+test("reports a starting team that matches no team against the player's own field", () => {
+  const draft = buildDraft({
+    players: [{ name: "Alex" }, { name: "Jordan", team: "Pepper Riot" }],
+    teams: [{ name: "Scorch Squad" }]
+  });
+
+  const issues = selectDraftIssues(draft);
+
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0]?.path, "players.players[1].team");
+});
+
+// Renaming a team is how a good draft turns bad, and it must block the apply
+// rather than reach disk and fatal the next boot.
+test("blocks a draft where a team rename orphaned a player's starting team", () => {
+  const draft = buildDraft({
+    players: [{ name: "Alex", team: "Scorch Squad" }],
+    teams: [{ name: "Scorch Squadron" }]
+  });
+
+  assert.equal(selectDraftIssues(draft).length, 1);
 });

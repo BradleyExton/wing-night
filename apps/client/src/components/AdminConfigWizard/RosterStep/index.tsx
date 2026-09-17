@@ -6,7 +6,12 @@ import type {
 } from "@wingnight/shared";
 
 import { adminCopy } from "../../../copy/admin";
-import { blankPlayer, blankTeam, setPlayerAvatarSrc } from "../contentDraft";
+import {
+  blankPlayer,
+  blankTeam,
+  setPlayerAvatarSrc,
+  setPlayerTeam
+} from "../contentDraft";
 import { addEntry, removeEntry, setEntry } from "../entryListDraft";
 import { EntryListEditor, type EntryFieldSpec } from "../EntryListEditor";
 import type { IssueMessagesByPath } from "../selectIssueMessages";
@@ -37,6 +42,18 @@ const PLAYER_FIELDS: readonly EntryFieldSpec<PlayersContentEntry>[] = [
     // "" back to absent rather than writing one.
     read: (player) => player.avatarSrc ?? "",
     write: setPlayerAvatarSrc
+  },
+  {
+    // Same absent-vs-empty contract as `avatarSrc`. Kept a free-text field
+    // rather than a select over the teams draft: a select would have to decide
+    // what to show for a name that no longer matches a team — after a rename in
+    // the list below — and every answer either hides the stale value or rewrites
+    // it without being asked. `selectDraftIssues` flags the mismatch instead,
+    // which leaves the host's own text on screen next to what is wrong with it.
+    name: "team",
+    label: adminCopy.playerTeamFieldLabel,
+    read: (player) => player.team ?? "",
+    write: setPlayerTeam
   }
 ];
 
@@ -63,6 +80,7 @@ export const RosterStep = ({
       <section className={styles.section}>
         <h2 className={styles.sectionHeading}>{adminCopy.playersSectionTitle}</h2>
         <p className={styles.sectionHint}>{adminCopy.rosterOverwriteHint}</p>
+        <p className={styles.sectionHint}>{adminCopy.rosterStartingTeamHint}</p>
         <EntryListEditor
           idPrefix="admin-player"
           listPath="players"

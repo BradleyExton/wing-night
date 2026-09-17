@@ -6,6 +6,13 @@ import {
 export type PlayersContentEntry = {
   name: string;
   avatarSrc?: string;
+  // The team this player starts the night on, by team NAME — matched against
+  // `teams.json` rather than by index, so reordering either file cannot
+  // silently reseat anybody. Absent means unassigned, which is what every
+  // player was before preset seating existed. The name must resolve to a real
+  // team; that check needs both files and therefore lives in
+  // `content/rosterAssignment`, not here.
+  team?: string;
 };
 
 export type PlayersContentFile = {
@@ -38,6 +45,13 @@ export const validatePlayersContentEntry = (
   if ("avatarSrc" in value && !isNonEmptyString(value.avatarSrc)) {
     issues.push({
       path: "avatarSrc",
+      message: "must be a non-empty string when present"
+    });
+  }
+
+  if ("team" in value && !isNonEmptyString(value.team)) {
+    issues.push({
+      path: "team",
       message: "must be a non-empty string when present"
     });
   }

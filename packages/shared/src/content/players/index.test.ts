@@ -84,3 +84,39 @@ test("rejects via the predicate every value the validator reports issues for", (
     assert.ok(validatePlayersContentFile(value).length > 0);
   }
 });
+
+test("accepts an entry with no team key at all", () => {
+  assert.deepEqual(validatePlayersContentEntry({ name: "Ada" }), []);
+});
+
+test("accepts an entry whose team is a non-empty string", () => {
+  assert.deepEqual(
+    validatePlayersContentEntry({ name: "Ada", team: "Scorch Squad" }),
+    []
+  );
+});
+
+// Whether the name matches a real team is `validateRosterAssignments`'s job —
+// this validator only sees players.json and cannot know the teams.
+test("reports team when the key is present but blank", () => {
+  const issues = validatePlayersContentEntry({ name: "Ada", team: "   " });
+
+  assert.deepEqual(pathsOf(issues), ["team"]);
+});
+
+test("reports the entry index when a player's team is blank", () => {
+  const content = {
+    players: [{ name: "Ada", team: "Scorch Squad" }, { name: "Grace", team: "" }]
+  };
+
+  assert.deepEqual(pathsOf(validatePlayersContentFile(content)), [
+    "players[1].team"
+  ]);
+});
+
+test("rejects a team that is present and not a string", () => {
+  assert.deepEqual(
+    pathsOf(validatePlayersContentEntry({ name: "Ada", team: 2 })),
+    ["team"]
+  );
+});

@@ -19,14 +19,29 @@ export type ReadConfigContentResult =
 
 // `loadPlayers` derives ids positionally, so dropping them here is lossless —
 // and the wizard edits players.json, whose entries have no id field.
+//
+// `team` is the exception to "read it off the player": it is not a player field
+// at all, it is `Team.playerIds` read backwards. Deriving it here rather than
+// threading the raw entries through `loadContent` keeps one source of truth for
+// membership, and the derivation is lossless because the loader seated those
+// ids from these same names.
 const toPlayersContentEntries = (
-  players: Player[]
+  players: Player[],
+  teams: Team[]
 ): ConfigContentSnapshot["players"] => {
-  return players.map((player) =>
-    player.avatarSrc === undefined
-      ? { name: player.name }
-      : { name: player.name, avatarSrc: player.avatarSrc }
+  const teamNameByPlayerId = new Map(
+    teams.flatMap((team) => team.playerIds.map((playerId) => [playerId, team.name]))
   );
+
+  return players.map((player) => {
+    const teamName = teamNameByPlayerId.get(player.id);
+
+    return {
+      name: player.name,
+      ...(player.avatarSrc === undefined ? {} : { avatarSrc: player.avatarSrc }),
+      ...(teamName === undefined ? {} : { team: teamName })
+    };
+  });
 };
 
 // Same shape, same reason: `loadTeams` derives ids positionally, so dropping
@@ -63,7 +78,7 @@ export const readConfigContent = (
       ok: true,
       content: {
         gameConfig,
-        players: toPlayersContentEntries(players),
+        players: toPlayersContentEntries(players, teams),
         teams: toTeamsContentEntries(teams),
         triviaPrompts: isTriviaContentFile(triviaContent)
           ? triviaContent.prompts
