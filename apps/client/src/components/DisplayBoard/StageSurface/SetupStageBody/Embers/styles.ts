@@ -1,8 +1,12 @@
 export const container =
   "pointer-events-none absolute inset-0 z-[1] overflow-hidden";
 
+// The per-particle delay rides inside the `animation` shorthand rather than a separate
+// `[animation-delay:...]` utility: the shorthand resets animation-delay, and Tailwind emits it
+// after the standalone delay rule at equal specificity, so a split pair silently computes 0s and
+// every ember rises in unison. Second <time> in the shorthand is the delay.
 const particleBase =
-  "absolute -bottom-[2vh] h-1 w-1 rounded-full bg-ember opacity-0 [box-shadow:0_0_8px_theme(colors.ember),0_0_16px_rgba(251,191,36,0.6)] motion-reduce:hidden motion-reduce:[animation:none] [animation:rise_var(--ember-duration,9s)_linear_infinite] [animation-delay:var(--ember-delay,0s)]";
+  "absolute -bottom-[2vh] h-1 w-1 rounded-full bg-ember opacity-0 [box-shadow:0_0_8px_theme(colors.ember),0_0_16px_rgba(251,191,36,0.6)] motion-reduce:hidden motion-reduce:[animation:none] [animation:rise_var(--ember-duration,9s)_linear_var(--ember-delay,0s)_infinite]";
 
 const particleSmall = "h-[3px] w-[3px]";
 
