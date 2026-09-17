@@ -150,6 +150,19 @@ Both of these are `MinigameRuntimePlugin` packages registered on server and clie
 trivia/geo/drawing. Read `docs/minigame-authoring-guide.md` first — adding a `MinigameType` breaks
 every `Record<MinigameType, …>` in the repo until fully wired, so there's no throwaway half-state.
 
+### SEAR — stop the hidden clock at the target time
+Blind-clock precision relay: START on the tablet, three visible seconds on the TV, then the lid
+drops and the player taps STOP at the target from memory. Scored by absolute error in bands.
+
+- **Fully planned.** `docs/minigames/sear-spec.md` §0 is the ordered build plan with every open
+  question closed; the Research section is the reasoning. Build from §0, in order, one change.
+- One engine change rides along: an optional `receivedAtMs` stamped onto the minigame action
+  envelope by `dispatchMinigameAction`, so a timing-aware reducer stays pure and testable with
+  literal timestamps. Additive; existing plugins ignore it.
+- No content file, no audio, no `/dev/lab/` — the standard `/dev/minigame/sear` sandbox is the
+  feel lab. Band widths and target lengths are rules config to tune at a table.
+- Not scheduled in the sample config (song-guess precedent); `timers.searSeconds` is still added.
+
 ### ANAMORPH — rotate a 3D point cloud until it snaps into a silhouette
 TV renders a seeded point cloud that resolves into a recognizable shape from exactly one viewing
 angle; the active team hunts that angle with two dials on the tablet.

@@ -25,13 +25,19 @@ Last updated: 2026-09-16
 | Read the Room | idea | promising | [ideas/read-the-room.md](ideas/read-the-room.md) |
 | ANAMORPH | idea | promising | [ideas/anamorph.md](ideas/anamorph.md) |
 | CONTRAPTION | idea | promising | [ideas/contraption.md](ideas/contraption.md) |
+| SEAR | spec | ready | [sear-spec.md](sear-spec.md) (build plan in §0; runtime not started) |
 
-Target: **at least 8 games**. Current: 6 shipped, 1 spec'd, 3 ideas → 10 concepts, target covered.
+Target: **at least 8 games**. Current: 6 shipped, 2 spec'd, 3 ideas → 11 concepts, target covered.
 
 ANAMORPH and CONTRAPTION were added to close a specific gap: every other game on this
 list is words, recall, or expression, and none of them make the TV do something the room
 gasps at. Both are procedural — the server sends a seed and the display renders, so the
 graphics cost nothing on the wire and survive reconnect.
+
+SEAR was added to close a different gap: every game above is think-then-commit and runs three
+to five minutes a turn, so the night has no short, high-energy beat and no palate cleanser between
+the heavy rounds. It is a blind-clock precision game rather than a reaction-speed game on purpose —
+the spec explains why raw reaction time is mostly a sobriety test.
 
 ## Adding an idea
 
