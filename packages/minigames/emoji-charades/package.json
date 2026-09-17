@@ -1,0 +1,43 @@
+{
+  "name": "@wingnight/minigames-emoji-charades",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/runtime/index.ts",
+  "types": "src/runtime/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/runtime/index.ts",
+      "default": "./src/runtime/index.ts"
+    },
+    "./runtime": {
+      "types": "./src/runtime/index.ts",
+      "default": "./src/runtime/index.ts"
+    },
+    "./client": {
+      "types": "./src/client/index.ts",
+      "default": "./src/client/index.ts"
+    },
+    "./dev": {
+      "types": "./src/dev/index.ts",
+      "default": "./src/dev/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "tsx --test src/**/*.test.ts src/**/*.test.tsx"
+  },
+  "dependencies": {
+    "@wingnight/minigames-core": "workspace:*",
+    "@wingnight/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}

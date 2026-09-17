@@ -29,6 +29,13 @@ export type {
   DrawingPromptReveal,
   DrawingStroke,
   DisplayRoomStateSnapshot,
+  EmojiCharadesDeckOption,
+  EmojiCharadesMinigameDisplayView,
+  EmojiCharadesMinigameHostSubject,
+  EmojiCharadesMinigameHostView,
+  EmojiCharadesSubjectOutcome,
+  EmojiCharadesSubjectReveal,
+  EmojiCharadesSubState,
   GeoGuessCoordinates,
   GeoMinigameDisplayPrompt,
   GeoMinigameDisplayResult,
@@ -132,6 +139,18 @@ export {
   readFeaturedPlayers
 } from "./content/featuredPlayers/index.js";
 export type { FeaturedPlayers } from "./content/featuredPlayers/index.js";
+  isEmojiCharadesContentFile,
+  isEmojiCharadesDeck,
+  isEmojiCharadesSubject,
+  validateEmojiCharadesContentFile,
+  validateEmojiCharadesDeck,
+  validateEmojiCharadesSubject
+} from "./content/emojiCharades/index.js";
+export type {
+  EmojiCharadesContentFile,
+  EmojiCharadesDeck,
+  EmojiCharadesSubject
+} from "./content/emojiCharades/index.js";
 export {
   isGeoContentFile,
   isGeoCoordinates,

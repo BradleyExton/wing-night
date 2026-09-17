@@ -1,4 +1,5 @@
 import { drawingRuntimePlugin } from "@wingnight/minigames-drawing/runtime";
+import { emojiCharadesRuntimePlugin } from "@wingnight/minigames-emoji-charades/runtime";
 import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
 import { songGuessRuntimePlugin } from "@wingnight/minigames-song-guess/runtime";
 import { triviaRuntimePlugin } from "@wingnight/minigames-trivia/runtime";
@@ -11,7 +12,8 @@ const runtimePluginByMinigameType: Record<MinigameType, MinigameRuntimePlugin> =
   TRIVIA: triviaRuntimePlugin,
   GEO: geoRuntimePlugin,
   SONG_GUESS: songGuessRuntimePlugin,
-  DRAWING: drawingRuntimePlugin
+  DRAWING: drawingRuntimePlugin,
+  EMOJI_CHARADES: emojiCharadesRuntimePlugin
 };
 
 export const resolveMinigameRuntimePlugin = (

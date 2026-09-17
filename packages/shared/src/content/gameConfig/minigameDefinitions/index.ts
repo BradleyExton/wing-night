@@ -78,6 +78,23 @@ export const MINIGAME_DEFINITIONS = {
         "skipPrompt"
       ]
     }
+  },
+  EMOJI_CHARADES: {
+    id: "EMOJI_CHARADES",
+    slug: "emoji-charades",
+    timerKey: "emojiCharadesSeconds",
+    rulesKey: "emojiCharades",
+    contractMetadata: {
+      minigameApiVersion: MINIGAME_API_VERSION,
+      capabilityFlags: [
+        "selectDeck",
+        "appendEmoji",
+        "removeEmoji",
+        "clearEmojis",
+        "markCorrect",
+        "skipSubject"
+      ]
+    }
   }
 } as const satisfies Record<string, MinigameDefinition>;
 

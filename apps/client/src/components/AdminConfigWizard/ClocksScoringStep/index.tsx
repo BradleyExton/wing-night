@@ -18,7 +18,8 @@ const TIMER_FIELDS: readonly { key: TimerKey; label: string }[] = [
   { key: "eatingSeconds", label: adminCopy.eatingTimerLabel },
   { key: "triviaSeconds", label: adminCopy.triviaTimerLabel },
   { key: "geoSeconds", label: adminCopy.geoTimerLabel },
-  { key: "drawingSeconds", label: adminCopy.drawingTimerLabel }
+  { key: "drawingSeconds", label: adminCopy.drawingTimerLabel },
+  { key: "emojiCharadesSeconds", label: adminCopy.emojiCharadesTimerLabel }
 ];
 
 export const ClocksScoringStep = ({

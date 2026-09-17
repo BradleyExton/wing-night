@@ -6,6 +6,9 @@ import type {
 import { drawingRendererBundle } from "@wingnight/minigames-drawing/client";
 import { drawingDevManifest } from "@wingnight/minigames-drawing/dev";
 import { drawingRuntimePlugin } from "@wingnight/minigames-drawing/runtime";
+import { emojiCharadesRendererBundle } from "@wingnight/minigames-emoji-charades/client";
+import { emojiCharadesDevManifest } from "@wingnight/minigames-emoji-charades/dev";
+import { emojiCharadesRuntimePlugin } from "@wingnight/minigames-emoji-charades/runtime";
 import { geoRendererBundle } from "@wingnight/minigames-geo/client";
 import { geoDevManifest } from "@wingnight/minigames-geo/dev";
 import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
@@ -45,6 +48,11 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
     rendererBundle: drawingRendererBundle,
     devManifest: drawingDevManifest,
     runtimePlugin: drawingRuntimePlugin
+  },
+  EMOJI_CHARADES: {
+    rendererBundle: emojiCharadesRendererBundle,
+    devManifest: emojiCharadesDevManifest,
+    runtimePlugin: emojiCharadesRuntimePlugin
   }
 };
 

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 592 370" fill="none" role="img" aria-label="Emoji Charades mini-game artwork">
+  <defs>
+    <filter id="ec-shadow" x="-40" y="-40" width="672" height="450" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#121212" flood-opacity="0.18" />
+    </filter>
+    <linearGradient id="ec-frame" x1="50%" x2="50%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#242424" />
+      <stop offset="100%" stop-color="#1C1C1C" />
+    </linearGradient>
+  </defs>
+  <g filter="url(#ec-shadow)">
+    <rect x="46" y="40" width="500" height="290" rx="26" fill="url(#ec-frame)" stroke="#FBBF24" stroke-width="4" />
+  </g>
+  <g font-size="62" text-anchor="middle" dominant-baseline="central">
+    <text x="130" y="124">🦖</text>
+    <text x="256" y="124">🌴</text>
+    <text x="382" y="124">🚙</text>
+    <text x="130" y="246">⚡</text>
+    <text x="256" y="246">🧬</text>
+  </g>
+  <rect x="330" y="196" width="102" height="102" rx="18" fill="#FBBF24" fill-opacity="0.14" stroke="#FBBF24" stroke-width="4" />
+  <g stroke="#A3A3A3" stroke-width="3" stroke-dasharray="10 9" fill="none" opacity="0.5">
+    <rect x="456" y="72" width="66" height="66" rx="14" />
+    <rect x="456" y="196" width="66" height="66" rx="14" />
+  </g>
+  <g fill="#F97316">
+    <circle cx="256" cy="352" r="6" />
+    <circle cx="282" cy="352" r="6" fill-opacity="0.55" />
+    <circle cx="308" cy="352" r="6" fill-opacity="0.25" />
+  </g>
+</svg>

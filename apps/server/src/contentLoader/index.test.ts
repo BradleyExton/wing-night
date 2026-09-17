@@ -5,6 +5,7 @@ import { loadContent } from "./index.js";
 import {
   createContentRoot,
   createValidDrawingJson as createValidDrawing,
+  createValidEmojiCharadesJson as createValidEmojiCharades,
   createValidGameConfigJson,
   createValidGeoJson as createValidGeo,
   createValidSongGuessJson as createValidSongGuess,
@@ -46,6 +47,11 @@ test("loads all content from local files when available", () => {
     "local/minigames/song-guess.json",
     createValidSongGuess("Local")
   );
+  writeContentFile(
+    contentRoot,
+    "local/minigames/emoji-charades.json",
+    createValidEmojiCharades("Local")
+  );
 
   writeContentFile(
     contentRoot,
@@ -85,6 +91,11 @@ test("loads all content from local files when available", () => {
     contentRoot,
     "sample/minigames/song-guess.json",
     createValidSongGuess("Sample")
+  );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/emoji-charades.json",
+    createValidEmojiCharades("Sample")
   );
 
   const content = loadContent({ contentRootDir: contentRoot });
@@ -151,6 +162,11 @@ test("falls back to sample files when local files are missing", () => {
     contentRoot,
     "sample/minigames/song-guess.json",
     createValidSongGuess("Sample")
+  );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/emoji-charades.json",
+    createValidEmojiCharades("Sample")
   );
 
   const content = loadContent({ contentRootDir: contentRoot });

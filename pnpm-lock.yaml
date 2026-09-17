@@ -59,6 +59,9 @@ importers:
       '@wingnight/minigames-drawing':
         specifier: workspace:*
         version: link:../../packages/minigames/drawing
+      '@wingnight/minigames-emoji-charades':
+        specifier: workspace:*
+        version: link:../../packages/minigames/emoji-charades
       '@wingnight/minigames-geo':
         specifier: workspace:*
         version: link:../../packages/minigames/geo
@@ -123,6 +126,9 @@ importers:
       '@wingnight/minigames-drawing':
         specifier: workspace:*
         version: link:../../packages/minigames/drawing
+      '@wingnight/minigames-emoji-charades':
+        specifier: workspace:*
+        version: link:../../packages/minigames/emoji-charades
       '@wingnight/minigames-geo':
         specifier: workspace:*
         version: link:../../packages/minigames/geo
@@ -188,6 +194,31 @@ importers:
       perfect-freehand:
         specifier: ^1.2.2
         version: 1.2.3
+      react:
+        specifier: 'catalog:'
+        version: 18.3.1
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      '@types/react':
+        specifier: 'catalog:'
+        version: 18.3.28
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  packages/minigames/emoji-charades:
+    dependencies:
+      '@wingnight/minigames-core':
+        specifier: workspace:*
+        version: link:../core
+      '@wingnight/shared':
+        specifier: workspace:*
+        version: link:../../shared
       react:
         specifier: 'catalog:'
         version: 18.3.1

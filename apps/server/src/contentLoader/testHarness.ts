@@ -81,6 +81,20 @@ export const createValidSongGuessJson = (prefix: string): string => {
   });
 };
 
+export const createValidEmojiCharadesJson = (prefix: string): string => {
+  return JSON.stringify({
+    decks: [
+      {
+        id: `${prefix.toLowerCase()}-deck-1`,
+        label: `${prefix} Deck`,
+        subjects: [
+          { id: `${prefix.toLowerCase()}-subject-1`, text: `${prefix} Subject` }
+        ]
+      }
+    ]
+  });
+};
+
 type ValidGameConfigOptions = {
   questionsPerTurn?: number;
   setupPreviewRoundSlots?: number;
@@ -123,7 +137,8 @@ export const createValidGameConfigJson = (
       eatingSeconds: 120,
       triviaSeconds: 30,
       geoSeconds: 45,
-      drawingSeconds: 60
+      drawingSeconds: 60,
+      emojiCharadesSeconds: 90
     }
   });
 };
@@ -173,5 +188,10 @@ export const writeValidContentTree = (
     contentRoot,
     `${scope}/minigames/song-guess.json`,
     createValidSongGuessJson(prefix)
+  );
+  writeContentFile(
+    contentRoot,
+    `${scope}/minigames/emoji-charades.json`,
+    createValidEmojiCharadesJson(prefix)
   );
 };

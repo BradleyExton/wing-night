@@ -179,11 +179,59 @@ export type SongGuessMinigameHostView = MinigameHostViewBase & {
   scoresBySongId: Record<string, SongGuessTeamScore>;
 };
 
+export type EmojiCharadesSubState =
+  | "deck_selection"
+  | "playing"
+  | "turn_complete";
+
+export type EmojiCharadesSubjectOutcome = "CORRECT" | "SKIPPED";
+
+export type EmojiCharadesSubjectReveal = {
+  subjectId: string;
+  subjectText: string;
+  outcome: EmojiCharadesSubjectOutcome;
+  revealedAtMs: number;
+  expiresAtMs: number;
+};
+
+// `isSelectable` mirrors the deck.subjects.length >= pointsMax gate, so the
+// picker can disable an undersized deck instead of dispatching a selectDeck
+// the reducer will refuse.
+export type EmojiCharadesDeckOption = {
+  id: string;
+  label: string;
+  subjectCount: number;
+  isSelectable: boolean;
+};
+
+export type EmojiCharadesMinigameHostSubject = {
+  id: string;
+  text: string;
+};
+
+export type EmojiCharadesMinigameHostView = MinigameHostViewBase & {
+  minigame: "EMOJI_CHARADES";
+} & (
+    | {
+        status: "deck_selection";
+        availableDecks: EmojiCharadesDeckOption[];
+      }
+    | {
+        status: "playing";
+        currentSubject: EmojiCharadesMinigameHostSubject | null;
+        emojiSequence: string[];
+        subjectsRemaining: number;
+        reveal: EmojiCharadesSubjectReveal | null;
+      }
+    | { status: "turn_complete" }
+  );
+
 export type MinigameHostView =
   | TriviaMinigameHostView
   | GeoMinigameHostView
   | SongGuessMinigameHostView
-  | DrawingMinigameHostView;
+  | DrawingMinigameHostView
+  | EmojiCharadesMinigameHostView;
 
 export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
   minigame: "TRIVIA";
@@ -234,11 +282,29 @@ export type SongGuessMinigameDisplayView = MinigameDisplayViewBase & {
     | { phase: "done" }
   );
 
+// Answer-safe: the display never receives `currentSubject`. Subject text
+// reaches the TV only inside `reveal`, after the tablet resolves it.
+export type EmojiCharadesMinigameDisplayView = MinigameDisplayViewBase & {
+  minigame: "EMOJI_CHARADES";
+} & (
+    | {
+        status: "deck_selection";
+        availableDecks: EmojiCharadesDeckOption[];
+      }
+    | {
+        status: "playing";
+        emojiSequence: string[];
+        reveal: EmojiCharadesSubjectReveal | null;
+      }
+    | { status: "turn_complete" }
+  );
+
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView
   | GeoMinigameDisplayView
   | SongGuessMinigameDisplayView
-  | DrawingMinigameDisplayView;
+  | DrawingMinigameDisplayView
+  | EmojiCharadesMinigameDisplayView;
 
 export type RoomFatalError = {
   code: "CONTENT_LOAD_FAILED";

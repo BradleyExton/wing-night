@@ -48,7 +48,8 @@ export const buildGameConfig = (
       eatingSeconds: 120,
       triviaSeconds: 30,
       geoSeconds: 45,
-      drawingSeconds: 60
+      drawingSeconds: 60,
+      emojiCharadesSeconds: 90
     },
     ...overrides
   };

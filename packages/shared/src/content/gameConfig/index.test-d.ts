@@ -38,6 +38,7 @@ export type ValidGameConfigTimersCheck = Assert<
       triviaSeconds: number;
       geoSeconds: number;
       drawingSeconds: number;
+      emojiCharadesSeconds: number;
     },
     GameConfigTimers
   >

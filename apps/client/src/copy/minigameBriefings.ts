@@ -86,6 +86,20 @@ const minigameBriefingContentByType: Record<
 > = {
   TRIVIA: resolveTriviaBriefingContent,
   SONG_GUESS: resolveSongGuessBriefingContent,
+  EMOJI_CHARADES: () => {
+    return {
+      displayName: "Emoji Charades",
+      illustrationPath: `${DISPLAY_ASSET_ROOT}/emoji-charades-illustration.svg`,
+      illustrationAlt: "Emoji Charades mini-game artwork",
+      summary:
+        "One picker holds the tablet and clues the subject in emoji — no words, no letters.",
+      steps: [
+        "Your team picks a deck on the tablet.",
+        "The picker builds a clue in emoji; it appears on the TV live.",
+        "Shout your guesses — the picker taps Got It or Skip."
+      ]
+    };
+  },
   GEO: () => {
     return {
       displayName: "Geo",

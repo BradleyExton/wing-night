@@ -24,7 +24,8 @@ const validGameConfig = (): Record<string, unknown> => ({
     eatingSeconds: 300,
     triviaSeconds: 60,
     geoSeconds: 60,
-    drawingSeconds: 90
+    drawingSeconds: 90,
+    emojiCharadesSeconds: 90
   }
 });
 
@@ -101,7 +102,8 @@ test("accumulates every violation rather than stopping at the first", () => {
     "rounds[0].label",
     "rounds[0].pointsPerPlayer",
     "minigameScoring.defaultMax",
-    "timers.drawingSeconds"
+    "timers.drawingSeconds",
+    "timers.emojiCharadesSeconds"
   ]);
 });
 
@@ -112,7 +114,8 @@ test("reports every missing timer key separately", () => {
     "timers.eatingSeconds",
     "timers.triviaSeconds",
     "timers.geoSeconds",
-    "timers.drawingSeconds"
+    "timers.drawingSeconds",
+    "timers.emojiCharadesSeconds"
   ]);
 });
 
