@@ -18,10 +18,31 @@
     },
     {
       "round": 3,
-      "label": "Final Fire",
+      "label": "Getting Spicy",
+      "sauce": "Mango Habanero",
+      "pointsPerPlayer": 3,
+      "minigame": "SONG_GUESS"
+    },
+    {
+      "round": 4,
+      "label": "Full Sweat",
+      "sauce": "Scotch Bonnet",
+      "pointsPerPlayer": 4,
+      "minigame": "EMOJI_CHARADES"
+    },
+    {
+      "round": 5,
+      "label": "Danger Zone",
       "sauce": "Ghost Pepper",
       "pointsPerPlayer": 4,
       "minigame": "DRAWING"
+    },
+    {
+      "round": 6,
+      "label": "Final Fire",
+      "sauce": "Carolina Reaper",
+      "pointsPerPlayer": 5,
+      "minigame": "JOUST"
     }
   ],
   "minigameScoring": {
@@ -33,7 +54,17 @@
       "questionsPerTurn": 5
     },
     "geo": {
-      "promptsPerTurn": 3
+      "promptsPerTurn": 2
+    },
+    "songGuess": {
+      "songsPerTurn": 3
+    },
+    "emojiCharades": {
+      "pointsPerCorrect": 1,
+      "banLetterEmojis": true
+    },
+    "joust": {
+      "shotsPerTurn": 3
     }
   },
   "timers": {

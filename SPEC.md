@@ -159,11 +159,15 @@ Example:
     "defaultMax": 15,
     "finalRoundMax": 20
   },
+  "minigameRules": {
+    "trivia": { "questionsPerTurn": 5 }
+  },
   "timers": {
     "eatingSeconds": 120,
     "triviaSeconds": 30,
     "geoSeconds": 45,
-    "drawingSeconds": 60
+    "drawingSeconds": 60,
+    "emojiCharadesSeconds": 90
   }
 }
 
@@ -173,6 +177,10 @@ Rules:
 - Config locks once game starts
 - Invalid config blocks start
 - `setupPreviewRoundSlots` is optional and controls setup-screen lineup preview slots (filler cards render when slots exceed configured rounds)
+- `timers` must carry `eatingSeconds` plus one field per clock-paced minigame; host-paced
+  games (`SONG_GUESS`, `JOUST`) declare `timerKey: null` and contribute none
+- `minigameRules` is optional, keyed by each game's `rulesKey`; an omitted game falls back to
+  its runtime plugin's defaults
 
 ---
 

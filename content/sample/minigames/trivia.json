@@ -14,6 +14,91 @@
       "id": "scoville-name",
       "question": "What scale is used to measure pepper heat?",
       "answer": "Scoville scale"
+    },
+    {
+      "id": "buffalo-city",
+      "question": "Buffalo wings take their name from a city in which US state?",
+      "answer": "New York"
+    },
+    {
+      "id": "anchor-bar",
+      "question": "Which Buffalo restaurant is credited with inventing the Buffalo wing in 1964?",
+      "answer": "The Anchor Bar"
+    },
+    {
+      "id": "scoville-inventor",
+      "question": "Which pharmacist devised the pepper heat scale in 1912?",
+      "answer": "Wilbur Scoville"
+    },
+    {
+      "id": "bell-pepper-shu",
+      "question": "How many Scoville heat units does a bell pepper score?",
+      "answer": "Zero"
+    },
+    {
+      "id": "capsaicin-receptor",
+      "question": "Capsaicin hijacks which heat-sensing receptor to fake a burn?",
+      "answer": "TRPV1"
+    },
+    {
+      "id": "milk-protein",
+      "question": "Which protein in milk helps strip capsaicin off your tongue?",
+      "answer": "Casein"
+    },
+    {
+      "id": "carolina-reaper",
+      "question": "Which pepper held the Guinness world's-hottest title from 2013 to 2023?",
+      "answer": "The Carolina Reaper"
+    },
+    {
+      "id": "pepper-x",
+      "question": "Which pepper took the Guinness world's-hottest title in 2023?",
+      "answer": "Pepper X"
+    },
+    {
+      "id": "jalapeno-heat",
+      "question": "Roughly how many Scoville units does a jalapeno score?",
+      "answer": "About 2,500 to 8,000"
+    },
+    {
+      "id": "tabasco-island",
+      "question": "Tabasco sauce is made on which Louisiana island?",
+      "answer": "Avery Island"
+    },
+    {
+      "id": "sriracha-rooster",
+      "question": "Which bird appears on the classic Huy Fong Sriracha bottle?",
+      "answer": "A rooster"
+    },
+    {
+      "id": "franks-redhot",
+      "question": "Frank's RedHot is the sauce traditionally used in which wing style?",
+      "answer": "Buffalo wings"
+    },
+    {
+      "id": "wing-parts",
+      "question": "What are the two meaty parts of a chicken wing called?",
+      "answer": "The drumette and the flat"
+    },
+    {
+      "id": "blue-cheese-dip",
+      "question": "Which dip is traditionally served alongside Buffalo wings?",
+      "answer": "Blue cheese"
+    },
+    {
+      "id": "capsaicin-solubility",
+      "question": "Capsaicin dissolves in fat and alcohol, but not in what?",
+      "answer": "Water"
+    },
+    {
+      "id": "ghost-pepper-name",
+      "question": "The ghost pepper is also known by what Indian name?",
+      "answer": "Bhut jolokia"
+    },
+    {
+      "id": "scoville-modern",
+      "question": "Which lab technique has largely replaced taste-testing for measuring pepper heat?",
+      "answer": "High-performance liquid chromatography"
     }
   ]
 }

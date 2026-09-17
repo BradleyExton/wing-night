@@ -112,7 +112,7 @@ test("intro lock screen transitions to round-intro countdown on display", async 
   await expect(
     hostPage.getByRole("button", { name: "Open Team Briefing" })
   ).toBeVisible();
-  await expect(hostPage.locator("header").getByText("Round 1 of 3")).toBeVisible();
+  await expect(hostPage.locator("header").getByText("Round 1 of 6")).toBeVisible();
   await expect(hostPage.getByText("Game starts in")).toHaveCount(0);
 
   await expect(displayPage.getByText("Coming up")).toBeVisible();
