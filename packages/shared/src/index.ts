@@ -139,6 +139,7 @@ export {
   readFeaturedPlayers
 } from "./content/featuredPlayers/index.js";
 export type { FeaturedPlayers } from "./content/featuredPlayers/index.js";
+export {
   isEmojiCharadesContentFile,
   isEmojiCharadesDeck,
   isEmojiCharadesSubject,

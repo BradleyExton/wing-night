@@ -222,6 +222,11 @@ const writeRosterContentRoot = (playersJson: string, teamsJson: string): string 
     "sample/minigames/song-guess.json",
     createValidSongGuess("Sample")
   );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/emoji-charades.json",
+    createValidEmojiCharades("Sample")
+  );
 
   return contentRoot;
 };
