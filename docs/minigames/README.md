@@ -10,6 +10,7 @@ Last updated: 2026-09-16
 - **spec** — a draft `<slug>-spec.md` here at the root of `docs/minigames/`. Ready (or nearly ready) to build.
 - **building** — real implementation in progress under `packages/minigames/<slug>/`.
 - **shipped** — playable, tested, in the round rotation.
+- **killed** — investigated and ruled out. The doc records why, so nobody re-investigates.
 
 ## Roadmap
 
@@ -24,13 +25,20 @@ Last updated: 2026-09-16
 | Read the Room | idea | promising | [ideas/read-the-room.md](ideas/read-the-room.md) |
 | ANAMORPH | idea | promising | [ideas/anamorph.md](ideas/anamorph.md) |
 | CONTRAPTION | idea | promising | [ideas/contraption.md](ideas/contraption.md) |
+| STUNT | idea | promising | [ideas/stunt.md](ideas/stunt.md) |
+| Tilt / balance / shake (tablet sensors) | killed | — | [ideas/stunt.md §0](ideas/stunt.md) — motion APIs are secure-context only; plain-HTTP LAN origins get nothing on iPad or Android |
 
-Target: **at least 8 games**. Current: 4 shipped, 2 spec'd, 3 ideas → 9 concepts, target covered.
+Target: **at least 8 games**. Current: 4 shipped, 2 spec'd, 4 ideas → 10 concepts, target covered. One type (tablet sensors) investigated and killed.
 
 ANAMORPH and CONTRAPTION were added to close a specific gap: every other game on this
 list is words, recall, or expression, and none of them make the TV do something the room
 gasps at. Both are procedural — the server sends a seed and the display renders, so the
 graphics cost nothing on the wire and survive reconnect.
+
+STUNT closes the other gap: nothing on the list touched the body. A tablet-as-sensor type
+(tilt/balance) was the first candidate and is dead on arrival — the host tablet is served over
+plain HTTP on the LAN, and every engine gates motion sensors on a secure context. The evidence
+lives in the STUNT doc's §0; STUNT is the host-judged physical challenge that came out of it.
 
 ## Adding an idea
 
