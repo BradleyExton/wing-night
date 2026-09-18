@@ -1,7 +1,11 @@
 // Pure pieces of the avatar importer, kept apart from index.mjs so they can be
 // tested without a network, a filesystem or an API key.
 
-export const AVATAR_PUBLIC_PATH = "/local-assets/avatars";
+// Pack-relative, with no leading slash: `resolveContentAssetSrc` reads that as
+// "this lives in the content pack" and addresses it against the SERVER origin,
+// which is the only spelling that loads on the TV. A leading slash would mean
+// "Vite serves this" and 404 there.
+export const AVATAR_PACK_PATH = "avatars";
 // The head is generated on this background and the background is then keyed
 // out to alpha, so the bird can wear the head's own silhouette. Magenta,
 // because nothing in a face, beard or hair comes near it — the palette's
@@ -168,7 +172,7 @@ export const applyAvatarSrc = (playersFile, generatedSlugs) => {
     players: playersFile.players.map((player) => {
       const slug = slugifyName(player.name);
       return generatedSet.has(slug)
-        ? { ...player, avatarSrc: `${AVATAR_PUBLIC_PATH}/${slug}.png` }
+        ? { ...player, avatarSrc: `${AVATAR_PACK_PATH}/${slug}.png` }
         : player;
     })
   };

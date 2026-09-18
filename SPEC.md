@@ -71,7 +71,7 @@ Wing Night separates engine from custom content.
 
 ### Loading Priority
 
-1. `content/local/` (gitignored)
+1. `<content root>/local/` (the night pack, or the repo's gitignored `content/local/`)
 2. Fallback to `content/sample/` (committed)
 
 If local content is missing, sample content must allow the game to run.
@@ -82,14 +82,14 @@ If local content is missing, sample content must allow the game to run.
 
 Loaded from:
 
-- `content/local/players.json`
+- `<content root>/local/players.json`
 - fallback: `content/sample/players.json`
 
 Format:
 
 {
   "players": [
-    { "name": "Brad", "avatarSrc": "/local-assets/avatars/brad.jpg", "team": "Molten Metal" },
+    { "name": "Brad", "avatarSrc": "avatars/brad.png", "team": "Molten Metal" },
     { "name": "Mike" }
   ]
 }
@@ -110,7 +110,7 @@ Rules:
 
 Loaded from:
 
-- `content/local/teams.json`
+- `<content root>/local/teams.json`
 - fallback: `content/sample/teams.json`
 
 Format:
@@ -140,7 +140,7 @@ Rules:
 
 Loaded from:
 
-- `content/local/gameConfig.json`
+- `<content root>/local/gameConfig.json`
 - fallback: `content/sample/gameConfig.json`
 
 Example:
@@ -189,7 +189,7 @@ Rules:
 ### 3.3 Mini-Game Content
 
 Minigame content files are plugin-declared and loaded from:
-- `content/local/<plugin-file>.json`
+- `<content root>/local/<plugin-file>.json`
 - fallback: `content/sample/<plugin-file>.json`
 
 Current built-in content-backed minigame:
@@ -200,7 +200,8 @@ Current built-in unsupported runtime placeholders:
 - `DRAWING` (no content file required yet)
 
 Local static assets:
-- `apps/client/public/local-assets/` (gitignored)
+- `<content root>/local/assets/` — images, served by the server at `/content-assets/<path>` and
+  named pack-relative in content (`avatars/brad.png`, `geo/cottage.jpg`)
 
 Images may reference:
 - Local static paths (preferred)

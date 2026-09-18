@@ -1,0 +1,30 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "wing-night-server",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["PORT=3200", "pnpm", "--filter", "@wingnight/server", "dev"],
+      "port": 3200
+    },
+    {
+      "name": "wing-night-display",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "VITE_SOCKET_SERVER_URL=http://127.0.0.1:3200",
+        "pnpm",
+        "--filter",
+        "@wingnight/client",
+        "exec",
+        "vite",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5373",
+        "--strictPort"
+      ],
+      "port": 5373,
+      "url": "http://127.0.0.1:5373"
+    }
+  ]
+}

@@ -26,6 +26,39 @@ and report it green.
 
 If a check fails, say so with the output. If a step was skipped, say that.
 
+## The night pack
+
+The real content for a party — roster, teams, party music, generated heads, GEO photos, and the
+`GEMINI_API_KEY` the avatar importer needs — lives in ONE directory outside the repo:
+
+```text
+~/wing-night-content/
+  .env                       GEMINI_API_KEY (pnpm import:avatars reads it here)
+  local/players.json         roster; avatarSrc is pack-relative ("avatars/rob.png")
+  local/teams.json           teams, genres, anthem filenames
+  local/audio/lobby/*.mp3    SETUP lobby playlist
+  local/teams/audio/*.mp3    team anthems
+  local/assets/avatars/*     generated heads, served at /content-assets/avatars/…
+  local/assets/geo/*         GEO photos, served at /content-assets/geo/…
+  local/avatar-sources/*     input photos + manifest for import:avatars
+```
+
+It is outside the repo because every session runs in its own worktree and all of this is
+gitignored — inside, each worktree starts empty and the copies drift. `pnpm dev`, every
+`.claude/launch.json` stack and both import tools resolve it with no setup: `resolveContentRootDir`
+uses the pack when `~/wing-night-content` exists and the repo's `content/` when it does not.
+`WN_CONTENT_ROOT_DIR` overrides both (see `.env.example`), which is how the e2e stack stays on its
+own seeded root. The server logs the root it resolved at boot as `server:contentRoot`.
+
+Anything the pack does not carry — `gameConfig.json`, the minigame prompt banks — falls back to the
+repo's committed `content/sample/`, so the pack only holds what a party actually customises.
+
+Asset paths in content are **pack-relative with no leading slash** (`avatars/rob.png`,
+`geo/cottage.jpg`). `resolveContentAssetSrc` addresses those against the server origin, because the
+client and server are always separate origins. A leading slash (`/sample-assets/geo/eiffel.svg`)
+means "Vite serves this" and is left alone — that is the sample pack's committed placeholder art,
+the only images still under `apps/client/public/`.
+
 ## Conventions
 
 - Tests are colocated: `index.test.ts` next to `index.ts`. Name them `does X when Y`.

@@ -129,16 +129,22 @@ If content-backed:
 
 - Add `content/sample/minigames/<slug>.json` matching the plugin's
   `content.fileName`.
-- Loading order stays `content/local/` → `content/sample/` and is handled by
-  the generic loader — no loader edits.
+- Loading order stays `<root>/local/` → `<root>/sample/` → the repo's
+  `content/sample/` and is handled by the generic loader — no loader edits. The
+  root is the night pack when one exists (see CLAUDE.md).
 
 ### 5.1 Asset hosting
 
 Two patterns, pick by asset profile:
 
-- **Small static images, sample/local both possible** → `apps/client/public/local-assets/<slug>/`. Reference as `/local-assets/<slug>/foo.jpg`. Used by GEO. Bundled by the client build — no server route needed. Local overrides ship via `apps/client/public/local-assets/<slug>/` being gitignored.
+- **Static images (real ones)** → `<root>/local/assets/<slug>/`, referenced pack-relative as
+  `<slug>/foo.jpg` with NO leading slash, and resolved in the surface with
+  `resolveContentAssetSrc(src, serverOrigin)`. The server already serves the whole
+  `assets/` tree at `CONTENT_ASSET_ROUTE_PATH`, so a new game needs no new route. Used by GEO.
+  Committed placeholder art is the exception: it stays in `apps/client/public/sample-assets/<slug>/`
+  and is referenced with a leading slash, which the resolver passes through untouched.
 
-For GEO, `pnpm import:geo <photo-folder>` turns GPS-tagged JPEGs into prompts: it reads each photo's EXIF location as the answer, writes a resized metadata-stripped copy to `local-assets/geo/`, and appends entries to `content/local/minigames/geo.json` (edit titles/hints/`featuredPlayers` there afterwards — see 5.2).
+For GEO, `pnpm import:geo <photo-folder>` turns GPS-tagged JPEGs into prompts: it reads each photo's EXIF location as the answer, writes a resized metadata-stripped copy to `<pack>/local/assets/geo/`, and appends entries to `<pack>/local/minigames/geo.json` (edit titles/hints/`featuredPlayers` there afterwards — see 5.2).
 - **Large or many event-specific assets (audio, video)** → Express static route, mounted in **`apps/server/src/createApp`** (not `index.ts`), resolving **absolute** paths from the content root:
 
   ```ts
@@ -174,7 +180,7 @@ Any prompt in any bank may carry `featuredPlayers` — the names of the people
 who appear in it:
 
 ```json
-{ "id": "geo-back-deck", "title": "Back Deck", "imageSrc": "/local-assets/geo/back-deck.jpg",
+{ "id": "geo-back-deck", "title": "Back Deck", "imageSrc": "geo/back-deck.jpg",
   "featuredPlayers": ["Alex", "Jordan"], "answer": { "lat": 43.65, "lng": -79.38 } }
 ```
 

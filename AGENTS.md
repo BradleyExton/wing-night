@@ -158,7 +158,16 @@ Prefer `type` over `interface` unless declaration merging is required.
 # 8) Content Packs
 
 - Content loads via a single contentLoader module.
-- Loading order: `content/local/` → `content/sample/`.
+- Loading order: `<root>/local/` → `<root>/sample/`, and for the night pack alone, the repo's
+  committed `content/sample/` as a floor.
+- The root is resolved once, by `resolveContentRootDir`: `WN_CONTENT_ROOT_DIR` if set, else the
+  night pack at `~/wing-night-content` if it exists, else the repo's `content/`. Never re-derive it.
+- The night pack lives OUTSIDE the repo so every worktree shares one copy of gitignored party
+  content. See CLAUDE.md for its layout.
+- Images in content (`avatarSrc`, GEO `imageSrc`) are pack-relative with no leading slash and are
+  served by the SERVER at `CONTENT_ASSET_ROUTE_PATH`; resolve them with `resolveContentAssetSrc`,
+  never by interpolating the route. Real assets do not live in the client's `public/` directory —
+  the client and server are separate origins, so a root-relative asset URL 404s on the TV.
 - All content must be validated before game start.
 - Invalid content blocks start with clear error.
 - Never scatter direct JSON loads across components.

@@ -152,6 +152,7 @@ export const MinigameDevSandbox = ({
                 teamNameByTeamId={teamNameByTeamId}
                 canDispatchAction
                 onDispatchAction={handleDispatchAction}
+                serverOrigin={serverOrigin}
               />
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
-import type { GeoMinigameDisplayView } from "@wingnight/shared";
+import { resolveContentAssetSrc, type GeoMinigameDisplayView } from "@wingnight/shared";
 
 import { displayGeoSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -62,7 +62,8 @@ const GeoRevealNotes = ({ result }: { result: GeoDisplayResult }): JSX.Element =
 export const DisplayGeoSurface = ({
   phase,
   minigameDisplayView,
-  activeTeamName
+  activeTeamName,
+  serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const geoDisplayView =
     minigameDisplayView?.minigame === "GEO" ? minigameDisplayView : null;
@@ -92,7 +93,10 @@ export const DisplayGeoSurface = ({
           {result === null ? (
             <img
               className={styles.postcardPhoto}
-              src={currentPrompt.imageSrc}
+              // Party photos live in the content pack and are served by the
+              // server; the sample pack's placeholder art is served by Vite and
+              // passes through untouched.
+              src={resolveContentAssetSrc(currentPrompt.imageSrc, serverOrigin) ?? ""}
               alt={currentPrompt.title}
             />
           ) : (

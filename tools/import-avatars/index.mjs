@@ -1,20 +1,24 @@
 #!/usr/bin/env node
 // Generates flat-vector caricature heads for the roster with the Gemini image API:
 //   pnpm import:avatars [--dry-run] [--force] [--only steve-b,jazz] [--style-ref path.png] [--model name]
-// Reads content/local/players.json (seeded from content/sample if missing),
-// looks for one photo per player in content/local/avatar-sources/ named after
-// the player's slug (Steve B -> steve-b.jpg), sends each photo once with the
-// prompt assembled from design/illustration-spec.md, and writes the head to
-// apps/client/public/local-assets/avatars/<slug>.png. Then it points the
-// player's avatarSrc at it and writes a contact sheet next to the sources.
+// Everything it reads and writes lives in the CONTENT PACK — the one directory
+// outside the repo that every worktree shares (see contentLoaderUtils). It
+// reads <pack>/local/players.json (seeded from the repo's sample roster if
+// missing), looks for one photo per player in <pack>/local/avatar-sources/
+// named after the player's slug (Steve B -> steve-b.jpg), sends each photo once
+// with the prompt assembled from design/illustration-spec.md, and writes the
+// head to <pack>/local/assets/avatars/<slug>.png — which the server serves at
+// CONTENT_ASSET_ROUTE_PATH. Then it points the player's avatarSrc at it
+// (pack-relative, `avatars/<slug>.png`) and writes a contact sheet next to the
+// sources.
 // The head comes back on a magenta background (Gemini cannot return alpha);
 // that is flood-filled out and the result cropped to the head before it is
 // written, so the bird wears the head's own silhouette.
-// Offline-time tool only: the app never talks to Gemini. Needs GEMINI_API_KEY
-// (loaded from .env by the pnpm script).
+// Offline-time tool only: the app never talks to Gemini. Needs GEMINI_API_KEY,
+// which lives in the pack's own .env beside the content it generates — one key
+// file, not one per worktree.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 
 import {
   applyAvatarSrc,
@@ -30,12 +34,20 @@ import {
   planImports
 } from "./lib.mjs";
 import { withRaster } from "./raster.mjs";
+import {
+  DEFAULT_CONTENT_ROOT_DIR,
+  resolveContentRootDir
+} from "../../apps/server/src/contentLoader/contentLoaderUtils/index.ts";
 
-const repoRootDir = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
-const sourcesDir = join(repoRootDir, "content/local/avatar-sources");
-const avatarsDir = join(repoRootDir, "apps/client/public/local-assets/avatars");
-const localPlayersPath = join(repoRootDir, "content/local/players.json");
-const samplePlayersPath = join(repoRootDir, "content/sample/players.json");
+// The same resolver the server boots with, imported rather than re-derived: a
+// tool that wrote where the server does not read is the exact failure this
+// consolidation exists to end.
+const contentRootDir = resolveContentRootDir();
+const sourcesDir = join(contentRootDir, "local/avatar-sources");
+const avatarsDir = join(contentRootDir, "local/assets/avatars");
+const localPlayersPath = join(contentRootDir, "local/players.json");
+const samplePlayersPath = join(DEFAULT_CONTENT_ROOT_DIR, "sample/players.json");
+const packEnvPath = join(contentRootDir, ".env");
 const manifestPath = join(sourcesDir, "manifest.json");
 const contactSheetPath = join(sourcesDir, "contact-sheet.html");
 
@@ -76,13 +88,14 @@ const generateHead = async ({ apiKey, model, prompt, photoPath, styleRefPath }) 
 
 const main = async () => {
   const args = parseArgs(process.argv.slice(2));
+  console.log(`Content pack: ${contentRootDir}`);
   mkdirSync(sourcesDir, { recursive: true });
   mkdirSync(avatarsDir, { recursive: true });
 
   if (!existsSync(localPlayersPath)) {
-    mkdirSync(join(repoRootDir, "content/local"), { recursive: true });
+    mkdirSync(join(contentRootDir, "local"), { recursive: true });
     writeFileSync(localPlayersPath, readFileSync(samplePlayersPath));
-    console.log(`Seeded ${relative(repoRootDir, localPlayersPath)} from the sample roster.`);
+    console.log(`Seeded ${localPlayersPath} from the sample roster.`);
   }
 
   const playersFile = readJson(localPlayersPath);
@@ -104,7 +117,7 @@ const main = async () => {
     })();
 
   console.log(`Model: ${args.model}`);
-  console.log(`Style reference: ${styleRefPath === null ? "none (first head sets the style)" : relative(repoRootDir, styleRefPath)}`);
+  console.log(`Style reference: ${styleRefPath === null ? "none (first head sets the style)" : styleRefPath}`);
   for (const row of plan) {
     console.log(`  ${row.skipReason === null ? "GEN " : "skip"} ${row.name.padEnd(12)} ${row.skipReason ?? `${row.sourceFile} -> ${row.outputFile}`}`);
   }
@@ -116,9 +129,16 @@ const main = async () => {
     return;
   }
 
+  // Loaded from the pack, not the repo: the key belongs with the content it
+  // generates, so a fresh worktree needs no .env of its own. An exported
+  // GEMINI_API_KEY in the shell still wins.
+  if (!process.env.GEMINI_API_KEY && existsSync(packEnvPath)) {
+    process.loadEnvFile(packEnvPath);
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set. Put it in .env at the repo root.");
+    throw new Error(`GEMINI_API_KEY is not set. Put it in ${packEnvPath}.`);
   }
 
   let currentStyleRef = styleRefPath;
@@ -148,7 +168,7 @@ const main = async () => {
 
   writeJson(localPlayersPath, applyAvatarSrc(playersFile, Object.keys(manifest.generated)));
   writeFileSync(contactSheetPath, renderSheet(plan, manifest));
-  console.log(`Contact sheet: ${relative(repoRootDir, contactSheetPath)}`);
+  console.log(`Contact sheet: ${contactSheetPath}`);
   console.log("Restart the server to load the updated roster.");
 };
 

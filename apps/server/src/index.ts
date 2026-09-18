@@ -1,5 +1,9 @@
 import { createServer } from "node:http";
 
+import {
+  resolveContentLayerDirs,
+  resolveContentRootDir
+} from "./contentLoader/contentLoaderUtils/index.js";
 import { createApp } from "./createApp/index.js";
 import { logError, logInfo } from "./logger/index.js";
 import { reloadContentIntoRoomState } from "./reloadContentIntoRoomState/index.js";
@@ -8,7 +12,18 @@ import { attachSocketServer } from "./socketServer/index.js";
 
 const parsedPort = Number(process.env.PORT);
 const port = Number.isInteger(parsedPort) && parsedPort > 0 ? parsedPort : 3000;
-const app = createApp();
+const contentRootDir = resolveContentRootDir();
+const app = createApp({ contentRootDir });
+
+// Named at boot because the root is now resolved rather than fixed — it is the
+// night pack when one exists, the repo's content/ otherwise, and whatever
+// WN_CONTENT_ROOT_DIR says when it is set. A server quietly reading the wrong
+// content looks exactly like a server reading the right content, right up
+// until the roster on the TV is the sample one.
+logInfo("server:contentRoot", {
+  contentRootDir,
+  layerDirs: resolveContentLayerDirs(contentRootDir)
+});
 const httpServer = createServer(app);
 
 // Boot's failure policy: a server whose content will not load should not

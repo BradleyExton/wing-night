@@ -5,6 +5,7 @@ import type {
 } from "@wingnight/minigames-core";
 
 import { resolveMinigameRendererBundle } from "../../../minigames/registry";
+import { useServerOrigin } from "../../../utils/useServerOrigin";
 import { hostControlPanelCopy } from "../copy";
 import * as styles from "./styles";
 
@@ -27,6 +28,9 @@ export const MinigameSurface = ({
   canDispatchAction,
   onDispatchAction
 }: MinigameSurfaceProps): JSX.Element => {
+  // The host tablet is a different origin from the server as well, so a
+  // minigame surface that renders a content-pack image needs the absolute one.
+  const serverOrigin = useServerOrigin();
   const isTakeover = phase === "play";
   const containerClassName = isTakeover ? styles.takeoverCanvas : styles.group;
 
@@ -83,6 +87,7 @@ export const MinigameSurface = ({
             teamNameByTeamId={teamNameByTeamId}
             canDispatchAction={canDispatchAction}
             onDispatchAction={onDispatchAction}
+            serverOrigin={serverOrigin}
           />
         </div>
       </section>
@@ -105,6 +110,7 @@ export const MinigameSurface = ({
           teamNameByTeamId={teamNameByTeamId}
           canDispatchAction={canDispatchAction}
           onDispatchAction={onDispatchAction}
+          serverOrigin={serverOrigin}
         />
       </div>
     </section>

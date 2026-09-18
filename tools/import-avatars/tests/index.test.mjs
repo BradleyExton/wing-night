@@ -94,10 +94,10 @@ test("does surface the model's text when a response has no image", () => {
   );
 });
 
-test("does write avatarSrc as a client-root path when applying results", () => {
+test("does write avatarSrc as a pack-relative path when applying results", () => {
   const updated = applyAvatarSrc({ players }, ["steve-b"]);
 
-  assert.equal(updated.players[1].avatarSrc, "/local-assets/avatars/steve-b.png");
+  assert.equal(updated.players[1].avatarSrc, "avatars/steve-b.png");
   assert.equal(updated.players[0].avatarSrc, undefined);
   assert.equal(updated.players[2].avatarSrc, "/x.png");
   assert.equal(players[1].avatarSrc, undefined);

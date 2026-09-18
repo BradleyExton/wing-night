@@ -2,10 +2,11 @@
 // Imports GPS-tagged photos as GEO minigame prompts:
 //   pnpm import:geo <photo-folder>
 // For each *.jpg/*.jpeg with EXIF GPS data it writes a resized,
-// metadata-stripped copy to apps/client/public/local-assets/geo/ and appends
-// a prompt (answer = the photo's GPS position) to
-// content/local/minigames/geo.json. Titles default to the filename — edit
-// them (and add hints) in the JSON afterwards.
+// metadata-stripped copy into the CONTENT PACK at <pack>/local/assets/geo/ —
+// the directory the server serves at CONTENT_ASSET_ROUTE_PATH — and appends a
+// prompt (answer = the photo's GPS position) to
+// <pack>/local/minigames/geo.json. Titles default to the filename — edit them
+// (and add hints) in the JSON afterwards.
 import { execFileSync } from "node:child_process";
 import {
   existsSync,
@@ -17,12 +18,15 @@ import {
   writeFileSync
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, extname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { basename, extname, join } from "node:path";
 
-const repoRootDir = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
-const assetsDir = join(repoRootDir, "apps/client/public/local-assets/geo");
-const contentFilePath = join(repoRootDir, "content/local/minigames/geo.json");
+import { resolveContentRootDir } from "../../apps/server/src/contentLoader/contentLoaderUtils/index.ts";
+
+// The same resolver the server boots with, so the photos land where the game
+// reads them from — in the one content pack every worktree shares.
+const contentRootDir = resolveContentRootDir();
+const assetsDir = join(contentRootDir, "local/assets/geo");
+const contentFilePath = join(contentRootDir, "local/minigames/geo.json");
 const MAX_IMAGE_DIMENSION_PX = 1600;
 
 const parseTiffGps = (tiff) => {
@@ -262,7 +266,10 @@ for (const fileName of photoFileNames) {
   importedPrompts.push({
     id: promptId,
     title: toTitle(slug),
-    imageSrc: `/local-assets/geo/${slug}.jpg`,
+    // Pack-relative, no leading slash: the server serves the pack's images and
+    // the display is a different origin, so `resolveContentAssetSrc` has to
+    // address this absolutely or the photo 404s on the TV.
+    imageSrc: `geo/${slug}.jpg`,
     // Emitted empty because no importer can see who is in a photo. Empty means
     // "untagged", which the roster filter always keeps — so an unfinished
     // tagging pass degrades to today's behaviour instead of an empty pack.
@@ -281,7 +288,7 @@ for (const fileName of photoFileNames) {
 rmSync(tempDir, { recursive: true, force: true });
 
 if (importedPrompts.length > 0) {
-  mkdirSync(join(repoRootDir, "content/local/minigames"), { recursive: true });
+  mkdirSync(join(contentRootDir, "local/minigames"), { recursive: true });
   writeFileSync(
     contentFilePath,
     `${JSON.stringify(
@@ -297,7 +304,7 @@ for (const fileName of skippedFileNames) {
 }
 
 console.log(
-  `\nImported ${importedPrompts.length} prompt(s) into content/local/minigames/geo.json.`
+  `\nImported ${importedPrompts.length} prompt(s) into ${contentFilePath}.`
 );
 
 if (importedPrompts.length > 0) {

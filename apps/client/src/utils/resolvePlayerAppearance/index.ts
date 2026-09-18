@@ -1,4 +1,4 @@
-import type { Player } from "@wingnight/shared";
+import { resolveContentAssetSrc, type Player } from "@wingnight/shared";
 
 export const CHARACTER_BODIES = ["round", "tall", "wide"] as const;
 export type CharacterBody = (typeof CHARACTER_BODIES)[number];
@@ -35,8 +35,15 @@ const hashName = (name: string): number => {
   return hash;
 };
 
+// `serverOrigin` is INJECTED rather than read in here, the same seam
+// `resolveAnthemSrc` uses: client tests run under `tsx --test` with no DOM and
+// no Vite, so a `window` / `import.meta.env` read at module or render scope
+// throws. It is `null` until the host app has resolved it (the read happens in
+// an effect), and a player whose head cannot be addressed yet simply wears the
+// drawn one for that paint — the cast is never missing from the lobby.
 export const resolvePlayerAppearance = (
-  player: Pick<Player, "name" | "avatarSrc">
+  player: Pick<Player, "name" | "avatarSrc">,
+  serverOrigin: string | null = null
 ): CharacterAppearance => {
   const hash = hashName(player.name);
   // Each choice reads its own bit range so the three do not move in lockstep
@@ -49,5 +56,14 @@ export const resolvePlayerAppearance = (
     return { body, comb, tail };
   }
 
-  return { body, comb, tail, avatarSrc: player.avatarSrc };
+  // The roster writes pack-relative paths (`avatars/rob.png`), which live in the
+  // content pack and are served by the SERVER. Resolving them here keeps every
+  // head-rendering surface honest about the origin split.
+  const avatarSrc = resolveContentAssetSrc(player.avatarSrc, serverOrigin);
+
+  if (avatarSrc === null) {
+    return { body, comb, tail };
+  }
+
+  return { body, comb, tail, avatarSrc };
 };

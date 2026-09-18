@@ -7,9 +7,14 @@ import { validateRosterAssignments } from "@wingnight/shared";
 
 import {
   CONTENT_ROOT_DIR_ENV_KEY,
+  DEFAULT_CONTENT_PACK_DIR,
   DEFAULT_CONTENT_ROOT_DIR,
+  resolveContentLayerDirs,
   resolveContentRootDir
 } from "./index.js";
+
+const noDirectory = (): boolean => false;
+const everyDirectory = (): boolean => true;
 
 // This root was previously re-derived inside every consumer from its own
 // `import.meta.url` against a fixed five-level walk, so it only landed on the
@@ -66,6 +71,19 @@ test("resolves the configured root when the content-root env var is set", () => 
   );
 });
 
+// The configured root wins over a pack that is sitting right there, which is
+// what keeps the e2e stack off the real content: its seeded root is set in the
+// Playwright webServer env and nothing about this machine can override it.
+test("prefers the configured root over the pack when both are available", () => {
+  assert.equal(
+    resolveContentRootDir(
+      { [CONTENT_ROOT_DIR_ENV_KEY]: ".playwright/content" },
+      everyDirectory
+    ),
+    resolve(".playwright/content")
+  );
+});
+
 // A relative override means "relative to where the server was started", which
 // is what a `WN_CONTENT_ROOT_DIR=.playwright/content` in a webServer env is.
 test("resolves a relative override against the working directory", () => {
@@ -75,8 +93,14 @@ test("resolves a relative override against the working directory", () => {
   );
 });
 
-test("falls back to the repo's content directory when the env var is unset", () => {
-  assert.equal(resolveContentRootDir({}), DEFAULT_CONTENT_ROOT_DIR);
+// The pack is the default with no env var and no setup, which is the whole
+// reason a fresh worktree can run `pnpm dev` and see the real roster.
+test("resolves the night pack when the env var is unset and the pack is there", () => {
+  assert.equal(resolveContentRootDir({}, everyDirectory), DEFAULT_CONTENT_PACK_DIR);
+});
+
+test("falls back to the repo's content directory when there is no pack", () => {
+  assert.equal(resolveContentRootDir({}, noDirectory), DEFAULT_CONTENT_ROOT_DIR);
 });
 
 // An empty or whitespace-only value is what an unset shell variable expands to
@@ -86,9 +110,42 @@ test("falls back to the repo's content directory when the env var is unset", () 
 // message pointing at a directory nobody chose.
 test("falls back to the default when the env var is blank", () => {
   assert.equal(
-    resolveContentRootDir({ [CONTENT_ROOT_DIR_ENV_KEY]: "   " }),
+    resolveContentRootDir({ [CONTENT_ROOT_DIR_ENV_KEY]: "   " }, noDirectory),
     DEFAULT_CONTENT_ROOT_DIR
   );
+});
+
+test("orders an ordinary root as local then sample", () => {
+  assert.deepEqual(resolveContentLayerDirs("/tmp/wingnight-root", "/tmp/wingnight-pack"), [
+    resolve("/tmp/wingnight-root/local"),
+    resolve("/tmp/wingnight-root/sample")
+  ]);
+});
+
+// The pack lives outside the repo and carries only what a party customises, so
+// the committed sample pack is its floor — otherwise the first file it does not
+// carry (gameConfig.json) fatals the boot.
+test("appends the repo's sample pack as a floor when the root is the night pack", () => {
+  assert.deepEqual(resolveContentLayerDirs("/tmp/wingnight-pack", "/tmp/wingnight-pack"), [
+    resolve("/tmp/wingnight-pack/local"),
+    resolve("/tmp/wingnight-pack/sample"),
+    resolve(DEFAULT_CONTENT_ROOT_DIR, "sample")
+  ]);
+});
+
+// Constraint on the e2e suite, asserted rather than assumed: its seeded root is
+// self-contained, so no layer of it can reach the real pack even if the seed
+// were to fail.
+test("keeps a seeded e2e root off the pack entirely", () => {
+  const layerDirs = resolveContentLayerDirs(
+    resolve(".playwright/content"),
+    "/tmp/wingnight-pack"
+  );
+
+  assert.deepEqual(layerDirs, [
+    resolve(".playwright/content/local"),
+    resolve(".playwright/content/sample")
+  ]);
 });
 
 // The committed pack is the party's default, and a player seated on a team that

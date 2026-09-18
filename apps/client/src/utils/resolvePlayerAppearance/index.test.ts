@@ -45,13 +45,27 @@ test("does spread bodies, combs and tails across the sample roster", () => {
   assert.equal(tails.size, 2);
 });
 
-test("does carry the avatar through when the player has one", () => {
+test("does address the pack head on the server when an origin is known", () => {
+  const appearance = resolvePlayerAppearance(
+    { name: "Brad", avatarSrc: "avatars/brad.png" },
+    "http://192.168.1.20:3000"
+  );
+
+  assert.equal(
+    appearance.avatarSrc,
+    "http://192.168.1.20:3000/content-assets/avatars/brad.png"
+  );
+});
+
+// The origin read happens in an effect, so the first paint has none. A drawn
+// head for one frame beats a broken image, and beats an empty lobby.
+test("does fall back to the drawn head when the server origin is not known yet", () => {
   const appearance = resolvePlayerAppearance({
     name: "Brad",
-    avatarSrc: "/local-assets/avatars/brad.jpg"
+    avatarSrc: "avatars/brad.png"
   });
 
-  assert.equal(appearance.avatarSrc, "/local-assets/avatars/brad.jpg");
+  assert.equal("avatarSrc" in appearance, false);
 });
 
 test("does omit the avatar key when the player has none", () => {

@@ -5,6 +5,7 @@ import test from "node:test";
 import type { AddressInfo } from "node:net";
 
 import {
+  CONTENT_ASSET_ROUTE_PATH,
   SONG_GUESS_AUDIO_ROUTE_PATH,
   TEAM_AUDIO_ROUTE_PATH
 } from "@wingnight/shared";
@@ -169,5 +170,70 @@ test("keeps the song-audio and team-audio routes independent", async () => {
 
     assert.equal(await songResponse.text(), "song-bytes");
     assert.equal(await anthemResponse.text(), "anthem-bytes");
+  }, contentRoot);
+});
+
+// The pack's images — generated heads and party photos — are served by the
+// server, not by Vite: the display is always a different origin, so a
+// client-served root-relative URL 404s on the TV.
+test("serves a pack image from the local content layer", async () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(contentRoot, "local/assets/avatars/rob.png", "head-bytes");
+
+  await withApp(async (baseUrl) => {
+    const response = await fetch(
+      `${baseUrl}${CONTENT_ASSET_ROUTE_PATH}/avatars/rob.png`
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-type"), "image/png");
+    assert.equal(await response.text(), "head-bytes");
+  }, contentRoot);
+});
+
+test("falls back to the sample layer when the pack has no image of that name", async () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(contentRoot, "sample/assets/geo/eiffel.svg", "sample-bytes");
+
+  await withApp(async (baseUrl) => {
+    const response = await fetch(
+      `${baseUrl}${CONTENT_ASSET_ROUTE_PATH}/geo/eiffel.svg`
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), "sample-bytes");
+  }, contentRoot);
+});
+
+// Same local-wins rule the loaders follow, so a pack that replaces a photo
+// replaces the one the room actually sees.
+test("prefers the local image when both layers carry that name", async () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(contentRoot, "local/assets/geo/cottage.jpg", "local-bytes");
+  writeContentFile(contentRoot, "sample/assets/geo/cottage.jpg", "sample-bytes");
+
+  await withApp(async (baseUrl) => {
+    const response = await fetch(
+      `${baseUrl}${CONTENT_ASSET_ROUTE_PATH}/geo/cottage.jpg`
+    );
+
+    assert.equal(await response.text(), "local-bytes");
+  }, contentRoot);
+});
+
+test("responds 404 when no layer carries the requested image", async () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(contentRoot, "local/assets/avatars/rob.png", "head-bytes");
+
+  await withApp(async (baseUrl) => {
+    const response = await fetch(
+      `${baseUrl}${CONTENT_ASSET_ROUTE_PATH}/avatars/absent.png`
+    );
+
+    assert.equal(response.status, 404);
   }, contentRoot);
 });

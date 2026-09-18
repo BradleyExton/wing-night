@@ -335,10 +335,17 @@ lost to it are kept in `apps/client/public/mockups/cast/`.
     silhouette — hair, beard, chin, nothing below — which is what
     `pnpm import:avatars` writes: it generates on a magenta key, flood-fills
     the key out from the border (so the dark line art inside the face
-    survives) and crops to what is left. A photo or a boxed sprite in that
+    survives) and crops to what is left. The head file itself lives in the
+    night pack (`~/wing-night-content/local/assets/avatars/`), not in the
+    client's `public/`, and `avatarSrc` names it pack-relative
+    (`avatars/rob.png`). The server serves it at
+    `/content-assets/<path>` and `resolveContentAssetSrc` addresses it against
+    the server origin — the TV is a different origin, so a root-relative head
+    URL 404s there. Until that origin resolves (one paint), the bird wears its
+    drawn head rather than nothing. A photo or a boxed sprite in that
     field renders as a rectangle on a neck, on purpose. The one palette
     departure is flat skin and hair tints, which a face needs.
--   **Team apparel.** A team's `genre` (content/teams.json) dresses every bird
+-   **Team apparel.** A team's `genre` (`teams.json` in the night pack) dresses every bird
     on it, avatar or not, via `resolveTeamApparel`: country wears a white hat
     with a team-colour band, metal a dark spiked collar, pop white star
     shades, disco white lapels. Props are drawn from the palette the bird

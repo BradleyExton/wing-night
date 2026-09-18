@@ -77,9 +77,8 @@ packages/
 
 content/
   sample/                         # Safe, committed sample content
-  local/                          # Custom content (gitignored)
 
-apps/client/public/local-assets/  # Images (gitignored)
+~/wing-night-content/             # The night pack: real party content (outside the repo)
 ```
 
 SPEC.md AGENTS.md TASKS.md README.md pnpm-workspace.yaml
@@ -158,8 +157,16 @@ Display: http://`<your-ip>`:5173/display
 
 Loading priority:
 
-1.  content/local/ (gitignored)
-2.  content/sample/
+1.  `<root>/local/`
+2.  `<root>/sample/`
+3.  `content/sample/` in the repo (floor, for the night pack only)
+
+The root is `WN_CONTENT_ROOT_DIR` if set, otherwise the **night pack** at
+`~/wing-night-content` when that directory exists, otherwise the repo's own
+`content/`. The pack lives outside the repo so every checkout and worktree
+shares one copy of the party's gitignored content, and carries only what a
+party customises — everything else falls through to the committed sample pack.
+See `.env.example` for the layout.
 
 This enables private party content and open-source-safe engine
 distribution.
@@ -168,13 +175,16 @@ distribution.
 
 ## players.json
 
-content/local/players.json
+<pack>/local/players.json
 
 Example:
 
-{ "players": \[ { "name": "Brad", "avatarSrc":
-"/local-assets/avatars/brad.jpg", "team": "Molten Metal" }, { "name":
-"Mike" } \] }
+{ "players": \[ { "name": "Brad", "avatarSrc": "avatars/brad.png", "team":
+"Molten Metal" }, { "name": "Mike" } \] }
+
+`avatarSrc` is pack-relative (no leading slash): it names a file under
+`<pack>/local/assets/`, which the server serves at `/content-assets/<path>`.
+`pnpm import:avatars` writes both the file and this field.
 
 `team` is optional and names a team from teams.json, matched ignoring
 case and surrounding whitespace. A player who declares one starts the
@@ -186,7 +196,7 @@ declared team is invalid content and fails the load with a clear error.
 
 ## teams.json
 
-content/local/teams.json
+<pack>/local/teams.json
 
 fallback: content/sample/teams.json
 
@@ -201,7 +211,7 @@ the preset seating until the game locks. Local teams override sample
 teams when present.
 
 A team may also declare `genre` (a label the TV shows on its spotlight
-screen) and `anthems` (filenames under content/local/teams/audio/):
+screen) and `anthems` (filenames under `<pack>/local/teams/audio/`):
 
 { "teams": \[ { "name": "Molten Metal", "genre": "metal", "anthems":
 \["through-the-fire-and-flames.mp3", "highway-to-hell.mp3"\] } \] }
@@ -213,14 +223,14 @@ screen) and `anthems` (filenames under content/local/teams/audio/):
 Two directories, both gitignored, both convention over configuration —
 there is no music JSON to author.
 
-content/local/teams/audio/ — a team's anthems, named by teams.json.
+<pack>/local/teams/audio/ — a team's anthems, named by teams.json.
 Served at /team-audio/<filename>, local overriding sample. The display
 plays one at MINIGAME_INTRO, rotating by round number: round 1 plays the
 first anthem, round 2 the second, wrapping when the rounds outlast the
 list. Deterministic, so a TV refreshed mid-screen comes back on the same
 track.
 
-content/local/audio/lobby/ — background music while people arrive.
+<pack>/local/audio/lobby/ — background music while people arrive.
 Served at /lobby-audio/<filename>. The playlist is simply whatever MP3s
 are in the directory, sorted by filename, so 01-, 02- prefixes are the
 ordering mechanism. It plays through SETUP only, sequentially, looping,

@@ -6,8 +6,15 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
+# Real party assets live in the night pack outside the repo (see CLAUDE.md).
+# Both of these stay ignored: a checkout with no pack still falls back to
+# content/local/, and the old public/local-assets/ path must never be committed
+# from a worktree that predates the move.
 apps/client/public/local-assets/
 content/local/
 playwright-report/
 test-results/
 .playwright/
+# The preview stacks in .claude/launch.json are shared; per-machine Claude
+# settings are not.
+.claude/settings.local.json

@@ -1,6 +1,7 @@
 import type { Player, Team } from "@wingnight/shared";
 
 import { resolvePlayerAppearance } from "../../../../../utils/resolvePlayerAppearance";
+import { useServerOrigin } from "../../../../../utils/useServerOrigin";
 import { resolveTeamApparel } from "../../../../../utils/resolveTeamApparel";
 import { resolveTeamColorVariant } from "../../../../../utils/resolveTeamColorVariant";
 import { Character } from "../../../../Character";
@@ -28,6 +29,11 @@ const buildTeamByPlayerId = (teams: Team[]): Map<string, Team> => {
 // genre's apparel, so the room can see who is seated where. Decoration only —
 // no state, no server field, `aria-hidden`.
 export const CastWander = ({ players, teams }: CastWanderProps): JSX.Element | null => {
+  // Player heads come from the content pack, which the SERVER serves — the TV
+  // is a different origin, so they have to be addressed absolutely. `null` on
+  // the first paint, and every player wears their drawn head until it resolves.
+  const serverOrigin = useServerOrigin();
+
   if (players.length === 0) {
     return null;
   }
@@ -51,7 +57,7 @@ export const CastWander = ({ players, teams }: CastWanderProps): JSX.Element | n
           >
             <span className={styles.waddle}>
               <Character
-                appearance={resolvePlayerAppearance(player)}
+                appearance={resolvePlayerAppearance(player, serverOrigin)}
                 apparel={resolveTeamApparel(team)}
                 fillClassName={fillClassName}
               />

@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import type { GeoMinigameHostView } from "@wingnight/shared";
+import { resolveContentAssetSrc, type GeoMinigameHostView } from "@wingnight/shared";
 
 import { hostGeoSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -33,16 +33,18 @@ const resolveActiveTeamName = ({
 };
 
 const GeoPromptRow = ({
-  currentPrompt
+  currentPrompt,
+  serverOrigin
 }: {
   currentPrompt: NonNullable<GeoMinigameHostView["currentPrompt"]>;
+  serverOrigin: string | null;
 }): JSX.Element => {
   return (
     <div className={styles.promptRow}>
       <div className={styles.polaroid}>
         <img
           className={styles.polaroidPhoto}
-          src={currentPrompt.imageSrc}
+          src={resolveContentAssetSrc(currentPrompt.imageSrc, serverOrigin) ?? ""}
           alt={currentPrompt.title}
         />
         <p className={styles.polaroidCaption}>{currentPrompt.title}</p>
@@ -109,7 +111,8 @@ export const HostGeoSurface = ({
   activeTeamName,
   teamNameByTeamId,
   canDispatchAction,
-  onDispatchAction
+  onDispatchAction,
+  serverOrigin
 }: MinigameHostRendererProps): JSX.Element => {
   const geoHostView =
     minigameHostView?.minigame === "GEO" ? minigameHostView : null;
@@ -149,7 +152,7 @@ export const HostGeoSurface = ({
         <p className={styles.statusNote}>{hostGeoSurfaceCopy.waitingPromptLabel}</p>
       )}
       {isPlayPhase && currentPrompt !== null && (
-        <GeoPromptRow currentPrompt={currentPrompt} />
+        <GeoPromptRow currentPrompt={currentPrompt} serverOrigin={serverOrigin} />
       )}
       {shouldRenderGuessSection && geoHostView !== null && (
         <GeoGuessSection

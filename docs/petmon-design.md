@@ -75,8 +75,8 @@ updating this doc.
   leader. Square PNGs rendered with `image-rendering: pixelated`.
 - Asset/content locations mirror GEO: committed placeholders in
   `content/sample/minigames/petmon.json` + `apps/client/public/sample-assets/petmon/`;
-  real friend content gitignored in `content/local/` +
-  `apps/client/public/local-assets/petmon/`.
+  real friend content in the night pack (`<pack>/local/minigames/petmon.json` +
+  `<pack>/local/assets/petmon/`, referenced pack-relative).
 - Schema sketch:
   - `typeChart`: type ids + effectiveness multipliers (content, not code,
     so the jokes stay editable).

@@ -49,14 +49,17 @@ Rationale: prompts are independent score units (max 5 pts each, awarded on submi
 ### 3.1 Content Files
 
 Content loading follows the same pattern as trivia — load one file, local overrides sample entirely:
-- Primary (local): `content/local/minigames/geo.json` (gitignored, optional)
+- Primary (local): `<content root>/local/minigames/geo.json` (optional)
 - Fallback (sample): `content/sample/minigames/geo.json`
 
-Host local images:
-- `apps/client/public/local-assets/geo/*` (gitignored)
+Host photos:
+- `<content root>/local/assets/geo/*` — in the night pack, served by the server
 
 Image reference format:
-- Local path: `"/local-assets/geo/eiffel-tower.jpg"`
+- Pack-relative (no leading slash): `"geo/eiffel-tower.jpg"` — served at
+  `/content-assets/geo/eiffel-tower.jpg` and resolved against the server origin by
+  `resolveContentAssetSrc`
+- Client-served placeholder: `"/sample-assets/geo/eiffel-tower.svg"` — passed through untouched
 - External URL: `"https://..."`
 
 ### 3.2 Content Schema
@@ -67,7 +70,7 @@ Image reference format:
     {
       "id": "geo-eiffel-01",
       "title": "Eiffel Tower",
-      "imageSrc": "/local-assets/geo/eiffel.jpg",
+      "imageSrc": "geo/eiffel.jpg",
       "hint": "European capital",
       "answer": { "lat": 48.85837, "lng": 2.294481 }
     }
@@ -265,7 +268,7 @@ apps/server/src/contentLoader/loadMinigameContent/index.ts   (add GEO content lo
 apps/server/src/roomState/index.ts                           (wire GEO rule resolver)
 
 content/sample/minigames/geo.json
-apps/client/public/local-assets/geo/                 (gitignored)
+<content root>/local/assets/geo/                     (the night pack, outside the repo)
 content/local/minigames/geo.additions.json           (removed — not needed, local overrides sample)
 ```
 

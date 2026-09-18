@@ -62,6 +62,7 @@ const renderSurface = (
       teamNameByTeamId={TEAM_NAMES}
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
+      serverOrigin={null}
     />
   );
 };

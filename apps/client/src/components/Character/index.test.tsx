@@ -5,7 +5,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Character } from "./index";
 
 const drawn = { body: "round", comb: "none", tail: "fan" } as const;
-const costume = { ...drawn, avatarSrc: "/local-assets/avatars/brad.png" } as const;
+const costume = {
+  ...drawn,
+  avatarSrc: "http://127.0.0.1:3000/content-assets/avatars/brad.png"
+} as const;
 
 test("does draw the two-eye face on a circle head when the appearance has no avatar", () => {
   const html = renderToStaticMarkup(<Character appearance={drawn} />);
@@ -27,7 +30,10 @@ test("does draw the beak, wattle and legs in primary whatever the fill", () => {
 test("does wear the avatar as its own silhouette in place of the drawn head when the appearance has one", () => {
   const html = renderToStaticMarkup(<Character appearance={costume} />);
 
-  assert.match(html, /<image href="\/local-assets\/avatars\/brad\.png"[^>]*filter="url\(#[^"]+\)"/);
+  assert.match(
+    html,
+    /<image href="http:\/\/127\.0\.0\.1:3000\/content-assets\/avatars\/brad\.png"[^>]*filter="url\(#[^"]+\)"/
+  );
   assert.match(html, /preserveAspectRatio="xMidYMax meet"/);
   assert.doesNotMatch(html, /clipPath/);
   assert.equal((html.match(/<circle/g) ?? []).length, 0, "no head circle and no drawn eyes");

@@ -100,6 +100,11 @@ export type MinigameHostRendererProps = {
   teamNameByTeamId: Map<string, string>;
   canDispatchAction: boolean;
   onDispatchAction: MinigameActionDispatch;
+  // Origin of the asset-serving Express app, for the same reason the display
+  // props carry one: the host tablet is a different origin from the server too,
+  // so a content-pack image (a GEO photo, a player's head) has to be addressed
+  // absolutely. `null` until the host app has resolved it in an effect.
+  serverOrigin: string | null;
 };
 
 export type MinigameDisplayRendererProps = {
