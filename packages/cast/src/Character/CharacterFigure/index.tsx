@@ -20,7 +20,18 @@ import * as styles from "./styles.js";
 export type CharacterFigureProps = {
   appearance: CharacterAppearance;
   apparel?: CharacterApparel;
+  // `none` leaves the wing off the figure so a surface can draw it on its
+  // own layer and beat it (FAPPY flaps it in time with the taps); the figure
+  // underneath then never repaints, which is what keeps a costume head's halo
+  // filter rasterised once.
+  wing?: "drawn" | "none";
 };
+
+// The wing, drawn hanging from its root on the shoulder; `WING_ROOT` is the
+// point a flap rotates it about, in the same 80×72 box.
+export const CHARACTER_WING_PATH = "M 26 42 C 34 34 48 36 52 46 C 44 54 32 54 26 46 Z";
+
+export const CHARACTER_WING_ROOT = { x: 27, y: 44 } as const;
 
 const TAIL_PATHS: Record<CharacterTail, string> = {
   fan: "M 20 42 C 8 40 0 26 6 12 C 8 26 14 34 26 36 Z M 22 46 C 6 48 0 36 2 24 C 8 36 16 40 28 40 Z",
@@ -112,7 +123,7 @@ const CostumeHead = ({
   </g>
 );
 
-export const CharacterFigure = ({ appearance, apparel }: CharacterFigureProps): JSX.Element => {
+export const CharacterFigure = ({ appearance, apparel, wing = "drawn" }: CharacterFigureProps): JSX.Element => {
   const haloId = useId();
   const head = appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS;
 
@@ -129,7 +140,9 @@ export const CharacterFigure = ({ appearance, apparel }: CharacterFigureProps): 
       />
       <path className={styles.silhouette} d={BODY_PATHS[appearance.body]} />
       <path className={styles.silhouette} d="M 48 30 L 54 20 L 64 24 L 62 36 Z" />
-      <path className={styles.silhouette} d="M 26 42 C 34 34 48 36 52 46 C 44 54 32 54 26 46 Z" />
+      {wing === "drawn" && (
+        <path className={styles.silhouette} d={CHARACTER_WING_PATH} data-character-wing />
+      )}
       <g data-character-head>
         {appearance.avatarSrc === undefined ? (
           <DrawnHead head={head} />

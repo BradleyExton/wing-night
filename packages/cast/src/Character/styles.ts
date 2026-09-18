@@ -21,3 +21,8 @@ export const pupil = "fill-bg";
 // A costume head cannot take a stroke, so a filter dilates its alpha into a
 // `bg`-coloured halo the same 2 units wide as the bird's outline.
 export const haloInk = "[flood-color:theme(colors.bg)]";
+
+// A wing on its own layer turns about its shoulder root (27, 44 of 80×72), so
+// a rotate on the element beats it the way a rotate on the whole bird would
+// not.
+export const wingOrigin = "origin-[33.75%_61.1%]";

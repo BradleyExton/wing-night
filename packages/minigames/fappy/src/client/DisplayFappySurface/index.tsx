@@ -3,9 +3,11 @@ import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import type { FappyMinigameDisplayView, FappyMinigameLeg } from "@wingnight/shared";
 import { resolveFappyGates } from "@wingnight/shared";
 
+import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
 import { FappyScene, type FappySceneHandle } from "../FappyScene/index.js";
 import { resolveLegBird } from "../resolveLegBird/index.js";
 import { useFappyMirror } from "../useFappyMirror/index.js";
+import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
 import { formatRelayClock, useRelayClock } from "../useRelayClock/index.js";
 import { displayFappySurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -47,12 +49,28 @@ const ResultPlaque = ({ view, elapsedMs }: { view: FappyMinigameDisplayView; ela
   );
 };
 
+// The beat between legs, on the wall: whose tablet it is now, big enough to
+// read from the sofa, over the landing the room just watched.
+const HandoffCallout = ({ nextName }: { nextName: string | null }): JSX.Element => (
+  <div className={styles.handoffOverlay} data-fappy-handoff="display">
+    <div className={styles.handoffCard}>
+      <span className={styles.handoffName}>{displayFappySurfaceCopy.handoffCalloutName(nextName)}</span>
+      <span className={styles.handoffLine}>{displayFappySurfaceCopy.handoffCalloutLine}</span>
+    </div>
+  </div>
+);
+
 const resolveStatusLine = (
   view: FappyMinigameDisplayView,
   leg: FappyMinigameLeg | null,
   playerName: string | null,
-  waitingName: string | null
+  waitingName: string | null,
+  hold: LegHold | null
 ): string => {
+  if (hold?.kind === "handoff") {
+    return displayFappySurfaceCopy.handoffPrompt(playerName, waitingName);
+  }
+
   if (view.phase === "finished") {
     return displayFappySurfaceCopy.finishedPrompt;
   }
@@ -82,8 +100,10 @@ const FappyPlayBody = ({
   serverOrigin: string | null;
 }): JSX.Element => {
   const sceneRef = useRef<FappySceneHandle>(null);
-  // Once the relay is over the last leg stays on the wall.
-  const legIndex = Math.min(view.legIndex, view.legsPerTurn - 1);
+  // A cleared leg stays on the wall while its landing and the handoff play,
+  // a little longer than the tablet holds it, because the replay here runs
+  // behind; once the relay is over the last leg stays for good.
+  const { shownLegIndex: legIndex, hold } = useHeldLeg(view, MIRROR_HOLD_SLACK_MS);
   const leg = view.legs[legIndex] ?? null;
   const gates = useMemo(() => {
     return leg === null
@@ -137,19 +157,22 @@ const FappyPlayBody = ({
         </div>
       </header>
       <div className={styles.arenaArea}>
-        <FappyScene
-          ref={sceneRef}
-          gates={gates}
-          gatesPerLeg={view.gatesPerLeg}
-          bird={bird}
-          waitingBird={waitingBird}
-          sceneId="display-fappy"
-          label={displayFappySurfaceCopy.sceneLabel(bird.playerName)}
-        />
-        {isOver && <ResultPlaque view={view} elapsedMs={elapsedMs} />}
+        <div key={legIndex} className={styles.legEnter}>
+          <FappyScene
+            ref={sceneRef}
+            gates={gates}
+            gatesPerLeg={view.gatesPerLeg}
+            bird={bird}
+            waitingBird={waitingBird}
+            sceneId="display-fappy"
+            label={displayFappySurfaceCopy.sceneLabel(bird.playerName)}
+          />
+        </div>
+        {hold?.kind === "handoff" && <HandoffCallout nextName={waitingBird?.playerName ?? null} />}
+        {isOver && hold === null && <ResultPlaque view={view} elapsedMs={elapsedMs} />}
       </div>
       <p className={styles.statusLine}>
-        {resolveStatusLine(view, leg, bird.playerName, waitingBird?.playerName ?? null)}
+        {resolveStatusLine(view, leg, bird.playerName, waitingBird?.playerName ?? null, hold)}
       </p>
     </div>
   );

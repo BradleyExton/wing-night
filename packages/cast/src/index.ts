@@ -3,10 +3,12 @@
 // client component so a minigame package can draw a player's bird too — the
 // minigame packages cannot import from apps/client, and a second copy of the
 // bird would drift from the first.
-export { Character, type CharacterProps } from "./Character/index.js";
+export { Character, CharacterWing, type CharacterProps } from "./Character/index.js";
 // The same bird as a bare `<g>`, for a surface that already has an SVG and
 // wants to place it under its own transform (JOUST stands it on a physics pin).
 export {
+  CHARACTER_WING_PATH,
+  CHARACTER_WING_ROOT,
   CharacterFigure,
   type CharacterFigureProps
 } from "./Character/CharacterFigure/index.js";

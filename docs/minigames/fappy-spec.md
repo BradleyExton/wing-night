@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/fappy/`
 
-Last updated: 2026-09-18
+Last updated: 2026-09-18 (UX pass, same day)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on.** Adding a `MinigameType`
 > breaks every `Record<MinigameType, …>` in the repo until fully wired (authoring guide §1),
@@ -255,6 +255,29 @@ leg 1 and the idle clock.
 - **The dev sandbox** runs two legs of three gates with a 20 s par and a 60 s limit, so the
   slide and the timeout can be seen without waiting two real minutes.
 - **No mockup pass**, as §0.3 said; the surfaces are JOUST's chrome around the cast's drawing.
+- **UX pass (same day, after Brad played it).** Three things: the handoff was a hard cut (the
+  TV never even drew the landing — its mirror runs six ticks behind and the view moved on
+  first), a crash was a hard cut too, and the assets were flat. So: two client-side beats
+  the sim never sees — the handoff (`HANDOFF_BEAT_MS`, 1.4 s: land, squash, puff, the
+  waiter hops, a callout names whose tablet it is, taps ignored, then the next leg slides
+  in) and the crash (`CRASH_BEAT_MS`, 0.55 s: tumble, sink, puff, a shake, taps ignored).
+  `useHeldLeg` keeps a cleared leg on screen for the beat (the TV adds
+  `MIRROR_HOLD_SLACK_MS`), the runner and the mirror play the outcome they reach locally, and
+  the mirror keeps its own copy of the flap log because the server wipes a crashed attempt's
+  log the instant it respawns the bird. The mirror lets a flight the tablet has moved past
+  finish before it switches (its loops are stopped on purpose, never by an effect cleanup —
+  the first cut cancelled the replay the moment the respawn arrived). The hen's wing became a
+  cast layer (`<CharacterWing>`, `wing="none"` on the figure) so it can beat per tap without
+  repainting the costume head's halo; the wingbeat is read off `vy`. The scene grew a
+  starfield, a sun, two parallax dune bands, lit champs, a feathered eagle whose wings beat
+  on the shoulders, strata and tufts on the cliffs and a gold landing strip. The landing
+  plateau widened from 44 to 56 units and the waiter moved from its middle to 78% of it,
+  because two 16-unit birds could not stand on a 44-unit plateau without one drawn over the
+  other; the waiter also steps towards the wall on its first hop when a landing comes down
+  close (`BIRD_GAP_UNITS` in the scene). A slightly longer plateau is a slightly kinder
+  landing, which is the direction to err in. The beats cost
+  clock — about four seconds a relay of handoffs — so `parSeconds` may want a few seconds
+  back at the table.
 - **Not scheduled** in `content/sample/gameConfig.json`; its rules block is there with the
   §0.6 defaults. Schedule it via local config or `/admin`.
 
@@ -284,4 +307,6 @@ and hanging eagles against one clock. Tap to flap, crash and go again, hand it o
 - Thrown shooters as moving hazards (the JOUST projectile crossing the corridor).
 - Eagles that swoop rather than hover.
 - A landing that has to be soft: too fast onto the plateau and the bird bounces.
+- A ready countdown or a "go" cue for the player who just took the tablet, if the room wants
+  one; today their first tap is the go.
 - Anthem sting on a cleared relay.

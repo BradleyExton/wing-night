@@ -10,7 +10,13 @@ export {
   resolveFappyWaitingX,
   resolveFappyWave
 } from "./world/index.js";
-export { advanceFappy, createFappyLegStart, runFappyLeg, stepFappy } from "./simulate/index.js";
+export {
+  advanceFappy,
+  createFappyLegLanding,
+  createFappyLegStart,
+  runFappyLeg,
+  stepFappy
+} from "./simulate/index.js";
 export type {
   FappyBird,
   FappyFrame,

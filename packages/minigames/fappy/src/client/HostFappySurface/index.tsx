@@ -6,12 +6,16 @@ import { resolveFappyGates } from "@wingnight/shared";
 import { FappyScene, type FappySceneHandle } from "../FappyScene/index.js";
 import { resolveLegBird } from "../resolveLegBird/index.js";
 import { useFappyRunner } from "../useFappyRunner/index.js";
+import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
 import { formatRelayClock, useRelayClock } from "../useRelayClock/index.js";
 import { hostFappySurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
 // The clock turns to heat with this much of the limit left.
 const URGENT_REMAINING_MS = 15_000;
+
+// Before the view arrives there is no leg to hold.
+const EMPTY_LEG_VIEW = { legIndex: 0, legsPerTurn: 1, legs: [] };
 
 const resolveActiveTeamName = ({
   minigameHostView,
@@ -134,18 +138,32 @@ type CorridorProps = {
   canAct: boolean;
   serverOrigin: string | null;
   onDispatchAction: MinigameHostRendererProps["onDispatchAction"];
+  hold: LegHold | null;
+  legIndex: number;
 };
 
+// The beat between legs, over the corridor: whose tablet it is now. The
+// finger that just landed is still on the glass, so the arena is dead for
+// the beat and the name is the only thing to read.
+const HandoffCallout = ({ nextName }: { nextName: string | null }): JSX.Element => (
+  <div className={styles.handoffOverlay} data-fappy-handoff="host">
+    <span className={styles.handoffLead}>{hostFappySurfaceCopy.handoffCalloutLead}</span>
+    <span className={styles.handoffName}>{hostFappySurfaceCopy.handoffCalloutName(nextName)}</span>
+  </div>
+);
+
 // The flap surface and the loop behind it. Split from the deck so the
-// runner's refs and the scene live together, keyed on the leg in hand.
+// runner's refs and the scene live together, keyed on the leg in hand — or
+// on the leg just cleared while the handoff plays out.
 const Corridor = ({
   view,
   canAct,
   serverOrigin,
-  onDispatchAction
+  onDispatchAction,
+  hold,
+  legIndex
 }: CorridorProps): JSX.Element => {
   const sceneRef = useRef<FappySceneHandle>(null);
-  const legIndex = Math.min(view.legIndex, view.legsPerTurn - 1);
   const leg = view.legs[legIndex] ?? null;
   const gates = useMemo(() => {
     return leg === null
@@ -164,10 +182,11 @@ const Corridor = ({
       ? null
       : resolveLegBird({ figure: nextLeg.player, activeTurnTeamId: view.activeTurnTeamId, serverOrigin });
   const isLive = view.phase === "ready" || view.phase === "flying";
+  const isArmed = canAct && isLive && hold === null;
   const { flap } = useFappyRunner({
     leg,
     gatesPerLeg: view.gatesPerLeg,
-    canAct: canAct && isLive,
+    canAct: isArmed,
     sceneRef,
     onFlap: (tick): void => {
       onDispatchAction("flap", { tick });
@@ -176,7 +195,6 @@ const Corridor = ({
       onDispatchAction("endLeg", {});
     }
   });
-  const isArmed = canAct && isLive;
 
   return (
     <div
@@ -187,23 +205,33 @@ const Corridor = ({
         flap();
       }}
     >
-      <FappyScene
-        ref={sceneRef}
-        gates={gates}
-        gatesPerLeg={view.gatesPerLeg}
-        bird={bird}
-        waitingBird={waitingBird}
-        sceneId="host-fappy"
-        label={hostFappySurfaceCopy.sceneLabel(bird.playerName)}
-      />
+      <div key={legIndex} className={styles.legEnter}>
+        <FappyScene
+          ref={sceneRef}
+          gates={gates}
+          gatesPerLeg={view.gatesPerLeg}
+          bird={bird}
+          waitingBird={waitingBird}
+          sceneId="host-fappy"
+          label={hostFappySurfaceCopy.sceneLabel(bird.playerName)}
+        />
+      </div>
+      {hold?.kind === "handoff" && <HandoffCallout nextName={waitingBird?.playerName ?? null} />}
     </div>
   );
 };
 
-const resolveHint = (view: FappyMinigameHostView, canAct: boolean): string => {
+const resolveHint = (view: FappyMinigameHostView, canAct: boolean, hold: LegHold | null): string => {
   const legIndex = Math.min(view.legIndex, view.legsPerTurn - 1);
   const leg = view.legs[legIndex];
   const waitingName = resolvePlayerName(view.legs[legIndex + 1] ?? null);
+
+  if (hold?.kind === "handoff") {
+    return hostFappySurfaceCopy.handoffHint(
+      resolvePlayerName(view.legs[hold.legIndex] ?? null),
+      resolvePlayerName(leg ?? null)
+    );
+  }
 
   if (view.phase === "ready") {
     if (!canAct) {
@@ -212,7 +240,7 @@ const resolveHint = (view: FappyMinigameHostView, canAct: boolean): string => {
 
     return leg !== undefined && leg.attempt > 0
       ? hostFappySurfaceCopy.respawnHint(leg.checkpointGate)
-      : hostFappySurfaceCopy.readyHint(waitingName);
+      : hostFappySurfaceCopy.readyHint(resolvePlayerName(leg ?? null), waitingName);
   }
 
   if (view.phase === "flying") {
@@ -248,6 +276,9 @@ export const HostFappySurface = ({
     fappyView !== null && elapsedMs !== null && elapsedMs >= fappyView.limitSeconds * 1000;
   const currentLeg =
     fappyView === null ? null : (fappyView.legs[Math.min(fappyView.legIndex, fappyView.legsPerTurn - 1)] ?? null);
+  // The corridor lingers on a cleared leg while the handoff plays; the deck
+  // is already on the next one, which is the leg the room is asking about.
+  const { shownLegIndex, hold } = useHeldLeg(fappyView ?? EMPTY_LEG_VIEW);
 
   const dispatch = (actionType: string): void => {
     onDispatchAction(actionType, {});
@@ -282,8 +313,10 @@ export const HostFappySurface = ({
               canAct={canAct}
               serverOrigin={serverOrigin}
               onDispatchAction={onDispatchAction}
+              hold={hold}
+              legIndex={shownLegIndex}
             />
-            <p className={styles.arenaHint}>{resolveHint(fappyView, canAct)}</p>
+            <p className={styles.arenaHint}>{resolveHint(fappyView, canAct, hold)}</p>
           </div>
           <aside className={styles.deck}>
             <div className={styles.legCard}>

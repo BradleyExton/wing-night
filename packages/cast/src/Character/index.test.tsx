@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { Character } from "./index.js";
+import { Character, CharacterWing } from "./index.js";
 
 const drawn = { body: "round", comb: "none", tail: "fan" } as const;
 const costume = {
@@ -98,4 +98,21 @@ test("does lift the apparel onto the costume head when the bird has an avatar", 
 
   assert.match(onDrawn, /data-character-apparel="hat"[^]*?transform="translate\(2 -1\)"/);
   assert.match(onCostume, /data-character-apparel="hat"[^]*?transform="translate\(2 -21\)"/);
+});
+
+test("does leave the wing off the figure when the surface draws it on its own layer", () => {
+  const winged = renderToStaticMarkup(<Character appearance={drawn} />);
+  const wingless = renderToStaticMarkup(<Character appearance={drawn} wing="none" />);
+
+  assert.match(winged, /data-character-wing/);
+  assert.doesNotMatch(wingless, /data-character-wing/);
+});
+
+test("does draw the wing alone in the bird's box with its origin on the shoulder when asked for the wing layer", () => {
+  const html = renderToStaticMarkup(<CharacterWing fillClassName="text-teamA" />);
+
+  assert.match(html, /<svg[^>]*viewBox="0 0 80 72"[^>]*data-character-wing/);
+  assert.match(html, /origin-\[33\.75%_61\.1%\]/);
+  assert.match(html, /text-teamA/);
+  assert.equal((html.match(/<path/g) ?? []).length, 1);
 });

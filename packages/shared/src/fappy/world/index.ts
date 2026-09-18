@@ -22,8 +22,11 @@ export const FAPPY_WORLD = {
   startCliffEnd: 80,
   /** How far past the last gate the landing cliff's face stands. */
   landingCliffGap: 30,
-  /** The plateau the bird must come down on; past it a rock wall closes the sky. */
-  landingZoneWidth: 44,
+  /**
+   * The plateau the bird must come down on; past it a rock wall closes the sky. Wide enough for
+   * the bird that lands and the one waiting to stand side by side (each is 16 units drawn).
+   */
+  landingZoneWidth: 56,
   gateWidth: 10,
   /** The least sky a gate leaves between the champ at full stretch and whatever hangs above. */
   gapHeight: 30,
@@ -142,9 +145,13 @@ export const resolveFappyLandingX = (gatesPerLeg: number): number => {
   );
 };
 
-/** Where the next player's bird stands waiting: the middle of the landing zone. */
+/**
+ * Where the next player's bird stands waiting: well along the landing zone, so a bird that comes
+ * down early on the plateau lands beside it and not on top of it. Renderer geometry only; the sim
+ * never looks at the waiter.
+ */
 export const resolveFappyWaitingX = (gatesPerLeg: number): number => {
-  return resolveFappyLandingX(gatesPerLeg) + FAPPY_WORLD.landingZoneWidth / 2;
+  return resolveFappyLandingX(gatesPerLeg) + FAPPY_WORLD.landingZoneWidth * 0.78;
 };
 
 /** Where a bird sits when it is standing on a cliff. */
