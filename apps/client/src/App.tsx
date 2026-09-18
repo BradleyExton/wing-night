@@ -6,8 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import { AdminConfigWizard } from "./components/AdminConfigWizard";
 import { AnamorphLab } from "./components/AnamorphLab";
-import { ContraptionLab } from "./components/ContraptionLab";
-import { ContraptionUiLab } from "./components/ContraptionUiLab";
 import { DisplayBoard } from "./components/DisplayBoard";
 import { HostControlPanel } from "./components/HostControlPanel";
 import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
@@ -30,12 +28,6 @@ import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 // Throwaway — deleted along with the lab when the ANAMORPH minigame ships
 // (BACKLOG.md § Minigames).
 const ANAMORPH_LAB_NAME = "anamorph";
-
-// Throwaway — deleted along with the lab when the CONTRAPTION minigame ships.
-const CONTRAPTION_LAB_NAME = "contraption";
-
-// Throwaway — deleted along with the prototype when CONTRAPTION ships.
-const CONTRAPTION_UI_LAB_NAME = "contraption-ui";
 
 const resolveRouteContent = (
   route: ReturnType<typeof resolveClientRoute>,
@@ -67,14 +59,6 @@ const resolveRouteContent = (
 
   if (route === "DEV_LAB" && devLabName === ANAMORPH_LAB_NAME) {
     return <AnamorphLab />;
-  }
-
-  if (route === "DEV_LAB" && devLabName === CONTRAPTION_LAB_NAME) {
-    return <ContraptionLab />;
-  }
-
-  if (route === "DEV_LAB" && devLabName === CONTRAPTION_UI_LAB_NAME) {
-    return <ContraptionUiLab />;
   }
 
   return <RouteNotFound />;

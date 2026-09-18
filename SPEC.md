@@ -182,12 +182,12 @@ Minigame content files are plugin-declared and loaded from:
 - `content/local/<plugin-file>.json`
 - fallback: `content/sample/<plugin-file>.json`
 
-Current built-in content-backed minigame:
+Current content-backed minigames:
 - `TRIVIA` → `minigames/trivia.json`
-
-Current built-in unsupported runtime placeholders:
-- `GEO` (no content file required yet)
-- `DRAWING` (no content file required yet)
+- `GEO` → `minigames/geo.json`
+- `DRAWING` → `minigames/drawing.json`
+- `SONG_GUESS` → `minigames/song-guess.json`
+- `CONTRAPTION` → `minigames/contraption.json`
 
 Local static assets:
 - `apps/client/public/local-assets/` (gitignored)

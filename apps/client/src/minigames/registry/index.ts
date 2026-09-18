@@ -3,6 +3,9 @@ import type {
   MinigameRendererBundle,
   MinigameRuntimePlugin
 } from "@wingnight/minigames-core";
+import { contraptionRendererBundle } from "@wingnight/minigames-contraption/client";
+import { contraptionDevManifest } from "@wingnight/minigames-contraption/dev";
+import { contraptionRuntimePlugin } from "@wingnight/minigames-contraption/runtime";
 import { drawingRendererBundle } from "@wingnight/minigames-drawing/client";
 import { drawingDevManifest } from "@wingnight/minigames-drawing/dev";
 import { drawingRuntimePlugin } from "@wingnight/minigames-drawing/runtime";
@@ -45,6 +48,11 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
     rendererBundle: drawingRendererBundle,
     devManifest: drawingDevManifest,
     runtimePlugin: drawingRuntimePlugin
+  },
+  CONTRAPTION: {
+    rendererBundle: contraptionRendererBundle,
+    devManifest: contraptionDevManifest,
+    runtimePlugin: contraptionRuntimePlugin
   }
 };
 

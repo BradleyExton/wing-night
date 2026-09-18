@@ -3,6 +3,7 @@ import type { GameConfigFile, MinigameType } from "@wingnight/shared";
 const DISPLAY_ASSET_ROOT = "/display/minigames";
 const DEFAULT_TRIVIA_QUESTIONS_PER_TURN = 1;
 const DEFAULT_SONG_GUESS_SONGS_PER_TURN = 4;
+const DEFAULT_CONTRAPTION_ATTEMPTS_PER_TURN = 2;
 
 export type MinigameBriefingContent = {
   displayName: string;
@@ -80,12 +81,45 @@ const resolveSongGuessBriefingContent = (
   };
 };
 
+const resolveContraptionAttemptsPerTurn = (gameConfig: GameConfigFile | null): number => {
+  const configuredAttempts = gameConfig?.minigameRules?.contraption?.attemptsPerTurn;
+
+  if (
+    typeof configuredAttempts !== "number" ||
+    !Number.isInteger(configuredAttempts) ||
+    configuredAttempts <= 0
+  ) {
+    return DEFAULT_CONTRAPTION_ATTEMPTS_PER_TURN;
+  }
+
+  return configuredAttempts;
+};
+
+const resolveContraptionBriefingContent = (
+  gameConfig: GameConfigFile | null
+): MinigameBriefingContent => {
+  const attemptsPerTurn = resolveContraptionAttemptsPerTurn(gameConfig);
+
+  return {
+    displayName: "Contraption",
+    illustrationPath: `${DISPLAY_ASSET_ROOT}/contraption-illustration.svg`,
+    illustrationAlt: "Contraption mini-game artwork",
+    summary: "Build a machine on the tablet, hit GO, and watch a wing fall through it.",
+    steps: [
+      "Lay ramps on the grid to steer the wing into the bucket.",
+      "Clip a bonus on the way down for extra points.",
+      `You get ${attemptsPerTurn} go${attemptsPerTurn === 1 ? "" : "es"} — your best one counts.`
+    ]
+  };
+};
+
 const minigameBriefingContentByType: Record<
   MinigameType,
   (gameConfig: GameConfigFile | null) => MinigameBriefingContent
 > = {
   TRIVIA: resolveTriviaBriefingContent,
   SONG_GUESS: resolveSongGuessBriefingContent,
+  CONTRAPTION: resolveContraptionBriefingContent,
   GEO: () => {
     return {
       displayName: "Geo",

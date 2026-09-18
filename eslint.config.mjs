@@ -17,18 +17,6 @@ export default [
       // disabled and there is no eslint-disable in the lab. Shipping the ANAMORPH
       // minigame deletes both the folder and this entry (BACKLOG.md).
       "apps/client/src/components/AnamorphLab/**",
-      // Throwaway CONTRAPTION feel lab behind /dev/lab/contraption. A live-control harness over
-      // the shared integrator is hardcoded labels and runtime style values by construction, which the
-      // wingnight component rules rightly reject in shipped code. Scope carve-out only — no rule is
-      // disabled and there is no eslint-disable in the lab. Shipping the CONTRAPTION minigame
-      // deletes both the folder and this entry (BACKLOG.md).
-      "apps/client/src/components/ContraptionLab/**",
-      // Throwaway CONTRAPTION UI direction prototype behind /dev/lab/contraption-ui. A three-variant
-      // lab is hardcoded labels and runtime style values by construction, which the wingnight
-      // component rules rightly reject in shipped code. Scope carve-out only — no rule is disabled
-      // and there is no eslint-disable in the prototype. Shipping the CONTRAPTION minigame deletes
-      // both the folder and this entry (BACKLOG.md).
-      "apps/client/src/components/ContraptionUiLab/**",
       "**/dist/**",
       "**/coverage/**",
       "**/.cache/**",

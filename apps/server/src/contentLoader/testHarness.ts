@@ -81,6 +81,22 @@ export const createValidSongGuessJson = (prefix: string): string => {
   });
 };
 
+export const createValidContraptionJson = (prefix: string): string => {
+  return JSON.stringify({
+    prompts: [
+      {
+        id: `${prefix.toLowerCase()}-contraption-1`,
+        title: `${prefix} Machine`,
+        wing: { x: 8, y: 14, velocity: { x: 34, y: -26 } },
+        bucket: { x: 68, width: 16, height: 14 },
+        pieceBudget: 2,
+        pointsLanded: 5,
+        solution: [{ kind: "slope-right", column: 3, row: 6 }]
+      }
+    ]
+  });
+};
+
 type ValidGameConfigOptions = {
   questionsPerTurn?: number;
   setupPreviewRoundSlots?: number;
@@ -173,5 +189,10 @@ export const writeValidContentTree = (
     contentRoot,
     `${scope}/minigames/song-guess.json`,
     createValidSongGuessJson(prefix)
+  );
+  writeContentFile(
+    contentRoot,
+    `${scope}/minigames/contraption.json`,
+    createValidContraptionJson(prefix)
   );
 };

@@ -53,6 +53,9 @@ importers:
 
   apps/client:
     dependencies:
+      '@wingnight/minigames-contraption':
+        specifier: workspace:*
+        version: link:../../packages/minigames/contraption
       '@wingnight/minigames-core':
         specifier: workspace:*
         version: link:../../packages/minigames/core
@@ -117,6 +120,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@wingnight/minigames-contraption':
+        specifier: workspace:*
+        version: link:../../packages/minigames/contraption
       '@wingnight/minigames-core':
         specifier: workspace:*
         version: link:../../packages/minigames/core
@@ -151,6 +157,37 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  packages/minigames/contraption:
+    dependencies:
+      '@wingnight/minigames-core':
+        specifier: workspace:*
+        version: link:../core
+      '@wingnight/shared':
+        specifier: workspace:*
+        version: link:../../shared
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      '@types/react':
+        specifier: 'catalog:'
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.3.7(@types/react@18.3.28)
+      react:
+        specifier: 'catalog:'
+        version: 18.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 18.3.1(react@18.3.1)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

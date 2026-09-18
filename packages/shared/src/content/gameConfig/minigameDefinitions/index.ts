@@ -78,6 +78,25 @@ export const MINIGAME_DEFINITIONS = {
         "skipPrompt"
       ]
     }
+  },
+  CONTRAPTION: {
+    id: "CONTRAPTION",
+    slug: "contraption",
+    // Host-paced: build, GO, watch, next attempt. The turn ends on the host's
+    // phase advance, not a clock.
+    timerKey: null,
+    rulesKey: "contraption",
+    contractMetadata: {
+      minigameApiVersion: MINIGAME_API_VERSION,
+      capabilityFlags: [
+        "placePiece",
+        "removePiece",
+        "clearPieces",
+        "runContraption",
+        "replayRun",
+        "nextAttempt"
+      ]
+    }
   }
 } as const satisfies Record<string, MinigameDefinition>;
 

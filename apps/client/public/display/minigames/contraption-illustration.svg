@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="A wing falling through ramps into a bucket">
+  <rect width="320" height="200" rx="18" fill="#1c1c1c"/>
+  <rect x="16" y="168" width="288" height="8" rx="4" fill="#3a200d"/>
+  <g stroke="#f97316" stroke-width="10" stroke-linecap="round">
+    <line x1="64" y1="70" x2="128" y2="98"/>
+    <line x1="150" y1="120" x2="214" y2="148"/>
+  </g>
+  <g stroke="#7c2d12" stroke-width="3" stroke-linecap="round" opacity="0.6">
+    <line x1="64" y1="70" x2="128" y2="98"/>
+    <line x1="150" y1="120" x2="214" y2="148"/>
+  </g>
+  <path d="M 236 112 L 242 168 L 290 168 L 296 112" fill="#0f172a" stroke="#94a3b8" stroke-width="5" stroke-linejoin="round"/>
+  <rect x="230" y="104" width="72" height="10" rx="5" fill="#e2e8f0"/>
+  <circle cx="176" cy="72" r="9" fill="none" stroke="#fbbf24" stroke-width="3"/>
+  <text x="176" y="56" text-anchor="middle" font-family="ui-monospace, monospace" font-weight="800" font-size="14" fill="#fbbf24">+2</text>
+  <path d="M 40 30 Q 90 10 120 60 T 200 130" fill="none" stroke="rgba(255,213,128,0.55)" stroke-width="3" stroke-dasharray="6 8"/>
+  <circle cx="44" cy="34" r="14" fill="#f5ead6"/>
+  <circle cx="40" cy="30" r="8" fill="#fffaf0" opacity="0.6"/>
+  <rect x="54" y="30" width="12" height="8" rx="4" fill="#d9c7a6"/>
+</svg>

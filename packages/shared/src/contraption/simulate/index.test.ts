@@ -176,3 +176,45 @@ test("brings a high-friction body to rest instead of sliding forever", () => {
     `expected a high-friction body to grip, travelled ${travelAlongRamp(run)}`
   );
 });
+
+// ── Initial velocity ──────────────────────────────────────────────────────────────────────────
+// CONTRAPTION's thrower tosses the wing over their shoulder, so the first body in a level starts
+// moving. Verlet stores velocity as the previous-centre gap, and the pin is on the OBSERVABLE
+// consequence — horizontal travel under vertical-only gravity — not on the private step record.
+
+const thrownTest: Layout = {
+  gravity: { x: 0, y: 20 },
+  segments: [{ id: "floor", from: { x: -100, y: FLOOR_Y }, to: { x: 100, y: FLOOR_Y } }],
+  bodies: [
+    {
+      id: "wing",
+      origin: { x: 0, y: 0 },
+      radius: DROP_RADIUS,
+      restitution: 0,
+      slip: 1,
+      initialVelocity: { x: 12, y: -6 }
+    }
+  ]
+};
+
+test("carries a body sideways when it starts with an initial velocity", () => {
+  const run = simulate(thrownTest, options({ durationSeconds: 0.5 }));
+  const halfSecond = run.keyframes[run.keyframes.length - 1][0];
+
+  // No horizontal force acts, so x advances at the launch speed: 12 units/s for 0.5s.
+  assert.ok(Math.abs(halfSecond.x - 6) < 0.05, `expected x≈6, got ${halfSecond.x}`);
+  // Launched upward against gravity, it is still above its origin at the half-second mark.
+  assert.ok(halfSecond.y < 0, `expected the body above its origin, got y=${halfSecond.y}`);
+});
+
+test("treats a missing initial velocity as a release from rest", () => {
+  const atRest: Layout = {
+    ...thrownTest,
+    bodies: [{ ...thrownTest.bodies[0], initialVelocity: undefined }]
+  };
+  const run = simulate(atRest, options({ durationSeconds: 0.5 }));
+  const halfSecond = run.keyframes[run.keyframes.length - 1][0];
+
+  assert.ok(Math.abs(halfSecond.x) < 0.01);
+  assert.ok(halfSecond.y > 0);
+});

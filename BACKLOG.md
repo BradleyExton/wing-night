@@ -127,11 +127,11 @@ photo of Jordan comes up on Jordan's team's turn.
 
 ## Minigames
 
-Both of these are `MinigameRuntimePlugin` packages registered on server and client like
-trivia/geo/drawing. Read `docs/minigame-authoring-guide.md` first — adding a `MinigameType` breaks
-every `Record<MinigameType, …>` in the repo until fully wired, so there's no throwaway half-state.
-
 ### ANAMORPH — rotate a 3D point cloud until it snaps into a silhouette
+A `MinigameRuntimePlugin` package registered on server and client like trivia/geo/drawing/
+contraption. Read `docs/minigame-authoring-guide.md` first — adding a `MinigameType` breaks every
+`Record<MinigameType, …>` in the repo until fully wired, so there's no throwaway half-state.
+
 TV renders a seeded point cloud that resolves into a recognizable shape from exactly one viewing
 angle; the active team hunts that angle with two dials on the tablet.
 
@@ -149,76 +149,21 @@ angle; the active team hunts that angle with two dials on the tablet.
   late hard snap); whether the antipodal mirror image is an acceptable second solution; two dials vs
   drag-to-orbit on a sauce-covered tablet; whether the tablet needs its own preview of the cloud.
 
-### CONTRAPTION — build a physics contraption on the tablet, watch the run on the TV
-Active team lays out physics pieces on a coarse grid, commits, and the TV replays a
-server-simulated run of a wing falling through what they built.
-
-- **Architecture settled:** the server simulates in the reducer and emits a keyframe track; the
-  display replays it and never predicts (mirrors drawing's stroke replay). Track weight was measured
-  and is a non-issue — 8,610 B @30fps / 5,770 B @20fps for a whole ~4s run, ~1,600 B at real piece
-  counts. The both-sides-simulate alternative is struck; it would have bound us to the transcendental
-  ban forever.
-- Integrator is hand-rolled, deterministic, dependency-free; no `Math.sin`/`cos`/`pow` in the hot
-  path. Determinism proven by test — a fixed layout produces a byte-identical run — not asserted.
-- Every sample level ships a known-good solution in the content file, with a test asserting the sim
-  still solves it. An unsolvable level is a genuinely bad party moment.
-- Scoring: bucket landing plus en-route pickups, capped at `pointsMax`, applied at the phase
-  boundary. Host escape hatches: re-run the replay, skip a stuck turn.
-- **Settled from the labs:** failure readability needs the `Trail` aid level — trail kinks imply the
-  contacts and the arc over the bucket reads plainly; bare fails (after settle it's just a wing on
-  the floor and half the room is eating).
-- **Still unanswered:** piece set and count; one shot vs best-of-N (leaning two attempts, best score
-  counts); sim length (~4s target watchable window). These couldn't be driven before because the
-  integrator couldn't slide — that's since fixed, but the lab's presets still need re-finding against
-  the fixed physics (below).
-- Open scope questions: whether the room sees the plan before GO (invites backseat engineering from
-  other teams — probably the best part, but it's a fairness call), and authored levels vs seeded
-  procedural generation (leaning authored — tunable and solvable by construction).
-
-#### Prerequisite lab work
-
-**Re-cut the picked Sidestage variant** (`ContraptionUiLab`, `/dev/lab/contraption-ui?variant=sidestage`).
-The picked direction is A · Sidestage, but with a structural revision the lab doesn't render: the
-thrower **sits at a table** eating wings, **well above** the contraption field, facing **away**, and
-throws the wing **backward over their shoulder** — so the contraption sits behind and below them.
-
-- Reuse `scene/flightPath/` with new waypoints; do not fork the flight model. Tune waypoints if
-  `apexLift` reads wrong for a throw starting high.
-- Add a table and a seated back-turned thrower as primitives in `scene/`, used **only** by variant A.
-  Don't add a `seated` flag to the shared `Thrower` and thread it everywhere.
-- Variants B · Arena and C · Character-first stay byte-identical.
-- Projectile is the **drumette** — settled by the pick, no angular velocity, no changes under
-  `packages/shared/src/contraption/`. The flat wing bone stays in the toggle as the rejected option.
-- Variant A's three axis strings in `variants/index.ts` describe the old geometry and are asserted in
-  four places in `ContraptionUiLab/index.test.tsx`. Rewrite strings and assertions **in the same
-  change** — assert on axis values, not labels (`/Throw/` is a substring of `Thrower` and pins
-  nothing). Keep the two invariants the suite pins: all three variants distinct on all three axes,
-  and exactly one `targetTreatment` starting with `"Foregrounded"`.
-- The five beats must still play end to end, including the miss beat completing (bone on floor,
-  cleaner walks on, picks it up, carries it off, floor empty). `scene/cleanerWalk/` is parameterised
-  by `sceneWidth`/`restX` — re-aim it, don't reimplement.
-
-**Re-find the piece-set presets** (`ContraptionLab/pieceSets/index.ts`) against the fixed physics and
-the re-cut geometry.
-
-- A set is kept only if the wing lands **and physically contacts every piece it was given**, checked
-  at every one of the 240 integration steps, not at the 30 Hz display sampling. An uncontacted piece
-  is scenery, and a set full of scenery makes the piece-count question unanswerable.
-- **The sets must stop nesting.** They currently nest (`four = two + 2`, `six = four + 2`), which is
-  why 2 and 4 pieces produced a byte-identical track and an identical settle — the added ramps were
-  near-bucket deflectors. Re-find each set independently so piece count is a real variable. The
-  nesting test is deliberately re-specified to the non-nesting contract, not deleted.
-- At least one set must exploit **sliding** — only solvable because a body now travels along a ramp
-  instead of deflecting off it. Without that, nothing demonstrates the friction fix changed anything
-  a player would notice.
-- The contact-guard assertion must still fail loudly when a ramp is shifted out of the flight path
-  (a mutation probe moved min contact distance from ~2.60 to 15.97 and it went red). Do not relax it
-  to fit new geometry.
-- Rewrite the per-set `hint` copy to ask the re-framed question honestly.
-
-Both labs and their `eslint.config.mjs` `ignores` entries are throwaway — delete them when the real
-minigame packages ship. Neither lab may create a package under `packages/minigames/`, add a
+The lab and its `eslint.config.mjs` `ignores` entry are throwaway — delete them when the real
+minigame package ships. The lab may not create a package under `packages/minigames/`, add a
 `MINIGAME_DEFINITIONS` entry, or touch either registry.
+
+### CONTRAPTION follow-ups
+Shipped 2026-09-16 (`docs/minigames/contraption-spec.md`). Left open on purpose:
+
+- **More levels.** Three ship. Authoring one means finding a solution by search against the real
+  integrator (`gradeAttempt`) — a small `tools/` script in the shape of `tools/import-geo-photos`
+  would make that a one-liner for a pack author.
+- **Level rotation across rounds.** Every team in a round plays the same level (fair), and a night
+  with two CONTRAPTION rounds replays it unless `minigameRules.contraption.levelId` changes between
+  them. A per-round pin needs round context that `initialize` does not currently receive.
+- **Piece kinds.** Five straight segments. A bumper (high restitution) would need per-segment
+  materials in the integrator, which today are per-body.
 
 ---
 

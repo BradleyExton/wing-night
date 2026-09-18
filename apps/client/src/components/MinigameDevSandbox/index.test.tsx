@@ -53,3 +53,14 @@ test("renders the drawing sandbox without leaking the prompt to the display", ()
   );
   assert.equal(promptOccurrences, 1);
 });
+
+test("renders the contraption sandbox with the plan on both previews and no solution", () => {
+  const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="CONTRAPTION" />);
+
+  assert.match(html, /Minigame Dev Sandbox/);
+  // The first sample level is projected live into both previews.
+  assert.equal(html.split("Over the Shoulder").length - 1, 2);
+  assert.match(html, /GO/);
+  assert.match(html, /Building…/);
+  assert.doesNotMatch(html, /solution/i);
+});

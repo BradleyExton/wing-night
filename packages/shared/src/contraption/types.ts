@@ -28,6 +28,12 @@ export type CircleBody = {
    * `simulate/resolveSegmentContacts`.
    */
   readonly slip: number;
+  /**
+   * Velocity at the first step, in layout units per second. Absent means released from rest.
+   * CONTRAPTION's thrower tosses the wing backward over their shoulder, and an arc that starts
+   * with real velocity is the one thing a body dropped from rest cannot fake.
+   */
+  readonly initialVelocity?: Vec2;
 };
 
 /** An immovable line the circles collide against — a ramp, a wall, the floor. */

@@ -1,0 +1,154 @@
+{
+  "prompts": [
+    {
+      "id": "over-the-shoulder",
+      "title": "Over the Shoulder",
+      "wing": {
+        "x": 8,
+        "y": 14,
+        "velocity": {
+          "x": 34,
+          "y": -26
+        }
+      },
+      "bucket": {
+        "x": 68,
+        "width": 16,
+        "height": 14
+      },
+      "obstacles": [],
+      "pickups": [
+        {
+          "id": "mid-air",
+          "x": 50,
+          "y": 65,
+          "points": 2
+        },
+        {
+          "id": "high-and-wide",
+          "x": 40,
+          "y": 30,
+          "points": 3
+        }
+      ],
+      "pieceBudget": 2,
+      "pointsLanded": 5,
+      "solution": [
+        {
+          "kind": "slope-right",
+          "column": 3,
+          "row": 6
+        },
+        {
+          "kind": "slope-right",
+          "column": 5,
+          "row": 7
+        }
+      ]
+    },
+    {
+      "id": "the-ledge",
+      "title": "The Ledge",
+      "wing": {
+        "x": 8,
+        "y": 14,
+        "velocity": {
+          "x": 34,
+          "y": -26
+        }
+      },
+      "bucket": {
+        "x": 78,
+        "width": 16,
+        "height": 14
+      },
+      "obstacles": [
+        {
+          "id": "ledge",
+          "from": {
+            "x": 26,
+            "y": 48
+          },
+          "to": {
+            "x": 56,
+            "y": 48
+          }
+        }
+      ],
+      "pickups": [
+        {
+          "id": "off-the-edge",
+          "x": 60,
+          "y": 50,
+          "points": 2
+        },
+        {
+          "id": "under-the-ledge",
+          "x": 42,
+          "y": 78,
+          "points": 3
+        }
+      ],
+      "pieceBudget": 3,
+      "pointsLanded": 5,
+      "solution": [
+        {
+          "kind": "steep-right",
+          "column": 2,
+          "row": 2
+        },
+        {
+          "kind": "slope-left",
+          "column": 3,
+          "row": 4
+        },
+        {
+          "kind": "slope-right",
+          "column": 6,
+          "row": 5
+        }
+      ]
+    },
+    {
+      "id": "boomerang",
+      "title": "Boomerang",
+      "wing": {
+        "x": 8,
+        "y": 14,
+        "velocity": {
+          "x": 46,
+          "y": -30
+        }
+      },
+      "bucket": {
+        "x": 14,
+        "width": 16,
+        "height": 14
+      },
+      "obstacles": [],
+      "pickups": [
+        {
+          "id": "on-the-way-back",
+          "x": 25,
+          "y": 46,
+          "points": 2
+        },
+        {
+          "id": "far-corner",
+          "x": 70,
+          "y": 75,
+          "points": 3
+        }
+      ],
+      "pieceBudget": 2,
+      "pointsLanded": 6,
+      "solution": [
+        {
+          "kind": "slope-left",
+          "column": 3,
+          "row": 3
+        }
+      ]
+    }
+  ]
+}

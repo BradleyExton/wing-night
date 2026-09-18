@@ -1,4 +1,11 @@
 import type { DrawingPrompt } from "../content/drawing/index.js";
+import type {
+  ContraptionBucket,
+  ContraptionObstacle,
+  ContraptionPickup,
+  ContraptionPlacedPiece,
+  ContraptionPoint
+} from "../content/contraption/index.js";
 import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
@@ -179,11 +186,73 @@ export type SongGuessMinigameHostView = MinigameHostViewBase & {
   scoresBySongId: Record<string, SongGuessTeamScore>;
 };
 
+export type ContraptionPhase = "building" | "ran" | "done";
+
+// Why the run ended the way it did, in the room's terms rather than the
+// physics': only `landed` scores the bucket. `restless` means the wing was
+// still moving when the window closed — a sim-length signal, not a miss.
+export type ContraptionRunOutcome =
+  | "landed"
+  | "short"
+  | "long"
+  | "perched"
+  | "restless";
+
+// The keyframe track the display replays, flattened to `[x0, y0, x1, y1, …]`
+// at two decimals — the shape the byte measurement was taken against. The
+// display never predicts; it projects this.
+export type ContraptionRunTrack = {
+  keyframeHz: number;
+  positions: number[];
+};
+
+export type ContraptionMinigameRun = {
+  // 1-based, so the room reads "Attempt 1 of 2".
+  attemptNumber: number;
+  track: ContraptionRunTrack;
+  outcome: ContraptionRunOutcome;
+  settleSeconds: number | null;
+  collectedPickupIds: string[];
+  points: number;
+  // Bumped by the host's "replay for the room" escape hatch; the display
+  // restarts playback whenever it changes.
+  replayToken: number;
+};
+
+// Everything a surface needs to draw the scene. Deliberately NOT the content
+// level: the solution stays server-side, because the active team holds the
+// tablet and the host view is theirs to read.
+export type ContraptionMinigameLevelView = {
+  id: string;
+  title: string;
+  wing: ContraptionPoint & { radius: number };
+  bucket: ContraptionBucket;
+  obstacles: ContraptionObstacle[];
+  pickups: ContraptionPickup[];
+  pieceBudget: number;
+  pointsLanded: number;
+};
+
+type ContraptionMinigameViewFields = {
+  minigame: "CONTRAPTION";
+  phase: ContraptionPhase;
+  level: ContraptionMinigameLevelView | null;
+  pieces: ContraptionPlacedPiece[];
+  attemptsPerTurn: number;
+  attemptsUsed: number;
+  bestPoints: number;
+  run: ContraptionMinigameRun | null;
+};
+
+export type ContraptionMinigameHostView = MinigameHostViewBase &
+  ContraptionMinigameViewFields;
+
 export type MinigameHostView =
   | TriviaMinigameHostView
   | GeoMinigameHostView
   | SongGuessMinigameHostView
-  | DrawingMinigameHostView;
+  | DrawingMinigameHostView
+  | ContraptionMinigameHostView;
 
 export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
   minigame: "TRIVIA";
@@ -234,11 +303,18 @@ export type SongGuessMinigameDisplayView = MinigameDisplayViewBase & {
     | { phase: "done" }
   );
 
+// The room is meant to see the plan before GO (backseat engineering is the
+// best part), so the display carries the same fields as the host. What neither
+// carries is the level's solution.
+export type ContraptionMinigameDisplayView = MinigameDisplayViewBase &
+  ContraptionMinigameViewFields;
+
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView
   | GeoMinigameDisplayView
   | SongGuessMinigameDisplayView
-  | DrawingMinigameDisplayView;
+  | DrawingMinigameDisplayView
+  | ContraptionMinigameDisplayView;
 
 export type RoomFatalError = {
   code: "CONTENT_LOAD_FAILED";

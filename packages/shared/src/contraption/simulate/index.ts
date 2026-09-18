@@ -62,11 +62,26 @@ const toKeyframe = (steps: readonly BodyStep[]): Keyframe => {
   });
 };
 
-const jitteredStart = (origin: Vec2, offsetX: number, offsetY: number): BodyStep => {
+// Position-Verlet carries velocity as the gap between the current and previous centres, so an
+// initial velocity is written by placing the previous centre one step behind along it.
+const jitteredStart = (
+  origin: Vec2,
+  offsetX: number,
+  offsetY: number,
+  velocity: Vec2,
+  stepSeconds: number
+): BodyStep => {
   const x = origin.x + offsetX;
   const y = origin.y + offsetY;
-  return { x, y, previousX: x, previousY: y };
+  return {
+    x,
+    y,
+    previousX: x - velocity.x * stepSeconds,
+    previousY: y - velocity.y * stepSeconds
+  };
 };
+
+const AT_REST: Vec2 = { x: 0, y: 0 };
 
 const advance = (
   step: BodyStep,
@@ -104,7 +119,13 @@ export const simulate = (layout: Layout, options: SimulateOptions): Run => {
     const offsetX = (unitFromState(seedState) * 2 - 1) * JITTER_UNITS;
     seedState = nextSeedState(seedState);
     const offsetY = (unitFromState(seedState) * 2 - 1) * JITTER_UNITS;
-    return jitteredStart(body.origin, offsetX, offsetY);
+    return jitteredStart(
+      body.origin,
+      offsetX,
+      offsetY,
+      body.initialVelocity ?? AT_REST,
+      stepSeconds
+    );
   });
 
   const keyframes: Keyframe[] = [toKeyframe(steps)];

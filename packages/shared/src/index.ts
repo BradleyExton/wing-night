@@ -21,6 +21,13 @@ export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
 export type {
+  ContraptionMinigameDisplayView,
+  ContraptionMinigameHostView,
+  ContraptionMinigameLevelView,
+  ContraptionMinigameRun,
+  ContraptionPhase,
+  ContraptionRunOutcome,
+  ContraptionRunTrack,
   DrawingMinigameDisplayView,
   DrawingMinigameHostPrompt,
   DrawingMinigameHostView,
@@ -113,6 +120,31 @@ export type {
   TeamsContentEntry,
   TeamsContentFile
 } from "./content/teams/index.js";
+export {
+  CONTRAPTION_CELL_UNITS,
+  CONTRAPTION_FIELD_UNITS,
+  CONTRAPTION_GRID_COLUMNS,
+  CONTRAPTION_GRID_ROWS,
+  CONTRAPTION_PIECE_KINDS,
+  isContraptionContentFile,
+  isContraptionLevel,
+  isContraptionPlacedPiece,
+  validateContraptionContentFile,
+  validateContraptionLevel,
+  validateContraptionPieces,
+  validateContraptionPlacedPiece
+} from "./content/contraption/index.js";
+export type {
+  ContraptionBucket,
+  ContraptionContentFile,
+  ContraptionLevel,
+  ContraptionObstacle,
+  ContraptionPickup,
+  ContraptionPieceKind,
+  ContraptionPlacedPiece,
+  ContraptionPoint,
+  ContraptionWingStart
+} from "./content/contraption/index.js";
 export {
   isDrawingContentFile,
   isDrawingPrompt,
