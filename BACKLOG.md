@@ -234,6 +234,32 @@ minigame packages ship. Neither lab may create a package under `packages/minigam
 
 ---
 
+## Team identity (genre theming)
+
+Spec: `docs/team-identity.md`. Teams are told apart by a hashed colour and a name; the genre only
+reaches the cast's apparel and the intro eyebrow. The kit turns `genre` into typeface, wordmark,
+emblem, ambient texture and entrance beat, resolved once per room state and drawn by four shared
+components. Each phase is one session and ends on the full gate plus the Playwright run.
+
+- **Phase 1 — mockup.** `apps/client/public/mockups/team-identity/`: kit board with font candidates
+  per genre for the four pack teams, plus a standings footer and intro spotlight from the leading
+  picks. Ends on a font decision written into the spec.
+- **Phase 2 — foundation.** Bundled woff2 faces + `@font-face` + Tailwind `font-genre-*` tokens;
+  `resolveTeamTheme` (absorbs `resolveTeamApparel`, colour precedence authored → genre → hash with
+  a collision pass); optional `color` on the teams content entry; `TeamWordmark`, `TeamEmblem`,
+  `TeamLineup`, `TeamAmbient`; `teamThemeById` beside `selectHostTeamMaps` and in
+  `resolveStageViewModel`.
+- **Phase 3 — TV headline moments.** `StandingsSurface`, `MinigameIntroStageBody` (lineup replaces
+  the text roster), `TurnResultsStageBody`, `FinalResultsStageBody`.
+- **Phase 4 — host surfaces.** `HostMiniRail` pill, `TeamSetupSurface`, `SetupPlayersSurface`
+  chips, `TurnOrderSurface`, `ScoreOverrideSurface`: glyph plus colour, no genre face below 20px.
+- **Phase 5 — minigames.** `activeTeamTheme` / `teamThemeByTeamId` on the core contract and
+  sandbox fixture; marquees in drawing and joust, labels in trivia.
+- **Phase 6 — authoring and docs.** Wizard genre field with live preview (genre half of the item
+  below), `DESIGN.md` §0.1 exemption and §2.8 pointer, standings/intro sections updated.
+
+---
+
 ## Platform / architecture
 
 Kept deliberately unscoped — direction-setting work that wants a supervised session, not a

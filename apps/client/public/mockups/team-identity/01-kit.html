@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Team Identity — 01 Kit Board</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      main { max-width: 1400px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+      h1 { font-size: clamp(1.75rem, 3vw, 2.5rem); margin: 0 0 0.25rem; }
+      p.lede { color: var(--muted); line-height: 1.5; margin: 0 0 2.5rem; max-width: 72ch; }
+      section.genre { border-top: 1px solid #2a2a2a; padding: 2rem 0; display: grid; grid-template-columns: 200px 1fr; gap: 2rem; }
+      section.genre.extra { grid-template-columns: 200px 1fr; padding: 1.25rem 0; }
+      .side { display: flex; flex-direction: column; gap: 0.75rem; }
+      .side .key { text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.75rem; color: var(--muted); font-weight: 700; }
+      .side .team { font-size: 1.1rem; font-weight: 800; }
+      .side .meta { font-size: 0.8rem; color: var(--muted-warm); line-height: 1.5; }
+      .swatches { display: flex; gap: 0.6rem; align-items: center; }
+      .swatch { width: 40px; height: 40px; border-radius: 8px; border: 2px solid #121212; box-shadow: 0 0 0 1px #333; }
+      .texture { position: relative; width: 120px; height: 40px; border-radius: 8px; overflow: hidden; background: var(--surface); box-shadow: 0 0 0 1px #333; }
+      .texture .ambient { position: absolute; }
+      .candidates { display: grid; gap: 1rem; }
+      .candidate { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 1.5rem; padding: 1rem 1.5rem; border-radius: 12px; background: var(--surface); border: 1px solid #262626; cursor: pointer; position: relative; overflow: hidden; }
+      .candidate.lead { border-color: var(--primary); }
+      .candidate .ambient { opacity: 0.5; }
+      .candidate .wm { position: relative; font-size: clamp(2.6rem, 5.4vw, 5.5rem); z-index: 1; }
+      .candidate .face { position: relative; z-index: 1; text-align: right; font-size: 0.8rem; color: var(--muted); display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-end; }
+      .candidate .face b { color: var(--text); font-size: 0.95rem; }
+      .candidate .lead-tag { color: var(--primary); font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.7rem; }
+      .small { display: flex; gap: 1.5rem; align-items: center; margin-top: 0.75rem; }
+      .small .wm { font-size: 1.5rem; }
+      .small .floor { font-size: 1.25rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 0.5rem; }
+      .small .note { font-size: 0.75rem; color: var(--muted); }
+      .lineup { display: flex; align-items: flex-end; gap: 0.25rem; }
+      button.replay { align-self: flex-start; background: none; border: 1px solid #333; color: var(--text); border-radius: 999px; padding: 0.4rem 0.9rem; font-size: 0.8rem; cursor: pointer; }
+      button.replay:hover { border-color: var(--primary); }
+      .extra .candidate .wm { font-size: clamp(1.8rem, 3.2vw, 3rem); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>01 · Kit Board</h1>
+      <p class="lede">
+        One row per genre, the four pack teams first. Each candidate face shows the team name with
+        the genre's wordmark treatment on top of its ambient texture, so the decision is made on the
+        combination, not the font alone. Click a candidate to make it the lead; the choice is kept in
+        this browser and page 02 reads it. Under each row the name repeats at the 24px TV floor and
+        the glyph-plus-sans fallback used below that floor.
+      </p>
+      <div id="root"></div>
+    </main>
+    <script type="module">
+      import { GENRES, PACK_TEAMS, EXTRA_TEAMS, TOKENS, emblemSvg, henSvg, fontFamily, loadFonts } from "./kit.js";
+      loadFonts();
+
+      const KEY = "wn-team-identity-picks";
+      const picks = JSON.parse(localStorage.getItem(KEY) ?? "{}");
+      const leadFont = (genre) => picks[genre] ?? GENRES[genre].fonts[0];
+
+      const row = (team, extra) => {
+        const g = GENRES[team.genre];
+        const tint = TOKENS[g.token];
+        const lead = leadFont(team.genre);
+        const candidates = g.fonts.map((font) => `
+          <div class="candidate ${font === lead ? "lead" : ""}" data-genre="${team.genre}" data-font="${font}" style="--tint:${tint}">
+            ${g.texture ? `<span class="ambient ${g.texture}" style="--tint:${tint}"></span>` : ""}
+            <p class="wm wordmark ${g.treatment} enter ${g.entrance}" style="--tint:${tint}; font-family:${fontFamily(font)}">${team.name}</p>
+            <div class="face">
+              ${font === lead ? `<span class="lead-tag">lead</span>` : ""}
+              <b>${font}</b>
+              <span>${g.treatment} · ${g.entrance}</span>
+            </div>
+          </div>`).join("");
+        const lineup = team.players.map(() => henSvg(extra ? 40 : 56, tint, g.apparel)).join("");
+        return `
+          <section class="genre ${extra ? "extra" : ""}" data-genre="${team.genre}" style="--tint:${tint}">
+            <div class="side">
+              <span class="key">${g.label} · ${team.genre}</span>
+              <span class="team">${team.name}</span>
+              <div class="swatches">
+                <span class="swatch" style="background:${tint}" title="${g.token}"></span>
+                ${emblemSvg(g.emblem, 40, tint)}
+                <span class="texture">${g.texture ? `<span class="ambient ${g.texture}"></span>` : ""}</span>
+              </div>
+              <span class="meta">${g.token} · ${g.emblem ?? "no emblem"} · ${g.texture ?? "no texture"}<br/>apparel: ${g.apparel ?? "none"}</span>
+              <div class="lineup">${lineup}</div>
+              <button class="replay" data-replay="${team.genre}">Replay entrance</button>
+            </div>
+            <div>
+              <div class="candidates">${candidates}</div>
+              <div class="small">
+                <span class="wm wordmark ${g.treatment}" style="--tint:${tint}; font-family:${fontFamily(lead)}">${team.name}</span>
+                <span class="note">24px floor</span>
+                <span class="floor">${emblemSvg(g.emblem, 22, tint)}${team.name}</span>
+                <span class="note">below the floor: glyph + house sans</span>
+              </div>
+            </div>
+          </section>`;
+      };
+
+      const root = document.getElementById("root");
+      root.innerHTML = PACK_TEAMS.map((t) => row(t, false)).join("") + EXTRA_TEAMS.map((t) => row(t, true)).join("");
+
+      root.addEventListener("click", (event) => {
+        const candidate = event.target.closest(".candidate");
+        if (candidate) {
+          picks[candidate.dataset.genre] = candidate.dataset.font;
+          localStorage.setItem(KEY, JSON.stringify(picks));
+          const section = candidate.closest("section");
+          const team = [...PACK_TEAMS, ...EXTRA_TEAMS].find((t) => t.genre === candidate.dataset.genre);
+          section.outerHTML = row(team, section.classList.contains("extra"));
+          return;
+        }
+        const replay = event.target.closest("[data-replay]");
+        if (replay) {
+          replay.closest("section").querySelectorAll(".enter").forEach((el) => {
+            el.style.animation = "none";
+            void el.offsetWidth;
+            el.style.animation = "";
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

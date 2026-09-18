@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Team Identity — Mockups</title>
+    <style>
+      :root { --bg:#121212; --surface:#1c1c1c; --text:#fff; --muted:#a3a3a3; --primary:#f97316; }
+      html, body { margin: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; min-height: 100dvh; }
+      main { max-width: 980px; margin: 0 auto; padding: 4rem 2rem; }
+      h1 { font-size: clamp(2rem, 4vw, 3.25rem); margin: 0 0 0.5rem; }
+      p.lede { color: var(--muted); font-size: 1.125rem; line-height: 1.5; margin: 0 0 3rem; }
+      .grid { display: grid; gap: 1.5rem; }
+      a.card { display: block; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid #333; border-radius: 12px; padding: 1.5rem 1.75rem; transition: transform 120ms ease, border-color 120ms ease; }
+      a.card:hover, a.card:focus { border-color: var(--primary); transform: translateY(-2px); }
+      .index { display: inline-block; background: var(--primary); color: #1a0f04; font-weight: 800; font-size: 0.75rem; letter-spacing: 0.1em; padding: 0.25rem 0.5rem; border-radius: 4px; margin-bottom: 0.75rem; }
+      h2 { font-size: 1.5rem; margin: 0 0 0.5rem; }
+      .desc { color: var(--muted); line-height: 1.5; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Team Identity — Mockups</h1>
+      <p class="lede">
+        The genre kit from <code>docs/team-identity.md</code>: typeface, wordmark treatment, emblem,
+        ambient texture and entrance beat per genre. Page 01 is the decision board for the font
+        picks; page 02 shows the kit on the two TV surfaces that matter most.
+      </p>
+      <div class="grid">
+        <a class="card" href="01-kit.html">
+          <span class="index">01</span>
+          <h2>Kit Board</h2>
+          <p class="desc">
+            Every genre as a row: the four pack teams first, then the rest of the vocabulary. Each
+            row renders the team name in every candidate face with the treatment applied, next to the
+            emblem, the colour, the texture swatch, and a replay of the entrance beat. Click a
+            candidate to make it the lead.
+          </p>
+        </a>
+        <a class="card" href="02-surfaces.html">
+          <span class="index">02</span>
+          <h2>TV Surfaces</h2>
+          <p class="desc">
+            MINIGAME_INTRO spotlight with ambient, crest, wordmark and the cast lineup replacing the
+            text roster, over the standings footer with wordmark names and emblem watermarks. Tabs
+            switch the active team; picks carry over from page 01.
+          </p>
+        </a>
+      </div>
+    </main>
+  </body>
+</html>
