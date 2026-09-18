@@ -9,9 +9,10 @@ import {
   resolveFappyLandingX,
   resolveFappyLegTickCap,
   resolveFappyPerchY,
+  resolveFappyWaitingX,
   resolveFappyWave
 } from "../world/index.js";
-import { advanceFappy, createFappyLegStart, runFappyLeg, stepFappy } from "./index.js";
+import { advanceFappy, createFappyLegLanding, createFappyLegStart, runFappyLeg, stepFappy } from "./index.js";
 
 const course = { seed: 1234, legIndex: 0, gatesPerLeg: 8 };
 const gates = resolveFappyGates(course);
@@ -278,4 +279,18 @@ test("does size the tick cap past the whole course so a run always resolves", ()
   // Pinned to the ceiling the bird cannot thread a gate, so this ends in a crash, and it ends.
   assert.equal(run.outcome, "crashed");
   assert.ok(run.endTick < resolveFappyLegTickCap(course.gatesPerLeg));
+});
+
+test("does settle a leg nobody flew on the landing plateau, short of the waiting bird, with every gate counted", () => {
+  const gates = resolveFappyGates({ seed: 7, legIndex: 0, gatesPerLeg: 3 });
+  const landing = createFappyLegLanding(gates, 3, [1]);
+  const plateauStart = resolveFappyLandingX(3) - landing.scrollX;
+  const waiterX = resolveFappyWaitingX(3) - landing.scrollX;
+
+  assert.equal(landing.outcome, "cleared");
+  assert.equal(landing.gatesCleared, 3);
+  assert.equal(landing.bird.y, resolveFappyCliffPerchY());
+  assert.ok(FAPPY_WORLD.birdX > plateauStart, "over the plateau");
+  assert.ok(FAPPY_WORLD.birdX < waiterX, "left of the waiter");
+  assert.deepEqual(landing.knockedEagles, [{ gate: 1, tick: -1 }]);
 });

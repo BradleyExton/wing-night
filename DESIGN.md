@@ -333,28 +333,56 @@ under the same marquee and deck chrome:
 
 -   Scene materials are JOUST's, on purpose: the dusk sky and sand, and the
     obstacle is JOUST's cyan champ (`#22c9e6`) standing up from the floor,
-    growing and shrinking on a slow bob with its head wiggling. Over some
-    gates a bald eagle (dark brown, white head, `#f9a51a` beak) hangs in
-    the sky as the thing to duck under (bump one and it tumbles off, gone
-    for the leg). Each leg takes off from a sand
-    cliff on the left and lands on one on the right, where the next
-    player's bird stands facing the flyer (a gold pennant on the last leg);
-    past the plateau a dark rock wall closes the sky. The room already
-    knows that opponent. Drawing content, exempt from the two-accent
-    budget like the JOUST arena.
+    growing and shrinking on a slow bob with its head wiggling — lit from
+    the left with a gradient down the shaft and a highlight on the head, so
+    it reads as a solid thing at TV distance. Over some gates a bald eagle
+    (dark brown, white head and tail, `#f9a51a` beak and talons) hangs in
+    the sky as the thing to duck under, its feathered wings beating on the
+    shoulders (bump one and it tumbles off, gone for the leg). Behind the
+    corridor a starfield, a low sun on the horizon and two bands of dunes
+    that slide at a fifth and a half of the scroll, so the world has depth.
+    Each leg takes off from a sand cliff on the left and lands on one on the
+    right, where the next player's bird stands facing the flyer (a gold
+    pennant on the last leg); strata lines, a tuft or two and a barrel
+    cactus give the sand a surface, and a gold dashed strip along the
+    landing plateau says where to come down. Past the plateau a dark rock
+    wall closes the sky. Drawing content, exempt from the two-accent budget
+    like the JOUST arena.
 -   The bird is the leg's player's own cast hen — their costume head, their
     team's accent and apparel — so who is flying is visible from the sofa.
     A leg nobody is rostered for flies the drawn hen in the team colour.
+    **The wing beats.** The hen is drawn without its wing and the cast's
+    `<CharacterWing>` sits on a layer over it, turned about the shoulder
+    each frame: one wingbeat per tap, read straight off the physics (a flap
+    sets the velocity, so the ticks since the last tap are in it), a wing
+    held out on a glide, folded on a perch.
 -   The scene is a 16:9 box letterboxed with container units, world units
     mapped with one custom property, so tablet and TV draw the same world.
     The gate layer is an SVG in world units; the bird is an HTML box moved by
     a transform on its wrapper, so the costume head's halo filter is
-    rasterised once and composited, never recomputed per frame.
+    rasterised once and composited, never recomputed per frame — which is
+    also why the wing is a separate layer and not a moving part of the hen.
 -   The relay clock is the scoreboard: mono, tabular, `text` under par,
     `gold` past it, `heat` in the last fifteen seconds, on the host rail and
-    in the display marquee. Nothing drops over the corridor between legs:
-    the landing next to the waiting bird is the handoff, and the status
-    line names who to land next to.
+    in the display marquee.
+-   **Two beats the sim never sees**, both short because the clock runs
+    through them and both the same for every team. *The handoff* (1.4 s): the
+    bird lands next to the one waiting, squashes and settles with a puff of
+    sand, the waiter hops twice with its wing up (stepping towards the wall on
+    the first hop if the landing came down close, so the two stand side by
+    side and never one over the other — the plateau is 56 units wide and the
+    waiter stands at 78% of it for the same reason), and a callout drops over
+    the corridor — on the tablet "Hand it to *Caitlin*", on the TV *Caitlin*
+    in serif italic with "You're up — grab the tablet" — while the status
+    lines say the same. The tablet ignores taps for the whole beat, so the
+    finger that just landed cannot launch the next player's bird. Then the
+    corridor wipes: the next leg slides in from the right. *A crash* (0.55 s):
+    the bird goes over where it hit, sinks a little, a puff of sand and a
+    sideways kick on the scene that dies out; taps are ignored so a player
+    mashing through sees that they crashed. The TV replays a few ticks behind
+    the tablet, so it holds a finished leg a little longer than the tablet
+    does and finishes the flight it has before it switches: the room always
+    sees the landing and the crash, never a cut to the next start.
 -   Host: rail with the clock, the corridor as the whole flap surface (no
     scroll, no zoom), a deck of leg card (player, gates, crashes) → finish
     card → skip/reset → leg chips → totals. Display: marquee (team, "Fappy

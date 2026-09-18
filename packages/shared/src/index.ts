@@ -71,6 +71,7 @@ export type {
 export {
   FAPPY_WORLD,
   advanceFappy,
+  createFappyLegLanding,
   createFappyLegStart,
   createFappyRandom,
   resolveFappyChampTop,

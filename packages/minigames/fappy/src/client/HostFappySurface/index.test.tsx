@@ -86,7 +86,7 @@ test("does draw the leg's course, the idle clock and the player who is up", () =
   assert.match(html, /0:00\.0/);
   assert.match(html, /\/ 1:00/);
   assert.match(html, /0 of 6 gates/);
-  assert.match(html, /Tap anywhere to take off/);
+  assert.match(html, /Alex: tap anywhere to take off/);
   assert.match(html, /data-fappy-cliffs/);
   assert.match(html, /data-fappy-wall/);
 });

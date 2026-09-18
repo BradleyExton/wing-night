@@ -21,6 +21,13 @@ export const displayFappySurfaceCopy = {
       ? `${flyer} is flying — come down on the far cliff`
       : `${flyer} is flying — land next to ${waitingName}`;
   },
+  handoffCalloutName: (nextName: string | null): string => nextName ?? "Next player",
+  handoffCalloutLine: "You're up — grab the tablet",
+  handoffPrompt: (landedName: string | null, nextName: string | null): string => {
+    const landed = landedName === null ? "Landed" : `${landedName} is through`;
+
+    return nextName === null ? `${landed} — pass the tablet on` : `${landed} — ${nextName}, grab the tablet`;
+  },
   finishedTitle: "Through!",
   finishedBlurb: (clock: string): string => `The whole corridor in ${clock}.`,
   timedOutTitle: "Time!",

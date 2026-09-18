@@ -6,7 +6,8 @@ import {
   resolveFappyGates,
   resolveFappyLandingX,
   resolveFappyLegTickCap,
-  resolveFappyPerchY
+  resolveFappyPerchY,
+  resolveFappyWaitingX
 } from "../world/index.js";
 
 /**
@@ -43,6 +44,26 @@ export const createFappyLegStart = (
     gatesCleared: Math.min(checkpointGate, gates.length),
     knockedEagles,
     outcome: null
+  };
+};
+
+/**
+ * The frame a leg settles on when nobody flew it (a skipped leg): the bird standing on the landing
+ * plateau, a little short of the middle where the next bird waits, every gate behind it and the
+ * leg `cleared`. What the renderers hold during the handoff when there is no flight to replay.
+ */
+export const createFappyLegLanding = (
+  gates: readonly FappyGate[],
+  gatesPerLeg: number,
+  knockedEagleGates: readonly number[] = []
+): FappyFrame => {
+  return {
+    tick: 0,
+    bird: { y: resolveFappyCliffPerchY(), vy: 0 },
+    scrollX: resolveFappyWaitingX(gatesPerLeg) - 14 - FAPPY_WORLD.birdX,
+    gatesCleared: Math.min(gatesPerLeg, gates.length),
+    knockedEagles: knockedEagleGates.map((gate) => ({ gate, tick: -1 })),
+    outcome: "cleared"
   };
 };
 

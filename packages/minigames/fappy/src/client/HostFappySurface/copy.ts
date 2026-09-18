@@ -11,10 +11,22 @@ export const hostFappySurfaceCopy = {
     playerName === null ? "Flying: the house hen" : `Flying: ${playerName}`,
   sceneLabel: (playerName: string | null): string =>
     playerName === null ? "The corridor" : `The corridor — ${playerName}'s bird`,
-  readyHint: (waitingName: string | null): string =>
-    waitingName === null
-      ? "Tap anywhere to take off, keep tapping to stay up, and come down on the far cliff."
-      : `Tap anywhere to take off, keep tapping to stay up, and land next to ${waitingName}.`,
+  readyHint: (playerName: string | null, waitingName: string | null): string => {
+    const who = playerName === null ? "" : `${playerName}: `;
+
+    return waitingName === null
+      ? `${who}tap anywhere to take off, keep tapping to stay up, and come down on the far cliff.`
+      : `${who}tap anywhere to take off, keep tapping to stay up, and land next to ${waitingName}.`;
+  },
+  handoffCalloutLead: "Hand it to",
+  handoffCalloutName: (nextName: string | null): string => nextName ?? "the next player",
+  handoffHint: (landedName: string | null, nextName: string | null): string => {
+    const landed = landedName === null ? "Landed" : `${landedName} landed`;
+
+    return nextName === null
+      ? `${landed} — pass the tablet on. The clock is running.`
+      : `${landed} — pass the tablet to ${nextName}. The clock is running.`;
+  },
   respawnHint: (gatesCleared: number): string =>
     gatesCleared === 0
       ? "Back on the start cliff. Tap to go again."
