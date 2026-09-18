@@ -2,6 +2,7 @@ import type { JoustPlayerFigure } from "@wingnight/shared";
 import { JOUST_PIN_HEIGHT, JOUST_WORLD } from "@wingnight/shared";
 
 import { ArenaHen } from "../ArenaHen/index.js";
+import { GroundShadow } from "../GroundShadow/index.js";
 
 export type TeamBenchProps = {
   teammates: JoustPlayerFigure[];
@@ -34,10 +35,19 @@ export const TeamBench = ({
   const span = Math.min((waiting.length - 1) * BENCH_SPACING, Math.max(0, BENCH_RIGHT - BENCH_LEFT));
   const spacing = waiting.length > 1 ? span / (waiting.length - 1) : 0;
   const left = BENCH_RIGHT - span;
+  // The foot BODY's centre would sit a radius above the sand; the bench has no bodies, so its feet
+  // are placed on the floor line and the shadow is told so.
   const footY = JOUST_WORLD.floorY;
+  const standing = [
+    ...waiting.map((figure, index) => ({ figure, x: left + index * spacing })),
+    ...(shooter === null ? [] : [{ figure: shooter, x: AT_THE_BAND_X }])
+  ];
 
   return (
     <g data-joust-bench>
+      {standing.map(({ figure, x }) => (
+        <GroundShadow key={figure.playerId} foot={{ x, y: footY - 1.6 }} />
+      ))}
       {waiting.map((figure, index) => {
         const x = left + index * spacing;
 

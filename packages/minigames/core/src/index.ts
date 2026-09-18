@@ -163,34 +163,38 @@ export type CreateDevManifestInput = {
   pointsMax?: number;
 };
 
-// Six named players seated three a side — enough of a roster that a game which
-// draws the room itself has something to draw, and small enough to read in a
-// sandbox. No avatars: the sandbox has no content pack to serve heads from.
+// Twelve named players seated three a side across four teams — the shape of a real night, so a
+// game that draws the room (JOUST racks up everyone who is not shooting) has a plausible crowd to
+// draw, and so the sandbox can reach the per-team content of every team in the turn order. No
+// avatars: the sandbox has no content pack to serve heads from.
 const DEV_PLAYERS: Player[] = [
   { id: "player-1", name: "Alex" },
   { id: "player-2", name: "Caitlin" },
   { id: "player-3", name: "Dan" },
   { id: "player-4", name: "Rosie" },
   { id: "player-5", name: "Darren" },
-  { id: "player-6", name: "Sarah" }
+  { id: "player-6", name: "Sarah" },
+  { id: "player-7", name: "Jazz" },
+  { id: "player-8", name: "Dylan" },
+  { id: "player-9", name: "Rob" },
+  { id: "player-10", name: "Tay" },
+  { id: "player-11", name: "Steve" },
+  { id: "player-12", name: "Joleeza" }
 ];
 
-const DEV_TEAMS: Team[] = [
-  {
-    id: "team-alpha",
-    name: "Team Alpha",
-    playerIds: ["player-1", "player-2", "player-3"],
-    totalScore: 0
-  },
-  {
-    id: "team-beta",
-    name: "Team Beta",
-    playerIds: ["player-4", "player-5", "player-6"],
-    totalScore: 0
-  }
-];
+const DEV_TEAM_NAMES = ["Team Alpha", "Team Beta", "Team Gamma", "Team Delta"] as const;
+const DEV_TEAM_IDS = ["team-alpha", "team-beta", "team-gamma", "team-delta"] as const;
+const DEV_TEAM_GENRES = ["Metal", "Disco", "Country", "Pop"] as const;
 
-// Standard two-team sandbox fixture shared by every minigame package; only
+const DEV_TEAMS: Team[] = DEV_TEAM_IDS.map((teamId, index) => ({
+  id: teamId,
+  name: DEV_TEAM_NAMES[index] ?? teamId,
+  playerIds: DEV_PLAYERS.slice(index * 3, index * 3 + 3).map((player) => player.id),
+  totalScore: 0,
+  genre: DEV_TEAM_GENRES[index]
+}));
+
+// Standard four-team sandbox fixture shared by every minigame package; only
 // the game-specific rules/content (and optionally pointsMax) vary per game.
 export const createDevManifest = ({
   rules,
@@ -198,19 +202,13 @@ export const createDevManifest = ({
   pointsMax = 15
 }: CreateDevManifestInput): MinigameDevManifest => {
   return {
-    teamIds: ["team-alpha", "team-beta"],
+    teamIds: [...DEV_TEAM_IDS],
     players: DEV_PLAYERS,
     teams: DEV_TEAMS,
-    teamNameByTeamId: {
-      "team-alpha": "Team Alpha",
-      "team-beta": "Team Beta"
-    },
-    activeRoundTeamId: "team-alpha",
+    teamNameByTeamId: Object.fromEntries(DEV_TEAMS.map((team) => [team.id, team.name])),
+    activeRoundTeamId: DEV_TEAM_IDS[0],
     pointsMax,
-    pendingPointsByTeamId: {
-      "team-alpha": 0,
-      "team-beta": 0
-    },
+    pendingPointsByTeamId: Object.fromEntries(DEV_TEAMS.map((team) => [team.id, 0])),
     rules,
     content
   };

@@ -170,6 +170,7 @@ export const AimArena = ({
         activeShooterPlayerId={activeShooterPlayerId}
         isAiming={isAiming}
         burstPinIndices={scene.burstPinIndices}
+        trail={scene.trail}
         serverOrigin={serverOrigin}
         sceneId="host-joust"
         label={sceneLabel}

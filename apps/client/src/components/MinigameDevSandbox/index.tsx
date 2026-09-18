@@ -34,13 +34,14 @@ const navigateToMinigameSandbox = (minigameType: MinigameType): void => {
 // seeded with the package's dev fixture (fake teams + sample content).
 const initializeRuntimeState = (
   runtimePlugin: MinigameRuntimePlugin,
-  devManifest: MinigameDevManifest
+  devManifest: MinigameDevManifest,
+  activeRoundTeamId: string | null
 ): SerializableValue => {
   return runtimePlugin.initialize({
     teamIds: [...devManifest.teamIds],
     players: devManifest.players.map((player) => ({ ...player })),
     teams: devManifest.teams.map((team) => ({ ...team, playerIds: [...team.playerIds] })),
-    activeRoundTeamId: devManifest.activeRoundTeamId,
+    activeRoundTeamId,
     pointsMax: devManifest.pointsMax,
     pendingPointsByTeamId: { ...devManifest.pendingPointsByTeamId },
     rules: devManifest.rules,
@@ -57,12 +58,18 @@ export const MinigameDevSandbox = ({
 
   const serverOrigin = useServerOrigin();
   const [phase, setPhase] = useState<MinigameSurfacePhase>("play");
+  // Whose turn the sandbox is playing. A turn-based game hands each team its own content — JOUST
+  // picks its lane by the team's slot in the turn order — so this is how the sandbox reaches any
+  // of it without a full game running.
+  const [activeTeamId, setActiveTeamId] = useState<string | null>(
+    devManifest?.activeRoundTeamId ?? null
+  );
   const [runtimeState, setRuntimeState] = useState<SerializableValue>(() => {
     if (devManifest === null || runtimePlugin === null) {
       return null;
     }
 
-    return initializeRuntimeState(runtimePlugin, devManifest);
+    return initializeRuntimeState(runtimePlugin, devManifest, devManifest.activeRoundTeamId);
   });
 
   if (devManifest === null || rendererBundle === null || runtimePlugin === null) {
@@ -105,9 +112,11 @@ export const MinigameDevSandbox = ({
   const minigameHostView = runtimePlugin.selectHostView(selectorInput);
   const minigameDisplayView = runtimePlugin.selectDisplayView(selectorInput);
   const activeTeamName =
-    devManifest.activeRoundTeamId === null
-      ? null
-      : (devManifest.teamNameByTeamId[devManifest.activeRoundTeamId] ?? null);
+    activeTeamId === null ? null : (devManifest.teamNameByTeamId[activeTeamId] ?? null);
+  const teamOptions = devManifest.teamIds.map((teamId) => ({
+    teamId,
+    label: devManifest.teamNameByTeamId[teamId] ?? teamId
+  }));
   const teamNameByTeamId = new Map(Object.entries(devManifest.teamNameByTeamId));
   const { HostSurface, DisplaySurface } = rendererBundle;
 
@@ -131,8 +140,16 @@ export const MinigameDevSandbox = ({
         phase={phase}
         onMinigameTypeChange={navigateToMinigameSandbox}
         onPhaseChange={setPhase}
+        teamOptions={teamOptions}
+        activeTeamId={activeTeamId}
+        onActiveTeamChange={(teamId): void => {
+          // Switching team re-seeds the runtime, the same way the server does at the top of that
+          // team's turn — a half-played turn is not that team's turn.
+          setActiveTeamId(teamId);
+          setRuntimeState(initializeRuntimeState(runtimePlugin, devManifest, teamId));
+        }}
         onReset={(): void => {
-          setRuntimeState(initializeRuntimeState(runtimePlugin, devManifest));
+          setRuntimeState(initializeRuntimeState(runtimePlugin, devManifest, activeTeamId));
         }}
       />
 

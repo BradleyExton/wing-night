@@ -13,8 +13,13 @@ import * as styles from "./styles";
 type SandboxControlsProps = {
   minigameType: MinigameType;
   phase: MinigameSurfacePhase;
+  // Every team in the fixture's turn order, so the sandbox can reach the content each of them
+  // would face. JOUST picks its lane by the team's slot, so this is also the map switcher.
+  teamOptions: { teamId: string; label: string }[];
+  activeTeamId: string | null;
   onMinigameTypeChange: (minigameType: MinigameType) => void;
   onPhaseChange: (phase: MinigameSurfacePhase) => void;
+  onActiveTeamChange: (teamId: string) => void;
   onReset: () => void;
 };
 
@@ -35,8 +40,11 @@ const resolveMinigameOptions = (): { slug: string; label: string }[] => {
 export const SandboxControls = ({
   minigameType,
   phase,
+  teamOptions,
+  activeTeamId,
   onMinigameTypeChange,
   onPhaseChange,
+  onActiveTeamChange,
   onReset
 }: SandboxControlsProps): JSX.Element => {
   const minigameOptions = resolveMinigameOptions();
@@ -87,6 +95,26 @@ export const SandboxControls = ({
           >
             <option value="intro">{minigameDevSandboxCopy.introPhaseLabel}</option>
             <option value="play">{minigameDevSandboxCopy.playPhaseLabel}</option>
+          </select>
+        </div>
+
+        <div className={styles.controlBlock}>
+          <label className={styles.controlLabel} htmlFor="active-team">
+            {minigameDevSandboxCopy.teamLabel}
+          </label>
+          <select
+            id="active-team"
+            className={styles.input}
+            value={activeTeamId ?? ""}
+            onChange={(event): void => {
+              onActiveTeamChange(event.target.value);
+            }}
+          >
+            {teamOptions.map((option) => (
+              <option key={option.teamId} value={option.teamId}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
 

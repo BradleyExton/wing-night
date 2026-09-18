@@ -49,14 +49,14 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
   // Both previews draw the same lane from the live fixture content.
   await expect(page.locator("[data-joust-scene]")).toHaveCount(2);
   await expect(page.getByText("Shot 1 of 3")).toHaveCount(2);
-  // The rack IS the room: the sandbox roster is six players seated three a
-  // side, so each scene stands three birds down the lane and benches three
-  // behind the slingshot — one of whom is stepped up to the band.
+  // The rack IS the room: the sandbox roster is twelve players across four teams, so each scene
+  // stands the other nine down the lane and benches the shooting three behind the slingshot —
+  // one of whom is stepped up to the band.
   await expect(page.locator("[data-joust-bench]")).toHaveCount(2);
-  await expect(page.locator("[data-joust-hen]")).toHaveCount(12);
+  await expect(page.locator("[data-joust-hen]")).toHaveCount(24);
   await expect(page.locator("[data-joust-shooter-figure]")).toHaveCount(2);
-  await expect(page.getByText("3/3 standing")).toBeVisible();
-  await expect(page.getByText("3 of 3 still standing")).toBeVisible();
+  await expect(page.getByText("9/9 standing")).toBeVisible();
+  await expect(page.getByText("9 of 9 still standing")).toBeVisible();
 
   // Everyone on the team shoots, in roster order, and both surfaces say whose go it is.
   await expect(page.getByText("Alex — pull back and let it fly")).toBeVisible();
@@ -102,6 +102,23 @@ test("a barely drawn band does not spend a shot", async ({ page }) => {
 
   await expect(page.getByText("Shot 1 of 3")).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Next shot" })).toBeDisabled();
+});
+
+// A lane is picked by the shooting team's slot in the turn order, so the sandbox's team switcher
+// is also how a lane gets looked at without a whole game running.
+test("switching the shooting team puts the sandbox on that team's lane", async ({ page }) => {
+  await page.goto("/dev/minigame/joust");
+
+  await expect(page.getByText("Lane: Two Towers")).toBeVisible();
+
+  await page.getByLabel("Whose turn").selectOption("team-beta");
+
+  await expect(page.getByText("Lane: The Lookout")).toBeVisible();
+  await expect(page.getByText("Shot 1 of 3")).toHaveCount(2);
+
+  await page.getByLabel("Whose turn").selectOption("team-gamma");
+
+  await expect(page.getByText("Lane: Front Porch")).toBeVisible();
 });
 
 test("the sandbox reset button restores a fresh turn", async ({ page }) => {

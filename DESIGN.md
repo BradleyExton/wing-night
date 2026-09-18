@@ -292,9 +292,27 @@ marquee chrome the drawing easel uses:
 
 -   Scene materials are drawing content, not UI chrome, and are exempt
     from the 2-accent budget like the drawing inks: dusk sky
-    (`#160c2a` → `#4a1f3f` → `#c2582c`), sand (`#d6ac63` / `#b58a45`),
-    cactus greens (`#3f9d55` family), slingshot wood (`#6b4423`). The
-    shooter is `primary` orange.
+    (`#160c2a` → `#4a1f3f` → `#c2582c`), a fixed star field (`#fde7c5`, one
+    seeded constellation so the tablet and the TV agree and nothing
+    twinkles), a sun with a soft glow, two mesa ranges on the horizon
+    (`#3a1738` / `#63293a`) kept below the dunes' crests so nothing in the
+    sky competes with a bird on a shelf, sand (`#d6ac63` / `#b58a45`) with
+    broken wind lines below the floor, cactus greens (`#3f9d55` family),
+    slingshot wood (`#6b4423`). The shooter is `primary` orange.
+-   **The backdrop bleeds; the world does not.** The lane is a 160×90 world
+    letterboxed into whatever frame it gets, and the sky, ranges and sand are
+    painted 400 units past it on every side (`BACKDROP_BLEED`) outside the
+    world clip, so a frame that is not 16:9 meets its edges with scene and
+    never a seam. Everything that moves stays inside the clip.
+-   **Weight and flight are drawn, not just simulated.** Every standing bird
+    and every built tower casts a pool of shade on what it stands on
+    (`GroundShadow`, the post's dark at 0.3) — a depth cue with no body, so
+    a bird on a shelf reads as ON it. While a shot replays, the head leaves a
+    fading ghost trail of its last eight frames (`JOUST_TRAIL_FRAMES`), so
+    the room can read the arc of a flight that crossed the lane in under a
+    second; it collapses to nothing once the shooter stops. While the band is
+    being drawn, a dashed ring at the pull radius shows the room how much of
+    the band is in hand — the ring is full power.
 -   **The lane is the room.** Every player who is not shooting stands in it
     as the very same cast bird the setup lobby wanders (§2.8) — their own
     generated head and all — and the shooting team stands behind the
