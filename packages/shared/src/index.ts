@@ -54,6 +54,14 @@ export type {
   SongGuessMinigameHostView,
   SongGuessPhase,
   SongGuessTeamScore,
+  SpotterCell,
+  SpotterDirection,
+  SpotterHostShot,
+  SpotterMinigameDisplayView,
+  SpotterMinigameHostView,
+  SpotterShotBand,
+  SpotterShotResult,
+  SpotterStatus,
   TriviaMinigameDisplayView,
   TriviaMinigameHostView
 } from "./roomState/index.js";

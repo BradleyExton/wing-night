@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Spotter mini-game artwork">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#2a1608" />
+      <stop offset="100%" stop-color="#120a04" />
+    </radialGradient>
+  </defs>
+  <rect width="240" height="180" fill="url(#glow)" />
+  <g stroke="#ffffff" stroke-opacity="0.08" stroke-width="1">
+    <path d="M30 30h180M30 60h180M30 90h180M30 120h180M30 150h180" />
+    <path d="M30 30v120M60 30v120M90 30v120M120 30v120M150 30v120M180 30v120M210 30v120" />
+  </g>
+  <g fill="none" stroke="#a3a3a3" stroke-width="2.5">
+    <circle cx="75" cy="45" r="9" />
+    <circle cx="195" cy="135" r="9" />
+  </g>
+  <g fill="none" stroke="#ef4444" stroke-width="4">
+    <circle cx="165" cy="75" r="12" />
+  </g>
+  <polyline points="105,105 105,75 135,75" fill="none" stroke="#f97316" stroke-opacity="0.55" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  <g fill="none" stroke="#f97316" stroke-width="5" stroke-linecap="round">
+    <circle cx="135" cy="75" r="14" />
+    <path d="M113 75h44M135 53v44" />
+  </g>
+</svg>

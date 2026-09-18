@@ -15,6 +15,7 @@
     "@wingnight/minigames-drawing": "workspace:*",
     "@wingnight/minigames-geo": "workspace:*",
     "@wingnight/minigames-song-guess": "workspace:*",
+    "@wingnight/minigames-spotter": "workspace:*",
     "@wingnight/minigames-trivia": "workspace:*",
     "@wingnight/shared": "workspace:*",
     "leaflet": "^1.9.4",

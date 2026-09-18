@@ -30,6 +30,7 @@ export const adminCopy = {
   triviaTimerLabel: "Trivia timer (sec)",
   geoTimerLabel: "Geo timer (sec)",
   drawingTimerLabel: "Drawing timer (sec)",
+  spotterTimerLabel: "Spotter timer (sec)",
   defaultMaxLabel: "Mini-game max points",
   finalRoundMaxLabel: "Final round max points",
 
@@ -107,8 +108,9 @@ export const adminCopy = {
     triviaSeconds: number;
     geoSeconds: number;
     drawingSeconds: number;
+    spotterSeconds: number;
   }): string =>
-    `eat ${timers.eatingSeconds}s · trivia ${timers.triviaSeconds}s · geo ${timers.geoSeconds}s · draw ${timers.drawingSeconds}s`,
+    `eat ${timers.eatingSeconds}s · trivia ${timers.triviaSeconds}s · geo ${timers.geoSeconds}s · draw ${timers.drawingSeconds}s · spot ${timers.spotterSeconds}s`,
   reviewScoringValue: (defaultMax: number, finalRoundMax: number): string =>
     `max ${defaultMax} · final ${finalRoundMax}`,
   reviewRosterValue: (playerCount: number, teamCount: number): string =>

@@ -171,6 +171,29 @@ under game-show marquee chrome.
     holds the finished sketch on the board, dimmed, until the reveal
     window expires.
 
+## 2.6 SPOTTER Minigame Surface Language ("Fire Mission")
+
+SPOTTER inverts the usual channel: the TV holds the whole picture and the
+tablet-holder is blind to it, so the two surfaces are deliberately unequal.
+
+-   Display: one SVG target field in a fixed cell space scaled to fit
+    (`preserveAspectRatio` meet) so 720p and 4K read identically. Faint
+    `text/10` grid, numbered `muted` rings for upcoming targets, the
+    current target pulsing in `heat`, the crosshair and its trail in
+    `primary`. That is the 2-accent budget; `gold` appears only in the
+    marquee's pending-points readout, as on the Drawing marquee.
+-   Resolved shots are colour-coded splats — `success` hit, `gold` close,
+    `heat` miss — labelled with band and points. Functional use per §0.1.
+-   Host: the tablet shows **no field, no cursor, no targets**. It is a
+    3×3 pad — four edge zones (`surfaceAlt`, `text/15` border) and a
+    `primary` centre FIRE zone that turns `heat` while held — with visible
+    gaps as dead bands, plus a mono status row (target N of M, nudge
+    count, last shot). Zones are as large as the takeover canvas allows;
+    the pad is `touch-none` so a greasy drag never scrolls.
+-   The pulse on the current target is ambient and respects
+    `prefers-reduced-motion` (`motion-safe:`); the trail and splats are
+    user-initiated and always render.
+
 ------------------------------------------------------------------------
 
 # 3) Layout System

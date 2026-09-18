@@ -19,18 +19,26 @@ Last updated: 2026-09-16
 | Geo | shipped | — | [packages/minigames/geo/](../../packages/minigames/geo/) ([spec](geo-spec.md)) |
 | Drawing | shipped | — | [packages/minigames/drawing/](../../packages/minigames/drawing/) ([spec](drawing-spec.md)) |
 | Who's That Song | shipped | — | [packages/minigames/song-guess/](../../packages/minigames/song-guess/) ([spec](song-guess-spec.md)) |
+| SPOTTER | shipped | — | [packages/minigames/spotter/](../../packages/minigames/spotter/) ([spec](spotter-spec.md)) |
 | Emoji Charades | spec | ready | [emoji-charades-spec.md](emoji-charades-spec.md) |
 | PETMON | spec | ready | [petmon-design.md](../petmon-design.md) (design + mockups; runtime not started) |
 | Read the Room | idea | promising | [ideas/read-the-room.md](ideas/read-the-room.md) |
 | ANAMORPH | idea | promising | [ideas/anamorph.md](ideas/anamorph.md) |
 | CONTRAPTION | idea | promising | [ideas/contraption.md](ideas/contraption.md) |
 
-Target: **at least 8 games**. Current: 4 shipped, 2 spec'd, 3 ideas → 9 concepts, target covered.
+Target: **at least 8 games**. Current: 5 shipped, 2 spec'd, 3 ideas → 10 concepts, target covered.
 
 ANAMORPH and CONTRAPTION were added to close a specific gap: every other game on this
 list is words, recall, or expression, and none of them make the TV do something the room
 gasps at. Both are procedural — the server sends a seed and the display renders, so the
 graphics cost nothing on the wire and survive reconnect.
+
+SPOTTER closes a different gap: every other game sends information from the tablet outward, and
+the person who just ate the wing is the one who knows the answer. SPOTTER reverses the channel — the
+TV has the whole picture, the tablet-holder is blind to it, and the room is the input device. It is
+the only concept where the spice degrades the *relay* in public rather than the guesser in private.
+It is the only game with no content pack: the field is seeded from the rules, so it ships with zero
+authoring. Tune the feel numbers in `minigameRules.spotter` from the `/dev/minigame/spotter` sandbox.
 
 ## Adding an idea
 

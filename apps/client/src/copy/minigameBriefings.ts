@@ -3,6 +3,7 @@ import type { GameConfigFile, MinigameType } from "@wingnight/shared";
 const DISPLAY_ASSET_ROOT = "/display/minigames";
 const DEFAULT_TRIVIA_QUESTIONS_PER_TURN = 1;
 const DEFAULT_SONG_GUESS_SONGS_PER_TURN = 4;
+const DEFAULT_SPOTTER_TARGETS_PER_TURN = 5;
 
 export type MinigameBriefingContent = {
   displayName: string;
@@ -80,12 +81,46 @@ const resolveSongGuessBriefingContent = (
   };
 };
 
+const resolveSpotterTargetsPerTurn = (gameConfig: GameConfigFile | null): number => {
+  const configuredTargetsPerTurn = gameConfig?.minigameRules?.spotter?.targetsPerTurn;
+
+  if (
+    typeof configuredTargetsPerTurn !== "number" ||
+    !Number.isInteger(configuredTargetsPerTurn) ||
+    configuredTargetsPerTurn <= 0
+  ) {
+    return DEFAULT_SPOTTER_TARGETS_PER_TURN;
+  }
+
+  return configuredTargetsPerTurn;
+};
+
+const resolveSpotterBriefingContent = (
+  gameConfig: GameConfigFile | null
+): MinigameBriefingContent => {
+  const targetsPerTurn = resolveSpotterTargetsPerTurn(gameConfig);
+
+  return {
+    displayName: "Spotter",
+    illustrationPath: `${DISPLAY_ASSET_ROOT}/spotter-illustration.svg`,
+    illustrationAlt: "Spotter mini-game artwork",
+    summary:
+      "The TV has the targets. Your holder can't see them. Shout the crosshair onto each one and call FIRE.",
+    steps: [
+      "One teammate holds the tablet with their back to the TV.",
+      "The rest of you call the moves: up, down, left, right.",
+      `${targetsPerTurn} target${targetsPerTurn === 1 ? "" : "s"} — hold the centre to fire on each.`
+    ]
+  };
+};
+
 const minigameBriefingContentByType: Record<
   MinigameType,
   (gameConfig: GameConfigFile | null) => MinigameBriefingContent
 > = {
   TRIVIA: resolveTriviaBriefingContent,
   SONG_GUESS: resolveSongGuessBriefingContent,
+  SPOTTER: resolveSpotterBriefingContent,
   GEO: () => {
     return {
       displayName: "Geo",

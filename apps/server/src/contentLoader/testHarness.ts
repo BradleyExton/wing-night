@@ -123,7 +123,8 @@ export const createValidGameConfigJson = (
       eatingSeconds: 120,
       triviaSeconds: 30,
       geoSeconds: 45,
-      drawingSeconds: 60
+      drawingSeconds: 60,
+      spotterSeconds: 60
     }
   });
 };

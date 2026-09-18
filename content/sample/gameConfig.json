@@ -34,12 +34,18 @@
     },
     "geo": {
       "promptsPerTurn": 3
+    },
+    "spotter": {
+      "targetsPerTurn": 5,
+      "gridCols": 13,
+      "gridRows": 7
     }
   },
   "timers": {
     "eatingSeconds": 120,
     "triviaSeconds": 30,
     "geoSeconds": 45,
-    "drawingSeconds": 60
+    "drawingSeconds": 60,
+    "spotterSeconds": 60
   }
 }

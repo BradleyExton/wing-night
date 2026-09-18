@@ -12,6 +12,9 @@ import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
 import { songGuessRendererBundle } from "@wingnight/minigames-song-guess/client";
 import { songGuessDevManifest } from "@wingnight/minigames-song-guess/dev";
 import { songGuessRuntimePlugin } from "@wingnight/minigames-song-guess/runtime";
+import { spotterRendererBundle } from "@wingnight/minigames-spotter/client";
+import { spotterDevManifest } from "@wingnight/minigames-spotter/dev";
+import { spotterRuntimePlugin } from "@wingnight/minigames-spotter/runtime";
 import { triviaRendererBundle } from "@wingnight/minigames-trivia/client";
 import { triviaDevManifest } from "@wingnight/minigames-trivia/dev";
 import { triviaRuntimePlugin } from "@wingnight/minigames-trivia/runtime";
@@ -45,6 +48,11 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
     rendererBundle: drawingRendererBundle,
     devManifest: drawingDevManifest,
     runtimePlugin: drawingRuntimePlugin
+  },
+  SPOTTER: {
+    rendererBundle: spotterRendererBundle,
+    devManifest: spotterDevManifest,
+    runtimePlugin: spotterRuntimePlugin
   }
 };
 

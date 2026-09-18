@@ -179,11 +179,62 @@ export type SongGuessMinigameHostView = MinigameHostViewBase & {
   scoresBySongId: Record<string, SongGuessTeamScore>;
 };
 
+
+// SPOTTER: the TV has the whole picture and the tablet-holder is blind to it.
+// The display view therefore carries the field; the host view deliberately
+// does not — the mirror image of the drawing/geo answer-safety rule.
+export type SpotterDirection = "U" | "D" | "L" | "R";
+
+export type SpotterCell = {
+  col: number;
+  row: number;
+};
+
+export type SpotterShotBand = "HIT" | "CLOSE" | "MISS";
+
+export type SpotterShotResult = {
+  targetIndex: number;
+  col: number;
+  row: number;
+  distanceCells: number;
+  band: SpotterShotBand;
+  points: number;
+};
+
+// What the holder is allowed to know about a shot: how it scored, never where
+// the crosshair was when it landed.
+export type SpotterHostShot = Pick<SpotterShotResult, "band" | "points">;
+
+export type SpotterStatus = "aiming" | "done";
+
+export type SpotterMinigameHostView = MinigameHostViewBase & {
+  minigame: "SPOTTER";
+  status: SpotterStatus;
+  targetsPerTurn: number;
+  targetIndex: number;
+  nudgesThisTarget: number;
+  lastShot: SpotterHostShot | null;
+  results: SpotterHostShot[];
+};
+
+export type SpotterMinigameDisplayView = MinigameDisplayViewBase & {
+  minigame: "SPOTTER";
+  status: SpotterStatus;
+  gridCols: number;
+  gridRows: number;
+  targets: SpotterCell[];
+  targetIndex: number;
+  cursor: SpotterCell;
+  path: SpotterDirection[];
+  results: SpotterShotResult[];
+};
+
 export type MinigameHostView =
   | TriviaMinigameHostView
   | GeoMinigameHostView
   | SongGuessMinigameHostView
-  | DrawingMinigameHostView;
+  | DrawingMinigameHostView
+  | SpotterMinigameHostView;
 
 export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
   minigame: "TRIVIA";
@@ -238,7 +289,8 @@ export type MinigameDisplayView =
   | TriviaMinigameDisplayView
   | GeoMinigameDisplayView
   | SongGuessMinigameDisplayView
-  | DrawingMinigameDisplayView;
+  | DrawingMinigameDisplayView
+  | SpotterMinigameDisplayView;
 
 export type RoomFatalError = {
   code: "CONTENT_LOAD_FAILED";

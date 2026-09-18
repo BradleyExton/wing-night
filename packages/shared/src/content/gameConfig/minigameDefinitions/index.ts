@@ -78,6 +78,16 @@ export const MINIGAME_DEFINITIONS = {
         "skipPrompt"
       ]
     }
+  },
+  SPOTTER: {
+    id: "SPOTTER",
+    slug: "spotter",
+    timerKey: "spotterSeconds",
+    rulesKey: "spotter",
+    contractMetadata: {
+      minigameApiVersion: MINIGAME_API_VERSION,
+      capabilityFlags: ["nudge", "fire"]
+    }
   }
 } as const satisfies Record<string, MinigameDefinition>;
 
