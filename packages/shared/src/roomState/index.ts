@@ -278,11 +278,46 @@ type JoustMinigameViewFields = {
 
 export type JoustMinigameHostView = MinigameHostViewBase & JoustMinigameViewFields;
 
+export type FappyLegStatus = "ready" | "flying" | "landed";
+
+export type FappyLegOutcome = "cleared" | "crashed" | "skipped";
+
+export type FappyPhase = FappyLegStatus | "done";
+
+// One leg of the relay: whose bird, which course, and the flap log the display
+// re-runs the shared sim from. The gates cleared and the end tick are the
+// server's own re-run of that log, filled in once the leg has landed.
+export type FappyMinigameLeg = {
+  legIndex: number;
+  playerId: string | null;
+  seed: number;
+  status: FappyLegStatus;
+  flapTicks: number[];
+  gatesCleared: number;
+  endTick: number | null;
+  outcome: FappyLegOutcome | null;
+};
+
+// Nothing about a relay is secret — every leg is on the TV as it happens — so
+// the host and display carry the same fields, as JOUST does.
+type FappyMinigameViewFields = {
+  minigame: "FAPPY";
+  phase: FappyPhase;
+  legIndex: number;
+  legsPerTurn: number;
+  gatesPerLeg: number;
+  pointsPerGate: number;
+  legs: FappyMinigameLeg[];
+  totalGatesCleared: number;
+};
+export type FappyMinigameHostView = MinigameHostViewBase & FappyMinigameViewFields;
+
 export type MinigameHostView =
   | TriviaMinigameHostView
   | GeoMinigameHostView
   | SongGuessMinigameHostView
   | JoustMinigameHostView
+  | FappyMinigameHostView
   | DrawingMinigameHostView
   | EmojiCharadesMinigameHostView;
 
@@ -354,11 +389,14 @@ export type EmojiCharadesMinigameDisplayView = MinigameDisplayViewBase & {
 
 export type JoustMinigameDisplayView = MinigameDisplayViewBase & JoustMinigameViewFields;
 
+export type FappyMinigameDisplayView = MinigameDisplayViewBase & FappyMinigameViewFields;
+
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView
   | GeoMinigameDisplayView
   | SongGuessMinigameDisplayView
   | JoustMinigameDisplayView
+  | FappyMinigameDisplayView
   | DrawingMinigameDisplayView
   | EmojiCharadesMinigameDisplayView;
 

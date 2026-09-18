@@ -130,6 +130,9 @@ export const initializeActiveMinigameRuntimeState = (
   const runtimeState = runtimePlugin.initialize({
     teamIds: state.turnOrderTeamIds,
     activeRoundTeamId: state.activeRoundTeamId,
+    playerIdsByTeamId: Object.fromEntries(
+      state.teams.map((team) => [team.id, [...team.playerIds]])
+    ),
     pointsMax,
     pendingPointsByTeamId: state.pendingMinigamePointsByTeamId,
     rules,

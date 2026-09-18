@@ -302,6 +302,32 @@ marquee chrome the drawing easel uses:
     rule does not bite. `prefers-reduced-motion` skips the flight and shows
     the landing frame.
 
+## 2.9 FAPPY Minigame Surface Language ("The Corridor")
+
+The FAPPY (Fappy Bird) surfaces fly the cast (§2.8) through JOUST's desert (§2.7),
+under the same marquee and deck chrome:
+
+-   Scene materials are JOUST's, on purpose: the dusk sky and sand, and the
+    obstacles are JOUST's cyan champ (`#22c9e6`), one standing up from the
+    floor and one hanging from the ceiling, heads at the edge of the gap.
+    The room already knows that opponent. Drawing content, exempt from the
+    two-accent budget like the JOUST arena.
+-   The bird is the leg's player's own cast hen — their costume head, their
+    team's accent and apparel — so who is flying is visible from the sofa.
+    A leg nobody is rostered for flies the drawn hen in the team colour.
+-   The scene is a 16:9 box letterboxed with container units, world units
+    mapped with one custom property, so tablet and TV draw the same world.
+    The gate layer is an SVG in world units; the bird is an HTML box moved by
+    a transform on its wrapper, so the costume head's halo filter is
+    rasterised once and composited, never recomputed per frame.
+-   Host: rail, the corridor as the whole flap surface (no scroll, no zoom),
+    a deck of leg card → outcome → Pass the tablet → skip/redo/reset → leg
+    chips → totals. Display: marquee (team, "Fappy Bird", leg, gates,
+    pending), the corridor, a status line; the plaque drops once the leg
+    has landed.
+-   The flight is the game: §8's infinite-animation rule does not bite.
+    `prefers-reduced-motion` on the display shows the landing frame only.
+
 ## 2.8 Cast (shared character system)
 
 Every rostered player has a little hen that recurs across the show.

@@ -65,6 +65,11 @@
     },
     "joust": {
       "shotsPerTurn": 3
+    },
+    "fappy": {
+      "legsPerTurn": 4,
+      "gatesPerLeg": 8,
+      "pointsPerGate": 1
     }
   },
   "timers": {

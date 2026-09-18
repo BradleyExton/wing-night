@@ -1,4 +1,9 @@
-import { type MinigameHostView, type MinigameType } from "@wingnight/shared";
+import {
+  type MinigameHostView,
+  type MinigameType,
+  type Player,
+  type Team
+} from "@wingnight/shared";
 import type {
   MinigameSurfacePhase,
   SerializableValue
@@ -17,6 +22,8 @@ type MinigameSurfaceProps = {
   teamNameByTeamId: Map<string, string>;
   canDispatchAction: boolean;
   onDispatchAction: (actionType: string, actionPayload: SerializableValue) => void;
+  players: Player[];
+  teams: Team[];
 };
 
 export const MinigameSurface = ({
@@ -26,7 +33,9 @@ export const MinigameSurface = ({
   activeTeamName,
   teamNameByTeamId,
   canDispatchAction,
-  onDispatchAction
+  onDispatchAction,
+  players,
+  teams
 }: MinigameSurfaceProps): JSX.Element => {
   // The host tablet is a different origin from the server as well, so a
   // minigame surface that renders a content-pack image needs the absolute one.
@@ -88,6 +97,8 @@ export const MinigameSurface = ({
             canDispatchAction={canDispatchAction}
             onDispatchAction={onDispatchAction}
             serverOrigin={serverOrigin}
+            players={players}
+            teams={teams}
           />
         </div>
       </section>
@@ -111,6 +122,8 @@ export const MinigameSurface = ({
           canDispatchAction={canDispatchAction}
           onDispatchAction={onDispatchAction}
           serverOrigin={serverOrigin}
+          players={players}
+          teams={teams}
         />
       </div>
     </section>

@@ -51,6 +51,8 @@ const renderSurface = (
       minigameDisplayView={minigameDisplayView}
       activeTeamName="Team Heat"
       serverOrigin="http://localhost:3000"
+      players={[]}
+      teams={[]}
     />
   );
 };

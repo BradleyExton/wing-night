@@ -5,7 +5,9 @@ import {
 import type {
   MinigameDisplayView,
   MinigameHostView,
-  MinigameType
+  MinigameType,
+  Player,
+  Team
 } from "@wingnight/shared";
 import type { ComponentType } from "react";
 
@@ -26,6 +28,10 @@ export type MinigameRuntimeActionEnvelope = {
 export type MinigameRuntimeInitializationInput = {
   teamIds: string[];
   activeRoundTeamId: string | null;
+  // Each team's roster in seating order, for a relay that names whose leg it
+  // is. Optional so the fixtures and plugins written before it stay valid; a
+  // plugin that needs it treats a missing or empty roster as "no player".
+  playerIdsByTeamId?: Record<string, string[]>;
   pointsMax: number;
   pendingPointsByTeamId: Record<string, number>;
   rules: SerializableValue | null;
@@ -105,6 +111,12 @@ export type MinigameHostRendererProps = {
   // so a content-pack image (a GEO photo, a player's head) has to be addressed
   // absolutely. `null` until the host app has resolved it in an effect.
   serverOrigin: string | null;
+  // The room's roster and seating, so a surface can draw the player a view
+  // names by id (their cast bird, in their team's colour). Presentation only:
+  // the runtime's view still says WHOSE leg it is; these say what they look
+  // like. Empty in the shells that predate them.
+  players: Player[];
+  teams: Team[];
 };
 
 export type MinigameDisplayRendererProps = {
@@ -118,6 +130,9 @@ export type MinigameDisplayRendererProps = {
   // would 404 against the Vite origin. `null` until the host app has resolved
   // it — resolution reads `window`, so it happens in an effect.
   serverOrigin: string | null;
+  // See the host props: roster and seating for drawing a named player.
+  players: Player[];
+  teams: Team[];
 };
 
 export type MinigameRendererBundle = {
@@ -140,6 +155,10 @@ export type MinigameDevManifest = {
   pendingPointsByTeamId: Record<string, number>;
   rules: SerializableValue | null;
   content: SerializableValue | null;
+  // A roster for the sandbox, so a relay has legs to hand out and a surface
+  // has birds to draw. Two players a team; no heads, so they fly drawn.
+  players: Player[];
+  teams: Team[];
 };
 
 export type CreateDevManifestInput = {
@@ -168,8 +187,39 @@ export const createDevManifest = ({
       "team-beta": 0
     },
     rules,
-    content
+    content,
+    players: [
+      { id: "player-alpha-1", name: "Alex" },
+      { id: "player-alpha-2", name: "Morgan" },
+      { id: "player-beta-1", name: "Sam" },
+      { id: "player-beta-2", name: "Riley" }
+    ],
+    teams: [
+      {
+        id: "team-alpha",
+        name: "Team Alpha",
+        playerIds: ["player-alpha-1", "player-alpha-2"],
+        totalScore: 0,
+        genre: "country"
+      },
+      {
+        id: "team-beta",
+        name: "Team Beta",
+        playerIds: ["player-beta-1", "player-beta-2"],
+        totalScore: 0,
+        genre: "disco"
+      }
+    ]
   };
+};
+
+// The roster in the shape `initialize` takes, from the same fixture.
+export const resolveDevPlayerIdsByTeamId = (
+  devManifest: Pick<MinigameDevManifest, "teams">
+): Record<string, string[]> => {
+  return Object.fromEntries(
+    devManifest.teams.map((team) => [team.id, [...team.playerIds]])
+  );
 };
 
 export type PromptContentFile<TPrompt> = {

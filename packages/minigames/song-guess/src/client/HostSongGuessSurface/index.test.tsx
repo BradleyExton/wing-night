@@ -56,6 +56,8 @@ const renderSurface = (
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
       serverOrigin={null}
+      players={[]}
+      teams={[]}
     />
   );
 };

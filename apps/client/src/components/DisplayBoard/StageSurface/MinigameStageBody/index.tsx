@@ -1,4 +1,4 @@
-import type { MinigameType, RoomState } from "@wingnight/shared";
+import type { MinigameType, Player, RoomState, Team } from "@wingnight/shared";
 import type { MinigameSurfacePhase } from "@wingnight/minigames-core";
 
 import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
@@ -12,6 +12,8 @@ type MinigameStageBodyProps = {
   activeTeamName: string | null;
   minigameDisplayView: RoomState["minigameDisplayView"];
   remainingTimerSeconds?: number | null;
+  players: Player[];
+  teams: Team[];
 };
 
 const URGENT_THRESHOLD_SECONDS = 10;
@@ -43,7 +45,9 @@ export const MinigameStageBody = ({
   minigameType,
   activeTeamName,
   minigameDisplayView,
-  remainingTimerSeconds = null
+  remainingTimerSeconds = null,
+  players,
+  teams
 }: MinigameStageBodyProps): JSX.Element => {
   // Unconditional: the early returns below must not sit between the hook and
   // the component's first render pass.
@@ -80,6 +84,8 @@ export const MinigameStageBody = ({
         minigameDisplayView={minigameDisplayView}
         activeTeamName={activeTeamName}
         serverOrigin={serverOrigin}
+        players={players}
+        teams={teams}
       />
     </div>
   );
