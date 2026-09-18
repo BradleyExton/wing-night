@@ -10,7 +10,14 @@ export const railTeam = "flex items-center gap-2 text-text";
 
 export const railTeamDot = "h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_#f97316]";
 
-export const railPending = "ml-auto font-mono text-sm tracking-normal text-gold";
+// The relay clock: the one number the tablet holder should feel.
+export const railClock = "ml-auto flex items-baseline gap-2 font-mono text-base tracking-normal text-text";
+
+export const railClockPastPar = "text-gold";
+
+export const railClockUrgent = "text-heat";
+
+export const railClockLimit = "text-xs text-mutedWarmDim";
 
 export const introCard =
   "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
@@ -28,6 +35,14 @@ export const arenaFrameArmed = "cursor-pointer";
 
 export const arenaFrameLocked = "cursor-not-allowed opacity-80";
 
+// Dropped over the corridor between legs: the loudest thing on the tablet,
+// because the clock is running while it is read.
+export const handoffOverlay =
+  "pointer-events-none absolute inset-x-0 top-[8%] z-20 flex justify-center px-[6%]";
+
+export const handoffBanner =
+  "rounded-2xl border-[3px] border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-6 py-3 text-center text-2xl font-black uppercase tracking-[0.08em] text-gold shadow-[0_0_50px_rgba(251,191,36,0.35)]";
+
 export const arenaHint = "m-0 px-1 text-center text-sm italic text-muted";
 
 export const deck = "flex w-[clamp(230px,28vw,330px)] flex-col gap-3";
@@ -39,26 +54,24 @@ export const legCounter = "text-[0.62rem] font-extrabold uppercase tracking-[0.3
 
 export const flyingName = "m-0 mt-1 font-serif text-xl font-bold italic leading-tight text-text";
 
-export const outcomeCard =
+export const legMeta = "mt-1 flex items-center justify-between text-xs text-mutedWarm";
+
+export const finishCard =
   "rounded-xl border border-[#3a200d] bg-gradient-to-b from-[#1a0e05] to-[#0a0604] px-4 py-3 text-center";
 
-export const outcomeTitle =
-  "m-0 text-2xl font-black uppercase tracking-[0.08em] text-text [text-shadow:0_0_14px_rgba(251,191,36,0.35)]";
+export const finishTitle =
+  "m-0 text-2xl font-black uppercase tracking-[0.08em] text-gold [text-shadow:0_0_14px_rgba(251,191,36,0.35)]";
 
-export const outcomeTitleCleared = "text-gold";
+export const finishTitleTimedOut = "text-heat";
 
-export const outcomeGates = "mt-2 block font-mono text-3xl font-black text-gold";
+export const finishTime = "mt-1 block font-mono text-lg text-text";
 
-export const primaryButton =
-  "min-h-[64px] w-full rounded-xl border-2 border-gold bg-[radial-gradient(ellipse_at_top,#f9a51a_0%,#8a4b06_100%)] text-lg font-extrabold uppercase tracking-[0.12em] text-[#1c0d02] shadow-[0_4px_0_rgba(0,0,0,0.45)] transition disabled:cursor-not-allowed disabled:opacity-40";
+export const finishPoints = "mt-1 block font-mono text-3xl font-black text-gold";
 
 export const deckRows = "flex gap-2";
 
 export const deckRowButton =
   "min-h-12 flex-1 rounded-lg border border-[#3a200d] bg-surface text-xs font-extrabold uppercase tracking-[0.14em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
-
-export const doneNote =
-  "rounded-xl border border-gold/40 bg-surface px-4 py-3 text-center text-sm text-gold";
 
 export const historyRow = "flex items-center gap-2 px-1";
 
@@ -66,7 +79,7 @@ export const historyTitle =
   "text-[0.6rem] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
 
 export const historyChip =
-  "inline-flex min-w-[2.2rem] items-center justify-center rounded-full border border-text/15 px-2 py-0.5 font-mono text-xs text-muted";
+  "inline-flex min-w-[2.2rem] items-center justify-center gap-1 rounded-full border border-text/15 px-2 py-0.5 font-mono text-xs text-muted";
 
 export const historyChipCleared = "border-gold/60 text-gold";
 
@@ -85,4 +98,4 @@ export const totalsRowActive = "text-gold";
 
 export const totalsPoints = "font-mono text-sm text-gold";
 
-export const totalsGates = "mt-2 block text-center text-xs text-mutedWarm";
+export const totalsNote = "mt-2 block text-center text-xs text-mutedWarm";

@@ -278,37 +278,57 @@ type JoustMinigameViewFields = {
 
 export type JoustMinigameHostView = MinigameHostViewBase & JoustMinigameViewFields;
 
-export type FappyLegStatus = "ready" | "flying" | "landed";
+export type FappyLegStatus = "ready" | "flying" | "cleared";
 
-export type FappyLegOutcome = "cleared" | "crashed" | "skipped";
+export type FappyPhase = "ready" | "flying" | "finished" | "timedOut";
 
-export type FappyPhase = FappyLegStatus | "done";
+// The server's own re-run of one attempt's flap log, kept so the display can
+// hold the crash or the landing until the next attempt starts.
+export type FappyLegRunResult = {
+  endTick: number;
+  gatesCleared: number;
+  outcome: "cleared" | "crashed";
+};
 
-// One leg of the relay: whose bird, which course, and the flap log the display
-// re-runs the shared sim from. The gates cleared and the end tick are the
-// server's own re-run of that log, filled in once the leg has landed.
+// One leg of the relay: whose bird, which course, where the current attempt
+// starts from and the flap log the display re-runs the shared sim from. A
+// crash does not end a leg — it starts the next attempt on the perch of the
+// last gate cleared — so the relay always reaches the end; it only takes time.
 export type FappyMinigameLeg = {
   legIndex: number;
   playerId: string | null;
   seed: number;
   status: FappyLegStatus;
+  // 0 for the first attempt; climbs with every crash. Keys the surfaces' local runs.
+  attempt: number;
+  // How many gates the attempt starts behind: 0 at the start line.
+  checkpointGate: number;
   flapTicks: number[];
-  gatesCleared: number;
-  endTick: number | null;
-  outcome: FappyLegOutcome | null;
+  crashes: number;
+  skipped: boolean;
+  lastRun: FappyLegRunResult | null;
 };
 
 // Nothing about a relay is secret — every leg is on the TV as it happens — so
-// the host and display carry the same fields, as JOUST does.
+// the host and display carry the same fields, as JOUST does. Timestamps are
+// the server's wall clock; a surface renders a running clock against its own
+// and the score only ever comes from the server's numbers.
 type FappyMinigameViewFields = {
   minigame: "FAPPY";
   phase: FappyPhase;
   legIndex: number;
   legsPerTurn: number;
   gatesPerLeg: number;
-  pointsPerGate: number;
+  parSeconds: number;
+  limitSeconds: number;
   legs: FappyMinigameLeg[];
   totalGatesCleared: number;
+  startedAtMs: number | null;
+  finishedAtMs: number | null;
+  timedOutAtMs: number | null;
+  // The relay's time once it is over, and what it scored; null while it runs.
+  elapsedMs: number | null;
+  points: number | null;
 };
 export type FappyMinigameHostView = MinigameHostViewBase & FappyMinigameViewFields;
 

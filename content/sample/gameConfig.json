@@ -69,7 +69,8 @@
     "fappy": {
       "legsPerTurn": 4,
       "gatesPerLeg": 8,
-      "pointsPerGate": 1
+      "parSeconds": 45,
+      "limitSeconds": 120
     }
   },
   "timers": {

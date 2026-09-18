@@ -81,7 +81,7 @@ export const MINIGAME_DEFINITIONS = {
     rulesKey: "fappy",
     contractMetadata: {
       minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: ["flap", "endLeg", "nextLeg", "skipLeg", "redoLeg", "resetTurn"]
+      capabilityFlags: ["flap", "endLeg", "timeOut", "skipLeg", "resetTurn"]
     }
   },
   DRAWING: {

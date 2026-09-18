@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { FappyMinigameDisplayView, Player, Team } from "@wingnight/shared";
+import type { FappyMinigameDisplayView, FappyMinigameLeg, Player, Team } from "@wingnight/shared";
 
 import { DisplayFappySurface } from "./index.js";
 
@@ -12,6 +12,23 @@ const players: Player[] = [
 const teams: Team[] = [
   { id: "team-alpha", name: "Team Alpha", playerIds: ["p-1", "p-2"], totalScore: 0, genre: "disco" }
 ];
+const T0 = 1_700_000_000_000;
+
+const createLeg = (overrides: Partial<FappyMinigameLeg> = {}): FappyMinigameLeg => {
+  return {
+    legIndex: 0,
+    playerId: "p-1",
+    seed: 11,
+    status: "ready",
+    attempt: 0,
+    checkpointGate: 0,
+    flapTicks: [],
+    crashes: 0,
+    skipped: false,
+    lastRun: null,
+    ...overrides
+  };
+};
 
 const createView = (overrides: Partial<FappyMinigameDisplayView> = {}): FappyMinigameDisplayView => {
   return {
@@ -22,12 +39,15 @@ const createView = (overrides: Partial<FappyMinigameDisplayView> = {}): FappyMin
     legIndex: 0,
     legsPerTurn: 2,
     gatesPerLeg: 3,
-    pointsPerGate: 1,
-    legs: [
-      { legIndex: 0, playerId: "p-1", seed: 11, status: "ready", flapTicks: [], gatesCleared: 0, endTick: null, outcome: null },
-      { legIndex: 1, playerId: "p-2", seed: 12, status: "ready", flapTicks: [], gatesCleared: 0, endTick: null, outcome: null }
-    ],
+    parSeconds: 20,
+    limitSeconds: 60,
+    legs: [createLeg(), createLeg({ legIndex: 1, playerId: "p-2", seed: 12 })],
     totalGatesCleared: 0,
+    startedAtMs: null,
+    finishedAtMs: null,
+    timedOutAtMs: null,
+    elapsedMs: null,
+    points: null,
     ...overrides
   };
 };
@@ -67,7 +87,7 @@ test("does draw the marquee, the course and the player's own bird", () => {
   assert.match(html, /Team Alpha/);
   assert.match(html, /Leg 1 of 2/);
   assert.match(html, /0 \/ 6 gates/);
-  assert.match(html, /\+5/);
+  assert.match(html, /0:00\.0/);
   assert.match(html, /data-fappy-scene="display-fappy"/);
   assert.equal((html.match(/data-fappy-gate="/g) ?? []).length, 3);
   assert.match(html, /content-assets\/avatars\/alex\.png/);
@@ -75,27 +95,70 @@ test("does draw the marquee, the course and the player's own bird", () => {
   assert.match(html, /Alex is up — tap to launch/);
 });
 
-test("does drop the plaque over the corridor once the leg has landed", () => {
+test("does call the handoff on the wall between legs", () => {
   const html = render(
     createView({
-      phase: "landed",
-      legs: [
-        { legIndex: 0, playerId: "p-1", seed: 11, status: "landed", flapTicks: [0], gatesCleared: 3, endTick: 400, outcome: "cleared" },
-        { legIndex: 1, playerId: "p-2", seed: 12, status: "ready", flapTicks: [], gatesCleared: 0, endTick: null, outcome: null }
-      ],
+      legIndex: 1,
+      startedAtMs: T0,
+      legs: [createLeg({ status: "cleared" }), createLeg({ legIndex: 1, playerId: "p-2", seed: 12 })],
       totalGatesCleared: 3
     })
   );
 
-  assert.match(html, /data-fappy-result="cleared"/);
-  assert.match(html, /Section cleared/);
+  assert.match(html, /data-fappy-handoff/);
+  assert.match(html, /Hand it to Morgan!/);
   assert.match(html, /3 \/ 6 gates/);
 });
 
-test("does keep the last leg on the wall and call the relay over when done", () => {
-  const html = render(createView({ phase: "done", legIndex: 2 }));
+test("does send a crashed bird back to its perch on the wall", () => {
+  const html = render(
+    createView({
+      startedAtMs: T0,
+      legs: [createLeg({ attempt: 1, checkpointGate: 2, crashes: 1 }), createLeg({ legIndex: 1, playerId: "p-2", seed: 12 })],
+      totalGatesCleared: 2
+    })
+  );
 
+  assert.match(html, /Alex is back on the perch — go again/);
+  assert.doesNotMatch(html, /data-fappy-handoff/);
+});
+
+test("does drop the plaque with the time and the points once the relay is through", () => {
+  const html = render(
+    createView({
+      phase: "finished",
+      legIndex: 2,
+      startedAtMs: T0,
+      finishedAtMs: T0 + 41_200,
+      elapsedMs: 41_200,
+      points: 9,
+      legs: [createLeg({ status: "cleared" }), createLeg({ legIndex: 1, playerId: "p-2", seed: 12, status: "cleared" })],
+      totalGatesCleared: 6
+    })
+  );
+
+  assert.match(html, /data-fappy-result="finished"/);
+  assert.match(html, /Through!/);
+  assert.match(html, /0:41\.2/);
+  assert.match(html, /\+9/);
   assert.match(html, /Leg 2 of 2/);
   assert.match(html, /Relay over/);
-  assert.match(html, /Morgan/);
+});
+
+test("does call time on the wall when the limit caught the team", () => {
+  const html = render(
+    createView({
+      phase: "timedOut",
+      startedAtMs: T0,
+      timedOutAtMs: T0 + 60_000,
+      elapsedMs: 60_000,
+      points: 1,
+      totalGatesCleared: 2
+    })
+  );
+
+  assert.match(html, /data-fappy-result="timedOut"/);
+  assert.match(html, /Time!/);
+  assert.match(html, /2 of 6 gates before the clock ran out/);
+  assert.match(html, /Out of time/);
 });

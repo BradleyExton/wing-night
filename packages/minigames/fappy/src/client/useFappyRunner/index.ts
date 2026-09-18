@@ -27,23 +27,13 @@ type LocalRun = {
   hasEnded: boolean;
 };
 
-const createLocalRun = (): LocalRun => {
-  return {
-    frame: createFappyLegStart(),
-    flapTicks: [],
-    startedAtMs: null,
-    rafHandle: 0,
-    hasEnded: false
-  };
-};
-
-// The tablet plays the leg itself: a fixed-step sim on the local clock,
+// The tablet plays the attempt itself: a fixed-step sim on the local clock,
 // painted every animation frame, with each tap logged at the tick it landed
 // on and sent to the server as one action. The server's echo of the log is
 // not what drives this loop — the local copy is — so the bird answers the
 // finger with zero round trips. When the local sim reaches an outcome the
-// leg is reported ended; the server re-runs the same log and keeps its own
-// count.
+// attempt is reported ended; the server re-runs the same log from the same
+// checkpoint and decides whether the bird cleared or respawns.
 export const useFappyRunner = ({
   leg,
   gatesPerLeg,
@@ -52,19 +42,34 @@ export const useFappyRunner = ({
   onFlap,
   onEndLeg
 }: FappyRunnerInput): { flap: () => void } => {
-  const runRef = useRef<LocalRun>(createLocalRun());
-  const onFlapRef = useRef(onFlap);
-  const onEndLegRef = useRef(onEndLeg);
-  const legRef = useRef(leg);
-  const canActRef = useRef(canAct);
   const legIndex = leg?.legIndex ?? null;
   const legSeed = leg?.seed ?? 0;
   const legStatus = leg?.status ?? null;
+  const attempt = leg?.attempt ?? 0;
+  const checkpointGate = leg?.checkpointGate ?? 0;
   const gates = useMemo(() => {
     return legIndex === null
       ? []
       : resolveFappyGates({ seed: legSeed, legIndex, gatesPerLeg });
   }, [legIndex, legSeed, gatesPerLeg]);
+  const createRun = (): LocalRun => {
+    return {
+      frame: createFappyLegStart(gates, checkpointGate),
+      flapTicks: [],
+      startedAtMs: null,
+      rafHandle: 0,
+      hasEnded: false
+    };
+  };
+  const runRef = useRef<LocalRun | null>(null);
+  const onFlapRef = useRef(onFlap);
+  const onEndLegRef = useRef(onEndLeg);
+  const legRef = useRef(leg);
+  const canActRef = useRef(canAct);
+
+  if (runRef.current === null) {
+    runRef.current = createRun();
+  }
 
   onFlapRef.current = onFlap;
   onEndLegRef.current = onEndLeg;
@@ -72,17 +77,18 @@ export const useFappyRunner = ({
   canActRef.current = canAct;
 
   const stopLoop = (): void => {
-    if (runRef.current.rafHandle !== 0) {
-      window.cancelAnimationFrame(runRef.current.rafHandle);
-      runRef.current.rafHandle = 0;
+    const run = runRef.current;
+
+    if (run !== null && run.rafHandle !== 0) {
+      window.cancelAnimationFrame(run.rafHandle);
+      run.rafHandle = 0;
     }
   };
 
   const step = (now: number): void => {
     const run = runRef.current;
 
-    if (run.startedAtMs === null) {
-      run.rafHandle = 0;
+    if (run === null || run.startedAtMs === null) {
       return;
     }
 
@@ -105,28 +111,28 @@ export const useFappyRunner = ({
     run.rafHandle = window.requestAnimationFrame(step);
   };
 
-  // Follow the leg the server says we are on. A leg that comes back `ready`
-  // (a redo, a reset, the next leg) clears the local run; one that is already
-  // `flying` with no local run is a tablet that mounted mid-leg (a reload), so
-  // settle it from the log rather than pretend to resume a flight nobody is
-  // flying; a `landed` leg holds the server's final frame.
+  // Follow the attempt the server says we are on. A `ready` attempt (the first
+  // one, the one after a crash, the next leg) starts a fresh local run on its
+  // checkpoint; a `flying` one with no local run is a tablet that mounted
+  // mid-flight (a reload), so settle it from the log rather than pretend to
+  // resume a flight nobody is flying; a `cleared` leg holds its landing.
   useEffect(() => {
     const currentLeg = legRef.current;
 
     if (currentLeg === null || legStatus === null) {
       stopLoop();
-      runRef.current = createLocalRun();
+      runRef.current = createRun();
       return undefined;
     }
 
     if (legStatus === "ready") {
       stopLoop();
-      runRef.current = createLocalRun();
+      runRef.current = createRun();
       sceneRef.current?.paint(runRef.current.frame);
       return undefined;
     }
 
-    if (legStatus === "flying" && runRef.current.startedAtMs === null) {
+    if (legStatus === "flying" && runRef.current?.startedAtMs === null) {
       if (!runRef.current.hasEnded) {
         runRef.current.hasEnded = true;
         onEndLegRef.current();
@@ -134,23 +140,23 @@ export const useFappyRunner = ({
       return undefined;
     }
 
-    if (legStatus === "landed") {
+    if (legStatus === "cleared") {
       stopLoop();
 
-      const settled =
-        currentLeg.outcome === "skipped"
-          ? createFappyLegStart()
-          : runFappyLeg(
-              { seed: legSeed, legIndex: currentLeg.legIndex, gatesPerLeg },
-              currentLeg.flapTicks
-            ).frame;
+      const settled = currentLeg.skipped
+        ? createFappyLegStart(gates, gatesPerLeg)
+        : runFappyLeg(
+            { seed: legSeed, legIndex: currentLeg.legIndex, gatesPerLeg },
+            currentLeg.flapTicks,
+            currentLeg.checkpointGate
+          ).frame;
 
-      runRef.current = { ...createLocalRun(), frame: settled, hasEnded: true };
+      runRef.current = { ...createRun(), frame: settled, hasEnded: true };
       sceneRef.current?.paint(settled);
     }
 
     return undefined;
-  }, [legIndex, legSeed, legStatus, gatesPerLeg]);
+  }, [legIndex, legSeed, legStatus, attempt, checkpointGate, gatesPerLeg]);
 
   useEffect(() => {
     return (): void => {
@@ -163,9 +169,10 @@ export const useFappyRunner = ({
     const currentLeg = legRef.current;
 
     if (
+      run === null ||
       !canActRef.current ||
       currentLeg === null ||
-      currentLeg.status === "landed" ||
+      currentLeg.status === "cleared" ||
       run.hasEnded ||
       run.frame.outcome !== null
     ) {
@@ -174,7 +181,7 @@ export const useFappyRunner = ({
 
     if (run.startedAtMs === null) {
       run.startedAtMs = performance.now();
-      run.frame = createFappyLegStart();
+      run.frame = createFappyLegStart(gates, checkpointGate);
       run.flapTicks = [];
     }
 

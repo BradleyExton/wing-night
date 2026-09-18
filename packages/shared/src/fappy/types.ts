@@ -5,14 +5,25 @@
  * log, so a frame is a pure function of course + flaps + tick on all three.
  */
 
-/** One obstacle pair: a champ standing up from the floor and one hanging from the ceiling. */
+/**
+ * One obstacle: a champ standing up from the floor, bobbing, and sometimes an eagle hanging in
+ * the sky above it. The gap is whatever is left between the two.
+ */
 export type FappyGate = {
   /** Global gate number across the turn, so the room can count "gate 12 of 32". */
   index: number;
   /** Left edge in world units, measured from the leg's scroll origin. */
   x: number;
-  gapTop: number;
-  gapBottom: number;
+  /** Where the top of the champ's head sits at the bottom of its bob (its lowest reach). */
+  champTop: number;
+  /** How far the head rises above `champTop` at the top of its bob. 0 stands still. */
+  champBob: number;
+  /** One full bob, up and back down, in ticks. */
+  champPeriodTicks: number;
+  /** Where in its bob the champ is at tick 0, so a course is not all in step. */
+  champPhaseTicks: number;
+  /** Underside of the eagle over this gate, or null when the sky is clear to the ceiling. */
+  eagleBottom: number | null;
 };
 
 export type FappyBird = {

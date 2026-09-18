@@ -59,8 +59,11 @@ export {
   advanceFappy,
   createFappyLegStart,
   createFappyRandom,
+  resolveFappyChampTop,
   resolveFappyGates,
   resolveFappyLegTickCap,
+  resolveFappyPerchY,
+  resolveFappyWave,
   runFappyLeg,
   stepFappy
 } from "./fappy/index.js";
@@ -119,7 +122,7 @@ export type {
   JoustMinigameArena,
   JoustMinigameDisplayView,
   JoustMinigameHostView,
-  FappyLegOutcome,
+  FappyLegRunResult,
   FappyLegStatus,
   FappyMinigameDisplayView,
   FappyMinigameHostView,

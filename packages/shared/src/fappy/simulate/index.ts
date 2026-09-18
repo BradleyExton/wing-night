@@ -1,18 +1,44 @@
 import type { FappyFrame, FappyGate, FappyLegCourse, FappyLegRun } from "../types.js";
-import { FAPPY_WORLD, resolveFappyGates, resolveFappyLegTickCap } from "../world/index.js";
+import {
+  FAPPY_WORLD,
+  resolveFappyChampTop,
+  resolveFappyGates,
+  resolveFappyLegTickCap,
+  resolveFappyPerchY
+} from "../world/index.js";
 
-/** The frame every leg starts from: hovering at rest, nothing scrolled, nothing cleared. */
-export const createFappyLegStart = (): FappyFrame => {
+/**
+ * The frame a leg (or an attempt at it) starts from. From the start line the bird hovers at rest
+ * with nothing scrolled; from a checkpoint it sits on the perch of the last gate it cleared,
+ * that gate just behind it, with its count intact. A checkpoint past the course clamps to the
+ * last gate.
+ */
+export const createFappyLegStart = (
+  gates: readonly FappyGate[] = [],
+  checkpointGate = 0
+): FappyFrame => {
+  const perchGate = gates[Math.min(checkpointGate, gates.length) - 1];
+
+  if (checkpointGate <= 0 || perchGate === undefined) {
+    return {
+      tick: 0,
+      bird: { y: FAPPY_WORLD.restY, vy: 0 },
+      scrollX: 0,
+      gatesCleared: 0,
+      outcome: null
+    };
+  }
+
   return {
     tick: 0,
-    bird: { y: FAPPY_WORLD.restY, vy: 0 },
-    scrollX: 0,
-    gatesCleared: 0,
+    bird: { y: resolveFappyPerchY(perchGate), vy: 0 },
+    scrollX: perchGate.x + FAPPY_WORLD.gateWidth - FAPPY_WORLD.birdX + FAPPY_WORLD.birdRadius + 2,
+    gatesCleared: Math.min(checkpointGate, gates.length),
     outcome: null
   };
 };
 
-const overlapsGateColumn = (gateScreenX: number, birdY: number, gate: FappyGate): boolean => {
+const overlapsGate = (gateScreenX: number, birdY: number, gate: FappyGate, tick: number): boolean => {
   const { birdX, birdRadius, gateWidth } = FAPPY_WORLD;
   const isInColumn =
     birdX + birdRadius > gateScreenX && birdX - birdRadius < gateScreenX + gateWidth;
@@ -21,13 +47,17 @@ const overlapsGateColumn = (gateScreenX: number, birdY: number, gate: FappyGate)
     return false;
   }
 
-  return birdY - birdRadius < gate.gapTop || birdY + birdRadius > gate.gapBottom;
+  if (birdY + birdRadius > resolveFappyChampTop(gate, tick)) {
+    return true;
+  }
+
+  return gate.eagleBottom !== null && birdY - birdRadius < gate.eagleBottom;
 };
 
 /**
  * The whole physics, one tick. A terminal frame steps to itself, so callers can advance past
  * the outcome without guarding. A flap sets the vertical velocity; gravity accumulates to a
- * terminal fall; the ceiling stops the bird, the floor and a champ kill it.
+ * terminal fall; the ceiling stops the bird, the floor, a champ's head and an eagle kill it.
  */
 export const stepFappy = (
   frame: FappyFrame,
@@ -67,7 +97,7 @@ export const stepFappy = (
   for (const gate of gates) {
     const gateScreenX = gate.x - scrollX;
 
-    if (overlapsGateColumn(gateScreenX, y, gate)) {
+    if (overlapsGate(gateScreenX, y, gate, tick)) {
       return {
         tick,
         bird: { y, vy: nextVy },
@@ -127,11 +157,18 @@ export const advanceFappy = (
   return current;
 };
 
-/** Runs a leg's log to its outcome. This is the referee: the server scores from nothing else. */
-export const runFappyLeg = (course: FappyLegCourse, flapTicks: readonly number[]): FappyLegRun => {
+/**
+ * Runs one attempt's log to its outcome from its checkpoint. This is the referee: the server
+ * scores from nothing else.
+ */
+export const runFappyLeg = (
+  course: FappyLegCourse,
+  flapTicks: readonly number[],
+  checkpointGate = 0
+): FappyLegRun => {
   const gates = resolveFappyGates(course);
   const frame = advanceFappy(
-    createFappyLegStart(),
+    createFappyLegStart(gates, checkpointGate),
     gates,
     course.gatesPerLeg,
     flapTicks,

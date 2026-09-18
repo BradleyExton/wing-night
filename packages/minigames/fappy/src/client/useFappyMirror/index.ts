@@ -34,7 +34,7 @@ const prefersReducedMotion = (): boolean => {
   );
 };
 
-// The display re-runs the tablet's leg from its flap log on a local clock
+// The display re-runs the tablet's attempt from its flap log on a local clock
 // that starts when the first flap arrives, a few ticks behind. A flap that
 // arrives for a tick the mirror has already drawn re-simulates from the top
 // — a few hundred trivial steps — so the picture is always the log's truth,
@@ -44,7 +44,9 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
   const legIndex = leg?.legIndex ?? null;
   const legSeed = leg?.seed ?? 0;
   const legStatus = leg?.status ?? null;
-  const legOutcome = leg?.outcome ?? null;
+  const attempt = leg?.attempt ?? 0;
+  const checkpointGate = leg?.checkpointGate ?? 0;
+  const isSkipped = leg?.skipped ?? false;
   const flapTicks = useMemo(() => leg?.flapTicks ?? [], [leg]);
   const flapLogKey = flapTicks.join(",");
   const gates = useMemo(() => {
@@ -66,7 +68,7 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
     const holdStart = (): void => {
       stopLoop();
       run.startedAtMs = null;
-      run.frame = createFappyLegStart();
+      run.frame = createFappyLegStart(gates, checkpointGate);
       sceneRef.current?.paint(run.frame);
     };
 
@@ -77,23 +79,26 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
 
     const course = { seed: legSeed, legIndex, gatesPerLeg };
 
-    if (legStatus === "landed" && legOutcome === "skipped") {
-      holdStart();
+    if (legStatus === "cleared" && isSkipped) {
+      stopLoop();
+      run.startedAtMs = null;
+      run.frame = createFappyLegStart(gates, gatesPerLeg);
+      sceneRef.current?.paint(run.frame);
       return stopLoop;
     }
 
     // The flight is the game, not decoration — but a viewer who asked for
-    // less motion still gets the outcome, just without the flight.
-    if (legStatus === "landed" && (prefersReducedMotion() || run.startedAtMs === null)) {
+    // less motion still gets the landing, just without the flight.
+    if (legStatus === "cleared" && (prefersReducedMotion() || run.startedAtMs === null)) {
       stopLoop();
-      run.frame = runFappyLeg(course, flapTicks).frame;
+      run.frame = runFappyLeg(course, flapTicks, checkpointGate).frame;
       sceneRef.current?.paint(run.frame);
       return stopLoop;
     }
 
     if (run.startedAtMs === null) {
       run.startedAtMs = performance.now();
-      run.frame = createFappyLegStart();
+      run.frame = createFappyLegStart(gates, checkpointGate);
     }
 
     const resolveTargetTick = (now: number): number => {
@@ -106,7 +111,7 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
     // The log changed under a running mirror: rebuild the frame from the top
     // with the log as it now is, up to where the clock says we are.
     run.frame = advanceFappy(
-      createFappyLegStart(),
+      createFappyLegStart(gates, checkpointGate),
       gates,
       gatesPerLeg,
       flapTicks,
@@ -135,5 +140,5 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
     run.rafHandle = window.requestAnimationFrame(step);
 
     return stopLoop;
-  }, [legIndex, legSeed, legStatus, legOutcome, flapLogKey, gates, gatesPerLeg, sceneRef]);
+  }, [legIndex, legSeed, legStatus, attempt, checkpointGate, isSkipped, flapLogKey, gates, gatesPerLeg, sceneRef]);
 };

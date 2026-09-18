@@ -13,14 +13,16 @@ Last updated: 2026-09-18
 ### 0.1 What ships
 
 One `MinigameRuntimePlugin` package, `@wingnight/minigames-fappy`, registered on server and
-client like JOUST. A relay: the active team's players take the tablet in roster order, one
-**leg** each, and fly their own cast bird (the `@wingnight/cast` hen wearing their head, in the
-team colour and genre apparel) through a section of **gates** — a champ standing up from the
-floor and one hanging from the ceiling, with a gap between. Tap anywhere to flap. A crash ends
-the leg where it is; clearing the section ends it on a perch. The team scores the gates it
-cleared across every leg.
+client like JOUST. A timed relay: the active team's players take the tablet in roster order,
+one **leg** each, and fly their own cast bird (the `@wingnight/cast` hen wearing their head,
+in the team colour and genre apparel) through a section of **gates** — a champ standing up
+from the floor, bobbing, with sometimes an eagle hanging in the sky above. Tap anywhere to
+flap. A crash sends the bird back to the perch of the last gate it cleared; clearing the
+section hands the tablet to the next player. One clock runs from the first tap to the last
+gate, handoffs included, and the team's points come from that time.
 
-No content file, no timer (host-paced like JOUST), no audio.
+No content file, no room timer (host-paced like JOUST; the relay clock is the game's own),
+no audio.
 
 ### 0.2 Order of work (each step ends with the gate green)
 
@@ -30,51 +32,62 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
 
 1. **Prerequisite (shipped separately, 29473ed):** the cast lives in `packages/cast` so a
    minigame package can draw a player's bird.
-2. **Shared sim.** `packages/shared/src/fappy/{types,world,simulate}` + `index.ts`, exported
+2. **Engine plumbing (additive).** `receivedAtMs` on the action envelope, stamped by
+   `dispatchMinigameAction` (the SEAR plan's step 1, landed here first) and by the sandbox.
+   `MinigameRuntimeInitializationInput.playerIdsByTeamId` so a relay can name whose leg it
+   is; the server fills it from `roomState.teams`. `players` and `teams` on both renderer prop
+   types so a surface can draw the named player; the host shell, display shell and dev
+   sandbox pass them. `MinigameDevManifest` carries a two-player-per-team fixture.
+3. **Shared sim.** `packages/shared/src/fappy/{types,world,simulate}` + `index.ts`, exported
    from `packages/shared/src/index.ts`. Pure, tick-stepped, seeded, and covered by a copy of
    JOUST's `noTranscendentals.test.ts` — three parties re-run this sim from the same inputs
    (§0.4) and must land on the same bits.
-3. **Shared contracts.** `MINIGAME_DEFINITIONS.FAPPY` (`slug: "fappy"`, `timerKey: null`,
-   `rulesKey: "fappy"`, `capabilityFlags: ["flap","endLeg","nextLeg","skipLeg","redoLeg",
-   "resetTurn"]`). `FappyMinigameHostView` / `FappyMinigameDisplayView` in the room-state unions
-   (§0.5).
-4. **Engine plumbing (additive).** `MinigameRuntimeInitializationInput.playerIdsByTeamId` so a
-   relay can name whose leg it is; the server fills it from `roomState.teams`. `players` and
-   `teams` on both renderer prop types so a surface can draw the named player; the host shell,
-   display shell and dev sandbox pass them. `MinigameDevManifest` carries a two-player-per-team
-   fixture so every sandbox has a roster.
-5. **Runtime package.** Scaffold from JOUST (closest sibling: rules-backed, host-paced, no
-   timer). `src/runtime/{types,guards,rules,views}/index.ts` + `index.ts` + tests. No content
+4. **Shared contracts.** `MINIGAME_DEFINITIONS.FAPPY` (`slug: "fappy"`, `timerKey: null`,
+   `rulesKey: "fappy"`, `capabilityFlags: ["flap","endLeg","timeOut","skipLeg","resetTurn"]`).
+   `FappyMinigameHostView` / `FappyMinigameDisplayView` in the room-state unions (§0.5).
+5. **Runtime package.** Scaffold from JOUST (closest sibling: rules-backed, host-paced).
+   `src/runtime/{types,guards,rules,scoring,views}/index.ts` + `index.ts` + tests. No content
    adapter.
 6. **Registries + config.** Both registries, `minigameBriefings` (+ `fappy-illustration.svg`),
    workspace deps, `content/sample/gameConfig.json` `minigameRules.fappy` defaults. **Not
    scheduled in a sample round** (song-guess precedent).
 7. **Surfaces.** `HostFappySurface` (the flap canvas + deck) and `DisplayFappySurface` (the
-   mirror + marquee), sharing one `FappyScene`. Copy in `copy.ts`, styles in `styles.ts`.
-   `DESIGN.md` §2.9 paragraph in the same change.
+   mirror + marquee), sharing one `FappyScene`, one `useRelayClock`. Copy in `copy.ts`, styles
+   in `styles.ts`. `DESIGN.md` §2.9 paragraph in the same change.
 8. **E2E.** `tests/e2e/fappy-sandbox.spec.ts` against `/dev/minigame/fappy`.
 9. **Docs.** Flip this file to Shipped with an as-built list; README row.
 
 ### 0.3 Locked decisions
 
 - **Name and id:** "Fappy Bird", `FAPPY`, slug `fappy`.
-- **Relay by legs, roster order.** `legsPerTurn` legs per team, the same for every team
-  regardless of size (SEAR's fairness stance); a short roster cycles, so on a three-player team
-  the first player flies twice. Leg `k` belongs to `playerIds[k % playerIds.length]`; a team
-  with no roster flies the drawn hen.
-- **Crash ends the leg.** No lives, no respawn. Gates cleared so far are banked.
-- **One point per gate**, `pointsPerGate` in rules, capped at `pointsMax` like every game.
+- **Fixed course, must finish.** `legsPerTurn` legs of `gatesPerLeg` gates, the same for
+  every team regardless of size (SEAR's fairness stance); a short roster cycles. Leg `k`
+  belongs to `playerIds[k % playerIds.length]`; a team with no roster flies the drawn hen.
+- **A crash costs time, never points.** The bird respawns on the perch of the last gate it
+  cleared in that leg, hovering, waiting for a tap. The clock does not stop.
+- **One relay clock, handoffs included.** It starts on the relay's first flap and stops on
+  the last gate of the last leg. There is no pass button: a cleared leg makes the next leg
+  `ready` and the next player's first tap flies it. The handoff is the race.
+- **Points from time.** Every point the round offers at or under `parSeconds`, sliding
+  straight down to a quarter at `limitSeconds`. At the limit the relay ends; an unfinished
+  team keeps that quarter scaled by the gates it got through.
 - **Inputs, not positions, cross the wire.** Each flap is one action carrying its tick. The
-  runtime holds a seed and the flap log; nobody streams bird positions.
-- **Server is the referee.** On `endLeg` the server re-runs the sim from the log and computes
-  the gates cleared itself. The tablet's own count is never sent.
+  runtime holds a seed, a checkpoint and the flap log per attempt; nobody streams bird
+  positions.
+- **Server is the referee, and the clock.** On `endLeg` the server re-runs the attempt from
+  its checkpoint and decides cleared or crashed itself. Time comes from `receivedAtMs`, the
+  server's wall clock at receipt; the tablet's clock only decides when to *ask* for a
+  timeout, and the server checks that against its own.
 - **The tablet is the game screen; the TV is a mirror ~100 ms behind.** No clock-sync
   protocol (JOUST and SEAR both chose this). The display runs the same sim from the flap log
-  on a local clock that starts when the first flap arrives.
+  on a local clock that starts when the first flap arrives, and renders the relay clock from
+  the server's start stamp against its own wall clock.
 - **Sixty ticks a second, fixed step.** A flap logged at tick `T` applies to the step that
   produces `T + 1`, on every party.
-- **Obstacles are champs, not pipes.** Drawn in JOUST's champ cyan so the room recognises
-  them. Thrown shooters as moving hazards are a v2 layer, not in this build.
+- **Obstacles from the floor.** Every gate is a JOUST champ standing on the sand, growing
+  and shrinking on a bounded triangle-wave bob with its head wiggling; about half the gates
+  hang a bald eagle in the sky as the thing to duck under. Nothing hangs from the ceiling.
+  Thrown shooters as moving hazards are a v2 layer, not in this build.
 - **No mockup pass.** JOUST shipped without one; the surfaces reuse its marquee and deck
   language and the cast's own drawing. Noted here so the as-built list is honest.
 
@@ -82,141 +95,168 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
 
 World is a fixed 160×90 box (JOUST's), y down, floor at 84, the bird's x pinned at 40. Gates
 for a leg come from `resolveFappyGates({ seed, legIndex, gatesPerLeg })`: a mulberry32 stream
-seeded from the leg, first gap centre uniform in `[gapCentreMin, gapCentreMax]`, each next
-centre drifting at most `gapMaxDrift` so a section is flyable. `stepFappy(frame, gates,
-gatesPerLeg, didFlap)` is the whole physics: gravity, flap sets `vy`, ceiling clamps, floor
-kills, a gate kills when the bird's circle overlaps the champ column outside the gap, a gate
-counts once its trailing edge is behind the bird. `advanceFappy` steps a frame to a tick
-applying the logged flaps; `runFappyLeg` runs a log to its outcome under a tick cap.
+seeded from the leg; each gate has a champ whose head rests at `champTop` and rises `champBob`
+above it on a `champPeriodTicks` triangle wave (`resolveFappyChampTop`), and with even odds an
+`eagleBottom` placed so the gap at the champ's full stretch is at least `gapHeight`.
+`stepFappy(frame, gates, gatesPerLeg, didFlap)` is the whole physics: gravity, flap sets `vy`,
+ceiling clamps, floor kills, the champ's head at this tick kills, an eagle kills, a gate counts
+once its trailing edge is behind the bird. `createFappyLegStart(gates, checkpointGate)` starts
+an attempt on the perch of gate `checkpointGate − 1` (`resolveFappyPerchY`, the middle of that
+gate's gap at full stretch) with the count intact. `advanceFappy` steps a frame to a tick
+applying the logged flaps; `runFappyLeg(course, log, checkpoint)` runs an attempt to its
+outcome under a tick cap.
 
 ### 0.5 View shapes
 
 ```ts
-type FappyLegStatus = "ready" | "flying" | "landed";
-type FappyLegOutcome = "cleared" | "crashed" | "skipped";
+type FappyLegStatus = "ready" | "flying" | "cleared";
+type FappyPhase = "ready" | "flying" | "finished" | "timedOut";
 
-type FappyLegView = {
+type FappyMinigameLeg = {
   legIndex: number;
-  playerId: string | null;     // whose bird; null flies the drawn hen
+  playerId: string | null;      // whose bird; null flies the drawn hen
   seed: number;
   status: FappyLegStatus;
-  flapTicks: number[];         // the log; the display re-runs the sim from it
-  gatesCleared: number;        // server-computed once landed
-  endTick: number | null;      // server-computed once landed
-  outcome: FappyLegOutcome | null;
+  attempt: number;              // 0, then +1 per crash; keys the surfaces' local runs
+  checkpointGate: number;       // how many gates the attempt starts behind
+  flapTicks: number[];          // this attempt's log; the display re-runs the sim from it
+  crashes: number;
+  skipped: boolean;
+  lastRun: { endTick; gatesCleared; outcome: "cleared" | "crashed" } | null;
 };
 
 type FappyMinigameViewFields = {
   minigame: "FAPPY";
-  phase: "ready" | "flying" | "landed" | "done";
+  phase: FappyPhase;
   legIndex: number;
   legsPerTurn: number;
   gatesPerLeg: number;
-  pointsPerGate: number;
-  legs: FappyLegView[];
-  totalGatesCleared: number;
+  parSeconds: number;
+  limitSeconds: number;
+  legs: FappyMinigameLeg[];
+  totalGatesCleared: number;    // cleared legs count every gate; the leg in hand its checkpoint
+  startedAtMs: number | null;   // server wall clock
+  finishedAtMs: number | null;
+  timedOutAtMs: number | null;
+  elapsedMs: number | null;     // set once the relay is over
+  points: number | null;        // set once the relay is over
 };
 ```
 
 Nothing is secret, so host and display carry the same fields (JOUST precedent). The
-answer-safety test asserts the display view is exactly the host view minus nothing extra.
+answer-safety test asserts the display view is exactly the host view.
 
 ### 0.6 Rules (`minigameRules.fappy`)
 
 ```json
-{ "legsPerTurn": 4, "gatesPerLeg": 8, "pointsPerGate": 1 }
+{ "legsPerTurn": 4, "gatesPerLeg": 8, "parSeconds": 45, "limitSeconds": 120 }
 ```
 
-All positive integers, all optional, validated by `isRules` at config load. Defaults give
-32 gates, so a perfect turn lands just over `finalRoundMax`.
+All positive integers, all optional, `parSeconds < limitSeconds`, validated by `isRules` at
+config load. Eight gates is about ten seconds of clean flying, so a clean relay with quick
+handoffs beats par and a couple of crashes a leg still finishes inside the limit.
 
 ### 0.7 Runtime state and reducer
 
-State: `activeTurnTeamId`, `legsPerTurn`, `gatesPerLeg`, `pointsPerGate`, `legIndex`,
-`legs[]` (fixed length, §0.5 shape), `turnStartPoints`, `pendingPointsByTeamId`. `phase` is
-derived in the selectors, never stored: `done` when `legIndex === legsPerTurn`, else the
-current leg's status. Seeds are hashed from the team id and leg index (FNV, like JOUST's shot
-seed) so a reconnect re-derives the same course.
+State: the rules, `activeTurnTeamId`, `legIndex`, `legs[]` (§0.5 shape), `startedAtMs`,
+`finishedAtMs`, `timedOutAtMs`, `turnStartPoints`, `pendingPointsByTeamId`. `phase` is
+derived in the selectors, never stored. Seeds are hashed from the team id and leg index (FNV,
+like JOUST's shot seed) so a reconnect re-derives the same course.
 
-Actions (all `didMutate: false` outside their phase or on a malformed payload):
+Every action needs `envelope.receivedAtMs`; one without it is refused. All are
+`didMutate: false` outside their phase or on a malformed payload.
 
 - `flap { tick }` — in `ready` or `flying`; `tick` a non-negative integer strictly greater
-  than the last logged one. Appends; `ready` becomes `flying`.
-- `endLeg` — in `flying`. Runs `runFappyLeg` on the log; stores `gatesCleared`, `endTick`,
-  `outcome`; status `landed`; pending points = `turnStartPoints + pointsPerGate × total`,
-  clamped at `pointsMax`. A tablet that mounts into `flying` with no local run dispatches this
-  once (SEAR's `redoShot`-on-mount pattern), which settles the leg from the log.
-- `nextLeg` — in `landed`. Advances `legIndex`; the next leg is `ready`.
-- `skipLeg` — in `ready` or `flying`. Lands the leg as `skipped` with no gates and moves the
-  relay on at once (one tap, like JOUST's `skipShot`); the slot is consumed so leg counts stay
-  equal across teams.
-- `redoLeg` — in `flying` or `landed`: resets that leg to `ready` with an empty log and
-  recomputes pending points from the remaining landed legs.
-- `resetTurn` — every leg back to `ready`, `legIndex` 0, pending points back to
+  than the last logged one. Sets `startedAtMs` if unset (the relay's first flap), appends,
+  `ready` becomes `flying`. Past the limit it times the relay out instead.
+- `endLeg` — in `flying`. Runs `runFappyLeg` on the attempt from its checkpoint. Cleared:
+  the leg is `cleared`; the next leg becomes the leg in hand, or the last gate sets
+  `finishedAtMs` and scores the relay. Crashed: `attempt + 1`, `checkpointGate` raised to the
+  gates the run got past, log cleared, `crashes + 1`, status `ready`. A crash past the limit
+  times the relay out. A tablet that mounts into `flying` with no local run dispatches this
+  once (SEAR's `redoShot`-on-mount pattern), which settles the attempt from the log.
+- `timeOut` — in `ready` or `flying`, only when `receivedAtMs − startedAtMs ≥ limit` on the
+  server's clock. Sets `timedOutAtMs` and scores by progress.
+- `skipLeg` — in `ready` or `flying`. Marks the leg `cleared` and `skipped` and moves on; on
+  the last leg it finishes the relay. The clock keeps running.
+- `resetTurn` — every leg fresh, `legIndex` 0, clocks cleared, pending points back to
   `turnStartPoints`.
 
-Score override is the shell's generic pending-points hatch, as JOUST relies on.
+Scoring (`runtime/scoring`): `resolveFinishPoints(elapsedMs)` = `pointsMax` at or under par,
+then linear down to `0.25 × pointsMax` at the limit; `resolveTimeoutPoints` =
+`0.25 × pointsMax × gatesCleared / gatesTotal`. Added to `turnStartPoints`, clamped at
+`pointsMax` like every game. Score override is the shell's pending-points hatch, as JOUST
+relies on.
 
 ### 0.8 Surfaces
 
 Both draw one `FappyScene`: a 16:9 box letterboxed into its container with CSS container
-units, a floor strip, the gate layer (every champ pair for the leg, translated by `scrollX`),
-and the bird (a `<Character>` in a wrapper translated and tilted by `vy`). The scene is driven
-imperatively from a `requestAnimationFrame` loop writing transforms to refs — React never
-re-renders per frame, and the halo filter on a costume head is rasterised once and composited
-(the spike measured no cost).
+units, a floor line, the gate layer (every champ and eagle for the leg, translated by
+`scrollX`, each champ's shaft and head moved to its bob for the frame), and the bird (a
+`<Character>` in a wrapper translated and tilted by `vy`). The scene is driven imperatively
+from a `requestAnimationFrame` loop writing attributes and transforms to refs — React never
+re-renders per frame.
 
-**Host.** JOUST's rail + arena + deck. The arena is the flap surface: `pointerdown` anywhere
-flaps. `ready`: the bird hovers with a "tap to launch" hint and the player's name. `flying`:
-the local sim runs; on a terminal frame the surface dispatches `endLeg`. `landed`: outcome
-card with gates cleared, then **Pass the tablet** (`nextLeg`) naming the next player. Deck
-rows: skip leg, redo leg, reset turn; leg chips; round totals.
+**Host.** JOUST's rail + arena + deck, with the relay clock on the rail (`useRelayClock`:
+the server's start stamp against `Date.now()`, a tenth of a second at a time). The arena is
+the flap surface: `pointerdown` anywhere flaps. `ready`: the bird on its perch, a handoff
+banner over the corridor when the leg has just changed hands, a respawn hint after a crash.
+`flying`: the local sim runs; on a terminal frame the surface dispatches `endLeg`. When the
+local clock passes the limit the surface dispatches `timeOut` once. Deck: leg card (player,
+gates, crashes), finish card (time or progress, points), skip leg, reset turn, leg chips,
+totals.
 
-**Display.** JOUST's marquee (team, "Fappy Bird", leg counter, pending points), the scene,
-a status line. `flying`: `useFappyMirror` starts a local clock on the first flap's arrival and
-renders `localTick − 6`, re-simulating from tick 0 whenever a flap arrives for a tick already
-passed. `landed`: plays out to `endTick` and holds the pose; result plaque over the scene.
+**Display.** JOUST's marquee (team, "Fappy Bird", leg, gates, the clock), the scene, a
+status line. `useFappyMirror` runs the attempt from its log on a local clock that starts on
+the first flap's arrival, six ticks behind. The handoff call drops over the corridor between
+legs; the plaque drops with the time and the points when the relay is through, or the
+progress when the limit caught the team.
 
 ### 0.9 E2E (`tests/e2e/fappy-sandbox.spec.ts`)
 
-Against `/dev/minigame/fappy`, no sockets: both previews draw the scene; a tap on the host
-arena starts the leg and the display shows it flying; with no further taps the bird crashes,
-the host shows the outcome card and enables **Pass the tablet**; clicking it advances the leg
-counter on both previews; **Skip leg** consumes a leg; sandbox Reset restores leg 1.
+Against `/dev/minigame/fappy`, no sockets: both previews draw the course; a tap on the host
+arena starts the clock and the display shows the bird flying; with no further taps the bird
+crashes and the same player is back on the start line with a crash on the board; **Skip leg**
+hands the tablet on with the handoff call on both screens; skipping the last leg finishes the
+relay with a plaque; sandbox Reset restores leg 1 and the idle clock.
 
-### 0.10 As built (divergences from §0)
+### 0.10 As built
 
-- **Physics constants** were retuned after the first sandbox flight: a flap lifts about a
-  third of the gap (`flapVelocity: -1.6`, `gravity: 0.12`), the corridor scrolls at `0.95`
-  units a tick with gates `66` apart, and the first gate stands at `150` so the player has
-  about 1.75 s from the first tap to find the gap. All in `FAPPY_WORLD`; retune at a table.
-- **`skipLeg` advances the relay itself** rather than leaving a landed leg for `nextLeg`.
-- **The host's hint line** when the relay is over has its own copy, so the done note and the
-  hint do not say the same sentence twice.
+- **First cut (c772d2f) was a distance game**: crash ended the leg, a pass button, one point
+  per gate. Brad played it and re-pitched it the same day as a race — the team has to get
+  through, the handoff is the tension, the clock is the score — which is the shape above.
+- **Physics constants** were tuned once from a sandbox flight: a flap lifts about a third
+  of the gap (`flapVelocity: -1.6`, `gravity: 0.12`), the corridor scrolls at `0.95` units a
+  tick with gates `66` apart, the first gate at `150`. All in `FAPPY_WORLD`; retune at a table.
+- **The dev sandbox** runs two legs of three gates with a 20 s par and a 60 s limit, so the
+  slide and the timeout can be seen without waiting two real minutes.
 - **No mockup pass**, as §0.3 said; the surfaces are JOUST's chrome around the cast's drawing.
 - **Not scheduled** in `content/sample/gameConfig.json`; its rules block is there with the
   §0.6 defaults. Schedule it via local config or `/admin`.
 
 ## 1) One-liner
 
-Your team's chickens, wearing your faces, fly a relay through a corridor of champs. Tap to
-flap, crash to pass the tablet, and the TV watches every leg.
+Your team's chickens, wearing your faces, race a relay through a corridor of bobbing champs
+and hanging eagles against one clock. Tap to flap, crash and go again, hand it on fast.
 
 ## 2) Why this shape
 
 - **The cast is the payoff.** Step 2 of the character system was "reuse the bird as a
   minigame target"; this makes the bird the thing you fly, and the head on it is whoever is
   holding the tablet.
-- **Relay over one long run.** One player flying for two minutes is a spectator sport for
-  one; four short legs pass the tablet and the tension around the table.
-- **Crash ends the leg.** Lives mean respawn rules, invulnerability windows and a bigger
-  state shape for very little extra fun; a crash *is* the handoff beat.
+- **Everyone finishes.** A distance game lets a bad leg score nothing and end early; a race
+  with checkpoints means every player gets through their section and the only question is
+  how long the team took. Nobody sits out their own leg.
+- **The handoff is the game.** No pass button and no pause: the moment a section clears, the
+  next player's first tap is the next leg, and the clock is counting the fumble.
+- **Time, not lives.** Lives mean respawn rules, invulnerability windows and a bigger state
+  shape for very little extra fun; a crash that costs seconds is its own punishment.
 - **Inputs over positions.** A flap log is tiny, replays identically on three machines, and
-  rehydrates a reconnect or an undo for free. Streaming positions would cost a whole room
+  rehydrates a reconnect or a reset for free. Streaming positions would cost a whole room
   snapshot per frame.
 
 ## 3) Open for a v2
 
 - Thrown shooters as moving hazards (the JOUST projectile crossing the corridor).
-- A per-gate difficulty ramp across legs.
-- Anthem sting on a cleared section.
+- Eagles that swoop rather than hover.
+- Anthem sting on a cleared relay.

@@ -5,8 +5,9 @@ import type {
   MinigameRuntimeReductionResult
 } from "@wingnight/minigames-core";
 
-import { isFappyFlapPayload, isFappyRuntimeState } from "./guards/index.js";
+import { isFappyFlapPayload, isFappyRuntimeState, isReceivedAtMs } from "./guards/index.js";
 import { isFappyRules, resolveFappyRules } from "./rules/index.js";
+import { resolveFinishPoints, resolveTimeoutPoints } from "./scoring/index.js";
 import type { FappyRuntimeLeg, FappyRuntimeRules, FappyRuntimeState } from "./types/index.js";
 import {
   resolveFappyPhase,
@@ -17,7 +18,7 @@ import {
 
 export const fappyMinigameId: MinigameType = "FAPPY";
 
-// Stable per team and per leg, so a reconnect, a redo or a replayed reducer
+// Stable per team and per leg, so a reconnect, a reset or a replayed reducer
 // derives the same course. Same FNV mix JOUST seeds its shots with.
 const resolveLegSeed = (teamId: string | null, legIndex: number): number => {
   const key = teamId ?? "";
@@ -43,10 +44,12 @@ const createReadyLeg = (
     playerId: playerIds.length === 0 ? null : (playerIds[legIndex % playerIds.length] ?? null),
     seed: resolveLegSeed(teamId, legIndex),
     status: "ready",
+    attempt: 0,
+    checkpointGate: 0,
     flapTicks: [],
-    gatesCleared: 0,
-    endTick: null,
-    outcome: null
+    crashes: 0,
+    skipped: false,
+    lastRun: null
   };
 };
 
@@ -60,33 +63,12 @@ const createLegs = (
   });
 };
 
-// A leg keeps its player and seed across a redo: the same person flies the
-// same course again.
-const resetLeg = (leg: FappyRuntimeLeg): FappyRuntimeLeg => {
-  return {
-    ...leg,
-    status: "ready",
-    flapTicks: [],
-    gatesCleared: 0,
-    endTick: null,
-    outcome: null
-  };
+const mutated = (state: FappyRuntimeState): MinigameRuntimeReductionResult => {
+  return { state, didMutate: true };
 };
 
-const withPendingPoints = (
-  state: FappyRuntimeState,
-  pointsMax: number
-): Record<string, number> => {
-  if (state.activeTurnTeamId === null) {
-    return { ...state.pendingPointsByTeamId };
-  }
-
-  const turnPoints = state.turnStartPoints + state.pointsPerGate * resolveTotalGatesCleared(state);
-
-  return {
-    ...state.pendingPointsByTeamId,
-    [state.activeTurnTeamId]: Math.min(pointsMax, Math.max(0, turnPoints))
-  };
+const currentLeg = (state: FappyRuntimeState): FappyRuntimeLeg | null => {
+  return state.legs[state.legIndex] ?? null;
 };
 
 const replaceLeg = (
@@ -97,71 +79,118 @@ const replaceLeg = (
   return state.legs.map((leg) => (leg.legIndex === legIndex ? nextLeg : leg));
 };
 
-const mutated = (state: FappyRuntimeState): MinigameRuntimeReductionResult => {
-  return { state, didMutate: true };
-};
-
-const currentLeg = (state: FappyRuntimeState): FappyRuntimeLeg | null => {
-  return state.legs[state.legIndex] ?? null;
-};
-
-const landLeg = (
+const withTurnPoints = (
   state: FappyRuntimeState,
-  leg: FappyRuntimeLeg,
-  landed: Pick<FappyRuntimeLeg, "gatesCleared" | "endTick" | "outcome">,
+  turnPoints: number,
+  pointsMax: number
+): Record<string, number> => {
+  if (state.activeTurnTeamId === null) {
+    return { ...state.pendingPointsByTeamId };
+  }
+
+  return {
+    ...state.pendingPointsByTeamId,
+    [state.activeTurnTeamId]: Math.min(pointsMax, Math.max(0, state.turnStartPoints + turnPoints))
+  };
+};
+
+const isPastLimit = (state: FappyRuntimeState, receivedAtMs: number): boolean => {
+  return state.startedAtMs !== null && receivedAtMs - state.startedAtMs >= state.limitSeconds * 1000;
+};
+
+// The limit caught the team: the relay is over where it stands, and it keeps
+// the limit share scaled by how far it got.
+const timeOut = (
+  state: FappyRuntimeState,
+  receivedAtMs: number,
   pointsMax: number
 ): FappyRuntimeState => {
-  const withLanding: FappyRuntimeState = {
-    ...state,
-    legs: replaceLeg(state, leg.legIndex, { ...leg, ...landed, status: "landed" })
-  };
+  const timedOut: FappyRuntimeState = { ...state, timedOutAtMs: receivedAtMs };
+  const points = resolveTimeoutPoints(
+    resolveTotalGatesCleared(timedOut),
+    timedOut.legsPerTurn * timedOut.gatesPerLeg,
+    pointsMax
+  );
 
-  return { ...withLanding, pendingPointsByTeamId: withPendingPoints(withLanding, pointsMax) };
+  return { ...timedOut, pendingPointsByTeamId: withTurnPoints(timedOut, points, pointsMax) };
 };
 
-// The referee: the server re-runs the sim from the log and keeps its own
-// count. The tablet never sends a score, so there is nothing to dispute.
+// The last gate of the last leg: the clock stops and the time is the score.
+const finish = (
+  state: FappyRuntimeState,
+  receivedAtMs: number,
+  pointsMax: number
+): FappyRuntimeState => {
+  const startedAtMs = state.startedAtMs ?? receivedAtMs;
+  const finished: FappyRuntimeState = {
+    ...state,
+    startedAtMs,
+    finishedAtMs: receivedAtMs,
+    legIndex: state.legsPerTurn
+  };
+  const points = resolveFinishPoints(receivedAtMs - startedAtMs, finished, pointsMax);
+
+  return { ...finished, pendingPointsByTeamId: withTurnPoints(finished, points, pointsMax) };
+};
+
+// A cleared leg hands the tablet on: the next leg is ready for its player's
+// first tap, and the clock has not stopped for the handoff.
+const clearLeg = (
+  state: FappyRuntimeState,
+  leg: FappyRuntimeLeg,
+  receivedAtMs: number,
+  pointsMax: number
+): FappyRuntimeState => {
+  const withCleared: FappyRuntimeState = {
+    ...state,
+    legs: replaceLeg(state, leg.legIndex, { ...leg, status: "cleared" })
+  };
+
+  if (leg.legIndex + 1 >= state.legsPerTurn) {
+    return finish(withCleared, receivedAtMs, pointsMax);
+  }
+
+  return { ...withCleared, legIndex: leg.legIndex + 1 };
+};
+
+// The referee: the server re-runs the attempt from its checkpoint with the
+// log it holds and keeps its own count. Cleared moves the relay on; a crash
+// starts the next attempt on the perch of the last gate cleared.
 const endLeg = (
   state: FappyRuntimeState,
   leg: FappyRuntimeLeg,
+  receivedAtMs: number,
   pointsMax: number
 ): MinigameRuntimeReductionResult => {
   const run = runFappyLeg(
     { seed: leg.seed, legIndex: leg.legIndex, gatesPerLeg: state.gatesPerLeg },
-    leg.flapTicks
+    leg.flapTicks,
+    leg.checkpointGate
   );
+  const lastRun = {
+    endTick: run.endTick,
+    gatesCleared: run.gatesCleared,
+    outcome: run.outcome === "cleared" ? ("cleared" as const) : ("crashed" as const)
+  };
 
-  return mutated(
-    landLeg(
-      state,
-      leg,
-      {
-        gatesCleared: run.gatesCleared,
-        endTick: run.endTick,
-        // The cap is sized so a run always resolves; a `flying` here is a
-        // crash for scoring purposes rather than a leg that never ends.
-        outcome: run.outcome === "flying" ? "crashed" : run.outcome
-      },
-      pointsMax
-    )
-  );
-};
-
-const advanceLeg = (state: FappyRuntimeState): FappyRuntimeState => {
-  return { ...state, legIndex: Math.min(state.legsPerTurn, state.legIndex + 1) };
-};
-
-// The leg a redo targets: the one in hand if it has been flown, otherwise the
-// one just passed — "redo" after the tablet has changed hands still means the
-// last flight, and once the relay is over it means the final one.
-const resolveRedoLegIndex = (state: FappyRuntimeState): number | null => {
-  const leg = currentLeg(state);
-
-  if (leg !== null && leg.status !== "ready") {
-    return leg.legIndex;
+  if (run.outcome === "cleared") {
+    return mutated(clearLeg(state, { ...leg, lastRun }, receivedAtMs, pointsMax));
   }
 
-  return state.legIndex > 0 ? state.legIndex - 1 : null;
+  const crashed: FappyRuntimeState = {
+    ...state,
+    legs: replaceLeg(state, leg.legIndex, {
+      ...leg,
+      status: "ready",
+      attempt: leg.attempt + 1,
+      checkpointGate: Math.max(leg.checkpointGate, run.gatesCleared),
+      flapTicks: [],
+      crashes: leg.crashes + 1,
+      lastRun
+    })
+  };
+
+  return mutated(isPastLimit(crashed, receivedAtMs) ? timeOut(crashed, receivedAtMs, pointsMax) : crashed);
 };
 
 export const fappyRuntimePlugin: MinigameRuntimePlugin = {
@@ -177,9 +206,13 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
       activeTurnTeamId,
       legsPerTurn: rules.legsPerTurn,
       gatesPerLeg: rules.gatesPerLeg,
-      pointsPerGate: rules.pointsPerGate,
+      parSeconds: rules.parSeconds,
+      limitSeconds: rules.limitSeconds,
       legIndex: 0,
       legs: createLegs(activeTurnTeamId, playerIds, rules),
+      startedAtMs: null,
+      finishedAtMs: null,
+      timedOutAtMs: null,
       turnStartPoints:
         activeTurnTeamId === null ? 0 : (input.pendingPointsByTeamId[activeTurnTeamId] ?? 0),
       pendingPointsByTeamId: { ...input.pendingPointsByTeamId }
@@ -197,11 +230,22 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
     const state = input.state;
     const phase = resolveFappyPhase(state);
     const leg = currentLeg(state);
-    const { actionType, actionPayload } = input.envelope;
+    const isLive = phase === "ready" || phase === "flying";
+    const { actionType, actionPayload, receivedAtMs } = input.envelope;
+
+    // Every action here is timed against the server's clock; one that arrives
+    // without a stamp is a fixture from before the stamp existed, not a tap.
+    if (!isReceivedAtMs(receivedAtMs)) {
+      return unchanged;
+    }
 
     if (actionType === "flap") {
-      if (leg === null || (phase !== "ready" && phase !== "flying") || !isFappyFlapPayload(actionPayload)) {
+      if (leg === null || !isLive || !isFappyFlapPayload(actionPayload)) {
         return unchanged;
+      }
+
+      if (isPastLimit(state, receivedAtMs)) {
+        return mutated(timeOut(state, receivedAtMs, input.pointsMax));
       }
 
       const lastTick = leg.flapTicks[leg.flapTicks.length - 1];
@@ -214,6 +258,8 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
 
       return mutated({
         ...state,
+        // The relay's clock starts on its very first tap and never restarts.
+        startedAtMs: state.startedAtMs ?? receivedAtMs,
         legs: replaceLeg(state, leg.legIndex, {
           ...leg,
           status: "flying",
@@ -227,61 +273,46 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
         return unchanged;
       }
 
-      return endLeg(state, leg, input.pointsMax);
+      return endLeg(state, leg, receivedAtMs, input.pointsMax);
     }
 
-    if (actionType === "nextLeg") {
-      if (phase !== "landed") {
+    // The tablet's clock says the limit has passed; the server's clock decides.
+    if (actionType === "timeOut") {
+      if (!isLive || !isPastLimit(state, receivedAtMs)) {
         return unchanged;
       }
 
-      return mutated(advanceLeg(state));
+      return mutated(timeOut(state, receivedAtMs, input.pointsMax));
     }
 
-    // Escape hatch (AGENTS.md §11): forfeit a leg the tablet can't fly — a
-    // dead touch surface, a player who has had enough. The slot is consumed
-    // so leg counts stay equal across teams, and the relay moves on at once.
+    // Escape hatch (AGENTS.md §11): forgive a leg the tablet can't fly — a
+    // dead touch surface, a player who has had enough. The leg counts as
+    // cleared and the relay moves on; the clock keeps running.
     if (actionType === "skipLeg") {
-      if (leg === null || (phase !== "ready" && phase !== "flying")) {
+      if (leg === null || !isLive) {
         return unchanged;
       }
 
       return mutated(
-        advanceLeg(
-          landLeg(state, leg, { gatesCleared: 0, endTick: null, outcome: "skipped" }, input.pointsMax)
-        )
+        clearLeg(state, { ...leg, skipped: true, flapTicks: [] }, receivedAtMs, input.pointsMax)
       );
     }
 
-    // Escape hatch (AGENTS.md §11): fly the last leg again, handing back
-    // exactly the points it banked.
-    if (actionType === "redoLeg") {
-      const redoLegIndex = resolveRedoLegIndex(state);
-      const redoLeg = redoLegIndex === null ? null : (state.legs[redoLegIndex] ?? null);
-
-      if (redoLeg === null || redoLegIndex === null) {
-        return unchanged;
-      }
-
-      const rewound: FappyRuntimeState = {
-        ...state,
-        legIndex: redoLegIndex,
-        legs: replaceLeg(state, redoLegIndex, resetLeg(redoLeg))
-      };
-
-      return mutated({ ...rewound, pendingPointsByTeamId: withPendingPoints(rewound, input.pointsMax) });
-    }
-
-    // Escape hatch (AGENTS.md §11): run the whole relay again, handing back
-    // exactly the points this turn banked.
+    // Escape hatch (AGENTS.md §11): run the whole relay again from the start
+    // line, clock and all, handing back exactly the points this turn banked.
     if (actionType === "resetTurn") {
       const reset: FappyRuntimeState = {
         ...state,
         legIndex: 0,
-        legs: state.legs.map(resetLeg)
+        legs: state.legs.map((entry) =>
+          createReadyLeg(state.activeTurnTeamId, entry.playerId === null ? [] : [entry.playerId], entry.legIndex)
+        ),
+        startedAtMs: null,
+        finishedAtMs: null,
+        timedOutAtMs: null
       };
 
-      return mutated({ ...reset, pendingPointsByTeamId: withPendingPoints(reset, input.pointsMax) });
+      return mutated({ ...reset, pendingPointsByTeamId: withTurnPoints(reset, 0, input.pointsMax) });
     }
 
     return unchanged;

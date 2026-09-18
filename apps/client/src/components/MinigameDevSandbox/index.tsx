@@ -87,7 +87,9 @@ export const MinigameDevSandbox = ({
     setRuntimeState((previousState) =>
       runtimePlugin.reduceAction({
         state: previousState,
-        envelope: { actionType, actionPayload },
+        // The sandbox is its own server, so it stamps receipt the way the
+        // real one does; a timing-aware reducer runs the same here as there.
+        envelope: { actionType, actionPayload, receivedAtMs: Date.now() },
         pointsMax: devManifest.pointsMax,
         rules: devManifest.rules,
         content: devManifest.content

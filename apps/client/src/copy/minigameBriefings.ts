@@ -132,11 +132,11 @@ const resolveFappyBriefingContent = (
     illustrationPath: `${DISPLAY_ASSET_ROOT}/fappy-illustration.svg`,
     illustrationAlt: "Fappy Bird mini-game artwork",
     summary:
-      "Your chickens fly a relay through a corridor of champs. Tap to flap, crash to pass the tablet.",
+      "Your chickens fly a relay through a corridor of champs, against one clock. Get the whole team through, fast.",
     steps: [
       `${legsPerTurn} leg${legsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order.`,
-      `Tap anywhere on the tablet to flap. Clear ${gatesPerLeg} gates or crash, then pass it on.`,
-      "Every gate cleared is a point for the team."
+      `Tap anywhere on the tablet to flap through your ${gatesPerLeg} gates. Crash and you go again from your last gate.`,
+      "Land your section and hand the tablet on. The faster the team finishes, the more points."
     ]
   };
 };

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { FappyMinigameHostView, FappyMinigameLeg, Player, Team } from "@wingnight/shared";
 import { resolveFappyGates } from "@wingnight/shared";
@@ -6,8 +6,12 @@ import { resolveFappyGates } from "@wingnight/shared";
 import { FappyScene, type FappySceneHandle } from "../FappyScene/index.js";
 import { resolveLegBird } from "../resolveLegBird/index.js";
 import { useFappyRunner } from "../useFappyRunner/index.js";
+import { formatRelayClock, useRelayClock } from "../useRelayClock/index.js";
 import { hostFappySurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
+
+// The clock turns to heat with this much of the limit left.
+const URGENT_REMAINING_MS = 15_000;
 
 const resolveActiveTeamName = ({
   minigameHostView,
@@ -38,21 +42,41 @@ const resolvePlayerName = (
   return players.find((player) => player.id === leg.playerId)?.name ?? null;
 };
 
-const OutcomeCard = ({ leg }: { leg: FappyMinigameLeg }): JSX.Element | null => {
-  if (leg.outcome === null) {
-    return null;
-  }
+const isRelayOver = (view: FappyMinigameHostView): boolean => {
+  return view.phase === "finished" || view.phase === "timedOut";
+};
+
+const RelayClock = ({ view, elapsedMs }: { view: FappyMinigameHostView; elapsedMs: number | null }): JSX.Element => {
+  const remainingMs = view.limitSeconds * 1000 - (elapsedMs ?? 0);
+  const clockClassName =
+    elapsedMs !== null && remainingMs <= URGENT_REMAINING_MS
+      ? styles.railClockUrgent
+      : elapsedMs !== null && elapsedMs > view.parSeconds * 1000
+        ? styles.railClockPastPar
+        : "";
 
   return (
-    <div className={styles.outcomeCard} data-fappy-outcome={leg.outcome}>
-      <p
-        className={`${styles.outcomeTitle}${leg.outcome === "cleared" ? ` ${styles.outcomeTitleCleared}` : ""}`}
-      >
-        {hostFappySurfaceCopy.outcomeTitle(leg.outcome)}
+    <span className={`${styles.railClock} ${clockClassName}`} data-fappy-clock>
+      {elapsedMs === null ? hostFappySurfaceCopy.clockIdle : formatRelayClock(elapsedMs)}
+      <span className={styles.railClockLimit}>{hostFappySurfaceCopy.clockLimit(view.limitSeconds)}</span>
+    </span>
+  );
+};
+
+const FinishCard = ({ view, elapsedMs }: { view: FappyMinigameHostView; elapsedMs: number | null }): JSX.Element => {
+  const isTimedOut = view.phase === "timedOut";
+
+  return (
+    <div className={styles.finishCard} data-fappy-finish={view.phase}>
+      <p className={`${styles.finishTitle}${isTimedOut ? ` ${styles.finishTitleTimedOut}` : ""}`}>
+        {isTimedOut ? hostFappySurfaceCopy.timedOutTitle : hostFappySurfaceCopy.finishedTitle}
       </p>
-      <span className={styles.outcomeGates}>
-        {hostFappySurfaceCopy.outcomeGates(leg.gatesCleared)}
+      <span className={styles.finishTime}>
+        {isTimedOut
+          ? hostFappySurfaceCopy.progressLine(view.totalGatesCleared, view.legsPerTurn * view.gatesPerLeg)
+          : hostFappySurfaceCopy.finishTime(formatRelayClock(elapsedMs ?? 0))}
       </span>
+      <span className={styles.finishPoints}>{hostFappySurfaceCopy.finishPoints(view.points ?? 0)}</span>
     </div>
   );
 };
@@ -62,9 +86,9 @@ const LegHistory = ({ view }: { view: FappyMinigameHostView }): JSX.Element => {
     <div className={styles.historyRow}>
       <span className={styles.historyTitle}>{hostFappySurfaceCopy.historyTitle}</span>
       {view.legs.map((leg) => {
-        const isActive = leg.legIndex === view.legIndex && view.phase !== "done";
+        const isActive = leg.legIndex === view.legIndex && !isRelayOver(view);
         const chipClassName = `${styles.historyChip}${
-          leg.outcome === "cleared"
+          leg.status === "cleared"
             ? ` ${styles.historyChipCleared}`
             : isActive
               ? ` ${styles.historyChipActive}`
@@ -73,9 +97,8 @@ const LegHistory = ({ view }: { view: FappyMinigameHostView }): JSX.Element => {
 
         return (
           <span key={leg.legIndex} className={chipClassName}>
-            {leg.status === "landed"
-              ? hostFappySurfaceCopy.historyGates(leg.gatesCleared)
-              : hostFappySurfaceCopy.historyPending}
+            {leg.status === "cleared" ? hostFappySurfaceCopy.historyCleared : hostFappySurfaceCopy.historyPending}
+            {leg.crashes > 0 && <span>{hostFappySurfaceCopy.historyCrashes(leg.crashes)}</span>}
           </span>
         );
       })}
@@ -108,9 +131,7 @@ const RunningTotals = ({
           </span>
         </div>
       ))}
-      <span className={styles.totalsGates}>
-        {hostFappySurfaceCopy.gatesTotal(view.totalGatesCleared)}
-      </span>
+      <span className={styles.totalsNote}>{hostFappySurfaceCopy.parLine(view.parSeconds)}</span>
     </div>
   );
 };
@@ -135,7 +156,8 @@ const Corridor = ({
   onDispatchAction
 }: CorridorProps): JSX.Element => {
   const sceneRef = useRef<FappySceneHandle>(null);
-  const leg = view.legs[view.legIndex] ?? null;
+  const legIndex = Math.min(view.legIndex, view.legsPerTurn - 1);
+  const leg = view.legs[legIndex] ?? null;
   const gates = useMemo(() => {
     return leg === null
       ? []
@@ -148,10 +170,11 @@ const Corridor = ({
     teams,
     serverOrigin
   });
+  const isLive = view.phase === "ready" || view.phase === "flying";
   const { flap } = useFappyRunner({
     leg,
     gatesPerLeg: view.gatesPerLeg,
-    canAct: canAct && view.phase !== "done",
+    canAct: canAct && isLive,
     sceneRef,
     onFlap: (tick): void => {
       onDispatchAction("flap", { tick });
@@ -160,7 +183,8 @@ const Corridor = ({
       onDispatchAction("endLeg", {});
     }
   });
-  const isArmed = canAct && (view.phase === "ready" || view.phase === "flying");
+  const isArmed = canAct && isLive;
+  const isHandoff = view.phase === "ready" && view.legIndex > 0 && leg?.attempt === 0;
 
   return (
     <div
@@ -178,28 +202,33 @@ const Corridor = ({
         sceneId="host-fappy"
         label={hostFappySurfaceCopy.sceneLabel(bird.playerName)}
       />
+      {isHandoff && (
+        <div className={styles.handoffOverlay} data-fappy-handoff>
+          <span className={styles.handoffBanner}>{hostFappySurfaceCopy.handoffBanner(bird.playerName)}</span>
+        </div>
+      )}
     </div>
   );
 };
 
 const resolveHint = (view: FappyMinigameHostView, canAct: boolean): string => {
+  const leg = view.legs[Math.min(view.legIndex, view.legsPerTurn - 1)];
+
   if (view.phase === "ready") {
-    return canAct ? hostFappySurfaceCopy.readyHint : hostFappySurfaceCopy.readyLockedHint;
+    if (!canAct) {
+      return hostFappySurfaceCopy.readyLockedHint;
+    }
+
+    return leg !== undefined && leg.attempt > 0
+      ? hostFappySurfaceCopy.respawnHint(leg.checkpointGate)
+      : hostFappySurfaceCopy.readyHint;
   }
 
   if (view.phase === "flying") {
     return hostFappySurfaceCopy.flyingHint;
   }
 
-  if (view.phase === "landed") {
-    const leg = view.legs[view.legIndex];
-
-    return leg?.outcome === null || leg === undefined
-      ? hostFappySurfaceCopy.settlingHint
-      : hostFappySurfaceCopy.outcomeTitle(leg.outcome);
-  }
-
-  return hostFappySurfaceCopy.doneHint;
+  return view.phase === "timedOut" ? hostFappySurfaceCopy.timedOutHint : hostFappySurfaceCopy.finishedHint;
 };
 
 export const HostFappySurface = ({
@@ -220,20 +249,28 @@ export const HostFappySurface = ({
     activeTeamName
   });
   const isPlayPhase = phase === "play";
-  const pendingPoints =
-    fappyView === null || fappyView.activeTurnTeamId === null
-      ? null
-      : (fappyView.pendingPointsByTeamId[fappyView.activeTurnTeamId] ?? 0);
   const canAct = canDispatchAction && fappyView !== null;
-  const currentLeg = fappyView?.legs[fappyView.legIndex] ?? null;
-  const nextLeg = fappyView?.legs[fappyView.legIndex + 1] ?? null;
-  const isLanded = fappyView?.phase === "landed";
-  const isDone = fappyView?.phase === "done";
-  const isLastLeg = fappyView !== null && fappyView.legIndex === fappyView.legsPerTurn - 1;
+  const elapsedMs = useRelayClock({
+    startedAtMs: fappyView?.startedAtMs ?? null,
+    endedAtMs: fappyView?.timedOutAtMs ?? fappyView?.finishedAtMs ?? null
+  });
+  const isLive = fappyView !== null && (fappyView.phase === "ready" || fappyView.phase === "flying");
+  const isPastLimit =
+    fappyView !== null && elapsedMs !== null && elapsedMs >= fappyView.limitSeconds * 1000;
+  const currentLeg =
+    fappyView === null ? null : (fappyView.legs[Math.min(fappyView.legIndex, fappyView.legsPerTurn - 1)] ?? null);
 
   const dispatch = (actionType: string): void => {
     onDispatchAction(actionType, {});
   };
+
+  // The tablet's clock says the limit has passed; tell the server, which
+  // checks it against its own clock before ending the relay.
+  useEffect(() => {
+    if (canAct && isLive && isPastLimit) {
+      onDispatchAction("timeOut", {});
+    }
+  }, [canAct, isLive, isPastLimit]);
 
   return (
     <div className={styles.container}>
@@ -243,11 +280,7 @@ export const HostFappySurface = ({
           <span className={styles.railTeamDot} aria-hidden="true" />
           {hostFappySurfaceCopy.teamPrefix} {resolvedActiveTeamName}
         </span>
-        {isPlayPhase && pendingPoints !== null && (
-          <span className={styles.railPending}>
-            {hostFappySurfaceCopy.pendingChip(pendingPoints)}
-          </span>
-        )}
+        {isPlayPhase && fappyView !== null && <RelayClock view={fappyView} elapsedMs={elapsedMs} />}
       </div>
       {!isPlayPhase && (
         <p className={styles.introCard}>{hostFappySurfaceCopy.introDescription}</p>
@@ -273,49 +306,34 @@ export const HostFappySurface = ({
                   fappyView.legsPerTurn
                 )}
               </span>
-              {!isDone && (
-                <p className={styles.flyingName}>
-                  {hostFappySurfaceCopy.flyingLabel(resolvePlayerName(currentLeg, players))}
-                </p>
-              )}
+              <p className={styles.flyingName}>
+                {hostFappySurfaceCopy.flyingLabel(resolvePlayerName(currentLeg, players))}
+              </p>
+              <div className={styles.legMeta}>
+                <span>
+                  {hostFappySurfaceCopy.progressLine(
+                    fappyView.totalGatesCleared,
+                    fappyView.legsPerTurn * fappyView.gatesPerLeg
+                  )}
+                </span>
+                {currentLeg !== null && currentLeg.crashes > 0 && (
+                  <span data-fappy-crashes={currentLeg.crashes}>
+                    {hostFappySurfaceCopy.crashesChip(currentLeg.crashes)}
+                  </span>
+                )}
+              </div>
             </div>
-            {currentLeg !== null && isLanded && <OutcomeCard leg={currentLeg} />}
-            {isDone ? (
-              <p className={styles.doneNote}>{hostFappySurfaceCopy.turnOverLabel}</p>
-            ) : (
-              <button
-                className={styles.primaryButton}
-                type="button"
-                disabled={!canAct || !isLanded}
-                onClick={(): void => {
-                  dispatch("nextLeg");
-                }}
-              >
-                {isLastLeg
-                  ? hostFappySurfaceCopy.finishButtonLabel
-                  : hostFappySurfaceCopy.passButtonLabel(resolvePlayerName(nextLeg, players))}
-              </button>
-            )}
+            {isRelayOver(fappyView) && <FinishCard view={fappyView} elapsedMs={elapsedMs} />}
             <div className={styles.deckRows}>
               <button
                 className={styles.deckRowButton}
                 type="button"
-                disabled={!canAct || isLanded || isDone}
+                disabled={!canAct || !isLive}
                 onClick={(): void => {
                   dispatch("skipLeg");
                 }}
               >
                 {hostFappySurfaceCopy.skipLegButtonLabel}
-              </button>
-              <button
-                className={styles.deckRowButton}
-                type="button"
-                disabled={!canAct || (fappyView.phase === "ready" && fappyView.legIndex === 0)}
-                onClick={(): void => {
-                  dispatch("redoLeg");
-                }}
-              >
-                {hostFappySurfaceCopy.redoLegButtonLabel}
               </button>
               <button
                 className={styles.deckRowButton}

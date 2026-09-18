@@ -20,7 +20,7 @@ Last updated: 2026-09-18
 | Drawing | shipped | — | [packages/minigames/drawing/](../../packages/minigames/drawing/) ([spec](drawing-spec.md)) |
 | Who's That Song | shipped | — | [packages/minigames/song-guess/](../../packages/minigames/song-guess/) ([spec](song-guess-spec.md)) |
 | Slingshlong (JOUST) | shipped | — | [packages/minigames/joust/](../../packages/minigames/joust/) ([spec](joust-spec.md)) |
-| Fappy Bird (FAPPY) | shipped | — | [packages/minigames/fappy/](../../packages/minigames/fappy/) ([spec](fappy-spec.md)) — built and tested; not in the sample lineup yet |
+| Fappy Bird (FAPPY) | shipped | — | [packages/minigames/fappy/](../../packages/minigames/fappy/) ([spec](fappy-spec.md)) — a timed relay of the cast; built and tested; not in the sample lineup yet |
 | Emoji Charades | shipped | — | [packages/minigames/emoji-charades/](../../packages/minigames/emoji-charades/) ([spec](emoji-charades-spec.md)) — built and tested; not in the sample lineup yet |
 | PETMON | spec | ready | [petmon-design.md](../petmon-design.md) (design + mockups; runtime not started) |
 | Read the Room | idea | promising | [ideas/read-the-room.md](ideas/read-the-room.md) |
