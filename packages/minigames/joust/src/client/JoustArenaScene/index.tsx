@@ -1,8 +1,14 @@
-import type { JoustFrame, JoustMinigameArena, JoustPlayerFigure } from "@wingnight/shared";
+import type {
+  JoustFrame,
+  JoustMinigameArena,
+  JoustPlayerFigure,
+  JoustVec2
+} from "@wingnight/shared";
 import {
   JOUST_PIN_FOOT_RADIUS,
   JOUST_PIN_HEAD_RADIUS,
   JOUST_PIN_HEIGHT,
+  JOUST_SHOOTER_HEAD_INDEX,
   JOUST_WORLD,
   joustPinFootIndex,
   joustPinHeadIndex,
@@ -13,7 +19,9 @@ import { Perch } from "./Perch/index.js";
 
 import type { JoustStandingPin } from "../../runtime/lineup/index.js";
 import { ArenaHen } from "./ArenaHen/index.js";
+import { Backdrop } from "./Backdrop/index.js";
 import { Cactus } from "./Cactus/index.js";
+import { GroundShadow } from "./GroundShadow/index.js";
 import { Shooter } from "./Shooter/index.js";
 import { TeamBench } from "./TeamBench/index.js";
 import { joustPalette } from "./palette.js";
@@ -35,6 +43,8 @@ export type JoustArenaSceneProps = {
   isAiming: boolean;
   // Pins to punch an impact burst on this frame.
   burstPinIndices: number[];
+  // Where the shooter's head has just been, oldest first: the ghost of the flight so far.
+  trail: JoustVec2[];
   serverOrigin: string | null;
   // Prefix for gradient and clip ids, so two scenes on one page do not collide.
   sceneId: string;
@@ -43,6 +53,9 @@ export type JoustArenaSceneProps = {
 
 const PRONG_SPREAD = 5;
 const PRONG_RISE = 4;
+
+// A pull shorter than this is a finger resting on the fork, not a draw: no guide for it.
+const PULL_GUIDE_THRESHOLD = 0.03;
 
 const ImpactBurst = ({ at }: { at: { x: number; y: number } }): JSX.Element => {
   const points: string[] = [];
@@ -70,6 +83,36 @@ const ImpactBurst = ({ at }: { at: { x: number; y: number } }): JSX.Element => {
   );
 };
 
+/**
+ * The flight so far, as fading ghosts of the head: brightest and biggest where it was a frame
+ * ago, gone eight frames back. It is what lets the room read the arc of a shot that crossed the
+ * lane in under a second, and it collapses to nothing once the shooter has stopped moving.
+ */
+const ShotTrail = ({ trail }: { trail: JoustVec2[] }): JSX.Element | null => {
+  if (trail.length === 0) {
+    return null;
+  }
+
+  return (
+    <g data-joust-trail>
+      {trail.map((at, index) => {
+        const recency = (index + 1) / trail.length;
+
+        return (
+          <circle
+            key={index}
+            cx={at.x}
+            cy={at.y}
+            r={0.9 + recency * 1.9}
+            fill={joustPalette.shooterLight}
+            opacity={0.1 + recency * 0.32}
+          />
+        );
+      })}
+    </g>
+  );
+};
+
 export const JoustArenaScene = ({
   arena,
   frame,
@@ -79,15 +122,18 @@ export const JoustArenaScene = ({
   activeShooterPlayerId,
   isAiming,
   burstPinIndices,
+  trail,
   serverOrigin,
   sceneId,
   label
 }: JoustArenaSceneProps): JSX.Element => {
-  const { anchor, floorY, width, height } = JOUST_WORLD;
+  const { anchor, floorY, width, height, pullRadius } = JOUST_WORLD;
   const tail = readJoustFramePosition(frame, 0);
+  const head = readJoustFramePosition(frame, JOUST_SHOOTER_HEAD_INDEX);
   const bandTarget = isAiming ? tail : anchor;
-  const skyGradientId = `${sceneId}-sky`;
-  const sandGradientId = `${sceneId}-sand`;
+  // How far the band is drawn, as a fraction of its reach — read off the frame rather than the
+  // aim, so the guide and the shooter it rings can never disagree.
+  const pull = isAiming ? Math.hypot(head.x - anchor.x, head.y - anchor.y) / pullRadius : 0;
   const worldClipId = `${sceneId}-world`;
   const bursting = new Set(burstPinIndices);
 
@@ -102,42 +148,15 @@ export const JoustArenaScene = ({
         data-joust-scene
       >
         <defs>
-          <linearGradient id={skyGradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={joustPalette.skyTop} />
-            <stop offset="62%" stopColor={joustPalette.skyMid} />
-            <stop offset="100%" stopColor={joustPalette.horizon} />
-          </linearGradient>
-          <linearGradient id={sandGradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={joustPalette.sand} />
-            <stop offset="100%" stopColor={joustPalette.sandDark} />
-          </linearGradient>
           {/* A shot that leaves the world must not be drawn over the letterbox. */}
           <clipPath id={worldClipId}>
             <rect x={0} y={0} width={width} height={height} />
           </clipPath>
         </defs>
 
-        <g clipPath={`url(#${worldClipId})`}>
-          <rect x={0} y={0} width={width} height={floorY} fill={`url(#${skyGradientId})`} />
-          <circle cx={width - 26} cy={22} r={7} fill={joustPalette.sun} opacity={0.9} />
-          <ellipse cx={34} cy={floorY} rx={46} ry={8} fill={joustPalette.duneFar} />
-          <ellipse cx={116} cy={floorY + 1} rx={58} ry={10} fill={joustPalette.duneNear} />
-          <rect
-            x={0}
-            y={floorY}
-            width={width}
-            height={height - floorY}
-            fill={`url(#${sandGradientId})`}
-          />
-          <line
-            x1={0}
-            y1={floorY}
-            x2={width}
-            y2={floorY}
-            stroke={joustPalette.sandLine}
-            strokeWidth={0.8}
-          />
+        <Backdrop sceneId={sceneId} />
 
+        <g clipPath={`url(#${worldClipId})`}>
           {arena.obstacles.map((obstacle, index) => (
             <Cactus key={index} obstacle={obstacle} />
           ))}
@@ -163,6 +182,21 @@ export const JoustArenaScene = ({
               isDown
             />
           ))}
+
+          {/* The band's reach, shown only while it is being drawn: the ring is full power. */}
+          {pull > PULL_GUIDE_THRESHOLD && (
+            <circle
+              cx={anchor.x}
+              cy={anchor.y}
+              r={pullRadius}
+              fill="none"
+              stroke={joustPalette.band}
+              strokeWidth={0.5}
+              strokeDasharray="1.4 1.8"
+              opacity={0.25 + Math.min(1, pull) * 0.45}
+              data-joust-pull-guide
+            />
+          )}
 
           <g>
             <rect
@@ -199,6 +233,13 @@ export const JoustArenaScene = ({
           </g>
 
           {pins.map((pin, pinIndex) => (
+            <GroundShadow
+              key={pin.playerId}
+              foot={readJoustFramePosition(frame, joustPinFootIndex(pinIndex))}
+            />
+          ))}
+
+          {pins.map((pin, pinIndex) => (
             <ArenaHen
               key={pin.playerId}
               figure={pin}
@@ -208,6 +249,8 @@ export const JoustArenaScene = ({
               facing={-1}
             />
           ))}
+
+          <ShotTrail trail={trail} />
 
           <Shooter frame={frame} />
 

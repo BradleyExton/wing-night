@@ -115,6 +115,19 @@ test("draws a bird per player in the rack and a bird per teammate on the bench",
   assert.match(html, /data-joust-bench/);
 });
 
+test("dresses the lane with a backdrop and stands every bird in its own shade", () => {
+  const html = renderSurface(baseView());
+  const shadows = html.match(/data-joust-shadow/g) ?? [];
+
+  assert.match(html, /data-joust-backdrop/);
+  assert.equal(shadows.length, LINEUP.length + TEAMMATES.length);
+});
+
+test("rings the band's reach while it is being drawn, and not while it hangs slack", () => {
+  assert.match(renderSurface(baseView({ aim: { x: -0.8, y: 0.5 } })), /data-joust-pull-guide/);
+  assert.doesNotMatch(renderSurface(baseView()), /data-joust-pull-guide/);
+});
+
 test("addresses a pack-relative head against the server origin", () => {
   assert.match(
     renderSurface(baseView()),
@@ -156,6 +169,40 @@ test("keeps the plaque off the lane while a multi-frame shot is still in the air
 
   assert.doesNotMatch(html, /data-joust-result/);
   assert.match(html, /It&#x27;s away/);
+});
+
+test("holds the marquee at the launch numbers while a shot is still in the air", () => {
+  const inFlight: JoustMinigameShot = {
+    ...pileUp,
+    run: { ...pileUp.run, keyframes: [[...restFrame], [...restFrame], [...restFrame]] }
+  };
+  // The state has already banked the two topples and the two points.
+  const html = renderSurface(
+    baseView({
+      phase: "resolved",
+      lastShot: inFlight,
+      downPlayerIds: ["p4", "p5"],
+      pendingPointsByTeamId: { "team-1": 6, "team-2": 2 }
+    })
+  );
+
+  assert.match(html, /3\/3 standing/);
+  assert.match(html, /\+4/);
+  assert.doesNotMatch(html, /1\/3 standing/);
+});
+
+test("lets the marquee catch up once the replay has landed", () => {
+  const html = renderSurface(
+    baseView({
+      phase: "resolved",
+      lastShot: pileUp,
+      downPlayerIds: ["p4", "p5"],
+      pendingPointsByTeamId: { "team-1": 6, "team-2": 2 }
+    })
+  );
+
+  assert.match(html, /1\/3 standing/);
+  assert.match(html, /\+6/);
 });
 
 test("closes the turn without putting other teams' scores on the TV", () => {

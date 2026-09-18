@@ -110,17 +110,42 @@ test("createDevManifest supplies the standard sandbox team fixture", () => {
     content: { prompts: [] }
   });
 
-  assert.deepEqual(devManifest.teamIds, ["team-alpha", "team-beta"]);
+  assert.deepEqual(devManifest.teamIds, [
+    "team-alpha",
+    "team-beta",
+    "team-gamma",
+    "team-delta"
+  ]);
   assert.deepEqual(devManifest.teamNameByTeamId, {
     "team-alpha": "Team Alpha",
-    "team-beta": "Team Beta"
+    "team-beta": "Team Beta",
+    "team-gamma": "Team Gamma",
+    "team-delta": "Team Delta"
   });
   assert.equal(devManifest.activeRoundTeamId, "team-alpha");
   assert.equal(devManifest.pointsMax, 15);
   assert.deepEqual(devManifest.pendingPointsByTeamId, {
     "team-alpha": 0,
-    "team-beta": 0
+    "team-beta": 0,
+    "team-gamma": 0,
+    "team-delta": 0
   });
   assert.deepEqual(devManifest.rules, { questionsPerTurn: 3 });
   assert.deepEqual(devManifest.content, { prompts: [] });
+});
+
+// A game that draws the room needs a plausible crowd, and the sandbox needs every slot in the
+// turn order to reach the per-team content behind it — JOUST's lane is picked by that slot.
+test("createDevManifest seats a full roster across every team", () => {
+  const devManifest = createDevManifest({ rules: null, content: null });
+  const seated = devManifest.teams.flatMap((team) => team.playerIds);
+
+  assert.equal(devManifest.players.length, 12);
+  assert.equal(devManifest.teams.length, devManifest.teamIds.length);
+  assert.deepEqual(
+    seated.slice().sort(),
+    devManifest.players.map((player) => player.id).sort(),
+    "every player is on exactly one team"
+  );
+  assert.equal(new Set(seated).size, seated.length, "and on only one");
 });

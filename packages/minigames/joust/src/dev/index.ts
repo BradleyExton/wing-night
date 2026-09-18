@@ -1,14 +1,18 @@
 import { createDevManifest } from "@wingnight/minigames-core";
 
 // Mirrors content/sample/minigames/joust.json so sandbox play matches a real
-// night: team-alpha shoots down the first lane, team-beta the second.
+// night: team-alpha shoots down the first lane, team-beta the second. The built lanes
+// come first and the bare sand last, so the first turn of the night is the one with
+// scaffolding to aim at.
 const DEV_CONTENT = {
   prompts: [
     {
-      id: "arena-open-range",
-      name: "Open Range",
+      id: "arena-two-towers",
+      name: "Two Towers",
       perches: [
-        { x: 54, y: 78, width: 102 }
+        { x: 54, y: 78, width: 102 },
+        { x: 62, y: 56, width: 32 },
+        { x: 116, y: 56, width: 32 }
       ],
       obstacles: []
     },
@@ -22,22 +26,18 @@ const DEV_CONTENT = {
       obstacles: [{ x: 46, y: 66, width: 5, height: 12 }]
     },
     {
-      id: "arena-two-towers",
-      name: "Two Towers",
-      perches: [
-        { x: 54, y: 78, width: 102 },
-        { x: 62, y: 56, width: 32 },
-        { x: 116, y: 56, width: 32 }
-      ],
-      obstacles: []
-    },
-    {
       id: "arena-front-porch",
       name: "Front Porch",
       perches: [
         { x: 54, y: 78, width: 102 },
         { x: 58, y: 52, width: 34 }
       ],
+      obstacles: []
+    },
+    {
+      id: "arena-open-range",
+      name: "Open Range",
+      perches: [{ x: 54, y: 78, width: 102 }],
       obstacles: []
     }
   ]

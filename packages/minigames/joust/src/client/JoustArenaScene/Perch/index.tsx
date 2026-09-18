@@ -1,5 +1,5 @@
 import type { JoustPerch } from "@wingnight/shared";
-import { isGroundPerch, resolvePerchBoxes } from "@wingnight/shared";
+import { JOUST_WORLD, isGroundPerch, resolvePerchBoxes } from "@wingnight/shared";
 
 import { joustPalette } from "../palette.js";
 
@@ -21,6 +21,15 @@ export const Perch = ({ perch }: PerchProps): JSX.Element | null => {
 
   return (
     <g data-joust-perch>
+      {/* Its shade on the sand: no box, no edge, just what tells the eye the tower has weight. */}
+      <ellipse
+        cx={perch.x + perch.width / 2}
+        cy={JOUST_WORLD.floorY + 0.8}
+        rx={perch.width / 2 + 1.5}
+        ry={1.4}
+        fill={joustPalette.shadow}
+        opacity={0.3}
+      />
       {boxes.map((box, index) => (
         <rect
           key={index}
