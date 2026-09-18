@@ -90,8 +90,15 @@ const JoustPlayBody = ({
 }): JSX.Element => {
   const replayIndex = useShotReplay(view.lastShot);
   const replayFinished = isReplayFinished(view.lastShot, replayIndex);
+  // The state already knows how the shot ends; the room does not until the replay lands. While
+  // it is in the air the marquee reads what was true at launch, so the numbers land WITH the
+  // birds rather than a second before them.
+  const inFlight = view.lastShot !== null && !replayFinished ? view.lastShot : null;
   const pendingPoints =
-    view.activeTurnTeamId === null ? 0 : (view.pendingPointsByTeamId[view.activeTurnTeamId] ?? 0);
+    (view.activeTurnTeamId === null ? 0 : (view.pendingPointsByTeamId[view.activeTurnTeamId] ?? 0)) -
+    (inFlight?.points ?? 0);
+  const standingCount =
+    view.lineup.length - view.downPlayerIds.length + (inFlight?.toppledPlayerIds.length ?? 0);
   const arena = view.arena;
   const scene =
     arena === null
@@ -118,10 +125,7 @@ const JoustPlayBody = ({
             {displayJoustSurfaceCopy.shotCounter(view.shotIndex + 1, view.shotsPerTurn)}
           </span>
           <span className={styles.marqueeShot}>
-            {displayJoustSurfaceCopy.standing(
-              view.lineup.length - view.downPlayerIds.length,
-              view.lineup.length
-            )}
+            {displayJoustSurfaceCopy.standing(standingCount, view.lineup.length)}
           </span>
           <span className={styles.marqueePending}>
             {displayJoustSurfaceCopy.pendingPoints(pendingPoints)}
@@ -144,6 +148,7 @@ const JoustPlayBody = ({
               activeShooterPlayerId={view.activeShooterPlayerId}
               isAiming={view.lastShot === null}
               burstPinIndices={scene.burstPinIndices}
+              trail={scene.trail}
               serverOrigin={serverOrigin}
               sceneId="display-joust"
               label={displayJoustSurfaceCopy.sceneLabel(arena.name)}

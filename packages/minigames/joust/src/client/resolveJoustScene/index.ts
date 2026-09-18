@@ -4,14 +4,23 @@ import type {
   JoustFrame,
   JoustMinigameArena,
   JoustMinigameShot,
-  JoustPlayerFigure
+  JoustPlayerFigure,
+  JoustVec2
 } from "@wingnight/shared";
-import { resolveJoustRackSlots, resolveJoustRestFrame } from "@wingnight/shared";
+import {
+  JOUST_SHOOTER_HEAD_INDEX,
+  readJoustFramePosition,
+  resolveJoustRackSlots,
+  resolveJoustRestFrame
+} from "@wingnight/shared";
 
 import { resolveStandingPins, type JoustStandingPin } from "../../runtime/lineup/index.js";
 
 // How long a burst stays on a player who has just gone over, in track frames.
 const IMPACT_FRAMES = 10;
+
+/** How many frames of flight the shooter's ghost trail reaches back, at the track's own rate. */
+export const JOUST_TRAIL_FRAMES = 8;
 
 export type JoustScene = {
   frame: JoustFrame;
@@ -22,6 +31,9 @@ export type JoustScene = {
   fallen: JoustStandingPin[];
   // Pin indices to punch a burst on right now.
   burstPinIndices: number[];
+  // Where the shooter's head was on the frames just before this one, oldest first. Empty on a
+  // rest pose: nothing has flown yet.
+  trail: JoustVec2[];
 };
 
 const toFallen = (
@@ -74,7 +86,8 @@ export const resolveJoustScene = (
       frame: resolveJoustRestFrame(toArena(pins), aim),
       pins,
       fallen: toFallen(arena, lineup, new Set(pins.map((pin) => pin.playerId))),
-      burstPinIndices: []
+      burstPinIndices: [],
+      trail: []
     };
   }
 
@@ -101,7 +114,10 @@ export const resolveJoustScene = (
         (topple) =>
           clampedIndex >= topple.frameIndex && clampedIndex < topple.frameIndex + IMPACT_FRAMES
       )
-      .map((topple) => topple.pinIndex)
+      .map((topple) => topple.pinIndex),
+    trail: lastShot.run.keyframes
+      .slice(Math.max(0, clampedIndex - JOUST_TRAIL_FRAMES), clampedIndex)
+      .map((flown) => readJoustFramePosition(flown, JOUST_SHOOTER_HEAD_INDEX))
   };
 };
 

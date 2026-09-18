@@ -109,7 +109,7 @@ test("a barely drawn band does not spend a shot", async ({ page }) => {
 test("switching the shooting team puts the sandbox on that team's lane", async ({ page }) => {
   await page.goto("/dev/minigame/joust");
 
-  await expect(page.getByText("Lane: Open Range")).toBeVisible();
+  await expect(page.getByText("Lane: Two Towers")).toBeVisible();
 
   await page.getByLabel("Whose turn").selectOption("team-beta");
 
@@ -118,7 +118,7 @@ test("switching the shooting team puts the sandbox on that team's lane", async (
 
   await page.getByLabel("Whose turn").selectOption("team-gamma");
 
-  await expect(page.getByText("Lane: Two Towers")).toBeVisible();
+  await expect(page.getByText("Lane: Front Porch")).toBeVisible();
 });
 
 test("the sandbox reset button restores a fresh turn", async ({ page }) => {
