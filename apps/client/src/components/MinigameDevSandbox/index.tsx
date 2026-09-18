@@ -5,8 +5,11 @@ import type {
   MinigameSurfacePhase,
   SerializableValue
 } from "@wingnight/minigames-core";
-import { resolveMinigameDefinition, type MinigameType } from "@wingnight/shared";
+import { Phase, resolveMinigameDefinition, type MinigameType } from "@wingnight/shared";
 
+import { hostCopy } from "../../copy/host";
+import { HostActionBarSurface } from "../HostControlPanel/HostActionBarSurface";
+import { MinigameSurface } from "../HostControlPanel/MinigameSurface";
 import {
   resolveMinigameDevManifest,
   resolveMinigameRendererBundle,
@@ -14,6 +17,7 @@ import {
 } from "../../minigames/registry";
 import { useServerOrigin } from "../../utils/useServerOrigin";
 import { SandboxControls } from "./SandboxControls";
+import { SandboxDeviceFrame } from "./SandboxDeviceFrame";
 import { minigameDevSandboxCopy } from "./copy";
 import * as styles from "./styles";
 
@@ -28,6 +32,26 @@ const navigateToMinigameSandbox = (minigameType: MinigameType): void => {
   const { slug } = resolveMinigameDefinition(minigameType);
 
   window.location.assign(`/dev/minigame/${slug}`);
+};
+
+// What each preview stands in for, in CSS pixels. The host is a 4:3 tablet in
+// landscape (an iPad's 1024×768 logical points); the display is a 1080p TV.
+const HOST_DEVICE = { width: 1024, height: 768 } as const;
+const DISPLAY_DEVICE = { width: 1920, height: 1080 } as const;
+
+// The frame shows the CTA the real shell pins under this phase, so the
+// minigame is judged against the canvas it actually gets. The sandbox has no
+// game to advance, so the button is inert.
+const HOST_SHELL_PHASE_BY_SURFACE_PHASE: Record<MinigameSurfacePhase, Phase> = {
+  intro: Phase.MINIGAME_INTRO,
+  play: Phase.MINIGAME_PLAY
+};
+
+const resolveHostShellCtaLabel = (phase: MinigameSurfacePhase): string => {
+  return hostCopy.primaryActionLabel(HOST_SHELL_PHASE_BY_SURFACE_PHASE[phase], {
+    hasNextRoundTurn: false,
+    hasAdditionalRounds: false
+  });
 };
 
 // Boots the same pure runtime plugin the server drives during a real game,
@@ -118,7 +142,7 @@ export const MinigameDevSandbox = ({
     label: devManifest.teamNameByTeamId[teamId] ?? teamId
   }));
   const teamNameByTeamId = new Map(Object.entries(devManifest.teamNameByTeamId));
-  const { HostSurface, DisplaySurface } = rendererBundle;
+  const { DisplaySurface } = rendererBundle;
 
   return (
     <main className={styles.container}>
@@ -154,7 +178,7 @@ export const MinigameDevSandbox = ({
       />
 
       <section className={styles.previewGrid}>
-        <div className={`${styles.previewCard} ${styles.hostPreviewCard}`}>
+        <div className={styles.previewCard}>
           <header className={styles.previewHeader}>
             <span className={styles.previewHeaderLabel}>
               {minigameDevSandboxCopy.hostPreviewLabel}
@@ -163,22 +187,31 @@ export const MinigameDevSandbox = ({
               {minigameDevSandboxCopy.hostPreviewMetaLabel}
             </span>
           </header>
-          <div className={styles.hostViewport}>
-            <div className={styles.hostViewportSurface}>
-              <HostSurface
-                phase={phase}
-                minigameType={minigameType}
-                minigameHostView={minigameHostView}
-                activeTeamName={activeTeamName}
-                teamNameByTeamId={teamNameByTeamId}
-                canDispatchAction
-                onDispatchAction={handleDispatchAction}
-                serverOrigin={serverOrigin}
+          <SandboxDeviceFrame
+            frameClassName={styles.hostViewport}
+            deviceWidth={HOST_DEVICE.width}
+            deviceHeight={HOST_DEVICE.height}
+          >
+            <div className={styles.hostShell}>
+              <div className={styles.hostCanvas}>
+                <MinigameSurface
+                  phase={phase}
+                  minigameType={minigameType}
+                  minigameHostView={minigameHostView}
+                  activeTeamName={activeTeamName}
+                  teamNameByTeamId={teamNameByTeamId}
+                  canDispatchAction
+                  onDispatchAction={handleDispatchAction}
+                />
+              </div>
+              <HostActionBarSurface
+                nextPhaseDisabled
+                primaryButtonLabel={resolveHostShellCtaLabel(phase)}
               />
             </div>
-          </div>
+          </SandboxDeviceFrame>
         </div>
-        <div className={`${styles.previewCard} ${styles.displayPreviewCard}`}>
+        <div className={styles.previewCard}>
           <header className={styles.previewHeader}>
             <span className={styles.previewHeaderLabel}>
               {minigameDevSandboxCopy.displayPreviewLabel}
@@ -187,8 +220,12 @@ export const MinigameDevSandbox = ({
               {minigameDevSandboxCopy.displayPreviewMetaLabel}
             </span>
           </header>
-          <div className={styles.displayViewport}>
-            <div className={styles.displayViewportSurface}>
+          <SandboxDeviceFrame
+            frameClassName={styles.displayViewport}
+            deviceWidth={DISPLAY_DEVICE.width}
+            deviceHeight={DISPLAY_DEVICE.height}
+          >
+            <div className={styles.displayShell}>
               <DisplaySurface
                 phase={phase}
                 minigameType={minigameType}
@@ -197,7 +234,7 @@ export const MinigameDevSandbox = ({
                 serverOrigin={serverOrigin}
               />
             </div>
-          </div>
+          </SandboxDeviceFrame>
         </div>
       </section>
     </main>
