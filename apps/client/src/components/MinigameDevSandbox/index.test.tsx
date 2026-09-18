@@ -72,3 +72,14 @@ test("offers every registered minigame in the switcher", () => {
   assert.match(html, /<option value="joust" selected="">Slingshlong<\/option>/);
   assert.match(html, /href="\/dev"/);
 });
+
+// The host preview stands in for the tablet, so it carries the shell's pinned
+// CTA for the phase and says which screen it is sized as; a bare surface with
+// no shell around it is how the previews drifted to a different size per game.
+test("frames the host preview as the tablet shell with the phase's inert CTA", () => {
+  const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="TRIVIA" />);
+
+  assert.match(html, /Tablet · 1024 × 768 landscape/);
+  assert.match(html, /TV · 1920 × 1080/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*>End Team Turn<\/button>/);
+});
