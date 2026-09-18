@@ -67,10 +67,6 @@ export const SetupStageBody = ({
     0
   );
   const roundSlots = buildRoundSlots(visibleRounds, fillerRoundCount);
-  const packName =
-    typeof gameConfig?.name === "string" && gameConfig.name.length > 0
-      ? setupStageCopy.packNameValue(gameConfig.name)
-      : setupStageCopy.fallbackPackName;
 
   return (
     <div className={styles.container}>
@@ -90,10 +86,6 @@ export const SetupStageBody = ({
         <div className={styles.headingGlow}>
           <h2 className={styles.heading}>{setupStageCopy.brandLabel}</h2>
         </div>
-        <p className={styles.packName}>
-          <span className={styles.packNameDot} aria-hidden />
-          {packName}
-        </p>
       </div>
 
       <div className={styles.rounds}>

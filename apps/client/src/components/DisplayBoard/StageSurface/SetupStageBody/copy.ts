@@ -3,8 +3,6 @@ import { commonCopy } from "../../../../copy/common";
 export const setupStageCopy = {
   brandLabel: commonCopy.brandLabel,
   eyebrow: "Tonight",
-  fallbackPackName: "Pack loading…",
-  packNameValue: (name: string): string => name,
   formatRoundNumber: (round: number): string =>
     String(round).padStart(2, "0"),
   formatRoundLabel: (label: string): string => label,

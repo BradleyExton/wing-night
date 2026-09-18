@@ -69,6 +69,8 @@ test("renders Cinematic Inferno setup with rounds preview and waiting indicator"
   assert.doesNotMatch(html, /display\/minigames\/trivia-illustration\.svg/);
   assert.doesNotMatch(html, /Tonight at a Glance/);
   assert.doesNotMatch(html, /Pack:/);
+  // The pack-name chip was dropped; the config name reaches no TV surface.
+  assert.doesNotMatch(html, /Fixture Config/);
   assert.doesNotMatch(html, /Live Setup/);
 });
 

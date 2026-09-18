@@ -16,7 +16,7 @@ export const vignette =
 export const grain = "display-grain pointer-events-none absolute inset-0 z-[1]";
 
 // Entrance choreography. Everything mounts hidden and reveals top-down: eyebrow, wordmark,
-// pack, then the round cards in reading order, then the status pill last. Delays live inside
+// then the round cards in reading order, then the status pill last. Delays live inside
 // the shorthand (see Embers/styles.ts for why) and `both` keeps the hidden start state.
 
 export const header =
@@ -39,11 +39,6 @@ export const headingGlow =
   "[filter:drop-shadow(0_0_28px_rgba(251,191,36,0.32))_drop-shadow(0_0_90px_rgba(249,115,22,0.28))]";
 
 export const heading = `setup-wordmark m-0 text-[clamp(3.5rem,9vw,12rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] [animation:heroReveal_900ms_cubic-bezier(0.2,0.7,0.2,1)_120ms_both,shine_9s_ease-in-out_2.4s_infinite] motion-reduce:[animation:none]`;
-
-export const packName = `m-0 inline-flex items-center gap-[0.7em] rounded-full border border-primary/25 bg-bg/45 px-[1.3em] py-[0.5em] text-[clamp(0.9rem,1.2vw,1.4rem)] font-bold uppercase tracking-[0.32em] text-mutedWarm backdrop-blur-sm [box-shadow:inset_0_1px_0_rgba(255,214,170,0.1)] [animation:reveal_700ms_cubic-bezier(0.2,0.7,0.2,1)_280ms_both] motion-reduce:[animation:none]`;
-
-export const packNameDot =
-  "h-[0.45em] w-[0.45em] rounded-full bg-primary [box-shadow:0_0_10px_theme(colors.primary)]";
 
 export const rounds =
   "relative z-[2] grid w-full max-w-[1500px] grid-cols-4 gap-y-[clamp(0.6rem,1.1vw,1.4rem)] gap-x-[clamp(0.7rem,1.3vw,1.6rem)]";

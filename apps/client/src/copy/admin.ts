@@ -14,7 +14,7 @@ export const adminCopy = {
   reviewStepTitle: "Review",
 
   packNameLabel: "Pack name",
-  packNameHint: "Shown on the TV lobby while guests arrive.",
+  packNameHint: "Labels this config for you; no surface shows it.",
 
   roundLabel: (roundNumber: number): string => `Round ${roundNumber}`,
   roundLabelFieldLabel: "Label",
