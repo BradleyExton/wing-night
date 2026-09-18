@@ -1,16 +1,21 @@
+// The strip matches the floor the stage body reserves for it
+// (SetupStageBody/styles `container` padding-bottom), so the birds never walk
+// behind the round cards however tall the lineup gets.
 export const container =
-  "pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[clamp(4rem,9vh,11rem)] overflow-visible";
+  "pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[clamp(6rem,14vh,17rem)] overflow-visible";
 
 export const unassignedFill = "text-mutedWarm";
 
-// Character height, not width, is the legibility knob: 7vh is ~150px on a 4K
-// TV and ~75px at 1080p, both well above the illustration spec's 3% floor.
-// Every lane shares ONE cycle length so the stagger below never drifts into
+// Character height, not width, is the legibility knob: 12vh is ~130px at
+// 1080p and ~240px (the cap) on a 4K TV. The bird is a bobblehead — the head
+// is 44 of its 72 units — so this puts a costume head at roughly 80px at
+// 1080p, which is what it takes to tell whose face it is from the couch;
+// at the old 7vh the heads were coin-sized. Every lane shares ONE cycle length so the stagger below never drifts into
 // a clump: `strut` shows a bird for ~24% of its cycle, and sixteen lanes
 // spaced 4s apart over a 64s cycle keep three or four on screen at a time
 // with the whole cast turning over about once a minute.
 const walkerBase =
-  "absolute bottom-[6%] h-[clamp(3.25rem,7vh,9rem)] will-change-transform motion-safe:[animation:strut_64s_linear_var(--walk-delay,0s)_infinite]";
+  "absolute bottom-[5%] h-[clamp(5rem,12vh,15rem)] will-change-transform motion-safe:[animation:strut_64s_linear_var(--walk-delay,0s)_infinite]";
 
 export const waddle =
   "block h-full motion-safe:[animation:waddle_0.8s_ease-in-out_infinite]";

@@ -1,5 +1,9 @@
+// Three bands, top to bottom: the wordmark, the lineup, and a floor the cast
+// owns. The floor is padding rather than a flex child so the birds
+// (CastWander, absolutely positioned) get a strip nothing else can grow into,
+// and its height is the cast container's — change them together.
 export const container =
-  "relative isolate flex h-full flex-col items-center justify-evenly overflow-hidden px-[clamp(2rem,4vw,4rem)] py-[clamp(1.5rem,3vw,3rem)] text-center";
+  "relative isolate flex h-full flex-col items-center justify-center gap-[clamp(1.25rem,3.5vh,3.5rem)] overflow-hidden px-[clamp(2rem,4vw,4rem)] pb-[clamp(6rem,14vh,17rem)] pt-[clamp(1.5rem,3vw,3rem)] text-center";
 
 // Stacking, back to front: ambient floor glow → heat bloom → flame → embers → vignette
 // and grain → cast (CastWander, above the vignette so team colours stay bright at the
@@ -17,7 +21,7 @@ export const vignette =
 export const grain = "display-grain pointer-events-none absolute inset-0 z-[1]";
 
 // Entrance choreography. Everything mounts hidden and reveals top-down: eyebrow, wordmark,
-// then the round cards in reading order, then the status pill last. Delays live inside
+// then the round cards in reading order, then the corner status pill last. Delays live inside
 // the shorthand (see Embers/styles.ts for why) and `both` keeps the hidden start state.
 
 export const header =
@@ -42,7 +46,7 @@ export const headingGlow =
 export const heading = `setup-wordmark m-0 text-[clamp(3.5rem,9vw,12rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] [animation:heroReveal_900ms_cubic-bezier(0.2,0.7,0.2,1)_120ms_both,shine_9s_ease-in-out_2.4s_infinite] motion-reduce:[animation:none]`;
 
 export const rounds =
-  "relative z-[2] grid w-full max-w-[1500px] grid-cols-4 gap-y-[clamp(0.6rem,1.1vw,1.4rem)] gap-x-[clamp(0.7rem,1.3vw,1.6rem)]";
+  "relative z-[2] grid w-full max-w-[1640px] grid-cols-4 gap-y-[clamp(0.6rem,1.1vw,1.4rem)] gap-x-[clamp(0.7rem,1.3vw,1.6rem)]";
 
 const roundBase = `relative isolate flex flex-col items-center overflow-hidden rounded-[clamp(0.6rem,0.9vw,1.1rem)] px-[clamp(0.8rem,1.1vw,1.2rem)] py-[clamp(0.9rem,1.4vw,1.5rem)] text-center [animation:reveal_700ms_cubic-bezier(0.2,0.7,0.2,1)_var(--reveal-delay,0s)_both] motion-reduce:[animation:none]`;
 
@@ -69,17 +73,37 @@ export const roundRevealDelays: readonly string[] = [
 export const roundWatermark =
   "pointer-events-none absolute -right-[0.06em] -top-[0.18em] z-0 select-none font-mono text-[clamp(3.2rem,5.5vw,7rem)] font-black leading-none tracking-[-0.06em] text-text/[0.06]";
 
-export const roundNum =
-  "relative z-[1] font-mono text-[clamp(0.7rem,0.95vw,1.05rem)] font-extrabold uppercase tracking-[0.32em] text-primary";
+// A lit card has three tiers, not four: one eyebrow line (round number, then
+// its label), the sauce as the headline, the mini-game as a pill. The number
+// and the label used to be two stacked lines of near-equal weight that fought
+// the sauce for the eye; on one line the number is a small primary tag and
+// the label reads as its caption.
+export const roundMeta =
+  "relative z-[1] m-0 flex flex-wrap items-baseline justify-center gap-x-[0.7em] gap-y-[0.2em] text-[clamp(0.72rem,0.95vw,1.1rem)] font-bold uppercase leading-none tracking-[0.18em]";
 
-export const roundLabel =
-  "relative z-[1] mb-2 mt-1 text-[clamp(0.75rem,1vw,1.15rem)] font-bold uppercase tracking-[0.18em] text-mutedWarm";
+export const roundNum = "font-mono font-extrabold tracking-[0.2em] text-primary";
 
+export const roundMetaDot = "h-[0.3em] w-[0.3em] self-center rounded-full bg-primary/60";
+
+export const roundLabel = "text-mutedWarm";
+
+// An open slot's eyebrow: same line, but the "Round 07: Open Slot" tag has no
+// primary — the seat is empty, so nothing about it should glow.
+export const roundNumMuted =
+  "relative z-[1] font-mono text-[clamp(0.7rem,0.9vw,1rem)] font-extrabold uppercase leading-none tracking-[0.28em] text-mutedWarm/80";
+
+// The instruction is a footnote, not a headline: sentence case, no tracking,
+// dim, and well under the sauce size so six lit sauces stay the loud thing.
+export const roundPlaceholderSummary =
+  "relative z-[1] mx-auto mb-0 mt-[0.5em] max-w-[16em] text-[clamp(0.78rem,1vw,1.15rem)] font-medium leading-snug text-mutedWarmDim";
+
+// Sized so the longest sample sauce ("Classic Buffalo") holds one line in a
+// four-up card at 1080p; the two-word habaneros may still break, on purpose.
 export const sauce =
-  "relative z-[1] m-0 text-[clamp(1.2rem,2vw,2.8rem)] font-black uppercase leading-[0.95] tracking-[-0.005em] text-text [text-shadow:0_0_18px_rgba(249,115,22,0.45),0_2px_0_rgba(0,0,0,0.4)]";
+  "relative z-[1] mb-0 mt-[0.45em] text-[clamp(1.2rem,1.85vw,2.6rem)] font-black uppercase leading-[0.95] tracking-[-0.005em] text-text [text-shadow:0_0_18px_rgba(249,115,22,0.45),0_2px_0_rgba(0,0,0,0.4)]";
 
 export const sauceMuted =
-  "relative z-[1] m-0 text-[clamp(1.2rem,2vw,2.8rem)] font-black uppercase leading-[0.95] tracking-[-0.005em] text-mutedWarmDim";
+  "relative z-[1] mb-0 mt-[0.35em] text-[clamp(1.2rem,1.85vw,2.6rem)] font-black uppercase leading-[0.95] tracking-[-0.005em] text-mutedWarmDim/60";
 
 export const minigame =
   "relative z-[1] mt-[0.8em] inline-flex items-center gap-[0.55em] rounded-full border border-text/10 bg-text/[0.05] px-[0.95em] py-[0.38em] text-[clamp(0.68rem,0.9vw,1rem)] font-bold uppercase tracking-[0.2em] text-mutedWarm";
@@ -88,16 +112,22 @@ export const minigameDot =
   "h-[0.5em] w-[0.5em] rounded-full bg-primary/85 [box-shadow:0_0_8px_rgba(249,115,22,0.7)]";
 
 export const additionalRounds =
-  "relative z-[2] mt-2 text-[clamp(0.85rem,1.1vw,1.2rem)] font-bold uppercase tracking-[0.28em] text-mutedWarmDim";
+  "relative z-[2] -mt-2 text-[clamp(0.85rem,1.1vw,1.2rem)] font-bold uppercase tracking-[0.28em] text-mutedWarmDim";
 
-// Dark pill keeps the status legible where it crosses the flame's bright core.
-export const waiting = `relative z-[2] inline-flex items-center gap-[0.8em] rounded-full border border-primary/30 bg-bg/70 px-[1.5em] py-[0.7em] text-[clamp(0.85rem,1.1vw,1.2rem)] font-bold uppercase tracking-[0.32em] text-mutedWarm backdrop-blur-md [box-shadow:0_0_40px_rgba(249,115,22,0.18),inset_0_1px_0_rgba(255,214,170,0.1)] [animation:reveal_700ms_cubic-bezier(0.2,0.7,0.2,1)_900ms_both] motion-reduce:[animation:none]`;
+// The room's status lives in the top-left corner as the twin of the
+// now-playing pill in the top-right (NowPlayingSurface/styles): same insets,
+// same glass, same badge size, so the two read as one top line and the
+// centre of the screen belongs to the wordmark and the lineup alone. It used
+// to sit in the flow under the cards, where a status line competed with the
+// content it was reporting on.
+export const waiting = `pointer-events-none absolute left-4 top-2 z-[3] inline-flex items-center gap-[clamp(0.5rem,0.85vw,0.95rem)] rounded-full border border-primary/30 bg-[linear-gradient(120deg,rgba(46,22,9,0.88)_0%,rgba(18,18,18,0.86)_72%)] py-[clamp(0.3rem,0.55vh,0.5rem)] pl-[clamp(0.4rem,0.55vw,0.6rem)] pr-[clamp(0.9rem,1.3vw,1.4rem)] text-[clamp(0.7rem,0.8vw,1.05rem)] font-extrabold uppercase leading-none tracking-[0.26em] text-mutedWarm backdrop-blur-[6px] [box-shadow:0_14px_34px_-18px_rgba(0,0,0,0.95),0_0_22px_-8px_rgba(249,115,22,0.35),inset_0_1px_0_rgba(255,214,170,0.14)] [animation:reveal_700ms_cubic-bezier(0.2,0.7,0.2,1)_900ms_both] motion-reduce:[animation:none] md:left-8 md:top-4 2xl:left-12`;
 
+// The beacon sits in the same lit badge as the equalizer across the screen.
 export const waitingBeacon =
-  "relative flex h-[0.8em] w-[0.8em] items-center justify-center";
+  "relative flex h-[clamp(1.5rem,1.7vw,2.3rem)] w-[clamp(1.5rem,1.7vw,2.3rem)] flex-none items-center justify-center rounded-full border border-primary/35 bg-primary/12 [box-shadow:0_0_16px_rgba(249,115,22,0.28),inset_0_1px_0_rgba(255,214,170,0.14)]";
 
 export const waitingRing =
-  "absolute inset-0 rounded-full bg-primary/60 [animation:radar_2.2s_cubic-bezier(0,0,0.2,1)_infinite] motion-reduce:hidden";
+  "absolute left-1/2 top-1/2 h-[38%] w-[38%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/60 [animation:radar_2.2s_cubic-bezier(0,0,0.2,1)_infinite] motion-reduce:hidden";
 
 export const waitingDot =
-  "relative h-[0.7em] w-[0.7em] rounded-full bg-primary [box-shadow:0_0_12px_theme(colors.primary),0_0_24px_rgba(249,115,22,0.6)]";
+  "relative h-[34%] w-[34%] rounded-full bg-primary [box-shadow:0_0_12px_theme(colors.primary),0_0_24px_rgba(249,115,22,0.6)]";

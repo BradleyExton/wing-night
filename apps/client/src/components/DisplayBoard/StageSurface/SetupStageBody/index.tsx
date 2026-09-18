@@ -88,6 +88,14 @@ export const SetupStageBody = ({
       <span className={styles.grain} aria-hidden />
       <CastWander players={players} teams={teams} teamThemeByTeamId={teamThemeByTeamId} />
 
+      <p className={styles.waiting}>
+        <span className={styles.waitingBeacon} aria-hidden>
+          <span className={styles.waitingRing} />
+          <span className={styles.waitingDot} />
+        </span>
+        {setupStageCopy.waitingForTeamsLabel}
+      </p>
+
       <div className={styles.header}>
         <div className={styles.eyebrowRow}>
           <span className={styles.eyebrowRuleLeft} aria-hidden />
@@ -113,11 +121,14 @@ export const SetupStageBody = ({
                 <span className={styles.roundWatermark} aria-hidden>
                   {setupStageCopy.formatRoundNumber(round.round)}
                 </span>
-                <span className={styles.roundNum}>
-                  {setupStageCopy.placeholderRoundNumber(round.round)}
-                </span>
-                <p className={styles.roundLabel}>
-                  {setupStageCopy.formatRoundLabel(round.label)}
+                <p className={styles.roundMeta}>
+                  <span className={styles.roundNum}>
+                    {setupStageCopy.formatRoundNumber(round.round)}
+                  </span>
+                  <span className={styles.roundMetaDot} aria-hidden />
+                  <span className={styles.roundLabel}>
+                    {setupStageCopy.formatRoundLabel(round.label)}
+                  </span>
                 </p>
                 <p className={styles.sauce}>
                   {setupStageCopy.formatSauce(round.sauce)}
@@ -137,16 +148,16 @@ export const SetupStageBody = ({
               <span className={styles.roundWatermark} aria-hidden>
                 {setupStageCopy.formatRoundNumber(slot.roundNumber)}
               </span>
-              <span className={styles.roundNum}>
+              <span className={styles.roundNumMuted}>
                 {setupStageCopy.placeholderRoundNumber(slot.roundNumber)}
                 {setupStageCopy.placeholderRoundSeparator}{" "}
                 {setupStageCopy.placeholderRoundLabel}
               </span>
-              <p className={styles.roundLabel}>
-                {setupStageCopy.placeholderRoundSummary}
-              </p>
               <p className={styles.sauceMuted}>
                 {setupStageCopy.placeholderRoundDash}
+              </p>
+              <p className={styles.roundPlaceholderSummary}>
+                {setupStageCopy.placeholderRoundSummary}
               </p>
             </article>
           );
@@ -158,14 +169,6 @@ export const SetupStageBody = ({
           {setupStageCopy.additionalRoundsLabel(hiddenRoundCount)}
         </p>
       )}
-
-      <p className={styles.waiting}>
-        <span className={styles.waitingBeacon} aria-hidden>
-          <span className={styles.waitingRing} />
-          <span className={styles.waitingDot} />
-        </span>
-        {setupStageCopy.waitingForTeamsLabel}
-      </p>
     </div>
   );
 };

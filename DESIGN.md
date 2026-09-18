@@ -145,12 +145,22 @@ spends its motion budget. Built direction: the "Turbulent" hearth
 -   The wordmark carries the light: white with a warm foot via `background-clip: text`, with an
     ember band that sweeps through every few seconds. Its glow is a `drop-shadow` on a wrapper,
     never a `text-shadow` (which shows straight through clipped text).
+-   The lobby is full-bleed: the flame, vignette and cast are the frame, so the stage carries no
+    inset of its own (the other phases keep theirs on `StageSurface`'s canvas). Anything that
+    reads as a border around the hearth is a bug.
+-   Three bands, top to bottom: the wordmark, the lineup, and a floor the cast owns. The floor is
+    reserved space (`SetupStageBody` padding matched to the `CastWander` strip), so the birds
+    never walk behind the cards.
 -   Round cards are warm glass: a hairline `ember` rule along the top edge, a faint glow pooling
-    under it, a large embossed round number, the sauce as the headline and the mini-game as a
-    pill. Open slots keep the same footprint but go dashed and dim.
--   Entrance choreography on mount only: eyebrow → wordmark → pack → cards in reading order →
-    the live status pill, ~1s end to end. Everything infinite honours `prefers-reduced-motion`
-    per §8.
+    under it, a large embossed round number, and three tiers of type — one eyebrow line (the
+    round number as a small `primary` mono tag, then its label), the sauce as the headline, the
+    mini-game as a pill. Open slots keep the same footprint but go dashed and dim: no `primary`
+    anywhere on them, and the instruction is a sentence-case footnote under the dash.
+-   The room's status ("Waiting for teams") is a pill in the top-left corner, the twin of the
+    now-playing pill in the top-right (§2.2A): same insets, same glass, same badge. The two read
+    as one top line and the centre of the screen belongs to the wordmark and the lineup.
+-   Entrance choreography on mount only: eyebrow → wordmark → cards in reading order → the corner
+    status pill, ~1s end to end. Everything infinite honours `prefers-reduced-motion` per §8.
 -   Accent budget: `primary` plus the flame's own gradient. `gold` appears only inside the flame
     and the wordmark's sweep, never as UI chrome.
 
@@ -423,7 +433,10 @@ edge all come off one table and can never drift onto different hues.
     wears nothing.
 -   **Lobby strut.** On SETUP the cast takes turns at the foot of the stage in
     authored CSS lanes (`SetupStageBody/CastWander`), `z-1` behind the lobby
-    content and above the flame, exactly as the embers do. Only three or four
+    content and above the flame, exactly as the embers do. A bird stands
+    ~12vh tall (about 130px at 1080p): the head is the identity and the
+    costume head is a bobblehead, so anything shorter turns faces back into
+    coins. Only three or four
     birds are out at once — one pops up, struts a short span and back, and
     drops out — so the layer never competes with the lobby content. It is §8 ambient
     motion: `prefers-reduced-motion` leaves the cast standing still.
