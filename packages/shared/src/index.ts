@@ -74,6 +74,7 @@ export type {
   FappyBird,
   FappyFrame,
   FappyGate,
+  FappyKnockedEagle,
   FappyLegCourse,
   FappyLegRun,
   FappyOutcome

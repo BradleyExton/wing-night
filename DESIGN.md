@@ -311,7 +311,8 @@ under the same marquee and deck chrome:
     obstacle is JOUST's cyan champ (`#22c9e6`) standing up from the floor,
     growing and shrinking on a slow bob with its head wiggling. Over some
     gates a bald eagle (dark brown, white head, `#f9a51a` beak) hangs in
-    the sky as the thing to duck under. Each leg takes off from a sand
+    the sky as the thing to duck under (bump one and it tumbles off, gone
+    for the leg). Each leg takes off from a sand
     cliff on the left and lands on one on the right, where the next
     player's bird stands facing the flyer (a gold pennant on the last leg);
     past the plateau a dark rock wall closes the sky. The room already

@@ -1,4 +1,4 @@
-import type { FappyFrame, FappyGate, FappyLegCourse, FappyLegRun } from "../types.js";
+import type { FappyFrame, FappyGate, FappyKnockedEagle, FappyLegCourse, FappyLegRun } from "../types.js";
 import {
   FAPPY_WORLD,
   resolveFappyChampTop,
@@ -17,9 +17,13 @@ import {
  */
 export const createFappyLegStart = (
   gates: readonly FappyGate[] = [],
-  checkpointGate = 0
+  checkpointGate = 0,
+  knockedEagleGates: readonly number[] = []
 ): FappyFrame => {
   const perchGate = gates[Math.min(checkpointGate, gates.length) - 1];
+  // Eagles knocked away on an earlier attempt stay gone; a renderer sees the
+  // -1 and simply never draws them.
+  const knockedEagles: FappyKnockedEagle[] = knockedEagleGates.map((gate) => ({ gate, tick: -1 }));
 
   if (checkpointGate <= 0 || perchGate === undefined) {
     return {
@@ -27,6 +31,7 @@ export const createFappyLegStart = (
       bird: { y: resolveFappyCliffPerchY(), vy: 0 },
       scrollX: 0,
       gatesCleared: 0,
+      knockedEagles,
       outcome: null
     };
   }
@@ -36,24 +41,37 @@ export const createFappyLegStart = (
     bird: { y: resolveFappyPerchY(perchGate), vy: 0 },
     scrollX: perchGate.x + FAPPY_WORLD.gateWidth - FAPPY_WORLD.birdX + FAPPY_WORLD.birdRadius + 2,
     gatesCleared: Math.min(checkpointGate, gates.length),
+    knockedEagles,
     outcome: null
   };
 };
 
-const overlapsGate = (gateScreenX: number, birdY: number, gate: FappyGate, tick: number): boolean => {
+type GateContact = "none" | "champ" | "eagle";
+
+const resolveGateContact = (
+  gateScreenX: number,
+  birdY: number,
+  gate: FappyGate,
+  tick: number,
+  isEagleGone: boolean
+): GateContact => {
   const { birdX, birdRadius, gateWidth } = FAPPY_WORLD;
   const isInColumn =
     birdX + birdRadius > gateScreenX && birdX - birdRadius < gateScreenX + gateWidth;
 
   if (!isInColumn) {
-    return false;
+    return "none";
   }
 
   if (birdY + birdRadius > resolveFappyChampTop(gate, tick)) {
-    return true;
+    return "champ";
   }
 
-  return gate.eagleBottom !== null && birdY - birdRadius < gate.eagleBottom;
+  if (!isEagleGone && gate.eagleBottom !== null && birdY - birdRadius < gate.eagleBottom) {
+    return "eagle";
+  }
+
+  return "none";
 };
 
 /**
@@ -73,8 +91,17 @@ export const stepFappy = (
     return frame;
   }
 
-  const { birdRadius, floorY, gravity, flapVelocity, maxFallVelocity, scrollSpeed, gateWidth, birdX } =
-    FAPPY_WORLD;
+  const {
+    birdRadius,
+    floorY,
+    gravity,
+    flapVelocity,
+    maxFallVelocity,
+    scrollSpeed,
+    gateWidth,
+    birdX,
+    eagleBumpVelocity
+  } = FAPPY_WORLD;
   const vy = didFlap ? flapVelocity : Math.min(frame.bird.vy + gravity, maxFallVelocity);
   let y = frame.bird.y + vy;
   let nextVy = vy;
@@ -111,6 +138,7 @@ export const stepFappy = (
         bird: { y, vy: nextVy },
         scrollX,
         gatesCleared: frame.gatesCleared,
+        knockedEagles: frame.knockedEagles,
         outcome: "crashed"
       };
     }
@@ -121,6 +149,7 @@ export const stepFappy = (
         bird: { y: cliffPerchY, vy: 0 },
         scrollX,
         gatesCleared: Math.max(frame.gatesCleared, gatesPerLeg),
+        knockedEagles: frame.knockedEagles,
         outcome: "cleared"
       };
     }
@@ -132,23 +161,35 @@ export const stepFappy = (
       bird: { y: floorY - birdRadius, vy: nextVy },
       scrollX,
       gatesCleared: frame.gatesCleared,
+      knockedEagles: frame.knockedEagles,
       outcome: "crashed"
     };
   }
 
   let gatesCleared = 0;
+  let knockedEagles = frame.knockedEagles;
 
   for (const gate of gates) {
     const gateScreenX = gate.x - scrollX;
+    const isEagleGone = knockedEagles.some((knocked) => knocked.gate === gate.index);
+    const contact = resolveGateContact(gateScreenX, y, gate, tick, isEagleGone);
 
-    if (overlapsGate(gateScreenX, y, gate, tick)) {
+    if (contact === "champ") {
       return {
         tick,
         bird: { y, vy: nextVy },
         scrollX,
         gatesCleared: frame.gatesCleared,
+        knockedEagles,
         outcome: "crashed"
       };
+    }
+
+    // Bumping an eagle is not a crash: the eagle is knocked out of the sky
+    // for the rest of the leg and the bird is shoved down for its trouble.
+    if (contact === "eagle") {
+      knockedEagles = [...knockedEagles, { gate: gate.index, tick }];
+      nextVy = Math.max(nextVy, eagleBumpVelocity);
     }
 
     if (gateScreenX + gateWidth < birdX - birdRadius) {
@@ -161,6 +202,7 @@ export const stepFappy = (
     bird: { y, vy: nextVy },
     scrollX,
     gatesCleared: Math.max(frame.gatesCleared, gatesCleared),
+    knockedEagles,
     outcome: null
   };
 };
@@ -206,11 +248,12 @@ export const advanceFappy = (
 export const runFappyLeg = (
   course: FappyLegCourse,
   flapTicks: readonly number[],
-  checkpointGate = 0
+  checkpointGate = 0,
+  knockedEagleGates: readonly number[] = []
 ): FappyLegRun => {
   const gates = resolveFappyGates(course);
   const frame = advanceFappy(
-    createFappyLegStart(gates, checkpointGate),
+    createFappyLegStart(gates, checkpointGate, knockedEagleGates),
     gates,
     course.gatesPerLeg,
     flapTicks,

@@ -25,6 +25,7 @@ const createLeg = (overrides: Partial<FappyMinigameLeg> = {}): FappyMinigameLeg 
     flapTicks: [],
     crashes: 0,
     skipped: false,
+    knockedEagles: [],
     lastRun: null,
     ...overrides
   };

@@ -33,12 +33,23 @@ export type FappyBird = {
 
 export type FappyOutcome = "cleared" | "crashed";
 
+/**
+ * An eagle the bird has bumped out of the sky: which gate's, and the tick it went (`-1` when it
+ * was already gone before this attempt started, so a renderer hides it rather than plays the
+ * knock).
+ */
+export type FappyKnockedEagle = {
+  gate: number;
+  tick: number;
+};
+
 /** Everything the sim knows at one tick. `outcome` is set on the terminal frame and never cleared. */
 export type FappyFrame = {
   tick: number;
   bird: FappyBird;
   scrollX: number;
   gatesCleared: number;
+  knockedEagles: FappyKnockedEagle[];
   outcome: FappyOutcome | null;
 };
 

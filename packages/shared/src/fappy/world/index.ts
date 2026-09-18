@@ -41,6 +41,8 @@ export const FAPPY_WORLD = {
   eagleHeight: 10,
   /** An eagle hangs this much extra sky above the gap, at most, so gaps are not all the same. */
   eagleSlackMax: 8,
+  /** Bumping an eagle shoves the bird down at this speed, on top of knocking the eagle away. */
+  eagleBumpVelocity: 1,
   tickHz: 60,
   gravity: 0.12,
   /** A flap SETS the vertical velocity rather than adding to it, the way the original feels. */

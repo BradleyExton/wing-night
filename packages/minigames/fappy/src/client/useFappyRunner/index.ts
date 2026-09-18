@@ -47,6 +47,8 @@ export const useFappyRunner = ({
   const legStatus = leg?.status ?? null;
   const attempt = leg?.attempt ?? 0;
   const checkpointGate = leg?.checkpointGate ?? 0;
+  const knockedEagles = useMemo(() => leg?.knockedEagles ?? [], [leg]);
+  const knockedEaglesKey = knockedEagles.join(",");
   const gates = useMemo(() => {
     return legIndex === null
       ? []
@@ -54,7 +56,7 @@ export const useFappyRunner = ({
   }, [legIndex, legSeed, gatesPerLeg]);
   const createRun = (): LocalRun => {
     return {
-      frame: createFappyLegStart(gates, checkpointGate),
+      frame: createFappyLegStart(gates, checkpointGate, knockedEagles),
       flapTicks: [],
       startedAtMs: null,
       rafHandle: 0,
@@ -144,11 +146,12 @@ export const useFappyRunner = ({
       stopLoop();
 
       const settled = currentLeg.skipped
-        ? createFappyLegStart(gates, gatesPerLeg)
+        ? createFappyLegStart(gates, gatesPerLeg, knockedEagles)
         : runFappyLeg(
             { seed: legSeed, legIndex: currentLeg.legIndex, gatesPerLeg },
             currentLeg.flapTicks,
-            currentLeg.checkpointGate
+            currentLeg.checkpointGate,
+            currentLeg.knockedEagles
           ).frame;
 
       runRef.current = { ...createRun(), frame: settled, hasEnded: true };
@@ -156,7 +159,7 @@ export const useFappyRunner = ({
     }
 
     return undefined;
-  }, [legIndex, legSeed, legStatus, attempt, checkpointGate, gatesPerLeg]);
+  }, [legIndex, legSeed, legStatus, attempt, checkpointGate, knockedEaglesKey, gatesPerLeg]);
 
   useEffect(() => {
     return (): void => {
@@ -181,7 +184,7 @@ export const useFappyRunner = ({
 
     if (run.startedAtMs === null) {
       run.startedAtMs = performance.now();
-      run.frame = createFappyLegStart(gates, checkpointGate);
+      run.frame = createFappyLegStart(gates, checkpointGate, knockedEagles);
       run.flapTicks = [];
     }
 

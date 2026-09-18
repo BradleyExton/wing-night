@@ -52,6 +52,8 @@ const isLeg = (value: unknown): value is FappyRuntimeLeg => {
     value.flapTicks.every(isNonNegativeInteger) &&
     isNonNegativeInteger(value.crashes) &&
     typeof value.skipped === "boolean" &&
+    Array.isArray(value.knockedEagles) &&
+    value.knockedEagles.every(isNonNegativeInteger) &&
     isRunResultOrNull(value.lastRun)
   );
 };

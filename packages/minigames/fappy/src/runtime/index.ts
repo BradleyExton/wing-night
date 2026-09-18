@@ -49,6 +49,7 @@ const createReadyLeg = (
     flapTicks: [],
     crashes: 0,
     skipped: false,
+    knockedEagles: [],
     lastRun: null
   };
 };
@@ -165,8 +166,11 @@ const endLeg = (
   const run = runFappyLeg(
     { seed: leg.seed, legIndex: leg.legIndex, gatesPerLeg: state.gatesPerLeg },
     leg.flapTicks,
-    leg.checkpointGate
+    leg.checkpointGate,
+    leg.knockedEagles
   );
+  // Whatever the attempt knocked away stays away, whichever way it ended.
+  const knockedEagles = run.frame.knockedEagles.map((knocked) => knocked.gate);
   const lastRun = {
     endTick: run.endTick,
     gatesCleared: run.gatesCleared,
@@ -174,7 +178,7 @@ const endLeg = (
   };
 
   if (run.outcome === "cleared") {
-    return mutated(clearLeg(state, { ...leg, lastRun }, receivedAtMs, pointsMax));
+    return mutated(clearLeg(state, { ...leg, knockedEagles, lastRun }, receivedAtMs, pointsMax));
   }
 
   const crashed: FappyRuntimeState = {
@@ -186,6 +190,7 @@ const endLeg = (
       checkpointGate: Math.max(leg.checkpointGate, run.gatesCleared),
       flapTicks: [],
       crashes: leg.crashes + 1,
+      knockedEagles,
       lastRun
     })
   };

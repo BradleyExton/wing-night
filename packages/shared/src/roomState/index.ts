@@ -306,6 +306,9 @@ export type FappyMinigameLeg = {
   flapTicks: number[];
   crashes: number;
   skipped: boolean;
+  // Gates whose eagle the bird has bumped out of the sky this leg; they stay
+  // gone on every later attempt, which is what makes a bump a mercy.
+  knockedEagles: number[];
   lastRun: FappyLegRunResult | null;
 };
 

@@ -64,7 +64,11 @@ type GateRefs = {
   shaft: SVGRectElement | null;
   head: SVGGElement | null;
   wings: SVGGElement | null;
+  eagle: SVGGElement | null;
 };
+
+// A knocked eagle tumbles up and away for this long, then is gone.
+const EAGLE_EXIT_TICKS = 40;
 
 // One champ standing up from the floor, its head at the top of its reach.
 // The loop grows and shrinks the shaft and moves the head on every frame;
@@ -120,7 +124,7 @@ const Eagle = ({
   const bodyY = eagleBottom - 4;
 
   return (
-    <g data-fappy-eagle>
+    <g data-fappy-eagle ref={(element): void => registerRefs("eagle", element)}>
       <g ref={(element): void => registerRefs("wings", element)}>
         <path
           d={`M ${centreX - 2} ${bodyY} L ${centreX - 9} ${top + 1} L ${centreX - 7} ${top} L ${centreX - 1} ${bodyY - 2.5} Z`}
@@ -218,7 +222,8 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     const registerGateRefs =
       (gateIndex: number) =>
       (part: keyof GateRefs, element: SVGRectElement | SVGGElement | null): void => {
-        const entry = gateRefs.current.get(gateIndex) ?? { shaft: null, head: null, wings: null };
+        const entry =
+          gateRefs.current.get(gateIndex) ?? { shaft: null, head: null, wings: null, eagle: null };
 
         gateRefs.current.set(gateIndex, { ...entry, [part]: element });
       };
@@ -250,6 +255,29 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
           "transform",
           `translate(0 ${(resolveFappyWave(frame.tick, WINGBEAT_PERIOD_TICKS, 0) - 0.5) * WINGBEAT_UNITS})`
         );
+
+        // A bumped eagle tumbles up and off; one bumped on an earlier attempt
+        // (tick -1) is simply not there.
+        if (refs.eagle !== null) {
+          const knocked = frame.knockedEagles.find((entry) => entry.gate === gate.index);
+
+          if (knocked === undefined) {
+            refs.eagle.setAttribute("transform", "");
+            refs.eagle.setAttribute("opacity", "1");
+          } else if (knocked.tick < 0 || frame.tick - knocked.tick > EAGLE_EXIT_TICKS) {
+            refs.eagle.setAttribute("opacity", "0");
+          } else {
+            const gone = frame.tick - knocked.tick;
+            const centreX = gate.x + FAPPY_WORLD.gateWidth / 2;
+            const centreY = (gate.eagleBottom ?? 0) - 4;
+
+            refs.eagle.setAttribute(
+              "transform",
+              `translate(${gone * 1.6} ${-gone * 1.9}) rotate(${gone * 9} ${centreX} ${centreY})`
+            );
+            refs.eagle.setAttribute("opacity", `${Math.max(0, 1 - gone / EAGLE_EXIT_TICKS)}`);
+          }
+        }
       }
 
       if (birdBox !== null) {

@@ -215,6 +215,37 @@ test("does keep the gates an attempt got past as the next attempt's checkpoint",
   assert.equal(view.totalGatesCleared, expected.gatesCleared);
 });
 
+test("does keep an eagle the attempt knocked away gone on the next attempt", () => {
+  const initial = initialize();
+  const leg = hostView(initial).legs[0];
+
+  assert.ok(leg !== undefined);
+
+  // Fly the ceiling: no gap is up there, but an eagle is, on some gate of this course or
+  // the next seed's. Find one, bump it, then fall.
+  const course = { seed: leg.seed, legIndex: 0, gatesPerLeg: RULES.gatesPerLeg };
+  const eagleGate = resolveFappyGates(course).find((gate) => gate.eagleBottom !== null);
+
+  if (eagleGate === undefined) {
+    // This fixture's course happens to hang no eagle; nothing to bump.
+    return;
+  }
+
+  const ceilingLog: number[] = [];
+
+  for (let tick = 0; tick < 400; tick += 1) {
+    ceilingLog.push(tick);
+  }
+
+  const flown = flyLog(initial, ceilingLog, T0);
+  const ended = dispatch(flown, "endLeg", {}, T0 + 7000);
+  const view = hostView(ended.state);
+  const run = runFappyLeg(course, ceilingLog);
+
+  assert.deepEqual(view.legs[0]?.knockedEagles, run.frame.knockedEagles.map((knocked) => knocked.gate));
+  assert.equal(view.legs[0]?.status, run.outcome === "cleared" ? "cleared" : "ready");
+});
+
 test("does hand the tablet on when a leg clears and keep the relay clock", () => {
   const initial = initialize();
   const cleared = clearCurrentLeg(initial, T0);
@@ -312,7 +343,11 @@ test("does reset the turn to the start line with the points it started with", ()
   assert.equal(view.phase, "ready");
   assert.equal(view.startedAtMs, null);
   assert.equal(view.finishedAtMs, null);
-  assert.ok(view.legs.every((leg) => leg.status === "ready" && leg.attempt === 0 && leg.crashes === 0));
+  assert.ok(
+    view.legs.every(
+      (leg) => leg.status === "ready" && leg.attempt === 0 && leg.crashes === 0 && leg.knockedEagles.length === 0
+    )
+  );
   assert.deepEqual(view.legs.map((leg) => leg.playerId), ["alex", "morgan"]);
   assert.equal(view.pendingPointsByTeamId["team-alpha"], 2);
 });

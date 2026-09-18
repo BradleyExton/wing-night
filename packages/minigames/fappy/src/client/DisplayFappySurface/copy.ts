@@ -2,7 +2,7 @@ export const displayFappySurfaceCopy = {
   title: "Fappy Bird",
   introTitle: "Fappy Bird",
   introDescription:
-    "Your team's chickens fly a relay through a corridor of champs, against one clock. One player per section: tap to flap, land on the far cliff where the next bird is waiting, hand the tablet over. The quicker the whole team gets through, the more points.",
+    "Your team's chickens fly a relay through a corridor of champs, against one clock. One player per section: tap to flap, knock the eagles out of your way, land on the far cliff where the next bird is waiting, hand the tablet over. The quicker the whole team gets through, the more points.",
   waitingLabel: "Waiting for the relay to start…",
   sceneLabel: (playerName: string | null): string =>
     playerName === null ? "The corridor" : `The corridor — ${playerName}'s bird`,

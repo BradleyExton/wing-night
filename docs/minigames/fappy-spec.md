@@ -66,6 +66,9 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
   belongs to `playerIds[k % playerIds.length]`; a team with no roster flies the drawn hen.
 - **A crash costs time, never points.** The bird respawns on the perch of the last gate it
   cleared in that leg, hovering, waiting for a tap. The clock does not stop.
+- **Eagles are a bump, not a crash.** Hitting one knocks it out of the sky for the rest of the
+  leg (every later attempt too) and shoves the bird down. Only the champs, the sand and the
+  cliffs kill. Brad's call, to make the corridor kinder.
 - **Landing is the handoff.** A leg is cleared by coming down on the landing cliff's
   plateau, not by passing its last gate. The next player's bird stands in the middle of that
   plateau facing the flyer; on the last leg a flag stands there instead. Into the cliff's
@@ -108,7 +111,9 @@ above it on a `champPeriodTicks` triangle wave (`resolveFappyChampTop`), and wit
 `stepFappy(frame, gates, gatesPerLeg, didFlap)` is the whole physics: gravity, flap sets `vy`,
 ceiling clamps, the start cliff (to `startCliffEnd`) holds the bird up, floor kills, the
 champ's head at this tick kills, an eagle kills, a gate counts once its trailing edge is
-behind the bird, and at the landing cliff (`resolveFappyLandingX`, `landingCliffGap` past the
+behind the bird, an eagle bumped is knocked away (`knockedEagles` on the frame, carried into
+the next attempt's start with tick `-1`) and the bird shoved down `eagleBumpVelocity`, and at
+the landing cliff (`resolveFappyLandingX`, `landingCliffGap` past the
 last gate) the face below `cliffTop` kills, the wall past `landingZoneWidth` kills, and coming
 below `cliffTop` over the plateau ends the leg `cleared`. `createFappyLegStart(gates,
 checkpointGate)` starts an attempt standing on the start cliff, or on the perch of gate
@@ -133,6 +138,7 @@ type FappyMinigameLeg = {
   flapTicks: number[];          // this attempt's log; the display re-runs the sim from it
   crashes: number;
   skipped: boolean;
+  knockedEagles: number[];      // gates whose eagle is gone for the rest of the leg
   lastRun: { endTick; gatesCleared; outcome: "cleared" | "crashed" } | null;
 };
 
@@ -242,6 +248,7 @@ leg 1 and the idle clock.
 - **Physics constants** were tuned once from a sandbox flight: a flap lifts about a third
   of the gap (`flapVelocity: -1.6`, `gravity: 0.12`), the corridor scrolls at `0.95` units a
   tick with gates `66` apart, the first gate at `150`. All in `FAPPY_WORLD`; retune at a table.
+- **Eagles became a bump on the third play**: hitting one knocks it away instead of crashing.
 - **Cliffs came in on the second play.** Brad's note: the handoff should not pause on a
   banner; the flyer should have to land where the next bird is waiting. So the leg ends on
   the landing plateau, the waiter stands in its middle, and the banners went.

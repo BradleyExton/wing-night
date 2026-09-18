@@ -46,6 +46,8 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
   const legStatus = leg?.status ?? null;
   const attempt = leg?.attempt ?? 0;
   const checkpointGate = leg?.checkpointGate ?? 0;
+  const knockedEagles = useMemo(() => leg?.knockedEagles ?? [], [leg]);
+  const knockedEaglesKey = knockedEagles.join(",");
   const isSkipped = leg?.skipped ?? false;
   const flapTicks = useMemo(() => leg?.flapTicks ?? [], [leg]);
   const flapLogKey = flapTicks.join(",");
@@ -68,7 +70,7 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
     const holdStart = (): void => {
       stopLoop();
       run.startedAtMs = null;
-      run.frame = createFappyLegStart(gates, checkpointGate);
+      run.frame = createFappyLegStart(gates, checkpointGate, knockedEagles);
       sceneRef.current?.paint(run.frame);
     };
 
@@ -82,7 +84,7 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
     if (legStatus === "cleared" && isSkipped) {
       stopLoop();
       run.startedAtMs = null;
-      run.frame = createFappyLegStart(gates, gatesPerLeg);
+      run.frame = createFappyLegStart(gates, gatesPerLeg, knockedEagles);
       sceneRef.current?.paint(run.frame);
       return stopLoop;
     }
@@ -91,14 +93,14 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
     // less motion still gets the landing, just without the flight.
     if (legStatus === "cleared" && (prefersReducedMotion() || run.startedAtMs === null)) {
       stopLoop();
-      run.frame = runFappyLeg(course, flapTicks, checkpointGate).frame;
+      run.frame = runFappyLeg(course, flapTicks, checkpointGate, knockedEagles).frame;
       sceneRef.current?.paint(run.frame);
       return stopLoop;
     }
 
     if (run.startedAtMs === null) {
       run.startedAtMs = performance.now();
-      run.frame = createFappyLegStart(gates, checkpointGate);
+      run.frame = createFappyLegStart(gates, checkpointGate, knockedEagles);
     }
 
     const resolveTargetTick = (now: number): number => {
@@ -111,7 +113,7 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
     // The log changed under a running mirror: rebuild the frame from the top
     // with the log as it now is, up to where the clock says we are.
     run.frame = advanceFappy(
-      createFappyLegStart(gates, checkpointGate),
+      createFappyLegStart(gates, checkpointGate, knockedEagles),
       gates,
       gatesPerLeg,
       flapTicks,
@@ -140,5 +142,5 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
     run.rafHandle = window.requestAnimationFrame(step);
 
     return stopLoop;
-  }, [legIndex, legSeed, legStatus, attempt, checkpointGate, isSkipped, flapLogKey, gates, gatesPerLeg, sceneRef]);
+  }, [legIndex, legSeed, legStatus, attempt, checkpointGate, knockedEaglesKey, isSkipped, flapLogKey, gates, gatesPerLeg, sceneRef]);
 };

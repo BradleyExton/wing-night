@@ -135,7 +135,7 @@ const resolveFappyBriefingContent = (
       "Your chickens fly a relay through a corridor of champs, against one clock. Get the whole team through, fast.",
     steps: [
       `${legsPerTurn} leg${legsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order.`,
-      `Tap anywhere on the tablet to flap through your ${gatesPerLeg} gates. Crash and you go again from your last gate.`,
+      `Tap anywhere on the tablet to flap through your ${gatesPerLeg} gates. Eagles get knocked out of the way; a champ or the sand sends you back to your last gate.`,
       "Land your section and hand the tablet on. The faster the team finishes, the more points."
     ]
   };

@@ -151,15 +151,42 @@ test("does crash into the champ's head when the bird is too low at the column", 
   assert.equal(frame.gatesCleared, 0);
 });
 
-test("does crash into the eagle when the bird is too high under one", () => {
+test("does knock an eagle out of the sky instead of crashing when the bird bumps it", () => {
   const eagleGates = gates.map((gate, index) => (index === 0 ? { ...gate, eagleBottom: 20 } : gate));
+  const cap = ticksUntilScroll(eagleGates[0]!.x - FAPPY_WORLD.birdX) + 5;
   let frame = createFappyLegStart();
 
-  for (let tick = 0; tick < ticksUntilScroll(eagleGates[0]!.x - FAPPY_WORLD.birdX); tick += 1) {
+  while (frame.knockedEagles.length === 0 && frame.tick < cap) {
     frame = stepPinned(frame, 20 - FAPPY_WORLD.birdRadius + 1, eagleGates);
   }
 
-  assert.equal(frame.outcome, "crashed");
+  assert.equal(frame.outcome, null);
+  assert.deepEqual(frame.knockedEagles, [{ gate: eagleGates[0]!.index, tick: frame.tick }]);
+  assert.ok(frame.tick > 0 && frame.tick < cap);
+  assert.equal(frame.bird.vy, FAPPY_WORLD.eagleBumpVelocity);
+
+  // The eagle is gone: the same line through the column is clear air now.
+  const again = stepFappy({ ...frame, bird: { y: 20 - FAPPY_WORLD.birdRadius + 1, vy: 0 } }, eagleGates, course.gatesPerLeg, false);
+
+  assert.equal(again.outcome, null);
+  assert.equal(again.knockedEagles.length, 1);
+});
+
+test("does keep an eagle gone on the next attempt and hide it rather than replay the knock", () => {
+  const eagleGates = gates.map((gate, index) => (index === 1 ? { ...gate, eagleBottom: 20 } : gate));
+  const start = createFappyLegStart(eagleGates, 1, [eagleGates[1]!.index]);
+
+  assert.deepEqual(start.knockedEagles, [{ gate: eagleGates[1]!.index, tick: -1 }]);
+
+  let frame = start;
+
+  while (frame.gatesCleared < 2 && frame.outcome === null) {
+    frame = stepPinned(frame, 20 - FAPPY_WORLD.birdRadius + 1, eagleGates);
+  }
+
+  assert.equal(frame.outcome, null);
+  assert.equal(frame.gatesCleared, 2);
+  assert.equal(frame.knockedEagles.length, 1);
 });
 
 // A pinned flight down the whole corridor: on the gap centres through the gates,
