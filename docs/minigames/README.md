@@ -26,9 +26,10 @@ Last updated: 2026-09-18
 | Read the Room | idea | promising | [ideas/read-the-room.md](ideas/read-the-room.md) |
 | ANAMORPH | idea | promising | [ideas/anamorph.md](ideas/anamorph.md) |
 | CONTRAPTION | idea | promising | [ideas/contraption.md](ideas/contraption.md) |
+| Photo Codenames | idea | promising | [ideas/photo-codenames.md](ideas/photo-codenames.md) — blocked on the photo library, [ADR-0004](../adr/ADR-0004-shared-photo-library.md) |
 | SEAR | spec | ready | [sear-spec.md](sear-spec.md) (build plan in §0; runtime not started) |
 
-Target: **at least 8 games**. Current: 7 shipped, 2 spec'd, 3 ideas → 12 concepts, target covered.
+Target: **at least 8 games**. Current: 7 shipped, 2 spec'd, 4 ideas → 13 concepts, target covered.
 
 ANAMORPH and CONTRAPTION were added to close a specific gap: every other game on this
 list is words, recall, or expression, and none of them make the TV do something the room

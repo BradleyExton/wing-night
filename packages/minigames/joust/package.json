@@ -28,6 +28,7 @@
     "test": "tsx --tsconfig ../../../tsconfig.tsx-runtime.json --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\""
   },
   "dependencies": {
+    "@wingnight/cast": "workspace:*",
     "@wingnight/minigames-core": "workspace:*",
     "@wingnight/shared": "workspace:*"
   },

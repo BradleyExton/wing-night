@@ -5,6 +5,7 @@ import type {
   JoustPrompt
 } from "@wingnight/shared";
 
+import { resolveActiveShooter } from "../lineup/index.js";
 import type { JoustRuntimeContent, JoustRuntimeState } from "../types/index.js";
 
 export const resolveCurrentArena = (
@@ -22,7 +23,7 @@ const toViewArena = (prompt: JoustPrompt): JoustMinigameArena => {
   return {
     id: prompt.id,
     name: prompt.name,
-    targetX: prompt.targetX,
+    perches: prompt.perches.map((perch) => ({ ...perch })),
     obstacles: prompt.obstacles.map((obstacle) => ({ ...obstacle }))
   };
 };
@@ -38,19 +39,32 @@ const toJoustViewFields = (state: JoustRuntimeState, content: JoustRuntimeConten
     pendingPointsByTeamId: { ...state.pendingPointsByTeamId },
     phase: state.phase,
     arena: arena === null ? null : toViewArena(arena),
+    lineup: state.lineup.map((figure) => ({ ...figure })),
+    teammates: state.teammates.map((figure) => ({ ...figure })),
+    downPlayerIds: [...state.downPlayerIds],
+    activeShooterPlayerId:
+      state.phase === "done"
+        ? null
+        : (resolveActiveShooter(state.teammates, state.shotIndex)?.playerId ?? null),
     shotsPerTurn: state.shotsPerTurn,
     shotIndex: state.shotIndex,
     aim: { ...state.aim },
-    shots: state.shots.map((shot) => ({ ...shot })),
+    shots: state.shots.map((shot) => ({
+      ...shot,
+      toppledPlayerIds: [...shot.toppledPlayerIds]
+    })),
     lastShot:
       state.lastShot === null
         ? null
         : {
             ...state.lastShot,
+            toppledPlayerIds: [...state.lastShot.toppledPlayerIds],
+            pinPlayerIds: [...state.lastShot.pinPlayerIds],
             aim: { ...state.lastShot.aim },
             run: {
               ...state.lastShot.run,
-              keyframes: state.lastShot.run.keyframes.map((frame) => [...frame])
+              keyframes: state.lastShot.run.keyframes.map((frame) => [...frame]),
+              topples: state.lastShot.run.topples.map((topple) => ({ ...topple }))
             }
           }
   };

@@ -52,8 +52,6 @@ const renderSurface = (
       minigameDisplayView={minigameDisplayView}
       activeTeamName="Team Heat"
       serverOrigin="http://localhost:3000"
-      players={[]}
-      teams={[]}
     />
   );
 };
@@ -132,8 +130,6 @@ test("renders with no server origin resolved yet", () => {
       minigameDisplayView={clipView("idle")}
       activeTeamName="Team Heat"
       serverOrigin={null}
-      players={[]}
-      teams={[]}
     />
   );
 

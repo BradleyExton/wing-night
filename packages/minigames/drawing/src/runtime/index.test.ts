@@ -32,6 +32,9 @@ const point = (x: number, y: number, t = 0): DrawingPoint => ({ x, y, t });
 const initializeState = (
   overrides: Partial<{
     teamIds: string[];
+    // This game never looks at the roster; JOUST is the one that does.
+    players: [],
+    teams: [],
     activeRoundTeamId: string | null;
     pointsMax: number;
     pendingPointsByTeamId: Record<string, number>;
@@ -40,6 +43,9 @@ const initializeState = (
 ): DrawingRuntimeState => {
   const state = drawingRuntimePlugin.initialize({
     teamIds: overrides.teamIds ?? ["team-1", "team-2"],
+    // This game never looks at the roster; JOUST is the one that does.
+    players: [],
+    teams: [],
     activeRoundTeamId:
       overrides.activeRoundTeamId === undefined
         ? "team-1"

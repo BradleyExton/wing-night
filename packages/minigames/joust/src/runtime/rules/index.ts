@@ -1,6 +1,6 @@
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { DEFAULT_JOUST_SHOTS_PER_TURN, type JoustRuntimeRules } from "../types/index.js";
+import { DEFAULT_JOUST_SHOTS_PER_PLAYER, type JoustRuntimeRules } from "../types/index.js";
 
 const isPositiveInteger = (value: unknown): value is number => {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
@@ -13,23 +13,23 @@ export const isJoustRules = (value: unknown): boolean => {
     return false;
   }
 
-  if (!("shotsPerTurn" in value) || value.shotsPerTurn === undefined) {
+  if (!("shotsPerPlayer" in value) || value.shotsPerPlayer === undefined) {
     return true;
   }
 
-  return isPositiveInteger(value.shotsPerTurn);
+  return isPositiveInteger(value.shotsPerPlayer);
 };
 
 export const resolveJoustRules = (rules: SerializableValue | null): JoustRuntimeRules => {
   if (typeof rules !== "object" || rules === null || Array.isArray(rules)) {
-    return { shotsPerTurn: DEFAULT_JOUST_SHOTS_PER_TURN };
+    return { shotsPerPlayer: DEFAULT_JOUST_SHOTS_PER_PLAYER };
   }
 
   const parsedRules = rules as Partial<JoustRuntimeRules>;
 
   return {
-    shotsPerTurn: isPositiveInteger(parsedRules.shotsPerTurn)
-      ? parsedRules.shotsPerTurn
-      : DEFAULT_JOUST_SHOTS_PER_TURN
+    shotsPerPlayer: isPositiveInteger(parsedRules.shotsPerPlayer)
+      ? parsedRules.shotsPerPlayer
+      : DEFAULT_JOUST_SHOTS_PER_PLAYER
   };
 };

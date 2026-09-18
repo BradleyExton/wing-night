@@ -4,11 +4,12 @@ import type {
   JoustBodyDescriptor,
   JoustFrame,
   JoustObstacle,
+  JoustPerch,
   JoustVec2
 } from "../types.js";
 
 /**
- * The fixed geometry every arena shares. World units are arbitrary; the renderer maps the
+ * The fixed geometry every lane shares. World units are arbitrary; the renderer maps the
  * 160×90 box onto a 16:9 viewport, y grows downward like a screen, and the floor is a line a
  * little above the bottom edge so a body can visibly rest on it.
  */
@@ -36,36 +37,33 @@ const SHOOTER_SPACING = 3;
 const SHOOTER_SHAFT_RADIUS = 2.3;
 const SHOOTER_HEAD_RADIUS = 3.3;
 const SHOOTER_BALL_RADIUS = 2.5;
-const CHAMP_SPACING = 3.4;
-const CHAMP_SHAFT_RADIUS = 2.5;
-const CHAMP_HEAD_RADIUS = 3.6;
-const CHAMP_BALL_RADIUS = 2.6;
+
+/**
+ * A pin is two bodies: a foot on the sand and a head on top of it, an upright stick between. The
+ * three numbers are the CAST BIRD's own proportions at lane scale — `@wingnight/cast` says a
+ * hen stands 61 of its units from sole to the middle of a costume head, and that head reads as 22
+ * across — so what the room sees hit is what the integrator hit. The joust client pins that
+ * agreement with a test; changing one of these without the other three is a bug.
+ */
+export const JOUST_PIN_FOOT_RADIUS = 1.6;
+export const JOUST_PIN_HEAD_RADIUS = 4.2;
+export const JOUST_PIN_HEIGHT = 11.6;
 
 export const JOUST_SHOOTER_SHAFT_COUNT = 5;
-export const JOUST_CHAMP_SHAFT_COUNT = 5;
 
 const shooterShaft: JoustBodyDescriptor = {
   kind: "shooter-shaft",
   radius: SHOOTER_SHAFT_RADIUS
 };
-const champShaft: JoustBodyDescriptor = {
-  kind: "champ-shaft",
-  radius: CHAMP_SHAFT_RADIUS
-};
+const pinFoot: JoustBodyDescriptor = { kind: "pin-foot", radius: JOUST_PIN_FOOT_RADIUS };
+const pinHead: JoustBodyDescriptor = { kind: "pin-head", radius: JOUST_PIN_HEAD_RADIUS };
 
-/**
- * The one body order every frame, every renderer and the integrator agree on. Shooter first
- * (tail → head, then the two balls), then the champ (base → head, then its balls).
- */
-export const JOUST_BODIES: readonly JoustBodyDescriptor[] = Object.freeze([
+/** The shooter's own bodies, tail → head, then the two balls hung off the tail. */
+const JOUST_SHOOTER_BODIES: readonly JoustBodyDescriptor[] = Object.freeze([
   ...Array.from({ length: JOUST_SHOOTER_SHAFT_COUNT }, () => shooterShaft),
   { kind: "shooter-head", radius: SHOOTER_HEAD_RADIUS },
   { kind: "shooter-ball", radius: SHOOTER_BALL_RADIUS },
-  { kind: "shooter-ball", radius: SHOOTER_BALL_RADIUS },
-  ...Array.from({ length: JOUST_CHAMP_SHAFT_COUNT }, () => champShaft),
-  { kind: "champ-head", radius: CHAMP_HEAD_RADIUS },
-  { kind: "champ-ball", radius: CHAMP_BALL_RADIUS },
-  { kind: "champ-ball", radius: CHAMP_BALL_RADIUS }
+  { kind: "shooter-ball", radius: SHOOTER_BALL_RADIUS }
 ]);
 
 export const JOUST_SHOOTER_HEAD_INDEX = JOUST_SHOOTER_SHAFT_COUNT;
@@ -73,14 +71,260 @@ export const JOUST_SHOOTER_BALL_INDICES = [
   JOUST_SHOOTER_HEAD_INDEX + 1,
   JOUST_SHOOTER_HEAD_INDEX + 2
 ] as const;
-export const JOUST_SHOOTER_BODY_COUNT = JOUST_SHOOTER_HEAD_INDEX + 3;
-export const JOUST_CHAMP_BASE_INDEX = JOUST_SHOOTER_BODY_COUNT;
-export const JOUST_CHAMP_HEAD_INDEX = JOUST_CHAMP_BASE_INDEX + JOUST_CHAMP_SHAFT_COUNT;
-export const JOUST_CHAMP_BALL_INDICES = [
-  JOUST_CHAMP_HEAD_INDEX + 1,
-  JOUST_CHAMP_HEAD_INDEX + 2
-] as const;
-export const JOUST_BODY_COUNT = JOUST_BODIES.length;
+export const JOUST_SHOOTER_BODY_COUNT = JOUST_SHOOTER_BODIES.length;
+
+/** Where pin `pinIndex`'s foot sits in a frame; its head is the very next body. */
+export const joustPinFootIndex = (pinIndex: number): number => {
+  return JOUST_SHOOTER_BODY_COUNT + pinIndex * 2;
+};
+
+export const joustPinHeadIndex = (pinIndex: number): number => {
+  return joustPinFootIndex(pinIndex) + 1;
+};
+
+/**
+ * The one body order every frame, every renderer and the integrator agree on: the shooter,
+ * then a foot/head pair per standing pin in lane order. The length follows the rack, so a turn
+ * that has already felled four players simulates four bodies lighter.
+ */
+export const resolveJoustBodies = (pinCount: number): readonly JoustBodyDescriptor[] => {
+  const safeCount = Math.max(0, Math.trunc(pinCount));
+
+  return [
+    ...JOUST_SHOOTER_BODIES,
+    ...Array.from({ length: safeCount * 2 }, (_unused, index) =>
+      index % 2 === 0 ? pinFoot : pinHead
+    )
+  ];
+};
+
+/** Nearest the slingshot a perch may reach, and the last column that keeps a bird fully on screen. */
+export const JOUST_RACK_LEFT = JOUST_WORLD.anchor.x + 14;
+export const JOUST_RACK_RIGHT = JOUST_WORLD.width - 4;
+/** The highest a perch may lift a player: any higher and their head leaves the world. */
+export const JOUST_RACK_TOP = 22;
+
+/** A perch's own timber: the slab birds stand on, and the two legs holding it up. */
+export const JOUST_PERCH_THICKNESS = 3;
+export const JOUST_PERCH_LEG_WIDTH = 2.6;
+/** Legs hug the slab's ends, so the span between them is all standing room. */
+export const JOUST_PERCH_LEG_INSET = 0.4;
+/** How far a player's feet stay from the end of their own shelf. */
+export const JOUST_PERCH_MARGIN = JOUST_PIN_HEAD_RADIUS + 1;
+/**
+ * The gap between neighbours in an uncrowded rack: a shade wider than a bird's head, so a full
+ * lane is shoulder to shoulder without anyone standing inside anyone else.
+ */
+export const JOUST_PIN_SPACING = 9;
+
+/** A perch at floor level IS the sand; anything higher is built, and what is built is solid. */
+export const isGroundPerch = (perch: JoustPerch): boolean => {
+  return perch.y >= JOUST_WORLD.floorY - 0.001;
+};
+
+/**
+ * The timber one perch is made of, as collision boxes. Generated rather than authored so a lane
+ * cannot draw a platform that a shot passes straight through — and so the legs are solid too,
+ * which is what makes a low flat shot something you have to thread rather than spam.
+ */
+export const resolvePerchBoxes = (perch: JoustPerch): JoustObstacle[] => {
+  if (isGroundPerch(perch)) {
+    return [];
+  }
+
+  const slab: JoustObstacle = {
+    x: perch.x,
+    y: perch.y,
+    width: perch.width,
+    height: JOUST_PERCH_THICKNESS
+  };
+  const legTop = perch.y + JOUST_PERCH_THICKNESS;
+  const legHeight = JOUST_WORLD.floorY - legTop;
+
+  if (legHeight <= 0) {
+    return [slab];
+  }
+
+  return [
+    slab,
+    {
+      x: perch.x + JOUST_PERCH_LEG_INSET,
+      y: legTop,
+      width: JOUST_PERCH_LEG_WIDTH,
+      height: legHeight
+    },
+    {
+      x: perch.x + perch.width - JOUST_PERCH_LEG_INSET - JOUST_PERCH_LEG_WIDTH,
+      y: legTop,
+      width: JOUST_PERCH_LEG_WIDTH,
+      height: legHeight
+    }
+  ];
+};
+
+const overlaps = (low: number, high: number, boxLow: number, boxHigh: number): boolean => {
+  return low < boxHigh && high > boxLow;
+};
+
+/**
+ * Every spot on one perch a player can actually stand: a row at `JOUST_PIN_SPACING`, which is a
+ * shade wider than a bird's own head, minus any spot a tower's leg is already occupying. Spacing
+ * is never squeezed below that — birds dealt closer than their heads are wide shove each other
+ * over on the first step, and the whole rack comes down before the shot is even fired.
+ */
+export const resolvePerchSlots = (
+  perch: JoustPerch,
+  timber: readonly JoustObstacle[]
+): JoustVec2[] => {
+  const footY = perch.y - JOUST_PIN_FOOT_RADIUS;
+  const first = perch.x + JOUST_PERCH_MARGIN;
+  const last = perch.x + perch.width - JOUST_PERCH_MARGIN;
+  const headY = footY - JOUST_PIN_HEIGHT - JOUST_PIN_HEAD_RADIUS;
+  const slots: JoustVec2[] = [];
+
+  for (let x = first; x <= last + 1e-9; x += JOUST_PIN_SPACING) {
+    const blocked = timber.some((box) =>
+      overlaps(x - JOUST_PIN_HEAD_RADIUS, x + JOUST_PIN_HEAD_RADIUS, box.x, box.x + box.width) &&
+      overlaps(headY, footY, box.y, box.y + box.height)
+    );
+
+    if (!blocked) {
+      slots.push({ x, y: footY });
+    }
+  }
+
+  return slots;
+};
+
+/** Every spot in the whole lane, perch by perch. */
+export const resolveLaneSlots = (perches: readonly JoustPerch[]): JoustVec2[][] => {
+  const timber = perches.flatMap(resolvePerchBoxes);
+
+  return perches.map((perch) => resolvePerchSlots(perch, timber));
+};
+
+/**
+ * What the lane ends up being for a given rack: the structures actually built, and a standing spot
+ * per player. The two come back together because they have to agree — a rack too big for the
+ * lane's shelves is stood on the bare sand instead, and the renderer must not then draw towers
+ * with nobody on them.
+ */
+export type JoustRackLayout = {
+  readonly perches: readonly JoustPerch[];
+  readonly feet: readonly JoustVec2[];
+};
+
+/** The whole floor of the lane, for when the shelves cannot seat the room. */
+const bareGroundPerch = (): JoustPerch => ({
+  x: JOUST_RACK_LEFT,
+  y: JOUST_WORLD.floorY,
+  width: JOUST_RACK_RIGHT - JOUST_RACK_LEFT
+});
+
+/**
+ * A single row across the sand, only as tight as it has to be and never tighter than a bird is
+ * wide. The last resort for a roster bigger than any lane was built for.
+ */
+const crowdedGroundRow = (pinCount: number): JoustVec2[] => {
+  const footY = JOUST_WORLD.floorY - JOUST_PIN_FOOT_RADIUS;
+  // Every inch there is: from just clear of the slingshot to the last column that keeps a head on
+  // screen. Wider than the lane proper, because this is the row that has to hold everybody.
+  const from = JOUST_WORLD.anchor.x + 8;
+  const to = JOUST_WORLD.width - JOUST_PIN_HEAD_RADIUS - 2;
+  const room = to - from;
+  // Never below a bird's own width: two players inside each other shove the whole row over before
+  // the shot is fired, which is worse than one of them standing past the edge.
+  const tightest = JOUST_PIN_HEAD_RADIUS * 2 + 0.2;
+  const spacing =
+    pinCount <= 1 ? 0 : Math.max(tightest, Math.min(JOUST_PIN_SPACING, room / (pinCount - 1)));
+  const span = spacing * (pinCount - 1);
+  const left = from + Math.max(0, room - span) / 2;
+
+  return Array.from({ length: pinCount }, (_unused, index) => ({
+    x: left + index * spacing,
+    y: footY
+  }));
+};
+
+// Taking the MIDDLE of a perch's spots keeps a half-filled shelf looking stood-on rather than
+// shoved against one end.
+const dealAcross = (laneSlots: readonly JoustVec2[][], pinCount: number): JoustVec2[] => {
+  const taken = laneSlots.map(() => 0);
+
+  for (let placed = 0; placed < pinCount; placed += 1) {
+    let emptiest = -1;
+    let bestRatio = Number.POSITIVE_INFINITY;
+
+    for (let index = 0; index < laneSlots.length; index += 1) {
+      const room = laneSlots[index]?.length ?? 0;
+      const here = taken[index] ?? 0;
+
+      if (here >= room) {
+        continue;
+      }
+
+      if (here / room < bestRatio) {
+        bestRatio = here / room;
+        emptiest = index;
+      }
+    }
+
+    if (emptiest === -1) {
+      break;
+    }
+
+    taken[emptiest] = (taken[emptiest] ?? 0) + 1;
+  }
+
+  return laneSlots.flatMap((slots, index) => {
+    const count = taken[index] ?? 0;
+    const from = Math.floor((slots.length - count) / 2);
+
+    return slots.slice(from, from + count);
+  });
+};
+
+/**
+ * Where every player in the rack stands, and on what. Birds are dealt to the perch that is
+ * emptiest relative to its own standing room, so a wide floor takes the crowd, a shelf up top
+ * still gets somebody, and any roster size lands on a lane that looks built rather than lined up.
+ *
+ * A pure function of the FULL lineup: a player felled on shot one leaves their spot behind.
+ */
+export const resolveJoustRackLayout = (
+  perches: readonly JoustPerch[],
+  pinCount: number
+): JoustRackLayout => {
+  const safeCount = Math.max(0, Math.trunc(pinCount));
+
+  if (safeCount === 0) {
+    return { perches, feet: [] };
+  }
+
+  const laneSlots = resolveLaneSlots(perches);
+  const capacity = laneSlots.reduce((total, slots) => total + slots.length, 0);
+
+  if (capacity >= safeCount) {
+    return { perches, feet: dealAcross(laneSlots, safeCount) };
+  }
+
+  const ground = bareGroundPerch();
+  const groundSlots = resolvePerchSlots(ground, []);
+
+  if (groundSlots.length >= safeCount) {
+    return { perches: [ground], feet: dealAcross([groundSlots], safeCount) };
+  }
+
+  return { perches: [ground], feet: crowdedGroundRow(safeCount) };
+};
+
+/** Just the standing spots, for callers that already know what was built. */
+export const resolveJoustRackSlots = (
+  perches: readonly JoustPerch[],
+  pinCount: number
+): JoustVec2[] => {
+  return [...resolveJoustRackLayout(perches, pinCount).feet];
+};
 
 const length = (vector: JoustVec2): number => {
   return Math.sqrt(vector.x * vector.x + vector.y * vector.y);
@@ -107,7 +351,7 @@ export const clampJoustAim = (aim: JoustAim): JoustAim => {
 
 /**
  * The direction the shooter points — and flies — for a given pull: straight back along the
- * band. A slack band points it at the champ so the rest pose reads as "ready".
+ * band. A slack band points it down the lane so the rest pose reads as "ready".
  */
 export const resolveJoustHeading = (aim: JoustAim): JoustVec2 => {
   const clamped = clampJoustAim(aim);
@@ -166,29 +410,12 @@ export const resolveShooterRestPositions = (aim: JoustAim): JoustVec2[] => {
   return positions;
 };
 
-/** Where the champ stands before it's hit: upright on the floor at the arena's target column. */
-export const resolveChampRestPositions = (arena: JoustArena): JoustVec2[] => {
-  const positions: JoustVec2[] = [];
-  const baseY = JOUST_WORLD.floorY - CHAMP_SHAFT_RADIUS;
-
-  for (let index = 0; index < JOUST_CHAMP_SHAFT_COUNT; index += 1) {
-    positions.push({ x: arena.targetX, y: baseY - index * CHAMP_SPACING });
-  }
-
-  positions.push({
-    x: arena.targetX,
-    y: baseY - JOUST_CHAMP_SHAFT_COUNT * CHAMP_SPACING - 0.6
-  });
-  positions.push({
-    x: arena.targetX - 2.7,
-    y: JOUST_WORLD.floorY - CHAMP_BALL_RADIUS
-  });
-  positions.push({
-    x: arena.targetX + 2.7,
-    y: JOUST_WORLD.floorY - CHAMP_BALL_RADIUS
-  });
-
-  return positions;
+/** Where the rack stands before anything hits it: upright on its own spot, wherever that is. */
+export const resolvePinRestPositions = (arena: JoustArena): JoustVec2[] => {
+  return arena.pinFeet.flatMap((foot): JoustVec2[] => [
+    { x: foot.x, y: foot.y },
+    { x: foot.x, y: foot.y - JOUST_PIN_HEIGHT }
+  ]);
 };
 
 /** The full body set at rest for a pull — what both surfaces draw while the team is aiming. */
@@ -196,7 +423,7 @@ export const resolveJoustRestPositions = (
   arena: JoustArena,
   aim: JoustAim
 ): JoustVec2[] => {
-  return [...resolveShooterRestPositions(aim), ...resolveChampRestPositions(arena)];
+  return [...resolveShooterRestPositions(aim), ...resolvePinRestPositions(arena)];
 };
 
 export const toJoustFrame = (positions: readonly JoustVec2[]): JoustFrame => {
@@ -223,6 +450,18 @@ export const readJoustFramePosition = (
 export const resolveJoustRestFrame = (arena: JoustArena, aim: JoustAim): JoustFrame => {
   return toJoustFrame(resolveJoustRestPositions(arena, aim));
 };
+
+/**
+ * How far a pin has leaned, as a fraction of its own height: 0 is bolt upright and 1 is flat on
+ * the sand. Shared by the integrator, which latches a topple, and the renderer, which draws the
+ * lean — one definition, so the TV never shows a pin standing that the score says is down.
+ */
+export const resolveJoustPinTilt = (foot: JoustVec2, head: JoustVec2): number => {
+  return Math.abs(head.x - foot.x) / JOUST_PIN_HEIGHT;
+};
+
+/** Past this lean a pin is over and never gets back up. */
+export const JOUST_TOPPLE_TILT = 0.45;
 
 export type JoustSegment = {
   readonly from: JoustVec2;
@@ -256,6 +495,7 @@ export const resolveJoustSegments = (arena: JoustArena): JoustSegment[] => {
     // Well behind the slingshot, so a fully drawn shooter never touches it; it only stops a
     // shot fired backwards from leaving the world entirely.
     { from: { x: -30, y: -60 }, to: { x: -30, y: JOUST_WORLD.floorY } },
+    ...arena.perches.flatMap(resolvePerchBoxes).flatMap(obstacleSegments),
     ...arena.obstacles.flatMap(obstacleSegments)
   ];
 };

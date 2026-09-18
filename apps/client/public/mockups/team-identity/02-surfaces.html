@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Team Identity — 02 TV Surfaces</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      html, body { height: 100dvh; overflow: hidden; }
+      .stage { height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; }
+      nav.tabs { display: flex; gap: 0.5rem; padding: 0.75rem 1rem; background: #0d0d0d; border-bottom: 1px solid #222; align-items: center; }
+      nav.tabs span.label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.18em; margin-right: 0.5rem; }
+      nav.tabs button { background: var(--surface); color: var(--text); border: 1px solid #333; border-radius: 999px; padding: 0.35rem 0.9rem; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; }
+      nav.tabs button.active { border-color: var(--primary); }
+      nav.tabs button .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tint); }
+
+      /* MINIGAME_INTRO spotlight, after the shipped 03-beat layout */
+      .spotlight { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(1rem, 2.2vh, 2rem); text-align: center; padding: clamp(2rem, 4vw, 4rem); overflow: hidden; }
+      .eyebrow { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 0.8em; text-transform: uppercase; letter-spacing: 0.32em; font-size: clamp(0.9rem, 1.3vw, 1.4rem); font-weight: 700; color: var(--muted-warm); }
+      .eyebrow .genre { color: var(--tint); }
+      .eyebrow svg { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--tint) 50%, transparent)); }
+      .headline { position: relative; z-index: 1; font-size: clamp(3.5rem, 9.5vw, 11rem); max-width: 14ch; }
+      .lineup { position: relative; z-index: 1; display: flex; align-items: flex-end; justify-content: center; gap: clamp(0.5rem, 1.5vw, 2rem); }
+      .lineup figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+      .lineup svg { height: clamp(96px, 16vh, 220px); width: auto; }
+      .lineup figcaption { font-size: clamp(0.8rem, 1vw, 1.1rem); color: var(--muted-warm); text-transform: uppercase; letter-spacing: 0.18em; font-weight: 700; }
+      .post { position: relative; z-index: 1; font-size: clamp(1rem, 1.5vw, 1.6rem); color: var(--muted); text-transform: uppercase; letter-spacing: 0.22em; font-weight: 600; }
+      .post b { color: var(--text); margin-left: 0.6em; }
+
+      /* Standings footer, after the shipped 03-splits layout */
+      footer.splits { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; background: rgba(255,255,255,0.04); border-top: 1px solid rgba(255,255,255,0.06); }
+      .col { --tint: var(--primary); position: relative; overflow: hidden; background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 14%, transparent), color-mix(in srgb, var(--tint) 4%, transparent)), var(--bg); padding: clamp(0.85rem, 1.3vh, 1.5rem) clamp(1rem, 1.6vw, 2.25rem); display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+      .col.lead { background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 30%, transparent), color-mix(in srgb, var(--tint) 10%, transparent)), var(--bg); }
+      .col::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--tint); opacity: 0.55; }
+      .col.lead::before { opacity: 1; }
+      .col .watermark { position: absolute; right: -6%; top: 50%; transform: translateY(-50%) rotate(-8deg); opacity: 0.14; }
+      .col.lead .watermark { opacity: 0.22; }
+      .col .left { position: relative; display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+      .col .meta { font-size: clamp(0.7rem, 0.85vw, 0.95rem); text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); font-weight: 600; }
+      .col.lead .meta { color: var(--gold); }
+      .col .name { font-size: clamp(1.3rem, 1.9vw, 2.4rem); max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.05; }
+      .col .pts { position: relative; font-family: ui-monospace, Menlo, monospace; font-size: clamp(1.8rem, 2.6vw, 3.2rem); font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: -0.04em; line-height: 1; }
+      .col.lead .pts { color: var(--gold); }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <nav class="tabs" id="tabs"><span class="label">Active team</span></nav>
+      <section class="spotlight" id="spotlight"></section>
+      <footer class="splits" id="splits"></footer>
+    </div>
+    <script type="module">
+      import { GENRES, PACK_TEAMS, TOKENS, emblemSvg, henSvg, fontFamily, loadFonts } from "./kit.js";
+      loadFonts();
+
+      const picks = JSON.parse(localStorage.getItem("wn-team-identity-picks") ?? "{}");
+      const font = (genre) => fontFamily(picks[genre] ?? GENRES[genre].fonts[0]);
+      const scores = [42, 57, 38, 57];
+      let active = 0;
+
+      const renderTabs = () => {
+        document.getElementById("tabs").innerHTML =
+          `<span class="label">Active team</span>` +
+          PACK_TEAMS.map((t, i) => `<button class="${i === active ? "active" : ""}" data-i="${i}" style="--tint:${TOKENS[GENRES[t.genre].token]}"><span class="dot"></span>${t.name}</button>`).join("");
+      };
+
+      const renderSpotlight = () => {
+        const t = PACK_TEAMS[active], g = GENRES[t.genre], tint = TOKENS[g.token];
+        document.getElementById("spotlight").innerHTML = `
+          <span class="ambient ${g.texture ?? ""}" style="--tint:${tint}"></span>
+          <span class="eyebrow enter beat" style="--tint:${tint}">${emblemSvg(g.emblem, 44, tint)}<span>You're up</span><span aria-hidden>·</span><span class="genre">${t.genre}</span></span>
+          <h1 class="headline wordmark ${g.treatment} enter ${g.entrance}" style="--tint:${tint}; font-family:${font(t.genre)}; animation-delay: 120ms">${t.name}</h1>
+          <div class="lineup enter beat" style="animation-delay: 700ms">
+            ${t.players.map((p) => `<figure>${henSvg(96, tint, g.apparel)}<figcaption>${p}</figcaption></figure>`).join("")}
+          </div>
+          <p class="post enter beat" style="animation-delay: 1000ms">Playing<b>Live Sketch</b></p>`;
+      };
+
+      const renderSplits = () => {
+        const top = Math.max(...scores);
+        document.getElementById("splits").innerHTML = PACK_TEAMS.map((t, i) => {
+          const g = GENRES[t.genre], tint = TOKENS[g.token], lead = scores[i] === top;
+          return `<div class="col ${lead ? "lead" : ""}" style="--tint:${tint}">
+            <span class="watermark">${emblemSvg(g.emblem, 120, tint)}</span>
+            <div class="left">
+              <span class="meta">${lead ? "Tied lead" : `${i + 1}th`}</span>
+              <span class="name wordmark ${g.treatment}" style="--tint:${tint}; font-family:${font(t.genre)}">${t.name}</span>
+            </div>
+            <span class="pts">${scores[i]}</span>
+          </div>`;
+        }).join("");
+      };
+
+      const render = () => { renderTabs(); renderSpotlight(); renderSplits(); };
+      document.getElementById("tabs").addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-i]");
+        if (!b) return;
+        active = Number(b.dataset.i);
+        render();
+      });
+      render();
+    </script>
+  </body>
+</html>

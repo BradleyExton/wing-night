@@ -4,7 +4,5 @@ export const nowPlayingCopy = {
   // The anthem names its team, because at MINIGAME_INTRO the room is looking at
   // that team and the track belongs to them.
   anthemLabel: (teamName: string): string => `${teamName} anthem`,
-  anthemFallbackLabel: "Team anthem",
-  trackCountLabel: (trackIndex: number, trackCount: number): string =>
-    `${trackIndex + 1} / ${trackCount}`
+  anthemFallbackLabel: "Team anthem"
 } as const;

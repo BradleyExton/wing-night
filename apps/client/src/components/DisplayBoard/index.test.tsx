@@ -241,16 +241,9 @@ test("names the team whose anthem is playing", () => {
   assert.match(html, /Blaze/);
 });
 
-// An anthem is a one-shot cue with nowhere to be in, so it shows no position.
-test("shows no track position for an anthem", () => {
-  const html = renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM, {
-    musicPlayback: ANTHEM_PLAYBACK
-  });
-
-  assert.doesNotMatch(html, /1 \/ 1/);
-});
-
-test("titles a lobby track from its filename and shows its position", () => {
+// The pill is a corner chip, not a media player: "n of m" is host-deck detail,
+// and the room only needs to know what is playing.
+test("titles a lobby track from its filename and shows no track position", () => {
   const html = renderAtPhase(Phase.SETUP, ANTHEM_TEAM, {
     musicPlayback: LOBBY_PLAYBACK,
     lobbyPlaylist: ["03-hot-in-herre.mp3"]
@@ -258,12 +251,12 @@ test("titles a lobby track from its filename and shows its position", () => {
 
   assert.match(html, /Now playing/);
   assert.match(html, /Hot In Herre/);
-  assert.match(html, /3 \/ 12/);
+  assert.doesNotMatch(html, /3 \/ 12/);
 });
 
-// The row stays put when the host pauses — vanishing it would flicker the TV on
-// every tap — and says so instead.
-test("keeps the now-playing strip and labels it paused when the host pauses", () => {
+// The pill stays put when the host pauses — vanishing it would flicker the TV
+// on every tap — and says so instead.
+test("keeps the now-playing pill and labels it paused when the host pauses", () => {
   const html = renderAtPhase(Phase.SETUP, ANTHEM_TEAM, {
     musicPlayback: { ...LOBBY_PLAYBACK, isPlaying: false },
     lobbyPlaylist: ["03-hot-in-herre.mp3"]

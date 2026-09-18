@@ -4,7 +4,7 @@ import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
 import type { GeoPrompt } from "../content/geo/index.js";
 import type { JoustPrompt } from "../content/joust/index.js";
-import type { JoustAim, JoustHitZone } from "../joust/types.js";
+import type { JoustAim, JoustTopple } from "../joust/types.js";
 import type { SongGuessDifficulty } from "../content/songGuess/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { RoomMusicPlaybackState } from "../musicPlayback/index.js";
@@ -231,9 +231,25 @@ export type EmojiCharadesMinigameHostView = MinigameHostViewBase & {
 
 export type JoustPhase = "aiming" | "resolved" | "done";
 
+// One player in the lane or on the bench: everything the cast bird (DESIGN.md §2.8) needs to be
+// drawn as them. `avatarSrc` stays PACK-RELATIVE here; the surface that renders it resolves it
+// against the server origin, because the client and server are always separate origins. `teamId`
+// and `genre` are the bird's colour and its apparel — carried as the data they are, so the
+// runtime never has to name a UI class.
+export type JoustPlayerFigure = {
+  playerId: string;
+  name: string;
+  avatarSrc: string | null;
+  teamId: string | null;
+  genre: string | null;
+};
+
 export type JoustShotResult = {
   shotNumber: number;
-  hitZone: JoustHitZone | null;
+  // Who went over on this shot, in the order they fell.
+  toppledPlayerIds: string[];
+  // The shot left nobody standing — bowling's strike, and the only bonus in the game.
+  isRackCleared: boolean;
   points: number;
 };
 
@@ -243,8 +259,7 @@ export type JoustShotResult = {
 export type JoustShotTrack = {
   keyframeHz: number;
   keyframes: number[][];
-  hitZone: JoustHitZone | null;
-  hitFrameIndex: number | null;
+  topples: JoustTopple[];
 };
 
 // The shot the TV is replaying (or has just replayed): its outcome plus the
@@ -253,11 +268,15 @@ export type JoustShotTrack = {
 export type JoustMinigameShot = JoustShotResult & {
   aim: JoustAim;
   run: JoustShotTrack;
+  // The rack this track was simulated against, in frame order: `run.topples[n].pinIndex` and every
+  // pin body in a keyframe index into THIS list, not into the lineup. It is the standing set as it
+  // was before the shot, which is not the standing set after it.
+  pinPlayerIds: string[];
 };
 
 export type JoustMinigameArena = Pick<
   JoustPrompt,
-  "id" | "name" | "targetX" | "obstacles"
+  "id" | "name" | "perches" | "obstacles"
 >;
 
 // Nothing about a joust is secret — the arena is on the TV by design — so the
@@ -267,6 +286,16 @@ type JoustMinigameViewFields = {
   minigame: "JOUST";
   phase: JoustPhase;
   arena: JoustMinigameArena | null;
+  // Every player NOT on the shooting team, in the order they are racked up. Locked when the turn
+  // starts, so the columns hold still as the rack thins out.
+  lineup: JoustPlayerFigure[];
+  // The shooting team, stood behind the slingshot. Scenery that says whose turn it is.
+  teammates: JoustPlayerFigure[];
+  // Everyone the turn has already put on the sand; they sit out the remaining shots.
+  downPlayerIds: string[];
+  // Whose hand is on the band right now. Everybody on the team takes a turn, in roster order, so
+  // this walks the bench as the turn goes on.
+  activeShooterPlayerId: string | null;
   shotsPerTurn: number;
   // 0-based index of the shot being aimed or just resolved.
   shotIndex: number;
@@ -294,9 +323,21 @@ export type FappyLegRunResult = {
 // starts from and the flap log the display re-runs the shared sim from. A
 // crash does not end a leg — it starts the next attempt on the perch of the
 // last gate cleared — so the relay always reaches the end; it only takes time.
+// One player as the cast bird needs them drawn (the JOUST convention):
+// `avatarSrc` stays pack-relative and the surface resolves it against the
+// server origin; team id and genre are the bird's colour and apparel.
+export type FappyPlayerFigure = {
+  playerId: string;
+  name: string;
+  avatarSrc: string | null;
+  teamId: string | null;
+  genre: string | null;
+};
+
 export type FappyMinigameLeg = {
   legIndex: number;
-  playerId: string | null;
+  // Whose leg it is; null flies the drawn hen in the team colour.
+  player: FappyPlayerFigure | null;
   seed: number;
   status: FappyLegStatus;
   // 0 for the first attempt; climbs with every crash. Keys the surfaces' local runs.

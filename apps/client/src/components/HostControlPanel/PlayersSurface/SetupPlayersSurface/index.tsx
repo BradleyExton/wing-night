@@ -1,7 +1,8 @@
+import { resolveTeamColorVariant } from "@wingnight/cast";
+
 import { type FormEvent, useId, useState } from "react";
 
 import { hostControlPanelCopy } from "../../copy";
-import { resolveTeamColorVariant } from "@wingnight/cast";
 import type { SetupPlayersSurfaceProps } from "../index";
 import * as styles from "./styles";
 

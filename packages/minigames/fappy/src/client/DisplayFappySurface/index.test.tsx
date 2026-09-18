@@ -1,23 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { FappyMinigameDisplayView, FappyMinigameLeg, Player, Team } from "@wingnight/shared";
+import type { FappyMinigameDisplayView, FappyMinigameLeg, FappyPlayerFigure } from "@wingnight/shared";
 
 import { DisplayFappySurface } from "./index.js";
 
-const players: Player[] = [
-  { id: "p-1", name: "Alex", avatarSrc: "avatars/alex.png" },
-  { id: "p-2", name: "Morgan" }
-];
-const teams: Team[] = [
-  { id: "team-alpha", name: "Team Alpha", playerIds: ["p-1", "p-2"], totalScore: 0, genre: "disco" }
-];
+const ALEX: FappyPlayerFigure = { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "disco" };
+const MORGAN: FappyPlayerFigure = { playerId: "p-2", name: "Morgan", avatarSrc: null, teamId: "team-alpha", genre: "disco" };
 const T0 = 1_700_000_000_000;
 
 const createLeg = (overrides: Partial<FappyMinigameLeg> = {}): FappyMinigameLeg => {
   return {
     legIndex: 0,
-    playerId: "p-1",
+    player: ALEX,
     seed: 11,
     status: "ready",
     attempt: 0,
@@ -42,7 +37,7 @@ const createView = (overrides: Partial<FappyMinigameDisplayView> = {}): FappyMin
     gatesPerLeg: 3,
     parSeconds: 20,
     limitSeconds: 60,
-    legs: [createLeg(), createLeg({ legIndex: 1, playerId: "p-2", seed: 12 })],
+    legs: [createLeg(), createLeg({ legIndex: 1, player: MORGAN, seed: 12 })],
     totalGatesCleared: 0,
     startedAtMs: null,
     finishedAtMs: null,
@@ -65,8 +60,6 @@ const render = (
       minigameDisplayView={view}
       activeTeamName="Team Alpha"
       serverOrigin={serverOrigin}
-      players={players}
-      teams={teams}
     />
   );
 };
@@ -103,7 +96,7 @@ test("does put the finish flag, not a waiter, on the last leg's cliff", () => {
     createView({
       legIndex: 1,
       startedAtMs: T0,
-      legs: [createLeg({ status: "cleared" }), createLeg({ legIndex: 1, playerId: "p-2", seed: 12 })],
+      legs: [createLeg({ status: "cleared" }), createLeg({ legIndex: 1, player: MORGAN, seed: 12 })],
       totalGatesCleared: 3
     })
   );
@@ -114,7 +107,7 @@ test("does put the finish flag, not a waiter, on the last leg's cliff", () => {
 });
 
 test("does tell the room who the flyer has to land next to", () => {
-  const html = render(createView({ phase: "flying", startedAtMs: T0, legs: [createLeg({ status: "flying", flapTicks: [0] }), createLeg({ legIndex: 1, playerId: "p-2", seed: 12 })] }));
+  const html = render(createView({ phase: "flying", startedAtMs: T0, legs: [createLeg({ status: "flying", flapTicks: [0] }), createLeg({ legIndex: 1, player: MORGAN, seed: 12 })] }));
 
   assert.match(html, /Alex is flying — land next to Morgan/);
 });
@@ -123,7 +116,7 @@ test("does send a crashed bird back to its perch on the wall", () => {
   const html = render(
     createView({
       startedAtMs: T0,
-      legs: [createLeg({ attempt: 1, checkpointGate: 2, crashes: 1 }), createLeg({ legIndex: 1, playerId: "p-2", seed: 12 })],
+      legs: [createLeg({ attempt: 1, checkpointGate: 2, crashes: 1 }), createLeg({ legIndex: 1, player: MORGAN, seed: 12 })],
       totalGatesCleared: 2
     })
   );
@@ -140,7 +133,7 @@ test("does drop the plaque with the time and the points once the relay is throug
       finishedAtMs: T0 + 41_200,
       elapsedMs: 41_200,
       points: 9,
-      legs: [createLeg({ status: "cleared" }), createLeg({ legIndex: 1, playerId: "p-2", seed: 12, status: "cleared" })],
+      legs: [createLeg({ status: "cleared" }), createLeg({ legIndex: 1, player: MORGAN, seed: 12, status: "cleared" })],
       totalGatesCleared: 6
     })
   );

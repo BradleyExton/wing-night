@@ -19,10 +19,16 @@ import { isFappyRules, resolveFappyRules } from "./rules/index.js";
 import { DEFAULT_FAPPY_RULES } from "./types/index.js";
 
 const TEAM_IDS = ["team-alpha", "team-beta"];
-const ROSTER = {
-  "team-alpha": ["alex", "morgan", "sam"],
-  "team-beta": ["riley"]
-};
+const PLAYERS = [
+  { id: "alex", name: "Alex", avatarSrc: "avatars/alex.png" },
+  { id: "morgan", name: "Morgan" },
+  { id: "sam", name: "Sam" },
+  { id: "riley", name: "Riley" }
+];
+const TEAMS = [
+  { id: "team-alpha", name: "Team Alpha", playerIds: ["alex", "morgan", "sam"], totalScore: 0, genre: "country" },
+  { id: "team-beta", name: "Team Beta", playerIds: ["riley"], totalScore: 0 }
+];
 const T0 = 1_700_000_000_000;
 const RULES = { legsPerTurn: 2, gatesPerLeg: 3, parSeconds: 30, limitSeconds: 90 };
 
@@ -36,7 +42,8 @@ const initialize = (
     pendingPointsByTeamId: { "team-alpha": 2, "team-beta": 0 },
     rules: RULES,
     content: null,
-    playerIdsByTeamId: ROSTER,
+    players: PLAYERS,
+    teams: TEAMS,
     ...overrides
   });
 };
@@ -128,18 +135,26 @@ test("does hand the legs to the roster in seating order and cycle a short one", 
 
   assert.equal(view.phase, "ready");
   assert.deepEqual(
-    view.legs.map((leg) => leg.playerId),
+    view.legs.map((leg) => leg.player?.playerId ?? null),
     ["alex", "morgan", "sam", "alex"]
   );
+  assert.deepEqual(view.legs[0]?.player, {
+    playerId: "alex",
+    name: "Alex",
+    avatarSrc: "avatars/alex.png",
+    teamId: "team-alpha",
+    genre: "country"
+  });
+  assert.equal(view.legs[1]?.player?.avatarSrc, null);
   assert.equal(view.pendingPointsByTeamId["team-alpha"], 2);
   assert.equal(view.startedAtMs, null);
   assert.equal(view.points, null);
 });
 
 test("does fly the drawn hen when the team has no roster", () => {
-  const view = hostView(initialize({ playerIdsByTeamId: {} }));
+  const view = hostView(initialize({ players: [], teams: [] }));
 
-  assert.ok(view.legs.every((leg) => leg.playerId === null));
+  assert.ok(view.legs.every((leg) => leg.player === null));
 });
 
 test("does derive the same seeds for the same team across initializations", () => {
@@ -348,7 +363,7 @@ test("does reset the turn to the start line with the points it started with", ()
       (leg) => leg.status === "ready" && leg.attempt === 0 && leg.crashes === 0 && leg.knockedEagles.length === 0
     )
   );
-  assert.deepEqual(view.legs.map((leg) => leg.playerId), ["alex", "morgan"]);
+  assert.deepEqual(view.legs.map((leg) => leg.player?.playerId ?? null), ["alex", "morgan"]);
   assert.equal(view.pendingPointsByTeamId["team-alpha"], 2);
 });
 

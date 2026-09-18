@@ -1,10 +1,9 @@
-import type { JoustAim, JoustHitZone, JoustPhase } from "@wingnight/shared";
+import type { JoustAim, JoustPhase } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type { JoustRuntimeState } from "../types/index.js";
 
 const JOUST_PHASES: readonly JoustPhase[] = ["aiming", "resolved", "done"];
-const JOUST_HIT_ZONES: readonly JoustHitZone[] = ["head", "shaft", "balls"];
 
 const isObjectLike = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -26,28 +25,45 @@ const isJoustPhase = (value: unknown): value is JoustPhase => {
   return JOUST_PHASES.some((phase) => phase === value);
 };
 
-const isHitZoneOrNull = (value: unknown): value is JoustHitZone | null => {
-  return value === null || JOUST_HIT_ZONES.some((zone) => zone === value);
+const isStringArray = (value: unknown): value is string[] => {
+  return Array.isArray(value) && value.every((entry) => typeof entry === "string");
+};
+
+const isPlayerFigure = (value: unknown): boolean => {
+  return (
+    isObjectLike(value) &&
+    typeof value.playerId === "string" &&
+    typeof value.name === "string" &&
+    (value.avatarSrc === null || typeof value.avatarSrc === "string")
+  );
 };
 
 const isShotResult = (value: unknown): boolean => {
   return (
     isObjectLike(value) &&
     isNonNegativeInteger(value.shotNumber) &&
-    isHitZoneOrNull(value.hitZone) &&
+    isStringArray(value.toppledPlayerIds) &&
+    typeof value.isRackCleared === "boolean" &&
     isFiniteNumber(value.points)
   );
 };
 
+const isTopple = (value: unknown): boolean => {
+  return (
+    isObjectLike(value) &&
+    isNonNegativeInteger(value.pinIndex) &&
+    isNonNegativeInteger(value.frameIndex)
+  );
+};
+
 const isShotRun = (value: unknown): boolean => {
-  if (!isObjectLike(value) || !Array.isArray(value.keyframes)) {
+  if (!isObjectLike(value) || !Array.isArray(value.keyframes) || !Array.isArray(value.topples)) {
     return false;
   }
 
   return (
     isFiniteNumber(value.keyframeHz) &&
-    isHitZoneOrNull(value.hitZone) &&
-    (value.hitFrameIndex === null || isNonNegativeInteger(value.hitFrameIndex)) &&
+    value.topples.every(isTopple) &&
     value.keyframes.every(
       (frame) => Array.isArray(frame) && frame.every((entry) => isFiniteNumber(entry))
     )
@@ -63,6 +79,7 @@ const isLastShotOrNull = (value: unknown): boolean => {
     isShotResult(value) &&
     isObjectLike(value) &&
     isJoustAim(value.aim) &&
+    isStringArray(value.pinPlayerIds) &&
     isShotRun(value.run)
   );
 };
@@ -83,6 +100,11 @@ export const isJoustRuntimeState = (
   return (
     (state.activeTurnTeamId === null || typeof state.activeTurnTeamId === "string") &&
     (state.arenaId === null || typeof state.arenaId === "string") &&
+    Array.isArray(state.lineup) &&
+    state.lineup.every(isPlayerFigure) &&
+    Array.isArray(state.teammates) &&
+    state.teammates.every(isPlayerFigure) &&
+    isStringArray(state.downPlayerIds) &&
     isNonNegativeInteger(state.shotsPerTurn) &&
     isNonNegativeInteger(state.shotIndex) &&
     isJoustPhase(state.phase) &&

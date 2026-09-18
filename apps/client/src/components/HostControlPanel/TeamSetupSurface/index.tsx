@@ -1,8 +1,9 @@
+import { resolveTeamColorVariant } from "@wingnight/cast";
+
 import type { FormEvent } from "react";
 import type { Team } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
-import { resolveTeamColorVariant } from "@wingnight/cast";
 import * as styles from "./styles";
 
 type TeamSetupSurfaceProps = {

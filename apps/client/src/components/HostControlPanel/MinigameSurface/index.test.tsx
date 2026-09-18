@@ -32,8 +32,6 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
       onDispatchAction={(): void => {
         return;
       }}
-      players={[]}
-      teams={[]}
     />
   );
 
@@ -58,8 +56,6 @@ test("renders waiting fallback when host view is unavailable", () => {
       onDispatchAction={(): void => {
         return;
       }}
-      players={[]}
-      teams={[]}
     />
   );
 
@@ -97,8 +93,6 @@ test("renders GEO guessing surface for configured geo minigame", () => {
       onDispatchAction={(): void => {
         return;
       }}
-      players={[]}
-      teams={[]}
     />
   );
 
@@ -144,8 +138,6 @@ test("renders GEO result card after a submitted guess", () => {
       onDispatchAction={(): void => {
         return;
       }}
-      players={[]}
-      teams={[]}
     />
   );
 
@@ -166,8 +158,6 @@ test("renders intro surface for configured trivia minigame", () => {
       onDispatchAction={(): void => {
         return;
       }}
-      players={[]}
-      teams={[]}
     />
   );
 

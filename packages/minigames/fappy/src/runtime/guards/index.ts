@@ -1,4 +1,4 @@
-import type { FappyLegRunResult, FappyLegStatus } from "@wingnight/shared";
+import type { FappyLegRunResult, FappyLegStatus, FappyPlayerFigure } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type { FappyRuntimeLeg, FappyRuntimeState } from "../types/index.js";
@@ -39,11 +39,26 @@ const isRunResultOrNull = (value: unknown): value is FappyLegRunResult | null =>
   );
 };
 
+const isFigureOrNull = (value: unknown): value is FappyPlayerFigure | null => {
+  if (value === null) {
+    return true;
+  }
+
+  return (
+    isObjectLike(value) &&
+    typeof value.playerId === "string" &&
+    typeof value.name === "string" &&
+    (value.avatarSrc === null || typeof value.avatarSrc === "string") &&
+    (value.teamId === null || typeof value.teamId === "string") &&
+    (value.genre === null || typeof value.genre === "string")
+  );
+};
+
 const isLeg = (value: unknown): value is FappyRuntimeLeg => {
   return (
     isObjectLike(value) &&
     isNonNegativeInteger(value.legIndex) &&
-    (value.playerId === null || typeof value.playerId === "string") &&
+    isFigureOrNull(value.player) &&
     isFiniteNumber(value.seed) &&
     isLegStatus(value.status) &&
     isNonNegativeInteger(value.attempt) &&

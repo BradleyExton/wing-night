@@ -75,14 +75,10 @@ const resolveStatusLine = (
 const FappyPlayBody = ({
   view,
   activeTeamName,
-  players,
-  teams,
   serverOrigin
 }: {
   view: FappyMinigameDisplayView;
   activeTeamName: string | null;
-  players: MinigameDisplayRendererProps["players"];
-  teams: MinigameDisplayRendererProps["teams"];
   serverOrigin: string | null;
 }): JSX.Element => {
   const sceneRef = useRef<FappySceneHandle>(null);
@@ -95,10 +91,8 @@ const FappyPlayBody = ({
       : resolveFappyGates({ seed: leg.seed, legIndex: leg.legIndex, gatesPerLeg: view.gatesPerLeg });
   }, [leg, view.gatesPerLeg]);
   const bird = resolveLegBird({
-    leg,
+    figure: leg?.player ?? null,
     activeTurnTeamId: view.activeTurnTeamId,
-    players,
-    teams,
     serverOrigin
   });
   // Who stands on the landing cliff: the next leg's player, or nobody on the last leg.
@@ -106,7 +100,7 @@ const FappyPlayBody = ({
   const waitingBird =
     nextLeg === null
       ? null
-      : resolveLegBird({ leg: nextLeg, activeTurnTeamId: view.activeTurnTeamId, players, teams, serverOrigin });
+      : resolveLegBird({ figure: nextLeg.player, activeTurnTeamId: view.activeTurnTeamId, serverOrigin });
   const elapsedMs = useRelayClock({
     startedAtMs: view.startedAtMs,
     endedAtMs: view.timedOutAtMs ?? view.finishedAtMs
@@ -165,9 +159,7 @@ export const DisplayFappySurface = ({
   phase,
   minigameDisplayView,
   activeTeamName,
-  serverOrigin,
-  players,
-  teams
+  serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const fappyView = minigameDisplayView?.minigame === "FAPPY" ? minigameDisplayView : null;
 
@@ -187,8 +179,6 @@ export const DisplayFappySurface = ({
     <FappyPlayBody
       view={fappyView}
       activeTeamName={activeTeamName}
-      players={players}
-      teams={teams}
       serverOrigin={serverOrigin}
     />
   );

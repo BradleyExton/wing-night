@@ -136,6 +136,10 @@ export const DisplayBoard = ({
   return (
     <main className={styles.container}>
       <div className={styles.displayAtmosphere} data-display-atmosphere aria-hidden />
+      <NowPlayingSurface
+        musicPlayback={musicPlayback}
+        anthemTeamName={activeTeamName}
+      />
       <section className={styles.main}>
         <div className={styles.content}>
           <div className={styles.stageShell}>
@@ -144,10 +148,6 @@ export const DisplayBoard = ({
         </div>
       </section>
 
-      <NowPlayingSurface
-        musicPlayback={musicPlayback}
-        anthemTeamName={activeTeamName}
-      />
       <StandingsSurface phase={phase} standings={standings} players={players} />
       {/* Mounted on whether the ROOM has music at all, not on whether any is
           playing right now, so the element survives every phase advance and the

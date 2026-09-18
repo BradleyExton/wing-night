@@ -26,6 +26,9 @@ const triviaContentFixture: TriviaContentFile = {
 const initializeState = (
   overrides: Partial<{
     teamIds: string[];
+    // This game never looks at the roster; JOUST is the one that does.
+    players: [],
+    teams: [],
     activeRoundTeamId: string | null;
     pointsMax: number;
     pendingPointsByTeamId: Record<string, number>;
@@ -35,6 +38,9 @@ const initializeState = (
 ): TriviaRuntimeState => {
   const state = triviaRuntimePlugin.initialize({
     teamIds: overrides.teamIds ?? ["team-1", "team-2"],
+    // This game never looks at the roster; JOUST is the one that does.
+    players: [],
+    teams: [],
     activeRoundTeamId:
       overrides.activeRoundTeamId === undefined
         ? null
@@ -249,6 +255,9 @@ test("initialize seeds the prompt cursor by team index so later teams get fresh 
   ): TriviaRuntimeState => {
     return initializeState({
       teamIds: ["team-1", "team-2", "team-3"],
+      // This game never looks at the roster; JOUST is the one that does.
+      players: [],
+      teams: [],
       activeRoundTeamId,
       rules: { questionsPerTurn: 2 },
       content

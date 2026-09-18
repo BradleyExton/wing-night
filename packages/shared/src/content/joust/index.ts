@@ -1,20 +1,39 @@
-import { JOUST_WORLD } from "../../joust/world/index.js";
-import type { JoustObstacle } from "../../joust/types.js";
+import {
+  JOUST_PIN_HEAD_RADIUS,
+  JOUST_RACK_LEFT,
+  JOUST_RACK_RIGHT,
+  JOUST_RACK_TOP,
+  JOUST_WORLD,
+  resolveLaneSlots
+} from "../../joust/world/index.js";
+import type { JoustObstacle, JoustPerch } from "../../joust/types.js";
 import { validatePromptPackFile } from "../promptPack/index.js";
 import type { ValidationIssue } from "../validationIssue/index.js";
 
-/** How close to the slingshot a champ may stand: anything nearer is a tap, not a shot. */
-export const JOUST_MIN_TARGET_X = JOUST_WORLD.anchor.x + 40;
-/** Keeps the champ's balls on screen. */
-export const JOUST_MAX_TARGET_X = JOUST_WORLD.width - 8;
+/** The ends of the lane a perch has to live between, and the highest it may lift anybody. */
+export const JOUST_MIN_PERCH_X = JOUST_RACK_LEFT;
+export const JOUST_MAX_PERCH_X = JOUST_RACK_RIGHT;
+export const JOUST_MIN_PERCH_Y = JOUST_RACK_TOP;
+/** Narrower than this and nobody fits on it. */
+export const JOUST_MIN_PERCH_WIDTH = JOUST_PIN_HEAD_RADIUS * 2;
+/**
+ * How many players a lane must seat. A lane cannot know the night's roster, but a shelf hung too
+ * low shades out the sand beneath it and a tower's legs eat the spots they stand on — both of
+ * which quietly shrink a lane until somebody has nowhere to stand. Ten is the floor that catches
+ * it at content load rather than in front of the room.
+ */
+export const JOUST_MIN_LANE_CAPACITY = 10;
 
-// One arena in the pack: where the champ stands and what's in the way. Obstacle rectangles are
-// top-left anchored in world units (160 wide, floor at 78 — see JOUST_WORLD), and the renderer
-// draws every one of them as a cactus.
+// One lane in the pack: the structures players are stood on, and what else is in the way. How
+// MANY players stand there is not content — it is however many are not on the shooting team that
+// night, dealt across the perches — so a lane is authored as SHELVES, not as positions. A perch
+// at the floor is the sand; a higher one grows its own slab and legs and is solid. Obstacle
+// rectangles are top-left anchored in world units (160 wide, floor at 78 — see JOUST_WORLD), and
+// the renderer draws every one of them as a cactus.
 export type JoustPrompt = {
   id: string;
   name: string;
-  targetX: number;
+  perches: JoustPerch[];
   obstacles: JoustObstacle[];
 };
 
@@ -85,6 +104,51 @@ export const validateJoustObstacle = (value: unknown): ValidationIssue[] => {
   return issues;
 };
 
+export const validateJoustPerch = (value: unknown): ValidationIssue[] => {
+  if (!isObjectLike(value)) {
+    return [{ path: "", message: "must be an object" }];
+  }
+
+  const issues: ValidationIssue[] = [];
+
+  for (const field of ["x", "y", "width"] as const) {
+    if (!isFiniteNumber(value[field])) {
+      issues.push({ path: field, message: "must be a finite number" });
+    }
+  }
+
+  if (issues.length > 0) {
+    return issues;
+  }
+
+  const x = value.x as number;
+  const y = value.y as number;
+  const width = value.width as number;
+
+  if (width < JOUST_MIN_PERCH_WIDTH) {
+    issues.push({
+      path: "width",
+      message: `must be at least ${JOUST_MIN_PERCH_WIDTH} so a player fits on it`
+    });
+  }
+
+  if (!isWithin(x, JOUST_MIN_PERCH_X, JOUST_MAX_PERCH_X) || x + width > JOUST_MAX_PERCH_X) {
+    issues.push({
+      path: "x",
+      message: `must keep the perch between ${JOUST_MIN_PERCH_X} and ${JOUST_MAX_PERCH_X}`
+    });
+  }
+
+  if (!isWithin(y, JOUST_MIN_PERCH_Y, JOUST_WORLD.floorY)) {
+    issues.push({
+      path: "y",
+      message: `must be between ${JOUST_MIN_PERCH_Y} and the floor at ${JOUST_WORLD.floorY}`
+    });
+  }
+
+  return issues;
+};
+
 export const validateJoustPrompt = (value: unknown): ValidationIssue[] => {
   if (!isObjectLike(value)) {
     return [{ path: "", message: "must be an object" }];
@@ -94,13 +158,16 @@ export const validateJoustPrompt = (value: unknown): ValidationIssue[] => {
     .filter((field) => !isNonEmptyString(value[field]))
     .map((field) => ({ path: field, message: "must be a non-empty string" }));
 
-  if (
-    !isFiniteNumber(value.targetX) ||
-    !isWithin(value.targetX, JOUST_MIN_TARGET_X, JOUST_MAX_TARGET_X)
-  ) {
-    issues.push({
-      path: "targetX",
-      message: `must be a number between ${JOUST_MIN_TARGET_X} and ${JOUST_MAX_TARGET_X}`
+  if (!Array.isArray(value.perches) || value.perches.length === 0) {
+    issues.push({ path: "perches", message: "must be a non-empty array" });
+  } else {
+    value.perches.forEach((perch, index) => {
+      for (const issue of validateJoustPerch(perch)) {
+        issues.push({
+          path: issue.path === "" ? `perches[${index}]` : `perches[${index}].${issue.path}`,
+          message: issue.message
+        });
+      }
     });
   }
 
@@ -117,6 +184,20 @@ export const validateJoustPrompt = (value: unknown): ValidationIssue[] => {
       });
     }
   });
+
+  if (issues.length === 0) {
+    const capacity = resolveLaneSlots(value.perches as JoustPerch[]).reduce(
+      (total, slots) => total + slots.length,
+      0
+    );
+
+    if (capacity < JOUST_MIN_LANE_CAPACITY) {
+      issues.push({
+        path: "perches",
+        message: `must seat at least ${JOUST_MIN_LANE_CAPACITY} players between them, but this lane seats ${capacity} — a shelf may be hanging too low over the sand, or a tower's legs may be standing where players would`
+      });
+    }
+  }
 
   return issues;
 };

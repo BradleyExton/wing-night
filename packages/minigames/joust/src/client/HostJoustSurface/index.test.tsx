@@ -2,8 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { JoustMinigameHostView, JoustMinigameShot } from "@wingnight/shared";
-import { resolveJoustRestFrame } from "@wingnight/shared";
+import type {
+  JoustMinigameHostView,
+  JoustMinigameShot,
+  JoustPlayerFigure
+} from "@wingnight/shared";
+import { resolveJoustRackSlots, resolveJoustRestFrame } from "@wingnight/shared";
 
 import { HostJoustSurface } from "./index.js";
 
@@ -12,25 +16,49 @@ const TEAM_NAMES = new Map([
   ["team-2", "Team Chill"]
 ]);
 
+const PERCHES = [
+  { x: 54, y: 78, width: 102 },
+  { x: 116, y: 50, width: 34 }
+];
+
 const ARENA = {
   id: "arena-1",
-  name: "Lone Saguaro",
-  targetX: 126,
-  obstacles: [{ x: 80, y: 52, width: 7, height: 26 }]
+  name: "The Lookout",
+  perches: PERCHES,
+  obstacles: [{ x: 46, y: 66, width: 5, height: 12 }]
 };
 
-const restFrame = resolveJoustRestFrame(ARENA, { x: -0.8, y: 0.5 });
+const LINEUP: JoustPlayerFigure[] = [
+  { playerId: "p4", name: "Rosie", avatarSrc: null, teamId: "team-2", genre: "disco" },
+  { playerId: "p5", name: "Darren", avatarSrc: null, teamId: "team-2", genre: "disco" },
+  { playerId: "p6", name: "Sarah", avatarSrc: null, teamId: "team-2", genre: "disco" }
+];
 
-const headshot: JoustMinigameShot = {
+const TEAMMATES: JoustPlayerFigure[] = [
+  { playerId: "p1", name: "Alex", avatarSrc: null, teamId: "team-1", genre: "metal" },
+  { playerId: "p2", name: "Caitlin", avatarSrc: null, teamId: "team-1", genre: "metal" }
+];
+
+const restFrame = resolveJoustRestFrame(
+  {
+    pinFeet: resolveJoustRackSlots(PERCHES, LINEUP.length),
+    perches: PERCHES,
+    obstacles: ARENA.obstacles
+  },
+  { x: -0.8, y: 0.5 }
+);
+
+const oneDown: JoustMinigameShot = {
   shotNumber: 1,
-  hitZone: "head",
-  points: 3,
+  toppledPlayerIds: ["p4"],
+  isRackCleared: false,
+  points: 1,
   aim: { x: -0.8, y: 0.5 },
+  pinPlayerIds: ["p4", "p5", "p6"],
   run: {
-    keyframeHz: 30,
+    keyframeHz: 24,
     keyframes: [[...restFrame], [...restFrame]],
-    hitZone: "head",
-    hitFrameIndex: 1
+    topples: [{ pinIndex: 0, frameIndex: 1 }]
   }
 };
 
@@ -40,6 +68,10 @@ const hostView = (overrides: Partial<JoustMinigameHostView> = {}): JoustMinigame
   pendingPointsByTeamId: { "team-1": 3, "team-2": 1 },
   phase: "aiming",
   arena: ARENA,
+  lineup: LINEUP,
+  teammates: TEAMMATES,
+  downPlayerIds: [],
+  activeShooterPlayerId: "p1",
   shotsPerTurn: 3,
   shotIndex: 0,
   aim: { x: 0, y: 0 },
@@ -63,8 +95,6 @@ const renderSurface = (
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
       serverOrigin={null}
-      players={[]}
-      teams={[]}
     />
   );
 };
@@ -85,22 +115,28 @@ const isDisabled = (html: string, label: string): boolean => {
   return /<button[^>]*\sdisabled=""/.test(button ?? "");
 };
 
-test("renders the arena scene and the shot counter while aiming", () => {
+test("renders the lane scene, the shot counter and the rack while aiming", () => {
   const html = renderSurface(hostView());
 
   assert.match(html, /data-joust-scene/);
   assert.match(html, /data-joust-aim-arena/);
   assert.match(html, /Shot 1 of 3/);
-  assert.match(html, /Lone Saguaro/);
-  assert.match(html, /Drag back on the arena/);
+  assert.match(html, /The Lookout/);
+  assert.match(html, /Drag back on the lane/);
+  assert.match(html, /3 of 3 still standing/);
+  assert.match(html, /Alex is up/, "the deck names whose go it is");
 });
 
-test("draws every cactus in the arena", () => {
+test("counts a felled player out of the standing line", () => {
+  assert.match(renderSurface(hostView({ downPlayerIds: ["p4"] })), /2 of 3 still standing/);
+});
+
+test("draws every cactus in the lane", () => {
   const html = renderSurface(
     hostView({
       arena: {
         ...ARENA,
-        obstacles: [ARENA.obstacles[0] ?? { x: 0, y: 0, width: 1, height: 1 }, { x: 100, y: 60, width: 5, height: 18 }]
+        obstacles: [ARENA.obstacles[0] ?? { x: 0, y: 0, width: 1, height: 1 }, { x: 30, y: 60, width: 5, height: 18 }]
       }
     })
   );
@@ -112,50 +148,64 @@ test("draws every cactus in the arena", () => {
 test("holds next shot until a shot has resolved", () => {
   assert.equal(isDisabled(renderSurface(hostView()), "Next shot"), true);
   assert.equal(
-    isDisabled(renderSurface(hostView({ phase: "resolved", lastShot: headshot })), "Next shot"),
+    isDisabled(renderSurface(hostView({ phase: "resolved", lastShot: oneDown })), "Next shot"),
     false
   );
 });
 
-test("names the hit and its points once a shot resolves", () => {
-  const html = renderSurface(hostView({ phase: "resolved", lastShot: headshot, shots: [headshot] }));
+test("names who went over and the points once a shot resolves", () => {
+  const html = renderSurface(hostView({ phase: "resolved", lastShot: oneDown, shots: [oneDown] }));
 
   assert.match(html, /data-joust-result/);
-  assert.match(html, /Headshot/);
-  assert.match(html, /\+3/);
+  assert.match(html, /One down/);
+  assert.match(html, /Rosie/);
+  assert.match(html, /\+1/);
   assert.match(html, /Watch the TV/);
 });
 
 test("calls a miss a whiff", () => {
-  const miss: JoustMinigameShot = { ...headshot, hitZone: null, points: 0, run: { ...headshot.run, hitZone: null, hitFrameIndex: null } };
+  const miss: JoustMinigameShot = {
+    ...oneDown,
+    toppledPlayerIds: [],
+    points: 0,
+    run: { ...oneDown.run, topples: [] }
+  };
   const html = renderSurface(hostView({ phase: "resolved", lastShot: miss, shots: [miss] }));
 
   assert.match(html, /Whiff/);
 });
 
+test("says the rack is clear once nobody is left standing", () => {
+  const html = renderSurface(
+    hostView({ phase: "done", downPlayerIds: ["p4", "p5", "p6"], lastShot: oneDown })
+  );
+
+  assert.match(html, /Rack cleared — nobody left standing/);
+});
+
 test("offers the skip escape hatch only while aiming", () => {
   assert.equal(isDisabled(renderSurface(hostView()), "Skip shot"), false);
   assert.equal(
-    isDisabled(renderSurface(hostView({ phase: "resolved", lastShot: headshot })), "Skip shot"),
+    isDisabled(renderSurface(hostView({ phase: "resolved", lastShot: oneDown })), "Skip shot"),
     true
   );
 });
 
 test("keeps the reset escape hatch available in every phase", () => {
   for (const phase of ["aiming", "resolved", "done"] as const) {
-    assert.equal(isDisabled(renderSurface(hostView({ phase, lastShot: headshot })), "Reset turn"), false);
+    assert.equal(isDisabled(renderSurface(hostView({ phase, lastShot: oneDown })), "Reset turn"), false);
   }
 });
 
 test("tells the host the turn is over instead of offering another shot", () => {
-  const html = renderSurface(hostView({ phase: "done", shotIndex: 2, lastShot: headshot }));
+  const html = renderSurface(hostView({ phase: "done", shotIndex: 2, lastShot: oneDown }));
 
   assert.match(html, /Turn over/);
   assert.equal(buttonFor(html, "Next shot"), null);
 });
 
 test("shows a chip per shot with the banked points filled in", () => {
-  const html = renderSurface(hostView({ shots: [headshot], shotIndex: 1 }));
+  const html = renderSurface(hostView({ shots: [oneDown], shotIndex: 1 }));
 
   assert.match(html, /This turn/);
   assert.equal((html.match(/>—</g) ?? []).length, 2);
@@ -171,7 +221,7 @@ test("lists every team's running total, not just the active one", () => {
 });
 
 test("disables every control when the host cannot act", () => {
-  const html = renderSurface(hostView({ phase: "resolved", lastShot: headshot }), "play", false);
+  const html = renderSurface(hostView({ phase: "resolved", lastShot: oneDown }), "play", false);
 
   assert.equal(isDisabled(html, "Next shot"), true);
   assert.equal(isDisabled(html, "Reset turn"), true);
@@ -181,10 +231,10 @@ test("disables every control when the host cannot act", () => {
 test("explains the round instead of showing controls during the intro", () => {
   const html = renderSurface(hostView(), "intro");
 
-  assert.match(html, /slingshot/);
+  assert.match(html, /every player on the team gets one pull/i);
   assert.equal(buttonFor(html, "Next shot"), null);
 });
 
-test("points the host at the content pack when no arena is loaded", () => {
+test("points the host at the content pack when no lane is loaded", () => {
   assert.match(renderSurface(hostView({ arena: null })), /joust.json/);
 });

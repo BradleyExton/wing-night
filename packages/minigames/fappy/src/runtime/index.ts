@@ -1,4 +1,4 @@
-import type { MinigameType } from "@wingnight/shared";
+import type { FappyPlayerFigure, MinigameType, Player, Team } from "@wingnight/shared";
 import { runFappyLeg } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
@@ -32,16 +32,46 @@ const resolveLegSeed = (teamId: string | null, legIndex: number): number => {
   return (hash ^ Math.imul(legIndex + 1, 0x9e3779b1)) | 0;
 };
 
+// The active team's seating, as the figures the surfaces draw. Only players
+// the roster still lists count; an id with no player behind it is skipped.
+const resolveTeamFigures = (
+  teamId: string | null,
+  players: readonly Player[],
+  teams: readonly Team[]
+): FappyPlayerFigure[] => {
+  const team = teamId === null ? undefined : teams.find((entry) => entry.id === teamId);
+
+  if (team === undefined) {
+    return [];
+  }
+
+  return team.playerIds.flatMap((playerId) => {
+    const player = players.find((entry) => entry.id === playerId);
+
+    return player === undefined
+      ? []
+      : [
+          {
+            playerId: player.id,
+            name: player.name,
+            avatarSrc: player.avatarSrc ?? null,
+            teamId: team.id,
+            genre: team.genre ?? null
+          }
+        ];
+  });
+};
+
 const createReadyLeg = (
   teamId: string | null,
-  playerIds: readonly string[],
+  figures: readonly FappyPlayerFigure[],
   legIndex: number
 ): FappyRuntimeLeg => {
   return {
     legIndex,
     // The roster cycles, so a short team's first player flies again rather
     // than the team flying fewer legs than everyone else.
-    playerId: playerIds.length === 0 ? null : (playerIds[legIndex % playerIds.length] ?? null),
+    player: figures.length === 0 ? null : (figures[legIndex % figures.length] ?? null),
     seed: resolveLegSeed(teamId, legIndex),
     status: "ready",
     attempt: 0,
@@ -56,11 +86,11 @@ const createReadyLeg = (
 
 const createLegs = (
   teamId: string | null,
-  playerIds: readonly string[],
+  figures: readonly FappyPlayerFigure[],
   rules: FappyRuntimeRules
 ): FappyRuntimeLeg[] => {
   return Array.from({ length: rules.legsPerTurn }, (_unused, legIndex) => {
-    return createReadyLeg(teamId, playerIds, legIndex);
+    return createReadyLeg(teamId, figures, legIndex);
   });
 };
 
@@ -204,8 +234,7 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
   initialize: (input) => {
     const rules = resolveFappyRules(input.rules);
     const activeTurnTeamId = input.activeRoundTeamId ?? input.teamIds[0] ?? null;
-    const playerIds =
-      activeTurnTeamId === null ? [] : (input.playerIdsByTeamId?.[activeTurnTeamId] ?? []);
+    const figures = resolveTeamFigures(activeTurnTeamId, input.players, input.teams);
 
     const initialState: FappyRuntimeState = {
       activeTurnTeamId,
@@ -214,7 +243,7 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
       parSeconds: rules.parSeconds,
       limitSeconds: rules.limitSeconds,
       legIndex: 0,
-      legs: createLegs(activeTurnTeamId, playerIds, rules),
+      legs: createLegs(activeTurnTeamId, figures, rules),
       startedAtMs: null,
       finishedAtMs: null,
       timedOutAtMs: null,
@@ -310,7 +339,7 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
         ...state,
         legIndex: 0,
         legs: state.legs.map((entry) =>
-          createReadyLeg(state.activeTurnTeamId, entry.playerId === null ? [] : [entry.playerId], entry.legIndex)
+          createReadyLeg(state.activeTurnTeamId, entry.player === null ? [] : [entry.player], entry.legIndex)
         ),
         startedAtMs: null,
         finishedAtMs: null,

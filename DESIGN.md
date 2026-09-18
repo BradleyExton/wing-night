@@ -277,25 +277,49 @@ title, turn timer), the clue board, then the standings footer per §3.2.
 
 ## 2.7 JOUST Minigame Surface Language ("Dusk Desert")
 
-The JOUST (Slingshlong) surfaces put a side-on desert arena under the same
+The JOUST (Slingshlong) surfaces put a side-on desert lane under the same
 marquee chrome the drawing easel uses:
 
 -   Scene materials are drawing content, not UI chrome, and are exempt
     from the 2-accent budget like the drawing inks: dusk sky
     (`#160c2a` → `#4a1f3f` → `#c2582c`), sand (`#d6ac63` / `#b58a45`),
     cactus greens (`#3f9d55` family), slingshot wood (`#6b4423`). The
-    shooter is `primary` orange; the champ is a cyan (`#22c9e6`) chosen to
-    read as the opponent from across a room. Faces are two white eyes.
+    shooter is `primary` orange.
+-   **The lane is the room.** Every player who is not shooting stands in it
+    as the very same cast bird the setup lobby wanders (§2.8) — their own
+    generated head and all — and the shooting team stands behind the
+    slingshot. Birds wear their own team's colour here, not a scene hex, so
+    the lane reads as the other teams at a glance and the turn marker needs
+    no caption. A bird felled on an earlier shot lies on its own spot at
+    half opacity, still in its colours: the damage is countable at TV
+    distance without reading a number.
+-   **The lane is built, not lined up.** Players stand on scaffolding —
+    slabs on legs in the slingshot's own wood (`post` / `postDark`) — at
+    different heights, so a flat shot ploughs the sand and only an arc
+    reaches a shelf. The timber is drawn from the same boxes the integrator
+    collides against: what looks like a leg IS a leg, and a shot that clips
+    one stops there.
+-   **Whoever is shooting steps up.** The turn goes round the shooting team
+    one player at a time, and their bird walks from the bench to the post
+    while the rest wait. Both surfaces name them, so the room knows it is
+    their go without being told twice.
+-   `<CharacterFigure>` is the cast drawing as a bare `<g>`, which is what
+    lets the lane place it under its own transform. JOUST scales it by
+    `CHARACTER_STAND_HEIGHT` so the bird and the physics pin are one
+    creature, and stands it up from the pin's two body centres — the lean
+    is the rotation, so nothing in the scene needs an angle.
 -   `gold` is the marquee/framing accent (marquee border, pending points,
     the impact burst, the result plaque) — a scoped exception to the §0.1
     "winner moments only" rule, like GEO's §2.4 and DRAWING's §2.5.
 -   Host layout reuses the §2.0A shell language: mini-rail strip on top,
-    full-height arena left (the touch surface), control deck column right
-    (shot card → result → Next shot → skip/reset → shot chips → totals).
--   Display layout: marquee (team, "Desert Duel", shot count + pending),
-    the arena, a status line beneath. The result plaque drops over the top
-    of the arena only once the replay has landed.
--   The arena is an SVG with a fixed 160×90 viewBox and `xMidYMid meet`,
+    full-height lane left (the touch surface), control deck column right
+    (shot card + standing count → result → Next shot → skip/reset → shot
+    chips → totals).
+-   Display layout: marquee (team, "Desert Lanes", shot count, how many are
+    still standing, pending), the lane, a status line beneath. The result
+    plaque drops over the top of the lane only once the replay has landed,
+    and names who went over rather than scoring a zone.
+-   The lane is an SVG with a fixed 160×90 viewBox and `xMidYMid meet`,
     so the letterboxed scene maps identically on tablet and TV and the
     tablet's pointer math is the inverse of the same fit.
 -   The replay is the game, not ambient decoration: §8's infinite-animation
@@ -342,11 +366,17 @@ under the same marquee and deck chrome:
 ## 2.8 Cast (shared character system)
 
 Every rostered player has a little hen that recurs across the show.
-The drawing lives in `packages/cast` (`@wingnight/cast`, so minigame packages can
-draw a player's bird too) and the look
-resolves from the player *name* (`resolvePlayerAppearance`), so Brad is the
-same character every night regardless of roster order. The candidates that
-lost to it are kept in `apps/client/public/mockups/cast/`.
+The drawing lives in `@wingnight/cast` — its own package, so the
+minigames can draw the cast too and there is exactly one hen in the repo —
+and the look resolves from the player *name* (`resolvePlayerAppearance`), so
+Brad is the same character every night regardless of roster order. The
+candidates that lost to it are kept in `apps/client/public/mockups/cast/`.
+
+The package exports the bird two ways: `<Character>` for a page, which wraps
+it in its own `<svg>`, and `<CharacterFigure>` for a surface that has an SVG
+already and wants to place the bird in it (JOUST's lane, §2.7). It also owns
+`resolveTeamColorVariant`, so a team's bird, its standings dot and its row
+edge all come off one table and can never drift onto different hues.
 
 -   **One colour per bird.** The whole silhouette (tail, body, wing, neck,
     head, comb) is the player's team accent (`teamA`–`teamH`, via

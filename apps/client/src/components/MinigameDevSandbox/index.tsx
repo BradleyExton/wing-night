@@ -5,7 +5,6 @@ import type {
   MinigameSurfacePhase,
   SerializableValue
 } from "@wingnight/minigames-core";
-import { resolveDevPlayerIdsByTeamId } from "@wingnight/minigames-core";
 import { resolveMinigameDefinition, type MinigameType } from "@wingnight/shared";
 
 import {
@@ -39,8 +38,9 @@ const initializeRuntimeState = (
 ): SerializableValue => {
   return runtimePlugin.initialize({
     teamIds: [...devManifest.teamIds],
+    players: devManifest.players.map((player) => ({ ...player })),
+    teams: devManifest.teams.map((team) => ({ ...team, playerIds: [...team.playerIds] })),
     activeRoundTeamId: devManifest.activeRoundTeamId,
-    playerIdsByTeamId: resolveDevPlayerIdsByTeamId(devManifest),
     pointsMax: devManifest.pointsMax,
     pendingPointsByTeamId: { ...devManifest.pendingPointsByTeamId },
     rules: devManifest.rules,
@@ -157,8 +157,6 @@ export const MinigameDevSandbox = ({
                 canDispatchAction
                 onDispatchAction={handleDispatchAction}
                 serverOrigin={serverOrigin}
-                players={devManifest.players}
-                teams={devManifest.teams}
               />
             </div>
           </div>
@@ -180,8 +178,6 @@ export const MinigameDevSandbox = ({
                 minigameDisplayView={minigameDisplayView}
                 activeTeamName={activeTeamName}
                 serverOrigin={serverOrigin}
-                players={devManifest.players}
-                teams={devManifest.teams}
               />
             </div>
           </div>

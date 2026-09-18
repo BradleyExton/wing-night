@@ -1,9 +1,10 @@
+import { resolveTeamColorVariant } from "@wingnight/cast";
+
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Player, Team } from "@wingnight/shared";
 
-import { resolveTeamColorVariant } from "@wingnight/cast";
 import { CastWander } from "./index";
 import * as styles from "./styles";
 

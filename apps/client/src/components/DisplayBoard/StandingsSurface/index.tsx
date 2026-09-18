@@ -1,8 +1,9 @@
+import { resolveTeamColorVariant } from "@wingnight/cast";
+
 import { Phase, type Player, type Team } from "@wingnight/shared";
 import { Flame, Trophy } from "lucide-react";
 
 import { displayBoardCopy } from "../copy";
-import { resolveTeamColorVariant } from "@wingnight/cast";
 import * as styles from "./styles";
 
 type StandingsSurfaceProps = {

@@ -63,6 +63,7 @@ const toFappyViewFields = (state: FappyRuntimeState) => {
     limitSeconds: state.limitSeconds,
     legs: state.legs.map((leg) => ({
       ...leg,
+      player: leg.player === null ? null : { ...leg.player },
       flapTicks: [...leg.flapTicks],
       knockedEagles: [...leg.knockedEagles],
       lastRun: leg.lastRun === null ? null : { ...leg.lastRun }

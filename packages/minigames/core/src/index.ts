@@ -32,11 +32,13 @@ export type MinigameRuntimeActionEnvelope = {
 
 export type MinigameRuntimeInitializationInput = {
   teamIds: string[];
+  // The night's roster and seating. Most games never look: a turn is a team's,
+  // and the team ids above are the whole board. JOUST is the exception — it
+  // racks up every player who is not shooting, so it needs to know who they
+  // are and which side they are on.
+  players: Player[];
+  teams: Team[];
   activeRoundTeamId: string | null;
-  // Each team's roster in seating order, for a relay that names whose leg it
-  // is. Optional so the fixtures and plugins written before it stay valid; a
-  // plugin that needs it treats a missing or empty roster as "no player".
-  playerIdsByTeamId?: Record<string, string[]>;
   pointsMax: number;
   pendingPointsByTeamId: Record<string, number>;
   rules: SerializableValue | null;
@@ -116,12 +118,6 @@ export type MinigameHostRendererProps = {
   // so a content-pack image (a GEO photo, a player's head) has to be addressed
   // absolutely. `null` until the host app has resolved it in an effect.
   serverOrigin: string | null;
-  // The room's roster and seating, so a surface can draw the player a view
-  // names by id (their cast bird, in their team's colour). Presentation only:
-  // the runtime's view still says WHOSE leg it is; these say what they look
-  // like. Empty in the shells that predate them.
-  players: Player[];
-  teams: Team[];
 };
 
 export type MinigameDisplayRendererProps = {
@@ -135,9 +131,6 @@ export type MinigameDisplayRendererProps = {
   // would 404 against the Vite origin. `null` until the host app has resolved
   // it — resolution reads `window`, so it happens in an effect.
   serverOrigin: string | null;
-  // See the host props: roster and seating for drawing a named player.
-  players: Player[];
-  teams: Team[];
 };
 
 export type MinigameRendererBundle = {
@@ -154,16 +147,14 @@ export type MinigameRendererBundle = {
 // each package because the browser cannot read content/sample/.
 export type MinigameDevManifest = {
   teamIds: string[];
+  players: Player[];
+  teams: Team[];
   teamNameByTeamId: Record<string, string>;
   activeRoundTeamId: string | null;
   pointsMax: number;
   pendingPointsByTeamId: Record<string, number>;
   rules: SerializableValue | null;
   content: SerializableValue | null;
-  // A roster for the sandbox, so a relay has legs to hand out and a surface
-  // has birds to draw. Two players a team; no heads, so they fly drawn.
-  players: Player[];
-  teams: Team[];
 };
 
 export type CreateDevManifestInput = {
@@ -171,6 +162,33 @@ export type CreateDevManifestInput = {
   content: SerializableValue | null;
   pointsMax?: number;
 };
+
+// Six named players seated three a side — enough of a roster that a game which
+// draws the room itself has something to draw, and small enough to read in a
+// sandbox. No avatars: the sandbox has no content pack to serve heads from.
+const DEV_PLAYERS: Player[] = [
+  { id: "player-1", name: "Alex" },
+  { id: "player-2", name: "Caitlin" },
+  { id: "player-3", name: "Dan" },
+  { id: "player-4", name: "Rosie" },
+  { id: "player-5", name: "Darren" },
+  { id: "player-6", name: "Sarah" }
+];
+
+const DEV_TEAMS: Team[] = [
+  {
+    id: "team-alpha",
+    name: "Team Alpha",
+    playerIds: ["player-1", "player-2", "player-3"],
+    totalScore: 0
+  },
+  {
+    id: "team-beta",
+    name: "Team Beta",
+    playerIds: ["player-4", "player-5", "player-6"],
+    totalScore: 0
+  }
+];
 
 // Standard two-team sandbox fixture shared by every minigame package; only
 // the game-specific rules/content (and optionally pointsMax) vary per game.
@@ -181,6 +199,8 @@ export const createDevManifest = ({
 }: CreateDevManifestInput): MinigameDevManifest => {
   return {
     teamIds: ["team-alpha", "team-beta"],
+    players: DEV_PLAYERS,
+    teams: DEV_TEAMS,
     teamNameByTeamId: {
       "team-alpha": "Team Alpha",
       "team-beta": "Team Beta"
@@ -192,39 +212,8 @@ export const createDevManifest = ({
       "team-beta": 0
     },
     rules,
-    content,
-    players: [
-      { id: "player-alpha-1", name: "Alex" },
-      { id: "player-alpha-2", name: "Morgan" },
-      { id: "player-beta-1", name: "Sam" },
-      { id: "player-beta-2", name: "Riley" }
-    ],
-    teams: [
-      {
-        id: "team-alpha",
-        name: "Team Alpha",
-        playerIds: ["player-alpha-1", "player-alpha-2"],
-        totalScore: 0,
-        genre: "country"
-      },
-      {
-        id: "team-beta",
-        name: "Team Beta",
-        playerIds: ["player-beta-1", "player-beta-2"],
-        totalScore: 0,
-        genre: "disco"
-      }
-    ]
+    content
   };
-};
-
-// The roster in the shape `initialize` takes, from the same fixture.
-export const resolveDevPlayerIdsByTeamId = (
-  devManifest: Pick<MinigameDevManifest, "teams">
-): Record<string, string[]> => {
-  return Object.fromEntries(
-    devManifest.teams.map((team) => [team.id, [...team.playerIds]])
-  );
 };
 
 export type PromptContentFile<TPrompt> = {

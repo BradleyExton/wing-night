@@ -101,8 +101,11 @@ export const createValidJoustJson = (prefix: string): string => {
       {
         id: `${prefix.toLowerCase()}-arena-1`,
         name: `${prefix} Arena`,
-        targetX: 126,
-        obstacles: [{ x: 80, y: 52, width: 7, height: 26 }]
+        perches: [
+          { x: 54, y: 78, width: 102 },
+          { x: 116, y: 50, width: 34 }
+        ],
+        obstacles: [{ x: 46, y: 66, width: 5, height: 12 }]
       }
     ]
   });

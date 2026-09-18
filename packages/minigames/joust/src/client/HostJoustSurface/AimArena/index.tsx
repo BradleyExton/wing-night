@@ -1,11 +1,16 @@
 import { useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { JoustAim, JoustMinigameArena, JoustMinigameShot } from "@wingnight/shared";
+import type {
+  JoustAim,
+  JoustMinigameArena,
+  JoustMinigameShot,
+  JoustPlayerFigure
+} from "@wingnight/shared";
 import { JOUST_WORLD, clampJoustAim } from "@wingnight/shared";
 
 import { JOUST_MIN_LAUNCH_PULL } from "../../../runtime/types/index.js";
 import { JoustArenaScene } from "../../JoustArenaScene/index.js";
-import { resolveSceneFrame } from "../../resolveSceneFrame/index.js";
+import { resolveJoustScene } from "../../resolveJoustScene/index.js";
 import { useShotReplay } from "../../useShotReplay/index.js";
 import * as styles from "./styles.js";
 
@@ -15,6 +20,11 @@ const AIM_DISPATCH_INTERVAL_MS = 80;
 
 type AimArenaProps = {
   arena: JoustMinigameArena;
+  lineup: JoustPlayerFigure[];
+  teammates: JoustPlayerFigure[];
+  activeShooterPlayerId: string | null;
+  downPlayerIds: string[];
+  serverOrigin: string | null;
   aim: JoustAim;
   lastShot: JoustMinigameShot | null;
   canAim: boolean;
@@ -47,7 +57,7 @@ const toWorldPoint = (
 
 // The pull is the pointer's offset from the slingshot fork, as a fraction of
 // the band's radius. Forward pulls are pinned to slack rather than allowed to
-// fire the shooter backwards — a tap on the champ's side of the arena reads
+// fire the shooter backwards — a tap on the rack's side of the lane reads
 // as pointing, not pulling.
 const toAim = (bounds: DOMRect, clientX: number, clientY: number): JoustAim => {
   const point = toWorldPoint(bounds, clientX, clientY);
@@ -64,6 +74,11 @@ const magnitude = (aim: JoustAim): number => {
 
 export const AimArena = ({
   arena,
+  lineup,
+  teammates,
+  activeShooterPlayerId,
+  downPlayerIds,
+  serverOrigin,
   aim,
   lastShot,
   canAim,
@@ -78,7 +93,7 @@ export const AimArena = ({
   const replayIndex = useShotReplay(lastShot);
   const shownAim = localAim ?? aim;
   const isAiming = lastShot === null && (canAim || magnitude(shownAim) > 0);
-  const scene = resolveSceneFrame(arena, shownAim, lastShot, replayIndex);
+  const scene = resolveJoustScene(arena, lineup, downPlayerIds, shownAim, lastShot, replayIndex);
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
     if (!canAim || lastShot !== null) {
@@ -149,8 +164,13 @@ export const AimArena = ({
       <JoustArenaScene
         arena={arena}
         frame={scene.frame}
+        pins={scene.pins}
+        fallen={scene.fallen}
+        teammates={teammates}
+        activeShooterPlayerId={activeShooterPlayerId}
         isAiming={isAiming}
-        impactBodyIndex={scene.impactBodyIndex}
+        burstPinIndices={scene.burstPinIndices}
+        serverOrigin={serverOrigin}
         sceneId="host-joust"
         label={sceneLabel}
       />

@@ -349,6 +349,9 @@ importers:
 
   packages/minigames/joust:
     dependencies:
+      '@wingnight/cast':
+        specifier: workspace:*
+        version: link:../../cast
       '@wingnight/minigames-core':
         specifier: workspace:*
         version: link:../core

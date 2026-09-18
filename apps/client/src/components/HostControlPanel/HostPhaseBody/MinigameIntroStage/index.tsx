@@ -44,8 +44,6 @@ export const MinigameIntroStage = (): JSX.Element => {
           teamNameByTeamId={teamNameByTeamId}
           canDispatchAction={canDispatchMinigameAction}
           onDispatchAction={handleDispatchMinigameAction}
-          players={roomState?.players ?? []}
-          teams={roomState?.teams ?? []}
         />
         {/* The anthem is playing right now on the TV, so the controls for it
             belong on the phase that plays it — not parked on a settings screen

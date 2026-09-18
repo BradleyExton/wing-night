@@ -35,7 +35,7 @@ test("fappy sandbox starts the clock on the first tap and sends a crashed bird b
   // One tap launches the leg and starts the relay clock; the display mirrors it.
   await page.locator("[data-fappy-arena]").click();
 
-  await expect(page.getByText("Alex is flying — land next to Morgan")).toBeVisible();
+  await expect(page.getByText("Alex is flying — land next to Caitlin")).toBeVisible();
   await expect(page.locator("[data-fappy-clock]").first()).not.toHaveText(/0:00\.0/);
 
   // Nobody flaps again, so the bird comes down: the local sim reports the end,
@@ -60,7 +60,7 @@ test("skipping hands the tablet on to the last leg's finish flag, finishing scor
   // The last leg has nobody to hand to: a finish flag stands where the waiter did.
   await expect(page.locator("[data-fappy-waiting-bird]")).toHaveCount(0);
   await expect(page.locator("[data-fappy-finish-flag]")).toHaveCount(2);
-  await expect(page.getByText("Morgan is up — tap to take off")).toBeVisible();
+  await expect(page.getByText("Caitlin is up — tap to take off")).toBeVisible();
 
   await page.getByRole("button", { name: "Skip leg" }).click();
 

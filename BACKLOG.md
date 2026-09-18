@@ -102,11 +102,31 @@ photo of Jordan comes up on Jordan's team's turn.
   to the roster-filtered pack is probably right, but it means targeting is best-effort and the rule
   needs stating in the host UI, not just the code.
 
+### Shared photo library (ADR-0004)
+
+Photos are becoming the substance of the game rather than GEO's private asset folder, and the facts
+about a photo — where it was taken, who is in it — currently get retyped into each game's prompt
+bank. `docs/adr/ADR-0004-shared-photo-library.md` proposes one manifest per pack
+(`<pack>/local/photos.json`) plus a served image tree under `assets/photos/`, with game content
+referencing a `photoId` and the content loader filling in `imageSrc` and `featuredPlayers` from the
+manifest before the roster filter runs.
+
+- **Input is settled and mostly done.** Google Takeout per album ships a sidecar carrying taken-at,
+  location and a `people` list from named face groups; the real account already has twenty named
+  clusters, the event albums, and location estimation on. The remaining human work is curation into
+  one Wing Night album, not tagging.
+- **Blocked on that export landing**, not on design. Build the importer against the real unzipped
+  Takeout, never against invented fixtures — the last two photo passes both failed on assumptions
+  about what Google actually emits.
+- **Decide the non-player rule first.** See the ADR's consequences: copying a photo's full `people`
+  list into `featuredPlayers` would drop good cards and warn about friends who simply are not
+  playing.
+
 ---
 
 ## Minigames
 
-Both of these are `MinigameRuntimePlugin` packages registered on server and client like
+These are `MinigameRuntimePlugin` packages registered on server and client like
 trivia/geo/drawing. Read `docs/minigame-authoring-guide.md` first — adding a `MinigameType` breaks
 every `Record<MinigameType, …>` in the repo until fully wired, so there's no throwaway half-state.
 
@@ -211,6 +231,32 @@ the re-cut geometry.
 Both labs and their `eslint.config.mjs` `ignores` entries are throwaway — delete them when the real
 minigame packages ship. Neither lab may create a package under `packages/minigames/`, add a
 `MINIGAME_DEFINITIONS` entry, or touch either registry.
+
+---
+
+## Team identity (genre theming)
+
+Spec: `docs/team-identity.md`. Teams are told apart by a hashed colour and a name; the genre only
+reaches the cast's apparel and the intro eyebrow. The kit turns `genre` into typeface, wordmark,
+emblem, ambient texture and entrance beat, resolved once per room state and drawn by four shared
+components. Each phase is one session and ends on the full gate plus the Playwright run.
+
+- ~~**Phase 1 — mockup.**~~ Done 2026-09-18; picks recorded in the spec's typography table. `apps/client/public/mockups/team-identity/`: kit board with font candidates
+  per genre for the four pack teams, plus a standings footer and intro spotlight from the leading
+  picks. Ends on a font decision written into the spec.
+- **Phase 2 — foundation.** Bundled woff2 faces + `@font-face` + Tailwind `font-genre-*` tokens;
+  `resolveTeamTheme` (absorbs `resolveTeamApparel`, colour precedence authored → genre → hash with
+  a collision pass); optional `color` on the teams content entry; `TeamWordmark`, `TeamEmblem`,
+  `TeamLineup`, `TeamAmbient`; `teamThemeById` beside `selectHostTeamMaps` and in
+  `resolveStageViewModel`.
+- **Phase 3 — TV headline moments.** `StandingsSurface`, `MinigameIntroStageBody` (lineup replaces
+  the text roster), `TurnResultsStageBody`, `FinalResultsStageBody`.
+- **Phase 4 — host surfaces.** `HostMiniRail` pill, `TeamSetupSurface`, `SetupPlayersSurface`
+  chips, `TurnOrderSurface`, `ScoreOverrideSurface`: glyph plus colour, no genre face below 20px.
+- **Phase 5 — minigames.** `activeTeamTheme` / `teamThemeByTeamId` on the core contract and
+  sandbox fixture; marquees in drawing and joust, labels in trivia.
+- **Phase 6 — authoring and docs.** Wizard genre field with live preview (genre half of the item
+  below), `DESIGN.md` §0.1 exemption and §2.8 pointer, standings/intro sections updated.
 
 ---
 

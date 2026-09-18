@@ -5,22 +5,24 @@ import type {
   JoustAim,
   JoustArena,
   JoustFrame,
-  JoustHitZone,
   JoustShotRun,
   JoustSimulateOptions,
+  JoustTopple,
   JoustVec2
 } from "../types.js";
 import {
-  JOUST_BODIES,
-  JOUST_CHAMP_BALL_INDICES,
-  JOUST_CHAMP_BASE_INDEX,
-  JOUST_CHAMP_HEAD_INDEX,
+  JOUST_PIN_HEIGHT,
   JOUST_SHOOTER_BALL_INDICES,
   JOUST_SHOOTER_BODY_COUNT,
   JOUST_SHOOTER_HEAD_INDEX,
+  JOUST_TOPPLE_TILT,
   JOUST_WORLD,
   clampJoustAim,
+  joustPinFootIndex,
+  joustPinHeadIndex,
+  resolveJoustBodies,
   resolveJoustLaunchVelocity,
+  resolveJoustPinTilt,
   resolveJoustRestPositions,
   resolveJoustSegments,
   toJoustFrame
@@ -28,8 +30,8 @@ import {
 
 /**
  * Half a thousandth of a world unit. A shot lined up exactly on a segment endpoint or dead-centre
- * on the champ's head otherwise resolves into a degenerate, unwatchable frame; the seed nudges
- * every shooter body off that knife edge reproducibly.
+ * on a pin's head otherwise resolves into a degenerate, unwatchable frame; the seed nudges every
+ * shooter body off that knife edge reproducibly.
  */
 const JITTER_UNITS = 0.0005;
 const DEFAULT_SEED_STATE = 0x9e3779b9 | 0;
@@ -39,14 +41,27 @@ const UINT32_RANGE = 4294967296;
 const CONSTRAINT_ITERATIONS = 4;
 /** Second-neighbour stiffness: enough that the shooter reads as a body, not a rope. */
 const BEND_STIFFNESS = 0.45;
-/** Per-step pull of each champ body toward where it stands, so it wobbles and rights itself. */
-const CHAMP_HOME_STIFFNESS = 0.018;
-const CHAMP_DAMPING = 0.985;
+/** Per-step pull of a wobbling pin's head back over its own foot — what keeps it on its feet. */
+const PIN_UPRIGHT_STIFFNESS = 0.08;
+/**
+ * How far a pin may lean and still recover. A pin is bistable like the real thing: inside this
+ * band it rights itself, and past it nothing holds it up — gravity swings the head down about the
+ * planted foot and it is going over. Without the cliff the rack is a rubber wall that returns the
+ * shot instead of taking it.
+ */
+const PIN_RECOVERY_TILT = 0.14;
+/** Per-step pull of a pin's foot back onto its column, so a glancing blow does not walk it away. */
+const PIN_FOOT_STIFFNESS = 0.06;
+/** A pin that is over keeps only enough of that pull to stop it sliding off screen. */
+const PIN_FOOT_STIFFNESS_DOWN = 0.012;
+const PIN_DAMPING = 0.985;
 const SHOOTER_DAMPING = 0.999;
 const SHOOTER_RESTITUTION = 0.32;
 const SHOOTER_SLIP = 0.7;
-const CHAMP_RESTITUTION = 0.15;
-const CHAMP_SLIP = 0.9;
+/** How little of a shooter-versus-pin separation the shot absorbs: a pin is the lighter body. */
+const SHOOTER_MASS_SHARE = 0.15;
+const PIN_RESTITUTION = 0.15;
+const PIN_SLIP = 0.9;
 
 /**
  * A frame-to-frame move below this reads as stopped from across a room. Looser than
@@ -66,10 +81,17 @@ type Body = {
   previousX: number;
   previousY: number;
   readonly radius: number;
-  readonly pinned: boolean;
   readonly isShooter: boolean;
+  /** Which pin this body belongs to, so a pin never collides with its own other half. */
+  readonly pinIndex: number | null;
+};
+
+type Pin = {
+  readonly footIndex: number;
+  readonly headIndex: number;
   readonly homeX: number;
   readonly homeY: number;
+  toppled: boolean;
 };
 
 type DistanceConstraint = {
@@ -129,23 +151,18 @@ const distanceBetween = (a: JoustVec2, b: JoustVec2): number => {
   return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 };
 
-const isChampPinned = (bodyIndex: number): boolean => {
-  return (
-    bodyIndex === JOUST_CHAMP_BASE_INDEX ||
-    JOUST_CHAMP_BALL_INDICES.some((ballIndex) => ballIndex === bodyIndex)
-  );
-};
-
 const buildBodies = (
   rest: readonly JoustVec2[],
+  pinCount: number,
   launch: JoustVec2,
   stepSeconds: number,
   seed: number
 ): Body[] => {
+  const descriptors = resolveJoustBodies(pinCount);
   let seedState = seedStateFrom(seed);
 
   return rest.map((position, bodyIndex): Body => {
-    const descriptor = JOUST_BODIES[bodyIndex];
+    const descriptor = descriptors[bodyIndex];
     const isShooter = bodyIndex < JOUST_SHOOTER_BODY_COUNT;
     let x = position.x;
     let y = position.y;
@@ -165,15 +182,23 @@ const buildBodies = (
       previousX: isShooter ? x - launch.x * stepSeconds : x,
       previousY: isShooter ? y - launch.y * stepSeconds : y,
       radius: descriptor?.radius ?? 0,
-      pinned: !isShooter && isChampPinned(bodyIndex),
       isShooter,
-      homeX: x,
-      homeY: y
+      pinIndex: isShooter ? null : Math.floor((bodyIndex - JOUST_SHOOTER_BODY_COUNT) / 2)
     };
   });
 };
 
-const buildConstraints = (rest: readonly JoustVec2[]): DistanceConstraint[] => {
+const buildPins = (arena: JoustArena): Pin[] => {
+  return arena.pinFeet.map((foot, pinIndex) => ({
+    footIndex: joustPinFootIndex(pinIndex),
+    headIndex: joustPinHeadIndex(pinIndex),
+    homeX: foot.x,
+    homeY: foot.y,
+    toppled: false
+  }));
+};
+
+const buildConstraints = (rest: readonly JoustVec2[], pins: readonly Pin[]): DistanceConstraint[] => {
   const restBetween = (a: number, b: number): number => {
     const first = rest[a];
     const second = rest[b];
@@ -205,17 +230,14 @@ const buildConstraints = (rest: readonly JoustVec2[]): DistanceConstraint[] => {
     stiffness: 1
   });
 
-  // Champ: a chain from the pinned base up to the head. Its balls are pinned to the floor, so
-  // they need no links; the home spring in `settleChamp` is what keeps it standing.
-  for (let index = JOUST_CHAMP_BASE_INDEX; index < JOUST_CHAMP_HEAD_INDEX; index += 1) {
-    constraints.push({ a: index, b: index + 1, rest: restBetween(index, index + 1), stiffness: 1 });
-  }
-  for (let index = JOUST_CHAMP_BASE_INDEX; index + 2 <= JOUST_CHAMP_HEAD_INDEX; index += 1) {
+  // A pin is a rigid stick: one link, foot to head. What holds it UPRIGHT is the spring in
+  // `settlePins`, which is the thing a hard enough shot is allowed to beat.
+  for (const pin of pins) {
     constraints.push({
-      a: index,
-      b: index + 2,
-      rest: restBetween(index, index + 2),
-      stiffness: BEND_STIFFNESS
+      a: pin.footIndex,
+      b: pin.headIndex,
+      rest: JOUST_PIN_HEIGHT,
+      stiffness: 1
     });
   }
 
@@ -224,11 +246,7 @@ const buildConstraints = (rest: readonly JoustVec2[]): DistanceConstraint[] => {
 
 const integrate = (bodies: Body[], gravityStep: number): void => {
   for (const body of bodies) {
-    if (body.pinned) {
-      continue;
-    }
-
-    const damping = body.isShooter ? SHOOTER_DAMPING : CHAMP_DAMPING;
+    const damping = body.isShooter ? SHOOTER_DAMPING : PIN_DAMPING;
     const velocityX = (body.x - body.previousX) * damping;
     const velocityY = (body.y - body.previousY) * damping;
 
@@ -256,51 +274,75 @@ const relax = (bodies: Body[], constraints: readonly DistanceConstraint[]): void
       continue;
     }
 
-    const weightA = a.pinned ? 0 : 1;
-    const weightB = b.pinned ? 0 : 1;
-    const totalWeight = weightA + weightB;
+    const correction = ((distance - constraint.rest) / distance) * constraint.stiffness * 0.5;
 
-    if (totalWeight === 0) {
-      continue;
-    }
-
-    const correction = ((distance - constraint.rest) / distance) * constraint.stiffness;
-    const shareA = correction * (weightA / totalWeight);
-    const shareB = correction * (weightB / totalWeight);
-
-    a.x += deltaX * shareA;
-    a.y += deltaY * shareA;
-    b.x -= deltaX * shareB;
-    b.y -= deltaY * shareB;
+    a.x += deltaX * correction;
+    a.y += deltaY * correction;
+    b.x -= deltaX * correction;
+    b.y -= deltaY * correction;
   }
 };
 
-/** Pinned bodies never drift; free champ bodies are drawn back toward standing. */
-const settleChamp = (bodies: Body[]): void => {
-  for (const body of bodies) {
-    if (body.isShooter) {
+/**
+ * What keeps the rack standing: a pin's foot is drawn back onto its own spot — the sand, or the
+ * perch it was stood on — and while it is only wobbling, its head is drawn back over that foot. A
+ * pin that has gone over keeps only the sideways part of that pull, so a player knocked off a
+ * tower falls off it instead of being held in the air. Past `PIN_RECOVERY_TILT` that help stops, so
+ * the pin goes all the way over instead of springing back up — which is the whole game, and the
+ * reason a felled player can be counted once and left out of the next shot.
+ */
+const settlePins = (bodies: Body[], pins: readonly Pin[]): void => {
+  for (const pin of pins) {
+    const foot = bodies[pin.footIndex];
+    const head = bodies[pin.headIndex];
+
+    if (foot === undefined || head === undefined) {
       continue;
     }
 
-    if (body.pinned) {
-      body.x = body.homeX;
-      body.y = body.homeY;
-      body.previousX = body.homeX;
-      body.previousY = body.homeY;
+    const footStiffness = pin.toppled ? PIN_FOOT_STIFFNESS_DOWN : PIN_FOOT_STIFFNESS;
+
+    foot.x += (pin.homeX - foot.x) * footStiffness;
+
+    if (pin.toppled) {
       continue;
     }
 
-    body.x += (body.homeX - body.x) * CHAMP_HOME_STIFFNESS;
-    body.y += (body.homeY - body.y) * CHAMP_HOME_STIFFNESS;
+    foot.y += (pin.homeY - foot.y) * footStiffness;
+
+    if (resolveJoustPinTilt(foot, head) > PIN_RECOVERY_TILT) {
+      continue;
+    }
+
+    head.x += (foot.x - head.x) * PIN_UPRIGHT_STIFFNESS;
+    head.y += (foot.y - JOUST_PIN_HEIGHT - head.y) * PIN_UPRIGHT_STIFFNESS;
+  }
+};
+
+/** Latches every pin that has just passed the point of no return, newest columns last. */
+const latchTopples = (
+  bodies: readonly Body[],
+  pins: Pin[],
+  frameIndex: number,
+  topples: JoustTopple[]
+): void => {
+  for (const [pinIndex, pin] of pins.entries()) {
+    const foot = bodies[pin.footIndex];
+    const head = bodies[pin.headIndex];
+
+    if (pin.toppled || foot === undefined || head === undefined) {
+      continue;
+    }
+
+    if (resolveJoustPinTilt(foot, head) > JOUST_TOPPLE_TILT) {
+      pin.toppled = true;
+      topples.push({ pinIndex, frameIndex });
+    }
   }
 };
 
 const collideWithSegments = (bodies: Body[], segments: readonly Segment[]): void => {
   for (const body of bodies) {
-    if (body.pinned) {
-      continue;
-    }
-
     const step: BodyStep = {
       x: body.x,
       y: body.y,
@@ -311,8 +353,8 @@ const collideWithSegments = (bodies: Body[], segments: readonly Segment[]): void
       step,
       {
         radius: body.radius,
-        restitution: body.isShooter ? SHOOTER_RESTITUTION : CHAMP_RESTITUTION,
-        slip: body.isShooter ? SHOOTER_SLIP : CHAMP_SLIP
+        restitution: body.isShooter ? SHOOTER_RESTITUTION : PIN_RESTITUTION,
+        slip: body.isShooter ? SHOOTER_SLIP : PIN_SLIP
       },
       segments
     );
@@ -324,74 +366,100 @@ const collideWithSegments = (bodies: Body[], segments: readonly Segment[]): void
   }
 };
 
-const zoneOf = (champIndex: number): JoustHitZone => {
-  if (champIndex === JOUST_CHAMP_HEAD_INDEX) {
-    return "head";
-  }
-  if (JOUST_CHAMP_BALL_INDICES.some((ballIndex) => ballIndex === champIndex)) {
-    return "balls";
-  }
-  return "shaft";
+const clampUnit = (value: number): number => {
+  return Math.min(1, Math.max(0, value));
 };
 
 /**
- * Shooter bodies against champ bodies. Overlaps are pushed apart, split evenly unless the champ
- * side is pinned; the first overlap of the whole run is the hit that scores.
+ * One circular body against one pin, treated as the capsule it is drawn as rather than as its two
+ * endpoints. A two-body pin has a bird-sized hole between foot and head, and a flat shot sails
+ * clean through it; closing that hole is what makes the rack hittable at all.
+ *
+ * The push lands where the contact is: a blow near the head puts almost all of itself into the
+ * head and almost none into the foot, which is exactly the torque that puts a pin over. Positions
+ * move and the previous ones do not, which in Verlet IS the transfer of momentum.
+ *
+ * `bodyShare` is how much of the separation the circle absorbs — the mass ratio, in effect. A pin
+ * is light next to the flying schlong, so the shot keeps its legs and ploughs on down the rack
+ * instead of stopping dead in the first player it meets.
  */
-const collideShooterWithChamp = (bodies: Body[]): JoustHitZone | null => {
-  let firstZone: JoustHitZone | null = null;
+const collideCircleWithPin = (
+  body: Body,
+  foot: Body,
+  head: Body,
+  bodyShare: number
+): void => {
+  const shaftX = head.x - foot.x;
+  const shaftY = head.y - foot.y;
+  const shaftLengthSquared = shaftX * shaftX + shaftY * shaftY;
 
-  for (let shooterIndex = 0; shooterIndex < JOUST_SHOOTER_BODY_COUNT; shooterIndex += 1) {
-    const shooter = bodies[shooterIndex];
+  if (shaftLengthSquared === 0) {
+    return;
+  }
 
-    if (shooter === undefined) {
+  const along = clampUnit(
+    ((body.x - foot.x) * shaftX + (body.y - foot.y) * shaftY) / shaftLengthSquared
+  );
+  const deltaX = foot.x + shaftX * along - body.x;
+  const deltaY = foot.y + shaftY * along - body.y;
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  const minimum = body.radius + foot.radius + (head.radius - foot.radius) * along;
+
+  if (distance >= minimum || distance === 0) {
+    return;
+  }
+
+  const push = (minimum - distance) / distance;
+  const pinShare = push * (1 - bodyShare);
+
+  body.x -= deltaX * push * bodyShare;
+  body.y -= deltaY * push * bodyShare;
+  foot.x += deltaX * pinShare * (1 - along);
+  foot.y += deltaY * pinShare * (1 - along);
+  head.x += deltaX * pinShare * along;
+  head.y += deltaY * pinShare * along;
+};
+
+/**
+ * The shot against the rack, then the rack against itself — so a pin going over takes its
+ * neighbours with it and the lane goes down like bowling. A pin is never tested against its own
+ * shaft; its two halves are held by their stick.
+ */
+const collideRack = (bodies: Body[], pins: readonly Pin[]): void => {
+  for (const pin of pins) {
+    const foot = bodies[pin.footIndex];
+    const head = bodies[pin.headIndex];
+
+    if (foot === undefined || head === undefined) {
       continue;
     }
 
-    for (let champIndex = JOUST_CHAMP_BASE_INDEX; champIndex < bodies.length; champIndex += 1) {
-      const champ = bodies[champIndex];
+    for (let bodyIndex = 0; bodyIndex < JOUST_SHOOTER_BODY_COUNT; bodyIndex += 1) {
+      const shooterBody = bodies[bodyIndex];
 
-      if (champ === undefined) {
+      if (shooterBody !== undefined) {
+        collideCircleWithPin(shooterBody, foot, head, SHOOTER_MASS_SHARE);
+      }
+    }
+
+    for (const neighbour of pins) {
+      const neighbourFoot = bodies[neighbour.footIndex];
+      const neighbourHead = bodies[neighbour.headIndex];
+
+      if (neighbour === pin || neighbourFoot === undefined || neighbourHead === undefined) {
         continue;
       }
 
-      const deltaX = champ.x - shooter.x;
-      const deltaY = champ.y - shooter.y;
-      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      const minimum = shooter.radius + champ.radius;
-
-      if (distance >= minimum || distance === 0) {
-        continue;
-      }
-
-      if (firstZone === null) {
-        firstZone = zoneOf(champIndex);
-      }
-
-      const overlap = minimum - distance;
-      const normalX = deltaX / distance;
-      const normalY = deltaY / distance;
-
-      if (champ.pinned) {
-        shooter.x -= normalX * overlap;
-        shooter.y -= normalY * overlap;
-        continue;
-      }
-
-      shooter.x -= normalX * overlap * 0.5;
-      shooter.y -= normalY * overlap * 0.5;
-      champ.x += normalX * overlap * 0.5;
-      champ.y += normalY * overlap * 0.5;
+      collideCircleWithPin(head, neighbourFoot, neighbourHead, 0.5);
+      collideCircleWithPin(foot, neighbourFoot, neighbourHead, 0.5);
     }
   }
-
-  return firstZone;
 };
 
-const maxDisplacement = (before: JoustFrame, after: JoustFrame): number => {
+const maxDisplacement = (before: JoustFrame, after: JoustFrame, fromBodyIndex: number): number => {
   let largest = 0;
 
-  for (let index = 0; index + 1 < after.length; index += 2) {
+  for (let index = fromBodyIndex * 2; index + 1 < after.length; index += 2) {
     const deltaX = (after[index] ?? 0) - (before[index] ?? 0);
     const deltaY = (after[index + 1] ?? 0) - (before[index + 1] ?? 0);
     largest = Math.max(largest, Math.sqrt(deltaX * deltaX + deltaY * deltaY));
@@ -428,13 +496,13 @@ const toSegments = (arena: JoustArena): Segment[] => {
 };
 
 /**
- * Fires one shot and returns the keyframe track a display would replay, plus where — if
- * anywhere — it first touched the champ.
+ * Fires one shot and returns the keyframe track a display would replay, plus every pin it put on
+ * the sand and the frame each one went down on.
  *
- * Pure and dependency-free by construction: same arena + same aim + same seed ⇒ the same track,
- * every time. The track is cut as soon as the scene has settled or the shooter has left the
- * world, so a clean miss into the void and a wobble-and-topple both end near the moment the
- * room stops caring.
+ * Pure and dependency-free by construction: same lane + same aim + same seed ⇒ the same track,
+ * every time. The track is cut as soon as the scene has settled or the shooter has left the world
+ * with the rack quiet, so a clean miss into the void and a nine-pin pile-up both end near the
+ * moment the room stops caring.
  */
 export const simulateJoustShot = (
   arena: JoustArena,
@@ -453,34 +521,32 @@ export const simulateJoustShot = (
   const rest = resolveJoustRestPositions(arena, clampedAim);
   const bodies = buildBodies(
     rest,
+    arena.pinFeet.length,
     resolveJoustLaunchVelocity(clampedAim),
     stepSeconds,
     options.seed
   );
-  const constraints = buildConstraints(rest);
+  const pins = buildPins(arena);
+  const constraints = buildConstraints(rest, pins);
   const segments = toSegments(arena);
 
   const keyframes: JoustFrame[] = [toJoustFrame(bodies)];
-  let hitZone: JoustHitZone | null = null;
-  let hitFrameIndex: number | null = null;
+  const topples: JoustTopple[] = [];
   let stillFrames = 0;
+  let quietRackFrames = 0;
 
   for (let stepIndex = 1; stepIndex <= totalSteps; stepIndex += 1) {
     integrate(bodies, gravityStep);
 
     for (let iteration = 0; iteration < CONSTRAINT_ITERATIONS; iteration += 1) {
       relax(bodies, constraints);
-      settleChamp(bodies);
     }
+
+    settlePins(bodies, pins);
 
     collideWithSegments(bodies, segments);
-
-    const contactZone = collideShooterWithChamp(bodies);
-
-    if (contactZone !== null && hitZone === null) {
-      hitZone = contactZone;
-      hitFrameIndex = keyframes.length;
-    }
+    collideRack(bodies, pins);
+    latchTopples(bodies, pins, keyframes.length, topples);
 
     if (stepIndex % stepsPerKeyframe !== 0) {
       continue;
@@ -490,12 +556,25 @@ export const simulateJoustShot = (
     const previous = keyframes[keyframes.length - 1];
 
     keyframes.push(frame);
+
+    if (previous === undefined) {
+      continue;
+    }
+
     stillFrames =
-      previous !== undefined && maxDisplacement(previous, frame) <= SETTLE_EPSILON_UNITS
-        ? stillFrames + 1
+      maxDisplacement(previous, frame, 0) <= SETTLE_EPSILON_UNITS ? stillFrames + 1 : 0;
+    // Measured over the rack alone, because a shooter tumbling out of the world never stops
+    // moving and would otherwise hold a finished scene open to the cap.
+    quietRackFrames =
+      maxDisplacement(previous, frame, JOUST_SHOOTER_BODY_COUNT) <= SETTLE_EPSILON_UNITS
+        ? quietRackFrames + 1
         : 0;
 
-    if (stepIndex >= minSteps && (stillFrames >= SETTLE_FRAMES || isShooterGone(bodies))) {
+    const isSceneOver =
+      stillFrames >= SETTLE_FRAMES ||
+      (isShooterGone(bodies) && quietRackFrames >= SETTLE_FRAMES);
+
+    if (stepIndex >= minSteps && isSceneOver) {
       break;
     }
   }
@@ -503,7 +582,9 @@ export const simulateJoustShot = (
   return {
     keyframeHz: options.keyframeHz,
     keyframes,
-    hitZone,
-    hitFrameIndex: hitFrameIndex === null ? null : Math.min(hitFrameIndex, keyframes.length - 1)
+    topples: topples.map((topple) => ({
+      pinIndex: topple.pinIndex,
+      frameIndex: Math.min(topple.frameIndex, keyframes.length - 1)
+    }))
   };
 };

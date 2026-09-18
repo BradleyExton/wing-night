@@ -6,13 +6,13 @@ export const joustContentAdapter = createPromptContentAdapter<JoustPrompt>({
   label: "joust",
   fileName: "minigames/joust.json",
   invalidContentHint:
-    "expected { prompts: [{ id, name, targetX, obstacles: [{ x, y, width, height }] }] } with unique ids.",
+    "expected { prompts: [{ id, name, perches: [{ x, y, width }], obstacles: [{ x, y, width, height }] }] } with unique ids.",
   isContentFile: isJoustContentFile,
   isPrompt: isJoustPrompt,
   clonePrompt: (prompt) => ({
     id: prompt.id,
     name: prompt.name,
-    targetX: prompt.targetX,
+    perches: prompt.perches.map((perch) => ({ ...perch })),
     obstacles: prompt.obstacles.map((obstacle) => ({
       x: obstacle.x,
       y: obstacle.y,

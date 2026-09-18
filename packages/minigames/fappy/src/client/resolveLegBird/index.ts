@@ -1,11 +1,11 @@
 import {
+  resolveCharacterFillClassName,
   resolvePlayerAppearance,
   resolveTeamApparel,
-  resolveTeamColorVariant,
   type CharacterApparel,
   type CharacterAppearance
 } from "@wingnight/cast";
-import type { FappyMinigameLeg, Player, Team } from "@wingnight/shared";
+import type { FappyPlayerFigure } from "@wingnight/shared";
 
 export type LegBird = {
   playerName: string | null;
@@ -14,43 +14,35 @@ export type LegBird = {
   fillClassName: string;
 };
 
-// The hen nobody is wearing: a team with no roster, or a leg whose player
-// has left the room state. Still the team's colour, still the team's apparel.
+// The hen nobody is wearing: a team with no roster. Still the team's colour.
 const ANONYMOUS_APPEARANCE: CharacterAppearance = { body: "round", comb: "crest", tail: "fan" };
 
 type ResolveLegBirdInput = {
-  leg: Pick<FappyMinigameLeg, "playerId"> | null;
+  figure: FappyPlayerFigure | null;
   activeTurnTeamId: string | null;
-  players: readonly Player[];
-  teams: readonly Team[];
   serverOrigin: string | null;
 };
 
-// Who is flying this leg and what their bird looks like: the runtime's view
-// names the player by id, and the roster and seating the shell passes turn
-// that into a face, a colour and an outfit.
-export const resolveLegBird = ({
-  leg,
-  activeTurnTeamId,
-  players,
-  teams,
-  serverOrigin
-}: ResolveLegBirdInput): LegBird => {
-  const player =
-    leg === null || leg.playerId === null
-      ? undefined
-      : players.find((candidate) => candidate.id === leg.playerId);
-  const team =
-    activeTurnTeamId === null ? undefined : teams.find((candidate) => candidate.id === activeTurnTeamId);
+// What a leg's bird looks like. The runtime's view carries the player as a
+// figure (name, pack-relative head, team, genre — the JOUST convention), and
+// this turns that into a face, a colour and an outfit for the cast to draw.
+export const resolveLegBird = ({ figure, activeTurnTeamId, serverOrigin }: ResolveLegBirdInput): LegBird => {
+  if (figure === null) {
+    return {
+      playerName: null,
+      appearance: ANONYMOUS_APPEARANCE,
+      apparel: undefined,
+      fillClassName: resolveCharacterFillClassName(activeTurnTeamId)
+    };
+  }
 
   return {
-    playerName: player?.name ?? null,
-    appearance:
-      player === undefined ? ANONYMOUS_APPEARANCE : resolvePlayerAppearance(player, serverOrigin),
-    apparel: resolveTeamApparel(team),
-    fillClassName:
-      activeTurnTeamId === null
-        ? "text-mutedWarm"
-        : resolveTeamColorVariant(activeTurnTeamId).characterFillClassName
+    playerName: figure.name,
+    appearance: resolvePlayerAppearance(
+      { name: figure.name, avatarSrc: figure.avatarSrc ?? undefined },
+      serverOrigin
+    ),
+    apparel: resolveTeamApparel({ genre: figure.genre ?? undefined }),
+    fillClassName: resolveCharacterFillClassName(figure.teamId ?? activeTurnTeamId)
   };
 };

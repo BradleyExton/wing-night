@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import type { FappyMinigameHostView, FappyMinigameLeg, Player, Team } from "@wingnight/shared";
+import type { FappyMinigameHostView, FappyMinigameLeg } from "@wingnight/shared";
 import { resolveFappyGates } from "@wingnight/shared";
 
 import { FappyScene, type FappySceneHandle } from "../FappyScene/index.js";
@@ -31,15 +31,8 @@ const resolveActiveTeamName = ({
   return activeTeamName ?? hostFappySurfaceCopy.noAssignedTeamLabel;
 };
 
-const resolvePlayerName = (
-  leg: FappyMinigameLeg | null | undefined,
-  players: readonly Player[]
-): string | null => {
-  if (leg === null || leg === undefined || leg.playerId === null) {
-    return null;
-  }
-
-  return players.find((player) => player.id === leg.playerId)?.name ?? null;
+const resolvePlayerName = (leg: FappyMinigameLeg | null | undefined): string | null => {
+  return leg?.player?.name ?? null;
 };
 
 const isRelayOver = (view: FappyMinigameHostView): boolean => {
@@ -139,8 +132,6 @@ const RunningTotals = ({
 type CorridorProps = {
   view: FappyMinigameHostView;
   canAct: boolean;
-  players: readonly Player[];
-  teams: readonly Team[];
   serverOrigin: string | null;
   onDispatchAction: MinigameHostRendererProps["onDispatchAction"];
 };
@@ -150,8 +141,6 @@ type CorridorProps = {
 const Corridor = ({
   view,
   canAct,
-  players,
-  teams,
   serverOrigin,
   onDispatchAction
 }: CorridorProps): JSX.Element => {
@@ -164,10 +153,8 @@ const Corridor = ({
       : resolveFappyGates({ seed: leg.seed, legIndex: leg.legIndex, gatesPerLeg: view.gatesPerLeg });
   }, [leg, view.gatesPerLeg]);
   const bird = resolveLegBird({
-    leg,
+    figure: leg?.player ?? null,
     activeTurnTeamId: view.activeTurnTeamId,
-    players,
-    teams,
     serverOrigin
   });
   // Who stands on the landing cliff: the next leg's player, or nobody on the last leg.
@@ -175,7 +162,7 @@ const Corridor = ({
   const waitingBird =
     nextLeg === null
       ? null
-      : resolveLegBird({ leg: nextLeg, activeTurnTeamId: view.activeTurnTeamId, players, teams, serverOrigin });
+      : resolveLegBird({ figure: nextLeg.player, activeTurnTeamId: view.activeTurnTeamId, serverOrigin });
   const isLive = view.phase === "ready" || view.phase === "flying";
   const { flap } = useFappyRunner({
     leg,
@@ -213,14 +200,10 @@ const Corridor = ({
   );
 };
 
-const resolveHint = (
-  view: FappyMinigameHostView,
-  canAct: boolean,
-  players: readonly Player[]
-): string => {
+const resolveHint = (view: FappyMinigameHostView, canAct: boolean): string => {
   const legIndex = Math.min(view.legIndex, view.legsPerTurn - 1);
   const leg = view.legs[legIndex];
-  const waitingName = resolvePlayerName(view.legs[legIndex + 1] ?? null, players);
+  const waitingName = resolvePlayerName(view.legs[legIndex + 1] ?? null);
 
   if (view.phase === "ready") {
     if (!canAct) {
@@ -246,9 +229,7 @@ export const HostFappySurface = ({
   teamNameByTeamId,
   canDispatchAction,
   onDispatchAction,
-  serverOrigin,
-  players,
-  teams
+  serverOrigin
 }: MinigameHostRendererProps): JSX.Element => {
   const fappyView = minigameHostView?.minigame === "FAPPY" ? minigameHostView : null;
   const resolvedActiveTeamName = resolveActiveTeamName({
@@ -299,12 +280,10 @@ export const HostFappySurface = ({
             <Corridor
               view={fappyView}
               canAct={canAct}
-              players={players}
-              teams={teams}
               serverOrigin={serverOrigin}
               onDispatchAction={onDispatchAction}
             />
-            <p className={styles.arenaHint}>{resolveHint(fappyView, canAct, players)}</p>
+            <p className={styles.arenaHint}>{resolveHint(fappyView, canAct)}</p>
           </div>
           <aside className={styles.deck}>
             <div className={styles.legCard}>
@@ -315,7 +294,7 @@ export const HostFappySurface = ({
                 )}
               </span>
               <p className={styles.flyingName}>
-                {hostFappySurfaceCopy.flyingLabel(resolvePlayerName(currentLeg, players))}
+                {hostFappySurfaceCopy.flyingLabel(resolvePlayerName(currentLeg))}
               </p>
               <div className={styles.legMeta}>
                 <span>

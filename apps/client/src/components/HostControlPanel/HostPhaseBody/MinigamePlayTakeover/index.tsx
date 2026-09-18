@@ -53,8 +53,6 @@ export const MinigamePlayTakeover = (): JSX.Element => {
         teamNameByTeamId={teamNameByTeamId}
         canDispatchAction={canDispatchMinigameAction}
         onDispatchAction={handleDispatchMinigameAction}
-        players={roomState?.players ?? []}
-        teams={roomState?.teams ?? []}
       />
     </div>
   );

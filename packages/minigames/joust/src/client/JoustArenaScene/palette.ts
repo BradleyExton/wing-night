@@ -1,6 +1,8 @@
-// Scene materials for the "Dusk Desert" arena (DESIGN.md §2.7). These are
-// drawing content — the sand, the cacti, the two combatants — not UI chrome,
-// and are exempt from the two-accent budget the way the drawing inks are.
+// Scene materials for the "Dusk Desert" lane (DESIGN.md §2.7). These are
+// drawing content — the sand, the cacti, the shot — not UI chrome, and are
+// exempt from the two-accent budget the way the drawing inks are. The birds
+// standing in the lane are NOT here: they are cast members (§2.8) and wear
+// their own team's theme colour.
 export const joustPalette = {
   skyTop: "#160c2a",
   skyMid: "#4a1f3f",
@@ -20,9 +22,6 @@ export const joustPalette = {
   shooter: "#f97316",
   shooterDark: "#b8410a",
   shooterLight: "#fdba74",
-  champ: "#22c9e6",
-  champDark: "#0b7f97",
-  champLight: "#a5f3fc",
   eye: "#fff7ed",
   pupil: "#1c0d02",
   burst: "#fbbf24",

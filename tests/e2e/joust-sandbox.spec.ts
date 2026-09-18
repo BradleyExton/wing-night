@@ -46,10 +46,21 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
 
   await expect(page.getByRole("heading", { name: "Minigame Dev Sandbox" })).toBeVisible();
 
-  // Both previews draw the same arena from the live fixture content.
+  // Both previews draw the same lane from the live fixture content.
   await expect(page.locator("[data-joust-scene]")).toHaveCount(2);
   await expect(page.getByText("Shot 1 of 3")).toHaveCount(2);
-  await expect(page.getByText("Pull back… and let it fly")).toBeVisible();
+  // The rack IS the room: the sandbox roster is six players seated three a
+  // side, so each scene stands three birds down the lane and benches three
+  // behind the slingshot — one of whom is stepped up to the band.
+  await expect(page.locator("[data-joust-bench]")).toHaveCount(2);
+  await expect(page.locator("[data-joust-hen]")).toHaveCount(12);
+  await expect(page.locator("[data-joust-shooter-figure]")).toHaveCount(2);
+  await expect(page.getByText("3/3 standing")).toBeVisible();
+  await expect(page.getByText("3 of 3 still standing")).toBeVisible();
+
+  // Everyone on the team shoots, in roster order, and both surfaces say whose go it is.
+  await expect(page.getByText("Alex — pull back and let it fly")).toBeVisible();
+  await expect(page.getByText("Alex is up")).toBeVisible();
 
   const nextShotButton = page.getByRole("button", { name: "Next shot" });
 
@@ -66,6 +77,7 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
   await nextShotButton.click();
 
   await expect(page.getByText("Shot 2 of 3")).toHaveCount(2);
+  await expect(page.getByText("Caitlin is up")).toBeVisible();
   await expect(nextShotButton).toBeDisabled();
 
   expect(socketRequests).toHaveLength(0);

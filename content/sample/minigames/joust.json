@@ -1,34 +1,38 @@
 {
   "prompts": [
     {
-      "id": "arena-lone-saguaro",
-      "name": "Lone Saguaro",
-      "targetX": 126,
-      "obstacles": [{ "x": 80, "y": 52, "width": 7, "height": 26 }]
-    },
-    {
       "id": "arena-open-range",
       "name": "Open Range",
-      "targetX": 134,
+      "perches": [{ "x": 54, "y": 78, "width": 102 }],
       "obstacles": []
     },
     {
-      "id": "arena-twin-peaks",
-      "name": "Twin Peaks",
-      "targetX": 122,
-      "obstacles": [
-        { "x": 66, "y": 60, "width": 6, "height": 18 },
-        { "x": 98, "y": 46, "width": 6, "height": 32 }
-      ]
+      "id": "arena-lookout",
+      "name": "The Lookout",
+      "perches": [
+        { "x": 54, "y": 78, "width": 102 },
+        { "x": 116, "y": 50, "width": 34 }
+      ],
+      "obstacles": [{ "x": 46, "y": 66, "width": 5, "height": 12 }]
     },
     {
-      "id": "arena-low-fence",
-      "name": "Low Fence",
-      "targetX": 140,
-      "obstacles": [
-        { "x": 90, "y": 68, "width": 5, "height": 10 },
-        { "x": 110, "y": 68, "width": 5, "height": 10 }
-      ]
+      "id": "arena-two-towers",
+      "name": "Two Towers",
+      "perches": [
+        { "x": 54, "y": 78, "width": 102 },
+        { "x": 62, "y": 56, "width": 32 },
+        { "x": 116, "y": 56, "width": 32 }
+      ],
+      "obstacles": []
+    },
+    {
+      "id": "arena-front-porch",
+      "name": "Front Porch",
+      "perches": [
+        { "x": 54, "y": 78, "width": 102 },
+        { "x": 58, "y": 52, "width": 34 }
+      ],
+      "obstacles": []
     }
   ]
 }
