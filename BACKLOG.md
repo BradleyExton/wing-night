@@ -102,11 +102,31 @@ photo of Jordan comes up on Jordan's team's turn.
   to the roster-filtered pack is probably right, but it means targeting is best-effort and the rule
   needs stating in the host UI, not just the code.
 
+### Shared photo library (ADR-0004)
+
+Photos are becoming the substance of the game rather than GEO's private asset folder, and the facts
+about a photo — where it was taken, who is in it — currently get retyped into each game's prompt
+bank. `docs/adr/ADR-0004-shared-photo-library.md` proposes one manifest per pack
+(`<pack>/local/photos.json`) plus a served image tree under `assets/photos/`, with game content
+referencing a `photoId` and the content loader filling in `imageSrc` and `featuredPlayers` from the
+manifest before the roster filter runs.
+
+- **Input is settled and mostly done.** Google Takeout per album ships a sidecar carrying taken-at,
+  location and a `people` list from named face groups; the real account already has twenty named
+  clusters, the event albums, and location estimation on. The remaining human work is curation into
+  one Wing Night album, not tagging.
+- **Blocked on that export landing**, not on design. Build the importer against the real unzipped
+  Takeout, never against invented fixtures — the last two photo passes both failed on assumptions
+  about what Google actually emits.
+- **Decide the non-player rule first.** See the ADR's consequences: copying a photo's full `people`
+  list into `featuredPlayers` would drop good cards and warn about friends who simply are not
+  playing.
+
 ---
 
 ## Minigames
 
-Both of these are `MinigameRuntimePlugin` packages registered on server and client like
+These are `MinigameRuntimePlugin` packages registered on server and client like
 trivia/geo/drawing. Read `docs/minigame-authoring-guide.md` first — adding a `MinigameType` breaks
 every `Record<MinigameType, …>` in the repo until fully wired, so there's no throwaway half-state.
 
