@@ -1,10 +1,13 @@
 import type { Player, Team } from "@wingnight/shared";
 
-import { resolvePlayerAppearance } from "../../../../../utils/resolvePlayerAppearance";
+import {
+  Character,
+  resolvePlayerAppearance,
+  resolveTeamApparel,
+  resolveTeamColorVariant
+} from "@wingnight/cast";
+
 import { useServerOrigin } from "../../../../../utils/useServerOrigin";
-import { resolveTeamApparel } from "../../../../../utils/resolveTeamApparel";
-import { resolveTeamColorVariant } from "../../../../../utils/resolveTeamColorVariant";
-import { Character } from "../../../../Character";
 import * as styles from "./styles";
 
 type CastWanderProps = {

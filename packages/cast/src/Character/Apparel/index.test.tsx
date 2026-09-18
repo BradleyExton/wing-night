@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { CHARACTER_APPARELS } from "../../../utils/resolveTeamApparel";
-import { DRAWN_HEAD_ANCHORS } from "../geometry";
-import { Apparel } from "./index";
+import { CHARACTER_APPARELS } from "../../resolveTeamApparel/index.js";
+import { DRAWN_HEAD_ANCHORS } from "../geometry/index.js";
+import { Apparel } from "./index.js";
 
 test("does render a tagged group for every apparel kind when placed on a head", () => {
   for (const apparel of CHARACTER_APPARELS) {

@@ -1,5 +1,5 @@
 import type { RoundResultsRow } from "../resolveStageViewModel";
-import { resolveTeamColorVariant } from "../../../../utils/resolveTeamColorVariant";
+import { resolveTeamColorVariant } from "@wingnight/cast";
 import { roundResultsStageCopy } from "./copy";
 import * as styles from "./styles";
 

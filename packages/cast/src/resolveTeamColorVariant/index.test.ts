@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveTeamColorVariant } from "./index";
+import { resolveTeamColorVariant } from "./index.js";
 
 test("returns deterministic team color variants by id", () => {
   const firstPass = resolveTeamColorVariant("team-alpha");

@@ -1,7 +1,4 @@
-const isStylesFile = (filename) =>
-  typeof filename === "string" &&
-  filename.includes("/apps/client/src/components/") &&
-  filename.endsWith("/styles.ts");
+import { isHouseStylesFile as isStylesFile } from "./houseComponentPaths.mjs";
 
 const DISALLOWED_COLOR_TOKEN_PATTERN =
   /(?:^|\s)(?:[a-z0-9-]+:)*(?:bg|text|border|ring|outline|from|via|to|placeholder|decoration|caret|accent)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|black|white)(?:[-/][^\s]*)?(?=\s|$)/;

@@ -10,7 +10,7 @@ export default {
       missingStylesImport:
         "Component entrypoint must import styles from \"./styles\".",
       invalidStylesImport:
-        "Component entrypoint must import styles as `import * as styles from \"./styles\"`."
+        "Component entrypoint must import styles as `import * as styles from \"./styles\"` (\"./styles.js\" in a NodeNext package)."
     }
   },
   create(context) {
@@ -18,7 +18,7 @@ export default {
     return {
       ImportDeclaration(node) {
         const source = node.source.value;
-        if (source === "./styles" || source === "./styles.ts") {
+        if (source === "./styles" || source === "./styles.ts" || source === "./styles.js") {
           hasStylesImport = true;
 
           const hasNamespaceStylesSpecifier =

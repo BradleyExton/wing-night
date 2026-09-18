@@ -1,7 +1,7 @@
-const normalize = (filename) => filename.replace(/\\/g, "/");
+import { isHouseComponentPath, normalizeFilename } from "./houseComponentPaths.mjs";
 
 const COMPONENT_ENTRY_FILE_PATTERN =
-  /\/apps\/client\/src\/components\/.+\/index(?:\.test)?\.tsx$/;
+  /\/(?:apps\/client\/src\/components|packages\/cast\/src)\/.+\/index(?:\.test)?\.tsx$/;
 
 export default {
   meta: {
@@ -19,8 +19,8 @@ export default {
   create(context) {
     return {
       Program(node) {
-        const filename = normalize(context.filename);
-        if (!filename.includes("/apps/client/src/components/")) {
+        const filename = normalizeFilename(context.filename);
+        if (!isHouseComponentPath(filename)) {
           return;
         }
 

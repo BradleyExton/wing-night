@@ -305,7 +305,8 @@ marquee chrome the drawing easel uses:
 ## 2.8 Cast (shared character system)
 
 Every rostered player has a little hen that recurs across the show.
-The drawing lives in `apps/client/src/components/Character` and the look
+The drawing lives in `packages/cast` (`@wingnight/cast`, so minigame packages can
+draw a player's bird too) and the look
 resolves from the player *name* (`resolvePlayerAppearance`), so Brad is the
 same character every night regardless of roster order. The candidates that
 lost to it are kept in `apps/client/public/mockups/cast/`.

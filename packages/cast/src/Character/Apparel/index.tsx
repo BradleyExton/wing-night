@@ -1,6 +1,6 @@
-import type { CharacterApparel } from "../../../utils/resolveTeamApparel";
-import { perchTransform, type HeadAnchors } from "../geometry";
-import * as styles from "./styles";
+import type { CharacterApparel } from "../../resolveTeamApparel/index.js";
+import { perchTransform, type HeadAnchors } from "../geometry/index.js";
+import * as styles from "./styles.js";
 
 type ApparelProps = {
   apparel: CharacterApparel;

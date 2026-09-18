@@ -38,6 +38,10 @@ test("require-styles-import-in-component-entry", () => {
         {
           filename: "/repo/apps/client/src/components/Example/index.tsx",
           code: "import * as styles from './styles'; export const Example = () => <main className={styles.container} />;"
+        },
+        {
+          filename: "/repo/packages/cast/src/Character/index.tsx",
+          code: "import * as styles from './styles.js'; export const Character = () => <svg className={styles.svg} />;"
         }
       ],
       invalid: [
@@ -139,12 +143,21 @@ test("component-entry-file-name", () => {
       {
         filename: "/repo/apps/client/src/components/Example/index.test.tsx",
         code: "export const ExampleTest = () => null;"
+      },
+      {
+        filename: "/repo/packages/cast/src/Character/index.tsx",
+        code: "export const Character = () => null;"
       }
     ],
     invalid: [
       {
         filename: "/repo/apps/client/src/components/Example/View.tsx",
         code: "export const View = () => null;",
+        errors: [{ messageId: "mustUseIndexTsx" }]
+      },
+      {
+        filename: "/repo/packages/cast/src/Character/Hen.tsx",
+        code: "export const Hen = () => null;",
         errors: [{ messageId: "mustUseIndexTsx" }]
       }
     ]
@@ -197,6 +210,11 @@ test("no-hardcoded-hex-colors-in-styles", () => {
         {
           filename: "/repo/apps/client/src/components/Example/styles.ts",
           code: "export const className = `text-[#FBBF24]`;",
+          errors: [{ messageId: "noHardcodedHexColor" }]
+        },
+        {
+          filename: "/repo/packages/cast/src/Character/styles.ts",
+          code: "export const silhouette = 'fill-[#f97316]';",
           errors: [{ messageId: "noHardcodedHexColor" }]
         }
       ]

@@ -5,9 +5,9 @@ import type {
   CharacterBody,
   CharacterComb,
   CharacterTail
-} from "../../utils/resolvePlayerAppearance";
-import type { CharacterApparel } from "../../utils/resolveTeamApparel";
-import { Apparel } from "./Apparel";
+} from "../resolvePlayerAppearance/index.js";
+import type { CharacterApparel } from "../resolveTeamApparel/index.js";
+import { Apparel } from "./Apparel/index.js";
 import {
   COSTUME_HEAD_ANCHORS,
   COSTUME_HEAD_HEIGHT,
@@ -15,8 +15,8 @@ import {
   DRAWN_HEAD_ANCHORS,
   perchTransform,
   type HeadAnchors
-} from "./geometry";
-import * as styles from "./styles";
+} from "./geometry/index.js";
+import * as styles from "./styles.js";
 
 // A hen, drawn facing RIGHT in an 80×72 box; surfaces that need it to face
 // left flip it with scaleX(-1). Tail, legs, body, neck, wing, head, eyes,
