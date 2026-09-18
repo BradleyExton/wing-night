@@ -49,3 +49,15 @@ test("does render plain house type for a team with no genre", () => {
   assert.doesNotMatch(html, /team-wordmark-/);
   assert.match(html, /text-primary/);
 });
+
+test("does keep the face but drop the treatment for a winner so gold can show", () => {
+  const theme = resolveTeamTheme(buildTeam("metal"));
+  const html = renderToStaticMarkup(
+    <TeamWordmark name="Molten Metal" theme={theme} sizeClassName="text-gold" winner />
+  );
+
+  assert.match(html, /data-team-wordmark="winner"/);
+  assert.match(html, /font-genre-metal/);
+  assert.doesNotMatch(html, /team-wordmark-chrome/);
+  assert.match(html, /text-gold/);
+});

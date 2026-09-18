@@ -5,10 +5,18 @@ import * as styles from "./styles";
 type TeamWordmarkProps = {
   name: string;
   theme: TeamTheme;
-  /** The caller's size (and, for a winner, colour) — the wordmark never picks its own scale. */
+  /**
+   * The caller's size and box — the wordmark never picks its own scale. A
+   * `[--enter-delay:600ms]` here shifts the entrance beat to the surface's cue.
+   */
   sizeClassName: string;
   /** Play the genre's entrance beat on mount; off for a name that is simply sitting there. */
   entrance?: boolean;
+  /**
+   * Gold is the winner colour (DESIGN.md §0.1), so a champion keeps the genre
+   * face but drops the treatment and takes the caller's gold instead.
+   */
+  winner?: boolean;
 };
 
 // The team name in its genre face with the treatment on top. Treatments are
@@ -21,13 +29,14 @@ export const TeamWordmark = ({
   name,
   theme,
   sizeClassName,
-  entrance = false
+  entrance = false,
+  winner = false
 }: TeamWordmarkProps): JSX.Element => {
   const className = [
     styles.base,
     theme.fontClassName,
     theme.colorVariant.tintClassName,
-    styles.treatments[theme.wordmark],
+    winner ? "" : styles.treatments[theme.wordmark],
     entrance ? styles.entrances[theme.entrance] : "",
     sizeClassName
   ]
@@ -35,7 +44,10 @@ export const TeamWordmark = ({
     .join(" ");
 
   return (
-    <span className={className} data-team-wordmark={theme.wordmark}>
+    <span
+      className={className}
+      data-team-wordmark={winner ? "winner" : theme.wordmark}
+    >
       {name}
     </span>
   );

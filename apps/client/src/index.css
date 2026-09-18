@@ -522,6 +522,8 @@ body {
 }
 
 .team-wordmark-drip {
+  /* A transform needs a box; the other treatments leave display to the caller. */
+  display: inline-block;
   color: var(--tint);
   -webkit-text-stroke: 0.03em #fff;
   paint-order: stroke fill;
@@ -663,6 +665,10 @@ body {
   animation-iteration-count: 1;
   animation-fill-mode: both;
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Set with a `[--enter-delay:…]` utility so a surface can slot the beat
+     into its own reveal sequence without a delay utility this shorthand
+     would otherwise reset. */
+  animation-delay: var(--enter-delay, 0s);
 }
 .team-enter-beat { animation-name: team-enter-beat; }
 .team-enter-slam {
@@ -689,14 +695,14 @@ body {
   animation-name: team-enter-beat, neon-flicker;
   animation-duration: 900ms, 4s;
   animation-iteration-count: 1, infinite;
-  animation-delay: 0s, 900ms;
+  animation-delay: var(--enter-delay, 0s), calc(var(--enter-delay, 0s) + 900ms);
   animation-fill-mode: both, none;
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1), linear;
 }
 .team-wordmark-neon.team-enter-spin {
   animation-name: team-enter-spin, neon-flicker;
   animation-duration: 1100ms, 4s;
-  animation-delay: 0s, 1100ms;
+  animation-delay: var(--enter-delay, 0s), calc(var(--enter-delay, 0s) + 1100ms);
 }
 .team-enter-rip {
   animation-name: team-enter-rip;

@@ -1,16 +1,22 @@
 import { Swords, Trophy } from "lucide-react";
+import type { TeamTheme } from "@wingnight/shared";
 
+import { TeamAmbient } from "../../../TeamAmbient";
+import { TeamWordmark } from "../../../TeamWordmark";
 import { finalResultsStageCopy } from "./copy";
 import * as styles from "./styles";
 
 type FinalResultsStageBodyProps = {
   winnerTeamNames: string[];
   winnerScore: number | null;
+  // The single champion's kit; null for a tie, which stays heat and text.
+  winnerTheme: TeamTheme | null;
 };
 
 export const FinalResultsStageBody = ({
   winnerTeamNames,
-  winnerScore
+  winnerScore,
+  winnerTheme
 }: FinalResultsStageBodyProps): JSX.Element => {
   const isTie = winnerTeamNames.length > 1;
   const resolvedTeamName =
@@ -22,6 +28,7 @@ export const FinalResultsStageBody = ({
   return (
     <div className={styles.container}>
       <span className={styles.ambient} aria-hidden />
+      {!isTie && winnerTheme !== null && <TeamAmbient theme={winnerTheme} />}
       <span className={`${styles.beatBase} ${styles.beatDelay1} ${styles.gameOver}`}>
         {finalResultsStageCopy.gameOverLabel}
       </span>
@@ -37,7 +44,18 @@ export const FinalResultsStageBody = ({
       <p
         className={`${styles.beatBase} ${styles.beatDelay3} ${isTie ? styles.tiedTeamNames : styles.teamName}`}
       >
-        {resolvedTeamName}
+        {/* Gold stays the winner colour (DESIGN.md §0.1): the champion keeps
+            the genre face and drops the treatment. */}
+        {!isTie && winnerTheme !== null ? (
+          <TeamWordmark
+            name={resolvedTeamName}
+            theme={winnerTheme}
+            sizeClassName={styles.teamWordmark}
+            winner
+          />
+        ) : (
+          resolvedTeamName
+        )}
       </p>
       {winnerScore !== null && (
         <p className={`${styles.beatBase} ${styles.beatDelay4} ${styles.score}`}>

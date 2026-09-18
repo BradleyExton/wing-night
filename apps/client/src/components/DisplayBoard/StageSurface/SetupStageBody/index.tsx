@@ -3,7 +3,8 @@ import {
   type GameConfigRound,
   type Player,
   type RoomState,
-  type Team
+  type Team,
+  type TeamTheme
 } from "@wingnight/shared";
 
 import { CastWander } from "./CastWander";
@@ -16,6 +17,7 @@ type SetupStageBodyProps = {
   gameConfig: RoomState["gameConfig"];
   players: Player[];
   teams: Team[];
+  teamThemeByTeamId: Map<string, TeamTheme>;
 };
 
 const DEFAULT_SETUP_PREVIEW_ROUND_SLOTS = 8;
@@ -63,7 +65,8 @@ const resolveRevealDelay = (index: number): string => {
 export const SetupStageBody = ({
   gameConfig,
   players,
-  teams
+  teams,
+  teamThemeByTeamId
 }: SetupStageBodyProps): JSX.Element => {
   const previewRoundSlotCount = resolveSetupPreviewRoundSlotCount(gameConfig);
   const configuredRounds = gameConfig?.rounds ?? [];
@@ -83,7 +86,7 @@ export const SetupStageBody = ({
       <Embers />
       <span className={styles.vignette} aria-hidden />
       <span className={styles.grain} aria-hidden />
-      <CastWander players={players} teams={teams} />
+      <CastWander players={players} teams={teams} teamThemeByTeamId={teamThemeByTeamId} />
 
       <div className={styles.header}>
         <div className={styles.eyebrowRow}>

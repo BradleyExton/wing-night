@@ -324,8 +324,10 @@ test("renders the team-first three-beat reveal during minigame intro", () => {
 
   assert.match(html, /on the wings/);
   assert.match(html, /Team One/);
-  assert.match(html, /Alex/);
-  assert.match(html, /Morgan/);
+  // The roster is the cast in formation now, one bird per seated player.
+  assert.match(html, /data-team-lineup/);
+  assert.match(html, /data-lineup-member="player-1"/);
+  assert.match(html, /data-lineup-member="player-2"/);
   assert.match(html, /playing/);
   assert.match(html, /TRIVIA/);
   assert.doesNotMatch(html, /Phase:/);
@@ -380,4 +382,45 @@ test("renders final-results winner callout from standings order", () => {
   assert.match(html, /pts/);
   assert.doesNotMatch(html, /Phase:/);
   assert.doesNotMatch(html, /Round:/);
+});
+
+const themedTeams = [
+  { id: "team-1", name: "Molten Metal", playerIds: ["player-1"], totalScore: 9, genre: "metal" },
+  { id: "team-2", name: "Disco Inferno", playerIds: ["player-2"], totalScore: 15, genre: "disco" }
+];
+
+test("dresses turn results in the finished team's kit at half strength", () => {
+  const html = renderStage({
+    ...buildSnapshot(Phase.TURN_RESULTS),
+    teams: themedTeams,
+    turnOrderTeamIds: ["team-1", "team-2"],
+    activeRoundTeamId: "team-1"
+  });
+
+  assert.match(html, /class="[^"]*opacity-50[^"]*"[^>]*data-team-ambient="lightning"/);
+  assert.match(html, /data-team-wordmark="chrome"[^>]*>Molten Metal</);
+});
+
+test("crowns a single champion in the genre face, gold, over the winning texture", () => {
+  const html = renderStage({
+    ...buildSnapshot(Phase.FINAL_RESULTS),
+    teams: themedTeams,
+    activeRoundTeamId: null
+  });
+
+  assert.match(html, /data-team-ambient="lightdots"/);
+  assert.match(html, /class="[^"]*font-genre-disco[^"]*"[^>]*data-team-wordmark="winner"[^>]*>Disco Inferno</);
+  assert.doesNotMatch(html, /team-wordmark-neon/);
+});
+
+test("keeps a tied final as heat text with no single team's kit", () => {
+  const html = renderStage({
+    ...buildSnapshot(Phase.FINAL_RESULTS),
+    teams: themedTeams.map((team) => ({ ...team, totalScore: 15 })),
+    activeRoundTeamId: null
+  });
+
+  assert.match(html, /It&#x27;s a Tie/);
+  assert.match(html, /(Molten Metal|Disco Inferno) &amp; (Molten Metal|Disco Inferno)/);
+  assert.doesNotMatch(html, /data-team-ambient|data-team-wordmark/);
 });

@@ -1,11 +1,15 @@
 import { Check } from "lucide-react";
+import type { TeamTheme } from "@wingnight/shared";
 
+import { TeamAmbient } from "../../../TeamAmbient";
+import { TeamWordmark } from "../../../TeamWordmark";
 import type { TurnTile } from "../resolveStageViewModel";
 import { turnResultsStageCopy } from "./copy";
 import * as styles from "./styles";
 
 type TurnResultsStageBodyProps = {
   justFinishedTeamName: string | null;
+  justFinishedTeamTheme: TeamTheme | null;
   turnTiles: TurnTile[];
   nextTeamName: string | null;
 };
@@ -22,6 +26,7 @@ const resolveDotClassName = (status: TurnTile["status"]): string => {
 
 export const TurnResultsStageBody = ({
   justFinishedTeamName,
+  justFinishedTeamTheme,
   turnTiles,
   nextTeamName
 }: TurnResultsStageBodyProps): JSX.Element => {
@@ -35,12 +40,24 @@ export const TurnResultsStageBody = ({
   return (
     <div className={styles.container}>
       <span className={styles.ambient} aria-hidden />
+      {/* Half strength: the team is what just happened, not the headline. */}
+      {justFinishedTeamTheme !== null && (
+        <TeamAmbient theme={justFinishedTeamTheme} strength="half" />
+      )}
       <span className={`${styles.beatBase} ${styles.beatDelay1} ${styles.eyebrow}`}>
         <Check className={styles.eyebrowIcon} aria-hidden />
         {turnResultsStageCopy.eyebrow}
       </span>
       <p className={`${styles.beatBase} ${styles.beatDelay2} ${styles.teamName}`}>
-        {resolvedTeamName}
+        {justFinishedTeamTheme !== null ? (
+          <TeamWordmark
+            name={resolvedTeamName}
+            theme={justFinishedTeamTheme}
+            sizeClassName={styles.teamWordmark}
+          />
+        ) : (
+          resolvedTeamName
+        )}
         <span className={styles.strikethrough} aria-hidden />
       </p>
       {turnTiles.length > 0 && (

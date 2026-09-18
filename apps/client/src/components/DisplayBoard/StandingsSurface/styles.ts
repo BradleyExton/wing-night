@@ -28,7 +28,16 @@ export const column =
 export const columnEdge =
   "pointer-events-none absolute inset-y-0 left-0 w-[3px]";
 
-export const columnInfo = "flex min-w-0 flex-col gap-[0.2rem]";
+// The emblem as a watermark: low alpha, right-aligned and a touch off-axis,
+// under the column's own info and score (both positioned so they paint over
+// it). It brightens with the lead tint so the leader's column reads as lit.
+export const watermark =
+  "pointer-events-none absolute right-[-6%] top-1/2 h-[clamp(4.5rem,6.5vw,8.5rem)] -translate-y-1/2 -rotate-[8deg] opacity-[0.14]";
+
+export const watermarkLead =
+  "pointer-events-none absolute right-[-6%] top-1/2 h-[clamp(4.5rem,6.5vw,8.5rem)] -translate-y-1/2 -rotate-[8deg] opacity-[0.22]";
+
+export const columnInfo = "relative flex min-w-0 flex-col gap-[0.2rem]";
 
 export const columnMeta =
   "inline-flex items-center gap-[0.4em] text-[clamp(0.7rem,0.85vw,0.95rem)] font-semibold uppercase tracking-[0.18em] text-muted";
@@ -38,10 +47,17 @@ export const columnMetaLead = "text-gold";
 export const columnMetaIcon =
   "h-[1.1em] w-[1.1em] [filter:drop-shadow(0_0_6px_rgba(251,191,36,0.5))]";
 
+// Sized above the 24px TV floor (docs/team-identity.md) so the genre face is
+// allowed here; two lines rather than a truncation because a display face
+// earns its width. The case and tracking are the `none` kit's; a treatment
+// that owns its own (rope, torn, scanline) overrides them.
 export const columnName =
-  "m-0 min-w-0 truncate text-[clamp(0.95rem,1.15vw,1.4rem)] font-extrabold uppercase tracking-[0.06em] text-text";
+  "m-0 min-w-0 font-extrabold uppercase tracking-[0.06em] text-text";
+
+export const columnWordmark =
+  "line-clamp-2 text-[clamp(1.3rem,1.9vw,2.4rem)] leading-[1.05]";
 
 export const columnScore =
-  "m-0 whitespace-nowrap font-mono text-[clamp(1.8rem,2.6vw,3.2rem)] font-black tabular-nums leading-none tracking-[-0.04em] text-text";
+  "relative m-0 whitespace-nowrap font-mono text-[clamp(1.8rem,2.6vw,3.2rem)] font-black tabular-nums leading-none tracking-[-0.04em] text-text";
 
 export const columnScoreLead = "text-gold";

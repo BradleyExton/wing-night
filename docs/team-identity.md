@@ -76,8 +76,9 @@ type TeamTheme = {
 
 The resolver is pure and DOM-free (tests run under `tsx --test`). Surfaces get themes from one map
 per room state, `teamThemeByTeamId`, built inside `selectHostTeamMaps` on the host and
-`resolveStageViewModel` on the display (which also pulls out `activeTeamTheme`), so no surface calls
-the resolver on its own. `resolveTeamApparel` stays in the cast rather than being deleted: JOUST
+`resolveStageViewModel` on the display (which also pulls out `activeTeamTheme` and
+`activeTeamPlayers`), so no surface calls the resolver on its own. The standings footer sits beside
+the stage rather than inside it, so `DisplayBoard` builds the same map once more for it. `resolveTeamApparel` stays in the cast rather than being deleted: JOUST
 dresses its lane birds from a display-view genre string, and the theme reads the same function, so
 there is still one apparel table. `tintClassName` on the colour variant sets the `--tint` custom
 property every wordmark treatment and texture keys off, which is how a component stays free of
@@ -154,9 +155,9 @@ All in `apps/client/src/components`, colocated tests, folder-with-index conventi
 | Surface | Change |
 |---|---|
 | TV standings columns | `TeamWordmark` for the name; `TeamEmblem` as a low-alpha watermark right-aligned in the column; colour as today |
-| TV MINIGAME_INTRO | `TeamAmbient` behind; crest-sized `TeamEmblem` in the eyebrow; `TeamWordmark` headline with the genre entrance beat; `TeamLineup` replaces the text roster line |
+| TV MINIGAME_INTRO | `TeamAmbient` behind; crest-sized `TeamEmblem` in the eyebrow; `TeamWordmark` headline with the genre entrance beat; `TeamLineup` replaces the text roster line (no names under the birds, DESIGN.md §2.8) |
 | TV TURN_RESULTS | `TeamWordmark` headline; ambient at half strength; dots row keeps colour |
-| TV FINAL_RESULTS | `TeamWordmark` in gold (gold stays the winner colour per §0.1); ambient of the winning genre |
+| TV FINAL_RESULTS | `TeamWordmark` in gold (gold stays the winner colour per §0.1: the `winner` prop keeps the face and drops the treatment); ambient of the winning genre; a tie stays heat text with no kit |
 | TV EATING meta, ROUND_RESULTS rows | glyph `TeamEmblem` before the name; name stays house type (below the floor) |
 | TV now-playing pill | glyph before the anthem label |
 | Host mini-rail pill | glyph next to the dot; wordmark only in the tall pill variant |
@@ -198,7 +199,9 @@ after each.
    id-hash colour, so the lobby strut (`CastWander`) and the standings dots stay on one table until
    phase 3 moves the TV onto the theme in a single commit.
 3. **TV headline moments.** Standings, MINIGAME_INTRO, TURN_RESULTS, FINAL_RESULTS, and the SETUP
-   strut's colour and apparel off `teamThemeByTeamId`.
+   strut's colour and apparel off `teamThemeByTeamId`. **Done 2026-09-18**, previewed on the
+   night pack at 1920×1080: lobby, metal and pop intros, turn results. Entrance beats take their
+   cue from a `[--enter-delay:…]` utility so they slot into a surface's existing reveal sequence.
 4. **Host surfaces.** Mini-rail pill, team setup rows, player chips, turn order, score override.
 5. **Minigames.** Core contract and fixture, then drawing, joust, trivia.
 6. **Authoring and docs.** Wizard genre field and preview (closes the "Team genre and anthems are

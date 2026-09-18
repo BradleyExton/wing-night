@@ -39,6 +39,7 @@ const SetupBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
       gameConfig={stageViewModel.gameConfig}
       players={stageViewModel.players}
       teams={stageViewModel.teams}
+      teamThemeByTeamId={stageViewModel.teamThemeByTeamId}
     />
   );
 };
@@ -86,7 +87,8 @@ const MinigameIntroBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
     <MinigameIntroStageBody
       activeTeamName={stageViewModel.activeTeamName}
       activeTeamGenre={stageViewModel.activeTeamGenre}
-      activeTeamPlayerNames={stageViewModel.activeTeamPlayerNames}
+      activeTeamTheme={stageViewModel.activeTeamTheme}
+      activeTeamPlayers={stageViewModel.activeTeamPlayers}
       minigameType={stageViewModel.minigameType}
     />
   );
@@ -111,6 +113,7 @@ const TurnResultsBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
   return (
     <TurnResultsStageBody
       justFinishedTeamName={stageViewModel.activeTeamName}
+      justFinishedTeamTheme={stageViewModel.activeTeamTheme}
       turnTiles={stageViewModel.turnTiles}
       nextTeamName={stageViewModel.nextTurnTeamName}
     />
@@ -127,11 +130,16 @@ const RoundResultsBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
   );
 };
 
-const FinalResultsBody = ({ leadingTeams }: StageBodyProps): JSX.Element => {
+const FinalResultsBody = ({ stageViewModel, leadingTeams }: StageBodyProps): JSX.Element => {
+  const winner = leadingTeams.length === 1 ? leadingTeams[0] : null;
+
   return (
     <FinalResultsStageBody
       winnerTeamNames={leadingTeams.map((team) => team.name)}
       winnerScore={leadingTeams[0]?.totalScore ?? null}
+      winnerTheme={
+        winner === null ? null : (stageViewModel.teamThemeByTeamId.get(winner.id) ?? null)
+      }
     />
   );
 };

@@ -57,7 +57,7 @@ export type StageViewModel = {
   // the active team's pulled out because that is the one the stage dresses.
   teamThemeByTeamId: Map<string, TeamTheme>;
   activeTeamTheme: TeamTheme | null;
-  activeTeamPlayerNames: string[];
+  activeTeamPlayers: Player[];
   shouldRenderTeamTurnContext: boolean;
   minigameBriefingContent: MinigameBriefingContent | null;
   minigameDisplayView: DisplayRoomStateSnapshot["minigameDisplayView"];
@@ -118,13 +118,13 @@ export const resolveStageViewModel = (
   const teamThemeByTeamId = resolveTeamThemeById(roomState?.teams ?? []);
   const activeTeamTheme =
     activeTeam !== null ? (teamThemeByTeamId.get(activeTeam.id) ?? null) : null;
-  const playerNameByPlayerId = new Map(
-    (roomState?.players ?? []).map((player) => [player.id, player.name] as const)
+  const playerByPlayerId = new Map(
+    (roomState?.players ?? []).map((player) => [player.id, player] as const)
   );
-  const activeTeamPlayerNames =
+  const activeTeamPlayers =
     activeTeam?.playerIds
-      .map((playerId) => playerNameByPlayerId.get(playerId) ?? null)
-      .filter((playerName): playerName is string => playerName !== null) ?? [];
+      .map((playerId) => playerByPlayerId.get(playerId) ?? null)
+      .filter((player): player is Player => player !== null) ?? [];
   const shouldRenderTeamTurnContext =
     activeTeamName !== null &&
     (stageMode === "eating" ||
@@ -220,7 +220,7 @@ export const resolveStageViewModel = (
     activeTeamGenre: activeTeam?.genre ?? null,
     teamThemeByTeamId,
     activeTeamTheme,
-    activeTeamPlayerNames,
+    activeTeamPlayers,
     shouldRenderTeamTurnContext,
     minigameBriefingContent,
     minigameDisplayView,

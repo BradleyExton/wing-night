@@ -1,18 +1,17 @@
-import type { Player, Team } from "@wingnight/shared";
+import type { Player, Team, TeamTheme } from "@wingnight/shared";
 
-import {
-  Character,
-  resolvePlayerAppearance,
-  resolveTeamApparel,
-  resolveTeamColorVariant
-} from "@wingnight/cast";
+import { Character, resolvePlayerAppearance } from "@wingnight/cast";
 
+import { resolveTeamTheme } from "../../../../../utils/resolveTeamTheme";
 import { useServerOrigin } from "../../../../../utils/useServerOrigin";
 import * as styles from "./styles";
 
 type CastWanderProps = {
   players: Player[];
   teams: Team[];
+  // Colour and apparel come off the theme map so the strut, the standings
+  // dots and the intro lineup can never disagree about a team's look.
+  teamThemeByTeamId: Map<string, TeamTheme>;
 };
 
 const buildTeamByPlayerId = (teams: Team[]): Map<string, Team> => {
@@ -31,7 +30,11 @@ const buildTeamByPlayerId = (teams: Team[]): Map<string, Team> => {
 // behind the lobby content, in their team's accent and wearing their team
 // genre's apparel, so the room can see who is seated where. Decoration only —
 // no state, no server field, `aria-hidden`.
-export const CastWander = ({ players, teams }: CastWanderProps): JSX.Element | null => {
+export const CastWander = ({
+  players,
+  teams,
+  teamThemeByTeamId
+}: CastWanderProps): JSX.Element | null => {
   // Player heads come from the content pack, which the SERVER serves — the TV
   // is a different origin, so they have to be addressed absolutely. `null` on
   // the first paint, and every player wears their drawn head until it resolves.
@@ -47,10 +50,11 @@ export const CastWander = ({ players, teams }: CastWanderProps): JSX.Element | n
     <div className={styles.container} aria-hidden data-cast-wander>
       {players.map((player, index) => {
         const team = teamByPlayerId.get(player.id);
-        const fillClassName =
+        const theme =
           team === undefined
-            ? styles.unassignedFill
-            : resolveTeamColorVariant(team.id).characterFillClassName;
+            ? undefined
+            : (teamThemeByTeamId.get(team.id) ?? resolveTeamTheme(team));
+        const fillClassName = theme?.colorVariant.characterFillClassName ?? styles.unassignedFill;
 
         return (
           <span
@@ -61,7 +65,7 @@ export const CastWander = ({ players, teams }: CastWanderProps): JSX.Element | n
             <span className={styles.waddle}>
               <Character
                 appearance={resolvePlayerAppearance(player, serverOrigin)}
-                apparel={resolveTeamApparel(team)}
+                apparel={theme?.apparel}
                 fillClassName={fillClassName}
               />
             </span>

@@ -1,10 +1,9 @@
-import { resolveTeamColorVariant } from "@wingnight/cast";
-
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Player, Team } from "@wingnight/shared";
 
+import { resolveTeamThemeById } from "../../../../../utils/resolveTeamTheme";
 import { CastWander } from "./index";
 import * as styles from "./styles";
 
@@ -19,12 +18,24 @@ const teams: Team[] = [
   { id: "team-beta", name: "Team Beta", playerIds: ["player-2"], totalScore: 0 }
 ];
 
+const themes = resolveTeamThemeById(teams);
+
+const renderWander = (wanderPlayers: Player[], wanderTeams: Team[] = teams): string => {
+  return renderToStaticMarkup(
+    <CastWander
+      players={wanderPlayers}
+      teams={wanderTeams}
+      teamThemeByTeamId={resolveTeamThemeById(wanderTeams)}
+    />
+  );
+};
+
 const countMembers = (html: string): number => {
   return (html.match(/data-cast-member="/g) ?? []).length;
 };
 
 test("does render one character per player when the roster has players", () => {
-  const html = renderToStaticMarkup(<CastWander players={players} teams={teams} />);
+  const html = renderWander(players);
 
   assert.equal(countMembers(html), players.length);
   assert.match(html, /data-cast-wander/);
@@ -32,9 +43,11 @@ test("does render one character per player when the roster has players", () => {
 });
 
 test("does colour a seated player by its team accent and leave an unassigned player muted", () => {
-  const html = renderToStaticMarkup(<CastWander players={players} teams={teams} />);
-  const alphaFill = resolveTeamColorVariant("team-alpha").characterFillClassName;
-  const betaFill = resolveTeamColorVariant("team-beta").characterFillClassName;
+  const html = renderWander(players);
+  const alphaFill = themes.get("team-alpha")?.colorVariant.characterFillClassName;
+  const betaFill = themes.get("team-beta")?.colorVariant.characterFillClassName;
+
+  assert.equal(alphaFill, "text-teamD");
 
   assert.match(html, new RegExp(`data-cast-member="player-1"[^]*?${alphaFill}`));
   assert.match(html, new RegExp(`data-cast-member="player-2"[^]*?${betaFill}`));
@@ -42,14 +55,14 @@ test("does colour a seated player by its team accent and leave an unassigned pla
 });
 
 test("does dress a player in the team genre's apparel and leave a genreless team bare", () => {
-  const html = renderToStaticMarkup(<CastWander players={players} teams={teams} />);
+  const html = renderWander(players);
 
   assert.match(html, /data-cast-member="player-1"[^]*?data-character-apparel="collar"/);
   assert.doesNotMatch(html, /data-cast-member="player-2"[^]*?data-character-apparel[^]*?data-cast-member="player-3"/);
 });
 
 test("does render nothing when the roster is empty", () => {
-  const html = renderToStaticMarkup(<CastWander players={[]} teams={teams} />);
+  const html = renderWander([]);
 
   assert.equal(html, "");
 });
@@ -59,7 +72,7 @@ test("does wrap onto the lane list when the roster is longer than it", () => {
     id: `player-${index + 1}`,
     name: `Player ${index + 1}`
   }));
-  const html = renderToStaticMarkup(<CastWander players={bigRoster} teams={[]} />);
+  const html = renderWander(bigRoster, []);
 
   assert.equal(countMembers(html), styles.lanes.length + 2);
 });

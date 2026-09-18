@@ -1,8 +1,9 @@
-import { resolveTeamColorVariant } from "@wingnight/cast";
-
-import { Phase, type Player, type Team } from "@wingnight/shared";
+import { Phase, type Player, type Team, type TeamTheme } from "@wingnight/shared";
 import { Flame, Trophy } from "lucide-react";
 
+import { resolveTeamTheme } from "../../../utils/resolveTeamTheme";
+import { TeamEmblem } from "../../TeamEmblem";
+import { TeamWordmark } from "../../TeamWordmark";
 import { displayBoardCopy } from "../copy";
 import * as styles from "./styles";
 
@@ -10,11 +11,15 @@ type StandingsSurfaceProps = {
   phase: Phase | null;
   standings: Team[];
   players: Player[];
+  // The display's one theme map (docs/team-identity.md); a team the map has
+  // somehow missed is themed on its own rather than rendered without a kit.
+  teamThemeByTeamId: Map<string, TeamTheme>;
 };
 
 export const StandingsSurface = ({
   phase,
-  standings
+  standings,
+  teamThemeByTeamId
 }: StandingsSurfaceProps): JSX.Element => {
   const topScore = standings[0]?.totalScore ?? null;
   // A team only "leads" when it is strictly ahead. At 0-0-0-0 (setup, round 1)
@@ -49,7 +54,8 @@ export const StandingsSurface = ({
             ? isTiedTop
             : isTiedTop && hasStrictLeader;
         const isWinner = isLeader && phase === Phase.FINAL_RESULTS;
-        const teamColorVariant = resolveTeamColorVariant(team.id);
+        const theme = teamThemeByTeamId.get(team.id) ?? resolveTeamTheme(team);
+        const teamColorVariant = theme.colorVariant;
         const columnBgClassName = isLeader
           ? teamColorVariant.splitColumnLeadBgClassName
           : teamColorVariant.splitColumnBgClassName;
@@ -70,6 +76,10 @@ export const StandingsSurface = ({
         return (
           <div key={team.id} className={`${styles.column} ${columnBgClassName}`}>
             <span className={`${styles.columnEdge} ${edgeClassName}`} aria-hidden />
+            <TeamEmblem
+              theme={theme}
+              sizeClassName={isLeader ? styles.watermarkLead : styles.watermark}
+            />
             <div className={styles.columnInfo}>
               <span className={metaClassName}>
                 {metaLabel}
@@ -77,7 +87,13 @@ export const StandingsSurface = ({
                   <LeaderIcon className={styles.columnMetaIcon} aria-hidden />
                 )}
               </span>
-              <p className={styles.columnName}>{team.name}</p>
+              <p className={styles.columnName}>
+                <TeamWordmark
+                  name={team.name}
+                  theme={theme}
+                  sizeClassName={styles.columnWordmark}
+                />
+              </p>
             </div>
             <p className={scoreClassName}>{team.totalScore}</p>
           </div>

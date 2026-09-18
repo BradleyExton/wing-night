@@ -1,6 +1,9 @@
 import type { EntranceId, WordmarkTreatment } from "@wingnight/shared";
 
-export const base = "inline-block [text-wrap:balance]";
+// No display utility here on purpose: the caller's box wins (a standings
+// column clamps to two lines, a headline is a block), and the one treatment
+// that needs a box of its own (drip's tilt) takes it in index.css.
+export const base = "max-w-full [text-wrap:balance]";
 
 // The treatment rules live in index.css — they are multi-layer gradients and
 // strokes Tailwind's arbitrary values cannot carry — so each entry is the

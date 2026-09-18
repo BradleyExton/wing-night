@@ -11,6 +11,7 @@ import { StandingsSurface } from "./StandingsSurface";
 import { useDisplayRoomState } from "../../context/RoomStateContext";
 import { resolveMinigameRendererBundle } from "../../minigames/registry";
 import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
+import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { useGameStartCountdown } from "./useGameStartCountdown";
 import { useMusicPlaybackCue } from "./useMusicPlaybackCue";
 import * as styles from "./styles";
@@ -35,6 +36,14 @@ export const DisplayBoard = ({
 
     return resolveSortedStandings(roomState.teams);
   }, [roomState]);
+
+  // The standings footer sits beside the stage, not inside it, so it takes
+  // the theme map from here; the stage bodies read the same map off
+  // resolveStageViewModel. Both are the one pure resolver over the same teams.
+  const teamThemeByTeamId = useMemo(
+    () => resolveTeamThemeById(roomState?.teams ?? []),
+    [roomState]
+  );
 
   const phase = roomState?.phase ?? null;
   const gameStartCountdownRemainingSeconds = useGameStartCountdown({
@@ -150,7 +159,12 @@ export const DisplayBoard = ({
         </div>
       </section>
 
-      <StandingsSurface phase={phase} standings={standings} players={players} />
+      <StandingsSurface
+        phase={phase}
+        standings={standings}
+        players={players}
+        teamThemeByTeamId={teamThemeByTeamId}
+      />
       {/* Mounted on whether the ROOM has music at all, not on whether any is
           playing right now, so the element survives every phase advance and the
           cue always has something to pause. The `src` is set by the cue effect,

@@ -4,8 +4,9 @@ export const container =
 export const ambient =
   "pointer-events-none absolute inset-[-10%] bg-[radial-gradient(ellipse_at_30%_30%,rgba(249,115,22,0.10)_0%,transparent_45%),radial-gradient(ellipse_at_70%_70%,rgba(132,204,22,0.08)_0%,transparent_45%)]";
 
+// z-10 lifts every beat over the genre texture (TeamAmbient, z-1).
 export const beatBase =
-  "relative opacity-0 animate-[reveal_600ms_ease_forwards] motion-reduce:opacity-100 motion-reduce:animate-none";
+  "relative z-10 opacity-0 animate-[reveal_600ms_ease_forwards] motion-reduce:opacity-100 motion-reduce:animate-none";
 
 export const beatDelay1 = "[animation-delay:100ms]";
 export const beatDelay2 = "[animation-delay:600ms]";
@@ -20,6 +21,10 @@ export const eyebrowIcon =
 
 export const teamName =
   "relative m-0 text-[clamp(4rem,11vw,13rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-text/55 [text-shadow:0_0_60px_rgba(249,115,22,0.2)]";
+
+// The wordmark inherits the row's dimmed type; a treatment that owns its
+// colour shows through at full strength under the strike, which is the point.
+export const teamWordmark = "text-[clamp(4rem,11vw,13rem)] leading-[0.9]";
 
 export const strikethrough =
   "pointer-events-none absolute left-[8%] right-[8%] top-1/2 h-1 origin-center -translate-y-1/2 rounded-full bg-primary opacity-0 animate-[strikethrough_500ms_ease_forwards] [animation-delay:1200ms] motion-reduce:opacity-100 motion-reduce:animate-none motion-reduce:[transform:translateY(-50%)]";
