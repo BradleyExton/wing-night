@@ -2,6 +2,12 @@
 // tested without a network, a filesystem or an API key.
 
 export const AVATAR_PUBLIC_PATH = "/local-assets/avatars";
+// The head is generated on this background and the background is then keyed
+// out to alpha, so the bird can wear the head's own silhouette. Magenta,
+// because nothing in a face, beard or hair comes near it — the palette's
+// #1C1C1C surface cannot be keyed, it is also the colour of every outline.
+export const CHROMA_KEY = { r: 255, g: 0, b: 255 };
+export const CHROMA_KEY_HEX = "#FF00FF";
 // Nano Banana 2. The older gemini-2.5-flash-image is retired on 2026-10-02.
 export const DEFAULT_MODEL = "gemini-3.1-flash-image";
 export const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
@@ -38,7 +44,8 @@ export const assemblePrompt = ({ hasStyleReference }) => {
     [
       "SCENE BRIEF:",
       "A flat vector caricature portrait of the person in the attached photo.",
-      "Head and shoulders, facing slightly to the right, centred, head filling about 80% of the frame.",
+      "Head ONLY, facing slightly to the right, centred, filling about 80% of the frame.",
+      "The drawing ENDS at the jawline (or the bottom of the beard): nothing below the chin. No neck, no shoulders, no clothing, no collar.",
       "Keep what makes them recognisable: hair length, shape and colour, facial hair, face shape, skin tone, expression. Simplify everything else.",
       "Draw ONLY what is in the photo. Do not add glasses, hats, jewellery or any accessory the person is not wearing in it.",
       "Friendly party game show mood. Two simple white eyes with dark pupils."
@@ -60,7 +67,7 @@ export const assemblePrompt = ({ hasStyleReference }) => {
     [
       "OUTPUT CONSTRAINTS:",
       "- Aspect ratio 1:1, 1024x1024.",
-      "- Background: solid #1C1C1C, nothing else behind the figure.",
+      `- Background: solid ${CHROMA_KEY_HEX} magenta, nothing else behind the head. It is keyed out afterwards, so use no magenta anywhere on the head.`,
       "- No text. No logos. No frame or border."
     ].join("\n")
   );
@@ -167,6 +174,100 @@ export const applyAvatarSrc = (playersFile, generatedSlugs) => {
   };
 };
 
+// Chebyshev distance from the key colour, on one RGBA pixel.
+const keyDistance = (pixels, offset, key) =>
+  Math.max(
+    Math.abs(pixels[offset] - key.r),
+    Math.abs(pixels[offset + 1] - key.g),
+    Math.abs(pixels[offset + 2] - key.b)
+  );
+
+// Knocks the generated background out to alpha 0. Two rules, because the
+// JPEG the model returns smears the key colour into the edge pixels: a pixel
+// within `strict` of the key is background wherever it is (the prompt forbids
+// magenta on the head, and a gap between two hair strands is background the
+// border cannot reach); a pixel within the looser `tolerance` is background
+// only when a flood fill from the image border reaches it, so a near-key
+// tint ENCLOSED by the head survives. Then the remaining edge is eroded by
+// `erode` pixels to drop the fringe. Mutates `pixels` (RGBA, row-major) and
+// returns the number of pixels cleared.
+export const knockOutBackground = ({
+  pixels,
+  width,
+  height,
+  key = CHROMA_KEY,
+  tolerance = 80,
+  strict = 28,
+  erode = 2
+}) => {
+  const cleared = new Uint8Array(width * height);
+  const stack = [];
+  for (let x = 0; x < width; x += 1) stack.push(x, (height - 1) * width + x);
+  for (let y = 0; y < height; y += 1) stack.push(y * width, y * width + width - 1);
+  for (let index = 0; index < width * height; index += 1) {
+    if (keyDistance(pixels, index * 4, key) <= strict) stack.push(index);
+  }
+
+  let count = 0;
+  while (stack.length > 0) {
+    const index = stack.pop();
+    if (cleared[index] === 1 || keyDistance(pixels, index * 4, key) > tolerance) continue;
+    cleared[index] = 1;
+    count += 1;
+    const x = index % width;
+    const y = (index - x) / width;
+    if (x > 0) stack.push(index - 1);
+    if (x < width - 1) stack.push(index + 1);
+    if (y > 0) stack.push(index - width);
+    if (y < height - 1) stack.push(index + width);
+  }
+
+  for (let pass = 0; pass < erode; pass += 1) {
+    const edge = [];
+    for (let index = 0; index < width * height; index += 1) {
+      if (cleared[index] === 1) continue;
+      const x = index % width;
+      const y = (index - x) / width;
+      if (
+        (x > 0 && cleared[index - 1] === 1) ||
+        (x < width - 1 && cleared[index + 1] === 1) ||
+        (y > 0 && cleared[index - width] === 1) ||
+        (y < height - 1 && cleared[index + width] === 1)
+      ) {
+        edge.push(index);
+      }
+    }
+    for (const index of edge) {
+      cleared[index] = 1;
+      count += 1;
+    }
+  }
+
+  for (let index = 0; index < width * height; index += 1) {
+    if (cleared[index] === 1) pixels[index * 4 + 3] = 0;
+  }
+  return count;
+};
+
+// Bounding box of the pixels that are still opaque, or null when none are.
+export const opaqueBounds = ({ pixels, width, height }) => {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (pixels[(y * width + x) * 4 + 3] > 127) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  return maxX < 0 ? null : { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+};
+
 const escapeHtml = (text) =>
   text.replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
 
@@ -191,12 +292,12 @@ export const buildContactSheet = ({ plan, generated, sourcesDirRelative, avatars
 body{margin:0;padding:2rem;background:#121212;color:#fff;font-family:ui-sans-serif,system-ui,sans-serif}
 table{border-collapse:collapse}th,td{padding:.75rem 1rem;border-bottom:1px solid #2a2a2a;text-align:left;vertical-align:middle}
 th{font-size:1.1rem}th small{display:block;color:#a3a3a3;font-weight:400;font-family:ui-monospace,monospace}
-img{width:180px;height:180px;object-fit:cover;border-radius:50%;background:#1c1c1c}
+img{width:180px;height:180px;object-fit:contain;background:#1c1c1c;border-radius:16px}
 .empty{width:180px;height:180px;border-radius:50%;border:2px dashed #3a3a3a;display:flex;align-items:center;justify-content:center;color:#a3a3a3;font-size:.8rem;text-align:center;padding:1rem;box-sizing:border-box}
 p{color:#a3a3a3;max-width:60ch}
 </style></head><body>
 <h1>Avatar contact sheet</h1>
-<p>Left: source photo. Right: generated head, shown in the circle the bird clips it to. To redo one, run <code>pnpm import:avatars --force --only &lt;slug&gt;</code>.</p>
+<p>Left: source photo. Right: generated head with its background knocked out, as the bird wears it. To redo one, run <code>pnpm import:avatars --force --only &lt;slug&gt;</code>.</p>
 <table><thead><tr><th>Player</th><th>Photo</th><th>Head</th></tr></thead><tbody>
 ${rows}
 </tbody></table></body></html>

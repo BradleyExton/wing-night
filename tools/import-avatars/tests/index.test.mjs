@@ -7,6 +7,8 @@ import {
   buildContactSheet,
   buildGeminiRequest,
   extractGeneratedImage,
+  knockOutBackground,
+  opaqueBounds,
   pickStyleReference,
   planImports,
   slugifyName
@@ -108,4 +110,90 @@ test("does render one contact sheet row per player with the skip reason where no
   assert.equal((html.match(/<tr><th>[^<]*<small>/g) ?? []).length, 3);
   assert.match(html, /no source photo/);
   assert.match(html, /\.\.\/avatars\/steve-b\.png/);
+});
+
+const pixel = (r, g, b) => [r, g, b, 255];
+const image = (rows) => ({
+  pixels: new Uint8ClampedArray(rows.flat(2)),
+  width: rows[0].length,
+  height: rows.length
+});
+const MAGENTA = pixel(255, 0, 255);
+const HAIR = pixel(120, 80, 40);
+
+test("does clear the background from the border but keep a near-key tint the head encloses", () => {
+  const tint = pixel(200, 60, 200);
+  const img = image([
+    [MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA],
+    [MAGENTA, HAIR, HAIR, HAIR, MAGENTA],
+    [MAGENTA, HAIR, tint, HAIR, MAGENTA],
+    [MAGENTA, HAIR, HAIR, HAIR, MAGENTA],
+    [MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA]
+  ]);
+
+  const cleared = knockOutBackground({ ...img, erode: 0 });
+
+  assert.equal(cleared, 16);
+  assert.equal(img.pixels[(2 * 5 + 2) * 4 + 3], 255, "the enclosed tint keeps its alpha");
+  assert.equal(img.pixels[3], 0, "a corner is cleared");
+});
+
+test("does clear an exact key pixel the head encloses, since a gap between hair strands is background too", () => {
+  const img = image([
+    [MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA],
+    [MAGENTA, HAIR, HAIR, HAIR, MAGENTA],
+    [MAGENTA, HAIR, MAGENTA, HAIR, MAGENTA],
+    [MAGENTA, HAIR, HAIR, HAIR, MAGENTA],
+    [MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA]
+  ]);
+
+  knockOutBackground({ ...img, erode: 0 });
+
+  assert.equal(img.pixels[(2 * 5 + 2) * 4 + 3], 0);
+});
+
+test("does eat the edge pixels when erode is set so a keyed fringe never shows", () => {
+  const img = image([
+    [MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA],
+    [MAGENTA, HAIR, HAIR, HAIR, MAGENTA],
+    [MAGENTA, HAIR, HAIR, HAIR, MAGENTA],
+    [MAGENTA, HAIR, HAIR, HAIR, MAGENTA],
+    [MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA]
+  ]);
+
+  knockOutBackground({ ...img, erode: 1 });
+
+  assert.equal(img.pixels[(1 * 5 + 1) * 4 + 3], 0, "an edge pixel of the head is eroded");
+  assert.equal(img.pixels[(2 * 5 + 2) * 4 + 3], 255, "the centre survives");
+});
+
+test("does tolerate jpeg noise on the background within the tolerance when keying", () => {
+  const noisy = pixel(240, 20, 235);
+  const img = image([[noisy, HAIR, noisy]]);
+
+  knockOutBackground({ ...img, erode: 0, tolerance: 40 });
+
+  assert.deepEqual([img.pixels[3], img.pixels[7], img.pixels[11]], [0, 255, 0]);
+});
+
+test("does report the opaque bounds after a knockout and null when nothing is left", () => {
+  const img = image([
+    [MAGENTA, MAGENTA, MAGENTA, MAGENTA],
+    [MAGENTA, HAIR, HAIR, MAGENTA],
+    [MAGENTA, MAGENTA, HAIR, MAGENTA],
+    [MAGENTA, MAGENTA, MAGENTA, MAGENTA]
+  ]);
+  knockOutBackground({ ...img, erode: 0 });
+
+  assert.deepEqual(opaqueBounds(img), { x: 1, y: 1, width: 2, height: 2 });
+  assert.equal(opaqueBounds(image([[[255, 0, 255, 0]]])), null);
+});
+
+test("does ask for the chroma background and a head-only crop in the prompt", () => {
+  const prompt = assemblePrompt({ hasStyleReference: false });
+
+  assert.match(prompt, /#FF00FF/);
+  assert.match(prompt, /Head ONLY/);
+  assert.match(prompt, /nothing below the chin/);
+  assert.doesNotMatch(prompt, /#1C1C1C, nothing else/);
 });

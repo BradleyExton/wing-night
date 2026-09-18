@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CAST — Head treatments</title>
+    <style>
+      :root { --bg:#121212; --surface:#1c1c1c; --text:#fff; --muted:#a3a3a3; --primary:#f97316; }
+      html, body { margin:0; background:var(--bg); color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+      main { max-width: 1800px; margin: 0 auto; padding: 2.5rem 2rem; }
+      h1 { font-size: 2rem; margin: 0 0 .25rem; }
+      p.lede { color: var(--muted); margin: 0 0 2rem; max-width: 80ch; line-height: 1.5; }
+      section { margin-bottom: 2.5rem; }
+      h2 { font-size: 1rem; letter-spacing: .12em; text-transform: uppercase; color: var(--primary); margin: 0 0 .25rem; }
+      p.note { color: var(--muted); margin: 0 0 1rem; max-width: 90ch; line-height: 1.45; font-size: .95rem; }
+      .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 1rem; }
+      .cell { background: var(--surface); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: .75rem; }
+      .cell .label { font-size: .8rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+      .stage { position: relative; width: 100%; border-radius: 8px; overflow: hidden;
+        background: radial-gradient(ellipse 70% 120% at 50% 110%, rgba(249,115,22,.55), rgba(249,115,22,.12) 55%, #171310 100%); }
+      .stage svg { display: block; margin: 0 auto; overflow: visible; }
+      .sizes { display: flex; align-items: flex-end; justify-content: center; gap: 1.5rem; padding: 1.5rem 1rem 1rem; flex-wrap: wrap; }
+      .sizes figure { margin: 0; text-align: center; }
+      .sizes figcaption { font-size: .7rem; color: var(--muted); margin-top: .5rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>CAST — how the head sits on the bird</h1>
+      <p class="lede">Same 80×72 bird as <code>components/Character</code>. Rob (Honky Tonk, teamD) and Rosie (Molten Metal, teamB) with their generated heads knocked out to alpha; Dan drawn with no avatar for reference. Each treatment is shown at the size it is on a 1080p TV (76px), 2× and 4×.</p>
+      <div id="root"></div>
+    </main>
+    <script>
+      const TEAM = { rob: "#f43f5e", rosie: "#06b6d4", dan: "#f43f5e" };
+      const HEAD = { rob: "/local-assets/avatars/rob.png", rosie: "/local-assets/avatars/rosie.png" };
+      const BG = "#121212", PRIMARY = "#f97316";
+      let uid = 0;
+
+      const tail = (fill) => `<path fill="${fill}" stroke="${BG}" stroke-width="2" d="M 18 44 L 0 26 L 14 38 L 6 16 L 20 36 L 18 18 L 26 38 Z"/>`;
+      const legs = () => `<path fill="none" stroke="${PRIMARY}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="M 29 56 L 27 70 L 37 70 M 43 56 L 41 70 L 51 70"/>`;
+      const body = (fill) => `<ellipse fill="${fill}" stroke="${BG}" stroke-width="2" cx="36" cy="44" rx="26" ry="21"/>`;
+      const beak = (dx, dy) => `<path fill="${PRIMARY}" stroke="${BG}" stroke-width="2" transform="translate(${dx} ${dy})" d="M 68 19 L 79 24 L 68 29 Z"/>`;
+      const comb = (fill, dx, dy) => `<path fill="${fill}" stroke="${BG}" stroke-width="2" transform="translate(${dx} ${dy})" d="M 46 13 L 49 3 L 53 10 L 57 1 L 61 9 L 65 4 L 66 13 Z"/>`;
+      const eyes = () => `<circle fill="#fff" cx="52" cy="20" r="3"/><circle fill="#fff" cx="60" cy="20" r="3"/><circle fill="${BG}" cx="53" cy="20" r="1.4"/><circle fill="${BG}" cx="61" cy="20" r="1.4"/>`;
+      const outlineFilter = (id) => `<filter id="${id}" x="-30%" y="-30%" width="160%" height="160%" primitiveUnits="userSpaceOnUse">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="d"/><feFlood flood-color="${BG}" result="c"/>
+          <feComposite in="c" in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+      // A head image whose bottom edge (chin/beard) sits on `bottom`, centred on `cx`, `h` tall.
+      const headImage = (src, cx, bottom, h, filterId) =>
+        `<image href="${src}" x="${cx - h / 2}" y="${bottom - h}" width="${h}" height="${h}" preserveAspectRatio="xMidYMax meet" filter="url(#${filterId})"/>`;
+
+      const variants = {
+        drawn: (who) => { const f = TEAM[who]; return `${tail(f)}${legs()}${body(f)}<circle fill="${f}" stroke="${BG}" stroke-width="2" cx="56" cy="22" r="13"/>${beak(0,0)}${eyes()}${comb(f,0,0)}`; },
+        coin: (who) => { const f = TEAM[who], id = `c${uid++}`; return `${tail(f)}${legs()}${body(f)}<circle fill="${f}" stroke="${BG}" stroke-width="2" cx="54" cy="24" r="19"/>${beak(4,2)}
+          <clipPath id="${id}"><circle cx="54" cy="24" r="17"/></clipPath><image href="${HEAD[who]}" x="37" y="7" width="34" height="34" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id})"/>${comb(f,-2,-4)}`; },
+        silhouette: (who) => { const f = TEAM[who], id = `o${uid++}`; return `<defs>${outlineFilter(id)}</defs>${tail(f)}${legs()}${body(f)}${headImage(HEAD[who], 56, 34, 44, id)}`; },
+        costume: (who) => { const f = TEAM[who], id = `o${uid++}`; return `<defs>${outlineFilter(id)}</defs>${tail(f)}${legs()}${body(f)}${beak(4,-8)}${headImage(HEAD[who], 56, 34, 44, id)}${comb(f,0,-19)}`; },
+        hood: (who) => { const f = TEAM[who], id = `o${uid++}`; return `<defs>${outlineFilter(id)}</defs>${tail(f)}${legs()}${body(f)}<circle fill="${f}" stroke="${BG}" stroke-width="2" cx="52" cy="20" r="22"/>${beak(5,-4)}${headImage(HEAD[who], 52, 32, 36, id)}${comb(f,-4,-11)}`; },
+        // Apparel sketches on drawn birds: what a team could wear beyond its colour.
+        country: (who) => { const f = TEAM[who]; return `${tail(f)}${legs()}${body(f)}<circle fill="${f}" stroke="${BG}" stroke-width="2" cx="56" cy="22" r="13"/>${beak(0,0)}${eyes()}
+          <path fill="#fff" stroke="${BG}" stroke-width="2" stroke-linejoin="round" d="M 38 12 Q 56 18 74 12 Q 70 9 66 9 L 64 1 Q 56 -2 48 1 L 46 9 Q 42 9 38 12 Z"/><rect fill="${f}" x="47" y="6" width="18" height="3"/>`; },
+        metal: (who) => { const f = TEAM[who]; return `${tail(f)}${legs()}${body(f)}<circle fill="${f}" stroke="${BG}" stroke-width="2" cx="56" cy="22" r="13"/>${beak(0,0)}${eyes()}${comb(f,0,0)}
+          <path fill="${BG}" d="M 44 30 Q 56 40 68 30 L 68 35 Q 56 46 44 35 Z"/><path fill="#fff" d="M 47 33 L 49 27 L 51 34 Z M 54 35 L 56 29 L 58 36 Z M 61 34 L 63 28 L 65 33 Z"/>`; },
+        pop: (who) => { const f = TEAM[who]; return `${tail(f)}${legs()}${body(f)}<circle fill="${f}" stroke="${BG}" stroke-width="2" cx="56" cy="22" r="13"/>${beak(0,0)}${comb(f,0,0)}
+          <path fill="#fff" stroke="${BG}" stroke-width="1.5" stroke-linejoin="round" d="M 52 14 L 53.8 18.2 L 58.2 18.5 L 54.8 21.2 L 56 25.5 L 52 23 L 48 25.5 L 49.2 21.2 L 45.8 18.5 L 50.2 18.2 Z"/>
+          <path fill="#fff" stroke="${BG}" stroke-width="1.5" stroke-linejoin="round" d="M 62 14 L 63.8 18.2 L 68.2 18.5 L 64.8 21.2 L 66 25.5 L 62 23 L 58 25.5 L 59.2 21.2 L 55.8 18.5 L 60.2 18.2 Z"/>`; }
+      };
+
+      const bird = (variant, who, px) => `<svg viewBox="0 0 80 72" width="${Math.round(px * 80 / 72)}" height="${px}">${variants[variant](who)}</svg>`;
+      const sizes = (variant, who) => `<div class="stage"><div class="sizes">
+        <figure>${bird(variant, who, 76)}<figcaption>76px · 1080p TV</figcaption></figure>
+        <figure>${bird(variant, who, 152)}<figcaption>2×</figcaption></figure>
+        <figure>${bird(variant, who, 228)}<figcaption>3×</figcaption></figure></div></div>`;
+
+      const sections = [
+        { key: "coin", title: "A · Coin (shipped, beak fixed)", note: "The head clipped into the team circle at bobblehead size. The beak and comb are moved out to the big head's edge, which the shipped build fails to do (its translate() is malformed, so they stay behind the coin)." },
+        { key: "silhouette", title: "B · Silhouette head", note: "Background knocked out, the bird wears the generated head's own outline: hair, beard, chin. No comb, no beak. A dark 1.4-unit halo stands in for the bird's stroke. Team colour only on the body." },
+        { key: "costume", title: "C · Costume (silhouette + comb + beak)", note: "Same head, but the bird's comb perches on the hair and the beak pokes out at mouth height, so it is still unmistakably the chicken. Reads like the player is in a chicken suit with the face showing." },
+        { key: "hood", title: "D · Hood (team circle behind the silhouette)", note: "The team-colour head circle stays, slightly bigger, BEHIND the knocked-out head; comb and beak on the circle. Team colour frames the face so it still reads from across the room, and the face belongs to the bird rather than sitting on it." }
+      ];
+
+      const root = document.getElementById("root");
+      root.innerHTML = sections.map((s) => `<section><h2>${s.title}</h2><p class="note">${s.note}</p>
+        <div class="row"><div class="cell"><span class="label">Rob</span>${sizes(s.key, "rob")}</div><div class="cell"><span class="label">Rosie</span>${sizes(s.key, "rosie")}</div><div class="cell"><span class="label">Dan (drawn, unchanged)</span>${sizes("drawn", "dan")}</div></div></section>`).join("")
+        + `<section><h2>Apparel sketches (question, not a proposal)</h2><p class="note">Three quick drawn props in the existing palette (white = text token, dark = bg token, band = team colour) to make the "metalheads look like metalheads" question concrete: a country hat, a metal spiked collar, pop star-shades. Deterministic SVG per team genre, so every bird on a team wears it, avatar or not.</p>
+        <div class="row"><div class="cell"><span class="label">Country · hat</span>${sizes("country", "dan")}</div><div class="cell"><span class="label">Metal · spiked collar</span>${sizes("metal", "rosie")}</div><div class="cell"><span class="label">Pop · star shades</span>${sizes("pop", "dan")}</div></div></section>`;
+    </script>
+  </body>
+</html>

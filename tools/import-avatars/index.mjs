@@ -7,6 +7,9 @@
 // prompt assembled from design/illustration-spec.md, and writes the head to
 // apps/client/public/local-assets/avatars/<slug>.png. Then it points the
 // player's avatarSrc at it and writes a contact sheet next to the sources.
+// The head comes back on a magenta background (Gemini cannot return alpha);
+// that is flood-filled out and the result cropped to the head before it is
+// written, so the bird wears the head's own silhouette.
 // Offline-time tool only: the app never talks to Gemini. Needs GEMINI_API_KEY
 // (loaded from .env by the pnpm script).
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -21,9 +24,12 @@ import {
   buildGeminiUrl,
   DEFAULT_MODEL,
   extractGeneratedImage,
+  knockOutBackground,
+  opaqueBounds,
   pickStyleReference,
   planImports
 } from "./lib.mjs";
+import { withRaster } from "./raster.mjs";
 
 const repoRootDir = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
 const sourcesDir = join(repoRootDir, "content/local/avatar-sources");
@@ -116,32 +122,45 @@ const main = async () => {
   }
 
   let currentStyleRef = styleRefPath;
-  for (const row of todo) {
-    process.stdout.write(`Generating ${row.name}… `);
-    try {
-      const prompt = assemblePrompt({ hasStyleReference: currentStyleRef !== null });
-      const image = await generateHead({
-        apiKey,
-        model: args.model,
-        prompt,
-        photoPath: join(sourcesDir, row.sourceFile),
-        styleRefPath: currentStyleRef
-      });
-      const outputPath = join(avatarsDir, row.outputFile);
-      writeFileSync(outputPath, Buffer.from(image.base64, "base64"));
-      manifest.generated[row.slug] = { file: row.outputFile, model: args.model, at: new Date().toISOString() };
-      writeJson(manifestPath, manifest);
-      if (currentStyleRef === null) currentStyleRef = outputPath;
-      console.log(`ok (${image.mimeType})`);
-    } catch (error) {
-      console.log(`FAILED: ${error.message}`);
+  await withRaster(async (raster) => {
+    for (const row of todo) {
+      process.stdout.write(`Generating ${row.name}… `);
+      try {
+        const prompt = assemblePrompt({ hasStyleReference: currentStyleRef !== null });
+        const image = await generateHead({
+          apiKey,
+          model: args.model,
+          prompt,
+          photoPath: join(sourcesDir, row.sourceFile),
+          styleRefPath: currentStyleRef
+        });
+        const outputPath = join(avatarsDir, row.outputFile);
+        writeFileSync(outputPath, await finishHead(raster, image));
+        manifest.generated[row.slug] = { file: row.outputFile, model: args.model, at: new Date().toISOString() };
+        writeJson(manifestPath, manifest);
+        if (currentStyleRef === null) currentStyleRef = outputPath;
+        console.log(`ok (${image.mimeType}, keyed and cropped)`);
+      } catch (error) {
+        console.log(`FAILED: ${error.message}`);
+      }
     }
-  }
+  });
 
   writeJson(localPlayersPath, applyAvatarSrc(playersFile, Object.keys(manifest.generated)));
   writeFileSync(contactSheetPath, renderSheet(plan, manifest));
   console.log(`Contact sheet: ${relative(repoRootDir, contactSheetPath)}`);
   console.log("Restart the server to load the updated roster.");
+};
+
+// Key the background out, crop to what is left, and hand back a PNG buffer.
+const finishHead = async (raster, image) => {
+  const decoded = await raster.decode(image);
+  knockOutBackground(decoded);
+  const crop = opaqueBounds(decoded);
+  if (crop === null) {
+    throw new Error("nothing left after keying the background out");
+  }
+  return raster.encodePng({ ...decoded, crop });
 };
 
 const renderSheet = (plan, manifest) =>

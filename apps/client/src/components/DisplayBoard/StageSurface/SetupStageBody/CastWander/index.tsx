@@ -1,6 +1,7 @@
 import type { Player, Team } from "@wingnight/shared";
 
 import { resolvePlayerAppearance } from "../../../../../utils/resolvePlayerAppearance";
+import { resolveTeamApparel } from "../../../../../utils/resolveTeamApparel";
 import { resolveTeamColorVariant } from "../../../../../utils/resolveTeamColorVariant";
 import { Character } from "../../../../Character";
 import * as styles from "./styles";
@@ -10,36 +11,37 @@ type CastWanderProps = {
   teams: Team[];
 };
 
-const buildTeamIdByPlayerId = (teams: Team[]): Map<string, string> => {
-  const teamIdByPlayerId = new Map<string, string>();
+const buildTeamByPlayerId = (teams: Team[]): Map<string, Team> => {
+  const teamByPlayerId = new Map<string, Team>();
 
   for (const team of teams) {
     for (const playerId of team.playerIds) {
-      teamIdByPlayerId.set(playerId, team.id);
+      teamByPlayerId.set(playerId, team);
     }
   }
 
-  return teamIdByPlayerId;
+  return teamByPlayerId;
 };
 
 // The lobby's ambient cast: every rostered player pacing the foot of the stage
-// behind the lobby content, in their team's accent so the room can see who is
-// seated where. Decoration only — no state, no server field, `aria-hidden`.
+// behind the lobby content, in their team's accent and wearing their team
+// genre's apparel, so the room can see who is seated where. Decoration only —
+// no state, no server field, `aria-hidden`.
 export const CastWander = ({ players, teams }: CastWanderProps): JSX.Element | null => {
   if (players.length === 0) {
     return null;
   }
 
-  const teamIdByPlayerId = buildTeamIdByPlayerId(teams);
+  const teamByPlayerId = buildTeamByPlayerId(teams);
 
   return (
     <div className={styles.container} aria-hidden data-cast-wander>
       {players.map((player, index) => {
-        const teamId = teamIdByPlayerId.get(player.id);
+        const team = teamByPlayerId.get(player.id);
         const fillClassName =
-          teamId === undefined
+          team === undefined
             ? styles.unassignedFill
-            : resolveTeamColorVariant(teamId).characterFillClassName;
+            : resolveTeamColorVariant(team.id).characterFillClassName;
 
         return (
           <span
@@ -50,6 +52,7 @@ export const CastWander = ({ players, teams }: CastWanderProps): JSX.Element | n
             <span className={styles.waddle}>
               <Character
                 appearance={resolvePlayerAppearance(player)}
+                apparel={resolveTeamApparel(team)}
                 fillClassName={fillClassName}
               />
             </span>

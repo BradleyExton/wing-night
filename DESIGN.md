@@ -304,33 +304,48 @@ marquee chrome the drawing easel uses:
 
 ## 2.8 Cast (shared character system)
 
-Every rostered player has a little chicken that recurs across the show.
+Every rostered player has a little hen that recurs across the show.
 The drawing lives in `apps/client/src/components/Character` and the look
 resolves from the player *name* (`resolvePlayerAppearance`), so Brad is the
-same character every night regardless of roster order.
+same character every night regardless of roster order. The candidates that
+lost to it are kept in `apps/client/public/mockups/cast/`.
 
--   **One colour per bird.** The whole silhouette (tail, body, head, comb) is
-    the player's team accent (`teamA`–`teamH`, via `resolveTeamColorVariant`, so
-    it matches that team's standings dot); unassigned players are `mutedWarm`.
-    Faces are two white eyes, the JOUST convention (§2.7); beak and legs are
-    `primary`, outlined in `bg` so they hold on an orange team. A 2-unit `bg`
-    stroke separates the silhouette from the flame glow.
+-   **One colour per bird.** The whole silhouette (tail, body, wing, neck,
+    head, comb) is the player's team accent (`teamA`–`teamH`, via
+    `resolveTeamColorVariant`, so it matches that team's standings dot);
+    unassigned players are `mutedWarm`. Faces are two white eyes, the JOUST
+    convention (§2.7); beak, wattle and legs are `primary`, outlined in `bg` so
+    they hold on an orange team. A 2-unit `bg` stroke separates the silhouette
+    from the flame glow.
 -   Character fills are **content, not chrome**: like the DRAWING inks (§2.5)
     they are exempt from the §0.1 two-accent budget, and using team tokens as
     a character's identity colour is an identity use like the standings dot,
     not a timer/status/CTA use. No skin tones, no new colours.
--   Silhouette first: three bodies, three combs and two tails, nine shapes per
-    bird, no detail below the illustration spec's 3% floor. Names are
-    never lettered under a character on the TV.
--   **Head swap.** An `avatarSrc` on the player is clipped into the head
-    circle in place of the drawn eyes (the Contraption lab's `Likeness`
-    convention); the outline, beak and comb stay so the silhouette survives.
-    A bird with a head gets a **bobblehead** proportion (head radius 19 of
-    a 72-tall bird, versus 13 drawn): at party distance the face is the
-    identity, and a coin-sized one reads as "a face" rather than whose.
-    Heads are generated offline by `pnpm import:avatars` from a photo, using
-    the illustration spec's prompt recipe, so they stay flat vector; the one
-    palette departure is flat skin and hair tints, which a face needs.
+-   Silhouette first: three bodies, three combs and two tails, and a neck so
+    the head has somewhere to be; no detail below the illustration spec's 3%
+    floor. Names are never lettered under a character on the TV.
+-   **Costume head.** An `avatarSrc` on the player is worn as the bird's own
+    head: the image replaces the drawn head circle and eyes, the comb perches
+    on the hair and the beak and wattle poke out at mouth height, so the
+    player reads as *in the chicken suit with their face showing*. It is a
+    **bobblehead** (44 tall on a 72-tall bird): at party distance the face is
+    the identity, and a coin-sized one reads as "a face" rather than whose.
+    A filter dilates the image's alpha into a `bg` halo, the stroke an image
+    cannot take. The contract is that `avatarSrc` is a head with a real alpha
+    silhouette — hair, beard, chin, nothing below — which is what
+    `pnpm import:avatars` writes: it generates on a magenta key, flood-fills
+    the key out from the border (so the dark line art inside the face
+    survives) and crops to what is left. A photo or a boxed sprite in that
+    field renders as a rectangle on a neck, on purpose. The one palette
+    departure is flat skin and hair tints, which a face needs.
+-   **Team apparel.** A team's `genre` (content/teams.json) dresses every bird
+    on it, avatar or not, via `resolveTeamApparel`: country wears a white hat
+    with a team-colour band, metal a dark spiked collar, pop white star
+    shades, disco white lapels. Props are drawn from the palette the bird
+    already has (`text`, `bg`, the team colour) and are placed off the head's
+    anchors (`Character/geometry`) so they land the same on a drawn head and
+    a costume head. A team without a genre, or with one nothing matches,
+    wears nothing.
 -   **Lobby strut.** On SETUP the cast takes turns at the foot of the stage in
     authored CSS lanes (`SetupStageBody/CastWander`), `z-1` behind the lobby
     content and above the flame, exactly as the embers do. Only three or four

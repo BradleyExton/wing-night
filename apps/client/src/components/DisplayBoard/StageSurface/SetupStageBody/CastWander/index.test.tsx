@@ -14,7 +14,7 @@ const players: Player[] = [
 ];
 
 const teams: Team[] = [
-  { id: "team-alpha", name: "Team Alpha", playerIds: ["player-1"], totalScore: 0 },
+  { id: "team-alpha", name: "Team Alpha", playerIds: ["player-1"], totalScore: 0, genre: "metal" },
   { id: "team-beta", name: "Team Beta", playerIds: ["player-2"], totalScore: 0 }
 ];
 
@@ -38,6 +38,13 @@ test("does colour a seated player by its team accent and leave an unassigned pla
   assert.match(html, new RegExp(`data-cast-member="player-1"[^]*?${alphaFill}`));
   assert.match(html, new RegExp(`data-cast-member="player-2"[^]*?${betaFill}`));
   assert.match(html, new RegExp(`data-cast-member="player-3"[^]*?${styles.unassignedFill}`));
+});
+
+test("does dress a player in the team genre's apparel and leave a genreless team bare", () => {
+  const html = renderToStaticMarkup(<CastWander players={players} teams={teams} />);
+
+  assert.match(html, /data-cast-member="player-1"[^]*?data-character-apparel="collar"/);
+  assert.doesNotMatch(html, /data-cast-member="player-2"[^]*?data-character-apparel[^]*?data-cast-member="player-3"/);
 });
 
 test("does render nothing when the roster is empty", () => {
