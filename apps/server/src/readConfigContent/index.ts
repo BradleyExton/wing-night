@@ -54,7 +54,8 @@ const toTeamsContentEntries = (
   return teams.map((team) => ({
     name: team.name,
     ...(team.genre === undefined ? {} : { genre: team.genre }),
-    ...(team.anthems === undefined ? {} : { anthems: team.anthems })
+    ...(team.anthems === undefined ? {} : { anthems: team.anthems }),
+    ...(team.color === undefined ? {} : { color: team.color })
   }));
 };
 

@@ -34,6 +34,16 @@ test("carries genre and anthems from disk into the config content snapshot", () 
   ]);
 });
 
+test("carries an authored colour from disk into the config content snapshot", () => {
+  const teams = readTeamsFrom(
+    JSON.stringify({
+      teams: [{ name: "Hot Ones", genre: "metal", color: "teamD" }]
+    })
+  );
+
+  assert.deepEqual(teams, [{ name: "Hot Ones", genre: "metal", color: "teamD" }]);
+});
+
 test("yields exactly a name for a team that declares neither field", () => {
   const teams = readTeamsFrom(
     JSON.stringify({ teams: [{ name: "Mild Bunch" }] })

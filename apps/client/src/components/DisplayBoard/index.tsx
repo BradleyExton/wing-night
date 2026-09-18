@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { ContentFatalState } from "../ContentFatalState";
 import { AudioUnlockOverlay } from "./AudioUnlockOverlay";
 import { GameLockedOverlay } from "./GameLockedOverlay";
+import { GenreFontPreload } from "./GenreFontPreload";
 import { NowPlayingSurface } from "./NowPlayingSurface";
 import { StageSurface } from "./StageSurface";
 import { StandingsSurface } from "./StandingsSurface";
@@ -135,6 +136,7 @@ export const DisplayBoard = ({
 
   return (
     <main className={styles.container}>
+      <GenreFontPreload teams={roomState?.teams ?? []} />
       <div className={styles.displayAtmosphere} data-display-atmosphere aria-hidden />
       <NowPlayingSurface
         musicPlayback={musicPlayback}

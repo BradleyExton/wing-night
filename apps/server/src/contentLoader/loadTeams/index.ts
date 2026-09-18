@@ -38,7 +38,8 @@ const buildTeam = (entry: TeamsContentEntry, index: number): Team => {
     playerIds: [],
     totalScore: 0,
     ...(entry.genre === undefined ? {} : { genre: entry.genre.trim() }),
-    ...(entry.anthems === undefined ? {} : { anthems: entry.anthems })
+    ...(entry.anthems === undefined ? {} : { anthems: entry.anthems }),
+    ...(entry.color === undefined ? {} : { color: entry.color })
   };
 };
 

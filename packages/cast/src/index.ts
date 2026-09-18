@@ -40,6 +40,8 @@ export {
 } from "./resolveTeamApparel/index.js";
 export {
   resolveCharacterFillClassName,
+  resolveHashedTeamColorToken,
   resolveTeamColorVariant,
+  resolveTeamColorVariantByToken,
   UNSEATED_CHARACTER_FILL_CLASS_NAME
 } from "./resolveTeamColorVariant/index.js";

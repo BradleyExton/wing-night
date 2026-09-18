@@ -1,8 +1,13 @@
-import type { RoomState } from "@wingnight/shared";
+import type { RoomState, TeamTheme } from "@wingnight/shared";
+
+import { resolveTeamThemeById } from "../../../utils/resolveTeamTheme";
 
 type HostTeamMaps = {
   assignedTeamByPlayerId: Map<string, string>;
   teamNameByTeamId: Map<string, string>;
+  // The host's one copy of every team's kit (docs/team-identity.md); surfaces
+  // read it rather than resolving a theme of their own.
+  teamThemeByTeamId: Map<string, TeamTheme>;
 };
 
 export const selectHostTeamMaps = (roomState: RoomState | null): HostTeamMaps => {
@@ -10,7 +15,7 @@ export const selectHostTeamMaps = (roomState: RoomState | null): HostTeamMaps =>
   const teamNameByTeamId = new Map<string, string>();
 
   if (!roomState) {
-    return { assignedTeamByPlayerId, teamNameByTeamId };
+    return { assignedTeamByPlayerId, teamNameByTeamId, teamThemeByTeamId: new Map() };
   }
 
   for (const team of roomState.teams) {
@@ -21,5 +26,9 @@ export const selectHostTeamMaps = (roomState: RoomState | null): HostTeamMaps =>
     }
   }
 
-  return { assignedTeamByPlayerId, teamNameByTeamId };
+  return {
+    assignedTeamByPlayerId,
+    teamNameByTeamId,
+    teamThemeByTeamId: resolveTeamThemeById(roomState.teams)
+  };
 };

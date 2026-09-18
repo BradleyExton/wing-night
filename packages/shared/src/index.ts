@@ -71,6 +71,28 @@ export type {
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
+export {
+  CHARACTER_APPARELS,
+  EMBLEM_IDS,
+  ENTRANCE_IDS,
+  GENRE_KEYS,
+  isTeamColorToken,
+  resolveGenreKey,
+  TEAM_COLOR_TOKENS,
+  TEXTURE_IDS,
+  WORDMARK_TREATMENTS
+} from "./teamTheme/index.js";
+export type {
+  CharacterApparel,
+  EmblemId,
+  EntranceId,
+  GenreKey,
+  TeamColorToken,
+  TeamColorVariant,
+  TeamTheme,
+  TextureId,
+  WordmarkTreatment
+} from "./teamTheme/index.js";
 export { LOBBY_AUDIO_ROUTE_PATH } from "./lobbyAudio/index.js";
 export {
   CONTENT_ASSET_ROUTE_PATH,

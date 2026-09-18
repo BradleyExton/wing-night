@@ -3,13 +3,15 @@ import {
   type DisplayRoomStateSnapshot,
   type MinigameType,
   type Player,
-  type Team
+  type Team,
+  type TeamTheme
 } from "@wingnight/shared";
 
 import {
   resolveMinigameBriefingContent,
   type MinigameBriefingContent
 } from "../../../../copy/minigameBriefings";
+import { resolveTeamThemeById } from "../../../../utils/resolveTeamTheme";
 
 export type StageRenderMode =
   | "setup"
@@ -51,6 +53,10 @@ export type StageViewModel = {
   teamNames: string[];
   activeTeamName: string | null;
   activeTeamGenre: string | null;
+  // The display's one copy of every team's kit (docs/team-identity.md), and
+  // the active team's pulled out because that is the one the stage dresses.
+  teamThemeByTeamId: Map<string, TeamTheme>;
+  activeTeamTheme: TeamTheme | null;
   activeTeamPlayerNames: string[];
   shouldRenderTeamTurnContext: boolean;
   minigameBriefingContent: MinigameBriefingContent | null;
@@ -109,6 +115,9 @@ export const resolveStageViewModel = (
     activeTeamId !== null
       ? (roomState?.teams.find((team) => team.id === activeTeamId) ?? null)
       : null;
+  const teamThemeByTeamId = resolveTeamThemeById(roomState?.teams ?? []);
+  const activeTeamTheme =
+    activeTeam !== null ? (teamThemeByTeamId.get(activeTeam.id) ?? null) : null;
   const playerNameByPlayerId = new Map(
     (roomState?.players ?? []).map((player) => [player.id, player.name] as const)
   );
@@ -209,6 +218,8 @@ export const resolveStageViewModel = (
     teamNames: roomState?.teams.map((team) => team.name) ?? [],
     activeTeamName,
     activeTeamGenre: activeTeam?.genre ?? null,
+    teamThemeByTeamId,
+    activeTeamTheme,
     activeTeamPlayerNames,
     shouldRenderTeamTurnContext,
     minigameBriefingContent,

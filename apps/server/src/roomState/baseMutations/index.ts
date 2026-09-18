@@ -54,7 +54,8 @@ const normalizeBaselineTeams = (teams: Team[]): Team[] => {
     playerIds: [...team.playerIds],
     totalScore: 0,
     ...(team.genre === undefined ? {} : { genre: team.genre }),
-    ...(team.anthems === undefined ? {} : { anthems: team.anthems })
+    ...(team.anthems === undefined ? {} : { anthems: team.anthems }),
+    ...(team.color === undefined ? {} : { color: team.color })
   }));
 };
 

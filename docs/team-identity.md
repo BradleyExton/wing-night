@@ -32,8 +32,10 @@ Structural limits the kit removes:
 ## Genre vocabulary
 
 `genre` stays free text in `teams.json` (the pack is hand-edited and the anthem cue already reads
-it). A single resolver maps it to a canonical key by case-insensitive keyword containment, first
-match wins, in this order:
+it). A single resolver, `resolveGenreKey` in `@wingnight/shared`, maps it to a canonical key by
+case-insensitive keyword containment, first match wins, in this order (it lives in shared rather
+than the client so the cast's `resolveTeamApparel` reads the same table and "funk" can never be
+disco to one and nothing to the other):
 
 | Key | Keywords |
 |---|---|
@@ -53,24 +55,33 @@ texture, existing beats), not an error: a team with no genre renders exactly wha
 
 ## The kit
 
-`resolveTeamTheme(team, seatingIndex)` in `apps/client/src/utils/resolveTeamTheme` returns:
+`resolveTeamThemeById(teams)` in `apps/client/src/utils/resolveTeamTheme` walks the teams in
+seating order (the colour collision pass needs the earlier teams, so a seating index alone is not
+enough) and returns one of these per team id; `resolveTeamTheme(team, teams)` picks one out, or
+themes a team on its own for a fixture:
 
 ```ts
 type TeamTheme = {
   genre: GenreKey;              // canonical key above
-  colorVariant: TeamColorVariant; // the existing class bundle, chosen per "Colour" below
+  colorToken: TeamColorToken;   // "teamA"–"teamH", chosen per "Colour" below
+  colorVariant: TeamColorVariant; // the existing class bundle for that token, plus `tintClassName`
   fontClassName: string;        // Tailwind font token, e.g. "font-genre-metal"
   wordmark: WordmarkTreatment;  // "chrome" | "candy" | "rope" | "neon" | "torn" | "drip" | "scanline" | "plain"
   emblem: EmblemId | null;      // "skull-hen" | "star-mic" | "hat-horseshoe" | "mirrorball" | ...
   texture: TextureId | null;    // "lightning" | "confetti" | "woodgrain" | "lightdots" | ...
   entrance: EntranceId;         // "slam" | "bounce" | "swing" | "spin" | "rip" | "drop" | "glitch" | "beat"
-  apparel: CharacterApparel | undefined; // folded in from resolveTeamApparel, which this replaces
+  apparel: CharacterApparel | undefined; // folded in from the cast's resolveTeamApparel
 };
 ```
 
 The resolver is pure and DOM-free (tests run under `tsx --test`). Surfaces get themes from one map
-per room state, `teamThemeById`, built beside `selectHostTeamMaps` on the host and in
-`resolveStageViewModel` on the display, so no surface calls the resolver on its own.
+per room state, `teamThemeByTeamId`, built inside `selectHostTeamMaps` on the host and
+`resolveStageViewModel` on the display (which also pulls out `activeTeamTheme`), so no surface calls
+the resolver on its own. `resolveTeamApparel` stays in the cast rather than being deleted: JOUST
+dresses its lane birds from a display-view genre string, and the theme reads the same function, so
+there is still one apparel table. `tintClassName` on the colour variant sets the `--tint` custom
+property every wordmark treatment and texture keys off, which is how a component stays free of
+inline styles.
 
 ### Colour
 
@@ -83,8 +94,8 @@ Precedence, first hit wins:
 3. The existing id hash.
 
 Then a collision pass in seating order: a team whose token is already taken by an earlier team
-takes the next free token in A–H order. Two teams never share a colour while eight or fewer exist.
-The team tokens themselves do not change; no new colours.
+takes the next free token after it in A–H order, wrapping past H. Two teams never share a colour
+while eight or fewer exist. The team tokens themselves do not change; no new colours.
 
 ### Typography
 
@@ -116,7 +127,11 @@ Phase 2 bundles exactly the picks, one woff2 each, not the whole board.
 Legibility floors: the genre face is used only where the name renders at 24px or larger on the TV
 and 20px or larger on the tablet. Below that the surface keeps the house sans and carries identity
 with colour plus the emblem glyph. Faces are loaded with `font-display: block` (a 100ms wait beats a
-sans-to-blackletter flash on a TV) and the active roster's faces are preloaded from `DisplayBoard`.
+sans-to-blackletter flash on a TV) and the active roster's faces are preloaded from `DisplayBoard`
+(`GenreFontPreload`, one latin subset per face). The treatments, textures and entrance beats are
+plain CSS classes in `index.css` (`team-wordmark-*`, `team-ambient-*`, `team-enter-*`), not
+Tailwind arbitrary values, because they are multi-layer gradients and keyframe sets and because an
+entrance's `animation` shorthand has to land after the utilities layer to win.
 
 ### Components
 
@@ -179,7 +194,11 @@ after each.
 2. **Foundation.** Bundle the chosen faces; `resolveTeamTheme` with tests, absorbing
    `resolveTeamApparel` and the colour precedence; the `color` content field; `TeamWordmark`,
    `TeamEmblem`, `TeamLineup`, `TeamAmbient`; `teamThemeById` on both surfaces.
-3. **TV headline moments.** Standings, MINIGAME_INTRO, TURN_RESULTS, FINAL_RESULTS.
+   **Done 2026-09-18.** Nothing on screen changes in this phase: every surface still reads the
+   id-hash colour, so the lobby strut (`CastWander`) and the standings dots stay on one table until
+   phase 3 moves the TV onto the theme in a single commit.
+3. **TV headline moments.** Standings, MINIGAME_INTRO, TURN_RESULTS, FINAL_RESULTS, and the SETUP
+   strut's colour and apparel off `teamThemeByTeamId`.
 4. **Host surfaces.** Mini-rail pill, team setup rows, player chips, turn order, score override.
 5. **Minigames.** Core contract and fixture, then drawing, joust, trivia.
 6. **Authoring and docs.** Wizard genre field and preview (closes the "Team genre and anthems are

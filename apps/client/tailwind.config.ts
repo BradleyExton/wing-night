@@ -9,6 +9,21 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // One display face per genre (docs/team-identity.md, "Typography"). The
+      // files are bundled under public/fonts and declared in index.css; the
+      // house sans stays the fallback so a name still renders before the face
+      // has loaded. `none` uses Tailwind's own `font-sans`.
+      fontFamily: {
+        "genre-metal": ['"Metal Mania"', "ui-sans-serif", "system-ui", "sans-serif"],
+        "genre-punk": ["Bangers", "ui-sans-serif", "system-ui", "sans-serif"],
+        "genre-rock": ["Anton", "ui-sans-serif", "system-ui", "sans-serif"],
+        "genre-pop": ["Fredoka", "ui-sans-serif", "system-ui", "sans-serif"],
+        "genre-country": ["Rye", "ui-sans-serif", "system-ui", "sans-serif"],
+        "genre-disco": ["Monoton", "ui-sans-serif", "system-ui", "sans-serif"],
+        "genre-hiphop": ['"Permanent Marker"', "ui-sans-serif", "system-ui", "sans-serif"],
+        "genre-electronic": ["Orbitron", "ui-sans-serif", "system-ui", "sans-serif"],
+        "genre-classical": ['"Playfair Display"', "ui-sans-serif", "system-ui", "sans-serif"]
+      },
       colors: {
         bg: "#121212",
         surface: "#1c1c1c",

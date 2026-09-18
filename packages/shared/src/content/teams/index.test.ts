@@ -105,3 +105,25 @@ test("rejects via the predicate every value the validator reports issues for", (
     assert.ok(validateTeamsContentFile(value).length > 0);
   }
 });
+
+test("returns no issues when a team names one of the eight colour tokens", () => {
+  const content = { teams: [{ name: "Hot Ones", color: "teamD" }] };
+
+  assert.deepEqual(validateTeamsContentFile(content), []);
+});
+
+test("reports the color path when color is not a team token", () => {
+  const content = {
+    teams: [
+      { name: "Hot Ones", color: "red" },
+      { name: "Mild Bunch", color: "#f43f5e" },
+      { name: "Blazers", color: 4 }
+    ]
+  };
+
+  assert.deepEqual(pathsOf(validateTeamsContentFile(content)), [
+    "teams[0].color",
+    "teams[1].color",
+    "teams[2].color"
+  ]);
+});

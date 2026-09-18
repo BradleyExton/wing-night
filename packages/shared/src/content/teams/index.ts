@@ -1,4 +1,9 @@
 import {
+  isTeamColorToken,
+  TEAM_COLOR_TOKENS,
+  type TeamColorToken
+} from "../../teamTheme/index.js";
+import {
   prefixIssuePaths,
   type ValidationIssue
 } from "../validationIssue/index.js";
@@ -7,6 +12,7 @@ export type TeamsContentEntry = {
   name: string;
   genre?: string;
   anthems?: string[];
+  color?: TeamColorToken;
 };
 
 export type TeamsContentFile = {
@@ -50,6 +56,13 @@ export const validateTeamsContentEntry = (value: unknown): ValidationIssue[] => 
     issues.push({
       path: "anthems",
       message: "must be an array of non-empty strings when present"
+    });
+  }
+
+  if ("color" in value && !isTeamColorToken(value.color)) {
+    issues.push({
+      path: "color",
+      message: `must be one of ${TEAM_COLOR_TOKENS.join(", ")} when present`
     });
   }
 

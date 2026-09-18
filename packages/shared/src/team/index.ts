@@ -1,3 +1,5 @@
+import type { TeamColorToken } from "../teamTheme/index.js";
+
 export type Team = {
   id: string;
   name: string;
@@ -5,6 +7,8 @@ export type Team = {
   totalScore: number;
   genre?: string;
   anthems?: string[];
+  /** An authored identity accent; when absent the genre default, then the id hash, decides. */
+  color?: TeamColorToken;
 };
 
 // Imported by BOTH the express mount and the client's anthem URL resolver, so

@@ -21,3 +21,9 @@ test("does dress nothing when the team has no genre or one nothing matches", () 
   assert.equal(resolveTeamApparel({ genre: "polka" }), undefined);
   assert.equal(resolveTeamApparel(undefined), undefined);
 });
+
+test("does dress a genre through the shared vocabulary so funk wears disco's lapels", () => {
+  assert.equal(resolveTeamApparel({ genre: "funk" }), "lapels");
+  assert.equal(resolveTeamApparel({ genre: "punk rock" }), "collar");
+  assert.equal(resolveTeamApparel({ genre: "hip hop" }), undefined);
+});

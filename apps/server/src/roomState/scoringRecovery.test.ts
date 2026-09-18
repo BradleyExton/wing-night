@@ -503,7 +503,7 @@ test("fatal room state blocks host mutations", () => {
 // literal, so a reset silently dropped the content-pack fields and the display
 // rendered no anthem element at all. Same defect class as the readConfigContent
 // strip this ticket also fixes.
-test("resetGameToSetup preserves genre and anthems on the restored team shells", () => {
+test("resetGameToSetup preserves genre, anthems and colour on the restored team shells", () => {
   setRoomStateGameConfig(gameConfigFixture);
   setRoomStatePlayers([{ id: "player-1", name: "Player One" }]);
   setRoomStateTeams([
@@ -513,7 +513,8 @@ test("resetGameToSetup preserves genre and anthems on the restored team shells",
       playerIds: [],
       totalScore: 0,
       genre: "metal",
-      anthems: ["blaze.mp3"]
+      anthems: ["blaze.mp3"],
+      color: "teamD"
     },
     { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
   ]);
@@ -528,7 +529,8 @@ test("resetGameToSetup preserves genre and anthems on the restored team shells",
       playerIds: [],
       totalScore: 0,
       genre: "metal",
-      anthems: ["blaze.mp3"]
+      anthems: ["blaze.mp3"],
+      color: "teamD"
     },
     { id: "team-2", name: "Preset Team Two", playerIds: [], totalScore: 0 }
   ]);

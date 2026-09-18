@@ -81,3 +81,41 @@ test("throws when both local and sample teams content files are missing", () => 
     /Missing teams content file/
   );
 });
+
+test("carries an authored colour onto the team when the entry names one", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "local/teams.json",
+    JSON.stringify({
+      teams: [{ name: "Molten Metal", genre: "metal", color: "teamD" }, { name: "Plain" }]
+    })
+  );
+
+  const teams = loadTeams({ contentRootDir: contentRoot });
+
+  assert.deepEqual(teams, [
+    {
+      id: "team-1",
+      name: "Molten Metal",
+      playerIds: [],
+      totalScore: 0,
+      genre: "metal",
+      color: "teamD"
+    },
+    { id: "team-2", name: "Plain", playerIds: [], totalScore: 0 }
+  ]);
+});
+
+test("throws when a team names a colour outside the eight team tokens", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "local/teams.json",
+    JSON.stringify({ teams: [{ name: "Molten Metal", color: "crimson" }] })
+  );
+
+  assert.throws(() => loadTeams({ contentRootDir: contentRoot }), /Invalid teams content/);
+});
