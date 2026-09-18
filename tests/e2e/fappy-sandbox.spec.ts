@@ -95,13 +95,14 @@ const flyUntilHandoff = (page: Page): Promise<number> => {
         return;
       }
 
+      // A champ writes where its head is each frame: the loop reads that, never the drawing.
       const gates = [...scene.querySelectorAll("[data-fappy-gate]")].map((gate) => {
-        const shaft = gate.querySelector("[data-fappy-champ] rect");
+        const champ = gate.querySelector("[data-fappy-champ]");
         const eagleBody = gate.querySelector("[data-fappy-eagle] ellipse");
 
         return {
-          x: Number(shaft?.getAttribute("x") ?? 0) - 2,
-          shaft,
+          x: Number(champ?.getAttribute("data-champ-x") ?? 0),
+          champ,
           minHead: Infinity,
           eagle: gate.querySelector("[data-fappy-eagle]"),
           eagleBottom: eagleBody ? Number(eagleBody.getAttribute("cy")) + 4 : null
@@ -133,7 +134,7 @@ const flyUntilHandoff = (page: Page): Promise<number> => {
         }
 
         for (const gate of gates) {
-          gate.minHead = Math.min(gate.minHead, Number(gate.shaft?.getAttribute("y") ?? 0) - 3.5);
+          gate.minHead = Math.min(gate.minHead, Number(gate.champ?.getAttribute("data-champ-top") ?? 0));
         }
 
         const { y, vy, scrollX } = read();

@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/joust/`
 
-Last updated: 2026-09-18
+Last updated: 2026-09-18 (schlong drawing + interpolated replay, same day)
 
 ## 1) One-liner
 
@@ -102,6 +102,12 @@ it is.
   pin's three numbers — `JOUST_PIN_HEIGHT`, `JOUST_PIN_HEAD_RADIUS`, `JOUST_PIN_FOOT_RADIUS` — are
   that bird's own proportions at lane scale, and `ArenaHen`'s test fails if the drawn head and the
   collided head stop being the same size.
+- **The shot is drawn along its bodies, between its keyframes.** `@wingnight/cast` exports
+  `resolveSchlongPaths`: the five shaft links and the head body are the spine, the glans is a cap
+  of the head body's radius, and FAPPY's champs come off the same function. The replay index is
+  fractional — the scene blends the two keyframes either side of it — so a 24 Hz track moves on
+  every screen frame. The lane's hens are memoised on their body positions, because a replay now
+  re-renders the scene at screen rate and most of the rack is standing still through most of it.
 - **A pin is light, the shot is heavy.** `SHOOTER_MASS_SHARE` (0.15) is what lets a shot plough on
   down the lane instead of stopping dead in the first player it meets.
 - **Live pull on the TV.** `setAim` streams the band at ~12/s while dragging (the drawing canvas

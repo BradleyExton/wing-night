@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/fappy/`
 
-Last updated: 2026-09-18 (UX pass, same day)
+Last updated: 2026-09-18 (UX pass, then the schlong drawing, same day)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on.** Adding a `MinigameType`
 > breaks every `Record<MinigameType, …>` in the repo until fully wired (authoring guide §1),
@@ -94,9 +94,13 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
   the server's start stamp against its own wall clock.
 - **Sixty ticks a second, fixed step.** A flap logged at tick `T` applies to the step that
   produces `T + 1`, on every party.
-- **Obstacles from the floor.** Every gate is a JOUST champ standing on the sand, growing
-  and shrinking on a bounded triangle-wave bob with its head wiggling; about half the gates
-  hang a bald eagle in the sky as the thing to duck under. Nothing hangs from the ceiling.
+- **Obstacles from the floor.** Every gate is a schlong standing on the sand — the cast's
+  `resolveSchlongPaths` drawing, the same one JOUST fires, in pink — growing and shrinking on a
+  bounded triangle-wave bob (the sim's `champTop` is the top of its head) with the shaft re-bent
+  each frame so the tip sways and the middle lags, and a face that watches the bird come; about
+  half the gates hang a bald eagle in the sky as the thing to duck under. Nothing hangs from the
+  ceiling. The e2e autopilot reads the head's height off `data-champ-top`, which the loop
+  writes every frame, never off the drawing.
   Thrown shooters as moving hazards are a v2 layer, not in this build.
 - **No mockup pass.** JOUST shipped without one; the surfaces reuse its marquee and deck
   language and the cast's own drawing. Noted here so the as-built list is honest.

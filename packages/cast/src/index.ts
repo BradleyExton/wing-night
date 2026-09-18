@@ -35,6 +35,16 @@ export {
   type CharacterComb,
   type CharacterTail
 } from "./resolvePlayerAppearance/index.js";
+// The schlong: JOUST's projectile and FAPPY's obstacle are one drawing, built
+// along whatever spine a surface hands it (physics bodies, or a bend it made).
+export {
+  resolveSchlongFace,
+  resolveSchlongPaths,
+  type SchlongFace,
+  type SchlongPaths,
+  type SchlongProportions,
+  type SchlongVec2
+} from "./Schlong/index.js";
 export {
   CHARACTER_APPARELS,
   resolveTeamApparel,

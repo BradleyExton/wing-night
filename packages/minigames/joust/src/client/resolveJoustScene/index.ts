@@ -36,6 +36,26 @@ export type JoustScene = {
   trail: JoustVec2[];
 };
 
+/**
+ * The frame at a fractional replay index: the two keyframes either side of it, blended. A
+ * track is sampled at 24 Hz and a screen paints at 60 or 120, so this is what makes a flight
+ * move every frame instead of every third one. Body order is the same in every frame of a
+ * track, so blending position by position is blending body by body.
+ */
+const blendFrames = (keyframes: readonly JoustFrame[], index: number): JoustFrame | undefined => {
+  const lower = Math.floor(index);
+  const upper = Math.min(lower + 1, keyframes.length - 1);
+  const from = keyframes[lower];
+  const to = keyframes[upper];
+  const mix = index - lower;
+
+  if (from === undefined || to === undefined || mix <= 0 || from === to) {
+    return from;
+  }
+
+  return from.map((value, position) => value + ((to[position] ?? value) - value) * mix);
+};
+
 const toFallen = (
   arena: JoustMinigameArena,
   lineup: readonly JoustPlayerFigure[],
@@ -103,7 +123,10 @@ export const resolveJoustScene = (
     return [{ ...figure, slotIndex, x: slot.x, y: slot.y }];
   });
   const clampedIndex = Math.max(0, Math.min(replayIndex, lastShot.run.keyframes.length - 1));
-  const frame = lastShot.run.keyframes[clampedIndex] ?? resolveJoustRestFrame(toArena(pins), aim);
+  const frame =
+    blendFrames(lastShot.run.keyframes, clampedIndex) ?? resolveJoustRestFrame(toArena(pins), aim);
+  // Bursts and the trail are counted in whole keyframes: the last one fully reached.
+  const reachedIndex = Math.floor(clampedIndex);
 
   return {
     frame,
@@ -112,11 +135,11 @@ export const resolveJoustScene = (
     burstPinIndices: lastShot.run.topples
       .filter(
         (topple) =>
-          clampedIndex >= topple.frameIndex && clampedIndex < topple.frameIndex + IMPACT_FRAMES
+          reachedIndex >= topple.frameIndex && reachedIndex < topple.frameIndex + IMPACT_FRAMES
       )
       .map((topple) => topple.pinIndex),
     trail: lastShot.run.keyframes
-      .slice(Math.max(0, clampedIndex - JOUST_TRAIL_FRAMES), clampedIndex)
+      .slice(Math.max(0, reachedIndex - JOUST_TRAIL_FRAMES), reachedIndex)
       .map((flown) => readJoustFramePosition(flown, JOUST_SHOOTER_HEAD_INDEX))
   };
 };

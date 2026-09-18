@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { JoustPlayerFigure, JoustVec2 } from "@wingnight/shared";
 import { JOUST_PIN_HEIGHT } from "@wingnight/shared";
 import {
@@ -50,7 +51,7 @@ const standUpOnPin = (foot: JoustVec2, head: JoustVec2): string => {
   return `matrix(${-upY} ${upX} ${-upX} ${-upY} ${foot.x} ${foot.y})`;
 };
 
-export const ArenaHen = ({
+const ArenaHenFigure = ({
   figure,
   foot,
   head,
@@ -81,3 +82,23 @@ export const ArenaHen = ({
     </g>
   );
 };
+
+const isSameVec = (a: JoustVec2, b: JoustVec2): boolean => a.x === b.x && a.y === b.y;
+
+// A replay now paints on every screen frame, and most of the rack is standing still through
+// most of it: skip the birds whose bodies have not moved. The figure is compared by identity
+// fields rather than reference because the scene resolver rebuilds its pin objects each call.
+export const ArenaHen = memo(ArenaHenFigure, (previous, next): boolean => {
+  return (
+    previous.figure.playerId === next.figure.playerId &&
+    previous.figure.name === next.figure.name &&
+    previous.figure.avatarSrc === next.figure.avatarSrc &&
+    previous.figure.teamId === next.figure.teamId &&
+    previous.figure.genre === next.figure.genre &&
+    isSameVec(previous.foot, next.foot) &&
+    isSameVec(previous.head, next.head) &&
+    previous.serverOrigin === next.serverOrigin &&
+    previous.facing === next.facing &&
+    previous.isDown === next.isDown
+  );
+});

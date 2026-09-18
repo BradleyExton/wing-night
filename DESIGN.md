@@ -313,6 +313,18 @@ marquee chrome the drawing easel uses:
     second; it collapses to nothing once the shooter stops. While the band is
     being drawn, a dashed ring at the pull radius shows the room how much of
     the band is in hand — the ring is full power.
+-   **The shot is the cast's schlong.** The thing on the band is drawn by
+    `@wingnight/cast`'s `resolveSchlongPaths` along its own physics bodies —
+    the five shaft links and the head are the spine, so every flop the
+    integrator gives it is in the outline, and the glans is a cap of the
+    head body's own radius, so what the room sees hit is the circle the
+    integrator hit. A soft outline with a flared glans and a rim at the neck,
+    a gloss up the lit side and a spot on the head, two balls off the tail,
+    and a cartoon face in screen space whose pupils look where it is going
+    (down the lane while it waits). It keeps `primary` orange: it is the
+    team's shot, and nothing else in the desert is orange. The replay draws
+    between the track's 24 Hz keyframes (`useShotReplay` is fractional), so
+    the flight moves on every screen frame rather than every third one.
 -   **The lane is the room.** Every player who is not shooting stands in it
     as the very same cast bird the setup lobby wanders (§2.8) — their own
     generated head and all — and the shooting team stands behind the
@@ -359,11 +371,17 @@ marquee chrome the drawing easel uses:
 The FAPPY (Fappy Bird) surfaces fly the cast (§2.8) through JOUST's desert (§2.7),
 under the same marquee and deck chrome:
 
--   Scene materials are JOUST's, on purpose: the dusk sky and sand, and the
-    obstacle is JOUST's cyan champ (`#22c9e6`) standing up from the floor,
-    growing and shrinking on a slow bob with its head wiggling — lit from
-    the left with a gradient down the shaft and a highlight on the head, so
-    it reads as a solid thing at TV distance. Over some gates a bald eagle
+-   Scene materials are JOUST's, on purpose: the dusk sky and sand. The
+    obstacle is the cast's schlong (§2.7, the same `resolveSchlongPaths`
+    drawing JOUST fires) standing up from the sand in bubblegum pink
+    (`#f9a3bc`, outlined `#8e2a52`) — the one hue in the desert that is
+    neither its sand nor its sky, so a row of them reads from the sofa.
+    Each frame the shaft is re-bent from its balls on the sand up to a head
+    whose top IS the sim's `champTop`: the tip sways on a slow wave and the
+    middle of the shaft follows a beat behind, so it whips rather than tilts,
+    and at full stretch of its bob the shaft thins a little. A gloss up the
+    lit side, a rim at the neck, a face on the head whose pupils turn to
+    watch the bird once it is close. Over some gates a bald eagle
     (dark brown, white head and tail, `#f9a51a` beak and talons) hangs in
     the sky as the thing to duck under, its feathered wings beating on the
     shoulders (bump one and it tumbles off, gone for the leg). Behind the
@@ -427,6 +445,12 @@ minigames can draw the cast too and there is exactly one hen in the repo —
 and the look resolves from the player *name* (`resolvePlayerAppearance`), so
 Brad is the same character every night regardless of roster order. The
 candidates that lost to it are kept in `apps/client/public/mockups/cast/`.
+
+The package also owns the other recurring character, the schlong that JOUST
+fires and FAPPY stands in a row: `resolveSchlongPaths` draws one along any
+spine (physics bodies, or a bend a surface made) and `resolveSchlongFace`
+puts the face on it, so the two games are one creature and neither has a
+copy that can drift.
 
 The package exports the bird two ways: `<Character>` for a page, which wraps
 it in its own `<svg>`, and `<CharacterFigure>` for a surface that has an SVG

@@ -3,10 +3,13 @@ import type { JoustMinigameShot } from "@wingnight/shared";
 
 // Client-local playback of a server-simulated track: the frame index climbs
 // at the track's own rate from the moment a new shot arrives, then holds on
-// the last frame. Keyed on the shot, not on the view object, so the ordinary
-// snapshot rebroadcasts that happen while a shot is on screen never restart
-// it. A display that refreshes mid-shot replays that shot once from the top,
-// which is the right thing for the room to see.
+// the last frame. It is FRACTIONAL — the track is 24 keyframes a second and
+// the screen is 60 or 120, so the scene draws the shot between two keyframes
+// rather than stepping from one to the next; a shot that crosses the lane in
+// under a second would otherwise judder. Keyed on the shot, not on the view
+// object, so the ordinary snapshot rebroadcasts that happen while a shot is
+// on screen never restart it. A display that refreshes mid-shot replays that
+// shot once from the top, which is the right thing for the room to see.
 export const useShotReplay = (shot: JoustMinigameShot | null): number => {
   const [frameIndex, setFrameIndex] = useState(0);
   const shotRef = useRef(shot);
@@ -41,7 +44,7 @@ export const useShotReplay = (shot: JoustMinigameShot | null): number => {
     setFrameIndex(0);
 
     const step = (now: number): void => {
-      const nextIndex = Math.min(lastIndex, Math.floor((now - startedAt) * framesPerMs));
+      const nextIndex = Math.min(lastIndex, (now - startedAt) * framesPerMs);
 
       setFrameIndex(nextIndex);
 

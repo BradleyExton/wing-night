@@ -70,3 +70,13 @@ test("does stop the trail short of the frame on screen, so the head is never gho
   assert.equal(headX, 95, "a replay index past the end holds the last frame");
   assert.ok(scene.trail.every((at) => at.x < 95));
 });
+
+test("does draw a shot between two keyframes when the replay index falls between them", () => {
+  const scene = resolveJoustScene(ARENA, LINEUP, [], SLACK, flight, 3.25);
+
+  assert.ok(Math.abs((scene.frame[JOUST_SHOOTER_HEAD_INDEX * 2] ?? 0) - 56.25) < 1e-9);
+  assert.deepEqual(
+    scene.trail.map((at) => at.x),
+    [40, 45, 50]
+  );
+});

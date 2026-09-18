@@ -3,7 +3,6 @@ import type { FappyFrame, FappyGate } from "@wingnight/shared";
 import {
   FAPPY_WORLD,
   createFappyLegStart,
-  resolveFappyChampTop,
   resolveFappyLandingX,
   resolveFappyWaitingX,
   resolveFappyWave
@@ -12,7 +11,7 @@ import {
 import type { LegBird } from "../resolveLegBird/index.js";
 import { Backdrop, FAR_DUNE_PARALLAX, NEAR_DUNE_PARALLAX, type BackdropRefs } from "./Backdrop/index.js";
 import { BirdSprite, type BirdSpriteRefs } from "./BirdSprite/index.js";
-import { CHAMP_HEAD_RADIUS, Champ, ChampDefs, type ChampRefs } from "./Champ/index.js";
+import { Champ, resolveChampPaint, type ChampRefs } from "./Champ/index.js";
 import { Cliffs, FinishFlag } from "./Cliffs/index.js";
 import { EAGLE_WINGBEAT_DEGREES, Eagle, resolveEagleShoulders, type EagleRefs } from "./Eagle/index.js";
 import { fappyPalette } from "./palette.js";
@@ -43,9 +42,6 @@ const BIRD_BOX_WIDTH = 16;
 const BIRD_BOX_HEIGHT = 14.4;
 // The puff's box, in world units, centred on the bird's feet.
 const PUFF_SIZE = 16;
-// The champ head's sideways wiggle: a slow wave, a unit and a bit each way.
-const SWAY_PERIOD_TICKS = 53;
-const SWAY_UNITS = 1.2;
 // The eagle's wingbeat.
 const WINGBEAT_PERIOD_TICKS = 26;
 // A knocked eagle tumbles up and away for this long, then is gone.
@@ -56,7 +52,18 @@ const BIRD_GAP_UNITS = 15;
 
 type GateRefs = ChampRefs & EagleRefs;
 
-const EMPTY_GATE_REFS: GateRefs = { shaft: null, head: null, eagle: null, leftWing: null, rightWing: null };
+const EMPTY_GATE_REFS: GateRefs = {
+  champ: null,
+  body: null,
+  gloss: null,
+  corona: null,
+  slit: null,
+  face: null,
+  pupils: null,
+  eagle: null,
+  leftWing: null,
+  rightWing: null
+};
 
 const unit = (value: number): string => `calc(${value} * var(--fappy-unit))`;
 
@@ -77,9 +84,7 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     const gatesPerLegRef = useRef(gatesPerLeg);
     const ids = {
       label: `${sceneId}-label`,
-      sun: `${sceneId}-sun`,
-      shaft: `${sceneId}-champ-shaft`,
-      head: `${sceneId}-champ-head`
+      sun: `${sceneId}-sun`
     };
 
     gatesRef.current = gates;
@@ -87,7 +92,7 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
 
     const registerGateRefs =
       (gateIndex: number) =>
-      (part: keyof GateRefs, element: SVGRectElement | SVGGElement | null): void => {
+      (part: keyof GateRefs, element: SVGElement | null): void => {
         const entry = gateRefs.current.get(gateIndex) ?? EMPTY_GATE_REFS;
 
         gateRefs.current.set(gateIndex, { ...entry, [part]: element });
@@ -99,6 +104,8 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
       backdropRef.current?.near?.setAttribute("transform", `translate(${-frame.scrollX * NEAR_DUNE_PARALLAX} 0)`);
 
       const wingbeat = (resolveFappyWave(frame.tick, WINGBEAT_PERIOD_TICKS, 0) - 0.5) * EAGLE_WINGBEAT_DEGREES;
+      // The bird, in the gate layer's own (unscrolled) coordinates, for the champs to watch.
+      const birdInLayer = { x: FAPPY_WORLD.birdX + frame.scrollX, y: frame.bird.y };
 
       for (const gate of gatesRef.current) {
         const refs = gateRefs.current.get(gate.index);
@@ -107,13 +114,15 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
           continue;
         }
 
-        const champTop = resolveFappyChampTop(gate, frame.tick);
-        const headY = champTop + CHAMP_HEAD_RADIUS;
-        const sway = (resolveFappyWave(frame.tick, SWAY_PERIOD_TICKS, gate.champPhaseTicks) * 2 - 1) * SWAY_UNITS;
+        const champ = resolveChampPaint(gate, frame.tick, birdInLayer);
 
-        refs.shaft?.setAttribute("y", `${headY}`);
-        refs.shaft?.setAttribute("height", `${FAPPY_WORLD.floorY + 4 - headY}`);
-        refs.head?.setAttribute("transform", `translate(${sway} ${champTop - gate.champTop})`);
+        refs.champ?.setAttribute("data-champ-top", `${champ.top}`);
+        refs.body?.setAttribute("d", champ.body);
+        refs.gloss?.setAttribute("d", champ.gloss);
+        refs.corona?.setAttribute("d", champ.corona);
+        refs.slit?.setAttribute("d", champ.slit);
+        refs.face?.setAttribute("transform", champ.faceTransform);
+        refs.pupils?.setAttribute("transform", champ.pupilsTransform);
 
         if (refs.eagle === null || gate.eagleBottom === null) {
           continue;
@@ -263,7 +272,6 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
             preserveAspectRatio="none"
             aria-hidden="true"
           >
-            <ChampDefs shaftGradientId={ids.shaft} headGradientId={ids.head} />
             <Backdrop ref={backdropRef} sunId={ids.sun} />
             <line
               x1={0}
@@ -279,12 +287,7 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
                   {gate.eagleBottom !== null && (
                     <Eagle gate={gate} eagleBottom={gate.eagleBottom} registerRefs={registerGateRefs(gate.index)} />
                   )}
-                  <Champ
-                    gate={gate}
-                    shaftGradientId={ids.shaft}
-                    headGradientId={ids.head}
-                    registerRefs={registerGateRefs(gate.index)}
-                  />
+                  <Champ gate={gate} registerRefs={registerGateRefs(gate.index)} />
                 </g>
               ))}
               <Cliffs gatesPerLeg={gatesPerLeg} />

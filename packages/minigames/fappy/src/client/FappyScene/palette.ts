@@ -1,14 +1,17 @@
 // Scene materials for the corridor (DESIGN.md §2.9): the same dusk desert
-// JOUST flies over, so the room recognises the world and the champ standing
-// in it; the eagle is a bald one, because it is funnier; the cliffs are the
-// desert's own sand and rock, the dunes behind them JOUST's, and the tufts on
-// the plateaus its cactus green. Drawing content, not UI chrome — exempt from
-// the two-accent budget the way the drawing inks and the JOUST arena are.
+// JOUST flies over, so the room recognises the world; the champs standing in
+// it are bubblegum pink — the Genital Jousting joke, and the one hue in the
+// desert that is neither its sand nor its sky, so a row of them reads from
+// the sofa; the eagle is a bald one, because it is funnier; the cliffs are
+// the desert's own sand and rock, the dunes behind them JOUST's, and the
+// tufts on the plateaus its cactus green. Drawing content, not UI chrome —
+// exempt from the two-accent budget the way the drawing inks and the JOUST
+// arena are.
 export const fappyPalette = {
-  champ: "#22c9e6",
-  champDark: "#0b7f97",
-  champLight: "#a5f3fc",
-  champBlush: "#67e8f9",
+  champ: "#f9a3bc",
+  champDark: "#8e2a52",
+  champLight: "#ffe6ee",
+  shadow: "#3d2411",
   eye: "#fff7ed",
   pupil: "#1c0d02",
   eagle: "#3b2314",

@@ -136,6 +136,10 @@ export const JoustArenaScene = ({
   const pull = isAiming ? Math.hypot(head.x - anchor.x, head.y - anchor.y) / pullRadius : 0;
   const worldClipId = `${sceneId}-world`;
   const bursting = new Set(burstPinIndices);
+  // Which way the shot is going, off the ghost of where it just was; nothing has flown at rest.
+  const lastGhost = trail[trail.length - 1];
+  const shooterVelocity =
+    lastGhost === undefined ? null : { x: head.x - lastGhost.x, y: head.y - lastGhost.y };
 
   return (
     <div className={styles.frame}>
@@ -252,7 +256,7 @@ export const JoustArenaScene = ({
 
           <ShotTrail trail={trail} />
 
-          <Shooter frame={frame} />
+          <Shooter frame={frame} velocity={shooterVelocity} />
 
           <line
             x1={anchor.x + PRONG_SPREAD}
