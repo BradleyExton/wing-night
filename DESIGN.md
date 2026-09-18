@@ -326,6 +326,43 @@ marquee chrome the drawing easel uses:
     rule does not bite. `prefers-reduced-motion` skips the flight and shows
     the landing frame.
 
+## 2.9 FAPPY Minigame Surface Language ("The Corridor")
+
+The FAPPY (Fappy Bird) surfaces fly the cast (§2.8) through JOUST's desert (§2.7),
+under the same marquee and deck chrome:
+
+-   Scene materials are JOUST's, on purpose: the dusk sky and sand, and the
+    obstacle is JOUST's cyan champ (`#22c9e6`) standing up from the floor,
+    growing and shrinking on a slow bob with its head wiggling. Over some
+    gates a bald eagle (dark brown, white head, `#f9a51a` beak) hangs in
+    the sky as the thing to duck under (bump one and it tumbles off, gone
+    for the leg). Each leg takes off from a sand
+    cliff on the left and lands on one on the right, where the next
+    player's bird stands facing the flyer (a gold pennant on the last leg);
+    past the plateau a dark rock wall closes the sky. The room already
+    knows that opponent. Drawing content, exempt from the two-accent
+    budget like the JOUST arena.
+-   The bird is the leg's player's own cast hen — their costume head, their
+    team's accent and apparel — so who is flying is visible from the sofa.
+    A leg nobody is rostered for flies the drawn hen in the team colour.
+-   The scene is a 16:9 box letterboxed with container units, world units
+    mapped with one custom property, so tablet and TV draw the same world.
+    The gate layer is an SVG in world units; the bird is an HTML box moved by
+    a transform on its wrapper, so the costume head's halo filter is
+    rasterised once and composited, never recomputed per frame.
+-   The relay clock is the scoreboard: mono, tabular, `text` under par,
+    `gold` past it, `heat` in the last fifteen seconds, on the host rail and
+    in the display marquee. Nothing drops over the corridor between legs:
+    the landing next to the waiting bird is the handoff, and the status
+    line names who to land next to.
+-   Host: rail with the clock, the corridor as the whole flap surface (no
+    scroll, no zoom), a deck of leg card (player, gates, crashes) → finish
+    card → skip/reset → leg chips → totals. Display: marquee (team, "Fappy
+    Bird", leg, gates, clock), the corridor, a status line; the plaque
+    drops once the relay is through or the limit has caught the team.
+-   The flight is the game: §8's infinite-animation rule does not bite.
+    `prefers-reduced-motion` on the display shows the landing frame only.
+
 ## 2.8 Cast (shared character system)
 
 Every rostered player has a little hen that recurs across the show.

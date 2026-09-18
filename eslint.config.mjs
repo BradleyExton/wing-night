@@ -101,7 +101,7 @@ export default [
     }
   },
   {
-    files: ["apps/client/src/**/*.{ts,tsx}"],
+    files: ["apps/client/src/**/*.{ts,tsx}", "packages/cast/src/**/*.{ts,tsx}"],
     languageOptions: {
       globals: globals.browser
     },
@@ -133,7 +133,9 @@ export default [
     }
   },
   {
-    files: ["apps/client/src/components/**/*.tsx"],
+    // packages/cast is the shared character system: it left apps/client so minigame
+    // packages can draw the bird, and it keeps the house component idiom with it.
+    files: ["apps/client/src/components/**/*.tsx", "packages/cast/src/**/*.tsx"],
     rules: {
       "wingnight/component-entry-file-name": "error"
     }
@@ -145,7 +147,7 @@ export default [
     }
   },
   {
-    files: ["apps/client/src/components/**/index.tsx"],
+    files: ["apps/client/src/components/**/index.tsx", "packages/cast/src/**/index.tsx"],
     rules: {
       "max-lines": [
         "error",
@@ -158,7 +160,7 @@ export default [
     }
   },
   {
-    files: ["apps/client/src/components/**/styles.ts"],
+    files: ["apps/client/src/components/**/styles.ts", "packages/cast/src/**/styles.ts"],
     rules: {
       "max-lines": [
         "error",

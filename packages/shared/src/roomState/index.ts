@@ -307,11 +307,81 @@ type JoustMinigameViewFields = {
 
 export type JoustMinigameHostView = MinigameHostViewBase & JoustMinigameViewFields;
 
+export type FappyLegStatus = "ready" | "flying" | "cleared";
+
+export type FappyPhase = "ready" | "flying" | "finished" | "timedOut";
+
+// The server's own re-run of one attempt's flap log, kept so the display can
+// hold the crash or the landing until the next attempt starts.
+export type FappyLegRunResult = {
+  endTick: number;
+  gatesCleared: number;
+  outcome: "cleared" | "crashed";
+};
+
+// One leg of the relay: whose bird, which course, where the current attempt
+// starts from and the flap log the display re-runs the shared sim from. A
+// crash does not end a leg — it starts the next attempt on the perch of the
+// last gate cleared — so the relay always reaches the end; it only takes time.
+// One player as the cast bird needs them drawn (the JOUST convention):
+// `avatarSrc` stays pack-relative and the surface resolves it against the
+// server origin; team id and genre are the bird's colour and apparel.
+export type FappyPlayerFigure = {
+  playerId: string;
+  name: string;
+  avatarSrc: string | null;
+  teamId: string | null;
+  genre: string | null;
+};
+
+export type FappyMinigameLeg = {
+  legIndex: number;
+  // Whose leg it is; null flies the drawn hen in the team colour.
+  player: FappyPlayerFigure | null;
+  seed: number;
+  status: FappyLegStatus;
+  // 0 for the first attempt; climbs with every crash. Keys the surfaces' local runs.
+  attempt: number;
+  // How many gates the attempt starts behind: 0 at the start line.
+  checkpointGate: number;
+  flapTicks: number[];
+  crashes: number;
+  skipped: boolean;
+  // Gates whose eagle the bird has bumped out of the sky this leg; they stay
+  // gone on every later attempt, which is what makes a bump a mercy.
+  knockedEagles: number[];
+  lastRun: FappyLegRunResult | null;
+};
+
+// Nothing about a relay is secret — every leg is on the TV as it happens — so
+// the host and display carry the same fields, as JOUST does. Timestamps are
+// the server's wall clock; a surface renders a running clock against its own
+// and the score only ever comes from the server's numbers.
+type FappyMinigameViewFields = {
+  minigame: "FAPPY";
+  phase: FappyPhase;
+  legIndex: number;
+  legsPerTurn: number;
+  gatesPerLeg: number;
+  parSeconds: number;
+  limitSeconds: number;
+  legs: FappyMinigameLeg[];
+  totalGatesCleared: number;
+  startedAtMs: number | null;
+  finishedAtMs: number | null;
+  timedOutAtMs: number | null;
+  // The relay's time once it is over, and what it scored; null while it runs.
+  elapsedMs: number | null;
+  points: number | null;
+};
+export type FappyMinigameHostView = MinigameHostViewBase & FappyMinigameViewFields;
+
 export type MinigameHostView =
   | TriviaMinigameHostView
   | GeoMinigameHostView
   | SongGuessMinigameHostView
   | JoustMinigameHostView
+  | FappyMinigameHostView
   | DrawingMinigameHostView
   | EmojiCharadesMinigameHostView;
 
@@ -383,11 +453,14 @@ export type EmojiCharadesMinigameDisplayView = MinigameDisplayViewBase & {
 
 export type JoustMinigameDisplayView = MinigameDisplayViewBase & JoustMinigameViewFields;
 
+export type FappyMinigameDisplayView = MinigameDisplayViewBase & FappyMinigameViewFields;
+
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView
   | GeoMinigameDisplayView
   | SongGuessMinigameDisplayView
   | JoustMinigameDisplayView
+  | FappyMinigameDisplayView
   | DrawingMinigameDisplayView
   | EmojiCharadesMinigameDisplayView;
 

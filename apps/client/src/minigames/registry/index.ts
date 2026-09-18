@@ -9,6 +9,9 @@ import { drawingRuntimePlugin } from "@wingnight/minigames-drawing/runtime";
 import { emojiCharadesRendererBundle } from "@wingnight/minigames-emoji-charades/client";
 import { emojiCharadesDevManifest } from "@wingnight/minigames-emoji-charades/dev";
 import { emojiCharadesRuntimePlugin } from "@wingnight/minigames-emoji-charades/runtime";
+import { fappyRendererBundle } from "@wingnight/minigames-fappy/client";
+import { fappyDevManifest } from "@wingnight/minigames-fappy/dev";
+import { fappyRuntimePlugin } from "@wingnight/minigames-fappy/runtime";
 import { geoRendererBundle } from "@wingnight/minigames-geo/client";
 import { geoDevManifest } from "@wingnight/minigames-geo/dev";
 import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
@@ -51,6 +54,11 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
     rendererBundle: joustRendererBundle,
     devManifest: joustDevManifest,
     runtimePlugin: joustRuntimePlugin
+  },
+  FAPPY: {
+    rendererBundle: fappyRendererBundle,
+    devManifest: fappyDevManifest,
+    runtimePlugin: fappyRuntimePlugin
   },
   DRAWING: {
     rendererBundle: drawingRendererBundle,

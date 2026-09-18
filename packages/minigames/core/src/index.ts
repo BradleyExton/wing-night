@@ -23,6 +23,11 @@ export type SerializableRecord = { [key: string]: SerializableValue };
 export type MinigameRuntimeActionEnvelope = {
   actionType: string;
   actionPayload: SerializableValue;
+  // Server wall-clock at receipt, stamped by `dispatchMinigameAction`, so a
+  // timing-aware reducer stays pure: it reads a number off the envelope and
+  // its tests pass literal timestamps. Optional because the fixtures written
+  // before it omit it; a reducer that needs it refuses an action without it.
+  receivedAtMs?: number;
 };
 
 export type MinigameRuntimeInitializationInput = {

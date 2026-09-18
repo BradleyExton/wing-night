@@ -68,6 +68,31 @@ export type {
   JoustTopple,
   JoustVec2
 } from "./joust/index.js";
+export {
+  FAPPY_WORLD,
+  advanceFappy,
+  createFappyLegStart,
+  createFappyRandom,
+  resolveFappyChampTop,
+  resolveFappyCliffPerchY,
+  resolveFappyGates,
+  resolveFappyLandingX,
+  resolveFappyLegTickCap,
+  resolveFappyPerchY,
+  resolveFappyWaitingX,
+  resolveFappyWave,
+  runFappyLeg,
+  stepFappy
+} from "./fappy/index.js";
+export type {
+  FappyBird,
+  FappyFrame,
+  FappyGate,
+  FappyKnockedEagle,
+  FappyLegCourse,
+  FappyLegRun,
+  FappyOutcome
+} from "./fappy/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
@@ -137,6 +162,13 @@ export type {
   JoustMinigameArena,
   JoustMinigameDisplayView,
   JoustMinigameHostView,
+  FappyLegRunResult,
+  FappyLegStatus,
+  FappyMinigameDisplayView,
+  FappyMinigameHostView,
+  FappyMinigameLeg,
+  FappyPhase,
+  FappyPlayerFigure,
   JoustMinigameShot,
   JoustPhase,
   JoustPlayerFigure,

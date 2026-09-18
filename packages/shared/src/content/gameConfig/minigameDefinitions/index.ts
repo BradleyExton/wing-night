@@ -72,6 +72,18 @@ export const MINIGAME_DEFINITIONS = {
       capabilityFlags: ["setAim", "launch", "nextShot", "skipShot", "resetTurn"]
     }
   },
+  FAPPY: {
+    id: "FAPPY",
+    slug: "fappy",
+    // Host-paced: the turn ends when the team has flown its legs, not when a
+    // clock runs out.
+    timerKey: null,
+    rulesKey: "fappy",
+    contractMetadata: {
+      minigameApiVersion: MINIGAME_API_VERSION,
+      capabilityFlags: ["flap", "endLeg", "timeOut", "skipLeg", "resetTurn"]
+    }
+  },
   DRAWING: {
     id: "DRAWING",
     slug: "drawing",

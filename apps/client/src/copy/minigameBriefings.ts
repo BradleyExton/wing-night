@@ -4,6 +4,12 @@ const DISPLAY_ASSET_ROOT = "/display/minigames";
 const DEFAULT_TRIVIA_QUESTIONS_PER_TURN = 1;
 const DEFAULT_SONG_GUESS_SONGS_PER_TURN = 4;
 const DEFAULT_JOUST_SHOTS_PER_TURN = 3;
+const DEFAULT_FAPPY_LEGS_PER_TURN = 4;
+const DEFAULT_FAPPY_GATES_PER_LEG = 8;
+
+const resolvePositiveInteger = (value: unknown, fallback: number): number => {
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : fallback;
+};
 
 export type MinigameBriefingContent = {
   displayName: string;
@@ -114,6 +120,27 @@ const resolveJoustBriefingContent = (
   };
 };
 
+const resolveFappyBriefingContent = (
+  gameConfig: GameConfigFile | null
+): MinigameBriefingContent => {
+  const rules = gameConfig?.minigameRules?.fappy;
+  const legsPerTurn = resolvePositiveInteger(rules?.legsPerTurn, DEFAULT_FAPPY_LEGS_PER_TURN);
+  const gatesPerLeg = resolvePositiveInteger(rules?.gatesPerLeg, DEFAULT_FAPPY_GATES_PER_LEG);
+
+  return {
+    displayName: "Fappy Bird",
+    illustrationPath: `${DISPLAY_ASSET_ROOT}/fappy-illustration.svg`,
+    illustrationAlt: "Fappy Bird mini-game artwork",
+    summary:
+      "Your chickens fly a relay through a corridor of champs, against one clock. Get the whole team through, fast.",
+    steps: [
+      `${legsPerTurn} leg${legsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order.`,
+      `Tap anywhere on the tablet to flap through your ${gatesPerLeg} gates. Eagles get knocked out of the way; a champ or the sand sends you back to your last gate.`,
+      "Land your section and hand the tablet on. The faster the team finishes, the more points."
+    ]
+  };
+};
+
 const minigameBriefingContentByType: Record<
   MinigameType,
   (gameConfig: GameConfigFile | null) => MinigameBriefingContent
@@ -135,6 +162,7 @@ const minigameBriefingContentByType: Record<
     };
   },
   JOUST: resolveJoustBriefingContent,
+  FAPPY: resolveFappyBriefingContent,
   GEO: () => {
     return {
       displayName: "Geo",

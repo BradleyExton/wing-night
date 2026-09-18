@@ -11,7 +11,7 @@ import {
   perchTransform,
   type HeadAnchors
 } from "../geometry/index.js";
-import * as styles from "../styles.js";
+import * as styles from "./styles.js";
 
 // The hen itself, as a bare `<g>` in the 80×72 character box, so it can be
 // dropped into someone else's SVG under their own transform — which is how

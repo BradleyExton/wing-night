@@ -1,9 +1,7 @@
+import { isHouseStylesFile as isStylesFile } from "./houseComponentPaths.mjs";
+
 const HEX_COLOR_PATTERN = /#[0-9a-fA-F]{3,8}\b/;
 
-const isStylesFile = (filename) =>
-  typeof filename === "string" &&
-  filename.includes("/apps/client/src/components/") &&
-  filename.endsWith("/styles.ts");
 
 const containsHexColor = (text) =>
   typeof text === "string" && HEX_COLOR_PATTERN.test(text);

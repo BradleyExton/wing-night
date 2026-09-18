@@ -204,7 +204,8 @@ export const dispatchMinigameAction = defineRoomMutation({
         roomState,
         {
           actionType,
-          actionPayload
+          actionPayload,
+          receivedAtMs: Date.now()
         },
         minigameContext.minigamePointsMax,
         minigameContext.minigameRules

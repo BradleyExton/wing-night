@@ -59,6 +59,7 @@ Run:
 - Minigame engine contracts live in `packages/minigames/core`.
 - Concrete minigames live in subdirectories of `packages/minigames` other than `core` (for example `packages/minigames/<minigameId>`). For the current iteration, minigame renderer modules are React-first.
 - Server adapters/projections for minigames live under `apps/server/src/minigames/**`.
+- Presentation both the app and minigame packages draw — the character cast and the team look — lives in `packages/cast` (`@wingnight/cast`). Minigame packages never import from `apps/client`; if a minigame needs something the app draws, it moves here first.
 - Display-facing minigame view contracts (for example `selectDisplayView`) must never include answer/secret fields; only host views may include privileged fields. Do not add answer fields to shared snapshot display-view contracts until host-only filtering or secret channels are implemented.
 
 ## 3.2 Minigame Projection Guardrails

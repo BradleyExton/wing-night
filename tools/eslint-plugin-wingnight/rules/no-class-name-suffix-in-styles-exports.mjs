@@ -1,7 +1,4 @@
-const isStylesFile = (filename) =>
-  typeof filename === "string" &&
-  filename.includes("/apps/client/src/components/") &&
-  filename.endsWith("/styles.ts");
+import { isHouseStylesFile as isStylesFile } from "./houseComponentPaths.mjs";
 
 const isDisallowedStylesExportName = (name) =>
   typeof name === "string" && name.endsWith("ClassName");
