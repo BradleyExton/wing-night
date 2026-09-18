@@ -2,9 +2,12 @@ export {
   FAPPY_WORLD,
   createFappyRandom,
   resolveFappyChampTop,
+  resolveFappyCliffPerchY,
   resolveFappyGates,
+  resolveFappyLandingX,
   resolveFappyLegTickCap,
   resolveFappyPerchY,
+  resolveFappyWaitingX,
   resolveFappyWave
 } from "./world/index.js";
 export { advanceFappy, createFappyLegStart, runFappyLeg, stepFappy } from "./simulate/index.js";

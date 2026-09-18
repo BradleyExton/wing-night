@@ -92,11 +92,12 @@ test("does draw the leg's course, the idle clock and the player who is up", () =
   assert.match(html, /0:00\.0/);
   assert.match(html, /\/ 1:00/);
   assert.match(html, /0 of 6 gates/);
-  assert.match(html, /Tap anywhere on the corridor/);
-  assert.doesNotMatch(html, /data-fappy-handoff/);
+  assert.match(html, /Tap anywhere to take off/);
+  assert.match(html, /data-fappy-cliffs/);
+  assert.match(html, /data-fappy-wall/);
 });
 
-test("does call the handoff over the corridor when the next leg is ready", () => {
+test("does stand the next player's bird on the landing cliff and name them in the hint", () => {
   const html = render(
     createView({
       legIndex: 1,
@@ -109,11 +110,18 @@ test("does call the handoff over the corridor when the next leg is ready", () =>
     })
   );
 
-  assert.match(html, /data-fappy-handoff/);
-  assert.match(html, /Hand it to Morgan!/);
+  assert.doesNotMatch(html, /data-fappy-waiting-bird/);
+  assert.match(html, /data-fappy-finish-flag/);
   assert.match(html, /Leg 2 of 2/);
   assert.match(html, /Flying: Morgan/);
   assert.match(html, /3 of 6 gates/);
+  assert.match(html, /come down on the far cliff/);
+
+  const firstLegHtml = render(createView());
+
+  assert.match(firstLegHtml, /data-fappy-waiting-bird/);
+  assert.match(firstLegHtml, /land next to Morgan/);
+  assert.doesNotMatch(firstLegHtml, /data-fappy-finish-flag/);
 });
 
 test("does send a crashed bird back to its perch with the crash count showing", () => {
@@ -131,7 +139,6 @@ test("does send a crashed bird back to its perch with the crash count showing", 
   assert.match(html, /Back on the perch at gate 1/);
   assert.match(html, /data-fappy-crashes="2"/);
   assert.match(html, /2 crashes/);
-  assert.doesNotMatch(html, /data-fappy-handoff/);
 });
 
 test("does show the time and the points once the relay is through", () => {

@@ -4,7 +4,9 @@ import test from "node:test";
 import {
   FAPPY_WORLD,
   resolveFappyChampTop,
+  resolveFappyCliffPerchY,
   resolveFappyGates,
+  resolveFappyLandingX,
   resolveFappyLegTickCap,
   resolveFappyPerchY,
   resolveFappyWave
@@ -13,6 +15,7 @@ import { advanceFappy, createFappyLegStart, runFappyLeg, stepFappy } from "./ind
 
 const course = { seed: 1234, legIndex: 0, gatesPerLeg: 8 };
 const gates = resolveFappyGates(course);
+const perch = resolveFappyCliffPerchY();
 
 const everyTick = (untilTick: number, everyTicks: number): number[] => {
   const ticks: number[] = [];
@@ -25,8 +28,17 @@ const everyTick = (untilTick: number, everyTicks: number): number[] => {
 };
 
 // Holds the bird on a line by hand so a test is about the rule under test, not about flying.
-const stepPinned = (frame: ReturnType<typeof createFappyLegStart>, y: number, legGates = gates): ReturnType<typeof stepFappy> => {
-  return stepFappy({ ...frame, bird: { y, vy: 0 } }, legGates, course.gatesPerLeg, false);
+const stepPinned = (
+  frame: ReturnType<typeof createFappyLegStart>,
+  y: number,
+  legGates = gates,
+  gatesPerLeg = course.gatesPerLeg
+): ReturnType<typeof stepFappy> => {
+  return stepFappy({ ...frame, bird: { y, vy: 0 } }, legGates, gatesPerLeg, false);
+};
+
+const ticksUntilScroll = (scrollX: number): number => {
+  return Math.ceil(scrollX / FAPPY_WORLD.scrollSpeed) + 1;
 };
 
 test("does derive the same gates for the same course on every call", () => {
@@ -70,13 +82,32 @@ test("does bob the champ's head between its rest and its full stretch", () => {
   assert.equal(resolveFappyChampTop({ ...gate, champBob: 0 }, 50), 60);
 });
 
-test("does fall to the floor and crash when nobody flaps", () => {
+test("does stand the bird on the start cliff and hold it there until the drop", () => {
+  const start = createFappyLegStart();
+
+  assert.equal(start.bird.y, perch);
+
+  // Ten ticks of nothing: still over the cliff, still standing on it.
+  const standing = advanceFappy(start, gates, course.gatesPerLeg, [], 10);
+
+  assert.equal(standing.bird.y, perch);
+  assert.equal(standing.bird.vy, 0);
+  assert.equal(standing.outcome, null);
+
+  // A hop that comes back down before the edge lands on the cliff, not in the sand.
+  const hopped = advanceFappy(start, gates, course.gatesPerLeg, [0], 30);
+
+  assert.equal(hopped.bird.y, perch);
+  assert.equal(hopped.outcome, null);
+});
+
+test("does fall off the start cliff and crash when nobody flaps", () => {
   const run = runFappyLeg(course, []);
 
   assert.equal(run.outcome, "crashed");
   assert.equal(run.gatesCleared, 0);
   assert.equal(run.frame.bird.y, FAPPY_WORLD.floorY - FAPPY_WORLD.birdRadius);
-  assert.ok(run.endTick > 0 && run.endTick < 120);
+  assert.ok(run.endTick > ticksUntilScroll(FAPPY_WORLD.startCliffEnd - FAPPY_WORLD.birdX) && run.endTick < 120);
 });
 
 test("does lift the bird when it flaps and clamp it at the ceiling", () => {
@@ -94,13 +125,14 @@ test("does lift the bird when it flaps and clamp it at the ceiling", () => {
 
 test("does count a gate once its trailing edge is behind the bird", () => {
   const firstGate = gates[0]!;
-  const gatePassedScroll = firstGate.x + FAPPY_WORLD.gateWidth - (FAPPY_WORLD.birdX - FAPPY_WORLD.birdRadius);
-  const ticksToPass = Math.ceil(gatePassedScroll / FAPPY_WORLD.scrollSpeed) + 1;
-  const perch = resolveFappyPerchY(firstGate);
+  const ticksToPass = ticksUntilScroll(
+    firstGate.x + FAPPY_WORLD.gateWidth - (FAPPY_WORLD.birdX - FAPPY_WORLD.birdRadius)
+  );
+  const gapCentre = resolveFappyPerchY(firstGate);
   let frame = createFappyLegStart();
 
   for (let tick = 0; tick < ticksToPass; tick += 1) {
-    frame = stepPinned(frame, perch);
+    frame = stepPinned(frame, gapCentre);
   }
 
   assert.equal(frame.gatesCleared, 1);
@@ -109,10 +141,9 @@ test("does count a gate once its trailing edge is behind the bird", () => {
 
 test("does crash into the champ's head when the bird is too low at the column", () => {
   const firstGate = gates[0]!;
-  const ticksToColumn = Math.ceil((firstGate.x - FAPPY_WORLD.birdX) / FAPPY_WORLD.scrollSpeed) + 1;
   let frame = createFappyLegStart();
 
-  for (let tick = 0; tick < ticksToColumn; tick += 1) {
+  for (let tick = 0; tick < ticksUntilScroll(firstGate.x - FAPPY_WORLD.birdX); tick += 1) {
     frame = stepPinned(frame, firstGate.champTop - firstGate.champBob + 1);
   }
 
@@ -122,32 +153,63 @@ test("does crash into the champ's head when the bird is too low at the column", 
 
 test("does crash into the eagle when the bird is too high under one", () => {
   const eagleGates = gates.map((gate, index) => (index === 0 ? { ...gate, eagleBottom: 20 } : gate));
-  const ticksToColumn = Math.ceil((eagleGates[0]!.x - FAPPY_WORLD.birdX) / FAPPY_WORLD.scrollSpeed) + 1;
   let frame = createFappyLegStart();
 
-  for (let tick = 0; tick < ticksToColumn; tick += 1) {
+  for (let tick = 0; tick < ticksUntilScroll(eagleGates[0]!.x - FAPPY_WORLD.birdX); tick += 1) {
     frame = stepPinned(frame, 20 - FAPPY_WORLD.birdRadius + 1, eagleGates);
   }
 
   assert.equal(frame.outcome, "crashed");
 });
 
-test("does clear the leg once every gate is behind the bird", () => {
-  const level = { seed: 7, legIndex: 0, gatesPerLeg: 3 };
-  const levelGates = resolveFappyGates(level).map((gate) => ({
-    ...gate,
-    champTop: 70,
-    champBob: 0,
-    eagleBottom: null
-  }));
+// A pinned flight down the whole corridor: on the gap centres through the gates,
+// then at `approachY` up to the landing cliff's face, then at `plateauY` over it.
+const flyPinned = (
+  approachY: number,
+  plateauY: number,
+  gatesPerLeg = 3,
+  seed = 7
+): ReturnType<typeof stepFappy> => {
+  const level = { seed, legIndex: 0, gatesPerLeg };
+  const levelGates = resolveFappyGates(level);
+  const cap = resolveFappyLegTickCap(gatesPerLeg);
+  const landingX = resolveFappyLandingX(gatesPerLeg);
   let frame = createFappyLegStart();
 
-  while (frame.outcome === null && frame.tick < resolveFappyLegTickCap(level.gatesPerLeg)) {
-    frame = stepFappy({ ...frame, bird: { y: 40, vy: 0 } }, levelGates, level.gatesPerLeg, false);
+  while (frame.outcome === null && frame.tick < cap) {
+    const nextGate = levelGates[frame.gatesCleared];
+    const isOverPlateau = FAPPY_WORLD.birdX >= landingX - frame.scrollX;
+    const y =
+      nextGate !== undefined ? resolveFappyPerchY(nextGate) : isOverPlateau ? plateauY : approachY;
+
+    frame = stepPinned(frame, y, levelGates, gatesPerLeg);
   }
 
-  assert.equal(frame.outcome, "cleared");
-  assert.equal(frame.gatesCleared, 3);
+  return frame;
+};
+
+test("does clear the leg by coming down on the landing plateau", () => {
+  const landed = flyPinned(perch - 3, perch + 0.5);
+
+  assert.equal(landed.outcome, "cleared");
+  assert.equal(landed.gatesCleared, 3);
+  assert.equal(landed.bird.y, perch);
+  assert.ok(landed.scrollX >= resolveFappyLandingX(3) - FAPPY_WORLD.birdX);
+});
+
+test("does crash into the landing cliff's face when the bird arrives too low", () => {
+  const crashed = flyPinned(FAPPY_WORLD.cliffTop + 6, perch + 0.5);
+
+  assert.equal(crashed.outcome, "crashed");
+  assert.equal(crashed.gatesCleared, 3);
+  assert.ok(crashed.scrollX < resolveFappyLandingX(3) - FAPPY_WORLD.birdX + FAPPY_WORLD.birdRadius);
+});
+
+test("does crash into the far wall when the bird never comes down", () => {
+  const crashed = flyPinned(30, 30);
+
+  assert.equal(crashed.outcome, "crashed");
+  assert.ok(crashed.scrollX > resolveFappyLandingX(3) + FAPPY_WORLD.landingZoneWidth - FAPPY_WORLD.birdX - FAPPY_WORLD.birdRadius);
 });
 
 test("does start a checkpointed attempt on the perch just past the last cleared gate", () => {
@@ -186,6 +248,7 @@ test("does reach the same frame whether advanced in one go or in pieces", () => 
 test("does size the tick cap past the whole course so a run always resolves", () => {
   const run = runFappyLeg(course, everyTick(resolveFappyLegTickCap(course.gatesPerLeg), 1));
 
+  // Pinned to the ceiling the bird cannot thread a gate, so this ends in a crash, and it ends.
   assert.equal(run.outcome, "crashed");
   assert.ok(run.endTick < resolveFappyLegTickCap(course.gatesPerLeg));
 });

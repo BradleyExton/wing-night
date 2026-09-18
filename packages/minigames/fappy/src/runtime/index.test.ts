@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { FappyMinigameHostView } from "@wingnight/shared";
-import { runFappyLeg } from "@wingnight/shared";
+import {
+  FAPPY_WORLD,
+  createFappyLegStart,
+  resolveFappyCliffPerchY,
+  resolveFappyGates,
+  resolveFappyLandingX,
+  resolveFappyLegTickCap,
+  resolveFappyPerchY,
+  runFappyLeg,
+  stepFappy
+} from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { fappyMinigameId, fappyRuntimePlugin } from "./index.js";
@@ -58,27 +68,39 @@ const hostView = (state: SerializableValue): FappyMinigameHostView => {
   return view;
 };
 
-// A leg the referee will call cleared: the shared sim run from the same seed
-// with a flap log that keeps the bird in every gap. Found once by search over
-// this fixture's course, then asserted below, so the test never guesses.
+// A leg the referee will call cleared: a bang-bang pilot over the shared sim
+// that flaps whenever the bird is falling below its target — each gate's gap
+// centre, then a line just above the landing plateau — and stops flapping
+// once it is over the plateau so it comes down. Asserted below, so the test
+// never guesses.
 const findClearingLog = (seed: number, legIndex: number, checkpointGate = 0): number[] => {
-  for (let every = 9; every <= 40; every += 1) {
-    for (let offset = 0; offset < every; offset += 1) {
-      const log: number[] = [];
+  const course = { seed, legIndex, gatesPerLeg: RULES.gatesPerLeg };
+  const gates = resolveFappyGates(course);
+  const landingX = resolveFappyLandingX(RULES.gatesPerLeg);
+  const perch = resolveFappyCliffPerchY();
+  const log: number[] = [];
+  let frame = createFappyLegStart(gates, checkpointGate);
 
-      for (let tick = offset; tick < 1200; tick += every) {
-        log.push(tick);
-      }
+  while (frame.outcome === null && frame.tick < resolveFappyLegTickCap(RULES.gatesPerLeg)) {
+    const nextGate = gates[frame.gatesCleared];
+    const isOverPlateau = FAPPY_WORLD.birdX >= landingX - frame.scrollX;
+    const target = nextGate !== undefined ? resolveFappyPerchY(nextGate) + 3 : perch - 6;
+    const isStanding = frame.bird.y >= perch && frame.bird.vy === 0;
+    const shouldFlap =
+      !isOverPlateau && frame.bird.y > target && (frame.bird.vy > 0.8 || isStanding);
 
-      const run = runFappyLeg({ seed, legIndex, gatesPerLeg: RULES.gatesPerLeg }, log, checkpointGate);
-
-      if (run.outcome === "cleared") {
-        return log.filter((tick) => tick <= run.endTick);
-      }
+    if (shouldFlap) {
+      log.push(frame.tick);
     }
+
+    frame = stepFappy(frame, gates, RULES.gatesPerLeg, shouldFlap);
   }
 
-  throw new Error("no clearing log found for this course");
+  if (frame.outcome !== "cleared") {
+    throw new Error(`the pilot could not clear seed ${seed} leg ${legIndex}: ${frame.outcome}`);
+  }
+
+  return log;
 };
 
 const flyLog = (state: SerializableValue, ticks: number[], atMs: number): SerializableValue => {

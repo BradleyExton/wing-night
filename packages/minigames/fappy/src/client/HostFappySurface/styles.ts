@@ -35,13 +35,6 @@ export const arenaFrameArmed = "cursor-pointer";
 
 export const arenaFrameLocked = "cursor-not-allowed opacity-80";
 
-// Dropped over the corridor between legs: the loudest thing on the tablet,
-// because the clock is running while it is read.
-export const handoffOverlay =
-  "pointer-events-none absolute inset-x-0 top-[8%] z-20 flex justify-center px-[6%]";
-
-export const handoffBanner =
-  "rounded-2xl border-[3px] border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-6 py-3 text-center text-2xl font-black uppercase tracking-[0.08em] text-gold shadow-[0_0_50px_rgba(251,191,36,0.35)]";
 
 export const arenaHint = "m-0 px-1 text-center text-sm italic text-muted";
 

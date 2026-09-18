@@ -17,4 +17,9 @@ export const gateLayer = "absolute inset-0 h-full w-full overflow-visible";
 export const bird =
   "absolute left-[20cqw] top-0 h-[9cqw] w-[10cqw] origin-center will-change-transform";
 
+// The next player's bird, standing on the landing plateau facing the flyer.
+// Same box as the bird; the loop places it in world units and flips it.
+export const waitingBird =
+  "absolute left-0 top-0 h-[9cqw] w-[10cqw] origin-center will-change-transform";
+
 export const label = "sr-only";

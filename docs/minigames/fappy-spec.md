@@ -16,10 +16,11 @@ One `MinigameRuntimePlugin` package, `@wingnight/minigames-fappy`, registered on
 client like JOUST. A timed relay: the active team's players take the tablet in roster order,
 one **leg** each, and fly their own cast bird (the `@wingnight/cast` hen wearing their head,
 in the team colour and genre apparel) through a section of **gates** — a champ standing up
-from the floor, bobbing, with sometimes an eagle hanging in the sky above. Tap anywhere to
-flap. A crash sends the bird back to the perch of the last gate it cleared; clearing the
-section hands the tablet to the next player. One clock runs from the first tap to the last
-gate, handoffs included, and the team's points come from that time.
+from the floor, bobbing, with sometimes an eagle hanging in the sky above. Each leg takes off
+from a cliff and ends on another, where the next player's bird stands waiting: tap anywhere
+to flap, come down on that plateau and the tablet changes hands. A crash sends the bird back
+to the perch of the last gate it cleared. One clock runs from the first tap to the last
+landing, handoffs included, and the team's points come from that time.
 
 No content file, no room timer (host-paced like JOUST; the relay clock is the game's own),
 no audio.
@@ -65,9 +66,15 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
   belongs to `playerIds[k % playerIds.length]`; a team with no roster flies the drawn hen.
 - **A crash costs time, never points.** The bird respawns on the perch of the last gate it
   cleared in that leg, hovering, waiting for a tap. The clock does not stop.
+- **Landing is the handoff.** A leg is cleared by coming down on the landing cliff's
+  plateau, not by passing its last gate. The next player's bird stands in the middle of that
+  plateau facing the flyer; on the last leg a flag stands there instead. Into the cliff's
+  face, or into the rock wall that closes the sky past the plateau, is a crash like any
+  other. The start cliff is solid ground: a hop that comes down before the drop just lands.
 - **One relay clock, handoffs included.** It starts on the relay's first flap and stops on
-  the last gate of the last leg. There is no pass button: a cleared leg makes the next leg
-  `ready` and the next player's first tap flies it. The handoff is the race.
+  the last landing. There is no pass button and no banner: a cleared leg makes the next leg
+  `ready`, its bird already on its own start cliff, and the next player's first tap flies
+  it. The handoff is the race.
 - **Points from time.** Every point the round offers at or under `parSeconds`, sliding
   straight down to a quarter at `limitSeconds`. At the limit the relay ends; an unfinished
   team keeps that quarter scaled by the gates it got through.
@@ -99,10 +106,14 @@ seeded from the leg; each gate has a champ whose head rests at `champTop` and ri
 above it on a `champPeriodTicks` triangle wave (`resolveFappyChampTop`), and with even odds an
 `eagleBottom` placed so the gap at the champ's full stretch is at least `gapHeight`.
 `stepFappy(frame, gates, gatesPerLeg, didFlap)` is the whole physics: gravity, flap sets `vy`,
-ceiling clamps, floor kills, the champ's head at this tick kills, an eagle kills, a gate counts
-once its trailing edge is behind the bird. `createFappyLegStart(gates, checkpointGate)` starts
-an attempt on the perch of gate `checkpointGate − 1` (`resolveFappyPerchY`, the middle of that
-gate's gap at full stretch) with the count intact. `advanceFappy` steps a frame to a tick
+ceiling clamps, the start cliff (to `startCliffEnd`) holds the bird up, floor kills, the
+champ's head at this tick kills, an eagle kills, a gate counts once its trailing edge is
+behind the bird, and at the landing cliff (`resolveFappyLandingX`, `landingCliffGap` past the
+last gate) the face below `cliffTop` kills, the wall past `landingZoneWidth` kills, and coming
+below `cliffTop` over the plateau ends the leg `cleared`. `createFappyLegStart(gates,
+checkpointGate)` starts an attempt standing on the start cliff, or on the perch of gate
+`checkpointGate − 1` (`resolveFappyPerchY`, the middle of that gate's gap at full stretch)
+with the count intact. `advanceFappy` steps a frame to a tick
 applying the logged flaps; `runFappyLeg(course, log, checkpoint)` runs an attempt to its
 outcome under a tick cap.
 
@@ -191,34 +202,37 @@ relies on.
 ### 0.8 Surfaces
 
 Both draw one `FappyScene`: a 16:9 box letterboxed into its container with CSS container
-units, a floor line, the gate layer (every champ and eagle for the leg, translated by
-`scrollX`, each champ's shaft and head moved to its bob for the frame), and the bird (a
-`<Character>` in a wrapper translated and tilted by `vy`). The scene is driven imperatively
+units, a floor line, the gate layer (both cliffs and the rock wall, every champ and eagle for
+the leg, translated by `scrollX`, each champ's shaft and head moved to its bob for the frame),
+the bird (a `<Character>` in a wrapper translated and tilted by `vy`) and the waiting bird
+(the next leg's player, flipped to face the flyer, placed on the plateau in world units each
+frame; a finish flag on the last leg). The scene is driven imperatively
 from a `requestAnimationFrame` loop writing attributes and transforms to refs — React never
 re-renders per frame.
 
 **Host.** JOUST's rail + arena + deck, with the relay clock on the rail (`useRelayClock`:
 the server's start stamp against `Date.now()`, a tenth of a second at a time). The arena is
-the flap surface: `pointerdown` anywhere flaps. `ready`: the bird on its perch, a handoff
-banner over the corridor when the leg has just changed hands, a respawn hint after a crash.
+the flap surface: `pointerdown` anywhere flaps. `ready`: the bird on its cliff or its perch,
+a hint naming who to land next to, a respawn hint after a crash.
 `flying`: the local sim runs; on a terminal frame the surface dispatches `endLeg`. When the
 local clock passes the limit the surface dispatches `timeOut` once. Deck: leg card (player,
 gates, crashes), finish card (time or progress, points), skip leg, reset turn, leg chips,
 totals.
 
 **Display.** JOUST's marquee (team, "Fappy Bird", leg, gates, the clock), the scene, a
-status line. `useFappyMirror` runs the attempt from its log on a local clock that starts on
-the first flap's arrival, six ticks behind. The handoff call drops over the corridor between
-legs; the plaque drops with the time and the points when the relay is through, or the
+status line naming the flyer and who they must land next to. `useFappyMirror` runs the
+attempt from its log on a local clock that starts on the first flap's arrival, six ticks
+behind. The plaque drops with the time and the points when the relay is through, or the
 progress when the limit caught the team.
 
 ### 0.9 E2E (`tests/e2e/fappy-sandbox.spec.ts`)
 
 Against `/dev/minigame/fappy`, no sockets: both previews draw the course; a tap on the host
-arena starts the clock and the display shows the bird flying; with no further taps the bird
-crashes and the same player is back on the start line with a crash on the board; **Skip leg**
-hands the tablet on with the handoff call on both screens; skipping the last leg finishes the
-relay with a plaque; sandbox Reset restores leg 1 and the idle clock.
+arena starts the clock and the display shows the bird flying towards the waiting bird; with
+no further taps the bird falls off the start cliff and the same player is back on it with a
+crash on the board; **Skip leg** hands the tablet on and the last leg's cliff carries the
+finish flag; skipping the last leg finishes the relay with a plaque; sandbox Reset restores
+leg 1 and the idle clock.
 
 ### 0.10 As built
 
@@ -228,6 +242,9 @@ relay with a plaque; sandbox Reset restores leg 1 and the idle clock.
 - **Physics constants** were tuned once from a sandbox flight: a flap lifts about a third
   of the gap (`flapVelocity: -1.6`, `gravity: 0.12`), the corridor scrolls at `0.95` units a
   tick with gates `66` apart, the first gate at `150`. All in `FAPPY_WORLD`; retune at a table.
+- **Cliffs came in on the second play.** Brad's note: the handoff should not pause on a
+  banner; the flyer should have to land where the next bird is waiting. So the leg ends on
+  the landing plateau, the waiter stands in its middle, and the banners went.
 - **The dev sandbox** runs two legs of three gates with a 20 s par and a 60 s limit, so the
   slide and the timeout can be seen without waiting two real minutes.
 - **No mockup pass**, as §0.3 said; the surfaces are JOUST's chrome around the cast's drawing.
@@ -259,4 +276,5 @@ and hanging eagles against one clock. Tap to flap, crash and go again, hand it o
 
 - Thrown shooters as moving hazards (the JOUST projectile crossing the corridor).
 - Eagles that swoop rather than hover.
+- A landing that has to be soft: too fast onto the plateau and the bird bounces.
 - Anthem sting on a cleared relay.

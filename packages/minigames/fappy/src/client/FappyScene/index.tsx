@@ -5,6 +5,8 @@ import {
   FAPPY_WORLD,
   createFappyLegStart,
   resolveFappyChampTop,
+  resolveFappyLandingX,
+  resolveFappyWaitingX,
   resolveFappyWave
 } from "@wingnight/shared";
 
@@ -18,12 +20,17 @@ export type FappySceneHandle = {
 
 export type FappySceneProps = {
   gates: readonly FappyGate[];
+  gatesPerLeg: number;
   bird: LegBird;
+  // Who stands on the landing cliff waiting to take over; null on the last
+  // leg, where a flag marks the finish instead.
+  waitingBird: LegBird | null;
   sceneId: string;
   label: string;
 };
 
 // The hen's box in world units: the 80×72 drawing at a fifth.
+const BIRD_BOX_WIDTH = 16;
 const BIRD_BOX_HEIGHT = 14.4;
 // Nose up on a flap, nose down as it falls; capped so a crash reads as a
 // dive, not a cartwheel.
@@ -37,6 +44,8 @@ const SWAY_UNITS = 1.2;
 // The eagle's wingbeat, as a small rise and fall of the wings.
 const WINGBEAT_PERIOD_TICKS = 28;
 const WINGBEAT_UNITS = 1.4;
+// How far the cliffs run off either edge of the world.
+const CLIFF_OVERRUN = 400;
 
 const resolveTilt = (vy: number): number => {
   return Math.min(TILT_MAX, Math.max(TILT_MIN, vy * TILT_PER_VELOCITY));
@@ -143,18 +152,68 @@ const Eagle = ({
   );
 };
 
+// The two cliffs: the one the leg takes off from, running off the left edge
+// of the world, and the landing cliff at the far end with the rock wall that
+// closes the sky beyond its plateau.
+const Cliffs = ({ gatesPerLeg }: { gatesPerLeg: number }): JSX.Element => {
+  const { cliffTop, floorY, startCliffEnd, landingZoneWidth } = FAPPY_WORLD;
+  const landingX = resolveFappyLandingX(gatesPerLeg);
+  const wallX = landingX + landingZoneWidth;
+  const cliffStroke = { stroke: fappyPalette.cliffEdge, strokeWidth: 0.8, strokeLinejoin: "round" as const };
+
+  return (
+    <g data-fappy-cliffs>
+      <path
+        d={`M ${-CLIFF_OVERRUN} ${cliffTop} L ${startCliffEnd - 2} ${cliffTop} Q ${startCliffEnd + 1} ${cliffTop + 2} ${startCliffEnd} ${cliffTop + 8} L ${startCliffEnd - 3} ${floorY + 4} L ${-CLIFF_OVERRUN} ${floorY + 4} Z`}
+        fill={fappyPalette.cliff}
+        {...cliffStroke}
+      />
+      <path
+        d={`M ${landingX} ${cliffTop + 8} Q ${landingX - 1} ${cliffTop + 2} ${landingX + 2} ${cliffTop} L ${wallX} ${cliffTop} L ${wallX + CLIFF_OVERRUN} ${cliffTop} L ${wallX + CLIFF_OVERRUN} ${floorY + 4} L ${landingX + 3} ${floorY + 4} Z`}
+        fill={fappyPalette.cliff}
+        {...cliffStroke}
+      />
+      <path
+        d={`M ${wallX} ${cliffTop} L ${wallX + 2} ${cliffTop - 30} L ${wallX + 6} ${cliffTop - 52} L ${wallX + 3} ${-CLIFF_OVERRUN} L ${wallX + CLIFF_OVERRUN} ${-CLIFF_OVERRUN} L ${wallX + CLIFF_OVERRUN} ${cliffTop} Z`}
+        fill={fappyPalette.rock}
+        stroke={fappyPalette.rockEdge}
+        strokeWidth={0.8}
+        strokeLinejoin="round"
+        data-fappy-wall
+      />
+    </g>
+  );
+};
+
+// A little pennant on the last leg's landing cliff: nobody is waiting there,
+// the finish is.
+const FinishFlag = ({ gatesPerLeg }: { gatesPerLeg: number }): JSX.Element => {
+  const x = resolveFappyWaitingX(gatesPerLeg);
+  const top = FAPPY_WORLD.cliffTop;
+
+  return (
+    <g data-fappy-finish-flag>
+      <line x1={x} y1={top} x2={x} y2={top - 16} stroke={fappyPalette.pole} strokeWidth={0.8} strokeLinecap="round" />
+      <path d={`M ${x} ${top - 16} L ${x + 9} ${top - 13} L ${x} ${top - 10} Z`} fill={fappyPalette.flag} stroke={fappyPalette.flagEdge} strokeWidth={0.5} />
+    </g>
+  );
+};
+
 // One 16:9 world both surfaces draw. The gate layer is an SVG in world units
-// and the bird an HTML box over it; neither is React-driven per frame — the
+// and the birds HTML boxes over it; none is React-driven per frame — the
 // owner paints frames through the handle from its own animation loop, so the
-// scene re-renders only when the course or the bird changes.
+// scene re-renders only when the course or the birds change.
 export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
-  ({ gates, bird, sceneId, label }, ref): JSX.Element => {
+  ({ gates, gatesPerLeg, bird, waitingBird, sceneId, label }, ref): JSX.Element => {
     const gateLayerRef = useRef<SVGGElement>(null);
     const birdRef = useRef<HTMLDivElement>(null);
+    const waitingBirdRef = useRef<HTMLDivElement>(null);
     const gateRefs = useRef(new Map<number, GateRefs>());
     const gatesRef = useRef(gates);
+    const gatesPerLegRef = useRef(gatesPerLeg);
 
     gatesRef.current = gates;
+    gatesPerLegRef.current = gatesPerLeg;
 
     const registerGateRefs =
       (gateIndex: number) =>
@@ -167,6 +226,7 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     const paint = (frame: FappyFrame): void => {
       const gateLayer = gateLayerRef.current;
       const birdBox = birdRef.current;
+      const waitingBox = waitingBirdRef.current;
 
       if (gateLayer !== null) {
         gateLayer.setAttribute("transform", `translate(${-frame.scrollX} 0)`);
@@ -197,15 +257,24 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
 
         birdBox.style.transform = `translate3d(0, calc(${top} * var(--fappy-unit)), 0) rotate(${resolveTilt(frame.bird.vy)}deg)`;
       }
+
+      // The waiter stands on the landing plateau, facing the bird coming in,
+      // and scrolls with the course like everything else on it.
+      if (waitingBox !== null) {
+        const left = resolveFappyWaitingX(gatesPerLegRef.current) - BIRD_BOX_WIDTH / 2 - frame.scrollX;
+        const top = FAPPY_WORLD.cliffTop - BIRD_BOX_HEIGHT + 1;
+
+        waitingBox.style.transform = `translate3d(calc(${left} * var(--fappy-unit)), calc(${top} * var(--fappy-unit)), 0) scaleX(-1)`;
+      }
     };
 
     useImperativeHandle(ref, () => ({ paint }));
 
-    // The rest pose, before any loop has run: a bird hovering at the start
-    // line. Without this the box sits at the ceiling until the first frame.
+    // The rest pose, before any loop has run: a bird standing on the start
+    // cliff. Without this the boxes sit at the top-left until the first frame.
     useLayoutEffect(() => {
-      paint(createFappyLegStart());
-    }, [sceneId]);
+      paint(createFappyLegStart(gatesRef.current, 0));
+    }, [sceneId, waitingBird === null]);
 
     const labelId = `${sceneId}-label`;
 
@@ -238,8 +307,19 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
                   <Champ gate={gate} registerRefs={registerGateRefs(gate.index)} />
                 </g>
               ))}
+              <Cliffs gatesPerLeg={gatesPerLeg} />
+              {waitingBird === null && <FinishFlag gatesPerLeg={gatesPerLeg} />}
             </g>
           </svg>
+          {waitingBird !== null && (
+            <div ref={waitingBirdRef} className={styles.waitingBird} data-fappy-waiting-bird>
+              <Character
+                appearance={waitingBird.appearance}
+                apparel={waitingBird.apparel}
+                fillClassName={waitingBird.fillClassName}
+              />
+            </div>
+          )}
           <div ref={birdRef} className={styles.bird} data-fappy-bird>
             <Character
               appearance={bird.appearance}

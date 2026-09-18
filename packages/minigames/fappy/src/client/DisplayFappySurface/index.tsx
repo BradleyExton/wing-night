@@ -50,7 +50,8 @@ const ResultPlaque = ({ view, elapsedMs }: { view: FappyMinigameDisplayView; ela
 const resolveStatusLine = (
   view: FappyMinigameDisplayView,
   leg: FappyMinigameLeg | null,
-  playerName: string | null
+  playerName: string | null,
+  waitingName: string | null
 ): string => {
   if (view.phase === "finished") {
     return displayFappySurfaceCopy.finishedPrompt;
@@ -61,16 +62,14 @@ const resolveStatusLine = (
   }
 
   if (view.phase === "flying") {
-    return displayFappySurfaceCopy.flyingPrompt(playerName);
+    return displayFappySurfaceCopy.flyingPrompt(playerName, waitingName);
   }
 
   if (leg !== null && leg.attempt > 0) {
     return displayFappySurfaceCopy.respawnPrompt(playerName);
   }
 
-  return view.legIndex > 0
-    ? displayFappySurfaceCopy.handoffPrompt(playerName)
-    : displayFappySurfaceCopy.readyPrompt(playerName);
+  return displayFappySurfaceCopy.readyPrompt(playerName);
 };
 
 const FappyPlayBody = ({
@@ -102,12 +101,17 @@ const FappyPlayBody = ({
     teams,
     serverOrigin
   });
+  // Who stands on the landing cliff: the next leg's player, or nobody on the last leg.
+  const nextLeg = view.legs[legIndex + 1] ?? null;
+  const waitingBird =
+    nextLeg === null
+      ? null
+      : resolveLegBird({ leg: nextLeg, activeTurnTeamId: view.activeTurnTeamId, players, teams, serverOrigin });
   const elapsedMs = useRelayClock({
     startedAtMs: view.startedAtMs,
     endedAtMs: view.timedOutAtMs ?? view.finishedAtMs
   });
   const isOver = view.phase === "finished" || view.phase === "timedOut";
-  const isHandoff = view.phase === "ready" && view.legIndex > 0 && leg?.attempt === 0;
   const remainingMs = view.limitSeconds * 1000 - (elapsedMs ?? 0);
   const clockClassName =
     elapsedMs !== null && !isOver && remainingMs <= URGENT_REMAINING_MS
@@ -142,18 +146,17 @@ const FappyPlayBody = ({
         <FappyScene
           ref={sceneRef}
           gates={gates}
+          gatesPerLeg={view.gatesPerLeg}
           bird={bird}
+          waitingBird={waitingBird}
           sceneId="display-fappy"
           label={displayFappySurfaceCopy.sceneLabel(bird.playerName)}
         />
-        {isHandoff && (
-          <div className={styles.resultOverlay} data-fappy-handoff>
-            <span className={styles.handoffPlaque}>{displayFappySurfaceCopy.handoffPrompt(bird.playerName)}</span>
-          </div>
-        )}
         {isOver && <ResultPlaque view={view} elapsedMs={elapsedMs} />}
       </div>
-      <p className={styles.statusLine}>{resolveStatusLine(view, leg, bird.playerName)}</p>
+      <p className={styles.statusLine}>
+        {resolveStatusLine(view, leg, bird.playerName, waitingBird?.playerName ?? null)}
+      </p>
     </div>
   );
 };

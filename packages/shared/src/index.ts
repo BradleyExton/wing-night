@@ -60,9 +60,12 @@ export {
   createFappyLegStart,
   createFappyRandom,
   resolveFappyChampTop,
+  resolveFappyCliffPerchY,
   resolveFappyGates,
+  resolveFappyLandingX,
   resolveFappyLegTickCap,
   resolveFappyPerchY,
+  resolveFappyWaitingX,
   resolveFappyWave,
   runFappyLeg,
   stepFappy

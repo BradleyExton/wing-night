@@ -52,10 +52,6 @@ export const resultBlurb =
 export const resultPoints =
   "font-mono text-[clamp(2.4rem,4vw,4.2rem)] font-black leading-none text-gold [text-shadow:0_0_18px_rgba(251,191,36,0.5)]";
 
-// The handoff call, over the corridor between legs, the size of the plaque:
-// the clock is running while the next player reads it.
-export const handoffPlaque =
-  "rounded-2xl border-[3px] border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(1.6rem,2.8vw,2.8rem)] py-[clamp(0.8rem,1.4vh,1.4rem)] text-[clamp(1.6rem,3vw,3.2rem)] font-black uppercase tracking-[0.08em] text-gold shadow-[0_0_70px_rgba(251,191,36,0.35)]";
 
 export const statusLine =
   "m-0 text-center text-[clamp(0.85rem,1.2vw,1.3rem)] font-extrabold uppercase tracking-[0.26em] text-primary";

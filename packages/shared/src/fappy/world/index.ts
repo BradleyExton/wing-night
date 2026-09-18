@@ -13,8 +13,17 @@ export const FAPPY_WORLD = {
   birdX: 40,
   /** Hitbox radius. The drawn hen is a touch bigger, which is the forgiving side to err on. */
   birdRadius: 4.5,
-  /** Where the bird hovers before the first flap of a leg. */
-  restY: 42,
+  /**
+   * The cliffs at both ends of a leg stand this high (their top's world y). The bird starts
+   * perched on the left one and the leg ends when it lands on the right one.
+   */
+  cliffTop: 62,
+  /** Where the start cliff drops away into the corridor. */
+  startCliffEnd: 80,
+  /** How far past the last gate the landing cliff's face stands. */
+  landingCliffGap: 30,
+  /** The plateau the bird must come down on; past it a rock wall closes the sky. */
+  landingZoneWidth: 44,
   gateWidth: 10,
   /** The least sky a gate leaves between the champ at full stretch and whatever hangs above. */
   gapHeight: 30,
@@ -121,13 +130,33 @@ export const resolveFappyPerchY = (gate: FappyGate): number => {
   return ((gate.eagleBottom ?? 0) + gate.champTop - gate.champBob) / 2;
 };
 
+/** Where the landing cliff's face stands for a leg of this many gates. */
+export const resolveFappyLandingX = (gatesPerLeg: number): number => {
+  return (
+    FAPPY_WORLD.firstGateX +
+    Math.max(0, gatesPerLeg - 1) * FAPPY_WORLD.gateSpacing +
+    FAPPY_WORLD.gateWidth +
+    FAPPY_WORLD.landingCliffGap
+  );
+};
+
+/** Where the next player's bird stands waiting: the middle of the landing zone. */
+export const resolveFappyWaitingX = (gatesPerLeg: number): number => {
+  return resolveFappyLandingX(gatesPerLeg) + FAPPY_WORLD.landingZoneWidth / 2;
+};
+
+/** Where a bird sits when it is standing on a cliff. */
+export const resolveFappyCliffPerchY = (): number => {
+  return FAPPY_WORLD.cliffTop - FAPPY_WORLD.birdRadius;
+};
+
 /**
  * How long a leg can possibly last: the course has scrolled entirely behind the bird well before
  * this, so a run that is still `flying` here is a bug, not a patient player.
  */
 export const resolveFappyLegTickCap = (gatesPerLeg: number): number => {
   const courseLength =
-    FAPPY_WORLD.firstGateX + gatesPerLeg * FAPPY_WORLD.gateSpacing + FAPPY_WORLD.width;
+    resolveFappyLandingX(gatesPerLeg) + FAPPY_WORLD.landingZoneWidth + FAPPY_WORLD.width;
 
   return Math.ceil(courseLength / FAPPY_WORLD.scrollSpeed) + FAPPY_WORLD.tickHz;
 };

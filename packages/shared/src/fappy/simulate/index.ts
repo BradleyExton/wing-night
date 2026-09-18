@@ -2,16 +2,18 @@ import type { FappyFrame, FappyGate, FappyLegCourse, FappyLegRun } from "../type
 import {
   FAPPY_WORLD,
   resolveFappyChampTop,
+  resolveFappyCliffPerchY,
   resolveFappyGates,
+  resolveFappyLandingX,
   resolveFappyLegTickCap,
   resolveFappyPerchY
 } from "../world/index.js";
 
 /**
- * The frame a leg (or an attempt at it) starts from. From the start line the bird hovers at rest
- * with nothing scrolled; from a checkpoint it sits on the perch of the last gate it cleared,
- * that gate just behind it, with its count intact. A checkpoint past the course clamps to the
- * last gate.
+ * The frame a leg (or an attempt at it) starts from. From the start line the bird stands on the
+ * start cliff with nothing scrolled; from a checkpoint it sits on the perch of the last gate it
+ * cleared, that gate just behind it, with its count intact. A checkpoint past the course clamps
+ * to the last gate.
  */
 export const createFappyLegStart = (
   gates: readonly FappyGate[] = [],
@@ -22,7 +24,7 @@ export const createFappyLegStart = (
   if (checkpointGate <= 0 || perchGate === undefined) {
     return {
       tick: 0,
-      bird: { y: FAPPY_WORLD.restY, vy: 0 },
+      bird: { y: resolveFappyCliffPerchY(), vy: 0 },
       scrollX: 0,
       gatesCleared: 0,
       outcome: null
@@ -57,7 +59,9 @@ const overlapsGate = (gateScreenX: number, birdY: number, gate: FappyGate, tick:
 /**
  * The whole physics, one tick. A terminal frame steps to itself, so callers can advance past
  * the outcome without guarding. A flap sets the vertical velocity; gravity accumulates to a
- * terminal fall; the ceiling stops the bird, the floor, a champ's head and an eagle kill it.
+ * terminal fall; the ceiling stops the bird, the start cliff holds it up, the floor, a champ's
+ * head, an eagle, the landing cliff's face and the far wall kill it, and coming down on the
+ * landing plateau ends the leg cleared.
  */
 export const stepFappy = (
   frame: FappyFrame,
@@ -80,6 +84,46 @@ export const stepFappy = (
   if (y - birdRadius < 0) {
     y = birdRadius;
     nextVy = 0;
+  }
+
+  const cliffPerchY = resolveFappyCliffPerchY();
+
+  // Still over the start cliff: solid ground, not a fall. A bird that comes
+  // back down before the drop just stands there again.
+  if (birdX - birdRadius < FAPPY_WORLD.startCliffEnd - scrollX && y > cliffPerchY) {
+    y = cliffPerchY;
+    nextVy = 0;
+  }
+
+  const landingScreenX = resolveFappyLandingX(gatesPerLeg) - scrollX;
+  const wallScreenX = landingScreenX + FAPPY_WORLD.landingZoneWidth;
+
+  if (birdX + birdRadius > landingScreenX) {
+    // Past the plateau the rock closes the sky; into the face, below the top,
+    // is the same crash. Anywhere on the plateau, the leg is flown.
+    const isIntoWall = birdX + birdRadius > wallScreenX;
+    const isBelowTop = y > cliffPerchY;
+    const isOverPlateau = birdX >= landingScreenX;
+
+    if (isIntoWall || (isBelowTop && !isOverPlateau)) {
+      return {
+        tick,
+        bird: { y, vy: nextVy },
+        scrollX,
+        gatesCleared: frame.gatesCleared,
+        outcome: "crashed"
+      };
+    }
+
+    if (isBelowTop) {
+      return {
+        tick,
+        bird: { y: cliffPerchY, vy: 0 },
+        scrollX,
+        gatesCleared: Math.max(frame.gatesCleared, gatesPerLeg),
+        outcome: "cleared"
+      };
+    }
   }
 
   if (y + birdRadius >= floorY) {
@@ -112,14 +156,12 @@ export const stepFappy = (
     }
   }
 
-  gatesCleared = Math.max(frame.gatesCleared, gatesCleared);
-
   return {
     tick,
     bird: { y, vy: nextVy },
     scrollX,
-    gatesCleared,
-    outcome: gatesCleared >= gatesPerLeg ? "cleared" : null
+    gatesCleared: Math.max(frame.gatesCleared, gatesCleared),
+    outcome: null
   };
 };
 

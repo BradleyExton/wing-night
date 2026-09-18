@@ -311,9 +311,12 @@ under the same marquee and deck chrome:
     obstacle is JOUST's cyan champ (`#22c9e6`) standing up from the floor,
     growing and shrinking on a slow bob with its head wiggling. Over some
     gates a bald eagle (dark brown, white head, `#f9a51a` beak) hangs in
-    the sky as the thing to duck under. The room already knows that
-    opponent. Drawing content, exempt from the two-accent budget like the
-    JOUST arena.
+    the sky as the thing to duck under. Each leg takes off from a sand
+    cliff on the left and lands on one on the right, where the next
+    player's bird stands facing the flyer (a gold pennant on the last leg);
+    past the plateau a dark rock wall closes the sky. The room already
+    knows that opponent. Drawing content, exempt from the two-accent
+    budget like the JOUST arena.
 -   The bird is the leg's player's own cast hen — their costume head, their
     team's accent and apparel — so who is flying is visible from the sofa.
     A leg nobody is rostered for flies the drawn hen in the team colour.
@@ -324,9 +327,9 @@ under the same marquee and deck chrome:
     rasterised once and composited, never recomputed per frame.
 -   The relay clock is the scoreboard: mono, tabular, `text` under par,
     `gold` past it, `heat` in the last fifteen seconds, on the host rail and
-    in the display marquee. The handoff call ("Hand it to Morgan!") drops
-    over the corridor on both screens between legs, plaque-sized, because
-    the clock runs while it is read.
+    in the display marquee. Nothing drops over the corridor between legs:
+    the landing next to the waiting bird is the handoff, and the status
+    line names who to land next to.
 -   Host: rail with the clock, the corridor as the whole flap surface (no
     scroll, no zoom), a deck of leg card (player, gates, crashes) → finish
     card → skip/reset → leg chips → totals. Display: marquee (team, "Fappy

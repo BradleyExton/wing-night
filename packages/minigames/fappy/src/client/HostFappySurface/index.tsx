@@ -170,6 +170,12 @@ const Corridor = ({
     teams,
     serverOrigin
   });
+  // Who stands on the landing cliff: the next leg's player, or nobody on the last leg.
+  const nextLeg = view.legs[legIndex + 1] ?? null;
+  const waitingBird =
+    nextLeg === null
+      ? null
+      : resolveLegBird({ leg: nextLeg, activeTurnTeamId: view.activeTurnTeamId, players, teams, serverOrigin });
   const isLive = view.phase === "ready" || view.phase === "flying";
   const { flap } = useFappyRunner({
     leg,
@@ -184,7 +190,6 @@ const Corridor = ({
     }
   });
   const isArmed = canAct && isLive;
-  const isHandoff = view.phase === "ready" && view.legIndex > 0 && leg?.attempt === 0;
 
   return (
     <div
@@ -198,21 +203,24 @@ const Corridor = ({
       <FappyScene
         ref={sceneRef}
         gates={gates}
+        gatesPerLeg={view.gatesPerLeg}
         bird={bird}
+        waitingBird={waitingBird}
         sceneId="host-fappy"
         label={hostFappySurfaceCopy.sceneLabel(bird.playerName)}
       />
-      {isHandoff && (
-        <div className={styles.handoffOverlay} data-fappy-handoff>
-          <span className={styles.handoffBanner}>{hostFappySurfaceCopy.handoffBanner(bird.playerName)}</span>
-        </div>
-      )}
     </div>
   );
 };
 
-const resolveHint = (view: FappyMinigameHostView, canAct: boolean): string => {
-  const leg = view.legs[Math.min(view.legIndex, view.legsPerTurn - 1)];
+const resolveHint = (
+  view: FappyMinigameHostView,
+  canAct: boolean,
+  players: readonly Player[]
+): string => {
+  const legIndex = Math.min(view.legIndex, view.legsPerTurn - 1);
+  const leg = view.legs[legIndex];
+  const waitingName = resolvePlayerName(view.legs[legIndex + 1] ?? null, players);
 
   if (view.phase === "ready") {
     if (!canAct) {
@@ -221,11 +229,11 @@ const resolveHint = (view: FappyMinigameHostView, canAct: boolean): string => {
 
     return leg !== undefined && leg.attempt > 0
       ? hostFappySurfaceCopy.respawnHint(leg.checkpointGate)
-      : hostFappySurfaceCopy.readyHint;
+      : hostFappySurfaceCopy.readyHint(waitingName);
   }
 
   if (view.phase === "flying") {
-    return hostFappySurfaceCopy.flyingHint;
+    return hostFappySurfaceCopy.flyingHint(waitingName);
   }
 
   return view.phase === "timedOut" ? hostFappySurfaceCopy.timedOutHint : hostFappySurfaceCopy.finishedHint;
@@ -296,7 +304,7 @@ export const HostFappySurface = ({
               serverOrigin={serverOrigin}
               onDispatchAction={onDispatchAction}
             />
-            <p className={styles.arenaHint}>{resolveHint(fappyView, canAct)}</p>
+            <p className={styles.arenaHint}>{resolveHint(fappyView, canAct, players)}</p>
           </div>
           <aside className={styles.deck}>
             <div className={styles.legCard}>

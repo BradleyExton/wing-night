@@ -92,10 +92,12 @@ test("does draw the marquee, the course and the player's own bird", () => {
   assert.equal((html.match(/data-fappy-gate="/g) ?? []).length, 3);
   assert.match(html, /content-assets\/avatars\/alex\.png/);
   assert.match(html, /data-character-apparel="lapels"/);
-  assert.match(html, /Alex is up — tap to launch/);
+  assert.match(html, /Alex is up — tap to take off/);
+  assert.match(html, /data-fappy-waiting-bird/);
+  assert.match(html, /data-fappy-cliffs/);
 });
 
-test("does call the handoff on the wall between legs", () => {
+test("does put the finish flag, not a waiter, on the last leg's cliff", () => {
   const html = render(
     createView({
       legIndex: 1,
@@ -105,9 +107,15 @@ test("does call the handoff on the wall between legs", () => {
     })
   );
 
-  assert.match(html, /data-fappy-handoff/);
-  assert.match(html, /Hand it to Morgan!/);
+  assert.doesNotMatch(html, /data-fappy-waiting-bird/);
+  assert.match(html, /data-fappy-finish-flag/);
   assert.match(html, /3 \/ 6 gates/);
+});
+
+test("does tell the room who the flyer has to land next to", () => {
+  const html = render(createView({ phase: "flying", startedAtMs: T0, legs: [createLeg({ status: "flying", flapTicks: [0] }), createLeg({ legIndex: 1, playerId: "p-2", seed: 12 })] }));
+
+  assert.match(html, /Alex is flying — land next to Morgan/);
 });
 
 test("does send a crashed bird back to its perch on the wall", () => {
@@ -120,7 +128,6 @@ test("does send a crashed bird back to its perch on the wall", () => {
   );
 
   assert.match(html, /Alex is back on the perch — go again/);
-  assert.doesNotMatch(html, /data-fappy-handoff/);
 });
 
 test("does drop the plaque with the time and the points once the relay is through", () => {
