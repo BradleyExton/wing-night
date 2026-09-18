@@ -1,61 +1,70 @@
-// Full-bleed row directly above the fixed standings footer (DESIGN.md §2.2:
-// the footer stays, the display never scrolls). It shares the footer's
-// hairline top edge so the two read as one bottom band, but the row itself is
-// warm glass like the setup cards: heat pools at the left, behind the
-// equalizer, and fades out under the title.
-export const container =
-  "relative z-10 flex shrink-0 items-center gap-[clamp(0.9rem,1.5vw,1.5rem)] overflow-hidden border-t border-primary/15 bg-[linear-gradient(90deg,rgba(46,22,9,0.75)_0%,rgba(18,18,18,0.9)_45%,rgba(18,18,18,0.9)_100%)] px-[clamp(1.2rem,2vw,2.5rem)] py-[clamp(0.7rem,1.1vh,1.1rem)] [animation:reveal_500ms_cubic-bezier(0.2,0.7,0.2,1)_both] motion-reduce:[animation:none] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-ember/70 before:via-primary/25 before:to-transparent before:content-[''] after:pointer-events-none after:absolute after:inset-y-0 after:left-0 after:w-[30%] after:bg-[radial-gradient(ellipse_at_left,rgba(249,115,22,0.22),transparent_70%)] after:content-['']";
+// A pill in the top-right corner of the display, not a full-bleed row: music
+// runs underneath whatever the stage is doing, so it gets the quietest corner
+// on screen rather than a band of its own. It balances the brand cluster the
+// StageContextHeader puts in the top-left and shares that header's insets, so
+// the two read as one top line. Floating over the stage is safe — the only
+// other thing that claims this corner is the MINIGAME countdown, and music
+// never plays during a minigame (lobby is SETUP, the anthem is MINIGAME_INTRO).
+const containerBase =
+  "pointer-events-none absolute right-4 top-2 z-30 flex max-w-[min(42vw,34rem)] items-center gap-[clamp(0.5rem,0.85vw,0.95rem)] rounded-full py-[clamp(0.3rem,0.55vh,0.5rem)] pl-[clamp(0.4rem,0.55vw,0.6rem)] pr-[clamp(0.9rem,1.3vw,1.4rem)] backdrop-blur-[6px] [animation:reveal_500ms_cubic-bezier(0.2,0.7,0.2,1)_both] motion-reduce:[animation:none] md:right-8 md:top-4 2xl:right-12";
+
+export const container = `${containerBase} border border-primary/30 bg-[linear-gradient(120deg,rgba(46,22,9,0.88)_0%,rgba(18,18,18,0.86)_72%)] [box-shadow:0_14px_34px_-18px_rgba(0,0,0,0.95),0_0_22px_-8px_rgba(249,115,22,0.35),inset_0_1px_0_rgba(255,214,170,0.14)]`;
+
+// Paused is the same pill gone cold: the ember glow and warm fill drop out,
+// bars freeze, text drops to muted. Hiding it would flicker the TV on every
+// host tap.
+export const containerPaused = `${containerBase} border border-text/10 bg-[linear-gradient(120deg,rgba(28,28,28,0.88)_0%,rgba(18,18,18,0.86)_72%)] [box-shadow:0_14px_34px_-18px_rgba(0,0,0,0.95)]`;
 
 // The equalizer sits in a lit badge so the moving bars have an edge to move
 // against from across the room.
 export const equalizer =
-  "relative z-[1] flex h-[clamp(1.7rem,1.9vw,2.6rem)] flex-none items-end gap-[3px] rounded-[0.55rem] border border-primary/30 bg-primary/10 px-[0.5rem] pb-[0.4rem] pt-[0.35rem] [box-shadow:0_0_18px_rgba(249,115,22,0.25),inset_0_1px_0_rgba(255,214,170,0.12)]";
+  "flex h-[clamp(1.5rem,1.7vw,2.3rem)] w-[clamp(1.5rem,1.7vw,2.3rem)] flex-none items-end justify-center gap-[3px] rounded-full border border-primary/35 bg-primary/12 pb-[0.42em] pt-[0.3em] [box-shadow:0_0_16px_rgba(249,115,22,0.28),inset_0_1px_0_rgba(255,214,170,0.14)]";
+
+export const equalizerPaused =
+  "flex h-[clamp(1.5rem,1.7vw,2.3rem)] w-[clamp(1.5rem,1.7vw,2.3rem)] flex-none items-end justify-center gap-[3px] rounded-full border border-text/10 bg-text/[0.04] pb-[0.42em] pt-[0.3em]";
 
 // Authored constants per bar, like the embers' particle list: each bar's
 // height and period is a static utility class rather than a computed style
 // prop. The periods differ so the bars never fall into lockstep, which is what
 // a shared period plus per-bar delays used to do (the shorthand resets the
-// delay, see Embers/styles.ts).
+// delay, see Embers/styles.ts). Four bars, not five: the pill is narrow and
+// the round badge wants a squarer cluster than the old row did.
 const barBase =
-  "w-[clamp(3px,0.2vw,5px)] origin-bottom rounded-full bg-primary [box-shadow:0_0_6px_rgba(249,115,22,0.8)] motion-reduce:[animation:none] motion-reduce:scale-y-[0.4]";
+  "w-[clamp(2.5px,0.18vw,4px)] origin-bottom rounded-full bg-primary [box-shadow:0_0_6px_rgba(249,115,22,0.8)] motion-reduce:[animation:none] motion-reduce:scale-y-[0.4]";
 
 export const bars: readonly string[] = [
   `${barBase} h-[45%] [animation:equalize_900ms_ease-in-out_infinite]`,
   `${barBase} h-full [animation:equalize_1100ms_ease-in-out_infinite]`,
   `${barBase} h-[65%] [animation:equalize_760ms_ease-in-out_infinite]`,
-  `${barBase} h-[85%] [animation:equalize_980ms_ease-in-out_infinite]`,
-  `${barBase} h-[55%] [animation:equalize_840ms_ease-in-out_infinite]`
+  `${barBase} h-[85%] [animation:equalize_980ms_ease-in-out_infinite]`
 ];
 
-// Paused is the same row gone quiet: bars frozen and dropped to muted, title
-// dimmed. Hiding the row instead would flicker the TV on every host tap.
 const pausedBarBase =
-  "w-[clamp(3px,0.2vw,5px)] origin-bottom rounded-full bg-mutedWarmDim scale-y-[0.4]";
+  "w-[clamp(2.5px,0.18vw,4px)] origin-bottom rounded-full bg-mutedWarmDim scale-y-[0.4]";
 
 export const pausedBars: readonly string[] = [
   `${pausedBarBase} h-[45%]`,
   `${pausedBarBase} h-full`,
   `${pausedBarBase} h-[65%]`,
-  `${pausedBarBase} h-[85%]`,
-  `${pausedBarBase} h-[55%]`
+  `${pausedBarBase} h-[85%]`
 ];
 
-export const equalizerPaused =
-  "relative z-[1] flex h-[clamp(1.7rem,1.9vw,2.6rem)] flex-none items-end gap-[3px] rounded-[0.55rem] border border-text/10 bg-text/[0.04] px-[0.5rem] pb-[0.4rem] pt-[0.35rem]";
+// Label over title, because a pill has far less width than the old row: the
+// two stack into one column so the title keeps the width it needs to be
+// readable from the couch.
+export const textColumn = "flex min-w-0 flex-col gap-[0.12em]";
 
 export const label =
-  "relative z-[1] inline-flex flex-none items-center gap-[0.55em] text-[clamp(0.68rem,0.8vw,0.95rem)] font-extrabold uppercase tracking-[0.3em] text-mutedWarm";
+  "inline-flex items-center gap-[0.5em] truncate text-[clamp(0.55rem,0.62vw,0.75rem)] font-extrabold uppercase leading-none tracking-[0.26em] text-mutedWarm";
 
 export const labelDot =
-  "h-[0.5em] w-[0.5em] rounded-full bg-primary [box-shadow:0_0_8px_theme(colors.primary)]";
+  "h-[0.5em] w-[0.5em] flex-none rounded-full bg-primary [box-shadow:0_0_8px_theme(colors.primary)]";
 
-export const labelDotPaused = "h-[0.5em] w-[0.5em] rounded-full bg-mutedWarmDim";
+export const labelDotPaused =
+  "h-[0.5em] w-[0.5em] flex-none rounded-full bg-mutedWarmDim";
 
 export const title =
-  "relative z-[1] min-w-0 flex-1 truncate text-[clamp(1rem,1.3vw,1.9rem)] font-bold tracking-[0.01em] text-text";
+  "truncate text-[clamp(0.85rem,1vw,1.4rem)] font-bold leading-tight tracking-[0.01em] text-text";
 
 export const titlePaused =
-  "relative z-[1] min-w-0 flex-1 truncate text-[clamp(1rem,1.3vw,1.9rem)] font-bold tracking-[0.01em] text-mutedWarm";
-
-export const trackCount =
-  "relative z-[1] flex-none rounded-full border border-text/10 bg-text/[0.05] px-[0.85em] py-[0.32em] font-mono text-[clamp(0.68rem,0.8vw,0.95rem)] font-bold tracking-[0.18em] tabular-nums text-mutedWarm";
+  "truncate text-[clamp(0.85rem,1vw,1.4rem)] font-bold leading-tight tracking-[0.01em] text-mutedWarm";

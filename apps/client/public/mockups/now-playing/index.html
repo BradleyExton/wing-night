@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>NOW PLAYING — Display strip + host controls</title>
+    <title>NOW PLAYING — Display pill + host controls</title>
     <style>
       :root {
         --bg: #0a0606; --surface: #1c1c1c; --text: #fff;
@@ -21,24 +21,40 @@
            text-transform: uppercase; color: var(--muted); margin: 2.5rem 0 0.4rem; }
       p.note { color: var(--muted); line-height: 1.55; margin: 0 0 1rem; max-width: 70ch; font-size: 0.95rem; }
 
-      /* ---- The TV strip. Sits directly above the fixed standings footer, ---- */
-      /* ---- full-bleed, and never competes with the stage above it.      ---- */
-      .tv { border: 1px solid #2a2a2a; border-radius: 10px; overflow: hidden; background: var(--bg); }
+      /* ---- The TV pill. Floats in the top-right corner of the display, ---- */
+      /* ---- opposite the brand cluster, over whatever the stage is doing. ---- */
+      .tv { position: relative; border: 1px solid #2a2a2a; border-radius: 10px; overflow: hidden; background: var(--bg); }
       .tv-stage {
-        height: 150px; display: grid; place-items: center;
+        height: 190px; display: grid; place-items: center;
         color: #4a4038; font-size: 0.85rem; letter-spacing: 0.3em; text-transform: uppercase;
         background: radial-gradient(ellipse 70% 70% at 50% 100%, rgba(249,115,22,0.16) 0%, transparent 62%);
       }
+      .tv-brand {
+        position: absolute; left: 1rem; top: 0.75rem;
+        font-size: 0.95rem; font-weight: 900; letter-spacing: 0.08em;
+        text-transform: uppercase; color: rgba(249,115,22,0.85);
+      }
 
       .now-playing {
-        display: flex; align-items: center; gap: clamp(0.75rem, 1.4vw, 1.25rem);
-        border-top: 1px solid rgba(255,255,255,0.06);
-        background: rgba(255,255,255,0.04);
-        padding: clamp(0.6rem, 1vh, 0.95rem) clamp(1rem, 1.8vw, 2rem);
+        position: absolute; right: 1rem; top: 0.75rem; max-width: 60%;
+        display: flex; align-items: center; gap: 0.7rem;
+        border: 1px solid rgba(249,115,22,0.3); border-radius: 999px;
+        background: linear-gradient(120deg, rgba(46,22,9,0.88) 0%, rgba(18,18,18,0.86) 72%);
+        box-shadow: 0 14px 34px -18px rgba(0,0,0,0.95), 0 0 22px -8px rgba(249,115,22,0.35),
+                    inset 0 1px 0 rgba(255,214,170,0.14);
+        backdrop-filter: blur(6px);
+        padding: 0.4rem 1.05rem 0.4rem 0.45rem;
       }
       /* Equalizer, not a note glyph: it reads as "sound is happening now" from
-         across a room, and it is the one element that stops when paused. */
-      .eq { display: flex; align-items: flex-end; gap: 3px; height: 1.15em; flex: none; }
+         across a room, and it is the one element that stops when paused. In the
+         pill it sits in a round lit badge so the bars have an edge to move against. */
+      .eq {
+        display: flex; align-items: flex-end; justify-content: center; gap: 3px;
+        flex: none; width: 1.9rem; height: 1.9rem; border-radius: 999px;
+        border: 1px solid rgba(249,115,22,0.35); background: rgba(249,115,22,0.12);
+        box-shadow: 0 0 16px rgba(249,115,22,0.28), inset 0 1px 0 rgba(255,214,170,0.14);
+        padding: 0.3rem 0 0.42rem;
+      }
       .eq span {
         width: 3px; background: var(--primary); border-radius: 1px;
         animation: eq 900ms ease-in-out infinite;
@@ -50,20 +66,27 @@
       @keyframes eq { 0%,100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
       @media (prefers-reduced-motion: reduce) { .eq span { animation: none; } }
 
-      .is-paused .eq span { animation: none; transform: scaleY(0.4); background: var(--muted); }
+      .is-paused { border-color: rgba(255,255,255,0.1); box-shadow: 0 14px 34px -18px rgba(0,0,0,0.95);
+                   background: linear-gradient(120deg, rgba(28,28,28,0.88) 0%, rgba(18,18,18,0.86) 72%); }
+      .is-paused .eq { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); box-shadow: none; }
+      .is-paused .eq span { animation: none; transform: scaleY(0.4); background: var(--muted); box-shadow: none; }
       .is-paused .np-title { color: var(--muted); }
+      .is-paused .np-dot { background: var(--muted); box-shadow: none; }
 
+      /* Label over title: a pill has far less width than the old row, so the two
+         stack and the title keeps the width it needs to read from the couch. */
+      .np-text { display: flex; flex-direction: column; gap: 0.12em; min-width: 0; }
       .np-label {
-        flex: none; font-size: clamp(0.62rem, 0.72vw, 0.8rem); font-weight: 800;
-        letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted);
-      }
-      .np-title {
-        min-width: 0; flex: 1; font-size: clamp(0.95rem, 1.15vw, 1.6rem); font-weight: 600;
+        display: inline-flex; align-items: center; gap: 0.5em;
+        font-size: 0.6rem; font-weight: 800; line-height: 1;
+        letter-spacing: 0.26em; text-transform: uppercase; color: var(--muted);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
-      .np-count {
-        flex: none; font-size: clamp(0.62rem, 0.72vw, 0.8rem); font-weight: 700;
-        letter-spacing: 0.22em; color: var(--muted); font-variant-numeric: tabular-nums;
+      .np-dot { width: 0.5em; height: 0.5em; flex: none; border-radius: 999px;
+                background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+      .np-title {
+        min-width: 0; font-size: 1.05rem; font-weight: 700; line-height: 1.2;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
 
       .standings {
@@ -98,30 +121,35 @@
   </head>
   <body>
     <main>
-      <h1>Now Playing — display strip &amp; host controls</h1>
+      <h1>Now Playing — display pill &amp; host controls</h1>
       <p class="lede">
-        The strip the TV shows while music is playing, and the block the host
+        The pill the TV shows while music is playing, and the block the host
         taps to control it. Both render the server's <code>musicPlayback</code>
-        state; neither decides anything. Two sources reach the same strip — the
+        state; neither decides anything. Two sources reach the same pill — the
         SETUP lobby playlist and a team's anthem at MINIGAME_INTRO — so the
         label is what distinguishes them, not a different shape.
       </p>
 
       <h2>01 · Lobby playlist, playing</h2>
       <p class="note">
-        Full-bleed row directly above the fixed standings footer (§2.2: the
-        footer stays, the display never scrolls). Title is derived from the
-        filename — <code>01-hot-in-herre.mp3</code> — so the lobby directory
-        stays drop-files-in-and-go. The equalizer is the state indicator: it
-        moves only while the music is actually playing.
+        Floats in the top-right corner of the display, opposite the brand
+        cluster and over whatever the stage is doing — music runs underneath the
+        night, so it takes the quietest corner instead of a band of its own.
+        Title is derived from the filename — <code>01-hot-in-herre.mp3</code> —
+        so the lobby directory stays drop-files-in-and-go. The equalizer is the
+        state indicator: it moves only while the music is actually playing. No
+        "n of m" position: that is host-deck detail, and the room only needs to
+        know what is playing.
       </p>
       <div class="tv">
         <div class="tv-stage">Setup stage</div>
+        <div class="tv-brand">Wing Night</div>
         <div class="now-playing">
           <span class="eq" aria-hidden><span></span><span></span><span></span><span></span></span>
-          <span class="np-label">Now playing</span>
-          <span class="np-title">Hot In Herre</span>
-          <span class="np-count">3 / 12</span>
+          <span class="np-text">
+            <span class="np-label"><span class="np-dot"></span>Now playing</span>
+            <span class="np-title">Hot In Herre</span>
+          </span>
         </div>
         <div class="standings">
           <div><span>Scorch Squad</span><span>18</span></div>
@@ -132,18 +160,20 @@
 
       <h2>02 · Host paused it</h2>
       <p class="note">
-        The row stays — vanishing it would make the TV flicker every time the
-        host taps pause — and goes quiet instead: bars still, both bars and
-        title dropped to muted. No pause glyph on the TV, because the TV is not
-        a control surface.
+        The pill stays — vanishing it would make the TV flicker every time the
+        host taps pause — and goes cold instead: the ember glow and warm fill
+        drop out, bars freeze, title drops to muted. No pause glyph on the TV,
+        because the TV is not a control surface.
       </p>
       <div class="tv">
         <div class="tv-stage">Setup stage</div>
+        <div class="tv-brand">Wing Night</div>
         <div class="now-playing is-paused">
           <span class="eq" aria-hidden><span></span><span></span><span></span><span></span></span>
-          <span class="np-label">Paused</span>
-          <span class="np-title">Hot In Herre</span>
-          <span class="np-count">3 / 12</span>
+          <span class="np-text">
+            <span class="np-label"><span class="np-dot"></span>Paused</span>
+            <span class="np-title">Hot In Herre</span>
+          </span>
         </div>
         <div class="standings">
           <div><span>Scorch Squad</span><span>18</span></div>
@@ -154,15 +184,19 @@
 
       <h2>03 · Team anthem at MINIGAME_INTRO</h2>
       <p class="note">
-        Same strip, different label — the anthem is a one-shot cue, so there is
-        no "n of m" to show. It stops on its own when the track ends.
+        Same pill, different label — the anthem names its team, because at
+        MINIGAME_INTRO the room is looking at that team. It stops on its own
+        when the track ends.
       </p>
       <div class="tv">
         <div class="tv-stage">Team briefing</div>
+        <div class="tv-brand">Wing Night</div>
         <div class="now-playing">
           <span class="eq" aria-hidden><span></span><span></span><span></span><span></span></span>
-          <span class="np-label">Scorch Squad anthem</span>
-          <span class="np-title">Thunderstruck</span>
+          <span class="np-text">
+            <span class="np-label"><span class="np-dot"></span>Scorch Squad anthem</span>
+            <span class="np-title">Thunderstruck</span>
+          </span>
         </div>
         <div class="standings">
           <div><span>Scorch Squad</span><span>18</span></div>
