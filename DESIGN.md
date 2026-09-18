@@ -114,10 +114,13 @@ A single full-bleed row directly above the fixed standings footer, shown only on
 own music (SETUP's lobby playlist, MINIGAME_INTRO's team anthem). Mockup:
 `apps/client/public/mockups/now-playing/`.
 
--   It borrows the standings footer's border and tint so the two read as one bottom edge rather than
-    two stacked bars competing for the same strip of screen.
--   State is carried by a four-bar equalizer in `primary`, which animates only while the music is
-    actually playing (frozen and `muted` when paused). It honours `prefers-reduced-motion`.
+-   It shares the standings footer's hairline top edge so the two read as one bottom band, but the
+    row itself is warm glass like the setup cards (§2.2B): heat pools at the left behind the
+    equalizer and fades out under the title, so it belongs to the show rather than the chrome.
+-   State is carried by a five-bar equalizer in `primary` inside a lit badge, which animates only
+    while the music is actually playing (frozen and dimmed when paused). The bars run on different
+    periods rather than shared delays so they never fall into lockstep. It honours
+    `prefers-reduced-motion`.
 -   No transport glyphs, ever. The display is a read-only surface (§2.2) — pause and skip live on
     the host tablet, and a pause icon on the TV would imply something the room can press.
 -   Track titles are derived from the filename, never authored: `01-hot-in-herre.mp3` renders as
@@ -125,6 +128,31 @@ own music (SETUP's lobby playlist, MINIGAME_INTRO's team anthem). Mockup:
 -   The lobby playlist shows its position ("3 / 12") and keeps its row through a host pause, because
     a playlist is a standing thing. An anthem is a one-shot: no position, and the row leaves with
     the music rather than sitting frozen as though paused.
+
+## 2.2B Setup Lobby ("Hearth")
+
+The SETUP stage is the screen the room looks at longest, so it is the one display surface that
+spends its motion budget. Built direction: the "Turbulent" hearth
+(`apps/client/public/mockups/setup/03-volcano.html`), polished.
+
+-   One flame, sized by height and anchored to the floor, so the whole silhouette shows on a 1080p
+    panel and a 4K one alike. Four gradient layers (`heat` → `primary` → `gold`/`ember` → `text`)
+    flicker on separate clocks; the edges are SVG turbulence. Embers and a few white-hot sparks rise
+    through it.
+-   The frame is finished, not flat: a breathing heat bloom under the flame, a vignette and a top
+    fade so the wordmark sits in shadow, and a film-grain overlay that keeps the big soft gradients
+    from banding on a large panel.
+-   The wordmark carries the light: white with a warm foot via `background-clip: text`, with an
+    ember band that sweeps through every few seconds. Its glow is a `drop-shadow` on a wrapper,
+    never a `text-shadow` (which shows straight through clipped text).
+-   Round cards are warm glass: a hairline `ember` rule along the top edge, a faint glow pooling
+    under it, a large embossed round number, the sauce as the headline and the mini-game as a
+    pill. Open slots keep the same footprint but go dashed and dim.
+-   Entrance choreography on mount only: eyebrow → wordmark → pack → cards in reading order →
+    the live status pill, ~1s end to end. Everything infinite honours `prefers-reduced-motion`
+    per §8.
+-   Accent budget: `primary` plus the flame's own gradient. `gold` appears only inside the flame
+    and the wordmark's sweep, never as UI chrome.
 
 ## 2.3 Team-Turn Context (Host + Display)
 

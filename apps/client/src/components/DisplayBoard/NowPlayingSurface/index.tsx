@@ -41,12 +41,19 @@ export const NowPlayingSurface = ({
 
   return (
     <section className={styles.container} data-now-playing>
-      <span className={styles.equalizer} aria-hidden>
+      <span
+        className={isPlaying ? styles.equalizer : styles.equalizerPaused}
+        aria-hidden
+      >
         {bars.map((barClassName) => (
           <span key={barClassName} className={barClassName} />
         ))}
       </span>
       <span className={styles.label}>
+        <span
+          className={isPlaying ? styles.labelDot : styles.labelDotPaused}
+          aria-hidden
+        />
         {resolveNowPlayingLabel(source, isPlaying, trackTitle, anthemTeamName)}
       </span>
       <span className={isPlaying ? styles.title : styles.titlePaused}>

@@ -9,8 +9,8 @@ export const setupStageCopy = {
     String(round).padStart(2, "0"),
   formatRoundLabel: (label: string): string => label,
   formatSauce: (sauce: string): string => sauce,
-  formatMinigame: (minigame: string): string => minigame,
-  minigameArrow: "→",
+  // Minigame ids are SCREAMING_SNAKE enum values; the TV shows them as words.
+  formatMinigame: (minigame: string): string => minigame.replace(/_/g, " "),
   placeholderRoundLabel: "Open Slot",
   placeholderRoundSeparator: ":",
   placeholderRoundDash: "—",

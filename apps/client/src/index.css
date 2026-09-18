@@ -242,3 +242,105 @@ body {
     transform: scaleY(1);
   }
 }
+
+/* SETUP lobby ("Hearth"). The flame's four layers each breathe on their own
+   clock so the tongues separate instead of scaling as one blob. */
+@keyframes flicker {
+  0%,
+  100% {
+    transform: scaleY(1) scaleX(1) skewX(0deg);
+  }
+  30% {
+    transform: scaleY(1.04) scaleX(0.985) skewX(-1.2deg);
+  }
+  55% {
+    transform: scaleY(0.97) scaleX(1.02) skewX(0.9deg);
+  }
+  80% {
+    transform: scaleY(1.025) scaleX(0.99) skewX(-0.5deg);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.08);
+  }
+}
+
+@keyframes heroReveal {
+  from {
+    opacity: 0;
+    transform: translateY(1.4rem) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes radar {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* Wordmark: white with a warm foot, plus an ember band that sweeps through
+   every few seconds. Both layers ride on background-clip so the letterforms
+   carry the light rather than sitting on top of it. */
+@keyframes shine {
+  0% {
+    background-position:
+      100% 0,
+      0 0;
+  }
+  40%,
+  100% {
+    background-position:
+      0% 0,
+      0 0;
+  }
+}
+
+.setup-wordmark {
+  color: transparent;
+  background-image:
+    linear-gradient(
+      105deg,
+      transparent 38%,
+      rgba(255, 227, 184, 0.85) 47%,
+      rgba(255, 179, 90, 0.95) 50%,
+      rgba(255, 227, 184, 0.85) 53%,
+      transparent 62%
+    ),
+    linear-gradient(180deg, #ffffff 0%, #ffffff 58%, #ffd7a3 100%);
+  background-size:
+    300% 100%,
+    100% 100%;
+  background-position:
+    100% 0,
+    0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* No `animation` here: this rule lands after the utilities layer and would
+     override the entrance + shine pair the styles.ts class carries. */
+}
+
+/* Film grain: a tiled fractal-noise SVG at low opacity. It is what stops the
+   big soft gradients from banding on a 65" panel. */
+.display-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+}

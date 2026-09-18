@@ -29,16 +29,6 @@ const resolveSetupPreviewRoundSlotCount = (
   return DEFAULT_SETUP_PREVIEW_ROUND_SLOTS;
 };
 
-const hasConfiguredSetupPreviewRoundSlots = (
-  gameConfig: RoomState["gameConfig"]
-): boolean => {
-  return (
-    typeof gameConfig?.setupPreviewRoundSlots === "number" &&
-    Number.isInteger(gameConfig.setupPreviewRoundSlots) &&
-    gameConfig.setupPreviewRoundSlots > 0
-  );
-};
-
 type RoundSlot =
   | { type: "round"; round: GameConfigRound }
   | { type: "placeholder"; roundNumber: number };
@@ -60,16 +50,18 @@ const buildRoundSlots = (
   return slots;
 };
 
+const resolveRevealDelay = (index: number): string => {
+  const lastIndex = styles.roundRevealDelays.length - 1;
+  return styles.roundRevealDelays[Math.min(index, lastIndex)] ?? "";
+};
+
 export const SetupStageBody = ({
   gameConfig
 }: SetupStageBodyProps): JSX.Element => {
-  const shouldRenderRoundFillers = hasConfiguredSetupPreviewRoundSlots(gameConfig);
   const previewRoundSlotCount = resolveSetupPreviewRoundSlotCount(gameConfig);
   const configuredRounds = gameConfig?.rounds ?? [];
   const visibleRounds = configuredRounds.slice(0, previewRoundSlotCount);
-  const fillerRoundCount = shouldRenderRoundFillers
-    ? Math.max(previewRoundSlotCount - visibleRounds.length, 0)
-    : Math.max(previewRoundSlotCount - visibleRounds.length, 0);
+  const fillerRoundCount = Math.max(previewRoundSlotCount - visibleRounds.length, 0);
   const hiddenRoundCount = Math.max(
     configuredRounds.length - visibleRounds.length,
     0
@@ -83,21 +75,41 @@ export const SetupStageBody = ({
   return (
     <div className={styles.container}>
       <span className={styles.ambient} aria-hidden />
+      <span className={styles.heatBloom} aria-hidden />
       <HeroFlame />
       <Embers />
+      <span className={styles.vignette} aria-hidden />
+      <span className={styles.grain} aria-hidden />
 
       <div className={styles.header}>
-        <span className={styles.eyebrow}>{setupStageCopy.eyebrow}</span>
-        <h2 className={styles.heading}>{setupStageCopy.brandLabel}</h2>
-        <p className={styles.packName}>{packName}</p>
+        <div className={styles.eyebrowRow}>
+          <span className={styles.eyebrowRuleLeft} aria-hidden />
+          <span className={styles.eyebrow}>{setupStageCopy.eyebrow}</span>
+          <span className={styles.eyebrowRuleRight} aria-hidden />
+        </div>
+        <div className={styles.headingGlow}>
+          <h2 className={styles.heading}>{setupStageCopy.brandLabel}</h2>
+        </div>
+        <p className={styles.packName}>
+          <span className={styles.packNameDot} aria-hidden />
+          {packName}
+        </p>
       </div>
 
       <div className={styles.rounds}>
-        {roundSlots.map((slot) => {
+        {roundSlots.map((slot, index) => {
+          const revealDelay = resolveRevealDelay(index);
+
           if (slot.type === "round") {
             const { round } = slot;
             return (
-              <article key={`round-${round.round}`} className={styles.round}>
+              <article
+                key={`round-${round.round}`}
+                className={`${styles.round} ${revealDelay}`}
+              >
+                <span className={styles.roundWatermark} aria-hidden>
+                  {setupStageCopy.formatRoundNumber(round.round)}
+                </span>
                 <span className={styles.roundNum}>
                   {setupStageCopy.placeholderRoundNumber(round.round)}
                 </span>
@@ -108,9 +120,7 @@ export const SetupStageBody = ({
                   {setupStageCopy.formatSauce(round.sauce)}
                 </p>
                 <p className={styles.minigame}>
-                  <span className={styles.minigameLabel}>
-                    {setupStageCopy.minigameArrow}
-                  </span>
+                  <span className={styles.minigameDot} aria-hidden />
                   {setupStageCopy.formatMinigame(round.minigame)}
                 </p>
               </article>
@@ -119,8 +129,11 @@ export const SetupStageBody = ({
           return (
             <article
               key={`placeholder-${slot.roundNumber}`}
-              className={styles.round}
+              className={`${styles.roundPlaceholder} ${revealDelay}`}
             >
+              <span className={styles.roundWatermark} aria-hidden>
+                {setupStageCopy.formatRoundNumber(slot.roundNumber)}
+              </span>
               <span className={styles.roundNum}>
                 {setupStageCopy.placeholderRoundNumber(slot.roundNumber)}
                 {setupStageCopy.placeholderRoundSeparator}{" "}
@@ -144,7 +157,10 @@ export const SetupStageBody = ({
       )}
 
       <p className={styles.waiting}>
-        <span className={styles.waitingDot} aria-hidden />
+        <span className={styles.waitingBeacon} aria-hidden>
+          <span className={styles.waitingRing} />
+          <span className={styles.waitingDot} />
+        </span>
         {setupStageCopy.waitingForTeamsLabel}
       </p>
     </div>

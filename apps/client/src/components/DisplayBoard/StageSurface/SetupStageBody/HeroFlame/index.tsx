@@ -9,6 +9,26 @@ export const HeroFlame = (): JSX.Element => {
         preserveAspectRatio="xMidYMax meet"
       >
         <defs>
+          <linearGradient id="setup-grad-outer" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" className={styles.stopOuterBase} />
+            <stop offset="0.55" className={styles.stopOuterMid} />
+            <stop offset="1" className={styles.stopOuterTip} />
+          </linearGradient>
+          <linearGradient id="setup-grad-mid" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" className={styles.stopMidBase} />
+            <stop offset="0.6" className={styles.stopMidMid} />
+            <stop offset="1" className={styles.stopMidTip} />
+          </linearGradient>
+          <linearGradient id="setup-grad-inner" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" className={styles.stopInnerBase} />
+            <stop offset="0.5" className={styles.stopInnerMid} />
+            <stop offset="1" className={styles.stopInnerTip} />
+          </linearGradient>
+          <linearGradient id="setup-grad-core" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" className={styles.stopCoreBase} />
+            <stop offset="0.5" className={styles.stopCoreMid} />
+            <stop offset="1" className={styles.stopCoreTip} />
+          </linearGradient>
           <filter id="setup-turb-outer" x="-20%" y="-20%" width="140%" height="140%">
             <feTurbulence
               type="fractalNoise"
@@ -78,26 +98,34 @@ export const HeroFlame = (): JSX.Element => {
             <feDisplacementMap in="SourceGraphic" in2="noise" scale={5} />
           </filter>
         </defs>
-        <path
-          className={styles.flameOuter}
-          filter="url(#setup-turb-outer)"
-          d="M 100 380 C 30 360 0 300 10 230 C 20 180 40 150 50 110 C 55 80 50 60 60 30 C 70 60 90 70 100 50 C 110 70 130 60 140 30 C 150 60 145 80 150 110 C 160 150 180 180 190 230 C 200 300 170 360 100 380 Z"
-        />
-        <path
-          className={styles.flameMid}
-          filter="url(#setup-turb-mid)"
-          d="M 100 370 C 50 355 25 305 35 245 C 45 195 65 170 75 130 C 80 100 75 80 85 50 C 95 75 100 65 100 50 C 100 65 105 75 115 50 C 125 80 120 100 125 130 C 135 170 155 195 165 245 C 175 305 150 355 100 370 Z"
-        />
-        <path
-          className={styles.flameInner}
-          filter="url(#setup-turb-inner)"
-          d="M 100 358 C 65 345 50 305 60 255 C 70 215 85 195 92 160 C 96 130 92 110 100 90 C 108 110 104 130 108 160 C 115 195 130 215 140 255 C 150 305 135 345 100 358 Z"
-        />
-        <path
-          className={styles.flameCore}
-          filter="url(#setup-turb-core)"
-          d="M 100 340 C 80 330 75 295 82 260 C 88 230 96 210 100 180 C 104 210 112 230 118 260 C 125 295 120 330 100 340 Z"
-        />
+        <g className={styles.layerOuter}>
+          <path
+            fill="url(#setup-grad-outer)"
+            filter="url(#setup-turb-outer)"
+            d="M 100 380 C 30 360 0 300 10 230 C 20 180 40 150 50 110 C 55 80 50 60 60 30 C 70 60 90 70 100 50 C 110 70 130 60 140 30 C 150 60 145 80 150 110 C 160 150 180 180 190 230 C 200 300 170 360 100 380 Z"
+          />
+        </g>
+        <g className={styles.layerMid}>
+          <path
+            fill="url(#setup-grad-mid)"
+            filter="url(#setup-turb-mid)"
+            d="M 100 370 C 50 355 25 305 35 245 C 45 195 65 170 75 130 C 80 100 75 80 85 50 C 95 75 100 65 100 50 C 100 65 105 75 115 50 C 125 80 120 100 125 130 C 135 170 155 195 165 245 C 175 305 150 355 100 370 Z"
+          />
+        </g>
+        <g className={styles.layerInner}>
+          <path
+            fill="url(#setup-grad-inner)"
+            filter="url(#setup-turb-inner)"
+            d="M 100 358 C 65 345 50 305 60 255 C 70 215 85 195 92 160 C 96 130 92 110 100 90 C 108 110 104 130 108 160 C 115 195 130 215 140 255 C 150 305 135 345 100 358 Z"
+          />
+        </g>
+        <g className={styles.layerCore}>
+          <path
+            fill="url(#setup-grad-core)"
+            filter="url(#setup-turb-core)"
+            d="M 100 340 C 80 330 75 295 82 260 C 88 230 96 210 100 180 C 104 210 112 230 118 260 C 125 295 120 330 100 340 Z"
+          />
+        </g>
       </svg>
     </div>
   );
