@@ -2,7 +2,8 @@ export const container =
   "relative isolate flex h-full flex-col items-center justify-evenly overflow-hidden px-[clamp(2rem,4vw,4rem)] py-[clamp(1.5rem,3vw,3rem)] text-center";
 
 // Stacking, back to front: ambient floor glow → heat bloom → flame → embers → vignette
-// and grain → content. The vignette sits ABOVE the flame so its tips dim into the frame
+// and grain → cast (CastWander, above the vignette so team colours stay bright at the
+// foot of the stage) → content. The vignette sits ABOVE the flame so its tips dim into the frame
 // rather than ending in a hard edge behind the wordmark.
 export const ambient =
   "pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_70%_55%_at_50%_100%,rgba(249,115,22,0.3)_0%,transparent_60%),radial-gradient(ellipse_45%_35%_at_50%_100%,rgba(239,68,68,0.3)_0%,transparent_55%),radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(8,4,2,0.55)_0%,transparent_65%)]";

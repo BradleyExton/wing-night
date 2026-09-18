@@ -302,6 +302,42 @@ marquee chrome the drawing easel uses:
     rule does not bite. `prefers-reduced-motion` skips the flight and shows
     the landing frame.
 
+## 2.8 Cast (shared character system)
+
+Every rostered player has a little chicken that recurs across the show.
+The drawing lives in `apps/client/src/components/Character` and the look
+resolves from the player *name* (`resolvePlayerAppearance`), so Brad is the
+same character every night regardless of roster order.
+
+-   **One colour per bird.** The whole silhouette (tail, body, head, comb) is
+    the player's team accent (`teamA`–`teamH`, via `resolveTeamColorVariant`, so
+    it matches that team's standings dot); unassigned players are `mutedWarm`.
+    Faces are two white eyes, the JOUST convention (§2.7); beak and legs are
+    `primary`, outlined in `bg` so they hold on an orange team. A 2-unit `bg`
+    stroke separates the silhouette from the flame glow.
+-   Character fills are **content, not chrome**: like the DRAWING inks (§2.5)
+    they are exempt from the §0.1 two-accent budget, and using team tokens as
+    a character's identity colour is an identity use like the standings dot,
+    not a timer/status/CTA use. No skin tones, no new colours.
+-   Silhouette first: three bodies, three combs and two tails, nine shapes per
+    bird, no detail below the illustration spec's 3% floor. Names are
+    never lettered under a character on the TV.
+-   **Head swap.** An `avatarSrc` on the player is clipped into the head
+    circle in place of the drawn eyes (the Contraption lab's `Likeness`
+    convention); the outline, beak and comb stay so the silhouette survives.
+    A bird with a head gets a **bobblehead** proportion (head radius 19 of
+    a 72-tall bird, versus 13 drawn): at party distance the face is the
+    identity, and a coin-sized one reads as "a face" rather than whose.
+    Heads are generated offline by `pnpm import:avatars` from a photo, using
+    the illustration spec's prompt recipe, so they stay flat vector; the one
+    palette departure is flat skin and hair tints, which a face needs.
+-   **Lobby strut.** On SETUP the cast takes turns at the foot of the stage in
+    authored CSS lanes (`SetupStageBody/CastWander`), `z-1` behind the lobby
+    content and above the flame, exactly as the embers do. Only three or four
+    birds are out at once — one pops up, struts a short span and back, and
+    drops out — so the layer never competes with the lobby content. It is §8 ambient
+    motion: `prefers-reduced-motion` leaves the cast standing still.
+
 ------------------------------------------------------------------------
 
 # 3) Layout System

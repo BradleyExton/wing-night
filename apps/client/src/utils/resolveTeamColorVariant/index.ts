@@ -1,6 +1,7 @@
 type TeamColorVariant = {
   borderAccentClassName: string;
   dotAccentClassName: string;
+  characterFillClassName: string;
   splitColumnBgClassName: string;
   splitColumnLeadBgClassName: string;
   splitEdgeFullClassName: string;
@@ -12,6 +13,7 @@ const TEAM_COLOR_VARIANTS = [
   {
     borderAccentClassName: "border-l-teamA/85",
     dotAccentClassName: "bg-teamA",
+    characterFillClassName: "text-teamA",
     splitColumnBgClassName: "bg-gradient-to-b from-teamA/15 to-teamA/5",
     splitColumnLeadBgClassName: "bg-gradient-to-b from-teamA/30 to-teamA/10",
     splitEdgeFullClassName: "bg-teamA",
@@ -21,6 +23,7 @@ const TEAM_COLOR_VARIANTS = [
   {
     borderAccentClassName: "border-l-teamB/85",
     dotAccentClassName: "bg-teamB",
+    characterFillClassName: "text-teamB",
     splitColumnBgClassName: "bg-gradient-to-b from-teamB/15 to-teamB/5",
     splitColumnLeadBgClassName: "bg-gradient-to-b from-teamB/30 to-teamB/10",
     splitEdgeFullClassName: "bg-teamB",
@@ -30,6 +33,7 @@ const TEAM_COLOR_VARIANTS = [
   {
     borderAccentClassName: "border-l-teamC/85",
     dotAccentClassName: "bg-teamC",
+    characterFillClassName: "text-teamC",
     splitColumnBgClassName: "bg-gradient-to-b from-teamC/15 to-teamC/5",
     splitColumnLeadBgClassName: "bg-gradient-to-b from-teamC/30 to-teamC/10",
     splitEdgeFullClassName: "bg-teamC",
@@ -39,6 +43,7 @@ const TEAM_COLOR_VARIANTS = [
   {
     borderAccentClassName: "border-l-teamD/85",
     dotAccentClassName: "bg-teamD",
+    characterFillClassName: "text-teamD",
     splitColumnBgClassName: "bg-gradient-to-b from-teamD/15 to-teamD/5",
     splitColumnLeadBgClassName: "bg-gradient-to-b from-teamD/30 to-teamD/10",
     splitEdgeFullClassName: "bg-teamD",
@@ -48,6 +53,7 @@ const TEAM_COLOR_VARIANTS = [
   {
     borderAccentClassName: "border-l-teamE/85",
     dotAccentClassName: "bg-teamE",
+    characterFillClassName: "text-teamE",
     splitColumnBgClassName: "bg-gradient-to-b from-teamE/15 to-teamE/5",
     splitColumnLeadBgClassName: "bg-gradient-to-b from-teamE/30 to-teamE/10",
     splitEdgeFullClassName: "bg-teamE",
@@ -57,6 +63,7 @@ const TEAM_COLOR_VARIANTS = [
   {
     borderAccentClassName: "border-l-teamF/85",
     dotAccentClassName: "bg-teamF",
+    characterFillClassName: "text-teamF",
     splitColumnBgClassName: "bg-gradient-to-b from-teamF/15 to-teamF/5",
     splitColumnLeadBgClassName: "bg-gradient-to-b from-teamF/30 to-teamF/10",
     splitEdgeFullClassName: "bg-teamF",
@@ -66,6 +73,7 @@ const TEAM_COLOR_VARIANTS = [
   {
     borderAccentClassName: "border-l-teamG/85",
     dotAccentClassName: "bg-teamG",
+    characterFillClassName: "text-teamG",
     splitColumnBgClassName: "bg-gradient-to-b from-teamG/15 to-teamG/5",
     splitColumnLeadBgClassName: "bg-gradient-to-b from-teamG/30 to-teamG/10",
     splitEdgeFullClassName: "bg-teamG",
@@ -75,6 +83,7 @@ const TEAM_COLOR_VARIANTS = [
   {
     borderAccentClassName: "border-l-teamH/85",
     dotAccentClassName: "bg-teamH",
+    characterFillClassName: "text-teamH",
     splitColumnBgClassName: "bg-gradient-to-b from-teamH/15 to-teamH/5",
     splitColumnLeadBgClassName: "bg-gradient-to-b from-teamH/30 to-teamH/10",
     splitEdgeFullClassName: "bg-teamH",

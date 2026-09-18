@@ -1,9 +1,12 @@
 import {
   SETUP_PREVIEW_ROUND_SLOTS_MAX,
   type GameConfigRound,
-  type RoomState
+  type Player,
+  type RoomState,
+  type Team
 } from "@wingnight/shared";
 
+import { CastWander } from "./CastWander";
 import { setupStageCopy } from "./copy";
 import { Embers } from "./Embers";
 import { HeroFlame } from "./HeroFlame";
@@ -11,6 +14,8 @@ import * as styles from "./styles";
 
 type SetupStageBodyProps = {
   gameConfig: RoomState["gameConfig"];
+  players: Player[];
+  teams: Team[];
 };
 
 const DEFAULT_SETUP_PREVIEW_ROUND_SLOTS = 8;
@@ -56,7 +61,9 @@ const resolveRevealDelay = (index: number): string => {
 };
 
 export const SetupStageBody = ({
-  gameConfig
+  gameConfig,
+  players,
+  teams
 }: SetupStageBodyProps): JSX.Element => {
   const previewRoundSlotCount = resolveSetupPreviewRoundSlotCount(gameConfig);
   const configuredRounds = gameConfig?.rounds ?? [];
@@ -76,6 +83,7 @@ export const SetupStageBody = ({
       <Embers />
       <span className={styles.vignette} aria-hidden />
       <span className={styles.grain} aria-hidden />
+      <CastWander players={players} teams={teams} />
 
       <div className={styles.header}>
         <div className={styles.eyebrowRow}>

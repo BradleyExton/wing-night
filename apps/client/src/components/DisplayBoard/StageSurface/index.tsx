@@ -34,7 +34,13 @@ type StageBodyProps = {
 };
 
 const SetupBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
-  return <SetupStageBody gameConfig={stageViewModel.gameConfig} />;
+  return (
+    <SetupStageBody
+      gameConfig={stageViewModel.gameConfig}
+      players={stageViewModel.players}
+      teams={stageViewModel.teams}
+    />
+  );
 };
 
 const FallbackBody = ({ stageViewModel, phaseLabel }: StageBodyProps): JSX.Element => {

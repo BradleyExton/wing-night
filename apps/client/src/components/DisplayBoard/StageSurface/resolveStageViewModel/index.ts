@@ -1,7 +1,9 @@
 import {
   Phase,
   type DisplayRoomStateSnapshot,
-  type MinigameType
+  type MinigameType,
+  type Player,
+  type Team
 } from "@wingnight/shared";
 
 import {
@@ -41,6 +43,8 @@ export type StageViewModel = {
   phase: Phase | null;
   stageMode: StageRenderMode;
   gameConfig: DisplayRoomStateSnapshot["gameConfig"];
+  players: Player[];
+  teams: Team[];
   currentRoundConfig: DisplayRoomStateSnapshot["currentRoundConfig"];
   minigameType: MinigameType | null;
   teamCount: number;
@@ -197,6 +201,8 @@ export const resolveStageViewModel = (
     phase,
     stageMode,
     gameConfig,
+    players: roomState?.players ?? [],
+    teams: roomState?.teams ?? [],
     currentRoundConfig,
     minigameType,
     teamCount: roomState?.teams.length ?? 0,
