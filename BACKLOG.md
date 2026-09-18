@@ -241,7 +241,7 @@ reaches the cast's apparel and the intro eyebrow. The kit turns `genre` into typ
 emblem, ambient texture and entrance beat, resolved once per room state and drawn by four shared
 components. Each phase is one session and ends on the full gate plus the Playwright run.
 
-- **Phase 1 — mockup.** `apps/client/public/mockups/team-identity/`: kit board with font candidates
+- ~~**Phase 1 — mockup.**~~ Done 2026-09-18; picks recorded in the spec's typography table. `apps/client/public/mockups/team-identity/`: kit board with font candidates
   per genre for the four pack teams, plus a standings footer and intro spotlight from the leading
   picks. Ends on a font decision written into the spec.
 - **Phase 2 — foundation.** Bundled woff2 faces + `@font-face` + Tailwind `font-genre-*` tokens;

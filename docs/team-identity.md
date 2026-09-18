@@ -91,20 +91,27 @@ The team tokens themselves do not change; no new colours.
 Display faces are bundled, never fetched: woff2 files under `apps/client/public/fonts/<family>/`
 with `@font-face` rules in `index.css` and one Tailwind `fontFamily` token per genre
 (`font-genre-metal`, …). All candidates are SIL Open Font License, which permits bundling.
-Candidates are decided on the phase 1 mockup, not here; the leading pick is first.
+**Decided 2026-09-18 on the phase 1 mockup** (`apps/client/public/mockups/team-identity/`): the
+lead face in each row is the pick. The other candidates are kept only so the board can re-open
+a decision without rebuilding it.
 
-| Key | Candidates |
-|---|---|
-| `metal` | Metal Mania, Pirata One, New Rocker |
-| `punk` | Bangers, Anton |
-| `rock` | Anton, Bebas Neue |
-| `pop` | Fredoka, Lilita One, Bubblegum Sans |
-| `country` | Rye, Alfa Slab One, Sancreek |
-| `disco` | Monoton, Shrikhand, Righteous |
-| `hiphop` | Permanent Marker, Rubik Spray Paint |
-| `electronic` | Orbitron, Audiowide |
-| `classical` | Playfair Display, Abril Fatface |
-| `none` | the house sans stack |
+| Key | Pick | Also on the board |
+|---|---|---|
+| `metal` | Metal Mania | Pirata One, New Rocker |
+| `punk` | Bangers | Anton |
+| `rock` | Anton | Bebas Neue |
+| `pop` | Fredoka (700) | Lilita One, Bubblegum Sans |
+| `country` | Rye | Alfa Slab One, Sancreek |
+| `disco` | Monoton | Shrikhand, Righteous |
+| `hiphop` | Permanent Marker | Rubik Spray Paint |
+| `electronic` | Orbitron (800) | Audiowide |
+| `classical` | Playfair Display (900) | Abril Fatface |
+| `none` | the house sans stack | |
+
+The treatments, emblems, textures and entrance beats shown on the board are decided with them:
+chrome/skull-hen/lightning/slam, candy/star-mic/confetti/bounce, rope/hat-horseshoe/woodgrain/swing,
+neon/mirrorball/lightdots/spin for the four pack genres, and the rest as `kit.js` lists them.
+Phase 2 bundles exactly the picks, one woff2 each, not the whole board.
 
 Legibility floors: the genre face is used only where the name renders at 24px or larger on the TV
 and 20px or larger on the tablet. Below that the surface keeps the house sans and carries identity
@@ -168,6 +175,7 @@ after each.
 1. **Mockup.** `apps/client/public/mockups/team-identity/`: a kit board rendering the four pack
    teams as wordmark candidates, emblem, colour, texture and entrance, plus a standings footer and
    an intro spotlight built from the leading picks. Ends on a font decision recorded in this doc.
+   **Done 2026-09-18.**
 2. **Foundation.** Bundle the chosen faces; `resolveTeamTheme` with tests, absorbing
    `resolveTeamApparel` and the colour precedence; the `color` content field; `TeamWordmark`,
    `TeamEmblem`, `TeamLineup`, `TeamAmbient`; `teamThemeById` on both surfaces.
