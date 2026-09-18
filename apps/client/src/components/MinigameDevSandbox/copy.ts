@@ -4,6 +4,7 @@ export const minigameDevSandboxCopy = {
     "Play a minigame with fake teams against the real runtime — no full game required.",
   minigameLabel: "Minigame",
   phaseLabel: "Phase",
+  teamLabel: "Whose turn",
   sessionLabel: "Session",
   resetButtonLabel: "Reset",
   hostPreviewLabel: "Host Preview",
