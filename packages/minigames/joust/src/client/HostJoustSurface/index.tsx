@@ -1,7 +1,7 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { JoustMinigameHostView, JoustShotResult } from "@wingnight/shared";
 
-import { resolveHitZoneCopy } from "../hitZoneCopy/index.js";
+import { resolveShotCopy } from "../shotResultCopy/index.js";
 import { AimArena } from "./AimArena/index.js";
 import { hostJoustSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -24,16 +24,25 @@ const resolveActiveTeamName = ({
   return activeTeamName ?? hostJoustSurfaceCopy.noAssignedTeamLabel;
 };
 
-const ShotResultCard = ({ shot }: { shot: JoustShotResult }): JSX.Element => {
-  const zoneCopy = resolveHitZoneCopy(shot.hitZone);
-  const isHit = shot.hitZone !== null;
+const ShotResultCard = ({
+  shot,
+  nameByPlayerId
+}: {
+  shot: JoustShotResult;
+  nameByPlayerId: Map<string, string>;
+}): JSX.Element => {
+  const copy = resolveShotCopy(shot.toppledPlayerIds.length, shot.isRackCleared);
+  const isHit = shot.toppledPlayerIds.length > 0;
+  const names = shot.toppledPlayerIds.map((playerId) => nameByPlayerId.get(playerId) ?? playerId);
 
   return (
     <div className={styles.resultCard} data-joust-result>
       <p className={`${styles.resultTitle}${isHit ? ` ${styles.resultTitleHit}` : ""}`}>
-        {zoneCopy.title}
+        {copy.title}
       </p>
-      <p className={styles.resultBlurb}>{zoneCopy.blurb}</p>
+      <p className={styles.resultBlurb}>
+        {isHit ? hostJoustSurfaceCopy.toppledNames(names) : copy.blurb}
+      </p>
       <span className={styles.resultPoints}>
         {hostJoustSurfaceCopy.resultPoints(shot.points)}
       </span>
@@ -53,7 +62,7 @@ const ShotHistory = ({ view }: { view: JoustMinigameHostView }): JSX.Element => 
         <span
           key={index}
           className={`${styles.historyChip}${
-            shot !== null && shot.hitZone !== null ? ` ${styles.historyChipHit}` : ""
+            shot !== null && shot.toppledPlayerIds.length > 0 ? ` ${styles.historyChipHit}` : ""
           }`}
         >
           {shot === null
@@ -100,7 +109,8 @@ export const HostJoustSurface = ({
   activeTeamName,
   teamNameByTeamId,
   canDispatchAction,
-  onDispatchAction
+  onDispatchAction,
+  serverOrigin
 }: MinigameHostRendererProps): JSX.Element => {
   const joustView = minigameHostView?.minigame === "JOUST" ? minigameHostView : null;
   const resolvedActiveTeamName = resolveActiveTeamName({
@@ -119,6 +129,15 @@ export const HostJoustSurface = ({
   const isResolved = joustPhase === "resolved";
   const isDone = joustPhase === "done";
   const arena = joustView?.arena ?? null;
+  const standingCount =
+    joustView === null ? 0 : joustView.lineup.length - joustView.downPlayerIds.length;
+  const nameByPlayerId = new Map(
+    (joustView?.lineup ?? []).map((figure) => [figure.playerId, figure.name] as const)
+  );
+  const shooter =
+    joustView?.teammates.find(
+      (figure) => figure.playerId === joustView.activeShooterPlayerId
+    ) ?? null;
 
   const dispatch = (actionType: string): void => {
     onDispatchAction(actionType, {});
@@ -151,6 +170,11 @@ export const HostJoustSurface = ({
                 <div className={styles.arenaFrame}>
                   <AimArena
                     arena={arena}
+                    lineup={joustView.lineup}
+                    teammates={joustView.teammates}
+                    activeShooterPlayerId={joustView.activeShooterPlayerId}
+                    downPlayerIds={joustView.downPlayerIds}
+                    serverOrigin={serverOrigin}
                     aim={joustView.aim}
                     lastShot={joustView.lastShot}
                     canAim={canAct && isAimingPhase}
@@ -180,12 +204,22 @@ export const HostJoustSurface = ({
               <span className={styles.shotCounter}>
                 {hostJoustSurfaceCopy.shotCounter(joustView.shotIndex + 1, joustView.shotsPerTurn)}
               </span>
+              {shooter !== null && (
+                <p className={styles.arenaName} data-joust-shooter>
+                  {hostJoustSurfaceCopy.shooterLabel(shooter.name)}
+                </p>
+              )}
               {arena !== null && (
                 <p className={styles.arenaName}>{hostJoustSurfaceCopy.arenaLabel(arena.name)}</p>
               )}
+              <p className={styles.arenaName}>
+                {standingCount === 0
+                  ? hostJoustSurfaceCopy.emptyRackLabel
+                  : hostJoustSurfaceCopy.standingLabel(standingCount, joustView.lineup.length)}
+              </p>
             </div>
             {joustView.lastShot !== null && (isResolved || isDone) && (
-              <ShotResultCard shot={joustView.lastShot} />
+              <ShotResultCard shot={joustView.lastShot} nameByPlayerId={nameByPlayerId} />
             )}
             {isDone ? (
               <p className={styles.doneNote}>{hostJoustSurfaceCopy.turnOverLabel}</p>

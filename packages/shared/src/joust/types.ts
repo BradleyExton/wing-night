@@ -1,8 +1,8 @@
 /**
- * JOUST's physics vocabulary: the arena a team shoots across, the bodies that fly and wobble in
- * it, and the keyframe track one shot produces. Free of any minigame, transport or rendering
- * concern — the integrator that consumes these types runs in the server-side reducer, so a shot
- * is a pure function of arena + aim + seed and the display only ever projects the track.
+ * JOUST's physics vocabulary: the lane a team shoots down, the bodies that fly and topple in it,
+ * and the keyframe track one shot produces. Free of any minigame, transport or rendering concern —
+ * the integrator that consumes these types runs in the server-side reducer, so a shot is a pure
+ * function of lane + aim + seed and the display only ever projects the track.
  */
 
 export type JoustVec2 = {
@@ -21,9 +21,26 @@ export type JoustObstacle = {
   height: number;
 };
 
-/** Everything content-authored about one arena: where the champ stands, what's in the way. */
+/**
+ * A shelf players stand on, anchored by its LEFT edge at `x` and by the surface they stand on at
+ * `y`. A perch at floor level is the sand itself and builds nothing; any higher one grows its own
+ * slab and legs, so an author cannot draw a platform and forget to make it solid.
+ */
+export type JoustPerch = {
+  x: number;
+  y: number;
+  width: number;
+};
+
+/**
+ * Everything the integrator needs about one lane: where each standing pin is planted, the
+ * structures they are planted on, and what else is in the way. `pinFeet` is already the STANDING
+ * set — a player felled earlier in the turn is absent from it, and the survivors keep the spots
+ * they started on.
+ */
 export type JoustArena = {
-  readonly targetX: number;
+  readonly pinFeet: readonly JoustVec2[];
+  readonly perches: readonly JoustPerch[];
   readonly obstacles: readonly JoustObstacle[];
 };
 
@@ -37,38 +54,42 @@ export type JoustAim = {
 };
 
 /**
- * What each body in a frame IS, so a renderer can draw a shaft, a head or a ball at that index
- * without the track carrying any of it. The order is fixed by `JOUST_BODIES` in `world/`.
+ * What each body in a frame IS, so a renderer can draw a shaft, a head or a pin at that index
+ * without the track carrying any of it. The order is fixed by `resolveJoustBodies` in `world/`.
  */
 export type JoustBodyKind =
   | "shooter-shaft"
   | "shooter-head"
   | "shooter-ball"
-  | "champ-shaft"
-  | "champ-head"
-  | "champ-ball";
+  | "pin-foot"
+  | "pin-head";
 
 export type JoustBodyDescriptor = {
   readonly kind: JoustBodyKind;
   readonly radius: number;
 };
 
-/** Where the shooter first touched the champ. `null` on a track means it never did. */
-export type JoustHitZone = "head" | "shaft" | "balls";
+/**
+ * One pin going over: which column it stood in, and the keyframe it passed the point of no
+ * return on. The renderer bursts on that frame; the reducer only counts the entries.
+ */
+export type JoustTopple = {
+  readonly pinIndex: number;
+  readonly frameIndex: number;
+};
 
 /**
  * Every body's centre at one sampled instant, flattened to `[x0, y0, x1, y1, ...]` in
- * `JOUST_BODIES` order and rounded to two decimals — a whole shot rides in the room snapshot,
- * so the encoding is deliberately the leanest JSON can carry.
+ * `resolveJoustBodies` order and rounded to two decimals — a whole shot rides in the room
+ * snapshot, so the encoding is deliberately the leanest JSON can carry.
  */
 export type JoustFrame = readonly number[];
 
 export type JoustShotRun = {
   readonly keyframeHz: number;
   readonly keyframes: readonly JoustFrame[];
-  readonly hitZone: JoustHitZone | null;
-  /** Index into `keyframes` of the first frame at or after the hit, for the renderer's flash. */
-  readonly hitFrameIndex: number | null;
+  /** In the order they went down, so a display can read out the carnage as it happens. */
+  readonly topples: readonly JoustTopple[];
 };
 
 export type JoustSimulateOptions = {

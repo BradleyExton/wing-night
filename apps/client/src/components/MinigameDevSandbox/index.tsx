@@ -38,6 +38,8 @@ const initializeRuntimeState = (
 ): SerializableValue => {
   return runtimePlugin.initialize({
     teamIds: [...devManifest.teamIds],
+    players: devManifest.players.map((player) => ({ ...player })),
+    teams: devManifest.teams.map((team) => ({ ...team, playerIds: [...team.playerIds] })),
     activeRoundTeamId: devManifest.activeRoundTeamId,
     pointsMax: devManifest.pointsMax,
     pendingPointsByTeamId: { ...devManifest.pendingPointsByTeamId },

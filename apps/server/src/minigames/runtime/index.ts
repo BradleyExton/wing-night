@@ -129,6 +129,8 @@ export const initializeActiveMinigameRuntimeState = (
   const runtimePlugin = resolveMinigameRuntimePlugin(descriptor.minigameId);
   const runtimeState = runtimePlugin.initialize({
     teamIds: state.turnOrderTeamIds,
+    players: state.players,
+    teams: state.teams,
     activeRoundTeamId: state.activeRoundTeamId,
     pointsMax,
     pendingPointsByTeamId: state.pendingMinigamePointsByTeamId,

@@ -1,7 +1,8 @@
+import { resolveTeamColorVariant } from "@wingnight/cast";
+
 import { Check } from "lucide-react";
 
 import { hostControlPanelCopy } from "../../copy";
-import { resolveTeamColorVariant } from "../../../../utils/resolveTeamColorVariant";
 import type { EatingPlayersSurfaceProps } from "../index";
 import * as styles from "./styles";
 

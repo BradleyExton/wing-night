@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolvePlayerAppearance } from "./index";
+import { resolvePlayerAppearance } from "./index.js";
 
 const rosterNames = [
   "Alex",

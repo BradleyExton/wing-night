@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { Character } from "./index";
+import { Character } from "./index.js";
 
 const drawn = { body: "round", comb: "none", tail: "fan" } as const;
 const costume = {

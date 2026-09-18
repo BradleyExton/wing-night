@@ -44,6 +44,9 @@ const asSerializable = (value: unknown): SerializableValue => {
 const initialize = (): EmojiCharadesRuntimeState => {
   const state = emojiCharadesRuntimePlugin.initialize({
     teamIds: ["team-a", "team-b"],
+    // This game never looks at the roster; JOUST is the one that does.
+    players: [],
+    teams: [],
     activeRoundTeamId: "team-a",
     pointsMax: POINTS_MAX,
     pendingPointsByTeamId: { "team-a": 0, "team-b": 0 },
@@ -445,6 +448,9 @@ test("throws when a deck has duplicate subject ids", () => {
 test("drops malformed decks when resolving content leniently", () => {
   const state = emojiCharadesRuntimePlugin.initialize({
     teamIds: ["team-a"],
+    // This game never looks at the roster; JOUST is the one that does.
+    players: [],
+    teams: [],
     activeRoundTeamId: "team-a",
     pointsMax: 1,
     pendingPointsByTeamId: { "team-a": 0 },

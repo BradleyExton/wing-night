@@ -1,8 +1,9 @@
+import { resolveTeamColorVariant } from "@wingnight/cast";
+
 import type { Player, Team } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
 import { resolveLeadingTeams } from "../../../utils/resolveLeadingTeams";
-import { resolveTeamColorVariant } from "../../../utils/resolveTeamColorVariant";
 import { resolveTeamRosterPreview } from "../../../utils/resolveTeamRosterPreview";
 import * as styles from "./styles";
 

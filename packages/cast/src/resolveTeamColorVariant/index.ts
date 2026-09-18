@@ -111,3 +111,20 @@ export const resolveTeamColorVariant = (teamId: string): TeamColorVariant => {
 
   return TEAM_COLOR_VARIANTS[variantIndex];
 };
+
+/** A player with no seat is not any team's colour; the cast's warm neutral is theirs. */
+export const UNSEATED_CHARACTER_FILL_CLASS_NAME = "text-mutedWarm";
+
+/**
+ * The `text-*` class a bird takes to be painted in its team's colour — the same index its
+ * standings dot and row edge use, because it comes off the same table. Surfaces that draw a bird
+ * for a player who may not be seated (JOUST's lane racks up whoever is in the room) want this
+ * rather than the whole variant.
+ */
+export const resolveCharacterFillClassName = (teamId: string | null): string => {
+  if (teamId === null || teamId.length === 0) {
+    return UNSEATED_CHARACTER_FILL_CLASS_NAME;
+  }
+
+  return resolveTeamColorVariant(teamId).characterFillClassName;
+};

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveTeamApparel } from "./index";
+import { resolveTeamApparel } from "./index.js";
 
 test("does pick the genre's apparel when the team names a known genre", () => {
   assert.equal(resolveTeamApparel({ genre: "metal" }), "collar");

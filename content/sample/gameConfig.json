@@ -64,7 +64,7 @@
       "banLetterEmojis": true
     },
     "joust": {
-      "shotsPerTurn": 3
+      "shotsPerPlayer": 1
     }
   },
   "timers": {

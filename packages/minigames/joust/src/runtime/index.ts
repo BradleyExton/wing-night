@@ -13,10 +13,12 @@ import type {
 
 import { joustContentAdapter, resolveJoustContent } from "./content/index.js";
 import { isJoustAimPayload, isJoustRuntimeState } from "./guards/index.js";
+import { resolveJoustRoster, resolveStandingPins } from "./lineup/index.js";
 import { isJoustRules, resolveJoustRules } from "./rules/index.js";
 import {
   JOUST_MIN_LAUNCH_PULL,
-  JOUST_POINTS_BY_ZONE,
+  JOUST_POINTS_PER_TOPPLE,
+  JOUST_RACK_CLEARED_BONUS,
   JOUST_SIMULATION_OPTIONS,
   SLACK_JOUST_AIM,
   type JoustRuntimeContent,
@@ -26,7 +28,7 @@ import { resolveCurrentArena, toJoustDisplayView, toJoustHostView } from "./view
 
 export const joustMinigameId: MinigameType = "JOUST";
 
-// Each team's turn is fought in its own arena, chosen by the team's place in
+// Each team's turn is fought on its own lane, chosen by the team's place in
 // the turn order so no two teams face the same cactus and a mid-turn reconnect
 // rehydrates the same one. Deterministic for the same reason GEO's prompt
 // cursor is: a random draw would re-roll on every re-entry.
@@ -45,7 +47,7 @@ const resolveArenaId = (
   return content.prompts[teamIndex % content.prompts.length]?.id ?? null;
 };
 
-// Stable per arena and per shot, so the jitter — and therefore the track — is
+// Stable per lane and per shot, so the jitter — and therefore the track — is
 // the same on a replayed reducer as on the first run.
 const resolveShotSeed = (arenaId: string, shotIndex: number): number => {
   let hash = 2166136261;
@@ -64,8 +66,7 @@ const toTrack = (run: JoustShotRun): JoustShotTrack => {
   return {
     keyframeHz: run.keyframeHz,
     keyframes: run.keyframes.map((frame) => [...frame]),
-    hitZone: run.hitZone,
-    hitFrameIndex: run.hitFrameIndex
+    topples: run.topples.map((topple) => ({ ...topple }))
   };
 };
 
@@ -96,12 +97,16 @@ const currentTeamPoints = (state: JoustRuntimeState): number => {
   return state.pendingPointsByTeamId[state.activeTurnTeamId] ?? 0;
 };
 
+const standingCount = (state: JoustRuntimeState): number => {
+  return state.lineup.length - state.downPlayerIds.length;
+};
+
 // Shared by `nextShot` and the `skipShot` escape hatch: both land on a fresh
-// band, or on `done` once the team's shots are spent. The replayed track is
-// dropped on the way out so the snapshot only ever carries one.
+// band, or on `done` once the team's shots are spent — or once there is nobody
+// left to knock over, because firing at an empty lane is not a shot.
 const advanceToNextShot = (state: JoustRuntimeState): MinigameRuntimeReductionResult => {
   const nextShotIndex = state.shotIndex + 1;
-  const hasNextShot = nextShotIndex < state.shotsPerTurn;
+  const hasNextShot = nextShotIndex < state.shotsPerTurn && standingCount(state) > 0;
 
   return {
     state: {
@@ -133,15 +138,31 @@ const launch = (
     return unchanged;
   }
 
+  const standing = resolveStandingPins(state.lineup, state.downPlayerIds, arena.perches);
   const run = simulateJoustShot(
-    { targetX: arena.targetX, obstacles: arena.obstacles },
+    {
+      pinFeet: standing.map((pin) => ({ x: pin.x, y: pin.y })),
+      perches: arena.perches,
+      obstacles: arena.obstacles
+    },
     clampedAim,
     { ...JOUST_SIMULATION_OPTIONS, seed: resolveShotSeed(arena.id, state.shotIndex) }
   );
-  const points = run.hitZone === null ? 0 : JOUST_POINTS_BY_ZONE[run.hitZone];
+  // `pinIndex` addresses the standing set the shot was fired at, which is the only list the
+  // integrator ever saw — never the lineup.
+  const toppledPlayerIds = run.topples.flatMap((topple) => {
+    const pin = standing[topple.pinIndex];
+    return pin === undefined ? [] : [pin.playerId];
+  });
+  const isRackCleared =
+    toppledPlayerIds.length > 0 && toppledPlayerIds.length === standing.length;
+  const points =
+    toppledPlayerIds.length * JOUST_POINTS_PER_TOPPLE +
+    (isRackCleared ? JOUST_RACK_CLEARED_BONUS : 0);
   const shot: JoustShotResult = {
     shotNumber: state.shotIndex + 1,
-    hitZone: run.hitZone,
+    toppledPlayerIds,
+    isRackCleared,
     points
   };
 
@@ -150,8 +171,15 @@ const launch = (
       ...state,
       phase: "resolved",
       aim: { ...SLACK_JOUST_AIM },
+      downPlayerIds: [...state.downPlayerIds, ...toppledPlayerIds],
       shots: [...state.shots, shot],
-      lastShot: { ...shot, aim: clampedAim, run: toTrack(run) },
+      lastShot: {
+        ...shot,
+        toppledPlayerIds: [...toppledPlayerIds],
+        aim: clampedAim,
+        run: toTrack(run),
+        pinPlayerIds: standing.map((pin) => pin.playerId)
+      },
       pendingPointsByTeamId: withPendingPoints(
         state,
         currentTeamPoints(state) + points,
@@ -172,16 +200,26 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
     const activeTurnTeamId = input.activeRoundTeamId ?? input.teamIds[0] ?? null;
     const arenaId = resolveArenaId(input.teamIds, input.activeRoundTeamId, content);
 
-    // No arena means no round to run; the server clears the projection and the
+    // No lane means no round to run; the server clears the projection and the
     // host surface falls back to its "check the content pack" note.
     if (arenaId === null) {
       return null;
     }
 
+    const roster = resolveJoustRoster({
+      players: input.players,
+      teams: input.teams,
+      activeTurnTeamId
+    });
+
     const initialState: JoustRuntimeState = {
       activeTurnTeamId,
       arenaId,
-      shotsPerTurn: rules.shotsPerTurn,
+      lineup: roster.lineup,
+      teammates: roster.teammates,
+      downPlayerIds: [],
+      // Everybody on the team shoots, so the turn is as long as the team is.
+      shotsPerTurn: Math.max(1, roster.teammates.length * rules.shotsPerPlayer),
       shotIndex: 0,
       phase: "aiming",
       aim: { ...SLACK_JOUST_AIM },
@@ -244,15 +282,16 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
 
       const forfeited: JoustShotResult = {
         shotNumber: state.shotIndex + 1,
-        hitZone: null,
+        toppledPlayerIds: [],
+        isRackCleared: false,
         points: 0
       };
 
       return advanceToNextShot({ ...state, shots: [...state.shots, forfeited] });
     }
 
-    // Escape hatch (AGENTS.md §11): run the whole turn again, handing back
-    // exactly the points this turn banked.
+    // Escape hatch (AGENTS.md §11): run the whole turn again — the rack back on
+    // its feet, and exactly the points this turn banked handed back.
     if (actionType === "resetTurn") {
       return {
         state: {
@@ -260,6 +299,7 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
           shotIndex: 0,
           phase: "aiming",
           aim: { ...SLACK_JOUST_AIM },
+          downPlayerIds: [],
           shots: [],
           lastShot: null,
           pendingPointsByTeamId: withPendingPoints(

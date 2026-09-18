@@ -5,7 +5,9 @@ import {
 import type {
   MinigameDisplayView,
   MinigameHostView,
-  MinigameType
+  MinigameType,
+  Player,
+  Team
 } from "@wingnight/shared";
 import type { ComponentType } from "react";
 
@@ -25,6 +27,12 @@ export type MinigameRuntimeActionEnvelope = {
 
 export type MinigameRuntimeInitializationInput = {
   teamIds: string[];
+  // The night's roster and seating. Most games never look: a turn is a team's,
+  // and the team ids above are the whole board. JOUST is the exception — it
+  // racks up every player who is not shooting, so it needs to know who they
+  // are and which side they are on.
+  players: Player[];
+  teams: Team[];
   activeRoundTeamId: string | null;
   pointsMax: number;
   pendingPointsByTeamId: Record<string, number>;
@@ -134,6 +142,8 @@ export type MinigameRendererBundle = {
 // each package because the browser cannot read content/sample/.
 export type MinigameDevManifest = {
   teamIds: string[];
+  players: Player[];
+  teams: Team[];
   teamNameByTeamId: Record<string, string>;
   activeRoundTeamId: string | null;
   pointsMax: number;
@@ -148,6 +158,33 @@ export type CreateDevManifestInput = {
   pointsMax?: number;
 };
 
+// Six named players seated three a side — enough of a roster that a game which
+// draws the room itself has something to draw, and small enough to read in a
+// sandbox. No avatars: the sandbox has no content pack to serve heads from.
+const DEV_PLAYERS: Player[] = [
+  { id: "player-1", name: "Alex" },
+  { id: "player-2", name: "Caitlin" },
+  { id: "player-3", name: "Dan" },
+  { id: "player-4", name: "Rosie" },
+  { id: "player-5", name: "Darren" },
+  { id: "player-6", name: "Sarah" }
+];
+
+const DEV_TEAMS: Team[] = [
+  {
+    id: "team-alpha",
+    name: "Team Alpha",
+    playerIds: ["player-1", "player-2", "player-3"],
+    totalScore: 0
+  },
+  {
+    id: "team-beta",
+    name: "Team Beta",
+    playerIds: ["player-4", "player-5", "player-6"],
+    totalScore: 0
+  }
+];
+
 // Standard two-team sandbox fixture shared by every minigame package; only
 // the game-specific rules/content (and optionally pointsMax) vary per game.
 export const createDevManifest = ({
@@ -157,6 +194,8 @@ export const createDevManifest = ({
 }: CreateDevManifestInput): MinigameDevManifest => {
   return {
     teamIds: ["team-alpha", "team-beta"],
+    players: DEV_PLAYERS,
+    teams: DEV_TEAMS,
     teamNameByTeamId: {
       "team-alpha": "Team Alpha",
       "team-beta": "Team Beta"
