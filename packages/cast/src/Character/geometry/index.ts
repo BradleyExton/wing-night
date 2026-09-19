@@ -63,9 +63,11 @@ export const CHARACTER_PIVOTS: Record<CharacterPart, CharacterPivot> = {
 
 // What the parts are doing. `still` is the pose for a surface that moves the
 // parts itself (FAPPY beats the wing off its physics) or wants a frozen bird;
-// the others are looping CSS beats keyed off `cast-*` keyframes in the
-// client's stylesheet. `fly` is a static tuck of the legs, not a loop.
-export const CHARACTER_POSES = ["still", "idle", "walk", "fly"] as const;
+// `idle` and `walk` are looping CSS beats keyed off `cast-*` keyframes in the
+// client's stylesheet; `fly` is a static tuck of the legs, not a loop; and
+// `dance` is the player's own move (`CharacterAppearance.dance`), a two-state
+// groove that a `data-beat` toggle on a `group/beat` ancestor flips between.
+export const CHARACTER_POSES = ["still", "idle", "walk", "fly", "dance"] as const;
 export type CharacterPose = (typeof CHARACTER_POSES)[number];
 
 // The bird's own proportions, for surfaces that have to stand it up somewhere

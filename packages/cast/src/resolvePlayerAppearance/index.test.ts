@@ -34,15 +34,17 @@ test("does ignore case and surrounding whitespace when seeding the appearance", 
   );
 });
 
-test("does spread bodies, combs and tails across the sample roster", () => {
+test("does spread bodies, combs, tails and dances across the sample roster", () => {
   const appearances = rosterNames.map((name) => resolvePlayerAppearance({ name }));
   const bodies = new Set(appearances.map((appearance) => appearance.body));
   const combs = new Set(appearances.map((appearance) => appearance.comb));
   const tails = new Set(appearances.map((appearance) => appearance.tail));
+  const dances = new Set(appearances.map((appearance) => appearance.dance));
 
   assert.ok(bodies.size >= 2, `expected more than one body, got ${[...bodies].join(",")}`);
   assert.ok(combs.size >= 2, `expected more than one comb, got ${[...combs].join(",")}`);
   assert.equal(tails.size, 2);
+  assert.ok(dances.size >= 3, `expected a spread of dances, got ${[...dances].join(",")}`);
 });
 
 test("does address the pack head on the server when an origin is known", () => {

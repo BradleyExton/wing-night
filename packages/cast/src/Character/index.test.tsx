@@ -4,9 +4,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { Character, CharacterWing } from "./index.js";
 import { CHARACTER_PARTS, CHARACTER_PIVOTS, CHARACTER_POSES } from "./geometry/index.js";
+import { CHARACTER_DANCES } from "../resolvePlayerAppearance/index.js";
 import * as figureStyles from "./CharacterFigure/styles.js";
 
-const drawn = { body: "round", comb: "none", tail: "fan" } as const;
+const drawn = { body: "round", comb: "none", tail: "fan", dance: "bounce" } as const;
 const costume = {
   ...drawn,
   avatarSrc: "http://127.0.0.1:3000/content-assets/avatars/brad.png"
@@ -80,7 +81,7 @@ test("does give each character its own halo id when several render together", ()
 
 test("does use the given fill class instead of the muted default when one is passed", () => {
   const html = renderToStaticMarkup(
-    <Character appearance={{ body: "wide", comb: "mohawk", tail: "plume" }} fillClassName="text-teamB" />
+    <Character appearance={{ body: "wide", comb: "mohawk", tail: "plume", dance: "flap" }} fillClassName="text-teamB" />
   );
 
   assert.match(html, /text-teamB/);
@@ -150,6 +151,10 @@ test("does stand still with no beat on any part unless a pose is asked for", () 
 
 test("does put each pose's beats on the parts the pose table names", () => {
   for (const pose of CHARACTER_POSES) {
+    if (pose === "dance") {
+      continue;
+    }
+
     const html = renderToStaticMarkup(<Character appearance={drawn} pose={pose} />);
 
     assert.match(html, new RegExp(`data-character-pose="${pose}"`));
@@ -185,4 +190,36 @@ test("does shade the belly in the outline ink at a fifth and nothing else", () =
   const html = renderToStaticMarkup(<Character appearance={drawn} />);
 
   assert.equal((html.match(/fill-bg\/20/g) ?? []).length, 1);
+});
+
+test("does dance the player's own move, answering the beat on a group ancestor, when asked to dance", () => {
+  for (const dance of CHARACTER_DANCES) {
+    const html = renderToStaticMarkup(<Character appearance={{ ...drawn, dance }} pose="dance" />);
+
+    assert.match(html, /data-character-pose="dance"/);
+    assert.doesNotMatch(html, /animation:/, `${dance} is on the beat, not a clock`);
+
+    for (const part of CHARACTER_PARTS) {
+      const className = figureStyles.dances[dance][part];
+      const partTag = html.match(new RegExp(`<g data-character-part="${part}"[^>]*>`))?.[0] ?? "";
+
+      if (className === undefined) {
+        assert.doesNotMatch(partTag, /class=/, `${dance}: ${part} holds still`);
+      } else {
+        assert.ok(partTag.includes(className), `${dance}: ${part} carries ${className}`);
+        assert.match(className, /transition-transform/);
+        assert.match(className, /group-data-\[beat=1\]\/beat:/);
+      }
+    }
+  }
+});
+
+test("does step differently from bird to bird so a dancing team is not one bird four times", () => {
+  const steps = new Set(
+    CHARACTER_DANCES.map((dance) =>
+      renderToStaticMarkup(<Character appearance={{ ...drawn, dance }} pose="dance" />)
+    )
+  );
+
+  assert.equal(steps.size, CHARACTER_DANCES.length);
 });

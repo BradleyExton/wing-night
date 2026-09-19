@@ -154,7 +154,7 @@ spends its motion budget. Built direction: the "Turbulent" hearth
     inset of its own (the other phases keep theirs on `StageSurface`'s canvas). Anything that
     reads as a border around the hearth is a bug.
 -   Three bands, top to bottom: the wordmark, the lineup, and a floor the cast owns. The floor is
-    reserved space (`SetupStageBody` padding matched to the `CastWander` strip), so the birds
+    reserved space (`SetupStageBody` padding matched to the `CastParade` strip), so the birds
     never walk behind the cards.
 -   Round cards are warm glass: a hairline `ember` rule along the top edge, a faint glow pooling
     under it, a large embossed round number, and three tiers of type — one eyebrow line (the
@@ -484,8 +484,12 @@ edge all come off one table and can never drift onto different hues.
     what a surface that drives the parts itself asks for), `idle` (breathing,
     the tail with it, a double peck every four seconds), `walk` (legs ±30°
     about the hips half a stride apart, a bob on every footfall, the head
-    nodding against it, the tail swaying, the wing tucking) and `fly` (both
-    legs tucked back, no loop). The beats are `cast-*` keyframes in the
+    nodding against it, the tail swaying, the wing tucking), `fly` (both
+    legs tucked back, no loop) and `dance` (the player's own move — bounce,
+    headbang, flap or shuffle, seeded off the name like the body — as two
+    states of its parts that a `data-beat` toggle on a `group/beat` ancestor
+    transitions between, so it is on the room's beat and not on a clock).
+    The beats are `cast-*` keyframes in the
     client's `index.css`; which part carries which beat in which pose is the
     `poses` table next to the figure. Every beat is `motion-safe`: a room that
     asked for less motion gets the bird standing still. The wing is drawn with
@@ -527,18 +531,38 @@ edge all come off one table and can never drift onto different hues.
     anchors (`Character/geometry`) so they land the same on a drawn head and
     a costume head. A team without a genre, or with one nothing matches,
     wears nothing.
--   **Lobby strut.** On SETUP the cast takes turns at the foot of the stage in
-    authored CSS lanes (`SetupStageBody/CastWander`), `z-1` behind the lobby
-    content and above the flame, exactly as the embers do. The lane carries
-    the bird along; the walking is the cast's own `walk` pose, so the strut
-    here and a bird walking anywhere else are the same walk. The intro and
-    host lineups (`TeamLineup`) stand in `idle`; JOUST's rack stands `still`. A bird stands
-    ~12vh tall (about 130px at 1080p): the head is the identity and the
-    costume head is a bobblehead, so anything shorter turns faces back into
-    coins. Only three or four
-    birds are out at once — one pops up, struts a short span and back, and
-    drops out — so the layer never competes with the lobby content. It is §8 ambient
-    motion: `prefers-reduced-motion` leaves the cast standing still.
+-   **Lobby parade.** On SETUP the cast parades at the foot of the stage
+    (`SetupStageBody/CastParade`), `z-1` behind the lobby content and above
+    the flame, exactly as the embers do. Two teams at a time: one walks in
+    from the left edge and one from the right (the cast's `walk`, each bird
+    facing the way it goes), they dance facing each other for fourteen
+    seconds, walk back out their own edges, and the next pair walks in. An
+    odd last team dances alone; players seated nowhere yet parade as a group
+    of their own in `mutedWarm`, so nobody is missing while the host seats
+    the room. Nothing fades: a bird is on the floor or off the edge, and the
+    walk on and off IS the group's transform transition (`resolveParadeFrame`
+    is the pure timeline; its beats and the transition length are one number
+    in two places). A team is a huddle — birds overlap a little — so six fit a
+    half of the floor. A bird stands ~12vh tall (about 130px at 1080p): the
+    head is the identity and the costume head is a bobblehead, so anything
+    shorter turns faces back into coins. The intro and host lineups
+    (`TeamLineup`) stand in `idle`; JOUST's rack stands `still`.
+-   **The dance is on the beat.** The display taps its one `<audio>` with a
+    Web Audio analyser (`DisplayBoard/useBeatClock`): the low band's energy
+    against its own last two-thirds of a second picks out the kicks
+    (`createBeatClock`, pure and tested), and every kick flips `data-beat` on
+    the display root (`group/beat`). A dancing bird's parts answer that
+    through a CSS transition, so the room's own music is what moves them and
+    the whole floor lands each step together. Before the room has tapped, or
+    when the host pauses, a 120 BPM metronome keeps the floor alive; the real
+    beat takes back over the moment it is heard. For the analyser to hear
+    anything the server sends `Access-Control-Allow-Origin` on its media
+    routes and the element is `crossOrigin="anonymous"` — without both, the
+    graph is tainted and the ROOM goes silent, not just the birds. The tapped
+    element is never released: it can be tapped once, and its sound only
+    reaches the speaker through the graph. It is §8 ambient motion:
+    `prefers-reduced-motion` parks the first pair on the floor and stops the
+    clock.
 
 ------------------------------------------------------------------------
 

@@ -6,6 +6,7 @@ import type { AddressInfo } from "node:net";
 
 import {
   CONTENT_ASSET_ROUTE_PATH,
+  LOBBY_AUDIO_ROUTE_PATH,
   SONG_GUESS_AUDIO_ROUTE_PATH,
   TEAM_AUDIO_ROUTE_PATH
 } from "@wingnight/shared";
@@ -48,6 +49,23 @@ const withApp = async (
     await closeServer(server);
   }
 };
+
+test("does let a display on another origin read its media when it asks with CORS", async () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(contentRoot, "sample/teams/audio/blaze.mp3", "sample-bytes");
+  writeContentFile(contentRoot, "local/audio/lobby/opener.mp3", "lobby-bytes");
+
+  await withApp(async (baseUrl) => {
+    const anthem = await fetch(`${baseUrl}${TEAM_AUDIO_ROUTE_PATH}/blaze.mp3`);
+    const lobby = await fetch(`${baseUrl}${LOBBY_AUDIO_ROUTE_PATH}/opener.mp3`);
+    const health = await fetch(`${baseUrl}/health`);
+
+    assert.equal(anthem.headers.get("access-control-allow-origin"), "*");
+    assert.equal(lobby.headers.get("access-control-allow-origin"), "*");
+    assert.equal(health.headers.get("access-control-allow-origin"), null);
+  }, contentRoot);
+});
 
 test("serves a team anthem from the sample content root", async () => {
   const contentRoot = createContentRoot();

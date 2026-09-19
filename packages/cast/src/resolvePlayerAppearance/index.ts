@@ -9,6 +9,11 @@ export type CharacterComb = (typeof CHARACTER_COMBS)[number];
 export const CHARACTER_TAILS = ["fan", "plume"] as const;
 export type CharacterTail = (typeof CHARACTER_TAILS)[number];
 
+// How the bird moves on the beat when a surface has it dancing: the body
+// bouncing, the head banging, the wing flapping or the feet shuffling.
+export const CHARACTER_DANCES = ["bounce", "headbang", "flap", "shuffle"] as const;
+export type CharacterDance = (typeof CHARACTER_DANCES)[number];
+
 // Everything `<Character>` needs to draw one cast member. Colour is NOT here:
 // it belongs to the team, not the player, and is resolved by the surface that
 // knows the seating (see `resolveTeamColorVariant`).
@@ -16,6 +21,7 @@ export type CharacterAppearance = {
   body: CharacterBody;
   comb: CharacterComb;
   tail: CharacterTail;
+  dance: CharacterDance;
   avatarSrc?: string;
 };
 
@@ -51,9 +57,10 @@ export const resolvePlayerAppearance = (
   const body = CHARACTER_BODIES[hash % CHARACTER_BODIES.length];
   const comb = CHARACTER_COMBS[(hash >>> 8) % CHARACTER_COMBS.length];
   const tail = CHARACTER_TAILS[(hash >>> 16) % CHARACTER_TAILS.length];
+  const dance = CHARACTER_DANCES[(hash >>> 24) % CHARACTER_DANCES.length];
 
   if (player.avatarSrc === undefined) {
-    return { body, comb, tail };
+    return { body, comb, tail, dance };
   }
 
   // The roster writes pack-relative paths (`avatars/rob.png`), which live in the
@@ -62,8 +69,8 @@ export const resolvePlayerAppearance = (
   const avatarSrc = resolveContentAssetSrc(player.avatarSrc, serverOrigin);
 
   if (avatarSrc === null) {
-    return { body, comb, tail };
+    return { body, comb, tail, dance };
   }
 
-  return { body, comb, tail, avatarSrc };
+  return { body, comb, tail, dance, avatarSrc };
 };

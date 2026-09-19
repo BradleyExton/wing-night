@@ -39,11 +39,13 @@ export {
 export {
   CHARACTER_BODIES,
   CHARACTER_COMBS,
+  CHARACTER_DANCES,
   CHARACTER_TAILS,
   resolvePlayerAppearance,
   type CharacterAppearance,
   type CharacterBody,
   type CharacterComb,
+  type CharacterDance,
   type CharacterTail
 } from "./resolvePlayerAppearance/index.js";
 // The schlong: JOUST's projectile and FAPPY's obstacle are one drawing, built
