@@ -17,12 +17,35 @@ export const JOUST_MIN_PERCH_Y = JOUST_RACK_TOP;
 /** Narrower than this and nobody fits on it. */
 export const JOUST_MIN_PERCH_WIDTH = JOUST_PIN_HEAD_RADIUS * 2;
 /**
- * How many players a lane must seat. A lane cannot know the night's roster, but a shelf hung too
- * low shades out the sand beneath it and a tower's legs eat the spots they stand on — both of
- * which quietly shrink a lane until somebody has nowhere to stand. Ten is the floor that catches
- * it at content load rather than in front of the room.
+ * The party this game is built for: fifteen at the table. Teams are dealt three or four deep, and
+ * the rack is everybody who is NOT on the shooting team — so the SMALLEST team faces the BIGGEST
+ * rack. Three shooting leaves twelve standing, and that is the number a lane has to hold.
  */
-export const JOUST_MIN_LANE_CAPACITY = 10;
+const JOUST_TUNED_ROSTER_SIZE = 15;
+const JOUST_SMALLEST_TEAM_SIZE = 3;
+/**
+ * Two spare chairs on top. A lane authored right at twelve breaks the night the moment two more
+ * people show up, and nobody re-authors lanes at a party — the headroom is what makes the floor
+ * survive a roster that grows.
+ */
+const JOUST_ROSTER_HEADROOM = 2;
+
+/**
+ * How many players a lane must seat on its OWN perches before it may ship.
+ *
+ * A lane cannot know the night's roster, and two things quietly shrink one: a shelf hung too low
+ * shades out the sand beneath it, and a tower's legs eat the spots they stand on. Seat fewer than
+ * the rack and `resolveJoustRackLayout` abandons the lane entirely — every tower gone, everybody
+ * dumped on one bare row worth a point each, birds overlapping. That fallback is a last resort for
+ * a roster nobody built for, not a thing to discover on the TV mid-party.
+ *
+ * So the floor is the worst rack a tuned night can produce, plus room to grow:
+ * (15 roster + 2 headroom) − 3 on the smallest shooting team = 14. The shipped sample lanes seat
+ * 15, 15, 15 and 17. DO NOT LOWER THIS to make a lane pass — widen the lane's shelves, or raise
+ * the one hanging over the sand.
+ */
+export const JOUST_MIN_LANE_CAPACITY =
+  JOUST_TUNED_ROSTER_SIZE + JOUST_ROSTER_HEADROOM - JOUST_SMALLEST_TEAM_SIZE;
 
 // One lane in the pack: the structures players are stood on, and what else is in the way. How
 // MANY players stand there is not content — it is however many are not on the shooting team that

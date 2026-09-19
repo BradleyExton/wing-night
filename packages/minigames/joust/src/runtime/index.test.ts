@@ -19,9 +19,12 @@ import {
   type JoustRuntimeState
 } from "./types/index.js";
 
+// Nine spots on the sand and five on the shelf: fourteen, which is the floor
+// `JOUST_MIN_LANE_CAPACITY` holds an authored lane to. A narrower shelf seats eleven, the content
+// adapter drops the lane on the way in, and every test here loses its arena.
 const PERCHES = [
   { x: 54, y: 78, width: 102 },
-  { x: 116, y: 50, width: 34 }
+  { x: 105, y: 50, width: 49 }
 ];
 
 const arenaFixture = (index: number): JoustContentFile["prompts"][number] => ({
@@ -33,14 +36,6 @@ const arenaFixture = (index: number): JoustContentFile["prompts"][number] => ({
 
 const contentFixture: JoustContentFile = {
   prompts: Array.from({ length: 3 }, (_unused, index) => arenaFixture(index + 1))
-};
-
-// A lane with nothing but sand, for the cases about clearing the rack: on a lane with a shelf,
-// no single shot reaches both levels — which is the point of the shelf, and no use here.
-const groundOnlyContent: JoustContentFile = {
-  prompts: [
-    { id: "arena-1", name: "Open Range", perches: [{ x: 54, y: 78, width: 102 }], obstacles: [] }
-  ]
 };
 
 const PLAYERS: Player[] = [
@@ -57,12 +52,13 @@ const TEAMS: Team[] = [
   { id: "team-2", name: "Team Two", playerIds: ["p4", "p5", "p6"], totalScore: 0 }
 ];
 
-// Found by sweeping the aim space against the fixture's three-player rack: a
-// flat shot ploughs the lot, a shallow lob clips one, a twitch never arrives —
-// and a full-power shot just above flat ploughs the sand row into the tower's
-// legs and brings the whole thing down.
-const SWEEPING_AIM = { x: -1, y: 0.1 };
-const SINGLE_AIM = { x: -0.9, y: 0.5 };
+// Found by sweeping the aim space against the fixture's three-player rack, which stands two on
+// the sand and one up on the shelf: a flat shot ploughs the sand row and leaves the shelf alone,
+// a shallow lob clips the one up top, a twitch never arrives — and a full-power shot just above
+// flat drives the sand row into the tower's legs and brings the whole thing down, which is the
+// ONLY way one shot takes both levels.
+const SWEEPING_AIM = { x: -1, y: 0 };
+const SINGLE_AIM = { x: -0.9, y: 0.6 };
 const MISSING_AIM = { x: -0.2, y: 0 };
 const TIMBER_AIM = { x: -0.95, y: 0.15 };
 
@@ -353,24 +349,20 @@ test("keeps the last shot's arc as a ghost for the next teammate, and drops it w
   assert.deepEqual(reset.collapsedPerchIndices, []);
 });
 
-test("pays the bonus for a shot that leaves nobody standing", () => {
-  const state = asState(
-    reduce(initializeState({ content: groundOnlyContent }), "launch", SWEEPING_AIM, {
-      content: groundOnlyContent
-    }).state
-  );
+// The lane the rack is cleared on is the ordinary two-level fixture, because a perch-free lane is
+// no longer authorable: bare sand seats eleven and `JOUST_MIN_LANE_CAPACITY` is fourteen, so the
+// content adapter drops a shelf-less lane before the runtime ever sees it. Clearing a real lane
+// therefore means bringing the tower down, which is what TIMBER_AIM does.
+test("does pay the bonus onto the team's pending points when a shot leaves nobody standing", () => {
+  const state = asState(reduce(initializeState(), "launch", TIMBER_AIM).state);
 
   assert.equal(state.lastShot?.isRackCleared, true);
   assert.equal(state.downPlayerIds.length, 3);
-  assert.equal(state.pendingPointsByTeamId["team-1"], 3 + JOUST_RACK_CLEARED_BONUS);
+  assert.equal(state.pendingPointsByTeamId["team-1"], 1 + 1 + 2 + JOUST_RACK_CLEARED_BONUS);
 });
 
 test("names the track's rack so a topple can be read back to a player", () => {
-  const state = asState(
-    reduce(initializeState({ content: groundOnlyContent }), "launch", SWEEPING_AIM, {
-      content: groundOnlyContent
-    }).state
-  );
+  const state = asState(reduce(initializeState(), "launch", TIMBER_AIM).state);
   const shot = state.lastShot;
 
   assert.ok(shot !== null);
@@ -378,6 +370,21 @@ test("names the track's rack so a topple can be read back to a player", () => {
   for (const playerId of shot.toppledPlayerIds) {
     assert.ok(shot.pinPlayerIds.includes(playerId));
   }
+});
+
+// What the shelf is FOR, and what the old bare-sand fixture existed to work around: the ball
+// itself only ever reaches one level. Everybody the sand row loses is worth one; the bird up top
+// is untouched and the tower is still standing, so the rack is not cleared.
+test("does leave the shelf standing when a shot only ploughs the sand", () => {
+  const state = asState(reduce(initializeState(), "launch", SWEEPING_AIM).state);
+  const shot = state.lastShot;
+
+  assert.ok(shot !== null);
+  assert.deepEqual(shot.toppledPlayerIds, ["p4", "p5"], "both on the sand, neither on the shelf");
+  assert.deepEqual(shot.collapsedPerchIndices, [], "the tower took no part in it");
+  assert.equal(shot.isRackCleared, false);
+  assert.equal(shot.points, 2, "two off the sand at one each");
+  assert.equal(state.downPlayerIds.includes("p6"), false, "the bird up on the shelf is still up");
 });
 
 test("leaves a felled player out of the next shot's rack", () => {
@@ -431,10 +438,8 @@ test("moves to the next shot and drops the replayed track on the way", () => {
 });
 
 test("ends the turn early once the rack is empty", () => {
-  const swept = reduce(initializeState({ content: groundOnlyContent }), "launch", SWEEPING_AIM, {
-    content: groundOnlyContent
-  }).state;
-  const done = asState(reduce(swept, "nextShot", {}, { content: groundOnlyContent }).state);
+  const swept = reduce(initializeState(), "launch", TIMBER_AIM).state;
+  const done = asState(reduce(swept, "nextShot").state);
 
   assert.equal(done.phase, "done");
   assert.equal(done.shotIndex, 0);

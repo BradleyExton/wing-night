@@ -115,9 +115,12 @@ export const createValidJoustJson = (prefix: string): string => {
       {
         id: `${prefix.toLowerCase()}-arena-1`,
         name: `${prefix} Arena`,
+        // Seats 14 — the floor `JOUST_MIN_LANE_CAPACITY` holds lanes to (nine on the sand, five
+        // on the shelf). A narrower shelf seats fewer and the loader rejects the file, so every
+        // harness case that only wanted "a valid pack" would start failing on the lane.
         perches: [
           { x: 54, y: 78, width: 102 },
-          { x: 116, y: 50, width: 34 }
+          { x: 105, y: 50, width: 49 }
         ],
         obstacles: [{ x: 46, y: 66, width: 5, height: 12 }]
       }

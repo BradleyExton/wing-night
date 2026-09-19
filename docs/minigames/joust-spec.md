@@ -158,7 +158,8 @@ it is.
       "name": "The Lookout",
       "perches": [
         { "x": 54, "y": 78, "width": 102 },
-        { "x": 116, "y": 50, "width": 34 }
+        { "x": 57, "y": 52, "width": 58 },
+        { "x": 129, "y": 40, "width": 22 }
       ],
       "obstacles": [{ "x": 46, "y": 66, "width": 5, "height": 12 }]
     }
@@ -175,9 +176,18 @@ higher than `JOUST_RACK_TOP` (22).
 
 Two things quietly eat a lane's standing room, and both are easy to author by accident: a shelf
 hung lower than a bird is tall shades out the sand beneath it, and a tower's legs occupy the spots
-they stand on. Validation therefore checks the lane still seats `JOUST_MIN_LANE_CAPACITY` (10) and
+they stand on. Validation therefore checks the lane still seats `JOUST_MIN_LANE_CAPACITY` (14 — a
+fifteen-player roster plus two spare chairs, less the three on the smallest shooting team) and
 says how many it actually seats when it does not. Obstacles must sit inside the world and above the
 floor. `featuredPlayers` tagging works as for every other pack.
+
+**Do not lower the floor to make a lane pass — widen the lane.** The number is the worst rack a
+tuned night can hand a lane: fifteen at the table, teams dealt three or four deep, so the SMALLEST
+shooting team faces the BIGGEST rack — 15 roster + 2 spare chairs − 3 shooting = 14. A lane that
+seats fewer does not fail at a party, it silently falls back: `resolveJoustRackLayout` abandons
+every perch, dumps the whole rack on one bare row worth a point a head, and the towers stop being
+drawn on. One consequence is deliberate: the sand alone holds eleven, so **every authored lane must
+carry at least one shelf** — a bare-sand lane cannot seat a real party, which is the whole bug.
 
 The sample pack is deliberately **not** scheduled in the sample `gameConfig.json`, so the default
 demo night is unchanged. Schedule it with `"minigame": "JOUST"` on a round in
