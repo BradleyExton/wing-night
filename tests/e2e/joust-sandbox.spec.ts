@@ -57,6 +57,12 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
   await expect(page.locator("[data-joust-shooter-figure]")).toHaveCount(2);
   await expect(page.getByText("9/9 standing")).toBeVisible();
   await expect(page.getByText("9 of 9 still standing")).toBeVisible();
+  // Two Towers: each tower stands on two legs the integrator owns, and each shelf says what it
+  // pays. Nothing is rubble yet, and there is no last shot to ghost.
+  await expect(page.locator("[data-joust-leg]")).toHaveCount(8);
+  await expect(page.locator("[data-joust-perch-points]")).toHaveCount(4);
+  await expect(page.locator("[data-joust-rubble]")).toHaveCount(0);
+  await expect(page.locator("[data-joust-ghost]")).toHaveCount(0);
 
   // Everyone on the team shoots, in roster order, and both surfaces say whose go it is.
   await expect(page.getByText("Alex — pull back and let it fly")).toBeVisible();
@@ -79,6 +85,8 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
   await expect(page.getByText("Shot 2 of 3")).toHaveCount(2);
   await expect(page.getByText("Caitlin is up")).toBeVisible();
   await expect(nextShotButton).toBeDisabled();
+  // The first shot's arc stays on both lanes for Caitlin to adjust off.
+  await expect(page.locator("[data-joust-ghost]")).toHaveCount(2);
 
   expect(socketRequests).toHaveLength(0);
 });

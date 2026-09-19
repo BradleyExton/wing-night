@@ -1,19 +1,26 @@
 import type {
   JoustAim,
+  JoustPerch,
   JoustShotResult,
   JoustShotRun,
   JoustShotTrack,
   MinigameType
 } from "@wingnight/shared";
-import { clampJoustAim, simulateJoustShot } from "@wingnight/shared";
+import {
+  JOUST_WORLD,
+  clampJoustAim,
+  resolveJoustPerchPoints,
+  simulateJoustShot
+} from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult
 } from "@wingnight/minigames-core";
 
 import { joustContentAdapter, resolveJoustContent } from "./content/index.js";
+import { resolveShotGhost } from "./ghost/index.js";
 import { isJoustAimPayload, isJoustRuntimeState } from "./guards/index.js";
-import { resolveJoustRoster, resolveStandingPins } from "./lineup/index.js";
+import { resolveJoustRoster, resolveStandingPins, type JoustStandingPin } from "./lineup/index.js";
 import { isJoustRules, resolveJoustRules } from "./rules/index.js";
 import {
   JOUST_MIN_LAUNCH_PULL,
@@ -66,8 +73,16 @@ const toTrack = (run: JoustShotRun): JoustShotTrack => {
   return {
     keyframeHz: run.keyframeHz,
     keyframes: run.keyframes.map((frame) => [...frame]),
-    topples: run.topples.map((topple) => ({ ...topple }))
+    topples: run.topples.map((topple) => ({ ...topple })),
+    collapses: run.collapses.map((collapse) => ({ ...collapse }))
   };
+};
+
+// What a felled player is worth: their perch's value, so a shelf pays more than the sand.
+const pointsForPin = (pin: JoustStandingPin, perches: readonly JoustPerch[]): number => {
+  const perch = pin.perchIndex === null ? null : (perches[pin.perchIndex] ?? null);
+
+  return JOUST_POINTS_PER_TOPPLE * resolveJoustPerchPoints(perch);
 };
 
 const aimMagnitude = (aim: JoustAim): number => {
@@ -103,7 +118,9 @@ const standingCount = (state: JoustRuntimeState): number => {
 
 // Shared by `nextShot` and the `skipShot` escape hatch: both land on a fresh
 // band, or on `done` once the team's shots are spent — or once there is nobody
-// left to knock over, because firing at an empty lane is not a shot.
+// left to knock over, because firing at an empty lane is not a shot. The track
+// is dropped on the way, but its arc stays behind as a ghost for the next
+// teammate to aim off; a skipped shot flew nothing and leaves the last ghost be.
 const advanceToNextShot = (state: JoustRuntimeState): MinigameRuntimeReductionResult => {
   const nextShotIndex = state.shotIndex + 1;
   const hasNextShot = nextShotIndex < state.shotsPerTurn && standingCount(state) > 0;
@@ -114,7 +131,11 @@ const advanceToNextShot = (state: JoustRuntimeState): MinigameRuntimeReductionRe
       shotIndex: hasNextShot ? nextShotIndex : state.shotIndex,
       phase: hasNextShot ? "aiming" : "done",
       aim: { ...SLACK_JOUST_AIM },
-      lastShot: hasNextShot ? null : state.lastShot
+      lastShot: hasNextShot ? null : state.lastShot,
+      previousShotGhost:
+        hasNextShot && state.lastShot !== null
+          ? resolveShotGhost(state.lastShot, JOUST_WORLD.floorY)
+          : state.previousShotGhost
     },
     didMutate: true
   };
@@ -143,25 +164,29 @@ const launch = (
     {
       pinFeet: standing.map((pin) => ({ x: pin.x, y: pin.y })),
       perches: arena.perches,
-      obstacles: arena.obstacles
+      obstacles: arena.obstacles,
+      collapsedPerchIndices: state.collapsedPerchIndices
     },
     clampedAim,
     { ...JOUST_SIMULATION_OPTIONS, seed: resolveShotSeed(arena.id, state.shotIndex) }
   );
   // `pinIndex` addresses the standing set the shot was fired at, which is the only list the
   // integrator ever saw — never the lineup.
-  const toppledPlayerIds = run.topples.flatMap((topple) => {
+  const toppled = run.topples.flatMap((topple) => {
     const pin = standing[topple.pinIndex];
-    return pin === undefined ? [] : [pin.playerId];
+    return pin === undefined ? [] : [pin];
   });
+  const toppledPlayerIds = toppled.map((pin) => pin.playerId);
+  const collapsedPerchIndices = run.collapses.map((collapse) => collapse.perchIndex);
   const isRackCleared =
     toppledPlayerIds.length > 0 && toppledPlayerIds.length === standing.length;
   const points =
-    toppledPlayerIds.length * JOUST_POINTS_PER_TOPPLE +
+    toppled.reduce((total, pin) => total + pointsForPin(pin, arena.perches), 0) +
     (isRackCleared ? JOUST_RACK_CLEARED_BONUS : 0);
   const shot: JoustShotResult = {
     shotNumber: state.shotIndex + 1,
     toppledPlayerIds,
+    collapsedPerchIndices,
     isRackCleared,
     points
   };
@@ -172,13 +197,16 @@ const launch = (
       phase: "resolved",
       aim: { ...SLACK_JOUST_AIM },
       downPlayerIds: [...state.downPlayerIds, ...toppledPlayerIds],
+      collapsedPerchIndices: [...state.collapsedPerchIndices, ...collapsedPerchIndices],
       shots: [...state.shots, shot],
       lastShot: {
         ...shot,
         toppledPlayerIds: [...toppledPlayerIds],
+        collapsedPerchIndices: [...collapsedPerchIndices],
         aim: clampedAim,
         run: toTrack(run),
-        pinPlayerIds: standing.map((pin) => pin.playerId)
+        pinPlayerIds: standing.map((pin) => pin.playerId),
+        rubblePerchIndices: [...state.collapsedPerchIndices]
       },
       pendingPointsByTeamId: withPendingPoints(
         state,
@@ -218,6 +246,8 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
       lineup: roster.lineup,
       teammates: roster.teammates,
       downPlayerIds: [],
+      collapsedPerchIndices: [],
+      previousShotGhost: null,
       // Everybody on the team shoots, so the turn is as long as the team is.
       shotsPerTurn: Math.max(1, roster.teammates.length * rules.shotsPerPlayer),
       shotIndex: 0,
@@ -283,6 +313,7 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
       const forfeited: JoustShotResult = {
         shotNumber: state.shotIndex + 1,
         toppledPlayerIds: [],
+        collapsedPerchIndices: [],
         isRackCleared: false,
         points: 0
       };
@@ -291,7 +322,8 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     // Escape hatch (AGENTS.md §11): run the whole turn again — the rack back on
-    // its feet, and exactly the points this turn banked handed back.
+    // its feet, the towers back on their legs, and exactly the points this turn
+    // banked handed back.
     if (actionType === "resetTurn") {
       return {
         state: {
@@ -300,6 +332,8 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
           phase: "aiming",
           aim: { ...SLACK_JOUST_AIM },
           downPlayerIds: [],
+          collapsedPerchIndices: [],
+          previousShotGhost: null,
           shots: [],
           lastShot: null,
           pendingPointsByTeamId: withPendingPoints(

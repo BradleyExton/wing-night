@@ -4,7 +4,7 @@ import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
 import type { GeoPrompt } from "../content/geo/index.js";
 import type { JoustPrompt } from "../content/joust/index.js";
-import type { JoustAim, JoustTopple } from "../joust/types.js";
+import type { JoustAim, JoustCollapse, JoustTopple, JoustVec2 } from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
 import type { SongGuessDifficulty } from "../content/songGuess/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
@@ -311,8 +311,13 @@ export type JoustShotResult = {
   shotNumber: number;
   // Who went over on this shot, in the order they fell.
   toppledPlayerIds: string[];
+  // Which towers the shot brought down, by index into the lane's perches. Everyone stood on one
+  // is in `toppledPlayerIds` too; this is what lets the plaque shout "Timber!".
+  collapsedPerchIndices: number[];
   // The shot left nobody standing — bowling's strike, and the only bonus in the game.
   isRackCleared: boolean;
+  // A player is worth what their perch is worth (`resolveJoustPerchPoints`): one on the sand,
+  // more up a tower. Plus the bonus for a cleared rack.
   points: number;
 };
 
@@ -323,6 +328,7 @@ export type JoustShotTrack = {
   keyframeHz: number;
   keyframes: number[][];
   topples: JoustTopple[];
+  collapses: JoustCollapse[];
 };
 
 // The shot the TV is replaying (or has just replayed): its outcome plus the
@@ -335,6 +341,18 @@ export type JoustMinigameShot = JoustShotResult & {
   // pin body in a keyframe index into THIS list, not into the lineup. It is the standing set as it
   // was before the shot, which is not the standing set after it.
   pinPlayerIds: string[];
+  // Towers already lying in rubble when this shot was fired. Their legs have no bodies in the
+  // track, the same way a felled player has no pin in it.
+  rubblePerchIndices: number[];
+};
+
+// The shot before this one, kept while the next teammate aims: where the band was pulled to and
+// the arc the head flew, up to its first contact. It is what turns a team's shots from three
+// guesses into three adjustments. Client-drawn only; the integrator never sees it.
+export type JoustShotGhost = {
+  shotNumber: number;
+  aim: JoustAim;
+  path: JoustVec2[];
 };
 
 export type JoustMinigameArena = Pick<
@@ -356,6 +374,11 @@ type JoustMinigameViewFields = {
   teammates: JoustPlayerFigure[];
   // Everyone the turn has already put on the sand; they sit out the remaining shots.
   downPlayerIds: string[];
+  // Every tower the turn has already brought down, by index into the lane's perches. Rubble for
+  // the rest of the turn: drawn flat, built for nothing, and nobody is stood on it.
+  collapsedPerchIndices: number[];
+  // The last shot's arc and pull, shown while the next one is aimed. Null on the first shot.
+  previousShotGhost: JoustShotGhost | null;
   // Whose hand is on the band right now. Everybody on the team takes a turn, in roster order, so
   // this walks the bench as the turn goes on.
   activeShooterPlayerId: string | null;

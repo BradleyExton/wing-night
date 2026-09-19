@@ -4,6 +4,7 @@ import { resolveSegmentContacts } from "../../contraption/simulate/resolveSegmen
 import type {
   JoustAim,
   JoustArena,
+  JoustCollapse,
   JoustFrame,
   JoustShotRun,
   JoustSimulateOptions,
@@ -11,20 +12,28 @@ import type {
   JoustVec2
 } from "../types.js";
 import {
+  JOUST_PIN_FOOT_RADIUS,
   JOUST_PIN_HEIGHT,
   JOUST_SHOOTER_BALL_INDICES,
   JOUST_SHOOTER_BODY_COUNT,
   JOUST_SHOOTER_HEAD_INDEX,
   JOUST_TOPPLE_TILT,
+  JOUST_TOWER_TOPPLE_TILT,
   JOUST_WORLD,
   clampJoustAim,
+  joustLegFootIndex,
+  joustLegTopIndex,
   joustPinFootIndex,
   joustPinHeadIndex,
   resolveJoustBodies,
   resolveJoustLaunchVelocity,
+  resolveJoustLeanTilt,
+  resolveJoustLegs,
+  resolveJoustPinPerchIndex,
   resolveJoustPinTilt,
   resolveJoustRestPositions,
-  resolveJoustSegments,
+  resolveJoustStaticSegments,
+  resolvePerchSlabSegments,
   toJoustFrame
 } from "../world/index.js";
 
@@ -64,6 +73,30 @@ const PIN_RESTITUTION = 0.15;
 const PIN_SLIP = 0.9;
 
 /**
+ * A tower's leg is the same bistable stick as a pin, only built to hold a shelf up: it is pulled
+ * upright harder, gives up later, and — the part that matters — is HEAVY. The shooter absorbs
+ * most of a leg contact, so a glancing shot bounces off and only a shot with real weight behind it
+ * folds a tower. Both legs share one slab, so folding one means moving both: a tower takes about
+ * twice the push a pin does before it goes.
+ */
+const LEG_UPRIGHT_STIFFNESS = 0.04;
+const LEG_RECOVERY_TILT = 0.12;
+const LEG_FOOT_STIFFNESS = 0.12;
+const LEG_FOOT_STIFFNESS_DOWN = 0.02;
+/** How much of a shooter-versus-leg separation the SHOT absorbs: a leg is the heavier body here. */
+const SHOOTER_LEG_SHARE = 0.35;
+/** How much of a pin-versus-leg separation the PIN absorbs: a bird bounces off timber. */
+const PIN_LEG_SHARE = 0.85;
+const LEG_RESTITUTION = 0.1;
+const LEG_SLIP = 0.9;
+/**
+ * The sideways shove a dropped player's head gets on the frame their tower folds, in world units a
+ * step, in the direction the tower is falling. A pin that simply loses its floor falls perfectly
+ * upright and lands standing; this is what turns the drop into a tumble.
+ */
+const DROP_KICK_UNITS = 0.12;
+
+/**
  * A frame-to-frame move below this reads as stopped from across a room. Looser than
  * CONTRAPTION's, because a shooter draped over a cactus edge keeps trading sub-tenth wobbles
  * between its links and the surface indefinitely.
@@ -75,13 +108,15 @@ const MIN_DURATION_SECONDS = 1;
 /** Past here a shooter body is gone for good and the track has nothing left to show. */
 const OUT_OF_BOUNDS_MARGIN = 14;
 
+type BodyRole = "shooter" | "pin" | "leg";
+
 type Body = {
   x: number;
   y: number;
   previousX: number;
   previousY: number;
   readonly radius: number;
-  readonly isShooter: boolean;
+  readonly role: BodyRole;
   /** Which pin this body belongs to, so a pin never collides with its own other half. */
   readonly pinIndex: number | null;
 };
@@ -90,8 +125,26 @@ type Pin = {
   readonly footIndex: number;
   readonly headIndex: number;
   readonly homeX: number;
-  readonly homeY: number;
+  homeY: number;
+  /** The perch this pin stands on, so its tower folding can take it down. Null on bare sand. */
+  readonly perchIndex: number | null;
   toppled: boolean;
+};
+
+type Leg = {
+  readonly footIndex: number;
+  readonly topIndex: number;
+  readonly homeX: number;
+  readonly homeY: number;
+  readonly height: number;
+  readonly towerIndex: number;
+};
+
+type Tower = {
+  readonly perchIndex: number;
+  readonly legIndices: readonly number[];
+  readonly slabSegments: readonly Segment[];
+  collapsed: boolean;
 };
 
 type DistanceConstraint = {
@@ -154,16 +207,19 @@ const distanceBetween = (a: JoustVec2, b: JoustVec2): number => {
 const buildBodies = (
   rest: readonly JoustVec2[],
   pinCount: number,
+  legCount: number,
   launch: JoustVec2,
   stepSeconds: number,
   seed: number
 ): Body[] => {
-  const descriptors = resolveJoustBodies(pinCount);
+  const descriptors = resolveJoustBodies(pinCount, legCount);
+  const firstLegBody = joustLegFootIndex(pinCount, 0);
   let seedState = seedStateFrom(seed);
 
   return rest.map((position, bodyIndex): Body => {
     const descriptor = descriptors[bodyIndex];
     const isShooter = bodyIndex < JOUST_SHOOTER_BODY_COUNT;
+    const isLeg = bodyIndex >= firstLegBody;
     let x = position.x;
     let y = position.y;
 
@@ -182,8 +238,9 @@ const buildBodies = (
       previousX: isShooter ? x - launch.x * stepSeconds : x,
       previousY: isShooter ? y - launch.y * stepSeconds : y,
       radius: descriptor?.radius ?? 0,
-      isShooter,
-      pinIndex: isShooter ? null : Math.floor((bodyIndex - JOUST_SHOOTER_BODY_COUNT) / 2)
+      role: isShooter ? "shooter" : isLeg ? "leg" : "pin",
+      pinIndex:
+        isShooter || isLeg ? null : Math.floor((bodyIndex - JOUST_SHOOTER_BODY_COUNT) / 2)
     };
   });
 };
@@ -194,11 +251,66 @@ const buildPins = (arena: JoustArena): Pin[] => {
     headIndex: joustPinHeadIndex(pinIndex),
     homeX: foot.x,
     homeY: foot.y,
+    perchIndex: resolveJoustPinPerchIndex(foot, arena.perches),
     toppled: false
   }));
 };
 
-const buildConstraints = (rest: readonly JoustVec2[], pins: readonly Pin[]): DistanceConstraint[] => {
+/** Every standing tower and the legs under it, legs in `resolveJoustLegs` (frame) order. */
+const buildTowers = (
+  arena: JoustArena,
+  pinCount: number
+): { towers: Tower[]; legs: Leg[] } => {
+  const legs: Leg[] = [];
+  const towers: Tower[] = [];
+
+  resolveJoustLegs(arena.perches, arena.collapsedPerchIndices ?? []).forEach((leg, legIndex) => {
+    let towerIndex = towers.findIndex((tower) => tower.perchIndex === leg.perchIndex);
+
+    if (towerIndex === -1) {
+      const perch = arena.perches[leg.perchIndex];
+
+      towerIndex = towers.length;
+      towers.push({
+        perchIndex: leg.perchIndex,
+        legIndices: [],
+        slabSegments:
+          perch === undefined
+            ? []
+            : resolvePerchSlabSegments(perch).map((segment, index) => ({
+                id: `slab-${leg.perchIndex}-${index}`,
+                from: segment.from,
+                to: segment.to
+              })),
+        collapsed: false
+      });
+    }
+
+    const tower = towers[towerIndex];
+
+    if (tower !== undefined) {
+      (tower.legIndices as number[]).push(legIndex);
+    }
+
+    legs.push({
+      footIndex: joustLegFootIndex(pinCount, legIndex),
+      topIndex: joustLegTopIndex(pinCount, legIndex),
+      homeX: leg.x,
+      homeY: leg.footY,
+      height: leg.footY - leg.topY,
+      towerIndex
+    });
+  });
+
+  return { towers, legs };
+};
+
+const buildConstraints = (
+  rest: readonly JoustVec2[],
+  pins: readonly Pin[],
+  legs: readonly Leg[],
+  towers: readonly Tower[]
+): DistanceConstraint[] => {
   const restBetween = (a: number, b: number): number => {
     const first = rest[a];
     const second = rest[b];
@@ -241,12 +353,32 @@ const buildConstraints = (rest: readonly JoustVec2[], pins: readonly Pin[]): Dis
     });
   }
 
+  // A leg is the same stick, its own height. The slab ties the two tops together, so a tower is
+  // a frame that can only shear: push one leg and the other has to come with it.
+  for (const leg of legs) {
+    constraints.push({ a: leg.footIndex, b: leg.topIndex, rest: leg.height, stiffness: 1 });
+  }
+  for (const tower of towers) {
+    const [first, second] = tower.legIndices;
+    const firstLeg = first === undefined ? undefined : legs[first];
+    const secondLeg = second === undefined ? undefined : legs[second];
+
+    if (firstLeg !== undefined && secondLeg !== undefined) {
+      constraints.push({
+        a: firstLeg.topIndex,
+        b: secondLeg.topIndex,
+        rest: restBetween(firstLeg.topIndex, secondLeg.topIndex),
+        stiffness: 1
+      });
+    }
+  }
+
   return constraints;
 };
 
 const integrate = (bodies: Body[], gravityStep: number): void => {
   for (const body of bodies) {
-    const damping = body.isShooter ? SHOOTER_DAMPING : PIN_DAMPING;
+    const damping = body.role === "shooter" ? SHOOTER_DAMPING : PIN_DAMPING;
     const velocityX = (body.x - body.previousX) * damping;
     const velocityY = (body.y - body.previousY) * damping;
 
@@ -319,6 +451,39 @@ const settlePins = (bodies: Body[], pins: readonly Pin[]): void => {
   }
 };
 
+/**
+ * The same bistable spring for a tower's legs, wound tighter. A folded tower keeps only the
+ * sideways foot pull, so its frame lands where it fell instead of skating down the lane.
+ */
+const settleLegs = (bodies: Body[], legs: readonly Leg[], towers: readonly Tower[]): void => {
+  for (const leg of legs) {
+    const foot = bodies[leg.footIndex];
+    const top = bodies[leg.topIndex];
+    const tower = towers[leg.towerIndex];
+
+    if (foot === undefined || top === undefined || tower === undefined) {
+      continue;
+    }
+
+    const footStiffness = tower.collapsed ? LEG_FOOT_STIFFNESS_DOWN : LEG_FOOT_STIFFNESS;
+
+    foot.x += (leg.homeX - foot.x) * footStiffness;
+
+    if (tower.collapsed) {
+      continue;
+    }
+
+    foot.y += (leg.homeY - foot.y) * footStiffness;
+
+    if (resolveJoustLeanTilt(foot, top, leg.height) > LEG_RECOVERY_TILT) {
+      continue;
+    }
+
+    top.x += (foot.x - top.x) * LEG_UPRIGHT_STIFFNESS;
+    top.y += (foot.y - leg.height - top.y) * LEG_UPRIGHT_STIFFNESS;
+  }
+};
+
 /** Latches every pin that has just passed the point of no return, newest columns last. */
 const latchTopples = (
   bodies: readonly Body[],
@@ -341,7 +506,76 @@ const latchTopples = (
   }
 };
 
-const collideWithSegments = (bodies: Body[], segments: readonly Segment[]): void => {
+/**
+ * A tower whose leg has leaned past `JOUST_TOWER_TOPPLE_TILT` is down: its slab stops being a
+ * floor, and everybody stood on it is dropped and counted on this frame — a player whose tower
+ * fell out from under them is over, wherever they land. Their heads get a shove the way the tower
+ * is going, so they tumble off it rather than riding it down standing up.
+ */
+const latchCollapses = (
+  bodies: Body[],
+  towers: Tower[],
+  legs: readonly Leg[],
+  pins: Pin[],
+  frameIndex: number,
+  collapses: JoustCollapse[],
+  topples: JoustTopple[]
+): boolean => {
+  let didCollapse = false;
+
+  for (const tower of towers) {
+    if (tower.collapsed) {
+      continue;
+    }
+
+    let lean = 0;
+
+    for (const legIndex of tower.legIndices) {
+      const leg = legs[legIndex];
+      const foot = leg === undefined ? undefined : bodies[leg.footIndex];
+      const top = leg === undefined ? undefined : bodies[leg.topIndex];
+
+      if (leg === undefined || foot === undefined || top === undefined) {
+        continue;
+      }
+
+      if (resolveJoustLeanTilt(foot, top, leg.height) > JOUST_TOWER_TOPPLE_TILT) {
+        lean = top.x - foot.x;
+      }
+    }
+
+    if (lean === 0) {
+      continue;
+    }
+
+    tower.collapsed = true;
+    didCollapse = true;
+    collapses.push({ perchIndex: tower.perchIndex, frameIndex });
+
+    const direction = lean > 0 ? 1 : -1;
+
+    for (const [pinIndex, pin] of pins.entries()) {
+      const head = bodies[pin.headIndex];
+
+      if (pin.toppled || pin.perchIndex !== tower.perchIndex || head === undefined) {
+        continue;
+      }
+
+      pin.toppled = true;
+      pin.homeY = JOUST_WORLD.floorY - JOUST_PIN_FOOT_RADIUS;
+      head.previousX -= DROP_KICK_UNITS * direction;
+      topples.push({ pinIndex, frameIndex });
+    }
+  }
+
+  return didCollapse;
+};
+
+const collideWithSegments = (
+  bodies: Body[],
+  segments: readonly Segment[],
+  staticSegments: readonly Segment[]
+): void => {
   for (const body of bodies) {
     const step: BodyStep = {
       x: body.x,
@@ -351,12 +585,14 @@ const collideWithSegments = (bodies: Body[], segments: readonly Segment[]): void
     };
     const resolved = resolveSegmentContacts(
       step,
-      {
-        radius: body.radius,
-        restitution: body.isShooter ? SHOOTER_RESTITUTION : PIN_RESTITUTION,
-        slip: body.isShooter ? SHOOTER_SLIP : PIN_SLIP
-      },
-      segments
+      body.role === "shooter"
+        ? { radius: body.radius, restitution: SHOOTER_RESTITUTION, slip: SHOOTER_SLIP }
+        : body.role === "leg"
+          ? { radius: body.radius, restitution: LEG_RESTITUTION, slip: LEG_SLIP }
+          : { radius: body.radius, restitution: PIN_RESTITUTION, slip: PIN_SLIP },
+      // A leg's top sits flush under its own slab; testing it against slabs at all would only
+      // jitter it, so legs meet the floor, the wall and the cacti and nothing built.
+      body.role === "leg" ? staticSegments : segments
     );
 
     body.x = resolved.x;
@@ -371,9 +607,9 @@ const clampUnit = (value: number): number => {
 };
 
 /**
- * One circular body against one pin, treated as the capsule it is drawn as rather than as its two
- * endpoints. A two-body pin has a bird-sized hole between foot and head, and a flat shot sails
- * clean through it; closing that hole is what makes the rack hittable at all.
+ * One circular body against one stick — a pin or a leg — treated as the capsule it is drawn as
+ * rather than as its two endpoints. A two-body pin has a bird-sized hole between foot and head,
+ * and a flat shot sails clean through it; closing that hole is what makes the rack hittable at all.
  *
  * The push lands where the contact is: a blow near the head puts almost all of itself into the
  * head and almost none into the foot, which is exactly the torque that puts a pin over. Positions
@@ -383,7 +619,7 @@ const clampUnit = (value: number): number => {
  * is light next to the flying schlong, so the shot keeps its legs and ploughs on down the rack
  * instead of stopping dead in the first player it meets.
  */
-const collideCircleWithPin = (
+const collideCircleWithStick = (
   body: Body,
   foot: Body,
   head: Body,
@@ -425,7 +661,7 @@ const collideCircleWithPin = (
  * neighbours with it and the lane goes down like bowling. A pin is never tested against its own
  * shaft; its two halves are held by their stick.
  */
-const collideRack = (bodies: Body[], pins: readonly Pin[]): void => {
+const collideRack = (bodies: Body[], pins: readonly Pin[], legs: readonly Leg[]): void => {
   for (const pin of pins) {
     const foot = bodies[pin.footIndex];
     const head = bodies[pin.headIndex];
@@ -438,7 +674,7 @@ const collideRack = (bodies: Body[], pins: readonly Pin[]): void => {
       const shooterBody = bodies[bodyIndex];
 
       if (shooterBody !== undefined) {
-        collideCircleWithPin(shooterBody, foot, head, SHOOTER_MASS_SHARE);
+        collideCircleWithStick(shooterBody, foot, head, SHOOTER_MASS_SHARE);
       }
     }
 
@@ -450,8 +686,42 @@ const collideRack = (bodies: Body[], pins: readonly Pin[]): void => {
         continue;
       }
 
-      collideCircleWithPin(head, neighbourFoot, neighbourHead, 0.5);
-      collideCircleWithPin(foot, neighbourFoot, neighbourHead, 0.5);
+      collideCircleWithStick(head, neighbourFoot, neighbourHead, 0.5);
+      collideCircleWithStick(foot, neighbourFoot, neighbourHead, 0.5);
+    }
+
+    // Birds against timber: a pin bounces off a standing leg, and a folding tower's frame sweeps
+    // whoever is stood beneath it — which is what makes bringing one down worth the shot.
+    for (const leg of legs) {
+      const legFoot = bodies[leg.footIndex];
+      const legTop = bodies[leg.topIndex];
+
+      if (legFoot === undefined || legTop === undefined) {
+        continue;
+      }
+
+      collideCircleWithStick(head, legFoot, legTop, PIN_LEG_SHARE);
+      collideCircleWithStick(foot, legFoot, legTop, PIN_LEG_SHARE);
+    }
+  }
+};
+
+/** The shot against the towers: the contact that can fold a leg, if there is enough behind it. */
+const collideTowers = (bodies: Body[], legs: readonly Leg[]): void => {
+  for (const leg of legs) {
+    const foot = bodies[leg.footIndex];
+    const top = bodies[leg.topIndex];
+
+    if (foot === undefined || top === undefined) {
+      continue;
+    }
+
+    for (let bodyIndex = 0; bodyIndex < JOUST_SHOOTER_BODY_COUNT; bodyIndex += 1) {
+      const shooterBody = bodies[bodyIndex];
+
+      if (shooterBody !== undefined) {
+        collideCircleWithStick(shooterBody, foot, top, SHOOTER_LEG_SHARE);
+      }
     }
   }
 };
@@ -487,12 +757,20 @@ const isShooterGone = (bodies: readonly Body[]): boolean => {
   return true;
 };
 
-const toSegments = (arena: JoustArena): Segment[] => {
-  return resolveJoustSegments(arena).map((segment, index) => ({
+const toStaticSegments = (arena: JoustArena): Segment[] => {
+  return resolveJoustStaticSegments(arena).map((segment, index) => ({
     id: `segment-${index}`,
     from: segment.from,
     to: segment.to
   }));
+};
+
+/** The static geometry plus the slab of every tower still on its legs. */
+const toActiveSegments = (staticSegments: readonly Segment[], towers: readonly Tower[]): Segment[] => {
+  return [
+    ...staticSegments,
+    ...towers.flatMap((tower) => (tower.collapsed ? [] : tower.slabSegments))
+  ];
 };
 
 /**
@@ -518,20 +796,25 @@ export const simulateJoustShot = (
   const totalSteps = Math.round(options.maxDurationSeconds * options.stepHz);
   const minSteps = Math.round(MIN_DURATION_SECONDS * options.stepHz);
 
+  const pinCount = arena.pinFeet.length;
+  const { towers, legs } = buildTowers(arena, pinCount);
   const rest = resolveJoustRestPositions(arena, clampedAim);
   const bodies = buildBodies(
     rest,
-    arena.pinFeet.length,
+    pinCount,
+    legs.length,
     resolveJoustLaunchVelocity(clampedAim),
     stepSeconds,
     options.seed
   );
   const pins = buildPins(arena);
-  const constraints = buildConstraints(rest, pins);
-  const segments = toSegments(arena);
+  const constraints = buildConstraints(rest, pins, legs, towers);
+  const staticSegments = toStaticSegments(arena);
+  let segments = toActiveSegments(staticSegments, towers);
 
   const keyframes: JoustFrame[] = [toJoustFrame(bodies)];
   const topples: JoustTopple[] = [];
+  const collapses: JoustCollapse[] = [];
   let stillFrames = 0;
   let quietRackFrames = 0;
 
@@ -543,10 +826,16 @@ export const simulateJoustShot = (
     }
 
     settlePins(bodies, pins);
+    settleLegs(bodies, legs, towers);
 
-    collideWithSegments(bodies, segments);
-    collideRack(bodies, pins);
+    collideWithSegments(bodies, segments, staticSegments);
+    collideTowers(bodies, legs);
+    collideRack(bodies, pins, legs);
     latchTopples(bodies, pins, keyframes.length, topples);
+
+    if (latchCollapses(bodies, towers, legs, pins, keyframes.length, collapses, topples)) {
+      segments = toActiveSegments(staticSegments, towers);
+    }
 
     if (stepIndex % stepsPerKeyframe !== 0) {
       continue;
@@ -579,12 +868,18 @@ export const simulateJoustShot = (
     }
   }
 
+  const lastFrameIndex = keyframes.length - 1;
+
   return {
     keyframeHz: options.keyframeHz,
     keyframes,
     topples: topples.map((topple) => ({
       pinIndex: topple.pinIndex,
-      frameIndex: Math.min(topple.frameIndex, keyframes.length - 1)
+      frameIndex: Math.min(topple.frameIndex, lastFrameIndex)
+    })),
+    collapses: collapses.map((collapse) => ({
+      perchIndex: collapse.perchIndex,
+      frameIndex: Math.min(collapse.frameIndex, lastFrameIndex)
     }))
   };
 };

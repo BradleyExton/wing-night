@@ -31,7 +31,7 @@ const ShotResultCard = ({
   shot: JoustShotResult;
   nameByPlayerId: Map<string, string>;
 }): JSX.Element => {
-  const copy = resolveShotCopy(shot.toppledPlayerIds.length, shot.isRackCleared);
+  const copy = resolveShotCopy(shot);
   const isHit = shot.toppledPlayerIds.length > 0;
   const names = shot.toppledPlayerIds.map((playerId) => nameByPlayerId.get(playerId) ?? playerId);
 
@@ -174,6 +174,8 @@ export const HostJoustSurface = ({
                     teammates={joustView.teammates}
                     activeShooterPlayerId={joustView.activeShooterPlayerId}
                     downPlayerIds={joustView.downPlayerIds}
+                    collapsedPerchIndices={joustView.collapsedPerchIndices}
+                    previousShotGhost={joustView.previousShotGhost}
                     serverOrigin={serverOrigin}
                     aim={joustView.aim}
                     lastShot={joustView.lastShot}

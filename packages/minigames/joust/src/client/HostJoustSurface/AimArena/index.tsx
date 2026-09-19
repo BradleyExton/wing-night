@@ -4,7 +4,8 @@ import type {
   JoustAim,
   JoustMinigameArena,
   JoustMinigameShot,
-  JoustPlayerFigure
+  JoustPlayerFigure,
+  JoustShotGhost
 } from "@wingnight/shared";
 import { JOUST_WORLD, clampJoustAim } from "@wingnight/shared";
 
@@ -24,6 +25,8 @@ type AimArenaProps = {
   teammates: JoustPlayerFigure[];
   activeShooterPlayerId: string | null;
   downPlayerIds: string[];
+  collapsedPerchIndices: number[];
+  previousShotGhost: JoustShotGhost | null;
   serverOrigin: string | null;
   aim: JoustAim;
   lastShot: JoustMinigameShot | null;
@@ -78,6 +81,8 @@ export const AimArena = ({
   teammates,
   activeShooterPlayerId,
   downPlayerIds,
+  collapsedPerchIndices,
+  previousShotGhost,
   serverOrigin,
   aim,
   lastShot,
@@ -93,7 +98,16 @@ export const AimArena = ({
   const replayIndex = useShotReplay(lastShot);
   const shownAim = localAim ?? aim;
   const isAiming = lastShot === null && (canAim || magnitude(shownAim) > 0);
-  const scene = resolveJoustScene(arena, lineup, downPlayerIds, shownAim, lastShot, replayIndex);
+  const scene = resolveJoustScene({
+    arena,
+    lineup,
+    downPlayerIds,
+    collapsedPerchIndices,
+    aim: shownAim,
+    lastShot,
+    replayIndex,
+    previousShotGhost
+  });
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
     if (!canAim || lastShot !== null) {
@@ -166,11 +180,15 @@ export const AimArena = ({
         frame={scene.frame}
         pins={scene.pins}
         fallen={scene.fallen}
+        legs={scene.legs}
+        rubblePerchIndices={scene.rubblePerchIndices}
+        collapsingPerchIndices={scene.collapsingPerchIndices}
         teammates={teammates}
         activeShooterPlayerId={activeShooterPlayerId}
         isAiming={isAiming}
         burstPinIndices={scene.burstPinIndices}
         trail={scene.trail}
+        ghost={scene.ghost}
         serverOrigin={serverOrigin}
         sceneId="host-joust"
         label={sceneLabel}

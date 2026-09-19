@@ -1,7 +1,7 @@
 export const displayJoustSurfaceCopy = {
   introTitle: "Slingshlong",
   introDescription:
-    "One slingshot, one very floppy projectile, and everyone who isn't on your team up on the scaffolding down the lane. Every player on the team gets one shot. Knock down as many of the rest of the room as you can.",
+    "One slingshot, one very floppy projectile, and everyone who isn't on your team up on the scaffolding down the lane. Every player on the team gets one shot. Knock down as many of the rest of the room as you can — a shelf pays double, and a hard shot into a tower's legs brings the whole thing down.",
   title: "Desert Lanes",
   shotCounter: (shotNumber: number, shotsTotal: number): string =>
     `Shot ${shotNumber} of ${shotsTotal}`,

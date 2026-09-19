@@ -28,7 +28,7 @@ const ResultPlaque = ({
   shot: JoustMinigameShot;
   nameByPlayerId: Map<string, string>;
 }): JSX.Element => {
-  const copy = resolveShotCopy(shot.toppledPlayerIds.length, shot.isRackCleared);
+  const copy = resolveShotCopy(shot);
   const isHit = shot.toppledPlayerIds.length > 0;
   const names = shot.toppledPlayerIds.map((playerId) => nameByPlayerId.get(playerId) ?? playerId);
 
@@ -60,7 +60,7 @@ const resolveStatusLine = (view: JoustMinigameDisplayView, replayFinished: boole
 
   if (view.lastShot !== null) {
     return replayFinished
-      ? resolveShotCopy(view.lastShot.toppledPlayerIds.length, view.lastShot.isRackCleared).title
+      ? resolveShotCopy(view.lastShot).title
       : displayJoustSurfaceCopy.flyingPrompt;
   }
 
@@ -103,14 +103,16 @@ const JoustPlayBody = ({
   const scene =
     arena === null
       ? null
-      : resolveJoustScene(
+      : resolveJoustScene({
           arena,
-          view.lineup,
-          view.downPlayerIds,
-          view.aim,
-          view.lastShot,
-          replayIndex
-        );
+          lineup: view.lineup,
+          downPlayerIds: view.downPlayerIds,
+          collapsedPerchIndices: view.collapsedPerchIndices,
+          aim: view.aim,
+          lastShot: view.lastShot,
+          replayIndex,
+          previousShotGhost: view.previousShotGhost
+        });
   const nameByPlayerId = new Map(
     view.lineup.map((figure) => [figure.playerId, figure.name] as const)
   );
@@ -144,11 +146,15 @@ const JoustPlayBody = ({
               frame={scene.frame}
               pins={scene.pins}
               fallen={scene.fallen}
+              legs={scene.legs}
+              rubblePerchIndices={scene.rubblePerchIndices}
+              collapsingPerchIndices={scene.collapsingPerchIndices}
               teammates={view.teammates}
               activeShooterPlayerId={view.activeShooterPlayerId}
               isAiming={view.lastShot === null}
               burstPinIndices={scene.burstPinIndices}
               trail={scene.trail}
+              ghost={scene.ghost}
               serverOrigin={serverOrigin}
               sceneId="display-joust"
               label={displayJoustSurfaceCopy.sceneLabel(arena.name)}

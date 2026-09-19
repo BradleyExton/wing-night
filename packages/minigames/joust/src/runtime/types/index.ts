@@ -4,6 +4,7 @@ import type {
   JoustMinigameShot,
   JoustPhase,
   JoustPlayerFigure,
+  JoustShotGhost,
   JoustShotResult,
   JoustSimulateOptions
 } from "@wingnight/shared";
@@ -26,6 +27,11 @@ export type JoustRuntimeState = {
   // Everyone this turn has already put on the sand. They sit out the remaining shots, which is
   // what makes three shots a bowling frame rather than three identical ones.
   downPlayerIds: string[];
+  // Every tower this turn has brought down, by index into the lane's perches. Rubble from then
+  // on: nothing is built for it, and everyone who stood on it is in `downPlayerIds`.
+  collapsedPerchIndices: number[];
+  // The shot before the one being aimed, for the next teammate to adjust off. Null on shot one.
+  previousShotGhost: JoustShotGhost | null;
   shotsPerTurn: number;
   shotIndex: number;
   phase: JoustPhase;
@@ -45,7 +51,11 @@ export type JoustRuntimeState = {
  */
 export const DEFAULT_JOUST_SHOTS_PER_PLAYER = 1;
 
-/** One point a head, like bowling counts pins — the shot that fells five is worth five. */
+/**
+ * A player is worth what they were stood on: one a head on the sand, like bowling counts pins,
+ * and more up a tower (`resolveJoustPerchPoints`). The tower is the harder target and the bigger
+ * prize, which is what makes it a choice rather than a nuisance.
+ */
 export const JOUST_POINTS_PER_TOPPLE = 1;
 /** For a shot that leaves nobody standing. The only bonus in the game, and the one to chase. */
 export const JOUST_RACK_CLEARED_BONUS = 3;

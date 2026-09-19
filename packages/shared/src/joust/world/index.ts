@@ -58,6 +58,21 @@ const shooterShaft: JoustBodyDescriptor = {
 const pinFoot: JoustBodyDescriptor = { kind: "pin-foot", radius: JOUST_PIN_FOOT_RADIUS };
 const pinHead: JoustBodyDescriptor = { kind: "pin-head", radius: JOUST_PIN_HEAD_RADIUS };
 
+/** A perch's own timber: the slab birds stand on, and the two legs holding it up. */
+export const JOUST_PERCH_THICKNESS = 3;
+export const JOUST_PERCH_LEG_WIDTH = 2.6;
+/** Legs hug the slab's ends, so the span between them is all standing room. */
+export const JOUST_PERCH_LEG_INSET = 0.4;
+/**
+ * A tower's leg is a body, not a wall: a foot on the sand and a top under the slab, collided
+ * against as the capsule it is drawn as — the same shape as a pin, only taller and far heavier.
+ * That is what makes a tower something a shot can bring DOWN rather than only bounce off.
+ */
+export const JOUST_LEG_RADIUS = JOUST_PERCH_LEG_WIDTH / 2;
+
+const legFoot: JoustBodyDescriptor = { kind: "leg-foot", radius: JOUST_LEG_RADIUS };
+const legTop: JoustBodyDescriptor = { kind: "leg-top", radius: JOUST_LEG_RADIUS };
+
 /** The shooter's own bodies, tail → head, then the two balls hung off the tail. */
 const JOUST_SHOOTER_BODIES: readonly JoustBodyDescriptor[] = Object.freeze([
   ...Array.from({ length: JOUST_SHOOTER_SHAFT_COUNT }, () => shooterShaft),
@@ -82,18 +97,36 @@ export const joustPinHeadIndex = (pinIndex: number): number => {
   return joustPinFootIndex(pinIndex) + 1;
 };
 
+/** Where leg `legIndex`'s foot sits in a frame of a lane racking `pinCount` pins; its top is next. */
+export const joustLegFootIndex = (pinCount: number, legIndex: number): number => {
+  return JOUST_SHOOTER_BODY_COUNT + Math.max(0, Math.trunc(pinCount)) * 2 + legIndex * 2;
+};
+
+export const joustLegTopIndex = (pinCount: number, legIndex: number): number => {
+  return joustLegFootIndex(pinCount, legIndex) + 1;
+};
+
 /**
  * The one body order every frame, every renderer and the integrator agree on: the shooter,
- * then a foot/head pair per standing pin in lane order. The length follows the rack, so a turn
- * that has already felled four players simulates four bodies lighter.
+ * then a foot/head pair per standing pin in lane order, then a foot/top pair per leg of every
+ * tower still standing. The length follows the rack, so a turn that has already felled four
+ * players simulates four bodies lighter — and legs come LAST so felling a player never moves
+ * a tower's bodies, and bringing a tower down never moves a pin's.
  */
-export const resolveJoustBodies = (pinCount: number): readonly JoustBodyDescriptor[] => {
+export const resolveJoustBodies = (
+  pinCount: number,
+  legCount = 0
+): readonly JoustBodyDescriptor[] => {
   const safeCount = Math.max(0, Math.trunc(pinCount));
+  const safeLegCount = Math.max(0, Math.trunc(legCount));
 
   return [
     ...JOUST_SHOOTER_BODIES,
     ...Array.from({ length: safeCount * 2 }, (_unused, index) =>
       index % 2 === 0 ? pinFoot : pinHead
+    ),
+    ...Array.from({ length: safeLegCount * 2 }, (_unused, index) =>
+      index % 2 === 0 ? legFoot : legTop
     )
   ];
 };
@@ -104,11 +137,6 @@ export const JOUST_RACK_RIGHT = JOUST_WORLD.width - 4;
 /** The highest a perch may lift a player: any higher and their head leaves the world. */
 export const JOUST_RACK_TOP = 22;
 
-/** A perch's own timber: the slab birds stand on, and the two legs holding it up. */
-export const JOUST_PERCH_THICKNESS = 3;
-export const JOUST_PERCH_LEG_WIDTH = 2.6;
-/** Legs hug the slab's ends, so the span between them is all standing room. */
-export const JOUST_PERCH_LEG_INSET = 0.4;
 /** How far a player's feet stay from the end of their own shelf. */
 export const JOUST_PERCH_MARGIN = JOUST_PIN_HEAD_RADIUS + 1;
 /**
@@ -122,31 +150,38 @@ export const isGroundPerch = (perch: JoustPerch): boolean => {
   return perch.y >= JOUST_WORLD.floorY - 0.001;
 };
 
-/**
- * The timber one perch is made of, as collision boxes. Generated rather than authored so a lane
- * cannot draw a platform that a shot passes straight through — and so the legs are solid too,
- * which is what makes a low flat shot something you have to thread rather than spam.
- */
-export const resolvePerchBoxes = (perch: JoustPerch): JoustObstacle[] => {
+/** The plank a built perch's players stand on; the sand has none. */
+export const resolvePerchSlab = (perch: JoustPerch): JoustObstacle | null => {
   if (isGroundPerch(perch)) {
-    return [];
+    return null;
   }
 
-  const slab: JoustObstacle = {
+  return {
     x: perch.x,
     y: perch.y,
     width: perch.width,
     height: JOUST_PERCH_THICKNESS
   };
+};
+
+/** One leg of a tower: where it stands, and the two body centres it is simulated as. */
+export type JoustLeg = {
+  readonly perchIndex: number;
+  readonly x: number;
+  readonly footY: number;
+  readonly topY: number;
+};
+
+/** The legs holding a slab up, as boxes: the footprint the slot dealer keeps players out of. */
+const resolvePerchLegBoxes = (perch: JoustPerch): JoustObstacle[] => {
   const legTop = perch.y + JOUST_PERCH_THICKNESS;
   const legHeight = JOUST_WORLD.floorY - legTop;
 
-  if (legHeight <= 0) {
-    return [slab];
+  if (isGroundPerch(perch) || legHeight <= 0) {
+    return [];
   }
 
   return [
-    slab,
     {
       x: perch.x + JOUST_PERCH_LEG_INSET,
       y: legTop,
@@ -160,6 +195,85 @@ export const resolvePerchBoxes = (perch: JoustPerch): JoustObstacle[] => {
       height: legHeight
     }
   ];
+};
+
+/**
+ * The timber one perch is made of, as boxes. Generated rather than authored so a lane cannot
+ * draw a platform and forget to make it solid. This is the LAYOUT view of a tower — what the slot
+ * dealer keeps players clear of and what content validation measures; the integrator collides
+ * the slab as a segment and the legs as bodies (`resolveJoustLegs`).
+ */
+export const resolvePerchBoxes = (perch: JoustPerch): JoustObstacle[] => {
+  const slab = resolvePerchSlab(perch);
+
+  return slab === null ? [] : [slab, ...resolvePerchLegBoxes(perch)];
+};
+
+/**
+ * Every leg in the lane that is still holding something up, two per built perch in perch order,
+ * skipping towers already in rubble. A shelf hung so low its legs would be shorter than they are
+ * wide gets none: its slab sits on the sand and is a wall, not a tower.
+ */
+export const resolveJoustLegs = (
+  perches: readonly JoustPerch[],
+  collapsedPerchIndices: readonly number[] = []
+): JoustLeg[] => {
+  const collapsed = new Set(collapsedPerchIndices);
+
+  return perches.flatMap((perch, perchIndex): JoustLeg[] => {
+    if (collapsed.has(perchIndex)) {
+      return [];
+    }
+
+    return resolvePerchLegBoxes(perch).map((box) => ({
+      perchIndex,
+      x: box.x + box.width / 2,
+      footY: JOUST_WORLD.floorY - JOUST_LEG_RADIUS,
+      topY: box.y + JOUST_LEG_RADIUS
+    }));
+  });
+};
+
+/** Whether a perch is a tower a shot could bring down, rather than sand or a slab on the sand. */
+export const isCollapsiblePerch = (perch: JoustPerch): boolean => {
+  return resolvePerchLegBoxes(perch).length > 0;
+};
+
+/**
+ * What a player stood on this perch is worth when they go over: one on the sand, like bowling,
+ * and more the higher the shelf — every `JOUST_PERCH_POINTS_TIER` units up adds one, to a cap.
+ * The tower is the harder target and the bigger prize, which is what makes it a choice.
+ */
+export const JOUST_PERCH_POINTS_TIER = 20;
+export const JOUST_PERCH_POINTS_MAX = 3;
+
+export const resolveJoustPerchPoints = (perch: JoustPerch | null): number => {
+  if (perch === null || isGroundPerch(perch)) {
+    return 1;
+  }
+
+  const rise = JOUST_WORLD.floorY - perch.y;
+
+  return Math.min(JOUST_PERCH_POINTS_MAX, 1 + Math.floor(rise / JOUST_PERCH_POINTS_TIER));
+};
+
+/**
+ * Which perch a pin planted at `foot` is standing on, or null for bare sand nobody authored (the
+ * crowded-roster fallback rows). Read off the geometry rather than carried on the pin, so the
+ * integrator, the scorer and the renderer can never disagree about whose tower a player is on.
+ */
+export const resolveJoustPinPerchIndex = (
+  foot: JoustVec2,
+  perches: readonly JoustPerch[]
+): number | null => {
+  const index = perches.findIndex(
+    (perch) =>
+      Math.abs(perch.y - JOUST_PIN_FOOT_RADIUS - foot.y) < 0.01 &&
+      foot.x >= perch.x - 0.01 &&
+      foot.x <= perch.x + perch.width + 0.01
+  );
+
+  return index === -1 ? null : index;
 };
 
 const overlaps = (low: number, high: number, boxLow: number, boxHigh: number): boolean => {
@@ -418,12 +532,26 @@ export const resolvePinRestPositions = (arena: JoustArena): JoustVec2[] => {
   ]);
 };
 
+/** Every standing tower's legs, bolt upright, foot then top, in `resolveJoustLegs` order. */
+export const resolveLegRestPositions = (arena: JoustArena): JoustVec2[] => {
+  return resolveJoustLegs(arena.perches, arena.collapsedPerchIndices ?? []).flatMap(
+    (leg): JoustVec2[] => [
+      { x: leg.x, y: leg.footY },
+      { x: leg.x, y: leg.topY }
+    ]
+  );
+};
+
 /** The full body set at rest for a pull — what both surfaces draw while the team is aiming. */
 export const resolveJoustRestPositions = (
   arena: JoustArena,
   aim: JoustAim
 ): JoustVec2[] => {
-  return [...resolveShooterRestPositions(aim), ...resolvePinRestPositions(arena)];
+  return [
+    ...resolveShooterRestPositions(aim),
+    ...resolvePinRestPositions(arena),
+    ...resolveLegRestPositions(arena)
+  ];
 };
 
 export const toJoustFrame = (positions: readonly JoustVec2[]): JoustFrame => {
@@ -456,12 +584,21 @@ export const resolveJoustRestFrame = (arena: JoustArena, aim: JoustAim): JoustFr
  * the sand. Shared by the integrator, which latches a topple, and the renderer, which draws the
  * lean — one definition, so the TV never shows a pin standing that the score says is down.
  */
+export const resolveJoustLeanTilt = (foot: JoustVec2, top: JoustVec2, height: number): number => {
+  return height <= 0 ? 0 : Math.abs(top.x - foot.x) / height;
+};
+
 export const resolveJoustPinTilt = (foot: JoustVec2, head: JoustVec2): number => {
-  return Math.abs(head.x - foot.x) / JOUST_PIN_HEIGHT;
+  return resolveJoustLeanTilt(foot, head, JOUST_PIN_HEIGHT);
 };
 
 /** Past this lean a pin is over and never gets back up. */
 export const JOUST_TOPPLE_TILT = 0.45;
+/**
+ * Past this lean, as a fraction of its own height, a tower's leg has folded: the slab it held
+ * stops being a floor and everyone on it is going down with it.
+ */
+export const JOUST_TOWER_TOPPLE_TILT = 0.4;
 
 export type JoustSegment = {
   readonly from: JoustVec2;
@@ -482,8 +619,12 @@ const obstacleSegments = (obstacle: JoustObstacle): JoustSegment[] => {
   ];
 };
 
-/** The floor, the back wall, and every obstacle edge — all the static geometry a shot can hit. */
-export const resolveJoustSegments = (arena: JoustArena): JoustSegment[] => {
+/**
+ * The floor, the back wall, and every obstacle edge: the geometry that is there whatever happens
+ * to the towers. Slabs are kept apart (`resolvePerchSlabSegments`) because a slab stops being
+ * solid the moment its legs fold.
+ */
+export const resolveJoustStaticSegments = (arena: JoustArena): JoustSegment[] => {
   const farLeft = -20;
   const farRight = JOUST_WORLD.width + 40;
 
@@ -495,7 +636,25 @@ export const resolveJoustSegments = (arena: JoustArena): JoustSegment[] => {
     // Well behind the slingshot, so a fully drawn shooter never touches it; it only stops a
     // shot fired backwards from leaving the world entirely.
     { from: { x: -30, y: -60 }, to: { x: -30, y: JOUST_WORLD.floorY } },
-    ...arena.perches.flatMap(resolvePerchBoxes).flatMap(obstacleSegments),
     ...arena.obstacles.flatMap(obstacleSegments)
+  ];
+};
+
+/** The four edges of one perch's slab, or none for the sand. */
+export const resolvePerchSlabSegments = (perch: JoustPerch): JoustSegment[] => {
+  const slab = resolvePerchSlab(perch);
+
+  return slab === null ? [] : obstacleSegments(slab);
+};
+
+/** Everything a shot can hit in a lane as it stands: the static geometry plus every standing slab. */
+export const resolveJoustSegments = (arena: JoustArena): JoustSegment[] => {
+  const collapsed = new Set(arena.collapsedPerchIndices ?? []);
+
+  return [
+    ...resolveJoustStaticSegments(arena),
+    ...arena.perches.flatMap((perch, perchIndex) =>
+      collapsed.has(perchIndex) ? [] : resolvePerchSlabSegments(perch)
+    )
   ];
 };

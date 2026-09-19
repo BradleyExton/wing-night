@@ -29,6 +29,10 @@ const isStringArray = (value: unknown): value is string[] => {
   return Array.isArray(value) && value.every((entry) => typeof entry === "string");
 };
 
+const isIndexArray = (value: unknown): value is number[] => {
+  return Array.isArray(value) && value.every(isNonNegativeInteger);
+};
+
 const isPlayerFigure = (value: unknown): boolean => {
   return (
     isObjectLike(value) &&
@@ -43,6 +47,7 @@ const isShotResult = (value: unknown): boolean => {
     isObjectLike(value) &&
     isNonNegativeInteger(value.shotNumber) &&
     isStringArray(value.toppledPlayerIds) &&
+    isIndexArray(value.collapsedPerchIndices) &&
     typeof value.isRackCleared === "boolean" &&
     isFiniteNumber(value.points)
   );
@@ -56,14 +61,28 @@ const isTopple = (value: unknown): boolean => {
   );
 };
 
+const isCollapse = (value: unknown): boolean => {
+  return (
+    isObjectLike(value) &&
+    isNonNegativeInteger(value.perchIndex) &&
+    isNonNegativeInteger(value.frameIndex)
+  );
+};
+
 const isShotRun = (value: unknown): boolean => {
-  if (!isObjectLike(value) || !Array.isArray(value.keyframes) || !Array.isArray(value.topples)) {
+  if (
+    !isObjectLike(value) ||
+    !Array.isArray(value.keyframes) ||
+    !Array.isArray(value.topples) ||
+    !Array.isArray(value.collapses)
+  ) {
     return false;
   }
 
   return (
     isFiniteNumber(value.keyframeHz) &&
     value.topples.every(isTopple) &&
+    value.collapses.every(isCollapse) &&
     value.keyframes.every(
       (frame) => Array.isArray(frame) && frame.every((entry) => isFiniteNumber(entry))
     )
@@ -80,7 +99,22 @@ const isLastShotOrNull = (value: unknown): boolean => {
     isObjectLike(value) &&
     isJoustAim(value.aim) &&
     isStringArray(value.pinPlayerIds) &&
+    isIndexArray(value.rubblePerchIndices) &&
     isShotRun(value.run)
+  );
+};
+
+const isGhostOrNull = (value: unknown): boolean => {
+  if (value === null) {
+    return true;
+  }
+
+  return (
+    isObjectLike(value) &&
+    isNonNegativeInteger(value.shotNumber) &&
+    isJoustAim(value.aim) &&
+    Array.isArray(value.path) &&
+    value.path.every(isJoustAim)
   );
 };
 
@@ -105,6 +139,8 @@ export const isJoustRuntimeState = (
     Array.isArray(state.teammates) &&
     state.teammates.every(isPlayerFigure) &&
     isStringArray(state.downPlayerIds) &&
+    isIndexArray(state.collapsedPerchIndices) &&
+    isGhostOrNull(state.previousShotGhost) &&
     isNonNegativeInteger(state.shotsPerTurn) &&
     isNonNegativeInteger(state.shotIndex) &&
     isJoustPhase(state.phase) &&

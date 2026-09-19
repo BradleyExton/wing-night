@@ -1,5 +1,5 @@
 import type { JoustPerch, JoustPlayerFigure, Player, Team } from "@wingnight/shared";
-import { resolveJoustRackSlots } from "@wingnight/shared";
+import { resolveJoustPinPerchIndex, resolveJoustRackSlots } from "@wingnight/shared";
 
 export type JoustRosterInput = {
   players: Player[];
@@ -16,6 +16,9 @@ export type JoustRoster = {
 export type JoustStandingPin = JoustPlayerFigure & {
   // Index into the FULL lineup, so a felled player's gap is still a gap.
   slotIndex: number;
+  // Which of the lane's perches they are stood on — what they are worth, and whose tower folding
+  // takes them down. Null on bare sand the lane never authored.
+  perchIndex: number | null;
   x: number;
   y: number;
 };
@@ -82,7 +85,15 @@ export const resolveStandingPins = (
       return [];
     }
 
-    return [{ ...figure, slotIndex, x: slot.x, y: slot.y }];
+    return [
+      {
+        ...figure,
+        slotIndex,
+        perchIndex: resolveJoustPinPerchIndex(slot, perches),
+        x: slot.x,
+        y: slot.y
+      }
+    ];
   });
 };
 

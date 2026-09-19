@@ -5,7 +5,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type {
   JoustMinigameDisplayView,
   JoustMinigameShot,
-  JoustPlayerFigure
+  JoustPlayerFigure,
+  JoustShotGhost
 } from "@wingnight/shared";
 import { resolveJoustRackSlots, resolveJoustRestFrame } from "@wingnight/shared";
 
@@ -48,18 +49,31 @@ const restFrame = resolveJoustRestFrame(
 const pileUp: JoustMinigameShot = {
   shotNumber: 2,
   toppledPlayerIds: ["p4", "p5"],
+  collapsedPerchIndices: [],
   isRackCleared: false,
   points: 2,
   aim: { x: -0.8, y: 0.5 },
   pinPlayerIds: ["p4", "p5", "p6"],
+  rubblePerchIndices: [],
   run: {
     keyframeHz: 24,
     keyframes: [[...restFrame]],
     topples: [
       { pinIndex: 0, frameIndex: 0 },
       { pinIndex: 1, frameIndex: 0 }
-    ]
+    ],
+    collapses: []
   }
+};
+
+const ghost: JoustShotGhost = {
+  shotNumber: 1,
+  aim: { x: -0.8, y: 0.5 },
+  path: [
+    { x: 40, y: 46 },
+    { x: 70, y: 30 },
+    { x: 110, y: 40 }
+  ]
 };
 
 const baseView = (overrides: Partial<JoustMinigameDisplayView> = {}): JoustMinigameDisplayView => ({
@@ -71,6 +85,8 @@ const baseView = (overrides: Partial<JoustMinigameDisplayView> = {}): JoustMinig
   lineup: LINEUP,
   teammates: TEAMMATES,
   downPlayerIds: [],
+  collapsedPerchIndices: [],
+  previousShotGhost: null,
   activeShooterPlayerId: "p1",
   shotsPerTurn: 3,
   shotIndex: 1,
@@ -147,6 +163,43 @@ test("names who went over on the plaque once the replay has landed", () => {
   assert.match(html, /Rosie/);
   assert.match(html, /Darren/);
   assert.match(html, /\+2/);
+});
+
+test("stands the tower on two legs drawn from its bodies, and tags what the shelf pays", () => {
+  const html = renderSurface(baseView());
+
+  assert.equal((html.match(/data-joust-leg/g) ?? []).length, 2);
+  assert.match(html, /data-joust-perch-points="2"/, "the shelf is 28 up: two a head");
+  assert.doesNotMatch(html, /data-joust-rubble/);
+});
+
+test("lays a fallen tower out as rubble with nobody stood on it", () => {
+  const html = renderSurface(baseView({ collapsedPerchIndices: [1] }));
+
+  assert.match(html, /data-joust-rubble/);
+  assert.equal((html.match(/data-joust-leg/g) ?? []).length, 0);
+});
+
+test("draws the last shot's arc while the next teammate aims, and not while a shot replays", () => {
+  assert.match(renderSurface(baseView({ previousShotGhost: ghost })), /data-joust-ghost/);
+  assert.doesNotMatch(
+    renderSurface(baseView({ previousShotGhost: ghost, phase: "resolved", lastShot: pileUp })),
+    /data-joust-ghost/
+  );
+});
+
+test("shouts timber when a shot brings a tower down", () => {
+  const timber: JoustMinigameShot = {
+    ...pileUp,
+    toppledPlayerIds: ["p6"],
+    collapsedPerchIndices: [1],
+    points: 2,
+    run: { ...pileUp.run, topples: [{ pinIndex: 2, frameIndex: 0 }], collapses: [{ perchIndex: 1, frameIndex: 0 }] }
+  };
+  const html = renderSurface(baseView({ phase: "resolved", lastShot: timber }));
+
+  assert.match(html, /Timber!/);
+  assert.match(html, /data-joust-collapse/, "dust on the frame it fell");
 });
 
 test("calls a shot that leaves nobody standing a cleared rack", () => {

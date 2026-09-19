@@ -5,11 +5,18 @@ import type {
   JoustMinigameArena,
   JoustMinigameShot,
   JoustPlayerFigure,
+  JoustShotGhost,
   JoustVec2
 } from "@wingnight/shared";
 import {
+  JOUST_PIN_FOOT_RADIUS,
   JOUST_SHOOTER_HEAD_INDEX,
+  JOUST_WORLD,
+  joustLegFootIndex,
+  joustLegTopIndex,
   readJoustFramePosition,
+  resolveJoustLegs,
+  resolveJoustPinPerchIndex,
   resolveJoustRackSlots,
   resolveJoustRestFrame
 } from "@wingnight/shared";
@@ -18,22 +25,51 @@ import { resolveStandingPins, type JoustStandingPin } from "../../runtime/lineup
 
 // How long a burst stays on a player who has just gone over, in track frames.
 const IMPACT_FRAMES = 10;
+// How long the dust hangs over a tower that has just folded.
+const COLLAPSE_FRAMES = 14;
 
 /** How many frames of flight the shooter's ghost trail reaches back, at the track's own rate. */
 export const JOUST_TRAIL_FRAMES = 8;
+
+/** One tower leg at one instant: where its foot and top are, and whose slab it holds up. */
+export type JoustSceneLeg = {
+  perchIndex: number;
+  foot: JoustVec2;
+  top: JoustVec2;
+};
 
 export type JoustScene = {
   frame: JoustFrame;
   // The players the frame's pin bodies belong to, in frame order.
   pins: JoustStandingPin[];
   // Players already on the sand before this frame's shot. They have no bodies in the track, so
-  // the renderer lays them out flat on their own columns.
+  // the renderer lays them out flat on their own columns — or on the sand below, if their tower
+  // has since come down.
   fallen: JoustStandingPin[];
+  // Every leg with a body in the frame, standing or folding, in frame order.
+  legs: JoustSceneLeg[];
+  // Towers already down before this frame's shot: no bodies, drawn as rubble.
+  rubblePerchIndices: number[];
   // Pin indices to punch a burst on right now.
   burstPinIndices: number[];
+  // Perch indices whose tower is folding right now.
+  collapsingPerchIndices: number[];
   // Where the shooter's head was on the frames just before this one, oldest first. Empty on a
   // rest pose: nothing has flown yet.
   trail: JoustVec2[];
+  // The previous shot's arc and pull, only while a fresh band is being aimed.
+  ghost: JoustShotGhost | null;
+};
+
+export type JoustSceneInput = {
+  arena: JoustMinigameArena;
+  lineup: readonly JoustPlayerFigure[];
+  downPlayerIds: readonly string[];
+  collapsedPerchIndices: readonly number[];
+  aim: JoustAim;
+  lastShot: JoustMinigameShot | null;
+  replayIndex: number;
+  previousShotGhost: JoustShotGhost | null;
 };
 
 /**
@@ -59,9 +95,11 @@ const blendFrames = (keyframes: readonly JoustFrame[], index: number): JoustFram
 const toFallen = (
   arena: JoustMinigameArena,
   lineup: readonly JoustPlayerFigure[],
-  presentPlayerIds: ReadonlySet<string>
+  presentPlayerIds: ReadonlySet<string>,
+  collapsedPerchIndices: readonly number[]
 ): JoustStandingPin[] => {
   const slots = resolveJoustRackSlots(arena.perches, lineup.length);
+  const collapsed = new Set(collapsedPerchIndices);
 
   return lineup.flatMap((figure, slotIndex): JoustStandingPin[] => {
     const slot = slots[slotIndex];
@@ -70,44 +108,84 @@ const toFallen = (
       return [];
     }
 
-    return [{ ...figure, slotIndex, x: slot.x, y: slot.y }];
+    const perchIndex = resolveJoustPinPerchIndex(slot, arena.perches);
+    // A felled player whose tower has since come down lies on the sand beneath it, not in the
+    // air where the shelf used to be.
+    const y =
+      perchIndex !== null && collapsed.has(perchIndex)
+        ? JOUST_WORLD.floorY - JOUST_PIN_FOOT_RADIUS
+        : slot.y;
+
+    return [{ ...figure, slotIndex, perchIndex, x: slot.x, y }];
   });
+};
+
+/** The legs' bodies read out of a frame, for the towers the frame was simulated with. */
+const toSceneLegs = (
+  arena: JoustMinigameArena,
+  rubblePerchIndices: readonly number[],
+  pinCount: number,
+  frame: JoustFrame
+): JoustSceneLeg[] => {
+  return resolveJoustLegs(arena.perches, rubblePerchIndices).map((leg, legIndex) => ({
+    perchIndex: leg.perchIndex,
+    foot: readJoustFramePosition(frame, joustLegFootIndex(pinCount, legIndex)),
+    top: readJoustFramePosition(frame, joustLegTopIndex(pinCount, legIndex))
+  }));
 };
 
 /**
  * The one scene both surfaces draw: a track frame while a shot is on screen, otherwise the rest
  * pose for the current pull.
  *
- * A replaying track carries its OWN rack — the standing set as it was before that shot — because
- * the players it is in the act of felling are still on their feet in its early frames. Reading the
- * current standing set there would erase them mid-flight.
+ * A replaying track carries its OWN rack and its own towers — the standing set as it was before
+ * that shot — because the players it is in the act of felling are still on their feet in its
+ * early frames, and the tower it is folding still has legs. Reading the current state there
+ * would erase them mid-flight.
  */
-export const resolveJoustScene = (
-  arena: JoustMinigameArena,
-  lineup: readonly JoustPlayerFigure[],
-  downPlayerIds: readonly string[],
-  aim: JoustAim,
-  lastShot: JoustMinigameShot | null,
-  replayIndex: number
-): JoustScene => {
+export const resolveJoustScene = ({
+  arena,
+  lineup,
+  downPlayerIds,
+  collapsedPerchIndices,
+  aim,
+  lastShot,
+  replayIndex,
+  previousShotGhost
+}: JoustSceneInput): JoustScene => {
   const figureById = new Map(lineup.map((figure) => [figure.playerId, figure]));
   const slots = resolveJoustRackSlots(arena.perches, lineup.length);
   const slotIndexById = new Map(lineup.map((figure, index) => [figure.playerId, index]));
-  const toArena = (pins: readonly JoustStandingPin[]): JoustArena => ({
+  const toArena = (
+    pins: readonly JoustStandingPin[],
+    rubblePerchIndices: readonly number[]
+  ): JoustArena => ({
     pinFeet: pins.map((pin) => ({ x: pin.x, y: pin.y })),
     perches: arena.perches,
-    obstacles: arena.obstacles
+    obstacles: arena.obstacles,
+    collapsedPerchIndices: rubblePerchIndices
   });
 
   if (lastShot === null) {
     const pins = resolveStandingPins(lineup, downPlayerIds, arena.perches);
+    const rubblePerchIndices = [...collapsedPerchIndices];
+    const frame = resolveJoustRestFrame(toArena(pins, rubblePerchIndices), aim);
 
     return {
-      frame: resolveJoustRestFrame(toArena(pins), aim),
+      frame,
       pins,
-      fallen: toFallen(arena, lineup, new Set(pins.map((pin) => pin.playerId))),
+      fallen: toFallen(
+        arena,
+        lineup,
+        new Set(pins.map((pin) => pin.playerId)),
+        collapsedPerchIndices
+      ),
+      legs: toSceneLegs(arena, rubblePerchIndices, pins.length, frame),
+      rubblePerchIndices,
       burstPinIndices: [],
-      trail: []
+      collapsingPerchIndices: [],
+      trail: [],
+      ghost: previousShotGhost
     };
   }
 
@@ -120,27 +198,47 @@ export const resolveJoustScene = (
       return [];
     }
 
-    return [{ ...figure, slotIndex, x: slot.x, y: slot.y }];
+    return [
+      {
+        ...figure,
+        slotIndex,
+        perchIndex: resolveJoustPinPerchIndex(slot, arena.perches),
+        x: slot.x,
+        y: slot.y
+      }
+    ];
   });
+  const rubblePerchIndices = [...lastShot.rubblePerchIndices];
   const clampedIndex = Math.max(0, Math.min(replayIndex, lastShot.run.keyframes.length - 1));
   const frame =
-    blendFrames(lastShot.run.keyframes, clampedIndex) ?? resolveJoustRestFrame(toArena(pins), aim);
+    blendFrames(lastShot.run.keyframes, clampedIndex) ??
+    resolveJoustRestFrame(toArena(pins, rubblePerchIndices), aim);
   // Bursts and the trail are counted in whole keyframes: the last one fully reached.
   const reachedIndex = Math.floor(clampedIndex);
 
   return {
     frame,
     pins,
-    fallen: toFallen(arena, lineup, new Set(lastShot.pinPlayerIds)),
+    fallen: toFallen(arena, lineup, new Set(lastShot.pinPlayerIds), collapsedPerchIndices),
+    legs: toSceneLegs(arena, rubblePerchIndices, pins.length, frame),
+    rubblePerchIndices,
     burstPinIndices: lastShot.run.topples
       .filter(
         (topple) =>
           reachedIndex >= topple.frameIndex && reachedIndex < topple.frameIndex + IMPACT_FRAMES
       )
       .map((topple) => topple.pinIndex),
+    collapsingPerchIndices: lastShot.run.collapses
+      .filter(
+        (collapse) =>
+          reachedIndex >= collapse.frameIndex &&
+          reachedIndex < collapse.frameIndex + COLLAPSE_FRAMES
+      )
+      .map((collapse) => collapse.perchIndex),
     trail: lastShot.run.keyframes
       .slice(Math.max(0, reachedIndex - JOUST_TRAIL_FRAMES), reachedIndex)
-      .map((flown) => readJoustFramePosition(flown, JOUST_SHOOTER_HEAD_INDEX))
+      .map((flown) => readJoustFramePosition(flown, JOUST_SHOOTER_HEAD_INDEX)),
+    ghost: null
   };
 };
 

@@ -58,10 +58,13 @@ const TEAMS: Team[] = [
 ];
 
 // Found by sweeping the aim space against the fixture's three-player rack: a
-// flat shot ploughs the lot, a shallow lob clips one, a twitch never arrives.
+// flat shot ploughs the lot, a shallow lob clips one, a twitch never arrives —
+// and a full-power shot just above flat ploughs the sand row into the tower's
+// legs and brings the whole thing down.
 const SWEEPING_AIM = { x: -1, y: 0.1 };
 const SINGLE_AIM = { x: -0.9, y: 0.5 };
 const MISSING_AIM = { x: -0.2, y: 0 };
+const TIMBER_AIM = { x: -0.95, y: 0.15 };
 
 type InitializeOverrides = Partial<{
   teamIds: string[];
@@ -165,6 +168,8 @@ test("racks up everyone who is not on the shooting team and benches the rest", (
     ["p1", "p2", "p3"]
   );
   assert.deepEqual(state.downPlayerIds, []);
+  assert.deepEqual(state.collapsedPerchIndices, []);
+  assert.equal(state.previousShotGhost, null);
 });
 
 test("carries the roster's pack-relative head through to the figure", () => {
@@ -279,7 +284,7 @@ test("ignores a malformed pull", () => {
   assert.equal(reduce(state, "launch", { y: 1 }).didMutate, false);
 });
 
-test("resolves a launch into a replayable track and banks a point a head", () => {
+test("resolves a launch into a replayable track and banks what the felled were worth", () => {
   const launched = reduce(initializeState(), "launch", SINGLE_AIM);
   const state = asState(launched.state);
 
@@ -290,8 +295,62 @@ test("resolves a launch into a replayable track and banks a point a head", () =>
   assert.ok(state.lastShot.run.keyframes.length > 1);
   assert.equal(state.lastShot.toppledPlayerIds.length, 1);
   assert.equal(state.lastShot.isRackCleared, false);
-  assert.equal(state.pendingPointsByTeamId["team-1"], 1);
+  assert.equal(state.pendingPointsByTeamId["team-1"], 2, "the one felled was up on the shelf");
   assert.deepEqual(state.aim, { x: 0, y: 0 });
+});
+
+// The fixture's shelf is 28 units up: worth two a head, where the sand is worth one.
+test("pays a felled player what their perch is worth", () => {
+  const state = asState(reduce(initializeState(), "launch", SINGLE_AIM).state);
+  const shelfPlayer = state.lastShot?.toppledPlayerIds[0];
+
+  assert.ok(shelfPlayer !== undefined);
+  assert.equal(state.lastShot?.points, 2, "one player on the shelf pays two");
+  assert.equal(state.pendingPointsByTeamId["team-1"], 2);
+});
+
+test("brings a tower down, drops everyone on it and keeps it down for the rest of the turn", () => {
+  const felled = asState(reduce(initializeState(), "launch", TIMBER_AIM).state);
+
+  assert.deepEqual(felled.lastShot?.collapsedPerchIndices, [1]);
+  assert.deepEqual(felled.collapsedPerchIndices, [1]);
+  assert.deepEqual(felled.lastShot?.rubblePerchIndices, [], "it stood when the shot was fired");
+  assert.ok((felled.lastShot?.run.collapses.length ?? 0) > 0);
+  assert.equal(felled.lastShot?.isRackCleared, true, "two on the sand and one off the shelf");
+  // Two sand players at one each, the shelf player at two, and the cleared-rack bonus.
+  assert.equal(felled.lastShot?.points, 1 + 1 + 2 + JOUST_RACK_CLEARED_BONUS);
+
+  // The next shot, were there one, is simulated against rubble.
+  const next = asState(
+    reduce(
+      { ...felled, downPlayerIds: [felled.downPlayerIds[0] ?? ""], phase: "aiming", lastShot: null },
+      "launch",
+      MISSING_AIM
+    ).state
+  );
+
+  assert.deepEqual(next.lastShot?.rubblePerchIndices, [1]);
+  assert.deepEqual(next.lastShot?.collapsedPerchIndices, []);
+});
+
+test("keeps the last shot's arc as a ghost for the next teammate, and drops it with the turn", () => {
+  const resolved = reduce(initializeState(), "launch", SINGLE_AIM).state;
+  const next = asState(reduce(resolved, "nextShot").state);
+
+  assert.equal(next.previousShotGhost?.shotNumber, 1);
+  assert.deepEqual(next.previousShotGhost?.aim, asState(resolved).lastShot?.aim);
+  assert.ok((next.previousShotGhost?.path.length ?? 0) > 2, "the arc has more than a start");
+  assert.equal(next.lastShot, null);
+
+  // A skipped shot flew nothing: the ghost of the last real one stays.
+  const skipped = asState(reduce(next, "skipShot").state);
+
+  assert.equal(skipped.previousShotGhost?.shotNumber, 1);
+
+  const reset = asState(reduce(skipped, "resetTurn").state);
+
+  assert.equal(reset.previousShotGhost, null);
+  assert.deepEqual(reset.collapsedPerchIndices, []);
 });
 
 test("pays the bonus for a shot that leaves nobody standing", () => {
@@ -416,7 +475,13 @@ test("forfeits a shot through the skip escape hatch", () => {
   assert.equal(skipped.phase, "aiming");
   assert.equal(skipped.shotIndex, 1);
   assert.deepEqual(skipped.shots, [
-    { shotNumber: 1, toppledPlayerIds: [], isRackCleared: false, points: 0 }
+    {
+      shotNumber: 1,
+      toppledPlayerIds: [],
+      collapsedPerchIndices: [],
+      isRackCleared: false,
+      points: 0
+    }
   ]);
   assert.equal(
     reduce(reduce(initializeState(), "launch", SINGLE_AIM).state, "skipShot").didMutate,
@@ -483,12 +548,14 @@ test("keeps the display view to the declared fields", () => {
       "activeTurnTeamId",
       "aim",
       "arena",
+      "collapsedPerchIndices",
       "downPlayerIds",
       "lastShot",
       "lineup",
       "minigame",
       "pendingPointsByTeamId",
       "phase",
+      "previousShotGhost",
       "shotIndex",
       "shots",
       "shotsPerTurn",

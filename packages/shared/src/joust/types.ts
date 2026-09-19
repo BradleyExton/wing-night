@@ -36,12 +36,14 @@ export type JoustPerch = {
  * Everything the integrator needs about one lane: where each standing pin is planted, the
  * structures they are planted on, and what else is in the way. `pinFeet` is already the STANDING
  * set — a player felled earlier in the turn is absent from it, and the survivors keep the spots
- * they started on.
+ * they started on. `collapsedPerchIndices` are the towers an earlier shot already brought down:
+ * they are rubble now, so nothing is built or simulated for them.
  */
 export type JoustArena = {
   readonly pinFeet: readonly JoustVec2[];
   readonly perches: readonly JoustPerch[];
   readonly obstacles: readonly JoustObstacle[];
+  readonly collapsedPerchIndices?: readonly number[];
 };
 
 /**
@@ -62,7 +64,9 @@ export type JoustBodyKind =
   | "shooter-head"
   | "shooter-ball"
   | "pin-foot"
-  | "pin-head";
+  | "pin-head"
+  | "leg-foot"
+  | "leg-top";
 
 export type JoustBodyDescriptor = {
   readonly kind: JoustBodyKind;
@@ -79,6 +83,15 @@ export type JoustTopple = {
 };
 
 /**
+ * One tower giving way: which perch it held up, and the keyframe its legs folded on. Everyone
+ * stood on it is dropped — and counted — on that same frame.
+ */
+export type JoustCollapse = {
+  readonly perchIndex: number;
+  readonly frameIndex: number;
+};
+
+/**
  * Every body's centre at one sampled instant, flattened to `[x0, y0, x1, y1, ...]` in
  * `resolveJoustBodies` order and rounded to two decimals — a whole shot rides in the room
  * snapshot, so the encoding is deliberately the leanest JSON can carry.
@@ -90,6 +103,8 @@ export type JoustShotRun = {
   readonly keyframes: readonly JoustFrame[];
   /** In the order they went down, so a display can read out the carnage as it happens. */
   readonly topples: readonly JoustTopple[];
+  /** Every tower the shot brought down, in the order they fell. */
+  readonly collapses: readonly JoustCollapse[];
 };
 
 export type JoustSimulateOptions = {

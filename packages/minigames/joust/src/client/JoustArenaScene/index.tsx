@@ -2,6 +2,7 @@ import type {
   JoustFrame,
   JoustMinigameArena,
   JoustPlayerFigure,
+  JoustShotGhost,
   JoustVec2
 } from "@wingnight/shared";
 import {
@@ -15,14 +16,16 @@ import {
   readJoustFramePosition
 } from "@wingnight/shared";
 
-import { Perch } from "./Perch/index.js";
-
 import type { JoustStandingPin } from "../../runtime/lineup/index.js";
+import type { JoustSceneLeg } from "../resolveJoustScene/index.js";
 import { ArenaHen } from "./ArenaHen/index.js";
 import { Backdrop } from "./Backdrop/index.js";
 import { Cactus } from "./Cactus/index.js";
+import { CollapseDust, ImpactBurst, ShotTrail } from "./FlightEffects/index.js";
 import { GroundShadow } from "./GroundShadow/index.js";
+import { Perch } from "./Perch/index.js";
 import { Shooter } from "./Shooter/index.js";
+import { ShotGhost } from "./ShotGhost/index.js";
 import { TeamBench } from "./TeamBench/index.js";
 import { joustPalette } from "./palette.js";
 import * as styles from "./styles.js";
@@ -35,6 +38,12 @@ export type JoustArenaSceneProps = {
   pins: JoustStandingPin[];
   // Players felled earlier in the turn: no bodies in the track, laid out on their own columns.
   fallen: JoustStandingPin[];
+  // Every tower leg with a body in the frame, so a slab is drawn where its legs actually are.
+  legs: JoustSceneLeg[];
+  // Towers already down before this frame's shot, drawn flat.
+  rubblePerchIndices: number[];
+  // Towers folding on this frame: dust.
+  collapsingPerchIndices: number[];
   // The shooting team, stood behind the slingshot.
   teammates: JoustPlayerFigure[];
   // Whose shot it is: they step up to the post while the rest wait on the bench.
@@ -45,6 +54,8 @@ export type JoustArenaSceneProps = {
   burstPinIndices: number[];
   // Where the shooter's head has just been, oldest first: the ghost of the flight so far.
   trail: JoustVec2[];
+  // The previous shot's arc and pull, for the next teammate to aim off. Only drawn while aiming.
+  ghost: JoustShotGhost | null;
   serverOrigin: string | null;
   // Prefix for gradient and clip ids, so two scenes on one page do not collide.
   sceneId: string;
@@ -57,72 +68,20 @@ const PRONG_RISE = 4;
 // A pull shorter than this is a finger resting on the fork, not a draw: no guide for it.
 const PULL_GUIDE_THRESHOLD = 0.03;
 
-const ImpactBurst = ({ at }: { at: { x: number; y: number } }): JSX.Element => {
-  const points: string[] = [];
-  const spikes = 8;
-
-  // Alternating outer/inner radii around the struck body. Screen-side only, so
-  // the trig here never touches the deterministic track.
-  for (let index = 0; index < spikes * 2; index += 1) {
-    const angle = (Math.PI * index) / spikes;
-    const radius = index % 2 === 0 ? 7 : 3.2;
-    points.push(`${at.x + Math.cos(angle) * radius},${at.y + Math.sin(angle) * radius}`);
-  }
-
-  return (
-    <g className={styles.burst} data-joust-impact>
-      <polygon
-        points={points.join(" ")}
-        fill={joustPalette.burst}
-        stroke={joustPalette.burstCore}
-        strokeWidth={0.8}
-        strokeLinejoin="round"
-        opacity={0.92}
-      />
-    </g>
-  );
-};
-
-/**
- * The flight so far, as fading ghosts of the head: brightest and biggest where it was a frame
- * ago, gone eight frames back. It is what lets the room read the arc of a shot that crossed the
- * lane in under a second, and it collapses to nothing once the shooter has stopped moving.
- */
-const ShotTrail = ({ trail }: { trail: JoustVec2[] }): JSX.Element | null => {
-  if (trail.length === 0) {
-    return null;
-  }
-
-  return (
-    <g data-joust-trail>
-      {trail.map((at, index) => {
-        const recency = (index + 1) / trail.length;
-
-        return (
-          <circle
-            key={index}
-            cx={at.x}
-            cy={at.y}
-            r={0.9 + recency * 1.9}
-            fill={joustPalette.shooterLight}
-            opacity={0.1 + recency * 0.32}
-          />
-        );
-      })}
-    </g>
-  );
-};
-
 export const JoustArenaScene = ({
   arena,
   frame,
   pins,
   fallen,
+  legs,
+  rubblePerchIndices,
+  collapsingPerchIndices,
   teammates,
   activeShooterPlayerId,
   isAiming,
   burstPinIndices,
   trail,
+  ghost,
   serverOrigin,
   sceneId,
   label
@@ -136,6 +95,8 @@ export const JoustArenaScene = ({
   const pull = isAiming ? Math.hypot(head.x - anchor.x, head.y - anchor.y) / pullRadius : 0;
   const worldClipId = `${sceneId}-world`;
   const bursting = new Set(burstPinIndices);
+  const rubble = new Set(rubblePerchIndices);
+  const collapsing = new Set(collapsingPerchIndices);
   // Which way the shot is going, off the ghost of where it just was; nothing has flown at rest.
   const lastGhost = trail[trail.length - 1];
   const shooterVelocity =
@@ -165,8 +126,13 @@ export const JoustArenaScene = ({
             <Cactus key={index} obstacle={obstacle} />
           ))}
 
-          {arena.perches.map((perch, index) => (
-            <Perch key={index} perch={perch} />
+          {arena.perches.map((perch, perchIndex) => (
+            <Perch
+              key={perchIndex}
+              perch={perch}
+              legs={legs.filter((leg) => leg.perchIndex === perchIndex)}
+              isRubble={rubble.has(perchIndex)}
+            />
           ))}
 
           <TeamBench
@@ -201,6 +167,8 @@ export const JoustArenaScene = ({
               data-joust-pull-guide
             />
           )}
+
+          {isAiming && ghost !== null && <ShotGhost ghost={ghost} />}
 
           <g>
             <rect
@@ -276,6 +244,18 @@ export const JoustArenaScene = ({
               />
             ) : null
           )}
+
+          {arena.perches.map((perch, perchIndex) => {
+            if (!collapsing.has(perchIndex)) {
+              return null;
+            }
+
+            const [near, far] = legs.filter((leg) => leg.perchIndex === perchIndex);
+            const from = near?.top ?? { x: perch.x, y: perch.y };
+            const to = far?.top ?? { x: perch.x + perch.width, y: perch.y };
+
+            return <CollapseDust key={perchIndex} from={from} to={to} />;
+          })}
         </g>
       </svg>
     </div>

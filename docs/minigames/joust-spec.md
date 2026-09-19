@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/joust/`
 
-Last updated: 2026-09-18 (schlong drawing + interpolated replay, same day)
+Last updated: 2026-09-19 (collapsible towers, points by height, ghost of the last shot)
 
 ## 1) One-liner
 
@@ -44,9 +44,29 @@ it is.
   perches. A player on no team at all is a target too. The **bench** is the shooting team, drawn
   behind the slingshot — scenery, never a body — with whoever's shot it is stepped up to the post.
 - **Players stand on scaffolding.** A lane is authored as shelves, and a shelf above the sand grows
-  its own slab and two legs, all solid. A flat shot cannot reach a shelf however hard it is pulled;
-  only an arc gets up there, and a tower's legs will stop a low one dead. That trade — power for
-  the sand, arc for the shelves — is the skill of the game.
+  its own slab and two legs. A flat shot cannot reach a shelf however hard it is pulled; only an
+  arc gets up there. That trade — power for the sand, arc for the shelves — is the skill of the
+  game.
+- **Towers come down.** A tower's legs are bodies, not walls: the same bistable stick as a pin,
+  taller, pulled upright harder and far heavier, tied together at the top by the slab. A shot
+  with enough behind it — hard, and angled down into the base — leans a leg past
+  `JOUST_TOWER_TOPPLE_TILT` (0.4 of its own height) and the frame folds. The slab stops being a
+  floor on that frame, everyone stood on it is dropped and **counted as felled**, their heads
+  shoved the way the tower is going so they tumble rather than ride it down standing, and the
+  falling frame sweeps whoever is beneath it. A fallen tower is rubble for the rest of the turn:
+  drawn flat, built for nothing, nobody on it. A lob that lands on top of a tower does not fold
+  it; the base is the target. Sweeps put 2–5% of the aim space on a collapse per lane, clustered
+  low and hard.
+- **A player is worth what they stood on.** One point on the sand, like bowling; a shelf pays
+  more the higher it is — `resolveJoustPerchPoints`: one more per `JOUST_PERCH_POINTS_TIER` (20)
+  units of rise, capped at `JOUST_PERCH_POINTS_MAX` (3). The sample lanes' shelves all pay 2, and
+  the plank says so on the TV. Together with collapse this is the choice: pick a player off the
+  shelf with an arc for 2, or go for the legs and take the whole shelf at once.
+- **The ghost of the last shot.** While a teammate aims, the previous shot's arc (the head's path
+  up to its first contact) and the ring it was pulled to stay on the lane, on both screens. Each
+  shooter on a team is adjusting off the last one rather than starting blind. Client-drawn from
+  `previousShotGhost`; the integrator never sees it. A skipped shot flew nothing and leaves the
+  last ghost be; a reset clears it.
 - The **shooter** is a verlet chain (5 shaft links, a head, two balls). Each **pin** is a foot and
   a head with a stick between them, collided against as the capsule it is drawn as. Obstacles are
   content-authored rectangles the renderer draws as cacti.
@@ -54,8 +74,9 @@ it is.
   it nothing holds it up — gravity swings the head down about the planted foot and it is going
   over. A pin over `JOUST_TOPPLE_TILT` (0.45 of its own height) is latched down for good. Falling
   pins collide with their neighbours, so the rack goes down in chains.
-- **Scoring is bowling's.** One point per player toppled, plus `JOUST_RACK_CLEARED_BONUS` (3) for a
-  shot that leaves nobody standing. Turn total is capped at `pointsMax`.
+- **Scoring is bowling's, weighted by height.** A player's perch value per player toppled, plus
+  `JOUST_RACK_CLEARED_BONUS` (3) for a shot that leaves nobody standing. Turn total is capped at
+  `pointsMax`.
 - **Whoever goes over stays over.** A felled player is out of the rack for the team's remaining
   shots and leaves their column empty — so three shots are one bowling frame, not three identical
   ones. Clearing the rack ends the turn early; there is nothing left to fire at.
@@ -108,8 +129,15 @@ it is.
   fractional — the scene blends the two keyframes either side of it — so a 24 Hz track moves on
   every screen frame. The lane's hens are memoised on their body positions, because a replay now
   re-renders the scene at screen rate and most of the rack is standing still through most of it.
-- **A pin is light, the shot is heavy.** `SHOOTER_MASS_SHARE` (0.15) is what lets a shot plough on
-  down the lane instead of stopping dead in the first player it meets.
+- **A pin is light, the shot is heavy, a leg is heavier.** `SHOOTER_MASS_SHARE` (0.15) is what
+  lets a shot plough on down the lane instead of stopping dead in the first player it meets;
+  `SHOOTER_LEG_SHARE` (0.35) is what makes a leg something to bounce off unless there is real
+  weight behind the shot. Legs come LAST in the body order (`resolveJoustBodies(pinCount,
+  legCount)`, `joustLegFootIndex`), so felling a player never moves a tower's bodies and bringing
+  a tower down never moves a pin's. The slab is the one piece of static timber; it is a segment
+  while the tower stands and dropped from the active set the step the legs fold. The renderer
+  draws each leg between its own two bodies and the plank across the two tops, so the TV's tower
+  falls exactly the way the integrator's did.
 - **Live pull on the TV.** `setAim` streams the band at ~12/s while dragging (the drawing canvas
   set the ~15/s budget). The tablet shows its own finger's pull immediately and yields to the
   server's echo when the drag ends.
@@ -170,10 +198,14 @@ demo night is unchanged. Schedule it with `"minigame": "JOUST"` on a round in
 - **Unreachable players.** On the busier lanes an aim-space sweep only ever reaches 7 of 10 —
   somebody tucked behind a tower's legs may be unhittable from the band. That is Angry Birds, but a
   player who can never be knocked over all night is not a fun thing to be. Watch it on a real lane.
-- **Destructible structures.** The scaffolding is static: you shoot past it, not through it. Crates
-  that topple and crush would be the real thing, and would need a rigid-body layer the engine does
-  not have — rotating boxes, box-against-box contacts, stable stacking. Deliberately deferred; a
-  janky stack would land worse than a solid one.
+- **Tower sturdiness.** `LEG_UPRIGHT_STIFFNESS` (0.04), `LEG_RECOVERY_TILT` (0.12) and
+  `SHOOTER_LEG_SHARE` (0.35) were set by an aim-space sweep, not a sofa. Two Towers folds on 4% of
+  aims, The Lookout 5% (full power just above flat: through the sand row and into the far tower's
+  legs, a 7–10 player strike), Front Porch 2% (only from a steep downward pull). Retune at a table;
+  the dropped players land in a heap on the fallen timber rather than flat on the sand, which reads
+  as a pile and may or may not be what the room wants.
+- **Rigid crates** — boxes that rotate, stack and crush — are still out: the engine is capsules
+  and segments. Legs-as-pins is what "destructible" means here.
 - **Trail.** CONTRAPTION's lab found a flight trail makes a miss legible. Not built; the impact
   burst and the plaque carry the result for now.
 - **The felled.** A player knocked over on shot one is drawn lying on their own spot, dimmed, for

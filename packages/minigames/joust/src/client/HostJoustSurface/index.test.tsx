@@ -51,14 +51,17 @@ const restFrame = resolveJoustRestFrame(
 const oneDown: JoustMinigameShot = {
   shotNumber: 1,
   toppledPlayerIds: ["p4"],
+  collapsedPerchIndices: [],
   isRackCleared: false,
   points: 1,
   aim: { x: -0.8, y: 0.5 },
   pinPlayerIds: ["p4", "p5", "p6"],
+  rubblePerchIndices: [],
   run: {
     keyframeHz: 24,
     keyframes: [[...restFrame], [...restFrame]],
-    topples: [{ pinIndex: 0, frameIndex: 1 }]
+    topples: [{ pinIndex: 0, frameIndex: 1 }],
+    collapses: []
   }
 };
 
@@ -71,6 +74,8 @@ const hostView = (overrides: Partial<JoustMinigameHostView> = {}): JoustMinigame
   lineup: LINEUP,
   teammates: TEAMMATES,
   downPlayerIds: [],
+  collapsedPerchIndices: [],
+  previousShotGhost: null,
   activeShooterPlayerId: "p1",
   shotsPerTurn: 3,
   shotIndex: 0,
@@ -161,6 +166,42 @@ test("names who went over and the points once a shot resolves", () => {
   assert.match(html, /Rosie/);
   assert.match(html, /\+1/);
   assert.match(html, /Watch the TV/);
+});
+
+test("calls a tower coming down timber", () => {
+  const timber: JoustMinigameShot = {
+    ...oneDown,
+    toppledPlayerIds: ["p6"],
+    collapsedPerchIndices: [1],
+    points: 2,
+    run: { ...oneDown.run, collapses: [{ perchIndex: 1, frameIndex: 1 }] }
+  };
+  const html = renderSurface(hostView({ phase: "resolved", lastShot: timber, shots: [timber] }));
+
+  assert.match(html, /Timber!/);
+  assert.match(html, /\+2/);
+});
+
+test("draws the last shot's ghost on the tablet while the next teammate aims", () => {
+  const html = renderSurface(
+    hostView({
+      shotIndex: 1,
+      previousShotGhost: {
+        shotNumber: 1,
+        aim: { x: -0.8, y: 0.5 },
+        path: [
+          { x: 40, y: 46 },
+          { x: 80, y: 30 }
+        ]
+      }
+    })
+  );
+
+  assert.match(html, /data-joust-ghost/);
+});
+
+test("lays a fallen tower out as rubble on the tablet too", () => {
+  assert.match(renderSurface(hostView({ collapsedPerchIndices: [1] })), /data-joust-rubble/);
 });
 
 test("calls a miss a whiff", () => {
