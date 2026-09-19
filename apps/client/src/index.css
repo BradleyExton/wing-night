@@ -635,6 +635,34 @@ body {
   }
 }
 
+/* The pool of shade a dancing bird leaves on the deck. It runs on the SAME
+   clock as `cast-jive` above and answers it frame for frame — tight and dark
+   when the bird's feet are down, wide and faint at the top of a hop — because
+   a shadow that does not shrink when the thing above it lifts reads as a
+   sticker, not as contact. Change one of these and change the other.
+
+   The pool stays on the floor while the bird moves: the parade hangs it
+   outside the jive layer, so it never inherits the hop it is answering. */
+@keyframes cast-jive-shadow {
+  0%,
+  100% {
+    transform: scaleX(1) scaleY(1);
+    opacity: 0.55;
+  }
+  22% {
+    transform: scaleX(0.74) scaleY(0.66);
+    opacity: 0.26;
+  }
+  48% {
+    transform: scaleX(0.95) scaleY(0.92);
+    opacity: 0.5;
+  }
+  74% {
+    transform: scaleX(0.8) scaleY(0.72);
+    opacity: 0.33;
+  }
+}
+
 /* ---- Team identity kit (docs/team-identity.md) ---------------------------
    Wordmark treatments, ambient textures and entrance beats, ported from the
    phase 1 mockup (public/mockups/team-identity/kit.css). They live here rather

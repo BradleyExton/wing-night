@@ -81,6 +81,10 @@ const resolvePose = (phase: ParadePhase): CharacterPose => (phase === "dance" ? 
 const resolveJiveClassName = (phase: ParadePhase): string =>
   phase === "dance" ? styles.jiveDancing : styles.jive;
 
+// The pool under its feet answers the bounce only while it is bouncing.
+const resolveShadowClassName = (phase: ParadePhase): string =>
+  phase === "dance" ? styles.shadowDancing : styles.shadow;
+
 // The lobby's ambient cast, two teams at a time: one walks in from the left
 // edge and one from the right, they dance to the beat facing each other, walk
 // back out their own edges, and the next pair walks in. Decoration only — no
@@ -117,6 +121,7 @@ export const CastParade = ({ players, teams, teamThemeByTeamId }: CastParadeProp
           className={`${resolveMemberClassName(side, frame.phase)} ${resolveCharacterGrooveClassName(player.name)}`}
           data-cast-member={player.id}
         >
+          <span className={resolveShadowClassName(frame.phase)} />
           <span className={resolveJiveClassName(frame.phase)}>
             <Character
               appearance={resolvePlayerAppearance(player, serverOrigin)}

@@ -20,6 +20,22 @@ export const vignette =
 
 export const grain = "display-grain pointer-events-none absolute inset-0 z-[1]";
 
+// The lobby floor: the plane the cast walks on, meeting the standings deck's
+// tread at the bottom edge of the stage (DESIGN.md §2.2C). It has to be drawn
+// HERE rather than by the deck, because the footer paints above the stage and
+// anything it reached up with would cover the birds.
+//
+// Dark where the floor recedes, warming into a lit sill at the deck line —
+// which is the whole reason it exists: a black pool of shade under a bird on
+// black is no shade at all, and the cast reads as stickers again. Above the
+// vignette with the parade, so the sill is not dimmed back out.
+export const floor =
+  "pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[clamp(2.2rem,5vh,5.2rem)] bg-[linear-gradient(180deg,transparent_0%,rgba(255,190,132,0.04)_44%,rgba(255,198,142,0.1)_72%,rgba(255,208,158,0.19)_92%,rgba(255,214,170,0.26)_100%)]";
+
+// The light the deck's lit lip throws back up into the air over the floor.
+export const floorBloom =
+  "pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[clamp(0.5rem,1vh,1.1rem)] bg-[linear-gradient(0deg,rgba(255,179,90,0.22)_0%,transparent_100%)] blur-[2px]";
+
 // Entrance choreography. Everything mounts hidden and reveals top-down: eyebrow, wordmark,
 // then the round cards in reading order, then the corner status pill last. Delays live inside
 // the shorthand (see Embers/styles.ts for why) and `both` keeps the hidden start state.

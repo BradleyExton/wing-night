@@ -86,7 +86,9 @@ export const SetupStageBody = ({
       <Embers />
       <span className={styles.vignette} aria-hidden />
       <span className={styles.grain} aria-hidden />
+      <span className={styles.floor} aria-hidden />
       <CastParade players={players} teams={teams} teamThemeByTeamId={teamThemeByTeamId} />
+      <span className={styles.floorBloom} aria-hidden />
 
       <p className={styles.waiting}>
         <span className={styles.waitingBeacon} aria-hidden>

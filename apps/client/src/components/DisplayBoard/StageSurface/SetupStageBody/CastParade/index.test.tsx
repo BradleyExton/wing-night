@@ -85,11 +85,30 @@ test("does hand every bird its own groove, so the floor is not one animal on one
 test("does wrap every bird in a bounce layer inside its mirror, so it keeps facing the room", () => {
   const html = renderParade(players);
 
-  assert.match(html, new RegExp(`data-cast-member="player-2"><span class="${escapeForRegExp(styles.jive)}"`));
+  assert.match(
+    html,
+    new RegExp(`data-cast-member="player-2">[^]*?<span class="${escapeForRegExp(styles.jive)}"`)
+  );
   // Walking on, the group's own transform carries the birds and nothing
   // wobbles under it — the bird's bounce timings are set on it, but the
   // bounce itself is not running.
   assert.doesNotMatch(html, /animation:cast-jive/);
+});
+
+// The pool of shade is what puts a bird ON the deck rather than in front of it
+// (DESIGN.md §2.2C). It has to hang OUTSIDE the bounce layer: inside it, the
+// shadow would hop with the bird and ground nothing.
+test("does give every bird a pool of shade that sits outside its bounce layer", () => {
+  const html = renderParade(players);
+
+  assert.match(
+    html,
+    new RegExp(
+      `data-cast-member="player-2"><span class="${escapeForRegExp(styles.shadow)}"></span><span class="${escapeForRegExp(styles.jive)}"`
+    )
+  );
+  // Walking on, the pool is as still as the bird is.
+  assert.doesNotMatch(html, /animation:cast-jive-shadow/);
 });
 
 test("does colour a group by its team accent and dress it in the genre's apparel", () => {

@@ -1,10 +1,9 @@
 import { Phase, type Player, type Team, type TeamTheme } from "@wingnight/shared";
-import { Flame, Trophy } from "lucide-react";
 
 import { resolveTeamTheme } from "../../../utils/resolveTeamTheme";
-import { TeamEmblem } from "../../TeamEmblem";
-import { TeamWordmark } from "../../TeamWordmark";
 import { displayBoardCopy } from "../copy";
+import { DeckChrome } from "./DeckChrome";
+import { StandingBay } from "./StandingBay";
 import * as styles from "./styles";
 
 type StandingsSurfaceProps = {
@@ -35,6 +34,7 @@ export const StandingsSurface = ({
         className={styles.footer}
         ref={styles.applyFooterColumns(standings.length)}
       >
+        <DeckChrome />
         <p className={styles.emptyLabel}>{displayBoardCopy.standingsEmptyLabel}</p>
       </footer>
     );
@@ -45,6 +45,7 @@ export const StandingsSurface = ({
       className={styles.footer}
       ref={styles.applyFooterColumns(standings.length)}
     >
+      <DeckChrome />
       {standings.map((team, index) => {
         // At FINAL_RESULTS every team tied at the top score is a winner —
         // never crown only the alphabetically-first of a tie.
@@ -53,50 +54,25 @@ export const StandingsSurface = ({
           phase === Phase.FINAL_RESULTS
             ? isTiedTop
             : isTiedTop && hasStrictLeader;
-        const isWinner = isLeader && phase === Phase.FINAL_RESULTS;
-        const theme = teamThemeByTeamId.get(team.id) ?? resolveTeamTheme(team);
-        const teamColorVariant = theme.colorVariant;
-        const columnBgClassName = isLeader
-          ? teamColorVariant.splitColumnLeadBgClassName
-          : teamColorVariant.splitColumnBgClassName;
-        const edgeClassName = isLeader
-          ? teamColorVariant.splitEdgeFullClassName
-          : teamColorVariant.splitEdgeMutedClassName;
-        const metaLabel = isWinner
-          ? displayBoardCopy.standingWinnerLabel
-          : isLeader
-            ? displayBoardCopy.standingLeaderLabel
-            : isTiedTop
-              ? displayBoardCopy.standingTiedLabel
-              : displayBoardCopy.standingRankOrdinalLabel(index + 1);
-        const metaClassName = `${styles.columnMeta} ${isLeader ? styles.columnMetaLead : ""}`.trim();
-        const scoreClassName = `${styles.columnScore} ${isLeader ? styles.columnScoreLead : ""}`.trim();
-        const LeaderIcon = isWinner ? Trophy : Flame;
+        const metaLabel =
+          isLeader && phase === Phase.FINAL_RESULTS
+            ? displayBoardCopy.standingWinnerLabel
+            : isLeader
+              ? displayBoardCopy.standingLeaderLabel
+              : isTiedTop
+                ? displayBoardCopy.standingTiedLabel
+                : displayBoardCopy.standingRankOrdinalLabel(index + 1);
 
         return (
-          <div key={team.id} className={`${styles.column} ${columnBgClassName}`}>
-            <span className={`${styles.columnEdge} ${edgeClassName}`} aria-hidden />
-            <TeamEmblem
-              theme={theme}
-              sizeClassName={isLeader ? styles.watermarkLead : styles.watermark}
-            />
-            <div className={styles.columnInfo}>
-              <span className={metaClassName}>
-                {metaLabel}
-                {isLeader && (
-                  <LeaderIcon className={styles.columnMetaIcon} aria-hidden />
-                )}
-              </span>
-              <p className={styles.columnName}>
-                <TeamWordmark
-                  name={team.name}
-                  theme={theme}
-                  sizeClassName={styles.columnWordmark}
-                />
-              </p>
-            </div>
-            <p className={scoreClassName}>{team.totalScore}</p>
-          </div>
+          <StandingBay
+            key={team.id}
+            name={team.name}
+            score={team.totalScore}
+            theme={teamThemeByTeamId.get(team.id) ?? resolveTeamTheme(team)}
+            isLeader={isLeader}
+            isWinner={isLeader && phase === Phase.FINAL_RESULTS}
+            metaLabel={metaLabel}
+          />
         );
       })}
     </footer>

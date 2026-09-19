@@ -1,5 +1,11 @@
+// The deck (DESIGN.md §2.2C). The band's own background is what shows through
+// the 1px grid gaps, so it IS the panel joints: a bright warm seam at the lip
+// falling to black at the foot, against the dark inset edge each bay draws on
+// itself. Light line between two dark ones reads as a routed groove, which is
+// how a real stage deck is made — and it is why there is no `border-t` here
+// any more, the chrome's lip is the top edge.
 export const footer =
-  "relative z-10 isolate shrink-0 grid gap-px border-t border-text/[0.06] bg-text/[0.04]";
+  "relative z-10 isolate shrink-0 grid gap-px bg-[linear-gradient(180deg,rgba(255,214,170,0.32)_0%,rgba(255,214,170,0.08)_34%,rgba(0,0,0,0.55)_100%)]";
 
 // One equal column per team, and the team count is only known at runtime, so the track
 // listing can't be a static utility class. It is applied through a ref so the declaration
@@ -19,58 +25,7 @@ export const applyFooterColumns =
       columnCount > 0 ? `repeat(${columnCount}, minmax(0, 1fr))` : "";
   };
 
+// An empty deck is still a deck: the chrome draws around this, so the slab is
+// there for the cast to walk on before a single team exists.
 export const emptyLabel =
-  "px-[clamp(1rem,2.2vw,3rem)] py-[clamp(0.85rem,1.4vh,1.5rem)] text-center text-[clamp(0.95rem,1vw,1.55rem)] text-muted";
-
-export const column =
-  "relative flex items-center justify-between gap-[clamp(0.85rem,1.4vw,2rem)] overflow-hidden bg-bg px-[clamp(1rem,1.6vw,2.25rem)] py-[clamp(0.85rem,1.3vh,1.5rem)]";
-
-export const columnEdge =
-  "pointer-events-none absolute inset-y-0 left-0 w-[3px]";
-
-// The emblem as a watermark: low alpha, right-aligned and a touch off-axis,
-// under the column's own info and score (both positioned so they paint over
-// it). It brightens with the lead tint so the leader's column reads as lit.
-//
-// Sized off the column rather than the viewport: a `vw` clamp overshot a
-// short column and the crest came out sheared flat against both its edges,
-// which reads as a crop rather than a watermark. 72% leaves the 8-degree
-// tilt room to swing inside the column at every stage height.
-export const watermark =
-  "pointer-events-none absolute right-[-6%] top-1/2 h-[72%] -translate-y-1/2 -rotate-[8deg] opacity-[0.14]";
-
-export const watermarkLead =
-  "pointer-events-none absolute right-[-6%] top-1/2 h-[72%] -translate-y-1/2 -rotate-[8deg] opacity-[0.22]";
-
-export const columnInfo = "relative flex min-w-0 flex-col gap-[0.2rem]";
-
-export const columnMeta =
-  "inline-flex items-center gap-[0.4em] text-[clamp(0.7rem,0.85vw,0.95rem)] font-semibold uppercase tracking-[0.18em] text-muted";
-
-export const columnMetaLead = "text-gold";
-
-export const columnMetaIcon =
-  "h-[1.1em] w-[1.1em] [filter:drop-shadow(0_0_6px_rgba(251,191,36,0.5))]";
-
-// Sized above the 24px TV floor (docs/team-identity.md) so the genre face is
-// allowed here; two lines rather than a truncation because a display face
-// earns its width. The case and tracking are the `none` kit's; a treatment
-// that owns its own (rope, torn, scanline) overrides them.
-//
-// The two lines are reserved whether or not the name uses them, and the name
-// is centred in them: sized to its own content the block grew by a line and
-// shunted that column's rank label out of line with its neighbours', so one
-// long name in the row tilted the whole ticker.
-export const columnName =
-  "m-0 flex min-h-[calc(2.1*clamp(1.3rem,1.9vw,2.4rem))] min-w-0 items-center font-extrabold uppercase tracking-[0.06em] text-text";
-
-export const columnWordmark =
-  "line-clamp-2 text-[clamp(1.3rem,1.9vw,2.4rem)] leading-[1.05]";
-
-// The shadow is what lets the score sit over the watermark: right-aligned in
-// a `justify-between` row, the number lands on the densest part of the crest,
-// and a faceted or toothed emblem eats the edges of a digit without it.
-export const columnScore =
-  "relative m-0 whitespace-nowrap font-mono text-[clamp(1.8rem,2.6vw,3.2rem)] font-black tabular-nums leading-none tracking-[-0.04em] text-text [text-shadow:0_0_14px_theme(colors.bg),0_0_4px_theme(colors.bg)]";
-
-export const columnScoreLead = "text-gold";
+  "relative z-[1] bg-bg px-[clamp(1rem,2.2vw,3rem)] py-[clamp(1.4rem,2.6vh,2.6rem)] text-center text-[clamp(0.95rem,1vw,1.55rem)] text-muted";

@@ -170,6 +170,46 @@ spends its motion budget. Built direction: the "Turbulent" hearth
 -   Accent budget: `primary` plus the flame's own gradient. `gold` appears only inside the flame
     and the wordmark's sweep, never as UI chrome.
 
+## 2.2C The Deck (standings footer)
+
+The fixed standings band (§3.2) is not chrome. It is the front edge of a stage, and the lobby cast
+walks and dances on it (§2.8, "Lobby parade") — so it is drawn as a physical slab rather than as a
+bar across the bottom of the screen. `DisplayBoard/StandingsSurface`; the slab's layers are
+`DeckChrome`, one team's panel of it is a `StandingBay`.
+
+-   **It is flat gradients standing in for geometry.** Nothing is drawn in perspective. Back to
+    front: the hearth's `wash` pooling on the face, one `sheen` across the whole band, the `tread`
+    (the deck's top surface, an unbroken strip over every bay because the top of a stage is one
+    plane however the face below it is panelled), the `nosing` (a hard bright line immediately over
+    a hard shadow — this is what reads as a *thickness*, and without it the tread is only a lighter
+    stripe), the `lip` as a specular sweep hottest under the flame, and a shaded `plinth` foot.
+-   **The sheen is load-bearing.** One light direction crossing every panel joint is what makes four
+    tinted rectangles read as ONE slab. Remove it and the bays go back to being four cards.
+-   **The joints are routed, not drawn.** The band's own background shows through the 1px grid gaps,
+    so it *is* the seam: a warm hairline at the lip falling to black at the foot, against the dark
+    inset edge each bay carries down its own sides. Light line between two dark ones is how a deck
+    panel meets a deck panel.
+-   **The chrome never paints outside its own box.** The footer sits above the stage in the display's
+    stacking order, so a layer reaching up past the deck line would be drawn OVER the cast — the
+    birds would be behind the platform they are standing on. The floor they stand on belongs to the
+    stage (`SetupStageBody` `floor`) and meets the deck's tread at the boundary.
+-   **The lobby floor is lit for one reason: shade.** It runs dark where it recedes and warms into a
+    sill at the deck line, because a black pool under a bird on black is no pool at all. Every bird
+    in the parade carries one (`CastParade` `shadow`), hung outside its bounce layer so a hop lifts
+    the bird off a shadow that stays put, and shrinking and fading on the bird's own jive clock
+    (`cast-jive-shadow` answers `cast-jive` frame for frame — change one, change the other). This is
+    JOUST's `GroundShadow` trade (§2.7): no body, no data, and the difference between a row standing
+    on a stage and a strip of stickers.
+-   **A bay's height is fixed for the night.** The name box always reserves two lines, so every bay's
+    rank label lands on the same line across the whole deck and a team renaming itself cannot reflow
+    the stage above.
+-   **The leader's stretch of lip runs gold**, clipped to its own bay, so the platform itself says who
+    is ahead before the score does. Gold here is a winner accent per §0.1, not decoration.
+-   Accent budget: the team tint on the face (an identity use, like the standings dot) plus the
+    hearth's `primary` wash. The deck's own material is warm neutral, never a team colour.
+
+------------------------------------------------------------------------
+
 ## 2.3 Team-Turn Context (Host + Display)
 
 -   During `EATING`, `MINIGAME_INTRO`, and `MINIGAME_PLAY`, both host and display must show:
@@ -605,7 +645,8 @@ edge all come off one table and can never drift onto different hues.
     is the pure timeline; its beats and the transition length are one number
     in two places). Once a pair is on the floor every bird also bounces off its
     feet on a layer of its own inside the mirror (`cast-jive`, the bird's own
-    period and phase, pivot on the floor), so the huddle jostles instead of
+    period and phase, pivot on the floor) over a pool of shade that stays on the
+    floor while it does (§2.2C), so the huddle jostles instead of
     standing in a row; walking on and off, that layer is still. A team is a huddle — birds overlap a little — so six fit a
     half of the floor. A bird stands ~12vh tall (about 130px at 1080p): the
     head is the identity and the costume head is a bobblehead, so anything
@@ -662,7 +703,8 @@ Root: - min-h-\[100dvh\] - flex flex-col - overflow-hidden
 
 Main: - flex-1 min-h-0 - Centered content - Stage-local context row (round + phase) when needed
 
-Footer: - Standings snapshot
+Footer: - Standings snapshot, drawn as the deck (§2.2C) - fixed height for the
+night, so the stage above never reflows
 
 ------------------------------------------------------------------------
 
