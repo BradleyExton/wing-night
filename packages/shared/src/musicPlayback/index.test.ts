@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  isValidMusicVolume,
   resolveAnthemForRound,
   resolveAnthemIndexForRound,
   resolveNextTrackIndex,
+  resolvePreviousTrackIndex,
   resolveTrackTitle
 } from "./index.js";
 
@@ -63,6 +65,25 @@ test("advances the track cursor sequentially and wraps at the end", () => {
 
 test("holds the track cursor at zero when there are no tracks", () => {
   assert.equal(resolveNextTrackIndex(0, 0), 0);
+  assert.equal(resolvePreviousTrackIndex(0, 0), 0);
+});
+
+// Back mirrors Next exactly, including the wrap: the first track's previous is
+// the last one, never a restart of the current one.
+test("steps the track cursor back and wraps from the first track to the last", () => {
+  assert.equal(resolvePreviousTrackIndex(2, 3), 1);
+  assert.equal(resolvePreviousTrackIndex(1, 3), 0);
+  assert.equal(resolvePreviousTrackIndex(0, 3), 2);
+});
+
+test("accepts a volume only on the element's own 0 to 1 scale", () => {
+  assert.equal(isValidMusicVolume(0), true);
+  assert.equal(isValidMusicVolume(0.35), true);
+  assert.equal(isValidMusicVolume(1), true);
+  assert.equal(isValidMusicVolume(-0.1), false);
+  assert.equal(isValidMusicVolume(1.01), false);
+  assert.equal(isValidMusicVolume(Number.NaN), false);
+  assert.equal(isValidMusicVolume("0.5"), false);
 });
 
 test("derives a title by stripping the ordering prefix and the extension", () => {

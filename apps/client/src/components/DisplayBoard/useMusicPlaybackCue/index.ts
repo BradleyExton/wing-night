@@ -34,6 +34,9 @@ export const shouldHoldMusicPosition = (
 
 type UseMusicPlaybackCueProps = {
   musicPlayback: RoomMusicPlaybackState | null;
+  // The room's master volume on the element's own 0–1 scale. Applied on its
+  // own effect so a host nudging the slider never reloads or restarts a track.
+  musicVolume: number;
   audioUnlocked: boolean;
   mediaRef: RefObject<HTMLAudioElement | null>;
   onTrackEnded?: (source: MusicPlaybackSource, trackIndex: number) => void;
@@ -41,6 +44,7 @@ type UseMusicPlaybackCueProps = {
 
 export const useMusicPlaybackCue = ({
   musicPlayback,
+  musicVolume,
   audioUnlocked,
   mediaRef,
   onTrackEnded
@@ -77,6 +81,21 @@ export const useMusicPlaybackCue = ({
       // A missing origin must not break the display.
     }
   }, [mediaRef, source, trackFileName]);
+
+  useEffect(() => {
+    const media = mediaRef.current;
+
+    if (media === null) {
+      return;
+    }
+
+    try {
+      media.volume = musicVolume;
+    } catch {
+      // An engine that owns its own volume (iOS) throws or ignores; either way
+      // the track still plays, which is the part the party needs.
+    }
+  }, [mediaRef, musicVolume]);
 
   // The server owns the cursor, so a finished track is REPORTED rather than
   // acted on: the display says which track ended and waits to be told what

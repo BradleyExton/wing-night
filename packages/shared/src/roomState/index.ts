@@ -493,6 +493,10 @@ export type RoomState = {
   // for the same reason `timer` is: the host can pause and skip, so playback
   // is a mutation target rather than something the display derives.
   musicPlayback: RoomMusicPlaybackState | null;
+  // The TV's master volume, 0–1. Deliberately NOT inside `musicPlayback`: that
+  // slot is null on every silent phase, and the host's volume has to survive
+  // EATING as well as a reset and a display refresh.
+  musicVolume: number;
   minigameHostView: MinigameHostView | null;
   minigameDisplayView: MinigameDisplayView | null;
   wingParticipationByPlayerId: Record<string, boolean>;
@@ -519,6 +523,7 @@ type DisplaySafeRoomStateKeys =
   | "activeTurnTeamId"
   | "timer"
   | "musicPlayback"
+  | "musicVolume"
   | "minigameDisplayView"
   | "wingParticipationByPlayerId"
   | "pendingWingPointsByTeamId"
@@ -543,6 +548,7 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "activeTurnTeamId",
   "timer",
   "musicPlayback",
+  "musicVolume",
   "minigameDisplayView",
   "wingParticipationByPlayerId",
   "pendingWingPointsByTeamId",
@@ -594,6 +600,7 @@ export const toDisplayRoomStateSnapshot = (
     // A track title is not privileged information, so the whole of it goes to
     // the display: the TV is the surface that has to render the strip.
     musicPlayback: roomState.musicPlayback,
+    musicVolume: roomState.musicVolume,
     minigameDisplayView: roomState.minigameDisplayView,
     wingParticipationByPlayerId: roomState.wingParticipationByPlayerId,
     pendingWingPointsByTeamId: roomState.pendingWingPointsByTeamId,

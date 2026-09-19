@@ -1,4 +1,4 @@
-import { Phase, type MusicPlaybackSource } from "@wingnight/shared";
+import { MUSIC_VOLUME_DEFAULT, Phase, type MusicPlaybackSource } from "@wingnight/shared";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { ContentFatalState } from "../ContentFatalState";
@@ -102,6 +102,7 @@ export const DisplayBoard = ({
 
   const lobbyPlaylist = roomState?.lobbyPlaylist ?? [];
   const musicPlayback = roomState?.musicPlayback ?? null;
+  const musicVolume = roomState?.musicVolume ?? MUSIC_VOLUME_DEFAULT;
 
   // ONE cue on the one element. It renders `musicPlayback` and decides nothing:
   // which track, whether it is playing and where the playlist has got to are
@@ -109,6 +110,7 @@ export const DisplayBoard = ({
   // disagree about them.
   useMusicPlaybackCue({
     musicPlayback,
+    musicVolume,
     audioUnlocked,
     mediaRef: displayMediaRef,
     onTrackEnded: onMusicTrackEnded

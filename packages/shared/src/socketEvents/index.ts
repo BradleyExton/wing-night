@@ -44,6 +44,8 @@ export type MinigameActionPayload =
 export type MinigameActionType = MinigameActionPayload["actionType"];
 export type TimerExtendPayload = HostSecretPayload &
   Record<"additionalSeconds", number>;
+// On the `<audio>` element's own 0–1 scale; see `MUSIC_VOLUME_MIN`/`MAX`.
+export type MusicSetVolumePayload = HostSecretPayload & Record<"volume", number>;
 export const TIMER_EXTEND_MAX_SECONDS = 600;
 
 // The ONE client event in this contract that carries no host secret, because
@@ -84,6 +86,8 @@ export const CLIENT_TO_SERVER_EVENTS = {
   MUSIC_PAUSE: "music:pause",
   MUSIC_RESUME: "music:resume",
   MUSIC_SKIP: "music:skip",
+  MUSIC_PREVIOUS: "music:previous",
+  MUSIC_SET_VOLUME: "music:setVolume",
   MUSIC_TRACK_ENDED: "music:trackEnded",
   CONFIG_READ: "config:read",
   CONFIG_SAVE: "config:save",
@@ -142,6 +146,10 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.MUSIC_PAUSE]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.MUSIC_RESUME]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.MUSIC_SKIP]: (payload: HostSecretPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.MUSIC_PREVIOUS]: (payload: HostSecretPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME]: (
+    payload: MusicSetVolumePayload
+  ) => void;
   [CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED]: (
     payload: MusicTrackEndedPayload
   ) => void;

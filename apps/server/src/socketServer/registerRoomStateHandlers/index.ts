@@ -31,12 +31,14 @@ import {
   getRoomStateSnapshot,
   pauseRoomMusic,
   pauseRoomTimer,
+  previousRoomMusicTrack,
   redoLastScoringMutation,
   reorderTurnOrder,
   reportRoomMusicTrackEnded,
   resetGameToSetup,
   resumeRoomMusic,
   resumeRoomTimer,
+  setRoomMusicVolume,
   setWingParticipation,
   skipRoomMusicTrack,
   skipTurnBoundary
@@ -45,6 +47,7 @@ import {
   isGameReorderTurnOrderPayload,
   isHostSecretPayload,
   isMinigameActionEnvelope,
+  isMusicSetVolumePayload,
   isMusicTrackEndedPayload,
   isScoringAdjustTeamScorePayload,
   isScoringSetWingParticipationPayload,
@@ -224,6 +227,14 @@ const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
   ),
   defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.MUSIC_SKIP, isHostSecretPayload, () =>
     skipRoomMusicTrack()
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.MUSIC_PREVIOUS, isHostSecretPayload, () =>
+    previousRoomMusicTrack()
+  ),
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME,
+    isMusicSetVolumePayload,
+    (payload) => setRoomMusicVolume(payload.volume)
   )
 ];
 

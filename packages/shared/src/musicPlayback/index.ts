@@ -84,6 +84,39 @@ export const resolveNextTrackIndex = (
   return (currentIndex + 1) % trackCount;
 };
 
+// Back is the plain mirror of Next: the previous track, wrapping from the
+// first to the last. It is NOT the music-player convention of "restart the
+// current track unless you are near its start" — the server does not know the
+// element's position, and a rule that changes meaning by the second is a
+// surprise on a sauce-covered tablet.
+export const resolvePreviousTrackIndex = (
+  currentIndex: number,
+  trackCount: number
+): number => {
+  if (trackCount <= 0) {
+    return 0;
+  }
+
+  return (currentIndex - 1 + trackCount) % trackCount;
+};
+
+// The TV's master volume, as a room setting rather than a playback field: it
+// lives OUTSIDE `musicPlayback` so it survives the silent phases and a display
+// refresh, and the host sets it once for the room rather than once per track.
+// The scale is the `<audio>` element's own, 0 to 1.
+export const MUSIC_VOLUME_MIN = 0;
+export const MUSIC_VOLUME_MAX = 1;
+export const MUSIC_VOLUME_DEFAULT = 1;
+
+export const isValidMusicVolume = (value: unknown): value is number => {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    value >= MUSIC_VOLUME_MIN &&
+    value <= MUSIC_VOLUME_MAX
+  );
+};
+
 // `01-hot-in-herre.mp3` is a filename, not display copy. Deriving the title
 // keeps the lobby directory's convention-over-configuration promise — a host
 // drops MP3s in an hour before guests arrive and the TV names them — where a

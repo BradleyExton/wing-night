@@ -1,6 +1,8 @@
 import {
   MUSIC_PLAYBACK_SOURCES,
+  isValidMusicVolume,
   resolveNextTrackIndex,
+  resolvePreviousTrackIndex,
   type MusicPlaybackSource
 } from "@wingnight/shared";
 
@@ -61,6 +63,50 @@ export const skipRoomMusicTrack = defineRoomMutation({
     }
 
     roomState.musicPlayback = nextMusic;
+
+    return true;
+  }
+});
+
+// Back implies play for the same reason Next does, and rejects the same
+// one-track no-op. On an anthem it steps within the active team's list, and
+// the next phase change re-seats the cursor from the round rotation anyway.
+export const previousRoomMusicTrack = defineRoomMutation({
+  run: (roomState): boolean => {
+    const music = roomState.musicPlayback;
+
+    if (music === null) {
+      return false;
+    }
+
+    const tracks = resolveMusicTrackList(roomState, music.source);
+    const previousIndex = resolvePreviousTrackIndex(music.trackIndex, tracks.length);
+    const previousMusic = resolveMusicAtIndex(roomState, music, previousIndex, true);
+
+    if (
+      previousMusic === null ||
+      (previousIndex === music.trackIndex && music.isPlaying)
+    ) {
+      return false;
+    }
+
+    roomState.musicPlayback = previousMusic;
+
+    return true;
+  }
+});
+
+// No `musicPlayback === null` rejection here, unlike every transport mutation
+// above: the volume is a room setting, not a property of the playing track,
+// and a host turning it down during a silent phase should find it down when
+// the next anthem starts.
+export const setRoomMusicVolume = defineRoomMutation({
+  run: (roomState, volume: number): boolean => {
+    if (!isValidMusicVolume(volume) || roomState.musicVolume === volume) {
+      return false;
+    }
+
+    roomState.musicVolume = volume;
 
     return true;
   }
