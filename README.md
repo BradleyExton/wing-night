@@ -242,6 +242,31 @@ overlay, so a tap while guests are still arriving covers the whole night.
 
 ------------------------------------------------------------------------
 
+## minigames/recreate.json
+
+<pack>/local/minigames/recreate.json
+
+The Forgery Studio's targets. Each one is a party photo, the prompt that
+remixed it, the remix itself, and the visible ingredients that prompt put
+in the picture — the ingredients are the whole scoring rubric.
+
+{ "prompts": \[ { "id": "cottage-underwater", "title": "Cottage Weekend",
+"sourceImageSrc": "geo/cottage.jpg", "targetImageSrc":
+"recreate/targets/cottage-underwater.png", "prompt": "Everyone scuba
+diving on the sea floor, a neon sign glowing behind them", "ingredients":
+\["Underwater", "Scuba gear", "Neon sign"\] } \] }
+
+Author the photo, the prompt and the ingredients, leave `targetImageSrc`
+blank, then `pnpm import:recreate` paints the targets with the Gemini
+image API (key in `<pack>/.env`) and fills the field in. Audition every
+picture: an ingredient the model did not paint is not a fair tick. On the
+night the server sends each team's prompt through the same pipeline and
+saves the forgeries under `<pack>/local/assets/recreate/attempts/`. With
+no key, the rules' `"liveGeneration": false`, or a refusal, the host
+judges the prompt by ear and nothing stalls.
+
+------------------------------------------------------------------------
+
 ## gameConfig.json
 
 Defines rounds, sauces, scoring, timers, and scheduled mini-games.

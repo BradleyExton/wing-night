@@ -71,6 +71,11 @@
       "gatesPerLeg": 8,
       "parSeconds": 45,
       "limitSeconds": 120
+    },
+    "recreate": {
+      "targetsPerTurn": 1,
+      "pointsPerIngredient": 1,
+      "liveGeneration": true
     }
   },
   "timers": {

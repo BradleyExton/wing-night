@@ -54,6 +54,20 @@ export const createValidGeoJson = (prefix: string): string => {
   });
 };
 
+export const createValidRecreateJson = (prefix: string): string => {
+  return JSON.stringify({
+    prompts: [
+      {
+        id: `${prefix.toLowerCase()}-recreate-1`,
+        title: `${prefix} Remix`,
+        targetImageSrc: `/sample-assets/recreate/${prefix.toLowerCase()}.svg`,
+        prompt: `${prefix} underwater with a neon sign`,
+        ingredients: ["Underwater", "Neon sign"]
+      }
+    ]
+  });
+};
+
 export const createValidDrawingJson = (prefix: string): string => {
   return JSON.stringify({
     prompts: [
@@ -214,5 +228,10 @@ export const writeValidContentTree = (
     contentRoot,
     `${scope}/minigames/joust.json`,
     createValidJoustJson(prefix)
+  );
+  writeContentFile(
+    contentRoot,
+    `${scope}/minigames/recreate.json`,
+    createValidRecreateJson(prefix)
   );
 };

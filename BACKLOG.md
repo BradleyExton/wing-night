@@ -130,6 +130,32 @@ These are `MinigameRuntimePlugin` packages registered on server and client like
 trivia/geo/drawing. Read `docs/minigame-authoring-guide.md` first — adding a `MinigameType` breaks
 every `Record<MinigameType, …>` in the repo until fully wired, so there's no throwaway half-state.
 
+### RECREATE ("Forgery Studio") — follow-ups
+The game shipped 2026-09-18: a doctored party photo on the TV, the team writes the prompt they
+think made it, the server sends that prompt (with the source photo) to the Gemini image API once
+per attempt, and the host scores the PROMPT by ticking the target's secret ingredients. Package in
+`packages/minigames/recreate`, generation runner in `apps/server/src/minigames/recreateGeneration`,
+targets painted ahead of the night by `pnpm import:recreate`. The picture never decides the score,
+so a failed or absent generator degrades to judging by ear rather than stalling. Left out on
+purpose, in rough priority:
+
+- **A judge that pre-ticks.** A cheap text-only model call that maps the team's prompt onto the
+  ingredient list ("sea floor" counts as "underwater") and pre-ticks the host's checklist as a
+  suggestion. The host still confirms; with no call the host ticks by hand, exactly as now. The
+  reducer already takes `toggleIngredient` per index, so this is a second server side effect in the
+  shape of the generation runner, not a rules change.
+- **A writing clock.** The game is host-paced (`timerKey: null`) so the tablet can sit with the team
+  while they type. A prompt-writing countdown would give the turn pressure; FAPPY's `receivedAtMs`
+  pattern (rules-owned limit, no shell timer) is the precedent, and it keeps the shell's timer
+  contract untouched.
+- **Room-awarded bonus.** One extra point, tapped by the host, for the forgery the room liked best.
+  Cheap, and it gives the picture a stake without making it the referee.
+- **Video as the reward.** An eight-second clip of the winning forgery over ROUND_RESULTS. Minutes
+  and dollars per clip, so pre-rendered from the night's `recreate/attempts/` afterwards, never live.
+- **Content-pack targets.** The sample bank ships placeholder SVGs. The night pack needs real
+  targets authored from the GEO photos and painted by `pnpm import:recreate`; audition every
+  picture against its ingredients before the party.
+
 ### SEAR — stop the hidden clock at the target time
 Blind-clock precision relay: START on the tablet, three visible seconds on the TV, then the lid
 drops and the player taps STOP at the target from memory. Scored by absolute error in bands.

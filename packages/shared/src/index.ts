@@ -178,6 +178,13 @@ export type {
   MinigameContractCompatibilityStatus,
   MinigameDisplayView,
   MinigameHostView,
+  RecreateAttempt,
+  RecreateAttemptStatus,
+  RecreateChecklist,
+  RecreateMinigameDisplayView,
+  RecreateMinigameHostView,
+  RecreateMinigameTarget,
+  RecreateSubState,
   RoleScopedSnapshotByRole,
   RoleScopedStateSnapshotEnvelope,
   RoomFatalError,
@@ -322,6 +329,18 @@ export type {
   SongGuessDifficulty,
   SongGuessPrompt
 } from "./content/songGuess/index.js";
+export {
+  isRecreateContentFile,
+  isRecreatePrompt,
+  RECREATE_MAX_INGREDIENTS,
+  RECREATE_MIN_INGREDIENTS,
+  validateRecreateContentFile,
+  validateRecreatePrompt
+} from "./content/recreate/index.js";
+export type {
+  RecreateContentFile,
+  RecreatePrompt
+} from "./content/recreate/index.js";
 export {
   isTriviaContentFile,
   isTriviaPrompt,

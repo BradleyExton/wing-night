@@ -192,8 +192,13 @@ Minigame content files are plugin-declared and loaded from:
 - `<content root>/local/<plugin-file>.json`
 - fallback: `content/sample/<plugin-file>.json`
 
-Current built-in content-backed minigame:
+Current built-in content-backed minigames include:
 - `TRIVIA` → `minigames/trivia.json`
+- `RECREATE` → `minigames/recreate.json` — targets authored ahead of the night: a party photo
+  (`sourceImageSrc`), the prompt that remixed it, the remix (`targetImageSrc`, painted by
+  `pnpm import:recreate`) and the two-to-six visible `ingredients` that prompt put in it. The
+  ingredients and the authored prompt are secrets: absent from the display view while a team is
+  writing, unsealed once its prompt is in, the authored prompt only once the score is locked.
 
 Current built-in unsupported runtime placeholders:
 - `GEO` (no content file required yet)
@@ -202,6 +207,12 @@ Current built-in unsupported runtime placeholders:
 Local static assets:
 - `<content root>/local/assets/` — images, served by the server at `/content-assets/<path>` and
   named pack-relative in content (`avatars/brad.png`, `geo/cottage.jpg`)
+- `<content root>/local/assets/recreate/attempts/` — written by the SERVER during play: the one
+  place the app generates content at party time. RECREATE sends each team's prompt (with the
+  target's source photo attached) to the Gemini image API once per attempt; the reply is saved
+  here and served like any other asset. No key, no signal or a refusal fails the attempt with a
+  readable reason and the host scores the prompt anyway — the call can never stall a turn, and
+  the picture never decides the score.
 
 Images may reference:
 - Local static paths (preferred)

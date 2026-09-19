@@ -33,13 +33,17 @@ The real content for a party — roster, teams, party music, generated heads, GE
 
 ```text
 ~/wing-night-content/
-  .env                       GEMINI_API_KEY (pnpm import:avatars reads it here)
+  .env                       GEMINI_API_KEY (import:avatars, import:recreate and the
+                             RECREATE forger at party time all read it here)
   local/players.json         roster; avatarSrc is pack-relative ("avatars/rob.png")
   local/teams.json           teams, genres, anthem filenames
   local/audio/lobby/*.mp3    SETUP lobby playlist
   local/teams/audio/*.mp3    team anthems
   local/assets/avatars/*     generated heads, served at /content-assets/avatars/…
   local/assets/geo/*         GEO photos, served at /content-assets/geo/…
+  local/minigames/recreate.json  RECREATE targets: source photo, authored prompt, ingredients
+  local/assets/recreate/targets/*   the targets import:recreate painted from that file
+  local/assets/recreate/attempts/*  the forgeries the server painted on the night (keepsakes)
   local/avatar-sources/*     input photos + manifest for import:avatars
 ```
 

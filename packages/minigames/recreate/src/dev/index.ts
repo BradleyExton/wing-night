@@ -1,0 +1,40 @@
+import { createDevManifest } from "@wingnight/minigames-core";
+
+// Mirrors content/sample/minigames/recreate.json so sandbox play matches a
+// real night; the placeholder targets resolve from the client's public sample
+// assets. Live generation is OFF here: the sandbox has no server to call the
+// image model from, and the offline path is the one that has to work
+// regardless.
+const DEV_CONTENT = {
+  prompts: [
+    {
+      id: "cottage-space",
+      title: "Cottage Weekend",
+      targetImageSrc: "/sample-assets/recreate/cottage-space.svg",
+      prompt:
+        "The whole group floating in outer space in silver spacesuits, the Earth behind them, a slice of pizza drifting past",
+      ingredients: ["Outer space", "Spacesuits", "Earth behind them", "A floating pizza"]
+    },
+    {
+      id: "diner-noir",
+      title: "Late-Night Diner",
+      targetImageSrc: "/sample-assets/recreate/diner-noir.svg",
+      prompt:
+        "A black-and-white film noir scene, everyone in trench coats and fedoras, rain streaking the window, a magnifying glass on the table",
+      ingredients: ["Black and white", "Trench coats and fedoras", "Rain on the window", "A magnifying glass"]
+    },
+    {
+      id: "beach-dinosaur",
+      title: "Beach Day",
+      targetImageSrc: "/sample-assets/recreate/beach-dinosaur.svg",
+      prompt:
+        "A dinosaur crashing the beach party under a purple sky, everyone holding tiny cocktail umbrellas",
+      ingredients: ["A dinosaur", "Purple sky", "Tiny cocktail umbrellas"]
+    }
+  ]
+};
+
+export const recreateDevManifest = createDevManifest({
+  rules: { targetsPerTurn: 2, pointsPerIngredient: 1, liveGeneration: false },
+  content: DEV_CONTENT
+});

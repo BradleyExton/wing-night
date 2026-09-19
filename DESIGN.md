@@ -437,6 +437,41 @@ under the same marquee and deck chrome:
 -   The flight is the game: §8's infinite-animation rule does not bite.
     `prefers-reduced-motion` on the display shows the landing frame only.
 
+## 2.10 RECREATE Minigame Surface Language ("Forgery Studio")
+
+The RECREATE surfaces are a gallery back room: the TV hangs a doctored party
+photo (the target), the team on the tablet writes the prompt they think made
+it, and the forger — the image model — paints their version next to it.
+
+-   The picture is never the referee. Points come from the host ticking the
+    target's secret ingredients against the prompt as read aloud, so the
+    surfaces keep the pictures and the appraisal visually separate: matte
+    frames up top, the grading bench underneath (TV) or beside them (tablet).
+-   Frames are matte and dark (`surface` border and mat, on a `surfaceAlt`
+    wall) — the art is the party's own photos, so the frame stays out of
+    their way. A photo that does not fill its frame is matted, not
+    letterboxed. The forgery's frame holds a pulsing "Painting…" while the
+    model works and a plain-words reason when it bails; the frame is never
+    empty and never spins forever.
+-   `primary` is the studio's accent (title, the one button to press, the
+    points seal); `success` is the tick, and functional only. That is the
+    two-accent budget; no gold, heat or team tokens inside these surfaces.
+-   Secrets stage in, never out: while the team writes, the TV shows only the
+    target and "ingredients sealed"; the prompt and the ingredient chips
+    appear the moment it is sent; the authored prompt only once the score is
+    locked. In PASS_AND_PLAY the tablet is in the team's hands, so the
+    checklist is absent from the host view too until the prompt is in.
+-   Host: header rail (studio title, "Target n of m"), team line, then a
+    two-column stage — writing: target | composer (tall textarea, character
+    count, one primary button); judging: both pictures small | the bench
+    (their prompt in a quote block, ingredient toggles at ≥56px, running
+    tally, lock, and "let them rewrite" as the redo hatch). Scored: points
+    seal, the real prompt, next target or turn-complete note.
+-   Display: masthead, two frames (target | original while writing, target |
+    forgery after), the appraisal under a hairline: title, their prompt in
+    italics, ingredient chips that fill `success` as the host ticks, the
+    points seal and the real prompt on lock.
+
 ## 2.8 Cast (shared character system)
 
 Every rostered player has a little hen that recurs across the show.

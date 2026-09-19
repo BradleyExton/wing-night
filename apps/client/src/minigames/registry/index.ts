@@ -18,6 +18,9 @@ import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
 import { joustRendererBundle } from "@wingnight/minigames-joust/client";
 import { joustDevManifest } from "@wingnight/minigames-joust/dev";
 import { joustRuntimePlugin } from "@wingnight/minigames-joust/runtime";
+import { recreateRendererBundle } from "@wingnight/minigames-recreate/client";
+import { recreateDevManifest } from "@wingnight/minigames-recreate/dev";
+import { recreateRuntimePlugin } from "@wingnight/minigames-recreate/runtime";
 import { songGuessRendererBundle } from "@wingnight/minigames-song-guess/client";
 import { songGuessDevManifest } from "@wingnight/minigames-song-guess/dev";
 import { songGuessRuntimePlugin } from "@wingnight/minigames-song-guess/runtime";
@@ -59,6 +62,11 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
     rendererBundle: fappyRendererBundle,
     devManifest: fappyDevManifest,
     runtimePlugin: fappyRuntimePlugin
+  },
+  RECREATE: {
+    rendererBundle: recreateRendererBundle,
+    devManifest: recreateDevManifest,
+    runtimePlugin: recreateRuntimePlugin
   },
   DRAWING: {
     rendererBundle: drawingRendererBundle,

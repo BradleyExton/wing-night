@@ -103,6 +103,25 @@ export const MINIGAME_DEFINITIONS = {
       ]
     }
   },
+  RECREATE: {
+    id: "RECREATE",
+    slug: "recreate",
+    // Host-paced: a target ends when the host locks its score, not when a
+    // clock runs out. The tablet is in the team's hands while they write.
+    timerKey: null,
+    rulesKey: "recreate",
+    contractMetadata: {
+      minigameApiVersion: MINIGAME_API_VERSION,
+      capabilityFlags: [
+        "submitPrompt",
+        "resolveGeneration",
+        "toggleIngredient",
+        "lockScore",
+        "retryPrompt",
+        "nextTarget"
+      ]
+    }
+  },
   EMOJI_CHARADES: {
     id: "EMOJI_CHARADES",
     slug: "emoji-charades",

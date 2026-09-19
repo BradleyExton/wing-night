@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 592 370" fill="none">
+  <defs>
+    <filter id="shadow-flat" x="-40" y="-40" width="672" height="450" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#121212" flood-opacity="0.16" />
+    </filter>
+  </defs>
+  <!-- The target: a framed party photo, hung straight. -->
+  <g filter="url(#shadow-flat)">
+    <rect x="44" y="70" width="228" height="176" rx="12" fill="#1C1C1C" stroke="#F97316" stroke-width="14" />
+    <rect x="72" y="98" width="172" height="120" rx="8" fill="#242424" />
+    <circle cx="112" cy="146" r="16" fill="#A3A3A3" />
+    <circle cx="158" cy="140" r="16" fill="#A3A3A3" />
+    <circle cx="204" cy="148" r="16" fill="#A3A3A3" />
+    <path d="M84 218c8-30 24-46 28-46 6 0 12 16 16 30 4-20 18-40 30-40 10 0 16 22 22 38 6-16 16-30 24-30 10 0 18 26 22 48Z" fill="#6B6157" />
+    <path d="M176 104l10 18 20 3-14 14 3 20-19-10-19 10 3-20-14-14 20-3Z" fill="#FBBF24" />
+  </g>
+  <!-- The forgery: the same frame, hung crooked, still wet. -->
+  <g filter="url(#shadow-flat)" transform="rotate(-6 434 168)">
+    <rect x="320" y="70" width="228" height="176" rx="12" fill="#1C1C1C" stroke="#A3A3A3" stroke-width="14" />
+    <rect x="348" y="98" width="172" height="120" rx="8" fill="#242424" />
+    <circle cx="388" cy="150" r="16" fill="#A3A3A3" />
+    <circle cx="434" cy="136" r="18" fill="#A3A3A3" />
+    <circle cx="482" cy="152" r="14" fill="#A3A3A3" />
+    <path d="M360 218c10-24 24-40 32-40 8 0 14 18 18 30 6-24 20-44 32-44 12 0 18 24 24 40 6-12 14-22 22-22 8 0 14 18 18 36Z" fill="#6B6157" />
+    <path d="M452 106l8 14 16 2-12 11 3 16-15-8-15 8 3-16-12-11 16-2Z" fill="#F97316" />
+  </g>
+  <!-- The brush that did it. -->
+  <g transform="rotate(32 296 300)">
+    <rect x="236" y="288" width="120" height="22" rx="11" fill="#242424" stroke="#A3A3A3" stroke-width="4" />
+    <rect x="352" y="284" width="26" height="30" rx="6" fill="#A3A3A3" />
+    <path d="M378 286c22 0 40 6 48 13-8 7-26 13-48 13Z" fill="#F97316" />
+  </g>
+  <!-- Ticks: two of three ingredients named. -->
+  <g stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="72" cy="318" r="16" stroke="#22C55E" />
+    <path d="M63 318l7 7 12-14" stroke="#22C55E" />
+    <circle cx="128" cy="318" r="16" stroke="#22C55E" />
+    <path d="M119 318l7 7 12-14" stroke="#22C55E" />
+    <circle cx="184" cy="318" r="16" stroke="#A3A3A3" />
+  </g>
+</svg>

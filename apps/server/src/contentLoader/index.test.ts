@@ -9,6 +9,7 @@ import {
   createValidGameConfigJson,
   createValidGeoJson as createValidGeo,
   createValidJoustJson as createValidJoust,
+  createValidRecreateJson as createValidRecreate,
   createValidSongGuessJson as createValidSongGuess,
   createValidTriviaJson as createValidTrivia,
   writeContentFile
@@ -57,6 +58,11 @@ test("loads all content from local files when available", () => {
     contentRoot,
     "local/minigames/joust.json",
     createValidJoust("Local")
+  );
+  writeContentFile(
+    contentRoot,
+    "local/minigames/recreate.json",
+    createValidRecreate("Local")
   );
 
   writeContentFile(
@@ -107,6 +113,11 @@ test("loads all content from local files when available", () => {
     contentRoot,
     "sample/minigames/joust.json",
     createValidJoust("Sample")
+  );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/recreate.json",
+    createValidRecreate("Sample")
   );
 
   const content = loadContent({ contentRootDir: contentRoot });
@@ -184,6 +195,11 @@ test("falls back to sample files when local files are missing", () => {
     "sample/minigames/joust.json",
     createValidJoust("Sample")
   );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/recreate.json",
+    createValidRecreate("Sample")
+  );
 
   const content = loadContent({ contentRootDir: contentRoot });
 
@@ -247,6 +263,11 @@ const writeRosterContentRoot = (playersJson: string, teamsJson: string): string 
     contentRoot,
     "sample/minigames/joust.json",
     createValidJoust("Sample")
+  );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/recreate.json",
+    createValidRecreate("Sample")
   );
 
   return contentRoot;

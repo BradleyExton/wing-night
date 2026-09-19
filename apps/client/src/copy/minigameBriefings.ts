@@ -6,6 +6,7 @@ const DEFAULT_SONG_GUESS_SONGS_PER_TURN = 4;
 const DEFAULT_JOUST_SHOTS_PER_TURN = 3;
 const DEFAULT_FAPPY_LEGS_PER_TURN = 4;
 const DEFAULT_FAPPY_GATES_PER_LEG = 8;
+const DEFAULT_RECREATE_TARGETS_PER_TURN = 1;
 
 const resolvePositiveInteger = (value: unknown, fallback: number): number => {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : fallback;
@@ -141,6 +142,29 @@ const resolveFappyBriefingContent = (
   };
 };
 
+const resolveRecreateBriefingContent = (
+  gameConfig: GameConfigFile | null
+): MinigameBriefingContent => {
+  const rules = gameConfig?.minigameRules?.recreate;
+  const targetsPerTurn = resolvePositiveInteger(
+    rules?.targetsPerTurn,
+    DEFAULT_RECREATE_TARGETS_PER_TURN
+  );
+
+  return {
+    displayName: "Forgery Studio",
+    illustrationPath: `${DISPLAY_ASSET_ROOT}/recreate-illustration.svg`,
+    illustrationAlt: "Forgery Studio mini-game artwork",
+    summary:
+      "The TV shows a doctored party photo. Write the prompt you think made it, and the forger paints your version next to it.",
+    steps: [
+      `${targetsPerTurn} target${targetsPerTurn === 1 ? "" : "s"} this turn. Study the picture, then type one prompt on the tablet.`,
+      "The host reads your prompt aloud and ticks off every secret ingredient it names.",
+      "A point per ingredient. The forgery itself is just for laughs."
+    ]
+  };
+};
+
 const minigameBriefingContentByType: Record<
   MinigameType,
   (gameConfig: GameConfigFile | null) => MinigameBriefingContent
@@ -163,6 +187,7 @@ const minigameBriefingContentByType: Record<
   },
   JOUST: resolveJoustBriefingContent,
   FAPPY: resolveFappyBriefingContent,
+  RECREATE: resolveRecreateBriefingContent,
   GEO: () => {
     return {
       displayName: "Geo",

@@ -5,6 +5,7 @@ import type { MinigameType } from "../content/gameConfig/index.js";
 import type { GeoPrompt } from "../content/geo/index.js";
 import type { JoustPrompt } from "../content/joust/index.js";
 import type { JoustAim, JoustTopple } from "../joust/types.js";
+import type { RecreatePrompt } from "../content/recreate/index.js";
 import type { SongGuessDifficulty } from "../content/songGuess/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { RoomMusicPlaybackState } from "../musicPlayback/index.js";
@@ -105,6 +106,68 @@ export type GeoMinigameDisplayView = MinigameDisplayViewBase & {
     | { status: "guessing" }
     | { status: "submitted"; result: GeoMinigameDisplayResult }
   );
+
+// A RECREATE target runs writing -> judging -> scored, host-paced.
+export type RecreateSubState = "writing" | "judging" | "scored";
+
+// What became of the team's prompt once it was sent to the image model.
+// `skipped` is the offline path: the rules turned live generation off, so the
+// room judges the prompt as read aloud and no picture is expected.
+export type RecreateAttemptStatus = "generating" | "ready" | "failed" | "skipped";
+
+export type RecreateAttempt = {
+  attemptId: string;
+  prompt: string;
+  status: RecreateAttemptStatus;
+  // Pack-relative once generated (`recreate/attempts/…`), null until then.
+  imageSrc: string | null;
+  failureReason: string | null;
+};
+
+// Both surfaces see the target itself; only the checklist and the authored
+// prompt are staged.
+export type RecreateMinigameTarget = Pick<
+  RecreatePrompt,
+  "id" | "title" | "targetImageSrc"
+> & {
+  sourceImageSrc: string | null;
+};
+
+// The rubric, present on the host view from the moment the team submits.
+// Absent while writing, because in PASS_AND_PLAY the tablet is in the team's
+// hands and the ingredients are the answer.
+export type RecreateChecklist = {
+  ingredients: string[];
+  checkedIngredientIndexes: number[];
+  authoredPrompt: string;
+};
+
+type RecreateMinigameViewFields = {
+  minigame: "RECREATE";
+  subState: RecreateSubState;
+  targetsPerTurn: number;
+  targetsCompletedThisTurn: number;
+  pointsPerIngredient: number;
+  liveGeneration: boolean;
+  currentTarget: RecreateMinigameTarget | null;
+  attempt: RecreateAttempt | null;
+  lastPointsAwarded: number | null;
+};
+
+export type RecreateMinigameHostView = MinigameHostViewBase &
+  RecreateMinigameViewFields & {
+    checklist: RecreateChecklist | null;
+  };
+
+// The display's copy of the rubric lags the host's by one beat: the
+// ingredients appear once the prompt is in (they are no longer an answer the
+// team could use), the authored prompt only once the score is locked.
+export type RecreateMinigameDisplayView = MinigameDisplayViewBase &
+  RecreateMinigameViewFields & {
+    ingredients: string[] | null;
+    checkedIngredientIndexes: number[];
+    authoredPrompt: string | null;
+  };
 
 export type DrawingPoint = {
   // Normalized 0–1 coordinates; the capture surface and the display canvas
@@ -382,6 +445,7 @@ export type MinigameHostView =
   | SongGuessMinigameHostView
   | JoustMinigameHostView
   | FappyMinigameHostView
+  | RecreateMinigameHostView
   | DrawingMinigameHostView
   | EmojiCharadesMinigameHostView;
 
@@ -461,6 +525,7 @@ export type MinigameDisplayView =
   | SongGuessMinigameDisplayView
   | JoustMinigameDisplayView
   | FappyMinigameDisplayView
+  | RecreateMinigameDisplayView
   | DrawingMinigameDisplayView
   | EmojiCharadesMinigameDisplayView;
 

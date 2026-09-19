@@ -4,14 +4,14 @@
     {
       "name": "wing-night-server",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["PORT=3500", "pnpm", "--filter", "@wingnight/server", "dev"],
-      "port": 3500
+      "runtimeArgs": ["PORT=3700", "pnpm", "--filter", "@wingnight/server", "dev"],
+      "port": 3700
     },
     {
       "name": "wing-night-display",
       "runtimeExecutable": "env",
       "runtimeArgs": [
-        "VITE_SOCKET_SERVER_URL=http://127.0.0.1:3500",
+        "VITE_SOCKET_SERVER_URL=http://127.0.0.1:3700",
         "pnpm",
         "--filter",
         "@wingnight/client",
@@ -20,11 +20,11 @@
         "--host",
         "127.0.0.1",
         "--port",
-        "5673",
+        "5873",
         "--strictPort"
       ],
-      "port": 5673,
-      "url": "http://127.0.0.1:5673"
+      "port": 5873,
+      "url": "http://127.0.0.1:5873"
     }
   ]
 }
