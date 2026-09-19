@@ -36,6 +36,14 @@ export {
   type CharacterPose,
   type HeadAnchors
 } from "./Character/geometry/index.js";
+// How loose one bird is: a class of custom properties that scatter its
+// footwork, its bounce and the moment it lands the room's beat.
+export {
+  CHARACTER_BEAT_LAGS,
+  CHARACTER_BOUNCES,
+  CHARACTER_FOOTWORKS,
+  resolveCharacterGrooveClassName
+} from "./resolveCharacterGroove/index.js";
 export {
   CHARACTER_BODIES,
   CHARACTER_COMBS,

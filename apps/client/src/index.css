@@ -526,6 +526,115 @@ body {
   }
 }
 
+/* The jig (DESIGN.md §2.8): the loop a DANCING bird runs between the beats,
+   on its own clock rather than the room's. Every one of these is driven at a
+   tempo and a phase the bird carries as CSS variables (the cast's
+   `resolveDanceJitter`), which is what stops a floor of birds from moving as
+   one animal. The beat is still the beat — these ride under it. */
+
+/* Quick feet. Four taps a cycle at uneven heights, so a foot scuffs and
+   kicks rather than marching. */
+@keyframes cast-jig-feet {
+  0% {
+    transform: rotate(-26deg);
+  }
+  25% {
+    transform: rotate(16deg);
+  }
+  50% {
+    transform: rotate(-9deg);
+  }
+  75% {
+    transform: rotate(32deg);
+  }
+  100% {
+    transform: rotate(-26deg);
+  }
+}
+
+/* The other foot: its own shape, not this one delayed, so the two cross. */
+@keyframes cast-jig-feet-off {
+  0% {
+    transform: rotate(30deg);
+  }
+  30% {
+    transform: rotate(-22deg);
+  }
+  55% {
+    transform: rotate(12deg);
+  }
+  80% {
+    transform: rotate(-14deg);
+  }
+  100% {
+    transform: rotate(30deg);
+  }
+}
+
+/* The body riding over those feet: up on the ball of the foot, a lean, down. */
+@keyframes cast-jig-hop {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  30% {
+    transform: translateY(-2.5px) rotate(-3deg);
+  }
+  55% {
+    transform: translateY(0.8px) rotate(2deg);
+  }
+  80% {
+    transform: translateY(-1.5px) rotate(-1deg);
+  }
+}
+
+@keyframes cast-jig-tail {
+  0%,
+  100% {
+    transform: rotate(-9deg);
+  }
+  40% {
+    transform: rotate(11deg);
+  }
+  70% {
+    transform: rotate(-4deg);
+  }
+}
+
+@keyframes cast-jig-wing {
+  0%,
+  100% {
+    transform: rotate(4deg);
+  }
+  45% {
+    transform: rotate(-26deg);
+  }
+  75% {
+    transform: rotate(-8deg);
+  }
+}
+
+/* The whole bird, off its feet: the lobby parade hangs this on a layer of its
+   own inside each dancer so it composes with the mirror flip on the member.
+   Percentages are of the bird's own box, so the hop is the same fraction of a
+   bird on a 1080p panel and on a 4K one, and `origin-bottom` keeps the pivot
+   at its feet rather than swinging it off the floor. */
+@keyframes cast-jive {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  22% {
+    transform: translate(-1.5%, -7%) rotate(-4deg);
+  }
+  48% {
+    transform: translate(1%, -1%) rotate(2deg);
+  }
+  74% {
+    transform: translate(2.5%, -5%) rotate(5deg);
+  }
+}
+
 /* ---- Team identity kit (docs/team-identity.md) ---------------------------
    Wordmark treatments, ambient textures and entrance beats, ported from the
    phase 1 mockup (public/mockups/team-identity/kit.css). They live here rather

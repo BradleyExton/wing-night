@@ -3,6 +3,8 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Player, Team } from "@wingnight/shared";
 
+import { CHARACTER_FOOTWORKS, resolveCharacterGrooveClassName } from "@wingnight/cast";
+
 import { resolveTeamThemeById } from "../../../../../utils/resolveTeamTheme";
 import { CastParade } from "./index";
 import * as styles from "./styles";
@@ -30,6 +32,8 @@ const renderParade = (paradePlayers: Player[], paradeTeams: Team[] = teams): str
     />
   );
 };
+
+const escapeForRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const countMembers = (html: string): number => {
   return (html.match(/data-cast-member="/g) ?? []).length;
@@ -59,8 +63,33 @@ test("does stage both groups off their own edges, walking, before the first fram
 test("does face the right-hand group left so it walks in towards the floor", () => {
   const html = renderParade(players);
 
-  assert.match(html, new RegExp(`data-cast-group="team-beta"[^]*?class="${styles.member} ${styles.memberFacingLeft}"`));
-  assert.match(html, new RegExp(`data-cast-group="team-alpha"[^]*?class="${styles.member}" data-cast-member="player-1"`));
+  assert.match(html, new RegExp(`data-cast-group="team-beta"[^]*?class="${styles.member} ${styles.memberFacingLeft} `));
+  assert.match(html, new RegExp(`data-cast-group="team-alpha"[^]*?class="${styles.member} [^"]*" data-cast-member="player-1"`));
+});
+
+test("does hand every bird its own groove, so the floor is not one animal on one clock", () => {
+  const html = renderParade(players);
+  const worn = CHARACTER_FOOTWORKS.filter((footwork) => html.includes(footwork));
+
+  assert.ok(worn.length > 1, "the whole floor wore one footwork");
+  assert.match(
+    html,
+    new RegExp(`class="[^"]*${escapeForRegExp(resolveCharacterGrooveClassName("Alex"))}[^"]*" data-cast-member="player-1"`)
+  );
+});
+
+// What the birds DO once they are dancing — the jig layer and its quick
+// feet — is the cast's, and is tested against the figure that draws it
+// (`packages/cast/src/Character`). What the parade owns is which groove each
+// bird wears and what wraps it, which is what a first frame shows.
+test("does wrap every bird in a bounce layer inside its mirror, so it keeps facing the room", () => {
+  const html = renderParade(players);
+
+  assert.match(html, new RegExp(`data-cast-member="player-2"><span class="${escapeForRegExp(styles.jive)}"`));
+  // Walking on, the group's own transform carries the birds and nothing
+  // wobbles under it — the bird's bounce timings are set on it, but the
+  // bounce itself is not running.
+  assert.doesNotMatch(html, /animation:cast-jive/);
 });
 
 test("does colour a group by its team accent and dress it in the genre's apparel", () => {

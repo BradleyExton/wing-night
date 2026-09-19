@@ -78,29 +78,50 @@ const thighPath = ({ x, y }: CharacterPivot): string =>
   `M ${x - 5} ${y - 4} C ${x - 6} ${y + 3} ${x - 1} ${y + 6} ${x + 3} ${y + 2} C ${x + 4} ${y - 2} ${x} ${y - 6} ${x - 5} ${y - 4} Z`;
 
 // A part on its pivot: the outer translate puts the pivot at the origin, the
-// middle `<g>` is what a pose (or a surface's own frame loop) rotates, and the
-// inner translate puts the drawing back. Rotating about a local origin this
-// way holds under any transform a surface wraps the figure in, where a CSS
-// `transform-origin` would be measured against the wrong viewport.
+// `<g>`s in the middle are what move it, and the inner translate puts the
+// drawing back. Rotating about a local origin this way holds under any
+// transform a surface wraps the figure in, where a CSS `transform-origin`
+// would be measured against the wrong viewport.
+//
+// TWO layers move, because an element carries one `transform` at a time and a
+// dancing bird needs two clocks: the `pose` layer is the beat (a transition
+// the room's music drives), and the `jig` layer around it is the bird's own
+// free-running loop. A part with no jig is not wrapped at all, so every pose
+// but `dance` draws exactly the markup it always did.
 type PartClassNames = Partial<Record<CharacterPart, string>>;
+
+type CharacterRig = {
+  pose: PartClassNames;
+  jig: PartClassNames;
+};
 
 const Part = ({
   part,
-  classNames,
+  rig,
   children
 }: {
   part: CharacterPart;
-  classNames: PartClassNames;
+  rig: CharacterRig;
   children: ReactNode;
 }): JSX.Element => {
   const pivot = CHARACTER_PIVOTS[part];
-  const className = classNames[part];
+  const jigClassName = rig.jig[part];
+
+  const posed = (
+    <g data-character-part={part} className={rig.pose[part]}>
+      <g transform={`translate(${-pivot.x} ${-pivot.y})`}>{children}</g>
+    </g>
+  );
 
   return (
     <g transform={`translate(${pivot.x} ${pivot.y})`}>
-      <g data-character-part={part} className={className}>
-        <g transform={`translate(${-pivot.x} ${-pivot.y})`}>{children}</g>
-      </g>
+      {jigClassName === undefined ? (
+        posed
+      ) : (
+        <g data-character-jig={part} className={jigClassName}>
+          {posed}
+        </g>
+      )}
     </g>
   );
 };
@@ -192,8 +213,12 @@ export const CharacterFigure = ({
 }: CharacterFigureProps): JSX.Element => {
   const haloId = useId();
   const head = appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS;
-  // A dance is the player's own; every other pose is the same for every bird.
-  const classNames = pose === "dance" ? styles.dances[appearance.dance] : styles.poses[pose];
+  // A dance is the player's own — its steps AND the loop it runs between the
+  // beats; every other pose is the same for every bird and has no jig.
+  const rig: CharacterRig =
+    pose === "dance"
+      ? { pose: styles.dances[appearance.dance], jig: styles.danceJigs[appearance.dance] }
+      : { pose: styles.poses[pose], jig: {} };
 
   return (
     <g
@@ -202,28 +227,28 @@ export const CharacterFigure = ({
       data-character-tail={appearance.tail}
       data-character-pose={pose}
     >
-      <Part part="tail" classNames={classNames}>
+      <Part part="tail" rig={rig}>
         <path className={styles.silhouette} d={TAIL_PATHS[appearance.tail]} />
       </Part>
-      <Part part="legFar" classNames={classNames}>
+      <Part part="legFar" rig={rig}>
         <g className={styles.legFar}>
           <path className={styles.legs} d={legPath(CHARACTER_PIVOTS.legFar)} />
         </g>
       </Part>
-      <Part part="body" classNames={classNames}>
+      <Part part="body" rig={rig}>
         <path className={styles.silhouette} d={BODY_PATHS[appearance.body]} />
         <path className={styles.shade} d={BELLY_SHADE_PATHS[appearance.body]} />
       </Part>
-      <Part part="legNear" classNames={classNames}>
+      <Part part="legNear" rig={rig}>
         <path className={styles.silhouette} d={thighPath(CHARACTER_PIVOTS.legNear)} />
         <path className={styles.legs} d={legPath(CHARACTER_PIVOTS.legNear)} />
       </Part>
       {wing === "drawn" && (
-        <Part part="wing" classNames={classNames}>
+        <Part part="wing" rig={rig}>
           <path className={styles.silhouette} d={CHARACTER_WING_PATH} data-character-wing />
         </Part>
       )}
-      <Part part="head" classNames={classNames}>
+      <Part part="head" rig={rig}>
         <path className={styles.silhouette} d={NECK_PATH} />
         <g data-character-head>
           {appearance.avatarSrc === undefined ? (

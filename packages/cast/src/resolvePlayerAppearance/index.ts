@@ -1,5 +1,7 @@
 import { resolveContentAssetSrc, type Player } from "@wingnight/shared";
 
+import { hashName } from "../hashName/index.js";
+
 export const CHARACTER_BODIES = ["round", "tall", "wide"] as const;
 export type CharacterBody = (typeof CHARACTER_BODIES)[number];
 
@@ -23,22 +25,6 @@ export type CharacterAppearance = {
   tail: CharacterTail;
   dance: CharacterDance;
   avatarSrc?: string;
-};
-
-// Seeded off the NAME, not the id. Player ids are positional in players.json,
-// so an id seed would hand Brad a new body every time the roster is reordered.
-// The name is the one thing about a player that is the same night after night.
-// Case and surrounding whitespace are ignored so "brad " and "Brad" agree.
-const hashName = (name: string): number => {
-  const normalizedName = name.trim().toLowerCase();
-  let hash = 2166136261;
-
-  for (let index = 0; index < normalizedName.length; index += 1) {
-    hash ^= normalizedName.charCodeAt(index);
-    hash = Math.imul(hash, 16777619) >>> 0;
-  }
-
-  return hash;
 };
 
 // `serverOrigin` is INJECTED rather than read in here, the same seam

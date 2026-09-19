@@ -182,8 +182,11 @@ test("does tuck both legs and loop nothing when flying", () => {
 test("does swing the far leg half a stride behind the near one when walking", () => {
   const html = renderToStaticMarkup(<Character appearance={drawn} pose="walk" />);
 
-  assert.match(html, /data-character-part="legNear" class="[^"]*cast-step_0\.5s_ease-in-out_infinite/);
-  assert.match(html, /data-character-part="legFar" class="[^"]*cast-step_0\.5s_ease-in-out_-0\.25s_infinite/);
+  // The stride's own phase is the bird's (`--cast-step-phase`, from its
+  // groove); the half-stride between the two legs is the walk's, and is baked
+  // into the far leg's fallback so a bird nobody grooved still walks properly.
+  assert.match(html, /data-character-part="legNear" class="[^"]*cast-step_0\.5s_ease-in-out_var\(--cast-step-phase,0ms\)_infinite/);
+  assert.match(html, /data-character-part="legFar" class="[^"]*cast-step_0\.5s_ease-in-out_var\(--cast-step-phase-far,-0\.25s\)_infinite/);
 });
 
 test("does shade the belly in the outline ink at a fifth and nothing else", () => {
@@ -197,7 +200,6 @@ test("does dance the player's own move, answering the beat on a group ancestor, 
     const html = renderToStaticMarkup(<Character appearance={{ ...drawn, dance }} pose="dance" />);
 
     assert.match(html, /data-character-pose="dance"/);
-    assert.doesNotMatch(html, /animation:/, `${dance} is on the beat, not a clock`);
 
     for (const part of CHARACTER_PARTS) {
       const className = figureStyles.dances[dance][part];
@@ -207,10 +209,66 @@ test("does dance the player's own move, answering the beat on a group ancestor, 
         assert.doesNotMatch(partTag, /class=/, `${dance}: ${part} holds still`);
       } else {
         assert.ok(partTag.includes(className), `${dance}: ${part} carries ${className}`);
-        assert.match(className, /transition-transform/);
+        assert.match(className, /transition:transform/);
         assert.match(className, /group-data-\[beat=1\]\/beat:/);
       }
     }
+  }
+});
+
+test("does keep the beat off a clock, so the step is the one the room is hearing", () => {
+  for (const dance of CHARACTER_DANCES) {
+    const html = renderToStaticMarkup(<Character appearance={{ ...drawn, dance }} pose="dance" />);
+    const beaten = html.match(/<g data-character-part="[^"]*" class="[^"]*"/g) ?? [];
+
+    for (const partTag of beaten) {
+      assert.doesNotMatch(partTag, /animation:/, `${dance} is on the beat, not a clock`);
+    }
+  }
+});
+
+test("does run a jig under the beat on a layer of its own, so quick feet and the beat both move a leg", () => {
+  for (const dance of CHARACTER_DANCES) {
+    const html = renderToStaticMarkup(<Character appearance={{ ...drawn, dance }} pose="dance" />);
+
+    // Every dance has quick feet, whatever else it does.
+    assert.match(html, /data-character-jig="legNear"/, `${dance} has a near foot going`);
+    assert.match(html, /data-character-jig="legFar"/, `${dance} has a far foot going`);
+
+    for (const part of CHARACTER_PARTS) {
+      const className = figureStyles.danceJigs[dance][part];
+
+      if (className === undefined) {
+        assert.doesNotMatch(
+          html,
+          new RegExp(`data-character-jig="${part}"`),
+          `${dance}: ${part} is not wrapped when it has no jig`
+        );
+        continue;
+      }
+
+      // The jig wraps the beat, not the other way round: one element carries
+      // one transform, and the beat is already using the inner one.
+      assert.match(
+        html,
+        new RegExp(`<g data-character-jig="${part}" class="[^"]*"><g data-character-part="${part}"`),
+        `${dance}: ${part}'s jig is the layer around its beat`
+      );
+      assert.match(className, /motion-safe:\[animation:cast-jig/);
+      assert.match(className, /var\(--cast-(jig|jive)-ms/, `${dance}: ${part} runs at the bird's own tempo`);
+    }
+  }
+});
+
+test("does leave the drawing untouched by the jig for every pose but dancing", () => {
+  for (const pose of CHARACTER_POSES) {
+    if (pose === "dance") {
+      continue;
+    }
+
+    const html = renderToStaticMarkup(<Character appearance={drawn} pose={pose} />);
+
+    assert.doesNotMatch(html, /data-character-jig/, `${pose} is not a dance`);
   }
 });
 

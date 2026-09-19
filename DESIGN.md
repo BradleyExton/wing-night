@@ -524,7 +524,11 @@ edge all come off one table and can never drift onto different hues.
     headbang, flap or shuffle, seeded off the name like the body — as two
     states of its parts that a `data-beat` toggle on a `group/beat` ancestor
     transitions between, so it is on the room's beat and not on a clock).
-    The beats are `cast-*` keyframes in the
+    A dancing bird moves on TWO clocks: the beat, and a **jig** under it —
+    quick feet at a tempo of its own, a hop, a tail or a wing going its own
+    way (`danceJigs` next to the figure, `cast-jig-*` keyframes). Each part is
+    wrapped twice for it, because one element carries one transform and the
+    beat is already using the inner one. The beats are `cast-*` keyframes in the
     client's `index.css`; which part carries which beat in which pose is the
     `poses` table next to the figure. Every beat is `motion-safe`: a room that
     asked for less motion gets the bird standing still. The wing is drawn with
@@ -577,19 +581,36 @@ edge all come off one table and can never drift onto different hues.
     the room. Nothing fades: a bird is on the floor or off the edge, and the
     walk on and off IS the group's transform transition (`resolveParadeFrame`
     is the pure timeline; its beats and the transition length are one number
-    in two places). A team is a huddle — birds overlap a little — so six fit a
+    in two places). Once a pair is on the floor every bird also bounces off its
+    feet on a layer of its own inside the mirror (`cast-jive`, the bird's own
+    period and phase, pivot on the floor), so the huddle jostles instead of
+    standing in a row; walking on and off, that layer is still. A team is a huddle — birds overlap a little — so six fit a
     half of the floor. A bird stands ~12vh tall (about 130px at 1080p): the
     head is the identity and the costume head is a bobblehead, so anything
     shorter turns faces back into coins. The intro and host lineups
     (`TeamLineup`) stand in `idle`; JOUST's rack stands `still`.
+-   **No two birds are the same bird.** A floor where every hen lands the beat
+    on the same millisecond with the same feet reads as a chorus line, not as a
+    party, so each one carries a **groove**: its footwork tempo and phase, its
+    bounce period and phase, and how late it lands the beat
+    (`resolveCharacterGroove`, eight CSS custom properties). They are three
+    short tables drawn independently off three bit ranges of the player's name
+    hash — a hundred-odd grooves out of fourteen lines, and stable, so Brad
+    dances Brad's dance night after night and reordering the roster reshuffles
+    nothing. Custom properties inherit, so a surface hangs the groove on
+    whatever it wraps a bird in and every part of the drawing reads it; the
+    cast's own shorthands carry house fallbacks, so an ungrooved bird still
+    walks and dances properly. The walk reads them too — a team arriving
+    together does not drum its feet in unison.
 -   **The dance is on the beat.** The display taps its one `<audio>` with a
     Web Audio analyser (`DisplayBoard/useBeatClock`): the low band's energy
     against its own last two-thirds of a second picks out the kicks
     (`createBeatClock`, pure and tested), and every kick flips `data-beat` on
     the display root (`group/beat`). A dancing bird's parts answer that
     through a CSS transition, so the room's own music is what moves them and
-    the whole floor lands each step together. Before the room has tapped, or
-    when the host pauses, a 120 BPM metronome keeps the floor alive; the real
+    the whole floor lands each step within a beat of each other — every bird on
+    the same kick, none of them on the same millisecond. Before the room has
+    tapped, or when the host pauses, a 120 BPM metronome keeps it alive; the real
     beat takes back over the moment it is heard. For the analyser to hear
     anything the server sends `Access-Control-Allow-Origin` on its media
     routes and the element is `crossOrigin="anonymous"` — without both, the

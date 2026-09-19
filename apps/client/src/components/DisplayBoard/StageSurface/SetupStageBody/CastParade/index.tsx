@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import type { Player, Team, TeamTheme } from "@wingnight/shared";
 
-import { Character, resolvePlayerAppearance, type CharacterPose } from "@wingnight/cast";
+import {
+  Character,
+  resolveCharacterGrooveClassName,
+  resolvePlayerAppearance,
+  type CharacterPose
+} from "@wingnight/cast";
 
 import { useServerOrigin } from "../../../../../utils/useServerOrigin";
 import { resolveParadeFrame, type ParadeFrame, type ParadePhase } from "./resolveParadeFrame";
@@ -72,6 +77,10 @@ const resolveMemberClassName = (side: Side, phase: ParadePhase): string => {
 
 const resolvePose = (phase: ParadePhase): CharacterPose => (phase === "dance" ? "dance" : "walk");
 
+// A dancing bird bounces around on its own; a walking one just walks.
+const resolveJiveClassName = (phase: ParadePhase): string =>
+  phase === "dance" ? styles.jiveDancing : styles.jive;
+
 // The lobby's ambient cast, two teams at a time: one walks in from the left
 // edge and one from the right, they dance to the beat facing each other, walk
 // back out their own edges, and the next pair walks in. Decoration only — no
@@ -97,17 +106,25 @@ export const CastParade = ({ players, teams, teamThemeByTeamId }: CastParadeProp
       data-cast-side={side}
     >
       {group.players.map((player) => (
+        // The bird's own groove rides on the member as custom properties and
+        // inherits all the way down into the drawing: its footwork tempo, how
+        // late it lands the beat, where in its bounce it is. Nothing here is
+        // random — the groove is the player's name, so Brad dances Brad's
+        // dance every night — but the floor never draws one groove, which is
+        // what makes it look like a party and not a drill.
         <span
           key={player.id}
-          className={resolveMemberClassName(side, frame.phase)}
+          className={`${resolveMemberClassName(side, frame.phase)} ${resolveCharacterGrooveClassName(player.name)}`}
           data-cast-member={player.id}
         >
-          <Character
-            appearance={resolvePlayerAppearance(player, serverOrigin)}
-            apparel={group.apparel}
-            fillClassName={group.fillClassName ?? styles.unassignedFill}
-            pose={resolvePose(frame.phase)}
-          />
+          <span className={resolveJiveClassName(frame.phase)}>
+            <Character
+              appearance={resolvePlayerAppearance(player, serverOrigin)}
+              apparel={group.apparel}
+              fillClassName={group.fillClassName ?? styles.unassignedFill}
+              pose={resolvePose(frame.phase)}
+            />
+          </span>
         </span>
       ))}
     </span>
