@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { devSandboxPath } from "./sandbox";
 
 const collectSocketRequests = (page: Page): string[] => {
   const socketRequests: string[] = [];
@@ -20,7 +21,7 @@ test("recreate sandbox writes a prompt, grades it against the sealed checklist a
 }) => {
   const socketRequests = collectSocketRequests(page);
 
-  await page.goto("/dev/minigame/recreate");
+  await page.goto(devSandboxPath("recreate"));
 
   await expect(page.getByRole("heading", { name: "Minigame Dev Sandbox" })).toBeVisible();
   await expect(page.getByText("Target 1 of 2")).toBeVisible();
@@ -84,7 +85,7 @@ test("recreate sandbox writes a prompt, grades it against the sealed checklist a
 });
 
 test("recreate sandbox lets the team rewrite before anything is scored", async ({ page }) => {
-  await page.goto("/dev/minigame/recreate");
+  await page.goto(devSandboxPath("recreate"));
 
   await page.getByLabel("Describe the target in one prompt").fill("first try");
   await page.getByRole("button", { name: "Send to the forger" }).click();

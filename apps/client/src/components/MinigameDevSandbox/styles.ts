@@ -11,6 +11,8 @@ export const devIndexLink =
 
 export const description = "mt-2 text-sm text-muted md:text-base";
 
+export const contentSource = "text-muted/70";
+
 export const controlsCard =
   "mx-auto mt-4 w-full max-w-[2200px] rounded-xl border border-text/10 bg-surface p-4 shadow-lg";
 

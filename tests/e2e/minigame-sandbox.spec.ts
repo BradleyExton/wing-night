@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { devSandboxPath } from "./sandbox";
 
 const collectSocketRequests = (page: Page): string[] => {
   const socketRequests: string[] = [];
@@ -17,7 +18,7 @@ test("trivia sandbox plays a live turn against the real runtime without sockets"
 }) => {
   const socketRequests = collectSocketRequests(page);
 
-  await page.goto("/dev/minigame/trivia");
+  await page.goto(devSandboxPath("trivia"));
 
   await expect(
     page.getByRole("heading", { name: "Minigame Dev Sandbox" })
@@ -47,7 +48,7 @@ test("geo sandbox plays guess, submit, reveal, and next prompt live", async ({
 }) => {
   const socketRequests = collectSocketRequests(page);
 
-  await page.goto("/dev/minigame/geo");
+  await page.goto(devSandboxPath("geo"));
 
   await expect(
     page.getByRole("heading", { name: "Minigame Dev Sandbox" })
@@ -94,7 +95,7 @@ test("drawing sandbox syncs tablet strokes to the display and reveals on correct
 }) => {
   const socketRequests = collectSocketRequests(page);
 
-  await page.goto("/dev/minigame/drawing");
+  await page.goto(devSandboxPath("drawing"));
 
   await expect(
     page.getByRole("heading", { name: "Minigame Dev Sandbox" })

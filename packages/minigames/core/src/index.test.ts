@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   createDevManifest,
   createPromptContentAdapter,
+  isMinigameDevManifest,
   isSerializableValue
 } from "./index.js";
 
@@ -148,4 +149,50 @@ test("createDevManifest seats a full roster across every team", () => {
     "every player is on exactly one team"
   );
   assert.equal(new Set(seated).size, seated.length, "and on only one");
+});
+
+const VALID_DEV_MANIFEST = {
+  teamIds: ["team-1"],
+  players: [{ id: "player-1", name: "Rosi", avatarSrc: "avatars/rosi.png" }],
+  teams: [{ id: "team-1", name: "Molten Metal", playerIds: ["player-1"], totalScore: 0 }],
+  teamNameByTeamId: { "team-1": "Molten Metal" },
+  activeRoundTeamId: "team-1",
+  pointsMax: 15,
+  pendingPointsByTeamId: { "team-1": 0 },
+  rules: { questionsPerTurn: 4 },
+  content: { prompts: [] }
+};
+
+test("isMinigameDevManifest accepts a manifest served from the content pack", () => {
+  assert.equal(isMinigameDevManifest(VALID_DEV_MANIFEST), true);
+  assert.equal(
+    isMinigameDevManifest({ ...VALID_DEV_MANIFEST, activeRoundTeamId: null }),
+    true
+  );
+});
+
+// A `true` here would let the sandbox swap a broken payload in over the
+// fixture that was already rendering, which is strictly worse than no pack.
+test("isMinigameDevManifest rejects payloads the sandbox cannot seed from", () => {
+  assert.equal(isMinigameDevManifest(null), false);
+  assert.equal(isMinigameDevManifest([VALID_DEV_MANIFEST]), false);
+  assert.equal(isMinigameDevManifest({ ...VALID_DEV_MANIFEST, teamIds: [1] }), false);
+  assert.equal(
+    isMinigameDevManifest({ ...VALID_DEV_MANIFEST, players: [{ id: "player-1" }] }),
+    false
+  );
+  assert.equal(
+    isMinigameDevManifest({ ...VALID_DEV_MANIFEST, pointsMax: "15" }),
+    false
+  );
+  assert.equal(
+    isMinigameDevManifest({ ...VALID_DEV_MANIFEST, pendingPointsByTeamId: { "team-1": "0" } }),
+    false
+  );
+  assert.equal(
+    isMinigameDevManifest({ ...VALID_DEV_MANIFEST, teamNameByTeamId: { "team-1": 7 } }),
+    false
+  );
+  const { content: _content, ...withoutContent } = VALID_DEV_MANIFEST;
+  assert.equal(isMinigameDevManifest(withoutContent), false);
 });

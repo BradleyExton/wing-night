@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { devSandboxPath } from "./sandbox";
 
 const collectSocketRequests = (page: Page): string[] => {
   const socketRequests: string[] = [];
@@ -42,7 +43,7 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
 }) => {
   const socketRequests = collectSocketRequests(page);
 
-  await page.goto("/dev/minigame/joust");
+  await page.goto(devSandboxPath("joust"));
 
   await expect(page.getByRole("heading", { name: "Minigame Dev Sandbox" })).toBeVisible();
 
@@ -92,7 +93,7 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
 });
 
 test("a barely drawn band does not spend a shot", async ({ page }) => {
-  await page.goto("/dev/minigame/joust");
+  await page.goto(devSandboxPath("joust"));
 
   const arena = page.locator("[data-joust-aim-arena]");
   const bounds = await arena.boundingBox();
@@ -115,7 +116,7 @@ test("a barely drawn band does not spend a shot", async ({ page }) => {
 // A lane is picked by the shooting team's slot in the turn order, so the sandbox's team switcher
 // is also how a lane gets looked at without a whole game running.
 test("switching the shooting team puts the sandbox on that team's lane", async ({ page }) => {
-  await page.goto("/dev/minigame/joust");
+  await page.goto(devSandboxPath("joust"));
 
   await expect(page.getByText("Lane: Two Towers")).toBeVisible();
 
@@ -130,7 +131,7 @@ test("switching the shooting team puts the sandbox on that team's lane", async (
 });
 
 test("the sandbox reset button restores a fresh turn", async ({ page }) => {
-  await page.goto("/dev/minigame/joust");
+  await page.goto(devSandboxPath("joust"));
 
   await page.getByRole("button", { name: "Skip shot" }).click();
 

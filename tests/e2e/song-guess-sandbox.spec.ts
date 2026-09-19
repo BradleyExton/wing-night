@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { devSandboxPath } from "./sandbox";
 
 // Mirrors SONG_GUESS_AUDIO_ROUTE_PATH in packages/shared. Re-declared rather
 // than imported because nothing under tests/e2e depends on the workspace
@@ -27,7 +28,7 @@ test("song guess sandbox plays, pauses, replays once, reveals and scores live", 
 }) => {
   const socketRequests = collectSocketRequests(page);
 
-  await page.goto("/dev/minigame/song-guess");
+  await page.goto(devSandboxPath("song-guess"));
 
   await expect(
     page.getByRole("heading", { name: "Minigame Dev Sandbox" })
@@ -101,7 +102,7 @@ test("song guess sandbox plays, pauses, replays once, reveals and scores live", 
 // Deliberately port-agnostic — it compares the clip origin against the page's
 // OWN origin rather than hardcoding 3100/5273.
 test("display clip src is an absolute url on the server origin", async ({ page }) => {
-  await page.goto("/dev/minigame/song-guess");
+  await page.goto(devSandboxPath("song-guess"));
 
   const clipAudio = page.locator("audio[data-song-guess-audio]");
 
@@ -120,7 +121,7 @@ test("display clip src is an absolute url on the server origin", async ({ page }
 });
 
 test("the sandbox reset button restores a fresh set", async ({ page }) => {
-  await page.goto("/dev/minigame/song-guess");
+  await page.goto(devSandboxPath("song-guess"));
 
   await page.getByRole("button", { name: "Play clip" }).click();
   await page.getByRole("button", { name: "Pause" }).click();

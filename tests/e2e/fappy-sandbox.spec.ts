@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { devSandboxPath } from "./sandbox";
 
 const collectSocketRequests = (page: Page): string[] => {
   const socketRequests: string[] = [];
@@ -17,7 +18,7 @@ test("fappy sandbox starts the clock on the first tap and sends a crashed bird b
 }) => {
   const socketRequests = collectSocketRequests(page);
 
-  await page.goto("/dev/minigame/fappy");
+  await page.goto(devSandboxPath("fappy"));
 
   await expect(page.getByRole("heading", { name: "Minigame Dev Sandbox" })).toBeVisible();
 
@@ -55,7 +56,7 @@ test("fappy sandbox starts the clock on the first tap and sends a crashed bird b
 test("skipping hands the tablet on to the last leg's finish flag, finishing scores by time, and reset restores a fresh relay", async ({
   page
 }) => {
-  await page.goto("/dev/minigame/fappy");
+  await page.goto(devSandboxPath("fappy"));
 
   await page.getByRole("button", { name: "Skip leg" }).click();
 
@@ -183,7 +184,7 @@ const flyUntilHandoff = (page: Page): Promise<number> => {
 test("landing next to the waiting bird holds the corridor, tells the room whose tablet it is, then wipes to the next leg", async ({
   page
 }) => {
-  await page.goto("/dev/minigame/fappy");
+  await page.goto(devSandboxPath("fappy"));
   await expect(page.locator("[data-fappy-scene]")).toHaveCount(2);
 
   const taps = await flyUntilHandoff(page);

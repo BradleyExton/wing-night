@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import express from "express";
 import {
   CONTENT_ASSET_ROUTE_PATH,
+  DEV_SANDBOX_MANIFEST_ROUTE_PATH,
   LOBBY_AUDIO_ROUTE_PATH,
   SONG_GUESS_AUDIO_ROUTE_PATH,
   TEAM_AUDIO_ROUTE_PATH
@@ -12,6 +13,7 @@ import {
   resolveContentLayerDirs,
   resolveContentRootDir
 } from "../contentLoader/contentLoaderUtils/index.js";
+import { createDevSandboxRouter } from "../routes/devSandbox/index.js";
 import { healthRouter } from "../routes/health/index.js";
 
 type CreateAppOptions = {
@@ -43,6 +45,16 @@ export const createApp = (options: CreateAppOptions = {}): express.Express => {
   };
 
   app.use("/health", healthRouter);
+
+  // The dev sandbox's seed content. Cross-origin like the media routes and for
+  // the same reason — the sandbox is a client page, and there is no dev proxy
+  // here — but it is JSON fetched by script rather than a media element, so it
+  // needs the header on its own mount.
+  app.use(
+    DEV_SANDBOX_MANIFEST_ROUTE_PATH,
+    allowCrossOriginMedia,
+    createDevSandboxRouter({ contentRootDir })
+  );
 
   // The TV listens to its own music: the display taps its `<audio>` with a
   // Web Audio analyser to find the beat the lobby cast dances to (DESIGN.md

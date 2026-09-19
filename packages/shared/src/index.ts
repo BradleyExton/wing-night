@@ -145,6 +145,10 @@ export {
   resolveContentAssetSrc
 } from "./contentAssets/index.js";
 export {
+  DEV_SANDBOX_MANIFEST_ROUTE_PATH,
+  resolveDevSandboxManifestUrl
+} from "./devSandbox/index.js";
+export {
   MUSIC_PLAYBACK_SOURCES,
   MUSIC_VOLUME_DEFAULT,
   MUSIC_VOLUME_MAX,

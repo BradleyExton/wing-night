@@ -374,3 +374,63 @@ export const isSerializableValue = (value: unknown): value is SerializableValue 
 
   return false;
 };
+
+const isStringArray = (value: unknown): value is string[] => {
+  return Array.isArray(value) && value.every((entry) => typeof entry === "string");
+};
+
+const isNumberRecord = (value: unknown): value is Record<string, number> => {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  return Object.values(value).every((entry) => typeof entry === "number");
+};
+
+const isStringRecord = (value: unknown): value is Record<string, string> => {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  return Object.values(value).every((entry) => typeof entry === "string");
+};
+
+const isNamedEntity = (value: unknown): boolean => {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const entity = value as { id?: unknown; name?: unknown };
+
+  return typeof entity.id === "string" && typeof entity.name === "string";
+};
+
+// Guards a manifest that arrived over the wire — the dev sandbox fetches one
+// from the server so it can seed itself from the real content pack. Only the
+// fields the sandbox hands `initialize()` are checked, and a `false` here
+// keeps the sandbox on its bundled fixture rather than blanking it.
+export const isMinigameDevManifest = (
+  value: unknown
+): value is MinigameDevManifest => {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const manifest = value as Record<string, unknown>;
+
+  return (
+    isStringArray(manifest.teamIds) &&
+    Array.isArray(manifest.players) &&
+    manifest.players.every((player) => isNamedEntity(player)) &&
+    Array.isArray(manifest.teams) &&
+    manifest.teams.every((team) => isNamedEntity(team)) &&
+    isStringRecord(manifest.teamNameByTeamId) &&
+    (manifest.activeRoundTeamId === null ||
+      typeof manifest.activeRoundTeamId === "string") &&
+    typeof manifest.pointsMax === "number" &&
+    Number.isFinite(manifest.pointsMax) &&
+    isNumberRecord(manifest.pendingPointsByTeamId) &&
+    isSerializableValue(manifest.rules) &&
+    isSerializableValue(manifest.content)
+  );
+};
