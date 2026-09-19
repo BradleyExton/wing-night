@@ -6,6 +6,8 @@ export const container =
 
 export const unassignedFill = "text-mutedWarm";
 
+// The lane carries the bird along; the strut itself (legs, bob, nod) is the
+// cast's own `walk` pose, so it is the same walk everywhere the hen walks.
 // Character height, not width, is the legibility knob: 12vh is ~130px at
 // 1080p and ~240px (the cap) on a 4K TV. The bird is a bobblehead — the head
 // is 44 of its 72 units — so this puts a costume head at roughly 80px at
@@ -16,9 +18,6 @@ export const unassignedFill = "text-mutedWarm";
 // with the whole cast turning over about once a minute.
 const walkerBase =
   "absolute bottom-[5%] h-[clamp(5rem,12vh,15rem)] will-change-transform motion-safe:[animation:strut_64s_linear_var(--walk-delay,0s)_infinite]";
-
-export const waddle =
-  "block h-full motion-safe:[animation:waddle_0.8s_ease-in-out_infinite]";
 
 // One entry per lane, Embers-style: origin, span and phase are authored
 // constants, so a lane is a static utility class and no position is ever

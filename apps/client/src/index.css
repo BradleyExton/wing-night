@@ -474,13 +474,85 @@ body {
   }
 }
 
-@keyframes waddle {
+/* The cast rig (DESIGN.md §2.8): each beat turns one part of the hen about
+   the pivot @wingnight/cast wrapped it on, in the bird's own 80×72 units.
+   Which part gets which beat in which pose is the `poses` table in the cast
+   package; only the keyframes live here. */
+@keyframes cast-step {
   0%,
   100% {
-    transform: translateY(0) rotate(-3deg);
+    transform: rotate(-30deg);
   }
   50% {
-    transform: translateY(-5%) rotate(3deg);
+    transform: rotate(30deg);
+  }
+}
+
+@keyframes cast-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes cast-nod {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes cast-sway {
+  0%,
+  100% {
+    transform: rotate(4deg);
+  }
+  50% {
+    transform: rotate(-4deg);
+  }
+}
+
+@keyframes cast-tuck {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-8deg);
+  }
+}
+
+@keyframes cast-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.7px);
+  }
+}
+
+/* Standing still, then a quick double peck at the ground. */
+@keyframes cast-peck {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0deg);
+  }
+  70% {
+    transform: rotate(22deg);
+  }
+  78% {
+    transform: rotate(-4deg);
+  }
+  86% {
+    transform: rotate(18deg);
   }
 }
 

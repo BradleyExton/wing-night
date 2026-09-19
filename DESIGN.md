@@ -397,8 +397,9 @@ under the same marquee and deck chrome:
 -   The bird is the leg's player's own cast hen — their costume head, their
     team's accent and apparel — so who is flying is visible from the sofa.
     A leg nobody is rostered for flies the drawn hen in the team colour.
-    **The wing beats.** The hen is drawn without its wing and the cast's
-    `<CharacterWing>` sits on a layer over it, turned about the shoulder
+    **The wing beats.** The hen is drawn without its wing (in the cast's
+    `fly` pose, legs tucked; the waiter on the cliff stands in `idle`) and the
+    cast's `<CharacterWing>` sits on a layer over it, turned about the shoulder
     each frame: one wingbeat per tap, read straight off the physics (a flap
     sets the velocity, so the ticks since the last tap are in it), a wing
     held out on a glide, folded on a perch.
@@ -444,7 +445,9 @@ The drawing lives in `@wingnight/cast` — its own package, so the
 minigames can draw the cast too and there is exactly one hen in the repo —
 and the look resolves from the player *name* (`resolvePlayerAppearance`), so
 Brad is the same character every night regardless of roster order. The
-candidates that lost to it are kept in `apps/client/public/mockups/cast/`.
+candidates that lost to it are kept in `apps/client/public/mockups/cast/`,
+and `mockups/cast/rig.html` is the shipped drawing taken apart: its parts,
+pivots and every pose as a filmstrip.
 
 The package also owns the other recurring character, the schlong that JOUST
 fires and FAPPY stands in a row: `resolveSchlongPaths` draws one along any
@@ -462,9 +465,27 @@ edge all come off one table and can never drift onto different hues.
     head, comb) is the player's team accent (`teamA`–`teamH`, via
     `resolveTeamColorVariant`, so it matches that team's standings dot);
     unassigned players are `mutedWarm`. Faces are two white eyes, the JOUST
-    convention (§2.7); beak, wattle and legs are `primary`, outlined in `bg` so
-    they hold on an orange team. A 2-unit `bg` stroke separates the silhouette
-    from the flame glow.
+    convention (§2.7); beak (two mandibles), wattle and legs are `primary`,
+    outlined in `bg` so they hold on an orange team. A 2-unit `bg` stroke
+    separates the silhouette from the flame glow. The one shade the bird gets
+    is that same ink at a fifth (`fill-bg/20`) in a crescent along the belly,
+    so the body reads as round and no second hue is spent; the far leg is the
+    near one at 70%, so two legs read as one behind the other.
+-   **It is a rig, not a picture.** The hen is six parts drawn back to
+    front — tail, far leg, body, near leg, wing, head with its neck — and
+    each is wrapped on its own pivot (`CHARACTER_PIVOTS`: tail root, hips,
+    shoulder, neck base) so a pose is a rotation per part and never a redraw.
+    The figure takes a `pose` (`CHARACTER_POSES`): `still` (the default, and
+    what a surface that drives the parts itself asks for), `idle` (breathing,
+    the tail with it, a double peck every four seconds), `walk` (legs ±30°
+    about the hips half a stride apart, a bob on every footfall, the head
+    nodding against it, the tail swaying, the wing tucking) and `fly` (both
+    legs tucked back, no loop). The beats are `cast-*` keyframes in the
+    client's `index.css`; which part carries which beat in which pose is the
+    `poses` table next to the figure. Every beat is `motion-safe`: a room that
+    asked for less motion gets the bird standing still. The wing is drawn with
+    three feather tips on its trailing edge and hangs from the shoulder at the
+    front of the body, so a flap about `CHARACTER_PIVOTS.wing` lifts the tip.
 -   Character fills are **content, not chrome**: like the DRAWING inks (§2.5)
     they are exempt from the §0.1 two-accent budget, and using team tokens as
     a character's identity colour is an identity use like the standings dot,
@@ -503,7 +524,10 @@ edge all come off one table and can never drift onto different hues.
     wears nothing.
 -   **Lobby strut.** On SETUP the cast takes turns at the foot of the stage in
     authored CSS lanes (`SetupStageBody/CastWander`), `z-1` behind the lobby
-    content and above the flame, exactly as the embers do. A bird stands
+    content and above the flame, exactly as the embers do. The lane carries
+    the bird along; the walking is the cast's own `walk` pose, so the strut
+    here and a bird walking anywhere else are the same walk. The intro and
+    host lineups (`TeamLineup`) stand in `idle`; JOUST's rack stands `still`. A bird stands
     ~12vh tall (about 130px at 1080p): the head is the identity and the
     costume head is a bobblehead, so anything shorter turns faces back into
     coins. Only three or four

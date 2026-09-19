@@ -62,13 +62,12 @@ export const CastWander = ({
             className={styles.lanes[index % styles.lanes.length]}
             data-cast-member={player.id}
           >
-            <span className={styles.waddle}>
-              <Character
-                appearance={resolvePlayerAppearance(player, serverOrigin)}
-                apparel={theme?.apparel}
-                fillClassName={fillClassName}
-              />
-            </span>
+            <Character
+              appearance={resolvePlayerAppearance(player, serverOrigin)}
+              apparel={theme?.apparel}
+              fillClassName={fillClassName}
+              pose="walk"
+            />
           </span>
         );
       })}

@@ -9,10 +9,18 @@ export const defaultFill = "text-mutedWarm";
 
 export const silhouette = "fill-current stroke-bg stroke-2 [stroke-linejoin:round]";
 
+// The one shade the bird gets: the outline ink at a fifth, over its own
+// colour, so a belly reads as round without a second hue.
+export const shade = "fill-bg/20";
+
 export const beak = "fill-primary stroke-bg stroke-2 [stroke-linejoin:round]";
 
 export const legs =
   "fill-none stroke-primary [stroke-width:3.5] [stroke-linecap:round] [stroke-linejoin:round]";
+
+// The leg on the far side of the body, seen past the near one: dimmed so the
+// two read as one behind the other rather than as four toes on one foot.
+export const legFar = "opacity-70";
 
 export const eye = "fill-text";
 
@@ -22,7 +30,7 @@ export const pupil = "fill-bg";
 // `bg`-coloured halo the same 2 units wide as the bird's outline.
 export const haloInk = "[flood-color:theme(colors.bg)]";
 
-// A wing on its own layer turns about its shoulder root (27, 44 of 80×72), so
-// a rotate on the element beats it the way a rotate on the whole bird would
-// not.
-export const wingOrigin = "origin-[33.75%_61.1%]";
+// A wing on its own layer turns about its shoulder root (`CHARACTER_PIVOTS.wing`,
+// 47,35 of 80×72), so a rotate on the element beats it the way a rotate on the
+// whole bird would not.
+export const wingOrigin = "origin-[58.75%_48.6%]";

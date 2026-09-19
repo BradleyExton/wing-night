@@ -3,6 +3,8 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { Character, CharacterWing } from "./index.js";
+import { CHARACTER_PARTS, CHARACTER_PIVOTS, CHARACTER_POSES } from "./geometry/index.js";
+import * as figureStyles from "./CharacterFigure/styles.js";
 
 const drawn = { body: "round", comb: "none", tail: "fan" } as const;
 const costume = {
@@ -21,10 +23,11 @@ test("does draw the two-eye face on a circle head when the appearance has no ava
   assert.doesNotMatch(html, /<filter/);
 });
 
-test("does draw the beak, wattle and legs in primary whatever the fill", () => {
+test("does draw the two mandibles, the wattle and both legs in primary whatever the fill", () => {
   const html = renderToStaticMarkup(<Character appearance={drawn} fillClassName="text-teamA" />);
 
-  assert.equal((html.match(/fill-primary|stroke-primary/g) ?? []).length, 3);
+  assert.equal((html.match(/fill-primary/g) ?? []).length, 3);
+  assert.equal((html.match(/stroke-primary/g) ?? []).length, 2);
 });
 
 test("does wear the avatar as its own silhouette in place of the drawn head when the appearance has one", () => {
@@ -58,8 +61,8 @@ test("does poke the beak out at mouth height when the head is a costume", () => 
   const drawnHtml = renderToStaticMarkup(<Character appearance={drawn} />);
   const costumeHtml = renderToStaticMarkup(<Character appearance={costume} />);
 
-  assert.match(drawnHtml, /d="M 69 15 L 80 20 L 69 25 Z"/);
-  assert.match(costumeHtml, /d="M 74 9 L 85 14 L 74 19 Z"/);
+  assert.match(drawnHtml, /d="M 69 16 L 81 20 L 69 21 Z"/);
+  assert.match(costumeHtml, /d="M 74 10 L 86 14 L 74 15 Z"/);
 });
 
 test("does give each character its own halo id when several render together", () => {
@@ -112,7 +115,74 @@ test("does draw the wing alone in the bird's box with its origin on the shoulder
   const html = renderToStaticMarkup(<CharacterWing fillClassName="text-teamA" />);
 
   assert.match(html, /<svg[^>]*viewBox="0 0 80 72"[^>]*data-character-wing/);
-  assert.match(html, /origin-\[33\.75%_61\.1%\]/);
+  assert.match(html, /origin-\[58\.75%_48\.6%\]/);
   assert.match(html, /text-teamA/);
   assert.equal((html.match(/<path/g) ?? []).length, 1);
+});
+
+test("does keep the wing layer's origin on the shoulder pivot the figure turns the wing about", () => {
+  const html = renderToStaticMarkup(<CharacterWing />);
+  const [, x, y] = html.match(/origin-\[([\d.]+)%_([\d.]+)%\]/) ?? [];
+
+  assert.ok(Math.abs(Number(x) / 100 - CHARACTER_PIVOTS.wing.x / 80) < 0.001);
+  assert.ok(Math.abs(Number(y) / 100 - CHARACTER_PIVOTS.wing.y / 72) < 0.001);
+});
+
+test("does wrap every part on its own pivot so a pose turns it in place", () => {
+  const html = renderToStaticMarkup(<Character appearance={drawn} />);
+
+  for (const part of CHARACTER_PARTS) {
+    const { x, y } = CHARACTER_PIVOTS[part];
+    const wrapped = new RegExp(
+      `<g transform="translate\\(${x} ${y}\\)"><g data-character-part="${part}"[^>]*><g transform="translate\\(${-x} ${-y}\\)">`
+    );
+
+    assert.match(html, wrapped, `${part} is on its pivot`);
+  }
+});
+
+test("does stand still with no beat on any part unless a pose is asked for", () => {
+  const html = renderToStaticMarkup(<Character appearance={drawn} />);
+
+  assert.match(html, /data-character-pose="still"/);
+  assert.doesNotMatch(html, /animation:|transform:rotate/);
+});
+
+test("does put each pose's beats on the parts the pose table names", () => {
+  for (const pose of CHARACTER_POSES) {
+    const html = renderToStaticMarkup(<Character appearance={drawn} pose={pose} />);
+
+    assert.match(html, new RegExp(`data-character-pose="${pose}"`));
+
+    for (const part of CHARACTER_PARTS) {
+      const className = figureStyles.poses[pose][part];
+      const partTag = html.match(new RegExp(`<g data-character-part="${part}"[^>]*>`))?.[0] ?? "";
+
+      if (className === undefined) {
+        assert.doesNotMatch(partTag, /class=/, `${pose}: ${part} has no beat`);
+      } else {
+        assert.ok(partTag.includes(className), `${pose}: ${part} carries ${className}`);
+      }
+    }
+  }
+});
+
+test("does tuck both legs and loop nothing when flying", () => {
+  const html = renderToStaticMarkup(<Character appearance={drawn} pose="fly" />);
+
+  assert.equal((html.match(/transform:rotate\(55deg\)/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /animation:/);
+});
+
+test("does swing the far leg half a stride behind the near one when walking", () => {
+  const html = renderToStaticMarkup(<Character appearance={drawn} pose="walk" />);
+
+  assert.match(html, /data-character-part="legNear" class="[^"]*cast-step_0\.5s_ease-in-out_infinite/);
+  assert.match(html, /data-character-part="legFar" class="[^"]*cast-step_0\.5s_ease-in-out_-0\.25s_infinite/);
+});
+
+test("does shade the belly in the outline ink at a fifth and nothing else", () => {
+  const html = renderToStaticMarkup(<Character appearance={drawn} />);
+
+  assert.equal((html.match(/fill-bg\/20/g) ?? []).length, 1);
 });

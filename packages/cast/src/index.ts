@@ -3,7 +3,12 @@
 // client component so a minigame package can draw a player's bird too — the
 // minigame packages cannot import from apps/client, and a second copy of the
 // bird would drift from the first.
-export { Character, CharacterWing, type CharacterProps } from "./Character/index.js";
+export {
+  CHARACTER_WING_ORIGIN_CLASS_NAME,
+  Character,
+  CharacterWing,
+  type CharacterProps
+} from "./Character/index.js";
 // The same bird as a bare `<g>`, for a surface that already has an SVG and
 // wants to place it under its own transform (JOUST stands it on a physics pin).
 export {
@@ -15,6 +20,9 @@ export {
 export {
   CHARACTER_BOX,
   CHARACTER_FOOT,
+  CHARACTER_PARTS,
+  CHARACTER_PIVOTS,
+  CHARACTER_POSES,
   CHARACTER_HEAD_CENTRE,
   CHARACTER_HEAD_RADIUS,
   CHARACTER_STAND_HEIGHT,
@@ -23,6 +31,9 @@ export {
   DRAWN_HEAD,
   DRAWN_HEAD_ANCHORS,
   perchTransform,
+  type CharacterPart,
+  type CharacterPivot,
+  type CharacterPose,
   type HeadAnchors
 } from "./Character/geometry/index.js";
 export {

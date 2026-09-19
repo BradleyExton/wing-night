@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CAST — The rigged hen</title>
+    <style>
+      :root { --bg:#121212; --surface:#1c1c1c; --text:#fff; --muted:#a3a3a3; --primary:#f97316; }
+      html, body { margin:0; background:var(--bg); color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+      main { max-width: 1800px; margin: 0 auto; padding: 2.5rem 2rem; }
+      h1 { font-size: 2rem; margin: 0 0 .25rem; }
+      p.lede { color: var(--muted); margin: 0 0 2rem; max-width: 90ch; line-height: 1.5; }
+      section { margin-bottom: 2.5rem; }
+      h2 { font-size: 1rem; letter-spacing: .12em; text-transform: uppercase; color: var(--primary); margin: 0 0 .25rem; }
+      p.note { color: var(--muted); margin: 0 0 1rem; max-width: 90ch; line-height: 1.45; font-size: .95rem; }
+      .row { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-end; background: var(--surface); border-radius: 12px; padding: 1.5rem; }
+      figure { margin: 0; text-align: center; }
+      figcaption { font-size: .7rem; color: var(--muted); margin-top: .5rem; letter-spacing: .06em; text-transform: uppercase; }
+      svg { display: block; overflow: visible; }
+      .sil { fill: currentColor; stroke: var(--bg); stroke-width: 2; stroke-linejoin: round; }
+      .shade { fill: var(--bg); opacity: .2; }
+      .beak { fill: var(--primary); stroke: var(--bg); stroke-width: 2; stroke-linejoin: round; }
+      .legs { fill: none; stroke: var(--primary); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+      .far { opacity: .7; }
+      .eye { fill: var(--text); } .pupil { fill: var(--bg); }
+      .light { fill: var(--text); stroke: var(--bg); stroke-width: 2; stroke-linejoin: round; }
+      .pivot { fill: none; stroke: #fff; stroke-width: .8; }
+      .pivot-dot { fill: var(--primary); }
+
+      /* The same keyframes as apps/client/src/index.css, so this page is the rig it documents. */
+      @keyframes cast-step { 0%, 100% { transform: rotate(-30deg); } 50% { transform: rotate(30deg); } }
+      @keyframes cast-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+      @keyframes cast-nod { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(5deg); } }
+      @keyframes cast-sway { 0%, 100% { transform: rotate(4deg); } 50% { transform: rotate(-4deg); } }
+      @keyframes cast-tuck { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-8deg); } }
+      @keyframes cast-breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.7px); } }
+      @keyframes cast-peck { 0%, 60%, 100% { transform: rotate(0deg); } 70% { transform: rotate(22deg); } 78% { transform: rotate(-4deg); } 86% { transform: rotate(18deg); } }
+      [data-pose=walk] [data-part=legNear] { animation: cast-step .5s ease-in-out infinite; }
+      [data-pose=walk] [data-part=legFar] { animation: cast-step .5s ease-in-out -.25s infinite; }
+      [data-pose=walk] [data-part=body] { animation: cast-bob .25s ease-in-out infinite; }
+      [data-pose=walk] [data-part=head] { animation: cast-nod .5s ease-in-out infinite; }
+      [data-pose=walk] [data-part=tail] { animation: cast-sway .5s ease-in-out infinite; }
+      [data-pose=walk] [data-part=wing] { animation: cast-tuck .5s ease-in-out infinite; }
+      [data-pose=idle] [data-part=body] { animation: cast-breathe 2.4s ease-in-out infinite; }
+      [data-pose=idle] [data-part=head] { animation: cast-peck 4s ease-in-out infinite; }
+      [data-pose=idle] [data-part=tail] { animation: cast-sway 2.4s ease-in-out infinite; }
+      [data-pose=fly] [data-part=legNear], [data-pose=fly] [data-part=legFar] { transform: rotate(55deg); }
+      .frozen [data-part] { animation-play-state: paused !important; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>CAST — the rigged hen</h1>
+      <p class="lede">What <code>@wingnight/cast</code> ships (DESIGN.md §2.8). One drawing in an 80×72 box, cut into six parts that each turn about a pivot: tail, far leg, body, near leg, wing, head-with-neck. A pose is a beat per part, never a redraw. Add <code>?avatar=&lt;url&gt;</code> to wear a costume head (the server serves the pack's at <code>/content-assets/avatars/…</code>).</p>
+      <div id="root"></div>
+    </main>
+    <script>
+      const AVATAR = new URLSearchParams(location.search).get("avatar");
+      const BODY = {
+        round: "M 16 42 C 16 28 32 22 50 27 C 64 31 67 44 61 55 C 53 65 30 66 21 58 C 16 54 16 48 16 42 Z",
+        tall: "M 19 42 C 17 24 33 19 50 25 C 63 30 63 47 58 57 C 52 66 30 66 23 59 C 19 55 19 49 19 42 Z",
+        wide: "M 11 45 C 11 30 30 24 52 28 C 66 32 69 45 63 55 C 55 65 26 67 16 59 C 11 55 11 50 11 45 Z"
+      };
+      const SHADE = {
+        round: "M 22 56 C 30 64 52 64 60 54 C 56 66 30 68 22 56 Z",
+        tall: "M 24 57 C 32 64 50 64 57 56 C 52 67 30 67 24 57 Z",
+        wide: "M 17 57 C 28 66 54 66 62 54 C 56 67 26 69 17 57 Z"
+      };
+      const TAIL = {
+        fan: "M 22 46 C 10 47 2 41 0 30 C 6 39 14 42 26 41 Z M 22 41 C 11 40 3 33 2 20 C 9 31 15 36 25 36 Z M 24 36 C 14 32 8 24 11 10 C 14 25 19 30 28 31 Z",
+        plume: "M 24 36 C 10 30 2 16 12 2 C 9 19 17 28 30 32 Z M 22 43 C 8 41 0 28 6 16 C 9 31 17 37 28 38 Z"
+      };
+      const WING = "M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 Q 28 50 31 54 Q 35 49 38 53 Q 42 48 45 51 C 49 46 51 40 47 35 Z";
+      const NECK = "M 45 33 C 47 24 52 17 60 15 L 68 25 C 63 28 60 34 60 40 Z";
+      const COMB = { crest: "M 47 13 C 46 5 52 3 54 9 C 55 2 61 2 62 8 C 63 4 68 5 66 13 Z", mohawk: "M 50 13 C 51 4 58 -2 68 2 C 61 3 62 9 64 13 Z" };
+      const PIVOTS = { tail: [20, 42], legFar: [44, 57], body: [40, 45], legNear: [32, 57], wing: [47, 35], head: [52, 36] };
+      const leg = (x, y) => `M ${x} ${y} L ${x - 1} ${y + 11} M ${x - 1} ${y + 11} L ${x - 7} ${y + 13.5} M ${x - 1} ${y + 11} L ${x} ${y + 14} M ${x - 1} ${y + 11} L ${x + 6} ${y + 13.5}`;
+      const thigh = (x, y) => `M ${x - 5} ${y - 4} C ${x - 6} ${y + 3} ${x - 1} ${y + 6} ${x + 3} ${y + 2} C ${x + 4} ${y - 2} ${x} ${y - 6} ${x - 5} ${y - 4} Z`;
+      const part = (name, inner) => { const [x, y] = PIVOTS[name]; return `<g transform="translate(${x} ${y})"><g data-part="${name}"><g transform="translate(${-x} ${-y})">${inner}</g></g></g>`; };
+      const beak = (bx, by) => `<path class="beak" d="M ${bx} ${by - 4} L ${bx + 12} ${by} L ${bx} ${by + 1} Z"/><path class="beak" d="M ${bx} ${by + 1} L ${bx + 10} ${by + 1} L ${bx} ${by + 5} Z"/><path class="beak" d="M ${bx - 3} ${by + 5} C ${bx + 2} ${by + 5} ${bx + 2} ${by + 13} ${bx - 3} ${by + 12} Z"/>`;
+      let uid = 0;
+
+      function bird({ h = 130, color = "#f43f5e", body = "round", tail = "fan", comb = "crest", pose = "still", hat = false, delay = 0, pivots = false, facing = 1 }) {
+        let head, perch;
+        if (AVATAR) {
+          const top = 32 - 44, by = top + 26, id = "halo" + uid++;
+          head = `<filter id="${id}" x="-30%" y="-30%" width="160%" height="160%" primitiveUnits="userSpaceOnUse"><feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="halo"/><feFlood flood-color="#121212" result="ink"/><feComposite in="ink" in2="halo" operator="in" result="outline"/><feMerge><feMergeNode in="outline"/><feMergeNode in="SourceGraphic"/></feMerge></filter>${beak(74, by)}<image href="${AVATAR}" x="36" y="${top}" width="44" height="44" preserveAspectRatio="xMidYMax meet" filter="url(#${id})"/>`;
+          perch = `translate(2 ${top + 4 - 13})`;
+        } else {
+          head = `<circle class="sil" cx="58" cy="20" r="12"/>${beak(69, 20)}<circle class="eye" cx="54" cy="18" r="3"/><circle class="eye" cx="62" cy="18" r="3"/><circle class="pupil" cx="55" cy="18" r="1.4"/><circle class="pupil" cx="63" cy="18" r="1.4"/>`;
+          perch = "translate(2 -1)";
+        }
+        const hatSvg = hat ? `<path class="light" transform="${perch}" d="M 38 12 Q 56 18 74 12 Q 70 9 66 9 L 64 1 Q 56 -2 48 1 L 46 9 Q 42 9 38 12 Z"/>` : "";
+        const inner =
+          part("tail", `<path class="sil" d="${TAIL[tail]}"/>`) +
+          part("legFar", `<g class="far"><path class="legs" d="${leg(44, 57)}"/></g>`) +
+          part("body", `<path class="sil" d="${BODY[body]}"/><path class="shade" d="${SHADE[body]}"/>`) +
+          part("legNear", `<path class="sil" d="${thigh(32, 57)}"/><path class="legs" d="${leg(32, 57)}"/>`) +
+          part("wing", `<path class="sil" d="${WING}"/>`) +
+          part("head", `<path class="sil" d="${NECK}"/>${head}${comb ? `<path class="sil" transform="${perch}" d="${COMB[comb]}"/>` : ""}${hatSvg}`);
+        const marks = pivots ? Object.entries(PIVOTS).map(([n, [x, y]]) => `<circle class="pivot" cx="${x}" cy="${y}" r="3"/><circle class="pivot-dot" cx="${x}" cy="${y}" r="1.2"/>`).join("") : "";
+        return `<figure><svg viewBox="0 0 80 72" style="height:${h}px;color:${color}" data-pose="${pose}" data-delay="${delay}"><g transform="${facing < 0 ? "matrix(-1 0 0 1 80 0)" : ""}">${inner}${marks}</g></svg><figcaption>${body} · ${tail} · ${comb || "no comb"} · ${pose}</figcaption></figure>`;
+      }
+      const strip = (pose, frames, period, opts) => Array.from({ length: frames }, (_, i) => bird({ ...opts, pose, delay: -(i / frames) * period })).join("");
+
+      document.getElementById("root").innerHTML = `
+        <section><h2>Parts and pivots</h2><p class="note">Tail root, far hip, body, near hip, shoulder, neck base. Each part is wrapped translate(pivot) › animated group › translate(−pivot), so a rotate on the middle group turns it in place under whatever transform a surface puts the whole figure in.</p>
+          <div class="row">${bird({ h: 360, pivots: true })}${bird({ h: 360, pivots: true, color: "#06b6d4", body: "tall", tail: "plume", comb: "mohawk", hat: true })}</div></section>
+        <section><h2>At the sizes the room sees it</h2><p class="note">76px is a bird at 7vh on a 1080p TV (the old lobby height), 130px is the lobby strut at 12vh, 240px is the 4K cap.</p>
+          <div class="row">${bird({ h: 76 })}${bird({ h: 76, color: "#84cc16", body: "wide", comb: null, facing: -1 })}${bird({ h: 130 })}${bird({ h: 130, color: "#06b6d4", body: "tall", tail: "plume", comb: "mohawk" })}${bird({ h: 130, color: "#84cc16", body: "wide", comb: null })}${bird({ h: 240, color: "#facc15", hat: true })}</div></section>
+        <section><h2>Walk (the lobby strut)</h2><p class="note">Legs alternate ±30° about the hips half a stride apart, the body bobs on every footfall, the head nods against it, the tail sways, the wing tucks. Eight frames of the 0.5s stride, then the loop itself.</p>
+          <div class="row frozen">${strip("walk", 8, 0.5, { h: 150 })}</div><div class="row">${bird({ h: 200, pose: "walk" })}${bird({ h: 200, pose: "walk", color: "#06b6d4", body: "tall", tail: "plume", comb: "mohawk", hat: true, facing: -1 })}</div></section>
+        <section><h2>Idle (the lineup)</h2><p class="note">Breathing, the tail swaying with it, and a double peck at the ground every four seconds.</p>
+          <div class="row frozen">${strip("idle", 8, 4, { h: 150, color: "#14b8a6" })}</div><div class="row">${bird({ h: 200, pose: "idle", color: "#14b8a6" })}</div></section>
+        <section><h2>Fly (FAPPY's flyer)</h2><p class="note">A static tuck of both legs; the wing is not on the figure here, FAPPY draws it on its own layer and beats it off the physics.</p>
+          <div class="row">${bird({ h: 200, pose: "fly", color: "#60a5fa" })}</div></section>`;
+
+      // Freeze each filmstrip frame at its phase: every animated part inherits the frame's negative delay.
+      document.querySelectorAll(".frozen svg").forEach((svg) => {
+        const frame = parseFloat(svg.dataset.delay);
+        svg.querySelectorAll("[data-part]").forEach((p) => {
+          const cs = getComputedStyle(p);
+          if (cs.animationName !== "none") p.style.animationDelay = `${frame + (parseFloat(cs.animationDelay) || 0)}s`;
+        });
+      });
+    </script>
+  </body>
+</html>

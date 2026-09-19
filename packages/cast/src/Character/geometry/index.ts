@@ -42,6 +42,32 @@ export const COSTUME_HEAD_ANCHORS: HeadAnchors = {
 export const perchTransform = (cx: number, baseY: number): string =>
   `translate(${cx - 56} ${baseY - 13})`;
 
+// The rig. The hen is drawn in six parts, back to front, and each part turns
+// about its own pivot — the tail about its root, a leg about its hip, the
+// wing about the shoulder, the head (neck and all) about the base of the
+// neck — so a pose is a rotation per part and never a redraw. The body has
+// no joint; its pivot is only where a bob is measured from.
+export const CHARACTER_PARTS = ["tail", "legFar", "body", "legNear", "wing", "head"] as const;
+export type CharacterPart = (typeof CHARACTER_PARTS)[number];
+
+export type CharacterPivot = { x: number; y: number };
+
+export const CHARACTER_PIVOTS: Record<CharacterPart, CharacterPivot> = {
+  tail: { x: 20, y: 42 },
+  legFar: { x: 44, y: 57 },
+  body: { x: 40, y: 45 },
+  legNear: { x: 32, y: 57 },
+  wing: { x: 47, y: 35 },
+  head: { x: 52, y: 36 }
+};
+
+// What the parts are doing. `still` is the pose for a surface that moves the
+// parts itself (FAPPY beats the wing off its physics) or wants a frozen bird;
+// the others are looping CSS beats keyed off `cast-*` keyframes in the
+// client's stylesheet. `fly` is a static tuck of the legs, not a loop.
+export const CHARACTER_POSES = ["still", "idle", "walk", "fly"] as const;
+export type CharacterPose = (typeof CHARACTER_POSES)[number];
+
 // The bird's own proportions, for surfaces that have to stand it up somewhere
 // that is not a page: the sole of its feet, how tall it stands from there to
 // the middle of its head, and the radius that head reads as. JOUST scales the
