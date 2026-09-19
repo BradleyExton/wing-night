@@ -7,7 +7,7 @@ import { resolveHeldSketch, resolveRevealKey } from "./index.js";
 
 const stroke = (strokeId: string): DrawingStroke => ({
   strokeId,
-  points: [{ x: 0.2, y: 0.3, t: 0 }],
+  points: [{ x: 0.2, y: 0.3 }],
   color: "#F3EEE2",
   size: 0.03
 });

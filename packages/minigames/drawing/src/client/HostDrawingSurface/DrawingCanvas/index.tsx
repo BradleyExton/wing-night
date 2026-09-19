@@ -74,7 +74,6 @@ export type DrawingCanvasHandle = {
 export type ActiveStrokeCapture = {
   pointerId: number;
   strokeId: string;
-  startedAtMs: number;
   pendingPoints: DrawingPoint[];
 };
 
@@ -304,16 +303,14 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
     }, [renderScene, stopFlushInterval]);
 
     const toNormalizedPoint = (
-      pointerEvent: ReactPointerEvent<HTMLCanvasElement>,
-      startedAtMs: number
+      pointerEvent: ReactPointerEvent<HTMLCanvasElement>
     ): DrawingPoint => {
       const bounds = pointerEvent.currentTarget.getBoundingClientRect();
       const clamp = (value: number): number => Math.min(1, Math.max(0, value));
 
       return {
         x: clamp((pointerEvent.clientX - bounds.left) / Math.max(1, bounds.width)),
-        y: clamp((pointerEvent.clientY - bounds.top) / Math.max(1, bounds.height)),
-        t: Math.max(0, Date.now() - startedAtMs)
+        y: clamp((pointerEvent.clientY - bounds.top) / Math.max(1, bounds.height))
       };
     };
 
@@ -326,14 +323,12 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
 
       pointerEvent.currentTarget.setPointerCapture(pointerEvent.pointerId);
 
-      const startedAtMs = Date.now();
       const strokeId = createStrokeId();
-      const startPoint = toNormalizedPoint(pointerEvent, startedAtMs);
+      const startPoint = toNormalizedPoint(pointerEvent);
 
       activeStrokeRef.current = {
         pointerId: pointerEvent.pointerId,
         strokeId,
-        startedAtMs,
         pendingPoints: []
       };
       localStrokesRef.current.set(strokeId, {
@@ -366,7 +361,7 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
         return;
       }
 
-      const nextPoint = toNormalizedPoint(pointerEvent, activeStroke.startedAtMs);
+      const nextPoint = toNormalizedPoint(pointerEvent);
       const localRecord = localStrokesRef.current.get(activeStroke.strokeId);
 
       localRecord?.stroke.points.push(nextPoint);

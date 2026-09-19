@@ -13,7 +13,6 @@ import {
 const activeStroke = (pointerId: number): ActiveStrokeCapture => ({
   pointerId,
   strokeId: "stroke-1",
-  startedAtMs: 0,
   pendingPoints: []
 });
 
@@ -21,8 +20,7 @@ const stroke = (pointCount: number): DrawingStroke => ({
   strokeId: "stroke-1",
   points: Array.from({ length: pointCount }, (_unused, index) => ({
     x: index / pointCount,
-    y: 0.5,
-    t: index
+    y: 0.5
   })),
   color: "#F3EEE2",
   size: 0.03

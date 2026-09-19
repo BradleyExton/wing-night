@@ -27,7 +27,7 @@ const drawingContentFixture: DrawingContentFile = {
   ]
 };
 
-const point = (x: number, y: number, t = 0): DrawingPoint => ({ x, y, t });
+const point = (x: number, y: number): DrawingPoint => ({ x, y });
 
 const initializeState = (
   overrides: Partial<{
@@ -151,11 +151,11 @@ test("initialize falls back to the first team when no round team is active", () 
 
 test("beginStroke starts a new active stroke", () => {
   const state = initializeState();
-  const nextState = beginStroke(state, "stroke-1", point(0.25, 0.75, 10));
+  const nextState = beginStroke(state, "stroke-1", point(0.25, 0.75));
 
   assert.equal(nextState.strokes.length, 1);
   assert.equal(nextState.activeStrokeId, "stroke-1");
-  assert.deepEqual(nextState.strokes[0]?.points, [point(0.25, 0.75, 10)]);
+  assert.deepEqual(nextState.strokes[0]?.points, [point(0.25, 0.75)]);
 });
 
 test("beginStroke rejects duplicate stroke ids and malformed payloads", () => {
@@ -200,14 +200,14 @@ test("appendStrokePoints appends clamped points to the active stroke only", () =
 
   const appended = reduce(state, "appendStrokePoints", {
     strokeId: "stroke-1",
-    points: [point(2, -1, 5), point(0.5, 0.25, 6)]
+    points: [point(2, -1), point(0.5, 0.25)]
   });
   assert.equal(appended.didMutate, true);
 
   const appendedState = appended.state as DrawingRuntimeState;
   assert.deepEqual(appendedState.strokes[0]?.points.slice(1), [
-    point(1, 0, 5),
-    point(0.5, 0.25, 6)
+    point(1, 0),
+    point(0.5, 0.25)
   ]);
 });
 
@@ -216,7 +216,7 @@ test("appendStrokePoints caps the batch and the stroke point total", () => {
 
   const oversizedBatch = Array.from(
     { length: MAX_APPEND_POINTS_PER_ACTION + 10 },
-    (_, index) => point(0.5, 0.5, index)
+    () => point(0.5, 0.5)
   );
   const batchResult = reduce(state, "appendStrokePoints", {
     strokeId: "stroke-1",

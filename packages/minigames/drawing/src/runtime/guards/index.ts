@@ -41,12 +41,7 @@ const isDrawingPoint = (value: unknown): value is DrawingPoint => {
   }
 
   const point = value as Partial<DrawingPoint>;
-  return (
-    isFiniteNumber(point.x) &&
-    isFiniteNumber(point.y) &&
-    isFiniteNumber(point.t) &&
-    point.t >= 0
-  );
+  return isFiniteNumber(point.x) && isFiniteNumber(point.y);
 };
 
 const isStrokeColor = (value: unknown): value is string => {
@@ -226,11 +221,11 @@ const sanitizeCoordinate = (value: number): number => {
 // out-of-bounds pointer samples from distorting the display projection, and
 // rounding is enforced here — at the trust boundary — rather than at each
 // render site, so nothing downstream ever holds precision the board cannot
-// draw.
+// draw. The point is rebuilt from x and y alone, so any extra field a tablet
+// tacks on is dropped here rather than stored and broadcast.
 export const sanitizeDrawingPoint = (point: DrawingPoint): DrawingPoint => {
   return {
     x: sanitizeCoordinate(point.x),
-    y: sanitizeCoordinate(point.y),
-    t: point.t
+    y: sanitizeCoordinate(point.y)
   };
 };
