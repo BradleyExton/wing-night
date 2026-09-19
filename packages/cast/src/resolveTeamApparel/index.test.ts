@@ -7,7 +7,7 @@ test("does pick the genre's apparel when the team names a known genre", () => {
   assert.equal(resolveTeamApparel({ genre: "metal" }), "collar");
   assert.equal(resolveTeamApparel({ genre: "country" }), "hat");
   assert.equal(resolveTeamApparel({ genre: "pop" }), "shades");
-  assert.equal(resolveTeamApparel({ genre: "disco" }), "lapels");
+  assert.equal(resolveTeamApparel({ genre: "disco" }), "medallion");
 });
 
 test("does match a genre loosely when it is cased or padded differently", () => {
@@ -22,8 +22,8 @@ test("does dress nothing when the team has no genre or one nothing matches", () 
   assert.equal(resolveTeamApparel(undefined), undefined);
 });
 
-test("does dress a genre through the shared vocabulary so funk wears disco's lapels", () => {
-  assert.equal(resolveTeamApparel({ genre: "funk" }), "lapels");
+test("does dress a genre through the shared vocabulary so funk wears disco's medallion", () => {
+  assert.equal(resolveTeamApparel({ genre: "funk" }), "medallion");
   assert.equal(resolveTeamApparel({ genre: "punk rock" }), "collar");
   assert.equal(resolveTeamApparel({ genre: "hip hop" }), undefined);
 });

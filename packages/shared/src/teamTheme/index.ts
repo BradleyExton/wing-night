@@ -42,7 +42,7 @@ export type TeamColorVariant = {
 };
 
 /** What a team's birds wear on top of their colour; drawn by the cast's `Apparel`. */
-export const CHARACTER_APPARELS = ["hat", "collar", "shades", "lapels"] as const;
+export const CHARACTER_APPARELS = ["hat", "collar", "shades", "medallion"] as const;
 export type CharacterApparel = (typeof CHARACTER_APPARELS)[number];
 
 export const GENRE_KEYS = [

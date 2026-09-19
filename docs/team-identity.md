@@ -80,7 +80,9 @@ per room state, `teamThemeByTeamId`, built inside `selectHostTeamMaps` on the ho
 `activeTeamPlayers`), so no surface calls the resolver on its own. The standings footer sits beside
 the stage rather than inside it, so `DisplayBoard` builds the same map once more for it. `resolveTeamApparel` stays in the cast rather than being deleted: JOUST
 dresses its lane birds from a display-view genre string, and the theme reads the same function, so
-there is still one apparel table. `tintClassName` on the colour variant sets the `--tint` custom
+there is still one apparel table. The vocabulary is `hat`, `collar`, `shades`, `medallion` — the
+last was `lapels` until the 2026-09-19 audit; see `DESIGN.md` §2.8's apparel bullet for the two
+rules that redrawing turned up. `tintClassName` on the colour variant sets the `--tint` custom
 property every wordmark treatment and texture keys off, which is how a component stays free of
 inline styles.
 
@@ -90,13 +92,41 @@ Precedence, first hit wins:
 
 1. `color` on the team entry in `teams.json`, one of `teamA`–`teamH`. New optional field on
    `TeamsContentEntry` and `Team`, validated in `packages/shared/src/content/teams`.
-2. The genre default: metal `teamD`, punk `teamD`, rock `teamA`, pop `teamH`, country `teamE`, disco
-   `teamB`, hiphop `teamG`, electronic `teamF`, classical `teamC`.
+2. The genre default: metal `teamD`, punk `teamC`, rock `teamA`, pop `teamH`, country `teamE`, disco
+   `teamB`, hiphop `teamG`, electronic `teamF`, classical `teamA`. Nine genres over eight tokens
+   means exactly one pair shares a default; rock and classical are the pair least likely to sit in
+   one room, and the collision pass parts them if they do.
 3. The existing id hash.
 
 Then a collision pass in seating order: a team whose token is already taken by an earlier team
 takes the next free token after it in A–H order, wrapping past H. Two teams never share a colour
-while eight or fewer exist. The team tokens themselves do not change; no new colours.
+while eight or fewer exist.
+
+**Retuned 2026-09-19, from an audit of the four pack teams on a TV.** The ramp still has eight
+slots and no new token was added, but three of them were the wrong colour. An accent has to
+separate from the other accents AND from the reserved semantics in `DESIGN.md` §0.1, and measured
+as CIE ΔE against the shipped palette:
+
+| was | ΔE | now | ΔE |
+|---|---|---|---|
+| `teamD` #F43F5E vs `teamH` #FB7185 | **20** | `teamD` #D9DEE6 vs `teamH` #EC4899 | 76 |
+| `teamD` #F43F5E vs reserved `heat` | **15** | `teamD` #D9DEE6 vs `heat` | 79 |
+| `teamE` #FACC15 vs reserved `gold` | **10** | `teamE` #D98324 vs `gold` | 30 |
+
+Metal and pop were one hue apart at two lightnesses — a single team across a room — while every
+other pair in the pack sat between 87 and 113. Country was closer to the winner gold than most
+teams are to each other, so it looked like it was winning on every screen.
+
+`teamD` is **chrome, not a hue**: metal's own palette is the absence of colour, it is the slot
+metal defaults to, and an achromatic accent is the one thing that can never collide with a hue.
+Two consequences follow and are deliberate. Punk moved off `teamD` to `teamC`, because the two
+genres most likely to share a party would otherwise have shared a default; classical took punk's
+old `teamC`, landing on `teamA` beside rock. And a `candy` wordmark on `teamD` would be near-white
+text with a near-white stroke — reachable only by a pop team walking the collision pass to D, which
+needs five or more teams, so it is a known edge rather than a live bug.
+
+`teamA` is still byte-identical to `primary`. It is the one overlap the audit found and left; no
+pack team is rock, and moving it is a bigger change than this pass earns.
 
 ### Typography
 

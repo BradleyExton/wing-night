@@ -43,7 +43,7 @@ test("does fold the pack's four genres into the kits the board decided", () => {
       ["teamD", "chrome", "skull-hen", "lightning", "slam", "collar"],
       ["teamH", "candy", "star-mic", "confetti", "bounce", "shades"],
       ["teamE", "rope", "hat-horseshoe", "woodgrain", "swing", "hat"],
-      ["teamB", "neon", "mirrorball", "lightdots", "spin", "lapels"]
+      ["teamB", "neon", "mirrorball", "lightdots", "spin", "medallion"]
     ]
   );
 });
@@ -76,17 +76,19 @@ test("does fall back to the id hash when neither colour nor genre decides", () =
 });
 
 test("does move a later team onto the next free token when its colour is already taken", () => {
+  // `folk` resolves to country, and `grunge` to rock, so both pairs want a
+  // token an earlier team already holds.
   const themes = resolveTeamThemeById([
-    buildTeam({ id: "team-1", genre: "metal" }),
-    buildTeam({ id: "team-2", genre: "punk" }),
-    buildTeam({ id: "team-3", genre: "country" }),
-    buildTeam({ id: "team-4", genre: "folk" })
+    buildTeam({ id: "team-1", genre: "country" }),
+    buildTeam({ id: "team-2", genre: "folk" }),
+    buildTeam({ id: "team-3", genre: "rock" }),
+    buildTeam({ id: "team-4", genre: "grunge" })
   ]);
 
-  assert.equal(themes.get("team-1")?.colorToken, "teamD");
-  assert.equal(themes.get("team-2")?.colorToken, "teamE");
-  assert.equal(themes.get("team-3")?.colorToken, "teamF");
-  assert.equal(themes.get("team-4")?.colorToken, "teamG");
+  assert.equal(themes.get("team-1")?.colorToken, "teamE");
+  assert.equal(themes.get("team-2")?.colorToken, "teamF");
+  assert.equal(themes.get("team-3")?.colorToken, "teamA");
+  assert.equal(themes.get("team-4")?.colorToken, "teamB");
 });
 
 test("does wrap the collision walk past H back to A when the tail is full", () => {
@@ -108,13 +110,16 @@ test("does never share a colour among eight teams however they collide", () => {
 });
 
 test("does theme a team by its seat when it is resolved among the roster", () => {
+  // Rock and classical are the one pair that share a default token (nine
+  // genres, eight accents), so the second of them is what the collision pass
+  // has to move — and moving it is exactly what seat-awareness buys.
   const teams = [
-    buildTeam({ id: "team-1", genre: "metal" }),
-    buildTeam({ id: "team-2", genre: "punk" })
+    buildTeam({ id: "team-1", genre: "rock" }),
+    buildTeam({ id: "team-2", genre: "classical" })
   ];
 
-  assert.equal(resolveTeamTheme(teams[1], teams).colorToken, "teamE");
-  assert.equal(resolveTeamTheme(teams[1]).colorToken, "teamD");
+  assert.equal(resolveTeamTheme(teams[1], teams).colorToken, "teamB");
+  assert.equal(resolveTeamTheme(teams[1]).colorToken, "teamA");
 });
 
 test("does list each face once for preload and skip the roster's genreless teams", () => {

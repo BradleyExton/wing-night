@@ -20,7 +20,7 @@ const APPAREL_BY_GENRE_KEY: Record<GenreKey, CharacterApparel | undefined> = {
   rock: "collar",
   pop: "shades",
   country: "hat",
-  disco: "lapels",
+  disco: "medallion",
   hiphop: undefined,
   electronic: undefined,
   classical: undefined,

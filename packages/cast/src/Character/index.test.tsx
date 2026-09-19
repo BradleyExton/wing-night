@@ -107,13 +107,46 @@ test("does take the apparel off the face when the bird wears its own head", () =
   }
 });
 
-test("does keep the apparel that hangs below the head, dropped clear of a photographed jaw", () => {
-  const onDrawn = renderToStaticMarkup(<Character appearance={drawn} apparel="collar" />);
-  const onCostume = renderToStaticMarkup(<Character appearance={costume} apparel="collar" />);
+// Every y coordinate inside an apparel group, whatever shape carries it.
+const apparelYs = (html: string, apparel: string): number[] => {
+  const group = html.match(new RegExp(`data-character-apparel="${apparel}"(.*?)</g>`, "s"))?.[1];
+  assert.ok(group !== undefined, `no ${apparel} group in the markup`);
 
-  // The drawn chin is 32 and the spikes reach 5 above whatever they hang from.
-  assert.match(onDrawn, /data-character-apparel="collar"[^]*?L 51 27 /);
-  assert.match(onCostume, /data-character-apparel="collar"[^]*?L 51 32 /);
+  const ys = [
+    ...[...group.matchAll(/[MLQ]\s[-\d.]+\s([-\d.]+)/g)].map((m) => Number(m[1])),
+    ...[...group.matchAll(/\s([-\d.]+)\s[-\d.]+\s[-\d.]+\s([-\d.]+)/g)].map((m) => Number(m[2])),
+    ...[...group.matchAll(/cy="([-\d.]+)"\s+r="([\d.]+)"/g)].flatMap((m) => [
+      Number(m[1]) - Number(m[2]),
+      Number(m[1]) + Number(m[2])
+    ])
+  ].filter((y) => Number.isFinite(y));
+
+  assert.ok(ys.length > 0, `no coordinates parsed out of the ${apparel} group`);
+  return ys;
+};
+
+test("does keep the apparel that hangs below the head, dropped clear of a photographed jaw", () => {
+  // The guarantee is not a coordinate, it is a relationship: a prop that hangs
+  // below the head must sit ENTIRELY under a costume head's photo, whose
+  // bottom edge is the drawn chin at 32, or it crops somebody's jaw. Asserted
+  // as a property rather than as a path string so redrawing a prop cannot
+  // quietly reintroduce the bite.
+  for (const apparel of ["collar", "medallion"] as const) {
+    const onDrawn = renderToStaticMarkup(<Character appearance={drawn} apparel={apparel} />);
+    const onCostume = renderToStaticMarkup(<Character appearance={costume} apparel={apparel} />);
+
+    assert.ok(
+      Math.min(...apparelYs(onCostume, apparel)) > 32,
+      `${apparel} rises into a photographed jaw`
+    );
+    // And it hangs lower on a costume head than on a drawn one, which is the
+    // COSTUME_SHOULDER_DROP doing its job rather than the two coinciding.
+    assert.ok(
+      Math.min(...apparelYs(onCostume, apparel)) >
+        Math.min(...apparelYs(onDrawn, apparel)),
+      `${apparel} does not drop for a costume head`
+    );
+  }
 });
 
 test("does leave the wing off the figure when the surface draws it on its own layer", () => {

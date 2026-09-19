@@ -41,11 +41,11 @@ gold #FBBF24\
 teamA #F97316\
 teamB #06B6D4\
 teamC #84CC16\
-teamD #F43F5E\
-teamE #FACC15\
+teamD #D9DEE6 (chrome)\
+teamE #D98324\
 teamF #14B8A6\
 teamG #60A5FA\
-teamH #FB7185
+teamH #EC4899
 
 Rules: - Never use more than 2 accent colors on a single screen. -
 primary (orange) is the default emphasis color. - heat (red) is reserved
@@ -55,7 +55,15 @@ celebration. - success/danger are functional only (never decorative).
 Team accent rules: - `teamA` through `teamH` are identity accents for
 team cards and standings rows only (left border + small dot). - Team
 tokens must not be used for timers, status states, CTA buttons, or
-winner celebrations.
+winner celebrations. - An accent must stay clear of the reserved
+semantics above as well as of the other accents: a team the room reads
+as `gold` looks like it is winning and one it reads as `heat` looks
+like a warning. Three of them failed that on 2026-09-19 and were
+retuned (`docs/team-identity.md`, "Colour"): `teamD` was 15 from `heat`
+and 20 from `teamH`, `teamE` was 10 from `gold`. `teamD` is now chrome
+rather than a hue, which is metal's own palette and the one accent that
+can never collide with one. `teamA` is still `primary` exactly; it is
+the known remaining overlap.
 
 ------------------------------------------------------------------------
 
@@ -622,16 +630,24 @@ edge all come off one table and can never drift onto different hues.
     departure is flat skin and hair tints, which a face needs.
 -   **Team apparel.** A team's `genre` (`teams.json` in the night pack) dresses
     every bird on it via `resolveTeamApparel`: country wears a white hat with
-    a team-colour band, metal a dark spiked collar, pop white star shades,
-    disco white lapels. Props are drawn from the palette the bird already has
-    (`text`, `bg`, the team colour) and are placed off the head's anchors
-    (`Character/geometry`). Two of them sit ON the head — the hat and the
-    shades — and a bird wearing a costume head goes without them, so a team
+    a team-colour band, metal a black studded collar, pop white star shades,
+    disco a medallion on a chain. Props are drawn from the palette the bird
+    already has (`text`, `bg`, the team colour) and are placed off the head's
+    anchors (`Character/geometry`). Two of them sit ON the head — the hat and
+    the shades — and a bird wearing a costume head goes without them, so a team
     whose genre is one of those reads by colour alone rather than by a hat
-    balanced on somebody's photograph. The collar and the lapels hang from
+    balanced on somebody's photograph. The collar and the medallion hang from
     the `shoulders` anchor instead: the chin itself on a drawn head, a little
-    below it on a costume head, so no spike ever climbs into a beard. A team
-    without a genre, or with one nothing matches, wears nothing.
+    below it on a costume head, so nothing ever climbs into a beard — asserted
+    as a property in `Character`'s own test, not as a path string. Two rules
+    come out of the 2026-09-19 audit and hold for any prop added later. A prop
+    must fit INSIDE the body at the anchor it hangs from: disco's old lapels
+    were wider than the chest and hung off the bird's edge into the background
+    on a costume head, which is why they are a disc now. And no pointed light
+    shape goes in a dark shape under the beak, whichever way the points face:
+    that is a mouth full of teeth from across a room, which is what metal's
+    collar was until its studs became circles. A team without a genre, or with
+    one nothing matches, wears nothing.
 -   **Lobby parade.** On SETUP the cast parades at the foot of the stage
     (`SetupStageBody/CastParade`), `z-1` behind the lobby content and above
     the flame, exactly as the embers do. Two teams at a time: one walks in

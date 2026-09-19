@@ -42,7 +42,11 @@ const GENRE_KITS: Record<GenreKey, GenreKit> = {
     entrance: "slam"
   },
   punk: {
-    defaultColorToken: "teamD",
+    // Not `teamD` any more: that slot is chrome, and a punk team inheriting
+    // metal's silver by default put the two genres most likely to share a
+    // party on one colour before the collision pass ever ran. Neon lime is
+    // punk's own.
+    defaultColorToken: "teamC",
     fontClassName: "font-genre-punk",
     fontSrc: "/fonts/bangers/bangers-latin.woff2",
     wordmark: "torn",
@@ -105,7 +109,10 @@ const GENRE_KITS: Record<GenreKey, GenreKit> = {
     entrance: "glitch"
   },
   classical: {
-    defaultColorToken: "teamC",
+    // Displaced from `teamC` by punk. Nine genres over eight tokens means one
+    // pair shares a default, and rock-plus-classical is the pair least likely
+    // to sit in one room; the collision pass parts them if it happens.
+    defaultColorToken: "teamA",
     fontClassName: "font-genre-classical",
     fontSrc: "/fonts/playfair-display/playfair-display-900-latin.woff2",
     wordmark: "plain",
