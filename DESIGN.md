@@ -506,7 +506,9 @@ edge all come off one table and can never drift onto different hues.
     `resolveTeamColorVariant`, so it matches that team's standings dot);
     unassigned players are `mutedWarm`. Faces are two white eyes, the JOUST
     convention (§2.7); beak (two mandibles), wattle and legs are `primary`,
-    outlined in `bg` so they hold on an orange team. A 2-unit `bg` stroke
+    outlined in `bg` so they hold on an orange team. The face, the beak and
+    the wattle belong to the drawn head alone; a costume head wears none of
+    them. A 2-unit `bg` stroke
     separates the silhouette from the flame glow. The one shade the bird gets
     is that same ink at a fifth (`fill-bg/20`) in a crescent along the belly,
     so the body reads as round and no second hue is spent; the far leg is the
@@ -542,9 +544,13 @@ edge all come off one table and can never drift onto different hues.
     the head has somewhere to be; no detail below the illustration spec's 3%
     floor. Names are never lettered under a character on the TV.
 -   **Costume head.** An `avatarSrc` on the player is worn as the bird's own
-    head: the image replaces the drawn head circle and eyes, the comb perches
-    on the hair and the beak and wattle poke out at mouth height, so the
-    player reads as *in the chicken suit with their face showing*. It is a
+    head, and worn **bare**: the image replaces the drawn head circle and
+    eyes, and nothing else of the chicken's head is drawn — no comb planted
+    in the player's hair, no beak or wattle poking out from behind a cheek,
+    and no prop across the face (see *Team apparel*). A generated head
+    already has its own hat, glasses and beard, and a second set fighting
+    them reads as two heads on one neck. Everything below the chin is still
+    entirely a bird, which is where the joke lives. It is a
     **bobblehead** (44 tall on a 72-tall bird): at party distance the face is
     the identity, and a coin-sized one reads as "a face" rather than whose.
     A filter dilates the image's alpha into a `bg` halo, the stroke an image
@@ -562,14 +568,18 @@ edge all come off one table and can never drift onto different hues.
     drawn head rather than nothing. A photo or a boxed sprite in that
     field renders as a rectangle on a neck, on purpose. The one palette
     departure is flat skin and hair tints, which a face needs.
--   **Team apparel.** A team's `genre` (`teams.json` in the night pack) dresses every bird
-    on it, avatar or not, via `resolveTeamApparel`: country wears a white hat
-    with a team-colour band, metal a dark spiked collar, pop white star
-    shades, disco white lapels. Props are drawn from the palette the bird
-    already has (`text`, `bg`, the team colour) and are placed off the head's
-    anchors (`Character/geometry`) so they land the same on a drawn head and
-    a costume head. A team without a genre, or with one nothing matches,
-    wears nothing.
+-   **Team apparel.** A team's `genre` (`teams.json` in the night pack) dresses
+    every bird on it via `resolveTeamApparel`: country wears a white hat with
+    a team-colour band, metal a dark spiked collar, pop white star shades,
+    disco white lapels. Props are drawn from the palette the bird already has
+    (`text`, `bg`, the team colour) and are placed off the head's anchors
+    (`Character/geometry`). Two of them sit ON the head — the hat and the
+    shades — and a bird wearing a costume head goes without them, so a team
+    whose genre is one of those reads by colour alone rather than by a hat
+    balanced on somebody's photograph. The collar and the lapels hang from
+    the `shoulders` anchor instead: the chin itself on a drawn head, a little
+    below it on a costume head, so no spike ever climbs into a beard. A team
+    without a genre, or with one nothing matches, wears nothing.
 -   **Lobby parade.** On SETUP the cast parades at the foot of the stage
     (`SetupStageBody/CastParade`), `z-1` behind the lobby content and above
     the flame, exactly as the embers do. Two teams at a time: one walks in

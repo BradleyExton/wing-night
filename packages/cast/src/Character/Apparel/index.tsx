@@ -2,6 +2,19 @@ import type { CharacterApparel } from "../../resolveTeamApparel/index.js";
 import { perchTransform, type HeadAnchors } from "../geometry/index.js";
 import * as styles from "./styles.js";
 
+// Which props are ON the head and which hang below it. A costume head wears
+// only the second kind — a player's own face is not a place to put a hat
+// (`CharacterFigure`).
+const APPAREL_CROSSES_THE_FACE: Record<CharacterApparel, boolean> = {
+  hat: true,
+  shades: true,
+  collar: false,
+  lapels: false
+};
+
+export const apparelCrossesTheFace = (apparel: CharacterApparel): boolean =>
+  APPAREL_CROSSES_THE_FACE[apparel];
+
 type ApparelProps = {
   apparel: CharacterApparel;
   head: HeadAnchors;
@@ -20,7 +33,9 @@ const starPath = (cx: number, cy: number, r: number): string => {
 
 // One prop per genre, placed off the head's anchors so it lands the same on a
 // drawn head and on a costume head: the hat's base sits 4 under the top of
-// the head, the shades on the eye line, the collar and lapels at the chin.
+// the head, the shades on the eye line, the collar and lapels on the
+// shoulders — which are the chin itself on a drawn head and a little under
+// it on a photographed one, so no spike ever climbs into a beard.
 export const Apparel = ({ apparel, head }: ApparelProps): JSX.Element => {
   if (apparel === "hat") {
     return (
@@ -36,16 +51,16 @@ export const Apparel = ({ apparel, head }: ApparelProps): JSX.Element => {
   }
 
   if (apparel === "collar") {
-    const { cx, chin } = head;
+    const { cx, shoulders } = head;
     return (
       <g data-character-apparel="collar">
         <path
           className={styles.dark}
-          d={`M ${cx - 12} ${chin - 2} Q ${cx} ${chin + 8} ${cx + 12} ${chin - 2} L ${cx + 12} ${chin + 3} Q ${cx} ${chin + 13} ${cx - 12} ${chin + 3} Z`}
+          d={`M ${cx - 12} ${shoulders - 2} Q ${cx} ${shoulders + 8} ${cx + 12} ${shoulders - 2} L ${cx + 12} ${shoulders + 3} Q ${cx} ${shoulders + 13} ${cx - 12} ${shoulders + 3} Z`}
         />
         <path
           className={styles.light}
-          d={`M ${cx - 9} ${chin + 1} L ${cx - 7} ${chin - 5} L ${cx - 5} ${chin + 2} Z M ${cx - 2} ${chin + 3} L ${cx} ${chin - 3} L ${cx + 2} ${chin + 4} Z M ${cx + 5} ${chin + 2} L ${cx + 7} ${chin - 4} L ${cx + 9} ${chin + 1} Z`}
+          d={`M ${cx - 9} ${shoulders + 1} L ${cx - 7} ${shoulders - 5} L ${cx - 5} ${shoulders + 2} Z M ${cx - 2} ${shoulders + 3} L ${cx} ${shoulders - 3} L ${cx + 2} ${shoulders + 4} Z M ${cx + 5} ${shoulders + 2} L ${cx + 7} ${shoulders - 4} L ${cx + 9} ${shoulders + 1} Z`}
         />
       </g>
     );
@@ -60,12 +75,12 @@ export const Apparel = ({ apparel, head }: ApparelProps): JSX.Element => {
     );
   }
 
-  const { cx, chin } = head;
+  const { cx, shoulders } = head;
   return (
     <g data-character-apparel="lapels">
       <path
         className={styles.light}
-        d={`M ${cx - 2} ${chin} L ${cx - 16} ${chin + 5} L ${cx - 5} ${chin + 15} Z M ${cx + 2} ${chin} L ${cx + 16} ${chin + 5} L ${cx + 5} ${chin + 15} Z`}
+        d={`M ${cx - 2} ${shoulders} L ${cx - 16} ${shoulders + 5} L ${cx - 5} ${shoulders + 15} Z M ${cx + 2} ${shoulders} L ${cx + 16} ${shoulders + 5} L ${cx + 5} ${shoulders + 15} Z`}
       />
     </g>
   );

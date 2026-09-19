@@ -50,20 +50,21 @@ test("does halo the avatar in the bg ink when the appearance has one", () => {
   assert.match(html, /<feFlood class="\[flood-color:theme\(colors\.bg\)\]"/);
 });
 
-test("does perch the comb on the hair when the head is a costume", () => {
+test("does perch the comb on the drawn head and leave it off a costume head", () => {
   const drawnHtml = renderToStaticMarkup(<Character appearance={{ ...drawn, comb: "crest" }} />);
   const costumeHtml = renderToStaticMarkup(<Character appearance={{ ...costume, comb: "crest" }} />);
 
   assert.match(drawnHtml, /transform="translate\(2 -1\)"/);
-  assert.match(costumeHtml, /transform="translate\(2 -21\)"/);
+  assert.doesNotMatch(costumeHtml, /transform="translate\(2 -21\)"/);
+  assert.match(costumeHtml, /data-character-comb="crest"/, "the roll is still the player's");
 });
 
-test("does poke the beak out at mouth height when the head is a costume", () => {
+test("does keep the beak and wattle off a costume head so no second head shows behind the face", () => {
   const drawnHtml = renderToStaticMarkup(<Character appearance={drawn} />);
   const costumeHtml = renderToStaticMarkup(<Character appearance={costume} />);
 
   assert.match(drawnHtml, /d="M 69 16 L 81 20 L 69 21 Z"/);
-  assert.match(costumeHtml, /d="M 74 10 L 86 14 L 74 15 Z"/);
+  assert.doesNotMatch(costumeHtml, /class="fill-primary[^"]*"/);
 });
 
 test("does give each character its own halo id when several render together", () => {
@@ -96,12 +97,23 @@ test("does dress the bird in the team's apparel only when one is given", () => {
   assert.match(dressed, /data-character-apparel="hat"/);
 });
 
-test("does lift the apparel onto the costume head when the bird has an avatar", () => {
-  const onDrawn = renderToStaticMarkup(<Character appearance={drawn} apparel="hat" />);
-  const onCostume = renderToStaticMarkup(<Character appearance={costume} apparel="hat" />);
+test("does take the apparel off the face when the bird wears its own head", () => {
+  for (const apparel of ["hat", "shades"] as const) {
+    const onDrawn = renderToStaticMarkup(<Character appearance={drawn} apparel={apparel} />);
+    const onCostume = renderToStaticMarkup(<Character appearance={costume} apparel={apparel} />);
 
-  assert.match(onDrawn, /data-character-apparel="hat"[^]*?transform="translate\(2 -1\)"/);
-  assert.match(onCostume, /data-character-apparel="hat"[^]*?transform="translate\(2 -21\)"/);
+    assert.match(onDrawn, new RegExp(`data-character-apparel="${apparel}"`));
+    assert.doesNotMatch(onCostume, /data-character-apparel/);
+  }
+});
+
+test("does keep the apparel that hangs below the head, dropped clear of a photographed jaw", () => {
+  const onDrawn = renderToStaticMarkup(<Character appearance={drawn} apparel="collar" />);
+  const onCostume = renderToStaticMarkup(<Character appearance={costume} apparel="collar" />);
+
+  // The drawn chin is 32 and the spikes reach 5 above whatever they hang from.
+  assert.match(onDrawn, /data-character-apparel="collar"[^]*?L 51 27 /);
+  assert.match(onCostume, /data-character-apparel="collar"[^]*?L 51 32 /);
 });
 
 test("does leave the wing off the figure when the surface draws it on its own layer", () => {

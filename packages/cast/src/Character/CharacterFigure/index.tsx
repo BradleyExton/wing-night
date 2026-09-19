@@ -2,11 +2,12 @@ import { useId, type ReactNode } from "react";
 
 import type { CharacterAppearance, CharacterComb, CharacterTail, CharacterBody } from "../../resolvePlayerAppearance/index.js";
 import type { CharacterApparel } from "../../resolveTeamApparel/index.js";
-import { Apparel } from "../Apparel/index.js";
+import { Apparel, apparelCrossesTheFace } from "../Apparel/index.js";
 import {
   CHARACTER_PIVOTS,
   COSTUME_HEAD_ANCHORS,
   COSTUME_HEAD_HEIGHT,
+  DRAWN_BEAK,
   DRAWN_HEAD,
   DRAWN_HEAD_ANCHORS,
   perchTransform,
@@ -140,20 +141,21 @@ const Comb = ({ comb, head }: { comb: CharacterComb; head: HeadAnchors }): JSX.E
   );
 };
 
-// An upper and a lower mandible, parted by the outline, and the wattle under them.
-const BeakAndWattle = ({ head }: { head: HeadAnchors }): JSX.Element => (
+// An upper and a lower mandible, parted by the outline, and the wattle under
+// them. The drawn head's alone: a costume head wears none of it.
+const BeakAndWattle = (): JSX.Element => (
   <g>
     <path
       className={styles.beak}
-      d={`M ${head.beakX} ${head.beakY - 4} L ${head.beakX + 12} ${head.beakY} L ${head.beakX} ${head.beakY + 1} Z`}
+      d={`M ${DRAWN_BEAK.x} ${DRAWN_BEAK.y - 4} L ${DRAWN_BEAK.x + 12} ${DRAWN_BEAK.y} L ${DRAWN_BEAK.x} ${DRAWN_BEAK.y + 1} Z`}
     />
     <path
       className={styles.beak}
-      d={`M ${head.beakX} ${head.beakY + 1} L ${head.beakX + 10} ${head.beakY + 1} L ${head.beakX} ${head.beakY + 5} Z`}
+      d={`M ${DRAWN_BEAK.x} ${DRAWN_BEAK.y + 1} L ${DRAWN_BEAK.x + 10} ${DRAWN_BEAK.y + 1} L ${DRAWN_BEAK.x} ${DRAWN_BEAK.y + 5} Z`}
     />
     <path
       className={styles.beak}
-      d={`M ${head.beakX - 3} ${head.beakY + 5} C ${head.beakX + 2} ${head.beakY + 5} ${head.beakX + 2} ${head.beakY + 13} ${head.beakX - 3} ${head.beakY + 12} Z`}
+      d={`M ${DRAWN_BEAK.x - 3} ${DRAWN_BEAK.y + 5} C ${DRAWN_BEAK.x + 2} ${DRAWN_BEAK.y + 5} ${DRAWN_BEAK.x + 2} ${DRAWN_BEAK.y + 13} ${DRAWN_BEAK.x - 3} ${DRAWN_BEAK.y + 12} Z`}
     />
   </g>
 );
@@ -161,7 +163,7 @@ const BeakAndWattle = ({ head }: { head: HeadAnchors }): JSX.Element => (
 const DrawnHead = ({ head }: { head: HeadAnchors }): JSX.Element => (
   <g>
     <circle className={styles.silhouette} cx={DRAWN_HEAD.cx} cy={DRAWN_HEAD.cy} r={DRAWN_HEAD.r} />
-    <BeakAndWattle head={head} />
+    <BeakAndWattle />
     <circle className={styles.eye} cx={head.cx - 4} cy={head.eyeY} r={3} />
     <circle className={styles.eye} cx={head.cx + 4} cy={head.eyeY} r={3} />
     <circle className={styles.pupil} cx={head.cx - 3} cy={head.eyeY} r={1.4} />
@@ -170,9 +172,12 @@ const DrawnHead = ({ head }: { head: HeadAnchors }): JSX.Element => (
 );
 
 // The costume: a player's generated likeness, background already knocked out
-// by the importer, worn as the bird's own head. The beak pokes out at mouth
-// height and the comb perches on the hair, so it is still unmistakably the
-// chicken — the player is in the suit with their face showing.
+// by the importer, worn as the bird's own head — and worn ALONE. Nothing of
+// the chicken's own head is drawn behind it and nothing perches on it or
+// crosses it: a beak poking out past a cheek, a comb planted in someone's
+// hair and a pair of star shades over a face the room came to recognise all
+// read as two heads fighting over one neck. Below the chin the bird is still
+// entirely a bird, which is where the joke actually lives.
 const CostumeHead = ({
   avatarSrc,
   haloId,
@@ -192,7 +197,6 @@ const CostumeHead = ({
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
-    <BeakAndWattle head={head} />
     <image
       href={avatarSrc}
       x={head.cx - COSTUME_HEAD_HEIGHT / 2}
@@ -212,7 +216,13 @@ export const CharacterFigure = ({
   pose = "still"
 }: CharacterFigureProps): JSX.Element => {
   const haloId = useId();
-  const head = appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS;
+  const wearsCostume = appearance.avatarSrc !== undefined;
+  const head = wearsCostume ? COSTUME_HEAD_ANCHORS : DRAWN_HEAD_ANCHORS;
+  // A costume head keeps only the apparel that hangs below it: whatever the
+  // photo already has on — a cap, glasses, a beard — is the thing the room
+  // recognises, and a team still reads as its genre from the collar down.
+  const wornApparel =
+    apparel !== undefined && !(wearsCostume && apparelCrossesTheFace(apparel)) ? apparel : undefined;
   // A dance is the player's own — its steps AND the loop it runs between the
   // beats; every other pose is the same for every bird and has no jig.
   const rig: CharacterRig =
@@ -256,8 +266,8 @@ export const CharacterFigure = ({
           ) : (
             <CostumeHead avatarSrc={appearance.avatarSrc} haloId={haloId} head={head} />
           )}
-          <Comb comb={appearance.comb} head={head} />
-          {apparel !== undefined && <Apparel apparel={apparel} head={head} />}
+          {!wearsCostume && <Comb comb={appearance.comb} head={head} />}
+          {wornApparel !== undefined && <Apparel apparel={wornApparel} head={head} />}
         </g>
       </Part>
     </g>

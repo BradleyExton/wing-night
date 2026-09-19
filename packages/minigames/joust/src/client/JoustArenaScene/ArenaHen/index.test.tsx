@@ -13,7 +13,7 @@ const FIGURE: JoustPlayerFigure = {
   name: "Rosie",
   avatarSrc: "avatars/rosie.png",
   teamId: "team-molten",
-  genre: "Country"
+  genre: "Metal"
 };
 
 const render = (props: Partial<Parameters<typeof ArenaHen>[0]> = {}): string =>
@@ -50,8 +50,10 @@ test("does paint the bird in its own team's colour", () => {
   assert.match(render(), /class="text-team[A-H]"/);
 });
 
+// The arena bird wears a generated head, so it only ever gets the apparel that
+// hangs below one — nothing perches on a player's face (cast `CharacterFigure`).
 test("does wear the team's genre apparel", () => {
-  assert.match(render(), /data-character-apparel="hat"/);
+  assert.match(render(), /data-character-apparel="collar"/);
 });
 
 // The two halves of standing a bird on a pin: WHERE (the outer matrix, built from the two body
