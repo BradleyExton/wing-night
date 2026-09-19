@@ -46,9 +46,10 @@ export const hostViewport = "relative aspect-[4/3] w-full overflow-hidden bg-bg"
 export const displayViewport = "relative aspect-video w-full overflow-hidden bg-bg";
 
 // The tablet's own layout: canvas row plus the pinned CTA row, as the real
-// controller composes them (HostControlPanel `container`).
+// controller composes them (HostControlPanel `container`). Relative so the
+// play phase's corner dock anchors here, exactly as it does on the device.
 export const hostShell =
-  "grid h-full grid-rows-[minmax(0,1fr)_auto] overflow-hidden bg-bg text-text";
+  "relative grid h-full grid-rows-[minmax(0,1fr)_auto] overflow-hidden bg-bg text-text";
 
 // Same gutter the shell's MinigamePlayTakeover wraps a minigame in.
 export const hostCanvas =

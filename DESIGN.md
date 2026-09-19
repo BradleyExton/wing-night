@@ -78,14 +78,15 @@ The Host shell is a single-canvas tablet controller. Every phase composes the sa
 -   **Mini-rail** — the top strip of every stage hero. Tiny inline rail showing round number, sauce, minigame, and the active-team color pill. Replaces the older kicker + title + description chrome; rail is data, not navigation.
 -   **Stage hero** — left ~65% of the canvas. Dramatic eyebrow + headline + meta, or a live datum like a timer or score. Subtle radial-gradient glow backdrop. Phases pick their own glow variant (default vs eating).
 -   **Control deck** — right ~35% of the canvas. Vertical stack of deck-groups: small uppercase group head + tappable rows + inline create form. No card chrome — rows are separated by 1px dividers, not borders.
--   **CTA + heat strip** — full-bleed bottom row of the viewport. Primary action button always visible per §2.1. A heat-color shimmer strip sits across the top of the bar to add energy without competing with the button.
+-   **CTA + heat strip** — full-bleed bottom row of the viewport. Primary action button always visible per §2.1, on every phase the host drives. A heat-color shimmer strip sits across the top of the bar to add energy without competing with the button.
 -   **Override entry** — a `⋯ Overrides` button lives at the foot of the deck. It opens the floating override dock. Override actions are never inline in the deck flow — they're an escape hatch, not a primary path.
--   **Takeover** — during `MINIGAME_PLAY`, the deck collapses and the minigame package owns the full canvas. The CTA bar stays pinned. The shell steps out of the way; the minigame's own surface owns the "we're done" trigger.
+-   **Takeover** — during `MINIGAME_PLAY`, the deck collapses and the minigame package owns the full canvas. The shell steps out of the way; the minigame's own surface owns the "we're done" trigger.
+-   **Corner dock** — the takeover is the one phase where the tablet leaves the host's hands, so the CTA bar and the overrides entry both collapse into a single quiet circle in the bottom-right corner. Tapping it reveals the phase's primary action and `Overrides` as labelled pills over a scrim; tapping the scrim, the circle or `Escape` puts them away. Two taps, not one — a player's thumb resting on the canvas can't end their own turn. While collapsed the circle carries the same `heat` dot the overrides entry does, so a turn that needs review still reaches the host. The dock layers above anything the minigame draws, so a minigame surface must keep a ~4.5rem gutter clear at that corner rather than putting a control underneath it.
 
 ## 2.1 Host UI (Tablet Optimized)
 
 -   Touch targets ≥ 44x44 CSS px
--   Primary actions always visible
+-   Primary actions always visible — except during `MINIGAME_PLAY`, where they live one tap deep in the corner dock (§2.0A)
 -   Avoid dense tables
 -   Prefer cards and large rows
 -   No hover-only interactions
@@ -195,6 +196,17 @@ The GEO minigame's host and display surfaces use a vintage-expedition
     postcard/polaroid frames. Map tiles are sepia-filtered to match.
 -   Reveal stats are stamps, not stat cards: rotated bordered distance
     stamp + circular gold points seal.
+-   The host page is laid out for a tablet held in landscape and never
+    scrolls: a one-line header band, then two columns — a fixed-width
+    dossier (the polaroid at a 4:3 frame, the hint, and the turn's single
+    action pinned to its foot) beside the chart, which takes the rest of
+    the canvas. Once the guess is stamped the chart column carries the
+    verdict, so the page keeps its shape between guessing and scoring.
+-   The chart carries quick views in its top-right corner — `World` and
+    `Barrie` — because the night's photos are either around the home town
+    or nowhere near it, and panning between the two by hand was the
+    slowest part of a turn. They are journal chrome (gold on glass), not
+    Leaflet controls, and they live in `leafletConstants`.
 
 ## 2.5 DRAWING Minigame Surface Language ("Showtime Easel")
 

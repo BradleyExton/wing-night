@@ -13,7 +13,24 @@ export const openOverridesPanelButton = (hostPage: Page): Locator => {
   return hostPage.getByRole("button", { name: "Open overrides panel" }).first();
 };
 
+// During MINIGAME_PLAY the tablet is in the players' hands, so the host's CTA
+// bar and overrides entry both collapse into one corner dock
+// (HostTakeoverDock). Nothing host-facing is reachable until it is opened.
+// Best effort by design: callers run this mid-transition, so the dock is just
+// as likely to be absent, or to detach between being found and being clicked,
+// as it is to open. Either way the caller carries on and re-checks the phase.
+const openTakeoverDockIfCollapsed = async (hostPage: Page): Promise<void> => {
+  const dockToggle = hostPage.getByRole("button", { name: "Open host controls" });
+
+  try {
+    await dockToggle.click({ timeout: 1_000 });
+  } catch {
+    return;
+  }
+};
+
 const resetGameFromOverrides = async (hostPage: Page): Promise<void> => {
+  await openTakeoverDockIfCollapsed(hostPage);
   await openOverridesPanelButton(hostPage).click();
   await hostPage.getByRole("button", { name: "Reset Game" }).click();
   await hostPage.getByRole("button", { name: "Confirm", exact: true }).click();
@@ -24,12 +41,15 @@ export const ensureSetupPhase = async (hostPage: Page): Promise<void> => {
   const primaryActionButton = hostPrimaryActionButton(hostPage);
   const overridesButton = openOverridesPanelButton(hostPage);
 
+  await openTakeoverDockIfCollapsed(hostPage);
   await expect(primaryActionButton).toBeVisible();
 
   for (let attempt = 0; attempt < 12; attempt += 1) {
     if ((await setupPhaseEyebrow.count()) > 0) {
       return;
     }
+
+    await openTakeoverDockIfCollapsed(hostPage);
 
     if ((await overridesButton.count()) > 0) {
       await resetGameFromOverrides(hostPage);

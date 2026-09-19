@@ -33,7 +33,7 @@ const resolveActiveTeamName = ({
   return activeTeamName ?? hostGeoSurfaceCopy.noAssignedTeamLabel;
 };
 
-const GeoPromptRow = ({
+const GeoDossier = ({
   currentPrompt,
   serverOrigin
 }: {
@@ -41,7 +41,7 @@ const GeoPromptRow = ({
   serverOrigin: string | null;
 }): JSX.Element => {
   return (
-    <div className={styles.promptRow}>
+    <>
       <div className={styles.polaroid}>
         <img
           className={styles.polaroidPhoto}
@@ -51,24 +51,20 @@ const GeoPromptRow = ({
         <p className={styles.polaroidCaption}>{currentPrompt.title}</p>
       </div>
       {currentPrompt.hint !== undefined && (
-        <div className={styles.promptDetails}>
-          <p className={styles.promptHint}>
-            {hostGeoSurfaceCopy.hintLabel(currentPrompt.hint)}
-          </p>
-        </div>
+        <p className={styles.promptHint}>
+          {hostGeoSurfaceCopy.hintLabel(currentPrompt.hint)}
+        </p>
       )}
-    </div>
+    </>
   );
 };
 
-const GeoGuessSection = ({
+const GeoChart = ({
   geoHostView,
-  canDispatchAction,
   onDispatchAction
-}: Pick<MinigameHostRendererProps, "canDispatchAction" | "onDispatchAction"> & {
+}: Pick<MinigameHostRendererProps, "onDispatchAction"> & {
   geoHostView: GeoMinigameHostView;
 }): JSX.Element => {
-  const canSubmitGuess = canDispatchAction && geoHostView.currentGuess !== null;
   const mapFallback = (
     <div className={styles.mapFallback}>{hostGeoSurfaceCopy.mapLoadingLabel}</div>
   );
@@ -92,17 +88,29 @@ const GeoGuessSection = ({
       <p className={styles.mapInstruction}>
         {hostGeoSurfaceCopy.mapInstructionLabel}
       </p>
-      <button
-        className={styles.submitButton}
-        type="button"
-        disabled={!canSubmitGuess}
-        onClick={(): void => {
-          onDispatchAction("submitGuess", {});
-        }}
-      >
-        {hostGeoSurfaceCopy.submitButtonLabel}
-      </button>
     </>
+  );
+};
+
+const GeoResult = ({
+  lastResult
+}: {
+  lastResult: NonNullable<GeoMinigameHostView["lastResult"]>;
+}): JSX.Element => {
+  return (
+    <div className={styles.resultPanel}>
+      <span className={styles.distanceStamp}>
+        {hostGeoSurfaceCopy.distanceStamp(lastResult.distanceKm)}
+      </span>
+      <span className={styles.pointsSeal}>
+        <span className={styles.pointsSealValue}>
+          {hostGeoSurfaceCopy.pointsSealValue(lastResult.pointsAwarded)}
+        </span>
+        <span className={styles.pointsSealLabel}>
+          {hostGeoSurfaceCopy.pointsSealLabel}
+        </span>
+      </span>
+    </div>
   );
 };
 
@@ -133,70 +141,83 @@ export const HostGeoSurface = ({
     promptsPerTurn,
     isSubmitted
   });
-  const shouldRenderGuessSection =
+  const lastResult = geoHostView?.lastResult ?? null;
+  const isGuessing =
     isPlayPhase && geoHostView !== null && !isSubmitted && currentPrompt !== null;
+  const canSubmitGuess =
+    canDispatchAction && geoHostView !== null && geoHostView.currentGuess !== null;
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <p className={styles.headerTitle}>{hostGeoSurfaceCopy.logTitle}</p>
+        <p className={styles.teamLine}>
+          {hostGeoSurfaceCopy.teamPrefix}
+          <span className={styles.teamName}>{resolvedActiveTeamName}</span>
+        </p>
         {isPlayPhase && promptsPerTurn > 0 && (
           <p className={styles.headerMeta}>
             {hostGeoSurfaceCopy.exhibitLabel(promptNumber, promptsPerTurn)}
           </p>
         )}
       </header>
-      <p className={styles.teamLine}>
-        {hostGeoSurfaceCopy.teamPrefix}
-        <span className={styles.teamName}>{resolvedActiveTeamName}</span>
-      </p>
+
       {!isPlayPhase && (
         <p className={styles.statusNote}>{hostGeoSurfaceCopy.introDescription}</p>
       )}
       {isPlayPhase && currentPrompt === null && (
         <p className={styles.statusNote}>{hostGeoSurfaceCopy.waitingPromptLabel}</p>
       )}
+
+      {/* Landscape pairing: the dossier holds still on the left while the chart
+          — the thing a player actually works in — takes the rest of the tablet,
+          so a turn never needs a scroll. */}
       {isPlayPhase && currentPrompt !== null && (
-        <GeoPromptRow currentPrompt={currentPrompt} serverOrigin={serverOrigin} />
-      )}
-      {shouldRenderGuessSection && geoHostView !== null && (
-        <GeoGuessSection
-          geoHostView={geoHostView}
-          canDispatchAction={canDispatchAction}
-          onDispatchAction={onDispatchAction}
-        />
-      )}
-      {isPlayPhase && isSubmitted && geoHostView?.lastResult != null && (
-        <div className={styles.resultRow}>
-          <span className={styles.distanceStamp}>
-            {hostGeoSurfaceCopy.distanceStamp(geoHostView.lastResult.distanceKm)}
-          </span>
-          <span className={styles.pointsSeal}>
-            <span className={styles.pointsSealValue}>
-              {hostGeoSurfaceCopy.pointsSealValue(
-                geoHostView.lastResult.pointsAwarded
-              )}
-            </span>
-            <span className={styles.pointsSealLabel}>
-              {hostGeoSurfaceCopy.pointsSealLabel}
-            </span>
-          </span>
+        <div className={styles.playBody}>
+          <div className={styles.dossierColumn}>
+            <GeoDossier currentPrompt={currentPrompt} serverOrigin={serverOrigin} />
+            {isGuessing && (
+              <button
+                className={styles.submitButton}
+                type="button"
+                disabled={!canSubmitGuess}
+                onClick={(): void => {
+                  onDispatchAction("submitGuess", {});
+                }}
+              >
+                {hostGeoSurfaceCopy.submitButtonLabel}
+              </button>
+            )}
+            {isSubmitted && !isTurnComplete && (
+              <button
+                className={styles.nextPromptButton}
+                type="button"
+                disabled={!canDispatchAction}
+                onClick={(): void => {
+                  onDispatchAction("nextPrompt", {});
+                }}
+              >
+                {hostGeoSurfaceCopy.nextPromptButtonLabel}
+              </button>
+            )}
+            {isTurnComplete && (
+              <p className={styles.dossierNote}>
+                {hostGeoSurfaceCopy.turnCompleteLabel}
+              </p>
+            )}
+          </div>
+          <div className={styles.chartColumn}>
+            {isGuessing && geoHostView !== null && (
+              <GeoChart
+                geoHostView={geoHostView}
+                onDispatchAction={onDispatchAction}
+              />
+            )}
+            {isSubmitted && lastResult !== null && (
+              <GeoResult lastResult={lastResult} />
+            )}
+          </div>
         </div>
-      )}
-      {isPlayPhase && isSubmitted && !isTurnComplete && (
-        <button
-          className={styles.nextPromptButton}
-          type="button"
-          disabled={!canDispatchAction}
-          onClick={(): void => {
-            onDispatchAction("nextPrompt", {});
-          }}
-        >
-          {hostGeoSurfaceCopy.nextPromptButtonLabel}
-        </button>
-      )}
-      {isPlayPhase && isTurnComplete && (
-        <p className={styles.statusNote}>{hostGeoSurfaceCopy.turnCompleteLabel}</p>
       )}
     </div>
   );

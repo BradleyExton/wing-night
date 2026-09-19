@@ -3,6 +3,7 @@ import { type RoomState } from "@wingnight/shared";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { HostActionBarSurface } from "./HostActionBarSurface";
+import { HostTakeoverDock } from "./HostTakeoverDock";
 import { OverrideActionsSurface } from "./OverrideActionsSurface";
 import { OverrideDock } from "./OverrideDock";
 import { hostControlPanelCopy } from "./copy";
@@ -33,6 +34,9 @@ export const HostControlPanel = (): JSX.Element => {
   const hostMode = resolveHostRenderMode(phase);
   const isMinigameTakeover =
     hostMode === "minigame_intro" || hostMode === "minigame_play";
+  // Only MINIGAME_PLAY hands the tablet over; MINIGAME_INTRO is still the host
+  // briefing the room, so it keeps the full-bleed CTA bar.
+  const isPlayerHeld = hostMode === "minigame_play";
   const nextPhaseDisabled =
     handlers.onNextPhase === undefined || roomState?.canAdvancePhase !== true;
   const orderedTeams = useMemo(() => resolveOrderedTeams(roomState), [roomState]);
@@ -78,17 +82,33 @@ export const HostControlPanel = (): JSX.Element => {
         <HostPhaseBody />
       </HostOverridesUiProvider>
 
-      <HostActionBarSurface
-        onNextPhase={handlers.onNextPhase}
-        nextPhaseDisabled={nextPhaseDisabled}
-        primaryButtonLabel={primaryButtonLabel}
-      />
+      {/* During the minigame takeover the tablet is in the players' hands, so
+          the full-bleed CTA bar collapses to a discreet corner dock and the
+          whole canvas goes to the minigame (DESIGN.md §2.0A). */}
+      {isPlayerHeld ? (
+        <HostTakeoverDock
+          primaryActionLabel={primaryButtonLabel}
+          primaryActionDisabled={nextPhaseDisabled}
+          onPrimaryAction={handlers.onNextPhase}
+          showOverridesAction={overrideDockContext.isVisible}
+          overridesNeedAttention={overrideDockContext.showBadge}
+          onOpenOverrides={(): void => {
+            setIsOverrideDockOpen(true);
+          }}
+        />
+      ) : (
+        <HostActionBarSurface
+          onNextPhase={handlers.onNextPhase}
+          nextPhaseDisabled={nextPhaseDisabled}
+          primaryButtonLabel={primaryButtonLabel}
+        />
+      )}
 
       {overrideDockContext.isVisible && (
         <OverrideDock
           isOpen={isOverrideDockOpen}
           showBadge={overrideDockContext.showBadge}
-          showTrigger={hostMode === "minigame_play"}
+          showTrigger={false}
           panelId={overrideDockPanelId}
           onOpen={(): void => {
             setIsOverrideDockOpen(true);

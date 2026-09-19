@@ -225,8 +225,10 @@ Passed to the active team during their turn. Must be thumb-friendly.
 - Prompt photo card + hint + active team name.
 - Progress indicator (e.g. "Prompt 2 of 3").
 - Clickable Leaflet map (OpenStreetMap tiles, no API key) with marker placement. Clicking overwrites the current marker.
+- Quick views in the map's top-right corner (`World`, `Barrie`) that fly the chart between the whole world and the home town, since the night's photos are either around Barrie or nowhere near it. The list lives in `leafletConstants`.
 - Submit button (enabled once a guess is placed).
 - Post-submit: result card with distance and points awarded. Host advances to next prompt explicitly.
+- Laid out for a tablet held in landscape and never scrolls: header band, then a fixed-width dossier column (photo, hint, the turn's one action) beside the chart, which takes the rest of the canvas. See DESIGN.md §2.4.
 
 ### Display surface (`packages/minigames/geo/src/client/DisplayGeoSurface`)
 

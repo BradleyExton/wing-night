@@ -108,7 +108,10 @@ export const verdictIcon = "text-2xl leading-none";
 export const verdictHint =
   "text-[0.6rem] font-bold uppercase tracking-[0.24em] opacity-80";
 
-export const utilityRow = "flex gap-2";
+// The shell floats the host's corner dock over the bottom-right of the
+// takeover canvas (DESIGN.md §2.0A), so the row that reaches that corner
+// keeps a gutter clear of it rather than putting a control underneath.
+export const utilityRow = "flex gap-2 pr-[4.5rem]";
 
 export const utilityButton =
   "min-h-[52px] flex-1 rounded-xl border border-text/10 bg-surface text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";

@@ -3,9 +3,10 @@
 export const container =
   "grid h-[100dvh] grid-rows-[minmax(0,1fr)_auto] overflow-hidden bg-bg text-text";
 
-// Minigame takeover collapses the shell — minigame package owns the canvas.
+// Minigame takeover collapses the shell — minigame package owns the canvas,
+// and the corner dock anchors against this container rather than the viewport.
 export const takeoverContainer =
-  "grid h-[100dvh] grid-rows-[minmax(0,1fr)_auto] overflow-hidden bg-bg text-text";
+  "relative grid h-[100dvh] grid-rows-[minmax(0,1fr)_auto] overflow-hidden bg-bg text-text";
 
 // Main split — asymmetric 65/35 (stage on left, deck on right). The deck
 // keeps a floor width so narrow/portrait tablets shrink the hero, not the

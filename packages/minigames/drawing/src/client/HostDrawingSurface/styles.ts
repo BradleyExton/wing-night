@@ -53,8 +53,11 @@ export const deckRows = "flex gap-2";
 export const deckRowButton =
   "min-h-12 flex-1 rounded-lg border border-[#3a200d] bg-surface text-xs font-extrabold uppercase tracking-[0.14em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
 
+// The shell floats the host's corner dock over the bottom-right of the
+// takeover canvas (DESIGN.md §2.0A), so the row that reaches that corner
+// keeps a gutter clear of it rather than putting a control underneath.
 export const paletteGrid =
-  "grid grid-cols-6 gap-2 rounded-xl border border-[#3a200d] bg-gradient-to-b from-[#1a0e05] to-[#0a0604] p-3";
+  "grid grid-cols-6 gap-2 rounded-xl border border-[#3a200d] bg-gradient-to-b from-[#1a0e05] to-[#0a0604] p-3 pr-[4.5rem]";
 
 export const inkLight =
   "aspect-square w-full rounded-full border-2 border-black/50 transition disabled:cursor-not-allowed disabled:opacity-40";

@@ -108,6 +108,13 @@ export const hostCopy = {
   skipTurnBoundaryButtonLabel: "Skip Turn",
   redoLastMutationButtonLabel: "Undo Last Score",
   resetGameButtonLabel: "Reset Game",
+  // Takeover dock — the host's own controls while the tablet is in the players'
+  // hands. One discreet circle; the labelled actions only appear after a tap.
+  takeoverDockOpenGlyph: "⋯",
+  takeoverDockCloseGlyph: "✕",
+  takeoverDockOpenAriaLabel: "Open host controls",
+  takeoverDockCloseAriaLabel: "Close host controls",
+  takeoverDockScrimDismissAriaLabel: "Close host controls",
   overridesTriggerButtonLabel: "Overrides",
   overridesTriggerNeedsAttentionLabel: "Needs Review",
   overridesTriggerOpenAriaLabel: "Open overrides panel",

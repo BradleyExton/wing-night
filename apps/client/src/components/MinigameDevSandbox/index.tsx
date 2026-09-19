@@ -9,6 +9,7 @@ import { Phase, resolveMinigameDefinition, type MinigameType } from "@wingnight/
 
 import { hostCopy } from "../../copy/host";
 import { HostActionBarSurface } from "../HostControlPanel/HostActionBarSurface";
+import { HostTakeoverDock } from "../HostControlPanel/HostTakeoverDock";
 import { MinigameSurface } from "../HostControlPanel/MinigameSurface";
 import {
   resolveMinigameDevManifest,
@@ -46,6 +47,9 @@ const HOST_SHELL_PHASE_BY_SURFACE_PHASE: Record<MinigameSurfacePhase, Phase> = {
   intro: Phase.MINIGAME_INTRO,
   play: Phase.MINIGAME_PLAY
 };
+
+// The sandbox has no game to advance, so the shell's host controls are inert.
+const noop = (): void => {};
 
 const resolveHostShellCtaLabel = (phase: MinigameSurfacePhase): string => {
   return hostCopy.primaryActionLabel(HOST_SHELL_PHASE_BY_SURFACE_PHASE[phase], {
@@ -204,10 +208,20 @@ export const MinigameDevSandbox = ({
                   onDispatchAction={handleDispatchAction}
                 />
               </div>
-              <HostActionBarSurface
-                nextPhaseDisabled
-                primaryButtonLabel={resolveHostShellCtaLabel(phase)}
-              />
+              {phase === "play" ? (
+                <HostTakeoverDock
+                  primaryActionLabel={resolveHostShellCtaLabel(phase)}
+                  primaryActionDisabled
+                  showOverridesAction={false}
+                  overridesNeedAttention={false}
+                  onOpenOverrides={noop}
+                />
+              ) : (
+                <HostActionBarSurface
+                  nextPhaseDisabled
+                  primaryButtonLabel={resolveHostShellCtaLabel(phase)}
+                />
+              )}
             </div>
           </SandboxDeviceFrame>
         </div>
