@@ -2,10 +2,12 @@ import {
   CLIENT_TO_SERVER_EVENTS,
   MINIGAME_API_VERSION,
   TIMER_EXTEND_MAX_SECONDS,
+  isValidMusicVolume,
   type GameReorderTurnOrderPayload,
   type HostSecretPayload,
   type MinigameActionPayload,
   type MinigameType,
+  type MusicSetVolumePayload,
   type ScoringAdjustTeamScorePayload,
   type ScoringSetWingParticipationPayload,
   type SetupAddPlayerPayload,
@@ -57,6 +59,8 @@ type HostRequestArgs = {
   onPauseMusic: [];
   onResumeMusic: [];
   onSkipMusicTrack: [];
+  onPreviousMusicTrack: [];
+  onSetMusicVolume: [volume: number];
   onReorderTurnOrder: [teamIds: string[]];
   onSkipTurnBoundary: [];
   onAdjustTeamScore: [teamId: string, delta: number];
@@ -195,6 +199,18 @@ export const hostRequestTable: HostRequestTable = {
     event: CLIENT_TO_SERVER_EVENTS.MUSIC_SKIP,
     buildPayload: buildHostSecretPayload
   },
+  onPreviousMusicTrack: {
+    event: CLIENT_TO_SERVER_EVENTS.MUSIC_PREVIOUS,
+    buildPayload: buildHostSecretPayload
+  },
+  onSetMusicVolume: {
+    event: CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME,
+    canEmit: (volume): boolean => isValidMusicVolume(volume),
+    buildPayload: (hostSecret, volume): MusicSetVolumePayload => ({
+      hostSecret,
+      volume
+    })
+  },
   onReorderTurnOrder: {
     event: CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER,
     canEmit: (teamIds): boolean => isValidTeamIdList(teamIds),
@@ -278,6 +294,8 @@ export const createHostRequestHandlers = (
     onPauseMusic: buildHandler("onPauseMusic"),
     onResumeMusic: buildHandler("onResumeMusic"),
     onSkipMusicTrack: buildHandler("onSkipMusicTrack"),
+    onPreviousMusicTrack: buildHandler("onPreviousMusicTrack"),
+    onSetMusicVolume: buildHandler("onSetMusicVolume"),
     onReorderTurnOrder: buildHandler("onReorderTurnOrder"),
     onSkipTurnBoundary: buildHandler("onSkipTurnBoundary"),
     onAdjustTeamScore: buildHandler("onAdjustTeamScore"),

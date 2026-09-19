@@ -1,3 +1,5 @@
+import { MUSIC_VOLUME_DEFAULT } from "@wingnight/shared";
+
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
 import { MinigameSurface } from "../../MinigameSurface";
@@ -50,9 +52,12 @@ export const MinigameIntroStage = (): JSX.Element => {
             the host would have to leave the briefing to reach. */}
         <MusicControlsSurface
           musicPlayback={roomState?.musicPlayback ?? null}
+          musicVolume={roomState?.musicVolume ?? MUSIC_VOLUME_DEFAULT}
           onPauseMusic={handlers.onPauseMusic}
           onResumeMusic={handlers.onResumeMusic}
           onSkipMusicTrack={handlers.onSkipMusicTrack}
+          onPreviousMusicTrack={handlers.onPreviousMusicTrack}
+          onSetMusicVolume={handlers.onSetMusicVolume}
         />
       </ControlDeck>
     </>

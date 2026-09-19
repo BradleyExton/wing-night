@@ -72,10 +72,27 @@ test("display anthem src is an absolute url on the server origin, and stops at E
   await unlockOverlay.click();
   await expect(unlockOverlay).toHaveCount(0);
 
+  // The tap starts the anthem under a fade-in: it is playing, and the volume
+  // climbs to the room's master (1 by default) rather than snapping there.
+  await expect(anthem).toHaveJSProperty("paused", false);
+  await expect(anthem).toHaveJSProperty("volume", 1);
+
   await startEatingFromBriefing(hostPage);
 
   await expect(displayPage.getByText("Eating · Frank's")).toBeVisible();
   await expect(anthem).toHaveJSProperty("paused", true);
+  // Paused AT ZERO is the fade-out having run to its end before the stop; a
+  // hard cut would leave the element paused at 1.
+  await expect(anthem).toHaveJSProperty("volume", 0);
+
+  // Where the anthem got to is the TV's memory, keyed by source and file, so
+  // the same anthem picks up here when the team's round comes back around.
+  const rememberedPositions = await displayPage.evaluate(() =>
+    window.localStorage.getItem("wingnight.musicPositions")
+  );
+
+  expect(rememberedPositions).not.toBeNull();
+  expect(rememberedPositions).toContain("ANTHEM/");
 
   await expect(displayPage.getByText("Content Load Error")).toHaveCount(0);
 

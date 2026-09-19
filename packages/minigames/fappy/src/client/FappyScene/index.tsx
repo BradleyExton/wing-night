@@ -296,9 +296,15 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
           </svg>
           <div ref={puffRef} className={styles.puff} data-fappy-puff />
           {waitingBird !== null && (
-            <BirdSprite ref={waitingBirdRef} bird={waitingBird} className={styles.waitingBird} dataAttribute="data-fappy-waiting-bird" />
+            <BirdSprite
+              ref={waitingBirdRef}
+              bird={waitingBird}
+              className={styles.waitingBird}
+              dataAttribute="data-fappy-waiting-bird"
+              pose="idle"
+            />
           )}
-          <BirdSprite ref={birdRef} bird={bird} className={styles.bird} dataAttribute="data-fappy-bird" />
+          <BirdSprite ref={birdRef} bird={bird} className={styles.bird} dataAttribute="data-fappy-bird" pose="fly" />
         </div>
       </div>
     );

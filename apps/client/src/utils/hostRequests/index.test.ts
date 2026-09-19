@@ -144,6 +144,16 @@ const handlerInvocations: HandlerInvocation[] = [
     expectedPayload: { hostSecret: "valid-host-secret" }
   },
   {
+    name: "onPreviousMusicTrack",
+    invoke: (handlers) => handlers.onPreviousMusicTrack(),
+    expectedPayload: { hostSecret: "valid-host-secret" }
+  },
+  {
+    name: "onSetMusicVolume",
+    invoke: (handlers) => handlers.onSetMusicVolume(0.4),
+    expectedPayload: { hostSecret: "valid-host-secret", volume: 0.4 }
+  },
+  {
     name: "onReorderTurnOrder",
     invoke: (handlers) => handlers.onReorderTurnOrder(["team-2", "team-1"]),
     expectedPayload: {
@@ -260,6 +270,14 @@ const guardedInvocations: GuardedInvocation[] = [
   {
     label: "onAdjustTeamScore rejects blank team ids",
     invoke: (handlers) => handlers.onAdjustTeamScore(" ", 2)
+  },
+  {
+    label: "onSetMusicVolume rejects a volume above one",
+    invoke: (handlers) => handlers.onSetMusicVolume(1.5)
+  },
+  {
+    label: "onSetMusicVolume rejects a negative volume",
+    invoke: (handlers) => handlers.onSetMusicVolume(-0.5)
   }
 ];
 

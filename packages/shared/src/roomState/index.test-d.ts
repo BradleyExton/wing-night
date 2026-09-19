@@ -150,6 +150,7 @@ export type ValidRoomStateCheck = Assert<
       minigameDisplayView: RoomState["minigameDisplayView"];
       timer: RoomState["timer"];
       musicPlayback: RoomState["musicPlayback"];
+      musicVolume: number;
       wingParticipationByPlayerId: Record<string, boolean>;
       pendingWingPointsByTeamId: Record<string, number>;
       pendingMinigamePointsByTeamId: Record<string, number>;
@@ -184,6 +185,7 @@ export type DisplaySnapshotShapeCheck = Assert<
       minigameDisplayView: RoomState["minigameDisplayView"];
       timer: RoomState["timer"];
       musicPlayback: RoomState["musicPlayback"];
+      musicVolume: number;
       wingParticipationByPlayerId: Record<string, boolean>;
       pendingWingPointsByTeamId: Record<string, number>;
       pendingMinigamePointsByTeamId: Record<string, number>;

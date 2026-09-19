@@ -189,6 +189,9 @@ export const hostCopy = {
   musicPauseButtonLabel: "Pause",
   musicResumeButtonLabel: "Resume",
   musicSkipButtonLabel: "Next",
+  musicPreviousButtonLabel: "Back",
+  musicVolumeLabel: "Volume",
+  musicVolumeValue: (percent: number): string => `${percent}%`,
   musicStatusValue: (sourceLabel: string, stateLabel: string): string =>
     `${sourceLabel} · ${stateLabel}`,
   musicTrackPositionLabel: (trackIndex: number, trackCount: number): string =>

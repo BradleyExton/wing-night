@@ -12,7 +12,8 @@ import { setupHandlers } from "./testHarness.js";
 const HOST_MUSIC_EVENTS = [
   CLIENT_TO_SERVER_EVENTS.MUSIC_PAUSE,
   CLIENT_TO_SERVER_EVENTS.MUSIC_RESUME,
-  CLIENT_TO_SERVER_EVENTS.MUSIC_SKIP
+  CLIENT_TO_SERVER_EVENTS.MUSIC_SKIP,
+  CLIENT_TO_SERVER_EVENTS.MUSIC_PREVIOUS
 ] as const;
 
 for (const event of HOST_MUSIC_EVENTS) {
@@ -39,6 +40,45 @@ for (const event of HOST_MUSIC_EVENTS) {
     assert.equal(socketHarness.invalidSecretEvents, 1);
   });
 }
+
+test("accepts a volume only with a host secret and an in-range number", () => {
+  const volumes: unknown[] = [];
+
+  const socketHarness = setupHandlers({
+    phase: Phase.SETUP,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME]: (payload) => {
+        volumes.push((payload as { volume: unknown }).volume);
+      }
+    }
+  });
+
+  assert.doesNotThrow(() => {
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME, {
+      hostSecret: "valid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME, {
+      hostSecret: "valid-host-secret",
+      volume: 1.5
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME, {
+      hostSecret: "valid-host-secret",
+      volume: "0.5"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME, {
+      hostSecret: "invalid-host-secret",
+      volume: 0.5
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME, {
+      hostSecret: "valid-host-secret",
+      volume: 0.5
+    });
+  });
+
+  assert.deepEqual(volumes, [0.5]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
 
 // The display's report is the ONE client event that carries no host secret, so
 // this pins the thing that makes that safe: the payload still has to be the

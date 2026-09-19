@@ -141,6 +141,9 @@ export const resetGameToSetup = defineRoomMutation({
     // here would silence the lobby music at exactly the moment a reset returns
     // the room to SETUP and people start milling around again.
     nextState.lobbyPlaylist = structuredClone(previousSnapshot.lobbyPlaylist);
+    // Same carry-through, same reason: the volume is how loud the TV is in
+    // THIS room, and a reset should not blast the lobby at the default.
+    nextState.musicVolume = previousSnapshot.musicVolume;
     nextState.gameConfig = restoredGameConfig;
     nextState.totalRounds =
       restoredGameConfig === null ? nextState.totalRounds : restoredGameConfig.rounds.length;

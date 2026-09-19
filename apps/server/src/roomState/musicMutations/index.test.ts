@@ -6,9 +6,12 @@ import { MUSIC_PLAYBACK_SOURCES, Phase } from "@wingnight/shared";
 import {
   getRoomStateSnapshot,
   pauseRoomMusic,
+  previousRoomMusicTrack,
   reportRoomMusicTrackEnded,
+  resetGameToSetup,
   resetRoomState,
   resumeRoomMusic,
+  setRoomMusicVolume,
   setRoomStateLobbyPlaylist,
   setRoomStateTeams,
   skipRoomMusicTrack
@@ -105,6 +108,78 @@ test("resumes playback when skipping while paused", () => {
   skipRoomMusicTrack();
 
   assert.equal(getRoomStateSnapshot().musicPlayback?.isPlaying, true);
+});
+
+test("steps back to the previous lobby track and names it", () => {
+  seedLobbyPlaylist();
+
+  skipRoomMusicTrack();
+  skipRoomMusicTrack();
+  previousRoomMusicTrack();
+
+  assert.deepEqual(getRoomStateSnapshot().musicPlayback, {
+    source: MUSIC_PLAYBACK_SOURCES.LOBBY,
+    trackFileName: "02-second.mp3",
+    trackIndex: 1,
+    trackCount: 3,
+    isPlaying: true
+  });
+});
+
+test("wraps the lobby cursor to the last track when stepping back from the first", () => {
+  seedLobbyPlaylist();
+
+  previousRoomMusicTrack();
+
+  assert.equal(getRoomStateSnapshot().musicPlayback?.trackIndex, 2);
+});
+
+// Back implies play, exactly as Next does.
+test("resumes playback when stepping back while paused", () => {
+  seedLobbyPlaylist();
+
+  pauseRoomMusic();
+  previousRoomMusicTrack();
+
+  assert.equal(getRoomStateSnapshot().musicPlayback?.isPlaying, true);
+});
+
+test("starts the room at full volume and lets the host set it", () => {
+  assert.equal(getRoomStateSnapshot().musicVolume, 1);
+
+  setRoomMusicVolume(0.4);
+
+  assert.equal(getRoomStateSnapshot().musicVolume, 0.4);
+});
+
+test("rejects a volume outside the element's 0 to 1 scale", () => {
+  setRoomMusicVolume(1.2);
+  setRoomMusicVolume(-0.1);
+
+  assert.equal(getRoomStateSnapshot().musicVolume, 1);
+});
+
+// The volume is a room setting, not a property of the playing track: a host
+// who turns it down while the room is silent finds it down when the next
+// anthem starts.
+test("keeps a volume set during a silent phase", () => {
+  seedLobbyPlaylist();
+  seedTeamsWithAnthems();
+  advanceUntil(Phase.EATING, 1);
+  assert.equal(getRoomStateSnapshot().musicPlayback, null);
+
+  setRoomMusicVolume(0.25);
+
+  assert.equal(getRoomStateSnapshot().musicVolume, 0.25);
+});
+
+test("carries the volume through Reset Game", () => {
+  seedLobbyPlaylist();
+  setRoomMusicVolume(0.6);
+
+  resetGameToSetup();
+
+  assert.equal(getRoomStateSnapshot().musicVolume, 0.6);
 });
 
 test("advances the lobby playlist when the display reports the track ended", () => {

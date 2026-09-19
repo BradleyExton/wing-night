@@ -37,8 +37,10 @@ export {
 
 export {
   pauseRoomMusic,
+  previousRoomMusicTrack,
   reportRoomMusicTrackEnded,
   resumeRoomMusic,
+  setRoomMusicVolume,
   skipRoomMusicTrack
 } from "./musicMutations/index.js";
 

@@ -1,4 +1,4 @@
-import { Phase, type RoomState } from "@wingnight/shared";
+import { MUSIC_VOLUME_DEFAULT, Phase, type RoomState } from "@wingnight/shared";
 
 const DEFAULT_TOTAL_ROUNDS = 3;
 
@@ -21,6 +21,7 @@ export const createInitialRoomState = (): RoomState => {
     minigameDisplayView: null,
     timer: null,
     musicPlayback: null,
+    musicVolume: MUSIC_VOLUME_DEFAULT,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},

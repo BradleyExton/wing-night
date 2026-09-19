@@ -29,11 +29,13 @@ export type RoomMusicPlaybackState = {
   isPlaying: boolean;
 };
 
-// POSITION IS DELIBERATELY ABSENT. A display refresh mid-track restarts the
-// current track rather than resuming it: tracking elapsed position would mean
-// `RoomTimerState`-shaped machinery (startedAt/endsAt/pausedAt, all of it
-// re-derived on every pause) for a case that happens when someone bumps the
-// HDMI cable. The track is right, the round is right, and the song starts over.
+// POSITION IS DELIBERATELY ABSENT FROM ROOM STATE. Where a track picks up is
+// the DISPLAY's memory (`musicPositionMemory`, localStorage on the TV): a
+// team's anthem resumes in round three where it faded out in round one, and a
+// refresh mid-track resumes too. Putting seconds here instead would mean
+// `RoomTimerState`-shaped machinery (startedAt/endsAt/pausedAt, re-derived on
+// every pause) plus a second display-reported event, for a value nothing but
+// the speaker consumes. The server names the track; the TV knows how far in.
 
 // Which of a team's anthems plays this round.
 //
@@ -82,6 +84,39 @@ export const resolveNextTrackIndex = (
   }
 
   return (currentIndex + 1) % trackCount;
+};
+
+// Back is the plain mirror of Next: the previous track, wrapping from the
+// first to the last. It is NOT the music-player convention of "restart the
+// current track unless you are near its start" — the server does not know the
+// element's position, and a rule that changes meaning by the second is a
+// surprise on a sauce-covered tablet.
+export const resolvePreviousTrackIndex = (
+  currentIndex: number,
+  trackCount: number
+): number => {
+  if (trackCount <= 0) {
+    return 0;
+  }
+
+  return (currentIndex - 1 + trackCount) % trackCount;
+};
+
+// The TV's master volume, as a room setting rather than a playback field: it
+// lives OUTSIDE `musicPlayback` so it survives the silent phases and a display
+// refresh, and the host sets it once for the room rather than once per track.
+// The scale is the `<audio>` element's own, 0 to 1.
+export const MUSIC_VOLUME_MIN = 0;
+export const MUSIC_VOLUME_MAX = 1;
+export const MUSIC_VOLUME_DEFAULT = 1;
+
+export const isValidMusicVolume = (value: unknown): value is number => {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    value >= MUSIC_VOLUME_MIN &&
+    value <= MUSIC_VOLUME_MAX
+  );
 };
 
 // `01-hot-in-herre.mp3` is a filename, not display copy. Deriving the title

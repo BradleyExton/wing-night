@@ -126,9 +126,14 @@ export {
 } from "./contentAssets/index.js";
 export {
   MUSIC_PLAYBACK_SOURCES,
+  MUSIC_VOLUME_DEFAULT,
+  MUSIC_VOLUME_MAX,
+  MUSIC_VOLUME_MIN,
+  isValidMusicVolume,
   resolveAnthemForRound,
   resolveAnthemIndexForRound,
   resolveNextTrackIndex,
+  resolvePreviousTrackIndex,
   resolveTrackTitle
 } from "./musicPlayback/index.js";
 export type {
@@ -387,6 +392,7 @@ export type {
   MinigameActionPayload,
   MinigameActionType,
   MinigameActionEnvelopePayload,
+  MusicSetVolumePayload,
   MusicTrackEndedPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,

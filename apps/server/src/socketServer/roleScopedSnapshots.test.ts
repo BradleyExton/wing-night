@@ -35,6 +35,7 @@ const createRoomStateFixture = (): RoomState => {
     minigameDisplayView: null,
     timer: null,
     musicPlayback: null,
+    musicVolume: 1,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},

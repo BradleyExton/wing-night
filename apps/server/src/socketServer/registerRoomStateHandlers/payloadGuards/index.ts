@@ -3,10 +3,12 @@ import {
   MUSIC_PLAYBACK_SOURCES,
   MINIGAME_API_VERSION,
   TIMER_EXTEND_MAX_SECONDS,
+  isValidMusicVolume,
   type ConfigSavePayload,
   type GameReorderTurnOrderPayload,
   type HostSecretPayload,
   type MinigameActionEnvelope,
+  type MusicSetVolumePayload,
   type MusicTrackEndedPayload,
   type ScoringAdjustTeamScorePayload,
   type ScoringSetWingParticipationPayload,
@@ -125,6 +127,11 @@ export const isMusicTrackEndedPayload = (
     trackIndex: (value) =>
       typeof value === "number" && Number.isInteger(value) && value >= 0
   });
+
+export const isMusicSetVolumePayload = (
+  payload: unknown
+): payload is MusicSetVolumePayload =>
+  hasShape(payload, { hostSecret: isString, volume: isValidMusicVolume });
 
 export const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload =>
   hasShape(payload, {

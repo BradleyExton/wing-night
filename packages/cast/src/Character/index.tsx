@@ -1,5 +1,6 @@
 import type { CharacterAppearance } from "../resolvePlayerAppearance/index.js";
 import type { CharacterApparel } from "../resolveTeamApparel/index.js";
+import type { CharacterPose } from "./geometry/index.js";
 import { CHARACTER_WING_PATH, CharacterFigure } from "./CharacterFigure/index.js";
 import * as styles from "./styles.js";
 
@@ -7,29 +8,36 @@ import * as styles from "./styles.js";
 // left flip it with scaleX(-1). Tail, legs, body, neck, wing, head, eyes,
 // beak, wattle and comb — one colour plus `primary`, 2-unit stroke — so it
 // still reads as a bird when it is 3% of a TV's height. Fill comes from the
-// parent as a `text-*` class; apparel comes from the team's genre.
+// parent as a `text-*` class; apparel comes from the team's genre; `pose`
+// names what the rigged parts are doing (`still` unless asked).
 export type CharacterProps = {
   appearance: CharacterAppearance;
   apparel?: CharacterApparel;
   fillClassName?: string;
   wing?: "drawn" | "none";
+  pose?: CharacterPose;
 };
 
-export const Character = ({ appearance, apparel, fillClassName, wing }: CharacterProps): JSX.Element => {
+export const Character = ({ appearance, apparel, fillClassName, wing, pose }: CharacterProps): JSX.Element => {
   return (
     <svg
       className={`${styles.svg} ${fillClassName ?? styles.defaultFill}`}
       viewBox="0 0 80 72"
     >
-      <CharacterFigure appearance={appearance} apparel={apparel} wing={wing} />
+      <CharacterFigure appearance={appearance} apparel={apparel} wing={wing} pose={pose} />
     </svg>
   );
 };
 
+// The class that puts an element's transform origin on the wing's shoulder,
+// in the bird box's own percentages, for a surface that beats the wing on a
+// box of its own the size of the bird.
+export const CHARACTER_WING_ORIGIN_CLASS_NAME = styles.wingOrigin;
+
 // The wing alone, in the same box as the bird, for a surface that draws the
 // bird with `wing="none"` and beats this one over it: rotate the element
-// holding it about `CHARACTER_WING_ROOT` (in the box's own percentages,
-// see `wingOrigin`) and the hen flaps without the rest of it repainting.
+// holding it about the shoulder (`CHARACTER_WING_ORIGIN_CLASS_NAME` on a box
+// the bird's size does it) and the hen flaps without the rest of it repainting.
 export const CharacterWing = ({ fillClassName }: Pick<CharacterProps, "fillClassName">): JSX.Element => {
   return (
     <svg
