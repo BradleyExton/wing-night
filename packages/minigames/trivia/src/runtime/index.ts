@@ -108,6 +108,14 @@ export const triviaRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     const prompts = resolveTriviaContent(input.content).prompts;
+
+    // No question on the surfaces means there is nothing to have got right or
+    // wrong: an empty prompt bank must not let a stale client spend the turn's
+    // attempts, or bank a point per click, on questions nobody was ever asked.
+    if (prompts.length === 0) {
+      return unchanged;
+    }
+
     const nextPendingPointsByTeamId = clonePendingPoints(state.pendingPointsByTeamId);
 
     if (input.envelope.actionPayload.isCorrect) {
@@ -118,22 +126,30 @@ export const triviaRuntimePlugin: MinigameRuntimePlugin = {
       );
     }
 
+    const nextAttemptsUsedThisTurn = Math.min(
+      input.state.questionsPerTurnLimit,
+      input.state.attemptsUsedThisTurn + 1
+    );
+    // The verdict that ends a turn leaves the question it scored on screen.
+    // Advancing the cursor here would push the next question onto the TV and
+    // its answer onto the host tablet while nobody can answer it — and because
+    // each team is seeded its own slice of the bank, that next question is the
+    // next team's first one, burnt before their turn starts.
+    const hasQuestionsLeftThisTurn =
+      nextAttemptsUsedThisTurn < input.state.questionsPerTurnLimit;
+
     return {
       state: {
         runtimeState: {
           turnOrderTeamIds: [...state.turnOrderTeamIds],
           activeTurnIndex:
             (state.activeTurnIndex + 1) % state.turnOrderTeamIds.length,
-          promptCursor:
-            prompts.length === 0
-              ? state.promptCursor
-              : (state.promptCursor + 1) % prompts.length,
+          promptCursor: hasQuestionsLeftThisTurn
+            ? (state.promptCursor + 1) % prompts.length
+            : state.promptCursor,
           pendingPointsByTeamId: nextPendingPointsByTeamId
         },
-        attemptsUsedThisTurn: Math.min(
-          input.state.questionsPerTurnLimit,
-          input.state.attemptsUsedThisTurn + 1
-        ),
+        attemptsUsedThisTurn: nextAttemptsUsedThisTurn,
         questionsPerTurnLimit: input.state.questionsPerTurnLimit
       },
       didMutate: true

@@ -265,6 +265,48 @@ test("a full three-prompt turn accumulates points for the active team only", () 
   assert.equal(blockedNext.didMutate, false);
 });
 
+// The cursor may only move on `nextPrompt`, and `nextPrompt` is dead once the
+// turn's budget is spent. Advancing it on the guess that ends the turn would
+// put the NEXT team's photo on the TV — and its answer on the host tablet —
+// between the final stamp and END TEAM TURN, and burn that exhibit.
+test("holds the prompt cursor on the exhibit that ends the turn", () => {
+  const rules = { promptsPerTurn: 2 };
+  let state: SerializableValue = initializeState({
+    activeRoundTeamId: "team-1",
+    rules
+  });
+
+  // Team 2 opens at (1 * 2 promptsPerTurn) % 3 prompts = 2, so a cursor that
+  // ran on after the last stamp would land exactly on its first exhibit.
+  assert.equal(
+    initializeState({ activeRoundTeamId: "team-2", rules }).promptCursor,
+    2
+  );
+
+  for (let promptIndex = 0; promptIndex < 2; promptIndex += 1) {
+    state = reduce(state, "setGuess", { lat: 0, lng: 0 }, { rules }).state;
+    state = reduce(state, "submitGuess", {}, { rules }).state;
+
+    if (promptIndex === 0) {
+      state = reduce(state, "nextPrompt", {}, { rules }).state;
+    }
+  }
+
+  assert.equal((state as GeoRuntimeState).promptCursor, 1);
+  assert.equal(reduce(state, "nextPrompt", {}, { rules }).didMutate, false);
+
+  const displayView = geoRuntimePlugin.selectDisplayView({
+    state,
+    rules,
+    content: geoContentFixture
+  });
+
+  assert.equal(
+    displayView?.minigame === "GEO" ? displayView.currentPrompt?.id : null,
+    "geo-2"
+  );
+});
+
 test("actions outside their sub-state are silently dropped", () => {
   const guessingState = initializeState();
 

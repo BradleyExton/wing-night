@@ -3,6 +3,11 @@ import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import type { DrawingPromptReveal, DrawingStroke } from "@wingnight/shared";
 
 import { StrokeReplayCanvas } from "./StrokeReplayCanvas/index.js";
+import {
+  resolveHeldSketch,
+  resolveRevealKey,
+  type HeldSketch
+} from "./heldSketch/index.js";
 import { displayDrawingSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -97,17 +102,21 @@ export const DisplayDrawingSurface = ({
 
   // The runtime clears the canvas the moment a prompt resolves, but the
   // payoff lands better when the finished sketch lingers, dimmed, under the
-  // reveal plaque — so hold the last drawing until the reveal expires.
-  const heldStrokesRef = useRef<DrawingStroke[]>([]);
+  // reveal plaque — so hold the board this reveal caught until it expires.
+  const previousStrokesRef = useRef<DrawingStroke[]>(strokes);
+  const heldSketchRef = useRef<HeldSketch | null>(null);
 
-  useEffect(() => {
-    if (strokes.length > 0) {
-      heldStrokesRef.current = strokes;
-    }
-  }, [strokes]);
+  heldSketchRef.current = resolveHeldSketch({
+    heldSketch: heldSketchRef.current,
+    revealKey: resolveRevealKey(reveal),
+    strokes,
+    previousStrokes: previousStrokesRef.current
+  });
+  previousStrokesRef.current = strokes;
 
+  const heldStrokes = heldSketchRef.current?.strokes ?? [];
   const shouldHoldSketch = isRevealVisible && strokes.length === 0;
-  const strokesToRender = shouldHoldSketch ? heldStrokesRef.current : strokes;
+  const strokesToRender = shouldHoldSketch ? heldStrokes : strokes;
 
   const pendingPoints =
     drawingDisplayView !== null &&

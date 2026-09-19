@@ -36,11 +36,14 @@ type AimArenaProps = {
   onLaunch: (aim: JoustAim) => void;
 };
 
+/** Everything the pointer maths reads off the arena's box, so a test can hand it one. */
+export type AimArenaBounds = Pick<DOMRect, "left" | "top" | "width" | "height">;
+
 // Maps a pointer inside the letterboxed SVG back to world units. The scene
 // uses `xMidYMid meet`, so the drawn world is the largest 16:9 box that fits,
 // centred.
 const toWorldPoint = (
-  bounds: DOMRect,
+  bounds: AimArenaBounds,
   clientX: number,
   clientY: number
 ): { x: number; y: number } => {
@@ -59,16 +62,23 @@ const toWorldPoint = (
 };
 
 // The pull is the pointer's offset from the slingshot fork, as a fraction of
-// the band's radius. Forward pulls are pinned to slack rather than allowed to
-// fire the shooter backwards — a tap on the rack's side of the lane reads
-// as pointing, not pulling.
-const toAim = (bounds: DOMRect, clientX: number, clientY: number): JoustAim => {
+// the band's radius. A touch at or forward of the fork is pointing down the
+// lane, not pulling, so the WHOLE pull goes slack: pinning only its x still
+// left a tap on a bird as a full-power pull straight up or down, which fired
+// the shooter and spent that player's only shot of the turn. A near-vertical
+// shot is still there for anyone who wants it — a hair behind the fork is a pull.
+export const resolveAimFromPointer = (
+  bounds: AimArenaBounds,
+  clientX: number,
+  clientY: number
+): JoustAim => {
   const point = toWorldPoint(bounds, clientX, clientY);
-
-  return clampJoustAim({
-    x: Math.min(0, (point.x - JOUST_WORLD.anchor.x) / JOUST_WORLD.pullRadius),
+  const pull = {
+    x: (point.x - JOUST_WORLD.anchor.x) / JOUST_WORLD.pullRadius,
     y: (point.y - JOUST_WORLD.anchor.y) / JOUST_WORLD.pullRadius
-  });
+  };
+
+  return pull.x >= 0 ? { x: 0, y: 0 } : clampJoustAim(pull);
 };
 
 const magnitude = (aim: JoustAim): number => {
@@ -116,7 +126,11 @@ export const AimArena = ({
 
     event.currentTarget.setPointerCapture(event.pointerId);
 
-    const nextAim = toAim(event.currentTarget.getBoundingClientRect(), event.clientX, event.clientY);
+    const nextAim = resolveAimFromPointer(
+      event.currentTarget.getBoundingClientRect(),
+      event.clientX,
+      event.clientY
+    );
 
     setLocalAim(nextAim);
     lastDispatchAtRef.current = Date.now();
@@ -128,7 +142,11 @@ export const AimArena = ({
       return;
     }
 
-    const nextAim = toAim(event.currentTarget.getBoundingClientRect(), event.clientX, event.clientY);
+    const nextAim = resolveAimFromPointer(
+      event.currentTarget.getBoundingClientRect(),
+      event.clientX,
+      event.clientY
+    );
 
     setLocalAim(nextAim);
 
@@ -145,7 +163,11 @@ export const AimArena = ({
       return;
     }
 
-    const finalAim = toAim(event.currentTarget.getBoundingClientRect(), event.clientX, event.clientY);
+    const finalAim = resolveAimFromPointer(
+      event.currentTarget.getBoundingClientRect(),
+      event.clientX,
+      event.clientY
+    );
 
     setLocalAim(null);
 

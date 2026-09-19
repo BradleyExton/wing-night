@@ -238,7 +238,17 @@ test("redoLastScoringMutation restores scoring fields without rewinding phase or
 });
 
 test("redoLastScoringMutation restores trivia runtime prompt and points", () => {
-  setupValidTeamsAndAssignments();
+  // Three questions a turn, so the attempt below lands mid-turn and genuinely turns the page.
+  // At the default of one, that attempt would end the turn, which deliberately holds the cursor
+  // on the question just scored — and this test would no longer be watching the prompt move.
+  setupValidTeamsAndAssignments({
+    ...gameConfigFixture,
+    minigameRules: {
+      trivia: {
+        questionsPerTurn: 3
+      }
+    }
+  });
   setRoomStateTriviaPrompts(triviaPromptFixture);
   advanceToMinigamePlayPhase();
   const beforeAttemptSnapshot = getRoomStateSnapshot();

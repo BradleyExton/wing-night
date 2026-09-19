@@ -258,6 +258,58 @@ test("takes the point back when the host changes a ruling", () => {
   assert.equal(hostViewOf(revoked).currentScore.title, false);
 });
 
+test("keeps the points already won when the host rules a fresh song wrong", () => {
+  const scoredFirstSong = advanceTo(
+    initializeState({ pendingPointsByTeamId: { "team-1": 0 } }),
+    "playClip",
+    "pauseClip",
+    "triggerReveal"
+  );
+  const bankedTwo = reduce(
+    reduce(scoredFirstSong, "markTitle", { correct: true }).state,
+    "markArtist",
+    { correct: true }
+  ).state;
+  const secondSong = advanceTo(
+    bankedTwo,
+    "nextSong",
+    "playClip",
+    "pauseClip",
+    "triggerReveal"
+  );
+  const ruledWrong = reduce(secondSong, "markTitle", { correct: false }).state;
+
+  assert.equal(hostViewOf(ruledWrong).pendingPointsByTeamId["team-1"], 2);
+  assert.equal(hostViewOf(ruledWrong).currentScore.title, false);
+});
+
+test("records a wrong ruling on an unmarked field without moving the total", () => {
+  const revealed = advanceTo(
+    initializeState({ pendingPointsByTeamId: { "team-1": 0 } }),
+    "playClip",
+    "pauseClip",
+    "triggerReveal"
+  );
+  const ruledWrong = reduce(revealed, "markArtist", { correct: false });
+
+  assert.equal(ruledWrong.didMutate, true);
+  assert.equal(hostViewOf(ruledWrong.state).currentScore.artist, false);
+  assert.equal(hostViewOf(ruledWrong.state).pendingPointsByTeamId["team-1"], 0);
+});
+
+test("awards the point when the host takes a wrong ruling back", () => {
+  const revealed = advanceTo(
+    initializeState({ pendingPointsByTeamId: { "team-1": 0 } }),
+    "playClip",
+    "pauseClip",
+    "triggerReveal"
+  );
+  const ruledWrong = reduce(revealed, "markTitle", { correct: false }).state;
+  const ruledRight = reduce(ruledWrong, "markTitle", { correct: true }).state;
+
+  assert.equal(hostViewOf(ruledRight).pendingPointsByTeamId["team-1"], 1);
+});
+
 test("ignores a repeated identical ruling", () => {
   const revealed = advanceTo(
     initializeState(),

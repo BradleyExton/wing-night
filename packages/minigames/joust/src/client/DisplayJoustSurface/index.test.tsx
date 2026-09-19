@@ -244,6 +244,30 @@ test("holds the marquee at the launch numbers while a shot is still in the air",
   assert.doesNotMatch(html, /1\/3 standing/);
 });
 
+// A rack-clearing shot off tall shelves can pay more than the whole round is worth, and the
+// reducer banks only what the cap allows. Taking the shot's full score back off the banked total
+// would then read the marquee negative — "+-3" over the lane while the birds are still in the air.
+test("does not read the marquee negative when a shot in the air scored past the round's cap", () => {
+  const capped: JoustMinigameShot = {
+    ...pileUp,
+    toppledPlayerIds: ["p4", "p5", "p6"],
+    isRackCleared: true,
+    points: 18,
+    run: { ...pileUp.run, keyframes: [[...restFrame], [...restFrame], [...restFrame]] }
+  };
+  const html = renderSurface(
+    baseView({
+      phase: "resolved",
+      lastShot: capped,
+      downPlayerIds: ["p4", "p5", "p6"],
+      pendingPointsByTeamId: { "team-1": 15, "team-2": 2 }
+    })
+  );
+
+  assert.doesNotMatch(html, /\+-\d/);
+  assert.match(html, /\+0/, "nothing was pending before a turn's first shot");
+});
+
 test("lets the marquee catch up once the replay has landed", () => {
   const html = renderSurface(
     baseView({

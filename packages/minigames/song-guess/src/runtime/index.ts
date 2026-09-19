@@ -63,7 +63,10 @@ const resolveSelectedSongIds = (
 
 // A mark can be changed — the host may rule a title good, then hear the rest of
 // the answer and take it back — so points move by the DELTA between rulings
-// rather than incrementing on every tap.
+// rather than incrementing on every tap. A field the host has never ruled on
+// holds no point, so ruling it WRONG has nothing to take back: only a flip off
+// a previously correct mark is worth a deduction. Otherwise the first ✗ of a
+// song would quietly eat a point the team won on an earlier one.
 const resolveMarkDelta = (
   previousMark: boolean | null,
   nextMark: boolean
@@ -72,7 +75,11 @@ const resolveMarkDelta = (
     return 0;
   }
 
-  return nextMark ? SONG_GUESS_POINTS_PER_MARK : -SONG_GUESS_POINTS_PER_MARK;
+  if (nextMark) {
+    return SONG_GUESS_POINTS_PER_MARK;
+  }
+
+  return previousMark === true ? -SONG_GUESS_POINTS_PER_MARK : 0;
 };
 
 const applyMark = (

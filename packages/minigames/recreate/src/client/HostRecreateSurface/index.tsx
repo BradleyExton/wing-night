@@ -3,7 +3,8 @@ import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import {
   resolveContentAssetSrc,
   type RecreateAttempt,
-  type RecreateMinigameHostView
+  type RecreateMinigameHostView,
+  type RecreateSubState
 } from "@wingnight/shared";
 
 import { RECREATE_MAX_PROMPT_LENGTH } from "../../runtime/index.js";
@@ -28,6 +29,20 @@ const resolveActiveTeamName = ({
   }
 
   return activeTeamName ?? hostRecreateSurfaceCopy.noAssignedTeamLabel;
+};
+
+// Counts the target the host is LOOKING AT, not the one the turn has reached.
+// A scored target stays on the tablet — its seal and the real prompt — until
+// "Next target", so the count must not run ahead of that reveal.
+export const resolveRecreateTargetNumber = (
+  subState: RecreateSubState,
+  targetsCompletedThisTurn: number,
+  targetsPerTurn: number
+): number => {
+  const targetOnScreen =
+    subState === "scored" ? targetsCompletedThisTurn : targetsCompletedThisTurn + 1;
+
+  return Math.min(Math.max(targetOnScreen, 1), targetsPerTurn);
 };
 
 const Frame = ({
@@ -142,7 +157,7 @@ export const HostRecreateSurface = ({
   const targetsPerTurn = recreateHostView?.targetsPerTurn ?? 0;
   const targetsCompleted = recreateHostView?.targetsCompletedThisTurn ?? 0;
   const isTurnComplete = subState === "scored" && targetsCompleted >= targetsPerTurn;
-  const targetNumber = Math.min(targetsCompleted + 1, targetsPerTurn);
+  const targetNumber = resolveRecreateTargetNumber(subState, targetsCompleted, targetsPerTurn);
   // The draft belongs to one target of one turn: a fresh target starts blank,
   // while a rewrite of the same one (after "let them rewrite") keeps what the
   // team already typed. Keyed rather than reset in an effect so the surface

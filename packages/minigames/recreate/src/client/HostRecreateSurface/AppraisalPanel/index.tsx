@@ -50,7 +50,9 @@ export const AppraisalPanel = ({
           const isChecked = checklist.checkedIngredientIndexes.includes(ingredientIndex);
 
           return (
-            <li key={ingredient}>
+            // Keyed by position: an authored list is allowed to say the same
+            // thing twice, and the tick follows the index either way.
+            <li key={`${ingredientIndex}-${ingredient}`}>
               <button
                 className={isChecked ? styles.ingredientChecked : styles.ingredient}
                 type="button"

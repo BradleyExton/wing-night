@@ -16,8 +16,12 @@ export const pendingPoints =
 export const showTitle =
   "text-[clamp(0.8rem,1.2vw,1.3rem)] font-extrabold uppercase tracking-[0.34em] text-gold";
 
+// Height-bound, not width-bound: the board takes the height the marquee and
+// the status line leave and derives its width from the 6:5 aspect. Sizing it
+// from the width instead (w-full) overflows a 1080p TV by ~280px, which eats
+// the bottom rows of slots and the status line under them.
 export const board =
-  "grid aspect-[6/5] max-h-full w-full max-w-[1500px] grid-cols-6 grid-rows-5 gap-[clamp(0.4rem,0.9vw,0.9rem)]";
+  "grid aspect-[6/5] h-full max-h-full w-auto max-w-full grid-cols-6 grid-rows-5 gap-[clamp(0.4rem,0.9vw,0.9rem)]";
 
 export const boardArea =
   "relative grid min-h-0 flex-1 justify-items-center gap-[clamp(0.4rem,1vh,0.9rem)] [grid-template-rows:1fr_auto]";

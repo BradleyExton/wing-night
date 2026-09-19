@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import { resolveContentAssetSrc, type GeoMinigameHostView } from "@wingnight/shared";
 
+import { resolveExhibitNumber } from "../resolveExhibitNumber/index.js";
 import { hostGeoSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -127,7 +128,11 @@ export const HostGeoSurface = ({
   const promptsPerTurn = geoHostView?.promptsPerTurn ?? 0;
   const promptsCompleted = geoHostView?.promptsCompletedThisTurn ?? 0;
   const isTurnComplete = isSubmitted && promptsCompleted >= promptsPerTurn;
-  const promptNumber = Math.min(promptsCompleted + 1, promptsPerTurn);
+  const promptNumber = resolveExhibitNumber({
+    promptsCompletedThisTurn: promptsCompleted,
+    promptsPerTurn,
+    isSubmitted
+  });
   const shouldRenderGuessSection =
     isPlayPhase && geoHostView !== null && !isSubmitted && currentPrompt !== null;
 

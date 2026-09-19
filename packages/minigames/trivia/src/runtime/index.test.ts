@@ -131,6 +131,46 @@ test("reduce stops once the questions-per-turn limit is spent", () => {
   assert.equal(blocked.didMutate, false);
 });
 
+test("reduce holds the prompt cursor on the verdict that ends the turn", () => {
+  const state = initializeState({ rules: { questionsPerTurn: 2 } });
+
+  const first = recordAttempt(state, true);
+  const firstState = first.state as TriviaRuntimeState;
+
+  assert.equal(firstState.runtimeState.promptCursor, 1);
+
+  const last = recordAttempt(first.state, true);
+  const lastState = last.state as TriviaRuntimeState;
+
+  assert.equal(last.didMutate, true);
+  assert.equal(lastState.attemptsUsedThisTurn, 2);
+  // The question the last verdict scored stays up; the next one belongs to the
+  // next team and must not reach the TV, or its answer the host tablet.
+  assert.equal(lastState.runtimeState.promptCursor, 1);
+
+  const hostView = triviaRuntimePlugin.selectHostView({
+    state: lastState,
+    rules: null,
+    content: triviaContentFixture
+  });
+
+  assert.equal(
+    hostView?.minigame === "TRIVIA" ? hostView.currentPrompt?.id : null,
+    "prompt-2"
+  );
+});
+
+test("reduce refuses an attempt when the prompt bank is empty", () => {
+  const state = initializeState({ content: { prompts: [] } });
+
+  const attempt = recordAttempt(state, true, { content: { prompts: [] } });
+  const attemptState = attempt.state as TriviaRuntimeState;
+
+  assert.equal(attempt.didMutate, false);
+  assert.equal(attemptState.attemptsUsedThisTurn, 0);
+  assert.deepEqual(attemptState.runtimeState.pendingPointsByTeamId, {});
+});
+
 test("reduce ignores unknown actions, malformed payloads, and foreign state", () => {
   const state = initializeState();
 

@@ -83,13 +83,34 @@ export const isSelectDeckPayload = (
   );
 };
 
+// One clue slot holds one emoji, so the payload has to be exactly that: a run
+// of pictographs, emoji components (skin tones, ZWJ, variation selectors,
+// regional indicators, keycaps) and flag tag characters. Anything else — plain
+// text, markup, a sentence, a novel — would ride the sequence straight onto the
+// TV, and the subject word is plain text. Defence in depth: the picker only
+// ever sends a catalog emoji.
+const EMOJI_TOKEN_PATTERN =
+  /^(?:\p{Extended_Pictographic}|\p{Emoji_Component}|[\u{E0020}-\u{E007F}])+$/u;
+
+// Headroom over the longest sequences in use: a tag-sequence flag and the
+// family ZWJ sequence are 7 code points each.
+const MAX_EMOJI_CODE_POINTS = 16;
+
+export const isEmojiToken = (value: string): boolean => {
+  if (!EMOJI_TOKEN_PATTERN.test(value)) {
+    return false;
+  }
+
+  return [...value].length <= MAX_EMOJI_CODE_POINTS;
+};
+
 export const isAppendEmojiPayload = (
   value: SerializableValue
 ): value is { emoji: string } => {
   return (
     isObjectLike(value) &&
     typeof value.emoji === "string" &&
-    value.emoji.trim().length > 0
+    isEmojiToken(value.emoji)
   );
 };
 

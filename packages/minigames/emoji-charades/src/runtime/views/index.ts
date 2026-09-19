@@ -83,7 +83,7 @@ export const toEmojiCharadesHostView = (
   }
 
   if (state.status === "turn_complete") {
-    return { ...base, status: "turn_complete" };
+    return { ...base, status: "turn_complete", reveal: cloneReveal(state.reveal) };
   }
 
   return {
@@ -122,7 +122,7 @@ export const toEmojiCharadesDisplayView = (
   }
 
   if (state.status === "turn_complete") {
-    return { ...base, status: "turn_complete" };
+    return { ...base, status: "turn_complete", reveal: cloneReveal(state.reveal) };
   }
 
   return {

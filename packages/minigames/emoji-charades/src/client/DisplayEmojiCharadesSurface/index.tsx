@@ -117,7 +117,12 @@ export const DisplayEmojiCharadesSurface = ({
 }: MinigameDisplayRendererProps): JSX.Element => {
   const displayView: EmojiCharadesMinigameDisplayView | null =
     minigameDisplayView?.minigame === "EMOJI_CHARADES" ? minigameDisplayView : null;
-  const reveal = displayView?.status === "playing" ? displayView.reveal : null;
+  // The final verdict of a turn flips straight to `turn_complete`, so the reveal has to be read
+  // from that status too — otherwise the turn's last answer never reaches the room.
+  const reveal =
+    displayView?.status === "playing" || displayView?.status === "turn_complete"
+      ? displayView.reveal
+      : null;
   const isRevealVisible = useIsRevealVisible(reveal);
   const pendingPoints =
     displayView?.activeTurnTeamId === undefined ||
@@ -189,9 +194,13 @@ export const DisplayEmojiCharadesSurface = ({
 
       {displayView?.status === "turn_complete" && (
         <div className={styles.boardArea}>
-          <p className={styles.sectionTitle}>
-            {displayEmojiCharadesSurfaceCopy.turnCompleteTitle}
-          </p>
+          {isRevealVisible && reveal !== null ? (
+            <RevealOverlay reveal={reveal} teamName={activeTeamName} />
+          ) : (
+            <p className={styles.sectionTitle}>
+              {displayEmojiCharadesSurfaceCopy.turnCompleteTitle}
+            </p>
+          )}
         </div>
       )}
     </div>

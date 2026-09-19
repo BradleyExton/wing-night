@@ -94,9 +94,11 @@ const JoustPlayBody = ({
   // it is in the air the marquee reads what was true at launch, so the numbers land WITH the
   // birds rather than a second before them.
   const inFlight = view.lastShot !== null && !replayFinished ? view.lastShot : null;
-  const pendingPoints =
-    (view.activeTurnTeamId === null ? 0 : (view.pendingPointsByTeamId[view.activeTurnTeamId] ?? 0)) -
-    (inFlight?.points ?? 0);
+  const bankedPoints =
+    view.activeTurnTeamId === null ? 0 : (view.pendingPointsByTeamId[view.activeTurnTeamId] ?? 0);
+  // A shot big enough to run the team into the round's cap banks less than it scored, so taking
+  // the whole score back off would read the marquee negative. Nothing below nothing was pending.
+  const pendingPoints = Math.max(0, bankedPoints - (inFlight?.points ?? 0));
   const standingCount =
     view.lineup.length - view.downPlayerIds.length + (inFlight?.toppledPlayerIds.length ?? 0);
   const arena = view.arena;

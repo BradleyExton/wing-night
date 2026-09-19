@@ -68,7 +68,9 @@ export const HostTriviaSurface = ({
         </div>
       </div>
       <div className={styles.playArea}>
-        {/* In the intro phase there is no prompt yet by design — the
+        {/* The intro phase already has the turn's first question, so the host
+            gets a look at it before play starts; only the TV is held back to
+            "Get ready". A missing prompt means an empty bank, and that
             "waiting" note is only meaningful once play has started. */}
         {currentPrompt !== null ? (
           <div className={styles.promptShell}>

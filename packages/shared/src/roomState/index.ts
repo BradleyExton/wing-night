@@ -289,7 +289,12 @@ export type EmojiCharadesMinigameHostView = MinigameHostViewBase & {
         subjectsRemaining: number;
         reveal: EmojiCharadesSubjectReveal | null;
       }
-    | { status: "turn_complete" }
+    | {
+        // The turn's last verdict lands here, so the reveal rides along: without it the
+        // room never learns the final subject's answer.
+        status: "turn_complete";
+        reveal: EmojiCharadesSubjectReveal | null;
+      }
   );
 
 export type JoustPhase = "aiming" | "resolved" | "done";
@@ -535,7 +540,12 @@ export type EmojiCharadesMinigameDisplayView = MinigameDisplayViewBase & {
         emojiSequence: string[];
         reveal: EmojiCharadesSubjectReveal | null;
       }
-    | { status: "turn_complete" }
+    | {
+        // The turn's last verdict lands here, so the reveal rides along: without it the
+        // room never learns the final subject's answer.
+        status: "turn_complete";
+        reveal: EmojiCharadesSubjectReveal | null;
+      }
   );
 
 export type JoustMinigameDisplayView = MinigameDisplayViewBase & JoustMinigameViewFields;

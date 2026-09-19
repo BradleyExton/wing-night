@@ -18,16 +18,43 @@ import * as styles from "./styles.js";
 // the spec's ~15/sec dispatch budget.
 const FLUSH_INTERVAL_MS = 70;
 const MAX_POINTS_PER_DISPATCH = 64;
-// Ended strokes the server never echoed back (e.g. rejected at the stroke
-// cap) drop out of the local overlay after this long.
+// Ended strokes the server never took whole — rejected at the stroke cap,
+// trimmed at the point cap — drop out of the local overlay after this long.
 const LOCAL_STROKE_RETENTION_MS = 4000;
 // Wood frame padding + border around the chalkboard canvas, subtracted from
 // the fit area before letterboxing so the frame hugs the board.
 const EASEL_FRAME_INSET_PX = 28;
 
-type LocalStrokeRecord = {
+export type LocalStrokeRecord = {
   stroke: DrawingStroke;
   endedAtMs: number | null;
+};
+
+// Whether an ended stroke may stop covering for the server's copy. Catching
+// up cannot be the only exit: the runtime trims a stroke at its point cap
+// and then never grows it, so a trimmed stroke would sit on the easel
+// forever, showing the artist ink the TV never received.
+export const shouldDropLocalStroke = ({
+  localRecord,
+  serverStroke,
+  nowMs
+}: {
+  localRecord: LocalStrokeRecord;
+  serverStroke: DrawingStroke | undefined;
+  nowMs: number;
+}): boolean => {
+  if (localRecord.endedAtMs === null) {
+    return false;
+  }
+
+  if (
+    serverStroke !== undefined &&
+    serverStroke.points.length >= localRecord.stroke.points.length
+  ) {
+    return true;
+  }
+
+  return nowMs - localRecord.endedAtMs > LOCAL_STROKE_RETENTION_MS;
 };
 
 export type BeginStrokeDispatch = {
@@ -42,6 +69,24 @@ export type DrawingCanvasHandle = {
   // overlay so the canvas re-renders from canonical server strokes only.
   // Call before dispatching undo/clear/result actions.
   finalizeStrokes: () => void;
+};
+
+export type ActiveStrokeCapture = {
+  pointerId: number;
+  strokeId: string;
+  startedAtMs: number;
+  pendingPoints: DrawingPoint[];
+};
+
+// One finger owns the easel for the length of a stroke. A tablet reports a
+// resting palm, a second finger or a neighbour reaching in as ordinary
+// pointer events, and without this every one of them would steer the stroke
+// already in flight — or end it early on its own lift.
+export const ownsActiveStroke = (
+  activeStroke: ActiveStrokeCapture | null,
+  pointerId: number
+): activeStroke is ActiveStrokeCapture => {
+  return activeStroke !== null && activeStroke.pointerId === pointerId;
 };
 
 type DrawingCanvasProps = {
@@ -77,12 +122,9 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const fitAreaRef = useRef<HTMLDivElement | null>(null);
     const localStrokesRef = useRef<Map<string, LocalStrokeRecord>>(new Map());
-    const activeStrokeRef = useRef<{
-      strokeId: string;
-      startedAtMs: number;
-      pendingPoints: DrawingPoint[];
-    } | null>(null);
+    const activeStrokeRef = useRef<ActiveStrokeCapture | null>(null);
     const flushIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const retentionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const renderFrameRef = useRef<number | null>(null);
     const serverStrokesRef = useRef<DrawingStroke[]>(strokes);
 
@@ -150,6 +192,29 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
       }
     }, []);
 
+    // Drops overlay strokes the canonical snapshot has caught up on, or has
+    // conclusively not taken whole.
+    const pruneLocalStrokes = useCallback((): void => {
+      const serverStrokeById = new Map(
+        serverStrokesRef.current.map((stroke) => [stroke.strokeId, stroke])
+      );
+      const nowMs = Date.now();
+
+      for (const [strokeId, localRecord] of localStrokesRef.current) {
+        if (
+          shouldDropLocalStroke({
+            localRecord,
+            serverStroke: serverStrokeById.get(strokeId),
+            nowMs
+          })
+        ) {
+          localStrokesRef.current.delete(strokeId);
+        }
+      }
+
+      scheduleRender();
+    }, [scheduleRender]);
+
     const endActiveStroke = useCallback((): void => {
       const activeStroke = activeStrokeRef.current;
 
@@ -171,7 +236,18 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
       }
 
       activeStrokeRef.current = null;
-    }, [flushPendingPoints, onEndStroke, stopFlushInterval]);
+
+      // Nothing redraws the easel on its own once the artist lifts, so a
+      // stroke the server trimmed needs its own wake-up to fall away.
+      if (retentionTimerRef.current !== null) {
+        clearTimeout(retentionTimerRef.current);
+      }
+
+      retentionTimerRef.current = setTimeout(
+        pruneLocalStrokes,
+        LOCAL_STROKE_RETENTION_MS + 1
+      );
+    }, [flushPendingPoints, onEndStroke, pruneLocalStrokes, stopFlushInterval]);
 
     useImperativeHandle(
       ref,
@@ -185,38 +261,10 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
       [endActiveStroke, scheduleRender]
     );
 
-    // Prune local overlay strokes the server has caught up on (or silently
-    // rejected) whenever a fresh canonical snapshot arrives.
+    // Re-prune whenever a fresh canonical snapshot arrives.
     useEffect(() => {
-      const serverStrokeById = new Map(
-        strokes.map((stroke) => [stroke.strokeId, stroke])
-      );
-
-      for (const [strokeId, localRecord] of localStrokesRef.current) {
-        if (localRecord.endedAtMs === null) {
-          continue;
-        }
-
-        const serverStroke = serverStrokeById.get(strokeId);
-
-        if (
-          serverStroke !== undefined &&
-          serverStroke.points.length >= localRecord.stroke.points.length
-        ) {
-          localStrokesRef.current.delete(strokeId);
-          continue;
-        }
-
-        if (
-          serverStroke === undefined &&
-          Date.now() - localRecord.endedAtMs > LOCAL_STROKE_RETENTION_MS
-        ) {
-          localStrokesRef.current.delete(strokeId);
-        }
-      }
-
-      scheduleRender();
-    }, [strokes, scheduleRender]);
+      pruneLocalStrokes();
+    }, [strokes, pruneLocalStrokes]);
 
     useEffect(() => {
       const canvas = canvasRef.current;
@@ -244,6 +292,10 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
       return (): void => {
         resizeObserver.disconnect();
         stopFlushInterval();
+
+        if (retentionTimerRef.current !== null) {
+          clearTimeout(retentionTimerRef.current);
+        }
 
         if (renderFrameRef.current !== null) {
           window.cancelAnimationFrame(renderFrameRef.current);
@@ -279,6 +331,7 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
       const startPoint = toNormalizedPoint(pointerEvent, startedAtMs);
 
       activeStrokeRef.current = {
+        pointerId: pointerEvent.pointerId,
         strokeId,
         startedAtMs,
         pendingPoints: []
@@ -309,7 +362,7 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
     ): void => {
       const activeStroke = activeStrokeRef.current;
 
-      if (activeStroke === null) {
+      if (!ownsActiveStroke(activeStroke, pointerEvent.pointerId)) {
         return;
       }
 
@@ -321,7 +374,13 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
       scheduleRender();
     };
 
-    const handlePointerEnd = (): void => {
+    const handlePointerEnd = (
+      pointerEvent: ReactPointerEvent<HTMLCanvasElement>
+    ): void => {
+      if (!ownsActiveStroke(activeStrokeRef.current, pointerEvent.pointerId)) {
+        return;
+      }
+
       endActiveStroke();
       scheduleRender();
     };

@@ -284,6 +284,27 @@ test("recordTriviaAttempt defaults to one question per turn when minigameRules a
   );
 });
 
+test("recordTriviaAttempt keeps the scored question on both surfaces when it ends the turn", () => {
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+
+  const scoredPromptId = resolveHostPromptId(getRoomStateSnapshot());
+
+  // One question a turn by default, so this verdict exhausts the turn. The page must not turn:
+  // the next question belongs to the next team, and the room would read it off the TV — with its
+  // answer on the host tablet — in the pause before the host ends the turn.
+  recordTriviaAttempt(true);
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(resolveHostPromptId(snapshot), scoredPromptId);
+  assert.equal(resolveHostPromptCursor(snapshot), 0);
+  assert.equal(
+    resolveTriviaHostView(snapshot.minigameHostView)?.attemptsRemaining,
+    0
+  );
+});
+
 test("blocked trivia attempts do not mutate runtime projection or redo snapshot", () => {
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);

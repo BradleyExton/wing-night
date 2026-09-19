@@ -80,8 +80,10 @@ const IngredientBoard = ({
       const isChecked = checkedIngredientIndexes.includes(ingredientIndex);
 
       return (
+        // Keyed by position, like the host's bench: an authored list is
+        // allowed to say the same thing twice.
         <li
-          key={ingredient}
+          key={`${ingredientIndex}-${ingredient}`}
           className={isChecked ? styles.ingredientChecked : styles.ingredient}
           data-recreate-ingredient={isChecked ? "checked" : "unchecked"}
         >

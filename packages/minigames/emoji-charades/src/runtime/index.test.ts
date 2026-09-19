@@ -214,6 +214,42 @@ test("accepts letter emoji when banLetterEmojis is turned off", () => {
   assert.deepEqual(state.emojiSequence, ["🇦"]);
 });
 
+test("keeps multi-codepoint emoji whole when they are appended", () => {
+  let state = selectDeck(initialize());
+
+  // A ZWJ sequence, a skin-tone modifier and a tag-sequence flag: the clue is
+  // an array of whole emoji, never a string anything may index into.
+  for (const emoji of ["👨‍👩‍👧‍👦", "👋🏽", "🏴󠁧󠁢󠁳󠁣󠁴󠁿"]) {
+    state = reduce(state, "appendEmoji", { emoji }).state;
+  }
+
+  assert.deepEqual(state.emojiSequence, ["👨‍👩‍👧‍👦", "👋🏽", "🏴󠁧󠁢󠁳󠁣󠁴󠁿"]);
+
+  state = reduce(state, "removeEmoji").state;
+
+  assert.deepEqual(state.emojiSequence, ["👨‍👩‍👧‍👦", "👋🏽"]);
+});
+
+test("ignores appendEmoji when the payload is not a single emoji", () => {
+  const playing = selectDeck(initialize());
+  const rejected = [
+    "Jaws",
+    "the answer is Jaws",
+    "<img src=x onerror=alert(1)>",
+    "🔥 🔥",
+    "🔥x",
+    "   ",
+    "🔥".repeat(20)
+  ];
+
+  for (const emoji of rejected) {
+    const { state, didMutate } = reduce(playing, "appendEmoji", { emoji });
+
+    assert.equal(didMutate, false, emoji);
+    assert.deepEqual(state.emojiSequence, []);
+  }
+});
+
 test("stops appending at the per-subject emoji cap", () => {
   let state = selectDeck(initialize());
 
@@ -318,6 +354,41 @@ test("enters turn_complete when the deck is exhausted", () => {
   }
 
   assert.equal(state.status, "turn_complete");
+});
+
+test("carries the last subject's reveal into turn_complete so the room still learns the answer", () => {
+  let state = selectDeck(initialize());
+
+  // Burn every subject but the last, then score the one that ends the turn.
+  for (let index = 0; index < 2; index += 1) {
+    state = reduce(state, "skipSubject").state;
+  }
+
+  const lastSubjectText = (() => {
+    const view = hostView(state);
+
+    return view.status === "playing" && view.currentSubject !== null
+      ? view.currentSubject.text
+      : null;
+  })();
+
+  state = reduce(state, "markCorrect").state;
+
+  assert.equal(state.status, "turn_complete");
+
+  const display = displayView(state);
+  const host = hostView(state);
+
+  assert.equal(display.status, "turn_complete");
+  assert.equal(host.status, "turn_complete");
+  assert.equal(
+    display.status === "turn_complete" ? (display.reveal?.subjectText ?? null) : null,
+    lastSubjectText
+  );
+  assert.equal(
+    host.status === "turn_complete" ? (host.reveal?.subjectText ?? null) : null,
+    lastSubjectText
+  );
 });
 
 test("ignores further actions once the turn is complete", () => {
