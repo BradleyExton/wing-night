@@ -11,6 +11,7 @@ export const minigameDevSandboxCopy = {
   hostPreviewMetaLabel: "Tablet · 1024 × 768 landscape",
   displayPreviewLabel: "Display Preview",
   displayPreviewMetaLabel: "TV · 1920 × 1080",
+  loadingLabel: "Loading the runtime…",
   noRendererLabel: "No renderer bundle is available for this minigame.",
   noRuntimeLabel: "No runtime plugin is available for this minigame.",
   devIndexLinkHref: "/dev",
