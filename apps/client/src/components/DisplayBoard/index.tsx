@@ -9,7 +9,8 @@ import { NowPlayingSurface } from "./NowPlayingSurface";
 import { StageSurface } from "./StageSurface";
 import { StandingsSurface } from "./StandingsSurface";
 import { useDisplayRoomState } from "../../context/RoomStateContext";
-import { resolveMinigameRendererBundle } from "../../minigames/registry";
+import { minigameRequiresDisplayAudio } from "../../minigames/registry";
+import { useMinigameRendererBundle } from "../../minigames/useMinigameRendererBundle";
 import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { useGameStartCountdown } from "./useGameStartCountdown";
@@ -133,8 +134,13 @@ export const DisplayBoard = ({
   // of the round is silently swallowed by the autoplay policy.
   const roundMinigameType = roomState?.currentRoundConfig?.minigame ?? null;
   const roundRequiresDisplayAudio =
-    roundMinigameType !== null &&
-    (resolveMinigameRendererBundle(roundMinigameType)?.requiresDisplayAudio ?? false);
+    roundMinigameType !== null && minigameRequiresDisplayAudio(roundMinigameType);
+
+  // Warms the round's renderer chunk the moment the room names the game —
+  // ROUND_INTRO at the latest, with EATING still to come — so the surface is
+  // already in memory when MinigameStageBody first mounts at MINIGAME_PLAY.
+  // Nothing here renders it; the call is for the fetch.
+  useMinigameRendererBundle(roundMinigameType);
 
   // Music the server is actually trying to PLAY is the condition, which covers
   // SETUP's lobby playlist and MINIGAME_INTRO's anthem in one clause — and

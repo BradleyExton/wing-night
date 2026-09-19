@@ -15,7 +15,7 @@ import {
   resolveMinigameDevManifest,
   resolveMinigameRuntimePlugin
 } from "../../../minigames/devRegistry";
-import { resolveMinigameRendererBundle } from "../../../minigames/registry";
+import { useMinigameRendererBundle } from "../../../minigames/useMinigameRendererBundle";
 import { useServerOrigin } from "../../../utils/useServerOrigin";
 import { SandboxControls } from "../SandboxControls";
 import { SandboxDeviceFrame } from "../SandboxDeviceFrame";
@@ -83,8 +83,10 @@ const initializeRuntimeState = (
 // party bundle.
 export const SandboxStage = ({ minigameType }: SandboxStageProps): JSX.Element => {
   const devManifest = resolveMinigameDevManifest(minigameType);
-  const rendererBundle = resolveMinigameRendererBundle(minigameType);
   const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
+  // The sandbox route names its game in the URL, so the fetch starts on this
+  // component's first render and the stage fills a beat later.
+  const rendererBundle = useMinigameRendererBundle(minigameType);
 
   const serverOrigin = useServerOrigin();
   const [phase, setPhase] = useState<MinigameSurfacePhase>("play");
@@ -102,13 +104,16 @@ export const SandboxStage = ({ minigameType }: SandboxStageProps): JSX.Element =
     return initializeRuntimeState(runtimePlugin, devManifest, devManifest.activeRoundTeamId);
   });
 
-  if (devManifest === null || rendererBundle === null || runtimePlugin === null) {
+  if (devManifest === null || runtimePlugin === null) {
+    return <p className={styles.unavailableNote}>{minigameDevSandboxCopy.noRuntimeLabel}</p>;
+  }
+
+  // Null only ever means "the renderer chunk is still on the wire" — the
+  // registry is exhaustive over MinigameType — so the stage waits rather than
+  // claiming the game has no surface.
+  if (rendererBundle === null) {
     return (
-      <p className={styles.unavailableNote}>
-        {rendererBundle === null
-          ? minigameDevSandboxCopy.noRendererLabel
-          : minigameDevSandboxCopy.noRuntimeLabel}
-      </p>
+      <p className={styles.unavailableNote}>{minigameDevSandboxCopy.loadingRendererLabel}</p>
     );
   }
 

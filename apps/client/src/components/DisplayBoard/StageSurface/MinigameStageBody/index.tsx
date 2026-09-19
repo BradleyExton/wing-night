@@ -1,7 +1,7 @@
 import type { MinigameType, RoomState } from "@wingnight/shared";
 import type { MinigameSurfacePhase } from "@wingnight/minigames-core";
 
-import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
+import { useMinigameRendererBundle } from "../../../../minigames/useMinigameRendererBundle";
 import { useServerOrigin } from "../../../../utils/useServerOrigin";
 import { displayBoardCopy } from "../../copy";
 import * as styles from "./styles";
@@ -48,6 +48,10 @@ export const MinigameStageBody = ({
   // Unconditional: the early returns below must not sit between the hook and
   // the component's first render pass.
   const serverOrigin = useServerOrigin();
+  // Warm by now in a real game: DisplayBoard asked for this chunk back when the
+  // room named the round's minigame, phases ago. The null branch below is the
+  // boot-from-cold path (a TV refreshed into MINIGAME_PLAY), not a phase change.
+  const minigameRendererBundle = useMinigameRendererBundle(minigameType);
 
   if (minigameType === null) {
     return (
@@ -57,16 +61,11 @@ export const MinigameStageBody = ({
     );
   }
 
-  const minigameRendererBundle = resolveMinigameRendererBundle(minigameType);
-
   if (minigameRendererBundle === null) {
-    return (
-      <div className={styles.minigameShell}>
-        <p className={styles.fallbackText}>
-          {displayBoardCopy.minigameRendererUnavailableLabel(minigameType)}
-        </p>
-      </div>
-    );
+    // An empty stage, not a spinner and not a message: the renderer is a LAN
+    // fetch away and whatever we drew here would be gone before the room read
+    // it. The shell keeps its size so the stage does not jump when it lands.
+    return <div className={styles.minigameShell} aria-hidden />;
   }
 
   return (

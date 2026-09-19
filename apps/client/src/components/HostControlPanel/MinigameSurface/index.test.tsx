@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { before } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { MinigameHostView } from "@wingnight/shared";
 
+import { warmMinigameRenderers } from "../../../testSupport/warmMinigameRenderers";
 import { MinigameSurface } from "./index";
+
+// The surfaces below arrive over a dynamic import; warm them so these tests
+// assert on the minigame's markup and not on the pre-chunk placeholder.
+before(warmMinigameRenderers);
 
 const teamNameByTeamId = new Map<string, string>([["team-alpha", "Team Alpha"]]);
 

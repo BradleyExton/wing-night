@@ -4,7 +4,7 @@ import type {
   SerializableValue
 } from "@wingnight/minigames-core";
 
-import { resolveMinigameRendererBundle } from "../../../minigames/registry";
+import { useMinigameRendererBundle } from "../../../minigames/useMinigameRendererBundle";
 import { useServerOrigin } from "../../../utils/useServerOrigin";
 import { hostControlPanelCopy } from "../copy";
 import * as styles from "./styles";
@@ -31,6 +31,10 @@ export const MinigameSurface = ({
   // The host tablet is a different origin from the server as well, so a
   // minigame surface that renders a content-pack image needs the absolute one.
   const serverOrigin = useServerOrigin();
+  // Unconditional, above the early returns. In a real game the chunk is already
+  // warm — HostControlPanel asked for it when the room named the round — so this
+  // is a cache read, not a fetch.
+  const minigameRendererBundle = useMinigameRendererBundle(minigameType);
   const isTakeover = phase === "play";
   const containerClassName = isTakeover ? styles.takeoverCanvas : styles.group;
 
@@ -45,8 +49,9 @@ export const MinigameSurface = ({
     );
   }
 
-  const minigameRendererBundle = resolveMinigameRendererBundle(minigameType);
-
+  // The renderer chunk has not landed yet. Same wording as a host view that has
+  // not arrived, because it is the same situation from the host's side: the
+  // panel is a beat behind and is about to catch up.
   if (minigameRendererBundle === null) {
     return (
       <section className={containerClassName}>
@@ -54,7 +59,7 @@ export const MinigameSurface = ({
           <span>{hostControlPanelCopy.minigameSectionTitle}</span>
         </div>
         <p className={styles.description}>
-          {hostControlPanelCopy.minigameRendererUnavailableLabel(minigameType)}
+          {hostControlPanelCopy.minigameWaitingForViewLabel}
         </p>
       </section>
     );

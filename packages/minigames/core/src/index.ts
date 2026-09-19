@@ -133,13 +133,13 @@ export type MinigameDisplayRendererProps = {
   serverOrigin: string | null;
 };
 
+// Code only. Static facts about a game — whether its display surface is the
+// room's speaker, for one — live in the app's minigame registry instead, on the
+// near side of the dynamic import that fetches this bundle: the shell has to
+// answer them before the renderer has been downloaded.
 export type MinigameRendererBundle = {
   HostSurface: ComponentType<MinigameHostRendererProps>;
   DisplaySurface: ComponentType<MinigameDisplayRendererProps>;
-  // Declares that the display surface is the room's speaker for this game, so
-  // the display shell knows to offer its tap-to-enable-audio overlay even when
-  // the active team has no anthem to play.
-  requiresDisplayAudio?: boolean;
 };
 
 // Everything the dev sandbox needs to boot a minigame's runtime plugin with
