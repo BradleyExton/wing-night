@@ -1,5 +1,9 @@
+// `absolute inset-0` rather than `h-full`: an absolute child is laid out
+// against the stage canvas's padding box, so the genre texture and the glow
+// below reach the screen edges instead of stopping in a hard rectangle a
+// canvas gutter short of them. The spotlight owns its own inset, below.
 export const container =
-  "relative flex h-full flex-col items-center justify-center gap-[clamp(0.75rem,1.6vw,2rem)] overflow-hidden px-[clamp(2rem,4vw,4rem)] py-[clamp(2rem,4vw,4rem)] text-center";
+  "absolute inset-0 flex flex-col items-center justify-center gap-[clamp(0.75rem,1.6vw,2rem)] overflow-hidden px-[clamp(2rem,4vw,4rem)] py-[clamp(2rem,4vw,4rem)] text-center";
 
 export const ambient =
   "pointer-events-none absolute inset-[-10%] bg-[radial-gradient(ellipse_at_20%_30%,rgba(249,115,22,0.12)_0%,transparent_45%),radial-gradient(ellipse_at_80%_70%,rgba(239,68,68,0.10)_0%,transparent_45%)]";
@@ -29,15 +33,23 @@ export const genre = "text-[var(--tint)]";
 // The headline is the wordmark's entrance beat, not the reveal the other
 // lines share, so the row carries no animation of its own; the wordmark's
 // delay slots it where the old name used to arrive.
-export const headlineRow = "relative z-10 m-0 max-w-[14ch]";
+//
+// Full width, and the wrap budget rides the wordmark's own `max-w-full`
+// below: a `ch` clamp here would be measured in this row's 16px body font,
+// not the display face two hundred pixels tall inside it.
+export const headlineRow = "relative z-10 m-0 w-full";
 
+// `block` is load-bearing, not decoration: TeamWordmark leaves display to the
+// caller, and an inline box ignores the `max-w-full` that keeps a long name
+// inside the stage, centres its overflowing lines on the box's left edge, and
+// drops the transforms every `team-enter-*` entrance is built from.
 export const headline =
-  "text-[clamp(3.5rem,9.5vw,11rem)] leading-[0.95] [--enter-delay:600ms]";
+  "block text-[clamp(3.5rem,9.5vw,11rem)] leading-[0.95] [--enter-delay:600ms]";
 
 // The `none` kit's headline is what shipped before the kit: primary, black,
 // upper, with the flame glow.
 export const headlinePlain =
-  "text-[clamp(4.5rem,12vw,14rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-primary [text-shadow:0_0_80px_rgba(249,115,22,0.4)] [--enter-delay:600ms]";
+  "block text-[clamp(4.5rem,12vw,14rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-primary [text-shadow:0_0_80px_rgba(249,115,22,0.4)] [--enter-delay:600ms]";
 
 export const teamName =
   "m-0 text-[clamp(4.5rem,12vw,14rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-primary [text-shadow:0_0_80px_rgba(249,115,22,0.4)]";

@@ -31,11 +31,16 @@ export const columnEdge =
 // The emblem as a watermark: low alpha, right-aligned and a touch off-axis,
 // under the column's own info and score (both positioned so they paint over
 // it). It brightens with the lead tint so the leader's column reads as lit.
+//
+// Sized off the column rather than the viewport: a `vw` clamp overshot a
+// short column and the crest came out sheared flat against both its edges,
+// which reads as a crop rather than a watermark. 72% leaves the 8-degree
+// tilt room to swing inside the column at every stage height.
 export const watermark =
-  "pointer-events-none absolute right-[-6%] top-1/2 h-[clamp(4.5rem,6.5vw,8.5rem)] -translate-y-1/2 -rotate-[8deg] opacity-[0.14]";
+  "pointer-events-none absolute right-[-6%] top-1/2 h-[72%] -translate-y-1/2 -rotate-[8deg] opacity-[0.14]";
 
 export const watermarkLead =
-  "pointer-events-none absolute right-[-6%] top-1/2 h-[clamp(4.5rem,6.5vw,8.5rem)] -translate-y-1/2 -rotate-[8deg] opacity-[0.22]";
+  "pointer-events-none absolute right-[-6%] top-1/2 h-[72%] -translate-y-1/2 -rotate-[8deg] opacity-[0.22]";
 
 export const columnInfo = "relative flex min-w-0 flex-col gap-[0.2rem]";
 
@@ -51,13 +56,21 @@ export const columnMetaIcon =
 // allowed here; two lines rather than a truncation because a display face
 // earns its width. The case and tracking are the `none` kit's; a treatment
 // that owns its own (rope, torn, scanline) overrides them.
+//
+// The two lines are reserved whether or not the name uses them, and the name
+// is centred in them: sized to its own content the block grew by a line and
+// shunted that column's rank label out of line with its neighbours', so one
+// long name in the row tilted the whole ticker.
 export const columnName =
-  "m-0 min-w-0 font-extrabold uppercase tracking-[0.06em] text-text";
+  "m-0 flex min-h-[calc(2.1*clamp(1.3rem,1.9vw,2.4rem))] min-w-0 items-center font-extrabold uppercase tracking-[0.06em] text-text";
 
 export const columnWordmark =
   "line-clamp-2 text-[clamp(1.3rem,1.9vw,2.4rem)] leading-[1.05]";
 
+// The shadow is what lets the score sit over the watermark: right-aligned in
+// a `justify-between` row, the number lands on the densest part of the crest,
+// and a faceted or toothed emblem eats the edges of a digit without it.
 export const columnScore =
-  "relative m-0 whitespace-nowrap font-mono text-[clamp(1.8rem,2.6vw,3.2rem)] font-black tabular-nums leading-none tracking-[-0.04em] text-text";
+  "relative m-0 whitespace-nowrap font-mono text-[clamp(1.8rem,2.6vw,3.2rem)] font-black tabular-nums leading-none tracking-[-0.04em] text-text [text-shadow:0_0_14px_theme(colors.bg),0_0_4px_theme(colors.bg)]";
 
 export const columnScoreLead = "text-gold";
