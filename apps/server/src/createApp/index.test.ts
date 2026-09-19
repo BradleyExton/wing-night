@@ -255,3 +255,55 @@ test("responds 404 when no layer carries the requested image", async () => {
     assert.equal(response.status, 404);
   }, contentRoot);
 });
+
+// The room's devices remount the same heads all night — the SETUP parade alone
+// remounts every avatar as the pairs rotate — and each remount was a
+// conditional round-trip over house Wi-Fi for a byte-identical file.
+test("does cache a pack image for an hour when the party is running", async () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(contentRoot, "local/assets/avatars/rob.png", "head-bytes");
+
+  await withApp(async (baseUrl) => {
+    const response = await fetch(
+      `${baseUrl}${CONTENT_ASSET_ROUTE_PATH}/avatars/rob.png`
+    );
+
+    assert.equal(response.headers.get("cache-control"), "public, max-age=3600");
+  }, contentRoot);
+});
+
+test("does cache lobby music for an hour when the party is running", async () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(contentRoot, "local/audio/lobby/opener.mp3", "lobby-bytes");
+
+  await withApp(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}${LOBBY_AUDIO_ROUTE_PATH}/opener.mp3`);
+
+    assert.equal(response.headers.get("cache-control"), "public, max-age=3600");
+  }, contentRoot);
+});
+
+// RECREATE paints these DURING the night and reuses file names across runs —
+// an attempt id restarts its sequence at 1 every turn — so a cached forgery is
+// a stale forgery on the TV.
+test("does keep a live-painted forgery revalidated when the rest of the pack is cached", async () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "local/assets/recreate/attempts/cottage-team-1-1.png",
+    "forgery-bytes"
+  );
+
+  await withApp(async (baseUrl) => {
+    const response = await fetch(
+      `${baseUrl}${CONTENT_ASSET_ROUTE_PATH}/recreate/attempts/cottage-team-1-1.png`
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), "forgery-bytes");
+    assert.equal(response.headers.get("cache-control"), "public, max-age=0");
+  }, contentRoot);
+});
