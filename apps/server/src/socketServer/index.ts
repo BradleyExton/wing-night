@@ -58,6 +58,13 @@ export const attachSocketServer = (httpServer: HttpServer): AttachedSocketServer
       cors: {
         origin: corsOrigin,
         credentials: true
+      },
+      // Every stroke point republishes the whole room state, and room state is
+      // repetitive JSON — it deflates hard. The threshold keeps the small,
+      // frequent frames (taps, timer ticks) out of the compressor, where the
+      // CPU would cost more than the bytes saved.
+      perMessageDeflate: {
+        threshold: 1024
       }
     }
   );
