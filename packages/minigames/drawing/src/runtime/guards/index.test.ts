@@ -40,6 +40,9 @@ test("sanitizeDrawingPoint keeps a rounded coordinate inside the unit interval w
 });
 
 test("sanitizeDrawingPoint yields positive zero when a coordinate rounds down from a negative sample", () => {
+  // Pins the clamp-before-round ordering: rounding first would hand
+  // `Math.round` a negative and put -0 into state, which prints as 0 through
+  // JSON but fails `Object.is` against the 0 it prints as.
   const sanitized = sanitizeDrawingPoint(point(-0.0001, -0));
 
   assert.ok(Object.is(sanitized.x, 0), "x should be +0, not -0");

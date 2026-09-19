@@ -38,11 +38,12 @@ export type LocalStrokeRecord = {
 // (the canvas flushes its buffer before it dispatches endStroke, and the
 // socket delivers in order), and nothing will be added to it again.
 //
-// Point count cannot stand in for this. The runtime bakes a settled stroke
-// down with Ramer-Douglas-Peucker, so the canonical copy is normally SHORTER
-// than the tablet's unbaked prediction — "the server has as many points as I
-// do" would never come true, and every stroke would limp out on the
-// retention timeout with the two surfaces disagreeing until it did.
+// Point count cannot stand in for this. The runtime trims a stroke at
+// MAX_POINTS_PER_STROKE and then never grows it, so a long scribble's
+// canonical copy is permanently SHORTER than the tablet's own capture —
+// "the server has as many points as I do" would never come true for it, and
+// that stroke would limp out on the retention timeout with the two surfaces
+// disagreeing for the whole four seconds until it did.
 export const isStrokeSettledOnServer = ({
   serverStroke,
   serverActiveStrokeId
@@ -84,11 +85,11 @@ export const shouldDropLocalStroke = ({
 };
 
 // The easel draws the local prediction only while the server is still
-// extending that stroke; once it settles, the canonical copy wins even though
-// it holds fewer points, because those extra local points are stale ink the
-// TV is not drawing. Strokes the snapshot has not acknowledged yet are drawn
-// from the overlay alone, after the canonical ones, so a stroke in flight
-// still appears on top.
+// extending that stroke; once it settles, the canonical copy wins even when it
+// holds fewer points — a scribble past the point cap is trimmed, and that tail
+// is ink the TV is not drawing. Strokes the snapshot has not acknowledged
+// yet are drawn from the overlay alone, after the canonical ones, so a stroke
+// in flight still appears on top.
 export const mergeLocalAndServerStrokes = ({
   serverStrokes,
   localStrokes,

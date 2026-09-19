@@ -205,16 +205,16 @@ const clampUnitInterval = (value: number): number => {
 // are wire bytes and nothing else.
 //
 // Clamping runs first so rounding can only ever move a value inside [0, 1];
-// rounding first could hand the clamp a 1.0004. The explicit zero case
-// normalizes -0, which Math.round returns for a tiny negative sample: JSON
-// serializes it as 0, so it would never show up on the wire, but state would
-// be holding a value that fails Object.is against the 0 it prints as.
+// rounding first could hand the clamp a 1.0004. That ordering is also what
+// keeps -0 out of state: `Math.round` does return -0 for a tiny negative
+// sample, but the clamp has already turned every negative into +0 by then, so
+// `Math.round` is never handed one. Reorder these two and -0 becomes
+// reachable — it prints as 0 through JSON but fails `Object.is` against it.
 const sanitizeCoordinate = (value: number): number => {
-  const rounded =
+  return (
     Math.round(clampUnitInterval(value) * COORDINATE_ROUNDING_FACTOR) /
-    COORDINATE_ROUNDING_FACTOR;
-
-  return rounded === 0 ? 0 : rounded;
+    COORDINATE_ROUNDING_FACTOR
+  );
 };
 
 // Coordinates arrive normalized from the tablet; clamping keeps stray

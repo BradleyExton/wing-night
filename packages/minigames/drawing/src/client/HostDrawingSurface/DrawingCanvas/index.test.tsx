@@ -117,11 +117,11 @@ test("does drop a stroke once the server settles it", () => {
 });
 
 test("does drop a stroke the server settled shorter than the prediction", () => {
-  // REGRESSION: endStroke bakes the settled stroke down with RDP, so the
-  // canonical copy is permanently shorter than the tablet's raw capture. A
-  // point-count hand-over reads that as "not caught up" forever and the
-  // overlay only falls away on the retention timeout — four seconds of the
-  // easel and the TV drawing different ink.
+  // REGRESSION: the runtime trims a stroke at MAX_POINTS_PER_STROKE and never
+  // grows it again, so a long scribble's canonical copy is permanently shorter
+  // than the tablet's raw capture. A point-count hand-over reads that as "not
+  // caught up" forever and the overlay only falls away on the retention
+  // timeout — four seconds of the easel and the TV drawing different ink.
   assert.equal(
     shouldDropLocalStroke({
       localRecord: localRecord(620, 9_000_000),
@@ -201,10 +201,11 @@ test("does draw the local prediction while the server is still extending it", ()
   assert.equal(merged[0]?.points.length, 40);
 });
 
-test("does draw the server's baked copy once the stroke has settled", () => {
-  // REGRESSION: the baked copy holds fewer points than the overlay, so a
-  // longest-wins merge would keep showing the artist the unbaked prediction
-  // while the TV drew the baked one, then pop when retention expired.
+test("does draw the server's settled copy once the stroke has settled", () => {
+  // REGRESSION: a scribble past the point cap is trimmed, so the canonical
+  // copy holds fewer points than the overlay. A longest-wins merge would keep
+  // showing the artist the untrimmed prediction while the TV drew the trimmed
+  // one, then pop when retention expired.
   const serverStrokes = [stroke(180)];
   const merged = mergeLocalAndServerStrokes({
     serverStrokes,
