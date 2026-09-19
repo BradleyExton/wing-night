@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { test } from "node:test";
 
-import { E2E_CONTENT_ROOT_DIR, seedE2eContentRoot } from "./index.ts";
+import {
+  buildSilentWav,
+  E2E_CONTENT_ROOT_DIR,
+  PLACEHOLDER_ANTHEM_SECONDS,
+  seedE2eContentRoot
+} from "./index.ts";
 
 const withTemporaryRoot = (run) => {
   const temporaryDir = mkdtempSync(resolve(tmpdir(), "wingnight-e2e-content-"));
@@ -94,4 +99,35 @@ test("throws naming the missing source when the sample content is not where it s
       /Cannot seed the e2e content root/
     );
   });
+});
+
+// Without a playable file the TV's element 404s and every playback assertion
+// in the anthem spec holds trivially. The seeded root gives each anthem the
+// sample pack names a decodable placeholder under the name the pack uses.
+test("seeds a playable placeholder for every anthem the sample teams name", () => {
+  withTemporaryRoot((contentRootDir) => {
+    seedE2eContentRoot(contentRootDir);
+
+    const teams = JSON.parse(
+      readFileSync(resolve(contentRootDir, "sample/teams.json"), "utf8")
+    ).teams;
+    const anthems = teams.flatMap((team) => team.anthems ?? []);
+
+    assert.ok(anthems.length > 0, "the sample pack names at least one anthem");
+
+    for (const fileName of anthems) {
+      const file = readFileSync(resolve(contentRootDir, "sample/teams/audio", fileName));
+
+      assert.equal(file.subarray(0, 4).toString("ascii"), "RIFF", `${fileName} is a WAV`);
+      assert.equal(file.subarray(8, 12).toString("ascii"), "WAVE");
+    }
+  });
+});
+
+test("builds a WAV whose declared data length matches the requested duration", () => {
+  const wav = buildSilentWav(2);
+
+  assert.equal(wav.readUInt32LE(40), 16000);
+  assert.equal(wav.length, 44 + 16000);
+  assert.ok(PLACEHOLDER_ANTHEM_SECONDS >= 30, "long enough to fade in, play and fade out");
 });

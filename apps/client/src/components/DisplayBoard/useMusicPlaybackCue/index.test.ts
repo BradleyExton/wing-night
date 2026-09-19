@@ -6,7 +6,13 @@ import {
   type RoomMusicPlaybackState
 } from "@wingnight/shared";
 
-import { shouldHoldMusicPosition, shouldPlayMusic } from "./index";
+import {
+  shouldFadeOutFirst,
+  shouldHoldMusicPosition,
+  shouldPlayMusic,
+  shouldRememberPosition,
+  shouldSeekToRememberedPosition
+} from "./index";
 
 const buildMusic = (
   overrides: Partial<RoomMusicPlaybackState> = {}
@@ -43,4 +49,32 @@ test("holds position only while paused music is still the room's track", () => {
   assert.equal(shouldHoldMusicPosition(buildMusic({ isPlaying: false })), true);
   assert.equal(shouldHoldMusicPosition(buildMusic()), false);
   assert.equal(shouldHoldMusicPosition(null), false);
+});
+
+// The fade exists for the speaker, so only an audible element earns one. A
+// silent element — before the unlock tap, or already paused — swaps its file
+// and stops instantly, which is what keeps "src is set before the tap" true.
+test("fades out first only when audible music is being silenced or swapped", () => {
+  assert.equal(shouldFadeOutFirst(true, true, true), true);
+  assert.equal(shouldFadeOutFirst(true, false, false), true);
+  assert.equal(shouldFadeOutFirst(true, false, true), false);
+  assert.equal(shouldFadeOutFirst(false, true, true), false);
+  assert.equal(shouldFadeOutFirst(false, false, false), false);
+});
+
+// A resume from a host pause keeps the element's own position; only a track
+// starting from the top consults the memory.
+test("seeks to the remembered position only when starting from the top", () => {
+  assert.equal(shouldSeekToRememberedPosition(0), true);
+  assert.equal(shouldSeekToRememberedPosition(0.2), true);
+  assert.equal(shouldSeekToRememberedPosition(12), false);
+});
+
+// The pre-unlock stop and the tap's own rewind both leave the element at 0;
+// writing that would erase the position the memory exists to keep.
+test("remembers a position only once the track is actually under way", () => {
+  assert.equal(shouldRememberPosition(0), false);
+  assert.equal(shouldRememberPosition(0.3), false);
+  assert.equal(shouldRememberPosition(0.5), true);
+  assert.equal(shouldRememberPosition(90), true);
 });

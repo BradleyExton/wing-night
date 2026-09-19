@@ -29,11 +29,13 @@ export type RoomMusicPlaybackState = {
   isPlaying: boolean;
 };
 
-// POSITION IS DELIBERATELY ABSENT. A display refresh mid-track restarts the
-// current track rather than resuming it: tracking elapsed position would mean
-// `RoomTimerState`-shaped machinery (startedAt/endsAt/pausedAt, all of it
-// re-derived on every pause) for a case that happens when someone bumps the
-// HDMI cable. The track is right, the round is right, and the song starts over.
+// POSITION IS DELIBERATELY ABSENT FROM ROOM STATE. Where a track picks up is
+// the DISPLAY's memory (`musicPositionMemory`, localStorage on the TV): a
+// team's anthem resumes in round three where it faded out in round one, and a
+// refresh mid-track resumes too. Putting seconds here instead would mean
+// `RoomTimerState`-shaped machinery (startedAt/endsAt/pausedAt, re-derived on
+// every pause) plus a second display-reported event, for a value nothing but
+// the speaker consumes. The server names the track; the TV knows how far in.
 
 // Which of a team's anthems plays this round.
 //

@@ -128,6 +128,11 @@ own music (SETUP's lobby playlist, MINIGAME_INTRO's team anthem). Mockup:
 -   The lobby playlist shows its position ("3 / 12") and keeps its row through a host pause, because
     a playlist is a standing thing. An anthem is a one-shot: no position, and the row leaves with
     the music rather than sitting frozen as though paused.
+-   Music never hard-cuts. A track fades in over about a second when it starts and fades out just
+    under a second before it stops or is swapped (`musicVolumeRamp`), under the host's master
+    volume. A returning track picks up where it faded out (`musicPositionMemory`, kept on the TV),
+    so a seven-minute anthem is heard across a night rather than its first thirty seconds four
+    times; a track that finished starts from the top.
 
 ## 2.2B Setup Lobby ("Hearth")
 
