@@ -27,9 +27,15 @@ no tags at all, so the migration cost is at its minimum.
 The sourcing question is settled and it pushes the same way. Google Takeout, exported per album,
 ships a JSON sidecar per photo carrying `photoTakenTime`, `geoData` and a `people` array populated
 from named face groups. Verified against the real account on 2026-09-18: twenty named clusters
-already exist, the event albums already exist, and "estimate missing locations" is on, so even
-photos whose EXIF was stripped usually arrive with coordinates. Location and people therefore arrive
-**per photo, together, once** — which is the shape of a library, not the shape of a prompt bank.
+already exist and the event albums already exist, so **people** arrive per photo, once — which is
+the shape of a library, not the shape of a prompt bank.
+
+**Locations do not.** The same day, the "hot ones" album was checked photo by photo in the web UI.
+"Estimate missing locations" is on, and the photos still carry no location at all — the info panel
+offers "Add a location" even for the Mexico 2024 set, shot on a Pixel in another country. Of thirty
+photos downloaded from that album, four had EXIF GPS and twenty-six had none, and Google holds no
+estimate to put in a sidecar for the rest. So the importer reads `geoData` when it is there and
+treats an absent or zeroed one as "no location": a GEO answer key is **authored**, not harvested.
 
 ## Decision
 
@@ -99,8 +105,9 @@ photos whose EXIF was stripped usually arrive with coordinates. Location and peo
 
 - **Tagging becomes a one-time job in Google Photos, not a per-game job in JSON.** Fourteen labelled
   clusters plus a review pass replaces hundreds of hand-typed tags.
-- **GEO gets its answer key for free** on any photo whose location survived, which is what the
-  importer was originally supposed to do and could not, because the download path strips GPS.
+- **GEO's answer key stays hand-authored.** Only a handful of photos keep EXIF GPS and Google has no
+  estimate for the rest, so `location` comes from the pack's curator for most photos. The library
+  still earns its keep: the place is typed once, against the photo, instead of once per game.
 - **A new photo game costs a content file, not a photo pipeline.**
 - **The roster filter needs a decision about non-players before Codenames ships.** The manifest's
   `people` is the truth about the photo, and most party photos include friends who are not playing

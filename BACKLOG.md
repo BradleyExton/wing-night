@@ -111,10 +111,11 @@ bank. `docs/adr/ADR-0004-shared-photo-library.md` proposes one manifest per pack
 referencing a `photoId` and the content loader filling in `imageSrc` and `featuredPlayers` from the
 manifest before the roster filter runs.
 
-- **Input is settled and mostly done.** Google Takeout per album ships a sidecar carrying taken-at,
-  location and a `people` list from named face groups; the real account already has twenty named
-  clusters, the event albums, and location estimation on. The remaining human work is curation into
-  one Wing Night album, not tagging.
+- **Takeout buys people, not places.** The sidecar carries taken-at and a `people` list from named
+  face groups, and the real account already has twenty named clusters and the event albums. But the
+  "hot ones" album was walked in the web UI on 2026-09-18: location estimation is on and the photos
+  still have no location — four of thirty kept EXIF GPS, the other twenty-six offer "Add a
+  location". Coordinates are authored by hand; the export is worth having for the tags.
 - **Blocked on that export landing**, not on design. Build the importer against the real unzipped
   Takeout, never against invented fixtures — the last two photo passes both failed on assumptions
   about what Google actually emits.
