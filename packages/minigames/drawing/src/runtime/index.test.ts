@@ -258,6 +258,106 @@ test("endStroke clears the active stroke id", () => {
   assert.equal((ended.state as DrawingRuntimeState).activeStrokeId, null);
 });
 
+test("endStroke bakes the settled stroke down to the points that bend it", () => {
+  let state = beginStroke(initializeState(), "stroke-1", point(0.1, 0.1));
+
+  // A straight drag across the board: every sample sits on the line through
+  // its neighbours, so only the two ends survive baking.
+  const appended = reduce(state, "appendStrokePoints", {
+    strokeId: "stroke-1",
+    points: Array.from({ length: 60 }, (_unused, index) =>
+      point((101 + index) / 1000, (101 + index) / 1000)
+    )
+  });
+  state = appended.state as DrawingRuntimeState;
+  assert.equal(state.strokes[0]?.points.length, 61);
+
+  const ended = reduce(state, "endStroke", { strokeId: "stroke-1" });
+  assert.equal(ended.didMutate, true);
+
+  const endedState = ended.state as DrawingRuntimeState;
+  assert.deepEqual(endedState.strokes[0]?.points, [
+    point(0.1, 0.1),
+    point(0.16, 0.16)
+  ]);
+  assert.equal(endedState.activeStrokeId, null);
+});
+
+test("endStroke keeps the dot when the artist only tapped the board", () => {
+  const state = beginStroke(initializeState(), "stroke-1", point(0.42, 0.63));
+  const ended = reduce(state, "endStroke", { strokeId: "stroke-1" });
+
+  assert.deepEqual((ended.state as DrawingRuntimeState).strokes[0]?.points, [
+    point(0.42, 0.63)
+  ]);
+});
+
+test("endStroke keeps the corners when the stroke actually bends", () => {
+  let state = beginStroke(initializeState(), "stroke-1", point(0.1, 0.5));
+
+  const appended = reduce(state, "appendStrokePoints", {
+    strokeId: "stroke-1",
+    points: [point(0.3, 0.5), point(0.5, 0.5), point(0.5, 0.9), point(0.5, 1)]
+  });
+  state = appended.state as DrawingRuntimeState;
+
+  const ended = reduce(state, "endStroke", { strokeId: "stroke-1" });
+
+  assert.deepEqual((ended.state as DrawingRuntimeState).strokes[0]?.points, [
+    point(0.1, 0.5),
+    point(0.5, 0.5),
+    point(0.5, 1)
+  ]);
+});
+
+test("a baked stroke cannot be regrown past the point cap once it settles", () => {
+  // Baking shrinks a settled stroke, so the capacity it appears to have free
+  // must never become reachable again: appends only land on the active
+  // stroke, and its id can never be made active a second time.
+  let state = beginStroke(initializeState(), "stroke-1", point(0.1, 0.1));
+
+  while ((state.strokes[0]?.points.length ?? 0) < MAX_POINTS_PER_STROKE) {
+    const filled = reduce(state, "appendStrokePoints", {
+      strokeId: "stroke-1",
+      points: Array.from({ length: MAX_APPEND_POINTS_PER_ACTION }, () =>
+        point(0.1, 0.1)
+      )
+    });
+
+    if (!filled.didMutate) {
+      break;
+    }
+
+    state = filled.state as DrawingRuntimeState;
+  }
+
+  assert.equal(state.strokes[0]?.points.length, MAX_POINTS_PER_STROKE);
+
+  const settled = reduce(state, "endStroke", { strokeId: "stroke-1" })
+    .state as DrawingRuntimeState;
+  const bakedPointCount = settled.strokes[0]?.points.length ?? 0;
+  assert.equal(bakedPointCount < MAX_POINTS_PER_STROKE, true);
+
+  const regrow = reduce(settled, "appendStrokePoints", {
+    strokeId: "stroke-1",
+    points: [point(0.9, 0.9)]
+  });
+  assert.equal(regrow.didMutate, false);
+
+  const resume = reduce(settled, "beginStroke", {
+    strokeId: "stroke-1",
+    color: "#FFFFFF",
+    size: 0.025,
+    start: point(0.9, 0.9)
+  });
+  assert.equal(resume.didMutate, false);
+
+  assert.equal(
+    (regrow.state as DrawingRuntimeState).strokes[0]?.points.length,
+    bakedPointCount
+  );
+});
+
 test("undoStroke removes the most recent stroke", () => {
   let state = beginStroke(initializeState(), "stroke-1");
   state = beginStroke(state, "stroke-2");

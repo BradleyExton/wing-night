@@ -23,6 +23,7 @@ import {
   PROMPT_REVEAL_MS,
   type DrawingRuntimeState
 } from "./types/index.js";
+import { simplifyStroke } from "./simplifyStroke/index.js";
 import {
   resolveCurrentDrawingPrompt,
   toDrawingDisplayView,
@@ -177,9 +178,30 @@ export const drawingRuntimePlugin: MinigameRuntimePlugin = {
         return unchanged;
       }
 
+      // A settled stroke never grows again — `appendStrokePoints` above only
+      // accepts the active stroke — so this is the one moment the runtime can
+      // bake it down. Every pointer sample the tablet buffered is already in
+      // (the canvas flushes before it dispatches endStroke), and dropping the
+      // ones that sit on the line through their neighbours costs the drawing
+      // nothing while taking roughly three quarters of the points off the
+      // wire and out of the TV's redraw.
+      const settledStrokeIndex = state.strokes.findIndex(
+        (stroke) => stroke.strokeId === state.activeStrokeId
+      );
+      const settledStroke = state.strokes[settledStrokeIndex];
+      const nextStrokes = [...state.strokes];
+
+      if (settledStroke !== undefined) {
+        nextStrokes[settledStrokeIndex] = {
+          ...settledStroke,
+          points: simplifyStroke(settledStroke.points)
+        };
+      }
+
       return {
         state: {
           ...state,
+          strokes: nextStrokes,
           activeStrokeId: null
         },
         didMutate: true

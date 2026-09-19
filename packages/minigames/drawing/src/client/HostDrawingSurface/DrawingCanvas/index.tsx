@@ -18,8 +18,10 @@ import * as styles from "./styles.js";
 // the spec's ~15/sec dispatch budget.
 const FLUSH_INTERVAL_MS = 70;
 const MAX_POINTS_PER_DISPATCH = 64;
-// Ended strokes the server never took whole — rejected at the stroke cap,
-// trimmed at the point cap — drop out of the local overlay after this long.
+// Backstop for ended strokes the server will never settle — rejected at the
+// stroke cap, or dispatched into a dropped socket. They drop out of the local
+// overlay after this long. A stroke the server does settle hands over the
+// moment the snapshot carrying that settlement lands, not on this timer.
 const LOCAL_STROKE_RETENTION_MS = 4000;
 // Wood frame padding + border around the chalkboard canvas, subtracted from
 // the fit area before letterboxing so the frame hugs the board.
@@ -30,31 +32,95 @@ export type LocalStrokeRecord = {
   endedAtMs: number | null;
 };
 
-// Whether an ended stroke may stop covering for the server's copy. Catching
-// up cannot be the only exit: the runtime trims a stroke at its point cap
-// and then never grows it, so a trimmed stroke would sit on the easel
-// forever, showing the artist ink the TV never received.
+// Whether the server is done with a stroke. `activeStrokeId` is the server's
+// own word for "still under the artist's finger", so a stroke it carries and
+// no longer calls active is final: every point the tablet sent has landed
+// (the canvas flushes its buffer before it dispatches endStroke, and the
+// socket delivers in order), and nothing will be added to it again.
+//
+// Point count cannot stand in for this. The runtime bakes a settled stroke
+// down with Ramer-Douglas-Peucker, so the canonical copy is normally SHORTER
+// than the tablet's unbaked prediction — "the server has as many points as I
+// do" would never come true, and every stroke would limp out on the
+// retention timeout with the two surfaces disagreeing until it did.
+export const isStrokeSettledOnServer = ({
+  serverStroke,
+  serverActiveStrokeId
+}: {
+  serverStroke: DrawingStroke | undefined;
+  serverActiveStrokeId: string | null;
+}): boolean => {
+  return (
+    serverStroke !== undefined && serverStroke.strokeId !== serverActiveStrokeId
+  );
+};
+
+// Whether an ended stroke may stop covering for the server's copy. Settling
+// cannot be the only exit: a stroke the server never took at all — rejected
+// at the stroke cap, or dispatched while the tablet was disconnected — is
+// never going to settle, and would sit on the easel forever showing the
+// artist ink the TV never received. The window is the backstop for that, not
+// the ordinary path.
 export const shouldDropLocalStroke = ({
   localRecord,
   serverStroke,
+  serverActiveStrokeId,
   nowMs
 }: {
   localRecord: LocalStrokeRecord;
   serverStroke: DrawingStroke | undefined;
+  serverActiveStrokeId: string | null;
   nowMs: number;
 }): boolean => {
   if (localRecord.endedAtMs === null) {
     return false;
   }
 
-  if (
-    serverStroke !== undefined &&
-    serverStroke.points.length >= localRecord.stroke.points.length
-  ) {
+  if (isStrokeSettledOnServer({ serverStroke, serverActiveStrokeId })) {
     return true;
   }
 
   return nowMs - localRecord.endedAtMs > LOCAL_STROKE_RETENTION_MS;
+};
+
+// The easel draws the local prediction only while the server is still
+// extending that stroke; once it settles, the canonical copy wins even though
+// it holds fewer points, because those extra local points are stale ink the
+// TV is not drawing. Strokes the snapshot has not acknowledged yet are drawn
+// from the overlay alone, after the canonical ones, so a stroke in flight
+// still appears on top.
+export const mergeLocalAndServerStrokes = ({
+  serverStrokes,
+  localStrokes,
+  serverActiveStrokeId
+}: {
+  serverStrokes: DrawingStroke[];
+  localStrokes: ReadonlyMap<string, LocalStrokeRecord>;
+  serverActiveStrokeId: string | null;
+}): DrawingStroke[] => {
+  const mergedStrokes: DrawingStroke[] = [];
+  const mergedStrokeIds = new Set<string>();
+
+  for (const serverStroke of serverStrokes) {
+    const localRecord = localStrokes.get(serverStroke.strokeId);
+    const hasSettled = isStrokeSettledOnServer({
+      serverStroke,
+      serverActiveStrokeId
+    });
+
+    mergedStrokes.push(
+      localRecord !== undefined && !hasSettled ? localRecord.stroke : serverStroke
+    );
+    mergedStrokeIds.add(serverStroke.strokeId);
+  }
+
+  for (const [strokeId, localRecord] of localStrokes) {
+    if (!mergedStrokeIds.has(strokeId)) {
+      mergedStrokes.push(localRecord.stroke);
+    }
+  }
+
+  return mergedStrokes;
 };
 
 export type BeginStrokeDispatch = {
@@ -90,6 +156,9 @@ export const ownsActiveStroke = (
 
 type DrawingCanvasProps = {
   strokes: DrawingStroke[];
+  // The server's own active-stroke cursor, straight off the host view. It is
+  // how the overlay knows the canonical copy of a stroke is final.
+  activeStrokeId: string | null;
   canDraw: boolean;
   brushColor: string;
   brushSize: number;
@@ -109,6 +178,7 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
   (
     {
       strokes,
+      activeStrokeId,
       canDraw,
       brushColor,
       brushSize,
@@ -126,8 +196,10 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
     const retentionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const renderFrameRef = useRef<number | null>(null);
     const serverStrokesRef = useRef<DrawingStroke[]>(strokes);
+    const serverActiveStrokeIdRef = useRef<string | null>(activeStrokeId);
 
     serverStrokesRef.current = strokes;
+    serverActiveStrokeIdRef.current = activeStrokeId;
 
     const renderScene = useCallback((): void => {
       const canvas = canvasRef.current;
@@ -137,27 +209,11 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
         return;
       }
 
-      const serverStrokes = serverStrokesRef.current;
-      const localStrokes = localStrokesRef.current;
-      const mergedStrokes: DrawingStroke[] = [];
-      const mergedStrokeIds = new Set<string>();
-
-      for (const serverStroke of serverStrokes) {
-        const localRecord = localStrokes.get(serverStroke.strokeId);
-        mergedStrokes.push(
-          localRecord !== undefined &&
-            localRecord.stroke.points.length > serverStroke.points.length
-            ? localRecord.stroke
-            : serverStroke
-        );
-        mergedStrokeIds.add(serverStroke.strokeId);
-      }
-
-      for (const [strokeId, localRecord] of localStrokes) {
-        if (!mergedStrokeIds.has(strokeId)) {
-          mergedStrokes.push(localRecord.stroke);
-        }
-      }
+      const mergedStrokes = mergeLocalAndServerStrokes({
+        serverStrokes: serverStrokesRef.current,
+        localStrokes: localStrokesRef.current,
+        serverActiveStrokeId: serverActiveStrokeIdRef.current
+      });
 
       renderStrokesToCanvas(context, mergedStrokes, canvas.width, canvas.height);
     }, []);
@@ -198,12 +254,14 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
         serverStrokesRef.current.map((stroke) => [stroke.strokeId, stroke])
       );
       const nowMs = Date.now();
+      const serverActiveStrokeId = serverActiveStrokeIdRef.current;
 
       for (const [strokeId, localRecord] of localStrokesRef.current) {
         if (
           shouldDropLocalStroke({
             localRecord,
             serverStroke: serverStrokeById.get(strokeId),
+            serverActiveStrokeId,
             nowMs
           })
         ) {
@@ -260,10 +318,13 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
       [endActiveStroke, scheduleRender]
     );
 
-    // Re-prune whenever a fresh canonical snapshot arrives.
+    // Re-prune whenever a fresh canonical snapshot arrives. The active-stroke
+    // cursor is a dependency in its own right: the snapshot that settles the
+    // last stroke of a drawing changes nothing but that id, and it is the
+    // one that hands the easel back to the server.
     useEffect(() => {
       pruneLocalStrokes();
-    }, [strokes, pruneLocalStrokes]);
+    }, [strokes, activeStrokeId, pruneLocalStrokes]);
 
     useEffect(() => {
       const canvas = canvasRef.current;

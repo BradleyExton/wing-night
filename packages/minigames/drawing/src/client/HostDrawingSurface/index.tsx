@@ -147,6 +147,7 @@ export const HostDrawingSurface = ({
             <DrawingCanvas
               ref={canvasHandleRef}
               strokes={drawingHostView.strokes}
+              activeStrokeId={drawingHostView.activeStrokeId}
               canDraw={canDraw}
               brushColor={selectedInk.color}
               brushSize={BRUSH_SIZE}
