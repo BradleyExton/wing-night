@@ -4,16 +4,7 @@ import {
 } from "@wingnight/shared";
 import { useEffect, useMemo, useState } from "react";
 
-import { AdminConfigWizard } from "./components/AdminConfigWizard";
-import { AnamorphLab } from "./components/AnamorphLab";
-import { ContraptionLab } from "./components/ContraptionLab";
-import { ContraptionUiLab } from "./components/ContraptionUiLab";
-import { DevRouteIndex } from "./components/DevRouteIndex";
-import { DisplayBoard } from "./components/DisplayBoard";
-import { HostControlPanel } from "./components/HostControlPanel";
-import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
-import { RootRouteLanding } from "./components/RootRouteLanding";
-import { RouteNotFound } from "./components/RouteNotFound";
+import { RouteContent } from "./components/RouteContent";
 import { HostHandlersProvider } from "./context/HostHandlersContext";
 import { RoomStateProvider } from "./context/RoomStateContext";
 import { createRoomSocket } from "./socket/createRoomSocket";
@@ -28,67 +19,6 @@ import {
 } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
-
-// Throwaway — deleted along with the lab when the ANAMORPH minigame ships
-// (BACKLOG.md § Minigames).
-const ANAMORPH_LAB_NAME = "anamorph";
-
-// Throwaway — deleted along with the lab when the CONTRAPTION minigame ships.
-const CONTRAPTION_LAB_NAME = "contraption";
-
-// Throwaway — deleted along with the prototype when CONTRAPTION ships.
-const CONTRAPTION_UI_LAB_NAME = "contraption-ui";
-
-const resolveRouteContent = (
-  route: ReturnType<typeof resolveClientRoute>,
-  devMinigameType: ReturnType<typeof resolveMinigameTypeFromSlug> | null,
-  devLabName: string | null,
-  roomSocket: ReturnType<typeof createRoomSocket> | null,
-  displayReports: ReturnType<typeof createDisplayReportHandlers> | null
-): JSX.Element => {
-  if (route === "HOST") {
-    return <HostControlPanel />;
-  }
-
-  // The wizard talks to the server directly over `config:*` rather than through
-  // room state, so it takes the socket instead of reading a context.
-  if (route === "ADMIN") {
-    return <AdminConfigWizard socket={roomSocket} />;
-  }
-
-  if (route === "DISPLAY") {
-    // The board takes the reporter as a prop rather than reading a context,
-    // because it is the only thing the display ever sends and a context for one
-    // callback is more machinery than the callback.
-    return <DisplayBoard onMusicTrackEnded={displayReports?.onMusicTrackEnded} />;
-  }
-
-  if (route === "ROOT") {
-    return <RootRouteLanding />;
-  }
-
-  if (route === "DEV_INDEX") {
-    return <DevRouteIndex />;
-  }
-
-  if (route === "DEV_MINIGAME" && devMinigameType !== null) {
-    return <MinigameDevSandbox minigameType={devMinigameType} />;
-  }
-
-  if (route === "DEV_LAB" && devLabName === ANAMORPH_LAB_NAME) {
-    return <AnamorphLab />;
-  }
-
-  if (route === "DEV_LAB" && devLabName === CONTRAPTION_LAB_NAME) {
-    return <ContraptionLab />;
-  }
-
-  if (route === "DEV_LAB" && devLabName === CONTRAPTION_UI_LAB_NAME) {
-    return <ContraptionUiLab />;
-  }
-
-  return <RouteNotFound />;
-};
 
 export const App = (): JSX.Element => {
   const pathname = window.location.pathname;
@@ -154,13 +84,13 @@ export const App = (): JSX.Element => {
   return (
     <RoomStateProvider value={roomStateEnvelope}>
       <HostHandlersProvider value={hostHandlers}>
-        {resolveRouteContent(
-          route,
-          devMinigameType,
-          devLabName,
-          roomSocket,
-          displayReports
-        )}
+        <RouteContent
+          route={route}
+          devMinigameType={devMinigameType}
+          devLabName={devLabName}
+          roomSocket={roomSocket}
+          displayReports={displayReports}
+        />
       </HostHandlersProvider>
     </RoomStateProvider>
   );
