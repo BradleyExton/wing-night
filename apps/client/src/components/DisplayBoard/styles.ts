@@ -1,5 +1,8 @@
+// `group/beat`: the root carries `data-beat`, flipped by `useBeatClock` on
+// every kick, and a dancing bird's parts anywhere below answer it through
+// `group-data-[beat=1]/beat` (packages/cast, the `dance` pose).
 export const container =
-  "relative isolate flex h-[100dvh] min-h-[100dvh] w-full flex-col overflow-hidden bg-bg text-text";
+  "group/beat relative isolate flex h-[100dvh] min-h-[100dvh] w-full flex-col overflow-hidden bg-bg text-text";
 
 export const displayAtmosphere =
   "pointer-events-none fixed inset-0 z-0 h-[100dvh] w-full bg-gradient-to-br from-primary/20 via-transparent to-primary/10 opacity-50 blur-3xl [animation:spin_90s_linear_infinite] motion-reduce:[animation:none]";

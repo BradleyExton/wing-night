@@ -15,7 +15,7 @@ export type LegBird = {
 };
 
 // The hen nobody is wearing: a team with no roster. Still the team's colour.
-const ANONYMOUS_APPEARANCE: CharacterAppearance = { body: "round", comb: "crest", tail: "fan" };
+const ANONYMOUS_APPEARANCE: CharacterAppearance = { body: "round", comb: "crest", tail: "fan", dance: "bounce" };
 
 type ResolveLegBirdInput = {
   figure: FappyPlayerFigure | null;

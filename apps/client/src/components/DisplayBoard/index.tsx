@@ -14,6 +14,7 @@ import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { useGameStartCountdown } from "./useGameStartCountdown";
 import { useMusicPlaybackCue } from "./useMusicPlaybackCue";
+import { useBeatClock } from "./useBeatClock";
 import * as styles from "./styles";
 
 type DisplayBoardProps = {
@@ -66,6 +67,7 @@ export const DisplayBoard = ({
   }, [roomState, activeTeamId]);
 
   const displayMediaRef = useRef<HTMLAudioElement | null>(null);
+  const rootRef = useRef<HTMLElement | null>(null);
   // Session-scoped: once the room has been tapped, it stays unlocked, so the
   // overlay appears once a night rather than at every MINIGAME_INTRO.
   const [audioUnlocked, setAudioUnlocked] = useState(false);
@@ -114,6 +116,10 @@ export const DisplayBoard = ({
     onTrackEnded: onMusicTrackEnded
   });
 
+  // The beat the lobby cast dances to, read off the same element: it flips
+  // `data-beat` on the root, and the birds' parts answer it in CSS.
+  useBeatClock({ mediaRef: displayMediaRef, audioUnlocked, rootRef });
+
   // Any source the night could ever play, which is what decides whether the
   // element exists — distinct from `musicPlayback`, which is what is playing.
   const hasAnyMusicSource =
@@ -144,7 +150,7 @@ export const DisplayBoard = ({
   }
 
   return (
-    <main className={styles.container}>
+    <main ref={rootRef} className={styles.container}>
       <GenreFontPreload teams={roomState?.teams ?? []} />
       <div className={styles.displayAtmosphere} data-display-atmosphere aria-hidden />
       <NowPlayingSurface
@@ -172,7 +178,7 @@ export const DisplayBoard = ({
           do. `data-team-anthem` predates the lobby playlist and is kept because
           the e2e suite locates the element by it. */}
       {hasAnyMusicSource && (
-        <audio ref={displayMediaRef} data-team-anthem preload="auto" />
+        <audio ref={displayMediaRef} data-team-anthem preload="auto" crossOrigin="anonymous" />
       )}
       {shouldShowGameLockedOverlay && (
         <GameLockedOverlay remainingSeconds={gameStartCountdownRemainingSeconds} />

@@ -444,36 +444,6 @@ body {
   opacity: 0.09;
   mix-blend-mode: overlay;
 }
-/* Cast strut (SETUP lobby). One bird per lane: pop up from the floor, walk
-   --walk-span, flip to face the way back, return, drop out, then stay gone for
-   the rest of the cycle. Lanes share the 64s cycle and differ only by delay
-   (CastWander/styles), which is what keeps only a few on screen at once. */
-@keyframes strut {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 30%, 0) scaleX(1);
-  }
-  3% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scaleX(1);
-  }
-  12% {
-    transform: translate3d(var(--walk-span, 16vw), 0, 0) scaleX(1);
-  }
-  12.01% {
-    transform: translate3d(var(--walk-span, 16vw), 0, 0) scaleX(-1);
-  }
-  21% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scaleX(-1);
-  }
-  24%,
-  100% {
-    opacity: 0;
-    transform: translate3d(0, 30%, 0) scaleX(-1);
-  }
-}
-
 /* The cast rig (DESIGN.md §2.8): each beat turns one part of the hen about
    the pivot @wingnight/cast wrapped it on, in the bird's own 80×72 units.
    Which part gets which beat in which pose is the `poses` table in the cast

@@ -1,12 +1,12 @@
 // Three bands, top to bottom: the wordmark, the lineup, and a floor the cast
 // owns. The floor is padding rather than a flex child so the birds
-// (CastWander, absolutely positioned) get a strip nothing else can grow into,
+// (CastParade, absolutely positioned) get a strip nothing else can grow into,
 // and its height is the cast container's — change them together.
 export const container =
   "relative isolate flex h-full flex-col items-center justify-center gap-[clamp(1.25rem,3.5vh,3.5rem)] overflow-hidden px-[clamp(2rem,4vw,4rem)] pb-[clamp(6rem,14vh,17rem)] pt-[clamp(1.5rem,3vw,3rem)] text-center";
 
 // Stacking, back to front: ambient floor glow → heat bloom → flame → embers → vignette
-// and grain → cast (CastWander, above the vignette so team colours stay bright at the
+// and grain → cast (CastParade, above the vignette so team colours stay bright at the
 // foot of the stage) → content. The vignette sits ABOVE the flame so its tips dim into the frame
 // rather than ending in a hard edge behind the wordmark.
 export const ambient =

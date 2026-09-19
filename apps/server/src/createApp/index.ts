@@ -18,6 +18,11 @@ type CreateAppOptions = {
   contentRootDir?: string;
 };
 
+const allowCrossOriginMedia: express.RequestHandler = (_request, response, next) => {
+  response.setHeader("Access-Control-Allow-Origin", "*");
+  next();
+};
+
 export const createApp = (options: CreateAppOptions = {}): express.Express => {
   // Resolved at CALL time, not module scope — `resolveContentRootDir` reads
   // WN_CONTENT_ROOT_DIR, which the e2e stack points at its own seeded root.
@@ -38,6 +43,17 @@ export const createApp = (options: CreateAppOptions = {}): express.Express => {
   };
 
   app.use("/health", healthRouter);
+
+  // The TV listens to its own music: the display taps its `<audio>` with a
+  // Web Audio analyser to find the beat the lobby cast dances to (DESIGN.md
+  // §2.8). A media element on another origin only reaches that graph when the
+  // response says it may — without this header the analyser hears silence and,
+  // worse, so does the room, because the element's sound now routes through
+  // the graph. The display marks the element `crossOrigin="anonymous"` to ask.
+  app.use(
+    [CONTENT_ASSET_ROUTE_PATH, TEAM_AUDIO_ROUTE_PATH, SONG_GUESS_AUDIO_ROUTE_PATH, LOBBY_AUDIO_ROUTE_PATH],
+    allowCrossOriginMedia
+  );
 
   // The content pack's images: generated heads, party photos, anything a
   // player's `avatarSrc` or a GEO prompt's `imageSrc` names. Served from the

@@ -7,7 +7,7 @@ import {
   type TeamTheme
 } from "@wingnight/shared";
 
-import { CastWander } from "./CastWander";
+import { CastParade } from "./CastParade";
 import { setupStageCopy } from "./copy";
 import { Embers } from "./Embers";
 import { HeroFlame } from "./HeroFlame";
@@ -86,7 +86,7 @@ export const SetupStageBody = ({
       <Embers />
       <span className={styles.vignette} aria-hidden />
       <span className={styles.grain} aria-hidden />
-      <CastWander players={players} teams={teams} teamThemeByTeamId={teamThemeByTeamId} />
+      <CastParade players={players} teams={teams} teamThemeByTeamId={teamThemeByTeamId} />
 
       <p className={styles.waiting}>
         <span className={styles.waitingBeacon} aria-hidden>

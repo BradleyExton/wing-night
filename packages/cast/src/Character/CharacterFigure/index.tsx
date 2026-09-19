@@ -82,17 +82,19 @@ const thighPath = ({ x, y }: CharacterPivot): string =>
 // inner translate puts the drawing back. Rotating about a local origin this
 // way holds under any transform a surface wraps the figure in, where a CSS
 // `transform-origin` would be measured against the wrong viewport.
+type PartClassNames = Partial<Record<CharacterPart, string>>;
+
 const Part = ({
   part,
-  pose,
+  classNames,
   children
 }: {
   part: CharacterPart;
-  pose: CharacterPose;
+  classNames: PartClassNames;
   children: ReactNode;
 }): JSX.Element => {
   const pivot = CHARACTER_PIVOTS[part];
-  const className = styles.poses[pose][part];
+  const className = classNames[part];
 
   return (
     <g transform={`translate(${pivot.x} ${pivot.y})`}>
@@ -190,6 +192,8 @@ export const CharacterFigure = ({
 }: CharacterFigureProps): JSX.Element => {
   const haloId = useId();
   const head = appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS;
+  // A dance is the player's own; every other pose is the same for every bird.
+  const classNames = pose === "dance" ? styles.dances[appearance.dance] : styles.poses[pose];
 
   return (
     <g
@@ -198,28 +202,28 @@ export const CharacterFigure = ({
       data-character-tail={appearance.tail}
       data-character-pose={pose}
     >
-      <Part part="tail" pose={pose}>
+      <Part part="tail" classNames={classNames}>
         <path className={styles.silhouette} d={TAIL_PATHS[appearance.tail]} />
       </Part>
-      <Part part="legFar" pose={pose}>
+      <Part part="legFar" classNames={classNames}>
         <g className={styles.legFar}>
           <path className={styles.legs} d={legPath(CHARACTER_PIVOTS.legFar)} />
         </g>
       </Part>
-      <Part part="body" pose={pose}>
+      <Part part="body" classNames={classNames}>
         <path className={styles.silhouette} d={BODY_PATHS[appearance.body]} />
         <path className={styles.shade} d={BELLY_SHADE_PATHS[appearance.body]} />
       </Part>
-      <Part part="legNear" pose={pose}>
+      <Part part="legNear" classNames={classNames}>
         <path className={styles.silhouette} d={thighPath(CHARACTER_PIVOTS.legNear)} />
         <path className={styles.legs} d={legPath(CHARACTER_PIVOTS.legNear)} />
       </Part>
       {wing === "drawn" && (
-        <Part part="wing" pose={pose}>
+        <Part part="wing" classNames={classNames}>
           <path className={styles.silhouette} d={CHARACTER_WING_PATH} data-character-wing />
         </Part>
       )}
-      <Part part="head" pose={pose}>
+      <Part part="head" classNames={classNames}>
         <path className={styles.silhouette} d={NECK_PATH} />
         <g data-character-head>
           {appearance.avatarSrc === undefined ? (

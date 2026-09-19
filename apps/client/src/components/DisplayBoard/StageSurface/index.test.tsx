@@ -74,10 +74,10 @@ test("renders Cinematic Inferno setup with rounds preview and waiting indicator"
   assert.doesNotMatch(html, /Live Setup/);
 });
 
-test("does wander the roster cast behind the setup stage when players are rostered", () => {
+test("does parade the roster cast behind the setup stage when players are rostered", () => {
   const html = renderStage(buildSnapshot(Phase.SETUP));
 
-  assert.match(html, /data-cast-wander/);
+  assert.match(html, /data-cast-parade/);
   assert.equal((html.match(/data-cast-member="/g) ?? []).length, 2);
 });
 
