@@ -1,4 +1,4 @@
-import type { RoomState, TeamTheme } from "@wingnight/shared";
+import type { HostRoomStateSnapshot, TeamTheme } from "@wingnight/shared";
 
 import { resolveTeamThemeById } from "../../../utils/resolveTeamTheme";
 
@@ -10,7 +10,7 @@ type HostTeamMaps = {
   teamThemeByTeamId: Map<string, TeamTheme>;
 };
 
-export const selectHostTeamMaps = (roomState: RoomState | null): HostTeamMaps => {
+export const selectHostTeamMaps = (roomState: HostRoomStateSnapshot | null): HostTeamMaps => {
   const assignedTeamByPlayerId = new Map<string, string>();
   const teamNameByTeamId = new Map<string, string>();
 

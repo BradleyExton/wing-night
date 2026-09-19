@@ -1,8 +1,8 @@
 import type { SerializableValue } from "@wingnight/minigames-core";
 import type {
+  HostRoomStateSnapshot,
   MinigameHostView,
-  MinigameType,
-  RoomState
+  MinigameType
 } from "@wingnight/shared";
 
 import { useHostHandlers } from "../../../context/HostHandlersContext";
@@ -15,7 +15,7 @@ import { createMinigameHandlers } from "../setupHandlers";
 type MinigameHostMode = Extract<HostRenderMode, "minigame_intro" | "minigame_play">;
 
 type MinigameHostContext = {
-  roomState: RoomState | null;
+  roomState: HostRoomStateSnapshot | null;
   teamNameByTeamId: Map<string, string>;
   minigameType: MinigameType | null;
   minigameHostView: MinigameHostView | null;

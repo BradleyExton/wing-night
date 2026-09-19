@@ -166,6 +166,14 @@ export type HostSnapshotExtendsRoomStateCheck = Assert<
   IsAssignable<RoomState, HostRoomStateSnapshot>
 >;
 
+export type HostSnapshotHasNoMinigameDisplayViewCheck = Assert<
+  IsAssignable<HasKey<HostRoomStateSnapshot, "minigameDisplayView">, false>
+>;
+
+export type HostSnapshotKeepsMinigameHostViewCheck = Assert<
+  IsAssignable<HasKey<HostRoomStateSnapshot, "minigameHostView">, true>
+>;
+
 export type DisplaySnapshotShapeCheck = Assert<
   IsAssignable<
     {

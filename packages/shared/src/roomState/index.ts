@@ -658,7 +658,11 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
 
 type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
 
-export type HostRoomStateSnapshot = RoomState;
+// The host tablet renders `minigameHostView`; the display view is the TV's copy of the
+// same turn. Shipping both in the host envelope sent the whole of a DRAWING board twice
+// in every snapshot, which is why a 60-second turn cost the tablet roughly twice the
+// bytes the TV paid. The host snapshot is everything but that one field.
+export type HostRoomStateSnapshot = Omit<RoomState, "minigameDisplayView">;
 
 export type DisplayRoomStateSnapshot = Pick<RoomState, DisplaySafeRoomStateKey>;
 
@@ -711,6 +715,16 @@ export const toDisplayRoomStateSnapshot = (
   return displaySnapshot;
 };
 
+export const toHostRoomStateSnapshot = (
+  roomState: RoomState
+): HostRoomStateSnapshot => {
+  // Destructured, not merely re-typed: the type change alone would still put the whole
+  // display view on the wire. The key has to be absent from the object we emit.
+  const { minigameDisplayView: _minigameDisplayView, ...hostSnapshot } = roomState;
+
+  return hostSnapshot;
+};
+
 export function toRoleScopedSnapshotEnvelope(
   clientRole: "HOST",
   roomState: RoomState
@@ -730,7 +744,7 @@ export function toRoleScopedSnapshotEnvelope(
   if (clientRole === "HOST") {
     return {
       clientRole: "HOST",
-      roomState
+      roomState: toHostRoomStateSnapshot(roomState)
     };
   }
 

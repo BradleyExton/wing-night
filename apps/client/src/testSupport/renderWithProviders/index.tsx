@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type {
   DisplayRoomStateSnapshot,
-  RoleScopedStateSnapshotEnvelope,
-  RoomState
+  HostRoomStateSnapshot,
+  RoleScopedStateSnapshotEnvelope
 } from "@wingnight/shared";
 
 import { HostHandlersProvider } from "../../context/HostHandlersContext";
@@ -11,7 +11,7 @@ import type { HostHandlers } from "../../context/HostHandlersContext";
 import { RoomStateProvider } from "../../context/RoomStateContext";
 
 type HostProviderOptions = {
-  roomState?: RoomState | null;
+  roomState?: HostRoomStateSnapshot | null;
   handlers?: HostHandlers;
 };
 

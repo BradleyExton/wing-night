@@ -230,6 +230,7 @@ export type {
 export {
   DISPLAY_SAFE_ROOM_STATE_KEYS,
   toDisplayRoomStateSnapshot,
+  toHostRoomStateSnapshot,
   toRoleScopedSnapshotEnvelope
 } from "./roomState/index.js";
 export type { ValidationIssue } from "./content/validationIssue/index.js";

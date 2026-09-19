@@ -1,7 +1,7 @@
-import type { RoomState, Team } from "@wingnight/shared";
+import type { HostRoomStateSnapshot, Team } from "@wingnight/shared";
 
 export const resolveOrderedTeams = (
-  roomState: RoomState | null
+  roomState: HostRoomStateSnapshot | null
 ): Team[] => {
   if (!roomState) {
     return [];

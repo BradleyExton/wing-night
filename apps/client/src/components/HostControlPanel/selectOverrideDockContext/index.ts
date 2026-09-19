@@ -1,4 +1,4 @@
-import { Phase, type RoomState } from "@wingnight/shared";
+import { Phase, type HostRoomStateSnapshot } from "@wingnight/shared";
 
 type OverrideDockContext = {
   isVisible: boolean;
@@ -33,7 +33,7 @@ const areTeamIdOrdersEqual = (leftTeamIds: string[], rightTeamIds: string[]): bo
   return leftTeamIds.every((teamId, index) => teamId === rightTeamIds[index]);
 };
 
-export const hasCustomTurnOrder = (roomState: RoomState | null): boolean => {
+export const hasCustomTurnOrder = (roomState: HostRoomStateSnapshot | null): boolean => {
   if (!roomState) {
     return false;
   }
@@ -42,7 +42,7 @@ export const hasCustomTurnOrder = (roomState: RoomState | null): boolean => {
   return !areTeamIdOrdersEqual(roomState.turnOrderTeamIds, defaultTeamIds);
 };
 
-export const selectOverrideDockContext = (roomState: RoomState | null): OverrideDockContext => {
+export const selectOverrideDockContext = (roomState: HostRoomStateSnapshot | null): OverrideDockContext => {
   const phase = roomState?.phase ?? null;
   const isVisible = phase !== null && OVERRIDE_DOCK_PHASES.has(phase);
   const showRedoLastMutationAction = isVisible && roomState?.canRedoScoringMutation === true;

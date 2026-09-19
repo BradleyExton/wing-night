@@ -1,4 +1,4 @@
-import { Phase, type RoomState } from "@wingnight/shared";
+import { Phase, type HostRoomStateSnapshot } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../../copy";
 
@@ -11,7 +11,7 @@ type HeaderContext = {
   activeTeamName: string | null;
 };
 
-const selectActiveTeamId = (roomState: RoomState | null): string | null => {
+const selectActiveTeamId = (roomState: HostRoomStateSnapshot | null): string | null => {
   if (!roomState) {
     return null;
   }
@@ -32,7 +32,7 @@ const selectActiveTeamId = (roomState: RoomState | null): string | null => {
 };
 
 export const selectHeaderContext = (
-  roomState: RoomState | null,
+  roomState: HostRoomStateSnapshot | null,
   teamNameByTeamId: Map<string, string>
 ): HeaderContext => {
   const phase = roomState?.phase ?? null;

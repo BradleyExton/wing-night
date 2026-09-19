@@ -2,8 +2,8 @@ import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 import type {
   DisplayRoomStateSnapshot,
-  RoleScopedStateSnapshotEnvelope,
-  RoomState
+  HostRoomStateSnapshot,
+  RoleScopedStateSnapshotEnvelope
 } from "@wingnight/shared";
 
 const RoomStateContext = createContext<RoleScopedStateSnapshotEnvelope | null>(null);
@@ -24,7 +24,7 @@ export const useRoomStateEnvelope = (): RoleScopedStateSnapshotEnvelope | null =
   return useContext(RoomStateContext);
 };
 
-export const useHostRoomState = (): RoomState | null => {
+export const useHostRoomState = (): HostRoomStateSnapshot | null => {
   const envelope = useRoomStateEnvelope();
 
   return envelope?.clientRole === "HOST" ? envelope.roomState : null;
