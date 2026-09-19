@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm -r --parallel --filter @wingnight/server --filter @wingnight/client dev",
+    "start": "pnpm build && pnpm -r --parallel --filter @wingnight/server --filter @wingnight/client start",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test && pnpm test:lint-rules && pnpm test:playwright-ports && pnpm test:e2e-content-root && pnpm test:import-avatars && pnpm test:import-recreate",

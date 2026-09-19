@@ -106,7 +106,9 @@ State: - In-memory authoritative server state - No database in MVP
 
 ------------------------------------------------------------------------
 
-# 🚀 Development Setup
+# 🎉 Running a Party
+
+Once per machine:
 
 1)  Use Node 25:
 
@@ -122,7 +124,53 @@ corepack prepare pnpm@10 --activate
 
 pnpm install
 
-4)  Start development:
+On the night, one command:
+
+pnpm start
+
+That builds the client for production and then runs the server and a static
+file server for the built client, in parallel — the same shape as `pnpm dev`,
+but serving the build instead of source.
+
+**Run the party on `pnpm start`, not `pnpm dev`.** The dev server hands the TV
+and the tablet every `.ts` and `.tsx` module as its own HTTP request — about
+250 requests and 5.3 MB on a first load — plus React's development build. The
+production path is 8 requests and roughly 355 kB over the wire. On a tablet
+over party Wi-Fi that is the entire difference between "it's up" and "hang on,
+it's still loading".
+
+`pnpm start` prints the LAN address to open. Read the **Network** line:
+
+```text
+➜  Local:   http://localhost:4173/
+➜  Network: http://10.0.0.4:4173/
+```
+
+That is your local IP, already worked out for you — no need to go digging in
+network settings. If 4173 is taken, Vite picks the next free port, which is
+exactly why you read the printed URL instead of assuming one.
+
+Open on devices (same Wi-Fi), using that Network address:
+
+Display (TV): http://`<your-ip>`:4173/display
+
+Host (tablet): http://`<your-ip>`:4173/host
+
+Config wizard: http://`<your-ip>`:4173/admin
+
+The client and the server are always separate origins — there is no dev proxy
+anywhere in this repo, deliberately. Nothing is baked into the build: the
+client looks for the server on port **3000** at whatever hostname the page was
+opened from, so the TV and the tablet find it with no configuration as long as
+the server keeps its default port. If you must move the server, set `PORT` for
+it and `VITE_SOCKET_SERVER_URL` in the environment of the `pnpm start` that
+builds the client, so the bundle knows where to look.
+
+------------------------------------------------------------------------
+
+# 🚀 Development Setup
+
+Same three setup steps as above, then:
 
 pnpm dev
 
@@ -131,13 +179,14 @@ Or individually:
 pnpm --filter @wingnight/server dev
 pnpm --filter @wingnight/client dev
 
-5)  Find your local IP address.
-
-6)  Open on devices (same Wi-Fi):
+Dev gives you hot module reload, source maps and React's development
+warnings, and serves the client on port 5173:
 
 Host: http://`<your-ip>`:5173/host
 
 Display: http://`<your-ip>`:5173/display
+
+`pnpm dev` is for building the thing; `pnpm start` is for running the party.
 
 ------------------------------------------------------------------------
 
