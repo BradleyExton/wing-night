@@ -34,7 +34,7 @@ export const MinigameSurface = ({
   // Unconditional, above the early returns. In a real game the chunk is already
   // warm — HostControlPanel asked for it when the room named the round — so this
   // is a cache read, not a fetch.
-  const minigameRendererBundle = useMinigameRendererBundle(minigameType);
+  const minigameRendererLoad = useMinigameRendererBundle(minigameType);
   const isTakeover = phase === "play";
   const containerClassName = isTakeover ? styles.takeoverCanvas : styles.group;
 
@@ -51,19 +51,25 @@ export const MinigameSurface = ({
 
   // The renderer chunk has not landed yet. Same wording as a host view that has
   // not arrived, because it is the same situation from the host's side: the
-  // panel is a beat behind and is about to catch up.
-  if (minigameRendererBundle === null) {
+  // panel is a beat behind and is about to catch up — unless the chunk has
+  // failed enough times that "catching up" is no longer an honest description,
+  // in which case the host is told what actually happened and how to fix it.
+  if (minigameRendererLoad.rendererBundle === null) {
     return (
       <section className={containerClassName}>
         <div className={styles.groupHead}>
           <span>{hostControlPanelCopy.minigameSectionTitle}</span>
         </div>
         <p className={styles.description}>
-          {hostControlPanelCopy.minigameWaitingForViewLabel}
+          {minigameRendererLoad.status === "unavailable"
+            ? hostControlPanelCopy.minigameRendererUnavailableLabel(minigameType)
+            : hostControlPanelCopy.minigameWaitingForViewLabel}
         </p>
       </section>
     );
   }
+
+  const { HostSurface } = minigameRendererLoad.rendererBundle;
 
   // Minigame-agnostic loading state: during play the host view can be null
   // for a beat while the server snapshot catches up after (re)connection.
@@ -84,7 +90,7 @@ export const MinigameSurface = ({
     return (
       <section className={containerClassName}>
         <div className={styles.takeoverInner}>
-          <minigameRendererBundle.HostSurface
+          <HostSurface
             phase={phase}
             minigameType={minigameType}
             minigameHostView={minigameHostView}
@@ -107,7 +113,7 @@ export const MinigameSurface = ({
         <span>{hostControlPanelCopy.minigameSectionTitle}</span>
       </div>
       <div className={styles.body}>
-        <minigameRendererBundle.HostSurface
+        <HostSurface
           phase={phase}
           minigameType={minigameType}
           minigameHostView={minigameHostView}

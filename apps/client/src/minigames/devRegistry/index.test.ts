@@ -7,13 +7,13 @@ import {
   resolveMinigameRuntimePlugin
 } from "./index";
 
-test("resolves dev manifests for all minigame types", () => {
+test("does resolve a dev manifest when the sandbox names any minigame type", () => {
   for (const minigameType of MINIGAME_TYPES) {
     assert.ok(resolveMinigameDevManifest(minigameType));
   }
 });
 
-test("resolves runtime plugins matching each minigame type", () => {
+test("does resolve a runtime plugin whose id matches when the sandbox names any minigame type", () => {
   for (const minigameType of MINIGAME_TYPES) {
     assert.equal(resolveMinigameRuntimePlugin(minigameType)?.id, minigameType);
   }

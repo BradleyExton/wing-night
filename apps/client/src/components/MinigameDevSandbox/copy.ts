@@ -13,6 +13,8 @@ export const minigameDevSandboxCopy = {
   displayPreviewMetaLabel: "TV · 1920 × 1080",
   loadingLabel: "Loading the runtime…",
   loadingRendererLabel: "Loading the minigame surfaces…",
+  rendererUnavailableLabel:
+    "The minigame surfaces failed to load. Check the dev server and reload the page.",
   noRuntimeLabel: "No runtime plugin is available for this minigame.",
   devIndexLinkHref: "/dev",
   devIndexLinkLabel: "All sandboxes",

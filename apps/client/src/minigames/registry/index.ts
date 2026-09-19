@@ -1,6 +1,11 @@
 import type { MinigameRendererBundle } from "@wingnight/minigames-core";
 import type { MinigameType } from "@wingnight/shared";
 
+import {
+  createMinigameRendererBundleStore,
+  type MinigameRendererLoad
+} from "../rendererBundleStore";
+
 // The party half of the registry: the surfaces the tablet and the TV draw.
 // The dev manifests and runtime plugins live in ../devRegistry, which only the
 // sandbox reaches and only through a dynamic import — a party never downloads
@@ -65,66 +70,50 @@ const MINIGAME_RENDERER_REGISTRY: Record<MinigameType, MinigameRendererRegistrat
   }
 };
 
-// Resolved bundles, kept forever: a renderer is a module, the import cache
-// already holds it, and remembering it here is what lets a surface render the
-// real component on its FIRST pass instead of suspending for a tick. That
-// distinction is the whole point of the prefetch — see useMinigameRendererBundle.
-const warmBundleByMinigameType = new Map<MinigameType, MinigameRendererBundle>();
-const inFlightLoadByMinigameType = new Map<
-  MinigameType,
-  Promise<MinigameRendererBundle | null>
->();
+// Resolved bundles are kept forever by the store below: a renderer is a module,
+// the import cache already holds it, and remembering it here is what lets a
+// surface render the real component on its FIRST pass instead of suspending for
+// a tick. That distinction is the whole point of the prefetch — see
+// useMinigameRendererBundle. The store also owns what happens when a chunk does
+// NOT arrive; that policy lives in ../rendererBundleStore.
+const minigameRendererBundleStore = createMinigameRendererBundleStore({
+  loadRendererBundle: (minigameType) =>
+    MINIGAME_RENDERER_REGISTRY[minigameType].loadBundle()
+});
 
 // Synchronous, and deliberately so. Null means "the chunk has not landed yet",
 // never "there is no such game" — the Record above is exhaustive.
 export const peekMinigameRendererBundle = (
   minigameType: MinigameType
 ): MinigameRendererBundle | null => {
-  return warmBundleByMinigameType.get(minigameType) ?? null;
+  return minigameRendererBundleStore.peekBundle(minigameType);
+};
+
+// The same read, with the reason the bundle is missing attached: still on the
+// wire, or failed often enough that the surface should stop drawing nothing and
+// say so.
+export const peekMinigameRendererLoad = (
+  minigameType: MinigameType
+): MinigameRendererLoad => {
+  return minigameRendererBundleStore.peekLoad(minigameType);
+};
+
+// Fires whenever any renderer's load state changes — a chunk landing, or a
+// run of failures crossing into "unavailable".
+export const subscribeToMinigameRendererLoads = (
+  listener: () => void
+): (() => void) => {
+  return minigameRendererBundleStore.subscribe(listener);
 };
 
 // Idempotent: the second caller joins the first one's import rather than
-// starting a second fetch.
+// starting a second fetch, and a failed load retries itself rather than
+// latching. Resolves null when the current attempt failed — the retry that
+// follows publishes to subscribers, not to this promise.
 export const loadMinigameRendererBundle = (
   minigameType: MinigameType
 ): Promise<MinigameRendererBundle | null> => {
-  const warmBundle = warmBundleByMinigameType.get(minigameType);
-
-  if (warmBundle !== undefined) {
-    return Promise.resolve(warmBundle);
-  }
-
-  const inFlightLoad = inFlightLoadByMinigameType.get(minigameType);
-
-  if (inFlightLoad !== undefined) {
-    return inFlightLoad;
-  }
-
-  const registration = MINIGAME_RENDERER_REGISTRY[minigameType];
-
-  if (registration === undefined) {
-    return Promise.resolve(null);
-  }
-
-  const load = registration
-    .loadBundle()
-    .then((rendererBundle) => {
-      warmBundleByMinigameType.set(minigameType, rendererBundle);
-
-      return rendererBundle;
-    })
-    .catch(() => {
-      // A chunk that failed to arrive is worth retrying — the next render or
-      // the next prefetch starts a fresh request rather than inheriting a
-      // permanently rejected promise.
-      inFlightLoadByMinigameType.delete(minigameType);
-
-      return null;
-    });
-
-  inFlightLoadByMinigameType.set(minigameType, load);
-
-  return load;
+  return minigameRendererBundleStore.requestBundle(minigameType);
 };
 
 export const minigameRequiresDisplayAudio = (minigameType: MinigameType): boolean => {

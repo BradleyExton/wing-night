@@ -51,7 +51,7 @@ export const MinigameStageBody = ({
   // Warm by now in a real game: DisplayBoard asked for this chunk back when the
   // room named the round's minigame, phases ago. The null branch below is the
   // boot-from-cold path (a TV refreshed into MINIGAME_PLAY), not a phase change.
-  const minigameRendererBundle = useMinigameRendererBundle(minigameType);
+  const minigameRendererLoad = useMinigameRendererBundle(minigameType);
 
   if (minigameType === null) {
     return (
@@ -61,19 +61,34 @@ export const MinigameStageBody = ({
     );
   }
 
-  if (minigameRendererBundle === null) {
+  if (minigameRendererLoad.rendererBundle === null) {
+    // The chunk has failed often enough that silence has stopped being the
+    // kinder answer — the retries are still running underneath, but the room
+    // has been looking at an empty stage and deserves to know why.
+    if (minigameRendererLoad.status === "unavailable") {
+      return (
+        <div className={styles.minigameShell}>
+          <p className={styles.fallbackText}>
+            {displayBoardCopy.minigameRendererUnavailableLabel(minigameType)}
+          </p>
+        </div>
+      );
+    }
+
     // An empty stage, not a spinner and not a message: the renderer is a LAN
     // fetch away and whatever we drew here would be gone before the room read
     // it. The shell keeps its size so the stage does not jump when it lands.
     return <div className={styles.minigameShell} aria-hidden />;
   }
 
+  const { DisplaySurface } = minigameRendererLoad.rendererBundle;
+
   return (
     <div className={styles.minigameShell}>
       {remainingTimerSeconds !== null && (
         <MinigameTimerChip remainingSeconds={remainingTimerSeconds} />
       )}
-      <minigameRendererBundle.DisplaySurface
+      <DisplaySurface
         phase={phase}
         minigameType={minigameType}
         minigameDisplayView={minigameDisplayView}

@@ -15,9 +15,13 @@ const RendererProbe = ({
 }: {
   minigameType: MinigameType | null;
 }): JSX.Element => {
-  const rendererBundle = useMinigameRendererBundle(minigameType);
+  const { status, rendererBundle } = useMinigameRendererBundle(minigameType);
 
-  return <span>{rendererBundle === null ? "not-ready" : "ready"}</span>;
+  return (
+    <span>
+      {rendererBundle === null ? "not-ready" : "ready"}:{status}
+    </span>
+  );
 };
 
 test("does report not-ready on the first render when the chunk has not landed", () => {
@@ -34,7 +38,7 @@ test("does hand back the bundle on the very first render when the chunk is warm"
   // therefore no fallback for the TV to flash mid-game.
   const html = renderToStaticMarkup(<RendererProbe minigameType="TRIVIA" />);
 
-  assert.match(html, /ready/);
+  assert.match(html, /ready:ready/);
   assert.doesNotMatch(html, /not-ready/);
 });
 
@@ -46,8 +50,8 @@ test("does stay not-ready for a game whose own chunk has not landed", async () =
   assert.match(html, /not-ready/);
 });
 
-test("does report not-ready when no minigame is named", () => {
+test("does report an idle load when no minigame is named", () => {
   const html = renderToStaticMarkup(<RendererProbe minigameType={null} />);
 
-  assert.match(html, /not-ready/);
+  assert.match(html, /not-ready:idle/);
 });

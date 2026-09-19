@@ -27,6 +27,15 @@ export const displayCopy = {
     `${minigame} is up next.`,
   minigameWaitingForViewLabel:
     "Waiting for minigame display state from the server snapshot.",
+  // Deleted once as unreachable, and back because it is not: a renderer chunk
+  // can fail (a dropped LAN, or a cached index.html naming a rebuilt chunk that
+  // now 404s), and the retries cannot always win — the browser's module map
+  // caches a failed import for the life of the page, so a refresh is the only
+  // guaranteed cure. It leads with that. Everything outside the stage — scores,
+  // standings, the timer — is still live, which is why this says the round's
+  // game rather than the night.
+  minigameRendererUnavailableLabel: (minigame: MinigameType): string =>
+    `${minigame} didn't load. Refresh the display to bring it back — scores are safe.`,
   triviaTurnTitle: "Trivia Turn",
   triviaQuestionLabel: "Question",
   eatingTimerLabel: "Round Timer",

@@ -86,7 +86,7 @@ export const SandboxStage = ({ minigameType }: SandboxStageProps): JSX.Element =
   const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
   // The sandbox route names its game in the URL, so the fetch starts on this
   // component's first render and the stage fills a beat later.
-  const rendererBundle = useMinigameRendererBundle(minigameType);
+  const rendererLoad = useMinigameRendererBundle(minigameType);
 
   const serverOrigin = useServerOrigin();
   const [phase, setPhase] = useState<MinigameSurfacePhase>("play");
@@ -108,12 +108,16 @@ export const SandboxStage = ({ minigameType }: SandboxStageProps): JSX.Element =
     return <p className={styles.unavailableNote}>{minigameDevSandboxCopy.noRuntimeLabel}</p>;
   }
 
-  // Null only ever means "the renderer chunk is still on the wire" — the
-  // registry is exhaustive over MinigameType — so the stage waits rather than
-  // claiming the game has no surface.
-  if (rendererBundle === null) {
+  // Null never means "the game has no surface" — the registry is exhaustive
+  // over MinigameType — so the stage either waits for the chunk or, once it has
+  // failed often enough, says the fetch is the thing that went wrong.
+  if (rendererLoad.rendererBundle === null) {
     return (
-      <p className={styles.unavailableNote}>{minigameDevSandboxCopy.loadingRendererLabel}</p>
+      <p className={styles.unavailableNote}>
+        {rendererLoad.status === "unavailable"
+          ? minigameDevSandboxCopy.rendererUnavailableLabel
+          : minigameDevSandboxCopy.loadingRendererLabel}
+      </p>
     );
   }
 
@@ -148,7 +152,7 @@ export const SandboxStage = ({ minigameType }: SandboxStageProps): JSX.Element =
     label: devManifest.teamNameByTeamId[teamId] ?? teamId
   }));
   const teamNameByTeamId = new Map(Object.entries(devManifest.teamNameByTeamId));
-  const { DisplaySurface } = rendererBundle;
+  const { DisplaySurface } = rendererLoad.rendererBundle;
 
   return (
     <>

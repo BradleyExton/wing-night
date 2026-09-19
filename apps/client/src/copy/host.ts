@@ -227,6 +227,11 @@ export const hostCopy = {
     `${minigame} is live for this team turn.`,
   minigameWaitingForViewLabel:
     "Waiting for minigame host state from the server snapshot.",
+  // The host's half of the same failure — see display.ts. The tablet gets the
+  // blunter wording because the host is the one who can do something about it,
+  // for the TV as well as for this screen.
+  minigameRendererUnavailableLabel: (minigame: MinigameType): string =>
+    `${minigame}'s controls didn't load. Reload this tablet to bring them back — scores are safe.`,
   minigameFallbackType: "TRIVIA" as MinigameType,
   waitingStateLabel: "Waiting for room state...",
   triviaActiveTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,

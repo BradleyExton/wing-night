@@ -4,6 +4,7 @@ import {
 } from "@wingnight/shared";
 import { useEffect, useMemo, useState } from "react";
 
+import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { RouteContent } from "./components/RouteContent";
 import { HostHandlersProvider } from "./context/HostHandlersContext";
 import { RoomStateProvider } from "./context/RoomStateContext";
@@ -84,13 +85,18 @@ export const App = (): JSX.Element => {
   return (
     <RoomStateProvider value={roomStateEnvelope}>
       <HostHandlersProvider value={hostHandlers}>
-        <RouteContent
-          route={route}
-          devMinigameType={devMinigameType}
-          devLabName={devLabName}
-          roomSocket={roomSocket}
-          displayReports={displayReports}
-        />
+        {/* Inside the providers and around the whole route: every route is a
+            lazy chunk, and a chunk that never arrives throws on render. Without
+            something here React unmounts the root and the TV goes white. */}
+        <AppErrorBoundary surface={route === "DISPLAY" ? "DISPLAY" : "CONTROL"}>
+          <RouteContent
+            route={route}
+            devMinigameType={devMinigameType}
+            devLabName={devLabName}
+            roomSocket={roomSocket}
+            displayReports={displayReports}
+          />
+        </AppErrorBoundary>
       </HostHandlersProvider>
     </RoomStateProvider>
   );
