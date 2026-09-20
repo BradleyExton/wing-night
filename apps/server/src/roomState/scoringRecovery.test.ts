@@ -105,7 +105,7 @@ test("clears pending round score maps after leaving ROUND_RESULTS", () => {
 
   const snapshot = getRoomStateSnapshot();
 
-  assert.equal(snapshot.phase, Phase.ROUND_INTRO);
+  assert.equal(snapshot.phase, Phase.MINIGAME_INTRO);
   assert.deepEqual(snapshot.pendingWingPointsByTeamId, {});
   assert.deepEqual(snapshot.pendingMinigamePointsByTeamId, {});
 });
@@ -294,11 +294,11 @@ test("redo scoring history clears on round change", () => {
   assert.equal(getRoomStateSnapshot().canRedoScoringMutation, true);
 
   advanceRoomStatePhase();
-  const roundIntroSnapshot = getRoomStateSnapshot();
+  const roundOneSnapshot = getRoomStateSnapshot();
 
-  assert.equal(roundIntroSnapshot.phase, Phase.ROUND_INTRO);
-  assert.equal(roundIntroSnapshot.currentRound, 1);
-  assert.equal(roundIntroSnapshot.canRedoScoringMutation, false);
+  assert.equal(roundOneSnapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(roundOneSnapshot.currentRound, 1);
+  assert.equal(roundOneSnapshot.canRedoScoringMutation, false);
 
   redoLastScoringMutation();
   assert.equal(getRoomStateSnapshot().teams[0].totalScore, 3);

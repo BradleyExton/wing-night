@@ -102,8 +102,8 @@ test("renders minigame surface in minigame play mode", () => {
   assert.match(html, /Incorrect/);
 });
 
-test("renders compact round intro surfaces", () => {
-  const html = renderPhaseBody(buildRoomState(Phase.ROUND_INTRO));
+test("renders compact between-turns surfaces", () => {
+  const html = renderPhaseBody(buildRoomState(Phase.TURN_RESULTS));
 
   assert.match(html, /Standings Snapshot/);
   assert.doesNotMatch(html, /Turn Order/);

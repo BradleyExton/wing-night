@@ -44,20 +44,6 @@ const renderStage = (
   });
 };
 
-test("renders round intro three-beat reveal with metadata", () => {
-  const html = renderStage(buildSnapshot(Phase.ROUND_INTRO));
-
-  assert.match(html, /Coming up/);
-  assert.match(html, />01</);
-  assert.match(html, /Warm Up/);
-  assert.match(html, /Frank&#x27;s/);
-  assert.match(html, /followed by/);
-  assert.match(html, /TRIVIA/);
-  assert.doesNotMatch(html, /Wing Night logo/);
-  assert.doesNotMatch(html, /Round: Round 1 of 1/);
-  assert.doesNotMatch(html, /Phase: Round Intro/);
-});
-
 test("renders Cinematic Inferno setup with rounds preview and waiting indicator", () => {
   const html = renderStage(buildSnapshot(Phase.SETUP));
 
@@ -91,8 +77,8 @@ test("renders waiting Cinematic Inferno setup during INTRO with same chrome", ()
   assert.doesNotMatch(html, /Host is ready to launch the round\./);
 });
 
-test("keeps rendering the setup surface while round intro is locally counting down", () => {
-  const html = renderStage(buildSnapshot(Phase.ROUND_INTRO), true);
+test("keeps rendering the setup surface while the game start is counting down", () => {
+  const html = renderStage(buildSnapshot(Phase.MINIGAME_INTRO), true);
 
   assert.match(html, /Wing Night/);
   assert.match(html, /Tonight/);
@@ -129,13 +115,15 @@ test("clamps setup preview filler cards to the shared maximum", () => {
   assert.doesNotMatch(html, new RegExp(`Round ${paddedOver}: Open Slot`));
 });
 
-test("falls back to generic context when ROUND_INTRO is missing round config", () => {
+test("falls back to generic context when EATING has no clock to run", () => {
   const html = renderStage({
-    ...buildSnapshot(Phase.ROUND_INTRO),
+    ...buildSnapshot(Phase.EATING),
+    timer: null,
+    gameConfig: null,
     currentRoundConfig: null
   });
 
-  assert.match(html, /Round Intro in progress/);
+  assert.match(html, /Eating in progress/);
   assert.match(html, /Phase details will appear on the next update\./);
 });
 

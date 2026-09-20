@@ -36,7 +36,7 @@ test("ignores malformed and unauthorized reorder-turn-order payloads", () => {
   const reorderCalls: string[][] = [];
 
   const socketHarness = setupHandlers({
-    phase: Phase.ROUND_INTRO,
+    phase: Phase.INTRO,
     overrides: {
       [CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER]: (payload) => {
         reorderCalls.push(payload.teamIds);

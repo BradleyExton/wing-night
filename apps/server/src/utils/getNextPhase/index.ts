@@ -2,8 +2,7 @@ import { Phase } from "@wingnight/shared";
 
 const phaseTransitionMap: Record<Phase, Phase> = {
   [Phase.SETUP]: Phase.INTRO,
-  [Phase.INTRO]: Phase.ROUND_INTRO,
-  [Phase.ROUND_INTRO]: Phase.MINIGAME_INTRO,
+  [Phase.INTRO]: Phase.MINIGAME_INTRO,
   [Phase.MINIGAME_INTRO]: Phase.EATING,
   [Phase.EATING]: Phase.MINIGAME_PLAY,
   [Phase.MINIGAME_PLAY]: Phase.TURN_RESULTS,
@@ -18,7 +17,7 @@ export const getNextPhase = (
   totalRounds: number
 ): Phase => {
   if (currentPhase === Phase.ROUND_RESULTS) {
-    return currentRound < totalRounds ? Phase.ROUND_INTRO : Phase.FINAL_RESULTS;
+    return currentRound < totalRounds ? Phase.MINIGAME_INTRO : Phase.FINAL_RESULTS;
   }
 
   return phaseTransitionMap[currentPhase];

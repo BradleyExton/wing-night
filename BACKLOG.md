@@ -29,7 +29,7 @@ character (Price-is-Right framing, host plus helper), so the app is the ANNOUNCE
   enumerated from `content/local/audio/announcer/` at boot — the lobby-playlist convention, and the
   same local-file pipeline as the anthems. No cloud call and no TTS engine in the party's critical
   path, and every line is auditionable before guests arrive.
-- **Cue coverage:** how-to-play per minigame (MINIGAME_INTRO), round + sauce intro (ROUND_INTRO),
+- **Cue coverage:** how-to-play per minigame (MINIGAME_INTRO), round + sauce intro (MINIGAME_INTRO),
   team intros and a post-results standings call, and a winner/finale line.
 
 **What pre-rendering can and cannot say.** Rosters and teams are AUTHORED content, known before the

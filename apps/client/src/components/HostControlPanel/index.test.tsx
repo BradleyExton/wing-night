@@ -202,14 +202,12 @@ test("renders locked setup deck during INTRO with start-game CTA", () => {
   assert.match(html, /<button[^>]*disabled=""[^>]*>Add Player<\/button>/);
 });
 
-test("renders standings snapshot in compact ROUND_INTRO view", () => {
+test("renders standings snapshot in the compact between-turns view", () => {
   const html = renderHostMarkup(<HostControlPanel />, {
-    roomState: buildSnapshot(Phase.ROUND_INTRO)
+    roomState: buildSnapshot(Phase.TURN_RESULTS)
   });
 
   assert.match(html, /Round 1 of 1/);
-  assert.match(html, /Frank&#x27;s/);
-  assert.match(html, /TRIVIA/);
   assert.match(html, /Overrides/);
   assert.match(html, /Standings Snapshot/);
 });

@@ -48,9 +48,11 @@ required.
 
 Each round executes as:
 
-1. `ROUND_INTRO` (once)
-2. `MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS` (repeat for each team turn)
-3. `ROUND_RESULTS` (apply accumulated wing + mini-game points once per round)
+1. `MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS` (repeat for each team turn)
+2. `ROUND_RESULTS` (apply accumulated wing + mini-game points once per round)
+
+The round opens on its first team's `MINIGAME_INTRO` — there is no separate
+round intro beat.
 
 Room snapshots carry team-turn context (`turnOrderTeamIds`,
 `roundTurnCursor`, `activeRoundTeamId`, `completedRoundTurnTeamIds`,

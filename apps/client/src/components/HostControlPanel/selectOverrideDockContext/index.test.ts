@@ -22,12 +22,11 @@ const buildSnapshot = (
   });
 };
 
-test("dock is visible only in gameplay phases", () => {
+test("dock is visible from the locked lineup onwards", () => {
   assert.equal(selectOverrideDockContext(null).isVisible, false);
   assert.equal(selectOverrideDockContext(buildSnapshot(Phase.SETUP)).isVisible, false);
-  assert.equal(selectOverrideDockContext(buildSnapshot(Phase.INTRO)).isVisible, false);
 
-  assert.equal(selectOverrideDockContext(buildSnapshot(Phase.ROUND_INTRO)).isVisible, true);
+  assert.equal(selectOverrideDockContext(buildSnapshot(Phase.INTRO)).isVisible, true);
   assert.equal(selectOverrideDockContext(buildSnapshot(Phase.EATING)).isVisible, true);
   assert.equal(selectOverrideDockContext(buildSnapshot(Phase.MINIGAME_INTRO)).isVisible, true);
   assert.equal(selectOverrideDockContext(buildSnapshot(Phase.MINIGAME_PLAY)).isVisible, true);
@@ -37,7 +36,7 @@ test("dock is visible only in gameplay phases", () => {
 
 test("skip-turn action is limited to turn phases", () => {
   assert.equal(
-    selectOverrideDockContext(buildSnapshot(Phase.ROUND_INTRO)).showSkipTurnBoundaryAction,
+    selectOverrideDockContext(buildSnapshot(Phase.INTRO)).showSkipTurnBoundaryAction,
     false
   );
   assert.equal(
@@ -58,12 +57,20 @@ test("skip-turn action is limited to turn phases", () => {
   );
 });
 
-test("turn-order editability is round-intro only", () => {
+test("turn-order editability is limited to the gaps between rounds", () => {
   assert.equal(
-    selectOverrideDockContext(buildSnapshot(Phase.ROUND_INTRO)).isTurnOrderEditable,
+    selectOverrideDockContext(buildSnapshot(Phase.INTRO)).isTurnOrderEditable,
+    true
+  );
+  assert.equal(
+    selectOverrideDockContext(buildSnapshot(Phase.ROUND_RESULTS)).isTurnOrderEditable,
     true
   );
   assert.equal(selectOverrideDockContext(buildSnapshot(Phase.EATING)).isTurnOrderEditable, false);
+  assert.equal(
+    selectOverrideDockContext(buildSnapshot(Phase.MINIGAME_INTRO)).isTurnOrderEditable,
+    false
+  );
 });
 
 test("badge turns on for redo availability", () => {

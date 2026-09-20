@@ -110,15 +110,16 @@ test("intro lock screen transitions to round-intro countdown on display", async 
   });
 
   await expect(
-    hostPage.getByRole("button", { name: "Open Team Briefing" })
+    hostPage.getByRole("button", { name: "Start Eating" })
   ).toBeVisible();
   await expect(hostPage.locator("header").getByText("Round 1 of 6")).toBeVisible();
   await expect(hostPage.getByText("Game starts in")).toHaveCount(0);
 
-  await expect(displayPage.getByText("Coming up")).toBeVisible();
-  await expect(displayPage.getByText("Warm Up")).toBeVisible();
+  // The count-in now hands straight over to the first team's briefing, and the
+  // host rail carries the round's sauce and mini-game the round intro used to.
+  await expect(displayPage.getByText("on the wings")).toBeVisible();
   await expect(displayPage.getByText("Game starts in")).toHaveCount(0);
-  await expect(displayPage.getByText("Frank's")).toBeVisible();
+  await expect(hostPage.locator("header").getByText("Frank's")).toBeVisible();
   await expect(displayPage.getByText("TRIVIA")).toBeVisible();
 
   await context.close();

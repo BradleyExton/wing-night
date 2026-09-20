@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 const DEFAULT_GAME_START_COUNTDOWN_SECONDS = 3;
 const COUNTDOWN_TICK_MS = 1000;
 
+// The count-in belongs to the first screen of the night's first round, which is
+// now the round-one team briefing: INTRO -> MINIGAME_INTRO with the round just
+// turned over to 1. Later rounds reach MINIGAME_INTRO too, and the round check
+// is what keeps them from counting in again.
 export const shouldStartGameStartCountdown = (
   previousPhase: Phase | null,
   currentPhase: Phase | null,
@@ -11,7 +15,7 @@ export const shouldStartGameStartCountdown = (
 ): boolean => {
   return (
     previousPhase === Phase.INTRO &&
-    currentPhase === Phase.ROUND_INTRO &&
+    currentPhase === Phase.MINIGAME_INTRO &&
     currentRound === 1
   );
 };
@@ -19,7 +23,7 @@ export const shouldStartGameStartCountdown = (
 export const shouldCancelGameStartCountdown = (
   currentPhase: Phase | null
 ): boolean => {
-  return currentPhase !== Phase.ROUND_INTRO;
+  return currentPhase !== Phase.MINIGAME_INTRO;
 };
 
 type UseGameStartCountdownProps = {

@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 export const HOST_PRIMARY_ACTION_LABEL =
-  /Lock Teams & Continue|Start Game|Open Team Briefing|Start Eating|Start Mini-Game|End Team Turn|Prepare Next Team|Show Round Results|Start Next Round|Show Final Results|Game Complete|Next Phase/;
+  /Lock Teams & Continue|Start Game|Start Eating|Start Mini-Game|End Team Turn|Prepare Next Team|Show Round Results|Start Next Round|Show Final Results|Game Complete|Next Phase/;
 
 export const hostPrimaryActionButton = (hostPage: Page): Locator => {
   return hostPage.getByRole("button", { name: HOST_PRIMARY_ACTION_LABEL });
@@ -84,18 +84,10 @@ export const lockTeamsFromSetup = async (hostPage: Page): Promise<void> => {
   await expect(hostPage.getByRole("button", { name: "Start Game" })).toBeVisible();
 };
 
+// Starting the game lands straight on the first team's briefing: there is no
+// round intro screen in between any more.
 export const startGameFromIntro = async (hostPage: Page): Promise<void> => {
   await hostPage.getByRole("button", { name: "Start Game" }).click();
-
-  await expect(
-    hostPage.getByRole("button", { name: "Open Team Briefing" })
-  ).toBeVisible();
-};
-
-export const openTeamBriefingFromRoundIntro = async (
-  hostPage: Page
-): Promise<void> => {
-  await hostPage.getByRole("button", { name: "Open Team Briefing" }).click();
 
   await expect(
     hostPage.getByRole("button", { name: "Start Eating" })

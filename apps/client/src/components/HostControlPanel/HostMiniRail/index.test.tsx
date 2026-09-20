@@ -25,7 +25,7 @@ test("renders pre-game label when room state is missing", () => {
 
 test("renders round progress when round metadata is valid", () => {
   const html = renderMiniRail(
-    buildSnapshot(Phase.ROUND_INTRO, { currentRound: 2, totalRounds: 5 })
+    buildSnapshot(Phase.MINIGAME_INTRO, { currentRound: 2, totalRounds: 5 })
   );
 
   assert.match(html, /Round 2 of 5/);
@@ -51,7 +51,7 @@ test("renders pre-game when total rounds metadata is invalid", () => {
   assert.doesNotMatch(html, /Round 1 of 0/);
 });
 
-test("hides round-intro-only sauce and minigame outside ROUND_INTRO", () => {
+test("hides the briefing's sauce and minigame outside MINIGAME_INTRO", () => {
   const html = renderMiniRail(buildSnapshot(Phase.EATING));
 
   assert.doesNotMatch(html, /Frank/);
@@ -87,7 +87,6 @@ test("hides active-team rail data in non-turn phases", () => {
   const nonTurnPhases = [
     Phase.SETUP,
     Phase.INTRO,
-    Phase.ROUND_INTRO,
     Phase.ROUND_RESULTS,
     Phase.FINAL_RESULTS
   ];

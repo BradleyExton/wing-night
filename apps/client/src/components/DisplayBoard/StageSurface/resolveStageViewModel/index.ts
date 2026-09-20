@@ -16,7 +16,6 @@ import { resolveTeamThemeById } from "../../../../utils/resolveTeamTheme";
 export type StageRenderMode =
   | "setup"
   | "setup_locked"
-  | "round_intro"
   | "eating"
   | "minigame_intro"
   | "minigame_play"
@@ -74,7 +73,6 @@ export type StageViewModel = {
 const STAGE_RENDER_MODE_BY_PHASE: Record<Phase, StageRenderMode> = {
   [Phase.SETUP]: "setup",
   [Phase.INTRO]: "setup_locked",
-  [Phase.ROUND_INTRO]: "round_intro",
   [Phase.EATING]: "eating",
   [Phase.MINIGAME_INTRO]: "minigame_intro",
   [Phase.MINIGAME_PLAY]: "minigame_play",

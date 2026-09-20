@@ -6,8 +6,8 @@ type HeaderContext = {
   phaseTitle: string;
   phaseDescription: string;
   roundLabel: string;
-  roundIntroSauce: string | null;
-  roundIntroMinigame: string | null;
+  sauceLabel: string | null;
+  minigameLabel: string | null;
   activeTeamName: string | null;
 };
 
@@ -53,10 +53,16 @@ export const selectHeaderContext = (
       ? hostControlPanelCopy.compactRoundProgressLabel(currentRound, totalRounds)
       : hostControlPanelCopy.headerPreGameLabel;
 
-  const roundIntroSauce =
-    phase === Phase.ROUND_INTRO ? (roomState?.currentRoundConfig?.sauce ?? null) : null;
-  const roundIntroMinigame =
-    phase === Phase.ROUND_INTRO ? (roomState?.currentRoundConfig?.minigame ?? null) : null;
+  // The sauce and the mini-game are what the deleted round intro screen told the
+  // host. They now ride the rail on the beat that replaced it — the briefing,
+  // where the host says both out loud before the team starts eating.
+  const isRoundBriefingPhase = phase === Phase.MINIGAME_INTRO;
+  const sauceLabel = isRoundBriefingPhase
+    ? (roomState?.currentRoundConfig?.sauce ?? null)
+    : null;
+  const minigameLabel = isRoundBriefingPhase
+    ? (roomState?.currentRoundConfig?.minigame ?? null)
+    : null;
 
   const isActiveTeamContextPhase =
     phase === Phase.EATING ||
@@ -76,8 +82,8 @@ export const selectHeaderContext = (
     phaseTitle,
     phaseDescription,
     roundLabel,
-    roundIntroSauce,
-    roundIntroMinigame,
+    sauceLabel,
+    minigameLabel,
     activeTeamName
   };
 };

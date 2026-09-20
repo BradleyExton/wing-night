@@ -201,9 +201,9 @@ test("renders no audio unlock overlay at INTRO", () => {
   );
 });
 
-test("renders no audio unlock overlay at ROUND_INTRO", () => {
+test("renders no audio unlock overlay at MINIGAME_INTRO", () => {
   assert.doesNotMatch(
-    renderAtPhase(Phase.ROUND_INTRO, ANTHEM_TEAM),
+    renderAtPhase(Phase.MINIGAME_INTRO, ANTHEM_TEAM),
     /data-audio-unlock-overlay/
   );
 });

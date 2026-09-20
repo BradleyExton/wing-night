@@ -123,9 +123,7 @@ test("entering EATING clears wing participation from the previous round", () => 
   setWingParticipation("player-1", true);
 
   advanceToRoundResultsPhase(1);
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+  advanceToEatingPhase(2);
 
   const snapshot = getRoomStateSnapshot();
 

@@ -3,7 +3,6 @@ import { expect, test } from "@playwright/test";
 import {
   ensureSetupPhase,
   lockTeamsFromSetup,
-  openTeamBriefingFromRoundIntro,
   startEatingFromBriefing,
   startGameFromIntro,
   startMinigameFromEating
@@ -27,7 +26,6 @@ test("host takeover dock hides the CTA during play and still advances the turn",
   await ensureSetupPhase(hostPage);
   await lockTeamsFromSetup(hostPage);
   await startGameFromIntro(hostPage);
-  await openTeamBriefingFromRoundIntro(hostPage);
 
   // The briefing is still host-driven, so it keeps the full-bleed CTA bar and
   // never grows a corner dock.

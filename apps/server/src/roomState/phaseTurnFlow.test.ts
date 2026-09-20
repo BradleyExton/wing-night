@@ -90,13 +90,13 @@ test("advanceRoomStatePhase transitions setup to intro", () => {
   assert.equal(nextState.currentRound, 0);
 });
 
-test("advanceRoomStatePhase sets currentRound to 1 on INTRO -> ROUND_INTRO", () => {
+test("advanceRoomStatePhase sets currentRound to 1 on INTRO -> MINIGAME_INTRO", () => {
   setupValidTeamsAndAssignments();
 
   advanceRoomStatePhase();
   const nextState = advanceRoomStatePhase();
 
-  assert.equal(nextState.phase, Phase.ROUND_INTRO);
+  assert.equal(nextState.phase, Phase.MINIGAME_INTRO);
   assert.equal(nextState.currentRound, 1);
   assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[0]);
   assert.deepEqual(nextState.turnOrderTeamIds, ["team-1", "team-2"]);
@@ -105,14 +105,14 @@ test("advanceRoomStatePhase sets currentRound to 1 on INTRO -> ROUND_INTRO", () 
   assert.deepEqual(nextState.completedRoundTurnTeamIds, []);
 });
 
-test("advanceRoomStatePhase preserves currentRound after round intro", () => {
+test("advanceRoomStatePhase preserves currentRound into EATING", () => {
   setupValidTeamsAndAssignments();
 
   advanceRoomStatePhase();
   advanceRoomStatePhase();
   const nextState = advanceRoomStatePhase();
 
-  assert.equal(nextState.phase, Phase.MINIGAME_INTRO);
+  assert.equal(nextState.phase, Phase.EATING);
   assert.equal(nextState.currentRound, 1);
   assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[0]);
 });
@@ -124,10 +124,8 @@ test("advanceRoomStatePhase starts an EATING timer with endsAt", () => {
   Date.now = (): number => 50_000;
 
   try {
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    const eatingState = advanceRoomStatePhase();
+    advanceToEatingPhase();
+    const eatingState = getRoomStateSnapshot();
 
     assert.equal(eatingState.phase, Phase.EATING);
     assert.deepEqual(eatingState.timer, {
@@ -147,10 +145,7 @@ test("advanceRoomStatePhase replaces EATING timer when leaving EATING", () => {
   setupValidTeamsAndAssignments(clockPacedGameConfigFixture);
   setRoomStateGeoPrompts(geoPromptFixture);
 
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+  advanceToEatingPhase();
   setWingParticipation("player-1", false);
 
   const nextState = advanceRoomStatePhase();
@@ -167,10 +162,7 @@ test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
   Date.now = (): number => 90_000;
 
   try {
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
+    advanceToEatingPhase();
     setWingParticipation("player-1", false);
     const minigamePlayState = advanceRoomStatePhase();
 
@@ -195,10 +187,7 @@ test("advanceRoomStatePhase clears the timer on MINIGAME_PLAY for a host-paced m
   setupValidTeamsAndAssignments();
   setRoomStateTriviaPrompts(triviaPromptFixture);
 
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
-  advanceRoomStatePhase();
+  advanceToEatingPhase();
   setWingParticipation("player-1", false);
 
   const minigamePlayState = advanceRoomStatePhase();
@@ -242,10 +231,7 @@ test("pauseRoomTimer pauses EATING timer and captures remaining time", () => {
   Date.now = (): number => 100_000;
 
   try {
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
+    advanceToEatingPhase();
   } finally {
     Date.now = originalDateNow;
   }
@@ -268,10 +254,7 @@ test("resumeRoomTimer resumes paused EATING timer with recomputed endsAt", () =>
   Date.now = (): number => 100_000;
 
   try {
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
+    advanceToEatingPhase();
   } finally {
     Date.now = originalDateNow;
   }
@@ -297,10 +280,7 @@ test("extendRoomTimer extends EATING timer while running", () => {
   Date.now = (): number => 100_000;
 
   try {
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
+    advanceToEatingPhase();
   } finally {
     Date.now = originalDateNow;
   }
@@ -322,10 +302,7 @@ test("extendRoomTimer ignores non-integer and over-limit extension values", () =
   Date.now = (): number => 100_000;
 
   try {
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
-    advanceRoomStatePhase();
+    advanceToEatingPhase();
   } finally {
     Date.now = originalDateNow;
   }
@@ -417,7 +394,7 @@ test("advanceRoomStatePhase increments round after ROUND_RESULTS when rounds rem
   advanceUntil(Phase.ROUND_RESULTS, 1);
   const nextState = advanceRoomStatePhase();
 
-  assert.equal(nextState.phase, Phase.ROUND_INTRO);
+  assert.equal(nextState.phase, Phase.MINIGAME_INTRO);
   assert.equal(nextState.currentRound, 2);
   assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[1]);
   assert.equal(nextState.roundTurnCursor, 0);
@@ -425,13 +402,13 @@ test("advanceRoomStatePhase increments round after ROUND_RESULTS when rounds rem
   assert.deepEqual(nextState.completedRoundTurnTeamIds, []);
 });
 
-test("reorderTurnOrder updates round-intro turn order and active team", () => {
+test("reorderTurnOrder updates pre-game turn order and active team", () => {
   setupThreeTeamsAndAssignments();
-  advanceUntil(Phase.ROUND_INTRO, 1);
+  advanceUntil(Phase.INTRO, 0);
 
   const reorderedSnapshot = reorderTurnOrder(["team-3", "team-1", "team-2"]);
 
-  assert.equal(reorderedSnapshot.phase, Phase.ROUND_INTRO);
+  assert.equal(reorderedSnapshot.phase, Phase.INTRO);
   assert.deepEqual(reorderedSnapshot.turnOrderTeamIds, [
     "team-3",
     "team-1",
@@ -442,7 +419,7 @@ test("reorderTurnOrder updates round-intro turn order and active team", () => {
   assert.deepEqual(reorderedSnapshot.completedRoundTurnTeamIds, []);
 });
 
-test("reorderTurnOrder is ignored outside ROUND_INTRO", () => {
+test("reorderTurnOrder is ignored once a round is under way", () => {
   setupThreeTeamsAndAssignments();
   advanceToEatingPhase();
   const beforeMutation = getRoomStateSnapshot();
@@ -479,7 +456,7 @@ test("reorderTurnOrder persists into later rounds and rejects invalid sets", () 
   assignPlayerToTeam("player-1", "team-1");
   assignPlayerToTeam("player-2", "team-2");
   assignPlayerToTeam("player-3", "team-3");
-  advanceUntil(Phase.ROUND_INTRO, 1);
+  advanceUntil(Phase.INTRO, 0);
   reorderTurnOrder(["team-2", "team-3", "team-1"]);
   const orderedSnapshot = getRoomStateSnapshot();
 
@@ -492,15 +469,29 @@ test("reorderTurnOrder persists into later rounds and rejects invalid sets", () 
 
   advanceToRoundResultsPhase(1);
   advanceRoomStatePhase();
-  const nextRoundIntroSnapshot = getRoomStateSnapshot();
+  const nextRoundSnapshot = getRoomStateSnapshot();
 
-  assert.equal(nextRoundIntroSnapshot.phase, Phase.ROUND_INTRO);
-  assert.deepEqual(nextRoundIntroSnapshot.turnOrderTeamIds, [
+  assert.equal(nextRoundSnapshot.phase, Phase.MINIGAME_INTRO);
+  assert.deepEqual(nextRoundSnapshot.turnOrderTeamIds, [
     "team-2",
     "team-3",
     "team-1"
   ]);
-  assert.equal(nextRoundIntroSnapshot.activeRoundTeamId, "team-2");
+  assert.equal(nextRoundSnapshot.activeRoundTeamId, "team-2");
+});
+
+test("reorderTurnOrder at ROUND_RESULTS lands on the round about to start", () => {
+  setupValidTeamsAndAssignments();
+  advanceToRoundResultsPhase(1);
+
+  reorderTurnOrder(["team-2", "team-1"]);
+  const nextRoundSnapshot = advanceRoomStatePhase();
+
+  assert.equal(nextRoundSnapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(nextRoundSnapshot.currentRound, 2);
+  assert.deepEqual(nextRoundSnapshot.turnOrderTeamIds, ["team-2", "team-1"]);
+  assert.equal(nextRoundSnapshot.activeRoundTeamId, "team-2");
+  assert.deepEqual(nextRoundSnapshot.completedRoundTurnTeamIds, []);
 });
 
 test("advanceRoomStatePhase loops team turns before round results", () => {
@@ -638,7 +629,7 @@ test("skipTurnBoundary from last-team MINIGAME_PLAY lands on ROUND_RESULTS witho
 
 test("skipTurnBoundary is ignored outside turn phases", () => {
   setupValidTeamsAndAssignments();
-  advanceUntil(Phase.ROUND_INTRO, 1);
+  advanceUntil(Phase.INTRO, 0);
   const beforeSkip = getRoomStateSnapshot();
 
   skipTurnBoundary();

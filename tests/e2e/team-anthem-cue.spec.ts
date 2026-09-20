@@ -3,7 +3,6 @@ import { expect, test } from "@playwright/test";
 import {
   ensureSetupPhase,
   lockTeamsFromSetup,
-  openTeamBriefingFromRoundIntro,
   startEatingFromBriefing,
   startGameFromIntro
 } from "./hostShell";
@@ -51,7 +50,6 @@ test("display anthem src is an absolute url on the server origin, and stops at E
     timeout: 6_000
   });
 
-  await openTeamBriefingFromRoundIntro(hostPage);
 
   const anthem = displayPage.locator("audio[data-team-anthem]");
 

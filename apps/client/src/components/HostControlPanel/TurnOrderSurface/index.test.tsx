@@ -33,12 +33,12 @@ test("renders editable turn order controls during round intro", () => {
     html,
     /Adjust team order before the round begins\. This order carries into later rounds until changed\./
   );
-  assert.doesNotMatch(html, /Locked until Round Intro/);
+  assert.doesNotMatch(html, /Locked until the round ends/);
   assert.match(html, /Move Up/);
   assert.match(html, /Move Down/);
 });
 
-test("renders locked message and disables controls outside round intro", () => {
+test("renders locked message and disables controls once a round is under way", () => {
   const html = renderToStaticMarkup(
     <TurnOrderSurface
       orderedTeams={teamsFixture}
@@ -47,8 +47,11 @@ test("renders locked message and disables controls outside round intro", () => {
     />
   );
 
-  assert.match(html, /Turn order is locked outside Round Intro\. Open during Round Intro to edit\./);
-  assert.match(html, /Locked until Round Intro/);
+  assert.match(
+    html,
+    /Turn order is locked once a round is under way\. Edit before the game starts or between rounds\./
+  );
+  assert.match(html, /Locked until the round ends/);
   assert.match(html, /disabled=""/);
 });
 

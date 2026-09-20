@@ -12,7 +12,6 @@ export type HostRenderMode =
 const HOST_RENDER_MODE_BY_PHASE: Record<Phase, HostRenderMode> = {
   [Phase.SETUP]: "setup",
   [Phase.INTRO]: "setup_locked",
-  [Phase.ROUND_INTRO]: "compact",
   [Phase.EATING]: "eating",
   [Phase.MINIGAME_INTRO]: "minigame_intro",
   [Phase.MINIGAME_PLAY]: "minigame_play",

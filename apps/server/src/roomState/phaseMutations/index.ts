@@ -54,15 +54,17 @@ export const advanceRoomStatePhase = defineRoomMutation({
 
     roomState.phase = nextPhase;
 
+    // The round counter moves on the way INTO the round's first team briefing —
+    // the beat the deleted round intro screen used to own.
     if (
       previousPhase === Phase.INTRO &&
-      nextPhase === Phase.ROUND_INTRO &&
+      nextPhase === Phase.MINIGAME_INTRO &&
       roomState.currentRound === 0
     ) {
       roomState.currentRound = 1;
     }
 
-    if (previousPhase === Phase.ROUND_RESULTS && nextPhase === Phase.ROUND_INTRO) {
+    if (previousPhase === Phase.ROUND_RESULTS && nextPhase === Phase.MINIGAME_INTRO) {
       roomState.currentRound += 1;
     }
 

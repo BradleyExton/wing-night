@@ -10,7 +10,6 @@ import { MinigameStageBody } from "./MinigameStageBody";
 import { resolveStageViewModel } from "./resolveStageViewModel";
 import type { StageRenderMode, StageViewModel } from "./resolveStageViewModel";
 import { RoundResultsStageBody } from "./RoundResultsStageBody";
-import { RoundIntroStageBody } from "./RoundIntroStageBody";
 import { StageContextHeader } from "./StageContextHeader";
 import { SetupStageBody } from "./SetupStageBody";
 import { TurnResultsStageBody } from "./TurnResultsStageBody";
@@ -50,16 +49,6 @@ const FallbackBody = ({ stageViewModel, phaseLabel }: StageBodyProps): JSX.Eleme
       phaseLabel={phaseLabel}
       hasRoomState={stageViewModel.hasRoomState}
     />
-  );
-};
-
-const RoundIntroBody = (props: StageBodyProps): JSX.Element => {
-  const { stageViewModel } = props;
-
-  return stageViewModel.currentRoundConfig !== null ? (
-    <RoundIntroStageBody currentRoundConfig={stageViewModel.currentRoundConfig} />
-  ) : (
-    <FallbackBody {...props} />
   );
 };
 
@@ -147,7 +136,6 @@ const FinalResultsBody = ({ stageViewModel, leadingTeams }: StageBodyProps): JSX
 const STAGE_BODY_BY_MODE: Record<StageRenderMode, ComponentType<StageBodyProps>> = {
   setup: SetupBody,
   setup_locked: SetupBody,
-  round_intro: RoundIntroBody,
   eating: EatingBody,
   minigame_intro: MinigameIntroBody,
   minigame_play: MinigamePlayBody,
@@ -160,7 +148,6 @@ const STAGE_BODY_BY_MODE: Record<StageRenderMode, ComponentType<StageBodyProps>>
 const FULL_STAGE_MODES: ReadonlySet<StageRenderMode> = new Set([
   "minigame_play",
   "eating",
-  "round_intro",
   "minigame_intro",
   "turn_results",
   "round_results",

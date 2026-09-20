@@ -42,6 +42,18 @@ const initializeActiveMinigameTurnState = (state: RoomState): void => {
   );
 };
 
+// A round now begins the moment its first team is called up, because the round
+// intro screen it used to begin on is gone. MINIGAME_INTRO is reached three
+// ways: from INTRO (round 1), from ROUND_RESULTS (every round after), and from
+// TURN_RESULTS (the next team in the round already running). Only the first two
+// start a round; the third must leave the turn cursor exactly where it is.
+const isRoundStartTransition = (previousPhase: Phase, nextPhase: Phase): boolean => {
+  return (
+    nextPhase === Phase.MINIGAME_INTRO &&
+    (previousPhase === Phase.INTRO || previousPhase === Phase.ROUND_RESULTS)
+  );
+};
+
 const setTimerForPhase = (state: RoomState, nextPhase: Phase): void => {
   if (nextPhase === Phase.EATING) {
     const eatingSeconds = state.gameConfig?.timers.eatingSeconds ?? null;
@@ -68,7 +80,9 @@ export const applyPhaseTransitionEffects = (
   nextPhase: Phase,
   options: ApplyPhaseTransitionEffectsOptions = {}
 ): void => {
-  if (nextPhase === Phase.ROUND_INTRO) {
+  const isRoundStart = isRoundStartTransition(previousPhase, nextPhase);
+
+  if (isRoundStart) {
     initializeRoundTurnState(state);
   }
 
@@ -94,7 +108,7 @@ export const applyPhaseTransitionEffects = (
     clearPendingRoundScores(state);
   }
 
-  if (previousPhase === Phase.ROUND_INTRO && nextPhase === Phase.MINIGAME_INTRO) {
+  if (isRoundStart) {
     resetRoundWingParticipation(state);
   }
 

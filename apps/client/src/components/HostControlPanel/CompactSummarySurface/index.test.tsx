@@ -27,7 +27,7 @@ const playersFixture: Player[] = [
   { id: "player-4", name: "Jules" }
 ];
 
-test("renders standings snapshot during ROUND_INTRO", () => {
+test("renders standings snapshot in the compact view", () => {
   const html = renderToStaticMarkup(
     <CompactSummarySurface
       sortedStandings={standingsFixture}

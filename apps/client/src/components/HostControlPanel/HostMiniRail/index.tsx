@@ -11,16 +11,16 @@ export const HostMiniRail = (): JSX.Element => {
   return (
     <header className={styles.container}>
       <span className={styles.strong}>{headerContext.roundLabel}</span>
-      {headerContext.roundIntroSauce !== null && (
+      {headerContext.sauceLabel !== null && (
         <>
           <span className={styles.divider} aria-hidden />
-          <span className={styles.strong}>{headerContext.roundIntroSauce}</span>
+          <span className={styles.strong}>{headerContext.sauceLabel}</span>
         </>
       )}
-      {headerContext.roundIntroMinigame !== null && (
+      {headerContext.minigameLabel !== null && (
         <>
           <span className={styles.divider} aria-hidden />
-          <span className={styles.strong}>{headerContext.roundIntroMinigame}</span>
+          <span className={styles.strong}>{headerContext.minigameLabel}</span>
         </>
       )}
       {headerContext.activeTeamName !== null && (

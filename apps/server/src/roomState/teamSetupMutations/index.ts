@@ -145,8 +145,12 @@ export const autoAssignRemainingPlayers = defineRoomMutation({
   }
 });
 
+// The two moments a round has not started yet: INTRO before round 1, and
+// ROUND_RESULTS before every round after it. `initializeRoundTurnState` re-reads
+// this order when the round's first team is called up, so an edit here always
+// lands on the round about to be played and never on the one in progress.
 export const reorderTurnOrder = defineRoomMutation({
-  requiredPhase: Phase.ROUND_INTRO,
+  requiredPhase: [Phase.INTRO, Phase.ROUND_RESULTS],
   run: (roomState, teamIds: string[]): boolean => {
     if (!isExactTeamIdSet(teamIds, roomState.teams)) {
       return false;

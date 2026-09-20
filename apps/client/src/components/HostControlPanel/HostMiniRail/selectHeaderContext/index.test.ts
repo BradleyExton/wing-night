@@ -27,16 +27,30 @@ test("returns waiting context when room state is missing", () => {
   assert.equal(context.activeTeamName, null);
 });
 
-test("returns round-intro sauce and minigame context", () => {
+test("returns sauce and minigame context on the team briefing", () => {
   const context = selectHeaderContext(
-    buildSnapshot(Phase.ROUND_INTRO, { currentRound: 2, totalRounds: 5 }),
+    buildSnapshot(Phase.MINIGAME_INTRO, {
+      currentRound: 2,
+      totalRounds: 5,
+      activeRoundTeamId: "team-alpha"
+    }),
     teamNameByTeamId
   );
 
   assert.equal(context.roundLabel, "Round 2 of 5");
-  assert.equal(context.roundIntroSauce, "Frank's");
-  assert.equal(context.roundIntroMinigame, "TRIVIA");
-  assert.equal(context.activeTeamName, null);
+  assert.equal(context.sauceLabel, "Frank's");
+  assert.equal(context.minigameLabel, "TRIVIA");
+  assert.equal(context.activeTeamName, "Team Alpha");
+});
+
+test("drops sauce and minigame context once the round is under way", () => {
+  const context = selectHeaderContext(
+    buildSnapshot(Phase.EATING, { currentRound: 2, totalRounds: 5 }),
+    teamNameByTeamId
+  );
+
+  assert.equal(context.sauceLabel, null);
+  assert.equal(context.minigameLabel, null);
 });
 
 test("prefers active-turn team in MINIGAME_PLAY and falls back to active-round team", () => {

@@ -3,7 +3,6 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   ensureSetupPhase,
   lockTeamsFromSetup,
-  openTeamBriefingFromRoundIntro,
   startEatingFromBriefing,
   startGameFromIntro,
   startMinigameFromEating
@@ -35,7 +34,6 @@ const advanceToEatingMilestone = async (
   await ensureSetupPhase(hostPage);
   await lockTeamsFromSetup(hostPage);
   await startGameFromIntro(hostPage);
-  await openTeamBriefingFromRoundIntro(hostPage);
   await startEatingFromBriefing(hostPage);
 
   // Reload only once a stable milestone surface is up — never mid-countdown, so

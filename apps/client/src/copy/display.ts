@@ -14,8 +14,6 @@ export const displayCopy = {
   stageContextPhaseLabel: (phaseLabel: string): string => `Phase: ${phaseLabel}`,
   stageContextRoundLabel: (roundMetaLabel: string): string => `Round: ${roundMetaLabel}`,
   stageContextTeamLabel: (teamName: string): string => `Team Up: ${teamName}`,
-  roundIntroTitle: (roundNumber: number, label: string): string =>
-    `Round ${roundNumber}: ${label}`,
   phaseContextTitle: (phaseLabel: string): string => `${phaseLabel} in progress`,
   sauceLabel: "Sauce",
   minigameLabel: "Mini-Game",

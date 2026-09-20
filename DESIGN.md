@@ -810,12 +810,14 @@ Host: - Section titles: text-xl to text-2xl - Interactive rows: text-lg+
 
 # 5) Emotional Phase Guidelines
 
-## ROUND_INTRO
+## MINIGAME_INTRO
 
 -   Bold
 -   Dramatic
 -   High contrast
 -   primary accent allowed
+-   Opens the round as well as the turn, so the first briefing of a round
+    carries the weight the round intro screen used to
 
 ## EATING
 

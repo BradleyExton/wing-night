@@ -18,8 +18,6 @@ const primaryActionLabel = (
       return "Lock Teams & Continue";
     case Phase.INTRO:
       return "Start Game";
-    case Phase.ROUND_INTRO:
-      return "Open Team Briefing";
     case Phase.MINIGAME_INTRO:
       return "Start Eating";
     case Phase.EATING:
@@ -42,9 +40,7 @@ const phaseAdvanceHint = (phase: Phase): string => {
     case Phase.SETUP:
       return "Advance when teams are assigned and the room is ready to start.";
     case Phase.INTRO:
-      return "Start game when teams are locked and everyone is ready for Round 1.";
-    case Phase.ROUND_INTRO:
-      return "Advance when the first team is gathered for the round briefing.";
+      return "Set the turn order if needed, then start the game when everyone is ready for Round 1.";
     case Phase.MINIGAME_INTRO:
       return "Call up the active team, brief them, then start eating once they are in place.";
     case Phase.EATING:
@@ -68,8 +64,6 @@ const phaseDescription = (phase: Phase): string => {
       return "Create teams and assign players before starting the game.";
     case Phase.INTRO:
       return "Review locked teams and start the game when the room is ready.";
-    case Phase.ROUND_INTRO:
-      return "Review this round before the first team briefing.";
     case Phase.MINIGAME_INTRO:
       return "Call up the active team and brief them before their turn begins.";
     case Phase.EATING:
@@ -282,8 +276,8 @@ export const hostCopy = {
   turnOrderDescription:
     "Adjust team order before the round begins. This order carries into later rounds until changed.",
   turnOrderLockedDescription:
-    "Turn order is locked outside Round Intro. Open during Round Intro to edit.",
-  turnOrderLockedStatusLabel: "Locked until Round Intro",
+    "Turn order is locked once a round is under way. Edit before the game starts or between rounds.",
+  turnOrderLockedStatusLabel: "Locked until the round ends",
   turnOrderEmptyLabel: "Turn order will appear when teams are available.",
   turnOrderPositionLabel: (index: number, total: number): string =>
     `Team ${index + 1} of ${total}`,

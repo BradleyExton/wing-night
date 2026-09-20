@@ -19,8 +19,7 @@ Excluded:
 ```mermaid
 flowchart TD
   A["SETUP"] --> B["INTRO"]
-  B --> C["ROUND_INTRO"]
-  C --> D["MINIGAME_INTRO (Team n)"]
+  B --> D["MINIGAME_INTRO (Team n)"]
   D --> E["EATING (Team n)"]
   E --> F["MINIGAME_PLAY (Team n)"]
   F --> G["TURN_RESULTS (Team n)"]
@@ -28,7 +27,7 @@ flowchart TD
   H -- Yes --> D
   H -- No --> I["ROUND_RESULTS"]
   I --> J{"More rounds?"}
-  J -- Yes --> C
+  J -- Yes --> D
   J -- No --> K["FINAL_RESULTS"]
   K --> L["Reset Game (Override)"]
   L --> A
@@ -38,17 +37,20 @@ flowchart TD
 | Phase | Host UI mode | Display UI mode | Key controls | Override dock |
 | --- | --- | --- | --- | --- |
 | `SETUP` | Team setup + player assignment surfaces | Setup flow stage + standings | Create team, assign players | Hidden |
-| `INTRO` | Locked setup surfaces (read-only) + `Start Game` action | Locked setup flow stage (`Game Locked In`) + standings | `Start Game` | Hidden |
-| `ROUND_INTRO` | Compact standings snapshot + round context pills | Round intro stage (round/sauce/minigame metadata) + standings | `Open Team Briefing` | Visible, turn-order editable |
-| `MINIGAME_INTRO` | Minigame briefing context for active team | Minigame stage intro context + standings | `Start Eating` | Visible, `Skip Turn` available |
+| `INTRO` | Locked setup surfaces (read-only) + `Start Game` action | Locked setup flow stage (`Game Locked In`) + standings | `Start Game` | Visible, turn-order editable |
+| `MINIGAME_INTRO` | Minigame briefing context for active team; rail carries the round's sauce + mini-game | Minigame stage intro context + standings | `Start Eating` | Visible, `Skip Turn` available |
 | `EATING` | Active-team players + timer controls | Eating stage (active team + timer) + standings | Wing participation, pause/resume/extend timer, `Start Mini-Game` | Visible, `Skip Turn` available |
 | `MINIGAME_PLAY` | Minigame surface (or waiting fallback for non-trivia host view) | Minigame stage play context + standings | `End Team Turn`; trivia rounds also show scoring actions | Visible, `Skip Turn` available |
 | `TURN_RESULTS` | Compact standings snapshot between team turns | Transitional turn-results context + standings | `Prepare Next Team` or `Show Round Results` | Visible, score override / undo / reset |
-| `ROUND_RESULTS` | Compact standings snapshot | Fallback stage (`Round Results in progress`) + updated standings | `Start Next Round` or `Show Final Results` | Visible, score override / undo / reset |
+| `ROUND_RESULTS` | Compact standings snapshot | Fallback stage (`Round Results in progress`) + updated standings | `Start Next Round` or `Show Final Results` | Visible, turn-order editable, score override / undo / reset |
 | `FINAL_RESULTS` | Compact standings snapshot | Fallback stage (`Final Results in progress`) + winner-highlighted standings | Primary action disabled (`Game Complete`) | Visible, reset |
 
 ## Captured Core States
 All screenshots below were captured with Playwright MCP against local sample content (`Team One`, `Team Two`; rounds `TRIVIA`, `GEO`, `DRAWING`).
+
+> **Stale:** these captures predate the removal of the `ROUND_INTRO` phase, so
+> states 05, 06 and 15 show a screen the game no longer has and every state
+> after them is off by one. The whole set needs re-capturing.
 
 ### 01. Setup (Empty)
 | Host | Display |
@@ -171,12 +173,13 @@ All screenshots below were captured with Playwright MCP against local sample con
 | ![24 host](screenshots/core-flows/24-reset-to-setup-host.png) | ![24 display](screenshots/core-flows/24-reset-to-setup-display.png) |
 
 ## Coverage Checklist
-- Global phases covered in captures: `SETUP`, `INTRO`, `ROUND_INTRO`, `MINIGAME_INTRO`, `EATING`, `MINIGAME_PLAY`, `TURN_RESULTS`, `ROUND_RESULTS`, `FINAL_RESULTS`.
+- Global phases covered in captures: `SETUP`, `INTRO`, `MINIGAME_INTRO`, `EATING`, `MINIGAME_PLAY`, `TURN_RESULTS`, `ROUND_RESULTS`, `FINAL_RESULTS`.
 - Team-turn loop shown: first-team and second-team turn states in `MINIGAME_INTRO`, `EATING`, `MINIGAME_PLAY`, and `TURN_RESULTS`.
-- Override/escape hatch states shown: overrides panel open in `ROUND_INTRO`, `ROUND_RESULTS`, `MINIGAME_PLAY`, and `FINAL_RESULTS`; `Skip Turn` path; score override path; reset-to-setup path.
+- Override/escape hatch states shown: overrides panel open in `ROUND_RESULTS`, `MINIGAME_PLAY`, and `FINAL_RESULTS`; `Skip Turn` path; score override path; reset-to-setup path.
 - Host/display pairing coverage: each numbered state includes both host and display screenshots.
 
 ## Notes for Analysis
-- The display route keeps setup visuals for both `SETUP` and `INTRO`, with `INTRO` adding locked-state confirmation and a game-start countdown before round intro context.
-- The host override dock is the consistent escape-hatch surface in all gameplay phases except `SETUP` and `INTRO`.
+- The display route keeps setup visuals for both `SETUP` and `INTRO`, with `INTRO` adding locked-state confirmation and a game-start countdown before the first team briefing.
+- The host override dock is the consistent escape-hatch surface everywhere except `SETUP`.
+- A round has no announcement phase of its own. Its first `MINIGAME_INTRO` is where the round counter turns over, the turn order is read, and wing participation resets.
 - Round flow repeats a per-team turn loop (`MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS`) before aggregating at `ROUND_RESULTS`.

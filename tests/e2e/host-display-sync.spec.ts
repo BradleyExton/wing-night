@@ -3,7 +3,6 @@ import { expect, test } from "@playwright/test";
 import {
   ensureSetupPhase,
   lockTeamsFromSetup,
-  openTeamBriefingFromRoundIntro,
   startEatingFromBriefing,
   startGameFromIntro,
   startMinigameFromEating
@@ -26,16 +25,11 @@ test("display follows host phase advances through the round-1 milestone chain", 
 
   await startGameFromIntro(hostPage);
 
-  // Round intro: let the 3-2-1 countdown finish before asserting the surface.
+  // Team briefing (MINIGAME_INTRO): let the 3-2-1 count-in finish, then the
+  // display announces the team on the wings.
   await expect(displayPage.getByText("Game starts in")).toHaveCount(0, {
     timeout: 6_000
   });
-  await expect(displayPage.getByText("Coming up")).toBeVisible();
-  await expect(displayPage.getByText("Warm Up")).toBeVisible();
-
-  // Team briefing (MINIGAME_INTRO): the display announces the team on the wings.
-  await openTeamBriefingFromRoundIntro(hostPage);
-
   await expect(displayPage.getByText("playing", { exact: true })).toBeVisible();
   await expect(displayPage.getByText("TRIVIA")).toBeVisible();
 

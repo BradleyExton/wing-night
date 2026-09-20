@@ -237,18 +237,21 @@ Global Phases:
 
 1. SETUP
 2. INTRO
-3. ROUND_INTRO
-4. MINIGAME_INTRO
-5. EATING
-6. MINIGAME_PLAY
-7. TURN_RESULTS
-8. ROUND_RESULTS
-9. FINAL_RESULTS
+3. MINIGAME_INTRO
+4. EATING
+5. MINIGAME_PLAY
+6. TURN_RESULTS
+7. ROUND_RESULTS
+8. FINAL_RESULTS
 
-Rounds 1–N repeat phases 3–8 with a per-team loop:
-- `ROUND_INTRO` (once per round)
+Rounds 1–N repeat phases 3–7 with a per-team loop:
 - `MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS` (once per team, in fixed turn order)
 - `ROUND_RESULTS` (once after the last team turn in the round)
+
+A round has no announcement beat of its own: it opens on its first team's
+`MINIGAME_INTRO`, which is where the round counter turns over and the turn
+order is read. The sauce reveals on the TV at `EATING`, where the room is
+about to eat it, and rides the host rail through the briefing.
 
 ---
 
@@ -276,18 +279,8 @@ Host:
 
 Display:
 - Setup flow surface remains visible in locked mode (`Game Locked In`).
-- On host start action, display runs a local 3-second countdown (`3 → 2 → 1`) before revealing round intro context.
-
----
-
-### ROUND_INTRO
-Display:
-- Round number
-- Label
-- Sauce
-- Standings
-
-Host advances → MINIGAME_INTRO
+- On host start action, display runs a local 3-second countdown (`3 → 2 → 1`) before handing over to the first team's briefing.
+- Turn order is editable here, before round one starts.
 
 ---
 
@@ -371,7 +364,7 @@ Goal:
 
 Entry Point:
 - Host UI exposes a persistent `Overrides` trigger in the bottom-right corner.
-- Trigger remains visible in all host gameplay phases (`ROUND_INTRO`, `MINIGAME_INTRO`, `EATING`, `MINIGAME_PLAY`, `TURN_RESULTS`, `ROUND_RESULTS`, `FINAL_RESULTS`).
+- Trigger remains visible in all host gameplay phases (`INTRO`, `MINIGAME_INTRO`, `EATING`, `MINIGAME_PLAY`, `TURN_RESULTS`, `ROUND_RESULTS`, `FINAL_RESULTS`).
 - Trigger shows a visible active-state indicator when any override has pending or non-default state.
 
 Surface Behavior:
