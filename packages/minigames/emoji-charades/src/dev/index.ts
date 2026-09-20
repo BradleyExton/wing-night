@@ -6,6 +6,18 @@ import { createDevManifest } from "@wingnight/minigames-core";
 const DEV_CONTENT = {
   decks: [
     {
+      id: "the-room",
+      label: "People in This Room",
+      subjects: [
+        { id: "alex-m", text: "Alex M" },
+        { id: "kaitlyn", text: "Kaitlyn" },
+        { id: "dan-b", text: "Dan B" },
+        { id: "rosi", text: "Rosi" },
+        { id: "darren-m", text: "Darren M" },
+        { id: "steve-burke", text: "Steve Burke" }
+      ]
+    },
+    {
       id: "movies",
       label: "Movies",
       subjects: [

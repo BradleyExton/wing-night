@@ -1,6 +1,32 @@
 {
   "decks": [
     {
+      "id": "the-room",
+      "label": "People in This Room",
+      "subjects": [
+        { "id": "alex-m", "text": "Alex M" },
+        { "id": "kaitlyn", "text": "Kaitlyn" },
+        { "id": "dan-b", "text": "Dan B" },
+        { "id": "rosi", "text": "Rosi" },
+        { "id": "darren-m", "text": "Darren M" },
+        { "id": "steve-burke", "text": "Steve Burke" },
+        { "id": "sara", "text": "Sara" },
+        { "id": "jaz", "text": "Jaz" },
+        { "id": "dylan", "text": "Dylan" },
+        { "id": "sam", "text": "Sam" },
+        { "id": "rob-barnes", "text": "Rob Barnes" },
+        { "id": "joleeza", "text": "Joleeza" },
+        { "id": "steve-crane", "text": "Steve Crane" },
+        { "id": "tay", "text": "Tay" },
+        { "id": "alex-royce", "text": "Alex Royce" },
+        { "id": "matt", "text": "Matt" },
+        { "id": "ryan", "text": "Ryan" },
+        { "id": "kenny", "text": "Kenny" },
+        { "id": "sean", "text": "Sean" },
+        { "id": "josh-j", "text": "Josh J" }
+      ]
+    },
+    {
       "id": "movies",
       "label": "Movies",
       "subjects": [
