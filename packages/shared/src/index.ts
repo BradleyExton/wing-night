@@ -114,6 +114,33 @@ export type {
   FappyLegRun,
   FappyOutcome
 } from "./fappy/index.js";
+export {
+  SCHLONIC_WORLD,
+  advanceSchlonic,
+  createSchlonicRandom,
+  createSchlonicRunSkip,
+  createSchlonicRunStart,
+  isSchlonicInPit,
+  isSchlonicOverPit,
+  resolveSchlonicGroundSlope,
+  resolveSchlonicGroundY,
+  resolveSchlonicRingTotal,
+  resolveSchlonicTickCap,
+  resolveSchlonicZone,
+  runSchlonicRun,
+  stepSchlonic
+} from "./schlonic/index.js";
+export type {
+  SchlonicFrame,
+  SchlonicInput,
+  SchlonicOutcome,
+  SchlonicPit,
+  SchlonicProp,
+  SchlonicPropKind,
+  SchlonicRun,
+  SchlonicZone,
+  SchlonicZoneCourse
+} from "./schlonic/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
@@ -196,6 +223,13 @@ export type {
   FappyLegStatus,
   FappyMinigameDisplayView,
   FappyMinigameHostView,
+  SchlonicMinigameDisplayView,
+  SchlonicMinigameHostView,
+  SchlonicMinigameRun,
+  SchlonicPhase,
+  SchlonicPlayerFigure,
+  SchlonicRunResult,
+  SchlonicRunStatus,
   FappyMinigameLeg,
   FappyPhase,
   FappyPlayerFigure,

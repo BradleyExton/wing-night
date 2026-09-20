@@ -72,6 +72,12 @@
       "parSeconds": 45,
       "limitSeconds": 120
     },
+    "schlonic": {
+      "runsPerTurn": 3,
+      "zoneSeed": 20260919,
+      "zoneChunks": 22,
+      "parRingsPerRun": 70
+    },
     "recreate": {
       "targetsPerTurn": 1,
       "pointsPerIngredient": 1,

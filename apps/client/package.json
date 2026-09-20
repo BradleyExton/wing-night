@@ -19,6 +19,7 @@
     "@wingnight/minigames-geo": "workspace:*",
     "@wingnight/minigames-joust": "workspace:*",
     "@wingnight/minigames-recreate": "workspace:*",
+    "@wingnight/minigames-schlonic": "workspace:*",
     "@wingnight/minigames-song-guess": "workspace:*",
     "@wingnight/minigames-trivia": "workspace:*",
     "@wingnight/shared": "workspace:*",

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Schlonic mini-game artwork">
+  <defs>
+    <linearGradient id="schlonic-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2aa7e0" />
+      <stop offset="58%" stop-color="#7fd4f0" />
+      <stop offset="100%" stop-color="#bdeafc" />
+    </linearGradient>
+    <linearGradient id="schlonic-soil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8a5a2b" />
+      <stop offset="100%" stop-color="#5b3a1a" />
+    </linearGradient>
+  </defs>
+  <rect width="240" height="180" fill="url(#schlonic-sky)" />
+  <circle cx="206" cy="32" r="17" fill="#ffe066" opacity="0.9" />
+  <ellipse cx="44" cy="28" rx="17" ry="7" fill="#f4fbff" opacity="0.85" />
+  <ellipse cx="56" cy="24" rx="11" ry="6" fill="#f4fbff" opacity="0.85" />
+  <path d="M -20 118 Q 40 72 100 118 Q 160 72 220 118 L 260 180 L -20 180 Z" fill="#7fd4a8" opacity="0.7" />
+  <path d="M -20 136 Q 30 102 80 136 Q 130 102 180 136 Q 220 110 260 136 L 260 180 L -20 180 Z" fill="#4fb87c" opacity="0.85" />
+
+  <!-- The hill, cut by a hole on the right -->
+  <path d="M -10 148 Q 56 106 116 150 L 152 150 L 152 180 L -10 180 Z" fill="url(#schlonic-soil)" />
+  <path d="M -10 148 Q 56 106 116 150 L 152 150" fill="none" stroke="#3fa34d" stroke-width="9" />
+  <path d="M -10 148 Q 56 106 116 150 L 152 150" fill="none" stroke="#63c364" stroke-width="3" />
+  <path d="M 190 150 L 250 150 L 250 180 L 190 180 Z" fill="url(#schlonic-soil)" />
+  <path d="M 190 150 L 250 150" fill="none" stroke="#3fa34d" stroke-width="9" />
+  <path d="M 190 150 L 250 150" fill="none" stroke="#63c364" stroke-width="3" />
+
+  <!-- What the hill is furnished with: one standing, one thorn bed -->
+  <g stroke="#8e2a52" stroke-width="1.4" stroke-linejoin="round">
+    <circle cx="207" cy="145" r="4" fill="#f9a3bc" />
+    <circle cx="217" cy="145" r="4" fill="#f9a3bc" />
+    <path d="M 206 147 C 214 138 216 126 212 116 C 210 110 216 106 220 110 C 225 116 224 134 215 147 Z" fill="#f9a3bc" />
+    <circle cx="216" cy="110" r="7" fill="#f9a3bc" />
+  </g>
+  <circle cx="213" cy="108" r="2.4" fill="#fff7ed" stroke="none" />
+  <circle cx="219.5" cy="108" r="2.4" fill="#fff7ed" stroke="none" />
+  <circle cx="212.6" cy="108.4" r="1.2" fill="#1c0d02" stroke="none" />
+  <circle cx="219.1" cy="108.4" r="1.2" fill="#1c0d02" stroke="none" />
+  <g fill="#d81e5b" stroke="#6d0d2f" stroke-width="1.1">
+    <path d="M 60 140 C 57 132 53 128 50 124 C 47 121 51 117 54 120 C 58 124 63 132 64 140 Z" />
+    <circle cx="52" cy="121" r="4" />
+    <path d="M 70 139 C 69 131 69 126 69 121 C 69 117 74 117 74 121 C 74 127 74 133 74 139 Z" />
+    <circle cx="71.5" cy="119" r="4" />
+    <path d="M 80 140 C 82 132 86 128 89 124 C 92 121 88 117 85 120 C 81 124 77 132 76 140 Z" />
+    <circle cx="87" cy="121" r="4" />
+  </g>
+
+  <!-- Rings over the hole: the greedy line -->
+  <g fill="none" stroke="#ffc300" stroke-width="3.4">
+    <circle cx="146" cy="96" r="7" />
+    <circle cx="168" cy="86" r="7" />
+    <circle cx="192" cy="96" r="7" />
+  </g>
+
+  <!-- The hen, mid-jump and spinning: the cast bird, turned through its own spin -->
+  <g transform="translate(96 90) rotate(-34) scale(0.72) translate(-40 -46)" fill="#f97316" stroke="#1a0c04" stroke-width="2.2" stroke-linejoin="round">
+    <path d="M 22 46 C 10 47 2 41 0 30 C 6 39 14 42 26 41 Z M 22 41 C 11 40 3 33 2 20 C 9 31 15 36 25 36 Z M 24 36 C 14 32 8 24 11 10 C 14 25 19 30 28 31 Z" />
+    <path d="M 16 42 C 16 28 32 22 50 27 C 64 31 67 44 61 55 C 53 65 30 66 21 58 C 16 54 16 48 16 42 Z" />
+    <path d="M 47 13 C 46 5 52 3 54 9 C 55 2 61 2 62 8 C 63 4 68 5 66 13 Z" />
+    <circle cx="58" cy="20" r="12" />
+    <path d="M 69 20 L 79 17 L 69 24 Z" />
+    <path d="M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 Q 28 50 31 54 Q 35 49 38 53 Q 42 48 45 51 C 49 46 51 40 47 35 Z" />
+    <circle cx="57" cy="18" r="3" fill="#fff7ed" stroke="none" />
+    <circle cx="58" cy="18" r="1.5" fill="#1c0d02" stroke="none" />
+  </g>
+
+  <!-- The handful it is carrying, trailing behind -->
+  <g fill="none" stroke="#ffc300" stroke-width="2.6" opacity="0.7">
+    <circle cx="58" cy="106" r="5" />
+    <circle cx="38" cy="116" r="5" />
+  </g>
+</svg>

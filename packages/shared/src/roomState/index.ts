@@ -6,6 +6,7 @@ import type { GeoPrompt } from "../content/geo/index.js";
 import type { JoustPrompt } from "../content/joust/index.js";
 import type { JoustAim, JoustCollapse, JoustTopple, JoustVec2 } from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
+import type { SchlonicInput, SchlonicOutcome } from "../schlonic/types.js";
 import type { SongGuessDifficulty } from "../content/songGuess/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { RoomMusicPlaybackState } from "../musicPlayback/index.js";
@@ -467,12 +468,69 @@ type FappyMinigameViewFields = {
 };
 export type FappyMinigameHostView = MinigameHostViewBase & FappyMinigameViewFields;
 
+export type SchlonicRunStatus = "ready" | "running" | "done";
+
+export type SchlonicPhase = "ready" | "running" | "finished";
+
+// The server's own re-run of one run's input log: the only reading of a run that scores.
+export type SchlonicRunResult = {
+  outcome: SchlonicOutcome;
+  endTick: number;
+  rings: number;
+  distance: number;
+};
+
+// One player as the runner needs them named (the JOUST convention): `avatarSrc` stays
+// pack-relative and the surface resolves it against the server origin; team id and genre are
+// the schlong's colour and the crowd's apparel.
+export type SchlonicPlayerFigure = {
+  playerId: string;
+  name: string;
+  avatarSrc: string | null;
+  teamId: string | null;
+  genre: string | null;
+};
+
+// One player's run at the zone. There is no second attempt: a run ends at the post or it ends
+// where it went wrong, and either way the tablet moves on. The input log is what the display
+// re-runs the shared sim from, and what the server refereed the result out of.
+export type SchlonicMinigameRun = {
+  runIndex: number;
+  // Whose run it is; null runs the house schlong in the team colour.
+  player: SchlonicPlayerFigure | null;
+  status: SchlonicRunStatus;
+  inputs: SchlonicInput[];
+  skipped: boolean;
+  result: SchlonicRunResult | null;
+};
+
+// Nothing about a run is secret — the whole zone is on the TV as it happens — so the host and
+// display carry the same fields, as JOUST and FAPPY do. The zone is a RULE, not a roll: every
+// team in the round runs the same one, so the night is a race rather than a lottery.
+type SchlonicMinigameViewFields = {
+  minigame: "SCHLONIC";
+  phase: SchlonicPhase;
+  runIndex: number;
+  runsPerTurn: number;
+  zoneSeed: number;
+  zoneChunks: number;
+  parRingsPerRun: number;
+  runs: SchlonicMinigameRun[];
+  // What the team has brought home so far, and what it would need for the round's full points.
+  ringsBanked: number;
+  ringsPar: number;
+  points: number | null;
+};
+
+export type SchlonicMinigameHostView = MinigameHostViewBase & SchlonicMinigameViewFields;
+
 export type MinigameHostView =
   | TriviaMinigameHostView
   | GeoMinigameHostView
   | SongGuessMinigameHostView
   | JoustMinigameHostView
   | FappyMinigameHostView
+  | SchlonicMinigameHostView
   | RecreateMinigameHostView
   | DrawingMinigameHostView
   | EmojiCharadesMinigameHostView;
@@ -552,12 +610,15 @@ export type JoustMinigameDisplayView = MinigameDisplayViewBase & JoustMinigameVi
 
 export type FappyMinigameDisplayView = MinigameDisplayViewBase & FappyMinigameViewFields;
 
+export type SchlonicMinigameDisplayView = MinigameDisplayViewBase & SchlonicMinigameViewFields;
+
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView
   | GeoMinigameDisplayView
   | SongGuessMinigameDisplayView
   | JoustMinigameDisplayView
   | FappyMinigameDisplayView
+  | SchlonicMinigameDisplayView
   | RecreateMinigameDisplayView
   | DrawingMinigameDisplayView
   | EmojiCharadesMinigameDisplayView;

@@ -4,6 +4,7 @@ import { fappyRuntimePlugin } from "@wingnight/minigames-fappy/runtime";
 import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
 import { joustRuntimePlugin } from "@wingnight/minigames-joust/runtime";
 import { recreateRuntimePlugin } from "@wingnight/minigames-recreate/runtime";
+import { schlonicRuntimePlugin } from "@wingnight/minigames-schlonic/runtime";
 import { songGuessRuntimePlugin } from "@wingnight/minigames-song-guess/runtime";
 import { triviaRuntimePlugin } from "@wingnight/minigames-trivia/runtime";
 import type { MinigameType } from "@wingnight/shared";
@@ -18,6 +19,7 @@ const runtimePluginByMinigameType: Record<MinigameType, MinigameRuntimePlugin> =
   JOUST: joustRuntimePlugin,
   FAPPY: fappyRuntimePlugin,
   RECREATE: recreateRuntimePlugin,
+  SCHLONIC: schlonicRuntimePlugin,
   DRAWING: drawingRuntimePlugin,
   EMOJI_CHARADES: emojiCharadesRuntimePlugin
 };

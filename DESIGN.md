@@ -538,6 +538,70 @@ it, and the forger — the image model — paints their version next to it.
     italics, ingredient chips that fill `success` as the host ticks, the
     points seal and the real prompt on lock.
 
+## 2.11 SCHLONIC Minigame Surface Language ("Chubby Hill Zone")
+
+The SCHLONIC surfaces are the one place in the night that is supposed to look
+like a 16-bit platformer, and they look like nothing else in the show on
+purpose: a bright morning over a green hill, so the room knows which game it
+is watching from the sofa before a word is read.
+
+-   **The two cast members finally meet, and the hen is the hero.** The runner
+    is the player's own bird (§2.8) — team colour, their generated head, their
+    team's apparel, the same character that parades in the lobby and flies
+    FAPPY's corridor. Everything standing in its way is the cast's schlong
+    (§2.8, the same `resolveSchlongPaths` JOUST fires). The hill is furnished
+    with dicks and a chicken is running through them; that is the joke, and
+    nothing else on screen has to carry it.
+-   Scene materials are their own (`packages/minigames/schlonic/.../palette.ts`):
+    a sky that runs `#2aa7e0` to `#bdeafc`, turf `#3fa34d` over soil `#8a5a2b`,
+    two banks of parallax hills and a row of clouds behind. Rings are `#ffc300`.
+    Drawing content, not UI chrome — exempt from the two-accent budget the way
+    the JOUST arena and the drawing inks are. The letterbox bars around the 16:9
+    world are near-black (`#0d1f14`): they are outside the world, and painting
+    them sky-blue made the hill read as floating.
+-   **Three readings of one creature, told apart at speed.** The schlong is
+    drawn three ways and the room has to know which is which in a glance:
+    *pink with a FACE* is alive, an enemy, and pops when landed on; *crimson,
+    stubby, several of them and no face* is a thorn bed that hurts however you
+    arrive; *pink with a red-and-white PAD strapped over the glans* is a
+    springboard, the only one on your side. The face means alive and the pad
+    means safe — colour alone was never going to carry three meanings.
+-   The bird has no spine to bend, so its pose is how it is turned and how
+    tightly it is tucked: on its feet it runs and leans with the ground, and
+    the moment it leaves the ground it tucks and spins. The spin is the Sonic
+    move and the rule at once — being a ball is what pops a badnik — and both
+    the spin and the step's bob come off the distance travelled, so the tablet
+    and the TV draw the same runner from the same frame with nothing
+    synchronised. The bird turns about the hitbox's own centre; a group inside
+    it stands the cast on that centre and tucks it in, because a spin and a
+    stance are different transforms and neither should know about the other.
+-   **Rings are the score and the health bar at the same time.** That is the
+    whole design, so the tally is the one number both surfaces put in their
+    chrome: the tablet's rail and the TV's marquee, in `gold`. A hit flashes
+    the bird for the sim's own mercy window and bursts a handful of rings out
+    of it; the burst is decoration, and none of it can be caught back.
+-   The zone is generated once per seed and scrolled with a transform, never
+    rebuilt. Rings and popped badniks are hidden through refs as they are
+    taken — a zone carries a couple of hundred of them and the loop runs at
+    60fps — and nothing in the scene is React-driven per frame, which is what
+    keeps a costume head's halo filter rasterised once.
+-   The whole zone is the jump surface (no scroll, no zoom, no text selection):
+    down jumps, and holding climbs higher. The only chrome inside it is a
+    `JUMP / HOLD FOR HEIGHT` legend, bottom-LEFT, because the bottom-right
+    belongs to the host's corner dock (§2.0A).
+-   The display runs a few ticks behind the tablet, so it holds a finished run
+    a little longer than the tablet does and finishes the run it has before it
+    switches: the room always sees the post or the hole, never a cut to the
+    next start line.
+-   Host: rail with the ring tally, the zone as the whole jump surface, a deck
+    of run card (player, banked) → zone-clear card → skip/reset → run list with
+    each run's outcome → totals. Display: marquee (team, "Chubby Hill Zone",
+    run, rings), the zone, a status line; an outcome plaque over the beat and
+    the points plaque once the team is through.
+-   The run is the game: §8's infinite-animation rule does not bite.
+    `prefers-reduced-motion` on the display shows how the run ended, without
+    the running.
+
 ## 2.8 Cast (shared character system)
 
 Every rostered player has a little hen that recurs across the show.
@@ -550,10 +614,10 @@ and `mockups/cast/rig.html` is the shipped drawing taken apart: its parts,
 pivots and every pose as a filmstrip.
 
 The package also owns the other recurring character, the schlong that JOUST
-fires and FAPPY stands in a row: `resolveSchlongPaths` draws one along any
-spine (physics bodies, or a bend a surface made) and `resolveSchlongFace`
-puts the face on it, so the two games are one creature and neither has a
-copy that can drift.
+fires, FAPPY stands in a row and SCHLONIC furnishes a hill with:
+`resolveSchlongPaths` draws one along any spine (physics bodies, or a bend a
+surface made) and `resolveSchlongFace` puts the face on it, so the three games
+are one creature and none has a copy that can drift.
 
 The package exports the bird two ways: `<Character>` for a page, which wraps
 it in its own `<svg>`, and `<CharacterFigure>` for a surface that has an SVG

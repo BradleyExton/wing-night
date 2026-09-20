@@ -21,6 +21,9 @@ import { joustRuntimePlugin } from "@wingnight/minigames-joust/runtime";
 import { recreateRendererBundle } from "@wingnight/minigames-recreate/client";
 import { recreateDevManifest } from "@wingnight/minigames-recreate/dev";
 import { recreateRuntimePlugin } from "@wingnight/minigames-recreate/runtime";
+import { schlonicRendererBundle } from "@wingnight/minigames-schlonic/client";
+import { schlonicDevManifest } from "@wingnight/minigames-schlonic/dev";
+import { schlonicRuntimePlugin } from "@wingnight/minigames-schlonic/runtime";
 import { songGuessRendererBundle } from "@wingnight/minigames-song-guess/client";
 import { songGuessDevManifest } from "@wingnight/minigames-song-guess/dev";
 import { songGuessRuntimePlugin } from "@wingnight/minigames-song-guess/runtime";
@@ -67,6 +70,11 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
     rendererBundle: recreateRendererBundle,
     devManifest: recreateDevManifest,
     runtimePlugin: recreateRuntimePlugin
+  },
+  SCHLONIC: {
+    rendererBundle: schlonicRendererBundle,
+    devManifest: schlonicDevManifest,
+    runtimePlugin: schlonicRuntimePlugin
   },
   DRAWING: {
     rendererBundle: drawingRendererBundle,

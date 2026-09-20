@@ -77,6 +77,9 @@ importers:
       '@wingnight/minigames-recreate':
         specifier: workspace:*
         version: link:../../packages/minigames/recreate
+      '@wingnight/minigames-schlonic':
+        specifier: workspace:*
+        version: link:../../packages/minigames/schlonic
       '@wingnight/minigames-song-guess':
         specifier: workspace:*
         version: link:../../packages/minigames/song-guess
@@ -153,6 +156,9 @@ importers:
       '@wingnight/minigames-recreate':
         specifier: workspace:*
         version: link:../../packages/minigames/recreate
+      '@wingnight/minigames-schlonic':
+        specifier: workspace:*
+        version: link:../../packages/minigames/schlonic
       '@wingnight/minigames-song-guess':
         specifier: workspace:*
         version: link:../../packages/minigames/song-guess
@@ -405,6 +411,40 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 18.3.28
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  packages/minigames/schlonic:
+    dependencies:
+      '@wingnight/cast':
+        specifier: workspace:*
+        version: link:../../cast
+      '@wingnight/minigames-core':
+        specifier: workspace:*
+        version: link:../core
+      '@wingnight/shared':
+        specifier: workspace:*
+        version: link:../../shared
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      '@types/react':
+        specifier: 'catalog:'
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.3.7(@types/react@18.3.28)
+      react:
+        specifier: 'catalog:'
+        version: 18.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 18.3.1(react@18.3.1)
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
