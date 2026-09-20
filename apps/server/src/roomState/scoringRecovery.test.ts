@@ -31,7 +31,10 @@ import {
   advanceToEatingPhase,
   advanceToMinigamePlayPhase,
   advanceToRoundResultsPhase,
+  clockPacedGameConfigFixture,
   gameConfigFixture,
+  geoPromptFixture,
+  setRoomStateGeoPrompts,
   resolveHostPromptCursor,
   resolveHostPromptId,
   setRoomStateTriviaPrompts,
@@ -215,8 +218,11 @@ test("redoLastScoringMutation undoes the latest wing participation mutation", ()
   assert.equal(snapshot.canRedoScoringMutation, false);
 });
 
+// Clock-paced on purpose: the point of the test is that a redo leaves the
+// running MINIGAME_PLAY timer alone, and TRIVIA is host-paced with none.
 test("redoLastScoringMutation restores scoring fields without rewinding phase or timer", () => {
-  setupValidTeamsAndAssignments();
+  setupValidTeamsAndAssignments(clockPacedGameConfigFixture);
+  setRoomStateGeoPrompts(geoPromptFixture);
   advanceToEatingPhase();
 
   setWingParticipation("player-1", true);

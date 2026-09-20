@@ -22,7 +22,12 @@ export const MINIGAME_DEFINITIONS = {
   TRIVIA: {
     id: "TRIVIA",
     slug: "trivia",
-    timerKey: "triviaSeconds",
+    // Host-paced: the turn ends when the team has spent its questions, not
+    // when a clock runs out. A room clock only ever lied here — the host reads
+    // each question aloud and waits on the table, so `triviaSeconds` expired
+    // mid-turn while the verdict buttons stayed live, and a turn that ran out
+    // of questions first went on wearing a countdown nobody was racing.
+    timerKey: null,
     rulesKey: "trivia",
     contractMetadata: {
       minigameApiVersion: MINIGAME_API_VERSION,

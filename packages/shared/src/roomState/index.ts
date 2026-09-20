@@ -538,6 +538,10 @@ export type MinigameHostView =
 export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
   minigame: "TRIVIA";
   promptCursor: number;
+  // Not an answer — a count of questions the team has left. TRIVIA is
+  // host-paced, so the TV has no clock to tell the room the turn is over; the
+  // count reaching zero is the only signal it gets.
+  attemptsRemaining: number;
   currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
 };
 

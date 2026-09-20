@@ -35,7 +35,6 @@ export type ValidGameConfigTimersCheck = Assert<
   IsAssignable<
     {
       eatingSeconds: number;
-      triviaSeconds: number;
       geoSeconds: number;
       drawingSeconds: number;
       emojiCharadesSeconds: number;
@@ -81,7 +80,7 @@ export type InvalidMinigameTypeCheck = Assert<IsAssignable<"RACING", MinigameTyp
 export type MissingRoundMinigameCheck = Assert<IsAssignable<{ round: number; label: string; sauce: string; pointsPerPlayer: number }, GameConfigRound>>;
 
 // @ts-expect-error timers must include drawingSeconds.
-export type MissingTimerFieldCheck = Assert<IsAssignable<{ eatingSeconds: number; triviaSeconds: number; geoSeconds: number }, GameConfigTimers>>;
+export type MissingTimerFieldCheck = Assert<IsAssignable<{ eatingSeconds: number; geoSeconds: number }, GameConfigTimers>>;
 
 // @ts-expect-error Rules entries must be records, not primitives.
 export type NonRecordRulesEntryCheck = Assert<IsAssignable<{ trivia: number }, MinigameRules>>;

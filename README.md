@@ -275,7 +275,7 @@ Defines rounds, sauces, scoring, timers, and scheduled mini-games.
 Up", "sauce": "Frank's", "pointsPerPlayer": 2, "minigame": "TRIVIA" }
 \], "minigameScoring": { "defaultMax": 15, "finalRoundMax": 20 },
 "minigameRules": { "trivia": { "questionsPerTurn": 1 } }, "timers": {
-"eatingSeconds": 120, "triviaSeconds": 30, "geoSeconds": 45,
+"eatingSeconds": 120, "geoSeconds": 45,
 "drawingSeconds": 60 } }
 
 ------------------------------------------------------------------------

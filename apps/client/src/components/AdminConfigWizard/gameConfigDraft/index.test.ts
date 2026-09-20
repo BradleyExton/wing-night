@@ -41,7 +41,6 @@ const buildGameConfig = (): GameConfigFile => ({
   minigameScoring: { defaultMax: 15, finalRoundMax: 20 },
   timers: {
     eatingSeconds: 120,
-    triviaSeconds: 30,
     geoSeconds: 45,
     drawingSeconds: 60,
     emojiCharadesSeconds: 90
@@ -118,9 +117,9 @@ test("renumbers the surviving rounds contiguously when a middle round is removed
 });
 
 test("sets the addressed timer when a clock changes", () => {
-  const edited = setTimer(buildGameConfig(), "triviaSeconds", 45);
+  const edited = setTimer(buildGameConfig(), "geoSeconds", 60);
 
-  assert.equal(edited.timers.triviaSeconds, 45);
+  assert.equal(edited.timers.geoSeconds, 60);
   assert.equal(edited.timers.eatingSeconds, 120);
 });
 

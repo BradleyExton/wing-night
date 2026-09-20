@@ -27,7 +27,6 @@ export const adminCopy = {
     MINIGAME_DEFINITIONS[minigameType].slug,
 
   eatingTimerLabel: "Eating timer (sec)",
-  triviaTimerLabel: "Trivia timer (sec)",
   geoTimerLabel: "Geo timer (sec)",
   drawingTimerLabel: "Drawing timer (sec)",
   emojiCharadesTimerLabel: "Emoji charades timer (sec)",
@@ -105,12 +104,11 @@ export const adminCopy = {
   reviewLineupSeparator: " · ",
   reviewTimersValue: (timers: {
     eatingSeconds: number;
-    triviaSeconds: number;
     geoSeconds: number;
     drawingSeconds: number;
     emojiCharadesSeconds: number;
   }): string =>
-    `eat ${timers.eatingSeconds}s · trivia ${timers.triviaSeconds}s · geo ${timers.geoSeconds}s · draw ${timers.drawingSeconds}s · emoji ${timers.emojiCharadesSeconds}s`,
+    `eat ${timers.eatingSeconds}s · geo ${timers.geoSeconds}s · draw ${timers.drawingSeconds}s · emoji ${timers.emojiCharadesSeconds}s`,
   reviewScoringValue: (defaultMax: number, finalRoundMax: number): string =>
     `max ${defaultMax} · final ${finalRoundMax}`,
   reviewRosterValue: (playerCount: number, teamCount: number): string =>

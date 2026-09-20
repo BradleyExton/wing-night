@@ -32,7 +32,6 @@ const buildSnapshot = (
     minigameRules: { trivia: { questionsPerTurn: 5 }, geo: { promptsPerTurn: 3 } },
     timers: {
       eatingSeconds: 120,
-      triviaSeconds: 30,
       geoSeconds: 45,
       drawingSeconds: 60,
       emojiCharadesSeconds: 90

@@ -4,9 +4,9 @@
 // flex styles degrade gracefully to a plain stack.
 export const container = "flex h-full min-h-0 flex-col gap-[clamp(1rem,2vh,1.5rem)]";
 
-// Right padding keeps the header clear of the absolute timer chip pinned to
-// the takeover's top-right corner.
-export const header = "space-y-3 pr-[clamp(4rem,8vw,7rem)]";
+// TRIVIA is host-paced, so no timer chip is pinned to the takeover's
+// top-right corner and the header gets the full width.
+export const header = "space-y-3";
 
 export const description = "max-w-3xl text-sm leading-6 text-muted";
 
@@ -44,6 +44,18 @@ export const promptValue =
 
 export const answerValue =
   "mt-3 text-[clamp(1.25rem,2.4vw,2.1rem)] font-semibold leading-tight text-text/92";
+
+// The spent turn takes the verdict buttons' place rather than sitting above
+// them greyed out: dimmed CORRECT/INCORRECT still read as controls, and the
+// tablet is in the team's hands, so "there is nothing left to press" has to be
+// the loudest thing on the canvas.
+export const turnComplete =
+  "flex min-h-[clamp(64px,9vh,88px)] flex-col justify-center gap-1 rounded-2xl border border-primary/25 bg-primary/10 px-5 py-4 text-center";
+
+export const turnCompleteTitle =
+  "text-[clamp(1rem,1.4vw,1.3rem)] font-extrabold uppercase tracking-[0.12em] text-text";
+
+export const turnCompleteHint = "text-sm font-medium text-text/80";
 
 export const statusNote =
   "rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-medium text-text/85";

@@ -29,7 +29,10 @@ import {
   advanceToMinigamePlayPhase,
   advanceToRoundResultsPhase,
   advanceUntil,
+  clockPacedGameConfigFixture,
   gameConfigFixture,
+  geoPromptFixture,
+  setRoomStateGeoPrompts,
   setRoomStateTriviaPrompts,
   setupThreeTeamsAndAssignments,
   setupValidTeamsAndAssignments,
@@ -141,7 +144,8 @@ test("advanceRoomStatePhase starts an EATING timer with endsAt", () => {
 });
 
 test("advanceRoomStatePhase replaces EATING timer when leaving EATING", () => {
-  setupValidTeamsAndAssignments();
+  setupValidTeamsAndAssignments(clockPacedGameConfigFixture);
+  setRoomStateGeoPrompts(geoPromptFixture);
 
   advanceRoomStatePhase();
   advanceRoomStatePhase();
@@ -156,7 +160,8 @@ test("advanceRoomStatePhase replaces EATING timer when leaving EATING", () => {
 });
 
 test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
-  setupValidTeamsAndAssignments();
+  setupValidTeamsAndAssignments(clockPacedGameConfigFixture);
+  setRoomStateGeoPrompts(geoPromptFixture);
 
   const originalDateNow = Date.now;
   Date.now = (): number => 90_000;
@@ -173,14 +178,33 @@ test("advanceRoomStatePhase starts minigame timer on MINIGAME_PLAY", () => {
     assert.deepEqual(minigamePlayState.timer, {
       phase: Phase.MINIGAME_PLAY,
       startedAt: 90_000,
-      endsAt: 120_000,
-      durationMs: 30_000,
+      endsAt: 135_000,
+      durationMs: 45_000,
       isPaused: false,
-      remainingMs: 30_000
+      remainingMs: 45_000
     });
   } finally {
     Date.now = originalDateNow;
   }
+});
+
+// A host-paced game's turn ends on the host's word, so the EATING clock is
+// cleared rather than replaced — a countdown the room cannot race is worse
+// than none, which is exactly what TRIVIA used to run.
+test("advanceRoomStatePhase clears the timer on MINIGAME_PLAY for a host-paced minigame", () => {
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  advanceRoomStatePhase();
+  setWingParticipation("player-1", false);
+
+  const minigamePlayState = advanceRoomStatePhase();
+
+  assert.equal(minigamePlayState.phase, Phase.MINIGAME_PLAY);
+  assert.equal(minigamePlayState.timer, null);
 });
 
 test("advanceRoomStatePhase starts next-team EATING timer after TURN_RESULTS -> MINIGAME_INTRO", () => {

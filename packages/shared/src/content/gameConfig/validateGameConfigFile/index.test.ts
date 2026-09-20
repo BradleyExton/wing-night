@@ -22,7 +22,6 @@ const validGameConfig = (): Record<string, unknown> => ({
   minigameScoring: { defaultMax: 10, finalRoundMax: 20 },
   timers: {
     eatingSeconds: 300,
-    triviaSeconds: 60,
     geoSeconds: 60,
     drawingSeconds: 90,
     emojiCharadesSeconds: 90
@@ -94,7 +93,7 @@ test("accumulates every violation rather than stopping at the first", () => {
     name: "",
     rounds: [{ ...validRound(1), label: "", pointsPerPlayer: 0 }],
     minigameScoring: { defaultMax: 0, finalRoundMax: 20 },
-    timers: { eatingSeconds: 300, triviaSeconds: 60, geoSeconds: 60 }
+    timers: { eatingSeconds: 300, geoSeconds: 60 }
   };
 
   assert.deepEqual(pathsOf(validateGameConfigFile(config)), [
@@ -112,7 +111,6 @@ test("reports every missing timer key separately", () => {
 
   assert.deepEqual(pathsOf(issues), [
     "timers.eatingSeconds",
-    "timers.triviaSeconds",
     "timers.geoSeconds",
     "timers.drawingSeconds",
     "timers.emojiCharadesSeconds"

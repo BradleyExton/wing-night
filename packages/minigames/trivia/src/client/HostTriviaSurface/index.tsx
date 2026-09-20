@@ -41,7 +41,10 @@ export const HostTriviaSurface = ({
   const attemptsExhausted = attemptsRemaining <= 0;
   const disableAttemptButtons =
     !isPlayPhase || !canDispatchAction || attemptsExhausted || currentPrompt === null;
-  const shouldRenderQuestionsLeft = isPlayPhase && currentPrompt !== null;
+  // Once the turn is spent the count is the turn-complete panel's job to say,
+  // and "0 questions left" beside it just says it twice.
+  const shouldRenderQuestionsLeft =
+    isPlayPhase && currentPrompt !== null && !attemptsExhausted;
 
   return (
     <div className={styles.container}>
@@ -87,9 +90,16 @@ export const HostTriviaSurface = ({
           <p className={styles.statusNote}>{hostTriviaSurfaceCopy.waitingPromptLabel}</p>
         ) : null}
         {isPlayPhase && attemptsExhausted && (
-          <p className={styles.statusNote}>{hostTriviaSurfaceCopy.turnCompleteLabel}</p>
+          <div className={styles.turnComplete}>
+            <p className={styles.turnCompleteTitle}>
+              {hostTriviaSurfaceCopy.turnCompleteTitle}
+            </p>
+            <p className={styles.turnCompleteHint}>
+              {hostTriviaSurfaceCopy.turnCompleteHint}
+            </p>
+          </div>
         )}
-        {isPlayPhase && (
+        {isPlayPhase && !attemptsExhausted && (
           <div className={styles.actions}>
             <button
               className={styles.correctButton}

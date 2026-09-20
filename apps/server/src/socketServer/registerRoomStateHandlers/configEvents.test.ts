@@ -256,7 +256,6 @@ test("config:apply from a fatal state clears it", () => {
           minigameScoring: { defaultMax: 15, finalRoundMax: 20 },
           timers: {
             eatingSeconds: 120,
-            triviaSeconds: 30,
             geoSeconds: 45,
             drawingSeconds: 60,
             emojiCharadesSeconds: 90

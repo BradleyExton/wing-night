@@ -227,6 +227,31 @@ test("selectDisplayView omits prompt answer while host view includes it", () => 
   assert.equal(JSON.stringify(displayView).includes("Answer 1"), false);
 });
 
+// The TV has no clock for a host-paced game, so the count reaching zero is the
+// room's only sign that the last question on screen is nobody's to answer.
+test("selectDisplayView counts the turn's questions down to zero", () => {
+  let state: SerializableValue = initializeState();
+
+  const attemptsRemainingOf = (current: SerializableValue): number | null => {
+    const displayView = triviaRuntimePlugin.selectDisplayView({
+      state: current,
+      rules: null,
+      content: triviaContentFixture
+    });
+
+    return displayView?.minigame === "TRIVIA" ? displayView.attemptsRemaining : null;
+  };
+
+  assert.equal(attemptsRemainingOf(state), 3);
+
+  state = recordAttempt(state, true).state;
+  assert.equal(attemptsRemainingOf(state), 2);
+
+  state = recordAttempt(state, false).state;
+  state = recordAttempt(state, true).state;
+  assert.equal(attemptsRemainingOf(state), 0);
+});
+
 test("syncPendingPoints replaces the pending points map", () => {
   const state = initializeState();
   const synced = triviaRuntimePlugin.syncPendingPoints?.({

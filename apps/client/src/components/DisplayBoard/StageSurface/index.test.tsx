@@ -146,6 +146,7 @@ test("renders trivia question without answer leakage", () => {
       minigame: "TRIVIA",
       activeTurnTeamId: "team-1",
       promptCursor: 0,
+      attemptsRemaining: 3,
       pendingPointsByTeamId: {},
       currentPrompt: {
         id: "prompt-1",

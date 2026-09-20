@@ -159,7 +159,10 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
   assert.match(html, /Incorrect/);
 });
 
-test("disables trivia attempt controls when attemptsRemaining is exhausted", () => {
+// The tablet is in the team's hands and TRIVIA has no clock, so a spent turn
+// has to say so loudly: the verdict buttons give way to the turn-complete
+// panel rather than sitting there greyed out, still looking like controls.
+test("replaces trivia attempt controls with the turn-complete panel when the questions run out", () => {
   const html = renderHostMarkup(<HostControlPanel />, {
     roomState: buildSnapshot(Phase.MINIGAME_PLAY, {
       minigameHostView: {
@@ -180,8 +183,10 @@ test("disables trivia attempt controls when attemptsRemaining is exhausted", () 
     handlers: { onDispatchMinigameAction: (): void => {} }
   });
 
-  assert.match(html, /<button[^>]*disabled=""[^>]*>Correct<\/button>/);
-  assert.match(html, /<button[^>]*disabled=""[^>]*>Incorrect<\/button>/);
+  assert.doesNotMatch(html, /Correct<\/button>/);
+  assert.doesNotMatch(html, /Incorrect<\/button>/);
+  assert.match(html, /Turn complete/);
+  assert.match(html, /Advance the phase when the room is ready/);
 });
 
 test("renders locked setup deck during INTRO with start-game CTA", () => {

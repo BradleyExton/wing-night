@@ -141,7 +141,6 @@ test("throws when trivia minigame rules are invalid", () => {
       },
       timers: {
         eatingSeconds: 120,
-        triviaSeconds: 30,
         geoSeconds: 45,
         drawingSeconds: 60,
         emojiCharadesSeconds: 90
@@ -197,7 +196,6 @@ test("ignores minigameRules entries that no minigame claims", () => {
       },
       timers: {
         eatingSeconds: 120,
-        triviaSeconds: 30,
         geoSeconds: 45,
         drawingSeconds: 60,
         emojiCharadesSeconds: 90
@@ -234,7 +232,6 @@ test("throws when setup preview round slot count is invalid", () => {
       setupPreviewRoundSlots: 0,
       timers: {
         eatingSeconds: 120,
-        triviaSeconds: 30,
         geoSeconds: 45,
         drawingSeconds: 60,
         emojiCharadesSeconds: 90
@@ -274,7 +271,6 @@ test("throws when setup preview round slot count exceeds the maximum", () => {
       setupPreviewRoundSlots: 1000,
       timers: {
         eatingSeconds: 120,
-        triviaSeconds: 30,
         geoSeconds: 45,
         drawingSeconds: 60,
         emojiCharadesSeconds: 90

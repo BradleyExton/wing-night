@@ -43,11 +43,20 @@ export const gameConfigFixture: GameConfigFile = {
   },
   timers: {
     eatingSeconds: 120,
-    triviaSeconds: 30,
     geoSeconds: 45,
     drawingSeconds: 60,
     emojiCharadesSeconds: 90
   }
+};
+
+// Round 1 is TRIVIA, which is host-paced and owns no clock — a test about the
+// MINIGAME_PLAY timer has to schedule a game that carries one.
+export const clockPacedGameConfigFixture: GameConfigFile = {
+  ...gameConfigFixture,
+  rounds: [
+    { ...gameConfigFixture.rounds[0], minigame: "GEO" },
+    ...gameConfigFixture.rounds.slice(1)
+  ]
 };
 
 export const triviaPromptFixture: TriviaPrompt[] = [

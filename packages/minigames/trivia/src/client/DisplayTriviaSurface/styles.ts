@@ -12,6 +12,10 @@ export const activeTeam =
 
 export const activeTeamLabel = "mr-[0.7em] font-medium text-muted";
 
+// Trails the team name rather than leading it: the room reads who is up
+// first, then that they are done.
+export const turnCompleteTag = "ml-[0.7em] font-medium text-primary";
+
 export const introContainer =
   "flex h-full flex-col items-center justify-center gap-[clamp(1rem,2vw,2rem)] px-[clamp(1rem,3vw,3rem)] py-[clamp(1rem,2vw,2rem)] text-center";
 

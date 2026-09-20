@@ -9,7 +9,9 @@ export const hostTriviaSurfaceCopy = {
   questionLabel: "Question",
   answerLabel: "Answer",
   waitingPromptLabel: "Waiting for the next trivia prompt.",
-  turnCompleteLabel: "This team has finished all trivia questions. Advance when ready.",
+  turnCompleteTitle: "Turn complete",
+  turnCompleteHint:
+    "That's the team's questions. Advance the phase when the room is ready.",
   correctButtonLabel: "Correct",
   incorrectButtonLabel: "Incorrect"
 } as const;

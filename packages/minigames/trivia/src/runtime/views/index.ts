@@ -55,6 +55,7 @@ export const toTriviaDisplayView = (
     activeTurnTeamId:
       state.runtimeState.turnOrderTeamIds[state.runtimeState.activeTurnIndex] ?? null,
     promptCursor: state.runtimeState.promptCursor,
+    attemptsRemaining: resolveAttemptsRemaining(state),
     pendingPointsByTeamId: { ...state.runtimeState.pendingPointsByTeamId },
     currentPrompt:
       currentPrompt === null
