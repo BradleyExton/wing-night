@@ -68,6 +68,15 @@ const PRONG_RISE = 4;
 // A pull shorter than this is a finger resting on the fork, not a draw: no guide for it.
 const PULL_GUIDE_THRESHOLD = 0.03;
 
+/**
+ * The shortest pull that can fold a tower. Below it a leg hit springs back at EVERY angle —
+ * sweeping the aim space against the four shipped lanes put the floor at about 0.65, with zero
+ * collapses under it and a wide band of them above. So this is where a standing tower's legs
+ * start announcing themselves as the target they are: the shot is near-deterministic once it is
+ * pointed at a leg, and the whole difficulty was never knowing there was anything to point at.
+ */
+const LEG_TARGET_PULL = 0.65;
+
 export const JoustArenaScene = ({
   arena,
   frame,
@@ -132,6 +141,7 @@ export const JoustArenaScene = ({
               perch={perch}
               legs={legs.filter((leg) => leg.perchIndex === perchIndex)}
               isRubble={rubble.has(perchIndex)}
+              isAimTarget={pull >= LEG_TARGET_PULL && !rubble.has(perchIndex)}
             />
           ))}
 

@@ -57,6 +57,54 @@ test("does tag a shelf with what it pays and leave a single-point plank untagged
   );
 });
 
+test("does ring a standing tower's legs when the band is drawn hard enough to fold it", () => {
+  const legs = uprightLegs(SHELF);
+
+  assert.doesNotMatch(
+    render(<Perch perch={SHELF} legs={legs} isRubble={false} />),
+    /data-joust-leg-target/,
+    "a slack band marks nothing"
+  );
+
+  const targeted = render(<Perch perch={SHELF} legs={legs} isRubble={false} isAimTarget />);
+  const rings = targeted.match(/<line[^>]*data-joust-leg-target[^>]*>/g) ?? [];
+
+  assert.equal(rings.length, 2, "both legs are the target, not just the near one");
+  assert.match(targeted, /data-joust-leg[^-]/, "the timber itself is still drawn");
+});
+
+test("does paint the strain on a leg a shot is leaning on, and leave an untouched one clean", () => {
+  const upright = uprightLegs(SHELF);
+
+  assert.doesNotMatch(
+    render(<Perch perch={SHELF} legs={upright} isRubble={false} />),
+    /data-joust-leg-strain/,
+    "a tower nothing has touched does not shudder"
+  );
+
+  // A lean the integrator would let spring back: invisible in the timber, loud in the overlay.
+  const [nearLeg, farLeg] = upright;
+  const nudged = [{ ...nearLeg!, top: { x: nearLeg!.top.x + 3, y: nearLeg!.top.y } }, farLeg!];
+  const html = render(<Perch perch={SHELF} legs={nudged} isRubble={false} />);
+  const strained = html.match(/data-joust-leg-strain="([\d.]+)"/g) ?? [];
+
+  assert.equal(strained.length, 1, "only the leg that was hit is strained");
+  assert.match(html, /data-joust-leg-strain="0\.[1-9]/, "the strain is well clear of the floor");
+});
+
+test("does report strain against the leg's own rest height, so a taller tower is not over-read", () => {
+  const lean = (perch: typeof SHELF): number => {
+    const [near, far] = uprightLegs(perch);
+    const html = render(
+      <Perch perch={perch} legs={[{ ...near!, top: { x: near!.top.x + 4, y: near!.top.y } }, far!]} isRubble={false} />
+    );
+
+    return Number(/data-joust-leg-strain="([\d.]+)"/.exec(html)?.[1] ?? 0);
+  };
+
+  assert.ok(lean(HIGH_SHELF) < lean(SHELF), "the same shove leans a long leg proportionally less");
+});
+
 test("does lay a fallen tower flat on the sand as rubble", () => {
   const html = render(<Perch perch={SHELF} legs={[]} isRubble />);
 
