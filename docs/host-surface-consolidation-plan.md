@@ -449,3 +449,16 @@ Re-read this section from disk at the top of every iteration; do not trust memor
   without restarting a game loop. Deferred to BACKLOG.md with line numbers, along with 49 hex literals
   + 1 raw palette class across 7 packages (a design pass, not a config chore). `pnpm lint` exits 0.
   Gate green, e2e 36 passed.
+- [x] T1.7 `e7eb1af` — sandbox host preview now renders the real `TakeoverTimerChip`, composed
+  exactly as `MinigamePlayTakeover` composes it (first child of the `relative flex h-full min-h-0
+  flex-col p-[clamp(1rem,2vw,1.75rem)]` container — the sandbox's `hostCanvas` already carried that
+  identical class string, so no positioning change was needed). New
+  `SandboxStage/resolveSandboxHostRoomState/` builds the minimal `RoomState` the chip reads, sourcing
+  `timerKey` from `resolveMinigameDefinition` the way the shell does: `null` outside play and for the
+  six host-paced games, so the chip truthfully renders nothing; a timer **paused at full duration**
+  (45/60/90s) for GEO/DRAWING/EMOJI_CHARADES, since the sandbox has no gameConfig to count down from
+  and a live value would race the wall clock in a server-rendered test. Colocated tests assert the chip
+  is present for GEO and absent for TRIVIA. Client tests 533 → 538. Gate green, e2e 36 passed.
+
+**Phase 1 complete.** All eight tasks landed green. `pnpm lint` exits 0 with the house rules now
+governing `packages/minigames/*/src/client/**` and `packages/surface/src/**`.
