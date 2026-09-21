@@ -486,3 +486,24 @@ the end of phase 4. P4 accepted — drop `MinigameSurface`'s takeover `overflow-
 **P5, P6 and P7 are pulled into scope**: hide the dock toggle while the override panel is open (T2.3);
 team dots take the team's real colour via `teamThemeByTeamId` (T2.3); "positive verdict first" becomes
 a house rule, with DRAWING's inverted pair fixed in T4.1.
+- [x] T2.2 `2bcd1bc` — `<TakeoverStage>` and `<TakeoverCanvas>` in `packages/surface`, 21 colocated
+  tests. Props are slots only, no flag, no variant, no config object: Stage takes
+  `{rail, clock, counter?, children, deck?, actions?}`, Canvas takes
+  `{rail, clock, counter?, children, actions?, readout?}`. Shell slots required (the game always
+  forwards them), game slots optional. `counter`/`clock` render **bare** into the flex row with no
+  wrapper, which is the mechanism behind the abolished top-right budget — an unfilled slot leaves no
+  element. Bottom-right 4.5rem applied in four places by the layouts; **no gutter token exported**, and
+  a test asserts no export matches `/gutter|dock|reserve/`. Root and body both `relative isolate`;
+  no `z-[1100]`, no `fixed`, no landmark element (protects the `locator("header")` contract).
+  No `copy.ts` — neither layout renders a user-facing string. Deviations: Canvas `actions` max-width
+  uses 4.5rem not GEO's 6rem (§6's "one number" beats §5's citation; 4.5rem still clears the dock's
+  real 42.4px intrusion); chrome insets take GEO's existing `clamp(0.6rem,1.2vw,1rem)`; the deck is a
+  styled slot wrapper, not a third component. Orchestrator independently mutation-tested: stripping
+  `isolate` reddens exactly 1 test, dropping `pr-[4.5rem]` reddens exactly 1, restore returns 21/21 —
+  the tests bite. Gate green; e2e correctly not run (nothing outside `packages/surface`).
+  **Handed to T2.3**: `MinigameHostRendererProps` needs `rail` and `clock` as two separate ReactNode
+  props (not one `chrome` object); `TakeoverTimerChip/styles.ts:4` must lose `absolute right/top z-10`
+  or the §6 mechanism is inert; `SandboxStage/index.tsx:188-190` must move with it or the sandbox
+  resumes lying about the corner; and when P4 drops `overflow-y-auto` from `MinigameSurface`, the
+  sibling `[&>*]:min-h-full` on the same line means the replacement must still hand the layout a
+  full-height box or a short body sits at content height.
