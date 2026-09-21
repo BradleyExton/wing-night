@@ -462,3 +462,19 @@ Re-read this section from disk at the top of every iteration; do not trust memor
 
 **Phase 1 complete.** All eight tasks landed green. `pnpm lint` exits 0 with the house rules now
 governing `packages/minigames/*/src/client/**` and `packages/surface/src/**`.
+- [x] T2.1 `52a5087` — `docs/takeover-layout-api.md`, 650 lines, prose only. Shell owns rail +
+  clock + dock; `resolveActiveTeamName` dies in all nine because `MinigamePlayTakeover:24` currently
+  passes `activeRoundTeamName` (the ROUND's team) where every game wants the TURN's — verified by the
+  orchestrator, and the actual root cause of the nine copies. Slot maps for both layouts; **no
+  bottom-right slot for a control exists**, which is what kills the TRIVIA and RECREATE dock
+  collisions geometrically rather than by nine more hand-typed paddings. Top-right budget abolished,
+  not corrected: the clock is the last item of a flex rail row, so an empty slot takes no width.
+  `packages/surface` deliberately exports NO dock-gutter token (exporting one invites a tenth
+  hand-typed reserve). Four-band z-index scale whose mechanism is `relative isolate` on the body — the
+  game is sandboxed by geometry, not by agreement on numbers; `position: fixed` banned outright
+  because the sandbox's CSS-scaled device frame captures it via the transformed ancestor. §12 is a
+  fact table of every cited string, number and line. Orchestrator spot-checked four claims (all
+  correct) and confirmed the arithmetic reproduces the audit's measured 1227×747 and 887. Gate green;
+  e2e correctly not run (docs only). **Corrected two plan errors**: header assertions are
+  `intro-countdown.spec.ts:149`/`:157` not `:115`/`:122`; override rule is `SPEC.md:380` not `:377`.
+  Seven proposals in §11 flagged for the owner.
