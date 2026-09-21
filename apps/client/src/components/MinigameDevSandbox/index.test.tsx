@@ -24,7 +24,7 @@ test("renders the geo sandbox without leaking answer coordinates", () => {
   const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="GEO" />);
 
   assert.match(html, /Eiffel Tower/);
-  assert.match(html, /Stamp the Guess/);
+  assert.match(html, /Lock it in/);
   assert.doesNotMatch(html, /48\.85837/);
   assert.doesNotMatch(html, /answerLat/);
 });

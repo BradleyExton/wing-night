@@ -57,7 +57,7 @@ test("geo sandbox plays guess, submit, reveal, and next prompt live", async ({
   // Both previews render the first prompt from the live fixture content.
   await expect(page.getByText("Eiffel Tower")).toHaveCount(2);
 
-  const submitButton = page.getByRole("button", { name: "Stamp the Guess" });
+  const submitButton = page.getByRole("button", { name: "Lock it in" });
   await expect(submitButton).toBeDisabled();
 
   // The display preview must not include answer coordinates while guessing.
@@ -65,18 +65,22 @@ test("geo sandbox plays guess, submit, reveal, and next prompt live", async ({
   expect(guessingContent.includes("answerLat")).toBe(false);
   expect(guessingContent.includes("48.85837")).toBe(false);
 
-  // Tapping the host map places a guess, arming the submit button.
-  await page.locator(".leaflet-container").click();
+  // Both surfaces now run a map for the whole turn, so the host's is the first
+  // of the two — a click on the display's theatre map would land nothing.
+  await page.locator(".leaflet-container").first().click();
   await expect(submitButton).toBeEnabled();
+
+  // The team's own pin reaches the TV before the guess is stamped.
+  await expect(page.getByText("is dropping a pin")).toBeVisible();
 
   await submitButton.click();
 
-  // The host result stamps and the display reveal stamps update live.
-  await expect(page.getByText(/km off course|m off course/)).toHaveCount(2);
+  // The host verdict and the display reveal tiles update live.
+  await expect(page.getByText("Off by")).toHaveCount(2);
   await expect(page.getByText(/^\+\d+$/).first()).toBeVisible();
 
   // Advancing moves both previews to the second prompt.
-  await page.getByRole("button", { name: "Turn the Page" }).click();
+  await page.getByRole("button", { name: "Next photo" }).click();
   await expect(page.getByText("Statue of Liberty")).toHaveCount(2);
 
   // Reset restores the freshly initialized state.

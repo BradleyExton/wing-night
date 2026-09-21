@@ -1,86 +1,91 @@
-// The tablet is held in landscape and handed round the table, so the journal
-// page fills the canvas and never scrolls: a fixed header band, then a two
-// column body that grows into whatever height is left.
+// Map First (DESIGN.md §2.4): the chart is the tablet. Everything the host
+// needs floats on it as glass, because the map is the thing a team's thumb is
+// actually working in and a fixed column was taking a third of it.
+//
+// `isolate` keeps Leaflet's own stacking (panes at z-400, controls at z-1000)
+// inside this frame. Without it those layers compete with the host shell's
+// chrome in the same context and the map paints straight over the corner dock.
 export const container =
-  "flex h-full min-h-0 flex-col gap-3 border-2 border-double border-gold/40 bg-surfaceAlt p-4 font-serif";
+  "relative isolate h-full min-h-0 w-full overflow-hidden rounded-2xl border border-text/10 bg-[#0e1419]";
 
-// Right padding keeps the header meta clear of the shell's absolute timer chip.
-export const header =
-  "flex flex-wrap items-baseline gap-x-5 gap-y-1 border-b border-gold/30 pb-2.5 pr-[clamp(9rem,15vw,12rem)]";
-
-export const headerTitle =
-  "m-0 text-xl font-bold uppercase tracking-[0.25em] text-gold";
-
-export const headerMeta = "m-0 ml-auto text-sm italic text-muted";
-
-export const teamLine =
-  "m-0 text-sm font-semibold uppercase tracking-[0.18em] text-text";
-
-export const teamName = "ml-2 text-gold";
+// Intro phase renders inside the deck, where a full-bleed chart would be
+// nonsense — it gets the plain note instead.
+export const introContainer = "flex flex-col gap-3";
 
 export const statusNote =
-  "border border-gold/30 bg-surface px-4 py-3 text-sm italic text-text/85";
+  "rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-medium text-text/85";
 
-// Same note, but it takes the foot of the dossier where the action button was.
-export const dossierNote =
-  "mt-auto border border-gold/30 bg-surface px-4 py-3 text-sm italic text-text/85";
+// Every floating layer rides above Leaflet's controls.
+const floating = "absolute z-[1100]";
 
-// Portrait falls back to a single column; landscape gives the chart the room.
-export const playBody =
-  "grid min-h-0 flex-1 gap-4 md:grid-cols-[minmax(14rem,1fr)_minmax(0,1.9fr)]";
+export const rail = `${floating} left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(0.6rem,1.2vw,1rem)] flex flex-wrap items-center gap-2 pr-[clamp(9rem,15vw,12rem)]`;
 
-// Scrollable only as a portrait safety valve — in landscape the column fits.
-export const dossierColumn = "flex min-h-0 flex-col gap-3 overflow-y-auto";
+const chip =
+  "inline-flex min-h-9 items-center gap-2 rounded-full border border-text/10 bg-bg/85 px-3.5 text-[0.78rem] font-semibold text-muted backdrop-blur";
 
-export const chartColumn = "flex min-h-0 flex-col gap-2";
+export const teamChip = `${chip} border-primary/35 bg-primary/15 text-text`;
 
-// The photo keeps a fixed frame rather than stretching into whatever height is
-// left: a party snapshot filling a tall slab crops to somebody's chin.
-export const polaroid =
-  "relative -rotate-1 flex shrink-0 flex-col border-8 border-text bg-text shadow-xl";
+export const teamChipDot = "h-2.5 w-2.5 shrink-0 rounded-full bg-primary";
 
-export const polaroidPhoto = "aspect-[4/3] w-full object-cover";
+export const counterChip = chip;
 
-export const polaroidCaption =
-  "m-0 shrink-0 px-2 py-1.5 text-center text-sm font-bold italic text-bg";
+export const counterChipValue = "font-extrabold text-text";
 
-export const promptHint = "m-0 shrink-0 text-base italic leading-snug text-muted";
+export const plate = `${floating} left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(3.9rem,7vh,4.6rem)] w-[clamp(14rem,26vw,20rem)] overflow-hidden rounded-[1.25rem] border border-text/15 bg-gradient-to-br from-surfaceAlt to-surface shadow-[0_22px_50px_rgba(0,0,0,0.7)]`;
 
-// `isolate` keeps Leaflet's own stacking (panes at z-400, controls at z-1000)
-// inside this frame. Without it those layers compete with the shell's chrome
-// in the same context and the map paints straight over the host's corner dock.
-export const mapFrame =
-  "isolate min-h-0 flex-1 overflow-hidden border border-gold/40 [&_.leaflet-tile-pane]:sepia [&_.leaflet-tile-pane]:brightness-95";
+export const plateShot = "relative aspect-[4/3]";
+
+export const platePhoto = "h-full w-full object-cover";
+
+export const plateEdge =
+  "pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-primary to-transparent";
+
+export const plateCaption = "flex flex-col gap-1 px-3.5 pb-3 pt-2.5";
+
+export const plateEyebrow =
+  "text-[0.6rem] font-extrabold uppercase tracking-[0.28em] text-primary";
+
+export const plateTitle =
+  "m-0 text-balance text-[clamp(0.95rem,1.7vw,1.15rem)] font-extrabold leading-tight text-text";
+
+export const plateHint = "m-0 text-[0.82rem] leading-snug text-muted";
+
+// Bottom-left, so the turn's one action never sits under the corner dock's
+// gutter and never covers the pin the team just placed.
+export const actionBar = `${floating} bottom-[clamp(0.6rem,1.2vw,1rem)] left-[clamp(0.6rem,1.2vw,1rem)] flex max-w-[calc(100%-6rem)] items-center gap-3`;
+
+const actionButton =
+  "min-h-14 shrink-0 rounded-2xl px-[clamp(1.2rem,3vw,2.2rem)] text-[clamp(0.95rem,1.6vw,1.1rem)] font-black uppercase tracking-[0.12em] transition disabled:cursor-not-allowed disabled:opacity-40";
+
+export const submitButton = `${actionButton} bg-primary text-bg shadow-[0_12px_28px_rgba(249,115,22,0.3)] hover:bg-primary/90 disabled:shadow-none`;
+
+export const nextPromptButton = `${actionButton} border border-text/15 bg-bg/85 text-text backdrop-blur hover:bg-surfaceAlt`;
+
+export const mapInstruction =
+  "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] text-text/75 backdrop-blur";
+
+export const turnCompleteNote = `${floating} bottom-[clamp(0.6rem,1.2vw,1rem)] left-[clamp(0.6rem,1.2vw,1rem)] max-w-[calc(100%-6rem)] rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm font-medium text-text backdrop-blur`;
+
+// Clear of the corner dock (§2.0A): the dock owns a ~4.5rem circle in the
+// bottom-right, so the verdict sits above it rather than under it.
+export const verdict = `${floating} bottom-[clamp(4.9rem,9vh,5.6rem)] right-[clamp(0.6rem,1.2vw,1rem)] flex gap-2.5`;
+
+const tile =
+  "min-w-[8.5rem] rounded-[1.1rem] border px-4 py-2.5 text-right backdrop-blur";
+
+export const distanceTile = `${tile} border-text/10 bg-bg/88`;
+
+export const pointsTile = `${tile} border-primary/40 bg-gradient-to-br from-primary/25 to-primary/[0.07]`;
+
+export const tileLabel =
+  "text-[0.62rem] font-extrabold uppercase tracking-[0.24em] text-muted";
+
+export const tileValue =
+  "mt-1 font-mono text-[clamp(1.5rem,3vw,1.9rem)] font-extrabold leading-none tabular-nums text-text";
+
+export const pointsTileValue = `${tileValue} text-primary`;
+
+export const tileUnit = "ml-[0.3em] text-[0.42em] text-muted";
 
 export const mapFallback =
-  "flex h-full w-full items-center justify-center bg-surface text-sm italic text-muted";
-
-export const mapInstruction = "shrink-0 text-xs italic text-muted";
-
-// mt-auto pins the turn's one action to the foot of the dossier, so it lands
-// in the same place whether or not the exhibit carries a hint.
-const actionButton =
-  "mt-auto min-h-14 w-full shrink-0 px-5 font-serif text-base font-bold uppercase tracking-[0.2em] transition disabled:cursor-not-allowed disabled:opacity-40";
-
-export const submitButton = `${actionButton} border-2 border-gold bg-gold/10 text-gold hover:bg-gold/20`;
-
-export const nextPromptButton = `${actionButton} border-2 border-text/30 bg-surface text-text hover:bg-surface/60`;
-
-// Once the guess is stamped the chart column carries the verdict instead, so
-// the page keeps its shape between guessing and scoring.
-export const resultPanel =
-  "flex min-h-0 flex-1 flex-col items-center justify-center gap-6 border border-gold/30 bg-surface";
-
-// The verdict owns the chart's column, so it is sized to fill it rather than
-// floating small in the middle of an empty frame.
-export const distanceStamp =
-  "inline-block -rotate-3 border-[3px] border-primary px-6 py-3 font-serif text-[clamp(1.35rem,2.8vw,2.4rem)] font-black uppercase tracking-[0.12em] text-primary opacity-90";
-
-export const pointsSeal =
-  "flex h-[clamp(7rem,13vw,11rem)] w-[clamp(7rem,13vw,11rem)] rotate-6 flex-col items-center justify-center rounded-full border-4 border-gold text-gold";
-
-export const pointsSealValue =
-  "font-serif text-[clamp(2rem,4vw,3.5rem)] font-black leading-none";
-
-export const pointsSealLabel =
-  "mt-0.5 text-[0.55rem] font-bold uppercase tracking-[0.3em]";
+  "flex h-full w-full items-center justify-center text-sm text-muted";

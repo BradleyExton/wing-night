@@ -94,6 +94,7 @@ export type ValidGeoMinigameDisplayGuessingViewCheck = Assert<
       promptsPerTurn: number;
       promptsCompletedThisTurn: number;
       currentPrompt: { id: string; title: string; imageSrc: string } | null;
+      currentGuess: { lat: number; lng: number } | null;
       status: "guessing";
     },
     GeoMinigameDisplayView
@@ -109,6 +110,7 @@ export type ValidGeoMinigameDisplaySubmittedViewCheck = Assert<
       promptsPerTurn: number;
       promptsCompletedThisTurn: number;
       currentPrompt: { id: string; title: string; imageSrc: string } | null;
+      currentGuess: { lat: number; lng: number } | null;
       status: "submitted";
       result: {
         guessLat: number;

@@ -83,7 +83,10 @@ export const toGeoDisplayView = (
     pendingPointsByTeamId: { ...state.pendingPointsByTeamId },
     promptsPerTurn: state.promptsPerTurn,
     promptsCompletedThisTurn: state.promptsCompletedThisTurn,
-    currentPrompt: currentPrompt === null ? null : toDisplayPrompt(currentPrompt)
+    currentPrompt: currentPrompt === null ? null : toDisplayPrompt(currentPrompt),
+    // The team's own pin, so the TV can show it land while they argue. The
+    // answer stays behind `isRevealSafe` below.
+    currentGuess: state.currentGuess === null ? null : { ...state.currentGuess }
   };
 
   // Answer coordinates may only leave the server after the guess for this

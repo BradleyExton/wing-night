@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Geo Host — 01 Deck (click to toggle submitted)</title>
+    <style>
+      :root {
+        --bg: #121212; --surface: #1c1c1c; --surface-alt: #242424;
+        --text: #ffffff; --muted: #a3a3a3; --primary: #f97316;
+        --success: #22c55e; --gold: #fbbf24;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100dvh; overflow: hidden; background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        user-select: none; cursor: pointer;
+      }
+      /* Tablet, landscape, never scrolls (DESIGN.md §2.1). */
+      .canvas {
+        height: 100dvh; display: grid; grid-template-rows: auto 1fr;
+        gap: clamp(0.75rem, 1.6vh, 1.25rem); padding: clamp(0.9rem, 1.8vw, 1.5rem);
+      }
+
+      /* Mini-rail — the host shell's own top strip (§2.0A), not a journal masthead. */
+      .rail { display: flex; align-items: center; gap: clamp(0.6rem, 1.2vw, 1rem); flex-wrap: wrap; padding-right: clamp(9rem, 15vw, 12rem); }
+      .chip {
+        display: inline-flex; align-items: center; gap: 0.55rem;
+        border: 1px solid rgba(255,255,255,0.10); background: var(--surface);
+        border-radius: 999px; padding: 0.4rem 0.95rem;
+        font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; color: var(--muted);
+      }
+      .chip b { color: var(--text); font-weight: 800; }
+      .chip .dot { width: 0.6rem; aspect-ratio: 1; border-radius: 999px; background: var(--primary); }
+      .chip.team { border-color: rgba(249,115,22,0.35); background: rgba(249,115,22,0.10); color: var(--text); }
+      .rail .run { margin-left: auto; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); }
+      .rail .run b { color: var(--text); }
+
+      main { display: grid; grid-template-columns: minmax(16rem, 1fr) minmax(0, 1.85fr); gap: clamp(0.75rem, 1.6vw, 1.25rem); min-height: 0; }
+
+      .dossier { display: flex; flex-direction: column; gap: clamp(0.6rem, 1.2vh, 1rem); min-height: 0; }
+      .plate {
+        position: relative; flex: 0 0 auto; aspect-ratio: 4 / 3; overflow: hidden;
+        border-radius: 18px; border: 1px solid rgba(255,255,255,0.10);
+        background: linear-gradient(160deg, var(--surface-alt), var(--surface));
+      }
+      .plate .photo {
+        position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse at 36% 28%, rgba(255,214,150,0.30) 0%, transparent 52%),
+          linear-gradient(170deg, #4a3423 0%, #2b1d16 46%, #17110e 100%);
+      }
+      .plate .photo::after { content: "PARTY PHOTO"; position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,0.16); font-weight: 900; letter-spacing: 0.35em; font-size: 0.68rem; }
+      .plate .edge { position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, transparent, var(--primary), transparent); }
+      .caption { margin: 0; font-size: clamp(1rem, 1.9vw, 1.35rem); font-weight: 800; line-height: 1.15; }
+      .hint { margin: 0; color: var(--muted); font-size: clamp(0.85rem, 1.5vw, 1.05rem); line-height: 1.35; }
+
+      /* One dominant primary action (§6), pinned to the foot of the column. */
+      .cta {
+        margin-top: auto; min-height: 3.75rem; width: 100%; border: 0; border-radius: 16px;
+        background: var(--primary); color: #1a0f04; cursor: pointer;
+        font: inherit; font-size: clamp(0.95rem, 1.6vw, 1.15rem); font-weight: 900;
+        text-transform: uppercase; letter-spacing: 0.12em;
+        box-shadow: 0 10px 24px rgba(249,115,22,0.28);
+      }
+      .cta:disabled { opacity: 0.35; box-shadow: none; cursor: not-allowed; }
+      .cta.secondary { background: var(--surface-alt); color: var(--text); border: 1px solid rgba(255,255,255,0.12); box-shadow: none; }
+      body.submitted .cta.primary-cta { display: none; }
+      .cta.secondary { display: none; }
+      body.submitted .cta.secondary { display: block; }
+
+      .chart { display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+      .mapframe {
+        position: relative; flex: 1; min-height: 0; overflow: hidden; isolation: isolate;
+        border-radius: 18px; border: 1px solid rgba(255,255,255,0.10); background: #0e1419;
+      }
+      /* The z=2 world is square. It is sized to COVER its box and centred, so the
+         map crops at the edges instead of stretching — a stretched Mercator puts
+         the pins in the wrong place. Pins are percentages of this square. */
+      .world { position: absolute; left: 0; top: 50%; width: 100%; aspect-ratio: 1; transform: translateY(-50%); }
+      .tiles { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.92) saturate(0.45); }
+      .tiles img { width: 100%; height: 100%; min-width: 0; min-height: 0; display: block; }
+      .pin { position: absolute; width: 18px; aspect-ratio: 1; border-radius: 999px; transform: translate(-50%, -50%); background: var(--primary); box-shadow: 0 0 0 4px rgba(249,115,22,0.3), 0 0 20px rgba(249,115,22,0.7); }
+      .pin.answer { background: var(--success); box-shadow: 0 0 0 4px rgba(34,197,94,0.3), 0 0 20px rgba(34,197,94,0.7); }
+      .link { position: absolute; inset: 0; }
+
+      /* Quick views, restyled as house chips instead of journal gold-on-glass. */
+      .views { position: absolute; top: 0.7rem; right: 0.7rem; z-index: 2; display: flex; gap: 0.4rem; }
+      .views button {
+        border: 1px solid rgba(255,255,255,0.14); background: rgba(18,18,18,0.86); backdrop-filter: blur(6px);
+        color: var(--text); border-radius: 10px; padding: 0.45rem 0.85rem; cursor: pointer;
+        font: inherit; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.16em;
+      }
+      .views button.on { border-color: rgba(249,115,22,0.5); background: rgba(249,115,22,0.18); color: var(--primary); }
+      .mapnote { flex: 0 0 auto; color: var(--muted); font-size: 0.8rem; padding-right: 5rem; }
+
+      /* Verdict takes the chart column once the pin is stamped. */
+      .verdict { display: none; flex: 1; min-height: 0; flex-direction: column; justify-content: center; gap: clamp(0.7rem, 1.6vh, 1.1rem); border-radius: 18px; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(160deg, var(--surface-alt), var(--surface)); padding: clamp(1rem, 2.4vw, 2rem); }
+      body.submitted .verdict { display: flex; }
+      body.submitted .mapframe, body.submitted .mapnote { display: none; }
+      .vrow { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(0.7rem, 1.4vw, 1.1rem); }
+      .tile { border-radius: 16px; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.03); padding: clamp(0.8rem, 1.8vh, 1.2rem) clamp(0.9rem, 1.8vw, 1.4rem); }
+      .tile .lbl { font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.24em; color: var(--muted); }
+      .tile .val { margin-top: 0.3rem; font-family: ui-monospace, monospace; font-weight: 800; font-size: clamp(1.6rem, 3.6vw, 2.8rem); line-height: 1; font-variant-numeric: tabular-nums; }
+      .tile .val small { font-size: 0.42em; color: var(--muted); margin-left: 0.3em; }
+      .tile.points { border-color: rgba(249,115,22,0.35); background: linear-gradient(160deg, rgba(249,115,22,0.16), rgba(249,115,22,0.04)); }
+      .tile.points .val { color: var(--primary); }
+      .vmap { position: relative; flex: 1; min-height: 0; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+
+      /* The corner dock the shell owns during MINIGAME_PLAY (§2.0A). */
+      .dock { position: fixed; right: 1.1rem; bottom: 1.1rem; width: 3.4rem; aspect-ratio: 1; border-radius: 999px; background: var(--surface-alt); border: 1px solid rgba(255,255,255,0.14); display: grid; place-items: center; color: var(--muted); font-size: 1.2rem; z-index: 9; }
+    </style>
+  </head>
+  <body onclick="document.body.classList.toggle('submitted')">
+    <div class="canvas">
+      <div class="rail">
+        <span class="chip"><b>R3</b>&nbsp;Scorpion Sting</span>
+        <span class="chip">Geo</span>
+        <span class="chip team"><span class="dot"></span>Molten Metal</span>
+        <span class="run">Photo <b>1</b> / 2</span>
+      </div>
+
+      <main>
+        <div class="dossier">
+          <div class="plate"><div class="photo"></div><div class="edge"></div></div>
+          <p class="caption">Wings and Robes</p>
+          <p class="hint">“Long before there was a scoreboard”</p>
+          <button class="cta primary-cta" type="button">Drop the pin</button>
+          <button class="cta secondary" type="button">Next photo</button>
+        </div>
+
+        <div class="chart">
+          <div class="mapframe">
+            <div class="views"><button class="on" type="button">World</button><button type="button">Barrie</button></div>
+            <div class="world">
+  <div class="tiles">
+                <img src="https://tile.openstreetmap.org/2/0/0.png" alt="" /><img src="https://tile.openstreetmap.org/2/1/0.png" alt="" /><img src="https://tile.openstreetmap.org/2/2/0.png" alt="" /><img src="https://tile.openstreetmap.org/2/3/0.png" alt="" />
+                <img src="https://tile.openstreetmap.org/2/0/1.png" alt="" /><img src="https://tile.openstreetmap.org/2/1/1.png" alt="" /><img src="https://tile.openstreetmap.org/2/2/1.png" alt="" /><img src="https://tile.openstreetmap.org/2/3/1.png" alt="" />
+                <img src="https://tile.openstreetmap.org/2/0/2.png" alt="" /><img src="https://tile.openstreetmap.org/2/1/2.png" alt="" /><img src="https://tile.openstreetmap.org/2/2/2.png" alt="" /><img src="https://tile.openstreetmap.org/2/3/2.png" alt="" />
+                <img src="https://tile.openstreetmap.org/2/0/3.png" alt="" /><img src="https://tile.openstreetmap.org/2/1/3.png" alt="" /><img src="https://tile.openstreetmap.org/2/2/3.png" alt="" /><img src="https://tile.openstreetmap.org/2/3/3.png" alt="" />
+              </div>
+              <span class="pin" style="left:50.7%; top:34.4%"></span>
+        </div>
+        </div>
+          <p class="mapnote">Tap the map to place your pin. Tap again to move it.</p>
+
+          <div class="verdict">
+            <div class="vrow">
+              <div class="tile"><div class="lbl">Off by</div><div class="val">5,904<small>km</small></div></div>
+              <div class="tile points"><div class="lbl">Points</div><div class="val">+180</div></div>
+            </div>
+            <div class="vmap">
+              <div class="world">
+  <div class="tiles">
+                  <img src="https://tile.openstreetmap.org/2/0/0.png" alt="" /><img src="https://tile.openstreetmap.org/2/1/0.png" alt="" /><img src="https://tile.openstreetmap.org/2/2/0.png" alt="" /><img src="https://tile.openstreetmap.org/2/3/0.png" alt="" />
+                  <img src="https://tile.openstreetmap.org/2/0/1.png" alt="" /><img src="https://tile.openstreetmap.org/2/1/1.png" alt="" /><img src="https://tile.openstreetmap.org/2/2/1.png" alt="" /><img src="https://tile.openstreetmap.org/2/3/1.png" alt="" />
+                  <img src="https://tile.openstreetmap.org/2/0/2.png" alt="" /><img src="https://tile.openstreetmap.org/2/1/2.png" alt="" /><img src="https://tile.openstreetmap.org/2/2/2.png" alt="" /><img src="https://tile.openstreetmap.org/2/3/2.png" alt="" />
+                  <img src="https://tile.openstreetmap.org/2/0/3.png" alt="" /><img src="https://tile.openstreetmap.org/2/1/3.png" alt="" /><img src="https://tile.openstreetmap.org/2/2/3.png" alt="" /><img src="https://tile.openstreetmap.org/2/3/3.png" alt="" />
+                </div>
+                <svg class="link" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <line x1="50.7" y1="34.4" x2="27.8" y2="36.2" stroke="#a3a3a3" stroke-width="0.4" stroke-dasharray="1.6 1.6" vector-effect="non-scaling-stroke" />
+                </svg>
+                <span class="pin" style="left:50.7%; top:34.4%"></span>
+                <span class="pin answer" style="left:27.8%; top:36.2%"></span>
+        </div>
+        </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <div class="dock">⋯</div>
+  </body>
+</html>

@@ -383,6 +383,40 @@ test("display view never exposes answer coordinates while guessing", () => {
   );
 });
 
+// Map Theatre (DESIGN.md §2.4) puts the chart on the TV for the whole turn, so
+// the room watches the pin land. The pin is the team's own input and carries no
+// disclosure; the answer beside it would.
+test("display view carries the team's in-progress pin but not the answer", () => {
+  const state = initializeState();
+  const placed = reduce(state, "setGuess", { lat: 10, lng: 20 });
+
+  const openView = geoRuntimePlugin.selectDisplayView({
+    state,
+    rules: null,
+    content: geoContentFixture
+  });
+
+  assert.equal(
+    openView?.minigame === "GEO" ? openView.currentGuess : undefined,
+    null
+  );
+
+  const pinnedView = geoRuntimePlugin.selectDisplayView({
+    state: placed.state,
+    rules: null,
+    content: geoContentFixture
+  });
+
+  assert.deepEqual(
+    pinnedView?.minigame === "GEO" ? pinnedView.currentGuess : undefined,
+    { lat: 10, lng: 20 }
+  );
+  assert.equal(
+    pinnedView?.minigame === "GEO" ? pinnedView.status : undefined,
+    "guessing"
+  );
+});
+
 test("display view reveals the result only for the submitted prompt", () => {
   const state = initializeState();
   const placed = reduce(state, "setGuess", { lat: 48.8, lng: 2.3 });

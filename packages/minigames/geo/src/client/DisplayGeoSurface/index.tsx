@@ -2,13 +2,14 @@ import { lazy, Suspense, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import { resolveContentAssetSrc, type GeoMinigameDisplayView } from "@wingnight/shared";
 
+import { resolvePhotoNumber } from "../resolvePhotoNumber/index.js";
 import { displayGeoSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
 // Leaflet touches window at module scope, so the map only loads in browsers.
-const GeoRevealMap = lazy(() =>
-  import("./GeoRevealMap/index.js").then((module) => ({
-    default: module.GeoRevealMap
+const GeoTheatreMap = lazy(() =>
+  import("./GeoTheatreMap/index.js").then((module) => ({
+    default: module.GeoTheatreMap
   }))
 );
 
@@ -19,45 +20,67 @@ type GeoDisplayResult = Extract<
   { status: "submitted" }
 >["result"];
 
-const DossierShell = ({ children }: { children: ReactNode }): JSX.Element => (
-  <div className={styles.stage}>
-    <div className={styles.frame}>
-      <header className={styles.header}>
-        <p className={styles.headerTitle}>{displayGeoSurfaceCopy.dossierTitle}</p>
-        <p className={styles.headerMeta}>{displayGeoSurfaceCopy.dossierSubtitle}</p>
-      </header>
-      {children}
+const Marquee = ({
+  activeTeamName,
+  pendingPoints,
+  counterLabel
+}: {
+  activeTeamName: string | null;
+  pendingPoints: number | null;
+  counterLabel: string | null;
+}): JSX.Element => (
+  <header className={styles.marquee}>
+    <span className={styles.marqueeBulbs} aria-hidden="true" />
+    <div className={styles.marqueeTeam}>
+      {activeTeamName !== null && (
+        <p className={styles.marqueeTeamName}>{activeTeamName}</p>
+      )}
+      {pendingPoints !== null && (
+        <span className={styles.marqueeTeamPoints}>{pendingPoints}</span>
+      )}
     </div>
-  </div>
+    <div className={styles.marqueeTitle}>{displayGeoSurfaceCopy.showTitle}</div>
+    <div className={styles.marqueeCounter}>{counterLabel}</div>
+  </header>
 );
 
-const GeoRevealNotes = ({ result }: { result: GeoDisplayResult }): JSX.Element => (
-  <>
-    <div className={styles.resultRow}>
-      <span className={styles.distanceStamp}>
-        {displayGeoSurfaceCopy.distanceStamp(result.distanceKm)}
-      </span>
-      <span className={styles.pointsSeal}>
-        <span className={styles.pointsSealValue}>
-          {displayGeoSurfaceCopy.pointsSealValue(result.pointsAwarded)}
+const GeoResultReadout = ({ result }: { result: GeoDisplayResult }): ReactNode => {
+  const distance = displayGeoSurfaceCopy.distanceValue(result.distanceKm);
+
+  return (
+    <>
+      <div className={styles.resultRow}>
+        <div className={styles.distanceTile}>
+          <div className={styles.tileLabel}>
+            {displayGeoSurfaceCopy.distanceLabel}
+          </div>
+          <div className={styles.tileValue}>
+            {distance.value}
+            <span className={styles.tileUnit}>{distance.unit}</span>
+          </div>
+        </div>
+        <div className={styles.pointsTile}>
+          <div className={styles.tileLabel}>
+            {displayGeoSurfaceCopy.pointsLabel}
+          </div>
+          <div className={styles.pointsTileValue}>
+            {displayGeoSurfaceCopy.pointsValue(result.pointsAwarded)}
+          </div>
+        </div>
+      </div>
+      <div className={styles.legendRow}>
+        <span className={styles.legendEntry}>
+          <span className={styles.legendGuessDot} aria-hidden="true" />
+          {displayGeoSurfaceCopy.guessPinLabel}
         </span>
-        <span className={styles.pointsSealLabel}>
-          {displayGeoSurfaceCopy.pointsSealLabel}
+        <span className={styles.legendEntry}>
+          <span className={styles.legendAnswerDot} aria-hidden="true" />
+          {displayGeoSurfaceCopy.answerPinLabel}
         </span>
-      </span>
-    </div>
-    <div className={styles.legendRow}>
-      <span className={styles.legendEntry}>
-        <span className={styles.legendGuessDot} aria-hidden="true" />
-        {displayGeoSurfaceCopy.guessPinLabel}
-      </span>
-      <span className={styles.legendEntry}>
-        <span className={styles.legendAnswerDot} aria-hidden="true" />
-        {displayGeoSurfaceCopy.answerPinLabel}
-      </span>
-    </div>
-  </>
-);
+      </div>
+    </>
+  );
+};
 
 export const DisplayGeoSurface = ({
   phase,
@@ -71,10 +94,32 @@ export const DisplayGeoSurface = ({
   const isPlayPhase = phase === "play";
   const result =
     geoDisplayView?.status === "submitted" ? geoDisplayView.result : null;
+  const activeTurnTeamId = geoDisplayView?.activeTurnTeamId ?? null;
+  const pendingPoints =
+    activeTurnTeamId === null
+      ? null
+      : (geoDisplayView?.pendingPointsByTeamId[activeTurnTeamId] ?? null);
+  const promptsPerTurn = geoDisplayView?.promptsPerTurn ?? 0;
+  const counterLabel =
+    isPlayPhase && promptsPerTurn > 0
+      ? displayGeoSurfaceCopy.photoCounter(
+          resolvePhotoNumber({
+            promptsCompletedThisTurn: geoDisplayView?.promptsCompletedThisTurn ?? 0,
+            promptsPerTurn,
+            isSubmitted: result !== null
+          }),
+          promptsPerTurn
+        )
+      : null;
 
-  if (!isPlayPhase || currentPrompt === null) {
+  if (!isPlayPhase || currentPrompt === null || geoDisplayView === null) {
     return (
-      <DossierShell>
+      <div className={styles.stage}>
+        <Marquee
+          activeTeamName={activeTeamName}
+          pendingPoints={pendingPoints}
+          counterLabel={counterLabel}
+        />
         <div className={styles.idleBody}>
           <p className={styles.idleText}>
             {isPlayPhase
@@ -82,60 +127,74 @@ export const DisplayGeoSurface = ({
               : displayGeoSurfaceCopy.introMessage}
           </p>
         </div>
-      </DossierShell>
+      </div>
     );
   }
 
+  // Before the guess is stamped the TV knows the team's pin but not the answer,
+  // so the theatre map draws one pin and holds the world. Both arrive together
+  // at the reveal and it closes on them.
+  const guess =
+    result === null
+      ? geoDisplayView.currentGuess
+      : { lat: result.guessLat, lng: result.guessLng };
+  const answer =
+    result === null ? null : { lat: result.answerLat, lng: result.answerLng };
+
   return (
-    <DossierShell>
-      <div className={styles.body}>
-        <div className={styles.postcard}>
-          {result === null ? (
+    <div className={styles.stage}>
+      <Marquee
+        activeTeamName={activeTeamName}
+        pendingPoints={pendingPoints}
+        counterLabel={counterLabel}
+      />
+
+      <div className={styles.arena}>
+        <div className={styles.mapLayer}>
+          {isBrowser && (
+            <Suspense fallback={null}>
+              <GeoTheatreMap guess={guess} answer={answer} />
+            </Suspense>
+          )}
+        </div>
+        <div className={styles.vignette} aria-hidden="true" />
+
+        <div className={styles.plate}>
+          <div className={styles.plateShot}>
             <img
-              className={styles.postcardPhoto}
+              className={styles.platePhoto}
               // Party photos live in the content pack and are served by the
               // server; the sample pack's placeholder art is served by Vite and
               // passes through untouched.
               src={resolveContentAssetSrc(currentPrompt.imageSrc, serverOrigin) ?? ""}
               alt={currentPrompt.title}
             />
-          ) : (
-            <div className={styles.postcardMap}>
-              {isBrowser && (
-                <Suspense fallback={null}>
-                  <GeoRevealMap
-                    guess={{ lat: result.guessLat, lng: result.guessLng }}
-                    answer={{ lat: result.answerLat, lng: result.answerLng }}
-                  />
-                </Suspense>
-              )}
-            </div>
-          )}
-          <span className={styles.postmark}>
-            {displayGeoSurfaceCopy.postmarkLabel}
-          </span>
+            <span className={styles.plateEdge} aria-hidden="true" />
+          </div>
+          <div className={styles.plateCaption}>
+            <span className={styles.plateEyebrow}>
+              {displayGeoSurfaceCopy.eyebrow}
+            </span>
+            <p className={styles.plateTitle}>{currentPrompt.title}</p>
+            {currentPrompt.hint !== undefined && (
+              <p className={styles.plateHint}>
+                {displayGeoSurfaceCopy.hintLabel(currentPrompt.hint)}
+              </p>
+            )}
+          </div>
         </div>
-        <div className={styles.notes}>
-          <p className={styles.noteTitle}>{currentPrompt.title}</p>
-          <span className={styles.noteRule} aria-hidden="true" />
-          {result === null ? (
-            <>
-              {currentPrompt.hint !== undefined && (
-                <p className={styles.noteHint}>
-                  {displayGeoSurfaceCopy.hintLabel(currentPrompt.hint)}
-                </p>
-              )}
-              {activeTeamName !== null && (
-                <p className={styles.noteTeam}>
+
+        <div className={styles.readout}>
+          {result === null
+            ? activeTeamName !== null && (
+                <span className={styles.status}>
+                  <span className={styles.statusDot} aria-hidden="true" />
                   {displayGeoSurfaceCopy.plottingStatus(activeTeamName)}
-                </p>
-              )}
-            </>
-          ) : (
-            <GeoRevealNotes result={result} />
-          )}
+                </span>
+              )
+            : <GeoResultReadout result={result} />}
         </div>
       </div>
-    </DossierShell>
+    </div>
   );
 };

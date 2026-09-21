@@ -194,6 +194,10 @@ type GeoMinigameDisplayView = {
   activeTurnTeamId: string | null;
   pendingPointsByTeamId: Record<string, number>;
   currentPrompt: { id: string; title: string; imageSrc: string; hint?: string } | null;
+  // The team's own in-progress pin, so the TV can show it land while they
+  // argue (DESIGN.md §2.4, "Map Theatre"). Not a disclosure — the pin is the
+  // room's own input. The ANSWER coords still wait for `submitted`.
+  currentGuess: { lat: number; lng: number } | null;
 } & (
   | {
       status: "guessing";
@@ -222,21 +226,26 @@ Do **not** add separate `GeoMinigameDisplayViewGuessing` / `GeoMinigameDisplayVi
 
 Passed to the active team during their turn. Must be thumb-friendly.
 
-- Prompt photo card + hint + active team name.
-- Progress indicator (e.g. "Prompt 2 of 3").
-- Clickable Leaflet map (OpenStreetMap tiles, no API key) with marker placement. Clicking overwrites the current marker.
-- Quick views in the map's top-right corner (`World`, `Barrie`) that fly the chart between the whole world and the home town, since the night's photos are either around Barrie or nowhere near it. The list lives in `leafletConstants`.
-- Submit button (enabled once a guess is placed).
-- Post-submit: result card with distance and points awarded. Host advances to next prompt explicitly.
-- Laid out for a tablet held in landscape and never scrolls: header band, then a fixed-width dossier column (photo, hint, the turn's one action) beside the chart, which takes the rest of the canvas. See DESIGN.md §2.4.
+"Map First" (DESIGN.md §2.4): the map is the whole tablet and everything else floats on it as glass. Laid out for landscape, never scrolls.
+
+- Clickable Leaflet map (OpenStreetMap tiles, no API key) filling the canvas, with marker placement. Clicking overwrites the current marker. Tiles are inverted to the show's dark palette; Leaflet's own zoom control is off.
+- Rail chips top-left: active team, photo counter ("Photo 2 / 3").
+- Prompt photo card + hint below the rail.
+- A house control strip on the right edge — quick views (`World`, `Barrie`, from `leafletConstants`) plus zoom, since the night's photos are either around Barrie or nowhere near it. Right edge because the tablet's top-right belongs to the shell's timer chip and its bottom-right to the corner dock (§2.0A).
+- Submit button bottom-left (enabled once a guess is placed), with the tap instruction beside it.
+- Post-submit: the answer pin and the connecting line are drawn on the same chart the team just pinned, and `Off by` / `Points` tiles sit bottom-right, clear of the dock's gutter. Host advances to the next prompt explicitly.
 
 ### Display surface (`packages/minigames/geo/src/client/DisplayGeoSurface`)
 
 On the shared room display. Read-only.
 
-- Prompt photo + hint. Location title is the hero text.
-- During guessing: status text only, no map.
-- After submit: Leaflet map showing both pins (guess + answer) with a connecting line, distance label, points awarded, and location title as the headline.
+"Map Theatre" (DESIGN.md §2.4): the marquee row every minigame wears, and under it the dark chart as the arena for the whole turn.
+
+- Marquee: active team + pending points, `GEO`, photo counter.
+- The map runs the whole turn. While the guess is open it holds the world and breathes the team's pin, which reaches the TV through `currentGuess`. The room watches the pin move.
+- Prompt photo + title + hint ride in a corner card bottom-left.
+- During guessing: a "<team> is dropping a pin" status pill bottom-right.
+- After submit: the answer pin appears, the map closes on the pair with a connecting line, and the status pill is replaced by `Off by` / `Points` tiles plus a pin legend.
 
 ## 7) Dependencies
 

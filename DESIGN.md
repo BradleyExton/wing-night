@@ -226,35 +226,66 @@ bar across the bottom of the screen. `DisplayBoard/StandingsSurface`; the slab's
 -   Team-turn context in these phases is active-team only (no turn-progress label).
 -   Display context is informational only; it must not expose host-only answer data.
 
-## 2.4 GEO Minigame Surface Language ("Field Journal")
+## 2.4 GEO Minigame Surface Language ("Map Theatre" + "Map First")
 
-The GEO minigame's host and display surfaces use a vintage-expedition
-"Field Journal" look, distinct from the broadcast shell that frames them:
+GEO used to wear a vintage-expedition "Field Journal" costume — serif
+type, gold double-rule frames, sepia tiles, a rotated polaroid, a
+postmark, and reveal stats as rubber stamps — deliberately distinct from
+the broadcast shell around it. It was retired on 2026-09-21: it was the
+only minigame in the night dressed as something else, and on a dark TV
+the sepia basemap read as a white rectangle. GEO now wears the same kit
+as DRAWING, EMOJI_CHARADES, JOUST, FAPPY and SCHLONIC. Directions:
+`apps/client/public/mockups/geo-display/03-map-theatre.html` and
+`geo-host/02-map-first.html`.
 
--   Serif typography throughout GEO surfaces (Tailwind `font-serif`);
-    hints render as italic quoted field notes.
--   `gold` is permitted on GEO surfaces as the dossier framing accent
-    (double-rule frames, header rules, postmark, points seal). This is a
-    scoped exception to the §0.1 "winner moments only" rule; outside GEO
-    surfaces the §0.1 rule stands.
--   `primary` is the rubber-stamp accent (distance "off course" stamp).
-    Together with gold that is the 2-accent budget; no heat/team tokens
-    inside GEO surfaces.
--   Photos and reveal maps sit in white-bordered, slightly rotated
-    postcard/polaroid frames. Map tiles are sepia-filtered to match.
--   Reveal stats are stamps, not stat cards: rotated bordered distance
-    stamp + circular gold points seal.
--   The host page is laid out for a tablet held in landscape and never
-    scrolls: a one-line header band, then two columns — a fixed-width
-    dossier (the polaroid at a 4:3 frame, the hint, and the turn's single
-    action pinned to its foot) beside the chart, which takes the rest of
-    the canvas. Once the guess is stamped the chart column carries the
-    verdict, so the page keeps its shape between guessing and scoring.
--   The chart carries quick views in its top-right corner — `World` and
-    `Barrie` — because the night's photos are either around the home town
-    or nowhere near it, and panning between the two by hand was the
-    slowest part of a turn. They are journal chrome (gold on glass), not
-    Leaflet controls, and they live in `leafletConstants`.
+-   **Sans typography and the house card.** No `font-serif` anywhere on
+    these surfaces, no `gold` framing, no rotation, and nothing that
+    reads as paper. The §0.1 scoped gold exception GEO used to hold is
+    gone; `gold` appears only where every other minigame puts it — the
+    marquee. Accent budget is `gold` (marquee) plus `primary` (the live
+    mark, the CTA, the points tile), with `success` functional on the
+    answer pin.
+-   **Dark map tiles.** OSM only publishes a light basemap, so the tile
+    pane is inverted and hue-rotated back (`.geo-map-dark` in
+    `index.css`, applied via `client/mapTheme`). This replaces the sepia
+    filter and is what makes the chart belong on the stage. A second
+    tile provider was rejected: a LAN party may not be able to reach one.
+-   **Leaflet's own chrome never ships.** `zoomControl` is off on both
+    surfaces — its white browser buttons are exactly the foreign
+    furniture this language exists to remove. The tablet draws its own
+    control strip instead, and the required OSM attribution is restyled
+    rather than hidden.
+-   **Reveal stats are stat tiles**, the shape the rest of the show uses
+    for a number worth reading: an `Off by` tile and a `primary` `Points`
+    tile. Not stamps, not seals, not rotated. The number and its unit are
+    sized separately (`client/formatGeoDistance`).
+-   **Display — "Map Theatre".** Marquee row on top (team + pending
+    points, `GEO`, photo counter), and under it the dark chart as the
+    arena for the *whole* turn, not just the reveal. The photo rides in a
+    corner card bottom-left; the live status pill, then the reveal tiles
+    and pin legend, ride bottom-right. The room watches the pin land
+    while the table argues, and the reveal is the answer pin appearing
+    and the map closing on the pair.
+-   **This costs a projection.** `GeoMinigameDisplayView.currentGuess`
+    carries the team's in-progress pin to the TV. It is the room's own
+    input, already on the tablet in front of them — not a disclosure. The
+    answer coordinates stay host-only until the guess is locked in, which
+    is what the answer-safety tests pin.
+-   **Host — "Map First".** The chart is the tablet. Rail chips (team,
+    photo counter) float top-left, the photo card under them, the turn's
+    one `primary` CTA bottom-left with the tap instruction beside it, and
+    the verdict tiles bottom-right *above* the corner dock's gutter. The
+    map keeps the whole canvas instead of a third of it, which is the
+    thing a team's thumb is actually working in.
+-   **Quick views stay**, restyled as house glass on the right edge with
+    the zoom buttons — `World` and `Barrie`, because the night's photos
+    are either around the home town or nowhere near it, and panning
+    between the two by hand was the slowest part of a turn. They live in
+    `leafletConstants`. The right edge, because the tablet's top-right
+    belongs to the shell's timer chip and its bottom-right to the dock.
+-   **The reveal happens on the chart the team just pinned**, on both
+    surfaces — the tablet no longer swaps its map out for a verdict
+    panel.
 
 ## 2.5 DRAWING Minigame Surface Language ("Showtime Easel")
 
@@ -270,7 +301,9 @@ under game-show marquee chrome.
     surfaces only.
 -   `gold` is the marquee/framing accent (prompt card, bulb-dotted
     marquee, pending-points chips, palette frame) — a scoped exception
-    to the §0.1 "winner moments only" rule, like GEO's §2.4 exception.
+    to the §0.1 "winner moments only" rule. Every minigame marquee holds
+    the same exception; GEO's §2.4 once held a wider one and no longer
+    does.
 -   Verdict controls are green/red gradient buttons with check/cross
     icons (host) and matching reveal plaques (display) — functional
     success/danger usage per §0.1.
@@ -308,8 +341,8 @@ under the same bulb marquee DRAWING uses.
     Got It / Skip are green/red gradient buttons — functional
     success/danger per §0.1, not decorative accents.
 -   `gold` as a framing accent on these surfaces is a scoped exception to
-    the §0.1 "winner moments only" rule, like GEO's §2.4 and DRAWING's
-    §2.5 exceptions. Outside these surfaces the §0.1 rule stands.
+    the §0.1 "winner moments only" rule, like DRAWING's §2.5 exception.
+    Outside these surfaces the §0.1 rule stands.
 -   The subject card reuses DRAWING's prompt-card treatment — serif
     italic on a `#3A1D09` → `#1A0C04` panel inside a gold border — so the
     two minigames read as the same show.
@@ -415,7 +448,7 @@ marquee chrome the drawing easel uses:
     is the rotation, so nothing in the scene needs an angle.
 -   `gold` is the marquee/framing accent (marquee border, pending points,
     the impact burst, the result plaque) — a scoped exception to the §0.1
-    "winner moments only" rule, like GEO's §2.4 and DRAWING's §2.5.
+    "winner moments only" rule, like DRAWING's §2.5.
 -   Host layout reuses the §2.0A shell language: mini-rail strip on top,
     full-height lane left (the touch surface), control deck column right
     (shot card + standing count → result → Next shot → skip/reset → shot

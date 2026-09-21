@@ -16,7 +16,7 @@ export const takeoverCanvas =
 
 // Column flex so the minigame's own container stretches to the full canvas
 // width and can resolve h-full/flex-1 against a real height.
-// Children fill the canvas but may grow beyond it (e.g. GEO's journal page),
-// in which case the takeover scrolls instead of bleeding under the CTA bar.
+// Children fill the canvas but may grow beyond it, in which case the takeover
+// scrolls instead of bleeding under the CTA bar.
 export const takeoverInner =
   "flex min-h-0 flex-1 flex-col overflow-y-auto [&>*]:min-h-full";

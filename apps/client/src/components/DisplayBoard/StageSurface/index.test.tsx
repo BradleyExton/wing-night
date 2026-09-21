@@ -163,7 +163,7 @@ test("renders GEO waiting state in MINIGAME_PLAY before the projected view arriv
     }
   });
 
-  assert.match(html, /Awaiting the next dispatch from the field/);
+  assert.match(html, /Waiting for the next photo/);
 });
 
 test("renders GEO guessing surface without leaking answer coordinates", () => {
@@ -186,13 +186,17 @@ test("renders GEO guessing surface without leaking answer coordinates", () => {
         imageSrc: "/sample-assets/geo/eiffel-tower.svg",
         hint: "Iron lady of a European capital"
       },
+      // The team's own pin reaches the TV while the guess is still open; the
+      // answer must not.
+      currentGuess: { lat: 12.5, lng: 34.5 },
       status: "guessing"
     }
   });
 
   assert.match(html, /Eiffel Tower/);
+  assert.match(html, /Where was this taken\?/);
   assert.match(html, /“Iron lady of a European capital”/);
-  assert.match(html, /expedition is plotting coordinates/);
+  assert.match(html, /is dropping a pin/);
   assert.doesNotMatch(html, /48\.85837/);
   assert.doesNotMatch(html, /answerLat/);
 });
@@ -216,6 +220,7 @@ test("renders GEO reveal stats after the guess is submitted", () => {
         title: "Eiffel Tower",
         imageSrc: "/sample-assets/geo/eiffel-tower.svg"
       },
+      currentGuess: { lat: 48.8, lng: 2.35 },
       status: "submitted",
       result: {
         guessLat: 48.8,
@@ -229,7 +234,8 @@ test("renders GEO reveal stats after the guess is submitted", () => {
   });
 
   assert.match(html, /Eiffel Tower/);
-  assert.match(html, /7\.7 km off course/);
+  assert.match(html, /Off by/);
+  assert.match(html, /7\.7/);
   assert.match(html, /\+2/);
 });
 

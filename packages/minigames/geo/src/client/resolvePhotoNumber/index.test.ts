@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveExhibitNumber } from "./index.js";
+import { resolvePhotoNumber } from "./index.js";
 
-test("names the exhibit on the page while its guess is still open", () => {
+test("names the photo on screen while its guess is still open", () => {
   assert.equal(
-    resolveExhibitNumber({
+    resolvePhotoNumber({
       promptsCompletedThisTurn: 0,
       promptsPerTurn: 3,
       isSubmitted: false
@@ -14,7 +14,7 @@ test("names the exhibit on the page while its guess is still open", () => {
   );
 
   assert.equal(
-    resolveExhibitNumber({
+    resolvePhotoNumber({
       promptsCompletedThisTurn: 2,
       promptsPerTurn: 3,
       isSubmitted: false
@@ -23,11 +23,11 @@ test("names the exhibit on the page while its guess is still open", () => {
   );
 });
 
-// The reveal beat: the guess is scored but the page has not turned, so the
-// header must still name the exhibit whose result the room is looking at.
-test("keeps naming the scored exhibit while its result is on the page", () => {
+// The reveal beat: the guess is scored but the turn has not moved on, so the
+// counter must still name the photo whose result the room is looking at.
+test("keeps naming the scored photo while its result is on screen", () => {
   assert.equal(
-    resolveExhibitNumber({
+    resolvePhotoNumber({
       promptsCompletedThisTurn: 1,
       promptsPerTurn: 3,
       isSubmitted: true
@@ -36,7 +36,7 @@ test("keeps naming the scored exhibit while its result is on the page", () => {
   );
 
   assert.equal(
-    resolveExhibitNumber({
+    resolvePhotoNumber({
       promptsCompletedThisTurn: 3,
       promptsPerTurn: 3,
       isSubmitted: true
@@ -45,9 +45,9 @@ test("keeps naming the scored exhibit while its result is on the page", () => {
   );
 });
 
-test("never counts past the turn's last exhibit or below the first", () => {
+test("never counts past the turn's last photo or below the first", () => {
   assert.equal(
-    resolveExhibitNumber({
+    resolvePhotoNumber({
       promptsCompletedThisTurn: 3,
       promptsPerTurn: 3,
       isSubmitted: false
@@ -56,7 +56,7 @@ test("never counts past the turn's last exhibit or below the first", () => {
   );
 
   assert.equal(
-    resolveExhibitNumber({
+    resolvePhotoNumber({
       promptsCompletedThisTurn: 0,
       promptsPerTurn: 3,
       isSubmitted: true

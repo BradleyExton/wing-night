@@ -98,11 +98,17 @@ export type GeoMinigameDisplayResult = {
   pointsAwarded: number;
 };
 
+// `currentGuess` is the team's own in-progress pin, projected so the TV can
+// show it land while the table argues. It is not a disclosure: the pin is the
+// room's own input, already on the tablet in front of them. The ANSWER
+// coordinates stay host-only until the guess is locked in, which is what the
+// answer-safety tests pin.
 export type GeoMinigameDisplayView = MinigameDisplayViewBase & {
   minigame: "GEO";
   promptsPerTurn: number;
   promptsCompletedThisTurn: number;
   currentPrompt: GeoMinigameDisplayPrompt | null;
+  currentGuess: GeoGuessCoordinates | null;
 } & (
     | { status: "guessing" }
     | { status: "submitted"; result: GeoMinigameDisplayResult }

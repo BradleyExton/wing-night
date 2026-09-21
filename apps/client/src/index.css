@@ -1010,3 +1010,44 @@ body {
     animation: none !important;
   }
 }
+
+/* GEO's chart is the one surface in the show that paints third-party raster
+   tiles, and OSM only ships a light basemap. Inverting it and rotating the hue
+   back gives a slate map that belongs on a dark stage (DESIGN.md §2.4) without
+   adding a second tile provider a LAN party may not be able to reach. */
+.geo-map-dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9)
+    saturate(0.5);
+}
+
+/* Leaflet draws its own attribution as black on opaque white, which reads as a
+   torn corner on the TV. It stays legible — OSM's licence requires it — but in
+   the show's colours. */
+.geo-map-dark .leaflet-control-attribution {
+  background: rgba(18, 18, 18, 0.72);
+  color: #6b6157;
+}
+.geo-map-dark .leaflet-control-attribution a {
+  color: #a3a3a3;
+}
+
+/* The in-progress pin breathes so the room can pick it out of a whole world
+   while the table is still arguing. Fill only — a transform would move an SVG
+   path out of the pane's coordinate space rather than scale it in place.
+   `.geo-map-live` is only on the TV's map while the guess is open, and the
+   team's pin is the one path on it. */
+@keyframes geo-pin-pulse {
+  50% {
+    fill-opacity: 0.2;
+  }
+}
+.geo-map-live .leaflet-interactive {
+  animation: geo-pin-pulse 1.8s ease-in-out infinite;
+}
+
+/* §8 ambient rule: the breathing pin is decoration; the pin itself is not. */
+@media (prefers-reduced-motion: reduce) {
+  .geo-map-live .leaflet-interactive {
+    animation: none !important;
+  }
+}
