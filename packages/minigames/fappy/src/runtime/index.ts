@@ -152,14 +152,21 @@ const finish = (
   receivedAtMs: number,
   pointsMax: number
 ): FappyRuntimeState => {
-  const startedAtMs = state.startedAtMs ?? receivedAtMs;
   const finished: FappyRuntimeState = {
     ...state,
-    startedAtMs,
     finishedAtMs: receivedAtMs,
     legIndex: state.legsPerTurn
   };
-  const points = resolveFinishPoints(receivedAtMs - startedAtMs, finished, pointsMax);
+  // A relay whose clock never started is one nobody flew: `startedAtMs` is set
+  // by the first flap of the turn and by nothing else, so a null here means
+  // every leg was skipped. It used to fall back to `receivedAtMs`, which made
+  // the elapsed time zero — and zero is under par, so skipping the whole relay
+  // paid the full round. The escape hatch scores nothing instead, which is the
+  // bargain JOUST's `skipShot` and SCHLONIC's `skipRun` already make.
+  const points =
+    state.startedAtMs === null
+      ? 0
+      : resolveFinishPoints(receivedAtMs - state.startedAtMs, finished, pointsMax);
 
   return { ...finished, pendingPointsByTeamId: withTurnPoints(finished, points, pointsMax) };
 };

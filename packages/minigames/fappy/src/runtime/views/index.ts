@@ -24,9 +24,17 @@ export const resolveFappyPhase = (state: FappyRuntimeState): FappyPhase => {
 
 // A cleared leg counts every gate; the leg in hand counts up to its
 // checkpoint, which is the last gate its bird got behind and stayed behind.
+//
+// A SKIPPED leg reaches `cleared` too — that is what moves the relay on — but
+// nobody flew it, so it counts what its bird actually got past rather than the
+// full course. Counting it whole had the TV reporting every gate cleared on a
+// relay nobody played, and inflated the timeout share, which is scaled by
+// exactly this number.
 export const resolveTotalGatesCleared = (state: FappyRuntimeState): number => {
   return state.legs.reduce((total, leg) => {
-    return total + (leg.status === "cleared" ? state.gatesPerLeg : leg.checkpointGate);
+    const flewTheWholeLeg = leg.status === "cleared" && !leg.skipped;
+
+    return total + (flewTheWholeLeg ? state.gatesPerLeg : leg.checkpointGate);
   }, 0);
 };
 

@@ -343,7 +343,36 @@ test("does forgive a leg with skipLeg and move the relay on", () => {
   const finished = dispatch(skipped.state, "skipLeg", {}, T0 + 1000);
 
   assert.equal(hostView(finished.state).phase, "finished");
-  assert.equal(hostView(finished.state).points, 18);
+  assert.equal(hostView(finished.state).points, 0);
+});
+
+// The escape hatch used to pay the full round: `finish` fell back to the
+// action's own timestamp when the clock had never started, and an elapsed time
+// of zero is comfortably under par. A relay nobody flew scores nothing, and
+// reports no time and no gates rather than a clean sweep of them.
+test("does score nothing when every leg is skipped and no bird ever flew", () => {
+  const skipped = dispatch(initialize(), "skipLeg", {}, T0);
+  const finished = dispatch(skipped.state, "skipLeg", {}, T0 + 1000);
+  const view = hostView(finished.state);
+
+  assert.equal(view.points, 0);
+  assert.equal(view.totalGatesCleared, 0);
+  assert.equal(view.startedAtMs, null);
+  assert.equal(view.elapsedMs, null);
+});
+
+// A skip only forgives the leg it is spent on: a team that actually flew the
+// rest of the relay is still paid for the time it took.
+test("does still pay for time when a flown relay ends on a skipped leg", () => {
+  const flown = clearCurrentLeg(initialize(), T0);
+  const finished = dispatch(flown, "skipLeg", {}, T0 + 1000);
+  const view = hostView(finished.state);
+
+  assert.equal(view.phase, "finished");
+  assert.equal(view.points, 18);
+  assert.equal(view.elapsedMs, 1000);
+  // The flown leg's three gates; the skipped one contributes none.
+  assert.equal(view.totalGatesCleared, RULES.gatesPerLeg);
 });
 
 test("does reset the turn to the start line with the points it started with", () => {
