@@ -41,7 +41,8 @@ import {
   setRoomMusicVolume,
   setWingParticipation,
   skipRoomMusicTrack,
-  skipTurnBoundary
+  skipTurnBoundary,
+  startGame
 } from "../../roomState/index.js";
 import {
   isGameReorderTurnOrderPayload,
@@ -148,6 +149,9 @@ const defineAuthorizedEvent = <TEvent extends HostSecretEventName>(
 const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
   defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, isHostSecretPayload, () =>
     advanceRoomStatePhase()
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.START_GAME, isHostSecretPayload, () =>
+    startGame()
   ),
   defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.SKIP_TURN_BOUNDARY, isHostSecretPayload, () =>
     skipTurnBoundary()

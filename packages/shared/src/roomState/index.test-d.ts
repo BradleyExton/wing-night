@@ -151,6 +151,7 @@ export type ValidRoomStateCheck = Assert<
       minigameHostView: RoomState["minigameHostView"];
       minigameDisplayView: RoomState["minigameDisplayView"];
       timer: RoomState["timer"];
+      gameStartCountdownEndsAt: number | null;
       musicPlayback: RoomState["musicPlayback"];
       musicVolume: number;
       wingParticipationByPlayerId: Record<string, boolean>;
@@ -186,6 +187,7 @@ export type DisplaySnapshotShapeCheck = Assert<
       activeTurnTeamId: string | null;
       minigameDisplayView: RoomState["minigameDisplayView"];
       timer: RoomState["timer"];
+      gameStartCountdownEndsAt: number | null;
       musicPlayback: RoomState["musicPlayback"];
       musicVolume: number;
       wingParticipationByPlayerId: Record<string, boolean>;

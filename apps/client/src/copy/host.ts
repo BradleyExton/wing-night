@@ -98,6 +98,10 @@ export const hostCopy = {
   primaryActionLabel,
   nextPhaseButtonLabel: "Next Phase",
   startGameButtonLabel: "Start Game",
+  // The tablet holds the same count-in the TV is showing the room, so the
+  // host knows the tap landed and how long the lock screen has left.
+  startGameCountingInLabel: (remainingSeconds: number): string =>
+    `Starting in ${remainingSeconds}…`,
   setupLockedNoticeLabel: "Game Locked In",
   skipTurnBoundaryButtonLabel: "Skip Turn",
   redoLastMutationButtonLabel: "Undo Last Score",

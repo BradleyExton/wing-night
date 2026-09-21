@@ -1,7 +1,9 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+// `Starting in` is the INTRO count-in holding the button: the tap has landed,
+// the room is being counted in, and the phase has not moved yet.
 export const HOST_PRIMARY_ACTION_LABEL =
-  /Lock Teams & Continue|Start Game|Start Eating|Start Mini-Game|End Team Turn|Prepare Next Team|Show Round Results|Start Next Round|Show Final Results|Game Complete|Next Phase/;
+  /Lock Teams & Continue|Start Game|Starting in|Start Eating|Start Mini-Game|End Team Turn|Prepare Next Team|Show Round Results|Start Next Round|Show Final Results|Game Complete|Next Phase/;
 
 export const hostPrimaryActionButton = (hostPage: Page): Locator => {
   return hostPage.getByRole("button", { name: HOST_PRIMARY_ACTION_LABEL });
@@ -84,14 +86,16 @@ export const lockTeamsFromSetup = async (hostPage: Page): Promise<void> => {
   await expect(hostPage.getByRole("button", { name: "Start Game" })).toBeVisible();
 };
 
-// Starting the game lands straight on the first team's briefing: there is no
-// round intro screen in between any more.
+// Starting the game counts the room in on the lock screen first, then lands
+// straight on the first team's briefing: there is no round intro screen in
+// between any more. The extra bound covers the count-in the tap arms — the
+// phase does not move until it has run out.
 export const startGameFromIntro = async (hostPage: Page): Promise<void> => {
   await hostPage.getByRole("button", { name: "Start Game" }).click();
 
-  await expect(
-    hostPage.getByRole("button", { name: "Start Eating" })
-  ).toBeVisible();
+  await expect(hostPage.getByRole("button", { name: "Start Eating" })).toBeVisible({
+    timeout: 15_000
+  });
 };
 
 export const startEatingFromBriefing = async (hostPage: Page): Promise<void> => {

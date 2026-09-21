@@ -37,7 +37,9 @@ export const MinigameIntroStageBody = ({
   ].join(" ");
 
   return (
-    <div className={styles.container}>
+    /* Stable hook for the e2e count-in capture, which has to prove this screen
+       is NOT up while the room is being counted in. */
+    <div className={styles.container} data-team-briefing>
       <span className={styles.ambient} aria-hidden />
       {activeTeamTheme !== null && <TeamAmbient theme={activeTeamTheme} />}
       {/* The genre rides the eyebrow rather than taking a line of its own: it is

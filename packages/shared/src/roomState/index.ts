@@ -15,6 +15,14 @@ import type { Player } from "../player/index.js";
 import type { SocketClientRole } from "../socketClientRole/index.js";
 import type { Team } from "../team/index.js";
 
+// The count-in the room sees between the host tapping Start Game and the
+// night actually starting. It is server state rather than a display animation
+// because the phase must NOT move until it finishes: the first team's anthem
+// and briefing are cued by the advance, so counting in after it would spend
+// the opening seconds of their entrance behind a lock screen.
+export const GAME_START_COUNTDOWN_SECONDS = 3;
+export const GAME_START_COUNTDOWN_MS = GAME_START_COUNTDOWN_SECONDS * 1000;
+
 export type RoomTimerState = {
   phase: Phase;
   startedAt: number;
@@ -645,6 +653,9 @@ export type RoomState = {
   activeRoundTeamId: string | null;
   activeTurnTeamId: string | null;
   timer: RoomTimerState | null;
+  // Wall-clock instant the INTRO count-in ends, or null when none is armed.
+  // Only INTRO ever carries one, and every phase transition clears it.
+  gameStartCountdownEndsAt: number | null;
   // What the TV's speaker is doing, and whether it is doing it. Server-owned
   // for the same reason `timer` is: the host can pause and skip, so playback
   // is a mutation target rather than something the display derives.
@@ -678,6 +689,7 @@ type DisplaySafeRoomStateKeys =
   | "activeRoundTeamId"
   | "activeTurnTeamId"
   | "timer"
+  | "gameStartCountdownEndsAt"
   | "musicPlayback"
   | "musicVolume"
   | "minigameDisplayView"
@@ -703,6 +715,7 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "activeRoundTeamId",
   "activeTurnTeamId",
   "timer",
+  "gameStartCountdownEndsAt",
   "musicPlayback",
   "musicVolume",
   "minigameDisplayView",
@@ -753,6 +766,7 @@ export const toDisplayRoomStateSnapshot = (
     activeRoundTeamId: roomState.activeRoundTeamId,
     activeTurnTeamId: roomState.activeTurnTeamId,
     timer: roomState.timer,
+    gameStartCountdownEndsAt: roomState.gameStartCountdownEndsAt,
     // A track title is not privileged information, so the whole of it goes to
     // the display: the TV is the surface that has to render the strip.
     musicPlayback: roomState.musicPlayback,

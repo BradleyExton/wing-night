@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import { type RoomState } from "@wingnight/shared";
+import { Phase, type RoomState } from "@wingnight/shared";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { HostActionBarSurface } from "./HostActionBarSurface";
@@ -17,6 +17,7 @@ import { useHostHandlers } from "../../context/HostHandlersContext";
 import { HostOverridesUiProvider } from "../../context/HostOverridesUiContext";
 import type { HostOverridesUi } from "../../context/HostOverridesUiContext";
 import { useHostRoomState } from "../../context/RoomStateContext";
+import { useGameStartHandoff } from "./useGameStartHandoff";
 import { useHostWakeLock } from "./useHostWakeLock";
 import * as styles from "./styles";
 
@@ -37,8 +38,21 @@ export const HostControlPanel = (): JSX.Element => {
   // Only MINIGAME_PLAY hands the tablet over; MINIGAME_INTRO is still the host
   // briefing the room, so it keeps the full-bleed CTA bar.
   const isPlayerHeld = hostMode === "minigame_play";
+  // INTRO's primary action is Start Game, which arms the room's count-in
+  // instead of advancing: the phase waits for the lock screen to finish
+  // counting so the first team's briefing and anthem open together.
+  const gameStartCountdownSeconds = useGameStartHandoff({
+    phase,
+    gameStartCountdownEndsAt: roomState?.gameStartCountdownEndsAt ?? null,
+    onStartGame: handlers.onStartGame
+  });
+  const isCountingInGameStart = gameStartCountdownSeconds !== null;
+  const primaryAction =
+    phase === Phase.INTRO ? handlers.onStartGame : handlers.onNextPhase;
   const nextPhaseDisabled =
-    handlers.onNextPhase === undefined || roomState?.canAdvancePhase !== true;
+    primaryAction === undefined ||
+    roomState?.canAdvancePhase !== true ||
+    isCountingInGameStart;
   const orderedTeams = useMemo(() => resolveOrderedTeams(roomState), [roomState]);
   const overrideDockContext = useMemo(() => {
     return selectOverrideDockContext(roomState);
@@ -49,12 +63,14 @@ export const HostControlPanel = (): JSX.Element => {
   const hasAdditionalRounds =
     roomState !== null && roomState.currentRound < roomState.totalRounds;
   const primaryButtonLabel =
-    phase === null
-      ? hostControlPanelCopy.nextPhaseButtonLabel
-      : hostControlPanelCopy.primaryActionLabel(phase, {
-          hasNextRoundTurn,
-          hasAdditionalRounds
-        });
+    gameStartCountdownSeconds !== null
+      ? hostControlPanelCopy.startGameCountingInLabel(gameStartCountdownSeconds)
+      : phase === null
+        ? hostControlPanelCopy.nextPhaseButtonLabel
+        : hostControlPanelCopy.primaryActionLabel(phase, {
+            hasNextRoundTurn,
+            hasAdditionalRounds
+          });
   const containerClassName = isMinigameTakeover
     ? styles.takeoverContainer
     : styles.container;
@@ -89,7 +105,7 @@ export const HostControlPanel = (): JSX.Element => {
         <HostTakeoverDock
           primaryActionLabel={primaryButtonLabel}
           primaryActionDisabled={nextPhaseDisabled}
-          onPrimaryAction={handlers.onNextPhase}
+          onPrimaryAction={primaryAction}
           showOverridesAction={overrideDockContext.isVisible}
           overridesNeedAttention={overrideDockContext.showBadge}
           onOpenOverrides={(): void => {
@@ -98,7 +114,7 @@ export const HostControlPanel = (): JSX.Element => {
         />
       ) : (
         <HostActionBarSurface
-          onNextPhase={handlers.onNextPhase}
+          onNextPhase={primaryAction}
           nextPhaseDisabled={nextPhaseDisabled}
           primaryButtonLabel={primaryButtonLabel}
         />

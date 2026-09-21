@@ -43,6 +43,7 @@ type EventPayload<EventName extends PayloadEventName> = Parameters<
 
 type HostRequestArgs = {
   onNextPhase: [];
+  onStartGame: [];
   onCreateTeam: [name: string];
   onAddPlayer: [name: string];
   onAssignPlayer: [playerId: string, teamId: string | null];
@@ -111,6 +112,10 @@ const isValidTeamIdList = (teamIds: string[]): boolean => {
 export const hostRequestTable: HostRequestTable = {
   onNextPhase: {
     event: CLIENT_TO_SERVER_EVENTS.NEXT_PHASE,
+    buildPayload: buildHostSecretPayload
+  },
+  onStartGame: {
+    event: CLIENT_TO_SERVER_EVENTS.START_GAME,
     buildPayload: buildHostSecretPayload
   },
   onCreateTeam: {
@@ -282,6 +287,7 @@ export const createHostRequestHandlers = (
 
   return {
     onNextPhase: buildHandler("onNextPhase"),
+    onStartGame: buildHandler("onStartGame"),
     onCreateTeam: buildHandler("onCreateTeam"),
     onAddPlayer: buildHandler("onAddPlayer"),
     onAssignPlayer: buildHandler("onAssignPlayer"),

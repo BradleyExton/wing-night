@@ -26,11 +26,9 @@ test("display follows host phase advances through the round-1 milestone chain", 
 
   await startGameFromIntro(hostPage);
 
-  // Team briefing (MINIGAME_INTRO): let the 3-2-1 count-in finish, then the
-  // display announces the team on the wings.
-  await expect(displayPage.getByText("Game starts in")).toHaveCount(0, {
-    timeout: 6_000
-  });
+  // Team briefing (MINIGAME_INTRO): the count-in ran on the lock screen before
+  // the phase moved, so the display is already announcing the team on the wings.
+  await expect(displayPage.getByText("Game starts in")).toHaveCount(0);
   await expect(displayPage.getByText("playing", { exact: true })).toBeVisible();
   await expect(displayPage.getByText("SCHLONIC")).toBeVisible();
 

@@ -67,6 +67,11 @@ const handlerInvocations: HandlerInvocation[] = [
     expectedPayload: { hostSecret: "valid-host-secret" }
   },
   {
+    name: "onStartGame",
+    invoke: (handlers) => handlers.onStartGame(),
+    expectedPayload: { hostSecret: "valid-host-secret" }
+  },
+  {
     name: "onCreateTeam",
     invoke: (handlers) => handlers.onCreateTeam("  Spice Squad  "),
     expectedPayload: { hostSecret: "valid-host-secret", name: "Spice Squad" }

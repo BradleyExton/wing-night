@@ -24,6 +24,7 @@ export const buildNoopHostHandlers = (
 ): HostHandlers => {
   return {
     onNextPhase: (): void => undefined,
+    onStartGame: (): void => undefined,
     onCreateTeam: (): void => undefined,
     onAddPlayer: (): void => undefined,
     onAssignPlayer: (): void => undefined,

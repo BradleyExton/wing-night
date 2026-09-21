@@ -46,6 +46,7 @@ export {
 
 export {
   skipTurnBoundary,
+  startGame,
   advanceRoomStatePhase
 } from "./phaseMutations/index.js";
 

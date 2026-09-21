@@ -20,6 +20,7 @@ export const createInitialRoomState = (): RoomState => {
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
+    gameStartCountdownEndsAt: null,
     musicPlayback: null,
     musicVolume: MUSIC_VOLUME_DEFAULT,
     wingParticipationByPlayerId: {},

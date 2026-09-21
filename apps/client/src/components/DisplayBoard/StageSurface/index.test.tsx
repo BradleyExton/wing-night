@@ -35,11 +35,8 @@ const buildSnapshot = (phase: Phase): RoomState => {
   });
 };
 
-const renderStage = (
-  roomState: RoomState,
-  showSetupPreview = false
-): string => {
-  return renderDisplayMarkup(<StageSurface showSetupPreview={showSetupPreview} />, {
+const renderStage = (roomState: RoomState): string => {
+  return renderDisplayMarkup(<StageSurface />, {
     roomState
   });
 };
@@ -75,15 +72,6 @@ test("renders waiting Cinematic Inferno setup during INTRO with same chrome", ()
   assert.match(html, /Waiting for teams/);
   assert.doesNotMatch(html, /Game Locked In/);
   assert.doesNotMatch(html, /Host is ready to launch the round\./);
-});
-
-test("keeps rendering the setup surface while the game start is counting down", () => {
-  const html = renderStage(buildSnapshot(Phase.MINIGAME_INTRO), true);
-
-  assert.match(html, /Wing Night/);
-  assert.match(html, /Tonight/);
-  assert.match(html, /Waiting for teams/);
-  assert.doesNotMatch(html, /Sauce is locked\. Mini-game is up next\./);
 });
 
 test("renders setup preview filler cards when setup preview slots are configured", () => {

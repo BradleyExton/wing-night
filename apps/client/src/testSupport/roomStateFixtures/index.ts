@@ -77,6 +77,7 @@ export const buildRoomState = (
     minigameHostView: null,
     minigameDisplayView: null,
     timer: null,
+    gameStartCountdownEndsAt: null,
     musicPlayback: null,
     musicVolume: 1,
     wingParticipationByPlayerId: {},

@@ -47,12 +47,13 @@ export const DisplayBoard = ({
   );
 
   const phase = roomState?.phase ?? null;
+  // INTRO owns the lock screen from end to end now — the count-in runs ON it
+  // and the phase only advances once the room has been counted in, so the
+  // first team's briefing and anthem open together on a screen of their own.
   const gameStartCountdownRemainingSeconds = useGameStartCountdown({
-    phase,
-    currentRound: roomState?.currentRound ?? null
+    gameStartCountdownEndsAt: roomState?.gameStartCountdownEndsAt ?? null
   });
-  const shouldShowGameLockedOverlay =
-    phase === Phase.INTRO || gameStartCountdownRemainingSeconds !== null;
+  const shouldShowGameLockedOverlay = phase === Phase.INTRO;
 
   // Same resolution the stage surface uses (resolveStageViewModel:101).
   const activeTeamId =
@@ -162,7 +163,7 @@ export const DisplayBoard = ({
       <section className={styles.main}>
         <div className={styles.content}>
           <div className={styles.stageShell}>
-            <StageSurface showSetupPreview={shouldShowGameLockedOverlay} />
+            <StageSurface />
           </div>
         </div>
       </section>

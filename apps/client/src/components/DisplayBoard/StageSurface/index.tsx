@@ -20,10 +20,6 @@ import { useMinigameCountdown } from "./useMinigameCountdown";
 import { resolveLeadingTeams } from "../../../utils/resolveLeadingTeams";
 import { resolveSortedStandings } from "../../../utils/resolveSortedStandings";
 
-type StageSurfaceProps = {
-  showSetupPreview?: boolean;
-};
-
 type StageBodyProps = {
   stageViewModel: StageViewModel;
   phaseLabel: string;
@@ -154,15 +150,11 @@ const FULL_STAGE_MODES: ReadonlySet<StageRenderMode> = new Set([
   "final_results"
 ]);
 
-export const StageSurface = ({
-  showSetupPreview = false
-}: StageSurfaceProps): JSX.Element => {
+export const StageSurface = (): JSX.Element => {
   const roomState = useDisplayRoomState();
   const stageViewModel = resolveStageViewModel(roomState);
   const effectiveStageMode =
-    showSetupPreview || stageViewModel.stageMode === "setup_locked"
-      ? "setup"
-      : stageViewModel.stageMode;
+    stageViewModel.stageMode === "setup_locked" ? "setup" : stageViewModel.stageMode;
   const sortedStandings = roomState ? resolveSortedStandings(roomState.teams) : [];
   const phaseLabel =
     stageViewModel.phase === null

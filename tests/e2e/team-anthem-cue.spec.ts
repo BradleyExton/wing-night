@@ -45,12 +45,9 @@ test("display anthem src is an absolute url on the server origin, and stops at E
   await lockTeamsFromSetup(hostPage);
   await startGameFromIntro(hostPage);
 
-  // Let the 3-2-1 countdown finish before advancing, as the sibling spec does.
-  await expect(displayPage.getByText("Game starts in")).toHaveCount(0, {
-    timeout: 6_000
-  });
-
-
+  // No countdown gate: the count-in now runs BEFORE the phase moves, so
+  // `startGameFromIntro` returning already means the briefing is up and the
+  // anthem has been cued from its first bar.
   const anthem = displayPage.locator("audio[data-team-anthem]");
 
   await expect(anthem).toHaveCount(1);

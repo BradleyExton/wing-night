@@ -82,6 +82,11 @@ export const applyPhaseTransitionEffects = (
 ): void => {
   const isRoundStart = isRoundStartTransition(previousPhase, nextPhase);
 
+  // The INTRO count-in exists only to hold this transition back; once it has
+  // happened, whether it was counted in or advanced straight through, the
+  // room is past it. Cleared here so no later phase can inherit a stale one.
+  state.gameStartCountdownEndsAt = null;
+
   if (isRoundStart) {
     initializeRoundTurnState(state);
   }

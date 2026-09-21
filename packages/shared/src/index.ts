@@ -268,6 +268,8 @@ export type {
 } from "./roomState/index.js";
 export {
   DISPLAY_SAFE_ROOM_STATE_KEYS,
+  GAME_START_COUNTDOWN_MS,
+  GAME_START_COUNTDOWN_SECONDS,
   toDisplayRoomStateSnapshot,
   toRoleScopedSnapshotEnvelope
 } from "./roomState/index.js";
