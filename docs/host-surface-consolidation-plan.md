@@ -478,3 +478,11 @@ governing `packages/minigames/*/src/client/**` and `packages/surface/src/**`.
   e2e correctly not run (docs only). **Corrected two plan errors**: header assertions are
   `intro-countdown.spec.ts:149`/`:157` not `:115`/`:122`; override rule is `SPEC.md:380` not `:377`.
   Seven proposals in §11 flagged for the owner.
+
+### Owner's decisions on the T2.1 proposals (2026-09-21)
+P1 accepted — the rail is a slot, not a component; the plan's "four components" is three plus a slot.
+P2 accepted — `RunningTotals`, not "standings panel". P3 noted — re-check the deck against ADR-0002 at
+the end of phase 4. P4 accepted — drop `MinigameSurface`'s takeover `overflow-y-auto` in T2.3.
+**P5, P6 and P7 are pulled into scope**: hide the dock toggle while the override panel is open (T2.3);
+team dots take the team's real colour via `teamThemeByTeamId` (T2.3); "positive verdict first" becomes
+a house rule, with DRAWING's inverted pair fixed in T4.1.

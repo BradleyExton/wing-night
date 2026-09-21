@@ -648,3 +648,31 @@ worktree.
   width: 1280, height: 800 }`; `:188-190` — `hostCanvas` wrapping `<TakeoverTimerChip />` and
   `<MinigameSurface>`, mirroring `MinigamePlayTakeover`.
 - `MinigameDevSandbox/styles.ts:57-58` — `hostCanvas` carries the takeover's exact class string.
+
+---
+
+## 13) Owner's decisions on §11 (2026-09-21)
+
+Settled by the repo owner after reading this document. These are no longer proposals.
+
+- **P1 — ACCEPTED.** The rail is a **slot**, not a fifth component. `HostMiniRail` reads client
+  context and stays in `apps/client`; the shell passes it into the layout's `rail` slot. The plan's
+  "four components" becomes three plus a slot, and `packages/surface` keeps no dependency on client
+  context — which is the entire reason the package exists.
+- **P2 — ACCEPTED.** `RunningTotals`, not "the standings panel". It shows pending points;
+  `StandingsSurface` is the standings.
+- **P3 — NOTED.** Re-check the deck column against ADR-0002's three-call-site bar at the end of
+  phase 4. If T3.4 makes SONG_GUESS a Canvas or T4.3 flattens RECREATE's bench, the deck drops below
+  the bar and becomes tokens.
+- **P4 — ACCEPTED.** `MinigameSurface`'s takeover `overflow-y-auto` is dropped in T2.3. A game that
+  overflows the canvas must break visibly in the sandbox rather than scroll quietly; scrolling is
+  wrong on this surface, and a silent 900px-tall migration is exactly the mistake the nine
+  migrations could otherwise hide.
+- **P5 — IN SCOPE, T2.3.** Hide the dock toggle while the override panel is open, rather than
+  renumbering the z-scale.
+- **P6 — IN SCOPE, T2.3.** Team dots take the team's actual colour. `teamThemeByTeamId` exists in
+  the client and simply is not on the renderer props; once the shell owns the rail this is a
+  one-place fix, and `bg-primary` in six files stops pretending to be six different teams.
+- **P7 — IN SCOPE, house rule, DRAWING fixed in T4.1.** Positive verdict first. DRAWING is the only
+  outlier (`verdictIncorrect` before `verdictCorrect`), and on a tablet that is a misclick risk, not
+  a preference.
