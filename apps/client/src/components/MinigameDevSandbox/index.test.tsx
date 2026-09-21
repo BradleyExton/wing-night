@@ -81,7 +81,7 @@ test("offers every registered minigame in the switcher", () => {
 test("frames the host preview as the tablet shell with the phase's host controls", () => {
   const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="TRIVIA" />);
 
-  assert.match(html, /Tablet · 1024 × 768 landscape/);
+  assert.match(html, /Tablet · 1280 × 800 landscape/);
   assert.match(html, /TV · 1920 × 1080/);
   assert.match(html, /aria-label="Open host controls"/);
   assert.doesNotMatch(html, /End Team Turn/);

@@ -34,9 +34,10 @@ const navigateToMinigameSandbox = (minigameType: MinigameType): void => {
   window.location.assign(`/dev/minigame/${slug}`);
 };
 
-// What each preview stands in for, in CSS pixels. The host is a 4:3 tablet in
-// landscape (an iPad's 1024×768 logical points); the display is a 1080p TV.
-const HOST_DEVICE = { width: 1024, height: 768 } as const;
+// What each preview stands in for, in CSS pixels. The host is the party's own
+// Android tablet in landscape (1280×800 logical points); the display is a
+// 1080p TV.
+const HOST_DEVICE = { width: 1280, height: 800 } as const;
 const DISPLAY_DEVICE = { width: 1920, height: 1080 } as const;
 
 // The frame shows the CTA the real shell pins under this phase, so the

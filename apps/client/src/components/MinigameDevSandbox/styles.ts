@@ -26,10 +26,10 @@ export const input =
   "h-10 w-full rounded-md border border-text/15 bg-surfaceAlt px-3 text-sm text-text outline-none focus:border-primary/60";
 
 // Both previews are fixed-aspect frames, so the column split is what makes
-// them the same height side by side: a 4:3 tablet next to a 16:9 TV needs
-// widths in the ratio (4/3):(16/9) = 3:4. Below xl they stack full width.
+// them the same height side by side: a 16:10 tablet next to a 16:9 TV needs
+// widths in the ratio (16/10):(16/9) = 9:10. Below xl they stack full width.
 export const previewGrid =
-  "mx-auto mt-5 grid w-full max-w-[2200px] items-start gap-4 xl:grid-cols-[3fr_4fr] 2xl:gap-5";
+  "mx-auto mt-5 grid w-full max-w-[2200px] items-start gap-4 xl:grid-cols-[9fr_10fr] 2xl:gap-5";
 
 export const previewCard =
   "w-full overflow-hidden rounded-xl border border-text/10 bg-surfaceAlt shadow-xl";
@@ -43,7 +43,7 @@ export const previewHeaderMeta = "text-xs text-muted";
 
 // Each preview frame reserves its device's aspect ratio; SandboxDeviceFrame lays
 // the device out at full size inside and scales it down to the frame's width.
-export const hostViewport = "relative aspect-[4/3] w-full overflow-hidden bg-bg";
+export const hostViewport = "relative aspect-[16/10] w-full overflow-hidden bg-bg";
 
 export const displayViewport = "relative aspect-video w-full overflow-hidden bg-bg";
 
