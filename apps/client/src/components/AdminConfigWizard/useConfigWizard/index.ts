@@ -36,6 +36,48 @@ export type IssueMessagesByFile = Readonly<
   Record<ConfigFileKey, IssueMessagesByPath>
 >;
 
+export type ConfigContentState = {
+  baseline: ConfigDraft;
+  draft: ConfigDraft;
+};
+
+// Whether the draft holds work a re-seed would discard. The same diff
+// `isDirty` reports, so a host who typed a value and then typed the original
+// back counts as clean and is safely re-seeded.
+const hasUnsavedEdits = (content: ConfigContentState): boolean => {
+  return selectDirtyEdits(content.draft, content.baseline).length > 0;
+};
+
+// What a `config:result` carrying content does to the pair. Pure, and exported
+// for the reason every decision in this app's client is: the harness renders
+// with `renderToStaticMarkup` and never runs an effect, so a rule left inside
+// the socket handler is a rule no test can reach.
+//
+// The BASELINE always takes the incoming content — it is what `isDirty` diffs
+// against, and a stale one misreports a dirty draft as clean.
+//
+// The DRAFT does not, and that is the whole point of this function. A read is
+// not always something the host asked for: `handleConnect` fires one on every
+// socket (re)connect and socket.io reconnects on its own after a dropped
+// frame, so re-seeding unconditionally threw away whatever had been typed
+// since the last seed — no prompt, nothing to undo it, a wifi blip mid-edit
+// was enough. An apply is the one read that DOES reseed, because the content
+// coming back IS the host's edits landing on disk, and the two agreeing is
+// what makes the surface read "clean" again.
+export const resolveNextContentState = (
+  previous: ConfigContentState | null,
+  incoming: ConfigDraft,
+  didApply: boolean
+): ConfigContentState => {
+  const shouldReseedDraft =
+    previous === null || didApply || !hasUnsavedEdits(previous);
+
+  return {
+    baseline: incoming,
+    draft: shouldReseedDraft ? incoming : previous.draft
+  };
+};
+
 export type ConfigWizardApi = {
   draft: ConfigDraft | null;
   // Read-only: geo content is produced by `pnpm import:geo`, so the snapshot
@@ -68,8 +110,15 @@ export const useConfigWizard = (
   // The draft the host is editing, and the disk state it was seeded from. Both
   // are the WRITE shapes (see `contentDraft`), so the baseline can be diffed
   // against the draft key-for-key and the difference IS the apply payload.
-  const [baseline, setBaseline] = useState<ConfigDraft | null>(null);
-  const [draft, setDraft] = useState<ConfigDraft | null>(null);
+  //
+  // Held as ONE state rather than two, because the decision in
+  // `handleConfigResult` — may an incoming read replace the draft? — is a
+  // question about the pair, and answering it inside a single updater is what
+  // keeps it a pure function of the previous pair. As two states it needed a
+  // ref written during an updater, which React is free to invoke twice.
+  const [content, setContent] = useState<ConfigContentState | null>(null);
+  const baseline = content?.baseline ?? null;
+  const draft = content?.draft ?? null;
   const [geoPromptCount, setGeoPromptCount] = useState(0);
   const [serverIssues, setServerIssues] = useState<ValidationIssue[]>([]);
   const [isLocked, setIsLocked] = useState(false);
@@ -104,13 +153,25 @@ export const useConfigWizard = (
         return;
       }
 
-      // A successful read or apply is the freshest truth on disk, so it
-      // re-seeds both the baseline and the draft — after an apply the two
-      // agree, which is what makes the surface read "clean" again.
-      const nextDraft = toConfigDraft(outcome.content);
+      // A successful read or apply is the freshest truth on disk, so the
+      // BASELINE always takes it: that is what `isDirty` diffs against, and a
+      // stale baseline would misreport a draft as clean.
+      //
+      // The DRAFT is another matter. A read is not always something the host
+      // asked for — `handleConnect` fires one on every socket (re)connect, and
+      // socket.io reconnects on its own after a dropped frame — so re-seeding
+      // it unconditionally threw away whatever the host had typed since the
+      // last seed, with no prompt and nothing to undo it. A wifi blip mid-edit
+      // was enough. Unsaved edits therefore survive a re-read and are diffed
+      // against the newer baseline instead; an apply is the one read that DOES
+      // reseed, because the content coming back is the host's own edits landing
+      // on disk and the two agreeing is what makes the surface read "clean".
+      const incoming = toConfigDraft(outcome.content);
 
-      setBaseline(nextDraft);
-      setDraft(nextDraft);
+      setContent((previous) =>
+        resolveNextContentState(previous, incoming, outcome.didApply)
+      );
+
       setGeoPromptCount(outcome.content.geoPromptCount);
       setDidApply(outcome.didApply);
     };
@@ -176,15 +237,15 @@ export const useConfigWizard = (
       key: Key,
       edit: (file: ConfigDraft[Key]) => ConfigDraft[Key]
     ): void => {
-      setDraft((previous) => {
+      setContent((previous) => {
         if (previous === null) {
           return previous;
         }
 
-        const nextDraft: ConfigDraft = { ...previous };
-        nextDraft[key] = edit(previous[key]);
+        const nextDraft: ConfigDraft = { ...previous.draft };
+        nextDraft[key] = edit(previous.draft[key]);
 
-        return nextDraft;
+        return { baseline: previous.baseline, draft: nextDraft };
       });
       // The host is now typing past whatever the last apply reported, so the
       // confirmation stops being true.
