@@ -10,45 +10,12 @@ export const railTeam = "flex items-center gap-2 text-text";
 
 export const railTeamDot = "h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_#f97316]";
 
-// The relay clock: the one number the tablet holder should feel.
-export const railClock = "ml-auto flex items-baseline gap-2 font-mono text-base tracking-normal text-text";
-
-export const railClockPastPar = "text-gold";
-
-export const railClockUrgent = "text-heat";
-
-export const railClockLimit = "text-xs text-mutedWarmDim";
-
 export const introCard =
   "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
 
 export const playArea = "flex min-h-0 flex-1 gap-3";
 
 export const arenaColumn = "flex min-h-0 min-w-0 flex-1 flex-col gap-2";
-
-// The whole corridor is the flap button: no scroll, no zoom, no text
-// selection under a frantic thumb.
-export const arenaFrame =
-  "relative min-h-0 flex-1 touch-none select-none overflow-hidden rounded-xl border-2 border-[#3a200d] bg-[#160c2a] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]";
-
-export const arenaFrameArmed = "cursor-pointer";
-
-export const arenaFrameLocked = "cursor-not-allowed opacity-80";
-
-// Each leg's corridor slides in from the right as the last one wipes; the
-// remount keys it, the keyframes live in the client's index.css.
-export const legEnter = "h-full w-full motion-safe:animate-[fappy-scene-enter_480ms_ease-out_both]";
-
-// The handoff callout drops over the corridor for the beat: a dim pool in
-// the middle of the scene and the next player's name, nothing else.
-export const handoffOverlay =
-  "pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-[radial-gradient(ellipse_at_center,rgba(22,12,42,0.7)_0%,rgba(22,12,42,0)_68%)] motion-safe:animate-[fappy-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
-
-export const handoffLead = "text-[0.7rem] font-extrabold uppercase tracking-[0.34em] text-gold";
-
-export const handoffName =
-  "font-serif text-[clamp(2rem,5vw,3.4rem)] font-bold italic leading-none text-text [text-shadow:0_0_24px_rgba(251,191,36,0.55)]";
-
 
 export const arenaHint = "m-0 px-1 text-center text-sm italic text-muted";
 
@@ -79,30 +46,3 @@ export const deckRows = "flex gap-2";
 
 export const deckRowButton =
   "min-h-12 flex-1 rounded-lg border border-[#3a200d] bg-surface text-xs font-extrabold uppercase tracking-[0.14em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
-
-export const historyRow = "flex items-center gap-2 px-1";
-
-export const historyTitle =
-  "text-[0.6rem] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
-
-export const historyChip =
-  "inline-flex min-w-[2.2rem] items-center justify-center gap-1 rounded-full border border-text/15 px-2 py-0.5 font-mono text-xs text-muted";
-
-export const historyChipCleared = "border-gold/60 text-gold";
-
-export const historyChipActive = "border-primary text-primary";
-
-export const totalsCard =
-  "rounded-xl border border-[#3a200d] bg-gradient-to-b from-[#1a0e05] to-[#0a0604] p-3";
-
-export const totalsTitle =
-  "mb-2 block text-[0.6rem] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
-
-export const totalsRow =
-  "flex items-center justify-between border-b border-text/5 py-1.5 text-sm text-text last:border-b-0";
-
-export const totalsRowActive = "text-gold";
-
-export const totalsPoints = "font-mono text-sm text-gold";
-
-export const totalsNote = "mt-2 block text-center text-xs text-mutedWarm";

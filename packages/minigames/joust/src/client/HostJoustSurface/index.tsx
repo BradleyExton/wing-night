@@ -1,8 +1,10 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import type { JoustMinigameHostView, JoustShotResult } from "@wingnight/shared";
+import type { JoustShotResult } from "@wingnight/shared";
 
 import { resolveShotCopy } from "../shotResultCopy/index.js";
 import { AimArena } from "./AimArena/index.js";
+import { RunningTotals } from "./RunningTotals/index.js";
+import { ShotHistory } from "./ShotHistory/index.js";
 import { hostJoustSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -46,59 +48,6 @@ const ShotResultCard = ({
       <span className={styles.resultPoints}>
         {hostJoustSurfaceCopy.resultPoints(shot.points)}
       </span>
-    </div>
-  );
-};
-
-const ShotHistory = ({ view }: { view: JoustMinigameHostView }): JSX.Element => {
-  const slots = Array.from({ length: view.shotsPerTurn }, (_unused, index) => {
-    return view.shots[index] ?? null;
-  });
-
-  return (
-    <div className={styles.historyRow}>
-      <span className={styles.historyTitle}>{hostJoustSurfaceCopy.historyTitle}</span>
-      {slots.map((shot, index) => (
-        <span
-          key={index}
-          className={`${styles.historyChip}${
-            shot !== null && shot.toppledPlayerIds.length > 0 ? ` ${styles.historyChipHit}` : ""
-          }`}
-        >
-          {shot === null
-            ? hostJoustSurfaceCopy.historyPending
-            : hostJoustSurfaceCopy.resultPoints(shot.points)}
-        </span>
-      ))}
-    </div>
-  );
-};
-
-const RunningTotals = ({
-  view,
-  teamNameByTeamId
-}: {
-  view: JoustMinigameHostView;
-  teamNameByTeamId: Map<string, string>;
-}): JSX.Element => {
-  const teamIds = Object.keys(view.pendingPointsByTeamId);
-
-  return (
-    <div className={styles.totalsCard}>
-      <span className={styles.totalsTitle}>{hostJoustSurfaceCopy.totalsTitle}</span>
-      {teamIds.map((teamId) => (
-        <div
-          key={teamId}
-          className={`${styles.totalsRow}${
-            teamId === view.activeTurnTeamId ? ` ${styles.totalsRowActive}` : ""
-          }`}
-        >
-          <span>{teamNameByTeamId.get(teamId) ?? teamId}</span>
-          <span className={styles.totalsPoints}>
-            {hostJoustSurfaceCopy.totalsPoints(view.pendingPointsByTeamId[teamId] ?? 0)}
-          </span>
-        </div>
-      ))}
     </div>
   );
 };
@@ -259,8 +208,12 @@ export const HostJoustSurface = ({
                 {hostJoustSurfaceCopy.resetTurnButtonLabel}
               </button>
             </div>
-            <ShotHistory view={joustView} />
-            <RunningTotals view={joustView} teamNameByTeamId={teamNameByTeamId} />
+            <ShotHistory shots={joustView.shots} shotsPerTurn={joustView.shotsPerTurn} />
+            <RunningTotals
+              pendingPointsByTeamId={joustView.pendingPointsByTeamId}
+              activeTurnTeamId={joustView.activeTurnTeamId}
+              teamNameByTeamId={teamNameByTeamId}
+            />
           </aside>
         </div>
       )}

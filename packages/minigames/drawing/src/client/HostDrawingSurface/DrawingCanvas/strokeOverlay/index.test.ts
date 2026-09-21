@@ -4,21 +4,13 @@ import test from "node:test";
 import type { DrawingStroke } from "@wingnight/shared";
 
 import {
-  ownsActiveStroke,
+  mergeStrokesForRender,
   shouldDropLocalStroke,
-  type ActiveStrokeCapture,
   type LocalStrokeRecord
 } from "./index.js";
 
-const activeStroke = (pointerId: number): ActiveStrokeCapture => ({
-  pointerId,
-  strokeId: "stroke-1",
-  startedAtMs: 0,
-  pendingPoints: []
-});
-
-const stroke = (pointCount: number): DrawingStroke => ({
-  strokeId: "stroke-1",
+const stroke = (pointCount: number, strokeId = "stroke-1"): DrawingStroke => ({
+  strokeId,
   points: Array.from({ length: pointCount }, (_unused, index) => ({
     x: index / pointCount,
     y: 0.5,
@@ -30,23 +22,9 @@ const stroke = (pointCount: number): DrawingStroke => ({
 
 const localRecord = (
   pointCount: number,
-  endedAtMs: number | null
-): LocalStrokeRecord => ({ stroke: stroke(pointCount), endedAtMs });
-
-test("does accept samples from the finger that started the stroke", () => {
-  assert.equal(ownsActiveStroke(activeStroke(1), 1), true);
-});
-
-test("does ignore a second finger while a stroke is in flight", () => {
-  // A resting palm reports its own pointerId; steering the live stroke with
-  // it drags a streak across the drawing.
-  assert.equal(ownsActiveStroke(activeStroke(1), 2), false);
-});
-
-test("does ignore a lift from a finger that owns no stroke", () => {
-  assert.equal(ownsActiveStroke(activeStroke(1), 2), false);
-  assert.equal(ownsActiveStroke(null, 1), false);
-});
+  endedAtMs: number | null,
+  strokeId = "stroke-1"
+): LocalStrokeRecord => ({ stroke: stroke(pointCount, strokeId), endedAtMs });
 
 test("does keep a stroke still under the artist's finger", () => {
   assert.equal(
@@ -102,5 +80,36 @@ test("does drop a stroke the server never took when the window passes", () => {
       nowMs: 9_005_000
     }),
     true
+  );
+});
+
+test("does paint the artist's copy of a stroke the server is behind on", () => {
+  const merged = mergeStrokesForRender({
+    serverStrokes: [stroke(12)],
+    localStrokes: new Map([["stroke-1", localRecord(40, null)]])
+  });
+
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0]?.points.length, 40);
+});
+
+test("does keep the server's copy once it has caught up", () => {
+  const merged = mergeStrokesForRender({
+    serverStrokes: [stroke(40)],
+    localStrokes: new Map([["stroke-1", localRecord(40, 9_000_000)]])
+  });
+
+  assert.equal(merged[0]?.points.length, 40);
+});
+
+test("does paint a stroke the snapshot has not carried back yet, after the ones it has", () => {
+  const merged = mergeStrokesForRender({
+    serverStrokes: [stroke(9, "stroke-a")],
+    localStrokes: new Map([["stroke-b", localRecord(3, null, "stroke-b")]])
+  });
+
+  assert.deepEqual(
+    merged.map((entry) => entry.strokeId),
+    ["stroke-a", "stroke-b"]
   );
 });

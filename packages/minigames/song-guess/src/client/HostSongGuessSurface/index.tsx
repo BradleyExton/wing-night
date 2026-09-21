@@ -1,6 +1,7 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { SongGuessMinigameHostView } from "@wingnight/shared";
 
+import { RunningTotals } from "./RunningTotals/index.js";
 import { SongScoringDeck } from "./SongScoringDeck/index.js";
 import { hostSongGuessSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -59,39 +60,6 @@ const SongCard = ({ view }: { view: SongGuessMinigameHostView }): JSX.Element =>
           )}
         </div>
       )}
-    </div>
-  );
-};
-
-const RunningTotals = ({
-  view,
-  teamNameByTeamId
-}: {
-  view: SongGuessMinigameHostView;
-  teamNameByTeamId: Map<string, string>;
-}): JSX.Element => {
-  const teamIds = Object.keys(view.pendingPointsByTeamId);
-
-  return (
-    <div className={styles.totalsCard}>
-      <span className={styles.totalsTitle}>
-        {hostSongGuessSurfaceCopy.totalsTitle}
-      </span>
-      {teamIds.map((teamId) => (
-        <div
-          key={teamId}
-          className={`${styles.totalsRow}${
-            teamId === view.activeTurnTeamId ? ` ${styles.totalsRowActive}` : ""
-          }`}
-        >
-          <span>{teamNameByTeamId.get(teamId) ?? teamId}</span>
-          <span className={styles.totalsPoints}>
-            {hostSongGuessSurfaceCopy.totalsPoints(
-              view.pendingPointsByTeamId[teamId] ?? 0
-            )}
-          </span>
-        </div>
-      ))}
     </div>
   );
 };
@@ -238,7 +206,11 @@ export const HostSongGuessSurface = ({
                 {hostSongGuessSurfaceCopy.revealButtonLabel}
               </button>
             )}
-            <RunningTotals view={songGuessView} teamNameByTeamId={teamNameByTeamId} />
+            <RunningTotals
+              pendingPointsByTeamId={songGuessView.pendingPointsByTeamId}
+              activeTurnTeamId={songGuessView.activeTurnTeamId}
+              teamNameByTeamId={teamNameByTeamId}
+            />
           </aside>
         </div>
       )}

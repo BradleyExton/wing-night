@@ -23,9 +23,5 @@ export const hostJoustSurfaceCopy = {
   nextShotButtonLabel: "Next shot →",
   turnOverLabel: "Turn over — advance the phase when the room is ready.",
   skipShotButtonLabel: "Skip shot",
-  resetTurnButtonLabel: "Reset turn",
-  historyTitle: "This turn",
-  historyPending: "—",
-  totalsTitle: "Round so far",
-  totalsPoints: (points: number): string => `${points} pt${points === 1 ? "" : "s"}`
+  resetTurnButtonLabel: "Reset turn"
 } as const;

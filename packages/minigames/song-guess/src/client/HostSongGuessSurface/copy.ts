@@ -27,7 +27,5 @@ export const hostSongGuessSurfaceCopy = {
   correctLabel: "✓",
   incorrectLabel: "✗",
   markAriaLabel: (field: string, isCorrect: boolean): string =>
-    `Mark ${field} ${isCorrect ? "correct" : "incorrect"}`,
-  totalsTitle: "Round so far",
-  totalsPoints: (points: number): string => `${points} pt${points === 1 ? "" : "s"}`
+    `Mark ${field} ${isCorrect ? "correct" : "incorrect"}`
 } as const;

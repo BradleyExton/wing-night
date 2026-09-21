@@ -7,18 +7,12 @@ export const hostSchlonicSurfaceCopy = {
   runCounter: (runNumber: number, runsTotal: number): string => `Run ${runNumber} of ${runsTotal}`,
   runningLabel: (playerName: string | null): string =>
     playerName === null ? "Running: the house hen" : `Running: ${playerName}`,
-  sceneLabel: (playerName: string | null): string =>
-    playerName === null ? "Kempenfelt Bay Zone" : `Kempenfelt Bay Zone — ${playerName}'s run`,
-  jumpPadLabel: "Jump",
-  jumpPadHint: "Hold for height",
   readyHint: (playerName: string | null): string =>
     playerName === null
       ? "Tap to go. Hold the tap to jump higher, and you curl into a ball in the air."
       : `${playerName}: tap to go. Hold the tap to jump higher — in the air you're a ball, and a ball squashes things.`,
   readyLockedHint: "Waiting for the host to open the round.",
   runningHint: "Keep hold of your wings — they are the only thing between you and the end of the run.",
-  handoffCalloutLead: "Hand it to",
-  handoffCalloutName: (nextName: string | null): string => nextName ?? "the next player",
   handoffHint: (endedName: string | null, nextName: string | null): string => {
     const who = endedName === null ? "That's the run" : `${endedName} is done`;
 
@@ -28,28 +22,9 @@ export const hostSchlonicSurfaceCopy = {
   wingsLabel: "Wings",
   wingsTally: (banked: number, par: number): string => `${banked} / ${par}`,
   bankedTitle: "Banked",
-  runOutcome: (outcome: "cleared" | "wiped" | "fell" | null, wings: number): string => {
-    if (outcome === "cleared") {
-      return `Post! +${wings}`;
-    }
-
-    if (outcome === "fell") {
-      return "Down a hole";
-    }
-
-    if (outcome === "wiped") {
-      return "Wiped out";
-    }
-
-    return "Skipped";
-  },
   finishedTitle: "Zone clear",
   finishPoints: (points: number): string => `+${points}`,
-  historyTitle: "Runs",
-  historyPending: "—",
   skipRunButtonLabel: "Skip run",
   resetTurnButtonLabel: "Reset turn",
-  totalsTitle: "Round so far",
-  totalsPoints: (points: number): string => `${points} pt${points === 1 ? "" : "s"}`,
   parLine: (par: number): string => `Full points at ${par} wings`
 } as const;

@@ -58,26 +58,3 @@ export const deckRowButton =
 
 export const doneNote =
   "rounded-xl border border-gold/40 bg-surface px-4 py-3 text-center text-sm text-gold";
-
-export const historyRow = "flex items-center gap-2 px-1";
-
-export const historyTitle =
-  "text-[0.6rem] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
-
-export const historyChip =
-  "inline-flex min-w-[2.2rem] items-center justify-center rounded-full border border-text/15 px-2 py-0.5 font-mono text-xs text-muted";
-
-export const historyChipHit = "border-gold/60 text-gold";
-
-export const totalsCard =
-  "rounded-xl border border-[#3a200d] bg-gradient-to-b from-[#1a0e05] to-[#0a0604] p-3";
-
-export const totalsTitle =
-  "mb-2 block text-[0.6rem] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
-
-export const totalsRow =
-  "flex items-center justify-between border-b border-text/5 py-1.5 text-sm text-text last:border-b-0";
-
-export const totalsRowActive = "text-gold";
-
-export const totalsPoints = "font-mono text-sm text-gold";
