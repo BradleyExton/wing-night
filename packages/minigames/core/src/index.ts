@@ -91,6 +91,16 @@ export type MinigameRuntimePlugin = {
   // fail fast at startup with a clear error.
   isRules?: (value: unknown) => boolean;
   initialize: (input: MinigameRuntimeInitializationInput) => SerializableValue | null;
+  // `reduceAction`, `syncPendingPoints` and `syncContent` MUST NOT mutate
+  // `input.state`. They return the next state; the one they were handed has to
+  // keep describing the room as it was before the action.
+  //
+  // This is not tidiness, it is what undo is built on. The server captures an
+  // undo point by HOLDING A REFERENCE to the current runtime state rather than
+  // deep-copying it — a copy per action meant cloning every stroke on the easel
+  // fourteen times a second during a DRAWING turn. A reducer that writes
+  // through to `input.state` would rewrite the undo point under the host's
+  // feet, and nothing would report it. Rebuild by spreading, always.
   reduceAction: (input: MinigameRuntimeReductionInput) => MinigameRuntimeReductionResult;
   syncPendingPoints?: (input: MinigameRuntimeSyncPendingPointsInput) => SerializableValue;
   syncContent?: (input: MinigameRuntimeSyncContentInput) => SerializableValue;

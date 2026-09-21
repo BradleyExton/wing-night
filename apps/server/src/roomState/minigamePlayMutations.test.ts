@@ -9,6 +9,7 @@ import {
 
 import {
   advanceRoomStatePhase,
+  applyRoomStateMutation,
   dispatchMinigameAction,
   getRoomStateSnapshot,
   redoLastScoringMutation,
@@ -557,4 +558,78 @@ test("setPendingMinigamePoints enforces final-round scoring cap", () => {
   setPendingMinigamePoints({ "team-1": 21 });
   snapshot = getRoomStateSnapshot();
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 20);
+});
+
+// The undo point is a REFERENCE to the runtime state as it stood before the
+// action (apps/server/src/minigames/runtime, captureMinigameRuntimeStateSnapshot),
+// not a copy of it. That is only sound while runtime plugins rebuild state
+// instead of writing through to the one they were handed — the rule
+// `MinigameRuntimePlugin.reduceAction` states. A reducer that broke it would
+// rewrite the pending undo point as it ran, and the only place the damage
+// would surface is here: a redo landing somewhere other than the beat before
+// the last action.
+test("does redo to the beat before the last action when several actions preceded it", () => {
+  setupValidTeamsAndAssignments({
+    ...gameConfigFixture,
+    minigameRules: {
+      trivia: {
+        questionsPerTurn: 3
+      }
+    }
+  });
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+
+  recordTriviaAttempt(true);
+  recordTriviaAttempt(true);
+  const beforeLastAttempt = getRoomStateSnapshot();
+
+  recordTriviaAttempt(false);
+  redoLastScoringMutation();
+  const afterRedo = getRoomStateSnapshot();
+
+  assert.equal(
+    resolveTriviaHostView(afterRedo.minigameHostView)?.attemptsRemaining,
+    resolveTriviaHostView(beforeLastAttempt.minigameHostView)?.attemptsRemaining
+  );
+  assert.equal(
+    resolveHostPromptCursor(afterRedo),
+    resolveHostPromptCursor(beforeLastAttempt)
+  );
+  assert.equal(
+    resolveHostPromptId(afterRedo),
+    resolveHostPromptId(beforeLastAttempt)
+  );
+  assert.equal(
+    afterRedo.pendingMinigamePointsByTeamId["team-1"],
+    beforeLastAttempt.pendingMinigamePointsByTeamId["team-1"]
+  );
+});
+
+// The broadcast decision compares the PROJECTION rather than deep-comparing a
+// clone of the whole room, so this pins the half of that which is easy to lose:
+// an action the runtime refuses must still leave `didMutate` off, or the TV
+// redraws on every rejected tap.
+test("does report didMutate=false when the runtime refuses the action", () => {
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+
+  const mutationResult = applyRoomStateMutation(() =>
+    dispatchMinigameAction("TRIVIA", "notAnAction", {})
+  );
+
+  assert.equal(mutationResult.didMutate, false);
+});
+
+test("does report didMutate=true when an action moves the projection", () => {
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+
+  const mutationResult = applyRoomStateMutation(() =>
+    dispatchMinigameAction("TRIVIA", "recordAttempt", { isCorrect: true })
+  );
+
+  assert.equal(mutationResult.didMutate, true);
 });

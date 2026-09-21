@@ -1,6 +1,12 @@
 import { isDeepStrictEqual } from "node:util";
 
-import { Phase, type MinigameType } from "@wingnight/shared";
+import {
+  Phase,
+  type MinigameDisplayView,
+  type MinigameHostView,
+  type MinigameType,
+  type RoomState
+} from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { logError, logManualScoreAdjustment } from "../../logger/index.js";
@@ -10,7 +16,6 @@ import {
   syncActiveMinigameRuntimeWithPendingPoints
 } from "../../minigames/runtime/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
-import { getRoomStateSnapshot } from "../getRoomStateSnapshot/index.js";
 import {
   arePointsByTeamIdEqual,
   captureScoringMutationUndoState,
@@ -175,6 +180,44 @@ export const setPendingMinigamePoints = defineRoomMutation({
   }
 });
 
+// Everything `projectActiveRuntimeStateToRoomState` writes, plus the redo flag
+// the dispatch sets itself: the only room state a minigame action can move.
+type MinigameProjection = {
+  activeTurnTeamId: string | null;
+  minigameHostView: MinigameHostView | null;
+  minigameDisplayView: MinigameDisplayView | null;
+  pendingMinigamePointsByTeamId: Record<string, number>;
+  canRedoScoringMutation: boolean;
+};
+
+// Deliberately holds REFERENCES rather than cloning. Projection REPLACES these
+// fields instead of mutating them, so a value captured here still describes the
+// room as it was before the action — and because runtime reducers rebuild state
+// by spreading, the parts an action did not touch stay identical by reference,
+// which `isDeepStrictEqual` short-circuits on. The whole-room
+// `getRoomStateSnapshot()` clone this replaced deep-copied the roster, the game
+// config and every stroke on the easel, three times per action, which is 14
+// times a second while a DRAWING turn is being flushed.
+const captureMinigameProjection = (roomState: RoomState): MinigameProjection => {
+  return {
+    activeTurnTeamId: roomState.activeTurnTeamId,
+    minigameHostView: roomState.minigameHostView,
+    minigameDisplayView: roomState.minigameDisplayView,
+    pendingMinigamePointsByTeamId: roomState.pendingMinigamePointsByTeamId,
+    canRedoScoringMutation: roomState.canRedoScoringMutation
+  };
+};
+
+// Runtime plugins own their didMutate signal for undo bookkeeping, but the
+// broadcast decision compares the projection, because a plugin may report a
+// mutation that projects to an identical room state.
+const didMinigameProjectionChange = (
+  previousProjection: MinigameProjection,
+  roomState: RoomState
+): boolean => {
+  return !isDeepStrictEqual(previousProjection, captureMinigameProjection(roomState));
+};
+
 export const dispatchMinigameAction = defineRoomMutation({
   run: (
     roomState,
@@ -192,10 +235,7 @@ export const dispatchMinigameAction = defineRoomMutation({
       return false;
     }
 
-    // Runtime plugins own their didMutate signal for undo bookkeeping, but the
-    // broadcast decision keeps the historical whole-state comparison because a
-    // plugin may report a mutation that projects to an identical room state.
-    const previousSnapshot = getRoomStateSnapshot();
+    const previousProjection = captureMinigameProjection(roomState);
     const nextUndoSnapshot = createScoringMutationUndoSnapshot(roomState);
     let didRuntimeMutate = false;
 
@@ -213,7 +253,7 @@ export const dispatchMinigameAction = defineRoomMutation({
     } catch (error) {
       logError("server:minigameRuntimeFailure", error);
       clearActiveMinigameRuntimeState(roomState);
-      return !isDeepStrictEqual(previousSnapshot, getRoomStateSnapshot());
+      return didMinigameProjectionChange(previousProjection, roomState);
     }
 
     if (!didRuntimeMutate) {
@@ -223,7 +263,7 @@ export const dispatchMinigameAction = defineRoomMutation({
     setScoringMutationUndoSnapshot(nextUndoSnapshot);
     roomState.canRedoScoringMutation = true;
 
-    return !isDeepStrictEqual(previousSnapshot, getRoomStateSnapshot());
+    return didMinigameProjectionChange(previousProjection, roomState);
   }
 });
 

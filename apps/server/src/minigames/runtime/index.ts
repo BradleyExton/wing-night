@@ -80,12 +80,18 @@ export const resetMinigameRuntimeState = (): void => {
   activeMinigameRuntimeState = null;
 };
 
+// Holds a REFERENCE to the live runtime state rather than copying it, which
+// the plugin contract's no-mutation rule (`MinigameRuntimePlugin.reduceAction`)
+// is what makes safe: every operation on the active runtime REPLACES this
+// object wholesale, so the one captured here goes on describing the room as it
+// was. `restoreMinigameRuntimeStateSnapshot` still clones on the way back out,
+// so a restored state is never the snapshot's own.
+//
+// It used to deep-copy, which on a DRAWING turn meant copying every stroke on
+// the easel on every point flush — fourteen times a second, growing with the
+// drawing.
 export const captureMinigameRuntimeStateSnapshot = (): MinigameRuntimeStateSnapshot => {
-  if (activeMinigameRuntimeState === null) {
-    return null;
-  }
-
-  return structuredClone(activeMinigameRuntimeState);
+  return activeMinigameRuntimeState;
 };
 
 export const restoreMinigameRuntimeStateSnapshot = (
