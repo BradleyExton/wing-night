@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import {
+  resolveRevealDurationMs,
+  type MinigameDisplayRendererProps
+} from "@wingnight/minigames-core";
 import type {
   EmojiCharadesMinigameDisplayView,
   EmojiCharadesSubjectReveal
@@ -17,34 +20,42 @@ import {
 } from "./heldClue/index.js";
 import * as styles from "./styles.js";
 
-// The reveal window is display-client-driven: visible while now is before
-// expiresAtMs, then the subject text disappears again.
+// The reveal window is display-client-driven: the subject text is visible for
+// the server's window, timed from when THIS display saw the reveal.
+//
+// Timed from arrival rather than measured against `expiresAtMs`, because that
+// stamp is on the server's clock and this comparison would be on the TV's —
+// see `resolveRevealDurationMs`. A TV two seconds fast used to find every
+// window already closed and show the room no answers at all.
+//
+// The trade is that a display joining mid-window gives the reveal its full
+// length rather than the remainder. That is the right way round: the window
+// exists so the room can read the answer, and a late display reading it a
+// beat late is the outcome worth having.
 const useIsRevealVisible = (
   reveal: EmojiCharadesSubjectReveal | null
 ): boolean => {
-  const [, setExpiryTick] = useState(0);
+  const [visibleRevealKey, setVisibleRevealKey] = useState<string | null>(null);
+  const revealKey = resolveRevealKey(reveal);
+  const durationMs = reveal === null ? 0 : resolveRevealDurationMs(reveal);
 
   useEffect(() => {
-    if (reveal === null) {
+    if (revealKey === null || durationMs <= 0) {
       return undefined;
     }
 
-    const remainingMs = reveal.expiresAtMs - Date.now();
-
-    if (remainingMs <= 0) {
-      return undefined;
-    }
+    setVisibleRevealKey(revealKey);
 
     const expiryTimer = setTimeout(() => {
-      setExpiryTick((tick) => tick + 1);
-    }, remainingMs);
+      setVisibleRevealKey(null);
+    }, durationMs);
 
     return (): void => {
       clearTimeout(expiryTimer);
     };
-  }, [reveal]);
+  }, [durationMs, revealKey]);
 
-  return reveal !== null && Date.now() < reveal.expiresAtMs;
+  return revealKey !== null && visibleRevealKey === revealKey;
 };
 
 export const DisplayEmojiCharadesSurface = ({

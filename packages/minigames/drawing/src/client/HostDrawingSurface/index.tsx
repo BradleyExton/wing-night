@@ -1,14 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import type {
-  DrawingMinigameHostView,
-  DrawingPromptReveal
-} from "@wingnight/shared";
+import type { DrawingMinigameHostView } from "@wingnight/shared";
 
 import {
   DrawingCanvas,
   type DrawingCanvasHandle
 } from "./DrawingCanvas/index.js";
+import { useIsRevealVisible } from "../useIsRevealVisible/index.js";
 import { hostDrawingSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -24,32 +22,6 @@ const INK_PALETTE = [
 ] as const;
 
 const BRUSH_SIZE = 0.03;
-
-const useIsRevealVisible = (reveal: DrawingPromptReveal | null): boolean => {
-  const [, setExpiryTick] = useState(0);
-
-  useEffect(() => {
-    if (reveal === null) {
-      return undefined;
-    }
-
-    const remainingMs = reveal.expiresAtMs - Date.now();
-
-    if (remainingMs <= 0) {
-      return undefined;
-    }
-
-    const expiryTimer = setTimeout(() => {
-      setExpiryTick((tick) => tick + 1);
-    }, remainingMs);
-
-    return (): void => {
-      clearTimeout(expiryTimer);
-    };
-  }, [reveal]);
-
-  return reveal !== null && Date.now() < reveal.expiresAtMs;
-};
 
 const resolveActiveTeamName = ({
   minigameHostView,

@@ -434,3 +434,26 @@ export const isMinigameDevManifest = (
     isSerializableValue(manifest.content)
   );
 };
+
+// A reveal is a two-second window on the answer a tablet just ruled on, and
+// both of its timestamps are stamped by the SERVER's clock.
+//
+// Which is why a surface must never compare `expiresAtMs` against its own
+// `Date.now()`: the TV, the host tablet and the server are three devices with
+// three clocks, and the window is 2000ms. A display running two seconds fast
+// finds every reveal already expired and never shows the room an answer at
+// all; one running slow pins the answer on screen long past its welcome.
+// Nothing warns anybody — the surface just quietly stops doing its job.
+//
+// The DIFFERENCE between the two stamps has no such problem. Both come off the
+// same clock, so it is a duration, and a duration means the same thing on
+// every device. Surfaces time the window from the moment they see the reveal,
+// for as long as this says.
+export type MinigameRevealWindow = {
+  revealedAtMs: number;
+  expiresAtMs: number;
+};
+
+export const resolveRevealDurationMs = (reveal: MinigameRevealWindow): number => {
+  return Math.max(0, reveal.expiresAtMs - reveal.revealedAtMs);
+};

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import type { DrawingPromptReveal, DrawingStroke } from "@wingnight/shared";
 
@@ -8,36 +8,9 @@ import {
   resolveRevealKey,
   type HeldSketch
 } from "./heldSketch/index.js";
+import { useIsRevealVisible } from "../useIsRevealVisible/index.js";
 import { displayDrawingSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
-
-// The reveal window is display-client-driven: visible while now is before
-// expiresAtMs, then the prompt text disappears again.
-const useIsRevealVisible = (reveal: DrawingPromptReveal | null): boolean => {
-  const [, setExpiryTick] = useState(0);
-
-  useEffect(() => {
-    if (reveal === null) {
-      return undefined;
-    }
-
-    const remainingMs = reveal.expiresAtMs - Date.now();
-
-    if (remainingMs <= 0) {
-      return undefined;
-    }
-
-    const expiryTimer = setTimeout(() => {
-      setExpiryTick((tick) => tick + 1);
-    }, remainingMs);
-
-    return (): void => {
-      clearTimeout(expiryTimer);
-    };
-  }, [reveal]);
-
-  return reveal !== null && Date.now() < reveal.expiresAtMs;
-};
 
 const RevealPlaque = ({
   reveal,
