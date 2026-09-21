@@ -34,7 +34,7 @@ const OutcomePlaque = ({ hold }: { hold: RunHold }): JSX.Element => {
             {displaySchlonicSurfaceCopy.outcomeTitle(hold.outcome)}
           </p>
           <p className={styles.resultBlurb}>
-            {displaySchlonicSurfaceCopy.outcomeBlurb(hold.outcome, hold.rings)}
+            {displaySchlonicSurfaceCopy.outcomeBlurb(hold.outcome, hold.wings)}
           </p>
         </div>
       </div>
@@ -48,7 +48,7 @@ const FinishPlaque = ({ view }: { view: SchlonicMinigameDisplayView }): JSX.Elem
       <div>
         <p className={styles.resultTitle}>{displaySchlonicSurfaceCopy.finishedTitle}</p>
         <p className={styles.resultBlurb}>
-          {displaySchlonicSurfaceCopy.finishedBlurb(view.ringsBanked, view.ringsPar)}
+          {displaySchlonicSurfaceCopy.finishedBlurb(view.wingsBanked, view.wingsPar)}
         </p>
       </div>
       <span className={styles.resultPoints}>
@@ -132,10 +132,10 @@ const SchlonicPlayBody = ({
           <span className={styles.marqueeRun}>
             {displaySchlonicSurfaceCopy.runCounter(shownRunIndex + 1, view.runsPerTurn)}
           </span>
-          <span className={styles.marqueeRings} data-schlonic-rings>
-            {displaySchlonicSurfaceCopy.ringsCounter(view.ringsBanked, view.ringsPar)}
+          <span className={styles.marqueeWings} data-schlonic-wings>
+            {displaySchlonicSurfaceCopy.wingsCounter(view.wingsBanked, view.wingsPar)}
           </span>
-          <span className={styles.marqueeRingsLabel}>{displaySchlonicSurfaceCopy.ringsLabel}</span>
+          <span className={styles.marqueeWingsLabel}>{displaySchlonicSurfaceCopy.wingsLabel}</span>
         </div>
       </header>
       <div className={styles.arenaArea}>

@@ -32,7 +32,7 @@ test("schlonic sandbox lays out one zone for both screens and starts the run on 
   await expect(page.locator("[data-schlonic-goal]")).toHaveCount(2);
   await expect(page.getByText("Run 1 of 2")).toBeVisible();
   await expect(page.getByText("Alex is on the line — tap to go")).toBeVisible();
-  await expect(page.locator("[data-schlonic-rings]").first()).toHaveText(/0 \/ 52/);
+  await expect(page.locator("[data-schlonic-wings]").first()).toHaveText(/0 \/ 52/);
 
   // One tap takes the run off the line; the display mirrors it.
   await page.locator("[data-schlonic-arena]").click();
@@ -42,7 +42,7 @@ test("schlonic sandbox lays out one zone for both screens and starts the run on 
   expect(socketRequests).toHaveLength(0);
 });
 
-// The rings are the score and the health at once, so the only honest check is to run the zone.
+// The wings are the score and the health at once, so the only honest check is to run the zone.
 // Reads the runner's own numbers off the scene each frame — where it is, whether its feet are
 // down, what it is holding — and jumps when a hole or a hazard is close ahead, holding the tap
 // longer for a hole. Resolves once the run has ended.
@@ -50,7 +50,7 @@ type ZoneRun = {
   jumps: number;
   endedAtX: number;
   frames: number;
-  mostRingsHeld: number;
+  mostWingsHeld: number;
   wasAirborne: boolean;
 };
 
@@ -62,7 +62,7 @@ const runUntilHandoff = (page: Page): Promise<ZoneRun> => {
       const runner = scene?.querySelector("[data-schlonic-runner]");
 
       if (!scene || !arena || !runner) {
-        resolve({ jumps: -1, endedAtX: -1, frames: 0, mostRingsHeld: 0, wasAirborne: false });
+        resolve({ jumps: -1, endedAtX: -1, frames: 0, mostWingsHeld: 0, wasAirborne: false });
         return;
       }
 
@@ -91,7 +91,7 @@ const runUntilHandoff = (page: Page): Promise<ZoneRun> => {
       const startedAt = performance.now();
       let jumps = 0;
       let frames = 0;
-      let mostRingsHeld = 0;
+      let mostWingsHeld = 0;
       let wasAirborne = false;
       let isDown = false;
       let releaseAt = 0;
@@ -104,9 +104,9 @@ const runUntilHandoff = (page: Page): Promise<ZoneRun> => {
 
         frames += 1;
         wasAirborne = wasAirborne || !isGrounded;
-        mostRingsHeld = Math.max(
-          mostRingsHeld,
-          Number(runner.getAttribute("data-schlonic-held-rings") ?? 0)
+        mostWingsHeld = Math.max(
+          mostWingsHeld,
+          Number(runner.getAttribute("data-schlonic-held-wings") ?? 0)
         );
 
         if (document.querySelector("[data-schlonic-handoff]") || now - startedAt > 45_000) {
@@ -114,7 +114,7 @@ const runUntilHandoff = (page: Page): Promise<ZoneRun> => {
             send("pointerup");
           }
 
-          resolve({ jumps, endedAtX: x, frames, mostRingsHeld, wasAirborne });
+          resolve({ jumps, endedAtX: x, frames, mostWingsHeld, wasAirborne });
           return;
         }
 
@@ -154,20 +154,20 @@ const runUntilHandoff = (page: Page): Promise<ZoneRun> => {
   });
 };
 
-test("running the zone collects rings, clears the hole, and hands the tablet on with a tally", async ({
+test("running the zone collects wings, clears the hole, and hands the tablet on with a tally", async ({
   page
 }) => {
   await page.goto(devSandboxPath("schlonic"));
   await expect(page.locator("[data-schlonic-scene]")).toHaveCount(2);
 
-  const { jumps, endedAtX, frames, mostRingsHeld, wasAirborne } = await runUntilHandoff(page);
+  const { jumps, endedAtX, frames, mostWingsHeld, wasAirborne } = await runUntilHandoff(page);
 
   // A throttled tab would step the sim in giant hops and make everything below meaningless.
   expect(frames).toBeGreaterThan(200);
   expect(jumps).toBeGreaterThan(0);
   expect(wasAirborne).toBe(true);
-  // Rings are picked up by running through them, and the zone starts with a line of them.
-  expect(mostRingsHeld).toBeGreaterThan(4);
+  // Wings are picked up by running through them, and the zone starts with a line of them.
+  expect(mostWingsHeld).toBeGreaterThan(4);
   // The pit sits a third of the way in; getting past it is what the jumps were for.
   expect(endedAtX).toBeGreaterThan(400);
 
@@ -256,10 +256,10 @@ test("skipping banks nothing, finishing scores the turn, and reset puts the team
 
   await expect(page.locator("[data-schlonic-finish='finished']")).toBeVisible();
   await expect(page.locator("[data-schlonic-result='finished']")).toBeVisible({ timeout: 6000 });
-  await expect(page.getByText("0 of 52 rings")).toBeVisible();
+  await expect(page.getByText("0 of 52 wings")).toBeVisible();
 
   await page.getByRole("button", { name: "Reset turn" }).click();
 
   await expect(page.getByText("Run 1 of 2")).toBeVisible();
-  await expect(page.locator("[data-schlonic-rings]").first()).toHaveText(/0 \/ 52/);
+  await expect(page.locator("[data-schlonic-wings]").first()).toHaveText(/0 \/ 52/);
 });

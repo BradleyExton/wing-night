@@ -13,8 +13,8 @@ import {
   type BackdropRefs
 } from "./Backdrop/index.js";
 import { Ground } from "./Ground/index.js";
-import { schlonicPalette } from "./palette.js";
 import { resolveRunnerCurl, resolveRunnerPose } from "./runnerPose/index.js";
+import { Wing } from "./Wing/index.js";
 import * as styles from "./styles.js";
 import { ZoneProps } from "./ZoneProps/index.js";
 
@@ -46,9 +46,12 @@ const TUCK_SHRINK = 0.12;
 const FLASH_TICKS = SCHLONIC_WORLD.invulnerableTicks;
 /** Flashes per second while it lasts. */
 const FLASH_HZ = 8;
-/** A ring bursts out of the bird for this long after a hit. */
+/** A wing bursts out of the bird for this long after a hit. */
 const BURST_TICKS = 34;
-const BURST_RINGS = 6;
+const BURST_WINGS = 6;
+/** Thrown wings are a size down from the ones on the shore, and they tumble on the way out. */
+const BURST_SCALE = 0.8;
+const BURST_SPIN_DEGREES = 40;
 
 /**
  * One 16:9 world both surfaces draw. The zone is SVG in world units, built once and scrolled by a
@@ -82,7 +85,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
     };
 
     // Only the props that changed hands this frame are touched: a zone carries a couple of
-    // hundred rings and the loop runs sixty times a second.
+    // hundred wings and the loop runs sixty times a second.
     const paintProps = (frame: SchlonicFrame): void => {
       if (hiddenProps.current.size > frame.takenProps.length) {
         // A replay went back to the start (a reset, a rewound mirror): put everything back.
@@ -143,7 +146,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       // (the JOUST and FAPPY convention — see `data-champ-top`).
       group?.setAttribute("data-schlonic-x", `${Math.round(frame.x * 10) / 10}`);
       group?.setAttribute("data-schlonic-grounded", frame.grounded ? "true" : "false");
-      group?.setAttribute("data-schlonic-held-rings", `${frame.rings}`);
+      group?.setAttribute("data-schlonic-held-wings", `${frame.wings}`);
 
       runnerTuckRef.current?.setAttribute(
         "transform",
@@ -153,7 +156,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       );
     };
 
-    // The handful that leaves you when you take a hit: rings thrown up out of the bird and gone.
+    // The handful that leaves you when you take a hit: wings thrown up out of the bird and gone.
     // Decoration — the sim already took them, and none of these can be caught.
     const paintBurst = (frame: SchlonicFrame): void => {
       const burst = burstRef.current;
@@ -175,12 +178,18 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       burst.setAttribute("opacity", `${1 - along}`);
       burst.setAttribute("transform", `translate(${SCHLONIC_WORLD.runnerX} ${frame.y})`);
 
-      for (let index = 0; index < BURST_RINGS; index += 1) {
-        const radians = (index / BURST_RINGS) * Math.PI * 2;
+      for (let index = 0; index < BURST_WINGS; index += 1) {
+        const radians = (index / BURST_WINGS) * Math.PI * 2;
         const spread = along * 16;
+        const x = Math.cos(radians) * spread;
+        const y = Math.sin(radians) * spread - along * 6;
 
-        burst.children[index]?.setAttribute("cx", `${Math.cos(radians) * spread}`);
-        burst.children[index]?.setAttribute("cy", `${Math.sin(radians) * spread - along * 6}`);
+        // A wing is a whole drawing rather than one circle, so it is placed by transform — and
+        // tumbling as it goes is free once it is a group.
+        burst.children[index]?.setAttribute(
+          "transform",
+          `translate(${x} ${y}) rotate(${radians * BURST_SPIN_DEGREES})`
+        );
       }
     };
 
@@ -247,14 +256,10 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
               <ZoneProps zone={zone} registerProp={registerProp} goalGroundY={goalGroundY} />
             </g>
             <g ref={burstRef} data-schlonic-burst opacity={0}>
-              {Array.from({ length: BURST_RINGS }, (_unused, index) => (
-                <circle
-                  key={index}
-                  r={SCHLONIC_WORLD.ringRadius * 0.8}
-                  fill="none"
-                  stroke={schlonicPalette.ring}
-                  strokeWidth={1}
-                />
+              {Array.from({ length: BURST_WINGS }, (_unused, index) => (
+                <g key={index}>
+                  <Wing scale={BURST_SCALE} />
+                </g>
               ))}
             </g>
             {/* The bird turns about the hitbox's own centre; the group inside it stands the cast

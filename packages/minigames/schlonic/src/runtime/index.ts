@@ -7,7 +7,7 @@ import type {
 
 import { isSchlonicRuntimeState, isSchlonicTickPayload } from "./guards/index.js";
 import { isSchlonicRules, resolveSchlonicRules } from "./rules/index.js";
-import { resolveRingsBanked, resolveRingsPar, resolveSchlonicPoints } from "./scoring/index.js";
+import { resolveWingsBanked, resolveWingsPar, resolveSchlonicPoints } from "./scoring/index.js";
 import type { SchlonicRuntimeRules, SchlonicRuntimeRun, SchlonicRuntimeState } from "./types/index.js";
 import { resolveSchlonicPhase, toSchlonicDisplayView, toSchlonicHostView } from "./views/index.js";
 
@@ -97,8 +97,8 @@ const withTurnScore = (
   }
 
   const points = resolveSchlonicPoints(
-    resolveRingsBanked(state.runs),
-    resolveRingsPar(state.parRingsPerRun, state.runsPerTurn),
+    resolveWingsBanked(state.runs),
+    resolveWingsPar(state.parWingsPerRun, state.runsPerTurn),
     pointsMax
   );
 
@@ -144,7 +144,7 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
       runsPerTurn: rules.runsPerTurn,
       zoneSeed: rules.zoneSeed,
       zoneChunks: rules.zoneChunks,
-      parRingsPerRun: rules.parRingsPerRun,
+      parWingsPerRun: rules.parWingsPerRun,
       runIndex: 0,
       runs: createRuns(figures, rules),
       turnStartPoints:
@@ -214,7 +214,7 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
             result: {
               outcome: refereed.outcome === "running" ? "wiped" : refereed.outcome,
               endTick: refereed.endTick,
-              rings: refereed.rings,
+              wings: refereed.wings,
               distance: refereed.distance
             }
           },

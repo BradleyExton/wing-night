@@ -9,7 +9,7 @@ export type RunHold = {
   /** How it ended, which is what the room is being shown. */
   outcome: "cleared" | "wiped" | "fell";
   /** What it brought home, so the plaque can say so without going back to the run. */
-  rings: number;
+  wings: number;
   /** Whether the tablet is changing hands or the team is through. */
   kind: "handoff" | "finish";
   startedAtMs: number;
@@ -42,7 +42,7 @@ export const resolveRunHold = (
     runIndex: previousRunIndex,
     // A skipped run has no result and nothing to show: it reads as the run that never happened.
     outcome: endedRun.result?.outcome ?? "wiped",
-    rings: endedRun.result?.rings ?? 0,
+    wings: endedRun.result?.wings ?? 0,
     kind: view.runIndex >= view.runsPerTurn ? "finish" : "handoff",
     startedAtMs: nowMs
   };

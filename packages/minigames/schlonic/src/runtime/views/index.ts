@@ -4,7 +4,7 @@ import type {
   SchlonicPhase
 } from "@wingnight/shared";
 
-import { resolveRingsBanked, resolveRingsPar } from "../scoring/index.js";
+import { resolveWingsBanked, resolveWingsPar } from "../scoring/index.js";
 import type { SchlonicRuntimeState } from "../types/index.js";
 
 // Derived, never stored: the team is through once every run is behind it; otherwise the room is
@@ -41,15 +41,15 @@ const toSchlonicViewFields = (state: SchlonicRuntimeState) => {
     runsPerTurn: state.runsPerTurn,
     zoneSeed: state.zoneSeed,
     zoneChunks: state.zoneChunks,
-    parRingsPerRun: state.parRingsPerRun,
+    parWingsPerRun: state.parWingsPerRun,
     runs: state.runs.map((run) => ({
       ...run,
       player: run.player === null ? null : { ...run.player },
       inputs: run.inputs.map((input) => ({ ...input })),
       result: run.result === null ? null : { ...run.result }
     })),
-    ringsBanked: resolveRingsBanked(state.runs),
-    ringsPar: resolveRingsPar(state.parRingsPerRun, state.runsPerTurn),
+    wingsBanked: resolveWingsBanked(state.runs),
+    wingsPar: resolveWingsPar(state.parWingsPerRun, state.runsPerTurn),
     points: resolvePoints(state)
   };
 };

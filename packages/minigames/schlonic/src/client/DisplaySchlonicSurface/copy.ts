@@ -3,11 +3,11 @@ export const displaySchlonicSurfaceCopy = {
   zoneName: "Kempenfelt Bay Zone",
   introTitle: "Schlonic",
   introDescription:
-    "One chicken, one shoreline, and a lot of rings — past everything the waterfront has standing on it. The rings are the score, and they are also the only health there is: get hit and you drop half of them, get hit holding none and the run is over. The post is the only place a handful counts.",
+    "One chicken, one shoreline, and a lot of wings nobody is asking about. The wings are the score, and they are also the only health there is: get hit and you drop half of them, get hit holding none and the run is over. The post is the only place a handful counts.",
   waitingLabel: "Waiting for the zone…",
   runCounter: (runNumber: number, runsTotal: number): string => `Run ${runNumber} / ${runsTotal}`,
-  ringsCounter: (banked: number, par: number): string => `${banked} / ${par}`,
-  ringsLabel: "Rings",
+  wingsCounter: (banked: number, par: number): string => `${banked} / ${par}`,
+  wingsLabel: "Wings",
   sceneLabel: (playerName: string | null): string =>
     playerName === null ? "Kempenfelt Bay Zone" : `Kempenfelt Bay Zone — ${playerName}'s run`,
   readyPrompt: (playerName: string | null): string =>
@@ -27,9 +27,9 @@ export const displaySchlonicSurfaceCopy = {
 
     return outcome === "fell" ? "Down a hole!" : "Wiped out!";
   },
-  outcomeBlurb: (outcome: "cleared" | "wiped" | "fell", rings: number): string => {
+  outcomeBlurb: (outcome: "cleared" | "wiped" | "fell", wings: number): string => {
     if (outcome === "cleared") {
-      return `${rings} ring${rings === 1 ? "" : "s"} banked`;
+      return `${wings} wing${wings === 1 ? "" : "s"} banked`;
     }
 
     return outcome === "fell" ? "Everything went down with it" : "Nothing left to lose";
@@ -37,6 +37,6 @@ export const displaySchlonicSurfaceCopy = {
   handoffCalloutName: (nextName: string | null): string => nextName ?? "Next up",
   handoffCalloutLine: "You're up — grab the tablet",
   finishedTitle: "Zone clear",
-  finishedBlurb: (banked: number, par: number): string => `${banked} of ${par} rings`,
+  finishedBlurb: (banked: number, par: number): string => `${banked} of ${par} wings`,
   points: (points: number): string => `+${points}`
 } as const;

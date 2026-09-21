@@ -58,7 +58,7 @@ const RunHistory = ({ view }: { view: SchlonicMinigameHostView }): JSX.Element =
         <span>{resolvePlayerName(run) ?? hostSchlonicSurfaceCopy.historyPending}</span>
         <span>
           {run.status === "done"
-            ? hostSchlonicSurfaceCopy.runOutcome(run.result?.outcome ?? null, run.result?.rings ?? 0)
+            ? hostSchlonicSurfaceCopy.runOutcome(run.result?.outcome ?? null, run.result?.wings ?? 0)
             : hostSchlonicSurfaceCopy.historyPending}
         </span>
       </span>
@@ -88,7 +88,7 @@ const RunningTotals = ({
         </span>
       </div>
     ))}
-    <span className={styles.totalsNote}>{hostSchlonicSurfaceCopy.parLine(view.ringsPar)}</span>
+    <span className={styles.totalsNote}>{hostSchlonicSurfaceCopy.parLine(view.wingsPar)}</span>
   </div>
 );
 
@@ -234,9 +234,9 @@ export const HostSchlonicSurface = ({
           {hostSchlonicSurfaceCopy.teamPrefix} {resolvedActiveTeamName}
         </span>
         {isPlayPhase && schlonicView !== null && (
-          <span className={styles.railRings} data-schlonic-rings>
-            {hostSchlonicSurfaceCopy.ringsTally(schlonicView.ringsBanked, schlonicView.ringsPar)}
-            <span className={styles.railRingsLabel}>{hostSchlonicSurfaceCopy.ringsLabel}</span>
+          <span className={styles.railWings} data-schlonic-wings>
+            {hostSchlonicSurfaceCopy.wingsTally(schlonicView.wingsBanked, schlonicView.wingsPar)}
+            <span className={styles.railWingsLabel}>{hostSchlonicSurfaceCopy.wingsLabel}</span>
           </span>
         )}
       </div>
@@ -268,7 +268,7 @@ export const HostSchlonicSurface = ({
               <div className={styles.runMeta}>
                 <span>{hostSchlonicSurfaceCopy.bankedTitle}</span>
                 <span>
-                  {hostSchlonicSurfaceCopy.ringsTally(schlonicView.ringsBanked, schlonicView.ringsPar)}
+                  {hostSchlonicSurfaceCopy.wingsTally(schlonicView.wingsBanked, schlonicView.wingsPar)}
                 </span>
               </div>
             </div>

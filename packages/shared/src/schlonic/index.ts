@@ -4,7 +4,7 @@ export {
   isSchlonicOverPit,
   resolveSchlonicGroundSlope,
   resolveSchlonicGroundY,
-  resolveSchlonicRingTotal,
+  resolveSchlonicWingTotal,
   resolveSchlonicTickCap,
   resolveSchlonicZone
 } from "./world/index.js";

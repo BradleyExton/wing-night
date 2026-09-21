@@ -10,6 +10,9 @@
 //   pink with a FACE      = alive, an enemy, and squashable
 //   crimson, stubby, many = a thorn bed, and it hurts however you arrive
 //   pink with a PAD       = a springboard, and it is the only one that helps
+// The collectible is deliberately none of those: an orange wing on a pale bone, the one shape in
+// the zone that is not a schlong, because "grab this" and "avoid that" have to separate in the
+// half-second an arc goes past.
 // Drawing content, not UI chrome — exempt from the two-accent budget the way the drawing inks
 // and the JOUST arena are.
 export const schlonicPalette = {
@@ -52,8 +55,16 @@ export const schlonicPalette = {
   park: "#4fb87c",
   cloud: "#f4fbff",
   sun: "#ffe066",
-  ring: "#ffc300",
-  ringCore: "#fff3bf",
+  // The collectible, and the night's own joke: a sauced party wing. Orange rather than the gold
+  // a ring would be, because a hot orange separates from both the turf and the bay, which are the
+  // two grounds it mostly hangs over. The edge is much darker than the sauce rather than a shade
+  // of it: a wing crossing Allandale Station has to stay a wing, and the station's brick
+  // (`#a8523d`) is all but the same hue as a merely-darker orange would be.
+  wing: "#f5902b",
+  wingDark: "#7a3105",
+  wingGloss: "#ffce7a",
+  wingBone: "#fff1d6",
+  wingBoneDark: "#c9a273",
   // The schlong, in JOUST and FAPPY's own bubblegum: the one hue on a green shore that is
   // neither its turf nor its bay, so a row of them reads from the sofa.
   schlong: "#f9a3bc",

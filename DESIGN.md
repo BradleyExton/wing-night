@@ -640,7 +640,8 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     `#2b6ea6` and a shallow `#63b8de`, beach `#f0dcae`, park `#4fb87c`, and the
     ground itself turf `#3fa34d` over the bluff's sand `#d8bb86` over soil
     `#8a5a2b` — so a pit is a bite out of the shoreline with sand at the lips,
-    the way the real bluffs go. Rings are `#ffc300`. Drawing content, not UI
+    the way the real bluffs go. Wings are `#f5902b` on a `#fff1d6` bone.
+    Drawing content, not UI
     chrome — exempt from the two-accent budget the way the JOUST arena and the
     drawing inks are. The letterbox bars around the 16:9 world are near-black
     (`#0d1f14`): they are outside the world, and painting them sky-blue made
@@ -652,6 +653,16 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     arrive; *pink with a red-and-white PAD strapped over the glans* is a
     springboard, the only one on your side. The face means alive and the pad
     means safe — colour alone was never going to carry three meanings.
+-   **The collectible is the one thing out there that is not a schlong.** It is
+    a sauced party wing — a fat orange lobe on a pale bone, the night's own
+    name picked up off the floor by a chicken, and nobody asks where they came
+    from. That it shares no outline with the furniture is the point and not a
+    detail: the zone's three hazards are one silhouette read three ways, so
+    "grab this" can only separate from "avoid that" by being a different shape
+    entirely. Every wing in a zone is drawn identically — a collectible line
+    reads as a line because the eye stops resolving it after the first one —
+    and the drawing is sized off the sim's own `wingRadius`, so what the room
+    reaches for is the hitbox rather than a guess at it.
 -   The bird has no spine to bend, so its pose is how it is turned and how
     tightly it is tucked: on its feet it runs and leans with the ground, and
     the moment it leaves the ground it tucks and spins. The spin is the Sonic
@@ -661,13 +672,14 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     synchronised. The bird turns about the hitbox's own centre; a group inside
     it stands the cast on that centre and tucks it in, because a spin and a
     stance are different transforms and neither should know about the other.
--   **Rings are the score and the health bar at the same time.** That is the
+-   **Wings are the score and the health bar at the same time.** That is the
     whole design, so the tally is the one number both surfaces put in their
     chrome: the tablet's rail and the TV's marquee, in `gold`. A hit flashes
-    the bird for the sim's own mercy window and bursts a handful of rings out
-    of it; the burst is decoration, and none of it can be caught back.
+    the bird for the sim's own mercy window and bursts a handful of wings out
+    of it, tumbling as they go; the burst is decoration, and none of it can be
+    caught back.
 -   The zone is generated once per seed and scrolled with a transform, never
-    rebuilt. Rings and popped badniks are hidden through refs as they are
+    rebuilt. Wings and popped badniks are hidden through refs as they are
     taken — a zone carries a couple of hundred of them and the loop runs at
     60fps — and nothing in the scene is React-driven per frame, which is what
     keeps a costume head's halo filter rasterised once.
@@ -679,10 +691,10 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     a little longer than the tablet does and finishes the run it has before it
     switches: the room always sees the post or the hole, never a cut to the
     next start line.
--   Host: rail with the ring tally, the zone as the whole jump surface, a deck
+-   Host: rail with the wing tally, the zone as the whole jump surface, a deck
     of run card (player, banked) → zone-clear card → skip/reset → run list with
     each run's outcome → totals. Display: marquee (team, "Kempenfelt Bay Zone",
-    run, rings), the zone, a status line; an outcome plaque over the beat and
+    run, wings), the zone, a status line; an outcome plaque over the beat and
     the points plaque once the team is through.
 -   The run is the game: §8's infinite-animation rule does not bite.
     `prefers-reduced-motion` on the display shows how the run ended, without

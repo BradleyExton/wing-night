@@ -8,7 +8,7 @@ const DEFAULT_FAPPY_LEGS_PER_TURN = 4;
 const DEFAULT_FAPPY_GATES_PER_LEG = 8;
 const DEFAULT_RECREATE_TARGETS_PER_TURN = 1;
 const DEFAULT_SCHLONIC_RUNS_PER_TURN = 3;
-const DEFAULT_SCHLONIC_PAR_RINGS_PER_RUN = 70;
+const DEFAULT_SCHLONIC_PAR_WINGS_PER_RUN = 70;
 
 const resolvePositiveInteger = (value: unknown, fallback: number): number => {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : fallback;
@@ -149,9 +149,9 @@ const resolveSchlonicBriefingContent = (
 ): MinigameBriefingContent => {
   const rules = gameConfig?.minigameRules?.schlonic;
   const runsPerTurn = resolvePositiveInteger(rules?.runsPerTurn, DEFAULT_SCHLONIC_RUNS_PER_TURN);
-  const parRingsPerRun = resolvePositiveInteger(
-    rules?.parRingsPerRun,
-    DEFAULT_SCHLONIC_PAR_RINGS_PER_RUN
+  const parWingsPerRun = resolvePositiveInteger(
+    rules?.parWingsPerRun ?? rules?.parRingsPerRun,
+    DEFAULT_SCHLONIC_PAR_WINGS_PER_RUN
   );
 
   return {
@@ -159,11 +159,11 @@ const resolveSchlonicBriefingContent = (
     illustrationPath: `${DISPLAY_ASSET_ROOT}/schlonic-illustration.svg`,
     illustrationAlt: "Schlonic mini-game artwork",
     summary:
-      "One at a time, your chickens run Kempenfelt Bay Zone. The rings are the score — and they are the only health you have.",
+      "One at a time, your chickens run Kempenfelt Bay Zone, collecting wings. The wings are the score — and they are the only health you have.",
     steps: [
       `${runsPerTurn} run${runsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order. Everyone runs the same shore.`,
       "Your bird runs on its own; the tablet only jumps. Tap to hop, hold the tap to go higher — and you curl into a ball in the air, which is what lets you land on the things standing in the zone and pop them.",
-      `A thorn bed or a hole is bad news either way. Take a hit and you drop half your rings; take one holding none and the run is over. ${parRingsPerRun * runsPerTurn} rings over the post is full marks.`
+      `A thorn bed or a hole is bad news either way. Take a hit and you drop half your wings; take one holding none and the run is over. ${parWingsPerRun * runsPerTurn} wings over the post is full marks.`
     ]
   };
 };

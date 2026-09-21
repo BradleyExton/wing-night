@@ -40,7 +40,7 @@ const isResultOrNull = (value: unknown): value is SchlonicRunResult | null => {
     isObjectLike(value) &&
     OUTCOMES.some((outcome) => outcome === value.outcome) &&
     isNonNegativeInteger(value.endTick) &&
-    isNonNegativeInteger(value.rings) &&
+    isNonNegativeInteger(value.wings) &&
     isFiniteNumber(value.distance)
   );
 };
@@ -95,7 +95,7 @@ export const isSchlonicRuntimeState = (
     isNonNegativeInteger(state.runsPerTurn) &&
     isInteger(state.zoneSeed) &&
     isNonNegativeInteger(state.zoneChunks) &&
-    isNonNegativeInteger(state.parRingsPerRun) &&
+    isNonNegativeInteger(state.parWingsPerRun) &&
     isNonNegativeInteger(state.runIndex) &&
     Array.isArray(state.runs) &&
     state.runs.every(isRun) &&

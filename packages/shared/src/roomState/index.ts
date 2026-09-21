@@ -478,7 +478,7 @@ export type SchlonicPhase = "ready" | "running" | "finished";
 export type SchlonicRunResult = {
   outcome: SchlonicOutcome;
   endTick: number;
-  rings: number;
+  wings: number;
   distance: number;
 };
 
@@ -516,11 +516,11 @@ type SchlonicMinigameViewFields = {
   runsPerTurn: number;
   zoneSeed: number;
   zoneChunks: number;
-  parRingsPerRun: number;
+  parWingsPerRun: number;
   runs: SchlonicMinigameRun[];
   // What the team has brought home so far, and what it would need for the round's full points.
-  ringsBanked: number;
-  ringsPar: number;
+  wingsBanked: number;
+  wingsPar: number;
   points: number | null;
 };
 

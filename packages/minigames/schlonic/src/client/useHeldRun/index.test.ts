@@ -15,7 +15,7 @@ const run = (
   status,
   inputs: [],
   skipped: false,
-  result: outcome === null ? null : { outcome, endTick: 100, rings: 9, distance: 400 }
+  result: outcome === null ? null : { outcome, endTick: 100, wings: 9, distance: 400 }
 });
 
 const view = (runIndex: number, runs: SchlonicMinigameRun[]) => ({

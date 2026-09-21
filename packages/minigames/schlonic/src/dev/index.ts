@@ -6,6 +6,6 @@ import { createDevManifest } from "@wingnight/minigames-core";
 // low par lets the score climb where it can be seen; a real night runs the rules in
 // content/sample/gameConfig.json.
 export const schlonicDevManifest = createDevManifest({
-  rules: { runsPerTurn: 2, zoneSeed: 4, zoneChunks: 14, parRingsPerRun: 26 },
+  rules: { runsPerTurn: 2, zoneSeed: 4, zoneChunks: 14, parWingsPerRun: 26 },
   content: null
 });

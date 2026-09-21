@@ -21,8 +21,8 @@ const flatZone = (props: Omit<SchlonicProp, "index">[] = [], goalX = 600): Schlo
   goalX
 });
 
-const ring = (x: number, above: number): Omit<SchlonicProp, "index"> => ({
-  kind: "ring",
+const wing = (x: number, above: number): Omit<SchlonicProp, "index"> => ({
+  kind: "wing",
   x,
   y: FLAT_HEIGHT - above
 });
@@ -53,7 +53,7 @@ test("stands the runner on the ground at the line with nothing in hand", () => {
   assert.equal(frame.x, SCHLONIC_WORLD.runnerX);
   assert.equal(frame.y, FLAT_HEIGHT - SCHLONIC_WORLD.runnerRadius);
   assert.equal(frame.grounded, true);
-  assert.equal(frame.rings, 0);
+  assert.equal(frame.wings, 0);
   assert.equal(frame.outcome, null);
 });
 
@@ -115,34 +115,34 @@ test("refuses a second jump in the air, so one press is one jump", () => {
   assert.ok(doubled.y > single.y, "the mid-air press lifted the runner");
 });
 
-test("picks up a ring it runs through and leaves the ones it does not", () => {
-  const zone = flatZone([ring(120, 9), ring(400, 40)]);
+test("picks up a wing it runs through and leaves the ones it does not", () => {
+  const zone = flatZone([wing(120, 9), wing(400, 40)]);
   const frame = run(zone, [], 400);
 
-  assert.equal(frame.rings, 1);
+  assert.equal(frame.wings, 1);
   assert.deepEqual(frame.takenProps, [0]);
 });
 
-test("takes a ring only once, however long it stands in it", () => {
-  const zone = flatZone([ring(120, 9)]);
+test("takes a wing only once, however long it stands in it", () => {
+  const zone = flatZone([wing(120, 9)]);
   const frame = run(zone, [], 600);
 
-  assert.equal(frame.rings, 1);
+  assert.equal(frame.wings, 1);
 });
 
 test("costs half the handful and a chunk of speed to hit a spike strip", () => {
   const zone = flatZone([
-    ring(80, 9),
-    ring(90, 9),
-    ring(100, 9),
-    ring(110, 9),
+    wing(80, 9),
+    wing(90, 9),
+    wing(100, 9),
+    wing(110, 9),
     { kind: "spike", x: 200, y: FLAT_HEIGHT }
   ]);
   const before = run(zone, [], 100);
   const after = run(zone, [], 220);
 
-  assert.equal(before.rings, 4);
-  assert.equal(after.rings, 2);
+  assert.equal(before.wings, 4);
+  assert.equal(after.wings, 2);
   assert.equal(after.hits.length, 1);
   assert.equal(after.outcome, null);
 });
@@ -152,12 +152,12 @@ test("ends the run on a hit taken with nothing in hand", () => {
   const frame = run(zone, [], 400);
 
   assert.equal(frame.outcome, "wiped");
-  assert.equal(frame.rings, 0);
+  assert.equal(frame.wings, 0);
 });
 
 test("lets one strip cost only one handful, however wide the runner's stride", () => {
   const zone = flatZone([
-    ...Array.from({ length: 16 }, (_unused, index) => ring(60 + index * 10, 9)),
+    ...Array.from({ length: 16 }, (_unused, index) => wing(60 + index * 10, 9)),
     { kind: "spike", x: 260, y: FLAT_HEIGHT },
     { kind: "spike", x: 268, y: FLAT_HEIGHT }
   ]);
@@ -183,7 +183,7 @@ test("squashes the badnik it comes down on, and pays for it", () => {
       reachesIt + 90
     );
 
-    if (frame.rings > 0) {
+    if (frame.wings > 0) {
       squashes.push(frame);
     }
   }
@@ -191,7 +191,7 @@ test("squashes the badnik it comes down on, and pays for it", () => {
   assert.ok(squashes.length > 4, `only ${squashes.length} jump ticks landed on it`);
 
   for (const frame of squashes) {
-    assert.equal(frame.rings, SCHLONIC_WORLD.badnikRings);
+    assert.equal(frame.wings, SCHLONIC_WORLD.badnikWings);
     assert.equal(frame.hits.length, 0);
     assert.equal(frame.outcome, null);
   }
@@ -209,7 +209,7 @@ test("lets a high jump sail clean over a badnik without touching it", () => {
     jumpTick + 120
   );
 
-  assert.equal(frame.rings, 0);
+  assert.equal(frame.wings, 0);
   assert.equal(frame.hits.length, 0);
   assert.equal(frame.outcome, null);
 });
@@ -236,18 +236,18 @@ test("throws the runner at the high line off a spring", () => {
 
 test("ends the run in the hole, with everything that was in hand", () => {
   const zone: SchlonicZone = {
-    ...flatZone([ring(80, 9), ring(90, 9)]),
+    ...flatZone([wing(80, 9), wing(90, 9)]),
     pits: [{ fromX: 200, toX: 200 + SCHLONIC_WORLD.pitWidth, lipY: FLAT_HEIGHT }]
   };
   const frame = run(zone, [], 600);
 
   assert.equal(frame.outcome, "fell");
-  assert.equal(frame.rings, 0);
+  assert.equal(frame.wings, 0);
 });
 
 test("clears a hole that is jumped, and keeps what it was carrying", () => {
   const zone: SchlonicZone = {
-    ...flatZone([ring(80, 9)], 600),
+    ...flatZone([wing(80, 9)], 600),
     pits: [{ fromX: 200, toX: 200 + SCHLONIC_WORLD.pitWidth, lipY: FLAT_HEIGHT }]
   };
   // Leave the ground a stride before the lip and hold the jump out.
@@ -262,7 +262,7 @@ test("clears a hole that is jumped, and keeps what it was carrying", () => {
   );
 
   assert.equal(frame.outcome, "cleared");
-  assert.equal(frame.rings, 1);
+  assert.equal(frame.wings, 1);
 });
 
 test("replays a log to the same frame however it is stepped", () => {
@@ -295,21 +295,21 @@ test("referees a run to a result the server can score from", () => {
 });
 
 test("brings nothing home from a run that ended badly", () => {
-  const zone = flatZone([ring(80, 9), ring(90, 9), { kind: "spike", x: 300, y: FLAT_HEIGHT }]);
+  const zone = flatZone([wing(80, 9), wing(90, 9), { kind: "spike", x: 300, y: FLAT_HEIGHT }]);
   const frame = run(zone, [], 600);
 
-  assert.equal(frame.rings, 1);
+  assert.equal(frame.wings, 1);
 
   // The referee's own reading of the same shape of run: a wipeout banks nothing.
   const wiped = runSchlonicRun({ seed: 6, chunks: 22 }, []);
 
   assert.notEqual(wiped.outcome, "cleared");
-  assert.equal(wiped.rings, 0);
+  assert.equal(wiped.wings, 0);
 });
 
 test("settles a skipped run on the line, already over", () => {
   const frame = createSchlonicRunSkip(flatZone());
 
   assert.equal(frame.outcome, "wiped");
-  assert.equal(frame.rings, 0);
+  assert.equal(frame.wings, 0);
 });

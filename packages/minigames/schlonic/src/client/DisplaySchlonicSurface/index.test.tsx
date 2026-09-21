@@ -38,10 +38,10 @@ const createView = (
   runsPerTurn: 2,
   zoneSeed: 4,
   zoneChunks: 8,
-  parRingsPerRun: 20,
+  parWingsPerRun: 20,
   runs: [createRun(), createRun({ runIndex: 1 })],
-  ringsBanked: 0,
-  ringsPar: 40,
+  wingsBanked: 0,
+  wingsPar: 40,
   points: null,
   ...overrides
 });
@@ -67,8 +67,8 @@ test("sets the room up before the round rather than drawing an empty zone", () =
   assert.ok(!markup.includes("data-schlonic-scene"));
 });
 
-test("puts the team, the zone and the ring tally on the marquee", () => {
-  const markup = render(createView({ ringsBanked: 12 }));
+test("puts the team, the zone and the wing tally on the marquee", () => {
+  const markup = render(createView({ wingsBanked: 12 }));
 
   assert.ok(markup.includes("Team Alpha"));
   assert.ok(markup.includes("Kempenfelt Bay Zone"));
@@ -82,10 +82,10 @@ test("tells the room who is on the line and who is running", () => {
 });
 
 test("posts the turn's points once the team is through", () => {
-  const markup = render(createView({ phase: "finished", runIndex: 2, ringsBanked: 31, points: 11 }));
+  const markup = render(createView({ phase: "finished", runIndex: 2, wingsBanked: 31, points: 11 }));
 
   assert.ok(markup.includes('data-schlonic-result="finished"'));
-  assert.ok(markup.includes("31 of 40 rings"));
+  assert.ok(markup.includes("31 of 40 wings"));
   assert.ok(markup.includes("+11"));
 });
 

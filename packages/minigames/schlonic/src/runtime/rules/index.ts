@@ -2,7 +2,15 @@ import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { DEFAULT_SCHLONIC_RULES, type SchlonicRuntimeRules } from "../types/index.js";
 
-const RULE_KEYS = ["runsPerTurn", "zoneChunks", "parRingsPerRun"] as const;
+const RULE_KEYS = ["runsPerTurn", "zoneChunks", "parWingsPerRun"] as const;
+
+/**
+ * What `parWingsPerRun` was called before the zone was furnished with wings instead of rings.
+ * Still honoured, because the night pack's own `gameConfig.json` lives outside the repo and a
+ * key this file silently stopped reading would tune nothing and say nothing — the config would
+ * load clean and the party would run on the default.
+ */
+const LEGACY_PAR_KEY = "parRingsPerRun";
 
 /** The zone needs at least a run-up, one piece of kit and a straight to the post. */
 const ZONE_CHUNKS_MIN = 6;
@@ -30,6 +38,10 @@ export const isSchlonicRules = (value: unknown): boolean => {
     return false;
   }
 
+  if (rules[LEGACY_PAR_KEY] !== undefined && !isPositiveInteger(rules[LEGACY_PAR_KEY])) {
+    return false;
+  }
+
   if (!RULE_KEYS.every((key) => rules[key] === undefined || isPositiveInteger(rules[key]))) {
     return false;
   }
@@ -42,7 +54,14 @@ export const resolveSchlonicRules = (rules: SerializableValue | null): SchlonicR
     return { ...DEFAULT_SCHLONIC_RULES };
   }
 
-  const parsedRules = rules as Partial<Record<keyof SchlonicRuntimeRules, unknown>>;
+  const parsedRules = rules as Partial<Record<keyof SchlonicRuntimeRules, unknown>> & {
+    [LEGACY_PAR_KEY]?: unknown;
+  };
+  // The new key wins where a pack carries both; the old one still tunes a pack nobody has
+  // renamed yet.
+  const parWings = isPositiveInteger(parsedRules.parWingsPerRun)
+    ? parsedRules.parWingsPerRun
+    : parsedRules[LEGACY_PAR_KEY];
   const zoneChunks = isPositiveInteger(parsedRules.zoneChunks)
     ? parsedRules.zoneChunks
     : DEFAULT_SCHLONIC_RULES.zoneChunks;
@@ -53,8 +72,6 @@ export const resolveSchlonicRules = (rules: SerializableValue | null): SchlonicR
       : DEFAULT_SCHLONIC_RULES.runsPerTurn,
     zoneSeed: isSeed(parsedRules.zoneSeed) ? parsedRules.zoneSeed : DEFAULT_SCHLONIC_RULES.zoneSeed,
     zoneChunks: Math.max(ZONE_CHUNKS_MIN, zoneChunks),
-    parRingsPerRun: isPositiveInteger(parsedRules.parRingsPerRun)
-      ? parsedRules.parRingsPerRun
-      : DEFAULT_SCHLONIC_RULES.parRingsPerRun
+    parWingsPerRun: isPositiveInteger(parWings) ? parWings : DEFAULT_SCHLONIC_RULES.parWingsPerRun
   };
 };

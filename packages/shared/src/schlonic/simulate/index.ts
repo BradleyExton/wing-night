@@ -30,7 +30,7 @@ export const createSchlonicRunStart = (zone: SchlonicZone): SchlonicFrame => {
     vy: 0,
     grounded: true,
     holding: false,
-    rings: 0,
+    wings: 0,
     takenProps: [],
     hits: [],
     invulnerableUntilTick: 0,
@@ -44,7 +44,7 @@ export const createSchlonicRunSkip = (zone: SchlonicZone): SchlonicFrame => {
 };
 
 type Contact = {
-  rings: number;
+  wings: number;
   taken: number[];
   vy: number | null;
   isHit: boolean;
@@ -61,15 +61,15 @@ const isTouching = (frame: SchlonicFrame, prop: SchlonicProp, halfWidth: number,
 };
 
 /**
- * Everything the runner touched at its new position. Rings are taken, a badnik is popped by
+ * Everything the runner touched at its new position. Wings are taken, a badnik is popped by
  * anything airborne (the bird is a ball the moment its feet leave the ground, which is the whole
  * point of jumping on one) and pays for it, a springboard throws it at the high line, and a thorn
  * bed hurts however you arrive.
  */
 const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
-  const { runnerRadius, ringRadius, spikeWidth, spikeHeight, badnikWidth, badnikHeight, springWidth, springHeight } =
+  const { runnerRadius, wingRadius, spikeWidth, spikeHeight, badnikWidth, badnikHeight, springWidth, springHeight } =
     SCHLONIC_WORLD;
-  const contact: Contact = { rings: frame.rings, taken: [], vy: null, isHit: false };
+  const contact: Contact = { wings: frame.wings, taken: [], vy: null, isHit: false };
   const isInvulnerable = frame.tick < frame.invulnerableUntilTick;
 
   for (const prop of zone.props) {
@@ -81,8 +81,8 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
       continue;
     }
 
-    if (prop.kind === "ring") {
-      const reach = runnerRadius + ringRadius;
+    if (prop.kind === "wing") {
+      const reach = runnerRadius + wingRadius;
 
       if (
         frame.x + reach > prop.x &&
@@ -90,7 +90,7 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
         frame.y + reach > prop.y &&
         frame.y - reach < prop.y
       ) {
-        contact.rings += 1;
+        contact.wings += 1;
         contact.taken.push(prop.index);
       }
 
@@ -112,7 +112,7 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
 
       if (!frame.grounded) {
         // A bird in a ball: it lands on the thing rather than walking into it.
-        contact.rings += SCHLONIC_WORLD.badnikRings;
+        contact.wings += SCHLONIC_WORLD.badnikWings;
         contact.taken.push(prop.index);
         contact.vy = SCHLONIC_WORLD.badnikBounceVelocity;
         continue;
@@ -135,7 +135,7 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
  * outcome without guarding. Speed comes off the ground — a downhill is worth more than the legs
  * are — a press off the floor jumps and holding it climbs higher, a pit is the end of the run,
  * and a hit costs half the handful. Nothing but a hit taken with nothing in hand ends a run
- * short of the post: the rings are the health bar, which is why greed is the game.
+ * short of the post: the wings are the health bar, which is why greed is the game.
  */
 export const stepSchlonic = (
   frame: SchlonicFrame,
@@ -209,7 +209,7 @@ export const stepSchlonic = (
   };
 
   if (y > pitDeathY || isSchlonicInPit(zone, x, y)) {
-    return { ...moved, rings: 0, outcome: "fell" };
+    return { ...moved, wings: 0, outcome: "fell" };
   }
 
   const contact = resolveContacts(moved, zone);
@@ -217,18 +217,18 @@ export const stepSchlonic = (
     ...moved,
     vy: contact.vy ?? moved.vy,
     grounded: contact.vy === null ? moved.grounded : false,
-    rings: contact.rings,
+    wings: contact.wings,
     takenProps: contact.taken.length === 0 ? moved.takenProps : [...moved.takenProps, ...contact.taken]
   };
 
   if (contact.isHit) {
-    if (settled.rings <= 0) {
-      return { ...settled, rings: 0, hits: [...settled.hits, tick], outcome: "wiped" };
+    if (settled.wings <= 0) {
+      return { ...settled, wings: 0, hits: [...settled.hits, tick], outcome: "wiped" };
     }
 
     return {
       ...settled,
-      rings: Math.floor(settled.rings / 2),
+      wings: Math.floor(settled.wings / 2),
       vx: Math.max(minSpeed, settled.vx * hitSpeedShare),
       vy: hitBounceVelocity,
       grounded: false,
@@ -300,8 +300,8 @@ export const runSchlonicRun = (
   return {
     outcome: frame.outcome ?? "running",
     endTick: frame.tick,
-    // A run that ended badly comes home with nothing: the rings were the health bar.
-    rings: frame.outcome === "cleared" ? frame.rings : 0,
+    // A run that ended badly comes home with nothing: the wings were the health bar.
+    wings: frame.outcome === "cleared" ? frame.wings : 0,
     distance: Math.max(0, Math.min(zone.goalX, frame.x) - SCHLONIC_WORLD.runnerX),
     frame
   };

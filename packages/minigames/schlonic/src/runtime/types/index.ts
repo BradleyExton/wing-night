@@ -8,8 +8,8 @@ export type SchlonicRuntimeRules = {
    */
   zoneSeed: number;
   zoneChunks: number;
-  /** The rings one clean run is expected to come home with. Par for the whole team is this times the runs. */
-  parRingsPerRun: number;
+  /** The wings one clean run is expected to come home with. Par for the whole team is this times the runs. */
+  parWingsPerRun: number;
 };
 
 export type SchlonicRuntimeRun = SchlonicMinigameRun;
@@ -19,7 +19,7 @@ export type SchlonicRuntimeState = {
   runsPerTurn: number;
   zoneSeed: number;
   zoneChunks: number;
-  parRingsPerRun: number;
+  parWingsPerRun: number;
   /** The run in hand; equal to `runsPerTurn` once the team is through. */
   runIndex: number;
   runs: SchlonicRuntimeRun[];
@@ -36,5 +36,5 @@ export const DEFAULT_SCHLONIC_RULES: SchlonicRuntimeRules = {
   runsPerTurn: 3,
   zoneSeed: 20260919,
   zoneChunks: 22,
-  parRingsPerRun: 70
+  parWingsPerRun: 70
 };

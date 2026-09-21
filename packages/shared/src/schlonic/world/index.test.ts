@@ -7,7 +7,7 @@ import {
   isSchlonicOverPit,
   resolveSchlonicGroundSlope,
   resolveSchlonicGroundY,
-  resolveSchlonicRingTotal,
+  resolveSchlonicWingTotal,
   resolveSchlonicTickCap,
   resolveSchlonicZone
 } from "./index.js";
@@ -57,11 +57,11 @@ test("deals every team the same mix of hard kit rather than rolling each slot", 
   }
 });
 
-test("hangs enough rings that a clean run is worth chasing", () => {
-  assert.ok(resolveSchlonicRingTotal(zoneOf(3, 22)) > 80);
+test("hangs enough wings that a clean run is worth chasing", () => {
+  assert.ok(resolveSchlonicWingTotal(zoneOf(3, 22)) > 80);
 });
 
-test("keeps every ring inside the box and off the floor", () => {
+test("keeps every wing inside the box and off the floor", () => {
   const zone = zoneOf(11, 24);
 
   for (const prop of zone.props) {

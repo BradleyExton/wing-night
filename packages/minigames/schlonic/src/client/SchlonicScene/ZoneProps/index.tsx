@@ -3,8 +3,9 @@ import type { SchlonicProp, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD } from "@wingnight/shared";
 
 import { schlonicPalette } from "../palette.js";
+import { Wing } from "../Wing/index.js";
 
-// Everything standing on the zone's floor, drawn once and scrolled with it. A taken ring and a
+// Everything standing on the zone's floor, drawn once and scrolled with it. A taken wing and a
 // squashed schlong are hidden by the paint loop through these refs rather than by a re-render:
 // there are a couple of hundred of them and the loop runs at sixty frames a second.
 export type RegisterProp = (index: number, element: SVGGElement | null) => void;
@@ -38,7 +39,7 @@ const CRIMSON: SchlongSkin = {
 };
 
 // One body along a spine, in the cast's own drawing (§2.8, `resolveSchlongPaths`): the shaft,
-// the gloss down its lit side, the rim and the slit. Everything in the zone that is not a ring
+// the gloss down its lit side, the rim and the slit. Everything in the zone that is not a wing
 // or the ground is one of these.
 const SchlongBody = ({
   spine,
@@ -127,23 +128,9 @@ const GroundShadow = ({ x, y, radius }: { x: number; y: number; radius: number }
   <ellipse cx={x} cy={y + 0.5} rx={radius} ry={1.1} fill={schlonicPalette.shadow} opacity={0.3} />
 );
 
-const Ring = ({ prop }: { prop: SchlonicProp }): JSX.Element => (
-  <g data-schlonic-ring={prop.index}>
-    <circle
-      cx={prop.x}
-      cy={prop.y}
-      r={SCHLONIC_WORLD.ringRadius}
-      fill="none"
-      stroke={schlonicPalette.ring}
-      strokeWidth={1.3}
-    />
-    <circle
-      cx={prop.x - 0.7}
-      cy={prop.y - 0.7}
-      r={SCHLONIC_WORLD.ringRadius * 0.4}
-      fill={schlonicPalette.ringCore}
-      opacity={0.8}
-    />
+const ZoneWing = ({ prop }: { prop: SchlonicProp }): JSX.Element => (
+  <g data-schlonic-wing={prop.index} transform={`translate(${prop.x} ${prop.y})`}>
+    <Wing />
   </g>
 );
 
@@ -290,8 +277,8 @@ type ZonePropsProps = {
 };
 
 const drawProp = (prop: SchlonicProp): JSX.Element => {
-  if (prop.kind === "ring") {
-    return <Ring prop={prop} />;
+  if (prop.kind === "wing") {
+    return <ZoneWing prop={prop} />;
   }
 
   if (prop.kind === "spike") {

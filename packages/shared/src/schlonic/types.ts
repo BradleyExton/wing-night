@@ -14,19 +14,21 @@ export type SchlonicPit = {
 };
 
 /**
- * Everything that is not ground: a ring to collect, a thorn bed that always hurts, a badnik that
+ * Everything that is not ground: a wing to collect, a thorn bed that always hurts, a badnik that
  * only hurts you on your feet (land on it and it pops instead), and a springboard that throws you
- * at the high ring line. The runner is the player's own cast hen; the zone is furnished with the
- * cast's schlong, which is the whole visual joke.
+ * at the high wing line. The runner is the player's own cast hen and the three HAZARDS are all
+ * the cast's schlong, which is the whole visual joke; the wing is deliberately neither, because
+ * a collectible that shared a silhouette with the things that hurt you would be unreadable at
+ * the speed this runs at.
  */
-export type SchlonicPropKind = "ring" | "spike" | "badnik" | "spring";
+export type SchlonicPropKind = "wing" | "spike" | "badnik" | "spring";
 
 export type SchlonicProp = {
   /** Index within the zone's own `props`, so a frame can name the ones it has taken. */
   index: number;
   kind: SchlonicPropKind;
   x: number;
-  /** Centre for a ring; the ground it stands on for everything else. */
+  /** Centre for a wing; the ground it stands on for everything else. */
   y: number;
 };
 
@@ -68,11 +70,11 @@ export type SchlonicFrame = {
   grounded: boolean;
   /** The button is still down: a held jump climbs higher, the way a platformer should. */
   holding: boolean;
-  /** Rings in hand — the score, and the whole health bar. */
-  rings: number;
-  /** Props already taken, by index: rings collected and badniks smashed. */
+  /** Wings in hand — the score, and the whole health bar. */
+  wings: number;
+  /** Props already taken, by index: wings collected and badniks smashed. */
   takenProps: number[];
-  /** The tick of every hit this run, so a surface can burst rings at the right moment. */
+  /** The tick of every hit this run, so a surface can burst wings at the right moment. */
   hits: number[];
   /** Hits pass through up to this tick, so one spike strip cannot cost two handfuls. */
   invulnerableUntilTick: number;
@@ -83,8 +85,8 @@ export type SchlonicRun = {
   /** `running` only when the tick cap was reached first, which the cap is sized to make impossible. */
   outcome: SchlonicOutcome | "running";
   endTick: number;
-  /** Rings in hand when it ended — nothing if the run ended badly. */
-  rings: number;
+  /** Wings in hand when it ended — nothing if the run ended badly. */
+  wings: number;
   /** How far along the zone the run got, in world units. */
   distance: number;
   frame: SchlonicFrame;

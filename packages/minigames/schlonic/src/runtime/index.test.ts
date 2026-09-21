@@ -5,7 +5,7 @@ import { runSchlonicRun } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { isSchlonicRules, resolveSchlonicRules } from "./rules/index.js";
-import { resolveSchlonicPoints, resolveRingsBanked, resolveRingsPar } from "./scoring/index.js";
+import { resolveSchlonicPoints, resolveWingsBanked, resolveWingsPar } from "./scoring/index.js";
 import { DEFAULT_SCHLONIC_RULES } from "./types/index.js";
 import { schlonicRuntimePlugin } from "./index.js";
 
@@ -20,7 +20,7 @@ const TEAMS: Team[] = [
   { id: "team-b", name: "Team B", playerIds: [], totalScore: 0 }
 ];
 
-const RULES = { runsPerTurn: 2, zoneSeed: 4, zoneChunks: 14, parRingsPerRun: 20 };
+const RULES = { runsPerTurn: 2, zoneSeed: 4, zoneChunks: 14, parWingsPerRun: 20 };
 const POINTS_MAX = 15;
 
 const initialize = (rules: SerializableValue = RULES): SerializableValue => {
@@ -170,7 +170,7 @@ test("scores from its own re-run of the log, never from anything the tablet clai
   assert.deepEqual(recorded, {
     outcome: refereed.outcome,
     endTick: refereed.endTick,
-    rings: refereed.rings,
+    wings: refereed.wings,
     distance: refereed.distance
   });
 });
@@ -182,11 +182,11 @@ test("brings nothing home from a run that never reached the post", () => {
   const view = hostView(ended.state);
 
   assert.equal(view.runs[0]?.result?.outcome, "fell");
-  assert.equal(view.runs[0]?.result?.rings, 0);
-  assert.equal(view.ringsBanked, 0);
+  assert.equal(view.runs[0]?.result?.wings, 0);
+  assert.equal(view.wingsBanked, 0);
 });
 
-test("scores the turn out of the rings the team carried over the post", () => {
+test("scores the turn out of the wings the team carried over the post", () => {
   assert.equal(resolveSchlonicPoints(0, 40, 15), 0);
   assert.equal(resolveSchlonicPoints(20, 40, 15), 8);
   assert.equal(resolveSchlonicPoints(40, 40, 15), 15);
@@ -195,10 +195,10 @@ test("scores the turn out of the rings the team carried over the post", () => {
 });
 
 test("counts par across the whole team's runs, not one of them", () => {
-  assert.equal(resolveRingsPar(20, 3), 60);
+  assert.equal(resolveWingsPar(20, 3), 60);
   assert.equal(
-    resolveRingsBanked([
-      { runIndex: 0, player: null, status: "done", inputs: [], skipped: false, result: { outcome: "cleared", endTick: 10, rings: 7, distance: 100 } },
+    resolveWingsBanked([
+      { runIndex: 0, player: null, status: "done", inputs: [], skipped: false, result: { outcome: "cleared", endTick: 10, wings: 7, distance: 100 } },
       { runIndex: 1, player: null, status: "done", inputs: [], skipped: true, result: null }
     ]),
     7
@@ -212,7 +212,7 @@ test("skips a run the tablet cannot take, banking nothing and moving on", () => 
   assert.equal(view.runIndex, 1);
   assert.equal(view.runs[0]?.skipped, true);
   assert.equal(view.runs[0]?.result, null);
-  assert.equal(view.ringsBanked, 0);
+  assert.equal(view.wingsBanked, 0);
 });
 
 test("finishes the turn once every run is behind the team", () => {
@@ -246,7 +246,7 @@ test("hands back exactly what the turn banked on a reset", () => {
 
   assert.equal(view.runIndex, 0);
   assert.equal(view.phase, "ready");
-  assert.equal(view.ringsBanked, 0);
+  assert.equal(view.wingsBanked, 0);
   assert.equal(view.pendingPointsByTeamId["team-a"], 4);
   assert.deepEqual(
     view.runs.map((run) => run.inputs),

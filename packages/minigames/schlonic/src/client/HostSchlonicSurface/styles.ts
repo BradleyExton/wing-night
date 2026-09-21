@@ -10,11 +10,11 @@ export const railTeam = "flex items-center gap-2 text-text";
 
 export const railTeamDot = "h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_#f97316]";
 
-// The ring tally is the one number the tablet holder should feel: it is the score and the health
+// The wing tally is the one number the tablet holder should feel: it is the score and the health
 // bar at once.
-export const railRings = "ml-auto flex items-baseline gap-2 font-mono text-base tracking-normal text-gold";
+export const railWings = "ml-auto flex items-baseline gap-2 font-mono text-base tracking-normal text-gold";
 
-export const railRingsLabel = "text-xs text-mutedWarmDim";
+export const railWingsLabel = "text-xs text-mutedWarmDim";
 
 export const introCard =
   "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";

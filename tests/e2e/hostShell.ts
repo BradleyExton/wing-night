@@ -119,8 +119,8 @@ export const startMinigameFromEating = async (hostPage: Page): Promise<void> => 
 
 // The same takeover as the TV sees it. A locator rather than a copy string
 // because SCHLONIC's marquee already carries a data hook, and every wording on
-// that surface — zone name, status line, ring tally — is the game's to retune;
+// that surface — zone name, status line, wing tally — is the game's to retune;
 // specs that assert on it red out for reasons that are not about the shell.
 export const displayMinigameTakeover = (displayPage: Page): Locator => {
-  return displayPage.locator("[data-schlonic-rings]");
+  return displayPage.locator("[data-schlonic-wings]");
 };

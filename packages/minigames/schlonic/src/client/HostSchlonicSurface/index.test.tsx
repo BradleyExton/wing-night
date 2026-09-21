@@ -46,10 +46,10 @@ const createView = (
   runsPerTurn: 2,
   zoneSeed: 4,
   zoneChunks: 8,
-  parRingsPerRun: 20,
+  parWingsPerRun: 20,
   runs: [createRun(), createRun({ runIndex: 1, player: MORGAN })],
-  ringsBanked: 0,
-  ringsPar: 40,
+  wingsBanked: 0,
+  wingsPar: 40,
   points: null,
   ...overrides
 });
@@ -88,8 +88,8 @@ test("draws the zone and names whose run it is", () => {
   assert.ok(markup.includes("Alex: tap to go"));
 });
 
-test("keeps the tally of rings on the rail, because it is the score and the health at once", () => {
-  const markup = render(createView({ ringsBanked: 17, ringsPar: 40 }));
+test("keeps the tally of wings on the rail, because it is the score and the health at once", () => {
+  const markup = render(createView({ wingsBanked: 17, wingsPar: 40 }));
 
   assert.ok(markup.includes("17 / 40"));
 });
@@ -107,7 +107,7 @@ test("shows how each finished run went, and what it banked", () => {
       runs: [
         createRun({
           status: "done",
-          result: { outcome: "cleared", endTick: 900, rings: 24, distance: 480 }
+          result: { outcome: "cleared", endTick: 900, wings: 24, distance: 480 }
         }),
         createRun({ runIndex: 1, player: MORGAN })
       ]
@@ -126,7 +126,7 @@ test("names a run that went down a hole as one, so the room knows what it saw", 
       runs: [
         createRun({
           status: "done",
-          result: { outcome: "fell", endTick: 300, rings: 0, distance: 120 }
+          result: { outcome: "fell", endTick: 300, wings: 0, distance: 120 }
         }),
         createRun({ runIndex: 1, player: MORGAN })
       ]
@@ -141,7 +141,7 @@ test("posts the turn's points once the team is through", () => {
     createView({
       phase: "finished",
       runIndex: 2,
-      ringsBanked: 31,
+      wingsBanked: 31,
       points: 11
     })
   );

@@ -122,7 +122,7 @@ export {
   isSchlonicOverPit,
   resolveSchlonicGroundSlope,
   resolveSchlonicGroundY,
-  resolveSchlonicRingTotal,
+  resolveSchlonicWingTotal,
   resolveSchlonicTickCap,
   resolveSchlonicZone,
   runSchlonicRun,

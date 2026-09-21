@@ -42,18 +42,18 @@ export const SCHLONIC_WORLD = {
   slopeAcceleration: 0.052,
   /** However badly it goes, the runner never comes to a stop — the room would be waiting. */
   minSpeed: 0.34,
-  ringRadius: 2.6,
+  wingRadius: 2.6,
   spikeHeight: 6.5,
   spikeWidth: 14,
   badnikHeight: 10,
   badnikWidth: 9,
   springHeight: 8,
   springWidth: 9,
-  /** What a springboard is for: the high ring line, which the legs alone cannot reach. */
+  /** What a springboard is for: the high wing line, which the legs alone cannot reach. */
   springVelocity: -3.4,
   /** Popping a badnik bounces the runner back up, and pays. */
   badnikBounceVelocity: -1.7,
-  badnikRings: 3,
+  badnikWings: 3,
   /** A hit costs half the handful, knocks the runner back, and buys this long to recover. */
   invulnerableTicks: 70,
   hitSpeedShare: 0.45,
@@ -246,19 +246,19 @@ const addProp = (
   placer.props.push({ index: placer.props.length, kind, x, y });
 };
 
-/** A line of rings hanging `above` the ground, one every 10 units. */
-const addRingRun = (placer: PropPlacer, fromX: number, count: number, above: number): void => {
+/** A line of wings hanging `above` the ground, one every 10 units. */
+const addWingRun = (placer: PropPlacer, fromX: number, count: number, above: number): void => {
   for (let step = 0; step < count; step += 1) {
     const x = fromX + step * 10;
     const ground = groundAt(placer.heights, placer.pits, x);
     const floor = ground >= SCHLONIC_WORLD.pitFloorY ? SCHLONIC_WORLD.groundBaseY : ground;
 
-    addProp(placer, "ring", x, Math.max(6, floor - above));
+    addProp(placer, "wing", x, Math.max(6, floor - above));
   }
 };
 
-/** A shallow arc of rings, the shape of a jump: the greedy line over a pit or a crest. */
-const addRingArc = (placer: PropPlacer, fromX: number, count: number, above: number): void => {
+/** A shallow arc of wings, the shape of a jump: the greedy line over a pit or a crest. */
+const addWingArc = (placer: PropPlacer, fromX: number, count: number, above: number): void => {
   const middle = (count - 1) / 2;
 
   for (let step = 0; step < count; step += 1) {
@@ -267,7 +267,7 @@ const addRingArc = (placer: PropPlacer, fromX: number, count: number, above: num
     const floor = ground >= SCHLONIC_WORLD.pitFloorY ? SCHLONIC_WORLD.groundBaseY : ground;
     const lift = 7 * (1 - ((step - middle) * (step - middle)) / Math.max(1, middle * middle));
 
-    addProp(placer, "ring", x, Math.max(6, floor - above - lift));
+    addProp(placer, "wing", x, Math.max(6, floor - above - lift));
   }
 };
 
@@ -279,7 +279,7 @@ const addChunkProps = (
   random: () => number
 ): void => {
   if (kind === "pit") {
-    addRingArc(placer, chunkX + 14, 5, 15);
+    addWingArc(placer, chunkX + 14, 5, 15);
     return;
   }
 
@@ -287,8 +287,8 @@ const addChunkProps = (
     const spikeX = chunkX + 24;
 
     addProp(placer, "spike", spikeX, groundAt(placer.heights, placer.pits, spikeX));
-    addRingArc(placer, spikeX - 4, 3, 16);
-    addRingRun(placer, chunkX + 44, 2, 9);
+    addWingArc(placer, spikeX - 4, 3, 16);
+    addWingRun(placer, chunkX + 44, 2, 9);
     return;
   }
 
@@ -296,8 +296,8 @@ const addChunkProps = (
     const badnikX = chunkX + 32;
 
     addProp(placer, "badnik", badnikX, groundAt(placer.heights, placer.pits, badnikX));
-    addRingRun(placer, chunkX + 6, 2, 9);
-    addRingArc(placer, badnikX - 6, 3, 18);
+    addWingRun(placer, chunkX + 6, 2, 9);
+    addWingArc(placer, badnikX - 6, 3, 18);
     return;
   }
 
@@ -311,28 +311,28 @@ const addChunkProps = (
       const x = springX + 6 + step * 9;
       const ground = groundAt(placer.heights, placer.pits, x);
 
-      addProp(placer, "ring", x, Math.max(6, ground - 22 - step * 7));
+      addProp(placer, "wing", x, Math.max(6, ground - 22 - step * 7));
     }
 
-    addRingRun(placer, chunkX + 44, 2, 9);
+    addWingRun(placer, chunkX + 44, 2, 9);
     return;
   }
 
   if (kind === "hill") {
-    addRingArc(placer, chunkX + 14, 4, 10);
+    addWingArc(placer, chunkX + 14, 4, 10);
     // The high line: reachable only by leaving the crest at speed.
-    addRingRun(placer, chunkX + 24, 3, 22);
+    addWingRun(placer, chunkX + 24, 3, 22);
     return;
   }
 
   if (kind === "dip") {
-    addRingRun(placer, chunkX + 14, 4, 9);
+    addWingRun(placer, chunkX + 14, 4, 9);
     // Straight across the dip, for whoever would rather keep their speed than collect the floor.
-    addRingRun(placer, chunkX + 20, 3, 20);
+    addWingRun(placer, chunkX + 20, 3, 20);
     return;
   }
 
-  addRingRun(placer, chunkX + 10, pickInteger(random, 4, 5), 9);
+  addWingRun(placer, chunkX + 10, pickInteger(random, 4, 5), 9);
 };
 
 /**
@@ -372,9 +372,9 @@ export const resolveSchlonicZone = ({ seed, chunks }: SchlonicZoneCourse): Schlo
   };
 };
 
-/** Every ring the zone holds: what a perfect run would come home with. */
-export const resolveSchlonicRingTotal = (zone: SchlonicZone): number => {
-  return zone.props.filter((prop) => prop.kind === "ring").length;
+/** Every wing the zone holds: what a perfect run would come home with. */
+export const resolveSchlonicWingTotal = (zone: SchlonicZone): number => {
+  return zone.props.filter((prop) => prop.kind === "wing").length;
 };
 
 /**
