@@ -34,10 +34,11 @@ export const schlonicPalette = {
   town: "#93abc6",
   townDark: "#6f89a7",
   townGlass: "#e2f0fb",
-  // The Spirit Catcher, in weathered steel. It is a bird, which is the joke the city got to
-  // first — the one on the hill is just smaller.
-  steel: "#aebccb",
-  steelDark: "#5f6e7d",
+  // The Spirit Catcher, in the weathering steel it is actually made of — warm and dark, not the
+  // cool grey a steel sculpture is drawn in from memory. It is a bird, which is the joke the
+  // city got to first; the one on the hill is just smaller.
+  steel: "#8a7263",
+  steelDark: "#55433a",
   // Allandale Station and the marina below it.
   brick: "#a8523d",
   brickDark: "#6f3325",

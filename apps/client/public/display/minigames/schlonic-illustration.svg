@@ -64,15 +64,32 @@
     <rect x="193" y="123.4" width="1.4" height="7" fill="#3d4b58" />
   </g>
 
-  <!-- The Spirit Catcher: the city put a giant steel bird on this shore first -->
-  <g fill="#aebccb" stroke="#5f6e7d" stroke-width="0.7" stroke-linejoin="round">
-    <rect x="27.2" y="126.6" width="13.7" height="3.8" fill="#5f6e7d" stroke="none" />
-    <path d="M 31.15 127 L 36.85 127 L 35.33 100 L 32.67 100 Z" />
-    <path d="M 32.86 107.6 C 22.6 101.9 12.15 88.6 15 71.5 C 20.7 82 28.3 90.5 36.28 98.1 Z" />
-    <path d="M 35.14 101.14 L 50.2 112.35 L 47.3 104.56 Z" />
-    <circle cx="32.86" cy="95.82" r="3.04" />
-    <path d="M 30.58 94.68 L 23.74 93.16 L 30.58 96.96 Z" />
-    <path d="M 31.34 104.94 C 24.5 98.1 18.04 88.6 16.52 75.3" fill="none" stroke="#5f6e7d" stroke-width="0.7" opacity="0.55" />
+  <!-- The Spirit Catcher: the city put a giant steel bird on this shore first.
+       Same shape as the scene backdrop, at 1.60x — see SpiritCatcher in
+       packages/minigames/schlonic/.../Backdrop for the measurements. -->
+  <path d="M 12.96 126 Q 32 120.68 51.04 126 Z" fill="#1f6b34" opacity="0.5" />
+  <g fill="#8a7263">
+    <path d="M 25.84 89.76 L 4.84 78.84 L 4.84 78.84 L 5.83 82.87 L 6.83 83.54 L 7.5 86.48 L 8.17 86.06 L 8.84 88.9 L 9.52 88.38 L 10.19 91.63 L 10.86 91.52 L 12.2 94.5 L 13.55 94.12 L 14.89 97.03 L 16.24 96.58 L 17.59 99.92 L 18.95 99.9 L 20.3 103.69 L 21.64 104.12 C 22.06 98.84 23.74 95.76 25.84 90.16 Z" />
+    <path d="M 38.16 89.76 L 59.16 78.84 L 59.16 78.84 L 58.17 82.87 L 57.17 83.54 L 56.5 86.48 L 55.83 86.06 L 55.16 88.9 L 54.48 88.38 L 53.81 91.63 L 53.14 91.52 L 51.8 94.5 L 50.45 94.12 L 49.11 97.03 L 47.76 96.58 L 46.41 99.92 L 45.05 99.9 L 43.7 103.69 L 42.36 104.12 C 41.94 98.84 40.26 95.76 38.16 90.16 Z" />
+    <path d="M 32 91.56 L 4 77.84 L 5.12 79.54 L 32 93.52 Z" />
+    <path d="M 32 91.56 L 60 77.84 L 58.88 79.54 L 32 93.52 Z" />
+    <path d="M 30.04 92.96 L 28.58 92.96 L 22.09 126 L 23.54 126 Z" />
+    <path d="M 33.96 92.96 L 35.42 92.96 L 41.91 126 L 40.46 126 Z" />
+    <path d="M 26.62 89.88 L 27.13 89.88 L 27.13 84.28 L 26.62 84.28 Z" />
+    <path d="M 37.38 89.88 L 36.87 89.88 L 36.87 84.28 L 37.38 84.28 Z" />
+    <path d="M 31.33 92.4 L 32.67 92.4 L 32.67 126 L 31.33 126 Z" />
+    <path d="M 31.33 92.68 L 32.67 92.68 L 32.67 83.44 L 31.33 83.44 Z" />
+    <path d="M 29.34 79.24 C 29.34 85.96 34.66 85.96 34.66 79.24 C 33.26 83.16 30.74 83.16 29.34 79.24 Z" />
+  </g>
+  <g fill="none" stroke="#8a7263" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M 25.98 89.27 C 26.12 94.92 29.48 96.6 32 96.6" />
+    <path d="M 38.02 89.27 C 37.88 94.92 34.52 96.6 32 96.6" />
+    <path d="M 32 91.84 C 28.64 93.24 28.64 104.16 32 109.2 C 35.36 104.16 35.36 93.24 32 91.84 Z" />
+    <path d="M 29.06 96.32 L 34.94 96.32" />
+  </g>
+  <g fill="none" stroke="#55433a" stroke-width="0.62" opacity="0.75">
+    <path d="M 25.28 89.47 L 5.4 79.13" />
+    <path d="M 38.72 89.47 L 58.6 79.13" />
   </g>
 
   <!-- The shore, cut by a hole on the right: turf over the bay's sand over the clay -->
