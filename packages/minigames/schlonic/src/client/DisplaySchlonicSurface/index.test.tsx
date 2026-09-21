@@ -71,7 +71,7 @@ test("puts the team, the zone and the ring tally on the marquee", () => {
   const markup = render(createView({ ringsBanked: 12 }));
 
   assert.ok(markup.includes("Team Alpha"));
-  assert.ok(markup.includes("Chubby Hill Zone"));
+  assert.ok(markup.includes("Kempenfelt Bay Zone"));
   assert.ok(markup.includes("Run 1 / 2"));
   assert.ok(markup.includes("12 / 40"));
 });

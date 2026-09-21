@@ -571,27 +571,43 @@ it, and the forger — the image model — paints their version next to it.
     italics, ingredient chips that fill `success` as the host ticks, the
     points seal and the real prompt on lock.
 
-## 2.11 SCHLONIC Minigame Surface Language ("Chubby Hill Zone")
+## 2.11 SCHLONIC Minigame Surface Language ("Kempenfelt Bay Zone")
 
 The SCHLONIC surfaces are the one place in the night that is supposed to look
 like a 16-bit platformer, and they look like nothing else in the show on
-purpose: a bright morning over a green hill, so the room knows which game it
-is watching from the sofa before a word is read.
+purpose: a bright summer morning on Kempenfelt Bay, so the room knows which
+game it is watching from the sofa before a word is read — and, because
+everyone on that sofa is from Barrie, knows where it is watching it from.
 
 -   **The two cast members finally meet, and the hen is the hero.** The runner
     is the player's own bird (§2.8) — team colour, their generated head, their
     team's apparel, the same character that parades in the lobby and flies
     FAPPY's corridor. Everything standing in its way is the cast's schlong
-    (§2.8, the same `resolveSchlongPaths` JOUST fires). The hill is furnished
-    with dicks and a chicken is running through them; that is the joke, and
+    (§2.8, the same `resolveSchlongPaths` JOUST fires). The shore is furnished
+    with dicks and a chicken is running down it; that is the joke, and
     nothing else on screen has to carry it.
+-   **The zone is the city's own shoreline.** The runner runs the south shore of
+    Kempenfelt Bay, facing east down the water into the morning sun, and the
+    backdrop is four banks scrolling at their own share of the zone: clouds and
+    gulls; Oro's treeline across the water; downtown's slabs, the stepped block
+    of City Hall and a spire at the west end; and the near waterfront strip —
+    the Spirit Catcher, the marina, Allandale Station. The city put a giant
+    steel bird on that shore decades before this game put a small one on it,
+    which is the joke nobody from here has to be told. Every bank is hazed,
+    flat and quiet: it is a backdrop, and a pink one with a face still has to
+    win the eye. Each bank is only as wide as the zone's own length needs
+    (`bandWidth`), so a long zone never outruns its skyline and a short one
+    does not pay for scenery it never reaches.
 -   Scene materials are their own (`packages/minigames/schlonic/.../palette.ts`):
-    a sky that runs `#2aa7e0` to `#bdeafc`, turf `#3fa34d` over soil `#8a5a2b`,
-    two banks of parallax hills and a row of clouds behind. Rings are `#ffc300`.
-    Drawing content, not UI chrome — exempt from the two-accent budget the way
-    the JOUST arena and the drawing inks are. The letterbox bars around the 16:9
-    world are near-black (`#0d1f14`): they are outside the world, and painting
-    them sky-blue made the hill read as floating.
+    a sky that runs `#1f7fc4` to `#cfeaf7`, the bay `#2f8fc4` between a deep
+    `#2b6ea6` and a shallow `#63b8de`, beach `#f0dcae`, park `#4fb87c`, and the
+    ground itself turf `#3fa34d` over the bluff's sand `#d8bb86` over soil
+    `#8a5a2b` — so a pit is a bite out of the shoreline with sand at the lips,
+    the way the real bluffs go. Rings are `#ffc300`. Drawing content, not UI
+    chrome — exempt from the two-accent budget the way the JOUST arena and the
+    drawing inks are. The letterbox bars around the 16:9 world are near-black
+    (`#0d1f14`): they are outside the world, and painting them sky-blue made
+    the shore read as floating.
 -   **Three readings of one creature, told apart at speed.** The schlong is
     drawn three ways and the room has to know which is which in a glance:
     *pink with a FACE* is alive, an enemy, and pops when landed on; *crimson,
@@ -628,7 +644,7 @@ is watching from the sofa before a word is read.
     next start line.
 -   Host: rail with the ring tally, the zone as the whole jump surface, a deck
     of run card (player, banked) → zone-clear card → skip/reset → run list with
-    each run's outcome → totals. Display: marquee (team, "Chubby Hill Zone",
+    each run's outcome → totals. Display: marquee (team, "Kempenfelt Bay Zone",
     run, rings), the zone, a status line; an outcome plaque over the beat and
     the points plaque once the team is through.
 -   The run is the game: §8's infinite-animation rule does not bite.

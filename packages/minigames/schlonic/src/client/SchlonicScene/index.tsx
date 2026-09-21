@@ -7,8 +7,9 @@ import type { RunnerFigure } from "../resolveRunnerFigure/index.js";
 import {
   Backdrop,
   CLOUD_PARALLAX,
-  FAR_HILL_PARALLAX,
-  NEAR_HILL_PARALLAX,
+  FAR_SHORE_PARALLAX,
+  TOWN_PARALLAX,
+  WATERFRONT_PARALLAX,
   type BackdropRefs
 } from "./Backdrop/index.js";
 import { Ground } from "./Ground/index.js";
@@ -107,8 +108,12 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
 
       zoneLayerRef.current?.setAttribute("transform", `translate(${-scrollX} 0)`);
       backdropRef.current?.clouds?.setAttribute("transform", `translate(${-scrollX * CLOUD_PARALLAX} 0)`);
-      backdropRef.current?.farHills?.setAttribute("transform", `translate(${-scrollX * FAR_HILL_PARALLAX} 0)`);
-      backdropRef.current?.nearHills?.setAttribute("transform", `translate(${-scrollX * NEAR_HILL_PARALLAX} 0)`);
+      backdropRef.current?.farShore?.setAttribute("transform", `translate(${-scrollX * FAR_SHORE_PARALLAX} 0)`);
+      backdropRef.current?.town?.setAttribute("transform", `translate(${-scrollX * TOWN_PARALLAX} 0)`);
+      backdropRef.current?.waterfront?.setAttribute(
+        "transform",
+        `translate(${-scrollX * WATERFRONT_PARALLAX} 0)`
+      );
     };
 
     const paintRunner = (
@@ -236,7 +241,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
             preserveAspectRatio="none"
             aria-hidden="true"
           >
-            <Backdrop ref={backdropRef} />
+            <Backdrop ref={backdropRef} zoneLength={zone.goalX} />
             <g ref={zoneLayerRef} data-schlonic-zone>
               <Ground zone={zone} />
               <ZoneProps zone={zone} registerProp={registerProp} goalGroundY={goalGroundY} />

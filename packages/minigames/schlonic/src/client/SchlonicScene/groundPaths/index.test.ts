@@ -3,7 +3,7 @@ import test from "node:test";
 import type { SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, resolveSchlonicZone } from "@wingnight/shared";
 
-import { resolveGroundSegments } from "./index.js";
+import { BLUFF_DEPTH, resolveGroundSegments } from "./index.js";
 
 const flat = (samples: number): number[] => {
   return Array.from({ length: samples }, () => SCHLONIC_WORLD.groundBaseY);
@@ -57,4 +57,15 @@ test("leaves no ground drawn across the inside of a hole", () => {
       `a run spanned the hole: ${segment.fromX} to ${segment.toX}`
     );
   }
+});
+
+test("follows the surface back with a sand band under it", () => {
+  const segment = resolveGroundSegments(zoneOf([]), 90)[0];
+
+  assert.ok(segment !== undefined);
+  assert.ok(segment.bluffPath.startsWith(segment.topPath));
+  assert.ok(segment.bluffPath.endsWith("Z"));
+  // Back along the same run at the band's depth: last surface point first, first point last.
+  assert.ok(segment.bluffPath.includes(`L 200 ${SCHLONIC_WORLD.groundBaseY + BLUFF_DEPTH}`));
+  assert.ok(segment.bluffPath.includes(`L 0 ${SCHLONIC_WORLD.groundBaseY + BLUFF_DEPTH} Z`));
 });

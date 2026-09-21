@@ -1,15 +1,15 @@
 export const displaySchlonicSurfaceCopy = {
   title: "Schlonic",
-  zoneName: "Chubby Hill Zone",
+  zoneName: "Kempenfelt Bay Zone",
   introTitle: "Schlonic",
   introDescription:
-    "One chicken, one hill, and a lot of rings — through everything the hill has standing on it. The rings are the score, and they are also the only health there is: get hit and you drop half of them, get hit holding none and the run is over. The post is the only place a handful counts.",
+    "One chicken, one shoreline, and a lot of rings — past everything the waterfront has standing on it. The rings are the score, and they are also the only health there is: get hit and you drop half of them, get hit holding none and the run is over. The post is the only place a handful counts.",
   waitingLabel: "Waiting for the zone…",
   runCounter: (runNumber: number, runsTotal: number): string => `Run ${runNumber} / ${runsTotal}`,
   ringsCounter: (banked: number, par: number): string => `${banked} / ${par}`,
   ringsLabel: "Rings",
   sceneLabel: (playerName: string | null): string =>
-    playerName === null ? "Chubby Hill Zone" : `Chubby Hill Zone — ${playerName}'s run`,
+    playerName === null ? "Kempenfelt Bay Zone" : `Kempenfelt Bay Zone — ${playerName}'s run`,
   readyPrompt: (playerName: string | null): string =>
     playerName === null ? "On the line — tap to go" : `${playerName} is on the line — tap to go`,
   runningPrompt: (playerName: string | null): string =>

@@ -75,7 +75,7 @@ const render = (
 test("explains the zone before the round opens rather than drawing it", () => {
   const markup = render(createView(), "intro");
 
-  assert.ok(markup.includes("Chubby Hill Zone"));
+  assert.ok(markup.includes("Kempenfelt Bay Zone"));
   assert.ok(!markup.includes("data-schlonic-arena"));
 });
 

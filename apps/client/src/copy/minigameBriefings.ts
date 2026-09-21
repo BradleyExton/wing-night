@@ -159,9 +159,9 @@ const resolveSchlonicBriefingContent = (
     illustrationPath: `${DISPLAY_ASSET_ROOT}/schlonic-illustration.svg`,
     illustrationAlt: "Schlonic mini-game artwork",
     summary:
-      "One at a time, your chickens run Chubby Hill Zone. The rings are the score — and they are the only health you have.",
+      "One at a time, your chickens run Kempenfelt Bay Zone. The rings are the score — and they are the only health you have.",
     steps: [
-      `${runsPerTurn} run${runsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order. Everyone runs the same hill.`,
+      `${runsPerTurn} run${runsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order. Everyone runs the same shore.`,
       "Your bird runs on its own; the tablet only jumps. Tap to hop, hold the tap to go higher — and you curl into a ball in the air, which is what lets you land on the things standing in the zone and pop them.",
       `A thorn bed or a hole is bad news either way. Take a hit and you drop half your rings; take one holding none and the run is over. ${parRingsPerRun * runsPerTurn} rings over the post is full marks.`
     ]

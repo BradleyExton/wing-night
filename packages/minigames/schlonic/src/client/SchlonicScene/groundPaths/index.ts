@@ -14,9 +14,14 @@ export type GroundSegment = {
   topPath: string;
   /** The same run closed down to the bottom of the box, for the soil underneath. */
   fillPath: string;
+  /** A band following the surface down, for the sand the bay's bluffs are cut out of. */
+  bluffPath: string;
   fromX: number;
   toX: number;
 };
+
+/** How deep the sand runs under the turf before the bluff gives way to clay. */
+export const BLUFF_DEPTH = 6;
 
 const round = (value: number): number => Math.round(value * 100) / 100;
 
@@ -50,9 +55,15 @@ const toSegment = (points: readonly { x: number; y: number }[], bottomY: number)
 
   const topPath = `M ${points.map((point) => `${round(point.x)} ${round(point.y)}`).join(" L ")}`;
 
+  const underside = [...points]
+    .reverse()
+    .map((point) => `L ${round(point.x)} ${round(point.y + BLUFF_DEPTH)}`)
+    .join(" ");
+
   return {
     topPath,
     fillPath: `${topPath} L ${round(last.x)} ${bottomY} L ${round(first.x)} ${bottomY} Z`,
+    bluffPath: `${topPath} ${underside} Z`,
     fromX: first.x,
     toX: last.x
   };
