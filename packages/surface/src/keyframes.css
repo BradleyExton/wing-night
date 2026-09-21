@@ -1,0 +1,44 @@
+/* The keyframes this package's style tokens name.
+ *
+ * A token carries its animation as a Tailwind arbitrary value —
+ * `motion-safe:[animation:pulse_0.7s_ease-in-out_infinite]` on `stageTimerUrgent`,
+ * `motion-safe:[animation:shimmer_3s_linear_infinite]` on `heatStripShimmer`.
+ * Tailwind emits the `animation` PROPERTY for an arbitrary value but never the
+ * matching `@keyframes` block, so something else has to define it. Until now
+ * that something was apps/client/src/index.css: a package declaring an
+ * animation the consuming app had to remember to define.
+ *
+ * Lifting the blocks into `theme.extend.keyframes` does not fix it. Tailwind v3
+ * only emits a keyframes block when the `animate-*` utility that names it is
+ * generated, and an arbitrary `[animation:…]` value never generates one — the
+ * built CSS keeps `animation: shimmer 3s linear infinite` and loses
+ * `@keyframes shimmer`, which lints, typechecks and renders motionless. The
+ * config also lives in apps/client, so it would relocate the coupling rather
+ * than resolve it.
+ *
+ * So the package ships the definitions next to the tokens that name them, and a
+ * consumer imports this file the way apps/client/src/main.tsx does. That is the
+ * shape the wider crack wants too: packages/cast's ten `cast-*` keyframes and
+ * the minigames' `fappy-scene-enter` / `schlonic-scene-enter` are coupled to
+ * apps/client/src/index.css exactly this way, and each should move beside its
+ * own package's styles the same way. (Not migrated here — out of scope.)
+ */
+
+/* Byte-for-byte Tailwind's own `pulse`, which several minigame packages reach
+ * through `animate-pulse`. Keeping it identical means the two definitions can
+ * never disagree about what a pulse looks like. */
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-50%);
+  }
+
+  100% {
+    transform: translateX(150%);
+  }
+}

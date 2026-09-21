@@ -101,11 +101,9 @@ body {
   }
 }
 
-@keyframes pulse {
-  50% {
-    opacity: 0.5;
-  }
-}
+/* `pulse` and `shimmer` are declared by @wingnight/surface's style tokens, so
+   they ship from that package (packages/surface/src/keyframes.css) and main.tsx
+   imports them. */
 
 @keyframes heatpulse {
   0%, 100% {
@@ -299,16 +297,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .heat-locked-ring::before {
     animation: none;
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-50%);
-  }
-
-  100% {
-    transform: translateX(150%);
   }
 }
 
