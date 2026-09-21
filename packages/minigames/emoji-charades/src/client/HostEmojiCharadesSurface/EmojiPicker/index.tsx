@@ -11,6 +11,10 @@ import * as styles from "./styles.js";
 
 export type EmojiPickerProps = {
   isDisabled: boolean;
+  // Set by a subject whose clue is an authored running joke: the search, the
+  // tabs and the catalog all go away, and the picker offers exactly this list.
+  lockedEmojis: string[] | null;
+  lockedLabel: string;
   onSelectEmoji: (emoji: string) => void;
 };
 
@@ -18,6 +22,8 @@ export type EmojiPickerProps = {
 // frequency-ranked "Top" landing tab stay underneath it (DESIGN.md §2.6).
 export const EmojiPicker = ({
   isDisabled,
+  lockedEmojis,
+  lockedLabel,
   onSelectEmoji
 }: EmojiPickerProps): JSX.Element => {
   const [activeTabId, setActiveTabId] = useState(DEFAULT_EMOJI_CATALOG_TAB_ID);
@@ -44,6 +50,29 @@ export const EmojiPicker = ({
   }, [activeTabId, isSearching, searchQuery]);
 
   const hasResults = sections.some((section) => section.emojis.length > 0);
+
+  // A locked subject gets no search and no tabs: there is nothing else to find.
+  if (lockedEmojis !== null) {
+    return (
+      <div className={styles.lockedGrid}>
+        <p className={styles.lockedLabel}>{lockedLabel}</p>
+        {lockedEmojis.map((emoji, index) => (
+          <button
+            key={`locked-${emoji}-${index}`}
+            className={styles.lockedEmojiButton}
+            type="button"
+            disabled={isDisabled}
+            aria-label={emoji}
+            onClick={(): void => {
+              onSelectEmoji(emoji);
+            }}
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <>

@@ -252,10 +252,9 @@ export type SongGuessMinigameHostView = MinigameHostViewBase & {
   scoresBySongId: Record<string, SongGuessTeamScore>;
 };
 
-export type EmojiCharadesSubState =
-  | "deck_selection"
-  | "playing"
-  | "turn_complete";
+// No deck-selection beat: the turn is dealt a deck at initialize and opens on
+// the first subject (docs/minigames/emoji-charades-spec.md §4).
+export type EmojiCharadesSubState = "playing" | "turn_complete";
 
 export type EmojiCharadesSubjectOutcome = "CORRECT" | "SKIPPED";
 
@@ -267,28 +266,17 @@ export type EmojiCharadesSubjectReveal = {
   expiresAtMs: number;
 };
 
-// `isSelectable` mirrors the deck.subjects.length >= pointsMax gate, so the
-// picker can disable an undersized deck instead of dispatching a selectDeck
-// the reducer will refuse.
-export type EmojiCharadesDeckOption = {
-  id: string;
-  label: string;
-  subjectCount: number;
-  isSelectable: boolean;
-};
-
 export type EmojiCharadesMinigameHostSubject = {
   id: string;
   text: string;
+  // Authored per subject: when set, the tablet's picker offers these emojis
+  // and nothing else. Host-only, like the subject text it belongs to.
+  lockedEmojis: string[] | null;
 };
 
 export type EmojiCharadesMinigameHostView = MinigameHostViewBase & {
   minigame: "EMOJI_CHARADES";
 } & (
-    | {
-        status: "deck_selection";
-        availableDecks: EmojiCharadesDeckOption[];
-      }
     | {
         status: "playing";
         currentSubject: EmojiCharadesMinigameHostSubject | null;
@@ -598,11 +586,10 @@ export type SongGuessMinigameDisplayView = MinigameDisplayViewBase & {
 // reaches the TV only inside `reveal`, after the tablet resolves it.
 export type EmojiCharadesMinigameDisplayView = MinigameDisplayViewBase & {
   minigame: "EMOJI_CHARADES";
+  // A rule, not an answer: it is what the award pill on the TV says a solved
+  // subject was worth.
+  pointsPerCorrect: number;
 } & (
-    | {
-        status: "deck_selection";
-        availableDecks: EmojiCharadesDeckOption[];
-      }
     | {
         status: "playing";
         emojiSequence: string[];

@@ -77,19 +77,16 @@ export const subjectValue =
 export const subjectMeta =
   "mt-1 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-muted";
 
-export const deckList = "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto";
+// A locked subject drops the tabs and the search with them, so the grid it
+// leaves behind is free to draw the few emoji it has as big touch targets.
+export const lockedGrid =
+  "grid min-h-0 flex-1 grid-cols-4 content-start gap-2 overflow-y-auto rounded-2xl border-2 border-gold/40 bg-surfaceAlt p-3 sm:grid-cols-6";
 
-const deckRowBase =
-  "flex min-h-[64px] w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition";
+export const lockedLabel =
+  "col-span-full px-1 pb-1 text-center text-[0.62rem] font-extrabold uppercase tracking-[0.24em] text-gold";
 
-export const deckRow = `${deckRowBase} border-text/10 bg-surface hover:border-gold`;
-
-export const deckRowDisabled = `${deckRowBase} cursor-not-allowed border-dashed border-text/10 bg-surface opacity-50`;
-
-export const deckRowLabel = "text-base font-bold text-text";
-
-export const deckRowMeta =
-  "ml-auto text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted";
+export const lockedEmojiButton =
+  "flex aspect-square items-center justify-center rounded-xl bg-gold/10 text-[clamp(1.8rem,4vw,3rem)] transition hover:bg-gold/25 disabled:cursor-not-allowed disabled:opacity-40";
 
 export const sectionTitle = "text-lg font-bold text-text";
 

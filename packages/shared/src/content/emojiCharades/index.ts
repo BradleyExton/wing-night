@@ -3,6 +3,10 @@ import type { ValidationIssue } from "../validationIssue/index.js";
 export type EmojiCharadesSubject = {
   id: string;
   text: string;
+  // A running joke, authored per subject: the tablet's whole picker collapses
+  // to exactly these emojis for this one subject. Absent on every ordinary
+  // subject, which gets the full catalog.
+  lockedEmojis?: string[];
 };
 
 export type EmojiCharadesDeck = {
@@ -30,9 +34,26 @@ export const validateEmojiCharadesSubject = (
     return [{ path: "", message: "must be an object" }];
   }
 
-  return (["id", "text"] as const)
+  const issues: ValidationIssue[] = (["id", "text"] as const)
     .filter((field) => !isNonEmptyString(value[field]))
     .map((field) => ({ path: field, message: "must be a non-empty string" }));
+
+  // Optional, but an empty lock would hand the picker nothing to tap.
+  if (value.lockedEmojis !== undefined) {
+    if (!Array.isArray(value.lockedEmojis) || value.lockedEmojis.length === 0) {
+      issues.push({
+        path: "lockedEmojis",
+        message: "must be a non-empty array when present"
+      });
+    } else if (!value.lockedEmojis.every(isNonEmptyString)) {
+      issues.push({
+        path: "lockedEmojis",
+        message: "must hold only non-empty strings"
+      });
+    }
+  }
+
+  return issues;
 };
 
 // Decks own their own id namespace: subject ids must be unique within a deck

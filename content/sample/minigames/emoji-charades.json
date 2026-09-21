@@ -14,7 +14,24 @@
         { "id": "jaz", "text": "Jaz" },
         { "id": "dylan", "text": "Dylan" },
         { "id": "sam", "text": "Sam" },
-        { "id": "rob-barnes", "text": "Rob Barnes" },
+        {
+          "id": "rob-barnes",
+          "text": "Rob Barnes",
+          "lockedEmojis": [
+            "✡️",
+            "🕎",
+            "🕍",
+            "🕯️",
+            "📜",
+            "🍷",
+            "🥯",
+            "🍎",
+            "🍯",
+            "🐏",
+            "🧔",
+            "🙏"
+          ]
+        },
         { "id": "joleeza", "text": "Joleeza" },
         { "id": "steve-crane", "text": "Steve Crane" },
         { "id": "tay", "text": "Tay" },

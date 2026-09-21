@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import type {
@@ -7,7 +7,14 @@ import type {
 } from "@wingnight/shared";
 
 import { MAX_EMOJIS_PER_SUBJECT } from "../../runtime/types/index.js";
+import { ClueBoard } from "./ClueBoard/index.js";
+import { RevealOverlay } from "./RevealOverlay/index.js";
 import { displayEmojiCharadesSurfaceCopy } from "./copy.js";
+import {
+  resolveHeldClue,
+  resolveRevealKey,
+  type HeldClue
+} from "./heldClue/index.js";
 import * as styles from "./styles.js";
 
 // The reveal window is display-client-driven: visible while now is before
@@ -40,77 +47,6 @@ const useIsRevealVisible = (
   return reveal !== null && Date.now() < reveal.expiresAtMs;
 };
 
-const ClueBoard = ({
-  emojiSequence,
-  isDimmed
-}: {
-  emojiSequence: string[];
-  isDimmed: boolean;
-}): JSX.Element => {
-  const slots = Array.from({ length: MAX_EMOJIS_PER_SUBJECT }, (_, index) => index);
-  const newestIndex = emojiSequence.length - 1;
-
-  return (
-    <div className={isDimmed ? `${styles.board} ${styles.boardDimmed}` : styles.board}>
-      {slots.map((slotIndex) => {
-        const emoji = emojiSequence[slotIndex];
-
-        if (emoji === undefined) {
-          return <div key={slotIndex} className={styles.slotEmpty} />;
-        }
-
-        return (
-          <div
-            key={slotIndex}
-            className={
-              slotIndex === newestIndex ? styles.slotNewest : styles.slotFilled
-            }
-          >
-            {emoji}
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-const RevealOverlay = ({
-  reveal,
-  teamName
-}: {
-  reveal: EmojiCharadesSubjectReveal;
-  teamName: string | null;
-}): JSX.Element => {
-  const isCorrect = reveal.outcome === "CORRECT";
-
-  return (
-    <div className={styles.revealOverlay}>
-      <span
-        className={isCorrect ? styles.revealIconCorrect : styles.revealIconSkipped}
-        aria-hidden="true"
-      >
-        {isCorrect ? "✓" : "✗"}
-      </span>
-      <div>
-        <p className={styles.revealLabel}>
-          {isCorrect
-            ? displayEmojiCharadesSurfaceCopy.revealCorrectLabel
-            : displayEmojiCharadesSurfaceCopy.revealSkippedLabel}
-        </p>
-        <p className={styles.revealAnswer}>{reveal.subjectText}</p>
-      </div>
-      {isCorrect && teamName !== null && (
-        <p className={styles.revealAward}>
-          <span className={styles.revealAwardPoints}>
-            {displayEmojiCharadesSurfaceCopy.revealAwardLabel}
-          </span>
-          <span className={styles.revealAwardTeam}>{teamName}</span>
-        </p>
-      )}
-    </div>
-  );
-};
-
 export const DisplayEmojiCharadesSurface = ({
   minigameDisplayView,
   activeTeamName
@@ -119,27 +55,48 @@ export const DisplayEmojiCharadesSurface = ({
     minigameDisplayView?.minigame === "EMOJI_CHARADES" ? minigameDisplayView : null;
   // The final verdict of a turn flips straight to `turn_complete`, so the reveal has to be read
   // from that status too — otherwise the turn's last answer never reaches the room.
-  const reveal =
-    displayView?.status === "playing" || displayView?.status === "turn_complete"
-      ? displayView.reveal
-      : null;
+  const reveal = displayView === null ? null : displayView.reveal;
   const isRevealVisible = useIsRevealVisible(reveal);
+  const emojiSequence =
+    displayView?.status === "playing" ? displayView.emojiSequence : [];
+
+  // The verdict lands in the same update that empties the clue, so the board
+  // the answer dims over is the one held from the render before.
+  const previousEmojiSequenceRef = useRef<string[]>(emojiSequence);
+  const heldClueRef = useRef<HeldClue | null>(null);
+
+  heldClueRef.current = resolveHeldClue({
+    heldClue: heldClueRef.current,
+    revealKey: resolveRevealKey(reveal),
+    emojiSequence,
+    previousEmojiSequence: previousEmojiSequenceRef.current
+  });
+  previousEmojiSequenceRef.current = emojiSequence;
+
+  const boardEmojiSequence =
+    isRevealVisible && heldClueRef.current !== null
+      ? heldClueRef.current.emojiSequence
+      : emojiSequence;
+
   const pendingPoints =
-    displayView?.activeTurnTeamId === undefined ||
-    displayView?.activeTurnTeamId === null
+    displayView === null || displayView.activeTurnTeamId === null
       ? 0
       : (displayView.pendingPointsByTeamId[displayView.activeTurnTeamId] ?? 0);
 
   return (
     <div className={styles.container}>
       <div className={styles.marquee}>
+        <span className={styles.marqueeBulbs} aria-hidden="true" />
         <p className={styles.teamName}>
           {activeTeamName ?? displayEmojiCharadesSurfaceCopy.showTitle}
-          <span className={styles.pendingPoints}>{pendingPoints}</span>
+          <span className={styles.pendingPoints}>
+            {displayEmojiCharadesSurfaceCopy.pendingPointsLabel(pendingPoints)}
+          </span>
         </p>
         <p className={styles.showTitle}>
           {displayEmojiCharadesSurfaceCopy.showTitle}
         </p>
+        <span className={styles.timerGutter} aria-hidden="true" />
       </div>
 
       {displayView === null && (
@@ -148,43 +105,24 @@ export const DisplayEmojiCharadesSurface = ({
         </p>
       )}
 
-      {displayView?.status === "deck_selection" && (
-        <div className={styles.deckGrid}>
-          {displayView.availableDecks.map((deck) => (
-            <div
-              key={deck.id}
-              className={deck.isSelectable ? styles.deckCard : styles.deckCardDisabled}
-            >
-              <p className={styles.deckCardLabel}>{deck.label}</p>
-              <p className={styles.deckCardMeta}>
-                {deck.isSelectable
-                  ? displayEmojiCharadesSurfaceCopy.deckSubjectCountLabel(
-                      deck.subjectCount
-                    )
-                  : displayEmojiCharadesSurfaceCopy.deckTooSmallLabel}
-              </p>
-            </div>
-          ))}
-          <p className={styles.sectionHint}>
-            {displayEmojiCharadesSurfaceCopy.deckSelectionHint}
-          </p>
-        </div>
-      )}
-
       {displayView?.status === "playing" && (
         <div className={styles.boardArea}>
           <ClueBoard
-            emojiSequence={displayView.emojiSequence}
+            emojiSequence={boardEmojiSequence}
             isDimmed={isRevealVisible}
           />
           {isRevealVisible && reveal !== null && (
-            <RevealOverlay reveal={reveal} teamName={activeTeamName} />
+            <RevealOverlay
+              reveal={reveal}
+              teamName={activeTeamName}
+              pointsAwarded={displayView.pointsPerCorrect}
+            />
           )}
           <p className={styles.statusLine}>
             {displayEmojiCharadesSurfaceCopy.clueingLabel(activeTeamName)}{" "}
             <span className={styles.statusCount}>
               {displayEmojiCharadesSurfaceCopy.clueProgressLabel(
-                displayView.emojiSequence.length,
+                boardEmojiSequence.length,
                 MAX_EMOJIS_PER_SUBJECT
               )}
             </span>
@@ -195,11 +133,23 @@ export const DisplayEmojiCharadesSurface = ({
       {displayView?.status === "turn_complete" && (
         <div className={styles.boardArea}>
           {isRevealVisible && reveal !== null ? (
-            <RevealOverlay reveal={reveal} teamName={activeTeamName} />
+            <>
+              <ClueBoard emojiSequence={boardEmojiSequence} isDimmed />
+              <RevealOverlay
+                reveal={reveal}
+                teamName={activeTeamName}
+                pointsAwarded={displayView.pointsPerCorrect}
+              />
+            </>
           ) : (
-            <p className={styles.sectionTitle}>
-              {displayEmojiCharadesSurfaceCopy.turnCompleteTitle}
-            </p>
+            <div className={styles.turnCompleteCard}>
+              <p className={styles.turnCompleteTitle}>
+                {displayEmojiCharadesSurfaceCopy.turnCompleteTitle}
+              </p>
+              <p className={styles.turnCompleteHint}>
+                {displayEmojiCharadesSurfaceCopy.turnCompleteHint(pendingPoints)}
+              </p>
+            </div>
           )}
         </div>
       )}

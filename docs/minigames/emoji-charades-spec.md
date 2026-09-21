@@ -2,13 +2,13 @@
 
 Status: Draft for implementation
 
-Last updated: 2026-05-01
+Last updated: 2026-09-21
 
 ## 1) Goals
 
 - Ship a full `EMOJI_CHARADES` minigame that fits the existing Wing Night turn loop.
 - One picker per team per turn; team chooses who holds the tablet (same physical handoff model as Drawing — the runtime does not track picker identity).
-- Active team picks a deck on the tablet at start of turn; subjects within a deck served in random order.
+- The turn is DEALT a deck at initialize — the room never picks one; subjects within it served in random order.
 - Picker sees the subject on the tablet and taps emojis; the emoji sequence streams to the TV display in real time.
 - Display never sees the subject text during play — only the emoji sequence the picker is building.
 - Brief subject reveal on display after Got It / Skip, then onto the next subject. Same reveal pattern as Drawing.
@@ -19,10 +19,11 @@ Last updated: 2026-05-01
 - Two turns per team total = schedule `EMOJI_CHARADES` **twice in `gameConfig.json`**, once per Wing Night round. The minigame itself runs one 90s turn per scheduled round.
 - Phase timer is the only turn constraint (`emojiCharadesSeconds`, default 90). Hard cutoff at zero, no late taps.
 - Scoring: `+1` per correct subject, configurable via `minigameRules.emojiCharades.pointsPerCorrect`.
-- Deck selection happens inside `MINIGAME_PLAY`, before play begins, while the active team holds the tablet.
-- A deck is only selectable if `deck.subjects.length >= pointsMax`. Server rejects under-sized decks; this gate guarantees mid-turn subject exhaustion is impossible.
+- There is NO deck-selection beat (dropped 2026-09-21). `initialize` deals the first deck in the content file whose `subjects.length >= pointsMax`; if no deck clears that bar it deals the longest one rather than leaving the tablet dead. The file's order is the preference order, so "People in This Room" leads it and the decks under it are fallbacks nobody should ever see.
+- The gate is what makes mid-turn subject exhaustion impossible in the normal case, so the cursor never has to wrap.
 - Skip costs no points and has no penalty. The 90s clock is the disincentive.
 - Letter emojis (regional indicators 🇦–🇿 and keycap digits 0️⃣–9️⃣) are banned by default in the picker; configurable via `minigameRules.emojiCharades.banLetterEmojis`.
+- A subject may carry `lockedEmojis`: an authored running joke that collapses the whole picker to that list for that one subject. Host-only, enforced by the reducer as well as the picker.
 - Display reveals the resolved subject text briefly after Got It / Skip (`REVEAL_MS = 2000`); reveal is display-client-driven (`now < expiresAtMs`).
 - Emoji catalog (categories + per-tab emoji sets) is hardcoded in the picker UI, not content-driven.
 - `EmojiCharadesHostView | EmojiCharadesDisplayView` are added as new discriminated union members in `MinigameHostView` / `MinigameDisplayView`.
@@ -41,15 +42,14 @@ Last updated: 2026-05-01
 
 For the active team turn:
 
-1. Active team holds the tablet; display shows the available decks alongside team context.
-2. Active team taps a deck on the tablet → runtime shuffles that deck's subjects, advances to `playing` sub-state.
-3. Tablet shows the current subject text + emoji picker; display shows an empty emoji canvas + active team name.
-4. Picker taps emojis on the tablet; the sequence streams to the display in real time.
-5. Picker taps **Got It** (`+1` point) or **Skip** (`+0`) when the team guesses or gives up.
-6. Runtime briefly reveals the resolved subject text on the display (2s window).
-7. Runtime clears the emoji sequence and advances `subjectCursor` to the next subject.
-8. Loop until phase timer fires; phase advances via the existing room flow.
-9. If the picker hits Got It on the last subject in the shuffled list (theoretically possible if `pointsMax > deck.subjects.length`, but the deck-selection gate prevents this), the runtime blocks further `markCorrect` / `skipSubject` actions until the timer ends.
+1. The turn opens already `playing`: `initialize` dealt a deck and shuffled its subjects.
+2. Tablet shows the current subject text + emoji picker; display shows an empty clue board + active team name.
+3. Picker taps emojis on the tablet; the sequence streams to the display in real time. A subject carrying `lockedEmojis` offers only those, and nothing else.
+4. Picker taps **Got It** (`+1` point) or **Skip** (`+0`) when the team guesses or gives up.
+5. Runtime briefly reveals the resolved subject text on the display (2s window); the TV holds the clue that earned it on the board behind the plaque.
+6. Runtime clears the emoji sequence and advances `subjectCursor` to the next subject.
+7. Loop until phase timer fires; phase advances via the existing room flow.
+8. If the picker hits Got It on the last subject in the shuffled list (theoretically possible if `pointsMax > deck.subjects.length`, but the deck-selection gate prevents this), the runtime blocks further `markCorrect` / `skipSubject` actions until the timer ends.
 
 ## 5) Config And Content Contracts
 
@@ -113,6 +113,8 @@ Schema:
 type EmojiCharadesSubject = {
   id: string;
   text: string;
+  // Optional running joke: the picker offers exactly these and nothing else.
+  lockedEmojis?: string[];
 };
 
 type EmojiCharadesDeck = {
@@ -132,7 +134,8 @@ Validation rules:
 - Each deck has non-empty `id`, `label`, and `subjects[]`.
 - Subject `id`s unique within a deck; deck `id`s unique across the file.
 - Each subject has non-empty `id` and `text`.
-- Decks with `subjects.length < pointsMax` are loadable but server rejects them at deck-selection time. The validator may warn at load.
+- Decks with `subjects.length < pointsMax` are loadable; they are simply never the deck the turn is dealt unless no deck clears the bar.
+- `lockedEmojis`, when present, must be a non-empty array of non-empty strings.
 
 Sample content ships with 3–4 starter decks (movies, celebrities, things-around-the-house) covering the cap-met threshold for typical `pointsMax` values.
 
@@ -178,7 +181,7 @@ File: `packages/minigames/emoji-charades/src/runtime/index.ts`
 ### 6.1 State model
 
 ```ts
-type EmojiCharadesSubState = "deck_selection" | "playing" | "turn_complete";
+type EmojiCharadesSubState = "playing" | "turn_complete";
 
 type SubjectReveal = {
   subjectId: string;
@@ -192,7 +195,7 @@ type EmojiCharadesRuntimeState = {
   activeTurnTeamId: string | null;
   status: EmojiCharadesSubState;
   selectedDeckId: string | null;
-  shuffledSubjectIds: string[];     // populated on selectDeck
+  shuffledSubjectIds: string[];     // populated by the deal, in initialize
   subjectCursor: number;
   emojiSequence: string[];          // current subject's clue
   reveal: SubjectReveal | null;
@@ -209,7 +212,6 @@ Constants:
 
 Use the existing `minigame:action` envelope with bare `actionType` values:
 
-- `selectDeck` — payload `{ deckId: string }`. Valid only in `deck_selection`.
 - `appendEmoji` — payload `{ emoji: string }`. Valid only in `playing`.
 - `removeEmoji` — payload `{}`. Valid only in `playing`. Removes last emoji.
 - `clearEmojis` — payload `{}`. Valid only in `playing`.
@@ -220,13 +222,10 @@ Use the existing `minigame:action` envelope with bare `actionType` values:
 
 - Ignore actions invalid for the current `status`.
 - Ignore actions when runtime state is malformed.
-- `selectDeck`:
-  - Validate `deckId` exists in content.
-  - Validate `deck.subjects.length >= pointsMax`. If not, ignore action (host can intervene via unlocked mode, otherwise the team picks another deck).
-  - Set `selectedDeckId`, populate `shuffledSubjectIds` from a shuffle of the deck's subject IDs, set `subjectCursor = 0`, transition to `playing`, clear `emojiSequence` and `reveal`.
 - `appendEmoji`:
   - Clear `reveal` if present.
   - If `banLetterEmojis === true`, reject regional-indicator letters and keycap digits silently. (Picker UI doesn't surface them, so this is defense-in-depth.)
+  - If the current subject carries `lockedEmojis`, reject anything off that list, for the same defence-in-depth reason.
   - Append to `emojiSequence` if `emojiSequence.length < MAX_EMOJIS_PER_SUBJECT`.
 - `removeEmoji`: pop last emoji.
 - `clearEmojis`: empty the array.
@@ -244,7 +243,7 @@ Use the existing `minigame:action` envelope with bare `actionType` values:
 ### 6.4 Subject rotation
 
 - `subjectCursor` indexes into `shuffledSubjectIds`. No wrap — exhaustion → `turn_complete`.
-- `shuffledSubjectIds` is populated only on `selectDeck`. Re-selecting (not allowed in MVP) would require explicit handling.
+- `shuffledSubjectIds` is populated only by the deal in `initialize`. A second scheduled turn re-initializes and reshuffles.
 
 ## 7) Host And Display Projection
 
@@ -263,12 +262,8 @@ type EmojiCharadesHostView = {
   pendingPointsByTeamId: Record<string, number>;
 } & (
   | {
-      status: "deck_selection";
-      availableDecks: { id: string; label: string; subjectCount: number; isSelectable: boolean }[];
-    }
-  | {
       status: "playing";
-      currentSubject: { id: string; text: string } | null;
+      currentSubject: { id: string; text: string; lockedEmojis: string[] | null } | null;
       emojiSequence: string[];
       subjectsRemaining: number;
       reveal: SubjectReveal | null;
@@ -279,7 +274,7 @@ type EmojiCharadesHostView = {
 );
 ```
 
-`isSelectable` reflects the `deck.subjects.length >= pointsMax` gate so the picker UI can disable too-small decks.
+`currentSubject.lockedEmojis` is host-only, like the subject text it rides with: it names the emoji the picker is allowed to draw.
 
 ### 7.3 Emoji charades display view
 
@@ -288,11 +283,9 @@ type EmojiCharadesDisplayView = {
   minigame: "EMOJI_CHARADES";
   activeTurnTeamId: string | null;
   pendingPointsByTeamId: Record<string, number>;
+  // A rule, not an answer: what the TV's award readout says a solve was worth.
+  pointsPerCorrect: number;
 } & (
-  | {
-      status: "deck_selection";
-      availableDecks: { id: string; label: string; subjectCount: number; isSelectable: boolean }[];
-    }
   | {
       status: "playing";
       emojiSequence: string[];
@@ -308,7 +301,6 @@ Display view excludes `currentSubject` and `subjectsRemaining`. The post-result 
 
 Display behavior:
 
-- `deck_selection`: show decks list (label + subject count + selectable state) and active team name. No emoji canvas.
 - `playing` with `reveal === null` or `now >= reveal.expiresAtMs`: show the live `emojiSequence`, large.
 - `playing` with `reveal !== null` and `now < reveal.expiresAtMs`: overlay the resolved subject text + outcome badge for 2s.
 - `turn_complete`: show "Time's up" or equivalent end card; phase advance is host-driven.
@@ -323,16 +315,11 @@ Files under:
 
 Required UI per `status`:
 
-**`deck_selection`:**
-- Active team name banner.
-- Vertical list of available decks; each row shows label + subject count.
-- Decks failing the `pointsMax` gate render disabled with a "needs more subjects" hint.
-- Tapping a row dispatches `selectDeck`.
-
 **`playing`:**
 - Subject card at the top of the screen (always visible to picker; never sent to display).
 - Emoji canvas below — shows the live `emojiSequence`, with a backspace control to dispatch `removeEmoji` and a clear control for `clearEmojis`.
 - Emoji picker — primary surface is **category tabs** (6–8 tabs, hardcoded). Each tab shows a grid of emojis. Tap to dispatch `appendEmoji`.
+- A subject carrying `lockedEmojis` replaces the search, tabs and grid with a single captioned grid of exactly those emoji.
 - Search bar as secondary escape hatch (string contains match against emoji name).
 - Two large action buttons at the bottom: **Got It** → `markCorrect`, **Skip** → `skipSubject`.
 - Subjects-remaining indicator (small, top-right).
@@ -350,10 +337,9 @@ Files under:
 
 Renders based on `EmojiCharadesDisplayView` status:
 
-- `deck_selection`: large deck cards laid out for room visibility, with "Pick on the tablet" subtitle.
 - `playing`: hero emoji sequence (large, center). HUD: timer (top-right, sourced from `RoomTimerState`), active team name, score line per team.
 - `playing` + active reveal: overlay the resolved subject text and outcome badge for 2s, then return to live emoji canvas (but the canvas will be cleared by the runtime on next tick).
-- `turn_complete`: "Turn complete" + score recap.
+- `turn_complete`: a gold "Turn complete" card carrying the team's haul for the turn.
 
 ### 8.3 Intro surface
 
@@ -366,7 +352,6 @@ File: `packages/minigames/emoji-charades/src/dev/index.ts`
 Add scenarios:
 
 - Intro idle.
-- Deck selection (multiple decks, one disabled by `pointsMax` gate).
 - Playing with empty emoji sequence.
 - Playing with mid-sequence emojis.
 - Playing with active reveal — `CORRECT` outcome.
@@ -398,23 +383,23 @@ Optional:
 
 - Content validation (missing fields, duplicate IDs, empty decks).
 - Runtime reducer behavior per action and per `status`.
-- Deck-selection gate: under-sized decks are rejected.
+- The deal: the first deck clearing `pointsMax` wins, a short leading deck is skipped, the longest is the fallback when none clears it.
+- Locked subjects: an emoji off the authored list is refused; one on it is accepted.
 - Banned-emoji rejection in `appendEmoji`.
 - Points clamping at `pointsMax`.
-- Subject rotation: shuffle on `selectDeck`, cursor advance on resolve, exhaustion → `turn_complete`.
+- Subject rotation: shuffle on the deal, cursor advance on resolve, exhaustion → `turn_complete`.
 - Display-safe projection: `currentSubject` never appears outside `playing.reveal`.
 
 ### 12.2 Component tests
 
-- Host: deck selection renders disabled state for under-sized decks.
+- Host: a locked subject shows only its own emoji, with no search or tabs.
 - Host: emoji picker filters letter emojis when `banLetterEmojis === true`.
 - Host: Got It / Skip dispatch correct actions.
-- Display: status-driven rendering across all four states.
+- Display: status-driven rendering across both states.
 - Display: reveal overlay appears for 2s and clears.
 
 ### 12.3 E2E tests (Playwright)
 
-- Active team selects a deck on tablet → display transitions out of deck-selection.
 - Picker taps emojis on tablet → display sequence updates in real time.
 - Got It → score updates, brief reveal flashes on display, next subject loads.
 - Skip → no score change, reveal flashes, next subject loads.
@@ -423,7 +408,7 @@ Optional:
 ## 13) Acceptance Criteria
 
 - `EMOJI_CHARADES` runtime no longer returns unsupported stub state.
-- Active team selects a deck on the tablet; under-sized decks are not selectable.
+- The turn opens on a dealt deck; the room is never shown a deck picker.
 - Subjects within a deck are served in random order; no repeats within a turn.
 - Display never receives `currentSubject` outside the 2s post-result reveal.
 - Got It awards `pointsPerCorrect` (default 1); Skip awards 0; both flash a brief reveal.

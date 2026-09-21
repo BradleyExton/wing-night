@@ -1,14 +1,9 @@
 export const hostEmojiCharadesSurfaceCopy = {
   introDescription:
-    "One picker per team. Pick a deck, then clue the subject in emoji only.",
+    "One picker per team. The deck is dealt — clue each subject in emoji only.",
   playDescription: "Tap emoji to build the clue. Your team shouts the guesses.",
   noAssignedTeamLabel: "No team assigned",
   activeTeamMetaLabel: "Clueing",
-  deckSelectionTitle: "Pick a deck",
-  deckSelectionHint: "Your team picks, then the clock starts.",
-  deckSubjectCountLabel: (count: number): string =>
-    `${count} subject${count === 1 ? "" : "s"}`,
-  deckTooSmallLabel: "Needs more subjects",
   subjectLabel: "Your subject",
   subjectsRemainingLabel: (count: number): string =>
     `${count} subject${count === 1 ? "" : "s"} left`,
@@ -17,6 +12,8 @@ export const hostEmojiCharadesSurfaceCopy = {
   searchPlaceholderLabel: "Search all emoji…",
   searchClearLabel: "Clear search",
   noSearchResultsLabel: "No emoji match that search",
+  lockedPickerLabel: (subjectText: string): string =>
+    `${subjectText} only ever picks these`,
   backButtonLabel: "⌫ Back",
   clearButtonLabel: "✕ Clear",
   gotItButtonLabel: "Got it",

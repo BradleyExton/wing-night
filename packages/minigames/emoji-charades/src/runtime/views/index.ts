@@ -1,5 +1,4 @@
 import type {
-  EmojiCharadesDeckOption,
   EmojiCharadesMinigameHostSubject,
   EmojiCharadesSubject,
   EmojiCharadesSubjectReveal,
@@ -7,8 +6,12 @@ import type {
   MinigameHostView
 } from "@wingnight/shared";
 
-import { findEmojiCharadesDeck } from "../content/index.js";
+import {
+  cloneEmojiCharadesSubject,
+  findEmojiCharadesDeck
+} from "../content/index.js";
 import type {
+  EmojiCharadesMinigameRules,
   EmojiCharadesRuntimeContent,
   EmojiCharadesRuntimeState
 } from "../types/index.js";
@@ -35,21 +38,7 @@ export const resolveCurrentEmojiCharadesSubject = (
     return null;
   }
 
-  return { id: subject.id, text: subject.text };
-};
-
-// A deck is only offered once it can carry a full turn: the gate is what makes
-// mid-turn subject exhaustion impossible, so the cursor never has to wrap.
-export const toEmojiCharadesDeckOptions = (
-  content: EmojiCharadesRuntimeContent,
-  pointsMax: number
-): EmojiCharadesDeckOption[] => {
-  return content.decks.map((deck) => ({
-    id: deck.id,
-    label: deck.label,
-    subjectCount: deck.subjects.length,
-    isSelectable: deck.subjects.length >= pointsMax
-  }));
+  return cloneEmojiCharadesSubject(subject);
 };
 
 const cloneReveal = (
@@ -61,7 +50,15 @@ const cloneReveal = (
 const toHostSubject = (
   subject: EmojiCharadesSubject | null
 ): EmojiCharadesMinigameHostSubject | null => {
-  return subject === null ? null : { id: subject.id, text: subject.text };
+  if (subject === null) {
+    return null;
+  }
+
+  return {
+    id: subject.id,
+    text: subject.text,
+    lockedEmojis: subject.lockedEmojis === undefined ? null : [...subject.lockedEmojis]
+  };
 };
 
 export const toEmojiCharadesHostView = (
@@ -73,14 +70,6 @@ export const toEmojiCharadesHostView = (
     activeTurnTeamId: state.activeTurnTeamId,
     pendingPointsByTeamId: { ...state.pendingPointsByTeamId }
   };
-
-  if (state.status === "deck_selection") {
-    return {
-      ...base,
-      status: "deck_selection",
-      availableDecks: toEmojiCharadesDeckOptions(content, state.pointsMax)
-    };
-  }
 
   if (state.status === "turn_complete") {
     return { ...base, status: "turn_complete", reveal: cloneReveal(state.reveal) };
@@ -101,25 +90,19 @@ export const toEmojiCharadesHostView = (
   };
 };
 
-// Answer-safe: no `currentSubject`, no cursor, no subject count. Subject text
-// reaches the TV only through `reveal`, which the tablet has already resolved.
+// Answer-safe: no `currentSubject`, no cursor, no subject count. It takes no
+// content at all — subject text reaches the TV only through `reveal`, which
+// the tablet has already resolved.
 export const toEmojiCharadesDisplayView = (
   state: EmojiCharadesRuntimeState,
-  content: EmojiCharadesRuntimeContent
+  rules: EmojiCharadesMinigameRules
 ): MinigameDisplayView => {
   const base = {
     minigame: "EMOJI_CHARADES" as const,
     activeTurnTeamId: state.activeTurnTeamId,
-    pendingPointsByTeamId: { ...state.pendingPointsByTeamId }
+    pendingPointsByTeamId: { ...state.pendingPointsByTeamId },
+    pointsPerCorrect: rules.pointsPerCorrect
   };
-
-  if (state.status === "deck_selection") {
-    return {
-      ...base,
-      status: "deck_selection",
-      availableDecks: toEmojiCharadesDeckOptions(content, state.pointsMax)
-    };
-  }
 
   if (state.status === "turn_complete") {
     return { ...base, status: "turn_complete", reveal: cloneReveal(state.reveal) };

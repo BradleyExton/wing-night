@@ -1,9 +1,12 @@
-import { createDevManifest } from "@wingnight/minigames-core";
+import { createDevManifest, type SerializableValue } from "@wingnight/minigames-core";
+import type { EmojiCharadesContentFile } from "@wingnight/shared";
 
 // Mirrors a slice of content/sample/minigames/emoji-charades.json so sandbox
 // play matches a real night without filesystem access from the browser. The
-// short deck is deliberate: it exercises the pointsMax selectability gate.
-const DEV_CONTENT = {
+// room deck leads because the deck a turn is dealt is the first one long
+// enough to carry it; the decks under it are the fallbacks nobody should ever
+// see. Rob keeps his locked picker here so the joke is previewable.
+const DEV_CONTENT: EmojiCharadesContentFile = {
   decks: [
     {
       id: "the-room",
@@ -14,7 +17,15 @@ const DEV_CONTENT = {
         { id: "dan-b", text: "Dan B" },
         { id: "rosi", text: "Rosi" },
         { id: "darren-m", text: "Darren M" },
-        { id: "steve-burke", text: "Steve Burke" }
+        { id: "steve-burke", text: "Steve Burke" },
+        {
+          id: "rob-barnes",
+          text: "Rob Barnes",
+          lockedEmojis: [
+            "✡️", "🕎", "🕍", "🕯️", "📜", "🍷",
+            "🥯", "🍎", "🍯", "🐏", "🧔", "🙏"
+          ]
+        }
       ]
     },
     {
@@ -40,20 +51,14 @@ const DEV_CONTENT = {
         { id: "houseplant", text: "Houseplant" },
         { id: "mousetrap", text: "Mousetrap" }
       ]
-    },
-    {
-      id: "tiny-deck",
-      label: "Quick Two (too short)",
-      subjects: [
-        { id: "sunrise", text: "Sunrise" },
-        { id: "road-trip", text: "Road trip" }
-      ]
     }
   ]
 };
 
 export const emojiCharadesDevManifest = createDevManifest({
   rules: null,
-  content: DEV_CONTENT,
+  // `lockedEmojis` is optional, and an optional property is not expressible in
+  // SerializableValue — the same crossing the runtime's content adapter makes.
+  content: DEV_CONTENT as unknown as SerializableValue,
   pointsMax: 6
 });

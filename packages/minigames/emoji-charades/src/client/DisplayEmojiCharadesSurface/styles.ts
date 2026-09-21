@@ -1,89 +1,46 @@
-// TV surface per DESIGN.md §2.6 ("Clue Board"): fixed 6x5 board of clue slots,
-// letterboxed into whatever height the marquee and footer leave. Emoji never
-// scale with sequence length — cell size is a function of space alone.
+// TV surface per DESIGN.md §2.6 ("Clue Board"): bulb marquee over a fixed
+// board of clue slots, letterboxed into whatever height the marquee and the
+// status line leave. The ember stage is DRAWING's showtime material (§2.5),
+// shared so the two minigames read as the same show.
 export const container =
-  "flex h-full min-h-0 flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)]";
+  "flex h-full min-h-0 flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)] bg-[radial-gradient(ellipse_at_top,#2a1306_0%,#0f0a08_60%,#050505_100%)] p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
+// Grand bulb marquee, the one DRAWING uses: team + pending left, show title
+// centred, and a right column deliberately left empty — the display shell
+// pins its turn-timer chip over that corner, and the mockup put the timer
+// there too.
 export const marquee =
-  "flex items-center justify-between gap-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-[clamp(1.4rem,2.4vw,2.4rem)] py-[clamp(0.8rem,1.4vh,1.3rem)]";
+  "relative grid grid-cols-[1fr_auto_1fr] items-center gap-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(1.4rem,2.4vw,2.4rem)] py-[clamp(0.8rem,1.4vh,1.3rem)] shadow-[inset_0_0_36px_rgba(251,191,36,0.2),0_8px_20px_rgba(0,0,0,0.55)]";
+
+export const marqueeBulbs =
+  "pointer-events-none absolute inset-[7px] rounded-xl border-4 border-dotted border-gold/45";
 
 export const teamName =
-  "text-[clamp(1.2rem,2vw,2.1rem)] font-black uppercase tracking-[0.06em] text-text";
+  "m-0 text-[clamp(1.2rem,2vw,2.1rem)] font-black uppercase tracking-[0.06em] text-text";
 
 export const pendingPoints =
-  "ml-3 font-mono text-[clamp(0.95rem,1.4vw,1.5rem)] font-extrabold text-gold";
+  "ml-[0.8rem] font-mono text-[clamp(0.95rem,1.4vw,1.5rem)] font-extrabold text-gold";
 
 export const showTitle =
-  "text-[clamp(0.8rem,1.2vw,1.3rem)] font-extrabold uppercase tracking-[0.34em] text-gold";
+  "text-center text-[clamp(0.8rem,1.2vw,1.3rem)] font-extrabold uppercase tracking-[0.34em] text-gold";
 
-// Height-bound, not width-bound: the board takes the height the marquee and
-// the status line leave and derives its width from the 6:5 aspect. Sizing it
-// from the width instead (w-full) overflows a 1080p TV by ~280px, which eats
-// the bottom rows of slots and the status line under them.
-export const board =
-  "grid aspect-[6/5] h-full max-h-full w-auto max-w-full grid-cols-6 grid-rows-5 gap-[clamp(0.4rem,0.9vw,0.9rem)]";
+// Reserves the marquee's right third for the shell's timer chip.
+export const timerGutter = "min-h-[1px]";
 
 export const boardArea =
-  "relative grid min-h-0 flex-1 justify-items-center gap-[clamp(0.4rem,1vh,0.9rem)] [grid-template-rows:1fr_auto]";
-
-export const slotFilled =
-  "flex items-center justify-center rounded-2xl bg-text/5 text-[min(11vh,6.4vw)] leading-none";
-
-// Newest slot keeps the one beat of drama borrowed from the ribbon direction.
-export const slotNewest =
-  "flex animate-[emojipop_420ms_cubic-bezier(0.2,1.4,0.4,1)] items-center justify-center rounded-2xl bg-gold/15 text-[min(11vh,6.4vw)] leading-none ring-[3px] ring-gold";
-
-export const slotEmpty =
-  "rounded-2xl border-2 border-dashed border-text/10 bg-text/[0.02]";
+  "relative grid min-h-0 flex-1 justify-items-center gap-[clamp(0.4rem,1vh,0.9rem)] px-[clamp(1rem,3vw,3rem)] [grid-template-rows:1fr_auto]";
 
 export const statusLine =
   "text-center text-[clamp(0.72rem,1.1vw,1.1rem)] font-bold uppercase tracking-[0.24em] text-muted";
 
 export const statusCount = "font-mono text-gold";
 
-export const deckGrid =
-  "grid min-h-0 flex-1 content-center gap-[clamp(0.6rem,1.4vw,1.4rem)] sm:grid-cols-2 lg:grid-cols-3";
+// Turn-complete card: the last thing on screen before the host advances, so
+// it carries the turn's haul rather than a bare headline.
+export const turnCompleteCard =
+  "self-center rounded-2xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(2rem,4vw,4rem)] py-[clamp(1.2rem,2.4vh,2.4rem)] text-center shadow-[inset_0_0_36px_rgba(251,191,36,0.2)]";
 
-export const deckCard =
-  "rounded-2xl border-2 border-gold/40 bg-surfaceAlt px-6 py-5 text-center";
-
-export const deckCardDisabled =
-  "rounded-2xl border-2 border-dashed border-text/10 bg-surfaceAlt px-6 py-5 text-center opacity-50";
-
-export const deckCardLabel =
-  "text-[clamp(1.2rem,2vw,2rem)] font-extrabold text-text";
-
-export const deckCardMeta =
-  "mt-2 text-[clamp(0.72rem,1vw,1rem)] font-bold uppercase tracking-[0.18em] text-muted";
-
-export const sectionTitle =
+export const turnCompleteTitle =
   "text-center text-[clamp(1.5rem,3vw,3rem)] font-black uppercase tracking-[0.08em] text-text";
 
-export const sectionHint = `${statusLine} mt-2`;
-
-// Reveal overlay: the board dims behind it for the 2s window (§2.6).
-export const revealOverlay =
-  "absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(0.6rem,1.4vh,1.4rem)] rounded-2xl bg-bg/95";
-
-export const revealIconCorrect =
-  "text-[clamp(3rem,7vw,6rem)] leading-none text-success";
-
-export const revealIconSkipped =
-  "text-[clamp(3rem,7vw,6rem)] leading-none text-danger";
-
-export const revealLabel =
-  "text-center text-[clamp(0.72rem,1.1vw,1.1rem)] font-extrabold uppercase tracking-[0.3em] text-muted";
-
-export const revealAnswer =
-  "text-center font-serif text-[clamp(2.4rem,6vw,5.5rem)] font-bold italic text-text";
-
-export const revealAward =
-  "inline-flex items-baseline gap-3 rounded-full border-2 border-gold px-6 py-1";
-
-export const revealAwardPoints =
-  "font-mono text-[clamp(1.4rem,2.6vw,2.4rem)] font-black text-gold";
-
-export const revealAwardTeam =
-  "text-[clamp(0.8rem,1.2vw,1.2rem)] font-extrabold uppercase tracking-[0.2em] text-text";
-
-export const boardDimmed = "opacity-10 transition-opacity";
+export const turnCompleteHint = `${statusLine} mt-2`;

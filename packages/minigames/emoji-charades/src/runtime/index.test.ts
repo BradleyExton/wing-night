@@ -77,13 +77,6 @@ const reduce = (
   };
 };
 
-const selectDeck = (
-  state: EmojiCharadesRuntimeState,
-  deckId = "movies"
-): EmojiCharadesRuntimeState => {
-  return reduce(state, "selectDeck", { deckId }).state;
-};
-
 const hostView = (
   state: EmojiCharadesRuntimeState
 ): EmojiCharadesMinigameHostView => {
@@ -109,85 +102,79 @@ test("registers under the EMOJI_CHARADES minigame id", () => {
   assert.equal(emojiCharadesRuntimePlugin.id, "EMOJI_CHARADES");
 });
 
-test("starts in deck_selection when initialized", () => {
+test("opens on a shuffled deck, dealt rather than picked", () => {
   const state = initialize();
-
-  assert.equal(state.status, "deck_selection");
-  assert.equal(state.selectedDeckId, null);
-  assert.deepEqual(state.shuffledSubjectIds, []);
-  assert.equal(state.activeTurnTeamId, "team-a");
-});
-
-test("enters playing with a shuffled deck when a deck is selected", () => {
-  const state = selectDeck(initialize());
 
   assert.equal(state.status, "playing");
   assert.equal(state.selectedDeckId, "movies");
   assert.equal(state.subjectCursor, 0);
+  assert.equal(state.activeTurnTeamId, "team-a");
   assert.deepEqual(
     [...state.shuffledSubjectIds].sort(),
     ["jaws", "rocky", "titanic"]
   );
 });
 
-test("ignores selectDeck when the deck has fewer subjects than pointsMax", () => {
-  const { state, didMutate } = reduce(initialize(), "selectDeck", {
-    deckId: "tiny"
-  });
+test("skips past a leading deck too short to carry the turn", () => {
+  const state = emojiCharadesRuntimePlugin.initialize({
+    teamIds: ["team-a"],
+    players: [],
+    teams: [],
+    activeRoundTeamId: "team-a",
+    pointsMax: POINTS_MAX,
+    pendingPointsByTeamId: { "team-a": 0 },
+    rules: null,
+    content: asSerializable({
+      decks: [contentFixture.decks[1], contentFixture.decks[0]]
+    })
+  }) as EmojiCharadesRuntimeState;
 
-  assert.equal(didMutate, false);
-  assert.equal(state.status, "deck_selection");
+  assert.equal(state.selectedDeckId, "movies");
 });
 
-test("ignores selectDeck when the deck id is unknown", () => {
-  const { didMutate } = reduce(initialize(), "selectDeck", {
-    deckId: "nope"
-  });
+test("deals the longest deck when no deck can carry a whole turn", () => {
+  const state = emojiCharadesRuntimePlugin.initialize({
+    teamIds: ["team-a"],
+    players: [],
+    teams: [],
+    activeRoundTeamId: "team-a",
+    // Nothing in the fixture reaches this, so the fallback is the only path.
+    pointsMax: 99,
+    pendingPointsByTeamId: { "team-a": 0 },
+    rules: null,
+    content: asSerializable(contentFixture)
+  }) as EmojiCharadesRuntimeState;
 
-  assert.equal(didMutate, false);
+  assert.equal(state.selectedDeckId, "movies");
+  assert.equal(state.shuffledSubjectIds.length, 3);
 });
 
-test("ignores selectDeck when already playing", () => {
-  const playing = selectDeck(initialize());
-  const { didMutate } = reduce(playing, "selectDeck", { deckId: "movies" });
+test("deals no deck at all when the content carries none", () => {
+  const state = emojiCharadesRuntimePlugin.initialize({
+    teamIds: ["team-a"],
+    players: [],
+    teams: [],
+    activeRoundTeamId: "team-a",
+    pointsMax: POINTS_MAX,
+    pendingPointsByTeamId: { "team-a": 0 },
+    rules: null,
+    content: asSerializable({ decks: [] })
+  }) as EmojiCharadesRuntimeState;
 
-  assert.equal(didMutate, false);
-});
-
-test("marks decks unselectable when they are smaller than pointsMax", () => {
-  const view = hostView(initialize());
-
-  assert.equal(view.status, "deck_selection");
-
-  if (view.status !== "deck_selection") {
-    return;
-  }
-
-  assert.deepEqual(
-    view.availableDecks.map((deck) => [deck.id, deck.isSelectable]),
-    [
-      ["movies", true],
-      ["tiny", false]
-    ]
-  );
+  assert.equal(state.selectedDeckId, null);
+  assert.deepEqual(state.shuffledSubjectIds, []);
 });
 
 test("appends emoji to the sequence when playing", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
   state = reduce(state, "appendEmoji", { emoji: "🦖" }).state;
   state = reduce(state, "appendEmoji", { emoji: "🌴" }).state;
 
   assert.deepEqual(state.emojiSequence, ["🦖", "🌴"]);
 });
 
-test("ignores appendEmoji when still in deck_selection", () => {
-  const { didMutate } = reduce(initialize(), "appendEmoji", { emoji: "🦖" });
-
-  assert.equal(didMutate, false);
-});
-
 test("rejects regional indicator letters when banLetterEmojis is on", () => {
-  const playing = selectDeck(initialize());
+  const playing = initialize();
   const { state, didMutate } = reduce(playing, "appendEmoji", { emoji: "🇦" });
 
   assert.equal(didMutate, false);
@@ -195,14 +182,14 @@ test("rejects regional indicator letters when banLetterEmojis is on", () => {
 });
 
 test("rejects keycap digits when banLetterEmojis is on", () => {
-  const playing = selectDeck(initialize());
+  const playing = initialize();
   const { didMutate } = reduce(playing, "appendEmoji", { emoji: "1️⃣" });
 
   assert.equal(didMutate, false);
 });
 
 test("accepts letter emoji when banLetterEmojis is turned off", () => {
-  const playing = selectDeck(initialize());
+  const playing = initialize();
   const { state, didMutate } = reduce(
     playing,
     "appendEmoji",
@@ -215,7 +202,7 @@ test("accepts letter emoji when banLetterEmojis is turned off", () => {
 });
 
 test("keeps multi-codepoint emoji whole when they are appended", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
 
   // A ZWJ sequence, a skin-tone modifier and a tag-sequence flag: the clue is
   // an array of whole emoji, never a string anything may index into.
@@ -231,7 +218,7 @@ test("keeps multi-codepoint emoji whole when they are appended", () => {
 });
 
 test("ignores appendEmoji when the payload is not a single emoji", () => {
-  const playing = selectDeck(initialize());
+  const playing = initialize();
   const rejected = [
     "Jaws",
     "the answer is Jaws",
@@ -251,7 +238,7 @@ test("ignores appendEmoji when the payload is not a single emoji", () => {
 });
 
 test("stops appending at the per-subject emoji cap", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
 
   for (let index = 0; index < MAX_EMOJIS_PER_SUBJECT; index += 1) {
     state = reduce(state, "appendEmoji", { emoji: "🔥" }).state;
@@ -265,7 +252,7 @@ test("stops appending at the per-subject emoji cap", () => {
 });
 
 test("removes the last emoji when removeEmoji is dispatched", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
   state = reduce(state, "appendEmoji", { emoji: "🦖" }).state;
   state = reduce(state, "appendEmoji", { emoji: "🌴" }).state;
   state = reduce(state, "removeEmoji").state;
@@ -274,13 +261,13 @@ test("removes the last emoji when removeEmoji is dispatched", () => {
 });
 
 test("ignores removeEmoji when the sequence is empty", () => {
-  const { didMutate } = reduce(selectDeck(initialize()), "removeEmoji");
+  const { didMutate } = reduce(initialize(), "removeEmoji");
 
   assert.equal(didMutate, false);
 });
 
 test("empties the sequence when clearEmojis is dispatched", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
   state = reduce(state, "appendEmoji", { emoji: "🦖" }).state;
   state = reduce(state, "clearEmojis").state;
 
@@ -288,7 +275,7 @@ test("empties the sequence when clearEmojis is dispatched", () => {
 });
 
 test("awards a point and reveals the subject when marked correct", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
   const subjectId = state.shuffledSubjectIds[0] as string;
   state = reduce(state, "appendEmoji", { emoji: "🦖" }).state;
 
@@ -304,7 +291,7 @@ test("awards a point and reveals the subject when marked correct", () => {
 });
 
 test("awards no points but still reveals the subject when skipped", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
   state = reduce(state, "skipSubject").state;
 
   assert.equal(state.pendingPointsByTeamId["team-a"], 0);
@@ -313,14 +300,14 @@ test("awards no points but still reveals the subject when skipped", () => {
 });
 
 test("honours pointsPerCorrect from rules", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
   state = reduce(state, "markCorrect", {}, { pointsPerCorrect: 2 }).state;
 
   assert.equal(state.pendingPointsByTeamId["team-a"], 2);
 });
 
 test("clamps pending points at pointsMax", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
 
   for (let index = 0; index < 3; index += 1) {
     state = reduce(state, "markCorrect", {}, { pointsPerCorrect: 5 }).state;
@@ -330,7 +317,7 @@ test("clamps pending points at pointsMax", () => {
 });
 
 test("serves every subject once without repeating within a turn", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
   const served: string[] = [];
 
   for (let index = 0; index < 3; index += 1) {
@@ -347,7 +334,7 @@ test("serves every subject once without repeating within a turn", () => {
 });
 
 test("enters turn_complete when the deck is exhausted", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
 
   for (let index = 0; index < 3; index += 1) {
     state = reduce(state, "skipSubject").state;
@@ -357,7 +344,7 @@ test("enters turn_complete when the deck is exhausted", () => {
 });
 
 test("carries the last subject's reveal into turn_complete so the room still learns the answer", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
 
   // Burn every subject but the last, then score the one that ends the turn.
   for (let index = 0; index < 2; index += 1) {
@@ -392,7 +379,7 @@ test("carries the last subject's reveal into turn_complete so the room still lea
 });
 
 test("ignores further actions once the turn is complete", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
 
   for (let index = 0; index < 3; index += 1) {
     state = reduce(state, "skipSubject").state;
@@ -415,13 +402,13 @@ test("ignores actions when the runtime state is malformed", () => {
 });
 
 test("ignores an unknown action type", () => {
-  const { didMutate } = reduce(selectDeck(initialize()), "somethingElse");
+  const { didMutate } = reduce(initialize(), "somethingElse");
 
   assert.equal(didMutate, false);
 });
 
 test("keeps the subject text off the display view while playing", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
   state = reduce(state, "appendEmoji", { emoji: "🦖" }).state;
 
   const view = displayView(state);
@@ -434,7 +421,7 @@ test("keeps the subject text off the display view while playing", () => {
 });
 
 test("sends the subject text to the display only inside the reveal", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
   const expectedText =
     contentFixture.decks[0]?.subjects.find(
       (subject) => subject.id === state.shuffledSubjectIds[0]
@@ -454,7 +441,7 @@ test("sends the subject text to the display only inside the reveal", () => {
 });
 
 test("reports subjects remaining on the host view", () => {
-  let state = selectDeck(initialize());
+  let state = initialize();
 
   const before = hostView(state);
   assert.equal(before.status === "playing" ? before.subjectsRemaining : -1, 3);
@@ -465,8 +452,107 @@ test("reports subjects remaining on the host view", () => {
   assert.equal(after.status === "playing" ? after.subjectsRemaining : -1, 2);
 });
 
+// A subject whose clue is a running joke: the tablet offers Rob's twelve and
+// nothing else, and the reducer holds the same line the picker draws.
+const LOCKED_EMOJIS = ["✡️", "🕎", "🕍"];
+
+const lockedContentFixture: EmojiCharadesContentFile = {
+  decks: [
+    {
+      id: "the-room",
+      label: "People in This Room",
+      subjects: [
+        { id: "rob-barnes", text: "Rob Barnes", lockedEmojis: LOCKED_EMOJIS }
+      ]
+    }
+  ]
+};
+
+const initializeLocked = (): EmojiCharadesRuntimeState => {
+  return emojiCharadesRuntimePlugin.initialize({
+    teamIds: ["team-a"],
+    players: [],
+    teams: [],
+    activeRoundTeamId: "team-a",
+    pointsMax: 1,
+    pendingPointsByTeamId: { "team-a": 0 },
+    rules: null,
+    content: asSerializable(lockedContentFixture)
+  }) as EmojiCharadesRuntimeState;
+};
+
+const reduceLocked = (
+  state: EmojiCharadesRuntimeState,
+  emoji: string
+): { state: EmojiCharadesRuntimeState; didMutate: boolean } => {
+  const result = emojiCharadesRuntimePlugin.reduceAction({
+    state: asSerializable(state),
+    envelope: { actionType: "appendEmoji", actionPayload: { emoji } },
+    pointsMax: 1,
+    rules: null,
+    content: asSerializable(lockedContentFixture)
+  });
+
+  return {
+    state: result.state as EmojiCharadesRuntimeState,
+    didMutate: result.didMutate
+  };
+};
+
+test("accepts an emoji from a locked subject's own list", () => {
+  const { state, didMutate } = reduceLocked(initializeLocked(), "🕎");
+
+  assert.equal(didMutate, true);
+  assert.deepEqual(state.emojiSequence, ["🕎"]);
+});
+
+test("refuses an emoji a locked subject was never offered", () => {
+  const { state, didMutate } = reduceLocked(initializeLocked(), "🦖");
+
+  assert.equal(didMutate, false);
+  assert.deepEqual(state.emojiSequence, []);
+});
+
+test("hands the locked list to the tablet and to nobody else", () => {
+  const state = initializeLocked();
+
+  const host = emojiCharadesRuntimePlugin.selectHostView({
+    state: asSerializable(state),
+    rules: null,
+    content: asSerializable(lockedContentFixture)
+  }) as EmojiCharadesMinigameHostView;
+
+  assert.equal(host.status, "playing");
+
+  if (host.status !== "playing") {
+    return;
+  }
+
+  assert.deepEqual(host.currentSubject?.lockedEmojis, LOCKED_EMOJIS);
+
+  const display = emojiCharadesRuntimePlugin.selectDisplayView({
+    state: asSerializable(state),
+    rules: null,
+    content: asSerializable(lockedContentFixture)
+  }) as EmojiCharadesMinigameDisplayView;
+
+  assert.equal(JSON.stringify(display).includes("lockedEmojis"), false);
+});
+
+test("leaves an ordinary subject's locked list null", () => {
+  const host = hostView(initialize());
+
+  assert.equal(host.status, "playing");
+
+  if (host.status !== "playing") {
+    return;
+  }
+
+  assert.equal(host.currentSubject?.lockedEmojis, null);
+});
+
 test("replaces pending points when the room syncs them", () => {
-  const state = selectDeck(initialize());
+  const state = initialize();
   const synced = emojiCharadesRuntimePlugin.syncPendingPoints?.({
     state: asSerializable(state),
     pendingPointsByTeamId: { "team-a": 7, "team-b": 2 }
@@ -517,6 +603,7 @@ test("throws when a deck has duplicate subject ids", () => {
 });
 
 test("drops malformed decks when resolving content leniently", () => {
+  const brokenContent = asSerializable({ decks: [{ id: "broken" }] });
   const state = emojiCharadesRuntimePlugin.initialize({
     teamIds: ["team-a"],
     // This game never looks at the roster; JOUST is the one that does.
@@ -526,20 +613,32 @@ test("drops malformed decks when resolving content leniently", () => {
     pointsMax: 1,
     pendingPointsByTeamId: { "team-a": 0 },
     rules: null,
-    content: asSerializable({ decks: [{ id: "broken" }] })
+    content: brokenContent
   }) as EmojiCharadesRuntimeState;
+
+  assert.equal(state.selectedDeckId, null);
 
   const view = emojiCharadesRuntimePlugin.selectHostView({
     state: asSerializable(state),
     rules: null,
-    content: asSerializable({ decks: [{ id: "broken" }] })
+    content: brokenContent
   }) as EmojiCharadesMinigameHostView;
 
-  assert.equal(view.status, "deck_selection");
+  assert.equal(view.status, "playing");
 
-  if (view.status !== "deck_selection") {
+  if (view.status !== "playing") {
     return;
   }
 
-  assert.deepEqual(view.availableDecks, []);
+  assert.equal(view.currentSubject, null);
+});
+
+test("tells the display what a solved subject is worth", () => {
+  const view = emojiCharadesRuntimePlugin.selectDisplayView({
+    state: asSerializable(initialize()),
+    rules: asSerializable({ pointsPerCorrect: 2 }),
+    content: asSerializable(contentFixture)
+  }) as EmojiCharadesMinigameDisplayView;
+
+  assert.equal(view.pointsPerCorrect, 2);
 });

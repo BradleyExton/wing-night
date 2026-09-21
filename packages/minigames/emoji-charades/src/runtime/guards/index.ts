@@ -7,11 +7,7 @@ import {
   type EmojiCharadesRuntimeState
 } from "../types/index.js";
 
-const SUB_STATES: readonly EmojiCharadesSubState[] = [
-  "deck_selection",
-  "playing",
-  "turn_complete"
-];
+const SUB_STATES: readonly EmojiCharadesSubState[] = ["playing", "turn_complete"];
 
 const isObjectLike = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -71,16 +67,6 @@ export const isEmojiCharadesRuntimeState = (
   }
 
   return isNumberRecord(value.pendingPointsByTeamId);
-};
-
-export const isSelectDeckPayload = (
-  value: SerializableValue
-): value is { deckId: string } => {
-  return (
-    isObjectLike(value) &&
-    typeof value.deckId === "string" &&
-    value.deckId.trim().length > 0
-  );
 };
 
 // One clue slot holds one emoji, so the payload has to be exactly that: a run

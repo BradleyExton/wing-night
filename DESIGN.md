@@ -347,6 +347,17 @@ under the same bulb marquee DRAWING uses.
     italic on a `#3A1D09` → `#1A0C04` panel inside a gold border — so the
     two minigames read as the same show.
 
+There is **no deck picker**. The turn is dealt "People in This Room" (the
+first deck in the file long enough to carry a turn) and opens on its first
+subject, so no clock is spent browsing. The deck-selection screens in
+`04-hybrid.html` and `02-clue-wall.html` are design history, not a surface.
+
+A subject may be **locked to its own emoji**: the tablet's search, tabs and
+catalog all disappear and the picker offers exactly the authored list under a
+caption naming the subject. It is a running joke about one person in the room,
+authored in content (`lockedEmojis`), and the reducer refuses anything off the
+list so the bit cannot be broken from the tablet. The TV never sees it.
+
 **Host layout** reuses the §2.0A shell language: mini-rail on top, then a
 left picker column (clue canvas → persistent search field → category
 tabs → emoji grid) beside the standard control deck column (subject card
@@ -379,9 +390,17 @@ title, turn timer), the clue board, then the standings footer per §3.2.
 -   The newest slot carries a gold ring and a 420ms `pop` — the one beat
     of drama, borrowed from the rejected `03-ribbon.html` direction.
 -   Answer-safe per §2.3: the display never receives subject text outside
-    the post-result reveal. During the reveal the board dims to 0.12
-    behind a centred check/cross, the resolved subject in serif italic,
-    and a gold award pill, until the reveal window expires.
+    the post-result reveal. The reveal is DRAWING's plaque (§2.5), not a
+    full-bleed wash: a check/cross, the resolved subject in serif italic
+    and a gold award readout, over a board dimmed to 0.3.
+-   **The board holds the clue through the reveal.** The runtime empties
+    the sequence in the same update that raises the verdict, so the TV
+    keeps the emoji that were on it the render before — otherwise the
+    room loses the clue at the exact moment the answer would make sense
+    of it. Same hold DRAWING keeps for its sketch, pinned to the reveal
+    that caught it so a subject resolved on an empty board never
+    resurrects the last one's clue. (The prototype dimmed to 0.12 under
+    an opaque wash, which erased a board it had nothing on anyway.)
 
 ## 2.7 JOUST Minigame Surface Language ("Dusk Desert")
 

@@ -9,17 +9,14 @@ export type EmojiCharadesRuntimeContent = EmojiCharadesContentFile;
 export type EmojiCharadesRuntimeState = {
   activeTurnTeamId: string | null;
   status: EmojiCharadesSubState;
+  // The deck the turn was dealt at initialize; the room never picks one.
   selectedDeckId: string | null;
-  // Populated once, on selectDeck; the cursor never wraps.
+  // Shuffled once, alongside the deal; the cursor never wraps.
   shuffledSubjectIds: string[];
   subjectCursor: number;
   emojiSequence: string[];
   reveal: EmojiCharadesSubjectReveal | null;
   pendingPointsByTeamId: Record<string, number>;
-  // Selectors receive only { state, rules, content }, so the deck gate's
-  // threshold has to travel in the state itself. initialize() seeds it and
-  // reduceAction() refreshes it from the live input.
-  pointsMax: number;
 };
 
 export type EmojiCharadesMinigameRules = {

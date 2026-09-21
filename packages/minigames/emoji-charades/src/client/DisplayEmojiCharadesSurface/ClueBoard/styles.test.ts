@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MAX_EMOJIS_PER_SUBJECT } from "../../runtime/types/index.js";
+import { MAX_EMOJIS_PER_SUBJECT } from "../../../runtime/types/index.js";
 import * as styles from "./styles.js";
 
 test("sizes the clue board from the height the TV leaves, not its width", () => {

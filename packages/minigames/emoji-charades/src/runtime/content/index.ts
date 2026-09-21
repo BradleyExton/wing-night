@@ -13,7 +13,15 @@ export const EMOJI_CHARADES_CONTENT_FILE_NAME = "minigames/emoji-charades.json";
 export const cloneEmojiCharadesSubject = (
   subject: EmojiCharadesSubject
 ): EmojiCharadesSubject => {
-  return { id: subject.id, text: subject.text };
+  if (subject.lockedEmojis === undefined) {
+    return { id: subject.id, text: subject.text };
+  }
+
+  return {
+    id: subject.id,
+    text: subject.text,
+    lockedEmojis: [...subject.lockedEmojis]
+  };
 };
 
 export const cloneEmojiCharadesDeck = (
@@ -97,4 +105,29 @@ export const findEmojiCharadesDeck = (
   }
 
   return content.decks.find((deck) => deck.id === deckId) ?? null;
+};
+
+// The room never picks a deck, so the file's order IS the preference order:
+// the first deck long enough to carry a whole turn is the one dealt, and the
+// decks under it are fallbacks nobody has to see. A file whose every deck is
+// short still gets a turn — the longest one — rather than a dead tablet.
+export const dealEmojiCharadesDeck = (
+  content: EmojiCharadesRuntimeContent,
+  pointsMax: number
+): EmojiCharadesDeck | null => {
+  const dealtDeck = content.decks.find(
+    (deck) => deck.subjects.length >= pointsMax
+  );
+
+  if (dealtDeck !== undefined) {
+    return dealtDeck;
+  }
+
+  return content.decks.reduce<EmojiCharadesDeck | null>((longest, deck) => {
+    if (longest === null || deck.subjects.length > longest.subjects.length) {
+      return deck;
+    }
+
+    return longest;
+  }, null);
 };

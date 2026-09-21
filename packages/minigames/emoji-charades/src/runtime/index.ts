@@ -8,8 +8,8 @@ import type {
 } from "@wingnight/minigames-core";
 
 import {
+  dealEmojiCharadesDeck,
   emojiCharadesContentAdapter,
-  findEmojiCharadesDeck,
   resolveEmojiCharadesContent
 } from "./content/index.js";
 import {
@@ -17,7 +17,6 @@ import {
   isEmojiCharadesRules,
   isEmojiCharadesRuntimeState,
   isLetterEmoji,
-  isSelectDeckPayload,
   resolveEmojiCharadesRules
 } from "./guards/index.js";
 import {
@@ -65,16 +64,25 @@ export const emojiCharadesRuntimePlugin: MinigameRuntimePlugin = {
   content: emojiCharadesContentAdapter,
   isRules: isEmojiCharadesRules,
   initialize: (input) => {
+    // The turn opens on its first subject: the deck is dealt here rather than
+    // chosen on the tablet, so nobody spends the clock browsing.
+    const dealtDeck = dealEmojiCharadesDeck(
+      resolveEmojiCharadesContent(input.content),
+      input.pointsMax
+    );
+
     const initialState: EmojiCharadesRuntimeState = {
       activeTurnTeamId: input.activeRoundTeamId ?? input.teamIds[0] ?? null,
-      status: "deck_selection",
-      selectedDeckId: null,
-      shuffledSubjectIds: [],
+      status: "playing",
+      selectedDeckId: dealtDeck?.id ?? null,
+      shuffledSubjectIds:
+        dealtDeck === null
+          ? []
+          : shuffleSubjectIds(dealtDeck.subjects.map((subject) => subject.id)),
       subjectCursor: 0,
       emojiSequence: [],
       reveal: null,
-      pendingPointsByTeamId: { ...input.pendingPointsByTeamId },
-      pointsMax: input.pointsMax
+      pendingPointsByTeamId: { ...input.pendingPointsByTeamId }
     };
 
     return initialState;
@@ -90,47 +98,6 @@ export const emojiCharadesRuntimePlugin: MinigameRuntimePlugin = {
     const actionType = input.envelope.actionType;
     const rules = resolveEmojiCharadesRules(input.rules);
 
-    if (actionType === "selectDeck") {
-      if (state.status !== "deck_selection") {
-        return unchanged;
-      }
-
-      if (!isSelectDeckPayload(input.envelope.actionPayload)) {
-        return unchanged;
-      }
-
-      const content = resolveEmojiCharadesContent(input.content);
-      const deck = findEmojiCharadesDeck(
-        content,
-        input.envelope.actionPayload.deckId
-      );
-
-      if (deck === null) {
-        return unchanged;
-      }
-
-      // The gate that guarantees the cursor can never run off the end.
-      if (deck.subjects.length < input.pointsMax) {
-        return unchanged;
-      }
-
-      return {
-        state: {
-          ...state,
-          status: "playing",
-          selectedDeckId: deck.id,
-          shuffledSubjectIds: shuffleSubjectIds(
-            deck.subjects.map((subject) => subject.id)
-          ),
-          subjectCursor: 0,
-          emojiSequence: [],
-          reveal: null,
-          pointsMax: input.pointsMax
-        },
-        didMutate: true
-      };
-    }
-
     if (state.status !== "playing") {
       return unchanged;
     }
@@ -144,6 +111,18 @@ export const emojiCharadesRuntimePlugin: MinigameRuntimePlugin = {
 
       // Defence in depth: the picker already hides these.
       if (rules.banLetterEmojis && isLetterEmoji(emoji)) {
+        return unchanged;
+      }
+
+      // A locked subject is a bit, and the bit only lands if it holds: the
+      // reducer refuses anything off the authored list, the same way the
+      // picker refuses to draw it.
+      const lockedEmojis = resolveCurrentEmojiCharadesSubject(
+        state,
+        resolveEmojiCharadesContent(input.content)
+      )?.lockedEmojis;
+
+      if (lockedEmojis !== undefined && !lockedEmojis.includes(emoji)) {
         return unchanged;
       }
 
@@ -224,7 +203,6 @@ export const emojiCharadesRuntimePlugin: MinigameRuntimePlugin = {
         subjectCursor: nextCursor,
         emojiSequence: [],
         pendingPointsByTeamId,
-        pointsMax: input.pointsMax,
         reveal: {
           subjectId: currentSubject.id,
           subjectText: currentSubject.text,
@@ -263,7 +241,7 @@ export const emojiCharadesRuntimePlugin: MinigameRuntimePlugin = {
 
     return toEmojiCharadesDisplayView(
       input.state,
-      resolveEmojiCharadesContent(input.content)
+      resolveEmojiCharadesRules(input.rules)
     );
   }
 };

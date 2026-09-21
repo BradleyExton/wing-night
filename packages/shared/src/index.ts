@@ -200,7 +200,6 @@ export type {
   DrawingPromptReveal,
   DrawingStroke,
   DisplayRoomStateSnapshot,
-  EmojiCharadesDeckOption,
   EmojiCharadesMinigameDisplayView,
   EmojiCharadesMinigameHostSubject,
   EmojiCharadesMinigameHostView,

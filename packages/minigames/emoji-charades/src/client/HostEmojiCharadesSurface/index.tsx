@@ -59,43 +59,6 @@ export const HostEmojiCharadesSurface = ({
         </div>
       </div>
 
-      {hostView?.status === "deck_selection" && (
-        <div className={styles.playArea}>
-          <div className={styles.pickerColumn}>
-            <p className={styles.sectionTitle}>
-              {hostEmojiCharadesSurfaceCopy.deckSelectionTitle}
-            </p>
-            <p className={styles.sectionHint}>
-              {hostEmojiCharadesSurfaceCopy.deckSelectionHint}
-            </p>
-            <div className={styles.deckList}>
-              {hostView.availableDecks.map((deck) => (
-                <button
-                  key={deck.id}
-                  className={
-                    deck.isSelectable ? styles.deckRow : styles.deckRowDisabled
-                  }
-                  type="button"
-                  disabled={!deck.isSelectable || !canAct}
-                  onClick={(): void => {
-                    onDispatchAction("selectDeck", { deckId: deck.id });
-                  }}
-                >
-                  <span className={styles.deckRowLabel}>{deck.label}</span>
-                  <span className={styles.deckRowMeta}>
-                    {deck.isSelectable
-                      ? hostEmojiCharadesSurfaceCopy.deckSubjectCountLabel(
-                          deck.subjectCount
-                        )
-                      : hostEmojiCharadesSurfaceCopy.deckTooSmallLabel}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {hostView?.status === "playing" && (
         <div className={styles.playArea}>
           <div className={styles.pickerColumn}>
@@ -112,6 +75,10 @@ export const HostEmojiCharadesSurface = ({
             )}
             <EmojiPicker
               isDisabled={!canAct}
+              lockedEmojis={hostView.currentSubject?.lockedEmojis ?? null}
+              lockedLabel={hostEmojiCharadesSurfaceCopy.lockedPickerLabel(
+                hostView.currentSubject?.text ?? ""
+              )}
               onSelectEmoji={(emoji): void => {
                 onDispatchAction("appendEmoji", { emoji });
               }}
