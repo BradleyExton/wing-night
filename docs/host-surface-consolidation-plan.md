@@ -381,3 +381,19 @@ Re-read this section from disk at the top of every iteration; do not trust memor
   comment plus `export {}`. Glob independently probed by the orchestrator with a three-levels-deep
   `.tsx` test that renders React — it ran, so the suite is not silently empty. Tailwind `content` in
   `apps/client/tailwind.config.ts` gained the package's glob. Gate green (lint/typecheck/test all 0).
+- [x] T1.2 `f659315` — `styleTokens` moved to `packages/surface/src/styleTokens/`; git records a pure
+  rename (0 insertions, 0 deletions), so the tokens are byte-identical. 29 importer `styles.ts` files
+  across `HostControlPanel`, `HostPhaseBody`, `PlayersSurface` and `AdminConfigWizard` now import
+  `@wingnight/surface` by package root; `apps/client` declares the workspace dependency. The
+  `motion-safe:[animation:pulse_…]` / `[animation:shimmer_…]` arbitrary values were deliberately left
+  untouched — they still reach keyframes in `apps/client/src/index.css`, so the coupling now crosses a
+  package boundary. That is T1.3's to resolve. Gate green, e2e 36 passed.
+- [x] T1.8 `264a1cf` — TRIVIA `"No assigned team"` → `"No team assigned"`, matching the other eight.
+  RECREATE dock gutter: the first attempt added `pb-[clamp(5rem,7vw,5.5rem)]` to the top-level
+  `container` and was REJECTED by the orchestrator — a full-width bottom band to clear a bottom-right
+  corner, pushing up every child of the flex column and enlarging the ~268px of dead air on the game
+  with the worst canvas share (33%). It had copied the header's `pr-[clamp(9rem,15vw,12rem)]`, which is
+  itself one of the bugs in the diagnosis (RECREATE has `timerKey: null`, so that reserve holds space
+  for a chip that never renders). Repaired: `container` restored to plain `p-5`, and the reserve taken
+  on the button itself as `w-[calc(100%-4.5rem)]`, costing horizontal space in one element and no
+  vertical space anywhere. `min-h-14` touch target unchanged. Gate green, e2e 36 passed.
