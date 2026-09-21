@@ -145,12 +145,21 @@ export const reportRoomMusicTrackEnded = defineRoomMutation({
     }
 
     const tracks = resolveMusicTrackList(roomState, music.source);
-    const nextMusic = resolveMusicAtIndex(
-      roomState,
-      music,
-      resolveNextTrackIndex(music.trackIndex, tracks.length),
-      true
-    );
+    const nextTrackIndex = resolveNextTrackIndex(music.trackIndex, tracks.length);
+
+    // A one-track playlist wraps to itself, so there is no next track to move
+    // to and nothing about the room changed. Rejecting it matters beyond the
+    // wasted broadcast: the snapshot it used to publish was byte-identical to
+    // the one before it, so the display's cue — which keys on the source, the
+    // filename, the index and `isPlaying` — never saw a change and never
+    // restarted the element. The track played once and the lobby went quiet.
+    // Looping it is the DISPLAY's job now (`shouldLoopTrack`), which is the
+    // only place that can loop a track without a round trip per repeat.
+    if (nextTrackIndex === music.trackIndex) {
+      return false;
+    }
+
+    const nextMusic = resolveMusicAtIndex(roomState, music, nextTrackIndex, true);
 
     // The playlist emptied under us (a content reload mid-party). Silence beats
     // pointing the TV at a file that is no longer there.

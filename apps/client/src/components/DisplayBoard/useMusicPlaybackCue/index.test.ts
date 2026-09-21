@@ -10,6 +10,7 @@ import {
   shouldFadeOutFirst,
   shouldHoldMusicPosition,
   shouldPlayMusic,
+  shouldLoopTrack,
   shouldRememberPosition,
   shouldSeekToRememberedPosition
 } from "./index";
@@ -77,4 +78,30 @@ test("remembers a position only once the track is actually under way", () => {
   assert.equal(shouldRememberPosition(0.3), false);
   assert.equal(shouldRememberPosition(0.5), true);
   assert.equal(shouldRememberPosition(90), true);
+});
+
+// The lobby's one-track case is the only thing the element repeats on its own:
+// the server's cursor wraps to the track already playing, so no snapshot comes
+// and nothing else would ever restart it.
+test("loops the lobby when the playlist holds a single track", () => {
+  assert.equal(shouldLoopTrack(buildMusic({ trackCount: 1 })), true);
+});
+
+test("does not loop a lobby playlist the server can advance through", () => {
+  assert.equal(shouldLoopTrack(buildMusic({ trackCount: 3 })), false);
+});
+
+// An anthem is a one-shot cue however short the team's list: it ends, the
+// server marks it stopped, and the room is quiet until the next phase.
+test("never loops an anthem, even a team's only one", () => {
+  assert.equal(
+    shouldLoopTrack(
+      buildMusic({ source: MUSIC_PLAYBACK_SOURCES.ANTHEM, trackCount: 1 })
+    ),
+    false
+  );
+});
+
+test("does not loop when the room has no music playing", () => {
+  assert.equal(shouldLoopTrack(null), false);
 });

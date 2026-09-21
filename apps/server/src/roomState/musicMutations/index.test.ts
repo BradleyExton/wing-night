@@ -16,6 +16,7 @@ import {
   setRoomStateTeams,
   skipRoomMusicTrack
 } from "../index.js";
+import { applyRoomStateMutation } from "../mutationResult/index.js";
 import { advanceUntil, setupValidTeamsAndAssignments } from "../testHarness.js";
 
 const LOBBY_PLAYLIST = ["01-first.mp3", "02-second.mp3", "03-third.mp3"];
@@ -188,6 +189,23 @@ test("advances the lobby playlist when the display reports the track ended", () 
   reportRoomMusicTrackEnded(MUSIC_PLAYBACK_SOURCES.LOBBY, 0);
 
   assert.equal(getRoomStateSnapshot().musicPlayback?.trackIndex, 1);
+});
+
+// A one-track playlist wraps to the track already playing, so the report
+// changes nothing and must not broadcast. It used to publish a snapshot
+// identical to the one before it, which the display's cue could not tell from
+// no news at all — so it never restarted the element and the lobby fell silent
+// after one play. The display loops that case itself now.
+test("does not broadcast when the lobby's only track reports it ended", () => {
+  seedLobbyPlaylist(["only.mp3"]);
+
+  const before = getRoomStateSnapshot().musicPlayback;
+  const result = applyRoomStateMutation(() =>
+    reportRoomMusicTrackEnded(MUSIC_PLAYBACK_SOURCES.LOBBY, 0)
+  );
+
+  assert.equal(result.didMutate, false);
+  assert.deepEqual(result.roomState.musicPlayback, before);
 });
 
 // A display that reconnected mid-track, or a second display, reports a track

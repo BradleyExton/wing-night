@@ -1,4 +1,8 @@
-import type { MusicPlaybackSource, RoomMusicPlaybackState } from "@wingnight/shared";
+import {
+  MUSIC_PLAYBACK_SOURCES,
+  type MusicPlaybackSource,
+  type RoomMusicPlaybackState
+} from "@wingnight/shared";
 import { useEffect, useRef, type RefObject } from "react";
 
 import { pauseQuietly, playQuietly, stopQuietly } from "../displayMediaPlayback";
@@ -64,6 +68,31 @@ export const shouldFadeOutFirst = (
   return isAudible && (isTrackChanging || !wantsPlay);
 };
 
+// Whether the element itself should repeat the track it is on.
+//
+// Only ever the lobby, and only when it is the playlist's one track. A
+// multi-track playlist advances through the server — the display reports the
+// track ended, the server moves its cursor, the next snapshot names the next
+// file — which is what keeps a refresh, a second display and a host skip
+// agreeing about where the playlist is. A ONE-track playlist has nowhere to
+// advance to: the server's cursor wraps to the track it is already on, which
+// is not a change, so no snapshot arrives and nothing restarts the element.
+// The lobby played once and the room went quiet. `loop` is the repeat that
+// needs no round trip.
+//
+// An anthem is never looped however short the team's list, because it is a
+// one-shot cue: it ends, the server marks it not playing, and the room is
+// quiet until the next phase.
+export const shouldLoopTrack = (
+  musicPlayback: RoomMusicPlaybackState | null
+): boolean => {
+  return (
+    musicPlayback !== null &&
+    musicPlayback.source === MUSIC_PLAYBACK_SOURCES.LOBBY &&
+    musicPlayback.trackCount <= 1
+  );
+};
+
 // A resume from a host pause keeps the element's own position; only a track
 // starting from (near) the top consults the memory.
 export const shouldSeekToRememberedPosition = (currentTimeSeconds: number): boolean => {
@@ -105,6 +134,7 @@ export const useMusicPlaybackCue = ({
   const trackFileName = musicPlayback?.trackFileName ?? null;
   const trackIndex = musicPlayback?.trackIndex ?? null;
   const isPlaying = musicPlayback?.isPlaying ?? false;
+  const isLoopingTrack = shouldLoopTrack(musicPlayback);
 
   const masterVolumeRef = useRef(musicVolume);
   const rampRef = useRef<VolumeRamp | null>(null);
@@ -148,6 +178,20 @@ export const useMusicPlaybackCue = ({
       // the track still plays, which is the part the party needs.
     }
   }, [mediaRef, musicVolume]);
+
+  // Kept in its own effect rather than folded into the transition below, so it
+  // cannot disturb that effect's guarded `src` assignment — and so it re-applies
+  // on a playlist that grows or shrinks under a content reload, which changes
+  // `trackCount` without touching the track being played.
+  useEffect(() => {
+    const media = mediaRef.current;
+
+    if (media === null) {
+      return;
+    }
+
+    media.loop = isLoopingTrack;
+  }, [isLoopingTrack, mediaRef]);
 
   // The server owns the cursor, so a finished track is REPORTED rather than
   // acted on: the display says which track ended and waits to be told what
