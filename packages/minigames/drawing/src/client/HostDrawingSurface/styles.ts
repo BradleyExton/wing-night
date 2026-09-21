@@ -81,9 +81,10 @@ export const verdictIncorrect = `${verdictBase} border-danger/60 bg-danger/20 ho
 export const verdictIcon = "text-lg leading-none";
 
 // Inks are drawing content, not UI accents, so the swatches carry their own
-// color inline and the tray stays on surface tokens.
+// color rather than a surface token — via the `--ink-color` custom property
+// each swatch's own class sets (index.tsx), never an inline style prop.
 export const inkLight =
-  "h-11 w-11 rounded-full border-2 border-black/40 transition disabled:cursor-not-allowed disabled:opacity-40";
+  "h-11 w-11 rounded-full border-2 border-black/40 bg-[var(--ink-color)] shadow-[inset_0_-4px_8px_rgba(0,0,0,0.45),inset_0_4px_8px_rgba(255,255,255,0.18),0_0_12px_var(--ink-color)] transition disabled:cursor-not-allowed disabled:opacity-40";
 
 export const inkLightSelected =
   "outline outline-[3px] outline-offset-2 outline-gold";

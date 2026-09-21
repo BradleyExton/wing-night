@@ -109,7 +109,7 @@ export const HostEmojiCharadesSurface = ({
               }}
             >
               <span className={styles.verdictIcon} aria-hidden="true">
-                {"✓"}
+                {hostEmojiCharadesSurfaceCopy.gotItIconGlyph}
               </span>
               {hostEmojiCharadesSurfaceCopy.gotItButtonLabel}
               <span className={styles.verdictHint}>
@@ -125,7 +125,7 @@ export const HostEmojiCharadesSurface = ({
               }}
             >
               <span className={styles.verdictIcon} aria-hidden="true">
-                {"↷"}
+                {hostEmojiCharadesSurfaceCopy.skipIconGlyph}
               </span>
               {hostEmojiCharadesSurfaceCopy.skipButtonLabel}
               <span className={styles.verdictHint}>

@@ -169,7 +169,7 @@ export const GeoGuessMap = ({
             map?.zoomIn();
           }}
         >
-          +
+          {hostGeoSurfaceCopy.zoomInGlyph}
         </button>
         <button
           className={styles.zoomButton}
@@ -179,7 +179,7 @@ export const GeoGuessMap = ({
             map?.zoomOut();
           }}
         >
-          −
+          {hostGeoSurfaceCopy.zoomOutGlyph}
         </button>
       </div>
     </div>

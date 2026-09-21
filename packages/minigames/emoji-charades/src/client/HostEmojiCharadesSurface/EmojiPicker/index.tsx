@@ -78,7 +78,7 @@ export const EmojiPicker = ({
     <>
       <div className={styles.search}>
         <span className={styles.searchIcon} aria-hidden="true">
-          {"\u{1F50D}"}
+          {hostEmojiCharadesSurfaceCopy.searchIconGlyph}
         </span>
         <input
           className={styles.searchInput}

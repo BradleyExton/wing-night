@@ -21,5 +21,7 @@ export const hostGeoSurfaceCopy = {
   pointsLabel: "Points",
   pointsValue: (points: number): string => `+${points}`,
   zoomInLabel: "Zoom in",
-  zoomOutLabel: "Zoom out"
+  zoomOutLabel: "Zoom out",
+  zoomInGlyph: "+",
+  zoomOutGlyph: "−"
 } as const;

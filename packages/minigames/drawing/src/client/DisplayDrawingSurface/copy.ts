@@ -5,5 +5,7 @@ export const displayDrawingSurfaceCopy = {
     "Artists, limber up. The canvas goes live when the round starts.",
   drawingStatus: (teamName: string): string => `${teamName} is drawing…`,
   revealAnswerLabel: "The answer was",
-  revealAwardPoints: "+1"
+  revealAwardPoints: "+1",
+  revealSparkGlyphPrimary: "✦",
+  revealSparkGlyphSecondary: "✧"
 } as const;

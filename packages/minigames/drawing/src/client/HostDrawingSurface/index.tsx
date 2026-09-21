@@ -12,13 +12,17 @@ import * as styles from "./styles.js";
 
 // Glowing "palette light" inks from the easel mockups; chalk plus existing
 // theme tokens (see DESIGN.md §2.5). Inks are drawing content, not UI accents.
+// Each swatch's glow is genuinely per-instance colour, so it rides a `--ink-color`
+// custom property (styles.ts) rather than an inline style prop — the same
+// enumerated-class pattern the cast package uses for its per-instance timings
+// (resolveTeamColorVariant's `tintClassName`).
 const INK_PALETTE = [
-  { id: "chalk", label: "Chalk", color: "#F3EEE2" },
-  { id: "ember", label: "Ember", color: "#F97316" },
-  { id: "chili", label: "Chili", color: "#EF4444" },
-  { id: "gold", label: "Gold", color: "#FBBF24" },
-  { id: "wave", label: "Wave", color: "#06B6D4" },
-  { id: "lime", label: "Lime", color: "#84CC16" }
+  { id: "chalk", label: "Chalk", color: "#F3EEE2", varClassName: "[--ink-color:#F3EEE2]" },
+  { id: "ember", label: "Ember", color: "#F97316", varClassName: "[--ink-color:#F97316]" },
+  { id: "chili", label: "Chili", color: "#EF4444", varClassName: "[--ink-color:#EF4444]" },
+  { id: "gold", label: "Gold", color: "#FBBF24", varClassName: "[--ink-color:#FBBF24]" },
+  { id: "wave", label: "Wave", color: "#06B6D4", varClassName: "[--ink-color:#06B6D4]" },
+  { id: "lime", label: "Lime", color: "#84CC16", varClassName: "[--ink-color:#84CC16]" }
 ] as const;
 
 const BRUSH_SIZE = 0.03;
@@ -137,15 +141,11 @@ export const HostDrawingSurface = ({
                   type="button"
                   aria-label={hostDrawingSurfaceCopy.inkSwatchLabel(ink.label)}
                   aria-pressed={ink.id === selectedInk.id}
-                  className={`${styles.inkLight}${
+                  className={`${styles.inkLight} ${ink.varClassName}${
                     ink.id === selectedInk.id
                       ? ` ${styles.inkLightSelected}`
                       : ""
                   }`}
-                  style={{
-                    backgroundColor: ink.color,
-                    boxShadow: `inset 0 -4px 8px rgba(0,0,0,0.45), inset 0 4px 8px rgba(255,255,255,0.18), 0 0 12px ${ink.color}`
-                  }}
                   disabled={!canDraw}
                   onClick={(): void => {
                     setSelectedInkId(ink.id);
@@ -228,7 +228,7 @@ export const HostDrawingSurface = ({
                 }}
               >
                 <span className={styles.verdictIcon} aria-hidden="true">
-                  ✗
+                  {hostDrawingSurfaceCopy.incorrectIconGlyph}
                 </span>
                 {hostDrawingSurfaceCopy.incorrectButtonLabel}
               </button>
@@ -241,7 +241,7 @@ export const HostDrawingSurface = ({
                 }}
               >
                 <span className={styles.verdictIcon} aria-hidden="true">
-                  ✓
+                  {hostDrawingSurfaceCopy.correctIconGlyph}
                 </span>
                 {hostDrawingSurfaceCopy.correctButtonLabel}
               </button>

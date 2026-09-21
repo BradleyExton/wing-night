@@ -10,6 +10,7 @@ export const hostEmojiCharadesSurfaceCopy = {
   waitingSubjectLabel: "Waiting for the next subject…",
   emptySequenceLabel: "Tap emoji to start the clue",
   searchPlaceholderLabel: "Search all emoji…",
+  searchIconGlyph: "\u{1F50D}",
   searchClearLabel: "Clear search",
   noSearchResultsLabel: "No emoji match that search",
   lockedPickerLabel: (subjectText: string): string =>
@@ -18,8 +19,10 @@ export const hostEmojiCharadesSurfaceCopy = {
   clearButtonLabel: "✕ Clear",
   gotItButtonLabel: "Got it",
   gotItButtonHint: "+1 point",
+  gotItIconGlyph: "✓",
   skipButtonLabel: "Skip",
   skipButtonHint: "no points",
+  skipIconGlyph: "↷",
   turnCompleteTitle: "Turn complete",
   turnCompleteHint: "Hand the tablet back to the host."
 } as const;

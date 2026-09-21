@@ -128,22 +128,22 @@ export const DisplayDrawingSurface = ({
         {isPlayPhase && isRevealVisible && reveal !== null && (
           <>
             <span className={`${styles.spark} ${styles.sparkOne}`} aria-hidden="true">
-              ✦
+              {displayDrawingSurfaceCopy.revealSparkGlyphPrimary}
             </span>
             <span className={`${styles.spark} ${styles.sparkTwo}`} aria-hidden="true">
-              ✦
+              {displayDrawingSurfaceCopy.revealSparkGlyphPrimary}
             </span>
             <span
               className={`${styles.spark} ${styles.sparkThree}`}
               aria-hidden="true"
             >
-              ✧
+              {displayDrawingSurfaceCopy.revealSparkGlyphSecondary}
             </span>
             <span
               className={`${styles.spark} ${styles.sparkFour}`}
               aria-hidden="true"
             >
-              ✧
+              {displayDrawingSurfaceCopy.revealSparkGlyphSecondary}
             </span>
             <div className={styles.revealOverlay}>
               <RevealPlaque reveal={reveal} teamName={activeTeamName} />
