@@ -1,7 +1,16 @@
-import { isHouseComponentPath, normalizeFilename } from "./houseComponentPaths.mjs";
+import { normalizeFilename } from "./houseComponentPaths.mjs";
 
-const COMPONENT_ENTRY_FILE_PATTERN =
-  /\/(?:apps\/client\/src\/components|packages\/cast\/src)\/.+\/index(?:\.test)?\.tsx$/;
+// The trees whose React components live in folders: apps/client, the shared cast and
+// surface packages, and every minigame client tree. One source of truth — the gate below
+// and the entry-file pattern are built from it, so the two can no longer drift apart.
+const COMPONENT_FOLDER_ROOTS =
+  "(?:apps/client/src/components|packages/cast/src|packages/surface/src|packages/minigames/[^/]+/src/client)";
+
+const COMPONENT_FOLDER_PATTERN = new RegExp(`/${COMPONENT_FOLDER_ROOTS}/`);
+
+const COMPONENT_ENTRY_FILE_PATTERN = new RegExp(
+  `/${COMPONENT_FOLDER_ROOTS}/.+/index(?:\\.test)?\\.tsx$`
+);
 
 export default {
   meta: {
@@ -20,7 +29,7 @@ export default {
     return {
       Program(node) {
         const filename = normalizeFilename(context.filename);
-        if (!isHouseComponentPath(filename)) {
+        if (!COMPONENT_FOLDER_PATTERN.test(filename)) {
           return;
         }
 

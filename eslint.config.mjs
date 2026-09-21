@@ -101,7 +101,18 @@ export default [
     }
   },
   {
-    files: ["apps/client/src/**/*.{ts,tsx}", "packages/cast/src/**/*.{ts,tsx}"],
+    // The minigame client trees are browser code too, but they are deliberately NOT
+    // listed here. `no-undef` is off for TS, so the browser globals are inert; the live
+    // effect of this block is the two react-hooks rules, and the minigame runners, mirrors
+    // and hold timers all carry hand-narrowed dependency arrays that keep a rAF loop from
+    // being torn down and restarted mid-flight. Widening them is a behaviour change to a
+    // shipped minigame, not a lint fix, so it is its own piece of work (BACKLOG.md). Every
+    // house component rule below does cover the minigame trees.
+    files: [
+      "apps/client/src/**/*.{ts,tsx}",
+      "packages/cast/src/**/*.{ts,tsx}",
+      "packages/surface/src/**/*.{ts,tsx}"
+    ],
     languageOptions: {
       globals: globals.browser
     },
@@ -135,7 +146,14 @@ export default [
   {
     // packages/cast is the shared character system: it left apps/client so minigame
     // packages can draw the bird, and it keeps the house component idiom with it.
-    files: ["apps/client/src/components/**/*.tsx", "packages/cast/src/**/*.tsx"],
+    // packages/surface is the shared design-system package, governed the same way, and
+    // the minigame client trees are most of the game UI — the idiom is house-wide.
+    files: [
+      "apps/client/src/components/**/*.tsx",
+      "packages/cast/src/**/*.tsx",
+      "packages/surface/src/**/*.tsx",
+      "packages/minigames/*/src/client/**/*.tsx"
+    ],
     rules: {
       "wingnight/component-entry-file-name": "error"
     }
@@ -147,7 +165,12 @@ export default [
     }
   },
   {
-    files: ["apps/client/src/components/**/index.tsx", "packages/cast/src/**/index.tsx"],
+    files: [
+      "apps/client/src/components/**/index.tsx",
+      "packages/cast/src/**/index.tsx",
+      "packages/surface/src/**/index.tsx",
+      "packages/minigames/*/src/client/**/index.tsx"
+    ],
     rules: {
       "max-lines": [
         "error",
@@ -160,7 +183,42 @@ export default [
     }
   },
   {
-    files: ["apps/client/src/components/**/styles.ts", "packages/cast/src/**/styles.ts"],
+    // The SVG primitives a minigame scene is drawn from. A Cactus or a Backdrop is a <g>
+    // of shapes with no className anywhere — its colour and geometry come from the scene's
+    // palette.ts and its props, so there is no styles.ts for it to import and
+    // require-styles-import-in-component-entry has nothing left to ask for. Scope carve-out
+    // only — that single rule is off for the primitives and no rule is weakened: the
+    // 260-line cap, the inline-style ban, the copy-module rule and the JSON import ban all
+    // still apply here, and there is no eslint-disable in any of these files.
+    //
+    // The ignores are the parts of a scene that are NOT primitives — the three scene roots,
+    // which are the real elements in the DOM, and the four animated parts that carry a
+    // className. Each has a sibling styles.ts, so each stays under the rule; without these
+    // lines the carve-out would quietly stop noticing if one of them lost its styles import.
+    files: ["packages/minigames/*/src/client/*Scene/**/index.tsx"],
+    ignores: [
+      "packages/minigames/*/src/client/*Scene/index.tsx",
+      "packages/minigames/fappy/src/client/FappyScene/BirdSprite/index.tsx",
+      "packages/minigames/joust/src/client/JoustArenaScene/ArenaHen/index.tsx",
+      "packages/minigames/joust/src/client/JoustArenaScene/FlightEffects/index.tsx",
+      "packages/minigames/joust/src/client/JoustArenaScene/Perch/LegTimber/index.tsx"
+    ],
+    rules: {
+      "wingnight/require-styles-import-in-component-entry": "off"
+    }
+  },
+  {
+    // max-lines applies to every tree listed here. The three colour rules carry their own
+    // tree list in tools/eslint-plugin-wingnight/rules/houseComponentPaths.mjs, and the
+    // minigame trees are not on it yet — their styles.ts files still hold raw hex from
+    // before the semantic tokens existed. The glob is here so that list is the only thing
+    // left to change when that migration lands.
+    files: [
+      "apps/client/src/components/**/styles.ts",
+      "packages/cast/src/**/styles.ts",
+      "packages/surface/src/**/styles.ts",
+      "packages/minigames/*/src/client/**/styles.ts"
+    ],
     rules: {
       "max-lines": [
         "error",

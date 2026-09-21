@@ -503,3 +503,35 @@ labels the set stale — it predates the removal of `ROUND_INTRO`, and two of th
 deleted phase. Either recapture the walkthrough or delete the captures and keep the prose. Left
 alone in the 2026-09-21 pass because which one it should be is a call about whether that document
 is a living guide or a historical record.
+
+### The minigame client trees are outside `react-hooks/exhaustive-deps`
+Extending the house rules to `packages/minigames/*/src/client/**` (T1.4) left one block behind.
+The browser-globals block in `eslint.config.mjs` also carries `react-hooks/rules-of-hooks` and
+`react-hooks/exhaustive-deps`, and turning those on for the minigame trees reports ten findings,
+every one of them a hand-narrowed dependency array on a loop or a hold rather than an oversight:
+
+- `fappy/src/client/FappyScene/index.tsx:261` — deps are `[sceneId, waitingBird === null]`, an
+  expression the rule cannot follow at all
+- `fappy/src/client/HostFappySurface/index.tsx:130`, `useFappyMirror/index.ts:289`,
+  `useFappyRunner/index.ts:242`, `useHeldLeg/index.ts:63`
+- `schlonic/src/client/SchlonicScene/index.tsx:239`, `useHeldRun/index.ts:79`,
+  `useSchlonicMirror/index.ts:257`, `useSchlonicRunner/index.ts:202`
+
+Widening any of them re-runs an effect that starts a `requestAnimationFrame` loop, so the honest
+fix is a ref/`useCallback` restructure per site, verified under Playwright because a hidden browser
+pane throttles rAF to 1 fps and hides exactly this class of regression. That is a behaviour change
+to two shipped minigames, not a lint fix, and it wants its own ticket and its own table time.
+
+### Minigame `styles.ts` files are still on raw hex
+`no-hardcoded-hex-colors-in-styles` and `no-nonsemantic-color-tokens-in-styles` gate on the tree
+list in `tools/eslint-plugin-wingnight/rules/houseComponentPaths.mjs`, and the minigame client
+trees are not on it. Adding them reports 50 findings — 49 hex literals plus one raw Tailwind
+palette class at `drawing/src/client/HostDrawingSurface/styles.ts:87` — across seven of the nine
+minigame packages, concentrated in the host and display surface `styles.ts` files (SONG GUESS 12,
+FAPPY 11, JOUST 11, SCHLONIC 8, GEO 3, DRAWING 2, EMOJI CHARADES 2; RECREATE and TRIVIA are
+already clean).
+
+Every one of those literals is a shipped colour, so this is a design pass against DESIGN.md's
+token set, not a find-and-replace: some will map onto an existing semantic token and some will
+show that the token set is missing a value. The `eslint.config.mjs` glob is already in place, so
+the marker list is the only thing left to change once the colours land.
