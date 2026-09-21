@@ -58,5 +58,6 @@ export const revealLabel = "m-0 text-[0.68rem] font-semibold uppercase tracking-
 
 export const revealPrompt = "m-0 text-lg italic leading-snug text-text";
 
+// Right reserve keeps the button clear of the shell's bottom-right takeover dock.
 export const nextTargetButton =
-  "min-h-14 w-full rounded-md border-2 border-primary bg-primary/15 px-5 text-base font-black uppercase tracking-[0.2em] text-primary transition hover:bg-primary/25 disabled:cursor-not-allowed disabled:opacity-40";
+  "min-h-14 w-[calc(100%-4.5rem)] rounded-md border-2 border-primary bg-primary/15 px-5 text-base font-black uppercase tracking-[0.2em] text-primary transition hover:bg-primary/25 disabled:cursor-not-allowed disabled:opacity-40";

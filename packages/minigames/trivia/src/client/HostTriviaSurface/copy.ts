@@ -5,7 +5,7 @@ export const hostTriviaSurfaceCopy = {
   activeTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,
   questionsLeftLabel: (count: number): string =>
     `${count} question${count === 1 ? "" : "s"} left`,
-  noAssignedTeamLabel: "No assigned team",
+  noAssignedTeamLabel: "No team assigned",
   questionLabel: "Question",
   answerLabel: "Answer",
   waitingPromptLabel: "Waiting for the next trivia prompt.",
