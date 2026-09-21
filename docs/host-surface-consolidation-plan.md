@@ -369,6 +369,8 @@ SVG-primitive carve-out: 13 of them are pure SVG scene primitives with legitimat
 The orchestrator appends one line per completed task: `- [x] T1.1 <sha> — what actually changed`.
 Re-read this section from disk at the top of every iteration; do not trust memory of it.
 
-- [x] T0.1 (pre-plan) — sandbox host preview retargeted from 1024x768 (4:3 iPad) to 1280x800 (16:10
-  Android tablet): `HOST_DEVICE`, the frame aspect, the preview column split and its test. Gate
-  green, 533 client tests pass. Uncommitted at time of writing.
+- [x] T0.1 `b44ef49` — sandbox host preview retargeted from 1024x768 (4:3 iPad) to 1280x800 (16:10
+  Android tablet): `HOST_DEVICE`, the frame aspect, the preview column split and its test. Authored
+  in the `host-tablet-layout-audit-d735c1` worktree and left uncommitted there; carried into this
+  worktree by patch along with this plan document, which was likewise untracked there. Gate green,
+  e2e 36 passed.

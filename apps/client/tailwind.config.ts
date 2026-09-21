@@ -5,6 +5,7 @@ const config: Config = {
     "./index.html",
     "./src/**/*.{ts,tsx}",
     "../../packages/cast/src/**/*.{ts,tsx}",
+    "../../packages/surface/src/**/*.{ts,tsx}",
     "../../packages/minigames/*/src/**/*.{ts,tsx}"
   ],
   theme: {
