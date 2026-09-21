@@ -787,26 +787,56 @@ TV disagreed with.
     drawn head rather than nothing. A photo or a boxed sprite in that
     field renders as a rectangle on a neck, on purpose. The one palette
     departure is flat skin and hair tints, which a face needs.
--   **Team apparel.** A team's `genre` (`teams.json` in the night pack) dresses
-    every bird on it via `resolveTeamApparel`: country wears a white hat with
-    a team-colour band, metal a black studded collar, pop white star shades,
-    disco a medallion on a chain. Props are drawn from the palette the bird
-    already has (`text`, `bg`, the team colour) and are placed off the head's
-    anchors (`Character/geometry`). Two of them sit ON the head — the hat and
-    the shades — and a bird wearing a costume head goes without them, so a team
-    whose genre is one of those reads by colour alone rather than by a hat
-    balanced on somebody's photograph. The collar and the medallion hang from
-    the `shoulders` anchor instead: the chin itself on a drawn head, a little
-    below it on a costume head, so nothing ever climbs into a beard — asserted
-    as a property in `Character`'s own test, not as a path string. Two rules
-    come out of the 2026-09-19 audit and hold for any prop added later. A prop
-    must fit INSIDE the body at the anchor it hangs from: disco's old lapels
-    were wider than the chest and hung off the bird's edge into the background
-    on a costume head, which is why they are a disc now. And no pointed light
-    shape goes in a dark shape under the beak, whichever way the points face:
-    that is a mouth full of teeth from across a room, which is what metal's
-    collar was until its studs became circles. A team without a genre, or with
-    one nothing matches, wears nothing.
+-   **Genre carriers.** A team's `genre` (`teams.json` in the night pack) is
+    stated ONCE, and which way depends on the genre. Most are carried by the
+    bird's own SHAPE (`resolveTeamSilhouette`): metal, punk and rock are
+    `spiky` (jagged comb, pointed tail, cut feather edges, a dorsal ridge),
+    country is `broody` (settled low, belly near the floor, legs all but
+    gone) and disco is `preener` (tall and chesty, a high sickle tail). The
+    three sit on one axis — spiky at one end, squat at the other — so a new
+    genre is placed on it rather than drawn from scratch. Pop is the ORIGIN of
+    that axis, not a point on it: "smooth, round, upright" describes the stock
+    bird, so pop carries itself in motion instead (`TeamTheme.dance` — pop is
+    the team whose birds bounce) and keeps the star shades for a player with
+    no generated head. A team is never both shaped and dressed; the two are
+    the same statement a few units apart and the prop wins an argument nobody
+    wanted. A genre with neither keeps the stock bird, whose body, comb and
+    tail come from the player's own name hash.
+
+    Shape beats a prop because of arithmetic: one bird is 76px on a 1080p TV,
+    a prop is a few pixels of that, and anything that crosses a player's
+    photographed face is dropped outright — which used to leave the pop and
+    country teams wearing nothing at all on a real night. A silhouette has
+    neither problem. The shapes may change freely but `CHARACTER_BOX`,
+    `CHARACTER_FOOT`, `CHARACTER_HEAD_CENTRE` and `CHARACTER_PIVOTS` may not:
+    JOUST stands the bird on a physics pin and FAPPY beats its wing on its own
+    layer. Two shapes carry a silhouette and neither is the obvious one — the
+    TAIL does most of the work (the only organ with no head, leg, wing or
+    photograph competing for its space), and the BELLY LINE is the leg dial,
+    since the hip pivot and the foot are fixed but dropping the belly from
+    y=56 to y=68 swings visible orange from 15 units to 3. `spiky` is the one
+    place the house line style bends: its outline is mitered, because a 2-unit
+    round join blunts a point by a unit and at 76px a unit is the whole point.
+
+-   **Team apparel.** What is left of props after the silhouettes: `hat`,
+    `shades` and `medallion`, drawn from the palette the bird already has
+    (`text`, `bg`, the team colour) and placed off the head's anchors
+    (`Character/geometry`). Only pop's shades are mapped to a genre today; the
+    other two are drawings kept in the vocabulary, not assignments. `collar`
+    was deleted on 2026-09-21 — a dark band slung under a chin with studs on
+    it read as a necklace rather than as metal, and metal is shaped now.
+    Three rules hold for any prop added later. A prop that sits ON the head —
+    the hat and the shades — is dropped on a costume head, so a genre carried
+    only by one of those reads by colour alone. A prop must fit INSIDE the
+    body at the anchor it hangs from: `head.cx` is the HEAD's centre, not the
+    chest's, and the silhouette's right edge at the shoulder line is only
+    x≈59 against a prop reaching x≈69, which is why disco's old lapels hung
+    off the bird's edge into the background. And no pointed light shape goes
+    near the beak, whichever way the points face and whatever is behind them:
+    that is a mouth full of teeth from across a room. The rule is a radius,
+    not a colour — within ~16 units of the head centre, a point reads as a
+    tooth.
+
 -   **Lobby parade.** On SETUP the cast parades at the foot of the stage
     (`SetupStageBody/CastParade`), `z-1` behind the lobby content and above
     the flame, exactly as the embers do. Two teams at a time: one walks in

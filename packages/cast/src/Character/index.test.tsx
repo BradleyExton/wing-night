@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { Character, CharacterWing } from "./index.js";
 import { CHARACTER_PARTS, CHARACTER_PIVOTS, CHARACTER_POSES } from "./geometry/index.js";
-import { CHARACTER_DANCES } from "../resolvePlayerAppearance/index.js";
+import { CHARACTER_DANCES, type CharacterDance } from "../resolvePlayerAppearance/index.js";
 import * as figureStyles from "./CharacterFigure/styles.js";
 
 const drawn = { body: "round", comb: "none", tail: "fan", dance: "bounce" } as const;
@@ -131,7 +131,7 @@ test("does keep the apparel that hangs below the head, dropped clear of a photog
   // bottom edge is the drawn chin at 32, or it crops somebody's jaw. Asserted
   // as a property rather than as a path string so redrawing a prop cannot
   // quietly reintroduce the bite.
-  for (const apparel of ["collar", "medallion"] as const) {
+  for (const apparel of ["medallion"] as const) {
     const onDrawn = renderToStaticMarkup(<Character appearance={drawn} apparel={apparel} />);
     const onCostume = renderToStaticMarkup(<Character appearance={costume} apparel={apparel} />);
 
@@ -319,7 +319,7 @@ test("does leave the drawing untouched by the jig for every pose but dancing", (
 
 test("does step differently from bird to bird so a dancing team is not one bird four times", () => {
   const steps = new Set(
-    CHARACTER_DANCES.map((dance) =>
+    CHARACTER_DANCES.map((dance: CharacterDance) =>
       renderToStaticMarkup(<Character appearance={{ ...drawn, dance }} pose="dance" />)
     )
   );

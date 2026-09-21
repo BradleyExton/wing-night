@@ -85,7 +85,9 @@ test("does draw the marquee, the course and the player's own bird", () => {
   assert.match(html, /data-fappy-scene="display-fappy"/);
   assert.equal((html.match(/data-fappy-gate="/g) ?? []).length, 3);
   assert.match(html, /content-assets\/avatars\/alex\.png/);
-  assert.match(html, /data-character-apparel="medallion"/);
+  // Disco is shaped, not dressed: the bird carries its genre in its own tall,
+  // high-tailed outline rather than in a prop.
+  assert.match(html, /data-character-silhouette="preener"/);
   assert.match(html, /Alex is up — tap to take off/);
   assert.match(html, /data-fappy-waiting-bird/);
   assert.match(html, /data-fappy-cliffs/);

@@ -144,6 +144,8 @@ export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
 export {
   CHARACTER_APPARELS,
+  CHARACTER_DANCES,
+  CHARACTER_SILHOUETTES,
   EMBLEM_IDS,
   ENTRANCE_IDS,
   GENRE_KEYS,
@@ -155,6 +157,8 @@ export {
 } from "./teamTheme/index.js";
 export type {
   CharacterApparel,
+  CharacterDance,
+  CharacterSilhouette,
   EmblemId,
   EntranceId,
   GenreKey,

@@ -4,7 +4,7 @@ import { resolveCharacterFillClassName, UNSEATED_CHARACTER_FILL_CLASS_NAME } fro
 
 import { resolveLegBird } from "./index.js";
 
-test("does dress the figure's bird in their head, the team colour and the team apparel", () => {
+test("does dress the figure's bird in their head, the team colour and the team's own shape", () => {
   const bird = resolveLegBird({
     figure: { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "country" },
     activeTurnTeamId: "team-alpha",
@@ -13,7 +13,10 @@ test("does dress the figure's bird in their head, the team colour and the team a
 
   assert.equal(bird.playerName, "Alex");
   assert.equal(bird.appearance.avatarSrc, "http://127.0.0.1:3000/content-assets/avatars/alex.png");
-  assert.equal(bird.apparel, "hat");
+  // Country is a SHAPED genre now, so the bird carries its team in its own
+  // outline and wears nothing — see `resolveTeamSilhouette`.
+  assert.equal(bird.apparel, undefined);
+  assert.equal(bird.silhouette, "broody");
   assert.equal(bird.fillClassName, resolveCharacterFillClassName("team-alpha"));
 });
 

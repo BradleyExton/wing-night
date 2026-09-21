@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>APPAREL — country</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>APPAREL — country · Honky Tonk Heat</h1>
+      <p class="lede">
+        Today country wears <code>SHIPPING_APPAREL.hat</code>: a white brim with a team-coloured
+        band, perched 4 under the top of the head. On a <em>drawn</em> bird it is the best-reading
+        prop in the whole set, because a hat is a silhouette change and a silhouette change is what
+        survives at 76px. But it crosses the face, so on a real night every costume-headed player
+        on this team wears <strong>nothing</strong>. One correction to
+        <a href="./apparel-baseline.html">apparel-baseline.html</a> before you compare it: the
+        harness draws whatever apparel function it is handed, so the costume birds on that page are
+        shown <em>wearing</em> the hat, and pop's star shades sit right on rosi's face. The shipped
+        <code>CharacterFigure</code> drops a face-crossing prop before a costume head ever sees it.
+        The "before" card below reproduces that drop, which is why its rosi and rob really are bare.
+        This round asks the question at the centre of it: <strong>is a hat on a photographed head
+        actually the same failure as shades?</strong> A comb planted in someone's hair and a beak
+        past a cheek read as two heads fighting over one neck. A brim sitting <em>above</em> the
+        hairline touches no eye, no nose, no mouth. Candidate A tests that honestly on all four
+        generated heads. B, C and D are the answers that never go near the head at all.
+      </p>
+
+      <div id="root"></div>
+    </main>
+
+    <script type="module">
+      import { PALETTE, HEADS, SHIPPING_APPAREL, candidateCard } from "./apparel-harness.js";
+
+      const BG = PALETTE.bg;
+      const WHITE = PALETTE.text;
+      const S = `stroke="${BG}" stroke-width="2" stroke-linejoin="round"`;
+
+      // ----------------------------------------------------------- anchors --
+      // The one thing the anchors let a prop ask about the head under it: a
+      // drawn head is 24 tall, a costume head 44. Nothing in `HeadAnchors`
+      // reports a head's WIDTH, which is the whole problem with candidate A.
+      const isCostume = (head) => head.chin - head.top > 30;
+
+      // `head.cx` is the centre of the HEAD, and the head sits far to the
+      // right of the body. Measured off the shipping paths, the silhouette at
+      // the shoulder line runs roughly x 45–62: the chest's own centre is
+      // about four units LEFT of cx. Every chest prop here hangs off this,
+      // not off cx — which is why the shipping collar and medallion both put
+      // their right-hand corner a few units outside the bird.
+      const chestX = (head) => head.cx - 5;
+
+      // The harness draws whatever apparel function you hand it. The SHIPPED
+      // bird does not: `CharacterFigure` drops any prop where
+      // `apparelCrossesTheFace` is true before a costume head ever sees it.
+      // The "before" card has to reproduce that or it is not the before.
+      const asWornTonight = (prop) => (head, fill) =>
+        isCostume(head) ? "" : prop(head, fill);
+
+      const shippingHat = asWornTonight(SHIPPING_APPAREL.hat);
+
+      // ------------------------------------------------- A · hairline hat --
+      // The shipping hat's own outline, reparametrised so the brim, the crown
+      // and the pinch all scale off one half-width instead of being frozen at
+      // the drawn head's size.
+      const HAT_SIDE = 0.5;
+      const HAT_TOP = 0.38;
+
+      const hatPath = (cx, baseY, hw, ch) => {
+        const s = hw * HAT_SIDE;
+        const t = hw * HAT_TOP;
+        return (
+          // The brim, with its tips turned UP and its centre dipping — the one
+          // line that separates a cowboy hat from a boater.
+          `M ${cx - hw} ${baseY - 3} Q ${cx} ${baseY + 5.5} ${cx + hw} ${baseY - 3}` +
+          ` Q ${cx + s + 2} ${baseY - 5} ${cx + s} ${baseY - 5}` +
+          // …and a tall crown with a deep pinch in the top.
+          ` L ${cx + t} ${baseY - ch} Q ${cx} ${baseY - ch - 4} ${cx - t} ${baseY - ch}` +
+          ` L ${cx - s} ${baseY - 5} Q ${cx - s - 2} ${baseY - 5} ${cx - hw} ${baseY - 3} Z`
+        );
+      };
+
+      const hairlineHat = (head) => {
+        const costume = isCostume(head);
+        // A generated head is ~24 units wide seven below its crown against a
+        // drawn head's 24 at four below — so a brim that fits one is wrong on
+        // the other, and the anchors report no width to size it off.
+        const hw = costume ? 13.5 : 18;
+        const ch = costume ? 11 : 14;
+        const baseY = head.top + (costume ? 7 : 4);
+        const s = hw * HAT_SIDE;
+        const t = hw * HAT_TOP;
+        const bandHalf = t + (s - t) * 0.45;
+        const bandY = baseY - ch * 0.6;
+        return `<g data-apparel="hairline-hat">
+          <path fill="${WHITE}" ${S} d="${hatPath(head.cx, baseY, hw, ch)}"/>
+          <rect fill="${BG}" x="${head.cx - bandHalf}" y="${bandY}" width="${bandHalf * 2}" height="2.5"/>
+        </g>`;
+      };
+
+      // ----------------------------------------------------- B · bandana --
+      // A neckerchief, not a collar: it hangs from the shoulders with a point
+      // down the chest, and it has no band around the neck and no studs, so
+      // it can never be read as metal's rejected collar. Two shapes.
+      const bandana = (head) => {
+        const x = chestX(head);
+        const y = head.shoulders;
+        const cloth =
+          `M ${x - 9} ${y} Q ${x} ${y + 7} ${x + 9} ${y + 1}` +
+          ` Q ${x + 7} ${y + 9} ${x - 0.5} ${y + 16}` +
+          ` Q ${x - 6} ${y + 10} ${x - 9} ${y} Z`;
+        // The knot: ONE small dark gather at the top of the cloth, and no
+        // bigger. A first pass made it a third of the cloth and the bandana
+        // stopped being a triangle at all — it read as a bare white chevron.
+        // It sits ON the white, never around it, so there is never a dark
+        // shape with white points inside it under a beak.
+        const knot =
+          `M ${x - 3.4} ${y + 1.4} Q ${x} ${y + 5.6} ${x + 3.4} ${y + 2}` +
+          ` Q ${x + 2.4} ${y + 4.4} ${x + 0.2} ${y + 5.4}` +
+          ` Q ${x - 2.2} ${y + 4.4} ${x - 3.4} ${y + 1.4} Z`;
+        return `<g data-apparel="bandana">
+          <path fill="${WHITE}" ${S} d="${cloth}"/>
+          <path fill="${BG}" d="${knot}"/>
+        </g>`;
+      };
+
+      // ------------------------------------------------------ C · buckle --
+      // Anchored on `head.chin`, which is 32 on BOTH head types — the one
+      // anchor that is literally identical for a drawn and a costume head, so
+      // a belly prop hung off it cannot drift between them.
+      const buckle = (head) => {
+        const b = head.chin; // 32 either way
+        const bx = 53;
+        const by = b + 19.5;
+        return `<g data-apparel="buckle">
+          <path fill="none" stroke="${BG}" stroke-width="4.5" stroke-linecap="round"
+                d="M ${bx - 14} ${by + 3} L ${bx + 8} ${by - 2.5}"/>
+          <rect fill="${WHITE}" ${S} x="${bx - 5.5}" y="${by - 4}" width="11" height="8" rx="2.4"/>
+          <rect fill="${BG}" x="${bx - 3.4}" y="${by - 2.6}" width="1.9" height="5.2" rx="0.9"/>
+        </g>`;
+      };
+
+      // ------------------------------------------------------- D · boots --
+      // The legs are the one part of the bird nothing has ever been hung on.
+      // The boot starts at y=63 because the body's underside is at ~63 and
+      // apparel is painted LAST — a taller shaft would be drawn over the belly
+      // instead of disappearing under it.
+      // A dropped heel at the back and a raised, pointed toe at the front is
+      // the whole cowboy boot; without them the shape is a white sock. A spur
+      // was drawn here too and cut — at every size it read as a caster wheel.
+      const bootPath = (ax) =>
+        `M ${ax - 3.2} 62.5 L ${ax + 3.2} 62.5 L ${ax + 3.8} 66.5` +
+        ` L ${ax + 9} 68.4 Q ${ax + 10} 68.9 ${ax + 9.2} 70.2 L ${ax + 1.6} 70.4` +
+        ` L ${ax + 0.6} 68.8 L ${ax - 1.2} 68.9 L ${ax - 1.2} 72 L ${ax - 4.2} 72` +
+        ` L ${ax - 4.2} 68.6 L ${ax - 3.2} 66.5 Z`;
+
+      const boot = (ax) => `<path fill="${WHITE}" ${S} d="${bootPath(ax)}"/>`;
+
+      const boots = () => `<g data-apparel="boots">
+        <g opacity="0.7">${boot(43)}</g>
+        ${boot(31)}
+      </g>`;
+
+      // ------------------------------------------------------ the rigged --
+      // B + D together: nothing on the head, one bright wedge at the chest and
+      // two at the feet.
+      const rigged = (head) => `${boots()}${bandana(head)}`;
+
+      // -------------------------------------------------------------- page --
+      const D = (fill, extra = {}) => ({ fill, body: "round", comb: "crest", tail: "fan", ...extra });
+
+      const CARDS = [];
+
+      CARDS.push(
+        candidateCard({
+          title: "before · the hat that ships tonight",
+          note:
+            "teamE. A 36-unit white brim with a team-coloured band. On the drawn birds it is the clearest prop in the set. On rosi and rob it is simply gone — <code>apparelCrossesTheFace.hat === true</code>, so the team wears nothing. The chrome bird on the right is the second problem: a white hat on a #d9dee6 bird is white-on-white, and the band — which is the only contrast the hat carries — is <em>also</em> chrome.",
+          birds: [
+            D(PALETTE.teamE, { apparel: shippingHat, caption: "drawn head" }),
+            D(PALETTE.teamE, { apparel: shippingHat, body: "tall", comb: "mohawk", tail: "plume", caption: "drawn · tall/mohawk" }),
+            D(PALETTE.teamE, { apparel: shippingHat, avatarSrc: HEADS.rosi, caption: "costume · rosi — bare" }),
+            D(PALETTE.teamE, { apparel: shippingHat, avatarSrc: HEADS.rob, body: "wide", caption: "costume · rob — bare" }),
+            D(PALETTE.teamD, { apparel: shippingHat, caption: "teamD chrome · the trap" })
+          ]
+        })
+      );
+
+      CARDS.push(
+        candidateCard({
+          title: "A · the hat, above the hairline — and why it still fails",
+          note:
+            "The honest test. The brim is shrunk and sat on <code>head.top + 7</code>; I measured the alpha of all four generated heads and the importer crops every one of them tight and portrait, so the top of the image genuinely is the top of the hair. It touches no eye, no nose, no mouth — <strong>and it is still wrong, for a reason the face rule never named.</strong> A costume head is 44 units tall and only ~8 of those are above the eyes, so a hat that stays out of the face covers a sixth of the head and reads as a <em>lid balanced on someone</em>, not as a hat worn. On <strong>rob</strong> and <strong>rosi</strong> the hair is a mass wider than the brim, so the hat has nothing to sit into. On <strong>kenny</strong> the brim cuts his dark hair in half and leaves hair above it. Only <strong>sara</strong> nearly works. Two more measured facts: the four crown centres span x 57.4–60.4, so a hat centred on <code>cx</code> is up to 2.4 units off on a given player; and the hat reaches y ≈ −20, twenty units <em>outside</em> the 80×72 box, which only survives because <code>Character</code> is <code>overflow-visible</code>. The drawn birds on the left show the same shape working perfectly — that is the point. The hat is not the problem; the photograph is.",
+          birds: [
+            D(PALETTE.teamE, { apparel: hairlineHat, caption: "drawn head" }),
+            D(PALETTE.teamE, { apparel: hairlineHat, body: "tall", comb: "mohawk", tail: "plume", caption: "drawn · tall/mohawk" }),
+            D(PALETTE.teamE, { apparel: hairlineHat, avatarSrc: HEADS.rob, caption: "costume · rob" }),
+            D(PALETTE.teamE, { apparel: hairlineHat, avatarSrc: HEADS.rosi, caption: "costume · rosi" }),
+            D(PALETTE.teamE, { apparel: hairlineHat, avatarSrc: HEADS.sara, body: "wide", caption: "costume · sara" }),
+            D(PALETTE.teamE, { apparel: hairlineHat, avatarSrc: HEADS.kenny, body: "tall", caption: "costume · kenny" }),
+            D(PALETTE.teamD, { apparel: hairlineHat, caption: "teamD chrome · drawn" }),
+            D(PALETTE.teamD, { apparel: hairlineHat, avatarSrc: HEADS.sara, caption: "teamD chrome · costume" })
+          ]
+        })
+      );
+
+      CARDS.push(
+        candidateCard({
+          title: "B · bandana",
+          note:
+            "A neckerchief: a kite of cloth hung off <code>shoulders</code>, point down the chest, with a small dark gather where it knots. It is not metal's rejected collar — no band round the neck, no studs, a point instead of a crescent. It is centred on the CHEST (<code>cx − 5</code>), not on <code>cx</code>: the head sits far right of the body, the silhouette at the shoulder line only runs about x 45–62, and both shipping chest props put their right-hand corner a few units outside the bird because of it. Two shapes, nothing on the head, so every player on the team actually wears it. At 76px it degrades to one white wedge at the throat — a silhouette, not a texture — and it holds on chrome on the <code>bg</code> stroke alone.",
+          birds: [
+            D(PALETTE.teamE, { apparel: bandana, caption: "drawn head" }),
+            D(PALETTE.teamE, { apparel: bandana, body: "wide", comb: "mohawk", tail: "plume", caption: "drawn · wide/mohawk" }),
+            D(PALETTE.teamE, { apparel: bandana, avatarSrc: HEADS.rosi, caption: "costume · rosi" }),
+            D(PALETTE.teamE, { apparel: bandana, avatarSrc: HEADS.kenny, body: "tall", caption: "costume · kenny" }),
+            D(PALETTE.teamD, { apparel: bandana, avatarSrc: HEADS.rob, caption: "teamD chrome · costume" }),
+            D(PALETTE.teamA, { apparel: bandana, caption: "teamA orange · drawn" })
+          ]
+        })
+      );
+
+      CARDS.push(
+        candidateCard({
+          title: "C · belt buckle",
+          note:
+            "A bright plate on the belly with a dark strap running back into the wing. Strongest degrade in the set — at 76px it is one lit rectangle and it is still obviously a belt. Hung off <code>head.chin</code>, which is 32 on a drawn head <em>and</em> 32 on a costume head: the one anchor that cannot drift between the two, so a belly prop placed on it is head-type-invariant by construction. <strong>A warning worth carrying to the other genres:</strong> the first draft was a white oval with a dark centre on a long curved strap, and it read unmistakably as an EYE sitting on a MOUTH — a white shape with a dark middle is this bird's own eye, and a dark curve on its belly is a grin. Rectangle, off-centre prong, straight strap. The last bird is disco's medallion for comparison: the strap is what keeps the two teams apart.",
+          birds: [
+            D(PALETTE.teamE, { apparel: buckle, caption: "drawn head" }),
+            D(PALETTE.teamE, { apparel: buckle, body: "tall", comb: "mohawk", tail: "plume", caption: "drawn · tall/mohawk" }),
+            D(PALETTE.teamE, { apparel: buckle, avatarSrc: HEADS.sara, caption: "costume · sara" }),
+            D(PALETTE.teamE, { apparel: buckle, avatarSrc: HEADS.rob, body: "wide", caption: "costume · rob" }),
+            D(PALETTE.teamA, { apparel: buckle, avatarSrc: HEADS.kenny, caption: "teamA orange · costume" }),
+            D(PALETTE.teamB, { apparel: SHIPPING_APPAREL.medallion, caption: "disco's medallion — compare" })
+          ]
+        })
+      );
+
+      CARDS.push(
+        candidateCard({
+          title: "D · boots (the spur was cut)",
+          note:
+            "The legs are unused <code>primary</code> lines and the only real estate nobody is fighting over. Honest degrade, and it is not good: at 4× the raised toe and the dropped heel read as a cowboy boot, at 152px it is ambiguous and at 76px it is a white smudge where the orange toes used to be. The ceiling is structural — only about 8 of the bird's 72 units are below the body, and apparel paints LAST, so a shaft tall enough to read cannot tuck under the belly. Fixing that is a rig change (move apparel into the <code>legNear</code> <code>Part</code>), not a drawing change. A spur was drawn here and cut: at every size a small disc behind a heel reads as a caster wheel. Its real cost is that this team alone loses the <code>primary</code> note at the bottom of the bird.",
+          birds: [
+            D(PALETTE.teamE, { apparel: boots, caption: "drawn head" }),
+            D(PALETTE.teamE, { apparel: boots, body: "wide", comb: "mohawk", tail: "plume", caption: "drawn · wide/mohawk" }),
+            D(PALETTE.teamE, { apparel: boots, avatarSrc: HEADS.rosi, caption: "costume · rosi" }),
+            D(PALETTE.teamE, { apparel: boots, avatarSrc: HEADS.rob, body: "tall", caption: "costume · rob" }),
+            D(PALETTE.teamD, { apparel: boots, avatarSrc: HEADS.kenny, caption: "teamD chrome · costume" })
+          ]
+        })
+      );
+
+      CARDS.push(
+        candidateCard({
+          title: "verdict · ship B, the bandana",
+          note:
+            "The bandana on all eight team colours. <strong>Answer to the round's question: a hat above the hairline is not the same failure as shades — it never crosses a face — but it fails anyway, because the strip of a photographed head that is not face is only a sixth of it, so the hat can be correct or it can be proportional, never both.</strong> Keep the hat for drawn heads if you like it; it must not be the team's only identity. The bandana is unmistakably country, is two shapes, sits at the throat where the eye already is, and reaches every player. Chrome (4th) holds on the 2-unit ink stroke; orange (1st) holds because nothing in it is <code>primary</code>. The buckle (C) is the close second and degrades better — pick it if you would rather the team read from the belly than the throat. Do not wear both: the chest and the belly are the same twenty units and the bandana's point lands on the buckle.",
+          birds: [
+            D(PALETTE.teamA, { apparel: bandana, caption: "teamA" }),
+            D(PALETTE.teamB, { apparel: bandana, caption: "teamB" }),
+            D(PALETTE.teamC, { apparel: bandana, caption: "teamC" }),
+            D(PALETTE.teamD, { apparel: bandana, caption: "teamD chrome" }),
+            D(PALETTE.teamE, { apparel: bandana, caption: "teamE · country" }),
+            D(PALETTE.teamF, { apparel: bandana, caption: "teamF" }),
+            D(PALETTE.teamG, { apparel: bandana, avatarSrc: HEADS.sara, caption: "teamG · costume" }),
+            D(PALETTE.teamH, { apparel: bandana, avatarSrc: HEADS.kenny, caption: "teamH · costume" })
+          ]
+        })
+      );
+
+      CARDS.push(
+        candidateCard({
+          title: "if you want more · B + D",
+          note:
+            "Bandana and boots together — the one pair that does NOT collide, because they are at opposite ends of the bird. Four shapes, none of them on the head, so a costume player wears all of it. Shown mostly so you can see how little the boots add at the size the room sees; at 76px this is the bandana bird with pale feet.",
+          birds: [
+            D(PALETTE.teamE, { apparel: rigged, caption: "drawn head" }),
+            D(PALETTE.teamE, { apparel: rigged, body: "tall", comb: "mohawk", tail: "plume", caption: "drawn · tall/mohawk" }),
+            D(PALETTE.teamE, { apparel: rigged, avatarSrc: HEADS.rob, caption: "costume · rob" }),
+            D(PALETTE.teamE, { apparel: rigged, avatarSrc: HEADS.rosi, body: "wide", caption: "costume · rosi" }),
+            D(PALETTE.teamD, { apparel: rigged, avatarSrc: HEADS.sara, caption: "teamD chrome · costume" })
+          ]
+        })
+      );
+
+      document.getElementById("root").innerHTML = CARDS.join("");
+    </script>
+  </body>
+</html>

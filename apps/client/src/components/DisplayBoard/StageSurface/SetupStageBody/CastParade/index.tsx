@@ -126,6 +126,8 @@ export const CastParade = ({ players, teams, teamThemeByTeamId }: CastParadeProp
             <Character
               appearance={resolvePlayerAppearance(player, serverOrigin)}
               apparel={group.apparel}
+              silhouette={group.silhouette}
+              dance={group.dance}
               fillClassName={group.fillClassName ?? styles.unassignedFill}
               pose={resolvePose(frame.phase)}
             />

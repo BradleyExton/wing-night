@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>APPAREL — pop</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>POP · Spice Girls — getting the team off the face</h1>
+      <p class="lede">
+        Today pop wears <strong>star shades</strong>: two white five-point stars on the eye line.
+        The stars are fine. The placement is fatal — they cross the face, so
+        <code>apparelCrossesTheFace</code> drops them on every player with a generated likeness,
+        and on the actual night the pop team wears <em>nothing at all</em>. Colour is its only
+        genre read, and colour alone is not a genre.
+      </p>
+      <p class="lede">
+        So the round is not "better sunglasses". <strong>Pop is stage production, not costume.</strong>
+        Every candidate below lives from the shoulders down or off the bird entirely, so a drawn
+        head and a photographed head wear exactly the same thing — and the star motif survives by
+        moving, not by being replaced.
+      </p>
+      <div id="root"></div>
+    </main>
+    <script type="module">
+      import { PALETTE, HEADS, SHIPPING_APPAREL, candidateCard } from "./apparel-harness.js";
+
+      const BG = PALETTE.bg;
+      const INK = `stroke="${BG}" stroke-width="2" stroke-linejoin="round"`;
+      const LIGHT = `fill="${PALETTE.text}" ${INK}`;
+
+      // The harness draws whatever apparel you hand it; the shipping figure does not.
+      // A costume head's `top` is above the box (-12) where a drawn head's is 8, so this
+      // is the same test `apparelCrossesTheFace` makes, and it is what the TV really shows.
+      const onlyOnDrawnHeads = (prop) => (head, fill) => (head.top < 0 ? "" : prop(head, fill));
+
+      // A five-point star, `r` tall, centred on (cx, cy). `squash` flattens it toward the
+      // floor; `rot` is radians.
+      const star = (cx, cy, r, squash = 1, rot = 0) => {
+        const points = [];
+        for (let index = 0; index < 10; index += 1) {
+          const radius = index % 2 === 0 ? r : r * 0.45;
+          const angle = -Math.PI / 2 + (index * Math.PI) / 5 + rot;
+          points.push(
+            `${(cx + radius * Math.cos(angle)).toFixed(1)} ${(cy + squash * radius * Math.sin(angle)).toFixed(1)}`
+          );
+        }
+        return `M ${points.join(" L ")} Z`;
+      };
+
+      // ------------------------------------------------------------- candidates --
+
+      // 1 · STAR BILLING. The same star, moved to the wing — the one big uninterrupted
+      // plane the bird has, and a part of the body, so it is identical under both heads.
+      const starBilling = () => `
+        <g data-apparel="star-billing">
+          <path fill="${PALETTE.text}" stroke="${BG}" stroke-width="2.4" stroke-linejoin="round" d="${star(33.5, 42, 6)}"/>
+        </g>`;
+
+      // A closed scalloped curve around an ellipse: `n` feather bumps, each a quadratic
+      // whose control sits 1.3 radii out, so the crest lands about 1.15 radii out.
+      const fluffPath = (cx, cy, rx, ry, n) => {
+        const at = (index, k) => {
+          const angle = (index * 2 * Math.PI) / n - Math.PI / 2;
+          return [cx + rx * k * Math.cos(angle), cy + ry * k * Math.sin(angle)];
+        };
+        const parts = [];
+        for (let index = 0; index < n; index += 1) {
+          const [x, y] = at(index, 1);
+          const [mx, my] = at(index + 0.5, 1.3);
+          const [nx, ny] = at(index + 1, 1);
+          if (index === 0) parts.push(`M ${x.toFixed(1)} ${y.toFixed(1)}`);
+          parts.push(`Q ${mx.toFixed(1)} ${my.toFixed(1)} ${nx.toFixed(1)} ${ny.toFixed(1)}`);
+        }
+        return `${parts.join(" ")} Z`;
+      };
+
+      // 2 · BOA. A feather mass draped over the shoulders — nine bumps around a
+      // 24×17 ellipse, so every edge of it is feathered and it changes the bird's
+      // outline instead of sitting inside it. Centred LEFT of the neck (cx-8.5), both
+      // because that is where the chest actually is and because the chest is only
+      // ~62 wide at the shoulders anchor: the collar's own ±11.5 already hangs into
+      // the background on the right, and a white prop cannot get away with that.
+      const boa = (head) => {
+        const { cx, shoulders: sh } = head;
+        return `<g data-apparel="boa"><path ${LIGHT} d="${fluffPath(cx - 8.5, sh + 5, 10.5, 7.5, 9)}"/></g>`;
+      };
+
+      // 3 · PLATFORM BOOTS. The legs are `primary` strokes and nothing else has ever
+      // touched them. The catch is how little of a leg is actually visible: the belly
+      // ends at y≈63 and the floor is y≈71.4, so a boot gets eight units. So: ankle
+      // block, platform sole, toe pointing the way the bird faces, and three units of
+      // orange shank left showing above it — without that gap it stops being a boot
+      // and starts being a plinth. The far boot is drawn first and NOT dimmed: white
+      // at 70% over the flame goes beige, which is the one trick the far leg's own
+      // opacity does not survive.
+      const boot = (fx) =>
+        [
+          `M ${fx - 4.5} 64.6`,
+          `L ${fx + 3.5} 64.6`,
+          `L ${fx + 3.5} 67.9`,
+          `L ${fx + 7} 67.9`,
+          `L ${fx + 7.5} 71.3`,
+          `L ${fx - 6.5} 71.3`,
+          `L ${fx - 7} 67.9`,
+          `L ${fx - 4.5} 67.9`,
+          "Z"
+        ].join(" ");
+
+      const platforms = () => `
+        <g data-apparel="platforms">
+          <path ${LIGHT} d="${boot(43.5)}"/>
+          <path ${LIGHT} d="${boot(31)}"/>
+        </g>`;
+
+      // 4 · MIC STAND. Not worn — stood beside. A headset boom would cross the face and a
+      // handheld needs a hand the bird has not got, but a stand is a set piece: a tall
+      // thin thing reads at distance where a small blob does not.
+      const micStand = () => `
+        <g data-apparel="mic-stand">
+          <path fill="none" stroke="${BG}" stroke-width="6" stroke-linecap="round" d="M 71 70.4 L 69.6 45"/>
+          <ellipse fill="${BG}" cx="71" cy="70.6" rx="6.6" ry="3.2"/>
+          <ellipse ${LIGHT} cx="71" cy="70.6" rx="5.2" ry="2"/>
+          <path fill="none" stroke="${PALETTE.text}" stroke-width="2.6" stroke-linecap="round" d="M 70.9 69.4 L 69.6 45.5"/>
+          <path fill="none" stroke="${BG}" stroke-width="7.6" stroke-linecap="round" d="M 69.6 45.2 L 65.2 40.2"/>
+          <path fill="none" stroke="${PALETTE.text}" stroke-width="5.2" stroke-linecap="round" d="M 69.6 45.2 L 65.2 40.2"/>
+        </g>`;
+
+      // ------------------------------------------------------------- page --------
+
+      const cast = (apparel, fill = PALETTE.teamH) => [
+        { fill, apparel, body: "round", comb: "crest", tail: "fan", caption: "drawn head" },
+        { fill, apparel, body: "wide", comb: "mohawk", tail: "plume", caption: "drawn · wide/mohawk" },
+        { fill, apparel, avatarSrc: HEADS.rosi, caption: "costume · rosi" },
+        { fill, apparel, avatarSrc: HEADS.kenny, body: "tall", caption: "costume · kenny" }
+      ];
+
+      const CARDS = [
+        {
+          title: "before · star shades, as they ship tonight",
+          note:
+            "teamH. Rendered the way the TV renders it, not the way the harness draws it: the stars are on the eye line, so a costume head drops them and the last two birds wear nothing. That is the real state of the pop team on the night — two players in sunglasses and everybody else in plain pink.",
+          birds: cast(onlyOnDrawnHeads(SHIPPING_APPAREL.shades))
+        },
+        {
+          title: "1 · star billing — the same star, on the wing",
+          note:
+            "The star was never the problem; the eye line was. The wing is the one big uninterrupted plane on the bird, it is part of the BODY so it is pixel-identical under a drawn head and a photograph, and a 12-unit star is the largest single mark any of these candidates can make. One shape. Degrades at 76px to a bright five-point mark mid-bird — still unmistakably a star, and it is the only candidate whose whole idea survives the degrade intact. Watch the chrome row below: on teamD the white fill is nearly the body colour and the prop is carried by its `bg` outline alone, which is why the stroke here is 2.4 rather than 2.",
+          birds: cast(starBilling)
+        },
+        {
+          title: "2 · boa — a shape around the shoulders",
+          note:
+            "A feather mass over the shoulders — one path, nine bumps around an ellipse, so every edge of it is feathered. It hangs off the `shoulders` anchor like the collar and the medallion, so it clears a jaw on a costume head. Degrades at 76px to a big soft white shape at the chest, and it is the loudest of the four at that size. Two honest failures: it is the fattest prop in the set at 24×17 units, and it sits INSIDE the outline rather than breaking it — three earlier passes tried a drape that wrapped the neck and a horseshoe with the neck showing through, and both read as a life ring rather than as feathers. It is also the one candidate that could be mistaken for metal's collar in silhouette, which is why it is white and lumpy where that one is dark and smooth.",
+          birds: cast(boa)
+        },
+        {
+          title: "3 · platform boots — the legs, finally used",
+          note:
+            "The legs are two `primary` strokes and no prop has ever touched them. An ankle block, a platform sole and a toe pointing the way the bird faces — one path each, drawn over the leg's own toes. Two things this round taught: the visible leg is only eight units tall (the belly ends at y≈63, the floor is y≈71.4), so a boot cannot climb a shank the drawing never shows; and leaving three units of orange shank above the boot is what makes it a boot instead of a plinth. The far boot is NOT dimmed the way the far leg is — white at 70% over the flame glow goes beige and reads as a third object. Degrades at 76px to two chunky white marks at the floor, which is the only candidate that changes the bird's stance rather than its dressing.",
+          birds: cast(platforms)
+        },
+        {
+          title: "4 · mic stand — not worn, stood beside",
+          note:
+            "Pop is production. A headset boom crosses the face and a handheld needs a hand the hen does not have, but a stand is a set piece the bird stands beside — in the column at x≈70, the one strip of the 80×72 box that neither head, neither beak nor any body reaches. It is the best-reading candidate of the four at 76px, and the reason is worth stealing: a TALL THIN thing survives distance where a small blob does not. The capsule is tilted toward where a mouth would be and stops 7 units below the chin, so it never approaches a face. The catch is that it is furniture, not clothing: six pop birds in the lobby parade are six mic stands, and a flying FAPPY bird tows one.",
+          birds: cast(micStand)
+        },
+        {
+          title: "the chrome and orange test — star billing across the accents",
+          note:
+            "Constraint 6, and it splits the field. On teamD (chrome) a white prop has no fill contrast at all — only its `bg` outline is doing any work — so the question becomes how much OUTLINE the shape has per unit of area. The star wins that: it is a ten-sided figure, so on chrome it reads as a drawn star rather than as a white patch, and it is still legible at 76px. The boa is a smooth blob and thins to a faint outlined lump. The boots effectively disappear at 76px on chrome — they are white blocks sitting on a white bird's white feet, and that is the honest reason not to ship them alone. teamA is `primary` exactly, the same colour as the bird's own legs and beak; all three survive it, because none of them is orange.",
+          birds: [
+            { fill: PALETTE.teamD, apparel: starBilling, caption: "teamD chrome · star" },
+            { fill: PALETTE.teamD, apparel: boa, avatarSrc: HEADS.rob, body: "wide", caption: "teamD chrome · boa" },
+            { fill: PALETTE.teamD, apparel: platforms, avatarSrc: HEADS.sara, caption: "teamD chrome · boots" },
+            { fill: PALETTE.teamA, apparel: starBilling, body: "tall", tail: "plume", caption: "teamA orange · star" },
+            { fill: PALETTE.teamA, apparel: boa, avatarSrc: HEADS.rosi, caption: "teamA orange · boa" },
+            { fill: PALETTE.teamC, apparel: starBilling, avatarSrc: HEADS.kenny, caption: "teamC lime · star" }
+          ]
+        },
+        {
+          title: "verdict",
+          note:
+            "Recommend <strong>1 · star billing</strong>, with <strong>3 · platform boots</strong> under it as an optional second layer. The star is the only candidate that keeps the joke the shades were already telling, and moving it from the eye line to the wing costs nothing: one shape, on the BODY, so a photographed player and a drawn one wear the identical prop — the pop team finally reads as pop on the night instead of reading as the pink one. It is also the one that survives chrome, because a ten-sided outline still reads when a white fill has nothing to contrast with. Boots are worth pairing with it rather than shipping alone: they claim the only surface no prop has ever used and they anchor the bird to the floor, but on teamD at 76px they are white blocks on a white bird's white feet and they vanish — star on the wing, boots on the floor, and the bird is dressed top to bottom with no mark above the chin. The boa reads loudest at 76px and is the most conventional answer, but it is a 24×17 blob that sits inside the outline and can be confused with metal's collar in silhouette. The mic stand is the best idea here and the worst citizen: it is the clearest thing on the page at 76px, and it is furniture — six pop birds in the lobby parade are six mic stands, and FAPPY would fly one across the corridor. A walk-of-fame star on the floor was drawn up and dropped for the same reason plus a worse one: the feet are already there, so the prop either covers the toes or gets covered by them.",
+          birds: [
+            { fill: PALETTE.teamH, apparel: (h, f) => starBilling(h, f) + platforms(h, f), body: "round", caption: "star + boots · drawn" },
+            { fill: PALETTE.teamH, apparel: (h, f) => starBilling(h, f) + platforms(h, f), avatarSrc: HEADS.rosi, caption: "star + boots · rosi" },
+            { fill: PALETTE.teamH, apparel: (h, f) => starBilling(h, f) + platforms(h, f), avatarSrc: HEADS.rob, body: "wide", caption: "star + boots · rob" },
+            { fill: PALETTE.teamD, apparel: (h, f) => starBilling(h, f) + platforms(h, f), avatarSrc: HEADS.sara, body: "tall", caption: "star + boots · chrome" }
+          ]
+        }
+      ];
+
+      document.getElementById("root").innerHTML = CARDS.map(candidateCard).join("");
+    </script>
+  </body>
+</html>

@@ -2,8 +2,10 @@ import {
   resolveCharacterFillClassName,
   resolvePlayerAppearance,
   resolveTeamApparel,
+  resolveTeamSilhouette,
+  type CharacterAppearance,
   type CharacterApparel,
-  type CharacterAppearance
+  type CharacterSilhouette
 } from "@wingnight/cast";
 import type { FappyPlayerFigure } from "@wingnight/shared";
 
@@ -11,6 +13,7 @@ export type LegBird = {
   playerName: string | null;
   appearance: CharacterAppearance;
   apparel: CharacterApparel | undefined;
+  silhouette: CharacterSilhouette | undefined;
   fillClassName: string;
 };
 
@@ -32,6 +35,7 @@ export const resolveLegBird = ({ figure, activeTurnTeamId, serverOrigin }: Resol
       playerName: null,
       appearance: ANONYMOUS_APPEARANCE,
       apparel: undefined,
+      silhouette: undefined,
       fillClassName: resolveCharacterFillClassName(activeTurnTeamId)
     };
   }
@@ -43,6 +47,7 @@ export const resolveLegBird = ({ figure, activeTurnTeamId, serverOrigin }: Resol
       serverOrigin
     ),
     apparel: resolveTeamApparel({ genre: figure.genre ?? undefined }),
+    silhouette: resolveTeamSilhouette({ genre: figure.genre ?? undefined }),
     fillClassName: resolveCharacterFillClassName(figure.teamId ?? activeTurnTeamId)
   };
 };

@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SILHOUETTE — does the genre change the bird?</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+    <style>
+      .verdict { border: 1px solid rgba(249, 115, 22, 0.45); }
+      .verdict h2 { color: var(--text); }
+      .verdict p { max-width: 90ch; line-height: 1.6; color: var(--muted); margin: 0 0 0.9rem; }
+      .verdict strong { color: var(--text); }
+      .verdict ol { color: var(--muted); max-width: 90ch; line-height: 1.6; padding-left: 1.2rem; }
+      .verdict li { margin-bottom: 0.5rem; }
+      .verdict li b { color: var(--text); }
+      .answer { font-size: 1.1rem; color: var(--text); line-height: 1.5; margin: 0 0 1rem;
+        border-left: 3px solid var(--primary); padding-left: 0.9rem; }
+      .stage.tight .sizes { padding: 1.75rem 1rem 1rem; gap: 1.1rem; }
+      .cell h3 { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase;
+        color: rgba(255,255,255,.55); margin: 1.4rem 0 .5rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>SILHOUETTE — does the genre change the bird itself?</h1>
+      <p class="lede">
+        Brad's question, and his own doubt: <em>"like the metal birds being spiky birds,
+        hardcore... but maybe that doesn't apply to the other ones. I don't know."</em> This page
+        answers it with pictures. Four genres, four birds, each built only from its own anatomy —
+        body, comb, tail, wing edge, how much leg shows. No props, no apparel. Same 80×72 box, same
+        foot at (38,71), same head centre, same pivots, same <code>primary</code> legs, so these
+        birds can stand beside the apparel pages honestly.
+        <br /><br />
+        <strong>Read the line-up first</strong> — it is the whole test, and it comes before the
+        four anatomies that explain it. Read it in the <em>colour-stripped</em> version too: every
+        team already has its own hue, so a coloured line-up would separate even if the shapes did
+        nothing. Then the clone rows near the bottom, which were meant to be the argument against
+        all of this and turned out to be the argument for it.
+      </p>
+      <div id="root"></div>
+    </main>
+    <script type="module">
+      import {
+        PALETTE,
+        HEADS,
+        DRAWN_HEAD_ANCHORS,
+        COSTUME_HEAD_ANCHORS,
+        COSTUME_HEAD_HEIGHT,
+        perchTransform
+      } from "./apparel-harness.js";
+
+      // ------------------------------------------------------------------ rig --
+      // Transcribed from apparel-harness.js / CharacterFigure, because this round
+      // needs to vary the paths the harness hard-codes. The harness is untouched.
+
+      const BG = PALETTE.bg;
+      const ink = (join = "round") => `stroke="${BG}" stroke-width="2" stroke-linejoin="${join}"`;
+
+      const STOCK_BODY = {
+        round: "M 16 42 C 16 28 32 22 50 27 C 64 31 67 44 61 55 C 53 65 30 66 21 58 C 16 54 16 48 16 42 Z",
+        tall: "M 19 42 C 17 24 33 19 50 25 C 63 30 63 47 58 57 C 52 66 30 66 23 59 C 19 55 19 49 19 42 Z",
+        wide: "M 11 45 C 11 30 30 24 52 28 C 66 32 69 45 63 55 C 55 65 26 67 16 59 C 11 55 11 50 11 45 Z"
+      };
+      const STOCK_BELLY = {
+        round: "M 22 56 C 30 64 52 64 60 54 C 56 66 30 68 22 56 Z",
+        tall: "M 24 57 C 32 64 50 64 57 56 C 52 67 30 67 24 57 Z",
+        wide: "M 17 57 C 28 66 54 66 62 54 C 56 67 26 69 17 57 Z"
+      };
+      const STOCK_TAIL = {
+        fan: "M 22 46 C 10 47 2 41 0 30 C 6 39 14 42 26 41 Z M 22 41 C 11 40 3 33 2 20 C 9 31 15 36 25 36 Z M 24 36 C 14 32 8 24 11 10 C 14 25 19 30 28 31 Z",
+        plume: "M 24 36 C 10 30 2 16 12 2 C 9 19 17 28 30 32 Z M 22 43 C 8 41 0 28 6 16 C 9 31 17 37 28 38 Z"
+      };
+      const STOCK_COMB = {
+        none: undefined,
+        crest: "M 47 13 C 46 5 52 3 54 9 C 55 2 61 2 62 8 C 63 4 68 5 66 13 Z",
+        mohawk: "M 50 13 C 51 4 58 -2 68 2 C 61 3 62 9 64 13 Z"
+      };
+      const STOCK_WING =
+        "M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 Q 28 50 31 54 Q 35 49 38 53 Q 42 48 45 51 C 49 46 51 40 47 35 Z";
+      const NECK_PATH = "M 45 33 C 47 24 52 17 60 15 L 68 25 C 63 28 60 34 60 40 Z";
+      const PIVOTS = { legFar: { x: 44, y: 57 }, legNear: { x: 32, y: 57 } };
+
+      const legPath = ({ x, y }) =>
+        `M ${x} ${y} L ${x - 1} ${y + 11} M ${x - 1} ${y + 11} L ${x - 7} ${y + 13.5} M ${x - 1} ${y + 11} L ${x} ${y + 14} M ${x - 1} ${y + 11} L ${x + 6} ${y + 13.5}`;
+      const thighPath = ({ x, y }) =>
+        `M ${x - 5} ${y - 4} C ${x - 6} ${y + 3} ${x - 1} ${y + 6} ${x + 3} ${y + 2} C ${x + 4} ${y - 2} ${x} ${y - 6} ${x - 5} ${y - 4} Z`;
+
+      const DRAWN_HEAD = { cx: 58, cy: 20, r: 12 };
+      const BEAK = { x: DRAWN_HEAD.cx + DRAWN_HEAD.r - 1, y: DRAWN_HEAD.cy };
+      const S2 = ink();
+
+      const drawnHead = (fill, head) => `
+        <circle fill="${fill}" ${S2} cx="${DRAWN_HEAD.cx}" cy="${DRAWN_HEAD.cy}" r="${DRAWN_HEAD.r}"/>
+        <path fill="${PALETTE.primary}" ${S2} d="M ${BEAK.x} ${BEAK.y - 4} L ${BEAK.x + 12} ${BEAK.y} L ${BEAK.x} ${BEAK.y + 1} Z"/>
+        <path fill="${PALETTE.primary}" ${S2} d="M ${BEAK.x} ${BEAK.y + 1} L ${BEAK.x + 10} ${BEAK.y + 1} L ${BEAK.x} ${BEAK.y + 5} Z"/>
+        <path fill="${PALETTE.primary}" ${S2} d="M ${BEAK.x - 3} ${BEAK.y + 5} C ${BEAK.x + 2} ${BEAK.y + 5} ${BEAK.x + 2} ${BEAK.y + 13} ${BEAK.x - 3} ${BEAK.y + 12} Z"/>
+        <circle fill="${PALETTE.text}" cx="${head.cx - 4}" cy="${head.eyeY}" r="3"/>
+        <circle fill="${PALETTE.text}" cx="${head.cx + 4}" cy="${head.eyeY}" r="3"/>
+        <circle fill="${BG}" cx="${head.cx - 3}" cy="${head.eyeY}" r="1.4"/>
+        <circle fill="${BG}" cx="${head.cx + 5}" cy="${head.eyeY}" r="1.4"/>`;
+
+      let uid = 0;
+      const costumeHead = (avatarSrc, head) => {
+        const id = `sil${(uid += 1)}`;
+        return `
+        <filter id="${id}" x="-30%" y="-30%" width="160%" height="160%" primitiveUnits="userSpaceOnUse">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="halo"/>
+          <feFlood flood-color="${BG}" result="ink"/>
+          <feComposite in="ink" in2="halo" operator="in" result="outline"/>
+          <feMerge><feMergeNode in="outline"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <image href="${avatarSrc}" x="${head.cx - COSTUME_HEAD_HEIGHT / 2}" y="${head.top}"
+               width="${COSTUME_HEAD_HEIGHT}" height="${COSTUME_HEAD_HEIGHT}"
+               preserveAspectRatio="xMidYMax meet" filter="url(#${id})"/>`;
+      };
+
+      /** One hen, every silhouette organ passed in. Same draw order as the shipping figure. */
+      const figure = ({ fill, join = "round", body, belly, tail, wing, comb, avatarSrc }) => {
+        const head = avatarSrc ? COSTUME_HEAD_ANCHORS : DRAWN_HEAD_ANCHORS;
+        const S = ink(join);
+        const leg = (p, o) =>
+          `<path fill="none" stroke="${PALETTE.primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="${legPath(p)}"${o}/>`;
+        return `
+        <path fill="${fill}" ${S} d="${tail}"/>
+        <g opacity="0.7">${leg(PIVOTS.legFar, "")}</g>
+        <path fill="${fill}" ${S} d="${body}"/>
+        <path fill="${BG}" fill-opacity="0.2" d="${belly}"/>
+        <path fill="${fill}" ${S2} d="${thighPath(PIVOTS.legNear)}"/>
+        ${leg(PIVOTS.legNear, "")}
+        <path fill="${fill}" ${S} d="${wing}"/>
+        <path fill="${fill}" ${S2} d="${NECK_PATH}"/>
+        ${avatarSrc ? costumeHead(avatarSrc, head) : drawnHead(fill, head)}
+        ${!avatarSrc && comb ? `<path fill="${fill}" ${S} transform="${perchTransform(head.cx, head.top + 4)}" d="${comb}"/>` : ""}`;
+      };
+
+      const svg = (o, h) =>
+        `<svg viewBox="0 0 80 72" height="${h}" style="overflow:visible;display:block">${figure(o)}</svg>`;
+
+      const stage = ({ label, h = 76, birds, tight }) => `
+        <div class="stage${tight ? " tight" : ""}"><div class="sizes">${birds
+          .map((b) => `<figure>${svg(b, h)}<figcaption>${b.caption ?? ""}</figcaption></figure>`)
+          .join("")}</div><span class="scale">${label}</span></div>`;
+
+      const card = ({ title, note, rows, heading }) => `
+        <section class="cell">
+          <h2>${title}</h2>
+          <p class="note">${note}</p>
+          ${rows
+            .map((r) => (r.heading ? `<h3>${r.heading}</h3>${stage(r)}` : stage(r)))
+            .join("")}
+        </section>`;
+
+      // -------------------------------------------------------------- genres --
+      // Each genre owns five organs. Nothing else moves: the foot, the head
+      // centre, the hips, the shoulder and the tail root are all where
+      // geometry/index.ts puts them, because JOUST and FAPPY read them.
+
+      const GENRE = {
+        metal: {
+          name: "METAL",
+          fill: PALETTE.teamD,
+          // Spikes need a miter join. A 2-unit ROUND join blunts every point by a
+          // unit, which at 76px is the whole point gone. This is the one place
+          // the house line style has to bend, and it bends by one word.
+          join: "miter",
+          body: "M 18 47 C 17 37 23 31 29 29 L 32 17 L 36 28 L 40 18 L 44 29 C 57 31 66 40 62 51 C 55 61 32 62 25 57 C 20 54 18 51 18 47 Z",
+          belly: "M 28 54 C 36 60 51 59 58 51 C 53 60 31 61 28 54 Z",
+          tail: "M 30 48 L 2 46 L 28 40 Z M 28 42 L 0 26 L 29 33 Z M 29 34 L 7 9 L 31 27 Z",
+          wing: "M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 L 27 52 L 31 55 L 34 52 L 38 54 L 41 51 L 45 51 C 49 46 51 40 47 35 Z",
+          comb: "M 48 13 L 51 1 L 54 10 L 57 -1 L 60 9 L 64 2 L 66 13 Z"
+        },
+        pop: {
+          name: "POP",
+          fill: PALETTE.teamH,
+          body: "M 24 44 C 22 26 36 19 51 24 C 66 29 69 43 63 53 C 55 62 30 63 26 55 C 24 52 24 48 24 44 Z",
+          belly: "M 29 54 C 36 60 51 59 59 51 C 54 61 32 62 29 54 Z",
+          tail: "M 25 42 C 16 44 10 38 12 29 C 15 36 20 38 27 37 Z M 26 37 C 18 34 14 27 18 19 C 19 28 22 31 28 32 Z",
+          wing: "M 47 35 C 39 30 27 33 24 43 C 23 48 26 52 29 53 Q 33 48 36 52 Q 40 47 44 51 C 48 46 50 40 47 35 Z",
+          comb: "M 46 13 C 44 3 51 -1 54 6 C 55 -3 63 -2 63 7 C 64 2 69 4 67 13 Z"
+        },
+        country: {
+          name: "COUNTRY",
+          fill: PALETTE.teamE,
+          body: "M 14 49 C 14 33 31 25 52 29 C 68 32 71 47 65 58 C 57 67 24 69 18 61 C 14 57 14 53 14 49 Z",
+          belly: "M 21 59 C 30 66 55 65 63 56 C 57 68 27 68 21 59 Z",
+          tail: "M 24 46 C 12 58 0 55 0 42 C 4 52 12 53 22 44 Z M 24 41 C 12 47 2 43 2 31 C 7 41 16 42 25 38 Z",
+          wing: "M 47 36 C 40 32 30 35 27 43 C 26 47 28 50 31 51 Q 35 47 39 50 C 45 47 49 41 47 36 Z",
+          comb: "M 51 13 C 51 7 56 5 58 9 C 60 6 64 7 63 13 Z"
+        },
+        disco: {
+          name: "DISCO",
+          fill: PALETTE.teamB,
+          body: "M 27 41 C 25 22 39 16 52 22 C 64 27 66 39 60 48 C 54 55 33 56 30 50 C 27 47 27 45 27 41 Z",
+          belly: "M 32 49 C 38 54 51 53 57 45 C 53 55 34 56 32 49 Z",
+          tail: "M 27 38 C 13 30 5 12 17 0 C 13 16 21 26 32 32 Z M 25 45 C 9 40 1 24 9 10 C 10 27 18 36 29 40 Z",
+          wing: "M 47 34 C 37 29 21 32 17 43 C 16 48 19 53 23 54 C 28 48 33 43 40 41 C 46 40 50 38 47 34 Z",
+          comb: "M 51 13 C 50 5 55 -3 63 -4 C 59 2 59 8 62 13 Z"
+        }
+      };
+
+      const KEYS = ["metal", "pop", "country", "disco"];
+
+      /** A full genre bird: the genre owns body, comb, tail and wing. */
+      const full = (key, extra = {}) => ({ ...GENRE[key], ...extra });
+
+      /** The hybrid: the genre owns tail + wing, the name hash keeps body + comb. */
+      const hybrid = (key, { body = "round", comb = "crest", ...extra } = {}) => ({
+        ...GENRE[key],
+        body: STOCK_BODY[body],
+        belly: STOCK_BELLY[body],
+        comb: STOCK_COMB[comb],
+        ...extra
+      });
+
+      /** Tonight's bird: every organ off the name hash, no genre at all. */
+      const today = ({ fill, body = "round", comb = "crest", tail = "fan", ...extra }) => ({
+        fill,
+        body: STOCK_BODY[body],
+        belly: STOCK_BELLY[body],
+        tail: STOCK_TAIL[tail],
+        wing: STOCK_WING,
+        comb: STOCK_COMB[comb],
+        ...extra
+      });
+
+      const HEAD_LIST = [HEADS.rob, HEADS.rosi, HEADS.sara, HEADS.kenny];
+
+      const out = [];
+
+      // ------------------------------------------------- THE LINE-UP (the test) --
+
+      out.push(
+        card({
+          title: "THE LINE-UP · the decisive test",
+          note:
+            "One bird per genre, side by side at 76px — the size one hen actually is on a 1080p TV. Metal, pop, country, disco. Ask the only question that matters: could a stranger walking past the TV tell these are four different teams from their shapes? Then the same four at 152 and 304 — if they only separate at 4×, the idea has failed at the size that matters.",
+          rows: [
+            {
+              heading: "drawn heads · team colours",
+              label: "76px · actual size on a 1080p TV",
+              h: 76,
+              birds: KEYS.map((k) => full(k, { caption: GENRE[k].name.toLowerCase() }))
+            },
+            { label: "152px", h: 152, birds: KEYS.map((k) => full(k)) },
+            { label: "304px", h: 304, birds: KEYS.map((k) => full(k)) }
+          ]
+        })
+      );
+
+      out.push(
+        card({
+          title: "THE LINE-UP · costume heads — what a real night looks like",
+          note:
+            "The same four with photographed heads. Note what is missing: the comb. A costume head wears no comb, by design (DESIGN.md §2.8 — nothing is planted in a player's hair). So on a real night a genre comb carries ZERO signal, and the whole burden falls on tail, wing and body. This row, not the one above, is the honest test.",
+          rows: [
+            {
+              label: "76px · actual size",
+              h: 76,
+              birds: KEYS.map((k, i) =>
+                full(k, { avatarSrc: HEAD_LIST[i], caption: GENRE[k].name.toLowerCase() })
+              )
+            },
+            { label: "152px", h: 152, birds: KEYS.map((k, i) => full(k, { avatarSrc: HEAD_LIST[i] })) },
+            { label: "304px", h: 304, birds: KEYS.map((k, i) => full(k, { avatarSrc: HEAD_LIST[i] })) }
+          ]
+        })
+      );
+
+      out.push(
+        card({
+          title: "THE LINE-UP · colour stripped",
+          note:
+            "The cheat we have to remove. Every team already has its own hue, so a coloured line-up separates whether or not the shapes do — teamD chrome and teamH pink would read as four teams even if all four birds were identical. Here all four are one neutral (mutedWarm, the unassigned-player colour). Whatever you can still tell apart HERE is what the silhouette is actually buying. This is the row that decides the round.",
+          rows: [
+            {
+              label: "76px · no colour",
+              h: 76,
+              birds: KEYS.map((k) =>
+                full(k, { fill: PALETTE.mutedWarm, caption: GENRE[k].name.toLowerCase() })
+              )
+            },
+            {
+              label: "76px · no colour, costume heads",
+              h: 76,
+              birds: KEYS.map((k, i) =>
+                full(k, { fill: PALETTE.mutedWarm, avatarSrc: HEAD_LIST[i] })
+              )
+            },
+            { label: "152px · no colour", h: 152, birds: KEYS.map((k) => full(k, { fill: PALETTE.mutedWarm })) }
+          ]
+        })
+      );
+
+      // --------------------------------------------------- the four anatomies --
+
+      const ANATOMY = [
+        {
+          key: "metal",
+          title: "METAL · teamD chrome — the spiky bird",
+          note:
+            "The one Brad already believed in, and it does work — it is the strongest bird on the page. Three organs carry it: two raised hackles on the back (11 units, and a real chicken raising its hackles in a fight is exactly the reference, so this is a hen being hardcore and not a generic spiky creature), three straight blade tails where the stock bird has three soft crescents, and a belly line 6 units higher than stock so more orange leg shows and the bird reads crouched. Every join is MITRED, not rounded — the house 2-unit round join eats a unit off every point, and at 76px that is the whole spike. REJECTED on the way here: a deeply saw-toothed wing (7-unit notches). It read as a jagged tear across the belly — the teeth problem this codebase has hit twice, in a new costume. The serration on the wing now is 3 units and is honestly invisible at 76px; keep it or drop it, it changes nothing. At 76px the bird degrades to a spiky halo with a jagged crown: still a chicken, still angry, and nameable across a room with the colour taken away."
+        },
+        {
+          key: "pop",
+          title: "POP · teamH — the smooth bird (the weak one, shown honestly)",
+          note:
+            "The most generous pop I could draw, and it still fails. Every curve convex, not one straight line or point anywhere, a big three-lobed soft crest, a forward-chested teardrop body with the chest pushed out to x=69, a scalloped wing, and a small high perky tuft where the tail should be. The problem is not that it is badly drawn — it is that 'smooth, round, upright' IS the bird we already ship. Compare the 304px pair below: the genre silhouette and tonight's bird are the same animal. On a drawn head the fat crest carries it; on a costume head the crest is dropped and nothing is left. Pop is not a point on the scale, it is the origin of the scale, and no amount of drawing fixes that. See the verdict for what to give pop instead."
+        },
+        {
+          key: "country",
+          title: "COUNTRY · teamE burnt orange — the broody hen",
+          note:
+            "Wide body, belly dropped to y=68 so the legs all but vanish and the bird looks settled on the ground; a fat short tail that droops BELOW its root instead of rising; a small wing tucked high. Nothing here is a costume — it is the difference between a strutting rooster and a sitting hen, and a room reads that instantly without being told. At 76px it degrades to a low wide lump with toes and no legs, which is exactly the read, and with the colour stripped it is the second most nameable bird on the page. Note how little the tail matters here and how much the belly line does: this is the genre that is carried almost entirely by one number."
+        },
+        {
+          key: "disco",
+          title: "DISCO · teamB cyan — the tall preener",
+          note:
+            "Narrow body, belly raised to y=56 so 15 units of orange leg show, and two enormous sickle tails sweeping to the very top of the box — the tail is taller than the bird, and it is the single loudest shape on the page. Wing is one long unbroken swept blade, no scallops, no teeth. The important discovery is in the constraint: leg length is NOT free, because the hips are a pivot at y=57 and the foot is pinned at (38,71), so a longer leg cannot be drawn. It has to be FAKED by raising the belly line, and it works completely — the eye reads leg, not belly. Disco and country are the two ends of that one dial and are unmistakable from each other at 76px with no colour at all."
+        }
+      ];
+
+      for (const { key, title, note } of ANATOMY) {
+        out.push(
+          card({
+            title,
+            note,
+            rows: [
+              {
+                label: "76px · actual size",
+                h: 76,
+                birds: [
+                  full(key, { caption: "drawn head" }),
+                  full(key, { avatarSrc: HEADS.rosi, caption: "costume · rosi" }),
+                  full(key, { avatarSrc: HEADS.kenny, caption: "costume · kenny" }),
+                  full(key, { fill: PALETTE.teamA, caption: "on teamA orange" }),
+                  full(key, { fill: PALETTE.teamD, caption: "on teamD chrome" })
+                ]
+              },
+              {
+                label: "152px",
+                h: 152,
+                birds: [
+                  full(key, { caption: "drawn head" }),
+                  full(key, { avatarSrc: HEADS.rosi }),
+                  full(key, { avatarSrc: HEADS.kenny }),
+                  full(key, { fill: PALETTE.teamA }),
+                  full(key, { fill: PALETTE.teamD })
+                ]
+              },
+              {
+                heading: "against tonight's bird — stock silhouette, same colour",
+                label: "304px · candidate vs tonight",
+                h: 304,
+                birds: [
+                  full(key, { caption: "genre silhouette" }),
+                  today({ fill: GENRE[key].fill, caption: "tonight's bird" }),
+                  full(key, { avatarSrc: HEADS.sara, caption: "costume · sara" })
+                ]
+              }
+            ]
+          })
+        );
+      }
+
+      // ----------------------------------------------------- the clone problem --
+
+      const TEAM_SIX = [
+        { head: HEADS.rob, body: "round", comb: "crest", tail: "fan", name: "rob" },
+        { head: HEADS.rosi, body: "tall", comb: "mohawk", tail: "plume", name: "rosi" },
+        { head: HEADS.sara, body: "wide", comb: "none", tail: "fan", name: "sara" },
+        { head: HEADS.kenny, body: "round", comb: "mohawk", tail: "plume", name: "kenny" },
+        { head: undefined, body: "tall", comb: "crest", tail: "plume", name: "no photo · tall" },
+        { head: undefined, body: "wide", comb: "mohawk", tail: "fan", name: "no photo · wide" }
+      ];
+
+      out.push(
+        card({
+          title: "THE CLONE PROBLEM · six teammates on the metal team",
+          note:
+            "Today body/comb/tail are hashed from the player's NAME so teammates differ from each other. If the genre takes those over, a team is six copies of one bird. Three rows of the same six people, all on teamD. Row 1 is tonight. Row 2 is genre-owns-everything. Row 3 is the hybrid: the genre owns TAIL and WING, the name hash keeps BODY and COMB. Look at row 1 before you judge row 2 — with real photographed heads, tonight's six are already far less distinct from each other than the roster code implies.",
+          rows: [
+            {
+              heading: "1 · tonight — the hash owns body, comb and tail; no genre",
+              label: "76px",
+              h: 76,
+              tight: true,
+              birds: TEAM_SIX.map((p) =>
+                today({ fill: PALETTE.teamD, body: p.body, comb: p.comb, tail: p.tail, avatarSrc: p.head, caption: p.name })
+              )
+            },
+            {
+              heading: "2 · genre owns everything — six identical birds",
+              label: "76px",
+              h: 76,
+              tight: true,
+              birds: TEAM_SIX.map((p) => full("metal", { avatarSrc: p.head, caption: p.name }))
+            },
+            {
+              heading: "3 · hybrid — genre owns tail + wing, the hash keeps body + comb",
+              label: "76px",
+              h: 76,
+              tight: true,
+              birds: TEAM_SIX.map((p) =>
+                hybrid("metal", { body: p.body, comb: p.comb, avatarSrc: p.head, caption: p.name })
+              )
+            },
+            {
+              heading: "the same three rows at 152px",
+              label: "152px · tonight",
+              h: 152,
+              tight: true,
+              birds: TEAM_SIX.slice(0, 4).map((p) =>
+                today({ fill: PALETTE.teamD, body: p.body, comb: p.comb, tail: p.tail, avatarSrc: p.head, caption: p.name })
+              )
+            },
+            {
+              label: "152px · genre owns everything",
+              h: 152,
+              tight: true,
+              birds: TEAM_SIX.slice(0, 4).map((p) => full("metal", { avatarSrc: p.head, caption: p.name }))
+            },
+            {
+              label: "152px · hybrid",
+              h: 152,
+              tight: true,
+              birds: TEAM_SIX.slice(0, 4).map((p) =>
+                hybrid("metal", { body: p.body, comb: p.comb, avatarSrc: p.head, caption: p.name })
+              )
+            }
+          ]
+        })
+      );
+
+      out.push(
+        card({
+          title: "THE HYBRID LINE-UP · does the genre still read when it only owns tail + wing?",
+          note:
+            "Which organ is actually doing the work? Here the genre owns ONLY the tail and the wing edge — every body is the stock round body, every comb the stock crest. RESULT, and it is a clean one: rows 1 and 3 are indistinguishable from each other, so the WING EDGE BUYS NOTHING. A feather serration is 3 units deep, which is 3px on a TV, and the wing is body-coloured on a body-coloured body so its only signal is a thin ink line. Meanwhile the tail alone still separates all four. The second result is the cost: compare this to the full line-up at the top and you can see what the body and the belly line were adding — country loses its squat and disco loses its legs. The tail is necessary; the body is the upgrade; the wing is decoration.",
+          rows: [
+            {
+              heading: "genre tail + wing only · stock body · team colours",
+              label: "76px",
+              h: 76,
+              birds: KEYS.map((k) => hybrid(k, { caption: GENRE[k].name.toLowerCase() }))
+            },
+            {
+              heading: "the same, colour stripped",
+              label: "76px · no colour",
+              h: 76,
+              birds: KEYS.map((k) =>
+                hybrid(k, { fill: PALETTE.mutedWarm, caption: GENRE[k].name.toLowerCase() })
+              )
+            },
+            {
+              heading: "genre TAIL only · stock body, STOCK wing — is the wing edge buying anything?",
+              label: "76px",
+              h: 76,
+              birds: KEYS.map((k) => hybrid(k, { wing: STOCK_WING, caption: GENRE[k].name.toLowerCase() }))
+            },
+            {
+              label: "152px · genre tail only, stock wing",
+              h: 152,
+              birds: KEYS.map((k) => hybrid(k, { wing: STOCK_WING }))
+            },
+            {
+              heading: "and with costume heads",
+              label: "76px · costume",
+              h: 76,
+              birds: KEYS.map((k, i) => hybrid(k, { avatarSrc: HEAD_LIST[i], caption: GENRE[k].name.toLowerCase() }))
+            },
+            {
+              label: "152px · genre tail + wing only",
+              h: 152,
+              birds: KEYS.map((k) => hybrid(k, { caption: GENRE[k].name.toLowerCase() }))
+            }
+          ]
+        })
+      );
+
+      document.getElementById("root").innerHTML = out.join("");
+
+      document.getElementById("root").insertAdjacentHTML(
+        "beforeend",
+        `
+        <section class="cell verdict">
+          <h2>VERDICT</h2>
+          <p class="answer">
+            <strong>It generalises to three of the four, and it generalises as a scale rather than
+            as four breeds.</strong> Metal is not a lucky special case — country and disco both get
+            silhouettes you can name at 76px with the team colour taken away. But they are not four
+            independent ideas; they are four points on <em>one</em> axis —
+            <strong>spiky and long-legged ↔ round and squat</strong> — with metal and country at the
+            two ends and disco near metal. <strong>Pop is the one that fails</strong>, and it fails
+            for a reason no amount of drawing fixes: pop's brief is "smooth, round, upright", which
+            is a description of the bird we already ship. Pop is the origin of the axis, not a point
+            on it. Brad's doubt was half right, and the half it was right about was pop.
+          </p>
+          <p>
+            <b>The surprise, and it changes the recommendation.</b> The clone rows are supposed to be
+            the argument against letting the genre own the silhouette. They are not. Look at row 1 —
+            that is <em>tonight's</em> bird, six teammates, body/comb/tail all hashed off their
+            names, all wearing their real heads. They are already six of the same bird. The comb is
+            dropped on a costume head, the three bodies differ by a few units of width, and fan
+            versus plume is two thin shapes at the back. At 76px none of it survives; the face is
+            doing 100% of the work of telling Rob from Rosi. So the variation the genre would be
+            taking over is variation the room cannot see. Row 2 (genre owns everything) costs
+            essentially nothing against row 1, and row 3 (the hybrid) buys essentially nothing over
+            row 2.
+          </p>
+          <ol>
+            <li>
+              <b>Ship it: let the genre own the whole silhouette — body, tail and comb.</b> Not the
+              hybrid. The hybrid was the cautious answer and the pictures say the caution is
+              unfounded: it pays a real price (country stops being squat, disco loses its legs) to
+              protect a per-player difference that is invisible at party size. Nothing in
+              <code>geometry/index.ts</code> moves — same foot, same head centre, same six pivots —
+              so JOUST and FAPPY never notice. <code>BODY_PATHS</code>, <code>TAIL_PATHS</code>,
+              <code>BELLY_SHADE_PATHS</code> and <code>COMB_PATHS</code> stop being keyed by the name
+              hash and start being keyed by the genre, which <code>resolveTeamApparel</code> already
+              knows how to compute from the team.
+            </li>
+            <li>
+              <b>The tail is the load-bearing organ and the belly line is second.</b> The hybrid card
+              proves the tail alone separates all four genres at 76px. The belly line is the leg
+              dial: the hips are a pivot at y=57 and the foot is pinned at (38,71), so a leg cannot
+              actually get longer — raising or dropping the belly from y=56 to y=68 changes the
+              visible orange from 15 units to 3, and the eye reads that as a tall bird or a squat
+              one. Those two organs are the whole system. If you ship nothing else, ship those.
+            </li>
+            <li>
+              <b>The wing edge buys nothing, and the comb buys nothing.</b> Two dead ends, both
+              tested on this page. The wing is body-coloured on a body-coloured body, so its only
+              signal is an ink line, and a feather serration deep enough to see at 76px reads as a
+              tear across the belly (that candidate is in the metal note, rejected). The comb is
+              dropped on every costume head by design, and on a real night everybody has one — so
+              every comb on this page is dead weight the moment the party starts. Do not spend
+              design effort on either.
+            </li>
+            <li>
+              <b>Metal needs <code>stroke-linejoin="miter"</code>.</b> One word. The house 2-unit
+              round join rounds a unit off every point, and at 76px a unit is the spike. It is the
+              only genre that needs it and it changes nothing else.
+            </li>
+            <li>
+              <b>Give pop a different lever entirely.</b> Pop should keep the stock silhouette and
+              take its identity from motion: <code>CHARACTER_DANCES</code> already exists, is already
+              hashed off the name, and is already on the room's beat. Pop is the team whose birds
+              bounce. That is one more map the same shape as the apparel map, and it is the only
+              place a pop idea actually lives. Trying to draw "pop" as an outline is the one thing
+              on this page I would not attempt again.
+            </li>
+            <li>
+              <b>If the rank of clones bothers you when you see it in the flesh</b>, the fix is NOT
+              keeping the stock body — that is the invisible variation we just measured. It is two
+              tails <em>within</em> each genre, picked by the name hash: two spiky tails for metal,
+              two droops for country. The genre grammar holds, the rank breaks, and the cost is four
+              more paths. Untested here — I am naming it because it is the cheap next move, not
+              because I have shown it.
+            </li>
+          </ol>
+          <p>
+            <b>Two things about this bird the other pages should know.</b> The costume head's photo
+            box is 44 units spanning x=36..80, y=−12..32 — so anything drawn on the upper back to the
+            right of about x=45 is behind a player's hair and gone; the metal hackles had to be moved
+            left twice before they survived. And the tail is the only organ on the hen with real room
+            to move: it is the one part with no head, no leg, no wing and no photograph competing for
+            its space, which is exactly why it turned out to be the organ that carries the genre.
+          </p>
+        </section>`
+      );
+    </script>
+  </body>
+</html>

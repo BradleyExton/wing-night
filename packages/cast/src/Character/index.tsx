@@ -1,5 +1,7 @@
 import type { CharacterAppearance } from "../resolvePlayerAppearance/index.js";
 import type { CharacterApparel } from "../resolveTeamApparel/index.js";
+import type { CharacterSilhouette } from "../resolveTeamSilhouette/index.js";
+import type { CharacterDance } from "../resolvePlayerAppearance/index.js";
 import type { CharacterPose } from "./geometry/index.js";
 import { CHARACTER_WING_PATH, CharacterFigure } from "./CharacterFigure/index.js";
 import * as styles from "./styles.js";
@@ -16,15 +18,32 @@ export type CharacterProps = {
   fillClassName?: string;
   wing?: "drawn" | "none";
   pose?: CharacterPose;
+  silhouette?: CharacterSilhouette;
+  dance?: CharacterDance;
 };
 
-export const Character = ({ appearance, apparel, fillClassName, wing, pose }: CharacterProps): JSX.Element => {
+export const Character = ({
+  appearance,
+  apparel,
+  fillClassName,
+  wing,
+  pose,
+  silhouette,
+  dance
+}: CharacterProps): JSX.Element => {
   return (
     <svg
       className={`${styles.svg} ${fillClassName ?? styles.defaultFill}`}
       viewBox="0 0 80 72"
     >
-      <CharacterFigure appearance={appearance} apparel={apparel} wing={wing} pose={pose} />
+      <CharacterFigure
+        appearance={appearance}
+        apparel={apparel}
+        wing={wing}
+        pose={pose}
+        silhouette={silhouette}
+        dance={dance}
+      />
     </svg>
   );
 };

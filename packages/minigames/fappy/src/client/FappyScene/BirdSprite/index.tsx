@@ -45,6 +45,7 @@ export const BirdSprite = forwardRef<
       <Character
         appearance={bird.appearance}
         apparel={bird.apparel}
+        silhouette={bird.silhouette}
         fillClassName={bird.fillClassName}
         wing="none"
         pose={pose}

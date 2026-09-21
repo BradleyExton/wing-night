@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>APPAREL — metal</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>APPAREL — metal · Molten Metal (teamD, chrome) · round 2</h1>
+      <p class="lede">
+        <strong>Round 1 lost.</strong> It replaced the studded collar — a dark crescent under the
+        chin that read as a necklace — with THE CUT, a battle vest, and the vest was rejected:
+        <em>"the vest doesn't really fit well with the chickens."</em> The round 1 cards are still
+        on this page, below, as the record. This is what replaces them.
+        <br /><br />
+        <strong>Why it lost, and the new rule.</strong> The vest out-weighed the bird. A team
+        <em>is</em> its colour, and at 76px a metal bird became a dark mass with a bright square
+        on it while chrome — the team's actual colour — nearly disappeared. So round 2 has a hard
+        constraint the first round did not: <strong>the team colour must stay the dominant area of
+        the bird.</strong> That is not left to taste here: the page rasterises every candidate at
+        TV size, counts the pixels that are still the team's colour, and prints the result against
+        the SAME bird wearing nothing — so the outline, the legs and the belly shade, which are
+        not colour either and are identical in every row, cancel out. A bare bird is
+        <span id="share-naked">…</span>; tonight's <strong>collar</strong> leaves
+        <span id="share-collar">…</span> of the colour standing; round 1's rejected
+        <strong>vest</strong> leaves <span id="share-cut">…</span>. Anything down at the vest's
+        number is out.
+        <br /><br />
+        <strong>Two other things went wrong and both are about anatomy.</strong> A cut rectangle
+        fights a round bird — hard edges do make a dark shape read as cloth, but laid across a
+        creature made entirely of curves they read as a saddle. And the vest sat exactly where the
+        wing is: same colour, same place, so the two merged and the bird lost a limb. Round 2
+        works with the anatomy instead — the wing's own plane, the wing's own axis, the bird's own
+        outline — and keeps every prop small enough that the colour still wins.
+      </p>
+      <div id="root"></div>
+    </main>
+    <script type="module">
+      import {
+        PALETTE,
+        HEADS,
+        SHIPPING_APPAREL,
+        birdMarkup,
+        candidateCard
+      } from "./apparel-harness.js";
+
+      const INK = PALETTE.bg;
+      const D = PALETTE.teamD;
+
+      // ===================================================== ROUND 2 ======
+      // The rule for everything in this block: the prop may not become the
+      // bird's main mass. Each one is measured — see `measureShare` at the
+      // foot of this file — and the number is printed in its own note.
+
+      // -------------------------------------------------------------- 1 --
+      // SKULL ON THE WING. The team identity kit already assigns metal an
+      // emblem, `skull-hen` (TeamEmblem/EmblemDrawing) — 11 shapes in a 64
+      // box. This is that drawing reduced to the four that survive on a
+      // 12-unit wing plate: cranium, jaw, two sockets. What is deliberately
+      // dropped: the three ink tooth rects (sub-pixel here, and a row of
+      // pointed light shapes is the mouth-of-teeth failure this codebase has
+      // hit twice), the primary beak wedge (apparel gets no third hue) and
+      // the comb and horn flourishes (they land outside the wing).
+      //
+      // Placed on the wing for the reason pop's star is: the wing is the one
+      // big uninterrupted plane on the bird, and it is part of the BODY, so
+      // it is pixel-identical under a drawn head and under a photograph.
+      // 2.4 stroke, not 2, because on chrome the white fill is nearly the
+      // body colour and the outline is doing all the work.
+      const LIGHT24 = `fill="${PALETTE.text}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"`;
+
+      const skull = () => `
+        <g data-apparel="skull">
+          <rect ${LIGHT24} x="29.6" y="43.6" width="6.9" height="4.8" rx="1.4"/>
+          <circle ${LIGHT24} cx="33" cy="40.3" r="5.8"/>
+          <circle fill="${INK}" cx="30.6" cy="39.9" r="1.75"/>
+          <circle fill="${INK}" cx="35.4" cy="39.9" r="1.75"/>
+        </g>`;
+
+      // -------------------------------------------------------------- 2 --
+      // THE CUT, REDUCED TO ITS EDGES. The same garment as round 1 with the
+      // fill taken out: a cut hem and a collar notch as a drawn line, with
+      // the bird's own colour inside it. Tests whether a garment can be a
+      // line rather than a mass. Still hung off the shoulders anchor.
+      const cutLine = (head) => `
+        <g data-apparel="cut-line" transform="translate(${head.cx - 58} ${head.shoulders - 32})">
+          <path fill="none" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"
+                stroke-linecap="round"
+                d="M 30.5 36.5 L 43.5 31.5 L 50.5 39.5 L 57.5 31.5 L 61 34
+                   C 63.5 41 63.5 46 61.5 51 L 37 49.5 Z"/>
+          <rect fill="${PALETTE.text}" stroke="${INK}" stroke-width="2" x="50" y="42.4"
+                width="6.2" height="5.6" rx="1" transform="rotate(-8 53.1 45.2)"/>
+        </g>`;
+
+      // -------------------------------------------------------------- 3 --
+      // THE CUFF. Worn on the wing rather than on the torso: a strap across
+      // the wing at the forearm, square to the wing's own axis (root 47,35 →
+      // tip 22,48) rather than to the page, so it sits on the limb like a
+      // band and not like a stripe painted over it. One white keeper on it,
+      // a rectangle — never a point, and nowhere near the beak.
+      const cuff = () => `
+        <g data-apparel="cuff">
+          <path fill="${INK}" d="M 35.9 33.9 L 41.6 44.6 L 38 46.4 L 32.4 35.8 Z"/>
+          <rect fill="${PALETTE.text}" x="35.4" y="38.1" width="3.1" height="3.1" rx="0.6"
+                transform="rotate(28 36.9 39.6)"/>
+        </g>`;
+
+      // -------------------------------------------------------------- 4 --
+      // THE SMALL V. Round 1's guitar at 0.7 scale with its joint moved down
+      // the body, so the whole instrument — headstock included — is inside
+      // the outline and tucked against the bird. Same two paths, same axis
+      // layout, same team-colour rim.
+      const SMALL_ANGLE = -38.5 * (Math.PI / 180);
+      const SMALL_JOINT = { x: 46, y: 45.5 };
+      const smallPath = (points) =>
+        `M ${points
+          .map(([x, y]) => {
+            const c = Math.cos(SMALL_ANGLE);
+            const s = Math.sin(SMALL_ANGLE);
+            const sx = x * 0.7;
+            const sy = y * 0.7;
+            return `${(SMALL_JOINT.x + sx * c - sy * s).toFixed(1)} ${(SMALL_JOINT.y + sx * s + sy * c).toFixed(1)}`;
+          })
+          .join(" L ")} Z`;
+
+      const SMALL_BODY = smallPath([
+        [-3.5, 0], [-11, 14], [-6.5, 17], [0, 8.5], [6.5, 17], [11, 14], [3.5, 0]
+      ]);
+      const SMALL_NECK = smallPath([
+        [-1.9, 1], [-1.9, -21], [-2.4, -26.5], [3.9, -28.5], [5.4, -23],
+        [1.9, -21], [1.9, 1]
+      ]);
+
+      const smallV = (head, fill) => {
+        const rim = `fill="${INK}" stroke="${fill}" stroke-width="1.4" stroke-linejoin="round"`;
+        return `<g data-apparel="small-v">
+          <path ${rim} d="${SMALL_NECK}"/>
+          <path ${rim} d="${SMALL_BODY}"/>
+        </g>`;
+      };
+
+      // The pairing the verdict recommends: the emblem on the wing, the
+      // instrument under it. Two small marks instead of one big one.
+      const skullAndV = (head, fill) => smallV(head, fill) + skull(head, fill);
+
+      // ===================================================== ROUND 1 ======
+
+      // --------------------------------------------------------------- A --
+      // THE CUT — a sleeveless battle vest. Authored against the drawn head's
+      // shoulders (32) and translated by the anchor delta, so on a costume
+      // head the whole garment drops 5 with the shoulders and the neckline
+      // never climbs into a beard. The armhole is cut around the wing root,
+      // so the wing reads as the arm coming out of it.
+      const cut = (head, fill) => {
+        const t = `translate(${head.cx - 58} ${head.shoulders - 32})`;
+        return `<g data-apparel="cut" transform="${t}">
+          <path fill="${INK}" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"
+            d="M 30.5 36.5 L 43.5 31.5 L 50.5 39.5 L 57.5 31.5 L 61 34
+               C 63.5 41 63.5 46 61.5 51 L 37 49.5 Z"/>
+          <rect fill="${fill}" x="49.4" y="41.8" width="7.4" height="6.8" rx="1.2"
+                transform="rotate(-8 53.1 45.2)"/>
+        </g>`;
+      };
+
+      // --------------------------------------------------------------- B --
+      // THE V — a flying V slung across the body. Two paths, laid out in the
+      // guitar's own axis and rotated into place, so the neck and the body
+      // stay one instrument. Filled in `bg` and rimmed in the TEAM colour:
+      // over the bird the rim is invisible and it reads as a clean black
+      // shape, and the moment it leaves the silhouette the rim is what keeps
+      // it off the background.
+      const V_ANGLE = -38.5 * (Math.PI / 180);
+      const V_JOINT = { x: 44, y: 40 };
+      const vPath = (points) =>
+        `M ${points
+          .map(([x, y]) => {
+            const c = Math.cos(V_ANGLE);
+            const s = Math.sin(V_ANGLE);
+            return `${(V_JOINT.x + x * c - y * s).toFixed(1)} ${(V_JOINT.y + x * s + y * c).toFixed(1)}`;
+          })
+          .join(" L ")} Z`;
+
+      const V_BODY = vPath([
+        [-3.5, 0], [-11, 14], [-6.5, 17], [0, 8.5], [6.5, 17], [11, 14], [3.5, 0]
+      ]);
+      const V_NECK = vPath([
+        [-1.5, 1], [-1.5, -21], [-2, -26.5], [3.5, -28.5], [5, -23],
+        [1.5, -21], [1.5, 1]
+      ]);
+
+      const flyingV = (head, fill) => {
+        const rim = `fill="${INK}" stroke="${fill}" stroke-width="1.6" stroke-linejoin="round"`;
+        return `<g data-apparel="flying-v">
+          <path ${rim} d="${V_NECK}"/>
+          <path ${rim} d="${V_BODY}"/>
+        </g>`;
+      };
+
+      // --------------------------------------------------------------- C --
+      // THE HORNS — no prop at all: the bird's own near wing, thrown up in
+      // the salute. Team fill, `bg` stroke, exactly like every other part of
+      // the drawing, so it costs no palette and no new material. It rises out
+      // of the wing's shoulder pivot (47,35) and stays left of x=36, which is
+      // where a costume photo's box begins.
+      const horns = (head, fill) => {
+        const limb = `fill="${fill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"`;
+        return `<g data-apparel="horns">
+          <path fill="none" stroke="${INK}" stroke-width="9.5" stroke-linecap="round"
+                d="M 46 38 Q 40 31 32 24"/>
+          <path fill="none" stroke="${fill}" stroke-width="6" stroke-linecap="round"
+                d="M 46 38 Q 40 31 32 24"/>
+          <path ${limb} d="M 26.5 25 C 21.8 21.5 22.3 15 25.8 12.5 L 23.3 4 L 27.8 3 L 30.2 12.3
+            L 33.4 3.6 L 37.2 4.8 L 34.6 15 C 36.2 20.5 31.8 27.5 26.5 25 Z"/>
+        </g>`;
+      };
+
+      // --------------------------------------------------------------- D --
+      // THE CAB — gear on the floor behind the bird, under the tail, where
+      // nothing else of the drawing lives. Immune to the head problem
+      // entirely, and the only candidate that changes the GROUP's silhouette:
+      // a row of birds becomes a backline.
+      const cab = (head, fill) => `
+        <g data-apparel="cab">
+          <rect fill="${fill}" stroke="${INK}" stroke-width="2" rx="2"
+                x="2" y="48" width="21" height="23"/>
+          <rect fill="${INK}" rx="0.9" x="5" y="51" width="15" height="4"/>
+          <circle fill="${fill}" cx="8.5" cy="53" r="1"/>
+          <circle fill="${fill}" cx="12.5" cy="53" r="1"/>
+          <rect fill="${INK}" rx="1" x="5" y="58" width="15" height="11"/>
+        </g>`;
+
+      // -------------------------------------------------------------------
+      const cast = (apparel, fill) => [
+        { fill, apparel, body: "round", comb: "crest", tail: "fan", caption: "drawn head" },
+        { fill, apparel, body: "tall", comb: "mohawk", tail: "plume", caption: "drawn · tall/mohawk" },
+        { fill, apparel, avatarSrc: HEADS.rosi, caption: "costume · rosi" },
+        { fill, apparel, avatarSrc: HEADS.kenny, body: "wide", caption: "costume · kenny" }
+      ];
+
+      // A measured claim instead of an adjective: rasterise the bird at TV
+      // size and count how much of it is still the team's colour.
+      const share = (key) => `<span id="share-${key}">…</span>`;
+
+      const ROUND2 = [
+        candidateCard({
+          title: "1 · SKULL ON THE WING — the team's own emblem, reduced",
+          note:
+            `The systematic answer. The identity kit already gives metal an emblem — skull-hen, in TeamEmblem/EmblemDrawing — and this is that drawing cut from eleven shapes to the four that survive on a 12-unit wing plate: cranium, jaw, two sockets. Dropped on purpose: the three tooth rects (sub-pixel at this size, and a row of pointed light marks is the teeth failure this codebase has hit twice), the primary beak wedge (apparel gets no third hue) and the comb flourishes (they fall off the wing). It sits on the wing because that is the one big uninterrupted plane on the bird and it belongs to the BODY, so a drawn head and a photograph wear it identically. ${share("skull")} — the mark is a tenth of the bird and the colour still owns it. On chrome the white fill has almost no contrast, so the prop is carried by its 2.4 outline and, crucially, by the two ink sockets, which are the only thing on this page that gets STRONGER as the bird gets paler.`,
+          birds: cast(skull, D)
+        }),
+        candidateCard({
+          title: "2 · THE CUT, REDUCED TO ITS EDGES — a garment as a line",
+          note:
+            `The rejected vest with the fill taken out: the same collar notch and cut hem, now a drawn line with the bird's own colour showing through it, plus one sewn patch so something survives the degrade. ${share("cutLine")} — by the measure it is the best-behaved candidate on the page, which is the point of the test. Whether it WORKS is a different question and you should judge it at 76px, not at 4×: a 2.2 line on a 76px bird is two pixels, and what it degrades to is a faint dark contour that can read as a crease in the drawing rather than as a garment. It is here because it is the honest experiment the objection implies, and because if it reads at all it is the cheapest possible answer.`,
+          birds: cast(cutLine, D)
+        }),
+        candidateCard({
+          title: "3 · THE CUFF — a strap on the wing, not on the torso",
+          note:
+            `The smallest thing on the page and the most anatomical: a leather cuff across the wing at the forearm, laid square to the WING's axis rather than to the page, so it bands the limb instead of striping over it. One white keeper, a rectangle. ${share("cuff")} — it barely touches the colour at all. Its honest failure is the other direction: at 76px it is a four-pixel dash, and at parade distance it reads as a dark nick in the wing rather than as a strap. It also does nothing to say METAL specifically — the same shape on the country team would be a watchband.`,
+          birds: cast(cuff, D)
+        }),
+        candidateCard({
+          title: "4 · THE SMALL V — the guitar, off the bench and tucked in",
+          note:
+            `Round 1's flying V at 0.7 scale with its joint moved down the body, so the whole instrument including the headstock is inside the outline and pressed against the bird. Two paths, ink-filled and rimmed in the team colour so the rim vanishes against the body. ${share("smallV")} — a quarter of the mass it had in round 1. It is the one prop in either round that is unambiguously metal without any explanation, and the trade is honest: it is the only dark mass left on the page, so it is the candidate most exposed to the new rule, and at 76px it degrades to a short dark diagonal with a wedge on the end.`,
+          birds: cast(smallV, D)
+        }),
+        candidateCard({
+          title: "1 + 4 · the pairing that does not work — and why it is worth seeing",
+          note:
+            `Pop's round landed on two small marks rather than one big one — a star on the wing and boots on the feet — so the obvious move here was the emblem plus the instrument. ${share("pair")}, which passes the measure comfortably, and it still fails: look at 76px. The bird has exactly ONE large flat plane, the wing, and both props want it, so the guitar's neck runs under the skull and comes out the other side and the two read as one piece of damage rather than as two things. Pop got away with it because boots live on the feet. The finding for anyone else doing this: a second prop has to claim a different ANATOMY, not just a different few units — wing, feet, floor, tail — and metal has only one good plane, so metal gets one mark.`,
+          birds: cast(skullAndV, D)
+        }),
+        candidateCard({
+          title: "colour survival · the skull on chrome and orange",
+          note:
+            "Chrome first — where a white fill has almost no contrast with the bird and the prop is held up by its outline and its two ink sockets — then teamA, which is primary exactly, so the bird's beak, wattle and legs are already the same hue as its body. The skull is white and ink and never the team's colour, so it cannot collide with any of the eight. Watch the wide body too: unlike round 1's vest, nothing here is authored against the body's front edge, so all three body shapes wear it identically.",
+          birds: [
+            { fill: PALETTE.teamD, apparel: skull, caption: "teamD · chrome" },
+            { fill: PALETTE.teamA, apparel: skull, body: "tall", comb: "mohawk", caption: "teamA · orange" },
+            { fill: PALETTE.teamA, apparel: skull, avatarSrc: HEADS.rob, caption: "teamA · costume · rob" },
+            { fill: PALETTE.teamD, apparel: skull, avatarSrc: HEADS.sara, body: "wide", caption: "chrome · costume · sara" },
+            { fill: PALETTE.teamC, apparel: skull, body: "wide", caption: "teamC · lime" }
+          ]
+        })
+      ];
+
+      const VERDICT2 = `
+        <section class="cell">
+          <h2>verdict · round 2</h2>
+          <p class="note">
+            <strong>Ship 1 · SKULL ON THE WING, on its own.</strong> It is the answer that costs
+            the team nothing: four shapes on the one flat plane the bird has, it is the emblem the
+            identity kit already says metal <em>is</em>, and it leaves the colour holding the bird.
+            It is also the only prop on either page that gets easier as the bird gets paler — its
+            two ink sockets do not care what the fill is, so chrome, the worst colour in the set,
+            is where it reads best. And it is the same systematic move pop's round made, which is
+            the real argument: if metal and pop both wear their kit emblem on the wing, the
+            identity kit starts paying for itself and the next genre is a lookup rather than a
+            design round.
+          </p>
+          <p class="note">
+            <strong>Where I push back.</strong> Two of the three diagnoses are exactly right — the
+            mass and the sticker — and the measured numbers back the first one hard. The third,
+            "it swallows the wing", is right about the vest and in direct tension with the fix:
+            the wing is also the only big flat plane a mark can live on, and it is what made pop's
+            round work. So the rule I have actually applied is narrower than "leave the wing
+            alone": a mark may SIT on the wing, but it may not cover the wing's own edges — the
+            leading curve and the three feather tips have to stay legible around it, which is why
+            the skull is 12 units and not 18. Worth checking that at 76px, because it is the one
+            judgement call in the recommendation. The other thing worth saying: the dominance rule
+            has a loophole, and the horns from round 1 sit in it — a prop drawn in the TEAM's own
+            colour adds mass without costing any colour at all. That is a real direction and it is
+            still, correctly, a cast pose rather than apparel.
+          </p>
+          <p class="note">
+            <strong>2, 3 and the pairing are the honest negatives</strong>, and they are the part
+            of this page worth keeping. The outlined vest scores best of anything on the new
+            measure and still fails, which is the useful finding twice over: a garment cannot be a
+            line at this size — two pixels of contour reads as a crease — and worse, a line prop
+            has to compete with the lines the bird already has, so it tangles with the wing's own
+            outline and reads as a drawing error. That closes the "reduce the vest further"
+            branch: the vest is finished, not pending. The cuff is the least invasive idea on the
+            page and says nothing about metal — the same strap on a country bird is a watchband.
+            The pairing fails for a reason worth passing to the other genres: the bird has one
+            good plane and two props both want it.
+          </p>
+          <p class="note">
+            <strong>4 · THE SMALL V is the alternative, not the second layer.</strong> If the room
+            should read "metal" with no interpretation at all, the guitar is the only prop in
+            either round that does it without explanation, and at 0.7 scale it leaves 94% of the
+            colour standing. It is second because it is the only dark mass left on the page — the
+            exact failure mode the vest was rejected for, just smaller — and because it lies
+            across the wing's feather tips, where it has the drawing's own lines to fight.
+          </p>
+        </section>`;
+
+      const DIVIDER = `
+        <section class="cell">
+          <h2>round 1 · the record (superseded)</h2>
+          <p class="note">
+            Everything below is round 1, kept as it was. It is the case for the battle vest and
+            three alternatives to it, and the reason it is still here is that the failure is the
+            useful part: the vest is the shape that proved a prop can win a bird's silhouette away
+            from its team colour, and the numbers now printed against it are what set the rule for
+            round 2.
+          </p>
+        </section>`;
+
+      const CARDS = [
+        candidateCard({
+          title: "before · the studded collar (shipping tonight)",
+          note:
+            "The prop being replaced. Two shapes — a dark band on the shoulders, five round studs — and at 76px only the band survives, which is the trouble: a dark crescent under a chin is a necklace. On the two costume birds it is also the ONLY thing they are wearing, because every other metal-adjacent prop crosses a face and gets dropped.",
+          birds: cast(SHIPPING_APPAREL.collar, D)
+        }),
+        candidateCard({
+          title: "A · THE CUT — the sleeveless battle vest",
+          note:
+            "Clothing, not jewellery. Two shapes: an ink panel with a notched collar and a straight cut-off hem, and one team-colour patch sewn on it. The straight edges are the whole trick — a body is round and a garment is cut, so a shape with hard lines across a round bird reads as fabric where a soft blob reads as a shadow. It runs from the back of the shoulders to the front outline, and the wing comes out from under the hem, which is what makes it sleeveless rather than a bib. It hangs off the shoulders anchor, so it drops the same 5 a costume head's shoulders do and never reaches a jaw. At 76px it degrades to a dark torso with a bright square on it — a dressed bird, which is the right thing to lose down to.",
+          birds: cast(cut, D)
+        }),
+        candidateCard({
+          title: "B · THE V — a flying V slung across the body",
+          note:
+            "A prop the bird carries rather than wears. Two paths authored in the guitar's own axis and rotated into place, so the neck and the body can never disagree. Ink-filled and rimmed in the TEAM colour, which is the trick worth stealing: over the bird the rim is the same hue as the body and vanishes, and the moment the headstock clears the back it is the only thing holding the black off a dark stage. It is the one candidate here that needs no anchor at all — it hangs on the body, and the body is identical under both head types; what it has to respect instead is the costume photo's box, which starts at x=36, and the headstock clears it at 28. At 76px it degrades to a hard diagonal with a wedge on the end, and nothing else in the cast has a diagonal.",
+          birds: cast(flyingV, D)
+        }),
+        candidateCard({
+          title: "C · THE HORNS — the wing itself, thrown up",
+          note:
+            "Not apparel at all: the near wing raised in the salute, drawn in the bird's own team fill and bg stroke, so it costs no palette and no new material. The whole gesture lives in the anatomy and it changes the outline above the back, which is the loudest thing a 76px bird can do. The honest cost: the wing is a rig part that flaps in idle, walk and dance, so shipping this means a POSE in the cast, not a prop in Apparel — a static arm drawn over a rotating wing would detach the moment the music starts.",
+          birds: cast(horns, D)
+        }),
+        candidateCard({
+          title: "D · THE CAB — a half-stack on the floor",
+          note:
+            "Apparel taken off the bird completely: a speaker cabinet parked on the floor under the tail, where nothing else of the drawing lives. Team-coloured box, ink control panel and grille, two knobs — the light frame around a dark grille is what stops it reading as a television, which the first pass did. It is immune to the head problem by construction and it is the only candidate that changes the GROUP's silhouette: a lobby parade of these is a backline. A jack cable to the wing was tried and cut — it is a hairline at TV scale and it disappeared into the stage. Its real risk is the parade huddle, where birds overlap: six cabs in half a floor is a wall of boxes, and one bird alone looks like it is moving house.",
+          birds: cast(cab, D)
+        }),
+        candidateCard({
+          title: "colour survival · THE CUT on all the hard ones",
+          note:
+            "Chrome first, then teamA — the orange that collides with primary, where the beak, wattle and legs are the same hue as the body. The vest is carried by bg ink and reads at full contrast on both; the patch is the team colour itself, so on orange it becomes an orange patch on black beside orange legs and still separates, and on chrome it is the brightest thing on the bird. Nothing here needs a hue the bird does not already own. Note the wide body (sara, and the lime bird): the panel is authored to the round body's front edge, so on a wide one it stops short and leaves a stripe of team colour in front of it — which happens to read as the vest hanging open, but it is worth a look before this ships.",
+          birds: [
+            { fill: PALETTE.teamD, apparel: cut, caption: "teamD · chrome" },
+            { fill: PALETTE.teamA, apparel: cut, body: "tall", comb: "mohawk", caption: "teamA · orange" },
+            { fill: PALETTE.teamA, apparel: cut, avatarSrc: HEADS.rob, caption: "teamA · costume · rob" },
+            { fill: PALETTE.teamD, apparel: cut, avatarSrc: HEADS.sara, body: "wide", caption: "chrome · costume · sara" },
+            { fill: PALETTE.teamC, apparel: cut, body: "wide", caption: "teamC · lime" }
+          ]
+        }),
+        candidateCard({
+          title: "colour survival · THE V on chrome and orange",
+          note:
+            "The runner-up on the same two colours. The ink body holds everywhere; the team-colour rim is the whole trick — invisible over the bird, and the only thing separating the guitar from the stage where it leaves the silhouette.",
+          birds: [
+            { fill: PALETTE.teamD, apparel: flyingV, caption: "teamD · chrome" },
+            { fill: PALETTE.teamA, apparel: flyingV, body: "tall", comb: "mohawk", caption: "teamA · orange" },
+            { fill: PALETTE.teamA, apparel: flyingV, avatarSrc: HEADS.rob, caption: "teamA · costume · rob" },
+            { fill: PALETTE.teamD, apparel: flyingV, avatarSrc: HEADS.sara, body: "wide", caption: "chrome · costume · sara" }
+          ]
+        })
+      ];
+
+      const VERDICT = `
+        <section class="cell">
+          <h2>verdict · round 1 (superseded — see round 2 at the top)</h2>
+          <p class="note">
+            <strong>Ship A, THE CUT.</strong> It is the only candidate that answers the actual
+            complaint — the team was wearing a trinket, and now it is wearing clothes. It is two
+            shapes, it lives entirely on the body, it hangs off the shoulders anchor so the drawn
+            bird and the costume bird wear the same garment, and on a costume head it is the one
+            prop in the set that loses nothing at all. It degrades to a dark torso with a bright
+            patch, which still says "dressed" at 3% of a TV, where the collar degrades to a bare
+            dark bar and says "beads". The thing that took three passes to learn: the vest only
+            started reading as a garment when its edges went <em>straight</em>. A rounded dark
+            shape on a round bird is a shadow; a hard collar notch and a flat hem is cloth.
+          </p>
+          <p class="note">
+            <strong>B, THE V, is the one to keep on the bench</strong> — it is the funnier bird and
+            the strongest silhouette of the four, and it is the natural second layer once the vest
+            is in: a bird in a cut-off holding a flying V is a metal band, and each of them alone
+            is a costume. Kept second because a carried object wants to break the outline to read as
+            carried while the house rule keeps props inside it — so this one is tuned right to the
+            edge of that rule, with only the headstock clearing the bird's back, and it is the
+            candidate most likely to need retuning on the other two body shapes.
+          </p>
+          <p class="note">
+            <strong>C is right and lives somewhere else.</strong> The horns should exist, but as a
+            cast POSE, not as apparel — the wing is a rig part that already flaps, and a prop drawn
+            over it detaches on the first beat. Worth its own ticket.
+            <strong>D is the fun one and the risky one:</strong> immune to every head problem,
+            deadly in the lobby huddle where six birds overlap in half a floor.
+          </p>
+          <p class="note">
+            <strong>Rejected outright:</strong> anything shaped like a band under the chin. A collar
+            with spikes, a choker, a chain of studs, a bullet belt at the neck — all of them are the
+            prop the user already turned down, and the design record shows that shape being rescued
+            twice and failing twice. Also rejected: a drawn headbanger mane, which on a costume head
+            is a second head of hair beside a photograph of someone's actual hair.
+          </p>
+        </section>`;
+
+      document.getElementById("root").innerHTML =
+        ROUND2.join("") + VERDICT2 + DIVIDER + CARDS.join("") + VERDICT;
+
+      // ------------------------------------------------- the measurement --
+      // Draw one bird into a canvas at TV size and count how many of its
+      // opaque pixels are still the team's colour. Measured on the DRAWN
+      // head, because an <img> of an SVG will not load the costume head's
+      // external <image> — and the drawn head is the harsher test anyway, as
+      // a costume head hands the bird 44 units of photograph that no prop of
+      // ours is allowed to touch.
+      const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+
+      const measureShare = (apparel, fill) =>
+        new Promise((resolve) => {
+          const markup = birdMarkup({ fill, apparel, body: "round", comb: "crest", tail: "fan" });
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 72" width="160" height="144">${markup}</svg>`;
+          const image = new Image();
+          image.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = 160;
+            canvas.height = 144;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(image, 0, 0);
+            const { data } = ctx.getImageData(0, 0, 160, 144);
+            const [r, g, b] = rgb(fill);
+            let team = 0;
+            for (let i = 0; i < data.length; i += 4) {
+              if (data[i + 3] < 200) continue;
+              const distance =
+                Math.abs(data[i] - r) + Math.abs(data[i + 1] - g) + Math.abs(data[i + 2] - b);
+              if (distance < 45) team += 1;
+            }
+            resolve(team);
+          };
+          image.onerror = () => resolve(null);
+          image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+        });
+
+      const MEASURED = [
+        ["collar", SHIPPING_APPAREL.collar, "bare"],
+        ["cut", cut, "bare"],
+        ["skull", skull, "phrase"],
+        ["cutLine", cutLine, "phrase"],
+        ["cuff", cuff, "phrase"],
+        ["smallV", smallV, "phrase"],
+        ["pair", skullAndV, "phrase"]
+      ];
+
+      // Every number is relative to the same bird wearing nothing, so the
+      // belly shade, the legs and the outline — which are not colour either,
+      // and are the same in every row — cancel out of the comparison.
+      const bare = await measureShare(undefined, D);
+      const nakedNode = document.getElementById("share-naked");
+      if (nakedNode) nakedNode.textContent = "100% by definition";
+
+      await Promise.all(
+        MEASURED.map(async ([key, apparel, form]) => {
+          const value = await measureShare(apparel, D);
+          const node = document.getElementById(`share-${key}`);
+          if (!node) return;
+          if (value === null || !bare) {
+            node.textContent = "unmeasured";
+            return;
+          }
+          const kept = Math.round((value / bare) * 100);
+          node.textContent =
+            form === "bare" ? `${kept}%` : `It leaves ${kept}% of the bird's colour standing`;
+        })
+      );
+    </script>
+  </body>
+</html>

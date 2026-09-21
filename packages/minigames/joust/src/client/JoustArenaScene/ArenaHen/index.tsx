@@ -7,7 +7,8 @@ import {
   CharacterFigure,
   resolveCharacterFillClassName,
   resolvePlayerAppearance,
-  resolveTeamApparel
+  resolveTeamApparel,
+  resolveTeamSilhouette
 } from "@wingnight/cast";
 
 import * as styles from "./styles.js";
@@ -77,6 +78,7 @@ const ArenaHenFigure = ({
         <CharacterFigure
           appearance={appearance}
           apparel={resolveTeamApparel({ genre: figure.genre ?? undefined })}
+          silhouette={resolveTeamSilhouette({ genre: figure.genre ?? undefined })}
         />
       </g>
     </g>

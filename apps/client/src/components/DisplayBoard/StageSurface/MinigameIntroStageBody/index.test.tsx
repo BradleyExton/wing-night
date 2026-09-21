@@ -39,7 +39,7 @@ test("renders the team-first reveal with the genre kit, the lineup and the minig
   assert.match(html, /team-enter team-enter-slam/);
   assert.match(html, /data-team-lineup/);
   assert.equal((html.match(/data-lineup-member="/g) ?? []).length, 3);
-  assert.match(html, /data-character-apparel="collar"/);
+  assert.match(html, /data-character-silhouette="spiky"/);
   assert.match(html, /playing/);
   assert.match(html, /TRIVIA/);
 });

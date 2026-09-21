@@ -265,6 +265,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
                 <CharacterFigure
                   appearance={runner.appearance}
                   apparel={runner.apparel}
+                  silhouette={runner.silhouette}
                   pose="walk"
                 />
               </g>

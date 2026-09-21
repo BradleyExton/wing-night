@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>APPAREL — what ships tonight</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>APPAREL — the four props as they ship tonight</h1>
+      <p class="lede">
+        The reference every genre prototype is measured against. Drawn by
+        <code>apparel-harness.js</code>, which transcribes
+        <code>packages/cast/src/Character</code> exactly — same paths, same head anchors, same
+        palette — so a candidate page and this page are the same bird. Each prop is shown on a
+        drawn head and on a costume head, at 76px (what one bird is on a 1080p TV), 2× and 4×.
+        Note what a costume head does: anything that crosses the face is dropped, so a real
+        player on the metal team wears the collar and nothing else.
+      </p>
+      <div id="root"></div>
+    </main>
+    <script type="module">
+      import { PALETTE, HEADS, SHIPPING_APPAREL, candidateCard } from "./apparel-harness.js";
+
+      const ROWS = [
+        {
+          title: "metal · Molten Metal — studded collar",
+          note: "teamD (chrome). A dark band across the shoulders with five round studs. This is the prop being replaced: on a costume head it is the ONLY thing the team wears, and a dark crescent slung under a chin reads as a necklace rather than as metal.",
+          apparel: SHIPPING_APPAREL.collar,
+          fill: PALETTE.teamD
+        },
+        {
+          title: "pop · Spice Girls — star shades",
+          note: "teamH. Two five-point stars on the eye line. Crosses the face, so a player with a generated head wears nothing at all.",
+          apparel: SHIPPING_APPAREL.shades,
+          fill: PALETTE.teamH
+        },
+        {
+          title: "country · Honky Tonk Heat — hat",
+          note: "teamE. A white brim with a team-coloured band, perched 4 under the top of the head. Also crosses the face, so it never reaches a costume head.",
+          apparel: SHIPPING_APPAREL.hat,
+          fill: PALETTE.teamE
+        },
+        {
+          title: "disco · Disco Inferno — chain and medallion",
+          note: "teamB. A hairline chain and a 4.6 disc on the chest. Hangs below the chin, so it survives onto a costume head.",
+          apparel: SHIPPING_APPAREL.medallion,
+          fill: PALETTE.teamB
+        }
+      ];
+
+      document.getElementById("root").innerHTML = ROWS.map(({ title, note, apparel, fill }) =>
+        candidateCard({
+          title,
+          note,
+          birds: [
+            { fill, apparel, body: "round", comb: "crest", tail: "fan", caption: "drawn head" },
+            { fill, apparel, body: "tall", comb: "mohawk", tail: "plume", caption: "drawn · tall/mohawk" },
+            { fill, apparel, avatarSrc: HEADS.rosi, caption: "costume · rosi" },
+            { fill, apparel, avatarSrc: HEADS.rob, body: "wide", caption: "costume · rob" }
+          ]
+        })
+      ).join("");
+    </script>
+  </body>
+</html>

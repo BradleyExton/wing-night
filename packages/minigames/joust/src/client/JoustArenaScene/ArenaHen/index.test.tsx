@@ -50,10 +50,11 @@ test("does paint the bird in its own team's colour", () => {
   assert.match(render(), /class="text-team[A-H]"/);
 });
 
-// The arena bird wears a generated head, so it only ever gets the apparel that
-// hangs below one — nothing perches on a player's face (cast `CharacterFigure`).
-test("does wear the team's genre apparel", () => {
-  assert.match(render(), /data-character-apparel="collar"/);
+// The arena bird wears a generated head, so nothing may perch on its face
+// (cast `CharacterFigure`) — which is most of why a genre is carried by the
+// bird's own outline now rather than by a prop.
+test("does wear the team's genre shape", () => {
+  assert.match(render(), /data-character-silhouette="spiky"/);
 });
 
 // The two halves of standing a bird on a pin: WHERE (the outer matrix, built from the two body

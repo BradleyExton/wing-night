@@ -72,6 +72,8 @@ type TeamTheme = {
   texture: TextureId | null;    // "lightning" | "confetti" | "woodgrain" | "lightdots" | ...
   entrance: EntranceId;         // "slam" | "bounce" | "swing" | "spin" | "rip" | "drop" | "glitch" | "beat"
   apparel: CharacterApparel | undefined; // folded in from the cast's resolveTeamApparel
+  silhouette: CharacterSilhouette | undefined; // ...and resolveTeamSilhouette
+  dance: CharacterDance | undefined; // ...and resolveTeamDance
 };
 ```
 
@@ -86,8 +88,11 @@ the genre kit, an authored `color` or the collision pass. The hash survives only
 `resolveCharacterFillClassName`, for birds drawn where no seating list is in reach. The standings footer sits beside
 the stage rather than inside it, so `DisplayBoard` builds the same map once more for it. `resolveTeamApparel` stays in the cast rather than being deleted: JOUST
 dresses its lane birds from a display-view genre string, and the theme reads the same function, so
-there is still one apparel table. The vocabulary is `hat`, `collar`, `shades`, `medallion` — the
-last was `lapels` until the 2026-09-19 audit; see `DESIGN.md` §2.8's apparel bullet for the two
+there is still one apparel table. The vocabulary is `hat`, `shades`, `medallion` — `lapels`
+became `medallion` in the 2026-09-19 audit and `collar` was deleted on 2026-09-21, when most
+genres stopped wearing props and started being SHAPED instead (`resolveTeamSilhouette`, and
+`DESIGN.md` §2.8's "Genre carriers"). A genre states itself once: it is shaped, or it moves, or
+it wears something, never two of the three. See `DESIGN.md` §2.8's apparel bullet for the
 rules that redrawing turned up. `tintClassName` on the colour variant sets the `--tint` custom
 property every wordmark treatment and texture keys off, which is how a component stays free of
 inline styles.

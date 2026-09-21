@@ -9,6 +9,11 @@ export const defaultFill = "text-mutedWarm";
 
 export const silhouette = "fill-current stroke-bg stroke-2 [stroke-linejoin:round]";
 
+// The same ink with the corners left sharp, for the `spiky` silhouette. The
+// house round join blunts a point by a unit, and at 76px a unit IS the point —
+// this is the one place the line style bends, and it bends by one word.
+export const silhouetteMitered = "fill-current stroke-bg stroke-2 [stroke-linejoin:miter]";
+
 // The one shade the bird gets: the outline ink at a fifth, over its own
 // colour, so a belly reads as round without a second hue.
 export const shade = "fill-bg/20";

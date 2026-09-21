@@ -1,7 +1,9 @@
 import {
   resolveHashedTeamColorToken,
   resolveTeamApparel,
-  resolveTeamColorVariantByToken
+  resolveTeamColorVariantByToken,
+  resolveTeamDance,
+  resolveTeamSilhouette
 } from "@wingnight/cast";
 import {
   resolveGenreKey,
@@ -181,7 +183,9 @@ const buildTeamTheme = (team: Team, colorToken: TeamColorToken): TeamTheme => {
     emblem: kit.emblem,
     texture: kit.texture,
     entrance: kit.entrance,
-    apparel: resolveTeamApparel(team)
+    apparel: resolveTeamApparel(team),
+    silhouette: resolveTeamSilhouette(team),
+    dance: resolveTeamDance(team)
   };
 };
 

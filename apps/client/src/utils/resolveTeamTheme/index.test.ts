@@ -26,7 +26,8 @@ test("does expand a genre to its whole kit when the team names one", () => {
   assert.equal(theme.emblem, "skull-hen");
   assert.equal(theme.texture, "lightning");
   assert.equal(theme.entrance, "slam");
-  assert.equal(theme.apparel, "collar");
+  assert.equal(theme.apparel, undefined);
+  assert.equal(theme.silhouette, "spiky");
 });
 
 test("does fold the pack's four genres into the kits the board decided", () => {
@@ -38,12 +39,23 @@ test("does fold the pack's four genres into the kits the board decided", () => {
   ]);
 
   assert.deepEqual(
-    [...themes.values()].map((theme) => [theme.colorToken, theme.wordmark, theme.emblem, theme.texture, theme.entrance, theme.apparel]),
+    [...themes.values()].map((theme) => [
+      theme.colorToken,
+      theme.wordmark,
+      theme.emblem,
+      theme.texture,
+      theme.entrance,
+      theme.apparel,
+      theme.silhouette,
+      theme.dance
+    ]),
     [
-      ["teamD", "chrome", "skull-hen", "lightning", "slam", "collar"],
-      ["teamH", "candy", "star-mic", "confetti", "bounce", "shades"],
-      ["teamE", "rope", "hat-horseshoe", "woodgrain", "swing", "hat"],
-      ["teamB", "neon", "mirrorball", "lightdots", "spin", "medallion"]
+      // One carrier each: three teams are shaped, and pop — the origin of the
+      // shape axis — is the one that moves and wears something instead.
+      ["teamD", "chrome", "skull-hen", "lightning", "slam", undefined, "spiky", undefined],
+      ["teamH", "candy", "star-mic", "confetti", "bounce", "shades", undefined, "bounce"],
+      ["teamE", "rope", "hat-horseshoe", "woodgrain", "swing", undefined, "broody", undefined],
+      ["teamB", "neon", "mirrorball", "lightdots", "spin", undefined, "preener", undefined]
     ]
   );
 });

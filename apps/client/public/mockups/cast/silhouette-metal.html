@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SILHOUETTE — metal</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+    <style>
+      .ladder { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; }
+      .ladder .col { text-align: center; }
+      .ladder .col h3 { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+        color: rgba(255,255,255,.45); margin: 0 0 .4rem; font-weight: 600; }
+      .flock .sizes { gap: .75rem; }
+      .warn { color: #f97316; }
+      .cost { color: #fff; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>SILHOUETTE — metal · a spiky bird (teamD, chrome)</h1>
+      <p class="lede">
+        Not a bird wearing metal. A bird whose own anatomy is hardcore. This page is a
+        <strong>ladder, not a menu</strong>: four doses of the same idea, cheapest first, so the
+        question is not "which spiky bird" but "how much spiky bird do you want to pay for".
+        Everything is drawn in the real 80×72 box with the real foot, head centre and part pivots
+        (<code>geometry/index.ts</code>), the real <code>bg</code> 2-unit stroke and the real
+        <code>primary</code> legs, so these birds sit honestly beside the four apparel pages.
+        <br /><br />
+        <strong>The cost is always the same currency:</strong> which of
+        <code>COMB_PATHS</code>, <code>TAIL_PATHS</code>, <code>CHARACTER_WING_PATH</code>,
+        <code>BODY_PATHS</code>, <code>BELLY_SHADE_PATHS</code> and <code>NECK_PATH</code> the
+        dose has to fork per genre, and how much of <code>resolvePlayerAppearance</code>'s
+        per-player variation the genre eats when it does. That second number turned out to be
+        zero for doses 1 and 2 and one bit for dose 3 — see the flock card, which is where the
+        page argues with its own first draft.
+        <br /><br />
+        <strong>Read the 76px row and nothing else, first.</strong> That is one bird on a 1080p
+        TV. Everything below it is evidence for why the 76px row looks the way it does.
+      </p>
+      <div id="root"></div>
+    </main>
+
+    <script type="module">
+      import { PALETTE, HEADS, SHIPPING_APPAREL } from "./apparel-harness.js";
+
+      const INK = PALETTE.bg;
+      const S = `stroke="${INK}" stroke-width="2" stroke-linejoin="round"`;
+      const D = PALETTE.teamD;
+
+      // ===================================================== the shipping bird ==
+      // Transcribed from packages/cast/src/Character/CharacterFigure/index.tsx.
+      // Copied rather than imported because this round VARIES these paths and the
+      // harness is shared with four other pages.
+
+      const DRAWN_HEAD = { cx: 58, cy: 20, r: 12 };
+      const COSTUME_HEAD_HEIGHT = 44;
+      const DRAWN_HEAD_ANCHORS = { cx: 58, top: 8, eyeY: 18, chin: 32, shoulders: 32 };
+      const COSTUME_HEAD_ANCHORS = { cx: 58, top: -12, eyeY: 6, chin: 32, shoulders: 37 };
+      const PIVOTS = { legFar: { x: 44, y: 57 }, legNear: { x: 32, y: 57 } };
+      const perchTransform = (cx, baseY) => `translate(${cx - 56} ${baseY - 13})`;
+
+      const STOCK = {
+        tail: {
+          fan: "M 22 46 C 10 47 2 41 0 30 C 6 39 14 42 26 41 Z M 22 41 C 11 40 3 33 2 20 C 9 31 15 36 25 36 Z M 24 36 C 14 32 8 24 11 10 C 14 25 19 30 28 31 Z",
+          plume: "M 24 36 C 10 30 2 16 12 2 C 9 19 17 28 30 32 Z M 22 43 C 8 41 0 28 6 16 C 9 31 17 37 28 38 Z"
+        },
+        body: {
+          round: "M 16 42 C 16 28 32 22 50 27 C 64 31 67 44 61 55 C 53 65 30 66 21 58 C 16 54 16 48 16 42 Z",
+          tall: "M 19 42 C 17 24 33 19 50 25 C 63 30 63 47 58 57 C 52 66 30 66 23 59 C 19 55 19 49 19 42 Z",
+          wide: "M 11 45 C 11 30 30 24 52 28 C 66 32 69 45 63 55 C 55 65 26 67 16 59 C 11 55 11 50 11 45 Z"
+        },
+        belly: {
+          round: "M 22 56 C 30 64 52 64 60 54 C 56 66 30 68 22 56 Z",
+          tall: "M 24 57 C 32 64 50 64 57 56 C 52 67 30 67 24 57 Z",
+          wide: "M 17 57 C 28 66 54 66 62 54 C 56 67 26 69 17 57 Z"
+        },
+        comb: {
+          crest: "M 47 13 C 46 5 52 3 54 9 C 55 2 61 2 62 8 C 63 4 68 5 66 13 Z",
+          mohawk: "M 50 13 C 51 4 58 -2 68 2 C 61 3 62 9 64 13 Z"
+        },
+        wing:
+          "M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 Q 28 50 31 54 Q 35 49 38 53 Q 42 48 45 51 C 49 46 51 40 47 35 Z",
+        neck: "M 45 33 C 47 24 52 17 60 15 L 68 25 C 63 28 60 34 60 40 Z"
+      };
+
+      // ========================================================= DOSE 1 =======
+      // The comb and the tail. The two parts that already vary per player, so the
+      // change is two entries in two lookup tables and NOTHING else in the rig
+      // moves. Every spike is a straight segment of the existing outline — the
+      // 2-unit bg stroke follows it, so the SILHOUETTE stays spiky even where the
+      // fill has been squeezed out of the point by its own hem.
+
+      const SPIKE_COMB = {
+        // Four teeth where the crest's three soft lobes were. Same footprint
+        // (x 46–67, base y 13), same perch, twice the point count.
+        crest: "M 46 13 L 49 3 L 52 9 L 56 0 L 60 8 L 63 2 L 67 13 Z",
+        // The mohawk's single backswept lobe, cut into a swept triple horn.
+        mohawk: "M 50 13 L 55 -1 L 58 7 L 68 -1 L 63 9 L 65 13 Z"
+      };
+
+      const SPIKE_TAIL = {
+        // Three barbed spears on the fan's own three axes. Each is four points:
+        // root-top, tip, ONE barb pushed clear of the chord, root-bottom. One
+        // barb, not three — see the degrade card; a second barb is invisible.
+        fan: "M 26 41 L 0 28 L 8 43 L 22 48 Z M 25 36 L 1 16 L 7 32 L 22 41 Z M 28 31 L 10 6 L 14 25 L 24 36 Z",
+        plume: "M 30 32 L 12 1 L 9 19 L 24 36 Z M 28 38 L 5 15 L 5 31 L 22 43 Z"
+      };
+
+      const DOSE1 = { ...STOCK, comb: SPIKE_COMB, tail: SPIKE_TAIL };
+
+      // ========================================================= DOSE 2 =======
+      // Plus the feather edges. The wing's three Q-curve scallops become straight
+      // saw teeth, and the body's back — the one stretch of its outline the wing
+      // does not cover — becomes a ridge. Notch depth is 8 units, which is ~8px at
+      // TV size, because 4 was not enough (see the degrade card).
+
+      const SAW_WING =
+        "M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 L 27 47 L 31 55 L 34 46 L 38 54 L 41 45 L 45 51 C 49 46 51 40 47 35 Z";
+
+      const RIDGE_BODY = {
+        round: "M 16 42 L 17 31 L 21 36 L 26 22 L 31 33 L 37 21 L 43 31 L 50 27 C 64 31 67 44 61 55 C 53 65 30 66 21 58 C 16 54 16 48 16 42 Z",
+        tall: "M 19 42 L 20 30 L 24 35 L 29 22 L 34 32 L 40 21 L 45 30 L 50 25 C 63 30 63 47 58 57 C 52 66 30 66 23 59 C 19 55 19 49 19 42 Z",
+        wide: "M 11 45 L 13 33 L 17 38 L 22 24 L 28 35 L 34 23 L 41 32 L 52 28 C 66 32 69 45 63 55 C 55 65 26 67 16 59 C 11 55 11 50 11 45 Z"
+      };
+
+      const DOSE2 = { ...DOSE1, wing: SAW_WING, body: RIDGE_BODY };
+
+      // ========================================================= DOSE 3 =======
+      // The whole bird. ONE body for the whole team — leaner through the rump,
+      // chest driven forward, the back ridge climbing from the tail root to the
+      // shoulder instead of doming over it — plus an angular neck that drops the
+      // head into the shoulders so the bird reads hunched without the head
+      // actually moving (it cannot: CHARACTER_HEAD_CENTRE is load-bearing).
+      //
+      // The ridge deliberately STOPS at y 26 by x 49. A spike any higher there is
+      // inside the drawn head's circle and, worse, inside the costume photo's
+      // alpha, where it pokes through a gap in someone's hair.
+
+      const LEAN_BODY =
+        "M 19 45 L 21 33 L 26 39 L 30 21 L 35 34 L 41 19 L 46 31 L 50 25 C 62 27 68 35 67 44 C 66 52 58 59 46 62 C 35 65 24 60 19 51 Z";
+      const LEAN_BELLY = "M 26 55 C 34 62 50 61 62 50 C 58 62 32 65 26 55 Z";
+      const LEAN_NECK = "M 45 35 L 49 21 L 59 14 L 69 24 C 64 28 61 33 62 42 Z";
+
+      const DOSE3 = {
+        ...DOSE2,
+        body: { round: LEAN_BODY, tall: LEAN_BODY, wide: LEAN_BODY },
+        belly: { round: LEAN_BELLY, tall: LEAN_BELLY, wide: LEAN_BELLY },
+        neck: LEAN_NECK
+      };
+
+      // ========================================================= DOSE 4 =======
+      // Too far, on purpose. Horns instead of a comb, five blades instead of three,
+      // spikes on the belly where a chicken's belly is, and — deliberately — a
+      // spiked ruff under the chin, which is the teeth failure this codebase has
+      // hit twice, reproduced here so the line is visible rather than described.
+
+      const DOSE4 = {
+        tail: {
+          fan: "M 26 41 L -2 26 L 8 42 L 22 48 Z M 25 36 L -1 12 L 7 31 L 22 42 Z M 27 32 L 5 2 L 12 20 L 24 36 Z M 28 29 L 19 -3 L 22 16 L 27 30 Z",
+          plume: "M 30 32 L 10 -3 L 10 18 L 24 36 Z M 28 38 L 1 12 L 4 30 L 22 43 Z"
+        },
+        body: {
+          round: "M 15 50 L 18 34 L 23 40 L 28 24 L 34 32 L 40 21 L 45 30 L 50 24 C 64 27 70 38 67 48 L 61 46 L 60 56 L 53 51 L 49 62 L 42 55 L 36 65 L 30 55 L 23 61 L 20 52 Z",
+          tall: "M 15 50 L 18 34 L 23 40 L 28 24 L 34 32 L 40 21 L 45 30 L 50 24 C 64 27 70 38 67 48 L 61 46 L 60 56 L 53 51 L 49 62 L 42 55 L 36 65 L 30 55 L 23 61 L 20 52 Z",
+          wide: "M 15 50 L 18 34 L 23 40 L 28 24 L 34 32 L 40 21 L 45 30 L 50 24 C 64 27 70 38 67 48 L 61 46 L 60 56 L 53 51 L 49 62 L 42 55 L 36 65 L 30 55 L 23 61 L 20 52 Z"
+        },
+        belly: {
+          round: "M 26 52 C 34 58 50 58 58 50 C 54 60 30 61 26 52 Z",
+          tall: "M 26 52 C 34 58 50 58 58 50 C 54 60 30 61 26 52 Z",
+          wide: "M 26 52 C 34 58 50 58 58 50 C 54 60 30 61 26 52 Z"
+        },
+        comb: {
+          crest: "M 44 13 L 47 -6 L 50 5 L 54 -11 L 58 3 L 62 -9 L 65 5 L 69 13 Z",
+          mohawk: "M 44 13 L 47 -6 L 50 5 L 54 -11 L 58 3 L 62 -9 L 65 5 L 69 13 Z"
+        },
+        wing:
+          "M 47 35 C 38 29 22 32 18 44 C 17 50 20 54 23 57 L 27 43 L 32 58 L 36 42 L 41 57 L 44 41 L 48 50 C 51 45 52 39 47 35 Z",
+        neck: "M 43 35 L 49 18 L 60 13 L 70 25 C 63 30 59 34 61 42 Z"
+      };
+
+      // The ruff, kept OFF the kit and passed as an overlay, so it can be shown
+      // alone as the failure it is.
+      const spikeRuff = (head, fill) => {
+        const { cx, shoulders: y } = head;
+        const d = [
+          `M ${cx - 13} ${y + 11}`,
+          `L ${cx - 10} ${y}`,
+          `L ${cx - 6.5} ${y + 9}`,
+          `L ${cx - 3} ${y - 1}`,
+          `L ${cx + 0.5} ${y + 9}`,
+          `L ${cx + 4} ${y - 1}`,
+          `L ${cx + 7.5} ${y + 9}`,
+          `L ${cx + 11} ${y}`,
+          `L ${cx + 13} ${y + 11}`,
+          "Z"
+        ].join(" ");
+        return `<path fill="${fill}" ${S} d="${d}"/>`;
+      };
+
+      // ==================================================== the metal emblem ==
+      // apparel-metal.html round 2 candidate 1 — the winner of the apparel round.
+      // Cranium, jaw, two sockets on the wing plate. Reused verbatim; the only
+      // change is the optional 3-unit lift, because the saw wing's notches climb
+      // to y 45 and the stock placement puts the jaw at 48.4, inside them.
+      const LIGHT24 = `fill="${PALETTE.text}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"`;
+      const skullAt = (dy) => () => `
+        <g data-apparel="skull" transform="translate(0 ${dy})">
+          <rect ${LIGHT24} x="29.6" y="43.6" width="6.9" height="4.8" rx="1.4"/>
+          <circle ${LIGHT24} cx="33" cy="40.3" r="5.8"/>
+          <circle fill="${INK}" cx="30.6" cy="39.9" r="1.75"/>
+          <circle fill="${INK}" cx="35.4" cy="39.9" r="1.75"/>
+        </g>`;
+      const skull = skullAt(0);
+      const skullLifted = skullAt(-4);
+
+      // ========================================================== renderer ===
+      // Same draw order, same pivots, same stroke as CharacterFigure; the only
+      // new thing is that the six path tables come from a `kit`.
+
+      const legPath = ({ x, y }) =>
+        `M ${x} ${y} L ${x - 1} ${y + 11} M ${x - 1} ${y + 11} L ${x - 7} ${y + 13.5} M ${x - 1} ${y + 11} L ${x} ${y + 14} M ${x - 1} ${y + 11} L ${x + 6} ${y + 13.5}`;
+      const thighPath = ({ x, y }) =>
+        `M ${x - 5} ${y - 4} C ${x - 6} ${y + 3} ${x - 1} ${y + 6} ${x + 3} ${y + 2} C ${x + 4} ${y - 2} ${x} ${y - 6} ${x - 5} ${y - 4} Z`;
+
+      const BEAK = { x: DRAWN_HEAD.cx + DRAWN_HEAD.r - 1, y: DRAWN_HEAD.cy };
+      const beakAndWattle = () => `
+        <path fill="${PALETTE.primary}" ${S} d="M ${BEAK.x} ${BEAK.y - 4} L ${BEAK.x + 12} ${BEAK.y} L ${BEAK.x} ${BEAK.y + 1} Z"/>
+        <path fill="${PALETTE.primary}" ${S} d="M ${BEAK.x} ${BEAK.y + 1} L ${BEAK.x + 10} ${BEAK.y + 1} L ${BEAK.x} ${BEAK.y + 5} Z"/>
+        <path fill="${PALETTE.primary}" ${S} d="M ${BEAK.x - 3} ${BEAK.y + 5} C ${BEAK.x + 2} ${BEAK.y + 5} ${BEAK.x + 2} ${BEAK.y + 13} ${BEAK.x - 3} ${BEAK.y + 12} Z"/>`;
+
+      const drawnHead = (fill, head) => `
+        <circle fill="${fill}" ${S} cx="${DRAWN_HEAD.cx}" cy="${DRAWN_HEAD.cy}" r="${DRAWN_HEAD.r}"/>
+        ${beakAndWattle()}
+        <circle fill="${PALETTE.text}" cx="${head.cx - 4}" cy="${head.eyeY}" r="3"/>
+        <circle fill="${PALETTE.text}" cx="${head.cx + 4}" cy="${head.eyeY}" r="3"/>
+        <circle fill="${INK}" cx="${head.cx - 3}" cy="${head.eyeY}" r="1.4"/>
+        <circle fill="${INK}" cx="${head.cx + 5}" cy="${head.eyeY}" r="1.4"/>`;
+
+      let uid = 0;
+      const costumeHead = (avatarSrc, head) => {
+        const id = `sil${(uid += 1)}`;
+        return `
+        <filter id="${id}" x="-30%" y="-30%" width="160%" height="160%" primitiveUnits="userSpaceOnUse">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="halo"/>
+          <feFlood flood-color="${INK}" result="ink"/>
+          <feComposite in="ink" in2="halo" operator="in" result="outline"/>
+          <feMerge><feMergeNode in="outline"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <image href="${avatarSrc}" x="${head.cx - COSTUME_HEAD_HEIGHT / 2}" y="${head.top}"
+               width="${COSTUME_HEAD_HEIGHT}" height="${COSTUME_HEAD_HEIGHT}"
+               preserveAspectRatio="xMidYMax meet" filter="url(#${id})"/>`;
+      };
+
+      const markup = ({
+        kit = STOCK,
+        fill,
+        body = "round",
+        comb = "crest",
+        tail = "fan",
+        avatarSrc,
+        apparel
+      }) => {
+        const head = avatarSrc ? COSTUME_HEAD_ANCHORS : DRAWN_HEAD_ANCHORS;
+        const worn = apparel && !(avatarSrc && apparel.crossesTheFace) ? apparel : undefined;
+        return `
+        <path fill="${fill}" ${S} d="${kit.tail[tail]}"/>
+        <g opacity="0.7"><path fill="none" stroke="${PALETTE.primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="${legPath(PIVOTS.legFar)}"/></g>
+        <path fill="${fill}" ${S} d="${kit.body[body]}"/>
+        <path fill="${INK}" fill-opacity="0.2" d="${kit.belly[body]}"/>
+        <path fill="${fill}" ${S} d="${thighPath(PIVOTS.legNear)}"/>
+        <path fill="none" stroke="${PALETTE.primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="${legPath(PIVOTS.legNear)}"/>
+        <path fill="${fill}" ${S} d="${kit.wing}"/>
+        <path fill="${fill}" ${S} d="${kit.neck}"/>
+        ${avatarSrc ? costumeHead(avatarSrc, head) : drawnHead(fill, head)}
+        ${!avatarSrc && comb !== "none" ? `<path fill="${fill}" ${S} transform="${perchTransform(head.cx, head.top + 4)}" d="${kit.comb[comb]}"/>` : ""}
+        ${worn ? worn(head, fill) : ""}`;
+      };
+
+      const hen = (o, h) =>
+        `<svg viewBox="0 0 80 72" height="${h}" style="overflow:visible;display:block">${markup(o)}</svg>`;
+
+      const row = (birds, h, label) => `
+        <div class="stage"><div class="sizes">${birds
+          .map((b) => `<figure>${hen(b, h)}<figcaption>${b.caption ?? ""}</figcaption></figure>`)
+          .join("")}</div><span class="scale">${label ?? `${h}px`}</span></div>`;
+
+      const card = ({ title, note, birds, sizes = [76, 152, 304] }) => `
+        <section class="cell">
+          <h2>${title}</h2>
+          <p class="note">${note}</p>
+          ${sizes
+            .map((h) => row(birds, h, h === 76 ? "76px · actual size on a 1080p TV" : `${h}px`))
+            .join("")}
+        </section>`;
+
+      // The cast a dose is judged on: two drawn birds with different
+      // body/comb/tail, then two different players' photographed heads.
+      const cast = (kit, fill = D, apparel) => [
+        { kit, fill, apparel, body: "round", comb: "crest", tail: "fan", caption: "drawn · round/crest/fan" },
+        { kit, fill, apparel, body: "tall", comb: "mohawk", tail: "plume", caption: "drawn · tall/mohawk/plume" },
+        { kit, fill, apparel, avatarSrc: HEADS.rosi, body: "round", tail: "fan", caption: "costume · rosi" },
+        { kit, fill, apparel, avatarSrc: HEADS.rob, body: "wide", tail: "plume", caption: "costume · rob" }
+      ];
+
+      const CARDS = [];
+
+      // ------------------------------------------------------------- before --
+      CARDS.push(
+        card({
+          title: "before · the bird as it ships, wearing the studded collar",
+          note:
+            "Nothing about the bird itself says metal. The team is chrome plus a trinket, and the trinket is the prop the apparel round already replaced. Every dose below is measured against this row — same box, same foot, same pivots, same legs.",
+          birds: cast(STOCK, D, SHIPPING_APPAREL.collar)
+        })
+      );
+
+      // ------------------------------------------------------------- dose 1 --
+      CARDS.push(
+        card({
+          title: "dose 1 · the comb and the tail only",
+          note:
+            "<span class='cost'>What changed:</span> two path tables. Four teeth instead of the crest's three soft lobes; three barbed spears instead of the fan's three curved sickles. Nothing else in the rig moves — same body, same wing, same neck, same pivots, so JOUST and FAPPY cannot tell. " +
+            "<span class='cost'>What it costs:</span> less than it looks. The genre forks the <em>vocabulary</em>, not the choice: metal gets its own crest AND its own mohawk, its own fan AND its own plume, and <code>resolvePlayerAppearance</code> still picks between them off the player's name. Nobody loses a bit of identity here — the tables just get a second column per genre that wants one. The bill is authoring, not variation. " +
+            "<span class='warn'>And here is the problem you can see in the 76px row:</span> a costume head wears NO COMB — <code>CharacterFigure</code> draws it only for a drawn head. So on a real night, where everyone has a generated likeness, half of dose 1 is not on the bird at all. Dose 1 is, in practice, <strong>a tail</strong>. It degrades to a slightly sharper tail and an unchanged bird.",
+          birds: cast(DOSE1)
+        })
+      );
+
+      // ------------------------------------------------------------- dose 2 --
+      CARDS.push(
+        card({
+          title: "dose 2 · plus the feather edges",
+          note:
+            "<span class='cost'>What changed:</span> the wing's three <code>Q</code> scallops become three straight saw teeth cut 8 units deep, and the body's back — the one stretch of outline the wing does not cover — grows two 12-unit dorsal spikes. " +
+            "<span class='cost'>What it costs:</span> a genre fork of <code>CHARACTER_WING_PATH</code>, which is a single exported constant and also the path FAPPY beats on its own layer, plus all three <code>BODY_PATHS</code>. Still no variation lost: three bodies in, three bodies out, each with its own ridge. " +
+            "This is the first dose that reads as spiky at 76px on a costume head, because the wing and the back are below the chin and therefore drawn identically whether the head is a circle or a photograph. The notches show as an ink zigzag across the flank, not as missing colour: they cut into same-coloured body, so what you see is the stroke.",
+          birds: cast(DOSE2)
+        })
+      );
+
+      // ------------------------------------------------------------- dose 3 --
+      CARDS.push(
+        card({
+          title: "dose 3 · the whole bird",
+          note:
+            "<span class='cost'>What changed:</span> one body for the whole team — leaner through the rump, chest driven forward, the back ridge climbing from the tail root to the shoulder instead of doming over it — and an angular neck that drops the head down into the shoulders. The bird reads hunched without the head moving, which it cannot: <code>CHARACTER_HEAD_CENTRE</code> and <code>CHARACTER_FOOT</code> are read by JOUST and FAPPY and are untouched here, as are both hip pivots and the wing shoulder. " +
+            "<span class='cost'>What it costs:</span> this is the first rung that actually takes something. Round/tall/wide collapses to one shape for everyone on the team — one of the three silhouette bits in <code>resolvePlayerAppearance</code> is now the genre's. Comb and tail still vary per player, so a metal team is not clones; it is six birds with one body and four combinations of head furniture. Whether that is a fair trade is the flock card, below. " +
+            "Note where the ridge stops: the last peak is at x 41, and past x 46 it stays below y 31. A spike any higher is inside the drawn head's circle and, worse, inside the costume photo's 44-unit box, where it pokes through a gap in somebody's hair.",
+          birds: cast(DOSE3)
+        })
+      );
+
+      // ------------------------------------------------------------- dose 4 --
+      CARDS.push(
+        card({
+          title: "dose 4 · too far (deliberately)",
+          note:
+            "Five blades, horns where the comb was, deep saw wing, and spikes on the belly — a chicken's belly is the roundest thing on it and spiking it is what finally kills the read. At 4× this is the most fun drawing on the page. At 76px it is a pale thistle: there are so many events on the outline that none of them is legible as a feature, the bird has no overall shape left, and the legs are suddenly the only chicken in the frame. Note that it fails the OPPOSITE way from the rejected battle vest — the vest lost the team colour to a dark mass, this loses it to stroke — but the symptom is the same, chrome stops being the thing you see. " +
+            "<span class='warn'>This card is the line, and the line is between dose 3 and dose 4.</span>",
+          birds: cast(DOSE4)
+        })
+      );
+
+      // -------------------------------------------------------- degrade test --
+      CARDS.push({
+        html: `
+        <section class="cell">
+          <h2>test 1 · does spiky survive the degrade?</h2>
+          <p class="note">
+            The honest version of the question: put the four doses beside the shipping bird at
+            <strong>76px only</strong>, drawn head on top, costume head below, and see which ones
+            you can actually tell apart from across a room. This is the card that decides the
+            page.
+            <br /><br />
+            <strong>What the geometry predicts, and the row confirms.</strong> A spike is a
+            triangle with a 2-unit ink stroke centred on its edges, so 1 unit of ink eats inward
+            from both sides: a spike narrower than about 4 units has no coloured interior left and
+            becomes a solid ink tooth. That is not a failure — the <em>outline</em> is still
+            spiky, and at TV size the outline is the whole drawing. What actually fails is
+            <strong>notch depth</strong>. A notch under about 5 units closes up: the ink hem on
+            one side of the valley touches the hem on the other, the valley fills with black and
+            the two spikes become one lump. The tail barb started at 4 deep and was invisible; it
+            is 8 now. The wing teeth are 8 and the dorsal spikes are 12, and those last two are the
+            only features on this page you can name from the 76px row.
+          </p>
+          ${[
+            [
+              { kit: STOCK, fill: D, apparel: SHIPPING_APPAREL.collar, caption: "ships today" },
+              { kit: DOSE1, fill: D, caption: "dose 1" },
+              { kit: DOSE2, fill: D, caption: "dose 2" },
+              { kit: DOSE3, fill: D, caption: "dose 3" },
+              { kit: DOSE4, fill: D, caption: "dose 4" }
+            ],
+            [
+              { kit: STOCK, fill: D, avatarSrc: HEADS.sara, apparel: SHIPPING_APPAREL.collar, caption: "ships today" },
+              { kit: DOSE1, fill: D, avatarSrc: HEADS.sara, caption: "dose 1 · costume" },
+              { kit: DOSE2, fill: D, avatarSrc: HEADS.sara, caption: "dose 2 · costume" },
+              { kit: DOSE3, fill: D, avatarSrc: HEADS.sara, caption: "dose 3 · costume" },
+              { kit: DOSE4, fill: D, avatarSrc: HEADS.sara, caption: "dose 4 · costume" }
+            ]
+          ]
+            .map((birds) => row(birds, 76, "76px · actual size on a 1080p TV"))
+            .join("")}
+          ${[
+            [
+              { kit: STOCK, fill: D, apparel: SHIPPING_APPAREL.collar, caption: "ships today" },
+              { kit: DOSE1, fill: D, caption: "dose 1" },
+              { kit: DOSE2, fill: D, caption: "dose 2" },
+              { kit: DOSE3, fill: D, caption: "dose 3" },
+              { kit: DOSE4, fill: D, caption: "dose 4" }
+            ]
+          ]
+            .map((birds) => row(birds, 152, "152px"))
+            .join("")}
+          <p class="note">
+            <strong>The finding, plainly:</strong> dose 1 does not survive. On a costume head it is
+            a tail and nothing else, and a tail is 20 units away from the head at the far edge of
+            the box — the part of the bird a room looks at least. Dose 2 is the first rung that
+            reads, and it reads because the wing is big, central and below the chin. If the answer
+            is "spiky metal birds", the price of admission is dose 2, not dose 1.
+          </p>
+        </section>`
+      });
+
+      // ----------------------------------------------------------- skull test --
+      CARDS.push({
+        html: `
+        <section class="cell">
+          <h2>test 2 · does the spiky bird fight the skull?</h2>
+          <p class="note">
+            The apparel round's winner is a skull on the wing (<code>apparel-metal.html</code>,
+            round 2 candidate 1) — four shapes, placed on the wing because the wing is the one
+            big uninterrupted plane on the bird and it is part of the body, so it is
+            pixel-identical under a drawn head and a photograph. That is exactly the plane dose 2
+            just cut teeth into. The two ideas want the same real estate.
+            <br /><br />
+            Mechanically it is survivable: the saw teeth climb to y 45 and the skull's jaw sits at
+            48.4, so the emblem has to lift 4 units to clear them. That is the third figure below.
+            The question is whether it should.
+          </p>
+          ${row(
+            [
+              { kit: STOCK, fill: D, apparel: skull, caption: "skull on the shipping wing" },
+              { kit: DOSE3, fill: D, caption: "dose 3, no skull" },
+              { kit: DOSE3, fill: D, apparel: skullLifted, caption: "dose 3 + skull (lifted 4)" },
+              { kit: DOSE3, fill: D, apparel: skull, caption: "dose 3 + skull, unlifted — collides" }
+            ],
+            76,
+            "76px · actual size on a 1080p TV"
+          )}
+          ${row(
+            [
+              { kit: STOCK, fill: D, apparel: skull, caption: "skull on the shipping wing" },
+              { kit: DOSE3, fill: D, caption: "dose 3, no skull" },
+              { kit: DOSE3, fill: D, apparel: skullLifted, caption: "dose 3 + skull (lifted 4)" },
+              { kit: DOSE3, fill: D, avatarSrc: HEADS.kenny, apparel: skullLifted, caption: "costume · kenny · both" }
+            ],
+            152,
+            "152px"
+          )}
+          ${row(
+            [
+              { kit: STOCK, fill: D, apparel: skull, caption: "skull on the shipping wing" },
+              { kit: DOSE3, fill: D, apparel: skullLifted, caption: "dose 3 + skull (lifted 4)" }
+            ],
+            304,
+            "304px"
+          )}
+          <p class="note">
+            <strong>The finding, and it is worth saying out loud: the spiky bird makes the skull
+            redundant.</strong> Both are doing the same job — "this team is metal" — through the
+            same channel, and they are 10 units apart. The skull is a bright white mark that pulls
+            the eye to the middle of the flank; the saw teeth are an ink rhythm along the edge of
+            that same flank. Put them together and the eye goes to the skull, the teeth become
+            noise behind it, and you have paid for a forked wing path that nobody can see. Take
+            the skull away and the silhouette has to carry the whole message, which it does, one
+            rung later than you would like (dose 2, not dose 1).
+            <br /><br />
+            So: <strong>metal gets a silhouette OR a mark, not both.</strong> The mark is cheaper,
+            it is already designed, it survives on every head, and it is one <code>&lt;g&gt;</code>
+            of four shapes in <code>Apparel</code>. The silhouette is more interesting and
+            generalises to the other three genres; the mark does not, because there is no
+            equivalent of "a skull" for country. That is the actual trade, and it is a product
+            decision, not a drawing one.
+          </p>
+        </section>`
+      });
+
+      // ------------------------------------------------------------ teeth rule --
+      CARDS.push({
+        html: `
+        <section class="cell">
+          <h2>test 3 · the teeth rule, reproduced on purpose</h2>
+          <p class="note">
+            Drawing a lot of points on a bird and then putting some of them near the head is how
+            this codebase got a row of teeth twice. The first figure is dose 3 with a spiked chest
+            ruff on the shoulders anchor — a shape I wanted, because a ruff is the most
+            chicken-shaped place on the bird to put spikes. It is also the failure: on
+            <strong>teamD it is the whole trap</strong>, because chrome (#d9dee6) is nearly white,
+            so a row of pale points rising under a beak against ink is literally the forbidden
+            shape, no white fill required. The second figure is the same ruff on teal, where it is
+            merely bad. The third is dose 3 without it.
+          </p>
+          ${row(
+            [
+              { kit: DOSE3, fill: D, apparel: spikeRuff, caption: "chrome + ruff — TEETH" },
+              { kit: DOSE3, fill: PALETTE.teamF, apparel: spikeRuff, caption: "teal + ruff" },
+              { kit: DOSE3, fill: D, caption: "dose 3, no ruff" },
+              { kit: DOSE3, fill: D, avatarSrc: HEADS.rob, apparel: spikeRuff, caption: "costume + ruff" }
+            ],
+            76,
+            "76px · actual size on a 1080p TV"
+          )}
+          ${row(
+            [
+              { kit: DOSE3, fill: D, apparel: spikeRuff, caption: "chrome + ruff — TEETH" },
+              { kit: DOSE3, fill: D, avatarSrc: HEADS.rob, apparel: spikeRuff, caption: "costume + ruff" },
+              { kit: DOSE3, fill: D, caption: "dose 3, no ruff" }
+            ],
+            152,
+            "152px"
+          )}
+          <p class="note">
+            <strong>The rule that came out of it, stated for the next genre:</strong> a point is
+            safe anywhere the bird is not a face. The tail, the back, the wing and the rump are
+            all fine at any density. Inside a radius of roughly 16 units of the head centre —
+            which is everything from the shoulders anchor up — a point does not read as "spiky",
+            it reads as "mouth", and on a near-white team it reads as a mouth whether you filled
+            it white or not. Every spike on doses 1–3 is outside that radius, which is why the
+            spiky comb is teeth-safe: it is above the eye line, not under the beak, and it is on
+            the one head type that has no photograph to fight.
+          </p>
+        </section>`
+      });
+
+      // ------------------------------------------------------------- the flock --
+      // The lazy implementation of the idea, for the flock card only: the genre
+      // hands the bird ONE comb and ONE tail instead of a set, so every choice
+      // resolvePlayerAppearance makes lands on the same shape. This is the clone
+      // failure people are actually afraid of, and it is avoidable.
+      const DOSE3_UNIFORM = {
+        ...DOSE3,
+        comb: { crest: SPIKE_COMB.crest, mohawk: SPIKE_COMB.crest },
+        tail: { fan: SPIKE_TAIL.fan, plume: SPIKE_TAIL.fan }
+      };
+
+      const FLOCK = [
+        { avatarSrc: HEADS.rob, body: "wide", comb: "mohawk", tail: "plume", caption: "rob" },
+        { avatarSrc: HEADS.rosi, body: "round", comb: "crest", tail: "fan", caption: "rosi" },
+        { avatarSrc: HEADS.sara, body: "tall", comb: "none", tail: "plume", caption: "sara" },
+        { avatarSrc: HEADS.kenny, body: "round", comb: "mohawk", tail: "fan", caption: "kenny" },
+        { body: "tall", comb: "crest", tail: "plume", caption: "no head yet" },
+        { body: "wide", comb: "mohawk", tail: "fan", caption: "no head yet" }
+      ];
+
+      CARDS.push({
+        html: `
+        <section class="cell flock">
+          <h2>the flock · six metal birds, does a team read as a team or as clones?</h2>
+          <p class="note">
+            The tension this round has to face rather than dodge. Body, comb and tail exist so
+            players are distinguishable from each other; if genre takes them over, every bird on a
+            team is identical. The counter-argument is that on a real night identity is the
+            photographed head. The same six players in every row — the last two have no generated
+            head yet, which is the case the whole question turns on.
+          </p>
+          ${row(FLOCK.map((b) => ({ ...b, kit: STOCK, fill: D, apparel: SHIPPING_APPAREL.collar })), 76, "today · 76px")}
+          ${row(FLOCK.map((b) => ({ ...b, kit: DOSE2, fill: D })), 76, "dose 2 · 76px — every bit still varies")}
+          ${row(FLOCK.map((b) => ({ ...b, kit: DOSE3, fill: D })), 76, "dose 3 · 76px — one body, combs and tails still vary")}
+          ${row(FLOCK.map((b) => ({ ...b, kit: DOSE3_UNIFORM, fill: D })), 76, "dose 3, done lazily · 76px — one of everything")}
+          ${row(FLOCK.map((b) => ({ ...b, kit: DOSE2, fill: D })), 152, "dose 2 · 152px")}
+          ${row(FLOCK.map((b) => ({ ...b, kit: DOSE3_UNIFORM, fill: D })), 152, "dose 3, done lazily · 152px")}
+          <p class="note">
+            <strong>The row that changed my mind is the fourth one, and it changed it about my own
+            first two cards.</strong> "Genre takes over the variation" turns out to be a false
+            choice, and it took drawing the clone row to see it. Forking a path table by genre does
+            not delete a player's choice — it gives metal its own crest AND its own mohawk, its own
+            fan AND its own plume, and <code>resolvePlayerAppearance</code> goes on choosing between
+            them off the name exactly as it does now. Rows two and three are still six
+            distinguishable birds. Row four is the clone disaster, and the only thing that produced
+            it was handing the genre ONE shape per slot instead of a set. That is an implementation
+            mistake, not a property of the idea.
+            <br /><br />
+            <strong>What is genuinely lost, and only at dose 3:</strong> the body. Round/tall/wide
+            becomes one shape, so the two players with no photograph lose the biggest of their
+            three distinguishing marks and are left differing by a comb and a tail. Compare rows
+            three and four at 152px: three is fine, four is not. And note how little today's row
+            was doing anyway — three body widths a few units apart, two tails, and a comb that one
+            of the six does not get at all. What tells rob from rosi across a room is rob's beard.
+            <br /><br />
+            <strong>So the flock argues for dose 2 and does not forbid dose 3.</strong> Dose 2
+            costs nothing in identity at all; dose 3 costs one bit for the minority of players
+            without a generated head. Neither is the clone row, as long as whoever builds it
+            authors a genre's shapes in pairs.
+          </p>
+        </section>`
+      });
+
+      // -------------------------------------------------------- colour survival --
+      CARDS.push(
+        card({
+          title: "colour survival · dose 3 on the two hard colours",
+          note:
+            "Chrome first — the team metal actually gets, nearly white, where every spike's ink hem is the only thing separating the bird from the stage. Then teamA, the orange that collides with <code>primary</code>, so beak, wattle and legs are the same hue as the body: the spikes are still legible there because they are outline events, not fill events, and the outline is <code>bg</code> on every team. No candidate on this page needs a colour the bird does not already own. Lime and pink are included because a saw edge on a light, saturated hue is where a vibrating stroke would show up, and it does not. One thing this row shows that is NOT this round's doing: on teamA the <code>primary</code> legs melt into the body because they are the same hue. That is true of the shipping bird too — the silhouette neither causes it nor fixes it — but it is the reason the spiky outline matters most on exactly that team, since the outline is the only edge left.",
+          birds: [
+            { kit: DOSE3, fill: PALETTE.teamD, caption: "teamD · chrome" },
+            { kit: DOSE3, fill: PALETTE.teamA, body: "tall", comb: "mohawk", caption: "teamA · orange" },
+            { kit: DOSE3, fill: PALETTE.teamA, avatarSrc: HEADS.kenny, caption: "teamA · costume" },
+            { kit: DOSE3, fill: PALETTE.teamC, caption: "teamC · lime" },
+            { kit: DOSE3, fill: PALETTE.teamH, avatarSrc: HEADS.sara, caption: "teamH · costume" }
+          ],
+          sizes: [76, 152]
+        })
+      );
+
+      // ---------------------------------------------------------------- verdict --
+      const VERDICT = `
+        <section class="cell">
+          <h2>verdict</h2>
+          <p class="note">
+            <strong>Ship dose 2.</strong> The idea is right — a metal bird should be a spiky bird,
+            and it is a better idea than any prop on the four apparel pages, because it is the
+            only one that changes what the team looks like rather than what it is carrying. But
+            the ladder puts the cheap rung and the expensive rung in the wrong places from where
+            intuition puts them.
+          </p>
+          <p class="note">
+            <strong>Dose 1 is not cheap, it is free — and worth what it costs.</strong> Two path
+            swaps sounded like the obvious first move, and it fails for a reason that has nothing
+            to do with drawing: <code>CharacterFigure</code> gives a costume head no comb at all.
+            On a night where everyone has a generated likeness, half of dose 1 is never rendered,
+            and the other half is a tail at the far edge of the box. It reads at 4× and is gone at
+            76px.
+          </p>
+          <p class="note">
+            <strong>Dose 2 is the first rung that reads, and it costs no identity at all.</strong>
+            The wing is the biggest uninterrupted plane on the bird, it is below the chin so it is
+            drawn identically on both head types, and three 8-unit saw teeth on its trailing edge
+            plus two 12-unit dorsal spikes change the bird's edge rhythm from across a room. Every
+            per-player bit survives: three bodies in, three bodies out, two combs, two tails, all
+            of them just drawn hardcore. Cost: one exported constant
+            (<code>CHARACTER_WING_PATH</code>, which FAPPY also draws on its own layer) and a
+            second column of <code>BODY_PATHS</code>, per genre that wants one.
+          </p>
+          <p class="note">
+            <strong>Dose 3 is the better drawing and it is the one I would put on the bench, not
+            in the bin.</strong> The lean hunched body with the chest driven forward is the only
+            thing on this page that says hardcore rather than merely pointy. It is also the first
+            rung that takes something: round/tall/wide becomes one body, which the two players
+            without a generated head pay for. If metal ends up being the only genre that changes
+            anatomy, dose 3 is the right size of change for a one-off and the placement rules are
+            already solved in it (ridge peaks stop at x 41, nothing above y 31 past x 46).
+          </p>
+          <p class="note">
+            <strong>Dose 4 is the line and it is closer than it looks.</strong> Not because it is
+            ugly at 4× — it is the most fun drawing here — but because the 2-unit ink hem is a
+            fixed cost per point. Past roughly a dozen points on the outline the hems merge, the
+            bird stops having an overall shape, and what a room sees is a pale thistle rather than
+            a team. It fails by the opposite mechanism from the battle vest — too much stroke
+            rather than too much dark fill — and arrives at the same symptom: chrome stops being
+            the thing you read.
+          </p>
+          <p class="note">
+            <strong>The skull has to go if dose 2 ships.</strong> They are the same message in the
+            same place and the skull wins the attention fight, which means the forked wing is paid
+            for and invisible. Metal gets a silhouette or a mark. If the answer is "we like the
+            skull", the honest conclusion is that this whole round is unnecessary for metal — and
+            then the interesting question is whether the OTHER three genres, which have no
+            equivalent of a skull, are the ones that actually need anatomy.
+          </p>
+          <p class="note">
+            <strong>The thing worth stealing for the other three genres</strong> is the one this
+            page got wrong first and the flock card corrected: <em>a genre owning a body part does
+            not cost a player their identity, as long as the genre hands the rig a SET and not a
+            shape.</em> Metal supplies a spiky crest and a spiky mohawk, a spiky fan and a spiky
+            plume, and the name hash goes on choosing. Do it the lazy way — one comb per genre —
+            and you get the clone row, which is the only genuinely bad picture on this page. That
+            makes "the genre changes the bird" much cheaper than it sounds and much more likely to
+            generalise than apparel was: country and disco have no equivalent of a skull, but every
+            genre has an edge quality.
+          </p>
+          <p class="note">
+            <strong>For the other genres, three more things this bird taught:</strong>
+            (1) A notch shallower than ~5 units closes up at TV size — the ink hem on one wall of
+            the valley touches the hem on the other and two features become one lump. Design
+            notches, not points; the point survives, the gap is what dies.
+            (2) Anything on the head is a drawn-head-only feature and therefore roughly a coin
+            flip whether the room ever sees it. The wing, the back and the tail are the parts that
+            always render.
+            (3) The teeth rule generalises to a radius, not a colour: inside ~16 units of the head
+            centre a point reads as a tooth, and on chrome it does so without anyone filling it
+            white.
+          </p>
+        </section>`;
+
+      document.getElementById("root").innerHTML =
+        CARDS.map((c) => (typeof c === "string" ? c : c.html)).join("") + VERDICT;
+    </script>
+  </body>
+</html>

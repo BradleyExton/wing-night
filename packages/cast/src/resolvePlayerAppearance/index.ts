@@ -1,4 +1,4 @@
-import { resolveContentAssetSrc, type Player } from "@wingnight/shared";
+import { CHARACTER_DANCES, resolveContentAssetSrc, type CharacterDance, type Player } from "@wingnight/shared";
 
 import { hashName } from "../hashName/index.js";
 
@@ -12,9 +12,11 @@ export const CHARACTER_TAILS = ["fan", "plume"] as const;
 export type CharacterTail = (typeof CHARACTER_TAILS)[number];
 
 // How the bird moves on the beat when a surface has it dancing: the body
-// bouncing, the head banging, the wing flapping or the feet shuffling.
-export const CHARACTER_DANCES = ["bounce", "headbang", "flap", "shuffle"] as const;
-export type CharacterDance = (typeof CHARACTER_DANCES)[number];
+// bouncing, the head banging, the wing flapping or the feet shuffling. The
+// vocabulary lives in `@wingnight/shared` because a team's theme can name a
+// dance too — pop is the team whose birds bounce — and the theme crosses the
+// package boundary.
+export { CHARACTER_DANCES, type CharacterDance };
 
 // Everything `<Character>` needs to draw one cast member. Colour is NOT here:
 // it belongs to the team, not the player, and is resolved by the surface that

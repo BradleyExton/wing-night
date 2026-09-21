@@ -1,5 +1,5 @@
 import type { Player, Team, TeamTheme } from "@wingnight/shared";
-import type { CharacterApparel } from "@wingnight/cast";
+import type { CharacterApparel, CharacterDance, CharacterSilhouette } from "@wingnight/cast";
 
 import { resolveTeamTheme } from "../../../../../../utils/resolveTeamTheme";
 
@@ -13,6 +13,8 @@ export type ParadeGroup = {
   id: string;
   players: Player[];
   apparel: CharacterApparel | undefined;
+  silhouette: CharacterSilhouette | undefined;
+  dance: CharacterDance | undefined;
   // `null` means the unseated group: the caller paints it in its own muted fill.
   fillClassName: string | null;
 };
@@ -49,6 +51,8 @@ export const resolveParadeGroups = (
       id: team.id,
       players: members,
       apparel: theme.apparel,
+      silhouette: theme.silhouette,
+      dance: theme.dance,
       fillClassName: theme.colorVariant.characterFillClassName
     });
   }
@@ -56,7 +60,14 @@ export const resolveParadeGroups = (
   const unseated = players.filter((player) => !seated.has(player.id));
 
   if (unseated.length > 0) {
-    groups.push({ id: UNSEATED_GROUP_ID, players: unseated, apparel: undefined, fillClassName: null });
+    groups.push({
+      id: UNSEATED_GROUP_ID,
+      players: unseated,
+      apparel: undefined,
+      silhouette: undefined,
+      dance: undefined,
+      fillClassName: null
+    });
   }
 
   return groups;

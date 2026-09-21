@@ -29,7 +29,8 @@ test("does group a team's rostered players in the team's look and skip a team wi
       [UNSEATED_GROUP_ID, ["Sam"]]
     ]
   );
-  assert.equal(groups[0]?.apparel, "collar");
+  assert.equal(groups[0]?.apparel, undefined);
+  assert.equal(groups[0]?.silhouette, "spiky");
   assert.equal(groups[0]?.fillClassName, "text-teamD");
   assert.equal(groups[2]?.fillClassName, null);
 });

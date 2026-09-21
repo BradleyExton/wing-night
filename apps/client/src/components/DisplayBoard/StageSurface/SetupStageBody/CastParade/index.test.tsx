@@ -118,7 +118,7 @@ test("does colour a group by its team accent and dress it in the genre's apparel
 
   assert.equal(alphaFill, "text-teamD");
   assert.match(html, new RegExp(`data-cast-member="player-1"[^]*?${alphaFill}`));
-  assert.match(html, new RegExp(`data-cast-member="player-1"[^]*?data-character-apparel="collar"`));
+  assert.match(html, new RegExp(`data-cast-member="player-1"[^]*?data-character-silhouette="spiky"`));
   assert.match(html, new RegExp(`data-cast-member="player-2"[^]*?${betaFill}`));
   assert.doesNotMatch(html, /data-cast-member="player-2"[^]*?data-character-apparel/);
 });

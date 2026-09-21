@@ -11,7 +11,7 @@ const FIGURE = {
   genre: "Metal"
 };
 
-test("runs the player's own hen, in their team's colour and their team's outfit", () => {
+test("runs the player's own hen, in their team's colour and their team's shape", () => {
   const runner = resolveRunnerFigure({
     figure: FIGURE,
     activeTurnTeamId: "team-b",
@@ -20,7 +20,7 @@ test("runs the player's own hen, in their team's colour and their team's outfit"
 
   assert.equal(runner.playerName, "Alex");
   assert.ok(runner.fillClassName.startsWith("text-team"));
-  assert.notEqual(runner.apparel, undefined);
+  assert.notEqual(runner.silhouette, undefined);
 });
 
 test("gives the same player the same bird every night, whatever the roster order", () => {

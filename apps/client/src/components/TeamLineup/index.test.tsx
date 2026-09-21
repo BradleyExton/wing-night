@@ -28,7 +28,7 @@ test("does stand one bird per player in the team colour wearing the genre's appa
   assert.match(html, /data-team-lineup/);
   assert.match(html, /h-40/);
   assert.equal((html.match(/data-lineup-member="/g) ?? []).length, 2);
-  assert.equal((html.match(/data-character-apparel="collar"/g) ?? []).length, 2);
+  assert.equal((html.match(/data-character-silhouette="spiky"/g) ?? []).length, 2);
   assert.equal((html.match(/text-teamD/g) ?? []).length, 2);
 });
 

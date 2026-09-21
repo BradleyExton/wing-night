@@ -2,8 +2,10 @@ import {
   resolveCharacterFillClassName,
   resolvePlayerAppearance,
   resolveTeamApparel,
+  resolveTeamSilhouette,
+  type CharacterAppearance,
   type CharacterApparel,
-  type CharacterAppearance
+  type CharacterSilhouette
 } from "@wingnight/cast";
 import type { SchlonicPlayerFigure } from "@wingnight/shared";
 
@@ -11,6 +13,7 @@ export type RunnerFigure = {
   playerName: string | null;
   appearance: CharacterAppearance;
   apparel: CharacterApparel | undefined;
+  silhouette: CharacterSilhouette | undefined;
   /** The `text-*` class the bird is painted in: its team's colour, off the standings table. */
   fillClassName: string;
 };
@@ -45,6 +48,7 @@ export const resolveRunnerFigure = ({
       playerName: null,
       appearance: ANONYMOUS_APPEARANCE,
       apparel: undefined,
+      silhouette: undefined,
       fillClassName: resolveCharacterFillClassName(activeTurnTeamId)
     };
   }
@@ -56,6 +60,7 @@ export const resolveRunnerFigure = ({
       serverOrigin
     ),
     apparel: resolveTeamApparel({ genre: figure.genre ?? undefined }),
+    silhouette: resolveTeamSilhouette({ genre: figure.genre ?? undefined }),
     fillClassName: resolveCharacterFillClassName(figure.teamId ?? activeTurnTeamId)
   };
 };

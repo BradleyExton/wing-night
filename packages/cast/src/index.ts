@@ -15,6 +15,7 @@ export {
   CHARACTER_WING_PATH,
   CHARACTER_WING_ROOT,
   CharacterFigure,
+  resolveCharacterWingPath,
   type CharacterFigureProps
 } from "./Character/CharacterFigure/index.js";
 export {
@@ -71,6 +72,14 @@ export {
   resolveTeamApparel,
   type CharacterApparel
 } from "./resolveTeamApparel/index.js";
+// What shape a team's birds ARE, which is the genre's primary carrier — a prop
+// is a few pixels of a 76px bird, a silhouette is the first thing read.
+export {
+  CHARACTER_SILHOUETTES,
+  resolveTeamDance,
+  resolveTeamSilhouette,
+  type CharacterSilhouette
+} from "./resolveTeamSilhouette/index.js";
 // `resolveTeamColorVariant` — the bare id hash — is deliberately NOT exported.
 // A surface that reached for it got a colour with no knowledge of the team's
 // genre, its authored `color`, or the cross-team collision pass, which is how

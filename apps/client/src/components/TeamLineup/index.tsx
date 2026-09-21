@@ -33,6 +33,8 @@ export const TeamLineup = ({ players, theme, sizeClassName }: TeamLineupProps): 
           <Character
             appearance={resolvePlayerAppearance(player, serverOrigin)}
             apparel={theme.apparel}
+            silhouette={theme.silhouette}
+            dance={theme.dance}
             fillClassName={theme.colorVariant.characterFillClassName}
             pose="idle"
           />

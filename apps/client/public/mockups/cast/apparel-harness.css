@@ -1,0 +1,28 @@
+/* The house prototype chrome, shared by every apparel page so four genres sit
+   side by side without four sets of styles drifting apart. */
+:root { --bg:#121212; --surface:#1c1c1c; --text:#fff; --muted:#a3a3a3; --primary:#f97316; }
+html, body { margin:0; background:var(--bg); color:var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+main { max-width: 1800px; margin: 0 auto; padding: 2.5rem 2rem; }
+h1 { font-size: 2rem; margin: 0 0 .25rem; }
+p.lede { color: var(--muted); margin: 0 0 2rem; max-width: 84ch; line-height: 1.55; }
+p.lede code { color: var(--text); }
+.cell { background: var(--surface); border-radius: 12px; padding: 1.25rem 1.25rem 1rem;
+  margin-bottom: 1.25rem; }
+.cell h2 { font-size: 1rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--primary); margin: 0 0 .35rem; }
+.cell p.note { color: var(--muted); margin: 0 0 1rem; max-width: 96ch;
+  line-height: 1.5; font-size: .92rem; }
+.stage { position: relative; border-radius: 8px; overflow: hidden; margin-bottom: .75rem;
+  background: radial-gradient(ellipse 70% 120% at 50% 110%,
+    rgba(249,115,22,.55), rgba(249,115,22,.12) 55%, #171310 100%); }
+.sizes { display: flex; align-items: flex-end; justify-content: center; gap: 2rem;
+  padding: 2.5rem 1.5rem 1.25rem; flex-wrap: wrap; }
+.sizes figure { margin: 0; text-align: center; }
+.sizes figcaption { font-size: .7rem; color: var(--muted); margin-top: .6rem;
+  letter-spacing: .05em; }
+.stage .scale { position: absolute; top: .5rem; right: .75rem; font-size: .65rem;
+  letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.35); }
+/* A strip for judging a prop against the other three genres at once. */
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem; }

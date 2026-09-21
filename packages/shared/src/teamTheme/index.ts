@@ -42,8 +42,34 @@ export type TeamColorVariant = {
 };
 
 /** What a team's birds wear on top of their colour; drawn by the cast's `Apparel`. */
-export const CHARACTER_APPARELS = ["hat", "collar", "shades", "medallion"] as const;
+// `collar` was removed 2026-09-21: a dark band slung under a chin with studs on
+// it read as a necklace rather than as metal, and metal is shaped now, not
+// dressed (`resolveTeamSilhouette`).
+export const CHARACTER_APPARELS = ["hat", "shades", "medallion"] as const;
 export type CharacterApparel = (typeof CHARACTER_APPARELS)[number];
+
+/**
+ * The shape a genre gives the bird ITSELF, which is the genre's primary carrier
+ * — a prop is a few pixels of a 76px bird, but a silhouette is the first thing
+ * the room reads. The three sit on one axis, spiky at one end and squat at the
+ * other, so a new genre is placed on it rather than drawn from scratch:
+ *
+ * - `spiky`    jagged comb, pointed tail, cut feather edges, dorsal ridge
+ * - `broody`   a hen settled low, belly near the floor, legs all but gone
+ * - `preener`  tall and chesty, high sweeping sickle tail, long legs
+ *
+ * A genre with no entry keeps the stock bird, whose body, comb and tail are
+ * hashed from the player's own name. Pop is deliberately one of those: "smooth,
+ * round, upright" describes the bird already shipping, so pop is the ORIGIN of
+ * the axis rather than a point on it, and it carries its genre in motion
+ * (`TeamTheme.dance`) instead.
+ */
+export const CHARACTER_SILHOUETTES = ["spiky", "broody", "preener"] as const;
+export type CharacterSilhouette = (typeof CHARACTER_SILHOUETTES)[number];
+
+/** How a team's birds move on the beat, when the genre — not the player — picks. */
+export const CHARACTER_DANCES = ["bounce", "headbang", "flap", "shuffle"] as const;
+export type CharacterDance = (typeof CHARACTER_DANCES)[number];
 
 export const GENRE_KEYS = [
   "metal",
@@ -119,6 +145,10 @@ export type TeamTheme = {
   texture: TextureId | null;
   entrance: EntranceId;
   apparel: CharacterApparel | undefined;
+  /** The bird's own shape; `undefined` keeps the stock, player-hashed bird. */
+  silhouette: CharacterSilhouette | undefined;
+  /** Overrides the player's own hashed dance; `undefined` leaves it to them. */
+  dance: CharacterDance | undefined;
 };
 
 // `genre` stays free text in teams.json; this is the one place it becomes a

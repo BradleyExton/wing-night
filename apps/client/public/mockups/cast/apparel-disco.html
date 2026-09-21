@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>APPAREL — disco</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>APPAREL — disco · Disco Inferno (teamB)</h1>
+      <p class="lede">
+        Tonight disco wears a chain and a 4.6 disc on the chest. It is the only prop in the set
+        that clears every rule: it hangs below the chin so it survives onto a costume head, it
+        sits inside the silhouette at both anchors, and it degrades cleanly. It replaced a pair
+        of floating white lapel wedges that hung off the bird's edge. <strong>So this page is
+        not a repair job — it asks whether the safe prop is the right one.</strong> Two reasons
+        to doubt it. First, a medallion is a necklace, and the note on metal's collar is
+        <em>"don't love the necklaces"</em>; if metal moves off the neck, disco is left as the
+        only bird in the room wearing jewellery. Second, look at the 76px row below: disco is
+        the loudest genre in the world and currently owns the quietest prop in the set — about five pixels of
+        white on a cyan chest, and no chain at all. The thesis here is that disco's prop should stop
+        being <em>worn on the chest</em> and start being <em>somewhere else on the bird</em> —
+        over its head, at its feet, or around its neckline as a shape big enough to cast a
+        silhouette. Every candidate uses only white, the outline ink and the team colour;
+        none needs a gradient, and the one that most wants glitter gets it from facet lines that
+        are allowed to disappear.
+      </p>
+      <div id="root"></div>
+    </main>
+    <script type="module">
+      import { PALETTE, HEADS, SHIPPING_APPAREL, candidateCard } from "./apparel-harness.js";
+
+      const { bg, text, primary, teamA, teamB, teamD } = PALETTE;
+      const S = `stroke="${bg}" stroke-width="2" stroke-linejoin="round"`;
+      const LIGHT = `fill="${text}" ${S}`;
+
+      // The leg, copied from the harness, so the dance-floor candidate can put
+      // the feet back on top of the tiles. Nothing else redraws the bird.
+      const legPath = ({ x, y }) =>
+        `M ${x} ${y} L ${x - 1} ${y + 11} M ${x - 1} ${y + 11} L ${x - 7} ${y + 13.5} M ${x - 1} ${y + 11} L ${x} ${y + 14} M ${x - 1} ${y + 11} L ${x + 6} ${y + 13.5}`;
+      const LEG_NEAR = { x: 32, y: 57 };
+      const LEG_FAR = { x: 44, y: 57 };
+      const legInk = (p) =>
+        `<path fill="none" stroke="${primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="${legPath(p)}"/>`;
+
+      // ------------------------------------------------------- candidate 1 --
+      // The mirrorball is NOT worn. It hangs in the box's own airspace above
+      // the bird's back, so it takes no anchor at all and lands identically on
+      // a drawn head and a costume head — the only prop on this page that is
+      // provably the same on both because it never touches either.
+      const BALL = { cx: 24, cy: 7, r: 5.5 };
+      const mirrorball = () => {
+        const { cx, cy, r } = BALL;
+        // Facets as ONE path of four subpaths — two meridians and two
+        // latitudes — so the whole ball is three shapes: cord, sphere, grid.
+        const lat = (dy) => {
+          const rx = Math.sqrt(r * r - dy * dy).toFixed(2);
+          return `M ${cx - rx} ${cy + dy} A ${rx} 1.9 0 0 0 ${Number(cx) + Number(rx)} ${cy + dy}`;
+        };
+        const facets = [
+          `M ${cx} ${cy - r} A 2.3 ${r} 0 0 0 ${cx} ${cy + r}`,
+          `M ${cx} ${cy - r} A 2.3 ${r} 0 0 1 ${cx} ${cy + r}`,
+          lat(-2.4),
+          lat(2.4)
+        ].join(" ");
+        return `
+        <g data-apparel="mirrorball">
+          <path fill="none" stroke="${text}" stroke-width="1.4" d="M ${cx} -6 L ${cx} ${cy - r + 0.5}"/>
+          <circle ${LIGHT} cx="${cx}" cy="${cy}" r="${r}"/>
+          <path fill="none" stroke="${bg}" stroke-width="1.1" d="${facets}"/>
+        </g>`;
+      };
+
+      // ------------------------------------------------------- candidate 2 --
+      // The open shirt front. The lapels that were rejected were two white
+      // wedges floating side by side; the first thing tried here was a
+      // butterfly collar — a band with two points hanging off it — and it
+      // failed on sight for the reason this codebase already knows: two white
+      // points with a notch between them, under a beak, is a mouth with
+      // fangs, and it is a mouth whether or not there is a dark shape behind
+      // it. So this is ONE wedge with ONE point. It starts wide at the
+      // shoulders, dips at the neckline and comes down to a single tip on the
+      // chest. Right edge only +2 from the head centre, because the head sits
+      // far right on the body: the silhouette's right edge at the shoulders
+      // is x≈61, not the x≈74 the old lapels reached.
+      const shirtFront = ({ cx, shoulders: s }) => {
+        const d = [
+          `M ${cx - 13.5} ${s - 3}`,
+          `Q ${cx - 5} ${s + 3.5} ${cx + 2.5} ${s - 3}`,
+          `L ${cx + 2} ${s + 6}`,
+          `L ${cx - 6} ${s + 13}`,
+          "Z"
+        ].join(" ");
+        return `<g data-apparel="shirt"><path ${LIGHT} d="${d}"/></g>`;
+      };
+
+      // ------------------------------------------------------- candidate 3 --
+      // Flares. The legs are `primary` lines and are the one part of the bird
+      // no prop has ever touched. The first cut was wide and flat and read as
+      // a pair of skis; these are narrower than they are tall and kept apart,
+      // so each bell is its own trouser leg and the ankle and toes stay
+      // orange underneath. The far bell is drawn first at the same 70% the
+      // far leg itself carries.
+      const bell = (lx, topY) => {
+        const t = 2.6;
+        const b = 5.0;
+        const h = 4.7;
+        const d = [
+          `M ${lx - t} ${topY}`,
+          `L ${lx + t} ${topY}`,
+          `C ${lx + t + 0.6} ${topY + h * 0.55} ${lx + b - 0.8} ${topY + h * 0.7} ${lx + b} ${topY + h}`,
+          `L ${lx - b} ${topY + h}`,
+          `C ${lx - b + 0.8} ${topY + h * 0.7} ${lx - t - 0.6} ${topY + h * 0.55} ${lx - t} ${topY}`,
+          "Z"
+        ].join(" ");
+        return `<path ${LIGHT} d="${d}"/>`;
+      };
+      const flares = () => `
+        <g data-apparel="flares">
+          <g opacity="0.7">${bell(43.5, 63.1)}</g>
+          ${bell(31, 63.6)}
+        </g>`;
+
+      // ------------------------------------------------------- candidate 4 --
+      // The lit floor. A dark backing quad in perspective with three white
+      // tiles inside it, then the two legs re-inked over the top so the bird
+      // stands ON the floor rather than behind it. That last step is the
+      // catch and it is a real one: apparel is a single layer drawn over the
+      // head today, so a ground prop needs the component to gain a second
+      // layer under the tail. Everything else on this page is a pure addition.
+      const FLOOR = { topY: 66.8, botY: 71.6, topL: 20, topW: 34, botL: 12, botW: 50, cols: 6 };
+      const floorQuad = (i) => {
+        const { topY, botY, topL, topW, botL, botW, cols } = FLOOR;
+        const t0 = topL + (topW * i) / cols;
+        const t1 = topL + (topW * (i + 1)) / cols;
+        const b0 = botL + (botW * i) / cols;
+        const b1 = botL + (botW * (i + 1)) / cols;
+        return `M ${t0} ${topY} L ${t1} ${topY} L ${b1} ${botY} L ${b0} ${botY} Z`;
+      };
+      const danceFloor = () => `
+        <g data-apparel="dancefloor">
+          <path fill="${bg}" ${S} d="M ${FLOOR.topL} ${FLOOR.topY} L ${FLOOR.topL + FLOOR.topW} ${FLOOR.topY} L ${FLOOR.botL + FLOOR.botW} ${FLOOR.botY} L ${FLOOR.botL} ${FLOOR.botY} Z"/>
+          ${[0, 2, 4].map((i) => `<path fill="${text}" d="${floorQuad(i)}"/>`).join("")}
+          <g opacity="0.7">${legInk(LEG_FAR)}</g>
+          ${legInk(LEG_NEAR)}
+        </g>`;
+
+      // ---------------------------------------------------------------------
+      const cast = (apparel, fill = teamB) => [
+        { fill, apparel, body: "round", comb: "crest", tail: "fan", caption: "drawn head" },
+        { fill, apparel, body: "tall", comb: "mohawk", tail: "plume", caption: "drawn · tall/mohawk" },
+        { fill, apparel, avatarSrc: HEADS.rosi, caption: "costume · rosi" },
+        { fill, apparel, avatarSrc: HEADS.rob, body: "wide", caption: "costume · rob" }
+      ];
+
+      const CARDS = [
+        {
+          title: "before · chain and medallion (ships tonight)",
+          note: "teamB. A hairline chain and a 4.6 disc hung off the shoulders anchor. It is correct on every rule and invisible on the only row that counts — at 76px the disc is about five pixels of white sitting on a cyan chest that is already the brightest thing on the bird, and the chain is gone entirely. It also reads as a necklace, which is the note metal just got.",
+          birds: cast(SHIPPING_APPAREL.medallion)
+        },
+        {
+          title: "1 · mirrorball — hung from the ceiling, not from the bird",
+          note: "The strongest silhouette move available, because it is the only one that costs the bird nothing: the ball hangs in the empty airspace over the bird's back at a FIXED point in the box, so it takes no head anchor and is provably identical on a drawn head and a costume head. It is also the only candidate that never has to contrast with the team colour — it is white against the stage, so chrome cannot wash it out. Degrades at 76px to a bright dot with a hairline going up out of frame: the facet lines drop out first and it becomes a plain lit ball, which is still a mirrorball. Cost: it is a scene object, so in the lobby parade huddle one bird's ball can overlap its neighbour, and it is the one prop that does not say which bird is on the team.",
+          birds: cast(mirrorball)
+        },
+        {
+          title: "2 · open shirt front — one wedge, one point",
+          note: "The lapel done as the earlier failure says it must be done: not two wedges floating side by side but one wedge, welded shut, hung off the shoulders anchor and reaching down to a single tip on the chest. <strong>The first version of this card was a butterfly collar — a band with two points under a notch — and it had to be thrown away on sight: it read as a mouth with fangs.</strong> That is the teeth rule again, and it turns out the rule is stronger than it is written: white points under a beak are a mouth with or without a dark shape behind them, so the safe number of points on a chest prop is one. Pulled only +2 right of the head centre, because the head sits far right on the body and the silhouette's right edge at the shoulders is x≈61 — the old lapels reached x≈74, which is what hung them off the bird. At 76px it degrades to a bright wedge at the neck: the exact inverse of metal's dark band, which is worth something if metal keeps its collar and worth more if metal does not. It is also the only candidate here that is unmistakably a garment rather than an accessory, which is the direct answer to \"don't love the necklaces\".",
+          birds: cast(shirtFront)
+        },
+        {
+          title: "3 · flares — the one part of the bird nothing else uses",
+          note: "The legs are `primary` lines and have never carried a prop. A bell hem on each, hung off the body's hem rather than any head anchor, with the far bell at the same 70% the far leg carries. Drawn wide and flat the first time, they merged into one white plank and the bird looked like it was on skis — so these are narrower than they are tall and kept apart, with the ankle and toes left orange below them. Degrades at 76px to a pair of white platform boots rather than to trousers, which is a different disco joke rather than no joke. <strong>The real cost is the bird's proportions:</strong> the body's hem is at y≈65.5 and the feet are at y≈71, so a trouser has under six units to live in and about three of those are toes. This is the smallest candidate on the page and it is at the end of the bird the eye reaches last.",
+          birds: cast(flares)
+        },
+        {
+          title: "4 · lit dance floor — a checker under the feet",
+          note: "A dark quad in perspective with three white tiles in it, and the bird standing on it. At 76px it degrades to a bright dashed bar under the feet, which is the largest and highest-contrast thing any candidate here produces, and it is nowhere near the face, the chin or the chest. The catch is structural, not visual: apparel is one layer drawn over the head today, so the legs have to be re-inked on top here and in React this prop would need a second apparel layer under the tail. It also fights the lobby parade, where every bird already stands over a pool of floor shade.",
+          birds: cast(danceFloor)
+        },
+        {
+          title: "the two hard colours · chrome and orange",
+          note: "teamD (#d9dee6) is nearly white, so an unstroked white prop dies on it; teamA (#f97316) is the same orange as the beak, wattle and legs, so a prop has to stay off `primary` too. The mirrorball is immune to both because it hangs off the bird against the stage. The shirt front and the bells are the two that chrome hurts: both are white on a near-white body and survive only on their 2-unit `bg` stroke — remove it and they vanish, and at 76px the bells very nearly do anyway. The floor is unaffected by team colour entirely; on orange its re-inked legs are the only place the prop and `primary` meet, and they do not collide.",
+          birds: [
+            { fill: teamD, apparel: mirrorball, avatarSrc: HEADS.sara, caption: "chrome · mirrorball" },
+            { fill: teamD, apparel: shirtFront, body: "round", comb: "crest", caption: "chrome · shirt front" },
+            { fill: teamD, apparel: flares, body: "wide", comb: "mohawk", caption: "chrome · flares" },
+            { fill: teamA, apparel: mirrorball, body: "tall", comb: "crest", caption: "orange · mirrorball" },
+            { fill: teamA, apparel: shirtFront, avatarSrc: HEADS.kenny, caption: "orange · shirt front" },
+            { fill: teamA, apparel: danceFloor, body: "round", comb: "crest", caption: "orange · floor" }
+          ]
+        },
+        {
+          title: "verdict · the mirrorball, with the shirt front as the fallback",
+          note: "<strong>Ship the mirrorball.</strong> It answers both doubts about the medallion at once: it is not a necklace, so it is untouched by whatever metal does next, and it is the loudest thing on this page at 76px because it lives in empty air instead of competing with a chest that is already the brightest part of the bird. It is also the only prop in the whole set whose placement on a costume head is unarguable — it never touches the head, so there is no anchor to get wrong, no face to cross, and it is provably the same drawing on both head types. The trade is that it is a scene object, not clothing: it says <em>disco</em> without saying <em>this bird</em>, and in the lobby parade huddle one bird\'s ball will overlap the neighbour it is standing next to. <strong>If a floating object is a step too far, take the open shirt front.</strong> It stays on the bird, it is worn rather than hung, and it is the one candidate that is unmistakably a garment — the direct answer to \"don\'t love the necklaces\" — but it is white-on-near-white on chrome and lives by its outline there. <strong>Rejected:</strong> the flares are charming and too small; the bird has under six units between its hem and the floor and half of those are toes, so what survives at 76px is boots, not trousers. The dance floor reads best of all at 76px and is the only candidate that cannot ship as a pure addition — apparel is one layer over the head, so a ground prop needs the figure to grow a second layer under the tail, which is too much structure to buy for one genre. The Saturday Night Fever point was dropped before it was drawn: the wing pivots at the shoulder, and the only arc that clears a player\'s photograph swings the arm backwards over the tail, which is a shrug, not a point. <strong>If two props are allowed,</strong> mirrorball plus flares is the pair — one at the top of the box, one at the bottom, neither anywhere near a face, and between them the bird is lit from above and dressed from below.",
+          birds: [
+            { fill: teamB, apparel: mirrorball, body: "round", comb: "crest", caption: "mirrorball · drawn" },
+            { fill: teamB, apparel: mirrorball, avatarSrc: HEADS.rosi, caption: "mirrorball · costume" },
+            { fill: teamB, apparel: (h, f) => mirrorball(h, f) + flares(h, f), avatarSrc: HEADS.rob, caption: "mirrorball + flares" },
+            { fill: teamB, apparel: shirtFront, avatarSrc: HEADS.sara, caption: "fallback · shirt front" }
+          ]
+        }
+      ];
+
+      document.getElementById("root").innerHTML = CARDS.map(candidateCard).join("");
+    </script>
+  </body>
+</html>
