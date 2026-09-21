@@ -1,5 +1,6 @@
 import type { MinigameType } from "@wingnight/shared";
 import type { MinigameRuntimePlugin } from "@wingnight/minigames-core";
+import { resolveSeededPromptCursor } from "@wingnight/minigames-core";
 
 import { resolveTriviaContent, triviaContentAdapter } from "./content/index.js";
 import {
@@ -35,24 +36,6 @@ export const createTriviaStateWithPendingPoints = (
   };
 };
 
-// Seed each team's cursor into a distinct content slice so later teams never
-// replay a question an earlier team already answered aloud this round.
-const resolveSeededPromptCursor = (
-  teamIds: string[],
-  activeRoundTeamId: string | null,
-  questionsPerTurn: number,
-  promptCount: number
-): number => {
-  if (promptCount === 0) {
-    return 0;
-  }
-
-  const teamIndex =
-    activeRoundTeamId === null ? 0 : Math.max(0, teamIds.indexOf(activeRoundTeamId));
-
-  return (teamIndex * questionsPerTurn) % promptCount;
-};
-
 export const triviaRuntimePlugin: MinigameRuntimePlugin = {
   id: "TRIVIA",
   content: triviaContentAdapter,
@@ -67,12 +50,12 @@ export const triviaRuntimePlugin: MinigameRuntimePlugin = {
       runtimeState: {
         turnOrderTeamIds: [...runtimeTeamIds],
         activeTurnIndex: 0,
-        promptCursor: resolveSeededPromptCursor(
-          input.teamIds,
-          input.activeRoundTeamId,
-          triviaRules.questionsPerTurn,
-          triviaContent.prompts.length
-        ),
+        promptCursor: resolveSeededPromptCursor({
+          teamIds: input.teamIds,
+          activeRoundTeamId: input.activeRoundTeamId,
+          promptsPerTurn: triviaRules.questionsPerTurn,
+          promptCount: triviaContent.prompts.length
+        }),
         pendingPointsByTeamId: clonePendingPoints(input.pendingPointsByTeamId)
       },
       attemptsUsedThisTurn: 0,

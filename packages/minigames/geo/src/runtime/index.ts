@@ -1,5 +1,6 @@
 import type { GeoPromptResult, MinigameType } from "@wingnight/shared";
 import type { MinigameRuntimePlugin } from "@wingnight/minigames-core";
+import { resolveSeededPromptCursor } from "@wingnight/minigames-core";
 
 import { geoContentAdapter, resolveGeoContent } from "./content/index.js";
 import { isGeoRuntimeState, isSetGuessPayload } from "./guards/index.js";
@@ -14,22 +15,6 @@ import {
 
 export const geoMinigameId: MinigameType = "GEO";
 
-const resolveSeededPromptCursor = (
-  teamIds: string[],
-  activeRoundTeamId: string | null,
-  promptsPerTurn: number,
-  promptCount: number
-): number => {
-  if (promptCount === 0) {
-    return 0;
-  }
-
-  const teamIndex =
-    activeRoundTeamId === null ? 0 : Math.max(0, teamIds.indexOf(activeRoundTeamId));
-
-  return (teamIndex * promptsPerTurn) % promptCount;
-};
-
 export const geoRuntimePlugin: MinigameRuntimePlugin = {
   id: "GEO",
   content: geoContentAdapter,
@@ -43,12 +28,12 @@ export const geoRuntimePlugin: MinigameRuntimePlugin = {
     const initialState: GeoRuntimeState = {
       turnOrderTeamIds: runtimeTeamIds,
       activeTurnIndex: 0,
-      promptCursor: resolveSeededPromptCursor(
-        input.teamIds,
-        input.activeRoundTeamId,
-        geoRules.promptsPerTurn,
-        geoContent.prompts.length
-      ),
+      promptCursor: resolveSeededPromptCursor({
+        teamIds: input.teamIds,
+        activeRoundTeamId: input.activeRoundTeamId,
+        promptsPerTurn: geoRules.promptsPerTurn,
+        promptCount: geoContent.prompts.length
+      }),
       promptsPerTurn: geoRules.promptsPerTurn,
       promptsCompletedThisTurn: 0,
       currentGuess: null,

@@ -1,4 +1,5 @@
 import type { FappyGate, FappyLegCourse } from "../types.js";
+import { createMulberry32, pickInteger } from "../../seededRandom/index.js";
 
 /**
  * The fixed geometry and tuning every leg shares. World units are JOUST's: a 160×90 box the
@@ -55,32 +56,12 @@ export const FAPPY_WORLD = {
 } as const;
 
 /**
- * mulberry32: integer arithmetic only, so the stream is bit-identical on every engine. The
- * shared JOUST determinism rule (no implementation-defined Math member) is enforced by a test
- * over this whole module.
- */
-export const createFappyRandom = (seed: number): (() => number) => {
-  let state = seed | 0;
-
-  return (): number => {
-    state = (state + 0x6d2b79f5) | 0;
-    let t = Math.imul(state ^ (state >>> 15), 1 | state);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-};
-
-const pickInteger = (random: () => number, min: number, max: number): number => {
-  return min + Math.floor(random() * (max - min + 1));
-};
-
-/**
  * The gates for one leg. Seeded from the leg, not from the turn, so a leg can be redone or
  * rehydrated on its own. Every gate has a champ from the floor; about half also hang an eagle,
  * always high enough that the gap at the champ's full stretch is still `gapHeight`.
  */
 export const resolveFappyGates = ({ seed, legIndex, gatesPerLeg }: FappyLegCourse): FappyGate[] => {
-  const random = createFappyRandom((seed ^ Math.imul(legIndex + 1, 0x9e3779b1)) | 0);
+  const random = createMulberry32((seed ^ Math.imul(legIndex + 1, 0x9e3779b1)) | 0);
   const gates: FappyGate[] = [];
 
   for (let gateOffset = 0; gateOffset < gatesPerLeg; gateOffset += 1) {

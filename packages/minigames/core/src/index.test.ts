@@ -5,7 +5,8 @@ import {
   createDevManifest,
   createPromptContentAdapter,
   isMinigameDevManifest,
-  isSerializableValue
+  isSerializableValue,
+  resolveSeededPromptCursor
 } from "./index.js";
 
 type DummyPrompt = {
@@ -195,4 +196,70 @@ test("isMinigameDevManifest rejects payloads the sandbox cannot seed from", () =
   );
   const { content: _content, ...withoutContent } = VALID_DEV_MANIFEST;
   assert.equal(isMinigameDevManifest(withoutContent), false);
+});
+
+const TURN_ORDER = ["team-1", "team-2", "team-3"];
+
+test("resolveSeededPromptCursor gives each team its own slice when the bank is big enough", () => {
+  const cursors = TURN_ORDER.map((teamId) =>
+    resolveSeededPromptCursor({
+      teamIds: TURN_ORDER,
+      activeRoundTeamId: teamId,
+      promptsPerTurn: 2,
+      promptCount: 6
+    })
+  );
+
+  assert.deepEqual(cursors, [0, 2, 4]);
+});
+
+test("resolveSeededPromptCursor wraps when the bank is smaller than teams x promptsPerTurn", () => {
+  // A short bank HAS to repeat; the third team lands back on the first team's
+  // slice rather than on an empty screen.
+  const cursors = TURN_ORDER.map((teamId) =>
+    resolveSeededPromptCursor({
+      teamIds: TURN_ORDER,
+      activeRoundTeamId: teamId,
+      promptsPerTurn: 2,
+      promptCount: 4
+    })
+  );
+
+  assert.deepEqual(cursors, [0, 2, 0]);
+});
+
+test("resolveSeededPromptCursor starts at zero when no team holds the round", () => {
+  assert.equal(
+    resolveSeededPromptCursor({
+      teamIds: TURN_ORDER,
+      activeRoundTeamId: null,
+      promptsPerTurn: 2,
+      promptCount: 6
+    }),
+    0
+  );
+});
+
+test("resolveSeededPromptCursor starts at zero when the active team is not in the turn order", () => {
+  assert.equal(
+    resolveSeededPromptCursor({
+      teamIds: TURN_ORDER,
+      activeRoundTeamId: "team-unknown",
+      promptsPerTurn: 2,
+      promptCount: 6
+    }),
+    0
+  );
+});
+
+test("resolveSeededPromptCursor returns zero when the bank is empty", () => {
+  assert.equal(
+    resolveSeededPromptCursor({
+      teamIds: TURN_ORDER,
+      activeRoundTeamId: "team-3",
+      promptsPerTurn: 2,
+      promptCount: 0
+    }),
+    0
+  );
 });

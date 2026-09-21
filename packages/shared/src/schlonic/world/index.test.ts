@@ -3,7 +3,6 @@ import test from "node:test";
 
 import {
   SCHLONIC_WORLD,
-  createSchlonicRandom,
   isSchlonicInPit,
   isSchlonicOverPit,
   resolveSchlonicGroundSlope,
@@ -21,13 +20,6 @@ test("draws the same zone twice from the same seed", () => {
 
 test("draws a different zone from a different seed", () => {
   assert.notDeepEqual(zoneOf(1).heights, zoneOf(2).heights);
-});
-
-test("runs the same random stream on every call for a seed", () => {
-  const first = createSchlonicRandom(7);
-  const second = createSchlonicRandom(7);
-
-  assert.deepEqual([first(), first(), first()], [second(), second(), second()]);
 });
 
 test("keeps the ground inside the box however the chunks stack up", () => {

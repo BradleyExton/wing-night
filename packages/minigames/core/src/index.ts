@@ -349,6 +349,38 @@ export const createPromptContentAdapter = <TPrompt>({
   };
 };
 
+export type ResolveSeededPromptCursorInput = {
+  // The room's turn order, so a team's position in it decides its slice.
+  teamIds: string[];
+  activeRoundTeamId: string | null;
+  // How many prompts this team will burn through on its turn.
+  promptsPerTurn: number;
+  // How many prompts the bank holds.
+  promptCount: number;
+};
+
+// Seed each team's cursor into a distinct content slice so later teams never
+// replay a prompt an earlier team already answered aloud this round.
+//
+// The wrap is deliberate: a bank smaller than teams x promptsPerTurn HAS to
+// repeat, and a repeat is a better party than an empty screen. It does mean a
+// short bank replays silently, so size the bank for the roster.
+export const resolveSeededPromptCursor = ({
+  teamIds,
+  activeRoundTeamId,
+  promptsPerTurn,
+  promptCount
+}: ResolveSeededPromptCursorInput): number => {
+  if (promptCount === 0) {
+    return 0;
+  }
+
+  const teamIndex =
+    activeRoundTeamId === null ? 0 : Math.max(0, teamIds.indexOf(activeRoundTeamId));
+
+  return (teamIndex * promptsPerTurn) % promptCount;
+};
+
 const isSerializableRecord = (
   value: Record<string, unknown>
 ): value is { [key: string]: SerializableValue } => {

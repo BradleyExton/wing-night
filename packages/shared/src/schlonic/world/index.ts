@@ -1,4 +1,5 @@
 import type { SchlonicPit, SchlonicProp, SchlonicZone, SchlonicZoneCourse } from "../types.js";
+import { createMulberry32, pickInteger } from "../../seededRandom/index.js";
 
 /**
  * The fixed geometry and tuning every zone shares. World units are JOUST's and FAPPY's: a 160×90
@@ -58,26 +59,6 @@ export const SCHLONIC_WORLD = {
   hitSpeedShare: 0.45,
   hitBounceVelocity: -1.1
 } as const;
-
-/**
- * mulberry32: integer arithmetic only, so the stream is bit-identical on every engine. The
- * shared determinism rule (no implementation-defined Math member) is enforced by a test over
- * this whole module.
- */
-export const createSchlonicRandom = (seed: number): (() => number) => {
-  let state = seed | 0;
-
-  return (): number => {
-    state = (state + 0x6d2b79f5) | 0;
-    let t = Math.imul(state ^ (state >>> 15), 1 | state);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-};
-
-const pickInteger = (random: () => number, min: number, max: number): number => {
-  return min + Math.floor(random() * (max - min + 1));
-};
 
 /**
  * The kit a zone is built from, in two piles. The hard kit asks something of the player; the
@@ -359,7 +340,7 @@ const addChunkProps = (
  * rule, not a roll — so the night is a race over the same hill rather than a lottery.
  */
 export const resolveSchlonicZone = ({ seed, chunks }: SchlonicZoneCourse): SchlonicZone => {
-  const random = createSchlonicRandom(seed | 0);
+  const random = createMulberry32(seed | 0);
   const kinds = resolveChunkKinds(random, Math.max(3, chunks));
   const heights = resolveHeights(kinds, random);
   const pits: SchlonicPit[] = kinds.flatMap((kind, chunk) => {

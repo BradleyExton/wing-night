@@ -1,6 +1,7 @@
 import type { Segment } from "../../contraption/types.js";
 import type { BodyStep } from "../../contraption/simulate/resolveSegmentContacts/index.js";
 import { resolveSegmentContacts } from "../../contraption/simulate/resolveSegmentContacts/index.js";
+import { createXorshift32 } from "../../seededRandom/index.js";
 import type {
   JoustAim,
   JoustArena,
@@ -43,8 +44,6 @@ import {
  * shooter body off that knife edge reproducibly.
  */
 const JITTER_UNITS = 0.0005;
-const DEFAULT_SEED_STATE = 0x9e3779b9 | 0;
-const UINT32_RANGE = 4294967296;
 
 /** How many constraint passes settle the chains each step. */
 const CONSTRAINT_ITERATIONS = 4;
@@ -154,28 +153,6 @@ type DistanceConstraint = {
   readonly stiffness: number;
 };
 
-/**
- * xorshift32 — integer operations only, so every engine implementing ES2022 bit operators yields
- * the identical stream. The platform PRNG is excluded for the opposite reason: it is not
- * reproducible at all.
- */
-const nextSeedState = (state: number): number => {
-  let next = state | 0;
-  next ^= next << 13;
-  next ^= next >>> 17;
-  next ^= next << 5;
-  return next | 0;
-};
-
-const seedStateFrom = (seed: number): number => {
-  const truncated = seed | 0;
-  return truncated === 0 ? DEFAULT_SEED_STATE : truncated;
-};
-
-const unitFromState = (state: number): number => {
-  return (state >>> 0) / UINT32_RANGE;
-};
-
 const assertOptions = (options: JoustSimulateOptions): void => {
   if (!Number.isFinite(options.seed)) {
     throw new RangeError("simulateJoustShot: seed must be a finite number");
@@ -214,7 +191,7 @@ const buildBodies = (
 ): Body[] => {
   const descriptors = resolveJoustBodies(pinCount, legCount);
   const firstLegBody = joustLegFootIndex(pinCount, 0);
-  let seedState = seedStateFrom(seed);
+  const jitter = createXorshift32(seed);
 
   return rest.map((position, bodyIndex): Body => {
     const descriptor = descriptors[bodyIndex];
@@ -224,10 +201,8 @@ const buildBodies = (
     let y = position.y;
 
     if (isShooter) {
-      seedState = nextSeedState(seedState);
-      x += (unitFromState(seedState) * 2 - 1) * JITTER_UNITS;
-      seedState = nextSeedState(seedState);
-      y += (unitFromState(seedState) * 2 - 1) * JITTER_UNITS;
+      x += (jitter() * 2 - 1) * JITTER_UNITS;
+      y += (jitter() * 2 - 1) * JITTER_UNITS;
     }
 
     return {

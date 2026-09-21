@@ -3,6 +3,7 @@ import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult
 } from "@wingnight/minigames-core";
+import { resolveSeededPromptCursor } from "@wingnight/minigames-core";
 
 import { recreateContentAdapter, resolveRecreateContent } from "./content/index.js";
 import {
@@ -25,22 +26,6 @@ import {
 } from "./views/index.js";
 
 export const recreateMinigameId: MinigameType = "RECREATE";
-
-const resolveSeededPromptCursor = (
-  teamIds: string[],
-  activeRoundTeamId: string | null,
-  targetsPerTurn: number,
-  promptCount: number
-): number => {
-  if (promptCount === 0) {
-    return 0;
-  }
-
-  const teamIndex =
-    activeRoundTeamId === null ? 0 : Math.max(0, teamIds.indexOf(activeRoundTeamId));
-
-  return (teamIndex * targetsPerTurn) % promptCount;
-};
 
 // Deterministic on purpose: a display refresh or an undo must land on the
 // same id the generator is already working on, so its result still matches.
@@ -223,12 +208,12 @@ export const recreateRuntimePlugin: MinigameRuntimePlugin = {
     const initialState: RecreateRuntimeState = {
       turnOrderTeamIds: [...runtimeTeamIds],
       activeTurnIndex: 0,
-      promptCursor: resolveSeededPromptCursor(
-        input.teamIds,
-        input.activeRoundTeamId,
-        rules.targetsPerTurn,
-        content.prompts.length
-      ),
+      promptCursor: resolveSeededPromptCursor({
+        teamIds: input.teamIds,
+        activeRoundTeamId: input.activeRoundTeamId,
+        promptsPerTurn: rules.targetsPerTurn,
+        promptCount: content.prompts.length
+      }),
       targetsPerTurn: rules.targetsPerTurn,
       targetsCompletedThisTurn: 0,
       pointsPerIngredient: rules.pointsPerIngredient,

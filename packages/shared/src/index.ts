@@ -93,7 +93,6 @@ export {
   advanceFappy,
   createFappyLegLanding,
   createFappyLegStart,
-  createFappyRandom,
   resolveFappyChampTop,
   resolveFappyCliffPerchY,
   resolveFappyGates,
@@ -117,7 +116,6 @@ export type {
 export {
   SCHLONIC_WORLD,
   advanceSchlonic,
-  createSchlonicRandom,
   createSchlonicRunSkip,
   createSchlonicRunStart,
   isSchlonicInPit,

@@ -1,6 +1,5 @@
 export {
   FAPPY_WORLD,
-  createFappyRandom,
   resolveFappyChampTop,
   resolveFappyCliffPerchY,
   resolveFappyGates,

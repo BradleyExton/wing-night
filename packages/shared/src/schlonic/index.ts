@@ -1,6 +1,5 @@
 export {
   SCHLONIC_WORLD,
-  createSchlonicRandom,
   isSchlonicInPit,
   isSchlonicOverPit,
   resolveSchlonicGroundSlope,

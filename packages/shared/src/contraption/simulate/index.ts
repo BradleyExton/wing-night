@@ -1,6 +1,7 @@
 import type { Keyframe, Layout, Run, SimulateOptions, Vec2 } from "../types.js";
 import type { BodyStep } from "./resolveSegmentContacts/index.js";
 import { resolveSegmentContacts } from "./resolveSegmentContacts/index.js";
+import { createXorshift32 } from "../../seededRandom/index.js";
 
 /**
  * Half a thousandth of a layout unit. A perfectly symmetric build — a ball centred exactly on a
@@ -8,33 +9,6 @@ import { resolveSegmentContacts } from "./resolveSegmentContacts/index.js";
  * body off that knife edge reproducibly.
  */
 const JITTER_UNITS = 0.0005;
-
-const DEFAULT_SEED_STATE = 0x9e3779b9 | 0;
-
-const UINT32_RANGE = 4294967296;
-
-/**
- * xorshift32 — integer operations only, so every engine implementing ES2022 bit operators yields
- * the identical stream. The platform PRNG is excluded from this module for the opposite reason:
- * it is not reproducible at all.
- */
-const nextSeedState = (state: number): number => {
-  let next = state | 0;
-  next ^= next << 13;
-  next ^= next >>> 17;
-  next ^= next << 5;
-  return next | 0;
-};
-
-/** xorshift32 is absorbing at zero, so a zero seed borrows a fixed non-zero state instead. */
-const seedStateFrom = (seed: number): number => {
-  const truncated = seed | 0;
-  return truncated === 0 ? DEFAULT_SEED_STATE : truncated;
-};
-
-const unitFromState = (state: number): number => {
-  return (state >>> 0) / UINT32_RANGE;
-};
 
 const assertOptions = (options: SimulateOptions): void => {
   if (!Number.isFinite(options.seed)) {
@@ -98,12 +72,10 @@ export const simulate = (layout: Layout, options: SimulateOptions): Run => {
   const stepsPerKeyframe = options.stepHz / options.keyframeHz;
   const totalSteps = Math.round(options.durationSeconds * options.stepHz);
 
-  let seedState = seedStateFrom(options.seed);
+  const jitter = createXorshift32(options.seed);
   const steps: BodyStep[] = layout.bodies.map((body): BodyStep => {
-    seedState = nextSeedState(seedState);
-    const offsetX = (unitFromState(seedState) * 2 - 1) * JITTER_UNITS;
-    seedState = nextSeedState(seedState);
-    const offsetY = (unitFromState(seedState) * 2 - 1) * JITTER_UNITS;
+    const offsetX = (jitter() * 2 - 1) * JITTER_UNITS;
+    const offsetY = (jitter() * 2 - 1) * JITTER_UNITS;
     return jitteredStart(body.origin, offsetX, offsetY);
   });
 
