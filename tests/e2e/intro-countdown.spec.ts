@@ -120,7 +120,7 @@ test("intro lock screen transitions to round-intro countdown on display", async 
   await expect(displayPage.getByText("on the wings")).toBeVisible();
   await expect(displayPage.getByText("Game starts in")).toHaveCount(0);
   await expect(hostPage.locator("header").getByText("Frank's")).toBeVisible();
-  await expect(displayPage.getByText("TRIVIA")).toBeVisible();
+  await expect(displayPage.getByText("SCHLONIC")).toBeVisible();
 
   await context.close();
 });

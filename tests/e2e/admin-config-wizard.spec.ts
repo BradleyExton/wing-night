@@ -4,7 +4,7 @@ import { ensureSetupPhase, hostPrimaryActionButton } from "./hostShell";
 
 // Round 2 deliberately, never round 1: `host-display-sync`, `refresh-rehydrate`
 // and `intro-countdown` all assert on round 1's values ("Warm Up", "Frank's",
-// "TRIVIA"). Nothing asserts on round 2's label, and nothing here adds or
+// "SCHLONIC"). Nothing asserts on round 2's label, and nothing here adds or
 // removes a round, so `intro-countdown`'s "Round 1 of 6" also stays true.
 const EDITED_ROUND_INDEX = 1;
 const EDITED_ROUND_LABEL = "Second Heat Rewired";

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import {
+  displayMinigameTakeover,
   ensureSetupPhase,
   lockTeamsFromSetup,
   startEatingFromBriefing,
@@ -52,7 +53,7 @@ test("host takeover dock hides the CTA during play and still advances the turn",
   // Escape puts the dock away without advancing anything.
   await hostPage.keyboard.press("Escape");
   await expect(endTurnButton).toHaveCount(0);
-  await expect(displayPage.getByText("On the clock:")).toBeVisible();
+  await expect(displayMinigameTakeover(displayPage)).toBeVisible();
 
   await dockToggle.click();
   await expect(
@@ -61,7 +62,7 @@ test("host takeover dock hides the CTA during play and still advances the turn",
   await endTurnButton.click();
 
   // The turn really ended: the display has left the mini-game takeover.
-  await expect(displayPage.getByText("On the clock:")).toHaveCount(0);
+  await expect(displayMinigameTakeover(displayPage)).toHaveCount(0);
 
   await ensureSetupPhase(hostPage);
   await context.close();

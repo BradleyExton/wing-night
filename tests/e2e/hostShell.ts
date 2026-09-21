@@ -103,11 +103,20 @@ export const startEatingFromBriefing = async (hostPage: Page): Promise<void> => 
 };
 
 // MINIGAME_PLAY replaces the host control deck with the full-screen takeover, so
-// the arrival signal is the trivia surface's grading control, not a phase label.
+// the arrival signal is a control belonging to round 1's game — SCHLONIC — not a
+// phase label.
 export const startMinigameFromEating = async (hostPage: Page): Promise<void> => {
   await hostPage.getByRole("button", { name: "Start Mini-Game" }).click();
 
   await expect(
-    hostPage.getByRole("button", { name: "Correct", exact: true })
+    hostPage.getByRole("button", { name: "Skip run", exact: true })
   ).toBeVisible();
+};
+
+// The same takeover as the TV sees it. A locator rather than a copy string
+// because SCHLONIC's marquee already carries a data hook, and every wording on
+// that surface — zone name, status line, ring tally — is the game's to retune;
+// specs that assert on it red out for reasons that are not about the shell.
+export const displayMinigameTakeover = (displayPage: Page): Locator => {
+  return displayPage.locator("[data-schlonic-rings]");
 };

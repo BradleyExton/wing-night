@@ -1,6 +1,7 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import {
+  displayMinigameTakeover,
   ensureSetupPhase,
   lockTeamsFromSetup,
   startEatingFromBriefing,
@@ -15,7 +16,6 @@ import {
 const PRE_SNAPSHOT_PLACEHOLDER = "Waiting for room state...";
 
 const EATING_MILESTONE_SURFACE = "Eating · Frank's";
-const MINIGAME_MILESTONE_SURFACE = "On the clock:";
 
 // Room state is one in-memory singleton shared by every spec in the run, so a
 // spec that ends mid-game hands the next one a surface it never asked for —
@@ -45,13 +45,15 @@ const advanceToEatingMilestone = async (
 // wireRoomStateRehydration guards its REQUEST_STATE emit with
 // `if (socket.connected)` (apps/client/src/utils/wireRoomStateRehydration/index.ts:31),
 // which is false during the mount that follows a reload.
+// The milestone is a Locator, not a string: locators resolve lazily, so one
+// built before the reload still addresses the page that comes back.
 const expectRehydratesTo = async (
   displayPage: Page,
-  milestoneSurface: string
+  milestoneSurface: Locator
 ): Promise<void> => {
   await displayPage.reload();
 
-  await expect(displayPage.getByText(milestoneSurface)).toBeVisible();
+  await expect(milestoneSurface).toBeVisible();
   await expect(displayPage.getByText(PRE_SNAPSHOT_PLACEHOLDER)).toHaveCount(0);
 };
 
@@ -64,7 +66,7 @@ test("display rehydrates the eating milestone when it is reloaded mid-game", asy
 
   await advanceToEatingMilestone(hostPage, displayPage);
 
-  await expectRehydratesTo(displayPage, EATING_MILESTONE_SURFACE);
+  await expectRehydratesTo(displayPage, displayPage.getByText(EATING_MILESTONE_SURFACE));
 
   await ensureSetupPhase(hostPage);
   await context.close();
@@ -80,9 +82,9 @@ test("display rehydrates the mini-game takeover when it is reloaded mid-game", a
   await advanceToEatingMilestone(hostPage, displayPage);
   await startMinigameFromEating(hostPage);
 
-  await expect(displayPage.getByText(MINIGAME_MILESTONE_SURFACE)).toBeVisible();
+  await expect(displayMinigameTakeover(displayPage)).toBeVisible();
 
-  await expectRehydratesTo(displayPage, MINIGAME_MILESTONE_SURFACE);
+  await expectRehydratesTo(displayPage, displayMinigameTakeover(displayPage));
 
   await ensureSetupPhase(hostPage);
   await context.close();

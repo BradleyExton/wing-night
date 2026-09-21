@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import {
+  displayMinigameTakeover,
   ensureSetupPhase,
   lockTeamsFromSetup,
   startEatingFromBriefing,
@@ -31,7 +32,7 @@ test("display follows host phase advances through the round-1 milestone chain", 
     timeout: 6_000
   });
   await expect(displayPage.getByText("playing", { exact: true })).toBeVisible();
-  await expect(displayPage.getByText("TRIVIA")).toBeVisible();
+  await expect(displayPage.getByText("SCHLONIC")).toBeVisible();
 
   // Eating: the briefing surface yields to the sauce timer.
   await startEatingFromBriefing(hostPage);
@@ -39,10 +40,10 @@ test("display follows host phase advances through the round-1 milestone chain", 
   await expect(displayPage.getByText("Eating · Frank's")).toBeVisible();
   await expect(displayPage.getByText("playing", { exact: true })).toHaveCount(0);
 
-  // Mini-game play: the trivia takeover replaces the eating surface.
+  // Mini-game play: the SCHLONIC takeover replaces the eating surface.
   await startMinigameFromEating(hostPage);
 
-  await expect(displayPage.getByText("On the clock:")).toBeVisible();
+  await expect(displayMinigameTakeover(displayPage)).toBeVisible();
   await expect(displayPage.getByText("Eating · Frank's")).toHaveCount(0);
 
   await expect(displayPage.getByText("Content Load Error")).toHaveCount(0);
