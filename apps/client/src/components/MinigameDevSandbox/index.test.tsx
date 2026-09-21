@@ -29,6 +29,22 @@ test("renders the geo sandbox without leaking answer coordinates", () => {
   assert.doesNotMatch(html, /answerLat/);
 });
 
+// The real MINIGAME_PLAY takeover pins TakeoverTimerChip in the canvas's top
+// right corner for a game with a play-phase clock (GEO, DRAWING,
+// EMOJI_CHARADES) and renders no chip for the rest — a sandbox that always
+// left this out was lying about how much corner the minigame actually gets.
+test("shows the takeover timer chip in the host preview for a game with a clock", () => {
+  const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="GEO" />);
+
+  assert.match(html, /00:45/);
+});
+
+test("shows no timer chip in the host preview for a host-paced game", () => {
+  const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="TRIVIA" />);
+
+  assert.doesNotMatch(html, /\d\d:\d\d/);
+});
+
 test("renders the drawing sandbox without leaking the prompt to the display", () => {
   const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="DRAWING" />);
 

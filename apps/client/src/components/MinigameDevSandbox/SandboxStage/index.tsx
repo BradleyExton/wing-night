@@ -9,12 +9,15 @@ import type {
 import { Phase, resolveMinigameDefinition, type MinigameType } from "@wingnight/shared";
 
 import { hostCopy } from "../../../copy/host";
+import { RoomStateProvider } from "../../../context/RoomStateContext";
 import { HostActionBarSurface } from "../../HostControlPanel/HostActionBarSurface";
+import { TakeoverTimerChip } from "../../HostControlPanel/HostPhaseBody/MinigamePlayTakeover/TakeoverTimerChip";
 import { HostTakeoverDock } from "../../HostControlPanel/HostTakeoverDock";
 import { MinigameSurface } from "../../HostControlPanel/MinigameSurface";
 import { SandboxControls } from "../SandboxControls";
 import { SandboxDeviceFrame } from "../SandboxDeviceFrame";
 import { minigameDevSandboxCopy } from "../copy";
+import { resolveSandboxHostRoomState } from "./resolveSandboxHostRoomState";
 import * as styles from "./styles";
 
 type SandboxStageProps = {
@@ -137,6 +140,7 @@ export const SandboxStage = ({
   }));
   const teamNameByTeamId = new Map(Object.entries(devManifest.teamNameByTeamId));
   const { DisplaySurface } = rendererBundle;
+  const sandboxHostRoomState = resolveSandboxHostRoomState(minigameType, phase);
 
   return (
     <>
@@ -174,17 +178,26 @@ export const SandboxStage = ({
             deviceHeight={HOST_DEVICE.height}
           >
             <div className={styles.hostShell}>
-              <div className={styles.hostCanvas}>
-                <MinigameSurface
-                  phase={phase}
-                  minigameType={minigameType}
-                  minigameHostView={minigameHostView}
-                  activeTeamName={activeTeamName}
-                  teamNameByTeamId={teamNameByTeamId}
-                  canDispatchAction
-                  onDispatchAction={handleDispatchAction}
-                />
-              </div>
+              <RoomStateProvider
+                value={
+                  sandboxHostRoomState === null
+                    ? null
+                    : { clientRole: "HOST", roomState: sandboxHostRoomState }
+                }
+              >
+                <div className={styles.hostCanvas}>
+                  <TakeoverTimerChip />
+                  <MinigameSurface
+                    phase={phase}
+                    minigameType={minigameType}
+                    minigameHostView={minigameHostView}
+                    activeTeamName={activeTeamName}
+                    teamNameByTeamId={teamNameByTeamId}
+                    canDispatchAction
+                    onDispatchAction={handleDispatchAction}
+                  />
+                </div>
+              </RoomStateProvider>
               {phase === "play" ? (
                 <HostTakeoverDock
                   primaryActionLabel={resolveHostShellCtaLabel(phase)}
