@@ -13,7 +13,7 @@ import * as styles from "./styles";
 
 export const CompactStage = (): JSX.Element | null => {
   const roomState = useHostRoomState();
-  const { teamNameByTeamId } = selectHostTeamMaps(roomState);
+  const { teamNameByTeamId, teamThemeByTeamId } = selectHostTeamMaps(roomState);
 
   if (roomState === null) {
     return null;
@@ -68,6 +68,7 @@ export const CompactStage = (): JSX.Element | null => {
         <CompactSummarySurface
           sortedStandings={sortedStandings}
           players={players}
+          teamThemeByTeamId={teamThemeByTeamId}
         />
       </ControlDeck>
     </>

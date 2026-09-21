@@ -1,8 +1,7 @@
-import { resolveTeamColorVariant } from "@wingnight/cast";
-
 import { type FormEvent, useId, useState } from "react";
 
 import { hostControlPanelCopy } from "../../copy";
+import { resolveTeamTheme } from "../../../../utils/resolveTeamTheme";
 import type { SetupPlayersSurfaceProps } from "../index";
 import * as styles from "./styles";
 
@@ -20,6 +19,7 @@ export const SetupPlayersSurface = ({
   players,
   teams,
   assignedTeamByPlayerId,
+  teamThemeByTeamId,
   assignmentDisabled,
   addPlayerDisabled,
   onAssignPlayer,
@@ -67,7 +67,9 @@ export const SetupPlayersSurface = ({
             >
               {teams.map((team) => {
                 const isActive = team.id === assignedTeamId;
-                const teamColorVariant = resolveTeamColorVariant(team.id);
+                const teamColorVariant = (
+                  teamThemeByTeamId.get(team.id) ?? resolveTeamTheme(team)
+                ).colorVariant;
                 const chipClassName = `${styles.chip} ${
                   isActive ? styles.chipActive : ""
                 }`;

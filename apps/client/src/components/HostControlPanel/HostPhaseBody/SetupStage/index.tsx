@@ -22,7 +22,8 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
   const roomState = useHostRoomState();
   const handlers = useHostHandlers();
   const [nextTeamName, setNextTeamName] = useState("");
-  const { assignedTeamByPlayerId, teamNameByTeamId } = selectHostTeamMaps(roomState);
+  const { assignedTeamByPlayerId, teamNameByTeamId, teamThemeByTeamId } =
+    selectHostTeamMaps(roomState);
   const players = roomState?.players ?? [];
   const teams = roomState?.teams ?? [];
   const setupMutationsDisabled = handlers.onCreateTeam === undefined || isLocked;
@@ -108,6 +109,7 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
           nextTeamName={nextTeamName}
           setupMutationsDisabled={setupMutationsDisabled}
           teams={teams}
+          teamThemeByTeamId={teamThemeByTeamId}
           onNextTeamNameChange={setNextTeamName}
           onCreateTeamSubmit={handleCreateTeamSubmit}
         />
@@ -116,6 +118,7 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
           players={players}
           teams={teams}
           assignedTeamByPlayerId={assignedTeamByPlayerId}
+          teamThemeByTeamId={teamThemeByTeamId}
           assignmentDisabled={assignmentDisabled}
           addPlayerDisabled={addPlayerDisabled}
           onAssignPlayer={handleAssignmentChange}

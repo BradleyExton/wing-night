@@ -1,4 +1,4 @@
-import type { Player, Team } from "@wingnight/shared";
+import type { Player, Team, TeamTheme } from "@wingnight/shared";
 
 import { EatingPlayersSurface } from "./EatingPlayersSurface";
 import { SetupPlayersSurface } from "./SetupPlayersSurface";
@@ -7,6 +7,10 @@ import * as styles from "./styles";
 type PlayersSurfaceBaseProps = {
   players: Player[];
   assignedTeamByPlayerId: Map<string, string>;
+  // The host's one copy of the kit, from `selectHostTeamMaps`. Both modes paint
+  // a team dot and both read it here, because a dot resolved per surface is a
+  // dot that disagrees with the TV (docs/team-identity.md).
+  teamThemeByTeamId: Map<string, TeamTheme>;
 };
 
 export type SetupPlayersSurfaceProps = PlayersSurfaceBaseProps & {

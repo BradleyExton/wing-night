@@ -23,7 +23,8 @@ Colour plus text almost everywhere; the genre reaches only two places.
 Structural limits the kit removes:
 
 - Colour is a hash of the positional team id (`resolveTeamColorVariant`), so it is neither authored
-  nor related to the genre, and reordering `teams.json` recolours every team.
+  nor related to the genre, and reordering `teams.json` recolours every team. (Closed by the kit:
+  the theme owns colour, and the hash is no longer exported from the cast at all — see "The kit".)
 - Only `resolveTeamApparel` and the intro eyebrow read `genre`.
 - The minigame contract (`packages/minigames/core`) passes a name and a name map, nothing themeable.
 - One system typeface everywhere; no webfonts.
@@ -77,7 +78,12 @@ type TeamTheme = {
 The resolver is pure and DOM-free (tests run under `tsx --test`). Surfaces get themes from one map
 per room state, `teamThemeByTeamId`, built inside `selectHostTeamMaps` on the host and
 `resolveStageViewModel` on the display (which also pulls out `activeTeamTheme` and
-`activeTeamPlayers`), so no surface calls the resolver on its own. The standings footer sits beside
+`activeTeamPlayers`), so no surface calls the resolver on its own. That is enforced rather than
+merely asked for: the cast no longer exports `resolveTeamColorVariant`, the bare id hash. Four host
+surfaces and the TV's ROUND_RESULTS table were still calling it into 2026-09-20 — the host tablet
+and the TV painted the same team two different colours all night, because the hash knows nothing of
+the genre kit, an authored `color` or the collision pass. The hash survives only inside the cast, as
+`resolveCharacterFillClassName`, for birds drawn where no seating list is in reach. The standings footer sits beside
 the stage rather than inside it, so `DisplayBoard` builds the same map once more for it. `resolveTeamApparel` stays in the cast rather than being deleted: JOUST
 dresses its lane birds from a display-view genre string, and the theme reads the same function, so
 there is still one apparel table. The vocabulary is `hat`, `collar`, `shades`, `medallion` — the

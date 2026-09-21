@@ -1,15 +1,15 @@
-import { resolveTeamColorVariant } from "@wingnight/cast";
-
 import type { FormEvent } from "react";
-import type { Team } from "@wingnight/shared";
+import type { Team, TeamTheme } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
+import { resolveTeamTheme } from "../../../utils/resolveTeamTheme";
 import * as styles from "./styles";
 
 type TeamSetupSurfaceProps = {
   nextTeamName: string;
   setupMutationsDisabled: boolean;
   teams: Team[];
+  teamThemeByTeamId: Map<string, TeamTheme>;
   onNextTeamNameChange: (nextTeamName: string) => void;
   onCreateTeamSubmit: (event: FormEvent<HTMLFormElement>) => void;
 };
@@ -18,6 +18,7 @@ export const TeamSetupSurface = ({
   nextTeamName,
   setupMutationsDisabled,
   teams,
+  teamThemeByTeamId,
   onNextTeamNameChange,
   onCreateTeamSubmit
 }: TeamSetupSurfaceProps): JSX.Element => {
@@ -35,7 +36,8 @@ export const TeamSetupSurface = ({
       )}
 
       {teams.map((team) => {
-        const teamColorVariant = resolveTeamColorVariant(team.id);
+        const teamColorVariant = (teamThemeByTeamId.get(team.id) ?? resolveTeamTheme(team))
+          .colorVariant;
         return (
           <div key={team.id} className={styles.row}>
             <span className={styles.rowName}>

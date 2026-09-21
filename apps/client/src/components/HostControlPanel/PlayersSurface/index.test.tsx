@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { resolveTeamThemeById } from "../../../utils/resolveTeamTheme";
 import { PlayersSurface } from "./index";
 
 const playersFixture = [
@@ -13,16 +14,20 @@ const teamsFixture = [
   {
     id: "team-alpha",
     name: "Team Alpha",
+    genre: "metal",
     playerIds: ["player-1"],
     totalScore: 10
   },
   {
     id: "team-beta",
     name: "Team Beta",
+    genre: "disco",
     playerIds: ["player-2"],
     totalScore: 8
   }
 ];
+
+const teamThemeByTeamId = resolveTeamThemeById(teamsFixture);
 
 test("delegates setup mode to setup players surface", () => {
   const html = renderToStaticMarkup(
@@ -31,6 +36,7 @@ test("delegates setup mode to setup players surface", () => {
       players={[...playersFixture]}
       teams={[...teamsFixture]}
       assignedTeamByPlayerId={new Map()}
+      teamThemeByTeamId={teamThemeByTeamId}
       assignmentDisabled={false}
       addPlayerDisabled={false}
       onAssignPlayer={(): void => {
@@ -55,6 +61,7 @@ test("delegates eating mode to eating players surface", () => {
         ["player-1", "team-alpha"],
         ["player-2", "team-beta"]
       ])}
+      teamThemeByTeamId={teamThemeByTeamId}
       teamNameByTeamId={
         new Map<string, string>([
           ["team-alpha", "Team Alpha"],

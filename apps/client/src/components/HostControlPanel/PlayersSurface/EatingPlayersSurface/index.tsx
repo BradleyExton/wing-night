@@ -1,5 +1,3 @@
-import { resolveTeamColorVariant } from "@wingnight/cast";
-
 import { Check } from "lucide-react";
 
 import { hostControlPanelCopy } from "../../copy";
@@ -9,6 +7,7 @@ import * as styles from "./styles";
 export const EatingPlayersSurface = ({
   players,
   assignedTeamByPlayerId,
+  teamThemeByTeamId,
   activeRoundTeamId,
   participationDisabled,
   wingParticipationByPlayerId,
@@ -48,8 +47,10 @@ export const EatingPlayersSurface = ({
       {visiblePlayers.map((player) => {
         const isSelected = wingParticipationByPlayerId[player.id] === true;
         const assignedTeamId = assignedTeamByPlayerId.get(player.id) ?? "";
-        const teamColorVariant =
-          assignedTeamId.length > 0 ? resolveTeamColorVariant(assignedTeamId) : null;
+        // No `resolveTeamTheme` fallback here the way the seated surfaces have
+        // one: this surface holds an id, not a `Team`, so a miss has nothing to
+        // theme from — and the dot is already optional.
+        const teamColorVariant = teamThemeByTeamId.get(assignedTeamId)?.colorVariant ?? null;
         const rowClassName = `${styles.row} ${isSelected ? styles.rowSelected : ""}`;
         const checkClassName = `${styles.rowCheck} ${
           isSelected ? styles.rowCheckActive : ""

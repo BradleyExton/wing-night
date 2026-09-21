@@ -622,12 +622,21 @@ are one creature and none has a copy that can drift.
 The package exports the bird two ways: `<Character>` for a page, which wraps
 it in its own `<svg>`, and `<CharacterFigure>` for a surface that has an SVG
 already and wants to place the bird in it (JOUST's lane, §2.7). It also owns
-`resolveTeamColorVariant`, so a team's bird, its standings dot and its row
-edge all come off one table and can never drift onto different hues.
+the `teamA`–`teamH` class table, so a team's bird, its standings dot and its
+row edge all come off one table and can never drift onto different hues.
+
+Which of the eight a team gets is the theme's call, not the cast's:
+`resolveTeamThemeById` (docs/team-identity.md) weighs the genre kit, an
+authored `color` and the cross-team collision pass, and every surface — TV and
+host tablet alike — reads the resulting map. The cast keeps a bare id hash for
+the one case with no seating list in reach, painting a bird
+(`resolveCharacterFillClassName`); it is deliberately not exported otherwise,
+because a surface that reached for it painted the host tablet in colours the
+TV disagreed with.
 
 -   **One colour per bird.** The whole silhouette (tail, body, wing, neck,
     head, comb) is the player's team accent (`teamA`–`teamH`, via
-    `resolveTeamColorVariant`, so it matches that team's standings dot);
+    `resolveCharacterFillClassName`, so it matches that team's standings dot);
     unassigned players are `mutedWarm`. Faces are two white eyes, the JOUST
     convention (§2.7); beak (two mandibles), wattle and legs are `primary`,
     outlined in `bg` so they hold on an orange team. The face, the beak and

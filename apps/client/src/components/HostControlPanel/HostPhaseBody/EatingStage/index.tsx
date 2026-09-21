@@ -17,7 +17,8 @@ const URGENT_THRESHOLD_SECONDS = 10;
 export const EatingStage = (): JSX.Element => {
   const roomState = useHostRoomState();
   const handlers = useHostHandlers();
-  const { assignedTeamByPlayerId, teamNameByTeamId } = selectHostTeamMaps(roomState);
+  const { assignedTeamByPlayerId, teamNameByTeamId, teamThemeByTeamId } =
+    selectHostTeamMaps(roomState);
   const players = roomState?.players ?? [];
   const wingParticipationByPlayerId = roomState?.wingParticipationByPlayerId ?? {};
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
@@ -77,6 +78,7 @@ export const EatingStage = (): JSX.Element => {
           mode="eating"
           players={players}
           assignedTeamByPlayerId={assignedTeamByPlayerId}
+          teamThemeByTeamId={teamThemeByTeamId}
           teamNameByTeamId={teamNameByTeamId}
           wingParticipationByPlayerId={wingParticipationByPlayerId}
           activeRoundTeamId={activeRoundTeamId}

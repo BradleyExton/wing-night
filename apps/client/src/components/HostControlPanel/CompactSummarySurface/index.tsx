@@ -1,20 +1,21 @@
-import { resolveTeamColorVariant } from "@wingnight/cast";
-
-import type { Player, Team } from "@wingnight/shared";
+import type { Player, Team, TeamTheme } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../copy";
 import { resolveLeadingTeams } from "../../../utils/resolveLeadingTeams";
+import { resolveTeamTheme } from "../../../utils/resolveTeamTheme";
 import { resolveTeamRosterPreview } from "../../../utils/resolveTeamRosterPreview";
 import * as styles from "./styles";
 
 type CompactSummarySurfaceProps = {
   sortedStandings: Team[];
   players: Player[];
+  teamThemeByTeamId: Map<string, TeamTheme>;
 };
 
 export const CompactSummarySurface = ({
   sortedStandings,
-  players
+  players,
+  teamThemeByTeamId
 }: CompactSummarySurfaceProps): JSX.Element => {
   const playerById = new Map(players.map((player) => [player.id, player] as const));
   // The leader row only lights up on a strict lead — while the top score is
@@ -38,7 +39,8 @@ export const CompactSummarySurface = ({
 
       {sortedStandings.map((team, index) => {
         const isLeader = index === 0 && hasStrictLeader;
-        const teamColorVariant = resolveTeamColorVariant(team.id);
+        const teamColorVariant = (teamThemeByTeamId.get(team.id) ?? resolveTeamTheme(team))
+          .colorVariant;
         const teamRosterPreview = resolveTeamRosterPreview(team, playerById, 2);
         const rowClassName = `${styles.row} ${isLeader ? styles.leaderRow : ""}`;
         const scoreClassName = `${styles.score} ${isLeader ? styles.scoreLeader : ""}`;

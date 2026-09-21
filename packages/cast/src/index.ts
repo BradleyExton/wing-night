@@ -71,10 +71,17 @@ export {
   resolveTeamApparel,
   type CharacterApparel
 } from "./resolveTeamApparel/index.js";
+// `resolveTeamColorVariant` — the bare id hash — is deliberately NOT exported.
+// A surface that reached for it got a colour with no knowledge of the team's
+// genre, its authored `color`, or the cross-team collision pass, which is how
+// the host tablet and the TV came to paint the same team two different colours
+// (2026-09-20). Surfaces read the theme map; the cast keeps the hash inside
+// `resolveCharacterFillClassName`, which paints birds where no seating list is
+// in reach. `resolveHashedTeamColorToken` stays exported because the theme
+// itself needs it, as the last tier of its colour precedence.
 export {
   resolveCharacterFillClassName,
   resolveHashedTeamColorToken,
-  resolveTeamColorVariant,
   resolveTeamColorVariantByToken,
   UNSEATED_CHARACTER_FILL_CLASS_NAME
 } from "./resolveTeamColorVariant/index.js";

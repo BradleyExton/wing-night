@@ -11,7 +11,7 @@ import {
   resolveMinigameBriefingContent,
   type MinigameBriefingContent
 } from "../../../../copy/minigameBriefings";
-import { resolveTeamThemeById } from "../../../../utils/resolveTeamTheme";
+import { resolveTeamTheme, resolveTeamThemeById } from "../../../../utils/resolveTeamTheme";
 
 export type StageRenderMode =
   | "setup"
@@ -35,6 +35,10 @@ export type TurnTile = {
 export type RoundResultsRow = {
   teamId: string;
   teamName: string;
+  // The row carries its team's kit rather than the body resolving one: these
+  // rows are built from the same `teams` the theme map was, so there is no
+  // miss to fall back from, and no second resolver for the colour to drift on.
+  theme: TeamTheme;
   wingPoints: number;
   minigamePoints: number;
   totalPoints: number;
@@ -188,6 +192,7 @@ export const resolveStageViewModel = (
       return {
         teamId: team.id,
         teamName: team.name,
+        theme: teamThemeByTeamId.get(team.id) ?? resolveTeamTheme(team),
         wingPoints,
         minigamePoints,
         totalPoints: wingPoints + minigamePoints

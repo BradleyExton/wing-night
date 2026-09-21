@@ -1,5 +1,3 @@
-import { resolveTeamColorVariant } from "@wingnight/cast";
-
 import type { RoundResultsRow } from "../resolveStageViewModel";
 import { roundResultsStageCopy } from "./copy";
 import * as styles from "./styles";
@@ -45,7 +43,7 @@ export const RoundResultsStageBody = ({
         )}
         {teamRows.map((row) => {
           const isTop = row.teamId === topTeamId;
-          const variant = resolveTeamColorVariant(row.teamId);
+          const variant = row.theme.colorVariant;
           const totalClassName = `${styles.num} ${
             isTop ? styles.numTotalTop : styles.numTotal
           }`;
