@@ -185,3 +185,89 @@ test("creates nested content directories for a minigame pack", () => {
     prompts: [{ id: "t-1", question: "Q?", answer: "A" }]
   });
 });
+
+// The pair rule `seatPresetRosters` enforces at load time, enforced here too:
+// the wizard blocks a dangling `team` first, but the wizard is a client and
+// this is the last check before the file lands. Without it a `config:save`
+// wrote cleanly and the NEXT BOOT fatalled on the join.
+test("refuses a players edit naming a team the batch's teams do not declare", () => {
+  const contentRoot = createContentRoot();
+  writeValidContentTree(contentRoot, "sample", "Sample");
+
+  const result = writeContentFiles(
+    [
+      { key: "teams", value: { teams: [{ name: "Scorch Squad" }] } },
+      { key: "players", value: { players: [{ name: "Rob", team: "Scortch Squad" }] } }
+    ],
+    { contentRootDir: contentRoot }
+  );
+
+  assert.equal(result.ok, false);
+  assert.ok(result.ok === false && result.reason === "invalid");
+  assert.deepEqual(result.issues, [
+    {
+      path: "players.players[0].team",
+      message: 'must name a team from teams.json (no team called "Scortch Squad")'
+    }
+  ]);
+  assert.equal(existsSync(join(contentRoot, "local", "players.json")), false);
+});
+
+// Matching is the loader's: case and surrounding whitespace do not make a
+// different team, so this is a legal save rather than a near miss.
+test("accepts a players edit whose team name differs only in case and padding", () => {
+  const contentRoot = createContentRoot();
+  writeValidContentTree(contentRoot, "sample", "Sample");
+
+  const result = writeContentFiles(
+    [
+      { key: "teams", value: { teams: [{ name: "Scorch Squad" }] } },
+      { key: "players", value: { players: [{ name: "Rob", team: " scorch squad " }] } }
+    ],
+    { contentRootDir: contentRoot }
+  );
+
+  assert.deepEqual(result, { ok: true });
+  assert.doesNotThrow(() => loadContent({ contentRootDir: contentRoot }));
+});
+
+// A rename can orphan a player the batch never mentions, so the side the batch
+// leaves alone is read off disk rather than assumed to agree.
+test("refuses a teams-only rename that orphans a player already on disk", () => {
+  const contentRoot = createContentRoot();
+  writeValidContentTree(contentRoot, "sample", "Sample");
+  writeContentFiles(
+    [
+      { key: "teams", value: { teams: [{ name: "Scorch Squad" }] } },
+      { key: "players", value: { players: [{ name: "Rob", team: "Scorch Squad" }] } }
+    ],
+    { contentRootDir: contentRoot }
+  );
+
+  const result = writeContentFiles(
+    [{ key: "teams", value: { teams: [{ name: "Molten Metal" }] } }],
+    { contentRootDir: contentRoot }
+  );
+
+  assert.equal(result.ok, false);
+  assert.ok(result.ok === false && result.reason === "invalid");
+  assert.equal(result.issues[0]?.path, "players.players[0].team");
+  // The rename is rejected, so the teams file on disk still holds the old name.
+  assert.deepEqual(readLocalFile(contentRoot, "teams.json"), {
+    teams: [{ name: "Scorch Squad" }]
+  });
+});
+
+// A player who starts unassigned is a legitimate choice — the host seats them
+// from the SETUP deck — not a dangling reference.
+test("accepts a players edit that seats nobody", () => {
+  const contentRoot = createContentRoot();
+  writeValidContentTree(contentRoot, "sample", "Sample");
+
+  const result = writeContentFiles(
+    [{ key: "players", value: { players: [{ name: "Rob" }] } }],
+    { contentRootDir: contentRoot }
+  );
+
+  assert.deepEqual(result, { ok: true });
+});

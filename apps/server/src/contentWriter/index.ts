@@ -2,18 +2,25 @@ import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 import {
+  isPlayersContentFile,
+  isTeamsContentFile,
   validateDrawingContentFile,
   validateGameConfigFile,
   validatePlayersContentFile,
+  validateRosterAssignments,
   validateTeamsContentFile,
   validateTriviaContentFile,
   type ConfigFileEdit,
   type ConfigFileKey,
+  type PlayersContentFile,
+  type TeamsContentFile,
   type ValidationIssue
 } from "@wingnight/shared";
 
 import { isRulesValidForKey } from "../minigames/rulesValidation/index.js";
 import { resolveContentRootDir } from "../contentLoader/contentLoaderUtils/index.js";
+import { loadPlayerEntries } from "../contentLoader/loadPlayers/index.js";
+import { loadTeams } from "../contentLoader/loadTeams/index.js";
 
 type ContentWriterOptions = {
   contentRootDir?: string;
@@ -90,6 +97,68 @@ const writeFileAtomically = (filePath: string, contents: string): void => {
   }
 };
 
+// The current on-disk side of a roster the batch only half-touches. Read
+// best-effort and per-file, NOT through `loadContent`: that one already
+// performs the join this check duplicates and throws on a dangling one, so on
+// exactly the broken content a repair is trying to fix it would refuse to tell
+// us anything. A side that cannot be read at all skips the check rather than
+// blocking the write, for the same reason — the wizard is the repair path.
+const readCurrentPlayers = (contentRootDir: string): PlayersContentFile | null => {
+  try {
+    return { players: loadPlayerEntries({ contentRootDir }) };
+  } catch {
+    return null;
+  }
+};
+
+const readCurrentTeams = (contentRootDir: string): TeamsContentFile | null => {
+  try {
+    return { teams: loadTeams({ contentRootDir }) };
+  } catch {
+    return null;
+  }
+};
+
+// The one rule no single-file validator can see: a player's `team` must name a
+// team `teams.json` declares. `seatPresetRosters` throws on a dangling one, so
+// without this the writer's own contract — nothing reaches disk that the next
+// boot would reject — was not true of the pair. The wizard blocks it first
+// (`selectDraftIssues`), but the wizard is a client, and this is the only
+// check between `config:save` and the file.
+//
+// Either side missing from the batch is read from disk, because a rename in
+// teams.json alone can orphan a player the batch never mentions.
+const validateRosterAssignmentEdits = (
+  edits: ConfigFileEdit[],
+  contentRootDir: string
+): ValidationIssue[] => {
+  const playersEdit = edits.find((edit) => edit.key === "players");
+  const teamsEdit = edits.find((edit) => edit.key === "teams");
+
+  if (playersEdit === undefined && teamsEdit === undefined) {
+    return [];
+  }
+
+  const players =
+    playersEdit === undefined
+      ? readCurrentPlayers(contentRootDir)
+      : isPlayersContentFile(playersEdit.value)
+        ? playersEdit.value
+        : null;
+  const teams =
+    teamsEdit === undefined
+      ? readCurrentTeams(contentRootDir)
+      : isTeamsContentFile(teamsEdit.value)
+        ? teamsEdit.value
+        : null;
+
+  if (players === null || teams === null) {
+    return [];
+  }
+
+  return prefixIssuesWithKey("players", validateRosterAssignments(players, teams));
+};
+
 // Validates EVERY edit before writing ANY of them: a batch that fails
 // halfway would leave content/local/ in a state neither the wizard nor the
 // loader asked for.
@@ -97,15 +166,17 @@ export const writeContentFiles = (
   edits: ConfigFileEdit[],
   options: ContentWriterOptions = {}
 ): WriteContentFilesResult => {
-  const issues = edits.flatMap((edit) =>
-    prefixIssuesWithKey(edit.key, DESCRIPTOR_BY_KEY[edit.key].validate(edit.value))
-  );
+  const contentRootDir = options.contentRootDir ?? resolveContentRootDir();
+  const issues = [
+    ...edits.flatMap((edit) =>
+      prefixIssuesWithKey(edit.key, DESCRIPTOR_BY_KEY[edit.key].validate(edit.value))
+    ),
+    ...validateRosterAssignmentEdits(edits, contentRootDir)
+  ];
 
   if (issues.length > 0) {
     return { ok: false, reason: "invalid", issues };
   }
-
-  const contentRootDir = options.contentRootDir ?? resolveContentRootDir();
 
   // A filesystem failure is reported, not thrown: this runs inside a socket
   // listener, and it is a different failure from "your content is invalid" —
