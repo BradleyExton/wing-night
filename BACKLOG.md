@@ -400,3 +400,106 @@ Docs-only, no code.
   envelope** (`minigameId`/`actionType`/`actionPayload` validation) or the **full-screen takeover
   shell** rules (shell-level override overlay, PASS_AND_PLAY lock preservation). Both are shipped
   and ungoverned.
+
+---
+
+## Code-health cleanup
+
+From a whole-repo audit on 2026-09-21. The mechanical half of that audit has already landed —
+`resolveSeededPromptCursor` deduplicated into `packages/minigames/core`, the four PRNG copies
+collapsed into `packages/shared/src/seededRandom`, two orphaned `index.css` keyframes deleted, and
+the committed PR screenshots untracked. What follows is the half that wants a decision or a
+supervised pass, roughly in payoff order.
+
+### Four copies of the same rAF beat loop
+`useFappyRunner`, `useFappyMirror`, `useSchlonicRunner` and `useSchlonicMirror` are 1,120 lines that
+share one piece of machinery: a `BEAT_DURATION_MS` record, a `stopLoop()`, and a `step(now)` body
+that computes `progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind]`, calls
+`paintBeat(min(1, progress))`, then advances or stops. Only the painting differs.
+
+- Shape: a `createBeatLoop` in `packages/minigames/core` taking the duration map and a `paintBeat`
+  callback, returning `{ start, stop }`. The scene refs stay in each hook.
+- Do it before a third one-button game lands, not after. The invariants these four share are
+  exactly the ones that are easy to get wrong once and then copy: the loop must not be stopped by
+  effect cleanup, and a hidden browser pane throttles rAF to ~1fps, so any verification runs under
+  Playwright rather than a backgrounded preview pane.
+- No behaviour change. Both games have runtime tests plus `/dev/minigame/<slug>` sandboxes.
+
+### The house component rules stop at the minigame packages
+`eslint.config.mjs` applies `max-lines`, `no-inline-style-prop`, `no-hardcoded-component-jsx-text`,
+`require-styles-import-in-component-entry` and the `styles.ts` colour rules to
+`apps/client/src/components/**` and `packages/cast/src/**` only. The 47 components under
+`packages/minigames/*/src/client/**` — most of the game UI — are ungoverned, and lint is the only
+thing enforcing the house idiom at all.
+
+Measured by temporarily extending the config: **28 violations**, none of them in `styles.ts`
+colour rules.
+
+| Rule | Count | Notes |
+| --- | --- | --- |
+| `require-styles-import-in-component-entry` | 13 | All pure SVG scene primitives (Backdrop, Cactus, Ground, Shooter, ShotGhost, …) |
+| `no-hardcoded-component-jsx-text` | 9 | drawing x5, emoji-charades x3, +1 |
+| `max-lines` (>260) | 5 | HostFappySurface 334, DrawingCanvas 337, ZoneProps 272, HostSchlonicSurface 290, Perch 264 |
+| `no-inline-style-prop` | 1 | `HostDrawingSurface/index.tsx:265` |
+
+The 13 SVG primitives are a real exception — a `<g>` of shapes has no `styles.ts` to import — so
+carve them out by path rather than bending the rule. The other 15 are ordinary fixes. Land the
+carve-out and the fixes together with the config change, or the gate goes red.
+
+### 118 dead exports
+Three recognisable families, all safe to delete:
+
+- **18 `*Props` types** exported and never imported (`PerchProps`, `ShooterProps`,
+  `FappySceneProps`, `SchlonicSceneProps`, `ArenaHenProps`, …). The component's own file is the
+  only consumer.
+- **9 `<game>MinigameId` constants**, one per minigame package, used by nothing
+  (`schlonicMinigameId`) or only by their own test. The plugin's `id` field already carries this.
+- **Assorted orphans**: `cloneJoustPrompt`, `cloneSongGuessPrompt`, `cloneEmojiCharadesSubject`,
+  `cloneEmojiCharadesDeck`, `isEmojiToken`, `isJoustAim`, `createTriviaStateWithPendingPoints`,
+  `BARRIE_CENTER`, `BARRIE_ZOOM`, `JOUST_PERCH_MARGIN` (used only inside its own file),
+  `useRoomStateEnvelope`, `withHostProviders`, `withDisplayProviders`, `buildGeminiImageUrl`.
+
+A further 104 exports exist only for their colocated test. Most are legitimate
+(`testHarness.ts` files, pure resolvers); a handful — `resolveLegHold`, `resolveRunHold`,
+`toVolumePercent`/`fromVolumePercent` — are testing internals where a test at the hook boundary
+would do.
+
+### `packages/shared/src/index.ts` hand-relists its own sub-barrels
+464 lines, roughly 144 of which repeat — symbol by symbol — the export lists already written in
+`joust/index.ts`, `fappy/index.ts`, `schlonic/index.ts` and `contraption/index.ts`. Adding a shared
+symbol means editing two files and nothing fails if you forget the second. No `export *` appears
+anywhere in the package, so decide whether the explicit listing is buying anything (it is not
+buying tree-shaking — every consumer is bundled from source) before keeping it.
+
+### `useIsRevealVisible` is still two copies in two packages
+The audit found this hook pasted into three surfaces. "Time the reveal on one clock" then merged
+DRAWING's two into `drawing/src/client/useIsRevealVisible/` and fixed the clock-skew bug all three
+carried — but EMOJI CHARADES kept its own at
+`DisplayEmojiCharadesSurface/index.tsx:35`, and the two bodies are now character-for-character
+identical apart from the reveal type.
+
+The home has moved with the fix: `resolveRevealDurationMs` already lives in
+`packages/minigames/core`, so the hook belongs beside it, generic over a reveal and a
+`resolveRevealKey`. Leaving one copy behind in another package is exactly how the first bug got
+written twice, and the comment in the DRAWING hook says so.
+
+### Two documented conventions the code no longer follows
+Docs-only unless the first one gets acted on.
+
+- `AGENTS.md` §3.1 says the team look lives in `packages/cast`. It does not — `TeamWordmark`,
+  `TeamEmblem`, `TeamAmbient`, `TeamLineup` and `resolveTeamTheme` are all in `apps/client`, where
+  no minigame package can reach them. Latent rather than broken: no minigame wants one yet. Move
+  them when the first one does, and note that `TeamWordmark` is inline by design and dies silently
+  without a `block`/`inline-block` in its `sizeClassName`.
+- `CLAUDE.md` and `AGENTS.md` §4 say tests are `index.test.ts` beside `index.ts`.
+  `apps/server/src/roomState/` instead has seven folder-level specs (`phaseTurnFlow.test.ts`,
+  `scoringRecovery.test.ts`, `minigamePlayMutations.test.ts`, …) testing sibling folders. That is
+  the right shape for cross-module flow tests; the docs should say so rather than the code
+  quietly disagreeing.
+
+### Stale core-flow screenshots
+`docs/screenshots/core-flows/` is 2.6 MB across 48 PNGs, and `docs/core-game-flow-ui.md:51` already
+labels the set stale — it predates the removal of `ROUND_INTRO`, and two of the pairs are of that
+deleted phase. Either recapture the walkthrough or delete the captures and keep the prose. Left
+alone in the 2026-09-21 pass because which one it should be is a call about whether that document
+is a living guide or a historical record.
