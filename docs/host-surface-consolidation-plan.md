@@ -397,3 +397,29 @@ Re-read this section from disk at the top of every iteration; do not trust memor
   for a chip that never renders). Repaired: `container` restored to plain `p-5`, and the reserve taken
   on the button itself as `w-[calc(100%-4.5rem)]`, costing horizontal space in one element and no
   vertical space anywhere. `min-h-14` touch target unchanged. Gate green, e2e 36 passed.
+- [x] T1.3 `13fb2c8` — keyframe coupling closed by shipping the definitions from the package
+  (`packages/surface/src/keyframes.css`, exported as `@wingnight/surface/keyframes.css`, imported once
+  in `apps/client/src/main.tsx`); `@keyframes pulse`/`shimmer` removed from `apps/client/src/index.css`.
+  Only two keyframes are actually referenced by the tokens (`pulse` via `stageTimerUrgent`,
+  `stageTimerTimeUp`, `stageEyebrowTimeUp`; `shimmer` via `heatStripShimmer`). Option (a),
+  `theme.extend.keyframes`, was tried and DISPROVED under a real `pnpm build`: the built CSS kept
+  `animation: shimmer 3s linear infinite` and contained zero `@keyframes shimmer`, because Tailwind v3
+  only emits a keyframes block for the `animate-*` utility that names it and an arbitrary
+  `[animation:…]` never generates one — silent, and green on all three checks. Verified by
+  rule-by-rule diff of the built stylesheet (1829 rules before and after, none added, none lost, order
+  only) and by `getAnimations()` in the live app with a negative control. Sets the pattern for the
+  `cast-*` and `*-scene-enter` keyframes, not migrated here. Gate green, e2e 36 passed.
+- [x] T1.6 `33389cf` — five over-cap files cut on their real seams, 69 files, +2045/−1436. Audit line
+  counts were stale (raw: 405/324/376/309/312, not 337/272/334/290/264 — `max-lines` skips blanks and
+  comments). Host surfaces gave up `RunningTotals`, `ShotHistory`, `LegHistory`, `RunHistory`, plus
+  `Corridor`/`Zone`/`RelayClock`; SONG_GUESS was under cap and was cut anyway so the fourth
+  `RunningTotals` clone sits at the same path with the same shape. **All four `RunningTotals`
+  `index.tsx` and `copy.ts` are now byte-identical** — they take `{pendingPointsByTeamId,
+  activeTurnTeamId, teamNameByTeamId, note?}` instead of a package-specific view, which is what had
+  made them unshareable. SCHLONIC's `styles.ts` is the one genuine divergence (flat box, no gold) and
+  is a decision for the sharing task. `Perch` and `ZoneProps` split on scene contents; `Perch` lost its
+  `styles.ts`/`copy.ts` and is now a pure SVG primitive. Behaviour pinned by rendering each extracted
+  surface against its pre-split self across every phase branch and asserting string equality. Gate
+  green, e2e 36 passed with zero flakes on a stable tree. NOTE: the orchestrator's first commit missed
+  26 untracked new directories (`git commit -- <path>` does not add untracked files); amended before
+  the log was written.
