@@ -291,26 +291,43 @@ as DRAWING, EMOJI_CHARADES, JOUST, FAPPY and SCHLONIC. Directions:
 
 The DRAWING surfaces follow the "Showtime Easel" prototype direction
 (`apps/client/public/mockups/drawing-host/05-easel-deck.html` and
-`drawing-display/06-easel-grand.html`): a wood-framed chalkboard easel
-under game-show marquee chrome.
+`drawing-display/06-easel-grand.html`), rebuilt on the house tokens: an
+easel silhouette under game-show marquee chrome, in the same materials
+every other surface uses.
 
--   Materials: easel wood gradient (`#5A3318` → `#2C1808`, edge
-    `#6A3D1A`), chalkboard board (`#0E2624` family with a faint 30px
-    grid), marquee/prompt-card panels (`#3A1D09` → `#1A0C04` behind a
-    `gold` border). These are scoped material colors for DRAWING
-    surfaces only.
+-   Materials: `surfaceAlt`/`surface` panels behind `gold` borders for
+    the marquee, the prompt card and both easel frames. The mockups'
+    wood gradient and brown marquee were scoped hex material colors;
+    they read as a different app beside every other surface and were
+    dropped on 2026-09-21. What carries "easel" is the *silhouette* —
+    the framed board and, on the TV, the splayed legs — not the timber.
+-   The chalkboard board (`#0E2624` family with a faint 30px grid) is
+    the one scoped material that stays: it is the drawing content
+    surface, shared pixel-for-pixel by tablet and TV, and chalk needs
+    slate to read against.
 -   `gold` is the marquee/framing accent (prompt card, bulb-dotted
-    marquee, pending-points chips, palette frame) — a scoped exception
+    marquee, pending-points chips, easel edge) — a scoped exception
     to the §0.1 "winner moments only" rule. Every minigame marquee holds
     the same exception; GEO's §2.4 once held a wider one and no longer
     does.
--   Verdict controls are green/red gradient buttons with check/cross
-    icons (host) and matching reveal plaques (display) — functional
-    success/danger usage per §0.1.
--   Host layout reuses the §2.0A shell language: mini-rail strip on top,
-    full-height easel canvas left, control deck column right (prompt
-    card → Correct/Nope verdicts → undo/clear/skip row → palette grid).
-    No control overlaps the drawing canvas.
+-   Verdict controls are `success`/`danger` tinted buttons with
+    check/cross icons (host) and matching opaque reveal plaques
+    (display) — functional success/danger usage per §0.1, at the same
+    weight EMOJI_CHARADES uses in §2.6. The plaques are opaque: the
+    held sketch stays on the board behind them.
+-   Host layout is canvas-first. The board is the surface; everything
+    else is a strip around it. One mini-rail row on top (§2.0A) with
+    the identity left, the prompt card centered and pending points
+    right; the ink palette as a vertical rail down the left of the
+    board; one toolbar row at the foot (undo/clear/skip, then
+    Nope/Correct). No control overlaps the drawing canvas, and none of
+    them takes a column of its own — the deck column this surface used
+    to carry cost the board ~40% of the tablet for controls the artist
+    presses a handful of times a turn.
+-   The board letterboxes to 16:10 against the *height* the strips
+    leave, so leftover width is free: the ink rail costs the board
+    nothing, but a second toolbar row or a wrapped mini-rail costs it
+    real area. Keep both to one line.
 -   Display layout: grand bulb marquee (team, "Live Sketch" title,
     pending points), easel with splayed legs, status line beneath.
 -   Ink palette is drawing content, not UI chrome, and is exempt from
@@ -323,7 +340,8 @@ under game-show marquee chrome.
 -   The TV canvas is read-only and answer-safe: prompt text appears only
     in the post-result reveal plaque. During the reveal the display
     holds the finished sketch on the board, dimmed, until the reveal
-    window expires.
+    window expires. The host gets the same result as a transient pill
+    floated over its own board, not a row in the layout.
 
 ## 2.6 EMOJI_CHARADES Minigame Surface Language ("Clue Board")
 
@@ -344,8 +362,8 @@ under the same bulb marquee DRAWING uses.
     the §0.1 "winner moments only" rule, like DRAWING's §2.5 exception.
     Outside these surfaces the §0.1 rule stands.
 -   The subject card reuses DRAWING's prompt-card treatment — serif
-    italic on a `#3A1D09` → `#1A0C04` panel inside a gold border — so the
-    two minigames read as the same show.
+    italic on a `surfaceAlt` → `surface` panel inside a gold border — so
+    the two minigames read as the same show.
 
 There is **no deck picker**. The turn is dealt "People in This Room" (the
 first deck in the file long enough to carry a turn) and opens on its first

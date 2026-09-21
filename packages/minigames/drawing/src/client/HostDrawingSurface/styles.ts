@@ -1,65 +1,89 @@
-export const container = "flex h-full min-h-0 flex-col gap-3";
+// Canvas-first takeover (DESIGN.md §2.5): a one-line rail on top, the easel
+// taking every pixel between, and a single toolbar row at the foot. The deck
+// column the surface used to carry cost the board ~40% of the tablet for
+// controls the artist presses a handful of times a turn.
+export const container = "flex h-full min-h-0 flex-col gap-[clamp(0.4rem,1vh,0.75rem)]";
 
-// Mini-rail strip, echoing the host shell anatomy (DESIGN.md §2.0A).
+// Mini-rail strip, echoing the host shell anatomy (DESIGN.md §2.0A). The
+// prompt rides in its middle column so the artist reads it without the board
+// giving up any height to a card.
+// `auto` on the outer columns rather than `1fr`: the identity strip wrapping
+// to a second line costs the board ~40px of height it never gets back.
 export const rail =
-  "flex flex-wrap items-center gap-x-4 gap-y-1 px-1 pr-[clamp(9rem,15vw,12rem)] text-xs font-extrabold uppercase tracking-[0.22em] text-muted";
+  "grid shrink-0 grid-cols-[auto_1fr_auto] items-center gap-3";
+
+export const railIdentity =
+  "flex items-center gap-4 whitespace-nowrap text-xs font-extrabold uppercase tracking-[0.22em] text-muted";
 
 export const railTitle = "text-primary";
 
 export const railTeam = "flex items-center gap-2 text-text";
 
 export const railTeamDot =
-  "h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_#f97316]";
+  "h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_theme(colors.primary)]";
 
-export const railPending = "ml-auto font-mono text-sm tracking-normal text-gold";
+export const railPending = "text-right font-mono text-sm font-extrabold text-gold";
 
-export const introCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
-
-export const playArea = "flex min-h-0 flex-1 gap-3";
-
-export const easelColumn = "min-h-0 min-w-0 flex-1";
-
-export const deck = "flex w-[clamp(230px,28vw,330px)] flex-col gap-3";
-
+// Prompt card keeps the gold marquee framing of §2.5, on the app's own
+// surface tokens rather than a scoped brown.
 export const promptCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-4 py-3 text-center shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
+  "flex flex-col items-center justify-self-center rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-[clamp(1rem,2vw,1.75rem)] py-1.5 text-center";
 
 export const promptCardLabel =
-  "text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-gold";
+  "text-[0.55rem] font-extrabold uppercase tracking-[0.3em] text-gold";
 
 export const promptCardText =
-  "m-0 font-serif text-2xl font-bold italic leading-tight text-text [text-shadow:0_0_12px_rgba(251,191,36,0.35)]";
+  "m-0 font-serif text-[clamp(1.2rem,2.4vw,1.9rem)] font-bold italic leading-tight text-text";
 
 export const waitingNote =
-  "rounded-xl border border-text/10 bg-surface px-4 py-3 text-sm text-text/85";
+  "rounded-2xl border border-text/10 bg-surface px-4 py-2 text-sm text-muted";
 
-export const revealLine = "m-0 px-1 text-center text-sm italic text-muted";
+export const introCard =
+  "rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-5 py-4 text-base leading-6 text-text/90";
 
-export const verdictCorrect =
-  "flex min-h-[72px] flex-1 flex-col items-center justify-center gap-1 rounded-xl border-2 border-[#5fe093] bg-[radial-gradient(ellipse_at_top,#2fb86c_0%,#0e6a36_100%)] font-extrabold uppercase tracking-[0.1em] text-[#061a0c] shadow-[0_4px_0_rgba(0,0,0,0.45),0_6px_14px_rgba(0,0,0,0.35)] transition disabled:cursor-not-allowed disabled:opacity-40";
+// Canvas row: ink rail down the left, board taking the rest. The board
+// letterboxes to 16:10 against the available height, so the rail's width is
+// slack the board was never going to use.
+export const easelRow = "flex min-h-0 flex-1 gap-[clamp(0.35rem,0.8vw,0.6rem)]";
 
-export const verdictIncorrect =
-  "flex min-h-[72px] flex-1 flex-col items-center justify-center gap-1 rounded-xl border-2 border-[#ff8a8a] bg-[radial-gradient(ellipse_at_top,#f04040_0%,#800f0f_100%)] font-extrabold uppercase tracking-[0.1em] text-[#1c0303] shadow-[0_4px_0_rgba(0,0,0,0.45),0_6px_14px_rgba(0,0,0,0.35)] transition disabled:cursor-not-allowed disabled:opacity-40";
+export const inkRail =
+  "flex h-fit w-14 shrink-0 flex-col items-center gap-2 self-center rounded-2xl border border-text/10 bg-surface py-2";
 
-export const verdictIcon = "text-3xl leading-none";
+export const easelArea = "relative min-h-0 min-w-0 flex-1";
 
-export const verdictLabel = "text-lg";
-
-export const verdictSub = "text-[0.62rem] tracking-[0.24em] opacity-80";
-
-export const deckRows = "flex gap-2";
-
-export const deckRowButton =
-  "min-h-12 flex-1 rounded-lg border border-[#3a200d] bg-surface text-xs font-extrabold uppercase tracking-[0.14em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+// Transient (2s) result line, floated over the board rather than holding a
+// row of its own in the layout.
+export const revealLine =
+  "pointer-events-none absolute left-1/2 top-3 z-10 m-0 -translate-x-1/2 rounded-full border border-gold/40 bg-bg/90 px-4 py-1.5 text-sm font-semibold italic text-text/85";
 
 // The shell floats the host's corner dock over the bottom-right of the
-// takeover canvas (DESIGN.md §2.0A), so the row that reaches that corner
-// keeps a gutter clear of it rather than putting a control underneath.
-export const paletteGrid =
-  "grid grid-cols-6 gap-2 rounded-xl border border-[#3a200d] bg-gradient-to-b from-[#1a0e05] to-[#0a0604] p-3 pr-[4.5rem]";
+// takeover canvas (DESIGN.md §2.0A), so the toolbar keeps a gutter clear of
+// it rather than putting a control underneath.
+export const toolbar =
+  "flex shrink-0 items-center gap-[clamp(0.35rem,0.9vw,0.7rem)] rounded-2xl border border-text/10 bg-surface px-3 py-2 pr-[4.5rem]";
 
+export const toolGroup = "flex items-center gap-2";
+
+export const toolButton =
+  "min-h-11 rounded-xl border border-text/10 bg-surfaceAlt px-4 text-[0.68rem] font-extrabold uppercase tracking-[0.14em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+
+export const verdictGroup = "ml-auto flex items-center gap-2";
+
+// Functional success/danger per §0.1, in the same weight the other host
+// verdict controls use (see EMOJI_CHARADES §2.6).
+const verdictBase =
+  "flex min-h-11 items-center gap-2 rounded-xl border-2 px-[clamp(0.9rem,1.8vw,1.5rem)] text-sm font-extrabold uppercase tracking-[0.1em] text-text transition disabled:cursor-not-allowed disabled:opacity-40";
+
+export const verdictCorrect = `${verdictBase} border-success/60 bg-success/20 hover:bg-success/30`;
+
+export const verdictIncorrect = `${verdictBase} border-danger/60 bg-danger/20 hover:bg-danger/30`;
+
+export const verdictIcon = "text-lg leading-none";
+
+// Inks are drawing content, not UI accents, so the swatches carry their own
+// color inline and the tray stays on surface tokens.
 export const inkLight =
-  "aspect-square w-full rounded-full border-2 border-black/50 transition disabled:cursor-not-allowed disabled:opacity-40";
+  "h-11 w-11 rounded-full border-2 border-black/40 transition disabled:cursor-not-allowed disabled:opacity-40";
 
-export const inkLightSelected = "outline outline-[3px] outline-offset-[3px] outline-gold";
+export const inkLightSelected =
+  "outline outline-[3px] outline-offset-2 outline-gold";

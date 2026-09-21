@@ -123,17 +123,31 @@ export const HostDrawingSurface = ({
   return (
     <div className={styles.container}>
       <div className={styles.rail}>
-        <span className={styles.railTitle}>
-          {hostDrawingSurfaceCopy.railTitle}
+        <span className={styles.railIdentity}>
+          <span className={styles.railTitle}>
+            {hostDrawingSurfaceCopy.railTitle}
+          </span>
+          <span className={styles.railTeam}>
+            <span className={styles.railTeamDot} aria-hidden="true" />
+            {hostDrawingSurfaceCopy.teamPrefix} {resolvedActiveTeamName}
+          </span>
         </span>
-        <span className={styles.railTeam}>
-          <span className={styles.railTeamDot} aria-hidden="true" />
-          {hostDrawingSurfaceCopy.teamPrefix} {resolvedActiveTeamName}
-        </span>
-        {isPlayPhase && pendingPoints !== null && (
+        {isPlayPhase && currentPrompt !== null ? (
+          <div className={styles.promptCard}>
+            <span className={styles.promptCardLabel}>
+              {hostDrawingSurfaceCopy.promptCardLabel}
+            </span>
+            <p className={styles.promptCardText}>{currentPrompt.prompt}</p>
+          </div>
+        ) : (
+          <span />
+        )}
+        {isPlayPhase && pendingPoints !== null ? (
           <span className={styles.railPending}>
             {hostDrawingSurfaceCopy.pendingChip(pendingPoints)}
           </span>
+        ) : (
+          <span />
         )}
       </div>
       {!isPlayPhase && (
@@ -142,115 +156,9 @@ export const HostDrawingSurface = ({
         </p>
       )}
       {isPlayPhase && drawingHostView !== null && (
-        <div className={styles.playArea}>
-          <div className={styles.easelColumn}>
-            <DrawingCanvas
-              ref={canvasHandleRef}
-              strokes={drawingHostView.strokes}
-              canDraw={canDraw}
-              brushColor={selectedInk.color}
-              brushSize={BRUSH_SIZE}
-              onBeginStroke={(payload): void => {
-                onDispatchAction("beginStroke", payload);
-              }}
-              onAppendStrokePoints={(strokeId, points): void => {
-                onDispatchAction("appendStrokePoints", { strokeId, points });
-              }}
-              onEndStroke={(strokeId): void => {
-                onDispatchAction("endStroke", { strokeId });
-              }}
-            />
-          </div>
-          <aside className={styles.deck}>
-            {currentPrompt !== null ? (
-              <div className={styles.promptCard}>
-                <div className={styles.promptCardLabel}>
-                  {hostDrawingSurfaceCopy.promptCardLabel}
-                </div>
-                <p className={styles.promptCardText}>{currentPrompt.prompt}</p>
-              </div>
-            ) : (
-              <p className={styles.waitingNote}>
-                {hostDrawingSurfaceCopy.waitingPromptLabel}
-              </p>
-            )}
-            {isRevealVisible && drawingHostView.reveal !== null && (
-              <p className={styles.revealLine}>
-                {hostDrawingSurfaceCopy.revealLine(
-                  drawingHostView.reveal.promptText,
-                  drawingHostView.reveal.outcome === "CORRECT"
-                )}
-              </p>
-            )}
-            <button
-              className={styles.verdictCorrect}
-              type="button"
-              disabled={!canResolvePrompt}
-              onClick={(): void => {
-                dispatchControlAction("markCorrect");
-              }}
-            >
-              <span className={styles.verdictIcon} aria-hidden="true">
-                ✓
-              </span>
-              <span className={styles.verdictLabel}>
-                {hostDrawingSurfaceCopy.correctButtonLabel}
-              </span>
-              <span className={styles.verdictSub}>
-                {hostDrawingSurfaceCopy.correctButtonSub}
-              </span>
-            </button>
-            <button
-              className={styles.verdictIncorrect}
-              type="button"
-              disabled={!canResolvePrompt}
-              onClick={(): void => {
-                dispatchControlAction("markIncorrect");
-              }}
-            >
-              <span className={styles.verdictIcon} aria-hidden="true">
-                ✗
-              </span>
-              <span className={styles.verdictLabel}>
-                {hostDrawingSurfaceCopy.incorrectButtonLabel}
-              </span>
-              <span className={styles.verdictSub}>
-                {hostDrawingSurfaceCopy.incorrectButtonSub}
-              </span>
-            </button>
-            <div className={styles.deckRows}>
-              <button
-                className={styles.deckRowButton}
-                type="button"
-                disabled={!canDraw || !hasStrokes}
-                onClick={(): void => {
-                  dispatchControlAction("undoStroke");
-                }}
-              >
-                {hostDrawingSurfaceCopy.undoButtonLabel}
-              </button>
-              <button
-                className={styles.deckRowButton}
-                type="button"
-                disabled={!canDraw || !hasStrokes}
-                onClick={(): void => {
-                  dispatchControlAction("clearCanvas");
-                }}
-              >
-                {hostDrawingSurfaceCopy.clearButtonLabel}
-              </button>
-              <button
-                className={styles.deckRowButton}
-                type="button"
-                disabled={!canResolvePrompt}
-                onClick={(): void => {
-                  dispatchControlAction("skipPrompt");
-                }}
-              >
-                {hostDrawingSurfaceCopy.skipButtonLabel}
-              </button>
-            </div>
-            <div className={styles.paletteGrid}>
+        <>
+          <div className={styles.easelRow}>
+            <div className={styles.inkRail}>
               {INK_PALETTE.map((ink) => (
                 <button
                   key={ink.id}
@@ -273,8 +181,101 @@ export const HostDrawingSurface = ({
                 />
               ))}
             </div>
-          </aside>
-        </div>
+            <div className={styles.easelArea}>
+              <DrawingCanvas
+                ref={canvasHandleRef}
+                strokes={drawingHostView.strokes}
+                canDraw={canDraw}
+                brushColor={selectedInk.color}
+                brushSize={BRUSH_SIZE}
+                onBeginStroke={(payload): void => {
+                  onDispatchAction("beginStroke", payload);
+                }}
+                onAppendStrokePoints={(strokeId, points): void => {
+                  onDispatchAction("appendStrokePoints", { strokeId, points });
+                }}
+                onEndStroke={(strokeId): void => {
+                  onDispatchAction("endStroke", { strokeId });
+                }}
+              />
+              {isRevealVisible && drawingHostView.reveal !== null && (
+                <p className={styles.revealLine}>
+                  {hostDrawingSurfaceCopy.revealLine(
+                    drawingHostView.reveal.promptText,
+                    drawingHostView.reveal.outcome === "CORRECT"
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+          {currentPrompt === null && (
+            <p className={styles.waitingNote}>
+              {hostDrawingSurfaceCopy.waitingPromptLabel}
+            </p>
+          )}
+          <div className={styles.toolbar}>
+            <div className={styles.toolGroup}>
+              <button
+                className={styles.toolButton}
+                type="button"
+                disabled={!canDraw || !hasStrokes}
+                onClick={(): void => {
+                  dispatchControlAction("undoStroke");
+                }}
+              >
+                {hostDrawingSurfaceCopy.undoButtonLabel}
+              </button>
+              <button
+                className={styles.toolButton}
+                type="button"
+                disabled={!canDraw || !hasStrokes}
+                onClick={(): void => {
+                  dispatchControlAction("clearCanvas");
+                }}
+              >
+                {hostDrawingSurfaceCopy.clearButtonLabel}
+              </button>
+              <button
+                className={styles.toolButton}
+                type="button"
+                disabled={!canResolvePrompt}
+                onClick={(): void => {
+                  dispatchControlAction("skipPrompt");
+                }}
+              >
+                {hostDrawingSurfaceCopy.skipButtonLabel}
+              </button>
+            </div>
+            <div className={styles.verdictGroup}>
+              <button
+                className={styles.verdictIncorrect}
+                type="button"
+                disabled={!canResolvePrompt}
+                onClick={(): void => {
+                  dispatchControlAction("markIncorrect");
+                }}
+              >
+                <span className={styles.verdictIcon} aria-hidden="true">
+                  ✗
+                </span>
+                {hostDrawingSurfaceCopy.incorrectButtonLabel}
+              </button>
+              <button
+                className={styles.verdictCorrect}
+                type="button"
+                disabled={!canResolvePrompt}
+                onClick={(): void => {
+                  dispatchControlAction("markCorrect");
+                }}
+              >
+                <span className={styles.verdictIcon} aria-hidden="true">
+                  ✓
+                </span>
+                {hostDrawingSurfaceCopy.correctButtonLabel}
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -21,9 +21,9 @@ const MAX_POINTS_PER_DISPATCH = 64;
 // Ended strokes the server never took whole — rejected at the stroke cap,
 // trimmed at the point cap — drop out of the local overlay after this long.
 const LOCAL_STROKE_RETENTION_MS = 4000;
-// Wood frame padding + border around the chalkboard canvas, subtracted from
-// the fit area before letterboxing so the frame hugs the board.
-const EASEL_FRAME_INSET_PX = 28;
+// Frame padding + border around the chalkboard canvas, subtracted from the
+// fit area before letterboxing so the frame hugs the board.
+const EASEL_FRAME_INSET_PX = 18;
 
 export type LocalStrokeRecord = {
   stroke: DrawingStroke;

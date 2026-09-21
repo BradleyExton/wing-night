@@ -12,9 +12,7 @@ export const hostDrawingSurfaceCopy = {
   clearButtonLabel: "⌫ Clear",
   skipButtonLabel: "Skip →",
   correctButtonLabel: "Correct",
-  correctButtonSub: "+1 point",
   incorrectButtonLabel: "Nope",
-  incorrectButtonSub: "no points",
   revealLine: (promptText: string, isCorrect: boolean): string =>
     isCorrect ? `“${promptText}” — got it!` : `“${promptText}” — missed it`
 } as const;
