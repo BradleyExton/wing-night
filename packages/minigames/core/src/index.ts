@@ -9,7 +9,7 @@ import type {
   Player,
   Team
 } from "@wingnight/shared";
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 export type SerializablePrimitive = null | boolean | number | string;
 
@@ -119,8 +119,27 @@ export type MinigameHostRendererProps = {
   phase: MinigameSurfacePhase;
   minigameType: MinigameType;
   minigameHostView: MinigameHostView | null;
+  // The turn's team, resolved ONCE by the shell with the mini-rail's own
+  // precedence (`selectHeaderContext`: the turn's team, else the round's), so
+  // the string here and the string in the rail are the same string. A host
+  // surface must not render it as chrome — the rail says it, and saying it
+  // twice on one canvas is the duplication this seam exists to remove — but a
+  // sentence that needs the name may still use it.
   activeTeamName: string | null;
   teamNameByTeamId: Map<string, string>;
+  // Shell-owned takeover chrome, two slots rather than one `chrome` object:
+  // a multi-field configuration object is what `docs/adr/0002` guardrail 2
+  // forbids, and these two have nothing to do with each other beyond where
+  // they land. `rail` is the shell's `<HostMiniRail />`, `clock` its
+  // `<TakeoverTimerChip />`, which renders nothing when the room has no timer.
+  //
+  // A host surface never renders either one itself: it forwards them into
+  // `<TakeoverStage>`'s or `<TakeoverCanvas>`'s `rail` and `clock` slots and
+  // lets the layout place them (docs/takeover-layout-api.md §4, §5). Both are
+  // `null` on the intro deck, which is a panel in the host's own control deck
+  // rather than a takeover and carries no chrome of its own.
+  rail: ReactNode;
+  clock: ReactNode;
   canDispatchAction: boolean;
   onDispatchAction: MinigameActionDispatch;
   // Origin of the asset-serving Express app, for the same reason the display

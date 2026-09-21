@@ -109,3 +109,40 @@ test("does not render trivia prompt or answer payloads in rail", () => {
   assert.doesNotMatch(html, /Which scale measures pepper heat/);
   assert.doesNotMatch(html, /Scoville/);
 });
+
+// The dot beside the team's name was `bg-primary` here and in five minigame
+// copies, so the one mark on the host that stands for a team was never that
+// team's colour (docs/takeover-layout-api.md P6). The rail reads the host's
+// own `teamThemeByTeamId` — the same map the standings, the roster and the
+// birds read — rather than resolving a theme of its own.
+const readTeamDotClassName = (html: string): string => {
+  return /<span class="(h-2 w-2 rounded-full[^"]*)"/.exec(html)?.[1] ?? "";
+};
+
+test("paints the rail's team dot in the active team's own colour", () => {
+  const alphaHtml = renderMiniRail(
+    buildSnapshot(Phase.MINIGAME_PLAY, { activeTurnTeamId: "team-alpha" })
+  );
+  const betaHtml = renderMiniRail(
+    buildSnapshot(Phase.MINIGAME_PLAY, { activeTurnTeamId: "team-beta" })
+  );
+  const alphaDot = readTeamDotClassName(alphaHtml);
+  const betaDot = readTeamDotClassName(betaHtml);
+
+  assert.match(alphaDot, /bg-team[A-H]\b/);
+  assert.match(betaDot, /bg-team[A-H]\b/);
+  // The tint is what the dot's glow reads, so the halo is the team's colour too.
+  assert.match(alphaDot, /--tint:theme\(colors\.team[A-H]\)/);
+  assert.doesNotMatch(alphaDot, /bg-primary/);
+  // Two teams, two colours: a dot that is always the same class is the bug.
+  assert.notEqual(alphaDot, betaDot);
+});
+
+test("falls back to the house accent when the phase has no team to colour", () => {
+  const html = renderMiniRail(
+    buildSnapshot(Phase.EATING, { activeRoundTeamId: "missing-team-id" })
+  );
+
+  assert.match(html, /No team assigned/);
+  assert.match(readTeamDotClassName(html), /bg-primary/);
+});

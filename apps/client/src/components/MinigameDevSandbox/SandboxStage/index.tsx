@@ -11,6 +11,7 @@ import { Phase, resolveMinigameDefinition, type MinigameType } from "@wingnight/
 import { hostCopy } from "../../../copy/host";
 import { RoomStateProvider } from "../../../context/RoomStateContext";
 import { HostActionBarSurface } from "../../HostControlPanel/HostActionBarSurface";
+import { HostMiniRail } from "../../HostControlPanel/HostMiniRail";
 import { TakeoverTimerChip } from "../../HostControlPanel/HostPhaseBody/MinigamePlayTakeover/TakeoverTimerChip";
 import { HostTakeoverDock } from "../../HostControlPanel/HostTakeoverDock";
 import { MinigameSurface } from "../../HostControlPanel/MinigameSurface";
@@ -141,6 +142,7 @@ export const SandboxStage = ({
   const teamNameByTeamId = new Map(Object.entries(devManifest.teamNameByTeamId));
   const { DisplaySurface } = rendererBundle;
   const sandboxHostRoomState = resolveSandboxHostRoomState(minigameType, phase);
+  const isTakeover = phase === "play";
 
   return (
     <>
@@ -186,19 +188,25 @@ export const SandboxStage = ({
                 }
               >
                 <div className={styles.hostCanvas}>
-                  <TakeoverTimerChip />
+                  {/* Composed exactly as `MinigamePlayTakeover` composes it,
+                      deliberately: the sandbox is where a takeover is judged,
+                      so it has to hand the surface the same chrome slots the
+                      shell does. A game that has not migrated to the layouts
+                      yet drops them, and the preview shows that honestly. */}
                   <MinigameSurface
                     phase={phase}
                     minigameType={minigameType}
                     minigameHostView={minigameHostView}
                     activeTeamName={activeTeamName}
                     teamNameByTeamId={teamNameByTeamId}
+                    rail={isTakeover ? <HostMiniRail /> : null}
+                    clock={isTakeover ? <TakeoverTimerChip /> : null}
                     canDispatchAction
                     onDispatchAction={handleDispatchAction}
                   />
                 </div>
               </RoomStateProvider>
-              {phase === "play" ? (
+              {isTakeover ? (
                 <HostTakeoverDock
                   primaryActionLabel={resolveHostShellCtaLabel(phase)}
                   primaryActionDisabled

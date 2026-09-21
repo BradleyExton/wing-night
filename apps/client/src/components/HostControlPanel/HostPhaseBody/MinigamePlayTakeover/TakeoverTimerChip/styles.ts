@@ -1,7 +1,12 @@
-// Pinned to the takeover's own padding box, so the chip sits in the same
-// corner whatever the minigame underneath does with the canvas.
+// A pill, and nothing else. It used to pin itself to the takeover's padding box
+// with `absolute right-… top-… z-10`, which is what made five games reserve
+// `pr-[clamp(9rem,15vw,12rem)]` of rail width for a chip that never draws and
+// let it land on top of DRAWING's pending-points number when it did
+// (docs/takeover-layout-api.md §6). It is now the last item of the layout's
+// rail row: an empty clock takes no width, a filled one pushes the counter
+// left, and the top-right budget is abolished rather than corrected.
 const timerChipBase =
-  "absolute right-[clamp(0.75rem,1.5vw,1.5rem)] top-[clamp(0.75rem,1.5vw,1.5rem)] z-10 rounded-full border border-text/10 bg-surface/90 px-[clamp(0.8rem,1.2vw,1.2rem)] py-[clamp(0.3rem,0.6vw,0.6rem)] font-mono text-[clamp(1rem,1.6vw,1.6rem)] font-black tabular-nums tracking-[-0.02em]";
+  "rounded-full border border-text/10 bg-surface/90 px-[clamp(0.8rem,1.2vw,1.2rem)] py-[clamp(0.3rem,0.6vw,0.6rem)] font-mono text-[clamp(1rem,1.6vw,1.6rem)] font-black tabular-nums tracking-[-0.02em]";
 
 export const timerChip = `${timerChipBase} text-primary`;
 

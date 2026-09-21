@@ -15,8 +15,14 @@ export const takeoverCanvas =
   "flex min-h-0 w-full flex-1 flex-col";
 
 // Column flex so the minigame's own container stretches to the full canvas
-// width and can resolve h-full/flex-1 against a real height.
-// Children fill the canvas but may grow beyond it, in which case the takeover
-// scrolls instead of bleeding under the CTA bar.
-export const takeoverInner =
-  "flex min-h-0 flex-1 flex-col overflow-y-auto [&>*]:min-h-full";
+// width and can resolve h-full/flex-1 against a real height; `min-h-full` on
+// the child so a short body still fills the tablet rather than sitting at
+// content height.
+//
+// It does NOT scroll. `overflow-y-auto` was here to stop an overgrown minigame
+// bleeding under the CTA bar — but there is no CTA bar on this phase, and a
+// takeover that scrolls is a takeover whose layout is wrong
+// (docs/takeover-layout-api.md §10, P4). A body taller than the tablet now
+// breaks visibly in the sandbox instead of scrolling quietly, which is the
+// feedback a nine-game migration wants.
+export const takeoverInner = "flex min-h-0 flex-1 flex-col [&>*]:min-h-full";

@@ -29,16 +29,25 @@ test("renders the geo sandbox without leaking answer coordinates", () => {
   assert.doesNotMatch(html, /answerLat/);
 });
 
-// The real MINIGAME_PLAY takeover pins TakeoverTimerChip in the canvas's top
-// right corner for a game with a play-phase clock (GEO, DRAWING,
-// EMOJI_CHARADES) and renders no chip for the rest — a sandbox that always
-// left this out was lying about how much corner the minigame actually gets.
-test("shows the takeover timer chip in the host preview for a game with a clock", () => {
+// The play clock is a SLOT now, not an overlay the shell pins into the top
+// right corner (docs/takeover-layout-api.md §6). `MinigamePlayTakeover` hands
+// `<TakeoverTimerChip />` to the minigame's own host surface and the surface
+// puts it in its layout's `clock` slot; the sandbox composes it exactly the
+// same way, which is what makes the preview worth judging a takeover against.
+//
+// So a game that has not migrated to `<TakeoverStage>` / `<TakeoverCanvas>`
+// yet draws no chip at all, and the preview says so rather than drawing one
+// the tablet would not. GEO is the last migration (T4.4): this assertion
+// flips to `match(/00:45/)` in the commit that gives GEO a `clock` slot, and
+// goes red first if that commit forgets.
+test("draws no timer chip until the minigame forwards the shell's clock slot", () => {
   const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="GEO" />);
 
-  assert.match(html, /00:45/);
+  assert.doesNotMatch(html, /00:45/);
 });
 
+// TRIVIA has `timerKey: null`, so the chip renders nothing whoever holds the
+// slot — this one stays true through every migration.
 test("shows no timer chip in the host preview for a host-paced game", () => {
   const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="TRIVIA" />);
 

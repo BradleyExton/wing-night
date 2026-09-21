@@ -100,8 +100,15 @@ export const HostControlPanel = (): JSX.Element => {
 
       {/* During the minigame takeover the tablet is in the players' hands, so
           the full-bleed CTA bar collapses to a discreet corner dock and the
-          whole canvas goes to the minigame (DESIGN.md §2.0A). */}
-      {isPlayerHeld ? (
+          whole canvas goes to the minigame (DESIGN.md §2.0A).
+
+          The dock stands down while the override panel is open. The two are
+          the same escape hatch at two depths, and the dock's 48px circle sits
+          at `z-[1100]` in the very corner the panel occupies on a tablet
+          (`md:bottom-4 md:right-4`, `z-40`) — so showing both at once put a
+          floating button over the panel and offered the host two ways out of
+          one situation (docs/takeover-layout-api.md §7, P5). */}
+      {isPlayerHeld && !isOverrideDockOpen ? (
         <HostTakeoverDock
           primaryActionLabel={primaryButtonLabel}
           primaryActionDisabled={nextPhaseDisabled}
@@ -112,7 +119,9 @@ export const HostControlPanel = (): JSX.Element => {
             setIsOverrideDockOpen(true);
           }}
         />
-      ) : (
+      ) : null}
+
+      {isPlayerHeld ? null : (
         <HostActionBarSurface
           onNextPhase={primaryAction}
           nextPhaseDisabled={nextPhaseDisabled}

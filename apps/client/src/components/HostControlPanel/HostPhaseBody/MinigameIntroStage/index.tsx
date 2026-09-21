@@ -16,8 +16,7 @@ export const MinigameIntroStage = (): JSX.Element => {
     teamNameByTeamId,
     minigameType,
     minigameHostView,
-    activeRoundTeamId,
-    activeRoundTeamName,
+    activeTeamName,
     canDispatchMinigameAction,
     handleDispatchMinigameAction
   } = useMinigameHostContext("minigame_intro");
@@ -38,12 +37,17 @@ export const MinigameIntroStage = (): JSX.Element => {
         </p>
       </StageHero>
       <ControlDeck>
+        {/* The intro deck is a panel in the host's own control deck, not a
+            takeover: the rail is already above it in the stage hero, and the
+            clock belongs to play — so this surface carries no chrome slots. */}
         <MinigameSurface
           phase="intro"
           minigameType={minigameType}
           minigameHostView={minigameHostView}
-          activeTeamName={activeRoundTeamId === null ? null : activeRoundTeamName}
+          activeTeamName={activeTeamName}
           teamNameByTeamId={teamNameByTeamId}
+          rail={null}
+          clock={null}
           canDispatchAction={canDispatchMinigameAction}
           onDispatchAction={handleDispatchMinigameAction}
         />

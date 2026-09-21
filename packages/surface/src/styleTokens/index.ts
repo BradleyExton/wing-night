@@ -50,8 +50,19 @@ export const miniRailDivider = "h-1.5 w-1.5 rounded-full bg-text/20";
 export const miniRailTeamPill =
   "inline-flex items-center gap-2 rounded-full border border-primary/45 bg-primary/15 px-3 py-1.5 text-text";
 
+// Geometry and glow only. The colour comes from the team's own kit, composed
+// by the rail: `dotAccentClassName` fills it and `tintClassName` sets the
+// `--tint` the glow reads — the same channel every wordmark and texture keys
+// off. It carried `bg-primary text-primary` until 2026-09-21, which meant the
+// one dot on the host that names a team was never that team's colour.
+// `currentColor` is the fallback for a rail with no team to colour.
 export const miniRailTeamDot =
-  "h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_currentColor] text-primary";
+  "h-2 w-2 rounded-full shadow-[0_0_8px_var(--tint,currentColor)]";
+
+// The dot with no team to be. The rail still draws one beside "No team
+// assigned", and a colourless circle there reads as a rendering fault rather
+// than as a gap in the roster.
+export const miniRailTeamDotUnassigned = "bg-primary text-primary";
 
 // =============================================================================
 // Stage hero — left 65% of the canvas; dramatic eyebrow + headline + meta or

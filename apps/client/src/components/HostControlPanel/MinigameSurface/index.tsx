@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { type MinigameHostView, type MinigameType } from "@wingnight/shared";
 import type {
   MinigameSurfacePhase,
@@ -15,6 +16,13 @@ type MinigameSurfaceProps = {
   minigameHostView: MinigameHostView | null;
   activeTeamName: string | null;
   teamNameByTeamId: Map<string, string>;
+  // The takeover's shell-owned chrome, passed through to the minigame's own
+  // host surface rather than drawn here: the rail and the clock belong in the
+  // layout's rail row, and only the game knows whether its body is a
+  // `<TakeoverStage>` or a `<TakeoverCanvas>`
+  // (docs/takeover-layout-api.md §1). Both are null on the intro deck.
+  rail: ReactNode;
+  clock: ReactNode;
   canDispatchAction: boolean;
   onDispatchAction: (actionType: string, actionPayload: SerializableValue) => void;
 };
@@ -25,6 +33,8 @@ export const MinigameSurface = ({
   minigameHostView,
   activeTeamName,
   teamNameByTeamId,
+  rail,
+  clock,
   canDispatchAction,
   onDispatchAction
 }: MinigameSurfaceProps): JSX.Element => {
@@ -85,6 +95,8 @@ export const MinigameSurface = ({
             minigameHostView={minigameHostView}
             activeTeamName={activeTeamName}
             teamNameByTeamId={teamNameByTeamId}
+            rail={rail}
+            clock={clock}
             canDispatchAction={canDispatchAction}
             onDispatchAction={onDispatchAction}
             serverOrigin={serverOrigin}
@@ -108,6 +120,8 @@ export const MinigameSurface = ({
           minigameHostView={minigameHostView}
           activeTeamName={activeTeamName}
           teamNameByTeamId={teamNameByTeamId}
+          rail={rail}
+          clock={clock}
           canDispatchAction={canDispatchAction}
           onDispatchAction={onDispatchAction}
           serverOrigin={serverOrigin}

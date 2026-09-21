@@ -7,7 +7,7 @@ import type {
 
 import { useHostHandlers } from "../../../context/HostHandlersContext";
 import { useHostRoomState } from "../../../context/RoomStateContext";
-import { hostControlPanelCopy } from "../copy";
+import { selectHeaderContext } from "../HostMiniRail/selectHeaderContext";
 import type { HostRenderMode } from "../resolveHostRenderMode";
 import { selectHostTeamMaps } from "../selectHostTeamMaps";
 import { createMinigameHandlers } from "../setupHandlers";
@@ -19,8 +19,13 @@ type MinigameHostContext = {
   teamNameByTeamId: Map<string, string>;
   minigameType: MinigameType | null;
   minigameHostView: MinigameHostView | null;
-  activeRoundTeamId: string | null;
-  activeRoundTeamName: string;
+  // The TURN's team, not the round's, resolved by the mini-rail's own
+  // selector so the name a minigame is handed and the name the rail prints
+  // are one string. The takeover used to pass `activeRoundTeamName` here,
+  // which is why all nine host surfaces grew an identical
+  // `resolveActiveTeamName` to re-derive the turn's team from the host view
+  // (docs/takeover-layout-api.md §1).
+  activeTeamName: string | null;
   canDispatchMinigameAction: boolean;
   handleDispatchMinigameAction: (
     actionType: string,
@@ -39,12 +44,7 @@ export const useMinigameHostContext = (
     minigameHostView?.minigame ?? roomState?.currentRoundConfig?.minigame ?? null;
   const triviaHostView =
     minigameHostView?.minigame === "TRIVIA" ? minigameHostView : null;
-  const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
-  const activeRoundTeamName =
-    activeRoundTeamId !== null
-      ? (teamNameByTeamId.get(activeRoundTeamId) ??
-        hostControlPanelCopy.noAssignedTeamLabel)
-      : hostControlPanelCopy.noAssignedTeamLabel;
+  const { activeTeamName } = selectHeaderContext(roomState, teamNameByTeamId);
   const currentTriviaPrompt = triviaHostView?.currentPrompt ?? null;
   const activeTurnTeamId =
     minigameHostView?.activeTurnTeamId ?? roomState?.activeTurnTeamId ?? null;
@@ -68,8 +68,7 @@ export const useMinigameHostContext = (
     teamNameByTeamId,
     minigameType,
     minigameHostView,
-    activeRoundTeamId,
-    activeRoundTeamName,
+    activeTeamName,
     canDispatchMinigameAction,
     handleDispatchMinigameAction
   };

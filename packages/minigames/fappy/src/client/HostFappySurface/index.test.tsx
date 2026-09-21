@@ -57,6 +57,8 @@ const render = (view: FappyMinigameHostView | null, phase: "intro" | "play" = "p
       minigameHostView={view}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
+      rail={null}
+      clock={null}
       canDispatchAction
       onDispatchAction={(): void => {
         return;

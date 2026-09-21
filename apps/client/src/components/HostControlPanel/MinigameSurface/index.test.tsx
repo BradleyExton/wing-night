@@ -28,6 +28,8 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
       minigameHostView={triviaHostViewFixture}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
+      rail={null}
+      clock={null}
       canDispatchAction
       onDispatchAction={(): void => {
         return;
@@ -52,6 +54,8 @@ test("renders waiting fallback when host view is unavailable", () => {
       minigameHostView={null}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
+      rail={null}
+      clock={null}
       canDispatchAction={false}
       onDispatchAction={(): void => {
         return;
@@ -89,6 +93,8 @@ test("renders GEO guessing surface for configured geo minigame", () => {
       }}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
+      rail={null}
+      clock={null}
       canDispatchAction={false}
       onDispatchAction={(): void => {
         return;
@@ -134,6 +140,8 @@ test("renders GEO result card after a submitted guess", () => {
       }}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
+      rail={null}
+      clock={null}
       canDispatchAction={false}
       onDispatchAction={(): void => {
         return;
@@ -155,6 +163,8 @@ test("renders intro surface for configured trivia minigame", () => {
       minigameHostView={null}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
+      rail={null}
+      clock={null}
       canDispatchAction={false}
       onDispatchAction={(): void => {
         return;

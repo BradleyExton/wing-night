@@ -97,6 +97,8 @@ const renderSurface = (
       minigameHostView={view}
       activeTeamName="Team Heat"
       teamNameByTeamId={TEAM_NAMES}
+      rail={null}
+      clock={null}
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
       serverOrigin={null}

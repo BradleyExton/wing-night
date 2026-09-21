@@ -8,6 +8,12 @@ type HeaderContext = {
   roundLabel: string;
   sauceLabel: string | null;
   minigameLabel: string | null;
+  // The id as well as the name: the rail paints its dot in the team's own
+  // colour, and a colour is looked up by id (`teamThemeByTeamId`). Null on
+  // every phase that carries no active team, and on a phase that does but has
+  // no id for it — the name is `"No team assigned"` there and the dot has no
+  // team to be.
+  activeTeamId: string | null;
   activeTeamName: string | null;
 };
 
@@ -84,6 +90,7 @@ export const selectHeaderContext = (
     roundLabel,
     sauceLabel,
     minigameLabel,
+    activeTeamId: isActiveTeamContextPhase ? activeTeamId : null,
     activeTeamName
   };
 };
