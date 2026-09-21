@@ -423,7 +423,7 @@ Re-read this section from disk at the top of every iteration; do not trust memor
   green, e2e 36 passed with zero flakes on a stable tree. NOTE: the orchestrator's first commit missed
   26 untracked new directories (`git commit -- <path>` does not add untracked files); amended before
   the log was written.
-- [x] T1.5 `b1fd498` — 11 hardcoded JSX strings moved into colocated `copy.ts` across
+- [x] T1.5 `0ac8706` — 11 hardcoded JSX strings moved into colocated `copy.ts` across
   `DisplayDrawingSurface`, `HostDrawingSurface`, `EmojiPicker`, `HostEmojiCharadesSurface` and
   `GeoGuessMap` (glyphs only — sparks, ticks, magnifier, zoom `+`/`−` U+2212 — no wording changed).
   The inline `style` prop on DRAWING's ink swatches became a literal `[--ink-color:#…]` class per
