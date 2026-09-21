@@ -6,7 +6,7 @@ export {
   stageTimerTimeUp as timerTimeUp,
   stageTimerCap as timerCap,
   stageGlowEating as glowEating
-} from "../../styleTokens";
+} from "@wingnight/surface";
 
 export const heatTrack =
   "relative h-[clamp(8px,1vh,12px)] max-w-[80%] overflow-hidden rounded-full bg-text/[0.06]";

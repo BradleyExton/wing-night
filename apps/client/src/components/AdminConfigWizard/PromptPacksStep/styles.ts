@@ -3,7 +3,7 @@ export { sectionRoot as section } from "../fieldTokens";
 export {
   cardBase as geoCard,
   sectionHeading
-} from "../../HostControlPanel/styleTokens";
+} from "@wingnight/surface";
 
 // `block` rather than the shared section description: this hint sits inside the
 // geo card's paragraph, so it has to break onto its own line.

@@ -3,7 +3,7 @@ import {
   cardBase,
   sectionDescriptionDefault as sectionDescriptionDefaultToken,
   sectionHeading as sectionHeadingToken
-} from "../styleTokens";
+} from "@wingnight/surface";
 
 export const card = cardBase;
 

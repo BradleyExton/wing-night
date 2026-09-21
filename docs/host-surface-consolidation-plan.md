@@ -374,3 +374,10 @@ Re-read this section from disk at the top of every iteration; do not trust memor
   in the `host-tablet-layout-audit-d735c1` worktree and left uncommitted there; carried into this
   worktree by patch along with this plan document, which was likewise untracked there. Gate green,
   e2e 36 passed.
+- [x] T1.1 `067f25b` — `packages/surface` (`@wingnight/surface`) scaffolded on `packages/cast`'s
+  exact manifest shape: same scripts, same catalog devDeps, same tsconfig, same quoted
+  `tsx --test "src/**/*.test.ts" "src/**/*.test.tsx"` with `--tsconfig ../../tsconfig.tsx-runtime.json`.
+  Omits cast's `@wingnight/shared` dependency (nothing uses it yet). Entry `src/index.ts` is a header
+  comment plus `export {}`. Glob independently probed by the orchestrator with a three-levels-deep
+  `.tsx` test that renders React — it ran, so the suite is not silently empty. Tailwind `content` in
+  `apps/client/tailwind.config.ts` gained the package's glob. Gate green (lint/typecheck/test all 0).

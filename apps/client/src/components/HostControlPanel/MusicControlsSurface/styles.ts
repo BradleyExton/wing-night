@@ -3,7 +3,7 @@ export {
   deckGroupHead as groupHead,
   deckGroupCount as groupCount,
   deckCtrlButton as button
-} from "../styleTokens";
+} from "@wingnight/surface";
 
 // Three equal thumb targets: the tablet is sauce-covered (DESIGN.md §2.1), so
 // Back, Pause and Next each get a third of the deck's width rather than the

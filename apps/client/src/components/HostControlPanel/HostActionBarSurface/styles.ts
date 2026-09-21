@@ -4,4 +4,4 @@ export {
   heatStripShimmer,
   ctaBar,
   ctaButton as primaryButton
-} from "../styleTokens";
+} from "@wingnight/surface";

@@ -9,4 +9,4 @@ export {
   deckInput as input,
   deckAddButton as addButton,
   teamDot
-} from "../styleTokens";
+} from "@wingnight/surface";

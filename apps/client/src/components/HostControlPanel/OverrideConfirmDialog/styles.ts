@@ -1,4 +1,4 @@
-import { actionButtonSecondary } from "../styleTokens";
+import { actionButtonSecondary } from "@wingnight/surface";
 
 // Gold is the confirmation accent: this is the one dock surface that asks
 // "are you sure", and it should read as a distinct beat, not another group.

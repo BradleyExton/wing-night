@@ -5,7 +5,7 @@ export {
   deckRowName as rowName,
   deckRowMeta as rowMeta,
   teamDot
-} from "../styleTokens";
+} from "@wingnight/surface";
 
 export const leaderRow =
   "border-l-[3px] border-l-primary/70 bg-gradient-to-r from-primary/10 to-transparent";

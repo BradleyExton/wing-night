@@ -9,4 +9,4 @@ export {
   deckRowCheckActive as rowCheckActive,
   deckRowCheckIcon as rowCheckIcon,
   teamDot
-} from "../../styleTokens";
+} from "@wingnight/surface";

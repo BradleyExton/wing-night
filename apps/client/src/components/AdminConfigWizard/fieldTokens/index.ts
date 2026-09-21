@@ -1,5 +1,5 @@
 // Field-level vocabulary shared by the wizard's step surfaces. Lives beside the
-// steps (not in HostControlPanel/styleTokens) because it is layout for a
+// steps (not in @wingnight/surface's styleTokens) because it is layout for a
 // form-heavy standalone page, which the host deck has no use for.
 export const fieldGrid = "grid grid-cols-1 gap-4 sm:grid-cols-2";
 

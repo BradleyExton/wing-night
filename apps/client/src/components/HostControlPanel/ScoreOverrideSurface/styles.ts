@@ -6,7 +6,7 @@ import {
   sectionDescriptionDefault as sectionDescriptionDefaultToken,
   sectionHeading as sectionHeadingToken,
   selectBase
-} from "../styleTokens";
+} from "@wingnight/surface";
 
 export const card = cardBase;
 

@@ -1,1 +1,1 @@
-export { deckGroupRoot as group } from "../styleTokens";
+export { deckGroupRoot as group } from "@wingnight/surface";

@@ -89,6 +89,9 @@ importers:
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@wingnight/surface':
+        specifier: workspace:*
+        version: link:../../packages/surface
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4

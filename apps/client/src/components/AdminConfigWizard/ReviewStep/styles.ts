@@ -1,6 +1,6 @@
 export { applyButton, reviewKey, reviewRow, reviewValue } from "../fieldTokens";
 
-export { cardBase as card } from "../../HostControlPanel/styleTokens";
+export { cardBase as card } from "@wingnight/surface";
 
 export const root = "flex flex-col gap-5";
 

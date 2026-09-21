@@ -4,4 +4,4 @@ export {
   miniRailDivider as divider,
   miniRailTeamPill as teamPill,
   miniRailTeamDot as teamDot
-} from "../styleTokens";
+} from "@wingnight/surface";

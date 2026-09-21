@@ -23,6 +23,7 @@
     "@wingnight/minigames-song-guess": "workspace:*",
     "@wingnight/minigames-trivia": "workspace:*",
     "@wingnight/shared": "workspace:*",
+    "@wingnight/surface": "workspace:*",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.576.0",
     "react": "catalog:",

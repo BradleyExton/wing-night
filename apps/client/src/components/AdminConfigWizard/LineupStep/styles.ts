@@ -15,4 +15,4 @@ export {
   deckChipActive as chipActive,
   fieldLabel as label,
   inputBase as input
-} from "../../HostControlPanel/styleTokens";
+} from "@wingnight/surface";

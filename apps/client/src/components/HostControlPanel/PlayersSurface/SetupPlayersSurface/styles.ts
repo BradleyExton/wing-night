@@ -11,4 +11,4 @@ export {
   deckChip as chip,
   deckChipActive as chipActive,
   teamDot
-} from "../../styleTokens";
+} from "@wingnight/surface";

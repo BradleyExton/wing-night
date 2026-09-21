@@ -4,4 +4,4 @@ export {
   deckGroupCount as groupCount,
   deckTimerControls as controls,
   deckCtrlButton as button
-} from "../styleTokens";
+} from "@wingnight/surface";

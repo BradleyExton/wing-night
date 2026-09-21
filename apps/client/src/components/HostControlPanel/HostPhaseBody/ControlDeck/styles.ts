@@ -3,4 +3,4 @@ export {
   deckFoot as foot,
   deckOverridesButton as overridesButton,
   deckOverridesBadge as overridesBadge
-} from "../../styleTokens";
+} from "@wingnight/surface";

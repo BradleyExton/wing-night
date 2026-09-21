@@ -1,7 +1,7 @@
 export {
   deckGroupRoot as group,
   deckGroupHead as groupHead
-} from "../styleTokens";
+} from "@wingnight/surface";
 
 export const description =
   "px-1.5 text-[clamp(0.85rem,1.05vw,1rem)] leading-[1.4] text-muted";

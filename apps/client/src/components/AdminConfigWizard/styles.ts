@@ -7,7 +7,7 @@ export {
   deckAddButton as continueButton,
   stageEyebrow as eyebrow,
   stageMeta as meta
-} from "../HostControlPanel/styleTokens";
+} from "@wingnight/surface";
 
 export const root =
   "min-h-screen bg-bg px-[clamp(1.25rem,4vw,3rem)] py-[clamp(1.5rem,4vh,3rem)]";

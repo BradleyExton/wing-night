@@ -6,7 +6,5 @@
 // design system would drift from the first, the same reason `packages/cast`
 // exists for the bird.
 //
-// Scaffold only (T1.1): styleTokens moves in from
-// apps/client/src/components/HostControlPanel/styleTokens, and
-// `<TakeoverStage>`/`<TakeoverCanvas>` land here, in later tasks.
-export {};
+// `<TakeoverStage>`/`<TakeoverCanvas>` land here in later tasks.
+export * from "./styleTokens/index.js";
