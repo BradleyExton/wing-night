@@ -1,95 +1,83 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
+import type { TriviaPrompt } from "@wingnight/shared";
+import { TakeoverStage } from "@wingnight/surface";
 
 import { hostTriviaSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
-const resolveActiveTeamName = ({
-  minigameHostView,
-  teamNameByTeamId,
-  activeTeamName
-}: Pick<
-  MinigameHostRendererProps,
-  "minigameHostView" | "teamNameByTeamId" | "activeTeamName"
->): string => {
-  if (minigameHostView?.activeTurnTeamId) {
-    return (
-      teamNameByTeamId.get(minigameHostView.activeTurnTeamId) ??
-      hostTriviaSurfaceCopy.noAssignedTeamLabel
-    );
-  }
+// The same card on both beats, at two heights: the takeover's body slot has a
+// definite height to fill, the intro deck's panel has not.
+const renderPromptCard = (prompt: TriviaPrompt, className: string): JSX.Element => (
+  <div className={className}>
+    <div className={styles.promptSection}>
+      <p className={styles.promptLabel}>{hostTriviaSurfaceCopy.questionLabel}</p>
+      <p className={styles.promptValue}>{prompt.question}</p>
+    </div>
+    <div className={styles.answerSection}>
+      <p className={styles.answerLabel}>{hostTriviaSurfaceCopy.answerLabel}</p>
+      <p className={styles.answerValue}>{prompt.answer}</p>
+    </div>
+  </div>
+);
 
-  return activeTeamName ?? hostTriviaSurfaceCopy.noAssignedTeamLabel;
-};
-
+// TRIVIA's host surface. At play it is a `<TakeoverStage>`
+// (docs/takeover-layout-api.md §3): the body is a question card the host reads
+// out, so there is nothing a floating chip could cover a corner of without
+// covering a word.
+//
+// It renders no rail and no team chip of its own. `rail` arrives filled with
+// the shell's `<HostMiniRail />`, which already says the round, the sauce and
+// whose turn it is, and `activeTeamName` on the props is that same string
+// resolved once by the shell — which is why this file no longer carries the
+// `resolveActiveTeamName` helper that all nine host surfaces had copied.
 export const HostTriviaSurface = ({
   phase,
   minigameHostView,
-  activeTeamName,
-  teamNameByTeamId,
+  rail,
+  clock,
   canDispatchAction,
   onDispatchAction
 }: MinigameHostRendererProps): JSX.Element => {
   const triviaHostView = minigameHostView?.minigame === "TRIVIA" ? minigameHostView : null;
-  const resolvedActiveTeamName = resolveActiveTeamName({
-    minigameHostView,
-    teamNameByTeamId,
-    activeTeamName
-  });
-  const isPlayPhase = phase === "play";
   const currentPrompt = triviaHostView?.currentPrompt ?? null;
   const attemptsRemaining = triviaHostView?.attemptsRemaining ?? 0;
   const attemptsExhausted = attemptsRemaining <= 0;
+
+  // The intro phase already has the turn's first question, so the host gets a
+  // look at it before play starts; only the TV is held back to "Get ready".
+  // This beat is a panel in the control deck rather than a takeover — `rail`
+  // and `clock` are both null on it — so it renders neither and lets the deck
+  // hold the stack at its own content height.
+  if (phase !== "play") {
+    return (
+      <div className={styles.introRoot}>
+        <p className={styles.introDescription}>
+          {hostTriviaSurfaceCopy.introDescription}
+        </p>
+        {currentPrompt !== null && renderPromptCard(currentPrompt, styles.promptCard)}
+      </div>
+    );
+  }
+
   const disableAttemptButtons =
-    !isPlayPhase || !canDispatchAction || attemptsExhausted || currentPrompt === null;
+    !canDispatchAction || attemptsExhausted || currentPrompt === null;
   // Once the turn is spent the count is the turn-complete panel's job to say,
   // and "0 questions left" beside it just says it twice.
-  const shouldRenderQuestionsLeft =
-    isPlayPhase && currentPrompt !== null && !attemptsExhausted;
+  const shouldRenderQuestionsLeft = currentPrompt !== null && !attemptsExhausted;
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <p className={styles.description}>
-          {isPlayPhase
-            ? hostTriviaSurfaceCopy.playDescription
-            : hostTriviaSurfaceCopy.introDescription}
-        </p>
-        <div className={styles.meta}>
-          <div className={styles.metaBlock}>
-            <p className={styles.metaLabel}>{hostTriviaSurfaceCopy.activeTeamMetaLabel}</p>
-            <p className={styles.metaValue}>{resolvedActiveTeamName}</p>
-          </div>
-          {shouldRenderQuestionsLeft && (
-            <div className={styles.metaBlock}>
-              {/* The value already reads "N questions left", so a "Questions
-                  Left" label in front of it just says it twice. */}
-              <p className={styles.metaValue}>
-                {hostTriviaSurfaceCopy.questionsLeftLabel(attemptsRemaining)}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className={styles.playArea}>
-        {/* The intro phase already has the turn's first question, so the host
-            gets a look at it before play starts; only the TV is held back to
-            "Get ready". A missing prompt means an empty bank, and that
-            "waiting" note is only meaningful once play has started. */}
-        {currentPrompt !== null ? (
-          <div className={styles.promptShell}>
-            <div className={styles.promptSection}>
-              <p className={styles.promptLabel}>{hostTriviaSurfaceCopy.questionLabel}</p>
-              <p className={styles.promptValue}>{currentPrompt.question}</p>
-            </div>
-            <div className={styles.answerSection}>
-              <p className={styles.answerLabel}>{hostTriviaSurfaceCopy.answerLabel}</p>
-              <p className={styles.answerValue}>{currentPrompt.answer}</p>
-            </div>
-          </div>
-        ) : isPlayPhase ? (
-          <p className={styles.statusNote}>{hostTriviaSurfaceCopy.waitingPromptLabel}</p>
-        ) : null}
-        {isPlayPhase && attemptsExhausted && (
+    <TakeoverStage
+      rail={rail}
+      clock={clock}
+      counter={
+        shouldRenderQuestionsLeft ? (
+          <p className={styles.counter}>
+            {hostTriviaSurfaceCopy.questionsLeftLabel(attemptsRemaining)}
+          </p>
+        ) : null
+      }
+      actions={
+        attemptsExhausted ? (
           <div className={styles.turnComplete}>
             <p className={styles.turnCompleteTitle}>
               {hostTriviaSurfaceCopy.turnCompleteTitle}
@@ -98,9 +86,9 @@ export const HostTriviaSurface = ({
               {hostTriviaSurfaceCopy.turnCompleteHint}
             </p>
           </div>
-        )}
-        {isPlayPhase && !attemptsExhausted && (
+        ) : (
           <div className={styles.actions}>
+            {/* Positive verdict first (§4, owner decision P7). */}
             <button
               className={styles.correctButton}
               type="button"
@@ -122,8 +110,19 @@ export const HostTriviaSurface = ({
               {hostTriviaSurfaceCopy.incorrectButtonLabel}
             </button>
           </div>
-        )}
-      </div>
-    </div>
+        )
+      }
+    >
+      {/* A missing prompt means an empty bank, and that "waiting" note is only
+          meaningful once play has started. */}
+      {currentPrompt === null ? (
+        <p className={styles.statusNote}>{hostTriviaSurfaceCopy.waitingPromptLabel}</p>
+      ) : (
+        renderPromptCard(
+          currentPrompt,
+          `${styles.promptCard} ${styles.promptCardFill}`
+        )
+      )}
+    </TakeoverStage>
   );
 };

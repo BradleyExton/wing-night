@@ -19,9 +19,12 @@ test("seeds the sandbox from the server's content pack by default", async ({ pag
   await expect(turnSelect.getByRole("option", { name: "Disco Inferno" })).toHaveCount(1);
   await expect(turnSelect.getByRole("option", { name: "Team Alpha" })).toHaveCount(0);
 
-  // Not just the controls: the scoring chips are drawn from the runtime's own
-  // view, so a pack team named there means the manifest reached `initialize()`.
-  await expect(page.locator("p").filter({ hasText: /^Molten Metal$/ })).toHaveCount(1);
+  // Not just the controls: the host preview's takeover rail names the team
+  // whose turn the seeded room is playing, so a pack team there means the
+  // manifest reached the preview's own room state and not only the picker.
+  // (It used to be read off TRIVIA's own team chip; the rail owns the team
+  // name now — docs/takeover-layout-api.md §1.)
+  await expect(page.locator("header").getByText("Molten Metal")).toHaveCount(1);
 });
 
 // The pin is what keeps the other sandbox specs deterministic, so it gets its

@@ -70,8 +70,9 @@ test("renders minigame surface in minigame intro mode", () => {
 
   assert.match(html, /Mini-Game/);
   assert.match(html, /Call the team up, explain it, then start eating once they are set\./);
-  assert.match(html, /Team Up/);
-  assert.match(html, /Team Alpha/);
+  // Once, in the hero's rail. The minigame's intro panel used to print it a
+  // second time on the same screen (docs/takeover-layout-api.md §1).
+  assert.equal(html.match(/Team Alpha/g)?.length, 1);
 });
 
 test("renders minigame surface in minigame play mode", () => {

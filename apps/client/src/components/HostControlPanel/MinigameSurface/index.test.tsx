@@ -28,7 +28,7 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
       minigameHostView={triviaHostViewFixture}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
-      rail={null}
+      rail={<span data-test-rail />}
       clock={null}
       canDispatchAction
       onDispatchAction={(): void => {
@@ -37,8 +37,12 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
     />
   );
 
-  assert.match(html, /Team Up/);
-  assert.match(html, /Team Alpha/);
+  // The seam hands the shell's chrome to the game, and TRIVIA forwards it into
+  // its layout's rail slot. The team name rides that rail now: a host surface
+  // that also printed it would be saying it twice on one canvas
+  // (docs/takeover-layout-api.md §1).
+  assert.match(html, /data-test-rail/);
+  assert.doesNotMatch(html, /Team Alpha/);
   assert.match(html, /1 question left/);
   assert.match(html, /Which scale measures pepper heat\?/);
   assert.match(html, /Scoville/);
@@ -177,6 +181,7 @@ test("renders intro surface for configured trivia minigame", () => {
   assert.match(html, /Review the active team, then advance to begin trivia play\./);
   // No prompt exists yet in intro by design, so no "waiting" note either.
   assert.doesNotMatch(html, /Waiting for the next trivia prompt/);
-  assert.match(html, /Team Up/);
-  assert.match(html, /Team Alpha/);
+  // The intro deck is a panel, not a takeover: the stage hero above it already
+  // carries the rail, so the panel names no team of its own.
+  assert.doesNotMatch(html, /Team Alpha/);
 });

@@ -141,7 +141,12 @@ export const SandboxStage = ({
   }));
   const teamNameByTeamId = new Map(Object.entries(devManifest.teamNameByTeamId));
   const { DisplaySurface } = rendererBundle;
-  const sandboxHostRoomState = resolveSandboxHostRoomState(minigameType, phase);
+  const sandboxHostRoomState = resolveSandboxHostRoomState(
+    minigameType,
+    phase,
+    activeTeamId,
+    devManifest.teams
+  );
   const isTakeover = phase === "play";
 
   return (

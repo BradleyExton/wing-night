@@ -5,7 +5,8 @@ import {
   type MinigameTimerKey,
   type MinigameType,
   type RoomState,
-  type RoomTimerState
+  type RoomTimerState,
+  type Team
 } from "@wingnight/shared";
 
 // Stand-in durations for the three minigames that declare a play-phase clock
@@ -41,23 +42,25 @@ const resolveSandboxTimer = (minigameType: MinigameType): RoomTimerState | null 
   };
 };
 
-// The host preview's own `RoomState`, built just so `TakeoverTimerChip` — the
-// real component, reading straight off `useHostRoomState` like it does on the
-// tablet — sees the same shape it does in the room. `null` here is what makes
-// the chip render nothing: a host-paced game (most of them, `timerKey: null`)
-// or the intro phase, neither of which the real shell ever mounts the chip
-// under either.
+// The host preview's own `RoomState`, built so the shell's real chrome —
+// `TakeoverTimerChip` and `HostMiniRail`, both reading straight off
+// `useHostRoomState` like they do on the tablet — sees the same shape it does
+// in the room. `null` only on the intro phase, which the sandbox draws as a
+// deck panel and which mounts neither.
+//
+// It carries the turn's team and the selected game because the rail is a slot
+// in the takeover now: a preview whose rail says "Pre-game" with no team would
+// lie about the layout being judged in it, the same way the preview lied about
+// the corner before it composed the clock itself. A host-paced game (six of
+// the nine, `timerKey: null`) gets a room with `timer: null`, which is exactly
+// what makes the chip render nothing and the clock slot cost no width.
 export const resolveSandboxHostRoomState = (
   minigameType: MinigameType,
-  phase: MinigameSurfacePhase
+  phase: MinigameSurfacePhase,
+  activeTurnTeamId: string | null,
+  teams: readonly Team[]
 ): RoomState | null => {
   if (phase !== "play") {
-    return null;
-  }
-
-  const timer = resolveSandboxTimer(minigameType);
-
-  if (timer === null) {
     return null;
   }
 
@@ -66,16 +69,16 @@ export const resolveSandboxHostRoomState = (
     currentRound: 1,
     totalRounds: 1,
     players: [],
-    teams: [],
+    teams: teams.map((team) => ({ ...team, playerIds: [...team.playerIds] })),
     lobbyPlaylist: [],
     gameConfig: null,
     currentRoundConfig: null,
     turnOrderTeamIds: [],
     roundTurnCursor: 0,
     completedRoundTurnTeamIds: [],
-    activeRoundTeamId: null,
-    activeTurnTeamId: null,
-    timer,
+    activeRoundTeamId: activeTurnTeamId,
+    activeTurnTeamId,
+    timer: resolveSandboxTimer(minigameType),
     gameStartCountdownEndsAt: null,
     musicPlayback: null,
     musicVolume: 1,
