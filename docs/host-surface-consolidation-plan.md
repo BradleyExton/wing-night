@@ -507,3 +507,29 @@ a house rule, with DRAWING's inverted pair fixed in T4.1.
   resumes lying about the corner; and when P4 drops `overflow-y-auto` from `MinigameSurface`, the
   sibling `[&>*]:min-h-full` on the same line means the replacement must still hand the layout a
   full-height box or a short body sits at content height.
+- [x] T2.3 `c6bc1e1` — shell draws the takeover chrome as structural layout. `MinigameHostRendererProps`
+  gained `rail: ReactNode` and `clock: ReactNode` as two separate props (not a `chrome` object —
+  ADR-0002); `MinigamePlayTakeover` fills them with the real `HostMiniRail` and `TakeoverTimerChip`;
+  `MinigameIntroStage` passes `null`/`null`. `TakeoverTimerChip/styles.ts` stripped of
+  `absolute right-… top-… z-10` — without that the §6 mechanism is inert — with a `styles.test.ts`
+  that reddens if positioning returns. P4 applied: `takeoverInner` is now
+  `flex min-h-0 flex-1 flex-col [&>*]:min-h-full`, only `overflow-y-auto` removed (`min-h-full` kept
+  deliberately, since dropping it would be an unrequested layout change to nine unmigrated games).
+  `activeTeamName` fixed at source via `selectHeaderContext`; the subagent went further and verified
+  `apps/server/src/minigames/runtime/index.ts:62` writes `state.activeTurnTeamId` and
+  `hostView.activeTurnTeamId` in the same pass, so the two are identical on every snapshot and the
+  nine `resolveActiveTeamName` copies are **provably** redundant — none deleted here. P5: the dock
+  renders only when `isPlayerHeld && !isOverrideDockOpen`, with the CTA-bar branch split out so hiding
+  the dock cannot fall through to it; new `host-takeover-dock.spec.ts` covers open→absent→Escape→back.
+  P6: `selectHeaderContext` now returns `activeTeamId` and the rail composes
+  `dotAccentClassName`/`tintClassName` from the existing `teamThemeByTeamId`, so the dot and its halo
+  are the team's colour; `miniRailTeamDotUnassigned` keeps the house accent for "No team assigned".
+  Nine games proven unchanged: zero source files touched under `packages/minigames/*/src/client`, and
+  all 18 host surfaces (9 games × 2 phases) rendered byte-identical across three prop shapes.
+  Client tests 538 → 544. Gate green, e2e 36 passed.
+  **KNOWN INTERIM REGRESSION, accepted:** no game forwards `clock` yet, so GEO, DRAWING and
+  EMOJI_CHARADES draw no host-tablet play clock until T4.1/T4.2/T4.4. The TV keeps its own timer. A
+  ratchet test in `MinigameDevSandbox/index.test.tsx` asserts the chip is ABSENT for GEO and must be
+  flipped back to `match(/00:45/)` by the commit that gives GEO its clock slot — it reddens first if
+  that commit forgets. The rail is NOT a regression: the shell never drew it at `MINIGAME_PLAY`, and
+  unmigrated games still draw their own.
