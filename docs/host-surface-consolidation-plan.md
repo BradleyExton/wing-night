@@ -563,6 +563,7 @@ a house rule, with DRAWING's inverted pair fixed in T4.1.
 |---|---|---|---|
 | TRIVIA | 36% | **82.5%** (independently measured) | T2.4 |
 | GEO | 90% | **89.9%** (held — correct for the reference) | T4.4 |
+| JOUST | 60% | **89.9%** (deck removed) | T3.1 |
 
 **HUMAN CHECKPOINT REACHED** — the anatomy is on the tablet and awaiting the owner's read before the
 remaining eight games adopt it.
@@ -621,3 +622,45 @@ since its `RunningTotals` deck must survive as a `readout`, a shape GEO never ex
 takes the gutter as a max-width but `readout` takes it as a bottom offset, so a **tall** `readout`
 grows upward into the body unconstrained. GEO's two tiles are short so nothing surfaced. Watch this
 when a four-team running-totals panel lands in `readout` at T3.1.
+- [x] T3.1 `044437d` — **JOUST full-bleed on `<TakeoverCanvas>`, 60% → 89.9%** (arena 887×689 →
+  1229×749). The 330px deck is gone: counts → `counter`, the four controls plus `arenaHint` →
+  `actions` (the hint used to be a row *under* the lane, costing it height), `ShotResultCard` +
+  `RunningTotals` → `readout`, lane/shooter labels → a `pointer-events-none` plate in the body.
+  `resolveActiveTeamName` deleted — **6 definitions remain** (drawing, emoji-charades, fappy,
+  recreate, schlonic, song-guess), orchestrator verified; the brief's "7" was stale. Dock proof: 36
+  points sampled across the circle (centre + radii 10/20 at 30° steps), **0 misses**. DESIGN.md §2.7
+  rewritten in the same commit.
+  **The tall-`readout` hazard GEO flagged is NOT real, and the real one was unguarded.** Height
+  measured: a row is 33px, so eight teams — the room's hard max — is 311px against a 677px budget; it
+  would take ~23 teams to reach the rail. But `readout` was right-anchored with **no `max-w` at all**,
+  and JOUST's result plaque names everyone a shot felled: a cleared rack is nine names on one line,
+  measured at **1154px of the 1229px canvas**. Fixed in two places deliberately — `packages/surface`
+  gives `readout` the same `max-w-[calc(100%-4.5rem)]` `actions` has (one number, now five
+  applications; spec §5/§6 amended with the height arithmetic), and JOUST caps its own plaque at
+  `clamp(16rem,26vw,22rem)` because the layout cannot know how wide a game's card should be. Worst
+  case 1154×179 → 523×186.
+  **Shared: `RunningTotals` → `packages/surface/src/RunningTotals/`.** Three call sites (JOUST, FAPPY,
+  SONG_GUESS), identical semantics and byte-identical styles. Two findings: (1) **the "house card" was
+  never a house card** — the three identical copies were written in JOUST's dusk-desert hexes
+  (`#3a200d` is the arena frame's own border, `#1a0e05`→`#0a0604` its result plaque, DESIGN.md §2.7),
+  which a house-component path may not carry; substituted value-for-value to `border-ember/20`,
+  `from-surface to-bg`. **SCHLONIC's variant is the only one of the four already written in house
+  tokens.** (2) Sharing closed a real bug invisible from inside a deck: the row had `justify-between`
+  and no gap, so floated at content width the longest name met its points at a measured **0px**
+  ("Honky Tonk Heat0 pts"). The shared row takes `gap-4` — the one thing SCHLONIC's variant had and
+  the other three didn't.
+  **NOT shared, deliberately: the history strips.** ADR-0002 wants three call sites with *identical
+  semantics*; these are three shapes — `ShotHistory` pads to a fixed slot count with no active notion,
+  `LegHistory` is data-length with an active chip plus a crash badge, `RunHistory` is a vertical list
+  of two cells per row. Collapsing needs `items`+`renderItem`+`isActive`+`padTo`+`tone`: a multi-flag
+  configuration object, or a render prop wearing a hat. The genuinely identical residue is the `title`
+  class string, which §8 calls a token, not a component — left for the wider token pass.
+  **NOT built: the arena frame** (§8 assigns it to T3.1). Only one of its three call sites is
+  full-bleed yet — JOUST is `h-full w-full` while FAPPY and SCHLONIC are still `min-h-0 flex-1` — and
+  §8's "paints nothing, children carry the interaction" design would move the click target off two
+  games' containers, a behavioural change colliding with T3.2/T3.3. **Recommend it lands at T3.3.**
+  Gate green, e2e 36 passed. Screenshot: `docs/screenshots/t3.1-joust-takeover-host-1280x800.png`.
+
+**HUMAN CHECKPOINT REACHED** (post-T3.1, "is full-bleed right, before three more games follow"), with
+two decisions attached: SCHLONIC's `RunningTotals` styling, and whether the arcade games share a
+surface language the design system should name or have simply been copying JOUST.
