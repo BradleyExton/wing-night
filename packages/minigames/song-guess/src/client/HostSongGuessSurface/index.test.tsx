@@ -137,7 +137,7 @@ test("keeps replay unavailable outside the paused phase", () => {
   assert.equal(isDisabled(renderAtPhase("clip_playing"), "Replay"), true);
 });
 
-test("swaps reveal for the scoring deck and next song once revealed", () => {
+test("swaps reveal for the scoring pad and next song once revealed", () => {
   const html = renderAtPhase("reveal");
 
   assert.match(html, /data-song-guess-scoring/);
@@ -146,7 +146,7 @@ test("swaps reveal for the scoring deck and next song once revealed", () => {
   assert.equal(buttonFor(html, "Reveal answer"), null);
 });
 
-test("hides the scoring deck until the answer is revealed", () => {
+test("hides the scoring pad until the answer is revealed", () => {
   for (const phase of ["idle", "clip_playing", "clip_paused"] as const) {
     assert.doesNotMatch(renderAtPhase(phase), /data-song-guess-scoring/);
   }

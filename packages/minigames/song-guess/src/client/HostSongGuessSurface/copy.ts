@@ -1,7 +1,7 @@
+// The rail strip this surface used to draw is the shell's mini-rail now, so
+// its title and its team chip went with it: `railTitle`, `teamPrefix` and the
+// `noAssignedTeamLabel` that only `resolveActiveTeamName` ever reached for.
 export const hostSongGuessSurfaceCopy = {
-  railTitle: "Lounge Set",
-  teamPrefix: "On the mic:",
-  noAssignedTeamLabel: "No team assigned",
   pendingChip: (points: number): string => `+${points} pending`,
   introDescription:
     "Lounge covers of songs everyone knows. Play the clip, let the team shout it out, then rule on the title and the original artist — a point each.",
@@ -11,7 +11,6 @@ export const hostSongGuessSurfaceCopy = {
     `Song ${songNumber} of ${songsTotal}`,
   answerLabel: "Answer (host only)",
   artistPrefix: "by",
-  hintLabel: "Hint",
   playButtonLabel: "▶ Play clip",
   resumeButtonLabel: "▶ Resume",
   pauseButtonLabel: "⏸ Pause",

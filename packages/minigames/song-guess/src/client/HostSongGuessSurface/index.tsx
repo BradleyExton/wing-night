@@ -1,30 +1,15 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { SongGuessMinigameHostView } from "@wingnight/shared";
-import { RunningTotals } from "@wingnight/surface";
+import { RunningTotals, TakeoverStage } from "@wingnight/surface";
 
-import { SongScoringDeck } from "./SongScoringDeck/index.js";
+import { SongScoringPad } from "./SongScoringPad/index.js";
 import { hostSongGuessSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
-const resolveActiveTeamName = ({
-  minigameHostView,
-  teamNameByTeamId,
-  activeTeamName
-}: Pick<
-  MinigameHostRendererProps,
-  "minigameHostView" | "teamNameByTeamId" | "activeTeamName"
->): string => {
-  if (minigameHostView?.activeTurnTeamId) {
-    return (
-      teamNameByTeamId.get(minigameHostView.activeTurnTeamId) ??
-      hostSongGuessSurfaceCopy.noAssignedTeamLabel
-    );
-  }
-
-  return activeTeamName ?? hostSongGuessSurfaceCopy.noAssignedTeamLabel;
-};
-
-const SongCard = ({ view }: { view: SongGuessMinigameHostView }): JSX.Element => {
+// The answer, host-only, filling the body's left pane. The song counter that
+// used to sit inside it is a rail-row chip now (§4, `counter`): it is a number
+// the host glances at, and the card is the thing they read out.
+const AnswerCard = ({ view }: { view: SongGuessMinigameHostView }): JSX.Element => {
   const currentSong = view.currentSong;
 
   if (currentSong === null) {
@@ -36,10 +21,7 @@ const SongCard = ({ view }: { view: SongGuessMinigameHostView }): JSX.Element =>
   }
 
   return (
-    <div className={styles.songCard}>
-      <span className={styles.songCounter}>
-        {hostSongGuessSurfaceCopy.songCounter(view.songCursor + 1, view.songsTotal)}
-      </span>
+    <div className={styles.answerCard}>
       <span className={styles.answerLabel}>
         {hostSongGuessSurfaceCopy.answerLabel}
       </span>
@@ -64,22 +46,46 @@ const SongCard = ({ view }: { view: SongGuessMinigameHostView }): JSX.Element =>
   );
 };
 
+// SONG_GUESS's host surface. At play it is a `<TakeoverStage>` with no deck
+// (docs/takeover-layout-api.md §3): the body is the answer the host reads out
+// and the round so far they check it against, so a floating chip there covers
+// a word rather than a corner of scenery — and the turn needs nine tap targets
+// plus a totals panel, which a Canvas has nowhere to put, its two floating
+// slots sharing one edge. The 330px deck that held all of them is gone; the
+// controls are the foot row now, where both thumbs are on a tablet on a table.
+//
+// It renders no rail and no team chip of its own — `rail` arrives filled with
+// the shell's `<HostMiniRail />`, which already says the round, the sauce and
+// whose turn it is — which is why the `resolveActiveTeamName` helper that all
+// nine host surfaces had copied is no longer here. `clock` is forwarded
+// untouched and draws nothing: SONG_GUESS is `timerKey: null`, and an empty
+// slot in the rail row takes no width, which is what retired this file's
+// hand-typed `pr-[clamp(9rem,15vw,12rem)]` reserve (§6).
 export const HostSongGuessSurface = ({
   phase,
   minigameHostView,
-  activeTeamName,
   teamNameByTeamId,
+  rail,
+  clock,
   canDispatchAction,
   onDispatchAction
 }: MinigameHostRendererProps): JSX.Element => {
   const songGuessView =
     minigameHostView?.minigame === "SONG_GUESS" ? minigameHostView : null;
-  const resolvedActiveTeamName = resolveActiveTeamName({
-    minigameHostView,
-    teamNameByTeamId,
-    activeTeamName
-  });
-  const isPlayPhase = phase === "play";
+
+  // The intro beat is a panel in the host's own control deck rather than a
+  // takeover — `rail` and `clock` are both null on it — so it gets the
+  // briefing note and no chrome.
+  if (phase !== "play") {
+    return (
+      <div className={styles.introRoot}>
+        <p className={styles.introCard}>
+          {hostSongGuessSurfaceCopy.introDescription}
+        </p>
+      </div>
+    );
+  }
+
   const pendingPoints =
     songGuessView === null || songGuessView.activeTurnTeamId === null
       ? null
@@ -97,36 +103,30 @@ export const HostSongGuessSurface = ({
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.rail}>
-        <span className={styles.railTitle}>
-          {hostSongGuessSurfaceCopy.railTitle}
-        </span>
-        <span className={styles.railTeam}>
-          <span className={styles.railTeamDot} aria-hidden="true" />
-          {hostSongGuessSurfaceCopy.teamPrefix} {resolvedActiveTeamName}
-        </span>
-        {isPlayPhase && pendingPoints !== null && (
-          <span className={styles.railPending}>
-            {hostSongGuessSurfaceCopy.pendingChip(pendingPoints)}
-          </span>
-        )}
-      </div>
-      {!isPlayPhase && (
-        <p className={styles.introCard}>
-          {hostSongGuessSurfaceCopy.introDescription}
-        </p>
-      )}
-      {isPlayPhase && songGuessView !== null && (
-        <div className={styles.playArea}>
-          <div className={styles.stageColumn}>
-            <SongCard view={songGuessView} />
-            {isDone && (
-              <p className={styles.doneNote}>{hostSongGuessSurfaceCopy.doneLabel}</p>
+    <TakeoverStage
+      rail={rail}
+      clock={clock}
+      counter={
+        songGuessView === null ? null : (
+          <>
+            <span className={styles.counter}>
+              {hostSongGuessSurfaceCopy.songCounter(
+                songGuessView.songCursor + 1,
+                songGuessView.songsTotal
+              )}
+            </span>
+            {pendingPoints !== null && (
+              <span className={styles.counterPending}>
+                {hostSongGuessSurfaceCopy.pendingChip(pendingPoints)}
+              </span>
             )}
-          </div>
-          <aside className={styles.deck}>
-            <div className={styles.transportRow}>
+          </>
+        )
+      }
+      actions={
+        songGuessView === null ? null : (
+          <div className={styles.actions}>
+            <div className={styles.transport}>
               <button
                 className={styles.transportPrimary}
                 type="button"
@@ -149,8 +149,6 @@ export const HostSongGuessSurface = ({
               >
                 {hostSongGuessSurfaceCopy.pauseButtonLabel}
               </button>
-            </div>
-            <div className={styles.transportRow}>
               <button
                 className={styles.transportSecondary}
                 type="button"
@@ -163,6 +161,9 @@ export const HostSongGuessSurface = ({
                   ? hostSongGuessSurfaceCopy.replayUsedLabel
                   : hostSongGuessSurfaceCopy.replayButtonLabel}
               </button>
+              {/* The escape hatch stays on the canvas, not in the override
+                  dock: dropping a song the room cannot hear is the host's
+                  ordinary move here, and AGENTS.md §11 never lets it leave. */}
               <button
                 className={styles.transportSecondary}
                 type="button"
@@ -174,38 +175,55 @@ export const HostSongGuessSurface = ({
                 {hostSongGuessSurfaceCopy.skipSongButtonLabel}
               </button>
             </div>
-            {isRevealing ? (
-              <>
-                <SongScoringDeck
-                  currentScore={songGuessView.currentScore}
-                  canDispatchAction={canAct}
-                  onMark={(actionType, correct): void => {
-                    onDispatchAction(actionType, { correct });
-                  }}
-                />
+            <div className={styles.ruling}>
+              {isDone ? (
+                <p className={styles.doneNote}>{hostSongGuessSurfaceCopy.doneLabel}</p>
+              ) : isRevealing ? (
+                <>
+                  <SongScoringPad
+                    currentScore={songGuessView.currentScore}
+                    canDispatchAction={canAct}
+                    onMark={(actionType, correct): void => {
+                      onDispatchAction(actionType, { correct });
+                    }}
+                  />
+                  <button
+                    className={styles.nextButton}
+                    type="button"
+                    disabled={!canAct}
+                    onClick={(): void => {
+                      dispatch("nextSong");
+                    }}
+                  >
+                    {hostSongGuessSurfaceCopy.nextSongButtonLabel}
+                  </button>
+                </>
+              ) : (
                 <button
                   className={styles.revealButton}
                   type="button"
-                  disabled={!canAct}
+                  disabled={!canAct || !isPaused}
                   onClick={(): void => {
-                    dispatch("nextSong");
+                    dispatch("triggerReveal");
                   }}
                 >
-                  {hostSongGuessSurfaceCopy.nextSongButtonLabel}
+                  {hostSongGuessSurfaceCopy.revealButtonLabel}
                 </button>
-              </>
-            ) : (
-              <button
-                className={styles.revealButton}
-                type="button"
-                disabled={!canAct || !isPaused}
-                onClick={(): void => {
-                  dispatch("triggerReveal");
-                }}
-              >
-                {hostSongGuessSurfaceCopy.revealButtonLabel}
-              </button>
-            )}
+              )}
+            </div>
+          </div>
+        )
+      }
+    >
+      {songGuessView === null ? null : (
+        <div className={styles.body}>
+          <div className={styles.answerPane}>
+            <AnswerCard view={songGuessView} />
+          </div>
+          {/* Read-only, so it is body content rather than chrome: the body is
+              everything the host reads (§4), and what is left of the old deck
+              column is this one pane. */}
+          <aside className={styles.totalsPane}>
             <RunningTotals
               pendingPointsByTeamId={songGuessView.pendingPointsByTeamId}
               activeTurnTeamId={songGuessView.activeTurnTeamId}
@@ -214,6 +232,6 @@ export const HostSongGuessSurface = ({
           </aside>
         </div>
       )}
-    </div>
+    </TakeoverStage>
   );
 };
