@@ -562,6 +562,7 @@ a house rule, with DRAWING's inverted pair fixed in T4.1.
 | Game | Before | After | Task |
 |---|---|---|---|
 | TRIVIA | 36% | **82.5%** (independently measured) | T2.4 |
+| GEO | 90% | **89.9%** (held — correct for the reference) | T4.4 |
 
 **HUMAN CHECKPOINT REACHED** — the anatomy is on the tablet and awaiting the owner's read before the
 remaining eight games adopt it.
@@ -581,3 +582,42 @@ The owner cleared the T2.5 checkpoint and accepted the orchestrator's recommenda
   `copy.ts`, `index.tsx`, `styles.ts` — no `RunningTotals`, no history strip.
 Cost accepted: T3.1 also lands the shared primitives that unblock T3.2/T3.3/T3.4 to run in parallel,
 so that parallelism is delayed by one task.
+- [x] T4.4 `9af6dc7` — **GEO migrated to `<TakeoverCanvas>`, pulled ahead of phase 3.** Canvas share
+  89.9% (layout root/body/map frame all 1229×749; `.leaflet-container` 1227×747 = 89.5%, the audit's
+  exact numbers) — held, not improved, which is the right outcome for the reference implementation.
+  Deleted: a hand-typed `bottom-[clamp(4.9rem,9vh,5.6rem)]`, `max-w-[calc(100%-6rem)]`, the
+  `pr-[clamp(9rem,15vw,12rem)]` top-right reserve, the `floating = "absolute z-[1100]"` helper, the
+  rail, the team chip and `resolveActiveTeamName` (7 definitions remain). **Clock restored for GEO** —
+  the T2.3 interim regression is one-third closed, and the ratchet test is flipped back to
+  `match(/00:45/)`.
+  **The Leaflet question is settled by pixels, not class strings.** Hashing the chrome-row region at
+  a true 1280×800: as shipped and with GEO's own map-frame `isolate` removed are byte-identical
+  (`afb80b11…`, 1864 bytes); with BOTH isolations removed the region collapses to 170 bytes — a flat
+  Leaflet tile painting over the chip. So the layout's `isolate` on the body is sufficient on its own
+  to contain z-1000. GEO's own isolate is still load-bearing one level in (removing it takes the photo
+  plate from 151,396 to 19,392 bytes) and sits inside band 0 where §5 permits it —
+  `body.contains(mapFrame) && body !== mapFrame` verified true.
+  Dock reachability behavioural: `elementFromPoint` at the circle's centre returns
+  `BUTTON aria-label="Open host controls"`, with the stack top-down dock → leaflet-container → map
+  wrapper. Nothing GEO draws is above it.
+  Screenshot: `docs/screenshots/t4.4-geo-takeover-host-1280x800.png`, captured **un-scaled** at a true
+  1280×800 and deliberately re-shot against `content/sample` via `WN_CONTENT_ROOT_DIR` — the first
+  pass picked up the live pack and would have committed a photograph of identifiable people into
+  `docs/`, defeating the pack's gitignore.
+  One intentional behaviour change: at play with no prompt GEO used to drop to the intro panel; it now
+  keeps the takeover and renders the waiting note in the body, so the rail and clock stay on the
+  tablet through the gap. Gate green, e2e 36 passed.
+  **Interrupted-agent note:** this task was interrupted mid-flight; its writes survived but its
+  verification did not, and it had edited `geo/package.json` without running `pnpm install`, so the
+  tree was red on missing workspace links. One repair agent finished it. The only genuine test failure
+  was the first agent's own over-strict regex (it assumed `readout` content was one level below the
+  slot wrapper; GEO passes two bare tiles, so it is two) — fixed and mutation-checked.
+
+### Verdict on `<TakeoverCanvas>` (from the GEO migration)
+**Fits.** GEO gave up code without giving up a pixel, and every slot §5 names had an obvious home.
+Two caveats carried into T3.1: (1) the Canvas was *derived* from GEO, so this proves the
+generalisation did not break its source, not that the abstraction travels — JOUST is the real test,
+since its `RunningTotals` deck must survive as a `readout`, a shape GEO never exercised; (2) `actions`
+takes the gutter as a max-width but `readout` takes it as a bottom offset, so a **tall** `readout`
+grows upward into the body unconstrained. GEO's two tiles are short so nothing surfaced. Watch this
+when a four-team running-totals panel lands in `readout` at T3.1.
