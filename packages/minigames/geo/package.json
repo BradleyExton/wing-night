@@ -25,11 +25,12 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "tsx --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\""
+    "test": "tsx --tsconfig ../../../tsconfig.tsx-runtime.json --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\""
   },
   "dependencies": {
     "@wingnight/minigames-core": "workspace:*",
     "@wingnight/shared": "workspace:*",
+    "@wingnight/surface": "workspace:*",
     "leaflet": "^1.9.4",
     "react-leaflet": "^4.2.1"
   },
@@ -37,6 +38,9 @@
     "@types/leaflet": "^1.9.16",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:"
   },

@@ -3,7 +3,6 @@ import { formatGeoDistance } from "../formatGeoDistance/index.js";
 export const hostGeoSurfaceCopy = {
   photoCounter: (current: number, total: number): string =>
     `Photo ${current} / ${total}`,
-  noAssignedTeamLabel: "No team assigned",
   introDescription: "Brief the team, then advance to open the map.",
   waitingPromptLabel: "Waiting for the next photo.",
   eyebrow: "Where was this taken?",

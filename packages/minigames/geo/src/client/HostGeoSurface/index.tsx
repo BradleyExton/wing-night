@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import { resolveContentAssetSrc, type GeoMinigameHostView } from "@wingnight/shared";
+import { TakeoverCanvas } from "@wingnight/surface";
 
 import { resolvePhotoNumber } from "../resolvePhotoNumber/index.js";
 import { hostGeoSurfaceCopy } from "./copy.js";
@@ -14,24 +15,6 @@ const GeoGuessMap = lazy(() =>
 );
 
 const isBrowser = typeof window !== "undefined";
-
-const resolveActiveTeamName = ({
-  minigameHostView,
-  teamNameByTeamId,
-  activeTeamName
-}: Pick<
-  MinigameHostRendererProps,
-  "minigameHostView" | "teamNameByTeamId" | "activeTeamName"
->): string => {
-  if (minigameHostView?.activeTurnTeamId) {
-    return (
-      teamNameByTeamId.get(minigameHostView.activeTurnTeamId) ??
-      hostGeoSurfaceCopy.noAssignedTeamLabel
-    );
-  }
-
-  return activeTeamName ?? hostGeoSurfaceCopy.noAssignedTeamLabel;
-};
 
 const GeoPlate = ({
   currentPrompt,
@@ -61,6 +44,9 @@ const GeoPlate = ({
   </div>
 );
 
+// Two tiles, no box of their own: the layout's `readout` slot is the flex row
+// that used to be `styles.verdict`, and it is the one that knows where the
+// corner dock is.
 const GeoVerdict = ({
   lastResult
 }: {
@@ -69,7 +55,7 @@ const GeoVerdict = ({
   const distance = hostGeoSurfaceCopy.distanceValue(lastResult.distanceKm);
 
   return (
-    <div className={styles.verdict}>
+    <>
       <div className={styles.distanceTile}>
         <div className={styles.tileLabel}>{hostGeoSurfaceCopy.distanceLabel}</div>
         <div className={styles.tileValue}>
@@ -83,27 +69,45 @@ const GeoVerdict = ({
           {hostGeoSurfaceCopy.pointsValue(lastResult.pointsAwarded)}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
+// GEO's host surface. At play it is a `<TakeoverCanvas>`
+// (docs/takeover-layout-api.md §3, §5): the chart is the tablet, and every
+// name in this file is one GEO invented and the Canvas generalised.
+//
+// It renders no rail and no team chip of its own — `rail` arrives filled with
+// the shell's `<HostMiniRail />`, which already says the round, the sauce and
+// whose turn it is — which is why the `resolveActiveTeamName` helper that all
+// nine host surfaces had copied is no longer here. It also writes no z-index
+// and no `isolate` on the body: the layout owns the bands, and `z-[1100]` is
+// the corner dock's alone (§7).
 export const HostGeoSurface = ({
   phase,
   minigameHostView,
-  activeTeamName,
-  teamNameByTeamId,
+  rail,
+  clock,
   canDispatchAction,
   onDispatchAction,
   serverOrigin
 }: MinigameHostRendererProps): JSX.Element => {
   const geoHostView =
     minigameHostView?.minigame === "GEO" ? minigameHostView : null;
-  const resolvedActiveTeamName = resolveActiveTeamName({
-    minigameHostView,
-    teamNameByTeamId,
-    activeTeamName
-  });
-  const isPlayPhase = phase === "play";
+
+  // The intro beat is a panel in the host's own control deck rather than a
+  // takeover — `rail` and `clock` are both null on it — so a full-bleed chart
+  // there would be nonsense and it gets the briefing note instead.
+  if (phase !== "play") {
+    return (
+      <div className={styles.introContainer}>
+        <p className={styles.statusNote}>
+          {hostGeoSurfaceCopy.introDescription}
+        </p>
+      </div>
+    );
+  }
+
   const currentPrompt = geoHostView?.currentPrompt ?? null;
   const isSubmitted = geoHostView?.currentSubState === "submitted";
   const promptsPerTurn = geoHostView?.promptsPerTurn ?? 0;
@@ -115,89 +119,51 @@ export const HostGeoSurface = ({
     isSubmitted
   });
   const lastResult = geoHostView?.lastResult ?? null;
-  const isGuessing =
-    isPlayPhase && geoHostView !== null && !isSubmitted && currentPrompt !== null;
+  const isGuessing = geoHostView !== null && !isSubmitted && currentPrompt !== null;
   const canSubmitGuess =
     canDispatchAction && geoHostView !== null && geoHostView.currentGuess !== null;
-
-  if (!isPlayPhase || currentPrompt === null || geoHostView === null) {
-    return (
-      <div className={styles.introContainer}>
-        <p className={styles.statusNote}>
-          {isPlayPhase
-            ? hostGeoSurfaceCopy.waitingPromptLabel
-            : hostGeoSurfaceCopy.introDescription}
-        </p>
-      </div>
-    );
-  }
 
   // The answer only exists on the tablet once the guess is stamped, so the
   // reveal draws itself on the same chart the team just pinned rather than
   // swapping the canvas out from under them.
   const answer =
-    isSubmitted && lastResult !== null
+    isSubmitted && lastResult !== null && currentPrompt !== null
       ? { lat: currentPrompt.answerLat, lng: currentPrompt.answerLng }
       : null;
 
   return (
-    <div className={styles.container}>
-      {isBrowser ? (
-        <Suspense
-          fallback={
-            <div className={styles.mapFallback}>
-              {hostGeoSurfaceCopy.mapLoadingLabel}
-            </div>
-          }
-        >
-          <GeoGuessMap
-            guess={geoHostView.currentGuess}
-            answer={answer}
-            onSelectLocation={(lat, lng): void => {
-              onDispatchAction("setGuess", { lat, lng });
-            }}
-          />
-        </Suspense>
-      ) : (
-        <div className={styles.mapFallback}>
-          {hostGeoSurfaceCopy.mapLoadingLabel}
-        </div>
-      )}
-
-      <div className={styles.rail}>
-        <span className={styles.teamChip}>
-          <span className={styles.teamChipDot} aria-hidden="true" />
-          {resolvedActiveTeamName}
-        </span>
-        {promptsPerTurn > 0 && (
-          <span className={styles.counterChip}>
+    <TakeoverCanvas
+      rail={rail}
+      clock={clock}
+      counter={
+        promptsPerTurn > 0 ? (
+          <span className={styles.counter}>
             {hostGeoSurfaceCopy.photoCounter(photoNumber, promptsPerTurn)}
           </span>
-        )}
-      </div>
-
-      <GeoPlate currentPrompt={currentPrompt} serverOrigin={serverOrigin} />
-
-      {isGuessing && (
-        <div className={styles.actionBar}>
-          <button
-            className={styles.submitButton}
-            type="button"
-            disabled={!canSubmitGuess}
-            onClick={(): void => {
-              onDispatchAction("submitGuess", {});
-            }}
-          >
-            {hostGeoSurfaceCopy.submitButtonLabel}
-          </button>
-          <span className={styles.mapInstruction}>
-            {hostGeoSurfaceCopy.mapInstructionLabel}
-          </span>
-        </div>
-      )}
-
-      {isSubmitted && !isTurnComplete && (
-        <div className={styles.actionBar}>
+        ) : null
+      }
+      actions={
+        isGuessing ? (
+          <>
+            <button
+              className={styles.submitButton}
+              type="button"
+              disabled={!canSubmitGuess}
+              onClick={(): void => {
+                onDispatchAction("submitGuess", {});
+              }}
+            >
+              {hostGeoSurfaceCopy.submitButtonLabel}
+            </button>
+            <span className={styles.mapInstruction}>
+              {hostGeoSurfaceCopy.mapInstructionLabel}
+            </span>
+          </>
+        ) : isTurnComplete ? (
+          <p className={styles.turnCompleteNote}>
+            {hostGeoSurfaceCopy.turnCompleteLabel}
+          </p>
+        ) : isSubmitted ? (
           <button
             className={styles.nextPromptButton}
             type="button"
@@ -208,18 +174,49 @@ export const HostGeoSurface = ({
           >
             {hostGeoSurfaceCopy.nextPromptButtonLabel}
           </button>
-        </div>
-      )}
-
-      {isTurnComplete && (
-        <p className={styles.turnCompleteNote}>
-          {hostGeoSurfaceCopy.turnCompleteLabel}
+        ) : null
+      }
+      readout={
+        isSubmitted && lastResult !== null ? (
+          <GeoVerdict lastResult={lastResult} />
+        ) : null
+      }
+    >
+      {/* An empty bank, or a turn whose next photo has not landed yet. The
+          note stands in for the chart rather than dropping the takeover, so
+          the rail and the clock stay on the tablet through the gap. */}
+      {geoHostView === null || currentPrompt === null ? (
+        <p className={styles.mapFallback}>
+          {hostGeoSurfaceCopy.waitingPromptLabel}
         </p>
+      ) : (
+        <>
+          <div className={styles.map}>
+            {isBrowser ? (
+              <Suspense
+                fallback={
+                  <div className={styles.mapFallback}>
+                    {hostGeoSurfaceCopy.mapLoadingLabel}
+                  </div>
+                }
+              >
+                <GeoGuessMap
+                  guess={geoHostView.currentGuess}
+                  answer={answer}
+                  onSelectLocation={(lat, lng): void => {
+                    onDispatchAction("setGuess", { lat, lng });
+                  }}
+                />
+              </Suspense>
+            ) : (
+              <div className={styles.mapFallback}>
+                {hostGeoSurfaceCopy.mapLoadingLabel}
+              </div>
+            )}
+          </div>
+          <GeoPlate currentPrompt={currentPrompt} serverOrigin={serverOrigin} />
+        </>
       )}
-
-      {isSubmitted && lastResult !== null && (
-        <GeoVerdict lastResult={lastResult} />
-      )}
-    </div>
+    </TakeoverCanvas>
   );
 };

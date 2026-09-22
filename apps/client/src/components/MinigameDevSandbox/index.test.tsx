@@ -37,13 +37,14 @@ test("renders the geo sandbox without leaking answer coordinates", () => {
 //
 // So a game that has not migrated to `<TakeoverStage>` / `<TakeoverCanvas>`
 // yet draws no chip at all, and the preview says so rather than drawing one
-// the tablet would not. GEO is the last migration (T4.4): this assertion
-// flips to `match(/00:45/)` in the commit that gives GEO a `clock` slot, and
-// goes red first if that commit forgets.
-test("draws no timer chip until the minigame forwards the shell's clock slot", () => {
+// the tablet would not. GEO migrated at T4.4 and forwards `clock` into its
+// `<TakeoverCanvas>`, so its 45-second chip is back — this assertion is the
+// ratchet, and it reddens if a later change drops the slot again. DRAWING and
+// EMOJI_CHARADES are the two still waiting for their own migrations.
+test("draws the timer chip once the minigame forwards the shell's clock slot", () => {
   const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="GEO" />);
 
-  assert.doesNotMatch(html, /00:45/);
+  assert.match(html, /00:45/);
 });
 
 // TRIVIA has `timerKey: null`, so the chip renders nothing whoever holds the

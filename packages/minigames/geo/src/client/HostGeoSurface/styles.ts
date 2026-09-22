@@ -1,37 +1,50 @@
-// Map First (DESIGN.md §2.4): the chart is the tablet. Everything the host
-// needs floats on it as glass, because the map is the thing a team's thumb is
-// actually working in and a fixed column was taking a third of it.
+// GEO is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the chart is
+// the tablet, and a chip in one corner costs a corner of scenery rather than a
+// word the host has to read.
 //
-// `isolate` keeps Leaflet's own stacking (panes at z-400, controls at z-1000)
-// inside this frame. Without it those layers compete with the host shell's
-// chrome in the same context and the map paints straight over the corner dock.
-export const container =
-  "relative isolate h-full min-h-0 w-full overflow-hidden rounded-2xl border border-text/10 bg-[#0e1419]";
+// Nothing here positions the takeover's chrome and nothing here reserves the
+// corner dock. The rail, the clock, the counter's place in the row, the
+// bottom-left actions and the bottom-right readout are all the layout's — and
+// so is the z-index budget. The `floating = "absolute z-[1100]"` helper this
+// file used to carry picked the dock's own number and was kept off the dock by
+// a single `isolate` in this same file; that is the trap §7 exists to remove.
 
 // Intro phase renders inside the deck, where a full-bleed chart would be
-// nonsense — it gets the plain note instead.
+// nonsense — it gets the plain note instead. Not a takeover: `rail` and
+// `clock` are both null on this beat, so it draws neither.
 export const introContainer = "flex flex-col gap-3";
 
 export const statusNote =
   "rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-medium text-text/85";
 
-// Every floating layer rides above Leaflet's controls.
-const floating = "absolute z-[1100]";
-
-export const rail = `${floating} left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(0.6rem,1.2vw,1rem)] flex flex-wrap items-center gap-2 pr-[clamp(9rem,15vw,12rem)]`;
+// The map frame, filling the layout's body slot edge to edge.
+//
+// `isolate` here rather than on the body (§5 forbids a second isolation on the
+// body, and the layout already has that one). It is still load-bearing, one
+// level in: Leaflet parks its own panes at z-400 and this map's zoom strip at
+// z-1000, and without a stacking context around the frame those layers would
+// paint over the plate that is their sibling. Containing them here keeps the
+// game's interior exactly that — interior — and means nothing GEO draws ever
+// competes with the shell's chrome row or the corner dock again.
+export const map =
+  "relative isolate h-full min-h-0 w-full overflow-hidden rounded-2xl border border-text/10 bg-[#0e1419]";
 
 const chip =
   "inline-flex min-h-9 items-center gap-2 rounded-full border border-text/10 bg-bg/85 px-3.5 text-[0.78rem] font-semibold text-muted backdrop-blur";
 
-export const teamChip = `${chip} border-primary/35 bg-primary/15 text-text`;
+// The rail row's read-only count (§5, `counter`). Glass rather than solid: on a
+// Canvas this chip floats over the map instead of sitting on a panel.
+export const counter = chip;
 
-export const teamChipDot = "h-2.5 w-2.5 shrink-0 rounded-full bg-primary";
-
-export const counterChip = chip;
-
-export const counterChipValue = "font-extrabold text-text";
-
-export const plate = `${floating} left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(3.9rem,7vh,4.6rem)] w-[clamp(14rem,26vw,20rem)] overflow-hidden rounded-[1.25rem] border border-text/15 bg-gradient-to-br from-surfaceAlt to-surface shadow-[0_22px_50px_rgba(0,0,0,0.7)]`;
+// The prompt itself — the photo the team is guessing at and the title the host
+// reads out. Body content, not chrome: it is the question, and the Canvas's
+// slots are for the turn's chrome. It is absolutely positioned inside the body
+// slot, which Band 0 (§7) allows without qualification.
+//
+// `top` clears the shell's chrome row, which is taller than the chip row GEO
+// used to float there because it carries the mini-rail and the play clock.
+export const plate =
+  "absolute left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(4.4rem,8vh,5.2rem)] w-[clamp(14rem,26vw,20rem)] overflow-hidden rounded-[1.25rem] border border-text/15 bg-gradient-to-br from-surfaceAlt to-surface shadow-[0_22px_50px_rgba(0,0,0,0.7)]";
 
 export const plateShot = "relative aspect-[4/3]";
 
@@ -50,10 +63,11 @@ export const plateTitle =
 
 export const plateHint = "m-0 text-[0.82rem] leading-snug text-muted";
 
-// Bottom-left, so the turn's one action never sits under the corner dock's
-// gutter and never covers the pin the team just placed.
-export const actionBar = `${floating} bottom-[clamp(0.6rem,1.2vw,1rem)] left-[clamp(0.6rem,1.2vw,1rem)] flex max-w-[calc(100%-6rem)] items-center gap-3`;
-
+// The turn's one control, plus the hint that explains it (§5, `actions`). The
+// layout floats this bottom-left — the one corner where a control is neither
+// under the dock nor over the pin the team just placed — and constrains its
+// width so it cannot run under the corner. Neither the position nor the
+// `max-w-[calc(100%-6rem)]` this file used to hand-type is here any more.
 const actionButton =
   "min-h-14 shrink-0 rounded-2xl px-[clamp(1.2rem,3vw,2.2rem)] text-[clamp(0.95rem,1.6vw,1.1rem)] font-black uppercase tracking-[0.12em] transition disabled:cursor-not-allowed disabled:opacity-40";
 
@@ -64,12 +78,13 @@ export const nextPromptButton = `${actionButton} border border-text/15 bg-bg/85 
 export const mapInstruction =
   "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] text-text/75 backdrop-blur";
 
-export const turnCompleteNote = `${floating} bottom-[clamp(0.6rem,1.2vw,1rem)] left-[clamp(0.6rem,1.2vw,1rem)] max-w-[calc(100%-6rem)] rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm font-medium text-text backdrop-blur`;
+export const turnCompleteNote =
+  "m-0 rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm font-medium text-text backdrop-blur";
 
-// Clear of the corner dock (§2.0A): the dock owns a ~4.5rem circle in the
-// bottom-right, so the verdict sits above it rather than under it.
-export const verdict = `${floating} bottom-[clamp(4.9rem,9vh,5.6rem)] right-[clamp(0.6rem,1.2vw,1rem)] flex gap-2.5`;
-
+// The turn's numbers (§5, `readout`). The layout lifts them clear of the
+// corner dock, so the `bottom-[clamp(4.9rem,9vh,5.6rem)]` that used to be
+// typed here — the number the spec did not want copied into four more games —
+// is gone with it.
 const tile =
   "min-w-[8.5rem] rounded-[1.1rem] border px-4 py-2.5 text-right backdrop-blur";
 
