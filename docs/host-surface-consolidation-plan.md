@@ -664,3 +664,14 @@ when a four-team running-totals panel lands in `readout` at T3.1.
 **HUMAN CHECKPOINT REACHED** (post-T3.1, "is full-bleed right, before three more games follow"), with
 two decisions attached: SCHLONIC's `RunningTotals` styling, and whether the arcade games share a
 surface language the design system should name or have simply been copying JOUST.
+
+### Owner's decisions at the T3.1 checkpoint (2026-09-22)
+Full-bleed approved; FAPPY, SCHLONIC and SONG_GUESS proceed.
+- **SCHLONIC adopts the shared `RunningTotals`** (T3.3). It costs SCHLONIC ~73px of vertical
+  (131px → 204px, +56%) and turns its points and active row gold, but it has ~677px of readout budget
+  and the alternative is keeping a fourth near-clone — the exact thing this project exists to remove.
+  SCHLONIC's local copy is deleted at T3.3.
+- **The arcade surface-language question is DEFERRED**, not dropped. Each migration substitutes house
+  tokens value-for-value as JOUST's did; the question of whether the arcade games genuinely share a
+  surface language or have been copying JOUST's dusk-desert palette is logged to BACKLOG and revisited
+  in phase 6, when DESIGN.md is reconciled anyway.

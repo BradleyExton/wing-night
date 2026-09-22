@@ -535,3 +535,17 @@ Every one of those literals is a shipped colour, so this is a design pass agains
 token set, not a find-and-replace: some will map onto an existing semantic token and some will
 show that the token set is missing a value. The `eslint.config.mjs` glob is already in place, so
 the marker list is the only thing left to change once the colours land.
+
+### Do the arcade games share a surface language, or have they been copying JOUST?
+Surfaced by T3.1. Three `RunningTotals` copies (JOUST, FAPPY, SONG_GUESS) were byte-identical — and
+written in `#3a200d` / `#1a0e05` / `#0a0604`, which are JOUST's own arena-frame border and result
+plaque from DESIGN.md §2.7. That is not a house card three games agreed on; it is one game's skin that
+two games copied. Hoisting it into `packages/surface` forced a value-for-value substitution to
+`border-ember/20` / `from-surface to-bg`, because a house-component path may carry no raw hex.
+
+SCHLONIC's variant was the only one of the four already written in house tokens.
+
+The open question, deferred from the T3.1 checkpoint to phase 6: either the arcade games share a
+surface language that DESIGN.md should name with real tokens, or the dusk-desert palette belongs to
+JOUST's arena alone and the others should stop borrowing it. Until then each migration substitutes
+tokens as it goes. Revisit when §2.4–§2.11 are reconciled (T6.2).
