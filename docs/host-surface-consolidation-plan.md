@@ -565,3 +565,19 @@ a house rule, with DRAWING's inverted pair fixed in T4.1.
 
 **HUMAN CHECKPOINT REACHED** — the anatomy is on the tablet and awaiting the owner's read before the
 remaining eight games adopt it.
+
+### Checkpoint passed, with a reorder (2026-09-22)
+The owner cleared the T2.5 checkpoint and accepted the orchestrator's recommendation to **run GEO
+(T4.4) before JOUST (T3.1)**, against the plan's written order. Reasons:
+- TRIVIA validated `<TakeoverStage>`. **Nothing has exercised `<TakeoverCanvas>` yet**, and that is
+  the half phase 3 bets on — JOUST, FAPPY and SCHLONIC all go full-bleed. The T3.1 checkpoint asks
+  "is full-bleed right" of someone who has never seen full-bleed under the new layout.
+- GEO is the safest test of the Canvas because the Canvas was modelled on GEO ("GEO's model,
+  generalised", spec §2). If the Canvas is wrong, GEO is where it shows up cheapest.
+- GEO is the least work in the plan (opus/medium, "mostly adopting names it already invented").
+- GEO is one of the three games with a play clock, so it closes a third of the T2.3 clock regression
+  and flips the ratchet test back.
+- Verified GEO does NOT depend on T3.1's shared primitives: its host surface is `GeoGuessMap`,
+  `copy.ts`, `index.tsx`, `styles.ts` — no `RunningTotals`, no history strip.
+Cost accepted: T3.1 also lands the shared primitives that unblock T3.2/T3.3/T3.4 to run in parallel,
+so that parallelism is delayed by one task.
