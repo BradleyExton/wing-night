@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { FappyMinigameHostView, FappyMinigameLeg } from "@wingnight/shared";
-import { RunningTotals } from "@wingnight/surface";
+import { RunningTotals, TakeoverCanvas } from "@wingnight/surface";
 
 import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
 import { formatRelayClock, useRelayClock } from "../useRelayClock/index.js";
@@ -13,24 +13,6 @@ import * as styles from "./styles.js";
 
 // Before the view arrives there is no leg to hold.
 const EMPTY_LEG_VIEW = { legIndex: 0, legsPerTurn: 1, legs: [] };
-
-const resolveActiveTeamName = ({
-  minigameHostView,
-  teamNameByTeamId,
-  activeTeamName
-}: Pick<
-  MinigameHostRendererProps,
-  "minigameHostView" | "teamNameByTeamId" | "activeTeamName"
->): string => {
-  if (minigameHostView?.activeTurnTeamId) {
-    return (
-      teamNameByTeamId.get(minigameHostView.activeTurnTeamId) ??
-      hostFappySurfaceCopy.noAssignedTeamLabel
-    );
-  }
-
-  return activeTeamName ?? hostFappySurfaceCopy.noAssignedTeamLabel;
-};
 
 const resolvePlayerName = (leg: FappyMinigameLeg | null | undefined): string | null => {
   return leg?.player?.name ?? null;
@@ -87,22 +69,30 @@ const resolveHint = (view: FappyMinigameHostView, canAct: boolean, hold: LegHold
   return view.phase === "timedOut" ? hostFappySurfaceCopy.timedOutHint : hostFappySurfaceCopy.finishedHint;
 };
 
+// FAPPY's host surface. At play it is a `<TakeoverCanvas>`
+// (docs/takeover-layout-api.md §3, §5): the corridor is evenly spread scenery,
+// so a chip in one corner costs a corner of desert rather than a word, and the
+// 330px control deck this file used to grow — which cost the corridor 342px of
+// the tablet — is gone. Its contents went to the slots §5 names: the counts,
+// the leg chips and the relay clock to `counter`, the escape hatches and the
+// hint to `actions`, the finish card and the running totals to `readout`.
+//
+// It renders no rail and no team chip of its own — `rail` arrives filled with
+// the shell's `<HostMiniRail />`, which already says the round, the sauce and
+// whose turn it is — which is why the `resolveActiveTeamName` helper that all
+// nine host surfaces had copied is no longer here. It writes no z-index, no
+// `isolate` and no dock gutter either; the layout owns all three.
 export const HostFappySurface = ({
   phase,
   minigameHostView,
-  activeTeamName,
   teamNameByTeamId,
+  rail,
+  clock,
   canDispatchAction,
   onDispatchAction,
   serverOrigin
 }: MinigameHostRendererProps): JSX.Element => {
   const fappyView = minigameHostView?.minigame === "FAPPY" ? minigameHostView : null;
-  const resolvedActiveTeamName = resolveActiveTeamName({
-    minigameHostView,
-    teamNameByTeamId,
-    activeTeamName
-  });
-  const isPlayPhase = phase === "play";
   const canAct = canDispatchAction && fappyView !== null;
   const elapsedMs = useRelayClock({
     startedAtMs: fappyView?.startedAtMs ?? null,
@@ -113,8 +103,8 @@ export const HostFappySurface = ({
     fappyView !== null && elapsedMs !== null && elapsedMs >= fappyView.limitSeconds * 1000;
   const currentLeg =
     fappyView === null ? null : (fappyView.legs[Math.min(fappyView.legIndex, fappyView.legsPerTurn - 1)] ?? null);
-  // The corridor lingers on a cleared leg while the handoff plays; the deck
-  // is already on the next one, which is the leg the room is asking about.
+  // The corridor lingers on a cleared leg while the handoff plays; the chrome
+  // row is already on the next one, which is the leg the room is asking about.
   const { shownLegIndex, hold } = useHeldLeg(fappyView ?? EMPTY_LEG_VIEW);
 
   const dispatch = (actionType: string): void => {
@@ -129,93 +119,108 @@ export const HostFappySurface = ({
     }
   }, [canAct, isLive, isPastLimit]);
 
-  return (
-    <div className={styles.container}>
-      <div className={styles.rail}>
-        <span className={styles.railTitle}>{hostFappySurfaceCopy.railTitle}</span>
-        <span className={styles.railTeam}>
-          <span className={styles.railTeamDot} aria-hidden="true" />
-          {hostFappySurfaceCopy.teamPrefix} {resolvedActiveTeamName}
-        </span>
-        {isPlayPhase && fappyView !== null && <RelayClock view={fappyView} elapsedMs={elapsedMs} />}
-      </div>
-      {!isPlayPhase && (
+  // Every hook above runs on both beats: the intro is a panel in the host's own
+  // control deck rather than a takeover — `rail` and `clock` are both null on
+  // it — so a full-bleed corridor there would be nonsense and it gets the
+  // briefing note instead.
+  if (phase !== "play") {
+    return (
+      <div className={styles.introRoot}>
         <p className={styles.introCard}>{hostFappySurfaceCopy.introDescription}</p>
-      )}
-      {isPlayPhase && fappyView !== null && (
-        <div className={styles.playArea}>
-          <div className={styles.arenaColumn}>
-            <Corridor
-              view={fappyView}
-              canAct={canAct}
-              serverOrigin={serverOrigin}
-              onDispatchAction={onDispatchAction}
-              hold={hold}
-              legIndex={shownLegIndex}
-            />
-            <p className={styles.arenaHint}>{resolveHint(fappyView, canAct, hold)}</p>
-          </div>
-          <aside className={styles.deck}>
-            <div className={styles.legCard}>
-              <span className={styles.legCounter}>
-                {hostFappySurfaceCopy.legCounter(
-                  Math.min(fappyView.legIndex + 1, fappyView.legsPerTurn),
-                  fappyView.legsPerTurn
-                )}
-              </span>
-              <p className={styles.flyingName}>
-                {hostFappySurfaceCopy.flyingLabel(resolvePlayerName(currentLeg))}
-              </p>
-              <div className={styles.legMeta}>
-                <span>
-                  {hostFappySurfaceCopy.progressLine(
-                    fappyView.totalGatesCleared,
-                    fappyView.legsPerTurn * fappyView.gatesPerLeg
-                  )}
-                </span>
-                {currentLeg !== null && currentLeg.crashes > 0 && (
-                  <span data-fappy-crashes={currentLeg.crashes}>
-                    {hostFappySurfaceCopy.crashesChip(currentLeg.crashes)}
-                  </span>
-                )}
-              </div>
-            </div>
-            {isRelayOver(fappyView) && <FinishCard view={fappyView} elapsedMs={elapsedMs} />}
-            <div className={styles.deckRows}>
-              <button
-                className={styles.deckRowButton}
-                type="button"
-                disabled={!canAct || !isLive}
-                onClick={(): void => {
-                  dispatch("skipLeg");
-                }}
-              >
-                {hostFappySurfaceCopy.skipLegButtonLabel}
-              </button>
-              <button
-                className={styles.deckRowButton}
-                type="button"
-                disabled={!canAct}
-                onClick={(): void => {
-                  dispatch("resetTurn");
-                }}
-              >
-                {hostFappySurfaceCopy.resetTurnButtonLabel}
-              </button>
-            </div>
+      </div>
+    );
+  }
+
+  return (
+    <TakeoverCanvas
+      rail={rail}
+      clock={clock}
+      counter={
+        fappyView === null ? null : (
+          <>
+            <span className={styles.counter}>
+              {hostFappySurfaceCopy.legCounter(
+                Math.min(fappyView.legIndex + 1, fappyView.legsPerTurn),
+                fappyView.legsPerTurn
+              )}
+            </span>
+            <span className={styles.counterName}>
+              {hostFappySurfaceCopy.flyingLabel(resolvePlayerName(currentLeg))}
+            </span>
             <LegHistory
               legs={fappyView.legs}
               activeLegIndex={isRelayOver(fappyView) ? null : fappyView.legIndex}
             />
+            <span className={styles.counter}>
+              {hostFappySurfaceCopy.progressLine(
+                fappyView.totalGatesCleared,
+                fappyView.legsPerTurn * fappyView.gatesPerLeg
+              )}
+            </span>
+            {/* FAPPY's own clock, not the shell's: `timerKey` is null for this
+                game, so the `clock` slot stays empty and takes no width, and
+                the relay clock is a count the host reads without acting on
+                it — which is what the `counter` slot is for (§4). */}
+            <RelayClock view={fappyView} elapsedMs={elapsedMs} />
+          </>
+        )
+      }
+      actions={
+        fappyView === null ? null : (
+          <>
+            {/* The escape hatches stay on the canvas, not in the override dock:
+                skipping a leg and resetting the turn are the host's ordinary
+                moves here, and AGENTS.md §11 never lets them leave. */}
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              disabled={!canAct || !isLive}
+              onClick={(): void => {
+                dispatch("skipLeg");
+              }}
+            >
+              {hostFappySurfaceCopy.skipLegButtonLabel}
+            </button>
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              disabled={!canAct}
+              onClick={(): void => {
+                dispatch("resetTurn");
+              }}
+            >
+              {hostFappySurfaceCopy.resetTurnButtonLabel}
+            </button>
+            <span className={styles.hint}>{resolveHint(fappyView, canAct, hold)}</span>
+          </>
+        )
+      }
+      readout={
+        fappyView === null ? null : (
+          <>
+            {isRelayOver(fappyView) && <FinishCard view={fappyView} elapsedMs={elapsedMs} />}
             <RunningTotals
               pendingPointsByTeamId={fappyView.pendingPointsByTeamId}
               activeTurnTeamId={fappyView.activeTurnTeamId}
               teamNameByTeamId={teamNameByTeamId}
               note={hostFappySurfaceCopy.parLine(fappyView.parSeconds)}
             />
-          </aside>
-        </div>
+          </>
+        )
+      }
+    >
+      {fappyView === null ? (
+        <p className={styles.waitingNote}>{hostFappySurfaceCopy.waitingRelayLabel}</p>
+      ) : (
+        <Corridor
+          view={fappyView}
+          canAct={canAct}
+          serverOrigin={serverOrigin}
+          onDispatchAction={onDispatchAction}
+          hold={hold}
+          legIndex={shownLegIndex}
+        />
       )}
-    </div>
+    </TakeoverCanvas>
   );
 };

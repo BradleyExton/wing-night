@@ -49,6 +49,10 @@ const createView = (overrides: Partial<FappyMinigameHostView> = {}): FappyMiniga
   };
 };
 
+// `rail` and `clock` are the shell's, and the surface only forwards them into
+// the layout's slots — a marker element each is enough to prove it does.
+const RAIL = <span data-test-rail />;
+
 const render = (view: FappyMinigameHostView | null, phase: "intro" | "play" = "play"): string => {
   return renderToStaticMarkup(
     <HostFappySurface
@@ -57,7 +61,7 @@ const render = (view: FappyMinigameHostView | null, phase: "intro" | "play" = "p
       minigameHostView={view}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
-      rail={null}
+      rail={phase === "play" ? RAIL : null}
       clock={null}
       canDispatchAction
       onDispatchAction={(): void => {
@@ -71,9 +75,32 @@ const render = (view: FappyMinigameHostView | null, phase: "intro" | "play" = "p
 test("does brief the relay without a corridor during the intro", () => {
   const html = render(createView(), "intro");
 
-  assert.match(html, /Fappy Bird/);
   assert.match(html, /against one clock/);
   assert.doesNotMatch(html, /data-fappy-arena/);
+  // The intro is a panel in the host's own control deck, not a takeover: no
+  // rail slot, and so no chrome row to put one in.
+  assert.doesNotMatch(html, /data-test-rail/);
+});
+
+test("does forward the shell's rail and say the team nowhere itself", () => {
+  const html = render(createView());
+
+  assert.match(html, /data-test-rail/);
+  // The mini-rail names the turn's team; the chip this surface used to draw
+  // said it a second time on the same canvas, which is the duplication the
+  // takeover layout exists to remove. (The running totals still list every
+  // team's name — that is a row of numbers, not a chip saying whose go it is.)
+  assert.doesNotMatch(html, /In the air:/);
+  assert.doesNotMatch(html, /shadow-\[0_0_8px_#f97316\]/);
+});
+
+test("does give the corridor the whole canvas with no deck column", () => {
+  const html = render(createView());
+
+  // The 330px deck and the hint row under the board are both gone: the frame
+  // takes the body slot's full height and the layout floats the rest.
+  assert.doesNotMatch(html, /w-\[clamp\(230px,28vw,330px\)\]/);
+  assert.match(html, /class="relative h-full w-full touch-none[^"]*"[^>]*data-fappy-arena/);
 });
 
 test("does draw the leg's course, the idle clock and the player who is up", () => {
@@ -133,8 +160,10 @@ test("does send a crashed bird back to its perch with the crash count showing", 
   );
 
   assert.match(html, /Back on the perch at gate 1/);
+  // The leg chips are the only place the crash count is said now that the
+  // deck's leg card is gone.
   assert.match(html, /data-fappy-crashes="2"/);
-  assert.match(html, /2 crashes/);
+  assert.match(html, /2×/);
 });
 
 test("does show the time and the points once the relay is through", () => {

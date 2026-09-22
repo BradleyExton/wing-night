@@ -517,7 +517,7 @@ marquee chrome the drawing easel uses:
 ## 2.9 FAPPY Minigame Surface Language ("The Corridor")
 
 The FAPPY (Fappy Bird) surfaces fly the cast (§2.8) through JOUST's desert (§2.7),
-under the same marquee and deck chrome:
+under the same marquee chrome and, on the tablet, the same full-bleed canvas:
 
 -   Scene materials are JOUST's, on purpose: the dusk sky and sand. The
     obstacle is the cast's schlong (§2.7, the same `resolveSchlongPaths`
@@ -558,8 +558,11 @@ under the same marquee and deck chrome:
     rasterised once and composited, never recomputed per frame — which is
     also why the wing is a separate layer and not a moving part of the hen.
 -   The relay clock is the scoreboard: mono, tabular, `text` under par,
-    `gold` past it, `heat` in the last fifteen seconds, on the host rail and
-    in the display marquee.
+    `gold` past it, `heat` in the last fifteen seconds, in the display marquee
+    and, on the tablet, as the last chip of the takeover's chrome row. It is
+    FAPPY's own clock, not the shell's — this minigame's `timerKey` is null, so
+    the layout's `clock` slot is empty and takes no width, and a relay clock is
+    a count the host reads without acting on it, which is what `counter` is for.
 -   **Two beats the sim never sees**, both short because the clock runs
     through them and both the same for every team. *The handoff* (1.4 s): the
     bird lands next to the one waiting, squashes and settles with a puff of
@@ -578,11 +581,31 @@ under the same marquee and deck chrome:
     the tablet, so it holds a finished leg a little longer than the tablet
     does and finishes the flight it has before it switches: the room always
     sees the landing and the crash, never a cut to the next start.
--   Host: rail with the clock, the corridor as the whole flap surface (no
-    scroll, no zoom), a deck of leg card (player, gates, crashes) → finish
-    card → skip/reset → leg chips → totals. Display: marquee (team, "Fappy
-    Bird", leg, gates, clock), the corridor, a status line; the plaque
-    drops once the relay is through or the limit has caught the team.
+-   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
+    the same one JOUST takes in §2.7: the corridor is full bleed and is still
+    the whole flap surface (no scroll, no zoom), filling the takeover's padding
+    box edge to edge — 1229x749 of the tablet's 1280x800, 89.9% against the 59%
+    the 330px control deck left it, and the 16:9 scene inside it goes from
+    887x499 to 1225x689. The deck is gone, and so is the mini-rail strip this
+    surface used to draw: the shell's own rail arrives in the layout's `rail`
+    slot and already says the round, the sauce and whose turn it is. Everything
+    the deck held went to a slot the layout places, and FAPPY hand-types none
+    of them:
+    -   `counter`, read-only in the chrome row: the leg count, who is flying,
+        the leg chips (which now carry the crash count the deck's card used to
+        repeat in words), the gates cleared, and the relay clock last.
+    -   `actions`, floating bottom-left: the skip and reset escape hatches,
+        then the hint that used to sit on a row under the corridor costing it
+        28px of height.
+    -   `readout`, floating bottom-right above the corner dock: the finish card
+        and the running totals with the par line under them.
+    -   Who is flying stays a chip rather than becoming a plate over the scene
+        the way JOUST's lane name does: the bird is pinned at 20% of the
+        scene's width, and a plate on the top-left sky would sit in its flight
+        path.
+-   Display: marquee (team, "Fappy Bird", leg, gates, clock), the corridor, a
+    status line; the plaque drops once the relay is through or the limit has
+    caught the team.
 -   The flight is the game: §8's infinite-animation rule does not bite.
     `prefers-reduced-motion` on the display shows the landing frame only.
 

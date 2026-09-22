@@ -1,9 +1,7 @@
 export const hostFappySurfaceCopy = {
-  railTitle: "Fappy Bird",
-  teamPrefix: "In the air:",
-  noAssignedTeamLabel: "No team assigned",
   introDescription:
     "Your team's chickens fly a relay through a corridor of champs, against one clock. Each player flies one section on the tablet: tap anywhere to flap, then come down on the far cliff where the next bird is waiting. Bump an eagle and it just flies off; hit a champ, the sand or the cliff and you go again from the last gate you made — it only costs time. The quicker the whole team gets through, the more points.",
+  waitingRelayLabel: "No relay is loaded. Check the round's FAPPY rules.",
   legCounter: (legNumber: number, legsTotal: number): string => `Leg ${legNumber} of ${legsTotal}`,
   flyingLabel: (playerName: string | null): string =>
     playerName === null ? "Flying: the house hen" : `Flying: ${playerName}`,
@@ -32,7 +30,6 @@ export const hostFappySurfaceCopy = {
       : `Keep tapping — then land next to ${waitingName} and hand it over.`,
   finishedHint: "Through! Advance the phase when the room is ready.",
   timedOutHint: "Time. Advance the phase when the room is ready.",
-  crashesChip: (crashes: number): string => `${crashes} crash${crashes === 1 ? "" : "es"}`,
   finishedTitle: "Through!",
   timedOutTitle: "Time!",
   finishTime: (clock: string): string => `${clock}`,

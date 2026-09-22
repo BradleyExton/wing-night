@@ -1,7 +1,11 @@
 // The whole corridor is the flap button: no scroll, no zoom, no text
 // selection under a frantic thumb.
+//
+// It fills the Canvas's body slot edge to edge, so it no longer sets
+// `min-h-0 flex-1`: it is not a column's child any more — the body slot has a
+// definite height and the frame takes all of it.
 export const container =
-  "relative min-h-0 flex-1 touch-none select-none overflow-hidden rounded-xl border-2 border-[#3a200d] bg-[#160c2a] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]";
+  "relative h-full w-full touch-none select-none overflow-hidden rounded-xl border-2 border-[#3a200d] bg-[#160c2a] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]";
 
 export const containerArmed = "cursor-pointer";
 
