@@ -533,3 +533,35 @@ a house rule, with DRAWING's inverted pair fixed in T4.1.
   flipped back to `match(/00:45/)` by the commit that gives GEO its clock slot — it reddens first if
   that commit forgets. The rail is NOT a regression: the shell never drew it at `MINIGAME_PLAY`, and
   unmigrated games still draw their own.
+- [x] T2.4 `bd42f9a` — TRIVIA migrated to `<TakeoverStage>` (no deck). §3's rule is about *covering*,
+  not size: a question card is meaning concentrated in one place, so floating chrome lands on a word
+  the host is reading aloud. **Canvas share 36% → 82.7%**: the card now fills the body slot
+  (`flex-[3]` question / `flex-[2]` answer) instead of sitting at content height in a centred column;
+  question type 2.6rem → 3.4rem, verdicts 72px → 88px. Verdicts moved out of the body into the
+  `actions` foot row, which is what fixes the dock collision structurally. The subagent REPRODUCED the
+  old bug before fixing it: forcing the card to the height a long question produces gave a real
+  42.4×20.8px overlap and `elementFromPoint` at the circle's centre returned `"Open host controls"` —
+  the dock stole the press. Latent only because the sample question is short. TRIVIA's `styles.ts`
+  contains no `4.5rem`, no `isolate`, no z-index — only comments naming them. Deleted:
+  `resolveActiveTeamName` (8 definitions remain, one per unmigrated game — orchestrator verified),
+  the team chip, the meta block and six style keys. Also fixed beyond brief:
+  `resolveSandboxHostRoomState` returned `null` whenever `timerKey` was null, which made the sandbox
+  rail read "Pre-game" with no team for six of nine games — the sandbox lying about the rail exactly
+  as it used to lie about the corner.
+- [x] T2.5 (measurement only, no code) — INDEPENDENT measurement by a second agent: **82.5%**
+  (card 1229×606 = 744,774px² + two buttons 569×88 = 100,144px², over the 1,024,000px² device box),
+  agreeing with T2.4's 82.7% to within clamp/rounding noise. Method: browser set to exactly 1280×800
+  (so `vw`/`vh` resolve against the device box), pane fronted (so `ResizeObserver` fires),
+  `offsetWidth`/`offsetHeight` rather than `getBoundingClientRect` (the frame is CSS-scaled).
+  Dock gutter confirmed BEHAVIOURALLY, not just geometrically: circle at left 1212–1260 / top 732–780,
+  Incorrect at left 614–1183 / top 687–775 — 29px horizontal gap, and `elementFromPoint` returns the
+  dock button at the circle's centre and the Incorrect button at its own right edge. Both hit their own
+  target. Screenshot: `docs/screenshots/t2.5-trivia-takeover-host-1280x800.png`.
+
+### Canvas share ledger
+| Game | Before | After | Task |
+|---|---|---|---|
+| TRIVIA | 36% | **82.5%** (independently measured) | T2.4 |
+
+**HUMAN CHECKPOINT REACHED** — the anatomy is on the tablet and awaiting the owner's read before the
+remaining eight games adopt it.
