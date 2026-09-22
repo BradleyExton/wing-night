@@ -564,6 +564,8 @@ a house rule, with DRAWING's inverted pair fixed in T4.1.
 | TRIVIA | 36% | **82.5%** (independently measured) | T2.4 |
 | GEO | 90% | **89.9%** (held — correct for the reference) | T4.4 |
 | JOUST | 60% | **89.9%** (deck removed) | T3.1 |
+| FAPPY | 59% | **89.9%** (deck removed; 16:9 scene +92% area) | T3.2 |
+| SONG_GUESS | 62% | **71.1%** (Stage, deck removed) | T3.4 |
 
 **HUMAN CHECKPOINT REACHED** — the anatomy is on the tablet and awaiting the owner's read before the
 remaining eight games adopt it.
@@ -675,3 +677,48 @@ Full-bleed approved; FAPPY, SCHLONIC and SONG_GUESS proceed.
   tokens value-for-value as JOUST's did; the question of whether the arcade games genuinely share a
   surface language or have been copying JOUST's dusk-desert palette is logged to BACKLOG and revisited
   in phase 6, when DESIGN.md is reconciled anyway.
+- [x] T3.2 `84d3ecb` — **FAPPY full-bleed, 59.3% → 89.9%** (corridor 887×685 → 1229×749). The corridor
+  letterboxes against WIDTH, so the deck was starving it in the one axis it needed: the 16:9 scene goes
+  887×499 → 1225×689, **+92% area**. Slots: leg count / "Flying: X" / `LegHistory` / gates / `RelayClock`
+  → `counter` (995px of content + 60px gaps in a 1198px row, 143px slack at four legs); Skip leg, Reset
+  turn and the hint → `actions` (the hint was its own row under the corridor, costing 28px of height);
+  finish card + shared `RunningTotals` → `readout`. **Deliberate divergence from JOUST**: who is flying
+  is a chip in `counter`, not a body plate — FAPPY's bird is pinned at `left-[20cqw]`, exactly where
+  JOUST's top-left plate would sit. `crashesChip` deleted: the deck's leg card said "2 crashes" in words
+  while the chips say "2×", the same fact twice on one row; `data-fappy-crashes` moved onto `LegHistory`'s
+  crash span so `fappy-sandbox.spec.ts:48` still works. Dock proof: **49 samples** (centre + radii 10/20
+  at 15° steps, a superset of JOUST's 36), 0 misses. Flight loops verified under Playwright, never a
+  backgrounded pane: host bird took 14 distinct transforms across 20 consecutive rAF frames, the display
+  mirror 16 across 20. DESIGN.md §2.9 rewritten. `LegHistory` stays local; no arena frame built.
+- [x] T3.4 `4eebc6a` — **SONG_GUESS → `<TakeoverStage>`, deck removed, 62.1% → 71.1%** (body 887×717 →
+  1229×592). **Chose Stage over Canvas, with §3 reasoning**: (1) once the answer card actually fills the
+  body — it never did, 190px of content in a 717px column, so ~70% of the "console" was black — every
+  corner holds the title, artist or hint, and floating chrome covers a word the host reads aloud; (2) a
+  Canvas has exactly two floating slots, `actions` and `readout`, **both on the same edge** and each
+  bounded at `calc(100%-4.5rem)`, which is nowhere to put nine tap targets (Play/Pause/Replay/Skip,
+  Reveal, Title ✓✗, Artist ✓✗, Next) plus a totals panel — and §5 is explicit there is no bottom-right
+  slot for a *control*. **The deck going is a separate axis from Canvas/Stage**, and the arithmetic says
+  keeping it could not have won: the shell's mini-rail is 33px against the game's own 20px strip, so a
+  deck-keeping Stage lands at 887×706 = **61.2%**, a regression. `SongScoringDeck` renamed
+  `SongScoringPad` (it is no longer in a deck; `data-song-guess-scoring` kept). Dock proof: 37 samples ×
+  4 beats, 0 misses. Audio proved untouched live — one `<audio>` node, same DOM node across a full turn
+  (play→pause→replay→pause→reveal→mark title→mark artist→next), src still absolute on the server origin.
+  e2e parity replayed assertion-by-assertion against the live sandbox rather than run (concurrent agent
+  held the ports); orchestrator ran the real suite: 36 passed.
+
+**Phase 3 complete.** `resolveActiveTeamName` is down to **4** definitions (drawing, emoji-charades,
+recreate, schlonic) from nine.
+
+### Open items raised in phase 3, for the owner
+1. **FAPPY's dead taps.** `<TakeoverCanvas>`'s `actions` row is `pointer-events-none` with
+   `[&>*]:pointer-events-auto` — right for the map it was drawn for, wrong for a game whose body IS the
+   button. FAPPY's 507px hint sentence now swallows flaps: **764×48, 4.0% of the corridor**, dead where
+   it was live. A plain `pointer-events-none` on the hint is inert (equal specificity, the layout's rule
+   ordered later), so the fix belongs in `packages/surface`, not in FAPPY. JOUST has the same shape but
+   not the same cost — its body is a drag surface, not one big button. **Not fixed; needs a call.**
+2. **P3 is now decidable and the answer has moved.** With SONG_GUESS off the deck, `<TakeoverStage>`'s
+   `deck` slot has **zero** call sites today and a projected **two** after phase 4 (EMOJI_CHARADES,
+   RECREATE) — below ADR-0002's three-call-site bar. §4's "exactly three, with nothing to spare" no
+   longer holds.
+3. **SONG_GUESS has no `DESIGN.md` section at all** (§2.8 is Cast; the per-game sections skip it). Not
+   invented here — a gap for phase 6.
