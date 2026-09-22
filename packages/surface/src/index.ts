@@ -16,3 +16,7 @@ export * from "./styleTokens/index.js";
 // nine-reserve mess these layouts exist to end (§6).
 export { TakeoverStage, type TakeoverStageProps } from "./TakeoverStage/index.js";
 export { TakeoverCanvas, type TakeoverCanvasProps } from "./TakeoverCanvas/index.js";
+// The round's pending points, the one card four arcade host surfaces had each
+// grown a byte-identical copy of (§8, owner's decision P2: `RunningTotals`,
+// because `StandingsSurface` on the TV is the standings and this is not it).
+export { RunningTotals } from "./RunningTotals/index.js";

@@ -46,5 +46,16 @@ export const actions =
 // intrusion by about 30px, which is right for a thumb. There is deliberately
 // no bottom-right slot for a control; that corner belongs to the dock, and the
 // only two things it does are end the turn and open overrides.
+//
+// The max-width is the same 4.5rem, and it is here because JOUST found the
+// asymmetry the first two Canvas games could not: `actions` was bounded in the
+// axis it grows and this row was not. Anchored right with no bound, a readout
+// whose content is variable — JOUST's result plaque names everyone a shot
+// felled, and a cleared rack is nine names on one line — grows leftward until
+// it spans the canvas and stops being a readout. Each floating slot is now
+// bounded in the axis it grows, by the same one number (§6). Its children are
+// ordinary flex items, so content past the bound wraps inside them rather than
+// being clipped: too much to say reads as cramped, which is feedback, not as
+// missing.
 export const readout =
-  "pointer-events-none absolute bottom-[4.5rem] right-[clamp(0.6rem,1.2vw,1rem)] z-10 flex items-center gap-3 [&>*]:pointer-events-auto";
+  "pointer-events-none absolute bottom-[4.5rem] right-[clamp(0.6rem,1.2vw,1rem)] z-10 flex max-w-[calc(100%-4.5rem)] items-center gap-3 [&>*]:pointer-events-auto";

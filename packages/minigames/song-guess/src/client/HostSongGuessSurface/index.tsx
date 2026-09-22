@@ -1,7 +1,7 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { SongGuessMinigameHostView } from "@wingnight/shared";
+import { RunningTotals } from "@wingnight/surface";
 
-import { RunningTotals } from "./RunningTotals/index.js";
 import { SongScoringDeck } from "./SongScoringDeck/index.js";
 import { hostSongGuessSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";

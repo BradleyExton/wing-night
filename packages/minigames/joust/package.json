@@ -30,7 +30,8 @@
   "dependencies": {
     "@wingnight/cast": "workspace:*",
     "@wingnight/minigames-core": "workspace:*",
-    "@wingnight/shared": "workspace:*"
+    "@wingnight/shared": "workspace:*",
+    "@wingnight/surface": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

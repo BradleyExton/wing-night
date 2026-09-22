@@ -305,6 +305,9 @@ importers:
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
+      '@wingnight/surface':
+        specifier: workspace:*
+        version: link:../../surface
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -382,6 +385,9 @@ importers:
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
+      '@wingnight/surface':
+        specifier: workspace:*
+        version: link:../../surface
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -472,6 +478,9 @@ importers:
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
+      '@wingnight/surface':
+        specifier: workspace:*
+        version: link:../../surface
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

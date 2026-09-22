@@ -2,8 +2,15 @@ import { runningTotalsCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
 // The round's pending points, team by team, with the team whose turn it is
-// lit. `note` is whatever this minigame wants to say under the rows — the par
-// line here — and nothing at all when it has nothing to add.
+// lit. It is the `readout` a Canvas floats above the corner dock and the last
+// card in a Stage's deck (docs/takeover-layout-api.md §5, §8) — the round's
+// pending points, not the game's standings, which is `StandingsSurface` on
+// the TV and is why this is not called a standings panel.
+//
+// It takes plain room-shaped values rather than any one package's host-view
+// type — that is what had made four identical copies unshareable — and `note`
+// is the only variation between them: whatever this minigame wants to say
+// under the rows, or nothing at all when it has nothing to add.
 export const RunningTotals = ({
   pendingPointsByTeamId,
   activeTurnTeamId,

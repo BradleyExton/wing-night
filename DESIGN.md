@@ -486,10 +486,23 @@ marquee chrome the drawing easel uses:
 -   `gold` is the marquee/framing accent (marquee border, pending points,
     the impact burst, the result plaque) — a scoped exception to the §0.1
     "winner moments only" rule, like DRAWING's §2.5.
--   Host layout reuses the §2.0A shell language: mini-rail strip on top,
-    full-height lane left (the touch surface), control deck column right
-    (shot card + standing count → result → Next shot → skip/reset → shot
-    chips → totals).
+-   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5):
+    the lane is full bleed, filling the takeover's padding box edge to edge —
+    1229x749 of the tablet's 1280x800, 89.9% against the 60% the 330px control
+    deck left it. The deck is gone, and so is the mini-rail strip this surface
+    used to draw: the shell's own rail arrives in the layout's `rail` slot and
+    already says the round, the sauce and whose turn it is. Everything the deck
+    held went to a slot the layout places, and JOUST hand-types none of them:
+    -   `counter`, read-only in the chrome row: shot count, the turn's shot
+        chips, how many are still standing, the team's pending points.
+    -   `actions`, floating bottom-left: Next shot, then the skip and reset
+        escape hatches, then the hint that used to sit on a row under the lane
+        costing it height.
+    -   `readout`, floating bottom-right above the corner dock: the result
+        plaque and the running totals.
+    -   The lane name and whose go it is are the scene's own identity rather
+        than chrome, so they ride in the body as a plate over the sky, and take
+        no pointer — every pixel of the frame under them fires the shot.
 -   Display layout: marquee (team, "Desert Lanes", shot count, how many are
     still standing, pending), the lane, a status line beneath. The result
     plaque drops over the top of the lane only once the replay has landed,

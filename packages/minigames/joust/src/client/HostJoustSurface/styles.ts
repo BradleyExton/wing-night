@@ -1,40 +1,60 @@
-export const container = "flex h-full min-h-0 flex-col gap-3";
+// JOUST is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the lane is
+// evenly spread scenery, so a chip in one corner costs a corner of desert
+// rather than a word the host has to read.
+//
+// Nothing here positions the takeover's chrome and nothing here reserves the
+// corner dock. The rail, the clock, the counter's place in the row, the
+// bottom-left actions and the bottom-right readout are all the layout's — and
+// so is the z-index budget. Gone with the deck: the 330px `deck` column and
+// its four cards, the `rail` strip with its `pr-[clamp(9rem,15vw,12rem)]`
+// reserve for a clock this game has never had (`timerKey: null`), and the
+// `railTeam` / `railTeamDot` chip that said a second time what the shell's
+// mini-rail says once.
 
-// Mini-rail strip, echoing the host shell anatomy (DESIGN.md §2.0A).
-export const rail =
-  "flex flex-wrap items-center gap-x-4 gap-y-1 px-1 pr-[clamp(9rem,15vw,12rem)] text-xs font-extrabold uppercase tracking-[0.22em] text-muted";
-
-export const railTitle = "text-primary";
-
-export const railTeam = "flex items-center gap-2 text-text";
-
-export const railTeamDot = "h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_#f97316]";
-
-export const railPending = "ml-auto font-mono text-sm tracking-normal text-gold";
+// Intro phase renders inside the deck, where a full-bleed lane would be
+// nonsense — it gets the plain briefing instead. Not a takeover: `rail` and
+// `clock` are both null on this beat, so it draws neither.
+export const introRoot = "flex flex-col gap-3";
 
 export const introCard =
   "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
 
-export const playArea = "flex min-h-0 flex-1 gap-3";
-
-export const arenaColumn = "flex min-h-0 min-w-0 flex-1 flex-col gap-2";
-
+// The lane, filling the layout's body slot edge to edge. It keeps the marquee
+// frame (DESIGN.md §2.7) and the dusk gradient the backdrop bleeds over, and
+// it is `relative` so the plate can sit in its sky — but it no longer sets
+// `min-h-0 flex-1`, because it is no longer a column's child: the body slot
+// has a definite height and the frame fills it.
 export const arenaFrame =
-  "relative min-h-0 flex-1 overflow-hidden rounded-xl border-2 border-[#3a200d] bg-[linear-gradient(180deg,#160c2a_0%,#4a1f3f_54%,#c2582c_86.6%,#d6ac63_86.7%,#b58a45_100%)] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]";
+  "relative h-full w-full overflow-hidden rounded-xl border-2 border-[#3a200d] bg-[linear-gradient(180deg,#160c2a_0%,#4a1f3f_54%,#c2582c_86.6%,#d6ac63_86.7%,#b58a45_100%)] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]";
 
-export const arenaHint = "m-0 px-1 text-center text-sm italic text-muted";
+// Which lane and whose go, over the sky at top-left. `top` clears the shell's
+// chrome row, which carries the mini-rail and the play clock and is taller
+// than a chip. `pointer-events-none` because the whole frame under it is the
+// drag surface that fires the shot.
+export const plate =
+  "pointer-events-none absolute left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(4.4rem,8vh,5.2rem)] max-w-[clamp(12rem,24vw,18rem)] rounded-xl border border-gold/35 bg-bg/70 px-4 py-2.5 backdrop-blur";
 
-export const deck = "flex w-[clamp(230px,28vw,330px)] flex-col gap-3";
+export const plateTitle =
+  "m-0 font-serif text-xl font-bold italic leading-tight text-text";
 
-export const shotCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-4 py-3 shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
+export const plateShooter = "m-0 mt-0.5 text-sm text-mutedWarm";
 
-export const shotCounter = "text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-gold";
+// The rail row's read-only counts (§5, `counter`). Glass rather than solid: on
+// a Canvas these float over the lane instead of sitting on a panel.
+const chip =
+  "inline-flex min-h-9 items-center rounded-full border border-text/10 bg-bg/85 px-3.5 text-[0.78rem] font-semibold text-muted backdrop-blur";
 
-export const arenaName = "m-0 mt-1 font-serif text-xl font-bold italic leading-tight text-text";
+export const counter = chip;
 
+export const counterPending = `${chip} font-mono text-gold`;
+
+// The plaque names everyone the shot felled, and a cleared rack is every
+// standing player on one line — 963px of it on the sandbox's roster, which in
+// a 330px deck column wrapped for free and on a full-bleed canvas does not.
+// The layout bounds the readout row it sits in, but only against the opposite
+// corner; how wide a game's own card should be is the game's to say.
 export const resultCard =
-  "rounded-xl border border-[#3a200d] bg-gradient-to-b from-[#1a0e05] to-[#0a0604] px-4 py-3 text-center";
+  "max-w-[clamp(16rem,26vw,22rem)] rounded-xl border border-[#3a200d] bg-gradient-to-b from-[#1a0e05] to-[#0a0604] px-4 py-3 text-center";
 
 export const resultTitle =
   "m-0 text-2xl font-black uppercase tracking-[0.08em] text-text [text-shadow:0_0_14px_rgba(251,191,36,0.35)]";
@@ -46,15 +66,20 @@ export const resultBlurb = "m-0 mt-1 text-sm italic text-mutedWarm";
 export const resultPoints = "mt-2 block font-mono text-3xl font-black text-gold";
 
 export const waitingNote =
-  "rounded-xl border border-text/10 bg-surface px-4 py-3 text-sm text-text/85";
+  "flex h-full w-full items-center justify-center text-sm text-muted";
 
+// The turn's controls, plus the hint that explains them (§5, `actions`). The
+// layout floats this bottom-left and constrains its width so it cannot run
+// under the corner dock — neither the position nor the max-width is typed
+// here. The buttons only have to be their own size now that they are a row
+// rather than a 330px column, so the `w-full` and `flex-1` are gone.
 export const primaryButton =
-  "min-h-[64px] w-full rounded-xl border-2 border-gold bg-[radial-gradient(ellipse_at_top,#f9a51a_0%,#8a4b06_100%)] text-lg font-extrabold uppercase tracking-[0.12em] text-[#1c0d02] shadow-[0_4px_0_rgba(0,0,0,0.45)] transition disabled:cursor-not-allowed disabled:opacity-40";
+  "min-h-14 shrink-0 rounded-xl border-2 border-gold bg-[radial-gradient(ellipse_at_top,#f9a51a_0%,#8a4b06_100%)] px-[clamp(1.2rem,3vw,2.2rem)] text-lg font-extrabold uppercase tracking-[0.12em] text-[#1c0d02] shadow-[0_4px_0_rgba(0,0,0,0.45)] transition disabled:cursor-not-allowed disabled:opacity-40";
 
-export const deckRows = "flex gap-2";
+export const secondaryButton =
+  "min-h-12 shrink-0 rounded-lg border border-[#3a200d] bg-bg/85 px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
 
-export const deckRowButton =
-  "min-h-12 flex-1 rounded-lg border border-[#3a200d] bg-surface text-xs font-extrabold uppercase tracking-[0.14em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+export const hint = "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] italic text-text/75 backdrop-blur";
 
 export const doneNote =
-  "rounded-xl border border-gold/40 bg-surface px-4 py-3 text-center text-sm text-gold";
+  "m-0 rounded-xl border border-gold/40 bg-bg/85 px-4 py-3 text-center text-sm text-gold backdrop-blur";

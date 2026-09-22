@@ -50,8 +50,8 @@ test("does fall back to the team id when the room has no name for it", () => {
 });
 
 test("does print the note under the rows, and nothing at all when there is none", () => {
-  // The four host surfaces that carry this card differ only here: FAPPY and
-  // SCHLONIC add a par line, JOUST and SONG_GUESS add nothing.
+  // The host surfaces that carry this card differ only here: FAPPY adds a
+  // par line, JOUST and SONG_GUESS add nothing.
   assert.match(
     render(
       <RunningTotals

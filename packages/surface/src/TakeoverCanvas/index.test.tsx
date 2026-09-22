@@ -83,6 +83,21 @@ test("does lift the readout clear of the corner dock", () => {
   assert.match(html, /<div class="[^"]*bottom-\[4\.5rem\][^"]*"><span data-slot="readout"/);
 });
 
+// The other half of the same bound. `actions` was constrained in the axis it
+// grows from the start; the readout was not, and an unbounded right-anchored
+// row grows leftward across the canvas the moment a game puts something of
+// variable width in it (JOUST's result plaque names everyone a shot felled).
+// Both floating slots are bounded now, by the same one number.
+test("does stop the readout growing back across the canvas", () => {
+  const html = renderToStaticMarkup(
+    <TakeoverCanvas rail={rail} clock={clock} readout={readout}>
+      {body}
+    </TakeoverCanvas>
+  );
+
+  assert.match(html, /<div class="[^"]*max-w-\[calc\(100%-4\.5rem\)\][^"]*"><span data-slot="readout"/);
+});
+
 test("does stop the actions row running under the corner dock", () => {
   const html = renderToStaticMarkup(
     <TakeoverCanvas rail={rail} clock={clock} actions={actions}>

@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { FappyMinigameHostView, FappyMinigameLeg } from "@wingnight/shared";
+import { RunningTotals } from "@wingnight/surface";
 
 import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
 import { formatRelayClock, useRelayClock } from "../useRelayClock/index.js";
 import { Corridor } from "./Corridor/index.js";
 import { LegHistory } from "./LegHistory/index.js";
 import { RelayClock } from "./RelayClock/index.js";
-import { RunningTotals } from "./RunningTotals/index.js";
 import { hostFappySurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 

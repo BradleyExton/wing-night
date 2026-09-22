@@ -234,6 +234,21 @@ The turn's numbers where the host's eye already is after a result: distance and 
 `verdict`), the running totals panel, the last shot's score. The layout positions it clear of the
 dock so the game does not hand-type GEO's `bottom-[clamp(4.9rem,9vh,5.6rem)]` four more times.
 
+*Amended at T3.1.* As first written, this slot took the gutter as a bottom offset and nothing else,
+while `actions` took it as a max-width — so `actions` was bounded in the axis it grows and this row
+was not. GEO's two fixed tiles never showed it. JOUST's did: its result plaque names everyone a
+shot felled, a cleared rack is nine names on one line, and a right-anchored row with no bound grows
+leftward until it spans the canvas and stops being a readout (measured at 1154px of 1229 on the
+sandbox's roster). The slot now carries `max-w-[calc(100%-4.5rem)]` as well, so **each floating
+slot is bounded in the axis it grows, by the same one number**. Its children are ordinary flex
+items, so content past the bound wraps inside them rather than being clipped.
+
+The other axis is not bounded and does not need to be: `readout` grows *upward* from the dock, and
+the room's largest possible standing — eight teams, `teamA`-`teamH` — makes `RunningTotals` 311px
+tall against the 677px between the gutter and the chrome row. A game would need some twenty-three
+teams to reach the rail. A `readout` that stacks rather than rows should check that budget; nothing
+enforces it.
+
 **There is no bottom-right slot for a control.** The bottom-right corner belongs to the dock. A
 game that wants a button there has misunderstood the phase: the tablet is in the players' hands,
 and the only two things that corner does are end the turn and open overrides.
@@ -306,9 +321,9 @@ The layouts apply 4.5rem, and only the layouts:
 - `<TakeoverStage>`: `actions` gets it as right padding; `deck` gets it as bottom padding inside
   its own scroll container.
 - `<TakeoverCanvas>`: `actions` gets it as a max-width constraint; `readout` gets it as a bottom
-  offset. There is no bottom-right slot at all.
+  offset **and** (T3.1) as a max-width. There is no bottom-right slot at all.
 
-One number, four applications, zero occurrences in any `packages/minigames/**/styles.ts`.
+One number, five applications, zero occurrences in any `packages/minigames/**/styles.ts`.
 
 GEO's Leaflet nudge — `[&_.leaflet-bottom.leaflet-right]:mr-[4.5rem]` in `GeoGuessMap/styles.ts:6`
 — is not one of the nine and stays where it is. It moves Leaflet's own attribution control, which
