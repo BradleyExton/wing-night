@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import type { ReactNode } from "react";
+
 import { marqueeBulbs } from "@wingnight/surface";
 import type { TriviaMinigameDisplayView } from "@wingnight/shared";
 
@@ -20,7 +22,8 @@ const playView = (attemptsRemaining: number): TriviaMinigameDisplayView => ({
 
 const renderSurface = (
   minigameDisplayView: TriviaMinigameDisplayView | null,
-  phase: "intro" | "play" = "play"
+  phase: "intro" | "play" = "play",
+  clock: ReactNode = null
 ): string => {
   return renderToStaticMarkup(
     <DisplayTriviaSurface
@@ -28,6 +31,7 @@ const renderSurface = (
       minigameType="TRIVIA"
       minigameDisplayView={minigameDisplayView}
       activeTeamName="Molten Metal"
+      clock={clock}
       serverOrigin="http://localhost:3000"
     />
   );
@@ -88,4 +92,28 @@ test("shows only the get-ready note during the minigame intro", () => {
 
   assert.match(html, /Get ready/);
   assert.doesNotMatch(html, /Molten Metal/);
+});
+
+// docs/takeover-layout-api.md §6, the TV's half of it (T5.3). TRIVIA is
+// `timerKey: null`, so the shell's clock renders nothing here — and the
+// marquee used to hold `pr-[clamp(8rem,14vw,18rem)]` of dead width against a
+// chip that has never once drawn on this surface. The reserve is gone because
+// the clock is a flex item: an absent one contributes no child and costs no
+// width. A hand-typed reserve creeping back in is the exact bug.
+test("reserves no width in the marquee for a clock this game never gets", () => {
+  const html = renderSurface(playView(3));
+
+  assert.doesNotMatch(html, /pr-\[clamp\(/);
+});
+
+// The other half of the inversion: the slot is honoured, so a game that DID
+// get a clock would draw it in the marquee's meta cell rather than under a
+// chip pinned over the corner. Dropping `{clock}` from the marquee would make
+// the six clock-less surfaces look fine and silently blind the three that have
+// one, which is how this went wrong the first time.
+test("puts the shell's clock in the marquee's meta cell when there is one", () => {
+  const html = renderSurface(playView(3), "play", <span>0:45</span>);
+
+  assert.match(html, /<span>0:45<\/span>/);
+  assert.match(html, /3 questions to go[\s\S]*0:45/);
 });

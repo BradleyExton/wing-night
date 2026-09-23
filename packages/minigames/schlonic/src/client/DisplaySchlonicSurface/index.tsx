@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import type { SchlonicMinigameDisplayView, SchlonicMinigameRun } from "@wingnight/shared";
 import { resolveSchlonicZone } from "@wingnight/shared";
@@ -93,10 +93,12 @@ const resolveStatusLine = (
 const SchlonicPlayBody = ({
   view,
   activeTeamName,
+  clock,
   serverOrigin
 }: {
   view: SchlonicMinigameDisplayView;
   activeTeamName: string | null;
+  clock: ReactNode;
   serverOrigin: string | null;
 }): JSX.Element => {
   const sceneRef = useRef<SchlonicSceneHandle>(null);
@@ -137,6 +139,7 @@ const SchlonicPlayBody = ({
             {displaySchlonicSurfaceCopy.wingsCounter(view.wingsBanked, view.wingsPar)}
           </span>
           <span className={styles.marqueeWingsLabel}>{displaySchlonicSurfaceCopy.wingsLabel}</span>
+          {clock}
         </div>
       </header>
       <div className={styles.arenaArea}>
@@ -164,6 +167,7 @@ export const DisplaySchlonicSurface = ({
   phase,
   minigameDisplayView,
   activeTeamName,
+  clock,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const schlonicView = minigameDisplayView?.minigame === "SCHLONIC" ? minigameDisplayView : null;
@@ -184,6 +188,7 @@ export const DisplaySchlonicSurface = ({
     <SchlonicPlayBody
       view={schlonicView}
       activeTeamName={activeTeamName}
+      clock={clock}
       serverOrigin={serverOrigin}
     />
   );

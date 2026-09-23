@@ -11,16 +11,16 @@ export const hint = "m-0 text-[clamp(1rem,1.6vw,1.6rem)] italic text-muted";
 export const stage =
   "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)] bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
-export { marqueeBulbs, marqueeTeamName, marqueeTitle } from "@wingnight/surface";
+export {
+  marqueeBulbs,
+  marqueeMeta,
+  marqueeTeamName,
+  marqueeTitle
+} from "@wingnight/surface";
 
 // Marquee row (DESIGN.md §2.9): team left, show title centre, run + wings right.
 export const marquee =
   "relative grid grid-cols-[1fr_auto_1fr] items-center gap-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(1.4rem,2.4vw,2.4rem)] py-[clamp(0.7rem,1.2vh,1.2rem)] shadow-[inset_0_0_36px_rgba(251,191,36,0.2),0_8px_20px_rgba(0,0,0,0.55)]";
-
-// Right padding keeps the readout clear of the display's absolute timer chip pinned to the
-// stage's top-right corner.
-export const marqueeMeta =
-  "flex items-center justify-end gap-[clamp(0.8rem,1.4vw,1.4rem)] pr-[clamp(8rem,14vw,18rem)] text-right";
 
 export const marqueeRun =
   "text-[clamp(0.72rem,1vw,1.05rem)] font-extrabold uppercase tracking-[0.28em] text-muted";

@@ -1,17 +1,20 @@
 export const stage =
   "flex h-full w-full flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)] bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
-export { marqueeBulbs, marqueeTeamName, marqueeTitle } from "@wingnight/surface";
+export {
+  marqueeBulbs,
+  marqueeMeta,
+  marqueeTeamName,
+  marqueeTitle
+} from "@wingnight/surface";
 
 // Grand bulb marquee (DESIGN.md §2.5): team + pending left, show title
 // center, pending pill right.
 export const marquee =
   "relative grid grid-cols-[1fr_auto_1fr] items-center gap-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-[clamp(1.4rem,2.4vw,2.4rem)] py-[clamp(0.8rem,1.4vh,1.3rem)]";
 
-// Right padding keeps the pending readout clear of the display's absolute
-// timer chip pinned to the stage's top-right corner.
 export const marqueePending =
-  "pr-[clamp(8rem,14vw,18rem)] text-right font-mono text-[clamp(1.1rem,1.8vw,1.9rem)] font-extrabold text-gold";
+  "font-mono text-[clamp(1.1rem,1.8vw,1.9rem)] font-extrabold text-gold";
 
 export const canvasArea = "relative flex min-h-0 flex-1";
 

@@ -52,6 +52,7 @@ const renderSurface = (
       minigameType="SONG_GUESS"
       minigameDisplayView={minigameDisplayView}
       activeTeamName="Team Heat"
+      clock={null}
       serverOrigin="http://localhost:3000"
     />
   );
@@ -164,6 +165,7 @@ test("renders with no server origin resolved yet", () => {
       minigameType="SONG_GUESS"
       minigameDisplayView={clipView("idle")}
       activeTeamName="Team Heat"
+      clock={null}
       serverOrigin={null}
     />
   );

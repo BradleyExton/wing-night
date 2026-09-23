@@ -154,6 +154,18 @@ export type MinigameDisplayRendererProps = {
   minigameType: MinigameType;
   minigameDisplayView: MinigameDisplayView | null;
   activeTeamName: string | null;
+  // The TV's turn clock, the display twin of the host props' `clock`
+  // (docs/takeover-layout-api.md §6). It used to pin itself over the stage's
+  // top-right corner, so eight of the nine display surfaces hand-typed
+  // `pr-[clamp(8rem,14vw,18rem)]` against it and EMOJI_CHARADES held an empty
+  // grid column — while only three of the nine have a `timerKey` at all, so
+  // six of those reserves guarded a chip that never draws.
+  //
+  // It is a slot now: the surface puts it in its marquee's meta cell, and a
+  // clock that renders nothing takes no width. The reserve follows from
+  // whether the chip renders because there is no reserve. `null` from any
+  // harness that has no room clock to show.
+  clock: ReactNode;
   // Origin of the asset-serving Express app, for surfaces that fetch
   // server-hosted media. There is no dev proxy in this repo, so the display is
   // always a different origin from the server and a root-relative media URL

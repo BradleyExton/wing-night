@@ -58,6 +58,7 @@ const render = (
       minigameType="SCHLONIC"
       minigameDisplayView={view}
       activeTeamName="Team Alpha"
+      clock={null}
       serverOrigin={null}
     />
   );

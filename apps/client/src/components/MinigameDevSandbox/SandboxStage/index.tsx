@@ -14,10 +14,12 @@ import { HostActionBarSurface } from "../../HostControlPanel/HostActionBarSurfac
 import { HostMiniRail } from "../../HostControlPanel/HostMiniRail";
 import { TakeoverTimerChip } from "../../HostControlPanel/HostPhaseBody/MinigamePlayTakeover/TakeoverTimerChip";
 import { HostTakeoverDock } from "../../HostControlPanel/HostTakeoverDock";
+import { MinigameTimerChip } from "../../DisplayBoard/StageSurface/MinigameTimerChip";
 import { MinigameSurface } from "../../HostControlPanel/MinigameSurface";
 import { SandboxControls } from "../SandboxControls";
 import { SandboxDeviceFrame } from "../SandboxDeviceFrame";
 import { minigameDevSandboxCopy } from "../copy";
+import { resolveRemainingTimerSeconds } from "../../../utils/resolveRemainingTimerSeconds";
 import { resolveSandboxHostRoomState } from "./resolveSandboxHostRoomState";
 import * as styles from "./styles";
 
@@ -148,6 +150,17 @@ export const SandboxStage = ({
     devManifest.teams
   );
   const isTakeover = phase === "play";
+  // The TV's clock is a slot too now (docs/takeover-layout-api.md §6 applied to
+  // the display at T5.3), so the display preview composes it exactly as
+  // `MinigameStageBody` does — from the same paused sandbox timer the host
+  // preview reads. Without this the preview would show the TV's marquee with
+  // an empty meta cell for the three games that actually carry a clock, which
+  // is the same lie the old reserve told in the other direction.
+  const sandboxTimer = sandboxHostRoomState?.timer ?? null;
+  const displayRemainingSeconds =
+    sandboxTimer === null
+      ? null
+      : resolveRemainingTimerSeconds(sandboxTimer, Date.now());
 
   return (
     <>
@@ -248,6 +261,7 @@ export const SandboxStage = ({
                 minigameType={minigameType}
                 minigameDisplayView={minigameDisplayView}
                 activeTeamName={activeTeamName}
+                clock={<MinigameTimerChip remainingSeconds={displayRemainingSeconds} />}
                 serverOrigin={serverOrigin}
               />
             </div>

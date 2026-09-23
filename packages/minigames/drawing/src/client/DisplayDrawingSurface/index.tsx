@@ -64,7 +64,8 @@ const RevealPlaque = ({
 export const DisplayDrawingSurface = ({
   phase,
   minigameDisplayView,
-  activeTeamName
+  activeTeamName,
+  clock
 }: MinigameDisplayRendererProps): JSX.Element => {
   const drawingDisplayView =
     minigameDisplayView?.minigame === "DRAWING" ? minigameDisplayView : null;
@@ -107,11 +108,14 @@ export const DisplayDrawingSurface = ({
         <span className={styles.marqueeTitle}>
           {displayDrawingSurfaceCopy.marqueeTitle}
         </span>
-        <span className={styles.marqueePending}>
-          {pendingPoints !== null
-            ? displayDrawingSurfaceCopy.pendingChip(pendingPoints)
-            : ""}
-        </span>
+        <div className={styles.marqueeMeta}>
+          <span className={styles.marqueePending}>
+            {pendingPoints !== null
+              ? displayDrawingSurfaceCopy.pendingChip(pendingPoints)
+              : ""}
+          </span>
+          {clock}
+        </div>
       </header>
       <main className={styles.canvasArea}>
         <StrokeReplayCanvas

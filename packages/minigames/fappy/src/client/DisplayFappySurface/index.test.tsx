@@ -61,6 +61,7 @@ const render = (
       minigameType="FAPPY"
       minigameDisplayView={view}
       activeTeamName="Team Alpha"
+      clock={null}
       serverOrigin={serverOrigin}
     />
   );

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import type { FappyMinigameDisplayView, FappyMinigameLeg } from "@wingnight/shared";
 import { resolveFappyGates } from "@wingnight/shared";
@@ -93,10 +93,12 @@ const resolveStatusLine = (
 const FappyPlayBody = ({
   view,
   activeTeamName,
+  clock,
   serverOrigin
 }: {
   view: FappyMinigameDisplayView;
   activeTeamName: string | null;
+  clock: ReactNode;
   serverOrigin: string | null;
 }): JSX.Element => {
   const sceneRef = useRef<FappySceneHandle>(null);
@@ -155,6 +157,10 @@ const FappyPlayBody = ({
           <span className={`${styles.marqueeClock} ${clockClassName}`} data-fappy-clock>
             {elapsedMs === null ? displayFappySurfaceCopy.clockIdle : formatRelayClock(elapsedMs)}
           </span>
+          {/* The relay clock above is the LEG's and FAPPY's own; this is the
+              room's, and FAPPY is `timerKey: null` so it draws nothing and
+              costs nothing. */}
+          {clock}
         </div>
       </header>
       <div className={styles.arenaArea}>
@@ -183,6 +189,7 @@ export const DisplayFappySurface = ({
   phase,
   minigameDisplayView,
   activeTeamName,
+  clock,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const fappyView = minigameDisplayView?.minigame === "FAPPY" ? minigameDisplayView : null;
@@ -203,6 +210,7 @@ export const DisplayFappySurface = ({
     <FappyPlayBody
       view={fappyView}
       activeTeamName={activeTeamName}
+      clock={clock}
       serverOrigin={serverOrigin}
     />
   );

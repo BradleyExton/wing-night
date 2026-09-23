@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 
 import { displayTriviaSurfaceCopy } from "./copy.js";
@@ -5,9 +6,11 @@ import * as styles from "./styles.js";
 
 const TriviaMarquee = ({
   activeTeamName,
-  attemptsRemaining
+  attemptsRemaining,
+  clock
 }: {
   activeTeamName: string | null;
+  clock: ReactNode;
   // Host-paced: the TV has no clock to run out, so the spent question budget is
   // the room's only sign that the turn is over and the last question on screen
   // is nobody's to answer.
@@ -25,14 +28,17 @@ const TriviaMarquee = ({
       <span className={styles.marqueeBulbs} aria-hidden="true" />
       <h2 className={styles.marqueeTeamName}>{activeTeamName ?? ""}</h2>
       <span className={styles.marqueeTitle}>{displayTriviaSurfaceCopy.showTitle}</span>
-      <div
-        className={
-          isTurnComplete ? styles.marqueeCounterComplete : styles.marqueeCounter
-        }
-      >
-        {isTurnComplete
-          ? displayTriviaSurfaceCopy.turnCompleteLabel
-          : displayTriviaSurfaceCopy.questionsToGoLabel(attemptsRemaining)}
+      <div className={styles.marqueeMeta}>
+        <span
+          className={
+            isTurnComplete ? styles.marqueeCounterComplete : styles.marqueeCounter
+          }
+        >
+          {isTurnComplete
+            ? displayTriviaSurfaceCopy.turnCompleteLabel
+            : displayTriviaSurfaceCopy.questionsToGoLabel(attemptsRemaining)}
+        </span>
+        {clock}
       </div>
     </div>
   );
@@ -41,7 +47,8 @@ const TriviaMarquee = ({
 export const DisplayTriviaSurface = ({
   phase,
   minigameDisplayView,
-  activeTeamName
+  activeTeamName,
+  clock
 }: MinigameDisplayRendererProps): JSX.Element => {
   const triviaDisplayView =
     minigameDisplayView?.minigame === "TRIVIA" ? minigameDisplayView : null;
@@ -68,6 +75,7 @@ export const DisplayTriviaSurface = ({
       <TriviaMarquee
         activeTeamName={activeTeamName}
         attemptsRemaining={triviaDisplayView.attemptsRemaining}
+        clock={clock}
       />
       {/* The team used to be named again under the question, as "On the clock:
           MOLTEN METAL". The marquee's left cell is where the other eight

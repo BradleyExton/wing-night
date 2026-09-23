@@ -2,9 +2,9 @@ import type { MinigameType, RoomState } from "@wingnight/shared";
 import type { MinigameSurfacePhase } from "@wingnight/minigames-core";
 
 import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
-import { isTimerTimeUp, isTimerUrgent } from "../../../../utils/timerUrgency";
 import { useServerOrigin } from "../../../../utils/useServerOrigin";
 import { displayBoardCopy } from "../../copy";
+import { MinigameTimerChip } from "../MinigameTimerChip";
 import * as styles from "./styles";
 
 type MinigameStageBodyProps = {
@@ -13,28 +13,6 @@ type MinigameStageBodyProps = {
   activeTeamName: string | null;
   minigameDisplayView: RoomState["minigameDisplayView"];
   remainingTimerSeconds?: number | null;
-};
-
-const MinigameTimerChip = ({
-  remainingSeconds
-}: {
-  remainingSeconds: number;
-}): JSX.Element => {
-  const isTimeUp = isTimerTimeUp(remainingSeconds);
-  const isUrgent = isTimerUrgent(remainingSeconds);
-  const chipClassName = isTimeUp
-    ? styles.timerChipTimeUp
-    : isUrgent
-      ? styles.timerChipUrgent
-      : styles.timerChip;
-
-  return (
-    <div className={chipClassName}>
-      {isTimeUp
-        ? displayBoardCopy.minigameTimesUpLabel
-        : displayBoardCopy.minigameTimerValue(remainingSeconds)}
-    </div>
-  );
 };
 
 export const MinigameStageBody = ({
@@ -70,14 +48,18 @@ export const MinigameStageBody = ({
 
   return (
     <div className={styles.minigameShell}>
-      {remainingTimerSeconds !== null && (
-        <MinigameTimerChip remainingSeconds={remainingTimerSeconds} />
-      )}
+      {/* Handed to the surface rather than pinned over it. The chip used to be
+          a sibling of the renderer with `absolute right-… top-…`, which is why
+          eight surfaces reserved a corner for it and six of those corners were
+          empty — only three minigames declare a `timerKey`. The surface puts
+          it in its marquee's meta cell and an absent clock costs no width
+          (docs/takeover-layout-api.md §6). */}
       <minigameRendererBundle.DisplaySurface
         phase={phase}
         minigameType={minigameType}
         minigameDisplayView={minigameDisplayView}
         activeTeamName={activeTeamName}
+        clock={<MinigameTimerChip remainingSeconds={remainingTimerSeconds} />}
         serverOrigin={serverOrigin}
       />
     </div>

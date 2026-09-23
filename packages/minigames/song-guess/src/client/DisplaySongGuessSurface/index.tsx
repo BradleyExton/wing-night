@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import type { SongGuessMinigameDisplayView } from "@wingnight/shared";
 
@@ -44,10 +44,12 @@ const SongGuessIntro = (): JSX.Element => {
 // first time.
 const SongGuessMarquee = ({
   activeTeamName,
-  songCounter
+  songCounter,
+  clock
 }: {
   activeTeamName: string | null;
   songCounter: string;
+  clock: ReactNode;
 }): JSX.Element => {
   // A `<div>`, the way EMOJI_CHARADES's marquee is one, not the `<header>` the
   // other five reach for: `page.locator("header")` is the e2e suite's strict
@@ -61,7 +63,10 @@ const SongGuessMarquee = ({
       <span className={styles.marqueeTitle}>
         {displaySongGuessSurfaceCopy.showTitle}
       </span>
-      <div className={styles.marqueeCounter}>{songCounter}</div>
+      <div className={styles.marqueeMeta}>
+        <span className={styles.marqueeCounter}>{songCounter}</span>
+        {clock}
+      </div>
     </div>
   );
 };
@@ -118,6 +123,7 @@ export const DisplaySongGuessSurface = ({
   phase,
   minigameDisplayView,
   activeTeamName,
+  clock,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const songGuessView =
@@ -142,6 +148,7 @@ export const DisplaySongGuessSurface = ({
               songGuessView.songCursor + 1,
               songGuessView.songsTotal
             )}
+            clock={clock}
           />
           <SongGuessPlayBody view={songGuessView} />
         </div>

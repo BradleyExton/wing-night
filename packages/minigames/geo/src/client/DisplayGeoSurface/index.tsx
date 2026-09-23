@@ -23,11 +23,13 @@ type GeoDisplayResult = Extract<
 const Marquee = ({
   activeTeamName,
   pendingPoints,
-  counterLabel
+  counterLabel,
+  clock
 }: {
   activeTeamName: string | null;
   pendingPoints: number | null;
   counterLabel: string | null;
+  clock: ReactNode;
 }): JSX.Element => (
   <header className={styles.marquee}>
     <span className={styles.marqueeBulbs} aria-hidden="true" />
@@ -40,7 +42,10 @@ const Marquee = ({
       )}
     </div>
     <div className={styles.marqueeTitle}>{displayGeoSurfaceCopy.showTitle}</div>
-    <div className={styles.marqueeCounter}>{counterLabel}</div>
+    <div className={styles.marqueeMeta}>
+      <span className={styles.marqueeCounter}>{counterLabel}</span>
+      {clock}
+    </div>
   </header>
 );
 
@@ -86,6 +91,7 @@ export const DisplayGeoSurface = ({
   phase,
   minigameDisplayView,
   activeTeamName,
+  clock,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const geoDisplayView =
@@ -119,6 +125,7 @@ export const DisplayGeoSurface = ({
           activeTeamName={activeTeamName}
           pendingPoints={pendingPoints}
           counterLabel={counterLabel}
+          clock={clock}
         />
         <div className={styles.idleBody}>
           <p className={styles.idleText}>
@@ -147,6 +154,7 @@ export const DisplayGeoSurface = ({
         activeTeamName={activeTeamName}
         pendingPoints={pendingPoints}
         counterLabel={counterLabel}
+        clock={clock}
       />
 
       <div className={styles.arena}>

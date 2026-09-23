@@ -11,12 +11,19 @@ import * as styles from "./styles.js";
 
 const CHECK_MARK = "✓";
 
-const StudioShell = ({ children }: { children: ReactNode }): JSX.Element => (
+const StudioShell = ({
+  children,
+  clock
+}: {
+  children: ReactNode;
+  clock: ReactNode;
+}): JSX.Element => (
   <div className={styles.stage}>
     <div className={styles.frameWall}>
       <header className={styles.header}>
         <p className={styles.headerTitle}>{displayRecreateSurfaceCopy.studioTitle}</p>
         <p className={styles.headerMeta}>{displayRecreateSurfaceCopy.studioSubtitle}</p>
+        {clock}
       </header>
       {children}
     </div>
@@ -163,6 +170,7 @@ export const DisplayRecreateSurface = ({
   phase,
   minigameDisplayView,
   activeTeamName,
+  clock,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const recreateDisplayView =
@@ -172,7 +180,7 @@ export const DisplayRecreateSurface = ({
 
   if (!isPlayPhase || recreateDisplayView === null || currentTarget === null) {
     return (
-      <StudioShell>
+      <StudioShell clock={clock}>
         <div className={styles.idleBody}>
           <p className={styles.idleText}>
             {isPlayPhase
@@ -187,7 +195,7 @@ export const DisplayRecreateSurface = ({
   const { attempt, subState } = recreateDisplayView;
 
   return (
-    <StudioShell>
+    <StudioShell clock={clock}>
       <div className={styles.pictures}>
         <Picture
           caption={displayRecreateSurfaceCopy.targetCaption}

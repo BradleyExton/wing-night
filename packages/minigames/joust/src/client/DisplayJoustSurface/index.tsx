@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import type { JoustMinigameDisplayView, JoustMinigameShot } from "@wingnight/shared";
 
@@ -82,10 +83,12 @@ const resolveStatusLine = (view: JoustMinigameDisplayView, replayFinished: boole
 const JoustPlayBody = ({
   view,
   activeTeamName,
+  clock,
   serverOrigin
 }: {
   view: JoustMinigameDisplayView;
   activeTeamName: string | null;
+  clock: ReactNode;
   serverOrigin: string | null;
 }): JSX.Element => {
   const replayIndex = useShotReplay(view.lastShot);
@@ -135,6 +138,7 @@ const JoustPlayBody = ({
           <span className={styles.marqueePending}>
             {displayJoustSurfaceCopy.pendingPoints(pendingPoints)}
           </span>
+          {clock}
         </div>
       </header>
       <div className={styles.arenaArea}>
@@ -177,6 +181,7 @@ export const DisplayJoustSurface = ({
   phase,
   minigameDisplayView,
   activeTeamName,
+  clock,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const joustView = minigameDisplayView?.minigame === "JOUST" ? minigameDisplayView : null;
@@ -194,6 +199,11 @@ export const DisplayJoustSurface = ({
   }
 
   return (
-    <JoustPlayBody view={joustView} activeTeamName={activeTeamName} serverOrigin={serverOrigin} />
+    <JoustPlayBody
+      view={joustView}
+      activeTeamName={activeTeamName}
+      clock={clock}
+      serverOrigin={serverOrigin}
+    />
   );
 };

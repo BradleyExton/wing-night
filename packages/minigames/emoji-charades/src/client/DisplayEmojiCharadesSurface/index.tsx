@@ -60,7 +60,8 @@ const useIsRevealVisible = (
 
 export const DisplayEmojiCharadesSurface = ({
   minigameDisplayView,
-  activeTeamName
+  activeTeamName,
+  clock
 }: MinigameDisplayRendererProps): JSX.Element => {
   const displayView: EmojiCharadesMinigameDisplayView | null =
     minigameDisplayView?.minigame === "EMOJI_CHARADES" ? minigameDisplayView : null;
@@ -107,7 +108,7 @@ export const DisplayEmojiCharadesSurface = ({
         <p className={styles.showTitle}>
           {displayEmojiCharadesSurfaceCopy.showTitle}
         </p>
-        <span className={styles.timerGutter} aria-hidden="true" />
+        <div className={styles.marqueeMeta}>{clock}</div>
       </div>
 
       {displayView === null && (

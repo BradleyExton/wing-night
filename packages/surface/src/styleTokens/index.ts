@@ -237,3 +237,17 @@ export const marqueeTitle =
 // all six at T5.2.
 export const marqueeBulbs =
   "pointer-events-none absolute inset-[7px] rounded-xl border-4 border-dotted border-gold/45";
+
+// The marquee's right cell: the turn's readout, right-aligned, with the
+// shell's clock last (T5.3, docs/takeover-layout-api.md §6 applied to the TV).
+// JOUST, FAPPY and SCHLONIC already had this string byte-identical before the
+// clock became a slot — three call sites, which is ADR-0002's bar met on
+// evidence that predates this change — and the five other marquees needed the
+// same row to hold their counter beside the chip. Hoisting it is what stops a
+// sixth, seventh and eighth hand-typed copy.
+//
+// It is a ROW, not a reserve: an absent clock contributes no child and the
+// cell costs nothing, which is the whole mechanism. Nothing here may grow a
+// padding, a min-width or a gutter — that is the bug this token replaced.
+export const marqueeMeta =
+  "flex items-center justify-end gap-[clamp(0.8rem,1.4vw,1.4rem)] text-right";
