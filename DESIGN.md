@@ -710,7 +710,7 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     stance are different transforms and neither should know about the other.
 -   **Wings are the score and the health bar at the same time.** That is the
     whole design, so the tally is the one number both surfaces put in their
-    chrome: the tablet's rail and the TV's marquee, in `gold`. A hit flashes
+    chrome: the tablet's takeover `counter` and the TV's marquee, in `gold`. A hit flashes
     the bird for the sim's own mercy window and bursts a handful of wings out
     of it, tumbling as they go; the burst is decoration, and none of it can be
     caught back.
@@ -720,18 +720,42 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     60fps — and nothing in the scene is React-driven per frame, which is what
     keeps a costume head's halo filter rasterised once.
 -   The whole zone is the jump surface (no scroll, no zoom, no text selection):
-    down jumps, and holding climbs higher. The only chrome inside it is a
-    `JUMP / HOLD FOR HEIGHT` legend, bottom-LEFT, because the bottom-right
-    belongs to the host's corner dock (§2.0A).
+    down jumps, and holding climbs higher. On the tablet it is now the whole of
+    it — there is no chrome drawn inside the zone at all. The
+    `JUMP / HOLD FOR HEIGHT` legend still sits bottom-LEFT, but as the takeover
+    layout's own bottom-left slot rather than as a box the arena paints, and it
+    takes no pointer there, so the pixels under it still jump.
 -   The display runs a few ticks behind the tablet, so it holds a finished run
     a little longer than the tablet does and finishes the run it has before it
     switches: the room always sees the post or the hole, never a cut to the
     next start line.
--   Host: rail with the wing tally, the zone as the whole jump surface, a deck
-    of run card (player, banked) → zone-clear card → skip/reset → run list with
-    each run's outcome → totals. Display: marquee (team, "Kempenfelt Bay Zone",
-    run, wings), the zone, a status line; an outcome plaque over the beat and
-    the points plaque once the team is through.
+-   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
+    the same one JOUST takes in §2.7 and FAPPY in §2.9: the zone is full bleed
+    and is still the whole jump surface, filling the takeover's padding box edge
+    to edge — 1229x749 of the tablet's 1280x800, 89.9% against the 59% the 330px
+    control deck left it, and the 16:9 world inside it goes from 883x497 to
+    1225x689. The deck is gone, and so is the mini-rail strip this surface used
+    to draw: the shell's own rail arrives in the layout's `rail` slot and already
+    says the round, the sauce and whose turn it is. Everything the deck held went
+    to a slot the layout places, and SCHLONIC hand-types none of them:
+    -   `counter`, read-only in the chrome row: the run count, who is running,
+        and the wing tally last — still gold and mono, because it is the score
+        and the health bar at once.
+    -   `actions`, floating bottom-left: the skip and reset escape hatches, the
+        JUMP legend out of the arena, then the hint that used to sit on a row
+        under the zone costing it 28px of height.
+    -   `readout`, floating bottom-right above the corner dock: the zone-clear
+        card, the run list with each run's outcome, and the running totals with
+        the par line under them.
+    -   Who is running stays a chip rather than becoming a plate over the scene
+        the way JOUST's lane name does, and for a sharper version of FAPPY's
+        reason: the hen is pinned at 46 of the world's 160 units — 28.75%, 353px
+        into a 1229px canvas — and a held jump is worth ~27 of the world's 90
+        units while a springboard is worth ~81, so it crosses the top-left sky on
+        any decent bounce.
+-   Display: marquee (team, "Kempenfelt Bay Zone", run, wings), the zone, a
+    status line; an outcome plaque over the beat and the points plaque once the
+    team is through.
 -   The run is the game: §8's infinite-animation rule does not bite.
     `prefers-reduced-motion` on the display shows how the run ended, without
     the running.

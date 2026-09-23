@@ -66,7 +66,7 @@ const render = (
       minigameHostView={view}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
-      rail={null}
+      rail={phase === "play" ? <span data-test-rail /> : null}
       clock={null}
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
@@ -79,6 +79,9 @@ test("explains the zone before the round opens rather than drawing it", () => {
 
   assert.ok(markup.includes("Kempenfelt Bay Zone"));
   assert.ok(!markup.includes("data-schlonic-arena"));
+  // The intro is a panel in the host's own control deck, not a takeover: no
+  // rail slot, and so no chrome row to put one in.
+  assert.ok(!markup.includes("data-test-rail"));
 });
 
 test("draws the zone and names whose run it is", () => {
@@ -90,10 +93,34 @@ test("draws the zone and names whose run it is", () => {
   assert.ok(markup.includes("Alex: tap to go"));
 });
 
-test("keeps the tally of wings on the rail, because it is the score and the health at once", () => {
+test("forwards the shell's rail and says the team nowhere itself", () => {
+  const markup = render(createView());
+
+  assert.ok(markup.includes("data-test-rail"));
+  // The mini-rail names the turn's team; the chip this surface used to draw
+  // said it a second time on the same canvas, which is the duplication the
+  // takeover layout exists to remove. (The running totals still list every
+  // team's name — that is a row of numbers, not a chip saying whose go it is.)
+  assert.ok(!markup.includes("On the shore:"));
+  assert.ok(!markup.includes("shadow-[0_0_8px_#f97316]"));
+});
+
+test("gives the zone the whole canvas with no deck column", () => {
+  const markup = render(createView());
+
+  // The 330px deck, its `pr-[clamp(9rem,15vw,12rem)]` reserve for a clock this
+  // game has never had, and the hint row under the zone are all gone: the
+  // frame takes the body slot's full height and the layout floats the rest.
+  assert.ok(!markup.includes("w-[clamp(230px,28vw,330px)]"));
+  assert.ok(!markup.includes("pr-[clamp(9rem,15vw,12rem)]"));
+  assert.ok(markup.includes('class="relative h-full w-full touch-none'));
+});
+
+test("keeps the tally of wings in the chrome, because it is the score and the health at once", () => {
   const markup = render(createView({ wingsBanked: 17, wingsPar: 40 }));
 
   assert.ok(markup.includes("17 / 40"));
+  assert.ok(markup.includes("data-schlonic-wings"));
 });
 
 test("tells the tablet holder to wait when the host has not opened the round", () => {
@@ -154,18 +181,39 @@ test("posts the turn's points once the team is through", () => {
   assert.ok(markup.includes("the team. Advance the phase"));
 });
 
-test("keeps both escape hatches on the deck (AGENTS.md §11)", () => {
+test("keeps both escape hatches on the canvas (AGENTS.md §11)", () => {
   const markup = render(createView());
 
   assert.ok(markup.includes("Skip run"));
   assert.ok(markup.includes("Reset turn"));
 });
 
-test("leaves the corner dock's gutter alone: the jump legend sits bottom-left", () => {
+// The zone is one big jump button, so the legend had to leave the body: a
+// Canvas body draws no chrome of its own (§5), and `bottom-3 left-3` was the
+// actions row's own corner anyway. It keeps its words and its data hook, and
+// the layout — not this file — decides where the corner is.
+test("moves the jump legend out of the zone and into the layout's bottom-left slot", () => {
   const markup = render(createView());
 
   assert.ok(markup.includes("data-schlonic-jump-legend"));
-  assert.ok(markup.includes("bottom-3 left-3"));
+  assert.ok(markup.includes("Hold for height"));
+  assert.ok(!markup.includes("bottom-3 left-3"));
+});
+
+// The card is `@wingnight/surface`'s now, not a fourth copy of it. The local
+// variant was the only one of the four written in house tokens rather than
+// JOUST's dusk-desert hexes, and the only one carrying a gap between a team's
+// name and its points — the shared card kept the gap and widened it, so what
+// travelled is the local one's best feature rather than its skin.
+test("reads the round's pending points off the shared running-totals card", () => {
+  const markup = render(createView({ pendingPointsByTeamId: { "team-alpha": 3 } }));
+
+  assert.ok(markup.includes("Round so far"));
+  assert.ok(markup.includes("Team Alpha"));
+  assert.ok(markup.includes("3 pts"));
+  assert.ok(markup.includes("Full points at 40 wings"));
+  // The shared card's skin, which the local flat box did not have.
+  assert.ok(markup.includes("border-ember/20 bg-gradient-to-b from-surface to-bg"));
 });
 
 test("draws nothing of its own for another game's view", () => {

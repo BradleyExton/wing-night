@@ -208,8 +208,27 @@ before "Correct", and it changes at T4.1.
 
 Same four names as the Stage — `rail`, `counter`, `clock`, `children` — with the same rules, except
 that the chrome row floats over the body instead of sitting above it. The row is
-`pointer-events-none` with `pointer-events-auto` on its chips, exactly as `HostTakeoverDock` does
-it, so it never eats a thumb aimed at the map underneath.
+`pointer-events-none`, so it never eats a thumb aimed at the map underneath.
+
+*Amended at T3.3.* As first written all three floating rows handed
+`pointer-events-auto` to every direct child, the way `HostTakeoverDock` does — correct for the map
+this layout was drawn around, where every child of `actions` was a button, and wrong for a game
+whose body IS the button. FAPPY's hint sentence is a `<span>` in that row and killed 764x48px of the
+corridor, 4.0% of it, where a tap means flap; SCHLONIC's `JUMP` legend is the same shape. A passive
+child could not opt out — a plain `pointer-events-none` on the hint is inert, because it and the
+generated `… > *` rule have equal specificity and the layout's is ordered later (verified in the
+browser: `getComputedStyle` read `"auto"` with both classes on). **So a row now grants the pointer
+to controls rather than to children**, matched as descendants:
+`[&_:is(button,a,input,select,textarea)]:pointer-events-auto`. A control claims the pointer by being
+one; a hint, a plaque and a running-totals card do not. It is a narrower selector, not a flag —
+there is no `interactive` prop and no per-slot configuration object (ADR-0002 guardrail 2) — and it
+fails in the safe direction, since a forgotten class on a sentence costs a dead tap target while a
+button is live for being a button. The same one rule is on all three rows, which makes `counter`,
+`clock` and `readout` fully transparent: §4 already forbids a control in the rail row and §5 forbids
+one in `readout`, so the grant matches nothing there today and the chrome row stops holding a
+full-width strip of the body's top edge against a thumb. Measured on SCHLONIC at 1280x800: 104,346px²
+of live overlay under the old rule, 11,520px² (the two escape hatches) under this one — 10.1% of the
+zone given back.
 
 "Full bleed" here means the body fills the takeover's padding box, not the viewport. At 1280x800
 the takeover container's `p-[clamp(1rem,2vw,1.75rem)]` resolves to 25.6px, leaving 1228.8 x 748.8
@@ -407,7 +426,7 @@ components, and only two of them land in T2.2:
 | The two layouts (`<TakeoverStage>`, `<TakeoverCanvas>`) | nine, after migration | **T2.2** |
 | The deck column | EMOJI_CHARADES, RECREATE, SONG_GUESS after phase 3 | T2.2, used from T4.x |
 | The running-totals panel | JOUST, FAPPY, SCHLONIC, SONG_GUESS — four, already byte-identical | T3.1 |
-| The arena frame | JOUST `arenaFrame`, FAPPY `Corridor`, SCHLONIC `Zone` — three | T3.1 |
+| ~~The arena frame~~ | JOUST `arenaFrame`, FAPPY `Corridor`, SCHLONIC `Zone` — three | **rejected at T3.3, see below** |
 
 **The rail is not on this list.** The plan's decision names "the rail" among the four, but the rail
 is `HostMiniRail`, which already exists, already renders the right `<header>`, and reads room state
@@ -424,13 +443,38 @@ keeps the name `RunningTotals` it already has in four packages. SCHLONIC's `styl
 genuine divergence (a flat box, no gold) and is T3.1's decision, not this document's. Naming
 recorded as P2.
 
-**The arena frame ships as geometry only.** The three call sites share
-`relative min-h-0 flex-1 overflow-hidden rounded-xl … shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]` and
-differ in border colour, background and `touch-none select-none` (FAPPY and SCHLONIC have it, JOUST
-does not, because JOUST's arena is a drag surface and the other two are one big button). So the
-frame takes children and paints nothing: the game's scene is a child that fills it and carries its
-own surface and its own interaction classes. **Rejected:** a `surfaceClassName` or `tone` prop,
-which is a configuration object by another name (ADR-0002 guardrail 2).
+**The arena frame is neither a component nor a token — settled at T3.3, REJECTED.** T3.1 deferred it
+because only one of its three call sites was full-bleed then; now all three are, and the three
+strings can finally be compared as they will actually be written:
+
+| Call site | The frame, after migration |
+|---|---|
+| JOUST `arenaFrame` | `relative h-full w-full overflow-hidden rounded-xl border-2 border-[#3a200d] bg-[linear-gradient(…)] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]` |
+| FAPPY `Corridor` | `relative h-full w-full touch-none select-none overflow-hidden rounded-xl border-2 border-[#3a200d] bg-[#160c2a] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]` |
+| SCHLONIC `Zone` | `relative h-full w-full touch-none select-none overflow-hidden rounded-xl border-2 border-[#1f6b34] bg-[#0d1f14] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]` |
+
+T3.1's own suspicion was right: stripped of colour, background and interaction it is
+`relative h-full w-full overflow-hidden rounded-xl border-2 shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]`
+— six utilities and no structure, which §8's own rule sends to `styleTokens` rather than to a
+component. **And it does not clear the bar as a token either, because the three call sites are not
+three.** Four of the six are dictated by the body slot rather than chosen (`relative h-full w-full`
+plus the clip every scrolled scene needs), and the two that *are* a design decision — `rounded-xl`
+and the inset vignette — are DESIGN.md §2.7's marquee frame, which JOUST and FAPPY share by descent
+(same `#3a200d` border, same desert). SCHLONIC's is not that frame: §2.11 says it "looks like nothing
+else in the show on purpose", it is green on near-black, and its letterbox bars are a deliberately
+different language. So the overlap is two call sites with identical semantics plus one coincidence,
+and ADR-0002 guardrail 1 asks for three.
+
+The component form fails a second time on its own terms. §8 sketched a frame that "takes children and
+paints nothing", which means the border colour, the background and `touch-none select-none` arrive
+as a class string from the game — a configuration object by another name, already rejected here as a
+`surfaceClassName` or `tone` prop. And FAPPY's and SCHLONIC's frames are not passive wrappers at all:
+they carry the pointer handlers, the armed/locked cursor, and the `data-fappy-arena` /
+`data-schlonic-arena` hooks five e2e specs click. Moving the tap target onto an inner child to satisfy
+the sketch is a behavioural change that buys nothing.
+
+**Verdict: leave all three where they are.** Building it would be building a component to satisfy a
+doc.
 
 Anything not on this list needs three call sites with identical semantics before it becomes a
 component. The bar is the bar.

@@ -27,8 +27,14 @@ const HandoffCallout = ({ nextName }: { nextName: string | null }): JSX.Element 
   </div>
 );
 
-// The jump surface and the loop behind it. Split from the deck so the runner's refs and the
-// scene live together, keyed on the run in hand — or on the run just ended while the beat plays.
+// The jump surface and the loop behind it, filling the takeover's body slot edge to edge. The
+// runner's refs and the scene live together, keyed on the run in hand — or on the run just ended
+// while the beat plays.
+//
+// Nothing floats in here but the handoff callout, which is the beat itself rather than chrome: a
+// Canvas body may not draw its own chrome (docs/takeover-layout-api.md §5), and the JUMP legend
+// that used to sit at `bottom-3 left-3` is now the layout's `actions` slot, which owns that
+// corner.
 export const Zone = ({
   view,
   canAct,
@@ -92,10 +98,6 @@ export const Zone = ({
           sceneId="host-schlonic"
           label={zoneCopy.sceneLabel(runner.playerName)}
         />
-      </div>
-      <div className={styles.jumpLegend} data-schlonic-jump-legend>
-        <span className={styles.jumpLegendLabel}>{zoneCopy.jumpPadLabel}</span>
-        <span className={styles.jumpLegendHint}>{zoneCopy.jumpPadHint}</span>
       </div>
       {hold?.kind === "handoff" && <HandoffCallout nextName={resolveRunPlayerName(nextRun)} />}
     </div>

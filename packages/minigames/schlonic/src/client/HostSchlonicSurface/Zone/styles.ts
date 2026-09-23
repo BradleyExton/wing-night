@@ -1,20 +1,16 @@
 // The whole zone is the jump button: no scroll, no zoom, no text selection under a frantic
-// thumb. The bottom-right gutter is the host's corner dock (DESIGN.md §2.0A), which layers over
-// anything drawn here — nothing of ours goes under it.
+// thumb — and now the whole of it, with nothing of ours drawn on top. The corner dock's gutter
+// is the layout's (docs/takeover-layout-api.md §6) and so is the bottom-left chrome that used to
+// sit in here.
+//
+// It fills the Canvas's body slot edge to edge, so it no longer sets `min-h-0 flex-1`: it is not
+// a column's child any more — the body slot has a definite height and the frame takes all of it.
 export const container =
-  "relative min-h-0 flex-1 touch-none select-none overflow-hidden rounded-xl border-2 border-[#1f6b34] bg-[#0d1f14] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]";
+  "relative h-full w-full touch-none select-none overflow-hidden rounded-xl border-2 border-[#1f6b34] bg-[#0d1f14] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]";
 
 export const containerArmed = "cursor-pointer";
 
 export const containerLocked = "cursor-not-allowed opacity-80";
-
-// The jump legend sits low-LEFT, clear of the corner dock.
-export const jumpLegend =
-  "pointer-events-none absolute bottom-3 left-3 flex flex-col gap-0.5 rounded-lg bg-[rgba(12,26,16,0.6)] px-3 py-1.5";
-
-export const jumpLegendLabel = "text-sm font-extrabold uppercase tracking-[0.28em] text-gold";
-
-export const jumpLegendHint = "text-[0.65rem] uppercase tracking-[0.2em] text-mutedWarmDim";
 
 // Each run's zone slides in from the right as the last one wipes; the remount keys it, and the
 // keyframes live in the client's index.css.
