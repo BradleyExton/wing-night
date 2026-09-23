@@ -566,6 +566,7 @@ a house rule, with DRAWING's inverted pair fixed in T4.1.
 | JOUST | 60% | **89.9%** (deck removed) | T3.1 |
 | FAPPY | 59% | **89.9%** (deck removed; 16:9 scene +92% area) | T3.2 |
 | SONG_GUESS | 62% | **71.1%** (Stage, deck removed) | T3.4 |
+| SCHLONIC | 59% | **89.9%** (deck removed; world +90% area) | T3.3 |
 
 **HUMAN CHECKPOINT REACHED** — the anatomy is on the tablet and awaiting the owner's read before the
 remaining eight games adopt it.
@@ -722,3 +723,43 @@ recreate, schlonic) from nine.
    longer holds.
 3. **SONG_GUESS has no `DESIGN.md` section at all** (§2.8 is Cast; the per-game sections skip it). Not
    invented here — a gap for phase 6.
+- [x] T3.3 `1b42982` + `ca5619b` — **SCHLONIC full-bleed, 59.3% → 89.9%** (stage 887×685 → 1229×749;
+  16:9 world 883×497 → 1225×689, **+90% area**). Nothing went in the body and the arithmetic is why:
+  the runner sits at `SCHLONIC_WORLD.runnerX = 46` of 160 world units = 28.75% = 353px into a 1229px
+  canvas, against JOUST's top-left plate reaching 303px at its clamp — and a held jump is ~27 of 90
+  world units, a springboard ~81, so the hen crosses the top-left sky on any decent bounce. Follows
+  FAPPY: who is running is a chip. The JUMP legend was floating chrome *inside* the body (forbidden by
+  §5) at the actions row's own inset, so it moved into `actions` rather than being deleted — during a
+  run it is the only place "hold for height" is said. `resolveActiveTeamName` deleted: **3 remain**
+  (drawing, emoji-charades, recreate). Dock: 37 of 49 sampled points fall inside the circle, **all 37
+  resolve to the toggle, 0 misses**; independently, no SCHLONIC slot box intersects the dock's box at
+  all. Runner motion verified under Playwright (`frames > 200`, jumps, airborne, `endedAtX > 400`).
+  DESIGN.md §2.11 rewritten.
+  **Shared `RunningTotals` adopted** (owner's decision): local copy deleted, cost measured side-by-side
+  in one browser — 194×131 → 172×204, +56% tall and 22px narrower. Budget: readout bottom y=677, chrome
+  row bottom y=51 → **626px available**, card uses 204, 422px spare; clears at eight teams too.
+  `RunHistory`'s `gap-2` widened to `gap-4` for the same reason the shared card has it.
+  **Dead-tap fix in `<TakeoverCanvas>`** (`ca5619b`): `[&>*]:pointer-events-auto` →
+  `[&_:is(button,a,input,select,textarea)]:pointer-events-auto`, one module-private `liveControls`
+  const on all three floating rows. **The row grants the pointer to controls, not to children** — no
+  prop, no config object, and it fails safe the right way round: a forgotten class on a sentence costs
+  a dead tap target, a button is live for being a button. Applied to `chromeRow` and `readout` too,
+  where §4/§5 forbid controls so it matches nothing and both go fully transparent — that was the larger
+  loss, the chrome row being 1198×38 across the top of every canvas. Verified in-browser: FAPPY's hint
+  now `none` and `elementFromPoint` at its centre resolves to `[data-fappy-arena]`, so the flap lands.
+  SCHLONIC live overlay **104,346px² → 11,520px², 10.1% of the zone given back**. Orchestrator
+  independently mutation-tested: reverting to the blanket rule reddens exactly 2 tests, restore returns
+  28/28. JOUST needed nothing (drag surface, everything goes passive for free).
+  **Arena frame REJECTED, nothing built.** Stripped to what the three actually share it is six
+  utilities and no structure — which §8's own rule sends to tokens, not a component. It fails as a token
+  too, because **the three call sites are not three**: four of the six utilities are dictated by the
+  body slot rather than chosen, and the two that are a design decision (`rounded-xl` + the inset
+  vignette) are DESIGN.md §2.7's marquee frame, which JOUST and FAPPY share *by descent* (same
+  `#3a200d`, same desert) and which SCHLONIC deliberately is not — §2.11 says it "looks like nothing
+  else in the show on purpose". Two call sites with identical semantics plus one coincidence; ADR-0002
+  g1 wants three. The component form also fails twice on its own terms: §8's "paints nothing" sketch
+  needs border/background/`touch-none` as a class string from the game (the `surfaceClassName`/`tone`
+  prop §8 itself rejects), and FAPPY's and SCHLONIC's frames are not passive wrappers — they carry
+  pointer handlers, an armed/locked cursor and the `data-*-arena` hooks the e2e specs click. §8's
+  component-table row struck through in the spec with the three strings tabled.
+  Gate green, e2e 36 passed, `schlonic-sandbox.spec.ts` 4 passed alone.
