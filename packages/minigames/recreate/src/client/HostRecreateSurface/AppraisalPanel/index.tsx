@@ -28,8 +28,13 @@ const resolveAttemptNote = (attempt: RecreateAttempt): string => {
 };
 
 // The host's grading bench: the team's prompt to read aloud, the secret
-// ingredients as big toggles, and the lock. The picture is somewhere else on
-// purpose — it never decides the score.
+// ingredients as big toggles, and the running tally. The picture is somewhere
+// else on purpose — it never decides the score.
+//
+// The lock and the redo hatch left with the migration: locking ends the beat,
+// so it belongs in the takeover's foot row beside the other two beat-enders
+// (docs/takeover-layout-api.md §4), and this panel is the thing the host reads
+// while deciding rather than the thing they press to finish.
 export const AppraisalPanel = ({
   attempt,
   checklist,
@@ -74,28 +79,6 @@ export const AppraisalPanel = ({
       <p className={styles.tally}>
         {hostRecreateSurfaceCopy.tallyLabel(checkedCount * pointsPerIngredient)}
       </p>
-      <div className={styles.actions}>
-        <button
-          className={styles.lockButton}
-          type="button"
-          disabled={!canDispatchAction}
-          onClick={(): void => {
-            onDispatchAction("lockScore", {});
-          }}
-        >
-          {hostRecreateSurfaceCopy.lockButtonLabel}
-        </button>
-        <button
-          className={styles.retryButton}
-          type="button"
-          disabled={!canDispatchAction}
-          onClick={(): void => {
-            onDispatchAction("retryPrompt", {});
-          }}
-        >
-          {hostRecreateSurfaceCopy.retryButtonLabel}
-        </button>
-      </div>
     </div>
   );
 };

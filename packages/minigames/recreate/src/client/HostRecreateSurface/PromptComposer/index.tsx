@@ -4,12 +4,9 @@ type PromptComposerProps = {
   draft: string;
   onDraftChange: (draft: string) => void;
   maxLength: number;
-  canSubmit: boolean;
   label: string;
   placeholder: string;
   counterLabel: (remaining: number) => string;
-  submitLabel: string;
-  onSubmit: (prompt: string) => void;
 };
 
 // The draft never leaves the tablet until it is sent: nothing on the TV should
@@ -17,51 +14,36 @@ type PromptComposerProps = {
 // the runtime honest about what was actually submitted. The surface owns the
 // draft rather than this component, because the composer unmounts while the
 // host grades and a team sent back to rewrite should find their words waiting.
+//
+// It owns no button either. "Send to the forger" is the beat's ender, so it
+// lives in the takeover's foot row with the other two
+// (docs/takeover-layout-api.md §4) rather than half way up the canvas where
+// this beat used to keep it.
 export const PromptComposer = ({
   draft,
   onDraftChange,
   maxLength,
-  canSubmit,
   label,
   placeholder,
-  counterLabel,
-  submitLabel,
-  onSubmit
-}: PromptComposerProps): JSX.Element => {
-  const trimmedDraft = draft.trim();
-  const isSubmittable = canSubmit && trimmedDraft.length > 0;
-
-  return (
-    <div className={styles.container}>
-      <label className={styles.label} htmlFor="recreate-prompt-draft">
-        {label}
-      </label>
-      <textarea
-        id="recreate-prompt-draft"
-        className={styles.textarea}
-        value={draft}
-        maxLength={maxLength}
-        placeholder={placeholder}
-        autoComplete="off"
-        autoCorrect="on"
-        spellCheck
-        onChange={(event): void => {
-          onDraftChange(event.target.value);
-        }}
-      />
-      <div className={styles.footer}>
-        <p className={styles.counter}>{counterLabel(maxLength - draft.length)}</p>
-        <button
-          className={styles.submitButton}
-          type="button"
-          disabled={!isSubmittable}
-          onClick={(): void => {
-            onSubmit(trimmedDraft);
-          }}
-        >
-          {submitLabel}
-        </button>
-      </div>
-    </div>
-  );
-};
+  counterLabel
+}: PromptComposerProps): JSX.Element => (
+  <div className={styles.container}>
+    <label className={styles.label} htmlFor="recreate-prompt-draft">
+      {label}
+    </label>
+    <textarea
+      id="recreate-prompt-draft"
+      className={styles.textarea}
+      value={draft}
+      maxLength={maxLength}
+      placeholder={placeholder}
+      autoComplete="off"
+      autoCorrect="on"
+      spellCheck
+      onChange={(event): void => {
+        onDraftChange(event.target.value);
+      }}
+    />
+    <p className={styles.counter}>{counterLabel(maxLength - draft.length)}</p>
+  </div>
+);

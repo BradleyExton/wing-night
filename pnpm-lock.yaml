@@ -249,12 +249,12 @@ importers:
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
+      '@wingnight/surface':
+        specifier: workspace:*
+        version: link:../../surface
       perfect-freehand:
         specifier: ^1.2.2
         version: 1.2.3
-      react:
-        specifier: 'catalog:'
-        version: 18.3.1
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -262,6 +262,15 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 18.3.28
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.3.7(@types/react@18.3.28)
+      react:
+        specifier: 'catalog:'
+        version: 18.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 18.3.1(react@18.3.1)
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
@@ -277,9 +286,9 @@ importers:
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
-      react:
-        specifier: 'catalog:'
-        version: 18.3.1
+      '@wingnight/surface':
+        specifier: workspace:*
+        version: link:../../surface
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -287,6 +296,15 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 18.3.28
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.3.7(@types/react@18.3.28)
+      react:
+        specifier: 'catalog:'
+        version: 18.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 18.3.1(react@18.3.1)
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
@@ -419,9 +437,9 @@ importers:
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
-      react:
-        specifier: 'catalog:'
-        version: 18.3.1
+      '@wingnight/surface':
+        specifier: workspace:*
+        version: link:../../surface
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -429,6 +447,15 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 18.3.28
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.3.7(@types/react@18.3.28)
+      react:
+        specifier: 'catalog:'
+        version: 18.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 18.3.1(react@18.3.1)
       tsx:
         specifier: 'catalog:'
         version: 4.21.0

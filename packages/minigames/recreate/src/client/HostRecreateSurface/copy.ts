@@ -1,8 +1,5 @@
 export const hostRecreateSurfaceCopy = {
-  studioTitle: "Forgery Studio",
   targetLabel: (current: number, total: number): string => `Target ${current} of ${total}`,
-  teamPrefix: "Forgers on the job:",
-  noAssignedTeamLabel: "No team assigned",
   introDescription:
     "The TV shows a doctored party photo. The team writes the prompt they think made it, then you grade that prompt against its secret ingredient list.",
   waitingTargetLabel: "No target loaded. Check minigames/recreate.json.",

@@ -1,35 +1,14 @@
 import { useState } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import {
-  resolveContentAssetSrc,
-  type RecreateAttempt,
-  type RecreateMinigameHostView,
-  type RecreateSubState
-} from "@wingnight/shared";
+import type { RecreateSubState } from "@wingnight/shared";
+import { TakeoverStage } from "@wingnight/surface";
 
 import { RECREATE_MAX_PROMPT_LENGTH } from "../../runtime/index.js";
 import { AppraisalPanel } from "./AppraisalPanel/index.js";
 import { PromptComposer } from "./PromptComposer/index.js";
+import { StudioFrames } from "./StudioFrames/index.js";
 import { hostRecreateSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
-
-const resolveActiveTeamName = ({
-  minigameHostView,
-  teamNameByTeamId,
-  activeTeamName
-}: Pick<
-  MinigameHostRendererProps,
-  "minigameHostView" | "teamNameByTeamId" | "activeTeamName"
->): string => {
-  if (minigameHostView?.activeTurnTeamId) {
-    return (
-      teamNameByTeamId.get(minigameHostView.activeTurnTeamId) ??
-      hostRecreateSurfaceCopy.noAssignedTeamLabel
-    );
-  }
-
-  return activeTeamName ?? hostRecreateSurfaceCopy.noAssignedTeamLabel;
-};
 
 // Counts the target the host is LOOKING AT, not the one the turn has reached.
 // A scored target stays on the tablet — its seal and the real prompt — until
@@ -45,113 +24,57 @@ export const resolveRecreateTargetNumber = (
   return Math.min(Math.max(targetOnScreen, 1), targetsPerTurn);
 };
 
-const Frame = ({
-  caption,
-  imageSrc,
-  alt,
-  serverOrigin,
-  placeholder,
-  isBusy = false
+// The scored beat's right column: what the ticks came to, and the prompt the
+// target was actually painted from. It stands where the composer and the bench
+// stand on the other two beats, instead of the row under the pictures that
+// left the whole 3fr column empty.
+const ScoredReveal = ({
+  pointsAwarded,
+  authoredPrompt
 }: {
-  caption: string;
-  imageSrc: string | null;
-  alt: string;
-  serverOrigin: string | null;
-  placeholder?: string;
-  isBusy?: boolean;
-}): JSX.Element => {
-  const resolvedSrc = imageSrc === null ? null : resolveContentAssetSrc(imageSrc, serverOrigin);
-
-  return (
-    <figure className={styles.frame}>
-      <div className={styles.framePicture}>
-        {resolvedSrc !== null ? (
-          <img className={styles.framePhoto} src={resolvedSrc} alt={alt} />
-        ) : (
-          <div className={isBusy ? styles.framePlaceholderBusy : styles.framePlaceholder}>
-            {placeholder ?? ""}
-          </div>
-        )}
+  pointsAwarded: number;
+  authoredPrompt: string | null;
+}): JSX.Element => (
+  <div className={styles.reveal}>
+    <span className={styles.pointsSeal}>
+      <span className={styles.pointsSealValue}>
+        {hostRecreateSurfaceCopy.pointsSealValue(pointsAwarded)}
+      </span>
+      <span className={styles.pointsSealLabel}>{hostRecreateSurfaceCopy.pointsSealLabel}</span>
+    </span>
+    {authoredPrompt !== null && (
+      <div className={styles.revealPromptBlock}>
+        <p className={styles.revealLabel}>{hostRecreateSurfaceCopy.authoredPromptLabel}</p>
+        <p className={styles.revealPrompt}>{authoredPrompt}</p>
       </div>
-      <figcaption className={styles.frameCaption}>{caption}</figcaption>
-    </figure>
-  );
-};
+    )}
+  </div>
+);
 
-const resolveAttemptPlaceholder = (attempt: RecreateAttempt): string => {
-  switch (attempt.status) {
-    case "generating":
-      return hostRecreateSurfaceCopy.attemptGeneratingLabel;
-    case "failed":
-      return hostRecreateSurfaceCopy.attemptFailedLabel(attempt.failureReason ?? "");
-    case "skipped":
-      return hostRecreateSurfaceCopy.attemptSkippedLabel;
-    case "ready":
-      return hostRecreateSurfaceCopy.attemptReadyLabel;
-  }
-};
-
-const StudioFrames = ({
-  recreateHostView,
-  serverOrigin
-}: {
-  recreateHostView: RecreateMinigameHostView;
-  serverOrigin: string | null;
-}): JSX.Element | null => {
-  const { currentTarget, attempt, subState } = recreateHostView;
-
-  if (currentTarget === null) {
-    return null;
-  }
-
-  return (
-    <div className={subState === "writing" ? styles.frames : styles.framesPair}>
-      <Frame
-        caption={hostRecreateSurfaceCopy.targetCaption}
-        imageSrc={currentTarget.targetImageSrc}
-        alt={currentTarget.title}
-        serverOrigin={serverOrigin}
-      />
-      {subState === "writing" ? (
-        currentTarget.sourceImageSrc !== null && (
-          <Frame
-            caption={hostRecreateSurfaceCopy.originalCaption}
-            imageSrc={currentTarget.sourceImageSrc}
-            alt={currentTarget.title}
-            serverOrigin={serverOrigin}
-          />
-        )
-      ) : (
-        <Frame
-          caption={hostRecreateSurfaceCopy.attemptCaption}
-          imageSrc={attempt?.imageSrc ?? null}
-          alt={attempt?.prompt ?? currentTarget.title}
-          serverOrigin={serverOrigin}
-          placeholder={attempt === null ? undefined : resolveAttemptPlaceholder(attempt)}
-          isBusy={attempt?.status === "generating"}
-        />
-      )}
-    </div>
-  );
-};
-
+// RECREATE's host surface. At play it is a `<TakeoverStage>` with no deck
+// (docs/takeover-layout-api.md §3): the body is a photograph beside either the
+// prompt the team is typing or the prompt the host reads aloud while ticking
+// ingredients, so a floating chip there covers a word or a tap target rather
+// than a corner of scenery — and the grading bench is the WIDER of the two
+// columns, which a 330px deck could not hold.
+//
+// It renders no rail, no header strip and no team chip of its own: `rail`
+// arrives filled with the shell's `<HostMiniRail />`, which already says the
+// round, the sauce and whose turn it is, which is why the
+// `resolveActiveTeamName` helper all nine host surfaces had copied is no longer
+// here. `clock` is forwarded untouched and draws nothing — RECREATE is
+// `timerKey: null`, and an empty slot in the rail row takes no width, which is
+// what retired this file's `pr-[clamp(9rem,15vw,12rem)]` reserve (§6).
 export const HostRecreateSurface = ({
   phase,
   minigameHostView,
-  activeTeamName,
-  teamNameByTeamId,
+  rail,
+  clock,
   canDispatchAction,
   onDispatchAction,
   serverOrigin
 }: MinigameHostRendererProps): JSX.Element => {
-  const recreateHostView =
-    minigameHostView?.minigame === "RECREATE" ? minigameHostView : null;
-  const resolvedActiveTeamName = resolveActiveTeamName({
-    minigameHostView,
-    teamNameByTeamId,
-    activeTeamName
-  });
-  const isPlayPhase = phase === "play";
+  const recreateHostView = minigameHostView?.minigame === "RECREATE" ? minigameHostView : null;
   const currentTarget = recreateHostView?.currentTarget ?? null;
   const subState = recreateHostView?.subState ?? "writing";
   const targetsPerTurn = recreateHostView?.targetsPerTurn ?? 0;
@@ -166,28 +89,106 @@ export const HostRecreateSurface = ({
   const [draftState, setDraftState] = useState({ draftKey, draft: "" });
   const draft = draftState.draftKey === draftKey ? draftState.draft : "";
 
+  // The intro beat is a panel in the host's own control deck rather than a
+  // takeover — `rail` and `clock` are both null on it — so it gets the
+  // briefing note and no chrome.
+  if (phase !== "play") {
+    return (
+      <div className={styles.introRoot}>
+        <p className={styles.introCard}>{hostRecreateSurfaceCopy.introDescription}</p>
+      </div>
+    );
+  }
+
+  const trimmedDraft = draft.trim();
+
+  // One beat-ender per beat, always in the foot row (§4, `actions`). RECREATE
+  // is the only game with three of them, and they are three beats of one turn
+  // rather than three buttons at once: write, grade, move on.
+  const renderActions = (): JSX.Element | null => {
+    if (recreateHostView === null || currentTarget === null) {
+      return null;
+    }
+
+    if (subState === "writing") {
+      return (
+        <button
+          className={styles.beatButton}
+          type="button"
+          disabled={!canDispatchAction || trimmedDraft.length === 0}
+          onClick={(): void => {
+            onDispatchAction("submitPrompt", { prompt: trimmedDraft });
+          }}
+        >
+          {hostRecreateSurfaceCopy.submitButtonLabel}
+        </button>
+      );
+    }
+
+    if (subState === "judging") {
+      return (
+        <div className={styles.verdictRow}>
+          <button
+            className={styles.beatButton}
+            type="button"
+            disabled={!canDispatchAction}
+            onClick={(): void => {
+              onDispatchAction("lockScore", {});
+            }}
+          >
+            {hostRecreateSurfaceCopy.lockButtonLabel}
+          </button>
+          <button
+            className={styles.beatButtonQuiet}
+            type="button"
+            disabled={!canDispatchAction}
+            onClick={(): void => {
+              onDispatchAction("retryPrompt", {});
+            }}
+          >
+            {hostRecreateSurfaceCopy.retryButtonLabel}
+          </button>
+        </div>
+      );
+    }
+
+    if (isTurnComplete) {
+      return (
+        <p className={styles.turnCompleteNote}>{hostRecreateSurfaceCopy.turnCompleteLabel}</p>
+      );
+    }
+
+    return (
+      <button
+        className={styles.beatButton}
+        type="button"
+        disabled={!canDispatchAction}
+        onClick={(): void => {
+          onDispatchAction("nextTarget", {});
+        }}
+      >
+        {hostRecreateSurfaceCopy.nextTargetButtonLabel}
+      </button>
+    );
+  };
+
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <p className={styles.headerTitle}>{hostRecreateSurfaceCopy.studioTitle}</p>
-        {isPlayPhase && targetsPerTurn > 0 && (
-          <p className={styles.headerMeta}>
+    <TakeoverStage
+      rail={rail}
+      clock={clock}
+      counter={
+        targetsPerTurn > 0 ? (
+          <p className={styles.counter}>
             {hostRecreateSurfaceCopy.targetLabel(targetNumber, targetsPerTurn)}
           </p>
-        )}
-      </header>
-      <p className={styles.teamLine}>
-        {hostRecreateSurfaceCopy.teamPrefix}
-        <span className={styles.teamName}>{resolvedActiveTeamName}</span>
-      </p>
-      {!isPlayPhase && (
-        <p className={styles.statusNote}>{hostRecreateSurfaceCopy.introDescription}</p>
-      )}
-      {isPlayPhase && currentTarget === null && (
+        ) : null
+      }
+      actions={renderActions()}
+    >
+      {recreateHostView === null || currentTarget === null ? (
         <p className={styles.statusNote}>{hostRecreateSurfaceCopy.waitingTargetLabel}</p>
-      )}
-      {isPlayPhase && recreateHostView !== null && currentTarget !== null && (
-        <div className={styles.stageRow}>
+      ) : (
+        <div className={styles.bench}>
           <StudioFrames recreateHostView={recreateHostView} serverOrigin={serverOrigin} />
           {subState === "writing" && (
             <PromptComposer
@@ -196,14 +197,9 @@ export const HostRecreateSurface = ({
                 setDraftState({ draftKey, draft: nextDraft });
               }}
               maxLength={RECREATE_MAX_PROMPT_LENGTH}
-              canSubmit={canDispatchAction}
               label={hostRecreateSurfaceCopy.composerLabel}
               placeholder={hostRecreateSurfaceCopy.composerPlaceholder}
               counterLabel={hostRecreateSurfaceCopy.composerCounter}
-              submitLabel={hostRecreateSurfaceCopy.submitButtonLabel}
-              onSubmit={(prompt): void => {
-                onDispatchAction("submitPrompt", { prompt });
-              }}
             />
           )}
           {subState === "judging" &&
@@ -217,41 +213,14 @@ export const HostRecreateSurface = ({
                 onDispatchAction={onDispatchAction}
               />
             )}
-        </div>
-      )}
-      {isPlayPhase && subState === "scored" && recreateHostView !== null && (
-        <div className={styles.scoredRow}>
-          <span className={styles.pointsSeal}>
-            <span className={styles.pointsSealValue}>
-              {hostRecreateSurfaceCopy.pointsSealValue(recreateHostView.lastPointsAwarded ?? 0)}
-            </span>
-            <span className={styles.pointsSealLabel}>
-              {hostRecreateSurfaceCopy.pointsSealLabel}
-            </span>
-          </span>
-          {recreateHostView.checklist !== null && (
-            <div className={styles.reveal}>
-              <p className={styles.revealLabel}>{hostRecreateSurfaceCopy.authoredPromptLabel}</p>
-              <p className={styles.revealPrompt}>{recreateHostView.checklist.authoredPrompt}</p>
-            </div>
+          {subState === "scored" && (
+            <ScoredReveal
+              pointsAwarded={recreateHostView.lastPointsAwarded ?? 0}
+              authoredPrompt={recreateHostView.checklist?.authoredPrompt ?? null}
+            />
           )}
         </div>
       )}
-      {isPlayPhase && subState === "scored" && !isTurnComplete && (
-        <button
-          className={styles.nextTargetButton}
-          type="button"
-          disabled={!canDispatchAction}
-          onClick={(): void => {
-            onDispatchAction("nextTarget", {});
-          }}
-        >
-          {hostRecreateSurfaceCopy.nextTargetButtonLabel}
-        </button>
-      )}
-      {isPlayPhase && isTurnComplete && (
-        <p className={styles.statusNote}>{hostRecreateSurfaceCopy.turnCompleteLabel}</p>
-      )}
-    </div>
+    </TakeoverStage>
   );
 };

@@ -315,19 +315,54 @@ every other surface uses.
     (display) — functional success/danger usage per §0.1, at the same
     weight EMOJI_CHARADES uses in §2.6. The plaques are opaque: the
     held sketch stays on the board behind them.
--   Host layout is canvas-first. The board is the surface; everything
-    else is a strip around it. One mini-rail row on top (§2.0A) with
-    the identity left, the prompt card centered and pending points
-    right; the ink palette as a vertical rail down the left of the
-    board; one toolbar row at the foot (undo/clear/skip, then
-    Nope/Correct). No control overlaps the drawing canvas, and none of
-    them takes a column of its own — the deck column this surface used
-    to carry cost the board ~40% of the tablet for controls the artist
-    presses a handful of times a turn.
--   The board letterboxes to 16:10 against the *height* the strips
-    leave, so leftover width is free: the ink rail costs the board
-    nothing, but a second toolbar row or a wrapped mini-rail costs it
-    real area. Keep both to one line.
+-   **Host layout is a `<TakeoverStage>` with no deck**
+    (`docs/takeover-layout-api.md` §3-§4) — and it is the case that rule
+    was written around. DRAWING has the biggest body of the nine and is
+    still not a `<TakeoverCanvas>`, because chrome that floats over this
+    body does not cost a corner of scenery the way it does on JOUST's
+    lane (§2.7) or SCHLONIC's zone (§2.11): **the board is the one body
+    on the tablet the host both reads and presses, every pixel of it.**
+    A floating toolbar covers the drawing, and under the layout's
+    pointer rule its buttons take the pointer, so it would also put a
+    live CLEAR under the artist's moving hand. Measured at 1280x800:
+    full bleed would be an 1133x708 board, 78% of the tablet against the
+    59% the Stage gives — the nineteen points are what the rule costs,
+    and they are worth it.
+-   Three rows and nothing else. The shell's mini-rail arrives in the
+    layout's `rail` slot and already says the round, the sauce and whose
+    turn it is, so this surface draws no rail, no identity strip and no
+    team chip of its own. What it puts in the slots:
+    -   `counter`, read-only in the rail row: the prompt, then the
+        pending points. The prompt is not a count, but it is the turn's
+        one glance-at-without-acting read, and the rail row is where it
+        is free — DRAWING is one of the three games with a play clock,
+        the clock chip is 48px tall, and anything shorter than that in
+        that row costs the board nothing. Keep the prompt to one line;
+        a wrapped prompt is paid for in board area.
+    -   `clock`, forwarded untouched and drawing: `drawingSeconds`.
+    -   The body: the ink palette as a vertical rail down the left, the
+        board taking the rest. The empty-bank note and the transient
+        result pill float over the board rather than holding rows.
+    -   `actions`, the foot row: undo/clear/skip, then **Correct before
+        Nope** (§4, owner decision P7 — this surface was the only one of
+        the nine with the destructive verdict on the left). A bare row
+        at the 44px touch target, not a panelled toolbar.
+-   **The board letterboxes to 16:10 against the *height* the rows leave
+    it, so every vertical pixel of chrome is worth 1.6 pixels of board
+    width — and side width is free.** Measured at 1280x800: the board is
+    984x615 inside a 1151px-wide slot, so the palette column and 149px
+    of letterbox bar sit in slack the board was never going to use,
+    while the foot row's own border and padding cost 18px of height and
+    29px of width. Columns are free here; rows are not. No second
+    toolbar row, no wrapped rail, no prompt card of its own.
+-   No control overlaps the drawing canvas, and none of them takes a
+    column of its own — the deck column this surface used to carry cost
+    the board ~40% of the tablet for controls the artist presses a
+    handful of times a turn.
+-   The booth's own name sits at the head of the ink palette rather than
+    in the rail row: §4 keeps a game's names out of the row the shell
+    owns, and the palette column is the one place on this surface where
+    a sign costs the board nothing.
 -   Display layout: grand bulb marquee (team, "Live Sketch" title,
     pending points), easel with splayed legs, status line beneath.
 -   Ink palette is drawing content, not UI chrome, and is exempt from
@@ -376,11 +411,46 @@ caption naming the subject. It is a running joke about one person in the room,
 authored in content (`lockedEmojis`), and the reducer refuses anything off the
 list so the bit cannot be broken from the tablet. The TV never sees it.
 
-**Host layout** reuses the §2.0A shell language: mini-rail on top, then a
-left picker column (clue canvas → persistent search field → category
-tabs → emoji grid) beside the standard control deck column (subject card
-→ Got It → Skip → back/clear).
+**Host layout is a `<TakeoverStage>` with a deck**
+(`docs/takeover-layout-api.md` §3), and the arrangement is the one this surface
+already had: the body is the picker column (clue canvas → persistent search
+field → category tabs → emoji grid), the deck column is subject card → Got It →
+Skip → back/clear. What changed is who owns the chrome around them.
 
+-   **It is a Stage because every pixel of the body is a tap target.** The
+    Canvas test asks whether chrome can float over the body without covering
+    something the host must read or press; over an emoji grid there is nowhere
+    the answer is yes. The cells are `<button>`s in the body rather than in a
+    floating row, so they would be covered and dead at once.
+-   **It keeps the deck because this body does not want width.** The cells are
+    `aspect-square`, so width and cell size move together: the 887px the deck
+    leaves draws a whole catalog tab — forty to fifty emoji — at 83px a cell,
+    while the full 1229px would blow each cell up to 118px and push a row off
+    the bottom. The 330px the deck costs is width the picker would spend on
+    holding less. It measures 887x689 of the tablet's 1280x800, 59.7% against
+    the 58% it had, and the emoji grid inside it takes all 21px of the gain —
+    reclaimed from the description paragraph and the "Clueing <team>" chip this
+    surface no longer draws, because the shell's own rail arrives in the
+    layout's `rail` slot and already says the round, the sauce and whose turn
+    it is.
+-   **The verdicts stay in the deck**, which §4 allows as readily as the foot
+    row. `actions` runs full width under both columns, so putting them there
+    would cost the grid ~90px of the one axis it is short in to buy width it
+    has no use for.
+-   `counter`, read-only in the rail row: the subjects left — the subject
+    card's old third line — then the points banked this turn. `clock` draws
+    here and is new on the surface: EMOJI_CHARADES is one of the three games
+    with a play-phase timer and one of the two that reserved nothing for it
+    (§6). The corner dock's 4.5rem is the deck's own scroll padding now, and
+    the `pr-[4.5rem]` the utility row used to type is gone.
+-   **The layout is chosen per `hostView.status`, not per phase** (§10): this
+    is the only surface of the nine whose host view is a union on a status.
+    When the turn completes the counter and the deck collapse to nothing and
+    the closing panel takes the whole 1229x749 canvas — an empty slot costs no
+    space, the same mechanism that lets a game with no clock pay nothing for
+    one. The intro beat is a panel in the host's own control deck rather than a
+    takeover, so it carries no chrome at all: the briefing line and the subject
+    card, which the host needs before the first tap.
 -   Search is **always visible but never permanently expensive**: it
     occupies its own row only, and the keyboard is summoned on focus,
     overlaying the grid and retracting on Done. The keyboard must never
@@ -633,12 +703,37 @@ it, and the forger — the image model — paints their version next to it.
     appear the moment it is sent; the authored prompt only once the score is
     locked. In PASS_AND_PLAY the tablet is in the team's hands, so the
     checklist is absent from the host view too until the prompt is in.
--   Host: header rail (studio title, "Target n of m"), team line, then a
-    two-column stage — writing: target | composer (tall textarea, character
-    count, one primary button); judging: both pictures small | the bench
-    (their prompt in a quote block, ingredient toggles at ≥56px, running
-    tally, lock, and "let them rewrite" as the redo hatch). Scored: points
-    seal, the real prompt, next target or turn-complete note.
+-   **Host layout is a `<TakeoverStage>` with no deck**
+    (`docs/takeover-layout-api.md` §3, §4): the body is a photograph beside
+    either the prompt the team is typing or the prompt the host reads aloud
+    while ticking ingredients, so there is no corner a floating chip could take
+    that is not a word or a tap target — and the grading bench is the wider of
+    the two columns, not a sidebar, so the 330px deck §3 pencilled in could
+    never have held it. Gone with the layout: the studio-title header strip and
+    its `pr-[clamp(9rem,15vw,12rem)]` reserve for a clock RECREATE has never
+    had, the team line the shell's mini-rail already says, this surface's own
+    `p-5` inside the shell's gutter, and the `w-[calc(100%-4.5rem)]` T1.8
+    hand-typed onto "Next target". The body is 1229x622 of the tablet's
+    1280x800 — 74.7% against the 33% the old content-height stack painted, the
+    worst share of the nine.
+    -   `counter`, read-only in the rail row: "Target n of m", the one thing
+        worth keeping off the header strip. It was the only turn counter in the
+        nine sitting top-right by hand; now it is top-right because that is
+        where the slot is.
+    -   The body, on all three beats: pictures left, bench right, 2fr/3fr.
+        Writing — the target (and the original, if the pack carries one) |
+        the composer, a textarea that takes the column's height. Judging — the
+        target and the forgery | the bench: their prompt in a quote block,
+        ingredient toggles at ≥56px, the running tally. Scored — the same two
+        pictures, now full size | the points seal and the real prompt, centred
+        in the column that used to stand empty.
+    -   `actions`, the foot row: one beat-ender per beat, always in the same
+        place. "Send to the forger" while they write, "Lock in the score" with
+        "let them rewrite" as the redo hatch beside it while the host grades,
+        "Next target" — or the turn-complete note — once it is scored. RECREATE
+        is the only game with three primaries, and they are three beats of one
+        turn rather than three buttons at once. The row's dock gutter is the
+        layout's.
 -   Display: masthead, two frames (target | original while writing, target |
     forgery after), the appraisal under a hairline: title, their prompt in
     italics, ingredient chips that fill `success` as the host ticks, the
