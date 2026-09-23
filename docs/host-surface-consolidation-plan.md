@@ -918,3 +918,42 @@ strange again, check `uptime` before reading the failures.
   now, so the assertion inverted AND the test's actual stated intent was guarded explicitly for the
   first time with `doesNotMatch(/\+\d/)`. Orchestrator reviewed that diff specifically — it is a
   strengthening, not a paper-over. Gate green, e2e 36 passed at load 2.85.
+- [x] T5.3 `22fed4a` — **the TV's gutter inversion fixed by §6's mechanism, not by correcting numbers.**
+  **The audit was stale in both directions.** It said four surfaces reserved for absent chips; the true
+  state was **nine surfaces reserving, six of them for nothing** — and TRIVIA and SONG_GUESS reserve too,
+  because T5.2b's new marquees were written with the same `pr-` copied in, so the count *grew* after the
+  audit. The TV chip draws only when `remainingTimerSeconds !== null`, which traces back through
+  `useMinigameCountdown` → `resolveStageViewModel` to a server timer that only starts when
+  `timerKey !== null` — GEO, DRAWING and EMOJI_CHARADES only.
+  **The three that DO have a clock were wrong in the other direction, which nobody had spotted**: the
+  chip was `absolute right-[clamp(1rem,2vw,2rem)]` anchored to the *shell*, not the marquee, so at 1920
+  it lands at **x=1856 — on top of the marquee's gold border and its dotted bulb ring** — while the
+  reserve clearing space for it sat 34px further in at 1822. The reserve and the thing it reserved for
+  never agreed on where the corner was.
+  Fix: `MinigameDisplayRendererProps` gains `clock: ReactNode` (the display twin of the host prop); the
+  chip is extracted to `DisplayBoard/StageSurface/MinigameTimerChip/` and **loses its `absolute … z-10`**;
+  all nine surfaces render `{clock}` in their marquee's meta cell (RECREATE at the end of its masthead)
+  and **all nine reserves are deleted**. EMOJI_CHARADES's `aria-hidden` `min-h-[1px]` spacer — the
+  seventh idiom — is deleted and its third grid column now holds the clock, which is where the mockup
+  (`emoji-charades-display/02-clue-wall.html`, `.timer-block`) always drew it. The sandbox's Display
+  Preview now composes the chip too, so it stops lying about the TV corner the way it once did about the
+  tablet's. One new token, `marqueeMeta`, which JOUST/FAPPY/SCHLONIC already carried byte-identically
+  (three call sites *before* the change, eight after). **No gutter number exported** — the
+  `/gutter|dock|reserve/i` guard test still returns `[]`.
+  Measured at 1920×1080: SCHLONIC's meta cell `padding-right` 268.8px → 0, usable width 381.8 → 650.6,
+  readout three lines → one, **marquee height 145.1px → 87.5px** — the dead reserve was costing 57.6px
+  of arena height on every JOUST/FAPPY/SCHLONIC turn. EMOJI_CHARADES: chip `absolute` → `static`, right
+  edge 1856 → **1822, the marquee's actual content edge**.
+  **This reverses T5.1's recorded judgement** that the TV chip should keep its overlay because on a TV
+  it genuinely is one. Nine hand-typed reserves and the mockups disagreed. Orchestrator independently
+  mutation-tested: re-anchoring the chip absolutely takes client tests 551 → 550 pass / 1 fail, restore
+  byte-identical. (First attempt was a false green — a `perl` call exited 0 without matching, so the
+  `||` fallback never ran and the file was never mutated. Worth remembering: verify a mutation actually
+  applied before trusting that it failed to redden anything.) Gate green, e2e 36 passed at load 2.75.
+  **Noted, not done:** `NowPlayingSurface` is a second `absolute right-4 top-2 z-30` TV overlay that no
+  game reserves for; it only draws while music plays, but it is the one remaining thing that can land on
+  a marquee.
+
+**Phase 5 complete.** The display surfaces are consolidated: one urgency threshold, three shared marquee
+tokens, bulbs on all eight marquee-bearing TVs, marquees added to the two that had none, and the clock
+laid out rather than floated on all nine.
