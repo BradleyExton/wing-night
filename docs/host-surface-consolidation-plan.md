@@ -891,3 +891,30 @@ strange again, check `uptime` before reading the failures.
   hours *after* GEO and EMOJI_CHARADES copied that brown — so DESIGN.md §2.5's reasoning ("read as a
   different app beside every other surface") now describes DRAWING as the only surface *without* it.
   A real inconsistency, left alone.
+
+### Checkpoint decision (2026-09-23): TRIVIA and SONG_GUESS both get a marquee
+- [x] T5.2b `8154765` — marquee added to both, from the shared tokens, with the bulb ring
+  (a seventh and eighth without it would recreate the bug T5.2 had just fixed). **All eight
+  marquee-bearing displays now carry bulbs**; RECREATE is the ninth and has its own masthead.
+  **Both marquees are a `<div>`, not a `<header>`**, deliberately: `page.locator("header")` is the
+  suite's strict handle on the host mini-rail and the sandbox puts both previews on one page, so a
+  second `<header>` naming the same team turns `sandbox-content-pack.spec.ts`'s
+  `header >> text=Molten Metal` from one match into two. EMOJI_CHARADES's marquee is already a `<div>`,
+  so this is in-house. Reason commented at both call sites.
+  **Redundant chrome resolved rather than stacked**: TRIVIA's `"ON THE CLOCK: <TEAM>"` caption removed
+  (the marquee says it, and reading the same fact twice is what was removed from FAPPY earlier) — but
+  the turn-complete signal it *also* carried moved into the counter cell rather than dying with it, and
+  now changes colour as well as wording, because at TV distance a wording change alone is not an event.
+  SONG_GUESS's `"SONG 1 OF 3"` **moved, not removed** — it was already the marquee title's exact
+  tracking, weight and colour, unframed; side effect worth knowing is that it previously rendered only
+  in the two clip phases, so the reveal and set-closing screens now carry it for the first time.
+  `introTitle` renamed `showTitle` and used by both the intro heading and the marquee — one string,
+  because it is one name. **SONG_GUESS now names the active team at all**, closing that gap.
+  Ink at 1920×1080: TRIVIA rows 341–739 → 26–812; SONG_GUESS rows 488–592 → 26–619. Nothing truncates.
+  DESIGN.md gains **§2.12 TRIVIA ("Question Card")** and **§2.13 SONG_GUESS ("Lounge Set")**, placed
+  after §2.11 so the nine per-game languages stay contiguous.
+  One existing test's assertion was flipped with justification: `closes the set without putting scores
+  on the TV` had asserted the team name was absent at `done`; the marquee legitimately names it there
+  now, so the assertion inverted AND the test's actual stated intent was guarded explicitly for the
+  first time with `doesNotMatch(/\+\d/)`. Orchestrator reviewed that diff specifically — it is a
+  strengthening, not a paper-over. Gate green, e2e 36 passed at load 2.85.
