@@ -433,8 +433,12 @@ Re-read this section from disk at the top of every iteration; do not trust memor
   `no-hardcoded-component-jsx-text` and `no-inline-style-prop` both at 0. Gate green, e2e 36 passed.
 - [x] T1.4 `6a0de41` — house rules extended to `packages/minigames/*/src/client/**` and
   `packages/surface/src/**` across all four rule blocks. **The brief's premise was wrong and the
-  subagent corrected it**: four of the rules gate internally on a hardcoded tree list in
-  `tools/eslint-plugin-wingnight/rules/houseComponentPaths.mjs`, so adding globs alone would have been
+  subagent corrected it**: THREE of the rules gate internally on a hardcoded tree list in
+  `tools/eslint-plugin-wingnight/rules/houseComponentPaths.mjs` (corrected at T6.4 — four files import from
+  that module, but `component-entry-file-name` imports only the `normalizeFilename` helper, not the
+  marker list, so it is glob-driven; the three that gate are the two colour rules and
+  `no-class-name-suffix-in-styles-exports`, and none of them reaches the minigame trees, which were
+  never added to the list), so adding globs alone would have been
   inert — that marker list, not a missing glob, is why a minigame `styles.ts` could write a raw hex.
   `component-entry-file-name` also kept its tree list in two places; collapsed to one constant.
   SVG-primitive carve-out written as a path rule (`*Scene/**/index.tsx`) disabling ONLY
@@ -989,3 +993,45 @@ laid out rather than floated on all nine.
 5. `docs/takeover-layout-api.md` §4 still says the deck has "exactly three [call sites], with nothing
    to spare". It has one.
 6. `TASKS.md:316` (D8) still points at the scrapped `.work/tickets/WN-6-*.md` pipeline.
+- [x] T6.2 `3183a6f` — all of §2.4–§2.13 reconciled, plus `AGENTS.md`, `TASKS.md` and the API spec.
+  All six handover errors confirmed against the code and fixed. **Beyond them: §2.4 GEO had never been
+  reconciled at all** — T4.4 predated the rule that a migration rewrites its own section, so the doc
+  still described the pre-migration surface and never said GEO is a `<TakeoverCanvas>`, the game the
+  Canvas was derived from. Marquee counts were wrong in both sections T5.2b wrote (eight marquees plus
+  RECREATE's masthead, not nine). Phase 5's clock-in-the-marquee was missing from §2.4/§2.5/§2.6/§2.11.
+  **`AGENTS.md` §3.1 and §16 no longer contradict each other**, and §16 now states the old collision in
+  place so nobody re-derives it. §8's component table rewritten as projected-vs-shipped: of four
+  promised, one shipped, one became a slot, one was refused, one is at a single call site.
+  **The DRAWING-brown question was ruled on, not logged**: `from-[#3a1d09] to-[#1a0c04]` is on seven of
+  the eight TV marquees and gold-bordered cards split 18 brown / 4 house tokens, so §2.5's stated
+  rationale was exactly backwards. §2.5 now states the direction — the brown goes, the seven follow
+  DRAWING — with three reasons, and §2.7 gained a matching bullet. **Written, not built**: the 18
+  literals are still in the tree and lint does not gate those paths. This also answers BACKLOG's
+  deferred "do the arcade games share a surface language" question — they were copying JOUST's skin.
+- [x] T6.3 `ccef136` — `docs/minigame-authoring-guide.md` 263 → 519 lines, inside the existing numbered
+  structure (no restructure), deliberately NOT duplicating §2.0B: it states rules and points at the
+  chapter, keeping only the numbers that change an author's decision. Adds layout choice, what the
+  shell hands you and what you forward, the slot summary, the traps that actually caught people, how to
+  measure canvas share, and when to share versus refuse. It declined to assert one anecdote from its
+  brief (an element measuring 80×80 instead of 179×179) because it could not source it on disk.
+- [x] T6.4 `225c588` — `docs/adr/ADR-0005-shared-host-display-surface.md`, 226 lines, numbered and
+  named to the on-disk convention, modelled on ADR-0002 (the only prior ADR with Guardrails and
+  Implementation Outcome). Records the contradiction, the decision, the guardrails, the measured
+  consequences with the yardstick caveat, the five refusals and the rule behind them, and what is still
+  open. **Corrected three claims in its brief rather than copying them**: only three lint rules gate on
+  the marker list and the minigame trees were never added to it (orchestrator verified — see the
+  corrected T1.4 entry above); the deferred colour work is 50 findings across 7 of 9 packages, not 49;
+  and it is eight marquees plus a masthead, not nine displays on the shared marquee.
+- [x] Orchestrator cleanup — two stale items no agent owned: `TakeoverStage/index.tsx:37-39` claimed the
+  deck is kept by "EMOJI_CHARADES, RECREATE and SONG_GUESS" (it is EMOJI_CHARADES alone), and
+  `BACKLOG.md`'s arcade-palette entry still said "revisit at T6.2" after T6.2 had answered it.
+
+**Phase 6 complete. All six phases done.**
+
+### A process note for whoever picks this up next
+Twice in phase 6 an agent refused to assert a claim that came from the orchestrator's own brief,
+because it could not find the claim anywhere on disk. Both refusals were correct. The cause was that
+the orchestrator was carrying details forward from subagent *reports* that had never been written into
+this log — the log is the only durable record, and anything not in it does not exist for the next task.
+T6.4 also corrected an error in this log itself (the "four rules" claim at T1.4). Treat the log as
+authoritative but not infallible, and verify against the code, which is what every phase-6 task did.
