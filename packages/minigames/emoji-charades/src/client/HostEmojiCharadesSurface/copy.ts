@@ -1,12 +1,10 @@
 export const hostEmojiCharadesSurfaceCopy = {
   introDescription:
     "One picker per team. The deck is dealt — clue each subject in emoji only.",
-  playDescription: "Tap emoji to build the clue. Your team shouts the guesses.",
-  noAssignedTeamLabel: "No team assigned",
-  activeTeamMetaLabel: "Clueing",
   subjectLabel: "Your subject",
   subjectsRemainingLabel: (count: number): string =>
     `${count} subject${count === 1 ? "" : "s"} left`,
+  pendingChip: (points: number): string => `+${points} pending`,
   waitingSubjectLabel: "Waiting for the next subject…",
   emptySequenceLabel: "Tap emoji to start the clue",
   searchPlaceholderLabel: "Search all emoji…",

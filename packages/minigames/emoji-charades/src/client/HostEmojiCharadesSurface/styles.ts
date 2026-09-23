@@ -1,26 +1,45 @@
-// Play-phase takeover owns the whole host canvas (DESIGN.md §2.0A): clue
-// canvas and picker on the left, subject card and verdicts in the deck column
-// on the right. Intro phase degrades to a plain stack inside the deck.
-export const container = "flex h-full min-h-0 flex-col gap-[clamp(0.75rem,1.6vh,1.25rem)]";
+// EMOJI_CHARADES is a `<TakeoverStage>` with a deck
+// (docs/takeover-layout-api.md §3). The body is a grid of tap targets, so
+// there is no corner of it a floating chip could take that is not a button:
+// the Canvas test asks whether chrome can float over the body without covering
+// something the host must press, and here the answer is no anywhere.
+//
+// It keeps the deck because this is the one body of the nine that does not
+// want more width. The cells are `aspect-square`, so width and cell size move
+// together: the 887px the deck leaves puts a whole catalog tab — forty to
+// fifty emoji — on screen at 84px a cell, and the full 1229px would blow each
+// cell up to 118px and push a row off the bottom. The 330px the deck costs is
+// width this body has no use for, and it buys the column where the subject and
+// the verdicts sit without costing the grid the height it is actually short of.
+//
+// Nothing here positions the takeover's chrome and nothing here reserves the
+// corner dock. The rail, the clock, the counter and the 4.5rem gutter are all
+// the layout's — the `pr-[4.5rem]` this file used to type on the utility row
+// was one of the nine hand-rolled reserves the layouts abolish (§6), and the
+// deck's own scroll container carries it now.
 
-export const description = "max-w-3xl text-sm leading-6 text-muted";
+// The intro beat is a panel in the host's own control deck rather than a
+// takeover — `rail` and `clock` are both null on it — so it draws no chrome
+// and lets the stack fall back to its own content height.
+export const introRoot = "flex flex-col gap-4";
 
-export const meta = "flex flex-wrap gap-2";
+export const introDescription = "max-w-3xl text-sm leading-6 text-muted";
 
-export const metaBlock =
-  "inline-flex min-h-11 items-center gap-2 rounded-full border border-text/10 bg-surface px-4 py-2";
+// The rail row's read-only counts (§4, `counter`). "N subjects left" was the
+// third line of the subject card and the points banked this turn were nowhere
+// at all; both are glanced at rather than pressed, so both belong here.
+const chip =
+  "inline-flex shrink-0 items-center rounded-full border border-text/10 bg-surface px-3.5 py-1.5 text-[0.78rem] font-semibold text-muted";
 
-export const metaLabel =
-  "text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted";
+export const counter = chip;
 
-export const metaValue = "text-sm font-semibold text-text";
+export const counterPending = `${chip} font-mono text-gold`;
 
-export const playArea =
-  "grid min-h-0 w-full flex-1 gap-[clamp(0.6rem,1.2vw,1.1rem)] lg:grid-cols-[1fr_clamp(240px,25vw,330px)]";
-
-export const pickerColumn = "flex min-h-0 flex-col gap-[clamp(0.5rem,1vh,0.8rem)]";
-
-export const deckColumn = "flex min-h-0 flex-col gap-[clamp(0.5rem,1vh,0.8rem)]";
+// The body slot, filled edge to edge: clue canvas → persistent search → tabs →
+// emoji grid, in that order (DESIGN.md §2.6). The height the description
+// paragraph and the hand-rolled "Clueing <team>" chip used to eat above it all
+// lands in the grid at the bottom.
+export const picker = "flex h-full min-h-0 flex-col gap-[clamp(0.5rem,1vh,0.8rem)]";
 
 // Clue canvas — the live sequence the TV is mirroring.
 export const canvas =
@@ -66,16 +85,13 @@ export const emptyNote =
 
 // Subject card reuses DRAWING's prompt-card treatment per DESIGN.md §2.6.
 export const subjectCard =
-  "rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-4 py-3 text-center";
+  "shrink-0 rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-4 py-3 text-center";
 
 export const subjectLabel =
   "text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-gold";
 
 export const subjectValue =
   "font-serif text-[clamp(1.4rem,2vw,2rem)] font-bold italic text-text";
-
-export const subjectMeta =
-  "mt-1 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-muted";
 
 // A locked subject drops the tabs and the search with them, so the grid it
 // leaves behind is free to draw the few emoji it has as big touch targets.
@@ -88,14 +104,11 @@ export const lockedLabel =
 export const lockedEmojiButton =
   "flex aspect-square items-center justify-center rounded-xl bg-gold/10 text-[clamp(1.8rem,4vw,3rem)] transition hover:bg-gold/25 disabled:cursor-not-allowed disabled:opacity-40";
 
-export const sectionTitle = "text-lg font-bold text-text";
-
-export const sectionHint = "text-sm text-muted";
-
 const verdictBase =
   "flex min-h-[76px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl border-2 text-[clamp(1rem,1.4vw,1.15rem)] font-extrabold uppercase tracking-[0.1em] text-text transition disabled:cursor-not-allowed disabled:opacity-50";
 
 // Functional success/danger per DESIGN.md §0.1 — these buttons score the turn.
+// GOT IT is rendered first (§4, owner decision P7).
 export const gotItButton = `${verdictBase} border-success/60 bg-success/20 hover:bg-success/30`;
 
 export const skipButton = `${verdictBase} border-danger/60 bg-danger/20 hover:bg-danger/30`;
@@ -105,13 +118,22 @@ export const verdictIcon = "text-2xl leading-none";
 export const verdictHint =
   "text-[0.6rem] font-bold uppercase tracking-[0.24em] opacity-80";
 
-// The shell floats the host's corner dock over the bottom-right of the
-// takeover canvas (DESIGN.md §2.0A), so the row that reaches that corner
-// keeps a gutter clear of it rather than putting a control underneath.
-export const utilityRow = "flex gap-2 pr-[4.5rem]";
+export const utilityRow = "flex shrink-0 gap-2";
 
 export const utilityButton =
   "min-h-[52px] flex-1 rounded-xl border border-text/10 bg-surface text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
 
-export const statusNote =
-  "rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-medium text-text/85";
+// The two beats with no picker on them. Both stand in for the body rather than
+// sitting at the top of an empty one: the deck collapses to nothing when the
+// turn is over, so this fills the whole canvas, which is the loudest way to say
+// there is nothing left to press while the tablet is still in a team's hands.
+export const turnComplete =
+  "flex h-full min-h-0 flex-col items-center justify-center gap-2 rounded-[1.75rem] border border-primary/25 bg-primary/10 px-6 py-5 text-center";
+
+export const turnCompleteTitle =
+  "text-[clamp(1.1rem,1.6vw,1.5rem)] font-extrabold uppercase tracking-[0.12em] text-text";
+
+export const turnCompleteHint = "text-sm font-medium text-text/80";
+
+export const waitingNote =
+  "flex h-full min-h-0 items-center justify-center rounded-[1.75rem] border border-text/10 bg-surfaceAlt px-6 py-5 text-center text-base font-medium text-muted";

@@ -25,15 +25,19 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "tsx --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\""
+    "test": "tsx --tsconfig ../../../tsconfig.tsx-runtime.json --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\""
   },
   "dependencies": {
     "@wingnight/minigames-core": "workspace:*",
-    "@wingnight/shared": "workspace:*"
+    "@wingnight/shared": "workspace:*",
+    "@wingnight/surface": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:"
   },
