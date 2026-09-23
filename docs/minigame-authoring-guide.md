@@ -9,6 +9,17 @@ Use this to keep implementation small, modular, and compatible with current host
 - Host and display render from `minigameHostView` and `minigameDisplayView`.
 - Display view must never include answer/secret fields.
 - Keep minigame code in `packages/minigames/<slug>`.
+- The host drives every phase. Nothing auto-advances, and no minigame ends its
+  own turn on a clock.
+- Escape hatches are never removed: the host can always skip, redo and manually
+  override score (`AGENTS.md` §11). During the takeover they live behind the
+  corner dock, not on your canvas.
+- New host controls go through the override surface, not inline phase chrome
+  (`SPEC.md:380`). A minigame's `actions` row is the *turn's* controls, not the
+  room's.
+- Touch targets stay 44x44 CSS px or larger (`SPEC.md`, "Interaction and
+  Accessibility") — including in `actions`, where the dock gutter has already
+  taken 72px of the row's width.
 
 ## 1) The Discovery Invariant
 
@@ -30,7 +41,8 @@ Timer and rules config keys are also derived from `MINIGAME_DEFINITIONS`
 For a content-backed game with the slug `<slug>`:
 
 1. `packages/minigames/<slug>/` — new package (scaffold by copying `packages/minigames/geo`):
-   - `package.json` (main/`.` and `./runtime` point at `src/runtime/index.ts`; `./client`, `./dev` subpaths), `tsconfig.json`
+   - `package.json` (main/`.` and `./runtime` point at `src/runtime/index.ts`; `./client`, `./dev` subpaths;
+     `"@wingnight/surface": "workspace:*"` for the takeover layouts, `@wingnight/cast` if you draw a bird), `tsconfig.json`
    - `src/runtime/index.ts` — the `MinigameRuntimePlugin`
    - `src/runtime/{types,guards,rules,views,content}/index.ts` as needed
    - `src/runtime/index.test.ts`
@@ -122,6 +134,231 @@ In `packages/minigames/<slug>/src/dev/index.ts`:
   import JSON across package boundaries.)
 - The sandbox boots `initialize` with that fixture and plays your real
   reducer live — there are no hand-authored view models or canned states.
+
+Both surfaces in that bundle are house components, and the host one also has an
+anatomy. 4.1–4.7 are what an author has to *do*; `DESIGN.md` §2.0B is why, and
+`docs/takeover-layout-api.md` is the contract with the arithmetic.
+
+### 4.1 House component idiom
+
+`packages/minigames/*/src/client/**` is governed by the same lint rules as
+`apps/client/src/components` (`eslint.config.mjs`). It was not when most of the
+nine were written, which is why the older surfaces do not all look like this:
+
+- A component is a folder with `index.tsx`, a colocated `styles.ts` imported as
+  `import * as styles from "./styles.js"`, and a `copy.ts` for every
+  user-facing string. **The `.js` suffix is not optional inside a package** —
+  the packages resolve as ESM while `apps/client` does not (which writes
+  `"./styles"`), so a component copied out of the app arrives with the wrong
+  import form.
+- Semantic style keys (`container`, `body`, `actions`), never a `ClassName` suffix.
+- `index.tsx` caps at 260 lines, `styles.ts` at 140. Both are errors, not warnings.
+- No inline `style` prop, no hardcoded JSX text, no `*.json` imports.
+- No hex colours and no raw Tailwind palette names in a `styles.ts` — only
+  `bg surface surfaceAlt text muted primary heat success danger gold teamA-teamH`,
+  plus `mutedWarm`, `mutedWarmDim` and `ember`. **Lint does not yet catch this in
+  your package**: the three colour rules gate on the marker list in
+  `tools/eslint-plugin-wingnight/rules/houseComponentPaths.mjs`, which is
+  `apps/client/src/components/`, `packages/cast/src/` and `packages/surface/src/`
+  — the minigame trees join it with the hex migration (BACKLOG). Write it right
+  anyway. A green lint is not a licence.
+
+### 4.2 Choosing a takeover layout
+
+At `MINIGAME_PLAY` the shell collapses its control deck and your host surface
+owns the canvas — but **it does not stop rendering the room's context**. The
+mini-rail, the play clock and the corner dock stay the shell's, along with the
+bottom-right gutter and the z-index budget, because both are properties of the
+canvas rather than of any game. You own the body, and the turn's own counts and
+controls.
+
+`packages/surface` exports two layouts, and you choose by rendering one — there
+is no flag between them (ADR-0002 guardrail 2), so a layout change shows up in a
+diff as the structural change it is:
+
+```tsx
+import { TakeoverCanvas, TakeoverStage } from "@wingnight/surface";
+```
+
+**The rule is about covering, not about size.** Use `<TakeoverCanvas>` when
+chrome can float over the body without hiding something the host must read or
+press; use `<TakeoverStage>` when it cannot. The mechanical test: is the body's
+meaning spread evenly across it — a map, an arena, a corridor, a zone, where a
+chip in one corner costs a corner of scenery — or concentrated in one place — a
+question, a picture frame, an emoji grid, a song console, where a chip covers a
+word?
+
+Two precedents, both measured rather than guessed, and both worth knowing before
+reaching for the bigger number:
+
+- **DRAWING has the largest body of the nine and is still a Stage.** Full bleed
+  was measured at **78.3%** of the tablet against the Stage's **59.1%**, and
+  refused: a floating `actions` row for DRAWING is five buttons — undo, clear,
+  skip, correct, incorrect — and under 4.5's pointer rule a button takes the
+  pointer for being a button. That is ~700x44px of the picture the TV is
+  mirroring gone dead to ink, with CLEAR under the artist's moving hand.
+  Nineteen points is what the covering rule costs there, and it is worth paying.
+- **SONG_GUESS refused the Canvas on the shape of the slots.** A Canvas has
+  exactly two floating slots, `actions` and `readout`, **both on the same edge**,
+  each bounded at `calc(100%-4.5rem)`. SONG_GUESS's host surface is nine tap
+  targets (play/pause, replay, skip, reveal, title ✓✗, artist ✓✗, next) plus a
+  `RunningTotals` panel, and there is nowhere on one edge to put them. It is a
+  Stage — and it dropped its deck anyway. Layout and deck are separate axes.
+
+Today: Stage for TRIVIA, DRAWING, EMOJI_CHARADES, RECREATE and SONG_GUESS;
+Canvas for GEO, JOUST, FAPPY and SCHLONIC. Read one of each before writing
+yours — `packages/minigames/trivia/src/client/HostTriviaSurface/index.tsx` is
+the smallest Stage, `packages/minigames/geo/src/client/HostGeoSurface/index.tsx`
+the reference Canvas.
+
+### 4.3 What the shell hands you, and what you must forward
+
+From `MinigameHostRendererProps` (`packages/minigames/core/src/index.ts`):
+
+- **`rail` and `clock` are shell-owned nodes. Forward them untouched into the
+  layout's `rail` and `clock` slots, always, on every play beat.** Never draw a
+  rail of your own; never wrap the rail slot in a second `<header>` or `<nav>`
+  (the rail is the only host `<header>` carrying round/sauce/team text, and the
+  e2e suite locates it that way); never drop `clock` because your game has
+  `timerKey: null`. `<TakeoverTimerChip />` renders nothing in that case, and an
+  unfilled slot in a flex row costs no width — that is the whole mechanism that
+  abolished nine hand-typed top-right reserves, five of which held 192px for a
+  clock that never drew. Both props are `null` on the intro beat, which is a
+  panel in the host's own control deck rather than a takeover; that is the one
+  place you render neither.
+- **`activeTeamName` is authoritative. Never write a local
+  `resolveActiveTeamName`.** The shell resolves it once with the rail's own
+  precedence (`selectHeaderContext`: the turn's team, else the round's), so the
+  string on your props and the string in the rail are the same string. All nine
+  packages used to carry that helper because the shell passed the *round's* team
+  where every game wanted the *turn's*; it is fixed at the source and there are
+  now zero copies in the repo. Do not render the name as chrome — the rail says
+  it, and saying it twice on one canvas is the duplication the anatomy exists to
+  end — but a sentence that needs the name may use it.
+- `teamNameByTeamId` is what `RunningTotals` takes. `serverOrigin` is `null`
+  until the host app resolves it in an effect (see 5.1 and 5.3).
+
+### 4.4 What goes in which slot
+
+`DESIGN.md` §2.0B has the full map and the reasoning. The short form:
+
+- **`rail`, `clock`** — shell. Forwarded, never drawn, never wrapped.
+- **`counter`** — yours, **read-only**: the turn's live counts, between the rail
+  and the clock. "Photo 2 of 3", "Shot 2 of 5", "+3 pending". **No tap targets** —
+  a control here sits beside the clock, which is exactly where a host will not
+  look for it. It may not repeat the team name or the minigame name.
+- **`children`** — the body, everything the host reads. The layout gives it
+  `relative isolate`. It may **not** hold a control that reaches the
+  bottom-right corner; that is the rule that fixed TRIVIA's `INCORRECT` and
+  RECREATE's `Next target`, both of which sat under the dock as the last flow
+  child of a body with no reserve.
+- **`deck`** (Stage only, optional) — a `clamp(230px,28vw,330px)` scrolling right
+  column. It has exactly one call site, EMOJI_CHARADES, whose picker cells are
+  `aspect-square` so a wider body holds *fewer* of them. Assume you do not want one.
+- **`actions`** (optional) — everything that ends a beat. Full-width foot row on
+  a Stage; floating bottom-left on a Canvas, together with the hint that explains
+  it, where it costs the arena no height at all. **The positive verdict comes first.**
+- **`readout`** (Canvas only, optional) — the turn's numbers, floating
+  bottom-right *above* the dock, where the host's eye already is after a result:
+  distance and points, the last shot's score, `RunningTotals`.
+
+**There is no bottom-right slot for a control.** That corner is the dock's, and
+the dock does exactly two things: end the turn and open overrides. A game that
+wants a button there has misread the phase — at `MINIGAME_PLAY` the tablet is in
+the players' hands.
+
+### 4.5 Traps that actually caught people
+
+- **Never hand-type a dock gutter.** If you are typing `4.5rem` into a game's
+  `styles.ts`, you have taken a wrong turn. The layouts own the reserve and apply
+  it in five places; `packages/surface` deliberately exports no token for it, and
+  `packages/surface/src/index.test.ts` asserts that no export name matches
+  `/gutter|dock|reserve/i`. Handing the number out is how a tenth reserve gets
+  written.
+- **`position: fixed` does not work in the takeover.** The dev sandbox renders
+  the host shell inside a CSS-scaled device frame, and a transformed ancestor
+  captures fixed positioning — so a fixed element pins to the frame rather than
+  to the tablet, and the surface looks right everywhere except where it is
+  judged. Position `absolute` inside the body instead: it is a stacking context,
+  so any z-index you like — Leaflet's own 400–1000 included — is sandboxed by
+  geometry and cannot reach the shell's chrome or the dock.
+- **Pointer events belong to controls, not to children.** A Canvas's floating
+  rows are `pointer-events-none` and hand the pointer back with
+  `[&_:is(button,a,input,select,textarea)]:pointer-events-auto`. A passive
+  `<div>` or `<span>` in `actions` does **not** take the pointer, and that is
+  deliberate: under the old every-direct-child rule FAPPY shipped a hint sentence
+  that killed 764x48px of a corridor where a tap means flap — 4.0% of it — and
+  the game could not opt out, because a plain `pointer-events-none` on the span
+  is inert against the layout's rule (equal specificity, ordered later). Group
+  your controls in a wrapper if you like; the selector matches descendants.
+- **Tailwind never generates a class from an interpolated fragment.**
+  `` `text-${tone}-500` `` produces no CSS at all. Enumerate literal class strings
+  and pick between them. `apps/client/tailwind.config.ts` scans
+  `packages/minigames/*/src/**/*.{ts,tsx}`, so a new minigame package is covered
+  the moment it exists — but only for classes that appear literally in the source.
+- **Quote your `tsx --test` globs.** Unquoted, the shell expands them and the
+  walk stops at two directory levels, so a deep colocated test never runs and the
+  suite goes green having tested nothing. Copy the line verbatim from a sibling
+  package: `"test": "tsx --tsconfig ../../../tsconfig.tsx-runtime.json --test
+  \"src/**/*.test.ts\" \"src/**/*.test.tsx\""`.
+
+### 4.6 Judging it: the sandbox, and measuring your canvas share
+
+`/dev/minigame/<slug>` drives your real reducer through the real host shell and
+previews the tablet at **1280x800** (`HOST_DEVICE` in
+`apps/client/src/components/MinigameDevSandbox/SandboxStage/index.tsx`), which is
+the party's actual Android tablet. It is the judging instrument, and two things
+lie in it:
+
+- **`vw`/`vh` resolve against the browser viewport, not the scaled device box.**
+  Every clamp reads wrong unless the browser is pinned to exactly 1280x800.
+- **A hidden pane never fires `ResizeObserver`.** Anything that sizes itself from
+  one — a self-sizing `<canvas>`, for instance — sits at its default 300x150 and
+  looks like a bug that is not there. Front the pane before trusting it.
+
+To measure the share of the tablet your body actually gets: pin the browser to
+exactly 1280x800, front the pane, and read **`offsetWidth`/`offsetHeight`** —
+never `getBoundingClientRect()`, which returns post-transform numbers in a
+CSS-scaled frame and will report your element far smaller than it is. Divide by
+the 1,024,000px² device box. The ledger to measure against is in
+`docs/host-surface-consolidation-plan.md`: a Canvas game lands at ~89.9%, a Stage
+between 59.1% and 82.5%.
+
+Then prove the corner **behaviourally**, not just geometrically:
+`document.elementFromPoint` at the dock circle's centre must return the dock, and
+at your nearest control's own edge must return your control. TRIVIA's collision
+sat latent because the sample question is short enough to miss it.
+
+### 4.7 When to share, and when not to
+
+You are writing the tenth game with nine to copy from, and the temptation is to
+hoist whatever looks alike. The bar is ADR-0002's: **three or more call sites
+with identical semantics**, no behaviour-switch props, no multi-flag
+configuration objects. Applied to this canvas it produced two layouts, one
+component and a set of tokens — plus five refusals recorded in `DESIGN.md`
+§2.0B, which are as much a part of the anatomy as the slots.
+
+**The pattern to carry: share the thing that would drift dangerously, refuse the
+thing that merely looks alike.**
+
+- `RunningTotals` was shared across four games because four copies of a scoring
+  panel will eventually disagree about a number — and it paid for itself at once
+  by exposing a bug none of the four could see from inside a 330px deck: the row
+  had `justify-between` and no gap, so floated at content width in a Canvas
+  `readout` a team's name met its points at a measured 0px ("Honky Tonk Heat0
+  pts"). The shared row takes `gap-4`.
+- The three history strips were refused: three call sites but three *shapes*, and
+  collapsing them needs `items` + `renderItem` + `isActive` + `padTo` + `tone` —
+  the configuration object the ADR forbids, or a render prop wearing a hat.
+- The arena frame was refused at what looked like three call sites, because one
+  of the three only coincidentally resembles the other two, and the residue was
+  six utilities and no structure.
+
+Note the second finding from `RunningTotals` before you hoist anything: the
+"house card" three games shared turned out to be written in JOUST's private
+dusk-desert hexes, and had to be re-expressed in house tokens value for value
+before it could move, because a `styles.ts` under `packages/surface/src` may not
+carry a raw hex. An abstraction is not free just because the strings match.
 
 ## 5) Content and Assets
 
@@ -240,8 +477,16 @@ Add tests at minimum:
 - Runtime/plugin tests in package (`src/runtime/index.test.ts`)
 - Display-safe projection tests (no answer leakage)
 - Any reducer validation and scoring cap behavior
+- Surface tests colocated as `index.test.tsx` beside each `index.tsx`
 - The existing client/server registry tests iterate `MINIGAME_TYPES` and cover
   your game automatically once it is registered.
+
+The idiom is `node:test` + `node:assert/strict` + `renderToStaticMarkup`,
+asserted with regexes against an HTML string. There is no Vitest, no jsdom and
+no Testing Library in this repo, whatever `AGENTS.md` §9 says. Name tests
+`does X when Y`, and remember the assertions run against **escaped** HTML —
+`/Frank&#x27;s/`, not `/Frank's/`. Quote the `tsx --test` globs in your
+`package.json` (4.5) or the deep ones never run.
 
 Run:
 
@@ -260,3 +505,15 @@ Run:
 - Display view contains no privileged answer fields.
 - Dev sandbox route works: `/dev/minigame/<slug>`.
 - All required verification commands pass.
+
+Host takeover, additionally:
+
+- The play beat renders `<TakeoverStage>` or `<TakeoverCanvas>`, and forwards
+  `rail` and `clock` into their slots untouched — including when the clock draws
+  nothing.
+- No `resolveActiveTeamName`, no rail of its own, no team name as chrome.
+- No `4.5rem` and no `position: fixed` anywhere in the game's `styles.ts`; no
+  z-index reaching outside the body.
+- No control in `counter`, and nothing reaching the bottom-right corner.
+- Measured in `/dev/minigame/<slug>` with the browser at a true 1280x800 and the
+  pane fronted, and the dock corner proved with `elementFromPoint` (4.6).
