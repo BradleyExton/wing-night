@@ -1,5 +1,6 @@
 import type { RoomState } from "@wingnight/shared";
 
+import { isTimerTimeUp, isTimerUrgent } from "../../../../utils/timerUrgency";
 import { displayBoardCopy } from "../../copy";
 import * as styles from "./styles";
 
@@ -10,16 +11,14 @@ type EatingStageBodyProps = {
   totalEatingSeconds: number | null;
 };
 
-const URGENT_THRESHOLD_SECONDS = 10;
-
 export const EatingStageBody = ({
   currentRoundConfig,
   activeTeamName,
   liveEatingRemainingSeconds,
   totalEatingSeconds
 }: EatingStageBodyProps): JSX.Element => {
-  const isUrgent = liveEatingRemainingSeconds <= URGENT_THRESHOLD_SECONDS;
-  const isTimeUp = liveEatingRemainingSeconds <= 0;
+  const isUrgent = isTimerUrgent(liveEatingRemainingSeconds);
+  const isTimeUp = isTimerTimeUp(liveEatingRemainingSeconds);
   const heatFillPercent =
     totalEatingSeconds !== null && totalEatingSeconds > 0
       ? Math.max(0, Math.min(100, (liveEatingRemainingSeconds / totalEatingSeconds) * 100))

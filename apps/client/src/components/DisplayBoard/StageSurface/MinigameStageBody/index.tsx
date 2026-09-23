@@ -2,6 +2,7 @@ import type { MinigameType, RoomState } from "@wingnight/shared";
 import type { MinigameSurfacePhase } from "@wingnight/minigames-core";
 
 import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
+import { isTimerTimeUp, isTimerUrgent } from "../../../../utils/timerUrgency";
 import { useServerOrigin } from "../../../../utils/useServerOrigin";
 import { displayBoardCopy } from "../../copy";
 import * as styles from "./styles";
@@ -14,15 +15,13 @@ type MinigameStageBodyProps = {
   remainingTimerSeconds?: number | null;
 };
 
-const URGENT_THRESHOLD_SECONDS = 10;
-
 const MinigameTimerChip = ({
   remainingSeconds
 }: {
   remainingSeconds: number;
 }): JSX.Element => {
-  const isTimeUp = remainingSeconds <= 0;
-  const isUrgent = remainingSeconds <= URGENT_THRESHOLD_SECONDS;
+  const isTimeUp = isTimerTimeUp(remainingSeconds);
+  const isUrgent = isTimerUrgent(remainingSeconds);
   const chipClassName = isTimeUp
     ? styles.timerChipTimeUp
     : isUrgent

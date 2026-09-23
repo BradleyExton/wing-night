@@ -10,9 +10,8 @@ import { useTimesUpChime } from "../../useTimesUpChime";
 import { useHostHandlers } from "../../../../context/HostHandlersContext";
 import { useHostRoomState } from "../../../../context/RoomStateContext";
 import { resolveRemainingTimerSeconds } from "../../../../utils/resolveRemainingTimerSeconds";
+import { isTimerTimeUp, isTimerUrgent } from "../../../../utils/timerUrgency";
 import * as styles from "./styles";
-
-const URGENT_THRESHOLD_SECONDS = 10;
 
 export const EatingStage = (): JSX.Element => {
   const roomState = useHostRoomState();
@@ -38,8 +37,11 @@ export const EatingStage = (): JSX.Element => {
   const nowTimestampMs = useNowTickMs();
   const remainingSeconds =
     timer !== null ? resolveRemainingTimerSeconds(timer, nowTimestampMs) : 0;
-  const isTimeUp = timer !== null && !timer.isPaused && remainingSeconds <= 0;
-  const isUrgent = remainingSeconds <= URGENT_THRESHOLD_SECONDS;
+  // The `!isPaused` is this surface's own and stays here: a clock the host has
+  // deliberately paused on zero has not called time on anybody.
+  const isTimeUp =
+    timer !== null && !timer.isPaused && isTimerTimeUp(remainingSeconds);
+  const isUrgent = isTimerUrgent(remainingSeconds);
   const totalDurationSeconds =
     timer !== null ? Math.max(timer.durationMs / 1000, 1) : 1;
   const heatPercent = Math.max(

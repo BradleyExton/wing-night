@@ -1,11 +1,10 @@
 import { useHostRoomState } from "../../../../../context/RoomStateContext";
 import { resolveRemainingTimerSeconds } from "../../../../../utils/resolveRemainingTimerSeconds";
+import { isTimerTimeUp, isTimerUrgent } from "../../../../../utils/timerUrgency";
 import { hostControlPanelCopy } from "../../../copy";
 import { useNowTickMs } from "../../../useNowTickMs";
 import { useTimesUpChime } from "../../../useTimesUpChime";
 import * as styles from "./styles";
-
-const URGENT_THRESHOLD_SECONDS = 10;
 
 // Its OWN component, and that is the whole point of it: `useNowTickMs` fires
 // four times a second for as long as a minigame is on the tablet, and while
@@ -18,9 +17,8 @@ export const TakeoverTimerChip = (): JSX.Element | null => {
   const nowTimestampMs = useNowTickMs();
   const remainingSeconds =
     timer === null ? null : resolveRemainingTimerSeconds(timer, nowTimestampMs);
-  const isTimeUp = remainingSeconds !== null && remainingSeconds <= 0;
-  const isUrgent =
-    remainingSeconds !== null && remainingSeconds <= URGENT_THRESHOLD_SECONDS;
+  const isTimeUp = remainingSeconds !== null && isTimerTimeUp(remainingSeconds);
+  const isUrgent = remainingSeconds !== null && isTimerUrgent(remainingSeconds);
   const timerChipClassName = isTimeUp
     ? styles.timerChipTimeUp
     : isUrgent
