@@ -567,6 +567,15 @@ a house rule, with DRAWING's inverted pair fixed in T4.1.
 | FAPPY | 59% | **89.9%** (deck removed; 16:9 scene +92% area) | T3.2 |
 | SONG_GUESS | 62% | **71.1%** (Stage, deck removed) | T3.4 |
 | SCHLONIC | 59% | **89.9%** (deck removed; world +90% area) | T3.3 |
+| DRAWING | 53.7% | **59.1%** (board 938→984 wide; Stage chosen, full-bleed refused at 78.3%) | T4.1 |
+| EMOJI_CHARADES | 58.3% | **59.7%** (deck KEPT — dropping it costs 14% of tap surface) | T4.2 |
+| RECREATE | 33.1% | **74.7%** (dead air 269px → 0) | T4.3 |
+
+**Caveat on this ledger:** the per-game figures were measured by different agents against slightly
+different definitions (body-slot area vs. the specific card-plus-controls the audit measured). Each
+was independently reproduced and every direction is sound, but the column is not one consistent
+metric — T4.3's agent measured TRIVIA at 72.7% on its own yardstick against the 82.5% recorded here.
+Treat the deltas as real and the absolute numbers as approximate.
 
 **HUMAN CHECKPOINT REACHED** — the anatomy is on the tablet and awaiting the owner's read before the
 remaining eight games adopt it.
@@ -763,3 +772,65 @@ recreate, schlonic) from nine.
   pointer handlers, an armed/locked cursor and the `data-*-arena` hooks the e2e specs click. §8's
   component-table row struck through in the spec with the three strings tabled.
   Gate green, e2e 36 passed, `schlonic-sandbox.spec.ts` 4 passed alone.
+- [x] T4.1 `fbf5d60` — **DRAWING → `<TakeoverStage>`, no deck, 53.7% → 59.1%** (board 938×586 →
+  984×615). **Full-bleed measured and REFUSED**: it would have been an 1133×708 board at 78.3%, but a
+  floating `actions` row for DRAWING is five `<button>`s — exactly what the new pointer selector grants
+  `pointer-events-auto` — putting ~700×44px of the board dead to drawing, one of them CLEAR under the
+  artist's moving hand. Nineteen points is what §3's covering rule costs here and the agent took it.
+  **Height-bound arithmetic**: `area = 1.6 × (body_h − 18)²`, so `d(area)/d(body_h) ≈ 1,968px²` — one
+  pixel of chrome is 1.6 pixels of board width. Net −29px of chrome → +29px board height → **+46px
+  board width** (46 = 1.6 × 29 ✓). Side width proven free: the framed board is 1002px in a 1151px slot,
+  so the 68px palette column sits entirely inside the 149px letterbox bar and deleting it would widen
+  the board by **0px**. 59.1% is the Stage ceiling, not a compromise. **Clock restored** (`01:00`).
+  **P7 fixed — DRAWING was the last outlier**, `verdictCorrect` now before `verdictIncorrect`. Dock:
+  49 samples, 41 hit the toggle, 8 fall through the rounded corners, **0 have any DRAWING element in
+  the hit stack**. DESIGN.md §2.5 rewritten. Flagged: "Sketch Booth" could not be deleted (asserted by
+  an e2e spec and a client test, both out of scope) so it became a nameplate on the palette post at
+  0.55rem — worth a second opinion.
+- [x] T4.2 `08c1e2d` — **EMOJI_CHARADES → `<TakeoverStage>` WITH the deck, 58.25% → 59.68%.** The deck
+  was re-tested rather than assumed and **kept**: cells are `aspect-square`, so width and cell size
+  move together — at 887px a cell is 83px and a whole catalog tab fits without scrolling; at the full
+  1229px each cell is 118px and a row falls off. **Widening makes the picker hold less.** Counterfactual
+  measured: "Stage, no deck" gives a grid of 362,555px² against the 419,551px² it has — **14% smaller
+  tap surface** for a prettier 71.7% body reading. Canvas rejected on both halves of §3's rule: the
+  picker's buttons live in the *body*, so the new `[&_:is(button,…)]` grant never reaches them — they
+  would be covered *and* dead. **`hostView.status` enumerated**: the union has exactly two members
+  (`playing`, `turn_complete`) plus two non-status cases (`minigameHostView === null`, `phase !== "play"`);
+  all eight combinations verified, six live and two by unit test. `turn_complete` drops the deck and the
+  body takes the full 1229×689 — which only works because an unfilled slot collapses to nothing.
+  **Clock restored** (`01:30`). Deck width moved off its odd fifth `clamp(240px,25vw,330px)` onto the
+  house `clamp(230px,28vw,330px)`. Dock: 49 samples, 0 picker cells; rect-intersection over all 43
+  interactive elements — **0 intersect**, nearest clears by 30px. DESIGN.md §2.6 rewritten.
+- [x] T4.3 `fce1bf2` — **RECREATE → `<TakeoverStage>`, no deck, 33.1% → 74.7%, dead air 269px → 0.**
+  Reproduced the audit's 33% and 269px exactly before changing anything, then accounted for every pixel:
+  72px → the foot row, ~51px net returned by deleting the surface's own header and team row, **~246px
+  into the body**. Frames 469×352 → 485×622 (writing) and 229×171 → 485×305 ×2 (**+3.8× picture area**);
+  the scored reveal moved into a 3fr column that previously stood *completely empty*. Per beat: writing
+  33.1→74.7, judging 34.4→74.7, scored 24.3→74.7. **The three primary buttons were never three** — they
+  are three beats of one turn, never two on screen at once, so all three became one `actions` row.
+  **Deck refused against §3's own table**: RECREATE's bench is the *wider* column (`2fr_3fr` = 485/728,
+  toggles a two-column grid of 360px buttons) and a 330px sidebar could never hold it. **T1.8's
+  hand-typed `w-[calc(100%-4.5rem)]` deleted** — the layout's `pr-[4.5rem]` gives the button a right
+  edge of 1183 against the circle's 1212, 29px clear; bare `w-full` in the old `p-5` would have reached
+  1235 and collided, which is what T1.8 was patching by hand. **Exactly one `<header>`** in the host
+  shell, measured. DESIGN.md §2.10 rewritten.
+
+**Phase 4 complete. All nine games migrated.** `resolveActiveTeamName` is at **zero** definitions
+repo-wide, down from nine. The T2.3 interim clock regression is **fully closed** — GEO (T4.4),
+DRAWING (T4.1) and EMOJI_CHARADES (T4.2) all forward and draw their clocks.
+
+### P3 is now decided by the code
+`<TakeoverStage>`'s `deck` slot has **exactly one** call site — EMOJI_CHARADES, which kept it and proved
+it should. SONG_GUESS, RECREATE, TRIVIA and DRAWING are all deckless. One call site is far below
+ADR-0002's three-call-site bar, so §4's "exactly three, with nothing to spare" is dead. **Open for the
+owner**: keep `deck` as a slot on the layout anyway (it costs nothing when unfilled, and the empty-slot
+collapse is already tested), or remove it and let EMOJI compose its own column in the body.
+
+### A verification note worth keeping
+Phase 4's e2e could not be verified for several hours: the machine was at load 7–14 (a VM, Logic Pro,
+stray node processes) and the suite took **1.6 hours** instead of 2.1 minutes, with 2 hard failures and
+4 flakes. None were real. The decisive evidence was `admin-config-wizard` failing after **32.4 minutes**
+under load and passing **4/4 in 19.2 seconds** at load 2.4 on identical code — and a later isolation
+attempt not even reaching the tests, because vite could not boot inside its 120s window at load 9.5. The
+tree was held uncommitted until a run at load 2.09 returned **36 passed (2.1m)**. If this suite goes
+strange again, check `uptime` before reading the failures.
