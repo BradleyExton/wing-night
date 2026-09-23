@@ -957,3 +957,35 @@ strange again, check `uptime` before reading the failures.
 **Phase 5 complete.** The display surfaces are consolidated: one urgency threshold, three shared marquee
 tokens, bulbs on all eight marquee-bearing TVs, marquees added to the two that had none, and the clock
 laid out rather than floated on all nine.
+- [x] T6.1 `8d6e064` — **`DESIGN.md` §2.0B "Takeover Anatomy"**, 285 lines, placed between §2.0A and
+  §2.1 because §2.0B is the continuation of §2.0A's one-sentence specification rather than a new
+  subject. Covers: shell-owns vs game-owns (including why nine `resolveActiveTeamName` copies existed —
+  the shell passed the ROUND's team where every game wanted the TURN's); the two layouts and the
+  covering rule with DRAWING's and SONG_GUESS's measured refusals; both slot maps; the corner budget
+  and the 42.4px arithmetic; why no gutter token is exported, with the `URGENT_THRESHOLD_SECONDS`
+  parallel; the four z-index bands and the T4.4 pixel proof that the mechanism is the body's `isolate`;
+  the `position: fixed` ban and its scaled-device-frame reason; pointer events belonging to controls
+  rather than children, with FAPPY's 4.0%; and the five refusals, ending on the named pattern —
+  *share the thing that would drift dangerously, refuse the thing that merely looks alike*.
+  **`TASKS.md` D9 ticked** (`:317`), with its stale `.work/tickets/WN-6-*` sub-bullet replaced by the
+  three things that actually close it. The agent verified its claims against the source rather than the
+  documents and listed the method for each; the orchestrator spot-checked three independently (the
+  pointer selector matches `TakeoverCanvas/styles.ts:50` verbatim; `deck=` really has exactly one call
+  site; `resolveActiveTeamName` really is at zero definitions). **It also refused to assert one claim
+  from its own brief** — a "fifth refusal" the orchestrator had summarised as a cosmetic token costing
+  two packages a no-op — because the phrasing appeared in no document, commit or comment it could find;
+  it rewrote that passage around the byte-identical history-strip `title` strings it had read itself.
+  Gate green; e2e correctly not run (two Markdown files).
+
+### Documentation errors found by T6.1, handed to T6.2
+1. `DESIGN.md` §2.13 (SONG_GUESS) claims "a `<TakeoverStage>` with a deck column, migrated in phase 4".
+   It has **no** deck (only EMOJI_CHARADES passes `deck=`) and was migrated at **T3.4, phase 3**.
+2. `DESIGN.md` §2.12 (TRIVIA) says "migrated in phase 4". TRIVIA was **T2.4, phase 2** — the first of
+   the nine. (Both errors were introduced by T5.2b when it wrote those two new sections.)
+3. `DESIGN.md` §2.0A:84 still points at `apps/client/src/components/HostControlPanel/styleTokens/`,
+   which T1.2 moved to `packages/surface`.
+4. **`AGENTS.md:259` carries the same stale path** and is outside both §2.0A and the per-game sections,
+   so nobody currently owns it.
+5. `docs/takeover-layout-api.md` §4 still says the deck has "exactly three [call sites], with nothing
+   to spare". It has one.
+6. `TASKS.md:316` (D8) still points at the scrapped `.work/tickets/WN-6-*.md` pipeline.
