@@ -10,6 +10,8 @@ import type {
 } from "@wingnight/shared";
 import { resolveJoustRackSlots, resolveJoustRestFrame } from "@wingnight/shared";
 
+import { marqueeBulbs } from "@wingnight/surface";
+
 import { DisplayJoustSurface } from "./index.js";
 
 const PERCHES = [
@@ -302,4 +304,12 @@ test("falls back to a waiting note when the view has not arrived", () => {
 
 test("says so when the lane is missing rather than drawing nothing", () => {
   assert.match(renderSurface(baseView({ arena: null })), /lane is missing/);
+});
+
+// T5.2: this surface descends from DRAWING's marquee but was missing its bulb
+// ring, because the copy that made it took the two text styles and left the
+// overlay behind — while keeping the `relative` that exists only to position
+// it. The ring is the shared token now, so this pins that it is actually hung.
+test("does hang the shared bulb ring on the marquee", () => {
+  assert.ok(renderSurface(baseView()).includes(marqueeBulbs));
 });

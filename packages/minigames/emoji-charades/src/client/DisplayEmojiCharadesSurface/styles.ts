@@ -5,6 +5,8 @@
 export const container =
   "flex h-full min-h-0 flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)] bg-[radial-gradient(ellipse_at_top,#2a1306_0%,#0f0a08_60%,#050505_100%)] p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
+export { marqueeBulbs, marqueeTeamName as teamName, marqueeTitle as showTitle } from "@wingnight/surface";
+
 // Grand bulb marquee, the one DRAWING uses: team + pending left, show title
 // centred, and a right column deliberately left empty — the display shell
 // pins its turn-timer chip over that corner, and the mockup put the timer
@@ -12,17 +14,8 @@ export const container =
 export const marquee =
   "relative grid grid-cols-[1fr_auto_1fr] items-center gap-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(1.4rem,2.4vw,2.4rem)] py-[clamp(0.8rem,1.4vh,1.3rem)] shadow-[inset_0_0_36px_rgba(251,191,36,0.2),0_8px_20px_rgba(0,0,0,0.55)]";
 
-export const marqueeBulbs =
-  "pointer-events-none absolute inset-[7px] rounded-xl border-4 border-dotted border-gold/45";
-
-export const teamName =
-  "m-0 text-[clamp(1.2rem,2vw,2.1rem)] font-black uppercase tracking-[0.06em] text-text";
-
 export const pendingPoints =
   "ml-[0.8rem] font-mono text-[clamp(0.95rem,1.4vw,1.5rem)] font-extrabold text-gold";
-
-export const showTitle =
-  "text-center text-[clamp(0.8rem,1.2vw,1.3rem)] font-extrabold uppercase tracking-[0.34em] text-gold";
 
 // Reserves the marquee's right third for the shell's timer chip.
 export const timerGutter = "min-h-[1px]";

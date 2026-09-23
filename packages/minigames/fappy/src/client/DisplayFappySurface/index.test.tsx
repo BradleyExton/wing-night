@@ -3,6 +3,8 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { FappyMinigameDisplayView, FappyMinigameLeg, FappyPlayerFigure } from "@wingnight/shared";
 
+import { marqueeBulbs } from "@wingnight/surface";
+
 import { DisplayFappySurface } from "./index.js";
 
 const ALEX: FappyPlayerFigure = { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "disco" };
@@ -164,4 +166,12 @@ test("does call time on the wall when the limit caught the team", () => {
   assert.match(html, /Time!/);
   assert.match(html, /2 of 6 gates before the clock ran out/);
   assert.match(html, /Out of time/);
+});
+
+// T5.2: this surface descends from DRAWING's marquee but was missing its bulb
+// ring, because the copy that made it took the two text styles and left the
+// overlay behind — while keeping the `relative` that exists only to position
+// it. The ring is the shared token now, so this pins that it is actually hung.
+test("does hang the shared bulb ring on the marquee", () => {
+  assert.ok(render(createView()).includes(marqueeBulbs));
 });

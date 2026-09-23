@@ -122,6 +122,7 @@ const JoustPlayBody = ({
   return (
     <div className={styles.stage}>
       <header className={styles.marquee}>
+        <span className={styles.marqueeBulbs} aria-hidden="true" />
         <h2 className={styles.marqueeTeamName}>{activeTeamName ?? ""}</h2>
         <span className={styles.marqueeTitle}>{displayJoustSurfaceCopy.title}</span>
         <div className={styles.marqueeMeta}>
