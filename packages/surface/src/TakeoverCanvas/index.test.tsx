@@ -55,9 +55,8 @@ test("does leave nothing behind in the chrome row when the counter and the clock
   assert.doesNotMatch(html, /<div[^>]*><\/div>/);
 });
 
-// The chrome floats over the map a team's thumb is working in, so the rows are
-// transparent to a touch and only their chips take one. React escapes the `&`
-// and `>` of the arbitrary child variant, hence the entities.
+// The chrome floats over the map a team's thumb is working in, so all three
+// rows are transparent to a touch.
 test("does let a thumb through the floating rows to the body underneath", () => {
   const html = renderToStaticMarkup(
     <TakeoverCanvas rail={rail} clock={clock} actions={actions} readout={readout}>
@@ -67,7 +66,56 @@ test("does let a thumb through the floating rows to the body underneath", () => 
 
   const floatingRows = html.match(/pointer-events-none/g);
   assert.equal(floatingRows?.length, 3);
-  assert.equal(html.match(/\[&amp;&gt;\*\]:pointer-events-auto/g)?.length, 3);
+});
+
+// The regression FAPPY shipped with, and the reason the rule below is not
+// `[&>*]`. A row that hands the pointer back to every direct child assumes
+// every child is a control. FAPPY's hint sentence is a `<span>` in the actions
+// row of a game whose body IS the button, and as a child it killed 764x48px of
+// the corridor — 4.0% of it — where a tap means flap. A passive child cannot
+// opt out on its own: a plain `pointer-events-none` on the hint has the same
+// specificity as the row's generated `… > *` rule and loses on source order.
+//
+// So the row grants the pointer to controls rather than to children. There is
+// no prop and no configuration object (ADR-0002 guardrail 2) — a control
+// claims the pointer by being one, which fails safe: a forgotten class on a
+// hint costs a dead tap target, a button is live for being a button.
+test("does hand the pointer back to controls rather than to every child", () => {
+  const html = renderToStaticMarkup(
+    <TakeoverCanvas rail={rail} clock={clock} actions={actions} readout={readout}>
+      {body}
+    </TakeoverCanvas>
+  );
+
+  // React escapes the `&` and `>` of an arbitrary variant, so the old
+  // direct-child rule would read as `[&amp;&gt;*]` if it came back.
+  assert.doesNotMatch(html, /&gt;\*\]:pointer-events-auto/);
+  assert.equal(
+    html.match(/\[&amp;_:is\(button,a,input,select,textarea\)\]:pointer-events-auto/g)?.length,
+    3
+  );
+});
+
+// §4 makes the chrome row read-only — no button, no link, no input — so
+// nothing in it has anything to do with a tap, and the row holds no strip of
+// the body's top edge against a thumb. §5 says the same of `readout`: there is
+// no bottom-right slot for a control. Both are therefore fully transparent,
+// and the one rule that says so is the one `actions` uses.
+test("does grant no row a blanket pointer, including the read-only ones", () => {
+  const html = renderToStaticMarkup(
+    <TakeoverCanvas rail={rail} clock={clock} counter={counter} actions={actions} readout={readout}>
+      {body}
+    </TakeoverCanvas>
+  );
+
+  const rows = html.match(/class="pointer-events-none[^"]*"/g) ?? [];
+
+  assert.equal(rows.length, 3);
+  for (const row of rows) {
+    assert.match(row, /\[&amp;_:is\(button,a,input,select,textarea\)\]:pointer-events-auto/);
+    // Exactly one grant per row: a second one is a blanket rule creeping back.
+    assert.equal(row.match(/pointer-events-auto/g)?.length, 1);
+  }
 });
 
 // §5/§6: the dock owns the bottom-right corner. The readout sits above it and

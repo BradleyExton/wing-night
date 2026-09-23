@@ -49,13 +49,15 @@ export const waitingNote =
 export const secondaryButton =
   "min-h-12 shrink-0 rounded-lg border border-[#3a200d] bg-bg/85 px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
 
-// The hint, beside the buttons it explains. It takes a pointer it has no use
-// for: the layout hands every child of the actions row `pointer-events-auto`,
-// which is right for the map GEO drew it for and costs this game the bottom
-// 48px of a body that IS the button ("tap anywhere to flap") — measured at
-// 764x48 of 1229x749, 4% of the corridor. `pointer-events-none` here is inert
-// (equal specificity, and the layout's rule is ordered later), so giving the
-// sentence its pointer back is a change to `<TakeoverCanvas>`, not to FAPPY.
+// The hint, beside the buttons it explains — and a `<span>`, which is now the
+// whole of what keeps it out of the way. It used to take a pointer it has no
+// use for, because the layout handed `pointer-events-auto` to every child of
+// the actions row: right for the map GEO drew that rule for, and 764x48 of
+// 1229x749 — 4.0% of a corridor where a tap means flap — dead on this one. A
+// `pointer-events-none` here could not have fixed it (equal specificity, and
+// the layout's rule ordered later), so the fix is in `<TakeoverCanvas>`: the
+// row grants the pointer to controls rather than to children, and a sentence
+// is not a control. Nothing in this file asks for that, which is the point.
 export const hint =
   "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] italic text-text/75 backdrop-blur";
 
