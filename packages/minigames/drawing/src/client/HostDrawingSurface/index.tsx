@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import type { DrawingMinigameHostView } from "@wingnight/shared";
+import { TakeoverStage } from "@wingnight/surface";
 
 import {
   DrawingCanvas,
@@ -27,41 +27,27 @@ const INK_PALETTE = [
 
 const BRUSH_SIZE = 0.03;
 
-const resolveActiveTeamName = ({
-  minigameHostView,
-  teamNameByTeamId,
-  activeTeamName
-}: Pick<
-  MinigameHostRendererProps,
-  "minigameHostView" | "teamNameByTeamId" | "activeTeamName"
->): string => {
-  if (minigameHostView?.activeTurnTeamId) {
-    return (
-      teamNameByTeamId.get(minigameHostView.activeTurnTeamId) ??
-      hostDrawingSurfaceCopy.noAssignedTeamLabel
-    );
-  }
-
-  return activeTeamName ?? hostDrawingSurfaceCopy.noAssignedTeamLabel;
-};
-
-const resolvePendingPoints = (
-  drawingHostView: DrawingMinigameHostView | null
-): number | null => {
-  if (drawingHostView === null || drawingHostView.activeTurnTeamId === null) {
-    return null;
-  }
-
-  return (
-    drawingHostView.pendingPointsByTeamId[drawingHostView.activeTurnTeamId] ?? 0
-  );
-};
-
+// DRAWING's host surface. At play it is a `<TakeoverStage>` with no deck
+// (docs/takeover-layout-api.md §3), and it is the case the rule was phrased
+// around: the body is the largest single element of any Stage game and still
+// is not a Canvas, because chrome floating over the board covers the drawing.
+// The rule reads even harder here than §3 states it — the board is both what
+// the host reads and what the host presses, so a floating `actions` row would
+// not merely sit on scenery, it would put five live buttons (one of them
+// CLEAR) on the surface the artist's hand is already moving across.
+//
+// It renders no rail and no team chip of its own — `rail` arrives filled with
+// the shell's `<HostMiniRail />`, which already says the round, the sauce and
+// whose turn it is — which is why the `resolveActiveTeamName` helper that all
+// nine host surfaces had copied is no longer here. `clock` is forwarded
+// untouched and DOES draw: DRAWING is one of the three games with a play-phase
+// timer, and it is the game whose `railPending` the old absolute chip used to
+// land on top of (§6).
 export const HostDrawingSurface = ({
   phase,
   minigameHostView,
-  activeTeamName,
-  teamNameByTeamId,
+  rail,
+  clock,
   canDispatchAction,
   onDispatchAction
 }: MinigameHostRendererProps): JSX.Element => {
@@ -73,18 +59,25 @@ export const HostDrawingSurface = ({
   );
   const isRevealVisible = useIsRevealVisible(drawingHostView?.reveal ?? null);
 
-  const resolvedActiveTeamName = resolveActiveTeamName({
-    minigameHostView,
-    teamNameByTeamId,
-    activeTeamName
-  });
-  const isPlayPhase = phase === "play";
+  if (phase !== "play") {
+    return (
+      <div className={styles.introRoot}>
+        <p className={styles.introCard}>
+          {hostDrawingSurfaceCopy.introDescription}
+        </p>
+      </div>
+    );
+  }
+
   const currentPrompt = drawingHostView?.currentPrompt ?? null;
-  const pendingPoints = resolvePendingPoints(drawingHostView);
+  const activeTurnTeamId = drawingHostView?.activeTurnTeamId ?? null;
+  const pendingPoints =
+    drawingHostView === null || activeTurnTeamId === null
+      ? null
+      : (drawingHostView.pendingPointsByTeamId[activeTurnTeamId] ?? 0);
   const selectedInk =
     INK_PALETTE.find((ink) => ink.id === selectedInkId) ?? INK_PALETTE[0];
-  const canDraw =
-    isPlayPhase && canDispatchAction && drawingHostView !== null;
+  const canDraw = canDispatchAction && drawingHostView !== null;
   const canResolvePrompt =
     canDispatchAction && drawingHostView !== null && currentPrompt !== null;
   const hasStrokes = (drawingHostView?.strokes.length ?? 0) > 0;
@@ -97,95 +90,29 @@ export const HostDrawingSurface = ({
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.rail}>
-        <span className={styles.railIdentity}>
-          <span className={styles.railTitle}>
-            {hostDrawingSurfaceCopy.railTitle}
-          </span>
-          <span className={styles.railTeam}>
-            <span className={styles.railTeamDot} aria-hidden="true" />
-            {hostDrawingSurfaceCopy.teamPrefix} {resolvedActiveTeamName}
-          </span>
-        </span>
-        {isPlayPhase && currentPrompt !== null ? (
-          <div className={styles.promptCard}>
-            <span className={styles.promptCardLabel}>
-              {hostDrawingSurfaceCopy.promptCardLabel}
-            </span>
-            <p className={styles.promptCardText}>{currentPrompt.prompt}</p>
-          </div>
-        ) : (
-          <span />
-        )}
-        {isPlayPhase && pendingPoints !== null ? (
-          <span className={styles.railPending}>
-            {hostDrawingSurfaceCopy.pendingChip(pendingPoints)}
-          </span>
-        ) : (
-          <span />
-        )}
-      </div>
-      {!isPlayPhase && (
-        <p className={styles.introCard}>
-          {hostDrawingSurfaceCopy.introDescription}
-        </p>
-      )}
-      {isPlayPhase && drawingHostView !== null && (
+    <TakeoverStage
+      rail={rail}
+      clock={clock}
+      counter={
         <>
-          <div className={styles.easelRow}>
-            <div className={styles.inkRail}>
-              {INK_PALETTE.map((ink) => (
-                <button
-                  key={ink.id}
-                  type="button"
-                  aria-label={hostDrawingSurfaceCopy.inkSwatchLabel(ink.label)}
-                  aria-pressed={ink.id === selectedInk.id}
-                  className={`${styles.inkLight} ${ink.varClassName}${
-                    ink.id === selectedInk.id
-                      ? ` ${styles.inkLightSelected}`
-                      : ""
-                  }`}
-                  disabled={!canDraw}
-                  onClick={(): void => {
-                    setSelectedInkId(ink.id);
-                  }}
-                />
-              ))}
-            </div>
-            <div className={styles.easelArea}>
-              <DrawingCanvas
-                ref={canvasHandleRef}
-                strokes={drawingHostView.strokes}
-                canDraw={canDraw}
-                brushColor={selectedInk.color}
-                brushSize={BRUSH_SIZE}
-                onBeginStroke={(payload): void => {
-                  onDispatchAction("beginStroke", payload);
-                }}
-                onAppendStrokePoints={(strokeId, points): void => {
-                  onDispatchAction("appendStrokePoints", { strokeId, points });
-                }}
-                onEndStroke={(strokeId): void => {
-                  onDispatchAction("endStroke", { strokeId });
-                }}
-              />
-              {isRevealVisible && drawingHostView.reveal !== null && (
-                <p className={styles.revealLine}>
-                  {hostDrawingSurfaceCopy.revealLine(
-                    drawingHostView.reveal.promptText,
-                    drawingHostView.reveal.outcome === "CORRECT"
-                  )}
-                </p>
-              )}
-            </div>
-          </div>
-          {currentPrompt === null && (
-            <p className={styles.waitingNote}>
-              {hostDrawingSurfaceCopy.waitingPromptLabel}
-            </p>
+          {currentPrompt !== null && (
+            <span className={styles.counterPrompt}>
+              <span className={styles.counterPromptLabel}>
+                {hostDrawingSurfaceCopy.promptCardLabel}
+              </span>
+              <p className={styles.counterPromptText}>{currentPrompt.prompt}</p>
+            </span>
           )}
-          <div className={styles.toolbar}>
+          {pendingPoints !== null && (
+            <span className={styles.counterPending}>
+              {hostDrawingSurfaceCopy.pendingChip(pendingPoints)}
+            </span>
+          )}
+        </>
+      }
+      actions={
+        drawingHostView === null ? null : (
+          <div className={styles.actions}>
             <div className={styles.toolGroup}>
               <button
                 className={styles.toolButton}
@@ -219,19 +146,7 @@ export const HostDrawingSurface = ({
               </button>
             </div>
             <div className={styles.verdictGroup}>
-              <button
-                className={styles.verdictIncorrect}
-                type="button"
-                disabled={!canResolvePrompt}
-                onClick={(): void => {
-                  dispatchControlAction("markIncorrect");
-                }}
-              >
-                <span className={styles.verdictIcon} aria-hidden="true">
-                  {hostDrawingSurfaceCopy.incorrectIconGlyph}
-                </span>
-                {hostDrawingSurfaceCopy.incorrectButtonLabel}
-              </button>
+              {/* Positive verdict first (§4, owner decision P7). */}
               <button
                 className={styles.verdictCorrect}
                 type="button"
@@ -245,10 +160,84 @@ export const HostDrawingSurface = ({
                 </span>
                 {hostDrawingSurfaceCopy.correctButtonLabel}
               </button>
+              <button
+                className={styles.verdictIncorrect}
+                type="button"
+                disabled={!canResolvePrompt}
+                onClick={(): void => {
+                  dispatchControlAction("markIncorrect");
+                }}
+              >
+                <span className={styles.verdictIcon} aria-hidden="true">
+                  {hostDrawingSurfaceCopy.incorrectIconGlyph}
+                </span>
+                {hostDrawingSurfaceCopy.incorrectButtonLabel}
+              </button>
             </div>
           </div>
-        </>
+        )
+      }
+    >
+      {drawingHostView === null ? (
+        <p className={styles.statusNote}>
+          {hostDrawingSurfaceCopy.waitingBoardLabel}
+        </p>
+      ) : (
+        <div className={styles.easelRow}>
+          <div className={styles.inkRail}>
+            <span className={styles.boothPlate}>
+              {hostDrawingSurfaceCopy.boothTitle}
+            </span>
+            <span className={styles.boothPlateRule} aria-hidden="true" />
+            {INK_PALETTE.map((ink) => (
+              <button
+                key={ink.id}
+                type="button"
+                aria-label={hostDrawingSurfaceCopy.inkSwatchLabel(ink.label)}
+                aria-pressed={ink.id === selectedInk.id}
+                className={`${styles.inkLight} ${ink.varClassName}${
+                  ink.id === selectedInk.id ? ` ${styles.inkLightSelected}` : ""
+                }`}
+                disabled={!canDraw}
+                onClick={(): void => {
+                  setSelectedInkId(ink.id);
+                }}
+              />
+            ))}
+          </div>
+          <div className={styles.easelArea}>
+            <DrawingCanvas
+              ref={canvasHandleRef}
+              strokes={drawingHostView.strokes}
+              canDraw={canDraw}
+              brushColor={selectedInk.color}
+              brushSize={BRUSH_SIZE}
+              onBeginStroke={(payload): void => {
+                onDispatchAction("beginStroke", payload);
+              }}
+              onAppendStrokePoints={(strokeId, points): void => {
+                onDispatchAction("appendStrokePoints", { strokeId, points });
+              }}
+              onEndStroke={(strokeId): void => {
+                onDispatchAction("endStroke", { strokeId });
+              }}
+            />
+            {currentPrompt === null && (
+              <p className={styles.waitingNote}>
+                {hostDrawingSurfaceCopy.waitingPromptLabel}
+              </p>
+            )}
+            {isRevealVisible && drawingHostView.reveal !== null && (
+              <p className={styles.revealLine}>
+                {hostDrawingSurfaceCopy.revealLine(
+                  drawingHostView.reveal.promptText,
+                  drawingHostView.reveal.outcome === "CORRECT"
+                )}
+              </p>
+            )}
+          </div>
+        </div>
       )}
-    </div>
+    </TakeoverStage>
   );
 };

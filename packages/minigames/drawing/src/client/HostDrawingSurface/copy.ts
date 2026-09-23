@@ -1,12 +1,15 @@
 export const hostDrawingSurfaceCopy = {
-  railTitle: "Sketch Booth",
-  teamPrefix: "On the easel:",
-  noAssignedTeamLabel: "No team assigned",
-  pendingChip: (points: number): string => `+${points} pending`,
+  // The booth's own sign. It used to be the title of a mini-rail this surface
+  // drew for itself; the rail is the shell's now, so the name went onto the
+  // furniture — the head of the ink palette, which is the one column on this
+  // surface that costs the board nothing.
+  boothTitle: "Sketch Booth",
   introDescription:
     "Pick an artist to hold the tablet. When the round starts, draw the prompt while your team shouts guesses — no letters, no numbers.",
   waitingPromptLabel: "No drawing prompts are loaded. Check minigames/drawing.json.",
+  waitingBoardLabel: "The easel has not loaded. Check the round's DRAWING rules.",
   promptCardLabel: "★ Tonight's Prompt ★",
+  pendingChip: (points: number): string => `+${points} pending`,
   inkSwatchLabel: (inkName: string): string => `${inkName} ink`,
   undoButtonLabel: "↶ Undo",
   clearButtonLabel: "⌫ Clear",

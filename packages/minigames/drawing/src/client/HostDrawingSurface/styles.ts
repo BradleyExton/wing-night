@@ -1,66 +1,89 @@
-// Canvas-first takeover (DESIGN.md §2.5): a one-line rail on top, the easel
-// taking every pixel between, and a single toolbar row at the foot. The deck
-// column the surface used to carry cost the board ~40% of the tablet for
-// controls the artist presses a handful of times a turn.
-export const container = "flex h-full min-h-0 flex-col gap-[clamp(0.4rem,1vh,0.75rem)]";
+// DRAWING is a `<TakeoverStage>` with no deck (docs/takeover-layout-api.md §3).
+// The board is not floatable-over: it is the one body on the tablet that the
+// host both reads AND presses, every pixel of it, so a floating toolbar does
+// not cost a corner of scenery — it covers the drawing and arms CLEAR under
+// the artist's hand.
+//
+// Everything here is shaped by one fact: the board letterboxes to 16:10
+// against the HEIGHT the rows leave it, so board width is 1.6x whatever height
+// the chrome gives back and side width is free. Rows are expensive, columns are
+// not. That is why the prompt rides the rail row rather than a card of its own,
+// why the toolbar lost its panel, and why the ink palette costs nothing.
+//
+// Nothing here positions the takeover's chrome and nothing here reserves the
+// corner dock: the rail, the clock, the counter's place in the row and the
+// 4.5rem bottom-right gutter are all the layout's, and the `pr-[4.5rem]` this
+// file used to carry was one of the nine hand-rolled reserves §6 abolishes.
 
-// Mini-rail strip, echoing the host shell anatomy (DESIGN.md §2.0A). The
-// prompt rides in its middle column so the artist reads it without the board
-// giving up any height to a card.
-// `auto` on the outer columns rather than `1fr`: the identity strip wrapping
-// to a second line costs the board ~40px of height it never gets back.
-export const rail =
-  "grid shrink-0 grid-cols-[auto_1fr_auto] items-center gap-3";
-
-export const railIdentity =
-  "flex items-center gap-4 whitespace-nowrap text-xs font-extrabold uppercase tracking-[0.22em] text-muted";
-
-export const railTitle = "text-primary";
-
-export const railTeam = "flex items-center gap-2 text-text";
-
-export const railTeamDot =
-  "h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_theme(colors.primary)]";
-
-export const railPending = "text-right font-mono text-sm font-extrabold text-gold";
-
-// Prompt card keeps the gold marquee framing of §2.5, on the app's own
-// surface tokens rather than a scoped brown.
-export const promptCard =
-  "flex flex-col items-center justify-self-center rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-[clamp(1rem,2vw,1.75rem)] py-1.5 text-center";
-
-export const promptCardLabel =
-  "text-[0.55rem] font-extrabold uppercase tracking-[0.3em] text-gold";
-
-export const promptCardText =
-  "m-0 font-serif text-[clamp(1.2rem,2.4vw,1.9rem)] font-bold italic leading-tight text-text";
-
-export const waitingNote =
-  "rounded-2xl border border-text/10 bg-surface px-4 py-2 text-sm text-muted";
+// The intro beat is a panel in the host's own control deck, not a takeover —
+// `rail` and `clock` are both null on it — so it draws no chrome and falls back
+// to its own content height.
+export const introRoot = "flex flex-col gap-4";
 
 export const introCard =
   "rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-5 py-4 text-base leading-6 text-text/90";
 
-// Canvas row: ink rail down the left, board taking the rest. The board
-// letterboxes to 16:10 against the available height, so the rail's width is
-// slack the board was never going to use.
-export const easelRow = "flex min-h-0 flex-1 gap-[clamp(0.35rem,0.8vw,0.6rem)]";
+// The rail row (§4, `counter`), read-only: the prompt the artist is drawing and
+// the points riding on it. The prompt is not a count, but it is the turn's one
+// glance-at-without-acting read, and the rail row is free real estate here —
+// DRAWING is one of the three games with a play clock, and the clock chip is
+// 48px tall, so anything shorter than that in this row costs the board nothing
+// at all. A card of its own would cost a row, and a row costs 1.6 rows of board.
+//
+// `whitespace-nowrap` on purpose: a wrapped prompt grows the rail row, and this
+// is the one surface where a second line of chrome is paid for in board area.
+export const counterPrompt =
+  "inline-flex shrink-0 items-center gap-3 whitespace-nowrap rounded-full border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-4 py-1";
+
+export const counterPromptLabel =
+  "text-[0.55rem] font-extrabold uppercase tracking-[0.3em] text-gold";
+
+export const counterPromptText =
+  "m-0 font-serif text-[clamp(1.2rem,1.9vw,1.6rem)] font-bold italic leading-tight text-text";
+
+export const counterPending =
+  "shrink-0 text-right font-mono text-sm font-extrabold text-gold";
+
+// The body. Ink rail down the left, board taking the rest. Measured at
+// 1280x800: the board comes out 984px wide inside a 1151px easel slot, so the
+// palette column sits entirely inside slack the board was never going to use —
+// removing it would not widen the board by a pixel.
+export const easelRow = "flex h-full min-h-0 gap-[clamp(0.35rem,0.8vw,0.6rem)]";
 
 export const inkRail =
-  "flex h-fit w-14 shrink-0 flex-col items-center gap-2 self-center rounded-2xl border border-text/10 bg-surface py-2";
+  "flex h-fit w-[4.25rem] shrink-0 flex-col items-center gap-2 self-center rounded-2xl border border-text/10 bg-surface px-2 py-2.5";
+
+// The booth's sign, at the head of the palette post. §4 keeps a game's own
+// names out of the rail row, and this surface has no row to spare for one, so
+// the name lives on the easel furniture where the letterbox pays for it.
+export const boothPlate =
+  "text-center text-[0.55rem] font-extrabold uppercase leading-[1.35] tracking-[0.18em] text-gold";
+
+export const boothPlateRule = "h-px w-8 bg-gold/30";
 
 export const easelArea = "relative min-h-0 min-w-0 flex-1";
 
-// Transient (2s) result line, floated over the board rather than holding a
-// row of its own in the layout.
+// Transient (2s) result line, floated over the board rather than holding a row
+// of its own in the layout.
 export const revealLine =
   "pointer-events-none absolute left-1/2 top-3 z-10 m-0 -translate-x-1/2 rounded-full border border-gold/40 bg-bg/90 px-4 py-1.5 text-sm font-semibold italic text-text/85";
 
-// The shell floats the host's corner dock over the bottom-right of the
-// takeover canvas (DESIGN.md §2.0A), so the toolbar keeps a gutter clear of
-// it rather than putting a control underneath.
-export const toolbar =
-  "flex shrink-0 items-center gap-[clamp(0.35rem,0.9vw,0.7rem)] rounded-2xl border border-text/10 bg-surface px-3 py-2 pr-[4.5rem]";
+// An empty prompt bank is a fault, and the loudest place to say so is the
+// middle of the board — which also costs no row. It never takes the pointer:
+// the artist can still draw under it.
+export const waitingNote =
+  "pointer-events-none absolute left-1/2 top-1/2 z-10 m-0 w-[min(30rem,80%)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-primary/25 bg-bg/90 px-4 py-3 text-center text-sm font-medium text-muted";
+
+// No host view at all: the body stands in for the easel rather than leaving the
+// canvas empty.
+export const statusNote =
+  "flex h-full min-h-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-center text-base font-medium text-muted";
+
+// The foot row (§4, `actions`). A bare row, not the panel this toolbar used to
+// sit in: the panel's border and padding were 18px of height, and 18px of
+// height is 29px of board width on a surface that letterboxes against height.
+// The row's own height is now exactly the 44px touch target (DESIGN.md §2.0A).
+export const actions = "flex items-center gap-[clamp(0.35rem,0.9vw,0.7rem)]";
 
 export const toolGroup = "flex items-center gap-2";
 
@@ -69,8 +92,10 @@ export const toolButton =
 
 export const verdictGroup = "ml-auto flex items-center gap-2";
 
-// Functional success/danger per §0.1, in the same weight the other host
-// verdict controls use (see EMOJI_CHARADES §2.6).
+// Functional success/danger per §0.1, in the same weight the other host verdict
+// controls use (see EMOJI_CHARADES §2.6). CORRECT is rendered first (§4, owner
+// decision P7): DRAWING was the only one of the nine putting "Nope" left of
+// "Correct", and on a tablet that is a misclick, not a preference.
 const verdictBase =
   "flex min-h-11 items-center gap-2 rounded-xl border-2 px-[clamp(0.9rem,1.8vw,1.5rem)] text-sm font-extrabold uppercase tracking-[0.1em] text-text transition disabled:cursor-not-allowed disabled:opacity-40";
 
