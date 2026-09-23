@@ -314,8 +314,11 @@ Backlog status:
 - [x] D7 SPEC Full-Screen Minigame Takeover Alignment (after 11.x)
 - [ ] D8 README Plugin + Reuse Architecture Alignment (after 12.x)
   - → owned by WN-6 (`.work/tickets/WN-6-*.md`)
-- [ ] D9 AGENTS Guardrail Update for Plugin API + Snapshot Privacy
-  - → partially absorbed by AGENTS.md (snapshot privacy done); envelope/takeover remainder owned by WN-6
+- [x] D9 AGENTS Guardrail Update for Plugin API + Snapshot Privacy
+  - → closed 2026-09-23. Snapshot privacy and display-safe payloads: `AGENTS.md` §3.1/§3.2
+    (server-owned projections, no answer fields on display views, regression tests required).
+    Event envelopes: `AGENTS.md` §3.3. Full-screen takeover shell rules: `DESIGN.md` §2.0B
+    "Takeover Anatomy", written at T6.1 of `docs/host-surface-consolidation-plan.md`.
 
 This roadmap is optimized for: - 4 hours per week - Small, verifiable
 tasks - Codex execution loops - Stable incremental progress

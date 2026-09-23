@@ -91,6 +91,291 @@ The Host shell is a single-canvas tablet controller. Every phase composes the sa
 -   **Takeover** — during `MINIGAME_PLAY`, the deck collapses and the minigame package owns the full canvas. The shell steps out of the way; the minigame's own surface owns the "we're done" trigger.
 -   **Corner dock** — the takeover is the one phase where the tablet leaves the host's hands, so the CTA bar and the overrides entry both collapse into a single quiet circle in the bottom-right corner. Tapping it reveals the phase's primary action and `Overrides` as labelled pills over a scrim; tapping the scrim, the circle or `Escape` puts them away. Two taps, not one — a player's thumb resting on the canvas can't end their own turn. While collapsed the circle carries the same `heat` dot the overrides entry does, so a turn that needs review still reaches the host. The dock layers above anything the minigame draws, so a minigame surface must keep a ~4.5rem gutter clear at that corner rather than putting a control underneath it.
 
+## 2.0B Takeover Anatomy (`MINIGAME_PLAY`)
+
+§2.0A's takeover bullet — "the deck collapses and the minigame package owns the
+full canvas; the shell steps out of the way" — was the entire specification for
+this phase, and nine minigame packages each invented an anatomy from it. That
+cost the show a host who relearned the tablet between games: the turn counter
+appeared in four places, the primary advance in five, and two surfaces put a
+verdict button underneath the corner dock. This section is the anatomy that
+should have been written down. The full contract, with the arithmetic, is
+`docs/takeover-layout-api.md`; what follows is the law a tenth minigame needs.
+
+The correct reading of §2.0A is narrower than it sounds: **the shell stops
+rendering the control deck. It does not stop rendering the room's context.**
+
+-   **The shell owns** the mini-rail (round, sauce, minigame, the active team's
+    name and its real colour), the play clock, and the corner dock. It also owns
+    the bottom-right gutter and the z-index budget, because both are properties
+    of the canvas rather than of any game.
+-   **The game owns** the body, and the turn's own counts and controls — in the
+    slots below, and nowhere else.
+-   **A game never computes the active team name.** `activeTeamName` on
+    `MinigameHostRendererProps` is authoritative: the shell resolves it once with
+    the rail's own precedence (`selectHeaderContext` — the turn's team, else the
+    round's), so the string on the props and the string in the rail are the same
+    string. Nine packages used to carry a byte-identical `resolveActiveTeamName`
+    because the shell passed the *round's* team where every game wanted the
+    *turn's*; that is fixed at the source and there are now zero copies. A
+    surface must not render the name as chrome — the rail says it, and saying it
+    twice on one canvas is the duplication this anatomy exists to end — but a
+    sentence that needs the name may still use it.
+
+### The two layouts, and how to choose
+
+`packages/surface` exports two named layouts, never one with a `fullBleed` flag
+(ADR-0002 guardrail 2): `<TakeoverStage>` for panels, `<TakeoverCanvas>` for a
+full-bleed body with the chrome floating over it. A game changes layout by
+changing which component it renders, which shows up in a diff as the structural
+change it is.
+
+**The rule is about covering, not about size.** Use a Canvas when chrome can
+float over the body without hiding something the host must read or press; use a
+Stage when it cannot. The mechanical test is whether the body's meaning is
+spread evenly across it or concentrated in one place. A map, an arena, a
+corridor and a zone are spread — a chip in one corner costs a corner of
+scenery. A question, a pair of picture frames, an emoji grid and a song console
+are concentrated — a chip over them covers a word.
+
+Two games measured the rule rather than guessing at it, and both are worth
+knowing before reaching for the bigger number:
+
+-   **DRAWING has the largest body of the nine and is still a Stage.** Full
+    bleed was measured, not assumed: an 1133x708 board, **78.3%** of the tablet
+    against the **59.1%** the Stage gives. It was refused, because a floating
+    `actions` row for DRAWING is five `<button>`s — undo, clear, skip, correct,
+    incorrect — and under the pointer rule below a button takes the pointer for
+    being a button. That is ~700x44px of the picture the TV is mirroring gone
+    dead to ink, with CLEAR sitting under the artist's moving hand. Nineteen
+    points is what the covering rule costs here, and it is worth paying.
+-   **SONG_GUESS refused the Canvas on the shape of the slots.** A Canvas has
+    exactly two floating slots, `actions` and `readout`, **both on the same
+    edge** and each bounded at `calc(100%-4.5rem)`. SONG_GUESS's host surface is
+    nine tap targets (play/pause, replay, skip, reveal, title ✓✗, artist ✓✗,
+    next) plus a `RunningTotals` panel, and there is nowhere on one edge to put
+    them. It is a Stage, and it dropped its deck anyway — the two are separate
+    axes.
+
+Today: Stage for TRIVIA, DRAWING, EMOJI_CHARADES, RECREATE and SONG_GUESS;
+Canvas for GEO, JOUST, FAPPY and SCHLONIC. The migrations moved TRIVIA from 36%
+of the tablet to 82.5%, RECREATE from 33.1% to 74.7%, and the three arcade games
+from ~59% to 89.9%, while GEO held the 89.9% it already had.
+
+### `<TakeoverStage>` — the slots
+
+Three rows: a rail row, a main row of body plus an optional deck column, an
+optional actions row at the foot.
+
+-   **`rail` (shell).** `<HostMiniRail />`, forwarded untouched. A game never
+    draws a rail of its own, and never wraps this slot in a second `<header>`,
+    `<nav>` or other landmark: the rail is the only `<header>` on the host
+    carrying round/sauce/team text, and the e2e suite locates it that way.
+-   **`counter` (game, read-only).** The turn's live counts, right of the rail
+    and left of the clock: "Photo 2 of 3", "Shot 2 of 5", "+3 pending". **No tap
+    targets** — the rail row is read-only, and a control there sits beside the
+    clock, which is exactly where a host will not look for it. It may not repeat
+    the team name or the minigame name.
+-   **`clock` (shell).** `<TakeoverTimerChip />`, which renders nothing when the
+    room has no timer — six of the nine minigames carry `timerKey: null`.
+-   **`children` — the body (game).** Everything the host reads. It may **not**
+    hold a control that reaches the bottom-right corner; that is the rule that
+    fixed TRIVIA's `INCORRECT` and RECREATE's `Next target`, both of which sat
+    under the dock as the last flow child of a body with no reserve.
+-   **`deck` (game, optional).** A `clamp(230px,28vw,330px)` scrolling right
+    column. It has exactly one call site — EMOJI_CHARADES, which re-tested it
+    and kept it: the picker's cells are `aspect-square`, so widening the body
+    makes it hold *less*, and going deckless costs 14% of the tap surface.
+-   **`actions` (game, optional).** The foot row, full width under both body and
+    deck. Everything that ends a beat. **The positive verdict comes first.**
+
+### `<TakeoverCanvas>` — the slots
+
+One body filling the takeover's padding box, with the chrome floating over it.
+`rail`, `counter`, `clock` and `children` carry the same rules; the row floats
+instead of sitting above. Two more slots, both floating along the bottom edge:
+
+-   **`actions` (game, optional), bottom-left.** The turn's one or two controls
+    and the hint that explains them. Bottom-left is the one corner where a
+    control is neither under the dock nor over the pin a team just placed, and a
+    hint here costs the arena no height at all — JOUST, FAPPY and SCHLONIC all
+    used to spend a row under the board on one sentence.
+-   **`readout` (game, optional), bottom-right, *above* the dock.** The turn's
+    numbers, where the host's eye already is after a result: distance and
+    points, the last shot's score, `RunningTotals`.
+
+**There is no bottom-right slot for a control.** That corner belongs to the
+dock, and the only two things it does are end the turn and open overrides. A
+game that wants a button there has misunderstood the phase — the tablet is in
+the players' hands.
+
+A Canvas body may not float its own chrome (if a chip belongs on the canvas it
+belongs in a slot), may not take the gutter itself, and may not set `isolate` on
+itself. The layout has all three.
+
+### The corner budget, and why there is no gutter token
+
+The bottom-right budget is **4.5rem**, and the arithmetic is the dock's. At
+1280x800 the takeover's `clamp(1rem,2vw,1.75rem)` padding resolves to 25.6px and
+the dock's `clamp(0.75rem,1.6vw,1.25rem)` offset to 20px, so the 48px circle
+intrudes **42.4px** into the body's content box. 4.5rem is 72px, clearing it by
+about 30px, which is right for a thumb.
+
+One number, five applications, all of them in the layouts: Stage gives it to
+`actions` as right padding and to `deck` as bottom padding inside its own scroll
+container; Canvas gives it to `actions` as a max-width and to `readout` as both
+a bottom offset and a max-width. A reserve is taken *inline*, never as a
+full-width bottom band — a band pushes up every child of a flex column and costs
+vertical space on games that have none to spare, while an inline reserve costs
+width in one row and nothing anywhere else.
+
+**The top-right reserve was abolished rather than corrected.** There used to be
+nine hand-typed reserves in three idioms, and five of them held
+`pr-[clamp(9rem,15vw,12rem)]` — 192px of rail width — for a clock that never
+draws, while the two games whose clock *does* draw reserved nothing and let it
+land on DRAWING's pending-points number. The fix is not a better number: the
+clock stopped being an overlay and became the last item of a flex row. **An
+unfilled slot takes no width; a filled one pushes the `counter` left.** Nothing
+in that row is wrapped in a box of its own, because an empty wrapper would still
+cost a gap. The TV was corrected the same way at phase 5, where the count had
+quietly grown to nine reserving surfaces, six of them for nothing.
+
+**`packages/surface` deliberately exports no dock-gutter token**, and a test
+asserts no export matches `/gutter|dock|reserve/i`. Handing out the value is an
+invitation to hand-type a tenth reserve, which is the mess the layouts exist to
+end. The same reasoning keeps `URGENT_THRESHOLD_SECONDS` unexported from
+`apps/client/src/utils/timerUrgency/`, which ships two predicates instead: that
+number had been typed out four times across both component trees, and a module
+that hands it out invites a fifth `remainingSeconds <= 10`.
+
+### The z-index scale, and why its mechanism is geometry
+
+-   **Band 0 — the game's interior.** The body slot is `relative isolate`, so it
+    is a stacking context. Inside it a game may use **any** z-index it likes,
+    including the z-400/z-1000 Leaflet assigns itself, and none of it escapes.
+-   **Band 1 — the game's floating chrome, `z-10`.** The Canvas's `actions` and
+    `readout`. Applied by the layout to the slot wrapper; a game never writes it.
+-   **Band 2 — the shell's chrome, `z-20`.** The rail row, `counter` and `clock`,
+    so a game with a lot to say can never bury the round number or the clock.
+-   **Band 3 — the shell's controls, `z-[1100]`, reserved.** `HostTakeoverDock`,
+    rendered outside the layout, above anything a minigame can raise.
+
+Bands 1 and 2 are local — the layout root isolates too — so these two small
+numbers cannot collide with anything else the app stacks.
+
+**The mechanism is the isolation, not an agreement about numbers, and it was
+proved rather than asserted.** GEO is the hard case: Leaflet reaches z-1000 and
+GEO's own chrome used to pick `z-[1100]`, kept off the dock by a single word in
+a different file. Hashing the chrome-row pixels at a true 1280x800 during the
+GEO migration: as shipped, and with GEO's own map-frame `isolate` removed, the
+region is byte-identical (1864 bytes); with **both** isolations removed it
+collapses to 170 bytes — a flat Leaflet tile painting over the clock. The
+layout's `isolate` on the body holds the line alone. A game is sandboxed by
+geometry, which is why it may be careless inside its body and must not reach for
+a number outside it.
+
+**`position: fixed` is banned anywhere in the takeover.** The dev sandbox renders
+the host shell inside a CSS-scaled device frame, and a transformed ancestor
+captures fixed positioning — so a fixed element pins to the frame rather than to
+the tablet, and the surface looks right everywhere except where it is judged.
+The corner dock is `absolute` for this reason and says so in its own styles.
+
+### Pointer events belong to controls, not to children
+
+The Canvas's three floating rows are `pointer-events-none` so they never eat a
+thumb aimed at the body, and each hands the pointer back with
+`[&_:is(button,a,input,select,textarea)]:pointer-events-auto` — **to controls,
+not to every child.**
+
+The first version granted it to every direct child, the way the corner dock
+does. That was right for the map the Canvas was drawn around, where every child
+of `actions` was a button, and wrong for a game whose body *is* the button:
+FAPPY shipped with a hint sentence in that row killing 764x48px of its corridor,
+4.0% of a surface where a tap means flap. The game could not opt out — a plain
+`pointer-events-none` on the sentence is inert against it, equal specificity and
+the layout's rule ordered later. So the fix belongs to the layout, and it is a
+narrower selector rather than an `interactive` prop or a per-slot config object.
+
+**It fails safe the right way round**: a forgotten class on a sentence costs one
+tap target, while a button is live for being a button. It also made the read-only
+rows fully transparent, since this section forbids a control in `counter`, `clock` and
+`readout` — which was the larger win, the chrome row being a full-width strip
+across the top of every canvas. SCHLONIC's live overlay went from 104,346px² to
+11,520px², 10.1% of the zone given back.
+
+### What gets shared, and what was measured and refused
+
+The house rule is ADR-0002's: three or more call sites with identical semantics,
+no behaviour-switch props, no multi-flag configuration objects. Applied to this
+canvas it produced two layouts, one component and a set of tokens — and five
+refusals, which are as much a part of the anatomy as the slots.
+
+-   **The history strips are not one strip.** `ShotHistory` pads to a fixed slot
+    count with no active notion, `LegHistory` is data-length with an active chip
+    and a crash badge, `RunHistory` is a vertical list of two cells per row.
+    Three call sites but three *shapes*: collapsing them needs
+    `items` + `renderItem` + `isActive` + `padTo` + `tone`, which is the
+    configuration object the ADR forbids, or a render prop wearing a hat.
+-   **The genuinely identical residue is a class string, and moving it is a
+    no-op.** The three strips' `title` really is byte-identical
+    (`text-[0.6rem] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim`).
+    Hoisting it means editing two packages so that the tablet renders exactly
+    what it rendered before. A token earns its place when drift would be
+    dangerous, not when two strings happen to match.
+-   **The arena frame was refused.** Stripped of colour, background and
+    interaction it is six utilities and no structure, four of them dictated by
+    the body slot rather than chosen. The two that *are* a design decision —
+    `rounded-xl` and the inset vignette — are §2.7's marquee frame, which JOUST
+    and FAPPY share by descent and which SCHLONIC deliberately does not: §2.11
+    says its zone "looks like nothing else in the show on purpose". Two call
+    sites with identical semantics plus one coincidence is not three. The
+    component form fails twice more: it would take the border and background as
+    a class string from the game, and FAPPY's and SCHLONIC's frames are not
+    passive wrappers — they carry the pointer handlers and the `data-*-arena`
+    hooks five e2e specs click.
+-   **The two timer chips were not merged.** They are a container and a
+    presenter that happen to draw similar pills. The host's `TakeoverTimerChip`
+    reads room context and fires the time's-up chime; isolating the 4 Hz tick
+    from the arena, the easel and the zone is *the whole point of it*, and
+    sharing it would push that tick back up into the component it exists to
+    protect them from. The drift the merge was meant to prevent was already
+    zero — both chips take their seconds from `resolveRemainingTimerSeconds` and
+    format them through the same function reference. What was actually
+    duplicated was the urgency threshold, and that is what got extracted.
+-   **There is no `<Marquee>` component.** Its two text styles and its bulb ring
+    were byte-identical across six TV surfaces and ship as three tokens; the
+    *containers* are not identical — two padding values and a background differ
+    — so a component would have to take the container as a prop. The honest cost
+    is recorded: a token cannot make an omission unrepresentable the way a
+    component can, which is how three of those six surfaces came to be copied
+    without their bulbs in the first place.
+
+**The pattern worth carrying into the tenth minigame: share the thing that would
+drift dangerously, refuse the thing that merely looks alike.** `RunningTotals`
+is shared across four games because four copies of a scoring panel will
+eventually disagree about a number — and sharing it closed a real bug no one
+could see from inside a deck, a row with `justify-between` and no gap that put
+a team's name flush against its points at a measured 0px. An arena frame that
+looks like another arena frame will not hurt anybody.
+
+### What does not change at this phase
+
+-   Escape hatches are never removed: the host can always skip, redo and
+    override score (`AGENTS.md` §11). They live behind the corner dock here, not
+    on the canvas.
+-   New host controls go through the override surface, not inline chrome
+    (`SPEC.md`, "Host Override Access"). A minigame's `actions` row is the
+    turn's controls, not the room's.
+-   Touch targets stay ≥ 44x44 CSS px (§2.1), including in `actions`, where the
+    gutter has already taken 72px of the row's width.
+-   **The host drives every phase. Nothing auto-advances**, and no minigame ends
+    its own turn on a clock.
+-   The layouts never branch on phase. They take elements and place them; a game
+    computes its slot contents however its own view type requires — `phase` for
+    eight of the nine, `hostView.status` for EMOJI_CHARADES — and passes nothing
+    for a slot it has nothing for this beat. A slot left unfilled collapses to no
+    space at all, which is what makes both the clock and the deck work.
+
 ## 2.1 Host UI (Tablet Optimized)
 
 -   Touch targets ≥ 44x44 CSS px
