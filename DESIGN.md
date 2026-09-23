@@ -81,15 +81,15 @@ Display UI (TV-first, spectator-first)
 
 ## 2.0A Host Surface Anatomy
 
-The Host shell is a single-canvas tablet controller. Every phase composes the same six pieces. Future Host surfaces should reuse this language instead of inventing parallel shapes — the utility classes live in `apps/client/src/components/HostControlPanel/styleTokens/index.ts`.
+The Host shell is a single-canvas tablet controller. Every phase composes the same six pieces. Future Host surfaces should reuse this language instead of inventing parallel shapes — the utility classes live in `packages/surface/src/styleTokens/index.ts`, imported as `@wingnight/surface`. They used to live in `apps/client/src/components/HostControlPanel/styleTokens/`, which is why the minigame packages could not reach them: a minigame may not import `apps/client` (`AGENTS.md` §3.1) and so could not obey the rule in `AGENTS.md` §16 that told it to use these. Moving them into a package is what made both rules obeyable at once, and it is the same reason `packages/cast` exists for the bird.
 
 -   **Mini-rail** — the top strip of every stage hero. Tiny inline rail showing round number, sauce, minigame, and the active-team color pill. Replaces the older kicker + title + description chrome; rail is data, not navigation.
 -   **Stage hero** — left ~65% of the canvas. Dramatic eyebrow + headline + meta, or a live datum like a timer or score. Subtle radial-gradient glow backdrop. Phases pick their own glow variant (default vs eating).
 -   **Control deck** — right ~35% of the canvas. Vertical stack of deck-groups: small uppercase group head + tappable rows + inline create form. No card chrome — rows are separated by 1px dividers, not borders.
 -   **CTA + heat strip** — full-bleed bottom row of the viewport. Primary action button always visible per §2.1, on every phase the host drives. A heat-color shimmer strip sits across the top of the bar to add energy without competing with the button.
 -   **Override entry** — a `⋯ Overrides` button lives at the foot of the deck. It opens the floating override dock. Override actions are never inline in the deck flow — they're an escape hatch, not a primary path.
--   **Takeover** — during `MINIGAME_PLAY`, the deck collapses and the minigame package owns the full canvas. The shell steps out of the way; the minigame's own surface owns the "we're done" trigger.
--   **Corner dock** — the takeover is the one phase where the tablet leaves the host's hands, so the CTA bar and the overrides entry both collapse into a single quiet circle in the bottom-right corner. Tapping it reveals the phase's primary action and `Overrides` as labelled pills over a scrim; tapping the scrim, the circle or `Escape` puts them away. Two taps, not one — a player's thumb resting on the canvas can't end their own turn. While collapsed the circle carries the same `heat` dot the overrides entry does, so a turn that needs review still reaches the host. The dock layers above anything the minigame draws, so a minigame surface must keep a ~4.5rem gutter clear at that corner rather than putting a control underneath it.
+-   **Takeover** — during `MINIGAME_PLAY`, the deck collapses and the minigame package owns the full canvas. The shell steps out of the way; the minigame's own surface owns the "we're done" trigger. Read that narrowly: the shell stops drawing the *deck*, not the room's context, and **§2.0B is what it means in full**. This one sentence was the entire specification for the phase for nine minigames, and §2.0B exists because it was not enough.
+-   **Corner dock** — the takeover is the one phase where the tablet leaves the host's hands, so the CTA bar and the overrides entry both collapse into a single quiet circle in the bottom-right corner. Tapping it reveals the phase's primary action and `Overrides` as labelled pills over a scrim; tapping the scrim, the circle or `Escape` puts them away. Two taps, not one — a player's thumb resting on the canvas can't end their own turn. While collapsed the circle carries the same `heat` dot the overrides entry does, so a turn that needs review still reaches the host. The dock layers above anything the minigame draws, so a ~4.5rem gutter stays clear at that corner. A minigame no longer types that reserve itself: the takeover layouts apply it, in the four slots §2.0B names, and `packages/surface` deliberately exports no token carrying the number.
 
 ## 2.0B Takeover Anatomy (`MINIGAME_PLAY`)
 
@@ -158,9 +158,20 @@ knowing before reaching for the bigger number:
     axes.
 
 Today: Stage for TRIVIA, DRAWING, EMOJI_CHARADES, RECREATE and SONG_GUESS;
-Canvas for GEO, JOUST, FAPPY and SCHLONIC. The migrations moved TRIVIA from 36%
-of the tablet to 82.5%, RECREATE from 33.1% to 74.7%, and the three arcade games
-from ~59% to 89.9%, while GEO held the 89.9% it already had.
+Canvas for GEO, JOUST, FAPPY and SCHLONIC. The migrations more than doubled
+TRIVIA's share of the tablet and RECREATE's, took the three arcade games from
+about three-fifths of it to about nine-tenths, and left GEO on the nine-tenths
+it already had.
+
+**Read the canvas-share figures in this chapter and in §2.4-§2.13 as deltas,
+not as one metric.** Each is a real measurement, reproduced at a true 1280x800
+against the tablet's 1,024,000px, and each was taken by the migration that
+moved that game — against what that game calls its canvas. Those definitions
+differ: body-slot area for one game, card-plus-controls for another. Two
+honest measurements of TRIVIA, taken two tasks apart against those two
+definitions, came out at 82.5% and 72.7%. Every direction here is sound and
+every jump is real; the third
+significant figure is not a number two games can be compared on.
 
 ### `<TakeoverStage>` — the slots
 
@@ -545,8 +556,11 @@ as DRAWING, EMOJI_CHARADES, JOUST, FAPPY and SCHLONIC. Directions:
     tile. Not stamps, not seals, not rotated. The number and its unit are
     sized separately (`client/formatGeoDistance`).
 -   **Display — "Map Theatre".** Marquee row on top (team + pending
-    points, `GEO`, photo counter), and under it the dark chart as the
-    arena for the *whole* turn, not just the reveal. The photo rides in a
+    points, "Geo", then the meta cell: photo counter and the clock —
+    GEO is one of the three games with a play timer, and on the TV that
+    chip is laid out in the marquee rather than floated over its corner),
+    and under it the dark chart as the arena for the *whole* turn, not
+    just the reveal. The photo rides in a
     corner card bottom-left; the live status pill, then the reveal tiles
     and pin legend, ride bottom-right. The room watches the pin land
     while the table argues, and the reveal is the answer pin appearing
@@ -556,18 +570,51 @@ as DRAWING, EMOJI_CHARADES, JOUST, FAPPY and SCHLONIC. Directions:
     input, already on the tablet in front of them — not a disclosure. The
     answer coordinates stay host-only until the guess is locked in, which
     is what the answer-safety tests pin.
--   **Host — "Map First".** The chart is the tablet. Rail chips (team,
-    photo counter) float top-left, the photo card under them, the turn's
-    one `primary` CTA bottom-left with the tap instruction beside it, and
-    the verdict tiles bottom-right *above* the corner dock's gutter. The
-    map keeps the whole canvas instead of a third of it, which is the
-    thing a team's thumb is actually working in.
+-   **Host layout is a `<TakeoverCanvas>`** (§2.0B,
+    `docs/takeover-layout-api.md` §5) — and GEO is where the Canvas came
+    from. "Map First" was the only surface of the nine that already put
+    the body full bleed with the chrome floating over it, so the layout
+    was drawn from this game and generalised; migrating GEO onto it gave
+    up code without giving up a pixel, holding the 1229x749 it already
+    had. Every name in the slot map is one GEO invented:
+    -   `counter`, read-only in the chrome row: the photo counter. The
+        team chip that used to sit beside it is gone — the shell's rail
+        arrives in the `rail` slot and already says the round, the sauce
+        and whose turn it is.
+    -   `clock`, forwarded untouched and drawing: `geoSeconds`.
+    -   The body: the chart, edge to edge, with the photo card an
+        absolutely-placed plate inside it. The plate is body content, not
+        chrome — it is the question the host reads out, and the Canvas's
+        floating slots are for the turn's chrome. An empty bank or a photo
+        that has not landed yet draws a waiting note *in the body* rather
+        than dropping the takeover, so the rail and the clock stay on the
+        tablet through the gap.
+    -   `actions`, bottom-left: the turn's one `primary` CTA with the tap
+        instruction beside it.
+    -   `readout`, bottom-right *above* the dock: the reveal tiles.
+    -   Deleted with the migration: a hand-typed
+        `bottom-[clamp(4.9rem,9vh,5.6rem)]`, a `max-w-[calc(100%-6rem)]`,
+        the `pr-[clamp(9rem,15vw,12rem)]` top-right reserve, and a
+        `floating = "absolute z-[1100]"` helper that had picked the corner
+        dock's own band and was kept off it by a single `isolate` in a
+        different file. That trap is what §2.0B's z-index scale exists to
+        remove.
+-   **The map frame keeps an `isolate` of its own**, one level inside the
+    body. Leaflet parks its panes at z-400 and this map's control strip at
+    z-1000, and without a stacking context around the frame those layers
+    paint over the plate that is their sibling. It sits inside Band 0,
+    where §2.0B permits a game any z-index it likes — and the layout's own
+    `isolate` on the body is what keeps all of it off the shell's chrome
+    and the dock, proved in pixels at the migration.
 -   **Quick views stay**, restyled as house glass on the right edge with
     the zoom buttons — `World` and `Barrie`, because the night's photos
     are either around the home town or nowhere near it, and panning
     between the two by hand was the slowest part of a turn. They live in
-    `leafletConstants`. The right edge, because the tablet's top-right
-    belongs to the shell's timer chip and its bottom-right to the dock.
+    `leafletConstants`. The right edge and vertically centred, because
+    both right-hand corners are spoken for: the chrome row runs across the
+    top and the dock owns the bottom. Leaflet's attribution is shunted
+    left of the dock for the same reason — a credit OSM's licence requires
+    may not sit under the circle.
 -   **The reveal happens on the chart the team just pinned**, on both
     surfaces — the tablet no longer swaps its map out for a verdict
     panel.
@@ -581,11 +628,41 @@ easel silhouette under game-show marquee chrome, in the same materials
 every other surface uses.
 
 -   Materials: `surfaceAlt`/`surface` panels behind `gold` borders for
-    the marquee, the prompt card and both easel frames. The mockups'
-    wood gradient and brown marquee were scoped hex material colors;
-    they read as a different app beside every other surface and were
-    dropped on 2026-09-21. What carries "easel" is the *silhouette* —
-    the framed board and, on the TV, the splayed legs — not the timber.
+    the marquee, the prompt card and both easel frames. The mockups' wood
+    gradient and brown marquee were scoped hex material colors and were
+    dropped for house tokens on 2026-09-21. What carries "easel" is the
+    *silhouette* — the framed board and, on the TV, the splayed legs —
+    not the timber.
+-   **The brown did not stay dropped elsewhere, and DRAWING is now the
+    odd one out.** GEO and EMOJI_CHARADES were restyled onto the marquee
+    hours *before* this surface dropped its brown, and TRIVIA and
+    SONG_GUESS were given one later still, so the marquee container
+    `bg-gradient-to-b from-[#3a1d09] to-[#1a0c04]` is on seven of the
+    eight TV marquees and this one is the exception. Across the minigame
+    `styles.ts` files the gold-bordered card splits eighteen brown to
+    four in house tokens. The reason this section used to give for
+    dropping it — that it "read as a different app beside every other
+    surface" — now describes DRAWING itself.
+-   **The direction is DRAWING's, and the other seven follow it.** The
+    marquee's team name, its title, its bulb ring and its meta row are
+    already one shared string apiece from `packages/surface`
+    (`marqueeTeamName`, `marqueeTitle`, `marqueeBulbs`, `marqueeMeta`).
+    The container is the one piece still copied per game, and it is
+    exactly where the drift landed. It cannot be hoisted as it stands: a
+    house-component path may carry no raw hex, which is why
+    `RunningTotals` had to be substituted value-for-value when it moved
+    into the package. And
+    §0.1's scoped-material exception is for *scene* content — this
+    surface's inks, JOUST's desert (§2.7), SCHLONIC's bay (§2.11) —
+    where the material is the thing the room is looking at. A marquee is
+    chrome, and the exception was never meant to reach it. The dusk
+    desert belongs to JOUST's arena, not to the frame around every other
+    game's.
+    **This is written, not built:** the eighteen literals are still in
+    the tree and lint does not yet see them, because
+    `no-hardcoded-hex-colors-in-styles` does not gate the minigame client
+    trees. Until they land, expect DRAWING's marquee to look unlike the
+    rest — that is a known debt, not a design decision.
 -   The chalkboard board (`#0E2624` family with a faint 30px grid) is
     the one scoped material that stays: it is the drawing content
     surface, shared pixel-for-pixel by tablet and TV, and chalk needs
@@ -648,8 +725,13 @@ every other surface uses.
     in the rail row: §4 keeps a game's names out of the row the shell
     owns, and the palette column is the one place on this surface where
     a sign costs the board nothing.
--   Display layout: grand bulb marquee (team, "Live Sketch" title,
-    pending points), easel with splayed legs, status line beneath.
+-   Display layout: grand bulb marquee — team on the left, the "★ Live
+    Sketch ★" title centre, and the meta cell on the right holding the
+    pending points and then the clock — easel with splayed legs, status
+    line beneath. The clock is *in* that cell, not floated over the
+    corner: this was one of only three TV surfaces whose chip ever drew,
+    and it used to be anchored to the shell rather than to the marquee,
+    landing on the gold border and the bulb ring.
 -   Ink palette is drawing content, not UI chrome, and is exempt from
     the 2-accent budget: chalk `#F3EEE2`, plus `#F97316` (primary),
     `#EF4444` (heat), `#FBBF24` (gold), `#06B6D4` (teamB), `#84CC16`
@@ -669,7 +751,10 @@ The EMOJI_CHARADES surfaces follow the "Hybrid" host direction
 (`apps/client/public/mockups/emoji-charades-host/04-hybrid.html`) and the
 "Clue Board" display direction
 (`emoji-charades-display/02-clue-wall.html`): a fixed board of clue slots
-under the same bulb marquee DRAWING uses.
+under the bulb marquee DRAWING built. Its team name, title and bulb ring are
+the shared strings from `packages/surface`; its *container* is still the brown
+gradient DRAWING has since dropped, which §2.5 records as debt rather than as
+this surface's own choice.
 
 -   **Emoji are content, not chrome.** They are full-colour unicode and
     are exempt from the §0.1 two-accent budget, exactly as DRAWING's ink
@@ -748,7 +833,12 @@ Skip → back/clear. What changed is who owns the chrome around them.
     the bottom fade is the scroll affordance.
 
 **Display layout**: bulb marquee (active team + pending points, show
-title, turn timer), the clue board, then the standings footer per §3.2.
+title, and the turn timer in the meta cell), the clue board, then the
+standings footer per §3.2. That third cell used to be an `aria-hidden`
+`min-h-[1px]` spacer holding a column open for a chip absolutely
+positioned somewhere else — a seventh idiom for the same reserve nine
+surfaces were typing. The chip is laid out in the cell now, which is
+where `02-clue-wall.html` always drew it (`.timer-block`).
 
 -   The board is a fixed 6×5 grid of all `MAX_EMOJIS_PER_SUBJECT` slots,
     letterboxed into whatever height the marquee and footer leave.
@@ -841,6 +931,17 @@ marquee chrome the drawing easel uses:
 -   `gold` is the marquee/framing accent (marquee border, pending points,
     the impact burst, the result plaque) — a scoped exception to the §0.1
     "winner moments only" rule, like DRAWING's §2.5.
+-   **The desert stops at the arena's edge.** `#3a200d`, `#1a0e05` and
+    `#0a0604` are this lane's own frame and plaque, and they leaked: the
+    result plaque, the hint card and the secondary buttons on this
+    surface — and the running-totals card three other games copied
+    verbatim — are chrome wearing a scene colour. Hoisting that card into
+    `packages/surface` forced a value-for-value substitution to
+    `border-ember/20` and `from-surface to-bg`, because a house-component
+    path may carry no raw hex, and the substitution is the answer to the
+    question it raised: the arcade games were not agreeing on a surface
+    language, they were copying one game's skin. §2.5 carries the
+    direction for the rest of it.
 -   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5):
     the lane is full bleed, filling the takeover's padding box edge to edge —
     1229x749 of the tablet's 1280x800, 89.9% against the 60% the 330px control
@@ -1023,6 +1124,12 @@ it, and the forger — the image model — paints their version next to it.
     forgery after), the appraisal under a hairline: title, their prompt in
     italics, ingredient chips that fill `success` as the host ticks, the
     points seal and the real prompt on lock.
+-   **RECREATE is the one display without a bulb marquee**, and that is the
+    gallery reading rather than an omission: the other eight wear a game-show
+    frame, and a back room hangs a masthead. The clock slot sits at the end of
+    that masthead and draws nothing — `timerKey: null` — so the rule runs the
+    full width of the wall. It used to stop 18rem short of it, holding space
+    for a chip this game has never had.
 
 ## 2.11 SCHLONIC Minigame Surface Language ("Kempenfelt Bay Zone")
 
@@ -1133,9 +1240,14 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
         into a 1229px canvas — and a held jump is worth ~27 of the world's 90
         units while a springboard is worth ~81, so it crosses the top-left sky on
         any decent bounce.
--   Display: marquee (team, "Kempenfelt Bay Zone", run, wings), the zone, a
-    status line; an outcome plaque over the beat and the points plaque once the
-    team is through.
+-   Display: marquee (team, "Kempenfelt Bay Zone", and a meta cell holding run
+    and wings), the zone, a status line; an outcome plaque over the beat and
+    the points plaque once the team is through. **The meta cell is a row, not a
+    reserve.** It used to carry 268.8px of `padding-right` against a clock this
+    game never draws, which squeezed its readout onto three lines and made the
+    marquee 145.1px tall; laid out rather than reserved it is 87.5px, and the
+    57.6px went back to the zone on every turn. JOUST and FAPPY were paying the
+    same on the same row.
 -   The run is the game: §8's infinite-animation rule does not bite.
     `prefers-reduced-motion` on the display shows how the run ended, without
     the running.
@@ -1155,9 +1267,13 @@ wears. Its language is what it refuses to draw.
 -   **It wears the grand bulb marquee** (§2.5, the one DRAWING built): the team
     on the left, "Trivia" as the show title in the centre, the turn's remaining
     questions on the right, and the dotted bulb ring inset inside the gold
-    border. It is the eighth of the nine displays to wear it, and it takes the
-    three class strings from `packages/surface`'s `styleTokens` rather than
-    copying them, which is what stopped three earlier surfaces losing the ring.
+    border. **Eight of the nine displays wear a marquee** — RECREATE is the
+    ninth and hangs its own masthead instead (§2.10) — and this was the seventh
+    to get one. It takes its four class strings (`marqueeTeamName`,
+    `marqueeTitle`, `marqueeBulbs`, `marqueeMeta`) from `packages/surface`'s
+    `styleTokens` rather than copying them, which is what stopped three earlier
+    surfaces losing the ring. Only the container is still per-game, and §2.5
+    records where its colour is going.
 -   **The team is named once.** The surface used to caption the question with
     "On the clock: MOLTEN METAL" in small grey caps; the marquee's left cell is
     where the other displays say it, so the caption went with the marquee's
@@ -1174,8 +1290,28 @@ wears. Its language is what it refuses to draw.
     ("3 questions left" — what is still his to run); the TV's is the room's
     ("3 questions to go"). SCHLONIC splits the same counter the same way, and
     each surface's `copy.ts` owns its own words.
--   Host layout is a `<TakeoverStage>` and was migrated in phase 4; nothing on
-    the tablet changed here.
+-   **Host layout is a `<TakeoverStage>` with no deck, and TRIVIA was the first
+    of the nine to take it** — it is the game the anatomy was proved on, not a
+    late adopter. Far from nothing changing on the tablet, this was the largest
+    single gain of the project: the question card used to sit at its own
+    content height in a centred column with 355px of dead air, the second-worst
+    canvas share of the nine, and it now fills the body slot (`flex-[3]`
+    question over `flex-[2]` answer) at roughly four-fifths of the tablet.
+    -   `counter`, read-only in the rail row: the questions still to run. It
+        disappears once the turn is spent, because the turn-complete panel
+        already says so and "0 questions left" beside it says it twice.
+    -   `clock`, forwarded and drawing nothing: TRIVIA is host-paced and
+        `timerKey: null`, and an unfilled slot costs no width.
+    -   The body: the question card, edge to edge.
+    -   `actions`, the foot row: **CORRECT before INCORRECT**, and moving them
+        out of the body is what fixed a live bug rather than a preference.
+        INCORRECT was the last flow child of a body with no reserve, so with a
+        question long enough to push the card down it landed under the corner
+        dock's circle and the dock took the press. The layout gives this row the
+        gutter as right padding, so the geometry cannot come back.
+    -   Deleted with the migration: the team chip and the meta block the rail
+        now says, and the `resolveActiveTeamName` copy every one of the nine
+        carried.
 
 ## 2.13 SONG_GUESS Minigame Surface Language ("Lounge Set")
 
@@ -1187,8 +1323,9 @@ the eye off the song.
 
 -   **It wears the grand bulb marquee** (§2.5): the team on the left, "Who's
     That Song" as the show title in the centre, "Song 2 of 4" on the right, and
-    the dotted bulb ring inset inside the gold border. Ninth and last of the
-    nine displays to wear it.
+    the dotted bulb ring inset inside the gold border. Eighth and last of the
+    eight TV surfaces that wear one; RECREATE is the ninth display and hangs a
+    masthead instead (§2.10).
 -   **It is the surface that never said whose turn it was.** Until the marquee
     landed, SONG_GUESS was the only one of the nine displays that never rendered
     `activeTeamName` — §2.3 asks both surfaces to carry the active team through
@@ -1218,8 +1355,38 @@ the eye off the song.
 -   `gold` is the framing accent (marquee border, the counter, the revealed
     title) — the same scoped exception to §0.1 that DRAWING's §2.5 and JOUST's
     §2.7 take.
--   Host layout is a `<TakeoverStage>` with a deck column and was migrated in
-    phase 4; nothing on the tablet changed here.
+-   **Host layout is a `<TakeoverStage>` with no deck.** It migrated with the
+    arcade games rather than with the panels, and it is the surface that showed
+    the two choices are separate axes: it refused the Canvas *and* dropped its
+    deck in the same change.
+    -   **Canvas refused on the shape of the slots, not on size.** A Canvas has
+        exactly two floating slots and both sit on the bottom edge, each bounded
+        at `calc(100%-4.5rem)`. This turn needs nine tap targets — play/pause,
+        replay, skip, reveal, title ✓✗, artist ✓✗, next — plus a totals panel,
+        and there is nowhere on one edge to put them. §2.0B is also explicit
+        that no bottom-right slot for a *control* exists at all.
+    -   **The deck went because keeping it could not have won.** The old column
+        was 330px against a 887px body that held about 190px of content — most
+        of the "console" was black. And a deck-keeping Stage arrives at a
+        *worse* share than the surface started with, because the shell's rail
+        is 33px where the game's own strip was 20px. Dropping it took the body
+        from 887x717 to 1229x592, roughly 62% of the tablet to 71%.
+    -   `counter`, read-only in the rail row: the song counter, then the points
+        banked this turn. `clock` is forwarded and draws nothing — SONG_GUESS is
+        `timerKey: null` — which is what retired this file's hand-typed
+        `pr-[clamp(9rem,15vw,12rem)]` reserve for a chip that never came.
+    -   The body: the answer card, with `RunningTotals` beside it as an
+        `<aside>`. It is read-only, so it is body content rather than chrome —
+        the body is everything the host reads, and this pane is all that
+        survives of the deck.
+    -   `actions`, the foot row: the transport, the reveal, the two scoring
+        pairs and next. `SongScoringDeck` is `SongScoringPad` now, because it is
+        no longer in a deck.
+    -   **The clip plays from the TV, and that is why the tablet could be
+        rebuilt around it.** The single `<audio>` node lives on the display
+        surface with its `src` absolute on the server origin; the host's
+        transport only dispatches actions. No arrangement of host slots can
+        restart a song.
 
 ## 2.8 Cast (shared character system)
 

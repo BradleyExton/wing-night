@@ -548,4 +548,4 @@ SCHLONIC's variant was the only one of the four already written in house tokens.
 The open question, deferred from the T3.1 checkpoint to phase 6: either the arcade games share a
 surface language that DESIGN.md should name with real tokens, or the dusk-desert palette belongs to
 JOUST's arena alone and the others should stop borrowing it. Until then each migration substitutes
-tokens as it goes. Revisit when §2.4–§2.11 are reconciled (T6.2).
+tokens as it goes. **Answered at T6.2**: they were copying JOUST's skin. `DESIGN.md` §2.5 now states the direction — the brown goes and the other seven marquees follow DRAWING onto house tokens. Written, not built: the 18 hex literals are still in the tree and lint does not gate those paths yet.

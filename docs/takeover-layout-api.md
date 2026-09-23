@@ -3,7 +3,15 @@
 Written for T2.1 of `docs/host-surface-consolidation-plan.md`. This is the contract that
 `<TakeoverStage>` and `<TakeoverCanvas>` are built to in T2.2, that `MinigamePlayTakeover` is wired
 to in T2.3, and that nine minigame host surfaces are rewritten against in T2.4 and phases 3–4. It
-is prose; no component exists yet.
+was prose written before any of it existed.
+
+**Status: built.** All of it shipped — both layouts, the shell wiring, all nine host surfaces and,
+in phase 5, the TV. Read this document as the contract and the arithmetic behind it; read
+`DESIGN.md` §2.0B for the shorter version a tenth minigame needs, and §2.4-§2.13 for what each game
+actually does with the slots. Where a projection here was overtaken by a measurement — the deck's
+call sites (§4, §8), the arena frame (§8), the token pass (§8) — the section says so at the point
+of the claim rather than being quietly rewritten, because the refusals are worth as much as the
+things that shipped.
 
 Read it as law about **where things go**, not about how they look. The measured problem is not that
 the nine surfaces are ugly — it is that a host moving from SCHLONIC to TRIVIA to GEO relearns the
@@ -45,14 +53,19 @@ rail: at `MINIGAME_PLAY` it takes `activeTurnTeamId ?? activeRoundTeamId`.
 and becomes authoritative — the shell resolves it once, with `selectHeaderContext`'s precedence, so
 the string on the props and the string in the rail are the same string. A game must not render it
 as chrome; the rail says it, and saying it twice on one canvas is the duplication this project
-exists to remove. A game may still use it inside body copy where a sentence needs it — RECREATE's
-`teamLine` is a sentence, not a chip, and can keep the name if the sentence survives the rewrite.
+exists to remove. A game may still use it inside body copy where a sentence needs it. As shipped,
+none of the nine does: RECREATE's `teamLine` was the one candidate and the rewrite deleted the row
+it lived on, so `activeTeamName` is read by no host surface today and `resolveActiveTeamName` is at
+zero definitions repo-wide, down from nine.
 
 **What the game does not receive, and should:** the team's colour. Every team dot on every host
 surface is `bg-primary`, in four different spellings, so the dot is never actually the team's
 colour — while `selectHostTeamMaps` already builds `teamThemeByTeamId` and simply is not on
 `MinigameHostRendererProps`. `HostMiniRail`'s own `miniRailTeamDot` has the same bug. This spec
-does not fix it; see §11, proposal P6.
+did not fix it; P6 was pulled into scope at T2.3 and it is fixed at the source instead. The rail
+composes its dot and halo from `teamThemeByTeamId` via `selectHeaderContext`, so the dot is the
+team's real colour, and `miniRailTeamDotUnassigned` keeps the house accent for "No team assigned".
+No game ever draws a team dot now, so the four spellings went with the chips.
 
 ---
 
@@ -102,8 +115,20 @@ emoji picker and a song console are concentrated — a chip over them covers wor
 | RECREATE | Stage with deck | Frames left, composer/appraisal bench right — already `md:grid-cols-[2fr_3fr]` |
 | SONG_GUESS | Stage with deck | A console, not an arena. T3.4 judges whether it should become a Canvas; the rule above says no |
 
+**The layout column survived contact; the deck column did not.** Every game landed on the layout
+this table predicted — five Stages, four Canvases — and the rule was never overridden. But two of
+the three predicted decks went: SONG_GUESS is a Stage *with no deck*, and RECREATE is a Stage with
+no deck. The reason is the same in both cases and worth carrying: **which layout and whether to keep
+a deck are separate questions**, and this table ran them together. RECREATE's bench turned out to be
+the *wider* of its two columns, which a 330px sidebar could never have held; SONG_GUESS's nine tap
+targets needed the foot row's full width. Only EMOJI_CHARADES's deck survived, and only because it
+was re-measured rather than inherited (§4).
+
 DRAWING is the interesting case and the reason the rule is phrased about *covering* rather than
-about size. Its body is the largest single element of any Stage game, and it still is not a Canvas.
+about size. Its body is the largest single element of any Stage game, and it still is not a Canvas:
+full bleed was measured at 78.3% against the Stage's 59.1% and refused, because a floating `actions`
+row for DRAWING is five buttons, and under §5's pointer rule a button takes the pointer for being
+one — ~700x44px of the picture the TV is mirroring, with CLEAR under the artist's moving hand.
 
 ---
 
@@ -169,8 +194,20 @@ A fixed-width right column, the width the four arcade games converged on by hand
 `w-[clamp(230px,28vw,330px)]`. At 1280 that is 330px, and with the `gap-3` between it costs the
 body exactly the 342px that shows up in the audit as `887` instead of `1228`.
 
-Only three games keep one after phase 3: EMOJI_CHARADES, RECREATE and SONG_GUESS. That is exactly
-ADR-0002's three-call-site bar, with nothing to spare — see §8 and proposal P3.
+**As shipped, the deck has exactly one call site: EMOJI_CHARADES.** This spec projected three
+(EMOJI_CHARADES, RECREATE, SONG_GUESS) and called it "ADR-0002's three-call-site bar with nothing
+to spare"; each of the other two was re-tested against §3 during its own migration and dropped it.
+SONG_GUESS's bench is nine tap targets and a totals panel, which needs the foot row's full width;
+RECREATE's is the *wider* of its two columns, a grid of 360px toggles a 330px sidebar could never
+have held. EMOJI_CHARADES kept it on measurement rather than inheritance: its cells are
+`aspect-square`, so widening the body makes the picker hold *less*, and going deckless costs 14% of
+the tap surface.
+
+One call site is far below the bar, so the deck is **a styled slot on `<TakeoverStage>`, not a
+component** — see §8. Keeping it as a slot costs nothing when unfilled, and the empty-slot collapse
+is the same mechanism the clock relies on. Removing it and letting EMOJI_CHARADES compose its own
+column in the body remains open for the owner; the argument for keeping it is that a second
+panel-shaped game wanting a right column should not have to re-derive its width.
 
 The deck is a scrolling column (`deckRoot` is already `overflow-y-auto`), so the layout gives it
 the dock gutter as bottom padding at no cost: short content never notices it, long content scrolls
@@ -187,8 +224,9 @@ up every child of a flex column and costs vertical space on games that have none
 inline reserve costs width in one row and nothing anywhere else.
 
 **Ordering inside `actions`:** the positive verdict comes first. TRIVIA and EMOJI_CHARADES already
-put `CORRECT` / `GOT IT` before the negative one; DRAWING is the only surface that renders "Nope"
-before "Correct", and it changes at T4.1.
+put `CORRECT` / `GOT IT` before the negative one; DRAWING was the only surface rendering "Nope"
+before "Correct", and it was flipped when it migrated. All three now agree, and this is a house
+rule rather than a preference (owner decision P7).
 
 ---
 
@@ -411,37 +449,65 @@ See proposal P5.
 
 ---
 
-## 8) Tokens, not components — and the four exceptions
+## 8) Tokens, not components — what shipped
 
-Everything shared that has no structure ships as a style token from `packages/surface`, the way the
-existing 190 lines of `styleTokens` already do: a named export whose value is a class string, no
-component, no props. The gold status card, the waiting note, the quiet secondary button, the team
-chip, the hint line, the counter chip — all tokens.
+Everything shared that has no structure ships as a style token from `packages/surface`: a named
+export whose value is a class string, no component, no props.
 
-Four things have real structure and clear ADR-0002's three-call-site bar. They are the only new
-components, and only two of them land in T2.2:
+**This section originally promised four new components and a broad token pass. One component
+shipped, the second became a slot, the third was refused with reasons, and the token pass was
+mostly overtaken.** The table is what it is now, not what was projected:
 
-| Thing | Call sites today | Lands in |
+| Thing | Projected | What shipped |
 |---|---|---|
-| The two layouts (`<TakeoverStage>`, `<TakeoverCanvas>`) | nine, after migration | **T2.2** |
-| The deck column | EMOJI_CHARADES, RECREATE, SONG_GUESS after phase 3 | T2.2, used from T4.x |
-| The running-totals panel | JOUST, FAPPY, SCHLONIC, SONG_GUESS — four, already byte-identical | T3.1 |
-| ~~The arena frame~~ | JOUST `arenaFrame`, FAPPY `Corridor`, SCHLONIC `Zone` — three | **rejected at T3.3, see below** |
+| The two layouts (`<TakeoverStage>`, `<TakeoverCanvas>`) | nine call sites after migration | **Shipped at T2.2.** Nine call sites: Stage for TRIVIA, DRAWING, EMOJI_CHARADES, RECREATE, SONG_GUESS; Canvas for GEO, JOUST, FAPPY, SCHLONIC |
+| The running-totals panel | four, already byte-identical | **Shipped at T3.1** as `RunningTotals`. Four call sites (JOUST, FAPPY, SCHLONIC, SONG_GUESS), and hoisting it closed a real bug — see below |
+| The deck column | a component, three call sites | **Not a component: a styled slot on `<TakeoverStage>`.** One call site, EMOJI_CHARADES (§4) |
+| ~~The arena frame~~ | three call sites | **Rejected at T3.3, see below.** Nothing built |
+| ~~The mini-rail~~ | named among the four in the plan | **Not a component and never could be:** it is `HostMiniRail`, which reads client context. The layouts expose a `rail` slot and the shell fills it (owner decision P1) |
 
-**The rail is not on this list.** The plan's decision names "the rail" among the four, but the rail
-is `HostMiniRail`, which already exists, already renders the right `<header>`, and reads room state
-through `useHostRoomState` — so it cannot move into `packages/surface`, which has no dependency on
-`@wingnight/shared` and no access to the client's context. Its *tokens* (`miniRail`,
-`miniRailStrong`, `miniRailDivider`, `miniRailTeamPill`, `miniRailTeamDot`) are already in the
-package. Nothing new is needed: the layouts expose a `rail` slot and the shell fills it. Recorded
-as clarification P1.
+**The broad token pass did not happen, and most of its list dissolved.** The gold status card, the
+waiting note, the quiet secondary button, the team chip, the hint line and the counter chip were
+all listed here as future tokens. What actually happened: the **team chip was deleted**, not
+hoisted — the shell's rail names the team and a surface saying it twice was the duplication being
+removed. The **hint line** moved into each Canvas's `actions` slot, where it is one sentence in the
+turn's own words rather than a shape. The **counter chip** is per-game content in `counter`. What
+did ship as new tokens is small and specific: `marqueeTeamName`, `marqueeTitle`, `marqueeBulbs`,
+`marqueeMeta` (T5.2, T5.3) and `miniRailTeamDotUnassigned` (T2.3) — five exports, taking
+`styleTokens` from 55 to 60.
+
+**The gold status card is the one item on that list still genuinely open**, and it is a colour
+question rather than a shape one: the same card exists in two systems, `from-[#3a1d09] to-[#1a0c04]`
+at eighteen sites and `from-surfaceAlt to-surface` at four. It cannot be hoisted while it carries
+raw hex — a house-component path may not — so the direction is recorded in `DESIGN.md` §2.5 and the
+migration is `BACKLOG.md`'s.
+
+**Why the rail could never be a component here.** The plan's decision names "the rail" among the
+four, but the rail is `HostMiniRail`, which already exists, already renders the right `<header>`,
+and reads room state through `useHostRoomState` — so it cannot move into `packages/surface`, which
+has no dependency on `@wingnight/shared` and no access to the client's context. Its *tokens*
+(`miniRail`, `miniRailStrong`, `miniRailDivider`, `miniRailTeamPill`, `miniRailTeamDot`) were
+already in the package. Nothing new was needed: the layouts expose a `rail` slot and the shell
+fills it. Accepted as clarification P1. Of the plan's four — rail, deck, standings panel, arena
+frame — exactly one became a component (`RunningTotals`); two became slots and one was refused.
 
 **The running-totals panel is not "standings".** T1.6 already made the four copies byte-identical,
 taking `{ pendingPointsByTeamId, activeTurnTeamId, teamNameByTeamId, note? }`. It shows the round's
 *pending* points, not the game's standings — `DisplayBoard/StandingsSurface` is the standings. It
-keeps the name `RunningTotals` it already has in four packages. SCHLONIC's `styles.ts` is the one
-genuine divergence (a flat box, no gold) and is T3.1's decision, not this document's. Naming
-recorded as P2.
+keeps the name `RunningTotals` it already has in four packages. Naming recorded as P2, accepted.
+
+**Two things came out of actually hoisting it, and both are worth keeping.** First, the "house card"
+never was one: the three identical copies were written in JOUST's own dusk-desert hexes (`#3a200d`
+is that arena frame's border, `#1a0e05`→`#0a0604` its result plaque), so what looked like three
+games agreeing on a card was two games copying a third's skin. A house-component path may carry no
+raw hex, so the move forced a value-for-value substitution to `border-ember/20` and
+`from-surface to-bg` — the answer to the question that raised. SCHLONIC's variant, the one genuine
+divergence, was the only one of the four already written in house tokens; the owner chose to drop it
+for the shared card anyway at T3.3, costing SCHLONIC about 73px of height against a 626px readout
+budget, because the alternative was keeping a fourth near-clone. Second, sharing closed a bug
+invisible from inside a deck: the row had `justify-between` and no gap, so floated at content width
+the longest team name met its points at a measured 0px ("Honky Tonk Heat0 pts"). The shared row
+takes `gap-4` — the one thing SCHLONIC's variant had and the other three did not.
 
 **The arena frame is neither a component nor a token — settled at T3.3, REJECTED.** T3.1 deferred it
 because only one of its three call sites was full-bleed then; now all three are, and the three
@@ -684,15 +750,19 @@ worktree.
   the container edge; body content box starts at 25.6px; intrusion **42.4px**.
 
 **House law**
-- `AGENTS.md:62` — minigame packages never import `apps/client`. `AGENTS.md:259` — host surfaces
-  prefer the host language utilities (path now stale: they live in `packages/surface`, T1.2).
+- `AGENTS.md` §3.1 — minigame packages never import `apps/client`. `AGENTS.md` §16 — host and
+  display surfaces prefer the shared design system. **These two rules were in direct contradiction
+  until T1.2**, because §16 pointed at `apps/client/src/components/HostControlPanel/styleTokens/`,
+  which §3.1 forbids a minigame from reaching; a minigame surface could obey one or the other and
+  not both, which is the root cause of nine invented anatomies. Both now point at
+  `packages/surface`, reachable from either tree. Reconciled in both files at T6.2.
 - `AGENTS.md` §11 (`:205-210`) — skip / redo / manual score override are never removed.
 - `SPEC.md:380` — new host override controls go through the override surface, not inline chrome.
   *The plan cites `SPEC.md:377`; the rule is at `:380`.*
 - `DESIGN.md:82-92` — §2.0A; `:91` the takeover bullet, `:92` the corner dock and its ~4.5rem;
-  `:96` touch targets ≥ 44x44. §2.0A's pointer to
-  `apps/client/src/components/HostControlPanel/styleTokens/index.ts` is stale after T1.2 and is
-  T6.1's to fix.
+  `:96` touch targets ≥ 44x44. §2.0A's pointer to the style tokens was stale after T1.2 and now
+  reads `packages/surface/src/styleTokens/index.ts` (fixed at T6.2). §2.0B is the takeover's own
+  anatomy; §2.4-§2.13 are the nine per-game surface languages.
 - `docs/adr/ADR-0002-dry-readability-epic.md` Guardrails 1-3; `ADR-0003` Guardrail 4.
 - `eslint.config.mjs:171-177` — 260-line cap on `packages/surface/src/**/index.tsx`;
   `:219-225` — 140-line cap on its `styles.ts`. `tools/eslint-plugin-wingnight/rules/
@@ -720,9 +790,13 @@ Settled by the repo owner after reading this document. These are no longer propo
   context — which is the entire reason the package exists.
 - **P2 — ACCEPTED.** `RunningTotals`, not "the standings panel". It shows pending points;
   `StandingsSurface` is the standings.
-- **P3 — NOTED.** Re-check the deck column against ADR-0002's three-call-site bar at the end of
-  phase 4. If T3.4 makes SONG_GUESS a Canvas or T4.3 flattens RECREATE's bench, the deck drops below
-  the bar and becomes tokens.
+- **P3 — NOTED, and now decided by the code.** Re-check the deck column against ADR-0002's
+  three-call-site bar at the end of phase 4. Both projected call sites went, and neither for the
+  reason anticipated: SONG_GUESS stayed a Stage and dropped the deck anyway (they are separate
+  axes), and RECREATE's bench turned out to be the *wider* of its two columns. The deck ends at
+  **one** call site, EMOJI_CHARADES. It ships as a styled slot on `<TakeoverStage>` rather than a
+  component (§4, §8). **Still open for the owner:** keep the slot — it costs nothing unfilled — or
+  remove it and let EMOJI_CHARADES compose its own column in the body.
 - **P4 — ACCEPTED.** `MinigameSurface`'s takeover `overflow-y-auto` is dropped in T2.3. A game that
   overflows the canvas must break visibly in the sandbox rather than scroll quietly; scrolling is
   wrong on this surface, and a silent 900px-tall migration is exactly the mistake the nine
@@ -732,6 +806,7 @@ Settled by the repo owner after reading this document. These are no longer propo
 - **P6 — IN SCOPE, T2.3.** Team dots take the team's actual colour. `teamThemeByTeamId` exists in
   the client and simply is not on the renderer props; once the shell owns the rail this is a
   one-place fix, and `bg-primary` in six files stops pretending to be six different teams.
-- **P7 — IN SCOPE, house rule, DRAWING fixed in T4.1.** Positive verdict first. DRAWING is the only
-  outlier (`verdictIncorrect` before `verdictCorrect`), and on a tablet that is a misclick risk, not
-  a preference.
+- **P7 — IN SCOPE, house rule, DRAWING fixed in T4.1 and shipped.** Positive verdict first. DRAWING
+  was the only outlier (`verdictIncorrect` before `verdictCorrect`), and on a tablet that is a
+  misclick risk, not a preference. All verdict pairs now agree; the rule is stated in `DESIGN.md`
+  §2.0B.

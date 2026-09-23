@@ -306,14 +306,20 @@ Backlog status:
 - [x] 11.8 TRIVIA Full-Screen Plugin Migration + GEO/DRAWING Unsupported States
 - [x] 11.9 Rehydrate/Recovery Hardening for Full-Screen Takeover
 - [ ] 12.1 Cross-Title Game Shell Contract ADR
-  - → owned by WN-7 (`.work/tickets/WN-7-*.md`, status: needs-research)
+  - → still open, scoped in `BACKLOG.md` → "Cross-title game shell contract (ADR)". Needs
+    research; ground it in the unmerged book-club variants rather than in hypotheticals.
 - [ ] 12.2 Extract Reusable Orchestrator Package Boundary (Monorepo-Local)
-  - → owned by WN-8 (`.work/tickets/WN-8-*.md`, needs-research, deps: WN-7)
+  - → still open, scoped in `BACKLOG.md` → "Extract the reusable orchestrator package".
+    Executes whatever 12.1 decides, so it waits on it.
 - [ ] 12.3 Minigame Authoring Guide + Example Scaffold
-  - → mostly shipped (`docs/minigame-authoring-guide.md` + full GEO implementation); README-reference remainder owned by WN-6
+  - → mostly shipped (`docs/minigame-authoring-guide.md` + nine real minigame implementations);
+    the remainder is the README reference, which is D8.
 - [x] D7 SPEC Full-Screen Minigame Takeover Alignment (after 11.x)
 - [ ] D8 README Plugin + Reuse Architecture Alignment (after 12.x)
-  - → owned by WN-6 (`.work/tickets/WN-6-*.md`)
+  - → still open, and now tracked in `BACKLOG.md` → "Docs alignment". `README.md` has zero
+    mentions of the plugin registry, the runtime or `docs/minigame-authoring-guide.md`, while the
+    plugin architecture ships nine real minigames. The `.work/tickets/WN-6-*.md` pipeline this
+    line used to point at was removed on 2026-09-14.
 - [x] D9 AGENTS Guardrail Update for Plugin API + Snapshot Privacy
   - → closed 2026-09-23. Snapshot privacy and display-safe payloads: `AGENTS.md` §3.1/§3.2
     (server-owned projections, no answer fields on display views, regression tests required).

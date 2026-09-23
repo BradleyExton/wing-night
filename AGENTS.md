@@ -59,7 +59,7 @@ Run:
 - Minigame engine contracts live in `packages/minigames/core`.
 - Concrete minigames live in subdirectories of `packages/minigames` other than `core` (for example `packages/minigames/<minigameId>`). For the current iteration, minigame renderer modules are React-first.
 - Server adapters/projections for minigames live under `apps/server/src/minigames/**`.
-- Presentation both the app and minigame packages draw — the character cast and the team look — lives in `packages/cast` (`@wingnight/cast`). Minigame packages never import from `apps/client`; if a minigame needs something the app draws, it moves here first.
+- Presentation both the app and minigame packages draw lives in a package, never in `apps/client`: the character cast and the team look in `packages/cast` (`@wingnight/cast`), the host/display design system — style tokens, `<TakeoverStage>`, `<TakeoverCanvas>`, `RunningTotals` — in `packages/surface` (`@wingnight/surface`). Minigame packages never import from `apps/client`; if a minigame needs something the app draws, it moves into one of those first. Three mechanisms enforce the ban and none of them is a convention: `apps/client/package.json` declares no `main`/`types`/`exports`, `tsconfig.base.json` declares no `paths`, and no minigame package declares the dependency.
 - Display-facing minigame view contracts (for example `selectDisplayView`) must never include answer/secret fields; only host views may include privileged fields. Do not add answer fields to shared snapshot display-view contracts until host-only filtering or secret channels are implemented.
 
 ## 3.2 Minigame Projection Guardrails
@@ -255,8 +255,8 @@ Never remove escape hatches.
 
 - For any client UI styling change, read `DESIGN.md` first and use its canonical semantic color tokens.
 - Use Tailwind theme token classes from `apps/client/tailwind.config.ts` in component `styles.ts` files.
-- Do not hardcode hex colors in `apps/client/src/components/**/styles.ts`.
-- For Host surfaces, prefer the Host language utilities exported from `apps/client/src/components/HostControlPanel/styleTokens/index.ts` (mini-rail, stage hero, deck row, CTA + heat strip) over re-implementing the same shapes. See `DESIGN.md` §2.0A for surface anatomy.
+- Do not hardcode hex colors in a house `styles.ts` — `apps/client/src/components/**`, `packages/cast/src/**` and `packages/surface/src/**`, the trees `tools/eslint-plugin-wingnight/rules/houseComponentPaths.mjs` marks. The minigame client trees keep the same folder shape and obey every other house rule, but are deliberately off that list until their ~50 pre-token hex literals are migrated (BACKLOG.md).
+- For Host and display surfaces, prefer the shared design system exported from `packages/surface` (`@wingnight/surface`) — the style tokens (mini-rail, stage hero, deck row, CTA + heat strip, the marquee strings) and the takeover layouts — over re-implementing the same shapes. **This rule and §3.1's ban on importing `apps/client` used to contradict each other**, because the tokens lived at `apps/client/src/components/HostControlPanel/styleTokens/` where no minigame could reach them; a minigame surface could obey one or the other and not both, which is why nine of them invented a takeover anatomy apiece. The tokens are in a package now and both rules hold at once. See `DESIGN.md` §2.0A for the host shell's anatomy and §2.0B for the takeover's.
 
 ---
 

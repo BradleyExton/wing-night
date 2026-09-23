@@ -34,8 +34,12 @@ export type TakeoverStageProps = {
   // It may not hold a control that reaches the bottom-right corner; those live
   // in `actions` or in `deck`, where the layout has already reserved the dock.
   children: ReactNode;
-  // Game-owned, optional: the fixed-width right column. Only EMOJI_CHARADES,
-  // RECREATE and SONG_GUESS keep one after phase 3.
+  // Game-owned, optional: the fixed-width right column. Only EMOJI_CHARADES
+  // keeps one — it is the single body of the nine that does not want more
+  // width, because its cells are square, so widening the picker makes it hold
+  // less. RECREATE's bench is the wider of its two columns and SONG_GUESS put
+  // its transport in `actions`, so both refused a deck. One call site is below
+  // ADR-0002's bar; the slot stays because it costs nothing unfilled.
   deck?: ReactNode;
   // Game-owned, optional: the foot row, full width under both the body and the
   // deck. Everything that ends a beat — verdicts, "Next photo", "Next target",
