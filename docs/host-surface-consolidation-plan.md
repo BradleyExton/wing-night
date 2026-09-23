@@ -834,3 +834,32 @@ under load and passing **4/4 in 19.2 seconds** at load 2.4 on identical code —
 attempt not even reaching the tests, because vite could not boot inside its 120s window at load 9.5. The
 tree was held uncommitted until a run at load 2.09 returned **36 passed (2.1m)**. If this suite goes
 strange again, check `uptime` before reading the failures.
+- [x] T5.1 `f6d2ec0` — **the two timer chips are NOT collapsed, and the refusal is the finding.** They
+  are a container and a presenter that happen to draw similar pills: `TakeoverTimerChip` calls
+  `useHostRoomState()` and fires `useTimesUpChime()`, and its own comment says isolation is *the whole
+  point of it* — `useNowTickMs` ticks 4×/sec and the chip exists so the joust arena / easel / schlonic
+  zone do not re-render on every tick. Sharing it means stripping the context read out, which pushes
+  the 4 Hz tick back up into `MinigamePlayTakeover` and re-breaks what the component exists to fix —
+  and `packages/surface` carries no client context by design (owner decision P1). The TV chip is a pure
+  `({remainingSeconds}) => JSX` presenter. Two call sites, below ADR-0002's bar anyway, and a merge
+  would need `size`/`variant`/`timeUpLabel` props (guardrail 2).
+  **The drift the task was commissioned to prevent was already at zero**: both chips take seconds from
+  `resolveRemainingTimerSeconds` and `hostControlPanelCopy.timerValue` / `displayBoardCopy.minigameTimerValue`
+  are *the same function reference* (`formatClockSeconds`). Neither can say a different second.
+  **What was actually duplicated: `const URGENT_THRESHOLD_SECONDS = 10;` typed verbatim in FOUR files**
+  — both chips and both eating heroes — so retuning urgency on the tablet would have turned the TV to
+  heat at a different moment. Four call sites, identical semantics, clears the bar. Extracted to
+  `apps/client/src/utils/timerUrgency/` as two predicates (`isTimerUrgent`, `isTimerTimeUp`), not an
+  enum, because the eating heroes read them independently — the TV's big number stays urgent while the
+  label flips to time's up. **The threshold is deliberately not exported**, on the same reasoning §6
+  uses to withhold the dock-gutter token. `EatingStage` keeps its `!timer.isPaused` guard visible at the
+  call site rather than as a flag in the helper (ADR-0003 g3): a clock paused on zero has not called
+  time on anyone. Pure extraction, zero behaviour change. Clamps and keyframes deliberately NOT unified
+  — host `clamp(1rem,1.6vw,1.6rem)` + `pulse` (opacity) vs TV `clamp(1.2rem,2vw,2.2rem)` + `heatpulse`
+  (scale) is essential, not a skin: a 48px rail pill at arm's length and an overlay read across a room
+  cannot share one `vw` clamp. The TV chip correctly KEEPS its `absolute … z-10` — on the TV it
+  genuinely is an overlay; §6's stripping applied only to the host chip in the rail row, and that
+  guard test still passes. Orchestrator independently mutation-tested: threshold 10→15 reddens exactly
+  1 test, restore byte-identical. Gate green, e2e 36 passed at load 2.84.
+  **Flagged**: the new tests protect the module, not the call sites — nothing stops a future edit
+  hand-typing `<= 10` again. A source-scanning guard test would catch it; judged disproportionate here.
