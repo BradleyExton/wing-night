@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { marqueeBulbs } from "@wingnight/surface";
 import type { SongGuessMinigameDisplayView } from "@wingnight/shared";
 
 import { DisplaySongGuessSurface } from "./index.js";
@@ -90,11 +91,45 @@ test("shows the title and original artist on reveal", () => {
   assert.match(html, new RegExp(ANSWER_ARTIST));
 });
 
+// The marquee is the surface's chrome for the whole of the play phase, so the
+// screen that closes the set still names the team whose set it was — the room
+// wants to know who just finished, the way TRIVIA's marquee keeps naming a team
+// under "Turn complete". What this test has always actually guarded is the
+// SCORES: they go up at the end of the round and never on this surface, so no
+// `+N` reaches the TV even though the view carries the pending points.
 test("closes the set without putting scores on the TV", () => {
   const html = renderSurface({ ...baseView, phase: "done" });
 
   assert.match(html, /That&#x27;s the set/);
-  assert.doesNotMatch(html, /Team Heat/);
+  assert.match(html, /Team Heat/);
+  assert.doesNotMatch(html, /\+\d/);
+});
+
+// Every other display marquee hangs the dotted bulb ring inside its gold
+// border; three of them were copied without it and had it restored at T5.2.
+// A new marquee arriving without one would recreate that bug exactly.
+test("does hang the shared bulb ring on the marquee", () => {
+  assert.ok(renderSurface(clipView("idle")).includes(marqueeBulbs));
+});
+
+// SONG_GUESS was the only one of the nine displays that never told the room
+// whose turn it was.
+test("names the active team on the marquee", () => {
+  assert.match(renderSurface(clipView("idle")), /Team Heat/);
+});
+
+// The show's name lived in copy.ts and painted only on the intro screen. The
+// marquee title is where the other displays carry it.
+test("carries the show title on the marquee for the whole set", () => {
+  for (const view of [clipView("clip_paused"), revealView]) {
+    assert.match(renderSurface(view), /Who&#x27;s That Song/);
+  }
+});
+
+// Moved out of the body and into the counter cell, which means the reveal —
+// which never had it — now shows it too.
+test("counts the set from the marquee through the reveal", () => {
+  assert.match(renderSurface(revealView), /Song 2 of 4/);
 });
 
 test("renders the rules summary during the minigame intro", () => {

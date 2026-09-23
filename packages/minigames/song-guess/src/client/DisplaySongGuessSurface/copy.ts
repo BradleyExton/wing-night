@@ -1,5 +1,7 @@
 export const displaySongGuessSurfaceCopy = {
-  introTitle: "Who's That Song",
+  // The show's name. It is the marquee title on the TV and the heading on the
+  // intro screen — one string, because it is one name.
+  showTitle: "Who's That Song",
   introDescription:
     "Lounge covers of songs you already know. Name the song, then name who did it first.",
   songCounter: (songNumber: number, songsTotal: number): string =>

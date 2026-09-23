@@ -29,10 +29,39 @@ const SongEqualizer = (): JSX.Element => {
 const SongGuessIntro = (): JSX.Element => {
   return (
     <div className={styles.container}>
-      <h2 className={styles.introTitle}>{displaySongGuessSurfaceCopy.introTitle}</h2>
+      <h2 className={styles.introTitle}>{displaySongGuessSurfaceCopy.showTitle}</h2>
       <p className={styles.introDescription}>
         {displaySongGuessSurfaceCopy.introDescription}
       </p>
+    </div>
+  );
+};
+
+// The set's position used to be a bare gold line above the prompt, in the
+// marquee title's own tracking, weight and colour — the marquee, unframed and
+// off to one side. It is the counter cell now, which is where the other eight
+// displays put it, and it reaches the reveal and the set's last screen for the
+// first time.
+const SongGuessMarquee = ({
+  activeTeamName,
+  songCounter
+}: {
+  activeTeamName: string | null;
+  songCounter: string;
+}): JSX.Element => {
+  // A `<div>`, the way EMOJI_CHARADES's marquee is one, not the `<header>` the
+  // other five reach for: `page.locator("header")` is the e2e suite's strict
+  // handle on the host's mini-rail, and the dev sandbox renders the host and
+  // the display previews on one page. A second `<header>` naming the same team
+  // there turns `header >> text=<team>` from one match into two.
+  return (
+    <div className={styles.marquee}>
+      <span className={styles.marqueeBulbs} aria-hidden="true" />
+      <h2 className={styles.marqueeTeamName}>{activeTeamName ?? ""}</h2>
+      <span className={styles.marqueeTitle}>
+        {displaySongGuessSurfaceCopy.showTitle}
+      </span>
+      <div className={styles.marqueeCounter}>{songCounter}</div>
     </div>
   );
 };
@@ -42,14 +71,9 @@ const SongGuessPlayBody = ({
 }: {
   view: SongGuessMinigameDisplayView;
 }): JSX.Element => {
-  const songCounter = displaySongGuessSurfaceCopy.songCounter(
-    view.songCursor + 1,
-    view.songsTotal
-  );
-
   if (view.phase === "done") {
     return (
-      <div className={styles.container}>
+      <div className={styles.body}>
         <p className={styles.doneTitle}>{displaySongGuessSurfaceCopy.donePrompt}</p>
         <p className={styles.hint}>{displaySongGuessSurfaceCopy.doneHint}</p>
       </div>
@@ -58,7 +82,7 @@ const SongGuessPlayBody = ({
 
   if (view.phase === "reveal") {
     return (
-      <div className={styles.container} data-song-guess-reveal>
+      <div className={styles.body} data-song-guess-reveal>
         <span className={styles.revealLabel}>
           {displaySongGuessSurfaceCopy.revealLabel}
         </span>
@@ -75,8 +99,7 @@ const SongGuessPlayBody = ({
 
   if (view.phase === "clip_paused") {
     return (
-      <div className={styles.container} data-song-guess-lock-in>
-        <span className={styles.counter}>{songCounter}</span>
+      <div className={styles.body} data-song-guess-lock-in>
         <p className={styles.prompt}>{displaySongGuessSurfaceCopy.lockInPrompt}</p>
         <p className={styles.hint}>{displaySongGuessSurfaceCopy.lockInHint}</p>
       </div>
@@ -84,8 +107,7 @@ const SongGuessPlayBody = ({
   }
 
   return (
-    <div className={styles.container} data-song-guess-listening>
-      <span className={styles.counter}>{songCounter}</span>
+    <div className={styles.body} data-song-guess-listening>
       <p className={styles.prompt}>{displaySongGuessSurfaceCopy.listenPrompt}</p>
       {view.phase === "clip_playing" && <SongEqualizer />}
     </div>
@@ -95,6 +117,7 @@ const SongGuessPlayBody = ({
 export const DisplaySongGuessSurface = ({
   phase,
   minigameDisplayView,
+  activeTeamName,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const songGuessView =
@@ -112,7 +135,16 @@ export const DisplaySongGuessSurface = ({
           <p className={styles.hint}>{displaySongGuessSurfaceCopy.waitingLabel}</p>
         </div>
       ) : (
-        <SongGuessPlayBody view={songGuessView} />
+        <div className={styles.stage}>
+          <SongGuessMarquee
+            activeTeamName={activeTeamName}
+            songCounter={displaySongGuessSurfaceCopy.songCounter(
+              songGuessView.songCursor + 1,
+              songGuessView.songsTotal
+            )}
+          />
+          <SongGuessPlayBody view={songGuessView} />
+        </div>
       )}
       {/* Rendered for the whole surface lifetime, not per phase, so seeking
           between clip and reveal never has to re-create the element. The `src`

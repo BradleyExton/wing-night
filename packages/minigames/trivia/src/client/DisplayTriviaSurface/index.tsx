@@ -3,6 +3,41 @@ import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import { displayTriviaSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
+const TriviaMarquee = ({
+  activeTeamName,
+  attemptsRemaining
+}: {
+  activeTeamName: string | null;
+  // Host-paced: the TV has no clock to run out, so the spent question budget is
+  // the room's only sign that the turn is over and the last question on screen
+  // is nobody's to answer.
+  attemptsRemaining: number;
+}): JSX.Element => {
+  const isTurnComplete = attemptsRemaining === 0;
+
+  // A `<div>`, the way EMOJI_CHARADES's marquee is one, not the `<header>` the
+  // other five reach for: `page.locator("header")` is the e2e suite's strict
+  // handle on the host's mini-rail, and the dev sandbox renders the host and
+  // the display previews on one page. A second `<header>` naming the same team
+  // there turns `header >> text=Molten Metal` from one match into two.
+  return (
+    <div className={styles.marquee}>
+      <span className={styles.marqueeBulbs} aria-hidden="true" />
+      <h2 className={styles.marqueeTeamName}>{activeTeamName ?? ""}</h2>
+      <span className={styles.marqueeTitle}>{displayTriviaSurfaceCopy.showTitle}</span>
+      <div
+        className={
+          isTurnComplete ? styles.marqueeCounterComplete : styles.marqueeCounter
+        }
+      >
+        {isTurnComplete
+          ? displayTriviaSurfaceCopy.turnCompleteLabel
+          : displayTriviaSurfaceCopy.questionsToGoLabel(attemptsRemaining)}
+      </div>
+    </div>
+  );
+};
+
 export const DisplayTriviaSurface = ({
   phase,
   minigameDisplayView,
@@ -10,12 +45,7 @@ export const DisplayTriviaSurface = ({
 }: MinigameDisplayRendererProps): JSX.Element => {
   const triviaDisplayView =
     minigameDisplayView?.minigame === "TRIVIA" ? minigameDisplayView : null;
-  const currentPrompt = triviaDisplayView?.currentPrompt ?? null;
   const isPlayPhase = phase === "play";
-  // Host-paced: the TV has no clock to run out, so the spent question budget is
-  // the room's only sign that the turn is over and the last question on screen
-  // is nobody's to answer.
-  const isTurnComplete = triviaDisplayView?.attemptsRemaining === 0;
 
   if (!isPlayPhase) {
     return (
@@ -25,7 +55,7 @@ export const DisplayTriviaSurface = ({
     );
   }
 
-  if (currentPrompt === null) {
+  if (triviaDisplayView === null || triviaDisplayView.currentPrompt === null) {
     return (
       <div className={styles.introContainer}>
         <p className={styles.fallbackTitle}>{displayTriviaSurfaceCopy.waitingMessage}</p>
@@ -34,24 +64,19 @@ export const DisplayTriviaSurface = ({
   }
 
   return (
-    <div className={styles.container}>
-      <p className={styles.question}>{currentPrompt.question}</p>
-      <span className={styles.underline} aria-hidden="true" />
-      {activeTeamName !== null && (
-        <p className={styles.activeTeam}>
-          {!isTurnComplete && (
-            <span className={styles.activeTeamLabel}>
-              {displayTriviaSurfaceCopy.activeTeamLabel}
-            </span>
-          )}
-          {activeTeamName}
-          {isTurnComplete && (
-            <span className={styles.turnCompleteTag}>
-              {displayTriviaSurfaceCopy.turnCompleteLabel}
-            </span>
-          )}
-        </p>
-      )}
+    <div className={styles.stage}>
+      <TriviaMarquee
+        activeTeamName={activeTeamName}
+        attemptsRemaining={triviaDisplayView.attemptsRemaining}
+      />
+      {/* The team used to be named again under the question, as "On the clock:
+          MOLTEN METAL". The marquee's left cell is where the other eight
+          displays say it, so the line below the rule was a second reading of
+          the same fact and went with the marquee's arrival. */}
+      <div className={styles.container}>
+        <p className={styles.question}>{triviaDisplayView.currentPrompt.question}</p>
+        <span className={styles.underline} aria-hidden="true" />
+      </div>
     </div>
   );
 };

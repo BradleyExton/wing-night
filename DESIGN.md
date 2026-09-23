@@ -855,6 +855,87 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     `prefers-reduced-motion` on the display shows how the run ended, without
     the running.
 
+## 2.12 TRIVIA Minigame Surface Language ("Question Card")
+
+TRIVIA has no scene, no arena and no artwork: the whole surface is one question
+set as large as a 1080p TV will carry, under the marquee the rest of the show
+wears. Its language is what it refuses to draw.
+
+-   **The question is the surface.** It is `clamp(2.8rem,6.5vw,8rem)`, black
+    weight, balanced across at most 22ch, with a short `primary` rule under it
+    and nothing else on the stage. At 1920 the 22ch cap is never the binding
+    constraint — the line box is, so the question is width-bound rather than
+    height-bound and re-centres into whatever height the marquee leaves instead
+    of shrinking or truncating.
+-   **It wears the grand bulb marquee** (§2.5, the one DRAWING built): the team
+    on the left, "Trivia" as the show title in the centre, the turn's remaining
+    questions on the right, and the dotted bulb ring inset inside the gold
+    border. It is the eighth of the nine displays to wear it, and it takes the
+    three class strings from `packages/surface`'s `styleTokens` rather than
+    copying them, which is what stopped three earlier surfaces losing the ring.
+-   **The team is named once.** The surface used to caption the question with
+    "On the clock: MOLTEN METAL" in small grey caps; the marquee's left cell is
+    where the other displays say it, so the caption went with the marquee's
+    arrival rather than living alongside it. A fact the room can read twice on
+    one canvas is the duplication these migrations exist to remove.
+-   **The budget is the clock.** TRIVIA is host-paced and dropped its unenforced
+    timer (2026-09-20), so the TV has no clock to run down: the questions
+    remaining in the marquee's right cell are the room's only sign of how much
+    turn is left. At zero the cell changes words to "Turn complete" *and*
+    changes colour to `primary`, because at TV distance a wording change alone
+    is not an event. The last question stays on the wall under it — it is
+    nobody's to answer, and clearing it would leave the room staring at nothing.
+-   The TV's counter is not the tablet's. The host's counter is operational
+    ("3 questions left" — what is still his to run); the TV's is the room's
+    ("3 questions to go"). SCHLONIC splits the same counter the same way, and
+    each surface's `copy.ts` owns its own words.
+-   Host layout is a `<TakeoverStage>` and was migrated in phase 4; nothing on
+    the tablet changed here.
+
+## 2.13 SONG_GUESS Minigame Surface Language ("Lounge Set")
+
+SONG_GUESS is the one game where the thing to attend to is not on the screen at
+all — the TV is the speaker, and the room should be listening rather than
+reading. Its surface is deliberately near-empty, and its job is to say who is up,
+what they are listening to and where in the set they are, without ever drawing
+the eye off the song.
+
+-   **It wears the grand bulb marquee** (§2.5): the team on the left, "Who's
+    That Song" as the show title in the centre, "Song 2 of 4" on the right, and
+    the dotted bulb ring inset inside the gold border. Ninth and last of the
+    nine displays to wear it.
+-   **It is the surface that never said whose turn it was.** Until the marquee
+    landed, SONG_GUESS was the only one of the nine displays that never rendered
+    `activeTeamName` — §2.3 asks both surfaces to carry the active team through
+    `MINIGAME_PLAY`, and this one quietly did not. The marquee's left cell is the
+    fix, and it stays up through the reveal and through the screen that closes
+    the set, so the room always knows whose set just ended.
+-   **The show's name was written and never shown.** "Who's That Song" existed
+    in `copy.ts` and painted only on the intro screen. It is the marquee title
+    now, and it is one string: the intro heading and the marquee read the same
+    `showTitle`, because it is one name.
+-   **The counter was already the marquee, unframed.** "SONG 1 OF 3" rendered in
+    `text-gold`, extrabold, at `tracking-[0.34em]` — the marquee title's exact
+    tracking, weight and colour, floating above the prompt with no frame around
+    it. It is the marquee's counter cell now rather than a second thing in the
+    marquee's clothes, which also means the reveal and the set's last screen
+    carry it for the first time.
+-   **Scores never go on this surface.** The display view carries the turn's
+    pending points and the TV shows none of them: "Scores go up at the end of
+    the round" is the copy, the deck (§2.2C) is where a number belongs, and a
+    `+N` on the wall mid-set would turn a listening game into a scoreboard.
+-   The body under the marquee stays a single centred line — "🎵 Listen
+    closely…", then "Lock in your answers", then the answer — in the serif
+    italic that is this game's own voice, with a five-bar `primary` equalizer
+    that animates only while the clip is actually playing. The equalizer is a
+    motif, not analysis: the TV shows that something is playing, it does not
+    read the waveform.
+-   `gold` is the framing accent (marquee border, the counter, the revealed
+    title) — the same scoped exception to §0.1 that DRAWING's §2.5 and JOUST's
+    §2.7 take.
+-   Host layout is a `<TakeoverStage>` with a deck column and was migrated in
+    phase 4; nothing on the tablet changed here.
+
 ## 2.8 Cast (shared character system)
 
 Every rostered player has a little hen that recurs across the show.

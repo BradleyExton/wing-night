@@ -1,8 +1,29 @@
-export const container =
-  "flex h-full min-h-0 w-full flex-col items-center justify-center gap-6 px-8 text-center";
+// Lounge Set (DESIGN.md §2.13): the marquee row the rest of the show wears,
+// and under it a near-empty stage — there is nothing to look at while a song
+// plays, and pretending otherwise is how a listening game gets loud.
+export const stage =
+  "flex h-full w-full flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)] p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
-export const counter =
-  "text-sm font-extrabold uppercase tracking-[0.34em] text-gold";
+export { marqueeBulbs, marqueeTeamName, marqueeTitle } from "@wingnight/surface";
+
+// The grand bulb marquee DRAWING built (DESIGN.md §2.5): team left, show title
+// centre, the set's position right.
+export const marquee =
+  "relative grid grid-cols-[1fr_auto_1fr] items-center gap-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(1.4rem,2.4vw,2.4rem)] py-[clamp(0.8rem,1.4vh,1.3rem)] shadow-[inset_0_0_36px_rgba(251,191,36,0.2),0_8px_20px_rgba(0,0,0,0.55)]";
+
+// Right padding keeps the counter clear of the display's absolute timer chip
+// pinned to the stage's top-right corner.
+export const marqueeCounter =
+  "pr-[clamp(8rem,14vw,18rem)] text-right text-[clamp(0.72rem,1vw,1.05rem)] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
+
+const bodyBase =
+  "flex min-h-0 w-full flex-col items-center justify-center gap-6 px-8 text-center";
+
+// The intro and the not-yet-arrived fallback are the whole surface, so they
+// take the height themselves; the play body is a row under the marquee.
+export const container = `${bodyBase} h-full`;
+
+export const body = `${bodyBase} flex-1`;
 
 export const prompt =
   "m-0 font-serif text-5xl font-bold italic leading-tight text-text [text-shadow:0_0_24px_rgba(251,191,36,0.35)]";
