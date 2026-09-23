@@ -863,3 +863,31 @@ strange again, check `uptime` before reading the failures.
   1 test, restore byte-identical. Gate green, e2e 36 passed at load 2.84.
   **Flagged**: the new tests protect the module, not the call sites — nothing stops a future edit
   hand-typing `<= 10` again. A source-scanning guard test would catch it; judged disproportionate here.
+- [x] T5.2 `2c71b43` — **marquee shared as three tokens, and the missing bulbs restored.** All six
+  marquees live in `packages/minigames/*`, **none in `apps/client`** — which settles where the shared
+  thing must live before it is a question. The byte-identical claim holds, with a wrinkle the audit's
+  grep missed: EMOJI_CHARADES spells the keys `teamName`/`showTitle`, so a grep for the marquee names
+  finds only five. Verified mechanically by a migration script that compares all 15 declarations and
+  aborts on divergence — all 15 matched. **Unlike `RunningTotals`, no colour substitution was needed**:
+  both strings and the bulb ring were already house tokens (`text-text`, `text-gold`, `border-gold/45`).
+  The absence of a substitution is recorded in the token comment, because last time there was one.
+  **The bulb asymmetry is an omission, not a decision, and the proof is the word `relative`.** All three
+  bulbless marquees still carry `relative` on the container, which exists for nothing except positioning
+  the absolutely-placed bulb ring — and none of the three renders anything else absolute inside it
+  (zero occurrences, checked). Nobody keeps a positioning context for an ornament they rejected.
+  Chronology: DRAWING born with the marquee and bulbs 2026-06-11; JOUST copied it 2026-09-16 byte-for-
+  byte *except* the `marqueeBulbs` line; FAPPY and SCHLONIC copied JOUST; GEO and EMOJI_CHARADES were
+  restyled onto it 2026-09-21 and both *added* bulbs. Nothing in DESIGN.md §2.7/§2.9/§2.11 asks for a
+  plainer marquee. Restored in all three.
+  **Tokens, not a component**, applying §8's own rule and T5.1's judgement: the three strings are
+  identical but the marquee *container* is not — two padding values and DRAWING's background differ six
+  ways — so a `<Marquee>` would have to take the container as a prop, which is the `surfaceClassName`/
+  `tone` prop §8 already refused for the arena frame at T3.3. Consumed by re-export from each game's
+  `styles.ts`, the idiom already at `AdminConfigWizard/ReviewStep/styles.ts:3`, so no call site changed.
+  Honest cost recorded: a token cannot make the omission unrepresentable the way a component would.
+  Orchestrator independently mutation-tested: pointing JOUST's bulb span at another token reddens
+  exactly 1 test, restore returns 125/125. Gate green, e2e 36 passed at load 2.70.
+  **Noted, out of scope:** DRAWING dropped its brown hex for house tokens at 14:31 on 2026-09-21, two
+  hours *after* GEO and EMOJI_CHARADES copied that brown — so DESIGN.md §2.5's reasoning ("read as a
+  different app beside every other surface") now describes DRAWING as the only surface *without* it.
+  A real inconsistency, left alone.
