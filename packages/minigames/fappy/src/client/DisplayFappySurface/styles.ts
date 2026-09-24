@@ -37,6 +37,11 @@ export const handoffName =
 export const handoffLine =
   "text-[clamp(0.8rem,1.3vw,1.4rem)] font-extrabold uppercase tracking-[0.3em] text-gold";
 
+// Who is up after them, a size down and dimmer, so the room gets the next one
+// off the sofa while the tablet is still changing hands.
+export const handoffThen =
+  "mt-1 text-[clamp(0.75rem,1.1vw,1.2rem)] font-semibold uppercase tracking-[0.22em] text-mutedWarm";
+
 export const resultOverlay =
   "pointer-events-none absolute inset-x-0 top-[6%] z-20 flex justify-center px-[8%]";
 

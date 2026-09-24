@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { FappyMinigameHostView } from "@wingnight/shared";
 import { resolveFappyGates } from "@wingnight/shared";
@@ -7,6 +7,7 @@ import { FappyScene, type FappySceneHandle } from "../../FappyScene/index.js";
 import { resolveLegBird } from "../../resolveLegBird/index.js";
 import { useFappyRunner } from "../../useFappyRunner/index.js";
 import type { LegHold } from "../../useHeldLeg/index.js";
+import { LegPoster } from "./LegPoster/index.js";
 import { corridorCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -22,10 +23,24 @@ type CorridorProps = {
 // The beat between legs, over the corridor: whose tablet it is now. The
 // finger that just landed is still on the glass, so the arena is dead for
 // the beat and the name is the only thing to read.
-const HandoffCallout = ({ nextName }: { nextName: string | null }): JSX.Element => (
+const HandoffCallout = ({
+  nextName,
+  onDeckName
+}: {
+  nextName: string | null;
+  onDeckName: string | null;
+}): JSX.Element => (
   <div className={styles.handoffOverlay} data-fappy-handoff="host">
     <span className={styles.handoffLead}>{corridorCopy.handoffCalloutLead}</span>
     <span className={styles.handoffName}>{corridorCopy.handoffCalloutName(nextName)}</span>
+    {/* Who to get standing up while the tablet is still in the air. Nothing
+        at all when there is nobody after — the relay must not promise a
+        player it does not have. */}
+    {onDeckName !== null && (
+      <span className={styles.handoffThen} data-fappy-on-deck="host">
+        {corridorCopy.handoffCalloutThen(onDeckName)}
+      </span>
+    )}
   </div>
 );
 
@@ -58,8 +73,17 @@ export const Corridor = ({
     nextLeg === null
       ? null
       : resolveLegBird({ figure: nextLeg.player, activeTurnTeamId: view.activeTurnTeamId, serverOrigin });
+  // The leg after the one waiting on the cliff, for the callout's second line.
+  const onDeckName = view.legs[legIndex + 2]?.player?.name ?? null;
   const isLive = view.phase === "ready" || view.phase === "flying";
   const isArmed = canAct && isLive && hold === null;
+  // The poster goes on the first flap, not on the server's echo of it: the
+  // attempt is the key, so a crash (which bumps `attempt`) brings it back and
+  // a landing (which bumps the leg) brings the next player's.
+  const [launchedAttemptKey, setLaunchedAttemptKey] = useState<string | null>(null);
+  const attemptKey = `${legIndex}:${leg?.attempt ?? 0}`;
+  const isPosterUp =
+    leg !== null && view.phase === "ready" && hold === null && launchedAttemptKey !== attemptKey;
   const { flap } = useFappyRunner({
     leg,
     gatesPerLeg: view.gatesPerLeg,
@@ -79,6 +103,11 @@ export const Corridor = ({
       data-fappy-arena
       onPointerDown={(event): void => {
         event.preventDefault();
+
+        if (isArmed) {
+          setLaunchedAttemptKey(attemptKey);
+        }
+
         flap();
       }}
     >
@@ -93,7 +122,10 @@ export const Corridor = ({
           label={corridorCopy.sceneLabel(bird.playerName)}
         />
       </div>
-      {hold?.kind === "handoff" && <HandoffCallout nextName={waitingBird?.playerName ?? null} />}
+      {isPosterUp && <LegPoster bird={bird} isRespawn={(leg?.attempt ?? 0) > 0} />}
+      {hold?.kind === "handoff" && (
+        <HandoffCallout nextName={waitingBird?.playerName ?? null} onDeckName={onDeckName} />
+      )}
     </div>
   );
 };

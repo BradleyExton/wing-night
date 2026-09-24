@@ -24,3 +24,8 @@ export const handoffLead = "text-[0.7rem] font-extrabold uppercase tracking-[0.3
 
 export const handoffName =
   "font-serif text-[clamp(2rem,5vw,3.4rem)] font-bold italic leading-none text-text [text-shadow:0_0_24px_rgba(251,191,36,0.55)]";
+
+// Who is up after them, a size down and dimmer: the tablet's owner reads the
+// name above, the room reads this one and starts moving.
+export const handoffThen =
+  "mt-1 text-[0.85rem] font-semibold uppercase tracking-[0.2em] text-mutedWarm";

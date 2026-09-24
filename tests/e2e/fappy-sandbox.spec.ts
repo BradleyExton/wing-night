@@ -29,6 +29,45 @@ test("fappy sandbox starts the clock on the first tap and sends a crashed bird b
   await expect(page.locator("[data-fappy-champ]")).toHaveCount(6);
   await expect(page.getByText("Leg 1 of 2")).toHaveCount(2);
   await expect(page.getByText("Alex is up — tap to take off")).toBeVisible();
+
+  // The relay's running order, as faces, on both screens: Alex is flying it
+  // and Caitlin's chip carries the NEXT tag. The fixture roster has no
+  // avatars, so a chip wears the player's initials rather than a head.
+  const hostLineup = page.locator('[data-fappy-lineup="tablet"]');
+  const wallLineup = page.locator('[data-fappy-lineup="wall"]');
+
+  await expect(page.locator("[data-fappy-lineup]")).toHaveCount(2);
+  await expect(hostLineup.locator("[data-fappy-lineup-chip]")).toHaveCount(2);
+  await expect(hostLineup.locator('[data-fappy-lineup-player="Alex"]')).toHaveAttribute(
+    "data-fappy-lineup-state",
+    "flying"
+  );
+  await expect(wallLineup.locator('[data-fappy-lineup-player="Caitlin"]')).toHaveAttribute(
+    "data-fappy-lineup-state",
+    "next"
+  );
+  await expect(hostLineup.getByText("Next", { exact: true })).toBeVisible();
+
+  // The on-deck line names the player after the one up next — and says
+  // nothing when there is nobody after. The sandbox fixture is a two-leg
+  // relay (see the dev manifest), so Caitlin is the last player and no screen
+  // may promise a third. The line's positive case is covered by the surfaces'
+  // own unit tests, which can build a three-leg view.
+  await expect(page.locator("[data-fappy-on-deck]")).toHaveCount(0);
+  await expect(page.getByText("Then ", { exact: false })).toHaveCount(0);
+
+  // The whole tablet says whose turn it is while the corridor is still dead,
+  // and it can never eat the flap that starts the leg.
+  const poster = page.locator('[data-fappy-leg-poster="start"]');
+
+  await expect(poster).toContainText("Alex");
+  await expect(poster).toContainText("Tap to fly");
+  await expect(poster).toHaveCSS("pointer-events", "none");
+
+  // Caitlin stands ~365 world units down a 160-unit viewport, so a bubble on
+  // the bezel stands in for her until her bird scrolls into view.
+  await expect(page.locator("[data-fappy-waiter-peek]").first()).toContainText("waiting at the cliff");
+  await expect(page.locator("[data-fappy-waiter-peek]").first()).toHaveCSS("opacity", "1");
   // Caitlin waits on the landing cliff of leg 1, on both screens; every bird
   // carries its wing on its own layer so the loop can beat it.
   await expect(page.locator("[data-fappy-waiting-bird]")).toHaveCount(2);
@@ -45,10 +84,14 @@ test("fappy sandbox starts the clock on the first tap and sends a crashed bird b
   // Nobody flaps again, so the bird comes down: the local sim reports the end,
   // the real reducer re-runs the log, and the same player is back on the
   // start line with a crash on the board and the clock still running.
-  await expect(page.locator("[data-fappy-crashes='1']")).toBeVisible({ timeout: 8000 });
+  // The crash count rides Alex's chip. Both screens carry the strip now, so
+  // the assertion names the tablet's rather than matching two elements.
+  await expect(hostLineup.locator("[data-fappy-crashes='1']")).toBeVisible({ timeout: 8000 });
   await expect(page.getByText("Alex is back on the perch — go again")).toBeVisible();
   await expect(page.getByText("Back on the start cliff. Tap to go again.")).toBeVisible();
   await expect(page.getByText("Leg 1 of 2")).toHaveCount(2);
+  // The poster comes back for the second attempt with the other instruction.
+  await expect(page.locator('[data-fappy-leg-poster="respawn"]')).toContainText("Tap to go again");
 
   expect(socketRequests).toHaveLength(0);
 });
@@ -204,6 +247,17 @@ test("landing next to the waiting bird holds the corridor, tells the room whose 
   await expect(displayCallout).toContainText("Caitlin");
   await expect(displayCallout).toContainText("You're up — grab the tablet");
   await expect(page.getByText("Alex is through — Caitlin, grab the tablet")).toBeVisible();
+
+  // Caitlin is the last leg of this two-leg fixture, so neither callout adds
+  // an on-deck line; the tablet's strip has ticked Alex off and moved the
+  // NEXT tag on, while the wall's is still lit on the leg it is showing.
+  await expect(page.locator("[data-fappy-on-deck]")).toHaveCount(0);
+  await expect(
+    page.locator('[data-fappy-lineup="tablet"] [data-fappy-lineup-player="Alex"]')
+  ).toHaveAttribute("data-fappy-lineup-state", "cleared");
+  await expect(
+    page.locator('[data-fappy-lineup="tablet"] [data-fappy-lineup-player="Caitlin"]')
+  ).toHaveAttribute("data-fappy-lineup-state", "flying");
 
   // The corridors are still leg 1's while the beat plays — the landed bird
   // and the waiter both on the plateau — even though the relay has moved on

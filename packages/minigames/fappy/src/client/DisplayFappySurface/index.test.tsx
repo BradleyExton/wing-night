@@ -8,6 +8,7 @@ import { DisplayFappySurface } from "./index.js";
 
 const ALEX: FappyPlayerFigure = { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "disco" };
 const MORGAN: FappyPlayerFigure = { playerId: "p-2", name: "Morgan", avatarSrc: null, teamId: "team-alpha", genre: "disco" };
+const DAN: FappyPlayerFigure = { playerId: "p-3", name: "Dan B", avatarSrc: null, teamId: "team-alpha", genre: "disco" };
 const T0 = 1_700_000_000_000;
 
 const createLeg = (overrides: Partial<FappyMinigameLeg> = {}): FappyMinigameLeg => {
@@ -174,4 +175,73 @@ test("does call time on the wall when the limit caught the team", () => {
 // THAT sign and not a private one — the drift the bulb-ring test used to catch.
 test("does hang the shared neon marquee", () => {
   assert.ok(render(createView()).includes("data-neon-marquee"));
+});
+
+// Step 2: the same lineup the tablet carries, at sofa size, under the sign.
+test("does hang the relay's running order under the marquee at wall size", () => {
+  const html = render(createView());
+
+  assert.match(html, /data-fappy-lineup="wall"/);
+  assert.equal((html.match(/data-fappy-lineup-chip="/g) ?? []).length, 2);
+  assert.match(html, /data-fappy-lineup-chip="0" data-fappy-lineup-state="flying"/);
+  assert.match(html, /data-fappy-lineup-chip="1" data-fappy-lineup-state="next"/);
+  // Alex's head comes from the pack; Morgan has none, so initials do.
+  assert.match(html, /data-fappy-head="photo"/);
+  assert.match(html, /data-fappy-head="initials"/);
+  // Nothing is lit once the relay is over.
+  assert.doesNotMatch(
+    render(createView({ phase: "finished", legIndex: 2, startedAtMs: T0, finishedAtMs: T0 + 1000, points: 4 })),
+    /data-fappy-lineup-state="next"/
+  );
+});
+
+// Step 3: the status line names who is up after the handoff, with the waiter
+// named first so "then" has something to hang off.
+test("does name the player after the next one on the wall's status line", () => {
+  const threeLegs = [
+    createLeg(),
+    createLeg({ legIndex: 1, player: MORGAN, seed: 12 }),
+    createLeg({ legIndex: 2, player: DAN, seed: 13 })
+  ];
+
+  assert.match(
+    render(createView({ legsPerTurn: 3, legs: threeLegs })),
+    /Alex is up — tap to take off\. Morgan, then Dan B\./
+  );
+  assert.match(
+    render(
+      createView({
+        phase: "flying",
+        legsPerTurn: 3,
+        startedAtMs: T0,
+        legs: [createLeg({ status: "flying", flapTicks: [0] }), threeLegs[1]!, threeLegs[2]!]
+      })
+    ),
+    /Alex is flying — land next to Morgan\. Then Dan B\./
+  );
+});
+
+test("does leave the on-deck line off when there is nobody after the next player", () => {
+  const html = render(createView());
+
+  assert.match(html, /Alex is up — tap to take off/);
+  assert.doesNotMatch(html, /then Dan B/);
+  assert.doesNotMatch(html, /Then /);
+});
+
+// Step 5: the waiting bird stands most of a leg past the right edge, so a
+// bubble on the bezel stands in for it until it scrolls into view.
+test("does peek the waiting player over the bezel while their bird is off screen", () => {
+  assert.match(render(createView()), /data-fappy-waiter-peek/);
+  assert.match(render(createView()), /waiting at the cliff/);
+  assert.doesNotMatch(
+    render(
+      createView({
+        legIndex: 1,
+        startedAtMs: T0,
+        legs: [createLeg({ status: "cleared" }), createLeg({ legIndex: 1, player: MORGAN, seed: 12 })]
+      })
+    ),
+    /data-fappy-waiter-peek/
+  );
 });

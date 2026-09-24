@@ -1,3 +1,14 @@
+// Who is up after the player who is up next. The wall names the waiter first
+// so "then" has something to hang off: "Caitlin, then Dan". Empty when there
+// is nobody after — a two-leg relay must not promise a third player.
+const onDeck = (waitingName: string | null, onDeckName: string | null): string => {
+  if (onDeckName === null) {
+    return "";
+  }
+
+  return waitingName === null ? `. Then ${onDeckName}.` : `. ${waitingName}, then ${onDeckName}.`;
+};
+
 export const displayFappySurfaceCopy = {
   title: "Fappy Bird",
   introTitle: "Fappy Bird",
@@ -10,19 +21,46 @@ export const displayFappySurfaceCopy = {
   gatesCounter: (gatesCleared: number, gatesTotal: number): string =>
     `${gatesCleared} / ${gatesTotal} gates`,
   clockIdle: "0:00.0",
-  readyPrompt: (playerName: string | null): string =>
-    playerName === null ? "Tap to take off" : `${playerName} is up — tap to take off`,
-  respawnPrompt: (playerName: string | null): string =>
-    playerName === null ? "Back on the perch — go again" : `${playerName} is back on the perch — go again`,
-  flyingPrompt: (playerName: string | null, waitingName: string | null): string => {
+  readyPrompt: (
+    playerName: string | null,
+    waitingName: string | null = null,
+    onDeckName: string | null = null
+  ): string => {
+    const head = playerName === null ? "Tap to take off" : `${playerName} is up — tap to take off`;
+
+    return `${head}${onDeck(waitingName, onDeckName)}`;
+  },
+  respawnPrompt: (
+    playerName: string | null,
+    waitingName: string | null = null,
+    onDeckName: string | null = null
+  ): string => {
+    const head =
+      playerName === null
+        ? "Back on the perch — go again"
+        : `${playerName} is back on the perch — go again`;
+
+    return `${head}${onDeck(waitingName, onDeckName)}`;
+  },
+  flyingPrompt: (
+    playerName: string | null,
+    waitingName: string | null,
+    onDeckName: string | null = null
+  ): string => {
     const flyer = playerName ?? "The bird";
 
-    return waitingName === null
-      ? `${flyer} is flying — come down on the far cliff`
-      : `${flyer} is flying — land next to ${waitingName}`;
+    if (waitingName === null) {
+      return `${flyer} is flying — come down on the far cliff`;
+    }
+
+    const head = `${flyer} is flying — land next to ${waitingName}`;
+
+    return onDeckName === null ? head : `${head}. Then ${onDeckName}.`;
   },
   handoffCalloutName: (nextName: string | null): string => nextName ?? "Next player",
   handoffCalloutLine: "You're up — grab the tablet",
+  // The second line of the callout: who is up after the player it just named.
+  handoffCalloutThen: (onDeckName: string): string => `then ${onDeckName}`,
   handoffPrompt: (landedName: string | null, nextName: string | null): string => {
     const landed = landedName === null ? "Landed" : `${landedName} is through`;
 

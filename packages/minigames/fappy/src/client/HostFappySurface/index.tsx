@@ -3,10 +3,10 @@ import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { FappyMinigameHostView, FappyMinigameLeg } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas } from "@wingnight/surface";
 
+import { RelayLineup } from "../RelayLineup/index.js";
 import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
 import { formatRelayClock, useRelayClock } from "../useRelayClock/index.js";
 import { Corridor } from "./Corridor/index.js";
-import { LegHistory } from "./LegHistory/index.js";
 import { RelayClock } from "./RelayClock/index.js";
 import { hostFappySurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -44,6 +44,10 @@ const resolveHint = (view: FappyMinigameHostView, canAct: boolean, hold: LegHold
   const legIndex = Math.min(view.legIndex, view.legsPerTurn - 1);
   const leg = view.legs[legIndex];
   const waitingName = resolvePlayerName(view.legs[legIndex + 1] ?? null);
+  // Who is up AFTER the handoff. Named so the room can start moving before
+  // the tablet reaches them; null on the last two legs, where there is
+  // nobody after and the sentence would be a lie.
+  const onDeckName = resolvePlayerName(view.legs[legIndex + 2] ?? null);
 
   if (hold?.kind === "handoff") {
     return hostFappySurfaceCopy.handoffHint(
@@ -58,12 +62,12 @@ const resolveHint = (view: FappyMinigameHostView, canAct: boolean, hold: LegHold
     }
 
     return leg !== undefined && leg.attempt > 0
-      ? hostFappySurfaceCopy.respawnHint(leg.checkpointGate)
-      : hostFappySurfaceCopy.readyHint(resolvePlayerName(leg ?? null), waitingName);
+      ? hostFappySurfaceCopy.respawnHint(leg.checkpointGate, onDeckName)
+      : hostFappySurfaceCopy.readyHint(resolvePlayerName(leg ?? null), waitingName, onDeckName);
   }
 
   if (view.phase === "flying") {
-    return hostFappySurfaceCopy.flyingHint(waitingName);
+    return hostFappySurfaceCopy.flyingHint(waitingName, onDeckName);
   }
 
   return view.phase === "timedOut" ? hostFappySurfaceCopy.timedOutHint : hostFappySurfaceCopy.finishedHint;
@@ -147,9 +151,15 @@ export const HostFappySurface = ({
             <span className={styles.counterName}>
               {hostFappySurfaceCopy.flyingLabel(resolvePlayerName(currentLeg))}
             </span>
-            <LegHistory
+            {/* The relay's running order as faces (step 1): who has flown,
+                who is flying, and — the fact the room could not find before —
+                whose tablet it is next. */}
+            <RelayLineup
               legs={fappyView.legs}
               activeLegIndex={isRelayOver(fappyView) ? null : fappyView.legIndex}
+              activeTurnTeamId={fappyView.activeTurnTeamId}
+              serverOrigin={serverOrigin}
+              surface="tablet"
             />
             <span className={styles.counter}>
               {hostFappySurfaceCopy.progressLine(
