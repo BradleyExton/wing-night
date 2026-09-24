@@ -1,5 +1,6 @@
 import {
   Phase,
+  resolveRoomTurnOrderTeamIds,
   type DisplayRoomStateSnapshot,
   type MinigameType,
   type Player,
@@ -147,7 +148,8 @@ export const resolveStageViewModel = (
       ? roomState.timer
       : null;
 
-  const turnOrderTeamIds = roomState?.turnOrderTeamIds ?? [];
+  // This round's order, which rotates the host-edited base each round.
+  const turnOrderTeamIds = roomState === null ? [] : resolveRoomTurnOrderTeamIds(roomState);
   const completedRoundTurnTeamIds = roomState?.completedRoundTurnTeamIds ?? [];
   const completedSet = new Set(completedRoundTurnTeamIds);
   const teamNameByTeamId = new Map(

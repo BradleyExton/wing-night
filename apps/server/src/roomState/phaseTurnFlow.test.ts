@@ -399,8 +399,60 @@ test("advanceRoomStatePhase increments round after ROUND_RESULTS when rounds rem
   assert.equal(nextState.currentRound, 2);
   assert.deepEqual(nextState.currentRoundConfig, gameConfigFixture.rounds[1]);
   assert.equal(nextState.roundTurnCursor, 0);
-  assert.equal(nextState.activeRoundTeamId, "team-1");
+  // Round two opens one team further down the base order.
+  assert.deepEqual(nextState.turnOrderTeamIds, ["team-1", "team-2"]);
+  assert.equal(nextState.activeRoundTeamId, "team-2");
   assert.deepEqual(nextState.completedRoundTurnTeamIds, []);
+});
+
+// Principle: the first team to play a fresh minigame has watched nobody, so no
+// team should always be first. The cursor stays "position within the round";
+// the team it lands on is the base order rotated by the round.
+test("does rotate which team opens each round so every team opens and plays once per round", () => {
+  setupThreeTeamsAndAssignments();
+  setRoomStateGameConfig({
+    ...gameConfigFixture,
+    rounds: [1, 2, 3, 4].map((round) => ({
+      ...gameConfigFixture.rounds[0],
+      round,
+      label: `Round ${round}`
+    }))
+  });
+  advanceUntil(Phase.INTRO, 0);
+  reorderTurnOrder(["team-2", "team-3", "team-1"]);
+
+  // Every MINIGAME_INTRO is one team's turn opening; one advance per step
+  // means each is seen exactly once.
+  const turnsByRound = new Map<number, string[]>();
+
+  for (let step = 0; step < 200; step += 1) {
+    const snapshot = getRoomStateSnapshot();
+
+    if (snapshot.phase === Phase.FINAL_RESULTS) {
+      break;
+    }
+
+    if (snapshot.phase === Phase.MINIGAME_INTRO) {
+      const turns = turnsByRound.get(snapshot.currentRound) ?? [];
+      turns.push(snapshot.activeRoundTeamId ?? "none");
+      turnsByRound.set(snapshot.currentRound, turns);
+    }
+
+    advanceRoomStatePhase();
+  }
+
+  assert.equal(getRoomStateSnapshot().phase, Phase.FINAL_RESULTS);
+  assert.deepEqual(
+    [...turnsByRound.entries()],
+    [
+      [1, ["team-2", "team-3", "team-1"]],
+      [2, ["team-3", "team-1", "team-2"]],
+      [3, ["team-1", "team-2", "team-3"]],
+      [4, ["team-2", "team-3", "team-1"]]
+    ]
+  );
+  // The base order the host set in INTRO is untouched by the rotation.
+  assert.deepEqual(getRoomStateSnapshot().turnOrderTeamIds, ["team-2", "team-3", "team-1"]);
 });
 
 test("reorderTurnOrder updates pre-game turn order and active team", () => {
@@ -473,24 +525,31 @@ test("reorderTurnOrder persists into later rounds and rejects invalid sets", () 
   const nextRoundSnapshot = getRoomStateSnapshot();
 
   assert.equal(nextRoundSnapshot.phase, Phase.MINIGAME_INTRO);
+  // The base order persists; round two opens one team further down it.
   assert.deepEqual(nextRoundSnapshot.turnOrderTeamIds, [
     "team-2",
     "team-3",
     "team-1"
   ]);
-  assert.equal(nextRoundSnapshot.activeRoundTeamId, "team-2");
+  assert.equal(nextRoundSnapshot.activeRoundTeamId, "team-3");
 });
 
+// The host arranges the list they see, which at ROUND_RESULTS is the order
+// the NEXT round will play in; the base stored is whatever rotates into it.
 test("reorderTurnOrder at ROUND_RESULTS lands on the round about to start", () => {
   setupValidTeamsAndAssignments();
   advanceToRoundResultsPhase(1);
 
-  reorderTurnOrder(["team-2", "team-1"]);
+  const reorderedSnapshot = reorderTurnOrder(["team-2", "team-1"]);
+
+  assert.deepEqual(reorderedSnapshot.turnOrderTeamIds, ["team-1", "team-2"]);
+  assert.equal(reorderedSnapshot.activeRoundTeamId, "team-2");
+
   const nextRoundSnapshot = advanceRoomStatePhase();
 
   assert.equal(nextRoundSnapshot.phase, Phase.MINIGAME_INTRO);
   assert.equal(nextRoundSnapshot.currentRound, 2);
-  assert.deepEqual(nextRoundSnapshot.turnOrderTeamIds, ["team-2", "team-1"]);
+  assert.deepEqual(nextRoundSnapshot.turnOrderTeamIds, ["team-1", "team-2"]);
   assert.equal(nextRoundSnapshot.activeRoundTeamId, "team-2");
   assert.deepEqual(nextRoundSnapshot.completedRoundTurnTeamIds, []);
 });

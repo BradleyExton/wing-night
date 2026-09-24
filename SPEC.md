@@ -245,7 +245,7 @@ Global Phases:
 8. FINAL_RESULTS
 
 Rounds 1–N repeat phases 3–7 with a per-team loop:
-- `MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS` (once per team, in fixed turn order)
+- `MINIGAME_INTRO -> EATING -> MINIGAME_PLAY -> TURN_RESULTS` (once per team, in the round's turn order)
 - `ROUND_RESULTS` (once after the last team turn in the round)
 
 A round has no announcement beat of its own: it opens on its first team's
@@ -280,7 +280,7 @@ Host:
 Display:
 - Setup flow surface remains visible in locked mode (`Game Locked In`).
 - On host start action, display runs a local 3-second countdown (`3 → 2 → 1`) before handing over to the first team's briefing.
-- Turn order is editable here, before round one starts.
+- Turn order is editable here, before round one starts. The order set here is the base order: round one plays it as listed, and every later round opens one team further down it (see MINIGAME_PLAY).
 
 ---
 
@@ -315,7 +315,7 @@ Display:
 ### MINIGAME_PLAY (Turn-Based)
 
 - One active team turn at a time
-- Fixed round turn order for the game
+- Round N (1-based) opens with the team at index `(N-1) mod teams.length` of the host-edited base order, and the rest follow in that order, wrapping, so no team is always first to play a fresh mini-game. `turnOrderTeamIds` on the snapshot stays the base order; surfaces resolve the round's order from it (`resolveRoomTurnOrderTeamIds`), and a reorder at `ROUND_RESULTS` is taken as the upcoming round's order and stored as the base that produces it.
 - Mini-game scoring mutations are accepted for the active team only
 - PASS_AND_PLAY hides host controls
 - Host unlock via press-and-hold

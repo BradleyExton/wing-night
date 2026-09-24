@@ -173,17 +173,22 @@ export const resolveTriviaHostView = (
   return minigameHostView;
 };
 
-export const advanceUntil = (
+// Rounds rotate which team opens, so a test that wants a PARTICULAR team's
+// turn in a later round names it; a test that only wants the phase leaves
+// `targetTeamId` out and lands on whichever team the round opens with.
+const advanceUntilTurn = (
   targetPhase: Phase,
   targetRound: number,
-  maxSteps = 64
+  targetTeamId: string | null,
+  maxSteps: number
 ): void => {
   for (let step = 0; step < maxSteps; step += 1) {
     const snapshot = getRoomStateSnapshot();
 
     if (
       snapshot.phase === targetPhase &&
-      snapshot.currentRound === targetRound
+      snapshot.currentRound === targetRound &&
+      (targetTeamId === null || snapshot.activeRoundTeamId === targetTeamId)
     ) {
       return;
     }
@@ -206,8 +211,27 @@ export const advanceUntil = (
   }
 
   assert.fail(
-    `Unable to reach phase ${targetPhase} in round ${targetRound} within ${maxSteps} steps`
+    `Unable to reach phase ${targetPhase} in round ${targetRound}${
+      targetTeamId === null ? "" : ` for ${targetTeamId}`
+    } within ${maxSteps} steps`
   );
+};
+
+export const advanceUntil = (
+  targetPhase: Phase,
+  targetRound: number,
+  maxSteps = 64
+): void => {
+  advanceUntilTurn(targetPhase, targetRound, null, maxSteps);
+};
+
+export const advanceToTeamTurn = (
+  targetPhase: Phase,
+  targetRound: number,
+  teamId: string,
+  maxSteps = 64
+): void => {
+  advanceUntilTurn(targetPhase, targetRound, teamId, maxSteps);
 };
 
 export const advanceToEatingPhase = (round = 1): void => {

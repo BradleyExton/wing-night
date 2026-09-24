@@ -31,6 +31,7 @@ import {
   advanceToEatingPhase,
   advanceToMinigamePlayPhase,
   advanceToRoundResultsPhase,
+  advanceToTeamTurn,
   clockPacedGameConfigFixture,
   gameConfigFixture,
   geoPromptFixture,
@@ -120,9 +121,10 @@ test("applies scores cumulatively across rounds", () => {
   advanceToRoundResultsPhase(1);
   advanceRoomStatePhase();
 
-  advanceToEatingPhase(2);
+  // Round two opens with team-2; team-1's turn is the one to score again.
+  advanceToTeamTurn(Phase.EATING, 2, "team-1");
   setWingParticipation("player-1", true);
-  advanceToMinigamePlayPhase(2);
+  advanceToTeamTurn(Phase.MINIGAME_PLAY, 2, "team-1");
   setPendingMinigamePoints({ "team-1": 4 });
   advanceToRoundResultsPhase(2);
 

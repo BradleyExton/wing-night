@@ -41,3 +41,31 @@ test("does leave the active theme null when no team is up or there is no room", 
   assert.equal(empty.activeTeamTheme, null);
   assert.equal(empty.teamThemeByTeamId.size, 0);
 });
+
+// The TV's turn tiles are the round's order, not the host-edited base: round
+// two opens one team further down, so the base's first team is now last.
+test("does lay the turn tiles out in the rotated order when a later round is on", () => {
+  const viewModel = resolveStageViewModel(
+    toDisplayRoomStateSnapshot(
+      buildRoomState({
+        phase: Phase.TURN_RESULTS,
+        currentRound: 2,
+        totalRounds: 3,
+        teams,
+        turnOrderTeamIds: ["team-1", "team-2"],
+        roundTurnCursor: 0,
+        completedRoundTurnTeamIds: [],
+        activeRoundTeamId: "team-2"
+      })
+    )
+  );
+
+  assert.deepEqual(
+    viewModel.turnTiles.map((tile) => [tile.teamId, tile.status]),
+    [
+      ["team-2", "just-done"],
+      ["team-1", "upcoming"]
+    ]
+  );
+  assert.equal(viewModel.nextTurnTeamName, "Molten Metal");
+});

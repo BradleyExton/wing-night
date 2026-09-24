@@ -31,7 +31,7 @@ test("renders editable turn order controls during round intro", () => {
 
   assert.match(
     html,
-    /Adjust team order before the round begins\. This order carries into later rounds until changed\./
+    /Adjust the order for the round about to start\. Each round opens one team further down the list than the last\./
   );
   assert.doesNotMatch(html, /Locked until the round ends/);
   assert.match(html, /Move Up/);
