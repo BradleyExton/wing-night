@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Minigame Marquee (TV) — Prototype Round</title>
+    <style>
+      :root { --bg:#121212; --surface:#1c1c1c; --surface-alt:#242424; --text:#fff; --muted:#a3a3a3; --primary:#f97316; --gold:#fbbf24; }
+      html, body { margin:0; background:var(--bg); color:var(--text); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; min-height:100dvh; }
+      main { max-width:1100px; margin:0 auto; padding:3rem 2rem 5rem; }
+      h1 { font-size:clamp(2rem,4vw,3.25rem); margin:0 0 0.5rem; }
+      p.lede { color:var(--muted); font-size:1.125rem; line-height:1.5; margin:0 0 2rem; }
+      p.note { color:var(--muted); font-size:0.95rem; line-height:1.5; margin:0 0 2.5rem; padding:0.85rem 1rem; background:var(--surface-alt); border-left:3px solid var(--primary); border-radius:6px; }
+      .q { color:var(--primary); font-weight:700; }
+      .grid { display:grid; gap:1.5rem; }
+      .card { display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid #333; border-radius:12px; overflow:hidden; transition:transform 120ms ease, border-color 120ms ease; }
+      .card:hover, .card:focus { border-color:var(--primary); transform:translateY(-2px); }
+      .shot { position:relative; aspect-ratio: 1920 / 300; overflow:hidden; background:#000; }
+      .shot iframe { position:absolute; top:0; left:0; width:1920px; height:300px; border:0; pointer-events:none; transform-origin:0 0; transform:scale(var(--s, 0.5)); }
+      .card .text { padding:1.25rem 1.75rem 1.5rem; }
+      .index { display:inline-block; background:var(--primary); color:#1a0f04; font-weight:800; font-size:0.75rem; letter-spacing:0.1em; padding:0.25rem 0.5rem; border-radius:4px; margin-bottom:0.6rem; }
+      h2 { font-size:1.4rem; margin:0 0 0.4rem; }
+      .desc { color:var(--muted); line-height:1.5; margin:0; }
+      .cost { display:block; margin-top:0.5rem; color:var(--gold); font-size:0.9rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Minigame Marquee (TV) — Prototype Round</h1>
+      <p class="lede">
+        Six directions for the strip, plus two hybrids added after the first pick (07, 08), across the top of every minigame on the TV: the team, the
+        show title, the counter and the clock. Each page cycles four real turns from the pack on
+        <strong>click</strong> and the clock ticks live; press <strong>U</strong> to jump into the
+        last fifteen seconds and see the urgent and time's-up states.
+      </p>
+      <p class="note">
+        <span class="q">The question these answer:</span> today all eight TV marquees wear the same
+        brown gold-bordered box with a dotted bulb ring, and it reads as generic game-show chrome
+        rather than as <em>this</em> show. These six disagree on purpose about what the strip is:
+        a broadcast graphic, the team's banner, a bar sign, a bottle label, a scoreboard, or no
+        chrome at all. All of them carry the same four facts in the same places, so any one can
+        replace the current marquee behind the shared tokens without touching a game's body.
+        The previews below are live at TV proportions; open one to see it full-screen. <strong>07 was chosen on 2026-09-23</strong> and built as <code>&lt;NeonMarquee&gt;</code> in packages/surface (DESIGN.md §2.2D, ADR-0006).
+      </p>
+      <div class="grid">
+        <a class="card" href="01-broadcast-bug.html"><div class="shot"><iframe src="01-broadcast-bug.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">01</span><h2>Broadcast Bug</h2>
+          <p class="desc">A sports score bug: compact, left-anchored, skewed, hard-edged. LIVE tab, the team on a slab of its own colour, the title as a channel ident, the clock as a filled block that drains. Nothing spans the width, so the game's body gets the rest of the top row back.</p>
+        </div></a>
+        <a class="card" href="02-team-banner.html"><div class="shot"><iframe src="02-team-banner.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">02</span><h2>Team Banner</h2>
+          <p class="desc">The turn's team owns the header outright: its colour floods the bar and its genre face sets the name, so Molten Metal and Honky Tonk Heat get visibly different headers. The show title becomes a stamp. Leans on the team-identity system that already ships.</p>
+          <span class="cost">Costs the genre font and team colour reaching the display surface props, which today only the rail and lobby get.</span>
+        </div></a>
+        <a class="card" href="03-neon-sign.html"><div class="shot"><iframe src="03-neon-sign.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">03</span><h2>Neon Sign</h2>
+          <p class="desc">No box. The show title is a neon tube in Monoton with one tired letter that flickers, the team is Anton in white light, the clock is a glowing pill that turns red. Chrome made of light instead of material, which is what a bar with a wing night actually has on its wall.</p>
+        </div></a>
+        <a class="card" href="04-sauce-label.html"><div class="shot"><iframe src="04-sauce-label.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">04</span><h2>Sauce Label</h2>
+          <p class="desc">A hot-sauce bottle label: cream paper, a double rule, ticket-punched ends, the title in Rye with an EXTRA HOT ribbon, the counter as a chili heat rating and the clock in a red wax seal. The only light direction, and the one that says "wings" rather than "game show".</p>
+          <span class="cost">Breaks §0.1's palette: the paper and kraft browns are new material colours and would need a scoped exception.</span>
+        </div></a>
+        <a class="card" href="05-jumbotron.html"><div class="shot"><iframe src="05-jumbotron.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">05</span><h2>Jumbotron</h2>
+          <p class="desc">An arena LED board: black bezel with rivets, an amber dot matrix behind Orbitron, the clock as a red segment display. The bluntest of the six and the easiest to read across a room, at the cost of feeling like a hockey rink more than a kitchen.</p>
+        </div></a>
+        <a class="card" href="06-heat-line.html"><div class="shot"><iframe src="06-heat-line.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">06</span><h2>Heat Line</h2>
+          <p class="desc">Anti-chrome. A gold kicker, a huge team name in the house sans, and the clock as a full-width line that burns down from gold through orange to red, with a white-hot tip. Time is space, the digits are a footnote. The cheapest to build and the one with the least decoration to date.</p>
+        </div></a>
+        <a class="card" href="07-neon-heat-line.html"><div class="shot"><iframe src="07-neon-heat-line.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">07 · CHOSEN</span><h2>Neon Heat Line <span style="color:var(--gold);font-size:0.8em">· hybrid of 06 + 03</span></h2>
+          <p class="desc">Heat Line's layout wearing Neon Sign's light: the kicker is a small Monoton tube with the flickering letter, the team name is Anton in white light, the digits sit in the glowing pill, and the burning line is itself a tube in a glass track with a white-hot tip.</p>
+        </div></a>
+        <a class="card" href="08-neon-sign-burning.html"><div class="shot"><iframe src="08-neon-sign-burning.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">08</span><h2>Neon Sign, Burning <span style="color:var(--gold);font-size:0.8em">· hybrid of 03 + 06</span></h2>
+          <p class="desc">Neon Sign exactly as it was, except the gold rule under the sign is now the clock: a tube that burns down from the right edge. The centred tube title stays the hero; the digits lose their pill and become a footnote beside the counter.</p>
+        </div></a>
+      </div>
+    </main>
+    <script>
+      // Each preview is the real page at 1920px wide, scaled to the card.
+      const fit = () => document.querySelectorAll(".shot").forEach((el) => el.style.setProperty("--s", String(el.clientWidth / 1920)));
+      fit(); addEventListener("resize", fit);
+    </script>
+  </body>
+</html>

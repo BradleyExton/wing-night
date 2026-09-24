@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import { NeonMarquee } from "@wingnight/surface";
 import type { JoustMinigameDisplayView, JoustMinigameShot } from "@wingnight/shared";
 
 import { JoustArenaScene } from "../JoustArenaScene/index.js";
@@ -84,11 +85,13 @@ const JoustPlayBody = ({
   view,
   activeTeamName,
   clock,
+  clockLine,
   serverOrigin
 }: {
   view: JoustMinigameDisplayView;
   activeTeamName: string | null;
   clock: ReactNode;
+  clockLine: ReactNode;
   serverOrigin: string | null;
 }): JSX.Element => {
   const replayIndex = useShotReplay(view.lastShot);
@@ -124,23 +127,23 @@ const JoustPlayBody = ({
 
   return (
     <div className={styles.stage}>
-      <header className={styles.marquee}>
-        <span className={styles.marqueeBulbs} aria-hidden="true" />
-        <h2 className={styles.marqueeTeamName}>{activeTeamName ?? ""}</h2>
-        <span className={styles.marqueeTitle}>{displayJoustSurfaceCopy.title}</span>
-        <div className={styles.marqueeMeta}>
-          <span className={styles.marqueeShot}>
-            {displayJoustSurfaceCopy.shotCounter(view.shotIndex + 1, view.shotsPerTurn)}
-          </span>
-          <span className={styles.marqueeShot}>
-            {displayJoustSurfaceCopy.standing(standingCount, view.lineup.length)}
-          </span>
-          <span className={styles.marqueePending}>
-            {displayJoustSurfaceCopy.pendingPoints(pendingPoints)}
-          </span>
-          {clock}
-        </div>
-      </header>
+      <NeonMarquee
+        title={displayJoustSurfaceCopy.title}
+        teamName={activeTeamName}
+        pending={displayJoustSurfaceCopy.pendingPoints(pendingPoints)}
+        readout={
+          <>
+            <span className={styles.marqueeShot}>
+              {displayJoustSurfaceCopy.shotCounter(view.shotIndex + 1, view.shotsPerTurn)}
+            </span>
+            <span className={styles.marqueeShot}>
+              {displayJoustSurfaceCopy.standing(standingCount, view.lineup.length)}
+            </span>
+          </>
+        }
+        clock={clock}
+        clockLine={clockLine}
+      />
       <div className={styles.arenaArea}>
         {arena === null || scene === null ? (
           <div className={styles.container}>
@@ -182,6 +185,7 @@ export const DisplayJoustSurface = ({
   minigameDisplayView,
   activeTeamName,
   clock,
+  clockLine,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const joustView = minigameDisplayView?.minigame === "JOUST" ? minigameDisplayView : null;
@@ -203,6 +207,7 @@ export const DisplayJoustSurface = ({
       view={joustView}
       activeTeamName={activeTeamName}
       clock={clock}
+      clockLine={clockLine}
       serverOrigin={serverOrigin}
     />
   );

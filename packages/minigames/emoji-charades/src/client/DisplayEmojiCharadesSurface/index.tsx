@@ -4,6 +4,7 @@ import {
   resolveRevealDurationMs,
   type MinigameDisplayRendererProps
 } from "@wingnight/minigames-core";
+import { NeonMarquee } from "@wingnight/surface";
 import type {
   EmojiCharadesMinigameDisplayView,
   EmojiCharadesSubjectReveal
@@ -61,7 +62,8 @@ const useIsRevealVisible = (
 export const DisplayEmojiCharadesSurface = ({
   minigameDisplayView,
   activeTeamName,
-  clock
+  clock,
+  clockLine
 }: MinigameDisplayRendererProps): JSX.Element => {
   const displayView: EmojiCharadesMinigameDisplayView | null =
     minigameDisplayView?.minigame === "EMOJI_CHARADES" ? minigameDisplayView : null;
@@ -97,19 +99,13 @@ export const DisplayEmojiCharadesSurface = ({
 
   return (
     <div className={styles.container}>
-      <div className={styles.marquee}>
-        <span className={styles.marqueeBulbs} aria-hidden="true" />
-        <p className={styles.teamName}>
-          {activeTeamName ?? displayEmojiCharadesSurfaceCopy.showTitle}
-          <span className={styles.pendingPoints}>
-            {displayEmojiCharadesSurfaceCopy.pendingPointsLabel(pendingPoints)}
-          </span>
-        </p>
-        <p className={styles.showTitle}>
-          {displayEmojiCharadesSurfaceCopy.showTitle}
-        </p>
-        <div className={styles.marqueeMeta}>{clock}</div>
-      </div>
+      <NeonMarquee
+        title={displayEmojiCharadesSurfaceCopy.showTitle}
+        teamName={activeTeamName}
+        pending={displayEmojiCharadesSurfaceCopy.pendingPointsLabel(pendingPoints)}
+        clock={clock}
+        clockLine={clockLine}
+      />
 
       {displayView === null && (
         <p className={styles.statusLine}>

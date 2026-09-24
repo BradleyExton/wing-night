@@ -1,0 +1,53 @@
+/* Shared scaffold for the marquee round: house tokens, the bundled genre
+   faces, the TV stage and a dim stand-in body. Each direction file owns only
+   its own marquee. */
+:root {
+  --bg: #121212; --surface: #1c1c1c; --surface-alt: #242424;
+  --text: #ffffff; --muted: #a3a3a3;
+  --primary: #f97316; --heat: #ef4444; --gold: #fbbf24; --success: #22c55e;
+  --team: var(--primary); --team-font: ui-sans-serif, system-ui, sans-serif;
+  --remaining: 1; /* 0..1, ticks down */
+}
+@font-face { font-family: "Metal Mania"; src: url("/fonts/metal-mania/metal-mania-latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Bangers"; src: url("/fonts/bangers/bangers-latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Anton"; src: url("/fonts/anton/anton-latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Fredoka"; font-weight: 700; src: url("/fonts/fredoka/fredoka-700-latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Rye"; src: url("/fonts/rye/rye-latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Monoton"; src: url("/fonts/monoton/monoton-latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Permanent Marker"; src: url("/fonts/permanent-marker/permanent-marker-latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Orbitron"; font-weight: 800; src: url("/fonts/orbitron/orbitron-800-latin.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Playfair Display"; font-weight: 900; src: url("/fonts/playfair-display/playfair-display-900-latin.woff2") format("woff2"); font-display: block; }
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100dvh; overflow: hidden; background: var(--bg); color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  user-select: none; cursor: pointer;
+}
+.stage {
+  height: 100dvh; display: grid; grid-template-rows: auto 1fr; gap: clamp(0.7rem, 1.2vh, 1.2rem);
+  padding: clamp(0.8rem, 1.4vw, 1.6rem);
+  background: radial-gradient(ellipse at top, #2a1306 0%, #0f0a08 60%, #050505 100%);
+}
+/* Stand-in for whatever the game draws; deliberately dull. */
+.body {
+  position: relative; min-height: 0; border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border: 1px dashed rgba(255,255,255,0.08);
+  display: grid; place-items: center;
+}
+.body::before {
+  content: ""; position: absolute; inset: 12% 22%; border-radius: 14px;
+  background: radial-gradient(ellipse at 30% 30%, rgba(249,115,22,0.12), transparent 60%),
+              radial-gradient(ellipse at 70% 70%, rgba(6,182,212,0.08), transparent 60%);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.body > span { position: relative; color: rgba(163,163,163,0.35); font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; font-size: clamp(0.7rem, 1vw, 1rem); }
+.legend {
+  position: fixed; right: 1rem; bottom: 0.7rem; color: rgba(163,163,163,0.55);
+  font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; pointer-events: none;
+}
+.legend b { color: var(--muted); }
+[hidden] { display: none !important; }
+.tnum { font-variant-numeric: tabular-nums; }
+@keyframes heatpulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }

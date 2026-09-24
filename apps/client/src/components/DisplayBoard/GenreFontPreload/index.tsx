@@ -9,7 +9,8 @@ type GenreFontPreloadProps = {
 
 // Preloads the active roster's genre faces the moment the TV knows the
 // roster, so the first MINIGAME_INTRO headline is drawn in its face rather
-// than in the house sans for a beat. Faces are `font-display: block`, which
+// than in the house sans for a beat — and the marquee's own two faces with
+// them, so the first neon sign of the night is not drawn in the sans either. Faces are `font-display: block`, which
 // is exactly the flash this removes. A preload link in the body is honoured
 // by every browser the TV runs; `crossOrigin` is required for a font preload
 // to match the stylesheet's fetch even on the same origin.

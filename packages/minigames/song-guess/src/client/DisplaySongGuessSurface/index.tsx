@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import { NeonMarquee } from "@wingnight/surface";
 import type { SongGuessMinigameDisplayView } from "@wingnight/shared";
 
 import { useSongAudioPlayback } from "../useSongAudioPlayback/index.js";
@@ -45,31 +46,22 @@ const SongGuessIntro = (): JSX.Element => {
 const SongGuessMarquee = ({
   activeTeamName,
   songCounter,
-  clock
+  clock,
+  clockLine
 }: {
   activeTeamName: string | null;
   songCounter: string;
   clock: ReactNode;
-}): JSX.Element => {
-  // A `<div>`, the way EMOJI_CHARADES's marquee is one, not the `<header>` the
-  // other five reach for: `page.locator("header")` is the e2e suite's strict
-  // handle on the host's mini-rail, and the dev sandbox renders the host and
-  // the display previews on one page. A second `<header>` naming the same team
-  // there turns `header >> text=<team>` from one match into two.
-  return (
-    <div className={styles.marquee}>
-      <span className={styles.marqueeBulbs} aria-hidden="true" />
-      <h2 className={styles.marqueeTeamName}>{activeTeamName ?? ""}</h2>
-      <span className={styles.marqueeTitle}>
-        {displaySongGuessSurfaceCopy.showTitle}
-      </span>
-      <div className={styles.marqueeMeta}>
-        <span className={styles.marqueeCounter}>{songCounter}</span>
-        {clock}
-      </div>
-    </div>
-  );
-};
+  clockLine: ReactNode;
+}): JSX.Element => (
+  <NeonMarquee
+    title={displaySongGuessSurfaceCopy.showTitle}
+    teamName={activeTeamName}
+    readout={<span className={styles.marqueeCounter}>{songCounter}</span>}
+    clock={clock}
+    clockLine={clockLine}
+  />
+);
 
 const SongGuessPlayBody = ({
   view
@@ -124,6 +116,7 @@ export const DisplaySongGuessSurface = ({
   minigameDisplayView,
   activeTeamName,
   clock,
+  clockLine,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const songGuessView =
@@ -149,6 +142,7 @@ export const DisplaySongGuessSurface = ({
               songGuessView.songsTotal
             )}
             clock={clock}
+            clockLine={clockLine}
           />
           <SongGuessPlayBody view={songGuessView} />
         </div>

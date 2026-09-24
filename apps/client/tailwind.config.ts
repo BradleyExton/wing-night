@@ -23,7 +23,14 @@ const config: Config = {
         "genre-disco": ["Monoton", "ui-sans-serif", "system-ui", "sans-serif"],
         "genre-hiphop": ['"Permanent Marker"', "ui-sans-serif", "system-ui", "sans-serif"],
         "genre-electronic": ["Orbitron", "ui-sans-serif", "system-ui", "sans-serif"],
-        "genre-classical": ['"Playfair Display"', "ui-sans-serif", "system-ui", "sans-serif"]
+        "genre-classical": ['"Playfair Display"', "ui-sans-serif", "system-ui", "sans-serif"],
+        // The TV marquee's two faces, by ROLE rather than by genre: the neon
+        // kicker is Monoton and the team name is Anton on every game, whatever
+        // the team's own face is (DESIGN.md §2.2D). Naming them `genre-disco`
+        // and `genre-rock` in the marquee would make a chrome decision look
+        // like a team's identity leaking.
+        "marquee-title": ["Monoton", "ui-sans-serif", "system-ui", "sans-serif"],
+        "marquee-name": ["Anton", "ui-sans-serif", "system-ui", "sans-serif"]
       },
       colors: {
         bg: "#121212",

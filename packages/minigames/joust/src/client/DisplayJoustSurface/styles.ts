@@ -1,22 +1,10 @@
 export const stage =
   "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)] bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
-export {
-  marqueeBulbs,
-  marqueeMeta,
-  marqueeTeamName,
-  marqueeTitle
-} from "@wingnight/surface";
-
-// Marquee row (DESIGN.md §2.7): team left, show title centre, shot + pending right.
-export const marquee =
-  "relative grid grid-cols-[1fr_auto_1fr] items-center gap-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(1.4rem,2.4vw,2.4rem)] py-[clamp(0.7rem,1.2vh,1.2rem)] shadow-[inset_0_0_36px_rgba(251,191,36,0.2),0_8px_20px_rgba(0,0,0,0.55)]";
-
+// The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 export const marqueeShot =
   "text-[clamp(0.72rem,1vw,1.05rem)] font-extrabold uppercase tracking-[0.28em] text-muted";
 
-export const marqueePending =
-  "font-mono text-[clamp(1.1rem,1.8vw,1.9rem)] font-extrabold text-gold";
 
 export const arenaArea =
   "relative flex min-h-0 flex-1 overflow-hidden rounded-2xl border-2 border-[#3a200d] bg-[linear-gradient(180deg,#160c2a_0%,#4a1f3f_54%,#c2582c_86.6%,#d6ac63_86.7%,#b58a45_100%)] shadow-[inset_0_0_40px_rgba(0,0,0,0.55)]";

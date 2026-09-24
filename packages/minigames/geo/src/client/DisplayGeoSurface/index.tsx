@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import { NeonMarquee } from "@wingnight/surface";
 import { resolveContentAssetSrc, type GeoMinigameDisplayView } from "@wingnight/shared";
 
 import { resolvePhotoNumber } from "../resolvePhotoNumber/index.js";
@@ -24,29 +25,27 @@ const Marquee = ({
   activeTeamName,
   pendingPoints,
   counterLabel,
-  clock
+  clock,
+  clockLine
 }: {
   activeTeamName: string | null;
   pendingPoints: number | null;
   counterLabel: string | null;
   clock: ReactNode;
+  clockLine: ReactNode;
 }): JSX.Element => (
-  <header className={styles.marquee}>
-    <span className={styles.marqueeBulbs} aria-hidden="true" />
-    <div className={styles.marqueeTeam}>
-      {activeTeamName !== null && (
-        <p className={styles.marqueeTeamName}>{activeTeamName}</p>
-      )}
-      {pendingPoints !== null && (
-        <span className={styles.marqueeTeamPoints}>{pendingPoints}</span>
-      )}
-    </div>
-    <div className={styles.marqueeTitle}>{displayGeoSurfaceCopy.showTitle}</div>
-    <div className={styles.marqueeMeta}>
-      <span className={styles.marqueeCounter}>{counterLabel}</span>
-      {clock}
-    </div>
-  </header>
+  <NeonMarquee
+    title={displayGeoSurfaceCopy.showTitle}
+    teamName={activeTeamName}
+    pending={pendingPoints === null ? null : displayGeoSurfaceCopy.pendingPoints(pendingPoints)}
+    readout={
+      counterLabel !== null && (
+        <span className={styles.marqueeCounter}>{counterLabel}</span>
+      )
+    }
+    clock={clock}
+    clockLine={clockLine}
+  />
 );
 
 const GeoResultReadout = ({ result }: { result: GeoDisplayResult }): ReactNode => {
@@ -92,6 +91,7 @@ export const DisplayGeoSurface = ({
   minigameDisplayView,
   activeTeamName,
   clock,
+  clockLine,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const geoDisplayView =
@@ -126,6 +126,7 @@ export const DisplayGeoSurface = ({
           pendingPoints={pendingPoints}
           counterLabel={counterLabel}
           clock={clock}
+          clockLine={clockLine}
         />
         <div className={styles.idleBody}>
           <p className={styles.idleText}>
@@ -155,6 +156,7 @@ export const DisplayGeoSurface = ({
         pendingPoints={pendingPoints}
         counterLabel={counterLabel}
         clock={clock}
+        clockLine={clockLine}
       />
 
       <div className={styles.arena}>

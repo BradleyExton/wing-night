@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import { NeonMarquee } from "@wingnight/surface";
 import type { DrawingPromptReveal, DrawingStroke } from "@wingnight/shared";
 
 import { StrokeReplayCanvas } from "./StrokeReplayCanvas/index.js";
@@ -65,7 +66,8 @@ export const DisplayDrawingSurface = ({
   phase,
   minigameDisplayView,
   activeTeamName,
-  clock
+  clock,
+  clockLine
 }: MinigameDisplayRendererProps): JSX.Element => {
   const drawingDisplayView =
     minigameDisplayView?.minigame === "DRAWING" ? minigameDisplayView : null;
@@ -102,21 +104,15 @@ export const DisplayDrawingSurface = ({
 
   return (
     <div className={styles.stage}>
-      <header className={styles.marquee}>
-        <span className={styles.marqueeBulbs} aria-hidden="true" />
-        <p className={styles.marqueeTeamName}>{activeTeamName ?? ""}</p>
-        <span className={styles.marqueeTitle}>
-          {displayDrawingSurfaceCopy.marqueeTitle}
-        </span>
-        <div className={styles.marqueeMeta}>
-          <span className={styles.marqueePending}>
-            {pendingPoints !== null
-              ? displayDrawingSurfaceCopy.pendingChip(pendingPoints)
-              : ""}
-          </span>
-          {clock}
-        </div>
-      </header>
+      <NeonMarquee
+        title={displayDrawingSurfaceCopy.marqueeTitle}
+        teamName={activeTeamName}
+        pending={
+          pendingPoints !== null ? displayDrawingSurfaceCopy.pendingChip(pendingPoints) : null
+        }
+        clock={clock}
+        clockLine={clockLine}
+      />
       <main className={styles.canvasArea}>
         <StrokeReplayCanvas
           strokes={strokesToRender}

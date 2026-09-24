@@ -5,20 +5,7 @@
 export const stage =
   "flex h-full w-full flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)] bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
-export {
-  marqueeBulbs,
-  marqueeMeta,
-  marqueeTeamName,
-  marqueeTitle
-} from "@wingnight/surface";
-
-export const marquee =
-  "relative grid grid-cols-[1fr_auto_1fr] items-center gap-6 rounded-2xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(1.4rem,2.4vw,2.4rem)] py-[clamp(0.8rem,1.4vh,1.3rem)] shadow-[inset_0_0_36px_rgba(251,191,36,0.2),0_8px_20px_rgba(0,0,0,0.55)]";
-
-export const marqueeTeam = "flex items-baseline gap-[clamp(0.6rem,1.2vw,1.2rem)]";
-
-export const marqueeTeamPoints =
-  "font-mono text-[clamp(0.95rem,1.4vw,1.5rem)] font-extrabold text-gold";
+// The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 
 export const marqueeCounter =
   "text-[clamp(0.72rem,1vw,1.05rem)] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";

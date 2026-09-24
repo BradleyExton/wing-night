@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import { NeonMarquee } from "@wingnight/surface";
 import {
   resolveContentAssetSrc,
   type RecreateAttempt,
@@ -13,18 +14,26 @@ const CHECK_MARK = "✓";
 
 const StudioShell = ({
   children,
-  clock
+  activeTeamName,
+  clock,
+  clockLine
 }: {
   children: ReactNode;
+  activeTeamName: string | null;
   clock: ReactNode;
+  clockLine: ReactNode;
 }): JSX.Element => (
   <div className={styles.stage}>
     <div className={styles.frameWall}>
-      <header className={styles.header}>
-        <p className={styles.headerTitle}>{displayRecreateSurfaceCopy.studioTitle}</p>
-        <p className={styles.headerMeta}>{displayRecreateSurfaceCopy.studioSubtitle}</p>
-        {clock}
-      </header>
+      <NeonMarquee
+        title={displayRecreateSurfaceCopy.studioTitle}
+        teamName={activeTeamName}
+        readout={
+          <span className={styles.headerMeta}>{displayRecreateSurfaceCopy.studioSubtitle}</span>
+        }
+        clock={clock}
+        clockLine={clockLine}
+      />
       {children}
     </div>
   </div>
@@ -171,6 +180,7 @@ export const DisplayRecreateSurface = ({
   minigameDisplayView,
   activeTeamName,
   clock,
+  clockLine,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const recreateDisplayView =
@@ -180,7 +190,7 @@ export const DisplayRecreateSurface = ({
 
   if (!isPlayPhase || recreateDisplayView === null || currentTarget === null) {
     return (
-      <StudioShell clock={clock}>
+      <StudioShell activeTeamName={activeTeamName} clock={clock} clockLine={clockLine}>
         <div className={styles.idleBody}>
           <p className={styles.idleText}>
             {isPlayPhase
@@ -195,7 +205,7 @@ export const DisplayRecreateSurface = ({
   const { attempt, subState } = recreateDisplayView;
 
   return (
-    <StudioShell clock={clock}>
+    <StudioShell activeTeamName={activeTeamName} clock={clock} clockLine={clockLine}>
       <div className={styles.pictures}>
         <Picture
           caption={displayRecreateSurfaceCopy.targetCaption}
