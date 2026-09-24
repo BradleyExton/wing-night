@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/fappy/`
 
-Last updated: 2026-09-18 (UX pass, then the schlong drawing, same day)
+Last updated: 2026-09-23 (line-up pass, then the balance pass)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on.** Adding a `MinigameType`
 > breaks every `Record<MinigameType, …>` in the repo until fully wired (authoring guide §1),
@@ -82,8 +82,8 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
   `ready`, its bird already on its own start cliff, and the next player's first tap flies
   it. The handoff is the race.
 - **Points from time.** Every point the round offers at or under `parSeconds`, sliding
-  straight down to a quarter at `limitSeconds`. At the limit the relay ends; an unfinished
-  team keeps that quarter scaled by the gates it got through.
+  straight down to a tenth at `limitSeconds`. At the limit the relay ends; an unfinished
+  team keeps that tenth scaled by the gates it got through.
 - **Inputs, not positions, cross the wire.** Each flap is one action carrying its tick. The
   runtime holds a seed, a checkpoint and the flap log per attempt; nobody streams bird
   positions.
@@ -184,12 +184,17 @@ answer-safety test asserts the display view is exactly the host view.
 ### 0.6 Rules (`minigameRules.fappy`)
 
 ```json
-{ "legsPerTurn": 4, "gatesPerLeg": 8, "parSeconds": 45, "limitSeconds": 120 }
+{ "legsPerTurn": 4, "gatesPerLeg": 6, "parSeconds": 50, "limitSeconds": 100 }
 ```
 
 All positive integers, all optional, `parSeconds < limitSeconds`, validated by `isRules` at
-config load. Eight gates is about ten seconds of clean flying, so a clean relay with quick
-handoffs beats par and a couple of crashes a leg still finishes inside the limit.
+config load. Measured on a greedy autopilot over the shared sim, a flawless six-gate leg takes
+**8.8 s** (eight gates took 11.1 s, five 7.7 s) and each handoff costs a further **1.4 s** of
+client-side beat that the relay clock is running through (`HANDOFF_BEAT_MS`, §0.10). So a
+perfect four-leg relay is about **39 s** before a human reacts: par is a target a good team
+reaches, not a floor everyone clears, and the limit leaves room for a crash or two a leg. These
+are the sample's numbers; a pack whose teams are deeper carries its own `legsPerTurn` (the night
+pack flies five legs of six with a 60 s par and a 110 s limit).
 
 ### 0.7 Runtime state and reducer
 
@@ -213,13 +218,19 @@ Every action needs `envelope.receivedAtMs`; one without it is refused. All are
 - `timeOut` — in `ready` or `flying`, only when `receivedAtMs − startedAtMs ≥ limit` on the
   server's clock. Sets `timedOutAtMs` and scores by progress.
 - `skipLeg` — in `ready` or `flying`. Marks the leg `cleared` and `skipped` and moves on; on
-  the last leg it finishes the relay. The clock keeps running.
+  the last leg it finishes the relay. The clock keeps running, and the relay is **charged
+  `parSeconds / legsPerTurn` seconds for every skipped leg** — the time a leg of the course is
+  worth. The penalty is added by `resolveSkipPenaltyMs` inside `resolveElapsedMs`, so the
+  `elapsedMs` the scoring reads is the same one the deck and the TV show; it never feeds
+  `isPastLimit`, which stays on the raw wall clock. A relay where nobody ever flapped still
+  scores zero outright (`startedAtMs` is null), which is the older, stronger rule.
 - `resetTurn` — every leg fresh, `legIndex` 0, clocks cleared, pending points back to
   `turnStartPoints`.
 
 Scoring (`runtime/scoring`): `resolveFinishPoints(elapsedMs)` = `pointsMax` at or under par,
-then linear down to `0.25 × pointsMax` at the limit; `resolveTimeoutPoints` =
-`0.25 × pointsMax × gatesCleared / gatesTotal`. Added to `turnStartPoints`, clamped at
+then linear down to `FAPPY_LIMIT_POINTS_SHARE × pointsMax` (a tenth) at the limit;
+`resolveTimeoutPoints` = `0.1 × pointsMax × gatesCleared / gatesTotal`. The `elapsedMs` is the
+penalised one above, not the raw wall clock. Added to `turnStartPoints`, clamped at
 `pointsMax` like every game. Score override is the shell's pending-points hatch, as JOUST
 relies on.
 
@@ -312,6 +323,22 @@ leg 1 and the idle clock.
   file split for it: `champPaint` (the maths), `paintGate` (the per-gate attribute writes),
   the splat helpers in `pose`. Sample-fixture e2e was unchanged: the autopilot takes a splat
   as a shove and flies on.
+- **Balance pass (2026-09-23).** A greedy autopilot over the shared sim put real numbers on the
+  course for the first time: a flawless leg takes **11.1 s at eight gates, 8.8 s at six, 7.7 s at
+  five**, and every handoff burns another **1.4 s** of `HANDOFF_BEAT_MS` with the relay clock
+  running. Against the old `{ 4, 8, 45, 120 }` a perfect relay was **48.8 s before anybody
+  reacted** — par was unreachable, so nobody was ever paid for flying well; and a 25 % share
+  spread over a 75 s slide meant a four-second crash cost **under one point out of twenty**, so
+  the clock the whole game is built on did not reach the board. Three fixes. (1) **A skipped leg
+  now costs `parSeconds / legsPerTurn` seconds** (`resolveSkipPenaltyMs`, folded into
+  `resolveElapsedMs`): the escape hatch used to be the fastest way through the course — one flap
+  to start the clock, then skip everything and finish in twenty seconds for the whole round — and
+  the only guard was the all-skipped-scores-zero rule, which one flap defeated. (2) **Defaults are
+  `{ 4, 6, 50, 100 }`**, a perfect relay near 39 s, with `content/sample/gameConfig.json` and the
+  briefing's `DEFAULT_FAPPY_GATES_PER_LEG` moved to match. (3) **`FAPPY_LIMIT_POINTS_SHARE` is
+  0.1**, which makes that same four-second crash worth a visible point. The night pack got
+  `{ 5, 6, 60, 110 }` separately: its teams are five deep and at four legs the fifth player never
+  flew.
 
 ## 1) One-liner
 

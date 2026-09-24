@@ -68,9 +68,9 @@
     },
     "fappy": {
       "legsPerTurn": 4,
-      "gatesPerLeg": 8,
-      "parSeconds": 45,
-      "limitSeconds": 120
+      "gatesPerLeg": 6,
+      "parSeconds": 50,
+      "limitSeconds": 100
     },
     "schlonic": {
       "runsPerTurn": 3,

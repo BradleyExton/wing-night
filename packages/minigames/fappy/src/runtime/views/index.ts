@@ -38,6 +38,20 @@ export const resolveTotalGatesCleared = (state: FappyRuntimeState): number => {
   }, 0);
 };
 
+// A skipped leg is forgiven, not free. Nobody flew it, so the relay is charged
+// what a leg of it is worth — one leg's share of par. Without this the escape
+// hatch was the fastest route through the course: one flap to start the clock
+// and a skip on every remaining leg finished well under par and paid the whole
+// round, beating the team that actually flew it.
+export const resolveSkipPenaltyMs = (state: FappyRuntimeState): number => {
+  const skippedLegs = state.legs.filter((leg) => leg.skipped).length;
+  const perLegMs = (state.parSeconds * 1000) / Math.max(1, state.legsPerTurn);
+
+  return Math.round(skippedLegs * perLegMs);
+};
+
+// The relay's time as the score sees it, and as the surfaces report it: wall
+// clock from the first flap to the last landing, plus the skip penalty.
 export const resolveElapsedMs = (state: FappyRuntimeState): number | null => {
   const endedAtMs = state.timedOutAtMs ?? state.finishedAtMs;
 
@@ -45,7 +59,7 @@ export const resolveElapsedMs = (state: FappyRuntimeState): number | null => {
     return null;
   }
 
-  return Math.max(0, endedAtMs - state.startedAtMs);
+  return Math.max(0, endedAtMs - state.startedAtMs) + resolveSkipPenaltyMs(state);
 };
 
 const resolvePoints = (state: FappyRuntimeState): number | null => {
