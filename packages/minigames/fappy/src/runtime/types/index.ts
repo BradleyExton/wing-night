@@ -25,6 +25,11 @@ export type FappyRuntimeState = {
   startedAtMs: number | null;
   finishedAtMs: number | null;
   timedOutAtMs: number | null;
+  // What a finish at or under par pays, handed in at `initialize` and held so
+  // the projection can carry it to the surfaces. The runtime is re-initialised
+  // for every team turn and a round's max does not move inside one, so there is
+  // nothing here for a reducer to keep in step.
+  pointsMax: number;
   // What the active team had banked before this turn, so `resetTurn` can hand
   // back exactly what the turn added and nothing more.
   turnStartPoints: number;

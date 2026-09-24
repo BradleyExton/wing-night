@@ -6,17 +6,17 @@ import { resolveFappyGates } from "@wingnight/shared";
 
 import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
 import { FappyScene, type FappySceneHandle } from "../FappyScene/index.js";
+import { PaceTrack } from "../PaceTrack/index.js";
 import { RelayLineup } from "../RelayLineup/index.js";
+import { resolveFinishClock, type FinishClock } from "../pressure/index.js";
 import { resolveLegBird } from "../resolveLegBird/index.js";
 import { useFappyMirror } from "../useFappyMirror/index.js";
 import { useFappySounds } from "../useFappySounds/index.js";
 import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
-import { formatRelayClock, useRelayClock } from "../useRelayClock/index.js";
+import { formatRelayClock, formatRelayClockSeconds, useRelayClock } from "../useRelayClock/index.js";
+import { MarqueeReadout } from "./MarqueeReadout/index.js";
 import { displayFappySurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
-
-// The clock turns to heat with this much of the limit left.
-const URGENT_REMAINING_MS = 15_000;
 
 const FappyIntro = (): JSX.Element => {
   return (
@@ -27,7 +27,13 @@ const FappyIntro = (): JSX.Element => {
   );
 };
 
-const ResultPlaque = ({ view, elapsedMs }: { view: FappyMinigameDisplayView; elapsedMs: number | null }): JSX.Element => {
+const ResultPlaque = ({
+  view,
+  finishClock
+}: {
+  view: FappyMinigameDisplayView;
+  finishClock: FinishClock;
+}): JSX.Element => {
   const isTimedOut = view.phase === "timedOut";
 
   return (
@@ -43,8 +49,18 @@ const ResultPlaque = ({ view, elapsedMs }: { view: FappyMinigameDisplayView; ela
                   view.totalGatesCleared,
                   view.legsPerTurn * view.gatesPerLeg
                 )
-              : displayFappySurfaceCopy.finishedBlurb(formatRelayClock(elapsedMs ?? 0))}
+              : displayFappySurfaceCopy.finishedBlurb(formatRelayClock(finishClock.elapsedMs ?? 0))}
           </p>
+          {/* The clock on the plaque is the SCORED time, so when a forgiven
+              leg put seconds in it the room is told which seconds. */}
+          {finishClock.penaltyMs > 0 && (
+            <p className={styles.resultPenalty} data-fappy-penalty="display">
+              {displayFappySurfaceCopy.penaltyLine(
+                formatRelayClockSeconds(finishClock.penaltyMs),
+                finishClock.skippedLegs
+              )}
+            </p>
+          )}
         </div>
         <span className={styles.resultPoints}>{displayFappySurfaceCopy.points(view.points ?? 0)}</span>
       </div>
@@ -149,13 +165,13 @@ const FappyPlayBody = ({
     endedAtMs: view.timedOutAtMs ?? view.finishedAtMs
   });
   const isOver = view.phase === "finished" || view.phase === "timedOut";
-  const remainingMs = view.limitSeconds * 1000 - (elapsedMs ?? 0);
-  const clockClassName =
-    elapsedMs !== null && !isOver && remainingMs <= URGENT_REMAINING_MS
-      ? styles.marqueeClockUrgent
-      : elapsedMs !== null && elapsedMs > view.parSeconds * 1000
-        ? styles.marqueeClockPastPar
-        : "";
+  // Two clocks, deliberately. `elapsedMs` is the wall the room watches tick and
+  // the one every live cue (the urgency colour, the soundboard's heartbeat, the
+  // pace strip) is timed against. `finishClock` is what the relay SCORED, which
+  // is the wall plus the penalty for every forgiven leg — the only honest
+  // number to leave on the screen once the points are on the board.
+  const finishClock = resolveFinishClock(view, elapsedMs);
+  const shownElapsedMs = isOver ? finishClock.elapsedMs : elapsedMs;
 
   // The TV is the room's speaker, so FAPPY's whole soundboard hangs off this one surface.
   const handleFappySound = useFappySounds({ view, hold, elapsedMs });
@@ -168,23 +184,13 @@ const FappyPlayBody = ({
         title={displayFappySurfaceCopy.title}
         teamName={activeTeamName}
         readout={
-          <>
-            <span className={styles.marqueeLeg}>
-              {displayFappySurfaceCopy.legCounter(legIndex + 1, view.legsPerTurn)}
-            </span>
-            <span className={styles.marqueeGates}>
-              {displayFappySurfaceCopy.gatesCounter(
-                view.totalGatesCleared,
-                view.legsPerTurn * view.gatesPerLeg
-              )}
-            </span>
-            {/* The relay clock is the LEG's and FAPPY's own; the shell's
-                `clock` and `clockLine` are the room's, and FAPPY is
-                `timerKey: null` so they draw nothing and cost nothing. */}
-            <span className={`${styles.marqueeClock} ${clockClassName}`} data-fappy-clock>
-              {elapsedMs === null ? displayFappySurfaceCopy.clockIdle : formatRelayClock(elapsedMs)}
-            </span>
-          </>
+          <MarqueeReadout
+            view={view}
+            shownLegIndex={legIndex}
+            elapsedMs={elapsedMs}
+            shownElapsedMs={shownElapsedMs}
+            isOver={isOver}
+          />
         }
         clock={clock}
         clockLine={clockLine}
@@ -206,6 +212,11 @@ const FappyPlayBody = ({
         serverOrigin={serverOrigin}
         surface="wall"
       />
+      {/* The race, as a race: the team's own bird placed by the course it has
+          cleared and a ghost hen placed by the clock, both running at the par
+          tick. Ahead or behind stops being arithmetic off two counters and
+          becomes which face is in front. */}
+      <PaceTrack view={view} elapsedMs={elapsedMs} bird={bird} />
       <div className={styles.arenaArea}>
         <div key={legIndex} className={styles.legEnter}>
           <FappyScene
@@ -221,7 +232,7 @@ const FappyPlayBody = ({
         {hold?.kind === "handoff" && (
           <HandoffCallout nextName={waitingBird?.playerName ?? null} onDeckName={onDeckName} />
         )}
-        {isOver && hold === null && <ResultPlaque view={view} elapsedMs={elapsedMs} />}
+        {isOver && hold === null && <ResultPlaque view={view} finishClock={finishClock} />}
       </div>
       <p className={styles.statusLine}>
         {resolveStatusLine(view, leg, bird.playerName, waitingBird?.playerName ?? null, onDeckName, hold)}

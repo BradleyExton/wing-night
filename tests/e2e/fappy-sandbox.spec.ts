@@ -75,11 +75,37 @@ test("fappy sandbox starts the clock on the first tap and sends a crashed bird b
   await expect(page.locator("[data-fappy-puff]")).toHaveCount(2);
   await expect(page.locator("[data-fappy-clock]").first()).toHaveText(/0:00\.0/);
 
+  // The pace strip is up before anything moves: a bar with par on it, the
+  // team's own bird on the start line and the par-pace ghost beside it.
+  const paceTrack = page.locator("[data-fappy-pace-track]");
+
+  await expect(paceTrack).toHaveCount(1);
+  await expect(paceTrack.locator("[data-fappy-pace-par]")).toHaveCount(1);
+  await expect(paceTrack.locator("[data-fappy-pace-bird]")).toHaveCount(1);
+  await expect(paceTrack.locator("[data-fappy-pace-ghost]")).toHaveCount(1);
+  await expect(paceTrack).toHaveAttribute("data-fappy-pace-past-par", "false");
+  // The window's far end is the limit; par is the tick, unlabelled, because the
+  // marquee right above already prints it under the points.
+  await expect(paceTrack.getByText("1:00")).toBeVisible();
+
+  // No clock yet, so nothing is being spent and neither screen prices it.
+  await expect(page.locator("[data-fappy-live-points]")).toHaveCount(0);
+
   // One tap launches the leg and starts the relay clock; the display mirrors it.
   await page.locator("[data-fappy-arena]").click();
 
   await expect(page.getByText("Alex is flying — land next to Caitlin")).toBeVisible();
   await expect(page.locator("[data-fappy-clock]").first()).not.toHaveText(/0:00\.0/);
+
+  // And now both screens say what the clock is spending: the round's whole 15
+  // while par holds, with par under it. The sandbox fixture banks Team Beta 9
+  // points, so both screens also carry the time that would top them — the
+  // tablet by name, the wall without one (its renderer props have no team-name
+  // lookup).
+  await expect(page.locator('[data-fappy-live-points="15"]')).toHaveCount(2);
+  await expect(page.getByText("par 0:20")).toHaveCount(2);
+  await expect(page.getByText("Beat 0:36 to top Team Beta")).toBeVisible();
+  await expect(page.locator("[data-fappy-time-to-beat]")).toHaveText("Beat 0:36 to take the lead");
 
   // Nobody flaps again, so the bird comes down: the local sim reports the end,
   // the real reducer re-runs the log, and the same player is back on the

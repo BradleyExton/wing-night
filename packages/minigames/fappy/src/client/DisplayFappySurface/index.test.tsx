@@ -46,6 +46,7 @@ const createView = (overrides: Partial<FappyMinigameDisplayView> = {}): FappyMin
     timedOutAtMs: null,
     elapsedMs: null,
     points: null,
+    pointsMax: 20,
     ...overrides
   };
 };
@@ -244,4 +245,62 @@ test("does peek the waiting player over the bezel while their bird is off screen
     ),
     /data-fappy-waiter-peek/
   );
+});
+
+test("does show the scored time and name the penalty on the plaque when a leg was skipped", () => {
+  const html = render(
+    createView({
+      phase: "finished",
+      legIndex: 2,
+      startedAtMs: T0,
+      finishedAtMs: T0 + 31_500,
+      elapsedMs: 41_500,
+      points: 9,
+      legs: [
+        createLeg({ status: "cleared", skipped: true }),
+        createLeg({ legIndex: 1, player: MORGAN, seed: 12, status: "cleared" })
+      ]
+    })
+  );
+
+  assert.match(html, /The whole corridor in 0:41\.5/);
+  assert.match(html, /data-fappy-penalty="display"/);
+  assert.match(html, /\+0:10 for 1 skipped leg/);
+});
+
+test("does show the stake beside the marquee clock while the relay is under par", () => {
+  const html = render(createView({ phase: "flying", startedAtMs: Date.now() }));
+
+  assert.match(html, /data-fappy-live-points="20"/);
+  assert.match(html, /par 0:20/);
+});
+
+test("does drain the marquee stake once the relay is past par", () => {
+  const html = render(createView({ phase: "flying", startedAtMs: Date.now() - 40_000 }));
+
+  assert.match(html, /data-fappy-live-points="11"/);
+});
+
+test("does name the time to beat on the wall without naming the rival", () => {
+  const html = render(
+    createView({
+      phase: "flying",
+      startedAtMs: Date.now(),
+      pendingPointsByTeamId: { "team-alpha": 0, "team-beta": 11 }
+    })
+  );
+
+  assert.match(html, /data-fappy-time-to-beat/);
+  assert.match(html, /Beat 0:\d\d to take the lead/);
+});
+
+// The room reads ahead-or-behind off two faces on one bar rather than off two
+// counters it has to subtract.
+test("does race the team's bird against a par-pace ghost under the marquee", () => {
+  const html = render(createView({ phase: "flying", startedAtMs: Date.now(), totalGatesCleared: 3 }));
+
+  assert.match(html, /data-fappy-pace-track/);
+  assert.match(html, /data-fappy-pace-bird/);
+  assert.match(html, /data-fappy-pace-ghost/);
+  assert.match(html, /data-fappy-pace-percent="17"/);
 });

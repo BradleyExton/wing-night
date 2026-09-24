@@ -4,9 +4,15 @@ import type { FappyMinigameHostView, FappyMinigameLeg } from "@wingnight/shared"
 import { RunningTotals, TakeoverCanvas } from "@wingnight/surface";
 
 import { RelayLineup } from "../RelayLineup/index.js";
+import {
+  resolveFinishClock,
+  resolveRelayChase,
+  type FinishClock
+} from "../pressure/index.js";
 import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
-import { formatRelayClock, useRelayClock } from "../useRelayClock/index.js";
+import { formatRelayClock, formatRelayClockSeconds, useRelayClock } from "../useRelayClock/index.js";
 import { Corridor } from "./Corridor/index.js";
+import { PointsMeter } from "./PointsMeter/index.js";
 import { RelayClock } from "./RelayClock/index.js";
 import { hostFappySurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -22,7 +28,13 @@ const isRelayOver = (view: FappyMinigameHostView): boolean => {
   return view.phase === "finished" || view.phase === "timedOut";
 };
 
-const FinishCard = ({ view, elapsedMs }: { view: FappyMinigameHostView; elapsedMs: number | null }): JSX.Element => {
+const FinishCard = ({
+  view,
+  finishClock
+}: {
+  view: FappyMinigameHostView;
+  finishClock: FinishClock;
+}): JSX.Element => {
   const isTimedOut = view.phase === "timedOut";
 
   return (
@@ -33,11 +45,41 @@ const FinishCard = ({ view, elapsedMs }: { view: FappyMinigameHostView; elapsedM
       <span className={styles.finishTime}>
         {isTimedOut
           ? hostFappySurfaceCopy.progressLine(view.totalGatesCleared, view.legsPerTurn * view.gatesPerLeg)
-          : hostFappySurfaceCopy.finishTime(formatRelayClock(elapsedMs ?? 0))}
+          : hostFappySurfaceCopy.finishTime(formatRelayClock(finishClock.elapsedMs ?? 0))}
       </span>
+      {/* The time above is the SCORED one, so a host who watched 0:38 run past
+          is told where the rest of it came from rather than left to guess. */}
+      {finishClock.penaltyMs > 0 && (
+        <span className={styles.finishPenalty} data-fappy-penalty="host">
+          {hostFappySurfaceCopy.penaltyLine(
+            formatRelayClockSeconds(finishClock.penaltyMs),
+            finishClock.skippedLegs
+          )}
+        </span>
+      )}
       <span className={styles.finishPoints}>{hostFappySurfaceCopy.finishPoints(view.points ?? 0)}</span>
     </div>
   );
+};
+
+// The line under the running totals: the slowest finish that still tops the
+// best rival this round, or par when even that would not do it. The par line
+// when there is nobody to chase yet.
+const resolveTotalsNote = (
+  view: FappyMinigameHostView,
+  teamNameByTeamId: Map<string, string>
+): string => {
+  const chase = resolveRelayChase(view);
+
+  if (chase === null || view.phase === "finished" || view.phase === "timedOut") {
+    return hostFappySurfaceCopy.parLine(view.parSeconds);
+  }
+
+  const rivalName = teamNameByTeamId.get(chase.teamId) ?? null;
+
+  return chase.timeToBeatMs === null
+    ? hostFappySurfaceCopy.beatPar(rivalName)
+    : hostFappySurfaceCopy.timeToBeat(formatRelayClockSeconds(chase.timeToBeatMs), rivalName);
 };
 
 const resolveHint = (view: FappyMinigameHostView, canAct: boolean, hold: LegHold | null): string => {
@@ -102,6 +144,9 @@ export const HostFappySurface = ({
     startedAtMs: fappyView?.startedAtMs ?? null,
     endedAtMs: fappyView?.timedOutAtMs ?? fappyView?.finishedAtMs ?? null
   });
+  // The wall the host watches, and what the relay actually scored — the two
+  // part company the moment a leg is forgiven (`resolveFinishClock`).
+  const finishClock = fappyView === null ? null : resolveFinishClock(fappyView, elapsedMs);
   const isLive = fappyView !== null && (fappyView.phase === "ready" || fappyView.phase === "flying");
   const isPastLimit =
     fappyView !== null && elapsedMs !== null && elapsedMs >= fappyView.limitSeconds * 1000;
@@ -171,7 +216,12 @@ export const HostFappySurface = ({
                 game, so the `clock` slot stays empty and takes no width, and
                 the relay clock is a count the host reads without acting on
                 it — which is what the `counter` slot is for (§4). */}
-            <RelayClock view={fappyView} elapsedMs={elapsedMs} />
+            <RelayClock
+              view={fappyView}
+              elapsedMs={isRelayOver(fappyView) ? (finishClock?.elapsedMs ?? elapsedMs) : elapsedMs}
+            />
+            {/* What the clock beside it is spending. */}
+            <PointsMeter view={fappyView} elapsedMs={elapsedMs} />
           </>
         )
       }
@@ -208,12 +258,14 @@ export const HostFappySurface = ({
       readout={
         fappyView === null ? null : (
           <>
-            {isRelayOver(fappyView) && <FinishCard view={fappyView} elapsedMs={elapsedMs} />}
+            {isRelayOver(fappyView) && finishClock !== null && (
+              <FinishCard view={fappyView} finishClock={finishClock} />
+            )}
             <RunningTotals
               pendingPointsByTeamId={fappyView.pendingPointsByTeamId}
               activeTurnTeamId={fappyView.activeTurnTeamId}
               teamNameByTeamId={teamNameByTeamId}
-              note={hostFappySurfaceCopy.parLine(fappyView.parSeconds)}
+              note={resolveTotalsNote(fappyView, teamNameByTeamId)}
             />
           </>
         )

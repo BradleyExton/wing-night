@@ -8,7 +8,10 @@ import { HostFappySurface } from "./index.js";
 const ALEX: FappyPlayerFigure = { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "country" };
 const MORGAN: FappyPlayerFigure = { playerId: "p-2", name: "Morgan", avatarSrc: null, teamId: "team-alpha", genre: "country" };
 const DAN: FappyPlayerFigure = { playerId: "p-3", name: "Dan B", avatarSrc: null, teamId: "team-alpha", genre: "country" };
-const teamNameByTeamId = new Map([["team-alpha", "Team Alpha"]]);
+const teamNameByTeamId = new Map([
+  ["team-alpha", "Team Alpha"],
+  ["team-beta", "Team Beta"]
+]);
 const T0 = 1_700_000_000_000;
 
 const createLeg = (overrides: Partial<FappyMinigameLeg> = {}): FappyMinigameLeg => {
@@ -46,6 +49,7 @@ const createView = (overrides: Partial<FappyMinigameHostView> = {}): FappyMiniga
     timedOutAtMs: null,
     elapsedMs: null,
     points: null,
+    pointsMax: 20,
     ...overrides
   };
 };
@@ -310,4 +314,96 @@ test("does peek the waiting player over the bezel while their bird is off screen
     ),
     /data-fappy-waiter-peek/
   );
+});
+
+// The clock the host watched run is not what the relay scored the moment a leg
+// is forgiven: `elapsedMs` carries the par-share penalty, and the points beside
+// it were taken from that. The card shows the scored time and says where the
+// difference came from.
+test("does show the scored time and name the penalty when a leg was skipped", () => {
+  const html = render(
+    createView({
+      phase: "finished",
+      legIndex: 2,
+      startedAtMs: T0,
+      finishedAtMs: T0 + 31_500,
+      elapsedMs: 41_500,
+      points: 9,
+      legs: [
+        createLeg({ status: "cleared", skipped: true }),
+        createLeg({ legIndex: 1, player: MORGAN, seed: 12, status: "cleared" })
+      ],
+      totalGatesCleared: 3
+    })
+  );
+
+  assert.match(html, /0:41\.5/);
+  assert.doesNotMatch(html, /0:31\.5/);
+  assert.match(html, /data-fappy-penalty="host"/);
+  assert.match(html, /\+0:10 for 1 skipped leg/);
+});
+
+test("does say nothing about a penalty when no leg was skipped", () => {
+  const html = render(
+    createView({
+      phase: "finished",
+      legIndex: 2,
+      startedAtMs: T0,
+      finishedAtMs: T0 + 31_500,
+      elapsedMs: 31_500,
+      points: 12
+    })
+  );
+
+  assert.doesNotMatch(html, /data-fappy-penalty/);
+});
+
+test("does hold the live points at the round's max while the relay is under par", () => {
+  const html = render(createView({ phase: "flying", startedAtMs: Date.now() }));
+
+  assert.match(html, /data-fappy-live-points="20"/);
+  assert.match(html, /par 0:20/);
+});
+
+// Past par the chip is the countdown the host could not do in their head.
+test("does drain the live points once the relay is past par", () => {
+  const html = render(createView({ phase: "flying", startedAtMs: Date.now() - 40_000 }));
+
+  assert.match(html, /data-fappy-live-points="11"/);
+});
+
+test("does show no live points before the first flap or once the relay is over", () => {
+  assert.doesNotMatch(render(createView()), /data-fappy-live-points/);
+  assert.doesNotMatch(
+    render(createView({ phase: "finished", startedAtMs: T0, finishedAtMs: T0 + 9000, elapsedMs: 9000, points: 20 })),
+    /data-fappy-live-points/
+  );
+});
+
+test("does name the time that would top the leading rival under the running totals", () => {
+  const html = render(
+    createView({
+      phase: "flying",
+      startedAtMs: Date.now(),
+      pendingPointsByTeamId: { "team-alpha": 0, "team-beta": 11 }
+    })
+  );
+
+  assert.match(html, /Beat 0:\d\d to top Team Beta/);
+});
+
+test("does ask for par when the leading rival already has the round's max", () => {
+  const html = render(
+    createView({
+      phase: "flying",
+      startedAtMs: Date.now(),
+      pendingPointsByTeamId: { "team-alpha": 0, "team-beta": 20 }
+    })
+  );
+
+  assert.match(html, /Beat par to top Team Beta/);
+});
+
+test("does fall back to the par line when no rival has scored yet", () => {
+  assert.match(render(createView({ phase: "flying", startedAtMs: Date.now() })), /Full points under 20s/);
 });

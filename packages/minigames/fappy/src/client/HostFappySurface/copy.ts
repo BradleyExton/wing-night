@@ -48,5 +48,16 @@ export const hostFappySurfaceCopy = {
     `${gatesCleared} of ${gatesTotal} gates`,
   skipLegButtonLabel: "Skip leg",
   resetTurnButtonLabel: "Reset turn",
-  parLine: (parSeconds: number): string => `Full points under ${parSeconds}s`
+  parLine: (parSeconds: number): string => `Full points under ${parSeconds}s`,
+  // The receipt on the finish card: which seconds of the scored time the
+  // escape hatch put there.
+  penaltyLine: (penaltyClock: string, skippedLegs: number): string =>
+    `+${penaltyClock} for ${skippedLegs} skipped leg${skippedLegs === 1 ? "" : "s"}`,
+  // The target under the running totals. The tablet has the round's team names
+  // in reach, so unlike the wall it can say WHO — and a rival already on the
+  // round's max cannot be beaten on time at all, only tied at par.
+  timeToBeat: (clock: string, rivalName: string | null): string =>
+    rivalName === null ? `Beat ${clock} to take the lead` : `Beat ${clock} to top ${rivalName}`,
+  beatPar: (rivalName: string | null): string =>
+    rivalName === null ? "Beat par to take the lead" : `Beat par to top ${rivalName}`
 } as const;

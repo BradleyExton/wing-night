@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/fappy/`
 
-Last updated: 2026-09-23 (line-up pass, then the balance pass)
+Last updated: 2026-09-23 (line-up pass, the balance pass, then the pressure pass)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on.** Adding a `MinigameType`
 > breaks every `Record<MinigameType, …>` in the repo until fully wired (authoring guide §1),
@@ -173,10 +173,16 @@ type FappyMinigameViewFields = {
   startedAtMs: number | null;   // server wall clock
   finishedAtMs: number | null;
   timedOutAtMs: number | null;
-  elapsedMs: number | null;     // set once the relay is over
+  elapsedMs: number | null;     // set once the relay is over; the SCORED time (wall + skip penalty)
   points: number | null;        // set once the relay is over
+  pointsMax: number;            // what a finish at or under par pays, from initialize()
 };
 ```
+
+`pointsMax` is carried so a surface can run the runtime's own `resolveFinishPoints` forwards
+(what a finish RIGHT NOW would pay) and `resolveTimeToBeat` backwards (the slowest finish that
+still tops a rival) without inventing a score curve of its own — the maths is the runtime's, the
+numbers are the server's, and AGENTS.md §6 still holds.
 
 Nothing is secret, so host and display carry the same fields (JOUST precedent). The
 answer-safety test asserts the display view is exactly the host view.
@@ -362,6 +368,32 @@ leg 1 and the idle clock.
   `mirrorEvents` diffs two frames into what the room should hear (flaps come from the log, since
   a frame carries no record of one). `useFappySounds` maps those to cues and owns the phase,
   handoff and clock edges.
+
+- **Pressure pass (2026-09-23).** The clock ran but the room could not price it. Six changes, all
+  reading the runtime's own scoring maths rather than a second copy of it (`client/pressure`).
+  (1) **The finish clock shows the SCORED time.** `useRelayClock` measures the wall between the
+  server's stamps; `view.elapsedMs` carries the skip penalty and is what `resolveFinishPoints` was
+  handed. Once the phase is `finished`/`timedOut` both the host's FinishCard and the TV's
+  ResultPlaque read the view, and when the two differ by more than a second they say why
+  ("+0:12 for 1 skipped leg") — a host who watched 0:38 run past was otherwise left to guess why it
+  paid like 0:50. (2) **`pointsMax` rides in the view** (§0.5), stored on `FappyRuntimeState` at
+  `initialize`. (3) **Points draining live**: what a finish on this tick would pay, big on the TV
+  marquee and in a chip next to the host's relay clock — the round's max with `par 0:50` under it
+  while par holds, then heat-coloured and dropping a point at a time. It charges legs already
+  skipped, so the escape hatch's cost lands the moment it is taken. (4) **Time to beat**:
+  `resolveTimeToBeat` inverts the slide (unit-tested against `resolveFinishPoints` itself, with a
+  bounded walk over the rounding boundary that floating point otherwise decides by its last bit) to
+  the slowest finish that still tops the best rival in `pendingPointsByTeamId` — the one field that
+  survives the per-turn re-initialisation, which is why points and not times are what get inverted.
+  The tablet names the rival (`teamNameByTeamId`); the TV says "to take the lead", because
+  `MinigameDisplayRendererProps` carries only `activeTeamName`. Null when topping them needs better
+  than par, and then the instruction is "beat par". (5) **The pace strip** (`PaceTrack`) under the
+  TV's line-up: a bar spanning 0 to the limit with a tick at par, the flyer's own head placed by
+  course cleared and a faint drawn hen placed by the clock — both running at the par tick, because a
+  par-pace relay finishes exactly there — so ahead-or-behind is which face is in front rather than a
+  subtraction. Past par the ghost parks and the bar beyond it fills heat toward the limit. One
+  bird-head tall (~30px at 1080p) so the letterboxed corridor keeps its height. (6) The sandbox's
+  dev manifest banks one rival 9 points, because a fixture with a zeroed board has no target to draw.
 
 ## 1) One-liner
 

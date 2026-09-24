@@ -1,22 +1,6 @@
 export const stage =
   "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)] bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
-// The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D);
-// these are the relay's own readouts in its `readout` slot.
-export const marqueeLeg =
-  "text-[clamp(0.72rem,1vw,1.05rem)] font-extrabold uppercase tracking-[0.28em] text-muted";
-
-export const marqueeGates =
-  "font-mono text-[clamp(0.9rem,1.4vw,1.5rem)] font-extrabold text-text";
-
-// The relay clock is the room's scoreboard while the bird is in the air.
-export const marqueeClock =
-  "font-mono text-[clamp(1.3rem,2.2vw,2.4rem)] font-extrabold text-text [font-variant-numeric:tabular-nums]";
-
-export const marqueeClockPastPar = "text-gold";
-
-export const marqueeClockUrgent = "text-heat";
-
 export const arenaArea =
   "relative flex min-h-0 flex-1 overflow-hidden rounded-2xl border-2 border-[#3a200d] bg-[#160c2a] shadow-[inset_0_0_40px_rgba(0,0,0,0.55)]";
 
@@ -57,6 +41,12 @@ export const resultTitleTimedOut = "text-heat [text-shadow:none]";
 
 export const resultBlurb =
   "m-0 mt-1 font-serif text-[clamp(0.9rem,1.5vw,1.6rem)] italic text-mutedWarm";
+
+// Where the difference between the wall clock and the scored time came from.
+// Small, under the blurb: the plaque's headline is the time, this is the
+// receipt for it.
+export const resultPenalty =
+  "m-0 mt-1 text-[clamp(0.62rem,0.95vw,1rem)] font-extrabold uppercase tracking-[0.16em] text-heat";
 
 export const resultPoints =
   "font-mono text-[clamp(2.4rem,4vw,4.2rem)] font-black leading-none text-gold [text-shadow:0_0_18px_rgba(251,191,36,0.5)]";

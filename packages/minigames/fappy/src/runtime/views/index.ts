@@ -6,6 +6,12 @@ import type {
 
 import type { FappyRuntimeState } from "../types/index.js";
 
+// The penalty is the same arithmetic on the state the server holds and on the
+// view the surfaces get, and both carry these three fields — so it is typed on
+// the fields rather than on the state, and the clock the room watches ticks
+// through the very function the score used.
+type SkipPenaltyFields = Pick<FappyRuntimeState, "legs" | "legsPerTurn" | "parSeconds">;
+
 // Derived, never stored: the limit passing or the last gate ends the relay;
 // otherwise the room is in whatever state the leg in hand is.
 export const resolveFappyPhase = (state: FappyRuntimeState): FappyPhase => {
@@ -43,7 +49,7 @@ export const resolveTotalGatesCleared = (state: FappyRuntimeState): number => {
 // hatch was the fastest route through the course: one flap to start the clock
 // and a skip on every remaining leg finished well under par and paid the whole
 // round, beating the team that actually flew it.
-export const resolveSkipPenaltyMs = (state: FappyRuntimeState): number => {
+export const resolveSkipPenaltyMs = (state: SkipPenaltyFields): number => {
   const skippedLegs = state.legs.filter((leg) => leg.skipped).length;
   const perLegMs = (state.parSeconds * 1000) / Math.max(1, state.legsPerTurn);
 
@@ -95,7 +101,8 @@ const toFappyViewFields = (state: FappyRuntimeState) => {
     finishedAtMs: state.finishedAtMs,
     timedOutAtMs: state.timedOutAtMs,
     elapsedMs: resolveElapsedMs(state),
-    points: resolvePoints(state)
+    points: resolvePoints(state),
+    pointsMax: state.pointsMax
   };
 };
 

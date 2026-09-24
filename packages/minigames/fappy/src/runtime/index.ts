@@ -257,6 +257,7 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
       startedAtMs: null,
       finishedAtMs: null,
       timedOutAtMs: null,
+      pointsMax: input.pointsMax,
       turnStartPoints:
         activeTurnTeamId === null ? 0 : (input.pendingPointsByTeamId[activeTurnTeamId] ?? 0),
       pendingPointsByTeamId: { ...input.pendingPointsByTeamId }

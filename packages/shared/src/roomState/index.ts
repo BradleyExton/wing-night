@@ -467,6 +467,12 @@ type FappyMinigameViewFields = {
   // The relay's time once it is over, and what it scored; null while it runs.
   elapsedMs: number | null;
   points: number | null;
+  // What the round pays a team that finishes at or under par. The score curve
+  // is pure arithmetic over this and the clock, so carrying it lets a surface
+  // show what a finish RIGHT NOW would pay without deriving a score of its own
+  // (AGENTS.md §6) — the maths is the runtime's `resolveFinishPoints`, the
+  // number it is fed is the server's.
+  pointsMax: number;
 };
 export type FappyMinigameHostView = MinigameHostViewBase & FappyMinigameViewFields;
 

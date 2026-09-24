@@ -17,10 +17,6 @@ export const displayFappySurfaceCopy = {
   waitingLabel: "Waiting for the relay to start…",
   sceneLabel: (playerName: string | null): string =>
     playerName === null ? "The corridor" : `The corridor — ${playerName}'s bird`,
-  legCounter: (legNumber: number, legsTotal: number): string => `Leg ${legNumber} of ${legsTotal}`,
-  gatesCounter: (gatesCleared: number, gatesTotal: number): string =>
-    `${gatesCleared} / ${gatesTotal} gates`,
-  clockIdle: "0:00.0",
   readyPrompt: (
     playerName: string | null,
     waitingName: string | null = null,
@@ -72,6 +68,8 @@ export const displayFappySurfaceCopy = {
   timedOutBlurb: (gatesCleared: number, gatesTotal: number): string =>
     `${gatesCleared} of ${gatesTotal} gates before the clock ran out.`,
   points: (points: number): string => `+${points}`,
+  penaltyLine: (penaltyClock: string, skippedLegs: number): string =>
+    `+${penaltyClock} for ${skippedLegs} skipped leg${skippedLegs === 1 ? "" : "s"}`,
   finishedPrompt: "Relay over — next team when the room is ready.",
   timedOutPrompt: "Out of time — next team when the room is ready."
 } as const;
