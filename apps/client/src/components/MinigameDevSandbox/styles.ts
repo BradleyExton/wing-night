@@ -16,7 +16,9 @@ export const contentSource = "text-muted/70";
 export const controlsCard =
   "mx-auto mt-4 w-full max-w-[2200px] rounded-xl border border-text/10 bg-surface p-4 shadow-lg";
 
-export const controlsGrid = "grid gap-3 md:grid-cols-2 xl:grid-cols-4";
+// Five columns for the five blocks a clocked game shows; a host-paced game
+// leaves the last one empty rather than reflowing the row.
+export const controlsGrid = "grid gap-3 md:grid-cols-2 xl:grid-cols-5";
 
 export const controlBlock = "space-y-2";
 

@@ -114,6 +114,20 @@ body {
   }
 }
 
+/* The TV clock's beat in the last ten seconds (MinigameTimerChip): one hit
+   per tick, played once from the top on every digit, settling in under a
+   second so the next one lands clean. */
+@keyframes lasttenbeat {
+  0% {
+    transform: scale(1.14);
+    filter: brightness(1.6);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
 @keyframes reveal {
   from {
     opacity: 0;

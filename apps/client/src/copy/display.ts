@@ -36,6 +36,8 @@ export const displayCopy = {
   eatingPhaseFallbackLabel: "Eating",
   eatingTimesUpLabel: "Time's Up!",
   minigameTimerValue: formatClockSeconds,
+  // The last ten seconds, as a room counts them: "9", never "00:09".
+  minigameTimerUrgentValue: (remainingSeconds: number): string => String(remainingSeconds),
   minigameTimesUpLabel: "Time!",
   roundChipLabel: (round: number): string => `Round ${round}`,
   roundLabelSauceSummary: (label: string, sauce: string): string =>

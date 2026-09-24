@@ -47,9 +47,10 @@ question, or whose outcome the player cannot affect, has none.
 - **Show the clock to the room, and escalate it.** Immediate feedback on progress is a
   *condition* of flow, not decoration (`1.2`, `8.3`), and a clock only the tablet can read
   is not feedback for the room. The last ten seconds should be the loudest thing on the TV.
-  Today the TV's turn clock is a chip that changes colour under ten seconds
-  (`apps/client/src/utils/timerUrgency`), and the only time's-up sound is the host's WebAudio
-  chime. That is the minimum, not the target.
+  Since 2026-09-24 the TV's turn clock does this: the marquee pill grows past the team's name in
+  bare seconds under ten (`apps/client/src/utils/timerUrgency` still decides when), beats on
+  every tick, and the TV's own speaker ticks each second and buzzes at zero
+  (`DESIGN.md` §5 MINIGAME_PLAY). The host's chime is the tablet's; the room has its own.
 - **Tense and release, not constant pressure.** Enjoyment oscillates (`1.3`). Every success
   or failure needs a beat of hold before the next demand, the way Vlambeer's hit-pause gives
   the brain a moment to register the hit (`8.2`). FAPPY's handoff and crash holds are this
@@ -322,8 +323,9 @@ decisions.
 - **The same team opens every round** (item 16, principle §5). Turn order is fixed for the
   night by `SPEC.md` and `turnState`. Rotating the opener each round, or adding a demo beat
   before the first team, is a spec change to decide at the table.
-- **The TV clock is a chip.** Under ten seconds it changes colour; there is no tick on the
-  TV and the digits do not grow (item 1). The host hears a chime; the room does not.
+- **The TV clock is a chip.** (Closed 2026-09-24.) Under ten seconds it now grows to more
+  than twice its size in bare seconds, beats on every tick, and the TV ticks each second and
+  buzzes at zero (`DESIGN.md` §5 MINIGAME_PLAY). The host's chime stays; the room has its own.
 - **No practice or demo beat exists** in the phase flow (item 16). MINIGAME_INTRO is a
   briefing card, then EATING, then play.
 - **Trivia is the flattest game we ship** against items 2, 9, 10 and 13: one person can

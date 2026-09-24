@@ -194,3 +194,45 @@ test("drawing sandbox syncs tablet strokes to the display and reveals on correct
 
   expect(socketRequests).toHaveLength(0);
 });
+
+// The TV's last ten seconds (DESIGN.md §5 MINIGAME_PLAY): the pill grows into
+// the biggest thing on the marquee, in bare seconds, and lands on time's up.
+// Driven here through the sandbox's rehearsal clock, because the sandbox's
+// own clock is paused at full and a real GEO turn is forty-five seconds away
+// from its last ten. The tick and the buzzer are best-effort audio and are
+// covered by the soundboard's unit tests; this holds the picture.
+test("geo sandbox grows the display clock into big digits for the last ten seconds", async ({
+  page
+}) => {
+  await page.goto(devSandboxPath("geo"));
+
+  const clock = page.locator("[data-minigame-timer-chip]");
+
+  await expect(clock).toHaveAttribute("data-minigame-timer-chip", "calm");
+  await expect(clock).toHaveText("00:45");
+
+  const calmFontPx = await clock.evaluate(
+    (element) => Number.parseFloat(getComputedStyle(element).fontSize)
+  );
+
+  await page.getByRole("button", { name: "Run the last ten seconds" }).click();
+
+  // Two seconds of calm first, then the tenth second turns the pill.
+  await expect(clock).toHaveAttribute("data-minigame-timer-chip", "urgent", {
+    timeout: 5_000
+  });
+  // Bare seconds, never "00:09".
+  await expect(clock).toHaveText(/^\d{1,2}$/);
+
+  const urgentFontPx = await clock.evaluate(
+    (element) => Number.parseFloat(getComputedStyle(element).fontSize)
+  );
+
+  expect(urgentFontPx).toBeGreaterThanOrEqual(calmFontPx * 2);
+
+  // The end is a landing in the same tube, not a shrink back to the footnote.
+  await expect(clock).toHaveAttribute("data-minigame-timer-chip", "time_up", {
+    timeout: 15_000
+  });
+  await expect(clock).toHaveText("Time!");
+});

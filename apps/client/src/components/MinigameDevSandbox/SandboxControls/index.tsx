@@ -21,6 +21,10 @@ type SandboxControlsProps = {
   onPhaseChange: (phase: MinigameSurfacePhase) => void;
   onActiveTeamChange: (teamId: string) => void;
   onReset: () => void;
+  // Arms a short running clock on both previews so the TV's last ten seconds
+  // can be judged here. Absent for a host-paced game, which has no clock to
+  // run, so the block does not draw.
+  onRehearseClock: (() => void) | null;
 };
 
 // The option list is derived from MINIGAME_TYPES, and the option value is the
@@ -45,7 +49,8 @@ export const SandboxControls = ({
   onMinigameTypeChange,
   onPhaseChange,
   onActiveTeamChange,
-  onReset
+  onReset,
+  onRehearseClock
 }: SandboxControlsProps): JSX.Element => {
   const minigameOptions = resolveMinigameOptions();
   const activeSlug = resolveMinigameDefinition(minigameType).slug;
@@ -132,6 +137,23 @@ export const SandboxControls = ({
             {minigameDevSandboxCopy.resetButtonLabel}
           </button>
         </div>
+
+        {onRehearseClock !== null && (
+          <div className={styles.controlBlock}>
+            <span className={styles.controlLabel}>
+              {minigameDevSandboxCopy.clockLabel}
+            </span>
+            <button
+              className={styles.resetButton}
+              type="button"
+              onClick={(): void => {
+                onRehearseClock();
+              }}
+            >
+              {minigameDevSandboxCopy.rehearseClockButtonLabel}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

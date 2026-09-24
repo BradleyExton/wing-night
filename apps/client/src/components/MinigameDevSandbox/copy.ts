@@ -14,6 +14,10 @@ export const minigameDevSandboxCopy = {
   teamLabel: "Whose turn",
   sessionLabel: "Session",
   resetButtonLabel: "Reset",
+  // Only for the three games with a room clock: the sandbox's clock is paused
+  // at full, so this is the one way to judge the TV's last ten seconds here.
+  clockLabel: "Clock",
+  rehearseClockButtonLabel: "Run the last ten seconds",
   hostPreviewLabel: "Host Preview",
   hostPreviewMetaLabel: "Tablet · 1280 × 800 landscape",
   displayPreviewLabel: "Display Preview",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type {
   MinigameDevManifest,
   MinigameRendererBundle,
@@ -6,7 +6,12 @@ import type {
   MinigameSurfacePhase,
   SerializableValue
 } from "@wingnight/minigames-core";
-import { Phase, resolveMinigameDefinition, type MinigameType } from "@wingnight/shared";
+import {
+  Phase,
+  resolveMinigameDefinition,
+  type MinigameType,
+  type RoomTimerState
+} from "@wingnight/shared";
 
 import { hostCopy } from "../../../copy/host";
 import { RoomStateProvider } from "../../../context/RoomStateContext";
@@ -16,12 +21,16 @@ import { TakeoverTimerChip } from "../../HostControlPanel/HostPhaseBody/Minigame
 import { HostTakeoverDock } from "../../HostControlPanel/HostTakeoverDock";
 import { MinigameTimerChip } from "../../DisplayBoard/StageSurface/MinigameTimerChip";
 import { MinigameTimerLine } from "../../DisplayBoard/StageSurface/MinigameTimerLine";
+import { useMinigameClockSound } from "../../DisplayBoard/StageSurface/useMinigameClockSound";
+import { useMinigameCountdown } from "../../DisplayBoard/StageSurface/useMinigameCountdown";
 import { MinigameSurface } from "../../HostControlPanel/MinigameSurface";
 import { SandboxControls } from "../SandboxControls";
 import { SandboxDeviceFrame } from "../SandboxDeviceFrame";
 import { minigameDevSandboxCopy } from "../copy";
-import { resolveRemainingTimerSeconds } from "../../../utils/resolveRemainingTimerSeconds";
-import { resolveSandboxHostRoomState } from "./resolveSandboxHostRoomState";
+import {
+  createClockRehearsalTimer,
+  resolveSandboxHostRoomState
+} from "./resolveSandboxHostRoomState";
 import * as styles from "./styles";
 
 type SandboxStageProps = {
@@ -111,6 +120,9 @@ export const SandboxStage = ({
       devManifest.activeRoundTeamId
     );
   });
+  // A short running clock in place of the paused one, while a rehearsal runs
+  // (`createClockRehearsalTimer`, next to the paused one it stands in for).
+  const [clockRehearsalTimer, setClockRehearsalTimer] = useState<RoomTimerState | null>(null);
 
   const handleDispatchAction = (
     actionType: string,
@@ -144,24 +156,46 @@ export const SandboxStage = ({
   }));
   const teamNameByTeamId = new Map(Object.entries(devManifest.teamNameByTeamId));
   const { DisplaySurface } = rendererBundle;
-  const sandboxHostRoomState = resolveSandboxHostRoomState(
-    minigameType,
-    phase,
-    activeTeamId,
-    devManifest.teams
-  );
+  // Memoised because the display's countdown hook keys its interval on the
+  // timer object: a fresh room state per render would re-arm it four times a
+  // second for as long as a rehearsal runs.
+  const sandboxHostRoomState = useMemo(() => {
+    const roomState = resolveSandboxHostRoomState(
+      minigameType,
+      phase,
+      activeTeamId,
+      devManifest.teams
+    );
+
+    if (roomState === null || clockRehearsalTimer === null) {
+      return roomState;
+    }
+
+    // Both previews read this one timer, so the tablet's chip and the TV's
+    // pill count the same rehearsal down together, as they do in a room.
+    return { ...roomState, timer: clockRehearsalTimer };
+  }, [minigameType, phase, activeTeamId, devManifest.teams, clockRehearsalTimer]);
   const isTakeover = phase === "play";
   // The TV's clock is a slot too now (docs/takeover-layout-api.md §6 applied to
   // the display at T5.3), so the display preview composes it exactly as
-  // `MinigameStageBody` does — from the same paused sandbox timer the host
-  // preview reads. Without this the preview would show the TV's marquee with
-  // an empty meta cell for the three games that actually carry a clock, which
-  // is the same lie the old reserve told in the other direction.
+  // `MinigameStageBody` does — from the same sandbox timer the host preview
+  // reads, through the same countdown hook, with the same voice. Without this
+  // the preview would show the TV's marquee with an empty meta cell for the
+  // three games that actually carry a clock, which is the same lie the old
+  // reserve told in the other direction.
   const sandboxTimer = sandboxHostRoomState?.timer ?? null;
-  const displayRemainingSeconds =
-    sandboxTimer === null
+  const displayRemainingSeconds = useMinigameCountdown({
+    stageMode: isTakeover ? "minigame_play" : "minigame_intro",
+    minigameTimerSnapshot: sandboxTimer
+  });
+
+  useMinigameClockSound(displayRemainingSeconds);
+
+  // Only a game with a room clock has a last ten seconds to rehearse.
+  const rehearseClock =
+    resolveMinigameDefinition(minigameType).timerKey === null
       ? null
-      : resolveRemainingTimerSeconds(sandboxTimer, Date.now());
+      : (): void => setClockRehearsalTimer(createClockRehearsalTimer());
 
   return (
     <>
@@ -177,10 +211,13 @@ export const SandboxStage = ({
           // team's turn — a half-played turn is not that team's turn.
           setActiveTeamId(teamId);
           setRuntimeState(initializeRuntimeState(runtimePlugin, devManifest, teamId));
+          setClockRehearsalTimer(null);
         }}
         onReset={(): void => {
           setRuntimeState(initializeRuntimeState(runtimePlugin, devManifest, activeTeamId));
+          setClockRehearsalTimer(null);
         }}
+        onRehearseClock={rehearseClock}
       />
 
       <section className={styles.previewGrid}>

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { Team } from "@wingnight/shared";
+import { Phase, type Team } from "@wingnight/shared";
 
-import { resolveSandboxHostRoomState } from "./index";
+import { createClockRehearsalTimer, resolveSandboxHostRoomState } from "./index";
 
 const TEAMS: Team[] = [
   {
@@ -43,4 +43,17 @@ test("carries no turn team when the sandbox has none selected", () => {
 
   assert.equal(roomState?.activeTurnTeamId, null);
   assert.deepEqual(roomState?.teams, []);
+});
+
+// The rehearsal is the one running clock the sandbox ever holds: long enough
+// to show the calm pill turn, short enough to sit through to time's up.
+test("does arm a running clock that reaches its last ten seconds within a few", () => {
+  const timer = createClockRehearsalTimer(1_000);
+
+  assert.equal(timer.phase, Phase.MINIGAME_PLAY);
+  assert.equal(timer.isPaused, false);
+  assert.equal(timer.startedAt, 1_000);
+  assert.equal(timer.endsAt - timer.startedAt, timer.durationMs);
+  assert.ok(timer.durationMs > 10_000);
+  assert.ok(timer.durationMs <= 15_000);
 });
