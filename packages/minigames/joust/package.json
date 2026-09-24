@@ -30,6 +30,7 @@
   "dependencies": {
     "@wingnight/cast": "workspace:*",
     "@wingnight/minigames-core": "workspace:*",
+    "@wingnight/scenery": "workspace:*",
     "@wingnight/shared": "workspace:*",
     "@wingnight/surface": "workspace:*"
   },

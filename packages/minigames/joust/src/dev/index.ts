@@ -12,42 +12,57 @@ import { createDevManifest } from "@wingnight/minigames-core";
 const DEV_CONTENT = {
   prompts: [
     {
-      id: "arena-two-towers",
-      name: "Two Towers",
+      id: "arena-centennial-beach",
+      name: "Centennial Beach",
       perches: [
         { x: 54, y: 78, width: 102 },
-        { x: 66, y: 44, width: 40 },
+        { x: 54, y: 64, width: 28 },
+        { x: 89, y: 50, width: 65 }
+      ],
+      obstacles: [
+        { x: 45, y: 64, width: 7, height: 14, kind: "umbrella" },
+        { x: 60, y: 73, width: 16, height: 5, kind: "canoe" },
+        { x: 156, y: 50, width: 2, height: 28, kind: "mast" }
+      ]
+    },
+    {
+      id: "arena-spirit-catcher",
+      name: "The Spirit Catcher",
+      perches: [
+        { x: 54, y: 78, width: 102 },
+        { x: 56, y: 52, width: 38 },
+        { x: 98, y: 40, width: 41 }
+      ],
+      obstacles: [
+        { x: 41, y: 66, width: 13, height: 12, kind: "chip-truck" },
+        { x: 156, y: 50, width: 2, height: 28, kind: "mast" }
+      ]
+    },
+    {
+      id: "arena-allandale-dock",
+      name: "Allandale Dock",
+      perches: [
+        { x: 54, y: 78, width: 102 },
+        { x: 54, y: 48, width: 65 },
+        { x: 128, y: 62, width: 28 }
+      ],
+      obstacles: [
+        { x: 45, y: 62, width: 6, height: 16, kind: "lifeguard-chair" },
+        { x: 134, y: 73, width: 16, height: 5, kind: "canoe" }
+      ]
+    },
+    {
+      id: "arena-meridian-place",
+      name: "Meridian Place",
+      perches: [
+        { x: 54, y: 78, width: 102 },
+        { x: 64, y: 44, width: 40 },
         { x: 112, y: 52, width: 40 }
       ],
-      obstacles: []
-    },
-    {
-      id: "arena-lookout",
-      name: "The Lookout",
-      perches: [
-        { x: 54, y: 78, width: 102 },
-        { x: 57, y: 52, width: 58 },
-        { x: 129, y: 40, width: 22 }
-      ],
-      obstacles: [{ x: 46, y: 66, width: 5, height: 12 }]
-    },
-    {
-      id: "arena-front-porch",
-      name: "Front Porch",
-      perches: [
-        { x: 54, y: 78, width: 102 },
-        { x: 62, y: 48, width: 76 }
-      ],
-      obstacles: []
-    },
-    {
-      id: "arena-open-range",
-      name: "Open Range",
-      perches: [
-        { x: 54, y: 78, width: 102 },
-        { x: 71, y: 56, width: 85 }
-      ],
-      obstacles: []
+      obstacles: [
+        { x: 44, y: 70, width: 8, height: 8, kind: "muskoka-chair" },
+        { x: 156, y: 52, width: 2, height: 26, kind: "mast" }
+      ]
     }
   ]
 };

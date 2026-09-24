@@ -20,10 +20,10 @@ import type { JoustStandingPin } from "../../runtime/lineup/index.js";
 import type { JoustSceneLeg } from "../resolveJoustScene/index.js";
 import { ArenaHen } from "./ArenaHen/index.js";
 import { Backdrop } from "./Backdrop/index.js";
-import { Cactus } from "./Cactus/index.js";
 import { CollapseDust, ImpactBurst, ShotTrail } from "./FlightEffects/index.js";
 import { GroundShadow } from "./GroundShadow/index.js";
 import { Perch } from "./Perch/index.js";
+import { Prop } from "./Prop/index.js";
 import { Shooter } from "./Shooter/index.js";
 import { ShotGhost } from "./ShotGhost/index.js";
 import { TeamBench } from "./TeamBench/index.js";
@@ -132,7 +132,7 @@ export const JoustArenaScene = ({
 
         <g clipPath={`url(#${worldClipId})`}>
           {arena.obstacles.map((obstacle, index) => (
-            <Cactus key={index} obstacle={obstacle} />
+            <Prop key={index} obstacle={obstacle} />
           ))}
 
           {arena.perches.map((perch, perchIndex) => (

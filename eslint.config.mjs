@@ -111,6 +111,7 @@ export default [
     files: [
       "apps/client/src/**/*.{ts,tsx}",
       "packages/cast/src/**/*.{ts,tsx}",
+      "packages/scenery/src/**/*.{ts,tsx}",
       "packages/surface/src/**/*.{ts,tsx}"
     ],
     languageOptions: {
@@ -146,11 +147,13 @@ export default [
   {
     // packages/cast is the shared character system: it left apps/client so minigame
     // packages can draw the bird, and it keeps the house component idiom with it.
-    // packages/surface is the shared design-system package, governed the same way, and
-    // the minigame client trees are most of the game UI — the idiom is house-wide.
+    // packages/scenery is the city's landmarks, hoisted out of SCHLONIC so JOUST can stand
+    // them too; packages/surface is the shared design-system package, governed the same way,
+    // and the minigame client trees are most of the game UI — the idiom is house-wide.
     files: [
       "apps/client/src/components/**/*.tsx",
       "packages/cast/src/**/*.tsx",
+      "packages/scenery/src/**/*.tsx",
       "packages/surface/src/**/*.tsx",
       "packages/minigames/*/src/client/**/*.tsx"
     ],
@@ -168,6 +171,7 @@ export default [
     files: [
       "apps/client/src/components/**/index.tsx",
       "packages/cast/src/**/index.tsx",
+      "packages/scenery/src/**/index.tsx",
       "packages/surface/src/**/index.tsx",
       "packages/minigames/*/src/client/**/index.tsx"
     ],
@@ -183,19 +187,25 @@ export default [
     }
   },
   {
-    // The SVG primitives a minigame scene is drawn from. A Cactus or a Backdrop is a <g>
+    // The SVG primitives a minigame scene is drawn from. A Prop or a Backdrop is a <g>
     // of shapes with no className anywhere — its colour and geometry come from the scene's
     // palette.ts and its props, so there is no styles.ts for it to import and
     // require-styles-import-in-component-entry has nothing left to ask for. Scope carve-out
     // only — that single rule is off for the primitives and no rule is weakened: the
     // 260-line cap, the inline-style ban, the copy-module rule and the JSON import ban all
     // still apply here, and there is no eslint-disable in any of these files.
+    // packages/scenery is the same kind of thing hoisted out of a scene: every landmark in
+    // it is a bare <g> painted in the palette its caller hands over, and it carries no
+    // className either.
     //
     // The ignores are the parts of a scene that are NOT primitives — the three scene roots,
     // which are the real elements in the DOM, and the four animated parts that carry a
     // className. Each has a sibling styles.ts, so each stays under the rule; without these
     // lines the carve-out would quietly stop noticing if one of them lost its styles import.
-    files: ["packages/minigames/*/src/client/*Scene/**/index.tsx"],
+    files: [
+      "packages/minigames/*/src/client/*Scene/**/index.tsx",
+      "packages/scenery/src/**/index.tsx"
+    ],
     ignores: [
       "packages/minigames/*/src/client/*Scene/index.tsx",
       "packages/minigames/fappy/src/client/FappyScene/BirdSprite/index.tsx",
@@ -216,6 +226,7 @@ export default [
     files: [
       "apps/client/src/components/**/styles.ts",
       "packages/cast/src/**/styles.ts",
+      "packages/scenery/src/**/styles.ts",
       "packages/surface/src/**/styles.ts",
       "packages/minigames/*/src/client/**/styles.ts"
     ],

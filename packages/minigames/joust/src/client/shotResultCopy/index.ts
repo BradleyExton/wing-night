@@ -8,7 +8,7 @@ export type JoustShotCopy = {
   blurb: string;
 };
 
-const MISS: JoustShotCopy = { title: "Whiff", blurb: "The desert claims another." };
+const MISS: JoustShotCopy = { title: "Whiff", blurb: "The bay claims another." };
 const RACK_CLEARED: JoustShotCopy = {
   title: "Rack cleared!",
   blurb: "Nobody left standing. Bonus on the board."

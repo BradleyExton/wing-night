@@ -145,7 +145,7 @@ test("counts a felled player out of the standing line", () => {
   assert.match(renderSurface(hostView({ downPlayerIds: ["p4"] })), /2 of 3 still standing/);
 });
 
-test("draws every cactus in the lane", () => {
+test("draws every prop in the lane", () => {
   const html = renderSurface(
     hostView({
       arena: {
@@ -154,9 +154,9 @@ test("draws every cactus in the lane", () => {
       }
     })
   );
-  const cactusCount = (html.match(/stroke-dasharray="1.2 1.6"/g) ?? []).length;
+  const propCount = (html.match(/data-joust-prop="/g) ?? []).length;
 
-  assert.equal(cactusCount, 2);
+  assert.equal(propCount, 2);
 });
 
 test("holds next shot until a shot has resolved", () => {

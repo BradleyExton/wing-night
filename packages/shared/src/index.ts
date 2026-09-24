@@ -18,6 +18,7 @@ export type {
   ContraptionVec2
 } from "./contraption/index.js";
 export {
+  JOUST_OBSTACLE_KINDS,
   JOUST_PIN_FOOT_RADIUS,
   JOUST_PIN_HEAD_RADIUS,
   JOUST_PIN_HEIGHT,
@@ -80,6 +81,7 @@ export type {
   JoustFrame,
   JoustLeg,
   JoustObstacle,
+  JoustObstacleKind,
   JoustPerch,
   JoustRackLayout,
   JoustSegment,

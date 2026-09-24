@@ -1,10 +1,10 @@
 import { normalizeFilename } from "./houseComponentPaths.mjs";
 
-// The trees whose React components live in folders: apps/client, the shared cast and
-// surface packages, and every minigame client tree. One source of truth — the gate below
+// The trees whose React components live in folders: apps/client, the shared cast, scenery
+// and surface packages, and every minigame client tree. One source of truth — the gate below
 // and the entry-file pattern are built from it, so the two can no longer drift apart.
 const COMPONENT_FOLDER_ROOTS =
-  "(?:apps/client/src/components|packages/cast/src|packages/surface/src|packages/minigames/[^/]+/src/client)";
+  "(?:apps/client/src/components|packages/cast/src|packages/scenery/src|packages/surface/src|packages/minigames/[^/]+/src/client)";
 
 const COMPONENT_FOLDER_PATTERN = new RegExp(`/${COMPONENT_FOLDER_ROOTS}/`);
 

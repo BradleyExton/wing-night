@@ -58,10 +58,14 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
   await expect(page.locator("[data-joust-shooter-figure]")).toHaveCount(2);
   await expect(page.getByText("9/9 standing")).toBeVisible();
   await expect(page.getByText("9 of 9 still standing")).toBeVisible();
-  // Two Towers: each tower stands on two legs the integrator owns, and each shelf says what it
-  // pays. Nothing is rubble yet, and there is no last shot to ghost.
+  // Centennial Beach: a dock and a lifeguard tower, each on two legs the integrator owns, and
+  // the tower's shelf says what it pays (the dock pays what the sand does, so it carries no tag).
+  // Nothing is rubble yet, and there is no last shot to ghost.
   await expect(page.locator("[data-joust-leg]")).toHaveCount(8);
-  await expect(page.locator("[data-joust-perch-points]")).toHaveCount(4);
+  await expect(page.locator('[data-joust-perch-skin="dock"]')).toHaveCount(2);
+  await expect(page.locator('[data-joust-perch-skin="lifeguard-tower"]')).toHaveCount(2);
+  await expect(page.locator("[data-joust-perch-points]")).toHaveCount(2);
+  await expect(page.locator("[data-joust-prop]")).toHaveCount(6);
   await expect(page.locator("[data-joust-rubble]")).toHaveCount(0);
   await expect(page.locator("[data-joust-ghost]")).toHaveCount(0);
 
@@ -118,16 +122,16 @@ test("a barely drawn band does not spend a shot", async ({ page }) => {
 test("switching the shooting team puts the sandbox on that team's lane", async ({ page }) => {
   await page.goto(devSandboxPath("joust"));
 
-  await expect(page.getByText("Lane: Two Towers")).toBeVisible();
+  await expect(page.getByText("Lane: Centennial Beach")).toBeVisible();
 
   await page.getByLabel("Whose turn").selectOption("team-beta");
 
-  await expect(page.getByText("Lane: The Lookout")).toBeVisible();
+  await expect(page.getByText("Lane: The Spirit Catcher")).toBeVisible();
   await expect(page.getByText("Shot 1 of 3")).toHaveCount(2);
 
   await page.getByLabel("Whose turn").selectOption("team-gamma");
 
-  await expect(page.getByText("Lane: Front Porch")).toBeVisible();
+  await expect(page.getByText("Lane: Allandale Dock")).toBeVisible();
 });
 
 test("the sandbox reset button restores a fresh turn", async ({ page }) => {
