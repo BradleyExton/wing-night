@@ -70,6 +70,17 @@ export const schlonicPalette = {
   schlong: "#f9a3bc",
   schlongDark: "#8e2a52",
   schlongLight: "#ffe6ee",
+  schlongVein: "#c4577f",
+  // The other two skins a badnik comes in, FAPPY's own (§2.9), so the zone's enemies are a
+  // line-up and not a fence: a big dark one and a pale one.
+  ebony: "#4b2a20",
+  ebonyDark: "#1a0a06",
+  ebonyLight: "#8c5a46",
+  ebonyVein: "#8a5443",
+  ivory: "#f4e3d3",
+  ivoryDark: "#a9735c",
+  ivoryLight: "#ffffff",
+  ivoryVein: "#cf9f8b",
   // The thorn bed: the same creature, angrier and lower, and never mistakeable for the pink.
   thorn: "#d81e5b",
   thornDark: "#6d0d2f",

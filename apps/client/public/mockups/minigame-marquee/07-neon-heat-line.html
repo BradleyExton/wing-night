@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Minigame Marquee — 07 Neon Heat Line (click: next turn · U: last 15s)</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      /* 06's layout wearing 03's light: the kicker is a small neon tube, the
+         team name is white light, and the burning line is itself a tube. */
+      .row { display: grid; grid-template-rows: auto auto; gap: clamp(0.6rem, 1.1vh, 1rem); padding: 0 clamp(0.4rem, 0.8vw, 0.8rem); }
+      .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; }
+      .kicker {
+        font-family: "Monoton", cursive; font-weight: 400; text-transform: uppercase; letter-spacing: 0.14em;
+        font-size: clamp(0.9rem, 1.5vw, 1.7rem); color: #fff3c4; line-height: 1; margin-bottom: 0.25em;
+        text-shadow: 0 0 5px #fff, 0 0 12px var(--gold), 0 0 28px var(--gold), 0 0 50px rgba(251,191,36,0.5);
+      }
+      .kicker em { font-style: normal; animation: flick 4.2s steps(1) infinite; }
+      @keyframes flick { 0%,93%,100% { opacity: 1; } 94%,96% { opacity: 0.35; } 95%,97% { opacity: 1; } 98% { opacity: 0.55; } }
+      .team {
+        font-family: "Anton", sans-serif; text-transform: uppercase; letter-spacing: 0.04em; line-height: 0.95;
+        font-size: clamp(2.2rem, 4vw, 4.4rem); color: #fff; display: flex; align-items: baseline; gap: 0.4em;
+        text-shadow: 0 0 8px rgba(255,255,255,0.5), 0 0 24px rgba(255,255,255,0.18);
+      }
+      .team small { font-family: ui-monospace, monospace; font-size: 0.4em; font-weight: 800; color: var(--gold); letter-spacing: 0; text-shadow: 0 0 8px var(--gold), 0 0 20px rgba(251,191,36,0.5); }
+      .right { display: flex; align-items: center; gap: clamp(1rem, 2vw, 2rem); }
+      .count { color: var(--muted); font-weight: 800; letter-spacing: 0.26em; text-transform: uppercase; font-size: clamp(0.65rem, 0.95vw, 1rem); }
+      .digits {
+        font-family: ui-monospace, monospace; font-weight: 800; font-size: clamp(1.4rem, 2.2vw, 2.5rem); color: #ffd6c7; line-height: 1;
+        border: 3px solid var(--primary); border-radius: 999px; padding: 0.05em 0.6em; letter-spacing: -0.02em;
+        text-shadow: 0 0 6px #fff, 0 0 16px var(--primary), 0 0 36px var(--primary);
+        box-shadow: 0 0 10px var(--primary), inset 0 0 10px rgba(249,115,22,0.6);
+      }
+      /* the tube: a dark glass track with the lit length inside it */
+      .line { position: relative; height: clamp(8px, 1.1vh, 12px); border-radius: 999px; background: rgba(255,255,255,0.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+      .line::before {
+        content: ""; position: absolute; inset: 2px; width: calc(var(--remaining) * 100% - 4px); border-radius: inherit;
+        background: linear-gradient(90deg, var(--heat), var(--primary) 30%, #ffe08a);
+        box-shadow: 0 0 8px var(--primary), 0 0 22px var(--primary), 0 0 44px rgba(249,115,22,0.5); transition: width 1s linear;
+      }
+      .line::after { /* the hot tip */
+        content: ""; position: absolute; top: -4px; bottom: -4px; width: 8px; border-radius: 4px; background: #fff;
+        left: calc(var(--remaining) * 100% - 4px); box-shadow: 0 0 10px #fff, 0 0 26px #fff, 0 0 40px var(--primary); transition: left 1s linear;
+      }
+      body.urgent .digits { border-color: var(--heat); color: #ffdada; animation: heatpulse 0.65s ease-in-out infinite; text-shadow: 0 0 6px #fff, 0 0 16px var(--heat), 0 0 36px var(--heat); box-shadow: 0 0 14px var(--heat), inset 0 0 12px rgba(239,68,68,0.7); }
+      body.urgent .line::before { background: var(--heat); box-shadow: 0 0 10px var(--heat), 0 0 30px var(--heat); animation: heatpulse 0.65s ease-in-out infinite; }
+      body.timeup .digits { font-size: clamp(0.8rem, 1.2vw, 1.3rem); letter-spacing: 0.16em; padding-block: 0.6em; border-color: var(--heat); }
+      body.timeup .line::after { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="row">
+        <div class="top">
+          <div>
+            <div class="kicker" id="tube"><span data-slot="title">Title</span></div>
+            <div class="team"><span data-slot="team">Team</span><small data-slot="pending">+0</small></div>
+          </div>
+          <div class="right"><span class="count" data-slot="counter">Counter</span><span class="digits tnum" data-slot="clock">0:00</span></div>
+        </div>
+        <div class="line"></div>
+      </header>
+      <div class="body"><span>game body</span></div>
+    </div>
+    <p class="legend"><b>click</b> next turn · <b>U</b> last 15s</p>
+    <script src="kit.js"></script>
+    <script>
+      const flicker = (t) => { const i = Math.max(1, Math.floor(t.length * 0.6)); document.getElementById("tube").innerHTML = `${t.slice(0, i)}<em>${t[i]}</em>${t.slice(i + 1)}`; };
+      document.addEventListener("scenario", (e) => flicker(e.detail.title));
+      flicker(SCENARIOS[0].title);
+    </script>
+  </body>
+</html>

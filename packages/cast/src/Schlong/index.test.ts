@@ -73,6 +73,17 @@ test("does point a standing spine's head up and put the slit at its tip", () => 
   assert.ok(vertices(standing.corona).every((at) => at.y > 60), "the rim is behind the head");
 });
 
+test("does run the veins up the shaft inside the body and stop them short of the head", () => {
+  const veins = vertices(straight.veins);
+  const shaftEnd = 20 - 1.6 * 3;
+
+  assert.ok(veins.length > 6, straight.veins);
+  assert.ok(veins.every((at) => Math.abs(at.y) < 2 && Math.abs(at.y) > 0.2), "a vein rides the shaft, off the spine");
+  assert.ok(veins.every((at) => at.x < shaftEnd && at.x > 1.5), "and never reaches the rim or the tail");
+  assert.ok(veins.some((at) => at.y > 0) && veins.some((at) => at.y < 0), "one each side");
+  assert.equal(straight.veins.split("M ").length - 1, 3, "two veins and a spur");
+});
+
 test("does still draw a head when every spine point is the same", () => {
   const collapsed = resolveSchlongPaths(
     [
@@ -84,6 +95,7 @@ test("does still draw a head when every spine point is the same", () => {
   );
 
   assert.match(collapsed.body, /^M /);
+  assert.equal(collapsed.veins, "");
   assert.deepEqual(collapsed.head, { x: 4, y: 4 });
 });
 

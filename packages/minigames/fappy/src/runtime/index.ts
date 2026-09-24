@@ -10,6 +10,7 @@ import { isFappyRules, resolveFappyRules } from "./rules/index.js";
 import { resolveFinishPoints, resolveTimeoutPoints } from "./scoring/index.js";
 import type { FappyRuntimeLeg, FappyRuntimeRules, FappyRuntimeState } from "./types/index.js";
 import {
+  resolveElapsedMs,
   resolveFappyPhase,
   resolveTotalGatesCleared,
   toFappyDisplayView,
@@ -163,10 +164,12 @@ const finish = (
   // the elapsed time zero — and zero is under par, so skipping the whole relay
   // paid the full round. The escape hatch scores nothing instead, which is the
   // bargain JOUST's `skipShot` and SCHLONIC's `skipRun` already make.
+  //
+  // Otherwise the score reads `resolveElapsedMs`, not the raw wall clock: it
+  // carries the skip penalty, so a relay with a forgiven leg in it pays for
+  // exactly the time the deck and the TV show.
   const points =
-    state.startedAtMs === null
-      ? 0
-      : resolveFinishPoints(receivedAtMs - state.startedAtMs, finished, pointsMax);
+    state.startedAtMs === null ? 0 : resolveFinishPoints(resolveElapsedMs(finished) ?? 0, finished, pointsMax);
 
   return { ...finished, pendingPointsByTeamId: withTurnPoints(finished, points, pointsMax) };
 };
@@ -254,6 +257,7 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
       startedAtMs: null,
       finishedAtMs: null,
       timedOutAtMs: null,
+      pointsMax: input.pointsMax,
       turnStartPoints:
         activeTurnTeamId === null ? 0 : (input.pendingPointsByTeamId[activeTurnTeamId] ?? 0),
       pendingPointsByTeamId: { ...input.pendingPointsByTeamId }

@@ -25,23 +25,34 @@ export type FappyRuntimeState = {
   startedAtMs: number | null;
   finishedAtMs: number | null;
   timedOutAtMs: number | null;
+  // What a finish at or under par pays, handed in at `initialize` and held so
+  // the projection can carry it to the surfaces. The runtime is re-initialised
+  // for every team turn and a round's max does not move inside one, so there is
+  // nothing here for a reducer to keep in step.
+  pointsMax: number;
   // What the active team had banked before this turn, so `resetTurn` can hand
   // back exactly what the turn added and nothing more.
   turnStartPoints: number;
   pendingPointsByTeamId: Record<string, number>;
 };
 
-// Four legs covers the biggest team in the sample pack without cycling; eight
-// gates a leg is about ten seconds of clean flying, so a clean relay with
-// quick handoffs beats par and a couple of crashes a leg still finishes
-// inside the limit.
+// Measured against a greedy autopilot on the shared sim: a flawless six-gate
+// leg takes 8.8 s and each handoff costs the relay a further 1.4 s of
+// client-side beat, so four legs is 39 s of perfect flying before a human
+// reacts. Par sits above that at 50 s — reachable, not free — and the limit at
+// twice a clean leg's worth beyond it. These are the SAMPLE's numbers; a pack
+// with deeper teams carries its own `legsPerTurn` (CLAUDE.md, the night pack),
+// which is why nothing here is sized to a particular roster.
 export const DEFAULT_FAPPY_RULES: FappyRuntimeRules = {
   legsPerTurn: 4,
-  gatesPerLeg: 8,
-  parSeconds: 45,
-  limitSeconds: 120
+  gatesPerLeg: 6,
+  parSeconds: 50,
+  limitSeconds: 100
 };
 
 // What finishing right at the limit is worth, as a share of the round's max;
-// a team that never finishes keeps this share scaled by how far it got.
-export const FAPPY_LIMIT_POINTS_SHARE = 0.25;
+// a team that never finishes keeps this share scaled by how far it got. A
+// tenth, not a quarter: over a 50 s slide a quarter made the curve so shallow
+// that a four-second crash cost less than a single point out of twenty, so
+// the clock the whole game is built on did not show up in the score.
+export const FAPPY_LIMIT_POINTS_SHARE = 0.1;

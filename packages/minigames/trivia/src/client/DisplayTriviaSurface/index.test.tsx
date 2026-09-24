@@ -4,7 +4,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import type { ReactNode } from "react";
 
-import { marqueeBulbs } from "@wingnight/surface";
 import type { TriviaMinigameDisplayView } from "@wingnight/shared";
 
 import { DisplayTriviaSurface } from "./index.js";
@@ -32,6 +31,7 @@ const renderSurface = (
       minigameDisplayView={minigameDisplayView}
       activeTeamName="Molten Metal"
       clock={clock}
+      clockLine={null}
       serverOrigin="http://localhost:3000"
     />
   );
@@ -43,11 +43,11 @@ test("puts the question and its rule on the stage", () => {
   assert.match(html, new RegExp(QUESTION));
 });
 
-// Every other display marquee hangs the dotted bulb ring inside its gold
-// border; three of them were copied without it and had it restored at T5.2.
-// A new marquee arriving without one would recreate that bug exactly.
-test("does hang the shared bulb ring on the marquee", () => {
-  assert.ok(renderSurface(playView(3)).includes(marqueeBulbs));
+// ADR-0006: the marquee is one shared component, not a container each game
+// copies and a ring each copy could forget. This pins that the surface hangs
+// THAT sign and not a private one — the drift the bulb-ring test used to catch.
+test("does hang the shared neon marquee", () => {
+  assert.ok(renderSurface(playView(3)).includes("data-neon-marquee"));
 });
 
 test("names the active team and the show on the marquee", () => {

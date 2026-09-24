@@ -15,6 +15,7 @@ import { HostMiniRail } from "../../HostControlPanel/HostMiniRail";
 import { TakeoverTimerChip } from "../../HostControlPanel/HostPhaseBody/MinigamePlayTakeover/TakeoverTimerChip";
 import { HostTakeoverDock } from "../../HostControlPanel/HostTakeoverDock";
 import { MinigameTimerChip } from "../../DisplayBoard/StageSurface/MinigameTimerChip";
+import { MinigameTimerLine } from "../../DisplayBoard/StageSurface/MinigameTimerLine";
 import { MinigameSurface } from "../../HostControlPanel/MinigameSurface";
 import { SandboxControls } from "../SandboxControls";
 import { SandboxDeviceFrame } from "../SandboxDeviceFrame";
@@ -262,6 +263,14 @@ export const SandboxStage = ({
                 minigameDisplayView={minigameDisplayView}
                 activeTeamName={activeTeamName}
                 clock={<MinigameTimerChip remainingSeconds={displayRemainingSeconds} />}
+                clockLine={
+                  <MinigameTimerLine
+                    remainingSeconds={displayRemainingSeconds}
+                    totalSeconds={
+                      sandboxTimer === null ? null : Math.round(sandboxTimer.durationMs / 1000)
+                    }
+                  />
+                }
                 serverOrigin={serverOrigin}
               />
             </div>

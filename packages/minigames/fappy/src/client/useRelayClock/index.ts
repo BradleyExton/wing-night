@@ -53,3 +53,13 @@ export const formatRelayClock = (elapsedMs: number): string => {
 
   return `${minutes}:${String(seconds).padStart(2, "0")}.${tenths}`;
 };
+
+// The same clock without the tenth: par, the limit and a time-to-beat are
+// targets the room reads, not a running count, and a tenth on a target reads
+// like precision nobody promised. Floored, not rounded — a target rounded UP
+// is a second the team has not actually got.
+export const formatRelayClockSeconds = (elapsedMs: number): string => {
+  const totalSeconds = Math.floor(elapsedMs / 1000);
+
+  return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
+};

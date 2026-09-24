@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import { NeonMarquee } from "@wingnight/surface";
 
 import { displayTriviaSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -7,10 +8,12 @@ import * as styles from "./styles.js";
 const TriviaMarquee = ({
   activeTeamName,
   attemptsRemaining,
-  clock
+  clock,
+  clockLine
 }: {
   activeTeamName: string | null;
   clock: ReactNode;
+  clockLine: ReactNode;
   // Host-paced: the TV has no clock to run out, so the spent question budget is
   // the room's only sign that the turn is over and the last question on screen
   // is nobody's to answer.
@@ -18,17 +21,11 @@ const TriviaMarquee = ({
 }): JSX.Element => {
   const isTurnComplete = attemptsRemaining === 0;
 
-  // A `<div>`, the way EMOJI_CHARADES's marquee is one, not the `<header>` the
-  // other five reach for: `page.locator("header")` is the e2e suite's strict
-  // handle on the host's mini-rail, and the dev sandbox renders the host and
-  // the display previews on one page. A second `<header>` naming the same team
-  // there turns `header >> text=Molten Metal` from one match into two.
   return (
-    <div className={styles.marquee}>
-      <span className={styles.marqueeBulbs} aria-hidden="true" />
-      <h2 className={styles.marqueeTeamName}>{activeTeamName ?? ""}</h2>
-      <span className={styles.marqueeTitle}>{displayTriviaSurfaceCopy.showTitle}</span>
-      <div className={styles.marqueeMeta}>
+    <NeonMarquee
+      title={displayTriviaSurfaceCopy.showTitle}
+      teamName={activeTeamName}
+      readout={
         <span
           className={
             isTurnComplete ? styles.marqueeCounterComplete : styles.marqueeCounter
@@ -38,9 +35,10 @@ const TriviaMarquee = ({
             ? displayTriviaSurfaceCopy.turnCompleteLabel
             : displayTriviaSurfaceCopy.questionsToGoLabel(attemptsRemaining)}
         </span>
-        {clock}
-      </div>
-    </div>
+      }
+      clock={clock}
+      clockLine={clockLine}
+    />
   );
 };
 
@@ -48,7 +46,8 @@ export const DisplayTriviaSurface = ({
   phase,
   minigameDisplayView,
   activeTeamName,
-  clock
+  clock,
+  clockLine
 }: MinigameDisplayRendererProps): JSX.Element => {
   const triviaDisplayView =
     minigameDisplayView?.minigame === "TRIVIA" ? minigameDisplayView : null;
@@ -76,6 +75,7 @@ export const DisplayTriviaSurface = ({
         activeTeamName={activeTeamName}
         attemptsRemaining={triviaDisplayView.attemptsRemaining}
         clock={clock}
+        clockLine={clockLine}
       />
       {/* The team used to be named again under the question, as "On the clock:
           MOLTEN METAL". The marquee's left cell is where the other eight

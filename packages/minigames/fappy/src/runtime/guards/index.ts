@@ -98,6 +98,7 @@ export const isFappyRuntimeState = (
     isFiniteNumberOrNull(state.startedAtMs) &&
     isFiniteNumberOrNull(state.finishedAtMs) &&
     isFiniteNumberOrNull(state.timedOutAtMs) &&
+    isNonNegativeInteger(state.pointsMax) &&
     isFiniteNumber(state.turnStartPoints) &&
     isRecordOfNumbers(state.pendingPointsByTeamId)
   );

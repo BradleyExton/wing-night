@@ -226,8 +226,18 @@ export const resolveTeamTheme = (
  * The font files a roster will draw with, deduplicated, for `DisplayBoard` to
  * preload — a face that arrives after the headline is painted flashes the TV.
  */
+// The TV marquee's two chrome faces (DESIGN.md §2.2D): the neon kicker is
+// Monoton and the team name is Anton on every game, whatever the roster's own
+// genres are, so the TV preloads them whether or not a disco or rock team is
+// playing. Taken from the kits rather than retyped so the path can only ever
+// be the one `index.css` declares.
+export const MARQUEE_FONT_SRCS: readonly string[] = [
+  GENRE_KITS.disco.fontSrc,
+  GENRE_KITS.rock.fontSrc
+].filter((fontSrc): fontSrc is string => fontSrc !== null);
+
 export const resolveGenreFontSrcs = (teams: ReadonlyArray<Pick<Team, "genre">>): string[] => {
-  const fontSrcs = new Set<string>();
+  const fontSrcs = new Set<string>(MARQUEE_FONT_SRCS);
 
   for (const team of teams) {
     const fontSrc = GENRE_KITS[resolveGenreKey(team.genre)].fontSrc;

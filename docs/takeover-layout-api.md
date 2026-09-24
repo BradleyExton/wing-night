@@ -474,7 +474,9 @@ removed. The **hint line** moved into each Canvas's `actions` slot, where it is 
 turn's own words rather than a shape. The **counter chip** is per-game content in `counter`. What
 did ship as new tokens is small and specific: `marqueeTeamName`, `marqueeTitle`, `marqueeBulbs`,
 `marqueeMeta` (T5.2, T5.3) and `miniRailTeamDotUnassigned` (T2.3) — five exports, taking
-`styleTokens` from 55 to 60.
+`styleTokens` from 55 to 60. (The four marquee tokens were retired on 2026-09-23 with the
+containers they dressed: the TV marquee is one component now, `<NeonMarquee>`, and the clock
+reaches it as two slots, `clock` and `clockLine` — DESIGN.md §2.2D, ADR-0006.)
 
 **The gold status card is the one item on that list still genuinely open**, and it is a colour
 question rather than a shape one: the same card exists in two systems, `from-[#3a1d09] to-[#1a0c04]`

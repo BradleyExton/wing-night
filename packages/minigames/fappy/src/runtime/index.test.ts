@@ -298,8 +298,9 @@ test("does pay less the longer the relay took past par", () => {
 
   const view = hostView(state);
 
-  // 60 s on a 30 s par and 90 s limit is halfway down the slide: 20 → 12.5 → 13.
-  assert.equal(view.points, 13);
+  // 60 s on a 30 s par and 90 s limit is halfway down the slide, which pays
+  // the midpoint between the whole round and the limit's tenth: 20 → 11.
+  assert.equal(view.points, 11);
 });
 
 test("does end the relay when the limit passes and keep a share for progress", () => {
@@ -322,8 +323,8 @@ test("does time out a late flap and a late crash on the server's clock", () => {
   const lateView = hostView(lateFlap.state);
 
   assert.equal(lateView.phase, "timedOut");
-  // Half the course done at the limit: a quarter of 20, halved, is 3 (2.5 rounded).
-  assert.equal(lateView.points, 3);
+  // Half the course done at the limit: a tenth of 20, halved, is 1.
+  assert.equal(lateView.points, 1);
 
   const flying = dispatch(cleared, "flap", { tick: 0 }, T0 + 80_000).state;
   const lateCrash = dispatch(flying, "endLeg", {}, T0 + 92_000);
@@ -370,9 +371,25 @@ test("does still pay for time when a flown relay ends on a skipped leg", () => {
 
   assert.equal(view.phase, "finished");
   assert.equal(view.points, 18);
-  assert.equal(view.elapsedMs, 1000);
+  // One second on the wall clock plus the skipped leg's share of par (30 s
+  // over two legs), which together still beat this fixture's par.
+  assert.equal(view.elapsedMs, 16_000);
   // The flown leg's three gates; the skipped one contributes none.
   assert.equal(view.totalGatesCleared, RULES.gatesPerLeg);
+});
+
+// Skipping used to be the fastest way through the course: one flap to start
+// the clock, then skip every remaining leg and finish far under par for the
+// whole round. A forgiven leg now costs what a leg is worth.
+test("does charge a skipped leg its share of par when the relay is scored", () => {
+  const flown = clearCurrentLeg(initialize(), T0);
+  const finished = dispatch(flown, "skipLeg", {}, T0 + 30_000);
+  const view = hostView(finished.state);
+
+  // 30 s flown plus a 15 s skip is a quarter of the way down the slide; the
+  // raw 30 s on its own would have sat exactly on par and paid everything.
+  assert.equal(view.elapsedMs, 45_000);
+  assert.equal(view.points, 16);
 });
 
 test("does reset the turn to the start line with the points it started with", () => {

@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { marqueeBulbs } from "@wingnight/surface";
 import type { SongGuessMinigameDisplayView } from "@wingnight/shared";
 
 import { DisplaySongGuessSurface } from "./index.js";
@@ -53,6 +52,7 @@ const renderSurface = (
       minigameDisplayView={minigameDisplayView}
       activeTeamName="Team Heat"
       clock={null}
+      clockLine={null}
       serverOrigin="http://localhost:3000"
     />
   );
@@ -106,11 +106,11 @@ test("closes the set without putting scores on the TV", () => {
   assert.doesNotMatch(html, /\+\d/);
 });
 
-// Every other display marquee hangs the dotted bulb ring inside its gold
-// border; three of them were copied without it and had it restored at T5.2.
-// A new marquee arriving without one would recreate that bug exactly.
-test("does hang the shared bulb ring on the marquee", () => {
-  assert.ok(renderSurface(clipView("idle")).includes(marqueeBulbs));
+// ADR-0006: the marquee is one shared component, not a container each game
+// copies and a ring each copy could forget. This pins that the surface hangs
+// THAT sign and not a private one — the drift the bulb-ring test used to catch.
+test("does hang the shared neon marquee", () => {
+  assert.ok(renderSurface(clipView("idle")).includes("data-neon-marquee"));
 });
 
 // SONG_GUESS was the only one of the nine displays that never told the room
@@ -166,6 +166,7 @@ test("renders with no server origin resolved yet", () => {
       minigameDisplayView={clipView("idle")}
       activeTeamName="Team Heat"
       clock={null}
+      clockLine={null}
       serverOrigin={null}
     />
   );

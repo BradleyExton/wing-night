@@ -353,13 +353,17 @@ refusals, which are as much a part of the anatomy as the slots.
     zero — both chips take their seconds from `resolveRemainingTimerSeconds` and
     format them through the same function reference. What was actually
     duplicated was the urgency threshold, and that is what got extracted.
--   **There is no `<Marquee>` component.** Its two text styles and its bulb ring
-    were byte-identical across six TV surfaces and ship as three tokens; the
-    *containers* are not identical — two padding values and a background differ
-    — so a component would have to take the container as a prop. The honest cost
-    is recorded: a token cannot make an omission unrepresentable the way a
-    component can, which is how three of those six surfaces came to be copied
-    without their bulbs in the first place.
+-   **There is no `<Marquee>` component** — *as of the consolidation.* Its two
+    text styles and its bulb ring were byte-identical across six TV surfaces and
+    shipped as three tokens; the *containers* were not identical — two padding
+    values and a background differed — so a component would have had to take the
+    container as a prop. The honest cost was recorded: a token cannot make an
+    omission unrepresentable the way a component can, which is how three of those
+    six surfaces came to be copied without their bulbs in the first place.
+    **Overtaken 2026-09-23 (ADR-0006):** there is one now, `<NeonMarquee>`, and
+    it is shareable for the reason the refusal named — it takes content and no
+    class string, so there is no container to configure (§2.2D). The three
+    tokens and `marqueeMeta` are gone with the containers they dressed.
 
 **The pattern worth carrying into the tenth minigame: share the thing that would
 drift dangerously, refuse the thing that merely looks alike.** `RunningTotals`
@@ -444,6 +448,42 @@ own music (SETUP's lobby playlist, MINIGAME_INTRO's team anthem). Mockup:
     volume. A returning track picks up where it faded out (`musicPositionMemory`, kept on the TV),
     so a seven-minute anthem is heard across a night rather than its first thirty seconds four
     times; a track that finished starts from the top.
+
+### 2.2D Minigame Marquee ("Neon Heat Line")
+
+The strip across the top of every minigame on the TV — the show's name, the team whose turn it
+is, the turn's readout and the room's clock. One component, `<NeonMarquee>` from
+`packages/surface`, worn by all nine display surfaces including RECREATE, which used to hang its
+own masthead. Decided 2026-09-23 on a prototype round of eight directions
+(`apps/client/public/mockups/minigame-marquee/`, direction 07); ADR-0006 records the pick and
+the seven refusals. It replaces the gold-bordered bulb marquee DRAWING built and seven surfaces
+copied, whose container was the one piece the shared text tokens could not stop drifting.
+
+-   **No box.** No border, no background, no bulb ring. The stage's own material shows through
+    and the marquee is made of light: a small neon-tube kicker naming the show (Monoton,
+    `font-marquee-title`, white core with a `gold` halo, and the whole sign dips for a frame every
+    few seconds — `signflicker`, stepped, because a tube cuts rather than fades), and under it the
+    team's name large in white light (Anton, `font-marquee-name`). Both faces are by ROLE, the same
+    on every game whatever the team's genre face is; the TV preloads them with the roster's.
+-   **The clock is a line.** Under the whole row runs a glass track; the shell's
+    `MinigameTimerLine` lights it from the left and the lit length burns down as the turn runs,
+    `gold` at the live end through `primary` to `heat`, with a white-hot tip. Time is space: the
+    room reads the line, and the digits in the neon pill at the row's right (`MinigameTimerChip`,
+    white light in a `primary` tube) are the footnote. In the last ten seconds both turn `heat` and
+    pulse; at zero the line is out and the pill reads TIME'S UP. A host-paced game gets the dark
+    track alone — the rule under the sign — and the clock and its line are two slots on the
+    display props (`clock`, `clockLine`), both `null` together, both costing nothing absent.
+-   **Slots, not styling.** A game passes what the marquee *says*: `title`, `teamName`, `pending`
+    (lit `gold` beside the name), `readout` (the turn's counts, right of centre, read-only, the same
+    rule as the host rail's `counter`). It never passes a class string. This is the refusal §2.0B
+    recorded of a configurable container, kept: the component is shareable precisely because
+    nothing about its look is a prop.
+-   **Accent budget.** `gold` for the sign and the pending points (the marquee's standing
+    exception to §0.1), `primary` and `heat` on the clock only. The team's own colour does not
+    reach the marquee; the name in white light is the team, and direction 02 of the round (the
+    team's colour flooding the bar) was refused for making the chrome look like identity.
+-   A `<div>`, never a `<header>`: `page.locator("header")` is the e2e suite's strict handle on
+    the host rail, and the sandbox draws both surfaces on one page.
 
 ## 2.2B Setup Lobby ("Hearth")
 
@@ -639,7 +679,7 @@ every other surface uses.
     dropped for house tokens on 2026-09-21. What carries "easel" is the
     *silhouette* — the framed board and, on the TV, the splayed legs —
     not the timber.
--   **The brown did not stay dropped elsewhere, and DRAWING is now the
+-   (Superseded 2026-09-23 — the TV marquee is the shared neon sign, §2.2D; what follows describes the bulb marquee it replaced.) **The brown did not stay dropped elsewhere, and DRAWING is now the
     odd one out.** GEO and EMOJI_CHARADES were restyled onto the marquee
     hours *before* this surface dropped its brown, and TRIVIA and
     SONG_GUESS were given one later still, so the marquee container
@@ -649,7 +689,7 @@ every other surface uses.
     four in house tokens. The reason this section used to give for
     dropping it — that it "read as a different app beside every other
     surface" — now describes DRAWING itself.
--   **The direction is DRAWING's, and the other seven follow it.** The
+-   (Superseded 2026-09-23 — the TV marquee is the shared neon sign, §2.2D; what follows describes the bulb marquee it replaced.) **The direction is DRAWING's, and the other seven follow it.** The
     marquee's team name, its title, its bulb ring and its meta row are
     already one shared string apiece from `packages/surface`
     (`marqueeTeamName`, `marqueeTitle`, `marqueeBulbs`, `marqueeMeta`).
@@ -673,8 +713,8 @@ every other surface uses.
     the one scoped material that stays: it is the drawing content
     surface, shared pixel-for-pixel by tablet and TV, and chalk needs
     slate to read against.
--   `gold` is the marquee/framing accent (prompt card, bulb-dotted
-    marquee, pending-points chips, easel edge) — a scoped exception
+-   `gold` is the marquee/framing accent (prompt card, the neon sign's
+    halo and pending points per §2.2D, easel edge) — a scoped exception
     to the §0.1 "winner moments only" rule. Every minigame marquee holds
     the same exception; GEO's §2.4 once held a wider one and no longer
     does.
@@ -731,7 +771,9 @@ every other surface uses.
     in the rail row: §4 keeps a game's names out of the row the shell
     owns, and the palette column is the one place on this surface where
     a sign costs the board nothing.
--   Display layout: grand bulb marquee — team on the left, the "★ Live
+-   Display layout: the shared neon marquee (§2.2D) — "Live Sketch" as the
+    kicker, the team under it, the pending points and then the clock on the
+    right, the burning line beneath — (Superseded 2026-09-23 — the TV marquee is the shared neon sign, §2.2D; the rest of this bullet describes the bulb marquee it replaced.) grand bulb marquee — team on the left, the "★ Live
     Sketch ★" title centre, and the meta cell on the right holding the
     pending points and then the clock — easel with splayed legs, status
     line beneath. The clock is *in* that cell, not floated over the
@@ -757,10 +799,10 @@ The EMOJI_CHARADES surfaces follow the "Hybrid" host direction
 (`apps/client/public/mockups/emoji-charades-host/04-hybrid.html`) and the
 "Clue Board" display direction
 (`emoji-charades-display/02-clue-wall.html`): a fixed board of clue slots
-under the bulb marquee DRAWING built. Its team name, title and bulb ring are
-the shared strings from `packages/surface`; its *container* is still the brown
-gradient DRAWING has since dropped, which §2.5 records as debt rather than as
-this surface's own choice.
+under the shared neon marquee (§2.2D). It used to sit under the bulb marquee
+DRAWING built, with its container the brown gradient §2.5 recorded as debt; the
+sign replaced both on 2026-09-23 and the ★ Emoji Charades ★ title lost its stars
+with the bulbs.
 
 -   **Emoji are content, not chrome.** They are full-colour unicode and
     are exempt from the §0.1 two-accent budget, exactly as DRAWING's ink
@@ -838,8 +880,8 @@ Skip → back/clear. What changed is who owns the chrome around them.
 -   Emoji cells are ≥44px touch targets per §2.1 and the grid scrolls;
     the bottom fade is the scroll affordance.
 
-**Display layout**: bulb marquee (active team + pending points, show
-title, and the turn timer in the meta cell), the clue board, then the
+**Display layout**: the shared neon marquee (§2.2D: active team + pending
+points, show title as the kicker, the turn timer as pill and burning line), the clue board, then the
 standings footer per §3.2. That third cell used to be an `aria-hidden`
 `min-h-[1px]` spacer holding a column open for a chip absolutely
 positioned somewhere else — a seventh idiom for the same reserve nine
@@ -1056,8 +1098,30 @@ under the same marquee chrome and, on the tablet, the same full-bleed canvas:
     whose top IS the sim's `champTop`: the tip sways on a slow wave and the
     middle of the shaft follows a beat behind, so it whips rather than tilts,
     and at full stretch of its bob the shaft thins a little. A gloss up the
-    lit side, a rim at the neck, a face on the head whose pupils turn to
-    watch the bird once it is close. Over some gates a bald eagle
+    lit side, veins wandering up the shaft (the cast's own, §2.8), a rim at
+    the neck, a face on the head whose pupils turn to watch the bird once it
+    is close. **The row is a line-up, not a fence.** Each gate is dealt one
+    of three kinds by the course seed, so every screen dresses it alike:
+    the bubblegum one (the staple, half the deal), a big dark one
+    (`#4b2a20`, a wider shaft and a bigger head, swinging slow and heavy)
+    and a slim pale one (`#f4e3d3`, quick and twitchy). The head's top is
+    the sim's `champTop` whatever the build, so a kind is a look and never
+    an advantage; the drawn head stays inside the gate's column, which is
+    the hitbox. **It jiggles.** Besides the idle sway, a champ whips in the
+    wake of a bird that has just gone past — a damped ring in the ticks
+    since the sim counted the gate, each kind at its own weight — and the
+    balls squash and stretch with it and breathe a little on their own.
+    **Some of them spit.** About two in five are spitters, on a beat of
+    their own: over the last twenty-odd ticks of it the head hinges open at
+    the rim, the eyes going back with it over a dark wet cavity — that is
+    the tell — and on the beat an off-white glob leaves the neck, thrown up
+    and towards the bird, and falls on its own gravity while the head snaps
+    shut with a gulp down the shaft. A glob that lands is not a crash: it is
+    spent, the bird is shoved down harder than an eagle shoves it, the scene
+    kicks sideways, and goo rides the bird's face and drips off over the
+    next second. The beat, the arc and the hit are the sim's, so the tablet,
+    the server and the TV agree on every glob; only the open head and the
+    goo are the renderer's. Over some gates a bald eagle
     (dark brown, white head and tail, `#f9a51a` beak and talons) hangs in
     the sky as the thing to duck under, its feathered wings beating on the
     shoulders (bump one and it tumbles off, gone for the leg). Behind the
@@ -1196,7 +1260,10 @@ it, and the forger — the image model — paints their version next to it.
     forgery after), the appraisal under a hairline: title, their prompt in
     italics, ingredient chips that fill `success` as the host ticks, the
     points seal and the real prompt on lock.
--   **RECREATE is the one display without a bulb marquee**, and that is the
+-   **RECREATE wears the shared neon marquee since 2026-09-23** (§2.2D), with
+    "Forgery Studio" as the kicker and the appraisal office's subtitle in the
+    readout slot; the masthead below is what it hung before. It was the one
+    display without a bulb marquee, and that was the
     gallery reading rather than an omission: the other eight wear a game-show
     frame, and a back room hangs a masthead. The clock slot sits at the end of
     that masthead and draws nothing — `timerKey: null` — so the rule runs the
@@ -1247,11 +1314,14 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     the shore read as floating.
 -   **Three readings of one creature, told apart at speed.** The schlong is
     drawn three ways and the room has to know which is which in a glance:
-    *pink with a FACE* is alive, an enemy, and pops when landed on; *crimson,
-    stubby, several of them and no face* is a thorn bed that hurts however you
-    arrive; *pink with a red-and-white PAD strapped over the glans* is a
-    springboard, the only one on your side. The face means alive and the pad
-    means safe — colour alone was never going to carry three meanings.
+    *a FACE* — on a pink, a dark or a pale one, dealt by its index the way
+    FAPPY deals its champs (§2.9), veins and all — is alive, an enemy, and
+    pops when landed on; *crimson, stubby, several of them and no face* is a
+    thorn bed that hurts however you arrive; *pink with a red-and-white PAD
+    strapped over the glans* is a springboard, the only one on your side. The
+    face means alive and the pad means safe — colour alone was never going
+    to carry three meanings, which is also why the enemy can come in three
+    skins without the reading changing.
 -   **The collectible is the one thing out there that is not a schlong.** It is
     a sauced party wing — a fat orange lobe on a pale bone, the night's own
     name picked up off the floor by a chicken, and nobody asks where they came
@@ -1340,7 +1410,8 @@ wears. Its language is what it refuses to draw.
     constraint — the line box is, so the question is width-bound rather than
     height-bound and re-centres into whatever height the marquee leaves instead
     of shrinking or truncating.
--   **It wears the grand bulb marquee** (§2.5, the one DRAWING built): the team
+-   **It wears the shared neon marquee** (§2.2D; before 2026-09-23 the grand bulb
+    marquee of §2.5, the one DRAWING built, as the rest of this bullet describes): the team
     on the left, "Trivia" as the show title in the centre, the turn's remaining
     questions on the right, and the dotted bulb ring inset inside the gold
     border. **Eight of the nine displays wear a marquee** — RECREATE is the
@@ -1397,7 +1468,8 @@ reading. Its surface is deliberately near-empty, and its job is to say who is up
 what they are listening to and where in the set they are, without ever drawing
 the eye off the song.
 
--   **It wears the grand bulb marquee** (§2.5): the team on the left, "Who's
+-   **It wears the shared neon marquee** (§2.2D; before 2026-09-23 the grand bulb
+    marquee of §2.5, as the rest of this bullet describes): the team on the left, "Who's
     That Song" as the show title in the centre, "Song 2 of 4" on the right, and
     the dotted bulb ring inset inside the gold border. Eighth and last of the
     eight TV surfaces that wear one; RECREATE is the ninth display and hangs a

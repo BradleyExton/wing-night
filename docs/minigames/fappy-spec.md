@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/fappy/`
 
-Last updated: 2026-09-18 (UX pass, then the schlong drawing, same day)
+Last updated: 2026-09-23 (line-up pass, the balance pass, then the pressure pass)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on.** Adding a `MinigameType`
 > breaks every `Record<MinigameType, …>` in the repo until fully wired (authoring guide §1),
@@ -22,8 +22,8 @@ to flap, come down on that plateau and the tablet changes hands. A crash sends t
 to the perch of the last gate it cleared. One clock runs from the first tap to the last
 landing, handoffs included, and the team's points come from that time.
 
-No content file, no room timer (host-paced like JOUST; the relay clock is the game's own),
-no audio.
+No content file, no room timer (host-paced like JOUST; the relay clock is the game's own). The
+TV carries the game's sound: a soundboard of synthesised cues, no audio files (§0.10).
 
 ### 0.2 Order of work (each step ends with the gate green)
 
@@ -69,6 +69,9 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
 - **Eagles are a bump, not a crash.** Hitting one knocks it out of the sky for the rest of the
   leg (every later attempt too) and shoves the bird down. Only the champs, the sand and the
   cliffs kill. Brad's call, to make the corridor kinder.
+- **Spit is a bump too.** A spitter's glob that lands is spent and shoves the bird down
+  (`spitSplatVelocity`, harder than an eagle) towards the things that do kill; it never kills
+  on its own. Same reasoning: the corridor stays kind, the hazard is in what it sets up.
 - **Landing is the handoff.** A leg is cleared by coming down on the landing cliff's
   plateau, not by passing its last gate. The next player's bird stands in the middle of that
   plateau facing the flyer; on the last leg a flag stands there instead. Into the cliff's
@@ -79,8 +82,8 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
   `ready`, its bird already on its own start cliff, and the next player's first tap flies
   it. The handoff is the race.
 - **Points from time.** Every point the round offers at or under `parSeconds`, sliding
-  straight down to a quarter at `limitSeconds`. At the limit the relay ends; an unfinished
-  team keeps that quarter scaled by the gates it got through.
+  straight down to a tenth at `limitSeconds`. At the limit the relay ends; an unfinished
+  team keeps that tenth scaled by the gates it got through.
 - **Inputs, not positions, cross the wire.** Each flap is one action carrying its tick. The
   runtime holds a seed, a checkpoint and the flap log per attempt; nobody streams bird
   positions.
@@ -95,11 +98,13 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
 - **Sixty ticks a second, fixed step.** A flap logged at tick `T` applies to the step that
   produces `T + 1`, on every party.
 - **Obstacles from the floor.** Every gate is a schlong standing on the sand — the cast's
-  `resolveSchlongPaths` drawing, the same one JOUST fires, in pink — growing and shrinking on a
+  `resolveSchlongPaths` drawing, the same one JOUST fires, in one of three kinds the course
+  deals (`champKind`: pink, ebony, ivory; a look, never a hitbox) — growing and shrinking on a
   bounded triangle-wave bob (the sim's `champTop` is the top of its head) with the shaft re-bent
-  each frame so the tip sways and the middle lags, and a face that watches the bird come; about
-  half the gates hang a bald eagle in the sky as the thing to duck under. Nothing hangs from the
-  ceiling. The e2e autopilot reads the head's height off `data-champ-top`, which the loop
+  each frame so the tip sways and the middle lags, whipping in the wake of a bird gone past, and
+  a face that watches the bird come; about two in five spit on a seeded beat
+  (`spitPeriodTicks`/`spitPhaseTicks`), the head opening as the tell; about half the gates hang a
+  bald eagle in the sky as the thing to duck under. Nothing hangs from the ceiling. The e2e autopilot reads the head's height off `data-champ-top`, which the loop
   writes every frame, never off the drawing.
   Thrown shooters as moving hazards are a v2 layer, not in this build.
 - **No mockup pass.** JOUST shipped without one; the surfaces reuse its marquee and deck
@@ -110,13 +115,22 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
 World is a fixed 160×90 box (JOUST's), y down, floor at 84, the bird's x pinned at 40. Gates
 for a leg come from `resolveFappyGates({ seed, legIndex, gatesPerLeg })`: a mulberry32 stream
 seeded from the leg; each gate has a champ whose head rests at `champTop` and rises `champBob`
-above it on a `champPeriodTicks` triangle wave (`resolveFappyChampTop`), and with even odds an
-`eagleBottom` placed so the gap at the champ's full stretch is at least `gapHeight`.
+above it on a `champPeriodTicks` triangle wave (`resolveFappyChampTop`), a `champKind` dealt
+from `champKinds`, with `spitterOdds` a spitting beat (`spitPeriodTicks` in
+`[spitPeriodMin, spitPeriodMax]`, longer than `spitLifeTicks` so one glob is out at a time, and a
+`spitPhaseTicks`), and with even odds an `eagleBottom` placed so the gap at the champ's full
+stretch is at least `gapHeight`. `resolveFappySpit(gate, tick)` is the glob a champ has in the
+air at a tick, or null: it leaves the mouth `spitMouthDepth` under the head on the beat, moves
+`spitSpeedX` a tick towards the bird, rises at `spitRiseVelocity` and falls on `spitGravity`,
+gone at `spitLifeTicks` or the sand — pure arithmetic in launch tick and age.
 `stepFappy(frame, gates, gatesPerLeg, didFlap)` is the whole physics: gravity, flap sets `vy`,
 ceiling clamps, the start cliff (to `startCliffEnd`) holds the bird up, floor kills, the
 champ's head at this tick kills, an eagle kills, a gate counts once its trailing edge is
 behind the bird, an eagle bumped is knocked away (`knockedEagles` on the frame, carried into
-the next attempt's start with tick `-1`) and the bird shoved down `eagleBumpVelocity`, and at
+the next attempt's start with tick `-1`) and the bird shoved down `eagleBumpVelocity`, a glob
+within `spitRadius + birdRadius` of the bird is a splat (`splats` on the frame, keyed by gate and
+launch tick so it lands once; not carried across attempts) that shoves the bird down
+`spitSplatVelocity`, and at
 the landing cliff (`resolveFappyLandingX`, `landingCliffGap` past the
 last gate) the face below `cliffTop` kills, the wall past `landingZoneWidth` kills, and coming
 below `cliffTop` over the plateau ends the leg `cleared`. `createFappyLegStart(gates,
@@ -159,10 +173,16 @@ type FappyMinigameViewFields = {
   startedAtMs: number | null;   // server wall clock
   finishedAtMs: number | null;
   timedOutAtMs: number | null;
-  elapsedMs: number | null;     // set once the relay is over
+  elapsedMs: number | null;     // set once the relay is over; the SCORED time (wall + skip penalty)
   points: number | null;        // set once the relay is over
+  pointsMax: number;            // what a finish at or under par pays, from initialize()
 };
 ```
+
+`pointsMax` is carried so a surface can run the runtime's own `resolveFinishPoints` forwards
+(what a finish RIGHT NOW would pay) and `resolveTimeToBeat` backwards (the slowest finish that
+still tops a rival) without inventing a score curve of its own — the maths is the runtime's, the
+numbers are the server's, and AGENTS.md §6 still holds.
 
 Nothing is secret, so host and display carry the same fields (JOUST precedent). The
 answer-safety test asserts the display view is exactly the host view.
@@ -170,12 +190,17 @@ answer-safety test asserts the display view is exactly the host view.
 ### 0.6 Rules (`minigameRules.fappy`)
 
 ```json
-{ "legsPerTurn": 4, "gatesPerLeg": 8, "parSeconds": 45, "limitSeconds": 120 }
+{ "legsPerTurn": 4, "gatesPerLeg": 6, "parSeconds": 50, "limitSeconds": 100 }
 ```
 
 All positive integers, all optional, `parSeconds < limitSeconds`, validated by `isRules` at
-config load. Eight gates is about ten seconds of clean flying, so a clean relay with quick
-handoffs beats par and a couple of crashes a leg still finishes inside the limit.
+config load. Measured on a greedy autopilot over the shared sim, a flawless six-gate leg takes
+**8.8 s** (eight gates took 11.1 s, five 7.7 s) and each handoff costs a further **1.4 s** of
+client-side beat that the relay clock is running through (`HANDOFF_BEAT_MS`, §0.10). So a
+perfect four-leg relay is about **39 s** before a human reacts: par is a target a good team
+reaches, not a floor everyone clears, and the limit leaves room for a crash or two a leg. These
+are the sample's numbers; a pack whose teams are deeper carries its own `legsPerTurn` (the night
+pack flies five legs of six with a 60 s par and a 110 s limit).
 
 ### 0.7 Runtime state and reducer
 
@@ -199,13 +224,19 @@ Every action needs `envelope.receivedAtMs`; one without it is refused. All are
 - `timeOut` — in `ready` or `flying`, only when `receivedAtMs − startedAtMs ≥ limit` on the
   server's clock. Sets `timedOutAtMs` and scores by progress.
 - `skipLeg` — in `ready` or `flying`. Marks the leg `cleared` and `skipped` and moves on; on
-  the last leg it finishes the relay. The clock keeps running.
+  the last leg it finishes the relay. The clock keeps running, and the relay is **charged
+  `parSeconds / legsPerTurn` seconds for every skipped leg** — the time a leg of the course is
+  worth. The penalty is added by `resolveSkipPenaltyMs` inside `resolveElapsedMs`, so the
+  `elapsedMs` the scoring reads is the same one the deck and the TV show; it never feeds
+  `isPastLimit`, which stays on the raw wall clock. A relay where nobody ever flapped still
+  scores zero outright (`startedAtMs` is null), which is the older, stronger rule.
 - `resetTurn` — every leg fresh, `legIndex` 0, clocks cleared, pending points back to
   `turnStartPoints`.
 
 Scoring (`runtime/scoring`): `resolveFinishPoints(elapsedMs)` = `pointsMax` at or under par,
-then linear down to `0.25 × pointsMax` at the limit; `resolveTimeoutPoints` =
-`0.25 × pointsMax × gatesCleared / gatesTotal`. Added to `turnStartPoints`, clamped at
+then linear down to `FAPPY_LIMIT_POINTS_SHARE × pointsMax` (a tenth) at the limit;
+`resolveTimeoutPoints` = `0.1 × pointsMax × gatesCleared / gatesTotal`. The `elapsedMs` is the
+penalised one above, not the raw wall clock. Added to `turnStartPoints`, clamped at
 `pointsMax` like every game. Score override is the shell's pending-points hatch, as JOUST
 relies on.
 
@@ -284,6 +315,85 @@ leg 1 and the idle clock.
   back at the table.
 - **Not scheduled** in `content/sample/gameConfig.json`; its rules block is there with the
   §0.6 defaults. Schedule it via local config or `/admin`.
+- **Line-up pass (2026-09-23).** Brad asked for variety, detail, more jiggle and something to
+  dodge: "big black ones and white ones", veins, heads that open and spit. So the course deals
+  each gate a `champKind` (pink half the time, ebony — bigger build — and ivory — slimmer — a
+  quarter each; `CHAMP_LOOKS` in `FappyScene/champPaint`), the cast drawing grew veins
+  (`resolveSchlongPaths().veins`, which SCHLONIC's badniks and springboards draw too, and
+  SCHLONIC's badniks now come in the same three skins), a champ whips in the wake of a passing
+  bird with its balls squashing along (`resolveWakeWobble`, client-only, read off the bird's
+  position so a replay rings the same), and two in five champs spit on a seeded beat: the head
+  is a hinged lid over a dark cavity through the windup (`resolveMouthOpen`, the tell), the
+  glob is the sim's (`resolveFappySpit`) and a hit is a shove, not a crash, with goo on the
+  bird's face for a second (`Goo`, `resolveGooOpacity`) and a kick on the scene. The scene
+  file split for it: `champPaint` (the maths), `paintGate` (the per-gate attribute writes),
+  the splat helpers in `pose`. Sample-fixture e2e was unchanged: the autopilot takes a splat
+  as a shove and flies on.
+- **Balance pass (2026-09-23).** A greedy autopilot over the shared sim put real numbers on the
+  course for the first time: a flawless leg takes **11.1 s at eight gates, 8.8 s at six, 7.7 s at
+  five**, and every handoff burns another **1.4 s** of `HANDOFF_BEAT_MS` with the relay clock
+  running. Against the old `{ 4, 8, 45, 120 }` a perfect relay was **48.8 s before anybody
+  reacted** — par was unreachable, so nobody was ever paid for flying well; and a 25 % share
+  spread over a 75 s slide meant a four-second crash cost **under one point out of twenty**, so
+  the clock the whole game is built on did not reach the board. Three fixes. (1) **A skipped leg
+  now costs `parSeconds / legsPerTurn` seconds** (`resolveSkipPenaltyMs`, folded into
+  `resolveElapsedMs`): the escape hatch used to be the fastest way through the course — one flap
+  to start the clock, then skip everything and finish in twenty seconds for the whole round — and
+  the only guard was the all-skipped-scores-zero rule, which one flap defeated. (2) **Defaults are
+  `{ 4, 6, 50, 100 }`**, a perfect relay near 39 s, with `content/sample/gameConfig.json` and the
+  briefing's `DEFAULT_FAPPY_GATES_PER_LEG` moved to match. (3) **`FAPPY_LIMIT_POINTS_SHARE` is
+  0.1**, which makes that same four-second crash worth a visible point. The night pack got
+  `{ 5, 6, 60, 110 }` separately: its teams are five deep and at four legs the fifth player never
+  flew.
+
+- **Sound (2026-09-23).** §0.1 said "no audio" and the corridor was silent. It now has a
+  soundboard: `client/audio`, pure Web Audio — oscillators, one buffer of deterministic noise
+  and gain envelopes, no assets, no dependency. Nine cues: `flap` (a 60 ms fwip, the quietest
+  thing on the board bar the next one), `gateCleared` (a tiny blip, so thirty-two of them read
+  as a rhythm picking up), `crash` (splat plus thud), `bump` (the eagle's shove and the glob's
+  landing share a squelch), `handoff` (two bright notes), `finish` (an air horn), `timedOut`
+  (three notes down), and the clock's `tick` once a second past par, replaced by a low
+  double-thump `heartbeat` for the last 15 s that swells as the limit closes
+  (`resolveClockCue`, `resolveHeartbeatGain`). **Display only** — the tablet sits on a table
+  and the TV is the room's speaker. ONE module-level `AudioContext` for the package, resumed on
+  every cue rather than made and closed per cue as `useTimesUpChime` does, because a game that
+  flaps ten times a second would burn through contexts; nothing ever closes it. Every cue is
+  best-effort: no `AudioContext`, or one the room has not unlocked with the display's
+  `AudioUnlockOverlay` tap yet, is silence and a retry on the next cue, never an exception —
+  which is also why a headless Playwright run is clean. The TV's master music volume is **not**
+  applied: it lives in room state and reaches the display's `<audio>` element, while a minigame
+  renderer's props carry no volume and reaching past them would break the minigame boundary, so
+  the board runs at a fixed modest master gain instead. Wiring is one reader: `useFappyMirror`
+  already steps every frame of the TV's replay, so it gained an additive `onEvent`, and
+  `mirrorEvents` diffs two frames into what the room should hear (flaps come from the log, since
+  a frame carries no record of one). `useFappySounds` maps those to cues and owns the phase,
+  handoff and clock edges.
+
+- **Pressure pass (2026-09-23).** The clock ran but the room could not price it. Six changes, all
+  reading the runtime's own scoring maths rather than a second copy of it (`client/pressure`).
+  (1) **The finish clock shows the SCORED time.** `useRelayClock` measures the wall between the
+  server's stamps; `view.elapsedMs` carries the skip penalty and is what `resolveFinishPoints` was
+  handed. Once the phase is `finished`/`timedOut` both the host's FinishCard and the TV's
+  ResultPlaque read the view, and when the two differ by more than a second they say why
+  ("+0:12 for 1 skipped leg") — a host who watched 0:38 run past was otherwise left to guess why it
+  paid like 0:50. (2) **`pointsMax` rides in the view** (§0.5), stored on `FappyRuntimeState` at
+  `initialize`. (3) **Points draining live**: what a finish on this tick would pay, big on the TV
+  marquee and in a chip next to the host's relay clock — the round's max with `par 0:50` under it
+  while par holds, then heat-coloured and dropping a point at a time. It charges legs already
+  skipped, so the escape hatch's cost lands the moment it is taken. (4) **Time to beat**:
+  `resolveTimeToBeat` inverts the slide (unit-tested against `resolveFinishPoints` itself, with a
+  bounded walk over the rounding boundary that floating point otherwise decides by its last bit) to
+  the slowest finish that still tops the best rival in `pendingPointsByTeamId` — the one field that
+  survives the per-turn re-initialisation, which is why points and not times are what get inverted.
+  The tablet names the rival (`teamNameByTeamId`); the TV says "to take the lead", because
+  `MinigameDisplayRendererProps` carries only `activeTeamName`. Null when topping them needs better
+  than par, and then the instruction is "beat par". (5) **The pace strip** (`PaceTrack`) under the
+  TV's line-up: a bar spanning 0 to the limit with a tick at par, the flyer's own head placed by
+  course cleared and a faint drawn hen placed by the clock — both running at the par tick, because a
+  par-pace relay finishes exactly there — so ahead-or-behind is which face is in front rather than a
+  subtraction. Past par the ghost parks and the bar beyond it fills heat toward the limit. One
+  bird-head tall (~30px at 1080p) so the letterboxed corridor keeps its height. (6) The sandbox's
+  dev manifest banks one rival 9 points, because a fixture with a zeroed board has no target to draw.
 
 ## 1) One-liner
 

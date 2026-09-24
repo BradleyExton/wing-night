@@ -1,5 +1,6 @@
 import { useMemo, useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import { NeonMarquee } from "@wingnight/surface";
 import type { SchlonicMinigameDisplayView, SchlonicMinigameRun } from "@wingnight/shared";
 import { resolveSchlonicZone } from "@wingnight/shared";
 
@@ -94,11 +95,13 @@ const SchlonicPlayBody = ({
   view,
   activeTeamName,
   clock,
+  clockLine,
   serverOrigin
 }: {
   view: SchlonicMinigameDisplayView;
   activeTeamName: string | null;
   clock: ReactNode;
+  clockLine: ReactNode;
   serverOrigin: string | null;
 }): JSX.Element => {
   const sceneRef = useRef<SchlonicSceneHandle>(null);
@@ -127,21 +130,23 @@ const SchlonicPlayBody = ({
 
   return (
     <div className={styles.stage}>
-      <header className={styles.marquee}>
-        <span className={styles.marqueeBulbs} aria-hidden="true" />
-        <h2 className={styles.marqueeTeamName}>{activeTeamName ?? ""}</h2>
-        <span className={styles.marqueeTitle}>{displaySchlonicSurfaceCopy.zoneName}</span>
-        <div className={styles.marqueeMeta}>
-          <span className={styles.marqueeRun}>
-            {displaySchlonicSurfaceCopy.runCounter(shownRunIndex + 1, view.runsPerTurn)}
-          </span>
-          <span className={styles.marqueeWings} data-schlonic-wings>
-            {displaySchlonicSurfaceCopy.wingsCounter(view.wingsBanked, view.wingsPar)}
-          </span>
-          <span className={styles.marqueeWingsLabel}>{displaySchlonicSurfaceCopy.wingsLabel}</span>
-          {clock}
-        </div>
-      </header>
+      <NeonMarquee
+        title={displaySchlonicSurfaceCopy.zoneName}
+        teamName={activeTeamName}
+        readout={
+          <>
+            <span className={styles.marqueeRun}>
+              {displaySchlonicSurfaceCopy.runCounter(shownRunIndex + 1, view.runsPerTurn)}
+            </span>
+            <span className={styles.marqueeWings} data-schlonic-wings>
+              {displaySchlonicSurfaceCopy.wingsCounter(view.wingsBanked, view.wingsPar)}
+            </span>
+            <span className={styles.marqueeWingsLabel}>{displaySchlonicSurfaceCopy.wingsLabel}</span>
+          </>
+        }
+        clock={clock}
+        clockLine={clockLine}
+      />
       <div className={styles.arenaArea}>
         <div key={shownRunIndex} className={styles.runEnter}>
           <SchlonicScene
@@ -168,6 +173,7 @@ export const DisplaySchlonicSurface = ({
   minigameDisplayView,
   activeTeamName,
   clock,
+  clockLine,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const schlonicView = minigameDisplayView?.minigame === "SCHLONIC" ? minigameDisplayView : null;
@@ -189,6 +195,7 @@ export const DisplaySchlonicSurface = ({
       view={schlonicView}
       activeTeamName={activeTeamName}
       clock={clock}
+      clockLine={clockLine}
       serverOrigin={serverOrigin}
     />
   );

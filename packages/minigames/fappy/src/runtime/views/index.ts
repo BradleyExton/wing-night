@@ -6,6 +6,12 @@ import type {
 
 import type { FappyRuntimeState } from "../types/index.js";
 
+// The penalty is the same arithmetic on the state the server holds and on the
+// view the surfaces get, and both carry these three fields — so it is typed on
+// the fields rather than on the state, and the clock the room watches ticks
+// through the very function the score used.
+type SkipPenaltyFields = Pick<FappyRuntimeState, "legs" | "legsPerTurn" | "parSeconds">;
+
 // Derived, never stored: the limit passing or the last gate ends the relay;
 // otherwise the room is in whatever state the leg in hand is.
 export const resolveFappyPhase = (state: FappyRuntimeState): FappyPhase => {
@@ -38,6 +44,20 @@ export const resolveTotalGatesCleared = (state: FappyRuntimeState): number => {
   }, 0);
 };
 
+// A skipped leg is forgiven, not free. Nobody flew it, so the relay is charged
+// what a leg of it is worth — one leg's share of par. Without this the escape
+// hatch was the fastest route through the course: one flap to start the clock
+// and a skip on every remaining leg finished well under par and paid the whole
+// round, beating the team that actually flew it.
+export const resolveSkipPenaltyMs = (state: SkipPenaltyFields): number => {
+  const skippedLegs = state.legs.filter((leg) => leg.skipped).length;
+  const perLegMs = (state.parSeconds * 1000) / Math.max(1, state.legsPerTurn);
+
+  return Math.round(skippedLegs * perLegMs);
+};
+
+// The relay's time as the score sees it, and as the surfaces report it: wall
+// clock from the first flap to the last landing, plus the skip penalty.
 export const resolveElapsedMs = (state: FappyRuntimeState): number | null => {
   const endedAtMs = state.timedOutAtMs ?? state.finishedAtMs;
 
@@ -45,7 +65,7 @@ export const resolveElapsedMs = (state: FappyRuntimeState): number | null => {
     return null;
   }
 
-  return Math.max(0, endedAtMs - state.startedAtMs);
+  return Math.max(0, endedAtMs - state.startedAtMs) + resolveSkipPenaltyMs(state);
 };
 
 const resolvePoints = (state: FappyRuntimeState): number | null => {
@@ -81,7 +101,8 @@ const toFappyViewFields = (state: FappyRuntimeState) => {
     finishedAtMs: state.finishedAtMs,
     timedOutAtMs: state.timedOutAtMs,
     elapsedMs: resolveElapsedMs(state),
-    points: resolvePoints(state)
+    points: resolvePoints(state),
+    pointsMax: state.pointsMax
   };
 };
 

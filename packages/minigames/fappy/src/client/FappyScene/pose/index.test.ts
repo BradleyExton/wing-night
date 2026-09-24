@@ -2,7 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { FAPPY_WORLD } from "@wingnight/shared";
 
-import { resolveCrashPose, resolveHandoffPose, resolveTilt, resolveWingAngle } from "./index.js";
+import {
+  GOO_TICKS,
+  resolveCrashPose,
+  resolveGooOpacity,
+  resolveHandoffPose,
+  resolveSplatKick,
+  resolveTilt,
+  resolveWingAngle
+} from "./index.js";
 
 test("does tilt nose up on a flap and cap the dive when falling", () => {
   assert.ok(Math.abs(resolveTilt(FAPPY_WORLD.flapVelocity) + 22.4) < 1e-9);
@@ -71,4 +79,17 @@ test("does tumble the bird over and let the shake die out across the crash beat"
 test("does clamp a beat's progress to its ends when the loop overshoots", () => {
   assert.deepEqual(resolveHandoffPose(1.4), resolveHandoffPose(1));
   assert.deepEqual(resolveCrashPose(-0.2), resolveCrashPose(0));
+});
+
+test("does drip the goo off the bird after the latest splat and kick the scene as it lands", () => {
+  const clean = { tick: 50, bird: { y: 40, vy: 0 }, scrollX: 0, gatesCleared: 0, knockedEagles: [], splats: [], outcome: null };
+  const splatted = { ...clean, splats: [{ gate: 0, launchTick: 0, tick: 20 }, { gate: 1, launchTick: 100, tick: 48 }] };
+
+  assert.equal(resolveGooOpacity(clean), 0);
+  assert.equal(resolveSplatKick(clean), 0);
+  assert.equal(resolveGooOpacity(splatted), 1);
+  assert.notEqual(resolveSplatKick(splatted), 0);
+  assert.equal(resolveSplatKick({ ...splatted, tick: 70 }), 0);
+  assert.ok(resolveGooOpacity({ ...splatted, tick: 48 + GOO_TICKS - 5 }) < 1);
+  assert.equal(resolveGooOpacity({ ...splatted, tick: 48 + GOO_TICKS }), 0);
 });

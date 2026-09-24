@@ -6,8 +6,16 @@
  */
 
 /**
+ * What a champ is built like. The sim's hitbox is the same for all three (the gate's column
+ * under `champTop`); the kind is the renderer's — skin, build, how it moves — and it is on the
+ * gate so every machine dresses the corridor the same way.
+ */
+export type FappyChampKind = "pink" | "ebony" | "ivory";
+
+/**
  * One obstacle: a champ standing up from the floor, bobbing, and sometimes an eagle hanging in
- * the sky above it. The gap is whatever is left between the two.
+ * the sky above it. The gap is whatever is left between the two. Some champs spit: on a fixed
+ * beat their head opens and a glob leaves it towards the bird coming down the corridor.
  */
 export type FappyGate = {
   /** Global gate number across the turn, so the room can count "gate 12 of 32". */
@@ -22,6 +30,11 @@ export type FappyGate = {
   champPeriodTicks: number;
   /** Where in its bob the champ is at tick 0, so a course is not all in step. */
   champPhaseTicks: number;
+  champKind: FappyChampKind;
+  /** Ticks between one glob and the next; 0 is a champ that never spits. */
+  spitPeriodTicks: number;
+  /** Where in its beat the spitter is at tick 0, so a corridor does not spit in chorus. */
+  spitPhaseTicks: number;
   /** Underside of the eagle over this gate, or null when the sky is clear to the ceiling. */
   eagleBottom: number | null;
 };
@@ -43,6 +56,27 @@ export type FappyKnockedEagle = {
   tick: number;
 };
 
+/**
+ * A glob in the air at one tick, in the gate layer's own (unscrolled) units: where it is, and
+ * the launch that identifies it, since a champ's globs are a beat apart and the sim must not
+ * let one hit twice.
+ */
+export type FappySpit = {
+  gate: number;
+  launchTick: number;
+  x: number;
+  y: number;
+  /** Ticks since it left the mouth. */
+  age: number;
+};
+
+/** A glob that got the bird: which one, and the tick it landed, so a renderer can drip it. */
+export type FappySplat = {
+  gate: number;
+  launchTick: number;
+  tick: number;
+};
+
 /** Everything the sim knows at one tick. `outcome` is set on the terminal frame and never cleared. */
 export type FappyFrame = {
   tick: number;
@@ -50,6 +84,8 @@ export type FappyFrame = {
   scrollX: number;
   gatesCleared: number;
   knockedEagles: FappyKnockedEagle[];
+  /** Every glob that has hit the bird this attempt. A hit glob is spent and never drawn again. */
+  splats: FappySplat[];
   outcome: FappyOutcome | null;
 };
 

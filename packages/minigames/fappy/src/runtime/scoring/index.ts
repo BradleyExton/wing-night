@@ -38,3 +38,58 @@ export const resolveTimeoutPoints = (
 
   return Math.max(0, Math.round(pointsMax * FAPPY_LIMIT_POINTS_SHARE * progress));
 };
+
+// The slide, read backwards: the SLOWEST finish that still pays one point more
+// than `rivalPoints`. The room cannot do this sum in its head — the curve is a
+// share of a max over a window between two configured seconds — so the number
+// that actually matters to a team mid-relay ("how long have we got?") was the
+// one thing neither screen could say.
+//
+// `resolveFinishPoints` rounds, so a time pays `target` for as long as its
+// unrounded share reaches `target - 0.5`; invert from there and floor, because
+// the next millisecond is the first that does not. Null when there is nothing
+// to chase: beating a rival who already has the round's max would take a time
+// better than par, and par is where the curve stops paying more.
+export const resolveTimeToBeat = (
+  rivalPoints: number,
+  rules: ScoringRules,
+  pointsMax: number
+): number | null => {
+  const target = rivalPoints + 1;
+
+  if (pointsMax <= 0 || target > pointsMax) {
+    return null;
+  }
+
+  const parMs = rules.parSeconds * 1000;
+  const limitMs = rules.limitSeconds * 1000;
+  const share = (target - 0.5) / pointsMax;
+  const overrun = (1 - share) / (1 - FAPPY_LIMIT_POINTS_SHARE);
+
+  if (overrun >= 1) {
+    return limitMs;
+  }
+
+  const closedForm = Math.min(limitMs, Math.max(parMs, Math.floor(parMs + overrun * Math.max(1, limitMs - parMs))));
+
+  // The closed form lands on a rounding boundary — `target - 0.5` is exactly
+  // where `Math.round` tips — and binary floating point decides which side by
+  // the last bit, so the answer can be one millisecond out either way. Walking
+  // the last step against `resolveFinishPoints` itself makes the two agree by
+  // construction rather than by the arithmetic happening to match; it is never
+  // more than a millisecond or two, so the walk is bounded and cheap.
+  let timeToBeatMs = closedForm;
+
+  while (timeToBeatMs > parMs && resolveFinishPoints(timeToBeatMs, rules, pointsMax) < target) {
+    timeToBeatMs -= 1;
+  }
+
+  while (
+    timeToBeatMs < limitMs &&
+    resolveFinishPoints(timeToBeatMs + 1, rules, pointsMax) >= target
+  ) {
+    timeToBeatMs += 1;
+  }
+
+  return timeToBeatMs;
+};

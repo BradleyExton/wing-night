@@ -11,11 +11,22 @@ import {
 import type { LegBird } from "../resolveLegBird/index.js";
 import { Backdrop, FAR_DUNE_PARALLAX, NEAR_DUNE_PARALLAX, type BackdropRefs } from "./Backdrop/index.js";
 import { BirdSprite, type BirdSpriteRefs } from "./BirdSprite/index.js";
-import { Champ, resolveChampPaint, type ChampRefs } from "./Champ/index.js";
+import { Champ, type ChampRefs } from "./Champ/index.js";
+import { resolveChampPaint } from "./champPaint/index.js";
 import { Cliffs, FinishFlag } from "./Cliffs/index.js";
-import { EAGLE_WINGBEAT_DEGREES, Eagle, resolveEagleShoulders, type EagleRefs } from "./Eagle/index.js";
+import { EAGLE_WINGBEAT_DEGREES, Eagle, type EagleRefs } from "./Eagle/index.js";
+import { Goo } from "./Goo/index.js";
+import { paintChamp, paintEagle } from "./paintGate/index.js";
 import { fappyPalette } from "./palette.js";
-import { resolveCrashPose, resolveHandoffPose, resolveTilt, resolveWingAngle } from "./pose/index.js";
+import { WaiterPeek } from "./WaiterPeek/index.js";
+import {
+  resolveCrashPose,
+  resolveGooOpacity,
+  resolveHandoffPose,
+  resolveSplatKick,
+  resolveTilt,
+  resolveWingAngle
+} from "./pose/index.js";
 import * as styles from "./styles.js";
 
 export type FappySceneHandle = {
@@ -44,8 +55,6 @@ const BIRD_BOX_HEIGHT = 14.4;
 const PUFF_SIZE = 16;
 // The eagle's wingbeat.
 const WINGBEAT_PERIOD_TICKS = 26;
-// A knocked eagle tumbles up and away for this long, then is gone.
-const EAGLE_EXIT_TICKS = 40;
 // Two birds on the plateau want their centres at least this far apart, or
 // one is drawn over the other; the waiter steps aside to make it so.
 const BIRD_GAP_UNITS = 15;
@@ -54,12 +63,18 @@ type GateRefs = ChampRefs & EagleRefs;
 
 const EMPTY_GATE_REFS: GateRefs = {
   champ: null,
+  balls: null,
   body: null,
   gloss: null,
+  veins: null,
   corona: null,
   slit: null,
   face: null,
+  cavity: null,
+  lid: null,
+  lidSkin: null,
   pupils: null,
+  spit: null,
   eagle: null,
   leftWing: null,
   rightWing: null
@@ -78,7 +93,12 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     const backdropRef = useRef<BackdropRefs | null>(null);
     const birdRef = useRef<BirdSpriteRefs | null>(null);
     const waitingBirdRef = useRef<BirdSpriteRefs | null>(null);
+    const waiterPeekRef = useRef<HTMLDivElement>(null);
+    // The last value written to the peek, so the loop touches the DOM on the
+    // beat it changes and on no other frame.
+    const isWaiterPeekUpRef = useRef<boolean | null>(null);
     const puffRef = useRef<HTMLDivElement>(null);
+    const gooRef = useRef<HTMLDivElement>(null);
     const gateRefs = useRef(new Map<number, GateRefs>());
     const gatesRef = useRef(gates);
     const gatesPerLegRef = useRef(gatesPerLeg);
@@ -114,47 +134,8 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
           continue;
         }
 
-        const champ = resolveChampPaint(gate, frame.tick, birdInLayer);
-
-        refs.champ?.setAttribute("data-champ-top", `${champ.top}`);
-        refs.body?.setAttribute("d", champ.body);
-        refs.gloss?.setAttribute("d", champ.gloss);
-        refs.corona?.setAttribute("d", champ.corona);
-        refs.slit?.setAttribute("d", champ.slit);
-        refs.face?.setAttribute("transform", champ.faceTransform);
-        refs.pupils?.setAttribute("transform", champ.pupilsTransform);
-
-        if (refs.eagle === null || gate.eagleBottom === null) {
-          continue;
-        }
-
-        const shoulders = resolveEagleShoulders(gate, gate.eagleBottom);
-
-        // A point left of its pivot rises on a clockwise turn, one right of
-        // it on an anticlockwise turn: opposite signs lift both tips together.
-        refs.leftWing?.setAttribute("transform", `rotate(${wingbeat} ${shoulders.leftX} ${shoulders.y})`);
-        refs.rightWing?.setAttribute("transform", `rotate(${-wingbeat} ${shoulders.rightX} ${shoulders.y})`);
-
-        // A bumped eagle tumbles up and off; one bumped on an earlier attempt
-        // (tick -1) is simply not there.
-        const knocked = frame.knockedEagles.find((entry) => entry.gate === gate.index);
-
-        if (knocked === undefined) {
-          refs.eagle.setAttribute("transform", "");
-          refs.eagle.setAttribute("opacity", "1");
-        } else if (knocked.tick < 0 || frame.tick - knocked.tick > EAGLE_EXIT_TICKS) {
-          refs.eagle.setAttribute("opacity", "0");
-        } else {
-          const gone = frame.tick - knocked.tick;
-          const centreX = gate.x + FAPPY_WORLD.gateWidth / 2;
-          const centreY = gate.eagleBottom - 4;
-
-          refs.eagle.setAttribute(
-            "transform",
-            `translate(${gone * 1.6} ${-gone * 1.9}) rotate(${gone * 9} ${centreX} ${centreY})`
-          );
-          refs.eagle.setAttribute("opacity", `${Math.max(0, 1 - gone / EAGLE_EXIT_TICKS)}`);
-        }
+        paintChamp(refs, gate, resolveChampPaint(gate, frame.tick, birdInLayer), frame);
+        paintEagle(refs, gate, frame, wingbeat);
       }
     };
 
@@ -162,10 +143,18 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
       const box = birdRef.current?.box ?? null;
       const wing = birdRef.current?.wing ?? null;
 
-      if (box !== null) {
-        const top = frame.bird.y - BIRD_BOX_HEIGHT / 2 + extra.sink;
+      const goo = gooRef.current;
+      const top = frame.bird.y - BIRD_BOX_HEIGHT / 2 + extra.sink;
+      const transform = `translate3d(0, ${unit(top)}, 0) rotate(${resolveTilt(frame.bird.vy) + extra.tilt}deg) scaleY(${extra.scaleY})`;
 
-        box.style.transform = `translate3d(0, ${unit(top)}, 0) rotate(${resolveTilt(frame.bird.vy) + extra.tilt}deg) scaleY(${extra.scaleY})`;
+      if (box !== null) {
+        box.style.transform = transform;
+      }
+
+      // What the last glob left on the face rides the bird and drips away.
+      if (goo !== null) {
+        goo.style.transform = transform;
+        goo.style.opacity = `${resolveGooOpacity(frame)}`;
       }
 
       if (wing !== null) {
@@ -178,9 +167,9 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     const paintWaiter = (frame: FappyFrame, hop: number, wingAngle: number, shift = 0): void => {
       const box = waitingBirdRef.current?.box ?? null;
       const wing = waitingBirdRef.current?.wing ?? null;
+      const left = resolveFappyWaitingX(gatesPerLegRef.current) + shift - BIRD_BOX_WIDTH / 2 - frame.scrollX;
 
       if (box !== null) {
-        const left = resolveFappyWaitingX(gatesPerLegRef.current) + shift - BIRD_BOX_WIDTH / 2 - frame.scrollX;
         const top = FAPPY_WORLD.cliffTop - BIRD_BOX_HEIGHT + 1 - hop;
 
         box.style.transform = `translate3d(${unit(left)}, ${unit(top)}, 0) scaleX(-1)`;
@@ -188,6 +177,18 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
 
       if (wing !== null) {
         wing.style.transform = `rotate(${wingAngle}deg)`;
+      }
+
+      // The waiter stands most of a leg's length past the right edge, so for
+      // most of a leg the bird the flyer is aiming at is off the screen. While
+      // it is, a bubble on the bezel says who it is; the moment the real one
+      // scrolls in, the bubble goes and the bird speaks for itself.
+      const peek = waiterPeekRef.current;
+      const isUp = left > FAPPY_WORLD.width;
+
+      if (peek !== null && isWaiterPeekUpRef.current !== isUp) {
+        isWaiterPeekUpRef.current = isUp;
+        peek.style.opacity = isUp ? "1" : "0";
       }
     };
 
@@ -217,7 +218,7 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
       paintBird(frame, { tilt: 0, sink: 0, scaleY: 1 });
       paintWaiter(frame, 0, 0);
       paintPuff(frame, 0, 1);
-      paintShake(0);
+      paintShake(resolveSplatKick(frame));
     };
 
     // How far the waiter has to step towards the wall so the bird that just
@@ -257,6 +258,7 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     // The rest pose, before any loop has run: a bird standing on the start
     // cliff. Without this the boxes sit at the top-left until the first frame.
     useLayoutEffect(() => {
+      isWaiterPeekUpRef.current = null;
       paint(createFappyLegStart(gatesRef.current, 0));
     }, [sceneId, waitingBird === null]);
 
@@ -304,7 +306,11 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
               pose="idle"
             />
           )}
+          {waitingBird !== null && <WaiterPeek ref={waiterPeekRef} bird={waitingBird} />}
           <BirdSprite ref={birdRef} bird={bird} className={styles.bird} dataAttribute="data-fappy-bird" pose="fly" />
+          <div ref={gooRef} className={styles.goo} data-fappy-goo>
+            <Goo />
+          </div>
         </div>
       </div>
     );

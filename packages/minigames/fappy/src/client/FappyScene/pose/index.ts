@@ -1,4 +1,4 @@
-import type { FappyBird } from "@wingnight/shared";
+import type { FappyBird, FappyFrame } from "@wingnight/shared";
 import { FAPPY_WORLD } from "@wingnight/shared";
 
 // The bird's pose from its physics, and the two beats the scene plays that
@@ -127,3 +127,45 @@ export const resolveCrashPose = (progress: number): CrashPose => {
     puffScale: 0.6 + p * 2
   };
 };
+
+// What a glob leaves behind. A splat drips off the bird over this long,
+// fading over the last of it, and kicks the scene sideways for the first
+// few ticks; all read off the frame's splat log, so a replay shows the same.
+export const GOO_TICKS = 70;
+const GOO_FADE_TICKS = 25;
+const SPLAT_KICK_TICKS = 8;
+
+// Ticks since the most recent glob got the bird, or null when none has this attempt.
+export const resolveSplatAge = (frame: FappyFrame): number | null => {
+  let latest: number | null = null;
+
+  for (const splat of frame.splats) {
+    if (latest === null || splat.tick > latest) {
+      latest = splat.tick;
+    }
+  }
+
+  return latest === null ? null : frame.tick - latest;
+};
+
+export const resolveGooOpacity = (frame: FappyFrame): number => {
+  const age = resolveSplatAge(frame);
+
+  if (age === null || age >= GOO_TICKS) {
+    return 0;
+  }
+
+  return Math.min(1, (GOO_TICKS - age) / GOO_FADE_TICKS);
+};
+
+// A sideways kick on the scene as a glob lands, dying out over a few ticks.
+export const resolveSplatKick = (frame: FappyFrame): number => {
+  const age = resolveSplatAge(frame);
+
+  if (age === null || age >= SPLAT_KICK_TICKS) {
+    return 0;
+  }
+
+  return Math.sin(age * 1.7) * 1.4 * (1 - age / SPLAT_KICK_TICKS);
+};
+

@@ -1,4 +1,4 @@
-import type { FappyGate, FappyLegCourse } from "../types.js";
+import type { FappyChampKind, FappyGate, FappyLegCourse, FappySpit } from "../types.js";
 import { createMulberry32, pickInteger } from "../../seededRandom/index.js";
 
 /**
@@ -41,6 +41,28 @@ export const FAPPY_WORLD = {
   champBobs: [0, 6, 10, 14] as readonly number[],
   champPeriodMin: 80,
   champPeriodMax: 140,
+  /**
+   * The kinds a course deals from, weighted by repetition: the bubblegum one is the corridor's
+   * staple, the big dark one and the pale one break up the row.
+   */
+  champKinds: ["pink", "pink", "ebony", "ivory"] as readonly FappyChampKind[],
+  /** The share of champs that spit. */
+  spitterOdds: 0.4,
+  /** A spitter's beat, in ticks; longer than a glob lives, so a champ has one glob out at a time. */
+  spitPeriodMin: 130,
+  spitPeriodMax: 200,
+  /** A glob is gone after this long, whether or not it reached the sand. */
+  spitLifeTicks: 70,
+  /** A glob leaves the mouth this far under the top of the head. */
+  spitMouthDepth: 3,
+  spitRadius: 2,
+  /** A glob's own speed towards the bird (leftward), on top of the scroll it rides. */
+  spitSpeedX: 0.55,
+  /** How hard a glob is thrown up, and what brings it back down. */
+  spitRiseVelocity: 1.3,
+  spitGravity: 0.045,
+  /** A glob that lands shoves the bird down at this speed: harder than an eagle, still not a crash. */
+  spitSplatVelocity: 1.8,
   /** How tall an eagle is, wingtip to talon. */
   eagleHeight: 10,
   /** An eagle hangs this much extra sky above the gap, at most, so gaps are not all the same. */
@@ -57,8 +79,9 @@ export const FAPPY_WORLD = {
 
 /**
  * The gates for one leg. Seeded from the leg, not from the turn, so a leg can be redone or
- * rehydrated on its own. Every gate has a champ from the floor; about half also hang an eagle,
- * always high enough that the gap at the champ's full stretch is still `gapHeight`.
+ * rehydrated on its own. Every gate has a champ from the floor, dealt a kind and, for some, a
+ * spitting beat; about half also hang an eagle, always high enough that the gap at the champ's
+ * full stretch is still `gapHeight`.
  */
 export const resolveFappyGates = ({ seed, legIndex, gatesPerLeg }: FappyLegCourse): FappyGate[] => {
   const random = createMulberry32((seed ^ Math.imul(legIndex + 1, 0x9e3779b1)) | 0);
@@ -81,6 +104,13 @@ export const resolveFappyGates = ({ seed, legIndex, gatesPerLeg }: FappyLegCours
       wantsEagle && eagleRoom >= 0
         ? skyAboveGap - pickInteger(random, 0, Math.min(FAPPY_WORLD.eagleSlackMax, eagleRoom))
         : null;
+    const champKind =
+      FAPPY_WORLD.champKinds[Math.floor(random() * FAPPY_WORLD.champKinds.length)] ?? "pink";
+    const isSpitter = random() < FAPPY_WORLD.spitterOdds;
+    const spitPeriodTicks = isSpitter
+      ? pickInteger(random, FAPPY_WORLD.spitPeriodMin, FAPPY_WORLD.spitPeriodMax)
+      : 0;
+    const spitPhaseTicks = isSpitter ? pickInteger(random, 0, spitPeriodTicks - 1) : 0;
 
     gates.push({
       index: legIndex * gatesPerLeg + gateOffset,
@@ -89,6 +119,9 @@ export const resolveFappyGates = ({ seed, legIndex, gatesPerLeg }: FappyLegCours
       champBob,
       champPeriodTicks,
       champPhaseTicks,
+      champKind,
+      spitPeriodTicks,
+      spitPhaseTicks,
       eagleBottom
     });
   }
@@ -109,6 +142,54 @@ export const resolveFappyChampTop = (gate: FappyGate, tick: number): number => {
   return (
     gate.champTop - gate.champBob * resolveFappyWave(tick, gate.champPeriodTicks, gate.champPhaseTicks)
   );
+};
+
+/**
+ * Where a spitter is in its beat at this tick: 0 on the tick a glob leaves, counting up to the
+ * period. Null for a champ that does not spit. The renderer opens the head over the last ticks
+ * of the beat and snaps it shut over the first, so the tell and the glob agree on every screen.
+ */
+export const resolveFappySpitPhase = (gate: FappyGate, tick: number): number | null => {
+  const period = gate.spitPeriodTicks;
+
+  if (period <= 0) {
+    return null;
+  }
+
+  return (((tick + gate.spitPhaseTicks) % period) + period) % period;
+};
+
+/**
+ * The glob a champ has in the air at this tick, or null: none between beats, none once it has
+ * lived `spitLifeTicks` or reached the sand. It leaves the mouth on the beat, thrown up and
+ * towards the bird (leftward — the bird comes from that side), and falls on its own gravity.
+ * Pure arithmetic in the launch tick and the age, so the tablet, the server and the TV put it
+ * in the same place.
+ */
+export const resolveFappySpit = (gate: FappyGate, tick: number): FappySpit | null => {
+  const age = resolveFappySpitPhase(gate, tick);
+
+  if (age === null || age >= FAPPY_WORLD.spitLifeTicks) {
+    return null;
+  }
+
+  const launchTick = tick - age;
+  const launchX = gate.x + FAPPY_WORLD.gateWidth / 2;
+  const launchY = resolveFappyChampTop(gate, launchTick) + FAPPY_WORLD.spitMouthDepth;
+  const y =
+    launchY - FAPPY_WORLD.spitRiseVelocity * age + (FAPPY_WORLD.spitGravity * age * age) / 2;
+
+  if (y > FAPPY_WORLD.floorY) {
+    return null;
+  }
+
+  return {
+    gate: gate.index,
+    launchTick,
+    x: launchX - FAPPY_WORLD.spitSpeedX * age,
+    y,
+    age
+  };
 };
 
 /** The middle of the gap at the champ's full stretch: the perch a bird respawns on. */

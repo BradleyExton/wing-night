@@ -1,5 +1,5 @@
 export const displayEmojiCharadesSurfaceCopy = {
-  showTitle: "★ Emoji Charades ★",
+  showTitle: "Emoji Charades",
   pendingPointsLabel: (points: number): string =>
     `+${points} pending`,
   clueingLabel: (teamName: string | null): string =>

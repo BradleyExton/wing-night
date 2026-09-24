@@ -29,6 +29,11 @@ export type SchlongPaths = {
   corona: string;
   /** The slit at the very tip. */
   slit: string;
+  /**
+   * Two veins wandering up the shaft, one each side of the spine, stopping short of the rim.
+   * Open subpaths, for a thin stroke over the body.
+   */
+  veins: string;
   /** The head's centre — where the face goes. */
   head: SchlongVec2;
   /** Unit vector the head points in. */
@@ -59,6 +64,13 @@ const TAIL_LENGTH_RATIO = 2.5;
 const GLOSS_OFFSET = 0.42;
 const GLOSS_WIDTH = 0.2;
 const HEAD_GLOSS_RADIUS = 0.3;
+/** A vein wanders between these fractions of the half-width, one wave every so many shaft radii. */
+const VEIN_INNER = 0.22;
+const VEIN_SWING = 0.34;
+const VEIN_WAVELENGTH_RADII = 2.6;
+/** Veins start this many shaft radii up from the tail and stop this far short of the rim. */
+const VEIN_START_RADII = 1.2;
+const VEIN_END_RADII = 0.5;
 /** Light comes from up and to the left, like the rest of the desert. */
 const LIGHT: SchlongVec2 = { x: -0.6, y: -0.8 };
 
@@ -237,6 +249,72 @@ const outline = (ribs: readonly Rib[], halfWidths: readonly number[]): string =>
   return `M ${ring.map(point).join(" L ")} Z`;
 };
 
+/**
+ * The veins: for each side of the spine, one open polyline that rides the shaft ribs at a
+ * half-width that swings in and out along the way, and a short spur that forks off the first
+ * one two thirds of the way up. Nothing on the head; the rim is where they stop.
+ */
+const veinPaths = (
+  ribs: readonly Rib[],
+  halfWidths: readonly number[],
+  length: number,
+  { shaftRadius, headRadius }: SchlongProportions
+): string => {
+  const from = VEIN_START_RADII * shaftRadius;
+  const to = length - HEAD_LENGTH_RATIO * headRadius - VEIN_END_RADII * shaftRadius;
+
+  if (to - from < shaftRadius) {
+    return "";
+  }
+
+  const wave = (Math.PI * 2) / (VEIN_WAVELENGTH_RADII * shaftRadius);
+  const sides: string[] = [];
+
+  for (const side of [1, -1]) {
+    const points: SchlongVec2[] = [];
+
+    for (let index = 0; index < ribs.length; index += 2) {
+      const rib = ribs[index]!;
+
+      if (rib.fromTail < from || rib.fromTail > to) {
+        continue;
+      }
+
+      const swing = VEIN_INNER + VEIN_SWING * (0.5 + 0.5 * Math.sin(rib.fromTail * wave + side * 1.3));
+      const offset = (halfWidths[index] ?? 0) * swing * side;
+
+      points.push({ x: rib.centre.x + rib.normal.x * offset, y: rib.centre.y + rib.normal.y * offset });
+    }
+
+    if (points.length > 1) {
+      sides.push(`M ${points.map(point).join(" L ")}`);
+    }
+
+    // The spur: off the first vein two thirds of the way up, out towards the
+    // edge and a little further along.
+    const forkAt = points[Math.floor(points.length * 0.66)];
+    const forkIndex = ribs.findIndex((rib) => rib.fromTail >= from + (to - from) * 0.66);
+    const forkRib = ribs[forkIndex];
+
+    if (side === 1 && forkAt !== undefined && forkRib !== undefined) {
+      const reach = (halfWidths[forkIndex] ?? 0) * 0.78;
+      const along = shaftRadius * 0.9;
+      const tip = {
+        x: forkRib.centre.x + forkRib.normal.x * reach + forkRib.tangent.x * along,
+        y: forkRib.centre.y + forkRib.normal.y * reach + forkRib.tangent.y * along
+      };
+      const bend = {
+        x: forkAt.x + (tip.x - forkAt.x) * 0.5 + forkRib.normal.x * reach * 0.2,
+        y: forkAt.y + (tip.y - forkAt.y) * 0.5 + forkRib.normal.y * reach * 0.2
+      };
+
+      sides.push(`M ${point(forkAt)} Q ${point(bend)} ${point(tip)}`);
+    }
+  }
+
+  return sides.join(" ");
+};
+
 const circlePath = (centre: SchlongVec2, radius: number): string => {
   const r = round(radius);
 
@@ -273,6 +351,7 @@ export const resolveSchlongPaths = (
       gloss: "",
       corona: "",
       slit: "",
+      veins: "",
       head,
       direction
     };
@@ -339,6 +418,7 @@ export const resolveSchlongPaths = (
     gloss: `${shaftRibs.length > 1 ? outline(shaftRibs, shaftWidths) : ""} ${headGloss}`.trim(),
     corona,
     slit,
+    veins: veinPaths(ribs, halfWidths, length, proportions),
     head,
     direction
   };

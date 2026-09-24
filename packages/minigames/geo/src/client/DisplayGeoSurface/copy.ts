@@ -2,6 +2,8 @@ import { formatGeoDistance } from "../formatGeoDistance/index.js";
 
 export const displayGeoSurfaceCopy = {
   showTitle: "Geo",
+  // The active team's pending points, lit beside its name the way JOUST's are.
+  pendingPoints: (points: number): string => `+${points}`,
   photoCounter: (current: number, total: number): string =>
     `Photo ${current} / ${total}`,
   introMessage: "Lining up the next photo...",
