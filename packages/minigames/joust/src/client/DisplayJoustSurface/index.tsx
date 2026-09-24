@@ -169,6 +169,8 @@ const JoustPlayBody = ({
               collapsingPerchIndices={scene.collapsingPerchIndices}
               teammates={view.teammates}
               activeShooterPlayerId={view.activeShooterPlayerId}
+              shotIndex={view.shotIndex}
+              shotsPerTurn={view.shotsPerTurn}
               isAiming={view.lastShot === null}
               burstPinIndices={scene.burstPinIndices}
               trail={scene.trail}

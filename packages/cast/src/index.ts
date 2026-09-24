@@ -9,6 +9,9 @@ export {
   CharacterWing,
   type CharacterProps
 } from "./Character/index.js";
+// The bird's own ink, for a surface that draws one of its parts on a layer of
+// its own (JOUST turns the shooter's wing toward the band).
+export { silhouette as CHARACTER_SILHOUETTE_CLASS_NAME } from "./Character/styles.js";
 // The same bird as a bare `<g>`, for a surface that already has an SVG and
 // wants to place it under its own transform (JOUST stands it on a physics pin).
 export {

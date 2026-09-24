@@ -3,6 +3,7 @@ import type { JoustPlayerFigure, JoustVec2 } from "@wingnight/shared";
 import { JOUST_PIN_HEIGHT } from "@wingnight/shared";
 import {
   CHARACTER_FOOT,
+  CHARACTER_SILHOUETTE_CLASS_NAME,
   CHARACTER_STAND_HEIGHT,
   CHARACTER_WING_ROOT,
   CharacterFigure,
@@ -133,7 +134,7 @@ const ArenaHenFigure = ({
             transform={`rotate(${resolveWingTurnDeg(foot, upright, facing, wingAimAt).toFixed(1)} ${CHARACTER_WING_ROOT.x} ${CHARACTER_WING_ROOT.y})`}
             data-joust-wing
           >
-            <path className={styles.wingInk} d={resolveCharacterWingPath(silhouette)} />
+            <path className={CHARACTER_SILHOUETTE_CLASS_NAME} d={resolveCharacterWingPath(silhouette)} />
           </g>
         )}
       </g>

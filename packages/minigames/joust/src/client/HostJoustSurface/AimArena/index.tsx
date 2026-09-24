@@ -25,6 +25,9 @@ type AimArenaProps = {
   lineup: JoustPlayerFigure[];
   teammates: JoustPlayerFigure[];
   activeShooterPlayerId: string | null;
+  // Which pull this is, so the bench walks off exactly whoever has taken their last one.
+  shotIndex: number;
+  shotsPerTurn: number;
   downPlayerIds: string[];
   collapsedPerchIndices: number[];
   previousShotGhost: JoustShotGhost | null;
@@ -93,6 +96,8 @@ export const AimArena = ({
   lineup,
   teammates,
   activeShooterPlayerId,
+  shotIndex,
+  shotsPerTurn,
   downPlayerIds,
   collapsedPerchIndices,
   previousShotGhost,
@@ -214,6 +219,8 @@ export const AimArena = ({
         collapsingPerchIndices={scene.collapsingPerchIndices}
         teammates={teammates}
         activeShooterPlayerId={activeShooterPlayerId}
+        shotIndex={shotIndex}
+        shotsPerTurn={shotsPerTurn}
         isAiming={isAiming}
         burstPinIndices={scene.burstPinIndices}
         trail={scene.trail}
