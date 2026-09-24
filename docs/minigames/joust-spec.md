@@ -225,7 +225,7 @@ it is.
       "perches": [
         { "x": 54, "y": 78, "width": 102 },
         { "x": 54, "y": 64, "width": 28 },
-        { "x": 89, "y": 50, "width": 65 }
+        { "x": 71, "y": 50, "width": 83 }
       ],
       "obstacles": [
         { "x": 45, "y": 64, "width": 7, "height": 14, "kind": "umbrella" },
@@ -273,7 +273,11 @@ floor. `featuredPlayers` tagging works as for every other pack.
 
 **Do not lower the floor to make a lane pass — widen the lane.** The number is the worst rack a
 tuned night can hand a lane: fifteen at the table, teams dealt three or four deep, so the SMALLEST
-shooting team faces the BIGGEST rack — 15 roster + 2 spare chairs − 3 shooting = 14. A lane that
+shooting team faces the BIGGEST rack — 15 roster + 2 spare chairs − 3 shooting = 14. It is a
+floor, not a target: the night pack seats twenty in teams of five, a rack of fifteen, and on
+2026-09-24 two of the four shipped lanes seated only 14 — so on the TV those two teams' turns
+fell back to bare sand, every target worth one and the towers empty. The shipped lanes now seat
+17 each, and `world/index.test.ts` holds them to it. A lane that
 seats fewer does not fail at a party, it silently falls back: `resolveJoustRackLayout` abandons
 every perch, dumps the whole rack on one bare row worth a point a head, and the towers stop being
 drawn on. One consequence is deliberate: the sand alone holds eleven, so **every authored lane must

@@ -42,9 +42,12 @@ const JOUST_ROSTER_HEADROOM = 2;
  * a roster nobody built for, not a thing to discover on the TV mid-party.
  *
  * So the floor is the worst rack a tuned night can produce, plus room to grow:
- * (15 roster + 2 headroom) − 3 on the smallest shooting team = 14. The shipped sample lanes seat
- * 15, 15, 15 and 17. DO NOT LOWER THIS to make a lane pass — widen the lane's shelves, or raise
- * the one hanging over the sand.
+ * (15 roster + 2 headroom) − 3 on the smallest shooting team = 14. It is a FLOOR, not a target:
+ * the night pack seats twenty in teams of five, a rack of fifteen, and the shipped sample lanes
+ * each seat 17 for it (`world/index.test.ts` pins that, and that the four pay alike up to 17).
+ * A pack author with a bigger table than fifteen has to author past this floor by hand. DO NOT
+ * LOWER THIS to make a lane pass — widen the lane's shelves, or raise the one hanging over the
+ * sand.
  */
 export const JOUST_MIN_LANE_CAPACITY =
   JOUST_TUNED_ROSTER_SIZE + JOUST_ROSTER_HEADROOM - JOUST_SMALLEST_TEAM_SIZE;

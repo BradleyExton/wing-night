@@ -21,7 +21,7 @@ const DEV_CONTENT: SerializableValue = {
       perches: [
         { x: 54, y: 78, width: 102 },
         { x: 54, y: 64, width: 28 },
-        { x: 89, y: 50, width: 65 }
+        { x: 71, y: 50, width: 83 }
       ],
       obstacles: [
         { x: 45, y: 64, width: 7, height: 14, kind: "umbrella" },
@@ -35,7 +35,7 @@ const DEV_CONTENT: SerializableValue = {
       perches: [
         { x: 54, y: 78, width: 102 },
         { x: 56, y: 52, width: 38 },
-        { x: 98, y: 40, width: 41 }
+        { x: 95, y: 40, width: 50 }
       ],
       obstacles: [
         { x: 41, y: 66, width: 13, height: 12, kind: "chip-truck" },
@@ -47,7 +47,7 @@ const DEV_CONTENT: SerializableValue = {
       name: "Allandale Dock",
       perches: [
         { x: 54, y: 78, width: 102 },
-        { x: 54, y: 48, width: 65 },
+        { x: 54, y: 48, width: 83 },
         { x: 128, y: 62, width: 28 }
       ],
       obstacles: [
@@ -60,7 +60,7 @@ const DEV_CONTENT: SerializableValue = {
       name: "Meridian Place",
       perches: [
         { x: 54, y: 78, width: 102 },
-        { x: 64, y: 44, width: 40 },
+        { x: 64, y: 44, width: 49 },
         { x: 112, y: 52, width: 40 }
       ],
       obstacles: [

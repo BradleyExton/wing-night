@@ -279,8 +279,18 @@ test("shows a chip per shot with the banked points filled in", () => {
   assert.equal((html.match(/>—</g) ?? []).length, 2);
 });
 
+// The totals come out once the turn is over: bottom-right is the far end of the rack, and on a
+// fifteen-player lane the last three targets stood under the card while the team was shooting.
+test("keeps the running totals off the rack until the turn is over", () => {
+  assert.doesNotMatch(renderSurface(hostView()), /Round so far/);
+  assert.doesNotMatch(
+    renderSurface(hostView({ phase: "resolved", lastShot: oneDown, shots: [oneDown] })),
+    /Round so far/
+  );
+});
+
 test("lists every team's running total, not just the active one", () => {
-  const html = renderSurface(hostView());
+  const html = renderSurface(hostView({ phase: "done", shotIndex: 2, lastShot: oneDown }));
 
   assert.match(html, /Team Heat/);
   assert.match(html, /Team Chill/);
@@ -328,7 +338,7 @@ test("does forward the shell's rail and clock into the canvas chrome row when pl
 // together. The name survives exactly once, in the running totals, where it
 // is a row of a table rather than a chip about the turn.
 test("does not repeat the active team name that the rail already carries", () => {
-  const html = renderSurface(hostView());
+  const html = renderSurface(hostView({ phase: "done", shotIndex: 2, lastShot: oneDown }));
 
   assert.equal(html.match(/Team Heat/g)?.length, 1);
   assert.doesNotMatch(html, /At the band:/);

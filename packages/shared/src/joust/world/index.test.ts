@@ -139,10 +139,10 @@ const SHIPPED_LANES = (
 ).prompts;
 
 /**
- * The widest rack a lane has to hold: a fifteen-player roster split into teams of three leaves
- * twelve opponents standing, and the shipped lanes carry headroom above that.
+ * The widest rack a lane has to hold: a twenty-player roster split into teams of five leaves
+ * fifteen opponents standing, and the shipped lanes carry two chairs of headroom above that.
  */
-const REALISTIC_PIN_COUNTS = [9, 10, 11, 12, 13, 14] as const;
+const REALISTIC_PIN_COUNTS = [9, 10, 11, 12, 13, 14, 15, 16, 17] as const;
 
 /** What the whole rack is worth to the team shooting at it, read off the geometry like the scorer. */
 const availablePoints = (perches: readonly JoustPerch[], pinCount: number): number => {
@@ -160,8 +160,8 @@ test("does seat a realistic roster on the lane's own perches when the lane is on
     const capacity = resolveLaneSlots(lane.perches).reduce((total, slots) => total + slots.length, 0);
 
     assert.ok(
-      capacity >= 14,
-      `${lane.name} seats only ${capacity}; a lane must hold 14 so a three-player team's twelve opponents keep their perches`
+      capacity >= 17,
+      `${lane.name} seats only ${capacity}; a lane must hold 17 so a five-player team's fifteen opponents keep their perches, with two chairs spare`
     );
 
     for (const pinCount of REALISTIC_PIN_COUNTS) {

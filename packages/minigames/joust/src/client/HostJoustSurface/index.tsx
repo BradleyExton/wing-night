@@ -194,16 +194,22 @@ export const HostJoustSurface = ({
         </>
       }
       readout={
-        joustView === null ? null : (
+        // Bottom-right is the far end of the rack: on a fifteen-player lane the last three
+        // targets stand under anything floating there. While the team is shooting the slot
+        // carries only the shot that just landed; the round's totals come out once the turn is
+        // over, when there is nothing under them left to aim at.
+        joustView === null || (!isResolved && !isDone) ? null : (
           <>
-            {lastShot !== null && (isResolved || isDone) && (
+            {lastShot !== null && (
               <ShotResultCard shot={lastShot} nameByPlayerId={nameByPlayerId} />
             )}
-            <RunningTotals
-              pendingPointsByTeamId={joustView.pendingPointsByTeamId}
-              activeTurnTeamId={joustView.activeTurnTeamId}
-              teamNameByTeamId={teamNameByTeamId}
-            />
+            {isDone && (
+              <RunningTotals
+                pendingPointsByTeamId={joustView.pendingPointsByTeamId}
+                activeTurnTeamId={joustView.activeTurnTeamId}
+                teamNameByTeamId={teamNameByTeamId}
+              />
+            )}
           </>
         )
       }

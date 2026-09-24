@@ -1025,7 +1025,12 @@ from the sofa by the hour:
     round the table without a caption. The line has one spot per teammate and
     fills from the far end in the order they finished, so a player who has
     walked off never moves again and the one gap is always the spot the
-    shooter stepped up from. The walk is the client's own beat
+    shooter stepped up from. The line stands two ranks deep: seventeen
+    units of sand behind the post is room for three birds shoulder to
+    shoulder, and a five-player team in one rank was a pile of heads nobody
+    could read a turn order off. Every second spot steps back a rank — a
+    little up the beach, a little smaller, a little dimmer, drawn behind the
+    rank in front (`data-joust-bench-rank`). The walk is the client's own beat
     (`useBenchWalk`, about 14 world units a second on `requestAnimationFrame`,
     the FAPPY handoff pattern): a walking bird wears the cast's `walk` pose
     and faces where it is going, a parked one wears `still` — not `idle`,
