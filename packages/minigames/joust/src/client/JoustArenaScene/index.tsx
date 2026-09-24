@@ -48,6 +48,12 @@ export type JoustArenaSceneProps = {
   teammates: JoustPlayerFigure[];
   // Whose shot it is: they step up to the post while the rest wait on the bench.
   activeShooterPlayerId: string | null;
+  // Which shot of the turn this is and how many there are, so the bench knows who has already
+  // had theirs and walks them off. Optional: a surface that does not pass them gets the bench
+  // assuming one shot a head, which is right under the default rules and only misorders the
+  // walk-off under `shotsPerPlayer` > 1.
+  shotIndex?: number;
+  shotsPerTurn?: number;
   // Draws the bands stretched to the shooter's tail rather than hanging slack.
   isAiming: boolean;
   // Pins to punch an impact burst on this frame.
@@ -87,6 +93,8 @@ export const JoustArenaScene = ({
   collapsingPerchIndices,
   teammates,
   activeShooterPlayerId,
+  shotIndex,
+  shotsPerTurn,
   isAiming,
   burstPinIndices,
   trail,
@@ -110,6 +118,13 @@ export const JoustArenaScene = ({
   const lastGhost = trail[trail.length - 1];
   const shooterVelocity =
     lastGhost === undefined ? null : { x: head.x - lastGhost.x, y: head.y - lastGhost.y };
+  // What the bench needs to know who has shot. Without the shot count from the view, assume one
+  // shot a head: the shooter's place in the roster is the shot index, and once the turn is over
+  // it was the last shot that ended it.
+  const shooterIndex = teammates.findIndex((figure) => figure.playerId === activeShooterPlayerId);
+  const benchShotIndex =
+    shotIndex ?? (activeShooterPlayerId === null ? teammates.length - 1 : Math.max(0, shooterIndex));
+  const benchShotsPerTurn = shotsPerTurn ?? teammates.length;
 
   return (
     <div className={styles.frame}>
@@ -148,6 +163,10 @@ export const JoustArenaScene = ({
           <TeamBench
             teammates={teammates}
             activeShooterPlayerId={activeShooterPlayerId}
+            shotIndex={benchShotIndex}
+            shotsPerTurn={benchShotsPerTurn}
+            bandTarget={pull > PULL_GUIDE_THRESHOLD ? tail : null}
+            pull={pull}
             serverOrigin={serverOrigin}
           />
 

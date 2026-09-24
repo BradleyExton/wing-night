@@ -111,3 +111,74 @@ export const resolveActiveShooter = (
 
   return teammates[shotIndex % teammates.length] ?? null;
 };
+
+export type JoustBenchOrderInput = {
+  teammates: readonly JoustPlayerFigure[];
+  // Null once the turn is over: nobody is at the post and everybody has walked off.
+  activeShooterPlayerId: string | null;
+  shotIndex: number;
+  shotsPerTurn: number;
+};
+
+/** Where one of the shooting team stands in the line behind the slingshot. */
+export type JoustBenchPlace = {
+  figure: JoustPlayerFigure;
+  // 0 is the post. 1.. is the line behind it, nearest the post first; it has one spot per
+  // teammate, so the far end is the team's size and is only ever reached by someone walking off.
+  slot: number;
+  // Spent for the turn: stood at the far end of the line with their back to the lane.
+  isDone: boolean;
+};
+
+/**
+ * The bench in turn order rather than roster order: whoever shoots next stands nearest the post,
+ * then the one after, so on every new shot the whole line visibly steps up a spot. Somebody who
+ * has taken their last shot walks off to the far end and stays there — the spots fill from the
+ * far end in the order they finished, so a player who has walked off never moves again, and the
+ * one gap in the line is always the spot the current shooter stepped up from. Under
+ * `shotsPerPlayer` > 1 a player who has shot but will shoot again is still in the line.
+ *
+ * Once the turn is over the last shooter takes that gap, and anyone the turn ended before they
+ * shot (the rack was cleared) keeps their place in the line, so nobody crosses anybody.
+ */
+export const resolveBenchOrder = ({
+  teammates,
+  activeShooterPlayerId,
+  shotIndex,
+  shotsPerTurn
+}: JoustBenchOrderInput): JoustBenchPlace[] => {
+  const size = teammates.length;
+
+  if (size === 0) {
+    return [];
+  }
+
+  const isTurnOver = activeShooterPlayerId === null;
+  const shooterIndex = ((shotIndex % size) + size) % size;
+  const shooter: JoustBenchPlace[] = [];
+  const waiting: { figure: JoustPlayerFigure; distance: number }[] = [];
+  const done: { figure: JoustPlayerFigure; lastShotIndex: number }[] = [];
+
+  teammates.forEach((figure, index) => {
+    const distance = (index - shooterIndex + size) % size;
+    const nextShotIndex = shotIndex + distance;
+    const lastShotIndex = distance === 0 ? shotIndex : nextShotIndex - size;
+
+    if (distance === 0 && !isTurnOver) {
+      shooter.push({ figure, slot: 0, isDone: false });
+    } else if ((isTurnOver || nextShotIndex >= shotsPerTurn) && lastShotIndex >= 0) {
+      done.push({ figure, lastShotIndex });
+    } else {
+      waiting.push({ figure, distance });
+    }
+  });
+
+  waiting.sort((a, b) => a.distance - b.distance);
+  done.sort((a, b) => a.lastShotIndex - b.lastShotIndex);
+
+  return [
+    ...shooter,
+    ...waiting.map(({ figure }, index) => ({ figure, slot: index + 1, isDone: isTurnOver })),
+    ...done.map(({ figure }, index) => ({ figure, slot: size - index, isDone: true }))
+  ];
+};

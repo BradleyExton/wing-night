@@ -925,10 +925,29 @@ marquee chrome the drawing easel uses:
     reaches a shelf. The timber is drawn from the same boxes the integrator
     collides against: what looks like a leg IS a leg, and a shot that clips
     one stops there.
--   **Whoever is shooting steps up.** The turn goes round the shooting team
-    one player at a time, and their bird walks from the bench to the post
-    while the rest wait. Both surfaces name them, so the room knows it is
-    their go without being told twice.
+-   **Whoever is shooting walks up, and walks off.** The bench stands in
+    turn order, not roster order (`resolveBenchOrder`): whoever shoots next
+    is nearest the post, then the one after, and when the next shot opens the
+    shooter walks off to the far end of the line and turns their back on the
+    lane while everybody else steps up a spot — so the room sees the turn go
+    round the table without a caption. The line has one spot per teammate and
+    fills from the far end in the order they finished, so a player who has
+    walked off never moves again and the one gap is always the spot the
+    shooter stepped up from. The walk is the client's own beat
+    (`useBenchWalk`, about 14 world units a second on `requestAnimationFrame`,
+    the FAPPY handoff pattern): a walking bird wears the cast's `walk` pose
+    and faces where it is going, a parked one wears `still` — not `idle`,
+    because the bench is scenery and §8's ambient-loop rule applies to it —
+    and each is wrapped in its own groove (`resolveCharacterGrooveClassName`)
+    so a line stepping up together does not march. `prefers-reduced-motion`
+    teleports, as the replay skips the flight. Nothing about a spot crosses
+    the wire. While the band is drawn the shooter at the post reaches for it:
+    the figure is drawn wingless and its wing goes on a layer of its own
+    (`ArenaHen`'s `wingAimAt`, the FAPPY wing convention), turned about the
+    shoulder toward the shooter's tail, and the whole bird leans back with
+    the pull, up to fifteen degrees at full draw. Through the replay the
+    shooter stays at the post watching. Both surfaces still name them, so the
+    room knows it is their go without being told twice.
 -   `<CharacterFigure>` is the cast drawing as a bare `<g>`, which is what
     lets the lane place it under its own transform. JOUST scales it by
     `CHARACTER_STAND_HEIGHT` so the bird and the physics pin are one

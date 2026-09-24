@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/joust/`
 
-Last updated: 2026-09-19 (collapsible towers, points by height, ghost of the last shot)
+Last updated: 2026-09-23 (the bench walks: turn-ordered line, walk-off, the shooter grabs the band)
 
 ## 1) One-liner
 
@@ -138,6 +138,16 @@ it is.
   while the tower stands and dropped from the active set the step the legs fold. The renderer
   draws each leg between its own two bodies and the plank across the two tops, so the TV's tower
   falls exactly the way the integrator's did.
+- **The bench walks, client-side.** The shooting team's line is ordered by turn distance
+  (`resolveBenchOrder` in `runtime/lineup`, pure): the next shooter nearest the post, the spent
+  ones at the far end facing away, one spot a head so nobody who has walked off ever moves again.
+  Each figure's x tweens toward its spot on `requestAnimationFrame` (`useBenchWalk`, ~14 units/s,
+  the FAPPY handoff-beat pattern; `prefers-reduced-motion` teleports), wearing the cast's `walk`
+  pose on the move and `still` parked. With the band drawn past `PULL_GUIDE_THRESHOLD` the parked
+  shooter's wing is drawn on its own layer aimed at the shooter's tail and the bird leans back
+  with the pull. None of it is state: the scene derives it from `teammates`,
+  `activeShooterPlayerId`, `shotIndex` and `shotsPerTurn`, and the harness reads
+  `data-joust-bench-slot` / `data-joust-walking` / `data-joust-facing` rather than transforms.
 - **Live pull on the TV.** `setAim` streams the band at ~12/s while dragging (the drawing canvas
   set the ~15/s budget). The tablet shows its own finger's pull immediately and yields to the
   server's echo when the drag ends.

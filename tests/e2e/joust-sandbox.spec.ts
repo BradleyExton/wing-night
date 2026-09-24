@@ -92,6 +92,47 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
   expect(socketRequests).toHaveLength(0);
 });
 
+// The shooting team stands behind the post in the order they will shoot, and the line walks: when
+// the next shot opens the last shooter walks off to the far end and turns their back on the lane
+// while everybody else steps up a spot. The harness reads the bench's own slot and walk seams,
+// never the transform (the SCHLONIC convention).
+const benchFigure = (page: Page, name: string, slot: number) =>
+  page.locator(`[data-joust-bench-slot="${slot}"] [data-joust-hen="${name}"]`);
+
+test("the bench steps up a spot and the last shooter walks off when the next shot opens", async ({
+  page
+}) => {
+  await page.goto(devSandboxPath("joust"));
+
+  // Alex is up; Caitlin is next and stands nearest the post, then Dan. Nobody is on the move.
+  await expect(benchFigure(page, "Alex", 0)).toHaveCount(2);
+  await expect(benchFigure(page, "Caitlin", 1)).toHaveCount(2);
+  await expect(benchFigure(page, "Dan", 2)).toHaveCount(2);
+  await expect(page.locator('[data-joust-walking="true"]')).toHaveCount(0);
+  await expect(page.locator('[data-joust-bench-slot][data-joust-facing="-1"]')).toHaveCount(0);
+
+  const nextShotButton = page.getByRole("button", { name: "Next shot" });
+
+  await pullAndRelease(page);
+
+  // The shooter stays at the post to watch the replay.
+  await expect(nextShotButton).toBeEnabled();
+  await expect(benchFigure(page, "Alex", 0)).toHaveCount(2);
+
+  await nextShotButton.click();
+
+  // The line is walking: Caitlin to the post, Dan up a spot, Alex off to the far end...
+  await expect(page.locator('[data-joust-walking="true"]')).not.toHaveCount(0);
+  await expect(benchFigure(page, "Caitlin", 0)).toHaveCount(2);
+  await expect(benchFigure(page, "Dan", 1)).toHaveCount(2);
+  await expect(benchFigure(page, "Alex", 3)).toHaveCount(2);
+  // ...and parks, with Alex turned away from the lane and the other two still facing it.
+  await expect(page.locator('[data-joust-walking="true"]')).toHaveCount(0);
+  await expect(page.locator('[data-joust-bench-slot="3"][data-joust-facing="-1"]')).toHaveCount(2);
+  await expect(page.locator('[data-joust-bench-slot="0"][data-joust-facing="1"]')).toHaveCount(2);
+  await expect(page.locator('[data-joust-bench-slot="1"][data-joust-facing="1"]')).toHaveCount(2);
+});
+
 test("a barely drawn band does not spend a shot", async ({ page }) => {
   await page.goto(devSandboxPath("joust"));
 

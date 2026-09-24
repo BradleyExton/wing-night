@@ -87,6 +87,49 @@ test("does lean the bird over when its pin is on its way down", () => {
   assert.ok(Math.abs(a ?? 0) < 0.9, "and should not still be drawn upright");
 });
 
+test("does stand still with its own wing on unless told otherwise", () => {
+  const html = render();
+
+  assert.match(html, /data-character-pose="still"/);
+  assert.match(html, /data-character-wing/);
+  assert.doesNotMatch(html, /data-joust-wing/);
+});
+
+test("does walk when the bench says so", () => {
+  assert.match(render({ pose: "walk" }), /data-character-pose="walk"/);
+});
+
+// The shooter's hand on the band: the figure loses its wing and one is drawn on a layer of its
+// own, turned about the shoulder toward the point it is reaching for.
+test("does reach for the band with a wing on its own layer, and none on the figure", () => {
+  const html = render({ facing: 1, wingAimAt: { x: 60, y: 76.4 - 6 } });
+
+  assert.doesNotMatch(html, /data-character-wing/);
+  assert.match(html, /data-joust-wing/);
+});
+
+// Straight behind an upright bird facing the lane, level with its shoulder: the wing hangs back
+// and down at rest, so reaching straight back is a modest lift of it — not a flip.
+const wingTurn = (html: string): number => {
+  const turn = /transform="rotate\(([-\d.]+) 47 35\)" data-joust-wing/.exec(html);
+
+  assert.ok(turn !== null, "the wing should turn about the shoulder");
+  return Number(turn[1]);
+};
+
+test("does turn the wing toward a point straight behind the shoulder by lifting it a little", () => {
+  const turn = wingTurn(render({ facing: 1, wingAimAt: { x: 0, y: 76.4 - JOUST_PIN_HEIGHT * 0.6 } }));
+
+  assert.ok(turn > 15 && turn < 45, `expected a modest lift back, got ${turn}`);
+});
+
+test("does turn the wing the mirrored way on a bird facing the other direction", () => {
+  const facingLane = wingTurn(render({ facing: 1, wingAimAt: { x: 0, y: 76.4 - JOUST_PIN_HEIGHT * 0.6 } }));
+  const facingAway = wingTurn(render({ facing: -1, wingAimAt: { x: 200, y: 76.4 - JOUST_PIN_HEIGHT * 0.6 } }));
+
+  assert.ok(Math.abs(facingLane - facingAway) < 0.2, `mirror should agree: ${facingLane} vs ${facingAway}`);
+});
+
 test("does mark a bird felled on an earlier shot as spent without losing who it is", () => {
   const html = render({ isDown: true });
 
