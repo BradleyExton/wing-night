@@ -1,9 +1,9 @@
-// `absolute inset-0` rather than `h-full`: an absolute child is laid out
-// against the stage canvas's padding box, so the genre texture and the glow
-// below reach the screen edges instead of stopping in a hard rectangle a
-// canvas gutter short of them. The spotlight owns its own inset, below.
+// The spotlight owns its own inset, and the stage canvas has none of its own
+// (StageSurface/styles), so the genre texture and the glow below reach the
+// screen edges. This used to be `absolute inset-0` to escape a canvas gutter
+// that no longer exists; it is `relative h-full` like its sibling stages now.
 export const container =
-  "absolute inset-0 flex flex-col items-center justify-center gap-[clamp(0.75rem,1.6vw,2rem)] overflow-hidden px-[clamp(2rem,4vw,4rem)] py-[clamp(2rem,4vw,4rem)] text-center";
+  "relative flex h-full flex-col items-center justify-center gap-[clamp(0.75rem,1.6vw,2rem)] overflow-hidden px-[clamp(2rem,4vw,4rem)] py-[clamp(2rem,4vw,4rem)] text-center";
 
 export const ambient =
   "pointer-events-none absolute inset-[-10%] bg-[radial-gradient(ellipse_at_20%_30%,rgba(249,115,22,0.12)_0%,transparent_45%),radial-gradient(ellipse_at_80%_70%,rgba(239,68,68,0.10)_0%,transparent_45%)]";

@@ -150,6 +150,18 @@ const FULL_STAGE_MODES: ReadonlySet<StageRenderMode> = new Set([
   "final_results"
 ]);
 
+// SETUP and every full stage get the canvas with no inset, for the same
+// reason: each body paints its own frame and carries its own padding, so a
+// gutter here is a border around the show (StageSurface/styles). The fallback
+// is the one page-shaped stage left, and the one that keeps the inset.
+const resolveSurfaceClassName = (stageMode: StageRenderMode): string => {
+  if (stageMode === "setup") {
+    return styles.setupCard;
+  }
+
+  return FULL_STAGE_MODES.has(stageMode) ? styles.fullStageCanvas : styles.stageCanvas;
+};
+
 export const StageSurface = (): JSX.Element => {
   const roomState = useDisplayRoomState();
   const stageViewModel = resolveStageViewModel(roomState);
@@ -183,8 +195,7 @@ export const StageSurface = (): JSX.Element => {
     />
   );
 
-  const surfaceClassName =
-    effectiveStageMode === "setup" ? styles.setupCard : styles.stageCanvas;
+  const surfaceClassName = resolveSurfaceClassName(effectiveStageMode);
   const isFullStageMode = FULL_STAGE_MODES.has(effectiveStageMode);
   const shouldRenderStageContextHeader =
     effectiveStageMode !== "setup" && !isFullStageMode;

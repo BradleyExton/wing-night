@@ -5,10 +5,21 @@ export const card =
 // are the frame, so any inset here would read as a border around the show.
 export const setupCard = "h-full max-h-full overflow-hidden text-left";
 
-// Every other phase keeps the inset the display row used to carry, so the
-// bodies below (and the context header) sit exactly where they did.
-export const stageCanvas =
-  "relative isolate h-full max-h-full overflow-hidden px-4 py-3 text-left md:px-8 md:py-4 [@media(max-height:850px)]:py-2";
+// So does every other stage that is a SHOW rather than a page, which is all of
+// them but the fallback: the eating clock, a team's intro, a minigame's arena
+// and the two results screens each paint their own frame — an ember gradient,
+// a vignette, a genre texture — and each carries the padding its own content
+// needs. An inset here painted a strip of the page's `bg` around that frame on
+// three sides while the deck below ran edge to edge, which reads as a border
+// around the show (DESIGN.md §2.2B). `MinigameIntroStageBody` used to escape
+// it with `absolute inset-0`; there is nothing left to escape.
+export const fullStageCanvas =
+  "relative isolate h-full max-h-full overflow-hidden text-left";
+
+// The fallback is the exception, and it is one because it is not a show: a
+// context header over a line of text, sitting on the display's own background.
+// It keeps the inset the display row used to carry.
+export const stageCanvas = `${fullStageCanvas} px-4 py-3 md:px-8 md:py-4 [@media(max-height:850px)]:py-2`;
 
 export const stageBody =
   "relative z-10 h-full min-h-0 px-4 pb-3 pt-1 md:px-8 md:pb-4 2xl:px-12";

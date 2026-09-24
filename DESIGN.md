@@ -405,6 +405,12 @@ looks like another arena frame will not hurt anybody.
 -   No global fixed header block on display
 -   Footer standings remains fixed
 -   Main area flexible but no overflow
+-   **The stage is full-bleed.** Every stage but the fallback paints its own frame — the hearth's
+    flame, a team's genre texture, a minigame's ember gradient or arena — and carries whatever
+    padding its own content needs, so `StageSurface`'s canvas adds no inset. An inset there shows
+    the page's `bg` around the show on three sides while the deck below (§2.2C) runs edge to edge,
+    which reads as a border around the play area. The fallback is the one stage that keeps one,
+    because it is a page rather than a show.
 -   Extremely high contrast
 -   Read-only surface
 -   Phase/round orientation should be lightweight and rendered inside stage surfaces
@@ -456,8 +462,8 @@ spends its motion budget. Built direction: the "Turbulent" hearth
     ember band that sweeps through every few seconds. Its glow is a `drop-shadow` on a wrapper,
     never a `text-shadow` (which shows straight through clipped text).
 -   The lobby is full-bleed: the flame, vignette and cast are the frame, so the stage carries no
-    inset of its own (the other phases keep theirs on `StageSurface`'s canvas). Anything that
-    reads as a border around the hearth is a bug.
+    inset of its own — as no stage does (§2.2). Anything that reads as a border around the hearth
+    is a bug.
 -   Three bands, top to bottom: the wordmark, the lineup, and a floor the cast owns. The floor is
     reserved space (`SetupStageBody` padding matched to the `CastParade` strip), so the birds
     never walk behind the cards.
