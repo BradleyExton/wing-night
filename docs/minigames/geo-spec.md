@@ -2,7 +2,7 @@
 
 Status: Ready for implementation  
 Owner: Wing Night  
-Updated: 2026-04-29
+Updated: 2026-09-24 (information asymmetry named; body is the 2026-04-29 spec)
 
 ## 1) Product Direction
 
@@ -43,6 +43,18 @@ If the timer expires mid-turn:
 - Remaining unplayed prompts in the turn are skipped — `promptsCompletedThisTurn` does not advance for them.
 
 Rationale: prompts are independent score units (max 5 pts each, awarded on submit). Mid-prompt time-cuts cleanly map to "prompt skipped, no score" without partial-credit ambiguity.
+
+### Information asymmetry
+
+- **Kind: nobody knows.** Only the server holds the answer. The room and the active team share
+  the same photo, title and hint (§2 steps 2–3; `GeoMinigameDisplayView.currentPrompt`, §5.4),
+  and the TV shows the team's own pin as it moves (`currentGuess`, §6 "Map Theatre"), so the open
+  question for everyone in the room is how far off that pin is.
+- **Collapses on `submitGuess`** (§5.1): the answer pin, the connecting line, the distance and the
+  points land on both screens at once (§2 step 7, §6).
+- One caveat: the host view carries `answerLat` / `answerLng` from the start of the prompt (§5.4).
+  Before submit the tablet withholds them by rendering, not by contract; the display view has no
+  answer field until `status: "submitted"`, which is what the answer-safety test pins (§9, slice 4).
 
 ## 3) Data and Content
 

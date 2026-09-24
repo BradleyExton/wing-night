@@ -2,7 +2,7 @@
 
 Status: **Planned** — nothing under `packages/minigames/sear/` yet
 
-Last updated: 2026-09-16
+Last updated: 2026-09-24 (information asymmetry named)
 
 > **§0 is the build plan; the Research section after it is the reasoning it rests on.**
 > Read §0, then `docs/minigame-authoring-guide.md`, then build in the order given. Every
@@ -251,6 +251,19 @@ wider `latencySlackMs` in the dev manifest, not a sleep.
 
 ---
 
+### 0.10 Information asymmetry
+
+- **Kind: nobody knows.** After the visible three seconds the count is hidden from every surface:
+  the tablet shows only STOP and the TV shows `?` (Research §7 "Running, hidden"; §0.4 "no
+  privileged field"). The Pitch's line that the audience can see the count and the player cannot
+  describes the TikTok original, not this build. Here the room's only edge is that its eyes are on
+  the TV while the player's are on a button.
+- **Collapses on STOP**: a smash cut to the measured time, the signed error and the band, on both
+  surfaces (Research §7 "Reveal"; §0.4 `status: "revealed"`). No lock-in precedes it beyond START;
+  the tap is the commit.
+- The room's job in the hidden beat is to count out loud, wrongly and on purpose (Pitch, Research
+  §8). `serverElapsedMs` and `disputed` stay host-only as bookkeeping, not as a secret (§0.4).
+
 ## Research
 
 Everything below is the 2026-09-16 research pass this plan came out of, kept intact. Section
@@ -421,4 +434,4 @@ No content file. This is the first game in the roster with nothing to author, wh
 - Speed-scored answers without latency compensation, and an accuracy mode as the fix: [Kahoot — How points work](https://support.kahoot.com/hc/en-us/articles/115002303908-How-points-work)
 - Clock-offset sync over a socket, the approach this design avoids needing: [timesync](https://www.npmjs.com/package/timesync)
 - Fake clocks for the e2e layer: [Playwright — Clock](https://playwright.dev/docs/clock)
-- In-repo precedents: phase-wide `endsAt` timers (`apps/server/src/roomState/selectors`, `phaseState`, `apps/client/src/utils/resolveRemainingTimerSeconds`); client-timed data accepted as data ([drawing-spec.md](../drawing-spec.md), stroke `t` offsets); proximity bands ([geo-spec.md](../geo-spec.md), `scoreBandsKm`); sandbox-only e2e and unscheduled sample config ([song-guess-spec.md](../song-guess-spec.md) §0); holder-agnostic runtimes ([emoji-charades-spec.md](../emoji-charades-spec.md) — one picker per turn, identity untracked).
+- In-repo precedents: phase-wide `endsAt` timers (`apps/server/src/roomState/selectors`, `phaseState`, `apps/client/src/utils/resolveRemainingTimerSeconds`); client-timed data accepted as data ([drawing-spec.md](drawing-spec.md), stroke `t` offsets); proximity bands ([geo-spec.md](geo-spec.md), `scoreBandsKm`); sandbox-only e2e and unscheduled sample config ([song-guess-spec.md](song-guess-spec.md) §0); holder-agnostic runtimes ([emoji-charades-spec.md](emoji-charades-spec.md) — one picker per turn, identity untracked).
