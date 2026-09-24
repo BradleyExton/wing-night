@@ -8,6 +8,7 @@ import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
 import { FappyScene, type FappySceneHandle } from "../FappyScene/index.js";
 import { resolveLegBird } from "../resolveLegBird/index.js";
 import { useFappyMirror } from "../useFappyMirror/index.js";
+import { useFappySounds } from "../useFappySounds/index.js";
 import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
 import { formatRelayClock, useRelayClock } from "../useRelayClock/index.js";
 import { displayFappySurfaceCopy } from "./copy.js";
@@ -139,7 +140,10 @@ const FappyPlayBody = ({
         ? styles.marqueeClockPastPar
         : "";
 
-  useFappyMirror({ leg, gatesPerLeg: view.gatesPerLeg, sceneRef });
+  // The TV is the room's speaker, so FAPPY's whole soundboard hangs off this one surface.
+  const handleFappySound = useFappySounds({ view, hold, elapsedMs });
+
+  useFappyMirror({ leg, gatesPerLeg: view.gatesPerLeg, sceneRef, onEvent: handleFappySound });
 
   return (
     <div className={styles.stage}>

@@ -11,11 +11,17 @@ import {
 
 import { CRASH_BEAT_MS, HANDOFF_BEAT_MS } from "../beats/index.js";
 import type { FappySceneHandle } from "../FappyScene/index.js";
+import { resolveMirrorEvents, type FappyMirrorEventHandler } from "../mirrorEvents/index.js";
 
 type FappyMirrorInput = {
   leg: FappyMinigameLeg | null;
   gatesPerLeg: number;
   sceneRef: RefObject<FappySceneHandle>;
+  // Told what changed between the frame just drawn and the one before it, so the room's sound
+  // can follow the picture without a second reader of frames. Optional and one-way: the
+  // mirror never waits on it and never reads anything back. Its identity must be stable —
+  // the rAF loops below close over it and are deliberately not restarted per render.
+  onEvent?: FappyMirrorEventHandler;
 };
 
 // How far behind the tablet the TV draws, in ticks: a tenth of a second, so a
@@ -65,7 +71,7 @@ const resolveRunKey = (leg: FappyMinigameLeg): string => `${leg.legIndex}:${leg.
 // moves on (a respawn, the next leg) while the wall is still mid-flight, the
 // wall finishes the flight it has, plays the crash or the landing, and only
 // then draws what the tablet is on.
-export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput): void => {
+export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef, onEvent }: FappyMirrorInput): void => {
   const runRef = useRef<MirrorRun | null>(null);
   const beatRef = useRef<MirrorBeat | null>(null);
   // Set once the flight in hand has ended with the tablet already elsewhere:
@@ -141,6 +147,22 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
     beat.rafHandle = window.requestAnimationFrame(step);
 
     return beat;
+  };
+
+  // Report what the step just drawn changed, for whoever is listening. Pure diffing lives in
+  // `mirrorEvents`; this only hands it the two frames and the log they were stepped through.
+  const emitFrameChange = (
+    previous: FappyFrame,
+    next: FappyFrame,
+    steppedFlapTicks: readonly number[]
+  ): void => {
+    if (onEvent === undefined) {
+      return;
+    }
+
+    for (const event of resolveMirrorEvents(previous, next, steppedFlapTicks)) {
+      onEvent(event);
+    }
   };
 
   // The flight in hand has ended: play it out, then draw whatever the tablet
@@ -258,6 +280,8 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
 
     // The log changed under a running mirror: rebuild the frame from the top
     // with the log as it now is, up to where the clock says we are.
+    const rebuiltFrom = run.frame;
+
     run.frame = advanceFappy(
       createFappyLegStart(gates, checkpointGate, knockedEagles),
       gates,
@@ -265,6 +289,8 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
       run.flapTicks,
       Math.max(run.frame.tick, resolveTargetTick(performance.now()))
     );
+
+    emitFrameChange(rebuiltFrom, run.frame, run.flapTicks);
 
     if (run.frame.outcome !== null) {
       settleRun(run);
@@ -274,7 +300,10 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef }: FappyMirrorInput)
     sceneRef.current?.paint(run.frame);
 
     const step = (now: number): void => {
+      const steppedFrom = run.frame;
+
       run.frame = advanceFappy(run.frame, run.gates, run.gatesPerLeg, run.flapTicks, resolveTargetTick(now));
+      emitFrameChange(steppedFrom, run.frame, run.flapTicks);
 
       if (run.frame.outcome !== null) {
         settleRun(run);

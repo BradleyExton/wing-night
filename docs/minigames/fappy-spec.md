@@ -22,8 +22,8 @@ to flap, come down on that plateau and the tablet changes hands. A crash sends t
 to the perch of the last gate it cleared. One clock runs from the first tap to the last
 landing, handoffs included, and the team's points come from that time.
 
-No content file, no room timer (host-paced like JOUST; the relay clock is the game's own),
-no audio.
+No content file, no room timer (host-paced like JOUST; the relay clock is the game's own). The
+TV carries the game's sound: a soundboard of synthesised cues, no audio files (§0.10).
 
 ### 0.2 Order of work (each step ends with the gate green)
 
@@ -312,6 +312,29 @@ leg 1 and the idle clock.
   file split for it: `champPaint` (the maths), `paintGate` (the per-gate attribute writes),
   the splat helpers in `pose`. Sample-fixture e2e was unchanged: the autopilot takes a splat
   as a shove and flies on.
+
+- **Sound (2026-09-23).** §0.1 said "no audio" and the corridor was silent. It now has a
+  soundboard: `client/audio`, pure Web Audio — oscillators, one buffer of deterministic noise
+  and gain envelopes, no assets, no dependency. Nine cues: `flap` (a 60 ms fwip, the quietest
+  thing on the board bar the next one), `gateCleared` (a tiny blip, so thirty-two of them read
+  as a rhythm picking up), `crash` (splat plus thud), `bump` (the eagle's shove and the glob's
+  landing share a squelch), `handoff` (two bright notes), `finish` (an air horn), `timedOut`
+  (three notes down), and the clock's `tick` once a second past par, replaced by a low
+  double-thump `heartbeat` for the last 15 s that swells as the limit closes
+  (`resolveClockCue`, `resolveHeartbeatGain`). **Display only** — the tablet sits on a table
+  and the TV is the room's speaker. ONE module-level `AudioContext` for the package, resumed on
+  every cue rather than made and closed per cue as `useTimesUpChime` does, because a game that
+  flaps ten times a second would burn through contexts; nothing ever closes it. Every cue is
+  best-effort: no `AudioContext`, or one the room has not unlocked with the display's
+  `AudioUnlockOverlay` tap yet, is silence and a retry on the next cue, never an exception —
+  which is also why a headless Playwright run is clean. The TV's master music volume is **not**
+  applied: it lives in room state and reaches the display's `<audio>` element, while a minigame
+  renderer's props carry no volume and reaching past them would break the minigame boundary, so
+  the board runs at a fixed modest master gain instead. Wiring is one reader: `useFappyMirror`
+  already steps every frame of the TV's replay, so it gained an additive `onEvent`, and
+  `mirrorEvents` diffs two frames into what the room should hear (flaps come from the log, since
+  a frame carries no record of one). `useFappySounds` maps those to cues and owns the phase,
+  handoff and clock edges.
 
 ## 1) One-liner
 
