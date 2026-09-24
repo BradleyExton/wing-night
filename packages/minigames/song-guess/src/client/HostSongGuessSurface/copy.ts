@@ -21,6 +21,9 @@ export const hostSongGuessSurfaceCopy = {
   skipSongButtonLabel: "Skip song",
   doneLabel: "Set complete — advance the phase when the room is ready.",
   scoringTitle: "Score this song",
+  // Both halves ruled: the TV has flipped to the card and the room is reading
+  // it, so the pad's heading says so instead of asking for a score again.
+  scoringOnDisplayTitle: "On the TV",
   titleRowLabel: "Title",
   artistRowLabel: "Artist",
   correctLabel: "✓",

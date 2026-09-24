@@ -159,6 +159,18 @@ test("reflects a ruling the host has already made", () => {
   assert.match(html, /aria-pressed="true"/);
 });
 
+// The TV flips to the card on the second mark; the pad says so, and keeps
+// both rulings live so the host can still change one.
+test("tells the host the card is on the TV once both halves are ruled", () => {
+  const currentScore: SongGuessTeamScore = { title: true, artist: false };
+  const html = renderSurface(hostView({ phase: "reveal", currentScore }));
+
+  assert.match(html, /On the TV/);
+  assert.doesNotMatch(html, /Score this song/);
+  assert.equal(isDisabled(html, "Next song"), false);
+  assert.match(html, /aria-label="Mark Artist correct"/);
+});
+
 test("offers the skip escape hatch before the answer is on screen", () => {
   assert.equal(isDisabled(renderAtPhase("idle"), "Skip song"), false);
   assert.equal(isDisabled(renderAtPhase("clip_playing"), "Skip song"), false);

@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/song-guess/`
 
-Last updated: 2026-09-24 (information asymmetry named)
+Last updated: 2026-09-24 (held reveal beat, information asymmetry named)
 
 > **Read §0 first.** This document is the 2026-05-01 draft, kept for its
 > reasoning. Where the build diverged from it, §0 is what actually shipped and
@@ -42,7 +42,8 @@ Last updated: 2026-09-24 (information asymmetry named)
   the client knows the server origin — `resolveSongAudioSrc(fileName, origin)`
   builds it, mirroring `resolveAnthemSrc`. The filename in the display view is the
   same class of disclosure as GEO's `imageSrc`; the ANSWER fields stay host-only
-  until reveal, which is what the answer-safety tests pin.
+  until the ruling is complete (the reveal bullet below), which is what the
+  answer-safety tests pin.
 - **The autoplay gate already existed.** `DisplayBoard`'s `AudioUnlockOverlay`
   (built for team anthems) now also fires for any round whose renderer bundle
   declares `requiresDisplayAudio`, so no second primer flow was added.
@@ -63,6 +64,19 @@ Last updated: 2026-09-24 (information asymmetry named)
   `content/local/minigames/song-guess/audio/`. SONG_GUESS is deliberately NOT
   scheduled in the sample `gameConfig.json`, so the default demo night is
   unchanged — schedule it in your local config for a real run.
+- **The reveal is a held beat on the TV, and it lands on the second mark, not
+  on the Reveal tap** (2026-09-24). The answer fields stay host-only until the
+  host has ruled on BOTH title and artist — the reveal phase before that shows
+  "And the ruling is…" and plays nothing, so the answer-safety tests now pin the
+  ruling screen too. The second mark puts up a reveal card — title, original
+  artist, each ruling as a hit or a miss, the song's points — and starts the
+  original from `revealStart`. The runtime stamps `revealedAtMs` /
+  `expiresAtMs` (`SONG_GUESS_REVEAL_MS = 2000`) the way DRAWING's plaque does,
+  and the display holds the card for that window timed from arrival
+  (`useHeldSongReveal`, via `resolveRevealDurationMs`) even after `nextSong`
+  lands: a display-side render window, never a server timer, so the host's next
+  tap is never blocked. No reveal sting — the package has no cue pattern beyond
+  the song's own `<audio>`, and the original starting is the sting.
 - **E2E covers the surfaces through the dev sandbox**
   (`tests/e2e/song-guess-sandbox.spec.ts`), not a live round: the suite's
   convention is that no spec changes round scheduling, since the seeded content
@@ -77,10 +91,12 @@ Last updated: 2026-09-24 (information asymmetry named)
   the answer fields, until reveal (§0, "the display view carries the audio filename"). Unlike
   DRAWING, the person holding the secret is the referee, not a contestant: the active team is on
   the room's side of the line, so the spectating teams are guessing too, silently.
-- **Collapses on `triggerReveal`** (§4 step 4): the display view's `reveal` carries the title, the
-  artist and the reveal audio (§7.3), and the host marks the team's spoken answer against it (§4
-  step 5). There is no lock-in before the collapse: the answer is verbal, which is the missing
-  commit beat named in the design principles §12.
+- **Collapses on the second mark, not the Reveal tap** (§0, held reveal bullet): the Reveal tap
+  moves the game to the ruling screen, the host marks the team's spoken title and artist against
+  the answer on the tablet (§4 step 5), and only once both marks are in does the display view's
+  `reveal` carry the title, the artist and the reveal audio (§7.3), held for `SONG_GUESS_REVEAL_MS`.
+  There is no lock-in before the collapse: the answer is verbal, which is the missing commit beat
+  named in the design principles §12.
 - Per-team turns exist to keep this asymmetry intact: with every team playing at once, the first
   shout spoiled the song for the room (§0, first bullet).
 

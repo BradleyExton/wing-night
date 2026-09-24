@@ -14,6 +14,8 @@ export type SongPlaybackSnapshot = {
   songCursor: number;
   replayUsed: boolean;
   clipStartSeconds: number | null;
+  // `null` through the whole of the reveal phase until the host has ruled on
+  // both halves: the view withholds the reveal, and this withholds the cover.
   revealStartSeconds: number | null;
 };
 
@@ -26,9 +28,22 @@ export const resolveSongPlaybackIntent = (
   const isNewSong = previous === null || previous.songCursor !== current.songCursor;
 
   if (current.phase === "reveal") {
-    // Re-entering reveal is the only thing that restarts the cover; a re-render
-    // while already revealed must not jump the track back.
-    if (!isNewSong && previous?.phase === "reveal") {
+    // The original plays with the card, not before it: while the host is still
+    // ruling the view carries no reveal, and the clip stays paused where the
+    // host stopped it. A `play` with no seek here would RESUME the cover mid-
+    // clip, which is the second listen the replay rule caps.
+    if (current.revealStartSeconds === null) {
+      return !isNewSong && previous?.phase === "reveal" ? NO_INTENT : { kind: "pause" };
+    }
+
+    // The ruling completing is the only thing that starts the original; a
+    // re-render while the card is up — the host changing a verdict — must not
+    // jump the track back.
+    if (
+      !isNewSong &&
+      previous?.phase === "reveal" &&
+      previous.revealStartSeconds !== null
+    ) {
       return NO_INTENT;
     }
 

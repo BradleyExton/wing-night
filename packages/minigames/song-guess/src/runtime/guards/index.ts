@@ -91,6 +91,13 @@ export const isSongGuessRuntimeState = (
     return false;
   }
 
+  if (
+    state.revealedAtMs !== null &&
+    !(typeof state.revealedAtMs === "number" && Number.isFinite(state.revealedAtMs))
+  ) {
+    return false;
+  }
+
   return isRecordOf(
     state.pendingPointsByTeamId,
     (entry) => typeof entry === "number"

@@ -65,9 +65,15 @@ export const SongScoringPad = ({
   canDispatchAction,
   onMark
 }: SongScoringPadProps): JSX.Element => {
+  const isFullyRuled = currentScore.title !== null && currentScore.artist !== null;
+
   return (
     <div className={styles.card} data-song-guess-scoring>
-      <span className={styles.title}>{hostSongGuessSurfaceCopy.scoringTitle}</span>
+      <span className={styles.title}>
+        {isFullyRuled
+          ? hostSongGuessSurfaceCopy.scoringOnDisplayTitle
+          : hostSongGuessSurfaceCopy.scoringTitle}
+      </span>
       <div className={styles.rows}>
         <MarkRow
           label={hostSongGuessSurfaceCopy.titleRowLabel}

@@ -30,16 +30,32 @@ const clipView = (
   }
 });
 
-const revealView: SongGuessMinigameDisplayView = {
+// The host has opened the ruling and has not finished it.
+const rulingView: SongGuessMinigameDisplayView = {
+  ...baseView,
+  phase: "reveal",
+  reveal: null
+};
+
+const revealViewWith = (
+  verdict: { title: boolean; artist: boolean },
+  pointsEarned: number
+): SongGuessMinigameDisplayView => ({
   ...baseView,
   phase: "reveal",
   reveal: {
     title: ANSWER_TITLE,
     artist: ANSWER_ARTIST,
     audioFileName: "smells-like-teen-spirit.mp3",
-    revealStart: 45
+    revealStart: 45,
+    verdict,
+    pointsEarned,
+    revealedAtMs: 1_000,
+    expiresAtMs: 3_000
   }
-};
+});
+
+const revealView = revealViewWith({ title: true, artist: true }, 2);
 
 const renderSurface = (
   minigameDisplayView: SongGuessMinigameDisplayView | null,
@@ -75,21 +91,60 @@ test("switches to the lock-in prompt when the host pauses", () => {
 });
 
 // The whole point of the answer-safe projection: a player looking at the TV
-// must not be able to read the answer off it before the host reveals.
-test("never renders the title or artist before the reveal", () => {
-  for (const phase of ["idle", "clip_playing", "clip_paused"] as const) {
-    const html = renderSurface(clipView(phase));
+// must not be able to read the answer off it before the host has ruled on
+// both halves — the ruling screen included.
+test("never renders the title or artist before the ruling is complete", () => {
+  for (const view of [
+    clipView("idle"),
+    clipView("clip_playing"),
+    clipView("clip_paused"),
+    rulingView
+  ]) {
+    const html = renderSurface(view);
 
     assert.doesNotMatch(html, new RegExp(ANSWER_TITLE));
     assert.doesNotMatch(html, new RegExp(ANSWER_ARTIST));
   }
 });
 
-test("shows the title and original artist on reveal", () => {
+test("says the ruling is coming while the host is still marking", () => {
+  const html = renderSurface(rulingView);
+
+  assert.match(html, /data-song-guess-ruling/);
+  assert.match(html, /And the ruling is/);
+  assert.doesNotMatch(html, /data-song-guess-reveal/);
+});
+
+test("shows the title and original artist once both halves are ruled", () => {
   const html = renderSurface(revealView);
 
+  assert.match(html, /data-song-guess-reveal/);
   assert.match(html, new RegExp(ANSWER_TITLE));
   assert.match(html, new RegExp(ANSWER_ARTIST));
+});
+
+// The react half of the beat: each ruling as a hit or a miss, and what the
+// song was worth — this song's points, never the running total.
+test("marks each half a hit or a miss with the points the song earned", () => {
+  const html = renderSurface(revealViewWith({ title: true, artist: false }, 1));
+
+  assert.match(html, /data-song-guess-verdict="hit"/);
+  assert.match(html, /data-song-guess-verdict="miss"/);
+  assert.match(html, /\+1 point this song/);
+  assert.doesNotMatch(html, /\+4/);
+});
+
+test("says when the song earned nothing", () => {
+  const html = renderSurface(revealViewWith({ title: false, artist: false }, 0));
+
+  assert.match(html, /No points this song/);
+  assert.doesNotMatch(html, /\+\d/);
+});
+
+// Under react-dom/server no effect runs, so nothing is ever held: the card
+// that renders is the live one.
+test("renders the live card, not a held one, on a static render", () => {
+  assert.doesNotMatch(renderSurface(revealView), /data-song-guess-reveal-held/);
 });
 
 // The marquee is the surface's chrome for the whole of the play phase, so the

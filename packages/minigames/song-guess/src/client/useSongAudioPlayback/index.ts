@@ -16,10 +16,13 @@ export const resolvePlaybackSnapshot = (
     songCursor: view.songCursor,
     replayUsed: view.replayUsed,
     clipStartSeconds: "clip" in view ? view.clip.clipStart : null,
-    revealStartSeconds: "reveal" in view ? view.reveal.revealStart : null
+    revealStartSeconds:
+      "reveal" in view && view.reveal !== null ? view.reveal.revealStart : null
   };
 };
 
+// While the host is still ruling the view carries neither block, and the
+// element keeps the clip it already has: the src effect leaves a `null` alone.
 export const resolveAudioFileName = (
   view: SongGuessMinigameDisplayView
 ): string | null => {
@@ -27,7 +30,7 @@ export const resolveAudioFileName = (
     return view.clip.audioFileName;
   }
 
-  if ("reveal" in view) {
+  if ("reveal" in view && view.reveal !== null) {
     return view.reveal.audioFileName;
   }
 
