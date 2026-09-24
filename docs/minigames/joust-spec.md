@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/joust/`
 
-Last updated: 2026-09-23 (the loadout: content-authored projectile kinds with their own physics; Centennial Beach at dusk, beach props by `kind`, four Barrie lanes; the bench walks: turn-ordered line, walk-off, the shooter grabs the band)
+Last updated: 2026-09-23 (the loadout: content-authored projectile kinds with their own physics; Centennial Beach at dusk, beach props by `kind`, four Barrie lanes; the bench walks: turn-ordered line, walk-off, the shooter grabs the band; 2026-09-24 information asymmetry named)
 
 ## 1) One-liner
 
@@ -98,6 +98,18 @@ it is.
   teammate never carries over to the next. A pack with no `shooters` plays exactly as before: the
   Standard alone, and no picker.
 - Host-paced (`timerKey: null`): the turn ends when every player has shot, or when the rack is clear.
+
+### Information asymmetry
+
+- **Kind: nobody knows.** Where the shot lands is decided by the integrator after release (§2
+  "hard commit, then spectator physics"; §4 "server simulates, display projects"). Host and display
+  views carry the same fields, so nothing is withheld from the room (§4 "Nothing is secret").
+- **Collapses during the replay**, over the seconds a shot is in the air (§4, the keyframe track),
+  and is complete when the rack settles and the felled players are latched down (§3, bistable
+  pins). The release is the commit; after it the room has nothing to do but watch.
+- The room's read is the lane itself. The ghost of the last shot (§3) gives the shooter and the
+  spectators the same information about the aim, and the spectating teams are stood on the
+  perches as the rack (§2, §3), so the collapse lands on them personally.
 
 ## 4) Architecture
 

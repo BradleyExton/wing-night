@@ -2,7 +2,7 @@
 
 Status: Draft for implementation
 
-Last updated: 2026-09-21
+Last updated: 2026-09-24 (information asymmetry named)
 
 ## 1) Goals
 
@@ -50,6 +50,19 @@ For the active team turn:
 6. Runtime clears the emoji sequence and advances `subjectCursor` to the next subject.
 7. Loop until phase timer fires; phase advances via the existing room flow.
 8. If the picker hits Got It on the last subject in the shuffled list (theoretically possible if `pointsMax > deck.subjects.length`, but the deck-selection gate prevents this), the runtime blocks further `markCorrect` / `skipSubject` actions until the timer ends.
+
+### Information asymmetry
+
+- **Kind: the player knows, the room does not.** The subject text, and any `lockedEmojis`, is on
+  the picker's tablet only (§7.2); the TV gets the emoji sequence as it is built and nothing else
+  (§1, §7.3). The picker's teammates are guessing with the room, knowing only what the picker has
+  managed to say in emoji, which is what makes the team shout (§4 steps 3–4).
+- **Collapses on Got It / Skip**: `reveal` carries the subject text and the outcome to the TV for
+  `REVEAL_MS` (2 s) (§4 step 5, §6.3, §7.3). Both actions reveal, so unlike DRAWING a skip still
+  pays the room its answer. As built, the turn's last verdict rides in `turn_complete` too
+  (`EmojiCharadesMinigameDisplayView`), so the final subject is never left unrevealed.
+- The clue is public from the first emoji: the room watches the sentence assemble on the TV in
+  real time (§8.2), so the collapse is gradual until the plaque drops.
 
 ## 5) Config And Content Contracts
 

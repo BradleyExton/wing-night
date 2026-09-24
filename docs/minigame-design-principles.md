@@ -11,7 +11,7 @@ paper; the evidence, with quotes and URLs, is in
 here are that file's finding numbers (`3.1`, `7.1`). Where a principle is our inference
 rather than something a source says, it is marked *(synthesis)* there too.
 
-Last updated: 2026-09-23
+Last updated: 2026-09-24
 
 ---
 
@@ -331,8 +331,10 @@ decisions.
   Item 2 wants a visible lock before the title appears on the TV.
 - **The pack schedule** has two back-to-back recall games and two back-to-back perform
   games (item 25); see the worked example in §7.
-- **No game states its information asymmetry** in its spec (item 10). The shipped games all
-  have one; writing it down is what stops the next game from having none.
+- ~~**No game states its information asymmetry** in its spec (item 10).~~ Done 2026-09-24:
+  every spec in `docs/minigames/` carries an "Information asymmetry" subsection that names its
+  kind and its collapse, and the three shipped games without a spec (TRIVIA, RECREATE, SCHLONIC)
+  say theirs in the Doc column of the [roadmap table](minigames/README.md#roadmap).
 
 ---
 

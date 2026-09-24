@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/fappy/`
 
-Last updated: 2026-09-23 (line-up pass, the balance pass, then the pressure pass)
+Last updated: 2026-09-24 (line-up pass, the balance pass, the pressure pass; information asymmetry named)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on.** Adding a `MinigameType`
 > breaks every `Record<MinigameType, …>` in the repo until fully wired (authoring guide §1),
@@ -394,6 +394,18 @@ leg 1 and the idle clock.
   subtraction. Past par the ghost parks and the bar beyond it fills heat toward the limit. One
   bird-head tall (~30px at 1080p) so the letterboxed corridor keeps its height. (6) The sandbox's
   dev manifest banks one rival 9 points, because a fixture with a zeroed board has no target to draw.
+
+### 0.11 Information asymmetry
+
+- **Kind: nobody knows.** Every flap is a commit and the sim decides the rest; nothing is withheld
+  from the room (§0.5, "host and display carry the same fields"). The TV is a mirror about 100 ms
+  behind the tablet (§0.3), so the room sees each gate resolve a beat after the flyer does.
+- **Collapses continuously, gate by gate**, and finally on the last landing when `elapsedMs` and
+  `points` are set (§0.5). A crash collapses it hard and reopens it at once: the bird respawns on
+  the last cleared perch and the clock keeps running (§0.3).
+- The open question for the room is not whether but how fast, and the pressure pass (§0.10) is
+  what makes that legible from the couch: points draining live, the time to beat, and the pace
+  strip's two heads. Without those the room had a race with no readable stake.
 
 ## 1) One-liner
 

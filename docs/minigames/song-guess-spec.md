@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/song-guess/`
 
-Last updated: 2026-09-16
+Last updated: 2026-09-24 (information asymmetry named)
 
 > **Read §0 first.** This document is the 2026-05-01 draft, kept for its
 > reasoning. Where the build diverged from it, §0 is what actually shipped and
@@ -68,6 +68,21 @@ Last updated: 2026-09-16
   convention is that no spec changes round scheduling, since the seeded content
   root is shared across a run. Socket sync and refresh-rehydrate are
   minigame-agnostic and covered by the existing specs.
+
+### Information asymmetry (as built)
+
+- **Kind: the tablet holder knows, the room does not, and the holder is the host.** The answer
+  (title and artist) is on the host tablet from the first bar (§7.2 `currentSong`); the TV and the
+  active team get the clip and nothing else. The display view carries the audio filename, never
+  the answer fields, until reveal (§0, "the display view carries the audio filename"). Unlike
+  DRAWING, the person holding the secret is the referee, not a contestant: the active team is on
+  the room's side of the line, so the spectating teams are guessing too, silently.
+- **Collapses on `triggerReveal`** (§4 step 4): the display view's `reveal` carries the title, the
+  artist and the reveal audio (§7.3), and the host marks the team's spoken answer against it (§4
+  step 5). There is no lock-in before the collapse: the answer is verbal, which is the missing
+  commit beat named in the design principles §12.
+- Per-team turns exist to keep this asymmetry intact: with every team playing at once, the first
+  shout spoiled the song for the room (§0, first bullet).
 
 ## 1) Goals
 

@@ -2,7 +2,7 @@
 
 Status: Draft for implementation
 
-Last updated: 2026-04-29
+Last updated: 2026-09-24 (information asymmetry named; body is the 2026-04-29 spec)
 
 ## 1) Goals
 
@@ -50,6 +50,18 @@ For the active team turn:
 7. Runtime clears the canvas and advances to the next prompt.
 8. Turn continues until the phase timer fires; host advances phase using existing phase controls.
 9. `skipPrompt` advances to the next prompt with no score change and no reveal.
+
+### Information asymmetry
+
+- **Kind: the player knows, the room does not.** The prompt is on the tablet the whole time the
+  drawer holds it (§2, §7.2 `currentPrompt`) and never on the TV during drawing (§7.3). The
+  drawer's own teammates are on the room's side of the line: they guess from the strokes like
+  everybody else, which is what makes them shout (§4 steps 4–5).
+- **Collapses on `markCorrect` / `markIncorrect`**: the resolved prompt text reaches the TV as
+  `reveal` for `PROMPT_REVEAL_MS` (2 s) with the outcome badge (§6.3, §7.3). `skipPrompt` never
+  reveals (§4 step 9), so a skipped prompt stays the drawer's secret.
+- The strokes themselves are never secret: the TV renders them live from the server projection
+  (§8.2), so the room watches the gap close between the drawing and the word.
 
 ## 5) Config And Content Contracts
 
