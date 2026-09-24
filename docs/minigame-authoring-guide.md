@@ -5,6 +5,9 @@ Use this to keep implementation small, modular, and compatible with current host
 
 ## 0) Guardrails
 
+- Before any of this: the game has passed the review in
+  [minigame-design-principles.md](minigame-design-principles.md) §11. This guide makes a
+  game run; that file is what makes it worth running.
 - Server remains authoritative for state, timers, and scoring.
 - Host and display render from `minigameHostView` and `minigameDisplayView`.
 - Display view must never include answer/secret fields.

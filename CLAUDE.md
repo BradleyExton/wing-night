@@ -2,7 +2,8 @@
 
 LAN-first party game: an authoritative Node server, a host tablet surface and a TV display, synced
 over Socket.IO. `SPEC.md` is the product scope, `DESIGN.md` the visual system, `AGENTS.md` the
-engineering standards, `BACKLOG.md` what's left to build.
+engineering standards, `BACKLOG.md` what's left to build, and
+`docs/minigame-design-principles.md` what makes a minigame worth building.
 
 ## Verify before claiming done
 

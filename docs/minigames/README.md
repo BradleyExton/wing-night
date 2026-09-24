@@ -2,7 +2,7 @@
 
 Index of every minigame — shipped, building, spec'd, or still just a sketch.
 
-Last updated: 2026-09-18
+Last updated: 2026-09-23
 
 ## Stages
 
@@ -43,12 +43,12 @@ the spec explains why raw reaction time is mostly a sobriety test.
 
 ## Adding an idea
 
-Drop a file in [`ideas/`](ideas/) using [`ideas/_template.md`](ideas/_template.md). Two lines is fine. Update the table above so the index reflects reality.
+Drop a file in [`ideas/`](ideas/) using [`ideas/_template.md`](ideas/_template.md). Two lines is fine, plus the template's Principles check — the starred items of [minigame-design-principles.md](../minigame-design-principles.md) §11. Update the table above so the index reflects reality.
 
 ## Promoting an idea to a spec
 
 When an idea hits `confidence: ready`:
 
-1. Move `ideas/<slug>.md` → `<slug>-spec.md` and flesh it out — use [drawing-spec.md](drawing-spec.md) as a reference shape.
+1. Move `ideas/<slug>.md` → `<slug>-spec.md` and flesh it out — use [drawing-spec.md](drawing-spec.md) as a reference shape, and answer the full [design principles checklist](../minigame-design-principles.md#11-the-review-checklist); where the answer is no, the spec says why the game is worth it anyway.
 2. Update the table.
 3. Scaffold the package under `packages/minigames/<slug>/` (see [minigame-authoring-guide.md](../minigame-authoring-guide.md)).
