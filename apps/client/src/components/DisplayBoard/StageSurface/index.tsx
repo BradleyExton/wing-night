@@ -90,6 +90,11 @@ const MinigamePlayBody = ({
       activeTeamName={stageViewModel.activeTeamName}
       minigameDisplayView={stageViewModel.minigameDisplayView}
       remainingTimerSeconds={liveMinigameRemainingSeconds}
+      totalTimerSeconds={
+        stageViewModel.minigameTimerSnapshot !== null
+          ? Math.round(stageViewModel.minigameTimerSnapshot.durationMs / 1000)
+          : null
+      }
     />
   );
 };

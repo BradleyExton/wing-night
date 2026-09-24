@@ -1,5 +1,6 @@
 import { useMemo, useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import { NeonMarquee } from "@wingnight/surface";
 import type { FappyMinigameDisplayView, FappyMinigameLeg } from "@wingnight/shared";
 import { resolveFappyGates } from "@wingnight/shared";
 
@@ -7,6 +8,7 @@ import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
 import { FappyScene, type FappySceneHandle } from "../FappyScene/index.js";
 import { resolveLegBird } from "../resolveLegBird/index.js";
 import { useFappyMirror } from "../useFappyMirror/index.js";
+import { useFappySounds } from "../useFappySounds/index.js";
 import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
 import { formatRelayClock, useRelayClock } from "../useRelayClock/index.js";
 import { displayFappySurfaceCopy } from "./copy.js";
@@ -94,11 +96,13 @@ const FappyPlayBody = ({
   view,
   activeTeamName,
   clock,
+  clockLine,
   serverOrigin
 }: {
   view: FappyMinigameDisplayView;
   activeTeamName: string | null;
   clock: ReactNode;
+  clockLine: ReactNode;
   serverOrigin: string | null;
 }): JSX.Element => {
   const sceneRef = useRef<FappySceneHandle>(null);
@@ -136,33 +140,38 @@ const FappyPlayBody = ({
         ? styles.marqueeClockPastPar
         : "";
 
-  useFappyMirror({ leg, gatesPerLeg: view.gatesPerLeg, sceneRef });
+  // The TV is the room's speaker, so FAPPY's whole soundboard hangs off this one surface.
+  const handleFappySound = useFappySounds({ view, hold, elapsedMs });
+
+  useFappyMirror({ leg, gatesPerLeg: view.gatesPerLeg, sceneRef, onEvent: handleFappySound });
 
   return (
     <div className={styles.stage}>
-      <header className={styles.marquee}>
-        <span className={styles.marqueeBulbs} aria-hidden="true" />
-        <h2 className={styles.marqueeTeamName}>{activeTeamName ?? ""}</h2>
-        <span className={styles.marqueeTitle}>{displayFappySurfaceCopy.title}</span>
-        <div className={styles.marqueeMeta}>
-          <span className={styles.marqueeLeg}>
-            {displayFappySurfaceCopy.legCounter(legIndex + 1, view.legsPerTurn)}
-          </span>
-          <span className={styles.marqueeGates}>
-            {displayFappySurfaceCopy.gatesCounter(
-              view.totalGatesCleared,
-              view.legsPerTurn * view.gatesPerLeg
-            )}
-          </span>
-          <span className={`${styles.marqueeClock} ${clockClassName}`} data-fappy-clock>
-            {elapsedMs === null ? displayFappySurfaceCopy.clockIdle : formatRelayClock(elapsedMs)}
-          </span>
-          {/* The relay clock above is the LEG's and FAPPY's own; this is the
-              room's, and FAPPY is `timerKey: null` so it draws nothing and
-              costs nothing. */}
-          {clock}
-        </div>
-      </header>
+      <NeonMarquee
+        title={displayFappySurfaceCopy.title}
+        teamName={activeTeamName}
+        readout={
+          <>
+            <span className={styles.marqueeLeg}>
+              {displayFappySurfaceCopy.legCounter(legIndex + 1, view.legsPerTurn)}
+            </span>
+            <span className={styles.marqueeGates}>
+              {displayFappySurfaceCopy.gatesCounter(
+                view.totalGatesCleared,
+                view.legsPerTurn * view.gatesPerLeg
+              )}
+            </span>
+            {/* The relay clock is the LEG's and FAPPY's own; the shell's
+                `clock` and `clockLine` are the room's, and FAPPY is
+                `timerKey: null` so they draw nothing and cost nothing. */}
+            <span className={`${styles.marqueeClock} ${clockClassName}`} data-fappy-clock>
+              {elapsedMs === null ? displayFappySurfaceCopy.clockIdle : formatRelayClock(elapsedMs)}
+            </span>
+          </>
+        }
+        clock={clock}
+        clockLine={clockLine}
+      />
       <div className={styles.arenaArea}>
         <div key={legIndex} className={styles.legEnter}>
           <FappyScene
@@ -190,6 +199,7 @@ export const DisplayFappySurface = ({
   minigameDisplayView,
   activeTeamName,
   clock,
+  clockLine,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const fappyView = minigameDisplayView?.minigame === "FAPPY" ? minigameDisplayView : null;
@@ -211,6 +221,7 @@ export const DisplayFappySurface = ({
       view={fappyView}
       activeTeamName={activeTeamName}
       clock={clock}
+      clockLine={clockLine}
       serverOrigin={serverOrigin}
     />
   );

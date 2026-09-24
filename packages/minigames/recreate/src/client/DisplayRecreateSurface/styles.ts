@@ -7,15 +7,10 @@ export const stage =
 export const frameWall =
   "flex h-full min-h-0 w-full flex-col gap-[clamp(0.75rem,1.4vw,1.4rem)] px-[clamp(1rem,2.5vw,2.5rem)] py-[clamp(0.75rem,1.6vw,1.6rem)]";
 
-// RECREATE is `timerKey: null`, so the clock slot at the end of this row
-// draws nothing and the masthead runs the full width of the wall. It used to
-// stop 18rem short of it to clear a chip that never came.
-export const header =
-  "flex flex-wrap items-baseline justify-between gap-4 border-b border-text/10 pb-[clamp(0.5rem,0.9vw,0.9rem)]";
-
-export const headerTitle =
-  "m-0 text-[clamp(1.2rem,2vw,2.2rem)] font-black uppercase tracking-[0.3em] text-primary";
-
+// The masthead is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D),
+// the same sign every other game hangs; the studio's subtitle rides in its
+// readout slot. RECREATE is `timerKey: null`, so the sign's clock and its
+// track stay dark.
 export const headerMeta =
   "m-0 text-[clamp(0.8rem,1.2vw,1.3rem)] font-semibold uppercase tracking-[0.2em] text-muted";
 

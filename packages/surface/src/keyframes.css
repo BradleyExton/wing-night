@@ -42,3 +42,28 @@
     transform: translateX(150%);
   }
 }
+
+/* `NeonMarquee`'s kicker: the whole sign dips for a frame or two every few
+ * seconds, the way a tube on a tired transformer does. Stepped, never eased —
+ * a neon sign does not fade, it cuts. */
+@keyframes signflicker {
+  0%,
+  93%,
+  100% {
+    opacity: 1;
+  }
+
+  94%,
+  96% {
+    opacity: 0.35;
+  }
+
+  95%,
+  97% {
+    opacity: 1;
+  }
+
+  98% {
+    opacity: 0.55;
+  }
+}

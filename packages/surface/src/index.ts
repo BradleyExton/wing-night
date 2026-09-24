@@ -20,3 +20,8 @@ export { TakeoverCanvas, type TakeoverCanvasProps } from "./TakeoverCanvas/index
 // grown a byte-identical copy of (§8, owner's decision P2: `RunningTotals`,
 // because `StandingsSurface` on the TV is the standings and this is not it).
 export { RunningTotals } from "./RunningTotals/index.js";
+// The TV's minigame marquee (DESIGN.md §2.2D, ADR-0006). One container for all
+// nine display surfaces, taking content and never a class string — the
+// refusal T5.2 recorded was of a container each game would CONFIGURE; this one
+// is not configurable, which is the whole reason it can be shared.
+export { NeonMarquee, type NeonMarqueeProps } from "./NeonMarquee/index.js";

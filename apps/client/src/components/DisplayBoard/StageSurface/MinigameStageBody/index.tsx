@@ -5,6 +5,7 @@ import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
 import { useServerOrigin } from "../../../../utils/useServerOrigin";
 import { displayBoardCopy } from "../../copy";
 import { MinigameTimerChip } from "../MinigameTimerChip";
+import { MinigameTimerLine } from "../MinigameTimerLine";
 import * as styles from "./styles";
 
 type MinigameStageBodyProps = {
@@ -13,6 +14,7 @@ type MinigameStageBodyProps = {
   activeTeamName: string | null;
   minigameDisplayView: RoomState["minigameDisplayView"];
   remainingTimerSeconds?: number | null;
+  totalTimerSeconds?: number | null;
 };
 
 export const MinigameStageBody = ({
@@ -20,7 +22,8 @@ export const MinigameStageBody = ({
   minigameType,
   activeTeamName,
   minigameDisplayView,
-  remainingTimerSeconds = null
+  remainingTimerSeconds = null,
+  totalTimerSeconds = null
 }: MinigameStageBodyProps): JSX.Element => {
   // Unconditional: the early returns below must not sit between the hook and
   // the component's first render pass.
@@ -53,13 +56,21 @@ export const MinigameStageBody = ({
           eight surfaces reserved a corner for it and six of those corners were
           empty — only three minigames declare a `timerKey`. The surface puts
           it in its marquee's meta cell and an absent clock costs no width
-          (docs/takeover-layout-api.md §6). */}
+          (docs/takeover-layout-api.md §6). The clock is two slots since the
+          Neon Heat Line marquee (ADR-0006): the digits pill, and the lit
+          length in the track under the row. Same seconds, both null together. */}
       <minigameRendererBundle.DisplaySurface
         phase={phase}
         minigameType={minigameType}
         minigameDisplayView={minigameDisplayView}
         activeTeamName={activeTeamName}
         clock={<MinigameTimerChip remainingSeconds={remainingTimerSeconds} />}
+        clockLine={
+          <MinigameTimerLine
+            remainingSeconds={remainingTimerSeconds}
+            totalSeconds={totalTimerSeconds}
+          />
+        }
         serverOrigin={serverOrigin}
       />
     </div>

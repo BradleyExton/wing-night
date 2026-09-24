@@ -1,5 +1,5 @@
 export const displayDrawingSurfaceCopy = {
-  marqueeTitle: "★ Live Sketch ★",
+  marqueeTitle: "Live Sketch",
   pendingChip: (points: number): string => `+${points} pending`,
   introMessage:
     "Artists, limber up. The canvas goes live when the round starts.",

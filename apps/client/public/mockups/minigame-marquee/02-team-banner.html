@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Minigame Marquee — 02 Team Banner (click: next turn · U: last 15s)</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      /* The turn's team owns the header outright: its colour, its genre face.
+         The show title is a stamp on the banner, not the banner. */
+      .banner {
+        display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: clamp(1rem, 2vw, 2rem);
+        background: var(--team) repeating-linear-gradient(-55deg, rgba(0,0,0,0.07) 0 14px, transparent 14px 28px);
+        color: #0b0b0b; padding: clamp(0.5rem, 1vh, 0.9rem) clamp(1.4rem, 2.4vw, 2.4rem);
+        border-radius: 8px; box-shadow: 0 12px 30px rgba(0,0,0,0.55), inset 0 -6px 0 rgba(0,0,0,0.25);
+        transition: background-color 400ms ease;
+      }
+      .team {
+        font-family: var(--team-font); font-size: clamp(2rem, 3.6vw, 4rem); line-height: 1.05; letter-spacing: 0.02em;
+        display: flex; align-items: baseline; gap: 0.5em; min-width: 0; white-space: nowrap;
+      }
+      .team small {
+        font-family: ui-monospace, monospace; font-weight: 900; font-size: 0.42em; letter-spacing: 0.02em;
+        background: #0b0b0b; color: var(--team); padding: 0.2em 0.55em; border-radius: 4px;
+      }
+      .stamp {
+        display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1;
+        font-weight: 900; text-transform: uppercase; letter-spacing: 0.24em; font-size: clamp(0.65rem, 0.95vw, 1rem);
+        border-right: 3px solid rgba(0,0,0,0.5); padding-right: clamp(1rem, 2vw, 2rem);
+      }
+      .stamp b { font-size: 1.55em; letter-spacing: 0.18em; }
+      .stamp span { opacity: 0.7; }
+      .clock {
+        font-family: ui-monospace, monospace; font-weight: 900; font-size: clamp(1.6rem, 2.6vw, 2.9rem);
+        background: #0b0b0b; color: var(--team); padding: 0.15em 0.6em; border-radius: 6px; letter-spacing: -0.02em;
+        transition: color 300ms ease;
+      }
+      body.urgent .clock { color: var(--heat); animation: heatpulse 0.65s ease-in-out infinite; }
+      body.timeup .clock { color: var(--heat); font-size: clamp(0.9rem, 1.3vw, 1.4rem); letter-spacing: 0.16em; padding-block: 0.7em; }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="banner">
+        <div class="team"><span data-slot="team">Team</span><small data-slot="pending">+0</small></div>
+        <div class="stamp"><b data-slot="title">Title</b><span data-slot="counter">Counter</span></div>
+        <div class="clock tnum" data-slot="clock">0:00</div>
+      </header>
+      <div class="body"><span>game body</span></div>
+    </div>
+    <p class="legend"><b>click</b> next turn · <b>U</b> last 15s</p>
+    <script src="kit.js"></script>
+  </body>
+</html>

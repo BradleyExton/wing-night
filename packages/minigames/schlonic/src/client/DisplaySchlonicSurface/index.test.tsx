@@ -7,7 +7,6 @@ import type {
   SchlonicPlayerFigure
 } from "@wingnight/shared";
 
-import { marqueeBulbs } from "@wingnight/surface";
 
 import { DisplaySchlonicSurface } from "./index.js";
 
@@ -59,6 +58,7 @@ const render = (
       minigameDisplayView={view}
       activeTeamName="Team Alpha"
       clock={null}
+      clockLine={null}
       serverOrigin={null}
     />
   );
@@ -103,10 +103,9 @@ test("carries nothing the host view does not, because a zone has no secrets", ()
   assert.ok(markup.includes("data-schlonic-scene"));
 });
 
-// T5.2: this surface descends from DRAWING's marquee but was missing its bulb
-// ring, because the copy that made it took the two text styles and left the
-// overlay behind — while keeping the `relative` that exists only to position
-// it. The ring is the shared token now, so this pins that it is actually hung.
-test("does hang the shared bulb ring on the marquee", () => {
-  assert.ok(render(createView()).includes(marqueeBulbs));
+// ADR-0006: the marquee is one shared component, not a container each game
+// copies and a ring each copy could forget. This pins that the surface hangs
+// THAT sign and not a private one — the drift the bulb-ring test used to catch.
+test("does hang the shared neon marquee", () => {
+  assert.ok(render(createView()).includes("data-neon-marquee"));
 });

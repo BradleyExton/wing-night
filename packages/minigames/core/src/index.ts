@@ -166,6 +166,11 @@ export type MinigameDisplayRendererProps = {
   // whether the chip renders because there is no reserve. `null` from any
   // harness that has no room clock to show.
   clock: ReactNode;
+  // The clock's other half: the lit length the shell's `MinigameTimerLine`
+  // draws in the marquee's track under the row, burning down as the turn
+  // runs. Same contract as `clock` — null for a room with no timer, and a
+  // surface seats it in `<NeonMarquee clockLine>` and nowhere else.
+  clockLine: ReactNode;
   // Origin of the asset-serving Express app, for surfaces that fetch
   // server-hosted media. There is no dev proxy in this repo, so the display is
   // always a different origin from the server and a root-relative media URL
