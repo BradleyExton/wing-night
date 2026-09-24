@@ -15,6 +15,7 @@ const shotWithHeadAt = (heads: Array<[number, number]>): JoustMinigameShot => ({
   isRackCleared: false,
   points: 0,
   aim: { x: -0.8, y: 0.3 },
+  shooterId: "standard",
   pinPlayerIds: [],
   rubblePerchIndices: [],
   run: {

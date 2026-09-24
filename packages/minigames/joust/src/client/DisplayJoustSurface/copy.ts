@@ -10,6 +10,8 @@ export const displayJoustSurfaceCopy = {
     `${standingCount}/${rackSize} standing`,
   sceneLabel: (arenaName: string): string => `Slingshot lane — ${arenaName}`,
   shooterPrompt: (name: string): string => `${name} — pull back and let it fly`,
+  shooterWithKindPrompt: (name: string, kindName: string): string =>
+    `${name} is up with ${kindName}`,
   aimingPrompt: "Pull back… and let it fly",
   aimingDrawnPrompt: "Steady…",
   flyingPrompt: "It's away!",

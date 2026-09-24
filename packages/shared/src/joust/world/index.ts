@@ -1,3 +1,4 @@
+import { JOUST_STANDARD_SHOOTER_PROFILE } from "../shooterProfile/index.js";
 import type {
   JoustAim,
   JoustArena,
@@ -5,6 +6,7 @@ import type {
   JoustFrame,
   JoustObstacle,
   JoustPerch,
+  JoustShooterProfile,
   JoustVec2
 } from "../types.js";
 
@@ -33,11 +35,6 @@ export const JOUST_WORLD = {
   gravity: 118
 } as const;
 
-const SHOOTER_SPACING = 3;
-const SHOOTER_SHAFT_RADIUS = 2.3;
-const SHOOTER_HEAD_RADIUS = 3.3;
-const SHOOTER_BALL_RADIUS = 2.5;
-
 /**
  * A pin is two bodies: a foot on the sand and a head on top of it, an upright stick between. The
  * three numbers are the CAST BIRD's own proportions at lane scale — `@wingnight/cast` says a
@@ -51,10 +48,6 @@ export const JOUST_PIN_HEIGHT = 11.6;
 
 export const JOUST_SHOOTER_SHAFT_COUNT = 5;
 
-const shooterShaft: JoustBodyDescriptor = {
-  kind: "shooter-shaft",
-  radius: SHOOTER_SHAFT_RADIUS
-};
 const pinFoot: JoustBodyDescriptor = { kind: "pin-foot", radius: JOUST_PIN_FOOT_RADIUS };
 const pinHead: JoustBodyDescriptor = { kind: "pin-head", radius: JOUST_PIN_HEAD_RADIUS };
 
@@ -73,13 +66,26 @@ export const JOUST_LEG_RADIUS = JOUST_PERCH_LEG_WIDTH / 2;
 const legFoot: JoustBodyDescriptor = { kind: "leg-foot", radius: JOUST_LEG_RADIUS };
 const legTop: JoustBodyDescriptor = { kind: "leg-top", radius: JOUST_LEG_RADIUS };
 
-/** The shooter's own bodies, tail → head, then the two balls hung off the tail. */
-const JOUST_SHOOTER_BODIES: readonly JoustBodyDescriptor[] = Object.freeze([
-  ...Array.from({ length: JOUST_SHOOTER_SHAFT_COUNT }, () => shooterShaft),
-  { kind: "shooter-head", radius: SHOOTER_HEAD_RADIUS },
-  { kind: "shooter-ball", radius: SHOOTER_BALL_RADIUS },
-  { kind: "shooter-ball", radius: SHOOTER_BALL_RADIUS }
-]);
+/**
+ * The shooter's own bodies, tail → head, then the two balls hung off the tail. The COUNT is fixed
+ * whatever kind is on the band — only the radii follow the profile — so every index below and
+ * every frame a renderer reads holds for every kind.
+ */
+export const resolveJoustShooterBodies = (
+  profile: JoustShooterProfile = JOUST_STANDARD_SHOOTER_PROFILE
+): readonly JoustBodyDescriptor[] => {
+  const shaft: JoustBodyDescriptor = { kind: "shooter-shaft", radius: profile.shaftRadius };
+  const ball: JoustBodyDescriptor = { kind: "shooter-ball", radius: profile.ballRadius };
+
+  return [
+    ...Array.from({ length: JOUST_SHOOTER_SHAFT_COUNT }, () => shaft),
+    { kind: "shooter-head", radius: profile.headRadius },
+    ball,
+    ball
+  ];
+};
+
+const JOUST_SHOOTER_BODIES = resolveJoustShooterBodies();
 
 export const JOUST_SHOOTER_HEAD_INDEX = JOUST_SHOOTER_SHAFT_COUNT;
 export const JOUST_SHOOTER_BALL_INDICES = [
@@ -115,13 +121,16 @@ export const joustLegTopIndex = (pinCount: number, legIndex: number): number => 
  */
 export const resolveJoustBodies = (
   pinCount: number,
-  legCount = 0
+  legCount = 0,
+  profile: JoustShooterProfile = JOUST_STANDARD_SHOOTER_PROFILE
 ): readonly JoustBodyDescriptor[] => {
   const safeCount = Math.max(0, Math.trunc(pinCount));
   const safeLegCount = Math.max(0, Math.trunc(legCount));
 
   return [
-    ...JOUST_SHOOTER_BODIES,
+    ...(profile === JOUST_STANDARD_SHOOTER_PROFILE
+      ? JOUST_SHOOTER_BODIES
+      : resolveJoustShooterBodies(profile)),
     ...Array.from({ length: safeCount * 2 }, (_unused, index) =>
       index % 2 === 0 ? pinFoot : pinHead
     ),
@@ -478,17 +487,30 @@ export const resolveJoustHeading = (aim: JoustAim): JoustVec2 => {
   return { x: -clamped.x / magnitude, y: -clamped.y / magnitude };
 };
 
-/** Launch velocity in world units per second: the heading scaled by how far the band was pulled. */
-export const resolveJoustLaunchVelocity = (aim: JoustAim): JoustVec2 => {
+/**
+ * Launch velocity in world units per second: the heading scaled by how far the band was pulled,
+ * and by how hard the kind on it can be thrown.
+ */
+export const resolveJoustLaunchVelocity = (
+  aim: JoustAim,
+  profile: JoustShooterProfile = JOUST_STANDARD_SHOOTER_PROFILE
+): JoustVec2 => {
   const clamped = clampJoustAim(aim);
   const heading = resolveJoustHeading(clamped);
-  const speed = length(clamped) * JOUST_WORLD.maxLaunchSpeed;
+  const speed = length(clamped) * JOUST_WORLD.maxLaunchSpeed * profile.launchSpeedScale;
 
   return { x: heading.x * speed, y: heading.y * speed };
 };
 
+/** The balls hang this far behind the tail and this far to either side, per unit of their radius. */
+const BALL_BACK_PER_RADIUS = 1.4 / 2.5;
+const BALL_SIDE_PER_RADIUS = 2.4 / 2.5;
+
 /** Where the shooter's bodies sit while the band is pulled, before anything moves. */
-export const resolveShooterRestPositions = (aim: JoustAim): JoustVec2[] => {
+export const resolveShooterRestPositions = (
+  aim: JoustAim,
+  profile: JoustShooterProfile = JOUST_STANDARD_SHOOTER_PROFILE
+): JoustVec2[] => {
   const clamped = clampJoustAim(aim);
   const heading = resolveJoustHeading(clamped);
   const head: JoustVec2 = {
@@ -498,7 +520,7 @@ export const resolveShooterRestPositions = (aim: JoustAim): JoustVec2[] => {
   const positions: JoustVec2[] = [];
 
   for (let index = 0; index < JOUST_SHOOTER_SHAFT_COUNT; index += 1) {
-    const distance = (JOUST_SHOOTER_SHAFT_COUNT - index) * SHOOTER_SPACING;
+    const distance = (JOUST_SHOOTER_SHAFT_COUNT - index) * profile.linkSpacing;
     positions.push({
       x: head.x - heading.x * distance,
       y: head.y - heading.y * distance
@@ -509,8 +531,8 @@ export const resolveShooterRestPositions = (aim: JoustAim): JoustVec2[] => {
 
   const tail = positions[0] ?? head;
   const perpendicular: JoustVec2 = { x: -heading.y, y: heading.x };
-  const ballBack = 1.4;
-  const ballSide = 2.4;
+  const ballBack = BALL_BACK_PER_RADIUS * profile.ballRadius;
+  const ballSide = BALL_SIDE_PER_RADIUS * profile.ballRadius;
 
   positions.push({
     x: tail.x - heading.x * ballBack + perpendicular.x * ballSide,
@@ -545,10 +567,11 @@ export const resolveLegRestPositions = (arena: JoustArena): JoustVec2[] => {
 /** The full body set at rest for a pull — what both surfaces draw while the team is aiming. */
 export const resolveJoustRestPositions = (
   arena: JoustArena,
-  aim: JoustAim
+  aim: JoustAim,
+  profile: JoustShooterProfile = JOUST_STANDARD_SHOOTER_PROFILE
 ): JoustVec2[] => {
   return [
-    ...resolveShooterRestPositions(aim),
+    ...resolveShooterRestPositions(aim, profile),
     ...resolvePinRestPositions(arena),
     ...resolveLegRestPositions(arena)
   ];
@@ -575,8 +598,12 @@ export const readJoustFramePosition = (
 };
 
 /** The rest pose as a frame, so renderers draw the aiming scene through the same path as a track. */
-export const resolveJoustRestFrame = (arena: JoustArena, aim: JoustAim): JoustFrame => {
-  return toJoustFrame(resolveJoustRestPositions(arena, aim));
+export const resolveJoustRestFrame = (
+  arena: JoustArena,
+  aim: JoustAim,
+  profile: JoustShooterProfile = JOUST_STANDARD_SHOOTER_PROFILE
+): JoustFrame => {
+  return toJoustFrame(resolveJoustRestPositions(arena, aim, profile));
 };
 
 /**

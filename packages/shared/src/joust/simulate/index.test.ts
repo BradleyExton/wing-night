@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import {
+  JOUST_STANDARD_SHOOTER_PROFILE,
+  resolveJoustShooterProfile
+} from "../shooterProfile/index.js";
 import type { JoustShotRun } from "../types.js";
 import {
   JOUST_SHOOTER_BODY_COUNT,
@@ -13,10 +17,14 @@ import {
   joustPinFootIndex,
   joustPinHeadIndex,
   readJoustFramePosition,
+  resolveJoustBodies,
+  resolveJoustLaunchVelocity,
   resolveJoustLeanTilt,
   resolveJoustLegs,
   resolveJoustPinTilt,
-  resolveJoustRackSlots
+  resolveJoustRackSlots,
+  resolveJoustRestFrame,
+  resolveShooterRestPositions
 } from "../world/index.js";
 import { simulateJoustShot } from "./index.js";
 
@@ -305,4 +313,86 @@ test("rejects options the replay could not honour", () => {
     () => simulateJoustShot(OPEN_ARENA, { x: -1, y: 0 }, { ...OPTIONS, maxDurationSeconds: 0 }),
     RangeError
   );
+});
+
+// ---- Kinds ---------------------------------------------------------------------------------------
+//
+// The body count never changes with the kind: only the radii, the spacing, the shares and the
+// throw do. These pin the plumbing — that the profile reaches every lever it claims to — not the
+// tuning, which is the aim-space sweep's job (docs/minigames/joust-spec.md §7).
+
+const LOG = resolveJoustShooterProfile({
+  shaftRadius: 3.4,
+  headRadius: 4.8,
+  massShare: 0.06,
+  legShare: 0.06,
+  launchSpeedScale: 0.65
+});
+const PENCIL = resolveJoustShooterProfile({ shaftRadius: 1.4, headRadius: 2.2, launchSpeedScale: 1.3 });
+
+test("does fly the Standard profile when no kind is named, byte for byte", () => {
+  const unnamed = simulateJoustShot(OPEN_ARENA, TIMBER_AIM, OPTIONS);
+  const named = simulateJoustShot(OPEN_ARENA, TIMBER_AIM, {
+    ...OPTIONS,
+    shooter: JOUST_STANDARD_SHOOTER_PROFILE
+  });
+  const resolved = simulateJoustShot(OPEN_ARENA, TIMBER_AIM, {
+    ...OPTIONS,
+    shooter: resolveJoustShooterProfile({})
+  });
+
+  assert.equal(JSON.stringify(named), JSON.stringify(unnamed));
+  assert.equal(JSON.stringify(resolved), JSON.stringify(unnamed));
+});
+
+test("does keep the same body count for every kind", () => {
+  for (const shooter of [LOG, PENCIL]) {
+    const run = simulateJoustShot(OPEN_ARENA, { x: -0.7, y: 0.3 }, { ...OPTIONS, shooter });
+
+    for (const frame of run.keyframes) {
+      assert.equal(frame.length, bodyCount(RACK.length) * 2);
+    }
+  }
+  assert.equal(resolveJoustBodies(3, 2, LOG).length, resolveJoustBodies(3, 2).length);
+  assert.equal(resolveJoustBodies(0, 0, LOG)[JOUST_SHOOTER_HEAD_INDEX]?.radius, 4.8);
+});
+
+test("does rest a kind's links at its own spacing", () => {
+  const long = resolveJoustShooterProfile({ linkSpacing: 5 });
+  const rest = resolveShooterRestPositions({ x: -1, y: 0 }, long);
+  const tail = rest[0];
+  const next = rest[1];
+
+  assert.ok(tail !== undefined && next !== undefined);
+  assert.ok(Math.abs(next.x - tail.x - 5) < 1e-9);
+  assert.equal(resolveJoustRestFrame(OPEN_ARENA, { x: -1, y: 0 }, long).length, bodyCount(RACK.length) * 2);
+});
+
+test("does throw a kind as hard as its launch scale says", () => {
+  const standard = resolveJoustLaunchVelocity({ x: -1, y: 0 });
+  const soft = resolveJoustLaunchVelocity({ x: -1, y: 0 }, LOG);
+
+  assert.ok(Math.abs(soft.x - standard.x * 0.65) < 1e-9);
+});
+
+test("does fly a different track for a different kind from the same pull", () => {
+  const standard = simulateJoustShot(OPEN_ARENA, { x: -0.7, y: 0.3 }, OPTIONS);
+  const pencil = simulateJoustShot(OPEN_ARENA, { x: -0.7, y: 0.3 }, { ...OPTIONS, shooter: PENCIL });
+  const farthest = (run: JoustShotRun): number =>
+    Math.max(...run.keyframes.map((frame) => readJoustFramePosition(frame, JOUST_SHOOTER_HEAD_INDEX).x));
+
+  assert.notEqual(JSON.stringify(standard.keyframes[3]), JSON.stringify(pencil.keyframes[3]));
+  assert.ok(farthest(pencil) > farthest(standard), "the faster kind gets further down the lane");
+});
+
+test("does fold a tower under a heavy kind at a pull the Standard bounces off", () => {
+  // Found by scanning this lane: a full-power pull a shade lower than TIMBER_AIM ploughs the sand
+  // row with the Standard and stops at the leg; the Log, absorbing a sixth of what the Standard
+  // does at a leg, carries on through it.
+  const lowPull = { x: -0.95, y: 0.1 };
+  const standard = simulateJoustShot(OPEN_ARENA, lowPull, OPTIONS);
+  const log = simulateJoustShot(OPEN_ARENA, lowPull, { ...OPTIONS, shooter: LOG });
+
+  assert.equal(standard.collapses.length, 0, "the Standard leaves it standing from here");
+  assert.ok(log.collapses.length > 0, "the Log brings it down");
 });

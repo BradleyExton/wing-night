@@ -10,6 +10,7 @@ import { JOUST_OBSTACLE_KINDS } from "../../joust/types.js";
 import type { JoustObstacle, JoustPerch } from "../../joust/types.js";
 import { validatePromptPackFile } from "../promptPack/index.js";
 import type { ValidationIssue } from "../validationIssue/index.js";
+import { validateJoustShooters, type JoustShooterKind } from "./shooters/index.js";
 
 /** The ends of the lane a perch has to live between, and the highest it may lift anybody. */
 export const JOUST_MIN_PERCH_X = JOUST_RACK_LEFT;
@@ -63,6 +64,9 @@ export type JoustPrompt = {
 
 export type JoustContentFile = {
   prompts: JoustPrompt[];
+  // The loadout: every kind of projectile a shooter may pick from the tablet (`shooters/`).
+  // Absent means the Standard kind alone, and the picker never shows.
+  shooters?: JoustShooterKind[];
 };
 
 const isNonEmptyString = (value: unknown): value is string => {
@@ -235,7 +239,9 @@ export const validateJoustPrompt = (value: unknown): ValidationIssue[] => {
 };
 
 export const validateJoustContentFile = (value: unknown): ValidationIssue[] => {
-  return validatePromptPackFile(value, validateJoustPrompt);
+  const issues = validatePromptPackFile(value, validateJoustPrompt);
+
+  return isObjectLike(value) ? [...issues, ...validateJoustShooters(value.shooters)] : issues;
 };
 
 export const isJoustPrompt = (value: unknown): value is JoustPrompt => {

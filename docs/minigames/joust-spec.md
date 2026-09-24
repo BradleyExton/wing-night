@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/joust/`
 
-Last updated: 2026-09-23 (Centennial Beach at dusk, beach props by `kind`, four Barrie lanes; the bench walks: turn-ordered line, walk-off, the shooter grabs the band)
+Last updated: 2026-09-23 (the loadout: content-authored projectile kinds with their own physics; Centennial Beach at dusk, beach props by `kind`, four Barrie lanes; the bench walks: turn-ordered line, walk-off, the shooter grabs the band)
 
 ## 1) One-liner
 
@@ -87,6 +87,16 @@ it is.
   `y` clamped to `JOUST_WORLD.maxPullDown` (0.7): a steeper pull would plant the shooter's tail in
   the floor before launch. Forward pulls are pinned to slack by the tablet.
 - A pull shorter than `JOUST_MIN_LAUNCH_PULL` (0.12) does not fire and does not spend a shot.
+- **The loadout.** The projectile is a KIND, and the pack decides which kinds are on offer
+  (`shooters`, §5). Before pulling, the shooter taps a kind on the tablet; the TV shows it on the
+  band and names it ("Rob is up with The Log"). Each kind has its own physics profile and its own
+  look, and they genuinely do different things — proven by the aim-space sweep in §7, not by feel.
+  A kind may be rationed (`usesPerTurn`): the sample's Log, Pencil and Bouncer are one pull each
+  per TEAM turn, the Standard is unlimited. Firing spends a use; a skipped shot spends nothing;
+  `resetTurn` hands every kind back. After every shot the band reloads with the default kind — the
+  first unlimited one, else the first listed with a pull left — so a rationed kind picked by one
+  teammate never carries over to the next. A pack with no `shooters` plays exactly as before: the
+  Standard alone, and no picker.
 - Host-paced (`timerKey: null`): the turn ends when every player has shot, or when the rack is clear.
 
 ## 4) Architecture
@@ -151,6 +161,35 @@ it is.
   with the pull. None of it is state: the scene derives it from `teammates`,
   `activeShooterPlayerId`, `shotIndex` and `shotsPerTurn`, and the harness reads
   `data-joust-bench-slot` / `data-joust-walking` / `data-joust-facing` rather than transforms.
+- **A kind is a profile, and the body count never changes.** `JoustShooterProfile`
+  (`packages/shared/src/joust/types.ts`) is the eleven levers a kind pulls on the integrator:
+  the three radii, the link spacing, `massShare` (how much of a shot-versus-pin separation the
+  SHOT absorbs — small is heavy), `legShare` (the same against a tower's leg), `restitution` and
+  `slip` against the floor, slabs and obstacles, `bendStiffness`, `damping` and
+  `launchSpeedScale`. `JOUST_STANDARD_SHOOTER_PROFILE` (`shooterProfile/`) is the constants
+  that used to be hard-coded in `world/` and `simulate/`, and a content kind is a diff against
+  it (`resolveJoustShooterProfile`). What a kind never changes is the body COUNT — five shaft
+  links, a head, two balls — so frame indexing, `joustPinFootIndex` and every renderer hold for
+  every kind. `resolveJoustBodies`, `resolveShooterRestPositions`, `resolveJoustRestFrame` and
+  `resolveJoustLaunchVelocity` take the profile as a trailing optional argument;
+  `simulateJoustShot` reads it off `options.shooter`, so a shot is still a pure function of
+  lane + aim + seed + kind.
+- **The runtime holds the loadout resolved.** `runtime/loadout/` reads a content kind into
+  `JoustRuntimeShooter` — `usesPerTurn: null` for unlimited and the FULL profile, plain JSON —
+  and falls back to the Standard kind when the file authors none. The prompt-pack adapter
+  carries `prompts` and nothing else by design, so `runtime/content/` reads `shooters` beside
+  it. State carries `selectedShooterId` and `usedShooterIds` (one entry per pull); `pickShooter
+  { shooterId }` is accepted only while `aiming`, only for a kind the content carries with a pull
+  left; `launch` refuses a spent or vanished kind rather than firing a phantom, simulates with
+  the kind's profile and records the use; `lastShot` and `previousShotGhost` carry `shooterId`
+  so a replay and a ghost are drawn as the kind that flew them. Both views carry `shooters` (id,
+  name, blurb, colour, `usesLeft`, resolved profile) and `selectedShooterId`; the projection
+  test pins the display to exactly those and `usedShooterIds` is projected only as `usesLeft`.
+- **The client draws what the integrator flew.** `Shooter` takes the kind and reads its radii
+  off the profile and its inks off the content colour; `resolveJoustScene` picks the kind — the
+  one that flew during a replay, the one loaded at rest — and builds the rest frame at that
+  kind's link spacing, so the TV shows a Log as long as a Log while the tablet is still pulling.
+  `data-joust-shooter-kind` on the shooter group is what the e2e reads.
 - **Live pull on the TV.** `setAim` streams the band at ~12/s while dragging (the drawing canvas
   set the ~15/s budget). The tablet shows its own finger's pull immediately and yields to the
   server's echo when the drag ends.
@@ -228,6 +267,38 @@ every perch, dumps the whole rack on one bare row worth a point a head, and the 
 drawn on. One consequence is deliberate: the sand alone holds eleven, so **every authored lane must
 carry at least one shelf** — a bare-sand lane cannot seat a real party, which is the whole bug.
 
+### The loadout
+
+A top-level `shooters` array is the turn's loadout. Each entry is one kind:
+
+```json
+{
+  "id": "log",
+  "name": "The Log",
+  "blurb": "Big, slow, heavy. Ploughs the sand row and folds towers. Can't reach the top shelf.",
+  "color": { "fill": "#8b5a2b", "dark": "#4a2c12", "light": "#c48b55" },
+  "usesPerTurn": 1,
+  "profile": { "shaftRadius": 3.4, "headRadius": 4.8, "massShare": 0.06, "legShare": 0.06, "launchSpeedScale": 0.65 }
+}
+```
+
+`usesPerTurn` absent means unlimited. `profile` is a diff against the Standard profile — every
+lever left out is today's value — and each lever is validated inside the band the integrator is
+sane over (`JOUST_SHOOTER_PROFILE_RANGES` in `packages/shared/src/content/joust/shooters/`):
+radii, spacing, `massShare` and `legShare` in (0, 1], `restitution` in [0, 0.95], `slip` and
+`bendStiffness` in [0, 1], `damping` in [0.9, 1], `launchSpeedScale` in [0.5, 1.4]. An unknown
+lever name is an error, so a typo cannot silently do nothing. Ids must be unique. `color` is
+three `#rrggbb` inks (body, outline, gloss): drawing content, exempt from the two-accent budget,
+and best kept off the eight team colours because the hens in the lane wear those.
+
+A file with no `shooters` loads the Standard kind alone and the tablet's picker stays hidden, so
+every existing pack keeps working unchanged. The sample ships four: `standard` (unlimited),
+`log`, `pencil` and `bouncer` (one pull each), with the profiles the §7 sweep settled on.
+
+**A night pack can author its own loadout** — names, blurbs, colours, profiles, rations — but a
+pack `joust.json` replaces the WHOLE sample file, prompts included: there is no per-key merge,
+so a pack that wants the sample lanes with its own kinds copies the lanes across.
+
 The sample pack is deliberately **not** scheduled in the sample `gameConfig.json`, so the default
 demo night is unchanged. Schedule it with `"minigame": "JOUST"` on a round in
 `content/local/gameConfig.json` (or through `/admin`).
@@ -240,6 +311,66 @@ demo night is unchanged. Schedule it with `"minigame": "JOUST"` on a round in
 - Manual score override — the global scoring dock, as for every game.
 
 ## 7) Open questions
+
+### The kinds, by sweep (2026-09-23)
+
+Every aim on a 0.05 × 0.1 grid over the clamped pull space (250 aims a lane, upward pulls
+included — those fire into the sand and mostly die, so the absolute rates are diluted) against a
+**12-player rack** on the four sample lanes, seed 7. `score` is the share of aims that fell
+anybody; `mean` is points when scoring; `collapse` is towers folded; `top` is aims that felled
+somebody on the lane's highest shelf WITHOUT folding it; `excl` is aims where this kind scores
+and the Standard scores zero; `std>` / `kind>` is the head-to-head — which of the two scored
+more from the same pull.
+
+| kind     | lane        | score | mean  | collapse | top   | excl  | std> | kind> |
+| -------- | ----------- | ----- | ----- | -------- | ----- | ----- | ---- | ----- |
+| standard | Two Towers  | 36.4% | 5.23  | 9.2%     | 8.8%  | —     | —    | —     |
+| standard | Lookout     | 19.2% | 8.69  | 5.6%     | 0.0%  | —     | —    | —     |
+| standard | Front Porch | 12.0% | 13.43 | 8.8%     | 3.2%  | —     | —    | —     |
+| standard | Open Range  | 19.2% | 11.79 | 10.8%    | 8.4%  | —     | —    | —     |
+| log      | Two Towers  | 35.6% | 5.85  | 14.0%    | 0.0%  | 10.4% | 19.6% | 18.0% |
+| log      | Lookout     | 21.2% | 11.40 | 20.0%    | 0.0%  | 12.4% | 10.8% | 15.2% |
+| log      | Front Porch | 44.8% | 18.88 | 44.8%    | 0.0%  | 33.2% | 0.4% | 41.2% |
+| log      | Open Range  | 30.8% | 16.71 | 30.8%    | 0.0%  | 18.8% | 7.6% | 25.6% |
+| pencil   | Two Towers  | 44.8% | 3.16  | 0.0%     | 16.8% | 16.8% | 16.8% | 23.2% |
+| pencil   | Lookout     | 30.4% | 7.57  | 0.0%     | 6.0%  | 18.0% | 8.0% | 23.6% |
+| pencil   | Front Porch | 14.0% | 7.77  | 0.0%     | 14.0% | 13.2% | 11.2% | 13.2% |
+| pencil   | Open Range  | 18.4% | 8.87  | 0.0%     | 18.4% | 14.0% | 17.2% | 14.0% |
+| bouncer  | Two Towers  | 49.2% | 3.04  | 0.0%     | 14.8% | 20.4% | 16.0% | 24.0% |
+| bouncer  | Lookout     | 28.0% | 7.76  | 0.0%     | 4.4%  | 14.4% | 7.2% | 18.4% |
+| bouncer  | Front Porch | 11.6% | 9.24  | 0.0%     | 11.6% | 9.6%  | 10.0% | 10.0% |
+| bouncer  | Open Range  | 18.4% | 8.30  | 0.0%     | 18.4% | 12.8% | 16.8% | 13.2% |
+| **all**  | standard    | 21.7% | 8.58  | 8.6%     | 5.1%  | —     | —    | —     |
+| **all**  | log         | 33.1% | 13.68 | 27.4%    | 0.0%  | 18.7% | 9.6% | 25.0% |
+| **all**  | pencil      | 26.9% | 5.98  | 0.0%     | 13.8% | 15.5% | 13.3% | 18.5% |
+| **all**  | bouncer     | 26.8% | 5.85  | 0.0%     | 12.3% | 14.3% | 12.5% | 16.4% |
+
+What the table says, against the bars it was tuned to:
+
+- **The Log folds towers at 3.2× the Standard** (27.4% vs 8.6%) and can NEVER pick a bird off
+  the top shelf directly (0.0% vs 5.1%): at 65% launch speed it only reaches a shelf by bringing
+  it down. Its mean-when-scoring is higher on every lane — a folded tower is worth the whole
+  shelf, and no tuning that keeps 3× collapse moves that — so the trade shows in the head-to-head
+  instead: the Standard outscores it on 9.6% of aims (19.6% on Two Towers, where the Log's score
+  rate is also below the Standard's) and it is the slowest thing on the band.
+- **The Pencil reaches the Lookout's top shelf, which the Standard never does** (6.0% vs 0.0%),
+  and reaches the top shelf at 2.7× the Standard's direct rate over all lanes. It never folds a
+  tower, its mean is 30% lower, its best shot is 12–14 against the Standard's 14–21: it gets
+  there and stops.
+- **The Bouncer scores on 14.3% of aims where the Standard scores zero** — mid-power lobs that
+  land short and come off the sand or a slab into a shelf row (the whole Front Porch shelf, 12
+  points, from pulls the Standard's flop wastes). It never folds a tower and its tracks still
+  settle (≈92 keyframes against the Standard's ≈65, cap 109).
+
+Levers that turned out **dead or flat** in this sweep, so nobody re-tunes them expecting
+movement: `slip` at 0–0.05 and `restitution` at 0.9–0.95 are indistinguishable for the Bouncer;
+`restitution` 0.1 versus 0.2 barely moves the Log; `legShare` flattens below ~0.08 (0.06 and
+0.08 fold the same towers); `ballRadius` was never a lever on its own. `massShare` above ~0.3 is
+not a lighter kind but a dead one — at 0.45 the Pencil scored on 2% of aims — and
+`launchSpeedScale` is what reach is, on both ends: 1.3 is what puts the Pencil on the Lookout's
+shelf and 0.65 is what keeps the Log off Two Towers' far tower. As before, `PIN_LEG_SHARE` is
+dead and power alone is not a gate: what folds a tower is weight (`legShare`) at a leg, and a
+faster shot without it just bounces harder.
 
 - **Rack difficulty.** An aim-space sweep against a ten-player rack scores on 48–62% of aims
   depending on the lane, 2.4–4.3 players when it scores, best shot 6–9. Worth re-checking against a

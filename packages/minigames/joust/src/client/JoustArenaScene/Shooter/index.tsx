@@ -1,9 +1,9 @@
-import type { JoustFrame, JoustVec2 } from "@wingnight/shared";
+import type { JoustFrame, JoustShooterView, JoustVec2 } from "@wingnight/shared";
 import {
   JOUST_SHOOTER_BALL_INDICES,
   JOUST_SHOOTER_HEAD_INDEX,
-  readJoustFramePosition,
-  resolveJoustBodies
+  JOUST_STANDARD_SHOOTER_PROFILE,
+  readJoustFramePosition
 } from "@wingnight/shared";
 import { resolveSchlongFace, resolveSchlongPaths } from "@wingnight/cast";
 
@@ -13,39 +13,52 @@ export type ShooterProps = {
   frame: JoustFrame;
   // Which way it is going, for the eyes; null at rest, when it eyes the rack.
   velocity: JoustVec2 | null;
+  // The kind on the band — its proportions and its inks. Null draws the Standard in the
+  // lane's own orange, which is what a view with no loadout looks like.
+  kind: JoustShooterView | null;
 };
 
-const SHOOTER_BODIES = resolveJoustBodies(0);
-const SHAFT_RADIUS = SHOOTER_BODIES[0]?.radius ?? 2;
-const HEAD_RADIUS = SHOOTER_BODIES[JOUST_SHOOTER_HEAD_INDEX]?.radius ?? 3;
 const OUTLINE_WIDTH = 0.9;
 // At rest it eyes the rack down the lane; in flight it looks where it is going.
 const DOWN_THE_LANE: JoustVec2 = { x: 400, y: 0 };
 
+const STANDARD_INKS = {
+  fill: joustPalette.shooter,
+  dark: joustPalette.shooterDark,
+  light: joustPalette.shooterLight
+};
+
 // The thing on the band, drawn as the cast's schlong along its own physics
 // bodies: the five shaft links and the head are the spine, so every flop the
 // integrator gives it is in the outline, and the glans is the head body's
-// circle. The balls are the two bodies hung off the tail. It keeps the primary
-// orange: it is the team's shot, and the desert has no other orange thing.
-export const Shooter = ({ frame, velocity }: ShooterProps): JSX.Element => {
+// circle. The balls are the two bodies hung off the tail. Its radii are the
+// kind's profile — the same numbers the integrator collided with — and its
+// inks are the kind's colour from the content file, so a Log is fat and brown
+// on the tablet because it is fat and heavy in the sim.
+export const Shooter = ({ frame, velocity, kind }: ShooterProps): JSX.Element => {
+  const profile = kind?.profile ?? JOUST_STANDARD_SHOOTER_PROFILE;
+  const inks = kind?.color ?? STANDARD_INKS;
   const spine: JoustVec2[] = [];
 
   for (let index = 0; index <= JOUST_SHOOTER_HEAD_INDEX; index += 1) {
     spine.push(readJoustFramePosition(frame, index));
   }
 
-  const paths = resolveSchlongPaths(spine, { shaftRadius: SHAFT_RADIUS, headRadius: HEAD_RADIUS });
+  const paths = resolveSchlongPaths(spine, {
+    shaftRadius: profile.shaftRadius,
+    headRadius: profile.headRadius
+  });
   const lookAt =
     velocity === null || (velocity.x === 0 && velocity.y === 0)
       ? DOWN_THE_LANE
       : { x: paths.head.x + velocity.x * 100, y: paths.head.y + velocity.y * 100 };
-  const face = resolveSchlongFace(paths.head, HEAD_RADIUS, lookAt);
+  const face = resolveSchlongFace(paths.head, profile.headRadius, lookAt);
 
   return (
-    <g data-joust-shooter>
+    <g data-joust-shooter data-joust-shooter-kind={kind?.id ?? "standard"}>
       {JOUST_SHOOTER_BALL_INDICES.map((ballIndex) => {
         const ball = readJoustFramePosition(frame, ballIndex);
-        const radius = SHOOTER_BODIES[ballIndex]?.radius ?? 2;
+        const radius = profile.ballRadius;
 
         return (
           <g key={ballIndex}>
@@ -53,15 +66,15 @@ export const Shooter = ({ frame, velocity }: ShooterProps): JSX.Element => {
               cx={ball.x}
               cy={ball.y}
               r={radius}
-              fill={joustPalette.shooter}
-              stroke={joustPalette.shooterDark}
+              fill={inks.fill}
+              stroke={inks.dark}
               strokeWidth={OUTLINE_WIDTH}
             />
             <circle
               cx={ball.x - radius * 0.32}
               cy={ball.y - radius * 0.36}
               r={radius * 0.3}
-              fill={joustPalette.shooterLight}
+              fill={inks.light}
               opacity={0.7}
             />
           </g>
@@ -69,17 +82,17 @@ export const Shooter = ({ frame, velocity }: ShooterProps): JSX.Element => {
       })}
       <path
         d={paths.body}
-        fill={joustPalette.shooter}
-        stroke={joustPalette.shooterDark}
+        fill={inks.fill}
+        stroke={inks.dark}
         strokeWidth={OUTLINE_WIDTH}
         strokeLinejoin="round"
         data-joust-shooter-body
       />
-      <path d={paths.gloss} fill={joustPalette.shooterLight} opacity={0.62} />
+      <path d={paths.gloss} fill={inks.light} opacity={0.62} />
       <path
         d={paths.corona}
         fill="none"
-        stroke={joustPalette.shooterDark}
+        stroke={inks.dark}
         strokeWidth={0.65}
         strokeLinecap="round"
         opacity={0.85}
@@ -87,7 +100,7 @@ export const Shooter = ({ frame, velocity }: ShooterProps): JSX.Element => {
       <path
         d={paths.slit}
         fill="none"
-        stroke={joustPalette.shooterDark}
+        stroke={inks.dark}
         strokeWidth={0.5}
         strokeLinecap="round"
         opacity={0.8}
@@ -109,7 +122,7 @@ export const Shooter = ({ frame, velocity }: ShooterProps): JSX.Element => {
       <path
         d={face.mouth}
         fill="none"
-        stroke={joustPalette.shooterDark}
+        stroke={inks.dark}
         strokeWidth={0.4}
         strokeLinecap="round"
       />

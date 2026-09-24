@@ -4,6 +4,7 @@ import { RunningTotals, TakeoverCanvas } from "@wingnight/surface";
 
 import { resolveShotCopy } from "../shotResultCopy/index.js";
 import { AimArena } from "./AimArena/index.js";
+import { Loadout } from "./Loadout/index.js";
 import { ShotHistory } from "./ShotHistory/index.js";
 import { hostJoustSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -219,6 +220,8 @@ export const HostJoustSurface = ({
             downPlayerIds={joustView.downPlayerIds}
             collapsedPerchIndices={joustView.collapsedPerchIndices}
             previousShotGhost={joustView.previousShotGhost}
+            shooters={joustView.shooters}
+            selectedShooterId={joustView.selectedShooterId}
             serverOrigin={serverOrigin}
             aim={joustView.aim}
             lastShot={joustView.lastShot}
@@ -232,6 +235,17 @@ export const HostJoustSurface = ({
             }}
           />
           <LanePlate arenaName={arena.name} shooterName={shooter?.name ?? null} />
+          {/* The strategy layer: which kind is on the band. Rides in the sky
+              like the plate, and only its buttons take the pointer, so a pull
+              that starts beside it still pulls. */}
+          <Loadout
+            shooters={joustView.shooters}
+            selectedShooterId={joustView.selectedShooterId}
+            canPick={canAct && isAimingPhase}
+            onPick={(shooterId): void => {
+              onDispatchAction("pickShooter", { shooterId });
+            }}
+          />
         </div>
       )}
     </TakeoverCanvas>

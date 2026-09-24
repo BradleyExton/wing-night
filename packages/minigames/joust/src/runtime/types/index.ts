@@ -1,15 +1,22 @@
 import type {
   JoustAim,
-  JoustContentFile,
   JoustMinigameShot,
   JoustPhase,
   JoustPlayerFigure,
+  JoustPrompt,
   JoustShotGhost,
   JoustShotResult,
   JoustSimulateOptions
 } from "@wingnight/shared";
 
-export type JoustRuntimeContent = JoustContentFile;
+import type { JoustRuntimeShooter } from "../loadout/index.js";
+
+// The content file as the runtime reads it: the lanes, and the loadout with every kind resolved
+// (`loadout/`). `shooters` is never empty — a file that authors none gets the Standard kind.
+export type JoustRuntimeContent = {
+  prompts: JoustPrompt[];
+  shooters: JoustRuntimeShooter[];
+};
 
 export type JoustRuntimeRules = {
   shotsPerPlayer: number;
@@ -32,6 +39,12 @@ export type JoustRuntimeState = {
   collapsedPerchIndices: number[];
   // The shot before the one being aimed, for the next teammate to adjust off. Null on shot one.
   previousShotGhost: JoustShotGhost | null;
+  // Which kind of projectile is on the band, by id into the content's loadout. Reset to the
+  // default kind on every fresh band so a spent kind is never left selected.
+  selectedShooterId: string;
+  // Every kind this turn has fired, one entry per pull, so a rationed kind counts down and comes
+  // back with `resetTurn`. A skipped shot fires nothing and spends nothing.
+  usedShooterIds: string[];
   shotsPerTurn: number;
   shotIndex: number;
   phase: JoustPhase;

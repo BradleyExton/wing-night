@@ -70,14 +70,23 @@ const resolveStatusLine = (view: JoustMinigameDisplayView, replayFinished: boole
   }
 
   // Naming whoever is up is the whole point of passing the tablet round; the TV is where the
-  // room finds out it is their go.
+  // room finds out it is their go. When the pack carries a loadout, the room also hears what
+  // they have loaded — the choice is the strategy, and the strategy is for everyone.
   const shooter = view.teammates.find(
     (figure) => figure.playerId === view.activeShooterPlayerId
   );
+  const kind =
+    view.shooters.length > 1
+      ? (view.shooters.find((entry) => entry.id === view.selectedShooterId) ?? null)
+      : null;
 
-  return shooter === undefined
-    ? displayJoustSurfaceCopy.aimingPrompt
-    : displayJoustSurfaceCopy.shooterPrompt(shooter.name);
+  if (shooter === undefined) {
+    return displayJoustSurfaceCopy.aimingPrompt;
+  }
+
+  return kind === null
+    ? displayJoustSurfaceCopy.shooterPrompt(shooter.name)
+    : displayJoustSurfaceCopy.shooterWithKindPrompt(shooter.name, kind.name);
 };
 
 const JoustPlayBody = ({
@@ -116,7 +125,9 @@ const JoustPlayBody = ({
           aim: view.aim,
           lastShot: view.lastShot,
           replayIndex,
-          previousShotGhost: view.previousShotGhost
+          previousShotGhost: view.previousShotGhost,
+          shooters: view.shooters,
+          selectedShooterId: view.selectedShooterId
         });
   const nameByPlayerId = new Map(
     view.lineup.map((figure) => [figure.playerId, figure.name] as const)
@@ -162,6 +173,8 @@ const JoustPlayBody = ({
               burstPinIndices={scene.burstPinIndices}
               trail={scene.trail}
               ghost={scene.ghost}
+              shooter={scene.shooter}
+              shooters={view.shooters}
               serverOrigin={serverOrigin}
               sceneId="display-joust"
               label={displayJoustSurfaceCopy.sceneLabel(arena.name)}
