@@ -400,7 +400,9 @@ test("setRoomStateTriviaPrompts reprojects trivia state through runtime adapter 
   assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 1);
 });
 
-test("trivia turn order remains fixed across rounds", () => {
+// The base order is the host's and survives the round boundary; the round's
+// order rotates it, so round two's first trivia turn is the second team's.
+test("trivia keeps the base turn order across rounds while round two opens with the next team", () => {
   const allTriviaRoundsConfig: GameConfigFile = {
     ...gameConfigFixture,
     rounds: [
@@ -421,7 +423,8 @@ test("trivia turn order remains fixed across rounds", () => {
   snapshot = getRoomStateSnapshot();
   assert.equal(snapshot.phase, Phase.MINIGAME_PLAY);
   assert.deepEqual(snapshot.turnOrderTeamIds, ["team-1", "team-2"]);
-  assert.equal(snapshot.activeTurnTeamId, "team-1");
+  assert.equal(snapshot.activeRoundTeamId, "team-2");
+  assert.equal(snapshot.activeTurnTeamId, "team-2");
 });
 
 test("recordTriviaAttempt enforces minigame scoring cap", () => {
@@ -550,14 +553,18 @@ test("setPendingMinigamePoints enforces final-round scoring cap", () => {
   advanceToFinalRoundMinigamePlayPhase();
 
   assert.equal(getRoomStateSnapshot().currentRound, 2);
+  // Round two opens with the second team; the cap is about the round, so the
+  // points go to whoever is up.
+  const activeTeamId = "team-2";
+  assert.equal(getRoomStateSnapshot().activeRoundTeamId, activeTeamId);
 
-  setPendingMinigamePoints({ "team-1": 20 });
+  setPendingMinigamePoints({ [activeTeamId]: 20 });
   let snapshot = getRoomStateSnapshot();
-  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 20);
+  assert.equal(snapshot.pendingMinigamePointsByTeamId[activeTeamId], 20);
 
-  setPendingMinigamePoints({ "team-1": 21 });
+  setPendingMinigamePoints({ [activeTeamId]: 21 });
   snapshot = getRoomStateSnapshot();
-  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], 20);
+  assert.equal(snapshot.pendingMinigamePointsByTeamId[activeTeamId], 20);
 });
 
 // The undo point is a REFERENCE to the runtime state as it stood before the

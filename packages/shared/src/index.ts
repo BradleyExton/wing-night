@@ -204,6 +204,12 @@ export type {
   MusicPlaybackSource,
   RoomMusicPlaybackState
 } from "./musicPlayback/index.js";
+export {
+  resolveBaseTurnOrderTeamIds,
+  resolveRoomTurnOrderTeamIds,
+  resolveRoundTurnOrderTeamIds,
+  resolveTurnOrderRoundNumber
+} from "./turnOrder/index.js";
 export type {
   DrawingMinigameDisplayView,
   DrawingMinigameHostPrompt,

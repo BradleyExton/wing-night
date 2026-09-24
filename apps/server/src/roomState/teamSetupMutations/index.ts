@@ -1,4 +1,8 @@
-import { Phase } from "@wingnight/shared";
+import {
+  Phase,
+  resolveBaseTurnOrderTeamIds,
+  resolveTurnOrderRoundNumber
+} from "@wingnight/shared";
 
 import {
   syncSetupBaselinePlayersFromState,
@@ -149,6 +153,11 @@ export const autoAssignRemainingPlayers = defineRoomMutation({
 // ROUND_RESULTS before every round after it. `initializeRoundTurnState` re-reads
 // this order when the round's first team is called up, so an edit here always
 // lands on the round about to be played and never on the one in progress.
+//
+// `teamIds` is the list as the host sees it: the order the round about to
+// start will play in, first team first. Rounds rotate the base order (see
+// `resolveRoundTurnOrderTeamIds`), so what is stored is the base that rotates
+// into that list — before round one the two are the same thing.
 export const reorderTurnOrder = defineRoomMutation({
   requiredPhase: [Phase.INTRO, Phase.ROUND_RESULTS],
   run: (roomState, teamIds: string[]): boolean => {
@@ -156,17 +165,23 @@ export const reorderTurnOrder = defineRoomMutation({
       return false;
     }
 
+    const nextTurnOrderTeamIds = resolveBaseTurnOrderTeamIds(
+      teamIds,
+      resolveTurnOrderRoundNumber(roomState)
+    );
     const nextRoundTurnCursor = teamIds.length > 0 ? 0 : -1;
     const nextActiveRoundTeamId =
       nextRoundTurnCursor === -1 ? null : teamIds[nextRoundTurnCursor] ?? null;
     const didChange =
-      roomState.turnOrderTeamIds.length !== teamIds.length ||
-      roomState.turnOrderTeamIds.some((teamId, index) => teamId !== teamIds[index]) ||
+      roomState.turnOrderTeamIds.length !== nextTurnOrderTeamIds.length ||
+      roomState.turnOrderTeamIds.some(
+        (teamId, index) => teamId !== nextTurnOrderTeamIds[index]
+      ) ||
       roomState.roundTurnCursor !== nextRoundTurnCursor ||
       roomState.completedRoundTurnTeamIds.length !== 0 ||
       roomState.activeRoundTeamId !== nextActiveRoundTeamId;
 
-    roomState.turnOrderTeamIds = [...teamIds];
+    roomState.turnOrderTeamIds = nextTurnOrderTeamIds;
     roomState.roundTurnCursor = nextRoundTurnCursor;
     roomState.completedRoundTurnTeamIds = [];
     roomState.activeRoundTeamId = nextActiveRoundTeamId;

@@ -2,6 +2,7 @@ import type {
   MinigameRuntimeActionEnvelope,
   SerializableValue
 } from "@wingnight/minigames-core";
+import { resolveRoomTurnOrderTeamIds } from "@wingnight/shared";
 import type { MinigameType, RoomState } from "@wingnight/shared";
 
 import { resolveMinigameRuntimePlugin } from "../registry/index.js";
@@ -134,7 +135,9 @@ export const initializeActiveMinigameRuntimeState = (
 
   const runtimePlugin = resolveMinigameRuntimePlugin(descriptor.minigameId);
   const runtimeState = runtimePlugin.initialize({
-    teamIds: state.turnOrderTeamIds,
+    // The round's order, not the base: a plugin that seeds its content bank
+    // by a team's position sees where that team sits in THIS round.
+    teamIds: resolveRoomTurnOrderTeamIds(state),
     players: state.players,
     teams: state.teams,
     activeRoundTeamId: state.activeRoundTeamId,

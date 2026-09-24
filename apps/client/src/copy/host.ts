@@ -278,7 +278,7 @@ export const hostCopy = {
   },
   turnOrderSectionTitle: "Turn Order",
   turnOrderDescription:
-    "Adjust team order before the round begins. This order carries into later rounds until changed.",
+    "Adjust the order for the round about to start. Each round opens one team further down the list than the last.",
   turnOrderLockedDescription:
     "Turn order is locked once a round is under way. Edit before the game starts or between rounds.",
   turnOrderLockedStatusLabel: "Locked until the round ends",
