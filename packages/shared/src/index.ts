@@ -275,6 +275,7 @@ export type {
   SongGuessMinigameHostView,
   SongGuessPhase,
   SongGuessTeamScore,
+  SongGuessVerdict,
   TriviaMinigameDisplayView,
   TriviaMinigameHostView
 } from "./roomState/index.js";

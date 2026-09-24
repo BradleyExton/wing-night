@@ -82,12 +82,18 @@ const resolveMarkDelta = (
   return previousMark === true ? -SONG_GUESS_POINTS_PER_MARK : 0;
 };
 
+// The mark that completes the ruling — both halves no longer `null` — is the
+// moment the answer goes on the TV, so it is stamped from the envelope's
+// server clock (a re-ruling later keeps the original stamp: the card is
+// already up, it just changes its verdict). The stamp falls back to the
+// server's own clock for the fixtures written before envelopes carried one.
 const applyMark = (
   state: SongGuessRuntimeState,
   content: SongGuessRuntimeContent,
   field: keyof SongGuessTeamScore,
   correct: boolean,
-  pointsMax: number
+  pointsMax: number,
+  receivedAtMs: number | undefined
 ): MinigameRuntimeReductionResult => {
   const unchanged = { state, didMutate: false };
   const currentSong = resolveCurrentSong(state, content);
@@ -105,14 +111,19 @@ const applyMark = (
   }
 
   const previousPoints = state.pendingPointsByTeamId[activeTurnTeamId] ?? 0;
+  const nextScore = { ...previousScore, [field]: correct };
+  const isFullyRuled = nextScore.title !== null && nextScore.artist !== null;
+  const revealedAtMs =
+    state.revealedAtMs ?? (isFullyRuled ? (receivedAtMs ?? Date.now()) : null);
 
   return {
     state: {
       ...state,
       scoresBySongId: {
         ...state.scoresBySongId,
-        [currentSong.id]: { ...previousScore, [field]: correct }
+        [currentSong.id]: nextScore
       },
+      revealedAtMs,
       pendingPointsByTeamId: {
         ...state.pendingPointsByTeamId,
         [activeTurnTeamId]: Math.min(
@@ -138,7 +149,8 @@ const advanceToNextSong = (
       ...state,
       songCursor: hasNextSong ? nextSongCursor : state.songCursor,
       phase: hasNextSong ? "idle" : "done",
-      replayUsed: hasNextSong ? false : state.replayUsed
+      replayUsed: hasNextSong ? false : state.replayUsed,
+      revealedAtMs: null
     },
     didMutate: true
   };
@@ -174,7 +186,8 @@ export const songGuessRuntimePlugin: MinigameRuntimePlugin = {
       selectedSongIds,
       replayUsed: false,
       scoresBySongId: {},
-      pendingPointsByTeamId: { ...input.pendingPointsByTeamId }
+      pendingPointsByTeamId: { ...input.pendingPointsByTeamId },
+      revealedAtMs: null
     };
 
     return initialState;
@@ -188,7 +201,7 @@ export const songGuessRuntimePlugin: MinigameRuntimePlugin = {
 
     const state = input.state;
     const content = resolveSongGuessContent(input.content);
-    const { actionType, actionPayload } = input.envelope;
+    const { actionType, actionPayload, receivedAtMs } = input.envelope;
 
     if (actionType === "playClip") {
       if (state.phase !== "idle" && state.phase !== "clip_paused") {
@@ -235,7 +248,8 @@ export const songGuessRuntimePlugin: MinigameRuntimePlugin = {
         content,
         actionType === "markTitle" ? "title" : "artist",
         actionPayload.correct,
-        input.pointsMax
+        input.pointsMax,
+        receivedAtMs
       );
     }
 

@@ -1,8 +1,12 @@
 import { useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import { NeonMarquee } from "@wingnight/surface";
-import type { SongGuessMinigameDisplayView } from "@wingnight/shared";
+import type {
+  SongGuessMinigameDisplayReveal,
+  SongGuessMinigameDisplayView
+} from "@wingnight/shared";
 
+import { useHeldSongReveal } from "../useHeldSongReveal/index.js";
 import { useSongAudioPlayback } from "../useSongAudioPlayback/index.js";
 import { displaySongGuessSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -63,10 +67,73 @@ const SongGuessMarquee = ({
   />
 );
 
+const VerdictChip = ({ field, isHit }: { field: string; isHit: boolean }): JSX.Element => (
+  <span
+    className={isHit ? styles.verdictChipHit : styles.verdictChipMiss}
+    data-song-guess-verdict={isHit ? "hit" : "miss"}
+  >
+    <span className={styles.verdictField}>{field}</span>
+    <span className={isHit ? styles.verdictGlyphHit : styles.verdictGlyphMiss}>
+      {isHit
+        ? displaySongGuessSurfaceCopy.verdictHitGlyph
+        : displaySongGuessSurfaceCopy.verdictMissGlyph}
+    </span>
+    <span className={isHit ? styles.verdictWordHit : styles.verdictWordMiss}>
+      {isHit
+        ? displaySongGuessSurfaceCopy.verdictHit
+        : displaySongGuessSurfaceCopy.verdictMiss}
+    </span>
+  </span>
+);
+
+// The reveal-and-react beat: the answer and the ruling on it, in one card,
+// with the points this song earned. `isHeld` marks the render where the
+// server has already moved on and the TV is finishing the window
+// (`useHeldSongReveal`) — the e2e reads it, the styling does not change.
+const SongRevealCard = ({
+  reveal,
+  isHeld
+}: {
+  reveal: SongGuessMinigameDisplayReveal;
+  isHeld: boolean;
+}): JSX.Element => (
+  <div
+    className={styles.body}
+    data-song-guess-reveal
+    data-song-guess-reveal-held={isHeld ? "" : undefined}
+  >
+    <span className={styles.revealLabel}>
+      {displaySongGuessSurfaceCopy.revealLabel}
+    </span>
+    <p className={styles.revealTitle}>{reveal.title}</p>
+    <p className={styles.revealArtist}>
+      <span className={styles.revealArtistPrefix}>
+        {displaySongGuessSurfaceCopy.revealArtistPrefix}
+      </span>
+      {reveal.artist}
+    </p>
+    <div className={styles.verdictRow}>
+      <VerdictChip
+        field={displaySongGuessSurfaceCopy.verdictTitleField}
+        isHit={reveal.verdict.title}
+      />
+      <VerdictChip
+        field={displaySongGuessSurfaceCopy.verdictArtistField}
+        isHit={reveal.verdict.artist}
+      />
+    </div>
+    <p className={reveal.pointsEarned > 0 ? styles.pointsEarned : styles.pointsNone}>
+      {displaySongGuessSurfaceCopy.pointsEarned(reveal.pointsEarned)}
+    </p>
+  </div>
+);
+
 const SongGuessPlayBody = ({
-  view
+  view,
+  isHeld
 }: {
   view: SongGuessMinigameDisplayView;
+  isHeld: boolean;
 }): JSX.Element => {
   if (view.phase === "done") {
     return (
@@ -78,20 +145,18 @@ const SongGuessPlayBody = ({
   }
 
   if (view.phase === "reveal") {
-    return (
-      <div className={styles.body} data-song-guess-reveal>
-        <span className={styles.revealLabel}>
-          {displaySongGuessSurfaceCopy.revealLabel}
-        </span>
-        <p className={styles.revealTitle}>{view.reveal.title}</p>
-        <p className={styles.revealArtist}>
-          <span className={styles.revealArtistPrefix}>
-            {displaySongGuessSurfaceCopy.revealArtistPrefix}
-          </span>
-          {view.reveal.artist}
-        </p>
-      </div>
-    );
+    // The host has opened the ruling but has not finished it: the room hears
+    // nothing and reads nothing until both halves are in.
+    if (view.reveal === null) {
+      return (
+        <div className={styles.body} data-song-guess-ruling>
+          <p className={styles.prompt}>{displaySongGuessSurfaceCopy.rulingPrompt}</p>
+          <p className={styles.hint}>{displaySongGuessSurfaceCopy.rulingHint}</p>
+        </div>
+      );
+    }
+
+    return <SongRevealCard reveal={view.reveal} isHeld={isHeld} />;
   }
 
   if (view.phase === "clip_paused") {
@@ -119,11 +184,15 @@ export const DisplaySongGuessSurface = ({
   clockLine,
   serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
-  const songGuessView =
+  const liveView =
     minigameDisplayView?.minigame === "SONG_GUESS" ? minigameDisplayView : null;
   const mediaRef = useRef<HTMLAudioElement | null>(null);
 
-  useSongAudioPlayback({ view: songGuessView, serverOrigin, mediaRef });
+  // Audio follows the LIVE view: when the host moves on, the next clip is cued
+  // at once even while the picture finishes the reveal beat below.
+  useSongAudioPlayback({ view: liveView, serverOrigin, mediaRef });
+
+  const { view: songGuessView, isHeld } = useHeldSongReveal(liveView);
 
   return (
     <>
@@ -144,7 +213,7 @@ export const DisplaySongGuessSurface = ({
             clock={clock}
             clockLine={clockLine}
           />
-          <SongGuessPlayBody view={songGuessView} />
+          <SongGuessPlayBody view={songGuessView} isHeld={isHeld} />
         </div>
       )}
       {/* Rendered for the whole surface lifetime, not per phase, so seeking

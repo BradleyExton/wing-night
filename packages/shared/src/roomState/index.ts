@@ -593,18 +593,36 @@ export type DrawingMinigameDisplayView = MinigameDisplayViewBase & {
 // The clip the TV plays. Carrying the audio filename is the same class of
 // disclosure as GEO's `imageSrc`: an asset the display must fetch to render the
 // round at all. The ANSWER fields — title and artist — stay host-only until the
-// host triggers the reveal, which is what the answer-safety tests pin.
+// host has ruled on BOTH halves of it, which is what the answer-safety tests
+// pin: the room hears the ruling and reads the answer in the same beat.
 export type SongGuessMinigameDisplayClip = {
   audioFileName: string;
   clipStart: number;
   clipEnd: number;
 };
 
+// Both halves ruled, so neither is `null` here — a pending mark never reaches
+// the TV, and a reveal with one half missing is not a reveal.
+export type SongGuessVerdict = {
+  title: boolean;
+  artist: boolean;
+};
+
+// The reveal card, and a `MinigameRevealWindow` like DRAWING's: both stamps are
+// the server's clock, and the TV times the hold from arrival for the
+// difference between them (`resolveRevealDurationMs`), never against its own
+// `Date.now()`.
 export type SongGuessMinigameDisplayReveal = {
   title: string;
   artist: string;
   audioFileName: string;
   revealStart: number;
+  verdict: SongGuessVerdict;
+  // This song's points, not the turn's running total — the total stays off
+  // this surface (DESIGN.md §2.13).
+  pointsEarned: number;
+  revealedAtMs: number;
+  expiresAtMs: number;
 };
 
 export type SongGuessMinigameDisplayView = MinigameDisplayViewBase & {
@@ -621,7 +639,9 @@ export type SongGuessMinigameDisplayView = MinigameDisplayViewBase & {
         phase: "idle" | "clip_playing" | "clip_paused";
         clip: SongGuessMinigameDisplayClip;
       }
-    | { phase: "reveal"; reveal: SongGuessMinigameDisplayReveal }
+    // `reveal` is `null` while the host is still ruling: the phase is on the
+    // TV as "and the ruling is…", the answer is not.
+    | { phase: "reveal"; reveal: SongGuessMinigameDisplayReveal | null }
     | { phase: "done" }
   );
 

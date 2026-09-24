@@ -77,17 +77,36 @@ test("restarts when the song changes even if the phase did not", () => {
   );
 });
 
-test("seeks to revealStart when the host reveals the answer", () => {
+// The original is the answer too, so it is held with the card: entering the
+// reveal phase pauses, and nothing plays until both halves are ruled.
+test("stays paused while the host is still ruling", () => {
   assert.deepEqual(
     resolveSongPlaybackIntent(
       snapshot({ phase: "clip_paused" }),
+      snapshot({ phase: "reveal", revealStartSeconds: null })
+    ),
+    { kind: "pause" }
+  );
+  assert.deepEqual(
+    resolveSongPlaybackIntent(
+      snapshot({ phase: "reveal", revealStartSeconds: null }),
+      snapshot({ phase: "reveal", revealStartSeconds: null })
+    ),
+    { kind: "none" }
+  );
+});
+
+test("seeks to revealStart when the ruling completes and the card goes up", () => {
+  assert.deepEqual(
+    resolveSongPlaybackIntent(
+      snapshot({ phase: "reveal", revealStartSeconds: null }),
       snapshot({ phase: "reveal" })
     ),
     { kind: "play", seekToSeconds: 40 }
   );
 });
 
-test("does not restart the cover on a re-render during reveal", () => {
+test("does not restart the cover when the host changes a verdict on the card", () => {
   assert.deepEqual(
     resolveSongPlaybackIntent(
       snapshot({ phase: "reveal" }),

@@ -3,6 +3,7 @@ import test from "node:test";
 
 import type {
   SongGuessContentFile,
+  SongGuessMinigameDisplayReveal,
   SongGuessMinigameDisplayView,
   SongGuessMinigameHostView
 } from "@wingnight/shared";
@@ -74,11 +75,21 @@ const reduce = (
   state: SerializableValue,
   actionType: string,
   actionPayload: SerializableValue = {},
-  options: Partial<{ pointsMax: number; content: SerializableValue | null }> = {}
+  options: Partial<{
+    pointsMax: number;
+    content: SerializableValue | null;
+    receivedAtMs: number;
+  }> = {}
 ): { state: SerializableValue; didMutate: boolean } => {
   return songGuessRuntimePlugin.reduceAction({
     state,
-    envelope: { actionType, actionPayload },
+    envelope: {
+      actionType,
+      actionPayload,
+      ...(options.receivedAtMs === undefined
+        ? {}
+        : { receivedAtMs: options.receivedAtMs })
+    },
     pointsMax: options.pointsMax ?? 15,
     rules: { songsPerTurn: 4 },
     content: options.content === undefined ? contentFixture : options.content
@@ -92,6 +103,16 @@ const advanceTo = (
   return actions.reduce<SerializableValue>((currentState, actionType) => {
     return reduce(currentState, actionType).state;
   }, state);
+};
+
+const advanceMarks = (
+  state: SerializableValue,
+  receivedAtMs: number
+): SerializableValue => {
+  const titleRuled = reduce(state, "markTitle", { correct: true }, { receivedAtMs })
+    .state;
+
+  return reduce(titleRuled, "markArtist", { correct: true }, { receivedAtMs }).state;
 };
 
 const hostViewOf = (state: SerializableValue): SongGuessMinigameHostView => {
@@ -419,42 +440,157 @@ test("ignores every action when the state is not song guess state", () => {
   }), null);
 });
 
-test("keeps the answer off the display until the host reveals it", () => {
-  const state = initializeState();
+const currentSongOf = (
+  state: SongGuessRuntimeState
+): SongGuessContentFile["prompts"][number] => {
   const currentSong = contentFixture.prompts.find(
-    (prompt) => prompt.id === state.selectedSongIds[0]
+    (prompt) => prompt.id === state.selectedSongIds[state.songCursor]
   );
 
   assert.notEqual(currentSong, undefined);
+  return currentSong!;
+};
+
+const assertAnswerOffDisplay = (
+  state: SerializableValue,
+  song: SongGuessContentFile["prompts"][number]
+): void => {
+  const serialized = JSON.stringify(displayViewOf(state));
+
+  assert.doesNotMatch(serialized, new RegExp(song.correctTitle));
+  assert.doesNotMatch(serialized, new RegExp(song.correctArtist));
+};
+
+const revealOf = (state: SerializableValue): SongGuessMinigameDisplayReveal => {
+  const view = displayViewOf(state);
+
+  assert.equal(view.phase, "reveal");
+  assert.notEqual(view.phase === "reveal" ? view.reveal : null, null);
+  return (view as { reveal: SongGuessMinigameDisplayReveal }).reveal;
+};
+
+// The answer-safety contract: a player looking at the TV must never be able to
+// read the answer off it before the host has ruled on BOTH halves of it — not
+// while the clip plays, not at lock-in, and not while the host is still
+// ruling. The reveal card is the same beat as the ruling, never before it.
+test("keeps the answer off the display until the host has ruled on both halves", () => {
+  const state = initializeState();
+  const currentSong = currentSongOf(state);
+  const revealing = advanceTo(state, "playClip", "pauseClip", "triggerReveal");
 
   for (const phaseState of [
     state as SerializableValue,
     advanceTo(state, "playClip"),
-    advanceTo(state, "playClip", "pauseClip")
+    advanceTo(state, "playClip", "pauseClip"),
+    revealing,
+    reduce(revealing, "markTitle", { correct: true }).state,
+    reduce(revealing, "markArtist", { correct: false }).state
   ]) {
-    const serialized = JSON.stringify(displayViewOf(phaseState));
-
-    assert.doesNotMatch(serialized, new RegExp(currentSong!.correctTitle));
-    assert.doesNotMatch(serialized, new RegExp(currentSong!.correctArtist));
+    assertAnswerOffDisplay(phaseState, currentSong);
   }
-});
 
-test("puts the title and artist on the display only in the reveal phase", () => {
-  const state = initializeState();
-  const revealed = advanceTo(state, "playClip", "pauseClip", "triggerReveal");
-  const view = displayViewOf(revealed);
-  const currentSong = contentFixture.prompts.find(
-    (prompt) => prompt.id === state.selectedSongIds[0]
-  );
+  const view = displayViewOf(reduce(revealing, "markTitle", { correct: true }).state);
 
   assert.equal(view.phase, "reveal");
-  assert.equal(
-    view.phase === "reveal" ? view.reveal.title : null,
-    currentSong?.correctTitle
+  assert.equal(view.phase === "reveal" ? view.reveal : "missing", null);
+});
+
+test("puts the title and artist on the display only once both halves are ruled", () => {
+  const state = initializeState();
+  const currentSong = currentSongOf(state);
+  const revealing = advanceTo(state, "playClip", "pauseClip", "triggerReveal");
+  const titleRuled = reduce(revealing, "markTitle", { correct: true }).state;
+  const bothRuled = reduce(titleRuled, "markArtist", { correct: false }).state;
+  const reveal = revealOf(bothRuled);
+
+  assert.equal(reveal.title, currentSong.correctTitle);
+  assert.equal(reveal.artist, currentSong.correctArtist);
+  assert.equal(reveal.audioFileName, currentSong.file);
+  assert.equal(reveal.revealStart, currentSong.revealStart);
+});
+
+test("carries each verdict and the points this song earned on the card", () => {
+  const revealing = advanceTo(
+    initializeState(),
+    "playClip",
+    "pauseClip",
+    "triggerReveal"
   );
-  assert.equal(
-    view.phase === "reveal" ? view.reveal.artist : null,
-    currentSong?.correctArtist
+  const titleOnly = reduce(
+    reduce(revealing, "markTitle", { correct: true }).state,
+    "markArtist",
+    { correct: false }
+  ).state;
+  const both = reduce(titleOnly, "markArtist", { correct: true }).state;
+  const neither = reduce(titleOnly, "markTitle", { correct: false }).state;
+
+  assert.deepEqual(revealOf(titleOnly).verdict, { title: true, artist: false });
+  assert.equal(revealOf(titleOnly).pointsEarned, 1);
+  assert.deepEqual(revealOf(both).verdict, { title: true, artist: true });
+  assert.equal(revealOf(both).pointsEarned, 2);
+  assert.equal(revealOf(neither).pointsEarned, 0);
+});
+
+// Both stamps come off the server's clock, as DRAWING's do: the TV times the
+// hold from the difference, never against its own `Date.now()`.
+test("opens the reveal window from the server clock on the mark that completes the ruling", () => {
+  const revealing = advanceTo(
+    initializeState(),
+    "playClip",
+    "pauseClip",
+    "triggerReveal"
+  );
+  const titleRuled = reduce(
+    revealing,
+    "markTitle",
+    { correct: true },
+    { receivedAtMs: 1_000 }
+  ).state;
+  const bothRuled = reduce(
+    titleRuled,
+    "markArtist",
+    { correct: true },
+    { receivedAtMs: 5_000 }
+  ).state;
+
+  assert.equal((titleRuled as SongGuessRuntimeState).revealedAtMs, null);
+  assert.equal(revealOf(bothRuled).revealedAtMs, 5_000);
+  assert.equal(revealOf(bothRuled).expiresAtMs, 7_000);
+});
+
+test("keeps the original reveal stamp when the host changes a ruling", () => {
+  const revealing = advanceTo(
+    initializeState(),
+    "playClip",
+    "pauseClip",
+    "triggerReveal"
+  );
+  const bothRuled = advanceMarks(revealing, 5_000);
+  const reRuled = reduce(
+    bothRuled,
+    "markTitle",
+    { correct: false },
+    { receivedAtMs: 9_000 }
+  ).state;
+
+  assert.equal(revealOf(reRuled).revealedAtMs, 5_000);
+  assert.deepEqual(revealOf(reRuled).verdict, { title: false, artist: true });
+});
+
+test("holds the next song's answer again after advancing", () => {
+  const revealing = advanceTo(
+    initializeState(),
+    "playClip",
+    "pauseClip",
+    "triggerReveal"
+  );
+  const advanced = reduce(advanceMarks(revealing, 5_000), "nextSong").state;
+  const nextSong = currentSongOf(advanced as SongGuessRuntimeState);
+
+  assert.equal((advanced as SongGuessRuntimeState).revealedAtMs, null);
+  assertAnswerOffDisplay(
+    advanceTo(advanced, "playClip", "pauseClip", "triggerReveal"),
+    nextSong
   );
 });
 

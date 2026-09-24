@@ -1,6 +1,7 @@
 import type {
   MinigameDisplayView,
   MinigameHostView,
+  SongGuessMinigameDisplayReveal,
   SongGuessMinigameDisplayView,
   SongGuessMinigameHostSong,
   SongGuessPrompt,
@@ -9,6 +10,8 @@ import type {
 
 import {
   EMPTY_SONG_GUESS_TEAM_SCORE,
+  SONG_GUESS_POINTS_PER_MARK,
+  SONG_GUESS_REVEAL_MS,
   type SongGuessRuntimeContent,
   type SongGuessRuntimeState
 } from "../types/index.js";
@@ -81,9 +84,38 @@ export const toSongGuessHostView = (
   };
 };
 
+// The card the TV shows once the host has ruled on both halves, or `null`
+// while either is still pending. A pending half is what keeps the answer off
+// the wall: `reveal` is built from the SCORE, so there is no phase the reducer
+// can enter that puts the title up before the ruling is complete.
+const toDisplayReveal = (
+  state: SongGuessRuntimeState,
+  currentSong: SongGuessPrompt
+): SongGuessMinigameDisplayReveal | null => {
+  const score = resolveScoreForSong(state, currentSong.id);
+
+  if (score.title === null || score.artist === null || state.revealedAtMs === null) {
+    return null;
+  }
+
+  const verdict = { title: score.title, artist: score.artist };
+  const hits = [verdict.title, verdict.artist].filter(Boolean).length;
+
+  return {
+    title: currentSong.correctTitle,
+    artist: currentSong.correctArtist,
+    audioFileName: currentSong.file,
+    revealStart: currentSong.revealStart,
+    verdict,
+    pointsEarned: hits * SONG_GUESS_POINTS_PER_MARK,
+    revealedAtMs: state.revealedAtMs,
+    expiresAtMs: state.revealedAtMs + SONG_GUESS_REVEAL_MS
+  };
+};
+
 // Answer-safe: `correctTitle` / `correctArtist` reach the display only through
-// the `reveal` branch, which the reducer can only enter on an explicit host
-// action. Every other phase carries the audio asset and nothing else.
+// the `reveal` branch, and only once the host has ruled on both of them. Every
+// other phase carries the audio asset and nothing else.
 export const toSongGuessDisplayView = (
   state: SongGuessRuntimeState,
   content: SongGuessRuntimeContent
@@ -107,12 +139,7 @@ export const toSongGuessDisplayView = (
     return {
       ...baseView,
       phase: "reveal",
-      reveal: {
-        title: currentSong.correctTitle,
-        artist: currentSong.correctArtist,
-        audioFileName: currentSong.file,
-        revealStart: currentSong.revealStart
-      }
+      reveal: toDisplayReveal(state, currentSong)
     } satisfies SongGuessMinigameDisplayView;
   }
 
