@@ -42,6 +42,27 @@ const resolveSandboxTimer = (minigameType: MinigameType): RoomTimerState | null 
   };
 };
 
+// What the sandbox's clock rehearsal arms in place of the paused timer above:
+// two seconds of calm, then the last ten, then time's up — the whole
+// treatment the TV gives a real turn's end (DESIGN.md §5 MINIGAME_PLAY), on a
+// clock short enough to sit through. A rehearsal length, not the urgency
+// threshold: that stays `utils/timerUrgency`'s, unexported, and this arms a
+// clock it reads.
+const CLOCK_REHEARSAL_SECONDS = 12;
+
+export const createClockRehearsalTimer = (nowMs: number = Date.now()): RoomTimerState => {
+  const durationMs = CLOCK_REHEARSAL_SECONDS * 1000;
+
+  return {
+    phase: Phase.MINIGAME_PLAY,
+    startedAt: nowMs,
+    endsAt: nowMs + durationMs,
+    durationMs,
+    isPaused: false,
+    remainingMs: durationMs
+  };
+};
+
 // The host preview's own `RoomState`, built so the shell's real chrome —
 // `TakeoverTimerChip` and `HostMiniRail`, both reading straight off
 // `useHostRoomState` like they do on the tablet — sees the same shape it does

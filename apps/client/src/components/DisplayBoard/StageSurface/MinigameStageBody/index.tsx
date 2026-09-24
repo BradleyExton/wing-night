@@ -6,6 +6,7 @@ import { useServerOrigin } from "../../../../utils/useServerOrigin";
 import { displayBoardCopy } from "../../copy";
 import { MinigameTimerChip } from "../MinigameTimerChip";
 import { MinigameTimerLine } from "../MinigameTimerLine";
+import { useMinigameClockSound } from "../useMinigameClockSound";
 import * as styles from "./styles";
 
 type MinigameStageBodyProps = {
@@ -25,9 +26,15 @@ export const MinigameStageBody = ({
   remainingTimerSeconds = null,
   totalTimerSeconds = null
 }: MinigameStageBodyProps): JSX.Element => {
-  // Unconditional: the early returns below must not sit between the hook and
+  // Unconditional: the early returns below must not sit between the hooks and
   // the component's first render pass.
   const serverOrigin = useServerOrigin();
+
+  // The clock's voice, on the same seconds the chip and the line draw: the TV
+  // is the room's speaker, and this is the one place the display composes the
+  // turn clock, so it is the one place the clock is heard. A host-paced game
+  // hands it `null` and it says nothing.
+  useMinigameClockSound(remainingTimerSeconds);
 
   if (minigameType === null) {
     return (
@@ -58,7 +65,10 @@ export const MinigameStageBody = ({
           it in its marquee's meta cell and an absent clock costs no width
           (docs/takeover-layout-api.md §6). The clock is two slots since the
           Neon Heat Line marquee (ADR-0006): the digits pill, and the lit
-          length in the track under the row. Same seconds, both null together. */}
+          length in the track under the row. Same seconds, both null together.
+          The pill grows into the biggest thing on the sign for the last ten
+          seconds (DESIGN.md §5), still inside the marquee's meta cell — no
+          overlay, no reflow, nothing new for a game to reserve against. */}
       <minigameRendererBundle.DisplaySurface
         phase={phase}
         minigameType={minigameType}

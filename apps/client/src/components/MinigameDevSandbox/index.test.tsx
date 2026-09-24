@@ -55,6 +55,20 @@ test("shows no timer chip in the host preview for a host-paced game", () => {
   assert.doesNotMatch(html, /\d\d:\d\d/);
 });
 
+// The sandbox's clock is paused at full, so the TV's last ten seconds can
+// only be judged here through the rehearsal control — and only a game with a
+// room clock has anything to rehearse.
+test("does offer the clock rehearsal only for a game with a room clock", () => {
+  assert.match(
+    renderToStaticMarkup(<MinigameDevSandbox minigameType="GEO" />),
+    /Run the last ten seconds/
+  );
+  assert.doesNotMatch(
+    renderToStaticMarkup(<MinigameDevSandbox minigameType="TRIVIA" />),
+    /Run the last ten seconds/
+  );
+});
+
 test("renders the drawing sandbox without leaking the prompt to the display", () => {
   const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="DRAWING" />);
 

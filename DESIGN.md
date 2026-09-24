@@ -469,10 +469,13 @@ copied, whose container was the one piece the shared text tokens could not stop 
     `MinigameTimerLine` lights it from the left and the lit length burns down as the turn runs,
     `gold` at the live end through `primary` to `heat`, with a white-hot tip. Time is space: the
     room reads the line, and the digits in the neon pill at the row's right (`MinigameTimerChip`,
-    white light in a `primary` tube) are the footnote. In the last ten seconds both turn `heat` and
-    pulse; at zero the line is out and the pill reads TIME'S UP. A host-paced game gets the dark
-    track alone — the rule under the sign — and the clock and its line are two slots on the
-    display props (`clock`, `clockLine`), both `null` together, both costing nothing absent.
+    white light in a `primary` tube) are the footnote — until the last ten seconds, when the line
+    turns `heat` and pulses and the pill stops being a footnote: it turns `heat`, grows to more
+    than twice its size, shows the bare seconds and beats on every tick, with a tick from the
+    TV's speaker to match and a buzzer at zero, where the line is out and the pill reads TIME! in
+    the same grown tube (§5 MINIGAME_PLAY). A host-paced game gets the dark track alone — the
+    rule under the sign — and the clock and its line are two slots on the display props
+    (`clock`, `clockLine`), both `null` together, both costing nothing absent.
 -   **Slots, not styling.** A game passes what the marquee *says*: `title`, `teamName`, `pending`
     (lit `gold` beside the name), `readout` (the turn's counts, right of centre, read-only, the same
     rule as the host rail's `counter`). It never passes a class string. This is the refusal §2.0B
@@ -1803,6 +1806,15 @@ Host: - Section titles: text-xl to text-2xl - Interactive rows: text-lg+
 -   Clear active team highlight
 -   Minimal distractions
 -   Focused layout
+-   **The last ten seconds are the largest, loudest thing on the TV.** For a clock-paced
+    game (GEO, DRAWING, EMOJI_CHARADES) the marquee's digits pill (§2.2D) turns to `heat`
+    and grows to more than twice its size — past the team's name, the bare seconds ("9",
+    never "00:09") beating once on every tick — while the TV's speaker ticks each second and
+    sounds a buzzer at zero, where the pill reads TIME! in the same grown tube. It grows in
+    place, in the marquee's meta cell: no overlay, no reflow of the game under it, nothing
+    new for a game to reserve against. Reduced motion drops the beat, never the size, the
+    colour or the sound. Host-paced games have no clock and get none of this. Mockup:
+    `apps/client/public/mockups/minigame-marquee/09-last-ten-seconds.html`.
 
 ## FINAL_RESULTS
 

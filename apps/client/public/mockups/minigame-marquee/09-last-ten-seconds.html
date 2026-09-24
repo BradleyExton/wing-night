@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Minigame Marquee — 09 Last Ten Seconds (click: next turn · U: last 15s · T: last 10s)</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      /* 07 exactly, until the last ten seconds. Then the digits pill is the
+         biggest thing on the sign: the leading "00:" goes, the one or two
+         digits left grow past the team's name, the tube turns to heat, and
+         the whole pill beats once on every tick. At zero it reads TIME! in
+         the same tube, still big, so the end is a landing and not a shrink. */
+      .row { display: grid; grid-template-rows: auto auto; gap: clamp(0.6rem, 1.1vh, 1rem); padding: 0 clamp(0.4rem, 0.8vw, 0.8rem); }
+      .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; }
+      .kicker {
+        font-family: "Monoton", cursive; font-weight: 400; text-transform: uppercase; letter-spacing: 0.14em;
+        font-size: clamp(0.9rem, 1.5vw, 1.7rem); color: #fff3c4; line-height: 1; margin-bottom: 0.25em;
+        text-shadow: 0 0 5px #fff, 0 0 12px var(--gold), 0 0 28px var(--gold), 0 0 50px rgba(251,191,36,0.5);
+      }
+      .kicker em { font-style: normal; animation: flick 4.2s steps(1) infinite; }
+      @keyframes flick { 0%,93%,100% { opacity: 1; } 94%,96% { opacity: 0.35; } 95%,97% { opacity: 1; } 98% { opacity: 0.55; } }
+      .team {
+        font-family: "Anton", sans-serif; text-transform: uppercase; letter-spacing: 0.04em; line-height: 0.95;
+        font-size: clamp(2.2rem, 4vw, 4.4rem); color: #fff; display: flex; align-items: baseline; gap: 0.4em;
+        text-shadow: 0 0 8px rgba(255,255,255,0.5), 0 0 24px rgba(255,255,255,0.18);
+      }
+      .team small { font-family: ui-monospace, monospace; font-size: 0.4em; font-weight: 800; color: var(--gold); letter-spacing: 0; text-shadow: 0 0 8px var(--gold), 0 0 20px rgba(251,191,36,0.5); }
+      .right { display: flex; align-items: center; gap: clamp(1rem, 2vw, 2rem); }
+      .count { color: var(--muted); font-weight: 800; letter-spacing: 0.26em; text-transform: uppercase; font-size: clamp(0.65rem, 0.95vw, 1rem); }
+      .digits {
+        font-family: ui-monospace, monospace; font-weight: 800; font-size: clamp(1.4rem, 2.2vw, 2.5rem); color: #fff; line-height: 1;
+        border: 3px solid var(--primary); border-radius: 999px; padding: clamp(0.2rem, 0.4vw, 0.4rem) clamp(0.9rem, 1.4vw, 1.4rem); letter-spacing: -0.02em;
+        text-shadow: 0 0 6px #fff, 0 0 16px var(--primary), 0 0 36px var(--primary);
+        box-shadow: 0 0 10px var(--primary), inset 0 0 10px rgba(249,115,22,0.6);
+      }
+      .line { position: relative; height: clamp(8px, 1.1vh, 12px); border-radius: 999px; background: rgba(255,255,255,0.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+      .line::before {
+        content: ""; position: absolute; inset: 2px; width: calc(var(--remaining) * 100% - 4px); border-radius: inherit;
+        background: linear-gradient(90deg, var(--heat), var(--primary) 30%, #ffe08a);
+        box-shadow: 0 0 8px var(--primary), 0 0 22px var(--primary), 0 0 44px rgba(249,115,22,0.5); transition: width 1s linear;
+      }
+      .line::after {
+        content: ""; position: absolute; top: -4px; bottom: -4px; width: 8px; border-radius: 4px; background: #fff;
+        left: calc(var(--remaining) * 100% - 4px); box-shadow: 0 0 10px #fff, 0 0 26px #fff, 0 0 40px var(--primary); transition: left 1s linear;
+      }
+
+      /* The kit's own "urgent" (<=15s) does nothing here on purpose: the house
+         threshold is ten, and everything below is keyed to `lastten`. */
+      body.lastten .line::before { background: var(--heat); box-shadow: 0 0 10px var(--heat), 0 0 30px var(--heat); animation: heatpulse 0.65s ease-in-out infinite; }
+
+      /* The pill, grown. Zero vertical padding: with line-height 1 the digit's
+         own em box is the pill's height, which keeps the row from reflowing
+         (the lead column is ~101px at 1080p, this is 90px + 8px of tube). At
+         every width the font is >2x the calm pill's. */
+      body.lastten .digits {
+        font-size: clamp(3rem, 5vw, 5.6rem); padding: 0 0.42em; border-width: 4px; border-color: var(--heat); letter-spacing: 0;
+        text-shadow: 0 0 6px #fff, 0 0 18px var(--heat), 0 0 44px var(--heat), 0 0 80px rgba(239,68,68,0.6);
+        box-shadow: 0 0 18px var(--heat), 0 0 44px rgba(239,68,68,0.45), inset 0 0 14px rgba(239,68,68,0.7);
+      }
+      /* One beat per tick, restarted from script on every digit change so the
+         hit lands with the number, not on an animation clock of its own. */
+      body.lastten .digits.beat { animation: lasttenbeat 0.9s cubic-bezier(0.2, 0.9, 0.3, 1) 1; }
+      @keyframes lasttenbeat { 0% { transform: scale(1.14); filter: brightness(1.6); } 100% { transform: scale(1); filter: brightness(1); } }
+
+      /* TIME! keeps the big tube. A word, so smaller than a digit, and the
+         slow pulse 07 already gave time's up. */
+      body.timeup .digits {
+        font-size: clamp(2rem, 3.4vw, 3.8rem); letter-spacing: 0.12em; padding: 0.2em 0.5em 0.2em 0.62em; border-width: 4px; border-color: var(--heat);
+        text-shadow: 0 0 6px #fff, 0 0 18px var(--heat), 0 0 44px var(--heat); box-shadow: 0 0 18px var(--heat), inset 0 0 14px rgba(239,68,68,0.7);
+        animation: heatpulse 1.2s ease-in-out infinite;
+      }
+      body.timeup .line::after { display: none; }
+
+      @media (prefers-reduced-motion: reduce) {
+        body.lastten .digits.beat, body.timeup .digits, body.lastten .line::before { animation: none; }
+      }
+      .legend b { color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header class="row">
+        <div class="top">
+          <div>
+            <div class="kicker" id="tube"><span data-slot="title">Title</span></div>
+            <div class="team"><span data-slot="team">Team</span><small data-slot="pending">+0</small></div>
+          </div>
+          <div class="right"><span class="count" data-slot="counter">Counter</span><span class="digits tnum" data-slot="clock" data-timeup="TIME!">0:00</span></div>
+        </div>
+        <div class="line"></div>
+      </header>
+      <div class="body"><span>game body</span></div>
+    </div>
+    <p class="legend"><b>click</b> next turn · <b>U</b> last 15s · <b>T</b> last 10s · sound after first click</p>
+    <script src="kit.js"></script>
+    <script>
+      const flicker = (t) => { const i = Math.max(1, Math.floor(t.length * 0.6)); document.getElementById("tube").innerHTML = `${t.slice(0, i)}<em>${t[i]}</em>${t.slice(i + 1)}`; };
+      document.addEventListener("scenario", (e) => flicker(e.detail.title));
+      flicker(SCENARIOS[0].title);
+
+      // --- the sound sketch: a tick a second under ten, a buzzer at zero ---
+      let ctx = null;
+      const audio = () => { if (ctx === null && window.AudioContext) { ctx = new AudioContext(); } if (ctx && ctx.state !== "running") { ctx.resume(); } return ctx && ctx.state === "running" ? ctx : null; };
+      const tone = (c, { at, dur, type, from, to, peak, attack = 0.005 }) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = type; o.frequency.setValueAtTime(from, at); if (to) { o.frequency.exponentialRampToValueAtTime(to, at + dur); }
+        g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(peak, at + attack); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+        o.connect(g); g.connect(c.destination); o.start(at); o.stop(at + dur + 0.02);
+      };
+      const tick = () => { const c = audio(); if (!c) return; const at = c.currentTime + 0.002;
+        tone(c, { at, dur: 0.05, type: "square", from: 1400, to: 900, peak: 0.12 });
+        tone(c, { at, dur: 0.09, type: "sine", from: 420, to: 300, peak: 0.16 }); };
+      const buzzer = () => { const c = audio(); if (!c) return; const at = c.currentTime + 0.002;
+        tone(c, { at, dur: 0.7, type: "sawtooth", from: 165, peak: 0.16, attack: 0.02 });
+        tone(c, { at, dur: 0.7, type: "sawtooth", from: 168, peak: 0.16, attack: 0.02 });
+        tone(c, { at, dur: 0.7, type: "square", from: 82, peak: 0.1, attack: 0.02 }); };
+
+      // --- the look: keyed to the house threshold (10), not the kit's 15 ---
+      const digits = document.querySelector('[data-slot="clock"]');
+      let shown = null;
+      const paint = () => {
+        const s = seconds; // kit.js's live countdown
+        const lastTen = s > 0 && s <= 10;
+        document.body.classList.toggle("lastten", lastTen);
+        if (lastTen) { digits.textContent = String(s); }
+        if (s === shown) return;
+        const crossed = shown !== null;
+        shown = s;
+        if (!crossed) return;
+        if (lastTen) { digits.classList.remove("beat"); void digits.offsetWidth; digits.classList.add("beat"); tick(); }
+        if (s === 0) { buzzer(); }
+      };
+      setInterval(paint, 50);
+      document.addEventListener("scenario", () => { shown = null; });
+      document.addEventListener("keydown", (e) => { if (e.key === "t" || e.key === "T") { seconds = 11; paintClock(); } });
+    </script>
+  </body>
+</html>
