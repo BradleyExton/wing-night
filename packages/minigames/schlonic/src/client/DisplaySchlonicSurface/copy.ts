@@ -7,18 +7,19 @@ export const displaySchlonicSurfaceCopy = {
   waitingLabel: "Waiting for the zone…",
   runCounter: (runNumber: number, runsTotal: number): string => `Run ${runNumber} / ${runsTotal}`,
   wingsCounter: (banked: number, par: number): string => `${banked} / ${par}`,
-  wingsLabel: "Wings",
+  inHandLabel: "In hand",
+  // What the tally reads before the loop has written to it: a bird on the line holds nothing.
+  inHandOnTheLine: "0",
+  bankedLabel: "Banked",
   sceneLabel: (playerName: string | null): string =>
     playerName === null ? "Kempenfelt Bay Zone" : `Kempenfelt Bay Zone — ${playerName}'s run`,
   readyPrompt: (playerName: string | null): string =>
     playerName === null ? "On the line — tap to go" : `${playerName} is on the line — tap to go`,
   runningPrompt: (playerName: string | null): string =>
     playerName === null ? "Running!" : `${playerName} is running!`,
-  handoffPrompt: (endedName: string | null, nextName: string | null): string => {
-    const who = endedName === null ? "That's the run" : `${endedName} is done`;
-
-    return nextName === null ? `${who}` : `${who} — ${nextName}, grab the tablet`;
-  },
+  // The plaque over the zone names who is next; this line only says who just finished.
+  handoffPrompt: (endedName: string | null): string =>
+    endedName === null ? "That's the run" : `${endedName} is done`,
   finishedPrompt: "That's the team's zone.",
   outcomeTitle: (outcome: "cleared" | "wiped" | "fell"): string => {
     if (outcome === "cleared") {

@@ -3,11 +3,14 @@ import type { SchlonicMinigameDisplayView, SchlonicMinigameHostView } from "@win
 
 import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 
+/** How a held run ended. `skipped` is the run that never happened: nothing to show, only who is next. */
+export type RunHoldOutcome = "cleared" | "wiped" | "fell" | "skipped";
+
 export type RunHold = {
   /** The run the surface keeps on screen: the one that just ended. */
   runIndex: number;
   /** How it ended, which is what the room is being shown. */
-  outcome: "cleared" | "wiped" | "fell";
+  outcome: RunHoldOutcome;
   /** What it brought home, so the plaque can say so without going back to the run. */
   wings: number;
   /** Whether the tablet is changing hands or the team is through. */
@@ -40,8 +43,9 @@ export const resolveRunHold = (
 
   return {
     runIndex: previousRunIndex,
-    // A skipped run has no result and nothing to show: it reads as the run that never happened.
-    outcome: endedRun.result?.outcome ?? "wiped",
+    // A skipped run has no result and nothing to show — it must not be announced as a wipeout,
+    // which is what the room would take a "Wiped out!" plaque over an untouched start line for.
+    outcome: endedRun.skipped ? "skipped" : (endedRun.result?.outcome ?? "wiped"),
     wings: endedRun.result?.wings ?? 0,
     kind: view.runIndex >= view.runsPerTurn ? "finish" : "handoff",
     startedAtMs: nowMs

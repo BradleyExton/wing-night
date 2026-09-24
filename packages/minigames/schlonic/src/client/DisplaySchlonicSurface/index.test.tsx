@@ -77,6 +77,8 @@ test("puts the team, the zone and the wing tally on the marquee", () => {
   assert.ok(markup.includes("Kempenfelt Bay Zone"));
   assert.ok(markup.includes("Run 1 / 2"));
   assert.ok(markup.includes("12 / 40"));
+  // The wings in hand, which the mirror's paint loop writes into as the runner collects them.
+  assert.ok(markup.includes("data-schlonic-in-hand"));
 });
 
 test("tells the room who is on the line and who is running", () => {

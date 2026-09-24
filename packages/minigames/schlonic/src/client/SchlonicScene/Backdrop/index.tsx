@@ -51,6 +51,14 @@ export const FAR_SHORE_PARALLAX = 0.1;
 export const TOWN_PARALLAX = 0.2;
 export const WATERFRONT_PARALLAX = 0.34;
 
+/**
+ * The near bank stands on the same strip of shore the zone's kit is dealt onto, in weathering
+ * steel and station brick — the two darkest, warmest things in the picture, and the brick is
+ * all but a wing's own hue. Hazed like the banks behind it, so a pink one with a face and an
+ * orange wing still win the eye over a landmark at the same height.
+ */
+export const WATERFRONT_HAZE = 0.55;
+
 export type BackdropRefs = {
   clouds: SVGGElement | null;
   farShore: SVGGElement | null;
@@ -200,7 +208,7 @@ export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number }>(
           height={SCHLONIC_WORLD.height - BEACH_Y}
           fill={schlonicPalette.park}
         />
-        <g ref={waterfront}>
+        <g ref={waterfront} opacity={WATERFRONT_HAZE}>
           {standsAt(waterfrontWidth, 186).map((x) => (
             <g key={x}>
               <Marina x={x + 4} baseY={SHORE_Y} palette={SCENERY} />

@@ -69,16 +69,28 @@ const toSegment = (points: readonly { x: number; y: number }[], bottomY: number)
   };
 };
 
+/**
+ * @param runOut How far past the last sample to keep drawing, in world units. The sim's ground
+ * runs level forever past its last sample, but the drawing used to stop there — one chunk past
+ * the post, with most of a screen still showing — so a cleared run ended on a cliff edge into
+ * the park. The scene asks for a screen's worth; the geometry itself defaults to none.
+ */
 export const resolveGroundSegments = (
   zone: SchlonicZone,
-  bottomY: number = SCHLONIC_WORLD.height
+  bottomY: number = SCHLONIC_WORLD.height,
+  runOut = 0
 ): GroundSegment[] => {
   const step = SCHLONIC_WORLD.sampleStep;
   const lips = new Set(zone.pits.map((pit) => pit.fromX));
   const resumes = new Set(zone.pits.map((pit) => pit.toX));
+  const lastSampleX = (zone.heights.length - 1) * step;
+  const runOutXs = Array.from({ length: Math.ceil(runOut / step) }, (_unused, index) => {
+    return lastSampleX + (index + 1) * step;
+  });
   const xs = [
     ...new Set([
       ...zone.heights.map((_unused, sample) => sample * step),
+      ...runOutXs,
       ...zone.pits.flatMap((pit) => [pit.fromX, pit.toX])
     ])
   ].sort((left, right) => left - right);

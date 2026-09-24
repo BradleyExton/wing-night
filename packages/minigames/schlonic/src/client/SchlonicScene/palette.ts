@@ -24,6 +24,8 @@ export const schlonicPalette = {
   soil: "#8a5a2b",
   soilDark: "#5b3a1a",
   soilEdge: "#3a2410",
+  // The dark under a pit: nothing down there, and it has to look it.
+  pitShaft: "#22130a",
   // Kempenfelt itself: deep down the middle, shallow and bright at the near shore.
   bayFar: "#2b6ea6",
   bay: "#2f8fc4",

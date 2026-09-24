@@ -89,8 +89,25 @@ test("draws the zone and names whose run it is", () => {
 
   assert.ok(markup.includes("data-schlonic-arena"));
   assert.ok(markup.includes("Run 1 of 2"));
-  assert.ok(markup.includes("Running: Alex"));
+  assert.ok(markup.includes("data-schlonic-runner-name"));
+  assert.ok(markup.includes(">Alex</span>"));
   assert.ok(markup.includes("Alex: tap to go"));
+});
+
+// While the bird is on the hill the chrome is two chips and two buttons. The
+// run list and the round's totals sit bottom-right, which is where the ground
+// band scrolls in; a card there hid the next hazard until it was under the hen.
+test("keeps the bottom-right corner clear while a run is live", () => {
+  const ready = render(createView());
+  const running = render(createView({ phase: "running" }));
+
+  for (const markup of [ready, running]) {
+    assert.ok(!markup.includes("data-schlonic-history"));
+    assert.ok(!markup.includes("Round so far"));
+  }
+
+  // And a running bird's holder is not reading, so the hint goes too.
+  assert.ok(!running.includes("data-schlonic-hint"));
 });
 
 test("forwards the shell's rail and says the team nowhere itself", () => {
@@ -121,6 +138,9 @@ test("keeps the tally of wings in the chrome, because it is the score and the he
 
   assert.ok(markup.includes("17 / 40"));
   assert.ok(markup.includes("data-schlonic-wings"));
+  // The wings in hand, which the paint loop writes into: on the line, none.
+  assert.ok(markup.includes("data-schlonic-in-hand"));
+  assert.ok(markup.includes("In hand"));
 });
 
 test("tells the tablet holder to wait when the host has not opened the round", () => {
@@ -129,7 +149,7 @@ test("tells the tablet holder to wait when the host has not opened the round", (
   assert.ok(markup.includes("Waiting for the host to open the round."));
 });
 
-test("shows how each finished run went, and what it banked", () => {
+test("moves the chip on to the next runner once a run is behind it", () => {
   const markup = render(
     createView({
       runIndex: 1,
@@ -143,26 +163,38 @@ test("shows how each finished run went, and what it banked", () => {
     })
   );
 
-  assert.ok(markup.includes("Post! +24"));
   assert.ok(markup.includes("Run 2 of 2"));
-  assert.ok(markup.includes("Running: Morgan"));
+  assert.ok(markup.includes(">Morgan</span>"));
+  assert.ok(!markup.includes(">Alex</span>"));
 });
 
-test("names a run that went down a hole as one, so the room knows what it saw", () => {
+test("shows how each finished run went, and what it banked, once the team is through", () => {
   const markup = render(
     createView({
-      runIndex: 1,
+      phase: "finished",
+      runIndex: 2,
       runs: [
         createRun({
           status: "done",
-          result: { outcome: "fell", endTick: 300, wings: 0, distance: 120 }
+          result: { outcome: "cleared", endTick: 900, wings: 24, distance: 480 }
         }),
-        createRun({ runIndex: 1, player: MORGAN })
-      ]
+        createRun({
+          runIndex: 1,
+          player: MORGAN,
+          status: "done",
+          result: { outcome: "fell", endTick: 300, wings: 0, distance: 120 }
+        })
+      ],
+      wingsBanked: 24,
+      points: 6
     })
   );
 
+  assert.ok(markup.includes("Post! +24"));
+  // A run that went down a hole is named as one, so the room knows what it saw.
   assert.ok(markup.includes("Down a hole"));
+  // The chip stops naming a runner: nobody is.
+  assert.ok(!markup.includes("data-schlonic-runner-name"));
 });
 
 test("posts the turn's points once the team is through", () => {
@@ -188,15 +220,15 @@ test("keeps both escape hatches on the canvas (AGENTS.md §11)", () => {
   assert.ok(markup.includes("Reset turn"));
 });
 
-// The zone is one big jump button, so the legend had to leave the body: a
-// Canvas body draws no chrome of its own (§5), and `bottom-3 left-3` was the
-// actions row's own corner anyway. It keeps its words and its data hook, and
-// the layout — not this file — decides where the corner is.
-test("moves the jump legend out of the zone and into the layout's bottom-left slot", () => {
+// The zone is one big jump button and draws no chrome of its own (§5). How to
+// jump is said once, in the hint on the line — the JUMP / HOLD FOR HEIGHT
+// legend that used to sit beside that hint said it a second time in the same
+// corner.
+test("says how to jump once, in the hint, with no legend chip beside it", () => {
   const markup = render(createView());
 
-  assert.ok(markup.includes("data-schlonic-jump-legend"));
-  assert.ok(markup.includes("Hold for height"));
+  assert.ok(markup.includes("Hold the tap to jump higher"));
+  assert.ok(!markup.includes("data-schlonic-jump-legend"));
   assert.ok(!markup.includes("bottom-3 left-3"));
 });
 
@@ -206,7 +238,9 @@ test("moves the jump legend out of the zone and into the layout's bottom-left sl
 // name and its points — the shared card kept the gap and widened it, so what
 // travelled is the local one's best feature rather than its skin.
 test("reads the round's pending points off the shared running-totals card", () => {
-  const markup = render(createView({ pendingPointsByTeamId: { "team-alpha": 3 } }));
+  const markup = render(
+    createView({ phase: "finished", runIndex: 2, pendingPointsByTeamId: { "team-alpha": 3 } })
+  );
 
   assert.ok(markup.includes("Round so far"));
   assert.ok(markup.includes("Team Alpha"));

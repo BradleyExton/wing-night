@@ -4,6 +4,7 @@ import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart, runSchlonicRun
 
 import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
+import { paintWingTally } from "../wingTally/index.js";
 
 type SchlonicMirrorInput = {
   run: SchlonicMinigameRun | null;
@@ -11,6 +12,8 @@ type SchlonicMirrorInput = {
   zoneSeed: number;
   zoneChunks: number;
   sceneRef: RefObject<SchlonicSceneHandle>;
+  /** Where the wings in hand are written each frame: the marquee's tally, outside the scene. */
+  tallyRef?: RefObject<HTMLElement>;
 };
 
 // How far behind the tablet the TV draws, in ticks: a tenth of a second, so a press has normally
@@ -58,7 +61,8 @@ export const useSchlonicMirror = ({
   zone,
   zoneSeed,
   zoneChunks,
-  sceneRef
+  sceneRef,
+  tallyRef
 }: SchlonicMirrorInput): void => {
   const runRef = useRef<MirrorRun | null>(null);
   const beatRef = useRef<MirrorBeat | null>(null);
@@ -104,6 +108,8 @@ export const useSchlonicMirror = ({
       } else {
         sceneRef.current?.paintWipeout(frame, progress);
       }
+
+      paintWingTally(tallyRef?.current ?? null, frame.wings);
     };
     const step = (now: number): void => {
       const progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind];
@@ -145,6 +151,7 @@ export const useSchlonicMirror = ({
     stopBeat();
     runRef.current = { key, inputs: [], frame, startedAtMs: null, rafHandle: 0 };
     sceneRef.current?.paint(frame);
+    paintWingTally(tallyRef?.current ?? null, frame.wings);
   };
 
   useEffect(() => {
@@ -240,6 +247,7 @@ export const useSchlonicMirror = ({
     }
 
     sceneRef.current?.paint(mirror.frame);
+    paintWingTally(tallyRef?.current ?? null, mirror.frame.wings);
 
     const step = (now: number): void => {
       mirror.frame = advanceSchlonic(mirror.frame, zone, mirror.inputs, resolveTargetTick(now));
@@ -250,11 +258,12 @@ export const useSchlonicMirror = ({
       }
 
       sceneRef.current?.paint(mirror.frame);
+      paintWingTally(tallyRef?.current ?? null, mirror.frame.wings);
       mirror.rafHandle = window.requestAnimationFrame(step);
     };
 
     mirror.rafHandle = window.requestAnimationFrame(step);
-  }, [runIndex, runStatus, isSkipped, inputLogKey, zone, zoneSeed, zoneChunks, sceneRef, settledCount]);
+  }, [runIndex, runStatus, isSkipped, inputLogKey, zone, zoneSeed, zoneChunks, sceneRef, tallyRef, settledCount]);
 
   useEffect(() => {
     return (): void => {

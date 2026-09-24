@@ -5,9 +5,9 @@ import type { SchlonicMinigameDisplayView, SchlonicMinigameRun } from "@wingnigh
 import { resolveSchlonicZone } from "@wingnight/shared";
 
 import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
-import { resolveRunnerFigure } from "../resolveRunnerFigure/index.js";
 import { SchlonicScene, type SchlonicSceneHandle } from "../SchlonicScene/index.js";
 import { useHeldRun, type RunHold } from "../useHeldRun/index.js";
+import { useRunnerFigure } from "../useRunnerFigure/index.js";
 import { useSchlonicMirror } from "../useSchlonicMirror/index.js";
 import { displaySchlonicSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -23,21 +23,43 @@ const SchlonicIntro = (): JSX.Element => (
   </div>
 );
 
-// How the run just ended, over the frame the room watched it end on.
-const OutcomePlaque = ({ hold }: { hold: RunHold }): JSX.Element => {
+// The beat over a run that just ended: how it went, and — when the tablet is changing hands —
+// who takes it. One card. A skipped run has no ending to show, so on a handoff the card is only
+// the name, and on a finish there is no card at all: the points plaque follows.
+const HoldPlaque = ({ hold, nextName }: { hold: RunHold; nextName: string | null }): JSX.Element | null => {
+  const showsOutcome = hold.outcome !== "skipped";
+  const showsNext = hold.kind === "handoff";
+
+  if (!showsOutcome && !showsNext) {
+    return null;
+  }
+
   const isCleared = hold.outcome === "cleared";
 
   return (
     <div className={styles.resultOverlay} data-schlonic-outcome={hold.outcome}>
-      <div className={styles.resultPlaque}>
-        <div>
-          <p className={`${styles.resultTitle}${isCleared ? "" : ` ${styles.resultTitleBad}`}`}>
-            {displaySchlonicSurfaceCopy.outcomeTitle(hold.outcome)}
-          </p>
-          <p className={styles.resultBlurb}>
-            {displaySchlonicSurfaceCopy.outcomeBlurb(hold.outcome, hold.wings)}
-          </p>
-        </div>
+      <div className={styles.holdPlaque}>
+        {hold.outcome !== "skipped" && (
+          <div>
+            <p className={`${styles.resultTitle}${isCleared ? "" : ` ${styles.resultTitleBad}`}`}>
+              {displaySchlonicSurfaceCopy.outcomeTitle(hold.outcome)}
+            </p>
+            <p className={styles.resultBlurb}>
+              {displaySchlonicSurfaceCopy.outcomeBlurb(hold.outcome, hold.wings)}
+            </p>
+          </div>
+        )}
+        {showsNext && (
+          <div
+            className={showsOutcome ? styles.holdNext : undefined}
+            data-schlonic-handoff="display"
+          >
+            <span className={styles.handoffName}>
+              {displaySchlonicSurfaceCopy.handoffCalloutName(nextName)}
+            </span>
+            <span className={styles.handoffLine}>{displaySchlonicSurfaceCopy.handoffCalloutLine}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -59,25 +81,13 @@ const FinishPlaque = ({ view }: { view: SchlonicMinigameDisplayView }): JSX.Elem
   </div>
 );
 
-const HandoffCallout = ({ nextName }: { nextName: string | null }): JSX.Element => (
-  <div className={styles.handoffOverlay} data-schlonic-handoff="display">
-    <div className={styles.handoffCard}>
-      <span className={styles.handoffName}>
-        {displaySchlonicSurfaceCopy.handoffCalloutName(nextName)}
-      </span>
-      <span className={styles.handoffLine}>{displaySchlonicSurfaceCopy.handoffCalloutLine}</span>
-    </div>
-  </div>
-);
-
 const resolveStatusLine = (
   view: SchlonicMinigameDisplayView,
   playerName: string | null,
-  nextName: string | null,
   hold: RunHold | null
 ): string => {
   if (hold?.kind === "handoff") {
-    return displaySchlonicSurfaceCopy.handoffPrompt(playerName, nextName);
+    return displaySchlonicSurfaceCopy.handoffPrompt(playerName);
   }
 
   if (view.phase === "finished") {
@@ -105,6 +115,8 @@ const SchlonicPlayBody = ({
   serverOrigin: string | null;
 }): JSX.Element => {
   const sceneRef = useRef<SchlonicSceneHandle>(null);
+  // Written by the mirror's paint loop: the wings the runner on the wall is holding.
+  const tallyRef = useRef<HTMLSpanElement>(null);
   // A run stays on the wall while how it ended plays out, a little longer than the tablet holds
   // it, because the replay here runs behind; once the team is through the last run stays for good.
   const { shownRunIndex, hold } = useHeldRun(view, MIRROR_HOLD_SLACK_MS);
@@ -112,7 +124,7 @@ const SchlonicPlayBody = ({
   const zone = useMemo(() => {
     return resolveSchlonicZone({ seed: view.zoneSeed, chunks: view.zoneChunks });
   }, [view.zoneSeed, view.zoneChunks]);
-  const runner = resolveRunnerFigure({
+  const runner = useRunnerFigure({
     figure: run?.player ?? null,
     activeTurnTeamId: view.activeTurnTeamId,
     serverOrigin
@@ -125,7 +137,8 @@ const SchlonicPlayBody = ({
     zone,
     zoneSeed: view.zoneSeed,
     zoneChunks: view.zoneChunks,
-    sceneRef
+    sceneRef,
+    tallyRef
   });
 
   return (
@@ -138,10 +151,14 @@ const SchlonicPlayBody = ({
             <span className={styles.marqueeRun}>
               {displaySchlonicSurfaceCopy.runCounter(shownRunIndex + 1, view.runsPerTurn)}
             </span>
+            <span ref={tallyRef} className={styles.marqueeInHand} data-schlonic-in-hand>
+              {displaySchlonicSurfaceCopy.inHandOnTheLine}
+            </span>
+            <span className={styles.marqueeWingsLabel}>{displaySchlonicSurfaceCopy.inHandLabel}</span>
             <span className={styles.marqueeWings} data-schlonic-wings>
               {displaySchlonicSurfaceCopy.wingsCounter(view.wingsBanked, view.wingsPar)}
             </span>
-            <span className={styles.marqueeWingsLabel}>{displaySchlonicSurfaceCopy.wingsLabel}</span>
+            <span className={styles.marqueeWingsLabel}>{displaySchlonicSurfaceCopy.bankedLabel}</span>
           </>
         }
         clock={clock}
@@ -157,13 +174,10 @@ const SchlonicPlayBody = ({
             label={displaySchlonicSurfaceCopy.sceneLabel(runner.playerName)}
           />
         </div>
-        {hold !== null && <OutcomePlaque hold={hold} />}
-        {hold?.kind === "handoff" && <HandoffCallout nextName={resolvePlayerName(nextRun)} />}
+        {hold !== null && <HoldPlaque hold={hold} nextName={resolvePlayerName(nextRun)} />}
         {isFinished && hold === null && <FinishPlaque view={view} />}
       </div>
-      <p className={styles.statusLine}>
-        {resolveStatusLine(view, runner.playerName, resolvePlayerName(nextRun), hold)}
-      </p>
+      <p className={styles.statusLine}>{resolveStatusLine(view, runner.playerName, hold)}</p>
     </div>
   );
 };

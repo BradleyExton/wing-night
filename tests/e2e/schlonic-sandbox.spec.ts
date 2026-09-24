@@ -33,6 +33,7 @@ test("schlonic sandbox lays out one zone for both screens and starts the run on 
   await expect(page.getByText("Run 1 of 2")).toBeVisible();
   await expect(page.getByText("Alex is on the line — tap to go")).toBeVisible();
   await expect(page.locator("[data-schlonic-wings]").first()).toHaveText(/0 \/ 52/);
+  await expect(page.locator("[data-schlonic-in-hand]").first()).toHaveText("0");
 
   // One tap takes the run off the line; the display mirrors it.
   await page.locator("[data-schlonic-arena]").click();
@@ -51,6 +52,8 @@ type ZoneRun = {
   endedAtX: number;
   frames: number;
   mostWingsHeld: number;
+  /** The most the chrome's own tally showed: the number the room is watching, off the loop. */
+  mostTallyShown: number;
   wasAirborne: boolean;
 };
 
@@ -60,9 +63,17 @@ const runUntilHandoff = (page: Page): Promise<ZoneRun> => {
       const scene = document.querySelector('[data-schlonic-scene="host-schlonic"]');
       const arena = document.querySelector("[data-schlonic-arena]");
       const runner = scene?.querySelector("[data-schlonic-runner]");
+      const tally = document.querySelector("[data-schlonic-in-hand]");
 
-      if (!scene || !arena || !runner) {
-        resolve({ jumps: -1, endedAtX: -1, frames: 0, mostWingsHeld: 0, wasAirborne: false });
+      if (!scene || !arena || !runner || !tally) {
+        resolve({
+          jumps: -1,
+          endedAtX: -1,
+          frames: 0,
+          mostWingsHeld: 0,
+          mostTallyShown: 0,
+          wasAirborne: false
+        });
         return;
       }
 
@@ -92,6 +103,7 @@ const runUntilHandoff = (page: Page): Promise<ZoneRun> => {
       let jumps = 0;
       let frames = 0;
       let mostWingsHeld = 0;
+      let mostTallyShown = 0;
       let wasAirborne = false;
       let isDown = false;
       let releaseAt = 0;
@@ -108,13 +120,14 @@ const runUntilHandoff = (page: Page): Promise<ZoneRun> => {
           mostWingsHeld,
           Number(runner.getAttribute("data-schlonic-held-wings") ?? 0)
         );
+        mostTallyShown = Math.max(mostTallyShown, Number(tally.textContent ?? 0));
 
         if (document.querySelector("[data-schlonic-handoff]") || now - startedAt > 45_000) {
           if (isDown) {
             send("pointerup");
           }
 
-          resolve({ jumps, endedAtX: x, frames, mostWingsHeld, wasAirborne });
+          resolve({ jumps, endedAtX: x, frames, mostWingsHeld, mostTallyShown, wasAirborne });
           return;
         }
 
@@ -160,7 +173,8 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
   await page.goto(devSandboxPath("schlonic"));
   await expect(page.locator("[data-schlonic-scene]")).toHaveCount(2);
 
-  const { jumps, endedAtX, frames, mostWingsHeld, wasAirborne } = await runUntilHandoff(page);
+  const { jumps, endedAtX, frames, mostWingsHeld, mostTallyShown, wasAirborne } =
+    await runUntilHandoff(page);
 
   // A throttled tab would step the sim in giant hops and make everything below meaningless.
   expect(frames).toBeGreaterThan(200);
@@ -168,6 +182,8 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
   expect(wasAirborne).toBe(true);
   // Wings are picked up by running through them, and the zone starts with a line of them.
   expect(mostWingsHeld).toBeGreaterThan(4);
+  // And the chrome's tally moved with them: the health bar is a live number, not the banked one.
+  expect(mostTallyShown).toBeGreaterThan(4);
   // The pit sits a third of the way in; getting past it is what the jumps were for.
   expect(endedAtX).toBeGreaterThan(400);
 
@@ -176,7 +192,11 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
 
   await expect(hostCallout).toContainText("Hand it to");
   await expect(hostCallout).toContainText("Caitlin");
-  await expect(page.locator('[data-schlonic-handoff="display"]')).toContainText(
+  // The wall says how the run ended and who is next on ONE card, not two stacked over each other.
+  const displayPlaque = page.locator("[data-schlonic-outcome]");
+
+  await expect(displayPlaque).toHaveCount(1);
+  await expect(displayPlaque.locator('[data-schlonic-handoff="display"]')).toContainText(
     "You're up — grab the tablet"
   );
 
@@ -250,6 +270,11 @@ test("skipping banks nothing, finishing scores the turn, and reset puts the team
   await page.getByRole("button", { name: "Skip run" }).click();
 
   await expect(page.getByText("Run 2 of 2")).toBeVisible();
+  // A skipped run is not a wipeout: the wall announces who is next and nothing about how it went.
+  const skippedPlaque = page.locator('[data-schlonic-outcome="skipped"]');
+
+  await expect(skippedPlaque).toContainText("Caitlin");
+  await expect(skippedPlaque).not.toContainText("Wiped out");
   await expect(page.getByText("Caitlin is on the line — tap to go")).toBeVisible();
 
   await page.getByRole("button", { name: "Skip run" }).click();

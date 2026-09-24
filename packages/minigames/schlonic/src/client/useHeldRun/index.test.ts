@@ -42,10 +42,12 @@ test("calls the last run of the turn a finish rather than a handoff", () => {
   assert.equal(hold?.kind, "finish");
 });
 
-test("reads a skipped run as one that never happened", () => {
-  const hold = resolveRunHold(0, view(1, [run(0, "done"), run(1, "ready")]), 0);
+test("reads a skipped run as one that never happened, not as a wipeout", () => {
+  const skipped: SchlonicMinigameRun = { ...run(0, "done"), skipped: true };
+  const hold = resolveRunHold(0, view(1, [skipped, run(1, "ready")]), 0);
 
-  assert.equal(hold?.outcome, "wiped");
+  assert.equal(hold?.outcome, "skipped");
+  assert.equal(hold?.wings, 0);
 });
 
 test("holds nothing when the cursor went backwards, which is a reset", () => {

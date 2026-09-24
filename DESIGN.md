@@ -1346,21 +1346,25 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     stance are different transforms and neither should know about the other.
 -   **Wings are the score and the health bar at the same time.** That is the
     whole design, so the tally is the one number both surfaces put in their
-    chrome: the tablet's takeover `counter` and the TV's marquee, in `gold`. A hit flashes
-    the bird for the sim's own mercy window and bursts a handful of wings out
-    of it, tumbling as they go; the burst is decoration, and none of it can be
-    caught back.
+    chrome, in `gold`: the tablet's takeover `counter` and the TV's marquee.
+    It is two figures, because the view only knows what a run *banked* once
+    the server has refereed it: the big one is what the bird is holding right
+    now, written straight into the chrome by the paint loop sixty times a
+    second (`paintWingTally`), and the smaller pair beside it is what the team
+    has banked against par. Before that split the chrome read `0 / 210` for
+    the whole seventeen seconds that mattered. A hit flashes the bird for the
+    sim's own mercy window and bursts a handful of wings out of it, tumbling
+    as they go; the burst is decoration, and none of it can be caught back.
 -   The zone is generated once per seed and scrolled with a transform, never
     rebuilt. Wings and popped badniks are hidden through refs as they are
     taken — a zone carries a couple of hundred of them and the loop runs at
     60fps — and nothing in the scene is React-driven per frame, which is what
     keeps a costume head's halo filter rasterised once.
 -   The whole zone is the jump surface (no scroll, no zoom, no text selection):
-    down jumps, and holding climbs higher. On the tablet it is now the whole of
-    it — there is no chrome drawn inside the zone at all. The
-    `JUMP / HOLD FOR HEIGHT` legend still sits bottom-LEFT, but as the takeover
-    layout's own bottom-left slot rather than as a box the arena paints, and it
-    takes no pointer there, so the pixels under it still jump.
+    down jumps, and holding climbs higher. On the tablet it is the whole of
+    it — there is no chrome drawn inside the zone at all, and how to jump is
+    said once, in the hint on the line, rather than as a legend chip beside a
+    hint that said the same thing.
 -   The display runs a few ticks behind the tablet, so it holds a finished run
     a little longer than the tablet does and finishes the run it has before it
     switches: the room always sees the post or the hole, never a cut to the
@@ -1373,30 +1377,47 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     1225x689. The deck is gone, and so is the mini-rail strip this surface used
     to draw: the shell's own rail arrives in the layout's `rail` slot and already
     says the round, the sauce and whose turn it is. Everything the deck held went
-    to a slot the layout places, and SCHLONIC hand-types none of them:
-    -   `counter`, read-only in the chrome row: the run count, who is running,
-        and the wing tally last — still gold and mono, because it is the score
-        and the health bar at once.
-    -   `actions`, floating bottom-left: the skip and reset escape hatches, the
-        JUMP legend out of the arena, then the hint that used to sit on a row
-        under the zone costing it 28px of height.
-    -   `readout`, floating bottom-right above the corner dock: the zone-clear
-        card, the run list with each run's outcome, and the running totals with
-        the par line under them.
+    to a slot the layout places, and SCHLONIC hand-types none of them — and
+    the chrome is kept to what a run needs, because the bottom-right corner is
+    where the ground band scrolls in and anything floating there hides the
+    next hazard until it is under the hen:
+    -   `counter`, read-only in the chrome row: one chip with the run count and
+        who is running it, and the wing tally — still gold and mono, because it
+        is the score and the health bar at once.
+    -   `actions`, floating bottom-left: the skip and reset escape hatches and
+        one hint, on the line only. A running bird's holder is not reading, and
+        the handoff is announced by the callout over the zone, so neither beat
+        gets a sentence here.
+    -   `readout`, floating bottom-right above the corner dock: the run list
+        while a run's ending is on screen, and the zone-clear card, the run
+        list and the running totals once the team is through. Empty while a
+        run is live.
     -   Who is running stays a chip rather than becoming a plate over the scene
         the way JOUST's lane name does, and for a sharper version of FAPPY's
         reason: the hen is pinned at 46 of the world's 160 units — 28.75%, 353px
         into a 1229px canvas — and a held jump is worth ~27 of the world's 90
         units while a springboard is worth ~81, so it crosses the top-left sky on
         any decent bounce.
--   Display: marquee (team, "Kempenfelt Bay Zone", and a meta cell holding run
-    and wings), the zone, a status line; an outcome plaque over the beat and
-    the points plaque once the team is through. **The meta cell is a row, not a
-    reserve.** It used to carry 268.8px of `padding-right` against a clock this
-    game never draws, which squeezed its readout onto three lines and made the
-    marquee 145.1px tall; laid out rather than reserved it is 87.5px, and the
-    57.6px went back to the zone on every turn. JOUST and FAPPY were paying the
-    same on the same row.
+-   Display: marquee (team, "Kempenfelt Bay Zone", and a meta cell holding the
+    run, the wings in hand and the wings banked), the zone, a status line; one
+    plaque over the beat — how the run ended and, under a rule, who takes the
+    tablet next — and the points plaque once the team is through. One card,
+    not an outcome plaque with a name card stacked over it and the status
+    line saying the name a third time: the status line only says who just
+    finished. A skipped run has no ending to announce, so its card is the next
+    name alone, and it is never called a wipeout. **The meta cell is a row,
+    not a reserve.** It used to carry 268.8px of `padding-right` against a
+    clock this game never draws, which squeezed its readout onto three lines
+    and made the marquee 145.1px tall; laid out rather than reserved it is
+    87.5px, and the 57.6px went back to the zone on every turn. JOUST and
+    FAPPY were paying the same on the same row.
+-   A pit has a shaft of dark under it. The backdrop's park used to show
+    through the gap, and from the sofa a hole read as a bright green pillar
+    standing in the ground rather than a drop out of it. The near waterfront
+    bank — the Spirit Catcher, the marina, Allandale Station — stands on the
+    same strip of shore the kit is dealt onto, in the two darkest, warmest
+    materials in the picture, so it is hazed (`WATERFRONT_HAZE`) like the
+    banks behind it and a pink one with a face still wins the eye.
 -   The run is the game: §8's infinite-animation rule does not bite.
     `prefers-reduced-motion` on the display shows how the run ended, without
     the running.

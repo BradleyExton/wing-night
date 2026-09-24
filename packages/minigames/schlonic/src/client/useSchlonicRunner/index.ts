@@ -4,12 +4,15 @@ import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart } from "@wingni
 
 import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
+import { paintWingTally } from "../wingTally/index.js";
 
 type SchlonicRunnerInput = {
   run: SchlonicMinigameRun | null;
   zone: SchlonicZone;
   canAct: boolean;
   sceneRef: RefObject<SchlonicSceneHandle>;
+  /** Where the wings in hand are written each frame: the chrome's tally, outside the scene. */
+  tallyRef?: RefObject<HTMLElement>;
   onPress: (tick: number) => void;
   onRelease: (tick: number) => void;
   onEndRun: () => void;
@@ -53,6 +56,7 @@ export const useSchlonicRunner = ({
   zone,
   canAct,
   sceneRef,
+  tallyRef,
   onPress,
   onRelease,
   onEndRun
@@ -116,6 +120,8 @@ export const useSchlonicRunner = ({
       } else {
         sceneRef.current?.paintWipeout(frame, progress);
       }
+
+      paintWingTally(tallyRef?.current ?? null, frame.wings);
     };
     const step = (now: number): void => {
       const progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind];
@@ -161,6 +167,7 @@ export const useSchlonicRunner = ({
     }
 
     sceneRef.current?.paint(local.frame);
+    paintWingTally(tallyRef?.current ?? null, local.frame.wings);
     local.rafHandle = window.requestAnimationFrame(step);
   };
 
@@ -181,6 +188,7 @@ export const useSchlonicRunner = ({
         stopLoop();
         runRef.current = createLocalRun();
         sceneRef.current?.paint(runRef.current.frame);
+        paintWingTally(tallyRef?.current ?? null, 0);
       };
       const beat = beatRef.current;
 
@@ -199,7 +207,7 @@ export const useSchlonicRunner = ({
         onEndRunRef.current();
       }
     }
-  }, [runIndex, runStatus, sceneRef]);
+  }, [runIndex, runStatus, sceneRef, tallyRef]);
 
   useEffect(() => {
     return (): void => {

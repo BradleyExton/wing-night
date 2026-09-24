@@ -5,13 +5,14 @@
 // Nothing here positions the takeover's chrome and nothing here reserves the
 // corner dock. The rail, the clock, the counter's place in the row, the
 // bottom-left actions and the bottom-right readout are all the layout's — and
-// so is the z-index budget. Gone with the deck: the 330px `deck` column and
-// its cards, the `rail` strip with its `pr-[clamp(9rem,15vw,12rem)]` reserve
-// for a shell clock this game has never had (`timerKey: null`, so the layout's
-// clock slot draws nothing and takes no width), the `railTeam` / `railTeamDot`
-// chip that said a second time what the shell's mini-rail says once, and the
-// `arenaHint` row that cost the zone 28px of height to say what a floating
-// line says for nothing.
+// so is the z-index budget.
+//
+// The chrome is kept to what a run needs. While the bird is on the hill the
+// slots hold two chips, two buttons and nothing else: the run list and the
+// round's totals come out only while a run's ending is being shown and once the
+// team is through, because the bottom-right corner is where the zone's ground
+// band scrolls in and a card there hid the next hazard until it was under the
+// hen (DESIGN.md §2.11).
 
 // Intro phase renders inside the host's own control deck, where a full-bleed
 // zone would be nonsense — it gets the plain briefing instead. Not a takeover:
@@ -28,19 +29,25 @@ export const introCard =
 const chip =
   "inline-flex min-h-9 items-center rounded-full border border-text/10 bg-bg/85 px-3.5 text-[0.78rem] font-semibold text-muted backdrop-blur";
 
-export const counter = chip;
+// The run count and, beside it in the same chip, who is running it. The scene
+// already draws that player's own hen, so this is the caption on it — and it
+// cannot ride in the body the way JOUST's lane plate does: the runner is pinned
+// at 46 of the world's 160 units and climbs most of the world's height off a
+// springboard, so a plate over the top-left sky would sit in its path.
+export const counter = `${chip} gap-2`;
 
-// Who is running. The scene already draws that player's own hen, so this is
-// the caption on it — and it cannot ride in the body the way JOUST's lane
-// plate does: the runner is pinned at 46 of the world's 160 units and climbs
-// most of the world's height off a springboard, so a plate over the top-left
-// sky would sit in its path. On the chrome row it costs the zone nothing.
-export const counterName = `${chip} text-text`;
+export const counterName = "text-text";
 
-// Wings are the score and the health bar at once (DESIGN.md §2.11), so the
-// tally is the one number in the chrome that is gold and mono rather than a
-// grey count.
+// Wings are the score and the health bar at once (DESIGN.md §2.11), so this is
+// the one chip in the chrome that is gold and mono rather than a grey count.
+// The big number is what the bird is holding right now, written by the paint
+// loop; the smaller pair beside it is what the team has already put on the
+// board against par.
 export const counterWings = `${chip} gap-2 font-mono text-[0.95rem] tracking-normal text-gold`;
+
+export const counterInHand = "text-[1.15rem] font-extrabold [font-variant-numeric:tabular-nums]";
+
+export const counterBanked = "text-[0.85rem] text-gold/80 [font-variant-numeric:tabular-nums]";
 
 export const counterWingsLabel =
   "text-[0.6rem] font-extrabold uppercase tracking-[0.22em] text-mutedWarmDim";
@@ -48,24 +55,14 @@ export const counterWingsLabel =
 export const waitingNote =
   "flex h-full w-full items-center justify-center text-sm text-muted";
 
-// The turn's escape hatches, the jump legend and the hint (§5, `actions`). The
-// layout floats this bottom-left and bounds its width so it cannot run under
-// the corner dock — neither the position nor the max-width is typed here.
-// Glass, because they now sit over the shoreline rather than in a panel, and
-// `shrink-0` so the hint beside them wraps rather than squeezing a 44px target
+// The turn's escape hatches and the one-line hint (§5, `actions`). The layout
+// floats this bottom-left and bounds its width so it cannot run under the
+// corner dock — neither the position nor the max-width is typed here. Glass,
+// because they sit over the shoreline rather than in a panel, and `shrink-0`
+// so the hint beside them wraps rather than squeezing a 44px target
 // (DESIGN.md §2.0A).
 export const secondaryButton =
   "min-h-12 shrink-0 rounded-lg border-2 border-mutedWarmDim/60 bg-bg/85 px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-45";
-
-// `JUMP / HOLD FOR HEIGHT`, which used to be drawn inside the zone at
-// `bottom-3 left-3` — the actions row's own corner. Same corner, same words,
-// placed by the layout now instead of by the arena.
-export const jumpLegend =
-  "flex shrink-0 flex-col gap-0.5 rounded-xl bg-bg/70 px-3 py-1.5 backdrop-blur";
-
-export const jumpLegendLabel = "text-sm font-extrabold uppercase tracking-[0.28em] text-gold";
-
-export const jumpLegendHint = "text-[0.65rem] uppercase tracking-[0.2em] text-mutedWarmDim";
 
 export const hint = "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] italic text-text/75 backdrop-blur";
 

@@ -69,3 +69,15 @@ test("follows the surface back with a sand band under it", () => {
   assert.ok(segment.bluffPath.includes(`L 200 ${SCHLONIC_WORLD.groundBaseY + BLUFF_DEPTH}`));
   assert.ok(segment.bluffPath.includes(`L 0 ${SCHLONIC_WORLD.groundBaseY + BLUFF_DEPTH} Z`));
 });
+
+test("keeps drawing level ground past the last sample when asked for a run-out", () => {
+  const segments = resolveGroundSegments(zoneOf([]), 90, 120);
+
+  assert.equal(segments.length, 1);
+  assert.equal(segments[0]?.toX, 320);
+  assert.ok(segments[0]?.topPath.endsWith(`L 320 ${SCHLONIC_WORLD.groundBaseY}`));
+});
+
+test("draws no run-out unless asked, so the geometry ends where the samples do", () => {
+  assert.equal(resolveGroundSegments(zoneOf([]))[0]?.toX, 200);
+});
