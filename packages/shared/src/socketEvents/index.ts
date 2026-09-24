@@ -7,6 +7,7 @@ import type {
   RoleScopedStateSnapshotEnvelope
 } from "../roomState/index.js";
 import type { MusicPlaybackSource } from "../musicPlayback/index.js";
+import type { QuickPlayStartRequest } from "../quickPlay/index.js";
 
 export { MINIGAME_API_VERSION } from "../content/gameConfig/index.js";
 export type { MinigameApiVersion } from "../content/gameConfig/index.js";
@@ -65,6 +66,10 @@ export type ConfigSavePayload = HostSecretPayload &
   Record<"files", ConfigFileEdit[]>;
 export type ConfigApplyPayload = ConfigSavePayload;
 
+// The launcher's one event: the queue and the dealt teams, in one message, so
+// the room either starts the whole session or none of it.
+export type QuickPlayStartPayload = HostSecretPayload & QuickPlayStartRequest;
+
 export const CLIENT_TO_SERVER_EVENTS = {
   REQUEST_STATE: "client:requestState",
   CLAIM_CONTROL: "host:claimControl",
@@ -92,7 +97,8 @@ export const CLIENT_TO_SERVER_EVENTS = {
   MUSIC_TRACK_ENDED: "music:trackEnded",
   CONFIG_READ: "config:read",
   CONFIG_SAVE: "config:save",
-  CONFIG_APPLY: "config:apply"
+  CONFIG_APPLY: "config:apply",
+  QUICKPLAY_START: "quickplay:start"
 } as const;
 
 export const SERVER_TO_CLIENT_EVENTS = {
@@ -158,6 +164,9 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.CONFIG_READ]: (payload: ConfigReadPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.CONFIG_SAVE]: (payload: ConfigSavePayload) => void;
   [CLIENT_TO_SERVER_EVENTS.CONFIG_APPLY]: (payload: ConfigApplyPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.QUICKPLAY_START]: (
+    payload: QuickPlayStartPayload
+  ) => void;
 };
 
 export type ServerToClientEvents = {

@@ -51,6 +51,22 @@ test("renders pre-game when total rounds metadata is invalid", () => {
   assert.doesNotMatch(html, /Round 1 of 0/);
 });
 
+// A Quick Play round is one queued game with a placeholder sauce nobody eats,
+// so the rail counts games and leaves the sauce slot out.
+test("counts games and hides the sauce during a Quick Play briefing", () => {
+  const html = renderMiniRail(
+    buildSnapshot(Phase.MINIGAME_INTRO, {
+      sessionMode: "QUICK_PLAY",
+      currentRound: 1,
+      totalRounds: 2
+    })
+  );
+
+  assert.match(html, /Game 1 of 2/);
+  assert.doesNotMatch(html, /Frank/);
+  assert.match(html, /TRIVIA/);
+});
+
 test("hides the briefing's sauce and minigame outside MINIGAME_INTRO", () => {
   const html = renderMiniRail(buildSnapshot(Phase.EATING));
 

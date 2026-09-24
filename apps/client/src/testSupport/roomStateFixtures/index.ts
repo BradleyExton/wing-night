@@ -62,6 +62,7 @@ export const buildRoomState = (
 
   return {
     phase: Phase.SETUP,
+    sessionMode: "NIGHT",
     currentRound: 1,
     totalRounds: 1,
     players: fixturePlayers,

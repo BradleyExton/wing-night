@@ -16,6 +16,12 @@ test("creates socket for the admin route", () => {
   assert.equal(shouldCreateRoomSocket("ADMIN"), true);
 });
 
+// The launcher reads the roster off room state and sends one host-authorized
+// `quickplay:start`; without a socket it could do neither.
+test("creates socket for the quick play route", () => {
+  assert.equal(shouldCreateRoomSocket("QUICKPLAY"), true);
+});
+
 // The launcher is a static list of links. Nothing on it reads room state.
 test("does not create a socket for the dev index route", () => {
   assert.equal(shouldCreateRoomSocket("DEV_INDEX"), false);

@@ -189,6 +189,25 @@ const handlerInvocations: HandlerInvocation[] = [
     name: "onRedoLastMutation",
     invoke: (handlers) => handlers.onRedoLastMutation(),
     expectedPayload: { hostSecret: "valid-host-secret" }
+  },
+  {
+    name: "onStartQuickPlay",
+    invoke: (handlers) =>
+      handlers.onStartQuickPlay(
+        [{ minigame: "TRIVIA", rules: { questionsPerTurn: 2 }, timerSeconds: null }],
+        [
+          { teamId: "team-1", playerIds: ["player-1"] },
+          { teamId: "team-2", playerIds: ["player-2"] }
+        ]
+      ),
+    expectedPayload: {
+      hostSecret: "valid-host-secret",
+      games: [{ minigame: "TRIVIA", rules: { questionsPerTurn: 2 }, timerSeconds: null }],
+      teams: [
+        { teamId: "team-1", playerIds: ["player-1"] },
+        { teamId: "team-2", playerIds: ["player-2"] }
+      ]
+    }
   }
 ];
 
@@ -283,6 +302,36 @@ const guardedInvocations: GuardedInvocation[] = [
   {
     label: "onSetMusicVolume rejects a negative volume",
     invoke: (handlers) => handlers.onSetMusicVolume(-0.5)
+  },
+  {
+    label: "onStartQuickPlay rejects an empty queue",
+    invoke: (handlers) =>
+      handlers.onStartQuickPlay(
+        [],
+        [
+          { teamId: "team-1", playerIds: ["player-1"] },
+          { teamId: "team-2", playerIds: ["player-2"] }
+        ]
+      )
+  },
+  {
+    label: "onStartQuickPlay rejects a lone team",
+    invoke: (handlers) =>
+      handlers.onStartQuickPlay(
+        [{ minigame: "TRIVIA" }],
+        [{ teamId: "team-1", playerIds: ["player-1"] }]
+      )
+  },
+  {
+    label: "onStartQuickPlay rejects an empty team",
+    invoke: (handlers) =>
+      handlers.onStartQuickPlay(
+        [{ minigame: "TRIVIA" }],
+        [
+          { teamId: "team-1", playerIds: ["player-1"] },
+          { teamId: "team-2", playerIds: [] }
+        ]
+      )
   }
 ];
 

@@ -1,4 +1,4 @@
-import { MUSIC_VOLUME_DEFAULT } from "@wingnight/shared";
+import { MUSIC_VOLUME_DEFAULT, SESSION_MODES } from "@wingnight/shared";
 
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
@@ -32,7 +32,9 @@ export const MinigameIntroStage = (): JSX.Element => {
         </h1>
         <p className={styles.meta}>
           {minigameType !== null
-            ? hostControlPanelCopy.minigameIntroDescription(minigameType)
+            ? hostControlPanelCopy.minigameIntroDescription(minigameType, {
+                isQuickPlay: roomState?.sessionMode === SESSION_MODES.QUICK_PLAY
+              })
             : hostControlPanelCopy.headerWaitingDescription}
         </p>
       </StageHero>

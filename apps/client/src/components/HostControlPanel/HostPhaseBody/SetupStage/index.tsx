@@ -91,16 +91,23 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
             </>
           )}
         </p>
-        {!isLocked && unassignedPlayers > 0 && (
+        {!isLocked && (
           <div className={styles.heroActionRow}>
-            <button
-              type="button"
-              className={styles.actionButton}
-              disabled={autoAssignDisabled}
-              onClick={handleAutoAssignRemainingPlayers}
-            >
-              {hostControlPanelCopy.autoAssignRemainingPlayersButtonLabel}
-            </button>
+            {unassignedPlayers > 0 && (
+              <button
+                type="button"
+                className={styles.actionButton}
+                disabled={autoAssignDisabled}
+                onClick={handleAutoAssignRemainingPlayers}
+              >
+                {hostControlPanelCopy.autoAssignRemainingPlayersButtonLabel}
+              </button>
+            )}
+            {/* The night's other exit. A link rather than a phase action: the
+                launcher is its own page, and nothing here mutates the room. */}
+            <a className={styles.quickPlayLink} href={hostControlPanelCopy.quickPlayLinkHref}>
+              {hostControlPanelCopy.quickPlayLinkLabel}
+            </a>
           </div>
         )}
       </StageHero>

@@ -87,6 +87,7 @@ export const resolveSandboxHostRoomState = (
 
   return {
     phase: Phase.MINIGAME_PLAY,
+    sessionMode: "NIGHT",
     currentRound: 1,
     totalRounds: 1,
     players: [],

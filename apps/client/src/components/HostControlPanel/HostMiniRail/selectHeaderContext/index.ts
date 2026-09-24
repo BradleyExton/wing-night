@@ -1,4 +1,4 @@
-import { Phase, type RoomState } from "@wingnight/shared";
+import { Phase, SESSION_MODES, type RoomState } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../../copy";
 
@@ -42,6 +42,7 @@ export const selectHeaderContext = (
   teamNameByTeamId: Map<string, string>
 ): HeaderContext => {
   const phase = roomState?.phase ?? null;
+  const isQuickPlay = roomState?.sessionMode === SESSION_MODES.QUICK_PLAY;
 
   const phaseTitle =
     phase === null
@@ -50,22 +51,27 @@ export const selectHeaderContext = (
   const phaseDescription =
     phase === null
       ? hostControlPanelCopy.headerWaitingDescription
-      : hostControlPanelCopy.headerPhaseDescription(phase);
+      : hostControlPanelCopy.headerPhaseDescription(phase, { isQuickPlay });
 
   const currentRound = roomState?.currentRound ?? 0;
   const totalRounds = roomState?.totalRounds ?? 0;
   const roundLabel =
     currentRound > 0 && totalRounds > 0
-      ? hostControlPanelCopy.compactRoundProgressLabel(currentRound, totalRounds)
+      ? isQuickPlay
+        ? hostControlPanelCopy.quickPlayGameProgressLabel(currentRound, totalRounds)
+        : hostControlPanelCopy.compactRoundProgressLabel(currentRound, totalRounds)
       : hostControlPanelCopy.headerPreGameLabel;
 
   // The sauce and the mini-game are what the deleted round intro screen told the
   // host. They now ride the rail on the beat that replaced it — the briefing,
   // where the host says both out loud before the team starts eating.
+  // Quick Play rounds carry a placeholder sauce the room never eats, so the
+  // rail leaves that slot out rather than announcing it.
   const isRoundBriefingPhase = phase === Phase.MINIGAME_INTRO;
-  const sauceLabel = isRoundBriefingPhase
-    ? (roomState?.currentRoundConfig?.sauce ?? null)
-    : null;
+  const sauceLabel =
+    isRoundBriefingPhase && !isQuickPlay
+      ? (roomState?.currentRoundConfig?.sauce ?? null)
+      : null;
   const minigameLabel = isRoundBriefingPhase
     ? (roomState?.currentRoundConfig?.minigame ?? null)
     : null;

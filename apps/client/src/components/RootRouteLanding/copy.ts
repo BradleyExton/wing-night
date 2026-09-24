@@ -25,6 +25,14 @@ export const rootRouteLandingCopy = {
       detail: "Show live game context and standings for everyone in the room.",
       targetDevice: "Best on the TV or projector display.",
       tone: "SECONDARY"
+    },
+    {
+      href: "/quickplay",
+      label: "Quick Play",
+      detail:
+        "Skip the wings: pick who's here, queue a few mini-games, tune their rules and play them on the TV.",
+      targetDevice: "Host tablet, with the Display Board on the TV.",
+      tone: "SECONDARY"
     }
   ] as const,
   devLink: {

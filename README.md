@@ -67,7 +67,7 @@ Wing Night uses a pnpm workspace monorepo.
 
 ```text
 apps/
-  client/                         # React app (routes: /host, /display, /dev/minigame/:minigameId)
+  client/                         # React app (routes: /host, /display, /quickplay, /admin, /dev/minigame/:minigameId)
   server/                         # Express + Socket.IO server
 
 packages/
@@ -92,6 +92,13 @@ For fast minigame iteration, open `/dev` — it lists every minigame
 sandbox and dev lab by name, so you never have to remember a slug. Each
 sandbox (`/dev/minigame/<slug>`) previews the host + display surfaces
 against the real runtime, and its Minigame dropdown hops to any other.
+
+To play a few mini-games with friends without running the night, open
+`/quickplay` on the host tablet (it is also linked from SETUP and the
+screen picker): tick who is here, deal them onto the pack's teams, queue
+the games and tune each one's rules, then Start. The TV on `/display`
+follows, there is no eating phase, and Reset Game brings the real night
+back. See `SPEC.md` § Quick Play.
 
 ------------------------------------------------------------------------
 

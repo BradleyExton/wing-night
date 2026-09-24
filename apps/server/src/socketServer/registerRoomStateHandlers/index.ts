@@ -3,14 +3,12 @@ import {
   CONFIG_ACTIONS,
   CONFIG_ERROR_CODES,
   MINIGAME_API_VERSION,
-  Phase,
   SERVER_TO_CLIENT_EVENTS
 } from "@wingnight/shared";
 import type {
   ClientToServerEvents,
   ConfigReadPayload,
   ConfigResultPayload,
-  ConfigSavePayload,
   HostSecretPayload,
   RoleScopedStateSnapshotEnvelope,
   RoomState
@@ -18,6 +16,7 @@ import type {
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { createConfigService, type ConfigService } from "../../configService/index.js";
+import { handleConfigApply } from "./handleConfigApply/index.js";
 
 import {
   addPlayer,
@@ -42,7 +41,8 @@ import {
   setWingParticipation,
   skipRoomMusicTrack,
   skipTurnBoundary,
-  startGame
+  startGame,
+  startQuickPlay
 } from "../../roomState/index.js";
 import {
   isGameReorderTurnOrderPayload,
@@ -55,6 +55,7 @@ import {
   isSetupAddPlayerPayload,
   isSetupAssignPlayerPayload,
   isConfigSavePayload,
+  isQuickPlayStartPayload,
   isSetupCreateTeamPayload,
   isTimerExtendPayload
 } from "./payloadGuards/index.js";
@@ -239,6 +240,11 @@ const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
     CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME,
     isMusicSetVolumePayload,
     (payload) => setRoomMusicVolume(payload.volume)
+  ),
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.QUICKPLAY_START,
+    isQuickPlayStartPayload,
+    (payload) => startQuickPlay(payload.games, payload.teams)
   )
 ];
 
@@ -264,7 +270,7 @@ const REPORTED_EVENTS: AuthorizedEventRegistration[] = [
   }
 ];
 
-type ConfigEventContext = {
+export type ConfigEventContext = {
   isValidHostSecret: (hostSecret: string) => boolean;
   emitSecretInvalid: () => void;
   emitConfigResult: (payload: ConfigResultPayload) => void;
@@ -337,59 +343,6 @@ const defineConfigEvent = <TPayload extends HostSecretPayload>(
       }
     }
   };
-};
-
-const handleConfigApply = (
-  payload: ConfigSavePayload,
-  context: ConfigEventContext
-): void => {
-  // Saves stay legal past SETUP so next week's config can be prepped mid-night;
-  // apply does not, because re-seeding room state mid-game would move the
-  // ground under a running round. Reset Game is the escape hatch.
-  if (getRoomStateSnapshot().phase !== Phase.SETUP) {
-    context.emitConfigResult({
-      action: CONFIG_ACTIONS.APPLY,
-      ok: false,
-      code: CONFIG_ERROR_CODES.LOCKED,
-      message: "Config can only be applied during SETUP. Reset the game first.",
-      issues: []
-    });
-    return;
-  }
-
-  const saveResult = context.configService.save(payload.files);
-
-  if (!saveResult.ok) {
-    context.emitConfigResult({ ...saveResult, action: CONFIG_ACTIONS.APPLY });
-    return;
-  }
-
-  // The re-seed has to run INSIDE the dispatch's thunk. `applyRoomStateMutation`
-  // clears its mutation flag on entry and reads it the instant the thunk
-  // returns, so a reload run before or after this call would raise the flag
-  // with nobody reading it — room state would change and neither host nor
-  // display would hear about it. Held in an object because the compiler cannot
-  // see that the callback runs synchronously.
-  const applyOutcome: { result: ConfigResultPayload } = {
-    result: {
-      action: CONFIG_ACTIONS.APPLY,
-      ok: false,
-      code: CONFIG_ERROR_CODES.LOAD_FAILED,
-      message: "Config reload did not run.",
-      issues: []
-    }
-  };
-
-  context.dispatchAuthorizedMutation(
-    CLIENT_TO_SERVER_EVENTS.CONFIG_APPLY,
-    payload,
-    () => {
-      applyOutcome.result = context.configService.reload();
-      return getRoomStateSnapshot();
-    }
-  );
-
-  context.emitConfigResult(applyOutcome.result);
 };
 
 const CONFIG_EVENTS: ConfigEventRegistration[] = [

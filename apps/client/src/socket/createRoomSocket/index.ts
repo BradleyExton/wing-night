@@ -22,7 +22,7 @@ type SocketAuthPayload = {
 export const resolveSocketClientRole = (pathname: string): SocketClientRole => {
   const route = resolveClientRoute(pathname);
 
-  if (route === "HOST" || route === "ADMIN") {
+  if (route === "HOST" || route === "ADMIN" || route === "QUICKPLAY") {
     return CLIENT_ROLES.HOST;
   }
 

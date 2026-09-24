@@ -12,6 +12,7 @@ import {
 const createRoomStateFixture = (): RoomState => {
   return {
     phase: Phase.SETUP,
+    sessionMode: "NIGHT",
     currentRound: 0,
     totalRounds: 3,
     players: [],

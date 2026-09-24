@@ -3,6 +3,7 @@ import {
   MUSIC_PLAYBACK_SOURCES,
   MINIGAME_API_VERSION,
   TIMER_EXTEND_MAX_SECONDS,
+  isQuickPlayStartRequest,
   isValidMusicVolume,
   type ConfigSavePayload,
   type GameReorderTurnOrderPayload,
@@ -10,6 +11,7 @@ import {
   type MinigameActionEnvelope,
   type MusicSetVolumePayload,
   type MusicTrackEndedPayload,
+  type QuickPlayStartPayload,
   type ScoringAdjustTeamScorePayload,
   type ScoringSetWingParticipationPayload,
   type SetupAddPlayerPayload,
@@ -142,3 +144,11 @@ export const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPa
       value > 0 &&
       value <= TIMER_EXTEND_MAX_SECONDS
   });
+
+// The envelope is the shared request guard plus the secret: the launcher runs
+// the same `isQuickPlayStartRequest` before it emits, so a payload this
+// rejects is one the launcher never built.
+export const isQuickPlayStartPayload = (
+  payload: unknown
+): payload is QuickPlayStartPayload =>
+  hasShape(payload, { hostSecret: isString }) && isQuickPlayStartRequest(payload);

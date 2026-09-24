@@ -19,6 +19,7 @@ import type { TriviaPrompt } from "../content/trivia/index.js";
 import type { RoomMusicPlaybackState } from "../musicPlayback/index.js";
 import type { Phase } from "../phase/index.js";
 import type { Player } from "../player/index.js";
+import type { SessionMode } from "../sessionMode/index.js";
 import type { SocketClientRole } from "../socketClientRole/index.js";
 import type { Team } from "../team/index.js";
 
@@ -690,6 +691,9 @@ export type RoomFatalError = {
 
 export type RoomState = {
   phase: Phase;
+  // NIGHT is the full show; QUICK_PLAY drops EATING and runs the queue the
+  // host built at /quickplay. Reset Game returns the room to NIGHT.
+  sessionMode: SessionMode;
   // 0 means pre-round state; rounds in progress are 1..N.
   currentRound: number;
   // Total rounds scheduled for the active game.
@@ -731,6 +735,7 @@ export type RoomState = {
 
 type DisplaySafeRoomStateKeys =
   | "phase"
+  | "sessionMode"
   | "currentRound"
   | "totalRounds"
   | "players"
@@ -757,6 +762,7 @@ type DisplaySafeRoomStateKeys =
 
 export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "phase",
+  "sessionMode",
   "currentRound",
   "totalRounds",
   "players",
@@ -808,6 +814,7 @@ export const toDisplayRoomStateSnapshot = (
 ): DisplayRoomStateSnapshot => {
   const displaySnapshot = {
     phase: roomState.phase,
+    sessionMode: roomState.sessionMode,
     currentRound: roomState.currentRound,
     totalRounds: roomState.totalRounds,
     players: roomState.players,

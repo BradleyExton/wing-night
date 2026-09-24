@@ -16,6 +16,12 @@ test("resolveSocketClientRole maps the admin route to HOST role", () => {
   assert.equal(resolveSocketClientRole("/admin"), CLIENT_ROLES.HOST);
 });
 
+// Same failure mode as ADMIN: connected as DISPLAY, the launcher's start would
+// be dropped without a reply.
+test("resolveSocketClientRole maps the quick play route to HOST role", () => {
+  assert.equal(resolveSocketClientRole("/quickplay"), CLIENT_ROLES.HOST);
+});
+
 test("resolveSocketAuthPayload includes the host control token for the admin route", () => {
   assert.deepEqual(resolveSocketAuthPayload("/admin", "host-token"), {
     clientRole: CLIENT_ROLES.HOST,

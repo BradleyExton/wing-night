@@ -39,6 +39,7 @@ type SocketHarness = {
 export const buildRoomState = (phase: RoomState["phase"], currentRound = 0): RoomState => {
   return {
     phase,
+    sessionMode: "NIGHT",
     currentRound,
     totalRounds: 3,
     players: [],

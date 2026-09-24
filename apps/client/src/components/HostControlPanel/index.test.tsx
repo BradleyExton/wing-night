@@ -36,6 +36,26 @@ test("renders fatal content state when snapshot reports content load failure", (
   assert.doesNotMatch(html, /Next Phase/);
 });
 
+// No EATING in Quick Play, so the briefing's primary action starts the game.
+test("labels the briefing's action Start Mini-Game during Quick Play", () => {
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.MINIGAME_INTRO, { sessionMode: "QUICK_PLAY" })
+  });
+
+  assert.match(html, /Start Mini-Game/);
+  assert.doesNotMatch(html, /Start Eating/);
+  assert.doesNotMatch(html, /start eating/);
+});
+
+test("links the Quick Play launcher from SETUP", () => {
+  const html = renderHostMarkup(<HostControlPanel />, {
+    roomState: buildSnapshot(Phase.SETUP)
+  });
+
+  assert.match(html, /href="\/quickplay"/);
+  assert.match(html, /Quick Play a mini-game/);
+});
+
 test("renders setup deck and assignment controls during SETUP", () => {
   // Snapshot with one player not assigned so auto-assign button renders.
   const html = renderHostMarkup(<HostControlPanel />, {
