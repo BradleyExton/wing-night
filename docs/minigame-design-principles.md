@@ -204,18 +204,20 @@ Worked example, the current pack schedule (`~/wing-night-content/local/gameConfi
 |---|---|---|---|
 | 1 | SCHLONIC | agon | twitch, one button |
 | 2 | GEO | agon (knowledge) | think then commit |
-| 3 | SONG_GUESS | agon (recall) | think then commit |
-| 4 | EMOJI_CHARADES | mimicry | perform, team shouts |
+| 3 | EMOJI_CHARADES | mimicry | perform, team shouts |
+| 4 | SONG_GUESS | agon (recall) | think then commit |
 | 5 | DRAWING | mimicry | perform, team shouts |
 | 6 | FAPPY | agon + ilinx | twitch relay, tablet handoff |
-| 7 | JOUST | agon + alea | aim, hard commit, spectator physics |
-| 8 | RECREATE | mimicry, judged | write, slow reveal |
+| 7 | RECREATE | mimicry, judged | write, slow reveal |
+| 8 | JOUST | agon + alea | aim, hard commit, spectator physics |
 
-Rounds 2 and 3 are consecutive think-then-commit recall games, and rounds 4 and 5 are
-consecutive perform-and-shout games. Swapping SONG_GUESS with EMOJI_CHARADES fixes both at
-no cost. Whether RECREATE's painting reveal is a bigger climax than JOUST knocking the
-whole room off its perches is a judgement call for the table; the principle only says the
-last round must be the loudest, not which one that is.
+No two consecutive rounds share a shape: recall alternates with perform through the middle
+of the night, and the two twitch games sit at rounds 1 and 6. Before 2026-09-24 the pack
+ran GEO then SONG_GUESS (two think-then-commit games) and EMOJI_CHARADES then DRAWING (two
+perform-and-shout games); swapping rounds 3 and 4 fixed both at no cost. JOUST closes the
+night because it is the loudest game we ship, the whole room watching towers collapse, and
+because its climax is local physics, whereas RECREATE's climax is a Gemini call that can
+refuse or stall, which is not a risk to take on the final round.
 
 ## 8) Juice: feedback the room can see
 
@@ -329,8 +331,10 @@ decisions.
   It is not in the pack schedule, and this is a reason to keep it out or redesign it.
 - **Song Guess has no commit or reveal beat**: answers are verbal and the host marks them.
   Item 2 wants a visible lock before the title appears on the TV.
-- **The pack schedule** has two back-to-back recall games and two back-to-back perform
-  games (item 25); see the worked example in §7.
+- **The pack schedule** used to have two back-to-back recall games and two back-to-back
+  perform games (item 25). Fixed 2026-09-24 by swapping rounds 3 and 4, and JOUST moved to
+  the finale so the last round does not depend on a network call; see the worked example
+  in §7.
 - **No game states its information asymmetry** in its spec (item 10). The shipped games all
   have one; writing it down is what stops the next game from having none.
 
