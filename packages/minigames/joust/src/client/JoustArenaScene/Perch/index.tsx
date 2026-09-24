@@ -12,6 +12,12 @@ import type { JoustSceneLeg } from "../../resolveJoustScene/index.js";
 import { joustPalette } from "../palette.js";
 import { LegTimber } from "./LegTimber/index.js";
 import { PerchShade } from "./PerchShade/index.js";
+import {
+  PerchSkin,
+  resolveLegPaint,
+  resolvePerchSkin,
+  resolvePlankPaint
+} from "./PerchSkin/index.js";
 import { PointsTag } from "./PointsTag/index.js";
 import { Rubble } from "./Rubble/index.js";
 import { plankPath } from "./plankPath/index.js";
@@ -42,6 +48,10 @@ const legRestHeight = (perch: JoustPerch): number => {
  * two tops. So when a shot folds the frame, the plank comes down with it on the TV — nothing
  * here is a second opinion about where the tower is.
  *
+ * What the timber is DRESSED as is decided by height (`PerchSkin`): a low shelf is a dock on
+ * pilings, a high one a lifeguard tower. The skin only paints the same legs and plank and hangs
+ * its trim off the plank's current ends, so it folds with the frame like everything else.
+ *
  * Fallen towers stay in the lane as rubble: plank flat on the sand, legs splayed under it.
  */
 export const Perch = ({
@@ -59,6 +69,8 @@ export const Perch = ({
   }
 
   const points = resolveJoustPerchPoints(perch);
+  const skin = resolvePerchSkin(JOUST_WORLD.floorY - perch.y);
+  const plankPaint = resolvePlankPaint(skin);
   const [nearLeg, farLeg] = legs;
 
   // A slab too low for legs is a wall on the sand: the static boxes, as ever.
@@ -112,26 +124,17 @@ export const Perch = ({
           leg={leg}
           height={legRestHeight(perch)}
           isAimTarget={isAimTarget}
+          paint={resolveLegPaint(skin)}
         />
       ))}
       <path
         d={plankPath(plankFrom, plankTo)}
-        fill={joustPalette.post}
-        stroke={joustPalette.postDark}
+        fill={plankPaint.fill}
+        stroke={plankPaint.stroke}
         strokeWidth={0.5}
         strokeLinejoin="round"
       />
-      {/* A grain line along the shelf, so a plank reads as a plank and not a bar of colour. */}
-      <line
-        x1={plankFrom.x + 1}
-        y1={plankFrom.y - 1.6}
-        x2={plankTo.x - 1}
-        y2={plankTo.y - 1.6}
-        stroke={joustPalette.postDark}
-        strokeWidth={0.4}
-        strokeDasharray="2 2.4"
-        opacity={0.7}
-      />
+      <PerchSkin skin={skin} from={plankFrom} to={plankTo} />
       {points > 1 && <PointsTag at={tagAt} points={points} />}
     </g>
   );

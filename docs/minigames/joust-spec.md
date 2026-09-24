@@ -2,13 +2,14 @@
 
 Status: **Shipped** — `packages/minigames/joust/`
 
-Last updated: 2026-09-23 (the bench walks: turn-ordered line, walk-off, the shooter grabs the band)
+Last updated: 2026-09-23 (Centennial Beach at dusk, beach props by `kind`, four Barrie lanes; the bench walks: turn-ordered line, walk-off, the shooter grabs the band)
 
 ## 1) One-liner
 
 The active team loads a very floppy challenger into a slingshot on the host tablet, pulls back,
-lets go, and the whole room watches it fly down a desert lane on the TV — into a cactus, into the
-sand, or into *everybody who isn't on their team*, stood on scaffolding down the lane as chickens.
+lets go, and the whole room watches it fly down Centennial Beach at dusk on the TV — into a
+lifeguard chair, into the sand, or into *everybody who isn't on their team*, stood on the docks and
+lifeguard towers down the beach as chickens, with the Spirit Catcher looking on.
 Every player on the shooting team gets one pull of the band. Every player they knock off is a
 point, and whoever goes over stays over.
 
@@ -59,9 +60,10 @@ it is.
   low and hard.
 - **A player is worth what they stood on.** One point on the sand, like bowling; a shelf pays
   more the higher it is — `resolveJoustPerchPoints`: one more per `JOUST_PERCH_POINTS_TIER` (20)
-  units of rise, capped at `JOUST_PERCH_POINTS_MAX` (3). The sample lanes' shelves all pay 2, and
-  the plank says so on the TV. Together with collapse this is the choice: pick a player off the
-  shelf with an arc for 2, or go for the legs and take the whole shelf at once.
+  units of rise, capped at `JOUST_PERCH_POINTS_MAX` (3). The sample lanes' towers all pay 2 and
+  the plank says so on the TV; their docks sit under the tier and pay what the sand does, so a
+  dock is a place to stand rather than a prize. Together with collapse this is the choice: pick a
+  player off the shelf with an arc for 2, or go for the legs and take the whole shelf at once.
 - **The ghost of the last shot.** While a teammate aims, the previous shot's arc (the head's path
   up to its first contact) and the ring it was pulled to stay on the lane, on both screens. Each
   shooter on a team is adjusting off the last one rather than starting blind. Client-drawn from
@@ -69,7 +71,8 @@ it is.
   last ghost be; a reset clears it.
 - The **shooter** is a verlet chain (5 shaft links, a head, two balls). Each **pin** is a foot and
   a head with a stick between them, collided against as the capsule it is drawn as. Obstacles are
-  content-authored rectangles the renderer draws as cacti.
+  content-authored rectangles the renderer draws as beach props; their optional `kind` (§5) is
+  skin only, and the physics sees four segments whatever it says.
 - A pin is **bistable**, like the real thing: inside `PIN_RECOVERY_TILT` it rights itself, and past
   it nothing holds it up — gravity swings the head down about the planted foot and it is going
   over. A pin over `JOUST_TOPPLE_TILT` (0.45 of its own height) is latched down for good. Falling
@@ -154,7 +157,9 @@ it is.
 - **Nothing is secret.** Host and display views carry the same fields; the projection test pins
   the display to exactly those and no runtime-only field.
 - **Lane per team.** Chosen by turn-order slot, like Song Guess's setlists, so no two teams face
-  the same cactus and a reconnect rehydrates the same lane.
+  the same lane and a reconnect rehydrates the same one. Because the slot picks the lane, the
+  shipped lanes have to pay alike — `world/index.test.ts` pins the spread of available points
+  across the four to one point at every realistic rack size, or going first is a prize.
 
 ## 5) Content
 
@@ -164,14 +169,18 @@ it is.
 {
   "prompts": [
     {
-      "id": "arena-lookout",
-      "name": "The Lookout",
+      "id": "arena-centennial-beach",
+      "name": "Centennial Beach",
       "perches": [
         { "x": 54, "y": 78, "width": 102 },
-        { "x": 57, "y": 52, "width": 58 },
-        { "x": 129, "y": 40, "width": 22 }
+        { "x": 54, "y": 64, "width": 28 },
+        { "x": 89, "y": 50, "width": 65 }
       ],
-      "obstacles": [{ "x": 46, "y": 66, "width": 5, "height": 12 }]
+      "obstacles": [
+        { "x": 45, "y": 64, "width": 7, "height": 14, "kind": "umbrella" },
+        { "x": 60, "y": 73, "width": 16, "height": 5, "kind": "canoe" },
+        { "x": 156, "y": 50, "width": 2, "height": 28, "kind": "mast" }
+      ]
     }
   ]
 }
@@ -182,7 +191,27 @@ World is 160 wide, 90 tall, floor at y = 78, slingshot fork at (40, 46). A lane 
 not shooting that night, dealt across the perches. A perch is anchored by its left edge `x` and by
 the surface `y` players stand on; one at floor level is the sand, and any higher one grows its own
 slab and legs. Perches must sit between `JOUST_RACK_LEFT` (54) and `JOUST_RACK_RIGHT` (156) and no
-higher than `JOUST_RACK_TOP` (22).
+higher than `JOUST_RACK_TOP` (22). The renderer dresses a shelf by its rise: under
+`JOUST_PERCH_POINTS_TIER` (20) it is a dock on pilings, from there up a lifeguard tower — skin only,
+the timber is the same boxes either way.
+
+An obstacle's optional `kind` is what the renderer dresses it as, one of `lifeguard-chair`,
+`muskoka-chair`, `canoe`, `chip-truck`, `mast` or `umbrella`; anything else is rejected at load,
+and a missing `kind` draws an umbrella. It never reaches the physics — a canoe and a chip truck of
+the same rectangle stop a shot identically — so pick the drawing that fits the rectangle rather
+than the other way round.
+
+**The sample lanes are four Barrie lanes**, dealt by turn slot: Centennial Beach (a dock and a big
+lifeguard tower), The Spirit Catcher (a mid shelf and the tallest stand of the four), Allandale
+Dock (a long lifeguard tower and a dock at the water's end) and Meridian Place (two shelves). They
+seat 14, 15, 14 and 15, and the available points across them are within one at every rack size
+from 9 to 14, because the first team's lane must not be the richest one.
+
+**The night pack carries no `joust.json`**, so the sample lanes above are what the party plays
+until one is added. A pack file replaces the whole file, not a lane at a time: an author adding one
+lane to `~/wing-night-content/local/minigames/joust.json` has to carry the other three across too.
+The loader holds every pack lane to the seating floor; the payout spread is pinned by a test on the
+sample only, so a pack author checks their own set pays alike before the night.
 
 Two things quietly eat a lane's standing room, and both are easy to author by accident: a shelf
 hung lower than a bird is tall shades out the sand beneath it, and a tower's legs occupy the spots
@@ -219,9 +248,11 @@ demo night is unchanged. Schedule it with `"minigame": "JOUST"` on a round in
   somebody tucked behind a tower's legs may be unhittable from the band. That is Angry Birds, but a
   player who can never be knocked over all night is not a fun thing to be. Watch it on a real lane.
 - **Tower sturdiness.** `LEG_UPRIGHT_STIFFNESS` (0.04), `LEG_RECOVERY_TILT` (0.12) and
-  `SHOOTER_LEG_SHARE` (0.35) were set by an aim-space sweep, not a sofa. Two Towers folds on 4% of
-  aims, The Lookout 5% (full power just above flat: through the sand row and into the far tower's
-  legs, a 7–10 player strike), Front Porch 2% (only from a steep downward pull). Retune at a table;
+  `SHOOTER_LEG_SHARE` (0.35) were set by an aim-space sweep, not a sofa, and the sweep was run on
+  the desert lanes these Barrie lanes replaced: Two Towers folded on 4% of aims, The Lookout 5%
+  (full power just above flat: through the sand row and into the far tower's legs, a 7–10 player
+  strike), Front Porch 2% (only from a steep downward pull). Meridian Place is Two Towers moved
+  along the sand; the other three have not been swept. Retune at a table;
   the dropped players land in a heap on the fallen timber rather than flat on the sand, which reads
   as a pile and may or may not be what the room wants.
 - **Rigid crates** — boxes that rotate, stack and crush — are still out: the engine is capsules

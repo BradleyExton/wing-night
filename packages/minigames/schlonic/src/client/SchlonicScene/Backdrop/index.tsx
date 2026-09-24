@@ -1,11 +1,32 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
+import { AllandaleStation, Marina, SpiritCatcher, TownCluster } from "@wingnight/scenery";
+import type { SceneryPalette } from "@wingnight/scenery";
 import { SCHLONIC_WORLD } from "@wingnight/shared";
 
 import { schlonicPalette } from "../palette.js";
-import { AllandaleStation } from "./AllandaleStation/index.js";
-import { Marina } from "./Marina/index.js";
-import { SpiritCatcher } from "./SpiritCatcher/index.js";
-import { TownCluster } from "./TownCluster/index.js";
+
+/**
+ * The landmarks in the zone's own morning haze. They are drawn by `@wingnight/scenery`, which
+ * carries no colour of its own — JOUST stands the same shapes at dusk (DESIGN.md §2.7) — so this
+ * is where the zone's palette (§2.11) names each material the waterfront is made of.
+ */
+const SCENERY: SceneryPalette = {
+  steel: schlonicPalette.steel,
+  steelDark: schlonicPalette.steelDark,
+  mound: schlonicPalette.turfDark,
+  wall: schlonicPalette.town,
+  wallDark: schlonicPalette.townDark,
+  glass: schlonicPalette.townGlass,
+  brick: schlonicPalette.brick,
+  brickDark: schlonicPalette.brickDark,
+  roof: schlonicPalette.roof,
+  platform: schlonicPalette.dockDark,
+  dock: schlonicPalette.dock,
+  dockDark: schlonicPalette.dockDark,
+  hull: schlonicPalette.hull,
+  mast: schlonicPalette.steelDark,
+  sail: schlonicPalette.sail
+};
 
 /**
  * What the zone looks out over: Kempenfelt Bay on a summer morning, from the south shore, facing
@@ -17,8 +38,9 @@ import { TownCluster } from "./TownCluster/index.js";
  *   town            downtown's towers, City Hall and a spire at the west end
  *   waterfront      the near strip: the Spirit Catcher, the marina, Allandale Station
  *
- * The sky, the water and the land are here; each landmark standing on them is its own folder
- * beside this one, the way a ZoneProp is.
+ * The sky, the water and the land are here; the landmarks standing on them come from
+ * `@wingnight/scenery`, because JOUST looks out over the same shore at dusk (§2.7) and the city
+ * is drawn once — this file only says what colour the morning makes it.
  *
  * Nothing here is a surface the runner can touch, and nothing here is the cast — the three
  * readings of the schlong (§2.11) are the only things in the zone that mean anything, so the
@@ -165,7 +187,7 @@ export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number }>(
         </g>
         <g ref={town}>
           {standsAt(townWidth, 128).map((x) => (
-            <TownCluster key={x} x={x} baseY={HORIZON_Y + 1} />
+            <TownCluster key={x} x={x} baseY={HORIZON_Y + 1} palette={SCENERY} />
           ))}
         </g>
         {/* The near shore: beach, then the park the zone is cut out of. */}
@@ -181,9 +203,9 @@ export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number }>(
         <g ref={waterfront}>
           {standsAt(waterfrontWidth, 186).map((x) => (
             <g key={x}>
-              <Marina x={x + 4} baseY={SHORE_Y} />
-              <SpiritCatcher x={x + 62} baseY={BEACH_Y + 1} />
-              <AllandaleStation x={x + 108} baseY={BEACH_Y + 1} />
+              <Marina x={x + 4} baseY={SHORE_Y} palette={SCENERY} />
+              <SpiritCatcher x={x + 62} baseY={BEACH_Y + 1} palette={SCENERY} />
+              <AllandaleStation x={x + 108} baseY={BEACH_Y + 1} palette={SCENERY} />
             </g>
           ))}
         </g>

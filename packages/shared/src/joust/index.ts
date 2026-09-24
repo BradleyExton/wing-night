@@ -1,4 +1,5 @@
 export { simulateJoustShot } from "./simulate/index.js";
+export { JOUST_OBSTACLE_KINDS } from "./types.js";
 export type {
   JoustAim,
   JoustArena,
@@ -7,6 +8,7 @@ export type {
   JoustCollapse,
   JoustFrame,
   JoustObstacle,
+  JoustObstacleKind,
   JoustPerch,
   JoustShotRun,
   JoustSimulateOptions,

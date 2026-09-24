@@ -11,14 +11,31 @@ export type JoustVec2 = {
 };
 
 /**
+ * What the renderer dresses an obstacle as: the furniture of a Barrie beach at dusk. Skin only —
+ * the physics never reads it, so a chip truck and a canoe of the same rectangle stop a shot
+ * identically. A pack may leave it off; the renderer then picks a default.
+ */
+export const JOUST_OBSTACLE_KINDS = [
+  "lifeguard-chair",
+  "muskoka-chair",
+  "canoe",
+  "chip-truck",
+  "mast",
+  "umbrella"
+] as const;
+
+export type JoustObstacleKind = (typeof JOUST_OBSTACLE_KINDS)[number];
+
+/**
  * An immovable rectangle in world units, top-left anchored. The sample packs draw these as
- * cacti, but the physics only sees four segments.
+ * beach props (`kind`), but the physics only sees four segments.
  */
 export type JoustObstacle = {
   x: number;
   y: number;
   width: number;
   height: number;
+  kind?: JoustObstacleKind;
 };
 
 /**

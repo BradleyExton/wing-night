@@ -105,6 +105,44 @@ test("does report strain against the leg's own rest height, so a taller tower is
   assert.ok(lean(HIGH_SHELF) < lean(SHELF), "the same shove leans a long leg proportionally less");
 });
 
+// A shelf's dressing is its height, not its content: under a points tier of rise it is a dock at
+// the water's edge, and from there up it is a lifeguard tower. The sand is dressed as nothing.
+test("does dress a low shelf as a dock and a high one as a lifeguard tower", () => {
+  const DOCK = { x: 54, y: 64, width: 28 };
+  const dock = render(<Perch perch={DOCK} legs={uprightLegs(DOCK)} isRubble={false} />);
+  const tower = render(<Perch perch={SHELF} legs={uprightLegs(SHELF)} isRubble={false} />);
+
+  assert.match(dock, /data-joust-perch-skin="dock"/);
+  assert.doesNotMatch(dock, /data-joust-perch-skin="lifeguard-tower"/);
+  assert.match(tower, /data-joust-perch-skin="lifeguard-tower"/);
+  assert.doesNotMatch(tower, /data-joust-perch-skin="dock"/);
+  // The skin repaints the same timber rather than adding any: still two legs, still one plank.
+  assert.equal((dock.match(/data-joust-leg[^-]/g) ?? []).length, 2);
+  assert.equal((tower.match(/data-joust-leg[^-]/g) ?? []).length, 2);
+});
+
+test("does carry the tower's rail down with the plank when the frame folds", () => {
+  const railTop = (html: string): number => {
+    const skin = /<g data-joust-perch-skin="lifeguard-tower">([\s\S]*?)<\/g>/.exec(html)?.[1] ?? "";
+    const ys = [...skin.matchAll(/y2="([-\d.]+)"/g)].map((match) => Number(match[1]));
+
+    return Math.min(...ys);
+  };
+  const upright = railTop(render(<Perch perch={SHELF} legs={uprightLegs(SHELF)} isRubble={false} />));
+  const folded = railTop(
+    render(
+      <Perch
+        perch={SHELF}
+        legs={uprightLegs(SHELF).map((leg) => ({ ...leg, top: { x: leg.top.x + 18, y: JOUST_WORLD.floorY - 6 } }))}
+        isRubble={false}
+      />
+    )
+  );
+
+  assert.ok(upright < SHELF.y, "upright, the rail stands above the shelf it was authored at");
+  assert.ok(folded > upright + 10, "folded, the rail has come down with the plank");
+});
+
 test("does lay a fallen tower flat on the sand as rubble", () => {
   const html = render(<Perch perch={SHELF} legs={[]} isRubble />);
 

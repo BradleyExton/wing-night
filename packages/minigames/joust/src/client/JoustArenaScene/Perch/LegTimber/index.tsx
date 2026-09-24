@@ -37,11 +37,14 @@ const resolveLegStress = (leg: JoustSceneLeg, height: number): number => {
 export const LegTimber = ({
   leg,
   height,
-  isAimTarget
+  isAimTarget,
+  paint = joustPalette.postDark
 }: {
   leg: JoustSceneLeg;
   height: number;
   isAimTarget: boolean;
+  // The timber's own colour, from the perch's skin: pilings under a dock, white under a tower.
+  paint?: string;
 }): JSX.Element => {
   const stress = resolveLegStress(leg, height);
 
@@ -66,7 +69,7 @@ export const LegTimber = ({
         y1={leg.foot.y}
         x2={leg.top.x}
         y2={leg.top.y}
-        stroke={joustPalette.postDark}
+        stroke={paint}
         strokeWidth={JOUST_LEG_RADIUS * 2}
         strokeLinecap="round"
         data-joust-leg

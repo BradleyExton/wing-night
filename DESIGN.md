@@ -871,23 +871,46 @@ where `02-clue-wall.html` always drew it (`.timer-block`).
     resurrects the last one's clue. (The prototype dimmed to 0.12 under
     an opaque wash, which erased a board it had nothing on anyway.)
 
-## 2.7 JOUST Minigame Surface Language ("Dusk Desert")
+## 2.7 JOUST Minigame Surface Language ("Centennial Beach at Dusk")
 
-The JOUST (Slingshlong) surfaces put a side-on desert lane under the same
-marquee chrome the drawing easel uses:
+The JOUST (Slingshlong) surfaces put a side-on beach lane under the same
+marquee chrome the drawing easel uses. It is the SAME shore SCHLONIC runs
+along on a summer morning (§2.11) — Kempenfelt Bay, seen from Centennial
+Beach — at dusk, so the two games share the city and are still told apart
+from the sofa by the hour:
 
 -   Scene materials are drawing content, not UI chrome, and are exempt
     from the 2-accent budget like the drawing inks: dusk sky
     (`#160c2a` → `#4a1f3f` → `#c2582c`), a fixed star field (`#fde7c5`, one
     seeded constellation so the tablet and the TV agree and nothing
-    twinkles), a sun with a soft glow, two mesa ranges on the horizon
-    (`#3a1738` / `#63293a`) kept below the dunes' crests so nothing in the
-    sky competes with a bird on a shelf, sand (`#d6ac63` / `#b58a45`) with
-    broken wind lines below the floor, cactus greens (`#3f9d55` family),
-    slingshot wood (`#6b4423`). The shooter is `primary` orange.
+    twinkles), the sun going down over the head of the bay (`#f9a51a`, half
+    into the far treeline, with its column broken across the water in the
+    same dashes SCHLONIC's morning uses), Oro's bank and treeline across the
+    bay hazed to two purples (`#4a1e42` / `#2f1234`) with a few porch lights
+    on it (`#ffd9a0`), the bay carrying the sky (`#8c3d48` → `#3b1c44` →
+    `#241233`, glitter `#ffc46b`), the beach wet at the water's edge
+    (`#b8894e`) and dry sand below the floor line (`#d3a75f` / `#ad8340`) with
+    broken wind lines, and the landmarks in one silhouette (`#22102b`) with
+    downtown's windows the only thing lit (`#ffcf8a`). The props a lane is
+    furnished with — beach furniture, not cacti — wear the bright paint the
+    real things come in (white `#f3e9d6`, Muskoka red `#c8433a`, canvas
+    `#e8b23a`), because they are things a shot hits. Slingshot wood is
+    `#6b4423`. The shooter is `primary` orange.
+-   **The city is drawn once.** The far skyline (downtown's slabs, the stepped
+    block of City Hall, a spire) and the Spirit Catcher are the same
+    `@wingnight/scenery` components SCHLONIC stands; each takes a palette, so
+    the morning paints them in haze and the dusk paints them in silhouette.
+    Downtown sits on the far horizon at the west end, half off the frame the
+    way a skyline is, and the Spirit Catcher stands on the beach BEHIND the
+    rack: a giant steel bird overlooking a rack of hens is the joke, and the
+    city built its half of it first. Everything stays hazed, flat and quiet so
+    a bird on a shelf still wins the eye, and every landmark is a solid sweep —
+    anything finer reads as a TV aerial at TV distance. There is no second
+    Spirit Catcher, and no marina: its masts stood exactly where the shooter
+    and the bench are drawn, and read as wires through them.
 -   **The backdrop bleeds; the world does not.** The lane is a 160×90 world
-    letterboxed into whatever frame it gets, and the sky, ranges and sand are
-    painted 400 units past it on every side (`BACKDROP_BLEED`) outside the
+    letterboxed into whatever frame it gets, and the sky, the bay and the sand
+    are painted 400 units past it on every side (`BACKDROP_BLEED`) outside the
     world clip, so a frame that is not 16:9 meets its edges with scene and
     never a seam. Everything that moves stays inside the clip.
 -   **Weight and flight are drawn, not just simulated.** Every standing bird
@@ -908,7 +931,7 @@ marquee chrome the drawing easel uses:
     a gloss up the lit side and a spot on the head, two balls off the tail,
     and a cartoon face in screen space whose pupils look where it is going
     (down the lane while it waits). It keeps `primary` orange: it is the
-    team's shot, and nothing else in the desert is orange. The replay draws
+    team's shot, and nothing else on the beach is orange. The replay draws
     between the track's 24 Hz keyframes (`useShotReplay` is fractional), so
     the flight moves on every screen frame rather than every third one.
 -   **The lane is the room.** Every player who is not shooting stands in it
@@ -920,11 +943,17 @@ marquee chrome the drawing easel uses:
     half opacity, still in its colours: the damage is countable at TV
     distance without reading a number.
 -   **The lane is built, not lined up.** Players stand on scaffolding —
-    slabs on legs in the slingshot's own wood (`post` / `postDark`) — at
-    different heights, so a flat shot ploughs the sand and only an arc
-    reaches a shelf. The timber is drawn from the same boxes the integrator
-    collides against: what looks like a leg IS a leg, and a shot that clips
-    one stops there.
+    slabs on legs — at different heights, so a flat shot ploughs the sand
+    and only an arc reaches a shelf. The timber is drawn from the same
+    boxes the integrator collides against: what looks like a leg IS a leg,
+    and a shot that clips one stops there. What the timber is DRESSED as is
+    its height (`PerchSkin`): a shelf under a points tier of rise is a dock
+    on dark pilings at the water's edge, decking and cleats on top
+    (`#8a6a45` / `#4f3a22`); one over it is a lifeguard tower, white timber
+    (`#efe6d3`) with a low red rail (`#c8433a`) along the platform. The skin
+    repaints the same legs and plank and hangs its trim off the plank's
+    current ends, so it folds with the frame; the strain overlay, the
+    target ring, the grit, the points tag and the rubble are untouched.
 -   **Whoever is shooting walks up, and walks off.** The bench stands in
     turn order, not roster order (`resolveBenchOrder`): whoever shoots next
     is nearest the post, then the one after, and when the next shot opens the
@@ -956,7 +985,7 @@ marquee chrome the drawing easel uses:
 -   `gold` is the marquee/framing accent (marquee border, pending points,
     the impact burst, the result plaque) — a scoped exception to the §0.1
     "winner moments only" rule, like DRAWING's §2.5.
--   **The desert stops at the arena's edge.** `#3a200d`, `#1a0e05` and
+-   **The beach stops at the arena's edge.** `#3a200d`, `#1a0e05` and
     `#0a0604` are this lane's own frame and plaque, and they leaked: the
     result plaque, the hint card and the secondary buttons on this
     surface — and the running-totals card three other games copied
@@ -984,7 +1013,7 @@ marquee chrome the drawing easel uses:
     -   The lane name and whose go it is are the scene's own identity rather
         than chrome, so they ride in the body as a plate over the sky, and take
         no pointer — every pixel of the frame under them fires the shot.
--   Display layout: marquee (team, "Desert Lanes", shot count, how many are
+-   Display layout: marquee (team, "Centennial Beach", shot count, how many are
     still standing, pending), the lane, a status line beneath. The result
     plaque drops over the top of the lane only once the replay has landed,
     and names who went over rather than scoring a zone.
@@ -1182,7 +1211,11 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     flat and quiet: it is a backdrop, and a pink one with a face still has to
     win the eye. Each bank is only as wide as the zone's own length needs
     (`bandWidth`), so a long zone never outruns its skyline and a short one
-    does not pay for scenery it never reaches.
+    does not pay for scenery it never reaches. The landmarks themselves —
+    the Spirit Catcher, the town cluster, Allandale Station, the marina — now
+    live in `@wingnight/scenery` as bare `<g>` components taking a palette,
+    because JOUST looks out over the same shore at dusk (§2.7); this scene
+    only says what colour the morning makes them.
 -   Scene materials are their own (`packages/minigames/schlonic/.../palette.ts`):
     a sky that runs `#1f7fc4` to `#cfeaf7`, the bay `#2f8fc4` between a deep
     `#2b6ea6` and a shallow `#63b8de`, beach `#f0dcae`, park `#4fb87c`, and the

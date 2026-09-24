@@ -6,6 +6,7 @@ import {
   JOUST_WORLD,
   resolveLaneSlots
 } from "../../joust/world/index.js";
+import { JOUST_OBSTACLE_KINDS } from "../../joust/types.js";
 import type { JoustObstacle, JoustPerch } from "../../joust/types.js";
 import { validatePromptPackFile } from "../promptPack/index.js";
 import type { ValidationIssue } from "../validationIssue/index.js";
@@ -52,7 +53,7 @@ export const JOUST_MIN_LANE_CAPACITY =
 // night, dealt across the perches — so a lane is authored as SHELVES, not as positions. A perch
 // at the floor is the sand; a higher one grows its own slab and legs and is solid. Obstacle
 // rectangles are top-left anchored in world units (160 wide, floor at 78 — see JOUST_WORLD), and
-// the renderer draws every one of them as a cactus.
+// the renderer draws every one of them as a beach prop — its optional `kind` says which.
 export type JoustPrompt = {
   id: string;
   name: string;
@@ -91,6 +92,14 @@ export const validateJoustObstacle = (value: unknown): ValidationIssue[] => {
     if (!isFiniteNumber(value[field])) {
       issues.push({ path: field, message: "must be a finite number" });
     }
+  }
+
+  // `kind` is skin, and optional: a pack may leave it off, but may not invent one.
+  if (
+    value.kind !== undefined &&
+    !JOUST_OBSTACLE_KINDS.some((kind) => kind === value.kind)
+  ) {
+    issues.push({ path: "kind", message: `must be one of ${JOUST_OBSTACLE_KINDS.join(", ")}` });
   }
 
   if (issues.length > 0) {

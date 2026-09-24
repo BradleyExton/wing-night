@@ -1,4 +1,9 @@
-import { schlonicPalette } from "../../palette.js";
+/** The steel it is made of, the shadow side of that steel, and the mound it stands on. */
+export type SpiritCatcherPalette = {
+  steel: string;
+  steelDark: string;
+  mound: string;
+};
 
 /**
  * The Spirit Catcher: Ron Baird's thunderbird, on the waterfront since 1986, and the reason the
@@ -22,8 +27,11 @@ import { schlonicPalette } from "../../palette.js";
  * the only thing left of the feathers is a tooth in the band's own edge where each blade's tip
  * falls. That is as much as a feather can say here without becoming a wire — and the band has
  * to run full depth, because a shallower one turns the thunderbird into a moth.
+ *
+ * `halfSpan` is the size, in the caller's world units: SCHLONIC's morning strip stands it at
+ * 17.5, and the whole sculpture is then 35 wide and 30 tall.
  */
-const SPIRIT_CATCHER_HALF_SPAN = 17.5;
+const DEFAULT_HALF_SPAN = 17.5;
 
 /** Height of the spar above the base, in half-spans, at a fraction of the way out along it. */
 const sparV = (u: number): number => 1.2 + 0.52 * u;
@@ -48,8 +56,18 @@ const BLADE_HANG: readonly (readonly [number, number])[] = [
 /** How far each blade's own tip falls below the line its neighbours make. One tooth per blade. */
 const BLADE_TOOTH = 0.06;
 
-export const SpiritCatcher = ({ x, baseY }: { x: number; baseY: number }): JSX.Element => {
-  const hs = SPIRIT_CATCHER_HALF_SPAN;
+export const SpiritCatcher = ({
+  x,
+  baseY,
+  palette,
+  halfSpan = DEFAULT_HALF_SPAN
+}: {
+  x: number;
+  baseY: number;
+  palette: SpiritCatcherPalette;
+  halfSpan?: number;
+}): JSX.Element => {
+  const hs = halfSpan;
   /** A point in the reference frame: u out along the span (signed), v up off the base. */
   const p = (u: number, v: number): string => `${x + u * hs} ${baseY - v * hs}`;
 
@@ -108,10 +126,10 @@ export const SpiritCatcher = ({ x, baseY }: { x: number; baseY: number }): JSX.E
     ].join(" ");
 
   return (
-    <g data-schlonic-spirit-catcher>
+    <g data-scenery-spirit-catcher>
       {/* The mound it stands on, which is why it clears everything else on that shore. */}
-      <path d={`M ${p(-0.68, 0)} Q ${p(0, 0.19)} ${p(0.68, 0)} Z`} fill={schlonicPalette.turfDark} opacity={0.5} />
-      <g fill={schlonicPalette.steel}>
+      <path d={`M ${p(-0.68, 0)} Q ${p(0, 0.19)} ${p(0.68, 0)} Z`} fill={palette.mound} opacity={0.5} />
+      <g fill={palette.steel}>
         <path d={blades(-1)} />
         <path d={blades(1)} />
         <path d={spar(-1)} />
@@ -133,7 +151,7 @@ export const SpiritCatcher = ({ x, baseY }: { x: number; baseY: number }): JSX.E
         />
       </g>
       {/* The body under the wings: the shoulders, the pointed loop and the bar across it. */}
-      <g fill="none" stroke={schlonicPalette.steel} strokeWidth={0.72} strokeLinejoin="round">
+      <g fill="none" stroke={palette.steel} strokeWidth={0.72} strokeLinejoin="round">
         <path d={`M ${p(-0.215, sparV(0.215))} C ${p(-0.21, 1.11)} ${p(-0.09, 1.05)} ${p(0, 1.05)}`} />
         <path d={`M ${p(0.215, sparV(0.215))} C ${p(0.21, 1.11)} ${p(0.09, 1.05)} ${p(0, 1.05)}`} />
         <path
@@ -147,7 +165,7 @@ export const SpiritCatcher = ({ x, baseY }: { x: number; baseY: number }): JSX.E
         <path d={`M ${p(-0.105, 1.06)} L ${p(0.105, 1.06)}`} />
       </g>
       {/* One seam, along the spar's underside: enough to say the blades hang off a bar. */}
-      <g fill="none" stroke={schlonicPalette.steelDark} strokeWidth={0.3} opacity={0.75}>
+      <g fill="none" stroke={palette.steelDark} strokeWidth={0.3} opacity={0.75}>
         <path d={`M ${p(-0.24, sparV(0.24) - 0.02)} L ${p(-0.95, sparV(0.95) - 0.02)}`} />
         <path d={`M ${p(0.24, sparV(0.24) - 0.02)} L ${p(0.95, sparV(0.95) - 0.02)}`} />
       </g>

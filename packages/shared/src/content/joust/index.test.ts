@@ -4,8 +4,9 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { resolveLaneSlots } from "../../joust/world/index.js";
+import { JOUST_OBSTACLE_KINDS } from "../../joust/types.js";
 import type { JoustPerch } from "../../joust/types.js";
+import { resolveLaneSlots } from "../../joust/world/index.js";
 import {
   JOUST_MAX_PERCH_X,
   JOUST_MIN_LANE_CAPACITY,
@@ -42,9 +43,32 @@ const laneCapacity = (perches: readonly JoustPerch[]): number => {
   return resolveLaneSlots(perches).reduce((total, slots) => total + slots.length, 0);
 };
 
-test("accepts a lane with perches in range and well-formed cacti", () => {
+test("accepts a lane with perches in range and well-formed props", () => {
   assert.deepEqual(validateJoustPrompt(validPrompt), []);
   assert.equal(isJoustContentFile({ prompts: [validPrompt] }), true);
+});
+
+test("does accept every prop kind the renderer can dress an obstacle as", () => {
+  for (const kind of JOUST_OBSTACLE_KINDS) {
+    assert.deepEqual(
+      validateJoustPrompt({ ...validPrompt, obstacles: [{ x: 46, y: 66, width: 5, height: 12, kind }] }),
+      [],
+      kind
+    );
+  }
+});
+
+test("does reject a prop kind the renderer has no drawing for", () => {
+  const issues = validateJoustPrompt({
+    ...validPrompt,
+    obstacles: [{ x: 46, y: 66, width: 5, height: 12, kind: "cactus" }]
+  });
+
+  assert.deepEqual(
+    issues.map((issue) => issue.path),
+    ["obstacles[0].kind"]
+  );
+  assert.match(issues[0]?.message ?? "", /lifeguard-chair/);
 });
 
 test("accepts an open lane with no obstacles", () => {
