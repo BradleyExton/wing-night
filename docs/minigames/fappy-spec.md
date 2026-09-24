@@ -69,6 +69,9 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
 - **Eagles are a bump, not a crash.** Hitting one knocks it out of the sky for the rest of the
   leg (every later attempt too) and shoves the bird down. Only the champs, the sand and the
   cliffs kill. Brad's call, to make the corridor kinder.
+- **Spit is a bump too.** A spitter's glob that lands is spent and shoves the bird down
+  (`spitSplatVelocity`, harder than an eagle) towards the things that do kill; it never kills
+  on its own. Same reasoning: the corridor stays kind, the hazard is in what it sets up.
 - **Landing is the handoff.** A leg is cleared by coming down on the landing cliff's
   plateau, not by passing its last gate. The next player's bird stands in the middle of that
   plateau facing the flyer; on the last leg a flag stands there instead. Into the cliff's
@@ -95,11 +98,13 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
 - **Sixty ticks a second, fixed step.** A flap logged at tick `T` applies to the step that
   produces `T + 1`, on every party.
 - **Obstacles from the floor.** Every gate is a schlong standing on the sand — the cast's
-  `resolveSchlongPaths` drawing, the same one JOUST fires, in pink — growing and shrinking on a
+  `resolveSchlongPaths` drawing, the same one JOUST fires, in one of three kinds the course
+  deals (`champKind`: pink, ebony, ivory; a look, never a hitbox) — growing and shrinking on a
   bounded triangle-wave bob (the sim's `champTop` is the top of its head) with the shaft re-bent
-  each frame so the tip sways and the middle lags, and a face that watches the bird come; about
-  half the gates hang a bald eagle in the sky as the thing to duck under. Nothing hangs from the
-  ceiling. The e2e autopilot reads the head's height off `data-champ-top`, which the loop
+  each frame so the tip sways and the middle lags, whipping in the wake of a bird gone past, and
+  a face that watches the bird come; about two in five spit on a seeded beat
+  (`spitPeriodTicks`/`spitPhaseTicks`), the head opening as the tell; about half the gates hang a
+  bald eagle in the sky as the thing to duck under. Nothing hangs from the ceiling. The e2e autopilot reads the head's height off `data-champ-top`, which the loop
   writes every frame, never off the drawing.
   Thrown shooters as moving hazards are a v2 layer, not in this build.
 - **No mockup pass.** JOUST shipped without one; the surfaces reuse its marquee and deck
@@ -110,13 +115,22 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
 World is a fixed 160×90 box (JOUST's), y down, floor at 84, the bird's x pinned at 40. Gates
 for a leg come from `resolveFappyGates({ seed, legIndex, gatesPerLeg })`: a mulberry32 stream
 seeded from the leg; each gate has a champ whose head rests at `champTop` and rises `champBob`
-above it on a `champPeriodTicks` triangle wave (`resolveFappyChampTop`), and with even odds an
-`eagleBottom` placed so the gap at the champ's full stretch is at least `gapHeight`.
+above it on a `champPeriodTicks` triangle wave (`resolveFappyChampTop`), a `champKind` dealt
+from `champKinds`, with `spitterOdds` a spitting beat (`spitPeriodTicks` in
+`[spitPeriodMin, spitPeriodMax]`, longer than `spitLifeTicks` so one glob is out at a time, and a
+`spitPhaseTicks`), and with even odds an `eagleBottom` placed so the gap at the champ's full
+stretch is at least `gapHeight`. `resolveFappySpit(gate, tick)` is the glob a champ has in the
+air at a tick, or null: it leaves the mouth `spitMouthDepth` under the head on the beat, moves
+`spitSpeedX` a tick towards the bird, rises at `spitRiseVelocity` and falls on `spitGravity`,
+gone at `spitLifeTicks` or the sand — pure arithmetic in launch tick and age.
 `stepFappy(frame, gates, gatesPerLeg, didFlap)` is the whole physics: gravity, flap sets `vy`,
 ceiling clamps, the start cliff (to `startCliffEnd`) holds the bird up, floor kills, the
 champ's head at this tick kills, an eagle kills, a gate counts once its trailing edge is
 behind the bird, an eagle bumped is knocked away (`knockedEagles` on the frame, carried into
-the next attempt's start with tick `-1`) and the bird shoved down `eagleBumpVelocity`, and at
+the next attempt's start with tick `-1`) and the bird shoved down `eagleBumpVelocity`, a glob
+within `spitRadius + birdRadius` of the bird is a splat (`splats` on the frame, keyed by gate and
+launch tick so it lands once; not carried across attempts) that shoves the bird down
+`spitSplatVelocity`, and at
 the landing cliff (`resolveFappyLandingX`, `landingCliffGap` past the
 last gate) the face below `cliffTop` kills, the wall past `landingZoneWidth` kills, and coming
 below `cliffTop` over the plateau ends the leg `cleared`. `createFappyLegStart(gates,
@@ -284,6 +298,20 @@ leg 1 and the idle clock.
   back at the table.
 - **Not scheduled** in `content/sample/gameConfig.json`; its rules block is there with the
   §0.6 defaults. Schedule it via local config or `/admin`.
+- **Line-up pass (2026-09-23).** Brad asked for variety, detail, more jiggle and something to
+  dodge: "big black ones and white ones", veins, heads that open and spit. So the course deals
+  each gate a `champKind` (pink half the time, ebony — bigger build — and ivory — slimmer — a
+  quarter each; `CHAMP_LOOKS` in `FappyScene/champPaint`), the cast drawing grew veins
+  (`resolveSchlongPaths().veins`, which SCHLONIC's badniks and springboards draw too, and
+  SCHLONIC's badniks now come in the same three skins), a champ whips in the wake of a passing
+  bird with its balls squashing along (`resolveWakeWobble`, client-only, read off the bird's
+  position so a replay rings the same), and two in five champs spit on a seeded beat: the head
+  is a hinged lid over a dark cavity through the windup (`resolveMouthOpen`, the tell), the
+  glob is the sim's (`resolveFappySpit`) and a hit is a shove, not a crash, with goo on the
+  bird's face for a second (`Goo`, `resolveGooOpacity`) and a kick on the scene. The scene
+  file split for it: `champPaint` (the maths), `paintGate` (the per-gate attribute writes),
+  the splat helpers in `pose`. Sample-fixture e2e was unchanged: the autopilot takes a splat
+  as a shove and flies on.
 
 ## 1) One-liner
 

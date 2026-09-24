@@ -99,6 +99,8 @@ export {
   resolveFappyLandingX,
   resolveFappyLegTickCap,
   resolveFappyPerchY,
+  resolveFappySpit,
+  resolveFappySpitPhase,
   resolveFappyWaitingX,
   resolveFappyWave,
   runFappyLeg,
@@ -106,12 +108,15 @@ export {
 } from "./fappy/index.js";
 export type {
   FappyBird,
+  FappyChampKind,
   FappyFrame,
   FappyGate,
   FappyKnockedEagle,
   FappyLegCourse,
   FappyLegRun,
-  FappyOutcome
+  FappyOutcome,
+  FappySpit,
+  FappySplat
 } from "./fappy/index.js";
 export {
   SCHLONIC_WORLD,

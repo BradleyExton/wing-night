@@ -984,8 +984,30 @@ under the same marquee chrome and, on the tablet, the same full-bleed canvas:
     whose top IS the sim's `champTop`: the tip sways on a slow wave and the
     middle of the shaft follows a beat behind, so it whips rather than tilts,
     and at full stretch of its bob the shaft thins a little. A gloss up the
-    lit side, a rim at the neck, a face on the head whose pupils turn to
-    watch the bird once it is close. Over some gates a bald eagle
+    lit side, veins wandering up the shaft (the cast's own, §2.8), a rim at
+    the neck, a face on the head whose pupils turn to watch the bird once it
+    is close. **The row is a line-up, not a fence.** Each gate is dealt one
+    of three kinds by the course seed, so every screen dresses it alike:
+    the bubblegum one (the staple, half the deal), a big dark one
+    (`#4b2a20`, a wider shaft and a bigger head, swinging slow and heavy)
+    and a slim pale one (`#f4e3d3`, quick and twitchy). The head's top is
+    the sim's `champTop` whatever the build, so a kind is a look and never
+    an advantage; the drawn head stays inside the gate's column, which is
+    the hitbox. **It jiggles.** Besides the idle sway, a champ whips in the
+    wake of a bird that has just gone past — a damped ring in the ticks
+    since the sim counted the gate, each kind at its own weight — and the
+    balls squash and stretch with it and breathe a little on their own.
+    **Some of them spit.** About two in five are spitters, on a beat of
+    their own: over the last twenty-odd ticks of it the head hinges open at
+    the rim, the eyes going back with it over a dark wet cavity — that is
+    the tell — and on the beat an off-white glob leaves the neck, thrown up
+    and towards the bird, and falls on its own gravity while the head snaps
+    shut with a gulp down the shaft. A glob that lands is not a crash: it is
+    spent, the bird is shoved down harder than an eagle shoves it, the scene
+    kicks sideways, and goo rides the bird's face and drips off over the
+    next second. The beat, the arc and the hit are the sim's, so the tablet,
+    the server and the TV agree on every glob; only the open head and the
+    goo are the renderer's. Over some gates a bald eagle
     (dark brown, white head and tail, `#f9a51a` beak and talons) hangs in
     the sky as the thing to duck under, its feathered wings beating on the
     shoulders (bump one and it tumbles off, gone for the leg). Behind the
@@ -1171,11 +1193,14 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     the shore read as floating.
 -   **Three readings of one creature, told apart at speed.** The schlong is
     drawn three ways and the room has to know which is which in a glance:
-    *pink with a FACE* is alive, an enemy, and pops when landed on; *crimson,
-    stubby, several of them and no face* is a thorn bed that hurts however you
-    arrive; *pink with a red-and-white PAD strapped over the glans* is a
-    springboard, the only one on your side. The face means alive and the pad
-    means safe — colour alone was never going to carry three meanings.
+    *a FACE* — on a pink, a dark or a pale one, dealt by its index the way
+    FAPPY deals its champs (§2.9), veins and all — is alive, an enemy, and
+    pops when landed on; *crimson, stubby, several of them and no face* is a
+    thorn bed that hurts however you arrive; *pink with a red-and-white PAD
+    strapped over the glans* is a springboard, the only one on your side. The
+    face means alive and the pad means safe — colour alone was never going
+    to carry three meanings, which is also why the enemy can come in three
+    skins without the reading changing.
 -   **The collectible is the one thing out there that is not a schlong.** It is
     a sauced party wing — a fat orange lobe on a pale bone, the night's own
     name picked up off the floor by a chicken, and nobody asks where they came

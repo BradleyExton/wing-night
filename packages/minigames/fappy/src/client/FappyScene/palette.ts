@@ -1,16 +1,31 @@
 // Scene materials for the corridor (DESIGN.md §2.9): the same dusk desert
 // JOUST flies over, so the room recognises the world; the champs standing in
-// it are bubblegum pink — the Genital Jousting joke, and the one hue in the
-// desert that is neither its sand nor its sky, so a row of them reads from
-// the sofa; the eagle is a bald one, because it is funnier; the cliffs are
-// the desert's own sand and rock, the dunes behind them JOUST's, and the
-// tufts on the plateaus its cactus green. Drawing content, not UI chrome —
+// it come in three skins — bubblegum pink (the Genital Jousting joke, and the
+// one hue in the desert that is neither its sand nor its sky, so a row of
+// them reads from the sofa), a big dark one and a pale one, so the row is a
+// line-up and not a fence; the eagle is a bald one, because it is funnier;
+// the cliffs are the desert's own sand and rock, the dunes behind them
+// JOUST's, and the tufts on the plateaus its cactus green. A spitter's open
+// mouth is a dark wet red inside, and what it spits is off-white with a
+// faint edge so it holds against the sky. Drawing content, not UI chrome —
 // exempt from the two-accent budget the way the drawing inks and the JOUST
 // arena are.
 export const fappyPalette = {
   champ: "#f9a3bc",
   champDark: "#8e2a52",
   champLight: "#ffe6ee",
+  champVein: "#c4577f",
+  ebony: "#4b2a20",
+  ebonyDark: "#1a0a06",
+  ebonyLight: "#8c5a46",
+  ebonyVein: "#8a5443",
+  ivory: "#f4e3d3",
+  ivoryDark: "#a9735c",
+  ivoryLight: "#ffffff",
+  ivoryVein: "#cf9f8b",
+  mouth: "#5a1230",
+  spit: "#fbf7f0",
+  spitEdge: "#d8cbb6",
   shadow: "#3d2411",
   eye: "#fff7ed",
   pupil: "#1c0d02",

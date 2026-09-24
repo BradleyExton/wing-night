@@ -28,3 +28,8 @@ export const puff =
   "pointer-events-none absolute left-[20cqw] top-0 h-[10cqw] w-[10cqw] origin-center rounded-full bg-[radial-gradient(circle,rgba(214,172,99,0.85)_0%,rgba(214,172,99,0.35)_45%,rgba(214,172,99,0)_70%)] opacity-0 will-change-transform";
 
 export const label = "sr-only";
+
+// A glob's leavings, on the same box as the bird and moved with the same
+// transform, so it rides the face through the tilt; faded by the loop.
+export const goo =
+  "pointer-events-none absolute left-[20cqw] top-0 h-[9cqw] w-[10cqw] origin-center opacity-0 will-change-transform";

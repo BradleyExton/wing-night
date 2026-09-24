@@ -9,6 +9,8 @@ import {
   resolveFappyLandingX,
   resolveFappyLegTickCap,
   resolveFappyPerchY,
+  resolveFappySpit,
+  resolveFappySpitPhase,
   resolveFappyWaitingX,
   resolveFappyWave
 } from "../world/index.js";
@@ -63,6 +65,77 @@ test("does leave every gate a flyable gap at the champ's full stretch", () => {
       assert.equal(gate.x, FAPPY_WORLD.firstGateX + gateOffset * FAPPY_WORLD.gateSpacing);
     });
   }
+});
+
+test("does deal every course a mix of champ kinds and make some of them spitters", () => {
+  const legGates = resolveFappyGates({ seed: 5, legIndex: 0, gatesPerLeg: 24 });
+  const kinds = new Set(legGates.map((gate) => gate.champKind));
+
+  assert.ok(kinds.has("pink") && kinds.has("ebony") && kinds.has("ivory"), [...kinds].join(","));
+  assert.ok(legGates.some((gate) => gate.spitPeriodTicks > 0));
+  assert.ok(legGates.some((gate) => gate.spitPeriodTicks === 0));
+
+  for (const gate of legGates) {
+    if (gate.spitPeriodTicks === 0) {
+      assert.equal(gate.spitPhaseTicks, 0);
+      continue;
+    }
+
+    // A beat outlives a glob, so a champ has at most one in the air.
+    assert.ok(gate.spitPeriodTicks > FAPPY_WORLD.spitLifeTicks);
+    assert.ok(gate.spitPhaseTicks >= 0 && gate.spitPhaseTicks < gate.spitPeriodTicks);
+  }
+});
+
+test("does throw a glob up and towards the bird on the beat, then let it fall and die", () => {
+  const gate = { ...gates[0]!, champBob: 0, spitPeriodTicks: 100, spitPhaseTicks: 0 };
+  const mouthX = gate.x + FAPPY_WORLD.gateWidth / 2;
+  const mouthY = gate.champTop + FAPPY_WORLD.spitMouthDepth;
+
+  assert.equal(resolveFappySpitPhase({ ...gate, spitPeriodTicks: 0 }, 5), null);
+  assert.equal(resolveFappySpit({ ...gate, spitPeriodTicks: 0 }, 5), null);
+  assert.deepEqual(resolveFappySpit(gate, 0), { gate: gate.index, launchTick: 0, x: mouthX, y: mouthY, age: 0 });
+
+  const rising = resolveFappySpit(gate, 10)!;
+  const later = resolveFappySpit(gate, 60)!;
+
+  assert.equal(rising.launchTick, 0);
+  assert.ok(rising.x < mouthX, "it travels towards the bird");
+  assert.ok(rising.y < mouthY, "it goes up first");
+  assert.ok(later.y > rising.y, "and comes back down");
+  assert.equal(resolveFappySpit(gate, FAPPY_WORLD.spitLifeTicks), null);
+  assert.equal(resolveFappySpit(gate, 100)!.launchTick, 100);
+  // A phase shifts the beat: this one spits on tick 30, not tick 0.
+  assert.equal(resolveFappySpit({ ...gate, spitPhaseTicks: 70 }, 30)!.age, 0);
+});
+
+test("does splat the bird once when a glob reaches it and shove it down", () => {
+  // Twenty ticks after the beat the glob is 11 units short of the mouth and 17 above it;
+  // stand a gate so that point is exactly where the bird will be on the next tick.
+  const age = 20;
+  const gate = { ...gates[0]!, champBob: 0, champTop: 60, spitPeriodTicks: 100, spitPhaseTicks: 0 };
+  const glob = resolveFappySpit(gate, age)!;
+  const start = createFappyLegStart();
+  const scrollX = 500;
+  const legGates = [{ ...gate, x: gate.x + (FAPPY_WORLD.birdX + scrollX + FAPPY_WORLD.scrollSpeed - glob.x) }];
+  const before = { ...start, tick: age - 1, scrollX };
+  const hit = stepPinned(before, glob.y, legGates, 20);
+
+  assert.equal(hit.outcome, null);
+  assert.deepEqual(hit.splats, [{ gate: gate.index, launchTick: 0, tick: age }]);
+  assert.equal(hit.bird.vy, FAPPY_WORLD.spitSplatVelocity);
+
+  // The same glob is spent: the next tick falls on gravity alone.
+  const after = stepFappy(hit, legGates, 20, false);
+
+  assert.equal(after.splats.length, 1);
+  assert.equal(after.bird.vy, FAPPY_WORLD.spitSplatVelocity + FAPPY_WORLD.gravity);
+
+  // Far from the glob nothing happens, and a fresh attempt starts clean.
+  const missed = stepPinned(before, glob.y - 30, legGates, 20);
+
+  assert.deepEqual(missed.splats, []);
+  assert.deepEqual(createFappyLegStart(legGates, 1).splats, []);
 });
 
 test("does hang an eagle over some gates and leave others clear to the sky", () => {

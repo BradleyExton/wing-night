@@ -6,6 +6,8 @@ export {
   resolveFappyLandingX,
   resolveFappyLegTickCap,
   resolveFappyPerchY,
+  resolveFappySpit,
+  resolveFappySpitPhase,
   resolveFappyWaitingX,
   resolveFappyWave
 } from "./world/index.js";
@@ -18,10 +20,13 @@ export {
 } from "./simulate/index.js";
 export type {
   FappyBird,
+  FappyChampKind,
   FappyFrame,
   FappyGate,
   FappyKnockedEagle,
   FappyLegCourse,
   FappyLegRun,
-  FappyOutcome
+  FappyOutcome,
+  FappySpit,
+  FappySplat
 } from "./types.js";

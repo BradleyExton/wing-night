@@ -33,6 +33,7 @@ export const Springboard = ({ prop }: { prop: SchlonicProp }): JSX.Element => {
         shaftRadius={SHAFT_RADIUS}
         headRadius={HEAD_RADIUS}
         skin={PINK}
+        veined
       />
       <rect
         x={head.x - padHalf}

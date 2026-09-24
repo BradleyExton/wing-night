@@ -1,4 +1,11 @@
-import type { FappyFrame, FappyGate, FappyKnockedEagle, FappyLegCourse, FappyLegRun } from "../types.js";
+import type {
+  FappyFrame,
+  FappyGate,
+  FappyKnockedEagle,
+  FappyLegCourse,
+  FappyLegRun,
+  FappySplat
+} from "../types.js";
 import {
   FAPPY_WORLD,
   resolveFappyChampTop,
@@ -7,6 +14,7 @@ import {
   resolveFappyLandingX,
   resolveFappyLegTickCap,
   resolveFappyPerchY,
+  resolveFappySpit,
   resolveFappyWaitingX
 } from "../world/index.js";
 
@@ -33,6 +41,7 @@ export const createFappyLegStart = (
       scrollX: 0,
       gatesCleared: 0,
       knockedEagles,
+      splats: [],
       outcome: null
     };
   }
@@ -43,6 +52,7 @@ export const createFappyLegStart = (
     scrollX: perchGate.x + FAPPY_WORLD.gateWidth - FAPPY_WORLD.birdX + FAPPY_WORLD.birdRadius + 2,
     gatesCleared: Math.min(checkpointGate, gates.length),
     knockedEagles,
+    splats: [],
     outcome: null
   };
 };
@@ -63,6 +73,7 @@ export const createFappyLegLanding = (
     scrollX: resolveFappyWaitingX(gatesPerLeg) - 14 - FAPPY_WORLD.birdX,
     gatesCleared: Math.min(gatesPerLeg, gates.length),
     knockedEagles: knockedEagleGates.map((gate) => ({ gate, tick: -1 })),
+    splats: [],
     outcome: "cleared"
   };
 };
@@ -121,7 +132,9 @@ export const stepFappy = (
     scrollSpeed,
     gateWidth,
     birdX,
-    eagleBumpVelocity
+    eagleBumpVelocity,
+    spitRadius,
+    spitSplatVelocity
   } = FAPPY_WORLD;
   const vy = didFlap ? flapVelocity : Math.min(frame.bird.vy + gravity, maxFallVelocity);
   let y = frame.bird.y + vy;
@@ -160,6 +173,7 @@ export const stepFappy = (
         scrollX,
         gatesCleared: frame.gatesCleared,
         knockedEagles: frame.knockedEagles,
+        splats: frame.splats,
         outcome: "crashed"
       };
     }
@@ -171,6 +185,7 @@ export const stepFappy = (
         scrollX,
         gatesCleared: Math.max(frame.gatesCleared, gatesPerLeg),
         knockedEagles: frame.knockedEagles,
+        splats: frame.splats,
         outcome: "cleared"
       };
     }
@@ -183,12 +198,15 @@ export const stepFappy = (
       scrollX,
       gatesCleared: frame.gatesCleared,
       knockedEagles: frame.knockedEagles,
+      splats: frame.splats,
       outcome: "crashed"
     };
   }
 
   let gatesCleared = 0;
   let knockedEagles = frame.knockedEagles;
+  let splats = frame.splats;
+  const birdInLayer = birdX + scrollX;
 
   for (const gate of gates) {
     const gateScreenX = gate.x - scrollX;
@@ -202,6 +220,7 @@ export const stepFappy = (
         scrollX,
         gatesCleared: frame.gatesCleared,
         knockedEagles,
+        splats,
         outcome: "crashed"
       };
     }
@@ -211,6 +230,28 @@ export const stepFappy = (
     if (contact === "eagle") {
       knockedEagles = [...knockedEagles, { gate: gate.index, tick }];
       nextVy = Math.max(nextVy, eagleBumpVelocity);
+    }
+
+    // A glob in the air is a hazard wherever it is, not only over its own
+    // gate. Getting hit is not a crash either: the glob is spent and the bird
+    // is shoved down, harder than an eagle shoves it, towards the things that
+    // do kill.
+    const spit = resolveFappySpit(gate, tick);
+
+    if (spit !== null) {
+      const isSpent = splats.some(
+        (splat) => splat.gate === gate.index && splat.launchTick === spit.launchTick
+      );
+      const deltaX = spit.x - birdInLayer;
+      const deltaY = spit.y - y;
+      const reach = spitRadius + birdRadius;
+
+      if (!isSpent && deltaX * deltaX + deltaY * deltaY < reach * reach) {
+        const splat: FappySplat = { gate: gate.index, launchTick: spit.launchTick, tick };
+
+        splats = [...splats, splat];
+        nextVy = Math.max(nextVy, spitSplatVelocity);
+      }
     }
 
     if (gateScreenX + gateWidth < birdX - birdRadius) {
@@ -224,6 +265,7 @@ export const stepFappy = (
     scrollX,
     gatesCleared: Math.max(frame.gatesCleared, gatesCleared),
     knockedEagles,
+    splats,
     outcome: null
   };
 };
