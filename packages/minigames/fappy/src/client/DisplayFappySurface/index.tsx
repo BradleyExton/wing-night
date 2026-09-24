@@ -6,6 +6,7 @@ import { resolveFappyGates } from "@wingnight/shared";
 
 import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
 import { FappyScene, type FappySceneHandle } from "../FappyScene/index.js";
+import { RelayLineup } from "../RelayLineup/index.js";
 import { resolveLegBird } from "../resolveLegBird/index.js";
 import { useFappyMirror } from "../useFappyMirror/index.js";
 import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
@@ -52,11 +53,24 @@ const ResultPlaque = ({ view, elapsedMs }: { view: FappyMinigameDisplayView; ela
 
 // The beat between legs, on the wall: whose tablet it is now, big enough to
 // read from the sofa, over the landing the room just watched.
-const HandoffCallout = ({ nextName }: { nextName: string | null }): JSX.Element => (
+const HandoffCallout = ({
+  nextName,
+  onDeckName
+}: {
+  nextName: string | null;
+  onDeckName: string | null;
+}): JSX.Element => (
   <div className={styles.handoffOverlay} data-fappy-handoff="display">
     <div className={styles.handoffCard}>
       <span className={styles.handoffName}>{displayFappySurfaceCopy.handoffCalloutName(nextName)}</span>
       <span className={styles.handoffLine}>{displayFappySurfaceCopy.handoffCalloutLine}</span>
+      {/* And who is up after them, so the room gets the next one moving.
+          Nothing at all when there is nobody after. */}
+      {onDeckName !== null && (
+        <span className={styles.handoffThen} data-fappy-on-deck="display">
+          {displayFappySurfaceCopy.handoffCalloutThen(onDeckName)}
+        </span>
+      )}
     </div>
   </div>
 );
@@ -66,6 +80,7 @@ const resolveStatusLine = (
   leg: FappyMinigameLeg | null,
   playerName: string | null,
   waitingName: string | null,
+  onDeckName: string | null,
   hold: LegHold | null
 ): string => {
   if (hold?.kind === "handoff") {
@@ -81,14 +96,14 @@ const resolveStatusLine = (
   }
 
   if (view.phase === "flying") {
-    return displayFappySurfaceCopy.flyingPrompt(playerName, waitingName);
+    return displayFappySurfaceCopy.flyingPrompt(playerName, waitingName, onDeckName);
   }
 
   if (leg !== null && leg.attempt > 0) {
-    return displayFappySurfaceCopy.respawnPrompt(playerName);
+    return displayFappySurfaceCopy.respawnPrompt(playerName, waitingName, onDeckName);
   }
 
-  return displayFappySurfaceCopy.readyPrompt(playerName);
+  return displayFappySurfaceCopy.readyPrompt(playerName, waitingName, onDeckName);
 };
 
 const FappyPlayBody = ({
@@ -126,6 +141,8 @@ const FappyPlayBody = ({
     nextLeg === null
       ? null
       : resolveLegBird({ figure: nextLeg.player, activeTurnTeamId: view.activeTurnTeamId, serverOrigin });
+  // Who is up after the handoff; null on the last two legs.
+  const onDeckName = view.legs[legIndex + 2]?.player?.name ?? null;
   const elapsedMs = useRelayClock({
     startedAtMs: view.startedAtMs,
     endedAtMs: view.timedOutAtMs ?? view.finishedAtMs
@@ -168,6 +185,23 @@ const FappyPlayBody = ({
         clock={clock}
         clockLine={clockLine}
       />
+      {/* The relay's running order, at sofa size, under the sign (step 2).
+          The tablet carries the same strip on its chrome row — one component,
+          two font-sizes — so the room and the player read one picture.
+
+          It lights the HELD leg, not the live one: while the handoff beat
+          plays, this screen's marquee still says "Leg 1" and its callout is
+          still naming who to hand to, so a strip already lit on leg 2 would
+          be the only thing on the wall that had moved on. The tablet's strip
+          is on the live leg for the opposite reason — its holder has the
+          tablet in hand and is asking what is next. */}
+      <RelayLineup
+        legs={view.legs}
+        activeLegIndex={isOver ? null : legIndex}
+        activeTurnTeamId={view.activeTurnTeamId}
+        serverOrigin={serverOrigin}
+        surface="wall"
+      />
       <div className={styles.arenaArea}>
         <div key={legIndex} className={styles.legEnter}>
           <FappyScene
@@ -180,11 +214,13 @@ const FappyPlayBody = ({
             label={displayFappySurfaceCopy.sceneLabel(bird.playerName)}
           />
         </div>
-        {hold?.kind === "handoff" && <HandoffCallout nextName={waitingBird?.playerName ?? null} />}
+        {hold?.kind === "handoff" && (
+          <HandoffCallout nextName={waitingBird?.playerName ?? null} onDeckName={onDeckName} />
+        )}
         {isOver && hold === null && <ResultPlaque view={view} elapsedMs={elapsedMs} />}
       </div>
       <p className={styles.statusLine}>
-        {resolveStatusLine(view, leg, bird.playerName, waitingBird?.playerName ?? null, hold)}
+        {resolveStatusLine(view, leg, bird.playerName, waitingBird?.playerName ?? null, onDeckName, hold)}
       </p>
     </div>
   );

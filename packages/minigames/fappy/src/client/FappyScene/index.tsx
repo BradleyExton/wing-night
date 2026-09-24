@@ -18,6 +18,7 @@ import { EAGLE_WINGBEAT_DEGREES, Eagle, type EagleRefs } from "./Eagle/index.js"
 import { Goo } from "./Goo/index.js";
 import { paintChamp, paintEagle } from "./paintGate/index.js";
 import { fappyPalette } from "./palette.js";
+import { WaiterPeek } from "./WaiterPeek/index.js";
 import {
   resolveCrashPose,
   resolveGooOpacity,
@@ -92,6 +93,10 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     const backdropRef = useRef<BackdropRefs | null>(null);
     const birdRef = useRef<BirdSpriteRefs | null>(null);
     const waitingBirdRef = useRef<BirdSpriteRefs | null>(null);
+    const waiterPeekRef = useRef<HTMLDivElement>(null);
+    // The last value written to the peek, so the loop touches the DOM on the
+    // beat it changes and on no other frame.
+    const isWaiterPeekUpRef = useRef<boolean | null>(null);
     const puffRef = useRef<HTMLDivElement>(null);
     const gooRef = useRef<HTMLDivElement>(null);
     const gateRefs = useRef(new Map<number, GateRefs>());
@@ -162,9 +167,9 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     const paintWaiter = (frame: FappyFrame, hop: number, wingAngle: number, shift = 0): void => {
       const box = waitingBirdRef.current?.box ?? null;
       const wing = waitingBirdRef.current?.wing ?? null;
+      const left = resolveFappyWaitingX(gatesPerLegRef.current) + shift - BIRD_BOX_WIDTH / 2 - frame.scrollX;
 
       if (box !== null) {
-        const left = resolveFappyWaitingX(gatesPerLegRef.current) + shift - BIRD_BOX_WIDTH / 2 - frame.scrollX;
         const top = FAPPY_WORLD.cliffTop - BIRD_BOX_HEIGHT + 1 - hop;
 
         box.style.transform = `translate3d(${unit(left)}, ${unit(top)}, 0) scaleX(-1)`;
@@ -172,6 +177,18 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
 
       if (wing !== null) {
         wing.style.transform = `rotate(${wingAngle}deg)`;
+      }
+
+      // The waiter stands most of a leg's length past the right edge, so for
+      // most of a leg the bird the flyer is aiming at is off the screen. While
+      // it is, a bubble on the bezel says who it is; the moment the real one
+      // scrolls in, the bubble goes and the bird speaks for itself.
+      const peek = waiterPeekRef.current;
+      const isUp = left > FAPPY_WORLD.width;
+
+      if (peek !== null && isWaiterPeekUpRef.current !== isUp) {
+        isWaiterPeekUpRef.current = isUp;
+        peek.style.opacity = isUp ? "1" : "0";
       }
     };
 
@@ -241,6 +258,7 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     // The rest pose, before any loop has run: a bird standing on the start
     // cliff. Without this the boxes sit at the top-left until the first frame.
     useLayoutEffect(() => {
+      isWaiterPeekUpRef.current = null;
       paint(createFappyLegStart(gatesRef.current, 0));
     }, [sceneId, waitingBird === null]);
 
@@ -288,6 +306,7 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
               pose="idle"
             />
           )}
+          {waitingBird !== null && <WaiterPeek ref={waiterPeekRef} bird={waitingBird} />}
           <BirdSprite ref={birdRef} bird={bird} className={styles.bird} dataAttribute="data-fappy-bird" pose="fly" />
           <div ref={gooRef} className={styles.goo} data-fappy-goo>
             <Goo />
