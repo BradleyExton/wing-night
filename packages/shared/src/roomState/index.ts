@@ -4,7 +4,14 @@ import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
 import type { GeoPrompt } from "../content/geo/index.js";
 import type { JoustPrompt } from "../content/joust/index.js";
-import type { JoustAim, JoustCollapse, JoustTopple, JoustVec2 } from "../joust/types.js";
+import type { JoustShooterColor } from "../content/joust/shooters/index.js";
+import type {
+  JoustAim,
+  JoustCollapse,
+  JoustShooterProfile,
+  JoustTopple,
+  JoustVec2
+} from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
 import type { SchlonicInput, SchlonicOutcome } from "../schlonic/types.js";
 import type { SongGuessDifficulty } from "../content/songGuess/index.js";
@@ -344,6 +351,9 @@ export type JoustShotTrack = {
 // the snapshot never holds more than one.
 export type JoustMinigameShot = JoustShotResult & {
   aim: JoustAim;
+  // Which kind of projectile flew: an id into the view's `shooters`, so the replay draws the
+  // thing that was actually fired rather than whatever is loaded now.
+  shooterId: string;
   run: JoustShotTrack;
   // The rack this track was simulated against, in frame order: `run.topples[n].pinIndex` and every
   // pin body in a keyframe index into THIS list, not into the lineup. It is the standing set as it
@@ -360,6 +370,8 @@ export type JoustMinigameShot = JoustShotResult & {
 export type JoustShotGhost = {
   shotNumber: number;
   aim: JoustAim;
+  // The kind that flew it, so the ghost is drawn in that kind's ink.
+  shooterId: string;
   path: JoustVec2[];
 };
 
@@ -367,6 +379,18 @@ export type JoustMinigameArena = Pick<
   JoustPrompt,
   "id" | "name" | "perches" | "obstacles"
 >;
+
+// One kind of projectile in the turn's loadout, as both surfaces see it: what to call it, how to
+// draw it (colour from the content, proportions from the resolved profile), and how many pulls
+// of it the team has left this turn — null when it is unlimited.
+export type JoustShooterView = {
+  id: string;
+  name: string;
+  blurb: string;
+  color: JoustShooterColor;
+  usesLeft: number | null;
+  profile: JoustShooterProfile;
+};
 
 // Nothing about a joust is secret — the arena is on the TV by design — so the
 // host and display carry the same fields. Kept as two members of the outer
@@ -397,6 +421,11 @@ type JoustMinigameViewFields = {
   aim: JoustAim;
   shots: JoustShotResult[];
   lastShot: JoustMinigameShot | null;
+  // The loadout: every kind the shooter may pick, with this turn's uses counted down. A pack with
+  // no `shooters` authored gets the Standard kind alone, and the tablet's picker stays hidden.
+  shooters: JoustShooterView[];
+  // Which kind is on the band. Reset to the default kind between shots.
+  selectedShooterId: string;
 };
 
 export type JoustMinigameHostView = MinigameHostViewBase & JoustMinigameViewFields;

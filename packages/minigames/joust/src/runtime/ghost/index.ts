@@ -27,6 +27,7 @@ export const resolveShotGhost = (shot: JoustMinigameShot, floorY: number): Joust
   return {
     shotNumber: shot.shotNumber,
     aim: { x: shot.aim.x, y: shot.aim.y },
+    shooterId: shot.shooterId,
     path
   };
 };

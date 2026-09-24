@@ -911,6 +911,24 @@ marquee chrome the drawing easel uses:
     team's shot, and nothing else in the desert is orange. The replay draws
     between the track's 24 Hz keyframes (`useShotReplay` is fractional), so
     the flight moves on every screen frame rather than every third one.
+-   **The shot is a KIND, and the kind is a silhouette first.** A pack may
+    author a loadout (`shooters` in `joust.json`): each kind carries its own
+    physics profile and its own three inks, and both surfaces draw it from
+    those — the Shooter's radii and link spacing are the integrator's, so a
+    Log is visibly longer and fatter on the band before it has flown, and a
+    Pencil is a thin quick line. Colour is second: kind inks are drawing
+    content, exempt from the two-accent budget like the sand and the cacti,
+    and a pack keeps them off the eight team colours because the hens in the
+    lane wear those. The sample ships the Standard in `primary` orange (its
+    old colour), a bark-brown Log, a violet Pencil and a rubber-red Bouncer.
+    The tablet's picker (`HostJoustSurface/Loadout`) rides in the arena's sky
+    at top-right the way the lane plate rides top-left — a row of the kinds
+    drawn by `resolveSchlongPaths` at one shared scale, the loaded one ringed
+    in `gold`, spent ones dimmed and dead — and only its buttons take the
+    pointer, so a pull that starts beside it still pulls. It is hidden when
+    the pack carries one kind. The TV names the loaded kind on its status line
+    ("Rob is up with The Log"), replays a track as the kind that flew it, and
+    draws the ghost in that kind's light ink.
 -   **The lane is the room.** Every player who is not shooting stands in it
     as the very same cast bird the setup lobby wanders (§2.8) — their own
     generated head and all — and the shooting team stands behind the

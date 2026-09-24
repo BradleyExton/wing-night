@@ -6,6 +6,7 @@ import type {
 } from "@wingnight/shared";
 
 import { resolveActiveShooter } from "../lineup/index.js";
+import { toShooterView } from "../loadout/index.js";
 import type { JoustRuntimeContent, JoustRuntimeState } from "../types/index.js";
 
 export const resolveCurrentArena = (
@@ -49,8 +50,11 @@ const toJoustViewFields = (state: JoustRuntimeState, content: JoustRuntimeConten
         : {
             shotNumber: state.previousShotGhost.shotNumber,
             aim: { ...state.previousShotGhost.aim },
+            shooterId: state.previousShotGhost.shooterId,
             path: state.previousShotGhost.path.map((at) => ({ ...at }))
           },
+    shooters: content.shooters.map((kind) => toShooterView(kind, state.usedShooterIds)),
+    selectedShooterId: state.selectedShooterId,
     activeShooterPlayerId:
       state.phase === "done"
         ? null

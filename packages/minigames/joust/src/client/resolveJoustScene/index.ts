@@ -5,12 +5,14 @@ import type {
   JoustMinigameArena,
   JoustMinigameShot,
   JoustPlayerFigure,
+  JoustShooterView,
   JoustShotGhost,
   JoustVec2
 } from "@wingnight/shared";
 import {
   JOUST_PIN_FOOT_RADIUS,
   JOUST_SHOOTER_HEAD_INDEX,
+  JOUST_STANDARD_SHOOTER_PROFILE,
   JOUST_WORLD,
   joustLegFootIndex,
   joustLegTopIndex,
@@ -59,6 +61,9 @@ export type JoustScene = {
   trail: JoustVec2[];
   // The previous shot's arc and pull, only while a fresh band is being aimed.
   ghost: JoustShotGhost | null;
+  // The kind to draw on the band: the one that flew while a track replays, otherwise the one
+  // loaded for the next pull. Null when the view carries no loadout at all.
+  shooter: JoustShooterView | null;
 };
 
 export type JoustSceneInput = {
@@ -70,6 +75,17 @@ export type JoustSceneInput = {
   lastShot: JoustMinigameShot | null;
   replayIndex: number;
   previousShotGhost: JoustShotGhost | null;
+  // The turn's loadout and what is on the band. Both default to empty and Standard, so a caller
+  // with no loadout to speak of draws exactly what it always drew.
+  shooters?: readonly JoustShooterView[];
+  selectedShooterId?: string | null;
+};
+
+const findShooter = (
+  shooters: readonly JoustShooterView[],
+  shooterId: string | null | undefined
+): JoustShooterView | null => {
+  return shooters.find((kind) => kind.id === shooterId) ?? null;
 };
 
 /**
@@ -151,7 +167,9 @@ export const resolveJoustScene = ({
   aim,
   lastShot,
   replayIndex,
-  previousShotGhost
+  previousShotGhost,
+  shooters = [],
+  selectedShooterId = null
 }: JoustSceneInput): JoustScene => {
   const figureById = new Map(lineup.map((figure) => [figure.playerId, figure]));
   const slots = resolveJoustRackSlots(arena.perches, lineup.length);
@@ -167,9 +185,16 @@ export const resolveJoustScene = ({
   });
 
   if (lastShot === null) {
+    // The kind loaded for the next pull sits on the band at rest, at its own link spacing, so
+    // the TV shows a Log as long as a Log while the tablet is still pulling.
+    const shooter = findShooter(shooters, selectedShooterId);
     const pins = resolveStandingPins(lineup, downPlayerIds, arena.perches);
     const rubblePerchIndices = [...collapsedPerchIndices];
-    const frame = resolveJoustRestFrame(toArena(pins, rubblePerchIndices), aim);
+    const frame = resolveJoustRestFrame(
+      toArena(pins, rubblePerchIndices),
+      aim,
+      shooter?.profile ?? JOUST_STANDARD_SHOOTER_PROFILE
+    );
 
     return {
       frame,
@@ -185,9 +210,13 @@ export const resolveJoustScene = ({
       burstPinIndices: [],
       collapsingPerchIndices: [],
       trail: [],
-      ghost: previousShotGhost
+      ghost: previousShotGhost,
+      shooter
     };
   }
+
+  // A replaying track is drawn as the kind that flew it, whatever is loaded now.
+  const shooter = findShooter(shooters, lastShot.shooterId);
 
   const pins = lastShot.pinPlayerIds.flatMap((playerId): JoustStandingPin[] => {
     const figure = figureById.get(playerId);
@@ -212,7 +241,11 @@ export const resolveJoustScene = ({
   const clampedIndex = Math.max(0, Math.min(replayIndex, lastShot.run.keyframes.length - 1));
   const frame =
     blendFrames(lastShot.run.keyframes, clampedIndex) ??
-    resolveJoustRestFrame(toArena(pins, rubblePerchIndices), aim);
+    resolveJoustRestFrame(
+      toArena(pins, rubblePerchIndices),
+      aim,
+      shooter?.profile ?? JOUST_STANDARD_SHOOTER_PROFILE
+    );
   // Bursts and the trail are counted in whole keyframes: the last one fully reached.
   const reachedIndex = Math.floor(clampedIndex);
 
@@ -238,7 +271,8 @@ export const resolveJoustScene = ({
     trail: lastShot.run.keyframes
       .slice(Math.max(0, reachedIndex - JOUST_TRAIL_FRAMES), reachedIndex)
       .map((flown) => readJoustFramePosition(flown, JOUST_SHOOTER_HEAD_INDEX)),
-    ghost: null
+    ghost: null,
+    shooter
   };
 };
 

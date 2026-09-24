@@ -2,6 +2,7 @@ import type {
   JoustFrame,
   JoustMinigameArena,
   JoustPlayerFigure,
+  JoustShooterView,
   JoustShotGhost,
   JoustVec2
 } from "@wingnight/shared";
@@ -56,6 +57,10 @@ export type JoustArenaSceneProps = {
   trail: JoustVec2[];
   // The previous shot's arc and pull, for the next teammate to aim off. Only drawn while aiming.
   ghost: JoustShotGhost | null;
+  // The kind on the band or in the air: its proportions and inks. Null draws the Standard.
+  shooter?: JoustShooterView | null;
+  // The turn's loadout, so the ghost can be drawn in the ink of the kind that flew it.
+  shooters?: readonly JoustShooterView[];
   serverOrigin: string | null;
   // Prefix for gradient and clip ids, so two scenes on one page do not collide.
   sceneId: string;
@@ -91,11 +96,17 @@ export const JoustArenaScene = ({
   burstPinIndices,
   trail,
   ghost,
+  shooter = null,
+  shooters = [],
   serverOrigin,
   sceneId,
   label
 }: JoustArenaSceneProps): JSX.Element => {
   const { anchor, floorY, width, height, pullRadius } = JOUST_WORLD;
+  const ghostInk =
+    ghost === null
+      ? null
+      : (shooters.find((kind) => kind.id === ghost.shooterId)?.color.light ?? null);
   const tail = readJoustFramePosition(frame, 0);
   const head = readJoustFramePosition(frame, JOUST_SHOOTER_HEAD_INDEX);
   const bandTarget = isAiming ? tail : anchor;
@@ -178,7 +189,7 @@ export const JoustArenaScene = ({
             />
           )}
 
-          {isAiming && ghost !== null && <ShotGhost ghost={ghost} />}
+          {isAiming && ghost !== null && <ShotGhost ghost={ghost} ink={ghostInk} />}
 
           <g>
             <rect
@@ -234,7 +245,7 @@ export const JoustArenaScene = ({
 
           <ShotTrail trail={trail} />
 
-          <Shooter frame={frame} velocity={shooterVelocity} />
+          <Shooter frame={frame} velocity={shooterVelocity} kind={shooter} />
 
           <line
             x1={anchor.x + PRONG_SPREAD}

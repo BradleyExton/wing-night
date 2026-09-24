@@ -8,6 +8,7 @@ import type {
   Player,
   Team
 } from "@wingnight/shared";
+import { JOUST_STANDARD_SHOOTER_PROFILE } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { joustMinigameId, joustRuntimePlugin } from "./index.js";
@@ -561,6 +562,8 @@ test("keeps the display view to the declared fields", () => {
       "pendingPointsByTeamId",
       "phase",
       "previousShotGhost",
+      "selectedShooterId",
+      "shooters",
       "shotIndex",
       "shots",
       "shotsPerTurn",
@@ -568,6 +571,262 @@ test("keeps the display view to the declared fields", () => {
     ]
   );
   assert.equal("turnStartPoints" in display, false);
+  assert.equal("usedShooterIds" in display, false, "the count-down is projected as usesLeft");
+});
+
+// ---- The loadout -------------------------------------------------------------------------------
+
+const LOG_PROFILE = { shaftRadius: 3.4, headRadius: 4.8, launchSpeedScale: 0.65, legShare: 0.06 };
+
+const loadoutFixture: JoustContentFile = {
+  ...contentFixture,
+  shooters: [
+    {
+      id: "standard",
+      name: "The Standard",
+      blurb: "House shot.",
+      color: { fill: "#f97316", dark: "#b8410a", light: "#fdba74" }
+    },
+    {
+      id: "log",
+      name: "The Log",
+      blurb: "Heavy.",
+      color: { fill: "#8b5a2b", dark: "#4a2c12", light: "#c48b55" },
+      usesPerTurn: 1,
+      profile: LOG_PROFILE
+    }
+  ]
+};
+
+const loadoutOptions = { content: loadoutFixture };
+
+test("does load the Standard kind alone and name it selected when the pack authors no shooters", () => {
+  const state = initializeState();
+  const view = hostView(state);
+
+  assert.equal(state.selectedShooterId, "standard");
+  assert.deepEqual(state.usedShooterIds, []);
+  assert.equal(view.shooters.length, 1);
+  assert.equal(view.shooters[0]?.id, "standard");
+  assert.equal(view.shooters[0]?.usesLeft, null);
+  assert.deepEqual(view.shooters[0]?.profile, JOUST_STANDARD_SHOOTER_PROFILE);
+});
+
+test("does project every authored kind with its uses left and its resolved profile", () => {
+  const view = joustRuntimePlugin.selectDisplayView({
+    state: initializeState({ content: loadoutFixture }),
+    rules: null,
+    content: loadoutFixture
+  });
+
+  assert.ok(view !== null && view.minigame === "JOUST");
+  assert.deepEqual(
+    view.shooters.map((kind) => [kind.id, kind.usesLeft]),
+    [
+      ["standard", null],
+      ["log", 1]
+    ]
+  );
+  assert.equal(view.shooters[1]?.profile.shaftRadius, 3.4);
+  assert.equal(
+    view.shooters[1]?.profile.massShare,
+    JOUST_STANDARD_SHOOTER_PROFILE.massShare,
+    "a lever the kind leaves out is the Standard's"
+  );
+  assert.equal(view.selectedShooterId, "standard");
+});
+
+test("does put a picked kind on the band while aiming", () => {
+  const state = initializeState({ content: loadoutFixture });
+  const picked = reduce(state, "pickShooter", { shooterId: "log" }, loadoutOptions);
+
+  assert.equal(picked.didMutate, true);
+  assert.equal(asState(picked.state).selectedShooterId, "log");
+});
+
+test("does ignore a pick for a kind the pack does not carry, a malformed one, or the kind already loaded", () => {
+  const state = initializeState({ content: loadoutFixture });
+
+  assert.equal(reduce(state, "pickShooter", { shooterId: "anvil" }, loadoutOptions).didMutate, false);
+  assert.equal(reduce(state, "pickShooter", { shooter: "log" }, loadoutOptions).didMutate, false);
+  assert.equal(reduce(state, "pickShooter", null, loadoutOptions).didMutate, false);
+  assert.equal(
+    reduce(state, "pickShooter", { shooterId: "standard" }, loadoutOptions).didMutate,
+    false
+  );
+});
+
+test("does refuse a pick once the shot has flown", () => {
+  const resolved = reduce(
+    initializeState({ content: loadoutFixture }),
+    "launch",
+    SINGLE_AIM,
+    loadoutOptions
+  ).state;
+
+  assert.equal(reduce(resolved, "pickShooter", { shooterId: "log" }, loadoutOptions).didMutate, false);
+});
+
+test("does fly the picked kind, record the use and name it on the track", () => {
+  const picked = reduce(
+    initializeState({ content: loadoutFixture }),
+    "pickShooter",
+    { shooterId: "log" },
+    loadoutOptions
+  ).state;
+  const launched = asState(reduce(picked, "launch", SINGLE_AIM, loadoutOptions).state);
+  const standard = asState(
+    reduce(initializeState({ content: loadoutFixture }), "launch", SINGLE_AIM, loadoutOptions).state
+  );
+
+  assert.equal(launched.phase, "resolved");
+  assert.equal(launched.lastShot?.shooterId, "log");
+  assert.deepEqual(launched.usedShooterIds, ["log"]);
+  assert.notEqual(
+    JSON.stringify(launched.lastShot?.run.keyframes[1]),
+    JSON.stringify(standard.lastShot?.run.keyframes[1]),
+    "a different kind flies a different track from the same pull"
+  );
+  assert.equal(standard.lastShot?.shooterId, "standard");
+});
+
+test("does count a rationed kind down and refuse it once it is spent", () => {
+  let state: SerializableValue = initializeState({ content: loadoutFixture });
+
+  state = reduce(state, "pickShooter", { shooterId: "log" }, loadoutOptions).state;
+  state = reduce(state, "launch", MISSING_AIM, loadoutOptions).state;
+  state = reduce(state, "nextShot", {}, loadoutOptions).state;
+
+  const view = joustRuntimePlugin.selectHostView({ state, rules: null, content: loadoutFixture });
+
+  assert.ok(view !== null && view.minigame === "JOUST");
+  assert.equal(view.shooters.find((kind) => kind.id === "log")?.usesLeft, 0);
+  assert.equal(view.selectedShooterId, "standard", "the band reloads with the default kind");
+  assert.equal(reduce(state, "pickShooter", { shooterId: "log" }, loadoutOptions).didMutate, false);
+});
+
+test("does reset the selection to the standard kind on the next shot", () => {
+  let state: SerializableValue = initializeState({ content: loadoutFixture });
+
+  state = reduce(state, "pickShooter", { shooterId: "log" }, loadoutOptions).state;
+  state = reduce(state, "launch", MISSING_AIM, loadoutOptions).state;
+  state = reduce(state, "nextShot", {}, loadoutOptions).state;
+
+  assert.equal(asState(state).selectedShooterId, "standard");
+});
+
+test("does spend nothing on a skipped shot and reload the default kind", () => {
+  const picked = reduce(
+    initializeState({ content: loadoutFixture }),
+    "pickShooter",
+    { shooterId: "log" },
+    loadoutOptions
+  ).state;
+  const skipped = asState(reduce(picked, "skipShot", {}, loadoutOptions).state);
+
+  assert.deepEqual(skipped.usedShooterIds, []);
+  assert.equal(skipped.selectedShooterId, "standard");
+});
+
+test("does hand every kind back on a reset", () => {
+  let state: SerializableValue = initializeState({ content: loadoutFixture });
+
+  state = reduce(state, "pickShooter", { shooterId: "log" }, loadoutOptions).state;
+  state = reduce(state, "launch", MISSING_AIM, loadoutOptions).state;
+  state = reduce(state, "nextShot", {}, loadoutOptions).state;
+  state = reduce(state, "pickShooter", { shooterId: "standard" }, loadoutOptions).state;
+
+  const reset = asState(reduce(state, "resetTurn", {}, loadoutOptions).state);
+
+  assert.deepEqual(reset.usedShooterIds, []);
+  assert.equal(reset.selectedShooterId, "standard");
+});
+
+test("does carry the kind onto the ghost the next teammate aims off", () => {
+  let state: SerializableValue = initializeState({ content: loadoutFixture });
+
+  state = reduce(state, "pickShooter", { shooterId: "log" }, loadoutOptions).state;
+  state = reduce(state, "launch", SINGLE_AIM, loadoutOptions).state;
+  state = reduce(state, "nextShot", {}, loadoutOptions).state;
+
+  assert.equal(asState(state).previousShotGhost?.shooterId, "log");
+});
+
+test("does fall back to the default kind when a content reload drops the one on the band", () => {
+  const picked = reduce(
+    initializeState({ content: loadoutFixture }),
+    "pickShooter",
+    { shooterId: "log" },
+    loadoutOptions
+  ).state;
+  const synced = joustRuntimePlugin.syncContent?.({
+    state: picked,
+    rules: null,
+    content: contentFixture
+  });
+
+  assert.ok(synced !== undefined);
+  assert.equal(asState(synced).selectedShooterId, "standard");
+  assert.equal(asState(synced).arenaId, "arena-1", "the lane it was on is untouched");
+});
+
+test("does default to the first listed kind when nothing in the loadout is unlimited", () => {
+  const rationed: JoustContentFile = {
+    ...contentFixture,
+    shooters: [
+      {
+        id: "log",
+        name: "The Log",
+        blurb: "Heavy.",
+        color: { fill: "#8b5a2b", dark: "#4a2c12", light: "#c48b55" },
+        usesPerTurn: 1
+      },
+      {
+        id: "standard",
+        name: "The Standard",
+        blurb: "House shot.",
+        color: { fill: "#f97316", dark: "#b8410a", light: "#fdba74" },
+        usesPerTurn: 2
+      }
+    ]
+  };
+  let state: SerializableValue = initializeState({ content: rationed });
+
+  assert.equal(asState(state).selectedShooterId, "log");
+
+  state = reduce(state, "launch", MISSING_AIM, { content: rationed }).state;
+  state = reduce(state, "nextShot", {}, { content: rationed }).state;
+
+  assert.equal(asState(state).selectedShooterId, "standard", "the spent first kind is skipped");
+});
+
+test("does parse the loadout strictly alongside the lanes", () => {
+  const parsed = parseJoustContentFile(JSON.stringify(loadoutFixture), "joust.json");
+
+  assert.deepEqual(
+    parsed.shooters.map((kind) => [kind.id, kind.usesPerTurn]),
+    [
+      ["standard", null],
+      ["log", 1]
+    ]
+  );
+  assert.equal(parsed.shooters[1]?.profile.headRadius, 4.8);
+  assert.throws(
+    () =>
+      parseJoustContentFile(
+        JSON.stringify({
+          ...loadoutFixture,
+          shooters: [{ ...loadoutFixture.shooters?.[1], profile: { launchSpeedScale: 9 } }]
+        }),
+        "joust.json"
+      ),
+    /Invalid joust content/
+  );
+  assert.equal(
+    parseJoustContentFile(JSON.stringify(contentFixture), "joust.json").shooters[0]?.id,
+    "standard",
+    "a file with no loadout parses to the Standard kind alone"
+  );
 });
 
 test("projects a missing lane as null once content drops it", () => {

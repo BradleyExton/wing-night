@@ -19,8 +19,17 @@ import type {
 
 import { joustContentAdapter, resolveJoustContent } from "./content/index.js";
 import { resolveShotGhost } from "./ghost/index.js";
-import { isJoustAimPayload, isJoustRuntimeState } from "./guards/index.js";
+import {
+  isJoustAimPayload,
+  isJoustPickShooterPayload,
+  isJoustRuntimeState
+} from "./guards/index.js";
 import { resolveJoustRoster, resolveStandingPins, type JoustStandingPin } from "./lineup/index.js";
+import {
+  findJoustShooter,
+  hasShooterUsesLeft,
+  resolveDefaultShooterId
+} from "./loadout/index.js";
 import { isJoustRules, resolveJoustRules } from "./rules/index.js";
 import {
   JOUST_MIN_LAUNCH_PULL,
@@ -121,7 +130,12 @@ const standingCount = (state: JoustRuntimeState): number => {
 // left to knock over, because firing at an empty lane is not a shot. The track
 // is dropped on the way, but its arc stays behind as a ghost for the next
 // teammate to aim off; a skipped shot flew nothing and leaves the last ghost be.
-const advanceToNextShot = (state: JoustRuntimeState): MinigameRuntimeReductionResult => {
+// The band reloads with the default kind, so a rationed kind picked for one
+// shot never carries over to a teammate who did not choose it.
+const advanceToNextShot = (
+  state: JoustRuntimeState,
+  content: JoustRuntimeContent
+): MinigameRuntimeReductionResult => {
   const nextShotIndex = state.shotIndex + 1;
   const hasNextShot = nextShotIndex < state.shotsPerTurn && standingCount(state) > 0;
 
@@ -131,6 +145,7 @@ const advanceToNextShot = (state: JoustRuntimeState): MinigameRuntimeReductionRe
       shotIndex: hasNextShot ? nextShotIndex : state.shotIndex,
       phase: hasNextShot ? "aiming" : "done",
       aim: { ...SLACK_JOUST_AIM },
+      selectedShooterId: resolveDefaultShooterId(content.shooters, state.usedShooterIds),
       lastShot: hasNextShot ? null : state.lastShot,
       previousShotGhost:
         hasNextShot && state.lastShot !== null
@@ -150,10 +165,15 @@ const launch = (
   const unchanged = { state, didMutate: false };
   const arena = resolveCurrentArena(state, content);
   const clampedAim = clampJoustAim(aim);
+  // The kind on the band. A kind the content no longer carries, or one this turn has already
+  // spent, cannot fly: the tablet has to pick again rather than fire a phantom.
+  const shooter = findJoustShooter(content.shooters, state.selectedShooterId);
 
   if (
     state.phase !== "aiming" ||
     arena === null ||
+    shooter === null ||
+    !hasShooterUsesLeft(shooter, state.usedShooterIds) ||
     aimMagnitude(clampedAim) < JOUST_MIN_LAUNCH_PULL
   ) {
     return unchanged;
@@ -168,7 +188,11 @@ const launch = (
       collapsedPerchIndices: state.collapsedPerchIndices
     },
     clampedAim,
-    { ...JOUST_SIMULATION_OPTIONS, seed: resolveShotSeed(arena.id, state.shotIndex) }
+    {
+      ...JOUST_SIMULATION_OPTIONS,
+      seed: resolveShotSeed(arena.id, state.shotIndex),
+      shooter: shooter.profile
+    }
   );
   // `pinIndex` addresses the standing set the shot was fired at, which is the only list the
   // integrator ever saw — never the lineup.
@@ -198,12 +222,14 @@ const launch = (
       aim: { ...SLACK_JOUST_AIM },
       downPlayerIds: [...state.downPlayerIds, ...toppledPlayerIds],
       collapsedPerchIndices: [...state.collapsedPerchIndices, ...collapsedPerchIndices],
+      usedShooterIds: [...state.usedShooterIds, shooter.id],
       shots: [...state.shots, shot],
       lastShot: {
         ...shot,
         toppledPlayerIds: [...toppledPlayerIds],
         collapsedPerchIndices: [...collapsedPerchIndices],
         aim: clampedAim,
+        shooterId: shooter.id,
         run: toTrack(run),
         pinPlayerIds: standing.map((pin) => pin.playerId),
         rubblePerchIndices: [...state.collapsedPerchIndices]
@@ -248,6 +274,8 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
       downPlayerIds: [],
       collapsedPerchIndices: [],
       previousShotGhost: null,
+      selectedShooterId: resolveDefaultShooterId(content.shooters),
+      usedShooterIds: [],
       // Everybody on the team shoots, so the turn is as long as the team is.
       shotsPerTurn: Math.max(1, roster.teammates.length * rules.shotsPerPlayer),
       shotIndex: 0,
@@ -287,6 +315,27 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
       return { state: { ...state, aim }, didMutate: true };
     }
 
+    // Loading a kind onto the band. Only while aiming — mid-replay the shot has
+    // already flown — only a kind the content carries, and only one with a pull
+    // left this turn; anything else leaves the band as it was.
+    if (actionType === "pickShooter") {
+      if (state.phase !== "aiming" || !isJoustPickShooterPayload(actionPayload)) {
+        return unchanged;
+      }
+
+      const shooter = findJoustShooter(content.shooters, actionPayload.shooterId);
+
+      if (
+        shooter === null ||
+        shooter.id === state.selectedShooterId ||
+        !hasShooterUsesLeft(shooter, state.usedShooterIds)
+      ) {
+        return unchanged;
+      }
+
+      return { state: { ...state, selectedShooterId: shooter.id }, didMutate: true };
+    }
+
     if (actionType === "launch") {
       if (!isJoustAimPayload(actionPayload)) {
         return unchanged;
@@ -300,7 +349,7 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
         return unchanged;
       }
 
-      return advanceToNextShot(state);
+      return advanceToNextShot(state, content);
     }
 
     // Escape hatch (AGENTS.md §11): forfeit a shot the tablet can't make —
@@ -318,12 +367,12 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
         points: 0
       };
 
-      return advanceToNextShot({ ...state, shots: [...state.shots, forfeited] });
+      return advanceToNextShot({ ...state, shots: [...state.shots, forfeited] }, content);
     }
 
     // Escape hatch (AGENTS.md §11): run the whole turn again — the rack back on
-    // its feet, the towers back on their legs, and exactly the points this turn
-    // banked handed back.
+    // its feet, the towers back on their legs, every kind back in the loadout,
+    // and exactly the points this turn banked handed back.
     if (actionType === "resetTurn") {
       return {
         state: {
@@ -334,6 +383,8 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
           downPlayerIds: [],
           collapsedPerchIndices: [],
           previousShotGhost: null,
+          selectedShooterId: resolveDefaultShooterId(content.shooters),
+          usedShooterIds: [],
           shots: [],
           lastShot: null,
           pendingPointsByTeamId: withPendingPoints(
@@ -366,8 +417,21 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
     const state = input.state;
     const content = resolveJoustContent(input.content);
     const arenaStillExists = content.prompts.some((prompt) => prompt.id === state.arenaId);
+    // A kind the reloaded pack dropped cannot stay on the band: the next launch would refuse it
+    // and the tablet would have nothing to explain why.
+    const shooterStillExists = findJoustShooter(content.shooters, state.selectedShooterId) !== null;
 
-    return arenaStillExists ? state : { ...state, arenaId: null };
+    if (arenaStillExists && shooterStillExists) {
+      return state;
+    }
+
+    return {
+      ...state,
+      arenaId: arenaStillExists ? state.arenaId : null,
+      selectedShooterId: shooterStillExists
+        ? state.selectedShooterId
+        : resolveDefaultShooterId(content.shooters, state.usedShooterIds)
+    };
   },
   selectHostView: (input) => {
     if (!isJoustRuntimeState(input.state)) {

@@ -116,4 +116,38 @@ export type JoustSimulateOptions = {
   readonly stepHz: number;
   /** Keyframes emitted per second — the rate the replay track is sized for. */
   readonly keyframeHz: number;
+  /** Which kind of projectile is on the band. Absent means the Standard profile. */
+  readonly shooter?: JoustShooterProfile;
+};
+
+/**
+ * The levers one KIND of projectile pulls on the integrator. The body COUNT never changes — five
+ * shaft links, a head, two balls — so frame indexing, `joustPinFootIndex` and every renderer stay
+ * put; what a kind changes is how big those bodies are, how far apart, how heavy they are next
+ * to a pin or a leg, how they bounce and how hard the band throws them. The Standard profile is
+ * today's constants (`shooterProfile/`); every other kind is authored in the content file as
+ * overrides of it.
+ */
+export type JoustShooterProfile = {
+  /** Half-width of each shaft link, in world units. */
+  readonly shaftRadius: number;
+  /** Radius of the head body: the glans, and the circle the rack is hit with. */
+  readonly headRadius: number;
+  readonly ballRadius: number;
+  /** Rest distance between neighbouring shaft links: the length of the thing. */
+  readonly linkSpacing: number;
+  /** How much of a shooter-versus-pin separation the SHOT absorbs. Small is heavy. */
+  readonly massShare: number;
+  /** How much of a shooter-versus-leg separation the SHOT absorbs. Small folds towers. */
+  readonly legShare: number;
+  /** Bounce off the floor, slabs and obstacles: 0 is dead, near 1 is rubber. */
+  readonly restitution: number;
+  /** Coulomb friction against those same surfaces: 0 is frictionless. */
+  readonly slip: number;
+  /** Second-neighbour stiffness along the shaft: 0 is a rope, 1 is a rod. */
+  readonly bendStiffness: number;
+  /** Per-step velocity retained in flight. */
+  readonly damping: number;
+  /** Multiplier on `JOUST_WORLD.maxLaunchSpeed` at a full pull. */
+  readonly launchSpeedScale: number;
 };

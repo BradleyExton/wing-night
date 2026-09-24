@@ -1,13 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { JoustMinigameShot, JoustPlayerFigure, JoustShotGhost } from "@wingnight/shared";
+import type {
+  JoustMinigameShot,
+  JoustPlayerFigure,
+  JoustShooterView,
+  JoustShotGhost
+} from "@wingnight/shared";
 import {
   JOUST_PIN_FOOT_RADIUS,
   JOUST_SHOOTER_HEAD_INDEX,
+  JOUST_STANDARD_SHOOTER_PROFILE,
   JOUST_WORLD,
   resolveJoustRackSlots,
-  resolveJoustRestFrame
+  resolveJoustRestFrame,
+  resolveJoustShooterProfile
 } from "@wingnight/shared";
 
 import { JOUST_TRAIL_FRAMES, resolveJoustScene, type JoustSceneInput } from "./index.js";
@@ -32,6 +39,7 @@ const flight: JoustMinigameShot = {
   isRackCleared: false,
   points: 0,
   aim: { x: -0.5, y: 0 },
+  shooterId: "standard",
   pinPlayerIds: ["p1"],
   rubblePerchIndices: [],
   run: {
@@ -50,6 +58,7 @@ const flight: JoustMinigameShot = {
 const GHOST: JoustShotGhost = {
   shotNumber: 1,
   aim: { x: -0.5, y: 0 },
+  shooterId: "standard",
   path: [
     { x: 40, y: 46 },
     { x: 60, y: 40 }
@@ -194,4 +203,51 @@ test("does keep a replaying track's own towers, and dust the one it is folding",
   assert.deepEqual(scene({ ...input, replayIndex: 5 }).collapsingPerchIndices, []);
   assert.deepEqual(scene({ ...input, replayIndex: 12 }).collapsingPerchIndices, [1]);
   assert.deepEqual(scene({ ...input, replayIndex: 29 }).collapsingPerchIndices, []);
+});
+
+// ---- Kinds ---------------------------------------------------------------------------------------
+
+const STANDARD_VIEW: JoustShooterView = {
+  id: "standard",
+  name: "The Standard",
+  blurb: "House shot.",
+  color: { fill: "#f97316", dark: "#b8410a", light: "#fdba74" },
+  usesLeft: null,
+  profile: JOUST_STANDARD_SHOOTER_PROFILE
+};
+const LONG_VIEW: JoustShooterView = {
+  ...STANDARD_VIEW,
+  id: "log",
+  name: "The Log",
+  profile: resolveJoustShooterProfile({ linkSpacing: 5 })
+};
+
+test("does rest the loaded kind on the band at its own spacing while aiming", () => {
+  const standard = scene({ shooters: [STANDARD_VIEW, LONG_VIEW], selectedShooterId: "standard" });
+  const long = scene({ shooters: [STANDARD_VIEW, LONG_VIEW], selectedShooterId: "log" });
+  const tailX = (frame: readonly number[]): number => frame[0] ?? 0;
+  const headX = (frame: readonly number[]): number => frame[JOUST_SHOOTER_HEAD_INDEX * 2] ?? 0;
+
+  assert.equal(long.shooter?.id, "log");
+  assert.equal(standard.shooter?.id, "standard");
+  assert.ok(
+    headX(long.frame) - tailX(long.frame) > headX(standard.frame) - tailX(standard.frame),
+    "the long kind is longer at rest"
+  );
+});
+
+test("does draw a replay as the kind that flew it, not the one loaded now", () => {
+  const replaying = scene({
+    lastShot: { ...flight, shooterId: "log" },
+    replayIndex: 3,
+    shooters: [STANDARD_VIEW, LONG_VIEW],
+    selectedShooterId: "standard"
+  });
+
+  assert.equal(replaying.shooter?.id, "log");
+});
+
+test("does draw nothing in particular when the view carries no loadout", () => {
+  assert.equal(scene().shooter, null);
+  assert.equal(scene({ shooters: [STANDARD_VIEW], selectedShooterId: "anvil" }).shooter, null);
 });

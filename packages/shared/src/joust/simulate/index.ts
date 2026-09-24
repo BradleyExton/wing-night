@@ -2,11 +2,13 @@ import type { Segment } from "../../contraption/types.js";
 import type { BodyStep } from "../../contraption/simulate/resolveSegmentContacts/index.js";
 import { resolveSegmentContacts } from "../../contraption/simulate/resolveSegmentContacts/index.js";
 import { createXorshift32 } from "../../seededRandom/index.js";
+import { JOUST_STANDARD_SHOOTER_PROFILE } from "../shooterProfile/index.js";
 import type {
   JoustAim,
   JoustArena,
   JoustCollapse,
   JoustFrame,
+  JoustShooterProfile,
   JoustShotRun,
   JoustSimulateOptions,
   JoustTopple,
@@ -47,8 +49,12 @@ const JITTER_UNITS = 0.0005;
 
 /** How many constraint passes settle the chains each step. */
 const CONSTRAINT_ITERATIONS = 4;
-/** Second-neighbour stiffness: enough that the shooter reads as a body, not a rope. */
-const BEND_STIFFNESS = 0.45;
+/**
+ * Everything about the SHOT — its second-neighbour stiffness, its damping, how it bounces, how
+ * heavy it is next to a pin or a leg, how hard the band throws it — comes off the kind's
+ * `JoustShooterProfile` (`options.shooter`). The Standard profile is the constants that used to
+ * sit here; the numbers below are the RACK's and the TOWERS', which no kind changes.
+ */
 /** Per-step pull of a wobbling pin's head back over its own foot — what keeps it on its feet. */
 const PIN_UPRIGHT_STIFFNESS = 0.08;
 /**
@@ -63,27 +69,20 @@ const PIN_FOOT_STIFFNESS = 0.06;
 /** A pin that is over keeps only enough of that pull to stop it sliding off screen. */
 const PIN_FOOT_STIFFNESS_DOWN = 0.012;
 const PIN_DAMPING = 0.985;
-const SHOOTER_DAMPING = 0.999;
-const SHOOTER_RESTITUTION = 0.32;
-const SHOOTER_SLIP = 0.7;
-/** How little of a shooter-versus-pin separation the shot absorbs: a pin is the lighter body. */
-const SHOOTER_MASS_SHARE = 0.15;
 const PIN_RESTITUTION = 0.15;
 const PIN_SLIP = 0.9;
 
 /**
  * A tower's leg is the same bistable stick as a pin, only built to hold a shelf up: it is pulled
  * upright harder, gives up later, and — the part that matters — is HEAVY. The shooter absorbs
- * most of a leg contact, so a glancing shot bounces off and only a shot with real weight behind it
- * folds a tower. Both legs share one slab, so folding one means moving both: a tower takes about
- * twice the push a pin does before it goes.
+ * most of a leg contact (the profile's `legShare`), so a glancing shot bounces off and only a
+ * shot with real weight behind it folds a tower. Both legs share one slab, so folding one means
+ * moving both: a tower takes about twice the push a pin does before it goes.
  */
 const LEG_UPRIGHT_STIFFNESS = 0.04;
 const LEG_RECOVERY_TILT = 0.12;
 const LEG_FOOT_STIFFNESS = 0.12;
 const LEG_FOOT_STIFFNESS_DOWN = 0.02;
-/** How much of a shooter-versus-leg separation the SHOT absorbs: a leg is the heavier body here. */
-const SHOOTER_LEG_SHARE = 0.35;
 /** How much of a pin-versus-leg separation the PIN absorbs: a bird bounces off timber. */
 const PIN_LEG_SHARE = 0.85;
 const LEG_RESTITUTION = 0.1;
@@ -187,9 +186,10 @@ const buildBodies = (
   legCount: number,
   launch: JoustVec2,
   stepSeconds: number,
-  seed: number
+  seed: number,
+  profile: JoustShooterProfile
 ): Body[] => {
-  const descriptors = resolveJoustBodies(pinCount, legCount);
+  const descriptors = resolveJoustBodies(pinCount, legCount, profile);
   const firstLegBody = joustLegFootIndex(pinCount, 0);
   const jitter = createXorshift32(seed);
 
@@ -284,7 +284,8 @@ const buildConstraints = (
   rest: readonly JoustVec2[],
   pins: readonly Pin[],
   legs: readonly Leg[],
-  towers: readonly Tower[]
+  towers: readonly Tower[],
+  profile: JoustShooterProfile
 ): DistanceConstraint[] => {
   const restBetween = (a: number, b: number): number => {
     const first = rest[a];
@@ -303,7 +304,7 @@ const buildConstraints = (
       a: index,
       b: index + 2,
       rest: restBetween(index, index + 2),
-      stiffness: BEND_STIFFNESS
+      stiffness: profile.bendStiffness
     });
   }
   for (const ballIndex of JOUST_SHOOTER_BALL_INDICES) {
@@ -351,9 +352,9 @@ const buildConstraints = (
   return constraints;
 };
 
-const integrate = (bodies: Body[], gravityStep: number): void => {
+const integrate = (bodies: Body[], gravityStep: number, shooterDamping: number): void => {
   for (const body of bodies) {
-    const damping = body.role === "shooter" ? SHOOTER_DAMPING : PIN_DAMPING;
+    const damping = body.role === "shooter" ? shooterDamping : PIN_DAMPING;
     const velocityX = (body.x - body.previousX) * damping;
     const velocityY = (body.y - body.previousY) * damping;
 
@@ -549,7 +550,8 @@ const latchCollapses = (
 const collideWithSegments = (
   bodies: Body[],
   segments: readonly Segment[],
-  staticSegments: readonly Segment[]
+  staticSegments: readonly Segment[],
+  profile: JoustShooterProfile
 ): void => {
   for (const body of bodies) {
     const step: BodyStep = {
@@ -561,7 +563,7 @@ const collideWithSegments = (
     const resolved = resolveSegmentContacts(
       step,
       body.role === "shooter"
-        ? { radius: body.radius, restitution: SHOOTER_RESTITUTION, slip: SHOOTER_SLIP }
+        ? { radius: body.radius, restitution: profile.restitution, slip: profile.slip }
         : body.role === "leg"
           ? { radius: body.radius, restitution: LEG_RESTITUTION, slip: LEG_SLIP }
           : { radius: body.radius, restitution: PIN_RESTITUTION, slip: PIN_SLIP },
@@ -636,7 +638,12 @@ const collideCircleWithStick = (
  * neighbours with it and the lane goes down like bowling. A pin is never tested against its own
  * shaft; its two halves are held by their stick.
  */
-const collideRack = (bodies: Body[], pins: readonly Pin[], legs: readonly Leg[]): void => {
+const collideRack = (
+  bodies: Body[],
+  pins: readonly Pin[],
+  legs: readonly Leg[],
+  shooterMassShare: number
+): void => {
   for (const pin of pins) {
     const foot = bodies[pin.footIndex];
     const head = bodies[pin.headIndex];
@@ -649,7 +656,7 @@ const collideRack = (bodies: Body[], pins: readonly Pin[], legs: readonly Leg[])
       const shooterBody = bodies[bodyIndex];
 
       if (shooterBody !== undefined) {
-        collideCircleWithStick(shooterBody, foot, head, SHOOTER_MASS_SHARE);
+        collideCircleWithStick(shooterBody, foot, head, shooterMassShare);
       }
     }
 
@@ -682,7 +689,7 @@ const collideRack = (bodies: Body[], pins: readonly Pin[], legs: readonly Leg[])
 };
 
 /** The shot against the towers: the contact that can fold a leg, if there is enough behind it. */
-const collideTowers = (bodies: Body[], legs: readonly Leg[]): void => {
+const collideTowers = (bodies: Body[], legs: readonly Leg[], shooterLegShare: number): void => {
   for (const leg of legs) {
     const foot = bodies[leg.footIndex];
     const top = bodies[leg.topIndex];
@@ -695,7 +702,7 @@ const collideTowers = (bodies: Body[], legs: readonly Leg[]): void => {
       const shooterBody = bodies[bodyIndex];
 
       if (shooterBody !== undefined) {
-        collideCircleWithStick(shooterBody, foot, top, SHOOTER_LEG_SHARE);
+        collideCircleWithStick(shooterBody, foot, top, shooterLegShare);
       }
     }
   }
@@ -771,19 +778,21 @@ export const simulateJoustShot = (
   const totalSteps = Math.round(options.maxDurationSeconds * options.stepHz);
   const minSteps = Math.round(MIN_DURATION_SECONDS * options.stepHz);
 
+  const profile = options.shooter ?? JOUST_STANDARD_SHOOTER_PROFILE;
   const pinCount = arena.pinFeet.length;
   const { towers, legs } = buildTowers(arena, pinCount);
-  const rest = resolveJoustRestPositions(arena, clampedAim);
+  const rest = resolveJoustRestPositions(arena, clampedAim, profile);
   const bodies = buildBodies(
     rest,
     pinCount,
     legs.length,
-    resolveJoustLaunchVelocity(clampedAim),
+    resolveJoustLaunchVelocity(clampedAim, profile),
     stepSeconds,
-    options.seed
+    options.seed,
+    profile
   );
   const pins = buildPins(arena);
-  const constraints = buildConstraints(rest, pins, legs, towers);
+  const constraints = buildConstraints(rest, pins, legs, towers, profile);
   const staticSegments = toStaticSegments(arena);
   let segments = toActiveSegments(staticSegments, towers);
 
@@ -794,7 +803,7 @@ export const simulateJoustShot = (
   let quietRackFrames = 0;
 
   for (let stepIndex = 1; stepIndex <= totalSteps; stepIndex += 1) {
-    integrate(bodies, gravityStep);
+    integrate(bodies, gravityStep, profile.damping);
 
     for (let iteration = 0; iteration < CONSTRAINT_ITERATIONS; iteration += 1) {
       relax(bodies, constraints);
@@ -803,9 +812,9 @@ export const simulateJoustShot = (
     settlePins(bodies, pins);
     settleLegs(bodies, legs, towers);
 
-    collideWithSegments(bodies, segments, staticSegments);
-    collideTowers(bodies, legs);
-    collideRack(bodies, pins, legs);
+    collideWithSegments(bodies, segments, staticSegments, profile);
+    collideTowers(bodies, legs, profile.legShare);
+    collideRack(bodies, pins, legs, profile.massShare);
     latchTopples(bodies, pins, keyframes.length, topples);
 
     if (latchCollapses(bodies, towers, legs, pins, keyframes.length, collapses, topples)) {

@@ -5,6 +5,7 @@ import type {
   JoustMinigameArena,
   JoustMinigameShot,
   JoustPlayerFigure,
+  JoustShooterView,
   JoustShotGhost
 } from "@wingnight/shared";
 import { JOUST_WORLD, clampJoustAim } from "@wingnight/shared";
@@ -27,6 +28,8 @@ type AimArenaProps = {
   downPlayerIds: string[];
   collapsedPerchIndices: number[];
   previousShotGhost: JoustShotGhost | null;
+  shooters: JoustShooterView[];
+  selectedShooterId: string;
   serverOrigin: string | null;
   aim: JoustAim;
   lastShot: JoustMinigameShot | null;
@@ -93,6 +96,8 @@ export const AimArena = ({
   downPlayerIds,
   collapsedPerchIndices,
   previousShotGhost,
+  shooters,
+  selectedShooterId,
   serverOrigin,
   aim,
   lastShot,
@@ -116,7 +121,9 @@ export const AimArena = ({
     aim: shownAim,
     lastShot,
     replayIndex,
-    previousShotGhost
+    previousShotGhost,
+    shooters,
+    selectedShooterId
   });
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
@@ -211,6 +218,8 @@ export const AimArena = ({
         burstPinIndices={scene.burstPinIndices}
         trail={scene.trail}
         ghost={scene.ghost}
+        shooter={scene.shooter}
+        shooters={shooters}
         serverOrigin={serverOrigin}
         sceneId="host-joust"
         label={sceneLabel}

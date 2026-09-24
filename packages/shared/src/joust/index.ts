@@ -1,4 +1,8 @@
 export { simulateJoustShot } from "./simulate/index.js";
+export {
+  JOUST_STANDARD_SHOOTER_PROFILE,
+  resolveJoustShooterProfile
+} from "./shooterProfile/index.js";
 export type {
   JoustAim,
   JoustArena,
@@ -8,6 +12,7 @@ export type {
   JoustFrame,
   JoustObstacle,
   JoustPerch,
+  JoustShooterProfile,
   JoustShotRun,
   JoustSimulateOptions,
   JoustTopple,
@@ -55,6 +60,7 @@ export {
   resolveJoustRestFrame,
   resolveJoustRestPositions,
   resolveJoustSegments,
+  resolveJoustShooterBodies,
   resolveJoustStaticSegments,
   resolveLegRestPositions,
   resolvePerchBoxes,

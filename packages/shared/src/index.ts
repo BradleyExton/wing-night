@@ -36,6 +36,7 @@ export {
   JOUST_PERCH_POINTS_TIER,
   JOUST_PERCH_THICKNESS,
   JOUST_TOPPLE_TILT,
+  JOUST_STANDARD_SHOOTER_PROFILE,
   JOUST_TOWER_TOPPLE_TILT,
   JOUST_WORLD,
   clampJoustAim,
@@ -59,6 +60,8 @@ export {
   resolveJoustRestFrame,
   resolveJoustRestPositions,
   resolveJoustSegments,
+  resolveJoustShooterBodies,
+  resolveJoustShooterProfile,
   resolveJoustStaticSegments,
   resolveLegRestPositions,
   resolvePerchBoxes,
@@ -83,6 +86,7 @@ export type {
   JoustPerch,
   JoustRackLayout,
   JoustSegment,
+  JoustShooterProfile,
   JoustShotRun,
   JoustSimulateOptions,
   JoustTopple,
@@ -237,6 +241,7 @@ export type {
   JoustMinigameShot,
   JoustPhase,
   JoustPlayerFigure,
+  JoustShooterView,
   JoustShotGhost,
   JoustShotResult,
   JoustShotTrack,
@@ -383,6 +388,17 @@ export type {
   JoustContentFile,
   JoustPrompt
 } from "./content/joust/index.js";
+export {
+  JOUST_SHOOTER_PROFILE_RANGES,
+  isJoustShooter,
+  validateJoustShooter,
+  validateJoustShooterProfile,
+  validateJoustShooters
+} from "./content/joust/shooters/index.js";
+export type {
+  JoustShooterColor,
+  JoustShooterKind
+} from "./content/joust/shooters/index.js";
 export {
   isSongGuessContentFile,
   isSongGuessPrompt,

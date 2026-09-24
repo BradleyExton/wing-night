@@ -98,6 +98,7 @@ const isLastShotOrNull = (value: unknown): boolean => {
     isShotResult(value) &&
     isObjectLike(value) &&
     isJoustAim(value.aim) &&
+    typeof value.shooterId === "string" &&
     isStringArray(value.pinPlayerIds) &&
     isIndexArray(value.rubblePerchIndices) &&
     isShotRun(value.run)
@@ -113,6 +114,7 @@ const isGhostOrNull = (value: unknown): boolean => {
     isObjectLike(value) &&
     isNonNegativeInteger(value.shotNumber) &&
     isJoustAim(value.aim) &&
+    typeof value.shooterId === "string" &&
     Array.isArray(value.path) &&
     value.path.every(isJoustAim)
   );
@@ -141,6 +143,8 @@ export const isJoustRuntimeState = (
     isStringArray(state.downPlayerIds) &&
     isIndexArray(state.collapsedPerchIndices) &&
     isGhostOrNull(state.previousShotGhost) &&
+    typeof state.selectedShooterId === "string" &&
+    isStringArray(state.usedShooterIds) &&
     isNonNegativeInteger(state.shotsPerTurn) &&
     isNonNegativeInteger(state.shotIndex) &&
     isJoustPhase(state.phase) &&
@@ -155,4 +159,14 @@ export const isJoustRuntimeState = (
 
 export const isJoustAimPayload = (actionPayload: SerializableValue): actionPayload is JoustAim => {
   return isJoustAim(actionPayload);
+};
+
+export type JoustPickShooterPayload = {
+  shooterId: string;
+};
+
+export const isJoustPickShooterPayload = (
+  actionPayload: SerializableValue
+): actionPayload is JoustPickShooterPayload => {
+  return isObjectLike(actionPayload) && typeof actionPayload.shooterId === "string";
 };

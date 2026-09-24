@@ -65,9 +65,10 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
   await expect(page.locator("[data-joust-rubble]")).toHaveCount(0);
   await expect(page.locator("[data-joust-ghost]")).toHaveCount(0);
 
-  // Everyone on the team shoots, in roster order, and both surfaces say whose go it is.
-  await expect(page.getByText("Alex — pull back and let it fly")).toBeVisible();
-  await expect(page.getByText("Alex is up")).toBeVisible();
+  // Everyone on the team shoots, in roster order, and both surfaces say whose go it is — the TV
+  // with what they have loaded, because the fixture carries the sample loadout.
+  await expect(page.getByText("Alex is up with The Standard")).toBeVisible();
+  await expect(page.getByText("Alex is up", { exact: true })).toBeVisible();
 
   const nextShotButton = page.getByRole("button", { name: "Next shot" });
 
@@ -84,7 +85,7 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
   await nextShotButton.click();
 
   await expect(page.getByText("Shot 2 of 3")).toHaveCount(2);
-  await expect(page.getByText("Caitlin is up")).toBeVisible();
+  await expect(page.getByText("Caitlin is up", { exact: true })).toBeVisible();
   await expect(nextShotButton).toBeDisabled();
   // The first shot's arc stays on both lanes for Caitlin to adjust off.
   await expect(page.locator("[data-joust-ghost]")).toHaveCount(2);
@@ -128,6 +129,52 @@ test("switching the shooting team puts the sandbox on that team's lane", async (
   await page.getByLabel("Whose turn").selectOption("team-gamma");
 
   await expect(page.getByText("Lane: Front Porch")).toBeVisible();
+});
+
+// The strategy layer: a kind picked on the tablet is what flies, what the TV draws and what the
+// room is told; a rationed kind is spent by firing it and comes back disabled on the next band.
+test("picking a kind fires it, draws it on both screens and spends it for the turn", async ({
+  page
+}) => {
+  await page.goto(devSandboxPath("joust"));
+
+  // The loadout rides in the host arena only; the fixture ships four kinds, Standard loaded.
+  const loadout = page.locator("[data-joust-loadout]");
+
+  await expect(loadout).toHaveCount(1);
+  await expect(loadout.locator("[data-joust-loadout-kind]")).toHaveCount(4);
+  await expect(page.locator('[data-joust-shooter-kind="standard"]')).toHaveCount(2);
+
+  const logButton = page.locator('[data-joust-loadout-kind="log"]');
+
+  await expect(logButton).toBeEnabled();
+  await logButton.click();
+
+  // The real reducer took the pick: both scenes redraw the band with the Log, and the TV says so.
+  await expect(logButton).toHaveAttribute("data-joust-loadout-selected", "true");
+  await expect(page.locator('[data-joust-shooter-kind="log"]')).toHaveCount(2);
+  await expect(page.locator('[data-joust-shooter-kind="standard"]')).toHaveCount(0);
+  await expect(page.getByText("Alex is up with The Log")).toBeVisible();
+
+  await pullAndRelease(page);
+
+  // The replay is drawn as the kind that flew, and the loadout is locked mid-shot.
+  await expect(page.locator("[data-joust-result]").first()).toBeVisible();
+  await expect(page.locator('[data-joust-shooter-kind="log"]')).toHaveCount(2);
+  await expect(logButton).toBeDisabled();
+  await expect(page.locator("[data-joust-result]")).toHaveCount(2, { timeout: 8000 });
+
+  await page.getByRole("button", { name: "Next shot" }).click();
+
+  // The next band reloads with the Standard; the Log is spent for the rest of the turn.
+  await expect(page.getByText("Shot 2 of 3")).toHaveCount(2);
+  await expect(page.locator('[data-joust-shooter-kind="standard"]')).toHaveCount(2);
+  await expect(logButton).toHaveAttribute("data-joust-loadout-spent", "true");
+  await expect(logButton).toBeDisabled();
+  await expect(page.locator('[data-joust-loadout-kind="pencil"]')).toBeEnabled();
+  await expect(page.getByText("Caitlin is up with The Standard")).toBeVisible();
+  // The ghost of the Log's flight is drawn as the Log's.
+  await expect(page.locator('[data-joust-ghost-kind="log"]')).toHaveCount(2);
 });
 
 test("the sandbox reset button restores a fresh turn", async ({ page }) => {

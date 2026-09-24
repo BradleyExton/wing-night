@@ -5,9 +5,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type {
   JoustMinigameHostView,
   JoustMinigameShot,
-  JoustPlayerFigure
+  JoustPlayerFigure,
+  JoustShooterView
 } from "@wingnight/shared";
-import { resolveJoustRackSlots, resolveJoustRestFrame } from "@wingnight/shared";
+import {
+  JOUST_STANDARD_SHOOTER_PROFILE,
+  resolveJoustRackSlots,
+  resolveJoustRestFrame
+} from "@wingnight/shared";
 
 import { HostJoustSurface } from "./index.js";
 
@@ -48,6 +53,15 @@ const restFrame = resolveJoustRestFrame(
   { x: -0.8, y: 0.5 }
 );
 
+const STANDARD_SHOOTER: JoustShooterView = {
+  id: "standard",
+  name: "The Standard",
+  blurb: "The house shot.",
+  color: { fill: "#f97316", dark: "#b8410a", light: "#fdba74" },
+  usesLeft: null,
+  profile: JOUST_STANDARD_SHOOTER_PROFILE
+};
+
 const oneDown: JoustMinigameShot = {
   shotNumber: 1,
   toppledPlayerIds: ["p4"],
@@ -55,6 +69,7 @@ const oneDown: JoustMinigameShot = {
   isRackCleared: false,
   points: 1,
   aim: { x: -0.8, y: 0.5 },
+  shooterId: "standard",
   pinPlayerIds: ["p4", "p5", "p6"],
   rubblePerchIndices: [],
   run: {
@@ -82,6 +97,8 @@ const hostView = (overrides: Partial<JoustMinigameHostView> = {}): JoustMinigame
   aim: { x: 0, y: 0 },
   shots: [],
   lastShot: null,
+  shooters: [STANDARD_SHOOTER],
+  selectedShooterId: "standard",
   ...overrides
 });
 
@@ -198,6 +215,7 @@ test("draws the last shot's ghost on the tablet while the next teammate aims", (
       previousShotGhost: {
         shotNumber: 1,
         aim: { x: -0.8, y: 0.5 },
+        shooterId: "standard",
         path: [
           { x: 40, y: 46 },
           { x: 80, y: 30 }
@@ -404,4 +422,55 @@ test("does keep the takeover when no lane is loaded", () => {
 
   assert.match(html, /data-slot="rail"/);
   assert.doesNotMatch(html, /data-joust-aim-arena/);
+});
+
+// ---- The loadout -------------------------------------------------------------------------------
+
+const LOG_SHOOTER: JoustShooterView = {
+  id: "log",
+  name: "The Log",
+  blurb: "Big, slow, heavy.",
+  color: { fill: "#8b5a2b", dark: "#4a2c12", light: "#c48b55" },
+  usesLeft: 1,
+  profile: { ...JOUST_STANDARD_SHOOTER_PROFILE, shaftRadius: 3.4, headRadius: 4.8, linkSpacing: 3.8 }
+};
+
+test("does hide the loadout when the pack carries one kind", () => {
+  assert.doesNotMatch(renderSurface(hostView()), /data-joust-loadout/);
+});
+
+test("does show the loadout inside the arena frame and ring the loaded kind", () => {
+  const html = renderSurface(
+    hostView({ shooters: [STANDARD_SHOOTER, LOG_SHOOTER], selectedShooterId: "log" })
+  );
+
+  assert.match(html, /data-joust-loadout/);
+  assert.match(html, /data-joust-loadout-kind="log"[^>]*data-joust-loadout-selected="true"/);
+  // The row lives in the arena frame, after the aim surface, not in a layout slot.
+  assert.ok(html.indexOf("data-joust-aim-arena") < html.indexOf("data-joust-loadout"));
+});
+
+test("does draw the loaded kind on the band in its own inks and name it on the group", () => {
+  const html = renderSurface(
+    hostView({ shooters: [STANDARD_SHOOTER, LOG_SHOOTER], selectedShooterId: "log" })
+  );
+
+  assert.match(html, /data-joust-shooter-kind="log"/);
+  assert.match(html, /<path d="[^"]*" fill="#8b5a2b" stroke="#4a2c12"[^>]*data-joust-shooter-body/);
+});
+
+test("does lock the loadout once the shot has flown", () => {
+  const html = renderSurface(
+    hostView({
+      phase: "resolved",
+      lastShot: oneDown,
+      shooters: [STANDARD_SHOOTER, LOG_SHOOTER]
+    })
+  );
+  const buttons = html.match(/<button[^>]*data-joust-loadout-kind[^>]*>/g) ?? [];
+
+  assert.equal(buttons.length, 2);
+  for (const button of buttons) {
+    assert.match(button, /\sdisabled=""/);
+  }
 });

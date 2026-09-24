@@ -6,13 +6,27 @@ import type {
   JoustMinigameDisplayView,
   JoustMinigameShot,
   JoustPlayerFigure,
+  JoustShooterView,
   JoustShotGhost
 } from "@wingnight/shared";
-import { resolveJoustRackSlots, resolveJoustRestFrame } from "@wingnight/shared";
+import {
+  JOUST_STANDARD_SHOOTER_PROFILE,
+  resolveJoustRackSlots,
+  resolveJoustRestFrame
+} from "@wingnight/shared";
 
 import { marqueeBulbs } from "@wingnight/surface";
 
 import { DisplayJoustSurface } from "./index.js";
+
+const STANDARD_SHOOTER: JoustShooterView = {
+  id: "standard",
+  name: "The Standard",
+  blurb: "The house shot.",
+  color: { fill: "#f97316", dark: "#b8410a", light: "#fdba74" },
+  usesLeft: null,
+  profile: JOUST_STANDARD_SHOOTER_PROFILE
+};
 
 const PERCHES = [
   { x: 54, y: 78, width: 102 },
@@ -55,6 +69,7 @@ const pileUp: JoustMinigameShot = {
   isRackCleared: false,
   points: 2,
   aim: { x: -0.8, y: 0.5 },
+  shooterId: "standard",
   pinPlayerIds: ["p4", "p5", "p6"],
   rubblePerchIndices: [],
   run: {
@@ -71,6 +86,7 @@ const pileUp: JoustMinigameShot = {
 const ghost: JoustShotGhost = {
   shotNumber: 1,
   aim: { x: -0.8, y: 0.5 },
+  shooterId: "standard",
   path: [
     { x: 40, y: 46 },
     { x: 70, y: 30 },
@@ -95,6 +111,8 @@ const baseView = (overrides: Partial<JoustMinigameDisplayView> = {}): JoustMinig
   aim: { x: 0, y: 0 },
   shots: [],
   lastShot: null,
+  shooters: [STANDARD_SHOOTER],
+  selectedShooterId: "standard",
   ...overrides
 });
 
@@ -313,4 +331,62 @@ test("says so when the lane is missing rather than drawing nothing", () => {
 // it. The ring is the shared token now, so this pins that it is actually hung.
 test("does hang the shared bulb ring on the marquee", () => {
   assert.ok(renderSurface(baseView()).includes(marqueeBulbs));
+});
+
+// ---- The loadout -------------------------------------------------------------------------------
+
+const LOG_SHOOTER: JoustShooterView = {
+  id: "log",
+  name: "The Log",
+  blurb: "Big, slow, heavy.",
+  color: { fill: "#8b5a2b", dark: "#4a2c12", light: "#c48b55" },
+  usesLeft: 1,
+  profile: { ...JOUST_STANDARD_SHOOTER_PROFILE, shaftRadius: 3.4, headRadius: 4.8, linkSpacing: 3.8 }
+};
+
+test("does name the loaded kind on the status line when the pack carries a loadout", () => {
+  const html = renderSurface(
+    baseView({ shooters: [STANDARD_SHOOTER, LOG_SHOOTER], selectedShooterId: "log" })
+  );
+
+  assert.match(html, /Alex is up with The Log/);
+  assert.doesNotMatch(html, /Alex — pull back/);
+});
+
+test("does keep the plain prompt when there is nothing to choose", () => {
+  assert.match(renderSurface(baseView()), /Alex — pull back/);
+});
+
+test("does draw the loaded kind on the band while the tablet aims", () => {
+  const html = renderSurface(
+    baseView({ shooters: [STANDARD_SHOOTER, LOG_SHOOTER], selectedShooterId: "log" })
+  );
+
+  assert.match(html, /data-joust-shooter-kind="log"/);
+  assert.match(html, /fill="#8b5a2b"/);
+});
+
+test("does replay a track as the kind that flew it, whatever is loaded now", () => {
+  const html = renderSurface(
+    baseView({
+      phase: "resolved",
+      lastShot: { ...pileUp, shooterId: "log" },
+      shooters: [STANDARD_SHOOTER, LOG_SHOOTER],
+      selectedShooterId: "standard"
+    })
+  );
+
+  assert.match(html, /data-joust-shooter-kind="log"/);
+});
+
+test("does draw the ghost in the ink of the kind that flew it", () => {
+  const html = renderSurface(
+    baseView({
+      previousShotGhost: { ...ghost, shooterId: "log" },
+      shooters: [STANDARD_SHOOTER, LOG_SHOOTER]
+    })
+  );
+
+  assert.match(html, /data-joust-ghost-kind="log"/);
+  assert.match(html, /<polyline[^>]*stroke="#c48b55"/);
 });
