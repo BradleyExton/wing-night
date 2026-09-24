@@ -320,9 +320,10 @@ starred items; a spec answers all of them. Numbers in brackets are the research 
 Audited 2026-09-23 against the checklist. These are candidates for `BACKLOG.md`, not
 decisions.
 
-- **The same team opens every round** (item 16, principle §5). Turn order is fixed for the
-  night by `SPEC.md` and `turnState`. Rotating the opener each round, or adding a demo beat
-  before the first team, is a spec change to decide at the table.
+- ~~**The same team opens every round** (item 16, principle §5).~~ Closed 2026-09-24: round
+  N opens with the team at `(N-1) mod teams` of the host-edited order and the rest follow,
+  wrapping (`SPEC.md` §MINIGAME_PLAY, `packages/shared/src/turnOrder`). A demo beat before
+  the first team is still open, below.
 - **The TV clock is a chip.** (Closed 2026-09-24.) Under ten seconds it now grows to more
   than twice its size in bare seconds, beats on every tick, and the TV ticks each second and
   buzzes at zero (`DESIGN.md` §5 MINIGAME_PLAY). The host's chime stays; the room has its own.
@@ -331,8 +332,10 @@ decisions.
 - **Trivia is the flattest game we ship** against items 2, 9, 10 and 13: one person can
   answer, the room has nothing to do but know the answer too, and there is no commit beat.
   It is not in the pack schedule, and this is a reason to keep it out or redesign it.
-- **Song Guess has no commit or reveal beat**: answers are verbal and the host marks them.
-  Item 2 wants a visible lock before the title appears on the TV.
+- **Song Guess has no commit beat**: answers are verbal and the host marks them. Item 2
+  wants a visible lock before the title appears on the TV. The reveal half is closed
+  2026-09-24: the second mark puts a held card on the TV (title, artist, hit or miss per
+  half, points) for two seconds before the next clip (`song-guess-spec.md` §0).
 - **The pack schedule** used to have two back-to-back recall games and two back-to-back
   perform games (item 25). Fixed 2026-09-24 by swapping rounds 3 and 4, and JOUST moved to
   the finale so the last round does not depend on a network call; see the worked example
