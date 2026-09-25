@@ -5,8 +5,11 @@
 //
 // It fills the Canvas's body slot edge to edge, so it no longer sets `min-h-0 flex-1`: it is not
 // a column's child any more — the body slot has a definite height and the frame takes all of it.
-export const container =
-  "relative h-full w-full touch-none select-none overflow-hidden rounded-xl border-2 border-[#1f6b34] bg-[#0d1f14] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]";
+// Scene art, licensed by DESIGN.md §2.11: the zone's green frame and ground. The zone looks like
+// nothing else in the show on purpose, so it carries no token.
+const sceneZone = "border-[#1f6b34] bg-[#0d1f14]";
+
+export const container = `relative h-full w-full touch-none select-none overflow-hidden rounded-xl border-2 ${sceneZone} shadow-[inset_0_0_30px_theme(colors.shade/50%)]`;
 
 export const containerArmed = "cursor-pointer";
 
@@ -18,10 +21,13 @@ export const runEnter = "h-full w-full motion-safe:animate-[schlonic-scene-enter
 
 // The handoff callout drops over the zone for the beat: a dim pool in the middle of the scene
 // and the next player's name, nothing else.
-export const handoffOverlay =
-  "pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-[radial-gradient(ellipse_at_center,rgba(12,26,16,0.72)_0%,rgba(12,26,16,0)_68%)] motion-safe:animate-[schlonic-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
+// Scene art (§2.11): the zone's own ground pooled behind the callout.
+const sceneZoneVeil =
+  "bg-[radial-gradient(ellipse_at_center,rgba(12,26,16,0.72)_0%,rgba(12,26,16,0)_68%)]";
+
+export const handoffOverlay = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 ${sceneZoneVeil} motion-safe:animate-[schlonic-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]`;
 
 export const handoffLead = "text-[0.7rem] font-extrabold uppercase tracking-[0.34em] text-gold";
 
 export const handoffName =
-  "font-serif text-[clamp(2rem,5vw,3.4rem)] font-bold italic leading-none text-text [text-shadow:0_0_24px_rgba(251,191,36,0.55)]";
+  "font-serif text-[clamp(2rem,5vw,3.4rem)] font-bold italic leading-none text-text [text-shadow:0_0_24px_theme(colors.gold/55%)]";

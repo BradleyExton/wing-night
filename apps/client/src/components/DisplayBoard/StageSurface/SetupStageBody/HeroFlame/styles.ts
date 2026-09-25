@@ -6,7 +6,7 @@ export const container =
 // alike. The 8% overshoot buries the base under the footer instead of ending it on a
 // flat line. Width follows from the viewBox ratio.
 export const svg =
-  "h-[108%] w-auto max-w-none [filter:drop-shadow(0_0_50px_rgba(249,115,22,0.5))_drop-shadow(0_0_140px_rgba(239,68,68,0.35))]";
+  "h-[108%] w-auto max-w-none [filter:drop-shadow(0_0_50px_theme(colors.primary/50%))_drop-shadow(0_0_140px_theme(colors.heat/35%))]";
 
 // Each layer flickers on its own clock, anchored at the flame's base, so the tongues
 // drift apart instead of the whole silhouette pumping in unison. The negative delays

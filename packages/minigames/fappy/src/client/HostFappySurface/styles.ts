@@ -19,7 +19,7 @@
 export const introRoot = "flex flex-col gap-3";
 
 export const introCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
+  "rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_theme(colors.gold/16%)]";
 
 // The chrome row's read-only counts (§5, `counter`). Glass rather than solid:
 // on a Canvas these float over the corridor's sky instead of sitting on a
@@ -47,7 +47,7 @@ export const waitingNote =
 // panel, and `shrink-0` so the hint beside them wraps rather than squeezing a
 // 44px target (DESIGN.md §2.0A).
 export const secondaryButton =
-  "min-h-12 shrink-0 rounded-lg border border-[#3a200d] bg-bg/85 px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+  "min-h-12 shrink-0 rounded-lg border border-ember/20 bg-bg/85 px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
 
 // The hint, beside the buttons it explains — and a `<span>`, which is now the
 // whole of what keeps it out of the way. It used to take a pointer it has no
@@ -64,10 +64,10 @@ export const hint =
 // The relay's result, in the `readout` above the corner dock with the running
 // totals under it.
 export const finishCard =
-  "rounded-xl border border-[#3a200d] bg-gradient-to-b from-[#1a0e05] to-[#0a0604] px-4 py-3 text-center";
+  "rounded-xl border border-ember/20 bg-gradient-to-b from-surface to-bg px-4 py-3 text-center";
 
 export const finishTitle =
-  "m-0 text-2xl font-black uppercase tracking-[0.08em] text-gold [text-shadow:0_0_14px_rgba(251,191,36,0.35)]";
+  "m-0 text-2xl font-black uppercase tracking-[0.08em] text-gold [text-shadow:0_0_14px_theme(colors.gold/35%)]";
 
 export const finishTitleTimedOut = "text-heat";
 

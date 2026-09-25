@@ -980,11 +980,11 @@ body {
    torn corner on the TV. It stays legible — OSM's licence requires it — but in
    the show's colours. */
 .geo-map-dark .leaflet-control-attribution {
-  background: rgba(18, 18, 18, 0.72);
-  color: #6b6157;
+  background: theme(colors.bg / 72%);
+  color: theme(colors.mutedWarmDim);
 }
 .geo-map-dark .leaflet-control-attribution a {
-  color: #a3a3a3;
+  color: theme(colors.muted);
 }
 
 /* The in-progress pin breathes so the room can pick it out of a whole world

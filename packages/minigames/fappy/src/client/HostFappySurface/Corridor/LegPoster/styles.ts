@@ -8,24 +8,28 @@
 // a dead tablet. It is centred, so it never reaches the takeover's bottom-right
 // dock gutter either.
 
+// Scene art, licensed by DESIGN.md §2.9: the corridor's night sky pooled behind the poster.
+const sceneNightVeil =
+  "bg-[radial-gradient(ellipse_at_center,rgba(22,12,42,0.82)_0%,rgba(22,12,42,0)_72%)]";
+
 const ENTER = "motion-safe:animate-[fappy-callout_420ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
 
-export const overlay = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(0.4rem,1vh,0.9rem)] bg-[radial-gradient(ellipse_at_center,rgba(22,12,42,0.82)_0%,rgba(22,12,42,0)_72%)] ${ENTER}`;
+export const overlay = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(0.4rem,1vh,0.9rem)] ${sceneNightVeil} ${ENTER}`;
 
 // After a crash the same poster waits out the crash beat before it drops, so
 // it never lands on top of the tumble the player needs to see. The delay is
 // folded into the animation SHORTHAND — a separate `animation-delay` utility
 // is overwritten by the shorthand and does nothing.
-export const overlayRespawn = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(0.4rem,1vh,0.9rem)] bg-[radial-gradient(ellipse_at_center,rgba(22,12,42,0.82)_0%,rgba(22,12,42,0)_72%)] motion-safe:animate-[fappy-callout_420ms_cubic-bezier(0.2,1.4,0.4,1)_550ms_both]`;
+export const overlayRespawn = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(0.4rem,1vh,0.9rem)] ${sceneNightVeil} motion-safe:animate-[fappy-callout_420ms_cubic-bezier(0.2,1.4,0.4,1)_550ms_both]`;
 
 export const head =
-  "h-[clamp(3.5rem,13vh,6rem)] w-[clamp(3.5rem,13vh,6rem)] overflow-hidden rounded-full border-4 border-current shadow-[0_0_2rem_rgba(0,0,0,0.6)]";
+  "h-[clamp(3.5rem,13vh,6rem)] w-[clamp(3.5rem,13vh,6rem)] overflow-hidden rounded-full border-4 border-current shadow-[0_0_2rem_theme(colors.shade/60%)]";
 
 export const kicker =
   "text-[0.7rem] font-extrabold uppercase tracking-[0.34em] text-gold";
 
 export const name =
-  "font-serif text-[clamp(2.2rem,6vw,4rem)] font-bold italic leading-none text-text [text-shadow:0_0_28px_rgba(251,191,36,0.55)]";
+  "font-serif text-[clamp(2.2rem,6vw,4rem)] font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.gold/55%)]";
 
 export const prompt =
   "rounded-full border border-gold/50 bg-bg/70 px-4 py-1.5 text-[0.78rem] font-extrabold uppercase tracking-[0.3em] text-gold backdrop-blur";

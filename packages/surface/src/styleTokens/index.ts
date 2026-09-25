@@ -76,10 +76,10 @@ export const stageGlow =
   "pointer-events-none absolute inset-[-10%_-10%_30%_-20%] -z-10 blur-[50px]";
 
 export const stageGlowDefault =
-  "[background:radial-gradient(ellipse_at_30%_50%,rgba(249,115,22,0.16),transparent_60%)]";
+  "[background:radial-gradient(ellipse_at_30%_50%,theme(colors.primary/16%),transparent_60%)]";
 
 export const stageGlowEating =
-  "[background:radial-gradient(ellipse_at_25%_35%,rgba(249,115,22,0.22),transparent_55%),radial-gradient(ellipse_at_70%_75%,rgba(239,68,68,0.1),transparent_60%)]";
+  "[background:radial-gradient(ellipse_at_25%_35%,theme(colors.primary/22%),transparent_55%),radial-gradient(ellipse_at_70%_75%,theme(colors.heat/10%),transparent_60%)]";
 
 export const stageEyebrow =
   "text-[clamp(0.85rem,1.05vw,1.1rem)] font-extrabold uppercase tracking-[0.34em] text-primary";
@@ -95,13 +95,13 @@ export const stageMeta =
 export const stageMetaStrong = "font-bold text-text";
 
 export const stageTimer =
-  "m-0 font-mono text-[clamp(8rem,18vw,16rem)] font-black leading-[0.82] tracking-[-0.06em] tabular-nums text-primary [text-shadow:0_0_60px_rgba(249,115,22,0.3)]";
+  "m-0 font-mono text-[clamp(8rem,18vw,16rem)] font-black leading-[0.82] tracking-[-0.06em] tabular-nums text-primary [text-shadow:0_0_60px_theme(colors.primary/30%)]";
 
 export const stageTimerUrgent =
-  "text-heat [text-shadow:0_0_60px_rgba(239,68,68,0.4)] motion-safe:[animation:pulse_0.7s_ease-in-out_infinite]";
+  "text-heat [text-shadow:0_0_60px_theme(colors.heat/40%)] motion-safe:[animation:pulse_0.7s_ease-in-out_infinite]";
 
 export const stageTimerTimeUp =
-  "text-heat [text-shadow:0_0_80px_rgba(239,68,68,0.55)] motion-safe:[animation:pulse_1.2s_ease-in-out_infinite]";
+  "text-heat [text-shadow:0_0_80px_theme(colors.heat/55%)] motion-safe:[animation:pulse_1.2s_ease-in-out_infinite]";
 
 export const stageEyebrowTimeUp =
   "text-[clamp(0.85rem,1.05vw,1.1rem)] font-extrabold uppercase tracking-[0.34em] text-heat motion-safe:[animation:pulse_1.2s_ease-in-out_infinite]";
@@ -116,7 +116,7 @@ export const stageTimerCap =
 // =============================================================================
 
 export const deckRoot =
-  "relative flex min-h-0 flex-col gap-[clamp(1rem,1.6vh,1.4rem)] overflow-y-auto border-l border-text/5 bg-black/20 p-[clamp(1.25rem,2vw,1.75rem)]";
+  "relative flex min-h-0 flex-col gap-[clamp(1rem,1.6vh,1.4rem)] overflow-y-auto border-l border-text/5 bg-shade/20 p-[clamp(1.25rem,2vw,1.75rem)]";
 
 export const deckGroupRoot = "flex flex-col";
 
@@ -187,7 +187,7 @@ export const heatStrip =
   "relative h-3 overflow-hidden bg-gradient-to-r from-gold/40 via-primary/80 to-heat/60 motion-reduce:[&>span]:hidden";
 
 export const heatStripShimmer =
-  "pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,transparent_30%,rgba(255,255,255,0.4)_50%,transparent_70%)] motion-safe:[animation:shimmer_3s_linear_infinite]";
+  "pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,transparent_30%,theme(colors.text/40%)_50%,transparent_70%)] motion-safe:[animation:shimmer_3s_linear_infinite]";
 
 export const ctaBar = "flex bg-bg";
 

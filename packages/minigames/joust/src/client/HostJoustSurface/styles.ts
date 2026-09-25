@@ -17,15 +17,18 @@
 export const introRoot = "flex flex-col gap-3";
 
 export const introCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
+  "rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_theme(colors.gold/16%)]";
+
+// Scene art, licensed by DESIGN.md §2.7: the lane's dusk sky and sand. Not chrome, so no token.
+const sceneDusk =
+  "bg-[linear-gradient(180deg,#160c2a_0%,#4a1f3f_54%,#c2582c_86.6%,#d6ac63_86.7%,#b58a45_100%)]";
 
 // The lane, filling the layout's body slot edge to edge. It keeps the marquee
 // frame (DESIGN.md §2.7) and the dusk gradient the backdrop bleeds over, and
 // it is `relative` so the plate can sit in its sky — but it no longer sets
 // `min-h-0 flex-1`, because it is no longer a column's child: the body slot
 // has a definite height and the frame fills it.
-export const arenaFrame =
-  "relative h-full w-full overflow-hidden rounded-xl border-2 border-[#3a200d] bg-[linear-gradient(180deg,#160c2a_0%,#4a1f3f_54%,#c2582c_86.6%,#d6ac63_86.7%,#b58a45_100%)] shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]";
+export const arenaFrame = `relative h-full w-full overflow-hidden rounded-xl border-2 border-ember/20 ${sceneDusk} shadow-[inset_0_0_30px_theme(colors.shade/50%)]`;
 
 // Which lane and whose go, over the sky at top-left. `top` clears the shell's
 // chrome row, which carries the mini-rail and the play clock and is taller
@@ -54,10 +57,10 @@ export const counterPending = `${chip} font-mono text-gold`;
 // The layout bounds the readout row it sits in, but only against the opposite
 // corner; how wide a game's own card should be is the game's to say.
 export const resultCard =
-  "max-w-[clamp(16rem,26vw,22rem)] rounded-xl border border-[#3a200d] bg-gradient-to-b from-[#1a0e05] to-[#0a0604] px-4 py-3 text-center";
+  "max-w-[clamp(16rem,26vw,22rem)] rounded-xl border border-ember/20 bg-gradient-to-b from-surface to-bg px-4 py-3 text-center";
 
 export const resultTitle =
-  "m-0 text-2xl font-black uppercase tracking-[0.08em] text-text [text-shadow:0_0_14px_rgba(251,191,36,0.35)]";
+  "m-0 text-2xl font-black uppercase tracking-[0.08em] text-text [text-shadow:0_0_14px_theme(colors.gold/35%)]";
 
 export const resultTitleHit = "text-gold";
 
@@ -74,10 +77,10 @@ export const waitingNote =
 // here. The buttons only have to be their own size now that they are a row
 // rather than a 330px column, so the `w-full` and `flex-1` are gone.
 export const primaryButton =
-  "min-h-14 shrink-0 rounded-xl border-2 border-gold bg-[radial-gradient(ellipse_at_top,#f9a51a_0%,#8a4b06_100%)] px-[clamp(1.2rem,3vw,2.2rem)] text-lg font-extrabold uppercase tracking-[0.12em] text-[#1c0d02] shadow-[0_4px_0_rgba(0,0,0,0.45)] transition disabled:cursor-not-allowed disabled:opacity-40";
+  "min-h-14 shrink-0 rounded-xl border-2 border-primary bg-primary px-[clamp(1.2rem,3vw,2.2rem)] text-lg font-extrabold uppercase tracking-[0.12em] text-bg shadow-[0_4px_0_theme(colors.shade/45%)] transition disabled:cursor-not-allowed disabled:opacity-40";
 
 export const secondaryButton =
-  "min-h-12 shrink-0 rounded-lg border border-[#3a200d] bg-bg/85 px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+  "min-h-12 shrink-0 rounded-lg border border-ember/20 bg-bg/85 px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
 
 export const hint = "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] italic text-text/75 backdrop-blur";
 

@@ -6,7 +6,7 @@ export const container =
   "relative flex h-full flex-col items-center justify-center gap-[clamp(0.75rem,1.6vw,2rem)] overflow-hidden px-[clamp(2rem,4vw,4rem)] py-[clamp(2rem,4vw,4rem)] text-center";
 
 export const ambient =
-  "pointer-events-none absolute inset-[-10%] bg-[radial-gradient(ellipse_at_20%_30%,rgba(249,115,22,0.12)_0%,transparent_45%),radial-gradient(ellipse_at_80%_70%,rgba(239,68,68,0.10)_0%,transparent_45%)]";
+  "pointer-events-none absolute inset-[-10%] bg-[radial-gradient(ellipse_at_20%_30%,theme(colors.primary/12%)_0%,transparent_45%),radial-gradient(ellipse_at_80%_70%,theme(colors.heat/10%)_0%,transparent_45%)]";
 
 // z-10 lifts every beat over the genre texture (TeamAmbient, z-1).
 export const beatBase =
@@ -49,10 +49,10 @@ export const headline =
 // The `none` kit's headline is what shipped before the kit: primary, black,
 // upper, with the flame glow.
 export const headlinePlain =
-  "block text-[clamp(4.5rem,12vw,14rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-primary [text-shadow:0_0_80px_rgba(249,115,22,0.4)] [--enter-delay:600ms]";
+  "block text-[clamp(4.5rem,12vw,14rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-primary [text-shadow:0_0_80px_theme(colors.primary/40%)] [--enter-delay:600ms]";
 
 export const teamName =
-  "m-0 text-[clamp(4.5rem,12vw,14rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-primary [text-shadow:0_0_80px_rgba(249,115,22,0.4)]";
+  "m-0 text-[clamp(4.5rem,12vw,14rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-primary [text-shadow:0_0_80px_theme(colors.primary/40%)]";
 
 export const lineup = "h-[clamp(6rem,16vh,13.75rem)]";
 

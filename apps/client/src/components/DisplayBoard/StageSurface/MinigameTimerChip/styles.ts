@@ -22,7 +22,7 @@
 const timerChipFrame =
   "rounded-full font-mono font-extrabold leading-none tabular-nums text-text";
 
-export const timerChip = `${timerChipFrame} border-[3px] border-primary px-[clamp(0.9rem,1.4vw,1.4rem)] py-[clamp(0.2rem,0.4vw,0.4rem)] text-[clamp(1.4rem,2.2vw,2.5rem)] tracking-[-0.02em] [text-shadow:0_0_6px_theme(colors.text),0_0_16px_theme(colors.primary),0_0_36px_theme(colors.primary)] shadow-[0_0_10px_theme(colors.primary),inset_0_0_10px_rgba(249,115,22,0.6)]`;
+export const timerChip = `${timerChipFrame} border-[3px] border-primary px-[clamp(0.9rem,1.4vw,1.4rem)] py-[clamp(0.2rem,0.4vw,0.4rem)] text-[clamp(1.4rem,2.2vw,2.5rem)] tracking-[-0.02em] [text-shadow:0_0_6px_theme(colors.text),0_0_16px_theme(colors.primary),0_0_36px_theme(colors.primary)] shadow-[0_0_10px_theme(colors.primary),inset_0_0_10px_theme(colors.primary/60%)]`;
 
 // The grown tube the last ten seconds and time's up share: a thicker ring, a
 // wider glow. Every term of the urgent font clamp is more than twice the calm
@@ -32,7 +32,7 @@ export const timerChip = `${timerChipFrame} border-[3px] border-primary px-[clam
 // ~101px at 1080p and this is 90px of digit plus 8px of tube, measured on the
 // mockup. Nothing under the marquee moves in the last ten seconds.
 const heatTube =
-  "border-4 border-heat [text-shadow:0_0_6px_theme(colors.text),0_0_18px_theme(colors.heat),0_0_44px_theme(colors.heat),0_0_80px_rgba(239,68,68,0.6)] shadow-[0_0_18px_theme(colors.heat),0_0_44px_rgba(239,68,68,0.45),inset_0_0_14px_rgba(239,68,68,0.7)]";
+  "border-4 border-heat [text-shadow:0_0_6px_theme(colors.text),0_0_18px_theme(colors.heat),0_0_44px_theme(colors.heat),0_0_80px_theme(colors.heat/60%)] shadow-[0_0_18px_theme(colors.heat),0_0_44px_theme(colors.heat/45%),inset_0_0_14px_theme(colors.heat/70%)]";
 
 // One beat per tick, not a free-running pulse: the chip is keyed on the
 // second, so the element remounts and `lasttenbeat` (index.css) plays once

@@ -522,19 +522,11 @@ fix is a ref/`useCallback` restructure per site, verified under Playwright becau
 pane throttles rAF to 1 fps and hides exactly this class of regression. That is a behaviour change
 to two shipped minigames, not a lint fix, and it wants its own ticket and its own table time.
 
-### Minigame `styles.ts` files are still on raw hex
-`no-hardcoded-hex-colors-in-styles` and `no-nonsemantic-color-tokens-in-styles` gate on the tree
-list in `tools/eslint-plugin-wingnight/rules/houseComponentPaths.mjs`, and the minigame client
-trees are not on it. Adding them reports 50 findings — 49 hex literals plus one raw Tailwind
-palette class at `drawing/src/client/HostDrawingSurface/styles.ts:87` — across seven of the nine
-minigame packages, concentrated in the host and display surface `styles.ts` files (SONG GUESS 12,
-FAPPY 11, JOUST 11, SCHLONIC 8, GEO 3, DRAWING 2, EMOJI CHARADES 2; RECREATE and TRIVIA are
-already clean).
-
-Every one of those literals is a shipped colour, so this is a design pass against DESIGN.md's
-token set, not a find-and-replace: some will map onto an existing semantic token and some will
-show that the token set is missing a value. The `eslint.config.mjs` glob is already in place, so
-the marker list is the only thing left to change once the colours land.
+### ~~Minigame `styles.ts` files are still on raw hex~~ — done 2026-09-24
+The minigame client trees are on the house path list, the colour rule catches `rgb()`/`rgba()`/
+`hsl()` as well as hex, and `packages/surface/src/styleTokens/index.ts` is gated too. Chrome is on
+tokens (`theme(colors.gold/35%)` inside arbitrary values); licensed scene art sits in `scene*`
+exports the rule exempts by name (DESIGN.md §0.1, "Scene art").
 
 ### Do the arcade games share a surface language, or have they been copying JOUST?
 Surfaced by T3.1. Three `RunningTotals` copies (JOUST, FAPPY, SONG_GUESS) were byte-identical — and
@@ -548,4 +540,4 @@ SCHLONIC's variant was the only one of the four already written in house tokens.
 The open question, deferred from the T3.1 checkpoint to phase 6: either the arcade games share a
 surface language that DESIGN.md should name with real tokens, or the dusk-desert palette belongs to
 JOUST's arena alone and the others should stop borrowing it. Until then each migration substitutes
-tokens as it goes. **Answered at T6.2**: they were copying JOUST's skin. `DESIGN.md` §2.5 now states the direction — the brown goes and the other seven marquees follow DRAWING onto house tokens. Written, not built: the 18 hex literals are still in the tree and lint does not gate those paths yet.
+tokens as it goes. **Answered at T6.2**: they were copying JOUST's skin. `DESIGN.md` §2.5 now states the direction — the brown goes and the other seven marquees follow DRAWING onto house tokens. Built 2026-09-24: the brown is gone from every chrome string and lint gates the minigame trees.

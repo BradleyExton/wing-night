@@ -31,7 +31,15 @@ surface #1C1C1C\
 surfaceAlt #242424
 
 text #FFFFFF\
-muted #A3A3A3
+muted #A3A3A3\
+mutedWarm #B3A89A\
+mutedWarmDim #6B6157
+
+ember #FFB35A\
+glow #FFD6AA\
+glowHot #FFECD6\
+hearthGlass #2E1609\
+shade #000000
 
 primary #F97316 (burnt orange)\
 heat #EF4444 (intense red)\
@@ -51,6 +59,40 @@ Rules: - Never use more than 2 accent colors on a single screen. -
 primary (orange) is the default emphasis color. - heat (red) is reserved
 for urgency or escalation. - gold is reserved for winner moments or
 celebration. - success/danger are functional only (never decorative).
+
+The warm set is material, not accent, and counts against no accent budget:
+- `mutedWarm` / `mutedWarmDim` are `muted`'s counterparts for label text on
+  the flame-lit stages, where a cool grey reads wrong against the orange.
+- `ember` is the hearth's hot rim — a hairline along a lit edge, the
+  deck's routed joint, a card's top rule.
+- `glow` and `glowHot` are the hearth's light as the deck and the lobby
+  glass catch it: `glow` the wash along a lit face, `glowHot` the near-white
+  nosing where it is strongest. Light only — a sheen, a wash, an inset
+  highlight — never a fill or a text colour. They named the shell's
+  warm-glow `rgba()` family (DeckChrome, StandingsSurface, SetupStageBody,
+  NowPlayingSurface), which was coherent but unnamed until 2026-09-24.
+- `hearthGlass` is the lobby's warm glass (round cards, the now-playing and
+  status pills), laid over the flame at high alpha so the fire reads through.
+- `shade` is pure black for the dark half of light: drop shadows,
+  vignettes, scrims. Never a surface — `bg` is the darkest thing the show
+  paints.
+
+A token colour that needs an alpha inside an arbitrary value is written
+`theme(colors.gold/35%)`, never `rgba(251,191,36,0.35)`. Lint enforces it:
+`no-hardcoded-hex-colors-in-styles` rejects hex, `rgb()`, `rgba()` and `hsl()`
+in every house `styles.ts` (minigame packages included) and in the design
+system's `styleTokens`.
+
+**Scene art** is the one licensed exception. A scene's own world — JOUST's
+dusk sky and sand (§2.7), the corridor's night (§2.9), the zone's green
+(§2.11), the easel's chalkboard (§2.5), the map's ground (§2.4) — is not
+chrome and has no token. It lives in the scene's `palette.ts`, or, where it
+has to be a Tailwind class string, in a `styles.ts` export named `scene*`
+(`sceneDusk`, `sceneZone`, `sceneBoard`), which the rule exempts by name so
+the licence is visible at the declaration. Chrome — frames, plaques,
+buttons, labels — never borrows a scene colour: the JOUST brown that had
+spread into five games' plaques and buttons is gone (border `ember/20`,
+fills `surface` → `bg`).
 
 Team accent rules: - `teamA` through `teamH` are identity accents for
 team cards and standings rows only (left border + small dot). - Team
@@ -603,6 +645,10 @@ as DRAWING, EMOJI_CHARADES, JOUST, FAPPY and SCHLONIC. Directions:
     `index.css`, applied via `client/mapTheme`). This replaces the sepia
     filter and is what makes the chart belong on the stage. A second
     tile provider was rejected: a LAN party may not be able to reach one.
+    Under the tiles the map frame is `#0E1419` (`sceneMapGround`), the
+    inverted basemap's own ocean, so a tile still loading shows the map's
+    dark rather than a grey hole. It is scene art under §0.1's licence,
+    not a surface token.
 -   **Leaflet's own chrome never ships.** `zoomControl` is off on both
     surfaces — its white browser buttons are exactly the foreign
     furniture this language exists to remove. The tablet draws its own

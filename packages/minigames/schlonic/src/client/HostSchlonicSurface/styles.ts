@@ -20,7 +20,7 @@
 export const introRoot = "flex flex-col gap-3";
 
 export const introCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
+  "rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_theme(colors.gold/16%)]";
 
 // The chrome row's read-only counts (§5, `counter`). Glass rather than solid:
 // on a Canvas these float over a bright summer sky instead of sitting on a
@@ -69,7 +69,7 @@ export const hint = "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] italic text-te
 // The turn's result, in the `readout` above the corner dock with the run list
 // and the running totals beside it.
 export const finishCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-4 py-3 text-center";
+  "rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-4 py-3 text-center";
 
 export const finishTitle = "m-0 text-base font-black uppercase tracking-[0.2em] text-gold";
 

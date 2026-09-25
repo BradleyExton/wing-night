@@ -19,12 +19,12 @@ export const container = `${bodyBase} h-full`;
 export const body = `${bodyBase} flex-1`;
 
 export const prompt =
-  "m-0 font-serif text-5xl font-bold italic leading-tight text-text [text-shadow:0_0_24px_rgba(251,191,36,0.35)]";
+  "m-0 font-serif text-5xl font-bold italic leading-tight text-text [text-shadow:0_0_24px_theme(colors.gold/35%)]";
 
 export const hint = "m-0 text-lg text-mutedWarm";
 
 export const introTitle =
-  "m-0 font-serif text-6xl font-bold italic leading-none text-text [text-shadow:0_0_28px_rgba(249,115,22,0.45)]";
+  "m-0 font-serif text-6xl font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.primary/45%)]";
 
 export const introDescription =
   "m-0 max-w-3xl text-2xl leading-relaxed text-mutedWarm";
@@ -32,13 +32,13 @@ export const introDescription =
 export const equalizer = "flex items-end justify-center gap-2 h-16";
 
 export const equalizerBar =
-  "w-3 rounded-full bg-primary shadow-[0_0_14px_#f97316] motion-safe:animate-pulse";
+  "w-3 rounded-full bg-primary shadow-[0_0_14px_theme(colors.primary)] motion-safe:animate-pulse";
 
 export const revealLabel =
   "text-xs font-extrabold uppercase tracking-[0.36em] text-mutedWarmDim";
 
 export const revealTitle =
-  "m-0 font-serif text-6xl font-bold leading-tight text-gold [text-shadow:0_0_30px_rgba(251,191,36,0.5)]";
+  "m-0 font-serif text-6xl font-bold leading-tight text-gold [text-shadow:0_0_30px_theme(colors.gold/50%)]";
 
 export const revealArtist = "m-0 text-3xl font-semibold text-text";
 

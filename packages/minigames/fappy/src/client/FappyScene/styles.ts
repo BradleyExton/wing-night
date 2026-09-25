@@ -24,8 +24,11 @@ export const waitingBird =
 
 // A puff of sand where the bird hits the ground, landing or crashing: 16
 // world units square on the bird's x, faded and scaled by the beat.
-export const puff =
-  "pointer-events-none absolute left-[20cqw] top-0 h-[10cqw] w-[10cqw] origin-center rounded-full bg-[radial-gradient(circle,rgba(214,172,99,0.85)_0%,rgba(214,172,99,0.35)_45%,rgba(214,172,99,0)_70%)] opacity-0 will-change-transform";
+// Scene art, licensed by DESIGN.md §2.9: the puff is the cliff's own sand.
+const sceneSandPuff =
+  "bg-[radial-gradient(circle,rgba(214,172,99,0.85)_0%,rgba(214,172,99,0.35)_45%,rgba(214,172,99,0)_70%)]";
+
+export const puff = `pointer-events-none absolute left-[20cqw] top-0 h-[10cqw] w-[10cqw] origin-center rounded-full ${sceneSandPuff} opacity-0 will-change-transform`;
 
 export const label = "sr-only";
 

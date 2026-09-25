@@ -15,7 +15,7 @@ const button =
 
 export const kind = `${button} border-text/15 bg-bg/75 hover:border-gold/60`;
 
-export const kindSelected = `${button} border-gold bg-bg/90 shadow-[0_0_0_2px_rgba(251,191,36,0.35)]`;
+export const kindSelected = `${button} border-gold bg-bg/90 shadow-[0_0_0_2px_theme(colors.gold/35%)]`;
 
 export const kindSpent = `${button} border-text/10 bg-bg/50 opacity-40`;
 

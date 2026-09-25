@@ -109,7 +109,7 @@ export const verdictIcon = "text-lg leading-none";
 // color rather than a surface token — via the `--ink-color` custom property
 // each swatch's own class sets (index.tsx), never an inline style prop.
 export const inkLight =
-  "h-11 w-11 rounded-full border-2 border-black/40 bg-[var(--ink-color)] shadow-[inset_0_-4px_8px_rgba(0,0,0,0.45),inset_0_4px_8px_rgba(255,255,255,0.18),0_0_12px_var(--ink-color)] transition disabled:cursor-not-allowed disabled:opacity-40";
+  "h-11 w-11 rounded-full border-2 border-shade/40 bg-[var(--ink-color)] shadow-[inset_0_-4px_8px_theme(colors.shade/45%),inset_0_4px_8px_theme(colors.text/18%),0_0_12px_var(--ink-color)] transition disabled:cursor-not-allowed disabled:opacity-40";
 
 export const inkLightSelected =
   "outline outline-[3px] outline-offset-2 outline-gold";

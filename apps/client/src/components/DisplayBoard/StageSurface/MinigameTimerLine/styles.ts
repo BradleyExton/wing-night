@@ -6,7 +6,7 @@
 const litBase =
   "absolute inset-y-[2px] left-[2px] max-w-[calc(100%-4px)] rounded-full transition-[width] duration-1000 ease-linear";
 
-export const lit = `${litBase} bg-gradient-to-r from-heat via-primary via-30% to-gold shadow-[0_0_8px_theme(colors.primary),0_0_22px_theme(colors.primary),0_0_44px_rgba(249,115,22,0.5)]`;
+export const lit = `${litBase} bg-gradient-to-r from-heat via-primary via-30% to-gold shadow-[0_0_8px_theme(colors.primary),0_0_22px_theme(colors.primary),0_0_44px_theme(colors.primary/50%)]`;
 
 export const litUrgent = `${litBase} bg-heat shadow-[0_0_10px_theme(colors.heat),0_0_30px_theme(colors.heat)] motion-safe:animate-[heatpulse_0.65s_ease-in-out_infinite]`;
 

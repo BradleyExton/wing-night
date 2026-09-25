@@ -2,7 +2,7 @@ export const container =
   "relative flex h-full flex-col items-center justify-center gap-[clamp(0.75rem,1.6vw,2rem)] overflow-hidden px-[clamp(2rem,4vw,4rem)] py-[clamp(2rem,4vw,4rem)] text-center";
 
 export const ambient =
-  "pointer-events-none absolute inset-[-10%] bg-[radial-gradient(ellipse_at_30%_30%,rgba(249,115,22,0.10)_0%,transparent_45%),radial-gradient(ellipse_at_70%_70%,rgba(132,204,22,0.08)_0%,transparent_45%)]";
+  "pointer-events-none absolute inset-[-10%] bg-[radial-gradient(ellipse_at_30%_30%,theme(colors.primary/10%)_0%,transparent_45%),radial-gradient(ellipse_at_70%_70%,theme(colors.ember/8%)_0%,transparent_45%)]";
 
 // z-10 lifts every beat over the genre texture (TeamAmbient, z-1).
 export const beatBase =
@@ -17,10 +17,10 @@ export const eyebrow =
   "inline-flex items-center gap-[0.7em] text-[clamp(0.85rem,1.1vw,1.2rem)] font-bold uppercase tracking-[0.32em] text-muted";
 
 export const eyebrowIcon =
-  "h-[1.4em] w-[1.4em] text-primary [filter:drop-shadow(0_0_6px_rgba(249,115,22,0.5))]";
+  "h-[1.4em] w-[1.4em] text-primary [filter:drop-shadow(0_0_6px_theme(colors.primary/50%))]";
 
 export const teamName =
-  "relative m-0 text-[clamp(4rem,11vw,13rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-text/55 [text-shadow:0_0_60px_rgba(249,115,22,0.2)]";
+  "relative m-0 text-[clamp(4rem,11vw,13rem)] font-black uppercase leading-[0.9] tracking-[-0.02em] text-text/55 [text-shadow:0_0_60px_theme(colors.primary/20%)]";
 
 // The wordmark inherits the row's dimmed type; a treatment that owns its
 // colour shows through at full strength under the strike, which is the point.
@@ -38,7 +38,7 @@ export const dotBase =
 export const dotDone = "bg-primary border-primary";
 
 export const dotJustDone =
-  "bg-primary border-primary shadow-[0_0_14px_rgba(249,115,22,0.65)]";
+  "bg-primary border-primary shadow-[0_0_14px_theme(colors.primary/65%)]";
 
 export const next =
   "m-0 text-[clamp(1rem,1.4vw,1.5rem)] font-bold uppercase tracking-[0.28em] text-muted";

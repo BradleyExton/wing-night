@@ -21,7 +21,7 @@
 export const introRoot = "flex flex-col gap-3";
 
 export const introCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
+  "rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_theme(colors.gold/16%)]";
 
 // The rail row's read-only counts (§4, `counter`). "Song 3 of 6" was buried in
 // the answer card and the pending chip was on the strip this file no longer
@@ -47,7 +47,7 @@ export const totalsPane = "w-[clamp(200px,17vw,240px)] shrink-0 overflow-y-auto"
 // left the rest of the console black. Centred, so a one-line title and a
 // hinted three-line answer both sit where the host's eye lands.
 export const answerCard =
-  "flex h-full min-h-0 flex-col justify-center gap-1 rounded-xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(1.5rem,3vw,3rem)] py-[clamp(1rem,2vh,2rem)] shadow-[inset_0_0_24px_rgba(251,191,36,0.16)]";
+  "flex h-full min-h-0 flex-col justify-center gap-1 rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-[clamp(1.5rem,3vw,3rem)] py-[clamp(1rem,2vh,2rem)] shadow-[inset_0_0_24px_theme(colors.gold/16%)]";
 
 export const answerLabel =
   "block text-[0.62rem] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
@@ -85,10 +85,10 @@ export const actions =
 export const transport = "flex min-w-0 flex-1 items-stretch gap-2";
 
 export const transportPrimary =
-  "flex flex-[1.4] items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 border-[#5fe093] bg-[radial-gradient(ellipse_at_top,#2fb86c_0%,#0e6a36_100%)] px-2 text-[clamp(0.85rem,1.2vw,1.15rem)] font-extrabold uppercase tracking-[0.08em] text-[#061a0c] shadow-[0_4px_0_rgba(0,0,0,0.45)] transition disabled:cursor-not-allowed disabled:opacity-40";
+  "flex flex-[1.4] items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 border-primary bg-primary px-2 text-[clamp(0.85rem,1.2vw,1.15rem)] font-extrabold uppercase tracking-[0.08em] text-bg shadow-[0_4px_0_theme(colors.shade/45%)] transition disabled:cursor-not-allowed disabled:opacity-40";
 
 export const transportSecondary =
-  "flex-1 rounded-xl border border-[#3a200d] bg-surface px-2 text-[clamp(0.75rem,1vw,0.95rem)] font-extrabold uppercase tracking-[0.1em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+  "flex-1 rounded-xl border border-ember/20 bg-surface px-2 text-[clamp(0.75rem,1vw,0.95rem)] font-extrabold uppercase tracking-[0.1em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
 
 export const ruling = "flex shrink-0 items-stretch gap-3";
 
@@ -96,7 +96,7 @@ export const ruling = "flex shrink-0 items-stretch gap-3";
 // plus an override: two `w-[…]` classes on one element are decided by the
 // stylesheet's order, not the attribute's, so an override would be a coin toss.
 const beatEnder =
-  "shrink-0 rounded-xl border-2 border-gold bg-[radial-gradient(ellipse_at_top,#f9a51a_0%,#8a4b06_100%)] text-[clamp(1rem,1.5vw,1.35rem)] font-extrabold uppercase tracking-[0.12em] text-[#1c0d02] shadow-[0_4px_0_rgba(0,0,0,0.45)] transition disabled:cursor-not-allowed disabled:opacity-40";
+  "shrink-0 rounded-xl border-2 border-primary bg-primary text-[clamp(1rem,1.5vw,1.35rem)] font-extrabold uppercase tracking-[0.12em] text-bg shadow-[0_4px_0_theme(colors.shade/45%)] transition disabled:cursor-not-allowed disabled:opacity-40";
 
 export const revealButton = `${beatEnder} w-[clamp(14rem,22vw,20rem)]`;
 

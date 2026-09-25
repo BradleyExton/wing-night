@@ -43,6 +43,17 @@ const config: Config = {
         mutedWarm: "#b3a89a",
         mutedWarmDim: "#6b6157",
         ember: "#ffb35a",
+        // The hearth's light, as the deck and the lobby glass catch it: `glow` is the warm
+        // wash along a lit edge, `glowHot` the near-white nosing where the light is strongest.
+        // Light only — a wash, a sheen, an inset highlight — never a fill or a text colour.
+        glow: "#ffd6aa",
+        glowHot: "#ffecd6",
+        // The lobby's warm glass (round cards, the now-playing and status pills), laid over
+        // the flame at high alpha so the fire reads through it.
+        hearthGlass: "#2e1609",
+        // Pure black, for the dark half of light: drop shadows, vignettes, scrims. Never a
+        // surface — `bg` is the darkest thing the show paints.
+        shade: "#000000",
         primary: "#f97316",
         heat: "#ef4444",
         success: "#22c55e",

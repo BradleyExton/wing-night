@@ -2,7 +2,7 @@ export const container =
   "relative flex h-full flex-col items-center justify-center gap-[clamp(1.5rem,3vw,2.75rem)] overflow-hidden px-[clamp(1.5rem,3vw,3rem)] py-[clamp(1.5rem,3vw,3rem)] text-center";
 
 export const ambient =
-  "pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,0.08)_0%,transparent_55%)]";
+  "pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,theme(colors.primary/8%)_0%,transparent_55%)]";
 
 export const header =
   "relative flex flex-col items-center gap-[0.6rem]";
@@ -40,4 +40,4 @@ export const numMuted = "text-muted";
 export const numTotal = "text-primary";
 
 export const numTotalTop =
-  "text-gold [text-shadow:0_0_18px_rgba(251,191,36,0.45)]";
+  "text-gold [text-shadow:0_0_18px_theme(colors.gold/45%)]";

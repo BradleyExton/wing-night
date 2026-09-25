@@ -6,12 +6,12 @@ export const container =
 // after the standalone delay rule at equal specificity, so a split pair silently computes 0s and
 // every ember rises in unison. Second <time> in the shorthand is the delay.
 const particleBase =
-  "absolute -bottom-[2vh] h-1 w-1 rounded-full bg-ember opacity-0 [box-shadow:0_0_8px_theme(colors.ember),0_0_16px_rgba(251,191,36,0.6)] motion-reduce:hidden motion-reduce:[animation:none] [animation:rise_var(--ember-duration,9s)_linear_var(--ember-delay,0s)_infinite]";
+  "absolute -bottom-[2vh] h-1 w-1 rounded-full bg-ember opacity-0 [box-shadow:0_0_8px_theme(colors.ember),0_0_16px_theme(colors.gold/60%)] motion-reduce:hidden motion-reduce:[animation:none] [animation:rise_var(--ember-duration,9s)_linear_var(--ember-delay,0s)_infinite]";
 
 const particleSmall = "h-[3px] w-[3px]";
 
 const particleLarge =
-  "h-1.5 w-1.5 [box-shadow:0_0_10px_theme(colors.ember),0_0_22px_rgba(251,191,36,0.7)]";
+  "h-1.5 w-1.5 [box-shadow:0_0_10px_theme(colors.ember),0_0_22px_theme(colors.gold/70%)]";
 
 // A few sparks near the core: white-hot, fast and short-lived.
 const particleSpark =

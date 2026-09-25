@@ -19,15 +19,15 @@ export const lead = "min-w-0";
 // The tube. `signflicker` (keyframes.css) dips the whole sign for a frame or
 // two every few seconds, the way a tired transformer does.
 export const kicker =
-  "m-0 mb-[0.25em] font-marquee-title text-[clamp(0.9rem,1.5vw,1.7rem)] uppercase leading-none tracking-[0.14em] text-text [text-shadow:0_0_5px_theme(colors.text),0_0_12px_theme(colors.gold),0_0_28px_theme(colors.gold),0_0_50px_rgba(251,191,36,0.5)] motion-safe:[animation:signflicker_4.2s_steps(1)_infinite]";
+  "m-0 mb-[0.25em] font-marquee-title text-[clamp(0.9rem,1.5vw,1.7rem)] uppercase leading-none tracking-[0.14em] text-text [text-shadow:0_0_5px_theme(colors.text),0_0_12px_theme(colors.gold),0_0_28px_theme(colors.gold),0_0_50px_theme(colors.gold/50%)] motion-safe:[animation:signflicker_4.2s_steps(1)_infinite]";
 
 export const team =
-  "m-0 flex items-baseline gap-[0.4em] font-marquee-name text-[clamp(2.2rem,4vw,4.4rem)] uppercase leading-[0.95] tracking-[0.04em] text-text [text-shadow:0_0_8px_rgba(255,255,255,0.5),0_0_24px_rgba(255,255,255,0.18)]";
+  "m-0 flex items-baseline gap-[0.4em] font-marquee-name text-[clamp(2.2rem,4vw,4.4rem)] uppercase leading-[0.95] tracking-[0.04em] text-text [text-shadow:0_0_8px_theme(colors.text/50%),0_0_24px_theme(colors.text/18%)]";
 
 export const teamName = "truncate";
 
 export const pending =
-  "shrink-0 font-mono text-[0.4em] font-extrabold tracking-normal text-gold [text-shadow:0_0_8px_theme(colors.gold),0_0_20px_rgba(251,191,36,0.5)]";
+  "shrink-0 font-mono text-[0.4em] font-extrabold tracking-normal text-gold [text-shadow:0_0_8px_theme(colors.gold),0_0_20px_theme(colors.gold/50%)]";
 
 // A ROW, not a reserve: the readout and the clock are ordinary children, so a
 // game with no clock and nothing to count pays nothing here. Nothing may grow
@@ -39,4 +39,4 @@ export const meta =
 // `MinigameTimerLine`, in the `clockLine` slot. A host-paced game gets the
 // dark track alone, which is the rule under the sign.
 export const track =
-  "relative h-[clamp(8px,1.1vh,12px)] rounded-full bg-text/5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]";
+  "relative h-[clamp(8px,1.1vh,12px)] rounded-full bg-text/5 shadow-[inset_0_0_0_1px_theme(colors.text/8%)]";

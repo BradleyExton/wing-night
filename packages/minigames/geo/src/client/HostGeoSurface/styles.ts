@@ -26,8 +26,11 @@ export const statusNote =
 // paint over the plate that is their sibling. Containing them here keeps the
 // game's interior exactly that — interior — and means nothing GEO draws ever
 // competes with the shell's chrome row or the corner dock again.
-export const map =
-  "relative isolate h-full min-h-0 w-full overflow-hidden rounded-2xl border border-text/10 bg-[#0e1419]";
+// Scene art, licensed by DESIGN.md §2.4: the ground the inverted map tiles are laid on, so a
+// tile still loading shows the map's own dark rather than the stage's.
+const sceneMapGround = "bg-[#0e1419]";
+
+export const map = `relative isolate h-full min-h-0 w-full overflow-hidden rounded-2xl border border-text/10 ${sceneMapGround}`;
 
 const chip =
   "inline-flex min-h-9 items-center gap-2 rounded-full border border-text/10 bg-bg/85 px-3.5 text-[0.78rem] font-semibold text-muted backdrop-blur";
@@ -44,7 +47,7 @@ export const counter = chip;
 // `top` clears the shell's chrome row, which is taller than the chip row GEO
 // used to float there because it carries the mini-rail and the play clock.
 export const plate =
-  "absolute left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(4.4rem,8vh,5.2rem)] w-[clamp(14rem,26vw,20rem)] overflow-hidden rounded-[1.25rem] border border-text/15 bg-gradient-to-br from-surfaceAlt to-surface shadow-[0_22px_50px_rgba(0,0,0,0.7)]";
+  "absolute left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(4.4rem,8vh,5.2rem)] w-[clamp(14rem,26vw,20rem)] overflow-hidden rounded-[1.25rem] border border-text/15 bg-gradient-to-br from-surfaceAlt to-surface shadow-[0_22px_50px_theme(colors.shade/70%)]";
 
 export const plateShot = "relative aspect-[4/3]";
 
@@ -71,7 +74,7 @@ export const plateHint = "m-0 text-[0.82rem] leading-snug text-muted";
 const actionButton =
   "min-h-14 shrink-0 rounded-2xl px-[clamp(1.2rem,3vw,2.2rem)] text-[clamp(0.95rem,1.6vw,1.1rem)] font-black uppercase tracking-[0.12em] transition disabled:cursor-not-allowed disabled:opacity-40";
 
-export const submitButton = `${actionButton} bg-primary text-bg shadow-[0_12px_28px_rgba(249,115,22,0.3)] hover:bg-primary/90 disabled:shadow-none`;
+export const submitButton = `${actionButton} bg-primary text-bg shadow-[0_12px_28px_theme(colors.primary/30%)] hover:bg-primary/90 disabled:shadow-none`;
 
 export const nextPromptButton = `${actionButton} border border-text/15 bg-bg/85 text-text backdrop-blur hover:bg-surfaceAlt`;
 

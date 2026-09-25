@@ -6,7 +6,7 @@
 // dark edge down each side against the footer's bright seam — plus the face
 // falling into shadow as it meets the plinth.
 export const bay =
-  "relative isolate grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-[clamp(0.85rem,1.4vw,2rem)] overflow-hidden bg-bg px-[clamp(1rem,1.6vw,2.25rem)] pb-[clamp(0.7rem,1.3vh,1.4rem)] pt-[clamp(1.1rem,2.2vh,2.3rem)] [--wn-bay-name:clamp(1.3rem,1.9vw,2.4rem)] [box-shadow:inset_1px_0_0_rgba(0,0,0,0.5),inset_-1px_0_0_rgba(0,0,0,0.5),inset_0_-16px_26px_-16px_rgba(0,0,0,0.72)]";
+  "relative isolate grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-[clamp(0.85rem,1.4vw,2rem)] overflow-hidden bg-bg px-[clamp(1rem,1.6vw,2.25rem)] pb-[clamp(0.7rem,1.3vh,1.4rem)] pt-[clamp(1.1rem,2.2vh,2.3rem)] [--wn-bay-name:clamp(1.3rem,1.9vw,2.4rem)] [box-shadow:inset_1px_0_0_theme(colors.shade/50%),inset_-1px_0_0_theme(colors.shade/50%),inset_0_-16px_26px_-16px_theme(colors.shade/72%)]";
 
 export const edge = "pointer-events-none absolute inset-y-0 left-0 z-[2] w-[3px]";
 
@@ -14,7 +14,7 @@ export const edge = "pointer-events-none absolute inset-y-0 left-0 z-[2] w-[3px]
 // says who is ahead. Above the deck chrome's own lip (z-3), and clipped by the
 // bay, so it stops exactly at the panel joints.
 export const leadLip =
-  "pointer-events-none absolute inset-x-0 top-0 z-[4] h-[2px] bg-gold [box-shadow:0_0_10px_rgba(251,191,36,0.75),0_2px_14px_rgba(251,191,36,0.4)]";
+  "pointer-events-none absolute inset-x-0 top-0 z-[4] h-[2px] bg-gold [box-shadow:0_0_10px_theme(colors.gold/75%),0_2px_14px_theme(colors.gold/40%)]";
 
 // The emblem as a watermark: low alpha, right-aligned and a touch off-axis,
 // under the bay's own info and score (both positioned so they paint over it).
@@ -42,7 +42,7 @@ export const meta =
 export const metaLead = "text-gold";
 
 export const metaIcon =
-  "h-[1.1em] w-[1.1em] [filter:drop-shadow(0_0_6px_rgba(251,191,36,0.5))]";
+  "h-[1.1em] w-[1.1em] [filter:drop-shadow(0_0_6px_theme(colors.gold/50%))]";
 
 // Sized above the 24px TV floor (docs/team-identity.md) so the genre face is
 // allowed here; two lines rather than a truncation because a display face

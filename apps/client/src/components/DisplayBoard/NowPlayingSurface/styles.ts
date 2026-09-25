@@ -8,17 +8,17 @@
 const containerBase =
   "pointer-events-none absolute right-4 top-2 z-30 flex max-w-[min(42vw,34rem)] items-center gap-[clamp(0.5rem,0.85vw,0.95rem)] rounded-full py-[clamp(0.3rem,0.55vh,0.5rem)] pl-[clamp(0.4rem,0.55vw,0.6rem)] pr-[clamp(0.9rem,1.3vw,1.4rem)] backdrop-blur-[6px] [animation:reveal_500ms_cubic-bezier(0.2,0.7,0.2,1)_both] motion-reduce:[animation:none] md:right-8 md:top-4 2xl:right-12";
 
-export const container = `${containerBase} border border-primary/30 bg-[linear-gradient(120deg,rgba(46,22,9,0.88)_0%,rgba(18,18,18,0.86)_72%)] [box-shadow:0_14px_34px_-18px_rgba(0,0,0,0.95),0_0_22px_-8px_rgba(249,115,22,0.35),inset_0_1px_0_rgba(255,214,170,0.14)]`;
+export const container = `${containerBase} border border-primary/30 bg-[linear-gradient(120deg,theme(colors.hearthGlass/88%)_0%,theme(colors.bg/86%)_72%)] [box-shadow:0_14px_34px_-18px_theme(colors.shade/95%),0_0_22px_-8px_theme(colors.primary/35%),inset_0_1px_0_theme(colors.glow/14%)]`;
 
 // Paused is the same pill gone cold: the ember glow and warm fill drop out,
 // bars freeze, text drops to muted. Hiding it would flicker the TV on every
 // host tap.
-export const containerPaused = `${containerBase} border border-text/10 bg-[linear-gradient(120deg,rgba(28,28,28,0.88)_0%,rgba(18,18,18,0.86)_72%)] [box-shadow:0_14px_34px_-18px_rgba(0,0,0,0.95)]`;
+export const containerPaused = `${containerBase} border border-text/10 bg-[linear-gradient(120deg,theme(colors.surface/88%)_0%,theme(colors.bg/86%)_72%)] [box-shadow:0_14px_34px_-18px_theme(colors.shade/95%)]`;
 
 // The equalizer sits in a lit badge so the moving bars have an edge to move
 // against from across the room.
 export const equalizer =
-  "flex h-[clamp(1.5rem,1.7vw,2.3rem)] w-[clamp(1.5rem,1.7vw,2.3rem)] flex-none items-end justify-center gap-[3px] rounded-full border border-primary/35 bg-primary/12 pb-[0.42em] pt-[0.3em] [box-shadow:0_0_16px_rgba(249,115,22,0.28),inset_0_1px_0_rgba(255,214,170,0.14)]";
+  "flex h-[clamp(1.5rem,1.7vw,2.3rem)] w-[clamp(1.5rem,1.7vw,2.3rem)] flex-none items-end justify-center gap-[3px] rounded-full border border-primary/35 bg-primary/12 pb-[0.42em] pt-[0.3em] [box-shadow:0_0_16px_theme(colors.primary/28%),inset_0_1px_0_theme(colors.glow/14%)]";
 
 export const equalizerPaused =
   "flex h-[clamp(1.5rem,1.7vw,2.3rem)] w-[clamp(1.5rem,1.7vw,2.3rem)] flex-none items-end justify-center gap-[3px] rounded-full border border-text/10 bg-text/[0.04] pb-[0.42em] pt-[0.3em]";
@@ -30,7 +30,7 @@ export const equalizerPaused =
 // delay, see Embers/styles.ts). Four bars, not five: the pill is narrow and
 // the round badge wants a squarer cluster than the old row did.
 const barBase =
-  "w-[clamp(2.5px,0.18vw,4px)] origin-bottom rounded-full bg-primary [box-shadow:0_0_6px_rgba(249,115,22,0.8)] motion-reduce:[animation:none] motion-reduce:scale-y-[0.4]";
+  "w-[clamp(2.5px,0.18vw,4px)] origin-bottom rounded-full bg-primary [box-shadow:0_0_6px_theme(colors.primary/80%)] motion-reduce:[animation:none] motion-reduce:scale-y-[0.4]";
 
 export const bars: readonly string[] = [
   `${barBase} h-[45%] [animation:equalize_900ms_ease-in-out_infinite]`,

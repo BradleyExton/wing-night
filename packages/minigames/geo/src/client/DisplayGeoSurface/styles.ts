@@ -15,8 +15,11 @@ export const marqueeCounterValue = "text-text";
 // `isolate` keeps Leaflet's own stacking (panes at z-400, controls at z-1000)
 // inside the arena. Without it those layers compete with the display shell's
 // chrome in the same context and the map paints over it.
-export const arena =
-  "relative isolate flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-text/10 bg-[#0e1419]";
+// Scene art, licensed by DESIGN.md §2.4: the ground the inverted map tiles are laid on, so a
+// tile still loading shows the map's own dark rather than the stage's.
+const sceneMapGround = "bg-[#0e1419]";
+
+export const arena = `relative isolate flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-text/10 ${sceneMapGround}`;
 
 export const mapLayer = "absolute inset-0";
 
@@ -24,7 +27,7 @@ export const mapLayer = "absolute inset-0";
 // screenshot. The vignette gives it an edge and, more usefully, guarantees the
 // corner cards always have something dark to sit on.
 export const vignette =
-  "pointer-events-none absolute inset-0 z-[1050] bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.72)_100%)]";
+  "pointer-events-none absolute inset-0 z-[1050] bg-[radial-gradient(ellipse_at_center,transparent_35%,theme(colors.shade/72%)_100%)]";
 
 export const idleBody = "grid flex-1 place-items-center px-[10%] text-center";
 
@@ -34,7 +37,7 @@ export const idleText =
 // Both corner stacks ride above Leaflet's controls (z-1000) and the vignette.
 const cornerStack = "absolute z-[1100] flex flex-col";
 
-export const plate = `${cornerStack} bottom-[clamp(1.4rem,3vh,3.2rem)] left-[clamp(1rem,2.4vw,2.6rem)] w-[clamp(17rem,30vw,34rem)] overflow-hidden rounded-[1.25rem] border border-text/15 bg-gradient-to-br from-surfaceAlt to-surface shadow-[0_26px_60px_rgba(0,0,0,0.75)]`;
+export const plate = `${cornerStack} bottom-[clamp(1.4rem,3vh,3.2rem)] left-[clamp(1rem,2.4vw,2.6rem)] w-[clamp(17rem,30vw,34rem)] overflow-hidden rounded-[1.25rem] border border-text/15 bg-gradient-to-br from-surfaceAlt to-surface shadow-[0_26px_60px_theme(colors.shade/75%)]`;
 
 export const plateShot = "relative aspect-[4/3]";
 

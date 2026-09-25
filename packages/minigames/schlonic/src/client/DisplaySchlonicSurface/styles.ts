@@ -28,8 +28,13 @@ export const marqueeWings =
 export const marqueeWingsLabel =
   "text-[clamp(0.6rem,0.9vw,0.95rem)] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
 
-export const arenaArea =
-  "relative flex min-h-0 flex-1 overflow-hidden rounded-2xl border-2 border-[#1f6b34] bg-[#0d1f14] shadow-[inset_0_0_40px_rgba(0,0,0,0.5)]";
+// Scene art, licensed by DESIGN.md §2.11: the zone's green frame and ground, and that ground
+// pooled behind a plaque. The zone looks like nothing else in the show on purpose.
+const sceneZone = "border-[#1f6b34] bg-[#0d1f14]";
+const sceneZoneVeil =
+  "bg-[radial-gradient(ellipse_at_center,rgba(12,26,16,0.78)_0%,rgba(12,26,16,0.1)_72%)]";
+
+export const arenaArea = `relative flex min-h-0 flex-1 overflow-hidden rounded-2xl border-2 ${sceneZone} shadow-[inset_0_0_40px_theme(colors.shade/50%)]`;
 
 // The venue, named where it is rather than on the marquee (which names the show, §2.2D): a small
 // plaque hung over the zone's sky. Centred rather than in JOUST's corner, because the zone
@@ -39,14 +44,13 @@ export const venuePlaque =
 
 export const runEnter = "h-full w-full motion-safe:animate-[schlonic-scene-enter_420ms_ease-out_both]";
 
-export const resultOverlay =
-  "pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-[radial-gradient(ellipse_at_center,rgba(12,26,16,0.78)_0%,rgba(12,26,16,0.1)_72%)]";
+export const resultOverlay = `pointer-events-none absolute inset-0 z-10 flex items-center justify-center ${sceneZoneVeil}`;
 
 // One plaque per beat. The run's ending on top, and under it — on a handoff — who is next, so
 // the room reads one card rather than two stacked over each other and a third line under the
 // zone saying the same thing.
 export const holdPlaque =
-  "flex flex-col items-center gap-[clamp(0.6rem,1.2vh,1.2rem)] rounded-2xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(1.8rem,3.4vw,3.6rem)] py-[clamp(1rem,1.8vh,1.8rem)] text-center motion-safe:animate-[schlonic-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
+  "flex flex-col items-center gap-[clamp(0.6rem,1.2vh,1.2rem)] rounded-2xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-[clamp(1.8rem,3.4vw,3.6rem)] py-[clamp(1rem,1.8vh,1.8rem)] text-center motion-safe:animate-[schlonic-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
 
 export const holdNext =
   "flex flex-col items-center gap-1 border-t border-gold/30 pt-[clamp(0.6rem,1.2vh,1.2rem)]";
@@ -58,7 +62,7 @@ export const handoffLine =
   "text-[clamp(0.7rem,1vw,1.1rem)] font-extrabold uppercase tracking-[0.3em] text-gold";
 
 export const resultPlaque =
-  "flex items-center gap-[clamp(1.2rem,2.4vw,2.6rem)] rounded-2xl border-2 border-gold bg-gradient-to-b from-[#3a1d09] to-[#1a0c04] px-[clamp(1.8rem,3.4vw,3.6rem)] py-[clamp(1rem,1.8vh,1.8rem)]";
+  "flex items-center gap-[clamp(1.2rem,2.4vw,2.6rem)] rounded-2xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-[clamp(1.8rem,3.4vw,3.6rem)] py-[clamp(1rem,1.8vh,1.8rem)]";
 
 export const resultTitle =
   "m-0 font-serif text-[clamp(1.8rem,3.6vw,3.2rem)] font-bold italic leading-none text-gold";

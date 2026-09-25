@@ -18,10 +18,10 @@ export const revealOverlay =
 // Opaque fill: the held sketch stays on the board behind the plaque, so a
 // translucent panel let strokes cut through the answer text.
 export const revealPlaqueCorrect =
-  "grid min-w-[60%] grid-cols-[auto_1fr_auto] items-center gap-[clamp(1.2rem,2.4vw,2.4rem)] rounded-2xl border-[3px] border-success/60 bg-surface px-[clamp(1.8rem,3vw,3rem)] py-[clamp(1.2rem,2vh,2rem)] shadow-[0_0_60px_theme(colors.success/30%),0_14px_32px_rgba(0,0,0,0.6)]";
+  "grid min-w-[60%] grid-cols-[auto_1fr_auto] items-center gap-[clamp(1.2rem,2.4vw,2.4rem)] rounded-2xl border-[3px] border-success/60 bg-surface px-[clamp(1.8rem,3vw,3rem)] py-[clamp(1.2rem,2vh,2rem)] shadow-[0_0_60px_theme(colors.success/30%),0_14px_32px_theme(colors.shade/60%)]";
 
 export const revealPlaqueIncorrect =
-  "grid min-w-[60%] grid-cols-[auto_1fr] items-center gap-[clamp(1.2rem,2.4vw,2.4rem)] rounded-2xl border-[3px] border-danger/60 bg-surface px-[clamp(1.8rem,3vw,3rem)] py-[clamp(1.2rem,2vh,2rem)] shadow-[0_0_60px_theme(colors.danger/30%),0_14px_32px_rgba(0,0,0,0.6)]";
+  "grid min-w-[60%] grid-cols-[auto_1fr] items-center gap-[clamp(1.2rem,2.4vw,2.4rem)] rounded-2xl border-[3px] border-danger/60 bg-surface px-[clamp(1.8rem,3vw,3rem)] py-[clamp(1.2rem,2vh,2rem)] shadow-[0_0_60px_theme(colors.danger/30%),0_14px_32px_theme(colors.shade/60%)]";
 
 export const revealCheckCorrect =
   "text-[clamp(2.8rem,4.4vw,4.4rem)] font-black leading-none text-success";

@@ -219,10 +219,8 @@ export default [
   },
   {
     // max-lines applies to every tree listed here. The three colour rules carry their own
-    // tree list in tools/eslint-plugin-wingnight/rules/houseComponentPaths.mjs, and the
-    // minigame trees are not on it yet — their styles.ts files still hold raw hex from
-    // before the semantic tokens existed. The glob is here so that list is the only thing
-    // left to change when that migration lands.
+    // tree list in tools/eslint-plugin-wingnight/rules/houseComponentPaths.mjs; the minigame
+    // trees joined it on 2026-09-24, when their chrome moved onto the semantic tokens.
     files: [
       "apps/client/src/components/**/styles.ts",
       "packages/cast/src/**/styles.ts",
@@ -236,6 +234,15 @@ export default [
         { max: 140, skipBlankLines: true, skipComments: true }
       ],
       "wingnight/no-class-name-suffix-in-styles-exports": "error",
+      "wingnight/no-hardcoded-hex-colors-in-styles": "error",
+      "wingnight/no-nonsemantic-color-tokens-in-styles": "error"
+    }
+  },
+  {
+    // The design system's own class strings. Not a styles.ts, so max-lines and the export-name
+    // rule stay off, but a colour in it reaches every surface at once.
+    files: ["packages/surface/src/styleTokens/index.ts"],
+    rules: {
       "wingnight/no-hardcoded-hex-colors-in-styles": "error",
       "wingnight/no-nonsemantic-color-tokens-in-styles": "error"
     }

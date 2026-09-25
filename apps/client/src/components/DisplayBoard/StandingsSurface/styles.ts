@@ -5,7 +5,7 @@
 // how a real stage deck is made — and it is why there is no `border-t` here
 // any more, the chrome's lip is the top edge.
 export const footer =
-  "relative z-10 isolate shrink-0 grid gap-px bg-[linear-gradient(180deg,rgba(255,214,170,0.32)_0%,rgba(255,214,170,0.08)_34%,rgba(0,0,0,0.55)_100%)]";
+  "relative z-10 isolate shrink-0 grid gap-px bg-[linear-gradient(180deg,theme(colors.glow/32%)_0%,theme(colors.glow/8%)_34%,theme(colors.shade/55%)_100%)]";
 
 // One equal column per team, and the team count is only known at runtime, so the track
 // listing can't be a static utility class. It is applied through a ref so the declaration

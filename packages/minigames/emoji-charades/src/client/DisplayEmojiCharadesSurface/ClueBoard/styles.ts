@@ -9,12 +9,12 @@ export const board =
 // from the space the board got, so a 3-emoji clue and a 28-emoji one are
 // equally legible from the sofa.
 const slotBase =
-  "flex items-center justify-center rounded-2xl text-[min(11vh,6.4vw)] leading-none [filter:drop-shadow(0_4px_12px_rgba(0,0,0,0.5))]";
+  "flex items-center justify-center rounded-2xl text-[min(11vh,6.4vw)] leading-none [filter:drop-shadow(0_4px_12px_theme(colors.shade/50%))]";
 
 export const slotFilled = `${slotBase} bg-text/[0.045]`;
 
 // Newest slot keeps the one beat of drama borrowed from the ribbon direction.
-export const slotNewest = `${slotBase} bg-gold/[0.14] shadow-[inset_0_0_0_3px_#fbbf24,0_0_26px_rgba(251,191,36,0.25)] motion-safe:animate-[emojipop_420ms_cubic-bezier(0.2,1.4,0.4,1)]`;
+export const slotNewest = `${slotBase} bg-gold/[0.14] shadow-[inset_0_0_0_3px_theme(colors.gold),0_0_26px_theme(colors.gold/25%)] motion-safe:animate-[emojipop_420ms_cubic-bezier(0.2,1.4,0.4,1)]`;
 
 // The clue the room has not seen yet, kept on screen so it can read how much
 // is still to come.

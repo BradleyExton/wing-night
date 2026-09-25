@@ -199,12 +199,40 @@ test("no-hardcoded-hex-colors-in-styles", () => {
         {
           filename: "/repo/apps/client/src/components/Example/index.tsx",
           code: "export const Example = () => <main className='bg-[#121212]' />;"
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const glow = 'shadow-[0_0_70px_theme(colors.gold/35%)]';"
+        },
+        {
+          filename: "/repo/packages/minigames/joust/src/client/DisplayJoustSurface/styles.ts",
+          code: "export const sceneDusk = 'bg-[linear-gradient(180deg,#160c2a_0%,#4a1f3f_54%)]';"
         }
       ],
       invalid: [
         {
           filename: "/repo/apps/client/src/components/Example/styles.ts",
           code: "export const className = 'bg-[#121212] text-white';",
+          errors: [{ messageId: "noHardcodedHexColor" }]
+        },
+        {
+          filename: "/repo/apps/client/src/components/Example/styles.ts",
+          code: "export const glow = 'shadow-[0_0_70px_rgba(251,191,36,0.35)]';",
+          errors: [{ messageId: "noHardcodedHexColor" }]
+        },
+        {
+          filename: "/repo/packages/minigames/joust/src/client/HostJoustSurface/styles.ts",
+          code: "export const plaque = 'border-[#3a200d] from-[#1a0e05]';",
+          errors: [{ messageId: "noHardcodedHexColor" }]
+        },
+        {
+          filename: "/repo/packages/minigames/joust/src/client/HostJoustSurface/styles.ts",
+          code: "export const scenery = 'bg-[hsl(20,50%,10%)]';",
+          errors: [{ messageId: "noHardcodedHexColor" }]
+        },
+        {
+          filename: "/repo/packages/surface/src/styleTokens/index.ts",
+          code: "export const deckRoot = 'bg-[rgb(0,0,0)]';",
           errors: [{ messageId: "noHardcodedHexColor" }]
         },
         {

@@ -12,7 +12,7 @@ export const heatTrack =
   "relative h-[clamp(8px,1vh,12px)] max-w-[80%] overflow-hidden rounded-full bg-text/[0.06]";
 
 export const heatTrackFill =
-  "h-full rounded-full bg-gradient-to-r from-gold via-primary to-heat shadow-[0_0_16px_rgba(249,115,22,0.4)] transition-[width] duration-1000 ease-linear";
+  "h-full rounded-full bg-gradient-to-r from-gold via-primary to-heat shadow-[0_0_16px_theme(colors.primary/40%)] transition-[width] duration-1000 ease-linear";
 
 // The fill width tracks the countdown continuously, so it can't be a static utility class.
 // It is applied through a ref so the whole declaration stays here with the rest of the
