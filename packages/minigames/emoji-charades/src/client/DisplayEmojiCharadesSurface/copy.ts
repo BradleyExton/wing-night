@@ -1,5 +1,7 @@
+import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
+
 export const displayEmojiCharadesSurfaceCopy = {
-  showTitle: "Emoji Charades",
+  title: MINIGAME_DEFINITIONS.EMOJI_CHARADES.displayName,
   pendingPointsLabel: (points: number): string =>
     `+${points} pending`,
   clueingLabel: (teamName: string | null): string =>

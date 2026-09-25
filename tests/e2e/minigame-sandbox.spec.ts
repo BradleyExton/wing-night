@@ -105,7 +105,9 @@ test("drawing sandbox syncs tablet strokes to the display and reveals on correct
     page.getByRole("heading", { name: "Minigame Dev Sandbox" })
   ).toBeVisible();
   await expect(page.getByText("Sketch Booth")).toBeVisible();
-  await expect(page.getByText("Live Sketch")).toBeVisible();
+  await expect(
+    page.locator("[data-neon-marquee]").getByText("Drawing", { exact: true })
+  ).toBeVisible();
 
   // The shuffled current prompt is visible on the host banner only; the
   // display side must never echo it while drawing.

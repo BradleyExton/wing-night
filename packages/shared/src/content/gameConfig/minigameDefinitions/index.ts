@@ -9,6 +9,10 @@ export type MinigameContractMetadataDefaults = {
 export type MinigameDefinition = {
   id: string;
   slug: string;
+  // The game's one guest-facing name: the host rail, the host briefing headline, the lobby card,
+  // the TV's "playing" line and the marquee's neon sign all read this field and nothing else.
+  // Never print the enum key — `EMOJI_CHARADES` is an identifier, not a title.
+  displayName: string;
   // `null` for host-paced games, which end on a host action rather than a
   // clock and so own no field in `GameConfigTimers`.
   timerKey: string | null;
@@ -22,6 +26,7 @@ export const MINIGAME_DEFINITIONS = {
   TRIVIA: {
     id: "TRIVIA",
     slug: "trivia",
+    displayName: "Trivia",
     // Host-paced: the turn ends when the team has spent its questions, not
     // when a clock runs out. A room clock only ever lied here — the host reads
     // each question aloud and waits on the table, so `triviaSeconds` expired
@@ -37,6 +42,7 @@ export const MINIGAME_DEFINITIONS = {
   GEO: {
     id: "GEO",
     slug: "geo",
+    displayName: "Geo",
     timerKey: "geoSeconds",
     rulesKey: "geo",
     contractMetadata: {
@@ -47,6 +53,7 @@ export const MINIGAME_DEFINITIONS = {
   SONG_GUESS: {
     id: "SONG_GUESS",
     slug: "song-guess",
+    displayName: "Who's That Song",
     // Host-paced: the turn ends when the host has worked through the songs,
     // not when a clock runs out.
     timerKey: null,
@@ -68,6 +75,7 @@ export const MINIGAME_DEFINITIONS = {
   JOUST: {
     id: "JOUST",
     slug: "joust",
+    displayName: "Slingshlong",
     // Host-paced: the turn ends when the team has used its shots, not when a
     // clock runs out.
     timerKey: null,
@@ -80,6 +88,7 @@ export const MINIGAME_DEFINITIONS = {
   FAPPY: {
     id: "FAPPY",
     slug: "fappy",
+    displayName: "Fappy Bird",
     // Host-paced: the turn ends when the team has flown its legs, not when a
     // clock runs out.
     timerKey: null,
@@ -92,6 +101,7 @@ export const MINIGAME_DEFINITIONS = {
   SCHLONIC: {
     id: "SCHLONIC",
     slug: "schlonic",
+    displayName: "Schlonic",
     // Host-paced: the turn ends when the team has run the zone, not when a clock runs out. The
     // run has its own clock, and it is the zone's, not the room's.
     timerKey: null,
@@ -104,6 +114,7 @@ export const MINIGAME_DEFINITIONS = {
   DRAWING: {
     id: "DRAWING",
     slug: "drawing",
+    displayName: "Drawing",
     timerKey: "drawingSeconds",
     rulesKey: null,
     contractMetadata: {
@@ -123,6 +134,7 @@ export const MINIGAME_DEFINITIONS = {
   RECREATE: {
     id: "RECREATE",
     slug: "recreate",
+    displayName: "Forgery Studio",
     // Host-paced: a target ends when the host locks its score, not when a
     // clock runs out. The tablet is in the team's hands while they write.
     timerKey: null,
@@ -142,6 +154,7 @@ export const MINIGAME_DEFINITIONS = {
   EMOJI_CHARADES: {
     id: "EMOJI_CHARADES",
     slug: "emoji-charades",
+    displayName: "Emoji Charades",
     timerKey: "emojiCharadesSeconds",
     rulesKey: "emojiCharades",
     contractMetadata: {

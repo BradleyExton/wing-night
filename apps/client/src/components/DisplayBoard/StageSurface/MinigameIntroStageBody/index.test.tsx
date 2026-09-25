@@ -41,7 +41,7 @@ test("renders the team-first reveal with the genre kit, the lineup and the minig
   assert.equal((html.match(/data-lineup-member="/g) ?? []).length, 3);
   assert.match(html, /data-character-silhouette="spiky"/);
   assert.match(html, /playing/);
-  assert.match(html, /TRIVIA/);
+  assert.match(html, />Trivia</);
 });
 
 test("falls back to placeholder labels when team and minigame data are missing", () => {

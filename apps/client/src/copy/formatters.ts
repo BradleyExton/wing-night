@@ -1,4 +1,4 @@
-import { Phase } from "@wingnight/shared";
+import { Phase, resolveMinigameDefinition, type MinigameType } from "@wingnight/shared";
 
 export const formatPhaseLabel = (phase: Phase): string => {
   if (phase === Phase.MINIGAME_INTRO) {
@@ -20,3 +20,7 @@ export const formatClockSeconds = (remainingSeconds: number): string => {
     .toString()
     .padStart(2, "0")}`;
 };
+
+// A game's guest-facing name. The enum key is an identifier and never reaches a screen.
+export const formatMinigameName = (minigame: MinigameType): string =>
+  resolveMinigameDefinition(minigame).displayName;

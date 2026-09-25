@@ -30,7 +30,7 @@ test("renders round progress when round metadata is valid", () => {
 
   assert.match(html, /Round 2 of 5/);
   assert.match(html, /Frank&#x27;s/);
-  assert.match(html, /TRIVIA/);
+  assert.match(html, />Trivia</);
 });
 
 test("renders pre-game when round metadata is not in progress", () => {
@@ -55,7 +55,7 @@ test("hides the briefing's sauce and minigame outside MINIGAME_INTRO", () => {
   const html = renderMiniRail(buildSnapshot(Phase.EATING));
 
   assert.doesNotMatch(html, /Frank/);
-  assert.doesNotMatch(html, /TRIVIA/);
+  assert.doesNotMatch(html, />Trivia</);
 });
 
 test("resolves active team using phase rules and fallback labels", () => {

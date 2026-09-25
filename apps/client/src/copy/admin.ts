@@ -1,4 +1,6 @@
-import { MINIGAME_DEFINITIONS, type MinigameType } from "@wingnight/shared";
+import type { MinigameType } from "@wingnight/shared";
+
+import { formatMinigameName } from "./formatters";
 
 // Every string the config wizard renders. Component entrypoints may not hold
 // JSX text, so this is where the wizard's words live.
@@ -23,8 +25,7 @@ export const adminCopy = {
   roundPointsFieldLabel: "Points per wing eaten",
   removeRoundLabel: (roundNumber: number): string => `Remove round ${roundNumber}`,
   addRoundLabel: "+ Add a round",
-  minigameSlug: (minigameType: MinigameType): string =>
-    MINIGAME_DEFINITIONS[minigameType].slug,
+  minigameName: formatMinigameName,
 
   eatingTimerLabel: "Eating timer (sec)",
   geoTimerLabel: "Geo timer (sec)",
@@ -100,7 +101,7 @@ export const adminCopy = {
     label: string,
     minigameType: MinigameType
   ): string =>
-    `${roundNumber}. ${label} (${MINIGAME_DEFINITIONS[minigameType].slug})`,
+    `${roundNumber}. ${label} (${formatMinigameName(minigameType)})`,
   reviewLineupSeparator: " · ",
   reviewTimersValue: (timers: {
     eatingSeconds: number;

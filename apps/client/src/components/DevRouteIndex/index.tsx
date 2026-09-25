@@ -14,14 +14,14 @@ const resolveMinigameSandboxEntries = (): {
   illustrationAlt: string;
 }[] => {
   return MINIGAME_TYPES.map((minigameType) => {
-    const { slug } = resolveMinigameDefinition(minigameType);
+    const { slug, displayName } = resolveMinigameDefinition(minigameType);
     // Non-null: the briefing map is Record<MinigameType, ...>, and every
     // resolver falls back to its own defaults when no game config is loaded.
     const briefing = resolveMinigameBriefingContent(minigameType, null);
 
     return {
       href: `/dev/minigame/${slug}`,
-      label: briefing?.displayName ?? minigameType,
+      label: displayName,
       detail: briefing?.summary ?? "",
       illustrationPath: briefing?.illustrationPath ?? "",
       illustrationAlt: briefing?.illustrationAlt ?? ""

@@ -312,7 +312,7 @@ test("renders the team-first three-beat reveal during minigame intro", () => {
   assert.match(html, /data-lineup-member="player-1"/);
   assert.match(html, /data-lineup-member="player-2"/);
   assert.match(html, /playing/);
-  assert.match(html, /TRIVIA/);
+  assert.match(html, />Trivia</);
   assert.doesNotMatch(html, /Phase:/);
   assert.doesNotMatch(html, /Round:/);
   assert.doesNotMatch(html, /Team Up:/);

@@ -1,7 +1,9 @@
+import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
+
 export const displaySongGuessSurfaceCopy = {
   // The show's name. It is the marquee title on the TV and the heading on the
   // intro screen — one string, because it is one name.
-  showTitle: "Who's That Song",
+  title: MINIGAME_DEFINITIONS.SONG_GUESS.displayName,
   introDescription:
     "Lounge covers of songs you already know. Name the song, then name who did it first.",
   songCounter: (songNumber: number, songsTotal: number): string =>

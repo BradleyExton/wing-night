@@ -23,7 +23,7 @@ const TriviaMarquee = ({
 
   return (
     <NeonMarquee
-      title={displayTriviaSurfaceCopy.showTitle}
+      title={displayTriviaSurfaceCopy.title}
       teamName={activeTeamName}
       readout={
         <span

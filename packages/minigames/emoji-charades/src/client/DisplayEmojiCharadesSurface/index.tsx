@@ -100,7 +100,7 @@ export const DisplayEmojiCharadesSurface = ({
   return (
     <div className={styles.container}>
       <NeonMarquee
-        title={displayEmojiCharadesSurfaceCopy.showTitle}
+        title={displayEmojiCharadesSurfaceCopy.title}
         teamName={activeTeamName}
         pending={displayEmojiCharadesSurfaceCopy.pendingPointsLabel(pendingPoints)}
         clock={clock}

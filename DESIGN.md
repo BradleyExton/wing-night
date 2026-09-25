@@ -476,6 +476,14 @@ copied, whose container was the one piece the shared text tokens could not stop 
     the same grown tube (§5 MINIGAME_PLAY). A host-paced game gets the dark track alone — the
     rule under the sign — and the clock and its line are two slots on the display props
     (`clock`, `clockLine`), both `null` together, both costing nothing absent.
+-   **The kicker is the game's one name.** `title` is always `displayName` from the game's
+    shared definition (`MINIGAME_DEFINITIONS`, next to `slug`) — the same field the host rail,
+    the host briefing headline, the lobby card and the TV's "playing" line read, so a game has
+    one name on every screen (decided 2026-09-24). A venue is not a title: JOUST's arena name and
+    SCHLONIC's "Kempenfelt Bay Zone" hang on a small plaque in the scene (`venuePlaque`,
+    `bg-bg/70`, uppercase, clamp-sized) — top-left on the beach, top-centre over the zone's sky
+    because the zone letterboxes — never on the sign. The enum key
+    (`EMOJI_CHARADES`) is an identifier and never reaches a screen.
 -   **Slots, not styling.** A game passes what the marquee *says*: `title`, `teamName`, `pending`
     (lit `gold` beside the name), `readout` (the turn's counts, right of centre, read-only, the same
     rule as the host rail's `counter`). It never passes a class string. This is the refusal §2.0B
@@ -774,7 +782,7 @@ every other surface uses.
     in the rail row: §4 keeps a game's names out of the row the shell
     owns, and the palette column is the one place on this surface where
     a sign costs the board nothing.
--   Display layout: the shared neon marquee (§2.2D) — "Live Sketch" as the
+-   Display layout: the shared neon marquee (§2.2D) — the game's name ("Drawing") as the
     kicker, the team under it, the pending points and then the clock on the
     right, the burning line beneath — (Superseded 2026-09-23 — the TV marquee is the shared neon sign, §2.2D; the rest of this bullet describes the bulb marquee it replaced.) grand bulb marquee — team on the left, the "★ Live
     Sketch ★" title centre, and the meta cell on the right holding the
@@ -1081,8 +1089,9 @@ from the sofa by the hour:
     -   The lane name and whose go it is are the scene's own identity rather
         than chrome, so they ride in the body as a plate over the sky, and take
         no pointer — every pixel of the frame under them fires the shot.
--   Display layout: marquee (team, "Centennial Beach", shot count, how many are
-    still standing, pending), the lane, a status line beneath. The result
+-   Display layout: marquee (team, the game's name, shot count, how many are
+    still standing, pending), the lane with the arena's own name on the venue plaque in its
+    top-left corner (§2.2D), a status line beneath. The result
     plaque drops over the top of the lane only once the replay has landed,
     and names who went over rather than scoring a zone.
 -   The lane is an SVG with a fixed 160×90 viewBox and `xMidYMid meet`,
@@ -1269,7 +1278,7 @@ it, and the forger — the image model — paints their version next to it.
     italics, ingredient chips that fill `success` as the host ticks, the
     points seal and the real prompt on lock.
 -   **RECREATE wears the shared neon marquee since 2026-09-23** (§2.2D), with
-    "Forgery Studio" as the kicker and the appraisal office's subtitle in the
+    its name ("Forgery Studio", the game's `displayName`) as the kicker and the appraisal office's subtitle in the
     readout slot; the masthead below is what it hung before. It was the one
     display without a bulb marquee, and that was the
     gallery reading rather than an omission: the other eight wear a game-show
@@ -1403,8 +1412,9 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
         into a 1229px canvas — and a held jump is worth ~27 of the world's 90
         units while a springboard is worth ~81, so it crosses the top-left sky on
         any decent bounce.
--   Display: marquee (team, "Kempenfelt Bay Zone", and a meta cell holding the
-    run, the wings in hand and the wings banked), the zone, a status line; one
+-   Display: marquee (team, the game's name, and a meta cell holding the
+    run, the wings in hand and the wings banked), the zone with "Kempenfelt Bay Zone" on the
+    venue plaque centred over its sky (§2.2D), a status line; one
     plaque over the beat — how the run ended and, under a rule, who takes the
     tablet next — and the points plaque once the team is through. One card,
     not an outcome plaque with a name card stacked over it and the status
@@ -1512,7 +1522,8 @@ the eye off the song.
 -   **The show's name was written and never shown.** "Who's That Song" existed
     in `copy.ts` and painted only on the intro screen. It is the marquee title
     now, and it is one string: the intro heading and the marquee read the same
-    `showTitle`, because it is one name.
+    `title`, because it is one name — and since 2026-09-24 that string is the game's shared
+    `displayName`, the one every other surface reads too.
 -   **The counter was already the marquee, unframed.** "SONG 1 OF 3" rendered in
     `text-gold`, extrabold, at `tracking-[0.34em]` — the marquee title's exact
     tracking, weight and colour, floating above the prompt with no frame around

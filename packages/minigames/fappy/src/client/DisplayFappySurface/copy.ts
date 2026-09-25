@@ -1,3 +1,5 @@
+import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
+
 // Who is up after the player who is up next. The wall names the waiter first
 // so "then" has something to hang off: "Caitlin, then Dan". Empty when there
 // is nobody after — a two-leg relay must not promise a third player.
@@ -10,8 +12,7 @@ const onDeck = (waitingName: string | null, onDeckName: string | null): string =
 };
 
 export const displayFappySurfaceCopy = {
-  title: "Fappy Bird",
-  introTitle: "Fappy Bird",
+  title: MINIGAME_DEFINITIONS.FAPPY.displayName,
   introDescription:
     "Your team's chickens fly a relay through a corridor of champs, against one clock. One player per section: tap to flap, knock the eagles out of your way, land on the far cliff where the next bird is waiting, hand the tablet over. The quicker the whole team gets through, the more points.",
   waitingLabel: "Waiting for the relay to start…",

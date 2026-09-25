@@ -21,7 +21,7 @@ import * as styles from "./styles.js";
 const FappyIntro = (): JSX.Element => {
   return (
     <div className={styles.container}>
-      <h2 className={styles.introTitle}>{displayFappySurfaceCopy.introTitle}</h2>
+      <h2 className={styles.introTitle}>{displayFappySurfaceCopy.title}</h2>
       <p className={styles.introDescription}>{displayFappySurfaceCopy.introDescription}</p>
     </div>
   );

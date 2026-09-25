@@ -6,7 +6,6 @@ import {
   type MinigameType
 } from "@wingnight/shared";
 
-import { resolveMinigameBriefingContent } from "../../../copy/minigameBriefings";
 import { minigameDevSandboxCopy } from "../copy";
 import * as styles from "./styles";
 
@@ -32,12 +31,9 @@ type SandboxControlsProps = {
 // that has no sandbox, and cannot guess a slug wrong.
 const resolveMinigameOptions = (): { slug: string; label: string }[] => {
   return MINIGAME_TYPES.map((minigameType) => {
-    const briefing = resolveMinigameBriefingContent(minigameType, null);
+    const { slug, displayName } = resolveMinigameDefinition(minigameType);
 
-    return {
-      slug: resolveMinigameDefinition(minigameType).slug,
-      label: briefing?.displayName ?? minigameType
-    };
+    return { slug, label: displayName };
   });
 };
 

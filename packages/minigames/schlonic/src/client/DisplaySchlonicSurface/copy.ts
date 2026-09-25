@@ -1,7 +1,9 @@
+import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
+
 export const displaySchlonicSurfaceCopy = {
-  title: "Schlonic",
+  title: MINIGAME_DEFINITIONS.SCHLONIC.displayName,
+  // The venue, not the show: it hangs on a plaque inside the zone, never on the marquee.
   zoneName: "Kempenfelt Bay Zone",
-  introTitle: "Schlonic",
   introDescription:
     "One chicken, one shoreline, and a lot of wings nobody is asking about. The wings are the score, and they are also the only health there is: get hit and you drop half of them, get hit holding none and the run is over. The post is the only place a handful counts.",
   waitingLabel: "Waiting for the zone…",

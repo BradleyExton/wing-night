@@ -31,6 +31,12 @@ export const marqueeWingsLabel =
 export const arenaArea =
   "relative flex min-h-0 flex-1 overflow-hidden rounded-2xl border-2 border-[#1f6b34] bg-[#0d1f14] shadow-[inset_0_0_40px_rgba(0,0,0,0.5)]";
 
+// The venue, named where it is rather than on the marquee (which names the show, §2.2D): a small
+// plaque hung over the zone's sky. Centred rather than in JOUST's corner, because the zone
+// letterboxes inside its frame and a corner plaque would straddle the bar and the sky.
+export const venuePlaque =
+  "pointer-events-none absolute left-1/2 top-[clamp(0.6rem,1.2vh,1.2rem)] z-10 -translate-x-1/2 rounded-md bg-bg/70 px-[0.9em] py-[0.35em] text-[clamp(0.9rem,1.1vw,1.4rem)] font-extrabold uppercase tracking-[0.22em] text-text/85";
+
 export const runEnter = "h-full w-full motion-safe:animate-[schlonic-scene-enter_420ms_ease-out_both]";
 
 export const resultOverlay =

@@ -1,7 +1,9 @@
+import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
+
 import { formatGeoDistance } from "../formatGeoDistance/index.js";
 
 export const displayGeoSurfaceCopy = {
-  showTitle: "Geo",
+  title: MINIGAME_DEFINITIONS.GEO.displayName,
   // The active team's pending points, lit beside its name the way JOUST's are.
   pendingPoints: (points: number): string => `+${points}`,
   photoCounter: (current: number, total: number): string =>

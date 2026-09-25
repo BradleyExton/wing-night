@@ -35,7 +35,7 @@ const Marquee = ({
   clockLine: ReactNode;
 }): JSX.Element => (
   <NeonMarquee
-    title={displayGeoSurfaceCopy.showTitle}
+    title={displayGeoSurfaceCopy.title}
     teamName={activeTeamName}
     pending={pendingPoints === null ? null : displayGeoSurfaceCopy.pendingPoints(pendingPoints)}
     readout={

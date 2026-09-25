@@ -1,4 +1,5 @@
 import { commonCopy } from "../../../../copy/common";
+import { formatMinigameName } from "../../../../copy/formatters";
 
 export const setupStageCopy = {
   brandLabel: commonCopy.brandLabel,
@@ -7,8 +8,7 @@ export const setupStageCopy = {
     String(round).padStart(2, "0"),
   formatRoundLabel: (label: string): string => label,
   formatSauce: (sauce: string): string => sauce,
-  // Minigame ids are SCREAMING_SNAKE enum values; the TV shows them as words.
-  formatMinigame: (minigame: string): string => minigame.replace(/_/g, " "),
+  formatMinigame: formatMinigameName,
   placeholderRoundLabel: "Open Slot",
   placeholderRoundSeparator: ":",
   placeholderRoundDash: "—",

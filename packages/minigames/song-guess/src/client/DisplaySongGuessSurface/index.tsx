@@ -34,7 +34,7 @@ const SongEqualizer = (): JSX.Element => {
 const SongGuessIntro = (): JSX.Element => {
   return (
     <div className={styles.container}>
-      <h2 className={styles.introTitle}>{displaySongGuessSurfaceCopy.showTitle}</h2>
+      <h2 className={styles.introTitle}>{displaySongGuessSurfaceCopy.title}</h2>
       <p className={styles.introDescription}>
         {displaySongGuessSurfaceCopy.introDescription}
       </p>
@@ -59,7 +59,7 @@ const SongGuessMarquee = ({
   clockLine: ReactNode;
 }): JSX.Element => (
   <NeonMarquee
-    title={displaySongGuessSurfaceCopy.showTitle}
+    title={displaySongGuessSurfaceCopy.title}
     teamName={activeTeamName}
     readout={<span className={styles.marqueeCounter}>{songCounter}</span>}
     clock={clock}

@@ -75,7 +75,7 @@ test("renders the drawing sandbox without leaking the prompt to the display", ()
   assert.match(html, /Minigame Dev Sandbox/);
   assert.match(html, /Sketch Booth/);
   assert.match(html, /Tonight&#x27;s Prompt/);
-  assert.match(html, /Live Sketch/);
+  assert.match(html, />Drawing</);
   assert.match(html, /Correct/);
 
   // The shuffled current prompt renders exactly once — in the host banner.

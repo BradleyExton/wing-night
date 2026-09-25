@@ -9,6 +9,11 @@ export const marqueeShot =
 export const arenaArea =
   "relative flex min-h-0 flex-1 overflow-hidden rounded-2xl border-2 border-[#3a200d] bg-[linear-gradient(180deg,#160c2a_0%,#4a1f3f_54%,#c2582c_86.6%,#d6ac63_86.7%,#b58a45_100%)] shadow-[inset_0_0_40px_rgba(0,0,0,0.55)]";
 
+// The venue, named where it is rather than on the marquee (which names the show, §2.2D): a small
+// plaque hung in the scene's top-left corner, the way a beach carries its own sign.
+export const venuePlaque =
+  "pointer-events-none absolute left-[clamp(0.8rem,1.4vw,1.6rem)] top-[clamp(0.6rem,1.2vh,1.2rem)] z-10 rounded-md bg-bg/70 px-[0.9em] py-[0.35em] text-[clamp(0.9rem,1.1vw,1.4rem)] font-extrabold uppercase tracking-[0.22em] text-text/85";
+
 export const resultOverlay =
   "pointer-events-none absolute inset-x-0 top-[6%] z-20 flex justify-center px-[8%]";
 

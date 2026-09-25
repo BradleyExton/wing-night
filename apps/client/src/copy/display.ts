@@ -1,6 +1,6 @@
 import type { MinigameType } from "@wingnight/shared";
 import type { Phase } from "@wingnight/shared";
-import { formatClockSeconds, formatPhaseLabel } from "./formatters";
+import { formatClockSeconds, formatMinigameName, formatPhaseLabel } from "./formatters";
 
 const STANDING_ROSTER_EMPTY_LABEL = "No players assigned.";
 
@@ -19,14 +19,14 @@ export const displayCopy = {
   minigameLabel: "Mini-Game",
   roundSauceSummary: (sauce: string): string => `Sauce: ${sauce}`,
   roundMinigameSummary: (minigame: MinigameType): string =>
-    `Mini-Game: ${minigame}`,
+    `Mini-Game: ${formatMinigameName(minigame)}`,
   minigameSectionTitle: "Mini-Game",
   minigameIntroDescription: (minigame: MinigameType): string =>
-    `${minigame} is up next.`,
+    `${formatMinigameName(minigame)} is up next.`,
   minigameWaitingForViewLabel:
     "Waiting for minigame display state from the server snapshot.",
   minigameRendererUnavailableLabel: (minigame: MinigameType): string =>
-    `${minigame} display surface is not available yet.`,
+    `${formatMinigameName(minigame)} display surface is not available yet.`,
   triviaTurnTitle: "Trivia Turn",
   triviaQuestionLabel: "Question",
   eatingTimerLabel: "Round Timer",

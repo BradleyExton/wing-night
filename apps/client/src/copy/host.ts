@@ -1,5 +1,5 @@
 import { Phase, type MinigameType } from "@wingnight/shared";
-import { formatClockSeconds, formatPhaseLabel } from "./formatters";
+import { formatClockSeconds, formatMinigameName, formatPhaseLabel } from "./formatters";
 
 const COMPACT_ROSTER_EMPTY_LABEL = "No players assigned.";
 const TEAM_ROSTER_EMPTY_LABEL = "No players assigned yet.";
@@ -219,14 +219,15 @@ export const hostCopy = {
   triviaSectionDescription:
     "Mark the active team's answer as correct or incorrect.",
   minigameSectionTitle: "Mini-Game",
+  minigameName: formatMinigameName,
   minigameIntroDescription: (minigame: MinigameType): string =>
-    `${minigame} is queued. Call the team up, explain it, then start eating once they are set.`,
+    `${formatMinigameName(minigame)} is queued. Call the team up, explain it, then start eating once they are set.`,
   minigamePlayDescription: (minigame: MinigameType): string =>
-    `${minigame} is live for this team turn.`,
+    `${formatMinigameName(minigame)} is live for this team turn.`,
   minigameWaitingForViewLabel:
     "Waiting for minigame host state from the server snapshot.",
   minigameRendererUnavailableLabel: (minigame: MinigameType): string =>
-    `${minigame} host surface is not available yet.`,
+    `${formatMinigameName(minigame)} host surface is not available yet.`,
   minigameFallbackType: "TRIVIA" as MinigameType,
   waitingStateLabel: "Waiting for room state...",
   triviaActiveTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,

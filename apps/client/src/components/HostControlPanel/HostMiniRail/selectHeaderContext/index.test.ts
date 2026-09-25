@@ -39,7 +39,7 @@ test("returns sauce and minigame context on the team briefing", () => {
 
   assert.equal(context.roundLabel, "Round 2 of 5");
   assert.equal(context.sauceLabel, "Frank's");
-  assert.equal(context.minigameLabel, "TRIVIA");
+  assert.equal(context.minigameLabel, "Trivia");
   assert.equal(context.activeTeamName, "Team Alpha");
 });
 

@@ -28,7 +28,10 @@ export const MinigameIntroStageBody = ({
   minigameType
 }: MinigameIntroStageBodyProps): JSX.Element => {
   const resolvedTeamName = activeTeamName ?? minigameIntroStageCopy.fallbackTeamName;
-  const resolvedMinigameLabel = minigameType ?? minigameIntroStageCopy.fallbackMinigameLabel;
+  const resolvedMinigameLabel =
+    minigameType === null
+      ? minigameIntroStageCopy.fallbackMinigameLabel
+      : minigameIntroStageCopy.minigameName(minigameType);
   const eyebrowClassName = [
     styles.beatBase,
     styles.beatDelay1,

@@ -17,7 +17,7 @@ const aimMagnitude = (aim: { x: number; y: number }): number => {
 const JoustIntro = (): JSX.Element => {
   return (
     <div className={styles.container}>
-      <h2 className={styles.introTitle}>{displayJoustSurfaceCopy.introTitle}</h2>
+      <h2 className={styles.introTitle}>{displayJoustSurfaceCopy.title}</h2>
       <p className={styles.introDescription}>{displayJoustSurfaceCopy.introDescription}</p>
     </div>
   );
@@ -184,6 +184,9 @@ const JoustPlayBody = ({
               sceneId="display-joust"
               label={displayJoustSurfaceCopy.sceneLabel(arena.name)}
             />
+            <span className={styles.venuePlaque} data-joust-venue>
+              {arena.name}
+            </span>
             {view.lastShot !== null && replayFinished && (
               <ResultPlaque shot={view.lastShot} nameByPlayerId={nameByPlayerId} />
             )}

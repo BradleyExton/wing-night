@@ -117,7 +117,7 @@ export const LineupStep = ({
                       onRoundChange(roundIndex, { minigame: minigameType });
                     }}
                   >
-                    {adminCopy.minigameSlug(minigameType)}
+                    {adminCopy.minigameName(minigameType)}
                   </button>
                 ))}
               </span>

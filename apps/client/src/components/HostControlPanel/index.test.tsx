@@ -271,6 +271,6 @@ test("renders MINIGAME_INTRO with team callout and intro deck", () => {
   });
 
   assert.match(html, /Team Alpha/);
-  assert.match(html, /TRIVIA/);
+  assert.match(html, />Trivia</);
   assert.doesNotMatch(html, /Teams/);
 });

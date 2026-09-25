@@ -105,7 +105,7 @@ export const DisplayDrawingSurface = ({
   return (
     <div className={styles.stage}>
       <NeonMarquee
-        title={displayDrawingSurfaceCopy.marqueeTitle}
+        title={displayDrawingSurfaceCopy.title}
         teamName={activeTeamName}
         pending={
           pendingPoints !== null ? displayDrawingSurfaceCopy.pendingChip(pendingPoints) : null

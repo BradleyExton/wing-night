@@ -26,7 +26,7 @@ const StudioShell = ({
   <div className={styles.stage}>
     <div className={styles.frameWall}>
       <NeonMarquee
-        title={displayRecreateSurfaceCopy.studioTitle}
+        title={displayRecreateSurfaceCopy.title}
         teamName={activeTeamName}
         readout={
           <span className={styles.headerMeta}>{displayRecreateSurfaceCopy.studioSubtitle}</span>

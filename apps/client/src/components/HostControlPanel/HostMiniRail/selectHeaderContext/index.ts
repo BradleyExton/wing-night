@@ -66,9 +66,11 @@ export const selectHeaderContext = (
   const sauceLabel = isRoundBriefingPhase
     ? (roomState?.currentRoundConfig?.sauce ?? null)
     : null;
-  const minigameLabel = isRoundBriefingPhase
-    ? (roomState?.currentRoundConfig?.minigame ?? null)
-    : null;
+  const roundMinigame = roomState?.currentRoundConfig?.minigame ?? null;
+  const minigameLabel =
+    isRoundBriefingPhase && roundMinigame !== null
+      ? hostControlPanelCopy.minigameName(roundMinigame)
+      : null;
 
   const isActiveTeamContextPhase =
     phase === Phase.EATING ||

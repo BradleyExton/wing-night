@@ -1,5 +1,7 @@
+import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
+
 export const displayDrawingSurfaceCopy = {
-  marqueeTitle: "Live Sketch",
+  title: MINIGAME_DEFINITIONS.DRAWING.displayName,
   pendingChip: (points: number): string => `+${points} pending`,
   introMessage:
     "Artists, limber up. The canvas goes live when the round starts.",

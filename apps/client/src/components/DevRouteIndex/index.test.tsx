@@ -3,7 +3,6 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MINIGAME_TYPES, resolveMinigameDefinition } from "@wingnight/shared";
 
-import { resolveMinigameBriefingContent } from "../../copy/minigameBriefings";
 import { resolveClientRoute, resolveDevLabName } from "../../utils/resolveClientRoute";
 import { devRouteIndexCopy } from "./copy";
 import { DevRouteIndex } from "./index";
@@ -20,15 +19,14 @@ test("links every registered minigame sandbox", () => {
   const html = renderToStaticMarkup(<DevRouteIndex />);
 
   for (const minigameType of MINIGAME_TYPES) {
-    const { slug } = resolveMinigameDefinition(minigameType);
-    const briefing = resolveMinigameBriefingContent(minigameType, null);
+    const { slug, displayName } = resolveMinigameDefinition(minigameType);
 
     assert.ok(
       html.includes(`href="/dev/minigame/${slug}"`),
       `missing sandbox link for ${minigameType}`
     );
     assert.ok(
-      html.includes(escapeApostrophes(briefing?.displayName ?? minigameType)),
+      html.includes(escapeApostrophes(displayName)),
       `missing display name for ${minigameType}`
     );
   }

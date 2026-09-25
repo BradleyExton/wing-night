@@ -14,8 +14,9 @@ const resolvePositiveInteger = (value: unknown, fallback: number): number => {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : fallback;
 };
 
+// The game's name is not briefing copy: it is `displayName` on the shared definition, read by
+// every surface that names a game.
 export type MinigameBriefingContent = {
-  displayName: string;
   illustrationPath: string;
   illustrationAlt: string;
   summary: string;
@@ -45,7 +46,6 @@ const resolveTriviaBriefingContent = (
   } this turn.`;
 
   return {
-    displayName: "Trivia",
     illustrationPath: `${DISPLAY_ASSET_ROOT}/trivia-illustration.svg`,
     illustrationAlt: "Trivia mini-game artwork",
     summary: "Quick-fire questions start once your team is in position.",
@@ -77,7 +77,6 @@ const resolveSongGuessBriefingContent = (
   const songsPerTurn = resolveSongGuessSongsPerTurn(gameConfig);
 
   return {
-    displayName: "Who's That Song",
     illustrationPath: `${DISPLAY_ASSET_ROOT}/song-guess-illustration.svg`,
     illustrationAlt: "Who's That Song mini-game artwork",
     summary:
@@ -110,7 +109,6 @@ const resolveJoustBriefingContent = (
   const shotsPerTurn = resolveJoustShotsPerTurn(gameConfig);
 
   return {
-    displayName: "Slingshlong",
     illustrationPath: `${DISPLAY_ASSET_ROOT}/joust-illustration.svg`,
     illustrationAlt: "Slingshlong mini-game artwork",
     summary:
@@ -131,7 +129,6 @@ const resolveFappyBriefingContent = (
   const gatesPerLeg = resolvePositiveInteger(rules?.gatesPerLeg, DEFAULT_FAPPY_GATES_PER_LEG);
 
   return {
-    displayName: "Fappy Bird",
     illustrationPath: `${DISPLAY_ASSET_ROOT}/fappy-illustration.svg`,
     illustrationAlt: "Fappy Bird mini-game artwork",
     summary:
@@ -155,7 +152,6 @@ const resolveSchlonicBriefingContent = (
   );
 
   return {
-    displayName: "Schlonic",
     illustrationPath: `${DISPLAY_ASSET_ROOT}/schlonic-illustration.svg`,
     illustrationAlt: "Schlonic mini-game artwork",
     summary:
@@ -178,7 +174,6 @@ const resolveRecreateBriefingContent = (
   );
 
   return {
-    displayName: "Forgery Studio",
     illustrationPath: `${DISPLAY_ASSET_ROOT}/recreate-illustration.svg`,
     illustrationAlt: "Forgery Studio mini-game artwork",
     summary:
@@ -199,7 +194,6 @@ const minigameBriefingContentByType: Record<
   SONG_GUESS: resolveSongGuessBriefingContent,
   EMOJI_CHARADES: () => {
     return {
-      displayName: "Emoji Charades",
       illustrationPath: `${DISPLAY_ASSET_ROOT}/emoji-charades-illustration.svg`,
       illustrationAlt: "Emoji Charades mini-game artwork",
       summary:
@@ -217,7 +211,6 @@ const minigameBriefingContentByType: Record<
   RECREATE: resolveRecreateBriefingContent,
   GEO: () => {
     return {
-      displayName: "Geo",
       illustrationPath: `${DISPLAY_ASSET_ROOT}/geo-illustration.png`,
       illustrationAlt: "Geo mini-game artwork",
       summary: "Listen for the location prompt, talk fast, and lock one answer in.",
@@ -230,7 +223,6 @@ const minigameBriefingContentByType: Record<
   },
   DRAWING: () => {
     return {
-      displayName: "Drawing",
       illustrationPath: `${DISPLAY_ASSET_ROOT}/drawing-icon.svg`,
       illustrationAlt: "Drawing mini-game icon",
       summary: "One teammate draws while the rest of the team guesses under pressure.",

@@ -18,7 +18,7 @@ const resolvePlayerName = (run: SchlonicMinigameRun | null | undefined): string 
 
 const SchlonicIntro = (): JSX.Element => (
   <div className={styles.container}>
-    <h2 className={styles.introTitle}>{displaySchlonicSurfaceCopy.introTitle}</h2>
+    <h2 className={styles.introTitle}>{displaySchlonicSurfaceCopy.title}</h2>
     <p className={styles.introDescription}>{displaySchlonicSurfaceCopy.introDescription}</p>
   </div>
 );
@@ -144,7 +144,7 @@ const SchlonicPlayBody = ({
   return (
     <div className={styles.stage}>
       <NeonMarquee
-        title={displaySchlonicSurfaceCopy.zoneName}
+        title={displaySchlonicSurfaceCopy.title}
         teamName={activeTeamName}
         readout={
           <>
@@ -174,6 +174,9 @@ const SchlonicPlayBody = ({
             label={displaySchlonicSurfaceCopy.sceneLabel(runner.playerName)}
           />
         </div>
+        <span className={styles.venuePlaque} data-schlonic-venue>
+          {displaySchlonicSurfaceCopy.zoneName}
+        </span>
         {hold !== null && <HoldPlaque hold={hold} nextName={resolvePlayerName(nextRun)} />}
         {isFinished && hold === null && <FinishPlaque view={view} />}
       </div>

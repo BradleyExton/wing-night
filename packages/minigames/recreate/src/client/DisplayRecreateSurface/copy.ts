@@ -1,5 +1,7 @@
+import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
+
 export const displayRecreateSurfaceCopy = {
-  studioTitle: "Forgery Studio",
+  title: MINIGAME_DEFINITIONS.RECREATE.displayName,
   studioSubtitle: "Wing Night Appraisal Office",
   introMessage: "The forger is warming up…",
   waitingMessage: "Waiting for a target…",
