@@ -1,9 +1,11 @@
+import { takeoverLabel } from "@wingnight/surface";
+
 // The right-hand column of the takeover body on the judging beat, filling it
 // rather than sitting at its content height.
 export const container = "flex h-full min-h-0 flex-col gap-3";
 
 export const sectionLabel =
-  "m-0 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted";
+  `m-0 ${takeoverLabel}`;
 
 export const teamPrompt =
   "m-0 rounded-md border border-text/10 bg-surface px-4 py-3 text-lg italic leading-snug text-text";

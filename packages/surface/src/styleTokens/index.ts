@@ -195,6 +195,36 @@ export const ctaButton =
   "inline-flex min-h-[clamp(84px,10vh,112px)] flex-1 items-center justify-center gap-3 bg-primary px-4 text-[clamp(1.2rem,1.7vw,1.6rem)] font-black uppercase tracking-[0.18em] text-bg transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-primary";
 
 // =============================================================================
+// Rail counter — the turn's counts in the takeover rail's `counter` slot
+// ("Shot 1 of 3", "+2 pending"), one chip in two materials: solid on a Stage,
+// glass over a Canvas's scene. Eight games had grown it in two copies each,
+// sentence case in six and caps in two. Sentence case; colourless, so a game
+// adds `text-muted` for a count or `text-gold` for pending points without two
+// colours contending on one element.
+// =============================================================================
+
+const railCounterBase =
+  "inline-flex shrink-0 items-center gap-2 rounded-full border border-text/10 px-3.5 text-[0.8rem] font-semibold";
+
+export const railCounter = `${railCounterBase} bg-surface py-1.5`;
+
+export const railCounterOverlay = `${railCounterBase} min-h-9 bg-bg/85 backdrop-blur`;
+
+// =============================================================================
+// Takeover label — the small caps kicker a minigame puts over a block of its
+// own canvas ("Tonight's prompt", "Runs", "Answer (host only)"). Twenty-eight
+// hand-rolled variants had grown, down to 0.55rem (8.8px) on a tablet held at
+// arm's length. One size, one tracking, two colours: `muted` for a label and
+// `primary` for the one that has to be seen. Not `gold` — that is the winner's.
+// =============================================================================
+
+const takeoverLabelBase = "text-[0.7rem] font-extrabold uppercase tracking-[0.24em]";
+
+export const takeoverLabel = `${takeoverLabelBase} text-muted`;
+
+export const takeoverLabelAccent = `${takeoverLabelBase} text-primary`;
+
+// =============================================================================
 // Takeover controls — the buttons a minigame draws on its own canvas during
 // MINIGAME_PLAY (DESIGN.md §2.0B, "Takeover controls"). Nine games had grown
 // four beat-ending recipes, eight secondaries and five verdict styles; these
@@ -232,6 +262,26 @@ export const verdictButtonSuccess = `${verdictButtonBase} border-success/60 bg-s
 export const verdictButtonDanger = `${verdictButtonBase} border-danger/60 bg-danger/20 hover:bg-danger/30 aria-pressed:border-danger aria-pressed:bg-danger aria-pressed:text-text`;
 
 export const verdictIcon = "text-[1.3em] leading-none";
+
+// =============================================================================
+// Stage status line — the one sentence under a minigame's stage on the TV that
+// says what is happening now ("Alex is up with The Log", "Team Alpha is
+// drawing…"). Four styles had grown: primary caps, muted caps, white sentence
+// case and a bigger primary. Primary caps, clamped to §4.1's 22px at 4K.
+// =============================================================================
+
+export const stageStatusLine =
+  "m-0 text-center text-[clamp(0.9rem,1.25vw,1.4rem)] font-extrabold uppercase tracking-[0.24em] text-primary";
+
+// =============================================================================
+// Readout figure — a live number in the TV marquee's readout (the relay clock,
+// the wings in hand) that has to read bigger than the label type the marquee
+// gives its readout. Colourless on purpose: the game says what the number
+// means (`text-text`, `text-gold`, `text-heat`) and nothing else contends.
+// =============================================================================
+
+export const readoutFigure =
+  "font-mono text-[clamp(1.3rem,2.2vw,2.4rem)] font-extrabold normal-case leading-none tracking-normal tabular-nums";
 
 // =============================================================================
 // Reveal points — the points a result banked, on the TV. One face for every

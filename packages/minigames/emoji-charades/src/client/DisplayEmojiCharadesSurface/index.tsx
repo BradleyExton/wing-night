@@ -102,7 +102,7 @@ export const DisplayEmojiCharadesSurface = ({
       <NeonMarquee
         title={displayEmojiCharadesSurfaceCopy.title}
         teamName={activeTeamName}
-        pending={displayEmojiCharadesSurfaceCopy.pendingPointsLabel(pendingPoints)}
+        pending={pendingPoints}
         clock={clock}
         clockLine={clockLine}
       />

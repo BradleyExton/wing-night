@@ -1,4 +1,4 @@
-import { takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
+import { railCounterOverlay, takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
 
 // JOUST is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the lane is
 // evenly spread scenery, so a chip in one corner costs a corner of desert
@@ -46,12 +46,11 @@ export const plateShooter = "m-0 mt-0.5 text-sm text-mutedWarm";
 
 // The rail row's read-only counts (§5, `counter`). Glass rather than solid: on
 // a Canvas these float over the lane instead of sitting on a panel.
-const chip =
-  "inline-flex min-h-9 items-center rounded-full border border-text/10 bg-bg/85 px-3.5 text-[0.78rem] font-semibold text-muted backdrop-blur";
+const chip = `${railCounterOverlay} text-muted`;
 
 export const counter = chip;
 
-export const counterPending = `${chip} font-mono text-gold`;
+export const counterPending = `${railCounterOverlay} font-mono text-gold`;
 
 // The plaque names everyone the shot felled, and a cleared rack is every
 // standing player on one line — 963px of it on the sandbox's roster, which in

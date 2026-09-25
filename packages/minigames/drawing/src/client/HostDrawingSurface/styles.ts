@@ -1,9 +1,4 @@
-import {
-  takeoverSecondary,
-  verdictButtonDanger,
-  verdictButtonSuccess,
-  verdictIcon
-} from "@wingnight/surface";
+import { takeoverLabelAccent, takeoverSecondary, verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnight/surface";
 
 // DRAWING is a `<TakeoverStage>` with no deck (docs/takeover-layout-api.md §3).
 // The board is not floatable-over: it is the one body on the tablet that the
@@ -43,7 +38,7 @@ export const counterPrompt =
   "inline-flex shrink-0 items-center gap-3 whitespace-nowrap rounded-full border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-4 py-1";
 
 export const counterPromptLabel =
-  "text-[0.55rem] font-extrabold uppercase tracking-[0.3em] text-gold";
+  takeoverLabelAccent;
 
 export const counterPromptText =
   "m-0 font-serif text-[clamp(1.2rem,1.9vw,1.6rem)] font-bold italic leading-tight text-text";
@@ -64,7 +59,7 @@ export const inkRail =
 // names out of the rail row, and this surface has no row to spare for one, so
 // the name lives on the easel furniture where the letterbox pays for it.
 export const boothPlate =
-  "text-center text-[0.55rem] font-extrabold uppercase leading-[1.35] tracking-[0.18em] text-gold";
+  "text-center text-[0.62rem] font-extrabold uppercase leading-[1.35] tracking-[0.18em] text-primary";
 
 export const boothPlateRule = "h-px w-8 bg-gold/30";
 

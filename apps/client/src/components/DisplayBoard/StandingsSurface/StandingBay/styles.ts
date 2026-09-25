@@ -37,7 +37,7 @@ export const watermarkLead =
 export const info = "relative z-[1] grid min-w-0 content-start gap-[0.22rem]";
 
 export const meta =
-  "inline-flex items-center gap-[0.4em] text-[clamp(0.7rem,0.85vw,0.95rem)] font-semibold uppercase leading-none tracking-[0.18em] text-muted";
+  "inline-flex items-center gap-[0.4em] text-[clamp(0.75rem,0.85vw,1.2rem)] font-semibold uppercase leading-none tracking-[0.18em] text-muted";
 
 export const metaLead = "text-gold";
 

@@ -1,4 +1,4 @@
-import { takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
+import { railCounter, takeoverLabel, takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
 
 // Forgery Studio, host side: a dim gallery back room. Matte frames on the
 // pictures, primary for the one thing to press, success for the ticks.
@@ -31,8 +31,7 @@ export const introCard = "max-w-3xl text-sm leading-6 text-muted";
 // the host glances at, never presses. A direct child of the row, so it hugs
 // itself and sits between the rail's pills and the clock slot RECREATE leaves
 // empty.
-export const counter =
-  "inline-flex shrink-0 items-center rounded-full border border-text/10 bg-surface px-3.5 py-1.5 text-[clamp(0.72rem,0.85vw,0.85rem)] font-semibold uppercase tracking-[0.2em] text-muted";
+export const counter = `${railCounter} text-muted`;
 
 // An empty prompt bank. It stands in for the whole bench, so it fills the body
 // rather than leaving the canvas empty on the one beat that is already a fault.
@@ -57,11 +56,11 @@ export const pointsSeal =
 
 export const pointsSealValue = "text-3xl font-black leading-none";
 
-export const pointsSealLabel = "mt-0.5 text-[0.6rem] font-bold uppercase tracking-[0.3em]";
+export const pointsSealLabel = "mt-0.5 text-[0.7rem] font-bold uppercase tracking-[0.24em]";
 
 export const revealPromptBlock = "flex min-w-0 flex-col gap-1";
 
-export const revealLabel = "m-0 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted";
+export const revealLabel = `m-0 ${takeoverLabel}`;
 
 export const revealPrompt = "m-0 text-xl italic leading-snug text-text";
 

@@ -6,7 +6,6 @@ export const displayJoustSurfaceCopy = {
     "One slingshot, one very floppy projectile, and everyone who isn't on your team up on the docks and lifeguard towers down the beach. Every player on the team gets one shot. Knock down as many of the rest of the room as you can — a shelf pays double, and a hard shot into a tower's legs brings the whole thing down.",
   shotCounter: (shotNumber: number, shotsTotal: number): string =>
     `Shot ${shotNumber} of ${shotsTotal}`,
-  pendingPoints: (points: number): string => `+${points}`,
   standing: (standingCount: number, rackSize: number): string =>
     `${standingCount}/${rackSize} standing`,
   sceneLabel: (arenaName: string): string => `Slingshot lane — ${arenaName}`,

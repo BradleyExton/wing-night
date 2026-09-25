@@ -19,7 +19,7 @@ export const table =
   "relative grid w-full max-w-[1100px] gap-0 border-t border-text/[0.08] bg-text/[0.04]";
 
 export const tableHeader =
-  "grid grid-cols-[2fr_1fr_1fr_1.2fr] items-center gap-[clamp(0.8rem,1.5vw,1.5rem)] bg-text/[0.025] px-[clamp(1rem,1.6vw,2rem)] py-[clamp(0.7rem,1.1vh,1.2rem)] text-left text-[clamp(0.65rem,0.8vw,0.95rem)] font-bold uppercase tracking-[0.18em] text-muted";
+  "grid grid-cols-[2fr_1fr_1fr_1.2fr] items-center gap-[clamp(0.8rem,1.5vw,1.5rem)] bg-text/[0.025] px-[clamp(1rem,1.6vw,2rem)] py-[clamp(0.7rem,1.1vh,1.2rem)] text-left text-[clamp(0.75rem,0.85vw,1.2rem)] font-bold uppercase tracking-[0.18em] text-muted";
 
 export const tableHeaderNum = "text-right";
 

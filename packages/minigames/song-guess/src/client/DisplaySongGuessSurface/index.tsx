@@ -61,7 +61,7 @@ const SongGuessMarquee = ({
   <NeonMarquee
     title={displaySongGuessSurfaceCopy.title}
     teamName={activeTeamName}
-    readout={<span className={styles.marqueeCounter}>{songCounter}</span>}
+    readout={songCounter}
     clock={clock}
     clockLine={clockLine}
   />

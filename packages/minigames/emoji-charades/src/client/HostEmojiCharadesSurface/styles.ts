@@ -1,9 +1,4 @@
-import {
-  takeoverSecondary,
-  verdictButtonDanger,
-  verdictButtonSuccess,
-  verdictIcon
-} from "@wingnight/surface";
+import { railCounter, takeoverLabel, takeoverLabelAccent, takeoverSecondary, verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnight/surface";
 
 // EMOJI_CHARADES is a `<TakeoverStage>` with a deck
 // (docs/takeover-layout-api.md §3). The body is a grid of tap targets, so
@@ -35,12 +30,11 @@ export const introDescription = "max-w-3xl text-sm leading-6 text-muted";
 // The rail row's read-only counts (§4, `counter`). "N subjects left" was the
 // third line of the subject card and the points banked this turn were nowhere
 // at all; both are glanced at rather than pressed, so both belong here.
-const chip =
-  "inline-flex shrink-0 items-center rounded-full border border-text/10 bg-surface px-3.5 py-1.5 text-[0.78rem] font-semibold text-muted";
+const chip = `${railCounter} text-muted`;
 
 export const counter = chip;
 
-export const counterPending = `${chip} font-mono text-gold`;
+export const counterPending = `${railCounter} font-mono text-gold`;
 
 // The body slot, filled edge to edge: clue canvas → persistent search → tabs →
 // emoji grid, in that order (DESIGN.md §2.6). The height the description
@@ -70,7 +64,7 @@ export const searchClearButton =
 export const tabs = "flex gap-1 overflow-x-auto";
 
 const tabBase =
-  "flex min-h-[46px] flex-1 flex-col items-center justify-center gap-0.5 rounded-t-xl border border-b-0 px-2 py-1 text-[0.55rem] font-extrabold uppercase tracking-[0.1em] transition";
+  "flex min-h-[46px] flex-1 flex-col items-center justify-center gap-0.5 rounded-t-xl border border-b-0 px-2 py-1 text-[0.7rem] font-extrabold uppercase tracking-[0.1em] transition";
 
 export const tab = `${tabBase} border-text/10 bg-surface text-muted hover:text-text`;
 
@@ -82,7 +76,7 @@ export const grid =
   "grid min-h-0 flex-1 grid-cols-8 content-start gap-1 overflow-y-auto rounded-b-2xl border border-t-0 border-text/10 bg-surfaceAlt p-2 sm:grid-cols-10";
 
 export const gridSection =
-  "col-span-full px-1 pb-1 pt-2 text-[0.55rem] font-extrabold uppercase tracking-[0.2em] text-muted";
+  `col-span-full px-1 pb-1 pt-2 ${takeoverLabel}`;
 
 export const emojiButton =
   "flex aspect-square items-center justify-center rounded-lg bg-text/5 text-[clamp(1.2rem,2.2vw,1.9rem)] transition hover:bg-gold/20 disabled:cursor-not-allowed disabled:opacity-40";
@@ -95,7 +89,7 @@ export const subjectCard =
   "shrink-0 rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-4 py-3 text-center";
 
 export const subjectLabel =
-  "text-[0.62rem] font-extrabold uppercase tracking-[0.3em] text-gold";
+  takeoverLabelAccent;
 
 export const subjectValue =
   "font-serif text-[clamp(1.4rem,2vw,2rem)] font-bold italic text-text";

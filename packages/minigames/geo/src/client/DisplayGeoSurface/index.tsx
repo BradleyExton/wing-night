@@ -37,12 +37,8 @@ const Marquee = ({
   <NeonMarquee
     title={displayGeoSurfaceCopy.title}
     teamName={activeTeamName}
-    pending={pendingPoints === null ? null : displayGeoSurfaceCopy.pendingPoints(pendingPoints)}
-    readout={
-      counterLabel !== null && (
-        <span className={styles.marqueeCounter}>{counterLabel}</span>
-      )
-    }
+    pending={pendingPoints}
+    readout={counterLabel}
     clock={clock}
     clockLine={clockLine}
   />

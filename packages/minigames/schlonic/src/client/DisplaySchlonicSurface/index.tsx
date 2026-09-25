@@ -149,17 +149,15 @@ const SchlonicPlayBody = ({
         teamName={activeTeamName}
         readout={
           <>
-            <span className={styles.marqueeRun}>
-              {displaySchlonicSurfaceCopy.runCounter(shownRunIndex + 1, view.runsPerTurn)}
-            </span>
+            <span>{displaySchlonicSurfaceCopy.runCounter(shownRunIndex + 1, view.runsPerTurn)}</span>
             <span ref={tallyRef} className={styles.marqueeInHand} data-schlonic-in-hand>
               {displaySchlonicSurfaceCopy.inHandOnTheLine}
             </span>
-            <span className={styles.marqueeWingsLabel}>{displaySchlonicSurfaceCopy.inHandLabel}</span>
+            <span>{displaySchlonicSurfaceCopy.inHandLabel}</span>
             <span className={styles.marqueeWings} data-schlonic-wings>
               {displaySchlonicSurfaceCopy.wingsCounter(view.wingsBanked, view.wingsPar)}
             </span>
-            <span className={styles.marqueeWingsLabel}>{displaySchlonicSurfaceCopy.bankedLabel}</span>
+            <span>{displaySchlonicSurfaceCopy.bankedLabel}</span>
           </>
         }
         clock={clock}

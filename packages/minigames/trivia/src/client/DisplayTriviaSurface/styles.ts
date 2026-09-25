@@ -5,15 +5,9 @@ export const stage =
 
 // The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 
-const marqueeCounterBase =
-  "text-[clamp(0.72rem,1vw,1.05rem)] font-extrabold uppercase tracking-[0.28em]";
-
-export const marqueeCounter = `${marqueeCounterBase} text-mutedWarmDim`;
-
-// TRIVIA is host-paced and the TV has no clock, so the budget reaching zero is
-// the room's only sign the turn is over: it lights rather than just changing
-// words.
-export const marqueeCounterComplete = `${marqueeCounterBase} text-primary`;
+// The marquee sets the readout's type (DESIGN.md §2.2D); a spent turn only
+// lights it `primary`, the one thing the room has to notice.
+export const marqueeCounterComplete = "text-primary";
 
 export const container =
   "flex min-h-0 flex-1 flex-col items-center justify-center gap-[clamp(1.5rem,3vw,3rem)] px-[clamp(1rem,3vw,3rem)] py-[clamp(1rem,2vw,2rem)] text-center";

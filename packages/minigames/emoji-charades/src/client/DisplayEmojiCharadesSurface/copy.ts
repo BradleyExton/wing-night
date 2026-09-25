@@ -2,8 +2,6 @@ import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
 
 export const displayEmojiCharadesSurfaceCopy = {
   title: MINIGAME_DEFINITIONS.EMOJI_CHARADES.displayName,
-  pendingPointsLabel: (points: number): string =>
-    `+${points} pending`,
   clueingLabel: (teamName: string | null): string =>
     teamName === null ? "Clueing…" : `${teamName} is clueing…`,
   clueProgressLabel: (used: number, max: number): string => `${used} / ${max}`,

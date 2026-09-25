@@ -1,4 +1,4 @@
-import { verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnight/surface";
+import { railCounter, takeoverLabel, takeoverLabelAccent, verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnight/surface";
 
 // TRIVIA is a `<TakeoverStage>` (docs/takeover-layout-api.md §3): a question
 // card and two verdicts, with nothing a floating chip could sit over without
@@ -12,8 +12,7 @@ import { verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnig
 // The rail row's read-only count (§4, `counter`). A direct child of the row,
 // so it hugs itself: an inline-flex chip that shrinks for nothing and sits
 // between the rail's own pills and the clock slot that TRIVIA never fills.
-export const counter =
-  "inline-flex shrink-0 items-center rounded-full border border-text/10 bg-surface px-3.5 py-1.5 text-[clamp(0.72rem,0.85vw,0.85rem)] font-semibold uppercase tracking-[0.2em] text-muted";
+export const counter = `${railCounter} text-muted`;
 
 // The intro deck is not a takeover — it is a panel in the host's own control
 // deck, where the rail and the clock are both null and the stage hero above
@@ -44,10 +43,10 @@ export const answerSection =
   "flex flex-[2] flex-col justify-center px-[clamp(1.5rem,3vw,3rem)] py-[clamp(1rem,2vh,2rem)]";
 
 export const promptLabel =
-  "text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-primary/90";
+  takeoverLabelAccent;
 
 export const answerLabel =
-  "text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-muted";
+  takeoverLabel;
 
 // Read across a room from a tablet on the table, so it takes the height the
 // card now has rather than the height a centred card used to leave it.

@@ -55,7 +55,7 @@ export const pausedBars: readonly string[] = [
 export const textColumn = "flex min-w-0 flex-col gap-[0.12em]";
 
 export const label =
-  "inline-flex items-center gap-[0.5em] truncate text-[clamp(0.55rem,0.62vw,0.75rem)] font-extrabold uppercase leading-none tracking-[0.26em] text-mutedWarm";
+  "inline-flex items-center gap-[0.5em] truncate text-[clamp(0.72rem,0.75vw,1.05rem)] font-extrabold uppercase leading-none tracking-[0.26em] text-mutedWarm";
 
 export const labelDot =
   "h-[0.5em] w-[0.5em] flex-none rounded-full bg-primary [box-shadow:0_0_8px_theme(colors.primary)]";

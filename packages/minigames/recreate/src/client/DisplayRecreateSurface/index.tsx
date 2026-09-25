@@ -7,6 +7,7 @@ import {
   type RecreateMinigameDisplayView
 } from "@wingnight/shared";
 
+import { resolveRecreateTargetNumber } from "../resolveRecreateTargetNumber/index.js";
 import { displayRecreateSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -15,11 +16,15 @@ const CHECK_MARK = "✓";
 const StudioShell = ({
   children,
   activeTeamName,
+  readout,
   clock,
   clockLine
 }: {
   children: ReactNode;
   activeTeamName: string | null;
+  // "Target 1 / 2" — the wall's wording, as SCHLONIC's is "Run 1 / 3" to the
+  // tablet's "of". Null before a view has arrived.
+  readout: string | null;
   clock: ReactNode;
   clockLine: ReactNode;
 }): JSX.Element => (
@@ -28,9 +33,7 @@ const StudioShell = ({
       <NeonMarquee
         title={displayRecreateSurfaceCopy.title}
         teamName={activeTeamName}
-        readout={
-          <span className={styles.headerMeta}>{displayRecreateSurfaceCopy.studioSubtitle}</span>
-        }
+        readout={readout}
         clock={clock}
         clockLine={clockLine}
       />
@@ -192,7 +195,12 @@ export const DisplayRecreateSurface = ({
 
   if (!isPlayPhase || recreateDisplayView === null || currentTarget === null) {
     return (
-      <StudioShell activeTeamName={activeTeamName} clock={clock} clockLine={clockLine}>
+      <StudioShell
+        activeTeamName={activeTeamName}
+        readout={null}
+        clock={clock}
+        clockLine={clockLine}
+      >
         <div className={styles.idleBody}>
           <p className={styles.idleText}>
             {isPlayPhase
@@ -205,9 +213,22 @@ export const DisplayRecreateSurface = ({
   }
 
   const { attempt, subState } = recreateDisplayView;
+  const targetReadout = displayRecreateSurfaceCopy.targetCounter(
+    resolveRecreateTargetNumber(
+      subState,
+      recreateDisplayView.targetsCompletedThisTurn,
+      recreateDisplayView.targetsPerTurn
+    ),
+    recreateDisplayView.targetsPerTurn
+  );
 
   return (
-    <StudioShell activeTeamName={activeTeamName} clock={clock} clockLine={clockLine}>
+    <StudioShell
+      activeTeamName={activeTeamName}
+      readout={targetReadout}
+      clock={clock}
+      clockLine={clockLine}
+    >
       <div className={styles.pictures}>
         <Picture
           caption={displayRecreateSurfaceCopy.targetCaption}

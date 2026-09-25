@@ -29,7 +29,7 @@ export const parTick =
   "absolute left-[var(--fappy-pace-par,50%)] top-1/2 h-[0.85rem] w-[0.14rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold";
 
 export const limitLabel =
-  "absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+0.35rem)] text-[0.62rem] font-extrabold uppercase tracking-[0.18em] text-mutedWarmDim";
+  "absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+0.35rem)] text-[clamp(0.8rem,0.95vw,1.15rem)] font-extrabold uppercase tracking-[0.18em] text-mutedWarmDim";
 
 // The team's own bird, placed by how much of the COURSE it has cleared: it
 // reaches the par tick exactly when it finishes.

@@ -1,28 +1,14 @@
 import { useState } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import type { RecreateSubState } from "@wingnight/shared";
 import { TakeoverStage } from "@wingnight/surface";
 
 import { RECREATE_MAX_PROMPT_LENGTH } from "../../runtime/index.js";
+import { resolveRecreateTargetNumber } from "../resolveRecreateTargetNumber/index.js";
 import { AppraisalPanel } from "./AppraisalPanel/index.js";
 import { PromptComposer } from "./PromptComposer/index.js";
 import { StudioFrames } from "./StudioFrames/index.js";
 import { hostRecreateSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
-
-// Counts the target the host is LOOKING AT, not the one the turn has reached.
-// A scored target stays on the tablet — its seal and the real prompt — until
-// "Next target", so the count must not run ahead of that reveal.
-export const resolveRecreateTargetNumber = (
-  subState: RecreateSubState,
-  targetsCompletedThisTurn: number,
-  targetsPerTurn: number
-): number => {
-  const targetOnScreen =
-    subState === "scored" ? targetsCompletedThisTurn : targetsCompletedThisTurn + 1;
-
-  return Math.min(Math.max(targetOnScreen, 1), targetsPerTurn);
-};
 
 // The scored beat's right column: what the ticks came to, and the prompt the
 // target was actually painted from. It stands where the composer and the bench

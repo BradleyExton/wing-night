@@ -389,6 +389,17 @@ Since 2026-09-24 there is one of each, as tokens in `packages/surface`
     works down, left-aligned sentences with a tick mark, not a ruling on the
     turn; their checked state already speaks the verdict's colours.
 
+### Takeover labels and rail counters
+
+-   **`takeoverLabel` / `takeoverLabelAccent`** — the small-caps kicker over a block of a
+    game's own canvas ("Tonight's prompt", "Runs", "Answer (host only)"). One size (0.7rem —
+    the floor on a tablet at arm's length; EMOJI's were 0.55rem), one tracking, `muted` or
+    `primary`. Twenty-eight hand-rolled variants went onto it; never `gold`.
+-   **`railCounter` / `railCounterOverlay`** — the `counter` slot's chip, solid on a Stage and
+    glass over a Canvas scene, sentence case in every game (TRIVIA and RECREATE had it in
+    caps). Colourless: a game adds `text-muted` for a count or `text-gold` for pending
+    points, so two colours never contend on one element.
+
 ### What gets shared, and what was measured and refused
 
 The house rule is ADR-0002's: three or more call sites with identical semantics,
@@ -561,7 +572,17 @@ copied, whose container was the one piece the shared text tokens could not stop 
     (`EMOJI_CHARADES`) is an identifier and never reaches a screen.
 -   **Slots, not styling.** A game passes what the marquee *says*: `title`, `teamName`, `pending`
     (lit `gold` beside the name), `readout` (the turn's counts, right of centre, read-only, the same
-    rule as the host rail's `counter`). It never passes a class string. This is the refusal §2.0B
+    rule as the host rail's `counter`). It never passes a class string.
+-   **The sign sets the readout's type** (since 2026-09-24). `pending` is a number and the sign
+    words it — "+3 pending" on every game; it read "+0 PENDING" on two and a bare "+0" on two
+    more. The readout is plain text in one label type (`mutedWarm` caps, clamp-sized); it was
+    `muted` on three games, `mutedWarmDim` on three and its own size on RECREATE, which now
+    counts its targets ("Target 1 / 2") like everyone else instead of hanging a subtitle there.
+    A live number that must read bigger than its label — FAPPY's relay clock and stake,
+    SCHLONIC's wings — wears the `readoutFigure` token and chooses only its colour.
+-   **Under the stage, one status line**: `stageStatusLine`, `primary` caps clamped to §4.1's
+    22px at 4K. It had four styles (primary caps, muted caps, white sentence case, a bigger
+    primary). This is the refusal §2.0B
     recorded of a configurable container, kept: the component is shareable precisely because
     nothing about its look is a prop.
 -   **Accent budget.** `gold` for the sign and the pending points (the marquee's standing
@@ -1927,6 +1948,12 @@ larger - Use tabular or monospace numerals for timers - Keep supporting
 copy concise and scan-friendly
 
 Host: - Section titles: text-xl to text-2xl - Interactive rows: text-lg+
+
+Labels (since 2026-09-24): small caps labels come from the design system's
+tokens rather than being hand-typed — `takeoverLabel` on the tablet (0.7rem
+floor), the marquee's readout and `stageStatusLine` on the TV. A TV size is
+always a `clamp()` (no fixed `text-6xl`), and a label's clamp tops out at or
+above ~1.2rem so it reaches §4.1's minimums at 4K.
 
 ## 4.1 4K Display Baseline (TV-First)
 

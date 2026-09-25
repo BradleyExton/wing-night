@@ -1,3 +1,5 @@
+import { stageStatusLine } from "@wingnight/surface";
+
 // TV surface per DESIGN.md §2.6 ("Clue Board"): the shared marquee (§2.2D)
 // over a fixed board of clue slots, letterboxed into whatever height the
 // marquee and the status line leave. The ember stage is DRAWING's showtime material (§2.5),
@@ -8,8 +10,7 @@ export const container =
 export const boardArea =
   "relative grid min-h-0 flex-1 justify-items-center gap-[clamp(0.4rem,1vh,0.9rem)] px-[clamp(1rem,3vw,3rem)] [grid-template-rows:1fr_auto]";
 
-export const statusLine =
-  "text-center text-[clamp(0.72rem,1.1vw,1.1rem)] font-bold uppercase tracking-[0.24em] text-muted";
+export const statusLine = stageStatusLine;
 
 export const statusCount = "font-mono text-gold";
 

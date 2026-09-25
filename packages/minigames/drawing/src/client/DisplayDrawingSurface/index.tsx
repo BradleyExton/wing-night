@@ -84,9 +84,7 @@ export const DisplayDrawingSurface = ({
       <NeonMarquee
         title={displayDrawingSurfaceCopy.title}
         teamName={activeTeamName}
-        pending={
-          pendingPoints !== null ? displayDrawingSurfaceCopy.pendingChip(pendingPoints) : null
-        }
+        pending={pendingPoints}
         clock={clock}
         clockLine={clockLine}
       />

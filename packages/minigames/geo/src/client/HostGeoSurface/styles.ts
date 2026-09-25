@@ -1,4 +1,4 @@
-import { takeoverPrimary } from "@wingnight/surface";
+import { railCounterOverlay, takeoverLabel, takeoverLabelAccent, takeoverPrimary } from "@wingnight/surface";
 
 // GEO is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the chart is
 // the tablet, and a chip in one corner costs a corner of scenery rather than a
@@ -34,8 +34,7 @@ const sceneMapGround = "bg-[#0e1419]";
 
 export const map = `relative isolate h-full min-h-0 w-full overflow-hidden rounded-2xl border border-text/10 ${sceneMapGround}`;
 
-const chip =
-  "inline-flex min-h-9 items-center gap-2 rounded-full border border-text/10 bg-bg/85 px-3.5 text-[0.78rem] font-semibold text-muted backdrop-blur";
+const chip = `${railCounterOverlay} text-muted`;
 
 // The rail row's read-only count (§5, `counter`). Glass rather than solid: on a
 // Canvas this chip floats over the map instead of sitting on a panel.
@@ -61,7 +60,7 @@ export const plateEdge =
 export const plateCaption = "flex flex-col gap-1 px-3.5 pb-3 pt-2.5";
 
 export const plateEyebrow =
-  "text-[0.6rem] font-extrabold uppercase tracking-[0.28em] text-primary";
+  takeoverLabelAccent;
 
 export const plateTitle =
   "m-0 text-balance text-[clamp(0.95rem,1.7vw,1.15rem)] font-extrabold leading-tight text-text";
@@ -97,7 +96,7 @@ export const distanceTile = `${tile} border-text/10 bg-bg/88`;
 export const pointsTile = `${tile} border-primary/40 bg-gradient-to-br from-primary/25 to-primary/[0.07]`;
 
 export const tileLabel =
-  "text-[0.62rem] font-extrabold uppercase tracking-[0.24em] text-muted";
+  takeoverLabel;
 
 export const tileValue =
   "mt-1 font-mono text-[clamp(1.5rem,3vw,1.9rem)] font-extrabold leading-none tabular-nums text-text";

@@ -1,3 +1,5 @@
+import { stageStatusLine } from "@wingnight/surface";
+
 // Forgery Studio, TV side: a gallery wall. Two matte frames up top, the
 // appraisal underneath. Primary is the studio's accent, success is the tick;
 // nothing else is coloured, per the two-accent budget.
@@ -8,12 +10,9 @@ export const frameWall =
   "flex h-full min-h-0 w-full flex-col gap-[clamp(0.75rem,1.4vw,1.4rem)] px-[clamp(1rem,2.5vw,2.5rem)] py-[clamp(0.75rem,1.6vw,1.6rem)]";
 
 // The masthead is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D),
-// the same sign every other game hangs; the studio's subtitle rides in its
-// readout slot. RECREATE is `timerKey: null`, so the sign's clock and its
+// the same sign every other game hangs; the target count rides in its readout
+// slot like every other game's count. RECREATE is `timerKey: null`, so the sign's clock and its
 // track stay dark.
-export const headerMeta =
-  "m-0 text-[clamp(0.8rem,1.2vw,1.3rem)] font-semibold uppercase tracking-[0.2em] text-muted";
-
 export const idleBody = "flex flex-1 items-center justify-center";
 
 export const idleText =
@@ -53,8 +52,7 @@ export const appraisalRow =
 export const title =
   "m-0 text-balance text-[clamp(1.6rem,3vw,3.4rem)] font-black leading-[1.05] text-text";
 
-export const status =
-  "m-0 text-[clamp(0.9rem,1.4vw,1.5rem)] font-semibold uppercase tracking-[0.2em] text-primary";
+export const status = stageStatusLine;
 
 export const sealed =
   "m-0 text-[clamp(0.85rem,1.2vw,1.3rem)] italic text-muted";

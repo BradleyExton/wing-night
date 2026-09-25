@@ -2,7 +2,7 @@ import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
 
 export const displayRecreateSurfaceCopy = {
   title: MINIGAME_DEFINITIONS.RECREATE.displayName,
-  studioSubtitle: "Wing Night Appraisal Office",
+  targetCounter: (current: number, total: number): string => `Target ${current} / ${total}`,
   introMessage: "The forger is warming up…",
   waitingMessage: "Waiting for a target…",
   originalCaption: "The original",

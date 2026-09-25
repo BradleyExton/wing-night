@@ -1,4 +1,4 @@
-import { takeoverSecondary } from "@wingnight/surface";
+import { railCounterOverlay, takeoverLabel, takeoverSecondary } from "@wingnight/surface";
 
 // SCHLONIC is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the zone
 // is evenly spread scenery — bay, shoreline and skyline — so a chip in one
@@ -28,15 +28,14 @@ export const introCard =
 // on a Canvas these float over a bright summer sky instead of sitting on a
 // panel. Matches JOUST's and FAPPY's chip at the same values, because the host
 // moving between the three arcade surfaces should not have to relearn a count.
-const chip =
-  "inline-flex min-h-9 items-center rounded-full border border-text/10 bg-bg/85 px-3.5 text-[0.78rem] font-semibold text-muted backdrop-blur";
+const chip = `${railCounterOverlay} text-muted`;
 
 // The run count and, beside it in the same chip, who is running it. The scene
 // already draws that player's own hen, so this is the caption on it — and it
 // cannot ride in the body the way JOUST's lane plate does: the runner is pinned
 // at 46 of the world's 160 units and climbs most of the world's height off a
 // springboard, so a plate over the top-left sky would sit in its path.
-export const counter = `${chip} gap-2`;
+export const counter = chip;
 
 export const counterName = "text-text";
 
@@ -45,14 +44,14 @@ export const counterName = "text-text";
 // The big number is what the bird is holding right now, written by the paint
 // loop; the smaller pair beside it is what the team has already put on the
 // board against par.
-export const counterWings = `${chip} gap-2 font-mono text-[0.95rem] tracking-normal text-gold`;
+export const counterWings = `${railCounterOverlay} font-mono tracking-normal text-gold`;
 
 export const counterInHand = "text-[1.15rem] font-extrabold [font-variant-numeric:tabular-nums]";
 
 export const counterBanked = "text-[0.85rem] text-gold/80 [font-variant-numeric:tabular-nums]";
 
 export const counterWingsLabel =
-  "text-[0.6rem] font-extrabold uppercase tracking-[0.22em] text-mutedWarmDim";
+  takeoverLabel;
 
 export const waitingNote =
   "flex h-full w-full items-center justify-center text-sm text-muted";

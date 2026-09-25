@@ -1,4 +1,4 @@
-import { takeoverSecondary } from "@wingnight/surface";
+import { railCounterOverlay, takeoverSecondary } from "@wingnight/surface";
 
 // FAPPY is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the corridor
 // is evenly spread scenery — dusk sky, sand and a row of champs — so a chip in
@@ -27,8 +27,7 @@ export const introCard =
 // on a Canvas these float over the corridor's sky instead of sitting on a
 // panel. Matches JOUST's chip at the same values, because the host moving
 // between the two arcade surfaces should not have to relearn a count.
-const chip =
-  "inline-flex min-h-9 items-center rounded-full border border-text/10 bg-bg/85 px-3.5 text-[0.78rem] font-semibold text-muted backdrop-blur";
+const chip = `${railCounterOverlay} text-muted`;
 
 export const counter = chip;
 
@@ -37,7 +36,7 @@ export const counter = chip;
 // does, because the bird is pinned at 20% of the scene's width and a plate
 // over the top-left sky would sit in its flight path. On the chrome row it
 // costs the corridor nothing and is never flown through.
-export const counterName = `${chip} text-text`;
+export const counterName = `${railCounterOverlay} text-text`;
 
 export const waitingNote =
   "flex h-full w-full items-center justify-center text-sm text-muted";

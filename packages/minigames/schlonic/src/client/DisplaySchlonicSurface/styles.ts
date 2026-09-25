@@ -1,3 +1,5 @@
+import { readoutFigure, stageStatusLine } from "@wingnight/surface";
+
 export const container = "flex h-full w-full flex-col items-center justify-center gap-4 bg-bg p-10 text-center";
 
 export const introTitle =
@@ -13,20 +15,12 @@ export const stage =
 
 // The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 
-export const marqueeRun =
-  "text-[clamp(0.72rem,1vw,1.05rem)] font-extrabold uppercase tracking-[0.28em] text-muted";
+// The wings are the score, so the two live numbers are the house `readoutFigure`
+// in gold; the marquee sets the labels between them (DESIGN.md §2.2D). The in-hand
+// tally is written by the mirror's paint loop rather than by the view.
+export const marqueeInHand = `${readoutFigure} text-gold`;
 
-// The wings in hand: the room's health bar while the runner is on the hill, written by the
-// mirror's paint loop rather than by the view.
-export const marqueeInHand =
-  "font-mono text-[clamp(1.5rem,2.6vw,2.8rem)] font-extrabold leading-none text-gold [font-variant-numeric:tabular-nums]";
-
-// What the team has already put on the board, against par.
-export const marqueeWings =
-  "font-mono text-[clamp(1rem,1.5vw,1.6rem)] font-extrabold text-gold/80 [font-variant-numeric:tabular-nums]";
-
-export const marqueeWingsLabel =
-  "text-[clamp(0.6rem,0.9vw,0.95rem)] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
+export const marqueeWings = `${readoutFigure} text-gold/80`;
 
 // Scene art, licensed by DESIGN.md §2.11: the zone's green frame and ground, and that ground
 // pooled behind a plaque. The zone looks like nothing else in the show on purpose.
@@ -57,5 +51,4 @@ export const handoffName =
 export const handoffLine =
   "text-[clamp(0.85rem,1.1vw,1.3rem)] font-extrabold uppercase tracking-[0.26em] text-primary";
 
-export const statusLine =
-  "m-0 text-center text-[clamp(1rem,1.7vw,1.8rem)] font-bold text-text/90";
+export const statusLine = stageStatusLine;

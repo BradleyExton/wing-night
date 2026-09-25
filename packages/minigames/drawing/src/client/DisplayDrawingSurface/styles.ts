@@ -1,3 +1,5 @@
+import { stageStatusLine } from "@wingnight/surface";
+
 export const stage =
   "flex h-full w-full flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)] bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
@@ -16,7 +18,7 @@ export const revealOverlay =
   "absolute inset-0 z-20 grid place-items-center px-[8%]";
 
 export const spark =
-  "absolute z-10 motion-safe:animate-pulse text-xl text-gold";
+  "absolute z-10 motion-safe:animate-pulse text-[clamp(1.2rem,1.6vw,1.9rem)] text-gold";
 
 export const sparkOne = "left-[12%] top-[10%]";
 
@@ -26,5 +28,4 @@ export const sparkThree = "bottom-[20%] left-[22%] [animation-delay:0.6s]";
 
 export const sparkFour = "bottom-[14%] right-[28%] [animation-delay:0.9s]";
 
-export const statusLine =
-  "m-0 text-center text-[clamp(0.78rem,1.1vw,1.2rem)] font-extrabold uppercase tracking-[0.26em] text-primary";
+export const statusLine = stageStatusLine;

@@ -132,15 +132,11 @@ const JoustPlayBody = ({
       <NeonMarquee
         title={displayJoustSurfaceCopy.title}
         teamName={activeTeamName}
-        pending={displayJoustSurfaceCopy.pendingPoints(pendingPoints)}
+        pending={pendingPoints}
         readout={
           <>
-            <span className={styles.marqueeShot}>
-              {displayJoustSurfaceCopy.shotCounter(view.shotIndex + 1, view.shotsPerTurn)}
-            </span>
-            <span className={styles.marqueeShot}>
-              {displayJoustSurfaceCopy.standing(standingCount, view.lineup.length)}
-            </span>
+            <span>{displayJoustSurfaceCopy.shotCounter(view.shotIndex + 1, view.shotsPerTurn)}</span>
+            <span>{displayJoustSurfaceCopy.standing(standingCount, view.lineup.length)}</span>
           </>
         }
         clock={clock}

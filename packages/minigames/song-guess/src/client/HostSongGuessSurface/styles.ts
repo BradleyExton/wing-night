@@ -1,4 +1,4 @@
-import { takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
+import { railCounter, takeoverLabel, takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
 
 // SONG_GUESS is a `<TakeoverStage>` with no deck (docs/takeover-layout-api.md
 // §3, §4). It is a console, not an arena: the body is the answer the host
@@ -28,12 +28,11 @@ export const introCard =
 // The rail row's read-only counts (§4, `counter`). "Song 3 of 6" was buried in
 // the answer card and the pending chip was on the strip this file no longer
 // draws; both are glanced at rather than pressed, so both belong here.
-const chip =
-  "inline-flex shrink-0 items-center rounded-full border border-text/10 bg-surface px-3.5 py-1.5 text-[0.78rem] font-semibold text-muted";
+const chip = `${railCounter} text-muted`;
 
 export const counter = chip;
 
-export const counterPending = `${chip} font-mono text-gold`;
+export const counterPending = `${railCounter} font-mono text-gold`;
 
 // The body slot: the two things the host reads. The answer takes the width and
 // the round so far keeps a narrow column beside it — a read pane, not the deck
@@ -52,7 +51,7 @@ export const answerCard =
   "flex h-full min-h-0 flex-col justify-center gap-1 rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-[clamp(1.5rem,3vw,3rem)] py-[clamp(1rem,2vh,2rem)] shadow-[inset_0_0_24px_theme(colors.gold/16%)]";
 
 export const answerLabel =
-  "block text-[0.62rem] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
+  `block ${takeoverLabel}`;
 
 // Read from across a table on a tablet that is lying flat, at the size the
 // card now has rather than the size a content-height card used to leave it.
@@ -67,7 +66,7 @@ export const answerArtistPrefix = "pr-1 italic";
 export const badgeRow = "mt-4 flex flex-wrap items-center gap-3";
 
 export const difficultyBadge =
-  "rounded-full border border-gold/60 px-3 py-1 text-[0.6rem] font-extrabold uppercase tracking-[0.2em] text-gold";
+  "rounded-full border border-gold/60 px-3 py-1 text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-gold";
 
 export const hintText = "m-0 text-[clamp(0.9rem,1.2vw,1.1rem)] italic text-mutedWarm";
 

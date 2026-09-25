@@ -1,3 +1,5 @@
+import { stageStatusLine } from "@wingnight/surface";
+
 export const stage =
   "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)] bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
@@ -37,17 +39,16 @@ export const resultOverlay =
 // Small, under the blurb: the plaque's headline is the time, this is the
 // receipt for it.
 export const resultPenalty =
-  "mt-1 block text-[clamp(0.62rem,0.95vw,1rem)] font-extrabold uppercase tracking-[0.16em] text-heat";
+  "mt-1 block text-[clamp(0.8rem,0.95vw,1.25rem)] font-extrabold uppercase tracking-[0.16em] text-heat";
 
-export const statusLine =
-  "m-0 text-center text-[clamp(0.85rem,1.2vw,1.3rem)] font-extrabold uppercase tracking-[0.26em] text-primary";
+export const statusLine = stageStatusLine;
 
 export const container =
   "flex h-full min-h-0 w-full flex-col items-center justify-center gap-6 px-8 text-center";
 
-export const hint = "m-0 text-lg text-mutedWarm";
+export const hint = "m-0 text-[clamp(1.1rem,1.4vw,1.6rem)] text-mutedWarm";
 
 export const introTitle =
-  "m-0 font-serif text-6xl font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.primary/45%)]";
+  "m-0 font-serif text-[clamp(2.8rem,5vw,5.6rem)] font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.primary/45%)]";
 
-export const introDescription = "m-0 max-w-3xl text-2xl leading-relaxed text-mutedWarm";
+export const introDescription = "m-0 max-w-3xl text-[clamp(1.3rem,1.8vw,2.2rem)] leading-relaxed text-mutedWarm";

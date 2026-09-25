@@ -36,16 +36,14 @@ export const MarqueeReadout = ({
       ? styles.marqueeClockUrgent
       : shownElapsedMs !== null && shownElapsedMs > view.parSeconds * 1000
         ? styles.marqueeClockPastPar
-        : "";
+        : styles.marqueeClock;
   const livePoints = resolveLivePoints(view, elapsedMs);
   const chase = resolveRelayChase(view);
 
   return (
     <>
-      <span className={styles.marqueeLeg}>
-        {marqueeReadoutCopy.legCounter(shownLegIndex + 1, view.legsPerTurn)}
-      </span>
-      <span className={styles.marqueeGates}>
+      <span>{marqueeReadoutCopy.legCounter(shownLegIndex + 1, view.legsPerTurn)}</span>
+      <span>
         {marqueeReadoutCopy.gatesCounter(
           view.totalGatesCleared,
           view.legsPerTurn * view.gatesPerLeg
@@ -54,7 +52,7 @@ export const MarqueeReadout = ({
       {/* The relay clock is the LEG's and FAPPY's own; the shell's `clock` and
           `clockLine` are the room's, and FAPPY is `timerKey: null` so they draw
           nothing and cost nothing. */}
-      <span className={`${styles.marqueeClock} ${clockClassName}`} data-fappy-clock>
+      <span className={clockClassName} data-fappy-clock>
         {shownElapsedMs === null
           ? marqueeReadoutCopy.clockIdle
           : formatRelayClock(shownElapsedMs)}
@@ -66,9 +64,9 @@ export const MarqueeReadout = ({
       {livePoints !== null && (
         <span className={styles.marqueePointsCell}>
           <span
-            className={`${styles.marqueePoints}${
-              livePoints < view.pointsMax ? ` ${styles.marqueePointsDraining}` : ""
-            }`}
+            className={
+              livePoints < view.pointsMax ? styles.marqueePointsDraining : styles.marqueePoints
+            }
             data-fappy-live-points={livePoints}
           >
             {marqueeReadoutCopy.livePoints(livePoints)}

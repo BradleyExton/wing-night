@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import type { RecreateMinigameHostView } from "@wingnight/shared";
 
-import { HostRecreateSurface, resolveRecreateTargetNumber } from "./index.js";
+import { HostRecreateSurface } from "./index.js";
 
 const TEAM_NAMES = new Map([["team-1", "Molten Metal"]]);
 
@@ -71,24 +71,6 @@ const buttonLabels = (html: string): string[] =>
   (html.match(/<button[^>]*>[\s\S]*?<\/button>/g) ?? []).map((button) =>
     button.replace(/<[^>]*>/g, "").trim()
   );
-
-test("does count the target being written when nothing is scored yet", () => {
-  assert.equal(resolveRecreateTargetNumber("writing", 0, 2), 1);
-  assert.equal(resolveRecreateTargetNumber("judging", 0, 2), 1);
-  assert.equal(resolveRecreateTargetNumber("writing", 1, 2), 2);
-});
-
-test("does hold the count on the scored target while its reveal is still up", () => {
-  // The seal and the real prompt for target one are on the tablet until the
-  // host taps "Next target" — the header read "Target 2 of 2" over them.
-  assert.equal(resolveRecreateTargetNumber("scored", 1, 2), 1);
-  assert.equal(resolveRecreateTargetNumber("scored", 2, 2), 2);
-});
-
-test("does stay inside the turn when the targets are spent", () => {
-  assert.equal(resolveRecreateTargetNumber("scored", 1, 1), 1);
-  assert.equal(resolveRecreateTargetNumber("writing", 3, 3), 3);
-});
 
 test("does leave the rail to the shell rather than drawing one of its own", () => {
   // `page.locator("header")` is a STRICT e2e locator and RECREATE used to be

@@ -7,11 +7,6 @@ export const stage =
 
 // The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 
-export const marqueeCounter =
-  "text-[clamp(0.72rem,1vw,1.05rem)] font-extrabold uppercase tracking-[0.28em] text-mutedWarmDim";
-
-export const marqueeCounterValue = "text-text";
-
 // `isolate` keeps Leaflet's own stacking (panes at z-400, controls at z-1000)
 // inside the arena. Without it those layers compete with the display shell's
 // chrome in the same context and the map paints over it.
@@ -52,7 +47,7 @@ export const plateCaption =
   "flex flex-col gap-1 px-[clamp(0.8rem,1.4vw,1.4rem)] py-[clamp(0.6rem,1.1vh,1.1rem)]";
 
 export const plateEyebrow =
-  "text-[clamp(0.6rem,0.85vw,0.9rem)] font-extrabold uppercase tracking-[0.3em] text-primary";
+  "text-[clamp(0.8rem,0.95vw,1.25rem)] font-extrabold uppercase tracking-[0.3em] text-primary";
 
 export const plateTitle =
   "m-0 text-balance text-[clamp(1.1rem,1.9vw,2rem)] font-extrabold leading-tight text-text";

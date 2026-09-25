@@ -1,8 +1,10 @@
+import { takeoverLabel } from "@wingnight/surface";
+
 // The right-hand column of the takeover body on the writing beat, filling it
 // rather than sitting at its content height.
 export const container = "flex h-full min-h-0 flex-col gap-2";
 
-export const label = "m-0 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted";
+export const label = `m-0 ${takeoverLabel}`;
 
 // The textarea takes whatever the body has left instead of a hand-typed
 // `min-h-[clamp(7rem,18vh,10rem)]`, which on the tablet stopped at 144px and

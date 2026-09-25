@@ -26,15 +26,13 @@ const TriviaMarquee = ({
       title={displayTriviaSurfaceCopy.title}
       teamName={activeTeamName}
       readout={
-        <span
-          className={
-            isTurnComplete ? styles.marqueeCounterComplete : styles.marqueeCounter
-          }
-        >
-          {isTurnComplete
-            ? displayTriviaSurfaceCopy.turnCompleteLabel
-            : displayTriviaSurfaceCopy.questionsToGoLabel(attemptsRemaining)}
-        </span>
+        isTurnComplete ? (
+          <span className={styles.marqueeCounterComplete}>
+            {displayTriviaSurfaceCopy.turnCompleteLabel}
+          </span>
+        ) : (
+          displayTriviaSurfaceCopy.questionsToGoLabel(attemptsRemaining)
+        )
       }
       clock={clock}
       clockLine={clockLine}

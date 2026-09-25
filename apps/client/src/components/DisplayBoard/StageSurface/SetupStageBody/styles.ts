@@ -106,7 +106,7 @@ export const roundLabel = "text-mutedWarm";
 // An open slot's eyebrow: same line, but the "Round 07: Open Slot" tag has no
 // primary — the seat is empty, so nothing about it should glow.
 export const roundNumMuted =
-  "relative z-[1] font-mono text-[clamp(0.7rem,0.9vw,1rem)] font-extrabold uppercase leading-none tracking-[0.28em] text-mutedWarm/80";
+  "relative z-[1] font-mono text-[clamp(0.7rem,0.9vw,1.25rem)] font-extrabold uppercase leading-none tracking-[0.28em] text-mutedWarm/80";
 
 // The instruction is a footnote, not a headline: sentence case, no tracking,
 // dim, and well under the sauce size so six lit sauces stay the loud thing.

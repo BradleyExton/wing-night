@@ -1,17 +1,21 @@
 import type { ReactNode } from "react";
 
+import { neonMarqueeCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
 export type NeonMarqueeProps = {
   // The show's name, as the neon kicker over the team.
   title: string;
   teamName: string | null;
-  // The active team's pending points, lit in gold beside the name. A game
-  // passes its own copy ("+3", "+3 pending") or nothing.
-  pending?: ReactNode;
+  // The active team's pending points, lit in gold beside the name. A number,
+  // not copy: the sign words it ("+3 pending") the same way on every game —
+  // it used to read "+0 PENDING" on two and a bare "+0" on two more.
+  pending?: number | null;
   // The turn's live counts — "Photo 2 of 3", "Shot 2 of 5", the wing tally —
   // right-aligned, left of the clock. Read-only, the same rule as the host
-  // rail's `counter` slot (docs/takeover-layout-api.md §4).
+  // rail's `counter` slot (docs/takeover-layout-api.md §4). The sign sets the
+  // label type, so a game passes plain text; a live number that has to read
+  // bigger than its label wears `readoutFigure`.
   readout?: ReactNode;
   // Both from the shell, both possibly null: the digits pill sits at the end
   // of the meta row, the lit length sits in the track under the row.
@@ -44,12 +48,17 @@ export const NeonMarquee = ({
         <p className={styles.team}>
           <span className={styles.teamName}>{teamName ?? ""}</span>
           {pending !== undefined && pending !== null && (
-            <span className={styles.pending}>{pending}</span>
+            <span className={styles.pending}>
+              {neonMarqueeCopy.pendingValue(pending)}{" "}
+              <span className={styles.pendingLabel}>{neonMarqueeCopy.pendingLabel}</span>
+            </span>
           )}
         </p>
       </div>
       <div className={styles.meta}>
-        {readout}
+        {readout !== undefined && readout !== null && readout !== false && (
+          <div className={styles.readout}>{readout}</div>
+        )}
         {clock}
       </div>
     </div>

@@ -1,3 +1,5 @@
+import { takeoverLabelAccent } from "@wingnight/surface";
+
 // The poster over a dead arena. A leg that has not been tapped yet is a still
 // corridor with a bird standing on a cliff — the one moment in FAPPY where the
 // scene says nothing and the whole tablet can be used to answer the room's
@@ -26,7 +28,7 @@ export const head =
   "h-[clamp(3.5rem,13vh,6rem)] w-[clamp(3.5rem,13vh,6rem)] overflow-hidden rounded-full border-4 border-current shadow-[0_0_2rem_theme(colors.shade/60%)]";
 
 export const kicker =
-  "text-[0.7rem] font-extrabold uppercase tracking-[0.34em] text-gold";
+  takeoverLabelAccent;
 
 export const name =
   "font-serif text-[clamp(2.2rem,6vw,4rem)] font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.gold/55%)]";

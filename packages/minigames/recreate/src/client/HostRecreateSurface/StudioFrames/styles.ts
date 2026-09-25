@@ -1,3 +1,5 @@
+import { takeoverLabel } from "@wingnight/surface";
+
 // Frames are matte and dark (DESIGN.md §2.10): the art is the party's own
 // photos, so the frame stays out of their way and a photo that does not fill
 // its mat is matted, never letterboxed.
@@ -25,4 +27,4 @@ export const placeholder =
 export const placeholderBusy = `${placeholder} animate-pulse`;
 
 export const caption =
-  "m-0 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted";
+  `m-0 ${takeoverLabel}`;
