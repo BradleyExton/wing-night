@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
-import { NeonMarquee } from "@wingnight/surface";
+import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 import { resolveContentAssetSrc, type GeoMinigameDisplayView } from "@wingnight/shared";
 
 import { resolvePhotoNumber } from "../resolvePhotoNumber/index.js";
@@ -53,25 +53,13 @@ const GeoResultReadout = ({ result }: { result: GeoDisplayResult }): ReactNode =
 
   return (
     <>
-      <div className={styles.resultRow}>
-        <div className={styles.distanceTile}>
-          <div className={styles.tileLabel}>
-            {displayGeoSurfaceCopy.distanceLabel}
-          </div>
-          <div className={styles.tileValue}>
-            {distance.value}
-            <span className={styles.tileUnit}>{distance.unit}</span>
-          </div>
-        </div>
-        <div className={styles.pointsTile}>
-          <div className={styles.tileLabel}>
-            {displayGeoSurfaceCopy.pointsLabel}
-          </div>
-          <div className={styles.pointsTileValue}>
-            {displayGeoSurfaceCopy.pointsValue(result.pointsAwarded)}
-          </div>
-        </div>
-      </div>
+      <ResultPlaque
+        tone={result.pointsAwarded > 0 ? "hit" : "miss"}
+        kicker={displayGeoSurfaceCopy.distanceLabel}
+        title={displayGeoSurfaceCopy.distanceTitle(distance.value, distance.unit)}
+        points={displayGeoSurfaceCopy.pointsValue(result.pointsAwarded)}
+        pointsCaption={displayGeoSurfaceCopy.pointsLabel}
+      />
       <div className={styles.legendRow}>
         <span className={styles.legendEntry}>
           <span className={styles.legendGuessDot} aria-hidden="true" />

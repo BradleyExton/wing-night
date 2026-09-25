@@ -25,3 +25,10 @@ export { RunningTotals } from "./RunningTotals/index.js";
 // refusal T5.2 recorded was of a container each game would CONFIGURE; this one
 // is not configurable, which is the whole reason it can be shared.
 export { NeonMarquee, type NeonMarqueeProps } from "./NeonMarquee/index.js";
+// The TV's one result card (DESIGN.md §2.2E). Content, never a class string —
+// the NeonMarquee rule — so the six result treatments it replaced cannot grow back.
+export {
+  ResultPlaque,
+  type ResultPlaqueProps,
+  type ResultPlaqueTone
+} from "./ResultPlaque/index.js";

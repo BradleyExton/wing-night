@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
-import { NeonMarquee } from "@wingnight/surface";
+import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 import type { DrawingPromptReveal, DrawingStroke } from "@wingnight/shared";
 
 import { StrokeReplayCanvas } from "./StrokeReplayCanvas/index.js";
@@ -13,6 +13,8 @@ import { useIsRevealVisible } from "../useIsRevealVisible/index.js";
 import { displayDrawingSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
+// The reveal is the house `<ResultPlaque>` (DESIGN.md §2.2E): the answer as its
+// title, and on a correct call the point and the team that banked it.
 const RevealPlaque = ({
   reveal,
   teamName
@@ -23,42 +25,17 @@ const RevealPlaque = ({
   const isCorrect = reveal.outcome === "CORRECT";
 
   return (
-    <div
-      className={
-        isCorrect ? styles.revealPlaqueCorrect : styles.revealPlaqueIncorrect
+    <ResultPlaque
+      tone={isCorrect ? "hit" : "miss"}
+      kicker={
+        isCorrect
+          ? displayDrawingSurfaceCopy.revealAnswerLabel
+          : displayDrawingSurfaceCopy.revealMissedLabel
       }
-    >
-      <span
-        className={
-          isCorrect ? styles.revealCheckCorrect : styles.revealCheckIncorrect
-        }
-        aria-hidden="true"
-      >
-        {isCorrect ? "✓" : "✗"}
-      </span>
-      <div className={styles.revealAnswer}>
-        <span
-          className={
-            isCorrect
-              ? styles.revealAnswerLabelCorrect
-              : styles.revealAnswerLabelIncorrect
-          }
-        >
-          {displayDrawingSurfaceCopy.revealAnswerLabel}
-        </span>
-        {reveal.promptText}
-      </div>
-      {isCorrect && (
-        <div className={styles.revealAward}>
-          <span className={styles.revealAwardPoints}>
-            {displayDrawingSurfaceCopy.revealAwardPoints}
-          </span>
-          {teamName !== null && (
-            <span className={styles.revealAwardTeam}>{teamName}</span>
-          )}
-        </div>
-      )}
-    </div>
+      title={reveal.promptText}
+      points={isCorrect ? displayDrawingSurfaceCopy.revealAwardPoints : null}
+      pointsCaption={isCorrect ? teamName : null}
+    />
   );
 };
 

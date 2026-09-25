@@ -130,7 +130,7 @@ test("marks each half a hit or a miss with the points the song earned", () => {
 
   assert.match(html, /data-song-guess-verdict="hit"/);
   assert.match(html, /data-song-guess-verdict="miss"/);
-  assert.match(html, /\+1 point this song/);
+  assert.match(html, />\+1<[\s\S]*point this song/);
   assert.doesNotMatch(html, /\+4/);
 });
 

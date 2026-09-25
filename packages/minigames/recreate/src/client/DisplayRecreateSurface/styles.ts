@@ -79,14 +79,6 @@ export const ingredientMark =
 
 export const scoredRow = "flex flex-wrap items-center gap-[clamp(1rem,2.5vw,2.5rem)]";
 
-export const pointsSeal =
-  "flex h-[clamp(4rem,6.5vw,7rem)] w-[clamp(4rem,6.5vw,7rem)] rotate-6 flex-col items-center justify-center rounded-full border-4 border-primary text-primary";
-
-export const pointsSealValue = "text-[clamp(1.3rem,2.4vw,2.6rem)] font-black leading-none";
-
-export const pointsSealLabel =
-  "mt-1 text-[clamp(0.55rem,0.85vw,0.9rem)] font-bold uppercase tracking-[0.3em]";
-
 export const reveal = "flex min-w-0 flex-1 flex-col gap-1";
 
 export const revealPrompt =

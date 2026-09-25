@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
-import { NeonMarquee } from "@wingnight/surface";
+import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 import type { JoustMinigameDisplayView, JoustMinigameShot } from "@wingnight/shared";
 
 import { JoustArenaScene } from "../JoustArenaScene/index.js";
@@ -23,7 +23,7 @@ const JoustIntro = (): JSX.Element => {
   );
 };
 
-const ResultPlaque = ({
+const ShotResult = ({
   shot,
   nameByPlayerId
 }: {
@@ -36,21 +36,12 @@ const ResultPlaque = ({
 
   return (
     <div className={styles.resultOverlay} data-joust-result>
-      <div className={`${styles.resultPlaque}${isHit ? "" : ` ${styles.resultPlaqueMiss}`}`}>
-        <div>
-          <p className={`${styles.resultTitle}${isHit ? "" : ` ${styles.resultTitleMiss}`}`}>
-            {copy.title}
-          </p>
-          <p className={styles.resultBlurb}>
-            {isHit ? displayJoustSurfaceCopy.toppledNames(names) : copy.blurb}
-          </p>
-        </div>
-        {isHit && (
-          <span className={styles.resultPoints}>
-            {displayJoustSurfaceCopy.resultPoints(shot.points)}
-          </span>
-        )}
-      </div>
+      <ResultPlaque
+        tone={isHit ? "hit" : "miss"}
+        title={copy.title}
+        detail={isHit ? displayJoustSurfaceCopy.toppledNames(names) : copy.blurb}
+        points={isHit ? displayJoustSurfaceCopy.resultPoints(shot.points) : null}
+      />
     </div>
   );
 };
@@ -188,7 +179,7 @@ const JoustPlayBody = ({
               {arena.name}
             </span>
             {view.lastShot !== null && replayFinished && (
-              <ResultPlaque shot={view.lastShot} nameByPlayerId={nameByPlayerId} />
+              <ShotResult shot={view.lastShot} nameByPlayerId={nameByPlayerId} />
             )}
           </>
         )}

@@ -46,33 +46,16 @@ export const runEnter = "h-full w-full motion-safe:animate-[schlonic-scene-enter
 
 export const resultOverlay = `pointer-events-none absolute inset-0 z-10 flex items-center justify-center ${sceneZoneVeil}`;
 
-// One plaque per beat. The run's ending on top, and under it — on a handoff — who is next, so
-// the room reads one card rather than two stacked over each other and a third line under the
-// zone saying the same thing.
-export const holdPlaque =
-  "flex flex-col items-center gap-[clamp(0.6rem,1.2vh,1.2rem)] rounded-2xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-[clamp(1.8rem,3.4vw,3.6rem)] py-[clamp(1rem,1.8vh,1.8rem)] text-center motion-safe:animate-[schlonic-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
-
-export const holdNext =
-  "flex flex-col items-center gap-1 border-t border-gold/30 pt-[clamp(0.6rem,1.2vh,1.2rem)]";
+// Who takes the tablet next, under the result plaque's rule: the name large, the call to
+// grab the tablet under it. Sans like the rest of the plaque — SCHLONIC's italic serif lived
+// outside DESIGN.md's licences.
+export const handoff = "flex flex-col items-start gap-1";
 
 export const handoffName =
-  "font-serif text-[clamp(2.2rem,5vw,4.2rem)] font-bold italic leading-none text-text";
+  "text-[clamp(2rem,4.4vw,4rem)] font-black uppercase leading-none tracking-[0.03em] text-text";
 
 export const handoffLine =
-  "text-[clamp(0.7rem,1vw,1.1rem)] font-extrabold uppercase tracking-[0.3em] text-gold";
-
-export const resultPlaque =
-  "flex items-center gap-[clamp(1.2rem,2.4vw,2.6rem)] rounded-2xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-[clamp(1.8rem,3.4vw,3.6rem)] py-[clamp(1rem,1.8vh,1.8rem)]";
-
-export const resultTitle =
-  "m-0 font-serif text-[clamp(1.8rem,3.6vw,3.2rem)] font-bold italic leading-none text-gold";
-
-export const resultTitleBad = "text-heat";
-
-export const resultBlurb = "m-0 text-[clamp(0.9rem,1.3vw,1.3rem)] text-text/85";
-
-export const resultPoints =
-  "font-mono text-[clamp(2rem,4vw,3.6rem)] font-extrabold leading-none text-text";
+  "text-[clamp(0.85rem,1.1vw,1.3rem)] font-extrabold uppercase tracking-[0.26em] text-primary";
 
 export const statusLine =
   "m-0 text-center text-[clamp(1rem,1.7vw,1.8rem)] font-bold text-text/90";

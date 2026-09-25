@@ -1,6 +1,6 @@
 import { useMemo, useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
-import { NeonMarquee } from "@wingnight/surface";
+import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 import type { SchlonicMinigameDisplayView, SchlonicMinigameRun } from "@wingnight/shared";
 import { resolveSchlonicZone } from "@wingnight/shared";
 
@@ -24,8 +24,9 @@ const SchlonicIntro = (): JSX.Element => (
 );
 
 // The beat over a run that just ended: how it went, and — when the tablet is changing hands —
-// who takes it. One card. A skipped run has no ending to show, so on a handoff the card is only
-// the name, and on a finish there is no card at all: the points plaque follows.
+// who takes it. One card, the house `<ResultPlaque>` (DESIGN.md §2.2E), with who is next under
+// its rule. A skipped run has no ending to show, so on a handoff the card is only the name, and
+// on a finish there is no card at all: the points plaque follows.
 const HoldPlaque = ({ hold, nextName }: { hold: RunHold; nextName: string | null }): JSX.Element | null => {
   const showsOutcome = hold.outcome !== "skipped";
   const showsNext = hold.kind === "handoff";
@@ -34,50 +35,49 @@ const HoldPlaque = ({ hold, nextName }: { hold: RunHold; nextName: string | null
     return null;
   }
 
-  const isCleared = hold.outcome === "cleared";
+  // A skipped run is not a wipeout: the card names who is next and says nothing about how it went.
+  if (!showsOutcome) {
+    return (
+      <div className={styles.resultOverlay} data-schlonic-outcome={hold.outcome}>
+        <ResultPlaque
+          tone="neutral"
+          kicker={displaySchlonicSurfaceCopy.handoffCalloutLine}
+          title={displaySchlonicSurfaceCopy.handoffCalloutName(nextName)}
+        />
+      </div>
+    );
+  }
+
+  const handoff = showsNext ? (
+    <div className={styles.handoff} data-schlonic-handoff="display">
+      <span className={styles.handoffName}>
+        {displaySchlonicSurfaceCopy.handoffCalloutName(nextName)}
+      </span>
+      <span className={styles.handoffLine}>{displaySchlonicSurfaceCopy.handoffCalloutLine}</span>
+    </div>
+  ) : null;
 
   return (
     <div className={styles.resultOverlay} data-schlonic-outcome={hold.outcome}>
-      <div className={styles.holdPlaque}>
-        {hold.outcome !== "skipped" && (
-          <div>
-            <p className={`${styles.resultTitle}${isCleared ? "" : ` ${styles.resultTitleBad}`}`}>
-              {displaySchlonicSurfaceCopy.outcomeTitle(hold.outcome)}
-            </p>
-            <p className={styles.resultBlurb}>
-              {displaySchlonicSurfaceCopy.outcomeBlurb(hold.outcome, hold.wings)}
-            </p>
-          </div>
-        )}
-        {showsNext && (
-          <div
-            className={showsOutcome ? styles.holdNext : undefined}
-            data-schlonic-handoff="display"
-          >
-            <span className={styles.handoffName}>
-              {displaySchlonicSurfaceCopy.handoffCalloutName(nextName)}
-            </span>
-            <span className={styles.handoffLine}>{displaySchlonicSurfaceCopy.handoffCalloutLine}</span>
-          </div>
-        )}
-      </div>
+      <ResultPlaque
+        tone={hold.outcome === "cleared" ? "hit" : "miss"}
+        title={displaySchlonicSurfaceCopy.outcomeTitle(hold.outcome)}
+        detail={displaySchlonicSurfaceCopy.outcomeBlurb(hold.outcome, hold.wings)}
+      >
+        {handoff}
+      </ResultPlaque>
     </div>
   );
 };
 
 const FinishPlaque = ({ view }: { view: SchlonicMinigameDisplayView }): JSX.Element => (
   <div className={styles.resultOverlay} data-schlonic-result="finished">
-    <div className={styles.resultPlaque}>
-      <div>
-        <p className={styles.resultTitle}>{displaySchlonicSurfaceCopy.finishedTitle}</p>
-        <p className={styles.resultBlurb}>
-          {displaySchlonicSurfaceCopy.finishedBlurb(view.wingsBanked, view.wingsPar)}
-        </p>
-      </div>
-      <span className={styles.resultPoints}>
-        {displaySchlonicSurfaceCopy.points(view.points ?? 0)}
-      </span>
-    </div>
+    <ResultPlaque
+      tone={(view.points ?? 0) > 0 ? "hit" : "neutral"}
+      title={displaySchlonicSurfaceCopy.finishedTitle}
+      detail={displaySchlonicSurfaceCopy.finishedBlurb(view.wingsBanked, view.wingsPar)}
+      points={displaySchlonicSurfaceCopy.points(view.points ?? 0)}
+    />
   </div>
 );
 

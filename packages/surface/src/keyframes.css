@@ -67,3 +67,15 @@
     opacity: 0.55;
   }
 }
+
+/* ResultPlaque's one entrance (DESIGN.md §2.2E): a short rise that settles. */
+@keyframes plaque-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

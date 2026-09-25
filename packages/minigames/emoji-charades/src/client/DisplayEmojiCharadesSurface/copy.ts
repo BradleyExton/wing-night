@@ -8,7 +8,7 @@ export const displayEmojiCharadesSurfaceCopy = {
     teamName === null ? "Clueing…" : `${teamName} is clueing…`,
   clueProgressLabel: (used: number, max: number): string => `${used} / ${max}`,
   revealCorrectLabel: "The answer was",
-  revealSkippedLabel: "Skipped —",
+  revealSkippedLabel: "Skipped — the answer was",
   revealAwardLabel: (points: number): string => `+${points}`,
   turnCompleteTitle: "Turn complete",
   turnCompleteHint: (points: number): string =>

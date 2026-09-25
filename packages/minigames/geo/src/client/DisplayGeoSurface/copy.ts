@@ -15,6 +15,7 @@ export const displayGeoSurfaceCopy = {
   plottingStatus: (teamName: string): string => `${teamName} is dropping a pin`,
   distanceLabel: "Off by",
   distanceValue: formatGeoDistance,
+  distanceTitle: (value: string, unit: string): string => `${value} ${unit}`,
   pointsLabel: "Points",
   pointsValue: (points: number): string => `+${points}`,
   guessPinLabel: "Their pin",

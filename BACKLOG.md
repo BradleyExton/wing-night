@@ -541,3 +541,10 @@ The open question, deferred from the T3.1 checkpoint to phase 6: either the arca
 surface language that DESIGN.md should name with real tokens, or the dusk-desert palette belongs to
 JOUST's arena alone and the others should stop borrowing it. Until then each migration substitutes
 tokens as it goes. **Answered at T6.2**: they were copying JOUST's skin. `DESIGN.md` §2.5 now states the direction — the brown goes and the other seven marquees follow DRAWING onto house tokens. Built 2026-09-24: the brown is gone from every chrome string and lint gates the minigame trees.
+
+### TRIVIA has no verdict on the TV
+Surfaced by the 2026-09-24 visual cohesion pass. Every other game shows the room a `<ResultPlaque>`
+(DESIGN.md §2.2E) when something is decided; TRIVIA's TV just moves to the next question, because
+`TriviaMinigameDisplayView` carries only the count of questions left. Showing "✓ Correct — Mexico"
+means projecting the last ruling (and, once ruled, its answer) into the display view — a
+projection change with its own answer-safety test, not a styling one.

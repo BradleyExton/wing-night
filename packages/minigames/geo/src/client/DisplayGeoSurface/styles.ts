@@ -68,27 +68,8 @@ export const status =
 export const statusDot =
   "h-[0.6em] w-[0.6em] shrink-0 rounded-full bg-primary motion-safe:[animation:pulse_1.6s_ease-in-out_infinite]";
 
-export const resultRow = "flex gap-[clamp(0.6rem,1.2vw,1.2rem)]";
-
-// Reveal stats are stat tiles, the same shape the rest of the show uses for a
-// number worth reading — not rotated rubber stamps.
-const tile =
-  "min-w-[clamp(8rem,13vw,13rem)] rounded-[1.1rem] border px-[clamp(0.9rem,1.6vw,1.6rem)] py-[clamp(0.6rem,1.2vh,1.2rem)] text-right backdrop-blur";
-
-export const distanceTile = `${tile} border-text/10 bg-bg/88`;
-
-export const pointsTile = `${tile} border-primary/40 bg-gradient-to-br from-primary/25 to-primary/[0.07]`;
-
-export const tileLabel =
-  "text-[clamp(0.6rem,0.9vw,0.95rem)] font-extrabold uppercase tracking-[0.26em] text-muted";
-
-export const tileValue =
-  "mt-1 font-mono text-[clamp(1.5rem,3vw,3.2rem)] font-extrabold leading-none tabular-nums text-text";
-
-export const pointsTileValue = `${tileValue} text-primary`;
-
-export const tileUnit = "ml-[0.3em] text-[0.42em] text-muted";
-
+// The reveal is the house `<ResultPlaque>` (DESIGN.md §2.2E) — how far off, and
+// what it scored — over the map's legend.
 export const legendRow =
   "flex gap-[clamp(0.8rem,1.4vw,1.4rem)] text-[clamp(0.68rem,1vw,1.05rem)] font-bold uppercase tracking-[0.18em] text-muted";
 

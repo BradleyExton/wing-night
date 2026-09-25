@@ -15,7 +15,11 @@ export const displayRecreateSurfaceCopy = {
   attemptGeneratingLabel: "Painting…",
   attemptFailedLabel: "The forger bailed",
   attemptSkippedLabel: "Judged by ear tonight",
-  pointsSealValue: (points: number): string => `+${points}`,
-  pointsSealLabel: "pts",
+  // The appraisal is the house `<ResultPlaque>` (DESIGN.md §2.2E), not a stamp.
+  appraisalKicker: "Appraised",
+  appraisalTitle: (named: number, total: number): string =>
+    `${named} of ${total} ingredient${total === 1 ? "" : "s"}`,
+  pointsValue: (points: number): string => `+${points}`,
+  pointsCaption: "pts",
   authoredPromptLabel: "The real prompt"
 } as const;

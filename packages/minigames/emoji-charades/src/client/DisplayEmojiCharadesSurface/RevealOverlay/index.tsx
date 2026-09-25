@@ -1,4 +1,5 @@
 import type { EmojiCharadesSubjectReveal } from "@wingnight/shared";
+import { ResultPlaque } from "@wingnight/surface";
 
 import { displayEmojiCharadesSurfaceCopy } from "../copy.js";
 import * as styles from "./styles.js";
@@ -9,6 +10,8 @@ export type RevealOverlayProps = {
   pointsAwarded: number;
 };
 
+// The verdict window is the house `<ResultPlaque>` (DESIGN.md §2.2E), the same
+// card DRAWING reveals its answer on.
 export const RevealOverlay = ({
   reveal,
   teamName,
@@ -19,32 +22,17 @@ export const RevealOverlay = ({
 
   return (
     <div className={styles.overlay}>
-      <div className={hasAward ? styles.plaqueCorrect : styles.plaqueSkipped}>
-        <span
-          className={
-            isCorrect ? styles.verdictIconCorrect : styles.verdictIconSkipped
-          }
-          aria-hidden="true"
-        >
-          {isCorrect ? "✓" : "✗"}
-        </span>
-        <p className={styles.answer}>
-          <span className={isCorrect ? styles.labelCorrect : styles.labelSkipped}>
-            {isCorrect
-              ? displayEmojiCharadesSurfaceCopy.revealCorrectLabel
-              : displayEmojiCharadesSurfaceCopy.revealSkippedLabel}
-          </span>
-          {reveal.subjectText}
-        </p>
-        {hasAward && (
-          <p className={styles.award}>
-            <span className={styles.awardPoints}>
-              {displayEmojiCharadesSurfaceCopy.revealAwardLabel(pointsAwarded)}
-            </span>
-            <span className={styles.awardTeam}>{teamName}</span>
-          </p>
-        )}
-      </div>
+      <ResultPlaque
+        tone={isCorrect ? "hit" : "miss"}
+        kicker={
+          isCorrect
+            ? displayEmojiCharadesSurfaceCopy.revealCorrectLabel
+            : displayEmojiCharadesSurfaceCopy.revealSkippedLabel
+        }
+        title={reveal.subjectText}
+        points={hasAward ? displayEmojiCharadesSurfaceCopy.revealAwardLabel(pointsAwarded) : null}
+        pointsCaption={hasAward ? teamName : null}
+      />
     </div>
   );
 };

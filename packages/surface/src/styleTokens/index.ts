@@ -234,6 +234,16 @@ export const verdictButtonDanger = `${verdictButtonBase} border-danger/60 bg-dan
 export const verdictIcon = "text-[1.3em] leading-none";
 
 // =============================================================================
+// Reveal points — the points a result banked, on the TV. One face for every
+// game: it was sans in three and mono in four. `gold` because points won are
+// the one celebration a turn has (§0.1), the same colour the marquee lights
+// pending points in.
+// =============================================================================
+
+export const revealPoints =
+  "text-[clamp(2.4rem,4vw,4.2rem)] font-black leading-none tabular-nums text-gold [text-shadow:0_0_18px_theme(colors.gold/50%)]";
+
+// =============================================================================
 // Team accents — small color dot used wherever a team name is rendered.
 // =============================================================================
 

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
-import { NeonMarquee } from "@wingnight/surface";
+import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 import {
   resolveContentAssetSrc,
   type RecreateAttempt,
@@ -153,14 +153,16 @@ const Appraisal = ({
       )}
       {subState === "scored" && (
         <div className={styles.scoredRow}>
-          <span className={styles.pointsSeal}>
-            <span className={styles.pointsSealValue}>
-              {displayRecreateSurfaceCopy.pointsSealValue(lastPointsAwarded ?? 0)}
-            </span>
-            <span className={styles.pointsSealLabel}>
-              {displayRecreateSurfaceCopy.pointsSealLabel}
-            </span>
-          </span>
+          <ResultPlaque
+            tone={(lastPointsAwarded ?? 0) > 0 ? "hit" : "miss"}
+            kicker={displayRecreateSurfaceCopy.appraisalKicker}
+            title={displayRecreateSurfaceCopy.appraisalTitle(
+              recreateDisplayView.checkedIngredientIndexes.length,
+              ingredients?.length ?? 0
+            )}
+            points={displayRecreateSurfaceCopy.pointsValue(lastPointsAwarded ?? 0)}
+            pointsCaption={displayRecreateSurfaceCopy.pointsCaption}
+          />
           {authoredPrompt !== null && (
             <div className={styles.reveal}>
               <p className={styles.sectionLabel}>

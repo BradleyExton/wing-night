@@ -1,6 +1,6 @@
 import { useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
-import { NeonMarquee } from "@wingnight/surface";
+import { NeonMarquee, ResultPlaque, type ResultPlaqueTone } from "@wingnight/surface";
 import type {
   SongGuessMinigameDisplayReveal,
   SongGuessMinigameDisplayView
@@ -86,10 +86,20 @@ const VerdictChip = ({ field, isHit }: { field: string; isHit: boolean }): JSX.E
   </span>
 );
 
-// The reveal-and-react beat: the answer and the ruling on it, in one card,
-// with the points this song earned. `isHeld` marks the render where the
-// server has already moved on and the TV is finishing the window
-// (`useHeldSongReveal`) — the e2e reads it, the styling does not change.
+// The reveal-and-react beat: the answer and the ruling on it, on the house
+// `<ResultPlaque>` (DESIGN.md §2.2E) — a clean sweep is a hit, a blank is a
+// miss, a split ruling is neither — with each half's chip under its rule and
+// the points this song earned. `isHeld` marks the render where the server has
+// already moved on and the TV is finishing the window (`useHeldSongReveal`) —
+// the e2e reads it, the styling does not change.
+const resolveRevealTone = (verdict: SongGuessMinigameDisplayReveal["verdict"]): ResultPlaqueTone => {
+  if (verdict.title && verdict.artist) {
+    return "hit";
+  }
+
+  return verdict.title || verdict.artist ? "neutral" : "miss";
+};
+
 const SongRevealCard = ({
   reveal,
   isHeld
@@ -102,29 +112,30 @@ const SongRevealCard = ({
     data-song-guess-reveal
     data-song-guess-reveal-held={isHeld ? "" : undefined}
   >
-    <span className={styles.revealLabel}>
-      {displaySongGuessSurfaceCopy.revealLabel}
-    </span>
-    <p className={styles.revealTitle}>{reveal.title}</p>
-    <p className={styles.revealArtist}>
-      <span className={styles.revealArtistPrefix}>
-        {displaySongGuessSurfaceCopy.revealArtistPrefix}
-      </span>
-      {reveal.artist}
-    </p>
-    <div className={styles.verdictRow}>
-      <VerdictChip
-        field={displaySongGuessSurfaceCopy.verdictTitleField}
-        isHit={reveal.verdict.title}
-      />
-      <VerdictChip
-        field={displaySongGuessSurfaceCopy.verdictArtistField}
-        isHit={reveal.verdict.artist}
-      />
-    </div>
-    <p className={reveal.pointsEarned > 0 ? styles.pointsEarned : styles.pointsNone}>
-      {displaySongGuessSurfaceCopy.pointsEarned(reveal.pointsEarned)}
-    </p>
+    <ResultPlaque
+      tone={resolveRevealTone(reveal.verdict)}
+      kicker={displaySongGuessSurfaceCopy.revealLabel}
+      title={reveal.title}
+      detail={displaySongGuessSurfaceCopy.revealArtist(reveal.artist)}
+      points={reveal.pointsEarned > 0 ? displaySongGuessSurfaceCopy.pointsValue(reveal.pointsEarned) : null}
+      pointsCaption={
+        reveal.pointsEarned > 0 ? displaySongGuessSurfaceCopy.pointsCaption(reveal.pointsEarned) : null
+      }
+    >
+      <div className={styles.verdictRow}>
+        <VerdictChip
+          field={displaySongGuessSurfaceCopy.verdictTitleField}
+          isHit={reveal.verdict.title}
+        />
+        <VerdictChip
+          field={displaySongGuessSurfaceCopy.verdictArtistField}
+          isHit={reveal.verdict.artist}
+        />
+        {reveal.pointsEarned === 0 && (
+          <span className={styles.pointsNone}>{displaySongGuessSurfaceCopy.noPoints}</span>
+        )}
+      </div>
+    </ResultPlaque>
   </div>
 );
 

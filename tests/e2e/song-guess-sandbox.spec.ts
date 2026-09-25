@@ -99,14 +99,16 @@ test("song guess sandbox plays, pauses, replays once, reveals and scores live", 
   await expect(page.getByText(FIRST_SONG_ARTIST)).toHaveCount(2);
   await expect(page.locator('[data-song-guess-verdict="hit"]')).toHaveCount(1);
   await expect(page.locator('[data-song-guess-verdict="miss"]')).toHaveCount(1);
-  await expect(page.getByText("+1 point this song")).toBeVisible();
+  await expect(revealCard).toContainText("+1");
+  await expect(revealCard).toContainText("point this song");
   await expect(page.getByText("On the TV")).toBeVisible();
 
   // A ruling can still change, and the card follows it.
   await page.getByRole("button", { name: "Mark Artist correct" }).click();
   await expect(page.getByText("+2 pending")).toBeVisible();
   await expect(page.locator('[data-song-guess-verdict="hit"]')).toHaveCount(2);
-  await expect(page.getByText("+2 points this song")).toBeVisible();
+  await expect(revealCard).toContainText("+2");
+  await expect(revealCard).toContainText("points this song");
 
   // Advancing restores the replay allowance and moves both previews on. The
   // display may finish its reveal window first (the next test pins that), so

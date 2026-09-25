@@ -571,6 +571,46 @@ copied, whose container was the one piece the shared text tokens could not stop 
 -   A `<div>`, never a `<header>`: `page.locator("header")` is the e2e suite's strict handle on
     the host rail, and the sandbox draws both surfaces on one page.
 
+### 2.2E Result Plaque
+
+The card a minigame puts on the TV when something is decided — a shot lands, a
+relay finishes, a run ends, an answer is revealed, a forgery is appraised, a pin
+is measured. One component, `<ResultPlaque>` from `packages/surface`, worn by
+eight of the nine display surfaces since 2026-09-24. It replaced six
+treatments: a gold cabinet plaque JOUST and FAPPY carried byte for byte, a
+drifted copy of it in SCHLONIC (serif italic title, white points), two verdict
+plaques (DRAWING's on tokens, EMOJI's on its own hexes and its own 220ms
+entrance), SONG_GUESS's hit/miss chips, RECREATE's rotated rubber stamp (the
+treatment GEO's own reveal had already refused) and GEO's stat tiles.
+
+-   **Content, never a class string** — the `NeonMarquee` rule (§2.2D). `tone`
+    (`hit` / `miss` / `neutral`), an optional `kicker` ("The answer was",
+    "Off by"), the `title`, an optional `detail` line, the `points` it banked
+    and a `pointsCaption` (the team, the unit), and `children` for whatever
+    follows on the same card under a hairline (SCHLONIC's who-is-next).
+-   **The game places it.** Where the card sits (over the top of the lane,
+    centred over the board, in the map's corner) and the `data-*` hook the e2e
+    reads stay on the game's own wrapper. The card hangs `data-result-plaque`
+    with its tone.
+-   **Tone is shape and words, not colour alone (§7).** A hit carries ✓ and a
+    `success` rim, a miss ✗ and a `danger` rim, neutral (a split ruling, a
+    finish that scored nothing) neither. A miss says so in the kicker too:
+    "Nope — the answer was", "Skipped — the answer was".
+-   **Points are `revealPoints`**, one face in every game (it was sans in three
+    and mono in four), in `gold` — points won are the turn's celebration, the
+    same gold the marquee lights pending points in.
+-   **Opaque**, `surface` → `bg`: a held sketch or a scene sits behind it and a
+    translucent card let strokes cut through the words.
+-   **One entrance**, `plaque-enter` (a 320ms rise that settles), nothing under
+    reduced motion. The per-game `schlonic-callout` / 220ms `reveal` entrances
+    on result cards are gone.
+-   **TRIVIA has no TV verdict** — its display view carries no ruling (the
+    projection is answer-safe and sends only the count left). Giving the room
+    one is a projection change, not a styling one (BACKLOG.md).
+
+The per-game sections below (§2.4–§2.13) describe what each card SAYS; where
+they describe how a result card looks, this section supersedes them.
+
 ## 2.2B Setup Lobby ("Hearth")
 
 The SETUP stage is the screen the room looks at longest, so it is the one display surface that

@@ -28,30 +28,16 @@ export const handoffLine =
 export const handoffThen =
   "mt-1 text-[clamp(0.75rem,1.1vw,1.2rem)] font-semibold uppercase tracking-[0.22em] text-mutedWarm";
 
+// Where the relay's `<ResultPlaque>` (DESIGN.md §2.2E) hangs: over the top of
+// the corridor, clear of the finish cliff.
 export const resultOverlay =
   "pointer-events-none absolute inset-x-0 top-[6%] z-20 flex justify-center px-[8%]";
-
-export const resultPlaque =
-  "flex items-center gap-[clamp(1rem,2vw,2rem)] rounded-2xl border-[3px] border-gold bg-gradient-to-b from-surface to-bg px-[clamp(1.6rem,2.8vw,2.8rem)] py-[clamp(0.8rem,1.4vh,1.4rem)] shadow-[0_0_70px_theme(colors.gold/35%),0_14px_32px_theme(colors.shade/60%)]";
-
-export const resultPlaqueTimedOut = "border-heat/60 shadow-[0_14px_32px_theme(colors.shade/60%)]";
-
-export const resultTitle =
-  "m-0 text-[clamp(2rem,3.6vw,3.8rem)] font-black uppercase leading-none tracking-[0.06em] text-gold [text-shadow:0_0_24px_theme(colors.gold/50%)]";
-
-export const resultTitleTimedOut = "text-heat [text-shadow:none]";
-
-export const resultBlurb =
-  "m-0 mt-1 font-serif text-[clamp(0.9rem,1.5vw,1.6rem)] italic text-mutedWarm";
 
 // Where the difference between the wall clock and the scored time came from.
 // Small, under the blurb: the plaque's headline is the time, this is the
 // receipt for it.
 export const resultPenalty =
-  "m-0 mt-1 text-[clamp(0.62rem,0.95vw,1rem)] font-extrabold uppercase tracking-[0.16em] text-heat";
-
-export const resultPoints =
-  "font-mono text-[clamp(2.4rem,4vw,4.2rem)] font-black leading-none text-gold [text-shadow:0_0_18px_theme(colors.gold/50%)]";
+  "mt-1 block text-[clamp(0.62rem,0.95vw,1rem)] font-extrabold uppercase tracking-[0.16em] text-heat";
 
 export const statusLine =
   "m-0 text-center text-[clamp(0.85rem,1.2vw,1.3rem)] font-extrabold uppercase tracking-[0.26em] text-primary";

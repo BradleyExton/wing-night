@@ -1,6 +1,6 @@
 import { useMemo, useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
-import { NeonMarquee } from "@wingnight/surface";
+import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 import type { FappyMinigameDisplayView, FappyMinigameLeg } from "@wingnight/shared";
 import { resolveFappyGates } from "@wingnight/shared";
 
@@ -27,7 +27,7 @@ const FappyIntro = (): JSX.Element => {
   );
 };
 
-const ResultPlaque = ({
+const RelayResult = ({
   view,
   finishClock
 }: {
@@ -38,32 +38,31 @@ const ResultPlaque = ({
 
   return (
     <div className={styles.resultOverlay} data-fappy-result={view.phase}>
-      <div className={`${styles.resultPlaque}${isTimedOut ? ` ${styles.resultPlaqueTimedOut}` : ""}`}>
-        <div>
-          <p className={`${styles.resultTitle}${isTimedOut ? ` ${styles.resultTitleTimedOut}` : ""}`}>
-            {isTimedOut ? displayFappySurfaceCopy.timedOutTitle : displayFappySurfaceCopy.finishedTitle}
-          </p>
-          <p className={styles.resultBlurb}>
+      <ResultPlaque
+        tone={isTimedOut ? "miss" : "hit"}
+        title={isTimedOut ? displayFappySurfaceCopy.timedOutTitle : displayFappySurfaceCopy.finishedTitle}
+        detail={
+          <>
             {isTimedOut
               ? displayFappySurfaceCopy.timedOutBlurb(
                   view.totalGatesCleared,
                   view.legsPerTurn * view.gatesPerLeg
                 )
               : displayFappySurfaceCopy.finishedBlurb(formatRelayClock(finishClock.elapsedMs ?? 0))}
-          </p>
-          {/* The clock on the plaque is the SCORED time, so when a forgiven
-              leg put seconds in it the room is told which seconds. */}
-          {finishClock.penaltyMs > 0 && (
-            <p className={styles.resultPenalty} data-fappy-penalty="display">
-              {displayFappySurfaceCopy.penaltyLine(
-                formatRelayClockSeconds(finishClock.penaltyMs),
-                finishClock.skippedLegs
-              )}
-            </p>
-          )}
-        </div>
-        <span className={styles.resultPoints}>{displayFappySurfaceCopy.points(view.points ?? 0)}</span>
-      </div>
+            {/* The clock on the plaque is the SCORED time, so when a forgiven
+                leg put seconds in it the room is told which seconds. */}
+            {finishClock.penaltyMs > 0 && (
+              <span className={styles.resultPenalty} data-fappy-penalty="display">
+                {displayFappySurfaceCopy.penaltyLine(
+                  formatRelayClockSeconds(finishClock.penaltyMs),
+                  finishClock.skippedLegs
+                )}
+              </span>
+            )}
+          </>
+        }
+        points={displayFappySurfaceCopy.points(view.points ?? 0)}
+      />
     </div>
   );
 };
@@ -232,7 +231,7 @@ const FappyPlayBody = ({
         {hold?.kind === "handoff" && (
           <HandoffCallout nextName={waitingBird?.playerName ?? null} onDeckName={onDeckName} />
         )}
-        {isOver && hold === null && <ResultPlaque view={view} finishClock={finishClock} />}
+        {isOver && hold === null && <RelayResult view={view} finishClock={finishClock} />}
       </div>
       <p className={styles.statusLine}>
         {resolveStatusLine(view, leg, bird.playerName, waitingBird?.playerName ?? null, onDeckName, hold)}

@@ -34,23 +34,12 @@ export const equalizer = "flex items-end justify-center gap-2 h-16";
 export const equalizerBar =
   "w-3 rounded-full bg-primary shadow-[0_0_14px_theme(colors.primary)] motion-safe:animate-pulse";
 
-export const revealLabel =
-  "text-xs font-extrabold uppercase tracking-[0.36em] text-mutedWarmDim";
-
-export const revealTitle =
-  "m-0 font-serif text-6xl font-bold leading-tight text-gold [text-shadow:0_0_30px_theme(colors.gold/50%)]";
-
-export const revealArtist = "m-0 text-3xl font-semibold text-text";
-
-export const revealArtistPrefix = "pr-2 text-2xl font-normal italic text-mutedWarm";
-
 export const doneTitle =
   "m-0 font-serif text-5xl font-bold italic leading-tight text-text";
 
-// The reveal card's ruling row: one chip per half, in the success/danger pair
-// DRAWING's plaque uses (§2.5), under the answer and over the song's points.
-export const verdictRow =
-  "mt-2 flex flex-wrap items-center justify-center gap-[clamp(0.8rem,1.6vw,1.6rem)]";
+// The reveal card's ruling row, under the plaque's rule: one chip per half, in
+// the plaque's own success/danger pair.
+export const verdictRow = "flex flex-wrap items-center gap-[clamp(0.8rem,1.6vw,1.6rem)]";
 
 const verdictChipBase =
   "flex items-center gap-3 rounded-2xl border-[3px] bg-surface px-[clamp(1.2rem,2vw,2rem)] py-[clamp(0.6rem,1.2vh,1.1rem)]";
@@ -73,8 +62,5 @@ export const verdictWordHit =
 
 export const verdictWordMiss =
   "text-[clamp(1rem,1.5vw,1.5rem)] font-extrabold uppercase tracking-[0.2em] text-danger";
-
-export const pointsEarned =
-  "m-0 font-mono text-[clamp(1.4rem,2.4vw,2.4rem)] font-black text-gold";
 
 export const pointsNone = "m-0 text-lg text-mutedWarm";
