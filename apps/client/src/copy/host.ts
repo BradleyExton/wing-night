@@ -7,6 +7,8 @@ const TEAM_ROSTER_EMPTY_LABEL = "No players assigned yet.";
 type PrimaryActionContext = {
   hasNextRoundTurn: boolean;
   hasAdditionalRounds: boolean;
+  // Quick Play has no EATING, so the briefing's action starts the game itself.
+  isQuickPlay?: boolean;
 };
 
 const primaryActionLabel = (
@@ -19,7 +21,7 @@ const primaryActionLabel = (
     case Phase.INTRO:
       return "Start Game";
     case Phase.MINIGAME_INTRO:
-      return "Start Eating";
+      return context.isQuickPlay === true ? "Start Mini-Game" : "Start Eating";
     case Phase.EATING:
       return "Start Mini-Game";
     case Phase.MINIGAME_PLAY:
@@ -58,14 +60,23 @@ const phaseAdvanceHint = (phase: Phase): string => {
   }
 };
 
-const phaseDescription = (phase: Phase): string => {
+type PhaseDescriptionContext = {
+  isQuickPlay?: boolean;
+};
+
+const phaseDescription = (
+  phase: Phase,
+  context: PhaseDescriptionContext = {}
+): string => {
   switch (phase) {
     case Phase.SETUP:
       return "Create teams and assign players before starting the game.";
     case Phase.INTRO:
       return "Review locked teams and start the game when the room is ready.";
     case Phase.MINIGAME_INTRO:
-      return "Call up the active team and brief them before their turn begins.";
+      return context.isQuickPlay === true
+        ? "Call up the active team, brief them, and start the mini-game when they are set."
+        : "Call up the active team and brief them before their turn begins.";
     case Phase.EATING:
       return "Track wing participation for the active team and run the eating timer.";
     case Phase.MINIGAME_PLAY:
@@ -162,6 +173,9 @@ export const hostCopy = {
   teamNameInputPlaceholder: "Enter a team name",
   createTeamButtonLabel: "Create Team",
   autoAssignRemainingPlayersButtonLabel: "Auto-Assign Remaining Players",
+  // SETUP's other exit: skip the night and just run a few games.
+  quickPlayLinkLabel: "Quick Play a mini-game",
+  quickPlayLinkHref: "/quickplay",
   playersSectionTitle: "Players",
   playerNameInputLabel: "Player Name",
   playerNameInputPlaceholder: "Enter a player name",
@@ -222,8 +236,13 @@ export const hostCopy = {
   minigameName: formatMinigameName,
   minigameHeadlineLead: "Up next:",
   railNoGameLabel: "No game yet",
-  minigameIntroDescription: (minigame: MinigameType): string =>
-    `${formatMinigameName(minigame)} is queued. Call the team up, explain it, then start eating once they are set.`,
+  minigameIntroDescription: (
+    minigame: MinigameType,
+    context: PhaseDescriptionContext = {}
+  ): string =>
+    context.isQuickPlay === true
+      ? `${formatMinigameName(minigame)} is queued. Call the team up, explain it, then start the mini-game once they are set.`
+      : `${formatMinigameName(minigame)} is queued. Call the team up, explain it, then start eating once they are set.`,
   minigamePlayDescription: (minigame: MinigameType): string =>
     `${formatMinigameName(minigame)} is live for this team turn.`,
   minigameWaitingForViewLabel:
@@ -264,6 +283,10 @@ export const hostCopy = {
   compactPhaseLabel: formatPhaseLabel,
   compactRoundProgressLabel: (currentRound: number, totalRounds: number): string =>
     `Round ${Math.max(currentRound, 1)} of ${totalRounds}`,
+  // A Quick Play "round" is one queued game, and the room has no sauce to
+  // name it by — so the rail counts games instead.
+  quickPlayGameProgressLabel: (currentGame: number, totalGames: number): string =>
+    `Game ${Math.max(currentGame, 1)} of ${totalGames}`,
   compactScoreLabel: (score: number): string => `${score} pts`,
   teamMembersLabel: (memberCount: number): string =>
     `${memberCount} player${memberCount === 1 ? "" : "s"}`,

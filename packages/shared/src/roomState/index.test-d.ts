@@ -10,6 +10,7 @@ import {
   type Phase,
   type Player,
   type RoleScopedSnapshotByRole,
+  type SessionMode,
   type RoleScopedStateSnapshotEnvelope,
   type RoomState,
   type SocketClientRole,
@@ -136,6 +137,7 @@ export type ValidRoomStateCheck = Assert<
   IsAssignable<
     {
       phase: Phase;
+      sessionMode: SessionMode;
       currentRound: number;
       totalRounds: number;
       players: Player[];
@@ -173,6 +175,7 @@ export type DisplaySnapshotShapeCheck = Assert<
   IsAssignable<
     {
       phase: Phase;
+      sessionMode: SessionMode;
       currentRound: number;
       totalRounds: number;
       players: Player[];

@@ -50,6 +50,8 @@ export {
   advanceRoomStatePhase
 } from "./phaseMutations/index.js";
 
+export { startQuickPlay } from "./quickPlayMutations/index.js";
+
 export {
   applyRoomStateMutation,
   reportRoomStateMutation

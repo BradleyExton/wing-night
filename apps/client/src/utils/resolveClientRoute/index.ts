@@ -2,6 +2,7 @@ export type ClientRoute =
   | "ROOT"
   | "HOST"
   | "ADMIN"
+  | "QUICKPLAY"
   | "DISPLAY"
   | "DEV_INDEX"
   | "DEV_MINIGAME"
@@ -37,6 +38,12 @@ export const resolveClientRoute = (pathname: string): ClientRoute => {
 
   if (normalizedPathname === "/display") {
     return "DISPLAY";
+  }
+
+  // The host tablet's other front door: queue a few mini-games for whoever
+  // is in the room and play them without the night around them.
+  if (normalizedPathname === "/quickplay") {
+    return "QUICKPLAY";
   }
 
   // The bare prefix is the dev launcher; the two prefixed segment routes below

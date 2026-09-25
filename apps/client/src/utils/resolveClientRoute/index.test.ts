@@ -13,6 +13,11 @@ test("resolves /admin and /admin/ to ADMIN", () => {
   assert.equal(resolveClientRoute("/admin/"), "ADMIN");
 });
 
+test("resolves /quickplay and /quickplay/ to QUICKPLAY", () => {
+  assert.equal(resolveClientRoute("/quickplay"), "QUICKPLAY");
+  assert.equal(resolveClientRoute("/quickplay/"), "QUICKPLAY");
+});
+
 test("resolves /display and /display/ to DISPLAY", () => {
   assert.equal(resolveClientRoute("/display"), "DISPLAY");
   assert.equal(resolveClientRoute("/display/"), "DISPLAY");

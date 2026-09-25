@@ -1,4 +1,4 @@
-import { Phase, type RoomState } from "@wingnight/shared";
+import { Phase, SESSION_MODES, type RoomState } from "@wingnight/shared";
 
 import {
   clearActiveMinigameRuntimeState,
@@ -91,7 +91,9 @@ export const applyPhaseTransitionEffects = (
     initializeRoundTurnState(state);
   }
 
-  if (previousPhase === Phase.EATING && nextPhase === Phase.MINIGAME_PLAY) {
+  // Entering play from anywhere seats the turn: EATING on a night, the
+  // briefing itself in Quick Play, where there is no EATING to come from.
+  if (previousPhase !== Phase.MINIGAME_PLAY && nextPhase === Phase.MINIGAME_PLAY) {
     initializeActiveMinigameTurnState(state);
   }
 
@@ -126,6 +128,14 @@ export const applyPhaseTransitionEffects = (
 export const resolveNextPhase = (state: RoomState, previousPhase: Phase): Phase => {
   if (previousPhase === Phase.MINIGAME_PLAY) {
     return Phase.TURN_RESULTS;
+  }
+
+  // Quick Play has no wings: the briefing goes straight to play.
+  if (
+    previousPhase === Phase.MINIGAME_INTRO &&
+    state.sessionMode === SESSION_MODES.QUICK_PLAY
+  ) {
+    return Phase.MINIGAME_PLAY;
   }
 
   if (previousPhase === Phase.TURN_RESULTS) {

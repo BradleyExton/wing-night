@@ -1,4 +1,23 @@
 export { Phase } from "./phase/index.js";
+export { SESSION_MODES, isSessionMode } from "./sessionMode/index.js";
+export type { SessionMode } from "./sessionMode/index.js";
+export {
+  QUICK_PLAY_CONFIG_NAME,
+  QUICK_PLAY_MIN_TEAMS,
+  QUICK_PLAY_POINTS_PER_PLAYER,
+  QUICK_PLAY_SAUCE_LABEL,
+  buildQuickPlayGameConfig,
+  isQuickPlayGame,
+  isQuickPlayStartRequest,
+  isQuickPlayTeam,
+  resolveQuickPlayStartIssues
+} from "./quickPlay/index.js";
+export type {
+  QuickPlayGame,
+  QuickPlayStartIssue,
+  QuickPlayStartRequest,
+  QuickPlayTeam
+} from "./quickPlay/index.js";
 export {
   CONTRAPTION_BENCHMARK_LAYOUT,
   CONTRAPTION_SETTLE_EPSILON_UNITS,
@@ -486,6 +505,7 @@ export type {
   MinigameActionEnvelopePayload,
   MusicSetVolumePayload,
   MusicTrackEndedPayload,
+  QuickPlayStartPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
   TimerExtendPayload,

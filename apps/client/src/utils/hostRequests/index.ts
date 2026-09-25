@@ -3,11 +3,15 @@ import {
   MINIGAME_API_VERSION,
   TIMER_EXTEND_MAX_SECONDS,
   isValidMusicVolume,
+  resolveQuickPlayStartIssues,
   type GameReorderTurnOrderPayload,
   type HostSecretPayload,
   type MinigameActionPayload,
   type MinigameType,
   type MusicSetVolumePayload,
+  type QuickPlayGame,
+  type QuickPlayStartPayload,
+  type QuickPlayTeam,
   type ScoringAdjustTeamScorePayload,
   type ScoringSetWingParticipationPayload,
   type SetupAddPlayerPayload,
@@ -67,6 +71,7 @@ type HostRequestArgs = {
   onAdjustTeamScore: [teamId: string, delta: number];
   onResetGame: [];
   onRedoLastMutation: [];
+  onStartQuickPlay: [games: QuickPlayGame[], teams: QuickPlayTeam[]];
 };
 
 export type HostRequestName = keyof HostRequestArgs;
@@ -245,6 +250,18 @@ export const hostRequestTable: HostRequestTable = {
   onRedoLastMutation: {
     event: CLIENT_TO_SERVER_EVENTS.REDO_LAST_MUTATION,
     buildPayload: buildHostSecretPayload
+  },
+  onStartQuickPlay: {
+    event: CLIENT_TO_SERVER_EVENTS.QUICKPLAY_START,
+    // The same issues the server refuses on, so a request that cannot start
+    // never leaves the tablet.
+    canEmit: (games, teams): boolean =>
+      resolveQuickPlayStartIssues({ games, teams }).length === 0,
+    buildPayload: (hostSecret, games, teams): QuickPlayStartPayload => ({
+      hostSecret,
+      games: structuredClone(games),
+      teams: structuredClone(teams)
+    })
   }
 };
 
@@ -306,6 +323,7 @@ export const createHostRequestHandlers = (
     onSkipTurnBoundary: buildHandler("onSkipTurnBoundary"),
     onAdjustTeamScore: buildHandler("onAdjustTeamScore"),
     onResetGame: buildHandler("onResetGame"),
-    onRedoLastMutation: buildHandler("onRedoLastMutation")
+    onRedoLastMutation: buildHandler("onRedoLastMutation"),
+    onStartQuickPlay: buildHandler("onStartQuickPlay")
   };
 };

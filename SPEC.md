@@ -357,6 +357,41 @@ Tie → Sudden death trivia.
 
 ---
 
+### Quick Play (session mode)
+
+The same engine with the wings taken out, for trying a mini-game with whoever is in the room
+without running the night. Entered from `/quickplay` on the host tablet (linked from SETUP's hero
+and the screen picker); the TV stays on `/display` and follows as it always does.
+
+- `RoomState.sessionMode` is `NIGHT` or `QUICK_PLAY`. Server-owned; every phase transition
+  reads it. `createInitialRoomState` and Reset Game return the room to `NIGHT`.
+- One host-authorized event, `quickplay:start`, carries the whole session: an ordered queue of
+  `{ minigame, rules?, timerSeconds? }` and the dealt teams `{ teamId, playerIds }`. Legal only
+  from `SETUP`. The server rebuilds the game config from the loaded pack —
+  `buildQuickPlayGameConfig` — with the queue as the rounds (one round per queued game, in
+  queue order, sauce `"No sauce"`, `pointsPerPlayer` 1), the pack's scoring, and the pack's
+  rules and clocks except where a queued game overrides its own. The result runs through the
+  same validator as the pack, plugin rules included; a request that fails it is a no-op.
+- Teams are the pack's PRESET teams (name, genre, anthems, colour) with the launcher's roster
+  in place of the preset seating; players not dealt onto a team leave `roomState.players` for
+  the session. The game config is set on live state only, never on the setup baseline, so
+  Reset Game restores the pack's real night, roster and all.
+- The room opens directly on `MINIGAME_INTRO` for the first dealt team (round 1, no lock screen,
+  no count-in). In `QUICK_PLAY`, `MINIGAME_INTRO -> MINIGAME_PLAY`: there is no `EATING`, no
+  eating timer and no wing points. Everything after — `TURN_RESULTS`, `ROUND_RESULTS`, the
+  next queued game, `FINAL_RESULTS` — is the night's own machine. Skip, redo and score
+  overrides stay exactly where they are.
+- The host rail counts games (`Game 1 of 2`) and drops the sauce slot; the briefing's primary
+  action reads `Start Mini-Game`.
+- The launcher (`/quickplay`): tick who is here (`Everyone` / `Clear`), pick how many teams
+  (2 … the pack's team count; the first N preset teams are dealt), `Shuffle` or tap a name to
+  bump it to the next team, tap games to queue them in order, and edit each queued game's
+  scalar rules and clock, seeded from the pack. Start is disabled until at least one game is
+  queued and every team has a player. Once the server opens the session the tablet navigates
+  itself to `/host`. A room already past `SETUP` gets the way back and a two-tap reset instead.
+
+---
+
 ### Host Override Access (Tablet UX)
 
 Goal:

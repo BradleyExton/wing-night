@@ -18,11 +18,14 @@ test("renders role picker landing with shared logo and hero image", () => {
 });
 
 // The role picker is what a guest gets handed on party night, so the dev
-// launcher is one muted link rather than a third card.
-test("links the dev launcher without adding a third role card", () => {
+// launcher is one muted link rather than a role card. Quick Play IS a card:
+// it is a way to run the room, not a tool for working on it.
+test("links the dev launcher without adding a role card for it", () => {
   const html = renderToStaticMarkup(<RootRouteLanding />);
 
   assert.match(html, /href="\/dev"/);
   assert.match(html, /Dev tools/);
-  assert.equal(html.match(/class="group relative overflow-hidden/g)?.length, 2);
+  assert.match(html, /href="\/quickplay"/);
+  assert.match(html, /Quick Play/);
+  assert.equal(html.match(/class="group relative overflow-hidden/g)?.length, 3);
 });

@@ -12,6 +12,7 @@ import { DevRouteIndex } from "./components/DevRouteIndex";
 import { DisplayBoard } from "./components/DisplayBoard";
 import { HostControlPanel } from "./components/HostControlPanel";
 import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
+import { QuickPlayLauncher } from "./components/QuickPlayLauncher";
 import { RootRouteLanding } from "./components/RootRouteLanding";
 import { RouteNotFound } from "./components/RouteNotFound";
 import { HostHandlersProvider } from "./context/HostHandlersContext";
@@ -54,6 +55,12 @@ const resolveRouteContent = (
   // room state, so it takes the socket instead of reading a context.
   if (route === "ADMIN") {
     return <AdminConfigWizard socket={roomSocket} />;
+  }
+
+  // The launcher is a host surface on another path: same room state, same
+  // request handlers, one extra event.
+  if (route === "QUICKPLAY") {
+    return <QuickPlayLauncher />;
   }
 
   if (route === "DISPLAY") {
@@ -116,7 +123,7 @@ export const App = (): JSX.Element => {
   }, [roomSocket, route]);
 
   const hostHandlers = useMemo(() => {
-    if (route !== "HOST" || roomSocket === null) {
+    if ((route !== "HOST" && route !== "QUICKPLAY") || roomSocket === null) {
       return null;
     }
 
@@ -131,10 +138,14 @@ export const App = (): JSX.Element => {
     return wireRoomStateRehydration(roomSocket, setRoomStateEnvelope);
   }, [roomSocket]);
 
-  // ADMIN claims host control too — `config:*` are host-authorized events, so
-  // without the claim the wizard never holds a secret to send with them.
+  // ADMIN and QUICKPLAY claim host control too — `config:*` and
+  // `quickplay:start` are host-authorized events, so without the claim
+  // neither page ever holds a secret to send with them.
   useEffect(() => {
-    if ((route !== "HOST" && route !== "ADMIN") || roomSocket === null) {
+    if (
+      (route !== "HOST" && route !== "ADMIN" && route !== "QUICKPLAY") ||
+      roomSocket === null
+    ) {
       return;
     }
 

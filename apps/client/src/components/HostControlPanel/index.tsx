@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import { Phase, type RoomState } from "@wingnight/shared";
+import { Phase, SESSION_MODES, type RoomState } from "@wingnight/shared";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { HostActionBarSurface } from "./HostActionBarSurface";
@@ -69,7 +69,8 @@ export const HostControlPanel = (): JSX.Element => {
         ? hostControlPanelCopy.nextPhaseButtonLabel
         : hostControlPanelCopy.primaryActionLabel(phase, {
             hasNextRoundTurn,
-            hasAdditionalRounds
+            hasAdditionalRounds,
+            isQuickPlay: roomState?.sessionMode === SESSION_MODES.QUICK_PLAY
           });
   const containerClassName = isMinigameTakeover
     ? styles.takeoverContainer

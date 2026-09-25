@@ -1,4 +1,4 @@
-import { Phase, type RoomState } from "@wingnight/shared";
+import { Phase, SESSION_MODES, type RoomState } from "@wingnight/shared";
 
 import { hostControlPanelCopy } from "../../copy";
 
@@ -42,6 +42,7 @@ export const selectHeaderContext = (
   teamNameByTeamId: Map<string, string>
 ): HeaderContext => {
   const phase = roomState?.phase ?? null;
+  const isQuickPlay = roomState?.sessionMode === SESSION_MODES.QUICK_PLAY;
 
   const phaseTitle =
     phase === null
@@ -50,13 +51,15 @@ export const selectHeaderContext = (
   const phaseDescription =
     phase === null
       ? hostControlPanelCopy.headerWaitingDescription
-      : hostControlPanelCopy.headerPhaseDescription(phase);
+      : hostControlPanelCopy.headerPhaseDescription(phase, { isQuickPlay });
 
   const currentRound = roomState?.currentRound ?? 0;
   const totalRounds = roomState?.totalRounds ?? 0;
   const roundLabel =
     currentRound > 0 && totalRounds > 0
-      ? hostControlPanelCopy.compactRoundProgressLabel(currentRound, totalRounds)
+      ? isQuickPlay
+        ? hostControlPanelCopy.quickPlayGameProgressLabel(currentRound, totalRounds)
+        : hostControlPanelCopy.compactRoundProgressLabel(currentRound, totalRounds)
       : hostControlPanelCopy.headerPreGameLabel;
 
   // The rail says the same four things on every phase — round, sauce, game,
@@ -65,7 +68,9 @@ export const selectHeaderContext = (
   // every other phase. Before a round exists the game slot holds a placeholder
   // rather than vanishing.
   const roundConfig = roomState?.currentRoundConfig ?? null;
-  const sauceLabel = roundConfig?.sauce ?? null;
+  // Quick Play rounds carry a placeholder sauce the room never eats, so the
+  // rail leaves that slot out rather than announcing it.
+  const sauceLabel = isQuickPlay ? null : (roundConfig?.sauce ?? null);
   // The round's game, else the game actually running (the dev sandbox plays a
   // game with no round around it), else the placeholder.
   const railMinigame = roundConfig?.minigame ?? roomState?.minigameHostView?.minigame ?? null;
