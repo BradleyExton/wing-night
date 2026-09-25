@@ -59,18 +59,20 @@ export const selectHeaderContext = (
       ? hostControlPanelCopy.compactRoundProgressLabel(currentRound, totalRounds)
       : hostControlPanelCopy.headerPreGameLabel;
 
-  // The sauce and the mini-game are what the deleted round intro screen told the
-  // host. They now ride the rail on the beat that replaced it — the briefing,
-  // where the host says both out loud before the team starts eating.
-  const isRoundBriefingPhase = phase === Phase.MINIGAME_INTRO;
-  const sauceLabel = isRoundBriefingPhase
-    ? (roomState?.currentRoundConfig?.sauce ?? null)
-    : null;
-  const roundMinigame = roomState?.currentRoundConfig?.minigame ?? null;
+  // The rail says the same four things on every phase — round, sauce, game,
+  // team — so the host never relearns it between beats (DESIGN.md §2.0A). It
+  // used to carry the sauce and the game on the briefing alone and drop them on
+  // every other phase. Before a round exists the game slot holds a placeholder
+  // rather than vanishing.
+  const roundConfig = roomState?.currentRoundConfig ?? null;
+  const sauceLabel = roundConfig?.sauce ?? null;
+  // The round's game, else the game actually running (the dev sandbox plays a
+  // game with no round around it), else the placeholder.
+  const railMinigame = roundConfig?.minigame ?? roomState?.minigameHostView?.minigame ?? null;
   const minigameLabel =
-    isRoundBriefingPhase && roundMinigame !== null
-      ? hostControlPanelCopy.minigameName(roundMinigame)
-      : null;
+    railMinigame !== null
+      ? hostControlPanelCopy.minigameName(railMinigame)
+      : hostControlPanelCopy.railNoGameLabel;
 
   const isActiveTeamContextPhase =
     phase === Phase.EATING ||

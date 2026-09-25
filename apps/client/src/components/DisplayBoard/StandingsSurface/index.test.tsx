@@ -73,6 +73,22 @@ test("uses gold accent and trophy for the leader during FINAL_RESULTS", () => {
   assert.match(html, /text-gold/);
 });
 
+// A tie at the end has no champion yet — sudden death decides it — so no bay is
+// crowned. It used to read "Winner" on every tied bay, all of them at 0-0.
+test("crowns nobody when the final ends tied at the top", () => {
+  const html = renderToStaticMarkup(
+    <StandingsSurface
+      phase={Phase.FINAL_RESULTS}
+      standings={teamsFixture.map((team) => ({ ...team, totalScore: 7 }))}
+      players={playersFixture}
+      teamThemeByTeamId={themesFixture}
+    />
+  );
+
+  assert.doesNotMatch(html, /Winner/);
+  assert.match(html, /Tied/);
+});
+
 test("uses flame icon glow class for the leader outside FINAL_RESULTS", () => {
   const html = renderToStaticMarkup(
     <StandingsSurface

@@ -396,7 +396,7 @@ test("crowns a single champion in the genre face, gold, over the winning texture
   assert.doesNotMatch(html, /team-wordmark-neon/);
 });
 
-test("keeps a tied final as heat text with no single team's kit", () => {
+test("names each team in a tied final in its own wordmark, with no single team's texture", () => {
   const html = renderStage({
     ...buildSnapshot(Phase.FINAL_RESULTS),
     teams: themedTeams.map((team) => ({ ...team, totalScore: 15 })),
@@ -404,6 +404,7 @@ test("keeps a tied final as heat text with no single team's kit", () => {
   });
 
   assert.match(html, /It&#x27;s a Tie/);
-  assert.match(html, /(Molten Metal|Disco Inferno) &amp; (Molten Metal|Disco Inferno)/);
-  assert.doesNotMatch(html, /data-team-ambient|data-team-wordmark/);
+  assert.match(html, /data-team-wordmark="[^"]*"[^>]*>(Molten Metal|Disco Inferno)<[\s\S]*&amp;[\s\S]*>(Molten Metal|Disco Inferno)</);
+  assert.doesNotMatch(html, /data-team-ambient/);
+  assert.doesNotMatch(html, /data-team-wordmark="winner"/);
 });

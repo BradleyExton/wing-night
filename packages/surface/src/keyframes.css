@@ -19,7 +19,7 @@
  * So the package ships the definitions next to the tokens that name them, and a
  * consumer imports this file the way apps/client/src/main.tsx does. That is the
  * shape the wider crack wants too: packages/cast's ten `cast-*` keyframes and
- * the minigames' `fappy-scene-enter` / `schlonic-scene-enter` are coupled to
+ * the minigames' `scene-enter` / `scene-callout` are coupled to
  * apps/client/src/index.css exactly this way, and each should move beside its
  * own package's styles the same way. (Not migrated here — out of scope.)
  */
@@ -77,5 +77,30 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* A clock in its last seconds, on the TV and the tablet alike (DESIGN.md §8):
+ * a scale throb, not an opacity blink. The host's timers blinked with `pulse`
+ * while the TV's throbbed; it lives here because both surfaces' tokens name it. */
+@keyframes heatpulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+/* The TV's one phase entrance (DESIGN.md §8): a subtle fade as a new stage
+ * mounts. Eating, round results and the minigame takeover used to cut hard
+ * while the other stages each chose their own duration. */
+@keyframes stage-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

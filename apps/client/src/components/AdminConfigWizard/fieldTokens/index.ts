@@ -29,8 +29,9 @@ export const sectionRoot = "flex flex-col gap-3";
 
 export const sectionHint = "text-sm text-muted";
 
+// 44px like every other touch target on the tablet (DESIGN.md §2.1); it was ~26px.
 export const removeButton =
-  "rounded-md border border-text/20 px-2 py-1 text-xs text-muted transition hover:border-danger hover:text-danger disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-text/20 px-3 text-xs text-muted transition hover:border-danger hover:text-danger disabled:cursor-not-allowed disabled:opacity-40";
 
 export const addRowButton =
   "rounded-md border border-dashed border-text/30 px-4 py-3 text-sm font-semibold text-muted transition hover:border-primary hover:text-text disabled:cursor-not-allowed disabled:opacity-40";

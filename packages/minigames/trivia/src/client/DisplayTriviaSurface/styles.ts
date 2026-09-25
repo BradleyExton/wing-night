@@ -1,7 +1,7 @@
 // Question Card (DESIGN.md §2.12): the marquee row the rest of the show wears,
 // and under it one question at the largest size the TV can carry.
 export const stage =
-  "flex h-full w-full flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)] p-[clamp(0.8rem,1.4vw,1.6rem)]";
+  "flex h-full w-full flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)]";
 
 // The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 

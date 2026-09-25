@@ -11,7 +11,7 @@ export const introDescription =
 export const hint = "m-0 text-[clamp(1rem,1.6vw,1.6rem)] italic text-muted";
 
 export const stage =
-  "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)] bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
+  "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)]";
 
 // The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 
@@ -36,7 +36,7 @@ export const arenaArea = `relative flex min-h-0 flex-1 overflow-hidden rounded-2
 export const venuePlaque =
   "pointer-events-none absolute left-1/2 top-[clamp(0.6rem,1.2vh,1.2rem)] z-10 -translate-x-1/2 rounded-md bg-bg/70 px-[0.9em] py-[0.35em] text-[clamp(0.9rem,1.1vw,1.4rem)] font-extrabold uppercase tracking-[0.22em] text-text/85";
 
-export const runEnter = "h-full w-full motion-safe:animate-[schlonic-scene-enter_420ms_ease-out_both]";
+export const runEnter = "h-full w-full motion-safe:animate-[scene-enter_420ms_ease-out_both]";
 
 export const resultOverlay = `pointer-events-none absolute inset-0 z-10 flex items-center justify-center ${sceneZoneVeil}`;
 

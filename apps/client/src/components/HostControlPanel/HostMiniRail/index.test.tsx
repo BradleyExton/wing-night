@@ -51,11 +51,11 @@ test("renders pre-game when total rounds metadata is invalid", () => {
   assert.doesNotMatch(html, /Round 1 of 0/);
 });
 
-test("hides the briefing's sauce and minigame outside MINIGAME_INTRO", () => {
+test("shows the round's sauce and minigame on every phase, not just the briefing", () => {
   const html = renderMiniRail(buildSnapshot(Phase.EATING));
 
-  assert.doesNotMatch(html, /Frank/);
-  assert.doesNotMatch(html, />Trivia</);
+  assert.match(html, /Frank/);
+  assert.match(html, />Trivia</);
 });
 
 test("resolves active team using phase rules and fallback labels", () => {

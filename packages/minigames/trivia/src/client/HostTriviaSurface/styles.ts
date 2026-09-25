@@ -27,7 +27,7 @@ export const introDescription = "max-w-3xl text-sm leading-6 text-muted";
 // column and leave 355px of dead air above and below it, which measured out
 // at a 36% canvas share — the second worst of the nine.
 export const promptCard =
-  "flex flex-col overflow-hidden rounded-[1.75rem] border border-text/10 bg-gradient-to-br from-surfaceAlt to-surface";
+  "flex flex-col overflow-hidden rounded-2xl border border-text/10 bg-gradient-to-br from-surfaceAlt to-surface";
 
 // Only at play. At intro the same card is a deck panel with no definite height
 // to fill, and `h-full` there would resolve against nothing.
@@ -60,7 +60,7 @@ export const answerValue =
 // rather than leaving the canvas half empty on the one beat that is already a
 // fault.
 export const statusNote =
-  "flex h-full min-h-0 items-center justify-center rounded-[1.75rem] border border-primary/20 bg-primary/10 px-4 py-3 text-center text-base font-medium text-muted";
+  "flex h-full min-h-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-center text-base font-medium text-muted";
 
 // The foot row (§4, `actions`). The layout gives this row the dock gutter as
 // right padding, which is what moved INCORRECT out from under the corner

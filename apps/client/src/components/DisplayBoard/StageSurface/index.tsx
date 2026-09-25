@@ -131,6 +131,15 @@ const FinalResultsBody = ({ stageViewModel, leadingTeams }: StageBodyProps): JSX
       winnerTheme={
         winner === null ? null : (stageViewModel.teamThemeByTeamId.get(winner.id) ?? null)
       }
+      tiedTeams={
+        winner === null
+          ? leadingTeams.map((team) => ({
+              id: team.id,
+              name: team.name,
+              theme: stageViewModel.teamThemeByTeamId.get(team.id) ?? null
+            }))
+          : []
+      }
     />
   );
 };
@@ -211,11 +220,13 @@ export const StageSurface = (): JSX.Element => {
   return (
     <article className={surfaceClassName}>
       {shouldRenderStageContextHeader && <StageContextHeader />}
-      {shouldWrapStageBody ? (
-        <div className={styles.stageBody}>{stageBodyElement}</div>
-      ) : (
-        stageBodyElement
-      )}
+      <div key={effectiveStageMode} className={styles.stageEnter}>
+        {shouldWrapStageBody ? (
+          <div className={styles.stageBody}>{stageBodyElement}</div>
+        ) : (
+          stageBodyElement
+        )}
+      </div>
     </article>
   );
 };

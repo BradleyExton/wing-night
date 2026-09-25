@@ -5,7 +5,7 @@ import { stageStatusLine } from "@wingnight/surface";
 // marquee and the status line leave. The ember stage is DRAWING's showtime material (§2.5),
 // shared so the two minigames read as the same show.
 export const container =
-  "flex h-full min-h-0 flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)] bg-[radial-gradient(ellipse_at_top,#2a1306_0%,#0f0a08_60%,#050505_100%)] p-[clamp(0.8rem,1.4vw,1.6rem)]";
+  "flex h-full min-h-0 flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)]";
 
 export const boardArea =
   "relative grid min-h-0 flex-1 justify-items-center gap-[clamp(0.4rem,1vh,0.9rem)] px-[clamp(1rem,3vw,3rem)] [grid-template-rows:1fr_auto]";

@@ -3,9 +3,10 @@ import { isHouseStylesFile as isStylesFile } from "./houseComponentPaths.mjs";
 // A literal colour in any of the forms CSS accepts inline: hex, and the rgb/hsl functions with
 // or without alpha. A token colour that needs an alpha inside an arbitrary value is written
 // `theme(colors.gold/35%)`, which Tailwind resolves at build time and this pattern ignores.
-// Not `\b` before the function name: Tailwind writes spaces as underscores, and `_rgba(` has no
-// word boundary in it.
-const LITERAL_COLOR_PATTERN = /#[0-9a-fA-F]{3,8}\b|(?<![A-Za-z])(?:rgba?|hsla?)\(/;
+// No `\b` on either side: Tailwind writes spaces as underscores, and neither `_rgba(` nor
+// `#2a1306_0%` has a word boundary where one would be looked for — the second hid a whole
+// gradient from this rule. Lookarounds on letters and digits instead.
+const LITERAL_COLOR_PATTERN = /#[0-9a-fA-F]{3,8}(?![0-9A-Za-z])|(?<![A-Za-z])(?:rgba?|hsla?)\(/;
 
 // Scene art is licensed to carry its own palette (DESIGN.md §2.4, §2.5, §2.7, §2.9, §2.11): a
 // dusk sky or a zone's grass is not chrome and has no token. A styles.ts keeps such a string in

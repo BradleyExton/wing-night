@@ -4,8 +4,11 @@
 // in world units multiplies by it.
 export const frame = "relative flex h-full min-h-0 w-full items-center justify-center [container-type:size]";
 
-export const scene =
-  "relative h-[min(100cqh,56.25cqw)] w-[min(100cqw,177.7778cqh)] overflow-hidden [container-type:size] [--fappy-unit:0.625cqw] bg-[linear-gradient(180deg,#160c2a_0%,#4a1f3f_58%,#c2582c_93.2%,#d6ac63_93.3%,#b58a45_100%)]";
+// Scene art, licensed by DESIGN.md §2.9: the corridor's dusk sky and sand.
+const sceneDusk =
+  "bg-[linear-gradient(180deg,#160c2a_0%,#4a1f3f_58%,#c2582c_93.2%,#d6ac63_93.3%,#b58a45_100%)]";
+
+export const scene = `relative h-[min(100cqh,56.25cqw)] w-[min(100cqw,177.7778cqh)] overflow-hidden [container-type:size] [--fappy-unit:0.625cqw] ${sceneDusk}`;
 
 export const gateLayer = "absolute inset-0 h-full w-full overflow-visible";
 

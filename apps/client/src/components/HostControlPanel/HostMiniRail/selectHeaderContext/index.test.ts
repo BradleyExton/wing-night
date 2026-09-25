@@ -43,14 +43,26 @@ test("returns sauce and minigame context on the team briefing", () => {
   assert.equal(context.activeTeamName, "Team Alpha");
 });
 
-test("drops sauce and minigame context once the round is under way", () => {
+// The rail says the same four things on every phase (DESIGN.md §2.0A); it used
+// to drop the sauce and the game once the briefing was over.
+test("keeps sauce and minigame context once the round is under way", () => {
   const context = selectHeaderContext(
     buildSnapshot(Phase.EATING, { currentRound: 2, totalRounds: 5 }),
     teamNameByTeamId
   );
 
+  assert.equal(context.sauceLabel, "Frank's");
+  assert.equal(context.minigameLabel, "Trivia");
+});
+
+test("holds a placeholder in the game slot before any round exists", () => {
+  const context = selectHeaderContext(
+    { ...buildSnapshot(Phase.SETUP), currentRoundConfig: null },
+    teamNameByTeamId
+  );
+
   assert.equal(context.sauceLabel, null);
-  assert.equal(context.minigameLabel, null);
+  assert.equal(context.minigameLabel, "No game yet");
 });
 
 test("prefers active-turn team in MINIGAME_PLAY and falls back to active-round team", () => {

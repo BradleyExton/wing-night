@@ -48,7 +48,7 @@ export const counter = chip;
 // `top` clears the shell's chrome row, which is taller than the chip row GEO
 // used to float there because it carries the mini-rail and the play clock.
 export const plate =
-  "absolute left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(4.4rem,8vh,5.2rem)] w-[clamp(14rem,26vw,20rem)] overflow-hidden rounded-[1.25rem] border border-text/15 bg-gradient-to-br from-surfaceAlt to-surface shadow-[0_22px_50px_theme(colors.shade/70%)]";
+  "absolute left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(4.4rem,8vh,5.2rem)] w-[clamp(14rem,26vw,20rem)] overflow-hidden rounded-2xl border border-text/15 bg-gradient-to-br from-surfaceAlt to-surface shadow-[0_22px_50px_theme(colors.shade/70%)]";
 
 export const plateShot = "relative aspect-[4/3]";
 
@@ -89,7 +89,7 @@ export const turnCompleteNote =
 // typed here — the number the spec did not want copied into four more games —
 // is gone with it.
 const tile =
-  "min-w-[8.5rem] rounded-[1.1rem] border px-4 py-2.5 text-right backdrop-blur";
+  "min-w-[8.5rem] rounded-xl border px-4 py-2.5 text-right backdrop-blur";
 
 export const distanceTile = `${tile} border-text/10 bg-bg/88`;
 

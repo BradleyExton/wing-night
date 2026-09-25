@@ -9,14 +9,19 @@ import * as styles from "./styles";
 type FinalResultsStageBodyProps = {
   winnerTeamNames: string[];
   winnerScore: number | null;
-  // The single champion's kit; null for a tie, which stays heat and text.
+  // The single champion's kit; null for a tie.
   winnerTheme: TeamTheme | null;
+  // The teams level at the top when there is no single champion, each in its
+  // own wordmark — a tied finale names its contenders rather than leaving the
+  // stage empty. Empty for a sole winner.
+  tiedTeams: { id: string; name: string; theme: TeamTheme | null }[];
 };
 
 export const FinalResultsStageBody = ({
   winnerTeamNames,
   winnerScore,
-  winnerTheme
+  winnerTheme,
+  tiedTeams
 }: FinalResultsStageBodyProps): JSX.Element => {
   const isTie = winnerTeamNames.length > 1;
   const resolvedTeamName =
@@ -53,6 +58,19 @@ export const FinalResultsStageBody = ({
             sizeClassName={styles.teamWordmark}
             winner
           />
+        ) : isTie ? (
+          tiedTeams.map((team, index) => (
+            <span key={team.id} className={styles.tiedTeam}>
+              {index > 0 && (
+                <span className={styles.tiedJoiner}>{finalResultsStageCopy.tieNameJoiner}</span>
+              )}
+              {team.theme !== null ? (
+                <TeamWordmark name={team.name} theme={team.theme} sizeClassName={styles.tiedWordmark} />
+              ) : (
+                team.name
+              )}
+            </span>
+          ))
         ) : (
           resolvedTeamName
         )}

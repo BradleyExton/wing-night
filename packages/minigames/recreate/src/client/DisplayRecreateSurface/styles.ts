@@ -4,10 +4,10 @@ import { stageStatusLine } from "@wingnight/surface";
 // appraisal underneath. Primary is the studio's accent, success is the tick;
 // nothing else is coloured, per the two-accent budget.
 export const stage =
-  "flex h-full w-full flex-col bg-surfaceAlt p-[clamp(0.75rem,1.5vw,1.5rem)]";
+  "flex h-full w-full flex-col";
 
 export const frameWall =
-  "flex h-full min-h-0 w-full flex-col gap-[clamp(0.75rem,1.4vw,1.4rem)] px-[clamp(1rem,2.5vw,2.5rem)] py-[clamp(0.75rem,1.6vw,1.6rem)]";
+  "flex h-full min-h-0 w-full flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)]";
 
 // The masthead is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D),
 // the same sign every other game hangs; the target count rides in its readout
@@ -38,7 +38,7 @@ export const picturePhoto = "h-full w-full object-contain";
 export const picturePlaceholder =
   "flex h-full w-full items-center justify-center px-[clamp(1rem,2vw,2rem)] text-center text-[clamp(1.2rem,2vw,2.4rem)] italic text-muted";
 
-export const picturePlaceholderBusy = `${picturePlaceholder} animate-pulse text-primary`;
+export const picturePlaceholderBusy = `${picturePlaceholder} motion-safe:animate-pulse text-primary`;
 
 export const pictureCaption =
   "m-0 text-[clamp(0.8rem,1.1vw,1.2rem)] font-semibold uppercase tracking-[0.25em] text-muted";

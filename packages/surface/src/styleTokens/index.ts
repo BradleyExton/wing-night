@@ -102,10 +102,10 @@ export const stageTimer =
   "m-0 font-score text-[clamp(8rem,18vw,16rem)] font-black leading-[0.82] tracking-[-0.06em] tabular-nums text-primary [text-shadow:0_0_60px_theme(colors.primary/30%)]";
 
 export const stageTimerUrgent =
-  "text-heat [text-shadow:0_0_60px_theme(colors.heat/40%)] motion-safe:[animation:pulse_0.7s_ease-in-out_infinite]";
+  "text-heat [text-shadow:0_0_60px_theme(colors.heat/40%)] motion-safe:[animation:heatpulse_0.65s_ease-in-out_infinite]";
 
 export const stageTimerTimeUp =
-  "text-heat [text-shadow:0_0_80px_theme(colors.heat/55%)] motion-safe:[animation:pulse_1.2s_ease-in-out_infinite]";
+  "text-heat [text-shadow:0_0_80px_theme(colors.heat/55%)] motion-safe:[animation:heatpulse_1.2s_ease-in-out_infinite]";
 
 export const stageEyebrowTimeUp =
   "text-[clamp(0.85rem,1.05vw,1.1rem)] font-extrabold uppercase tracking-[0.34em] text-heat motion-safe:[animation:pulse_1.2s_ease-in-out_infinite]";
@@ -161,7 +161,7 @@ export const deckAddButton =
 export const deckChipRow = "ml-auto inline-flex gap-1.5";
 
 export const deckChip =
-  "inline-flex h-9 min-w-[36px] items-center justify-center gap-1.5 rounded-md border border-text/10 bg-text/[0.03] px-2 font-score tabular-nums text-[clamp(0.7rem,0.85vw,0.85rem)] font-extrabold uppercase tracking-[0.14em] text-muted transition hover:border-text/25 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md border border-text/10 bg-text/[0.03] px-2 font-score tabular-nums text-[clamp(0.7rem,0.85vw,0.85rem)] font-extrabold uppercase tracking-[0.14em] text-muted transition hover:border-text/25 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const deckChipActive =
   "border-primary/55 bg-primary/15 text-primary hover:border-primary/70";
@@ -197,6 +197,17 @@ export const ctaBar = "flex bg-bg";
 
 export const ctaButton =
   "inline-flex min-h-[clamp(84px,10vh,112px)] flex-1 items-center justify-center gap-3 bg-primary px-4 text-[clamp(1.2rem,1.7vw,1.6rem)] font-black uppercase tracking-[0.18em] text-bg transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-primary";
+
+// =============================================================================
+// Minigame display stage — the TV's minigame stage: the one dark material every
+// game plays on and the one inset its marquee sits at. The shell's stage body
+// and the dev sandbox's TV frame both wear it, so a game draws content only.
+// RECREATE used to pad itself about twice as far (its marquee sat ~40px lower
+// and further in than the other eight's) on flat `surfaceAlt`; EMOJI painted a
+// warm gradient of its own.
+// =============================================================================
+
+export const minigameDisplayStage = "h-full min-h-0 bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
 
 // =============================================================================
 // Briefing card — the "how to play" card a minigame puts in the host's intro

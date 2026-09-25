@@ -124,15 +124,6 @@ body {
    they ship from that package (packages/surface/src/keyframes.css) and main.tsx
    imports them. */
 
-@keyframes heatpulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.04);
-  }
-}
-
 /* The TV clock's beat in the last ten seconds (MinigameTimerChip): one hit
    per tick, played once from the top on every digit, settling in under a
    second so the next one lands clean. */
@@ -169,9 +160,11 @@ body {
   }
 }
 
-/* FAPPY corridor beats (DESIGN.md §2.9): the next leg slides in as the last
-   one wipes, and the handoff callout drops over the landing with a bounce. */
-@keyframes fappy-scene-enter {
+/* The arcade scenes' two beats (DESIGN.md §2.9, §2.11), shared by FAPPY and
+   SCHLONIC: the next leg or run slides in as the last one wipes, and the
+   handoff callout drops over the scene with a bounce. They were two
+   byte-identical pairs, one per game. */
+@keyframes scene-enter {
   from {
     opacity: 0;
     transform: translate3d(6%, 0, 0);
@@ -182,20 +175,7 @@ body {
   }
 }
 
-/* SCHLONIC zone beats (DESIGN.md §2.9): the next run slides in as the last one
-   wipes, and the handoff callout drops over the hill with a bounce. */
-@keyframes schlonic-scene-enter {
-  from {
-    opacity: 0;
-    transform: translate3d(6%, 0, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-@keyframes schlonic-callout {
+@keyframes scene-callout {
   0% {
     opacity: 0;
     transform: translate3d(0, -28%, 0) scale(0.92);
@@ -210,29 +190,12 @@ body {
   }
 }
 
-@keyframes fappy-callout {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, -28%, 0) scale(0.92);
-  }
-  60% {
-    opacity: 1;
-    transform: translate3d(0, 5%, 0) scale(1.02);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes strikethrough {
+@keyframes strike-in {
   from {
-    transform: translateY(-50%) scaleX(0);
-    opacity: 0;
+    text-decoration-color: transparent;
   }
   to {
-    transform: translateY(-50%) scaleX(1);
-    opacity: 1;
+    text-decoration-color: theme(colors.primary);
   }
 }
 

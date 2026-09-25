@@ -55,12 +55,11 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
   return (
     <>
       <StageHero>
-        {isLocked && (
-          <span className={styles.lockBadge}>
-            {hostControlPanelCopy.setupLockedNoticeLabel}
-          </span>
-        )}
-        <span className={styles.eyebrow}>{headerContext.phaseTitle}</span>
+        {/* One kicker: the lock is the news, so it replaces the phase title
+            rather than stacking a pill over it. */}
+        <span className={styles.eyebrow}>
+          {isLocked ? hostControlPanelCopy.setupLockedNoticeLabel : headerContext.phaseTitle}
+        </span>
         <h1 className={styles.headline}>
           {isLocked
             ? hostControlPanelCopy.setupLockedHeadlineLead

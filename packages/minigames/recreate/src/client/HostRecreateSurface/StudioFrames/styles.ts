@@ -24,7 +24,7 @@ export const photo = "h-full w-full object-contain";
 export const placeholder =
   "flex h-full w-full items-center justify-center px-4 text-center text-sm italic text-muted";
 
-export const placeholderBusy = `${placeholder} animate-pulse`;
+export const placeholderBusy = `${placeholder} motion-safe:animate-pulse`;
 
 export const caption =
   `m-0 ${takeoverLabel}`;

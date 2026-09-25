@@ -19,7 +19,7 @@ export const containerLocked = "cursor-not-allowed opacity-80";
 
 // Each run's zone slides in from the right as the last one wipes; the remount keys it, and the
 // keyframes live in the client's index.css.
-export const runEnter = "h-full w-full motion-safe:animate-[schlonic-scene-enter_420ms_ease-out_both]";
+export const runEnter = "h-full w-full motion-safe:animate-[scene-enter_420ms_ease-out_both]";
 
 // The handoff callout drops over the zone for the beat: a dim pool in the middle of the scene
 // and the next player's name, nothing else.
@@ -27,7 +27,7 @@ export const runEnter = "h-full w-full motion-safe:animate-[schlonic-scene-enter
 const sceneZoneVeil =
   "bg-[radial-gradient(ellipse_at_center,rgba(12,26,16,0.72)_0%,rgba(12,26,16,0)_68%)]";
 
-export const handoffOverlay = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 ${sceneZoneVeil} motion-safe:animate-[schlonic-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]`;
+export const handoffOverlay = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 ${sceneZoneVeil} motion-safe:animate-[scene-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]`;
 
 export const handoffLead = takeoverLabelAccent;
 

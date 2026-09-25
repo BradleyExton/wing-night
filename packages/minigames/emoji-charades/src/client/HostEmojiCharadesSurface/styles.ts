@@ -127,7 +127,7 @@ export const utilityButton = `${takeoverSecondary} h-[52px] flex-1`;
 // turn is over, so this fills the whole canvas, which is the loudest way to say
 // there is nothing left to press while the tablet is still in a team's hands.
 export const turnComplete =
-  "flex h-full min-h-0 flex-col items-center justify-center gap-2 rounded-[1.75rem] border border-primary/25 bg-primary/10 px-6 py-5 text-center";
+  "flex h-full min-h-0 flex-col items-center justify-center gap-2 rounded-2xl border border-primary/25 bg-primary/10 px-6 py-5 text-center";
 
 export const turnCompleteTitle =
   "text-[clamp(1.1rem,1.6vw,1.5rem)] font-extrabold uppercase tracking-[0.12em] text-text";
@@ -135,4 +135,4 @@ export const turnCompleteTitle =
 export const turnCompleteHint = "text-sm font-medium text-text/80";
 
 export const waitingNote =
-  "flex h-full min-h-0 items-center justify-center rounded-[1.75rem] border border-text/10 bg-surfaceAlt px-6 py-5 text-center text-base font-medium text-muted";
+  "flex h-full min-h-0 items-center justify-center rounded-2xl border border-text/10 bg-surfaceAlt px-6 py-5 text-center text-base font-medium text-muted";

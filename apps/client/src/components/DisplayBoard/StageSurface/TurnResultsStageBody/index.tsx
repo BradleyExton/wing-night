@@ -49,16 +49,17 @@ export const TurnResultsStageBody = ({
         {turnResultsStageCopy.eyebrow}
       </span>
       <p className={`${styles.beatBase} ${styles.beatDelay2} ${styles.teamName}`}>
-        {justFinishedTeamTheme !== null ? (
-          <TeamWordmark
-            name={resolvedTeamName}
-            theme={justFinishedTeamTheme}
-            sizeClassName={styles.teamWordmark}
-          />
-        ) : (
-          resolvedTeamName
-        )}
-        <span className={styles.strikethrough} aria-hidden />
+        <span className={styles.struck}>
+          {justFinishedTeamTheme !== null ? (
+            <TeamWordmark
+              name={resolvedTeamName}
+              theme={justFinishedTeamTheme}
+              sizeClassName={styles.teamWordmark}
+            />
+          ) : (
+            resolvedTeamName
+          )}
+        </span>
       </p>
       {turnTiles.length > 0 && (
         <span className={`${styles.beatBase} ${styles.beatDelay3} ${styles.dotsRow}`}>

@@ -1,3 +1,5 @@
+import { minigameDisplayStage } from "@wingnight/surface";
+
 export const container = "min-h-[100dvh] bg-bg px-4 py-5 text-text md:px-6 md:py-6 2xl:px-8";
 
 export const headingBlock = "mx-auto w-full max-w-[2200px]";
@@ -59,4 +61,7 @@ export const hostShell =
 export const hostCanvas =
   "relative flex h-full min-h-0 flex-col p-[clamp(1rem,2vw,1.75rem)]";
 
-export const displayShell = "h-full w-full overflow-hidden bg-surfaceAlt";
+// The TV's own stage, so a sandboxed game sits on the material and at the inset it
+// has in the room — `surfaceAlt` here used to show games that paint no stage of
+// their own (TRIVIA, SONG_GUESS) on a grey the TV never draws.
+export const displayShell = `${minigameDisplayStage} w-full overflow-hidden`;

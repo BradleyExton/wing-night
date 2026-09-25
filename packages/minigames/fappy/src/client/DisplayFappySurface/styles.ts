@@ -1,7 +1,7 @@
 import { stageStatusLine } from "@wingnight/surface";
 
 export const stage =
-  "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)] bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
+  "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)]";
 
 // Scene art, licensed by DESIGN.md §2.9: the corridor's night sky. Not chrome, so no token.
 const sceneNight = "bg-[#160c2a]";
@@ -9,12 +9,12 @@ const sceneNight = "bg-[#160c2a]";
 export const arenaArea = `relative flex min-h-0 flex-1 overflow-hidden rounded-2xl border-2 border-ember/20 ${sceneNight} shadow-[inset_0_0_40px_theme(colors.shade/55%)]`;
 
 // Each leg's corridor slides in as the last one wipes; the remount keys it.
-export const legEnter = "h-full w-full motion-safe:animate-[fappy-scene-enter_480ms_ease-out_both]";
+export const legEnter = "h-full w-full motion-safe:animate-[scene-enter_480ms_ease-out_both]";
 
 // The handoff callout sits high over the corridor, clear of the landing
 // plateau the room is watching, and drops in with a bounce.
 export const handoffOverlay =
-  "pointer-events-none absolute inset-x-0 top-[7%] z-20 flex justify-center px-[8%] motion-safe:animate-[fappy-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
+  "pointer-events-none absolute inset-x-0 top-[7%] z-20 flex justify-center px-[8%] motion-safe:animate-[scene-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
 
 export const handoffCard =
   "flex flex-col items-center gap-1 rounded-2xl border-[3px] border-primary/70 bg-gradient-to-b from-surface to-bg px-[clamp(2rem,4vw,4rem)] py-[clamp(0.8rem,1.4vh,1.4rem)] shadow-[0_0_60px_theme(colors.primary/30%),0_14px_32px_theme(colors.shade/60%)]";

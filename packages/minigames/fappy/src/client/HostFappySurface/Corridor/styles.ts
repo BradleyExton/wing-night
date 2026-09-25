@@ -17,7 +17,7 @@ export const containerLocked = "cursor-not-allowed opacity-80";
 
 // Each leg's corridor slides in from the right as the last one wipes; the
 // remount keys it, the keyframes live in the client's index.css.
-export const legEnter = "h-full w-full motion-safe:animate-[fappy-scene-enter_480ms_ease-out_both]";
+export const legEnter = "h-full w-full motion-safe:animate-[scene-enter_480ms_ease-out_both]";
 
 // The handoff callout drops over the corridor for the beat: a dim pool in
 // the middle of the scene and the next player's name, nothing else.
@@ -26,7 +26,7 @@ export const legEnter = "h-full w-full motion-safe:animate-[fappy-scene-enter_48
 export const sceneNightVeil =
   "bg-[radial-gradient(ellipse_at_center,rgba(22,12,42,0.7)_0%,rgba(22,12,42,0)_68%)]";
 
-export const handoffOverlay = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 ${sceneNightVeil} motion-safe:animate-[fappy-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]`;
+export const handoffOverlay = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 ${sceneNightVeil} motion-safe:animate-[scene-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]`;
 
 export const handoffLead = takeoverLabelAccent;
 

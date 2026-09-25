@@ -14,7 +14,7 @@ import { takeoverLabelAccent } from "@wingnight/surface";
 const sceneNightVeil =
   "bg-[radial-gradient(ellipse_at_center,rgba(22,12,42,0.82)_0%,rgba(22,12,42,0)_72%)]";
 
-const ENTER = "motion-safe:animate-[fappy-callout_420ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
+const ENTER = "motion-safe:animate-[scene-callout_420ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
 
 export const overlay = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(0.4rem,1vh,0.9rem)] ${sceneNightVeil} ${ENTER}`;
 
@@ -22,7 +22,7 @@ export const overlay = `pointer-events-none absolute inset-0 z-10 flex flex-col 
 // it never lands on top of the tumble the player needs to see. The delay is
 // folded into the animation SHORTHAND — a separate `animation-delay` utility
 // is overwritten by the shorthand and does nothing.
-export const overlayRespawn = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(0.4rem,1vh,0.9rem)] ${sceneNightVeil} motion-safe:animate-[fappy-callout_420ms_cubic-bezier(0.2,1.4,0.4,1)_550ms_both]`;
+export const overlayRespawn = `pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(0.4rem,1vh,0.9rem)] ${sceneNightVeil} motion-safe:animate-[scene-callout_420ms_cubic-bezier(0.2,1.4,0.4,1)_550ms_both]`;
 
 export const head =
   "h-[clamp(3.5rem,13vh,6rem)] w-[clamp(3.5rem,13vh,6rem)] overflow-hidden rounded-full border-4 border-current shadow-[0_0_2rem_theme(colors.shade/60%)]";

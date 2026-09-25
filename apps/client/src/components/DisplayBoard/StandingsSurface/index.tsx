@@ -47,13 +47,12 @@ export const StandingsSurface = ({
     >
       <DeckChrome />
       {standings.map((team, index) => {
-        // At FINAL_RESULTS every team tied at the top score is a winner —
-        // never crown only the alphabetically-first of a tie.
+        // A tie at the top crowns nobody, at FINAL_RESULTS as at every other
+        // phase: sudden death decides the champion, so every tied bay reads
+        // "Tied" — never "Winner" on all of them, and never only on the
+        // alphabetically-first.
         const isTiedTop = topScore !== null && team.totalScore === topScore;
-        const isLeader =
-          phase === Phase.FINAL_RESULTS
-            ? isTiedTop
-            : isTiedTop && hasStrictLeader;
+        const isLeader = isTiedTop && hasStrictLeader;
         const metaLabel =
           isLeader && phase === Phase.FINAL_RESULTS
             ? displayBoardCopy.standingWinnerLabel

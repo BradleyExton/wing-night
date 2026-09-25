@@ -1,7 +1,7 @@
 import { stageStatusLine } from "@wingnight/surface";
 
 export const stage =
-  "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)] bg-bg p-[clamp(0.8rem,1.4vw,1.6rem)]";
+  "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)]";
 
 // The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 

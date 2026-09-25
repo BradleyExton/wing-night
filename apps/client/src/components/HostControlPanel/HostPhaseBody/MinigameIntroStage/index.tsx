@@ -28,9 +28,16 @@ export const MinigameIntroStage = (): JSX.Element => {
       <StageHero>
         <span className={styles.eyebrow}>{headerContext.phaseTitle}</span>
         <h1 className={styles.headline}>
-          {minigameType !== null
-            ? hostControlPanelCopy.minigameName(minigameType)
-            : hostControlPanelCopy.minigameSectionTitle}
+          {minigameType !== null ? (
+            <>
+              {hostControlPanelCopy.minigameHeadlineLead}{" "}
+              <span className={styles.headlineAccent}>
+                {hostControlPanelCopy.minigameName(minigameType)}
+              </span>
+            </>
+          ) : (
+            hostControlPanelCopy.minigameSectionTitle
+          )}
         </h1>
         <p className={styles.meta}>
           {minigameType !== null

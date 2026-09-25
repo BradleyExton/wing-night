@@ -26,8 +26,13 @@ export const teamName =
 // colour shows through at full strength under the strike, which is the point.
 export const teamWordmark = "text-[clamp(4rem,11vw,13rem)] leading-[0.9]";
 
-export const strikethrough =
-  "pointer-events-none absolute left-[8%] right-[8%] top-1/2 h-1 origin-center -translate-y-1/2 rounded-full bg-primary opacity-0 animate-[strikethrough_500ms_ease_forwards] [animation-delay:1200ms] motion-reduce:opacity-100 motion-reduce:animate-none motion-reduce:[transform:translateY(-50%)]";
+// The team is struck through, one stroke per line of its name. It used to be a
+// single bar across the middle of the box, which on a two-line wordmark
+// (DISCO / INFERNO) ran through the gap between the lines and crossed out
+// nothing. A text decoration follows the lines; `strike-in` fades it in on the
+// beat the bar used to draw on (index.css).
+export const struck =
+  "line-through decoration-primary decoration-[0.07em] [text-decoration-skip-ink:none] motion-safe:[animation:strike-in_500ms_ease_1200ms_both]";
 
 export const dotsRow =
   "inline-flex items-center gap-[clamp(0.5rem,1vw,1rem)]";

@@ -220,6 +220,8 @@ export const hostCopy = {
     "Mark the active team's answer as correct or incorrect.",
   minigameSectionTitle: "Mini-Game",
   minigameName: formatMinigameName,
+  minigameHeadlineLead: "Up next:",
+  railNoGameLabel: "No game yet",
   minigameIntroDescription: (minigame: MinigameType): string =>
     `${formatMinigameName(minigame)} is queued. Call the team up, explain it, then start eating once they are set.`,
   minigamePlayDescription: (minigame: MinigameType): string =>
@@ -238,9 +240,11 @@ export const hostCopy = {
   compactStandingsTitle: "Standings Snapshot",
   compactNoStandingsLabel: "No teams available for standings yet.",
   compactLeaderLabel: "Leader",
-  compactLeadSuffix: "leads.",
-  compactWinsSuffix: "wins.",
-  compactTiedLeadSuffix: "tied.",
+  // One headline pattern across the host (DESIGN.md §2.0A): a white lead and the
+  // phrase that matters last, in `primary`.
+  compactLeadPrefix: "In the lead:",
+  compactWinsPrefix: "Champion:",
+  compactTiedLeadPrefix: "Level at the top:",
   compactTiedTeamsLabel: (teamCount: number): string => `${teamCount} teams`,
   compactAllTiedLabel: "All teams",
   compactRosterValue: (

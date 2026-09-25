@@ -21,6 +21,13 @@ export const fullStageCanvas =
 // It keeps the inset the display row used to carry.
 export const stageCanvas = `${fullStageCanvas} px-4 py-3 md:px-8 md:py-4 [@media(max-height:850px)]:py-2`;
 
+// Every stage mounts inside this, keyed by stage mode, so a phase change is one
+// subtle fade of one duration on every stage (DESIGN.md §8) — the stages' own
+// staged beats play inside it. `stage-enter` lives in the surface package's
+// keyframes.css; reduced motion gets the cut.
+export const stageEnter =
+  "h-full min-h-0 motion-safe:[animation:stage-enter_400ms_cubic-bezier(0.2,0.8,0.2,1)_both]";
+
 export const stageBody =
   "relative z-10 h-full min-h-0 px-4 pb-3 pt-1 md:px-8 md:pb-4 2xl:px-12";
 

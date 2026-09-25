@@ -2,7 +2,7 @@
 // and under it a near-empty stage — there is nothing to look at while a song
 // plays, and pretending otherwise is how a listening game gets loud.
 export const stage =
-  "flex h-full w-full flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)] p-[clamp(0.8rem,1.4vw,1.6rem)]";
+  "flex h-full w-full flex-col gap-[clamp(0.7rem,1.2vh,1.2rem)]";
 
 // The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 

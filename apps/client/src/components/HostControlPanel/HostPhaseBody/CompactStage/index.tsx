@@ -45,14 +45,14 @@ export const CompactStage = (): JSX.Element | null => {
         <h1 className={styles.headline}>
           {leader !== null ? (
             <>
+              {isTiedLead
+                ? hostControlPanelCopy.compactTiedLeadPrefix
+                : isFinalResults
+                  ? hostControlPanelCopy.compactWinsPrefix
+                  : hostControlPanelCopy.compactLeadPrefix}{" "}
               <span className={styles.headlineAccent}>
                 {isTiedLead ? tiedHeadlineAccent : leader.name}
-              </span>{" "}
-              {isTiedLead
-                ? hostControlPanelCopy.compactTiedLeadSuffix
-                : isFinalResults
-                  ? hostControlPanelCopy.compactWinsSuffix
-                  : hostControlPanelCopy.compactLeadSuffix}
+              </span>
             </>
           ) : (
             hostControlPanelCopy.compactStandingsTitle

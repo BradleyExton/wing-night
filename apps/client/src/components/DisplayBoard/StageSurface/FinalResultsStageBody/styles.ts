@@ -22,14 +22,24 @@ export const champion =
 export const championIcon =
   "h-[1.4em] w-[1.4em] [filter:drop-shadow(0_0_12px_theme(colors.gold/70%))]";
 
+// A draw is not an emergency and not a win: `primary`, not `heat` (urgency) or
+// `gold` (a champion) — §0.1.
 export const tie =
-  "inline-flex items-center gap-[0.7em] text-[clamp(1rem,1.4vw,1.6rem)] font-extrabold uppercase tracking-[0.42em] text-heat";
+  "inline-flex items-center gap-[0.7em] text-[clamp(1rem,1.4vw,1.6rem)] font-extrabold uppercase tracking-[0.42em] text-primary";
 
 export const tieIcon =
-  "h-[1.4em] w-[1.4em] [filter:drop-shadow(0_0_12px_theme(colors.heat/70%))]";
+  "h-[1.4em] w-[1.4em] [filter:drop-shadow(0_0_12px_theme(colors.primary/70%))]";
 
 export const tiedTeamNames =
-  "m-0 text-[clamp(3rem,8vw,10rem)] font-black uppercase leading-[0.9] tracking-[-0.03em] text-heat [text-shadow:0_0_100px_theme(colors.heat/45%),0_0_240px_theme(colors.heat/25%)]";
+  "m-0 flex max-w-[90%] flex-wrap items-baseline justify-center gap-x-[0.3em] text-[clamp(2.4rem,6vw,7.5rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] text-text";
+
+export const tiedTeam = "inline-flex items-baseline gap-x-[0.3em]";
+
+export const tiedJoiner = "text-[0.6em] text-primary";
+
+// Each contender in its own wordmark; `block` because the wordmark is inline by
+// design and its size needs a box.
+export const tiedWordmark = "block text-[clamp(2.4rem,6vw,7.5rem)] leading-[0.95]";
 
 export const tieHint =
   "m-0 text-[clamp(1.1rem,1.8vw,2.2rem)] font-extrabold uppercase tracking-[0.16em] text-muted";

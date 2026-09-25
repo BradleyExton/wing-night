@@ -236,6 +236,11 @@ test("no-hardcoded-hex-colors-in-styles", () => {
           errors: [{ messageId: "noHardcodedHexColor" }]
         },
         {
+          filename: "/repo/packages/minigames/emoji-charades/src/client/Example/styles.ts",
+          code: "export const container = 'bg-[radial-gradient(ellipse_at_top,#2a1306_0%,#050505_100%)]';",
+          errors: [{ messageId: "noHardcodedHexColor" }]
+        },
+        {
           filename: "/repo/apps/client/src/components/Example/styles.ts",
           code: "export const className = `text-[#FBBF24]`;",
           errors: [{ messageId: "noHardcodedHexColor" }]

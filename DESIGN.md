@@ -138,8 +138,8 @@ Display UI (TV-first, spectator-first)
 
 The Host shell is a single-canvas tablet controller. Every phase composes the same six pieces. Future Host surfaces should reuse this language instead of inventing parallel shapes — the utility classes live in `packages/surface/src/styleTokens/index.ts`, imported as `@wingnight/surface`. They used to live in `apps/client/src/components/HostControlPanel/styleTokens/`, which is why the minigame packages could not reach them: a minigame may not import `apps/client` (`AGENTS.md` §3.1) and so could not obey the rule in `AGENTS.md` §16 that told it to use these. Moving them into a package is what made both rules obeyable at once, and it is the same reason `packages/cast` exists for the bird.
 
--   **Mini-rail** — the top strip of every stage hero. Tiny inline rail showing round number, sauce, minigame, and the active-team color pill. Replaces the older kicker + title + description chrome; rail is data, not navigation. The pill is the team's own colour — border and wash mixed from the team's `--tint` — not `primary` for every team with only the dot changing (2026-09-24).
--   **Stage hero** — left ~65% of the canvas. Dramatic eyebrow + headline + meta, or a live datum like a timer or score. Subtle radial-gradient glow backdrop. Phases pick their own glow variant (default vs eating).
+-   **Mini-rail** — the top strip of every stage hero. Tiny inline rail showing round number, sauce, minigame, and the active-team color pill — the same four on every phase (since 2026-09-24; it used to carry the sauce and the game on the briefing alone), with "No game yet" holding the game slot before a round exists. Replaces the older kicker + title + description chrome; rail is data, not navigation. The pill is the team's own colour — border and wash mixed from the team's `--tint` — not `primary` for every team with only the dot changing (2026-09-24).
+-   **Stage hero** — left ~65% of the canvas. Dramatic eyebrow + headline + meta, or a live datum like a timer or score. One eyebrow, never a stack of kickers (the locked lineup had three), and one headline pattern: a white lead with the phrase that matters last, in `primary` — "Build the **lineup.**", "In the lead: **Molten Metal**", "Up next: **Schlonic**". Subtle radial-gradient glow backdrop. Phases pick their own glow variant (default vs eating).
 -   **Control deck** — right ~35% of the canvas. Vertical stack of deck-groups: small uppercase group head + tappable rows + inline create form. No card chrome — rows are separated by 1px dividers, not borders.
 -   **CTA + heat strip** — full-bleed bottom row of the viewport. Primary action button always visible per §2.1, on every phase the host drives. A heat-color shimmer strip sits across the top of the bar to add energy without competing with the button.
 -   **Override entry** — a `⋯ Overrides` button lives at the foot of the deck. It opens the floating override dock. Override actions are never inline in the deck flow — they're an escape hatch, not a primary path.
@@ -1960,6 +1960,16 @@ night, so the stage above never reflows
 
 ------------------------------------------------------------------------
 
+## 3.3 Radius scale
+
+Three steps and a pill (2026-09-24): `rounded-md` / `rounded-xl` for a
+control (a shell control is `md`, a takeover control `xl`), `rounded-2xl` for
+a panel or card, `rounded-full` for a pill or dot. No arbitrary radii — the
+`[1.75rem]`, `[1.25rem]` and `[1.1rem]` a few games had grown are gone. A
+shape that is not a box (an oval glow, a timer tip) is not on the scale.
+
+------------------------------------------------------------------------
+
 # 4) Typography
 
 Display: - Round headline: text-5xl to text-7xl - Timer: text-7xl or
@@ -2039,6 +2049,11 @@ above ~1.2rem so it reaches §4.1's minimums at 4K.
 ## FINAL_RESULTS
 
 -   Winning team highlighted with gold
+-   A tie at the top crowns nobody: sudden death decides the champion, so
+    the deck reads "Tied" on the level bays (never "Winner" on all of them)
+    and the stage names each contender in its own wordmark under "It's a
+    Tie" in `primary` — not `heat`, which is urgency, and not `gold`, which
+    waits for the champion.
 -   Optional subtle celebration effect
 -   No rainbow or multi-color explosion
 
@@ -2080,6 +2095,23 @@ liveliness and avoids distraction
 -   Display surfaces with ambient motion must provide a reduced-motion fallback (`prefers-reduced-motion`) that disables non-essential infinite animations.
 
 Avoid: - Constant motion - Background animations - Long transitions
+
+One of each (2026-09-24):
+-   **Phase entrance.** Every TV stage mounts inside one wrapper keyed by
+    stage mode and fades in with `stage-enter` (400ms, ease-out). Eating,
+    round results and the minigame takeover used to cut hard while the other
+    stages chose 500, 600 or 700ms; the stages' own staged beats still play
+    inside the fade.
+-   **Urgency.** A clock in its last seconds throbs with `heatpulse` (a 4%
+    scale beat) on the TV and the tablet alike; the host's timers used to
+    blink their opacity instead. Both keyframes live in
+    `packages/surface/src/keyframes.css`.
+-   **Scene beats.** FAPPY and SCHLONIC share `scene-enter` and
+    `scene-callout`; they were byte-identical pairs, one per game.
+-   A staggered animation folds its delay into the shorthand
+    (`[animation:pulse_2s_…_0.3s_infinite]`): a separate `animation-delay`
+    next to `animate-*` is overwritten, which had DRAWING's four sparks
+    pulsing in lockstep.
 
 ------------------------------------------------------------------------
 
