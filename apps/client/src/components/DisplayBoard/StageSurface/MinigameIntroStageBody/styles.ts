@@ -6,7 +6,7 @@ export const container =
   "relative flex h-full flex-col items-center justify-center gap-[clamp(0.75rem,1.6vw,2rem)] overflow-hidden px-[clamp(2rem,4vw,4rem)] py-[clamp(2rem,4vw,4rem)] text-center";
 
 export const ambient =
-  "pointer-events-none absolute inset-[-10%] bg-[radial-gradient(ellipse_at_20%_30%,theme(colors.primary/12%)_0%,transparent_45%),radial-gradient(ellipse_at_80%_70%,theme(colors.heat/10%)_0%,transparent_45%)]";
+  "pointer-events-none absolute inset-[-10%] bg-[radial-gradient(ellipse_at_20%_30%,theme(colors.primary/12%)_0%,transparent_45%),radial-gradient(ellipse_at_80%_70%,theme(colors.ember/10%)_0%,transparent_45%)]";
 
 // z-10 lifts every beat over the genre texture (TeamAmbient, z-1).
 export const beatBase =

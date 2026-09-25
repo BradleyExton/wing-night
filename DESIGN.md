@@ -60,6 +60,19 @@ primary (orange) is the default emphasis color. - heat (red) is reserved
 for urgency or escalation. - gold is reserved for winner moments or
 celebration. - success/danger are functional only (never decorative).
 
+Gold, audited 2026-09-24. It stays on: the deck's leader lip and leader
+score (§2.2C), final results, the marquee's neon sign and pending points
+(§2.2D), and points won — `revealPoints`, the rail's pending chip, the
+running totals — because points are the turn's celebration. It came off
+everything else it had spread to: the TV's lock-in and tap-to-play overlays
+(now `primary`), the override confirmation (now `danger`, since every
+question it asks throws room state away), the turn-order lock label, the
+host briefing card's frame (one `briefingCard` token for five games, no
+frame colour at all), EMOJI's subject card, SONG_GUESS's answer card,
+DRAWING's prompt pill, the selected tab, loadout kind and ink, and every
+secondary button's hover. A decorative `heat` glow behind the TV briefing
+became `ember`; `heat` is urgency only.
+
 The warm set is material, not accent, and counts against no accent budget:
 - `mutedWarm` / `mutedWarmDim` are `muted`'s counterparts for label text on
   the flame-lit stages, where a cool grey reads wrong against the orange.
@@ -125,7 +138,7 @@ Display UI (TV-first, spectator-first)
 
 The Host shell is a single-canvas tablet controller. Every phase composes the same six pieces. Future Host surfaces should reuse this language instead of inventing parallel shapes — the utility classes live in `packages/surface/src/styleTokens/index.ts`, imported as `@wingnight/surface`. They used to live in `apps/client/src/components/HostControlPanel/styleTokens/`, which is why the minigame packages could not reach them: a minigame may not import `apps/client` (`AGENTS.md` §3.1) and so could not obey the rule in `AGENTS.md` §16 that told it to use these. Moving them into a package is what made both rules obeyable at once, and it is the same reason `packages/cast` exists for the bird.
 
--   **Mini-rail** — the top strip of every stage hero. Tiny inline rail showing round number, sauce, minigame, and the active-team color pill. Replaces the older kicker + title + description chrome; rail is data, not navigation.
+-   **Mini-rail** — the top strip of every stage hero. Tiny inline rail showing round number, sauce, minigame, and the active-team color pill. Replaces the older kicker + title + description chrome; rail is data, not navigation. The pill is the team's own colour — border and wash mixed from the team's `--tint` — not `primary` for every team with only the dot changing (2026-09-24).
 -   **Stage hero** — left ~65% of the canvas. Dramatic eyebrow + headline + meta, or a live datum like a timer or score. Subtle radial-gradient glow backdrop. Phases pick their own glow variant (default vs eating).
 -   **Control deck** — right ~35% of the canvas. Vertical stack of deck-groups: small uppercase group head + tappable rows + inline create form. No card chrome — rows are separated by 1px dividers, not borders.
 -   **CTA + heat strip** — full-bleed bottom row of the viewport. Primary action button always visible per §2.1, on every phase the host drives. A heat-color shimmer strip sits across the top of the bar to add energy without competing with the button.
@@ -708,6 +721,12 @@ bar across the bottom of the screen. `DisplayBoard/StandingsSurface`; the slab's
 ------------------------------------------------------------------------
 
 ## 2.3 Team-Turn Context (Host + Display)
+
+-   **A team's name on the TV is its wordmark** wherever it is the subject:
+    the briefing, the deck, the eating screen (top-right, beside the clock,
+    since 2026-09-24 — it was small tracked caps) and each row of the round
+    results table. The marquee is the exception by design: the name is white
+    light there (ADR-0006).
 
 -   During `EATING`, `MINIGAME_INTRO`, and `MINIGAME_PLAY`, both host and display must show:
     -   Active team name

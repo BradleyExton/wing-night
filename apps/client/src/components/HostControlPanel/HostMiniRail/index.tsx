@@ -37,7 +37,13 @@ export const HostMiniRail = (): JSX.Element => {
       {headerContext.activeTeamName !== null && (
         <>
           <span className={styles.divider} aria-hidden />
-          <span className={styles.teamPill}>
+          <span
+            className={
+              activeTeamColorVariant === null
+                ? styles.teamPill
+                : `${styles.teamPill} ${activeTeamColorVariant.tintClassName}`
+            }
+          >
             <span className={teamDotClassName} aria-hidden />
             {headerContext.activeTeamName}
           </span>

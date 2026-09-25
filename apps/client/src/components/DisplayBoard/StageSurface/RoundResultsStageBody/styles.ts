@@ -41,3 +41,9 @@ export const numTotal = "text-primary";
 
 export const numTotalTop =
   "text-gold [text-shadow:0_0_18px_theme(colors.gold/45%)]";
+
+// Each row names its team in the team's own wordmark, the way the deck and the
+// briefing do. `block` + `truncate` so a long name ellipsises inside the cell;
+// the size clears the 24px legibility floor from 1080p up (docs/team-identity.md).
+export const teamWordmark =
+  "block truncate text-[clamp(1.5rem,1.8vw,2.4rem)] normal-case leading-[1.1] tracking-normal";

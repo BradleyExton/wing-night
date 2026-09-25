@@ -1,4 +1,4 @@
-import { takeoverLabelAccent, takeoverSecondary, verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnight/surface";
+import { briefingCard, takeoverLabelAccent, takeoverSecondary, verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnight/surface";
 
 // DRAWING is a `<TakeoverStage>` with no deck (docs/takeover-layout-api.md §3).
 // The board is not floatable-over: it is the one body on the tablet that the
@@ -22,8 +22,7 @@ import { takeoverLabelAccent, takeoverSecondary, verdictButtonDanger, verdictBut
 // to its own content height.
 export const introRoot = "flex flex-col gap-4";
 
-export const introCard =
-  "rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-5 py-4 text-base leading-6 text-text/90";
+export const introCard = briefingCard;
 
 // The rail row (§4, `counter`), read-only: the prompt the artist is drawing and
 // the points riding on it. The prompt is not a count, but it is the turn's one
@@ -35,7 +34,7 @@ export const introCard =
 // `whitespace-nowrap` on purpose: a wrapped prompt grows the rail row, and this
 // is the one surface where a second line of chrome is paid for in board area.
 export const counterPrompt =
-  "inline-flex shrink-0 items-center gap-3 whitespace-nowrap rounded-full border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-4 py-1";
+  "inline-flex shrink-0 items-center gap-3 whitespace-nowrap rounded-full border-2 border-primary/50 bg-gradient-to-b from-surfaceAlt to-surface px-4 py-1";
 
 export const counterPromptLabel =
   takeoverLabelAccent;
@@ -61,14 +60,14 @@ export const inkRail =
 export const boothPlate =
   "text-center text-[0.62rem] font-extrabold uppercase leading-[1.35] tracking-[0.18em] text-primary";
 
-export const boothPlateRule = "h-px w-8 bg-gold/30";
+export const boothPlateRule = "h-px w-8 bg-text/15";
 
 export const easelArea = "relative min-h-0 min-w-0 flex-1";
 
 // Transient (2s) result line, floated over the board rather than holding a row
 // of its own in the layout.
 export const revealLine =
-  "pointer-events-none absolute left-1/2 top-3 z-10 m-0 -translate-x-1/2 rounded-full border border-gold/40 bg-bg/90 px-4 py-1.5 text-sm font-semibold italic text-text/85";
+  "pointer-events-none absolute left-1/2 top-3 z-10 m-0 -translate-x-1/2 rounded-full border border-text/15 bg-bg/90 px-4 py-1.5 text-sm font-semibold italic text-text/85";
 
 // An empty prompt bank is a fault, and the loudest place to say so is the
 // middle of the board — which also costs no row. It never takes the pointer:
@@ -109,4 +108,4 @@ export const inkLight =
   "h-11 w-11 rounded-full border-2 border-shade/40 bg-[var(--ink-color)] shadow-[inset_0_-4px_8px_theme(colors.shade/45%),inset_0_4px_8px_theme(colors.text/18%),0_0_12px_var(--ink-color)] transition disabled:cursor-not-allowed disabled:opacity-40";
 
 export const inkLightSelected =
-  "outline outline-[3px] outline-offset-2 outline-gold";
+  "outline outline-[3px] outline-offset-2 outline-text";

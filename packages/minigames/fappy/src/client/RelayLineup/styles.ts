@@ -28,7 +28,7 @@ const CHIP =
 export const chip = `${CHIP} border-text/15`;
 
 // Cleared: still legible, deliberately out of the way of the leg in hand.
-export const chipCleared = `${CHIP} border-gold/50 opacity-45`;
+export const chipCleared = `${CHIP} border-text/20 opacity-45`;
 
 // In hand: the team's own colour, lit. `border-current` and the glow both read
 // the fill class the cast resolved for that player's bird, so the chip and the

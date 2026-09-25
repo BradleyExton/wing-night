@@ -55,6 +55,7 @@ const EatingBody = (props: StageBodyProps): JSX.Element => {
     <EatingStageBody
       currentRoundConfig={stageViewModel.currentRoundConfig}
       activeTeamName={stageViewModel.activeTeamName}
+      activeTeamTheme={stageViewModel.activeTeamTheme}
       liveEatingRemainingSeconds={liveEatingRemainingSeconds}
       totalEatingSeconds={
         stageViewModel.eatingTimerSnapshot !== null

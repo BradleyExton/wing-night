@@ -1,4 +1,4 @@
-import { railCounterOverlay, takeoverLabel, takeoverSecondary } from "@wingnight/surface";
+import { briefingCard, railCounterOverlay, takeoverLabel, takeoverSecondary } from "@wingnight/surface";
 
 // SCHLONIC is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the zone
 // is evenly spread scenery — bay, shoreline and skyline — so a chip in one
@@ -21,8 +21,7 @@ import { railCounterOverlay, takeoverLabel, takeoverSecondary } from "@wingnight
 // `rail` and `clock` are both null on this beat, so it draws neither.
 export const introRoot = "flex flex-col gap-3";
 
-export const introCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_theme(colors.gold/16%)]";
+export const introCard = briefingCard;
 
 // The chrome row's read-only counts (§5, `counter`). Glass rather than solid:
 // on a Canvas these float over a bright summer sky instead of sitting on a

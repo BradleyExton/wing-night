@@ -47,8 +47,12 @@ export const miniRailStrong = "text-text";
 
 export const miniRailDivider = "h-1.5 w-1.5 rounded-full bg-text/20";
 
+// Tinted with the team's own `--tint` (the rail composes the team's
+// `tintClassName` onto it), so the pill is the team's colour and not orange for
+// every team with only the dot changing. `primary` is the fallback for a rail
+// with no team to colour. Identity use per §0.1: the team accent on its own chip.
 export const miniRailTeamPill =
-  "inline-flex items-center gap-2 rounded-full border border-primary/45 bg-primary/15 px-3 py-1.5 text-text";
+  "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-text [border-color:color-mix(in_srgb,var(--tint,theme(colors.primary))_45%,transparent)] [background-color:color-mix(in_srgb,var(--tint,theme(colors.primary))_15%,transparent)]";
 
 // Geometry and glow only. The colour comes from the team's own kit, composed
 // by the rail: `dotAccentClassName` fills it and `tintClassName` sets the
@@ -193,6 +197,16 @@ export const ctaBar = "flex bg-bg";
 
 export const ctaButton =
   "inline-flex min-h-[clamp(84px,10vh,112px)] flex-1 items-center justify-center gap-3 bg-primary px-4 text-[clamp(1.2rem,1.7vw,1.6rem)] font-black uppercase tracking-[0.18em] text-bg transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-primary";
+
+// =============================================================================
+// Briefing card — the "how to play" card a minigame puts in the host's intro
+// deck. Five games had it, four byte for byte in a gold frame with a gold inner
+// glow, DRAWING a variant; gold is the winner's colour (§0.1), and the intro is
+// where the team has won nothing yet.
+// =============================================================================
+
+export const briefingCard =
+  "rounded-xl border border-text/10 bg-gradient-to-b from-surface to-bg px-5 py-4 text-base leading-6 text-text/90";
 
 // =============================================================================
 // Rail counter — the turn's counts in the takeover rail's `counter` slot

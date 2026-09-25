@@ -1,4 +1,6 @@
-import type { RoomState } from "@wingnight/shared";
+import type { RoomState, TeamTheme } from "@wingnight/shared";
+
+import { TeamWordmark } from "../../../TeamWordmark";
 
 import { isTimerTimeUp, isTimerUrgent } from "../../../../utils/timerUrgency";
 import { displayBoardCopy } from "../../copy";
@@ -7,6 +9,9 @@ import * as styles from "./styles";
 type EatingStageBodyProps = {
   currentRoundConfig: RoomState["currentRoundConfig"];
   activeTeamName: string | null;
+  // The team on the wings, in its own genre face — the name the whole room
+  // has to see while the clock runs (docs/team-identity.md).
+  activeTeamTheme: TeamTheme | null;
   liveEatingRemainingSeconds: number;
   totalEatingSeconds: number | null;
 };
@@ -14,6 +19,7 @@ type EatingStageBodyProps = {
 export const EatingStageBody = ({
   currentRoundConfig,
   activeTeamName,
+  activeTeamTheme,
   liveEatingRemainingSeconds,
   totalEatingSeconds
 }: EatingStageBodyProps): JSX.Element => {
@@ -51,7 +57,15 @@ export const EatingStageBody = ({
           {activeTeamName !== null && (
             <>
               <span>{displayBoardCopy.eatingActiveTeamLabel}</span>
-              <span className={styles.metaAccentTeam}>{activeTeamName}</span>
+              {activeTeamTheme !== null ? (
+                <TeamWordmark
+                  name={activeTeamName}
+                  theme={activeTeamTheme}
+                  sizeClassName={styles.teamWordmark}
+                />
+              ) : (
+                <span className={styles.metaAccentTeam}>{activeTeamName}</span>
+              )}
             </>
           )}
         </div>

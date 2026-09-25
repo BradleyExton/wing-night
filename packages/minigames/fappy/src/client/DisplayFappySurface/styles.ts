@@ -17,13 +17,13 @@ export const handoffOverlay =
   "pointer-events-none absolute inset-x-0 top-[7%] z-20 flex justify-center px-[8%] motion-safe:animate-[fappy-callout_520ms_cubic-bezier(0.2,1.4,0.4,1)_both]";
 
 export const handoffCard =
-  "flex flex-col items-center gap-1 rounded-2xl border-[3px] border-gold bg-gradient-to-b from-surface to-bg px-[clamp(2rem,4vw,4rem)] py-[clamp(0.8rem,1.4vh,1.4rem)] shadow-[0_0_70px_theme(colors.gold/35%),0_14px_32px_theme(colors.shade/60%)]";
+  "flex flex-col items-center gap-1 rounded-2xl border-[3px] border-primary/70 bg-gradient-to-b from-surface to-bg px-[clamp(2rem,4vw,4rem)] py-[clamp(0.8rem,1.4vh,1.4rem)] shadow-[0_0_60px_theme(colors.primary/30%),0_14px_32px_theme(colors.shade/60%)]";
 
 export const handoffName =
-  "font-voice text-[clamp(2.4rem,5vw,5.2rem)] font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.gold/55%)]";
+  "font-voice text-[clamp(2.4rem,5vw,5.2rem)] font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.primary/45%)]";
 
 export const handoffLine =
-  "text-[clamp(0.8rem,1.3vw,1.4rem)] font-extrabold uppercase tracking-[0.3em] text-gold";
+  "text-[clamp(0.8rem,1.3vw,1.4rem)] font-extrabold uppercase tracking-[0.3em] text-primary";
 
 // Who is up after them, a size down and dimmer, so the room gets the next one
 // off the sofa while the tablet is still changing hands.

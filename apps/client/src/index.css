@@ -279,7 +279,7 @@ body {
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    rgba(251, 191, 36, 0.7) 60deg,
+    theme(colors.primary / 70%) 60deg,
     transparent 120deg,
     transparent 360deg
   );
@@ -291,8 +291,8 @@ body {
   position: absolute;
   inset: 8px;
   border-radius: 50%;
-  background: rgba(10, 6, 6, 0.95);
-  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: theme(colors.shade / 95%);
+  border: 1px solid theme(colors.primary / 35%);
 }
 @media (prefers-reduced-motion: reduce) {
   .heat-locked-lock-halo::before {

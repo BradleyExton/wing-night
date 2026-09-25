@@ -5,16 +5,17 @@ export const lockFrame =
   "heat-locked-lock-halo flex h-[clamp(140px,18vw,230px)] w-[clamp(140px,18vw,230px)] items-center justify-center";
 
 export const lockIcon =
-  "relative z-[1] h-[60%] w-[60%] text-gold [filter:drop-shadow(0_0_16px_theme(colors.gold/70%))]";
+  "relative z-[1] h-[60%] w-[60%] text-primary [filter:drop-shadow(0_0_16px_theme(colors.primary/70%))]";
 
 // The lucide SVG defaults to 24px; stretch it to fill the clamp-sized halo
 // so the lock reads at TV distance.
 export const lockIconSvg = "h-full w-full";
 
 export const heading =
-  "m-0 text-[clamp(3rem,8vw,10rem)] font-black uppercase leading-[0.85] tracking-[-0.01em] text-text [text-shadow:0_0_40px_theme(colors.gold/45%),0_0_100px_theme(colors.primary/25%)]";
+  "m-0 text-[clamp(3rem,8vw,10rem)] font-black uppercase leading-[0.85] tracking-[-0.01em] text-text [text-shadow:0_0_40px_theme(colors.primary/45%),0_0_100px_theme(colors.heat/20%)]";
 
-export const headingAccent = "text-gold";
+// `primary`, not `gold`: nobody has won anything yet (DESIGN.md §0.1).
+export const headingAccent = "text-primary";
 
 export const ringFrame =
   "heat-locked-ring flex h-[clamp(220px,28vw,360px)] w-[clamp(220px,28vw,360px)] items-center justify-center";
@@ -26,6 +27,6 @@ export const readyLabel =
   "m-0 text-[clamp(0.95rem,1.3vw,1.5rem)] font-bold uppercase tracking-[0.32em] text-mutedWarm";
 
 export const countdownLine =
-  "m-0 text-[clamp(0.95rem,1.2vw,1.4rem)] font-bold uppercase tracking-[0.32em] text-gold";
+  "m-0 text-[clamp(0.95rem,1.2vw,1.4rem)] font-bold uppercase tracking-[0.32em] text-primary";
 
 export const countdownLineLabel = "mr-2 text-mutedWarm";

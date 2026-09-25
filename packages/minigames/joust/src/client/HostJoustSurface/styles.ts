@@ -1,4 +1,4 @@
-import { railCounterOverlay, takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
+import { briefingCard, railCounterOverlay, takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
 
 // JOUST is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the lane is
 // evenly spread scenery, so a chip in one corner costs a corner of desert
@@ -18,8 +18,7 @@ import { railCounterOverlay, takeoverPrimary, takeoverSecondary } from "@wingnig
 // `clock` are both null on this beat, so it draws neither.
 export const introRoot = "flex flex-col gap-3";
 
-export const introCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_theme(colors.gold/16%)]";
+export const introCard = briefingCard;
 
 // Scene art, licensed by DESIGN.md §2.7: the lane's dusk sky and sand. Not chrome, so no token.
 const sceneDusk =
@@ -37,7 +36,7 @@ export const arenaFrame = `relative h-full w-full overflow-hidden rounded-xl bor
 // than a chip. `pointer-events-none` because the whole frame under it is the
 // drag surface that fires the shot.
 export const plate =
-  "pointer-events-none absolute left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(4.4rem,8vh,5.2rem)] max-w-[clamp(12rem,24vw,18rem)] rounded-xl border border-gold/35 bg-bg/70 px-4 py-2.5 backdrop-blur";
+  "pointer-events-none absolute left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(4.4rem,8vh,5.2rem)] max-w-[clamp(12rem,24vw,18rem)] rounded-xl border border-text/15 bg-bg/70 px-4 py-2.5 backdrop-blur";
 
 // A label, not a line anyone speaks, so the house sans: `font-voice` is for the
 // room being spoken to (DESIGN.md §4).
@@ -85,4 +84,4 @@ export const secondaryButton = `${takeoverSecondary} h-12`;
 export const hint = "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] italic text-text/75 backdrop-blur";
 
 export const doneNote =
-  "m-0 rounded-xl border border-gold/40 bg-bg/85 px-4 py-3 text-center text-sm text-gold backdrop-blur";
+  "m-0 rounded-xl border border-text/15 bg-bg/85 px-4 py-3 text-center text-sm text-text backdrop-blur";

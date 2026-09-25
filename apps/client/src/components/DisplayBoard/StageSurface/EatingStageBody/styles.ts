@@ -14,6 +14,13 @@ export const metaAccent =
 export const metaAccentTeam =
   "text-[clamp(1rem,1.4vw,1.5rem)] tracking-[0.2em] text-text";
 
+// The team in its wordmark: large enough to be the second thing the room reads
+// after the clock, never large enough to compete with it. `block` because the
+// wordmark is inline by design and its max-width needs a box; `normal-case` and
+// `tracking-normal` so the meta row's caps don't restyle a genre face.
+export const teamWordmark =
+  "block max-w-[40vw] text-right text-[clamp(1.8rem,3vw,3.6rem)] normal-case leading-[1.05] tracking-normal";
+
 export const timerArea =
   "flex flex-col items-center justify-center gap-[clamp(1rem,2vw,2rem)]";
 

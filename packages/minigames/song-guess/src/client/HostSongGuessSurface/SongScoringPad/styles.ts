@@ -5,7 +5,7 @@ import { takeoverLabel, takeoverLabelAccent, verdictButtonDanger, verdictButtonS
 // two rulings out side by side and takes the row's height rather than setting
 // a column's.
 export const card =
-  "flex shrink-0 flex-col justify-center rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-3 py-2";
+  "flex shrink-0 flex-col justify-center rounded-xl border border-text/15 bg-gradient-to-b from-surface to-bg px-3 py-2";
 
 export const title =
   `mb-1.5 block ${takeoverLabelAccent}`;

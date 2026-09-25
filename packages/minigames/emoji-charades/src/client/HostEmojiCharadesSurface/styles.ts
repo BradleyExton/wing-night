@@ -44,7 +44,7 @@ export const picker = "flex h-full min-h-0 flex-col gap-[clamp(0.5rem,1vh,0.8rem
 
 // Clue canvas — the live sequence the TV is mirroring.
 export const canvas =
-  "flex min-h-[88px] flex-wrap items-center gap-1 rounded-2xl border border-gold/30 bg-surfaceAlt px-4 py-3 text-[clamp(1.5rem,2.8vw,2.4rem)] leading-tight";
+  "flex min-h-[88px] flex-wrap items-center gap-1 rounded-2xl border border-text/10 bg-surfaceAlt px-4 py-3 text-[clamp(1.5rem,2.8vw,2.4rem)] leading-tight";
 
 export const canvasEmpty =
   "flex min-h-[88px] items-center rounded-2xl border border-dashed border-text/15 bg-surfaceAlt px-4 py-3 text-sm font-medium text-muted";
@@ -68,7 +68,7 @@ const tabBase =
 
 export const tab = `${tabBase} border-text/10 bg-surface text-muted hover:text-text`;
 
-export const tabActive = `${tabBase} border-gold bg-surfaceAlt text-gold`;
+export const tabActive = `${tabBase} border-primary bg-surfaceAlt text-primary`;
 
 export const tabIcon = "text-lg";
 
@@ -79,14 +79,14 @@ export const gridSection =
   `col-span-full px-1 pb-1 pt-2 ${takeoverLabel}`;
 
 export const emojiButton =
-  "flex aspect-square items-center justify-center rounded-lg bg-text/5 text-[clamp(1.2rem,2.2vw,1.9rem)] transition hover:bg-gold/20 disabled:cursor-not-allowed disabled:opacity-40";
+  "flex aspect-square items-center justify-center rounded-lg bg-text/5 text-[clamp(1.2rem,2.2vw,1.9rem)] transition hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40";
 
 export const emptyNote =
   "col-span-full px-1 py-6 text-center text-sm font-medium text-muted";
 
 // Subject card reuses DRAWING's prompt-card treatment per DESIGN.md §2.6.
 export const subjectCard =
-  "shrink-0 rounded-2xl border-2 border-gold bg-gradient-to-b from-surfaceAlt to-surface px-4 py-3 text-center";
+  "shrink-0 rounded-2xl border-2 border-primary/50 bg-gradient-to-b from-surfaceAlt to-surface px-4 py-3 text-center";
 
 export const subjectLabel =
   takeoverLabelAccent;
@@ -100,10 +100,10 @@ export const lockedGrid =
   "grid min-h-0 flex-1 grid-cols-4 content-start gap-2 overflow-y-auto rounded-2xl border-2 border-gold/40 bg-surfaceAlt p-3 sm:grid-cols-6";
 
 export const lockedLabel =
-  "col-span-full px-1 pb-1 text-center text-[0.62rem] font-extrabold uppercase tracking-[0.24em] text-gold";
+  "col-span-full px-1 pb-1 text-center text-[0.62rem] font-extrabold uppercase tracking-[0.24em] text-primary";
 
 export const lockedEmojiButton =
-  "flex aspect-square items-center justify-center rounded-xl bg-gold/10 text-[clamp(1.8rem,4vw,3rem)] transition hover:bg-gold/25 disabled:cursor-not-allowed disabled:opacity-40";
+  "flex aspect-square items-center justify-center rounded-xl bg-primary/10 text-[clamp(1.8rem,4vw,3rem)] transition hover:bg-primary/25 disabled:cursor-not-allowed disabled:opacity-40";
 
 // The house verdict (DESIGN.md §2.0B, "Takeover controls"), stood up as a card:
 // icon over label over the hint. GOT IT is rendered first (§4, owner decision P7).

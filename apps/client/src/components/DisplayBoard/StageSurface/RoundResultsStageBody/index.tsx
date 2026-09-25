@@ -1,3 +1,4 @@
+import { TeamWordmark } from "../../../TeamWordmark";
 import type { RoundResultsRow } from "../resolveStageViewModel";
 import { roundResultsStageCopy } from "./copy";
 import * as styles from "./styles";
@@ -56,7 +57,13 @@ export const RoundResultsStageBody = ({
                 className={`${styles.tableRowEdge} ${variant.splitEdgeMutedClassName}`}
                 aria-hidden
               />
-              <span className={styles.teamCell}>{row.teamName}</span>
+              <span className={styles.teamCell}>
+                <TeamWordmark
+                  name={row.teamName}
+                  theme={row.theme}
+                  sizeClassName={styles.teamWordmark}
+                />
+              </span>
               <span className={`${styles.num} ${styles.numMuted}`}>
                 {roundResultsStageCopy.formatPointsDelta(row.wingPoints)}
               </span>

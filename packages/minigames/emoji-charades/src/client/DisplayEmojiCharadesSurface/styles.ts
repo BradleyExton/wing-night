@@ -12,12 +12,12 @@ export const boardArea =
 
 export const statusLine = stageStatusLine;
 
-export const statusCount = "font-score tabular-nums text-gold";
+export const statusCount = "font-score tabular-nums text-primary";
 
 // Turn-complete card: the last thing on screen before the host advances, so
 // it carries the turn's haul rather than a bare headline.
 export const turnCompleteCard =
-  "self-center rounded-2xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-[clamp(2rem,4vw,4rem)] py-[clamp(1.2rem,2.4vh,2.4rem)] text-center shadow-[inset_0_0_36px_theme(colors.gold/20%)]";
+  "self-center rounded-2xl border-2 border-text/20 bg-gradient-to-b from-surface to-bg px-[clamp(2rem,4vw,4rem)] py-[clamp(1.2rem,2.4vh,2.4rem)] text-center shadow-[0_14px_32px_theme(colors.shade/60%)]";
 
 export const turnCompleteTitle =
   "text-center text-[clamp(1.5rem,3vw,3rem)] font-black uppercase tracking-[0.08em] text-text";

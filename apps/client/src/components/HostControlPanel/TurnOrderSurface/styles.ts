@@ -14,7 +14,7 @@ export const sectionHeading = sectionHeadingToken;
 export const sectionDescription = sectionDescriptionDefaultToken;
 
 export const lockedLabel =
-  "mt-2 px-1.5 text-[0.68rem] font-extrabold uppercase tracking-[0.28em] text-gold";
+  "mt-2 px-1.5 text-[0.68rem] font-extrabold uppercase tracking-[0.28em] text-primary";
 
 export const emptyLabel = "mt-3 px-1.5 text-sm text-muted";
 

@@ -1,4 +1,4 @@
-import { railCounter, takeoverLabel, takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
+import { briefingCard, railCounter, takeoverLabel, takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
 
 // SONG_GUESS is a `<TakeoverStage>` with no deck (docs/takeover-layout-api.md
 // §3, §4). It is a console, not an arena: the body is the answer the host
@@ -22,8 +22,7 @@ import { railCounter, takeoverLabel, takeoverPrimary, takeoverSecondary } from "
 // are both null, so it draws neither and keeps its own content height.
 export const introRoot = "flex flex-col gap-3";
 
-export const introCard =
-  "rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-5 py-4 text-base text-text/90 shadow-[inset_0_0_24px_theme(colors.gold/16%)]";
+export const introCard = briefingCard;
 
 // The rail row's read-only counts (§4, `counter`). "Song 3 of 6" was buried in
 // the answer card and the pending chip was on the strip this file no longer
@@ -48,7 +47,7 @@ export const totalsPane = "w-[clamp(200px,17vw,240px)] shrink-0 overflow-y-auto"
 // left the rest of the console black. Centred, so a one-line title and a
 // hinted three-line answer both sit where the host's eye lands.
 export const answerCard =
-  "flex h-full min-h-0 flex-col justify-center gap-1 rounded-xl border-2 border-gold bg-gradient-to-b from-surface to-bg px-[clamp(1.5rem,3vw,3rem)] py-[clamp(1rem,2vh,2rem)] shadow-[inset_0_0_24px_theme(colors.gold/16%)]";
+  "flex h-full min-h-0 flex-col justify-center gap-1 rounded-xl border-2 border-primary/50 bg-gradient-to-b from-surface to-bg px-[clamp(1.5rem,3vw,3rem)] py-[clamp(1rem,2vh,2rem)] shadow-[inset_0_0_24px_theme(colors.primary/12%)]";
 
 export const answerLabel =
   `block ${takeoverLabel}`;
@@ -66,7 +65,7 @@ export const answerArtistPrefix = "pr-1 italic";
 export const badgeRow = "mt-4 flex flex-wrap items-center gap-3";
 
 export const difficultyBadge =
-  "rounded-full border border-gold/60 px-3 py-1 text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-gold";
+  "rounded-full border border-text/20 px-3 py-1 text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-mutedWarm";
 
 export const hintText = "m-0 text-[clamp(0.9rem,1.2vw,1.1rem)] italic text-mutedWarm";
 
@@ -99,4 +98,4 @@ export const revealButton = `${takeoverPrimary} w-[clamp(14rem,22vw,20rem)]`;
 export const nextButton = `${takeoverPrimary} w-[clamp(10rem,15vw,14rem)]`;
 
 export const doneNote =
-  "flex items-center rounded-xl border border-gold/40 bg-surface px-6 text-center text-sm text-gold";
+  "flex items-center rounded-xl border border-text/15 bg-surface px-6 text-center text-sm text-gold";
