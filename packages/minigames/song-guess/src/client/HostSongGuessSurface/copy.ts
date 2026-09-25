@@ -26,8 +26,10 @@ export const hostSongGuessSurfaceCopy = {
   scoringOnDisplayTitle: "On the TV",
   titleRowLabel: "Title",
   artistRowLabel: "Artist",
-  correctLabel: "✓",
-  incorrectLabel: "✗",
+  correctIconGlyph: "✓",
+  correctLabel: "Hit",
+  incorrectIconGlyph: "✗",
+  incorrectLabel: "Miss",
   markAriaLabel: (field: string, isCorrect: boolean): string =>
     `Mark ${field} ${isCorrect ? "correct" : "incorrect"}`
 } as const;

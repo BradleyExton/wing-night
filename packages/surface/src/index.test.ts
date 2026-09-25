@@ -34,3 +34,32 @@ test("does export the TV marquee as a component and no marquee tokens beside it"
 
   assert.deepEqual(marqueeTokens, []);
 });
+
+// DESIGN.md §2.0B, "Takeover controls": one beat-ender, one secondary and one
+// verdict pair for all nine games. They are class strings that carry skin,
+// focus and disabled state; a game adds size and nothing else.
+test("does export the takeover control tokens with one focus ring and one disabled look", () => {
+  const controls = [
+    surface.takeoverPrimary,
+    surface.takeoverSecondary,
+    surface.verdictButtonSuccess,
+    surface.verdictButtonDanger
+  ];
+
+  for (const control of controls) {
+    assert.match(control, /focus-visible:ring-primary/);
+    assert.match(control, /disabled:opacity-40/);
+    assert.doesNotMatch(control, /gold/);
+  }
+});
+
+test("does keep every takeover control at or above the 44px touch floor", () => {
+  for (const control of [
+    surface.takeoverPrimary,
+    surface.takeoverSecondary,
+    surface.verdictButtonSuccess,
+    surface.verdictButtonDanger
+  ]) {
+    assert.match(control, /min-h-(11|12|14)\b/);
+  }
+});

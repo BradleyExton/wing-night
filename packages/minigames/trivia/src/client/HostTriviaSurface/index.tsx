@@ -97,6 +97,9 @@ export const HostTriviaSurface = ({
                 onDispatchAction("recordAttempt", { isCorrect: true });
               }}
             >
+              <span className={styles.verdictIcon} aria-hidden="true">
+                {hostTriviaSurfaceCopy.correctIconGlyph}
+              </span>
               {hostTriviaSurfaceCopy.correctButtonLabel}
             </button>
             <button
@@ -107,6 +110,9 @@ export const HostTriviaSurface = ({
                 onDispatchAction("recordAttempt", { isCorrect: false });
               }}
             >
+              <span className={styles.verdictIcon} aria-hidden="true">
+                {hostTriviaSurfaceCopy.incorrectIconGlyph}
+              </span>
               {hostTriviaSurfaceCopy.incorrectButtonLabel}
             </button>
           </div>

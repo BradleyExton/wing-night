@@ -11,11 +11,12 @@ export const label =
   "sr-only";
 
 const button =
-  "pointer-events-auto flex min-h-14 min-w-[5.6rem] flex-col items-center gap-0.5 rounded-xl border px-2.5 py-1.5 backdrop-blur transition disabled:cursor-not-allowed";
+  "pointer-events-auto flex min-h-14 min-w-[5.6rem] flex-col items-center gap-0.5 rounded-xl border px-2.5 py-1.5 backdrop-blur transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:cursor-not-allowed";
 
-export const kind = `${button} border-text/15 bg-bg/75 hover:border-gold/60`;
+export const kind = `${button} border-text/15 bg-bg/75 hover:border-primary/60`;
 
-export const kindSelected = `${button} border-gold bg-bg/90 shadow-[0_0_0_2px_theme(colors.gold/35%)]`;
+// Selection is emphasis, so `primary` — `gold` is the winner's colour (DESIGN.md §0.1).
+export const kindSelected = `${button} border-primary bg-bg/90 shadow-[0_0_0_2px_theme(colors.primary/35%)]`;
 
 export const kindSpent = `${button} border-text/10 bg-bg/50 opacity-40`;
 
@@ -25,4 +26,4 @@ export const name = "m-0 text-[0.68rem] font-extrabold uppercase leading-none tr
 
 export const uses = "m-0 text-[0.62rem] leading-none text-mutedWarm";
 
-export const usesSelected = "m-0 text-[0.62rem] leading-none text-gold";
+export const usesSelected = "m-0 text-[0.62rem] leading-none text-primary";

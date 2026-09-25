@@ -1,3 +1,5 @@
+import { takeoverSecondary } from "@wingnight/surface";
+
 // FAPPY is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the corridor
 // is evenly spread scenery — dusk sky, sand and a row of champs — so a chip in
 // one corner costs a corner of desert rather than a word the host has to read.
@@ -46,8 +48,7 @@ export const waitingNote =
 // typed here. Glass, because they now sit over the corridor rather than in a
 // panel, and `shrink-0` so the hint beside them wraps rather than squeezing a
 // 44px target (DESIGN.md §2.0A).
-export const secondaryButton =
-  "min-h-12 shrink-0 rounded-lg border border-ember/20 bg-bg/85 px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+export const secondaryButton = `${takeoverSecondary} h-12`;
 
 // The hint, beside the buttons it explains — and a `<span>`, which is now the
 // whole of what keeps it out of the way. It used to take a pointer it has no

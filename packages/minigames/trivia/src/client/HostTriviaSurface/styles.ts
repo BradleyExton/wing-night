@@ -1,3 +1,5 @@
+import { verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnight/surface";
+
 // TRIVIA is a `<TakeoverStage>` (docs/takeover-layout-api.md §3): a question
 // card and two verdicts, with nothing a floating chip could sit over without
 // covering a word the host has to read out loud.
@@ -67,15 +69,17 @@ export const statusNote =
 // because the width it gets has already been shortened for it.
 export const actions = "grid gap-[clamp(0.75rem,1.5vw,1.25rem)] sm:grid-cols-2";
 
-const verdictButtonBase =
-  "min-h-[clamp(76px,11vh,96px)] rounded-2xl border px-5 text-[clamp(1.1rem,1.6vw,1.5rem)] font-extrabold uppercase tracking-[0.12em] text-text transition disabled:cursor-not-allowed disabled:opacity-50";
-
-// Functional success/danger per DESIGN.md §0.1 — these buttons score answers.
+// The house verdict (DESIGN.md §2.0B, "Takeover controls"), at the height the
+// foot row gives a host-paced game: the rulings are the whole of this beat.
 // CORRECT is rendered first (§4, owner decision P7): the positive verdict is
 // the one pressed most, and it is the one that must not be a misclick.
-export const correctButton = `${verdictButtonBase} border-success/60 bg-success/20 hover:bg-success/30`;
+const verdictHeight = "h-[clamp(76px,11vh,96px)]";
 
-export const incorrectButton = `${verdictButtonBase} border-danger/60 bg-danger/20 hover:bg-danger/30`;
+export const correctButton = `${verdictButtonSuccess} ${verdictHeight}`;
+
+export const incorrectButton = `${verdictButtonDanger} ${verdictHeight}`;
+
+export { verdictIcon };
 
 // The spent turn takes the verdict buttons' place rather than sitting above
 // them greyed out: dimmed CORRECT/INCORRECT still read as controls, and the

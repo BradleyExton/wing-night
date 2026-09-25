@@ -1,3 +1,5 @@
+import { verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnight/surface";
+
 // The reveal beat's ruling pad. It used to be the third card down a 330px
 // deck column; it is now an item in the takeover's foot row, so it lays its
 // two rulings out side by side and takes the row's height rather than setting
@@ -15,11 +17,13 @@ export const row = "flex items-center gap-2";
 export const rowLabel =
   "text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-mutedWarm";
 
-export const markButton =
-  "min-h-[52px] w-[clamp(52px,5vw,64px)] rounded-lg border border-ember/20 bg-surface text-lg font-extrabold text-text transition hover:border-gold disabled:cursor-not-allowed disabled:opacity-40";
+// The house verdict (DESIGN.md §2.0B, "Takeover controls") as a toggle: tinted
+// until the host rules, then solid through `aria-pressed`, which the component
+// already sets — so the ruled state is the attribute, not a third class string.
+const markSize = "h-[52px] px-3";
 
-export const markButtonCorrect =
-  "min-h-[52px] w-[clamp(52px,5vw,64px)] rounded-lg border-2 border-success bg-success text-lg font-extrabold text-bg transition disabled:cursor-not-allowed disabled:opacity-40";
+export const markButtonCorrect = `${verdictButtonSuccess} ${markSize}`;
 
-export const markButtonIncorrect =
-  "min-h-[52px] w-[clamp(52px,5vw,64px)] rounded-lg border-2 border-danger bg-danger text-lg font-extrabold text-text transition disabled:cursor-not-allowed disabled:opacity-40";
+export const markButtonIncorrect = `${verdictButtonDanger} ${markSize}`;
+
+export { verdictIcon as markIcon };

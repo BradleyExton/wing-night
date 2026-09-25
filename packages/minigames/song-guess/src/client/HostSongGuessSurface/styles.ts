@@ -1,3 +1,5 @@
+import { takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
+
 // SONG_GUESS is a `<TakeoverStage>` with no deck (docs/takeover-layout-api.md
 // §3, §4). It is a console, not an arena: the body is the answer the host
 // reads out and the round so far they check it against, so there is no corner
@@ -84,23 +86,18 @@ export const actions =
 // all but one of them disabled by then — give up the width.
 export const transport = "flex min-w-0 flex-1 items-stretch gap-2";
 
-export const transportPrimary =
-  "flex flex-[1.4] items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 border-primary bg-primary px-2 text-[clamp(0.85rem,1.2vw,1.15rem)] font-extrabold uppercase tracking-[0.08em] text-bg shadow-[0_4px_0_theme(colors.shade/45%)] transition disabled:cursor-not-allowed disabled:opacity-40";
+export const transportPrimary = `${takeoverPrimary} flex-[1.4] whitespace-nowrap`;
 
-export const transportSecondary =
-  "flex-1 rounded-xl border border-ember/20 bg-surface px-2 text-[clamp(0.75rem,1vw,0.95rem)] font-extrabold uppercase tracking-[0.1em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+export const transportSecondary = `${takeoverSecondary} flex-1`;
 
 export const ruling = "flex shrink-0 items-stretch gap-3";
 
 // One skin, two widths, declared as separate exports rather than one export
 // plus an override: two `w-[…]` classes on one element are decided by the
 // stylesheet's order, not the attribute's, so an override would be a coin toss.
-const beatEnder =
-  "shrink-0 rounded-xl border-2 border-primary bg-primary text-[clamp(1rem,1.5vw,1.35rem)] font-extrabold uppercase tracking-[0.12em] text-bg shadow-[0_4px_0_theme(colors.shade/45%)] transition disabled:cursor-not-allowed disabled:opacity-40";
+export const revealButton = `${takeoverPrimary} w-[clamp(14rem,22vw,20rem)]`;
 
-export const revealButton = `${beatEnder} w-[clamp(14rem,22vw,20rem)]`;
-
-export const nextButton = `${beatEnder} w-[clamp(10rem,15vw,14rem)]`;
+export const nextButton = `${takeoverPrimary} w-[clamp(10rem,15vw,14rem)]`;
 
 export const doneNote =
   "flex items-center rounded-xl border border-gold/40 bg-surface px-6 text-center text-sm text-gold";

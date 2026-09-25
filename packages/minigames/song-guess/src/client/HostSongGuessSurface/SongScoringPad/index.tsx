@@ -16,17 +16,6 @@ type MarkRowProps = {
   onMark: (correct: boolean) => void;
 };
 
-const resolveMarkButtonClassName = (
-  mark: SongGuessMark,
-  isCorrectButton: boolean
-): string => {
-  if (mark !== isCorrectButton) {
-    return styles.markButton;
-  }
-
-  return isCorrectButton ? styles.markButtonCorrect : styles.markButtonIncorrect;
-};
-
 const MarkRow = ({
   label,
   mark,
@@ -42,12 +31,17 @@ const MarkRow = ({
           type="button"
           aria-label={hostSongGuessSurfaceCopy.markAriaLabel(label, isCorrectButton)}
           aria-pressed={mark === isCorrectButton}
-          className={resolveMarkButtonClassName(mark, isCorrectButton)}
+          className={isCorrectButton ? styles.markButtonCorrect : styles.markButtonIncorrect}
           disabled={!canDispatchAction}
           onClick={(): void => {
             onMark(isCorrectButton);
           }}
         >
+          <span className={styles.markIcon} aria-hidden="true">
+            {isCorrectButton
+              ? hostSongGuessSurfaceCopy.correctIconGlyph
+              : hostSongGuessSurfaceCopy.incorrectIconGlyph}
+          </span>
           {isCorrectButton
             ? hostSongGuessSurfaceCopy.correctLabel
             : hostSongGuessSurfaceCopy.incorrectLabel}

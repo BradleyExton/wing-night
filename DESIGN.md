@@ -356,6 +356,39 @@ rows fully transparent, since this section forbids a control in `counter`, `cloc
 across the top of every canvas. SCHLONIC's live overlay went from 104,346px² to
 11,520px², 10.1% of the zone given back.
 
+### Takeover controls
+
+Nine games had grown four beat-ending recipes (solid primary, tinted primary,
+a gold 3D arcade gradient, a green gradient), about eight secondaries and five
+verdict styles, three disabled opacities and focus rings on two games of nine.
+Since 2026-09-24 there is one of each, as tokens in `packages/surface`
+(`@wingnight/surface`), and all nine games use them:
+
+-   **`takeoverPrimary`** — the beat-ender: Lock it in, Next shot, Reveal,
+    Next photo. Flat `primary` with `bg` text, the shell CTA bar's colour, and
+    the arcade's hard drop edge kept as the one flourish: the edge is `primary`
+    at half strength over `shade` (a darker orange, not a new colour) and it
+    closes up when pressed. Decided 2026-09-24 over the gold 3D arcade button,
+    which spent `gold` — the winner's colour — on a button.
+-   **`takeoverSecondary`** — Skip, Reset turn, Pause, Undo. Glass (`bg/85`,
+    blurred) with a hairline, so it reads over a dusk sky and a board alike.
+    Hover is `primary`, never `gold`.
+-   **`verdictButtonSuccess` / `verdictButtonDanger`** + **`verdictIcon`** — a
+    ruling. Always an icon AND a label (✓ Correct, ✗ Nope; ✓ Hit, ✗ Miss), never
+    colour alone (§7); positive first. A one-shot verdict is tinted; a toggle
+    that holds its ruling (SONG_GUESS's pad) sets `aria-pressed` and fills
+    solid — the attribute variant outranks the tint without depending on
+    stylesheet order, so there is no "selected" token.
+-   **They carry skin, focus and disabled state, never size.** One focus ring
+    (`primary`, offset on `bg`), one disabled look (`opacity-40`), a 44px floor
+    (`min-h-11`, 48/56px on the secondary/primary). A game places a control with
+    `h-*`, `w-*` or `flex-*` — TRIVIA's 76–96px rulings, EMOJI's 76px cards,
+    DRAWING's 44px toolbar — which never contend with the token's `min-h` the
+    way a second `min-h-*` class would.
+-   **Refused: RECREATE's ingredient ticks.** They are a checklist the host
+    works down, left-aligned sentences with a tick mark, not a ruling on the
+    turn; their checked state already speaks the verdict's colours.
+
 ### What gets shared, and what was measured and refused
 
 The house rule is ADR-0002's: three or more call sites with identical semantics,

@@ -195,6 +195,45 @@ export const ctaButton =
   "inline-flex min-h-[clamp(84px,10vh,112px)] flex-1 items-center justify-center gap-3 bg-primary px-4 text-[clamp(1.2rem,1.7vw,1.6rem)] font-black uppercase tracking-[0.18em] text-bg transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-primary";
 
 // =============================================================================
+// Takeover controls — the buttons a minigame draws on its own canvas during
+// MINIGAME_PLAY (DESIGN.md §2.0B, "Takeover controls"). Nine games had grown
+// four beat-ending recipes, eight secondaries and five verdict styles; these
+// are the one of each. They carry skin, focus and disabled state, never size:
+// a game places them with `h-*`, `w-*` or `flex-*`, which never contend with
+// the token's `min-h` floor the way a second `min-h-*` would.
+// =============================================================================
+
+const takeoverFocus =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
+
+// One disabled look across every takeover control: the games had 0.4, 0.45 and 0.5.
+const takeoverDisabled = "disabled:cursor-not-allowed disabled:opacity-40";
+
+// The beat-ender — Lock it in, Next shot, Reveal. Flat `primary` like the
+// shell's CTA bar, with the arcade's hard drop edge kept as the one flourish:
+// the edge is `primary` at half strength over `shade`, a darker orange rather
+// than a new colour, and it closes up when the button is pressed.
+export const takeoverPrimary = `inline-flex min-h-14 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-[clamp(1.2rem,3vw,2.2rem)] text-[clamp(0.95rem,1.4vw,1.2rem)] font-black uppercase tracking-[0.12em] text-bg shadow-[0_4px_0_theme(colors.primary/50%),0_4px_0_theme(colors.shade)] transition hover:bg-primary/90 active:translate-y-[3px] active:shadow-[0_1px_0_theme(colors.primary/50%),0_1px_0_theme(colors.shade)] disabled:translate-y-0 disabled:shadow-none disabled:hover:bg-primary ${takeoverFocus} ${takeoverDisabled}`;
+
+// Everything else the turn needs — Skip, Reset turn, Pause, Undo. Glass over
+// the scene so it reads on a dusk sky and on a board alike. No `gold` on hover:
+// gold is the winner's colour (§0.1), not a pointer's.
+export const takeoverSecondary = `inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-text/15 bg-bg/85 px-4 text-[0.78rem] font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-primary/60 hover:text-primary ${takeoverFocus} ${takeoverDisabled}`;
+
+// A ruling — Correct / Nope, Got it / Skip, Hit / Miss. Always an icon AND a
+// label (§7: never colour alone), positive first, 44px at the least. A
+// one-shot verdict is tinted; a toggle that holds its ruling sets
+// `aria-pressed` and fills solid, and the attribute variant outranks the tint
+// without depending on stylesheet order.
+const verdictButtonBase = `inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 px-4 text-[clamp(0.9rem,1.3vw,1.2rem)] font-extrabold uppercase tracking-[0.1em] text-text transition aria-pressed:text-bg ${takeoverFocus} ${takeoverDisabled}`;
+
+export const verdictButtonSuccess = `${verdictButtonBase} border-success/60 bg-success/20 hover:bg-success/30 aria-pressed:border-success aria-pressed:bg-success`;
+
+export const verdictButtonDanger = `${verdictButtonBase} border-danger/60 bg-danger/20 hover:bg-danger/30 aria-pressed:border-danger aria-pressed:bg-danger aria-pressed:text-text`;
+
+export const verdictIcon = "text-[1.3em] leading-none";
+
+// =============================================================================
 // Team accents — small color dot used wherever a team name is rendered.
 // =============================================================================
 

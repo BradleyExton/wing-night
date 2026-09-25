@@ -1,3 +1,5 @@
+import { takeoverSecondary } from "@wingnight/surface";
+
 // SCHLONIC is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the zone
 // is evenly spread scenery — bay, shoreline and skyline — so a chip in one
 // corner costs a corner of Barrie rather than a word the host has to read.
@@ -61,8 +63,7 @@ export const waitingNote =
 // because they sit over the shoreline rather than in a panel, and `shrink-0`
 // so the hint beside them wraps rather than squeezing a 44px target
 // (DESIGN.md §2.0A).
-export const secondaryButton =
-  "min-h-12 shrink-0 rounded-lg border-2 border-mutedWarmDim/60 bg-bg/85 px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-45";
+export const secondaryButton = `${takeoverSecondary} h-12`;
 
 export const hint = "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] italic text-text/75 backdrop-blur";
 

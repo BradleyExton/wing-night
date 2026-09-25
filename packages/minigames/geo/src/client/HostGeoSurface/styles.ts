@@ -1,3 +1,5 @@
+import { takeoverPrimary } from "@wingnight/surface";
+
 // GEO is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the chart is
 // the tablet, and a chip in one corner costs a corner of scenery rather than a
 // word the host has to read.
@@ -71,12 +73,11 @@ export const plateHint = "m-0 text-[0.82rem] leading-snug text-muted";
 // under the dock nor over the pin the team just placed — and constrains its
 // width so it cannot run under the corner. Neither the position nor the
 // `max-w-[calc(100%-6rem)]` this file used to hand-type is here any more.
-const actionButton =
-  "min-h-14 shrink-0 rounded-2xl px-[clamp(1.2rem,3vw,2.2rem)] text-[clamp(0.95rem,1.6vw,1.1rem)] font-black uppercase tracking-[0.12em] transition disabled:cursor-not-allowed disabled:opacity-40";
+// Both beat-enders are the house one (DESIGN.md §2.0B, "Takeover controls"):
+// locking the pin in, then moving to the next photo once the room has seen it.
+export const submitButton = takeoverPrimary;
 
-export const submitButton = `${actionButton} bg-primary text-bg shadow-[0_12px_28px_theme(colors.primary/30%)] hover:bg-primary/90 disabled:shadow-none`;
-
-export const nextPromptButton = `${actionButton} border border-text/15 bg-bg/85 text-text backdrop-blur hover:bg-surfaceAlt`;
+export const nextPromptButton = takeoverPrimary;
 
 export const mapInstruction =
   "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] text-text/75 backdrop-blur";

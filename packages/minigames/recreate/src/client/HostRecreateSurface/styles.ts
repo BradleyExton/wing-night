@@ -1,3 +1,5 @@
+import { takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
+
 // Forgery Studio, host side: a dim gallery back room. Matte frames on the
 // pictures, primary for the one thing to press, success for the ticks.
 //
@@ -73,14 +75,15 @@ export const revealPrompt = "m-0 text-xl italic leading-snug text-text";
 // get has already been shortened for the corner.
 export const verdictRow = "grid gap-3 sm:grid-cols-[2fr_1fr]";
 
-const beatButtonBase =
-  "min-h-[clamp(56px,9vh,76px)] w-full rounded-md border-2 px-5 font-black uppercase transition disabled:cursor-not-allowed disabled:opacity-40";
+// The house beat-ender and secondary (DESIGN.md §2.0B, "Takeover controls"),
+// at the row's height and width.
+const beatButtonSize = "h-[clamp(56px,9vh,76px)] w-full";
 
-export const beatButton = `${beatButtonBase} border-primary bg-primary/15 text-base tracking-[0.2em] text-primary hover:bg-primary/25`;
+export const beatButton = `${takeoverPrimary} ${beatButtonSize}`;
 
 // "Let them rewrite" is the redo hatch (AGENTS.md §11) and rides beside the
 // lock, quieter than it and never in front of it.
-export const beatButtonQuiet = `${beatButtonBase} border-text/20 bg-surface text-sm font-bold tracking-[0.16em] text-text hover:bg-surface/60`;
+export const beatButtonQuiet = `${takeoverSecondary} ${beatButtonSize}`;
 
 // The spent turn takes the beat-ender's place rather than sitting above it
 // greyed out, and at the same height, so nothing jumps when the last target is

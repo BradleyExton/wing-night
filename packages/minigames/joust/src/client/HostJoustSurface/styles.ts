@@ -1,3 +1,5 @@
+import { takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
+
 // JOUST is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the lane is
 // evenly spread scenery, so a chip in one corner costs a corner of desert
 // rather than a word the host has to read.
@@ -76,11 +78,9 @@ export const waitingNote =
 // under the corner dock — neither the position nor the max-width is typed
 // here. The buttons only have to be their own size now that they are a row
 // rather than a 330px column, so the `w-full` and `flex-1` are gone.
-export const primaryButton =
-  "min-h-14 shrink-0 rounded-xl border-2 border-primary bg-primary px-[clamp(1.2rem,3vw,2.2rem)] text-lg font-extrabold uppercase tracking-[0.12em] text-bg shadow-[0_4px_0_theme(colors.shade/45%)] transition disabled:cursor-not-allowed disabled:opacity-40";
+export const primaryButton = takeoverPrimary;
 
-export const secondaryButton =
-  "min-h-12 shrink-0 rounded-lg border border-ember/20 bg-bg/85 px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-text backdrop-blur transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+export const secondaryButton = `${takeoverSecondary} h-12`;
 
 export const hint = "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] italic text-text/75 backdrop-blur";
 

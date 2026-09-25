@@ -13,5 +13,7 @@ export const hostTriviaSurfaceCopy = {
   turnCompleteHint:
     "That's the team's questions. Advance the phase when the room is ready.",
   correctButtonLabel: "Correct",
-  incorrectButtonLabel: "Incorrect"
+  correctIconGlyph: "✓",
+  incorrectButtonLabel: "Incorrect",
+  incorrectIconGlyph: "✗"
 } as const;

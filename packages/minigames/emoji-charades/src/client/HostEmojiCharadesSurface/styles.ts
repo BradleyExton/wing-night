@@ -1,3 +1,10 @@
+import {
+  takeoverSecondary,
+  verdictButtonDanger,
+  verdictButtonSuccess,
+  verdictIcon
+} from "@wingnight/surface";
+
 // EMOJI_CHARADES is a `<TakeoverStage>` with a deck
 // (docs/takeover-layout-api.md §3). The body is a grid of tap targets, so
 // there is no corner of it a floating chip could take that is not a button:
@@ -58,7 +65,7 @@ export const searchInput =
   "min-w-0 flex-1 bg-transparent text-base font-medium text-text outline-none placeholder:text-muted";
 
 export const searchClearButton =
-  "min-h-11 rounded-lg px-3 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-muted hover:text-gold";
+  "min-h-11 rounded-lg px-3 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-muted hover:text-primary";
 
 export const tabs = "flex gap-1 overflow-x-auto";
 
@@ -104,24 +111,22 @@ export const lockedLabel =
 export const lockedEmojiButton =
   "flex aspect-square items-center justify-center rounded-xl bg-gold/10 text-[clamp(1.8rem,4vw,3rem)] transition hover:bg-gold/25 disabled:cursor-not-allowed disabled:opacity-40";
 
-const verdictBase =
-  "flex min-h-[76px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl border-2 text-[clamp(1rem,1.4vw,1.15rem)] font-extrabold uppercase tracking-[0.1em] text-text transition disabled:cursor-not-allowed disabled:opacity-50";
+// The house verdict (DESIGN.md §2.0B, "Takeover controls"), stood up as a card:
+// icon over label over the hint. GOT IT is rendered first (§4, owner decision P7).
+const verdictCard = "h-[76px] flex-1 flex-col";
 
-// Functional success/danger per DESIGN.md §0.1 — these buttons score the turn.
-// GOT IT is rendered first (§4, owner decision P7).
-export const gotItButton = `${verdictBase} border-success/60 bg-success/20 hover:bg-success/30`;
+export const gotItButton = `${verdictButtonSuccess} ${verdictCard}`;
 
-export const skipButton = `${verdictBase} border-danger/60 bg-danger/20 hover:bg-danger/30`;
+export const skipButton = `${verdictButtonDanger} ${verdictCard}`;
 
-export const verdictIcon = "text-2xl leading-none";
+export { verdictIcon };
 
 export const verdictHint =
-  "text-[0.6rem] font-bold uppercase tracking-[0.24em] opacity-80";
+  "text-[0.7rem] font-bold uppercase tracking-[0.2em] opacity-80";
 
 export const utilityRow = "flex shrink-0 gap-2";
 
-export const utilityButton =
-  "min-h-[52px] flex-1 rounded-xl border border-text/10 bg-surface text-[0.72rem] font-extrabold uppercase tracking-[0.14em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+export const utilityButton = `${takeoverSecondary} h-[52px] flex-1`;
 
 // The two beats with no picker on them. Both stand in for the body rather than
 // sitting at the top of an empty one: the deck collapses to nothing when the

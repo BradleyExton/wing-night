@@ -1,3 +1,10 @@
+import {
+  takeoverSecondary,
+  verdictButtonDanger,
+  verdictButtonSuccess,
+  verdictIcon
+} from "@wingnight/surface";
+
 // DRAWING is a `<TakeoverStage>` with no deck (docs/takeover-layout-api.md §3).
 // The board is not floatable-over: it is the one body on the tablet that the
 // host both reads AND presses, every pixel of it, so a floating toolbar does
@@ -87,23 +94,18 @@ export const actions = "flex items-center gap-[clamp(0.35rem,0.9vw,0.7rem)]";
 
 export const toolGroup = "flex items-center gap-2";
 
-export const toolButton =
-  "min-h-11 rounded-xl border border-text/10 bg-surfaceAlt px-4 text-[0.68rem] font-extrabold uppercase tracking-[0.14em] text-text transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40";
+export const toolButton = takeoverSecondary;
 
 export const verdictGroup = "ml-auto flex items-center gap-2";
 
-// Functional success/danger per §0.1, in the same weight the other host verdict
-// controls use (see EMOJI_CHARADES §2.6). CORRECT is rendered first (§4, owner
-// decision P7): DRAWING was the only one of the nine putting "Nope" left of
-// "Correct", and on a tablet that is a misclick, not a preference.
-const verdictBase =
-  "flex min-h-11 items-center gap-2 rounded-xl border-2 px-[clamp(0.9rem,1.8vw,1.5rem)] text-sm font-extrabold uppercase tracking-[0.1em] text-text transition disabled:cursor-not-allowed disabled:opacity-40";
-
-export const verdictCorrect = `${verdictBase} border-success/60 bg-success/20 hover:bg-success/30`;
-
-export const verdictIncorrect = `${verdictBase} border-danger/60 bg-danger/20 hover:bg-danger/30`;
-
-export const verdictIcon = "text-lg leading-none";
+// The house verdict (DESIGN.md §2.0B, "Takeover controls") at its 44px floor:
+// on a surface that letterboxes against height, the row stays the touch target
+// and not a pixel more. CORRECT is rendered first (§4, owner decision P7).
+export {
+  verdictButtonSuccess as verdictCorrect,
+  verdictButtonDanger as verdictIncorrect,
+  verdictIcon
+};
 
 // Inks are drawing content, not UI accents, so the swatches carry their own
 // color rather than a surface token — via the `--ink-color` custom property
