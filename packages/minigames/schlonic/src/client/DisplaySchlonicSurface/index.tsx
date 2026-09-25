@@ -28,15 +28,16 @@ const SchlonicIntro = (): JSX.Element => (
 // its rule. A skipped run has no ending to show, so on a handoff the card is only the name, and
 // on a finish there is no card at all: the points plaque follows.
 const HoldPlaque = ({ hold, nextName }: { hold: RunHold; nextName: string | null }): JSX.Element | null => {
-  const showsOutcome = hold.outcome !== "skipped";
+  const { outcome } = hold;
   const showsNext = hold.kind === "handoff";
 
-  if (!showsOutcome && !showsNext) {
-    return null;
-  }
+  // A skipped run is not a wipeout: the card names who is next and says nothing about how it
+  // went — and a skipped run that hands nothing on has no card at all.
+  if (outcome === "skipped") {
+    if (!showsNext) {
+      return null;
+    }
 
-  // A skipped run is not a wipeout: the card names who is next and says nothing about how it went.
-  if (!showsOutcome) {
     return (
       <div className={styles.resultOverlay} data-schlonic-outcome={hold.outcome}>
         <ResultPlaque
@@ -60,9 +61,9 @@ const HoldPlaque = ({ hold, nextName }: { hold: RunHold; nextName: string | null
   return (
     <div className={styles.resultOverlay} data-schlonic-outcome={hold.outcome}>
       <ResultPlaque
-        tone={hold.outcome === "cleared" ? "hit" : "miss"}
-        title={displaySchlonicSurfaceCopy.outcomeTitle(hold.outcome)}
-        detail={displaySchlonicSurfaceCopy.outcomeBlurb(hold.outcome, hold.wings)}
+        tone={outcome === "cleared" ? "hit" : "miss"}
+        title={displaySchlonicSurfaceCopy.outcomeTitle(outcome)}
+        detail={displaySchlonicSurfaceCopy.outcomeBlurb(outcome, hold.wings)}
       >
         {handoff}
       </ResultPlaque>
