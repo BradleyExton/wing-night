@@ -39,8 +39,9 @@ export const arenaFrame = `relative h-full w-full overflow-hidden rounded-xl bor
 export const plate =
   "pointer-events-none absolute left-[clamp(0.6rem,1.2vw,1rem)] top-[clamp(4.4rem,8vh,5.2rem)] max-w-[clamp(12rem,24vw,18rem)] rounded-xl border border-gold/35 bg-bg/70 px-4 py-2.5 backdrop-blur";
 
-export const plateTitle =
-  "m-0 font-serif text-xl font-bold italic leading-tight text-text";
+// A label, not a line anyone speaks, so the house sans: `font-voice` is for the
+// room being spoken to (DESIGN.md §4).
+export const plateTitle = "m-0 text-lg font-extrabold leading-tight text-text";
 
 export const plateShooter = "m-0 mt-0.5 text-sm text-mutedWarm";
 
@@ -50,7 +51,7 @@ const chip = `${railCounterOverlay} text-muted`;
 
 export const counter = chip;
 
-export const counterPending = `${railCounterOverlay} font-mono text-gold`;
+export const counterPending = `${railCounterOverlay} font-score tabular-nums text-gold`;
 
 // The plaque names everyone the shot felled, and a cleared rack is every
 // standing player on one line — 963px of it on the sandbox's roster, which in
@@ -67,7 +68,7 @@ export const resultTitleHit = "text-gold";
 
 export const resultBlurb = "m-0 mt-1 text-sm italic text-mutedWarm";
 
-export const resultPoints = "mt-2 block font-mono text-3xl font-black text-gold";
+export const resultPoints = "mt-2 block font-score tabular-nums text-3xl font-black text-gold";
 
 export const waitingNote =
   "flex h-full w-full items-center justify-center text-sm text-muted";

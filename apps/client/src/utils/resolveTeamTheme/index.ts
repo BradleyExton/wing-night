@@ -236,8 +236,17 @@ export const MARQUEE_FONT_SRCS: readonly string[] = [
   GENRE_KITS.rock.fontSrc
 ].filter((fontSrc): fontSrc is string => fontSrc !== null);
 
+// The show's two role faces (DESIGN.md §4): `font-score` for every clock and
+// score — the deck is on screen from the first frame — and `font-voice` for the
+// lines spoken to the room. Neither belongs to a genre, so they are paths, and
+// the paths are the ones `index.css` declares.
+export const ROLE_FONT_SRCS: readonly string[] = [
+  "/fonts/barlow-condensed/barlow-condensed-800-latin.woff2",
+  "/fonts/playfair-display/playfair-display-700-italic-latin.woff2"
+];
+
 export const resolveGenreFontSrcs = (teams: ReadonlyArray<Pick<Team, "genre">>): string[] => {
-  const fontSrcs = new Set<string>(MARQUEE_FONT_SRCS);
+  const fontSrcs = new Set<string>([...MARQUEE_FONT_SRCS, ...ROLE_FONT_SRCS]);
 
   for (const team of teams) {
     const fontSrc = GENRE_KITS[resolveGenreKey(team.genre)].fontSrc;

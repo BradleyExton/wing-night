@@ -12,7 +12,7 @@ export const idleOverlay =
   "absolute inset-0 z-10 grid place-items-center px-[10%] text-center";
 
 export const idleText =
-  "m-0 font-serif text-[clamp(1.4rem,2.4vw,2.6rem)] italic text-text/70";
+  "m-0 font-voice text-[clamp(1.4rem,2.4vw,2.6rem)] italic text-text/70";
 
 export const revealOverlay =
   "absolute inset-0 z-20 grid place-items-center px-[8%]";

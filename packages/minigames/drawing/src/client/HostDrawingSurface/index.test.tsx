@@ -88,7 +88,7 @@ test("does not repeat the active team name that the rail already carries", () =>
 test("does put the prompt and the pending points in the rail row's counter slot", () => {
   const html = renderSurface(hostView());
 
-  assert.match(html, /<p class="[^"]*font-serif[^"]*">Pizza slice<\/p>/);
+  assert.match(html, /<p class="[^"]*font-voice[^"]*">Pizza slice<\/p>/);
   assert.ok(html.indexOf("Pizza slice") < html.indexOf("Undo"));
 });
 

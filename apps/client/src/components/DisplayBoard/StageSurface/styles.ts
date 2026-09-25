@@ -41,6 +41,6 @@ export const timerLabel =
   "m-0 text-xs font-semibold uppercase tracking-[0.18em] text-primary/90";
 
 export const timerValue =
-  "mt-3 font-mono text-7xl font-black leading-none tabular-nums text-primary md:text-8xl";
+  "mt-3 font-score text-7xl font-black leading-none tabular-nums text-primary md:text-8xl";
 
 export const fallbackText = "mt-5 text-xl text-text/85";

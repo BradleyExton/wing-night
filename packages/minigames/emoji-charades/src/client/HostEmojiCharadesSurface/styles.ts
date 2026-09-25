@@ -34,7 +34,7 @@ const chip = `${railCounter} text-muted`;
 
 export const counter = chip;
 
-export const counterPending = `${railCounter} font-mono text-gold`;
+export const counterPending = `${railCounter} font-score tabular-nums text-gold`;
 
 // The body slot, filled edge to edge: clue canvas → persistent search → tabs →
 // emoji grid, in that order (DESIGN.md §2.6). The height the description
@@ -92,7 +92,7 @@ export const subjectLabel =
   takeoverLabelAccent;
 
 export const subjectValue =
-  "font-serif text-[clamp(1.4rem,2vw,2rem)] font-bold italic text-text";
+  "font-voice text-[clamp(1.4rem,2vw,2rem)] font-bold italic text-text";
 
 // A locked subject drops the tabs and the search with them, so the grid it
 // leaves behind is free to draw the few emoji it has as big touch targets.

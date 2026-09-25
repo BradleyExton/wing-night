@@ -33,7 +33,7 @@ export const teamCell =
   "text-[clamp(1.1rem,1.55vw,2.1rem)] font-extrabold uppercase tracking-[0.04em] text-text";
 
 export const num =
-  "text-right font-mono text-[clamp(1.4rem,2vw,2.5rem)] font-black tabular-nums tracking-[-0.03em] text-text";
+  "text-right font-score text-[clamp(1.4rem,2vw,2.5rem)] font-black tabular-nums tracking-[-0.03em] text-text";
 
 export const numMuted = "text-muted";
 

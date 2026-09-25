@@ -30,4 +30,4 @@ export const volumeSlider =
   "h-2 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-text/15 accent-primary disabled:cursor-not-allowed disabled:opacity-50";
 
 export const volumeValue =
-  "w-[3.5ch] shrink-0 text-right font-mono text-[0.85rem] font-bold tabular-nums text-primary";
+  "w-[3.5ch] shrink-0 text-right font-score text-[0.85rem] font-bold tabular-nums text-primary";

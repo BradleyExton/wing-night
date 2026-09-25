@@ -1944,8 +1944,26 @@ night, so the stage above never reflows
 # 4) Typography
 
 Display: - Round headline: text-5xl to text-7xl - Timer: text-7xl or
-larger - Use tabular or monospace numerals for timers - Keep supporting
+larger - Use tabular numerals for timers - Keep supporting
 copy concise and scan-friendly
+
+Faces by role (since 2026-09-24), all bundled under `apps/client/public/fonts`
+and preloaded by the TV, so the Mac and the Android tablet draw the same
+letters. `font-mono` and `font-serif` are gone: they were never bundled and fell
+back to whatever the system had — SF Mono's slashed zero in the eating clock and
+every deck score, New York on the Mac and Noto Serif on the tablet.
+
+-   **`font-score`** — Barlow Condensed 800. Every clock, score and point: the
+    eating clock, the deck, the marquee's pending points and figures, the
+    result plaque's points. Condensed, plain zero. Its figures are tabular only
+    with `tabular-nums`, so `font-score` is never written without it.
+-   **`font-voice`** — Playfair Display 700 italic. A line spoken to the room:
+    an answer revealed, a name called up to take the tablet, a game's title
+    card. That role is the licence, and it is why JOUST's and SCHLONIC's intro
+    titles and handoff names keep it; a label (JOUST's host lane plate) is not
+    a voice and is the house sans.
+-   The house sans for everything else; the marquee's `font-marquee-*` pair
+    (§2.2D) and the genre faces (`docs/team-identity.md`) as they were.
 
 Host: - Section titles: text-xl to text-2xl - Interactive rows: text-lg+
 

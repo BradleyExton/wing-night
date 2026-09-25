@@ -99,7 +99,7 @@ export const tileLabel =
   takeoverLabel;
 
 export const tileValue =
-  "mt-1 font-mono text-[clamp(1.5rem,3vw,1.9rem)] font-extrabold leading-none tabular-nums text-text";
+  "mt-1 font-score text-[clamp(1.5rem,3vw,1.9rem)] font-extrabold leading-none tabular-nums text-text";
 
 export const pointsTileValue = `${tileValue} text-primary`;
 

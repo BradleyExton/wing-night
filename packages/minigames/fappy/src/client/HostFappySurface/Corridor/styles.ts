@@ -31,7 +31,7 @@ export const handoffOverlay = `pointer-events-none absolute inset-0 z-10 flex fl
 export const handoffLead = takeoverLabelAccent;
 
 export const handoffName =
-  "font-serif text-[clamp(2rem,5vw,3.4rem)] font-bold italic leading-none text-text [text-shadow:0_0_24px_theme(colors.gold/55%)]";
+  "font-voice text-[clamp(2rem,5vw,3.4rem)] font-bold italic leading-none text-text [text-shadow:0_0_24px_theme(colors.gold/55%)]";
 
 // Who is up after them, a size down and dimmer: the tablet's owner reads the
 // name above, the room reads this one and starts moving.

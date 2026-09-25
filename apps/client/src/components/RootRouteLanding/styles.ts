@@ -50,7 +50,7 @@ export const roleActionHeaderRow = "flex items-baseline justify-between gap-4";
 export const roleActionLabel = "text-2xl font-bold leading-tight";
 
 export const roleActionRoute =
-  "font-mono text-xs uppercase tracking-[0.12em] text-primary/90 group-hover:text-primary";
+  "font-score tabular-nums text-xs uppercase tracking-[0.12em] text-primary/90 group-hover:text-primary";
 
 export const roleActionDetail =
   "mt-2 block max-w-[48ch] text-sm leading-relaxed text-text/86 md:text-base";

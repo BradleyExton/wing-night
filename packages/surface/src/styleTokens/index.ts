@@ -95,7 +95,7 @@ export const stageMeta =
 export const stageMetaStrong = "font-bold text-text";
 
 export const stageTimer =
-  "m-0 font-mono text-[clamp(8rem,18vw,16rem)] font-black leading-[0.82] tracking-[-0.06em] tabular-nums text-primary [text-shadow:0_0_60px_theme(colors.primary/30%)]";
+  "m-0 font-score text-[clamp(8rem,18vw,16rem)] font-black leading-[0.82] tracking-[-0.06em] tabular-nums text-primary [text-shadow:0_0_60px_theme(colors.primary/30%)]";
 
 export const stageTimerUrgent =
   "text-heat [text-shadow:0_0_60px_theme(colors.heat/40%)] motion-safe:[animation:pulse_0.7s_ease-in-out_infinite]";
@@ -123,7 +123,7 @@ export const deckGroupRoot = "flex flex-col";
 export const deckGroupHead =
   "mb-1 flex items-baseline justify-between px-1.5 text-[clamp(0.65rem,0.8vw,0.78rem)] font-extrabold uppercase tracking-[0.34em] text-muted/70";
 
-export const deckGroupCount = "font-mono tracking-[0.12em] text-primary";
+export const deckGroupCount = "font-score tabular-nums tracking-[0.12em] text-primary";
 
 // flex-wrap lets a long name push the trailing control group (team chips)
 // onto its own right-aligned line instead of clipping on narrow decks.
@@ -157,7 +157,7 @@ export const deckAddButton =
 export const deckChipRow = "ml-auto inline-flex gap-1.5";
 
 export const deckChip =
-  "inline-flex h-9 min-w-[36px] items-center justify-center gap-1.5 rounded-md border border-text/10 bg-text/[0.03] px-2 font-mono text-[clamp(0.7rem,0.85vw,0.85rem)] font-extrabold uppercase tracking-[0.14em] text-muted transition hover:border-text/25 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-9 min-w-[36px] items-center justify-center gap-1.5 rounded-md border border-text/10 bg-text/[0.03] px-2 font-score tabular-nums text-[clamp(0.7rem,0.85vw,0.85rem)] font-extrabold uppercase tracking-[0.14em] text-muted transition hover:border-text/25 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const deckChipActive =
   "border-primary/55 bg-primary/15 text-primary hover:border-primary/70";
@@ -281,7 +281,7 @@ export const stageStatusLine =
 // =============================================================================
 
 export const readoutFigure =
-  "font-mono text-[clamp(1.3rem,2.2vw,2.4rem)] font-extrabold normal-case leading-none tracking-normal tabular-nums";
+  "font-score text-[clamp(1.3rem,2.2vw,2.4rem)] font-extrabold normal-case leading-none tracking-normal tabular-nums";
 
 // =============================================================================
 // Reveal points — the points a result banked, on the TV. One face for every

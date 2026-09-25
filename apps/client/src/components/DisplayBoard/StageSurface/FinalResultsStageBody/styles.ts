@@ -43,7 +43,7 @@ export const score =
   "m-0 inline-flex items-baseline gap-[0.4em]";
 
 export const scoreNum =
-  "font-mono text-[clamp(2.5rem,6vw,7rem)] font-black tabular-nums leading-none tracking-[-0.05em] text-text";
+  "font-score text-[clamp(2.5rem,6vw,7rem)] font-black tabular-nums leading-none tracking-[-0.05em] text-text";
 
 export const scoreUnit =
   "text-[clamp(1.1rem,1.8vw,2.2rem)] font-extrabold uppercase tracking-[0.16em] text-muted";

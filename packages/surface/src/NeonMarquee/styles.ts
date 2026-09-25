@@ -27,7 +27,7 @@ export const team =
 export const teamName = "truncate";
 
 export const pending =
-  "shrink-0 font-mono text-[0.4em] font-extrabold tracking-normal text-gold [text-shadow:0_0_8px_theme(colors.gold),0_0_20px_theme(colors.gold/50%)]";
+  "shrink-0 font-score tabular-nums text-[0.4em] font-extrabold tracking-normal text-gold [text-shadow:0_0_8px_theme(colors.gold),0_0_20px_theme(colors.gold/50%)]";
 
 export const pendingLabel = "font-sans text-[0.55em] uppercase tracking-[0.2em]";
 

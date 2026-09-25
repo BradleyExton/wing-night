@@ -41,10 +41,10 @@ export const counterPromptLabel =
   takeoverLabelAccent;
 
 export const counterPromptText =
-  "m-0 font-serif text-[clamp(1.2rem,1.9vw,1.6rem)] font-bold italic leading-tight text-text";
+  "m-0 font-voice text-[clamp(1.2rem,1.9vw,1.6rem)] font-bold italic leading-tight text-text";
 
 export const counterPending =
-  "shrink-0 text-right font-mono text-sm font-extrabold text-gold";
+  "shrink-0 text-right font-score tabular-nums text-sm font-extrabold text-gold";
 
 // The body. Ink rail down the left, board taking the rest. Measured at
 // 1280x800: the board comes out 984px wide inside a 1151px easel slot, so the

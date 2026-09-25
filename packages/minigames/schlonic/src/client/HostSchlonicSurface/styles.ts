@@ -44,11 +44,11 @@ export const counterName = "text-text";
 // The big number is what the bird is holding right now, written by the paint
 // loop; the smaller pair beside it is what the team has already put on the
 // board against par.
-export const counterWings = `${railCounterOverlay} font-mono tracking-normal text-gold`;
+export const counterWings = `${railCounterOverlay} font-score tabular-nums tracking-normal text-gold`;
 
-export const counterInHand = "text-[1.15rem] font-extrabold [font-variant-numeric:tabular-nums]";
+export const counterInHand = "text-[1.15rem] font-extrabold tabular-nums";
 
-export const counterBanked = "text-[0.85rem] text-gold/80 [font-variant-numeric:tabular-nums]";
+export const counterBanked = "text-[0.85rem] text-gold/80 tabular-nums";
 
 export const counterWingsLabel =
   takeoverLabel;
@@ -73,4 +73,4 @@ export const finishCard =
 
 export const finishTitle = "m-0 text-base font-black uppercase tracking-[0.2em] text-gold";
 
-export const finishPoints = "font-mono text-2xl font-extrabold text-text";
+export const finishPoints = "font-score tabular-nums text-2xl font-extrabold text-text";

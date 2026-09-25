@@ -31,7 +31,7 @@ export const kicker =
   takeoverLabelAccent;
 
 export const name =
-  "font-serif text-[clamp(2.2rem,6vw,4rem)] font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.gold/55%)]";
+  "font-voice text-[clamp(2.2rem,6vw,4rem)] font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.gold/55%)]";
 
 export const prompt =
   "rounded-full border border-gold/50 bg-bg/70 px-4 py-1.5 text-[0.78rem] font-extrabold uppercase tracking-[0.3em] text-gold backdrop-blur";

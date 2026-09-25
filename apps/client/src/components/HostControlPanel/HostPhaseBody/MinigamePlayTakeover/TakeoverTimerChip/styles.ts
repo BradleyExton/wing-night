@@ -6,7 +6,7 @@
 // rail row: an empty clock takes no width, a filled one pushes the counter
 // left, and the top-right budget is abolished rather than corrected.
 const timerChipBase =
-  "rounded-full border border-text/10 bg-surface/90 px-[clamp(0.8rem,1.2vw,1.2rem)] py-[clamp(0.3rem,0.6vw,0.6rem)] font-mono text-[clamp(1rem,1.6vw,1.6rem)] font-black tabular-nums tracking-[-0.02em]";
+  "rounded-full border border-text/10 bg-surface/90 px-[clamp(0.8rem,1.2vw,1.2rem)] py-[clamp(0.3rem,0.6vw,0.6rem)] font-score text-[clamp(1rem,1.6vw,1.6rem)] font-black tabular-nums tracking-[-0.02em]";
 
 export const timerChip = `${timerChipBase} text-primary`;
 

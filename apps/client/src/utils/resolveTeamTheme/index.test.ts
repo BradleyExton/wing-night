@@ -134,9 +134,10 @@ test("does theme a team by its seat when it is resolved among the roster", () =>
   assert.equal(resolveTeamTheme(teams[1]).colorToken, "teamA");
 });
 
-// The marquee's own two faces (Monoton, Anton) lead the list on every roster;
-// a disco team's Monoton is not listed a second time behind them.
-test("does list the marquee's faces, then each roster face once, skipping genreless teams", () => {
+// The marquee's own two faces (Monoton, Anton) and the two role faces (score,
+// voice) lead the list on every roster; a disco team's Monoton is not listed a
+// second time behind them.
+test("does list the chrome faces, then each roster face once, skipping genreless teams", () => {
   const fontSrcs = resolveGenreFontSrcs([
     { genre: "metal" },
     { genre: "heavy metal" },
@@ -147,6 +148,8 @@ test("does list the marquee's faces, then each roster face once, skipping genrel
   assert.deepEqual(fontSrcs, [
     "/fonts/monoton/monoton-latin.woff2",
     "/fonts/anton/anton-latin.woff2",
+    "/fonts/barlow-condensed/barlow-condensed-800-latin.woff2",
+    "/fonts/playfair-display/playfair-display-700-italic-latin.woff2",
     "/fonts/metal-mania/metal-mania-latin.woff2"
   ]);
 });

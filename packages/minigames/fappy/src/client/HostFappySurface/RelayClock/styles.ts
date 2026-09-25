@@ -5,7 +5,7 @@
 // `ml-auto`: the chrome row places it, last, where the shell's own clock would
 // be if this game had one.
 export const container =
-  "inline-flex min-h-9 items-baseline gap-2 rounded-full border border-text/10 bg-bg/85 px-3.5 py-1.5 font-mono text-base tracking-normal text-text backdrop-blur";
+  "inline-flex min-h-9 items-baseline gap-2 rounded-full border border-text/10 bg-bg/85 px-3.5 py-1.5 font-score tabular-nums text-base tracking-normal text-text backdrop-blur";
 
 export const containerPastPar = "text-gold";
 

@@ -29,9 +29,9 @@ export const container =
 export const hint = "m-0 text-[clamp(1.1rem,1.4vw,1.6rem)] text-mutedWarm";
 
 export const introTitle =
-  "m-0 font-serif text-[clamp(2.8rem,5vw,5.6rem)] font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.primary/45%)]";
+  "m-0 font-voice text-[clamp(2.8rem,5vw,5.6rem)] font-bold italic leading-none text-text [text-shadow:0_0_28px_theme(colors.primary/45%)]";
 
 export const introDescription = "m-0 max-w-3xl text-[clamp(1.3rem,1.8vw,2.2rem)] leading-relaxed text-mutedWarm";
 
 export const doneTitle =
-  "m-0 font-serif text-[clamp(2.4rem,4vw,4.6rem)] font-bold italic leading-tight text-text";
+  "m-0 font-voice text-[clamp(2.4rem,4vw,4.6rem)] font-bold italic leading-tight text-text";

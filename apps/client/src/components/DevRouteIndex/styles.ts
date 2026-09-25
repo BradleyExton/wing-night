@@ -24,7 +24,7 @@ export const routeBody = "flex min-w-0 flex-col";
 export const routeHeaderRow = "flex flex-wrap items-baseline gap-x-3 gap-y-1";
 export const routeLabel = "text-xl font-bold leading-tight";
 export const routePath =
-  "font-mono text-xs uppercase tracking-[0.12em] text-primary/90 group-hover:text-primary";
+  "font-score tabular-nums text-xs uppercase tracking-[0.12em] text-primary/90 group-hover:text-primary";
 export const routeDetail =
   "mt-1 block max-w-[52ch] text-sm leading-relaxed text-text/86";
 export const homeLink =

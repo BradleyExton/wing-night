@@ -12,7 +12,7 @@ export const boardArea =
 
 export const statusLine = stageStatusLine;
 
-export const statusCount = "font-mono text-gold";
+export const statusCount = "font-score tabular-nums text-gold";
 
 // Turn-complete card: the last thing on screen before the host advances, so
 // it carries the turn's haul rather than a bare headline.

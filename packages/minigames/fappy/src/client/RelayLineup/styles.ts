@@ -49,7 +49,7 @@ export const tick =
   "absolute -bottom-[0.25em] -right-[0.25em] flex h-[2em] w-[2em] items-center justify-center rounded-full bg-bg text-[1.1em] font-black leading-none text-gold";
 
 export const crashes =
-  "absolute -right-[0.35em] -top-[0.35em] flex min-w-[2em] items-center justify-center rounded-full bg-bg px-[0.3em] font-mono text-[1.1em] font-bold leading-[1.7] text-heat";
+  "absolute -right-[0.35em] -top-[0.35em] flex min-w-[2em] items-center justify-center rounded-full bg-bg px-[0.3em] font-score tabular-nums text-[1.1em] font-bold leading-[1.7] text-heat";
 
 // The one word the room needs: who has the tablet next. Overlaps the chin of
 // the chip it belongs to, so it costs the row no height at all.

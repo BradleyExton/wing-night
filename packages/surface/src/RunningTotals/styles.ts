@@ -36,6 +36,6 @@ export const row =
 // (DESIGN.md §2.7), scoped to framing rather than to a winner.
 export const rowActive = "text-gold";
 
-export const points = "font-mono text-sm text-gold";
+export const points = "font-score tabular-nums text-sm text-gold";
 
 export const note = "mt-2 block text-center text-xs text-mutedWarm";

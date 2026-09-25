@@ -6,7 +6,7 @@ export const container =
   "inline-flex min-h-9 items-baseline gap-2 rounded-full border border-text/10 bg-bg/85 px-3.5 py-1.5 backdrop-blur";
 
 export const points =
-  "font-mono text-lg font-black leading-none text-gold [font-variant-numeric:tabular-nums]";
+  "font-score text-lg font-black leading-none text-gold tabular-nums";
 
 // Past par every tenth of a second is a point leaving the board, so the number
 // stops being a promise and starts being a countdown.

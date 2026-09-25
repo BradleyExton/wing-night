@@ -62,6 +62,6 @@ export const wordmark = "line-clamp-2 text-[length:var(--wn-bay-name)] leading-[
 // lands it on the densest part of the crest behind it, and a faceted disco
 // ball or a toothed skull eats the edges of a white digit without it.
 export const score =
-  "relative z-[1] m-0 whitespace-nowrap font-mono text-[clamp(2rem,2.9vw,3.6rem)] font-black tabular-nums leading-none tracking-[-0.04em] text-text [text-shadow:0_0_14px_theme(colors.bg),0_0_4px_theme(colors.bg)]";
+  "relative z-[1] m-0 whitespace-nowrap font-score text-[clamp(2rem,2.9vw,3.6rem)] font-black tabular-nums leading-none tracking-[-0.04em] text-text [text-shadow:0_0_14px_theme(colors.bg),0_0_4px_theme(colors.bg)]";
 
 export const scoreLead = "text-gold";

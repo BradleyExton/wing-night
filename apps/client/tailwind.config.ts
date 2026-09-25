@@ -30,7 +30,14 @@ const config: Config = {
         // and `genre-rock` in the marquee would make a chrome decision look
         // like a team's identity leaking.
         "marquee-title": ["Monoton", "ui-sans-serif", "system-ui", "sans-serif"],
-        "marquee-name": ["Anton", "ui-sans-serif", "system-ui", "sans-serif"]
+        "marquee-name": ["Anton", "ui-sans-serif", "system-ui", "sans-serif"],
+        // The show's scoreboard face: every clock, score and point. Condensed with
+        // a plain zero; its figures are tabular only with `tabular-nums`, so the
+        // class never appears without it (DESIGN.md §4).
+        score: ['"Barlow Condensed"', "ui-sans-serif", "system-ui", "sans-serif"],
+        // The show's speaking voice, always italic: an answer revealed, a name
+        // called up, a game's title card (DESIGN.md §4).
+        voice: ['"Playfair Display"', "ui-serif", "Georgia", "serif"]
       },
       colors: {
         bg: "#121212",

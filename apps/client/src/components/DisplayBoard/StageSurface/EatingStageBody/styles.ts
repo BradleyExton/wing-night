@@ -18,7 +18,7 @@ export const timerArea =
   "flex flex-col items-center justify-center gap-[clamp(1rem,2vw,2rem)]";
 
 export const timer =
-  "m-0 font-mono text-[clamp(7rem,22vw,28rem)] font-black leading-[0.85] tabular-nums tracking-[-0.06em] text-primary";
+  "m-0 font-score text-[clamp(7rem,22vw,28rem)] font-black leading-[0.85] tabular-nums tracking-[-0.06em] text-primary";
 
 export const timerUrgent = "text-heat motion-safe:animate-[heatpulse_0.65s_ease-in-out_infinite]";
 

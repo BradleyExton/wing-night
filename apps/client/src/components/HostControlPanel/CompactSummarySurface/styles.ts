@@ -14,7 +14,7 @@ export const leaderLabel =
   "text-[0.65rem] font-extrabold uppercase tracking-[0.32em] text-gold";
 
 export const score =
-  "font-mono text-[clamp(1.05rem,1.4vw,1.4rem)] font-black tabular-nums tracking-[-0.03em] text-text";
+  "font-score text-[clamp(1.05rem,1.4vw,1.4rem)] font-black tabular-nums tracking-[-0.03em] text-text";
 
 export const scoreLeader = "text-gold";
 

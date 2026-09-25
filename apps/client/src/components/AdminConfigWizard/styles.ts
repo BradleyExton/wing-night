@@ -27,7 +27,7 @@ export const stepChipActive = "border-primary/70 bg-primary/15 text-text";
 export const stepChipDone = "border-success/50 text-text";
 
 export const stepIndex =
-  "inline-flex h-5 w-5 items-center justify-center rounded-full bg-text/10 font-mono text-xs";
+  "inline-flex h-5 w-5 items-center justify-center rounded-full bg-text/10 font-score tabular-nums text-xs";
 
 export const stepBody = "flex flex-col gap-5";
 

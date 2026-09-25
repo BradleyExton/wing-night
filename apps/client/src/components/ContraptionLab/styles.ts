@@ -35,7 +35,7 @@ export const controlLabel = "text-xs font-semibold uppercase tracking-[0.12em] t
 
 export const controlHint = "text-xs leading-snug text-muted/70";
 
-export const controlValue = "text-xs font-mono text-text";
+export const controlValue = "text-xs font-score tabular-nums text-text";
 
 export const controlRow = "flex items-center justify-between gap-2";
 
@@ -56,7 +56,7 @@ export const button =
 
 export const buttonRow = "flex gap-2";
 
-export const telemetryGrid = "grid grid-cols-2 gap-x-3 gap-y-1 text-xs font-mono text-text";
+export const telemetryGrid = "grid grid-cols-2 gap-x-3 gap-y-1 text-xs font-score tabular-nums text-text";
 
 export const telemetryKey = "text-muted";
 
@@ -82,7 +82,7 @@ export const attemptChipBest = "border-primary/60 bg-primary/10";
 
 export const attemptChipLabel = "font-semibold text-text";
 
-export const attemptChipMeta = "font-mono text-[11px] text-muted";
+export const attemptChipMeta = "font-score tabular-nums text-[11px] text-muted";
 
 export const varianceNote = "px-4 pb-3 text-xs text-muted";
 

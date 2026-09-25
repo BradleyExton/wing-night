@@ -20,7 +20,7 @@ export const ringFrame =
   "heat-locked-ring flex h-[clamp(220px,28vw,360px)] w-[clamp(220px,28vw,360px)] items-center justify-center";
 
 export const countdownNumber =
-  "relative z-[1] m-0 font-mono text-[clamp(8rem,18vw,16rem)] font-black tabular-nums leading-none tracking-[-0.05em] text-primary [text-shadow:0_0_50px_theme(colors.primary/60%),0_0_120px_theme(colors.primary/30%)] [animation:tick_1s_ease-out_infinite] motion-reduce:[animation:none]";
+  "relative z-[1] m-0 font-score text-[clamp(8rem,18vw,16rem)] font-black tabular-nums leading-none tracking-[-0.05em] text-primary [text-shadow:0_0_50px_theme(colors.primary/60%),0_0_120px_theme(colors.primary/30%)] [animation:tick_1s_ease-out_infinite] motion-reduce:[animation:none]";
 
 export const readyLabel =
   "m-0 text-[clamp(0.95rem,1.3vw,1.5rem)] font-bold uppercase tracking-[0.32em] text-mutedWarm";

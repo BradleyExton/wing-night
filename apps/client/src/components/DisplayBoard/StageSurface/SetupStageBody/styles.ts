@@ -87,7 +87,7 @@ export const roundRevealDelays: readonly string[] = [
 ];
 
 export const roundWatermark =
-  "pointer-events-none absolute -right-[0.06em] -top-[0.18em] z-0 select-none font-mono text-[clamp(3.2rem,5.5vw,7rem)] font-black leading-none tracking-[-0.06em] text-text/[0.06]";
+  "pointer-events-none absolute -right-[0.06em] -top-[0.18em] z-0 select-none font-score tabular-nums text-[clamp(3.2rem,5.5vw,7rem)] font-black leading-none tracking-[-0.06em] text-text/[0.06]";
 
 // A lit card has three tiers, not four: one eyebrow line (round number, then
 // its label), the sauce as the headline, the mini-game as a pill. The number
@@ -97,7 +97,7 @@ export const roundWatermark =
 export const roundMeta =
   "relative z-[1] m-0 flex flex-wrap items-baseline justify-center gap-x-[0.7em] gap-y-[0.2em] text-[clamp(0.72rem,0.95vw,1.1rem)] font-bold uppercase leading-none tracking-[0.18em]";
 
-export const roundNum = "font-mono font-extrabold tracking-[0.2em] text-primary";
+export const roundNum = "font-score tabular-nums font-extrabold tracking-[0.2em] text-primary";
 
 export const roundMetaDot = "h-[0.3em] w-[0.3em] self-center rounded-full bg-primary/60";
 
@@ -106,7 +106,7 @@ export const roundLabel = "text-mutedWarm";
 // An open slot's eyebrow: same line, but the "Round 07: Open Slot" tag has no
 // primary — the seat is empty, so nothing about it should glow.
 export const roundNumMuted =
-  "relative z-[1] font-mono text-[clamp(0.7rem,0.9vw,1.25rem)] font-extrabold uppercase leading-none tracking-[0.28em] text-mutedWarm/80";
+  "relative z-[1] font-score tabular-nums text-[clamp(0.7rem,0.9vw,1.25rem)] font-extrabold uppercase leading-none tracking-[0.28em] text-mutedWarm/80";
 
 // The instruction is a footnote, not a headline: sentence case, no tracking,
 // dim, and well under the sauce size so six lit sauces stay the loud thing.

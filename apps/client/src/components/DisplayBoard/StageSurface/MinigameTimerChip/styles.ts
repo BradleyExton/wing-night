@@ -20,7 +20,7 @@
 // across a room cannot share one `vw` clamp. The lit length under the row is
 // `MinigameTimerLine`, next door — same seconds, the other half of the clock.
 const timerChipFrame =
-  "rounded-full font-mono font-extrabold leading-none tabular-nums text-text";
+  "rounded-full font-score font-extrabold leading-none tabular-nums text-text";
 
 export const timerChip = `${timerChipFrame} border-[3px] border-primary px-[clamp(0.9rem,1.4vw,1.4rem)] py-[clamp(0.2rem,0.4vw,0.4rem)] text-[clamp(1.4rem,2.2vw,2.5rem)] tracking-[-0.02em] [text-shadow:0_0_6px_theme(colors.text),0_0_16px_theme(colors.primary),0_0_36px_theme(colors.primary)] shadow-[0_0_10px_theme(colors.primary),inset_0_0_10px_theme(colors.primary/60%)]`;
 

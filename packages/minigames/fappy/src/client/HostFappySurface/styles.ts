@@ -71,9 +71,9 @@ export const finishTitle =
 
 export const finishTitleTimedOut = "text-heat";
 
-export const finishTime = "mt-1 block font-mono text-lg text-text";
+export const finishTime = "mt-1 block font-score tabular-nums text-lg text-text";
 
-export const finishPoints = "mt-1 block font-mono text-3xl font-black text-gold";
+export const finishPoints = "mt-1 block font-score tabular-nums text-3xl font-black text-gold";
 
 // Why the finish card's clock reads later than the one the host watched run.
 export const finishPenalty =

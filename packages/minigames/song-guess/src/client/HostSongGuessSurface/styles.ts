@@ -32,7 +32,7 @@ const chip = `${railCounter} text-muted`;
 
 export const counter = chip;
 
-export const counterPending = `${railCounter} font-mono text-gold`;
+export const counterPending = `${railCounter} font-score tabular-nums text-gold`;
 
 // The body slot: the two things the host reads. The answer takes the width and
 // the round so far keeps a narrow column beside it — a read pane, not the deck
@@ -56,7 +56,7 @@ export const answerLabel =
 // Read from across a table on a tablet that is lying flat, at the size the
 // card now has rather than the size a content-height card used to leave it.
 export const answerTitle =
-  "m-0 text-balance font-serif text-[clamp(2rem,4.4vw,4rem)] font-bold italic leading-tight text-text";
+  "m-0 text-balance font-voice text-[clamp(2rem,4.4vw,4rem)] font-bold italic leading-tight text-text";
 
 export const answerArtist =
   "m-0 mt-1 text-[clamp(1.1rem,2vw,1.9rem)] text-mutedWarm";

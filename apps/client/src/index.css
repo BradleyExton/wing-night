@@ -69,6 +69,25 @@
   font-display: block;
   src: url("/fonts/playfair-display/playfair-display-900-latin.woff2") format("woff2");
 }
+/* The show's two faces by ROLE (DESIGN.md §4): `font-voice` is Playfair's italic —
+   someone speaking to the room — and `font-score` is Barlow Condensed, the face
+   every clock and score is set in. Both bundled so the Mac and the Android tablet
+   draw the same letters; `font-mono` and `font-serif` fell back to whatever the
+   system had (SF Mono's slashed zero, New York, Noto Serif). */
+@font-face {
+  font-family: "Playfair Display";
+  font-style: italic;
+  font-weight: 700;
+  font-display: block;
+  src: url("/fonts/playfair-display/playfair-display-700-italic-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-style: normal;
+  font-weight: 800;
+  font-display: block;
+  src: url("/fonts/barlow-condensed/barlow-condensed-800-latin.woff2") format("woff2");
+}
 
 :root {
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
