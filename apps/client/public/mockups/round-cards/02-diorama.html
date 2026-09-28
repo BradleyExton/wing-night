@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Round Cards — 02 Diorama Window</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      /* Each card opens a window onto its game: a painted moment in the cast's
+         flat-vector hand (dark 2.5 stroke, house palette), the sauce and the round
+         riding a smoked-glass sill across the bottom of it. The art is the card;
+         the text is its caption. */
+      .card { position: relative; isolation: isolate; overflow: hidden; border-radius: clamp(0.6rem, 0.9vw, 1.1rem); aspect-ratio: 16 / 9.2; border: 1px solid rgb(249 115 22 / 0.28); box-shadow: inset 0 1px 0 rgb(255 214 170 / 0.18), 0 18px 40px -20px rgb(0 0 0 / 0.9); }
+      .card { background: #120904; }
+      .art { position: absolute; inset: 0 0 auto; width: 100%; height: 76%; z-index: -2; display: block; }
+      /* Warm the scene toward the hearth so a blue sky doesn't punch a hole in the lobby. */
+      .card::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgb(46 22 9 / 0.12) 0%, rgb(46 22 9 / 0) 40%, rgb(18 9 4 / 0.85) 70%, #120904 78%); }
+      .sill { position: absolute; inset: auto 0 0; padding: 0 clamp(0.8rem, 1.1vw, 1.2rem) clamp(0.7rem, 1vw, 1.1rem); display: flex; align-items: flex-end; justify-content: space-between; gap: 0.6em; text-align: left; }
+      .sill .meta { justify-content: flex-start; }
+      .sill .sauce { margin-top: 0.3em; font-size: clamp(1.05rem, 1.6vw, 2.2rem); }
+      .tag { position: absolute; top: clamp(0.5rem, 0.7vw, 0.8rem); left: clamp(0.5rem, 0.7vw, 0.8rem); font-size: clamp(0.6rem, 0.78vw, 0.9rem); font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ember); background: rgb(18 9 4 / 0.78); border: 1px solid rgb(255 179 90 / 0.5); border-radius: 999px; padding: 0.35em 0.8em; backdrop-filter: blur(4px); box-shadow: 0 0 14px rgb(249 115 22 / 0.35); }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { mount, metaLine, scene } from "./kit.js";
+      mount((r) => `<article class="card">${scene(r.id, "art")}<span class="tag">${r.game}</span><div class="sill"><div>${metaLine(r)}<p class="sauce">${r.sauce}</p></div></div></article>`);
+    </script>
+  </body>
+</html>

@@ -57,6 +57,14 @@ test("renders Cinematic Inferno setup with rounds preview and waiting indicator"
   assert.doesNotMatch(html, /Live Setup/);
 });
 
+test("does press each lit round's game symbol into its card when setup previews rounds", () => {
+  const html = renderStage(buildSnapshot(Phase.SETUP));
+  const roundCount = gameConfigFixture.rounds.length;
+
+  assert.equal((html.match(/data-round-glyph="/g) ?? []).length, roundCount);
+  assert.match(html, new RegExp(`data-round-glyph="${gameConfigFixture.rounds[0]?.minigame}"`));
+});
+
 test("does parade the roster cast behind the setup stage when players are rostered", () => {
   const html = renderStage(buildSnapshot(Phase.SETUP));
 

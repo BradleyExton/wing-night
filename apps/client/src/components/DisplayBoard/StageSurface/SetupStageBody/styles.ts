@@ -86,9 +86,10 @@ export const roundRevealDelays: readonly string[] = [
   "[--reveal-delay:780ms]"
 ];
 
-// Embossed in the bottom-right corner, away from the eyebrow: in the top corner the
-// numeral ran into the round's label ("SECOND HEAT" into "02") on every card whose
-// label was long enough to reach it.
+// An open slot's numeral, embossed in the bottom-right corner, away from the
+// eyebrow: in the top corner it ran into the round's label ("SECOND HEAT" into
+// "02"). A lit card presses its game's symbol there instead (RoundGlyph), since
+// its number is already in the eyebrow.
 export const roundWatermark =
   "pointer-events-none absolute -bottom-[0.2em] -right-[0.06em] z-0 select-none font-score tabular-nums text-[clamp(3.2rem,5.5vw,7rem)] font-black leading-none tracking-[-0.06em] text-text/[0.06]";
 

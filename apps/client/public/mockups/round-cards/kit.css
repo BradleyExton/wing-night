@@ -1,0 +1,59 @@
+/* The SETUP stage as it ships (SetupStageBody/styles.ts), stripped to what the
+   round cards sit in: the flame, the wordmark, the grid, the cast's floor and
+   the standings deck. Every direction in this round restyles only `.card`. */
+@font-face { font-family: "Barlow Condensed"; font-weight: 800; src: url("../../fonts/barlow-condensed/barlow-condensed-800-latin.woff2") format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-style: italic; font-weight: 700; src: url("../../fonts/playfair-display/playfair-display-700-italic-latin.woff2") format("woff2"); }
+@font-face { font-family: "Monoton"; src: url("../../fonts/monoton/monoton-latin.woff2") format("woff2"); }
+@font-face { font-family: "Anton"; src: url("../../fonts/anton/anton-latin.woff2") format("woff2"); }
+
+:root {
+  --bg: #121212; --text: #fff; --muted-warm: #b3a89a; --muted-warm-dim: #6b6157;
+  --ember: #ffb35a; --glow: #ffd6aa; --hearth-glass: #2e1609; --shade: #000;
+  --primary: #f97316; --heat: #ef4444; --gold: #fbbf24;
+  --score: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  --voice: "Playfair Display", Georgia, serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100dvh; overflow: hidden; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+
+.tv { position: relative; height: 100dvh; display: grid; grid-template-rows: 1fr auto; }
+.stage { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(1.25rem, 3.5vh, 3.5rem); padding: clamp(1.5rem, 3vw, 3rem) clamp(2rem, 4vw, 4rem) clamp(6rem, 14vh, 17rem); text-align: center; }
+
+.ambient { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse 70% 55% at 50% 100%, rgb(249 115 22 / 0.3) 0%, transparent 60%), radial-gradient(ellipse 45% 35% at 50% 100%, rgb(239 68 68 / 0.3) 0%, transparent 55%), radial-gradient(ellipse 90% 50% at 50% 0%, rgb(0 0 0 / 0.55) 0%, transparent 65%); }
+/* A stand-in for HeroFlame: three stacked tongues, blurred. */
+.flame { position: absolute; left: 50%; bottom: -6%; z-index: 0; width: 26vw; height: 100%; transform: translateX(-50%); pointer-events: none; filter: blur(18px); opacity: 0.85; }
+.flame i { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); border-radius: 50% 50% 45% 45% / 70% 70% 30% 30%; }
+.flame i:nth-child(1) { width: 100%; height: 100%; background: radial-gradient(ellipse 50% 60% at 50% 70%, #c2410c 0%, rgb(154 52 18 / 0.6) 55%, transparent 75%); }
+.flame i:nth-child(2) { width: 62%; height: 82%; background: radial-gradient(ellipse 50% 60% at 50% 70%, #f97316 0%, rgb(249 115 22 / 0.5) 60%, transparent 80%); }
+.flame i:nth-child(3) { width: 26%; height: 62%; background: radial-gradient(ellipse 50% 60% at 50% 72%, #fff3e0 0%, #fbbf24 45%, transparent 80%); }
+.vignette { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgb(18 18 18 / 0.6) 0%, transparent 30%), radial-gradient(ellipse 75% 72% at 50% 45%, transparent 48%, rgb(0 0 0 / 0.62) 100%); }
+
+.header { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: clamp(0.6rem, 1vw, 1.1rem); }
+.eyebrow-row { display: flex; align-items: center; gap: clamp(0.8rem, 1.2vw, 1.5rem); }
+.eyebrow-row i { height: 1px; width: clamp(3rem, 6vw, 8rem); background: linear-gradient(90deg, transparent, rgb(179 168 154 / 0.7)); }
+.eyebrow-row i:last-child { transform: scaleX(-1); }
+.eyebrow { font-size: clamp(0.85rem, 1.1vw, 1.2rem); font-weight: 800; text-transform: uppercase; letter-spacing: 0.42em; color: var(--muted-warm); }
+.wordmark { margin: 0; font-size: clamp(3.5rem, 9vw, 12rem); font-weight: 900; text-transform: uppercase; line-height: 0.9; letter-spacing: -0.02em; color: transparent; background: linear-gradient(180deg, #fff 0%, #fff 58%, #ffd7a3 100%); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 0 28px rgb(251 191 36 / 0.32)) drop-shadow(0 0 90px rgb(249 115 22 / 0.28)); }
+
+.rounds { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(0.6rem, 1.1vw, 1.4rem) clamp(0.7rem, 1.3vw, 1.6rem); width: 100%; max-width: 1640px; }
+.card { animation: reveal 700ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) both; }
+@keyframes reveal { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* The shipped card's type, shared so every direction speaks the same words. */
+.meta { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 0.2em 0.7em; font-size: clamp(0.72rem, 0.95vw, 1.1rem); font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; line-height: 1; }
+.meta .num { font-family: var(--score); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.2em; color: var(--primary); }
+.meta .dot { width: 0.3em; height: 0.3em; align-self: center; border-radius: 50%; background: rgb(249 115 22 / 0.6); }
+.meta .label { color: var(--muted-warm); }
+.sauce { margin: 0.45em 0 0; font-size: clamp(1.2rem, 1.85vw, 2.6rem); font-weight: 900; text-transform: uppercase; line-height: 0.95; letter-spacing: -0.005em; text-shadow: 0 0 18px rgb(249 115 22 / 0.45), 0 2px 0 rgb(0 0 0 / 0.4); }
+.pill { margin-top: 0.8em; display: inline-flex; align-items: center; gap: 0.55em; border: 1px solid rgb(255 255 255 / 0.1); background: rgb(255 255 255 / 0.05); border-radius: 999px; padding: 0.38em 0.95em; font-size: clamp(0.68rem, 0.9vw, 1rem); font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted-warm); }
+.pill::before { content: ""; width: 0.5em; height: 0.5em; border-radius: 50%; background: rgb(249 115 22 / 0.85); box-shadow: 0 0 8px rgb(249 115 22 / 0.7); }
+.glass { border: 1px solid rgb(249 115 22 / 0.2); background: linear-gradient(180deg, rgb(46 22 9 / 0.84) 0%, rgb(0 0 0 / 0.93) 100%); backdrop-filter: blur(3px); box-shadow: inset 0 1px 0 rgb(255 214 170 / 0.14), 0 18px 40px -20px rgb(0 0 0 / 0.8); }
+
+/* The cast walks on this strip; it is padding in the real stage, drawn here so
+   the space the cards cannot grow into is visible. */
+.floor { position: absolute; inset: auto 0 0; z-index: 1; height: clamp(6rem, 14vh, 17rem); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 1.2vh; background: linear-gradient(180deg, transparent 0%, rgb(255 214 170 / 0.04) 44%, rgb(255 214 170 / 0.12) 100%); }
+.floor span { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: rgb(179 168 154 / 0.35); border: 1px dashed rgb(179 168 154 / 0.2); border-radius: 999px; padding: 0.3em 1em; }
+.deck { height: clamp(4.5rem, 9vh, 7rem); background: linear-gradient(180deg, #2a1509 0%, #120a05 100%); border-top: 2px solid rgb(255 179 90 / 0.5); box-shadow: 0 -6px 30px rgb(249 115 22 / 0.25); }
+
+.hint { position: fixed; right: 12px; top: 10px; z-index: 9; font-size: 11px; letter-spacing: 0.08em; color: rgb(179 168 154 / 0.55); }

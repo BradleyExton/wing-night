@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Round Cards — 04 Trading Card</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      /* The lineup as a hand of eight: one row of portrait cards, art first,
+         read left to right like the night itself. The game gets a banner across
+         the foot of its art and a line in the show's voice; the sauce is the
+         card's name plate; the heat is a row of chillies from pointsPerPlayer. */
+      .rounds { grid-template-columns: repeat(8, minmax(0, 1fr)); max-width: 1760px; gap: clamp(0.5rem, 0.9vw, 1.1rem); }
+      .card { position: relative; display: flex; flex-direction: column; border-radius: clamp(0.6rem, 0.8vw, 1rem); padding: clamp(0.3rem, 0.4vw, 0.5rem); background: linear-gradient(180deg, #5a2a0e 0%, #2e1609 40%, #1a0b04 100%); border: 1px solid rgb(255 179 90 / 0.45); box-shadow: inset 0 1px 0 rgb(255 214 170 / 0.3), 0 20px 40px -18px rgb(0 0 0 / 0.95), 0 0 24px -10px rgb(249 115 22 / 0.5); }
+      .card:nth-child(even) { transform: translateY(clamp(0.4rem, 1.2vh, 1.2rem)); }
+      .frame { position: relative; overflow: hidden; aspect-ratio: 1 / 1.08; border-radius: clamp(0.4rem, 0.55vw, 0.7rem); border: 1.5px solid rgb(26 14 7 / 0.9); }
+      .frame svg { display: block; width: 100%; height: 100%; }
+      .badge { position: absolute; top: 0.35em; left: 0.35em; font-family: var(--score); font-weight: 800; font-size: clamp(0.9rem, 1.3vw, 1.6rem); line-height: 1; color: #fff; background: rgb(18 9 4 / 0.8); border: 1px solid rgb(255 179 90 / 0.6); border-radius: 0.35em; padding: 0.15em 0.35em; }
+      .banner { position: absolute; inset: auto 0 0; padding: 0.45em 0.3em 0.4em; background: linear-gradient(180deg, transparent, rgb(12 6 2 / 0.92) 45%); font-size: clamp(0.62rem, 0.82vw, 0.98rem); font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ember); text-shadow: 0 0 10px rgb(249 115 22 / 0.7); }
+      .plate { display: flex; flex-direction: column; align-items: center; gap: 0.3em; padding: clamp(0.5rem, 0.8vw, 0.9rem) 0.2em clamp(0.4rem, 0.6vw, 0.7rem); }
+      .label { font-size: clamp(0.55rem, 0.7vw, 0.8rem); font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted-warm); }
+      .card .sauce { margin: 0; font-size: clamp(0.85rem, 1.12vw, 1.45rem); line-height: 1; min-height: 2em; display: grid; place-items: center; }
+      .voice { font-family: var(--voice); font-style: italic; font-weight: 700; font-size: clamp(0.6rem, 0.76vw, 0.95rem); color: var(--glow); opacity: 0.8; line-height: 1.2; }
+      .heat { display: flex; gap: 0.15em; font-size: clamp(0.62rem, 0.8vw, 1rem); }
+      .heat b { filter: grayscale(1) brightness(0.45); }
+      .heat b.on { filter: none; }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { mount, pad, scene, TAGLINES } from "./kit.js";
+      const heat = (h) => `<span class="heat">${[1, 2, 3, 4, 5].map((i) => `<b class="${i <= h ? "on" : ""}">🌶️</b>`).join("")}</span>`;
+      mount((r) => `<article class="card"><div class="frame">${scene(r.id)}<span class="badge">${pad(r.n)}</span><span class="banner">${r.game}</span></div>
+        <div class="plate"><span class="label">${r.label}</span><p class="sauce">${r.sauce}</p><span class="voice">${TAGLINES[r.id]}</span>${heat(r.heat)}</div></article>`);
+    </script>
+  </body>
+</html>
