@@ -1,78 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { createStubAudioContext } from "@wingnight/audio";
+
 import {
   FAPPY_CUE_NAMES,
+  FAPPY_CUES,
   FAPPY_HEARTBEAT_REMAINING_MS,
   HEARTBEAT_GAIN_FLOOR,
   createFappySoundboard,
-  isCueDue,
   resolveClockCue,
   resolveHeartbeatGain
 } from "./index.js";
-
-// The AudioContext is not unit-testable, so the board takes a factory and these stand in for
-// one. They record nothing about the sound — only that the graph was built without throwing.
-type StubAudioContext = {
-  context: AudioContext;
-  startedNodes: () => number;
-  resumeCalls: () => number;
-};
-
-const createStubParam = (): AudioParam => {
-  const param = {
-    value: 0,
-    setValueAtTime: (): AudioParam => param,
-    linearRampToValueAtTime: (): AudioParam => param,
-    exponentialRampToValueAtTime: (): AudioParam => param
-  } as unknown as AudioParam;
-
-  return param;
-};
-
-const createStubContext = (state: AudioContextState = "running"): StubAudioContext => {
-  let startedNodes = 0;
-  let resumeCalls = 0;
-  const context = {
-    state,
-    currentTime: 2,
-    sampleRate: 48_000,
-    destination: {},
-    resume: (): Promise<void> => {
-      resumeCalls += 1;
-      return Promise.resolve();
-    },
-    createGain: () => ({ gain: createStubParam(), connect: (): void => undefined }),
-    createOscillator: () => ({
-      type: "sine",
-      frequency: createStubParam(),
-      connect: (): void => undefined,
-      start: (): void => {
-        startedNodes += 1;
-      },
-      stop: (): void => undefined
-    }),
-    createBufferSource: () => ({
-      buffer: null,
-      connect: (): void => undefined,
-      start: (): void => {
-        startedNodes += 1;
-      },
-      stop: (): void => undefined
-    }),
-    createBiquadFilter: () => ({
-      type: "lowpass",
-      frequency: createStubParam(),
-      Q: createStubParam(),
-      connect: (): void => undefined
-    }),
-    createBuffer: (_channels: number, frameCount: number) => ({
-      getChannelData: (): Float32Array => new Float32Array(frameCount)
-    })
-  } as unknown as AudioContext;
-
-  return { context, startedNodes: () => startedNodes, resumeCalls: () => resumeCalls };
-};
 
 test("does sit at the floor when the heartbeat has no urgency yet", () => {
   assert.equal(resolveHeartbeatGain(0), HEARTBEAT_GAIN_FLOOR);
@@ -143,20 +82,12 @@ test("does say nothing when the elapsed time is not a usable number", () => {
   assert.equal(resolveClockCue({ elapsedMs: Number.NaN, parSeconds: 30, limitSeconds: 90 }).cue, null);
 });
 
-test("does let a cue through when it has never sounded", () => {
-  assert.equal(isCueDue(null, 1000, 200), true);
-});
-
-test("does hold a cue back when it repeats inside its own gap", () => {
-  assert.equal(isCueDue(1000, 1100, 200), false);
-});
-
-test("does let a cue through when its gap has passed", () => {
-  assert.equal(isCueDue(1000, 1200, 200), true);
+test("does name every cue in the table once in the list the tests walk", () => {
+  assert.deepEqual([...FAPPY_CUE_NAMES].sort(), Object.keys(FAPPY_CUES).sort());
 });
 
 test("does build a graph for every cue when the context is running", () => {
-  const stub = createStubContext();
+  const stub = createStubAudioContext();
   let nowMs = 0;
   const board = createFappySoundboard({ createContext: () => stub.context, now: () => nowMs });
 
@@ -178,7 +109,7 @@ test("does swallow the cue when the page has no AudioContext at all", () => {
 });
 
 test("does stay silent and retry when the context has not been unlocked yet", () => {
-  const stub = createStubContext("suspended");
+  const stub = createStubAudioContext("suspended");
   let nowMs = 0;
   const board = createFappySoundboard({ createContext: () => stub.context, now: () => nowMs });
 
@@ -204,7 +135,7 @@ test("does swallow the cue when the context throws on the way out", () => {
 });
 
 test("does sound a cue once when the same cue repeats inside its gap", () => {
-  const stub = createStubContext();
+  const stub = createStubAudioContext();
   const board = createFappySoundboard({ createContext: () => stub.context, now: () => 500 });
 
   board.play("handoff");

@@ -1,3 +1,4 @@
+import { wakeAudio } from "@wingnight/audio";
 import { MUSIC_VOLUME_DEFAULT, Phase, type MusicPlaybackSource } from "@wingnight/shared";
 import { useCallback, useMemo, useRef, useState } from "react";
 
@@ -76,6 +77,10 @@ export const DisplayBoard = ({
     const media = displayMediaRef.current;
 
     setAudioUnlocked(true);
+    // The same tap wakes the house's Web Audio context (the clock, the
+    // stings, every game's board), which otherwise first meets the browser
+    // inside an effect where no gesture can unlock it.
+    wakeAudio();
 
     if (media === null) {
       return;

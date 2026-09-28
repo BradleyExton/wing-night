@@ -110,6 +110,7 @@ export default [
     // house component rule below does cover the minigame trees.
     files: [
       "apps/client/src/**/*.{ts,tsx}",
+      "packages/audio/src/**/*.ts",
       "packages/cast/src/**/*.{ts,tsx}",
       "packages/scenery/src/**/*.{ts,tsx}",
       "packages/surface/src/**/*.{ts,tsx}"

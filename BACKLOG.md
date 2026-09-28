@@ -57,6 +57,9 @@ MINIGAME_INTRO — two things wanting the speaker at once is exactly what one el
 **Start from the music model, not from scratch.** `musicPlayback` is already server-authoritative
 room state with host-gated `music:*` mutations and a display-reported `music:trackEnded`; whatever
 the announcer becomes, it is a second speaker channel alongside that one, not a parallel invention.
+Since 2026-09-28 the Web Audio side has a `voice` bus waiting for it in `packages/audio`
+(`setAudioBusLevel("voice", …)`), separate from the `sfx` bus every game's cues leave through — so a
+spoken line can duck the effects without any board knowing.
 
 **Non-negotiables:**
 - A cue with no file is SILENT, never fatal and never a blocked phase transition. A party must not

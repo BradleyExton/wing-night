@@ -1,5 +1,9 @@
-import type { ClockCueName } from "../createClockSoundboard";
+import type { HouseCueName } from "@wingnight/audio";
+
 import { isTimerTimeUp, isTimerUrgent } from "../timerUrgency";
+
+// The two house cues the TV clock speaks in.
+export type ClockCueName = Extract<HouseCueName, "tick" | "timesUp">;
 
 // What the TV's clock should SAY on a change of second, as opposed to what it
 // shows. Pure, so the hook that plays it (`useMinigameClockSound`) is a ref

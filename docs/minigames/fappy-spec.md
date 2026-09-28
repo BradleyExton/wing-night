@@ -355,9 +355,10 @@ leg 1 and the idle clock.
   (three notes down), and the clock's `tick` once a second past par, replaced by a low
   double-thump `heartbeat` for the last 15 s that swells as the limit closes
   (`resolveClockCue`, `resolveHeartbeatGain`). **Display only** — the tablet sits on a table
-  and the TV is the room's speaker. ONE module-level `AudioContext` for the package, resumed on
-  every cue rather than made and closed per cue as `useTimesUpChime` does, because a game that
-  flaps ten times a second would burn through contexts; nothing ever closes it. Every cue is
+  and the TV is the room's speaker. The cues are a table on the house board
+  (`@wingnight/audio`, since 2026-09-28), which owns the tab's ONE `AudioContext`, resumed on
+  every cue and never closed — a game that flaps ten times a second would burn through
+  contexts made per cue. Every cue is
   best-effort: no `AudioContext`, or one the room has not unlocked with the display's
   `AudioUnlockOverlay` tap yet, is silence and a retry on the next cue, never an exception —
   which is also why a headless Playwright run is clean. The TV's master music volume is **not**

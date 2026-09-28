@@ -38,8 +38,10 @@ const RelayResult = ({
 
   return (
     <div className={styles.resultOverlay} data-fappy-result={view.phase}>
+      {/* Silent: the relay's own `finish` and `timedOut` cues sound this moment. */}
       <ResultPlaque
         tone={isTimedOut ? "miss" : "hit"}
+        silent
         title={isTimedOut ? displayFappySurfaceCopy.timedOutTitle : displayFappySurfaceCopy.finishedTitle}
         detail={
           <>

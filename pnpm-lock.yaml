@@ -53,6 +53,9 @@ importers:
 
   apps/client:
     dependencies:
+      '@wingnight/audio':
+        specifier: workspace:*
+        version: link:../../packages/audio
       '@wingnight/cast':
         specifier: workspace:*
         version: link:../../packages/cast
@@ -191,6 +194,18 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
+  packages/audio:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
   packages/cast:
     dependencies:
       '@wingnight/shared':
@@ -314,6 +329,9 @@ importers:
 
   packages/minigames/fappy:
     dependencies:
+      '@wingnight/audio':
+        specifier: workspace:*
+        version: link:../../audio
       '@wingnight/cast':
         specifier: workspace:*
         version: link:../../cast
@@ -611,6 +629,10 @@ importers:
         version: 5.9.3
 
   packages/surface:
+    dependencies:
+      '@wingnight/audio':
+        specifier: workspace:*
+        version: link:../audio
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

@@ -16,6 +16,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "tsx --tsconfig ../../tsconfig.tsx-runtime.json --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\""
   },
+  "dependencies": {
+    "@wingnight/audio": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/react": "catalog:",

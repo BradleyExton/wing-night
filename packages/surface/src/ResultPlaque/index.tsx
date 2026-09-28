@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { revealPoints } from "../styleTokens/index.js";
 import { resultPlaqueCopy } from "./copy.js";
 import * as styles from "./styles.js";
+import { useResultSting } from "./useResultSting/index.js";
 
 export type ResultPlaqueTone = "hit" | "miss" | "neutral";
 
@@ -24,6 +25,10 @@ export type ResultPlaqueProps = {
   pointsCaption?: string | null;
   // Whatever follows the result on the same card, under a rule.
   children?: ReactNode;
+  // The card sounds its tone as it lands (`useResultSting`). A game with a
+  // fanfare of its own for the same moment passes `silent` so the room does
+  // not hear both.
+  silent?: boolean;
 };
 
 const PLAQUE_BY_TONE = {
@@ -51,8 +56,11 @@ export const ResultPlaque = ({
   detail,
   points = null,
   pointsCaption = null,
-  children
+  children,
+  silent = false
 }: ResultPlaqueProps): JSX.Element => {
+  useResultSting(tone, silent);
+
   return (
     <div className={PLAQUE_BY_TONE[tone]} data-result-plaque={tone}>
       {tone !== "neutral" && (
