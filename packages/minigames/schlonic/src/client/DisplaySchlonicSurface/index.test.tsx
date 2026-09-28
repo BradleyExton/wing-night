@@ -105,6 +105,15 @@ test("carries nothing the host view does not, because a zone has no secrets", ()
   assert.ok(markup.includes("data-schlonic-scene"));
 });
 
+// The wall is the room's seat, not the tablet's mirror (docs/minigame-design-principles.md §3):
+// its camera fills the arena and shows more shore ahead of the runner than the tablet's box.
+test("draws the zone through the room's wider camera rather than the tablet's box", () => {
+  const markup = render(createView());
+
+  assert.ok(markup.includes('data-schlonic-camera="fill"'));
+  assert.ok(!markup.includes('viewBox="0 0 160 90"'));
+});
+
 // ADR-0006: the marquee is one shared component, not a container each game
 // copies and a ring each copy could forget. This pins that the surface hangs
 // THAT sign and not a private one — the drift the bulb-ring test used to catch.

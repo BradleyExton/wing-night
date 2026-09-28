@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
+import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { CHARACTER_FOOT, CharacterFigure } from "@wingnight/cast";
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, createSchlonicRunStart, resolveSchlonicGroundSlope } from "@wingnight/shared";
@@ -12,6 +12,7 @@ import {
   WATERFRONT_PARALLAX,
   type BackdropRefs
 } from "./Backdrop/index.js";
+import { TABLET_CAMERA_FIT, resolveCamera, type SchlonicCameraFit } from "./camera/index.js";
 import { Ground } from "./Ground/index.js";
 import { resolveRunnerCurl, resolveRunnerPose } from "./runnerPose/index.js";
 import { Wing } from "./Wing/index.js";
@@ -31,7 +32,15 @@ export type SchlonicSceneProps = {
   runner: RunnerFigure;
   sceneId: string;
   label: string;
+  /**
+   * How much of the world this surface sees, and how it sits in its box. The tablet's 16:9
+   * box by default; the TV passes a wider, filling camera so the room sees further ahead of
+   * the runner than the tablet holder does (`camera/index.ts`).
+   */
+  cameraFit?: SchlonicCameraFit;
 };
+
+type Box = { width: number; height: number };
 
 /** The cast's 80×72 box at this much: a bird about thirteen world units tall. */
 const RUNNER_SCALE = 0.18;
@@ -54,14 +63,20 @@ const BURST_SCALE = 0.8;
 const BURST_SPIN_DEGREES = 40;
 
 /**
- * One 16:9 world both surfaces draw. The zone is SVG in world units, built once and scrolled by a
- * transform; the runner is the player's own cast hen (§2.8) placed in it under a transform of its
- * own, turned and tucked every frame. Nothing here is React-driven per frame — the owner paints
- * frames through the handle from its own loop, so the scene re-renders only when the zone or the
- * runner changes, which is what keeps a costume head's halo filter rasterised once.
+ * One world both surfaces draw, each through its own camera. The zone is SVG in world units,
+ * built once and scrolled by a transform; the runner is the player's own cast hen (§2.8) placed
+ * in it under a transform of its own, turned and tucked every frame. Nothing here is
+ * React-driven per frame — the owner paints frames through the handle from its own loop, so the
+ * scene re-renders only when the zone, the runner or the box it fills changes, which is what
+ * keeps a costume head's halo filter rasterised once.
  */
 export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>(
-  ({ zone, runner, sceneId, label }, ref): JSX.Element => {
+  ({ zone, runner, sceneId, label, cameraFit = TABLET_CAMERA_FIT }, ref): JSX.Element => {
+    const frameRef = useRef<HTMLDivElement>(null);
+    // The box a filling camera measures itself against; null until the first measurement (and
+    // for good on a server render), when the camera falls back to its floor width.
+    const [box, setBox] = useState<Box | null>(null);
+    const camera = resolveCamera(cameraFit, box);
     const zoneLayerRef = useRef<SVGGElement>(null);
     const backdropRef = useRef<BackdropRefs | null>(null);
     const runnerGroupRef = useRef<SVGGElement>(null);
@@ -238,21 +253,58 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       paint(createSchlonicRunStart(zoneRef.current));
     }, [sceneId, zone, runner]);
 
+    // A filling camera follows its box: the viewBox is re-derived on every resize so the
+    // world is never stretched, only shown wider or narrower.
+    useLayoutEffect(() => {
+      const frame = frameRef.current;
+
+      if (cameraFit.kind !== "fill" || frame === null || typeof ResizeObserver === "undefined") {
+        return undefined;
+      }
+
+      const measure = (): void => {
+        const rect = frame.getBoundingClientRect();
+
+        setBox((current) => {
+          return current !== null && current.width === rect.width && current.height === rect.height
+            ? current
+            : { width: rect.width, height: rect.height };
+        });
+      };
+      const observer = new ResizeObserver(measure);
+
+      measure();
+      observer.observe(frame);
+
+      return (): void => {
+        observer.disconnect();
+      };
+    }, [cameraFit.kind]);
+
     return (
-      <div className={styles.frame} data-schlonic-scene={sceneId}>
-        <div className={styles.scene} role="img" aria-labelledby={ids.label}>
+      <div
+        ref={frameRef}
+        className={styles.frame}
+        data-schlonic-scene={sceneId}
+        data-schlonic-camera={cameraFit.kind}
+      >
+        <div
+          className={cameraFit.kind === "fill" ? styles.sceneFill : styles.sceneFixed}
+          role="img"
+          aria-labelledby={ids.label}
+        >
           <span id={ids.label} className={styles.label}>
             {label}
           </span>
           <svg
             className={styles.world}
-            viewBox={`0 0 ${SCHLONIC_WORLD.width} ${SCHLONIC_WORLD.height}`}
+            viewBox={`${camera.x} ${camera.y} ${camera.width} ${camera.height}`}
             preserveAspectRatio="none"
             aria-hidden="true"
           >
-            <Backdrop ref={backdropRef} zoneLength={zone.goalX} />
+            <Backdrop ref={backdropRef} zoneLength={zone.goalX} camera={camera} />
             <g ref={zoneLayerRef} data-schlonic-zone>
-              <Ground zone={zone} />
+              <Ground zone={zone} camera={camera} />
               <ZoneProps zone={zone} registerProp={registerProp} goalGroundY={goalGroundY} />
             </g>
             <g ref={burstRef} data-schlonic-burst opacity={0}>

@@ -1485,9 +1485,10 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     the way the real bluffs go. Wings are `#f5902b` on a `#fff1d6` bone.
     Drawing content, not UI
     chrome — exempt from the two-accent budget the way the JOUST arena and the
-    drawing inks are. The letterbox bars around the 16:9 world are near-black
-    (`#0d1f14`): they are outside the world, and painting them sky-blue made
-    the shore read as floating.
+    drawing inks are. On the tablet the letterbox bars around the 16:9 world
+    are near-black (`#0d1f14`): they are outside the world, and painting them
+    sky-blue made the shore read as floating. The wall has no bars at all — its
+    camera fills the arena (below).
 -   **Three readings of one creature, told apart at speed.** The schlong is
     drawn three ways and the room has to know which is which in a glance:
     *a FACE* — on a pink, a dark or a pale one, dealt by its index the way
@@ -1542,6 +1543,19 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     a little longer than the tablet does and finishes the run it has before it
     switches: the room always sees the post or the hole, never a cut to the
     next start line.
+-   **The wall sees further down the shore than the tablet.** The scene draws
+    the one world through a camera per surface (`SchlonicScene/camera`): the
+    tablet keeps the sim's own 16:9 box with the runner 46 units in, and the TV
+    fills its whole arena edge to edge with a camera widened to the arena's
+    aspect, the runner pulled nearer the left edge, and a little more sky and
+    ground than the box — about two and a quarter seconds of shore ahead of
+    the hen at top speed against the tablet's one and a half. That is the
+    game's information asymmetry (`docs/minigame-design-principles.md` §3): a
+    hazard is on the wall before it is on the tablet, so the couch is the
+    runner's lookout and "JUMP!" is the whole team's job, not the holder's.
+    The still banks (bay, beach, park) cover any camera; the scrolling banks
+    are sized off the camera's width the same way they are off the zone's
+    length, and the ground runs a camera past the post.
 -   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
     the same one JOUST takes in §2.7 and FAPPY in §2.9: the zone is full bleed
     and is still the whole jump surface, filling the takeover's padding box edge

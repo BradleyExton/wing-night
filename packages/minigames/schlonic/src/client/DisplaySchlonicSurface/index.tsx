@@ -5,6 +5,7 @@ import type { SchlonicMinigameDisplayView, SchlonicMinigameRun } from "@wingnigh
 import { resolveSchlonicZone } from "@wingnight/shared";
 
 import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
+import { TV_CAMERA_FIT } from "../SchlonicScene/camera/index.js";
 import { SchlonicScene, type SchlonicSceneHandle } from "../SchlonicScene/index.js";
 import { useHeldRun, type RunHold } from "../useHeldRun/index.js";
 import { useRunnerFigure } from "../useRunnerFigure/index.js";
@@ -165,12 +166,16 @@ const SchlonicPlayBody = ({
       />
       <div className={styles.arenaArea}>
         <div key={shownRunIndex} className={styles.runEnter}>
+          {/* The room's camera, not the tablet's: the zone fills the arena edge to edge and
+              runs further ahead of the hen than the tablet shows, so the couch sees the next
+              hazard first and the shouting is the team's (camera/index.ts). */}
           <SchlonicScene
             ref={sceneRef}
             zone={zone}
             runner={runner}
             sceneId="display-schlonic"
             label={displaySchlonicSurfaceCopy.sceneLabel(runner.playerName)}
+            cameraFit={TV_CAMERA_FIT}
           />
         </div>
         <span className={styles.venuePlaque} data-schlonic-venue>
