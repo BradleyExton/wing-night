@@ -42,6 +42,7 @@ export {
   reportRoomMusicTrackEnded,
   resumeRoomMusic,
   setRoomMusicVolume,
+  setRoomSfxVolume,
   skipRoomMusicTrack
 } from "./musicMutations/index.js";
 

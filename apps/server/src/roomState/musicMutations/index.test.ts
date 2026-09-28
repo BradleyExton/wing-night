@@ -12,6 +12,7 @@ import {
   resetRoomState,
   resumeRoomMusic,
   setRoomMusicVolume,
+  setRoomSfxVolume,
   setRoomStateLobbyPlaylist,
   setRoomStateTeams,
   skipRoomMusicTrack
@@ -290,4 +291,19 @@ test("restores the lobby playlist when Reset Game returns the room to SETUP", ()
     getRoomStateSnapshot().musicPlayback?.source,
     MUSIC_PLAYBACK_SOURCES.LOBBY
   );
+});
+
+test("sets the effects level on the same scale and carries it through Reset Game", () => {
+  assert.equal(getRoomStateSnapshot().sfxVolume, 1);
+
+  setRoomSfxVolume(0.3);
+  setRoomSfxVolume(1.5);
+  setRoomSfxVolume(-1);
+
+  assert.equal(getRoomStateSnapshot().sfxVolume, 0.3);
+
+  seedLobbyPlaylist();
+  resetGameToSetup();
+
+  assert.equal(getRoomStateSnapshot().sfxVolume, 0.3);
 });

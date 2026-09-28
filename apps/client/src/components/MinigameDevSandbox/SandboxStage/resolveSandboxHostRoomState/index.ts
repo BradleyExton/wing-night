@@ -105,6 +105,7 @@ export const resolveSandboxHostRoomState = (
     gameStartCountdownEndsAt: null,
     musicPlayback: null,
     musicVolume: 1,
+    sfxVolume: 1,
     minigameHostView: null,
     minigameDisplayView: null,
     wingParticipationByPlayerId: {},

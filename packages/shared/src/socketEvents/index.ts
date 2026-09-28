@@ -47,6 +47,8 @@ export type TimerExtendPayload = HostSecretPayload &
   Record<"additionalSeconds", number>;
 // On the `<audio>` element's own 0–1 scale; see `MUSIC_VOLUME_MIN`/`MAX`.
 export type MusicSetVolumePayload = HostSecretPayload & Record<"volume", number>;
+// The same scale, for the TV's effects bus.
+export type SfxSetVolumePayload = HostSecretPayload & Record<"volume", number>;
 export const TIMER_EXTEND_MAX_SECONDS = 600;
 
 // The ONE client event in this contract that carries no host secret, because
@@ -95,6 +97,7 @@ export const CLIENT_TO_SERVER_EVENTS = {
   MUSIC_PREVIOUS: "music:previous",
   MUSIC_SET_VOLUME: "music:setVolume",
   MUSIC_TRACK_ENDED: "music:trackEnded",
+  SFX_SET_VOLUME: "sfx:setVolume",
   CONFIG_READ: "config:read",
   CONFIG_SAVE: "config:save",
   CONFIG_APPLY: "config:apply",
@@ -161,6 +164,7 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED]: (
     payload: MusicTrackEndedPayload
   ) => void;
+  [CLIENT_TO_SERVER_EVENTS.SFX_SET_VOLUME]: (payload: SfxSetVolumePayload) => void;
   [CLIENT_TO_SERVER_EVENTS.CONFIG_READ]: (payload: ConfigReadPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.CONFIG_SAVE]: (payload: ConfigSavePayload) => void;
   [CLIENT_TO_SERVER_EVENTS.CONFIG_APPLY]: (payload: ConfigApplyPayload) => void;

@@ -210,7 +210,8 @@ export const hostCopy = {
   musicResumeButtonLabel: "Resume",
   musicSkipButtonLabel: "Next",
   musicPreviousButtonLabel: "Back",
-  musicVolumeLabel: "Volume",
+  musicVolumeLabel: "Music",
+  sfxVolumeLabel: "Effects",
   musicVolumeValue: (percent: number): string => `${percent}%`,
   musicStatusValue: (sourceLabel: string, stateLabel: string): string =>
     `${sourceLabel} · ${stateLabel}`,

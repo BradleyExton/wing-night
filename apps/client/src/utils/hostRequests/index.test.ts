@@ -159,6 +159,11 @@ const handlerInvocations: HandlerInvocation[] = [
     expectedPayload: { hostSecret: "valid-host-secret", volume: 0.4 }
   },
   {
+    name: "onSetSfxVolume",
+    invoke: (handlers) => handlers.onSetSfxVolume(0.6),
+    expectedPayload: { hostSecret: "valid-host-secret", volume: 0.6 }
+  },
+  {
     name: "onReorderTurnOrder",
     invoke: (handlers) => handlers.onReorderTurnOrder(["team-2", "team-1"]),
     expectedPayload: {
@@ -302,6 +307,10 @@ const guardedInvocations: GuardedInvocation[] = [
   {
     label: "onSetMusicVolume rejects a negative volume",
     invoke: (handlers) => handlers.onSetMusicVolume(-0.5)
+  },
+  {
+    label: "onSetSfxVolume rejects a level above one",
+    invoke: (handlers) => handlers.onSetSfxVolume(2)
   },
   {
     label: "onStartQuickPlay rejects an empty queue",

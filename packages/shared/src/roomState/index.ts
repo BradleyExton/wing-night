@@ -726,6 +726,10 @@ export type RoomState = {
   // slot is null on every silent phase, and the host's volume has to survive
   // EATING as well as a reset and a display refresh.
   musicVolume: number;
+  // The TV's sound-effects level, 0–1, applied to the `sfx` bus every game's
+  // cues leave through (`@wingnight/audio`). A room setting like the music
+  // volume, and for the same reasons kept beside it rather than anywhere else.
+  sfxVolume: number;
   minigameHostView: MinigameHostView | null;
   minigameDisplayView: MinigameDisplayView | null;
   wingParticipationByPlayerId: Record<string, boolean>;
@@ -756,6 +760,7 @@ type DisplaySafeRoomStateKeys =
   | "gameStartCountdownEndsAt"
   | "musicPlayback"
   | "musicVolume"
+  | "sfxVolume"
   | "minigameDisplayView"
   | "wingParticipationByPlayerId"
   | "pendingWingPointsByTeamId"
@@ -784,6 +789,7 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "gameStartCountdownEndsAt",
   "musicPlayback",
   "musicVolume",
+  "sfxVolume",
   "minigameDisplayView",
   "wingParticipationByPlayerId",
   "pendingWingPointsByTeamId",
@@ -839,6 +845,7 @@ export const toDisplayRoomStateSnapshot = (
     // the display: the TV is the surface that has to render the strip.
     musicPlayback: roomState.musicPlayback,
     musicVolume: roomState.musicVolume,
+    sfxVolume: roomState.sfxVolume,
     minigameDisplayView: roomState.minigameDisplayView,
     wingParticipationByPlayerId: roomState.wingParticipationByPlayerId,
     pendingWingPointsByTeamId: roomState.pendingWingPointsByTeamId,

@@ -1,5 +1,6 @@
 import {
   MUSIC_VOLUME_DEFAULT,
+  SFX_VOLUME_DEFAULT,
   Phase,
   SESSION_MODES,
   type RoomState
@@ -30,6 +31,7 @@ export const createInitialRoomState = (): RoomState => {
     gameStartCountdownEndsAt: null,
     musicPlayback: null,
     musicVolume: MUSIC_VOLUME_DEFAULT,
+    sfxVolume: SFX_VOLUME_DEFAULT,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},

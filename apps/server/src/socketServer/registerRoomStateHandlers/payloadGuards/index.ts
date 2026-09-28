@@ -10,6 +10,7 @@ import {
   type HostSecretPayload,
   type MinigameActionEnvelope,
   type MusicSetVolumePayload,
+  type SfxSetVolumePayload,
   type MusicTrackEndedPayload,
   type QuickPlayStartPayload,
   type ScoringAdjustTeamScorePayload,
@@ -134,6 +135,11 @@ export const isMusicTrackEndedPayload = (
 export const isMusicSetVolumePayload = (
   payload: unknown
 ): payload is MusicSetVolumePayload =>
+  hasShape(payload, { hostSecret: isString, volume: isValidMusicVolume });
+
+export const isSfxSetVolumePayload = (
+  payload: unknown
+): payload is SfxSetVolumePayload =>
   hasShape(payload, { hostSecret: isString, volume: isValidMusicVolume });
 
 export const isTimerExtendPayload = (payload: unknown): payload is TimerExtendPayload =>

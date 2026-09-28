@@ -157,6 +157,7 @@ export type ValidRoomStateCheck = Assert<
       gameStartCountdownEndsAt: number | null;
       musicPlayback: RoomState["musicPlayback"];
       musicVolume: number;
+      sfxVolume: number;
       wingParticipationByPlayerId: Record<string, boolean>;
       pendingWingPointsByTeamId: Record<string, number>;
       pendingMinigamePointsByTeamId: Record<string, number>;
@@ -195,6 +196,7 @@ export type DisplaySnapshotShapeCheck = Assert<
       gameStartCountdownEndsAt: number | null;
       musicPlayback: RoomState["musicPlayback"];
       musicVolume: number;
+      sfxVolume: number;
       wingParticipationByPlayerId: Record<string, boolean>;
       pendingWingPointsByTeamId: Record<string, number>;
       pendingMinigamePointsByTeamId: Record<string, number>;

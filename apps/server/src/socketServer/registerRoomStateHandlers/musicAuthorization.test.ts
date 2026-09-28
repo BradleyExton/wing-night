@@ -80,6 +80,45 @@ test("accepts a volume only with a host secret and an in-range number", () => {
   assert.equal(socketHarness.invalidSecretEvents, 1);
 });
 
+test("accepts an effects level only with a host secret and an in-range number", () => {
+  const volumes: unknown[] = [];
+
+  const socketHarness = setupHandlers({
+    phase: Phase.SETUP,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.SFX_SET_VOLUME]: (payload) => {
+        volumes.push((payload as { volume: unknown }).volume);
+      }
+    }
+  });
+
+  assert.doesNotThrow(() => {
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SFX_SET_VOLUME, undefined);
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SFX_SET_VOLUME, {
+      hostSecret: "valid-host-secret"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SFX_SET_VOLUME, {
+      hostSecret: "valid-host-secret",
+      volume: 1.5
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SFX_SET_VOLUME, {
+      hostSecret: "valid-host-secret",
+      volume: "0.5"
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SFX_SET_VOLUME, {
+      hostSecret: "invalid-host-secret",
+      volume: 0.5
+    });
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SFX_SET_VOLUME, {
+      hostSecret: "valid-host-secret",
+      volume: 0.5
+    });
+  });
+
+  assert.deepEqual(volumes, [0.5]);
+  assert.equal(socketHarness.invalidSecretEvents, 1);
+});
+
 // The display's report is the ONE client event that carries no host secret, so
 // this pins the thing that makes that safe: the payload still has to be the
 // exact shape, and nothing about it can reach a game-state mutation.

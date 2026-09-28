@@ -147,6 +147,9 @@ export const resolvePreviousTrackIndex = (
 export const MUSIC_VOLUME_MIN = 0;
 export const MUSIC_VOLUME_MAX = 1;
 export const MUSIC_VOLUME_DEFAULT = 1;
+// The effects level shares the scale and the default: every board already
+// sits under the music at its own fixed gain, so 1 is "as designed".
+export const SFX_VOLUME_DEFAULT = 1;
 
 export const isValidMusicVolume = (value: unknown): value is number => {
   return (

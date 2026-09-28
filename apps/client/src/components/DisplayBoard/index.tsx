@@ -1,6 +1,11 @@
-import { wakeAudio } from "@wingnight/audio";
-import { MUSIC_VOLUME_DEFAULT, Phase, type MusicPlaybackSource } from "@wingnight/shared";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { setAudioBusLevel, wakeAudio } from "@wingnight/audio";
+import {
+  MUSIC_VOLUME_DEFAULT,
+  Phase,
+  SFX_VOLUME_DEFAULT,
+  type MusicPlaybackSource
+} from "@wingnight/shared";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ContentFatalState } from "../ContentFatalState";
 import { AudioUnlockOverlay } from "./AudioUnlockOverlay";
@@ -124,6 +129,14 @@ export const DisplayBoard = ({
       ? activeTeamName
       : (roomState?.teams.find((team) => team.id === anthemTeamId)?.name ?? activeTeamName);
   const musicVolume = roomState?.musicVolume ?? MUSIC_VOLUME_DEFAULT;
+  const sfxVolume = roomState?.sfxVolume ?? SFX_VOLUME_DEFAULT;
+
+  // The room's effects level, onto the bus every board's cues leave through.
+  // Applied here and nowhere else: a minigame renderer is handed no volume
+  // and must not reach into app state for one (AGENTS.md §3.1).
+  useEffect(() => {
+    setAudioBusLevel("sfx", sfxVolume);
+  }, [sfxVolume]);
 
   // ONE cue on the one element. It renders `musicPlayback` and decides nothing:
   // which track, whether it is playing and where the playlist has got to are

@@ -1,4 +1,4 @@
-import { MUSIC_VOLUME_DEFAULT, Phase } from "@wingnight/shared";
+import { SFX_VOLUME_DEFAULT, MUSIC_VOLUME_DEFAULT, Phase } from "@wingnight/shared";
 import { useState } from "react";
 
 import { ControlDeck } from "../ControlDeck";
@@ -136,11 +136,13 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
         <MusicControlsSurface
           musicPlayback={roomState?.musicPlayback ?? null}
           musicVolume={roomState?.musicVolume ?? MUSIC_VOLUME_DEFAULT}
+          sfxVolume={roomState?.sfxVolume ?? SFX_VOLUME_DEFAULT}
           onPauseMusic={handlers.onPauseMusic}
           onResumeMusic={handlers.onResumeMusic}
           onSkipMusicTrack={handlers.onSkipMusicTrack}
           onPreviousMusicTrack={handlers.onPreviousMusicTrack}
           onSetMusicVolume={handlers.onSetMusicVolume}
+          onSetSfxVolume={handlers.onSetSfxVolume}
         />
       </ControlDeck>
     </>

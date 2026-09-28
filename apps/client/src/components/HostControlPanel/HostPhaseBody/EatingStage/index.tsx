@@ -1,5 +1,8 @@
+import { MUSIC_VOLUME_DEFAULT, SFX_VOLUME_DEFAULT } from "@wingnight/shared";
+
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
+import { MusicControlsSurface } from "../../MusicControlsSurface";
 import { PlayersSurface } from "../../PlayersSurface";
 import { TimerControlsSurface } from "../../TimerControlsSurface";
 import { hostControlPanelCopy } from "../../copy";
@@ -93,6 +96,19 @@ export const EatingStage = (): JSX.Element => {
           onPauseTimer={handlers.onPauseTimer}
           onResumeTimer={handlers.onResumeTimer}
           onExtendTimer={handlers.onExtendTimer}
+        />
+        {/* The eating playlist plays under the wings, so its transport sits on
+            the phase that plays it, the rule SETUP and the briefing follow. */}
+        <MusicControlsSurface
+          musicPlayback={roomState?.musicPlayback ?? null}
+          musicVolume={roomState?.musicVolume ?? MUSIC_VOLUME_DEFAULT}
+          sfxVolume={roomState?.sfxVolume ?? SFX_VOLUME_DEFAULT}
+          onPauseMusic={handlers.onPauseMusic}
+          onResumeMusic={handlers.onResumeMusic}
+          onSkipMusicTrack={handlers.onSkipMusicTrack}
+          onPreviousMusicTrack={handlers.onPreviousMusicTrack}
+          onSetMusicVolume={handlers.onSetMusicVolume}
+          onSetSfxVolume={handlers.onSetSfxVolume}
         />
       </ControlDeck>
     </>

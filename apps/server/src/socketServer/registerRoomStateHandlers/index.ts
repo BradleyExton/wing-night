@@ -38,6 +38,7 @@ import {
   resumeRoomMusic,
   resumeRoomTimer,
   setRoomMusicVolume,
+  setRoomSfxVolume,
   setWingParticipation,
   skipRoomMusicTrack,
   skipTurnBoundary,
@@ -49,6 +50,7 @@ import {
   isHostSecretPayload,
   isMinigameActionEnvelope,
   isMusicSetVolumePayload,
+  isSfxSetVolumePayload,
   isMusicTrackEndedPayload,
   isScoringAdjustTeamScorePayload,
   isScoringSetWingParticipationPayload,
@@ -240,6 +242,11 @@ const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
     CLIENT_TO_SERVER_EVENTS.MUSIC_SET_VOLUME,
     isMusicSetVolumePayload,
     (payload) => setRoomMusicVolume(payload.volume)
+  ),
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.SFX_SET_VOLUME,
+    isSfxSetVolumePayload,
+    (payload) => setRoomSfxVolume(payload.volume)
   ),
   defineAuthorizedEvent(
     CLIENT_TO_SERVER_EVENTS.QUICKPLAY_START,

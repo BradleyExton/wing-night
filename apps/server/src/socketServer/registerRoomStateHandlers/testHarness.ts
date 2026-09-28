@@ -59,6 +59,7 @@ export const buildRoomState = (phase: RoomState["phase"], currentRound = 0): Roo
     gameStartCountdownEndsAt: null,
     musicPlayback: null,
     musicVolume: 1,
+    sfxVolume: 1,
     wingParticipationByPlayerId: {},
     pendingWingPointsByTeamId: {},
     pendingMinigamePointsByTeamId: {},

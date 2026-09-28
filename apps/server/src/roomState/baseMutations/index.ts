@@ -145,6 +145,7 @@ export const resetGameToSetup = defineRoomMutation({
     // Same carry-through, same reason: the volume is how loud the TV is in
     // THIS room, and a reset should not blast the lobby at the default.
     nextState.musicVolume = previousSnapshot.musicVolume;
+    nextState.sfxVolume = previousSnapshot.sfxVolume;
     nextState.gameConfig = restoredGameConfig;
     nextState.totalRounds =
       restoredGameConfig === null ? nextState.totalRounds : restoredGameConfig.rounds.length;

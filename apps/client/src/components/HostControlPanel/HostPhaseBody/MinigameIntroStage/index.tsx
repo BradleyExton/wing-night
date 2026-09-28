@@ -1,4 +1,4 @@
-import { MUSIC_VOLUME_DEFAULT, SESSION_MODES } from "@wingnight/shared";
+import { SFX_VOLUME_DEFAULT, MUSIC_VOLUME_DEFAULT, SESSION_MODES } from "@wingnight/shared";
 
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
@@ -68,11 +68,13 @@ export const MinigameIntroStage = (): JSX.Element => {
         <MusicControlsSurface
           musicPlayback={roomState?.musicPlayback ?? null}
           musicVolume={roomState?.musicVolume ?? MUSIC_VOLUME_DEFAULT}
+          sfxVolume={roomState?.sfxVolume ?? SFX_VOLUME_DEFAULT}
           onPauseMusic={handlers.onPauseMusic}
           onResumeMusic={handlers.onResumeMusic}
           onSkipMusicTrack={handlers.onSkipMusicTrack}
           onPreviousMusicTrack={handlers.onPreviousMusicTrack}
           onSetMusicVolume={handlers.onSetMusicVolume}
+          onSetSfxVolume={handlers.onSetSfxVolume}
         />
       </ControlDeck>
     </>

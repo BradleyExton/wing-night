@@ -112,6 +112,20 @@ export const setRoomMusicVolume = defineRoomMutation({
   }
 });
 
+// The effects level is the music volume's twin: a room setting the TV applies
+// to its `sfx` bus, valid on the same 0–1 scale.
+export const setRoomSfxVolume = defineRoomMutation({
+  run: (roomState, volume: number): boolean => {
+    if (!isValidMusicVolume(volume) || roomState.sfxVolume === volume) {
+      return false;
+    }
+
+    roomState.sfxVolume = volume;
+
+    return true;
+  }
+});
+
 // Reported by the DISPLAY, which owns the `<audio>` element and is therefore
 // the only client that can know a track finished. See `MusicTrackEndedPayload`:
 // it is a report about a specific track, and everything below is the guard that

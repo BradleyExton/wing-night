@@ -1,4 +1,4 @@
-import { Pause, Play, SkipBack, SkipForward, Volume2 } from "lucide-react";
+import { Bell, Pause, Play, SkipBack, SkipForward, Volume2 } from "lucide-react";
 import {
   MUSIC_PLAYBACK_SOURCES,
   resolveTrackTitle,
@@ -23,21 +23,28 @@ export const fromVolumePercent = (percent: number): number => {
 type MusicControlsSurfaceProps = {
   musicPlayback: RoomMusicPlaybackState | null;
   musicVolume: number;
+  // The TV's effects level, the music volume's twin: one slider each, under
+  // the transport, so a host who finds the stings loud finds the answer next
+  // to the one they already know.
+  sfxVolume: number;
   onPauseMusic?: () => void;
   onResumeMusic?: () => void;
   onSkipMusicTrack?: () => void;
   onPreviousMusicTrack?: () => void;
   onSetMusicVolume?: (volume: number) => void;
+  onSetSfxVolume?: (volume: number) => void;
 };
 
 export const MusicControlsSurface = ({
   musicPlayback,
   musicVolume,
+  sfxVolume,
   onPauseMusic,
   onResumeMusic,
   onSkipMusicTrack,
   onPreviousMusicTrack,
-  onSetMusicVolume
+  onSetMusicVolume,
+  onSetSfxVolume
 }: MusicControlsSurfaceProps): JSX.Element => {
   // A phase that owns no music has nothing to control, and an empty deck group
   // is worse than no deck group.
@@ -66,6 +73,7 @@ export const MusicControlsSurface = ({
   const canSkip = onSkipMusicTrack !== undefined && canStep;
   const canStepBack = onPreviousMusicTrack !== undefined && canStep;
   const volumePercent = toVolumePercent(musicVolume);
+  const sfxPercent = toVolumePercent(sfxVolume);
 
   return (
     <section className={styles.group} data-music-controls>
@@ -134,6 +142,26 @@ export const MusicControlsSurface = ({
         />
         <span className={styles.volumeValue}>
           {hostControlPanelCopy.musicVolumeValue(volumePercent)}
+        </span>
+      </label>
+      <label className={styles.volumeRow}>
+        <Bell strokeWidth={2.4} className={styles.volumeIcon} />
+        <span className={styles.volumeLabel}>{hostControlPanelCopy.sfxVolumeLabel}</span>
+        <input
+          className={styles.volumeSlider}
+          type="range"
+          min={0}
+          max={100}
+          step={VOLUME_STEP_PERCENT}
+          value={sfxPercent}
+          disabled={onSetSfxVolume === undefined}
+          data-sfx-volume
+          onChange={(event): void => {
+            onSetSfxVolume?.(fromVolumePercent(Number(event.target.value)));
+          }}
+        />
+        <span className={styles.volumeValue}>
+          {hostControlPanelCopy.musicVolumeValue(sfxPercent)}
         </span>
       </label>
     </section>

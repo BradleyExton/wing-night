@@ -9,6 +9,7 @@ import {
   type MinigameActionPayload,
   type MinigameType,
   type MusicSetVolumePayload,
+  type SfxSetVolumePayload,
   type QuickPlayGame,
   type QuickPlayStartPayload,
   type QuickPlayTeam,
@@ -66,6 +67,7 @@ type HostRequestArgs = {
   onSkipMusicTrack: [];
   onPreviousMusicTrack: [];
   onSetMusicVolume: [volume: number];
+  onSetSfxVolume: [volume: number];
   onReorderTurnOrder: [teamIds: string[]];
   onSkipTurnBoundary: [];
   onAdjustTeamScore: [teamId: string, delta: number];
@@ -221,6 +223,14 @@ export const hostRequestTable: HostRequestTable = {
       volume
     })
   },
+  onSetSfxVolume: {
+    event: CLIENT_TO_SERVER_EVENTS.SFX_SET_VOLUME,
+    canEmit: (volume): boolean => isValidMusicVolume(volume),
+    buildPayload: (hostSecret, volume): SfxSetVolumePayload => ({
+      hostSecret,
+      volume
+    })
+  },
   onReorderTurnOrder: {
     event: CLIENT_TO_SERVER_EVENTS.REORDER_TURN_ORDER,
     canEmit: (teamIds): boolean => isValidTeamIdList(teamIds),
@@ -319,6 +329,7 @@ export const createHostRequestHandlers = (
     onSkipMusicTrack: buildHandler("onSkipMusicTrack"),
     onPreviousMusicTrack: buildHandler("onPreviousMusicTrack"),
     onSetMusicVolume: buildHandler("onSetMusicVolume"),
+    onSetSfxVolume: buildHandler("onSetSfxVolume"),
     onReorderTurnOrder: buildHandler("onReorderTurnOrder"),
     onSkipTurnBoundary: buildHandler("onSkipTurnBoundary"),
     onAdjustTeamScore: buildHandler("onAdjustTeamScore"),
