@@ -3,6 +3,7 @@ import test, { beforeEach } from "node:test";
 
 import {
   Phase,
+  runSchlonicRun,
   toDisplayRoomStateSnapshot,
   type GameConfigFile
 } from "@wingnight/shared";
@@ -22,6 +23,7 @@ import {
   advanceToFinalRoundMinigamePlayPhase,
   advanceToMinigamePlayPhase,
   advanceToRoundResultsPhase,
+  advanceToTeamTurn,
   advanceUntil,
   gameConfigFixture,
   geoPromptFixture,
@@ -639,4 +641,56 @@ test("does report didMutate=true when an action moves the projection", () => {
   );
 
   assert.equal(mutationResult.didMutate, true);
+});
+
+// A round-long fact crosses the per-turn re-initialisation through the plugin's round memory
+// (`MinigameRuntimePlugin.selectRoundMemory` → `initialize({ roundMemory })`). SCHLONIC is the
+// game that needs it: the round's best run is the ghost every later team races.
+test("SCHLONIC hands the round's best run to the next team and starts the next round without it", () => {
+  const schlonicConfig: GameConfigFile = {
+    ...gameConfigFixture,
+    rounds: [
+      { ...gameConfigFixture.rounds[0], minigame: "SCHLONIC" },
+      { ...gameConfigFixture.rounds[1], minigame: "SCHLONIC" }
+    ],
+    // A six-chunk zone with nothing a walking bird cannot survive, so a run with no jumps clears.
+    minigameRules: { schlonic: { runsPerTurn: 1, zoneSeed: 3, zoneChunks: 6, parWingsPerRun: 20 } }
+  };
+  const walkWings = runSchlonicRun({ seed: 3, chunks: 6 }, [{ tick: 0, down: true }]).wings;
+  const resolveSchlonicDisplayView = () => {
+    const view = getRoomStateSnapshot().minigameDisplayView;
+
+    assert.ok(view !== null && view.minigame === "SCHLONIC");
+
+    return view;
+  };
+
+  setupValidTeamsAndAssignments(schlonicConfig);
+  advanceToMinigamePlayPhase();
+
+  assert.equal(resolveSchlonicDisplayView().bestRun, null);
+
+  dispatchMinigameAction("SCHLONIC", "press", { tick: 0 });
+  dispatchMinigameAction("SCHLONIC", "endRun", {});
+
+  const teamOne = resolveSchlonicDisplayView();
+
+  assert.equal(teamOne.phase, "finished");
+  assert.equal(teamOne.bestRun?.teamId, "team-1");
+  assert.equal(teamOne.bestRun?.wings, walkWings);
+
+  advanceToTeamTurn(Phase.MINIGAME_PLAY, 1, "team-2");
+
+  const teamTwo = resolveSchlonicDisplayView();
+
+  assert.equal(teamTwo.activeTurnTeamId, "team-2");
+  assert.equal(teamTwo.runIndex, 0);
+  assert.equal(teamTwo.bestRun?.teamId, "team-1");
+  assert.equal(teamTwo.bestRun?.wings, walkWings);
+  assert.deepEqual(teamTwo.bestRun?.inputs, [{ tick: 0, down: true }]);
+
+  advanceToRoundResultsPhase(1);
+  advanceUntil(Phase.MINIGAME_PLAY, 2);
+
+  assert.equal(resolveSchlonicDisplayView().bestRun, null);
 });

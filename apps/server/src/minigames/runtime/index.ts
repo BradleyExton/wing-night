@@ -16,6 +16,11 @@ export type MinigameRuntimeStateSnapshot = ActiveMinigameRuntimeState | null;
 
 let activeMinigameRuntimeState: ActiveMinigameRuntimeState | null = null;
 let minigameContentById: Partial<Record<MinigameType, SerializableValue>> = {};
+// What each game asked the round to remember (`MinigameRuntimePlugin.selectRoundMemory`),
+// taken from the state every time it is projected — so it is always the latest state's, an
+// undo included — and handed to the next team's `initialize` as `roundMemory`. Keyed by game
+// and cleared at every round start, so a game played twice in a night starts each round clean.
+let minigameRoundMemoryById: Partial<Record<MinigameType, SerializableValue>> = {};
 
 const clearMinigameProjection = (state: RoomState): void => {
   state.activeTurnTeamId = null;
@@ -65,6 +70,25 @@ const projectActiveRuntimeStateToRoomState = (
   if (hostView !== null) {
     state.pendingMinigamePointsByTeamId = { ...hostView.pendingPointsByTeamId };
   }
+
+  if (runtimePlugin.selectRoundMemory !== undefined) {
+    const memory = runtimePlugin.selectRoundMemory({ state: runtimeState, rules, content });
+
+    minigameRoundMemoryById = {
+      ...minigameRoundMemoryById,
+      [minigameId]: memory === null ? undefined : structuredClone(memory)
+    };
+  }
+};
+
+/** A round starts clean: nothing a previous round's turns remembered reaches this one. */
+export const clearMinigameRoundMemory = (): void => {
+  minigameRoundMemoryById = {};
+};
+
+/** Test seam: what a game would hand its next team, as the server holds it now. */
+export const peekMinigameRoundMemory = (minigameId: MinigameType): SerializableValue | null => {
+  return minigameRoundMemoryById[minigameId] ?? null;
 };
 
 export const setMinigameContent = (
@@ -79,6 +103,7 @@ export const setMinigameContent = (
 
 export const resetMinigameRuntimeState = (): void => {
   activeMinigameRuntimeState = null;
+  minigameRoundMemoryById = {};
 };
 
 // Holds a REFERENCE to the live runtime state rather than copying it, which
@@ -144,7 +169,8 @@ export const initializeActiveMinigameRuntimeState = (
     pointsMax,
     pendingPointsByTeamId: state.pendingMinigamePointsByTeamId,
     rules,
-    content: minigameContentById[descriptor.minigameId] ?? null
+    content: minigameContentById[descriptor.minigameId] ?? null,
+    roundMemory: minigameRoundMemoryById[descriptor.minigameId] ?? null
   });
 
   if (runtimeState === null) {

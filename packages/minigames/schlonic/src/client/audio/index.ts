@@ -3,149 +3,197 @@ import {
   playNoise,
   playTone,
   type CueTable,
+  type CueVoice,
   type Soundboard,
   type SoundboardOptions
 } from "@wingnight/audio";
 
 /**
- * SCHLONIC's cue table on the house board (`@wingnight/audio`): a Sonic zone's noises, synthesised.
- * The TV's table, not the tablet's — the display is the room's speaker — so only
- * `DisplaySchlonicSurface` wires it up, through `useSchlonicSounds`.
+ * SCHLONIC's soundboard: the zone's noises, as a table of voices for the house board
+ * (`@wingnight/audio`). The TV's board, never the tablet's: the display is the room's
+ * speaker. Everything here is best-effort and silent when it cannot sound.
  */
 export type SchlonicCueName =
-  | "jump"
-  | "spring"
-  | "land"
   | "wing"
-  | "badnik"
+  | "spring"
+  | "pop"
   | "hit"
-  | "cleared"
-  | "wipeout"
-  | "fall";
+  | "fell"
+  | "wiped"
+  | "post"
+  | "riser"
+  | "bankTick"
+  | "handoff"
+  | "finish";
 
 export const SCHLONIC_CUE_NAMES: readonly SchlonicCueName[] = [
-  "jump",
-  "spring",
-  "land",
   "wing",
-  "badnik",
+  "spring",
+  "pop",
   "hit",
-  "cleared",
-  "wipeout",
-  "fall"
+  "fell",
+  "wiped",
+  "post",
+  "riser",
+  "bankTick",
+  "handoff",
+  "finish"
 ];
 
-// Under the party music, like FAPPY's: a zone full of wings is a lot of dings.
+// Music-friendly: loud enough to read across a room over a playlist, quiet enough that a line
+// of ten wings is a run of notes and not a nag.
 export const SCHLONIC_MASTER_GAIN = 0.25;
 
-// How many wings in hand take the wing's ding from its lowest note to its highest. The pitch
-// climbing with the handful is the whole feedback: the room hears the run getting richer.
-export const WING_PITCH_HANDFUL = 12;
-
-/** Pure: wings in hand into the 0..1 the wing cue climbs on. */
-export const resolveWingPitch = (wingsInHand: number): number => {
-  if (!Number.isFinite(wingsInHand) || wingsInHand <= 0) {
-    return 0;
-  }
-
-  return Math.min(1, wingsInHand / WING_PITCH_HANDFUL);
+/**
+ * The shortest gap between two soundings of the same cue. A wing line passes at one wing every
+ * ~120 ms at top speed, so `wing` is the tightest; `bankTick` is the count-up at the post, held
+ * to a rate a room can hear as counting; the beats that are told twice (the mirror's outcome and
+ * the surface's hold, a beat apart) collapse into one sounding.
+ */
+export const SCHLONIC_CUE_MIN_GAP_MS: Record<SchlonicCueName, number> = {
+  wing: 40,
+  spring: 150,
+  pop: 120,
+  hit: 250,
+  fell: 1500,
+  wiped: 1500,
+  post: 1500,
+  riser: 3000,
+  bankTick: 45,
+  handoff: 900,
+  finish: 1500
 };
 
-const WING_LOW_HZ = 1175;
-const WING_HIGH_HZ = 2349;
+/** How many wings in hand it takes for the pickup chime to reach the top of its climb. */
+export const WING_CHIME_TOP_AT = 40;
 
-export const SCHLONIC_CUES: CueTable<SchlonicCueName> = {
-  // A boing: a short rising blip, the cartoon spring under a jump.
-  jump: {
-    minGapMs: 80,
-    voice: (rig, startAt) => {
-      playTone(rig, { startAt, durationSeconds: 0.12, type: "square", fromHz: 330, toHz: 660, peak: 0.22 });
-    }
-  },
-  // The springboard: a longer, higher boing with a twang of air in it.
-  spring: {
-    minGapMs: 200,
-    voice: (rig, startAt) => {
-      playTone(rig, { startAt, durationSeconds: 0.28, type: "square", fromHz: 220, toHz: 1320, peak: 0.3 });
-      playNoise(rig, { startAt, durationSeconds: 0.15, peak: 0.12, filterType: "bandpass", fromHz: 600, toHz: 2400, q: 1.5 });
-    }
-  },
-  // Feet on the ground: a soft, low pat. Quiet, because the zone is bumpy.
-  land: {
-    minGapMs: 120,
-    voice: (rig, startAt) => {
-      playNoise(rig, { startAt, durationSeconds: 0.05, peak: 0.14, filterType: "lowpass", fromHz: 500, toHz: 150 });
-    }
-  },
-  // The ring: a bright ding that climbs a whole octave with the handful (`resolveWingPitch`).
-  wing: {
-    minGapMs: 40,
-    voice: (rig, startAt, intensity) => {
-      const hz = WING_LOW_HZ + (WING_HIGH_HZ - WING_LOW_HZ) * intensity;
+/** Pure: the pickup chime climbs with the handful, so a greedy line sounds like one. */
+export const resolveWingChimeHz = (wingsInHand: number): number => {
+  const share = Math.min(1, Math.max(0, wingsInHand) / WING_CHIME_TOP_AT);
 
-      playTone(rig, { startAt, durationSeconds: 0.09, type: "triangle", fromHz: hz, peak: 0.28 });
-      playTone(rig, { startAt, durationSeconds: 0.14, type: "sine", fromHz: hz * 2, peak: 0.1 });
-    }
-  },
-  // A badnik popped underfoot: a pop and a bounce.
-  badnik: {
-    minGapMs: 80,
-    voice: (rig, startAt) => {
-      playNoise(rig, { startAt, durationSeconds: 0.08, peak: 0.4, filterType: "bandpass", fromHz: 1200, toHz: 400, q: 1 });
-      playTone(rig, { startAt: startAt + 0.03, durationSeconds: 0.14, type: "square", fromHz: 200, toHz: 500, peak: 0.16 });
-    }
-  },
-  // Wings scattering: a harsh burst and a spray of little dings falling away.
-  hit: {
-    minGapMs: 200,
-    voice: (rig, startAt) => {
-      playNoise(rig, { startAt, durationSeconds: 0.2, peak: 0.5, filterType: "highpass", fromHz: 1200, toHz: 3000 });
-      for (let index = 0; index < 5; index += 1) {
-        playTone(rig, {
-          startAt: startAt + 0.04 + index * 0.05,
-          durationSeconds: 0.06,
-          type: "triangle",
-          fromHz: 2200 - index * 220,
-          peak: 0.16
-        });
-      }
-    }
-  },
-  // The goal line: a quick four-note run up and a held top, a stage-clear jingle.
-  cleared: {
-    minGapMs: 1500,
-    voice: (rig, startAt) => {
-      const notes = [523, 659, 784, 1047];
+  return 1320 + share * 880;
+};
 
-      notes.forEach((hz, index) => {
-        playTone(rig, {
-          startAt: startAt + index * 0.11,
-          durationSeconds: index === notes.length - 1 ? 0.5 : 0.12,
-          type: "square",
-          fromHz: hz,
-          peak: index === notes.length - 1 ? 0.3 : 0.24
-        });
-      });
-      playTone(rig, { startAt: startAt + 0.33, durationSeconds: 0.5, type: "triangle", fromHz: 1568, peak: 0.12 });
-    }
+// One voice per cue. The numbers are a table to retune, not a system.
+const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
+  // Sonic's ring, near enough: a bright two-note blip that climbs with the handful. `intensity`
+  // carries the wings in hand as a 0..1 share of the climb.
+  wing: (rig, startAt, intensity) => {
+    const hz = resolveWingChimeHz(intensity * WING_CHIME_TOP_AT);
+
+    playTone(rig, { startAt, durationSeconds: 0.05, type: "triangle", fromHz: hz, peak: 0.12 });
+    playTone(rig, {
+      startAt: startAt + 0.045,
+      durationSeconds: 0.07,
+      type: "triangle",
+      fromHz: hz * 1.5,
+      peak: 0.1
+    });
   },
-  // Wiped out: a crunch and a slow slide down.
-  wipeout: {
-    minGapMs: 1500,
-    voice: (rig, startAt) => {
-      playNoise(rig, { startAt, durationSeconds: 0.25, peak: 0.6, filterType: "lowpass", fromHz: 3000, toHz: 200 });
-      playTone(rig, { startAt: startAt + 0.1, durationSeconds: 0.6, type: "sawtooth", fromHz: 300, toHz: 70, peak: 0.3, attackSeconds: 0.05 });
-    }
+  // A boing: a sine bent up hard, with a touch of air.
+  spring: (rig, startAt) => {
+    playTone(rig, {
+      startAt,
+      durationSeconds: 0.28,
+      type: "sine",
+      fromHz: 180,
+      toHz: 900,
+      peak: 0.4,
+      attackSeconds: 0.02
+    });
+    playNoise(rig, { startAt, durationSeconds: 0.08, peak: 0.12, filterType: "bandpass", fromHz: 1200, q: 1.5 });
   },
-  // Into the pit: a long falling whistle and a distant thud at the bottom.
-  fall: {
-    minGapMs: 1500,
-    voice: (rig, startAt) => {
-      playTone(rig, { startAt, durationSeconds: 0.7, type: "sine", fromHz: 1400, toHz: 200, peak: 0.26, attackSeconds: 0.03 });
-      playTone(rig, { startAt: startAt + 0.7, durationSeconds: 0.18, type: "sine", fromHz: 120, toHz: 40, peak: 0.5 });
-    }
+  // A badnik popping under a ball: a short wet burst and a squeak down.
+  pop: (rig, startAt) => {
+    playNoise(rig, { startAt, durationSeconds: 0.09, peak: 0.45, filterType: "bandpass", fromHz: 700, toHz: 250, q: 2 });
+    playTone(rig, { startAt, durationSeconds: 0.12, type: "square", fromHz: 520, toHz: 140, peak: 0.18 });
+  },
+  // Half the handful gone: a scatter of noise and a low knock, nothing fatal about it.
+  hit: (rig, startAt) => {
+    playNoise(rig, { startAt, durationSeconds: 0.2, peak: 0.6, filterType: "highpass", fromHz: 1800, toHz: 4000 });
+    playTone(rig, { startAt, durationSeconds: 0.16, type: "sawtooth", fromHz: 240, toHz: 70, peak: 0.35 });
+  },
+  // Down a hole: a whistle falling away, then the bay takes it.
+  fell: (rig, startAt) => {
+    playTone(rig, {
+      startAt,
+      durationSeconds: 0.55,
+      type: "sine",
+      fromHz: 900,
+      toHz: 120,
+      peak: 0.3,
+      attackSeconds: 0.03
+    });
+    playNoise(rig, {
+      startAt: startAt + 0.5,
+      durationSeconds: 0.3,
+      peak: 0.5,
+      filterType: "lowpass",
+      fromHz: 1800,
+      toHz: 300
+    });
+  },
+  // Wiped out: three notes down, the game beat them.
+  wiped: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.2, type: "triangle", fromHz: 440, peak: 0.3 });
+    playTone(rig, { startAt: startAt + 0.18, durationSeconds: 0.2, type: "triangle", fromHz: 349, peak: 0.29 });
+    playTone(rig, { startAt: startAt + 0.36, durationSeconds: 0.34, type: "triangle", fromHz: 262, peak: 0.28 });
+  },
+  // The post: an act-clear fanfare, three notes up and a held fifth.
+  post: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.12, type: "square", fromHz: 523, peak: 0.16 });
+    playTone(rig, { startAt: startAt + 0.11, durationSeconds: 0.12, type: "square", fromHz: 659, peak: 0.16 });
+    playTone(rig, { startAt: startAt + 0.22, durationSeconds: 0.45, type: "square", fromHz: 784, peak: 0.18 });
+    playTone(rig, { startAt: startAt + 0.22, durationSeconds: 0.45, type: "triangle", fromHz: 1047, peak: 0.12, attackSeconds: 0.05 });
+  },
+  // The finale: a riser under the last two chunks, a saw sweeping up with the air opening
+  // over it, so the last ten seconds are the loudest thing in the run.
+  riser: (rig, startAt) => {
+    playTone(rig, {
+      startAt,
+      durationSeconds: 1.6,
+      type: "sawtooth",
+      fromHz: 110,
+      toHz: 440,
+      peak: 0.22,
+      attackSeconds: 0.6
+    });
+    playNoise(rig, {
+      startAt,
+      durationSeconds: 1.6,
+      peak: 0.14,
+      filterType: "highpass",
+      fromHz: 400,
+      toHz: 3000
+    });
+  },
+  // One wing into the bank: a tick that climbs as the count does. `intensity` is the share counted.
+  bankTick: (rig, startAt, intensity) => {
+    playTone(rig, {
+      startAt,
+      durationSeconds: 0.03,
+      type: "square",
+      fromHz: 1000 + intensity * 900,
+      peak: 0.1
+    });
+  },
+  // Two bright notes up: the tablet has changed hands.
+  handoff: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.12, type: "triangle", fromHz: 988, peak: 0.28 });
+    playTone(rig, { startAt: startAt + 0.1, durationSeconds: 0.2, type: "triangle", fromHz: 1319, peak: 0.26 });
+  },
+  // The team is through: an air horn, near enough.
+  finish: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.7, type: "sawtooth", fromHz: 196, toHz: 392, peak: 0.32, attackSeconds: 0.25 });
+    playTone(rig, { startAt, durationSeconds: 0.7, type: "sawtooth", fromHz: 294, toHz: 588, peak: 0.2, attackSeconds: 0.3 });
+    playNoise(rig, { startAt, durationSeconds: 0.68, peak: 0.1, filterType: "highpass", fromHz: 800, toHz: 2200 });
   }
 };
+
+// The board's table: each cue's voice beside the gap it may repeat at.
+export const SCHLONIC_CUES: CueTable<SchlonicCueName> = Object.fromEntries(
+  SCHLONIC_CUE_NAMES.map((cue) => [cue, { minGapMs: SCHLONIC_CUE_MIN_GAP_MS[cue], voice: CUE_VOICES[cue] }])
+) as CueTable<SchlonicCueName>;
 
 export type SchlonicSoundboard = Soundboard<SchlonicCueName>;
 

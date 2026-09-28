@@ -56,6 +56,13 @@ export const Zone = ({
     activeTurnTeamId: view.activeTurnTeamId,
     serverOrigin
   });
+  // The run to beat, as a figure — in its own team's colour, which may not be this team's.
+  const bestFigure = useRunnerFigure({
+    figure: view.bestRun?.player ?? null,
+    activeTurnTeamId: view.bestRun?.teamId ?? null,
+    serverOrigin
+  });
+  const ghost = view.bestRun === null ? null : bestFigure;
   const nextRun = view.runs[runIndex + 1] ?? null;
   const isLive = view.phase === "ready" || view.phase === "running";
   const isArmed = canAct && isLive && hold === null;
@@ -65,6 +72,7 @@ export const Zone = ({
     canAct: isArmed,
     sceneRef,
     tallyRef,
+    bestRun: view.bestRun,
     onPress: (tick): void => {
       onDispatchAction("press", { tick });
     },
@@ -101,6 +109,7 @@ export const Zone = ({
           runner={runner}
           sceneId="host-schlonic"
           label={zoneCopy.sceneLabel(runner.playerName)}
+          ghost={ghost}
         />
       </div>
       {hold?.kind === "handoff" && <HandoffCallout nextName={resolveRunPlayerName(nextRun)} />}

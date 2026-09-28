@@ -1,43 +1,90 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import type { SchlonicMinigameDisplayView } from "@wingnight/shared";
 
-import {
-  createSchlonicSoundboard,
-  resolveWingPitch,
-  type SchlonicCueName,
-  type SchlonicSoundboard
-} from "../audio/index.js";
-import type { SchlonicMirrorEvent, SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
+import { WING_CHIME_TOP_AT, createSchlonicSoundboard, type SchlonicSoundboard } from "../audio/index.js";
+import type { SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
+import type { RunHold } from "../useHeldRun/index.js";
 
-// Which cue each thing the mirror replays makes.
-const MIRROR_EVENT_CUES: Record<SchlonicMirrorEvent, SchlonicCueName> = {
-  jumped: "jump",
-  sprung: "spring",
-  landed: "land",
-  wingTaken: "wing",
-  badnikPopped: "badnik",
-  hit: "hit",
-  cleared: "cleared",
-  wiped: "wipeout",
-  fell: "fall"
+type SchlonicSoundsInput = {
+  view: SchlonicMinigameDisplayView;
+  hold: RunHold | null;
+};
+
+export type SchlonicSounds = {
+  /** Hand to the mirror as its `onEvent`; stable for the life of the surface. */
+  onMirrorEvent: SchlonicMirrorEventHandler;
+  /** Hand to the mirror as its `onBankTick`: one wing counted into the bank at the post. */
+  onBankTick: (share: number) => void;
 };
 
 /**
- * The room's sound for a run, on the TV only. Returns the handler to hand `useSchlonicMirror` as
- * its `onEvent`. Its identity is STABLE for the life of the surface, deliberately: the mirror's
- * effect carries a hand-narrowed dependency array so a rAF loop is never torn down mid-run, which
- * means its closure holds whatever handler it was set up with.
- *
- * Every cue comes from the mirror, so the wall sounds what the wall shows — the plaques that
- * follow a run are `silent`, because the server has already moved on by the time they land and
- * the mirror is still a few ticks behind it.
+ * The room's sound for one team's zone, on the TV only. The handlers' identities are STABLE
+ * for the life of the surface, deliberately: the mirror's effect carries a hand-narrowed
+ * dependency array so a rAF loop is never torn down mid-run, which means its closure holds
+ * whatever handlers it was set up with.
  */
-export const useSchlonicSounds = (): SchlonicMirrorEventHandler => {
-  // Made on the first cue rather than on mount, so a surface that is only ever looked at never
-  // asks the browser for an audio context at all.
+export const useSchlonicSounds = ({ view, hold }: SchlonicSoundsInput): SchlonicSounds => {
+  // Made on the first cue rather than on mount, so a surface that is only ever looked at
+  // never asks the browser for an audio context at all.
   const boardRef = useRef<SchlonicSoundboard | null>(null);
-
-  return useCallback((event: SchlonicMirrorEvent, wingsInHand: number): void => {
+  const play = useCallback((cue: Parameters<SchlonicSoundboard["play"]>[0], intensity?: number): void => {
     boardRef.current ??= createSchlonicSoundboard();
-    boardRef.current.play(MIRROR_EVENT_CUES[event], resolveWingPitch(wingsInHand));
+    boardRef.current.play(cue, intensity);
   }, []);
+
+  const onMirrorEvent = useCallback<SchlonicMirrorEventHandler>(
+    (event): void => {
+      if (event.kind === "wing") {
+        play("wing", Math.min(1, event.wingsInHand / WING_CHIME_TOP_AT));
+        return;
+      }
+
+      if (event.kind === "cleared") {
+        play("post");
+        return;
+      }
+
+      if (event.kind === "finale") {
+        play("riser");
+        return;
+      }
+
+      play(event.kind);
+    },
+    [play]
+  );
+
+  const onBankTick = useCallback(
+    (share: number): void => {
+      play("bankTick", share);
+    },
+    [play]
+  );
+
+  // The tablet changing hands. Keyed on the hold itself so a second handoff rings again.
+  const holdKind = hold?.kind ?? null;
+  const holdKey = hold === null ? "" : `${hold.runIndex}:${hold.startedAtMs}`;
+
+  useEffect(() => {
+    if (holdKind === "handoff") {
+      play("handoff");
+    }
+  }, [holdKind, holdKey, play]);
+
+  // The team through, once. A surface that mounts already finished (a reconnect) has no
+  // previous phase to have left, so it stays quiet.
+  const phase = view.phase;
+  const previousPhaseRef = useRef<typeof phase | null>(null);
+
+  useEffect(() => {
+    const previousPhase = previousPhaseRef.current;
+
+    previousPhaseRef.current = phase;
+
+    if (previousPhase !== null && previousPhase !== phase && phase === "finished") {
+      play("finish");
+    }
+  }, [phase, play]);
+
+  return { onMirrorEvent, onBankTick };
 };

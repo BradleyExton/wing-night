@@ -82,7 +82,8 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
     }
 
     if (prop.kind === "wing") {
-      const reach = runnerRadius + wingRadius;
+      const worth = prop.worth ?? 1;
+      const reach = runnerRadius + wingRadius * (worth > 1 ? SCHLONIC_WORLD.highLineWingScale : 1);
 
       if (
         frame.x + reach > prop.x &&
@@ -90,7 +91,7 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
         frame.y + reach > prop.y &&
         frame.y - reach < prop.y
       ) {
-        contact.wings += 1;
+        contact.wings += worth;
         contact.taken.push(prop.index);
       }
 

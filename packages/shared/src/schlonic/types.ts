@@ -30,6 +30,12 @@ export type SchlonicProp = {
   x: number;
   /** Centre for a wing; the ground it stands on for everything else. */
   y: number;
+  /**
+   * What a wing is worth in hand: one on the floor, two on the high line — the line only speed,
+   * a held jump or a springboard reaches. Absent means one; nothing but a wing carries it. It is
+   * why greed pays: the floor alone cannot make par.
+   */
+  worth?: number;
 };
 
 /**

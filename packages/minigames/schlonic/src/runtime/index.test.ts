@@ -23,16 +23,20 @@ const TEAMS: Team[] = [
 const RULES = { runsPerTurn: 2, zoneSeed: 4, zoneChunks: 14, parWingsPerRun: 20 };
 const POINTS_MAX = 15;
 
-const initialize = (rules: SerializableValue = RULES): SerializableValue => {
+const initialize = (
+  rules: SerializableValue = RULES,
+  options: { activeRoundTeamId?: string; roundMemory?: SerializableValue | null } = {}
+): SerializableValue => {
   const state = schlonicRuntimePlugin.initialize({
     teamIds: ["team-a", "team-b"],
     players: PLAYERS,
     teams: TEAMS,
-    activeRoundTeamId: "team-a",
+    activeRoundTeamId: options.activeRoundTeamId ?? "team-a",
     pointsMax: POINTS_MAX,
     pendingPointsByTeamId: { "team-a": 0, "team-b": 0 },
     rules,
-    content: null
+    content: null,
+    roundMemory: options.roundMemory ?? null
   });
 
   assert.ok(state !== null);
@@ -307,4 +311,110 @@ test("re-reads the round's running totals without touching the runs", () => {
   assert.ok(synced !== undefined);
   assert.deepEqual(hostView(synced).pendingPointsByTeamId, { "team-a": 9, "team-b": 3 });
   assert.equal(hostView(synced).phase, "running");
+});
+
+// A six-chunk zone with nothing in it a walking bird cannot survive: seed 3 deals a badnik, and
+// the finale's springboard throws a walker over its hole. So a run with no jumps clears it, and
+// one with an early hop clears it with a different handful. Which is the bigger is the sim's
+// business, so the tests ask it rather than assume.
+const CLEAR_RULES = { runsPerTurn: 2, zoneSeed: 3, zoneChunks: 6, parWingsPerRun: 20 };
+const CLEAR_COURSE = { seed: CLEAR_RULES.zoneSeed, chunks: CLEAR_RULES.zoneChunks };
+const HOP = [
+  { tick: 40, down: true },
+  { tick: 70, down: false }
+];
+const WALK_WINGS = runSchlonicRun(CLEAR_COURSE, [{ tick: 0, down: true }]).wings;
+const HOP_WINGS = runSchlonicRun(CLEAR_COURSE, HOP).wings;
+const [WORSE, BETTER] = HOP_WINGS < WALK_WINGS ? [HOP, []] : [[], HOP];
+const [WORSE_WINGS, BETTER_WINGS] = [Math.min(HOP_WINGS, WALK_WINGS), Math.max(HOP_WINGS, WALK_WINGS)];
+
+const playRun = (state: SerializableValue, inputs: readonly { tick: number; down: boolean }[]): SerializableValue => {
+  let next = state;
+
+  for (const input of inputs) {
+    next = reduce(next, input.down ? "press" : "release", { tick: input.tick }).state;
+  }
+
+  // A run with no inputs still has to be started before it can be ended.
+  if (inputs.length === 0) {
+    next = reduce(next, "press", { tick: 0 }).state;
+  }
+
+  return reduce(next, "endRun").state;
+};
+
+const roundMemory = (state: SerializableValue): SerializableValue | null => {
+  return schlonicRuntimePlugin.selectRoundMemory?.({ state, rules: CLEAR_RULES, content: null }) ?? null;
+};
+
+test("starts a round with no run to beat", () => {
+  const view = hostView(initialize(CLEAR_RULES));
+
+  assert.equal(view.bestRun, null);
+  assert.deepEqual(roundMemory(initialize(CLEAR_RULES)), { bestRun: null });
+});
+
+test("remembers the cleared run that banked the most wings as the round's best", () => {
+  assert.notEqual(WALK_WINGS, HOP_WINGS, "the two logs must bank different handfuls");
+
+  const afterWorse = playRun(initialize(CLEAR_RULES), WORSE);
+  const worseView = hostView(afterWorse);
+
+  assert.equal(worseView.runs[0]?.result?.outcome, "cleared");
+  assert.equal(worseView.bestRun?.wings, WORSE_WINGS);
+  assert.equal(worseView.bestRun?.player?.name, "Alex");
+  assert.equal(worseView.bestRun?.teamId, "team-a");
+
+  // The next run comes home with more: it is the new best.
+  const afterBetter = playRun(afterWorse, BETTER);
+
+  assert.equal(hostView(afterBetter).bestRun?.wings, BETTER_WINGS);
+  assert.equal(hostView(afterBetter).bestRun?.player?.name, "Caitlin");
+});
+
+test("keeps the standing best when a later run clears with fewer wings", () => {
+  const afterBetter = playRun(initialize(CLEAR_RULES), BETTER);
+  const afterWorse = playRun(afterBetter, WORSE);
+
+  assert.equal(hostView(afterWorse).bestRun?.wings, BETTER_WINGS);
+  assert.equal(hostView(afterWorse).bestRun?.player?.name, "Alex");
+});
+
+test("never makes a run that missed the post the one to beat", () => {
+  // The default rules' seed has a hole a third of the way in; a walking bird falls in it.
+  const state = playRun(initialize(), []);
+
+  assert.equal(hostView(state).runs[0]?.result?.outcome, "fell");
+  assert.equal(hostView(state).bestRun, null);
+});
+
+test("hands the best run on to the next team through the round's memory", () => {
+  const teamA = playRun(initialize(CLEAR_RULES), []);
+  const memory = roundMemory(teamA);
+  const teamB = initialize(CLEAR_RULES, { activeRoundTeamId: "team-b", roundMemory: memory });
+  const view = hostView(teamB);
+
+  assert.equal(view.activeTurnTeamId, "team-b");
+  assert.equal(view.bestRun?.wings, WALK_WINGS);
+  assert.equal(view.bestRun?.teamId, "team-a");
+  // Team B's own runs start fresh; only the ghost came across.
+  assert.equal(view.runIndex, 0);
+  assert.equal(view.wingsBanked, 0);
+});
+
+test("ignores a memory that is not its own", () => {
+  assert.equal(hostView(initialize(CLEAR_RULES, { roundMemory: { towers: [1, 2] } })).bestRun, null);
+  assert.equal(hostView(initialize(CLEAR_RULES, { roundMemory: "yes" })).bestRun, null);
+});
+
+test("forgets the best a reset turn had set, but not the one it inherited", () => {
+  const inherited = { bestRun: { teamId: "team-b", player: null, inputs: [], wings: 5, endTick: 300 } };
+  const state = playRun(initialize(CLEAR_RULES, { roundMemory: inherited }), []);
+
+  assert.equal(hostView(state).bestRun?.wings, WALK_WINGS);
+
+  const reset = reduce(state, "resetTurn").state;
+
+  assert.equal(hostView(reset).bestRun?.wings, 5);
+  assert.equal(hostView(reset).bestRun?.teamId, "team-b");
 });

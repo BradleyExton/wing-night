@@ -1,7 +1,9 @@
 export {
+  SCHLONIC_FINALE_CHUNKS,
   SCHLONIC_WORLD,
   isSchlonicInPit,
   isSchlonicOverPit,
+  resolveSchlonicFinaleX,
   resolveSchlonicGroundSlope,
   resolveSchlonicGroundY,
   resolveSchlonicWingTotal,

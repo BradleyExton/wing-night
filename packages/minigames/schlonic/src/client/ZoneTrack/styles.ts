@@ -1,0 +1,54 @@
+// The zone strip between the TV's marquee and the arena: the whole run as one line, start to
+// post, at the same height and width FAPPY's pace track takes (one bird-head tall, the bar
+// drawn through it), so the two twitch games read as one picture on the wall.
+export const container = "relative mx-auto h-[clamp(1.5rem,2.1vh,1.9rem)] w-[min(72%,60rem)] shrink-0";
+
+// The run, start to post. Centred on the row so the pins ride it.
+export const rail = "absolute inset-x-0 top-1/2 h-[0.3rem] -translate-y-1/2 rounded-full bg-text/10";
+
+// Every position below is a custom property or a class the strip writes — the house rule bans a
+// JSX `style` prop. The hazards and holes are laid out once per zone; only the runner's pin
+// moves, and it moves through ONE property the paint loop writes on the root sixty times a
+// second (`zoneTrack/paintZoneTrack`), never through React.
+export const railRun = "absolute inset-y-0 left-0 w-[var(--schlonic-track-run,0%)] rounded-full bg-gold/45";
+
+// Every static mark sits at `--schlonic-track-at`, which the component writes on the element
+// as it mounts; a hole is a gap in the rail and is drawn as one, the page's own dark over the
+// bar, `--schlonic-track-width` wide.
+const at = "left-[var(--schlonic-track-at,0%)]";
+
+export const pit = `absolute ${at} top-1/2 h-[0.5rem] w-[var(--schlonic-track-width,2%)] -translate-y-1/2 bg-bg`;
+
+// The three hazards, in the scene's own materials (DESIGN.md §2.11) and the three shapes the
+// zone tells them apart by: a thorn bed is a low crimson bar, a badnik is a pink dot, a
+// springboard is the pad's red on white. Scene art, not chrome.
+const hazard = `absolute ${at} top-1/2 -translate-x-1/2 -translate-y-1/2`;
+
+export const spike = `${hazard} h-[0.6rem] w-[0.9rem] rounded-sm bg-[#d81e5b]`;
+
+export const badnik = `${hazard} h-[0.8rem] w-[0.8rem] rounded-full bg-[#f9a3bc] shadow-[0_0_0_0.1rem_#8e2a52]`;
+
+export const spring = `${hazard} h-[0.8rem] w-[0.8rem] rounded-full border-[0.16rem] border-[#fff7ed] bg-[#e8453c]`;
+
+// The post: the finish, in gold like FAPPY's par tick.
+export const post = "absolute right-0 top-1/2 h-[0.85rem] w-[0.14rem] translate-x-1/2 -translate-y-1/2 rounded-full bg-gold";
+
+// Where an earlier run of this turn ended, in the team's colour: a cleared run sits on the
+// post, a wipeout or a fall where it went wrong. Faint, so the live pin wins.
+export const runPin = `absolute ${at} top-1/2 h-[0.6rem] w-[0.6rem] -translate-x-1/2 -translate-y-1/2 rounded-full border-[0.1rem] border-current bg-bg opacity-60`;
+
+// The live runner, placed by the paint loop. The player's own head, in the team's colour, the
+// same figure the arena draws — it moves every frame, so no transition.
+export const runnerMark =
+  "absolute left-[var(--schlonic-track-run,0%)] top-1/2 aspect-square h-full w-[auto] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[0.12rem] border-current bg-bg shadow-[0_0_0.5rem_currentColor]";
+
+// The run to beat, placed by its own replay on the same tick. Faint, because it is not in the
+// race — it is the race's shadow — and under the runner in the stacking order.
+export const ghostMark =
+  "pointer-events-none absolute left-[var(--schlonic-track-ghost,0%)] top-1/2 aspect-square h-[115%] w-[auto] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[0.1rem] border-current bg-bg opacity-50";
+
+export const runnerPhoto = "h-full w-full object-cover";
+
+export const runnerHen = "flex h-full w-full items-center justify-center p-[8%]";
+
+export const label = "sr-only";

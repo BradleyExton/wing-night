@@ -144,6 +144,7 @@ export type {
   FappySplat
 } from "./fappy/index.js";
 export {
+  SCHLONIC_FINALE_CHUNKS,
   SCHLONIC_WORLD,
   advanceSchlonic,
   createSchlonicRunSkip,
@@ -152,6 +153,7 @@ export {
   isSchlonicOverPit,
   resolveSchlonicGroundSlope,
   resolveSchlonicGroundY,
+  resolveSchlonicFinaleX,
   resolveSchlonicWingTotal,
   resolveSchlonicTickCap,
   resolveSchlonicZone,
@@ -266,6 +268,7 @@ export type {
   FappyMinigameHostView,
   SchlonicMinigameDisplayView,
   SchlonicMinigameHostView,
+  SchlonicBestRun,
   SchlonicMinigameRun,
   SchlonicPhase,
   SchlonicPlayerFigure,

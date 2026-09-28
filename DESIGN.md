@@ -1486,9 +1486,10 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     the way the real bluffs go. Wings are `#f5902b` on a `#fff1d6` bone.
     Drawing content, not UI
     chrome — exempt from the two-accent budget the way the JOUST arena and the
-    drawing inks are. The letterbox bars around the 16:9 world are near-black
-    (`#0d1f14`): they are outside the world, and painting them sky-blue made
-    the shore read as floating.
+    drawing inks are. On the tablet the letterbox bars around the 16:9 world
+    are near-black (`#0d1f14`): they are outside the world, and painting them
+    sky-blue made the shore read as floating. The wall has no bars at all — its
+    camera fills the arena (below).
 -   **Three readings of one creature, told apart at speed.** The schlong is
     drawn three ways and the room has to know which is which in a glance:
     *a FACE* — on a pink, a dark or a pale one, dealt by its index the way
@@ -1543,6 +1544,79 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     a little longer than the tablet does and finishes the run it has before it
     switches: the room always sees the post or the hole, never a cut to the
     next start line.
+-   **The wall sees further down the shore than the tablet.** The scene draws
+    the one world through a camera per surface (`SchlonicScene/camera`): the
+    tablet keeps the sim's own 16:9 box with the runner 46 units in, and the TV
+    fills its whole arena edge to edge with a camera widened to the arena's
+    aspect, the runner pulled nearer the left edge, and a little more sky and
+    ground than the box — about two and a quarter seconds of shore ahead of
+    the hen at top speed against the tablet's one and a half. That is the
+    game's information asymmetry (`docs/minigame-design-principles.md` §3): a
+    hazard is on the wall before it is on the tablet, so the couch is the
+    runner's lookout and "JUMP!" is the whole team's job, not the holder's.
+    The still banks (bay, beach, park) cover any camera; the scrolling banks
+    are sized off the camera's width the same way they are off the zone's
+    length, and the ground runs a camera past the post.
+-   **The zone strip.** Between the marquee and the arena the wall hangs the
+    zone as one line (`ZoneTrack`), in FAPPY's pace-track shape and at its
+    size, so the two twitch games read as one picture: the run start to post,
+    every hazard marked in the scene's own materials and the shape the zone
+    tells it by (a crimson bar for a thorn bed, a pink dot for a badnik, the
+    pad's red-on-white ring for a springboard), every hole a gap in the rail,
+    the post a gold tick, this turn's finished runs pinned in the team's colour
+    where they ended, and the live runner's own head riding the rail. Wings are
+    not on it: it is a map of what can go wrong, not of what there is to
+    collect. The static marks are laid out once per zone as custom properties
+    written on mount; the live pin is one property the mirror's loop writes
+    on the root beside the wing tally (`trackMarks/paintZoneTrack`), so nothing
+    on the strip re-renders per frame.
+-   **The ghost: the round's best run, raced live.** The cleared run that
+    banked the most wings so far — any team's — crosses from turn to turn as
+    the plugin's round memory (`selectRoundMemory` → `initialize({ roundMemory })`,
+    `docs/minigame-authoring-guide.md` §3) and both surfaces replay its input
+    log on the live run's own clock, tick for tick: the best run's own bird
+    (`SchlonicScene/Ghost`), at half strength, behind the runner, its name over
+    its head, wherever its replay has got to — ahead, behind, or off the
+    picture; the same figure as a second pin on the strip, under the runner's;
+    and its wings in both chromes as the number "to beat", dimmer than the
+    team's gold because it is the target and not the score. The ghost is fixed
+    when a run is taken up, so a run that sets the new best does not restart
+    its own replay, and it is hidden on the line, where two hens on one spot
+    are a smudge. This is what turns "how far does it get" into a race the
+    room can watch: the round's leader is on the wall, not in a sum.
+-   **Juice (§8 of the principles): the wall sounds, flinches and counts.**
+    The TV has a soundboard (`audio/`, a table of voices for the house synth
+    in `@wingnight/audio`): a ring-style chime per wing that climbs with the
+    handful, a boing off a springboard, a pop for a badnik, a scatter for a
+    hit, a whistle-and-splash for a hole, three notes down for a wipeout, an
+    act-clear fanfare at the post, a tick per wing counted into the bank, and
+    the handoff and finish stings the arcade games share. The mirror announces
+    what changed between frames (`mirrorEvents`) and the surface's sound hook
+    decides what that means; the tablet stays silent, the TV is the speaker.
+    A hit stops BOTH loops' clocks for `HIT_PAUSE_MS` (the sim never knows —
+    a tick is a tick) and jolts the scene's box opposite the impact
+    (`SchlonicScene/shake`, Web Animations so two hits a second apart both
+    flinch). At the post the in-hand figure counts down as the banked figure
+    counts up, a tick each, over `BANK_COUNT_MS` inside the cleared beat, and
+    up to a dozen wings fly off the bird into the banked figure over the stage
+    (`WingFlight`, thrown by `flyWings`). All of it is best-effort: no audio
+    context, no Web Animations, a headless run — silence and stillness, never
+    an exception.
+-   **Greed pays, and the finale is loud.** A wing on the high line — hung
+    `highLineAbove` or more over the ground, where only speed, a held jump or a
+    springboard reaches — is worth two (`SchlonicProp.worth`), drawn bigger by
+    `highLineWingScale` and reached at that size, so what the room sees is what
+    the bird hits. Par is set where the floor alone cannot make it (120 of the
+    default zone's 165; a bot that hops every hazard on the floor and never
+    takes a hit banks about 107, and the springboards hand it most of that),
+    which is what turns the hill lines from decoration into the decision the
+    game is built on. Every zone ends the same way: the chunk before the last is the finale
+    (`world/index.ts`), a springboard, then a hole wider than a tap clears, then
+    the post — with the biggest arc of the zone hung in the spring's flight at
+    double worth and a low line under it for whoever jumps the hole off the
+    lip. The wall plays a riser as the runner crosses into the last two chunks
+    (`resolveSchlonicFinaleX`), so the last ten seconds are the loudest thing
+    in the run rather than the coast they used to be.
 -   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
     the same one JOUST takes in §2.7 and FAPPY in §2.9: the zone is full bleed
     and is still the whole jump surface, filling the takeover's padding box edge

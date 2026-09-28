@@ -22,16 +22,28 @@ test("schlonic sandbox lays out one zone for both screens and starts the run on 
 
   await expect(page.getByRole("heading", { name: "Minigame Dev Sandbox" })).toBeVisible();
 
-  // Both previews draw the same zone from the live fixture: fourteen chunks, one pit cutting the
-  // ground in two, and all four pieces of hard kit somewhere along it.
+  // Both previews draw the same zone from the live fixture: fourteen chunks, a pit cutting the
+  // ground a third of the way in, all four pieces of hard kit somewhere along it, and the
+  // finale's springboard and hole before the post.
   await expect(page.locator("[data-schlonic-scene]")).toHaveCount(2);
-  await expect(page.locator("[data-schlonic-ground-run]")).toHaveCount(4);
+  await expect(page.locator("[data-schlonic-ground-run]")).toHaveCount(6);
   await expect(page.locator("[data-schlonic-spike]")).toHaveCount(2);
   await expect(page.locator("[data-schlonic-badnik]")).toHaveCount(2);
-  await expect(page.locator("[data-schlonic-spring]")).toHaveCount(2);
+  await expect(page.locator("[data-schlonic-spring]")).toHaveCount(4);
+  // The high line is drawn bigger, because it is worth more.
+  await expect(page.locator('[data-schlonic-wing-worth="2"]').first()).toBeAttached();
   await expect(page.locator("[data-schlonic-goal]")).toHaveCount(2);
   await expect(page.getByText("Run 1 of 2")).toBeVisible();
   await expect(page.getByText("Alex is on the line — tap to go")).toBeVisible();
+  // The wall carries the zone as a line over the arena: the kit, the hole and the post, with
+  // the runner's pin on the start line.
+  const track = page.locator("[data-schlonic-track]");
+
+  await expect(track).toHaveCount(1);
+  await expect(track.locator("[data-schlonic-track-hazard]")).toHaveCount(4);
+  await expect(track.locator("[data-schlonic-track-pit]")).toHaveCount(2);
+  await expect(track.locator("[data-schlonic-track-post]")).toHaveCount(1);
+  await expect(track).toHaveAttribute("data-schlonic-track-percent", "0");
   await expect(page.locator("[data-schlonic-wings]").first()).toHaveText(/0 \/ 52/);
   await expect(page.locator("[data-schlonic-in-hand]").first()).toHaveText("0");
 
@@ -187,6 +199,13 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
   // The pit sits a third of the way in; getting past it is what the jumps were for.
   expect(endedAtX).toBeGreaterThan(400);
 
+  // The strip's pin followed the run down the zone: past the hole, a third of the way in.
+  const trackPercent = Number(
+    await page.locator("[data-schlonic-track]").getAttribute("data-schlonic-track-percent")
+  );
+
+  expect(trackPercent).toBeGreaterThan(30);
+
   // The tablet says who to hand it to; the TV says who is up.
   const hostCallout = page.locator('[data-schlonic-handoff="host"]');
 
@@ -200,9 +219,25 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
     "You're up — grab the tablet"
   );
 
+
   // The server refereed the run from the log and put what it brought home on the board.
   await expect(page.locator("[data-schlonic-history='0']")).not.toContainText("—");
   await expect(page.getByText("Run 2 of 2")).toBeVisible({ timeout: 5000 });
+
+  // A run that made the post is the round's best, and the next team races it: hand the sandbox
+  // to another team and the ghost is in both zones, on the strip, and on the marquee as the
+  // number to beat. A run that went down the hole is nobody's ghost.
+  const didClear = (await displayPlaque.getAttribute("data-schlonic-outcome")) === "cleared";
+
+  await page.getByLabel("Whose turn").selectOption({ index: 1 });
+
+  if (didClear) {
+    await expect(page.locator("[data-schlonic-ghost]")).toHaveCount(2);
+    await expect(page.locator("[data-schlonic-track-ghost]")).toHaveCount(1);
+    await expect(page.locator("[data-schlonic-best]").first()).toContainText("To beat · Alex");
+  } else {
+    await expect(page.locator("[data-schlonic-ghost]")).toHaveCount(0);
+  }
 });
 
 test("the runner curls into a ball the moment it leaves the ground, and unrolls when it lands", async ({

@@ -1,6 +1,6 @@
 import type { SchlonicZone } from "@wingnight/shared";
-import { SCHLONIC_WORLD } from "@wingnight/shared";
 
+import type { SchlonicCamera } from "../camera/index.js";
 import { resolveGroundSegments } from "../groundPaths/index.js";
 import { schlonicPalette } from "../palette.js";
 
@@ -13,12 +13,12 @@ import { schlonicPalette } from "../palette.js";
 // and from the sofa a pit read as a bright green pillar standing in the ground rather than as
 // a drop out of it.
 //
-// The floor keeps going a screen past its last sample: the sim's ground is level forever out
-// there, and a cleared run used to stand at the post looking at a cliff edge into the park.
-const RUN_OUT = SCHLONIC_WORLD.width;
-
-export const Ground = ({ zone }: { zone: SchlonicZone }): JSX.Element => {
-  const segments = resolveGroundSegments(zone, SCHLONIC_WORLD.height, RUN_OUT);
+// The floor keeps going a camera's width past its last sample: the sim's ground is level forever
+// out there, and a cleared run used to stand at the post looking at a cliff edge into the park.
+// It is filled down to the camera's own floor, which on the wall sits below the sim's box.
+export const Ground = ({ zone, camera }: { zone: SchlonicZone; camera: SchlonicCamera }): JSX.Element => {
+  const bottomY = camera.y + camera.height;
+  const segments = resolveGroundSegments(zone, bottomY, camera.width);
 
   return (
     <g data-schlonic-ground>
@@ -29,7 +29,7 @@ export const Ground = ({ zone }: { zone: SchlonicZone }): JSX.Element => {
           x={pit.fromX}
           y={pit.lipY}
           width={pit.toX - pit.fromX}
-          height={SCHLONIC_WORLD.height - pit.lipY}
+          height={bottomY - pit.lipY}
           fill={schlonicPalette.pitShaft}
         />
       ))}

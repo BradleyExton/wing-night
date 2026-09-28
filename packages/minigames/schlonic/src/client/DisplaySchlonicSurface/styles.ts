@@ -10,8 +10,10 @@ export const introDescription =
 
 export const hint = "m-0 text-[clamp(1rem,1.6vw,1.6rem)] italic text-muted";
 
+// `relative`, because the wing flight lays its pool over the whole stage from the stage's own
+// corner (`WingFlight`).
 export const stage =
-  "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)]";
+  "relative flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)]";
 
 // The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 
@@ -22,17 +24,20 @@ export const marqueeInHand = `${readoutFigure} text-gold`;
 
 export const marqueeWings = `${readoutFigure} text-gold/80`;
 
-// Scene art, licensed by DESIGN.md §2.11: the zone's green frame and ground, and that ground
-// pooled behind a plaque. The zone looks like nothing else in the show on purpose.
-const sceneZone = "border-[#1f6b34] bg-[#0d1f14]";
+// The run to beat: dimmer than the team's gold, because it is the target and not the score.
+export const marqueeBest = `${readoutFigure} text-text/70`;
+
+// Scene art, licensed by DESIGN.md §2.11: the zone's ground pooled behind a plaque. The zone
+// looks like nothing else in the show on purpose.
 const sceneZoneVeil =
   "bg-[radial-gradient(ellipse_at_center,rgba(12,26,16,0.78)_0%,rgba(12,26,16,0.1)_72%)]";
 
-export const arenaArea = `relative flex min-h-0 flex-1 overflow-hidden rounded-2xl border-2 ${sceneZone} shadow-[inset_0_0_40px_theme(colors.shade/50%)]`;
+// No frame and no bars: the wall's camera fills the arena edge to edge (§2.11), so the shore
+// runs the whole width of the TV and the only edge is the arena's own rounded corner.
+export const arenaArea = "relative flex min-h-0 flex-1 overflow-hidden rounded-2xl";
 
 // The venue, named where it is rather than on the marquee (which names the show, §2.2D): a small
-// plaque hung over the zone's sky. Centred rather than in JOUST's corner, because the zone
-// letterboxes inside its frame and a corner plaque would straddle the bar and the sky.
+// plaque hung over the zone's sky, centred, clear of the sky the hen crosses on a spring.
 export const venuePlaque =
   "pointer-events-none absolute left-1/2 top-[clamp(0.6rem,1.2vh,1.2rem)] z-10 -translate-x-1/2 rounded-md bg-bg/70 px-[0.9em] py-[0.35em] text-[clamp(0.9rem,1.1vw,1.4rem)] font-extrabold uppercase tracking-[0.22em] text-text/85";
 

@@ -4,41 +4,34 @@ import test from "node:test";
 import { createStubAudioContext } from "@wingnight/audio";
 
 import {
+  SCHLONIC_CUE_MIN_GAP_MS,
   SCHLONIC_CUE_NAMES,
-  SCHLONIC_CUES,
-  WING_PITCH_HANDFUL,
+  WING_CHIME_TOP_AT,
   createSchlonicSoundboard,
-  resolveWingPitch
+  resolveWingChimeHz
 } from "./index.js";
 
-test("does name every cue in the table once in the list the tests walk", () => {
-  assert.deepEqual([...SCHLONIC_CUE_NAMES].sort(), Object.keys(SCHLONIC_CUES).sort());
-});
+const createStubContext = createStubAudioContext;
 
-test("does build a graph for every cue when the context is running", () => {
-  const stub = createStubAudioContext();
+test("does have a voice and a gap for every cue, and every cue makes a sound", () => {
   let nowMs = 0;
+  const stub = createStubContext();
   const board = createSchlonicSoundboard({ createContext: () => stub.context, now: () => nowMs });
 
   for (const cue of SCHLONIC_CUE_NAMES) {
-    nowMs += 10_000;
-    board.play(cue, 0.5);
+    assert.ok(SCHLONIC_CUE_MIN_GAP_MS[cue] >= 0, cue);
+
+    const before = stub.startedNodes();
+
+    board.play(cue);
+    nowMs += 5000;
+    assert.ok(stub.startedNodes() > before, `${cue} started nothing`);
   }
-
-  assert.ok(stub.startedNodes() >= SCHLONIC_CUE_NAMES.length);
 });
 
-test("does climb the wing's pitch with the handful and stop at the top", () => {
-  assert.equal(resolveWingPitch(0), 0);
-  assert.equal(resolveWingPitch(WING_PITCH_HANDFUL / 2), 0.5);
-  assert.equal(resolveWingPitch(WING_PITCH_HANDFUL * 3), 1);
-  assert.equal(resolveWingPitch(Number.NaN), 0);
-});
-
-test("does swallow a cue when the page has no AudioContext at all", () => {
-  const board = createSchlonicSoundboard({ createContext: () => null });
-
-  assert.doesNotThrow(() => {
-    board.play("wipeout");
-  });
+test("does climb the wing chime with the handful and stop climbing at the top", () => {
+  assert.ok(resolveWingChimeHz(0) < resolveWingChimeHz(10));
+  assert.ok(resolveWingChimeHz(10) < resolveWingChimeHz(WING_CHIME_TOP_AT));
+  assert.equal(resolveWingChimeHz(WING_CHIME_TOP_AT), resolveWingChimeHz(WING_CHIME_TOP_AT * 3));
+  assert.equal(resolveWingChimeHz(-4), resolveWingChimeHz(0));
 });

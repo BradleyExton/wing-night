@@ -31,6 +31,7 @@ import {
   createClockRehearsalTimer,
   resolveSandboxHostRoomState
 } from "./resolveSandboxHostRoomState";
+import { initializeRuntimeState, selectRoundMemory } from "./bootRuntime";
 import * as styles from "./styles";
 
 type SandboxStageProps = {
@@ -71,26 +72,6 @@ const resolveHostShellCtaLabel = (phase: MinigameSurfacePhase): string => {
   return hostCopy.primaryActionLabel(HOST_SHELL_PHASE_BY_SURFACE_PHASE[phase], {
     hasNextRoundTurn: false,
     hasAdditionalRounds: false
-  });
-};
-
-// Boots the same pure runtime plugin the server drives during a real game,
-// seeded with the manifest the sandbox resolved — the live content pack when
-// the server could be reached, the package's bundled fixture otherwise.
-const initializeRuntimeState = (
-  runtimePlugin: MinigameRuntimePlugin,
-  devManifest: MinigameDevManifest,
-  activeRoundTeamId: string | null
-): SerializableValue => {
-  return runtimePlugin.initialize({
-    teamIds: [...devManifest.teamIds],
-    players: devManifest.players.map((player) => ({ ...player })),
-    teams: devManifest.teams.map((team) => ({ ...team, playerIds: [...team.playerIds] })),
-    activeRoundTeamId,
-    pointsMax: devManifest.pointsMax,
-    pendingPointsByTeamId: { ...devManifest.pendingPointsByTeamId },
-    rules: devManifest.rules,
-    content: devManifest.content
   });
 };
 
@@ -208,9 +189,17 @@ export const SandboxStage = ({
         activeTeamId={activeTeamId}
         onActiveTeamChange={(teamId): void => {
           // Switching team re-seeds the runtime, the same way the server does at the top of that
-          // team's turn — a half-played turn is not that team's turn.
+          // team's turn — a half-played turn is not that team's turn — and hands on what the
+          // turn just played asked the round to remember, the way the server does too.
           setActiveTeamId(teamId);
-          setRuntimeState(initializeRuntimeState(runtimePlugin, devManifest, teamId));
+          setRuntimeState(
+            initializeRuntimeState(
+              runtimePlugin,
+              devManifest,
+              teamId,
+              selectRoundMemory(runtimePlugin, devManifest, runtimeState)
+            )
+          );
           setClockRehearsalTimer(null);
         }}
         onReset={(): void => {

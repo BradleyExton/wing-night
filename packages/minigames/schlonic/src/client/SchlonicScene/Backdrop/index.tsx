@@ -1,8 +1,8 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { AllandaleStation, Marina, SpiritCatcher, TownCluster } from "@wingnight/scenery";
 import type { SceneryPalette } from "@wingnight/scenery";
-import { SCHLONIC_WORLD } from "@wingnight/shared";
 
+import type { SchlonicCamera } from "../camera/index.js";
 import { schlonicPalette } from "../palette.js";
 
 /**
@@ -76,13 +76,19 @@ const SUN_X = 116;
 const SUN_Y = 26;
 
 /**
- * How wide a bank has to be so it never runs out before the zone does: the screen, plus the
+ * How wide a bank has to be so it never runs out before the zone does: the camera, plus the
  * distance this bank travels over the whole run, plus a margin for the first screen's worth of
  * scenery sitting left of the start line.
  */
-const bandWidth = (zoneLength: number, parallax: number): number => {
-  return SCHLONIC_WORLD.width * 1.5 + Math.max(0, zoneLength) * parallax;
+const bandWidth = (zoneLength: number, parallax: number, cameraWidth: number): number => {
+  return cameraWidth * 1.5 + Math.max(0, zoneLength) * parallax;
 };
+
+/**
+ * The water, the beach and the park never scroll, so they only have to cover the camera — with
+ * a margin either side, because a filling camera is re-measured a frame after the box changes.
+ */
+const STILL_BAND_MARGIN = 40;
 
 /** Where each repeat of a bank's scenery stands, laid out left of the start line and on. */
 const standsAt = (width: number, spacing: number): number[] => {
@@ -123,8 +129,8 @@ const treeBand = (width: number, baseY: number): string => {
   return `${path.join(" ")} L ${width} ${baseY + 3} L ${-step} ${baseY + 3} Z`;
 };
 
-export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number }>(
-  ({ zoneLength }, ref): JSX.Element => {
+export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number; camera: SchlonicCamera }>(
+  ({ zoneLength, camera }, ref): JSX.Element => {
     const clouds = useRef<SVGGElement>(null);
     const farShore = useRef<SVGGElement>(null);
     const town = useRef<SVGGElement>(null);
@@ -137,9 +143,12 @@ export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number }>(
       waterfront: waterfront.current
     }));
 
-    const shoreWidth = bandWidth(zoneLength, FAR_SHORE_PARALLAX);
-    const townWidth = bandWidth(zoneLength, TOWN_PARALLAX);
-    const waterfrontWidth = bandWidth(zoneLength, WATERFRONT_PARALLAX);
+    const shoreWidth = bandWidth(zoneLength, FAR_SHORE_PARALLAX, camera.width);
+    const townWidth = bandWidth(zoneLength, TOWN_PARALLAX, camera.width);
+    const waterfrontWidth = bandWidth(zoneLength, WATERFRONT_PARALLAX, camera.width);
+    const stillX = camera.x - STILL_BAND_MARGIN;
+    const stillWidth = camera.width + STILL_BAND_MARGIN * 2;
+    const floorY = camera.y + camera.height;
 
     return (
       <g data-schlonic-backdrop>
@@ -170,9 +179,9 @@ export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number }>(
           <path d={treeBand(shoreWidth, HORIZON_Y)} fill={schlonicPalette.shoreFarTrees} opacity={0.75} />
         </g>
         {/* The bay itself: deep down the middle, bright where it shallows into the near shore. */}
-        <rect x={0} y={HORIZON_Y} width={SCHLONIC_WORLD.width} height={SHORE_Y - HORIZON_Y} fill={schlonicPalette.bay} />
-        <rect x={0} y={HORIZON_Y} width={SCHLONIC_WORLD.width} height={4} fill={schlonicPalette.bayFar} />
-        <rect x={0} y={SHORE_Y - 4} width={SCHLONIC_WORLD.width} height={4} fill={schlonicPalette.bayNear} opacity={0.75} />
+        <rect x={stillX} y={HORIZON_Y} width={stillWidth} height={SHORE_Y - HORIZON_Y} fill={schlonicPalette.bay} />
+        <rect x={stillX} y={HORIZON_Y} width={stillWidth} height={4} fill={schlonicPalette.bayFar} />
+        <rect x={stillX} y={SHORE_Y - 4} width={stillWidth} height={4} fill={schlonicPalette.bayNear} opacity={0.75} />
         {/* The sun's column, widening as it comes at you. */}
         <g fill={schlonicPalette.bayGlitter}>
           {Array.from({ length: 8 }, (_unused, row) => {
@@ -199,15 +208,9 @@ export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number }>(
           ))}
         </g>
         {/* The near shore: beach, then the park the zone is cut out of. */}
-        <rect x={0} y={SHORE_Y} width={SCHLONIC_WORLD.width} height={BEACH_Y - SHORE_Y} fill={schlonicPalette.beach} />
-        <rect x={0} y={SHORE_Y} width={SCHLONIC_WORLD.width} height={1} fill={schlonicPalette.beachDark} opacity={0.7} />
-        <rect
-          x={0}
-          y={BEACH_Y}
-          width={SCHLONIC_WORLD.width}
-          height={SCHLONIC_WORLD.height - BEACH_Y}
-          fill={schlonicPalette.park}
-        />
+        <rect x={stillX} y={SHORE_Y} width={stillWidth} height={BEACH_Y - SHORE_Y} fill={schlonicPalette.beach} />
+        <rect x={stillX} y={SHORE_Y} width={stillWidth} height={1} fill={schlonicPalette.beachDark} opacity={0.7} />
+        <rect x={stillX} y={BEACH_Y} width={stillWidth} height={floorY - BEACH_Y} fill={schlonicPalette.park} />
         <g ref={waterfront} opacity={WATERFRONT_HAZE}>
           {standsAt(waterfrontWidth, 186).map((x) => (
             <g key={x}>

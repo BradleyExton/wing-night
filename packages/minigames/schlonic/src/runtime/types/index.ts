@@ -1,4 +1,4 @@
-import type { SchlonicMinigameRun } from "@wingnight/shared";
+import type { SchlonicBestRun, SchlonicMinigameRun } from "@wingnight/shared";
 
 export type SchlonicRuntimeRules = {
   runsPerTurn: number;
@@ -26,15 +26,29 @@ export type SchlonicRuntimeState = {
   /** What the active team had banked before this turn, so `resetTurn` hands back exactly the turn. */
   turnStartPoints: number;
   pendingPointsByTeamId: Record<string, number>;
+  /**
+   * The round's best cleared run so far, from any team: the ghost the runner races. Arrives
+   * through `roundMemory` from the previous turn and leaves the same way.
+   */
+  bestRun: SchlonicBestRun | null;
+  /** The best as it stood when this turn began, so `resetTurn` forgets this turn's runs only. */
+  turnStartBestRun: SchlonicBestRun | null;
+};
+
+/** What SCHLONIC asks the round to remember between turns. */
+export type SchlonicRoundMemory = {
+  bestRun: SchlonicBestRun | null;
 };
 
 // Three runs covers a full team without cycling in the sample pack, and 22 chunks is about
 // seventeen seconds of zone — long enough to find a rhythm, short enough that the tablet keeps
 // moving. Par is what a player who takes the high line and keeps hold of it comes home with:
-// well over what the zone gives away for free, well under a perfect run.
+// well over what the floor gives away — a bot that hops every hazard on the floor and never takes
+// a hit banks ~107 of the default zone's 165, and a person takes hits — and well under a perfect
+// run. The floor alone cannot make par, which is the point: the hill lines are the difference.
 export const DEFAULT_SCHLONIC_RULES: SchlonicRuntimeRules = {
   runsPerTurn: 3,
   zoneSeed: 20260919,
   zoneChunks: 22,
-  parWingsPerRun: 70
+  parWingsPerRun: 120
 };

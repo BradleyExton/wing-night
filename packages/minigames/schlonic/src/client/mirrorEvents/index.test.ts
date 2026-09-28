@@ -1,88 +1,50 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
-import { SCHLONIC_WORLD } from "@wingnight/shared";
+import { SCHLONIC_WORLD, createSchlonicRunStart, resolveSchlonicFinaleX, resolveSchlonicZone } from "@wingnight/shared";
 
 import { resolveMirrorEvents } from "./index.js";
 
-const zone: SchlonicZone = {
-  heights: [],
-  pits: [],
-  props: [
-    { index: 0, kind: "wing", x: 10, y: 5 },
-    { index: 1, kind: "badnik", x: 20, y: 8 },
-    { index: 2, kind: "spring", x: 30, y: 8 },
-    { index: 3, kind: "spike", x: 40, y: 8 }
-  ],
-  goalX: 100
-};
+const ZONE = resolveSchlonicZone({ seed: 20260919, chunks: 22 });
+const START = createSchlonicRunStart(ZONE);
+const wingIndexes = ZONE.props.filter((prop) => prop.kind === "wing").map((prop) => prop.index);
+const badnikIndex = ZONE.props.find((prop) => prop.kind === "badnik")?.index ?? -1;
 
-const frame = (overrides: Partial<SchlonicFrame> = {}): SchlonicFrame => ({
-  tick: 0,
-  x: 0,
-  y: 0,
-  vx: 1,
-  vy: 0,
-  grounded: true,
-  holding: false,
-  wings: 0,
-  takenProps: [],
-  hits: [],
-  invulnerableUntilTick: 0,
-  outcome: null,
-  ...overrides
+test("does chime once for a step's wings, at the handful it ended on", () => {
+  const next = { ...START, tick: 3, wings: 3, takenProps: wingIndexes.slice(0, 3) };
+
+  assert.deepEqual(resolveMirrorEvents(START, next, ZONE), [{ kind: "wing", wingsInHand: 3 }]);
 });
 
-test("does announce a jump when the runner leaves the ground under its own legs", () => {
-  const previous = frame();
-  const next = frame({ tick: 1, grounded: false, vy: SCHLONIC_WORLD.jumpVelocity });
+test("does tell a pop from a wing by what was taken", () => {
+  const popped = { ...START, tick: 3, wings: 3, takenProps: [badnikIndex] };
 
-  assert.deepEqual(resolveMirrorEvents(previous, next, zone), ["jumped"]);
+  assert.deepEqual(resolveMirrorEvents(START, popped, ZONE), [{ kind: "pop" }]);
 });
 
-test("does announce the spring instead of a jump when a springboard throws the runner", () => {
-  const previous = frame({ grounded: false, vy: 0.4 });
-  const next = frame({ tick: 1, grounded: false, vy: SCHLONIC_WORLD.springVelocity });
+test("does hear a springboard in the velocity and a hit in the log", () => {
+  const sprung = { ...START, tick: 2, vy: SCHLONIC_WORLD.springVelocity, grounded: false };
+  const hit = { ...START, tick: 2, hits: [2], wings: 4 };
 
-  assert.deepEqual(resolveMirrorEvents(previous, next, zone), ["sprung"]);
+  assert.deepEqual(resolveMirrorEvents(START, sprung, ZONE), [{ kind: "spring" }]);
+  assert.deepEqual(resolveMirrorEvents(START, hit, ZONE), [{ kind: "hit" }]);
+  // Still on the springboard's launch the next frame: no second boing.
+  assert.deepEqual(resolveMirrorEvents(sprung, { ...sprung, tick: 3 }, ZONE), []);
 });
 
-test("does announce a landing when the runner is back on its feet", () => {
-  const previous = frame({ grounded: false, vy: 1 });
-  const next = frame({ tick: 1, grounded: true });
+test("does call the finale once, as the runner crosses into the last two chunks", () => {
+  const finaleX = resolveSchlonicFinaleX(ZONE);
+  const before = { ...START, tick: 700, x: finaleX - 1 };
+  const after = { ...START, tick: 701, x: finaleX + 0.5 };
 
-  assert.deepEqual(resolveMirrorEvents(previous, next, zone), ["landed"]);
+  assert.deepEqual(resolveMirrorEvents(before, after, ZONE), [{ kind: "finale" }]);
+  assert.deepEqual(resolveMirrorEvents(after, { ...after, tick: 702, x: finaleX + 2 }, ZONE), []);
 });
 
-test("does tell a wing from a badnik by the zone's own prop kinds", () => {
-  const previous = frame();
-  const next = frame({ tick: 1, takenProps: [0, 1], wings: 4 });
+test("does announce an ending once, and nothing for a frame that did not move on", () => {
+  const cleared = { ...START, tick: 900, outcome: "cleared" as const };
 
-  assert.deepEqual(resolveMirrorEvents(previous, next, zone), ["wingTaken", "badnikPopped"]);
-});
-
-test("does announce a hit once per new entry in the hit log", () => {
-  const previous = frame({ hits: [3] });
-  const next = frame({ tick: 1, hits: [3, 9] });
-
-  assert.deepEqual(resolveMirrorEvents(previous, next, zone), ["hit"]);
-});
-
-test("does announce each ending once, on the frame it lands", () => {
-  assert.deepEqual(resolveMirrorEvents(frame(), frame({ tick: 1, outcome: "cleared" }), zone), ["cleared"]);
-  assert.deepEqual(resolveMirrorEvents(frame(), frame({ tick: 1, outcome: "wiped" }), zone), ["wiped"]);
-  assert.deepEqual(
-    resolveMirrorEvents(frame(), frame({ tick: 1, grounded: false, outcome: "fell" }), zone),
-    ["fell"]
-  );
-  assert.deepEqual(
-    resolveMirrorEvents(frame({ outcome: "fell" }), frame({ tick: 1, outcome: "fell" }), zone),
-    []
-  );
-});
-
-test("does say nothing when the mirror has not moved forward", () => {
-  const settled = frame({ tick: 5, takenProps: [0] });
-
-  assert.deepEqual(resolveMirrorEvents(settled, frame({ tick: 5, takenProps: [0, 1] }), zone), []);
+  assert.deepEqual(resolveMirrorEvents(START, cleared, ZONE), [{ kind: "cleared" }]);
+  assert.deepEqual(resolveMirrorEvents(cleared, cleared, ZONE), []);
+  assert.deepEqual(resolveMirrorEvents(cleared, { ...cleared, tick: 901 }, ZONE), []);
+  assert.deepEqual(resolveMirrorEvents(START, { ...START, tick: 40, outcome: "fell" as const }, ZONE), [{ kind: "fell" }]);
 });

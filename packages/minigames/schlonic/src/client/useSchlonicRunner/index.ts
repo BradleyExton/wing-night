@@ -1,8 +1,14 @@
 import { useEffect, useRef, type RefObject } from "react";
-import type { SchlonicFrame, SchlonicInput, SchlonicMinigameRun, SchlonicZone } from "@wingnight/shared";
+import type {
+  SchlonicBestRun,
+  SchlonicFrame,
+  SchlonicInput,
+  SchlonicMinigameRun,
+  SchlonicZone
+} from "@wingnight/shared";
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart } from "@wingnight/shared";
 
-import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
+import { CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
 import { paintWingTally } from "../wingTally/index.js";
 
@@ -13,6 +19,8 @@ type SchlonicRunnerInput = {
   sceneRef: RefObject<SchlonicSceneHandle>;
   /** Where the wings in hand are written each frame: the chrome's tally, outside the scene. */
   tallyRef?: RefObject<HTMLElement>;
+  /** The run to beat: replayed from its own log on this run's clock, as the ghost in the zone. */
+  bestRun?: SchlonicBestRun | null;
   onPress: (tick: number) => void;
   onRelease: (tick: number) => void;
   onEndRun: () => void;
@@ -21,6 +29,10 @@ type SchlonicRunnerInput = {
 type LocalRun = {
   frame: SchlonicFrame;
   inputs: SchlonicInput[];
+  // The ghost's log and frame, fixed when the run is created: the run to beat is the one that
+  // stood on the line, whatever the server says by the time this one ends.
+  ghostInputs: readonly SchlonicInput[] | null;
+  ghostFrame: SchlonicFrame | null;
   startedAtMs: number | null;
   rafHandle: number;
   hasEnded: boolean;
@@ -33,6 +45,8 @@ type LocalRun = {
 type LocalBeat = {
   kind: "cleared" | "wipeout";
   frame: SchlonicFrame;
+  /** Where the ghost stood when the run ended; it holds there through the beat. */
+  ghostFrame: SchlonicFrame | null;
   startedAtMs: number;
   rafHandle: number;
   then: (() => void) | null;
@@ -57,20 +71,33 @@ export const useSchlonicRunner = ({
   canAct,
   sceneRef,
   tallyRef,
+  bestRun = null,
   onPress,
   onRelease,
   onEndRun
 }: SchlonicRunnerInput): { press: () => void; release: () => void } => {
   const runIndex = run?.runIndex ?? null;
   const runStatus = run?.status ?? null;
-  const createLocalRun = (): LocalRun => ({
-    frame: createSchlonicRunStart(zone),
-    inputs: [],
-    startedAtMs: null,
-    rafHandle: 0,
-    hasEnded: false,
-    isDown: false
-  });
+  // Read when a run is created, never a dependency: a best run set by THIS run's own result
+  // must not restart the loop.
+  const bestRunRef = useRef(bestRun);
+
+  bestRunRef.current = bestRun;
+
+  const createLocalRun = (): LocalRun => {
+    const best = bestRunRef.current;
+
+    return {
+      frame: createSchlonicRunStart(zone),
+      inputs: [],
+      ghostInputs: best === null ? null : best.inputs,
+      ghostFrame: best === null ? null : createSchlonicRunStart(zone),
+      startedAtMs: null,
+      rafHandle: 0,
+      hasEnded: false,
+      isDown: false
+    };
+  };
   const runRef = useRef<LocalRun | null>(null);
   const beatRef = useRef<LocalBeat | null>(null);
   const zoneRef = useRef(zone);
@@ -110,15 +137,26 @@ export const useSchlonicRunner = ({
     beatRef.current = null;
   };
 
-  const startBeat = (kind: LocalBeat["kind"], frame: SchlonicFrame): void => {
+  const startBeat = (
+    kind: LocalBeat["kind"],
+    frame: SchlonicFrame,
+    ghostFrame: SchlonicFrame | null
+  ): void => {
     stopBeat();
 
-    const beat: LocalBeat = { kind, frame, startedAtMs: performance.now(), rafHandle: 0, then: null };
+    const beat: LocalBeat = {
+      kind,
+      frame,
+      ghostFrame,
+      startedAtMs: performance.now(),
+      rafHandle: 0,
+      then: null
+    };
     const paintBeat = (progress: number): void => {
       if (kind === "cleared") {
-        sceneRef.current?.paintCleared(frame, progress);
+        sceneRef.current?.paintCleared(frame, progress, ghostFrame);
       } else {
-        sceneRef.current?.paintWipeout(frame, progress);
+        sceneRef.current?.paintWipeout(frame, progress, ghostFrame);
       }
 
       paintWingTally(tallyRef?.current ?? null, frame.wings);
@@ -151,12 +189,25 @@ export const useSchlonicRunner = ({
     }
 
     const targetTick = Math.floor(((now - local.startedAtMs) * SCHLONIC_WORLD.tickHz) / 1000);
+    const hitsBefore = local.frame.hits.length;
 
     local.frame = advanceSchlonic(local.frame, zoneRef.current, local.inputs, targetTick);
 
+    // A hit stops the clock for a beat and jolts the picture. The clock, not the sim: the run's
+    // ticks are untouched, the tablet just holds this one a little longer.
+    if (local.frame.hits.length > hitsBefore) {
+      local.startedAtMs += HIT_PAUSE_MS;
+      sceneRef.current?.shake();
+    }
+
+    // The ghost keeps pace tick for tick; past its own post it stands still.
+    if (local.ghostFrame !== null && local.ghostInputs !== null) {
+      local.ghostFrame = advanceSchlonic(local.ghostFrame, zoneRef.current, local.ghostInputs, local.frame.tick);
+    }
+
     if (local.frame.outcome !== null) {
       local.rafHandle = 0;
-      startBeat(local.frame.outcome === "cleared" ? "cleared" : "wipeout", local.frame);
+      startBeat(local.frame.outcome === "cleared" ? "cleared" : "wipeout", local.frame, local.ghostFrame);
 
       if (!local.hasEnded) {
         local.hasEnded = true;
@@ -166,7 +217,7 @@ export const useSchlonicRunner = ({
       return;
     }
 
-    sceneRef.current?.paint(local.frame);
+    sceneRef.current?.paint(local.frame, local.ghostFrame);
     paintWingTally(tallyRef?.current ?? null, local.frame.wings);
     local.rafHandle = window.requestAnimationFrame(step);
   };

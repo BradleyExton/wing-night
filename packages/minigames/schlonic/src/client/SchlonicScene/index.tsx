@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
+import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { CHARACTER_FOOT, CharacterFigure } from "@wingnight/cast";
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, createSchlonicRunStart, resolveSchlonicGroundSlope } from "@wingnight/shared";
@@ -12,18 +12,26 @@ import {
   WATERFRONT_PARALLAX,
   type BackdropRefs
 } from "./Backdrop/index.js";
+import { Burst, paintBurst } from "./Burst/index.js";
+import { TABLET_CAMERA_FIT, resolveCamera, type SchlonicCameraFit } from "./camera/index.js";
+import { Ghost, RUNNER_SCALE, TUCK_DROP, TUCK_SHRINK, paintGhost, type GhostRefs } from "./Ghost/index.js";
 import { Ground } from "./Ground/index.js";
 import { resolveRunnerCurl, resolveRunnerPose } from "./runnerPose/index.js";
-import { Wing } from "./Wing/index.js";
+import { shakeElement } from "./shake/index.js";
 import * as styles from "./styles.js";
 import { ZoneProps } from "./ZoneProps/index.js";
 
 export type SchlonicSceneHandle = {
-  paint: (frame: SchlonicFrame) => void;
+  /** The live frame, and the ghost's frame on the same tick when the round has a run to beat. */
+  paint: (frame: SchlonicFrame, ghostFrame?: SchlonicFrame | null) => void;
   // The two beats a surface plays over a settled frame, `progress` 0 → 1: the post crossed, and
-  // the run that ended where it went wrong.
-  paintCleared: (frame: SchlonicFrame, progress: number) => void;
-  paintWipeout: (frame: SchlonicFrame, progress: number) => void;
+  // the run that ended where it went wrong. The ghost's frame comes with them, because the
+  // surface may hold the beat in a scene mounted after the run (the tablet keys its scene on
+  // the run it shows) and a scene keeps no ghost of its own.
+  paintCleared: (frame: SchlonicFrame, progress: number, ghostFrame?: SchlonicFrame | null) => void;
+  paintWipeout: (frame: SchlonicFrame, progress: number, ghostFrame?: SchlonicFrame | null) => void;
+  /** The whole picture flinches: a hit, opposite the impact. A browser without the API does nothing. */
+  shake: () => void;
 };
 
 export type SchlonicSceneProps = {
@@ -31,41 +39,55 @@ export type SchlonicSceneProps = {
   runner: RunnerFigure;
   sceneId: string;
   label: string;
+  /**
+   * How much of the world this surface sees, and how it sits in its box. The tablet's 16:9
+   * box by default; the TV passes a wider, filling camera so the room sees further ahead of
+   * the runner than the tablet holder does (`camera/index.ts`).
+   */
+  cameraFit?: SchlonicCameraFit;
+  /**
+   * The round's best run so far, as a figure: the ghost the runner races. Drawn behind the
+   * runner, at half strength, wherever its own replay has got to on the same tick — ahead or
+   * behind, in the picture or off it. Null until someone has cleared the zone.
+   */
+  ghost?: RunnerFigure | null;
 };
 
-/** The cast's 80×72 box at this much: a bird about thirteen world units tall. */
-const RUNNER_SCALE = 0.18;
-/**
- * The bird's drawn middle sits this far above its feet, so a tucked bird is pulled down onto the
- * hitbox's own centre and the spin turns on the spot instead of orbiting it.
- */
-const TUCK_DROP = 2.5;
-const TUCK_SHRINK = 0.12;
+type Box = { width: number; height: number };
+
+// The runner's scale and stance (`RUNNER_SCALE`, `TUCK_DROP`, `TUCK_SHRINK`) live with the
+// ghost, which is drawn as the same bird: the cast's 80×72 box at a fifth, and a tucked bird
+// pulled down onto the hitbox's own centre so the spin turns on the spot.
 
 /** How long after a hit the bird keeps flashing, in ticks — the sim's own mercy window. */
 const FLASH_TICKS = SCHLONIC_WORLD.invulnerableTicks;
 /** Flashes per second while it lasts. */
 const FLASH_HZ = 8;
-/** A wing bursts out of the bird for this long after a hit. */
-const BURST_TICKS = 34;
-const BURST_WINGS = 6;
-/** Thrown wings are a size down from the ones on the shore, and they tumble on the way out. */
-const BURST_SCALE = 0.8;
-const BURST_SPIN_DEGREES = 40;
 
 /**
- * One 16:9 world both surfaces draw. The zone is SVG in world units, built once and scrolled by a
- * transform; the runner is the player's own cast hen (§2.8) placed in it under a transform of its
- * own, turned and tucked every frame. Nothing here is React-driven per frame — the owner paints
- * frames through the handle from its own loop, so the scene re-renders only when the zone or the
- * runner changes, which is what keeps a costume head's halo filter rasterised once.
+ * One world both surfaces draw, each through its own camera. The zone is SVG in world units,
+ * built once and scrolled by a transform; the runner is the player's own cast hen (§2.8) placed
+ * in it under a transform of its own, turned and tucked every frame. Nothing here is
+ * React-driven per frame — the owner paints frames through the handle from its own loop, so the
+ * scene re-renders only when the zone, the runner or the box it fills changes, which is what
+ * keeps a costume head's halo filter rasterised once.
  */
 export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>(
-  ({ zone, runner, sceneId, label }, ref): JSX.Element => {
+  ({ zone, runner, sceneId, label, cameraFit = TABLET_CAMERA_FIT, ghost = null }, ref): JSX.Element => {
+    const frameRef = useRef<HTMLDivElement>(null);
+    // The box a filling camera measures itself against; null until the first measurement (and
+    // for good on a server render), when the camera falls back to its floor width.
+    const [box, setBox] = useState<Box | null>(null);
+    const camera = resolveCamera(cameraFit, box);
     const zoneLayerRef = useRef<SVGGElement>(null);
     const backdropRef = useRef<BackdropRefs | null>(null);
     const runnerGroupRef = useRef<SVGGElement>(null);
     const runnerTuckRef = useRef<SVGGElement>(null);
+    const ghostRefs = useRef<GhostRefs | null>(null);
+    const ghostCurlRef = useRef(0);
+    const cameraRef = useRef(camera);
+
+    cameraRef.current = camera;
     const burstRef = useRef<SVGGElement>(null);
     const propRefs = useRef(new Map<number, SVGGElement>());
     const hiddenProps = useRef(new Set<number>());
@@ -156,75 +178,64 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       );
     };
 
-    // The handful that leaves you when you take a hit: wings thrown up out of the bird and gone.
-    // Decoration — the sim already took them, and none of these can be caught.
-    const paintBurst = (frame: SchlonicFrame): void => {
-      const burst = burstRef.current;
-
-      if (burst === null) {
-        return;
-      }
-
-      const lastHit = frame.hits[frame.hits.length - 1] ?? -BURST_TICKS * 2;
-      const since = frame.tick - lastHit;
-
-      if (since < 0 || since > BURST_TICKS) {
-        burst.setAttribute("opacity", "0");
-        return;
-      }
-
-      const along = since / BURST_TICKS;
-
-      burst.setAttribute("opacity", `${1 - along}`);
-      burst.setAttribute("transform", `translate(${SCHLONIC_WORLD.runnerX} ${frame.y})`);
-
-      for (let index = 0; index < BURST_WINGS; index += 1) {
-        const radians = (index / BURST_WINGS) * Math.PI * 2;
-        const spread = along * 16;
-        const x = Math.cos(radians) * spread;
-        const y = Math.sin(radians) * spread - along * 6;
-
-        // A wing is a whole drawing rather than one circle, so it is placed by transform — and
-        // tumbling as it goes is free once it is a group.
-        burst.children[index]?.setAttribute(
-          "transform",
-          `translate(${x} ${y}) rotate(${radians * BURST_SPIN_DEGREES})`
-        );
-      }
+    const paintGhostFrame = (ghostFrame: SchlonicFrame | null, frame: SchlonicFrame): void => {
+      ghostCurlRef.current = paintGhost({
+        refs: ghostRefs.current,
+        ghostFrame,
+        frame,
+        camera: cameraRef.current,
+        zone: zoneRef.current,
+        curl: ghostCurlRef.current
+      });
     };
 
-    const paint = (frame: SchlonicFrame): void => {
+    const paint = (frame: SchlonicFrame, ghostFrame: SchlonicFrame | null = null): void => {
       curlRef.current = resolveRunnerCurl(frame.grounded, curlRef.current);
       paintScroll(frame);
       paintProps(frame);
+      paintGhostFrame(ghostFrame, frame);
       paintRunner(frame, { curl: curlRef.current, fade: 1, sink: 0 });
-      paintBurst(frame);
+      paintBurst(burstRef.current, frame);
     };
 
     // The post: the bird hops on the spot while the room reads the tally.
-    const paintCleared = (frame: SchlonicFrame, progress: number): void => {
+    const paintCleared = (
+      frame: SchlonicFrame,
+      progress: number,
+      ghostFrame: SchlonicFrame | null = null
+    ): void => {
       const hop = Math.abs(Math.sin(progress * Math.PI * 3)) * 6;
 
       paintScroll(frame);
       paintProps(frame);
+      paintGhostFrame(ghostFrame, frame);
       paintRunner(frame, { curl: 0, fade: 1, sink: -hop });
       burstRef.current?.setAttribute("opacity", "0");
     };
 
     // It went wrong: the bird drops out of the bottom of the zone and the room is left with the
     // ground it did not make.
-    const paintWipeout = (frame: SchlonicFrame, progress: number): void => {
+    const paintWipeout = (
+      frame: SchlonicFrame,
+      progress: number,
+      ghostFrame: SchlonicFrame | null = null
+    ): void => {
       paintScroll(frame);
       paintProps(frame);
+      paintGhostFrame(ghostFrame, frame);
       paintRunner(frame, {
         curl: 1,
         fade: Math.max(0, 1 - progress * 1.4),
         sink: progress * progress * 40
       });
-      paintBurst(frame);
+      paintBurst(burstRef.current, frame);
     };
 
-    useImperativeHandle(ref, () => ({ paint, paintCleared, paintWipeout }));
+    const shake = (): void => {
+      shakeElement(frameRef.current);
+    };
+
+    useImperativeHandle(ref, () => ({ paint, paintCleared, paintWipeout, shake }));
 
     const goalGroundY = useMemo(() => {
       return zone.heights[Math.floor(zone.goalX / SCHLONIC_WORLD.sampleStep)] ?? SCHLONIC_WORLD.groundBaseY;
@@ -235,33 +246,66 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
     useLayoutEffect(() => {
       hiddenProps.current.clear();
       curlRef.current = 0;
+      ghostCurlRef.current = 0;
       paint(createSchlonicRunStart(zoneRef.current));
-    }, [sceneId, zone, runner]);
+    }, [sceneId, zone, runner, ghost]);
+
+    // A filling camera follows its box: the viewBox is re-derived on every resize so the
+    // world is never stretched, only shown wider or narrower.
+    useLayoutEffect(() => {
+      const frame = frameRef.current;
+
+      if (cameraFit.kind !== "fill" || frame === null || typeof ResizeObserver === "undefined") {
+        return undefined;
+      }
+
+      const measure = (): void => {
+        const rect = frame.getBoundingClientRect();
+
+        setBox((current) => {
+          return current !== null && current.width === rect.width && current.height === rect.height
+            ? current
+            : { width: rect.width, height: rect.height };
+        });
+      };
+      const observer = new ResizeObserver(measure);
+
+      measure();
+      observer.observe(frame);
+
+      return (): void => {
+        observer.disconnect();
+      };
+    }, [cameraFit.kind]);
 
     return (
-      <div className={styles.frame} data-schlonic-scene={sceneId}>
-        <div className={styles.scene} role="img" aria-labelledby={ids.label}>
+      <div
+        ref={frameRef}
+        className={styles.frame}
+        data-schlonic-scene={sceneId}
+        data-schlonic-camera={cameraFit.kind}
+      >
+        <div
+          className={cameraFit.kind === "fill" ? styles.sceneFill : styles.sceneFixed}
+          role="img"
+          aria-labelledby={ids.label}
+        >
           <span id={ids.label} className={styles.label}>
             {label}
           </span>
           <svg
             className={styles.world}
-            viewBox={`0 0 ${SCHLONIC_WORLD.width} ${SCHLONIC_WORLD.height}`}
+            viewBox={`${camera.x} ${camera.y} ${camera.width} ${camera.height}`}
             preserveAspectRatio="none"
             aria-hidden="true"
           >
-            <Backdrop ref={backdropRef} zoneLength={zone.goalX} />
+            <Backdrop ref={backdropRef} zoneLength={zone.goalX} camera={camera} />
             <g ref={zoneLayerRef} data-schlonic-zone>
-              <Ground zone={zone} />
+              <Ground zone={zone} camera={camera} />
               <ZoneProps zone={zone} registerProp={registerProp} goalGroundY={goalGroundY} />
             </g>
-            <g ref={burstRef} data-schlonic-burst opacity={0}>
-              {Array.from({ length: BURST_WINGS }, (_unused, index) => (
-                <g key={index}>
-                  <Wing scale={BURST_SCALE} />
-                </g>
-              ))}
-            </g>
+            <Burst ref={burstRef} />
+            {ghost !== null && <Ghost ref={ghostRefs} figure={ghost} />}
             {/* The bird turns about the hitbox's own centre; the group inside it stands the cast
                 on that centre and tucks it in. Two groups, because a spin and a stance are
                 different transforms and neither should have to know about the other. */}
