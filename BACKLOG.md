@@ -131,6 +131,42 @@ These are `MinigameRuntimePlugin` packages registered on server and client like
 trivia/geo/drawing. Read `docs/minigame-authoring-guide.md` first — adding a `MinigameType` breaks
 every `Record<MinigameType, …>` in the repo until fully wired, so there's no throwaway half-state.
 
+### SCHLONIC — the rest of the wow pass
+
+Two of seven landed 2026-09-28 on `claude/scholnic-game-improvements-27a62e`: the TV's own camera
+(the zone fills the wall and runs ahead of the tablet, `SchlonicScene/camera`) and the zone strip
+(`ZoneTrack`, FAPPY's pace-track shape). Still to do, in the order they were argued for:
+
+- **Best-run ghost on the strip and in the zone.** Every run's input log is on the server and the
+  sim is deterministic, so the round's best run so far can replay as a translucent hen beside the
+  live one and as a second pin on the strip. Needs the best run's log and player figure on the
+  display view. This is the item that turns "how far does it get" into a race the room can see.
+- **Juice on the TV.** A soundboard on the FAPPY pattern (`useFappySounds`): wing chime, spring
+  boing, badnik pop, hit scatter, post sting, a rising tick over the last chunks. A ~0.2 s hit
+  pause and a shake opposite the impact. At the post, wings fly into the banked counter one by
+  one with ticks instead of a card appearing with the total.
+- **Make greed pay, make the finale loud.** A safe floor run of the party zone banks ~80 wings
+  against par 70, so the high line is worthless (audit 2026-09-24, confirmed by bot 2026-09-28).
+  Raise par in the pack to ~100 of the zone's 122, draw high-line wings bigger and worth two, and
+  have the generator end the zone on a gauntlet: a final springboard over the bay onto the post
+  with the biggest arc of the zone in that flight. The last ten seconds should be the peak, not
+  the coast.
+- **Failure as punchline.** A pit drop ends with the hen surfacing in the bay with a splash and a
+  gull taking the wings; a wipeout sends the dropped wings rolling to the badniks, who eat them.
+  Both play on the TV before the handoff card.
+- **Art pass, last.** Checkered ground band, more saturated sky, chunkier outlines, the hen a
+  touch bigger.
+
+### FAPPY — the TV camera SCHLONIC got
+
+FAPPY's TV is still a mirror of the tablet: the same 16:9 box, the bird 40 of 160 units in. The
+lead the SCHLONIC wall now gives the couch (the next hazard a beat before the holder sees it)
+would do the same for the gates and the seeded eagles. It is not a one-line switch, though:
+`FappyScene` sizes the bird, the waiter, the puff and the goo as HTML boxes in container units
+tied to the 160-wide box (`left-[20cqw]`, `h-[9cqw]`, `--fappy-unit:0.625cqw`), so a wider camera
+means deriving every one of those from the camera rather than from the box. Do it when FAPPY is
+next open; SCHLONIC's `camera/index.ts` is the shape to copy.
+
 ### Forgery Studio (RECREATE) — follow-ups
 The game shipped 2026-09-18: a doctored party photo on the TV, the team writes the prompt they
 think made it, the server sends that prompt (with the source photo) to the Gemini image API once
