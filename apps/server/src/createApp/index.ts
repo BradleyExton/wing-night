@@ -78,7 +78,7 @@ export const createApp = (options: CreateAppOptions = {}): express.Express => {
 
   mountPerLayer(TEAM_AUDIO_ROUTE_PATH, "teams/audio");
 
-  // Song Guess covers. The pack ships as JSON only — the MP3s are event-night
+  // Who's That Song covers. The pack ships as JSON only — the MP3s are event-night
   // assets the host drops into the pack.
   mountPerLayer(SONG_GUESS_AUDIO_ROUTE_PATH, "minigames/song-guess/audio");
 

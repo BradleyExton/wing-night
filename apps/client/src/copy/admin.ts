@@ -64,7 +64,7 @@ export const adminCopy = {
     "A player's starting team must match a team name below. Players seated here arrive already on their team; leave it blank and the host seats them in SETUP.",
 
   promptIdFieldLabel: "Id",
-  triviaSectionTitle: "Trivia",
+  triviaSectionTitle: formatMinigameName("TRIVIA"),
   triviaPromptHeading: (promptIndex: number): string =>
     `Question ${promptIndex + 1}`,
   triviaQuestionFieldLabel: "Question",
@@ -73,7 +73,7 @@ export const adminCopy = {
     `Remove trivia question ${promptIndex + 1}`,
   addTriviaPromptLabel: "+ Add a question",
 
-  drawingSectionTitle: "Drawing",
+  drawingSectionTitle: formatMinigameName("DRAWING"),
   drawingPromptHeading: (promptIndex: number): string =>
     `Prompt ${promptIndex + 1}`,
   drawingPromptFieldLabel: "Prompt",
@@ -81,7 +81,7 @@ export const adminCopy = {
     `Remove drawing prompt ${promptIndex + 1}`,
   addDrawingPromptLabel: "+ Add a prompt",
 
-  geoSectionTitle: "Geo",
+  geoSectionTitle: formatMinigameName("GEO"),
   geoPromptCountValue: (promptCount: number): string =>
     `${promptCount} photo prompts`,
   // Geo content is photos plus coordinates, produced by the import CLI — there

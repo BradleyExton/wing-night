@@ -73,7 +73,7 @@ test("renders the drawing sandbox without leaking the prompt to the display", ()
   const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="DRAWING" />);
 
   assert.match(html, /Minigame Dev Sandbox/);
-  assert.match(html, /Sketch Booth/);
+  assert.match(html, /data-booth-plate[^>]*>Drawing</);
   assert.match(html, /Tonight&#x27;s Prompt/);
   assert.match(html, />Drawing</);
   assert.match(html, /Correct/);

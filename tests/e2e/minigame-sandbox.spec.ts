@@ -104,7 +104,7 @@ test("drawing sandbox syncs tablet strokes to the display and reveals on correct
   await expect(
     page.getByRole("heading", { name: "Minigame Dev Sandbox" })
   ).toBeVisible();
-  await expect(page.getByText("Sketch Booth")).toBeVisible();
+  await expect(page.locator("[data-booth-plate]")).toHaveText("Drawing");
   await expect(
     page.locator("[data-neon-marquee]").getByText("Drawing", { exact: true })
   ).toBeVisible();

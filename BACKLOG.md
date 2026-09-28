@@ -131,7 +131,7 @@ These are `MinigameRuntimePlugin` packages registered on server and client like
 trivia/geo/drawing. Read `docs/minigame-authoring-guide.md` first — adding a `MinigameType` breaks
 every `Record<MinigameType, …>` in the repo until fully wired, so there's no throwaway half-state.
 
-### RECREATE ("Forgery Studio") — follow-ups
+### Forgery Studio (RECREATE) — follow-ups
 The game shipped 2026-09-18: a doctored party photo on the TV, the team writes the prompt they
 think made it, the server sends that prompt (with the source photo) to the Gemini image API once
 per attempt, and the host scores the PROMPT by ticking the target's secret ingredients. Package in

@@ -1,4 +1,4 @@
-# Song Guess Minigame Spec (MVP)
+# Who's That Song Minigame Spec (MVP)
 
 Status: **Shipped** — `packages/minigames/song-guess/`
 
@@ -30,7 +30,7 @@ Last updated: 2026-09-24 (held reveal beat, information asymmetry named)
   pack has and only returns `null` (no round) when the pack is empty. A dead round
   mid-party is worse than a short one.
 - **The content file is `{ prompts: [...] }`, not `{ songs: [...] }`.** Every
-  content pack in the repo shares one shape, which buys Song Guess
+  content pack in the repo shares one shape, which buys Who's That Song
   `validatePromptPackFile` (unique ids, per-entry issue paths) and
   `createPromptContentAdapter` for free rather than forking both for a key rename.
 - **The TV is the speaker; the host tablet is silent.** The draft had both

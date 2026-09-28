@@ -207,7 +207,7 @@ it is.
   server's echo when the drag ends.
 - **Nothing is secret.** Host and display views carry the same fields; the projection test pins
   the display to exactly those and no runtime-only field.
-- **Lane per team.** Chosen by turn-order slot, like Song Guess's setlists, so no two teams face
+- **Lane per team.** Chosen by turn-order slot, like Who's That Song's setlists, so no two teams face
   the same lane and a reconnect rehydrates the same one. Because the slot picks the lane, the
   shipped lanes have to pay alike — `world/index.test.ts` pins the spread of available points
   across the four to one point at every realistic rack size, or going first is a prize.

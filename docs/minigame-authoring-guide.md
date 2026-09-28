@@ -39,6 +39,16 @@ You cannot forget a registration: `pnpm typecheck` walks you to each one.
 Timer and rules config keys are also derived from `MINIGAME_DEFINITIONS`
 (`timerKey`, `rulesKey`), so no timer/rules type edits are needed anywhere.
 
+**A game has exactly one name.** The definition carries three strings and each has one job:
+`id` (`SONG_GUESS`) is the enum key the code, the config and the package folder use; `slug`
+(`song-guess`) is the URL and file form of the same identifier; `displayName` ("Who's That
+Song") is the only title a human ever reads. Every surface that names a game — the TV marquee,
+the host rail, the briefing, the lobby card, the admin wizard, a sandbox link, an SVG's
+`aria-label` — reads `displayName` (on the client through `formatMinigameName`), and docs and
+comments call the game by that name too. Do not coin a second title in copy ("Sketch Booth"),
+do not print the enum key as a heading, and do not add a `title` field beside `displayName`.
+Retiring a name means changing the one string in the definition.
+
 ## 2) End-State Checklist: Files for a New Minigame
 
 For a content-backed game with the slug `<slug>`:
@@ -408,7 +418,7 @@ For GEO, `pnpm import:geo <photo-folder>` turns GPS-tagged JPEGs into prompts: i
 
   Mount **local first, then sample**, mirroring `loadContentFileWithFallback`'s local-wins fallback: `express.static` defaults to `fallthrough: true`, so a miss — or an absent `local/` directory — falls through to the sample mount and then to a 404. Path traversal is handled for you.
 
-  Declare the route path as a constant in `packages/shared` and import it from **both** the mount and whatever builds the client-side URL, so the two cannot drift and a rename is a typecheck failure rather than a silent 404. Used by team anthems (`TEAM_AUDIO_ROUTE_PATH`), the lobby playlist (`LOBBY_AUDIO_ROUTE_PATH`) and Song Guess.
+  Declare the route path as a constant in `packages/shared` and import it from **both** the mount and whatever builds the client-side URL, so the two cannot drift and a rename is a typecheck failure rather than a silent 404. Used by team anthems (`TEAM_AUDIO_ROUTE_PATH`), the lobby playlist (`LOBBY_AUDIO_ROUTE_PATH`) and Who's That Song.
 
   **The client-side URL must be absolute.** There is no `vite.config` anywhere in this repo, so there is no dev proxy and the client is always a different origin from the server — a root-relative `src="/team-audio/x.mp3"` resolves against the Vite origin (5173 dev, 5273 under the e2e gate) and 404s. Build it from `apps/client/src/utils/resolveServerOrigin`, and read the origin **inside an effect**, never at module or render scope, which `react-dom/server` cannot do.
 

@@ -185,7 +185,7 @@ export const HostDrawingSurface = ({
       ) : (
         <div className={styles.easelRow}>
           <div className={styles.inkRail}>
-            <span className={styles.boothPlate}>
+            <span className={styles.boothPlate} data-booth-plate>
               {hostDrawingSurfaceCopy.boothTitle}
             </span>
             <span className={styles.boothPlateRule} aria-hidden="true" />

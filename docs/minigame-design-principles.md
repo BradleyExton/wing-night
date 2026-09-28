@@ -82,7 +82,7 @@ question, or whose outcome the player cannot affect, has none.
   physical: testers squatting because the game told them to (`2.3`). Passing a greasy tablet,
   flapping with a burning mouth, a whole team miming an emoji: the body is the joke.
 - **A human judge with a final say is fast, legitimate, and funny.** Apples to Apples licenses
-  lobbying the judge and then closes the argument in one line (`2.4`). Song Guess's "the host
+  lobbying the judge and then closes the argument in one line (`2.4`). Who's That Song's "the host
   is the judge" and RECREATE's host-ticked ingredients are already this. Never replace a
   human judge with a fuzzy matcher to seem fair; the argument is the content.
 - **Fun and funny are different, and both die when someone *has* to win.** DeKoven: "If you
@@ -332,7 +332,7 @@ decisions.
 - **Trivia is the flattest game we ship** against items 2, 9, 10 and 13: one person can
   answer, the room has nothing to do but know the answer too, and there is no commit beat.
   It is not in the pack schedule, and this is a reason to keep it out or redesign it.
-- **Song Guess has no commit beat**: answers are verbal and the host marks them. Item 2
+- **Who's That Song has no commit beat**: answers are verbal and the host marks them. Item 2
   wants a visible lock before the title appears on the TV. The reveal half is closed
   2026-09-24: the second mark puts a held card on the TV (title, artist, hit or miss per
   half, points) for two seconds before the next clip (`song-guess-spec.md` §0).

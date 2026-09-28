@@ -116,12 +116,12 @@ test("does float the empty-bank note over the board instead of giving it a row",
   assert.doesNotMatch(html, /Tonight/);
 });
 
-test("does keep the booth's own name off the rail row the shell owns", () => {
+test("does sign the booth with the game's one name, off the rail row the shell owns", () => {
   const html = renderSurface(hostView());
 
-  assert.match(html, /Sketch Booth/);
+  assert.match(html, /data-booth-plate[^>]*>Drawing</);
   // On the palette post, inside the body — after the rail row, not in it.
-  assert.ok(html.indexOf('data-slot="clock"') < html.indexOf("Sketch Booth"));
+  assert.ok(html.indexOf('data-slot="clock"') < html.indexOf("data-booth-plate"));
 });
 
 // The intro beat is a panel in the host's control deck, not a takeover: no
