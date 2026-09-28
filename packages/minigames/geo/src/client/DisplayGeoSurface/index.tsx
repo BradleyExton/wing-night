@@ -4,6 +4,7 @@ import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 import { resolveContentAssetSrc, type GeoMinigameDisplayView } from "@wingnight/shared";
 
 import { resolvePhotoNumber } from "../resolvePhotoNumber/index.js";
+import { useGeoSounds } from "../useGeoSounds/index.js";
 import { displayGeoSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -80,6 +81,9 @@ export const DisplayGeoSurface = ({
 }: MinigameDisplayRendererProps): JSX.Element => {
   const geoDisplayView =
     minigameDisplayView?.minigame === "GEO" ? minigameDisplayView : null;
+
+  useGeoSounds(geoDisplayView);
+
   const currentPrompt = geoDisplayView?.currentPrompt ?? null;
   const isPlayPhase = phase === "play";
   const result =

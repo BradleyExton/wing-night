@@ -32,3 +32,5 @@ export {
   type ResultPlaqueProps,
   type ResultPlaqueTone
 } from "./ResultPlaque/index.js";
+// The house cues, played from a surface (`@wingnight/audio` holds the board).
+export { useHouseSoundboard, type PlayHouseCue } from "./useHouseSoundboard/index.js";

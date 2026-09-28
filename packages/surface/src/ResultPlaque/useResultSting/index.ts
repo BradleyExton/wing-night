@@ -1,6 +1,7 @@
-import { createHouseSoundboard, type HouseCueName, type HouseSoundboard } from "@wingnight/audio";
-import { useEffect, useRef } from "react";
+import type { HouseCueName } from "@wingnight/audio";
+import { useEffect } from "react";
 
+import { useHouseSoundboard } from "../../useHouseSoundboard/index.js";
 import type { ResultPlaqueTone } from "../index.js";
 
 // Pure: which house cue a result card sounds. `neutral` says nothing — a split
@@ -25,7 +26,7 @@ export const resolveResultSting = (
 // `silent` is for a game with a bespoke ending of its own (FAPPY's air horn),
 // so the room does not hear its fanfare and the house sting on top of it.
 export const useResultSting = (tone: ResultPlaqueTone, silent: boolean): void => {
-  const soundboardRef = useRef<HouseSoundboard | null>(null);
+  const play = useHouseSoundboard();
 
   useEffect(() => {
     if (silent) {
@@ -38,7 +39,6 @@ export const useResultSting = (tone: ResultPlaqueTone, silent: boolean): void =>
       return;
     }
 
-    soundboardRef.current ??= createHouseSoundboard();
-    soundboardRef.current.play(cue);
-  }, [silent, tone]);
+    play(cue);
+  }, [play, silent, tone]);
 };

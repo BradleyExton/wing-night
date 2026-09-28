@@ -8,6 +8,7 @@ import type {
 
 import { useHeldSongReveal } from "../useHeldSongReveal/index.js";
 import { useSongAudioPlayback } from "../useSongAudioPlayback/index.js";
+import { useSongGuessSounds } from "../useSongGuessSounds/index.js";
 import { displaySongGuessSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -202,6 +203,7 @@ export const DisplaySongGuessSurface = ({
   // Audio follows the LIVE view: when the host moves on, the next clip is cued
   // at once even while the picture finishes the reveal beat below.
   useSongAudioPlayback({ view: liveView, serverOrigin, mediaRef });
+  useSongGuessSounds(liveView);
 
   const { view: songGuessView, isHeld } = useHeldSongReveal(liveView);
 

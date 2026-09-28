@@ -11,6 +11,7 @@ import type {
 } from "@wingnight/shared";
 
 import { MAX_EMOJIS_PER_SUBJECT } from "../../runtime/types/index.js";
+import { useEmojiCharadesSounds } from "../useEmojiCharadesSounds/index.js";
 import { ClueBoard } from "./ClueBoard/index.js";
 import { RevealOverlay } from "./RevealOverlay/index.js";
 import { displayEmojiCharadesSurfaceCopy } from "./copy.js";
@@ -73,6 +74,8 @@ export const DisplayEmojiCharadesSurface = ({
   const isRevealVisible = useIsRevealVisible(reveal);
   const emojiSequence =
     displayView?.status === "playing" ? displayView.emojiSequence : [];
+
+  useEmojiCharadesSounds(emojiSequence.length);
 
   // The verdict lands in the same update that empties the clue, so the board
   // the answer dims over is the one held from the render before.

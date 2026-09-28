@@ -8,6 +8,7 @@ import {
 } from "@wingnight/shared";
 
 import { resolveRecreateTargetNumber } from "../resolveRecreateTargetNumber/index.js";
+import { useRecreateSounds } from "../useRecreateSounds/index.js";
 import { displayRecreateSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -190,6 +191,9 @@ export const DisplayRecreateSurface = ({
 }: MinigameDisplayRendererProps): JSX.Element => {
   const recreateDisplayView =
     minigameDisplayView?.minigame === "RECREATE" ? minigameDisplayView : null;
+
+  useRecreateSounds(recreateDisplayView);
+
   const currentTarget = recreateDisplayView?.currentTarget ?? null;
   const isPlayPhase = phase === "play";
 
