@@ -114,6 +114,14 @@ test("draws the zone through the room's wider camera rather than the tablet's bo
   assert.ok(!markup.includes('viewBox="0 0 160 90"'));
 });
 
+test("hangs the zone strip over the arena so the room can read what is coming", () => {
+  const markup = render(createView());
+
+  assert.ok(markup.includes("data-schlonic-track"));
+  assert.ok(markup.includes("data-schlonic-track-post"));
+  assert.ok(markup.includes("data-schlonic-track-runner"));
+});
+
 // ADR-0006: the marquee is one shared component, not a container each game
 // copies and a ring each copy could forget. This pins that the surface hangs
 // THAT sign and not a private one — the drift the bulb-ring test used to catch.

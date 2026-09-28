@@ -10,6 +10,7 @@ import { SchlonicScene, type SchlonicSceneHandle } from "../SchlonicScene/index.
 import { useHeldRun, type RunHold } from "../useHeldRun/index.js";
 import { useRunnerFigure } from "../useRunnerFigure/index.js";
 import { useSchlonicMirror } from "../useSchlonicMirror/index.js";
+import { ZoneTrack } from "../ZoneTrack/index.js";
 import { displaySchlonicSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -117,8 +118,10 @@ const SchlonicPlayBody = ({
   serverOrigin: string | null;
 }): JSX.Element => {
   const sceneRef = useRef<SchlonicSceneHandle>(null);
-  // Written by the mirror's paint loop: the wings the runner on the wall is holding.
+  // Written by the mirror's paint loop: the wings the runner on the wall is holding, and the
+  // runner's pin on the zone strip.
   const tallyRef = useRef<HTMLSpanElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   // A run stays on the wall while how it ended plays out, a little longer than the tablet holds
   // it, because the replay here runs behind; once the team is through the last run stays for good.
   const { shownRunIndex, hold } = useHeldRun(view, MIRROR_HOLD_SLACK_MS);
@@ -140,7 +143,8 @@ const SchlonicPlayBody = ({
     zoneSeed: view.zoneSeed,
     zoneChunks: view.zoneChunks,
     sceneRef,
-    tallyRef
+    tallyRef,
+    trackRef
   });
 
   return (
@@ -163,6 +167,16 @@ const SchlonicPlayBody = ({
         }
         clock={clock}
         clockLine={clockLine}
+      />
+      {/* The zone as a line, FAPPY's pace-track shape: what is coming, how far to the post,
+          where the team's earlier runs ended, and the runner's own head riding it. */}
+      <ZoneTrack
+        ref={trackRef}
+        zone={zone}
+        runs={view.runs}
+        shownRunIndex={shownRunIndex}
+        runner={runner}
+        teamFillClassName={runner.fillClassName}
       />
       <div className={styles.arenaArea}>
         <div key={shownRunIndex} className={styles.runEnter}>

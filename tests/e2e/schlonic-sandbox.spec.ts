@@ -32,6 +32,15 @@ test("schlonic sandbox lays out one zone for both screens and starts the run on 
   await expect(page.locator("[data-schlonic-goal]")).toHaveCount(2);
   await expect(page.getByText("Run 1 of 2")).toBeVisible();
   await expect(page.getByText("Alex is on the line — tap to go")).toBeVisible();
+  // The wall carries the zone as a line over the arena: the kit, the hole and the post, with
+  // the runner's pin on the start line.
+  const track = page.locator("[data-schlonic-track]");
+
+  await expect(track).toHaveCount(1);
+  await expect(track.locator("[data-schlonic-track-hazard]")).toHaveCount(3);
+  await expect(track.locator("[data-schlonic-track-pit]")).toHaveCount(1);
+  await expect(track.locator("[data-schlonic-track-post]")).toHaveCount(1);
+  await expect(track).toHaveAttribute("data-schlonic-track-percent", "0");
   await expect(page.locator("[data-schlonic-wings]").first()).toHaveText(/0 \/ 52/);
   await expect(page.locator("[data-schlonic-in-hand]").first()).toHaveText("0");
 
@@ -186,6 +195,13 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
   expect(mostTallyShown).toBeGreaterThan(4);
   // The pit sits a third of the way in; getting past it is what the jumps were for.
   expect(endedAtX).toBeGreaterThan(400);
+
+  // The strip's pin followed the run down the zone: past the hole, a third of the way in.
+  const trackPercent = Number(
+    await page.locator("[data-schlonic-track]").getAttribute("data-schlonic-track-percent")
+  );
+
+  expect(trackPercent).toBeGreaterThan(30);
 
   // The tablet says who to hand it to; the TV says who is up.
   const hostCallout = page.locator('[data-schlonic-handoff="host"]');

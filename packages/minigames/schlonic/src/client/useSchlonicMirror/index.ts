@@ -4,6 +4,7 @@ import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart, runSchlonicRun
 
 import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
+import { paintZoneTrack } from "../trackMarks/index.js";
 import { paintWingTally } from "../wingTally/index.js";
 
 type SchlonicMirrorInput = {
@@ -14,6 +15,8 @@ type SchlonicMirrorInput = {
   sceneRef: RefObject<SchlonicSceneHandle>;
   /** Where the wings in hand are written each frame: the marquee's tally, outside the scene. */
   tallyRef?: RefObject<HTMLElement>;
+  /** The zone strip over the arena, whose live pin the loop moves each frame. */
+  trackRef?: RefObject<HTMLElement>;
 };
 
 // How far behind the tablet the TV draws, in ticks: a tenth of a second, so a press has normally
@@ -62,7 +65,8 @@ export const useSchlonicMirror = ({
   zoneSeed,
   zoneChunks,
   sceneRef,
-  tallyRef
+  tallyRef,
+  trackRef
 }: SchlonicMirrorInput): void => {
   const runRef = useRef<MirrorRun | null>(null);
   const beatRef = useRef<MirrorBeat | null>(null);
@@ -79,6 +83,12 @@ export const useSchlonicMirror = ({
   // The loops live on refs and are stopped on purpose — when a new run or a still frame replaces
   // them, or on unmount — never by an effect's cleanup, so a run the tablet has already moved
   // past can still play out.
+  // The chrome the loop writes outside the scene: the marquee's tally and the strip's pin.
+  const paintChrome = (frame: SchlonicFrame): void => {
+    paintWingTally(tallyRef?.current ?? null, frame.wings);
+    paintZoneTrack(trackRef?.current ?? null, zone, frame);
+  };
+
   const stopLoop = (): void => {
     const mirror = runRef.current;
 
@@ -109,7 +119,7 @@ export const useSchlonicMirror = ({
         sceneRef.current?.paintWipeout(frame, progress);
       }
 
-      paintWingTally(tallyRef?.current ?? null, frame.wings);
+      paintChrome(frame);
     };
     const step = (now: number): void => {
       const progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind];
@@ -151,7 +161,7 @@ export const useSchlonicMirror = ({
     stopBeat();
     runRef.current = { key, inputs: [], frame, startedAtMs: null, rafHandle: 0 };
     sceneRef.current?.paint(frame);
-    paintWingTally(tallyRef?.current ?? null, frame.wings);
+    paintChrome(frame);
   };
 
   useEffect(() => {
@@ -247,7 +257,7 @@ export const useSchlonicMirror = ({
     }
 
     sceneRef.current?.paint(mirror.frame);
-    paintWingTally(tallyRef?.current ?? null, mirror.frame.wings);
+    paintChrome(mirror.frame);
 
     const step = (now: number): void => {
       mirror.frame = advanceSchlonic(mirror.frame, zone, mirror.inputs, resolveTargetTick(now));
@@ -258,12 +268,12 @@ export const useSchlonicMirror = ({
       }
 
       sceneRef.current?.paint(mirror.frame);
-      paintWingTally(tallyRef?.current ?? null, mirror.frame.wings);
+      paintChrome(mirror.frame);
       mirror.rafHandle = window.requestAnimationFrame(step);
     };
 
     mirror.rafHandle = window.requestAnimationFrame(step);
-  }, [runIndex, runStatus, isSkipped, inputLogKey, zone, zoneSeed, zoneChunks, sceneRef, tallyRef, settledCount]);
+  }, [runIndex, runStatus, isSkipped, inputLogKey, zone, zoneSeed, zoneChunks, sceneRef, tallyRef, trackRef, settledCount]);
 
   useEffect(() => {
     return (): void => {

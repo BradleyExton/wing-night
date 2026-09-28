@@ -1556,6 +1556,19 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     The still banks (bay, beach, park) cover any camera; the scrolling banks
     are sized off the camera's width the same way they are off the zone's
     length, and the ground runs a camera past the post.
+-   **The zone strip.** Between the marquee and the arena the wall hangs the
+    zone as one line (`ZoneTrack`), in FAPPY's pace-track shape and at its
+    size, so the two twitch games read as one picture: the run start to post,
+    every hazard marked in the scene's own materials and the shape the zone
+    tells it by (a crimson bar for a thorn bed, a pink dot for a badnik, the
+    pad's red-on-white ring for a springboard), every hole a gap in the rail,
+    the post a gold tick, this turn's finished runs pinned in the team's colour
+    where they ended, and the live runner's own head riding the rail. Wings are
+    not on it: it is a map of what can go wrong, not of what there is to
+    collect. The static marks are laid out once per zone as custom properties
+    written on mount; the live pin is one property the mirror's loop writes
+    on the root beside the wing tally (`trackMarks/paintZoneTrack`), so nothing
+    on the strip re-renders per frame.
 -   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
     the same one JOUST takes in §2.7 and FAPPY in §2.9: the zone is full bleed
     and is still the whole jump surface, filling the takeover's padding box edge
