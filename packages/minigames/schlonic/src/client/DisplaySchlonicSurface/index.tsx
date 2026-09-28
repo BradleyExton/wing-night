@@ -9,6 +9,7 @@ import { SchlonicScene, type SchlonicSceneHandle } from "../SchlonicScene/index.
 import { useHeldRun, type RunHold } from "../useHeldRun/index.js";
 import { useRunnerFigure } from "../useRunnerFigure/index.js";
 import { useSchlonicMirror } from "../useSchlonicMirror/index.js";
+import { useSchlonicSounds } from "../useSchlonicSounds/index.js";
 import { displaySchlonicSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -42,6 +43,7 @@ const HoldPlaque = ({ hold, nextName }: { hold: RunHold; nextName: string | null
       <div className={styles.resultOverlay} data-schlonic-outcome={hold.outcome}>
         <ResultPlaque
           tone="neutral"
+          silent
           kicker={displaySchlonicSurfaceCopy.handoffCalloutLine}
           title={displaySchlonicSurfaceCopy.handoffCalloutName(nextName)}
         />
@@ -60,8 +62,10 @@ const HoldPlaque = ({ hold, nextName }: { hold: RunHold; nextName: string | null
 
   return (
     <div className={styles.resultOverlay} data-schlonic-outcome={hold.outcome}>
+      {/* Silent: the mirror sounds the ending when the wall shows it, a few ticks after this lands. */}
       <ResultPlaque
         tone={outcome === "cleared" ? "hit" : "miss"}
+        silent
         title={displaySchlonicSurfaceCopy.outcomeTitle(outcome)}
         detail={displaySchlonicSurfaceCopy.outcomeBlurb(outcome, hold.wings)}
       >
@@ -132,6 +136,7 @@ const SchlonicPlayBody = ({
   });
   const nextRun = view.runs[shownRunIndex + 1] ?? null;
   const isFinished = view.phase === "finished";
+  const handleMirrorEvent = useSchlonicSounds();
 
   useSchlonicMirror({
     run,
@@ -139,7 +144,8 @@ const SchlonicPlayBody = ({
     zoneSeed: view.zoneSeed,
     zoneChunks: view.zoneChunks,
     sceneRef,
-    tallyRef
+    tallyRef,
+    onEvent: handleMirrorEvent
   });
 
   return (

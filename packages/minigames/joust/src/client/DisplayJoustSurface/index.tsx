@@ -6,6 +6,7 @@ import type { JoustMinigameDisplayView, JoustMinigameShot } from "@wingnight/sha
 import { JoustArenaScene } from "../JoustArenaScene/index.js";
 import { isReplayFinished, resolveJoustScene } from "../resolveJoustScene/index.js";
 import { resolveShotCopy } from "../shotResultCopy/index.js";
+import { useJoustSounds } from "../useJoustSounds/index.js";
 import { useShotReplay } from "../useShotReplay/index.js";
 import { displayJoustSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -36,8 +37,10 @@ const ShotResult = ({
 
   return (
     <div className={styles.resultOverlay} data-joust-result>
+      {/* A cleared rack has its own fanfare (`useJoustSounds`); every other shot stings here. */}
       <ResultPlaque
         tone={isHit ? "hit" : "miss"}
+        silent={shot.isRackCleared}
         title={copy.title}
         detail={isHit ? displayJoustSurfaceCopy.toppledNames(names) : copy.blurb}
         points={isHit ? displayJoustSurfaceCopy.resultPoints(shot.points) : null}
@@ -96,6 +99,8 @@ const JoustPlayBody = ({
 }): JSX.Element => {
   const replayIndex = useShotReplay(view.lastShot);
   const replayFinished = isReplayFinished(view.lastShot, replayIndex);
+
+  useJoustSounds({ view, replayIndex, replayFinished });
   // The state already knows how the shot ends; the room does not until the replay lands. While
   // it is in the air the marquee reads what was true at launch, so the numbers land WITH the
   // birds rather than a second before them.

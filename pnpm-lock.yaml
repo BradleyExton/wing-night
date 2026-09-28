@@ -412,6 +412,9 @@ importers:
 
   packages/minigames/joust:
     dependencies:
+      '@wingnight/audio':
+        specifier: workspace:*
+        version: link:../../audio
       '@wingnight/cast':
         specifier: workspace:*
         version: link:../../cast
@@ -486,6 +489,9 @@ importers:
 
   packages/minigames/schlonic:
     dependencies:
+      '@wingnight/audio':
+        specifier: workspace:*
+        version: link:../../audio
       '@wingnight/cast':
         specifier: workspace:*
         version: link:../../cast

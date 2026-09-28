@@ -3,6 +3,7 @@ import type { SchlonicFrame, SchlonicInput, SchlonicMinigameRun, SchlonicZone } 
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart, runSchlonicRun } from "@wingnight/shared";
 
 import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
+import { resolveMirrorEvents, type SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
 import { paintWingTally } from "../wingTally/index.js";
 
@@ -14,6 +15,8 @@ type SchlonicMirrorInput = {
   sceneRef: RefObject<SchlonicSceneHandle>;
   /** Where the wings in hand are written each frame: the marquee's tally, outside the scene. */
   tallyRef?: RefObject<HTMLElement>;
+  /** Told what each drawn step changed (`mirrorEvents`). Must be stable: the loop below holds it. */
+  onEvent?: SchlonicMirrorEventHandler;
 };
 
 // How far behind the tablet the TV draws, in ticks: a tenth of a second, so a press has normally
@@ -62,7 +65,8 @@ export const useSchlonicMirror = ({
   zoneSeed,
   zoneChunks,
   sceneRef,
-  tallyRef
+  tallyRef,
+  onEvent
 }: SchlonicMirrorInput): void => {
   const runRef = useRef<MirrorRun | null>(null);
   const beatRef = useRef<MirrorBeat | null>(null);
@@ -131,6 +135,18 @@ export const useSchlonicMirror = ({
     beat.rafHandle = window.requestAnimationFrame(step);
 
     return beat;
+  };
+
+  // Report what the step just drawn changed, for whoever is listening. Pure diffing lives in
+  // `mirrorEvents`; this only hands it the two frames.
+  const emitFrameChange = (previous: SchlonicFrame, next: SchlonicFrame): void => {
+    if (onEvent === undefined) {
+      return;
+    }
+
+    for (const event of resolveMirrorEvents(previous, next, zone)) {
+      onEvent(event, next.wings);
+    }
   };
 
   const settleRun = (mirror: MirrorRun): void => {
@@ -234,12 +250,15 @@ export const useSchlonicMirror = ({
 
     // The log changed under a running mirror: rebuild the frame from the top with the log as it
     // now is, up to where the clock says we are.
+    const rebuiltFrom = mirror.frame;
+
     mirror.frame = advanceSchlonic(
       createSchlonicRunStart(zone),
       zone,
       mirror.inputs,
       Math.max(mirror.frame.tick, resolveTargetTick(performance.now()))
     );
+    emitFrameChange(rebuiltFrom, mirror.frame);
 
     if (mirror.frame.outcome !== null) {
       settleRun(mirror);
@@ -250,7 +269,10 @@ export const useSchlonicMirror = ({
     paintWingTally(tallyRef?.current ?? null, mirror.frame.wings);
 
     const step = (now: number): void => {
-      mirror.frame = advanceSchlonic(mirror.frame, zone, mirror.inputs, resolveTargetTick(now));
+      const previous = mirror.frame;
+
+      mirror.frame = advanceSchlonic(previous, zone, mirror.inputs, resolveTargetTick(now));
+      emitFrameChange(previous, mirror.frame);
 
       if (mirror.frame.outcome !== null) {
         settleRun(mirror);
