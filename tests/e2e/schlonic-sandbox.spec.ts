@@ -222,7 +222,8 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
 
   // The server refereed the run from the log and put what it brought home on the board.
   await expect(page.locator("[data-schlonic-history='0']")).not.toContainText("—");
-  await expect(page.getByText("Run 2 of 2")).toBeVisible({ timeout: 5000 });
+  // A run that went wrong holds for its punchline before the tablet moves on.
+  await expect(page.getByText("Run 2 of 2")).toBeVisible({ timeout: 8000 });
 
   // A run that made the post is the round's best, and the next team races it: hand the sandbox
   // to another team and the ghost is in both zones, on the strip, and on the marquee as the
@@ -238,6 +239,71 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
   } else {
     await expect(page.locator("[data-schlonic-ghost]")).toHaveCount(0);
   }
+});
+
+test("a run that goes down the hole comes up in the bay, loses its wings to a gull, and only then gets its card", async ({
+  page
+}) => {
+  await page.goto(devSandboxPath("schlonic"));
+  await expect(page.locator("[data-schlonic-scene]")).toHaveCount(2);
+
+  // One tap off the line and never another: the fixture's first hole takes a walker, and the
+  // walker has picked up the floor line on the way to it.
+  const seen = await page.evaluate(() => {
+    return new Promise<{ joke: string | null; cardAtJoke: number; gull: boolean; cardAfterMs: number }>(
+      (resolve) => {
+        const arena = document.querySelector("[data-schlonic-arena]");
+        const send = (type: "pointerdown" | "pointerup"): void => {
+          arena?.dispatchEvent(
+            new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, isPrimary: true })
+          );
+        };
+        let jokeAt = 0;
+        let joke: string | null = null;
+        let cardAtJoke = -1;
+        let gull = false;
+        const startedAt = performance.now();
+
+        send("pointerdown");
+        setTimeout(() => {
+          send("pointerup");
+        }, 40);
+
+        const loop = (): void => {
+          const now = performance.now();
+          const tv = document.querySelector('[data-schlonic-scene="display-schlonic"]');
+          const card = document.querySelectorAll("[data-schlonic-outcome]").length;
+
+          if (jokeAt === 0 && tv?.hasAttribute("data-schlonic-punchline")) {
+            jokeAt = now;
+            joke = tv.getAttribute("data-schlonic-punchline");
+            cardAtJoke = card;
+          }
+
+          if (jokeAt > 0 && Number(tv?.querySelector("[data-schlonic-gull]")?.getAttribute("opacity")) > 0) {
+            gull = true;
+          }
+
+          if ((jokeAt > 0 && card > 0) || now - startedAt > 20_000) {
+            resolve({ joke, cardAtJoke, gull, cardAfterMs: jokeAt > 0 ? now - jokeAt : -1 });
+            return;
+          }
+
+          requestAnimationFrame(loop);
+        };
+
+        requestAnimationFrame(loop);
+      }
+    );
+  });
+
+  expect(seen.joke).toBe("fell");
+  // The picture tells the joke first: no card over it, a gull comes for the handful, and the
+  // card follows once the gull has gone.
+  expect(seen.cardAtJoke).toBe(0);
+  expect(seen.gull).toBe(true);
+  expect(seen.cardAfterMs).toBeGreaterThan(1500);
+  await expect(page.locator('[data-schlonic-outcome="fell"]')).toContainText("Down a hole!");
 });
 
 test("the runner curls into a ball the moment it leaves the ground, and unrolls when it lands", async ({

@@ -10,6 +10,8 @@ import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart, runSchlonicRun
 
 import { BANK_COUNT_MS, CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 import { resolveMirrorEvents, type SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
+import { resolveHandfulLost } from "../resolveHandfulLost/index.js";
+import { resolveDueCues, resolvePunchlineCues } from "../SchlonicScene/punchlineTimeline/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
 import { paintZoneTrack } from "../trackMarks/index.js";
 import { paintWingTally } from "../wingTally/index.js";
@@ -186,7 +188,8 @@ export const useSchlonicMirror = ({
   const startBeat = (
     kind: MirrorBeat["kind"],
     frame: SchlonicFrame,
-    ghostFrame: SchlonicFrame | null
+    ghostFrame: SchlonicFrame | null,
+    inputs: readonly SchlonicInput[]
   ): MirrorBeat => {
     stopBeat();
 
@@ -202,6 +205,12 @@ export const useSchlonicMirror = ({
     // before the wall got here — so the bank starts from what it held before.
     const bankBefore = Math.max(0, wingsBankedRef.current - frame.wings);
     let counted = 0;
+    // A run that went wrong plays its punchline, and the wall sounds each part of the joke as
+    // the picture reaches it: the splash and the gull, or every wing the badnik eats.
+    const wingsLost = resolveHandfulLost(zone, inputs, frame);
+    const punchlineCues =
+      frame.outcome === "fell" || frame.outcome === "wiped" ? resolvePunchlineCues(frame.outcome, wingsLost) : [];
+    let soundedToMs = -1;
     const paintBeat = (progress: number): void => {
       if (kind === "cleared") {
         sceneRef.current?.paintCleared(frame, progress, ghostFrame);
@@ -220,8 +229,16 @@ export const useSchlonicMirror = ({
         return;
       }
 
-      sceneRef.current?.paintWipeout(frame, progress, ghostFrame);
+      const elapsedMs = progress * BEAT_DURATION_MS[kind];
+
+      sceneRef.current?.paintWipeout(frame, progress, ghostFrame, wingsLost);
       paintChrome(frame, ghostFrame);
+
+      for (const cue of resolveDueCues(punchlineCues, soundedToMs, elapsedMs)) {
+        onEventRef.current?.({ kind: cue });
+      }
+
+      soundedToMs = elapsedMs;
     };
     const step = (now: number): void => {
       const progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind];
@@ -251,7 +268,8 @@ export const useSchlonicMirror = ({
     const beat = startBeat(
       mirror.frame.outcome === "cleared" ? "cleared" : "wipeout",
       mirror.frame,
-      mirror.ghostFrame
+      mirror.ghostFrame,
+      mirror.inputs
     );
 
     beat.then = (): void => {
@@ -331,7 +349,8 @@ export const useSchlonicMirror = ({
         startBeat(
           settled.outcome === "cleared" ? "cleared" : "wipeout",
           settled,
-          still?.ghostFrame ?? null
+          still?.ghostFrame ?? null,
+          inputs
         );
       }
 

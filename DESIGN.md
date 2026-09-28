@@ -1350,6 +1350,32 @@ under the same marquee chrome and, on the tablet, the same full-bleed canvas:
     the tablet, so it holds a finished leg a little longer than the tablet
     does and finishes the flight it has before it switches: the room always
     sees the landing and the crash, never a cut to the next start.
+-   **Failure is a punchline, not a verdict** (principles §8, §9). A run that
+    ends badly plays the demand that beat it to its conclusion on the wall,
+    inside the wipeout beat and before any card goes up
+    (`SchlonicScene/punchlineTimeline`, painted by `usePunchline`). Down a
+    hole: the bird drops out of the zone, and the hole turns out to go to the
+    bay — it comes up in the water with a splash, clipped at the surface and
+    shaking its head, and a ring-billed gull (`SchlonicScene/Gull`, one of the
+    backdrop's own gulls come down, at about the hen's size) swoops in, takes
+    the handful off the water — one to three wings drawn, by the size of what
+    the hole took, read off the tick before the fall because the terminal frame
+    holds none — and climbs out of the top of the picture with it. Wiped out:
+    the empty-handed hit knocks the bird flat on its back, and the wings it
+    dropped roll down the shore and hop into the nearest badnik still standing
+    in that camera's picture, which gulps once per wing and swells at the burp;
+    with none in the picture, a pink one hops on from the edge ahead to do it.
+    The bay is a still band, so the hen surfaces at the first stretch of screen
+    ahead where the shore is low enough to show water. Each surface paints the
+    joke through its own camera; the TV sounds it from the SCHLONIC board
+    (`splash`, `squawk`, one `chomp` per wing, `burp`) as its beat reaches each
+    moment. The TV's card waits `PUNCHLINE_MS` into the hold, and the handoff
+    ding waits with it, so the room laughs before it reads; the wipeout beat is
+    the joke plus the card's old reading time (`WIPEOUT_BEAT_MS`), which is why
+    it now outlasts the post. The tablet's "Hand it to" callout is not held:
+    the holder has a tablet to pass. The plaque copy is unchanged — the
+    picture does the joke. Wipeouts are rare in practice: the floor wing lines
+    mean a runner is almost never hit empty-handed.
 -   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
     the same one JOUST takes in §2.7: the corridor is full bleed and is still
     the whole flap surface (no scroll, no zoom), filling the takeover's padding
@@ -1588,8 +1614,8 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     The TV has a soundboard (`audio/`, a table of voices for the house synth
     in `@wingnight/audio`): a ring-style chime per wing that climbs with the
     handful, a boing off a springboard, a pop for a badnik, a scatter for a
-    hit, a whistle-and-splash for a hole, three notes down for a wipeout, an
-    act-clear fanfare at the post, a tick per wing counted into the bank, and
+    hit, a whistle down a hole, three notes down for a wipeout, the
+    punchlines' own splash, gull, chomps and burp (below), an act-clear fanfare at the post, a tick per wing counted into the bank, and
     the handoff and finish stings the arcade games share. The mirror announces
     what changed between frames (`mirrorEvents`) and the surface's sound hook
     decides what that means; the tablet stays silent, the TV is the speaker.
@@ -1649,7 +1675,7 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
 -   Display: marquee (team, the game's name, and a meta cell holding the
     run, the wings in hand and the wings banked), the zone with "Kempenfelt Bay Zone" on the
     venue plaque centred over its sky (§2.2D), a status line; one
-    plaque over the beat — how the run ended and, under a rule, who takes the
+    plaque over the beat — after the punchline, when the run went wrong — how the run ended and, under a rule, who takes the
     tablet next — and the points plaque once the team is through. One card,
     not an outcome plaque with a name card stacked over it and the status
     line saying the name a third time: the status line only says who just

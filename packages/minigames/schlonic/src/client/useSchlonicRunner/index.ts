@@ -9,6 +9,7 @@ import type {
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart } from "@wingnight/shared";
 
 import { CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
+import { resolveHandfulLost } from "../resolveHandfulLost/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
 import { paintWingTally } from "../wingTally/index.js";
 
@@ -140,9 +141,13 @@ export const useSchlonicRunner = ({
   const startBeat = (
     kind: LocalBeat["kind"],
     frame: SchlonicFrame,
-    ghostFrame: SchlonicFrame | null
+    ghostFrame: SchlonicFrame | null,
+    inputs: readonly SchlonicInput[]
   ): void => {
     stopBeat();
+
+    // A hole takes the handful with it, and the punchline shows what it took.
+    const wingsLost = resolveHandfulLost(zoneRef.current, inputs, frame);
 
     const beat: LocalBeat = {
       kind,
@@ -156,7 +161,7 @@ export const useSchlonicRunner = ({
       if (kind === "cleared") {
         sceneRef.current?.paintCleared(frame, progress, ghostFrame);
       } else {
-        sceneRef.current?.paintWipeout(frame, progress, ghostFrame);
+        sceneRef.current?.paintWipeout(frame, progress, ghostFrame, wingsLost);
       }
 
       paintWingTally(tallyRef?.current ?? null, frame.wings);
@@ -207,7 +212,12 @@ export const useSchlonicRunner = ({
 
     if (local.frame.outcome !== null) {
       local.rafHandle = 0;
-      startBeat(local.frame.outcome === "cleared" ? "cleared" : "wipeout", local.frame, local.ghostFrame);
+      startBeat(
+        local.frame.outcome === "cleared" ? "cleared" : "wipeout",
+        local.frame,
+        local.ghostFrame,
+        local.inputs
+      );
 
       if (!local.hasEnded) {
         local.hasEnded = true;

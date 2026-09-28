@@ -7,7 +7,7 @@ import { resolveSchlonicZone } from "@wingnight/shared";
 import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
 import { TV_CAMERA_FIT } from "../SchlonicScene/camera/index.js";
 import { SchlonicScene, type SchlonicSceneHandle } from "../SchlonicScene/index.js";
-import { useHeldRun, type RunHold } from "../useHeldRun/index.js";
+import { useHeldRun, useHoldCard, type RunHold } from "../useHeldRun/index.js";
 import { useRunnerFigure } from "../useRunnerFigure/index.js";
 import { useSchlonicMirror } from "../useSchlonicMirror/index.js";
 import { useSchlonicSounds } from "../useSchlonicSounds/index.js";
@@ -135,6 +135,8 @@ const SchlonicPlayBody = ({
   // A run stays on the wall while how it ended plays out, a little longer than the tablet holds
   // it, because the replay here runs behind; once the team is through the last run stays for good.
   const { shownRunIndex, hold } = useHeldRun(view, MIRROR_HOLD_SLACK_MS);
+  // A run that went wrong plays its punchline on the wall first; the card waits for the joke.
+  const isCardUp = useHoldCard(hold);
   const run = view.runs[shownRunIndex] ?? null;
   const zone = useMemo(() => {
     return resolveSchlonicZone({ seed: view.zoneSeed, chunks: view.zoneChunks });
@@ -261,7 +263,7 @@ const SchlonicPlayBody = ({
         <span className={styles.venuePlaque} data-schlonic-venue>
           {displaySchlonicSurfaceCopy.zoneName}
         </span>
-        {hold !== null && <HoldPlaque hold={hold} nextName={resolvePlayerName(nextRun)} />}
+        {hold !== null && isCardUp && <HoldPlaque hold={hold} nextName={resolvePlayerName(nextRun)} />}
         {isFinished && hold === null && <FinishPlaque view={view} />}
       </div>
       <p className={styles.statusLine}>{resolveStatusLine(view, runner.playerName, hold)}</p>

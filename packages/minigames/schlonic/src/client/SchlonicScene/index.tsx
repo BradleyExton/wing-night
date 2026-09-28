@@ -14,22 +14,26 @@ import {
 } from "./Backdrop/index.js";
 import { Burst, paintBurst } from "./Burst/index.js";
 import { TABLET_CAMERA_FIT, resolveCamera, type SchlonicCameraFit } from "./camera/index.js";
+import { FallPunchline } from "./FallPunchline/index.js";
 import { Ghost, RUNNER_SCALE, TUCK_DROP, TUCK_SHRINK, paintGhost, type GhostRefs } from "./Ghost/index.js";
 import { Ground } from "./Ground/index.js";
 import { resolveRunnerCurl, resolveRunnerPose } from "./runnerPose/index.js";
 import { shakeElement } from "./shake/index.js";
 import * as styles from "./styles.js";
+import { usePunchline } from "./usePunchline/index.js";
+import { WipeoutPunchline } from "./WipeoutPunchline/index.js";
 import { ZoneProps } from "./ZoneProps/index.js";
 
 export type SchlonicSceneHandle = {
   /** The live frame, and the ghost's frame on the same tick when the round has a run to beat. */
   paint: (frame: SchlonicFrame, ghostFrame?: SchlonicFrame | null) => void;
   // The two beats a surface plays over a settled frame, `progress` 0 → 1: the post crossed, and
-  // the run that ended where it went wrong. The ghost's frame comes with them, because the
-  // surface may hold the beat in a scene mounted after the run (the tablet keys its scene on
-  // the run it shows) and a scene keeps no ghost of its own.
+  // the run that ended where it went wrong — played as its punchline (`punchlineTimeline/`),
+  // which for a fall needs the handful the terminal frame no longer carries. The ghost's frame
+  // comes with them, because the surface may hold the beat in a scene mounted after the run
+  // (the tablet keys its scene on the run it shows) and a scene keeps no ghost of its own.
   paintCleared: (frame: SchlonicFrame, progress: number, ghostFrame?: SchlonicFrame | null) => void;
-  paintWipeout: (frame: SchlonicFrame, progress: number, ghostFrame?: SchlonicFrame | null) => void;
+  paintWipeout: (frame: SchlonicFrame, progress: number, ghostFrame?: SchlonicFrame | null, wingsLost?: number) => void;
   /** The whole picture flinches: a hit, opposite the impact. A browser without the API does nothing. */
   shake: () => void;
 };
@@ -189,7 +193,20 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       });
     };
 
+    // A beat that ends badly ends on a joke; the hook moves the runner, the burst and the
+    // eater through it, and puts them back on the next paint.
+    const punchline = usePunchline({
+      frameRef,
+      runnerGroupRef,
+      runnerTuckRef,
+      burstRef,
+      propRefs,
+      zoneRef,
+      cameraRef
+    });
+
     const paint = (frame: SchlonicFrame, ghostFrame: SchlonicFrame | null = null): void => {
+      punchline.clear();
       curlRef.current = resolveRunnerCurl(frame.grounded, curlRef.current);
       paintScroll(frame);
       paintProps(frame);
@@ -213,22 +230,17 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       burstRef.current?.setAttribute("opacity", "0");
     };
 
-    // It went wrong: the bird drops out of the bottom of the zone and the room is left with the
-    // ground it did not make.
+    // It went wrong, and the picture tells the joke before the card tells the verdict.
     const paintWipeout = (
       frame: SchlonicFrame,
       progress: number,
-      ghostFrame: SchlonicFrame | null = null
+      ghostFrame: SchlonicFrame | null = null,
+      wingsLost = 0
     ): void => {
       paintScroll(frame);
       paintProps(frame);
       paintGhostFrame(ghostFrame, frame);
-      paintRunner(frame, {
-        curl: 1,
-        fade: Math.max(0, 1 - progress * 1.4),
-        sink: progress * progress * 40
-      });
-      paintBurst(burstRef.current, frame);
+      punchline.paint(frame, progress, wingsLost);
     };
 
     const shake = (): void => {
@@ -303,22 +315,26 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
             <g ref={zoneLayerRef} data-schlonic-zone>
               <Ground zone={zone} camera={camera} />
               <ZoneProps zone={zone} registerProp={registerProp} goalGroundY={goalGroundY} />
+              <WipeoutPunchline ref={punchline.wipeoutRef} />
             </g>
             <Burst ref={burstRef} />
             {ghost !== null && <Ghost ref={ghostRefs} figure={ghost} />}
             {/* The bird turns about the hitbox's own centre; the group inside it stands the cast
                 on that centre and tucks it in. Two groups, because a spin and a stance are
                 different transforms and neither should have to know about the other. */}
-            <g ref={runnerGroupRef} className={runner.fillClassName} data-schlonic-runner>
-              <g ref={runnerTuckRef}>
-                <CharacterFigure
-                  appearance={runner.appearance}
-                  apparel={runner.apparel}
-                  silhouette={runner.silhouette}
-                  pose="walk"
-                />
+            <g ref={punchline.runnerClipRef}>
+              <g ref={runnerGroupRef} className={runner.fillClassName} data-schlonic-runner>
+                <g ref={runnerTuckRef}>
+                  <CharacterFigure
+                    appearance={runner.appearance}
+                    apparel={runner.apparel}
+                    silhouette={runner.silhouette}
+                    pose="walk"
+                  />
+                </g>
               </g>
             </g>
+            <FallPunchline ref={punchline.fallRef} clipId={punchline.bayClipId} camera={camera} />
           </svg>
         </div>
       </div>

@@ -20,6 +20,10 @@ export type SchlonicCueName =
   | "hit"
   | "fell"
   | "wiped"
+  | "splash"
+  | "squawk"
+  | "chomp"
+  | "burp"
   | "post"
   | "riser"
   | "bankTick"
@@ -33,6 +37,10 @@ export const SCHLONIC_CUE_NAMES: readonly SchlonicCueName[] = [
   "hit",
   "fell",
   "wiped",
+  "splash",
+  "squawk",
+  "chomp",
+  "burp",
   "post",
   "riser",
   "bankTick",
@@ -57,6 +65,10 @@ export const SCHLONIC_CUE_MIN_GAP_MS: Record<SchlonicCueName, number> = {
   hit: 250,
   fell: 1500,
   wiped: 1500,
+  splash: 1500,
+  squawk: 600,
+  chomp: 60,
+  burp: 1500,
   post: 1500,
   riser: 3000,
   bankTick: 45,
@@ -113,24 +125,17 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
     playNoise(rig, { startAt, durationSeconds: 0.2, peak: 0.6, filterType: "highpass", fromHz: 1800, toHz: 4000 });
     playTone(rig, { startAt, durationSeconds: 0.16, type: "sawtooth", fromHz: 240, toHz: 70, peak: 0.35 });
   },
-  // Down a hole: a whistle falling away, then the bay takes it.
+  // Down a hole: a whistle falling away. The bay taking it is its own cue, `splash`, sounded
+  // when the picture gets there.
   fell: (rig, startAt) => {
     playTone(rig, {
       startAt,
-      durationSeconds: 0.55,
+      durationSeconds: 0.5,
       type: "sine",
       fromHz: 900,
       toHz: 120,
       peak: 0.3,
       attackSeconds: 0.03
-    });
-    playNoise(rig, {
-      startAt: startAt + 0.5,
-      durationSeconds: 0.3,
-      peak: 0.5,
-      filterType: "lowpass",
-      fromHz: 1800,
-      toHz: 300
     });
   },
   // Wiped out: three notes down, the game beat them.
@@ -138,6 +143,42 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
     playTone(rig, { startAt, durationSeconds: 0.2, type: "triangle", fromHz: 440, peak: 0.3 });
     playTone(rig, { startAt: startAt + 0.18, durationSeconds: 0.2, type: "triangle", fromHz: 349, peak: 0.29 });
     playTone(rig, { startAt: startAt + 0.36, durationSeconds: 0.34, type: "triangle", fromHz: 262, peak: 0.28 });
+  },
+  // The fall's punchline, part one: the hen comes up in the bay. A wet thump, a bloop under
+  // it, and the spray hissing back down.
+  splash: (rig, startAt) => {
+    playNoise(rig, { startAt, durationSeconds: 0.45, peak: 0.55, filterType: "lowpass", fromHz: 2400, toHz: 350 });
+    playTone(rig, { startAt, durationSeconds: 0.18, type: "sine", fromHz: 320, toHz: 90, peak: 0.32 });
+    playNoise(rig, {
+      startAt: startAt + 0.06,
+      durationSeconds: 0.32,
+      peak: 0.12,
+      filterType: "highpass",
+      fromHz: 3200,
+      toHz: 5200
+    });
+  },
+  // Part two: the gull. A rasping kee-OW as it takes the handful, then a laugh on the way out.
+  squawk: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.09, type: "sawtooth", fromHz: 1100, toHz: 1500, peak: 0.16 });
+    playTone(rig, { startAt: startAt + 0.1, durationSeconds: 0.3, type: "sawtooth", fromHz: 1600, toHz: 700, peak: 0.2 });
+    playTone(rig, { startAt: startAt + 0.1, durationSeconds: 0.3, type: "square", fromHz: 1650, toHz: 760, peak: 0.07 });
+
+    for (const laughAt of [0.48, 0.62, 0.76]) {
+      playTone(rig, { startAt: startAt + laughAt, durationSeconds: 0.08, type: "sawtooth", fromHz: 1250, toHz: 900, peak: 0.12 });
+    }
+  },
+  // The wipeout's punchline: one wing into the badnik. A wet crunch, short enough that five in
+  // a row are a meal and not a drum roll.
+  chomp: (rig, startAt) => {
+    playNoise(rig, { startAt, durationSeconds: 0.08, peak: 0.5, filterType: "bandpass", fromHz: 520, toHz: 160, q: 1.4 });
+    playTone(rig, { startAt, durationSeconds: 0.07, type: "square", fromHz: 190, toHz: 60, peak: 0.22 });
+  },
+  // And when it has eaten the lot.
+  burp: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.36, type: "sawtooth", fromHz: 108, toHz: 68, peak: 0.3, attackSeconds: 0.03 });
+    playTone(rig, { startAt, durationSeconds: 0.34, type: "sawtooth", fromHz: 113, toHz: 71, peak: 0.18, attackSeconds: 0.04 });
+    playNoise(rig, { startAt, durationSeconds: 0.3, peak: 0.12, filterType: "lowpass", fromHz: 420, toHz: 180 });
   },
   // The post: an act-clear fanfare, three notes up and a held fifth.
   post: (rig, startAt) => {

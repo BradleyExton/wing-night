@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { SchlonicMinigameDisplayView, SchlonicMinigameHostView } from "@wingnight/shared";
 
-import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
+import { CLEARED_BEAT_MS, PUNCHLINE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 
 /** How a held run ended. `skipped` is the run that never happened: nothing to show, only who is next. */
 export type RunHoldOutcome = "cleared" | "wiped" | "fell" | "skipped";
@@ -54,6 +54,37 @@ export const resolveRunHold = (
 
 export const resolveHoldDurationMs = (hold: RunHold): number => {
   return hold.outcome === "cleared" ? CLEARED_BEAT_MS : WIPEOUT_BEAT_MS;
+};
+
+/**
+ * How long the wall keeps its card down after a hold starts: a run that went wrong is playing
+ * its punchline, and the joke goes first. A post and a skip have nothing to wait for.
+ */
+export const resolveCardDelayMs = (hold: RunHold): number => {
+  return hold.outcome === "fell" || hold.outcome === "wiped" ? PUNCHLINE_MS : 0;
+};
+
+/** Whether the wall's card for this hold is up yet — `resolveCardDelayMs` after it started. */
+export const useHoldCard = (hold: RunHold | null): boolean => {
+  const [upKey, setUpKey] = useState<string | null>(null);
+  const key = hold === null ? null : `${hold.runIndex}:${hold.startedAtMs}`;
+  const delayMs = hold === null ? 0 : resolveCardDelayMs(hold);
+
+  useEffect(() => {
+    if (key === null || delayMs === 0) {
+      return undefined;
+    }
+
+    const handle = window.setTimeout(() => {
+      setUpKey(key);
+    }, delayMs);
+
+    return (): void => {
+      window.clearTimeout(handle);
+    };
+  }, [key, delayMs]);
+
+  return hold !== null && (delayMs === 0 || upKey === key);
 };
 
 /**

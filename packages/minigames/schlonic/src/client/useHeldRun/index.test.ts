@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { SchlonicMinigameRun } from "@wingnight/shared";
 
-import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
-import { resolveHoldDurationMs, resolveRunHold } from "./index.js";
+import { CLEARED_BEAT_MS, PUNCHLINE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
+import { resolveCardDelayMs, resolveHoldDurationMs, resolveRunHold } from "./index.js";
 
 const run = (
   runIndex: number,
@@ -54,12 +54,27 @@ test("holds nothing when the cursor went backwards, which is a reset", () => {
   assert.equal(resolveRunHold(1, view(0, [run(0, "ready"), run(1, "ready")]), 0), null);
 });
 
-test("lingers longer on a run that made the post than on one that did not", () => {
+test("does hold a run that went wrong for its punchline and then a card as long as the post's", () => {
   const cleared = resolveRunHold(0, view(1, [run(0, "done", "cleared"), run(1, "ready")]), 0);
   const wiped = resolveRunHold(0, view(1, [run(0, "done", "wiped"), run(1, "ready")]), 0);
 
   assert.ok(cleared !== null && wiped !== null);
   assert.equal(resolveHoldDurationMs(cleared), CLEARED_BEAT_MS);
   assert.equal(resolveHoldDurationMs(wiped), WIPEOUT_BEAT_MS);
-  assert.ok(CLEARED_BEAT_MS > WIPEOUT_BEAT_MS);
+  // The joke plays first; the card that follows it is up about as long as the post's beat.
+  assert.ok(WIPEOUT_BEAT_MS - PUNCHLINE_MS >= CLEARED_BEAT_MS * 0.7);
+});
+
+test("does keep the wall's card down for the punchline when the run fell or was wiped", () => {
+  for (const outcome of ["fell", "wiped"] as const) {
+    const hold = resolveRunHold(0, view(1, [run(0, "done", outcome), run(1, "ready")]), 0);
+
+    assert.ok(hold !== null);
+    assert.equal(resolveCardDelayMs(hold), PUNCHLINE_MS);
+  }
+
+  const cleared = resolveRunHold(0, view(1, [run(0, "done", "cleared"), run(1, "ready")]), 0);
+
+  assert.ok(cleared !== null);
+  assert.equal(resolveCardDelayMs(cleared), 0);
 });

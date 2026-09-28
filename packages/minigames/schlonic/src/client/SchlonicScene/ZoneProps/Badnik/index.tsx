@@ -15,8 +15,11 @@ const BALL_RADIUS = 1.7;
  * a face on the glans that watches the runner come, in whichever of the three skins its index
  * deals it. Squashed by anything that lands on it — which
  * is to say by a bird in a ball, which is the whole reason for jumping on one.
+ *
+ * `isZoneKit` false draws the same creature without the zone's tag, for the one that hops on
+ * to eat a wipeout's wings (`WipeoutPunchline`): it is a punchline, not a hazard to count.
  */
-export const Badnik = ({ prop }: { prop: SchlonicProp }): JSX.Element => {
+export const Badnik = ({ prop, isZoneKit = true }: { prop: SchlonicProp; isZoneKit?: boolean }): JSX.Element => {
   const top = prop.y - SCHLONIC_WORLD.badnikHeight;
   const head: SchlongVec2 = { x: prop.x - 0.5, y: top + HEAD_RADIUS };
   const base: SchlongVec2 = { x: prop.x + 0.6, y: prop.y - 0.4 };
@@ -30,7 +33,7 @@ export const Badnik = ({ prop }: { prop: SchlonicProp }): JSX.Element => {
   ];
 
   return (
-    <g data-schlonic-badnik={prop.index}>
+    <g data-schlonic-badnik={isZoneKit ? prop.index : undefined}>
       <GroundShadow x={prop.x} y={prop.y} radius={SCHLONIC_WORLD.badnikWidth * 0.62} />
       {[prop.x - 1.9, prop.x + 2.1].map((ballX) => (
         <circle

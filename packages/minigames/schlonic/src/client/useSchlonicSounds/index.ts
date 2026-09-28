@@ -3,7 +3,7 @@ import type { SchlonicMinigameDisplayView } from "@wingnight/shared";
 
 import { WING_CHIME_TOP_AT, createSchlonicSoundboard, type SchlonicSoundboard } from "../audio/index.js";
 import type { SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
-import type { RunHold } from "../useHeldRun/index.js";
+import { resolveCardDelayMs, type RunHold } from "../useHeldRun/index.js";
 
 type SchlonicSoundsInput = {
   view: SchlonicMinigameDisplayView;
@@ -61,15 +61,25 @@ export const useSchlonicSounds = ({ view, hold }: SchlonicSoundsInput): Schlonic
     [play]
   );
 
-  // The tablet changing hands. Keyed on the hold itself so a second handoff rings again.
+  // The tablet changing hands, rung as the card that says so goes up — after the punchline,
+  // when there is one. Keyed on the hold itself so a second handoff rings again.
   const holdKind = hold?.kind ?? null;
   const holdKey = hold === null ? "" : `${hold.runIndex}:${hold.startedAtMs}`;
+  const cardDelayMs = hold === null ? 0 : resolveCardDelayMs(hold);
 
   useEffect(() => {
-    if (holdKind === "handoff") {
-      play("handoff");
+    if (holdKind !== "handoff") {
+      return undefined;
     }
-  }, [holdKind, holdKey, play]);
+
+    const handle = window.setTimeout(() => {
+      play("handoff");
+    }, cardDelayMs);
+
+    return (): void => {
+      window.clearTimeout(handle);
+    };
+  }, [holdKind, holdKey, cardDelayMs, play]);
 
   // The team through, once. A surface that mounts already finished (a reconnect) has no
   // previous phase to have left, so it stays quiet.

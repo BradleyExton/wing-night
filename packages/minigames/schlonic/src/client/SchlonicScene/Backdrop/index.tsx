@@ -68,7 +68,7 @@ export type BackdropRefs = {
 
 /** Where the far bank meets the water, where the water meets the beach, where the beach gives up. */
 const HORIZON_Y = 42;
-const SHORE_Y = 58;
+export const SHORE_Y = 58;
 const BEACH_Y = 62;
 
 /** The sun is low and east, down the length of the bay, and the water carries its column. */

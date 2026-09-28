@@ -153,9 +153,12 @@ Two of seven landed 2026-09-28 on `claude/scholnic-game-improvements-27a62e`: th
   drawn bigger, par 120 in the defaults, the sample and the pack, every zone ending on a finale
   springboard over a wide hole with the biggest arc in the flight, and a riser on the wall as the
   runner enters the last two chunks.
-- **Failure as punchline.** A pit drop ends with the hen surfacing in the bay with a splash and a
-  gull taking the wings; a wipeout sends the dropped wings rolling to the badniks, who eat them.
-  Both play on the TV before the handoff card.
+- ~~**Failure as punchline.**~~ Done 2026-09-28: a pit drop surfaces the hen in the bay with a
+  splash and a gull takes the handful; a wipeout knocks it flat and the dropped wings roll into
+  the nearest badnik (or a stand-in that hops on), one chomp each. The TV's card waits for the
+  joke (`PUNCHLINE_MS`). Follow-up: a wipeout almost never happens — the floor wing lines keep
+  a runner's hands full — so the zone generator may want a stretch with no floor line before
+  a hazard if the room is ever to see it.
 - **Art pass, last.** Checkered ground band, more saturated sky, chunkier outlines, the hen a
   touch bigger.
 

@@ -90,6 +90,17 @@ export const schlonicPalette = {
   pad: "#e8453c",
   padStripe: "#fff7ed",
   padDark: "#9c1f1a",
+  // The punchlines (§2.11). The bay's spray is its own near shallows gone white. The gull is a
+  // Barrie ring-bill: white, a grey back and black tips, and the yellow beak with the red spot
+  // is what makes it a thief rather than a bird.
+  spray: "#eaf7ff",
+  gull: "#ffffff",
+  gullBack: "#b9c6d2",
+  gullTip: "#1f2a33",
+  gullEdge: "#55606b",
+  gullBeak: "#f6c343",
+  gullBeakSpot: "#d8322a",
+  gullLeg: "#f08a24",
   post: "#f4f6fa",
   postPole: "#9aa6b5",
   shadow: "#173a22",

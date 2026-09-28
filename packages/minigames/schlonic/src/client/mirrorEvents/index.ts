@@ -2,10 +2,11 @@ import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, resolveSchlonicFinaleX } from "@wingnight/shared";
 
 /**
- * What a replay of a run can announce between one drawn frame and the next. The loops are the
- * only things that read frames, and they should stay that way; instead of exposing frames they
- * report what changed, and whoever is listening (the soundboard, the shake) decides what that
- * means.
+ * What a replay of a run can announce between one drawn frame and the next — and, once a run
+ * has gone wrong, what its punchline announces as the beat plays it (`splash`, `squawk`,
+ * `chomp`, `burp`: `SchlonicScene/punchlineTimeline`). The loops are the only things that read
+ * frames, and they should stay that way; instead of exposing frames they report what changed,
+ * and whoever is listening (the soundboard, the shake) decides what that means.
  */
 export type SchlonicMirrorEvent =
   | { kind: "wing"; wingsInHand: number }
@@ -15,7 +16,11 @@ export type SchlonicMirrorEvent =
   | { kind: "finale" }
   | { kind: "cleared" }
   | { kind: "fell" }
-  | { kind: "wiped" };
+  | { kind: "wiped" }
+  | { kind: "splash" }
+  | { kind: "squawk" }
+  | { kind: "chomp" }
+  | { kind: "burp" };
 
 export type SchlonicMirrorEventHandler = (event: SchlonicMirrorEvent) => void;
 
