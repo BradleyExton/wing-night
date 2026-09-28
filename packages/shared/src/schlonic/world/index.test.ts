@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  SCHLONIC_FINALE_CHUNKS,
   SCHLONIC_WORLD,
   isSchlonicInPit,
   isSchlonicOverPit,
+  resolveSchlonicFinaleX,
   resolveSchlonicGroundSlope,
   resolveSchlonicGroundY,
   resolveSchlonicWingTotal,
@@ -59,6 +61,39 @@ test("deals every team the same mix of hard kit rather than rolling each slot", 
 
 test("hangs enough wings that a clean run is worth chasing", () => {
   assert.ok(resolveSchlonicWingTotal(zoneOf(3, 22)) > 80);
+});
+
+test("hangs the high line at double worth and the floor at one", () => {
+  const zone = zoneOf(3, 22);
+  const wings = zone.props.filter((prop) => prop.kind === "wing");
+  const high = wings.filter((prop) => prop.worth === SCHLONIC_WORLD.highLineWorth);
+  const floor = wings.filter((prop) => prop.worth === undefined);
+
+  assert.ok(high.length >= 10, `only ${high.length} on the high line`);
+  assert.ok(floor.length > high.length, "the floor should still carry most of the wings");
+  // Worth is what the total counts, so a perfect run is more than a wing a wing.
+  assert.equal(resolveSchlonicWingTotal(zone), floor.length + high.length * SCHLONIC_WORLD.highLineWorth);
+  // Nothing but a wing is worth anything.
+  assert.ok(zone.props.every((prop) => prop.kind === "wing" || prop.worth === undefined));
+});
+
+test("ends every zone on a springboard over a hole before the post", () => {
+  for (let seed = 0; seed < 25; seed += 1) {
+    const zone = zoneOf(seed, 12);
+    const finaleX = resolveSchlonicFinaleX(zone);
+    const lastPit = zone.pits[zone.pits.length - 1];
+    const finaleSpring = zone.props.find((prop) => prop.kind === "spring" && prop.x >= finaleX);
+
+    assert.equal(finaleX, zone.goalX - SCHLONIC_FINALE_CHUNKS * SCHLONIC_WORLD.chunkWidth);
+    assert.ok(finaleSpring !== undefined, `seed ${seed} has no finale springboard`);
+    assert.ok(lastPit !== undefined && lastPit.fromX > finaleSpring.x, `seed ${seed} has no hole after it`);
+    assert.equal(lastPit.toX - lastPit.fromX, SCHLONIC_WORLD.finalePitWidth);
+    assert.ok(lastPit.toX < zone.goalX, `seed ${seed} put the hole past the post`);
+    // The biggest arc in the zone hangs in the spring's flight.
+    const arc = zone.props.filter((prop) => prop.kind === "wing" && prop.x > finaleSpring.x && prop.x < lastPit.toX);
+
+    assert.ok(arc.some((prop) => prop.worth === SCHLONIC_WORLD.highLineWorth), `seed ${seed} hangs no high line over the finale`);
+  }
 });
 
 test("keeps every wing inside the box and off the floor", () => {

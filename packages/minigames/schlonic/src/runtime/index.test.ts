@@ -313,13 +313,20 @@ test("re-reads the round's running totals without touching the runs", () => {
   assert.equal(hostView(synced).phase, "running");
 });
 
-// A six-chunk zone with nothing in it a walking bird cannot survive (seed 3 deals a badnik, no
-// hole), so a run with no jumps clears it — with 21 wings — and one early hop clears with 20.
+// A six-chunk zone with nothing in it a walking bird cannot survive: seed 3 deals a badnik, and
+// the finale's springboard throws a walker over its hole. So a run with no jumps clears it, and
+// one with an early hop clears it with a different handful. Which is the bigger is the sim's
+// business, so the tests ask it rather than assume.
 const CLEAR_RULES = { runsPerTurn: 2, zoneSeed: 3, zoneChunks: 6, parWingsPerRun: 20 };
+const CLEAR_COURSE = { seed: CLEAR_RULES.zoneSeed, chunks: CLEAR_RULES.zoneChunks };
 const HOP = [
   { tick: 40, down: true },
   { tick: 70, down: false }
 ];
+const WALK_WINGS = runSchlonicRun(CLEAR_COURSE, [{ tick: 0, down: true }]).wings;
+const HOP_WINGS = runSchlonicRun(CLEAR_COURSE, HOP).wings;
+const [WORSE, BETTER] = HOP_WINGS < WALK_WINGS ? [HOP, []] : [[], HOP];
+const [WORSE_WINGS, BETTER_WINGS] = [Math.min(HOP_WINGS, WALK_WINGS), Math.max(HOP_WINGS, WALK_WINGS)];
 
 const playRun = (state: SerializableValue, inputs: readonly { tick: number; down: boolean }[]): SerializableValue => {
   let next = state;
@@ -348,28 +355,29 @@ test("starts a round with no run to beat", () => {
 });
 
 test("remembers the cleared run that banked the most wings as the round's best", () => {
-  const afterHop = playRun(initialize(CLEAR_RULES), HOP);
-  const hopView = hostView(afterHop);
+  assert.notEqual(WALK_WINGS, HOP_WINGS, "the two logs must bank different handfuls");
 
-  assert.equal(hopView.runs[0]?.result?.outcome, "cleared");
-  assert.equal(hopView.bestRun?.wings, 20);
-  assert.equal(hopView.bestRun?.player?.name, "Alex");
-  assert.equal(hopView.bestRun?.teamId, "team-a");
-  assert.deepEqual(hopView.bestRun?.inputs, HOP);
+  const afterWorse = playRun(initialize(CLEAR_RULES), WORSE);
+  const worseView = hostView(afterWorse);
 
-  // The next run walks it and comes home with one more: it is the new best.
-  const afterWalk = playRun(afterHop, []);
+  assert.equal(worseView.runs[0]?.result?.outcome, "cleared");
+  assert.equal(worseView.bestRun?.wings, WORSE_WINGS);
+  assert.equal(worseView.bestRun?.player?.name, "Alex");
+  assert.equal(worseView.bestRun?.teamId, "team-a");
 
-  assert.equal(hostView(afterWalk).bestRun?.wings, 21);
-  assert.equal(hostView(afterWalk).bestRun?.player?.name, "Caitlin");
+  // The next run comes home with more: it is the new best.
+  const afterBetter = playRun(afterWorse, BETTER);
+
+  assert.equal(hostView(afterBetter).bestRun?.wings, BETTER_WINGS);
+  assert.equal(hostView(afterBetter).bestRun?.player?.name, "Caitlin");
 });
 
 test("keeps the standing best when a later run clears with fewer wings", () => {
-  const afterWalk = playRun(initialize(CLEAR_RULES), []);
-  const afterHop = playRun(afterWalk, HOP);
+  const afterBetter = playRun(initialize(CLEAR_RULES), BETTER);
+  const afterWorse = playRun(afterBetter, WORSE);
 
-  assert.equal(hostView(afterHop).bestRun?.wings, 21);
-  assert.equal(hostView(afterHop).bestRun?.player?.name, "Alex");
+  assert.equal(hostView(afterWorse).bestRun?.wings, BETTER_WINGS);
+  assert.equal(hostView(afterWorse).bestRun?.player?.name, "Alex");
 });
 
 test("never makes a run that missed the post the one to beat", () => {
@@ -387,7 +395,7 @@ test("hands the best run on to the next team through the round's memory", () => 
   const view = hostView(teamB);
 
   assert.equal(view.activeTurnTeamId, "team-b");
-  assert.equal(view.bestRun?.wings, 21);
+  assert.equal(view.bestRun?.wings, WALK_WINGS);
   assert.equal(view.bestRun?.teamId, "team-a");
   // Team B's own runs start fresh; only the ghost came across.
   assert.equal(view.runIndex, 0);
@@ -403,7 +411,7 @@ test("forgets the best a reset turn had set, but not the one it inherited", () =
   const inherited = { bestRun: { teamId: "team-b", player: null, inputs: [], wings: 5, endTick: 300 } };
   const state = playRun(initialize(CLEAR_RULES, { roundMemory: inherited }), []);
 
-  assert.equal(hostView(state).bestRun?.wings, 21);
+  assert.equal(hostView(state).bestRun?.wings, WALK_WINGS);
 
   const reset = reduce(state, "resetTurn").state;
 

@@ -22,13 +22,16 @@ test("schlonic sandbox lays out one zone for both screens and starts the run on 
 
   await expect(page.getByRole("heading", { name: "Minigame Dev Sandbox" })).toBeVisible();
 
-  // Both previews draw the same zone from the live fixture: fourteen chunks, one pit cutting the
-  // ground in two, and all four pieces of hard kit somewhere along it.
+  // Both previews draw the same zone from the live fixture: fourteen chunks, a pit cutting the
+  // ground a third of the way in, all four pieces of hard kit somewhere along it, and the
+  // finale's springboard and hole before the post.
   await expect(page.locator("[data-schlonic-scene]")).toHaveCount(2);
-  await expect(page.locator("[data-schlonic-ground-run]")).toHaveCount(4);
+  await expect(page.locator("[data-schlonic-ground-run]")).toHaveCount(6);
   await expect(page.locator("[data-schlonic-spike]")).toHaveCount(2);
   await expect(page.locator("[data-schlonic-badnik]")).toHaveCount(2);
-  await expect(page.locator("[data-schlonic-spring]")).toHaveCount(2);
+  await expect(page.locator("[data-schlonic-spring]")).toHaveCount(4);
+  // The high line is drawn bigger, because it is worth more.
+  await expect(page.locator('[data-schlonic-wing-worth="2"]').first()).toBeAttached();
   await expect(page.locator("[data-schlonic-goal]")).toHaveCount(2);
   await expect(page.getByText("Run 1 of 2")).toBeVisible();
   await expect(page.getByText("Alex is on the line — tap to go")).toBeVisible();
@@ -37,8 +40,8 @@ test("schlonic sandbox lays out one zone for both screens and starts the run on 
   const track = page.locator("[data-schlonic-track]");
 
   await expect(track).toHaveCount(1);
-  await expect(track.locator("[data-schlonic-track-hazard]")).toHaveCount(3);
-  await expect(track.locator("[data-schlonic-track-pit]")).toHaveCount(1);
+  await expect(track.locator("[data-schlonic-track-hazard]")).toHaveCount(4);
+  await expect(track.locator("[data-schlonic-track-pit]")).toHaveCount(2);
   await expect(track.locator("[data-schlonic-track-post]")).toHaveCount(1);
   await expect(track).toHaveAttribute("data-schlonic-track-percent", "0");
   await expect(page.locator("[data-schlonic-wings]").first()).toHaveText(/0 \/ 52/);

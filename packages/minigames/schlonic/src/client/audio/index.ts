@@ -20,6 +20,7 @@ export type SchlonicCueName =
   | "fell"
   | "wiped"
   | "post"
+  | "riser"
   | "bankTick"
   | "handoff"
   | "finish";
@@ -32,6 +33,7 @@ export const SCHLONIC_CUE_NAMES: readonly SchlonicCueName[] = [
   "fell",
   "wiped",
   "post",
+  "riser",
   "bankTick",
   "handoff",
   "finish"
@@ -55,6 +57,7 @@ export const SCHLONIC_CUE_MIN_GAP_MS: Record<SchlonicCueName, number> = {
   fell: 1500,
   wiped: 1500,
   post: 1500,
+  riser: 3000,
   bankTick: 45,
   handoff: 900,
   finish: 1500
@@ -141,6 +144,27 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
     playTone(context, rig, { startAt: startAt + 0.11, durationSeconds: 0.12, type: "square", fromHz: 659, peak: 0.16 });
     playTone(context, rig, { startAt: startAt + 0.22, durationSeconds: 0.45, type: "square", fromHz: 784, peak: 0.18 });
     playTone(context, rig, { startAt: startAt + 0.22, durationSeconds: 0.45, type: "triangle", fromHz: 1047, peak: 0.12, attackSeconds: 0.05 });
+  },
+  // The finale: a riser under the last two chunks, a saw sweeping up with the air opening
+  // over it, so the last ten seconds are the loudest thing in the run.
+  riser: (context, rig, startAt) => {
+    playTone(context, rig, {
+      startAt,
+      durationSeconds: 1.6,
+      type: "sawtooth",
+      fromHz: 110,
+      toHz: 440,
+      peak: 0.22,
+      attackSeconds: 0.6
+    });
+    playNoise(context, rig, {
+      startAt,
+      durationSeconds: 1.6,
+      peak: 0.14,
+      filterType: "highpass",
+      fromHz: 400,
+      toHz: 3000
+    });
   },
   // One wing into the bank: a tick that climbs as the count does. `intensity` is the share counted.
   bankTick: (context, rig, startAt, intensity) => {

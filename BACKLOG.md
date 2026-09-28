@@ -146,12 +146,10 @@ Two of seven landed 2026-09-28 on `claude/scholnic-game-improvements-27a62e`: th
   with a tick per wing, and a dozen wings flying into the bank. Follow-up: FAPPY's `audio/`
   still carries its own copy of the oscillator plumbing — move it onto the shared engine so the
   tab has one AudioContext between the two arcade games.
-- **Make greed pay, make the finale loud.** A safe floor run of the party zone banks ~80 wings
-  against par 70, so the high line is worthless (audit 2026-09-24, confirmed by bot 2026-09-28).
-  Raise par in the pack to ~100 of the zone's 122, draw high-line wings bigger and worth two, and
-  have the generator end the zone on a gauntlet: a final springboard over the bay onto the post
-  with the biggest arc of the zone in that flight. The last ten seconds should be the peak, not
-  the coast.
+- ~~**Make greed pay, make the finale loud.**~~ Done 2026-09-28: high-line wings worth two and
+  drawn bigger, par 120 in the defaults, the sample and the pack, every zone ending on a finale
+  springboard over a wide hole with the biggest arc in the flight, and a riser on the wall as the
+  runner enters the last two chunks.
 - **Failure as punchline.** A pit drop ends with the hen surfacing in the bay with a splash and a
   gull taking the wings; a wipeout sends the dropped wings rolling to the badniks, who eat them.
   Both play on the TV before the handoff card.

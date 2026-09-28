@@ -76,7 +76,7 @@
       "runsPerTurn": 3,
       "zoneSeed": 20260919,
       "zoneChunks": 22,
-      "parWingsPerRun": 70
+      "parWingsPerRun": 120
     },
     "recreate": {
       "targetsPerTurn": 1,

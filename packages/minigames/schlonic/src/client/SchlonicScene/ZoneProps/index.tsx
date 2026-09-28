@@ -1,4 +1,5 @@
 import type { SchlonicProp, SchlonicZone } from "@wingnight/shared";
+import { SCHLONIC_WORLD } from "@wingnight/shared";
 
 import { Wing } from "../Wing/index.js";
 import { Badnik } from "./Badnik/index.js";
@@ -11,9 +12,15 @@ import { Thorns } from "./Thorns/index.js";
 // there are a couple of hundred of them and the loop runs at sixty frames a second.
 export type RegisterProp = (index: number, element: SVGGElement | null) => void;
 
+// A high-line wing is worth two and drawn bigger by the same factor the sim reaches for it, so
+// what the room sees is what the bird hits (§2.11).
 const ZoneWing = ({ prop }: { prop: SchlonicProp }): JSX.Element => (
-  <g data-schlonic-wing={prop.index} transform={`translate(${prop.x} ${prop.y})`}>
-    <Wing />
+  <g
+    data-schlonic-wing={prop.index}
+    data-schlonic-wing-worth={prop.worth ?? 1}
+    transform={`translate(${prop.x} ${prop.y})`}
+  >
+    <Wing scale={(prop.worth ?? 1) > 1 ? SCHLONIC_WORLD.highLineWingScale : 1} />
   </g>
 );
 

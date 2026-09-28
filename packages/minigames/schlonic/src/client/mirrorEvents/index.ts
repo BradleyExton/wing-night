@@ -1,5 +1,5 @@
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
-import { SCHLONIC_WORLD } from "@wingnight/shared";
+import { SCHLONIC_WORLD, resolveSchlonicFinaleX } from "@wingnight/shared";
 
 /**
  * What a replay of a run can announce between one drawn frame and the next. The loops are the
@@ -12,6 +12,7 @@ export type SchlonicMirrorEvent =
   | { kind: "spring" }
   | { kind: "pop" }
   | { kind: "hit" }
+  | { kind: "finale" }
   | { kind: "cleared" }
   | { kind: "fell" }
   | { kind: "wiped" };
@@ -59,6 +60,13 @@ export const resolveMirrorEvents = (
 
   if (next.vy === SCHLONIC_WORLD.springVelocity && previous.vy !== SCHLONIC_WORLD.springVelocity) {
     events.push({ kind: "spring" });
+  }
+
+  // The last stretch begins: the post is two chunks off.
+  const finaleX = resolveSchlonicFinaleX(zone);
+
+  if (previous.x < finaleX && next.x >= finaleX) {
+    events.push({ kind: "finale" });
   }
 
   if (previous.outcome === null && next.outcome !== null) {

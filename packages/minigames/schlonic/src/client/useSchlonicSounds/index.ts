@@ -44,6 +44,11 @@ export const useSchlonicSounds = ({ view, hold }: SchlonicSoundsInput): Schlonic
         return;
       }
 
+      if (event.kind === "finale") {
+        play("riser");
+        return;
+      }
+
       play(event.kind);
     },
     [play]

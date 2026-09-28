@@ -3,6 +3,7 @@ import test, { beforeEach } from "node:test";
 
 import {
   Phase,
+  runSchlonicRun,
   toDisplayRoomStateSnapshot,
   type GameConfigFile
 } from "@wingnight/shared";
@@ -655,6 +656,7 @@ test("SCHLONIC hands the round's best run to the next team and starts the next r
     // A six-chunk zone with nothing a walking bird cannot survive, so a run with no jumps clears.
     minigameRules: { schlonic: { runsPerTurn: 1, zoneSeed: 3, zoneChunks: 6, parWingsPerRun: 20 } }
   };
+  const walkWings = runSchlonicRun({ seed: 3, chunks: 6 }, [{ tick: 0, down: true }]).wings;
   const resolveSchlonicDisplayView = () => {
     const view = getRoomStateSnapshot().minigameDisplayView;
 
@@ -675,7 +677,7 @@ test("SCHLONIC hands the round's best run to the next team and starts the next r
 
   assert.equal(teamOne.phase, "finished");
   assert.equal(teamOne.bestRun?.teamId, "team-1");
-  assert.equal(teamOne.bestRun?.wings, 21);
+  assert.equal(teamOne.bestRun?.wings, walkWings);
 
   advanceToTeamTurn(Phase.MINIGAME_PLAY, 1, "team-2");
 
@@ -684,7 +686,7 @@ test("SCHLONIC hands the round's best run to the next team and starts the next r
   assert.equal(teamTwo.activeTurnTeamId, "team-2");
   assert.equal(teamTwo.runIndex, 0);
   assert.equal(teamTwo.bestRun?.teamId, "team-1");
-  assert.equal(teamTwo.bestRun?.wings, 21);
+  assert.equal(teamTwo.bestRun?.wings, walkWings);
   assert.deepEqual(teamTwo.bestRun?.inputs, [{ tick: 0, down: true }]);
 
   advanceToRoundResultsPhase(1);

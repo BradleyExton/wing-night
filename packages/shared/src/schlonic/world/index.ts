@@ -26,6 +26,17 @@ export const SCHLONIC_WORLD = {
   pitDeathY: 104,
   /** How wide a hole in the ground is: wide enough that only a jump gets over it. */
   pitWidth: 22,
+  /**
+   * The finale's hole, before the post: wider than a tap clears, so it takes the springboard in
+   * front of it or a held jump off the lip — and the springboard is where the arc of high-line
+   * wings hangs.
+   */
+  finalePitWidth: 34,
+  /** A wing hung at least this far above the ground is on the high line, and worth two. */
+  highLineAbove: 20,
+  highLineWorth: 2,
+  /** The high line's wings are drawn and reached this much bigger, so what you see is what you hit. */
+  highLineWingScale: 1.35,
   /** How far below the lip counts as being in the hole rather than over it. */
   pitLipTolerance: 3,
   tickHz: 60,
@@ -67,7 +78,20 @@ export const SCHLONIC_WORLD = {
 const HARD_KINDS = ["pit", "spikes", "badnik", "spring"] as const;
 const SOFT_KINDS = ["flat", "hill", "dip", "rise", "drop"] as const;
 
-type ChunkKind = (typeof HARD_KINDS)[number] | (typeof SOFT_KINDS)[number];
+/**
+ * The finale: the chunk before the last, on every zone. A springboard, then a hole wider than a
+ * tap clears, then the post. The last ten seconds of a run are the loudest thing in it, not the
+ * coast they used to be, and the biggest arc of the zone hangs in the spring's flight.
+ */
+const FINALE_KIND = "finale" as const;
+
+type ChunkKind = (typeof HARD_KINDS)[number] | (typeof SOFT_KINDS)[number] | typeof FINALE_KIND;
+
+/** Where the finale's kit stands inside its chunk. */
+const FINALE_SPRING_AT = 8;
+const FINALE_PIT_AT = 22;
+/** The post is two chunks off once the runner is here: the finale has begun. */
+export const SCHLONIC_FINALE_CHUNKS = 2;
 
 /** One piece of kit in every three asks something of the player; the rest is running room. */
 const HARD_CHUNK_INTERVAL = 3;
@@ -126,6 +150,11 @@ const resolveChunkKinds = (random: () => number, chunks: number): ChunkKind[] =>
   for (let chunk = 0; chunk < chunks; chunk += 1) {
     if (chunk < 2 || chunk === chunks - 1) {
       kinds.push("flat");
+      continue;
+    }
+
+    if (chunk === chunks - 2) {
+      kinds.push(FINALE_KIND);
       continue;
     }
 
@@ -246,6 +275,13 @@ const addProp = (
   placer.props.push({ index: placer.props.length, kind, x, y });
 };
 
+/** A wing, worth two if it hangs on the high line and one on the floor. */
+const addWing = (placer: PropPlacer, x: number, y: number, above: number): void => {
+  const worth = above >= SCHLONIC_WORLD.highLineAbove ? SCHLONIC_WORLD.highLineWorth : 1;
+
+  placer.props.push({ index: placer.props.length, kind: "wing", x, y, ...(worth === 1 ? {} : { worth }) });
+};
+
 /** A line of wings hanging `above` the ground, one every 10 units. */
 const addWingRun = (placer: PropPlacer, fromX: number, count: number, above: number): void => {
   for (let step = 0; step < count; step += 1) {
@@ -253,7 +289,7 @@ const addWingRun = (placer: PropPlacer, fromX: number, count: number, above: num
     const ground = groundAt(placer.heights, placer.pits, x);
     const floor = ground >= SCHLONIC_WORLD.pitFloorY ? SCHLONIC_WORLD.groundBaseY : ground;
 
-    addProp(placer, "wing", x, Math.max(6, floor - above));
+    addWing(placer, x, Math.max(6, floor - above), above);
   }
 };
 
@@ -267,7 +303,7 @@ const addWingArc = (placer: PropPlacer, fromX: number, count: number, above: num
     const floor = ground >= SCHLONIC_WORLD.pitFloorY ? SCHLONIC_WORLD.groundBaseY : ground;
     const lift = 7 * (1 - ((step - middle) * (step - middle)) / Math.max(1, middle * middle));
 
-    addProp(placer, "wing", x, Math.max(6, floor - above - lift));
+    addWing(placer, x, Math.max(6, floor - above - lift), above + lift);
   }
 };
 
@@ -310,11 +346,23 @@ const addChunkProps = (
     for (let step = 0; step < 4; step += 1) {
       const x = springX + 6 + step * 9;
       const ground = groundAt(placer.heights, placer.pits, x);
+      const above = 22 + step * 7;
 
-      addProp(placer, "wing", x, Math.max(6, ground - 22 - step * 7));
+      addWing(placer, x, Math.max(6, ground - above), above);
     }
 
     addWingRun(placer, chunkX + 44, 2, 9);
+    return;
+  }
+
+  if (kind === FINALE_KIND) {
+    const springX = chunkX + FINALE_SPRING_AT;
+
+    addProp(placer, "spring", springX, groundAt(placer.heights, placer.pits, springX));
+    // The biggest arc in the zone, over the hole, where the spring throws you: five on the
+    // high line, and a low line under them for whoever jumps it off the lip instead.
+    addWingArc(placer, springX + 8, 5, 28);
+    addWingArc(placer, springX + 14, 4, 12);
     return;
   }
 
@@ -344,6 +392,12 @@ export const resolveSchlonicZone = ({ seed, chunks }: SchlonicZoneCourse): Schlo
   const kinds = resolveChunkKinds(random, Math.max(3, chunks));
   const heights = resolveHeights(kinds, random);
   const pits: SchlonicPit[] = kinds.flatMap((kind, chunk) => {
+    if (kind === FINALE_KIND) {
+      const fromX = chunk * SCHLONIC_WORLD.chunkWidth + FINALE_PIT_AT;
+
+      return [{ fromX, toX: fromX + SCHLONIC_WORLD.finalePitWidth, lipY: groundAt(heights, [], fromX) }];
+    }
+
     if (kind !== "pit") {
       return [];
     }
@@ -372,9 +426,14 @@ export const resolveSchlonicZone = ({ seed, chunks }: SchlonicZoneCourse): Schlo
   };
 };
 
-/** Every wing the zone holds: what a perfect run would come home with. */
+/** Every wing the zone holds, at what it is worth: what a perfect run would come home with. */
 export const resolveSchlonicWingTotal = (zone: SchlonicZone): number => {
-  return zone.props.filter((prop) => prop.kind === "wing").length;
+  return zone.props.reduce((total, prop) => total + (prop.kind === "wing" ? (prop.worth ?? 1) : 0), 0);
+};
+
+/** Where the finale begins: the post is `SCHLONIC_FINALE_CHUNKS` chunks off from here. */
+export const resolveSchlonicFinaleX = (zone: SchlonicZone): number => {
+  return zone.goalX - SCHLONIC_FINALE_CHUNKS * SCHLONIC_WORLD.chunkWidth;
 };
 
 /**

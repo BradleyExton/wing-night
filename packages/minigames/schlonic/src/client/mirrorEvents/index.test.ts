@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { SCHLONIC_WORLD, createSchlonicRunStart, resolveSchlonicZone } from "@wingnight/shared";
+import { SCHLONIC_WORLD, createSchlonicRunStart, resolveSchlonicFinaleX, resolveSchlonicZone } from "@wingnight/shared";
 
 import { resolveMirrorEvents } from "./index.js";
 
@@ -29,6 +29,15 @@ test("does hear a springboard in the velocity and a hit in the log", () => {
   assert.deepEqual(resolveMirrorEvents(START, hit, ZONE), [{ kind: "hit" }]);
   // Still on the springboard's launch the next frame: no second boing.
   assert.deepEqual(resolveMirrorEvents(sprung, { ...sprung, tick: 3 }, ZONE), []);
+});
+
+test("does call the finale once, as the runner crosses into the last two chunks", () => {
+  const finaleX = resolveSchlonicFinaleX(ZONE);
+  const before = { ...START, tick: 700, x: finaleX - 1 };
+  const after = { ...START, tick: 701, x: finaleX + 0.5 };
+
+  assert.deepEqual(resolveMirrorEvents(before, after, ZONE), [{ kind: "finale" }]);
+  assert.deepEqual(resolveMirrorEvents(after, { ...after, tick: 702, x: finaleX + 2 }, ZONE), []);
 });
 
 test("does announce an ending once, and nothing for a frame that did not move on", () => {

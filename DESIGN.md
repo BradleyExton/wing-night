@@ -1601,6 +1601,21 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     (`WingFlight`, thrown by `flyWings`). All of it is best-effort: no audio
     context, no Web Animations, a headless run — silence and stillness, never
     an exception.
+-   **Greed pays, and the finale is loud.** A wing on the high line — hung
+    `highLineAbove` or more over the ground, where only speed, a held jump or a
+    springboard reaches — is worth two (`SchlonicProp.worth`), drawn bigger by
+    `highLineWingScale` and reached at that size, so what the room sees is what
+    the bird hits. Par is set where the floor alone cannot make it (120 of the
+    default zone's 165; a bot that hops every hazard on the floor and never
+    takes a hit banks about 107, and the springboards hand it most of that),
+    which is what turns the hill lines from decoration into the decision the
+    game is built on. Every zone ends the same way: the chunk before the last is the finale
+    (`world/index.ts`), a springboard, then a hole wider than a tap clears, then
+    the post — with the biggest arc of the zone hung in the spring's flight at
+    double worth and a low line under it for whoever jumps the hole off the
+    lip. The wall plays a riser as the runner crosses into the last two chunks
+    (`resolveSchlonicFinaleX`), so the last ten seconds are the loudest thing
+    in the run rather than the coast they used to be.
 -   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
     the same one JOUST takes in §2.7 and FAPPY in §2.9: the zone is full bleed
     and is still the whole jump surface, filling the takeover's padding box edge
