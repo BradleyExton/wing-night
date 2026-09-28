@@ -52,6 +52,7 @@ test("createInitialRoomState returns setup defaults", () => {
     players: [],
     teams: [],
     lobbyPlaylist: [],
+    eatingPlaylist: [],
     gameConfig: null,
     currentRoundConfig: null,
     turnOrderTeamIds: [],

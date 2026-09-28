@@ -113,7 +113,16 @@ export const DisplayBoard = ({
   }, []);
 
   const lobbyPlaylist = roomState?.lobbyPlaylist ?? [];
+  const eatingPlaylist = roomState?.eatingPlaylist ?? [];
   const musicPlayback = roomState?.musicPlayback ?? null;
+  // The strip names the anthem's team. The server says whose it is (the
+  // leader's, on the results screens); an anthem cued without a name is the
+  // active team's, the only anthem there used to be.
+  const anthemTeamId = musicPlayback?.anthemTeamId ?? null;
+  const anthemTeamName =
+    anthemTeamId === null
+      ? activeTeamName
+      : (roomState?.teams.find((team) => team.id === anthemTeamId)?.name ?? activeTeamName);
   const musicVolume = roomState?.musicVolume ?? MUSIC_VOLUME_DEFAULT;
 
   // ONE cue on the one element. It renders `musicPlayback` and decides nothing:
@@ -136,6 +145,7 @@ export const DisplayBoard = ({
   // element exists — distinct from `musicPlayback`, which is what is playing.
   const hasAnyMusicSource =
     lobbyPlaylist.length > 0 ||
+    eatingPlaylist.length > 0 ||
     (roomState?.teams ?? []).some((team) => (team.anthems ?? []).length > 0);
 
   // A game whose display surface is the room's speaker (Who's That Song) needs the
@@ -167,7 +177,7 @@ export const DisplayBoard = ({
       <div className={styles.displayAtmosphere} data-display-atmosphere aria-hidden />
       <NowPlayingSurface
         musicPlayback={musicPlayback}
-        anthemTeamName={activeTeamName}
+        anthemTeamName={anthemTeamName}
       />
       <section className={styles.main}>
         <div className={styles.content}>

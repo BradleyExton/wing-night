@@ -4,6 +4,7 @@ import express from "express";
 import {
   CONTENT_ASSET_ROUTE_PATH,
   DEV_SANDBOX_MANIFEST_ROUTE_PATH,
+  EATING_AUDIO_ROUTE_PATH,
   LOBBY_AUDIO_ROUTE_PATH,
   SONG_GUESS_AUDIO_ROUTE_PATH,
   TEAM_AUDIO_ROUTE_PATH
@@ -63,7 +64,13 @@ export const createApp = (options: CreateAppOptions = {}): express.Express => {
   // worse, so does the room, because the element's sound now routes through
   // the graph. The display marks the element `crossOrigin="anonymous"` to ask.
   app.use(
-    [CONTENT_ASSET_ROUTE_PATH, TEAM_AUDIO_ROUTE_PATH, SONG_GUESS_AUDIO_ROUTE_PATH, LOBBY_AUDIO_ROUTE_PATH],
+    [
+      CONTENT_ASSET_ROUTE_PATH,
+      TEAM_AUDIO_ROUTE_PATH,
+      SONG_GUESS_AUDIO_ROUTE_PATH,
+      LOBBY_AUDIO_ROUTE_PATH,
+      EATING_AUDIO_ROUTE_PATH
+    ],
     allowCrossOriginMedia
   );
 
@@ -89,6 +96,11 @@ export const createApp = (options: CreateAppOptions = {}): express.Express => {
   app.use(
     LOBBY_AUDIO_ROUTE_PATH,
     express.static(resolve(contentRootDir, "local", "audio", "lobby"))
+  );
+  // The bed under the wings, same convention and same reasons.
+  app.use(
+    EATING_AUDIO_ROUTE_PATH,
+    express.static(resolve(contentRootDir, "local", "audio", "eating"))
   );
 
   return app;

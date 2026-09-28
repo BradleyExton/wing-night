@@ -39,6 +39,7 @@ The real content for a party — roster, teams, party music, generated heads, GE
   local/players.json         roster; avatarSrc is pack-relative ("avatars/rob.png")
   local/teams.json           teams, genres, anthem filenames
   local/audio/lobby/*.mp3    SETUP lobby playlist
+  local/audio/eating/*.mp3   EATING playlist, the bed under the wings
   local/teams/audio/*.mp3    team anthems
   local/assets/avatars/*     generated heads, served at /content-assets/avatars/…
   local/assets/geo/*         GEO photos, served at /content-assets/geo/…

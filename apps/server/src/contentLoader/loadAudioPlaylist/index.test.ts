@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { loadLobbyPlaylist } from "./index.js";
+import { loadEatingPlaylist, loadLobbyPlaylist } from "./index.js";
 import { createContentRoot, writeContentFile } from "../testHarness.js";
 
 const seedLobbyAudio = (fileNames: string[]): string => {
@@ -48,4 +48,15 @@ test("returns an empty playlist when the lobby directory is missing", () => {
   const contentRootDir = createContentRoot();
 
   assert.deepEqual(loadLobbyPlaylist({ contentRootDir }), []);
+});
+
+test("reads the eating playlist from its own directory, with the same rules", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(contentRoot, "local/audio/eating/02-b.mp3", "mp3-bytes");
+  writeContentFile(contentRoot, "local/audio/eating/01-a.MP3", "mp3-bytes");
+  writeContentFile(contentRoot, "local/audio/lobby/01-lobby.mp3", "mp3-bytes");
+
+  assert.deepEqual(loadEatingPlaylist({ contentRootDir: contentRoot }), ["01-a.MP3", "02-b.mp3"]);
+  assert.deepEqual(loadLobbyPlaylist({ contentRootDir: contentRoot }), ["01-lobby.mp3"]);
 });

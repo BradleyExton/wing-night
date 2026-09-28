@@ -1,4 +1,8 @@
-import { MUSIC_PLAYBACK_SOURCES, type MusicPlaybackSource } from "@wingnight/shared";
+import {
+  EATING_AUDIO_ROUTE_PATH,
+  MUSIC_PLAYBACK_SOURCES,
+  type MusicPlaybackSource
+} from "@wingnight/shared";
 
 import { resolveAnthemSrc } from "../resolveAnthemSrc";
 import { resolveLobbyTrackSrc } from "../resolveLobbyTrackSrc";
@@ -15,6 +19,10 @@ export const resolveMusicTrackSrc = (
 ): string => {
   if (source === MUSIC_PLAYBACK_SOURCES.LOBBY) {
     return resolveLobbyTrackSrc(trackFileName, serverOrigin);
+  }
+
+  if (source === MUSIC_PLAYBACK_SOURCES.EATING) {
+    return `${serverOrigin}${EATING_AUDIO_ROUTE_PATH}/${encodeURIComponent(trackFileName)}`;
   }
 
   return resolveAnthemSrc(trackFileName, serverOrigin);

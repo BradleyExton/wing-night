@@ -200,6 +200,7 @@ export const hostCopy = {
   timerExtendThirtyButtonLabel: "+30s",
   musicSectionTitle: "Music",
   musicLobbyStatusLabel: "Lobby",
+  musicEatingStatusLabel: "Eating",
   musicAnthemStatusLabel: "Anthem",
   musicPlayingStatusLabel: "Playing",
   musicPausedStatusLabel: "Paused",

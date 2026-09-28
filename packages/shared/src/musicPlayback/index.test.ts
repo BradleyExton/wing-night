@@ -2,9 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  MUSIC_PLAYBACK_SOURCES,
+  isPlaylistSource,
   isValidMusicVolume,
   resolveAnthemForRound,
   resolveAnthemIndexForRound,
+  resolveEatingTrackIndexForTurn,
   resolveNextTrackIndex,
   resolvePreviousTrackIndex,
   resolveTrackTitle
@@ -119,4 +122,25 @@ test("keeps a filename that is nothing but a track number", () => {
 // with nothing left after the prefix strip is reachable.
 test("falls back to the unstripped name when nothing survives the strip", () => {
   assert.equal(resolveTrackTitle("01-.mp3"), "01");
+});
+
+test("does treat the lobby and eating lists as playlists and the anthem as a one-shot", () => {
+  assert.equal(isPlaylistSource(MUSIC_PLAYBACK_SOURCES.LOBBY), true);
+  assert.equal(isPlaylistSource(MUSIC_PLAYBACK_SOURCES.EATING), true);
+  assert.equal(isPlaylistSource(MUSIC_PLAYBACK_SOURCES.ANTHEM), false);
+});
+
+test("does open each turn's eating on the next track of the list, wrapping across the night", () => {
+  // Four teams, three tracks: turn n of the night opens on track n mod 3.
+  assert.equal(resolveEatingTrackIndexForTurn(3, 1, 0, 4), 0);
+  assert.equal(resolveEatingTrackIndexForTurn(3, 1, 1, 4), 1);
+  assert.equal(resolveEatingTrackIndexForTurn(3, 1, 3, 4), 0);
+  assert.equal(resolveEatingTrackIndexForTurn(3, 2, 0, 4), 1);
+  assert.equal(resolveEatingTrackIndexForTurn(3, 2, 2, 4), 0);
+});
+
+test("does stay on the first track when the list is empty or the turn is not set yet", () => {
+  assert.equal(resolveEatingTrackIndexForTurn(0, 1, 0, 4), 0);
+  assert.equal(resolveEatingTrackIndexForTurn(3, null, -1, 4), 0);
+  assert.equal(resolveEatingTrackIndexForTurn(3, 0, -1, 0), 0);
 });

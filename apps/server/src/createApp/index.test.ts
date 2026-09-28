@@ -6,6 +6,7 @@ import type { AddressInfo } from "node:net";
 
 import {
   CONTENT_ASSET_ROUTE_PATH,
+  EATING_AUDIO_ROUTE_PATH,
   LOBBY_AUDIO_ROUTE_PATH,
   SONG_GUESS_AUDIO_ROUTE_PATH,
   TEAM_AUDIO_ROUTE_PATH
@@ -55,14 +56,22 @@ test("does let a display on another origin read its media when it asks with CORS
 
   writeContentFile(contentRoot, "sample/teams/audio/blaze.mp3", "sample-bytes");
   writeContentFile(contentRoot, "local/audio/lobby/opener.mp3", "lobby-bytes");
+  writeContentFile(contentRoot, "local/audio/eating/wings.mp3", "eating-bytes");
 
   await withApp(async (baseUrl) => {
     const anthem = await fetch(`${baseUrl}${TEAM_AUDIO_ROUTE_PATH}/blaze.mp3`);
     const lobby = await fetch(`${baseUrl}${LOBBY_AUDIO_ROUTE_PATH}/opener.mp3`);
+    // Without this header the element's play() rejects with "no supported
+    // source" even though the file itself is served — the mount worked and the
+    // TV stayed silent, which is how the eating route shipped its first hour.
+    const eating = await fetch(`${baseUrl}${EATING_AUDIO_ROUTE_PATH}/wings.mp3`);
     const health = await fetch(`${baseUrl}/health`);
 
     assert.equal(anthem.headers.get("access-control-allow-origin"), "*");
     assert.equal(lobby.headers.get("access-control-allow-origin"), "*");
+    assert.equal(eating.headers.get("access-control-allow-origin"), "*");
+    assert.equal(eating.status, 200);
+    assert.equal(await eating.text(), "eating-bytes");
     assert.equal(health.headers.get("access-control-allow-origin"), null);
   }, contentRoot);
 });

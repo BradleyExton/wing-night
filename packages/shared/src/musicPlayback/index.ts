@@ -9,15 +9,31 @@
 export const MUSIC_PLAYBACK_SOURCES = {
   // The SETUP lobby playlist: `content/local/audio/lobby/`, filename-ordered.
   LOBBY: "LOBBY",
-  // The active team's anthem for the round: `Team.anthems`, round-rotated.
+  // The EATING playlist: `content/local/audio/eating/`, the same convention.
+  // The longest silent stretch of the night was the wings themselves.
+  EATING: "EATING",
+  // A team's anthem: the active team's at MINIGAME_INTRO, the leader's on the
+  // results screens. `Team.anthems`, round-rotated.
   ANTHEM: "ANTHEM"
 } as const;
 
 export type MusicPlaybackSource =
   (typeof MUSIC_PLAYBACK_SOURCES)[keyof typeof MUSIC_PLAYBACK_SOURCES];
 
+// A playlist is a standing thing the server advances through and the display
+// loops when it is one track long; an anthem is a one-shot cue. Every rule
+// that tells the two apart reads this rather than naming the sources.
+export const isPlaylistSource = (source: MusicPlaybackSource): boolean => {
+  return source === MUSIC_PLAYBACK_SOURCES.LOBBY || source === MUSIC_PLAYBACK_SOURCES.EATING;
+};
+
 export type RoomMusicPlaybackState = {
   source: MusicPlaybackSource;
+  // Whose anthem, for `ANTHEM`: the display names the team on its strip and
+  // the server re-reads that team's list when the host skips. Absent on a
+  // playlist, and absent on an anthem cued before this field existed, which
+  // falls back to the active team — the only anthem there used to be.
+  anthemTeamId?: string;
   // The filename inside that source's directory. The display turns it into a
   // URL, because only the display knows the server origin.
   trackFileName: string;
@@ -70,6 +86,28 @@ export const resolveAnthemForRound = (
   }
 
   return anthems[resolveAnthemIndexForRound(anthems.length, currentRound)] ?? null;
+};
+
+// Which eating track opens a turn's EATING. Deterministic by the turn's place
+// in the night — the same contract as the anthem rotation, for the same
+// refresh-mid-phase reason — and different from one turn to the next, so a
+// four-track playlist is heard across a night rather than its first track
+// eight times. A turn's own cut-off track resumes where it faded out when it
+// comes round again (`musicPositionMemory`, on the TV).
+export const resolveEatingTrackIndexForTurn = (
+  trackCount: number,
+  currentRound: number | null,
+  roundTurnCursor: number,
+  teamsPerRound: number
+): number => {
+  if (trackCount <= 0) {
+    return 0;
+  }
+
+  const roundOffset = Math.max(0, (currentRound ?? 1) - 1) * Math.max(0, teamsPerRound);
+  const turnNumber = roundOffset + Math.max(0, roundTurnCursor);
+
+  return turnNumber % trackCount;
 };
 
 // Sequential and wrapping, never shuffled: two displays (or one display and a

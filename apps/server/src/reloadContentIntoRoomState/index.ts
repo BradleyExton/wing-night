@@ -7,6 +7,7 @@ import {
   getRoomStateSnapshot,
   reportRoomStateMutation,
   setRoomStateGameConfig,
+  setRoomStateEatingPlaylist,
   setRoomStateLobbyPlaylist,
   setRoomStateMinigameContent,
   setRoomStatePlayers,
@@ -54,12 +55,13 @@ export const reloadContentIntoRoomState = (
   // throw on content the validators let through, and a throw there would
   // otherwise escape into a socket.io listener with no handler above it.
   try {
-    const { players, teams, lobbyPlaylist, gameConfig, minigameContentById } =
+    const { players, teams, lobbyPlaylist, eatingPlaylist, gameConfig, minigameContentById } =
       loadContent(options);
 
     setRoomStatePlayers(players);
     setRoomStateTeams(teams);
     setRoomStateLobbyPlaylist(lobbyPlaylist);
+    setRoomStateEatingPlaylist(eatingPlaylist);
     setRoomStateGameConfig(gameConfig);
 
     for (const [minigameId, minigameContent] of Object.entries(

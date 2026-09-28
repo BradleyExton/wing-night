@@ -68,6 +68,7 @@ export const buildRoomState = (
     players: fixturePlayers,
     teams: fixtureTeams,
     lobbyPlaylist: [],
+    eatingPlaylist: [],
     gameConfig,
     currentRoundConfig: gameConfig?.rounds[0] ?? null,
     turnOrderTeamIds: fixtureTeams.map((team) => team.id),

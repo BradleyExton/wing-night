@@ -18,6 +18,7 @@ const createRoomStateFixture = (): RoomState => {
     players: [],
     teams: [],
     lobbyPlaylist: [],
+    eatingPlaylist: [],
     gameConfig: null,
     currentRoundConfig: null,
     turnOrderTeamIds: [],

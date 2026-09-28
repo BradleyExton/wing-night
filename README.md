@@ -246,7 +246,16 @@ ordering mechanism. It plays through SETUP only, sequentially, looping,
 and hands the speaker back the moment the game starts. No directory, or
 an empty one, means a silent setup screen — never an error.
 
-Both share the display's single audio element and the one-tap unlock
+<pack>/local/audio/eating/ — the bed under the wings. Served at
+/eating-audio/<filename>, the same directory convention as the lobby. It
+plays through EATING only, opening each turn's eating on the next track
+of the list, and a track cut off by the clock picks up where it left off
+next time round. Empty or missing means silent eating — never an error.
+
+Results screens play the anthem of the team strictly in the lead (round
+and final); a tie at the top plays nothing.
+
+All of these share the display's single audio element and the one-tap unlock
 overlay, so a tap while guests are still arriving covers the whole night.
 
 ------------------------------------------------------------------------

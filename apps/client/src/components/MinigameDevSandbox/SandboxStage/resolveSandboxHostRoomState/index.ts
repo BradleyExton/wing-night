@@ -93,6 +93,7 @@ export const resolveSandboxHostRoomState = (
     players: [],
     teams: teams.map((team) => ({ ...team, playerIds: [...team.playerIds] })),
     lobbyPlaylist: [],
+    eatingPlaylist: [],
     gameConfig: null,
     currentRoundConfig: null,
     turnOrderTeamIds: [],

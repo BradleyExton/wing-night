@@ -35,3 +35,10 @@ test("percent-encodes a filename with spaces on either source", () => {
     `${SERVER_ORIGIN}/lobby-audio/hot%20in%20herre.mp3`
   );
 });
+
+test("routes an eating track to the eating audio path", () => {
+  assert.equal(
+    resolveMusicTrackSrc(MUSIC_PLAYBACK_SOURCES.EATING, "02-hot stuff.mp3", "http://10.0.0.2:3000"),
+    "http://10.0.0.2:3000/eating-audio/02-hot%20stuff.mp3"
+  );
+});

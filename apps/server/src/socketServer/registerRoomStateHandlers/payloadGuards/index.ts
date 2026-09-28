@@ -125,6 +125,7 @@ export const isMusicTrackEndedPayload = (
   hasShape(payload, {
     source: (value) =>
       value === MUSIC_PLAYBACK_SOURCES.LOBBY ||
+      value === MUSIC_PLAYBACK_SOURCES.EATING ||
       value === MUSIC_PLAYBACK_SOURCES.ANTHEM,
     trackIndex: (value) =>
       typeof value === "number" && Number.isInteger(value) && value >= 0

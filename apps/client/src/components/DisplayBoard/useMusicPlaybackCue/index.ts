@@ -1,5 +1,5 @@
 import {
-  MUSIC_PLAYBACK_SOURCES,
+  isPlaylistSource,
   type MusicPlaybackSource,
   type RoomMusicPlaybackState
 } from "@wingnight/shared";
@@ -70,8 +70,8 @@ export const shouldFadeOutFirst = (
 
 // Whether the element itself should repeat the track it is on.
 //
-// Only ever the lobby, and only when it is the playlist's one track. A
-// multi-track playlist advances through the server — the display reports the
+// Only ever a playlist (the lobby's or the eating one), and only when it is
+// the playlist's one track. A multi-track playlist advances through the server — the display reports the
 // track ended, the server moves its cursor, the next snapshot names the next
 // file — which is what keeps a refresh, a second display and a host skip
 // agreeing about where the playlist is. A ONE-track playlist has nowhere to
@@ -88,7 +88,7 @@ export const shouldLoopTrack = (
 ): boolean => {
   return (
     musicPlayback !== null &&
-    musicPlayback.source === MUSIC_PLAYBACK_SOURCES.LOBBY &&
+    isPlaylistSource(musicPlayback.source) &&
     musicPlayback.trackCount <= 1
   );
 };

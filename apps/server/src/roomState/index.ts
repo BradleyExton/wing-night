@@ -8,6 +8,7 @@ export {
   setRoomStateFatalError,
   setRoomStatePlayers,
   setRoomStateTeams,
+  setRoomStateEatingPlaylist,
   setRoomStateLobbyPlaylist,
   setRoomStateGameConfig,
   setRoomStateMinigameContent

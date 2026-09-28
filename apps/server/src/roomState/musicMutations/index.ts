@@ -52,7 +52,7 @@ export const skipRoomMusicTrack = defineRoomMutation({
       return false;
     }
 
-    const tracks = resolveMusicTrackList(roomState, music.source);
+    const tracks = resolveMusicTrackList(roomState, music);
     const nextIndex = resolveNextTrackIndex(music.trackIndex, tracks.length);
     const nextMusic = resolveMusicAtIndex(roomState, music, nextIndex, true);
 
@@ -79,7 +79,7 @@ export const previousRoomMusicTrack = defineRoomMutation({
       return false;
     }
 
-    const tracks = resolveMusicTrackList(roomState, music.source);
+    const tracks = resolveMusicTrackList(roomState, music);
     const previousIndex = resolvePreviousTrackIndex(music.trackIndex, tracks.length);
     const previousMusic = resolveMusicAtIndex(roomState, music, previousIndex, true);
 
@@ -144,7 +144,7 @@ export const reportRoomMusicTrackEnded = defineRoomMutation({
       return true;
     }
 
-    const tracks = resolveMusicTrackList(roomState, music.source);
+    const tracks = resolveMusicTrackList(roomState, music);
     const nextTrackIndex = resolveNextTrackIndex(music.trackIndex, tracks.length);
 
     // A one-track playlist wraps to itself, so there is no next track to move

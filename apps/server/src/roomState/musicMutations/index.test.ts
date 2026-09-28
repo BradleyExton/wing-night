@@ -241,8 +241,12 @@ test("plays the active team's round anthem at MINIGAME_INTRO", () => {
   seedTeamsWithAnthems();
   advanceUntil(Phase.MINIGAME_INTRO, 1);
 
-  assert.deepEqual(getRoomStateSnapshot().musicPlayback, {
+  const snapshot = getRoomStateSnapshot();
+
+  assert.deepEqual(snapshot.musicPlayback, {
     source: MUSIC_PLAYBACK_SOURCES.ANTHEM,
+    // Named, so the strip and a host skip both read the same team.
+    anthemTeamId: snapshot.activeRoundTeamId ?? snapshot.activeTurnTeamId,
     trackFileName: "blaze-one.mp3",
     trackIndex: 0,
     trackCount: 2,
@@ -253,6 +257,7 @@ test("plays the active team's round anthem at MINIGAME_INTRO", () => {
 test("silences the music on a phase that owns no music", () => {
   seedLobbyPlaylist();
   seedTeamsWithAnthems();
+  // EATING owns the eating playlist, and this room has none: silence.
   advanceUntil(Phase.EATING, 1);
 
   assert.equal(getRoomStateSnapshot().musicPlayback, null);

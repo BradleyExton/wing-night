@@ -87,6 +87,13 @@ test("loops the lobby when the playlist holds a single track", () => {
   assert.equal(shouldLoopTrack(buildMusic({ trackCount: 1 })), true);
 });
 
+test("does loop a one-track eating playlist the same way", () => {
+  assert.equal(
+    shouldLoopTrack(buildMusic({ source: MUSIC_PLAYBACK_SOURCES.EATING, trackCount: 1 })),
+    true
+  );
+});
+
 test("does not loop a lobby playlist the server can advance through", () => {
   assert.equal(shouldLoopTrack(buildMusic({ trackCount: 3 })), false);
 });

@@ -141,6 +141,7 @@ export const resetGameToSetup = defineRoomMutation({
     // here would silence the lobby music at exactly the moment a reset returns
     // the room to SETUP and people start milling around again.
     nextState.lobbyPlaylist = structuredClone(previousSnapshot.lobbyPlaylist);
+    nextState.eatingPlaylist = structuredClone(previousSnapshot.eatingPlaylist);
     // Same carry-through, same reason: the volume is how loud the TV is in
     // THIS room, and a reset should not blast the lobby at the default.
     nextState.musicVolume = previousSnapshot.musicVolume;
@@ -222,6 +223,17 @@ export const setRoomStateTeams = (teams: Team[]): RoomState => {
 
 // No setup-baseline sync: the playlist is not part of what "Reset Game"
 // restores, it is part of what a reset carries through untouched.
+export const setRoomStateEatingPlaylist = (eatingPlaylist: string[]): RoomState => {
+  const roomState = getRoomState();
+
+  roomState.eatingPlaylist = structuredClone(eatingPlaylist);
+  // A mid-party reload while the wings are out picks up the new list the
+  // same way the lobby does.
+  setMusicForPhase(roomState, roomState.phase);
+
+  return getRoomStateSnapshot();
+};
+
 export const setRoomStateLobbyPlaylist = (lobbyPlaylist: string[]): RoomState => {
   const roomState = getRoomState();
 

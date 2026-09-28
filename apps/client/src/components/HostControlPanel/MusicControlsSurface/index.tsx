@@ -49,7 +49,9 @@ export const MusicControlsSurface = ({
   const sourceLabel =
     source === MUSIC_PLAYBACK_SOURCES.LOBBY
       ? hostControlPanelCopy.musicLobbyStatusLabel
-      : hostControlPanelCopy.musicAnthemStatusLabel;
+      : source === MUSIC_PLAYBACK_SOURCES.EATING
+        ? hostControlPanelCopy.musicEatingStatusLabel
+        : hostControlPanelCopy.musicAnthemStatusLabel;
   const stateLabel = isPlaying
     ? hostControlPanelCopy.musicPlayingStatusLabel
     : hostControlPanelCopy.musicPausedStatusLabel;

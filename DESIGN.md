@@ -525,7 +525,8 @@ Timer must be the most visually dominant element during EATING.
 ### 2.2A Now-Playing Strip
 
 A single full-bleed row directly above the fixed standings footer, shown only on the phases that
-own music (SETUP's lobby playlist, MINIGAME_INTRO's team anthem). Mockup:
+own music (SETUP's lobby playlist, EATING's eating playlist, MINIGAME_INTRO's team anthem, and the
+leader's anthem on ROUND_RESULTS and FINAL_RESULTS). Mockup:
 `apps/client/public/mockups/now-playing/`.
 
 -   It shares the standings footer's hairline top edge so the two read as one bottom band, but the

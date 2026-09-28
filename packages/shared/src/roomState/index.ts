@@ -704,6 +704,9 @@ export type RoomState = {
   // content, not gameplay state: it is seeded by the content load and then
   // never mutated by a phase advance.
   lobbyPlaylist: string[];
+  // Filenames under `content/local/audio/eating/`, the same convention: the
+  // bed under the wings, and nothing else in the night.
+  eatingPlaylist: string[];
   gameConfig: GameConfigFile | null;
   currentRoundConfig: GameConfigRound | null;
   turnOrderTeamIds: string[];
@@ -741,6 +744,7 @@ type DisplaySafeRoomStateKeys =
   | "players"
   | "teams"
   | "lobbyPlaylist"
+  | "eatingPlaylist"
   | "gameConfig"
   | "currentRoundConfig"
   | "turnOrderTeamIds"
@@ -768,6 +772,7 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "players",
   "teams",
   "lobbyPlaylist",
+  "eatingPlaylist",
   "gameConfig",
   "currentRoundConfig",
   "turnOrderTeamIds",
@@ -820,6 +825,7 @@ export const toDisplayRoomStateSnapshot = (
     players: roomState.players,
     teams: roomState.teams,
     lobbyPlaylist: roomState.lobbyPlaylist,
+    eatingPlaylist: roomState.eatingPlaylist,
     gameConfig: roomState.gameConfig,
     currentRoundConfig: roomState.currentRoundConfig,
     turnOrderTeamIds: roomState.turnOrderTeamIds,

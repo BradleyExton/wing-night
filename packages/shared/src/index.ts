@@ -199,6 +199,7 @@ export type {
   WordmarkTreatment
 } from "./teamTheme/index.js";
 export { LOBBY_AUDIO_ROUTE_PATH } from "./lobbyAudio/index.js";
+export { EATING_AUDIO_ROUTE_PATH } from "./eatingAudio/index.js";
 export {
   CONTENT_ASSET_ROUTE_PATH,
   resolveContentAssetSrc
@@ -209,6 +210,8 @@ export {
 } from "./devSandbox/index.js";
 export {
   MUSIC_PLAYBACK_SOURCES,
+  isPlaylistSource,
+  resolveEatingTrackIndexForTurn,
   MUSIC_VOLUME_DEFAULT,
   MUSIC_VOLUME_MAX,
   MUSIC_VOLUME_MIN,

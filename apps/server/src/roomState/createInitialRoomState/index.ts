@@ -16,6 +16,7 @@ export const createInitialRoomState = (): RoomState => {
     players: [],
     teams: [],
     lobbyPlaylist: [],
+    eatingPlaylist: [],
     gameConfig: null,
     currentRoundConfig: null,
     turnOrderTeamIds: [],
