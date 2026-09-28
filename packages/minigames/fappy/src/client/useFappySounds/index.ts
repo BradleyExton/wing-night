@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { FappyMinigameDisplayView, FappyPhase } from "@wingnight/shared";
+import {
+  resolveSfxTakesUrl,
+  type FappyMinigameDisplayView,
+  type FappyPhase
+} from "@wingnight/shared";
+import { useSfxTakes } from "@wingnight/surface";
 
 import {
+  FAPPY_SFX_FOLDER,
   createFappySoundboard,
   resolveClockCue,
   type FappyCueName,
@@ -33,6 +39,7 @@ type FappySoundsInput = {
   hold: LegHold | null;
   /** The relay clock's running time, or null before the first flap. */
   elapsedMs: number | null;
+  serverOrigin: string | null;
 };
 
 /**
@@ -47,7 +54,13 @@ type FappySoundsInput = {
  * Nothing sounds before the relay's first flap (which is also what sets `startedAtMs`), so the
  * intro and a team still reading the briefing are silent by construction.
  */
-export const useFappySounds = ({ view, hold, elapsedMs }: FappySoundsInput): FappyMirrorEventHandler => {
+export const useFappySounds = ({
+  view,
+  hold,
+  elapsedMs,
+  serverOrigin
+}: FappySoundsInput): FappyMirrorEventHandler => {
+  const takes = useSfxTakes(resolveSfxTakesUrl(FAPPY_SFX_FOLDER, serverOrigin));
   // Made on the first cue rather than on mount, so a surface that is only ever looked at
   // never asks the browser for an audio context at all.
   const boardRef = useRef<FappySoundboard | null>(null);
@@ -55,6 +68,13 @@ export const useFappySounds = ({ view, hold, elapsedMs }: FappySoundsInput): Fap
     boardRef.current ??= createFappySoundboard();
     boardRef.current.play(cue, intensity);
   }, []);
+
+  // A board per take listing, made as the takes land so they have decoded before the first cue.
+  // With none, the board waits for the first cue as before. `play` reads the ref, so the
+  // handlers keep their identity across the swap.
+  useEffect(() => {
+    boardRef.current = Object.keys(takes).length === 0 ? null : createFappySoundboard({ takes });
+  }, [takes]);
 
   // Read by the stable mirror handler, so it always sees the current relay rather than the one
   // that was current when the mirror's effect last ran.

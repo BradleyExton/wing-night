@@ -6,6 +6,7 @@ import {
   DEV_SANDBOX_MANIFEST_ROUTE_PATH,
   EATING_AUDIO_ROUTE_PATH,
   LOBBY_AUDIO_ROUTE_PATH,
+  SFX_TAKES_ROUTE_PATH,
   SONG_GUESS_AUDIO_ROUTE_PATH,
   TEAM_AUDIO_ROUTE_PATH
 } from "@wingnight/shared";
@@ -16,6 +17,7 @@ import {
 } from "../contentLoader/contentLoaderUtils/index.js";
 import { createDevSandboxRouter } from "../routes/devSandbox/index.js";
 import { healthRouter } from "../routes/health/index.js";
+import { createSfxTakesRouter } from "../routes/sfxTakes/index.js";
 
 type CreateAppOptions = {
   contentRootDir?: string;
@@ -55,6 +57,15 @@ export const createApp = (options: CreateAppOptions = {}): express.Express => {
     DEV_SANDBOX_MANIFEST_ROUTE_PATH,
     allowCrossOriginMedia,
     createDevSandboxRouter({ contentRootDir })
+  );
+
+  // Which recorded takes the TV can play for a game's cues. JSON fetched by
+  // script, like the sandbox manifest, so it carries the header on its own
+  // mount; the takes themselves are ordinary content assets.
+  app.use(
+    SFX_TAKES_ROUTE_PATH,
+    allowCrossOriginMedia,
+    createSfxTakesRouter({ contentRootDir })
   );
 
   // The TV listens to its own music: the display taps its `<audio>` with a

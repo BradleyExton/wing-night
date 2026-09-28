@@ -34,3 +34,9 @@ export {
 } from "./ResultPlaque/index.js";
 // The house cues, played from a surface (`@wingnight/audio` holds the board).
 export { useHouseSoundboard, type PlayHouseCue } from "./useHouseSoundboard/index.js";
+// A game's recorded takes, fetched from the pack for its board (`@wingnight/audio`).
+export {
+  resolveSfxTakeUrls,
+  useSfxTakes,
+  type SfxTakeUrls
+} from "./useSfxTakes/index.js";

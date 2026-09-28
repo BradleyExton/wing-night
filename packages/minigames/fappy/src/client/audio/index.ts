@@ -196,7 +196,14 @@ export const FAPPY_CUES: CueTable<FappyCueName> = {
 
 export type FappySoundboard = Soundboard<FappyCueName>;
 
-export type FappySoundboardOptions = Pick<SoundboardOptions<FappyCueName>, "createContext" | "now">;
+// The pack folder its recorded takes live in: `assets/sfx/fappy/crash-1.mp3` is a take of `crash`.
+// A cue with none keeps its synthesis.
+export const FAPPY_SFX_FOLDER = "fappy";
+
+export type FappySoundboardOptions = Pick<
+  SoundboardOptions<FappyCueName>,
+  "createContext" | "now" | "takes" | "loadTake"
+>;
 
 export const createFappySoundboard = (options: FappySoundboardOptions = {}): FappySoundboard =>
   createSoundboard({ cues: FAPPY_CUES, masterGain: FAPPY_MASTER_GAIN, ...options });

@@ -56,6 +56,7 @@ export const createStubAudioContext = (state: AudioContextState = "running"): St
     }),
     createBufferSource: () => ({
       buffer: null,
+      playbackRate: createStubParam(),
       connect: (): void => undefined,
       start: (): void => {
         startedNodes += 1;

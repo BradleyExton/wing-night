@@ -3,7 +3,13 @@ import test from "node:test";
 
 import { createStubAudioContext } from "../stubAudioContext/index.js";
 import { playTone } from "../voices/index.js";
-import { createSoundboard, isCueDue, setAudioBusLevel, type CueTable } from "./index.js";
+import {
+  MAX_RINGING_TAKES,
+  createSoundboard,
+  isCueDue,
+  setAudioBusLevel,
+  type CueTable
+} from "./index.js";
 
 type TestCue = "blip" | "thud";
 
@@ -139,4 +145,128 @@ test("does clamp a bus level to the unit range and ignore a level that is not a 
     setAudioBusLevel("sfx", Number.NaN);
     setAudioBusLevel("sfx", 1);
   });
+});
+
+// A decoded take, as far as the board can tell: it only ever reads the length.
+const fakeTake = (durationSeconds: number): AudioBuffer => ({ duration: durationSeconds }) as AudioBuffer;
+
+// A loader that answers every URL with a one-second take, and remembers what it was asked for.
+const createTakeLoader = (): { load: (context: AudioContext, url: string) => Promise<AudioBuffer>; asked: string[] } => {
+  const asked: string[] = [];
+
+  return {
+    asked,
+    load: (_context, url) => {
+      asked.push(url);
+      return Promise.resolve(fakeTake(1));
+    }
+  };
+};
+
+const settleTakes = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
+
+test("does start decoding a cue's takes when the board is made", () => {
+  const stub = createStubAudioContext();
+  const loader = createTakeLoader();
+
+  createSoundboard({
+    cues: CUES,
+    masterGain: 0.3,
+    takes: { thud: ["http://tv/thud-1.mp3", "http://tv/thud-2.mp3"] },
+    createContext: () => stub.context,
+    loadTake: loader.load
+  });
+
+  assert.deepEqual(loader.asked, ["http://tv/thud-1.mp3", "http://tv/thud-2.mp3"]);
+});
+
+test("does play the cue's voice when its take has not decoded yet", () => {
+  const stub = createStubAudioContext();
+  const board = createSoundboard({
+    cues: CUES,
+    masterGain: 0.3,
+    takes: { thud: ["http://tv/thud-pending.mp3"] },
+    createContext: () => stub.context,
+    loadTake: () => new Promise<AudioBuffer>(() => undefined),
+    now: () => 0
+  });
+
+  board.play("thud");
+
+  // The two tones of the synthesised thud.
+  assert.equal(stub.startedNodes(), 2);
+});
+
+test("does play one take instead of the voice when a take has decoded", async () => {
+  const stub = createStubAudioContext();
+  const board = createSoundboard({
+    cues: CUES,
+    masterGain: 0.3,
+    takes: { thud: ["http://tv/thud-decoded.mp3"] },
+    createContext: () => stub.context,
+    loadTake: createTakeLoader().load,
+    now: () => 0
+  });
+
+  await settleTakes();
+  board.play("thud");
+
+  assert.equal(stub.startedNodes(), 1);
+});
+
+test("does keep a cue without takes on its voice when another cue has them", async () => {
+  const stub = createStubAudioContext();
+  const board = createSoundboard({
+    cues: CUES,
+    masterGain: 0.3,
+    takes: { thud: ["http://tv/thud-other.mp3"] },
+    createContext: () => stub.context,
+    loadTake: createTakeLoader().load,
+    now: () => 0
+  });
+
+  await settleTakes();
+  board.play("blip");
+
+  assert.equal(stub.startedNodes(), 1);
+});
+
+test("does fall back to the voice when every take failed to decode", async () => {
+  const stub = createStubAudioContext();
+  const board = createSoundboard({
+    cues: CUES,
+    masterGain: 0.3,
+    takes: { thud: ["http://tv/thud-broken.mp3"] },
+    createContext: () => stub.context,
+    loadTake: () => Promise.reject(new Error("not audio")),
+    now: () => 0
+  });
+
+  await settleTakes();
+  board.play("thud");
+
+  assert.equal(stub.startedNodes(), 2);
+});
+
+test("does drop a take when the cue already has its cap of takes ringing", async () => {
+  const stub = createStubAudioContext();
+  let nowMs = 0;
+  const board = createSoundboard({
+    cues: { ...CUES, blip: { ...CUES.blip, minGapMs: 0 } },
+    masterGain: 0.3,
+    takes: { blip: ["http://tv/blip-long.mp3"] },
+    createContext: () => stub.context,
+    loadTake: createTakeLoader().load,
+    now: () => nowMs
+  });
+
+  await settleTakes();
+
+  // The stub's clock never moves, so every take is still ringing when the next arrives.
+  for (let index = 0; index < MAX_RINGING_TAKES + 2; index += 1) {
+    board.play("blip");
+    nowMs += 10;
+  }
+
+  assert.equal(stub.startedNodes(), MAX_RINGING_TAKES);
 });

@@ -1,9 +1,9 @@
-// The two instruments every cue in the house is played on: a tone (one
+// The two instruments every cue in the house is SYNTHESISED on: a tone (one
 // oscillator under a gain envelope, optionally sliding in pitch) and a burst
-// of filtered noise. There are no audio files anywhere in the show — a party
-// pack must not carry a megabyte of samples and this machine has no MP3
-// encoder to make them with — so a cue is a few of these scheduled a hair
-// apart, and the numbers in a cue table are the whole sound.
+// of filtered noise. A cue is a few of these scheduled a hair apart, and the
+// numbers in a cue table are the whole sound. Recorded takes (`../takes`) can
+// stand in for a cue's voice, but they live in the night pack, never the repo,
+// so these voices are what every cue sounds like without one.
 //
 // A voice is handed a `CueRig`: the context, the gain node the board's cues
 // leave through, and the one noise buffer the board made for that context.

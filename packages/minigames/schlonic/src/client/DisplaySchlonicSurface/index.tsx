@@ -157,7 +157,7 @@ const SchlonicPlayBody = ({
   const isFinished = view.phase === "finished";
 
   // The TV is the room's speaker, so SCHLONIC's whole soundboard hangs off this one surface.
-  const { onMirrorEvent, onBankTick } = useSchlonicSounds({ view, hold });
+  const { onMirrorEvent, onBankTick } = useSchlonicSounds({ view, hold, serverOrigin });
 
   useSchlonicMirror({
     run,

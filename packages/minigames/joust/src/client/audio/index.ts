@@ -23,6 +23,10 @@ export const JOUST_CUE_NAMES: readonly JoustCueName[] = [
   "rackCleared"
 ];
 
+// The pack folder its recorded takes live in: `assets/sfx/joust/topple-1.mp3` is a take of
+// `topple`. A cue with none keeps the synthesis below.
+export const JOUST_SFX_FOLDER = "joust";
+
 // Under the party music, like FAPPY's.
 export const JOUST_MASTER_GAIN = 0.25;
 
@@ -145,7 +149,10 @@ export const JOUST_CUES: CueTable<JoustCueName> = {
 
 export type JoustSoundboard = Soundboard<JoustCueName>;
 
-export type JoustSoundboardOptions = Pick<SoundboardOptions<JoustCueName>, "createContext" | "now">;
+export type JoustSoundboardOptions = Pick<
+  SoundboardOptions<JoustCueName>,
+  "createContext" | "now" | "takes" | "loadTake"
+>;
 
 export const createJoustSoundboard = (options: JoustSoundboardOptions = {}): JoustSoundboard =>
   createSoundboard({ cues: JOUST_CUES, masterGain: JOUST_MASTER_GAIN, ...options });

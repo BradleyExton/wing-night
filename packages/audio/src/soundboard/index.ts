@@ -1,3 +1,11 @@
+import {
+  TAKE_PLAYBACK_RATES,
+  fetchTake,
+  loadTakes,
+  playTake,
+  resolveLoadedTakes,
+  type TakeLoader
+} from "../takes/index.js";
 import { createNoiseBuffer, type CueRig } from "../voices/index.js";
 
 // The house's one way to make a noise: a cue table played through a board.
@@ -46,6 +54,10 @@ export type CueSpec = {
 
 export type CueTable<Name extends string> = Record<Name, CueSpec>;
 
+// Recorded takes for some of a board's cues, as absolute URLs. A cue named
+// here plays a take once one has decoded, and its voice until then.
+export type CueTakes<Name extends string> = Partial<Record<Name, readonly string[]>>;
+
 export type Soundboard<Name extends string> = {
   // Sound a cue now. Never throws: a missing, blocked or still-suspended
   // context is silence, and the next cue tries again.
@@ -59,8 +71,10 @@ export type SoundboardOptions<Name extends string> = {
   // Where the whole board sits, 0..1, before its bus.
   masterGain: number;
   bus?: AudioBus;
+  takes?: CueTakes<Name>;
   // Injected in tests; the AudioContext itself is not unit-testable.
   createContext?: AudioContextFactory;
+  loadTake?: TakeLoader;
   now?: () => number;
 };
 
@@ -191,13 +205,28 @@ const resolveNoise = (context: AudioContext): AudioBuffer => {
   return noise;
 };
 
+// A take plays at this level into the board's master. A recording arrives
+// normalised near full scale, where a synthesised voice peaks at a half or so,
+// so it sits a little under unity to land beside the voices it replaces.
+const TAKE_PEAK = 0.8;
+// How many takes of one cue may ring at once. A voice is a tenth of a second;
+// a take can be a second of slap, and a rack of pins toppling in one frame
+// would otherwise stack a dozen of them into one clipped roar.
+export const MAX_RINGING_TAKES = 3;
+
 export const createSoundboard = <Name extends string>(
   options: SoundboardOptions<Name>
 ): Soundboard<Name> => {
   const createContext = options.createContext ?? resolveSharedContext;
   const now = options.now ?? ((): number => Date.now());
   const bus = options.bus ?? "sfx";
+  const loadTake = options.loadTake ?? fetchTake;
+  const takes = options.takes ?? {};
   const lastPlayedAtMs = new Map<Name, number>();
+  // Per cue: how many takes it has played (the walk through takes and rates)
+  // and the context times its ringing takes end at.
+  const takeTurns = new Map<Name, number>();
+  const ringingUntil = new Map<Name, number[]>();
   // The board's master and noise, made once per context and reused by every
   // cue. Keyed on the context because a test hands in its own.
   let rig: CueRig | null = null;
@@ -215,6 +244,58 @@ export const createSoundboard = <Name extends string>(
 
     return rig;
   };
+
+  const takeUrlsOf = (cue: Name): readonly string[] =>
+    (takes as Partial<Record<Name, readonly string[]>>)[cue] ?? [];
+
+  // Plays one of the cue's takes if any has decoded. False sends the cue to
+  // its voice; a cue already ringing its cap of takes is handled, silently.
+  const playCueTake = (cue: Name, context: AudioContext, startAt: number, intensity: number): boolean => {
+    const loaded = resolveLoadedTakes(context, takeUrlsOf(cue));
+
+    if (loaded.length === 0) {
+      return false;
+    }
+
+    const ringing = (ringingUntil.get(cue) ?? []).filter((endsAt) => endsAt > context.currentTime);
+
+    if (ringing.length >= MAX_RINGING_TAKES) {
+      ringingUntil.set(cue, ringing);
+      return true;
+    }
+
+    const turn = takeTurns.get(cue) ?? 0;
+    const buffer = loaded[turn % loaded.length];
+    const playbackRate = TAKE_PLAYBACK_RATES[turn % TAKE_PLAYBACK_RATES.length] ?? 1;
+
+    if (buffer === undefined) {
+      return false;
+    }
+
+    takeTurns.set(cue, turn + 1);
+    playTake(resolveRig(context), { startAt, buffer, peak: TAKE_PEAK * intensity, playbackRate });
+    ringing.push(startAt + buffer.duration / playbackRate);
+    ringingUntil.set(cue, ringing);
+
+    return true;
+  };
+
+  // Decode the takes as soon as the board exists, so the first topple of the
+  // night is a take rather than the synthesis it replaces. Decoding runs on a
+  // suspended context, so this needs no gesture.
+  const takeUrls = Object.values<readonly string[] | undefined>(takes).flatMap((urls) => urls ?? []);
+
+  if (takeUrls.length > 0) {
+    try {
+      const context = createContext();
+
+      if (context !== null) {
+        loadTakes(context, takeUrls, loadTake);
+      }
+    } catch {
+      // No context, no takes: the voices are still there.
+    }
+  }
 
   const play = (cue: Name, intensity = 1): void => {
     try {
@@ -245,7 +326,11 @@ export const createSoundboard = <Name extends string>(
       lastPlayedAtMs.set(cue, atMs);
       // A hair in the future, because a node started exactly at `currentTime`
       // can click.
-      options.cues[cue].voice(resolveRig(context), context.currentTime + 0.002, intensity);
+      const startAt = context.currentTime + 0.002;
+
+      if (!playCueTake(cue, context, startAt, intensity)) {
+        options.cues[cue].voice(resolveRig(context), startAt, intensity);
+      }
     } catch {
       // Best-effort: audio must never break the stage, a rAF loop or a
       // headless test run.

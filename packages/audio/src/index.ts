@@ -1,9 +1,10 @@
-// The house's sound: one AudioContext, two buses, two instruments and a cue
+// The house's sound: one AudioContext, two buses, three instruments and a cue
 // table played through a board. It is a package rather than a client module
 // for the reason `packages/surface` is — a minigame package cannot import
 // from apps/client, and FAPPY and the TV clock had each grown their own copy
 // of the board before this one existed.
 export {
+  MAX_RINGING_TAKES,
   createSoundboard,
   isCueDue,
   setAudioBusLevel,
@@ -12,10 +13,20 @@ export {
   type AudioContextFactory,
   type CueSpec,
   type CueTable,
+  type CueTakes,
   type CueVoice,
   type Soundboard,
   type SoundboardOptions
 } from "./soundboard/index.js";
+export {
+  TAKE_PLAYBACK_RATES,
+  fetchTake,
+  loadTakes,
+  playTake,
+  resolveLoadedTakes,
+  type TakeLoader,
+  type TakeSpec
+} from "./takes/index.js";
 export {
   playNoise,
   playTone,

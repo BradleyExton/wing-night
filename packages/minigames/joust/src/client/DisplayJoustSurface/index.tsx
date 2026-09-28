@@ -100,7 +100,7 @@ const JoustPlayBody = ({
   const replayIndex = useShotReplay(view.lastShot);
   const replayFinished = isReplayFinished(view.lastShot, replayIndex);
 
-  useJoustSounds({ view, replayIndex, replayFinished });
+  useJoustSounds({ view, replayIndex, replayFinished, serverOrigin });
   // The state already knows how the shot ends; the room does not until the replay lands. While
   // it is in the air the marquee reads what was true at launch, so the numbers land WITH the
   // birds rather than a second before them.

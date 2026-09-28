@@ -207,6 +207,12 @@ export {
   resolveContentAssetSrc
 } from "./contentAssets/index.js";
 export {
+  SFX_ASSET_DIR,
+  SFX_TAKES_ROUTE_PATH,
+  resolveSfxTakesUrl,
+  type SfxTakesListing
+} from "./sfxTakes/index.js";
+export {
   DEV_SANDBOX_MANIFEST_ROUTE_PATH,
   resolveDevSandboxManifestUrl
 } from "./devSandbox/index.js";

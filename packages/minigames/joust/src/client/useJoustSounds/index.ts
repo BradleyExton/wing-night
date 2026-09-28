@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { JoustMinigameDisplayView } from "@wingnight/shared";
+import { resolveSfxTakesUrl, type JoustMinigameDisplayView } from "@wingnight/shared";
+import { useSfxTakes } from "@wingnight/surface";
 
 import {
+  JOUST_SFX_FOLDER,
   createJoustSoundboard,
   resolveCreak,
   resolveReplayCues,
@@ -14,6 +16,7 @@ type JoustSoundsInput = {
   /** `useShotReplay`'s fractional frame index into the shot in hand. */
   replayIndex: number;
   replayFinished: boolean;
+  serverOrigin: string | null;
 };
 
 /**
@@ -23,10 +26,24 @@ type JoustSoundsInput = {
  * except a cleared rack, whose fanfare is that moment and which the plaque leaves `silent`.
  *
  * Every decision is a pure resolver in `audio/`; this is the refs and effects that play them. A
- * display that mounts mid-turn says nothing about what it missed.
+ * display that mounts mid-turn says nothing about what it missed. A cue the pack has recorded
+ * takes of (`assets/sfx/joust/<cue>-<n>.mp3`) plays those instead of its synthesis.
  */
-export const useJoustSounds = ({ view, replayIndex, replayFinished }: JoustSoundsInput): void => {
+export const useJoustSounds = ({
+  view,
+  replayIndex,
+  replayFinished,
+  serverOrigin
+}: JoustSoundsInput): void => {
+  const takes = useSfxTakes(resolveSfxTakesUrl(JOUST_SFX_FOLDER, serverOrigin));
   const boardRef = useRef<JoustSoundboard | null>(null);
+
+  // A board per take listing, made as the takes land so they have decoded before the first shot.
+  // With none, the board waits for the first cue like any other.
+  useEffect(() => {
+    boardRef.current = Object.keys(takes).length === 0 ? null : createJoustSoundboard({ takes });
+  }, [takes]);
+
   const play = useCallback((cue: JoustCueName, intensity?: number): void => {
     boardRef.current ??= createJoustSoundboard();
     boardRef.current.play(cue, intensity);

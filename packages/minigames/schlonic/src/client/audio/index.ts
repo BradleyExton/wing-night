@@ -48,6 +48,10 @@ export const SCHLONIC_CUE_NAMES: readonly SchlonicCueName[] = [
   "finish"
 ];
 
+// The pack folder its recorded takes live in: `assets/sfx/schlonic/hit-1.mp3` is a take of `hit`.
+// A cue with none keeps its synthesis.
+export const SCHLONIC_SFX_FOLDER = "schlonic";
+
 // Music-friendly: loud enough to read across a room over a playlist, quiet enough that a line
 // of ten wings is a run of notes and not a nag.
 export const SCHLONIC_MASTER_GAIN = 0.25;
@@ -238,7 +242,10 @@ export const SCHLONIC_CUES: CueTable<SchlonicCueName> = Object.fromEntries(
 
 export type SchlonicSoundboard = Soundboard<SchlonicCueName>;
 
-export type SchlonicSoundboardOptions = Pick<SoundboardOptions<SchlonicCueName>, "createContext" | "now">;
+export type SchlonicSoundboardOptions = Pick<
+  SoundboardOptions<SchlonicCueName>,
+  "createContext" | "now" | "takes" | "loadTake"
+>;
 
 export const createSchlonicSoundboard = (options: SchlonicSoundboardOptions = {}): SchlonicSoundboard =>
   createSoundboard({ cues: SCHLONIC_CUES, masterGain: SCHLONIC_MASTER_GAIN, ...options });

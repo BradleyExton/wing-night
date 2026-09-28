@@ -175,7 +175,7 @@ const FappyPlayBody = ({
   const shownElapsedMs = isOver ? finishClock.elapsedMs : elapsedMs;
 
   // The TV is the room's speaker, so FAPPY's whole soundboard hangs off this one surface.
-  const handleFappySound = useFappySounds({ view, hold, elapsedMs });
+  const handleFappySound = useFappySounds({ view, hold, elapsedMs, serverOrigin });
 
   useFappyMirror({ leg, gatesPerLeg: view.gatesPerLeg, sceneRef, onEvent: handleFappySound });
 

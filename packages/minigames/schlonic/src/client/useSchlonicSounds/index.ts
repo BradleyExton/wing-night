@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { SchlonicMinigameDisplayView } from "@wingnight/shared";
+import { resolveSfxTakesUrl, type SchlonicMinigameDisplayView } from "@wingnight/shared";
+import { useSfxTakes } from "@wingnight/surface";
 
-import { WING_CHIME_TOP_AT, createSchlonicSoundboard, type SchlonicSoundboard } from "../audio/index.js";
+import {
+  SCHLONIC_SFX_FOLDER,
+  WING_CHIME_TOP_AT,
+  createSchlonicSoundboard,
+  type SchlonicSoundboard
+} from "../audio/index.js";
 import type { SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
 import { resolveCardDelayMs, type RunHold } from "../useHeldRun/index.js";
 
 type SchlonicSoundsInput = {
   view: SchlonicMinigameDisplayView;
   hold: RunHold | null;
+  serverOrigin: string | null;
 };
 
 export type SchlonicSounds = {
@@ -23,7 +30,8 @@ export type SchlonicSounds = {
  * dependency array so a rAF loop is never torn down mid-run, which means its closure holds
  * whatever handlers it was set up with.
  */
-export const useSchlonicSounds = ({ view, hold }: SchlonicSoundsInput): SchlonicSounds => {
+export const useSchlonicSounds = ({ view, hold, serverOrigin }: SchlonicSoundsInput): SchlonicSounds => {
+  const takes = useSfxTakes(resolveSfxTakesUrl(SCHLONIC_SFX_FOLDER, serverOrigin));
   // Made on the first cue rather than on mount, so a surface that is only ever looked at
   // never asks the browser for an audio context at all.
   const boardRef = useRef<SchlonicSoundboard | null>(null);
@@ -31,6 +39,13 @@ export const useSchlonicSounds = ({ view, hold }: SchlonicSoundsInput): Schlonic
     boardRef.current ??= createSchlonicSoundboard();
     boardRef.current.play(cue, intensity);
   }, []);
+
+  // A board per take listing, made as the takes land so they have decoded before the first cue.
+  // With none, the board waits for the first cue as before. `play` reads the ref, so the
+  // handlers keep their identity across the swap.
+  useEffect(() => {
+    boardRef.current = Object.keys(takes).length === 0 ? null : createSchlonicSoundboard({ takes });
+  }, [takes]);
 
   const onMirrorEvent = useCallback<SchlonicMirrorEventHandler>(
     (event): void => {
