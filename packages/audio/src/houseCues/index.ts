@@ -22,7 +22,11 @@ export type HouseCueName =
   | "arrive"
   | "fizzle"
   | "tickOn"
-  | "tickOff";
+  | "tickOff"
+  | "go"
+  | "gong"
+  | "results"
+  | "fanfare";
 
 export const HOUSE_CUE_NAMES: readonly HouseCueName[] = [
   "tick",
@@ -38,7 +42,11 @@ export const HOUSE_CUE_NAMES: readonly HouseCueName[] = [
   "arrive",
   "fizzle",
   "tickOn",
-  "tickOff"
+  "tickOff",
+  "go",
+  "gong",
+  "results",
+  "fanfare"
 ];
 
 // How far a `pop` climbs across a board that fills up: from its lowest note to
@@ -170,6 +178,59 @@ export const HOUSE_CUES: CueTable<HouseCueName> = {
     minGapMs: 60,
     voice: (rig, startAt) => {
       playTone(rig, { startAt, durationSeconds: 0.06, type: "triangle", fromHz: 1200, toHz: 800, peak: 0.3 });
+    }
+  },
+  // The count-in landing: a bright rising stab, the starting pistol the night
+  // opens on.
+  go: {
+    minGapMs: 1500,
+    voice: (rig, startAt) => {
+      playTone(rig, { startAt, durationSeconds: 0.35, type: "square", fromHz: 440, toHz: 880, peak: 0.3, attackSeconds: 0.01 });
+      playTone(rig, { startAt, durationSeconds: 0.35, type: "sawtooth", fromHz: 660, toHz: 1320, peak: 0.18, attackSeconds: 0.01 });
+      playNoise(rig, { startAt, durationSeconds: 0.3, peak: 0.16, filterType: "highpass", fromHz: 1500, toHz: 5000 });
+    }
+  },
+  // Wings on the table: a gong, a low struck fundamental with a shimmer over it
+  // that rings for a couple of seconds.
+  gong: {
+    minGapMs: 2000,
+    voice: (rig, startAt) => {
+      playTone(rig, { startAt, durationSeconds: 2.2, type: "sine", fromHz: 110, toHz: 100, peak: 0.6, attackSeconds: 0.01 });
+      playTone(rig, { startAt, durationSeconds: 1.8, type: "triangle", fromHz: 277, toHz: 262, peak: 0.22, attackSeconds: 0.01 });
+      playTone(rig, { startAt, durationSeconds: 1.4, type: "sine", fromHz: 739, toHz: 700, peak: 0.12, attackSeconds: 0.01 });
+      playNoise(rig, { startAt, durationSeconds: 0.12, peak: 0.3, filterType: "bandpass", fromHz: 800, toHz: 200, q: 1 });
+    }
+  },
+  // The results landing: two low hits and a bright chord over the second, a
+  // game show's "and the scores are in".
+  results: {
+    minGapMs: 1500,
+    voice: (rig, startAt) => {
+      for (const hitAt of [0, 0.22]) {
+        playTone(rig, { startAt: startAt + hitAt, durationSeconds: 0.18, type: "sine", fromHz: 130, toHz: 60, peak: 0.6 });
+        playNoise(rig, { startAt: startAt + hitAt, durationSeconds: 0.06, peak: 0.3, filterType: "lowpass", fromHz: 1200, toHz: 300 });
+      }
+      for (const hz of [523, 659, 784]) {
+        playTone(rig, { startAt: startAt + 0.22, durationSeconds: 0.7, type: "triangle", fromHz: hz, peak: 0.16, attackSeconds: 0.02 });
+      }
+    }
+  },
+  // A champion: a proper fanfare, four notes up and a held major chord with a
+  // breath of air over it, two seconds of it.
+  fanfare: {
+    minGapMs: 3000,
+    voice: (rig, startAt) => {
+      const notes = [392, 523, 659, 784];
+
+      notes.forEach((hz, index) => {
+        playTone(rig, { startAt: startAt + index * 0.16, durationSeconds: 0.2, type: "sawtooth", fromHz: hz, peak: 0.22, attackSeconds: 0.02 });
+        playTone(rig, { startAt: startAt + index * 0.16, durationSeconds: 0.2, type: "square", fromHz: hz / 2, peak: 0.1, attackSeconds: 0.02 });
+      });
+      for (const hz of [784, 988, 1175, 1568]) {
+        playTone(rig, { startAt: startAt + 0.64, durationSeconds: 1.4, type: "sawtooth", fromHz: hz, peak: 0.13, attackSeconds: 0.05 });
+      }
+      playTone(rig, { startAt: startAt + 0.64, durationSeconds: 1.4, type: "sine", fromHz: 98, peak: 0.4, attackSeconds: 0.05 });
+      playNoise(rig, { startAt: startAt + 0.64, durationSeconds: 1.2, peak: 0.1, filterType: "highpass", fromHz: 2500, toHz: 6000 });
     }
   }
 };

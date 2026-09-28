@@ -15,6 +15,7 @@ import { resolveSortedStandings } from "../../utils/resolveSortedStandings";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { useGameStartCountdown } from "./useGameStartCountdown";
 import { useMusicPlaybackCue } from "./useMusicPlaybackCue";
+import { useShowSounds } from "./useShowSounds";
 import { useBeatClock } from "./useBeatClock";
 import * as styles from "./styles";
 
@@ -55,6 +56,9 @@ export const DisplayBoard = ({
     gameStartCountdownEndsAt: roomState?.gameStartCountdownEndsAt ?? null
   });
   const shouldShowGameLockedOverlay = phase === Phase.INTRO;
+
+  // The show's sound between the games: phase moves and the count-in.
+  useShowSounds({ phase, gameStartCountdownRemainingSeconds });
 
   // Same resolution the stage surface uses (resolveStageViewModel:101).
   const activeTeamId =

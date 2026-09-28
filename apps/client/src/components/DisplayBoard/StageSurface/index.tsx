@@ -16,6 +16,7 @@ import { TurnResultsStageBody } from "./TurnResultsStageBody";
 import { useDisplayRoomState } from "../../../context/RoomStateContext";
 import * as styles from "./styles";
 import { useEatingCountdown } from "./useEatingCountdown";
+import { useMinigameClockSound } from "./useMinigameClockSound";
 import { useMinigameCountdown } from "./useMinigameCountdown";
 import { resolveLeadingTeams } from "../../../utils/resolveLeadingTeams";
 import { resolveSortedStandings } from "../../../utils/resolveSortedStandings";
@@ -50,6 +51,11 @@ const FallbackBody = ({ stageViewModel, phaseLabel }: StageBodyProps): JSX.Eleme
 
 const EatingBody = (props: StageBodyProps): JSX.Element => {
   const { stageViewModel, liveEatingRemainingSeconds } = props;
+
+  // The eating clock's last ten seconds tick from the TV and buzz at zero,
+  // the same voice the minigame clock has: the room hears the wings called
+  // time on, not just the host's chime a foot from the tablet.
+  useMinigameClockSound(liveEatingRemainingSeconds);
 
   return liveEatingRemainingSeconds !== null ? (
     <EatingStageBody
