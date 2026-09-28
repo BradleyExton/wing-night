@@ -2,7 +2,7 @@ import { resolveSchlongPaths, type SchlongVec2 } from "@wingnight/cast";
 
 import { schlonicPalette } from "../../palette.js";
 
-export const OUTLINE_WIDTH = 0.45;
+export const OUTLINE_WIDTH = 0.6;
 
 export type SchlongSkin = {
   body: string;

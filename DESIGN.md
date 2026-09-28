@@ -1505,11 +1505,15 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     because JOUST looks out over the same shore at dusk (§2.7); this scene
     only says what colour the morning makes them.
 -   Scene materials are their own (`packages/minigames/schlonic/.../palette.ts`):
-    a sky that runs `#1f7fc4` to `#cfeaf7`, the bay `#2f8fc4` between a deep
+    a sky that runs `#0b6fd4` to `#cfeaf7`, the bay `#2f8fc4` between a deep
     `#2b6ea6` and a shallow `#63b8de`, beach `#f0dcae`, park `#4fb87c`, and the
     ground itself turf `#3fa34d` over the bluff's sand `#d8bb86` over soil
     `#8a5a2b` — so a pit is a bite out of the shoreline with sand at the lips,
-    the way the real bluffs go. Wings are `#f5902b` on a `#fff1d6` bone.
+    the way the real bluffs go. Under the sand the clay wears Green Hill's
+    checkerboard for a band (`CHECKER_DEPTH`, 5-unit squares of the soil and
+    `#b87a3d`), square to the screen on a slope the way the original's are,
+    its rows laid from the band's top edge so the flat shows two whole rows.
+    Wings are `#f5902b` on a `#fff1d6` bone.
     Drawing content, not UI
     chrome — exempt from the two-accent budget the way the JOUST arena and the
     drawing inks are. On the tablet the letterbox bars around the 16:9 world

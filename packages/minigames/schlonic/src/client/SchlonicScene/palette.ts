@@ -22,6 +22,8 @@ export const schlonicPalette = {
   turfDark: "#1f6b34",
   bluffSand: "#d8bb86",
   soil: "#8a5a2b",
+  // Green Hill's checkerboard, in the bluff's own clay: the soil and a warm light square.
+  soilChecker: "#b87a3d",
   soilDark: "#5b3a1a",
   soilEdge: "#3a2410",
   // The dark under a pit: nothing down there, and it has to look it.

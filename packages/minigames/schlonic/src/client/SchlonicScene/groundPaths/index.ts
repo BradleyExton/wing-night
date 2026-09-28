@@ -16,12 +16,16 @@ export type GroundSegment = {
   fillPath: string;
   /** A band following the surface down, for the sand the bay's bluffs are cut out of. */
   bluffPath: string;
+  /** The band under the sand, for the checkerboard the soil wears (Green Hill's, §2.11). */
+  checkerPath: string;
   fromX: number;
   toX: number;
 };
 
 /** How deep the sand runs under the turf before the bluff gives way to clay. */
 export const BLUFF_DEPTH = 6;
+/** How deep the checkered band runs under the sand before the plain clay takes over. */
+export const CHECKER_DEPTH = 10;
 
 const round = (value: number): number => Math.round(value * 100) / 100;
 
@@ -55,15 +59,18 @@ const toSegment = (points: readonly { x: number; y: number }[], bottomY: number)
 
   const topPath = `M ${points.map((point) => `${round(point.x)} ${round(point.y)}`).join(" L ")}`;
 
-  const underside = [...points]
-    .reverse()
-    .map((point) => `L ${round(point.x)} ${round(point.y + BLUFF_DEPTH)}`)
-    .join(" ");
+  // The surface followed down by `depth`, as a line to draw on to from the other edge of a band.
+  const edge = (depth: number, direction: "along" | "back", move: "M" | "L"): string => {
+    const run = direction === "along" ? points : [...points].reverse();
+
+    return run.map((point, index) => `${index === 0 ? move : "L"} ${round(point.x)} ${round(point.y + depth)}`).join(" ");
+  };
 
   return {
     topPath,
     fillPath: `${topPath} L ${round(last.x)} ${bottomY} L ${round(first.x)} ${bottomY} Z`,
-    bluffPath: `${topPath} ${underside} Z`,
+    bluffPath: `${topPath} ${edge(BLUFF_DEPTH, "back", "L")} Z`,
+    checkerPath: `${edge(BLUFF_DEPTH, "along", "M")} ${edge(BLUFF_DEPTH + CHECKER_DEPTH, "back", "L")} Z`,
     fromX: first.x,
     toX: last.x
   };

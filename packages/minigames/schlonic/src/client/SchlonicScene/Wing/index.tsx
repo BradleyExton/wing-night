@@ -41,7 +41,7 @@ const KNUCKLES = [1, -1].map((side) => ({
   y: BONE_TO.y + Math.sin(BONE_ANGLE + Math.PI / 2) * KNUCKLE_SPREAD * side
 }));
 
-const OUTLINE_WIDTH = 0.42;
+const OUTLINE_WIDTH = 0.56;
 
 export const Wing = ({ scale = 1 }: { scale?: number }): JSX.Element => (
   <g transform={`scale(${scale})`}>

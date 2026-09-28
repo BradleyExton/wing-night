@@ -136,9 +136,10 @@ every `Record<MinigameType, …>` in the repo until fully wired, so there's no t
 
 ### SCHLONIC — the rest of the wow pass
 
-Two of seven landed 2026-09-28 on `claude/scholnic-game-improvements-27a62e`: the TV's own camera
-(the zone fills the wall and runs ahead of the tablet, `SchlonicScene/camera`) and the zone strip
-(`ZoneTrack`, FAPPY's pace-track shape). Still to do, in the order they were argued for:
+All seven landed 2026-09-28. The first two on `claude/scholnic-game-improvements-27a62e`: the
+TV's own camera (the zone fills the wall and runs ahead of the tablet, `SchlonicScene/camera`)
+and the zone strip (`ZoneTrack`, FAPPY's pace-track shape). The rest, in the order they were
+argued for:
 
 - ~~**Best-run ghost on the strip and in the zone.**~~ Done 2026-09-28: the round's best run
   crosses turns as plugin round memory (a new optional `selectRoundMemory` / `roundMemory` on the
@@ -159,8 +160,10 @@ Two of seven landed 2026-09-28 on `claude/scholnic-game-improvements-27a62e`: th
   joke (`PUNCHLINE_MS`). Follow-up: a wipeout almost never happens — the floor wing lines keep
   a runner's hands full — so the zone generator may want a stretch with no floor line before
   a hazard if the room is ever to see it.
-- **Art pass, last.** Checkered ground band, more saturated sky, chunkier outlines, the hen a
-  touch bigger.
+- ~~**Art pass, last.**~~ Done 2026-09-28: Green Hill's checkered band in the clay under the
+  sand, the sky's top stop saturated (`#1f7fc4` → `#0b6fd4`), and the outlines on wings and the
+  schlong kit up about a third. The hazed backdrop banks were left alone (the haze is what keeps
+  the schlongs legible), and the hen was not resized: the TV camera already made it larger.
 
 ### FAPPY — the TV camera SCHLONIC got
 

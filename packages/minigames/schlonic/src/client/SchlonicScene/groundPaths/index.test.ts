@@ -3,7 +3,7 @@ import test from "node:test";
 import type { SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, resolveSchlonicZone } from "@wingnight/shared";
 
-import { BLUFF_DEPTH, resolveGroundSegments } from "./index.js";
+import { BLUFF_DEPTH, CHECKER_DEPTH, resolveGroundSegments } from "./index.js";
 
 const flat = (samples: number): number[] => {
   return Array.from({ length: samples }, () => SCHLONIC_WORLD.groundBaseY);
@@ -80,4 +80,14 @@ test("keeps drawing level ground past the last sample when asked for a run-out",
 
 test("draws no run-out unless asked, so the geometry ends where the samples do", () => {
   assert.equal(resolveGroundSegments(zoneOf([]))[0]?.toX, 200);
+});
+
+test("does lay the checkered band under the sand, following the surface down", () => {
+  const segment = resolveGroundSegments(zoneOf([]))[0];
+  const base = SCHLONIC_WORLD.groundBaseY;
+
+  assert.ok(segment !== undefined);
+  assert.ok(segment.checkerPath.startsWith(`M 0 ${base + BLUFF_DEPTH}`));
+  assert.ok(segment.checkerPath.includes(`L 200 ${base + BLUFF_DEPTH + CHECKER_DEPTH}`));
+  assert.ok(segment.checkerPath.endsWith(`L 0 ${base + BLUFF_DEPTH + CHECKER_DEPTH} Z`));
 });
