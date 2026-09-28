@@ -1583,6 +1583,24 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     its own replay, and it is hidden on the line, where two hens on one spot
     are a smudge. This is what turns "how far does it get" into a race the
     room can watch: the round's leader is on the wall, not in a sum.
+-   **Juice (§8 of the principles): the wall sounds, flinches and counts.**
+    The TV has a soundboard (`audio/`, a table of voices for the house synth
+    in `@wingnight/surface`): a ring-style chime per wing that climbs with the
+    handful, a boing off a springboard, a pop for a badnik, a scatter for a
+    hit, a whistle-and-splash for a hole, three notes down for a wipeout, an
+    act-clear fanfare at the post, a tick per wing counted into the bank, and
+    the handoff and finish stings the arcade games share. The mirror announces
+    what changed between frames (`mirrorEvents`) and the surface's sound hook
+    decides what that means; the tablet stays silent, the TV is the speaker.
+    A hit stops BOTH loops' clocks for `HIT_PAUSE_MS` (the sim never knows —
+    a tick is a tick) and jolts the scene's box opposite the impact
+    (`SchlonicScene/shake`, Web Animations so two hits a second apart both
+    flinch). At the post the in-hand figure counts down as the banked figure
+    counts up, a tick each, over `BANK_COUNT_MS` inside the cleared beat, and
+    up to a dozen wings fly off the bird into the banked figure over the stage
+    (`WingFlight`, thrown by `flyWings`). All of it is best-effort: no audio
+    context, no Web Animations, a headless run — silence and stillness, never
+    an exception.
 -   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
     the same one JOUST takes in §2.7 and FAPPY in §2.9: the zone is full bleed
     and is still the whole jump surface, filling the takeover's padding box edge

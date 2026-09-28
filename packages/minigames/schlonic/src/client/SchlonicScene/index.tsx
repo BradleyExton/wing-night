@@ -17,6 +17,7 @@ import { TABLET_CAMERA_FIT, resolveCamera, type SchlonicCameraFit } from "./came
 import { Ghost, RUNNER_SCALE, TUCK_DROP, TUCK_SHRINK, paintGhost, type GhostRefs } from "./Ghost/index.js";
 import { Ground } from "./Ground/index.js";
 import { resolveRunnerCurl, resolveRunnerPose } from "./runnerPose/index.js";
+import { shakeElement } from "./shake/index.js";
 import * as styles from "./styles.js";
 import { ZoneProps } from "./ZoneProps/index.js";
 
@@ -29,6 +30,8 @@ export type SchlonicSceneHandle = {
   // the run it shows) and a scene keeps no ghost of its own.
   paintCleared: (frame: SchlonicFrame, progress: number, ghostFrame?: SchlonicFrame | null) => void;
   paintWipeout: (frame: SchlonicFrame, progress: number, ghostFrame?: SchlonicFrame | null) => void;
+  /** The whole picture flinches: a hit, opposite the impact. A browser without the API does nothing. */
+  shake: () => void;
 };
 
 export type SchlonicSceneProps = {
@@ -228,7 +231,11 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       paintBurst(burstRef.current, frame);
     };
 
-    useImperativeHandle(ref, () => ({ paint, paintCleared, paintWipeout }));
+    const shake = (): void => {
+      shakeElement(frameRef.current);
+    };
+
+    useImperativeHandle(ref, () => ({ paint, paintCleared, paintWipeout, shake }));
 
     const goalGroundY = useMemo(() => {
       return zone.heights[Math.floor(zone.goalX / SCHLONIC_WORLD.sampleStep)] ?? SCHLONIC_WORLD.groundBaseY;

@@ -32,3 +32,19 @@ export {
   type ResultPlaqueProps,
   type ResultPlaqueTone
 } from "./ResultPlaque/index.js";
+// The house synth (DESIGN.md §8, "sound is half of it"): a minigame's TV board is a table of
+// voices handed to this engine, never a second copy of the oscillator plumbing.
+export {
+  createSoundboard,
+  isCueDue,
+  playNoise,
+  playTone,
+  resolveSharedAudioContext,
+  type AudioContextFactory,
+  type CueRig,
+  type CueVoice,
+  type NoiseSpec,
+  type Soundboard,
+  type SoundboardSpec,
+  type ToneSpec
+} from "./soundboard/index.js";

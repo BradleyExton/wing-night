@@ -8,7 +8,8 @@ import type {
 } from "@wingnight/shared";
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart, runSchlonicRun } from "@wingnight/shared";
 
-import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
+import { BANK_COUNT_MS, CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
+import { resolveMirrorEvents, type SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
 import { paintZoneTrack } from "../trackMarks/index.js";
 import { paintWingTally } from "../wingTally/index.js";
@@ -25,6 +26,14 @@ type SchlonicMirrorInput = {
   trackRef?: RefObject<HTMLElement>;
   /** The run to beat: replayed from its own log on the live run's clock, as the ghost. */
   bestRun?: SchlonicBestRun | null;
+  /** The marquee's banked figure, counted up at the post while the in-hand figure counts down. */
+  bankRef?: RefObject<HTMLElement>;
+  /** What the view says the team has banked — after the post, this run included. */
+  wingsBanked?: number;
+  /** What the replay announces between frames; STABLE identity, read from a ref. */
+  onEvent?: SchlonicMirrorEventHandler;
+  /** One wing counted into the bank at the post, with the share counted so far; stable identity. */
+  onBankTick?: (share: number) => void;
 };
 
 // How far behind the tablet the TV draws, in ticks: a tenth of a second, so a press has normally
@@ -81,14 +90,36 @@ export const useSchlonicMirror = ({
   sceneRef,
   tallyRef,
   trackRef,
-  bestRun = null
+  bestRun = null,
+  bankRef,
+  wingsBanked = 0,
+  onEvent,
+  onBankTick
 }: SchlonicMirrorInput): void => {
   const runRef = useRef<MirrorRun | null>(null);
   // Read when a run is taken up, never a dependency: a best run set by THIS run's own result
-  // must not restart the mirror mid-replay.
+  // must not restart the mirror mid-replay. The listeners and the bank are refs for the same
+  // reason: the loop's closure must see the current ones without being torn down.
   const bestRunRef = useRef(bestRun);
+  const onEventRef = useRef(onEvent);
+  const onBankTickRef = useRef(onBankTick);
+  const wingsBankedRef = useRef(wingsBanked);
 
   bestRunRef.current = bestRun;
+  onEventRef.current = onEvent;
+  onBankTickRef.current = onBankTick;
+  wingsBankedRef.current = wingsBanked;
+
+  // The view counts a run the moment the server has refereed it; the wall is still replaying
+  // that run for a few ticks and then holds the post for a beat, so while it is, the bank is
+  // shown WITHOUT that run — the count-up at the post is what puts it in.
+  const doneWingsRef = useRef(run?.status === "done" ? (run.result?.wings ?? 0) : 0);
+
+  doneWingsRef.current = run?.status === "done" ? (run.result?.wings ?? 0) : 0;
+
+  const paintBank = (banked: number): void => {
+    paintWingTally(bankRef?.current ?? null, Math.max(0, banked));
+  };
   const beatRef = useRef<MirrorBeat | null>(null);
   // Set once the run in hand has ended with the tablet already elsewhere: the effect below runs
   // again against whatever the tablet is on by then.
@@ -103,10 +134,12 @@ export const useSchlonicMirror = ({
   // The loops live on refs and are stopped on purpose — when a new run or a still frame replaces
   // them, or on unmount — never by an effect's cleanup, so a run the tablet has already moved
   // past can still play out.
-  // The chrome the loop writes outside the scene: the marquee's tally and the strip's pins.
+  // The chrome the loop writes outside the scene: the marquee's tallies and the strip's pins.
+  // A run still being replayed is not in the bank yet, whatever the view says.
   const paintChrome = (frame: SchlonicFrame, ghostFrame: SchlonicFrame | null = null): void => {
     paintWingTally(tallyRef?.current ?? null, frame.wings);
     paintZoneTrack(trackRef?.current ?? null, zone, frame, ghostFrame);
+    paintBank(wingsBankedRef.current - (frame.outcome === null ? doneWingsRef.current : 0));
   };
 
   // A fresh mirror run on the line, with the ghost on the line beside it if the round has one.
@@ -164,13 +197,30 @@ export const useSchlonicMirror = ({
       rafHandle: 0,
       then: null
     };
+    // The post's count-up: the handful leaves the bird and lands in the bank one wing at a
+    // time, a tick each. `wingsBankedRef` already includes this run — the server refereed it
+    // before the wall got here — so the bank starts from what it held before.
+    const bankBefore = Math.max(0, wingsBankedRef.current - frame.wings);
+    let counted = 0;
     const paintBeat = (progress: number): void => {
       if (kind === "cleared") {
         sceneRef.current?.paintCleared(frame, progress, ghostFrame);
-      } else {
-        sceneRef.current?.paintWipeout(frame, progress, ghostFrame);
+
+        const countShare = Math.min(1, (progress * BEAT_DURATION_MS[kind]) / BANK_COUNT_MS);
+        const nextCounted = Math.round(frame.wings * countShare);
+
+        if (nextCounted > counted) {
+          counted = nextCounted;
+          onBankTickRef.current?.(frame.wings === 0 ? 1 : counted / frame.wings);
+        }
+
+        paintWingTally(tallyRef?.current ?? null, frame.wings - counted);
+        paintBank(bankBefore + counted);
+        paintZoneTrack(trackRef?.current ?? null, zone, frame, ghostFrame);
+        return;
       }
 
+      sceneRef.current?.paintWipeout(frame, progress, ghostFrame);
       paintChrome(frame, ghostFrame);
     };
     const step = (now: number): void => {
@@ -221,6 +271,7 @@ export const useSchlonicMirror = ({
     runRef.current = { ...createMirrorRun(key, []), frame };
     sceneRef.current?.paint(frame);
     paintChrome(frame);
+    paintBank(wingsBankedRef.current);
   };
 
   useEffect(() => {
@@ -331,9 +382,23 @@ export const useSchlonicMirror = ({
 
     const step = (now: number): void => {
       const targetTick = resolveTargetTick(now);
+      const previous = mirror.frame;
 
       mirror.frame = advanceSchlonic(mirror.frame, zone, mirror.inputs, targetTick);
       advanceGhost(mirror, mirror.frame.tick);
+
+      const events = resolveMirrorEvents(previous, mirror.frame, zone);
+
+      for (const event of events) {
+        // A hit stops the wall's clock for a beat and jolts the picture, the same pause the
+        // tablet takes, so the two stay a fixed few ticks apart.
+        if (event.kind === "hit") {
+          mirror.startedAtMs = (mirror.startedAtMs ?? now) + HIT_PAUSE_MS;
+          sceneRef.current?.shake();
+        }
+
+        onEventRef.current?.(event);
+      }
 
       if (mirror.frame.outcome !== null) {
         settleRun(mirror);

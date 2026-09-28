@@ -8,7 +8,7 @@ import type {
 } from "@wingnight/shared";
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart } from "@wingnight/shared";
 
-import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
+import { CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
 import { paintWingTally } from "../wingTally/index.js";
 
@@ -189,8 +189,16 @@ export const useSchlonicRunner = ({
     }
 
     const targetTick = Math.floor(((now - local.startedAtMs) * SCHLONIC_WORLD.tickHz) / 1000);
+    const hitsBefore = local.frame.hits.length;
 
     local.frame = advanceSchlonic(local.frame, zoneRef.current, local.inputs, targetTick);
+
+    // A hit stops the clock for a beat and jolts the picture. The clock, not the sim: the run's
+    // ticks are untouched, the tablet just holds this one a little longer.
+    if (local.frame.hits.length > hitsBefore) {
+      local.startedAtMs += HIT_PAUSE_MS;
+      sceneRef.current?.shake();
+    }
 
     // The ghost keeps pace tick for tick; past its own post it stands still.
     if (local.ghostFrame !== null && local.ghostInputs !== null) {

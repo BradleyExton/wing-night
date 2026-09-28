@@ -8,7 +8,9 @@ export const displaySchlonicSurfaceCopy = {
     "One chicken, one shoreline, and a lot of wings nobody is asking about. The wings are the score, and they are also the only health there is: get hit and you drop half of them, get hit holding none and the run is over. The post is the only place a handful counts.",
   waitingLabel: "Waiting for the zone…",
   runCounter: (runNumber: number, runsTotal: number): string => `Run ${runNumber} / ${runsTotal}`,
-  wingsCounter: (banked: number, par: number): string => `${banked} / ${par}`,
+  // The banked figure stands in its own span, so the post's count-up can write it; this is
+  // what follows it.
+  wingsParSuffix: (par: number): string => ` / ${par}`,
   inHandLabel: "In hand",
   // What the tally reads before the loop has written to it: a bird on the line holds nothing.
   inHandOnTheLine: "0",

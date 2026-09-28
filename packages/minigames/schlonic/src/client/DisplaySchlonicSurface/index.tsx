@@ -1,4 +1,4 @@
-import { useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 import type { SchlonicMinigameDisplayView, SchlonicMinigameRun } from "@wingnight/shared";
@@ -10,6 +10,9 @@ import { SchlonicScene, type SchlonicSceneHandle } from "../SchlonicScene/index.
 import { useHeldRun, type RunHold } from "../useHeldRun/index.js";
 import { useRunnerFigure } from "../useRunnerFigure/index.js";
 import { useSchlonicMirror } from "../useSchlonicMirror/index.js";
+import { useSchlonicSounds } from "../useSchlonicSounds/index.js";
+import { flyWings, resolveCentre, resolveWingFlightCount } from "../flyWings/index.js";
+import { WingFlight } from "../WingFlight/index.js";
 import { ZoneTrack } from "../ZoneTrack/index.js";
 import { displaySchlonicSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -122,6 +125,10 @@ const SchlonicPlayBody = ({
   // runner's pin on the zone strip.
   const tallyRef = useRef<HTMLSpanElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  // Counted up by the mirror at the post, one wing at a time; the view's figure otherwise.
+  const bankRef = useRef<HTMLSpanElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const flightRef = useRef<HTMLDivElement>(null);
   // A run stays on the wall while how it ended plays out, a little longer than the tablet holds
   // it, because the replay here runs behind; once the team is through the last run stays for good.
   const { shownRunIndex, hold } = useHeldRun(view, MIRROR_HOLD_SLACK_MS);
@@ -144,6 +151,9 @@ const SchlonicPlayBody = ({
   const nextRun = view.runs[shownRunIndex + 1] ?? null;
   const isFinished = view.phase === "finished";
 
+  // The TV is the room's speaker, so SCHLONIC's whole soundboard hangs off this one surface.
+  const { onMirrorEvent, onBankTick } = useSchlonicSounds({ view, hold });
+
   useSchlonicMirror({
     run,
     zone,
@@ -152,11 +162,42 @@ const SchlonicPlayBody = ({
     sceneRef,
     tallyRef,
     trackRef,
-    bestRun: view.bestRun
+    bestRun: view.bestRun,
+    bankRef,
+    wingsBanked: view.wingsBanked,
+    onEvent: onMirrorEvent,
+    onBankTick
   });
 
+  // The post: the handful flies off the bird and into the bank, over the stage. Keyed on the
+  // hold, so it flies once per post; measured when it fires, because both ends move.
+  const holdKey = hold === null ? "" : `${hold.runIndex}:${hold.startedAtMs}`;
+  const flightWings = hold?.outcome === "cleared" ? hold.wings : 0;
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    const runner = stage?.querySelector("[data-schlonic-scene='display-schlonic'] [data-schlonic-runner]");
+    const bank = bankRef.current;
+
+    if (flightWings === 0 || stage === null || stage === undefined || runner === null || runner === undefined || bank === null) {
+      return;
+    }
+
+    const origin = stage.getBoundingClientRect();
+    const from = resolveCentre(runner.getBoundingClientRect());
+    const to = resolveCentre(bank.getBoundingClientRect());
+
+    flyWings(
+      flightRef.current,
+      { x: from.x - origin.left, y: from.y - origin.top },
+      { x: to.x - origin.left, y: to.y - origin.top },
+      resolveWingFlightCount(flightWings)
+    );
+  }, [holdKey, flightWings]);
+
   return (
-    <div className={styles.stage}>
+    <div ref={stageRef} className={styles.stage}>
+      <WingFlight ref={flightRef} />
       <NeonMarquee
         title={displaySchlonicSurfaceCopy.title}
         teamName={activeTeamName}
@@ -168,7 +209,10 @@ const SchlonicPlayBody = ({
             </span>
             <span>{displaySchlonicSurfaceCopy.inHandLabel}</span>
             <span className={styles.marqueeWings} data-schlonic-wings>
-              {displaySchlonicSurfaceCopy.wingsCounter(view.wingsBanked, view.wingsPar)}
+              <span ref={bankRef} data-schlonic-banked>
+                {view.wingsBanked}
+              </span>
+              {displaySchlonicSurfaceCopy.wingsParSuffix(view.wingsPar)}
             </span>
             <span>{displaySchlonicSurfaceCopy.bankedLabel}</span>
             {/* The run to beat, once the round has one: the ghost's wings and whose it is. */}

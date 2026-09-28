@@ -77,7 +77,7 @@ test("puts the team, the zone and the wing tally on the marquee", () => {
   assert.ok(markup.includes("Team Alpha"));
   assert.ok(markup.includes("Kempenfelt Bay Zone"));
   assert.ok(markup.includes("Run 1 / 2"));
-  assert.ok(markup.includes("12 / 40"));
+  assert.ok(markup.includes(">12</span> / 40"));
   // The wings in hand, which the mirror's paint loop writes into as the runner collects them.
   assert.ok(markup.includes("data-schlonic-in-hand"));
 });
@@ -138,6 +138,16 @@ test("races the round's best run as a ghost once there is one", () => {
   assert.ok(!without.includes("data-schlonic-ghost"));
   assert.ok(!without.includes("data-schlonic-track-ghost"));
   assert.ok(!without.includes("To beat"));
+});
+
+// The post's juice: the banked figure stands alone so the count-up can write it, and the pool
+// of wings that fly into it is over the stage from the start.
+test("stands the banked figure alone and mounts the wing flight over the stage", () => {
+  const markup = render(createView({ wingsBanked: 12 }));
+
+  assert.ok(markup.includes('data-schlonic-banked'));
+  assert.ok(markup.includes(">12</span> / 40"));
+  assert.ok(markup.includes("data-schlonic-wing-flight"));
 });
 
 test("hangs the zone strip over the arena so the room can read what is coming", () => {

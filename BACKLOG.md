@@ -141,10 +141,11 @@ Two of seven landed 2026-09-28 on `claude/scholnic-game-improvements-27a62e`: th
   crosses turns as plugin round memory (a new optional `selectRoundMemory` / `roundMemory` on the
   plugin contract) and replays as a ghost in the zone, a second pin on the strip and a "to beat"
   figure in both chromes.
-- **Juice on the TV.** A soundboard on the FAPPY pattern (`useFappySounds`): wing chime, spring
-  boing, badnik pop, hit scatter, post sting, a rising tick over the last chunks. A ~0.2 s hit
-  pause and a shake opposite the impact. At the post, wings fly into the banked counter one by
-  one with ticks instead of a card appearing with the total.
+- ~~**Juice on the TV.**~~ Done 2026-09-28: soundboard on a new shared synth engine
+  (`@wingnight/surface` `createSoundboard`), hit pause + shake in both loops, the post count-up
+  with a tick per wing, and a dozen wings flying into the bank. Follow-up: FAPPY's `audio/`
+  still carries its own copy of the oscillator plumbing — move it onto the shared engine so the
+  tab has one AudioContext between the two arcade games.
 - **Make greed pay, make the finale loud.** A safe floor run of the party zone banks ~80 wings
   against par 70, so the high line is worthless (audit 2026-09-24, confirmed by bot 2026-09-28).
   Raise par in the pack to ~100 of the zone's 122, draw high-line wings bigger and worth two, and

@@ -10,8 +10,10 @@ export const introDescription =
 
 export const hint = "m-0 text-[clamp(1rem,1.6vw,1.6rem)] italic text-muted";
 
+// `relative`, because the wing flight lays its pool over the whole stage from the stage's own
+// corner (`WingFlight`).
 export const stage =
-  "flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)]";
+  "relative flex h-full w-full flex-col gap-[clamp(0.6rem,1.1vh,1.1rem)]";
 
 // The marquee is `<NeonMarquee>` from @wingnight/surface (DESIGN.md §2.2D).
 
