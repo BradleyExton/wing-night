@@ -2,6 +2,7 @@ import { Phase, SESSION_MODES, type RoomState } from "@wingnight/shared";
 
 import {
   clearActiveMinigameRuntimeState,
+  clearMinigameRoundMemory,
   initializeActiveMinigameRuntimeState
 } from "../../minigames/runtime/index.js";
 import { getNextPhase } from "../../utils/getNextPhase/index.js";
@@ -89,6 +90,9 @@ export const applyPhaseTransitionEffects = (
 
   if (isRoundStart) {
     initializeRoundTurnState(state);
+    // The previous round's turns remembered things for each other; this round's have not
+    // happened yet.
+    clearMinigameRoundMemory();
   }
 
   // Entering play from anywhere seats the turn: EATING on a night, the

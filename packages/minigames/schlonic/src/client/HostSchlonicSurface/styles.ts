@@ -52,6 +52,12 @@ export const counterBanked = "text-[0.85rem] text-gold/80 tabular-nums";
 export const counterWingsLabel =
   takeoverLabel;
 
+// The run to beat, beside the tally in the same glass: the ghost's wings, dimmer than the
+// team's own gold because it is the target and not the score.
+export const counterBest = `${railCounterOverlay} font-score tabular-nums tracking-normal text-text/70`;
+
+export const counterBestWings = "text-[0.95rem] font-extrabold tabular-nums";
+
 export const waitingNote =
   "flex h-full w-full items-center justify-center text-sm text-muted";
 

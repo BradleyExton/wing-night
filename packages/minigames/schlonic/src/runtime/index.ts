@@ -1,11 +1,11 @@
-import type { MinigameType, Player, SchlonicPlayerFigure, Team } from "@wingnight/shared";
+import type { MinigameType, Player, SchlonicBestRun, SchlonicPlayerFigure, Team } from "@wingnight/shared";
 import { runSchlonicRun } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult
 } from "@wingnight/minigames-core";
 
-import { isSchlonicRuntimeState, isSchlonicTickPayload } from "./guards/index.js";
+import { isSchlonicRoundMemory, isSchlonicRuntimeState, isSchlonicTickPayload } from "./guards/index.js";
 import { isSchlonicRules, resolveSchlonicRules } from "./rules/index.js";
 import { resolveWingsBanked, resolveWingsPar, resolveSchlonicPoints } from "./scoring/index.js";
 import type { SchlonicRuntimeRules, SchlonicRuntimeRun, SchlonicRuntimeState } from "./types/index.js";
@@ -68,6 +68,47 @@ const createRuns = (
   });
 };
 
+const cloneBestRun = (bestRun: SchlonicBestRun | null): SchlonicBestRun | null => {
+  return bestRun === null
+    ? null
+    : {
+        ...bestRun,
+        player: bestRun.player === null ? null : { ...bestRun.player },
+        inputs: bestRun.inputs.map((input) => ({ ...input }))
+      };
+};
+
+/**
+ * The round's best is the cleared run with the most wings, whoever ran it; a tie keeps the one
+ * that stood first, because the ghost is a target and a target should not move for a draw. A
+ * run that did not reach the post banked nothing and cannot be the best of anything.
+ */
+const withBestRun = (
+  state: SchlonicRuntimeState,
+  run: SchlonicRuntimeRun
+): SchlonicRuntimeState => {
+  const result = run.result;
+
+  if (result === null || result.outcome !== "cleared") {
+    return state;
+  }
+
+  if (state.bestRun !== null && result.wings <= state.bestRun.wings) {
+    return state;
+  }
+
+  return {
+    ...state,
+    bestRun: {
+      teamId: state.activeTurnTeamId,
+      player: run.player === null ? null : { ...run.player },
+      inputs: run.inputs.map((input) => ({ ...input })),
+      wings: result.wings,
+      endTick: result.endTick
+    }
+  };
+};
+
 const mutated = (state: SchlonicRuntimeState): MinigameRuntimeReductionResult => {
   return { state, didMutate: true };
 };
@@ -122,11 +163,14 @@ const finishRun = (
   pointsMax: number
 ): SchlonicRuntimeState => {
   return withTurnScore(
-    {
-      ...state,
-      runs: replaceRun(state, run.runIndex, run),
-      runIndex: run.runIndex + 1
-    },
+    withBestRun(
+      {
+        ...state,
+        runs: replaceRun(state, run.runIndex, run),
+        runIndex: run.runIndex + 1
+      },
+      run
+    ),
     pointsMax
   );
 };
@@ -138,6 +182,10 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
     const rules = resolveSchlonicRules(input.rules);
     const activeTurnTeamId = input.activeRoundTeamId ?? input.teamIds[0] ?? null;
     const figures = resolveTeamFigures(activeTurnTeamId, input.players, input.teams);
+    // The previous turn's ghost, if the round has one yet.
+    const bestRun = isSchlonicRoundMemory(input.roundMemory)
+      ? cloneBestRun(input.roundMemory.bestRun)
+      : null;
 
     const initialState: SchlonicRuntimeState = {
       activeTurnTeamId,
@@ -149,7 +197,9 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
       runs: createRuns(figures, rules),
       turnStartPoints:
         activeTurnTeamId === null ? 0 : (input.pendingPointsByTeamId[activeTurnTeamId] ?? 0),
-      pendingPointsByTeamId: { ...input.pendingPointsByTeamId }
+      pendingPointsByTeamId: { ...input.pendingPointsByTeamId },
+      bestRun,
+      turnStartBestRun: cloneBestRun(bestRun)
     };
 
     return initialState;
@@ -240,14 +290,16 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     // Escape hatch (AGENTS.md §11): put the whole team back on the start line, handing back
-    // exactly the points this turn banked.
+    // exactly the points this turn banked — and the ghost this turn may have set, since a run
+    // that is being forgotten cannot be the one to beat.
     if (actionType === "resetTurn") {
       const reset: SchlonicRuntimeState = {
         ...state,
         runIndex: 0,
         runs: state.runs.map((entry) =>
           createReadyRun(entry.player === null ? [] : [entry.player], entry.runIndex)
-        )
+        ),
+        bestRun: cloneBestRun(state.turnStartBestRun)
       };
 
       return mutated(withTurnScore(reset, input.pointsMax));
@@ -278,5 +330,13 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     return toSchlonicDisplayView(input.state);
+  },
+  // The one thing a turn leaves for the next: the run to beat.
+  selectRoundMemory: (input) => {
+    if (!isSchlonicRuntimeState(input.state)) {
+      return null;
+    }
+
+    return { bestRun: cloneBestRun(input.state.bestRun) };
   }
 };

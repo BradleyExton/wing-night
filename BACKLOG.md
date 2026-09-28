@@ -137,10 +137,10 @@ Two of seven landed 2026-09-28 on `claude/scholnic-game-improvements-27a62e`: th
 (the zone fills the wall and runs ahead of the tablet, `SchlonicScene/camera`) and the zone strip
 (`ZoneTrack`, FAPPY's pace-track shape). Still to do, in the order they were argued for:
 
-- **Best-run ghost on the strip and in the zone.** Every run's input log is on the server and the
-  sim is deterministic, so the round's best run so far can replay as a translucent hen beside the
-  live one and as a second pin on the strip. Needs the best run's log and player figure on the
-  display view. This is the item that turns "how far does it get" into a race the room can see.
+- ~~**Best-run ghost on the strip and in the zone.**~~ Done 2026-09-28: the round's best run
+  crosses turns as plugin round memory (a new optional `selectRoundMemory` / `roundMemory` on the
+  plugin contract) and replays as a ghost in the zone, a second pin on the strip and a "to beat"
+  figure in both chromes.
 - **Juice on the TV.** A soundboard on the FAPPY pattern (`useFappySounds`): wing chime, spring
   boing, badnik pop, hit scatter, post sting, a rising tick over the last chunks. A ~0.2 s hit
   pause and a shake opposite the impact. At the post, wings fly into the banked counter one by

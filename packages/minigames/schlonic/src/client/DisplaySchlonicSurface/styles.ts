@@ -22,6 +22,9 @@ export const marqueeInHand = `${readoutFigure} text-gold`;
 
 export const marqueeWings = `${readoutFigure} text-gold/80`;
 
+// The run to beat: dimmer than the team's gold, because it is the target and not the score.
+export const marqueeBest = `${readoutFigure} text-text/70`;
+
 // Scene art, licensed by DESIGN.md §2.11: the zone's ground pooled behind a plaque. The zone
 // looks like nothing else in the show on purpose.
 const sceneZoneVeil =

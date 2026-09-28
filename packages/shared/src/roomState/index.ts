@@ -542,6 +542,18 @@ export type SchlonicMinigameRun = {
   result: SchlonicRunResult | null;
 };
 
+// The round's best run so far: the cleared run that banked the most wings, from any team in the
+// round, carried from turn to turn by the plugin's round memory. It is the ghost every later
+// runner races — the same input log the referee scored, re-run on the live run's clock — and it
+// is nobody's secret, so both views carry it whole.
+export type SchlonicBestRun = {
+  teamId: string | null;
+  player: SchlonicPlayerFigure | null;
+  inputs: SchlonicInput[];
+  wings: number;
+  endTick: number;
+};
+
 // Nothing about a run is secret — the whole zone is on the TV as it happens — so the host and
 // display carry the same fields, as JOUST and FAPPY do. The zone is a RULE, not a roll: every
 // team in the round runs the same one, so the night is a race rather than a lottery.
@@ -558,6 +570,8 @@ type SchlonicMinigameViewFields = {
   wingsBanked: number;
   wingsPar: number;
   points: number | null;
+  // The run to beat, as it stood when the run in hand started; null until someone clears the zone.
+  bestRun: SchlonicBestRun | null;
 };
 
 export type SchlonicMinigameHostView = MinigameHostViewBase & SchlonicMinigameViewFields;

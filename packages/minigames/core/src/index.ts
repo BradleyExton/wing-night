@@ -43,6 +43,12 @@ export type MinigameRuntimeInitializationInput = {
   pendingPointsByTeamId: Record<string, number>;
   rules: SerializableValue | null;
   content: SerializableValue | null;
+  // What this game's `selectRoundMemory` handed forward from the previous
+  // team's turn in the SAME round, or null on the round's first turn (and for
+  // a plugin that keeps no memory). Runtime state is re-initialised for every
+  // team, so this is the one way a round-long fact — a best run to race, a
+  // target already taken — crosses from one turn to the next.
+  roundMemory?: SerializableValue | null;
 };
 
 export type MinigameRuntimeReductionInput = {
@@ -106,6 +112,12 @@ export type MinigameRuntimePlugin = {
   syncContent?: (input: MinigameRuntimeSyncContentInput) => SerializableValue;
   selectHostView: (input: MinigameRuntimeSelectorInput) => MinigameHostView | null;
   selectDisplayView: (input: MinigameRuntimeSelectorInput) => MinigameDisplayView | null;
+  // Optional: what the round should remember of this state once the turn is
+  // over, handed to the next team's `initialize` as `roundMemory`. The server
+  // reads it after every change to the state, so a memory is always the
+  // latest state's — including after an undo — and never a stale one taken
+  // at the turn's end. Cleared when a round starts. Serializable, like state.
+  selectRoundMemory?: (input: MinigameRuntimeSelectorInput) => SerializableValue | null;
 };
 
 export type MinigameSurfacePhase = "intro" | "play";

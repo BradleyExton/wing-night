@@ -262,6 +262,7 @@ export type {
   FappyMinigameHostView,
   SchlonicMinigameDisplayView,
   SchlonicMinigameHostView,
+  SchlonicBestRun,
   SchlonicMinigameRun,
   SchlonicPhase,
   SchlonicPlayerFigure,

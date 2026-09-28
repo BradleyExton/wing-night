@@ -44,6 +44,7 @@ const createView = (
   wingsBanked: 0,
   wingsPar: 40,
   points: null,
+  bestRun: null,
   ...overrides
 });
 
@@ -112,6 +113,31 @@ test("draws the zone through the room's wider camera rather than the tablet's bo
 
   assert.ok(markup.includes('data-schlonic-camera="fill"'));
   assert.ok(!markup.includes('viewBox="0 0 160 90"'));
+});
+
+// The round's best run is the ghost the runner races: its bird in the zone, its pin on the
+// strip, and its wings on the marquee as the number to beat. Nothing of it before anyone has
+// cleared the zone.
+test("races the round's best run as a ghost once there is one", () => {
+  const bestRun = {
+    teamId: "team-beta",
+    player: { ...ALEX, playerId: "p-9", name: "Dan", teamId: "team-beta" },
+    inputs: [{ tick: 12, down: true }],
+    wings: 33,
+    endTick: 900
+  };
+  const markup = render(createView({ bestRun }));
+
+  assert.ok(markup.includes("data-schlonic-ghost"));
+  assert.ok(markup.includes("data-schlonic-track-ghost"));
+  assert.ok(markup.includes("To beat · Dan"));
+  assert.ok(markup.includes(">33<"));
+
+  const without = render(createView());
+
+  assert.ok(!without.includes("data-schlonic-ghost"));
+  assert.ok(!without.includes("data-schlonic-track-ghost"));
+  assert.ok(!without.includes("To beat"));
 });
 
 test("hangs the zone strip over the arena so the room can read what is coming", () => {

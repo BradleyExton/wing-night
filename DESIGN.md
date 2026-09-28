@@ -1569,6 +1569,20 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     written on mount; the live pin is one property the mirror's loop writes
     on the root beside the wing tally (`trackMarks/paintZoneTrack`), so nothing
     on the strip re-renders per frame.
+-   **The ghost: the round's best run, raced live.** The cleared run that
+    banked the most wings so far — any team's — crosses from turn to turn as
+    the plugin's round memory (`selectRoundMemory` → `initialize({ roundMemory })`,
+    `docs/minigame-authoring-guide.md` §3) and both surfaces replay its input
+    log on the live run's own clock, tick for tick: the best run's own bird
+    (`SchlonicScene/Ghost`), at half strength, behind the runner, its name over
+    its head, wherever its replay has got to — ahead, behind, or off the
+    picture; the same figure as a second pin on the strip, under the runner's;
+    and its wings in both chromes as the number "to beat", dimmer than the
+    team's gold because it is the target and not the score. The ghost is fixed
+    when a run is taken up, so a run that sets the new best does not restart
+    its own replay, and it is hidden on the line, where two hens on one spot
+    are a smudge. This is what turns "how far does it get" into a race the
+    room can watch: the round's leader is on the wall, not in a sum.
 -   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
     the same one JOUST takes in §2.7 and FAPPY in §2.9: the zone is full bleed
     and is still the whole jump surface, filling the takeover's padding box edge

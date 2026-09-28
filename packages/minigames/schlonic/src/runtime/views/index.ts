@@ -50,7 +50,15 @@ const toSchlonicViewFields = (state: SchlonicRuntimeState) => {
     })),
     wingsBanked: resolveWingsBanked(state.runs),
     wingsPar: resolveWingsPar(state.parWingsPerRun, state.runsPerTurn),
-    points: resolvePoints(state)
+    points: resolvePoints(state),
+    bestRun:
+      state.bestRun === null
+        ? null
+        : {
+            ...state.bestRun,
+            player: state.bestRun.player === null ? null : { ...state.bestRun.player },
+            inputs: state.bestRun.inputs.map((input) => ({ ...input }))
+          }
   };
 };
 

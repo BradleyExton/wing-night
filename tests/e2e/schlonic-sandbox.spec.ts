@@ -216,9 +216,25 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
     "You're up — grab the tablet"
   );
 
+
   // The server refereed the run from the log and put what it brought home on the board.
   await expect(page.locator("[data-schlonic-history='0']")).not.toContainText("—");
   await expect(page.getByText("Run 2 of 2")).toBeVisible({ timeout: 5000 });
+
+  // A run that made the post is the round's best, and the next team races it: hand the sandbox
+  // to another team and the ghost is in both zones, on the strip, and on the marquee as the
+  // number to beat. A run that went down the hole is nobody's ghost.
+  const didClear = (await displayPlaque.getAttribute("data-schlonic-outcome")) === "cleared";
+
+  await page.getByLabel("Whose turn").selectOption({ index: 1 });
+
+  if (didClear) {
+    await expect(page.locator("[data-schlonic-ghost]")).toHaveCount(2);
+    await expect(page.locator("[data-schlonic-track-ghost]")).toHaveCount(1);
+    await expect(page.locator("[data-schlonic-best]").first()).toContainText("To beat · Alex");
+  } else {
+    await expect(page.locator("[data-schlonic-ghost]")).toHaveCount(0);
+  }
 });
 
 test("the runner curls into a ball the moment it leaves the ground, and unrolls when it lands", async ({

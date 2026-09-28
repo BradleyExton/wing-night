@@ -13,6 +13,10 @@ export const displaySchlonicSurfaceCopy = {
   // What the tally reads before the loop has written to it: a bird on the line holds nothing.
   inHandOnTheLine: "0",
   bankedLabel: "Banked",
+  // The round's best run, the ghost in the zone: what it banked and whose it was.
+  bestWings: (wings: number): string => `${wings}`,
+  bestLabel: (playerName: string | null): string =>
+    playerName === null ? "To beat" : `To beat · ${playerName}`,
   sceneLabel: (playerName: string | null): string =>
     playerName === null ? "Kempenfelt Bay Zone" : `Kempenfelt Bay Zone — ${playerName}'s run`,
   readyPrompt: (playerName: string | null): string =>

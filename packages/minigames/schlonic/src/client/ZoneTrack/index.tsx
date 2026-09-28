@@ -15,6 +15,29 @@ type ZoneTrackProps = {
   runner: RunnerFigure;
   /** The `text-*` class of the team's colour, for the pins of runs whose runner is off screen. */
   teamFillClassName: string;
+  /** The round's best run as a figure, riding the bar behind the runner; null with no run to beat. */
+  ghost?: RunnerFigure | null;
+};
+
+// A figure's face for a pin: the generated head when the pack has one, the house hen otherwise.
+const PinFace = ({ figure, alt }: { figure: RunnerFigure; alt: string }): JSX.Element => {
+  const avatarSrc = figure.appearance.avatarSrc;
+
+  if (avatarSrc !== undefined && figure.playerName !== null) {
+    return <img className={styles.runnerPhoto} src={avatarSrc} alt={alt} />;
+  }
+
+  return (
+    <span className={styles.runnerHen}>
+      <Character
+        appearance={figure.appearance}
+        apparel={figure.apparel}
+        silhouette={figure.silhouette}
+        fillClassName={figure.fillClassName}
+        pose="still"
+      />
+    </span>
+  );
 };
 
 const HAZARD_CLASS_NAMES = {
@@ -45,12 +68,11 @@ const atPercent = (percent: number, widthPercent?: number) => {
  * here re-renders per frame.
  */
 export const ZoneTrack = forwardRef<HTMLDivElement, ZoneTrackProps>(
-  ({ zone, runs, shownRunIndex, runner, teamFillClassName }, ref): JSX.Element => {
+  ({ zone, runs, shownRunIndex, runner, teamFillClassName, ghost = null }, ref): JSX.Element => {
     const marks = useMemo(() => resolveTrackMarks(zone), [zone]);
     const finishedRuns = runs.filter(
       (run) => run.runIndex < shownRunIndex && run.result !== null && !run.skipped
     );
-    const avatarSrc = runner.appearance.avatarSrc;
 
     return (
       <div ref={ref} className={styles.container} data-schlonic-track>
@@ -96,28 +118,23 @@ export const ZoneTrack = forwardRef<HTMLDivElement, ZoneTrackProps>(
             />
           );
         })}
+        {/* The ghost rides behind the runner in the stacking order on purpose: when the two
+            meet, the room should read the live face. */}
+        {ghost !== null && (
+          <span
+            className={`${styles.ghostMark} ${ghost.fillClassName}`}
+            data-schlonic-track-ghost
+            aria-hidden="true"
+          >
+            <PinFace figure={ghost} alt={zoneTrackCopy.ghostAlt(ghost.playerName)} />
+          </span>
+        )}
         <span
           className={`${styles.runnerMark} ${runner.fillClassName}`}
           data-schlonic-track-runner
           aria-hidden="true"
         >
-          {avatarSrc !== undefined && runner.playerName !== null ? (
-            <img
-              className={styles.runnerPhoto}
-              src={avatarSrc}
-              alt={zoneTrackCopy.runnerAlt(runner.playerName)}
-            />
-          ) : (
-            <span className={styles.runnerHen}>
-              <Character
-                appearance={runner.appearance}
-                apparel={runner.apparel}
-                silhouette={runner.silhouette}
-                fillClassName={runner.fillClassName}
-                pose="still"
-              />
-            </span>
-          )}
+          <PinFace figure={runner} alt={zoneTrackCopy.runnerAlt(runner.playerName ?? "")} />
         </span>
         <span className={styles.label}>
           {zoneTrackCopy.label(marks.hazards.length, marks.pits.length)}

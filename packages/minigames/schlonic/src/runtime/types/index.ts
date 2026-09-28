@@ -1,4 +1,4 @@
-import type { SchlonicMinigameRun } from "@wingnight/shared";
+import type { SchlonicBestRun, SchlonicMinigameRun } from "@wingnight/shared";
 
 export type SchlonicRuntimeRules = {
   runsPerTurn: number;
@@ -26,6 +26,18 @@ export type SchlonicRuntimeState = {
   /** What the active team had banked before this turn, so `resetTurn` hands back exactly the turn. */
   turnStartPoints: number;
   pendingPointsByTeamId: Record<string, number>;
+  /**
+   * The round's best cleared run so far, from any team: the ghost the runner races. Arrives
+   * through `roundMemory` from the previous turn and leaves the same way.
+   */
+  bestRun: SchlonicBestRun | null;
+  /** The best as it stood when this turn began, so `resetTurn` forgets this turn's runs only. */
+  turnStartBestRun: SchlonicBestRun | null;
+};
+
+/** What SCHLONIC asks the round to remember between turns. */
+export type SchlonicRoundMemory = {
+  bestRun: SchlonicBestRun | null;
 };
 
 // Three runs covers a full team without cycling in the sample pack, and 22 chunks is about

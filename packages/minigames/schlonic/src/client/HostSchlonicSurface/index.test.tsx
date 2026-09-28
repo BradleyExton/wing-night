@@ -51,6 +51,7 @@ const createView = (
   wingsBanked: 0,
   wingsPar: 40,
   points: null,
+  bestRun: null,
   ...overrides
 });
 
@@ -254,4 +255,22 @@ test("draws nothing of its own for another game's view", () => {
   const markup = render(null);
 
   assert.ok(!markup.includes("data-schlonic-arena"));
+});
+
+// The tablet holder races the round's best run too: the ghost's bird is in the zone under the
+// finger, and its wings sit in the chrome as the number to beat.
+test("puts the run to beat in the zone and in the chrome once the round has one", () => {
+  const bestRun = {
+    teamId: "team-beta",
+    player: { playerId: "p-9", name: "Dan", avatarSrc: null, teamId: "team-beta", genre: null },
+    inputs: [{ tick: 12, down: true }],
+    wings: 33,
+    endTick: 900
+  };
+  const markup = render(createView({ bestRun }));
+
+  assert.ok(markup.includes("data-schlonic-ghost"));
+  assert.ok(markup.includes("data-schlonic-best"));
+  assert.ok(markup.includes("To beat · Dan"));
+  assert.ok(!render(createView()).includes("data-schlonic-ghost"));
 });

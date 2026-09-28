@@ -90,6 +90,12 @@ In `packages/minigames/<slug>/src/runtime/index.ts`, export a
 - `id`: your new `MinigameType`.
 - `initialize`, `reduceAction`, `selectHostView`, `selectDisplayView`.
 - `syncPendingPoints` and `syncContent` if needed.
+- `selectRoundMemory` if a fact has to outlive one team's turn. Runtime state
+  is re-initialised for every team, so a round-long fact (SCHLONIC's best run
+  to race, a target already taken) is returned from here after every change
+  and arrives at the next team's `initialize` as `roundMemory`. Guard it the
+  way you guard state — it is `null` on the round's first turn, and the server
+  clears it at every round start.
 - `content`: build it with `createPromptContentAdapter` from
   `@wingnight/minigames-core` — pass `label`, `fileName`, an
   `invalidContentHint` error suffix, plus your shared `isContentFile` /

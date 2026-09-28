@@ -67,7 +67,12 @@ export const resolveTrackMarks = (zone: SchlonicZone): ZoneTrackMarks => {
  * the strip's root and the same number as data for anything reading the wall, sixty times a
  * second, with no React in the way.
  */
-export const paintZoneTrack = (root: HTMLElement | null, zone: SchlonicZone, frame: SchlonicFrame): void => {
+export const paintZoneTrack = (
+  root: HTMLElement | null,
+  zone: SchlonicZone,
+  frame: SchlonicFrame,
+  ghostFrame: SchlonicFrame | null = null
+): void => {
   if (root === null) {
     return;
   }
@@ -75,10 +80,16 @@ export const paintZoneTrack = (root: HTMLElement | null, zone: SchlonicZone, fra
   const percent = resolveTrackPercent(zone, frame.x);
   const text = `${percent}`;
 
-  if (root.dataset.schlonicTrackPercent === text) {
-    return;
+  if (root.dataset.schlonicTrackPercent !== text) {
+    root.style.setProperty("--schlonic-track-run", `${percent}%`);
+    root.dataset.schlonicTrackPercent = text;
   }
 
-  root.style.setProperty("--schlonic-track-run", `${percent}%`);
-  root.dataset.schlonicTrackPercent = text;
+  // The run to beat, on the same bar: where its replay has got to on this tick.
+  const ghostText = ghostFrame === null ? "" : `${resolveTrackPercent(zone, ghostFrame.x)}`;
+
+  if ((root.dataset.schlonicTrackGhostPercent ?? "") !== ghostText) {
+    root.style.setProperty("--schlonic-track-ghost", ghostText === "" ? "0%" : `${ghostText}%`);
+    root.dataset.schlonicTrackGhostPercent = ghostText;
+  }
 };

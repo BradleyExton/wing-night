@@ -1,4 +1,5 @@
 import type {
+  SchlonicBestRun,
   SchlonicOutcome,
   SchlonicPlayerFigure,
   SchlonicRunResult,
@@ -6,7 +7,7 @@ import type {
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import type { SchlonicRuntimeRun, SchlonicRuntimeState } from "../types/index.js";
+import type { SchlonicRoundMemory, SchlonicRuntimeRun, SchlonicRuntimeState } from "../types/index.js";
 
 const RUN_STATUSES: readonly SchlonicRunStatus[] = ["ready", "running", "done"];
 const OUTCOMES: readonly SchlonicOutcome[] = ["cleared", "wiped", "fell"];
@@ -77,6 +78,32 @@ const isRun = (value: unknown): value is SchlonicRuntimeRun => {
   );
 };
 
+const isBestRunOrNull = (value: unknown): value is SchlonicBestRun | null => {
+  if (value === null) {
+    return true;
+  }
+
+  return (
+    isObjectLike(value) &&
+    (value.teamId === null || typeof value.teamId === "string") &&
+    isFigureOrNull(value.player) &&
+    Array.isArray(value.inputs) &&
+    value.inputs.every(isInput) &&
+    isNonNegativeInteger(value.wings) &&
+    isNonNegativeInteger(value.endTick)
+  );
+};
+
+/**
+ * What the previous turn handed on, if it was ours. Anything else — another game's memory, a
+ * shape from before this field existed — is no memory at all, and the round starts with no ghost.
+ */
+export const isSchlonicRoundMemory = (
+  value: SerializableValue | null | undefined
+): value is SchlonicRoundMemory => {
+  return isObjectLike(value) && isBestRunOrNull(value.bestRun);
+};
+
 const isRecordOfNumbers = (value: unknown): value is Record<string, number> => {
   return isObjectLike(value) && Object.values(value).every((entry) => isFiniteNumber(entry));
 };
@@ -100,7 +127,9 @@ export const isSchlonicRuntimeState = (
     Array.isArray(state.runs) &&
     state.runs.every(isRun) &&
     isFiniteNumber(state.turnStartPoints) &&
-    isRecordOfNumbers(state.pendingPointsByTeamId)
+    isRecordOfNumbers(state.pendingPointsByTeamId) &&
+    isBestRunOrNull(state.bestRun) &&
+    isBestRunOrNull(state.turnStartBestRun)
   );
 };
 

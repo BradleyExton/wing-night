@@ -147,6 +147,18 @@ export const HostSchlonicSurface = ({
                 {hostSchlonicSurfaceCopy.bankedLabel}
               </span>
             </span>
+            {/* The run to beat, once the round has one: the ghost's wings and whose it is.
+                The holder is racing it in the zone; this is the number the race is for. */}
+            {schlonicView.bestRun !== null && (
+              <span className={styles.counterBest} data-schlonic-best>
+                <span className={styles.counterBestWings}>
+                  {hostSchlonicSurfaceCopy.bestWings(schlonicView.bestRun.wings)}
+                </span>
+                <span className={styles.counterWingsLabel}>
+                  {hostSchlonicSurfaceCopy.bestLabel(schlonicView.bestRun.player?.name ?? null)}
+                </span>
+              </span>
+            )}
           </>
         )
       }

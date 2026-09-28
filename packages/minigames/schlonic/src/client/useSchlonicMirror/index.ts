@@ -1,5 +1,11 @@
 import { useEffect, useReducer, useRef, type RefObject } from "react";
-import type { SchlonicFrame, SchlonicInput, SchlonicMinigameRun, SchlonicZone } from "@wingnight/shared";
+import type {
+  SchlonicBestRun,
+  SchlonicFrame,
+  SchlonicInput,
+  SchlonicMinigameRun,
+  SchlonicZone
+} from "@wingnight/shared";
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart, runSchlonicRun } from "@wingnight/shared";
 
 import { CLEARED_BEAT_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
@@ -17,6 +23,8 @@ type SchlonicMirrorInput = {
   tallyRef?: RefObject<HTMLElement>;
   /** The zone strip over the arena, whose live pin the loop moves each frame. */
   trackRef?: RefObject<HTMLElement>;
+  /** The run to beat: replayed from its own log on the live run's clock, as the ghost. */
+  bestRun?: SchlonicBestRun | null;
 };
 
 // How far behind the tablet the TV draws, in ticks: a tenth of a second, so a press has normally
@@ -28,12 +36,18 @@ type MirrorRun = {
   key: string;
   inputs: readonly SchlonicInput[];
   frame: SchlonicFrame;
+  // The ghost's log and frame, fixed when the run is taken up: the run to beat is the one that
+  // stood when this run started, whatever the view says by the time it ends.
+  ghostInputs: readonly SchlonicInput[] | null;
+  ghostFrame: SchlonicFrame | null;
   startedAtMs: number | null;
   rafHandle: number;
 };
 
 type MirrorBeat = {
   kind: "cleared" | "wipeout";
+  /** Where the ghost stood when the run ended; it holds there through the beat. */
+  ghostFrame: SchlonicFrame | null;
   startedAtMs: number;
   rafHandle: number;
   then: (() => void) | null;
@@ -66,9 +80,15 @@ export const useSchlonicMirror = ({
   zoneChunks,
   sceneRef,
   tallyRef,
-  trackRef
+  trackRef,
+  bestRun = null
 }: SchlonicMirrorInput): void => {
   const runRef = useRef<MirrorRun | null>(null);
+  // Read when a run is taken up, never a dependency: a best run set by THIS run's own result
+  // must not restart the mirror mid-replay.
+  const bestRunRef = useRef(bestRun);
+
+  bestRunRef.current = bestRun;
   const beatRef = useRef<MirrorBeat | null>(null);
   // Set once the run in hand has ended with the tablet already elsewhere: the effect below runs
   // again against whatever the tablet is on by then.
@@ -83,10 +103,32 @@ export const useSchlonicMirror = ({
   // The loops live on refs and are stopped on purpose — when a new run or a still frame replaces
   // them, or on unmount — never by an effect's cleanup, so a run the tablet has already moved
   // past can still play out.
-  // The chrome the loop writes outside the scene: the marquee's tally and the strip's pin.
-  const paintChrome = (frame: SchlonicFrame): void => {
+  // The chrome the loop writes outside the scene: the marquee's tally and the strip's pins.
+  const paintChrome = (frame: SchlonicFrame, ghostFrame: SchlonicFrame | null = null): void => {
     paintWingTally(tallyRef?.current ?? null, frame.wings);
-    paintZoneTrack(trackRef?.current ?? null, zone, frame);
+    paintZoneTrack(trackRef?.current ?? null, zone, frame, ghostFrame);
+  };
+
+  // A fresh mirror run on the line, with the ghost on the line beside it if the round has one.
+  const createMirrorRun = (key: string, inputs: readonly SchlonicInput[]): MirrorRun => {
+    const best = bestRunRef.current;
+
+    return {
+      key,
+      inputs,
+      frame: createSchlonicRunStart(zone),
+      ghostInputs: best === null ? null : best.inputs,
+      ghostFrame: best === null ? null : createSchlonicRunStart(zone),
+      startedAtMs: null,
+      rafHandle: 0
+    };
+  };
+
+  // The ghost keeps pace with the live replay tick for tick; past its own post it stands still.
+  const advanceGhost = (mirror: MirrorRun, toTick: number): void => {
+    if (mirror.ghostFrame !== null && mirror.ghostInputs !== null) {
+      mirror.ghostFrame = advanceSchlonic(mirror.ghostFrame, zone, mirror.ghostInputs, toTick);
+    }
   };
 
   const stopLoop = (): void => {
@@ -108,18 +150,28 @@ export const useSchlonicMirror = ({
     beatRef.current = null;
   };
 
-  const startBeat = (kind: MirrorBeat["kind"], frame: SchlonicFrame): MirrorBeat => {
+  const startBeat = (
+    kind: MirrorBeat["kind"],
+    frame: SchlonicFrame,
+    ghostFrame: SchlonicFrame | null
+  ): MirrorBeat => {
     stopBeat();
 
-    const beat: MirrorBeat = { kind, startedAtMs: performance.now(), rafHandle: 0, then: null };
+    const beat: MirrorBeat = {
+      kind,
+      ghostFrame,
+      startedAtMs: performance.now(),
+      rafHandle: 0,
+      then: null
+    };
     const paintBeat = (progress: number): void => {
       if (kind === "cleared") {
-        sceneRef.current?.paintCleared(frame, progress);
+        sceneRef.current?.paintCleared(frame, progress, ghostFrame);
       } else {
-        sceneRef.current?.paintWipeout(frame, progress);
+        sceneRef.current?.paintWipeout(frame, progress, ghostFrame);
       }
 
-      paintChrome(frame);
+      paintChrome(frame, ghostFrame);
     };
     const step = (now: number): void => {
       const progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind];
@@ -146,7 +198,11 @@ export const useSchlonicMirror = ({
   const settleRun = (mirror: MirrorRun): void => {
     mirror.rafHandle = 0;
 
-    const beat = startBeat(mirror.frame.outcome === "cleared" ? "cleared" : "wipeout", mirror.frame);
+    const beat = startBeat(
+      mirror.frame.outcome === "cleared" ? "cleared" : "wipeout",
+      mirror.frame,
+      mirror.ghostFrame
+    );
 
     beat.then = (): void => {
       const pending = pendingRef.current;
@@ -156,10 +212,13 @@ export const useSchlonicMirror = ({
     };
   };
 
+  // A still frame is also where a run is first taken up (on the line, `ready`), and the live
+  // replay that follows inherits it — so it carries the ghost from the start, or the wall would
+  // race nobody.
   const paintStill = (key: string, frame: SchlonicFrame): void => {
     stopLoop();
     stopBeat();
-    runRef.current = { key, inputs: [], frame, startedAtMs: null, rafHandle: 0 };
+    runRef.current = { ...createMirrorRun(key, []), frame };
     sceneRef.current?.paint(frame);
     paintChrome(frame);
   };
@@ -211,7 +270,18 @@ export const useSchlonicMirror = ({
       paintStill(key, settled);
 
       if (!prefersReducedMotion()) {
-        startBeat(settled.outcome === "cleared" ? "cleared" : "wipeout", settled);
+        // The ghost as far as the settled run's own tick: the beat holds both where they stood.
+        const still = runRef.current;
+
+        if (still !== null) {
+          advanceGhost(still, settled.tick);
+        }
+
+        startBeat(
+          settled.outcome === "cleared" ? "cleared" : "wipeout",
+          settled,
+          still?.ghostFrame ?? null
+        );
       }
 
       return;
@@ -223,9 +293,7 @@ export const useSchlonicMirror = ({
     }
 
     const mirror: MirrorRun =
-      current !== null && current.key === key
-        ? { ...current, inputs }
-        : { key, inputs, frame: createSchlonicRunStart(zone), startedAtMs: null, rafHandle: 0 };
+      current !== null && current.key === key ? { ...current, inputs } : createMirrorRun(key, inputs);
 
     stopLoop();
     runRef.current = mirror;
@@ -251,24 +319,29 @@ export const useSchlonicMirror = ({
       Math.max(mirror.frame.tick, resolveTargetTick(performance.now()))
     );
 
+    advanceGhost(mirror, mirror.frame.tick);
+
     if (mirror.frame.outcome !== null) {
       settleRun(mirror);
       return;
     }
 
-    sceneRef.current?.paint(mirror.frame);
-    paintChrome(mirror.frame);
+    sceneRef.current?.paint(mirror.frame, mirror.ghostFrame);
+    paintChrome(mirror.frame, mirror.ghostFrame);
 
     const step = (now: number): void => {
-      mirror.frame = advanceSchlonic(mirror.frame, zone, mirror.inputs, resolveTargetTick(now));
+      const targetTick = resolveTargetTick(now);
+
+      mirror.frame = advanceSchlonic(mirror.frame, zone, mirror.inputs, targetTick);
+      advanceGhost(mirror, mirror.frame.tick);
 
       if (mirror.frame.outcome !== null) {
         settleRun(mirror);
         return;
       }
 
-      sceneRef.current?.paint(mirror.frame);
-      paintChrome(mirror.frame);
+      sceneRef.current?.paint(mirror.frame, mirror.ghostFrame);
+      paintChrome(mirror.frame, mirror.ghostFrame);
       mirror.rafHandle = window.requestAnimationFrame(step);
     };
 

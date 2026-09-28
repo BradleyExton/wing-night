@@ -42,6 +42,11 @@ export const runPin = `absolute ${at} top-1/2 h-[0.6rem] w-[0.6rem] -translate-x
 export const runnerMark =
   "absolute left-[var(--schlonic-track-run,0%)] top-1/2 aspect-square h-full w-[auto] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[0.12rem] border-current bg-bg shadow-[0_0_0.5rem_currentColor]";
 
+// The run to beat, placed by its own replay on the same tick. Faint, because it is not in the
+// race — it is the race's shadow — and under the runner in the stacking order.
+export const ghostMark =
+  "pointer-events-none absolute left-[var(--schlonic-track-ghost,0%)] top-1/2 aspect-square h-[115%] w-[auto] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[0.1rem] border-current bg-bg opacity-50";
+
 export const runnerPhoto = "h-full w-full object-cover";
 
 export const runnerHen = "flex h-full w-full items-center justify-center p-[8%]";

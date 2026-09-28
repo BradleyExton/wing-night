@@ -134,6 +134,13 @@ const SchlonicPlayBody = ({
     activeTurnTeamId: view.activeTurnTeamId,
     serverOrigin
   });
+  // The run to beat, as a figure — in its own team's colour, which may not be this team's.
+  const bestFigure = useRunnerFigure({
+    figure: view.bestRun?.player ?? null,
+    activeTurnTeamId: view.bestRun?.teamId ?? null,
+    serverOrigin
+  });
+  const ghost = view.bestRun === null ? null : bestFigure;
   const nextRun = view.runs[shownRunIndex + 1] ?? null;
   const isFinished = view.phase === "finished";
 
@@ -144,7 +151,8 @@ const SchlonicPlayBody = ({
     zoneChunks: view.zoneChunks,
     sceneRef,
     tallyRef,
-    trackRef
+    trackRef,
+    bestRun: view.bestRun
   });
 
   return (
@@ -163,6 +171,15 @@ const SchlonicPlayBody = ({
               {displaySchlonicSurfaceCopy.wingsCounter(view.wingsBanked, view.wingsPar)}
             </span>
             <span>{displaySchlonicSurfaceCopy.bankedLabel}</span>
+            {/* The run to beat, once the round has one: the ghost's wings and whose it is. */}
+            {view.bestRun !== null && (
+              <>
+                <span className={styles.marqueeBest} data-schlonic-best>
+                  {displaySchlonicSurfaceCopy.bestWings(view.bestRun.wings)}
+                </span>
+                <span>{displaySchlonicSurfaceCopy.bestLabel(view.bestRun.player?.name ?? null)}</span>
+              </>
+            )}
           </>
         }
         clock={clock}
@@ -177,6 +194,7 @@ const SchlonicPlayBody = ({
         shownRunIndex={shownRunIndex}
         runner={runner}
         teamFillClassName={runner.fillClassName}
+        ghost={ghost}
       />
       <div className={styles.arenaArea}>
         <div key={shownRunIndex} className={styles.runEnter}>
@@ -190,6 +208,7 @@ const SchlonicPlayBody = ({
             sceneId="display-schlonic"
             label={displaySchlonicSurfaceCopy.sceneLabel(runner.playerName)}
             cameraFit={TV_CAMERA_FIT}
+            ghost={ghost}
           />
         </div>
         <span className={styles.venuePlaque} data-schlonic-venue>

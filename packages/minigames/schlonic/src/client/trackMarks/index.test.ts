@@ -64,3 +64,28 @@ test("writes the live pin as one custom property and one data attribute", () => 
   // Nothing to paint into is not an error.
   paintZoneTrack(null, ZONE, start);
 });
+
+test("moves the ghost's pin on the same bar, and only when it moves", () => {
+  const writes: string[] = [];
+  const root = {
+    dataset: {} as Record<string, string>,
+    style: {
+      setProperty: (name: string, value: string): void => {
+        writes.push(`${name}=${value}`);
+      }
+    }
+  } as unknown as HTMLElement;
+  const start = createSchlonicRunStart(ZONE);
+  const halfway = { ...start, x: SCHLONIC_WORLD.runnerX + (ZONE.goalX - SCHLONIC_WORLD.runnerX) / 2 };
+
+  paintZoneTrack(root, ZONE, start, halfway);
+  paintZoneTrack(root, ZONE, start, halfway);
+  paintZoneTrack(root, ZONE, start, null);
+
+  assert.deepEqual(writes, [
+    "--schlonic-track-run=0%",
+    "--schlonic-track-ghost=50%",
+    "--schlonic-track-ghost=0%"
+  ]);
+  assert.equal(root.dataset.schlonicTrackGhostPercent, "");
+});
