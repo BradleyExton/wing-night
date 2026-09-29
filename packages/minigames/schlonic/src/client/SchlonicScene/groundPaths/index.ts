@@ -10,21 +10,21 @@ import { SCHLONIC_WORLD } from "@wingnight/shared";
  * and never rebuilds it.
  */
 export type GroundSegment = {
-  /** The walking surface, for the turf stroke along the top. */
+  /** The riding surface, for the sidewalk's sunlit lip along the top. */
   topPath: string;
-  /** The same run closed down to the bottom of the box, for the soil underneath. */
+  /** The same run closed down to the bottom of the box, for the subgrade underneath. */
   fillPath: string;
-  /** A band following the surface down, for the sand the bay's bluffs are cut out of. */
-  bluffPath: string;
-  /** The band under the sand, for the checkerboard the soil wears (Green Hill's, §2.11). */
+  /** A band following the surface down, for the sidewalk's concrete slabs. */
+  sidewalkPath: string;
+  /** The band under the sidewalk, for the checkerboard of brick pavers (Green Hill's, §2.11). */
   checkerPath: string;
   fromX: number;
   toX: number;
 };
 
-/** How deep the sand runs under the turf before the bluff gives way to clay. */
-export const BLUFF_DEPTH = 6;
-/** How deep the checkered band runs under the sand before the plain clay takes over. */
+/** How deep the sidewalk's concrete runs before the pavers under it show. */
+export const SIDEWALK_DEPTH = 6;
+/** How deep the checkered band of pavers runs under the sidewalk before the plain subgrade. */
 export const CHECKER_DEPTH = 10;
 
 const round = (value: number): number => Math.round(value * 100) / 100;
@@ -69,8 +69,8 @@ const toSegment = (points: readonly { x: number; y: number }[], bottomY: number)
   return {
     topPath,
     fillPath: `${topPath} L ${round(last.x)} ${bottomY} L ${round(first.x)} ${bottomY} Z`,
-    bluffPath: `${topPath} ${edge(BLUFF_DEPTH, "back", "L")} Z`,
-    checkerPath: `${edge(BLUFF_DEPTH, "along", "M")} ${edge(BLUFF_DEPTH + CHECKER_DEPTH, "back", "L")} Z`,
+    sidewalkPath: `${topPath} ${edge(SIDEWALK_DEPTH, "back", "L")} Z`,
+    checkerPath: `${edge(SIDEWALK_DEPTH, "along", "M")} ${edge(SIDEWALK_DEPTH + CHECKER_DEPTH, "back", "L")} Z`,
     fromX: first.x,
     toX: last.x
   };
@@ -80,7 +80,7 @@ const toSegment = (points: readonly { x: number; y: number }[], bottomY: number)
  * @param runOut How far past the last sample to keep drawing, in world units. The sim's ground
  * runs level forever past its last sample, but the drawing used to stop there — one chunk past
  * the post, with most of a screen still showing — so a cleared run ended on a cliff edge into
- * the park. The scene asks for a screen's worth; the geometry itself defaults to none.
+ * the road. The scene asks for a screen's worth; the geometry itself defaults to none.
  */
 export const resolveGroundSegments = (
   zone: SchlonicZone,

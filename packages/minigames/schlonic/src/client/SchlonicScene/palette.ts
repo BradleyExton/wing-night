@@ -1,8 +1,9 @@
-// Scene materials for the zone (DESIGN.md §2.11): a summer morning on Kempenfelt Bay, looking
-// east down the water the way the whole city does. Deliberately nothing like JOUST's dusk desert
-// or FAPPY's corridor, because SCHLONIC is the one minigame that is supposed to look like a
-// 16-bit platformer and the room should know which game it is looking at from the sofa before a
-// word is read — and now it should also know which CITY, because everyone on the sofa is from it.
+// Scene materials for the zone (DESIGN.md §2.11): a summer morning on Dunlop Street, downtown
+// Barrie, with the bay showing at the bottom of every cross street the way it does from the real
+// one. Deliberately nothing like JOUST's dusk beach or FAPPY's corridor, because SCHLONIC is the
+// one minigame that is supposed to look like a 16-bit platformer and the room should know which
+// game it is looking at from the sofa before a word is read — and which STREET, because everyone
+// on the sofa has walked it.
 //
 // The runner is the player's own cast hen and takes the TEAM's colour, so it is not in here.
 // What IS in here is everything standing in its way: the zone is furnished with the cast's
@@ -16,19 +17,36 @@
 // Drawing content, not UI chrome — exempt from the two-accent budget the way the drawing inks
 // and the JOUST arena are.
 export const schlonicPalette = {
-  // The shoreline the runner runs: park turf over the bay's sandy bluff.
-  turf: "#3fa34d",
-  turfLight: "#63c364",
-  turfDark: "#1f6b34",
-  bluffSand: "#d8bb86",
-  soil: "#8a5a2b",
-  // Green Hill's checkerboard, in the bluff's own clay: the soil and a warm light square.
-  soilChecker: "#b87a3d",
-  soilDark: "#5b3a1a",
-  soilEdge: "#3a2410",
-  // The dark under a pit: nothing down there, and it has to look it.
+  // The sidewalk the runner skates: poured concrete in slabs, a pale lip where the curb catches
+  // the sun, and a darker line where each slab meets the next.
+  concrete: "#cdc8bd",
+  concreteLight: "#efebe2",
+  concreteJoint: "#9c968a",
+  curbShadow: "#6b655b",
+  // Green Hill's checkerboard, laid as Dunlop's own red-brick pavers: two fired reds in mortar.
+  // The checker is what makes the ground read 16-bit before anything moves; the brick is what
+  // makes it read as downtown.
+  paver: "#b9523b",
+  paverDark: "#8e3a2a",
+  mortar: "#5c2518",
+  // What the pavers are laid on, down to the bottom of the box.
+  subgrade: "#5a3126",
+  // The dark under a trench: nothing down there, and it has to look it.
   pitShaft: "#22130a",
-  // Kempenfelt itself: deep down the middle, shallow and bright at the near shore.
+  // The Dunlop Street dig: an orange-and-white barrel either side of every trench, and the
+  // sawhorse that closes the near one. Barrel orange is a road-works orange, redder and deeper
+  // than a wing's sauce, and the white stripes are what say "barrel" rather than "another wing".
+  barrel: "#e8581c",
+  barrelDark: "#8f2f08",
+  barrelStripe: "#fbf8f1",
+  barrelLamp: "#ffd23f",
+  // The street itself, behind the near sidewalk: asphalt and its yellow centre line, then the
+  // far sidewalk the storefronts stand on, hazed like everything past the kerb.
+  asphalt: "#5b6068",
+  asphaltLight: "#737a83",
+  laneLine: "#f2c94c",
+  farSidewalk: "#c9ccc6",
+  // The bay at the bottom of the hill: deep at the horizon, bright where it meets the town.
   bayFar: "#2b6ea6",
   bay: "#2f8fc4",
   bayNear: "#63b8de",
@@ -36,41 +54,64 @@ export const schlonicPalette = {
   // The far bank across the water — Oro's treeline, hazed by the distance.
   shoreFar: "#86aab0",
   shoreFarTrees: "#5b8a84",
-  // Downtown, across the west end: the waterfront towers, City Hall and a church spire, hazed
-  // the same way so the eye reads them as far off rather than as scenery to jump on.
+  // Downtown's own slope down to the water, behind the fronts: the waterfront park, hazed.
+  hillside: "#a8c8b2",
+  // Downtown's slabs, City Hall and the spire, hazed so the eye reads them as far off rather
+  // than as scenery to jump on.
   town: "#93abc6",
   townDark: "#6f89a7",
   townGlass: "#e2f0fb",
-  // The Spirit Catcher, in the weathering steel it is actually made of — warm and dark, not the
-  // cool grey a steel sculpture is drawn in from memory. It is a bird, which is the joke the
-  // city got to first; the one on the hill is just smaller.
-  steel: "#8a7263",
-  steelDark: "#55433a",
-  // Allandale Station and the marina below it.
+  // The twin condos at the foot of Bayfield: the one cream thing on the skyline, with the blue
+  // glass balconies the room knows them by.
+  condo: "#f0dcae",
+  condoDark: "#cdb17c",
+  condoGlass: "#2b6ea6",
+  condoRoof: "#3d4b58",
+  // Dunlop Street's fronts across the road, in the morning haze: red and buff brick, white sills,
+  // dark glass and awnings, every one of them mixed toward the sky so the kit in front wins.
+  streetBrick: "#b88c83",
+  streetBrickDark: "#957975",
+  streetBuff: "#d4cbaf",
+  streetBuffDark: "#c1b79c",
+  streetTrim: "#e5eef4",
+  streetPane: "#6d7e88",
+  streetAwning: "#b06d6e",
+  streetCornice: "#659b7e",
+  // Crossover's pole sign, hazed only half as much: the parody is the joke, so it has to read.
+  crossoverRed: "#e25e57",
+  crossoverYellow: "#f6e07c",
+  crossoverInk: "#3a3230",
+  crossoverBoard: "#eef2f5",
+  // The two set pieces at the ends of the zone, near and at full strength: Souldiers' brick and
+  // its green graffiti wordmark, and the Queen's buff brick under its dark green roof.
   brick: "#a8523d",
   brickDark: "#6f3325",
-  roof: "#3d4b58",
-  beach: "#f0dcae",
-  beachDark: "#cdb17c",
-  dock: "#9a6b3c",
-  dockDark: "#5f4022",
-  sail: "#fdfdfd",
-  hull: "#2b3a46",
-  park: "#4fb87c",
+  trim: "#f4f6fa",
+  pane: "#2b3a46",
+  signGreen: "#3fa34d",
+  signGreenLight: "#63c364",
+  signInk: "#1c0d02",
+  signLetter: "#fff7ed",
+  buff: "#d8bb86",
+  buffDark: "#b89a66",
+  queensGreen: "#1f6b34",
+  flag: "#e8453c",
+  // Street steel: the gulls' ink in the sky, and a rail until it gets its own drawing.
+  steelDark: "#55433a",
   cloud: "#f4fbff",
   sun: "#ffe066",
   // The collectible, and the night's own joke: a sauced party wing. Orange rather than the gold
-  // a ring would be, because a hot orange separates from both the turf and the bay, which are the
-  // two grounds it mostly hangs over. The edge is much darker than the sauce rather than a shade
-  // of it: a wing crossing Allandale Station has to stay a wing, and the station's brick
+  // a ring would be, because a hot orange separates from both the sky and the hazed street,
+  // which are the two grounds it mostly hangs over. The edge is much darker than the sauce rather
+  // than a shade of it: a wing crossing Souldiers' wall has to stay a wing, and that brick
   // (`#a8523d`) is all but the same hue as a merely-darker orange would be.
   wing: "#f5902b",
   wingDark: "#7a3105",
   wingGloss: "#ffce7a",
   wingBone: "#fff1d6",
   wingBoneDark: "#c9a273",
-  // The schlong, in JOUST and FAPPY's own bubblegum: the one hue on a green shore that is
-  // neither its turf nor its bay, so a row of them reads from the sofa.
+  // The schlong, in JOUST and FAPPY's own bubblegum: the one hue on a grey-and-brick street that
+  // is neither its concrete nor its brick, so a row of them reads from the sofa.
   schlong: "#f9a3bc",
   schlongDark: "#8e2a52",
   schlongLight: "#ffe6ee",
@@ -105,7 +146,7 @@ export const schlonicPalette = {
   gullLeg: "#f08a24",
   post: "#f4f6fa",
   postPole: "#9aa6b5",
-  shadow: "#173a22",
+  shadow: "#2e2a26",
   eye: "#fff7ed",
   pupil: "#1c0d02",
   gloss: "#ffffff"

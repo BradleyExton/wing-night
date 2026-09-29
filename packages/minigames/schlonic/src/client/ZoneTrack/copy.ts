@@ -2,7 +2,7 @@ export const zoneTrackCopy = {
   // The strip is a picture; this is the same fact in words, for a screen reader and for the
   // e2e suite's benefit.
   label: (hazards: number, pits: number): string =>
-    `Kempenfelt Bay Zone, start line to post: ${hazards} hazard${hazards === 1 ? "" : "s"} and ${pits} hole${pits === 1 ? "" : "s"}`,
+    `Dunlop Street Zone, start line to post: ${hazards} hazard${hazards === 1 ? "" : "s"} and ${pits} hole${pits === 1 ? "" : "s"}`,
   runnerAlt: (playerName: string): string => `${playerName}, running`,
   ghostAlt: (playerName: string | null): string =>
     playerName === null ? "The run to beat" : `${playerName}'s run, the one to beat`,

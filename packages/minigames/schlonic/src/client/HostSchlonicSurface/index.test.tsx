@@ -78,7 +78,7 @@ const render = (
 test("explains the zone before the round opens rather than drawing it", () => {
   const markup = render(createView(), "intro");
 
-  assert.ok(markup.includes("Kempenfelt Bay Zone"));
+  assert.ok(markup.includes("Dunlop Street Zone"));
   assert.ok(!markup.includes("data-schlonic-arena"));
   // The intro is a panel in the host's own control deck, not a takeover: no
   // rail slot, and so no chrome row to put one in.

@@ -9,7 +9,7 @@ import {
 } from "@wingnight/shared";
 
 import type { LegBird } from "../resolveLegBird/index.js";
-import { Backdrop, FAR_DUNE_PARALLAX, NEAR_DUNE_PARALLAX, type BackdropRefs } from "./Backdrop/index.js";
+import { Backdrop, resolveSkylineTransform, type BackdropRefs } from "./Backdrop/index.js";
 import { BirdSprite, type BirdSpriteRefs } from "./BirdSprite/index.js";
 import { Champ, type ChampRefs } from "./Champ/index.js";
 import { resolveChampPaint } from "./champPaint/index.js";
@@ -83,8 +83,8 @@ const EMPTY_GATE_REFS: GateRefs = {
 const unit = (value: number): string => `calc(${value} * var(--fappy-unit))`;
 
 // One 16:9 world both surfaces draw. The backdrop and gate layers are SVG in
-// world units and the birds HTML boxes over it; none is React-driven per
-// frame — the owner paints frames through the handle from its own animation
+// world units and the birds HTML boxes over it; the skyline's bands slide as
+// composited layers under the gates. None is React-driven per frame — the owner paints frames through the handle from its own animation
 // loop, so the scene re-renders only when the course or the birds change.
 export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
   ({ gates, gatesPerLeg, bird, waitingBird, sceneId, label }, ref): JSX.Element => {
@@ -104,7 +104,7 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     const gatesPerLegRef = useRef(gatesPerLeg);
     const ids = {
       label: `${sceneId}-label`,
-      sun: `${sceneId}-sun`
+      backdrop: `${sceneId}-backdrop`
     };
 
     gatesRef.current = gates;
@@ -120,8 +120,15 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
 
     const paintGates = (frame: FappyFrame): void => {
       gateLayerRef.current?.setAttribute("transform", `translate(${-frame.scrollX} 0)`);
-      backdropRef.current?.far?.setAttribute("transform", `translate(${-frame.scrollX * FAR_DUNE_PARALLAX} 0)`);
-      backdropRef.current?.near?.setAttribute("transform", `translate(${-frame.scrollX * NEAR_DUNE_PARALLAX} 0)`);
+      const skyline = backdropRef.current;
+
+      if (skyline?.far) {
+        skyline.far.style.transform = resolveSkylineTransform(frame.scrollX, "far");
+      }
+
+      if (skyline?.near) {
+        skyline.near.style.transform = resolveSkylineTransform(frame.scrollX, "near");
+      }
 
       const wingbeat = (resolveFappyWave(frame.tick, WINGBEAT_PERIOD_TICKS, 0) - 0.5) * EAGLE_WINGBEAT_DEGREES;
       // The bird, in the gate layer's own (unscrolled) coordinates, for the champs to watch.
@@ -256,7 +263,7 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
     useImperativeHandle(ref, () => ({ paint, paintHandoff, paintCrash }));
 
     // The rest pose, before any loop has run: a bird standing on the start
-    // cliff. Without this the boxes sit at the top-left until the first frame.
+    // roof. Without this the boxes sit at the top-left until the first frame.
     useLayoutEffect(() => {
       isWaiterPeekUpRef.current = null;
       paint(createFappyLegStart(gatesRef.current, 0));
@@ -268,19 +275,19 @@ export const FappyScene = forwardRef<FappySceneHandle, FappySceneProps>(
           <span id={ids.label} className={styles.label}>
             {label}
           </span>
+          <Backdrop ref={backdropRef} idPrefix={ids.backdrop} />
           <svg
             className={styles.gateLayer}
             viewBox={`0 0 ${FAPPY_WORLD.width} ${FAPPY_WORLD.height}`}
             preserveAspectRatio="none"
             aria-hidden="true"
           >
-            <Backdrop ref={backdropRef} sunId={ids.sun} />
             <line
               x1={0}
               y1={FAPPY_WORLD.floorY}
               x2={FAPPY_WORLD.width}
               y2={FAPPY_WORLD.floorY}
-              stroke={fappyPalette.sandLine}
+              stroke={fappyPalette.kerbLine}
               strokeWidth={0.6}
             />
             <g ref={gateLayerRef} data-fappy-gates>

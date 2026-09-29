@@ -160,6 +160,13 @@ test("dresses the lane with a backdrop and stands every bird in its own shade", 
   assert.equal(shadows.length, LINEUP.length + TEAMMATES.length);
 });
 
+test("stands the twin condos on the skyline beside downtown when the lane is drawn", () => {
+  const html = renderSurface(baseView());
+
+  assert.equal((html.match(/data-scenery-town/g) ?? []).length, 1);
+  assert.equal((html.match(/data-scenery-condos/g) ?? []).length, 1);
+});
+
 test("rings the band's reach while it is being drawn, and not while it hangs slack", () => {
   assert.match(renderSurface(baseView({ aim: { x: -0.8, y: 0.5 } })), /data-joust-pull-guide/);
   assert.doesNotMatch(renderSurface(baseView()), /data-joust-pull-guide/);

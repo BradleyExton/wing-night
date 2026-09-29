@@ -10,7 +10,7 @@ const HEAD_RADIUS = 2.1;
 const SHAFT_RADIUS = 1.6;
 
 /**
- * The springboard: a schlong arched back out of the turf with a red-and-white pad strapped over
+ * The springboard: a schlong arched back out of the sidewalk with a red-and-white pad strapped over
  * the glans. The pad is the whole signal — the body is the same pink as the enemy, so the stripe
  * is what tells the room that this one is on their side.
  */

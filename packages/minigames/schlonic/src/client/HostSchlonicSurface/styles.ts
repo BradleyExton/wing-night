@@ -1,7 +1,7 @@
 import { briefingCard, railCounterOverlay, takeoverLabel, takeoverSecondary } from "@wingnight/surface";
 
 // SCHLONIC is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the zone
-// is evenly spread scenery — bay, shoreline and skyline — so a chip in one
+// is evenly spread scenery — street, skyline and bay — so a chip in one
 // corner costs a corner of Barrie rather than a word the host has to read.
 //
 // Nothing here positions the takeover's chrome and nothing here reserves the
@@ -64,7 +64,7 @@ export const waitingNote =
 // The turn's escape hatches and the one-line hint (§5, `actions`). The layout
 // floats this bottom-left and bounds its width so it cannot run under the
 // corner dock — neither the position nor the max-width is typed here. Glass,
-// because they sit over the shoreline rather than in a panel, and `shrink-0`
+// because they sit over the street rather than in a panel, and `shrink-0`
 // so the hint beside them wraps rather than squeezing a 44px target
 // (DESIGN.md §2.0A).
 export const secondaryButton = `${takeoverSecondary} h-12`;

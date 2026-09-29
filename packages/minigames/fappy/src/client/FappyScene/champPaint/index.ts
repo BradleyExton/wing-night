@@ -182,7 +182,7 @@ export const resolveWakeWobble = (gate: FappyGate, look: ChampLook, lookAt: Schl
 /**
  * Where everything on a champ is at one tick. The head's centre is one radius under the
  * sim's `champTop`, so the glans the bird sees is the line the bird dies on; the shaft is a
- * bend from the sand up to it, swaying at the tip and lagging in the middle, and whipping in
+ * bend from the street up to it, swaying at the tip and lagging in the middle, and whipping in
  * the wake of a bird that has just gone past. `lookAt` is the bird in the gate layer's own
  * coordinates; the pupils follow it once it is close.
  */

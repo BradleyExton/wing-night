@@ -338,6 +338,9 @@ importers:
       '@wingnight/minigames-core':
         specifier: workspace:*
         version: link:../core
+      '@wingnight/scenery':
+        specifier: workspace:*
+        version: link:../../scenery
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared

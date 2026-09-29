@@ -23,12 +23,12 @@ export type ChampRefs = {
   spit: SVGGElement | null;
 };
 
-// One champ standing up from the sand, drawn as the cast's schlong: balls on
+// One champ standing up from the street, drawn as the cast's schlong: balls on
 // the ground, a soft veined shaft bent up to a glans, a face on the head that
 // watches the bird come. The loop rewrites the body each frame from
 // `resolveChampPaint`; nothing here is React-driven per tick. Lit from the
-// left like everything else in the desert: a gloss up the shaft, a spot on
-// the head, a dark outline so it holds against the dusk at TV distance.
+// left like everything else on the street: a gloss up the shaft, a spot on
+// the head, a dark outline so it holds against the skyline at TV distance.
 //
 // A spitter's head is also a lid: a circle the size of the glans, hinged at
 // the rim, with the face on it. Shut, it is hidden and the body's own cap

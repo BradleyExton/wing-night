@@ -6,7 +6,7 @@ const onDeck = (onDeckName: string | null): string =>
 
 export const hostFappySurfaceCopy = {
   introDescription:
-    "Your team's chickens fly a relay through a corridor of champs, against one clock. Each player flies one section on the tablet: tap anywhere to flap, then come down on the far cliff where the next bird is waiting. Bump an eagle and it just flies off; hit a champ, the sand or the cliff and you go again from the last gate you made — it only costs time. The quicker the whole team gets through, the more points.",
+    "Your team's chickens fly a relay through a corridor of champs, against one clock. Each player flies one section on the tablet: tap anywhere to flap, then come down on the far cliff where the next bird is waiting. Bump an eagle and it just flies off; hit a champ, the street or the cliff and you go again from the last gate you made — it only costs time. The quicker the whole team gets through, the more points.",
   waitingRelayLabel: "No relay is loaded. Check the round's FAPPY rules.",
   legCounter: (legNumber: number, legsTotal: number): string => `Leg ${legNumber} of ${legsTotal}`,
   flyingLabel: (playerName: string | null): string =>

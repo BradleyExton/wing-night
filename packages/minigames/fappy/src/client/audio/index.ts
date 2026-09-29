@@ -124,7 +124,7 @@ export const FAPPY_CUES: CueTable<FappyCueName> = {
       playNoise(rig, { startAt, durationSeconds: 0.06, peak: 0.16, filterType: "bandpass", fromHz: 1500, toHz: 700, q: 1.2 });
     }
   },
-  // A splat and a thud together: the sand takes the bird.
+  // A splat and a thud together: the street takes the bird.
   crash: {
     minGapMs: 200,
     voice: (rig, startAt) => {

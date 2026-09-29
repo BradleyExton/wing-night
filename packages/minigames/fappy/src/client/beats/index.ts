@@ -8,7 +8,7 @@
 // that just landed cannot launch the next player's bird.
 export const HANDOFF_BEAT_MS = 1400;
 
-// A crash: the bird goes over where it hit, a puff of sand, and then the
+// A crash: the bird goes over where it hit, a puff of dust, and then the
 // respawn on the perch. Taps in the beat are ignored so a player mashing
 // through sees that they crashed rather than wondering why the bird jumped.
 export const CRASH_BEAT_MS = 550;

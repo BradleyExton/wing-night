@@ -7,7 +7,7 @@ import { schlonicPalette } from "../palette.js";
  * transform of its own.
  *
  * It is the one thing in the zone that is NOT a schlong, and that is the whole reason it looks
- * like this. Everything else standing on the shore is one silhouette read three ways (§2.11), so
+ * like this. Everything else standing on the street is one silhouette read three ways (§2.11), so
  * the room has half a second to tell "grab this" from "avoid that" as an arc goes past — and the
  * only separation that survives at that speed is shape. A fat lobe of meat on a pale bone shares
  * no outline with anything else out there, and it is what the night is called.

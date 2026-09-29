@@ -7,7 +7,7 @@ import { Wing } from "../Wing/index.js";
 /** A wing bursts out of the bird for this long after a hit. */
 const BURST_TICKS = 34;
 const BURST_WINGS = 6;
-/** Thrown wings are a size down from the ones on the shore, and they tumble on the way out. */
+/** Thrown wings are a size down from the ones in the zone, and they tumble on the way out. */
 const BURST_SCALE = 0.8;
 const BURST_SPIN_DEGREES = 40;
 

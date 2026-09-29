@@ -26,6 +26,10 @@ export const joustPalette = {
   // windows downtown are the one thing lit.
   silhouette: "#22102b",
   glass: "#ffcf8a",
+  // The twin condos' balcony glass, the blue edges the room knows them by in daylight: at dusk it
+  // holds the glow off the far edge of the bay rather than a lit room, so the pair still reads as
+  // glass-edged towers without outshining downtown's windows.
+  condoGlass: "#8c3d48",
   // The beach: wet at the water's edge, and dry sand below the floor line where the rack stands.
   beachWet: "#b8894e",
   sand: "#d3a75f",

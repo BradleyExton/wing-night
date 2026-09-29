@@ -117,7 +117,7 @@ const resolveHint = (view: FappyMinigameHostView, canAct: boolean, hold: LegHold
 
 // FAPPY's host surface. At play it is a `<TakeoverCanvas>`
 // (docs/takeover-layout-api.md §3, §5): the corridor is evenly spread scenery,
-// so a chip in one corner costs a corner of desert rather than a word, and the
+// so a chip in one corner costs a corner of sky rather than a word, and the
 // 330px control deck this file used to grow — which cost the corridor 342px of
 // the tablet — is gone. Its contents went to the slots §5 names: the counts,
 // the leg chips and the relay clock to `counter`, the escape hatches and the

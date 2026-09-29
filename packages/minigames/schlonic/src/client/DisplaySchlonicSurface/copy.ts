@@ -3,9 +3,9 @@ import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
 export const displaySchlonicSurfaceCopy = {
   title: MINIGAME_DEFINITIONS.SCHLONIC.displayName,
   // The venue, not the show: it hangs on a plaque inside the zone, never on the marquee.
-  zoneName: "Kempenfelt Bay Zone",
+  zoneName: "Dunlop Street Zone",
   introDescription:
-    "One chicken, one shoreline, and a lot of wings nobody is asking about. The wings are the score, and they are also the only health there is: get hit and you drop half of them, get hit holding none and the run is over. The post is the only place a handful counts.",
+    "One chicken, one skateboard, one sidewalk, and a lot of wings nobody is asking about. The wings are the score, and they are also the only health there is: get hit and you drop half of them, get hit holding none and the run is over. The post is the only place a handful counts.",
   waitingLabel: "Waiting for the zone…",
   runCounter: (runNumber: number, runsTotal: number): string => `Run ${runNumber} / ${runsTotal}`,
   // The banked figure stands in its own span, so the post's count-up can write it; this is
@@ -20,7 +20,7 @@ export const displaySchlonicSurfaceCopy = {
   bestLabel: (playerName: string | null): string =>
     playerName === null ? "To beat" : `To beat · ${playerName}`,
   sceneLabel: (playerName: string | null): string =>
-    playerName === null ? "Kempenfelt Bay Zone" : `Kempenfelt Bay Zone — ${playerName}'s run`,
+    playerName === null ? "Dunlop Street Zone" : `Dunlop Street Zone — ${playerName}'s run`,
   readyPrompt: (playerName: string | null): string =>
     playerName === null ? "On the line — tap to go" : `${playerName} is on the line — tap to go`,
   runningPrompt: (playerName: string | null): string =>

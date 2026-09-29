@@ -13,7 +13,7 @@ type UseRunnerFigureInput = {
  * `resolveRunnerFigure`, held stable across renders. The view arrives as a fresh deep copy on
  * every server echo — every press and release — and the scene repaints its rest pose whenever
  * the runner it was handed changes identity. Resolved per render, that meant every tap snapped
- * the zone back to the start line for a frame and put every collected wing back on the shore;
+ * the zone back to the start line for a frame and put every collected wing back in the zone;
  * memoised on the figure's own fields, the runner only changes when the player does.
  */
 export const useRunnerFigure = ({

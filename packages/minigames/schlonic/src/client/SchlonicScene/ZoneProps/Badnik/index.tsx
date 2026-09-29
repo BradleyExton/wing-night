@@ -11,7 +11,7 @@ const SHAFT_RADIUS = 1.7;
 const BALL_RADIUS = 1.7;
 
 /**
- * The enemy: a schlong standing up out of the turf on its own balls, leaning back a little, with
+ * The enemy: a schlong standing up out of the sidewalk on its own balls, leaning back a little, with
  * a face on the glans that watches the runner come, in whichever of the three skins its index
  * deals it. Squashed by anything that lands on it — which
  * is to say by a bird in a ball, which is the whole reason for jumping on one.

@@ -80,7 +80,7 @@ const HOP_HEIGHT = 5;
 
 // The handoff beat over `progress` 0 → 1: the bird that just landed squashes
 // and settles while the one waiting for the tablet hops twice, wing up, and a
-// puff of sand goes up where the landing hit.
+// puff of dust goes up off the roof where the landing hit.
 export const resolveHandoffPose = (progress: number): HandoffPose => {
   const p = Math.min(1, Math.max(0, progress));
   const hopPhase = (p * HOPS_PER_HANDOFF) % 1;

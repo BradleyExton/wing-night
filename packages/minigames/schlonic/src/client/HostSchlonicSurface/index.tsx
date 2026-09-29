@@ -41,7 +41,7 @@ const resolveHint = (
 
 // SCHLONIC's host surface. At play it is a `<TakeoverCanvas>`
 // (docs/takeover-layout-api.md §3, §5): the zone is evenly spread scenery — a
-// bay, a shoreline and a skyline — so a chip in one corner costs a corner of
+// street, a skyline and the bay below it — so a chip in one corner costs a corner of
 // Barrie rather than a word. Its chrome is the slots §5 names and no more: the
 // counts in `counter`, the escape hatches and the one hint in `actions`, and
 // the run list and running totals in `readout` — but only while a run's ending

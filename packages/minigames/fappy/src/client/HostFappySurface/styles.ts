@@ -1,8 +1,8 @@
 import { briefingCard, railCounterOverlay, takeoverSecondary } from "@wingnight/surface";
 
 // FAPPY is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the corridor
-// is evenly spread scenery — dusk sky, sand and a row of champs — so a chip in
-// one corner costs a corner of desert rather than a word the host has to read.
+// is evenly spread scenery — afternoon sky, skyline and a row of champs — so a chip
+// in one corner costs a corner of sky rather than a word the host has to read.
 //
 // Nothing here positions the takeover's chrome and nothing here reserves the
 // corner dock. The rail, the clock, the counter's place in the row, the

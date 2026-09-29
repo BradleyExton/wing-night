@@ -4,11 +4,13 @@
 // in world units multiplies by it.
 export const frame = "relative flex h-full min-h-0 w-full items-center justify-center [container-type:size]";
 
-// Scene art, licensed by DESIGN.md §2.9: the corridor's dusk sky and sand.
-const sceneDusk =
-  "bg-[linear-gradient(180deg,#160c2a_0%,#4a1f3f_58%,#c2582c_93.2%,#d6ac63_93.3%,#b58a45_100%)]";
+// Scene art, licensed by DESIGN.md §2.9: the corridor's afternoon sky, deep
+// blue overhead going to honey at the horizon, then under the floor line a
+// kerb and the asphalt the champs stand in.
+const sceneAfternoon =
+  "bg-[linear-gradient(180deg,#3a73ad_0%,#78a9cc_35%,#d9d3ad_58%,#f1d49a_74%,#f1d49a_93.2%,#a2988c_93.3%,#a2988c_95.2%,#58524e_95.3%,#47423f_100%)]";
 
-export const scene = `relative h-[min(100cqh,56.25cqw)] w-[min(100cqw,177.7778cqh)] overflow-hidden [container-type:size] [--fappy-unit:0.625cqw] ${sceneDusk}`;
+export const scene = `relative h-[min(100cqh,56.25cqw)] w-[min(100cqw,177.7778cqh)] overflow-hidden [container-type:size] [--fappy-unit:0.625cqw] ${sceneAfternoon}`;
 
 export const gateLayer = "absolute inset-0 h-full w-full overflow-visible";
 
@@ -20,18 +22,18 @@ export const gateLayer = "absolute inset-0 h-full w-full overflow-visible";
 export const bird =
   "absolute left-[20cqw] top-0 h-[9cqw] w-[10cqw] origin-center will-change-transform";
 
-// The next player's bird, standing on the landing plateau facing the flyer.
+// The next player's bird, standing on the landing roof facing the flyer.
 // Same box as the bird; the loop places it in world units and flips it.
 export const waitingBird =
   "absolute left-0 top-0 h-[9cqw] w-[10cqw] origin-center will-change-transform";
 
-// A puff of sand where the bird hits the ground, landing or crashing: 16
+// A puff of grit where the bird hits the ground, landing or crashing: 16
 // world units square on the bird's x, faded and scaled by the beat.
-// Scene art, licensed by DESIGN.md §2.9: the puff is the cliff's own sand.
-const sceneSandPuff =
-  "bg-[radial-gradient(circle,rgba(214,172,99,0.85)_0%,rgba(214,172,99,0.35)_45%,rgba(214,172,99,0)_70%)]";
+// Scene art, licensed by DESIGN.md §2.9: the puff is the roof's own dust.
+const sceneDustPuff =
+  "bg-[radial-gradient(circle,rgba(226,214,194,0.85)_0%,rgba(226,214,194,0.35)_45%,rgba(226,214,194,0)_70%)]";
 
-export const puff = `pointer-events-none absolute left-[20cqw] top-0 h-[10cqw] w-[10cqw] origin-center rounded-full ${sceneSandPuff} opacity-0 will-change-transform`;
+export const puff = `pointer-events-none absolute left-[20cqw] top-0 h-[10cqw] w-[10cqw] origin-center rounded-full ${sceneDustPuff} opacity-0 will-change-transform`;
 
 export const label = "sr-only";
 

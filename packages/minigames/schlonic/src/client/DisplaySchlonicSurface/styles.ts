@@ -32,7 +32,7 @@ export const marqueeBest = `${readoutFigure} text-text/70`;
 const sceneZoneVeil =
   "bg-[radial-gradient(ellipse_at_center,rgba(12,26,16,0.78)_0%,rgba(12,26,16,0.1)_72%)]";
 
-// No frame and no bars: the wall's camera fills the arena edge to edge (§2.11), so the shore
+// No frame and no bars: the wall's camera fills the arena edge to edge (§2.11), so the street
 // runs the whole width of the TV and the only edge is the arena's own rounded corner.
 export const arenaArea = "relative flex min-h-0 flex-1 overflow-hidden rounded-2xl";
 

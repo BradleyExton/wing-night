@@ -3,7 +3,7 @@ import test from "node:test";
 import type { SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, resolveSchlonicZone } from "@wingnight/shared";
 
-import { BLUFF_DEPTH, CHECKER_DEPTH, resolveGroundSegments } from "./index.js";
+import { SIDEWALK_DEPTH, CHECKER_DEPTH, resolveGroundSegments } from "./index.js";
 
 const flat = (samples: number): number[] => {
   return Array.from({ length: samples }, () => SCHLONIC_WORLD.groundBaseY);
@@ -24,7 +24,7 @@ test("draws unbroken ground as a single run", () => {
   assert.equal(segments[0]?.toX, 200);
 });
 
-test("closes the soil down to the bottom of the box so the ground is not a wire", () => {
+test("closes the subgrade down to the bottom of the box so the ground is not a wire", () => {
   const segment = resolveGroundSegments(zoneOf([]), 90)[0];
 
   assert.ok(segment !== undefined);
@@ -59,15 +59,15 @@ test("leaves no ground drawn across the inside of a hole", () => {
   }
 });
 
-test("follows the surface back with a sand band under it", () => {
+test("follows the surface back with a sidewalk band under it", () => {
   const segment = resolveGroundSegments(zoneOf([]), 90)[0];
 
   assert.ok(segment !== undefined);
-  assert.ok(segment.bluffPath.startsWith(segment.topPath));
-  assert.ok(segment.bluffPath.endsWith("Z"));
+  assert.ok(segment.sidewalkPath.startsWith(segment.topPath));
+  assert.ok(segment.sidewalkPath.endsWith("Z"));
   // Back along the same run at the band's depth: last surface point first, first point last.
-  assert.ok(segment.bluffPath.includes(`L 200 ${SCHLONIC_WORLD.groundBaseY + BLUFF_DEPTH}`));
-  assert.ok(segment.bluffPath.includes(`L 0 ${SCHLONIC_WORLD.groundBaseY + BLUFF_DEPTH} Z`));
+  assert.ok(segment.sidewalkPath.includes(`L 200 ${SCHLONIC_WORLD.groundBaseY + SIDEWALK_DEPTH}`));
+  assert.ok(segment.sidewalkPath.includes(`L 0 ${SCHLONIC_WORLD.groundBaseY + SIDEWALK_DEPTH} Z`));
 });
 
 test("keeps drawing level ground past the last sample when asked for a run-out", () => {
@@ -82,12 +82,12 @@ test("draws no run-out unless asked, so the geometry ends where the samples do",
   assert.equal(resolveGroundSegments(zoneOf([]))[0]?.toX, 200);
 });
 
-test("does lay the checkered band under the sand, following the surface down", () => {
+test("does lay the checkered pavers under the sidewalk, following the surface down", () => {
   const segment = resolveGroundSegments(zoneOf([]))[0];
   const base = SCHLONIC_WORLD.groundBaseY;
 
   assert.ok(segment !== undefined);
-  assert.ok(segment.checkerPath.startsWith(`M 0 ${base + BLUFF_DEPTH}`));
-  assert.ok(segment.checkerPath.includes(`L 200 ${base + BLUFF_DEPTH + CHECKER_DEPTH}`));
-  assert.ok(segment.checkerPath.endsWith(`L 0 ${base + BLUFF_DEPTH + CHECKER_DEPTH} Z`));
+  assert.ok(segment.checkerPath.startsWith(`M 0 ${base + SIDEWALK_DEPTH}`));
+  assert.ok(segment.checkerPath.includes(`L 200 ${base + SIDEWALK_DEPTH + CHECKER_DEPTH}`));
+  assert.ok(segment.checkerPath.endsWith(`L 0 ${base + SIDEWALK_DEPTH + CHECKER_DEPTH} Z`));
 });

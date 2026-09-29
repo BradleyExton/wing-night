@@ -17,7 +17,7 @@ export type SchlonicCamera = {
 /**
  * How a surface fits its camera into the box it has. `fixed` is a camera of one size,
  * letterboxed into the box; `fill` takes the box's whole area and widens the camera to
- * match its aspect, so a wider screen simply sees further down the shore.
+ * match its aspect, so a wider screen simply sees further down the street.
  */
 export type SchlonicFillCameraFit = {
   kind: "fill";
@@ -42,7 +42,7 @@ export const TABLET_CAMERA_FIT: SchlonicCameraFit = { kind: "fixed", camera: TAB
 /**
  * The TV's camera. The room's seat is not a mirror of the tablet's (docs/minigame-design-
  * principles.md §3): the wall fills its whole arena, keeps the runner close to the left edge,
- * and shows the shore further ahead than the tablet does — a hazard is on the TV a beat or more
+ * and shows the street further ahead than the tablet does — a hazard is on the TV a beat or more
  * before it is on the tablet, which makes the couch the runner's lookout and "JUMP!" the whole
  * team's job. A little more sky above and ground below than the tablet's box, because a
  * springboard throws the bird to the top of the world and the wall has the height to spare.

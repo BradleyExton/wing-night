@@ -135,7 +135,7 @@ const resolveFappyBriefingContent = (
       "Your chickens fly a relay through a corridor of champs, against one clock. Get the whole team through, fast.",
     steps: [
       `${legsPerTurn} leg${legsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order.`,
-      `Tap anywhere on the tablet to flap through your ${gatesPerLeg} gates. Eagles get knocked out of the way; a champ or the sand sends you back to your last gate.`,
+      `Tap anywhere on the tablet to flap through your ${gatesPerLeg} gates. Eagles get knocked out of the way; a champ or the street sends you back to your last gate.`,
       "Land your section and hand the tablet on. The faster the team finishes, the more points."
     ]
   };
@@ -155,11 +155,11 @@ const resolveSchlonicBriefingContent = (
     illustrationPath: `${DISPLAY_ASSET_ROOT}/schlonic-illustration.svg`,
     illustrationAlt: "Schlonic mini-game artwork",
     summary:
-      "One at a time, your chickens run Kempenfelt Bay Zone, collecting wings. The wings are the score — and they are the only health you have.",
+      "One at a time, your chickens skate Dunlop Street Zone, collecting wings. The wings are the score — and they are the only health you have.",
     steps: [
-      `${runsPerTurn} run${runsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order. Everyone runs the same shore.`,
-      "Your bird runs on its own; the tablet only jumps. Tap to hop, hold the tap to go higher — and you curl into a ball in the air, which is what lets you land on the things standing in the zone and pop them.",
-      `A thorn bed or a hole is bad news either way. Take a hit and you drop half your wings; take one holding none and the run is over. ${parWingsPerRun * runsPerTurn} wings over the post is full marks.`
+      `${runsPerTurn} run${runsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order. Everyone skates the same street.`,
+      "Your bird rolls on its own; the tablet only jumps. Tap to ollie, hold the tap to go higher — land on a rail to grind it, and land on anything with a face to pop it.",
+      `A thorn bed or a trench is bad news either way. Take a hit and you drop half your wings; take one holding none and the run is over. ${parWingsPerRun * runsPerTurn} wings over the post is full marks.`
     ]
   };
 };

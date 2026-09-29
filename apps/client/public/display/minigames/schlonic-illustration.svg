@@ -5,145 +5,184 @@
       <stop offset="58%" stop-color="#6dc0ea" />
       <stop offset="100%" stop-color="#cfeaf7" />
     </linearGradient>
-    <linearGradient id="schlonic-soil" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#8a5a2b" />
-      <stop offset="100%" stop-color="#5b3a1a" />
-    </linearGradient>
+    <pattern id="schlonic-pavers" patternUnits="userSpaceOnUse" x="0" y="146" width="18" height="18">
+      <g stroke="#5c2518" stroke-width="0.8">
+        <rect width="9" height="9" fill="#b9523b" />
+        <rect x="9" width="9" height="9" fill="#8e3a2a" />
+        <rect y="9" width="9" height="9" fill="#8e3a2a" />
+        <rect x="9" y="9" width="9" height="9" fill="#b9523b" />
+      </g>
+    </pattern>
+    <pattern id="schlonic-slabs" patternUnits="userSpaceOnUse" x="4" y="0" width="22" height="180">
+      <rect width="22" height="180" fill="#cdc8bd" />
+      <rect width="0.8" height="180" fill="#9c968a" />
+    </pattern>
+    <!-- A sauced wing: an orange lobe on a pale bone, the one thing out there that is not a schlong -->
+    <g id="schlonic-wing">
+      <line x1="-0.6" y1="-0.6" x2="-4.7" y2="-4.7" stroke="#c9a273" stroke-width="2.4" stroke-linecap="round" />
+      <line x1="-0.6" y1="-0.6" x2="-4.7" y2="-4.7" stroke="#fff1d6" stroke-width="1.5" stroke-linecap="round" />
+      <circle cx="-5.4" cy="-4" r="1.25" fill="#fff1d6" stroke="#c9a273" stroke-width="0.5" />
+      <circle cx="-4" cy="-5.4" r="1.25" fill="#fff1d6" stroke="#c9a273" stroke-width="0.5" />
+      <ellipse cx="0.8" cy="0.9" rx="5.2" ry="4.3" transform="rotate(-30 0.8 0.9)" fill="#f5902b" stroke="#7a3105" stroke-width="1.1" />
+      <ellipse cx="-0.6" cy="-0.6" rx="1.8" ry="1" transform="rotate(-30 -0.6 -0.6)" fill="#ffce7a" />
+    </g>
   </defs>
   <rect width="240" height="180" fill="url(#schlonic-sky)" />
-  <circle cx="206" cy="32" r="17" fill="#ffe066" opacity="0.9" />
-  <ellipse cx="44" cy="28" rx="17" ry="7" fill="#f4fbff" opacity="0.85" />
-  <ellipse cx="56" cy="24" rx="11" ry="6" fill="#f4fbff" opacity="0.85" />
+  <circle cx="206" cy="30" r="17" fill="#ffe066" opacity="0.9" />
+  <ellipse cx="44" cy="26" rx="17" ry="7" fill="#f4fbff" opacity="0.85" />
+  <ellipse cx="56" cy="22" rx="11" ry="6" fill="#f4fbff" opacity="0.85" />
+  <path d="M 150 40 q 3 -2.6 6 0 q 3 -2.6 6 0" fill="none" stroke="#55433a" stroke-width="0.8" stroke-linecap="round" opacity="0.5" />
 
-  <!-- Across the water: Oro's bank, hazed, with its treeline on it -->
-  <path d="M -20 84 Q 20 66 60 84 Q 100 70 140 84 Q 180 68 220 84 L 260 92 L -20 92 Z" fill="#86aab0" opacity="0.85" />
-  <path d="M -6 84 l 5 -5 5 5 5 -3.4 5 3.4 5 -6 5 6 5 -3 5 3 5 -5 5 5 5 -3.6 5 3.6 5 -5.4 5 5.4 5 -3 5 3 5 -5 5 5 5 -3.4 5 3.4 5 -6 5 6 5 -3 5 3 5 -5 5 5 5 -3.6 5 3.6 5 -5.4 5 5.4 5 -3 5 3 5 -5 5 5 5 -4 5 4 L 246 92 L -6 92 Z" fill="#5b8a84" opacity="0.72" />
-
-  <!-- Kempenfelt, east into the morning, with the sun's column coming up it -->
-  <rect x="0" y="84" width="240" height="38" fill="#2f8fc4" />
-  <rect x="0" y="84" width="240" height="6" fill="#2b6ea6" />
-  <rect x="0" y="116" width="240" height="6" fill="#63b8de" opacity="0.75" />
+  <!-- At the bottom of the hill: the bay, and Oro's bank across it -->
+  <path d="M -20 78 Q 20 68 60 78 Q 100 70 140 78 Q 180 69 220 78 L 260 84 L -20 84 Z" fill="#86aab0" opacity="0.85" />
+  <rect x="0" y="78" width="240" height="16" fill="#2f8fc4" />
+  <rect x="0" y="78" width="240" height="3" fill="#2b6ea6" />
+  <rect x="0" y="90" width="240" height="4" fill="#63b8de" opacity="0.75" />
   <g fill="#ffffff">
-    <rect x="202" y="90" width="7" height="1.3" opacity="0.4" />
-    <rect x="197" y="96" width="5" height="1.3" opacity="0.32" />
-    <rect x="208" y="96" width="8" height="1.3" opacity="0.32" />
-    <rect x="193" y="103" width="9" height="1.3" opacity="0.24" />
-    <rect x="210" y="104" width="6" height="1.3" opacity="0.24" />
+    <rect x="200" y="82" width="7" height="1.2" opacity="0.4" />
+    <rect x="195" y="86" width="6" height="1.2" opacity="0.3" />
+    <rect x="208" y="86" width="8" height="1.2" opacity="0.3" />
   </g>
+  <rect x="0" y="94" width="240" height="22" fill="#a8c8b2" />
 
-  <!-- The near shore: beach, then the park the zone is cut out of -->
-  <rect x="0" y="122" width="240" height="8" fill="#f0dcae" />
-  <rect x="0" y="122" width="240" height="1.8" fill="#cdb17c" opacity="0.7" />
-  <rect x="0" y="130" width="240" height="50" fill="#4fb87c" />
-
-  <!-- A boat off the marina -->
-  <g transform="translate(112 118) scale(1.7)">
-    <path d="M -3.2 0 L 3.2 0 L 2.1 1.5 L -2.1 1.5 Z" fill="#2b3a46" />
-    <rect x="-0.18" y="-7.2" width="0.36" height="7.2" fill="#7e8c9b" />
-    <path d="M 0.4 -6.9 L 3.6 -0.4 L 0.4 -0.4 Z" fill="#fdfdfd" />
-    <path d="M -0.4 -5.6 L -2.7 -0.4 L -0.4 -0.4 Z" fill="#fdfdfd" opacity="0.88" />
-  </g>
-
-  <!-- Allandale Station, still at the bottom of the hill it always stood at -->
-  <g>
-    <rect x="146" y="128.6" width="48" height="2.6" fill="#5f4022" />
-    <rect x="150" y="115" width="40" height="15" fill="#a8523d" />
-    <rect x="150" y="115" width="40" height="1.8" fill="#6f3325" opacity="0.5" />
-    <path d="M 146.5 115 L 156 109 L 184 109 L 193.5 115 Z" fill="#3d4b58" />
-    <path d="M 163 113 L 170 105.4 L 177 113 Z" fill="#3d4b58" />
-    <circle cx="170" cy="110.6" r="1.6" fill="#e2f0fb" />
-    <g fill="#e2f0fb" opacity="0.75">
-      <rect x="155" y="119" width="4.4" height="7.6" rx="2.2" />
-      <rect x="164" y="119" width="4.4" height="7.6" rx="2.2" />
-      <rect x="173" y="119" width="4.4" height="7.6" rx="2.2" />
-      <rect x="182" y="119" width="4.4" height="7.6" rx="2.2" />
+  <!-- Downtown's slabs and the twin condos on the water, hazed -->
+  <g opacity="0.82">
+    <g fill="#93abc6">
+      <rect x="12" y="66" width="10" height="29" />
+      <rect x="25" y="54" width="9" height="41" />
+      <rect x="37" y="72" width="12" height="23" />
+      <rect x="52" y="81" width="24" height="14" />
+      <rect x="52" y="73" width="10" height="9" />
     </g>
-    <rect x="144" y="123.4" width="52" height="1.8" fill="#3d4b58" />
-    <rect x="145" y="123.4" width="1.4" height="7" fill="#3d4b58" />
-    <rect x="169" y="123.4" width="1.4" height="7" fill="#3d4b58" />
-    <rect x="193" y="123.4" width="1.4" height="7" fill="#3d4b58" />
+    <g fill="#e2f0fb" opacity="0.5">
+      <rect x="14" y="70" width="6" height="2" /><rect x="14" y="76" width="6" height="2" /><rect x="14" y="82" width="6" height="2" />
+      <rect x="27" y="58" width="5" height="2" /><rect x="27" y="64" width="5" height="2" /><rect x="27" y="70" width="5" height="2" /><rect x="27" y="76" width="5" height="2" />
+      <rect x="39" y="76" width="8" height="2" /><rect x="39" y="82" width="8" height="2" />
+    </g>
+    <!-- The condos: cream towers with blue glass corners -->
+    <g>
+      <rect x="150" y="60" width="14" height="35" fill="#f0dcae" />
+      <rect x="164" y="60" width="4" height="35" fill="#cdb17c" />
+      <rect x="150" y="60" width="2.6" height="35" fill="#2b6ea6" />
+      <rect x="161" y="60" width="2.6" height="35" fill="#2b6ea6" />
+      <rect x="156" y="60" width="2" height="35" fill="#2b6ea6" opacity="0.7" />
+      <rect x="152" y="56" width="10" height="4" fill="#f0dcae" />
+      <rect x="172" y="54" width="15" height="41" fill="#f0dcae" />
+      <rect x="187" y="54" width="4.4" height="41" fill="#cdb17c" />
+      <rect x="172" y="54" width="2.8" height="41" fill="#2b6ea6" />
+      <rect x="184" y="54" width="2.8" height="41" fill="#2b6ea6" />
+      <rect x="178.5" y="54" width="2" height="41" fill="#2b6ea6" opacity="0.7" />
+      <rect x="174" y="49.5" width="11" height="4.5" fill="#f0dcae" />
+      <rect x="146" y="92" width="48" height="3" fill="#cdb17c" />
+    </g>
   </g>
 
-  <!-- The Spirit Catcher: the city put a giant steel bird on this shore first.
-       Same shape as the scene backdrop, at 1.60x — see SpiritCatcher in
-       packages/minigames/schlonic/.../Backdrop for the measurements. -->
-  <path d="M 12.96 126 Q 32 120.68 51.04 126 Z" fill="#1f6b34" opacity="0.5" />
-  <g fill="#8a7263">
-    <path d="M 25.84 89.76 L 4.84 78.84 L 4.84 78.84 L 5.83 82.87 L 6.83 83.54 L 7.5 86.48 L 8.17 86.06 L 8.84 88.9 L 9.52 88.38 L 10.19 91.63 L 10.86 91.52 L 12.2 94.5 L 13.55 94.12 L 14.89 97.03 L 16.24 96.58 L 17.59 99.92 L 18.95 99.9 L 20.3 103.69 L 21.64 104.12 C 22.06 98.84 23.74 95.76 25.84 90.16 Z" />
-    <path d="M 38.16 89.76 L 59.16 78.84 L 59.16 78.84 L 58.17 82.87 L 57.17 83.54 L 56.5 86.48 L 55.83 86.06 L 55.16 88.9 L 54.48 88.38 L 53.81 91.63 L 53.14 91.52 L 51.8 94.5 L 50.45 94.12 L 49.11 97.03 L 47.76 96.58 L 46.41 99.92 L 45.05 99.9 L 43.7 103.69 L 42.36 104.12 C 41.94 98.84 40.26 95.76 38.16 90.16 Z" />
-    <path d="M 32 91.56 L 4 77.84 L 5.12 79.54 L 32 93.52 Z" />
-    <path d="M 32 91.56 L 60 77.84 L 58.88 79.54 L 32 93.52 Z" />
-    <path d="M 30.04 92.96 L 28.58 92.96 L 22.09 126 L 23.54 126 Z" />
-    <path d="M 33.96 92.96 L 35.42 92.96 L 41.91 126 L 40.46 126 Z" />
-    <path d="M 26.62 89.88 L 27.13 89.88 L 27.13 84.28 L 26.62 84.28 Z" />
-    <path d="M 37.38 89.88 L 36.87 89.88 L 36.87 84.28 L 37.38 84.28 Z" />
-    <path d="M 31.33 92.4 L 32.67 92.4 L 32.67 126 L 31.33 126 Z" />
-    <path d="M 31.33 92.68 L 32.67 92.68 L 32.67 83.44 L 31.33 83.44 Z" />
-    <path d="M 29.34 79.24 C 29.34 85.96 34.66 85.96 34.66 79.24 C 33.26 83.16 30.74 83.16 29.34 79.24 Z" />
-  </g>
-  <g fill="none" stroke="#8a7263" stroke-width="1.5" stroke-linejoin="round">
-    <path d="M 25.98 89.27 C 26.12 94.92 29.48 96.6 32 96.6" />
-    <path d="M 38.02 89.27 C 37.88 94.92 34.52 96.6 32 96.6" />
-    <path d="M 32 91.84 C 28.64 93.24 28.64 104.16 32 109.2 C 35.36 104.16 35.36 93.24 32 91.84 Z" />
-    <path d="M 29.06 96.32 L 34.94 96.32" />
-  </g>
-  <g fill="none" stroke="#55433a" stroke-width="0.62" opacity="0.75">
-    <path d="M 25.28 89.47 L 5.4 79.13" />
-    <path d="M 38.72 89.47 L 58.6 79.13" />
+  <!-- Dunlop's fronts across the road, with a cross street down to the water between them -->
+  <g>
+    <rect x="-4" y="98" width="30" height="20" fill="#b88c83" />
+    <rect x="26" y="102" width="26" height="16" fill="#d4cbaf" />
+    <rect x="52" y="96" width="28" height="22" fill="#b88c83" />
+    <rect x="-4" y="96" width="30" height="2.4" fill="#957975" />
+    <rect x="52" y="94" width="28" height="2.4" fill="#957975" />
+    <path d="M 26 102 L 39 97 L 52 102 Z" fill="#c1b79c" />
+    <rect x="128" y="100" width="26" height="18" fill="#d4cbaf" />
+    <rect x="154" y="97" width="30" height="21" fill="#b88c83" />
+    <rect x="184" y="101" width="30" height="17" fill="#d4cbaf" />
+    <rect x="214" y="96" width="30" height="22" fill="#b88c83" />
+    <rect x="154" y="95" width="30" height="2.4" fill="#957975" />
+    <rect x="214" y="94" width="30" height="2.4" fill="#957975" />
+    <g fill="#6d7e88">
+      <rect x="2" y="102" width="5" height="5" /><rect x="14" y="102" width="5" height="5" />
+      <rect x="31" y="106" width="5" height="4" /><rect x="42" y="106" width="5" height="4" />
+      <rect x="57" y="100" width="5" height="5" /><rect x="69" y="100" width="5" height="5" />
+      <rect x="133" y="104" width="5" height="4" /><rect x="144" y="104" width="5" height="4" />
+      <rect x="159" y="101" width="5" height="5" /><rect x="172" y="101" width="5" height="5" />
+      <rect x="189" y="105" width="5" height="4" /><rect x="202" y="105" width="5" height="4" />
+      <rect x="219" y="100" width="5" height="5" /><rect x="231" y="100" width="5" height="5" />
+    </g>
+    <g fill="#b06d6e">
+      <path d="M -4 110 L 26 110 L 24 113 L -2 113 Z" />
+      <path d="M 154 110 L 184 110 L 182 113 L 156 113 Z" />
+    </g>
+    <g fill="#659b7e">
+      <path d="M 52 110 L 80 110 L 78 113 L 54 113 Z" />
+      <path d="M 214 110 L 244 110 L 242 113 L 216 113 Z" />
+    </g>
   </g>
 
-  <!-- The shore, cut by a hole on the right: turf over the bay's sand over the clay -->
-  <path d="M -10 148 Q 56 106 116 150 L 152 150 L 152 180 L -10 180 Z" fill="url(#schlonic-soil)" />
-  <path d="M -10 148 Q 56 106 116 150 L 152 150 L 152 162 L 116 162 Q 56 118 -10 160 Z" fill="#d8bb86" />
-  <path d="M -10 148 Q 56 106 116 150 L 152 150" fill="none" stroke="#3fa34d" stroke-width="9" />
-  <path d="M -10 148 Q 56 106 116 150 L 152 150" fill="none" stroke="#63c364" stroke-width="3" />
-  <path d="M 190 150 L 250 150 L 250 180 L 190 180 Z" fill="url(#schlonic-soil)" />
-  <path d="M 190 150 L 250 150 L 250 162 L 190 162 Z" fill="#d8bb86" />
-  <path d="M 190 150 L 250 150" fill="none" stroke="#3fa34d" stroke-width="9" />
-  <path d="M 190 150 L 250 150" fill="none" stroke="#63c364" stroke-width="3" />
+  <!-- The road between the two sidewalks, and its centre line -->
+  <rect x="0" y="118" width="240" height="3" fill="#c9ccc6" />
+  <rect x="0" y="121" width="240" height="17" fill="#5b6068" />
+  <g fill="#f2c94c" opacity="0.85">
+    <rect x="4" y="127" width="12" height="1.4" /><rect x="28" y="127" width="12" height="1.4" /><rect x="52" y="127" width="12" height="1.4" />
+    <rect x="76" y="127" width="12" height="1.4" /><rect x="100" y="127" width="12" height="1.4" /><rect x="124" y="127" width="12" height="1.4" />
+    <rect x="148" y="127" width="12" height="1.4" /><rect x="172" y="127" width="12" height="1.4" /><rect x="196" y="127" width="12" height="1.4" />
+    <rect x="220" y="127" width="12" height="1.4" />
+  </g>
 
-  <!-- What the shore is furnished with: one standing, one thorn bed -->
+  <!-- The near sidewalk the hen skates: concrete slabs over the red-brick paver checker -->
+  <rect x="0" y="136" width="240" height="10" fill="url(#schlonic-slabs)" />
+  <rect x="0" y="146" width="240" height="18" fill="url(#schlonic-pavers)" />
+  <rect x="0" y="146" width="240" height="18" fill="none" stroke="#5c2518" stroke-width="1" />
+  <rect x="0" y="164" width="240" height="16" fill="#5a3126" />
+  <line x1="0" y1="136" x2="240" y2="136" stroke="#efebe2" stroke-width="2.6" />
+
+  <!-- The grind rail, standing on the sidewalk -->
+  <g>
+    <rect x="30" y="118" width="3" height="18" fill="#3d4b58" />
+    <rect x="70" y="118" width="3" height="18" fill="#3d4b58" />
+    <rect x="110" y="118" width="3" height="18" fill="#3d4b58" />
+    <rect x="22" y="115" width="100" height="4.2" rx="2.1" fill="#55606b" />
+    <rect x="23" y="115.6" width="98" height="1.3" rx="0.65" fill="#d4dce4" />
+  </g>
+
+  <!-- The line strung along the rail -->
+  <use href="#schlonic-wing" transform="translate(104 104) scale(0.95)" />
+  <use href="#schlonic-wing" transform="translate(122 98) scale(0.95)" />
+  <use href="#schlonic-wing" transform="translate(140 94) scale(0.95)" />
+  <use href="#schlonic-wing" transform="translate(158 94) scale(0.95)" />
+
+  <!-- What the sidewalk is furnished with: one standing, with a face -->
   <g stroke="#8e2a52" stroke-width="1.4" stroke-linejoin="round">
-    <circle cx="207" cy="145" r="4" fill="#f9a3bc" />
-    <circle cx="217" cy="145" r="4" fill="#f9a3bc" />
-    <path d="M 206 147 C 214 138 216 126 212 116 C 210 110 216 106 220 110 C 225 116 224 134 215 147 Z" fill="#f9a3bc" />
-    <circle cx="216" cy="110" r="7" fill="#f9a3bc" />
+    <circle cx="203" cy="132" r="4.4" fill="#f9a3bc" />
+    <circle cx="213" cy="132" r="4.4" fill="#f9a3bc" />
+    <path d="M 202 134 C 210 124 212 112 208 102 C 206 96 212 92 216 96 C 221 102 220 120 211 134 Z" fill="#f9a3bc" />
+    <circle cx="212" cy="96" r="7.4" fill="#f9a3bc" />
   </g>
-  <circle cx="213" cy="108" r="2.4" fill="#fff7ed" stroke="none" />
-  <circle cx="219.5" cy="108" r="2.4" fill="#fff7ed" stroke="none" />
-  <circle cx="212.6" cy="108.4" r="1.2" fill="#1c0d02" stroke="none" />
-  <circle cx="219.1" cy="108.4" r="1.2" fill="#1c0d02" stroke="none" />
-  <g fill="#d81e5b" stroke="#6d0d2f" stroke-width="1.1">
-    <path d="M 60 140 C 57 132 53 128 50 124 C 47 121 51 117 54 120 C 58 124 63 132 64 140 Z" />
-    <circle cx="52" cy="121" r="4" />
-    <path d="M 70 139 C 69 131 69 126 69 121 C 69 117 74 117 74 121 C 74 127 74 133 74 139 Z" />
-    <circle cx="71.5" cy="119" r="4" />
-    <path d="M 80 140 C 82 132 86 128 89 124 C 92 121 88 117 85 120 C 81 124 77 132 76 140 Z" />
-    <circle cx="87" cy="121" r="4" />
-  </g>
+  <path d="M 209 104 C 211 110 212 116 210 124" fill="none" stroke="#c4577f" stroke-width="1" stroke-linecap="round" />
+  <circle cx="209" cy="94" r="2.5" fill="#fff7ed" />
+  <circle cx="215.8" cy="94" r="2.5" fill="#fff7ed" />
+  <circle cx="208.5" cy="94.4" r="1.25" fill="#1c0d02" />
+  <circle cx="215.3" cy="94.4" r="1.25" fill="#1c0d02" />
+  <path d="M 209 100 Q 212.4 102.4 215.8 100" fill="none" stroke="#8e2a52" stroke-width="1" stroke-linecap="round" />
 
-  <!-- Rings over the hole: the greedy line -->
-  <g fill="none" stroke="#ffc300" stroke-width="3.4">
-    <circle cx="146" cy="96" r="7" />
-    <circle cx="168" cy="86" r="7" />
-    <circle cx="192" cy="96" r="7" />
-  </g>
-
-  <!-- The hen, mid-jump and spinning: the cast bird, turned through its own spin -->
-  <g transform="translate(96 90) rotate(-34) scale(0.72) translate(-40 -46)" fill="#f97316" stroke="#1a0c04" stroke-width="2.2" stroke-linejoin="round">
-    <path d="M 22 46 C 10 47 2 41 0 30 C 6 39 14 42 26 41 Z M 22 41 C 11 40 3 33 2 20 C 9 31 15 36 25 36 Z M 24 36 C 14 32 8 24 11 10 C 14 25 19 30 28 31 Z" />
-    <path d="M 16 42 C 16 28 32 22 50 27 C 64 31 67 44 61 55 C 53 65 30 66 21 58 C 16 54 16 48 16 42 Z" />
-    <path d="M 47 13 C 46 5 52 3 54 9 C 55 2 61 2 62 8 C 63 4 68 5 66 13 Z" />
-    <circle cx="58" cy="20" r="12" />
-    <path d="M 69 20 L 79 17 L 69 24 Z" />
-    <path d="M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 Q 28 50 31 54 Q 35 49 38 53 Q 42 48 45 51 C 49 46 51 40 47 35 Z" />
-    <circle cx="57" cy="18" r="3" fill="#fff7ed" stroke="none" />
-    <circle cx="58" cy="18" r="1.5" fill="#1c0d02" stroke="none" />
-  </g>
-
-  <!-- The handful it is carrying, trailing behind -->
-  <g fill="none" stroke="#ffc300" stroke-width="2.6" opacity="0.7">
-    <circle cx="58" cy="106" r="5" />
-    <circle cx="38" cy="116" r="5" />
+  <!-- The hen, grinding: the cast bird on its board, the board's trucks locked on the rail -->
+  <g transform="translate(66 113) rotate(-5)">
+    <!-- The board: a black deck with a kicked tail and nose, red under the grip, white wheels -->
+    <path d="M -20 -2.4 Q -23 -6 -22 -7.2 L -19 -3.6 L 19 -3.6 L 22 -7.2 Q 23 -6 20 -2.4 Z" fill="#1c1c1c" />
+    <rect x="-19" y="-3" width="38" height="1.4" fill="#e8453c" />
+    <rect x="-13" y="-1.6" width="5" height="2" fill="#9aa6b5" />
+    <rect x="8" y="-1.6" width="5" height="2" fill="#9aa6b5" />
+    <circle cx="-14.5" cy="1.4" r="2.2" fill="#f4f6fa" stroke="#1c1c1c" stroke-width="0.8" />
+    <circle cx="-6.5" cy="1.4" r="2.2" fill="#f4f6fa" stroke="#1c1c1c" stroke-width="0.8" />
+    <circle cx="6.5" cy="1.4" r="2.2" fill="#f4f6fa" stroke="#1c1c1c" stroke-width="0.8" />
+    <circle cx="14.5" cy="1.4" r="2.2" fill="#f4f6fa" stroke="#1c1c1c" stroke-width="0.8" />
+    <!-- Legs down to the deck -->
+    <path d="M -6 -16 L -8 -4 M 6 -16 L 9 -4" fill="none" stroke="#f59e0b" stroke-width="2.4" stroke-linecap="round" />
+    <path d="M -11 -4 L -5 -4 M 6 -4 L 12 -4" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
+    <g transform="translate(0 -30) scale(0.62) translate(-40 -36)" fill="#34b86b" stroke="#0e3a22" stroke-width="2.4" stroke-linejoin="round">
+      <path d="M 22 46 C 10 47 2 41 0 30 C 6 39 14 42 26 41 Z M 22 41 C 11 40 3 33 2 20 C 9 31 15 36 25 36 Z M 24 36 C 14 32 8 24 11 10 C 14 25 19 30 28 31 Z" />
+      <path d="M 16 42 C 16 28 32 22 50 27 C 64 31 67 44 61 55 C 53 65 30 66 21 58 C 16 54 16 48 16 42 Z" />
+      <path d="M 47 13 C 46 5 52 3 54 9 C 55 2 61 2 62 8 C 63 4 68 5 66 13 Z" fill="#e8453c" />
+      <circle cx="58" cy="20" r="12" />
+      <path d="M 69 20 L 79 17 L 69 24 Z" fill="#f59e0b" />
+      <path d="M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 Q 28 50 31 54 Q 35 49 38 53 Q 42 48 45 51 C 49 46 51 40 47 35 Z" />
+      <circle cx="59" cy="18" r="3.2" fill="#fff7ed" stroke="none" />
+      <circle cx="60" cy="18" r="1.6" fill="#1c0d02" stroke="none" />
+    </g>
+    <!-- Sparks off the trucks -->
+    <g stroke="#ffd23f" stroke-width="1.1" stroke-linecap="round">
+      <path d="M -16 4 L -21 7" /><path d="M -14 5 L -17 9" /><path d="M -12 4 L -12.6 8" />
+    </g>
   </g>
 </svg>

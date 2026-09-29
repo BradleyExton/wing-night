@@ -580,7 +580,7 @@ copied, whose container was the one piece the shared text tokens could not stop 
     shared definition (`MINIGAME_DEFINITIONS`, next to `slug`) — the same field the host rail,
     the host briefing headline, the lobby card and the TV's "playing" line read, so a game has
     one name on every screen (decided 2026-09-24). A venue is not a title: JOUST's arena name and
-    SCHLONIC's "Kempenfelt Bay Zone" hang on a small plaque in the scene (`venuePlaque`,
+    SCHLONIC's "Dunlop Street Zone" hang on a small plaque in the scene (`venuePlaque`,
     `bg-bg/70`, uppercase, clamp-sized) — top-left on the beach, top-centre over the zone's sky
     because the zone letterboxes — never on the sign. The enum key
     (`EMOJI_CHARADES`) is an identifier and never reaches a screen.
@@ -1104,17 +1104,26 @@ from the sofa by the hour:
     `#241233`, glitter `#ffc46b`), the beach wet at the water's edge
     (`#b8894e`) and dry sand below the floor line (`#d3a75f` / `#ad8340`) with
     broken wind lines, and the landmarks in one silhouette (`#22102b`) with
-    downtown's windows the only thing lit (`#ffcf8a`). The props a lane is
-    furnished with — beach furniture, not cacti — wear the bright paint the
-    real things come in (white `#f3e9d6`, Muskoka red `#c8433a`, canvas
-    `#e8b23a`), because they are things a shot hits. Slingshot wood is
-    `#6b4423`. The shooter is `primary` orange.
+    downtown's windows the only thing lit (`#ffcf8a`) — the twin condos'
+    balcony glass holds the glow off the far bay (`#8c3d48`) rather than a lit
+    room, so the pair keeps its glass edges without outshining downtown. The
+    props a lane is furnished with — beach furniture, not cacti — wear the
+    bright paint the real things come in (white `#f3e9d6`, Muskoka red
+    `#c8433a`, canvas `#e8b23a`), because they are things a shot hits.
+    Slingshot wood is `#6b4423`. The shooter is `primary` orange.
 -   **The city is drawn once.** The far skyline (downtown's slabs, the stepped
-    block of City Hall, a spire) and the Spirit Catcher are the same
-    `@wingnight/scenery` components SCHLONIC stands; each takes a palette, so
-    the morning paints them in haze and the dusk paints them in silhouette.
-    Downtown sits on the far horizon at the west end, half off the frame the
-    way a skyline is, and the Spirit Catcher stands on the beach BEHIND the
+    block of City Hall, a spire), the twin waterfront condos and the Spirit
+    Catcher are the same `@wingnight/scenery` components SCHLONIC stands; each
+    takes a palette, so the morning paints them in haze and the dusk paints
+    them in silhouette. Downtown sits on the far horizon at the west end, half
+    off the frame the way a skyline is. The condos really stand over the beach
+    and the marina, so they are on the water's edge in front of downtown,
+    drawn over the far treeline at skyline scale (`WaterfrontCondos` at 0.4):
+    between downtown's tall slab and City Hall, the right tower stopping short
+    of where the shot hangs on the band, and the gap between the towers
+    falling where no window behind shows through, so the pair reads as a pair.
+    They are backdrop like the rest — nothing on the rack's side of the post,
+    nothing a shot can touch. The Spirit Catcher stands on the beach BEHIND the
     rack: a giant steel bird overlooking a rack of hens is the joke, and the
     city built its half of it first. Everything stays hazed, flat and quiet so
     a bird on a shelf still wins the eye, and every landmark is a solid sweep —
@@ -1261,17 +1270,21 @@ from the sofa by the hour:
     rule does not bite. `prefers-reduced-motion` skips the flight and shows
     the landing frame.
 
-## 2.9 FAPPY Minigame Surface Language ("The Corridor")
+## 2.9 FAPPY Minigame Surface Language ("The Downtown Corridor")
 
-The FAPPY (Fappy Bird) surfaces fly the cast (§2.8) through JOUST's desert (§2.7),
-under the same marquee chrome and, on the tablet, the same full-bleed canvas:
+The FAPPY (Fappy Bird) surfaces fly the cast (§2.8) over downtown Barrie at
+rooftop height, under JOUST's marquee chrome (§2.7) and, on the tablet, the same
+full-bleed canvas:
 
--   Scene materials are JOUST's, on purpose: the dusk sky and sand. The
+-   **A golden August afternoon**, so the room knows the game before a word is
+    read: not SCHLONIC's pale summer morning on the bay (§2.11), not JOUST's
+    purple dusk on the beach (§2.7), but a deep blue sky going to honey at the
+    horizon and a high sun on the right (`FappyScene/palette.ts`). The
     obstacle is the cast's schlong (§2.7, the same `resolveSchlongPaths`
-    drawing JOUST fires) standing up from the sand in bubblegum pink
-    (`#f9a3bc`, outlined `#8e2a52`) — the one hue in the desert that is
-    neither its sand nor its sky, so a row of them reads from the sofa.
-    Each frame the shaft is re-bent from its balls on the sand up to a head
+    drawing JOUST fires) standing up from the street in bubblegum pink
+    (`#f9a3bc`, outlined `#8e2a52`) — the one hue downtown that is neither
+    its brick nor its sky, so a row of them reads from the sofa.
+    Each frame the shaft is re-bent from its balls on the street up to a head
     whose top IS the sim's `champTop`: the tip sways on a slow wave and the
     middle of the shaft follows a beat behind, so it whips rather than tilts,
     and at full stretch of its bob the shaft thins a little. A gloss up the
@@ -1301,16 +1314,31 @@ under the same marquee chrome and, on the tablet, the same full-bleed canvas:
     goo are the renderer's. Over some gates a bald eagle
     (dark brown, white head and tail, `#f9a51a` beak and talons) hangs in
     the sky as the thing to duck under, its feathered wings beating on the
-    shoulders (bump one and it tumbles off, gone for the leg). Behind the
-    corridor a starfield, a low sun on the horizon and two bands of dunes
-    that slide at a fifth and a half of the scroll, so the world has depth.
-    Each leg takes off from a sand cliff on the left and lands on one on the
-    right, where the next player's bird stands facing the flyer (a gold
-    pennant on the last leg); strata lines, a tuft or two and a barrel
-    cactus give the sand a surface, and a gold dashed strip along the
-    landing plateau says where to come down. Past the plateau a dark rock
-    wall closes the sky. Drawing content, exempt from the two-accent budget
-    like the JOUST arena.
+    shoulders (bump one and it tumbles off, gone for the leg). **Behind the
+    corridor, the city** (`@wingnight/scenery`, in FAPPY's own palette):
+    across Kempenfelt Bay the skyline — downtown's slabs, City Hall and its
+    spire, the twin cream condos with blue down their corners — slides at a
+    fifth of the scroll; in front of it Dunlop Street, its brick fronts with
+    the Queen's Hotel among them (standing just past the start roof, so every
+    leg opens on it), slides at nearly half; the bay shows down the side
+    streets between them, and the sun and the water stand still. Both bands
+    are hazed toward the horizon and kept to middling values, so every champ,
+    eagle and glob is lighter or darker than anything behind it: the city is
+    where you are, never what you look at. Each band is its own SVG, a tile
+    drawn twice and slid by the scroll modulo the tile as a composited
+    transform, so a leg of any length never runs off its end and the city is
+    never repainted in flight. **The cliffs are rooftops**, on exactly the
+    sim's geometry — straight faces at the start roof's end, at the landing
+    x and at the plateau's end. Each leg takes off from a red-brick block on
+    the left (a rooftop unit and a vent stack well behind the bird) and lands
+    on a buff one on the right, where the next player's bird stands facing
+    the flyer (a gold pennant on the last leg); pale concrete coping along
+    each roofline is the roof, windows down each face make it a building, and
+    a gold dashed strip along the landing roof says where to come down. Past
+    the plateau a tall concrete office tower, ribbon glass and piers kept
+    quiet behind the two birds, closes the sky. Under the floor line, a kerb
+    and asphalt. Drawing content, exempt from the two-accent budget like the
+    JOUST arena.
 -   The bird is the leg's player's own cast hen — their costume head, their
     team's accent and apparel — so who is flying is visible from the sofa.
     A leg nobody is rostered for flies the drawn hen in the team colour.
@@ -1335,7 +1363,7 @@ under the same marquee chrome and, on the tablet, the same full-bleed canvas:
 -   **Two beats the sim never sees**, both short because the clock runs
     through them and both the same for every team. *The handoff* (1.4 s): the
     bird lands next to the one waiting, squashes and settles with a puff of
-    sand, the waiter hops twice with its wing up (stepping towards the wall on
+    dust, the waiter hops twice with its wing up (stepping towards the wall on
     the first hop if the landing came down close, so the two stand side by
     side and never one over the other — the plateau is 56 units wide and the
     waiter stands at 78% of it for the same reason), and a callout drops over
@@ -1344,7 +1372,7 @@ under the same marquee chrome and, on the tablet, the same full-bleed canvas:
     lines say the same. The tablet ignores taps for the whole beat, so the
     finger that just landed cannot launch the next player's bird. Then the
     corridor wipes: the next leg slides in from the right. *A crash* (0.55 s):
-    the bird goes over where it hit, sinks a little, a puff of sand and a
+    the bird goes over where it hit, sinks a little, a puff of dust and a
     sideways kick on the scene that dies out; taps are ignored so a player
     mashing through sees that they crashed. The TV replays a few ticks behind
     the tablet, so it holds a finished leg a little longer than the tablet
@@ -1473,52 +1501,91 @@ it, and the forger — the image model — paints their version next to it.
     full width of the wall. It used to stop 18rem short of it, holding space
     for a chip this game has never had.
 
-## 2.11 SCHLONIC Minigame Surface Language ("Kempenfelt Bay Zone")
+## 2.11 SCHLONIC Minigame Surface Language ("Dunlop Street Zone")
 
 The SCHLONIC surfaces are the one place in the night that is supposed to look
 like a 16-bit platformer, and they look like nothing else in the show on
-purpose: a bright summer morning on Kempenfelt Bay, so the room knows which
-game it is watching from the sofa before a word is read — and, because
-everyone on that sofa is from Barrie, knows where it is watching it from.
+purpose: a bright summer morning on Dunlop Street, downtown Barrie, with the
+bay at the bottom of the hill, so the room knows which game it is watching
+from the sofa before a word is read — and, because everyone on that sofa is
+from Barrie, knows which street it is watching.
 
 -   **The two cast members finally meet, and the hen is the hero.** The runner
     is the player's own bird (§2.8) — team colour, their generated head, their
     team's apparel, the same character that parades in the lobby and flies
     FAPPY's corridor. Everything standing in its way is the cast's schlong
-    (§2.8, the same `resolveSchlongPaths` JOUST fires). The shore is furnished
-    with dicks and a chicken is running down it; that is the joke, and
-    nothing else on screen has to carry it.
--   **The zone is the city's own shoreline.** The runner runs the south shore of
-    Kempenfelt Bay, facing east down the water into the morning sun, and the
-    backdrop is four banks scrolling at their own share of the zone: clouds and
-    gulls; Oro's treeline across the water; downtown's slabs, the stepped block
-    of City Hall and a spire at the west end; and the near waterfront strip —
-    the Spirit Catcher, the marina, Allandale Station. The city put a giant
-    steel bird on that shore decades before this game put a small one on it,
-    which is the joke nobody from here has to be told. Every bank is hazed,
-    flat and quiet: it is a backdrop, and a pink one with a face still has to
-    win the eye. Each bank is only as wide as the zone's own length needs
-    (`bandWidth`), so a long zone never outruns its skyline and a short one
-    does not pay for scenery it never reaches. The landmarks themselves —
-    the Spirit Catcher, the town cluster, Allandale Station, the marina — now
-    live in `@wingnight/scenery` as bare `<g>` components taking a palette,
-    because JOUST looks out over the same shore at dusk (§2.7); this scene
-    only says what colour the morning makes them.
+    (§2.8, the same `resolveSchlongPaths` JOUST fires). The sidewalk is
+    furnished with dicks and a chicken is skating down it; that is the joke,
+    and nothing else on screen has to carry it.
+-   **The zone is the city's own main street.** The runner skates Dunlop
+    Street's near sidewalk, east into the morning sun, from the door of
+    Souldiers Skate Shop to the Queen's Hotel patio, and the backdrop is five
+    banks scrolling at their own share of the zone: clouds and gulls; Oro's
+    treeline across the water; the bay at the bottom of the hill with
+    downtown's slabs, City Hall, the spire and the twin condos at the foot of
+    Bayfield standing on its near edge (cream towers with blue glass corners,
+    one pair to every other cluster, because two pairs on one screen read as
+    four); the fronts across the road — `Storefronts` in runs of two to four
+    with a cross street between each, which is where the bay shows through,
+    and Crossover's pole sign stood exactly once, ahead of the runner a
+    little before the middle of the zone, so it is gone off the back of the
+    picture before the Queen's comes up; and the road's yellow centre line.
+    Under them the still bands: the water, downtown's slope down to it
+    (`#a8c8b2`), the far sidewalk and the asphalt. Every bank is hazed, flat
+    and quiet — the fronts' own brick is mixed toward the sky
+    (`streetBrick` `#b88c83`, not the set pieces' `#a8523d`) and Crossover's
+    only half as much, because its parody (HENS HENS HENS, FREE WINGS THURS)
+    is the joke and has to read. It is a backdrop, and a pink one with a face
+    still has to win the eye. Each bank is only as wide as the zone's own
+    length needs (`bandWidth`), so a long zone never outruns its skyline and a
+    short one does not pay for scenery it never reaches. The landmarks live
+    in `@wingnight/scenery` as bare `<g>` components taking a palette, because
+    JOUST and FAPPY stand the same city at dusk (§2.7, §2.9); this scene only
+    says what colour the morning makes them.
+-   **The start and the finish are buildings.** The two set pieces stand in
+    the zone itself, not in a bank (`SchlonicScene/SetPieces`): they scroll
+    with the ground, stand on it behind the sidewalk's lip and behind every
+    piece of kit, and are the only buildings drawn near (Souldiers at 0.8, the
+    Queen's at 0.9) and at full strength — which is how the room knows the
+    start and the finish before the strip says so. Souldiers stands so its
+    door (`resolveSouldiersDoorX`) is under the runner on the start line: the
+    hen rolls out of the skate shop. The Queen's stands so the middle of its
+    patio (`resolveQueensPatioX`) is the post, and the post is restyled for
+    it (`GoalPost`): a chequered finish line painted across the sidewalk and a
+    Sonic signpost — a chequered disc in the hotel's green rim — on a short
+    post between the two patio umbrellas, sized to stand under the green
+    fascia rather than up through the BAR lettered on it.
+-   **The holes are the Dunlop Street dig.** Every pit is a road-construction
+    trench: the dark shaft under it stays dark (the road behind used to show
+    through the gap and a hole read as a grey pillar standing in the ground),
+    every cut shows the ground's layers the way a real dig does, and an
+    orange-and-white barrel stands on each lip — the near one with a flasher —
+    with a sawhorse closing the sidewalk on the near side (`Ground/Roadworks`).
+    It is dressing, not kit: it stands on solid ground either side, never over
+    the gap (nothing across a trench may read as a bridge), behind the lip the
+    runner rides, and the sawhorse stays away wherever kit stands, so the
+    finale's springboard is never dressed over. Barrel orange (`#e8581c`) is a
+    road-works orange, redder and deeper than a wing's sauce, and its white
+    bands are what say "barrel" rather than "another wing".
 -   Scene materials are their own (`packages/minigames/schlonic/.../palette.ts`):
     a sky that runs `#0b6fd4` to `#cfeaf7`, the bay `#2f8fc4` between a deep
-    `#2b6ea6` and a shallow `#63b8de`, beach `#f0dcae`, park `#4fb87c`, and the
-    ground itself turf `#3fa34d` over the bluff's sand `#d8bb86` over soil
-    `#8a5a2b` — so a pit is a bite out of the shoreline with sand at the lips,
-    the way the real bluffs go. Under the sand the clay wears Green Hill's
-    checkerboard for a band (`CHECKER_DEPTH`, 5-unit squares of the soil and
-    `#b87a3d`), square to the screen on a slope the way the original's are,
-    its rows laid from the band's top edge so the flat shows two whole rows.
+    `#2b6ea6` and a shallow `#63b8de`, asphalt `#5b6068` under a `#f2c94c`
+    centre line, and the ground itself a concrete sidewalk `#cdc8bd` in 8-unit
+    slabs (joints `#9c968a`, square to the screen like the checker, so a slope
+    reads as a ramp of slabs) with a sunlit lip `#efebe2` along its top, over
+    a band of red-brick pavers, over the subgrade `#5a3126`. The pavers are
+    Green Hill's checkerboard kept on purpose — it is what makes the ground
+    read 16-bit before anything moves, and the brick is what makes it read as
+    downtown: a band (`CHECKER_DEPTH`) of 5-unit squares in `#b9523b` and
+    `#8e3a2a` with `#5c2518` mortar between them and round the band's edge,
+    square to the screen on a slope the way the original's are, its rows laid
+    from the band's top edge so the flat shows two whole rows.
     Wings are `#f5902b` on a `#fff1d6` bone.
     Drawing content, not UI
     chrome — exempt from the two-accent budget the way the JOUST arena and the
     drawing inks are. On the tablet the letterbox bars around the 16:9 world
     are near-black (`#0d1f14`): they are outside the world, and painting them
-    sky-blue made the shore read as floating. The wall has no bars at all — its
+    sky-blue made the street read as floating. The wall has no bars at all — its
     camera fills the arena (below).
 -   **Three readings of one creature, told apart at speed.** The schlong is
     drawn three ways and the room has to know which is which in a glance:
@@ -1574,17 +1641,17 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     a little longer than the tablet does and finishes the run it has before it
     switches: the room always sees the post or the hole, never a cut to the
     next start line.
--   **The wall sees further down the shore than the tablet.** The scene draws
+-   **The wall sees further down the street than the tablet.** The scene draws
     the one world through a camera per surface (`SchlonicScene/camera`): the
     tablet keeps the sim's own 16:9 box with the runner 46 units in, and the TV
     fills its whole arena edge to edge with a camera widened to the arena's
     aspect, the runner pulled nearer the left edge, and a little more sky and
-    ground than the box — about two and a quarter seconds of shore ahead of
+    ground than the box — about two and a quarter seconds of street ahead of
     the hen at top speed against the tablet's one and a half. That is the
     game's information asymmetry (`docs/minigame-design-principles.md` §3): a
     hazard is on the wall before it is on the tablet, so the couch is the
     runner's lookout and "JUMP!" is the whole team's job, not the holder's.
-    The still banks (bay, beach, park) cover any camera; the scrolling banks
+    The still bands (bay, hillside, far sidewalk, road) cover any camera; the scrolling banks
     are sized off the camera's width the same way they are off the zone's
     length, and the ground runs a camera past the post.
 -   **The zone strip.** Between the marquee and the arena the wall hangs the
@@ -1677,7 +1744,7 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
         units while a springboard is worth ~81, so it crosses the top-left sky on
         any decent bounce.
 -   Display: marquee (team, the game's name, and a meta cell holding the
-    run, the wings in hand and the wings banked), the zone with "Kempenfelt Bay Zone" on the
+    run, the wings in hand and the wings banked), the zone with "Dunlop Street Zone" on the
     venue plaque centred over its sky (§2.2D), a status line; one
     plaque over the beat — after the punchline, when the run went wrong — how the run ended and, under a rule, who takes the
     tablet next — and the points plaque once the team is through. One card,
@@ -1690,13 +1757,11 @@ everyone on that sofa is from Barrie, knows where it is watching it from.
     and made the marquee 145.1px tall; laid out rather than reserved it is
     87.5px, and the 57.6px went back to the zone on every turn. JOUST and
     FAPPY were paying the same on the same row.
--   A pit has a shaft of dark under it. The backdrop's park used to show
-    through the gap, and from the sofa a hole read as a bright green pillar
-    standing in the ground rather than a drop out of it. The near waterfront
-    bank — the Spirit Catcher, the marina, Allandale Station — stands on the
-    same strip of shore the kit is dealt onto, in the two darkest, warmest
-    materials in the picture, so it is hazed (`WATERFRONT_HAZE`) like the
-    banks behind it and a pink one with a face still wins the eye.
+-   The Spirit Catcher, the marina and Allandale Station left this zone when
+    it moved uptown (2026-09-28); they still stand in `@wingnight/scenery`
+    for JOUST's beach. The runner's board, kickflip and grind, the rail's own
+    drawing and the trench's punchline are specified with the skate run's
+    sim and are not described here yet.
 -   The run is the game: §8's infinite-animation rule does not bite.
     `prefers-reduced-motion` on the display shows how the run ended, without
     the running.

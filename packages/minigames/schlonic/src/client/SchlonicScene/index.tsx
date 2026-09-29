@@ -4,20 +4,14 @@ import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, createSchlonicRunStart } from "@wingnight/shared";
 
 import type { RunnerFigure } from "../resolveRunnerFigure/index.js";
-import {
-  Backdrop,
-  CLOUD_PARALLAX,
-  FAR_SHORE_PARALLAX,
-  TOWN_PARALLAX,
-  WATERFRONT_PARALLAX,
-  type BackdropRefs
-} from "./Backdrop/index.js";
+import { Backdrop, paintBackdropScroll, type BackdropRefs } from "./Backdrop/index.js";
 import { Burst, paintBurst } from "./Burst/index.js";
 import { TABLET_CAMERA_FIT, resolveCamera, type SchlonicCameraFit } from "./camera/index.js";
 import { FallPunchline } from "./FallPunchline/index.js";
 import { Ghost, RUNNER_SCALE, TUCK_DROP, TUCK_SHRINK, paintGhost, type GhostRefs } from "./Ghost/index.js";
 import { Ground } from "./Ground/index.js";
 import { resolveRunnerCurl, resolveRunnerPose, resolveRunnerSlope } from "./runnerPose/index.js";
+import { SetPieces } from "./SetPieces/index.js";
 import { shakeElement } from "./shake/index.js";
 import * as styles from "./styles.js";
 import { usePunchline } from "./usePunchline/index.js";
@@ -136,13 +130,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       const scrollX = frame.x - SCHLONIC_WORLD.runnerX;
 
       zoneLayerRef.current?.setAttribute("transform", `translate(${-scrollX} 0)`);
-      backdropRef.current?.clouds?.setAttribute("transform", `translate(${-scrollX * CLOUD_PARALLAX} 0)`);
-      backdropRef.current?.farShore?.setAttribute("transform", `translate(${-scrollX * FAR_SHORE_PARALLAX} 0)`);
-      backdropRef.current?.town?.setAttribute("transform", `translate(${-scrollX * TOWN_PARALLAX} 0)`);
-      backdropRef.current?.waterfront?.setAttribute(
-        "transform",
-        `translate(${-scrollX * WATERFRONT_PARALLAX} 0)`
-      );
+      paintBackdropScroll(backdropRef.current, scrollX);
     };
 
     const paintRunner = (
@@ -313,6 +301,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
           >
             <Backdrop ref={backdropRef} zoneLength={zone.goalX} camera={camera} />
             <g ref={zoneLayerRef} data-schlonic-zone>
+              <SetPieces zone={zone} goalGroundY={goalGroundY} />
               <Ground zone={zone} camera={camera} />
               <ZoneProps zone={zone} registerProp={registerProp} goalGroundY={goalGroundY} />
               <WipeoutPunchline ref={punchline.wipeoutRef} />

@@ -3,10 +3,10 @@
 // whole of it, with the camera widened to the box's own aspect (`camera/index.ts`).
 export const frame = "relative flex h-full min-h-0 w-full items-center justify-center [container-type:size]";
 
-// Morning sky over Kempenfelt Bay, paling into the haze where the far bank sits: the one
-// minigame in the night that is supposed to read as a 16-bit platformer at a glance, and the one
-// that is supposed to read as home.
-// Scene art, licensed by DESIGN.md §2.11: the bay's summer sky.
+// Morning sky over downtown Barrie, paling into the haze where the bay and Oro's far bank sit:
+// the one minigame in the night that is supposed to read as a 16-bit platformer at a glance, and
+// the one that is supposed to read as home.
+// Scene art, licensed by DESIGN.md §2.11: Dunlop Street's summer sky.
 const sceneSky = "bg-[linear-gradient(180deg,#0b6fd4_0%,#6dc0ea_58%,#cfeaf7_100%)]";
 
 const sceneBase = `relative overflow-hidden ${sceneSky}`;

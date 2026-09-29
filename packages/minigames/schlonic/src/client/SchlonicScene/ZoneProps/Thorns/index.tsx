@@ -11,7 +11,7 @@ const THORNS_PER_BED = 3;
 
 /**
  * The thorn bed: the same creature, stubbier and crimson, several of them splayed out of the
- * turf with no face on any of them. It is scenery, not an enemy — there is no squashing it, and
+ * sidewalk with no face on any of them. It is scenery, not an enemy — there is no squashing it, and
  * it costs you half the handful however you arrive.
  */
 export const Thorns = ({ prop }: { prop: SchlonicProp }): JSX.Element => {

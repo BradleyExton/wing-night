@@ -1,5 +1,5 @@
-import { SpiritCatcher, TownCluster } from "@wingnight/scenery";
-import type { SceneryPalette } from "@wingnight/scenery";
+import { SpiritCatcher, TownCluster, WaterfrontCondos } from "@wingnight/scenery";
+import type { SceneryPalette, WaterfrontCondosPalette } from "@wingnight/scenery";
 import { JOUST_WORLD } from "@wingnight/shared";
 
 import { joustPalette } from "../palette.js";
@@ -62,9 +62,13 @@ const SUN = { cx: 136, cy: 54, r: 6.5, glowRadius: 18 };
 
 /**
  * The landmarks in dusk silhouette: one colour, the light behind them. `@wingnight/scenery`
- * draws the same shapes SCHLONIC stands in its morning haze; only the windows are lit here.
+ * draws the same shapes SCHLONIC stands in its morning haze; only the windows are lit here, and
+ * the condos' balcony glass holds the last of the glow.
  */
-const SCENERY: SceneryPalette = {
+const SCENERY: SceneryPalette & WaterfrontCondosPalette = {
+  tower: joustPalette.silhouette,
+  towerDark: joustPalette.silhouette,
+  towerGlass: joustPalette.condoGlass,
   steel: joustPalette.silhouette,
   steelDark: joustPalette.silhouette,
   mound: joustPalette.beachWet,
@@ -84,6 +88,16 @@ const SCENERY: SceneryPalette = {
 
 /** Downtown, on the far horizon at the west end, half off the frame the way a skyline is. */
 const TOWN_X = -6;
+
+/**
+ * The twin condos on the waterfront, standing on the water's edge in front of downtown — nearer
+ * than the town, so drawn over the far treeline. Skyline scale, and tucked between downtown's
+ * tall slab and City Hall: the right tower stops short of where the shot hangs on the band, and
+ * the gap between the two towers falls where neither the town's windows nor City Hall's show
+ * through, so the pair reads as a pair.
+ */
+const CONDOS = { x: 6, scale: 0.4 };
+
 /** The Spirit Catcher, on the beach behind the rack: a giant steel bird overlooking a rack of hens. */
 const SPIRIT_CATCHER = { x: 108, halfSpan: 16 };
 
@@ -129,10 +143,10 @@ const RIPPLES = [
 
 /**
  * Everything behind the lane that nothing can hit: sky, stars, the sun going down, the far shore,
- * downtown, the bay with the sun's column on it, the Spirit Catcher on the beach, the sand.
- * Painted well past the world on every side (see `BACKDROP_BLEED`), outside the clip the moving
- * bodies live in, so the scene meets whatever frame it is in with sky and sand and never a hard
- * edge.
+ * downtown and the twin condos, the bay with the sun's column on it, the Spirit Catcher on the
+ * beach, the sand. Painted well past the world on every side (see `BACKDROP_BLEED`), outside the
+ * clip the moving bodies live in, so the scene meets whatever frame it is in with sky and sand and
+ * never a hard edge.
  */
 export const Backdrop = ({ sceneId }: BackdropProps): JSX.Element => {
   const skyGradientId = `${sceneId}-sky`;
@@ -173,10 +187,12 @@ export const Backdrop = ({ sceneId }: BackdropProps): JSX.Element => {
       <circle cx={SUN.cx} cy={SUN.cy} r={SUN.glowRadius} fill={`url(#${sunGlowId})`} />
       <circle cx={SUN.cx} cy={SUN.cy} r={SUN.r} fill={joustPalette.sun} opacity={0.95} />
 
-      {/* Oro's shore across the water, and downtown at the head of the bay, all one haze. */}
+      {/* Oro's shore across the water, downtown at the head of the bay, and the condos on the
+          water's edge in front of it, all one haze. */}
       <path d={ridgeBand(64, 7)} fill={joustPalette.shoreFar} />
       <TownCluster x={TOWN_X} baseY={HORIZON_Y + 0.5} palette={SCENERY} />
       <path d={treeBand()} fill={joustPalette.shoreFarTrees} />
+      <WaterfrontCondos x={CONDOS.x} baseY={HORIZON_Y + 0.8} scale={CONDOS.scale} palette={SCENERY} />
       {SHORE_LIGHTS.map((x) => (
         <circle key={x} cx={x} cy={HORIZON_Y - 0.5} r={0.36} fill={joustPalette.shoreLight} opacity={0.85} />
       ))}

@@ -1,6 +1,6 @@
 export const hostSchlonicSurfaceCopy = {
   introDescription:
-    "One at a time, your chickens run Kempenfelt Bay Zone — down the waterfront, and the waterfront is furnished. The bird runs on its own; the tablet only jumps. Tap to hop, hold to go higher, and grab every wing you can: the wings are the score AND they are the only thing keeping you alive. A pink one with a face is an enemy — land on it and it pops. A crimson bed of them just hurts, and so does a hole. Take a hit and you drop half your wings; take one holding none and your run is over. Get to the post and everything in your hands goes on the board.",
+    "One at a time, your chickens skate Dunlop Street Zone — out of Souldiers, down the sidewalk to the Queen's patio, and the sidewalk is furnished. The bird rolls on its own; the tablet only jumps. Tap to ollie, hold to go higher, land on a rail to grind it, and grab every wing you can: the wings are the score AND they are the only thing keeping you alive. A pink one with a face is an enemy — land on it and it pops. A crimson bed of them just hurts, and so does a trench. Take a hit and you drop half your wings; take one holding none and your run is over. Get to the post and everything in your hands goes on the board.",
   waitingZoneLabel: "No zone is loaded. Check the round's SCHLONIC rules.",
   runCounter: (runNumber: number, runsTotal: number): string => `Run ${runNumber} of ${runsTotal}`,
   // The one hint the tablet holder gets, on the line: how to start and how to jump, in one
@@ -8,8 +8,8 @@ export const hostSchlonicSurfaceCopy = {
   // same thing a second time in the same corner.
   readyHint: (playerName: string | null): string =>
     playerName === null
-      ? "Tap to go. Hold the tap to jump higher — in the air you're a ball, and a ball squashes things."
-      : `${playerName}: tap to go. Hold the tap to jump higher — in the air you're a ball, and a ball squashes things.`,
+      ? "Tap to go. Hold the tap to jump higher — land on a rail to grind it, and on a face to pop it."
+      : `${playerName}: tap to go. Hold the tap to jump higher — land on a rail to grind it, and on a face to pop it.`,
   readyLockedHint: "Waiting for the host to open the round.",
   finishedHint: "That's the team. Advance the phase when the room is ready.",
   inHandLabel: "In hand",

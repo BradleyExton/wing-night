@@ -75,7 +75,7 @@ test("puts the team, the zone and the wing tally on the marquee", () => {
   const markup = render(createView({ wingsBanked: 12 }));
 
   assert.ok(markup.includes("Team Alpha"));
-  assert.ok(markup.includes("Kempenfelt Bay Zone"));
+  assert.ok(markup.includes("Dunlop Street Zone"));
   assert.ok(markup.includes("Run 1 / 2"));
   assert.ok(markup.includes(">12</span> / 40"));
   // The wings in hand, which the mirror's paint loop writes into as the runner collects them.

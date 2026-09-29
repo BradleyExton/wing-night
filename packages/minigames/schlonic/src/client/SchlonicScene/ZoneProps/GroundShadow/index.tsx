@@ -1,6 +1,6 @@
 import { schlonicPalette } from "../../palette.js";
 
-// The smudge under anything standing on the turf, so a prop sits on the ground rather than
+// The smudge under anything standing on the sidewalk, so a prop sits on the ground rather than
 // floating over it.
 export const GroundShadow = ({
   x,
