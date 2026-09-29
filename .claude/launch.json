@@ -31,6 +31,45 @@
       ],
       "port": 5674,
       "url": "http://127.0.0.1:5674"
+    },
+    {
+      "name": "wing-night-teaser",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@wingnight/client",
+        "exec",
+        "vite",
+        "--config",
+        "vite.teaser.config.ts",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5676",
+        "--strictPort"
+      ],
+      "port": 5676,
+      "url": "http://127.0.0.1:5676"
+    },
+    {
+      "name": "wing-night-teaser-dist",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@wingnight/client",
+        "exec",
+        "vite",
+        "preview",
+        "--config",
+        "vite.teaser.config.ts",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5677",
+        "--strictPort"
+      ],
+      "port": 5677,
+      "url": "http://127.0.0.1:5677"
     }
   ]
 }

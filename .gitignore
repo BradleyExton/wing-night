@@ -12,6 +12,10 @@ coverage/
 # from a worktree that predates the move.
 apps/client/public/local-assets/
 content/local/
+# The online teaser's public dir is filled from the night pack (tools/build-teaser), and its
+# build is a deploy artefact.
+apps/client/teaser-public/
+apps/client/dist-teaser/
 playwright-report/
 test-results/
 .playwright/

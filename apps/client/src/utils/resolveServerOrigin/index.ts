@@ -8,8 +8,18 @@
 // Both reads happen inside the function body, so importing this module never
 // touches `import.meta.env` or `window` — callers under `tsx --test` (no DOM,
 // no Vite) can import it freely as long as they don't call it.
+//
+// The one exception is the online teaser (vite.teaser.config.ts), a static site
+// that serves the content assets itself: it configures `same-origin`, and the
+// page's own origin is the answer.
+export const SAME_ORIGIN_SERVER_URL = "same-origin";
+
 export const resolveServerOrigin = (): string => {
   const configuredUrl = import.meta.env.VITE_SOCKET_SERVER_URL;
+
+  if (configuredUrl?.trim() === SAME_ORIGIN_SERVER_URL) {
+    return window.location.origin;
+  }
 
   if (configuredUrl && configuredUrl.trim().length > 0) {
     return configuredUrl.trim();

@@ -10,7 +10,7 @@
     "dev": "pnpm -r --parallel --filter @wingnight/server --filter @wingnight/client dev",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
-    "test": "pnpm -r --if-present test && pnpm test:lint-rules && pnpm test:playwright-ports && pnpm test:e2e-content-root && pnpm test:import-avatars && pnpm test:import-recreate",
+    "test": "pnpm -r --if-present test && pnpm test:lint-rules && pnpm test:playwright-ports && pnpm test:e2e-content-root && pnpm test:import-avatars && pnpm test:import-recreate && pnpm test:build-teaser",
     "test:e2e": "playwright test",
     "test:lint-rules": "node --test tools/eslint-plugin-wingnight/tests/index.test.mjs",
     "test:playwright-ports": "node --test tools/playwright-ports/index.test.mjs",
@@ -20,7 +20,12 @@
     "import:avatars": "node tools/import-avatars/index.mjs",
     "test:import-avatars": "node --test tools/import-avatars/tests/index.test.mjs",
     "import:recreate": "node tools/import-recreate-targets/index.mjs",
-    "test:import-recreate": "node --test tools/import-recreate-targets/tests/index.test.mjs"
+    "test:import-recreate": "node --test tools/import-recreate-targets/tests/index.test.mjs",
+    "teaser:prepare": "node tools/build-teaser/index.ts",
+    "teaser:dev": "pnpm teaser:prepare && pnpm --filter @wingnight/client dev:teaser",
+    "teaser:build": "pnpm teaser:prepare && pnpm --filter @wingnight/client build:teaser",
+    "teaser:deploy": "pnpm teaser:build && cd apps/client && pnpm dlx wrangler deploy --config wrangler.teaser.jsonc",
+    "test:build-teaser": "node --test tools/build-teaser/planTeaserRoster.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",

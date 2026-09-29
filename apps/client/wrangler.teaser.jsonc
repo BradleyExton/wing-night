@@ -1,0 +1,11 @@
+// The online teaser on Cloudflare (Workers static assets): `pnpm teaser:deploy` from the repo root.
+// A static site with no Worker script — every file is dist-teaser/, `_headers` included (the
+// noindex on every response), and an unknown path gets the page, so /dunlop-dash loads directly.
+{
+  "name": "wingnight",
+  "compatibility_date": "2026-09-29",
+  "assets": {
+    "directory": "./dist-teaser",
+    "not_found_handling": "single-page-application"
+  }
+}
