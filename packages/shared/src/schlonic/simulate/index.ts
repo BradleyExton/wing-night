@@ -157,7 +157,7 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
  * The whole physics, one tick. A terminal frame steps to itself, so callers can advance past the
  * outcome without guarding. Speed comes off the ground — a downhill is worth more than the legs
  * are — a press off the floor jumps and holding it climbs higher, a rail carries a bird that
- * comes down on it at the speed it arrived, a pit is the end of the run, and a hit costs half
+ * comes down on it at the speed it arrived (the legs still working it up to top speed), a pit is the end of the run, and a hit costs half
  * the handful. Nothing but a hit taken with nothing in hand ends a run short of the post: the
  * wings are the health bar, which is why greed is the game.
  */
@@ -193,8 +193,11 @@ export const stepSchlonic = (
   let vx: number;
 
   if (frame.grindingRail !== null) {
-    // A rail has no slope to run down and nothing to drag: the board keeps what it came with.
-    vx = Math.max(minSpeed, Math.min(grindMaxSpeed, frame.vx));
+    // A rail has no slope to run down and nothing to drag: the board keeps what it came with,
+    // and the legs still push it on towards top speed — a grind begun at the floor speed would
+    // otherwise crawl off the rail's end straight down into its own thorns.
+    vx = frame.vx < topSpeed ? Math.min(topSpeed, frame.vx + acceleration) : frame.vx;
+    vx = Math.max(minSpeed, Math.min(grindMaxSpeed, vx));
   } else {
     vx = frame.vx + (frame.grounded ? resolveSchlonicGroundSlope(zone, frame.x) * slopeAcceleration : 0);
     vx = vx < topSpeed ? Math.min(topSpeed, vx + acceleration) : Math.max(topSpeed, vx - drag);

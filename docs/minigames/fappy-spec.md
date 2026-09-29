@@ -17,8 +17,8 @@ client like JOUST. A timed relay: the active team's players take the tablet in r
 one **leg** each, and fly their own cast bird (the `@wingnight/cast` hen wearing their head,
 in the team colour and genre apparel) through a section of **gates** — a champ standing up
 from the floor, bobbing, with sometimes an eagle hanging in the sky above. Each leg takes off
-from a cliff and ends on another, where the next player's bird stands waiting: tap anywhere
-to flap, come down on that plateau and the tablet changes hands. A crash sends the bird back
+from one downtown roof and ends on another, where the next player's bird stands waiting: tap
+anywhere to flap, come down on that roof and the tablet changes hands. A crash sends the bird back
 to the perch of the last gate it cleared. One clock runs from the first tap to the last
 landing, handoffs included, and the team's points come from that time.
 
@@ -67,19 +67,21 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
 - **A crash costs time, never points.** The bird respawns on the perch of the last gate it
   cleared in that leg, hovering, waiting for a tap. The clock does not stop.
 - **Eagles are a bump, not a crash.** Hitting one knocks it out of the sky for the rest of the
-  leg (every later attempt too) and shoves the bird down. Only the champs, the sand and the
-  cliffs kill. Brad's call, to make the corridor kinder.
+  leg (every later attempt too) and shoves the bird down. Only the champs, the street and the
+  buildings' faces kill. Brad's call, to make the corridor kinder.
 - **Spit is a bump too.** A spitter's glob that lands is spent and shoves the bird down
   (`spitSplatVelocity`, harder than an eagle) towards the things that do kill; it never kills
   on its own. Same reasoning: the corridor stays kind, the hazard is in what it sets up.
-- **Landing is the handoff.** A leg is cleared by coming down on the landing cliff's
-  plateau, not by passing its last gate. The next player's bird stands in the middle of that
-  plateau facing the flyer; on the last leg a flag stands there instead. Into the cliff's
-  face, or into the rock wall that closes the sky past the plateau, is a crash like any
-  other. The start cliff is solid ground: a hop that comes down before the drop just lands.
+- **Landing is the handoff.** A leg is cleared by coming down on the landing roof, not by
+  passing its last gate. The next player's bird stands on that roof facing the flyer; on the
+  last leg a flag stands there instead. Into the building's face, or into the office tower
+  that closes the sky past the roof, is a crash like any other. The start roof is solid
+  ground: a hop that comes down before its edge just lands. (The sim still calls these
+  `cliffTop`, `startCliffEnd` and `landingCliffGap` — they were cliffs over sand until the
+  2026-09-28 downtown pass; the geometry did not change, only the drawing.)
 - **One relay clock, handoffs included.** It starts on the relay's first flap and stops on
   the last landing. There is no pass button and no banner: a cleared leg makes the next leg
-  `ready`, its bird already on its own start cliff, and the next player's first tap flies
+  `ready`, its bird already on its own start roof, and the next player's first tap flies
   it. The handoff is the race.
 - **Points from time.** Every point the round offers at or under `parSeconds`, sliding
   straight down to a tenth at `limitSeconds`. At the limit the relay ends; an unfinished
@@ -97,7 +99,7 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
   the server's start stamp against its own wall clock.
 - **Sixty ticks a second, fixed step.** A flap logged at tick `T` applies to the step that
   produces `T + 1`, on every party.
-- **Obstacles from the floor.** Every gate is a schlong standing on the sand — the cast's
+- **Obstacles from the floor.** Every gate is a schlong standing on the street — the cast's
   `resolveSchlongPaths` drawing, the same one JOUST fires, in one of three kinds the course
   deals (`champKind`: pink, ebony, ivory; a look, never a hitbox) — growing and shrinking on a
   bounded triangle-wave bob (the sim's `champTop` is the top of its head) with the shaft re-bent
@@ -122,19 +124,19 @@ from `champKinds`, with `spitterOdds` a spitting beat (`spitPeriodTicks` in
 stretch is at least `gapHeight`. `resolveFappySpit(gate, tick)` is the glob a champ has in the
 air at a tick, or null: it leaves the mouth `spitMouthDepth` under the head on the beat, moves
 `spitSpeedX` a tick towards the bird, rises at `spitRiseVelocity` and falls on `spitGravity`,
-gone at `spitLifeTicks` or the sand — pure arithmetic in launch tick and age.
+gone at `spitLifeTicks` or the street — pure arithmetic in launch tick and age.
 `stepFappy(frame, gates, gatesPerLeg, didFlap)` is the whole physics: gravity, flap sets `vy`,
-ceiling clamps, the start cliff (to `startCliffEnd`) holds the bird up, floor kills, the
+ceiling clamps, the start roof (to `startCliffEnd`) holds the bird up, floor kills, the
 champ's head at this tick kills, an eagle kills, a gate counts once its trailing edge is
 behind the bird, an eagle bumped is knocked away (`knockedEagles` on the frame, carried into
 the next attempt's start with tick `-1`) and the bird shoved down `eagleBumpVelocity`, a glob
 within `spitRadius + birdRadius` of the bird is a splat (`splats` on the frame, keyed by gate and
 launch tick so it lands once; not carried across attempts) that shoves the bird down
 `spitSplatVelocity`, and at
-the landing cliff (`resolveFappyLandingX`, `landingCliffGap` past the
-last gate) the face below `cliffTop` kills, the wall past `landingZoneWidth` kills, and coming
-below `cliffTop` over the plateau ends the leg `cleared`. `createFappyLegStart(gates,
-checkpointGate)` starts an attempt standing on the start cliff, or on the perch of gate
+the landing roof (`resolveFappyLandingX`, `landingCliffGap` past the
+last gate) the face below `cliffTop` kills, the tower past `landingZoneWidth` kills, and coming
+below `cliffTop` over the roof ends the leg `cleared`. `createFappyLegStart(gates,
+checkpointGate)` starts an attempt standing on the start roof, or on the perch of gate
 `checkpointGate − 1` (`resolveFappyPerchY`, the middle of that gate's gap at full stretch)
 with the count intact. `advanceFappy` steps a frame to a tick
 applying the logged flaps; `runFappyLeg(course, log, checkpoint)` runs an attempt to its
@@ -243,17 +245,17 @@ relies on.
 ### 0.8 Surfaces
 
 Both draw one `FappyScene`: a 16:9 box letterboxed into its container with CSS container
-units, a floor line, the gate layer (both cliffs and the rock wall, every champ and eagle for
+units, a floor line, the gate layer (both roofs and the office tower, every champ and eagle for
 the leg, translated by `scrollX`, each champ's shaft and head moved to its bob for the frame),
 the bird (a `<Character>` in a wrapper translated and tilted by `vy`) and the waiting bird
-(the next leg's player, flipped to face the flyer, placed on the plateau in world units each
+(the next leg's player, flipped to face the flyer, placed on the landing roof in world units each
 frame; a finish flag on the last leg). The scene is driven imperatively
 from a `requestAnimationFrame` loop writing attributes and transforms to refs — React never
 re-renders per frame.
 
 **Host.** JOUST's rail + arena + deck, with the relay clock on the rail (`useRelayClock`:
 the server's start stamp against `Date.now()`, a tenth of a second at a time). The arena is
-the flap surface: `pointerdown` anywhere flaps. `ready`: the bird on its cliff or its perch,
+the flap surface: `pointerdown` anywhere flaps. `ready`: the bird on its roof or its perch,
 a hint naming who to land next to, a respawn hint after a crash.
 `flying`: the local sim runs; on a terminal frame the surface dispatches `endLeg`. When the
 local clock passes the limit the surface dispatches `timeOut` once. Deck: leg card (player,
@@ -270,8 +272,8 @@ progress when the limit caught the team.
 
 Against `/dev/minigame/fappy`, no sockets: both previews draw the course; a tap on the host
 arena starts the clock and the display shows the bird flying towards the waiting bird; with
-no further taps the bird falls off the start cliff and the same player is back on it with a
-crash on the board; **Skip leg** hands the tablet on and the last leg's cliff carries the
+no further taps the bird falls off the start roof and the same player is back on it with a
+crash on the board; **Skip leg** hands the tablet on and the last leg's roof carries the
 finish flag; skipping the last leg finishes the relay with a plaque; sandbox Reset restores
 leg 1 and the idle clock.
 
@@ -305,7 +307,8 @@ leg 1 and the idle clock.
   cast layer (`<CharacterWing>`, `wing="none"` on the figure) so it can beat per tap without
   repainting the costume head's halo; the wingbeat is read off `vy`. The scene grew a
   starfield, a sun, two parallax dune bands, lit champs, a feathered eagle whose wings beat
-  on the shoulders, strata and tufts on the cliffs and a gold landing strip. The landing
+  on the shoulders, strata and tufts on the cliffs and a gold landing strip (the dusk, the
+  dunes and the cliffs went in the downtown pass below; the strip stayed). The landing
   plateau widened from 44 to 56 units and the waiter moved from its middle to 78% of it,
   because two 16-unit birds could not stand on a 44-unit plateau without one drawn over the
   other; the waiter also steps towards the wall on its first hop when a landing comes down
@@ -313,6 +316,14 @@ leg 1 and the idle clock.
   landing, which is the direction to err in. The beats cost
   clock — about four seconds a relay of handoffs — so `parSeconds` may want a few seconds
   back at the table.
+- **Downtown (2026-09-28).** The corridor moved to downtown Barrie on a golden afternoon,
+  flown at rooftop height: the purple dusk, the starfield and the dunes became a blue-to-honey
+  sky, a high sun, Kempenfelt Bay, and two parallax bands — the skyline across the bay
+  (downtown's slabs, City Hall, the twin condos) and Dunlop Street's fronts with the Queen's
+  Hotel among them; the sand became the street; the cliffs
+  became a red-brick block to take off from and a buff one to land on, with coping and windows,
+  and the rock wall a concrete office tower. Same geometry to the unit — `FAPPY_WORLD` is
+  unchanged, so the sim's cliff vocabulary stayed. The intro illustration was redrawn to match.
 - **Not scheduled** in `content/sample/gameConfig.json`; its rules block is there with the
   §0.6 defaults. Schedule it via local config or `/admin`.
 - **Line-up pass (2026-09-23).** Brad asked for variety, detail, more jiggle and something to

@@ -1,6 +1,8 @@
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, resolveSchlonicFinaleX } from "@wingnight/shared";
 
+import { AIR_CLEARANCE, resolveRunnerClearance } from "../runnerClearance/index.js";
+
 /**
  * What a replay of a run can announce between one drawn frame and the next — and, once a run
  * has gone wrong, what its punchline announces as the beat plays it (`thud`, `chitter`,
@@ -32,11 +34,21 @@ export type SchlonicMirrorEventHandler = (event: SchlonicMirrorEvent) => void;
 /** A grind scrapes once every this many units of rail: about every sixth of a second at speed. */
 export const GRIND_SCRAPE_UNITS = 8;
 
+/**
+ * The most air the runner has had since its feet were last down, carried by the caller from one
+ * drawn frame to the next: 0 on the ground, and the highest `resolveRunnerClearance` seen since.
+ * A landing is only a landing after real air, and a single frame cannot say whether it had any.
+ */
+export const resolveAirPeak = (previousPeak: number, frame: SchlonicFrame, zone: SchlonicZone): number => {
+  return frame.grounded ? 0 : Math.max(previousPeak, resolveRunnerClearance(zone, frame));
+};
+
 /** The board's own noises between two frames (see `resolveMirrorEvents`). */
 const resolveBoardEvents = (
   previous: SchlonicFrame,
   next: SchlonicFrame,
-  isThrown: boolean
+  isThrown: boolean,
+  airPeak: number
 ): SchlonicMirrorEvent[] => {
   const events: SchlonicMirrorEvent[] = [];
   const wasGrinding = previous.grindingRail !== null;
@@ -60,7 +72,7 @@ const resolveBoardEvents = (
     events.push({ kind: "grindStop" });
   }
 
-  if (!previous.grounded && next.grounded && !isGrinding) {
+  if (!previous.grounded && next.grounded && !isGrinding && airPeak > AIR_CLEARANCE) {
     events.push({ kind: "land" });
   }
 
@@ -82,13 +94,17 @@ const resolveBoardEvents = (
  * The board has its own voice. An ollie is the feet leaving the ground on the way up with
  * nothing else to explain it — not a hit's knock-back, a springboard or a badnik's bounce, and
  * not a walk off a ledge, which leaves at no speed. A landing is the feet coming down on the
- * street; coming down on a rail is the start of a grind instead, which scrapes every few units
- * along it and rings off the end. A bailing hen has no board under it, so it makes none of them.
+ * street after real air — `airPeak` (`resolveAirPeak`, up to and including `previous`) past
+ * `AIR_CLEARANCE` — because the sim lets a board rolling down a hill skip off the paving and
+ * touch down again every few ticks, and a clack for each would rattle the TV down every slope.
+ * Coming down on a rail is the start of a grind instead, which scrapes every few units along it
+ * and rings off the end. A bailing hen has no board under it, so it makes none of them.
  */
 export const resolveMirrorEvents = (
   previous: SchlonicFrame,
   next: SchlonicFrame,
-  zone: SchlonicZone
+  zone: SchlonicZone,
+  airPeak: number
 ): SchlonicMirrorEvent[] => {
   const events: SchlonicMirrorEvent[] = [];
 
@@ -122,7 +138,7 @@ export const resolveMirrorEvents = (
   const isOnBoard = next.tick >= next.invulnerableUntilTick;
 
   if (isOnBoard) {
-    events.push(...resolveBoardEvents(previous, next, isHit || isSprung || tookBadnik));
+    events.push(...resolveBoardEvents(previous, next, isHit || isSprung || tookBadnik, airPeak));
   }
 
   // The last stretch begins: the post is two chunks off.

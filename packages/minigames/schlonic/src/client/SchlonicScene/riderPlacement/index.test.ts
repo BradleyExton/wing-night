@@ -27,11 +27,11 @@ test("does lay the board under the hen's feet, wheels down, when it is rolling",
   assert.equal(placement.sparks.visible, false);
 });
 
-test("does flip the board under the hen at the top of an ollie", () => {
-  const top = { ...START, grounded: false, vy: 0, y: START.y - 14 };
-  const takeOff = { ...START, grounded: false, vy: jumpVelocity };
+test("does flip the board under the hen half way up an ollie", () => {
+  const halfWay = { ...START, grounded: false, vy: jumpVelocity / 2, y: START.y - 10 };
+  const takeOff = { ...START, grounded: false, vy: jumpVelocity, y: START.y - 1 };
 
-  assert.equal(resolveRiderPlacement({ zone: FLAT, frame: top, screenX: runnerX, curl: 1 }).boardRoll, 180);
+  assert.equal(resolveRiderPlacement({ zone: FLAT, frame: halfWay, screenX: runnerX, curl: 1 }).boardRoll, 180);
   assert.equal(resolveRiderPlacement({ zone: FLAT, frame: takeOff, screenX: runnerX, curl: 0.45 }).boardRoll, 0);
 });
 

@@ -63,12 +63,14 @@ export const SCHLONIC_WORLD = {
   /** What a springboard is for: the high wing line, which the legs alone cannot reach. */
   springVelocity: -3.4,
   /**
-   * A grind rail stands this far over level ground: under a tap's peak (about 16.5), so a tap
-   * timed right comes down on it. It runs most of its chunk, longer than a hop's whole arc, so a
+   * A grind rail stands this far over level ground: just under a tap's peak (the feet top out
+   * about 17.5 up), so a tap timed right comes down on it — and just over the rider's head (the
+   * hen on its board stands about 14 tall, its tube hangs 1.7 under this line), so a bird that
+   * stays on the street rolls clean under the bar rather than looking speared by it. It runs most of its chunk, longer than a hop's whole arc, so a
    * hop can only sweep the end of the line strung along it and the grind is the one way to take
    * all of it.
    */
-  railAbove: 12,
+  railAbove: 16.5,
   railLength: 48,
   /**
    * A rail has no slope and no drag, so the board keeps the speed it arrived with — up to this.

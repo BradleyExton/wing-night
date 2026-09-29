@@ -2,6 +2,7 @@ import { CHARACTER_FOOT, CHARACTER_RIDE_STANCE } from "@wingnight/cast";
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, resolveSchlonicGroundSlope } from "@wingnight/shared";
 
+import { resolveRunnerClearance } from "../../runnerClearance/index.js";
 import { resolveRestY } from "../punchlineTimeline/index.js";
 import { BOARD_DEPTH, TRUCK_XS, WHEEL_RADIUS } from "../Skateboard/index.js";
 import { resolveBailShare, resolveRunnerPose, resolveRunnerSlope, type RunnerPose } from "../runnerPose/index.js";
@@ -97,7 +98,7 @@ export const resolveRiderPlacement = ({ zone, frame, screenX, curl, sink = 0 }: 
   const pose = resolveRunnerPose({
     x: frame.x,
     vy: frame.vy,
-    grounded: frame.grounded,
+    clearance: resolveRunnerClearance(zone, frame),
     grinding,
     slope: resolveRunnerSlope(zone, frame),
     curl

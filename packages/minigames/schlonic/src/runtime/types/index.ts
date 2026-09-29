@@ -45,7 +45,7 @@ export type SchlonicRoundMemory = {
 // moving. Par is what a player who takes the high line and keeps hold of it comes home with:
 // well over what the floor gives away — a bot that hops every hazard on the floor and never takes
 // a hit banks ~105 of the default zone's 175, and a person takes hits — and well under a perfect
-// run (a searched greedy line, springs, rails and all, banks ~156). The floor alone cannot make
+// run (a searched greedy line, springs, rails and all, banks ~155). The floor alone cannot make
 // par, which is the point: the hill lines and the rails are the difference.
 export const DEFAULT_SCHLONIC_RULES: SchlonicRuntimeRules = {
   runsPerTurn: 3,

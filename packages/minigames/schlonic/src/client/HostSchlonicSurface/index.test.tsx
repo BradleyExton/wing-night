@@ -119,7 +119,6 @@ test("forwards the shell's rail and says the team nowhere itself", () => {
   // said it a second time on the same canvas, which is the duplication the
   // takeover layout exists to remove. (The running totals still list every
   // team's name — that is a row of numbers, not a chip saying whose go it is.)
-  assert.ok(!markup.includes("On the shore:"));
   assert.ok(!markup.includes("shadow-[0_0_8px_#f97316]"));
 });
 

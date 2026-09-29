@@ -154,8 +154,9 @@ argued for:
   drawn bigger, par 120 in the defaults, the sample and the pack, every zone ending on a finale
   springboard over a wide hole with the biggest arc in the flight, and a riser on the wall as the
   runner enters the last two chunks.
-- ~~**Failure as punchline.**~~ Done 2026-09-28: a pit drop surfaces the hen in the bay with a
-  splash and a gull takes the handful; a wipeout knocks it flat and the dropped wings roll into
+- ~~**Failure as punchline.**~~ Done 2026-09-28: a pit drop is a fall into the roadworks
+  trench — the hen thuds in and peeks out, and a raccoon in a hard hat snatches the handful off
+  the lip, chittering (it was the bay and a gull until the downtown skate pass the same day); a wipeout knocks it flat and the dropped wings roll into
   the nearest badnik (or a stand-in that hops on), one chomp each. The TV's card waits for the
   joke (`PUNCHLINE_MS`). Follow-up: a wipeout almost never happens — the floor wing lines keep
   a runner's hands full — so the zone generator may want a stretch with no floor line before
@@ -164,6 +165,24 @@ argued for:
   sand, the sky's top stop saturated (`#1f7fc4` → `#0b6fd4`), and the outlines on wings and the
   schlong kit up about a third. The hazed backdrop banks were left alone (the haze is what keeps
   the schlongs legible), and the hen was not resized: the TV camera already made it larger.
+
+### SCHLONIC skate/downtown — follow-ups
+
+The 2026-09-28 pass put the hen on a skateboard down Dunlop Street: kickflips, grind rails, a
+trench and a raccoon. What it could not check from a desk:
+
+- **Listen to the new synth cues at a table** — `ollie`, `land`, `grindStart`/`grind`/`grindStop`,
+  `thud`, `chitter` (`packages/minigames/schlonic/src/client/audio`). `thud` and `chitter` are the
+  likeliest to want recorded ElevenLabs takes in the pack (`assets/sfx/schlonic/<cue>-N.mp3`), the
+  way the slap, squelch and burp got theirs.
+- **Table-check the rail timing.** A tap that comes down on the rail late only grinds its last
+  third, and the rail now stands 16.5 up (just over the rider's head, just under a tap's peak):
+  see whether players find the landing or keep hopping the thorns.
+- **The wipeout's runaway board has never been seen on screen.** A real wipeout is near
+  unreachable (the floor lines keep hands full), so the board shooting off in the bail during a
+  wipeout was built blind.
+- **FAPPY's frame rate over the composited skyline** (two parallax bands of `@wingnight/scenery`
+  landmarks) has not been checked on the Android host tablet.
 
 ### FAPPY — the TV camera SCHLONIC got
 

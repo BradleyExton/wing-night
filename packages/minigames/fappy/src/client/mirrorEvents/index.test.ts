@@ -71,7 +71,7 @@ test("does report a splat when a glob lands on the bird", () => {
   );
 });
 
-test("does report the crash when the attempt ends in the sand", () => {
+test("does report the crash when the attempt ends in the street", () => {
   assert.deepEqual(
     resolveMirrorEvents(frame({ tick: 40 }), frame({ tick: 41, outcome: "crashed" }), []),
     ["crashed"]

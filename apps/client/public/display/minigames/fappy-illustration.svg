@@ -1,39 +1,140 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Fappy Bird mini-game artwork">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#160c2a" />
-      <stop offset="65%" stop-color="#4a1f3f" />
-      <stop offset="100%" stop-color="#c2582c" />
+    <!-- The corridor's golden afternoon: deep blue overhead going to honey at the horizon -->
+    <linearGradient id="fappy-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a73ad" />
+      <stop offset="40%" stop-color="#78a9cc" />
+      <stop offset="62%" stop-color="#d9d3ad" />
+      <stop offset="78%" stop-color="#f1d49a" />
     </linearGradient>
-    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#d6ac63" />
-      <stop offset="100%" stop-color="#b58a45" />
-    </linearGradient>
+    <radialGradient id="fappy-sun-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#f7c35f" stop-opacity="0.75" />
+      <stop offset="100%" stop-color="#f7c35f" stop-opacity="0" />
+    </radialGradient>
   </defs>
-  <rect width="240" height="180" fill="url(#sky)" />
-  <circle cx="196" cy="118" r="26" fill="#f9a51a" opacity="0.9" />
-  <rect y="156" width="240" height="24" fill="url(#sand)" />
-  <line x1="0" y1="156" x2="240" y2="156" stroke="#6e4f26" stroke-width="2" />
-  <!-- Standing champ, floor -->
-  <g fill="#22c9e6" stroke="#0b7f97" stroke-width="2" stroke-linejoin="round">
-    <rect x="150" y="112" width="18" height="52" rx="9" />
-    <circle cx="146" cy="154" r="9" />
-    <circle cx="172" cy="154" r="9" />
-    <circle cx="159" cy="110" r="11" />
+  <rect width="240" height="180" fill="url(#fappy-sky)" />
+  <circle cx="200" cy="36" r="30" fill="url(#fappy-sun-glow)" />
+  <circle cx="200" cy="36" r="11" fill="#fff3cf" />
+
+  <!-- Across Kempenfelt Bay: downtown's slabs, City Hall's spire and the twin condos, hazed gold -->
+  <g opacity="0.85">
+    <g fill="#b9a4a1">
+      <rect x="6" y="92" width="10" height="24" />
+      <rect x="18" y="80" width="9" height="36" />
+      <rect x="29" y="96" width="13" height="20" />
+      <rect x="98" y="88" width="10" height="28" />
+      <rect x="110" y="98" width="14" height="18" />
+    </g>
+    <path d="M 60 116 L 60 96 L 76 96 L 76 116 Z M 66 96 L 68 82 L 70 96 Z" fill="#9d8a8d" />
+    <g fill="#f8e6bd" opacity="0.55">
+      <rect x="20" y="84" width="5" height="1.6" /><rect x="20" y="90" width="5" height="1.6" /><rect x="20" y="96" width="5" height="1.6" />
+      <rect x="100" y="92" width="6" height="1.6" /><rect x="100" y="98" width="6" height="1.6" />
+    </g>
+    <!-- The condos: cream towers with blue down their corners -->
+    <rect x="146" y="82" width="12" height="34" fill="#dccab0" />
+    <rect x="158" y="82" width="3.5" height="34" fill="#b8a593" />
+    <rect x="146" y="82" width="2.2" height="34" fill="#91aebd" />
+    <rect x="155.6" y="82" width="2.2" height="34" fill="#91aebd" />
+    <rect x="166" y="76" width="13" height="40" fill="#dccab0" />
+    <rect x="179" y="76" width="3.8" height="40" fill="#b8a593" />
+    <rect x="166" y="76" width="2.4" height="40" fill="#91aebd" />
+    <rect x="176.4" y="76" width="2.4" height="40" fill="#91aebd" />
+    <rect x="0" y="113" width="240" height="3" fill="#98a58a" />
   </g>
-  <circle cx="155" cy="107" r="2.4" fill="#fff7ed" />
-  <circle cx="163" cy="107" r="2.4" fill="#fff7ed" />
-  <!-- Hanging champ, ceiling -->
-  <g fill="#22c9e6" stroke="#0b7f97" stroke-width="2" stroke-linejoin="round">
-    <rect x="150" y="-8" width="18" height="52" rx="9" />
-    <circle cx="146" cy="2" r="9" />
-    <circle cx="172" cy="2" r="9" />
-    <circle cx="159" cy="46" r="11" />
+  <rect x="0" y="116" width="240" height="8" fill="#7fa6b8" />
+  <rect x="0" y="116" width="240" height="2" fill="#b9c9bf" />
+  <g fill="#fff4d6" opacity="0.6">
+    <rect x="186" y="119" width="9" height="1" /><rect x="200" y="121" width="7" height="1" /><rect x="176" y="121" width="5" height="1" />
   </g>
-  <circle cx="155" cy="49" r="2.4" fill="#fff7ed" />
-  <circle cx="163" cy="49" r="2.4" fill="#fff7ed" />
-  <!-- The hen, mid-flap -->
-  <g transform="translate(46 62) rotate(-18)" fill="#f97316" stroke="#121212" stroke-width="2" stroke-linejoin="round">
+
+  <!-- Dunlop Street's fronts, a step nearer, the Queen's green roof among them -->
+  <g>
+    <rect x="58" y="120" width="26" height="30" fill="#a8695c" />
+    <rect x="84" y="124" width="24" height="26" fill="#c9b38f" />
+    <rect x="108" y="116" width="34" height="34" fill="#a8695c" />
+    <path d="M 106 117 L 110 110 L 140 110 L 144 117 Z" fill="#4e6a5c" />
+    <rect x="114" y="119" width="22" height="3.2" fill="#e5dccb" />
+    <rect x="142" y="122" width="26" height="28" fill="#c9b38f" />
+    <rect x="168" y="119" width="24" height="31" fill="#86534b" />
+    <g fill="#62788a">
+      <rect x="62" y="125" width="5" height="5" /><rect x="74" y="125" width="5" height="5" />
+      <rect x="88" y="128" width="5" height="4" /><rect x="99" y="128" width="5" height="4" />
+      <rect x="112" y="125" width="5" height="5" /><rect x="122.5" y="125" width="5" height="5" /><rect x="133" y="125" width="5" height="5" />
+      <rect x="146" y="127" width="5" height="4" /><rect x="158" y="127" width="5" height="4" />
+      <rect x="172" y="124" width="5" height="5" /><rect x="183" y="124" width="5" height="5" />
+    </g>
+    <g fill="#5b806c">
+      <path d="M 108 134 L 142 134 L 140 137 L 110 137 Z" />
+      <path d="M 58 134 L 84 134 L 82 137 L 60 137 Z" />
+    </g>
+    <rect x="124" y="104" width="1" height="7" fill="#6b4423" />
+    <path d="M 125 104 L 131 105.5 L 125 107 Z" fill="#c35b50" />
+  </g>
+
+  <!-- The street at the bottom: the promenade in front of the fronts, a kerb, and the asphalt the champs stand in -->
+  <rect x="0" y="150" width="240" height="12" fill="#a39a8f" />
+  <rect x="0" y="150" width="240" height="1.4" fill="#857c72" />
+  <rect x="0" y="162" width="240" height="3" fill="#a2988c" />
+  <rect x="0" y="165" width="240" height="15" fill="#47423f" />
+
+  <!-- The start roof: a red-brick block, coping along its top, a rooftop unit -->
+  <g stroke="#2e1c14" stroke-width="1.2" stroke-linejoin="round">
+    <rect x="-4" y="134" width="56" height="50" fill="#9a4b3a" />
+    <rect x="-4" y="131" width="58" height="4" fill="#e4ddcf" />
+    <rect x="8" y="121" width="14" height="10" fill="#b7b2a9" />
+    <rect x="28" y="115" width="2.4" height="16" fill="#b7b2a9" />
+  </g>
+  <circle cx="18" cy="126" r="2.2" fill="#77726a" />
+  <g fill="#34434f">
+    <rect x="6" y="142" width="7" height="8" /><rect x="20" y="142" width="7" height="8" /><rect x="34" y="142" width="7" height="8" />
+    <rect x="6" y="155" width="7" height="8" /><rect x="20" y="155" width="7" height="8" /><rect x="34" y="155" width="7" height="8" />
+  </g>
+
+  <!-- The landing roof: the buff block, its gold strip, the pennant, and the tower that closes the sky -->
+  <g stroke="#2e1c14" stroke-width="1.2" stroke-linejoin="round">
+    <rect x="228" y="-4" width="16" height="188" fill="#6f675f" />
+    <rect x="182" y="134" width="48" height="50" fill="#c9a26c" />
+    <rect x="180" y="131" width="50" height="4" fill="#e4ddcf" />
+  </g>
+  <g fill="#535a5f">
+    <rect x="231" y="10" width="13" height="4" /><rect x="231" y="30" width="13" height="4" /><rect x="231" y="50" width="13" height="4" />
+    <rect x="231" y="70" width="13" height="4" /><rect x="231" y="90" width="13" height="4" /><rect x="231" y="110" width="13" height="4" />
+  </g>
+  <g fill="#34434f">
+    <rect x="190" y="142" width="7" height="8" /><rect x="205" y="142" width="7" height="8" />
+    <rect x="190" y="155" width="7" height="8" /><rect x="205" y="155" width="7" height="8" />
+  </g>
+  <line x1="184" y1="129.6" x2="226" y2="129.6" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="5 3" stroke-linecap="round" />
+  <rect x="212" y="108" width="1.6" height="23" fill="#6b4423" />
+  <path d="M 213.6 108 L 224 111.5 L 213.6 115 Z" fill="#fbbf24" stroke="#8a4b06" stroke-width="0.8" stroke-linejoin="round" />
+
+  <!-- A champ standing up from the street, with a face -->
+  <g stroke="#8e2a52" stroke-width="1.6" stroke-linejoin="round">
+    <circle cx="124" cy="163" r="6" fill="#f9a3bc" />
+    <circle cx="138" cy="163" r="6" fill="#f9a3bc" />
+    <path d="M 122 165 C 128 150 130 128 127 108 C 126 100 135 97 138 104 C 142 122 141 148 139 165 Z" fill="#f9a3bc" />
+    <circle cx="133" cy="102" r="10" fill="#f9a3bc" />
+  </g>
+  <path d="M 131 114 C 134 126 135 138 133 152" fill="none" stroke="#c4577f" stroke-width="1.2" stroke-linecap="round" />
+  <circle cx="129" cy="100" r="3" fill="#fff7ed" />
+  <circle cx="137.4" cy="100" r="3" fill="#fff7ed" />
+  <circle cx="128.4" cy="100.5" r="1.5" fill="#1c0d02" />
+  <circle cx="136.8" cy="100.5" r="1.5" fill="#1c0d02" />
+  <path d="M 129 107 Q 133.2 110 137.4 107" fill="none" stroke="#8e2a52" stroke-width="1.2" stroke-linecap="round" />
+
+  <!-- A bald eagle hanging in the sky over the gap -->
+  <g transform="translate(138 42)" stroke="#1c0d02" stroke-width="1" stroke-linejoin="round">
+    <path d="M -2 0 C -10 -10 -20 -12 -26 -6 C -18 -6 -12 -2 -8 3 Z" fill="#5a3a22" />
+    <path d="M 2 0 C 10 -12 22 -14 28 -8 C 20 -7 13 -2 9 3 Z" fill="#5a3a22" />
+    <ellipse cx="2" cy="3" rx="10" ry="5" fill="#3b2314" />
+    <circle cx="-8" cy="0" r="4.2" fill="#f5efe6" />
+    <path d="M -12 -0.5 L -16.5 1 L -12 2.6 Z" fill="#f9a51a" />
+    <path d="M 11 3 L 17 1 L 17 6 Z" fill="#f5efe6" />
+    <circle cx="-9.2" cy="-0.8" r="0.8" fill="#1c0d02" stroke="none" />
+  </g>
+
+  <!-- The hen, mid-flap, off the start roof -->
+  <g transform="translate(40 50) rotate(-14) scale(0.82)" fill="#f97316" stroke="#121212" stroke-width="2" stroke-linejoin="round">
     <path d="M 20 42 C 8 40 0 26 6 12 C 8 26 14 34 26 36 Z M 22 46 C 6 48 0 36 2 24 C 8 36 16 40 28 40 Z" />
     <path d="M 14 46 C 14 28 30 20 50 26 C 64 30 66 44 60 54 C 52 64 30 66 20 58 C 15 54 14 50 14 46 Z" />
     <path d="M 48 30 L 54 20 L 64 24 L 62 36 Z" />

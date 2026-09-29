@@ -28,7 +28,7 @@ test("widens a fill camera to the box's aspect and never below its floor", () =>
   assert.equal(resolveCamera(TV_CAMERA_FIT, { width: 100, height: 0 }).width, 200);
 });
 
-test("shows the room more shore ahead of the runner than the tablet sees", () => {
+test("shows the room more street ahead of the runner than the tablet sees", () => {
   const tv = resolveCamera(TV_CAMERA_FIT, TV_ARENA);
   const tabletLead = resolveCameraLead(TABLET_CAMERA);
 

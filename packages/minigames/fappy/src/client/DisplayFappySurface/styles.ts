@@ -31,7 +31,7 @@ export const handoffThen =
   "mt-1 text-[clamp(0.75rem,1.1vw,1.2rem)] font-semibold uppercase tracking-[0.22em] text-mutedWarm";
 
 // Where the relay's `<ResultPlaque>` (DESIGN.md §2.2E) hangs: over the top of
-// the corridor, clear of the finish cliff.
+// the corridor, clear of the finish roof.
 export const resultOverlay =
   "pointer-events-none absolute inset-x-0 top-[6%] z-20 flex justify-center px-[8%]";
 

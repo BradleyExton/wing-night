@@ -9,7 +9,7 @@ import type {
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart, runSchlonicRun } from "@wingnight/shared";
 
 import { BANK_COUNT_MS, CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
-import { resolveMirrorEvents, type SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
+import { resolveAirPeak, resolveMirrorEvents, type SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
 import { resolveHandfulLost } from "../resolveHandfulLost/index.js";
 import { resolveDueCues, resolvePunchlineCues } from "../SchlonicScene/punchlineTimeline/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
@@ -391,6 +391,10 @@ export const useSchlonicMirror = ({
 
     advanceGhost(mirror, mirror.frame.tick);
 
+    // How much air the runner has had since its feet were last down, so a landing only clacks
+    // after a real one (`resolveAirPeak`). A rebuild can start mid-air; it counts from there.
+    let airPeak = resolveAirPeak(0, mirror.frame, zone);
+
     if (mirror.frame.outcome !== null) {
       settleRun(mirror);
       return;
@@ -406,7 +410,9 @@ export const useSchlonicMirror = ({
       mirror.frame = advanceSchlonic(mirror.frame, zone, mirror.inputs, targetTick);
       advanceGhost(mirror, mirror.frame.tick);
 
-      const events = resolveMirrorEvents(previous, mirror.frame, zone);
+      const events = resolveMirrorEvents(previous, mirror.frame, zone, airPeak);
+
+      airPeak = resolveAirPeak(airPeak, mirror.frame, zone);
 
       for (const event of events) {
         // A hit stops the wall's clock for a beat and jolts the picture, the same pause the

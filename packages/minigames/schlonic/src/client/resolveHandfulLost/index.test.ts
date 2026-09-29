@@ -8,7 +8,7 @@ import { resolveHandfulLost } from "./index.js";
 const FLAT = SCHLONIC_WORLD.groundBaseY;
 const STAND_Y = FLAT - SCHLONIC_WORLD.runnerRadius;
 
-// A flat shore with two wings on the floor, then a hole a walker cannot get over.
+// A flat street with two wings on the floor, then a hole a walker cannot get over.
 const ZONE: SchlonicZone = {
   heights: Array.from({ length: 80 }, () => FLAT),
   pits: [{ fromX: 200, toX: 200 + SCHLONIC_WORLD.pitWidth, lipY: FLAT }],

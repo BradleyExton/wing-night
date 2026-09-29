@@ -16,7 +16,7 @@ export type WipeoutPunchlineHandle = {
   hide: () => void;
 };
 
-/** Dropped wings are the burst's size, a size down from the ones on the shore. */
+/** Dropped wings are the burst's size, a size down from the ones along the street. */
 const DROPPED_SCALE = 0.8;
 
 /** Squash and stretch about a point on the ground, as one transform. */
@@ -29,8 +29,8 @@ export const resolveSquashTransform = (x: number, y: number, sx: number, sy: num
 const STAND_IN = { index: 2, kind: "badnik", x: 0, y: 0 } as const;
 
 /**
- * The wipeout's punchline, in the zone's own coordinates (it scrolls with the shore): the wings
- * the hit knocked loose, rolling down the turf to the eater, and — when no badnik is in the
+ * The wipeout's punchline, in the zone's own coordinates (it scrolls with the street): the wings
+ * the hit knocked loose, rolling down the sidewalk to the eater, and — when no badnik is in the
  * picture to do it — a stand-in that hops on from the edge. A badnik already standing in the
  * zone is the scene's own drawing, and the scene squashes it.
  */

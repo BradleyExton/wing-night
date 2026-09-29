@@ -376,7 +376,7 @@ test("jumps off the rail mid-grind like it jumps off the floor", () => {
   );
 });
 
-test("keeps its speed on the rail, with no drag and no slope", () => {
+test("keeps its speed on the rail over top speed, with no drag and no slope", () => {
   // Downhill under the rail: on the ground this would be worth speed, and over the top speed the
   // drag would be bleeding it. On the rail it is neither.
   const heights = Array.from({ length: 200 }, (_unused, sample) => FLAT_HEIGHT + Math.max(0, Math.min(10, sample - 26)));
@@ -408,6 +408,33 @@ test("keeps its speed on the rail, with no drag and no slope", () => {
   assert.ok(fast.every((frame) => frame.vx === first.vx), "the rail changed the speed it was ridden at");
   // However hard it arrives, the rail has a limit.
   assert.ok(ride(9).every((frame) => frame.vx === SCHLONIC_WORLD.grindMaxSpeed));
+});
+
+test("does clear the rail's thorns when the grind began at the floor speed", () => {
+  const zone = flatZone([rail(300, 348), { kind: "spike", x: 348, y: FLAT_HEIGHT }], 4000);
+  let frame: SchlonicFrame = {
+    ...createSchlonicRunStart(zone),
+    x: 301,
+    y: RAIL_RIDE_Y,
+    vx: SCHLONIC_WORLD.minSpeed,
+    grindingRail: 0
+  };
+  const frames: SchlonicFrame[] = [];
+
+  while (frame.x < 400 && frame.outcome === null && frames.length < 1000) {
+    frame = stepSchlonic(frame, zone, { pressed: false, holding: false });
+    frames.push(frame);
+  }
+
+  const grinding = frames.filter((each) => each.grindingRail === 0);
+
+  assert.ok(grinding.length > 20, "the grind should ride most of the rail");
+  assert.ok(
+    grinding.every((each, index) => index === 0 || each.vx > (grinding[index - 1]?.vx ?? 0) || each.vx === SCHLONIC_WORLD.topSpeed),
+    "the legs should push a slow board on along the rail"
+  );
+  assert.equal(frame.hits.length, 0, `landed in the thorns at x ${frames.find((each) => each.hits.length > 0)?.x}`);
+  assert.equal(frame.outcome, null);
 });
 
 test("collects the rail's wings while grinding and none of them from the floor under it", () => {

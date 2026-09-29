@@ -98,7 +98,7 @@ test("does draw the marquee, the course and the player's own bird", () => {
   assert.match(html, /data-fappy-cliffs/);
 });
 
-test("does put the finish flag, not a waiter, on the last leg's cliff", () => {
+test("does put the finish flag, not a waiter, on the last leg's roof", () => {
   const html = render(
     createView({
       legIndex: 1,

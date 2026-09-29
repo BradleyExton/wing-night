@@ -41,7 +41,7 @@ export type FappySceneProps = {
   gates: readonly FappyGate[];
   gatesPerLeg: number;
   bird: LegBird;
-  // Who stands on the landing cliff waiting to take over; null on the last
+  // Who stands on the landing roof waiting to take over; null on the last
   // leg, where a flag marks the finish instead.
   waitingBird: LegBird | null;
   sceneId: string;

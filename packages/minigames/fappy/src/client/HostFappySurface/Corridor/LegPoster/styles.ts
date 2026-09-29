@@ -1,7 +1,7 @@
 import { takeoverLabelAccent } from "@wingnight/surface";
 
 // The poster over a dead arena. A leg that has not been tapped yet is a still
-// corridor with a bird standing on a cliff — the one moment in FAPPY where the
+// corridor with a bird standing on a roof — the one moment in FAPPY where the
 // scene says nothing and the whole tablet can be used to answer the room's
 // question, which is whose turn it is.
 //

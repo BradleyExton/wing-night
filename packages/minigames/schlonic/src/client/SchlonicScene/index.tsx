@@ -3,6 +3,7 @@ import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, createSchlonicRunStart } from "@wingnight/shared";
 
 import type { RunnerFigure } from "../resolveRunnerFigure/index.js";
+import { isRunnerAirborne } from "../runnerClearance/index.js";
 import { Backdrop, paintBackdropScroll, type BackdropRefs } from "./Backdrop/index.js";
 import { Burst, paintBurst } from "./Burst/index.js";
 import { TABLET_CAMERA_FIT, resolveCamera, type SchlonicCameraFit } from "./camera/index.js";
@@ -183,7 +184,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
 
     const paint = (frame: SchlonicFrame, ghostFrame: SchlonicFrame | null = null): void => {
       punchline.clear();
-      curlRef.current = resolveRunnerCurl(frame.grounded, curlRef.current);
+      curlRef.current = resolveRunnerCurl(isRunnerAirborne(zoneRef.current, frame), curlRef.current);
       paintScroll(frame);
       paintProps(frame);
       paintGhostFrame(ghostFrame, frame);

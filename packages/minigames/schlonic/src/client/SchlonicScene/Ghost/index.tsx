@@ -3,6 +3,7 @@ import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD } from "@wingnight/shared";
 
 import type { RunnerFigure } from "../../resolveRunnerFigure/index.js";
+import { isRunnerAirborne } from "../../runnerClearance/index.js";
 import type { SchlonicCamera } from "../camera/index.js";
 import { Rider, paintRider, type RiderRefs } from "../Rider/index.js";
 import { resolveRiderPlacement } from "../riderPlacement/index.js";
@@ -64,7 +65,7 @@ export const paintGhost = ({ refs, ghostFrame, frame, camera, zone, curl }: Ghos
     return curl;
   }
 
-  const nextCurl = resolveRunnerCurl(ghostFrame.grounded, curl);
+  const nextCurl = resolveRunnerCurl(isRunnerAirborne(zone, ghostFrame), curl);
 
   paintRider(refs?.rider ?? null, resolveRiderPlacement({ zone, frame: ghostFrame, screenX, curl: nextCurl }), {
     hen: 1,

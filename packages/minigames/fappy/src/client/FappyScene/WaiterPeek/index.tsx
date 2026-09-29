@@ -5,7 +5,7 @@ import type { LegBird } from "../../resolveLegBird/index.js";
 import { waiterPeekCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
-// Who is standing on the cliff the flyer cannot see yet. The scene's paint
+// Who is standing on the roof the flyer cannot see yet. The scene's paint
 // loop owns whether it is up (see `paintWaiter`); this only draws it.
 export const WaiterPeek = forwardRef<HTMLDivElement, { bird: LegBird }>(
   ({ bird }, ref): JSX.Element => (

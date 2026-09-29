@@ -107,7 +107,7 @@ test("carries nothing the host view does not, because a zone has no secrets", ()
 });
 
 // The wall is the room's seat, not the tablet's mirror (docs/minigame-design-principles.md §3):
-// its camera fills the arena and shows more shore ahead of the runner than the tablet's box.
+// its camera fills the arena and shows more street ahead of the runner than the tablet's box.
 test("draws the zone through the room's wider camera rather than the tablet's box", () => {
   const markup = render(createView());
 

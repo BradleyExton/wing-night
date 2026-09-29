@@ -153,7 +153,7 @@ const FappyPlayBody = ({
     activeTurnTeamId: view.activeTurnTeamId,
     serverOrigin
   });
-  // Who stands on the landing cliff: the next leg's player, or nobody on the last leg.
+  // Who stands on the landing roof: the next leg's player, or nobody on the last leg.
   const nextLeg = view.legs[legIndex + 1] ?? null;
   const waitingBird =
     nextLeg === null

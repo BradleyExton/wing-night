@@ -129,7 +129,7 @@ test("does draw the leg's course, the idle clock and the player who is up", () =
   assert.match(html, /data-fappy-wall/);
 });
 
-test("does stand the next player's bird on the landing cliff and name them in the hint", () => {
+test("does stand the next player's bird on the landing roof and name them in the hint", () => {
   const html = render(
     createView({
       legIndex: 1,

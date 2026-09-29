@@ -67,13 +67,13 @@ export const Corridor = ({
     activeTurnTeamId: view.activeTurnTeamId,
     serverOrigin
   });
-  // Who stands on the landing cliff: the next leg's player, or nobody on the last leg.
+  // Who stands on the landing roof: the next leg's player, or nobody on the last leg.
   const nextLeg = view.legs[legIndex + 1] ?? null;
   const waitingBird =
     nextLeg === null
       ? null
       : resolveLegBird({ figure: nextLeg.player, activeTurnTeamId: view.activeTurnTeamId, serverOrigin });
-  // The leg after the one waiting on the cliff, for the callout's second line.
+  // The leg after the one waiting on the roof, for the callout's second line.
   const onDeckName = view.legs[legIndex + 2]?.player?.name ?? null;
   const isLive = view.phase === "ready" || view.phase === "flying";
   const isArmed = canAct && isLive && hold === null;

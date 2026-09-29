@@ -8,8 +8,8 @@ export const hostSchlonicSurfaceCopy = {
   // same thing a second time in the same corner.
   readyHint: (playerName: string | null): string =>
     playerName === null
-      ? "Tap to go. Hold the tap to jump higher — land on a rail to grind it, and on a face to pop it."
-      : `${playerName}: tap to go. Hold the tap to jump higher — land on a rail to grind it, and on a face to pop it.`,
+      ? "Tap to go. Hold the tap to jump higher — land on rails and faces."
+      : `${playerName}: tap to go. Hold the tap to jump higher — land on rails and faces.`,
   readyLockedHint: "Waiting for the host to open the round.",
   finishedHint: "That's the team. Advance the phase when the room is ready.",
   inHandLabel: "In hand",

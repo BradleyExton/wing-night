@@ -158,7 +158,7 @@ const resolveSchlonicBriefingContent = (
       "One at a time, your chickens skate Dunlop Street Zone, collecting wings. The wings are the score — and they are the only health you have.",
     steps: [
       `${runsPerTurn} run${runsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order. Everyone skates the same street.`,
-      "Your bird rolls on its own; the tablet only jumps. Tap to ollie, hold the tap to go higher — land on a rail to grind it, and land on anything with a face to pop it.",
+      "Your bird rolls on its own; the tablet only jumps. Tap to ollie, hold to go higher — land on rails and faces.",
       `A thorn bed or a trench is bad news either way. Take a hit and you drop half your wings; take one holding none and the run is over. ${parWingsPerRun * runsPerTurn} wings over the post is full marks.`
     ]
   };
