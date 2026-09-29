@@ -44,7 +44,7 @@ const createView = (
   wingsBanked: 0,
   wingsPar: 40,
   points: null,
-  bestRun: null,
+  bestTurn: null,
   ...overrides
 });
 
@@ -76,7 +76,7 @@ test("puts the team, the zone and the wing tally on the marquee", () => {
 
   assert.ok(markup.includes("Team Alpha"));
   assert.ok(markup.includes("Dunlop Street Zone"));
-  assert.ok(markup.includes("Run 1 / 2"));
+  assert.ok(markup.includes("Leg 1 / 2"));
   assert.ok(markup.includes(">12</span> / 40"));
   // The wings in hand, which the mirror's paint loop writes into as the runner collects them.
   assert.ok(markup.includes("data-schlonic-in-hand"));
@@ -118,20 +118,22 @@ test("draws the zone through the room's wider camera rather than the tablet's bo
 // The round's best run is the ghost the runner races: its bird in the zone, its pin on the
 // strip, and its wings on the marquee as the number to beat. Nothing of it before anyone has
 // cleared the zone.
-test("races the round's best run as a ghost once there is one", () => {
-  const bestRun = {
+test("races the turn to beat's leg as a ghost once there is one", () => {
+  const dan = { ...ALEX, playerId: "p-9", name: "Dan", teamId: "team-beta" };
+  const bestTurn = {
     teamId: "team-beta",
-    player: { ...ALEX, playerId: "p-9", name: "Dan", teamId: "team-beta" },
-    inputs: [{ tick: 12, down: true }],
+    teamName: "Team Beta",
     wings: 33,
-    endTick: 900
+    legs: [{ player: dan, inputs: [{ tick: 12, down: true }], outcome: "cleared" as const, wings: 33, endTick: 900 }, null]
   };
-  const markup = render(createView({ bestRun }));
+  const markup = render(createView({ bestTurn }));
 
   assert.ok(markup.includes("data-schlonic-ghost"));
   assert.ok(markup.includes("data-schlonic-track-ghost"));
-  assert.ok(markup.includes("To beat · Dan"));
+  assert.ok(markup.includes("To beat · Team Beta"));
   assert.ok(markup.includes(">33<"));
+  // The strip is the whole street: two legs, one handoff between them.
+  assert.equal(markup.split("data-schlonic-track-handoff=").length - 1, 1);
 
   const without = render(createView());
 

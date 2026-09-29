@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 import type { SchlonicMinigameDisplayView, SchlonicMinigameRun } from "@wingnight/shared";
-import { resolveSchlonicZone } from "@wingnight/shared";
 
 import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
 import { TV_CAMERA_FIT } from "../SchlonicScene/camera/index.js";
@@ -11,6 +10,7 @@ import { useHeldRun, useHoldCard, type RunHold } from "../useHeldRun/index.js";
 import { useRunnerFigure } from "../useRunnerFigure/index.js";
 import { useSchlonicMirror } from "../useSchlonicMirror/index.js";
 import { useSchlonicSounds } from "../useSchlonicSounds/index.js";
+import { useSchlonicStreet } from "../useSchlonicStreet/index.js";
 import { flyWings, resolveCentre, resolveWingFlightCount } from "../flyWings/index.js";
 import { WingFlight } from "../WingFlight/index.js";
 import { ZoneTrack } from "../ZoneTrack/index.js";
@@ -138,21 +138,21 @@ const SchlonicPlayBody = ({
   // A run that went wrong plays its punchline on the wall first; the card waits for the joke.
   const isCardUp = useHoldCard(hold);
   const run = view.runs[shownRunIndex] ?? null;
-  const zone = useMemo(() => {
-    return resolveSchlonicZone({ seed: view.zoneSeed, chunks: view.zoneChunks });
-  }, [view.zoneSeed, view.zoneChunks]);
+  // The leg on the wall, as the zone the replay runs on; the whole street, for the strip.
+  const { legCourse, zone, course, track, legWidth, ghostLeg } = useSchlonicStreet(view, shownRunIndex);
   const runner = useRunnerFigure({
     figure: run?.player ?? null,
     activeTurnTeamId: view.activeTurnTeamId,
     serverOrigin
   });
-  // The run to beat, as a figure — in its own team's colour, which may not be this team's.
-  const bestFigure = useRunnerFigure({
-    figure: view.bestRun?.player ?? null,
-    activeTurnTeamId: view.bestRun?.teamId ?? null,
+  // The leg to beat, as a figure — in its own team's colour, which is never this team's. A leg
+  // the best turn skipped leaves this leg with nobody to race.
+  const ghostFigure = useRunnerFigure({
+    figure: ghostLeg?.player ?? null,
+    activeTurnTeamId: view.bestTurn?.teamId ?? null,
     serverOrigin
   });
-  const ghost = view.bestRun === null ? null : bestFigure;
+  const ghost = ghostLeg === null ? null : ghostFigure;
   const nextRun = view.runs[shownRunIndex + 1] ?? null;
   const isFinished = view.phase === "finished";
 
@@ -162,12 +162,12 @@ const SchlonicPlayBody = ({
   useSchlonicMirror({
     run,
     zone,
-    zoneSeed: view.zoneSeed,
-    zoneChunks: view.zoneChunks,
+    course: legCourse,
     sceneRef,
     tallyRef,
     trackRef,
-    bestRun: view.bestRun,
+    track,
+    ghost: ghostLeg,
     bankRef,
     wingsBanked: view.wingsBanked,
     onEvent: onMirrorEvent,
@@ -220,13 +220,13 @@ const SchlonicPlayBody = ({
               {displaySchlonicSurfaceCopy.wingsParSuffix(view.wingsPar)}
             </span>
             <span>{displaySchlonicSurfaceCopy.bankedLabel}</span>
-            {/* The run to beat, once the round has one: the ghost's wings and whose it is. */}
-            {view.bestRun !== null && (
+            {/* The turn to beat, once the round has one: what it banked over the street and whose it was. */}
+            {view.bestTurn !== null && (
               <>
                 <span className={styles.marqueeBest} data-schlonic-best>
-                  {displaySchlonicSurfaceCopy.bestWings(view.bestRun.wings)}
+                  {displaySchlonicSurfaceCopy.bestWings(view.bestTurn.wings)}
                 </span>
-                <span>{displaySchlonicSurfaceCopy.bestLabel(view.bestRun.player?.name ?? null)}</span>
+                <span>{displaySchlonicSurfaceCopy.bestLabel(view.bestTurn.teamName)}</span>
               </>
             )}
           </>
@@ -234,11 +234,13 @@ const SchlonicPlayBody = ({
         clock={clock}
         clockLine={clockLine}
       />
-      {/* The zone as a line, FAPPY's pace-track shape: what is coming, how far to the post,
-          where the team's earlier runs ended, and the runner's own head riding it. */}
+      {/* The whole street as a line, FAPPY's pace-track shape: what is coming, how far to the
+          post, where each leg hands to the next, where the team's earlier legs ended, and the
+          runner's own head riding it. */}
       <ZoneTrack
         ref={trackRef}
-        zone={zone}
+        zone={course}
+        legWidth={legWidth}
         runs={view.runs}
         shownRunIndex={shownRunIndex}
         runner={runner}
@@ -258,6 +260,7 @@ const SchlonicPlayBody = ({
             label={displaySchlonicSurfaceCopy.sceneLabel(runner.playerName)}
             cameraFit={TV_CAMERA_FIT}
             ghost={ghost}
+            leg={{ index: shownRunIndex, count: view.runsPerTurn }}
           />
         </div>
         <span className={styles.venuePlaque} data-schlonic-venue>

@@ -1,5 +1,6 @@
 import type {
-  SchlonicBestRun,
+  SchlonicBestLeg,
+  SchlonicBestTurn,
   SchlonicOutcome,
   SchlonicPlayerFigure,
   SchlonicRunResult,
@@ -78,7 +79,23 @@ const isRun = (value: unknown): value is SchlonicRuntimeRun => {
   );
 };
 
-const isBestRunOrNull = (value: unknown): value is SchlonicBestRun | null => {
+const isBestLegOrNull = (value: unknown): value is SchlonicBestLeg | null => {
+  if (value === null) {
+    return true;
+  }
+
+  return (
+    isObjectLike(value) &&
+    isFigureOrNull(value.player) &&
+    Array.isArray(value.inputs) &&
+    value.inputs.every(isInput) &&
+    OUTCOMES.some((outcome) => outcome === value.outcome) &&
+    isNonNegativeInteger(value.wings) &&
+    isNonNegativeInteger(value.endTick)
+  );
+};
+
+const isBestTurnOrNull = (value: unknown): value is SchlonicBestTurn | null => {
   if (value === null) {
     return true;
   }
@@ -86,11 +103,10 @@ const isBestRunOrNull = (value: unknown): value is SchlonicBestRun | null => {
   return (
     isObjectLike(value) &&
     (value.teamId === null || typeof value.teamId === "string") &&
-    isFigureOrNull(value.player) &&
-    Array.isArray(value.inputs) &&
-    value.inputs.every(isInput) &&
+    (value.teamName === null || typeof value.teamName === "string") &&
     isNonNegativeInteger(value.wings) &&
-    isNonNegativeInteger(value.endTick)
+    Array.isArray(value.legs) &&
+    value.legs.every(isBestLegOrNull)
   );
 };
 
@@ -101,7 +117,7 @@ const isBestRunOrNull = (value: unknown): value is SchlonicBestRun | null => {
 export const isSchlonicRoundMemory = (
   value: SerializableValue | null | undefined
 ): value is SchlonicRoundMemory => {
-  return isObjectLike(value) && isBestRunOrNull(value.bestRun);
+  return isObjectLike(value) && isBestTurnOrNull(value.bestTurn);
 };
 
 const isRecordOfNumbers = (value: unknown): value is Record<string, number> => {
@@ -119,6 +135,7 @@ export const isSchlonicRuntimeState = (
 
   return (
     (state.activeTurnTeamId === null || typeof state.activeTurnTeamId === "string") &&
+    (state.activeTurnTeamName === null || typeof state.activeTurnTeamName === "string") &&
     isNonNegativeInteger(state.runsPerTurn) &&
     isInteger(state.zoneSeed) &&
     isNonNegativeInteger(state.zoneChunks) &&
@@ -128,8 +145,7 @@ export const isSchlonicRuntimeState = (
     state.runs.every(isRun) &&
     isFiniteNumber(state.turnStartPoints) &&
     isRecordOfNumbers(state.pendingPointsByTeamId) &&
-    isBestRunOrNull(state.bestRun) &&
-    isBestRunOrNull(state.turnStartBestRun)
+    isBestTurnOrNull(state.bestTurn)
   );
 };
 

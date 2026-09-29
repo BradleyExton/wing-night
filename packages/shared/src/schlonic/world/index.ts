@@ -160,13 +160,18 @@ const resolveChunkProfile = (kind: ChunkKind, random: () => number): number[] =>
  * get when nine kinds each roll for every slot, and what the room gets then is three pits in a
  * row for one team and none for the next.
  */
-const resolveChunkKinds = (random: () => number, chunks: number): ChunkKind[] => {
+const resolveChunkKinds = (
+  random: () => number,
+  chunks: number,
+  hardCursorStart: number | null = null
+): { kinds: ChunkKind[]; hardCursor: number } => {
   const kinds: ChunkKind[] = [];
   // The hard kit rotates rather than rolls, from a seeded starting point: over a zone every team
   // meets each of the five about equally often. Rolling each slot independently is how a seed
   // ends up with six spike strips and not one pit, and the zone is a rule — the whole round runs
-  // the one it drew.
-  let hardCursor = Math.floor(random() * HARD_KINDS.length);
+  // the one it drew. A later leg of a course picks the rotation up where the leg before left it,
+  // so the street keeps changing down its length rather than dealing every leg the same kit.
+  let hardCursor = hardCursorStart ?? Math.floor(random() * HARD_KINDS.length);
 
   for (let chunk = 0; chunk < chunks; chunk += 1) {
     if (chunk < 2 || chunk === chunks - 1) {
@@ -188,7 +193,7 @@ const resolveChunkKinds = (random: () => number, chunks: number): ChunkKind[] =>
     kinds.push(SOFT_KINDS[Math.floor(random() * SOFT_KINDS.length)] ?? "flat");
   }
 
-  return kinds;
+  return { kinds, hardCursor };
 };
 
 /**
@@ -436,13 +441,41 @@ const addChunkProps = (
   addWingRun(placer, chunkX + 10, pickInteger(random, 4, 5), 9);
 };
 
+/** How many legs a course has, and which one a run is: one and the first unless it says. */
+const resolveCourseLegs = ({ legs = 1, leg = 0 }: SchlonicZoneCourse): { legs: number; leg: number } => {
+  const count = Math.max(1, Math.floor(legs));
+
+  return { legs: count, leg: Math.max(0, Math.min(count - 1, Math.floor(leg))) };
+};
+
+/** Where a leg's start line is on the course, in course x. */
+export const resolveSchlonicLegFromX = (course: SchlonicZoneCourse): number => {
+  const { leg } = resolveCourseLegs(course);
+
+  return leg * Math.max(3, course.chunks) * SCHLONIC_WORLD.chunkWidth;
+};
+
 /**
- * One zone, laid out from its seed. Every team in the round runs the same one — the seed is a
- * rule, not a roll — so the night is a race over the same hill rather than a lottery.
+ * The whole street, every leg end to end, laid out from its seed. Each leg is dealt as a zone
+ * of its own — two level chunks to read it from, the hard kit on its beat, a finale and a post
+ * — and the ground runs on from one into the next, so a handoff is a line on one sidewalk and
+ * not a cut. Every team in the round runs the same one: the seed is a rule, not a roll, so the
+ * night is a race over the same street rather than a lottery. The strip over the TV draws
+ * this; a run is played on one leg of it (`resolveSchlonicZone`).
  */
-export const resolveSchlonicZone = ({ seed, chunks }: SchlonicZoneCourse): SchlonicZone => {
-  const random = createMulberry32(seed | 0);
-  const kinds = resolveChunkKinds(random, Math.max(3, chunks));
+export const resolveSchlonicCourse = (course: SchlonicZoneCourse): SchlonicZone => {
+  const { legs } = resolveCourseLegs(course);
+  const random = createMulberry32(course.seed | 0);
+  const kinds: ChunkKind[] = [];
+  let hardCursor: number | null = null;
+
+  for (let leg = 0; leg < legs; leg += 1) {
+    const dealt = resolveChunkKinds(random, Math.max(3, course.chunks), hardCursor);
+
+    kinds.push(...dealt.kinds);
+    hardCursor = dealt.hardCursor;
+  }
+
   const heights = resolveHeights(kinds, random);
   const pits: SchlonicPit[] = kinds.flatMap((kind, chunk) => {
     if (kind === FINALE_KIND) {
@@ -476,6 +509,44 @@ export const resolveSchlonicZone = ({ seed, chunks }: SchlonicZoneCourse): Schlo
     pits,
     props: placer.props,
     goalX: kinds.length * SCHLONIC_WORLD.chunkWidth
+  };
+};
+
+/**
+ * One leg of the course as the zone a run is played on: its stretch of ground, its holes and
+ * its kit, rebased so its start line is x 0 and its post is `goalX`, with the next leg's run-up
+ * as the ground past the post (the course's own run-out on the last). A course of one leg is
+ * the whole street, untouched.
+ */
+export const resolveSchlonicZone = (course: SchlonicZoneCourse): SchlonicZone => {
+  const whole = resolveSchlonicCourse(course);
+  const { legs } = resolveCourseLegs(course);
+
+  if (legs === 1) {
+    return whole;
+  }
+
+  const legWidth = Math.max(3, course.chunks) * SCHLONIC_WORLD.chunkWidth;
+  const fromX = resolveSchlonicLegFromX(course);
+  const toX = fromX + legWidth;
+  const fromSample = fromX / SCHLONIC_WORLD.sampleStep;
+  const legSamples = legWidth / SCHLONIC_WORLD.sampleStep;
+
+  return {
+    heights: whole.heights.slice(fromSample, fromSample + legSamples + SAMPLES_PER_CHUNK + 1),
+    pits: whole.pits.flatMap((pit) => {
+      return pit.fromX >= fromX && pit.fromX < toX
+        ? [{ fromX: pit.fromX - fromX, toX: pit.toX - fromX, lipY: pit.lipY }]
+        : [];
+    }),
+    props: whole.props
+      .filter((prop) => prop.x >= fromX && prop.x < toX)
+      .map((prop, index) => {
+        const rebased: SchlonicProp = { ...prop, index, x: prop.x - fromX };
+
+        return prop.toX === undefined ? rebased : { ...rebased, toX: prop.toX - fromX };
+      }),
+    goalX: legWidth
   };
 };
 

@@ -645,8 +645,8 @@ test("does report didMutate=true when an action moves the projection", () => {
 
 // A round-long fact crosses the per-turn re-initialisation through the plugin's round memory
 // (`MinigameRuntimePlugin.selectRoundMemory` → `initialize({ roundMemory })`). SCHLONIC is the
-// game that needs it: the round's best run is the ghost every later team races.
-test("SCHLONIC hands the round's best run to the next team and starts the next round without it", () => {
+// game that needs it: the turn to beat is the ghost every later team races.
+test("SCHLONIC hands the turn to beat to the next team and starts the next round without it", () => {
   const schlonicConfig: GameConfigFile = {
     ...gameConfigFixture,
     rounds: [
@@ -668,7 +668,7 @@ test("SCHLONIC hands the round's best run to the next team and starts the next r
   setupValidTeamsAndAssignments(schlonicConfig);
   advanceToMinigamePlayPhase();
 
-  assert.equal(resolveSchlonicDisplayView().bestRun, null);
+  assert.equal(resolveSchlonicDisplayView().bestTurn, null);
 
   dispatchMinigameAction("SCHLONIC", "press", { tick: 0 });
   dispatchMinigameAction("SCHLONIC", "endRun", {});
@@ -676,8 +676,8 @@ test("SCHLONIC hands the round's best run to the next team and starts the next r
   const teamOne = resolveSchlonicDisplayView();
 
   assert.equal(teamOne.phase, "finished");
-  assert.equal(teamOne.bestRun?.teamId, "team-1");
-  assert.equal(teamOne.bestRun?.wings, walkWings);
+  // A team never races itself: its own turn only becomes the one to beat for the NEXT team.
+  assert.equal(teamOne.bestTurn, null);
 
   advanceToTeamTurn(Phase.MINIGAME_PLAY, 1, "team-2");
 
@@ -685,12 +685,12 @@ test("SCHLONIC hands the round's best run to the next team and starts the next r
 
   assert.equal(teamTwo.activeTurnTeamId, "team-2");
   assert.equal(teamTwo.runIndex, 0);
-  assert.equal(teamTwo.bestRun?.teamId, "team-1");
-  assert.equal(teamTwo.bestRun?.wings, walkWings);
-  assert.deepEqual(teamTwo.bestRun?.inputs, [{ tick: 0, down: true }]);
+  assert.equal(teamTwo.bestTurn?.teamId, "team-1");
+  assert.equal(teamTwo.bestTurn?.wings, walkWings);
+  assert.deepEqual(teamTwo.bestTurn?.legs[0]?.inputs, [{ tick: 0, down: true }]);
 
   advanceToRoundResultsPhase(1);
   advanceUntil(Phase.MINIGAME_PLAY, 2);
 
-  assert.equal(resolveSchlonicDisplayView().bestRun, null);
+  assert.equal(resolveSchlonicDisplayView().bestTurn, null);
 });

@@ -51,7 +51,7 @@ const createView = (
   wingsBanked: 0,
   wingsPar: 40,
   points: null,
-  bestRun: null,
+  bestTurn: null,
   ...overrides
 });
 
@@ -89,7 +89,7 @@ test("draws the zone and names whose run it is", () => {
   const markup = render(createView());
 
   assert.ok(markup.includes("data-schlonic-arena"));
-  assert.ok(markup.includes("Run 1 of 2"));
+  assert.ok(markup.includes("Leg 1 of 2"));
   assert.ok(markup.includes("data-schlonic-runner-name"));
   assert.ok(markup.includes(">Alex</span>"));
   assert.ok(markup.includes("Alex: tap to go"));
@@ -163,7 +163,7 @@ test("moves the chip on to the next runner once a run is behind it", () => {
     })
   );
 
-  assert.ok(markup.includes("Run 2 of 2"));
+  assert.ok(markup.includes("Leg 2 of 2"));
   assert.ok(markup.includes(">Morgan</span>"));
   assert.ok(!markup.includes(">Alex</span>"));
 });
@@ -256,20 +256,28 @@ test("draws nothing of its own for another game's view", () => {
   assert.ok(!markup.includes("data-schlonic-arena"));
 });
 
-// The tablet holder races the round's best run too: the ghost's bird is in the zone under the
-// finger, and its wings sit in the chrome as the number to beat.
-test("puts the run to beat in the zone and in the chrome once the round has one", () => {
-  const bestRun = {
+// The tablet holder races the turn to beat too: the other team's rider for THIS leg is the
+// ghost in the zone under the finger, and what that team banked sits in the chrome as the
+// number to beat. A leg that team skipped leaves this leg with nobody to race, but the number
+// stays.
+test("puts the leg to beat in the zone and the turn to beat in the chrome once the round has one", () => {
+  const dan = { playerId: "p-9", name: "Dan", avatarSrc: null, teamId: "team-beta", genre: null };
+  const bestTurn = {
     teamId: "team-beta",
-    player: { playerId: "p-9", name: "Dan", avatarSrc: null, teamId: "team-beta", genre: null },
-    inputs: [{ tick: 12, down: true }],
+    teamName: "Team Beta",
     wings: 33,
-    endTick: 900
+    legs: [{ player: dan, inputs: [{ tick: 12, down: true }], outcome: "cleared" as const, wings: 33, endTick: 900 }, null]
   };
-  const markup = render(createView({ bestRun }));
+  const markup = render(createView({ bestTurn }));
 
   assert.ok(markup.includes("data-schlonic-ghost"));
   assert.ok(markup.includes("data-schlonic-best"));
-  assert.ok(markup.includes("To beat · Dan"));
+  assert.ok(markup.includes("To beat · Team Beta"));
+  assert.ok(markup.includes(">Dan<"));
   assert.ok(!render(createView()).includes("data-schlonic-ghost"));
+
+  const secondLeg = render(createView({ bestTurn, runIndex: 1 }));
+
+  assert.ok(!secondLeg.includes("data-schlonic-ghost"));
+  assert.ok(secondLeg.includes("To beat · Team Beta"));
 });

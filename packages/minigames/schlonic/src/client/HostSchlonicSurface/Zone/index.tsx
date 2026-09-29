@@ -1,13 +1,13 @@
-import { useMemo, useRef, type RefObject } from "react";
+import { useRef, type RefObject } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { SchlonicMinigameHostView } from "@wingnight/shared";
-import { resolveSchlonicZone } from "@wingnight/shared";
 
 import { resolveRunPlayerName } from "../../resolveRunPlayerName/index.js";
 import { SchlonicScene, type SchlonicSceneHandle } from "../../SchlonicScene/index.js";
 import type { RunHold } from "../../useHeldRun/index.js";
 import { useRunnerFigure } from "../../useRunnerFigure/index.js";
 import { useSchlonicRunner } from "../../useSchlonicRunner/index.js";
+import { useSchlonicStreet } from "../../useSchlonicStreet/index.js";
 import { zoneCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -48,21 +48,21 @@ export const Zone = ({
 }: ZoneProps): JSX.Element => {
   const sceneRef = useRef<SchlonicSceneHandle>(null);
   const run = view.runs[runIndex] ?? null;
-  const zone = useMemo(() => {
-    return resolveSchlonicZone({ seed: view.zoneSeed, chunks: view.zoneChunks });
-  }, [view.zoneSeed, view.zoneChunks]);
+  // The leg of the street this run is played on: run n is leg n of the course.
+  const { zone, ghostLeg } = useSchlonicStreet(view, runIndex);
   const runner = useRunnerFigure({
     figure: run?.player ?? null,
     activeTurnTeamId: view.activeTurnTeamId,
     serverOrigin
   });
-  // The run to beat, as a figure — in its own team's colour, which may not be this team's.
-  const bestFigure = useRunnerFigure({
-    figure: view.bestRun?.player ?? null,
-    activeTurnTeamId: view.bestRun?.teamId ?? null,
+  // The leg to beat, as a figure — in its own team's colour, which is never this team's. A leg
+  // the best turn skipped leaves this leg with nobody to race.
+  const ghostFigure = useRunnerFigure({
+    figure: ghostLeg?.player ?? null,
+    activeTurnTeamId: view.bestTurn?.teamId ?? null,
     serverOrigin
   });
-  const ghost = view.bestRun === null ? null : bestFigure;
+  const ghost = ghostLeg === null ? null : ghostFigure;
   const nextRun = view.runs[runIndex + 1] ?? null;
   const isLive = view.phase === "ready" || view.phase === "running";
   const isArmed = canAct && isLive && hold === null;
@@ -72,7 +72,7 @@ export const Zone = ({
     canAct: isArmed,
     sceneRef,
     tallyRef,
-    bestRun: view.bestRun,
+    ghost: ghostLeg,
     onPress: (tick): void => {
       onDispatchAction("press", { tick });
     },
@@ -110,6 +110,7 @@ export const Zone = ({
           sceneId="host-schlonic"
           label={zoneCopy.sceneLabel(runner.playerName)}
           ghost={ghost}
+          leg={{ index: runIndex, count: view.runsPerTurn }}
         />
       </div>
       {hold?.kind === "handoff" && <HandoffCallout nextName={resolveRunPlayerName(nextRun)} />}

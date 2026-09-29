@@ -1,33 +1,37 @@
 import { useEffect, useReducer, useRef, type RefObject } from "react";
 import type {
-  SchlonicBestRun,
+  SchlonicBestLeg,
   SchlonicFrame,
   SchlonicInput,
   SchlonicMinigameRun,
   SchlonicZone
 } from "@wingnight/shared";
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart, runSchlonicRun } from "@wingnight/shared";
+import type { SchlonicZoneCourse } from "@wingnight/shared";
 
 import { BANK_COUNT_MS, CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 import { resolveAirPeak, resolveMirrorEvents, type SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
 import { resolveHandfulLost } from "../resolveHandfulLost/index.js";
 import { resolveDueCues, resolvePunchlineCues } from "../SchlonicScene/punchlineTimeline/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
-import { paintZoneTrack } from "../trackMarks/index.js";
+import { paintZoneTrack, type SchlonicTrack } from "../trackMarks/index.js";
 import { paintWingTally } from "../wingTally/index.js";
 
 type SchlonicMirrorInput = {
   run: SchlonicMinigameRun | null;
+  /** The leg the run is played on, as the zone the sim sees. */
   zone: SchlonicZone;
-  zoneSeed: number;
-  zoneChunks: number;
+  /** What laid the zone out, so the referee's own re-run lands on the same leg. */
+  course: SchlonicZoneCourse;
   sceneRef: RefObject<SchlonicSceneHandle>;
   /** Where the wings in hand are written each frame: the marquee's tally, outside the scene. */
   tallyRef?: RefObject<HTMLElement>;
   /** The zone strip over the arena, whose live pin the loop moves each frame. */
   trackRef?: RefObject<HTMLElement>;
-  /** The run to beat: replayed from its own log on the live run's clock, as the ghost. */
-  bestRun?: SchlonicBestRun | null;
+  /** The whole street the strip draws, and where this leg starts on it, for the pin. */
+  track?: SchlonicTrack;
+  /** The leg to beat: replayed from its own log on the live run's clock, as the ghost. */
+  ghost?: SchlonicBestLeg | null;
   /** The marquee's banked figure, counted up at the post while the in-hand figure counts down. */
   bankRef?: RefObject<HTMLElement>;
   /** What the view says the team has banked — after the post, this run included. */
@@ -87,27 +91,27 @@ const prefersReducedMotion = (): boolean => {
 export const useSchlonicMirror = ({
   run,
   zone,
-  zoneSeed,
-  zoneChunks,
+  course,
   sceneRef,
   tallyRef,
   trackRef,
-  bestRun = null,
+  track,
+  ghost = null,
   bankRef,
   wingsBanked = 0,
   onEvent,
   onBankTick
 }: SchlonicMirrorInput): void => {
   const runRef = useRef<MirrorRun | null>(null);
-  // Read when a run is taken up, never a dependency: a best run set by THIS run's own result
-  // must not restart the mirror mid-replay. The listeners and the bank are refs for the same
-  // reason: the loop's closure must see the current ones without being torn down.
-  const bestRunRef = useRef(bestRun);
+  // Read when a run is taken up, never a dependency: the ghost must not restart the mirror
+  // mid-replay. The listeners and the bank are refs for the same reason: the loop's closure
+  // must see the current ones without being torn down.
+  const ghostRef = useRef(ghost);
   const onEventRef = useRef(onEvent);
   const onBankTickRef = useRef(onBankTick);
   const wingsBankedRef = useRef(wingsBanked);
 
-  bestRunRef.current = bestRun;
+  ghostRef.current = ghost;
   onEventRef.current = onEvent;
   onBankTickRef.current = onBankTick;
   wingsBankedRef.current = wingsBanked;
@@ -140,13 +144,13 @@ export const useSchlonicMirror = ({
   // A run still being replayed is not in the bank yet, whatever the view says.
   const paintChrome = (frame: SchlonicFrame, ghostFrame: SchlonicFrame | null = null): void => {
     paintWingTally(tallyRef?.current ?? null, frame.wings);
-    paintZoneTrack(trackRef?.current ?? null, zone, frame, ghostFrame);
+    paintZoneTrack(trackRef?.current ?? null, track ?? { course: zone, fromX: 0 }, frame, ghostFrame);
     paintBank(wingsBankedRef.current - (frame.outcome === null ? doneWingsRef.current : 0));
   };
 
   // A fresh mirror run on the line, with the ghost on the line beside it if the round has one.
   const createMirrorRun = (key: string, inputs: readonly SchlonicInput[]): MirrorRun => {
-    const best = bestRunRef.current;
+    const best = ghostRef.current;
 
     return {
       key,
@@ -225,7 +229,7 @@ export const useSchlonicMirror = ({
 
         paintWingTally(tallyRef?.current ?? null, frame.wings - counted);
         paintBank(bankBefore + counted);
-        paintZoneTrack(trackRef?.current ?? null, zone, frame, ghostFrame);
+        paintZoneTrack(trackRef?.current ?? null, track ?? { course: zone, fromX: 0 }, frame, ghostFrame);
         return;
       }
 
@@ -334,7 +338,7 @@ export const useSchlonicMirror = ({
       runStatus === "done" &&
       (prefersReducedMotion() || current === null || current.key !== key || current.startedAtMs === null)
     ) {
-      const settled = runSchlonicRun({ seed: zoneSeed, chunks: zoneChunks }, inputs).frame;
+      const settled = runSchlonicRun(course, inputs).frame;
 
       paintStill(key, settled);
 
@@ -436,7 +440,7 @@ export const useSchlonicMirror = ({
     };
 
     mirror.rafHandle = window.requestAnimationFrame(step);
-  }, [runIndex, runStatus, isSkipped, inputLogKey, zone, zoneSeed, zoneChunks, sceneRef, tallyRef, trackRef, settledCount]);
+  }, [runIndex, runStatus, isSkipped, inputLogKey, zone, course, track, sceneRef, tallyRef, trackRef, settledCount]);
 
   useEffect(() => {
     return (): void => {

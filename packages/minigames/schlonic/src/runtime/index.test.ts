@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { Player, SchlonicMinigameHostView, Team } from "@wingnight/shared";
+import type { Player, SchlonicBestTurn, SchlonicMinigameHostView, Team } from "@wingnight/shared";
 import { runSchlonicRun } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
@@ -167,9 +167,10 @@ test("scores from its own re-run of the log, never from anything the tablet clai
   const pressed = reduce(initialize(), "press", { tick: 0 });
   const ended = reduce(pressed.state, "endRun");
   const recorded = hostView(ended.state).runs[0]?.result;
-  const refereed = runSchlonicRun({ seed: RULES.zoneSeed, chunks: RULES.zoneChunks }, [
-    { tick: 0, down: true }
-  ]);
+  const refereed = runSchlonicRun(
+    { seed: RULES.zoneSeed, chunks: RULES.zoneChunks, legs: RULES.runsPerTurn, leg: 0 },
+    [{ tick: 0, down: true }]
+  );
 
   assert.deepEqual(recorded, {
     outcome: refereed.outcome,
@@ -313,11 +314,11 @@ test("re-reads the round's running totals without touching the runs", () => {
   assert.equal(hostView(synced).phase, "running");
 });
 
-// A six-chunk zone with nothing in it a walking bird cannot survive: seed 3 deals a springboard,
-// and the finale's springboard throws a walker over its hole. So a run with no jumps clears it, and
-// one with an early hop clears it with a different handful. Which is the bigger is the sim's
-// business, so the tests ask it rather than assume.
-const CLEAR_RULES = { runsPerTurn: 2, zoneSeed: 3, zoneChunks: 6, parWingsPerRun: 20 };
+// A six-chunk street of one leg with nothing in it a walking bird cannot survive: seed 3 deals a
+// springboard, and the finale's springboard throws a walker over its hole. So a run with no
+// jumps clears it, and one with an early hop clears it with a different handful. Which is the
+// bigger is the sim's business, so the tests ask it rather than assume.
+const CLEAR_RULES = { runsPerTurn: 1, zoneSeed: 3, zoneChunks: 6, parWingsPerRun: 20 };
 const CLEAR_COURSE = { seed: CLEAR_RULES.zoneSeed, chunks: CLEAR_RULES.zoneChunks };
 const HOP = [
   { tick: 40, down: true },
@@ -347,74 +348,124 @@ const roundMemory = (state: SerializableValue): SerializableValue | null => {
   return schlonicRuntimePlugin.selectRoundMemory?.({ state, rules: CLEAR_RULES, content: null }) ?? null;
 };
 
-test("starts a round with no run to beat", () => {
-  const view = hostView(initialize(CLEAR_RULES));
+const memoryBestTurn = (state: SerializableValue): SchlonicBestTurn | null => {
+  const memory = roundMemory(state);
 
-  assert.equal(view.bestRun, null);
-  assert.deepEqual(roundMemory(initialize(CLEAR_RULES)), { bestRun: null });
+  assert.ok(memory !== null && typeof memory === "object" && !Array.isArray(memory) && "bestTurn" in memory);
+
+  return memory.bestTurn as SchlonicBestTurn | null;
+};
+
+test("starts a round with no turn to beat", () => {
+  const state = initialize(CLEAR_RULES);
+
+  assert.equal(hostView(state).bestTurn, null);
+  assert.deepEqual(roundMemory(state), { bestTurn: null });
 });
 
-test("remembers the cleared run that banked the most wings as the round's best", () => {
+test("referees each run on its own leg of the street", () => {
+  const log = [{ tick: 0, down: true }, { tick: 90, down: false }, { tick: 200, down: true }, { tick: 230, down: false }];
+  const afterFirst = playRun(initialize(), log);
+  const afterSecond = playRun(afterFirst, log);
+  const runs = hostView(afterSecond).runs;
+  const refereed = (leg: number) => {
+    const run = runSchlonicRun({ seed: RULES.zoneSeed, chunks: RULES.zoneChunks, legs: RULES.runsPerTurn, leg }, log);
+
+    return { outcome: run.outcome, endTick: run.endTick, wings: run.wings, distance: run.distance };
+  };
+
+  assert.deepEqual(runs[0]?.result, refereed(0));
+  assert.deepEqual(runs[1]?.result, refereed(1));
+  // The same log on a different stretch of street is a different run.
+  assert.notDeepEqual(runs[0]?.result, runs[1]?.result);
+});
+
+test("hands a finished turn on as the turn to beat, every leg's log with it, and never races itself", () => {
   assert.notEqual(WALK_WINGS, HOP_WINGS, "the two logs must bank different handfuls");
 
-  const afterWorse = playRun(initialize(CLEAR_RULES), WORSE);
-  const worseView = hostView(afterWorse);
+  const played = playRun(initialize(CLEAR_RULES), WORSE);
+  const view = hostView(played);
 
-  assert.equal(worseView.runs[0]?.result?.outcome, "cleared");
-  assert.equal(worseView.bestRun?.wings, WORSE_WINGS);
-  assert.equal(worseView.bestRun?.player?.name, "Alex");
-  assert.equal(worseView.bestRun?.teamId, "team-a");
+  assert.equal(view.phase, "finished");
+  assert.equal(view.runs[0]?.result?.outcome, "cleared");
+  // The turn in hand never sees its own runs as the ones to beat: a rider races another team.
+  assert.equal(view.bestTurn, null);
 
-  // The next run comes home with more: it is the new best.
-  const afterBetter = playRun(afterWorse, BETTER);
+  const best = memoryBestTurn(played);
 
-  assert.equal(hostView(afterBetter).bestRun?.wings, BETTER_WINGS);
-  assert.equal(hostView(afterBetter).bestRun?.player?.name, "Caitlin");
+  assert.equal(best?.teamId, "team-a");
+  assert.equal(best?.teamName, "Team A");
+  assert.equal(best?.wings, WORSE_WINGS);
+  assert.equal(best?.legs.length, 1);
+  assert.equal(best?.legs[0]?.player?.name, "Alex");
+  assert.equal(best?.legs[0]?.outcome, "cleared");
+  assert.equal(best?.legs[0]?.wings, WORSE_WINGS);
+  assert.deepEqual(best?.legs[0]?.inputs, WORSE.length === 0 ? [{ tick: 0, down: true }] : WORSE);
 });
 
-test("keeps the standing best when a later run clears with fewer wings", () => {
-  const afterBetter = playRun(initialize(CLEAR_RULES), BETTER);
-  const afterWorse = playRun(afterBetter, WORSE);
+test("keeps whichever of the inherited turn and its own banked more", () => {
+  const inherited = (wings: number) => ({
+    bestTurn: { teamId: "team-b", teamName: "Team B", wings, legs: [null] }
+  });
+  const beaten = playRun(initialize(CLEAR_RULES, { roundMemory: inherited(WORSE_WINGS) }), BETTER);
+  const standing = playRun(initialize(CLEAR_RULES, { roundMemory: inherited(BETTER_WINGS) }), WORSE);
 
-  assert.equal(hostView(afterWorse).bestRun?.wings, BETTER_WINGS);
-  assert.equal(hostView(afterWorse).bestRun?.player?.name, "Alex");
+  assert.equal(memoryBestTurn(beaten)?.teamId, "team-a");
+  assert.equal(memoryBestTurn(beaten)?.wings, BETTER_WINGS);
+  assert.equal(memoryBestTurn(standing)?.teamId, "team-b");
+  // A draw keeps the standing one: a target should not move for a tie.
+  const tied = playRun(initialize(CLEAR_RULES, { roundMemory: inherited(WORSE_WINGS) }), WORSE);
+
+  assert.equal(memoryBestTurn(tied)?.teamId, "team-b");
 });
 
-test("never makes a run that missed the post the one to beat", () => {
-  // The default rules' seed has a hole a quarter of the way in; a walking bird falls in it.
-  const state = playRun(initialize(), []);
+test("hands on nothing from a turn still on the street, or one that banked nothing", () => {
+  // Two legs, one run in: the turn is not over.
+  const halfway = playRun(initialize({ ...CLEAR_RULES, runsPerTurn: 2 }), []);
 
-  assert.equal(hostView(state).runs[0]?.result?.outcome, "fell");
-  assert.equal(hostView(state).bestRun, null);
+  assert.equal(hostView(halfway).phase, "ready");
+  assert.equal(memoryBestTurn(halfway), null);
+
+  // The default rules' seed has a hole a quarter of the way in; a walking bird falls in it, and a
+  // turn that came home with nothing is nobody's pace.
+  const fell = playRun(playRun(playRun(initialize(), []), []), []);
+
+  assert.equal(hostView(fell).phase, "finished");
+  assert.equal(hostView(fell).runs[0]?.result?.outcome, "fell");
+  assert.equal(memoryBestTurn(fell), null);
 });
 
-test("hands the best run on to the next team through the round's memory", () => {
+test("hands the turn to beat to the next team through the round's memory", () => {
   const teamA = playRun(initialize(CLEAR_RULES), []);
   const memory = roundMemory(teamA);
   const teamB = initialize(CLEAR_RULES, { activeRoundTeamId: "team-b", roundMemory: memory });
   const view = hostView(teamB);
 
   assert.equal(view.activeTurnTeamId, "team-b");
-  assert.equal(view.bestRun?.wings, WALK_WINGS);
-  assert.equal(view.bestRun?.teamId, "team-a");
+  assert.equal(view.bestTurn?.wings, WALK_WINGS);
+  assert.equal(view.bestTurn?.teamId, "team-a");
+  assert.equal(view.bestTurn?.teamName, "Team A");
+  assert.deepEqual(view.bestTurn?.legs[0]?.inputs, [{ tick: 0, down: true }]);
   // Team B's own runs start fresh; only the ghost came across.
   assert.equal(view.runIndex, 0);
   assert.equal(view.wingsBanked, 0);
 });
 
 test("ignores a memory that is not its own", () => {
-  assert.equal(hostView(initialize(CLEAR_RULES, { roundMemory: { towers: [1, 2] } })).bestRun, null);
-  assert.equal(hostView(initialize(CLEAR_RULES, { roundMemory: "yes" })).bestRun, null);
+  assert.equal(hostView(initialize(CLEAR_RULES, { roundMemory: { towers: [1, 2] } })).bestTurn, null);
+  assert.equal(hostView(initialize(CLEAR_RULES, { roundMemory: "yes" })).bestTurn, null);
+  assert.equal(hostView(initialize(CLEAR_RULES, { roundMemory: { bestRun: { wings: 3 } } })).bestTurn, null);
 });
 
-test("forgets the best a reset turn had set, but not the one it inherited", () => {
-  const inherited = { bestRun: { teamId: "team-b", player: null, inputs: [], wings: 5, endTick: 300 } };
+test("leaves the memory as it inherited it when the turn is put back on the line", () => {
+  const inherited = { bestTurn: { teamId: "team-b", teamName: "Team B", wings: 5, legs: [null] } };
   const state = playRun(initialize(CLEAR_RULES, { roundMemory: inherited }), []);
 
-  assert.equal(hostView(state).bestRun?.wings, WALK_WINGS);
+  assert.equal(memoryBestTurn(state)?.teamId, "team-a");
 
   const reset = reduce(state, "resetTurn").state;
 
-  assert.equal(hostView(reset).bestRun?.wings, 5);
-  assert.equal(hostView(reset).bestRun?.teamId, "team-b");
+  assert.equal(hostView(reset).bestTurn?.wings, 5);
+  assert.equal(memoryBestTurn(reset)?.teamId, "team-b");
+  assert.equal(memoryBestTurn(reset)?.wings, 5);
 });

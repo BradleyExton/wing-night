@@ -1,14 +1,17 @@
-import type { SchlonicBestRun, SchlonicMinigameRun } from "@wingnight/shared";
+import type { SchlonicBestTurn, SchlonicMinigameRun } from "@wingnight/shared";
 
 export type SchlonicRuntimeRules = {
+  /** How many legs the street has: one run each, in seating order, end to end. */
   runsPerTurn: number;
   /**
-   * The zone every team in the round runs. A rule and not a roll on purpose: SCHLONIC is a race
-   * over one hill, and a team that drew an easier hill than the one before it is not a race.
+   * The street every team in the round runs. A rule and not a roll on purpose: SCHLONIC is a
+   * race over one street, and a team that drew an easier street than the one before it is not
+   * a race.
    */
   zoneSeed: number;
+  /** Chunks per LEG; the course is `runsPerTurn` of them end to end. */
   zoneChunks: number;
-  /** The wings one clean run is expected to come home with. Par for the whole team is this times the runs. */
+  /** The wings one clean leg is expected to come home with. Par for the whole team is this times the legs. */
   parWingsPerRun: number;
 };
 
@@ -16,6 +19,8 @@ export type SchlonicRuntimeRun = SchlonicMinigameRun;
 
 export type SchlonicRuntimeState = {
   activeTurnTeamId: string | null;
+  /** The team's name, kept so the turn can be named as the one to beat without a roster in reach. */
+  activeTurnTeamName: string | null;
   runsPerTurn: number;
   zoneSeed: number;
   zoneChunks: number;
@@ -27,22 +32,22 @@ export type SchlonicRuntimeState = {
   turnStartPoints: number;
   pendingPointsByTeamId: Record<string, number>;
   /**
-   * The round's best cleared run so far, from any team: the ghost the runner races. Arrives
-   * through `roundMemory` from the previous turn and leaves the same way.
+   * The turn to beat: the finished turn that banked the most wings, from any team before this
+   * one. Each leg's runner races its leg of it as a ghost. It arrives through `roundMemory` at
+   * the top of the turn and never moves inside one — this turn's own legs only join the memory
+   * once the turn is over (`selectRoundMemory`), so a rider never races a teammate.
    */
-  bestRun: SchlonicBestRun | null;
-  /** The best as it stood when this turn began, so `resetTurn` forgets this turn's runs only. */
-  turnStartBestRun: SchlonicBestRun | null;
+  bestTurn: SchlonicBestTurn | null;
 };
 
 /** What SCHLONIC asks the round to remember between turns. */
 export type SchlonicRoundMemory = {
-  bestRun: SchlonicBestRun | null;
+  bestTurn: SchlonicBestTurn | null;
 };
 
-// Three runs covers a full team without cycling in the sample pack, and 22 chunks is about
-// seventeen seconds of zone — long enough to find a rhythm, short enough that the tablet keeps
-// moving. Par is what a player who takes the high line and keeps hold of it comes home with:
+// Three legs covers a full team without cycling in the sample pack, and 22 chunks a leg is about
+// seventeen seconds of street each — long enough to find a rhythm, short enough that the tablet
+// keeps moving. Par is what a player who takes the high line and keeps hold of it comes home with:
 // well over what the floor gives away — a bot that hops every hazard on the floor and never takes
 // a hit banks ~105 of the default zone's 175, and a person takes hits — and well under a perfect
 // run (a searched greedy line, springs, rails and all, banks ~155). The floor alone cannot make

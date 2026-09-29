@@ -37,6 +37,10 @@ const sceneRailSteel = "bg-[#aab5bf] shadow-[0_0_0_0.08rem_#1f262c]";
 
 export const grindRail = `absolute ${at} top-[12%] h-[0.22rem] w-[var(--schlonic-track-width,4%)] rounded-full ${sceneRailSteel}`;
 
+// A handoff: where one leg's post is the next leg's start line, a pale tick through the bar,
+// shorter than the post so the end of the street still reads as the end.
+export const handoff = `absolute ${at} top-1/2 h-[0.7rem] w-[0.12rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-text/40`;
+
 // The post: the finish, in gold like FAPPY's par tick.
 export const post = "absolute right-0 top-1/2 h-[0.85rem] w-[0.14rem] translate-x-1/2 -translate-y-1/2 rounded-full bg-gold";
 

@@ -8,6 +8,8 @@ export {
   resolveSchlonicGroundY,
   resolveSchlonicWingTotal,
   resolveSchlonicTickCap,
+  resolveSchlonicCourse,
+  resolveSchlonicLegFromX,
   resolveSchlonicZone
 } from "./world/index.js";
 export {

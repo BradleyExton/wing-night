@@ -58,10 +58,19 @@ export type SchlonicZone = {
   goalX: number;
 };
 
-/** What picks a zone: every team in the round runs the same one, so the night is a fair race. */
+/**
+ * What picks a zone: every team in the round runs the same one, so the night is a fair race.
+ * The street is one course of `legs` legs, `chunks` chunks each, laid out end to end from the
+ * one seed; a run is one leg of it, and `leg` says which. A leg is a zone in its own right —
+ * its own run-up, its own finale, its own post — rebased so its start line is x 0, which is
+ * what lets the sim, the referee and the mirror stay leg-blind. `legs` and `leg` default to
+ * one and nought: a course of one leg is the zone as it always was.
+ */
 export type SchlonicZoneCourse = {
   seed: number;
   chunks: number;
+  legs?: number;
+  leg?: number;
 };
 
 /** How a run ended. `wiped` is a hit taken with nothing in hand; `fell` is a pit. */

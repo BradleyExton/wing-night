@@ -1,15 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { SCHLONIC_WORLD, createSchlonicRunStart, resolveSchlonicZone } from "@wingnight/shared";
+import {
+  SCHLONIC_WORLD,
+  createSchlonicRunStart,
+  resolveSchlonicCourse,
+  resolveSchlonicLegFromX,
+  resolveSchlonicZone
+} from "@wingnight/shared";
 
 import {
   paintZoneTrack,
   resolveTrackDistancePercent,
+  resolveTrackHandoffs,
   resolveTrackMarks,
   resolveTrackPercent
 } from "./index.js";
 
 const ZONE = resolveSchlonicZone({ seed: 20260919, chunks: 22 });
+const TRACK = { course: ZONE, fromX: 0 };
 
 test("puts the start line at nought and the post at a hundred", () => {
   assert.equal(resolveTrackPercent(ZONE, SCHLONIC_WORLD.runnerX), 0);
@@ -64,15 +72,15 @@ test("writes the live pin as one custom property and one data attribute", () => 
   } as unknown as HTMLElement;
   const start = createSchlonicRunStart(ZONE);
 
-  paintZoneTrack(root, ZONE, start);
-  paintZoneTrack(root, ZONE, start);
-  paintZoneTrack(root, ZONE, { ...start, x: ZONE.goalX });
+  paintZoneTrack(root, TRACK, start);
+  paintZoneTrack(root, TRACK, start);
+  paintZoneTrack(root, TRACK, { ...start, x: ZONE.goalX });
 
   // The same frame twice is one write: this runs sixty times a second.
   assert.deepEqual(writes, ["--schlonic-track-run=0%", "--schlonic-track-run=100%"]);
   assert.equal(root.dataset.schlonicTrackPercent, "100");
   // Nothing to paint into is not an error.
-  paintZoneTrack(null, ZONE, start);
+  paintZoneTrack(null, TRACK, start);
 });
 
 test("moves the ghost's pin on the same bar, and only when it moves", () => {
@@ -88,9 +96,9 @@ test("moves the ghost's pin on the same bar, and only when it moves", () => {
   const start = createSchlonicRunStart(ZONE);
   const halfway = { ...start, x: SCHLONIC_WORLD.runnerX + (ZONE.goalX - SCHLONIC_WORLD.runnerX) / 2 };
 
-  paintZoneTrack(root, ZONE, start, halfway);
-  paintZoneTrack(root, ZONE, start, halfway);
-  paintZoneTrack(root, ZONE, start, null);
+  paintZoneTrack(root, TRACK, start, halfway);
+  paintZoneTrack(root, TRACK, start, halfway);
+  paintZoneTrack(root, TRACK, start, null);
 
   assert.deepEqual(writes, [
     "--schlonic-track-run=0%",
@@ -98,4 +106,51 @@ test("moves the ghost's pin on the same bar, and only when it moves", () => {
     "--schlonic-track-ghost=0%"
   ]);
   assert.equal(root.dataset.schlonicTrackGhostPercent, "");
+});
+
+test("marks a handoff where every leg but the first starts, and none on a street of one leg", () => {
+  const course = resolveSchlonicCourse({ seed: 4, chunks: 8, legs: 3 });
+  const legWidth = 8 * SCHLONIC_WORLD.chunkWidth;
+  const handoffs = resolveTrackHandoffs(course, legWidth);
+
+  assert.deepEqual(
+    handoffs.map((handoff) => handoff.leg),
+    [1, 2]
+  );
+  assert.deepEqual(
+    handoffs.map((handoff) => handoff.percent),
+    [resolveTrackPercent(course, legWidth), resolveTrackPercent(course, legWidth * 2)]
+  );
+  assert.deepEqual(resolveTrackHandoffs(ZONE, ZONE.goalX), []);
+  assert.deepEqual(resolveTrackMarks(course, legWidth).handoffs, handoffs);
+  assert.deepEqual(resolveTrackMarks(ZONE).handoffs, []);
+});
+
+test("puts a leg's pin on its own stretch of the street", () => {
+  const legs = 3;
+  const chunks = 8;
+  const course = resolveSchlonicCourse({ seed: 4, chunks, legs });
+  const legCourse = { seed: 4, chunks, legs, leg: 1 };
+  const leg = resolveSchlonicZone(legCourse);
+  const track = { course, fromX: resolveSchlonicLegFromX(legCourse) };
+  const writes: string[] = [];
+  const root = {
+    dataset: {} as Record<string, string>,
+    style: {
+      setProperty: (name: string, value: string): void => {
+        writes.push(`${name}=${value}`);
+      }
+    }
+  } as unknown as HTMLElement;
+
+  // On the second leg's line: a third of the way down the street, not on the start line.
+  paintZoneTrack(root, track, createSchlonicRunStart(leg));
+
+  const onTheLine = Number(root.dataset.schlonicTrackPercent);
+
+  assert.ok(onTheLine > 30 && onTheLine < 36, `the second leg's line sits at ${onTheLine}%`);
+
+  // Its post is the third leg's line.
+  paintZoneTrack(root, track, { ...createSchlonicRunStart(leg), x: leg.goalX });
+  assert.equal(root.dataset.schlonicTrackPercent, `${resolveTrackPercent(course, 2 * chunks * SCHLONIC_WORLD.chunkWidth)}`);
 });

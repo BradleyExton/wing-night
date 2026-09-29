@@ -11,6 +11,8 @@ import {
   resolveSchlonicGroundY,
   resolveSchlonicWingTotal,
   resolveSchlonicTickCap,
+  resolveSchlonicCourse,
+  resolveSchlonicLegFromX,
   resolveSchlonicZone
 } from "./index.js";
 
@@ -178,6 +180,62 @@ test("holds nothing up over a pit, and calls the runner in once it drops below t
   assert.equal(isSchlonicInPit(zone, pit.fromX + 4, pit.lipY + 10), true);
   // The ground either side is solid.
   assert.equal(isSchlonicInPit(zone, pit.fromX - 2, pit.lipY + 10), false);
+});
+
+test("lays a course of one leg as the zone it always was", () => {
+  assert.deepEqual(resolveSchlonicZone({ seed: 7, chunks: 12, legs: 1, leg: 0 }), zoneOf(7));
+  assert.deepEqual(resolveSchlonicCourse({ seed: 7, chunks: 12 }), zoneOf(7));
+});
+
+test("lays a relay course end to end, and every leg of it as a zone with its own run-up, finale and post", () => {
+  const chunks = 8;
+  const legs = 3;
+  const course = resolveSchlonicCourse({ seed: 21, chunks, legs });
+  const legWidth = chunks * SCHLONIC_WORLD.chunkWidth;
+
+  assert.equal(course.goalX, legs * legWidth);
+
+  for (let leg = 0; leg < legs; leg += 1) {
+    const zone = resolveSchlonicZone({ seed: 21, chunks, legs, leg });
+    const fromX = resolveSchlonicLegFromX({ seed: 21, chunks, legs, leg });
+
+    assert.equal(fromX, leg * legWidth);
+    assert.equal(zone.goalX, legWidth);
+    // Its ground is the course's own stretch, plus the next leg's run-up past the post.
+    assert.equal(zone.heights.length, zoneOf(21, chunks).heights.length);
+    assert.deepEqual(
+      zone.heights,
+      course.heights.slice(leg * chunks * 6, leg * chunks * 6 + chunks * 6 + 7)
+    );
+    // Level off the line, and a finale over a hole before the post — on every leg, not just
+    // the last, because a handoff is worth a loud last ten seconds too.
+    assert.equal(resolveSchlonicGroundSlope(zone, 30), 0);
+    assert.equal(resolveSchlonicGroundSlope(zone, 90), 0);
+    assert.ok(zone.props.some((prop) => prop.kind === "spring" && prop.x >= resolveSchlonicFinaleX(zone)));
+    assert.ok(zone.pits.some((pit) => pit.toX > resolveSchlonicFinaleX(zone) && pit.toX < zone.goalX));
+    // Every prop and hole is the course's, moved back by the leg's start.
+    for (const prop of zone.props) {
+      const onCourse = course.props.find((entry) => entry.x === prop.x + fromX && entry.kind === prop.kind && entry.y === prop.y);
+
+      assert.ok(onCourse !== undefined, `leg ${leg} has a prop the course does not: ${JSON.stringify(prop)}`);
+      assert.ok(prop.x >= 0 && prop.x < zone.goalX);
+    }
+    assert.deepEqual(zone.props.map((prop) => prop.index), zone.props.map((_prop, index) => index));
+    for (const pit of zone.pits) {
+      assert.ok(course.pits.some((entry) => entry.fromX === pit.fromX + fromX && entry.toX === pit.toX + fromX));
+      assert.ok(pit.fromX >= 0 && pit.toX < zone.goalX);
+    }
+  }
+
+  // The legs between them carry every hole the course has.
+  const legPits = [0, 1, 2].reduce((total, leg) => total + resolveSchlonicZone({ seed: 21, chunks, legs, leg }).pits.length, 0);
+
+  assert.equal(legPits, course.pits.length);
+});
+
+test("clamps a leg to the course and treats a missing leg count as one", () => {
+  assert.deepEqual(resolveSchlonicZone({ seed: 5, chunks: 8, legs: 2, leg: 9 }), resolveSchlonicZone({ seed: 5, chunks: 8, legs: 2, leg: 1 }));
+  assert.deepEqual(resolveSchlonicZone({ seed: 5, chunks: 8, leg: 3 }), zoneOf(5, 8));
 });
 
 test("caps a run well past the time the post can possibly take to arrive", () => {

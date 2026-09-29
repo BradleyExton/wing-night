@@ -5,9 +5,9 @@ export const displaySchlonicSurfaceCopy = {
   // The venue, not the show: it hangs on a plaque inside the zone, never on the marquee.
   zoneName: "Dunlop Street Zone",
   introDescription:
-    "One chicken, one skateboard, one sidewalk, and a lot of wings nobody is asking about. The wings are the score, and they are also the only health there is: get hit and you drop half of them, get hit holding none and the run is over. The post is the only place a handful counts.",
+    "One street, one skateboard, one leg each, and a lot of wings nobody is asking about. The wings are the score, and they are also the only health there is: get hit and you drop half of them, get hit holding none and your leg is over. Your post is the only place a handful counts — and it is the next rider's start line.",
   waitingLabel: "Waiting for the zone…",
-  runCounter: (runNumber: number, runsTotal: number): string => `Run ${runNumber} / ${runsTotal}`,
+  runCounter: (runNumber: number, runsTotal: number): string => `Leg ${runNumber} / ${runsTotal}`,
   // The banked figure stands in its own span, so the post's count-up can write it; this is
   // what follows it.
   wingsParSuffix: (par: number): string => ` / ${par}`,
@@ -15,12 +15,12 @@ export const displaySchlonicSurfaceCopy = {
   // What the tally reads before the loop has written to it: a bird on the line holds nothing.
   inHandOnTheLine: "0",
   bankedLabel: "Banked",
-  // The round's best run, the ghost in the zone: what it banked and whose it was.
+  // The turn to beat, whose legs are the ghosts in the zone: what it banked and whose it was.
   bestWings: (wings: number): string => `${wings}`,
-  bestLabel: (playerName: string | null): string =>
-    playerName === null ? "To beat" : `To beat · ${playerName}`,
+  bestLabel: (teamName: string | null): string =>
+    teamName === null ? "To beat" : `To beat · ${teamName}`,
   sceneLabel: (playerName: string | null): string =>
-    playerName === null ? "Dunlop Street Zone" : `Dunlop Street Zone — ${playerName}'s run`,
+    playerName === null ? "Dunlop Street Zone" : `Dunlop Street Zone — ${playerName}'s leg`,
   readyPrompt: (playerName: string | null): string =>
     playerName === null ? "On the line — tap to go" : `${playerName} is on the line — tap to go`,
   runningPrompt: (playerName: string | null): string =>
@@ -28,7 +28,7 @@ export const displaySchlonicSurfaceCopy = {
   // The plaque over the zone names who is next; this line only says who just finished.
   handoffPrompt: (endedName: string | null): string =>
     endedName === null ? "That's the run" : `${endedName} is done`,
-  finishedPrompt: "That's the team's zone.",
+  finishedPrompt: "That's the team's street.",
   outcomeTitle: (outcome: "cleared" | "wiped" | "fell"): string => {
     if (outcome === "cleared") {
       return "Post!";

@@ -13,7 +13,7 @@ const collectSocketRequests = (page: Page): string[] => {
   return socketRequests;
 };
 
-test("schlonic sandbox lays out one zone for both screens and starts the run on the first tap", async ({
+test("schlonic sandbox lays out one leg for both screens and starts the run on the first tap", async ({
   page
 }) => {
   const socketRequests = collectSocketRequests(page);
@@ -22,9 +22,9 @@ test("schlonic sandbox lays out one zone for both screens and starts the run on 
 
   await expect(page.getByRole("heading", { name: "Minigame Dev Sandbox" })).toBeVisible();
 
-  // Both previews draw the same zone from the live fixture: fourteen chunks, a trench cutting the
-  // ground a third of the way in, every piece of kit somewhere along it, with the springboard
-  // only at the finale, and the finale's springboard and trench before the post.
+  // Both previews draw the same leg from the live fixture — the first of two, fourteen chunks, a
+  // trench cutting the ground a third of the way in, every piece of kit somewhere along it, with
+  // the springboard only at the finale, and the finale's springboard and trench before the post.
   await expect(page.locator("[data-schlonic-scene]")).toHaveCount(2);
   await expect(page.locator("[data-schlonic-ground-run]")).toHaveCount(6);
   await expect(page.locator("[data-schlonic-spike]")).toHaveCount(4);
@@ -35,16 +35,17 @@ test("schlonic sandbox lays out one zone for both screens and starts the run on 
   // The high line is drawn bigger, because it is worth more.
   await expect(page.locator('[data-schlonic-wing-worth="2"]').first()).toBeAttached();
   await expect(page.locator("[data-schlonic-goal]")).toHaveCount(2);
-  await expect(page.getByText("Run 1 of 2")).toBeVisible();
+  await expect(page.getByText("Leg 1 of 2")).toBeVisible();
   await expect(page.getByText("Alex is on the line — tap to go")).toBeVisible();
-  // The wall carries the zone as a line over the arena: the kit, the rail, the trenches and the
-  // post, with the runner's pin on the start line.
+  // The wall carries the WHOLE street as a line over the arena — both legs' kit, rails and
+  // trenches, the handoff between them and the post — with the runner's pin on the start line.
   const track = page.locator("[data-schlonic-track]");
 
   await expect(track).toHaveCount(1);
-  await expect(track.locator("[data-schlonic-track-hazard]")).toHaveCount(4);
-  await expect(track.locator("[data-schlonic-track-pit]")).toHaveCount(2);
-  await expect(track.locator("[data-schlonic-track-rail]")).toHaveCount(1);
+  await expect(track.locator("[data-schlonic-track-hazard]")).toHaveCount(8);
+  await expect(track.locator("[data-schlonic-track-pit]")).toHaveCount(4);
+  await expect(track.locator("[data-schlonic-track-rail]")).toHaveCount(2);
+  await expect(track.locator("[data-schlonic-track-handoff]")).toHaveCount(1);
   await expect(track.locator("[data-schlonic-track-post]")).toHaveCount(1);
   await expect(track).toHaveAttribute("data-schlonic-track-percent", "0");
   await expect(page.locator("[data-schlonic-wings]").first()).toHaveText(/0 \/ 52/);
@@ -207,12 +208,14 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
   // The pit sits a third of the way in; getting past it is what the jumps were for.
   expect(endedAtX).toBeGreaterThan(400);
 
-  // The strip's pin followed the run down the zone: past the hole, a third of the way in.
+  // The strip's pin followed the run down the street: past the hole, a third of the way down
+  // the first leg — a sixth of the way down the two-leg street.
   const trackPercent = Number(
     await page.locator("[data-schlonic-track]").getAttribute("data-schlonic-track-percent")
   );
 
-  expect(trackPercent).toBeGreaterThan(30);
+  expect(trackPercent).toBeGreaterThan(15);
+  expect(trackPercent).toBeLessThan(50);
 
   // The tablet says who to hand it to; the TV says who is up.
   const hostCallout = page.locator('[data-schlonic-handoff="host"]');
@@ -231,21 +234,31 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
   // The server refereed the run from the log and put what it brought home on the board.
   await expect(page.locator("[data-schlonic-history='0']")).not.toContainText("—");
   // A run that went wrong holds for its punchline before the tablet moves on.
-  await expect(page.getByText("Run 2 of 2")).toBeVisible({ timeout: 8000 });
+  await expect(page.getByText("Leg 2 of 2")).toBeVisible({ timeout: 8000 });
 
-  // A run that made the post is the round's best, and the next team races it: hand the sandbox
-  // to another team and the ghost is in both zones, on the strip, and on the marquee as the
-  // number to beat. A run that went down the hole is nobody's ghost.
+  // Nobody races a teammate: the second leg is a different stretch of street, and the first
+  // leg's rider is not its ghost whatever it banked.
+  await expect(page.locator("[data-schlonic-ghost]")).toHaveCount(0);
+
+  // A finished turn that banked is the turn to beat, and the next team races it leg for leg:
+  // finish the turn, hand the sandbox to another team, and the first leg's rider is the ghost in
+  // both zones and on the strip, with what the team banked on the marquee as the number to beat.
+  // A turn that went down the hole and banked nothing is nobody's ghost.
   const didClear = (await displayPlaque.getAttribute("data-schlonic-outcome")) === "cleared";
 
+  await page.getByRole("button", { name: "Skip run" }).click();
+  await expect(page.locator("[data-schlonic-finish='finished']")).toBeVisible();
   await page.getByLabel("Whose turn").selectOption({ index: 1 });
+  await expect(page.getByText("Leg 1 of 2")).toBeVisible();
 
   if (didClear) {
     await expect(page.locator("[data-schlonic-ghost]")).toHaveCount(2);
     await expect(page.locator("[data-schlonic-track-ghost]")).toHaveCount(1);
-    await expect(page.locator("[data-schlonic-best]").first()).toContainText("To beat · Alex");
+    await expect(page.locator("[data-schlonic-best]").first()).toBeVisible();
+    await expect(page.locator("[data-schlonic-in-hand]").first()).toHaveText("0");
   } else {
     await expect(page.locator("[data-schlonic-ghost]")).toHaveCount(0);
+    await expect(page.locator("[data-schlonic-best]")).toHaveCount(0);
   }
 });
 
@@ -380,7 +393,7 @@ test("skipping banks nothing, finishing scores the turn, and reset puts the team
 
   await page.getByRole("button", { name: "Skip run" }).click();
 
-  await expect(page.getByText("Run 2 of 2")).toBeVisible();
+  await expect(page.getByText("Leg 2 of 2")).toBeVisible();
   // A skipped run is not a wipeout: the wall announces who is next and nothing about how it went.
   const skippedPlaque = page.locator('[data-schlonic-outcome="skipped"]');
 
@@ -396,6 +409,6 @@ test("skipping banks nothing, finishing scores the turn, and reset puts the team
 
   await page.getByRole("button", { name: "Reset turn" }).click();
 
-  await expect(page.getByText("Run 1 of 2")).toBeVisible();
+  await expect(page.getByText("Leg 1 of 2")).toBeVisible();
   await expect(page.locator("[data-schlonic-wings]").first()).toHaveText(/0 \/ 52/);
 });

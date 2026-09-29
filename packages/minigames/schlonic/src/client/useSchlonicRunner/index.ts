@@ -1,6 +1,6 @@
 import { useEffect, useRef, type RefObject } from "react";
 import type {
-  SchlonicBestRun,
+  SchlonicBestLeg,
   SchlonicFrame,
   SchlonicInput,
   SchlonicMinigameRun,
@@ -20,8 +20,8 @@ type SchlonicRunnerInput = {
   sceneRef: RefObject<SchlonicSceneHandle>;
   /** Where the wings in hand are written each frame: the chrome's tally, outside the scene. */
   tallyRef?: RefObject<HTMLElement>;
-  /** The run to beat: replayed from its own log on this run's clock, as the ghost in the zone. */
-  bestRun?: SchlonicBestRun | null;
+  /** The leg to beat: replayed from its own log on this run's clock, as the ghost in the zone. */
+  ghost?: SchlonicBestLeg | null;
   onPress: (tick: number) => void;
   onRelease: (tick: number) => void;
   onEndRun: () => void;
@@ -72,21 +72,20 @@ export const useSchlonicRunner = ({
   canAct,
   sceneRef,
   tallyRef,
-  bestRun = null,
+  ghost = null,
   onPress,
   onRelease,
   onEndRun
 }: SchlonicRunnerInput): { press: () => void; release: () => void } => {
   const runIndex = run?.runIndex ?? null;
   const runStatus = run?.status ?? null;
-  // Read when a run is created, never a dependency: a best run set by THIS run's own result
-  // must not restart the loop.
-  const bestRunRef = useRef(bestRun);
+  // Read when a run is created, never a dependency: the ghost must not restart the loop.
+  const ghostRef = useRef(ghost);
 
-  bestRunRef.current = bestRun;
+  ghostRef.current = ghost;
 
   const createLocalRun = (): LocalRun => {
-    const best = bestRunRef.current;
+    const best = ghostRef.current;
 
     return {
       frame: createSchlonicRunStart(zone),

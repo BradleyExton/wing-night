@@ -1,4 +1,4 @@
-import type { MinigameType, Player, SchlonicBestRun, SchlonicPlayerFigure, Team } from "@wingnight/shared";
+import type { MinigameType, Player, SchlonicBestTurn, SchlonicPlayerFigure, Team } from "@wingnight/shared";
 import { runSchlonicRun } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
@@ -9,7 +9,7 @@ import { isSchlonicRoundMemory, isSchlonicRuntimeState, isSchlonicTickPayload } 
 import { isSchlonicRules, resolveSchlonicRules } from "./rules/index.js";
 import { resolveWingsBanked, resolveWingsPar, resolveSchlonicPoints } from "./scoring/index.js";
 import type { SchlonicRuntimeRules, SchlonicRuntimeRun, SchlonicRuntimeState } from "./types/index.js";
-import { resolveSchlonicPhase, toSchlonicDisplayView, toSchlonicHostView } from "./views/index.js";
+import { cloneBestTurn, resolveSchlonicPhase, toSchlonicDisplayView, toSchlonicHostView } from "./views/index.js";
 
 export const schlonicMinigameId: MinigameType = "SCHLONIC";
 
@@ -68,45 +68,49 @@ const createRuns = (
   });
 };
 
-const cloneBestRun = (bestRun: SchlonicBestRun | null): SchlonicBestRun | null => {
-  return bestRun === null
-    ? null
-    : {
-        ...bestRun,
-        player: bestRun.player === null ? null : { ...bestRun.player },
-        inputs: bestRun.inputs.map((input) => ({ ...input }))
-      };
-};
-
 /**
- * The round's best is the cleared run with the most wings, whoever ran it; a tie keeps the one
- * that stood first, because the ghost is a target and a target should not move for a draw. A
- * run that did not reach the post banked nothing and cannot be the best of anything.
+ * This turn as a turn to beat, once it is over: every leg's log as the referee scored it, and
+ * what the whole team banked. Null while the team is still on the street, and null for a turn
+ * that banked nothing — a ghost that wipes out on every leg is nobody's pace.
  */
-const withBestRun = (
-  state: SchlonicRuntimeState,
-  run: SchlonicRuntimeRun
-): SchlonicRuntimeState => {
-  const result = run.result;
+const resolveTurnAsBest = (state: SchlonicRuntimeState): SchlonicBestTurn | null => {
+  const wings = resolveWingsBanked(state.runs);
 
-  if (result === null || result.outcome !== "cleared") {
-    return state;
-  }
-
-  if (state.bestRun !== null && result.wings <= state.bestRun.wings) {
-    return state;
+  if (resolveSchlonicPhase(state) !== "finished" || state.activeTurnTeamId === null || wings <= 0) {
+    return null;
   }
 
   return {
-    ...state,
-    bestRun: {
-      teamId: state.activeTurnTeamId,
-      player: run.player === null ? null : { ...run.player },
-      inputs: run.inputs.map((input) => ({ ...input })),
-      wings: result.wings,
-      endTick: result.endTick
-    }
+    teamId: state.activeTurnTeamId,
+    teamName: state.activeTurnTeamName,
+    wings,
+    legs: state.runs.map((run) => {
+      return run.result === null
+        ? null
+        : {
+            player: run.player === null ? null : { ...run.player },
+            inputs: run.inputs.map((input) => ({ ...input })),
+            outcome: run.result.outcome,
+            wings: run.result.wings,
+            endTick: run.result.endTick
+          };
+    })
   };
+};
+
+/**
+ * The turn to beat is the finished turn that banked the most wings; a tie keeps the one that
+ * stood first, because the ghost is a target and a target should not move for a draw.
+ */
+const pickBestTurn = (
+  standing: SchlonicBestTurn | null,
+  challenger: SchlonicBestTurn | null
+): SchlonicBestTurn | null => {
+  if (challenger === null) {
+    return standing;
+  }
+
+  return standing === null || challenger.wings > standing.wings ? challenger : standing;
 };
 
 const mutated = (state: SchlonicRuntimeState): MinigameRuntimeReductionResult => {
@@ -155,22 +159,20 @@ const withTurnScore = (
   };
 };
 
-// The run is over and the tablet moves on. A run only ever happens once: there is no second
-// attempt at the zone, which is what makes the greedy line a decision rather than a rehearsal.
+// The run is over and the tablet moves on to the next leg. A run only ever happens once: there
+// is no second attempt at a leg, which is what makes the greedy line a decision rather than a
+// rehearsal.
 const finishRun = (
   state: SchlonicRuntimeState,
   run: SchlonicRuntimeRun,
   pointsMax: number
 ): SchlonicRuntimeState => {
   return withTurnScore(
-    withBestRun(
-      {
-        ...state,
-        runs: replaceRun(state, run.runIndex, run),
-        runIndex: run.runIndex + 1
-      },
-      run
-    ),
+    {
+      ...state,
+      runs: replaceRun(state, run.runIndex, run),
+      runIndex: run.runIndex + 1
+    },
     pointsMax
   );
 };
@@ -182,13 +184,14 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
     const rules = resolveSchlonicRules(input.rules);
     const activeTurnTeamId = input.activeRoundTeamId ?? input.teamIds[0] ?? null;
     const figures = resolveTeamFigures(activeTurnTeamId, input.players, input.teams);
-    // The previous turn's ghost, if the round has one yet.
-    const bestRun = isSchlonicRoundMemory(input.roundMemory)
-      ? cloneBestRun(input.roundMemory.bestRun)
+    // The turn to beat, if a team before this one has set one. Fixed for the whole turn.
+    const bestTurn = isSchlonicRoundMemory(input.roundMemory)
+      ? cloneBestTurn(input.roundMemory.bestTurn)
       : null;
 
     const initialState: SchlonicRuntimeState = {
       activeTurnTeamId,
+      activeTurnTeamName: input.teams.find((team) => team.id === activeTurnTeamId)?.name ?? null,
       runsPerTurn: rules.runsPerTurn,
       zoneSeed: rules.zoneSeed,
       zoneChunks: rules.zoneChunks,
@@ -198,8 +201,7 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
       turnStartPoints:
         activeTurnTeamId === null ? 0 : (input.pendingPointsByTeamId[activeTurnTeamId] ?? 0),
       pendingPointsByTeamId: { ...input.pendingPointsByTeamId },
-      bestRun,
-      turnStartBestRun: cloneBestRun(bestRun)
+      bestTurn
     };
 
     return initialState;
@@ -243,15 +245,16 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
       });
     }
 
-    // The referee: the server re-runs the log itself and takes its own reading. The tablet only
-    // ever says "that's the end of it" — never how it went, and never what it scored.
+    // The referee: the server re-runs the log itself, on the run's own leg of the street, and
+    // takes its own reading. The tablet only ever says "that's the end of it" — never how it
+    // went, and never what it scored.
     if (actionType === "endRun") {
       if (run === null || phase !== "running") {
         return unchanged;
       }
 
       const refereed = runSchlonicRun(
-        { seed: state.zoneSeed, chunks: state.zoneChunks },
+        { seed: state.zoneSeed, chunks: state.zoneChunks, legs: state.runsPerTurn, leg: run.runIndex },
         run.inputs
       );
 
@@ -290,16 +293,16 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     // Escape hatch (AGENTS.md §11): put the whole team back on the start line, handing back
-    // exactly the points this turn banked — and the ghost this turn may have set, since a run
-    // that is being forgotten cannot be the one to beat.
+    // exactly the points this turn banked. The turn to beat is untouched: it was never this
+    // turn's, and a turn put back on the line is no longer finished, so it leaves the memory
+    // of its own accord.
     if (actionType === "resetTurn") {
       const reset: SchlonicRuntimeState = {
         ...state,
         runIndex: 0,
         runs: state.runs.map((entry) =>
           createReadyRun(entry.player === null ? [] : [entry.player], entry.runIndex)
-        ),
-        bestRun: cloneBestRun(state.turnStartBestRun)
+        )
       };
 
       return mutated(withTurnScore(reset, input.pointsMax));
@@ -331,12 +334,16 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
 
     return toSchlonicDisplayView(input.state);
   },
-  // The one thing a turn leaves for the next: the run to beat.
+  // The one thing a turn leaves for the next: the turn to beat — the one it inherited, or its
+  // own now that it is over, whichever banked more. Taken from the latest state, so a turn put
+  // back on the line by a reset is not handed on.
   selectRoundMemory: (input) => {
     if (!isSchlonicRuntimeState(input.state)) {
       return null;
     }
 
-    return { bestRun: cloneBestRun(input.state.bestRun) };
+    return {
+      bestTurn: cloneBestTurn(pickBestTurn(input.state.bestTurn, resolveTurnAsBest(input.state)))
+    };
   }
 };

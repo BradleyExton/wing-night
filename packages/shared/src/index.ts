@@ -156,6 +156,8 @@ export {
   resolveSchlonicFinaleX,
   resolveSchlonicWingTotal,
   resolveSchlonicTickCap,
+  resolveSchlonicCourse,
+  resolveSchlonicLegFromX,
   resolveSchlonicZone,
   runSchlonicRun,
   stepSchlonic
@@ -274,7 +276,8 @@ export type {
   FappyMinigameHostView,
   SchlonicMinigameDisplayView,
   SchlonicMinigameHostView,
-  SchlonicBestRun,
+  SchlonicBestLeg,
+  SchlonicBestTurn,
   SchlonicMinigameRun,
   SchlonicPhase,
   SchlonicPlayerFigure,

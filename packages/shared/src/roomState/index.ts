@@ -529,9 +529,10 @@ export type SchlonicPlayerFigure = {
   genre: string | null;
 };
 
-// One player's run at the zone. There is no second attempt: a run ends at the post or it ends
-// where it went wrong, and either way the tablet moves on. The input log is what the display
-// re-runs the shared sim from, and what the server refereed the result out of.
+// One player's run at their leg of the street. There is no second attempt: a run ends at the
+// leg's post or it ends where it went wrong, and either way the tablet moves on to the next
+// leg. The input log is what the display re-runs the shared sim from, and what the server
+// refereed the result out of.
 export type SchlonicMinigameRun = {
   runIndex: number;
   // Whose run it is; null runs the house schlong in the team colour.
@@ -542,21 +543,33 @@ export type SchlonicMinigameRun = {
   result: SchlonicRunResult | null;
 };
 
-// The round's best run so far: the cleared run that banked the most wings, from any team in the
-// round, carried from turn to turn by the plugin's round memory. It is the ghost every later
-// runner races — the same input log the referee scored, re-run on the live run's clock — and it
-// is nobody's secret, so both views carry it whole.
-export type SchlonicBestRun = {
-  teamId: string | null;
+// One leg of the turn to beat: the log the referee scored on that leg, whose it was, and how it
+// went. Null where that leg was skipped, so the leg that races it has no ghost.
+export type SchlonicBestLeg = {
   player: SchlonicPlayerFigure | null;
   inputs: SchlonicInput[];
+  outcome: SchlonicOutcome;
   wings: number;
   endTick: number;
 };
 
+// The turn to beat: the finished turn that banked the most wings over the whole street, from
+// any team BEFORE this one, carried from turn to turn by the plugin's round memory. Each leg's
+// runner races its leg of it as a ghost — the same input log the referee scored, re-run on the
+// live run's clock — and it is nobody's secret, so both views carry it whole. It is always
+// another team's: a turn only joins the memory once it is over, so a rider never races a
+// teammate who ran a different stretch of the same street.
+export type SchlonicBestTurn = {
+  teamId: string | null;
+  teamName: string | null;
+  wings: number;
+  legs: (SchlonicBestLeg | null)[];
+};
+
 // Nothing about a run is secret — the whole zone is on the TV as it happens — so the host and
-// display carry the same fields, as JOUST and FAPPY do. The zone is a RULE, not a roll: every
-// team in the round runs the same one, so the night is a race rather than a lottery.
+// display carry the same fields, as JOUST and FAPPY do. The street is a RULE, not a roll: every
+// team in the round runs the same course of `runsPerTurn` legs, `zoneChunks` chunks each, so
+// the night is a race rather than a lottery. Run `n` is leg `n` of it.
 type SchlonicMinigameViewFields = {
   minigame: "SCHLONIC";
   phase: SchlonicPhase;
@@ -570,8 +583,8 @@ type SchlonicMinigameViewFields = {
   wingsBanked: number;
   wingsPar: number;
   points: number | null;
-  // The run to beat, as it stood when the run in hand started; null until someone clears the zone.
-  bestRun: SchlonicBestRun | null;
+  // The turn to beat, fixed for the whole turn; null until a team before this one has banked.
+  bestTurn: SchlonicBestTurn | null;
 };
 
 export type SchlonicMinigameHostView = MinigameHostViewBase & SchlonicMinigameViewFields;

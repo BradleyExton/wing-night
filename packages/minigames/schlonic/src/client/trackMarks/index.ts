@@ -28,10 +28,26 @@ export type ZoneTrackRail = {
   widthPercent: number;
 };
 
+/** Where one leg hands to the next: a line across the bar. Not drawn at the start or the post. */
+export type ZoneTrackHandoff = {
+  leg: number;
+  percent: number;
+};
+
 export type ZoneTrackMarks = {
   hazards: ZoneTrackHazard[];
   pits: ZoneTrackPit[];
   rails: ZoneTrackRail[];
+  handoffs: ZoneTrackHandoff[];
+};
+
+/**
+ * What the strip is a picture of: the whole street (`resolveSchlonicCourse`), and where the leg
+ * on the wall starts on it, so a leg-local x lands on the right stretch of the bar.
+ */
+export type SchlonicTrack = {
+  course: SchlonicZone;
+  fromX: number;
 };
 
 const clampPercent = (value: number): number => Math.min(100, Math.max(0, value));
@@ -50,7 +66,25 @@ export const resolveTrackDistancePercent = (zone: SchlonicZone, distance: number
   return resolveTrackPercent(zone, SCHLONIC_WORLD.runnerX + distance);
 };
 
-export const resolveTrackMarks = (zone: SchlonicZone): ZoneTrackMarks => {
+/**
+ * The handoff lines: one at the start of every leg but the first, at the leg's width apart. A
+ * course of one leg has none.
+ */
+export const resolveTrackHandoffs = (course: SchlonicZone, legWidth: number): ZoneTrackHandoff[] => {
+  const handoffs: ZoneTrackHandoff[] = [];
+
+  if (legWidth <= 0) {
+    return handoffs;
+  }
+
+  for (let leg = 1; leg * legWidth < course.goalX; leg += 1) {
+    handoffs.push({ leg, percent: resolveTrackPercent(course, leg * legWidth) });
+  }
+
+  return handoffs;
+};
+
+export const resolveTrackMarks = (zone: SchlonicZone, legWidth = zone.goalX): ZoneTrackMarks => {
   const hazards = zone.props.flatMap((prop): ZoneTrackHazard[] => {
     if (prop.kind === "wing" || prop.kind === "rail") {
       return [];
@@ -84,7 +118,7 @@ export const resolveTrackMarks = (zone: SchlonicZone): ZoneTrackMarks => {
     ];
   });
 
-  return { hazards, pits, rails };
+  return { hazards, pits, rails, handoffs: resolveTrackHandoffs(zone, legWidth) };
 };
 
 /**
@@ -94,7 +128,7 @@ export const resolveTrackMarks = (zone: SchlonicZone): ZoneTrackMarks => {
  */
 export const paintZoneTrack = (
   root: HTMLElement | null,
-  zone: SchlonicZone,
+  track: SchlonicTrack,
   frame: SchlonicFrame,
   ghostFrame: SchlonicFrame | null = null
 ): void => {
@@ -102,7 +136,9 @@ export const paintZoneTrack = (
     return;
   }
 
-  const percent = resolveTrackPercent(zone, frame.x);
+  // A leg's x is measured from its own start line; the bar is the whole street's.
+  const { course, fromX } = track;
+  const percent = resolveTrackPercent(course, frame.x + fromX);
   const text = `${percent}`;
 
   if (root.dataset.schlonicTrackPercent !== text) {
@@ -111,7 +147,7 @@ export const paintZoneTrack = (
   }
 
   // The run to beat, on the same bar: where its replay has got to on this tick.
-  const ghostText = ghostFrame === null ? "" : `${resolveTrackPercent(zone, ghostFrame.x)}`;
+  const ghostText = ghostFrame === null ? "" : `${resolveTrackPercent(course, ghostFrame.x + fromX)}`;
 
   if ((root.dataset.schlonicTrackGhostPercent ?? "") !== ghostText) {
     root.style.setProperty("--schlonic-track-ghost", ghostText === "" ? "0%" : `${ghostText}%`);

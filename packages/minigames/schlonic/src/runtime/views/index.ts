@@ -1,4 +1,5 @@
 import type {
+  SchlonicBestTurn,
   SchlonicMinigameDisplayView,
   SchlonicMinigameHostView,
   SchlonicPhase
@@ -6,6 +7,24 @@ import type {
 
 import { resolveWingsBanked, resolveWingsPar } from "../scoring/index.js";
 import type { SchlonicRuntimeState } from "../types/index.js";
+
+/** A deep copy of the turn to beat, so no view shares an array with the state. */
+export const cloneBestTurn = (bestTurn: SchlonicBestTurn | null): SchlonicBestTurn | null => {
+  return bestTurn === null
+    ? null
+    : {
+        ...bestTurn,
+        legs: bestTurn.legs.map((leg) => {
+          return leg === null
+            ? null
+            : {
+                ...leg,
+                player: leg.player === null ? null : { ...leg.player },
+                inputs: leg.inputs.map((input) => ({ ...input }))
+              };
+        })
+      };
+};
 
 // Derived, never stored: the team is through once every run is behind it; otherwise the room is
 // in whatever state the run in hand is.
@@ -51,14 +70,7 @@ const toSchlonicViewFields = (state: SchlonicRuntimeState) => {
     wingsBanked: resolveWingsBanked(state.runs),
     wingsPar: resolveWingsPar(state.parWingsPerRun, state.runsPerTurn),
     points: resolvePoints(state),
-    bestRun:
-      state.bestRun === null
-        ? null
-        : {
-            ...state.bestRun,
-            player: state.bestRun.player === null ? null : { ...state.bestRun.player },
-            inputs: state.bestRun.inputs.map((input) => ({ ...input }))
-          }
+    bestTurn: cloneBestTurn(state.bestTurn)
   };
 };
 

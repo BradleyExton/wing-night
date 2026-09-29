@@ -13,7 +13,7 @@ import { Ground } from "./Ground/index.js";
 import { Rider, paintRider, type RiderRefs } from "./Rider/index.js";
 import { resolveRiderPlacement } from "./riderPlacement/index.js";
 import { resolveRunnerCurl } from "./runnerPose/index.js";
-import { SetPieces } from "./SetPieces/index.js";
+import { FIRST_LEG, SetPieces, type SchlonicLeg } from "./SetPieces/index.js";
 import { shakeElement } from "./shake/index.js";
 import * as styles from "./styles.js";
 import { usePunchline } from "./usePunchline/index.js";
@@ -51,6 +51,8 @@ export type SchlonicSceneProps = {
    * behind, in the picture or off it. Null until someone has cleared the zone.
    */
   ghost?: RunnerFigure | null;
+  /** Which leg of the street the zone is: the shop stands on the first, the hotel on the last. */
+  leg?: SchlonicLeg;
 };
 
 type Box = { width: number; height: number };
@@ -72,7 +74,7 @@ const FLASH_HZ = 8;
  * keeps a costume head's halo filter rasterised once.
  */
 export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>(
-  ({ zone, runner, sceneId, label, cameraFit = TABLET_CAMERA_FIT, ghost = null }, ref): JSX.Element => {
+  ({ zone, runner, sceneId, label, cameraFit = TABLET_CAMERA_FIT, ghost = null, leg = FIRST_LEG }, ref): JSX.Element => {
     const frameRef = useRef<HTMLDivElement>(null);
     // The box a filling camera measures itself against; null until the first measurement (and
     // for good on a server render), when the camera falls back to its floor width.
@@ -290,7 +292,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
           >
             <Backdrop ref={backdropRef} zoneLength={zone.goalX} camera={camera} />
             <g ref={zoneLayerRef} data-schlonic-zone>
-              <SetPieces zone={zone} goalGroundY={goalGroundY} />
+              <SetPieces zone={zone} goalGroundY={goalGroundY} leg={leg} />
               <Ground zone={zone} camera={camera} />
               <ZoneProps zone={zone} registerProp={registerProp} goalGroundY={goalGroundY} />
               <WipeoutPunchline ref={punchline.wipeoutRef} />

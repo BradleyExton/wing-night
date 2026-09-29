@@ -43,18 +43,41 @@ export const resolveSouldiersX = (): number => SCHLONIC_WORLD.runnerX - SOULDIER
 /** Where the hotel stands so the middle of its patio is the post. */
 export const resolveQueensX = (goalX: number): number => goalX - QUEENS_HOTEL.barX * QUEENS_SCALE;
 
-export const SetPieces = ({ zone, goalGroundY }: { zone: SchlonicZone; goalGroundY: number }): JSX.Element => (
+/** Which leg of the street this zone is, so the shop stands on the first and the hotel on the last. */
+export type SchlonicLeg = {
+  index: number;
+  count: number;
+};
+
+export const FIRST_LEG: SchlonicLeg = { index: 0, count: 1 };
+
+// The street is one course; the shop is where it starts and the hotel is where it ends, so a
+// middle leg has neither: its start line is the last rider's post and its post is the next
+// rider's start line, on the same sidewalk.
+export const SetPieces = ({
+  zone,
+  goalGroundY,
+  leg = FIRST_LEG
+}: {
+  zone: SchlonicZone;
+  goalGroundY: number;
+  leg?: SchlonicLeg;
+}): JSX.Element => (
   <g data-schlonic-set-pieces>
-    <g data-schlonic-start-shop>
-      <SouldiersSkateShop
-        x={resolveSouldiersX()}
-        baseY={zone.heights[0] ?? SCHLONIC_WORLD.groundBaseY}
-        palette={SOULDIERS}
-        scale={SOULDIERS_SCALE}
-      />
-    </g>
-    <g data-schlonic-finish-hotel>
-      <QueensHotel x={resolveQueensX(zone.goalX)} baseY={goalGroundY} palette={QUEENS} scale={QUEENS_SCALE} />
-    </g>
+    {leg.index === 0 && (
+      <g data-schlonic-start-shop>
+        <SouldiersSkateShop
+          x={resolveSouldiersX()}
+          baseY={zone.heights[0] ?? SCHLONIC_WORLD.groundBaseY}
+          palette={SOULDIERS}
+          scale={SOULDIERS_SCALE}
+        />
+      </g>
+    )}
+    {leg.index >= leg.count - 1 && (
+      <g data-schlonic-finish-hotel>
+        <QueensHotel x={resolveQueensX(zone.goalX)} baseY={goalGroundY} palette={QUEENS} scale={QUEENS_SCALE} />
+      </g>
+    )}
   </g>
 );

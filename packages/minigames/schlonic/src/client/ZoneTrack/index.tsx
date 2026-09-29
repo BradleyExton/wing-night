@@ -1,14 +1,18 @@
 import { forwardRef, useMemo } from "react";
 import { Character } from "@wingnight/cast";
 import type { SchlonicMinigameRun, SchlonicZone } from "@wingnight/shared";
+import { SCHLONIC_WORLD } from "@wingnight/shared";
 
 import type { RunnerFigure } from "../resolveRunnerFigure/index.js";
-import { resolveTrackDistancePercent, resolveTrackMarks } from "../trackMarks/index.js";
+import { resolveTrackMarks, resolveTrackPercent } from "../trackMarks/index.js";
 import { zoneTrackCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
 type ZoneTrackProps = {
+  /** The whole street, every leg end to end (`resolveSchlonicCourse`). */
   zone: SchlonicZone;
+  /** How long one leg is, in world units; a run's leg starts `runIndex` of these in. */
+  legWidth?: number;
   runs: readonly SchlonicMinigameRun[];
   /** The run on the wall; the strip pins every refereed run before it. */
   shownRunIndex: number;
@@ -68,8 +72,8 @@ const atPercent = (percent: number, widthPercent?: number) => {
  * here re-renders per frame.
  */
 export const ZoneTrack = forwardRef<HTMLDivElement, ZoneTrackProps>(
-  ({ zone, runs, shownRunIndex, runner, teamFillClassName, ghost = null }, ref): JSX.Element => {
-    const marks = useMemo(() => resolveTrackMarks(zone), [zone]);
+  ({ zone, legWidth = zone.goalX, runs, shownRunIndex, runner, teamFillClassName, ghost = null }, ref): JSX.Element => {
+    const marks = useMemo(() => resolveTrackMarks(zone, legWidth), [zone, legWidth]);
     const finishedRuns = runs.filter(
       (run) => run.runIndex < shownRunIndex && run.result !== null && !run.skipped
     );
@@ -85,6 +89,14 @@ export const ZoneTrack = forwardRef<HTMLDivElement, ZoneTrackProps>(
             ref={atPercent(pit.fromPercent, pit.widthPercent)}
             className={styles.pit}
             data-schlonic-track-pit={pit.fromPercent}
+          />
+        ))}
+        {marks.handoffs.map((handoff) => (
+          <span
+            key={handoff.leg}
+            ref={atPercent(handoff.percent)}
+            className={styles.handoff}
+            data-schlonic-track-handoff={handoff.leg}
           />
         ))}
         {marks.rails.map((rail) => (
@@ -112,8 +124,13 @@ export const ZoneTrack = forwardRef<HTMLDivElement, ZoneTrackProps>(
             return null;
           }
 
-          const percent =
-            result.outcome === "cleared" ? 100 : resolveTrackDistancePercent(zone, result.distance);
+          // Where the run ended on ITS leg of the street: a cleared run sits on that leg's
+          // post, which is the handoff, not the end of the bar.
+          const legFromX = run.runIndex * legWidth;
+          const percent = resolveTrackPercent(
+            zone,
+            result.outcome === "cleared" ? legFromX + legWidth : legFromX + SCHLONIC_WORLD.runnerX + result.distance
+          );
 
           return (
             <span
@@ -145,7 +162,7 @@ export const ZoneTrack = forwardRef<HTMLDivElement, ZoneTrackProps>(
           <PinFace figure={runner} alt={zoneTrackCopy.runnerAlt(runner.playerName ?? "")} />
         </span>
         <span className={styles.label}>
-          {zoneTrackCopy.label(marks.hazards.length, marks.rails.length, marks.pits.length)}
+          {zoneTrackCopy.label(marks.hazards.length, marks.rails.length, marks.pits.length, marks.handoffs.length + 1)}
         </span>
       </div>
     );

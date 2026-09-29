@@ -1,8 +1,8 @@
 export const hostSchlonicSurfaceCopy = {
   introDescription:
-    "One at a time, your chickens skate Dunlop Street Zone — out of Souldiers, down the sidewalk to the Queen's patio, and the sidewalk is furnished. The bird rolls on its own; the tablet only jumps. Tap to ollie, hold to go higher, land on a rail to grind it, and grab every wing you can: the wings are the score AND they are the only thing keeping you alive. A pink one with a face is an enemy — land on it and it pops. A crimson bed of them just hurts, and so does a trench. Take a hit and you drop half your wings; take one holding none and your run is over. Get to the post and everything in your hands goes on the board.",
+    "Your chickens skate Dunlop Street Zone as a relay — out of Souldiers, down the sidewalk to the Queen's patio, one leg each, and the sidewalk is furnished. The bird rolls on its own; the tablet only jumps. Tap to ollie, hold to go higher, land on a rail to grind it, and grab every wing you can: the wings are the score AND they are the only thing keeping you alive. A pink one with a face is an enemy — land on it and it pops. A crimson bed of them just hurts, and so does a trench. Take a hit and you drop half your wings; take one holding none and your leg is over. Get to your post and everything in your hands goes on the board, and the tablet goes to the next rider. The ghost on your stretch is the other team's rider who ran it.",
   waitingZoneLabel: "No zone is loaded. Check the round's SCHLONIC rules.",
-  runCounter: (runNumber: number, runsTotal: number): string => `Run ${runNumber} of ${runsTotal}`,
+  runCounter: (runNumber: number, runsTotal: number): string => `Leg ${runNumber} of ${runsTotal}`,
   // The one hint the tablet holder gets, on the line: how to start and how to jump, in one
   // sentence. The separate JUMP / HOLD FOR HEIGHT legend that used to sit beside it said the
   // same thing a second time in the same corner.
@@ -16,10 +16,10 @@ export const hostSchlonicSurfaceCopy = {
   // What the tally reads before the loop has written to it: a bird on the line holds nothing.
   inHandOnTheLine: "0",
   bankedLabel: "Banked",
-  // The round's best run, the ghost in the zone: what it banked and whose it was.
+  // The turn to beat, whose legs are the ghosts in the zone: what it banked and whose it was.
   bestWings: (wings: number): string => `${wings}`,
-  bestLabel: (playerName: string | null): string =>
-    playerName === null ? "To beat" : `To beat · ${playerName}`,
+  bestLabel: (teamName: string | null): string =>
+    teamName === null ? "To beat" : `To beat · ${teamName}`,
   wingsTally: (banked: number, par: number): string => `${banked} / ${par}`,
   finishedTitle: "Zone clear",
   finishPoints: (points: number): string => `+${points}`,
