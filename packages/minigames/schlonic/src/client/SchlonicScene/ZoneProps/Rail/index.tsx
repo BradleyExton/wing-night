@@ -13,7 +13,7 @@ const END_DROP = 2.6;
 const END_TURN = 2.2;
 /**
  * Where the posts stand, as shares along the rail: near its start, and two more spaced down it,
- * none at the far end — the thorn bed waits under that end (`world/index.ts`), and a post stood
+ * none at the far end — one of the crowd waits under that end (`world/index.ts`), and a post stood
  * in it would read as part of it.
  */
 const POST_SHARES = [0.04, 0.38, 0.7] as const;

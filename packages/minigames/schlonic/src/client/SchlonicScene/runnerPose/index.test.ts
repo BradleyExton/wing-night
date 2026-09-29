@@ -23,7 +23,7 @@ import {
 const onBoard = { x: 100, vy: 0, clearance: 0, grinding: false, slope: 0, curl: 0 };
 /** Well clear of the street: in the air as far as the picture is concerned. */
 const AIR = 10;
-const { jumpVelocity, springVelocity, maxFallVelocity, invulnerableTicks } = SCHLONIC_WORLD;
+const { jumpVelocity, kickerVelocity, maxFallVelocity, invulnerableTicks } = SCHLONIC_WORLD;
 
 test("does stand the rider level on level ground with the board wheels down", () => {
   const pose = resolveRunnerPose({ ...onBoard, x: 104 });
@@ -52,8 +52,8 @@ test("does flip the board once on the way up an ollie: level off the ground, ups
   assert.equal(resolveRunnerPose({ ...air, vy: maxFallVelocity }).flip, 0);
 });
 
-test("does hold the board level off a springboard until the climb slows to a jump's", () => {
-  assert.equal(resolveFlipProgress(springVelocity), 0);
+test("does hold the board level off a kicker until the climb slows to a jump's", () => {
+  assert.equal(resolveFlipProgress(kickerVelocity), 0);
   assert.ok(resolveFlipProgress(jumpVelocity / 2) > 0.2);
 });
 
@@ -175,7 +175,7 @@ test("does not flip the board when it rolls off a rail's end", () => {
   const frames = ride(PARTY, from, (frame) => frame.grounded && frame.grindingRail === null);
 
   assert.ok(frames.filter((frame) => !frame.grounded).length > 8, "the rail's end should be a real drop");
-  assert.deepEqual(frames[frames.length - 1]?.hits, [], "the drop should clear the thorns under the rail's end");
+  assert.deepEqual(frames[frames.length - 1]?.hits, [], "the drop should clear the crowd at the rail's end");
   assert.deepEqual(frames.filter((frame) => flipOf(PARTY, frame) !== 0).map((frame) => frame.tick), []);
 });
 

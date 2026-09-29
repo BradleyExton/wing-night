@@ -36,7 +36,7 @@ type ResolveRunnerFigureInput = {
  * What a run's runner looks like. The zone is run by the player's own cast hen — the same bird
  * that stands in the lobby parade and flies FAPPY's corridor — so this turns the runtime's
  * figure (name, pack-relative head, team, genre — the JOUST convention) into a face, a colour
- * and an outfit for the cast to draw. The schlongs are the scenery here, not the runner.
+ * and an outfit for the cast to draw. The crowd is the scenery here, not the runner.
  */
 export const resolveRunnerFigure = ({
   figure,

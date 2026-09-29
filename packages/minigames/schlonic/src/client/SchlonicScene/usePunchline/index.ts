@@ -9,7 +9,6 @@ import type { FallPunchlineHandle } from "../FallPunchline/index.js";
 import {
   FALL_DROP_MS,
   resolveEater,
-  resolveEaterSquash,
   resolveKnockedHen,
   resolveRunawayBoard,
   resolveTrench,
@@ -17,14 +16,13 @@ import {
 } from "../punchlineTimeline/index.js";
 import { placeRiderBoard, placeRiderHen, type RiderRefs } from "../Rider/index.js";
 import { resolveLooseBoardTransform, resolveStanceTransform } from "../riderPlacement/index.js";
-import { resolveSquashTransform, type WipeoutPunchlineHandle } from "../WipeoutPunchline/index.js";
+import type { WipeoutPunchlineHandle } from "../WipeoutPunchline/index.js";
 
 /** The scene's own parts the punchline moves: the rider, the burst, the zone's props. */
 export type PunchlineRig = {
   frameRef: RefObject<HTMLDivElement>;
   riderRef: RefObject<RiderRefs>;
   burstRef: RefObject<SVGGElement>;
-  propRefs: MutableRefObject<Map<number, SVGGElement>>;
   zoneRef: MutableRefObject<SchlonicZone>;
   cameraRef: MutableRefObject<SchlonicCamera>;
 };
@@ -44,7 +42,7 @@ export type Punchline = {
 
 /**
  * The scene's punchlines (`punchlineTimeline/`): which layer plays, where the rider and its board
- * go while it does, and which of the zone's own badniks gets fed. Kept out of the scene so the
+ * go while it does, and where the goose that eats the wings stands. Kept out of the scene so the
  * scene's own paint stays the run's, and so the scene knows only that a beat can end in a joke.
  */
 export const usePunchline = (rig: PunchlineRig): Punchline => {
@@ -52,8 +50,6 @@ export const usePunchline = (rig: PunchlineRig): Punchline => {
   const trenchClipId = `schlonic-trench-clip${useId().replace(/[^a-zA-Z0-9-]/g, "")}`;
   const fallRef = useRef<FallPunchlineHandle>(null);
   const wipeoutRef = useRef<WipeoutPunchlineHandle>(null);
-  // The zone badnik a wipeout's wings are being fed to, squashed as it eats and put back after.
-  const eaterPropRef = useRef<number | null>(null);
   const kindRef = useRef<"fell" | "wiped" | null>(null);
 
   // The hen put somewhere the sim never would: down a trench, or flat on its back — off its
@@ -77,11 +73,6 @@ export const usePunchline = (rig: PunchlineRig): Punchline => {
     fallRef.current?.hide();
     wipeoutRef.current?.hide();
     runnerClipRef.current?.removeAttribute("clip-path");
-
-    if (eaterPropRef.current !== null) {
-      rig.propRefs.current.get(eaterPropRef.current)?.removeAttribute("transform");
-      eaterPropRef.current = null;
-    }
   };
 
   // Into the roadworks: the hen and its board drop down the trench, the dust comes up out of it,
@@ -125,7 +116,7 @@ export const usePunchline = (rig: PunchlineRig): Punchline => {
   };
 
   // Wiped out: knocked flat, the board rolling on without it, and the wings it dropped rolling
-  // off down the sidewalk to the nearest badnik, which eats them one at a time.
+  // off down the sidewalk to a goose, which eats them one at a time.
   const paintKnockedOut = (frame: SchlonicFrame, elapsedMs: number): void => {
     const zone = rig.zoneRef.current;
     const knocked = resolveKnockedHen(elapsedMs, frame, zone);
@@ -141,15 +132,6 @@ export const usePunchline = (rig: PunchlineRig): Punchline => {
     );
     rig.burstRef.current?.setAttribute("opacity", "0");
     wipeoutRef.current?.paint({ elapsedMs, frame, zone, eater });
-
-    if (eater.kind === "zone") {
-      const squash = resolveEaterSquash(elapsedMs);
-
-      eaterPropRef.current = eater.propIndex;
-      rig.propRefs.current
-        .get(eater.propIndex)
-        ?.setAttribute("transform", resolveSquashTransform(eater.x, eater.y, squash.sx, squash.sy));
-    }
   };
 
   const paint = (frame: SchlonicFrame, progress: number, wingsLost: number): void => {

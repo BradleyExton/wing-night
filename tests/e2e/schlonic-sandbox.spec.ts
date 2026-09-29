@@ -23,15 +23,16 @@ test("schlonic sandbox lays out one leg for both screens and starts the run on t
   await expect(page.getByRole("heading", { name: "Minigame Dev Sandbox" })).toBeVisible();
 
   // Both previews draw the same leg from the live fixture — the first of two, fourteen chunks, a
-  // trench cutting the ground a third of the way in, every piece of kit somewhere along it, with
-  // the springboard only at the finale, and the finale's springboard and trench before the post.
+  // trench cutting the ground a third of the way in, three of the crowd (a show-goer, a goose and
+  // a tent), two pieces of furniture (a bench and a planter), and the kicker only at the finale,
+  // over the trench before the post.
   await expect(page.locator("[data-schlonic-scene]")).toHaveCount(2);
   await expect(page.locator("[data-schlonic-ground-run]")).toHaveCount(6);
-  await expect(page.locator("[data-schlonic-spike]")).toHaveCount(4);
-  await expect(page.locator("[data-schlonic-badnik]")).toHaveCount(2);
-  await expect(page.locator("[data-schlonic-spring]")).toHaveCount(2);
-  // A grind rail in each zone, drawn as a handrail on posts.
-  await expect(page.locator("[data-schlonic-rail]")).toHaveCount(2);
+  await expect(page.locator("[data-schlonic-hazard]")).toHaveCount(6);
+  await expect(page.locator('[data-schlonic-hazard-kind="goose"]')).toHaveCount(2);
+  await expect(page.locator("[data-schlonic-kicker]")).toHaveCount(2);
+  await expect(page.locator("[data-schlonic-rail]")).toHaveCount(4);
+  await expect(page.locator('[data-schlonic-ride-on="bench"]')).toHaveCount(2);
   // The high line is drawn bigger, because it is worth more.
   await expect(page.locator('[data-schlonic-wing-worth="2"]').first()).toBeAttached();
   await expect(page.locator("[data-schlonic-goal]")).toHaveCount(2);
@@ -44,7 +45,7 @@ test("schlonic sandbox lays out one leg for both screens and starts the run on t
   await expect(track).toHaveCount(1);
   await expect(track.locator("[data-schlonic-track-hazard]")).toHaveCount(8);
   await expect(track.locator("[data-schlonic-track-pit]")).toHaveCount(4);
-  await expect(track.locator("[data-schlonic-track-rail]")).toHaveCount(2);
+  await expect(track.locator("[data-schlonic-track-rail]")).toHaveCount(3);
   await expect(track.locator("[data-schlonic-track-handoff]")).toHaveCount(1);
   await expect(track.locator("[data-schlonic-track-post]")).toHaveCount(1);
   await expect(track).toHaveAttribute("data-schlonic-track-percent", "0");
@@ -103,9 +104,7 @@ const runUntilHandoff = (page: Page): Promise<ZoneRun> => {
 
         return box.x + box.width / 2;
       };
-      const hazards = [
-        ...scene.querySelectorAll("[data-schlonic-spike], [data-schlonic-badnik]")
-      ].map(bboxCentre);
+      const hazards = [...scene.querySelectorAll("[data-schlonic-hazard]")].map(bboxCentre);
       const runs = [...scene.querySelectorAll("[data-schlonic-ground-run]")]
         .map((element) => {
           const box = (element as SVGGraphicsElement).getBBox();

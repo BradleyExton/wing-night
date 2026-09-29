@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
-import { SCHLONIC_WORLD, createSchlonicRunStart } from "@wingnight/shared";
+import { SCHLONIC_WORLD, createSchlonicRunStart, resolveSchlonicHazardX } from "@wingnight/shared";
 
 import type { RunnerFigure } from "../resolveRunnerFigure/index.js";
 import { isRunnerAirborne } from "../runnerClearance/index.js";
@@ -60,6 +60,8 @@ type Box = { width: number; height: number };
 // The runner's scale and stance live with the rider's placement (`riderPlacement/`), which the
 // ghost is placed by too: the same hen on the same board, by the same rule.
 
+/** How far either side of the runner a swaying crowd member is still moved: past both cameras' edges. */
+const MOVER_WINDOW = 260;
 /** How long after a hit the bird keeps flashing, in ticks — the sim's own mercy window. */
 const FLASH_TICKS = SCHLONIC_WORLD.invulnerableTicks;
 /** Flashes per second while it lasts. */
@@ -91,6 +93,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
     const burstRef = useRef<SVGGElement>(null);
     const propRefs = useRef(new Map<number, SVGGElement>());
     const hiddenProps = useRef(new Set<number>());
+    const movedProps = useRef(new Set<number>());
     const curlRef = useRef(0);
     const zoneRef = useRef(zone);
     const ids = { label: `${sceneId}-label` };
@@ -125,6 +128,24 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
 
         propRefs.current.get(index)?.setAttribute("opacity", "0");
         hiddenProps.current.add(index);
+      }
+    };
+
+    // The crowd that sways is moved off its spot every frame, by the same rule the sim hits it
+    // by: a translate on the prop's own group, so the drawing never re-renders. Only the ones
+    // near the runner are touched; the rest are off both cameras.
+    const paintMovers = (frame: SchlonicFrame): void => {
+      for (const prop of zoneRef.current.props) {
+        if (prop.kind !== "hazard" || Math.abs(prop.x - frame.x) > MOVER_WINDOW) {
+          continue;
+        }
+
+        const offset = resolveSchlonicHazardX(prop, frame.tick) - prop.x;
+
+        if (offset !== 0 || movedProps.current.has(prop.index)) {
+          propRefs.current.get(prop.index)?.setAttribute("transform", `translate(${offset} 0)`);
+          movedProps.current.add(prop.index);
+        }
       }
     };
 
@@ -179,7 +200,6 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       frameRef,
       riderRef,
       burstRef,
-      propRefs,
       zoneRef,
       cameraRef
     });
@@ -189,6 +209,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       curlRef.current = resolveRunnerCurl(isRunnerAirborne(zoneRef.current, frame), curlRef.current);
       paintScroll(frame);
       paintProps(frame);
+      paintMovers(frame);
       paintGhostFrame(ghostFrame, frame);
       paintRunner(frame, { curl: curlRef.current, sink: 0 });
       paintBurst(burstRef.current, frame);
@@ -204,6 +225,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
 
       paintScroll(frame);
       paintProps(frame);
+      paintMovers(frame);
       paintGhostFrame(ghostFrame, frame);
       paintRunner(frame, { curl: 0, sink: -hop });
       burstRef.current?.setAttribute("opacity", "0");
@@ -218,6 +240,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
     ): void => {
       paintScroll(frame);
       paintProps(frame);
+      paintMovers(frame);
       paintGhostFrame(ghostFrame, frame);
       punchline.paint(frame, progress, wingsLost);
     };
@@ -236,6 +259,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
     // drawing sits at the top-left until the first frame.
     useLayoutEffect(() => {
       hiddenProps.current.clear();
+      movedProps.current.clear();
       curlRef.current = 0;
       ghostCurlRef.current = 0;
       paint(createSchlonicRunStart(zoneRef.current));

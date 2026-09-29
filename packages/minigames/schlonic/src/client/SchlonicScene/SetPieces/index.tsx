@@ -8,7 +8,7 @@ import { schlonicPalette } from "../palette.js";
 // The two buildings the run goes between, stood in the zone itself rather than in a bank: the
 // runner rolls out of Souldiers Skate Shop's door on the start line, and the post stands on the
 // Queen's patio, under BAR. They scroll with the ground at full speed and stand on it, behind the
-// sidewalk's lip and behind every piece of kit, so a badnik or a wing in front of either still
+// sidewalk's lip and behind every piece of kit, so a goose or a wing in front of either still
 // wins — and they are the only buildings drawn at near scale and full strength, which is how the
 // room knows the start and the finish before the strip says so.
 

@@ -145,6 +145,8 @@ export type {
 } from "./fappy/index.js";
 export {
   SCHLONIC_FINALE_CHUNKS,
+  SCHLONIC_HAZARDS,
+  SCHLONIC_RIDE_ONS,
   SCHLONIC_WORLD,
   advanceSchlonic,
   createSchlonicRunSkip,
@@ -153,6 +155,8 @@ export {
   isSchlonicOverPit,
   resolveSchlonicGroundSlope,
   resolveSchlonicGroundY,
+  resolveSchlonicHazardBox,
+  resolveSchlonicHazardX,
   resolveSchlonicFinaleX,
   resolveSchlonicWingTotal,
   resolveSchlonicTickCap,
@@ -164,11 +168,13 @@ export {
 } from "./schlonic/index.js";
 export type {
   SchlonicFrame,
+  SchlonicHazardKind,
   SchlonicInput,
   SchlonicOutcome,
   SchlonicPit,
   SchlonicProp,
   SchlonicPropKind,
+  SchlonicRideOnKind,
   SchlonicRun,
   SchlonicZone,
   SchlonicZoneCourse

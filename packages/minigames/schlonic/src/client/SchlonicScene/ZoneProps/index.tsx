@@ -2,15 +2,14 @@ import type { SchlonicProp, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD } from "@wingnight/shared";
 
 import { Wing } from "../Wing/index.js";
-import { Badnik } from "./Badnik/index.js";
+import { Crowd } from "./Crowd/index.js";
 import { GoalPost } from "./GoalPost/index.js";
-import { Rail } from "./Rail/index.js";
-import { Springboard } from "./Springboard/index.js";
-import { Thorns } from "./Thorns/index.js";
+import { Kicker } from "./Kicker/index.js";
+import { RideOn } from "./RideOn/index.js";
 
-// Everything standing on the zone's floor, drawn once and scrolled with it. A taken wing and a
-// squashed schlong are hidden by the paint loop through these refs rather than by a re-render:
-// there are a couple of hundred of them and the loop runs at sixty frames a second.
+// Everything standing on the zone's floor, drawn once and scrolled with it. A taken wing is
+// hidden, and a swaying crowd member moved, by the paint loop through these refs rather than by
+// a re-render: there are a couple of hundred of them and the loop runs at sixty frames a second.
 export type RegisterProp = (index: number, element: SVGGElement | null) => void;
 
 // A high-line wing is worth two and drawn bigger by the same factor the sim reaches for it, so
@@ -36,19 +35,15 @@ const drawProp = (prop: SchlonicProp, zone: SchlonicZone): JSX.Element => {
     return <ZoneWing prop={prop} />;
   }
 
-  if (prop.kind === "spike") {
-    return <Thorns prop={prop} />;
-  }
-
-  if (prop.kind === "spring") {
-    return <Springboard prop={prop} />;
+  if (prop.kind === "kicker") {
+    return <Kicker prop={prop} />;
   }
 
   if (prop.kind === "rail") {
-    return <Rail prop={prop} zone={zone} />;
+    return <RideOn prop={prop} zone={zone} />;
   }
 
-  return <Badnik prop={prop} />;
+  return <Crowd prop={prop} />;
 };
 
 export const ZoneProps = ({ zone, registerProp, goalGroundY }: ZonePropsProps): JSX.Element => (

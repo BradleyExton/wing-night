@@ -6,9 +6,10 @@ import { SCHLONIC_WORLD } from "@wingnight/shared";
  * distance along the run — 0 on the start line, 100 at the post — the same number the run's
  * `distance` result is a fraction of, so a finished run's pin and a live run's pin are on one
  * scale. Wings are not on it: the strip is a map of what can go wrong, not of what there is to
- * collect, and a couple of hundred dots would read as a fence. Rails are, but apart: a rail is
+ * collect, and a couple of hundred dots would read as a fence. Furniture is, but apart: a rail is
  * kit, not a hazard — the greedy line rides it — so it is a span over the line rather than a mark
- * on it, and the thorn bed under its far end is marked as the hazard it is.
+ * on it, and whoever waits at its far end is marked as the hazard they are. A kicker is marked
+ * too: not a hazard, but the room wants to know where the launch is.
  */
 export type ZoneTrackHazard = {
   index: number;

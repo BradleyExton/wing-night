@@ -45,7 +45,7 @@ export const TABLET_CAMERA_FIT: SchlonicCameraFit = { kind: "fixed", camera: TAB
  * and shows the street further ahead than the tablet does — a hazard is on the TV a beat or more
  * before it is on the tablet, which makes the couch the runner's lookout and "JUMP!" the whole
  * team's job. A little more sky above and ground below than the tablet's box, because a
- * springboard throws the bird to the top of the world and the wall has the height to spare.
+ * kicker throws the bird to the top of the world and the wall has the height to spare.
  */
 export const TV_CAMERA_FIT: SchlonicFillCameraFit = {
   kind: "fill",

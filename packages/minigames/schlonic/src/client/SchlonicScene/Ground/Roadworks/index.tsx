@@ -5,7 +5,7 @@ import { schlonicPalette } from "../../palette.js";
 
 // The Dunlop Street dig, dressed round every hole in the zone: an orange-and-white barrel on each
 // lip, and on the near one a sawhorse to say the sidewalk is closed — unless a piece of kit stands
-// there (the finale's springboard does), because dressing never stands over kit. It is what turns a gap in
+// there (the finale's kicker does), because dressing never stands over kit. It is what turns a gap in
 // the ground into a road-construction trench, and it is dressing, not kit — it stands on the back
 // of the sidewalk, behind the lip the runner rides, and it never touches anything. It stands on
 // solid ground either side of the trench and never over it, so nothing across the gap can read

@@ -87,7 +87,7 @@ test("cycles a short roster rather than giving the team fewer runs at the zone",
   );
 });
 
-test("runs the house schlong for a team with nobody seated", () => {
+test("runs the house hen for a team with nobody seated", () => {
   const state = schlonicRuntimePlugin.initialize({
     teamIds: ["team-b"],
     players: PLAYERS,
@@ -315,7 +315,7 @@ test("re-reads the round's running totals without touching the runs", () => {
 });
 
 // A six-chunk street of one leg with nothing in it a walking bird cannot survive: seed 3 deals a
-// springboard, and the finale's springboard throws a walker over its hole. So a run with no
+// kicker, and the finale's kicker throws a walker over its hole. So a run with no
 // jumps clears it, and one with an early hop clears it with a different handful. Which is the
 // bigger is the sim's business, so the tests ask it rather than assume.
 const CLEAR_RULES = { runsPerTurn: 1, zoneSeed: 3, zoneChunks: 6, parWingsPerRun: 20 };

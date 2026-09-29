@@ -6,14 +6,13 @@
 // on the sofa has walked it.
 //
 // The runner is the player's own cast hen and takes the TEAM's colour, so it is not in here.
-// What IS in here is everything standing in its way: the zone is furnished with the cast's
-// schlong (§2.8), in three readings the room has to tell apart at a glance and at speed —
-//   pink with a FACE      = alive, an enemy, and squashable
-//   crimson, stubby, many = a thorn bed, and it hurts however you arrive
-//   pink with a PAD       = a springboard, and it is the only one that helps
-// The collectible is deliberately none of those: an orange wing on a pale bone, the one shape in
-// the zone that is not a schlong, because "grab this" and "avoid that" have to separate in the
-// half-second an arc goes past.
+// What IS in here is everything standing in its way: the Dunlop Street crowd to be jumped —
+// a tent, a sleeper, a punk, a roadie, a show-goer, a goose — and the street furniture to be
+// landed on — a handrail, a bench, a planter ledge, a parked car — plus the kicker ramp. The
+// room tells the two apart by the one question anyone who has watched a skate video can answer
+// at speed: is it flat on top, or not. The collectible is deliberately none of those: an orange
+// wing on a pale bone, because "grab this" and "avoid that" have to separate in the half-second
+// an arc goes past.
 // Drawing content, not UI chrome — exempt from the two-accent budget the way the drawing inks
 // and the JOUST arena are.
 export const schlonicPalette = {
@@ -99,7 +98,7 @@ export const schlonicPalette = {
   // The ink the backdrop's gulls are drawn in, far off in the sky.
   skyInk: "#55433a",
   // A grind rail: a galvanised handrail, pale steel with a sunlit top and a near-black edge, the
-  // one long straight line in the zone and nothing like a schlong's pink or a barrel's orange.
+  // one long straight line in the zone and nothing like a tent's red or a barrel's orange.
   steel: "#aab5bf",
   steelLight: "#f4f8fb",
   steelInk: "#1f262c",
@@ -128,29 +127,49 @@ export const schlonicPalette = {
   wingGloss: "#ffce7a",
   wingBone: "#fff1d6",
   wingBoneDark: "#c9a273",
-  // The schlong, in JOUST and FAPPY's own bubblegum: the one hue on a grey-and-brick street that
-  // is neither its concrete nor its brick, so a row of them reads from the sofa.
-  schlong: "#f9a3bc",
-  schlongDark: "#8e2a52",
-  schlongLight: "#ffe6ee",
-  schlongVein: "#c4577f",
-  // The other two skins a badnik comes in, FAPPY's own (§2.9), so the zone's enemies are a
-  // line-up and not a fence: a big dark one and a pale one.
-  ebony: "#4b2a20",
-  ebonyDark: "#1a0a06",
-  ebonyLight: "#8c5a46",
-  ebonyVein: "#8a5443",
-  ivory: "#f4e3d3",
-  ivoryDark: "#a9735c",
-  ivoryLight: "#ffffff",
-  ivoryVein: "#cf9f8b",
-  // The thorn bed: the same creature, angrier and lower, and never mistakeable for the pink.
-  thorn: "#d81e5b",
-  thornDark: "#6d0d2f",
-  // The springboard's pad, borrowed straight off a Sonic spring so it means what it means.
-  pad: "#e8453c",
-  padStripe: "#fff7ed",
-  padDark: "#9c1f1a",
+  // The crowd. A dome tent in a red that is nothing like a wing's sauce (bluer, deeper), with
+  // a blue tarp lump beside it and one of the dig's pylons; a sleeper in a grey hoodie on the
+  // pavers, bare feet out, a sandal in hand; the birds themselves take a colour class
+  // (`Crowd/styles.ts`), because the cast is painted in currentColor.
+  tentRed: "#c8352c",
+  tentRedDark: "#7f1c16",
+  tentSeam: "#f0d9d4",
+  tarp: "#2f6fd0",
+  tarpDark: "#1d478a",
+  hoodie: "#8e8e8e",
+  hoodieDark: "#565656",
+  hoodieLight: "#b9b9b9",
+  skin: "#d1a077",
+  skinDark: "#8f6547",
+  sandal: "#2a2a2e",
+  // A tallboy, a jacket's studs, and the roadie's bass cab on its dolly.
+  can: "#c9ced4",
+  canLabel: "#c0392b",
+  stud: "#d8dde3",
+  cab: "#1d1b1a",
+  cabGrille: "#4a4643",
+  cabPiping: "#e8e4dc",
+  dolly: "#aeb6be",
+  // The goose off the waterfront: the Canada goose everyone in Barrie has been hissed at.
+  gooseBody: "#e9e6df",
+  gooseDark: "#b3ada0",
+  gooseNeck: "#1f1f22",
+  gooseChin: "#ffffff",
+  gooseBill: "#f28c1b",
+  // The furniture. A park bench's slats on iron ends, a concrete planter with the hedge showing
+  // behind its lip, a parked sedan in a silver that is not the rail's steel, and a plywood
+  // kicker on a timber frame.
+  benchWood: "#a86b3c",
+  benchWoodDark: "#6f4322",
+  benchIron: "#2b2f33",
+  hedge: "#4f8a4b",
+  hedgeDark: "#2f5c2e",
+  carBody: "#d4d8dc",
+  carBodyDark: "#8f979f",
+  carGlass: "#7fb0d8",
+  carTyre: "#1d1d1f",
+  carLight: "#ffd23f",
+  kickerFrame: "#5b4a33",
   // The fall's punchline (§2.11): the dust a thud throws up out of the dig, and the raccoon that
   // lives down there — grey, a pale snout, the black mask with a bright eye in it — in the
   // roadworks' orange hard hat, a safety orange redder than a wing so the haul it hugs still reads.

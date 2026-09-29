@@ -53,7 +53,7 @@ const resolveHint = (
 // top-left sky, and FAPPY could not because its bird is pinned at 20% of the
 // scene's width; SCHLONIC's runner is pinned at 46 of the world's 160 units —
 // 28.75%, which at 1229px of canvas is 353px in, against a plate that reaches
-// 303px — and it climbs. A held jump is worth ~27 world units and a springboard
+// 303px — and it climbs. A held jump is worth ~27 world units and a kicker
 // ~81 of the world's 90, so the hen crosses the top-left sky on any decent
 // bounce. So who is running is a chip in the chrome row, and every pixel of
 // the zone stays jump surface.

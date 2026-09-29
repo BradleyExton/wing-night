@@ -61,7 +61,7 @@ const CROSSOVERS_PAINT: CrossoversPalette = {
  * Souldiers and the Queen's — are not back here: they stand in the zone itself (`SetPieces`).
  *
  * Nothing here is a surface the runner can touch, and nothing here is the cast — the three
- * readings of the schlong (§2.11) are the only things in the zone that mean anything, so the
+ * crowd and the furniture (§2.11) are the only things in the zone that mean anything, so the
  * whole backdrop is hazed, flat and quiet enough that a pink one with a face still wins the eye.
  */
 export const CLOUD_PARALLAX = 0.05;

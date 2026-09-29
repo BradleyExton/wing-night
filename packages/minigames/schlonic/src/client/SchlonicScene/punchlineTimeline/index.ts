@@ -1,5 +1,5 @@
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
-import { SCHLONIC_WORLD, isSchlonicOverPit, resolveSchlonicGroundY } from "@wingnight/shared";
+import { SCHLONIC_HAZARDS, SCHLONIC_WORLD, isSchlonicOverPit, resolveSchlonicGroundY } from "@wingnight/shared";
 
 import type { SchlonicCamera } from "../camera/index.js";
 
@@ -12,7 +12,8 @@ import type { SchlonicCamera } from "../camera/index.js";
  *           peeks back up over the lip, and a raccoon in a hard hat climbs out beside it with
  *           the handful it was carrying, chitters, and runs off down the street with it
  *   wiped   the hit that found it empty-handed knocks it flat, the board rolls off without it,
- *           and the wings it dropped roll down the sidewalk to the nearest badnik, which eats them
+ *           and the wings it dropped roll down the sidewalk to a goose that walks in off the
+ *           edge of the picture and eats them, one gulp each
  *
  * This is the whole timeline as pure functions of the beat's elapsed milliseconds, so the scene
  * paints from it and the mirror sounds from it and neither keeps a clock of its own. Everything
@@ -58,7 +59,7 @@ const easeOutBack = (share: number): number => {
   return 1 + (overshoot + 1) * shifted ** 3 + overshoot * shifted ** 2;
 };
 
-/** When the i-th dropped wing reaches the badnik's mouth. */
+/** When the i-th dropped wing reaches the goose's bill. */
 export const resolveChompAtMs = (index: number): number => {
   return WIPEOUT_KNOCK_MS + index * ROLL_STAGGER_MS + ROLL_MS;
 };
@@ -275,60 +276,34 @@ export const resolveDustShare = (elapsedMs: number): number | null => {
 
 // ── The wipeout ─────────────────────────────────────────────────────────────────────────────
 
-export type Eater =
-  | { kind: "zone"; propIndex: number; x: number; y: number }
-  | { kind: "standIn"; x: number; y: number; fromX: number };
+/** Who eats the wings: a goose, and where it stands to do it, and where it walks in from. */
+export type Eater = { x: number; y: number; fromX: number };
 
 const EATER_MARGIN = 6;
 const STAND_IN_LEAD = 24;
 const STAND_IN_ARRIVES_MS = WIPEOUT_KNOCK_MS + 220;
 
 /**
- * Who eats the wings: the nearest badnik still standing that this camera can see — usually the
- * one that did it. With none in the picture, one hops in from the edge ahead, because a joke
- * played to a badnik off the side of the screen is not a joke.
+ * Who eats the wings: a goose, every time — the one animal in Barrie that would — walking in
+ * from the edge of the picture ahead of the hen to a spot just past it, because a joke played
+ * to something off the side of the screen is not a joke. The crowd that did the hitting stays
+ * where it is: it is not a goose's business to be blamed.
  */
 export const resolveEater = (zone: SchlonicZone, frame: SchlonicFrame, camera: SchlonicCamera): Eater => {
   const scrollX = frame.x - SCHLONIC_WORLD.runnerX;
-  const fromX = scrollX + camera.x + EATER_MARGIN;
   const toX = scrollX + camera.x + camera.width - EATER_MARGIN;
-  const taken = new Set(frame.takenProps);
-  let nearest: Eater | null = null;
-  let nearestGap = Number.POSITIVE_INFINITY;
-
-  for (const prop of zone.props) {
-    if (prop.kind !== "badnik" || taken.has(prop.index) || prop.x < fromX || prop.x > toX) {
-      continue;
-    }
-
-    const gap = Math.abs(prop.x - frame.x);
-
-    if (gap < nearestGap) {
-      nearestGap = gap;
-      nearest = { kind: "zone", propIndex: prop.index, x: prop.x, y: prop.y };
-    }
-  }
-
-  if (nearest !== null) {
-    return nearest;
-  }
-
   const x = frame.x + STAND_IN_LEAD;
 
-  return { kind: "standIn", x, y: resolveRestY(zone, x), fromX: toX + EATER_MARGIN * 2 };
+  return { x, y: resolveRestY(zone, x), fromX: toX + EATER_MARGIN * 2 };
 };
 
-/** Where the stand-in is: hopping in from the edge until it is in place beside the hen. */
+/** Where the goose is: waddling in from the edge until it is in place beside the hen. */
 export const resolveStandInPlace = (eater: Eater, zone: SchlonicZone, elapsedMs: number): Point => {
-  if (eater.kind === "zone") {
-    return { x: eater.x, y: eater.y };
-  }
-
   const share = clamp01(elapsedMs / STAND_IN_ARRIVES_MS);
   const x = lerp(eater.fromX, eater.x, share);
-  const hop = share < 1 ? Math.abs(Math.sin(share * Math.PI * 3)) * 3 : 0;
+  const waddle = share < 1 ? Math.abs(Math.sin(share * Math.PI * 6)) * 0.8 : 0;
 
-  return { x, y: resolveRestY(zone, x) - hop };
+  return { x, y: resolveRestY(zone, x) - waddle };
 };
 
 /**
@@ -421,8 +396,9 @@ export const resolveDroppedWing = (
   }
 
   const side = eater.x >= landX ? 1 : -1;
-  const footX = eater.x - side * (SCHLONIC_WORLD.badnikWidth * 0.5);
-  const mouth = { x: eater.x - 0.5, y: eater.y - SCHLONIC_WORLD.badnikHeight + 2.4 };
+  const footX = eater.x - side * (SCHLONIC_HAZARDS.goose.width * 0.5);
+  // The goose's bill: out front and up its neck (`Crowd/Goose`), where the wings go in.
+  const mouth = { x: eater.x + 5.5, y: eater.y - 8.4 };
   const share = (elapsedMs - rollFrom) / ROLL_MS;
 
   if (share < ROLL_SHARE) {
@@ -450,7 +426,7 @@ export const resolveDroppedWing = (
 };
 
 /**
- * The eater's squash and stretch about its own base: a gulp as each wing goes in, then a
+ * The goose's squash and stretch about its own feet: a gulp as each wing goes in, then a
  * satisfied swell at the burp.
  */
 export const resolveEaterSquash = (elapsedMs: number): { sx: number; sy: number } => {

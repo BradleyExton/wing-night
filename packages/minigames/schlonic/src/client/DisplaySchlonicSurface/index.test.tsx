@@ -67,7 +67,7 @@ const render = (
 test("sets the room up before the round rather than drawing an empty zone", () => {
   const markup = render(createView(), "intro");
 
-  assert.ok(markup.includes("Schlonic"));
+  assert.ok(markup.includes("Dunlop Dash"));
   assert.ok(!markup.includes("data-schlonic-scene"));
 });
 

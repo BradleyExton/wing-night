@@ -18,7 +18,6 @@ export type SchlonicMirrorEvent =
   | { kind: "grind" }
   | { kind: "grindStop" }
   | { kind: "spring" }
-  | { kind: "pop" }
   | { kind: "hit" }
   | { kind: "finale" }
   | { kind: "cleared" }
@@ -87,13 +86,14 @@ const resolveBoardEvents = (
  * ending from being announced twice.
  *
  * Several wings in one step are one chime, at the handful the step ended on — a replay can
- * jump a few ticks after a late log and a burst would sound like a machine gun. A badnik popped
- * is a prop taken that is not a wing. A springboard leaves no mark on the frame but its
- * velocity: nothing else throws the bird up that hard.
+ * jump a few ticks after a late log and a burst would sound like a machine gun. A kicker
+ * leaves no mark on the frame but its velocity: nothing else throws the bird up that hard, and
+ * the cue it sounds is still called `spring`, which is the name the pack's recorded takes are
+ * filed under.
  *
  * The board has its own voice. An ollie is the feet leaving the ground on the way up with
- * nothing else to explain it — not a hit's knock-back, a springboard or a badnik's bounce, and
- * not a walk off a ledge, which leaves at no speed. A landing is the feet coming down on the
+ * nothing else to explain it — not a hit's knock-back or a kicker's launch, and not a walk off
+ * a ledge, which leaves at no speed. A landing is the feet coming down on the
  * street after real air — `airPeak` (`resolveAirPeak`, up to and including `previous`) past
  * `AIR_CLEARANCE` — because the sim lets a board rolling down a hill skip off the paving and
  * touch down again every few ticks, and a clack for each would rattle the TV down every slope.
@@ -118,17 +118,12 @@ export const resolveMirrorEvents = (
 
   const taken = next.takenProps.slice(previous.takenProps.length);
   const tookWing = taken.some((index) => zone.props[index]?.kind === "wing");
-  const tookBadnik = taken.some((index) => zone.props[index]?.kind === "badnik");
-
-  if (tookBadnik) {
-    events.push({ kind: "pop" });
-  }
 
   if (tookWing && next.wings > previous.wings) {
     events.push({ kind: "wing", wingsInHand: next.wings });
   }
 
-  const isSprung = next.vy === SCHLONIC_WORLD.springVelocity && previous.vy !== SCHLONIC_WORLD.springVelocity;
+  const isSprung = next.vy === SCHLONIC_WORLD.kickerVelocity && previous.vy !== SCHLONIC_WORLD.kickerVelocity;
 
   if (isSprung) {
     events.push({ kind: "spring" });
@@ -138,7 +133,7 @@ export const resolveMirrorEvents = (
   const isOnBoard = next.tick >= next.invulnerableUntilTick;
 
   if (isOnBoard) {
-    events.push(...resolveBoardEvents(previous, next, isHit || isSprung || tookBadnik, airPeak));
+    events.push(...resolveBoardEvents(previous, next, isHit || isSprung, airPeak));
   }
 
   // The last stretch begins: the post is two chunks off.

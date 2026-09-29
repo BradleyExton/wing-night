@@ -11,6 +11,7 @@ import {
   resolveSchlonicGroundY,
   resolveSchlonicWingTotal,
   resolveSchlonicTickCap,
+  SCHLONIC_RIDE_ONS,
   resolveSchlonicCourse,
   resolveSchlonicLegFromX,
   resolveSchlonicZone
@@ -55,53 +56,76 @@ test("deals every team the same mix of hard kit rather than rolling each slot", 
     const kinds = new Set(zone.props.map((prop) => prop.kind));
 
     assert.ok(zone.pits.length >= 1, `seed ${seed} laid no pit`);
-    assert.ok(kinds.has("spike"), `seed ${seed} laid no spikes`);
-    assert.ok(kinds.has("badnik"), `seed ${seed} laid no badnik`);
-    assert.ok(kinds.has("spring"), `seed ${seed} laid no spring`);
-    assert.ok(kinds.has("rail"), `seed ${seed} laid no rail`);
+    assert.ok(kinds.has("hazard"), `seed ${seed} laid no crowd`);
+    assert.ok(kinds.has("kicker"), `seed ${seed} laid no kicker`);
+    assert.ok(kinds.has("rail"), `seed ${seed} laid no furniture`);
   }
 });
 
-test("strings a rail over a thorn bed, with its wings worth two where only the rail reaches", () => {
-  // Longer than a hop's arc, so the grind is the only way to take the whole line.
-  const { runnerRadius, wingRadius, highLineWingScale, highLineWorth, railAbove } = SCHLONIC_WORLD;
+test("deals the whole crowd and every piece of furniture over the round's streets", () => {
+  const crowd = new Set<string>();
+  const furniture = new Set<string>();
+
+  for (let seed = 0; seed < 12; seed += 1) {
+    for (const prop of zoneOf(seed, 22).props) {
+      if (prop.kind === "hazard") {
+        assert.ok(prop.hazard !== undefined, `seed ${seed} laid a nobody`);
+        crowd.add(prop.hazard);
+      }
+
+      if (prop.kind === "rail") {
+        assert.ok(prop.rideOn !== undefined, `seed ${seed} laid furniture with no shape`);
+        furniture.add(prop.rideOn);
+      }
+    }
+  }
+
+  assert.deepEqual([...crowd].sort(), ["goose", "punk", "roadie", "sleeper", "stagger", "tent"]);
+  assert.deepEqual([...furniture].sort(), ["bench", "car", "ledge", "rail"]);
+});
+
+test("stands every piece of furniture at its own height over level ground, one of the crowd at its end, and its wings worth two along its top", () => {
+  const { runnerRadius, wingRadius, highLineWingScale, highLineWorth } = SCHLONIC_WORLD;
 
   for (let seed = 0; seed < 25; seed += 1) {
     const zone = zoneOf(seed, 22);
     const rails = zone.props.filter((prop) => prop.kind === "rail");
 
-    assert.ok(rails.length >= 1, `seed ${seed} laid no rail`);
+    assert.ok(rails.length >= 1, `seed ${seed} laid no furniture`);
 
     for (const rail of rails) {
-      assert.ok(rail.toX !== undefined, `seed ${seed} laid a rail with no end`);
+      assert.ok(rail.toX !== undefined && rail.rideOn !== undefined, `seed ${seed} laid furniture with no end`);
 
+      const spec = SCHLONIC_RIDE_ONS[rail.rideOn];
       const length = rail.toX - rail.x;
       const ground = resolveSchlonicGroundY(zone, rail.x);
 
-      assert.ok(length >= 46 && length <= 52, `seed ${seed} laid a rail ${length} long`);
-      assert.equal(resolveSchlonicGroundY(zone, rail.toX), ground, "the rail stands over level ground");
-      assert.equal(rail.y, ground - railAbove);
+      assert.equal(length, spec.length);
+      assert.equal(resolveSchlonicGroundY(zone, rail.toX), ground, "the furniture stands over level ground");
+      assert.equal(rail.y, ground - spec.above);
       assert.ok(
-        zone.props.some((prop) => prop.kind === "spike" && prop.x > rail.x && prop.x <= (rail.toX ?? 0) && prop.y === ground),
-        `seed ${seed} put no thorns under its rail`
+        zone.props.some((prop) => prop.kind === "hazard" && prop.x === rail.toX && prop.y === ground),
+        `seed ${seed} put nobody at the end of its ${rail.rideOn}`
       );
 
-      // Everything hung over the rail's top; the floor line under its near end is not the rail's.
+      // Everything hung over the top; the floor line under its near end is not the top's.
       const strung = zone.props.filter(
         (prop) => prop.kind === "wing" && prop.x >= rail.x && prop.x <= (rail.toX ?? 0) && prop.y < rail.y
       );
 
-      assert.ok(strung.length >= 6, `seed ${seed} strung ${strung.length} wings along its rail`);
+      assert.equal(strung.length, spec.wings, `seed ${seed} strung ${strung.length} wings along its ${rail.rideOn}`);
       // Spread along the whole of it, not bunched at one end.
-      assert.ok(strung.some((wing) => wing.x < rail.x + length / 3), `seed ${seed} left the rail's near end bare`);
-      assert.ok(strung.some((wing) => wing.x > (rail.toX ?? 0) - length / 3), `seed ${seed} left the rail's far end bare`);
+      assert.ok(strung.some((wing) => wing.x < rail.x + length / 3), `seed ${seed} left the near end bare`);
+      assert.ok(strung.some((wing) => wing.x > (rail.toX ?? 0) - length / 2), `seed ${seed} left the far end bare`);
 
       for (const wing of strung) {
         assert.equal(wing.worth, highLineWorth);
-        // Just over the rail's top, where a grinding bird's body passes…
+        // Just over the top, where a grinding bird's body passes…
         assert.equal(wing.y, rail.y - runnerRadius - wingRadius);
-        // …and out of reach of one on the floor under it.
-        assert.ok(ground - runnerRadius - wing.y > runnerRadius + wingRadius * highLineWingScale);
+        // …and, on the handrail, out of reach of one on the floor under it.
+        if (rail.rideOn === "rail") {
+          assert.ok(ground - runnerRadius - wing.y > runnerRadius + wingRadius * highLineWingScale);
+        }
       }
     }
   }
@@ -131,15 +155,15 @@ test("hangs the high line at double worth and the floor at one", () => {
   assert.ok(zone.props.every((prop) => prop.kind === "wing" || prop.worth === undefined));
 });
 
-test("ends every zone on a springboard over a hole before the post", () => {
+test("ends every zone on a kicker over a hole before the post", () => {
   for (let seed = 0; seed < 25; seed += 1) {
     const zone = zoneOf(seed, 12);
     const finaleX = resolveSchlonicFinaleX(zone);
     const lastPit = zone.pits[zone.pits.length - 1];
-    const finaleSpring = zone.props.find((prop) => prop.kind === "spring" && prop.x >= finaleX);
+    const finaleSpring = zone.props.find((prop) => prop.kind === "kicker" && prop.x >= finaleX);
 
     assert.equal(finaleX, zone.goalX - SCHLONIC_FINALE_CHUNKS * SCHLONIC_WORLD.chunkWidth);
-    assert.ok(finaleSpring !== undefined, `seed ${seed} has no finale springboard`);
+    assert.ok(finaleSpring !== undefined, `seed ${seed} has no finale kicker`);
     assert.ok(lastPit !== undefined && lastPit.fromX > finaleSpring.x, `seed ${seed} has no hole after it`);
     assert.equal(lastPit.toX - lastPit.fromX, SCHLONIC_WORLD.finalePitWidth);
     assert.ok(lastPit.toX < zone.goalX, `seed ${seed} put the hole past the post`);
@@ -211,7 +235,7 @@ test("lays a relay course end to end, and every leg of it as a zone with its own
     // the last, because a handoff is worth a loud last ten seconds too.
     assert.equal(resolveSchlonicGroundSlope(zone, 30), 0);
     assert.equal(resolveSchlonicGroundSlope(zone, 90), 0);
-    assert.ok(zone.props.some((prop) => prop.kind === "spring" && prop.x >= resolveSchlonicFinaleX(zone)));
+    assert.ok(zone.props.some((prop) => prop.kind === "kicker" && prop.x >= resolveSchlonicFinaleX(zone)));
     assert.ok(zone.pits.some((pit) => pit.toX > resolveSchlonicFinaleX(zone) && pit.toX < zone.goalX));
     // Every prop and hole is the course's, moved back by the leg's start.
     for (const prop of zone.props) {

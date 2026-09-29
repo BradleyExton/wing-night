@@ -34,7 +34,7 @@ test("keeps the sawhorse away when kit stands where it would go", () => {
   );
   const withSpring = renderToStaticMarkup(
     <svg>
-      <Roadworks zone={flatZone([{ index: 0, kind: "spring", x: 90, y: SCHLONIC_WORLD.groundBaseY }])} />
+      <Roadworks zone={flatZone([{ index: 0, kind: "kicker", x: 90, y: SCHLONIC_WORLD.groundBaseY }])} />
     </svg>
   );
 

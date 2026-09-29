@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { SchlonicFrame, SchlonicInput, SchlonicProp, SchlonicZone } from "../types.js";
-import { SCHLONIC_WORLD, resolveSchlonicZone } from "../world/index.js";
+import { SCHLONIC_HAZARDS, SCHLONIC_WORLD, resolveSchlonicHazardX, resolveSchlonicZone } from "../world/index.js";
 import {
   advanceSchlonic,
   createSchlonicRunSkip,
@@ -130,14 +130,11 @@ test("takes a wing only once, however long it stands in it", () => {
   assert.equal(frame.wings, 1);
 });
 
-test("costs half the handful and a chunk of speed to hit a spike strip", () => {
-  const zone = flatZone([
-    wing(80, 9),
-    wing(90, 9),
-    wing(100, 9),
-    wing(110, 9),
-    { kind: "spike", x: 200, y: FLAT_HEIGHT }
-  ]);
+// One of the crowd that stays put, so a test says what it is testing.
+const punk = (x: number): Omit<SchlonicProp, "index"> => ({ kind: "hazard", hazard: "punk", x, y: FLAT_HEIGHT });
+
+test("costs half the handful and a chunk of speed to run into one of the crowd", () => {
+  const zone = flatZone([wing(80, 9), wing(90, 9), wing(100, 9), wing(110, 9), punk(200)]);
   const before = run(zone, [], 100);
   const after = run(zone, [], 220);
 
@@ -148,30 +145,28 @@ test("costs half the handful and a chunk of speed to hit a spike strip", () => {
 });
 
 test("ends the run on a hit taken with nothing in hand", () => {
-  const zone = flatZone([{ kind: "spike", x: 200, y: FLAT_HEIGHT }]);
+  const zone = flatZone([punk(200)]);
   const frame = run(zone, [], 400);
 
   assert.equal(frame.outcome, "wiped");
   assert.equal(frame.wings, 0);
 });
 
-test("lets one strip cost only one handful, however wide the runner's stride", () => {
+test("lets one crowd cost only one handful, however wide the runner's stride", () => {
   const zone = flatZone([
     ...Array.from({ length: 16 }, (_unused, index) => wing(60 + index * 10, 9)),
-    { kind: "spike", x: 260, y: FLAT_HEIGHT },
-    { kind: "spike", x: 268, y: FLAT_HEIGHT }
+    punk(260),
+    punk(268)
   ]);
   const frame = run(zone, [], 400);
 
   assert.equal(frame.hits.length, 1);
 });
 
-test("squashes the badnik it comes down on, and pays for it", () => {
-  const zone = flatZone([{ kind: "badnik", x: 300, y: FLAT_HEIGHT }], 4000);
+test("is hurt by one of the crowd it comes down on: nothing on the sidewalk is flat on top but the furniture", () => {
+  const zone = flatZone([punk(300)], 4000);
   const reachesIt = tickAtX(zone, 300);
-  // Coming down on one is a timed thing, not a guaranteed one — a jump taken too early sails
-  // clean over it. What the test pins is that the window exists and that landing on it pays.
-  const squashes = [];
+  let landedOnIt = 0;
 
   for (let jumpTick = reachesIt - 60; jumpTick < reachesIt; jumpTick += 1) {
     const frame = run(
@@ -183,22 +178,17 @@ test("squashes the badnik it comes down on, and pays for it", () => {
       reachesIt + 90
     );
 
-    if (frame.wings > 0) {
-      squashes.push(frame);
+    if (frame.hits.length > 0) {
+      landedOnIt += 1;
+      assert.equal(frame.wings, 0);
     }
   }
 
-  assert.ok(squashes.length > 4, `only ${squashes.length} jump ticks landed on it`);
-
-  for (const frame of squashes) {
-    assert.equal(frame.wings, SCHLONIC_WORLD.badnikWings);
-    assert.equal(frame.hits.length, 0);
-    assert.equal(frame.outcome, null);
-  }
+  assert.ok(landedOnIt > 4, `only ${landedOnIt} jump ticks came down on it`);
 });
 
-test("lets a high jump sail clean over a badnik without touching it", () => {
-  const zone = flatZone([{ kind: "badnik", x: 300, y: FLAT_HEIGHT }], 4000);
+test("lets a high jump sail clean over one of the crowd without touching it", () => {
+  const zone = flatZone([punk(300)], 4000);
   const jumpTick = tickAtX(zone, 300 - 20);
   const frame = run(
     zone,
@@ -209,20 +199,41 @@ test("lets a high jump sail clean over a badnik without touching it", () => {
     jumpTick + 120
   );
 
-  assert.equal(frame.wings, 0);
   assert.equal(frame.hits.length, 0);
   assert.equal(frame.outcome, null);
 });
 
-test("is hurt by the badnik it runs into on its feet", () => {
-  const zone = flatZone([{ kind: "badnik", x: 300, y: FLAT_HEIGHT }]);
-  const frame = run(zone, [], 600);
+test("sways a mover across its spot on the tick, the same on every machine, and hurts where it is", () => {
+  const goose: Omit<SchlonicProp, "index"> = { kind: "hazard", hazard: "goose", x: 300, y: FLAT_HEIGHT };
+  const zone = flatZone([goose], 4000);
+  const { sway, swayTicks } = SCHLONIC_HAZARDS.goose;
+  const prop = zone.props[0];
 
-  assert.equal(frame.outcome, "wiped");
+  assert.ok(prop !== undefined);
+  // Out to one side, back through the middle, out to the other, and home.
+  assert.equal(resolveSchlonicHazardX(prop, 0), 300 - sway);
+  assert.equal(resolveSchlonicHazardX(prop, swayTicks / 4), 300);
+  assert.equal(resolveSchlonicHazardX(prop, swayTicks / 2), 300 + sway);
+  assert.equal(resolveSchlonicHazardX(prop, swayTicks), 300 - sway);
+  assert.equal(resolveSchlonicHazardX(prop, swayTicks * 7 + 3), resolveSchlonicHazardX(prop, 3));
+  // One that stays put is where it was laid.
+  assert.equal(resolveSchlonicHazardX({ ...prop, hazard: "punk" }, 77), 300);
+
+  // The hit lands on the goose's own position, not its spot: a walker meets it wherever the
+  // sway has it at that tick, and the two machines agree on the tick.
+  const walked = run(zone, [], 600);
+
+  assert.equal(walked.outcome, "wiped");
+
+  const hitTick = walked.hits[0] ?? 0;
+  const atHit = run(zone, [], hitTick);
+  const gooseX = resolveSchlonicHazardX(prop, hitTick);
+
+  assert.ok(Math.abs(atHit.x - gooseX) < SCHLONIC_WORLD.runnerRadius + SCHLONIC_HAZARDS.goose.width / 2 + 2);
 });
 
-test("throws the runner at the high line off a spring", () => {
-  const zone = flatZone([{ kind: "spring", x: 300, y: FLAT_HEIGHT }], 4000);
+test("throws the runner at the high line off a kicker it rolls into", () => {
+  const zone = flatZone([{ kind: "kicker", x: 300, y: FLAT_HEIGHT }], 4000);
   let frame = createSchlonicRunStart(zone);
   let apex = frame.y;
 
@@ -231,7 +242,7 @@ test("throws the runner at the high line off a spring", () => {
     apex = Math.min(apex, frame.y);
   }
 
-  assert.ok(FLAT_HEIGHT - apex > 40, `the spring only threw it ${FLAT_HEIGHT - apex} units`);
+  assert.ok(FLAT_HEIGHT - apex > 40, `the kicker only threw it ${FLAT_HEIGHT - apex} units`);
 });
 
 const RAIL_ABOVE = 12;
@@ -301,7 +312,7 @@ const longestGrind = (grinds: readonly Grind[]): Grind => {
 };
 
 test("lands and grinds when falling onto the rail", () => {
-  const zone = flatZone([rail(300, 330), { kind: "spike", x: 315, y: FLAT_HEIGHT }], 4000);
+  const zone = flatZone([rail(300, 330), punk(315)], 4000);
   const grinds = findGrinds(zone, 0);
 
   assert.ok(grinds.length > 4, `only ${grinds.length} tap ticks landed on the rail`);
@@ -313,7 +324,7 @@ test("lands and grinds when falling onto the rail", () => {
       assert.equal(frame.vy, 0);
     }
 
-    // Riding the rail is riding over the thorns, not through them.
+    // Riding the rail is riding over the crowd, not through it.
     assert.equal(grind.frames[grind.frames.length - 1]?.hits.length, 0);
   }
 });
@@ -410,8 +421,8 @@ test("keeps its speed on the rail over top speed, with no drag and no slope", ()
   assert.ok(ride(9).every((frame) => frame.vx === SCHLONIC_WORLD.grindMaxSpeed));
 });
 
-test("does clear the rail's thorns when the grind began at the floor speed", () => {
-  const zone = flatZone([rail(300, 348), { kind: "spike", x: 348, y: FLAT_HEIGHT }], 4000);
+test("does clear the crowd at the rail's end when the grind began at the floor speed", () => {
+  const zone = flatZone([rail(300, 348), punk(348)], 4000);
   let frame: SchlonicFrame = {
     ...createSchlonicRunStart(zone),
     x: 301,
@@ -433,7 +444,7 @@ test("does clear the rail's thorns when the grind began at the floor speed", () 
     grinding.every((each, index) => index === 0 || each.vx > (grinding[index - 1]?.vx ?? 0) || each.vx === SCHLONIC_WORLD.topSpeed),
     "the legs should push a slow board on along the rail"
   );
-  assert.equal(frame.hits.length, 0, `landed in the thorns at x ${frames.find((each) => each.hits.length > 0)?.x}`);
+  assert.equal(frame.hits.length, 0, `landed in the crowd at x ${frames.find((each) => each.hits.length > 0)?.x}`);
   assert.equal(frame.outcome, null);
 });
 
@@ -459,15 +470,8 @@ test("collects the rail's wings while grinding and none of them from the floor u
   assert.equal(frames[frames.length - 1]?.wings, 3 * SCHLONIC_WORLD.highLineWorth);
 });
 
-test("is hurt by the thorns under the rail when the grind is missed", () => {
-  const zone = flatZone([
-    wing(80, 9),
-    wing(90, 9),
-    wing(100, 9),
-    wing(110, 9),
-    rail(300, 330),
-    { kind: "spike", x: 315, y: FLAT_HEIGHT }
-  ]);
+test("is hurt by the crowd under the rail when the grind is missed", () => {
+  const zone = flatZone([wing(80, 9), wing(90, 9), wing(100, 9), wing(110, 9), rail(300, 330), punk(315)]);
   const frame = run(zone, [], tickAtX(zone, 360));
 
   assert.equal(frame.hits.length, 1);
@@ -484,34 +488,37 @@ test("does nothing to a runner that touches the rail's side", () => {
   assert.equal(frame.outcome, null);
 });
 
-// The first generated zone whose first piece of hard kit is a rail — its own thorn bed, then the
-// rail, with no hole before it — so a runner reaches the real chunk untouched.
+// The first generated zone whose first piece of hard kit is the handrail — one of the crowd at
+// its end, then the rail, with no hole before it — so a runner reaches the real chunk untouched.
+// The crowd member has to stay put, or the sweep depends on where the sway has it.
 const findRailCourse = (): { seed: number; chunks: number } => {
   const opensOnRail = (zone: SchlonicZone): boolean => {
-    const [thorns, railProp] = zone.props.filter((prop) => prop.kind !== "wing");
+    const [crowd, railProp] = zone.props.filter((prop) => prop.kind !== "wing");
 
     return (
-      thorns?.kind === "spike" &&
+      crowd?.kind === "hazard" &&
+      SCHLONIC_HAZARDS[crowd.hazard ?? "punk"].sway === 0 &&
       railProp?.kind === "rail" &&
+      railProp.rideOn === "rail" &&
       zone.pits.every((pit) => pit.fromX > (railProp.toX ?? 0))
     );
   };
   let course = { seed: 0, chunks: 12 };
 
   while (!opensOnRail(resolveSchlonicZone(course))) {
-    assert.ok(course.seed < 100, "no seed under 100 opens on a rail");
+    assert.ok(course.seed < 400, "no seed under 400 opens on the handrail");
     course = { ...course, seed: course.seed + 1 };
   }
 
   return course;
 };
 
-test("sweeps at most a third of the rail's line on a hop over its thorns, and all of it on a grind", () => {
+test("sweeps at most a third of the rail's line on a hop over the crowd at its end, and all of it on a grind", () => {
   const zone = resolveSchlonicZone(findRailCourse());
   const railProp = zone.props.find((prop) => prop.kind === "rail");
-  const thorns = zone.props.find((prop) => prop.kind === "spike");
+  const crowd = zone.props.find((prop) => prop.kind === "hazard");
 
-  assert.ok(railProp !== undefined && thorns !== undefined);
+  assert.ok(railProp !== undefined && crowd !== undefined);
 
   const line = zone.props.filter(
     (prop) => prop.kind === "wing" && prop.x >= railProp.x && prop.x <= (railProp.toX ?? 0) && prop.y < railProp.y
@@ -521,17 +528,17 @@ test("sweeps at most a third of the rail's line on a hop over its thorns, and al
     return line.reduce((total, prop) => total + (frame.takenProps.includes(prop.index) ? (prop.worth ?? 1) : 0), 0);
   };
   const pastIt = tickAtX(zone, (railProp.toX ?? 0) + 40);
-  // The reflex: hop the thorns at the first stride they are close ahead, a tap or a short hold,
+  // The reflex: hop the crowd at the first stride they are close ahead, a tap or a short hold,
   // the way a player hops any hazard. It clears them, never touches the rail, and sweeps only
   // the tail of the line on the way over.
-  const reflexTick = tickAtX(zone, thorns.x - 18);
+  const reflexTick = tickAtX(zone, crowd.x - 18);
 
   for (const hold of [1, 7]) {
     const frames = framesOf(zone, [{ tick: reflexTick, down: true }, { tick: reflexTick + hold, down: false }], pastIt);
     const last = frames[frames.length - 1];
 
     assert.ok(last !== undefined);
-    assert.equal(last.hits.length, 0, `a ${hold}-tick hop landed in the thorns`);
+    assert.equal(last.hits.length, 0, `a ${hold}-tick hop landed in the crowd`);
     assert.ok(frames.every((frame) => frame.grindingRail === null), `a ${hold}-tick hop came down on the rail`);
     assert.ok(takenWorth(last) * 3 <= lineWorth, `a ${hold}-tick hop swept ${takenWorth(last)} of the rail's ${lineWorth}`);
   }
@@ -624,7 +631,7 @@ test("referees a run to a result the server can score from", () => {
 });
 
 test("brings nothing home from a run that ended badly", () => {
-  const zone = flatZone([wing(80, 9), wing(90, 9), { kind: "spike", x: 300, y: FLAT_HEIGHT }]);
+  const zone = flatZone([wing(80, 9), wing(90, 9), punk(300)]);
   const frame = run(zone, [], 600);
 
   assert.equal(frame.wings, 1);

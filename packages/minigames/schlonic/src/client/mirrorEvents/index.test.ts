@@ -15,7 +15,6 @@ import { GRIND_SCRAPE_UNITS, resolveAirPeak, resolveMirrorEvents, type SchlonicM
 const ZONE = resolveSchlonicZone({ seed: 20260919, chunks: 22 });
 const START = createSchlonicRunStart(ZONE);
 const wingIndexes = ZONE.props.filter((prop) => prop.kind === "wing").map((prop) => prop.index);
-const badnikIndex = ZONE.props.find((prop) => prop.kind === "badnik")?.index ?? -1;
 
 test("does chime once for a step's wings, at the handful it ended on", () => {
   const next = { ...START, tick: 3, wings: 3, takenProps: wingIndexes.slice(0, 3) };
@@ -23,19 +22,13 @@ test("does chime once for a step's wings, at the handful it ended on", () => {
   assert.deepEqual(resolveMirrorEvents(START, next, ZONE, 0), [{ kind: "wing", wingsInHand: 3 }]);
 });
 
-test("does tell a pop from a wing by what was taken", () => {
-  const popped = { ...START, tick: 3, wings: 3, takenProps: [badnikIndex] };
-
-  assert.deepEqual(resolveMirrorEvents(START, popped, ZONE, 0), [{ kind: "pop" }]);
-});
-
-test("does hear a springboard in the velocity and a hit in the log", () => {
-  const sprung = { ...START, tick: 2, vy: SCHLONIC_WORLD.springVelocity, grounded: false };
+test("does hear a kicker in the velocity and a hit in the log", () => {
+  const sprung = { ...START, tick: 2, vy: SCHLONIC_WORLD.kickerVelocity, grounded: false };
   const hit = { ...START, tick: 2, hits: [2], wings: 4 };
 
   assert.deepEqual(resolveMirrorEvents(START, sprung, ZONE, 0), [{ kind: "spring" }]);
   assert.deepEqual(resolveMirrorEvents(START, hit, ZONE, 0), [{ kind: "hit" }]);
-  // Still on the springboard's launch the next frame: no second boing.
+  // Still on the kicker's launch the next frame: no second boing.
   assert.deepEqual(resolveMirrorEvents(sprung, { ...sprung, tick: 3 }, ZONE, 0), []);
 });
 

@@ -19,16 +19,14 @@ const at = "left-[var(--schlonic-track-at,0%)]";
 
 export const pit = `absolute ${at} top-1/2 h-[0.5rem] w-[var(--schlonic-track-width,2%)] -translate-y-1/2 bg-bg`;
 
-// The three hazards, in the scene's own materials (DESIGN.md §2.11) and the three shapes the
-// zone tells them apart by: a thorn bed is a low crimson bar, a badnik is a pink dot, a
-// springboard is the pad's red on white. Scene art, not chrome.
-const hazard = `absolute ${at} top-1/2 -translate-x-1/2 -translate-y-1/2`;
+// The two marks on the line, in the scene's own materials (DESIGN.md §2.11): one of the crowd
+// is a dark dot — the crow's black, whoever it is, because the strip says WHERE, not who — and
+// a kicker is a plywood wedge. Scene art, not chrome.
+const mark = `absolute ${at} top-1/2 -translate-x-1/2 -translate-y-1/2`;
 
-export const spike = `${hazard} h-[0.6rem] w-[0.9rem] rounded-sm bg-[#d81e5b]`;
+export const hazard = `${mark} h-[0.8rem] w-[0.8rem] rounded-full bg-[#2b2b30] shadow-[0_0_0_0.1rem_#d8dde3]`;
 
-export const badnik = `${hazard} h-[0.8rem] w-[0.8rem] rounded-full bg-[#f9a3bc] shadow-[0_0_0_0.1rem_#8e2a52]`;
-
-export const spring = `${hazard} h-[0.8rem] w-[0.8rem] rounded-full border-[0.16rem] border-[#fff7ed] bg-[#e8453c]`;
+export const kicker = `${mark} h-[0.7rem] w-[0.9rem] rounded-sm bg-[#e3b774] shadow-[0_0_0_0.08rem_#5b4a33] [clip-path:polygon(0_100%,100%_0,100%_100%)]`;
 
 // A grind rail: a thin steel bar raised over the line for the rail's whole length, in the rail's
 // own steel and edge — kit to aim for, so it stands off the line rather than sitting on it as a

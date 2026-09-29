@@ -45,9 +45,8 @@ const PinFace = ({ figure, alt }: { figure: RunnerFigure; alt: string }): JSX.El
 };
 
 const HAZARD_CLASS_NAMES = {
-  spike: styles.spike,
-  badnik: styles.badnik,
-  spring: styles.spring
+  hazard: styles.hazard,
+  kicker: styles.kicker
 } as const;
 
 // Where a mark sits is a custom property written on the element itself as it mounts — the

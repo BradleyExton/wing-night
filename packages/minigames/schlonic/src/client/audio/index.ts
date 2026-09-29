@@ -22,7 +22,6 @@ export type SchlonicCueName =
   | "grind"
   | "grindOff"
   | "spring"
-  | "pop"
   | "hit"
   | "fell"
   | "wiped"
@@ -44,7 +43,6 @@ export const SCHLONIC_CUE_NAMES: readonly SchlonicCueName[] = [
   "grind",
   "grindOff",
   "spring",
-  "pop",
   "hit",
   "fell",
   "wiped",
@@ -83,7 +81,6 @@ export const SCHLONIC_CUE_MIN_GAP_MS: Record<SchlonicCueName, number> = {
   grind: 60,
   grindOff: 200,
   spring: 150,
-  pop: 120,
   hit: 250,
   fell: 1500,
   wiped: 1500,
@@ -129,7 +126,7 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
     playNoise(rig, { startAt, durationSeconds: 0.05, peak: 0.5, filterType: "bandpass", fromHz: 1800, toHz: 900, q: 1.2 });
     playTone(rig, { startAt, durationSeconds: 0.07, type: "triangle", fromHz: 340, toHz: 150, peak: 0.34 });
   },
-  // Four wheels back on the sidewalk: a lower, duller clack than the pop, and a rattle of trucks.
+  // Four wheels back on the sidewalk: a low, dull clack and a rattle of trucks.
   land: (rig, startAt) => {
     playTone(rig, { startAt, durationSeconds: 0.06, type: "square", fromHz: 180, toHz: 90, peak: 0.2 });
     playNoise(rig, { startAt, durationSeconds: 0.09, peak: 0.34, filterType: "bandpass", fromHz: 1300, toHz: 500, q: 1.6 });
@@ -163,12 +160,6 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
     });
     playNoise(rig, { startAt, durationSeconds: 0.08, peak: 0.12, filterType: "bandpass", fromHz: 1200, q: 1.5 });
   },
-  // A badnik popping under a board: a short wet burst and a squeak down.
-  pop: (rig, startAt) => {
-    playNoise(rig, { startAt, durationSeconds: 0.09, peak: 0.45, filterType: "bandpass", fromHz: 700, toHz: 250, q: 2 });
-    playTone(rig, { startAt, durationSeconds: 0.12, type: "square", fromHz: 520, toHz: 140, peak: 0.18 });
-  },
-  // Half the handful gone: a scatter of noise and a low knock, nothing fatal about it.
   hit: (rig, startAt) => {
     playNoise(rig, { startAt, durationSeconds: 0.2, peak: 0.6, filterType: "highpass", fromHz: 1800, toHz: 4000 });
     playTone(rig, { startAt, durationSeconds: 0.16, type: "sawtooth", fromHz: 240, toHz: 70, peak: 0.35 });
@@ -216,7 +207,7 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
       playTone(rig, { startAt: startAt + at, durationSeconds: 0.05, type: "square", fromHz: top, toHz: top * 0.7, peak: 0.09 });
     }
   },
-  // The wipeout's punchline: one wing into the badnik. A wet crunch, short enough that five in
+  // The wipeout's punchline: one wing into the goose. A wet crunch, short enough that five in
   // a row are a meal and not a drum roll.
   chomp: (rig, startAt) => {
     playNoise(rig, { startAt, durationSeconds: 0.08, peak: 0.5, filterType: "bandpass", fromHz: 520, toHz: 160, q: 1.4 });

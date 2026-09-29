@@ -33,7 +33,7 @@ const chip = `${railCounterOverlay} text-muted`;
 // already draws that player's own hen, so this is the caption on it — and it
 // cannot ride in the body the way JOUST's lane plate does: the runner is pinned
 // at 46 of the world's 160 units and climbs most of the world's height off a
-// springboard, so a plate over the top-left sky would sit in its path.
+// kicker, so a plate over the top-left sky would sit in its path.
 export const counter = chip;
 
 export const counterName = "text-text";

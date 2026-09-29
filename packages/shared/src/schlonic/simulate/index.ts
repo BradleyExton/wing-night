@@ -11,6 +11,8 @@ import {
   isSchlonicInPit,
   resolveSchlonicGroundSlope,
   resolveSchlonicGroundY,
+  resolveSchlonicHazardBox,
+  resolveSchlonicHazardX,
   resolveSchlonicTickCap,
   resolveSchlonicZone
 } from "../world/index.js";
@@ -51,14 +53,15 @@ type Contact = {
   isHit: boolean;
 };
 
-const isTouching = (frame: SchlonicFrame, prop: SchlonicProp, halfWidth: number, height: number): boolean => {
+/** Whether the runner's box overlaps a box `halfWidth` either side of `x`, standing `height` up from `y`. */
+const isTouching = (frame: SchlonicFrame, x: number, y: number, halfWidth: number, height: number): boolean => {
   const { runnerRadius } = SCHLONIC_WORLD;
 
-  if (frame.x + runnerRadius < prop.x - halfWidth || frame.x - runnerRadius > prop.x + halfWidth) {
+  if (frame.x + runnerRadius < x - halfWidth || frame.x - runnerRadius > x + halfWidth) {
     return false;
   }
 
-  return frame.y + runnerRadius > prop.y - height && frame.y - runnerRadius < prop.y;
+  return frame.y + runnerRadius > y - height && frame.y - runnerRadius < y;
 };
 
 /**
@@ -82,15 +85,13 @@ const resolveRailCatch = (zone: SchlonicZone, x: number, fromFeetY: number, toFe
 };
 
 /**
- * Everything the runner touched at its new position. Wings are taken, a badnik is popped by
- * anything airborne (the bird is a ball the moment its feet leave the ground, which is the whole
- * point of jumping on one) and pays for it, a springboard throws it at the high line, and a thorn
- * bed hurts however you arrive. A rail is kit, not a hazard: the landing on it is the step's
- * business, and touching its side does nothing.
+ * Everything the runner touched at its new position. Wings are taken, a kicker throws whoever
+ * rolls into it at the high line, and one of the crowd hurts however you arrive — from above
+ * included: nothing on this sidewalk is flat on top but the furniture. A rail is kit, not a
+ * hazard: the landing on it is the step's business, and touching its side does nothing.
  */
 const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
-  const { runnerRadius, wingRadius, spikeWidth, spikeHeight, badnikWidth, badnikHeight, springWidth, springHeight } =
-    SCHLONIC_WORLD;
+  const { runnerRadius, wingRadius, kickerWidth, kickerHeight } = SCHLONIC_WORLD;
   const contact: Contact = { wings: frame.wings, taken: [], vy: null, isHit: false };
   const isInvulnerable = frame.tick < frame.invulnerableUntilTick;
 
@@ -120,32 +121,17 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
       continue;
     }
 
-    if (prop.kind === "spring") {
-      if (frame.vy >= 0 && isTouching(frame, prop, springWidth / 2, springHeight)) {
-        contact.vy = SCHLONIC_WORLD.springVelocity;
+    if (prop.kind === "kicker") {
+      if (frame.vy >= 0 && isTouching(frame, prop.x, prop.y, kickerWidth / 2, kickerHeight)) {
+        contact.vy = SCHLONIC_WORLD.kickerVelocity;
       }
 
       continue;
     }
 
-    if (prop.kind === "badnik") {
-      if (!isTouching(frame, prop, badnikWidth / 2, badnikHeight)) {
-        continue;
-      }
+    const box = resolveSchlonicHazardBox(prop);
 
-      if (!frame.grounded) {
-        // A bird in a ball: it lands on the thing rather than walking into it.
-        contact.wings += SCHLONIC_WORLD.badnikWings;
-        contact.taken.push(prop.index);
-        contact.vy = SCHLONIC_WORLD.badnikBounceVelocity;
-        continue;
-      }
-
-      contact.isHit = contact.isHit || !isInvulnerable;
-      continue;
-    }
-
-    if (isTouching(frame, prop, spikeWidth / 2, spikeHeight)) {
+    if (isTouching(frame, resolveSchlonicHazardX(prop, frame.tick), prop.y, box.halfWidth, box.height)) {
       contact.isHit = contact.isHit || !isInvulnerable;
     }
   }
@@ -195,7 +181,7 @@ export const stepSchlonic = (
   if (frame.grindingRail !== null) {
     // A rail has no slope to run down and nothing to drag: the board keeps what it came with,
     // and the legs still push it on towards top speed — a grind begun at the floor speed would
-    // otherwise crawl off the rail's end straight down into its own thorns.
+    // otherwise crawl off the rail's end straight down into the crowd at its end.
     vx = frame.vx < topSpeed ? Math.min(topSpeed, frame.vx + acceleration) : frame.vx;
     vx = Math.max(minSpeed, Math.min(grindMaxSpeed, vx));
   } else {

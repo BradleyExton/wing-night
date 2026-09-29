@@ -9,7 +9,7 @@ import {
   type Eater
 } from "../punchlineTimeline/index.js";
 import { Wing } from "../Wing/index.js";
-import { Badnik } from "../ZoneProps/Badnik/index.js";
+import { Goose } from "../ZoneProps/Crowd/index.js";
 
 export type WipeoutPunchlineHandle = {
   paint: (input: { elapsedMs: number; frame: SchlonicFrame; zone: SchlonicZone; eater: Eater }) => void;
@@ -24,15 +24,11 @@ export const resolveSquashTransform = (x: number, y: number, sx: number, sy: num
   return `translate(${x} ${y}) scale(${sx} ${sy}) translate(${-x} ${-y})`;
 };
 
-// Drawn at the origin and placed by transform. Its index only deals its skin, and 2 deals the
-// pink (`resolveBadnikSkin`): the one the room already reads as the enemy.
-const STAND_IN = { index: 2, kind: "badnik", x: 0, y: 0 } as const;
-
 /**
  * The wipeout's punchline, in the zone's own coordinates (it scrolls with the street): the wings
- * the hit knocked loose, rolling down the sidewalk to the eater, and — when no badnik is in the
- * picture to do it — a stand-in that hops on from the edge. A badnik already standing in the
- * zone is the scene's own drawing, and the scene squashes it.
+ * the hit knocked loose, rolling down the sidewalk to a goose that waddles in from the edge of
+ * the picture and eats them, one gulp each. The goose is drawn at the origin and placed by
+ * transform, squashed about its feet as it gulps.
  */
 export const WipeoutPunchline = forwardRef<WipeoutPunchlineHandle>((_props, ref): JSX.Element => {
   const group = useRef<SVGGElement>(null);
@@ -51,11 +47,6 @@ export const WipeoutPunchline = forwardRef<WipeoutPunchlineHandle>((_props, ref)
         element?.setAttribute("transform", `translate(${wing.x} ${wing.y}) rotate(${wing.spin})`);
       }
 
-      if (eater.kind !== "standIn") {
-        standIn.current?.setAttribute("opacity", "0");
-        return;
-      }
-
       const place = resolveStandInPlace(eater, zone, elapsedMs);
       const squash = resolveEaterSquash(elapsedMs);
 
@@ -72,8 +63,8 @@ export const WipeoutPunchline = forwardRef<WipeoutPunchlineHandle>((_props, ref)
 
   return (
     <g ref={group} opacity={0} data-schlonic-wipeout-punchline>
-      <g ref={standIn} opacity={0} data-schlonic-eater="stand-in">
-        <Badnik prop={STAND_IN} isZoneKit={false} />
+      <g ref={standIn} opacity={0} data-schlonic-eater="goose">
+        <Goose />
       </g>
       <g ref={wings}>
         {Array.from({ length: WIPEOUT_DROPPED_WINGS }, (_unused, index) => (

@@ -9,7 +9,7 @@ import { AIR_CLEARANCE } from "../../runnerClearance/index.js";
  * tightly the hen is tucked over the board, and where the board is in its kickflip. On the
  * sidewalk it rolls, leaning with the ground; the moment it leaves the ground it ollies — the hen
  * tucks a little and the board flips once about its long axis under its feet — and the board
- * comes down level. Airborne is still the rule: anything in the air pops a badnik it lands on.
+ * comes down level. Airborne is still the rule: a bird in the air is a bird off its board.
  *
  * Everything here is a pure function of the frame, with no state kept between paints, so the
  * tablet and the TV draw the same rider from the same frame without having to agree on anything.
@@ -63,7 +63,7 @@ const clamp = (value: number, low: number, high: number): number => Math.max(low
 /**
  * Where the board is in its flip, 0 → 1, off the vertical speed alone: 0 as it leaves the ground
  * at the jump velocity, a half half way up, 1 at the top of the arc and all the way down. A
- * springboard throws harder than a jump, so the board holds level until the climb has slowed to
+ * kicker throws harder than a jump, so the board holds level until the climb has slowed to
  * a jump's, and flips on the rest of the way up.
  */
 export const resolveFlipProgress = (vy: number): number => {

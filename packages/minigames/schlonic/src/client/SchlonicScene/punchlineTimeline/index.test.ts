@@ -29,7 +29,7 @@ import {
 
 const ZONE = resolveSchlonicZone({ seed: 20260919, chunks: 22 });
 const START = createSchlonicRunStart(ZONE);
-const BADNIK = ZONE.props.find((prop) => prop.kind === "badnik");
+const CROWD = ZONE.props.find((prop) => prop.kind === "hazard");
 const PIT = ZONE.pits[0];
 
 test("does finish the joke before the card goes up, and the card before the beat ends", () => {
@@ -129,33 +129,24 @@ test("does send the board rolling on up the sidewalk when the hen is wiped out",
   assert.ok(Math.abs(late.hop) < 1e-9, "the board should be back on its wheels");
 });
 
-test("does feed the wings to the badnik that is standing in the picture", () => {
-  assert.ok(BADNIK !== undefined);
+test("does send a goose in from the edge ahead to eat the wings, and has it in place before the first one gets there", () => {
+  assert.ok(CROWD !== undefined);
 
-  const frame = { ...START, x: BADNIK.x - 6, y: BADNIK.y - SCHLONIC_WORLD.runnerRadius, outcome: "wiped" as const };
+  const frame = { ...START, x: CROWD.x - 6, y: CROWD.y - SCHLONIC_WORLD.runnerRadius, outcome: "wiped" as const };
   const eater = resolveEater(ZONE, frame, TABLET_CAMERA);
 
-  assert.deepEqual(eater, { kind: "zone", propIndex: BADNIK.index, x: BADNIK.x, y: BADNIK.y });
-});
-
-test("does pass over a badnik already popped, and send one in from the edge when none is left", () => {
-  assert.ok(BADNIK !== undefined);
-
-  const popped = ZONE.props.filter((prop) => prop.kind === "badnik").map((prop) => prop.index);
-  const frame = { ...START, x: BADNIK.x - 6, takenProps: popped, outcome: "wiped" as const };
-  const eater = resolveEater(ZONE, frame, TABLET_CAMERA);
-
-  assert.equal(eater.kind, "standIn");
-  assert.ok(eater.kind === "standIn" && eater.fromX > eater.x);
-  // It hops in from off the picture and is in place before the first wing gets to it.
+  // Past the hen, and it walks in from off the right of the picture.
+  assert.ok(eater.x > frame.x);
+  assert.ok(eater.fromX > eater.x);
+  assert.ok(eater.fromX > frame.x - SCHLONIC_WORLD.runnerX + TABLET_CAMERA.x + TABLET_CAMERA.width);
   assert.ok(resolveStandInPlace(eater, ZONE, 0).x > eater.x);
   assert.equal(resolveStandInPlace(eater, ZONE, resolveChompAtMs(0)).x, eater.x);
 });
 
-test("does roll every dropped wing into the eater's mouth, and not one of them after", () => {
-  assert.ok(BADNIK !== undefined);
+test("does roll every dropped wing into the goose's bill, and not one of them after", () => {
+  assert.ok(CROWD !== undefined);
 
-  const frame = { ...START, x: BADNIK.x - 20, outcome: "wiped" as const };
+  const frame = { ...START, x: CROWD.x - 20, outcome: "wiped" as const };
   const eater = resolveEater(ZONE, frame, TABLET_CAMERA);
 
   for (let index = 0; index < WIPEOUT_DROPPED_WINGS; index += 1) {
@@ -164,7 +155,7 @@ test("does roll every dropped wing into the eater's mouth, and not one of them a
     const eaten = resolveDroppedWing(index, resolveChompAtMs(index), frame, ZONE, eater);
 
     assert.equal(flying.visible, true);
-    assert.ok(Math.abs(nearlyIn.x - eater.x) < 1.5, `wing ${index} ends at ${nearlyIn.x}`);
+    assert.ok(Math.abs(nearlyIn.x - (eater.x + 5.5)) < 1.5, `wing ${index} ends at ${nearlyIn.x}`);
     assert.equal(eaten.visible, false);
   }
 });

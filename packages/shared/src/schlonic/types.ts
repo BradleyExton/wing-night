@@ -14,22 +14,36 @@ export type SchlonicPit = {
 };
 
 /**
- * Everything that is not ground: a wing to collect, a thorn bed that always hurts, a badnik that
- * only hurts you on your feet (land on it and it pops instead), a springboard that throws you
- * at the high wing line, and a grind rail — a one-way ledge that catches a falling runner and
- * carries it, with the greedy line strung along its top. The runner is the player's own cast hen
- * and the three HAZARDS are all the cast's schlong, which is the whole visual joke; the wing is
- * deliberately neither, because a collectible that shared a silhouette with the things that hurt
- * you would be unreadable at the speed this runs at. The rail is kit, not a hazard: its side does
- * nothing to you, and the only way to meet it is to come down on it.
+ * Who is on the sidewalk to be jumped: the Dunlop Street crowd. All one thing to the sim — a
+ * box that hurts however you arrive, some of them swaying across their spot — and told apart
+ * only by the drawing and the box's size. The question the runner has to answer is the one
+ * anybody who has watched a skate video can: is it flat on top, or not. None of these is.
  */
-export type SchlonicPropKind = "wing" | "spike" | "badnik" | "spring" | "rail";
+export type SchlonicHazardKind = "tent" | "sleeper" | "punk" | "roadie" | "stagger" | "goose";
+
+/**
+ * What is flat on top: the street furniture a board comes down on and grinds. All one thing to
+ * the sim — a one-way ledge from `x` to `toX` at `y` — and told apart by the drawing, and by how
+ * high and how long each stands.
+ */
+export type SchlonicRideOnKind = "rail" | "bench" | "ledge" | "car";
+
+/**
+ * Everything that is not ground: a wing to collect, a hazard that hurts however you meet it, a
+ * rail — a one-way ledge that catches a falling runner and carries it, with the greedy line
+ * strung along its top — and a kicker ramp that throws whoever rolls into it at the high wing
+ * line. The wing is deliberately nothing like the rest, because a collectible that shared a
+ * silhouette with the things that hurt you would be unreadable at the speed this runs at. A
+ * rail is kit, not a hazard: its side does nothing to you, and the only way to meet it is to
+ * come down on it.
+ */
+export type SchlonicPropKind = "wing" | "hazard" | "rail" | "kicker";
 
 export type SchlonicProp = {
   /** Index within the zone's own `props`, so a frame can name the ones it has taken. */
   index: number;
   kind: SchlonicPropKind;
-  /** The middle of anything but a rail, which starts here. */
+  /** The middle of anything but a rail, which starts here. A swaying hazard's spot, not where it is. */
   x: number;
   /** Centre for a wing; a rail's top, where the feet go; the ground it stands on for everything else. */
   y: number;
@@ -37,9 +51,13 @@ export type SchlonicProp = {
    * Where a rail ends: it spans `x` to here, level, at `y`. Nothing but a rail carries it.
    */
   toX?: number;
+  /** Which of the crowd a hazard is: its box, whether it sways, and what to draw. */
+  hazard?: SchlonicHazardKind;
+  /** Which piece of furniture a rail is: what to draw. */
+  rideOn?: SchlonicRideOnKind;
   /**
    * What a wing is worth in hand: one on the floor, two on the high line — the line only speed,
-   * a held jump or a springboard reaches. Absent means one; nothing but a wing carries it. It is
+   * a held jump or a kicker reaches. Absent means one; nothing but a wing carries it. It is
    * why greed pays: the floor alone cannot make par.
    */
   worth?: number;
@@ -94,7 +112,7 @@ export type SchlonicFrame = {
   holding: boolean;
   /** Wings in hand — the score, and the whole health bar. */
   wings: number;
-  /** Props already taken, by index: wings collected and badniks smashed. */
+  /** Props already taken, by index: the wings collected. */
   takenProps: number[];
   /** The tick of every hit this run, so a surface can burst wings at the right moment. */
   hits: number[];

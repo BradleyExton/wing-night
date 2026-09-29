@@ -3,7 +3,7 @@
 // seconds the room needs to see what happened before the next player is handed the tablet.
 export const CLEARED_BEAT_MS = 1900;
 
-// A run that ends badly plays its punchline first — the trench and the raccoon, or the badnik's
+// A run that ends badly plays its punchline first — the trench and the raccoon, or the goose's
 // dinner (`SchlonicScene/punchlineTimeline`) — and only then does the TV put the card up, so the
 // room laughs at the picture before it reads the verdict. The beat is the joke plus the card's
 // own reading time, which is what the wipeout beat used to be on its own.
