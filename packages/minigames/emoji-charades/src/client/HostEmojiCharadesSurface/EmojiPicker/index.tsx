@@ -1,11 +1,15 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 
 import {
   DEFAULT_EMOJI_CATALOG_TAB_ID,
   EMOJI_CATALOG_TABS,
-  searchEmojiCatalog,
   type EmojiCatalogSection
 } from "../../emojiCatalog/index.js";
+import {
+  loadEmojiSearchIndex,
+  searchEmojiIndex,
+  type EmojiSearchEntry
+} from "../../emojiSearch/index.js";
 import { hostEmojiCharadesSurfaceCopy } from "../copy.js";
 import * as styles from "./styles.js";
 
@@ -18,8 +22,34 @@ export type EmojiPickerProps = {
   onSelectEmoji: (emoji: string) => void;
 };
 
-// Search is always visible but costs only its own row; the tabs and the
-// frequency-ranked "Top" landing tab stay underneath it (DESIGN.md §2.6).
+const USED_THIS_TURN_LIMIT = 20;
+
+// The keyword index loads once per picker, in its own chunk, as soon as the
+// picker is on screen — by the time a host has typed a word it is there.
+const useEmojiSearchIndex = (): EmojiSearchEntry[] | null => {
+  const [searchIndex, setSearchIndex] = useState<EmojiSearchEntry[] | null>(null);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    void loadEmojiSearchIndex().then((loadedIndex) => {
+      if (isCurrent) {
+        setSearchIndex(loadedIndex);
+      }
+    });
+
+    return (): void => {
+      isCurrent = false;
+    };
+  }, []);
+
+  return searchIndex;
+};
+
+// Search is always visible but costs only its own row; typing swaps the tabs
+// for results from every emoji there is, matched on names and keywords. The
+// "Top" landing tab leads with what this turn has already used, then the
+// charades staples (DESIGN.md §2.6).
 export const EmojiPicker = ({
   isDisabled,
   lockedEmojis,
@@ -28,6 +58,8 @@ export const EmojiPicker = ({
 }: EmojiPickerProps): JSX.Element => {
   const [activeTabId, setActiveTabId] = useState(DEFAULT_EMOJI_CATALOG_TAB_ID);
   const [searchQuery, setSearchQuery] = useState("");
+  const [usedThisTurn, setUsedThisTurn] = useState<string[]>([]);
+  const searchIndex = useEmojiSearchIndex();
 
   const isSearching = searchQuery.trim().length > 0;
 
@@ -36,8 +68,8 @@ export const EmojiPicker = ({
       return [
         {
           id: "search",
-          label: hostEmojiCharadesSurfaceCopy.searchPlaceholderLabel,
-          emojis: searchEmojiCatalog(searchQuery)
+          label: hostEmojiCharadesSurfaceCopy.searchResultsLabel(searchQuery),
+          emojis: searchIndex === null ? [] : searchEmojiIndex(searchIndex, searchQuery)
         }
       ];
     }
@@ -45,11 +77,30 @@ export const EmojiPicker = ({
     const activeTab =
       EMOJI_CATALOG_TABS.find((tab) => tab.id === activeTabId) ??
       EMOJI_CATALOG_TABS[0];
+    const tabSections = activeTab?.sections ?? [];
 
-    return activeTab?.sections ?? [];
-  }, [activeTabId, isSearching, searchQuery]);
+    if (activeTab?.id !== DEFAULT_EMOJI_CATALOG_TAB_ID || usedThisTurn.length === 0) {
+      return tabSections;
+    }
+
+    return [
+      {
+        id: "used-this-turn",
+        label: hostEmojiCharadesSurfaceCopy.usedThisTurnLabel,
+        emojis: usedThisTurn
+      },
+      ...tabSections
+    ];
+  }, [activeTabId, isSearching, searchIndex, searchQuery, usedThisTurn]);
 
   const hasResults = sections.some((section) => section.emojis.length > 0);
+
+  const selectEmoji = (emoji: string): void => {
+    onSelectEmoji(emoji);
+    setUsedThisTurn((current) =>
+      [emoji, ...current.filter((used) => used !== emoji)].slice(0, USED_THIS_TURN_LIMIT)
+    );
+  };
 
   // A locked subject gets no search and no tabs: there is nothing else to find.
   if (lockedEmojis !== null) {
@@ -74,8 +125,13 @@ export const EmojiPicker = ({
     );
   }
 
+  const emptyLabel =
+    searchIndex === null
+      ? hostEmojiCharadesSurfaceCopy.searchLoadingLabel
+      : hostEmojiCharadesSurfaceCopy.noSearchResultsLabel(searchQuery);
+
   return (
-    <>
+    <div className={styles.root}>
       <div className={styles.search}>
         <span className={styles.searchIcon} aria-hidden="true">
           {hostEmojiCharadesSurfaceCopy.searchIconGlyph}
@@ -86,8 +142,17 @@ export const EmojiPicker = ({
           value={searchQuery}
           placeholder={hostEmojiCharadesSurfaceCopy.searchPlaceholderLabel}
           aria-label={hostEmojiCharadesSurfaceCopy.searchPlaceholderLabel}
+          enterKeyHint="done"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
           onChange={(event): void => {
             setSearchQuery(event.target.value);
+          }}
+          onKeyDown={(event): void => {
+            if (event.key === "Enter") {
+              event.currentTarget.blur();
+            }
           }}
         />
         {isSearching && (
@@ -103,55 +168,53 @@ export const EmojiPicker = ({
         )}
       </div>
 
-      <div className={styles.tabs} role="tablist">
-        {EMOJI_CATALOG_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            className={
-              !isSearching && tab.id === activeTabId ? styles.tabActive : styles.tab
-            }
-            type="button"
-            role="tab"
-            aria-selected={!isSearching && tab.id === activeTabId}
-            onClick={(): void => {
-              setSearchQuery("");
-              setActiveTabId(tab.id);
-            }}
-          >
-            <span className={styles.tabIcon} aria-hidden="true">
-              {tab.icon}
-            </span>
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {!isSearching && (
+        <div className={styles.tabs} role="tablist">
+          {EMOJI_CATALOG_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={tab.id === activeTabId ? styles.tabActive : styles.tab}
+              type="button"
+              role="tab"
+              aria-selected={tab.id === activeTabId}
+              onClick={(): void => {
+                setActiveTabId(tab.id);
+              }}
+            >
+              <span className={styles.tabIcon} aria-hidden="true">
+                {tab.icon}
+              </span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <div className={styles.grid}>
-        {!hasResults && (
-          <p className={styles.emptyNote}>
-            {hostEmojiCharadesSurfaceCopy.noSearchResultsLabel}
-          </p>
+      <div className={isSearching ? styles.gridSearching : styles.grid}>
+        {!hasResults && <p className={styles.emptyNote}>{emptyLabel}</p>}
+        {sections.map(
+          (section) =>
+            section.emojis.length > 0 && (
+              <Fragment key={section.id}>
+                <p className={styles.gridSection}>{section.label}</p>
+                {section.emojis.map((emoji, index) => (
+                  <button
+                    key={`${section.id}-${emoji}-${index}`}
+                    className={styles.emojiButton}
+                    type="button"
+                    disabled={isDisabled}
+                    aria-label={emoji}
+                    onClick={(): void => {
+                      selectEmoji(emoji);
+                    }}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </Fragment>
+            )
         )}
-        {sections.map((section) => (
-          <Fragment key={section.id}>
-            <p className={styles.gridSection}>{section.label}</p>
-            {section.emojis.map((emoji, index) => (
-              <button
-                key={`${section.id}-${emoji}-${index}`}
-                className={styles.emojiButton}
-                type="button"
-                disabled={isDisabled}
-                aria-label={emoji}
-                onClick={(): void => {
-                  onSelectEmoji(emoji);
-                }}
-              >
-                {emoji}
-              </button>
-            ))}
-          </Fragment>
-        ))}
       </div>
-    </>
+    </div>
   );
 };

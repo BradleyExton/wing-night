@@ -964,13 +964,14 @@ every other surface uses.
     window expires. The host gets the same result as a transient pill
     floated over its own board, not a row in the layout.
 
-## 2.6 EMOJI_CHARADES Minigame Surface Language ("Clue Board")
+## 2.6 EMOJI_CHARADES Minigame Surface Language ("Stage")
 
 The EMOJI_CHARADES surfaces follow the "Hybrid" host direction
-(`apps/client/public/mockups/emoji-charades-host/04-hybrid.html`) and the
-"Clue Board" display direction
-(`emoji-charades-display/02-clue-wall.html`): a fixed board of clue slots
-under the shared neon marquee (§2.2D). It used to sit under the bulb marquee
+(`apps/client/public/mockups/emoji-charades-host/04-hybrid.html`) and, since
+2026-09-28, the "Stage" display: the last six emoji of the clue, big, standing
+on their own under the shared neon marquee (§2.2D). It replaced the "Clue
+Board" direction (`emoji-charades-display/02-clue-wall.html`), a fixed 6×5 wall
+of all thirty slots that spent most of the TV on dashed empty cells. It used to sit under the bulb marquee
 DRAWING built, with its container the brown gradient §2.5 recorded as debt; the
 sign replaced both on 2026-09-23 and the ★ Emoji Charades ★ title lost its stars
 with the bulbs.
@@ -978,7 +979,7 @@ with the bulbs.
 -   **Emoji are content, not chrome.** They are full-colour unicode and
     are exempt from the §0.1 two-accent budget, exactly as DRAWING's ink
     palette is (§2.5). The chrome around them stays within budget:
-    `gold` frames (marquee, subject card, newest-slot ring) plus
+    `gold` frames (marquee, subject card, the newest emoji's halo) plus
     `primary` for live data (timer, canvas caret, search focus ring).
     Got It / Skip are green/red gradient buttons — functional
     success/danger per §0.1, not decorative accents.
@@ -1001,10 +1002,18 @@ authored in content (`lockedEmojis`), and the reducer refuses anything off the
 list so the bit cannot be broken from the tablet. The TV never sees it.
 
 **Host layout is a `<TakeoverStage>` with a deck**
-(`docs/takeover-layout-api.md` §3), and the arrangement is the one this surface
-already had: the body is the picker column (clue canvas → persistent search
+(`docs/takeover-layout-api.md` §3): the body is the picker (persistent search
 field → category tabs → emoji grid), the deck column is subject card → Got It →
-Skip → back/clear. What changed is who owns the chrome around them.
+Skip → back/clear.
+
+-   **The subject card carries the clue.** The subject is the deck's headline,
+    sized by its length (4.4rem for a short name down to 1.8rem for a long
+    title) and re-dealt with an entrance on every new subject; under a rule
+    sits the whole clue so far with its `N / 30` count. The clue canvas that
+    used to head the body lives here, so all of the body's height is catalog.
+-   **Got It is a slab, Skip is a strip.** Got It (icon disc, label, hint) is
+    the tap a turn is made of; Skip is half its height underneath, always there
+    but never the thumb's first landing.
 
 -   **It is a Stage because every pixel of the body is a tap target.** The
     Canvas test asks whether chrome can float over the body without covering
@@ -1045,42 +1054,54 @@ Skip → back/clear. What changed is who owns the chrome around them.
     overlaying the grid and retracting on Done. The keyboard must never
     permanently reserve height — the control deck and the verdict buttons
     keep their full size at all times.
--   The landing tab is **Top**, sectioned used-this-turn → used-tonight →
-    charades staples. Frequency ranking, not alphabetical or unicode
-    order, is what puts the likely next tap on the first screen.
+-   **Search reaches every emoji by name and keyword** (emojilib's ~1,900,
+    loaded in its own chunk when the picker mounts): "dog", "dino", "red car".
+    Whole words outrank prefixes, names outrank keywords, every word typed must
+    match, and letter emoji the reducer refuses are never offered. Results
+    replace the tabs while a search is live. It used to match only the tab and
+    section labels, so "dog" found nothing.
+-   The landing tab is **Top**, sectioned used-this-turn → charades staples.
+    Frequency ranking, not alphabetical or unicode order, is what puts the
+    likely next tap on the first screen.
 -   Emoji cells are ≥44px touch targets per §2.1 and the grid scrolls;
     the bottom fade is the scroll affordance.
 
 **Display layout**: the shared neon marquee (§2.2D: active team + pending
-points, show title as the kicker, the turn timer as pill and burning line), the clue board, then the
+points, show title as the kicker, the turn timer as pill and burning line), the clue stage, then the
 standings footer per §3.2. That third cell used to be an `aria-hidden`
 `min-h-[1px]` spacer holding a column open for a chip absolutely
 positioned somewhere else — a seventh idiom for the same reserve nine
 surfaces were typing. The chip is laid out in the cell now, which is
 where `02-clue-wall.html` always drew it (`.timer-block`).
 
--   The board is a fixed 6×5 grid of all `MAX_EMOJIS_PER_SUBJECT` slots,
-    letterboxed into whatever height the marquee and footer leave.
--   **Emoji never scale with sequence length.** Cell size is a function
-    of available space alone, so a 3-emoji clue and a 28-emoji clue are
-    equally legible from across the room. This is the load-bearing
-    decision of the surface: shrink-to-fit was prototyped
-    (`01-hero-line.html`) and rejected for collapsing to unreadable
-    glyphs as a clue approaches the cap.
--   Filled slots are lit; the remainder stay as dashed ghost slots, so
-    the room can always see how much clue is left to come.
--   The newest slot carries a gold ring and a 420ms `pop` — the one beat
-    of drama, borrowed from the rejected `03-ribbon.html` direction.
+-   **At most six emoji are on stage**, centred, with no board, grid or
+    slots behind them — only a soft pool of light. The seventh pushes the
+    first off the left end and Back brings it back; the status line still
+    counts the whole clue (`8 / 30`).
+-   **A tap pops from the centre and grows out.** The new emoji pops up huge
+    in the middle of the stage over a pool of dark, holds a beat, then flies
+    to the end of the row while the rest glide outward to make room. A gold
+    halo marks the newest; a ring shocks out from the pop. Everything that
+    leaves — pushed off, backed out, cleared — shrinks away where it stood.
+-   **Size is bounded, not fixed.** One to three emoji share the largest size
+    the stage's height allows; four to six step down so the row fits, and six
+    are still ~260px on a 1080p TV. This revisits "emoji never scale with
+    sequence length": shrink-to-fit (`01-hero-line.html`) was rejected for
+    collapsing as a clue neared thirty, and a six-emoji window cannot.
+-   Lengths are container-query units on the stage, so the TV and the
+    sandbox's scaled frame size the row the same way.
 -   Answer-safe per §2.3: the display never receives subject text outside
     the post-result reveal. The reveal is DRAWING's plaque (§2.5), not a
     full-bleed wash: a check/cross, the resolved subject in serif italic
-    and a gold award readout, over a board dimmed to 0.3.
--   **The board holds the clue through the reveal.** The runtime empties
+    and a gold award readout, over a stage dimmed to 0.3.
+-   **The stage holds the clue through the reveal.** The runtime empties
     the sequence in the same update that raises the verdict, so the TV
-    keeps the emoji that were on it the render before — otherwise the
+    keeps the emoji that were on it the render before, from the very render
+    the verdict arrives in (one render late, the row left and came back
+    popping) — otherwise the
     room loses the clue at the exact moment the answer would make sense
     of it. Same hold DRAWING keeps for its sketch, pinned to the reveal
-    that caught it so a subject resolved on an empty board never
+    that caught it so a subject resolved on an empty stage never
     resurrects the last one's clue. (The prototype dimmed to 0.12 under
     an opaque wash, which erased a board it had nothing on anyway.)
 

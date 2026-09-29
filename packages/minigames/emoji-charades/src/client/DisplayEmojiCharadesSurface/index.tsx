@@ -12,7 +12,7 @@ import type {
 
 import { MAX_EMOJIS_PER_SUBJECT } from "../../runtime/types/index.js";
 import { useEmojiCharadesSounds } from "../useEmojiCharadesSounds/index.js";
-import { ClueBoard } from "./ClueBoard/index.js";
+import { ClueStage } from "./ClueStage/index.js";
 import { RevealOverlay } from "./RevealOverlay/index.js";
 import { displayEmojiCharadesSurfaceCopy } from "./copy.js";
 import {
@@ -37,7 +37,7 @@ import * as styles from "./styles.js";
 const useIsRevealVisible = (
   reveal: EmojiCharadesSubjectReveal | null
 ): boolean => {
-  const [visibleRevealKey, setVisibleRevealKey] = useState<string | null>(null);
+  const [expiredRevealKey, setExpiredRevealKey] = useState<string | null>(null);
   const revealKey = resolveRevealKey(reveal);
   const durationMs = reveal === null ? 0 : resolveRevealDurationMs(reveal);
 
@@ -46,10 +46,8 @@ const useIsRevealVisible = (
       return undefined;
     }
 
-    setVisibleRevealKey(revealKey);
-
     const expiryTimer = setTimeout(() => {
-      setVisibleRevealKey(null);
+      setExpiredRevealKey(revealKey);
     }, durationMs);
 
     return (): void => {
@@ -57,7 +55,11 @@ const useIsRevealVisible = (
     };
   }, [durationMs, revealKey]);
 
-  return revealKey !== null && visibleRevealKey === revealKey;
+  // Visible from the very render the reveal arrives in, not one render later:
+  // the verdict empties the clue in the same update, and a render that saw the
+  // empty clue before the held one would send the stage's emoji off and bring
+  // them back popping.
+  return revealKey !== null && durationMs > 0 && expiredRevealKey !== revealKey;
 };
 
 export const DisplayEmojiCharadesSurface = ({
@@ -118,7 +120,7 @@ export const DisplayEmojiCharadesSurface = ({
 
       {displayView?.status === "playing" && (
         <div className={styles.boardArea}>
-          <ClueBoard
+          <ClueStage
             emojiSequence={boardEmojiSequence}
             isDimmed={isRevealVisible}
           />
@@ -145,7 +147,7 @@ export const DisplayEmojiCharadesSurface = ({
         <div className={styles.boardArea}>
           {isRevealVisible && reveal !== null ? (
             <>
-              <ClueBoard emojiSequence={boardEmojiSequence} isDimmed />
+              <ClueStage emojiSequence={boardEmojiSequence} isDimmed />
               <RevealOverlay
                 reveal={reveal}
                 teamName={activeTeamName}

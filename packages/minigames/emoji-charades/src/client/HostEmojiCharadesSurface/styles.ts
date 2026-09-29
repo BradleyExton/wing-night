@@ -1,4 +1,4 @@
-import { railCounter, takeoverLabel, takeoverLabelAccent, takeoverSecondary, verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnight/surface";
+import { railCounter, takeoverSecondary, verdictButtonDanger, verdictButtonSuccess } from "@wingnight/surface";
 
 // EMOJI_CHARADES is a `<TakeoverStage>` with a deck
 // (docs/takeover-layout-api.md §3). The body is a grid of tap targets, so
@@ -36,91 +36,35 @@ export const counter = chip;
 
 export const counterPending = `${railCounter} font-score tabular-nums text-gold`;
 
-// The body slot, filled edge to edge: clue canvas → persistent search → tabs →
-// emoji grid, in that order (DESIGN.md §2.6). The height the description
-// paragraph and the hand-rolled "Clueing <team>" chip used to eat above it all
-// lands in the grid at the bottom.
-export const picker = "flex h-full min-h-0 flex-col gap-[clamp(0.5rem,1vh,0.8rem)]";
+// The house verdict (DESIGN.md §2.0B, "Takeover controls") at two weights.
+// GOT IT is the slab — icon disc, label, hint — because it is the tap a turn is
+// made of and it comes first (§4, owner decision P7). SKIP is a strip under it:
+// always there, never the thumb's first landing. The layout lives on an inner
+// span so it never contends with the token's own flex and gap.
+export const gotItButton = `${verdictButtonSuccess} h-[7.5rem] w-full shrink-0`;
 
-// Clue canvas — the live sequence the TV is mirroring.
-export const canvas =
-  "flex min-h-[88px] flex-wrap items-center gap-1 rounded-2xl border border-text/10 bg-surfaceAlt px-4 py-3 text-[clamp(1.5rem,2.8vw,2.4rem)] leading-tight";
+export const skipButton = `${verdictButtonDanger} h-[3.75rem] w-full shrink-0`;
 
-export const canvasEmpty =
-  "flex min-h-[88px] items-center rounded-2xl border border-dashed border-text/15 bg-surfaceAlt px-4 py-3 text-sm font-medium text-muted";
+export const verdictBody = "flex items-center gap-4";
 
-// Search sits above the tabs and costs only its own row until focused.
-export const search =
-  "flex min-h-[52px] items-center gap-3 rounded-2xl border-2 border-text/10 bg-surfaceAlt px-4 focus-within:border-primary";
+export const verdictText = "flex flex-col items-start gap-1";
 
-export const searchIcon = "text-lg opacity-70";
+export const gotItIcon =
+  "grid h-14 w-14 place-items-center rounded-full bg-success text-[2rem] font-black leading-none text-bg shadow-[0_0_24px_theme(colors.success/45%)]";
 
-export const searchInput =
-  "min-w-0 flex-1 bg-transparent text-base font-medium text-text outline-none placeholder:text-muted";
+export const gotItLabel = "text-[1.9rem] font-black leading-none tracking-[0.08em]";
 
-export const searchClearButton =
-  "min-h-11 rounded-lg px-3 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-muted hover:text-primary";
+export const skipIcon =
+  "grid h-8 w-8 place-items-center rounded-full bg-danger/80 text-[1.2rem] font-black leading-none text-text";
 
-export const tabs = "flex gap-1 overflow-x-auto";
-
-const tabBase =
-  "flex min-h-[46px] flex-1 flex-col items-center justify-center gap-0.5 rounded-t-xl border border-b-0 px-2 py-1 text-[0.7rem] font-extrabold uppercase tracking-[0.1em] transition";
-
-export const tab = `${tabBase} border-text/10 bg-surface text-muted hover:text-text`;
-
-export const tabActive = `${tabBase} border-primary bg-surfaceAlt text-primary`;
-
-export const tabIcon = "text-lg";
-
-export const grid =
-  "grid min-h-0 flex-1 grid-cols-8 content-start gap-1 overflow-y-auto rounded-b-2xl border border-t-0 border-text/10 bg-surfaceAlt p-2 sm:grid-cols-10";
-
-export const gridSection =
-  `col-span-full px-1 pb-1 pt-2 ${takeoverLabel}`;
-
-export const emojiButton =
-  "flex aspect-square items-center justify-center rounded-lg bg-text/5 text-[clamp(1.2rem,2.2vw,1.9rem)] transition hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40";
-
-export const emptyNote =
-  "col-span-full px-1 py-6 text-center text-sm font-medium text-muted";
-
-// Subject card reuses DRAWING's prompt-card treatment per DESIGN.md §2.6.
-export const subjectCard =
-  "shrink-0 rounded-2xl border-2 border-primary/50 bg-gradient-to-b from-surfaceAlt to-surface px-4 py-3 text-center";
-
-export const subjectLabel =
-  takeoverLabelAccent;
-
-export const subjectValue =
-  "font-voice text-[clamp(1.4rem,2vw,2rem)] font-bold italic text-text";
-
-// A locked subject drops the tabs and the search with them, so the grid it
-// leaves behind is free to draw the few emoji it has as big touch targets.
-export const lockedGrid =
-  "grid min-h-0 flex-1 grid-cols-4 content-start gap-2 overflow-y-auto rounded-2xl border-2 border-gold/40 bg-surfaceAlt p-3 sm:grid-cols-6";
-
-export const lockedLabel =
-  "col-span-full px-1 pb-1 text-center text-[0.62rem] font-extrabold uppercase tracking-[0.24em] text-primary";
-
-export const lockedEmojiButton =
-  "flex aspect-square items-center justify-center rounded-xl bg-primary/10 text-[clamp(1.8rem,4vw,3rem)] transition hover:bg-primary/25 disabled:cursor-not-allowed disabled:opacity-40";
-
-// The house verdict (DESIGN.md §2.0B, "Takeover controls"), stood up as a card:
-// icon over label over the hint. GOT IT is rendered first (§4, owner decision P7).
-const verdictCard = "h-[76px] flex-1 flex-col";
-
-export const gotItButton = `${verdictButtonSuccess} ${verdictCard}`;
-
-export const skipButton = `${verdictButtonDanger} ${verdictCard}`;
-
-export { verdictIcon };
+export const skipLabel = "text-[1.15rem] font-black tracking-[0.12em]";
 
 export const verdictHint =
-  "text-[0.7rem] font-bold uppercase tracking-[0.2em] opacity-80";
+  "text-[0.7rem] font-bold uppercase tracking-[0.2em] opacity-75";
 
 export const utilityRow = "flex shrink-0 gap-2";
 
-export const utilityButton = `${takeoverSecondary} h-[52px] flex-1`;
+export const utilityButton = `${takeoverSecondary} h-[3.25rem] flex-1`;
 
 // The two beats with no picker on them. Both stand in for the body rather than
 // sitting at the top of an empty one: the deck collapses to nothing when the

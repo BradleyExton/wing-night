@@ -4,23 +4,8 @@ import { TakeoverStage } from "@wingnight/surface";
 
 import { hostEmojiCharadesSurfaceCopy } from "./copy.js";
 import { EmojiPicker } from "./EmojiPicker/index.js";
+import { SubjectCard } from "./SubjectCard/index.js";
 import * as styles from "./styles.js";
-
-// The subject the clue-giver is drawing in emoji. The same card on both beats:
-// a panel in the host's own control deck at intro, the head of the takeover's
-// deck column at play. The "N subjects left" line it used to carry is a rail-
-// row chip now (§4, `counter`) — a number the host glances at, beside a name
-// they read.
-const renderSubjectCard = (subjectText: string | null): JSX.Element => (
-  <div className={styles.subjectCard}>
-    <p className={styles.subjectLabel}>
-      {hostEmojiCharadesSurfaceCopy.subjectLabel}
-    </p>
-    <p className={styles.subjectValue}>
-      {subjectText ?? hostEmojiCharadesSurfaceCopy.waitingSubjectLabel}
-    </p>
-  </div>
-);
 
 // EMOJI_CHARADES's host surface. At play it is a `<TakeoverStage>` with a deck
 // (docs/takeover-layout-api.md §3): the body is a grid of tap targets, so
@@ -61,9 +46,13 @@ export const HostEmojiCharadesSurface = ({
         <p className={styles.introDescription}>
           {hostEmojiCharadesSurfaceCopy.introDescription}
         </p>
-        {hostView !== null &&
-          hostView.status === "playing" &&
-          renderSubjectCard(hostView.currentSubject?.text ?? null)}
+        {hostView !== null && hostView.status === "playing" && (
+          <SubjectCard
+            subjectId={hostView.currentSubject?.id ?? null}
+            subjectText={hostView.currentSubject?.text ?? null}
+            emojiSequence={null}
+          />
+        )}
       </div>
     );
   }
@@ -117,8 +106,13 @@ export const HostEmojiCharadesSurface = ({
       }
       deck={
         <>
-          {renderSubjectCard(currentSubject?.text ?? null)}
-          {/* Positive verdict first (§4, owner decision P7). */}
+          <SubjectCard
+            subjectId={currentSubject?.id ?? null}
+            subjectText={currentSubject?.text ?? null}
+            emojiSequence={hostView.emojiSequence}
+          />
+          {/* Positive verdict first (§4, owner decision P7), and the bigger of
+              the two: it is the tap a turn is made of. */}
           <button
             className={styles.gotItButton}
             type="button"
@@ -127,17 +121,25 @@ export const HostEmojiCharadesSurface = ({
               onDispatchAction("markCorrect", {});
             }}
           >
-            <span className={styles.verdictIcon} aria-hidden="true">
-              {hostEmojiCharadesSurfaceCopy.gotItIconGlyph}
-            </span>
-            {hostEmojiCharadesSurfaceCopy.gotItButtonLabel}
-            <span className={styles.verdictHint}>
-              {hostEmojiCharadesSurfaceCopy.gotItButtonHint}
+            <span className={styles.verdictBody}>
+              <span className={styles.gotItIcon} aria-hidden="true">
+                {hostEmojiCharadesSurfaceCopy.gotItIconGlyph}
+              </span>
+              <span className={styles.verdictText}>
+                <span className={styles.gotItLabel}>
+                  {hostEmojiCharadesSurfaceCopy.gotItButtonLabel}
+                </span>
+                <span className={styles.verdictHint}>
+                  {hostEmojiCharadesSurfaceCopy.gotItButtonHint}
+                </span>
+              </span>
             </span>
           </button>
           {/* The skip escape hatch stays on the canvas rather than moving to
               the override dock: dropping a subject nobody can clue is the
-              host's ordinary move here, and AGENTS.md §11 never lets it go. */}
+              host's ordinary move here, and AGENTS.md §11 never lets it go. It
+              is a strip rather than a second slab so it is never the thumb's
+              first landing. */}
           <button
             className={styles.skipButton}
             type="button"
@@ -146,12 +148,16 @@ export const HostEmojiCharadesSurface = ({
               onDispatchAction("skipSubject", {});
             }}
           >
-            <span className={styles.verdictIcon} aria-hidden="true">
-              {hostEmojiCharadesSurfaceCopy.skipIconGlyph}
-            </span>
-            {hostEmojiCharadesSurfaceCopy.skipButtonLabel}
-            <span className={styles.verdictHint}>
-              {hostEmojiCharadesSurfaceCopy.skipButtonHint}
+            <span className={styles.verdictBody}>
+              <span className={styles.skipIcon} aria-hidden="true">
+                {hostEmojiCharadesSurfaceCopy.skipIconGlyph}
+              </span>
+              <span className={styles.skipLabel}>
+                {hostEmojiCharadesSurfaceCopy.skipButtonLabel}
+              </span>
+              <span className={styles.verdictHint}>
+                {hostEmojiCharadesSurfaceCopy.skipButtonHint}
+              </span>
             </span>
           </button>
           <div className={styles.utilityRow}>
@@ -179,29 +185,16 @@ export const HostEmojiCharadesSurface = ({
         </>
       }
     >
-      <div className={styles.picker}>
-        {hasSequence ? (
-          <p className={styles.canvas}>
-            {hostView.emojiSequence.map((emoji, index) => (
-              <span key={`${emoji}-${index}`}>{emoji}</span>
-            ))}
-          </p>
-        ) : (
-          <p className={styles.canvasEmpty}>
-            {hostEmojiCharadesSurfaceCopy.emptySequenceLabel}
-          </p>
+      <EmojiPicker
+        isDisabled={!canDispatchAction}
+        lockedEmojis={currentSubject?.lockedEmojis ?? null}
+        lockedLabel={hostEmojiCharadesSurfaceCopy.lockedPickerLabel(
+          currentSubject?.text ?? ""
         )}
-        <EmojiPicker
-          isDisabled={!canDispatchAction}
-          lockedEmojis={currentSubject?.lockedEmojis ?? null}
-          lockedLabel={hostEmojiCharadesSurfaceCopy.lockedPickerLabel(
-            currentSubject?.text ?? ""
-          )}
-          onSelectEmoji={(emoji): void => {
-            onDispatchAction("appendEmoji", { emoji });
-          }}
-        />
-      </div>
+        onSelectEmoji={(emoji): void => {
+          onDispatchAction("appendEmoji", { emoji });
+        }}
+      />
     </TakeoverStage>
   );
 };

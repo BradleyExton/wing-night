@@ -160,6 +160,70 @@ body {
   }
 }
 
+/* EMOJI_CHARADES's stage (DESIGN.md §2.6). An emoji just tapped pops up huge
+   in the middle of the stage, holds a beat for the room, then flies out to its
+   place in the row. The slot's own box sits at that place, so the flight is an
+   offset back to the centre that closes to nothing: `--slot`, `--pitch` and
+   `--hero-scale` are the stage's, set per emoji and per row length. */
+@keyframes emoji-stage-hero {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(var(--slot) * var(--pitch) * -1)) scale(0.3);
+  }
+  16% {
+    opacity: 1;
+    transform: translateX(calc(var(--slot) * var(--pitch) * -1))
+      scale(calc(var(--hero-scale) * 1.1));
+  }
+  26%,
+  58% {
+    opacity: 1;
+    transform: translateX(calc(var(--slot) * var(--pitch) * -1)) scale(var(--hero-scale));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes emoji-stage-settle {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes emoji-stage-exit {
+  from {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.12) rotate(-4deg);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0) rotate(-18deg);
+  }
+}
+
+/* The shockwave under the hero's pop, from the centre of the stage. */
+@keyframes emoji-stage-ring {
+  from {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+}
+
 /* The arcade scenes' two beats (DESIGN.md §2.9, §2.11), shared by FAPPY and
    SCHLONIC: the next leg or run slides in as the last one wipes, and the
    handoff callout drops over the scene with a bounce. They were two
