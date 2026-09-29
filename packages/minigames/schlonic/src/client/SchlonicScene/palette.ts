@@ -96,8 +96,26 @@ export const schlonicPalette = {
   buffDark: "#b89a66",
   queensGreen: "#1f6b34",
   flag: "#e8453c",
-  // Street steel: the gulls' ink in the sky, and a rail until it gets its own drawing.
-  steelDark: "#55433a",
+  // The ink the backdrop's gulls are drawn in, far off in the sky.
+  skyInk: "#55433a",
+  // A grind rail: a galvanised handrail, pale steel with a sunlit top and a near-black edge, the
+  // one long straight line in the zone and nothing like a schlong's pink or a barrel's orange.
+  steel: "#aab5bf",
+  steelLight: "#f4f8fb",
+  steelInk: "#1f262c",
+  // The runner's board: black grip on top, a maple edge, pale trucks and cream wheels, all edged
+  // near-black so it reads on the pale sidewalk. Its underside is the team's colour, not in here.
+  grip: "#26272b",
+  ply: "#e3b774",
+  boardInk: "#1c1714",
+  truck: "#d3d9de",
+  wheel: "#fff3d2",
+  wheelHub: "#8b7355",
+  deckFlash: "#fff7ed",
+  // The grind's sparks: white-hot at the truck, yellow and orange as they fly.
+  sparkHot: "#fffbe0",
+  spark: "#ffd23f",
+  sparkEmber: "#ff8a1c",
   cloud: "#f4fbff",
   sun: "#ffe066",
   // The collectible, and the night's own joke: a sauced party wing. Orange rather than the gold
@@ -133,17 +151,21 @@ export const schlonicPalette = {
   pad: "#e8453c",
   padStripe: "#fff7ed",
   padDark: "#9c1f1a",
-  // The punchlines (§2.11). The bay's spray is its own near shallows gone white. The gull is a
-  // Barrie ring-bill: white, a grey back and black tips, and the yellow beak with the red spot
-  // is what makes it a thief rather than a bird.
-  spray: "#eaf7ff",
-  gull: "#ffffff",
-  gullBack: "#b9c6d2",
-  gullTip: "#1f2a33",
-  gullEdge: "#55606b",
-  gullBeak: "#f6c343",
-  gullBeakSpot: "#d8322a",
-  gullLeg: "#f08a24",
+  // The fall's punchline (§2.11): the dust a thud throws up out of the dig, and the raccoon that
+  // lives down there — grey, a pale snout, the black mask with a bright eye in it — in the
+  // roadworks' orange hard hat, a safety orange redder than a wing so the haul it hugs still reads.
+  dust: "#d8caa9",
+  dustShade: "#a8977a",
+  pebble: "#6b5d4a",
+  raccoonFur: "#8f9398",
+  raccoonFurDark: "#5d6166",
+  raccoonPale: "#e6e2da",
+  raccoonMask: "#1b1c20",
+  raccoonInk: "#2a2b30",
+  raccoonEye: "#ffffff",
+  hardHat: "#ff6f0f",
+  hardHatDark: "#9e3f04",
+  hardHatShine: "#ffc58f",
   post: "#f4f6fa",
   postPole: "#9aa6b5",
   shadow: "#2e2a26",

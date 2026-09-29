@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { SCHLONIC_WORLD, createSchlonicRunStart, resolveSchlonicFinaleX, resolveSchlonicZone } from "@wingnight/shared";
 
-import { resolveMirrorEvents } from "./index.js";
+import { GRIND_SCRAPE_UNITS, resolveMirrorEvents } from "./index.js";
 
 const ZONE = resolveSchlonicZone({ seed: 20260919, chunks: 22 });
 const START = createSchlonicRunStart(ZONE);
@@ -47,4 +47,36 @@ test("does announce an ending once, and nothing for a frame that did not move on
   assert.deepEqual(resolveMirrorEvents(cleared, cleared, ZONE), []);
   assert.deepEqual(resolveMirrorEvents(cleared, { ...cleared, tick: 901 }, ZONE), []);
   assert.deepEqual(resolveMirrorEvents(START, { ...START, tick: 40, outcome: "fell" as const }, ZONE), [{ kind: "fell" }]);
+});
+
+test("does pop an ollie when the feet leave the ground on the way up, and clack when they come down", () => {
+  const rolling = { ...START, tick: 10, x: 60 };
+  const popped = { ...rolling, tick: 11, x: 61.3, vy: SCHLONIC_WORLD.jumpVelocity, grounded: false };
+  const falling = { ...popped, tick: 40, x: 100, vy: 1.8 };
+  const landed = { ...falling, tick: 41, x: 101.3, vy: 0, grounded: true };
+
+  assert.deepEqual(resolveMirrorEvents(rolling, popped, ZONE), [{ kind: "ollie" }]);
+  assert.deepEqual(resolveMirrorEvents(falling, landed, ZONE), [{ kind: "land" }]);
+  // Rolling off a ledge leaves the ground at no speed: no pop.
+  assert.deepEqual(resolveMirrorEvents(rolling, { ...rolling, tick: 11, vy: 0.1, grounded: false }, ZONE), []);
+});
+
+test("does keep the board quiet on a hit's knock-back and through the bail after it", () => {
+  const rolling = { ...START, tick: 10, x: 60, wings: 8 };
+  const knocked = { ...rolling, tick: 11, vy: SCHLONIC_WORLD.hitBounceVelocity, grounded: false, hits: [11], wings: 4, invulnerableUntilTick: 81 };
+  const downAgain = { ...knocked, tick: 30, vy: 0, grounded: true };
+
+  assert.deepEqual(resolveMirrorEvents(rolling, knocked, ZONE), [{ kind: "hit" }]);
+  assert.deepEqual(resolveMirrorEvents({ ...knocked, tick: 29 }, downAgain, ZONE), []);
+});
+
+test("does clank onto a rail, scrape along it, and ring off the end", () => {
+  const falling = { ...START, tick: 50, x: 200, vy: 1.2, grounded: false };
+  const caught = { ...falling, tick: 51, x: 201.3, vy: 0, grounded: true, grindingRail: 7 };
+  const along = { ...caught, tick: 52, x: (Math.floor(201.3 / GRIND_SCRAPE_UNITS) + 1) * GRIND_SCRAPE_UNITS + 0.1 };
+  const off = { ...along, tick: 53, x: along.x + 1.3, grounded: false, grindingRail: null };
+
+  assert.deepEqual(resolveMirrorEvents(falling, caught, ZONE), [{ kind: "grindStart" }]);
+  assert.deepEqual(resolveMirrorEvents(caught, along, ZONE), [{ kind: "grind" }]);
+  assert.deepEqual(resolveMirrorEvents(along, off, ZONE), [{ kind: "grindStop" }]);
 });

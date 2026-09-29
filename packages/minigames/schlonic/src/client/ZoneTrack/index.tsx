@@ -60,7 +60,7 @@ const atPercent = (percent: number, widthPercent?: number) => {
 };
 
 /**
- * The zone as a line over the arena: hazards and holes marked where they fall, the post at the
+ * The zone as a line over the arena: hazards, rails and trenches marked where they fall, the post at the
  * end, this turn's finished runs pinned where they ended, and the live runner's own head riding
  * along it. The room reads how far there is to go, what is coming, and how the team is doing
  * against its own earlier runs — at a glance, from the couch, without doing sums off the
@@ -85,6 +85,14 @@ export const ZoneTrack = forwardRef<HTMLDivElement, ZoneTrackProps>(
             ref={atPercent(pit.fromPercent, pit.widthPercent)}
             className={styles.pit}
             data-schlonic-track-pit={pit.fromPercent}
+          />
+        ))}
+        {marks.rails.map((rail) => (
+          <span
+            key={rail.index}
+            ref={atPercent(rail.fromPercent, rail.widthPercent)}
+            className={styles.grindRail}
+            data-schlonic-track-rail={rail.fromPercent}
           />
         ))}
         {marks.hazards.map((hazard) => (
@@ -137,7 +145,7 @@ export const ZoneTrack = forwardRef<HTMLDivElement, ZoneTrackProps>(
           <PinFace figure={runner} alt={zoneTrackCopy.runnerAlt(runner.playerName ?? "")} />
         </span>
         <span className={styles.label}>
-          {zoneTrackCopy.label(marks.hazards.length, marks.pits.length)}
+          {zoneTrackCopy.label(marks.hazards.length, marks.rails.length, marks.pits.length)}
         </span>
       </div>
     );

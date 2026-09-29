@@ -1,11 +1,12 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
-import { CHARACTER_FOOT, CharacterFigure } from "@wingnight/cast";
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD } from "@wingnight/shared";
 
 import type { RunnerFigure } from "../../resolveRunnerFigure/index.js";
 import type { SchlonicCamera } from "../camera/index.js";
-import { resolveRunnerCurl, resolveRunnerPose, resolveRunnerSlope } from "../runnerPose/index.js";
+import { Rider, paintRider, type RiderRefs } from "../Rider/index.js";
+import { resolveRiderPlacement } from "../riderPlacement/index.js";
+import { resolveRunnerCurl } from "../runnerPose/index.js";
 import * as styles from "./styles.js";
 
 /** The ghost is a shadow of a run, not a runner: never solid, never in front. */
@@ -13,11 +14,12 @@ const GHOST_OPACITY = 0.5;
 /** How far outside the camera the ghost may be before it is not drawn at all. */
 const GHOST_MARGIN = 20;
 /** The ghost's name tag hangs this far above its head, in world units. */
-const GHOST_TAG_RISE = 11;
+const GHOST_TAG_RISE = 13;
 
 export type GhostRefs = {
   group: SVGGElement | null;
-  tuck: SVGGElement | null;
+  tag: SVGTextElement | null;
+  rider: RiderRefs | null;
 };
 
 export type GhostPaintInput = {
@@ -32,16 +34,13 @@ export type GhostPaintInput = {
   curl: number;
 };
 
-/** The runner's own scale and stance, shared so the ghost is drawn as the same bird. */
-export const RUNNER_SCALE = 0.18;
-export const TUCK_DROP = 2.5;
-export const TUCK_SHRINK = 0.12;
-
 /**
  * The ghost stands where its own replay has got to, measured off the live runner: the zone
  * scrolls with the live run, so the ghost's place on screen is the runner's plus the gap
- * between the two. Hidden on the line (two hens on one spot is a smudge) and once it is
- * further off the camera than the margin. Returns the curl to carry to the next frame.
+ * between the two. Hidden on the line (two riders on one spot is a smudge) and once it is
+ * further off the camera than the margin. It is placed by the runner's own rule
+ * (`resolveRiderPlacement`) — board, kickflip, grind and bail — so it is the same rider. Returns
+ * the curl to carry to the next frame.
  */
 export const paintGhost = ({ refs, ghostFrame, frame, camera, zone, curl }: GhostPaintInput): number => {
   const group = refs?.group ?? null;
@@ -66,48 +65,34 @@ export const paintGhost = ({ refs, ghostFrame, frame, camera, zone, curl }: Ghos
   }
 
   const nextCurl = resolveRunnerCurl(ghostFrame.grounded, curl);
-  const pose = resolveRunnerPose({
-    x: ghostFrame.x,
-    grounded: ghostFrame.grounded,
-    slope: resolveRunnerSlope(zone, ghostFrame),
-    curl: nextCurl
-  });
 
-  group.setAttribute("transform", `translate(${screenX} ${ghostFrame.y - pose.bob})`);
-  refs?.tuck?.setAttribute(
-    "transform",
-    `rotate(${pose.angle}) translate(0 ${SCHLONIC_WORLD.runnerRadius + pose.tuck * TUCK_DROP}) scale(${
-      RUNNER_SCALE * (1 - pose.tuck * TUCK_SHRINK)
-    }) translate(${-CHARACTER_FOOT.x} ${-CHARACTER_FOOT.y})`
-  );
+  paintRider(refs?.rider ?? null, resolveRiderPlacement({ zone, frame: ghostFrame, screenX, curl: nextCurl }), {
+    hen: 1,
+    board: 1
+  });
+  refs?.tag?.setAttribute("transform", `translate(${screenX} ${ghostFrame.y - GHOST_TAG_RISE})`);
 
   return nextCurl;
 };
 
 /**
- * The run to beat, drawn behind the runner: the best run's own bird, at half strength, its
- * name over its head so the room knows whose pace this is. Placed every frame by `paintGhost`
- * through the refs; nothing here is React-driven per frame.
+ * The run to beat, drawn behind the runner: the best run's own bird on its own board, at half
+ * strength, its name over its head so the room knows whose pace this is. Placed every frame by
+ * `paintGhost` through the refs; nothing here is React-driven per frame.
  */
 export const Ghost = forwardRef<GhostRefs, { figure: RunnerFigure }>(({ figure }, ref): JSX.Element => {
   const group = useRef<SVGGElement>(null);
-  const tuck = useRef<SVGGElement>(null);
+  const tag = useRef<SVGTextElement>(null);
+  const rider = useRef<RiderRefs>(null);
 
-  useImperativeHandle(ref, () => ({ group: group.current, tuck: tuck.current }));
+  useImperativeHandle(ref, () => ({ group: group.current, tag: tag.current, rider: rider.current }));
 
   return (
     <g ref={group} className={figure.fillClassName} opacity={0} data-schlonic-ghost aria-hidden="true">
-      <text className={styles.tag} x={0} y={-GHOST_TAG_RISE} textAnchor="middle">
+      <text ref={tag} className={styles.tag} x={0} y={0} textAnchor="middle">
         {figure.playerName ?? ""}
       </text>
-      <g ref={tuck}>
-        <CharacterFigure
-          appearance={figure.appearance}
-          apparel={figure.apparel}
-          silhouette={figure.silhouette}
-          pose="walk"
-        />
-      </g>
+      <Rider ref={rider} figure={figure} isRunner={false} />
     </g>
   );
 });

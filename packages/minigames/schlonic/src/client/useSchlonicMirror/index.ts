@@ -206,7 +206,7 @@ export const useSchlonicMirror = ({
     const bankBefore = Math.max(0, wingsBankedRef.current - frame.wings);
     let counted = 0;
     // A run that went wrong plays its punchline, and the wall sounds each part of the joke as
-    // the picture reaches it: the splash and the gull, or every wing the badnik eats.
+    // the picture reaches it: the thud and the raccoon, or every wing the badnik eats.
     const wingsLost = resolveHandfulLost(zone, inputs, frame);
     const punchlineCues =
       frame.outcome === "fell" || frame.outcome === "wiped" ? resolvePunchlineCues(frame.outcome, wingsLost) : [];

@@ -6,8 +6,9 @@ import { SCHLONIC_WORLD } from "@wingnight/shared";
  * distance along the run — 0 on the start line, 100 at the post — the same number the run's
  * `distance` result is a fraction of, so a finished run's pin and a live run's pin are on one
  * scale. Wings are not on it: the strip is a map of what can go wrong, not of what there is to
- * collect, and a couple of hundred dots would read as a fence. Nor are rails: a rail is kit, not
- * a hazard, and the thorn bed under it is already marked.
+ * collect, and a couple of hundred dots would read as a fence. Rails are, but apart: a rail is
+ * kit, not a hazard — the greedy line rides it — so it is a span over the line rather than a mark
+ * on it, and the thorn bed under its far end is marked as the hazard it is.
  */
 export type ZoneTrackHazard = {
   index: number;
@@ -21,9 +22,16 @@ export type ZoneTrackPit = {
   widthPercent: number;
 };
 
+export type ZoneTrackRail = {
+  index: number;
+  fromPercent: number;
+  widthPercent: number;
+};
+
 export type ZoneTrackMarks = {
   hazards: ZoneTrackHazard[];
   pits: ZoneTrackPit[];
+  rails: ZoneTrackRail[];
 };
 
 const clampPercent = (value: number): number => Math.min(100, Math.max(0, value));
@@ -60,7 +68,23 @@ export const resolveTrackMarks = (zone: SchlonicZone): ZoneTrackMarks => {
     };
   });
 
-  return { hazards, pits };
+  const rails = zone.props.flatMap((prop): ZoneTrackRail[] => {
+    if (prop.kind !== "rail") {
+      return [];
+    }
+
+    const fromPercent = resolveTrackPercent(zone, prop.x);
+
+    return [
+      {
+        index: prop.index,
+        fromPercent,
+        widthPercent: round(resolveTrackPercent(zone, prop.toX ?? prop.x) - fromPercent)
+      }
+    ];
+  });
+
+  return { hazards, pits, rails };
 };
 
 /**

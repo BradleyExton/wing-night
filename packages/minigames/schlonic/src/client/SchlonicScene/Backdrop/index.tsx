@@ -105,12 +105,6 @@ const ROAD_Y = 61.6;
 /** The road's centre line, just clear of the near sidewalk's lip on the flat. */
 const LANE_Y = 62.7;
 
-/**
- * Where the bay used to meet the beach, which the fall punchline still measures its water from
- * until the trench's own joke replaces it.
- */
-export const SHORE_Y = 58;
-
 /** The sun is low and east, over the bay, and the water carries a short column of it. */
 const SUN_X = 116;
 const SUN_Y = 24;
@@ -268,7 +262,7 @@ export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number; camera: S
               key={x}
               d={`M ${x} ${19 + index * 4} q 1.6 -1.4 3.2 0 q 1.6 -1.4 3.2 0`}
               fill="none"
-              stroke={schlonicPalette.steelDark}
+              stroke={schlonicPalette.skyInk}
               strokeWidth={0.4}
               strokeLinecap="round"
               opacity={0.5}

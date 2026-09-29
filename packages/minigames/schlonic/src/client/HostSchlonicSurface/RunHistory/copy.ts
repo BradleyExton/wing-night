@@ -7,7 +7,7 @@ export const runHistoryCopy = {
     }
 
     if (outcome === "fell") {
-      return "Down a hole";
+      return "Into the roadworks";
     }
 
     if (outcome === "wiped") {

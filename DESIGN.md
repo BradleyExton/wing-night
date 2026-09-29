@@ -1087,10 +1087,10 @@ where `02-clue-wall.html` always drew it (`.timer-block`).
 ## 2.7 JOUST Minigame Surface Language ("Centennial Beach at Dusk")
 
 The JOUST (Slingshlong) surfaces put a side-on beach lane under the same
-marquee chrome the drawing easel uses. It is the SAME shore SCHLONIC runs
-along on a summer morning (§2.11) — Kempenfelt Bay, seen from Centennial
-Beach — at dusk, so the two games share the city and are still told apart
-from the sofa by the hour:
+marquee chrome the drawing easel uses. It is the SAME city SCHLONIC skates
+through on a summer morning (§2.11) — here from the water's edge, Kempenfelt
+Bay seen from Centennial Beach — at dusk, so the two games share the city and
+are still told apart from the sofa by the hour:
 
 -   Scene materials are drawing content, not UI chrome, and are exempt
     from the 2-accent budget like the drawing inks: dusk sky
@@ -1277,7 +1277,7 @@ rooftop height, under JOUST's marquee chrome (§2.7) and, on the tablet, the sam
 full-bleed canvas:
 
 -   **A golden August afternoon**, so the room knows the game before a word is
-    read: not SCHLONIC's pale summer morning on the bay (§2.11), not JOUST's
+    read: not SCHLONIC's pale summer morning on Dunlop Street (§2.11), not JOUST's
     purple dusk on the beach (§2.7), but a deep blue sky going to honey at the
     horizon and a high sun on the right (`FappyScene/palette.ts`). The
     obstacle is the cast's schlong (§2.7, the same `resolveSchlongPaths`
@@ -1378,32 +1378,6 @@ full-bleed canvas:
     the tablet, so it holds a finished leg a little longer than the tablet
     does and finishes the flight it has before it switches: the room always
     sees the landing and the crash, never a cut to the next start.
--   **Failure is a punchline, not a verdict** (principles §8, §9). A run that
-    ends badly plays the demand that beat it to its conclusion on the wall,
-    inside the wipeout beat and before any card goes up
-    (`SchlonicScene/punchlineTimeline`, painted by `usePunchline`). Down a
-    hole: the bird drops out of the zone, and the hole turns out to go to the
-    bay — it comes up in the water with a splash, clipped at the surface and
-    shaking its head, and a ring-billed gull (`SchlonicScene/Gull`, one of the
-    backdrop's own gulls come down, at about the hen's size) swoops in, takes
-    the handful off the water — one to three wings drawn, by the size of what
-    the hole took, read off the tick before the fall because the terminal frame
-    holds none — and climbs out of the top of the picture with it. Wiped out:
-    the empty-handed hit knocks the bird flat on its back, and the wings it
-    dropped roll down the shore and hop into the nearest badnik still standing
-    in that camera's picture, which gulps once per wing and swells at the burp;
-    with none in the picture, a pink one hops on from the edge ahead to do it.
-    The bay is a still band, so the hen surfaces at the first stretch of screen
-    ahead where the shore is low enough to show water. Each surface paints the
-    joke through its own camera; the TV sounds it from the SCHLONIC board
-    (`splash`, `squawk`, one `chomp` per wing, `burp`) as its beat reaches each
-    moment. The TV's card waits `PUNCHLINE_MS` into the hold, and the handoff
-    ding waits with it, so the room laughs before it reads; the wipeout beat is
-    the joke plus the card's old reading time (`WIPEOUT_BEAT_MS`), which is why
-    it now outlasts the post. The tablet's "Hand it to" callout is not held:
-    the holder has a tablet to pass. The plaque copy is unchanged — the
-    picture does the joke. Wipeouts are rare in practice: the floor wing lines
-    mean a runner is almost never hit empty-handed.
 -   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
     the same one JOUST takes in §2.7: the corridor is full bleed and is still
     the whole flap surface (no scroll, no zoom), filling the takeover's padding
@@ -1567,6 +1541,39 @@ from Barrie, knows which street it is watching.
     finale's springboard is never dressed over. Barrel orange (`#e8581c`) is a
     road-works orange, redder and deeper than a wing's sauce, and its white
     bands are what say "barrel" rather than "another wing".
+-   **Failure is a punchline, not a verdict** (principles §8, §9). A run that
+    ends badly plays the demand that beat it to its conclusion on the wall,
+    inside the wipeout beat and before any card goes up
+    (`SchlonicScene/punchlineTimeline`, painted by `usePunchline`). *Into the
+    roadworks*: the hen and its board drop down the trench — the rider is
+    clipped at the trench's lip, so it goes INTO the dig rather than in front
+    of it — a cloud of dust boils up out of the trench's mouth with a spit of
+    gravel (`SchlonicScene/Dust`), and the hen peeks back up over the near lip,
+    head and chest out, shaking its head. Then a raccoon in an orange hard hat
+    (`SchlonicScene/Raccoon`: grey fur, a pale snout, the black mask with a
+    bright eye in it and a ringed tail, stood up on its back legs at about the
+    hen's size) climbs out up the far wall hugging the handful to its chest —
+    one to three wings drawn, by the size of what the trench took, read off
+    the tick before the fall because the terminal frame holds none — hops onto
+    the far lip, chitters at the hen, and runs off down the sidewalk out of
+    the right of the picture. It lives in the dig; of course it does. The
+    hard hat is a safety orange `#ff6f0f`, redder than a wing, so the haul
+    still reads against it; its tail hangs down into the trench while it
+    climbs, out of the hen's face. *Wiped out*: the empty-handed hit knocks
+    the hen flat on its back, the board rolls on up the sidewalk without it,
+    and the wings it dropped roll down to the nearest badnik still standing
+    in that camera's picture, which gulps once per wing and swells at the
+    burp; with none in the picture, a pink one hops on from the edge ahead to
+    do it. Each surface paints the joke through its own camera; the TV sounds
+    it from the SCHLONIC board (`thud`, `chitter`, one `chomp` per wing,
+    `burp`) as its beat reaches each moment. The TV's card waits
+    `PUNCHLINE_MS` into the hold, and the handoff ding waits with it, so the
+    room laughs before it reads; the wipeout beat is the joke plus the card's
+    old reading time (`WIPEOUT_BEAT_MS`), which is why it outlasts the post.
+    The tablet's "Hand it to" callout is not held: the holder has a tablet to
+    pass. The plaque says "Into the roadworks!" for a fall and "Wiped out!"
+    for a wipeout — the picture does the joke. Wipeouts are rare in practice:
+    the floor wing lines mean a runner is almost never hit empty-handed.
 -   Scene materials are their own (`packages/minigames/schlonic/.../palette.ts`):
     a sky that runs `#0b6fd4` to `#cfeaf7`, the bay `#2f8fc4` between a deep
     `#2b6ea6` and a shallow `#63b8de`, asphalt `#5b6068` under a `#f2c94c`
@@ -1607,15 +1614,64 @@ from Barrie, knows which street it is watching.
     reads as a line because the eye stops resolving it after the first one —
     and the drawing is sized off the sim's own `wingRadius`, so what the room
     reaches for is the hitbox rather than a guess at it.
--   The bird has no spine to bend, so its pose is how it is turned and how
-    tightly it is tucked: on its feet it runs and leans with the ground, and
-    the moment it leaves the ground it tucks and spins. The spin is the Sonic
-    move and the rule at once — being a ball is what pops a badnik — and both
-    the spin and the step's bob come off the distance travelled, so the tablet
-    and the TV draw the same runner from the same frame with nothing
-    synchronised. The bird turns about the hitbox's own centre; a group inside
-    it stands the cast on that centre and tucks it in, because a spin and a
-    stance are different transforms and neither should know about the other.
+-   **The hen is on a skateboard.** The runner is the cast figure in its
+    `ride` pose (§2.8) — both feet flat on one line, knees bent, wings out for
+    balance — standing on a board drawn in the figure's own units
+    (`SchlonicScene/Skateboard`), so the deck's top is the stance's `deckY` and
+    a truck sits under each foot (`backFootX`/`frontFootX`). The board is a
+    deck with a kicktail and a nose turned up past the feet (the upturned ends
+    are what make a plank read as a skateboard from the sofa), black grip
+    `#26272b` over a maple edge `#e3b774`, pale trucks, cream wheels, all edged
+    near-black `#1c1714` so it holds on the pale sidewalk; its underside is the
+    team's own colour with a white flash, and only the kickflip shows it. The
+    board lifts the hen off the ground by its own depth, so the wheels, not
+    the soles, are on the sidewalk. On the ground the rider rolls, leaning
+    with the slope (`resolveRunnerSlope`), with a small knock every time the
+    wheels cross one of the sidewalk's slab joints — a board rolls, it does
+    not bob. The hen and the board are two groups (`SchlonicScene/Rider`),
+    because in a bail one leaves the other behind; the ghost is the same
+    `Rider` at half strength, placed by the same rule
+    (`riderPlacement/resolveRiderPlacement`), so it ollies, grinds and bails
+    exactly as its run did.
+-   **Airborne is a kickflip, and still the rule.** The moment the feet leave
+    the ground the hen tucks a little over the board (`AIR_TUCK`, never the old
+    full ball), pitches nose up on the way up and nose down coming down, and
+    the board flips once about its long axis under its feet, dropping a
+    little clear of the soles at the top. The flip comes off the vertical
+    speed, not a clock: a tap leaves the ground at the jump velocity and lands
+    at its mirror, so one ollie is exactly one flip and the board is level on
+    every landing; a springboard throws harder, so the board holds level until
+    the climb slows to a jump's and flips over the top. A side view of a board
+    turning over is drawn as the two things a side view can see — its edge,
+    squashing as it turns, and its flat face opening up as the edge closes,
+    the team-coloured underside first, then the grip. Anything airborne still
+    pops a badnik it lands on. `resolveRunnerPose` is a pure function of the
+    frame (the tuck is the only eased value), so the tablet and the TV flip
+    the same board on the same tick with nothing synchronised.
+-   **Rails are grinds.** A rail (`ZoneProps/Rail`) is a long straight
+    galvanised handrail — pale steel `#aab5bf` with a sunlit top `#f4f8fb` and
+    a near-black edge `#1f262c` — on three posts from the sidewalk up to the
+    rail's top, its ends turned down past the level run the way a real
+    handrail's are. The level top is exactly the line the sim catches a
+    falling board on, and the tube hangs from it so its top edge is that line.
+    No post stands at the far end: the thorn bed waits under it, and a post
+    in the thorns would read as part of them. It is the only long straight
+    line in the zone and the only grey kit, so it reads as metal to land on,
+    never as one more pink thing to avoid. On it (`frame.grindingRail`) the
+    rider drops onto its trucks — the hanger rides the bar with the wheels
+    either side of it — tilts nose up about the back truck (a 5-0, the grind
+    that reads side on), and sparks fly back off the back truck: short
+    white-hot, yellow and orange streaks redrawn every frame from how far along
+    the zone the rider is, so they flicker alike on both screens
+    (`SchlonicScene/Sparks`). The runner group publishes
+    `data-schlonic-grinding` beside `data-schlonic-grounded`, and
+    `data-schlonic-board-roll` and `data-schlonic-bailing` with them.
+-   **A hit is a bail.** For the sim's mercy window after a hit the board
+    squirts out from under the hen and rolls ahead up the sidewalk, bouncing
+    once and flipping as it goes, while the hen tumbles over once, tucked, and
+    flashes; the board slows, the hen catches it up, and steps back on as the
+    window closes. All of it is a picture of the frame's own `hits` and tick,
+    so both screens bail together, and none of it changes the sim.
 -   **Wings are the score and the health bar at the same time.** That is the
     whole design, so the tally is the one number both surfaces put in their
     chrome, in `gold`: the tablet's takeover `counter` and the TV's marquee.
@@ -1659,8 +1715,10 @@ from Barrie, knows which street it is watching.
     size, so the two twitch games read as one picture: the run start to post,
     every hazard marked in the scene's own materials and the shape the zone
     tells it by (a crimson bar for a thorn bed, a pink dot for a badnik, the
-    pad's red-on-white ring for a springboard), every hole a gap in the rail,
-    the post a gold tick, this turn's finished runs pinned in the team's colour
+    pad's red-on-white ring for a springboard), every grind rail a thin steel
+    bar raised over the line for the rail's whole length (kit to aim for, so it
+    stands off the line rather than sitting on it), every trench a gap in the
+    line, the post a gold tick, this turn's finished runs pinned in the team's colour
     where they ended, and the live runner's own head riding the rail. Wings are
     not on it: it is a map of what can go wrong, not of what there is to
     collect. The static marks are laid out once per zone as custom properties
@@ -1684,10 +1742,18 @@ from Barrie, knows which street it is watching.
 -   **Juice (§8 of the principles): the wall sounds, flinches and counts.**
     The TV has a soundboard (`audio/`, a table of voices for the house synth
     in `@wingnight/audio`): a ring-style chime per wing that climbs with the
-    handful, a boing off a springboard, a pop for a badnik, a scatter for a
-    hit, a whistle down a hole, three notes down for a wipeout, the
-    punchlines' own splash, gull, chomps and burp (below), an act-clear fanfare at the post, a tick per wing counted into the bank, and
-    the handoff and finish stings the arcade games share. The mirror announces
+    handful, the board's own voice — the tail's knock on an ollie, a duller
+    clack of four wheels landing, a steel clank onto a rail, a bright scrape
+    sounded every few units along it so the ticks run into one grind, and the
+    rail ringing on as the board leaves it — a boing off a springboard, a pop
+    for a badnik, a scatter for a hit, a whistle down a trench, three notes
+    down for a wipeout, the punchlines' own thud, chitter, chomps and burp
+    (above), an act-clear fanfare at the post, a tick per wing counted into
+    the bank, and the handoff and finish stings the arcade games share. A
+    bailing hen has no board under it, so it makes no board noises. The pack's
+    recorded takes stand in for a cue's synthesis where they exist
+    (`resolveSchlonicTakes` keeps only the takes of cues the board still has,
+    so the bay's old `splash` and `squawk` takes are left undecoded). The mirror announces
     what changed between frames (`mirrorEvents`) and the surface's sound hook
     decides what that means; the tablet stays silent, the TV is the speaker.
     A hit stops BOTH loops' clocks for `HIT_PAUSE_MS` (the sim never knows —
@@ -1759,9 +1825,8 @@ from Barrie, knows which street it is watching.
     FAPPY were paying the same on the same row.
 -   The Spirit Catcher, the marina and Allandale Station left this zone when
     it moved uptown (2026-09-28); they still stand in `@wingnight/scenery`
-    for JOUST's beach. The runner's board, kickflip and grind, the rail's own
-    drawing and the trench's punchline are specified with the skate run's
-    sim and are not described here yet.
+    for JOUST's beach, and the bay and the gull left the fall's punchline for
+    the trench and the raccoon.
 -   The run is the game: §8's infinite-animation rule does not bite.
     `prefers-reduced-motion` on the display shows how the run ended, without
     the running.
@@ -1958,10 +2023,16 @@ TV disagreed with.
     the tail with it, a double peck every four seconds), `walk` (legs ±30°
     about the hips half a stride apart, a bob on every footfall, the head
     nodding against it, the tail swaying, the wing tucking), `fly` (both
-    legs tucked back, no loop) and `dance` (the player's own move — bounce,
+    legs tucked back, no loop), `dance` (the player's own move — bounce,
     headbang, flap or shuffle, seeded off the name like the body — as two
     states of its parts that a `data-beat` toggle on a `group/beat` ancestor
-    transitions between, so it is on the room's beat and not on a clock).
+    transitions between, so it is on the room's beat and not on a clock) and
+    `ride` (the skate stance SCHLONIC stands on its board, §2.11: both feet
+    flat on one line fore and aft, the legs redrawn bent and everything above
+    the knees sunk by the shape's own crouch, the wing held out and the head
+    up; static, because a surface riding the bird along a zone moves the whole
+    figure — `CHARACTER_RIDE_STANCE` says where the feet and the deck are, so a
+    surface can lay a board exactly under them).
     A dancing bird moves on TWO clocks: the beat, and a **jig** under it —
     quick feet at a tempo of its own, a hop, a tail or a wing going its own
     way (`danceJigs` next to the figure, `cast-jig-*` keyframes). Each part is

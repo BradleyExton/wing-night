@@ -34,7 +34,7 @@ export const displaySchlonicSurfaceCopy = {
       return "Post!";
     }
 
-    return outcome === "fell" ? "Down a hole!" : "Wiped out!";
+    return outcome === "fell" ? "Into the roadworks!" : "Wiped out!";
   },
   outcomeBlurb: (outcome: "cleared" | "wiped" | "fell", wings: number): string => {
     if (outcome === "cleared") {

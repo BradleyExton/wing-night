@@ -4,31 +4,33 @@ import { SCHLONIC_WORLD, createSchlonicRunStart, resolveSchlonicZone } from "@wi
 
 import { PUNCHLINE_MS, WIPEOUT_BEAT_MS } from "../../beats/index.js";
 import { TABLET_CAMERA } from "../camera/index.js";
-import { GULL_HAUL_DROP } from "../Gull/index.js";
 import {
-  BAY_HEN_Y,
-  BAY_SURFACE_Y,
-  FALL_SPLASH_AT_MS,
-  GULL_GRAB_AT_MS,
-  GULL_IN_AT_MS,
+  FALL_THUD_AT_MS,
   PUNCHLINE_END_MS,
+  RACCOON_CHITTER_AT_MS,
+  RACCOON_IN_AT_MS,
+  RACCOON_OUT_AT_MS,
+  TRENCH_HEN_BELOW_LIP,
   WIPEOUT_DROPPED_WINGS,
   WIPEOUT_KNOCK_MS,
-  resolveBayHen,
   resolveBundleSize,
   resolveChompAtMs,
   resolveDroppedWing,
   resolveDueCues,
   resolveEater,
   resolveEaterSquash,
-  resolveGullFlight,
   resolvePunchlineCues,
-  resolveStandInPlace
+  resolveRaccoon,
+  resolveRunawayBoard,
+  resolveStandInPlace,
+  resolveTrench,
+  resolveTrenchHen
 } from "./index.js";
 
 const ZONE = resolveSchlonicZone({ seed: 20260919, chunks: 22 });
 const START = createSchlonicRunStart(ZONE);
 const BADNIK = ZONE.props.find((prop) => prop.kind === "badnik");
+const PIT = ZONE.pits[0];
 
 test("does finish the joke before the card goes up, and the card before the beat ends", () => {
   assert.ok(PUNCHLINE_END_MS <= PUNCHLINE_MS);
@@ -41,14 +43,14 @@ test("does finish the joke before the card goes up, and the card before the beat
   }
 });
 
-test("does splash and squawk on a fall, and only splash when there was nothing to take", () => {
+test("does thud and chitter on a fall, and only thud when there was nothing to take", () => {
   assert.deepEqual(
     resolvePunchlineCues("fell", 7).map((mark) => mark.cue),
-    ["splash", "squawk"]
+    ["thud", "chitter"]
   );
   assert.deepEqual(
     resolvePunchlineCues("fell", 0).map((mark) => mark.cue),
-    ["splash"]
+    ["thud"]
   );
 });
 
@@ -68,36 +70,63 @@ test("does sound each cue once when a loop steps across it, however the steps fa
   assert.equal(heard.length, cues.length);
 });
 
-test("does size the gull's haul by the handful, one to three wings", () => {
+test("does size the raccoon's haul by the handful, one to three wings", () => {
   assert.equal(resolveBundleSize(0), 0);
   assert.equal(resolveBundleSize(1), 1);
   assert.equal(resolveBundleSize(18), 2);
   assert.equal(resolveBundleSize(90), 3);
 });
 
-test("does keep the hen under the bay until the splash, then bring it up to the water line", () => {
-  assert.equal(resolveBayHen(FALL_SPLASH_AT_MS - 1, 70).visible, false);
+test("does find the trench the hen went down, on screen and under the runner", () => {
+  assert.ok(PIT !== undefined);
 
-  const surfaced = resolveBayHen(FALL_SPLASH_AT_MS + 900, 70);
+  const frame = { ...START, x: (PIT.fromX + PIT.toX) / 2, outcome: "fell" as const };
+  const trench = resolveTrench(ZONE, frame);
 
-  assert.equal(surfaced.visible, true);
-  assert.ok(Math.abs(surfaced.y - BAY_HEN_Y) < 1);
+  assert.ok(trench.fromX < SCHLONIC_WORLD.runnerX && trench.toX > SCHLONIC_WORLD.runnerX);
+  assert.equal(trench.toX - trench.fromX, PIT.toX - PIT.fromX);
+  assert.equal(trench.lipY, PIT.lipY);
 });
 
-test("does bring the gull down onto the handful, then carry it off the top of the picture", () => {
-  const bundle = { x: 80, y: BAY_SURFACE_Y - 1 };
+test("does keep the hen down the trench until the thud, then bring it up to peek over the lip", () => {
+  const trench = { fromX: 36, toX: 58, lipY: 66 };
 
-  assert.equal(resolveGullFlight(GULL_IN_AT_MS - 1, bundle, TABLET_CAMERA).visible, false);
+  assert.equal(resolveTrenchHen(FALL_THUD_AT_MS - 1, trench).visible, false);
 
-  const diving = resolveGullFlight(GULL_IN_AT_MS + 10, bundle, TABLET_CAMERA);
-  const grabbing = resolveGullFlight(GULL_GRAB_AT_MS, bundle, TABLET_CAMERA);
-  const leaving = resolveGullFlight(1860, bundle, TABLET_CAMERA);
+  const peeking = resolveTrenchHen(FALL_THUD_AT_MS + 900, trench);
 
-  assert.equal(diving.carrying, false);
-  assert.ok(diving.y < TABLET_CAMERA.y);
-  assert.equal(grabbing.carrying, true);
-  assert.ok(Math.abs(grabbing.x - bundle.x) < 0.5 && Math.abs(grabbing.y - (bundle.y - GULL_HAUL_DROP)) < 0.5);
-  assert.ok(leaving.x > bundle.x && leaving.y < TABLET_CAMERA.y + 2);
+  assert.equal(peeking.visible, true);
+  assert.ok(Math.abs(peeking.y - (trench.lipY + TRENCH_HEN_BELOW_LIP)) < 1);
+  assert.ok(peeking.x >= trench.fromX && peeking.x < trench.toX);
+});
+
+test("does climb the raccoon out of the trench, chitter on the far lip, and run it off the picture", () => {
+  const trench = { fromX: 36, toX: 58, lipY: 66 };
+  const flat = (): number => 66;
+
+  assert.equal(resolveRaccoon(RACCOON_IN_AT_MS - 1, trench, TABLET_CAMERA, flat).visible, false);
+
+  const climbing = resolveRaccoon(RACCOON_IN_AT_MS + 60, trench, TABLET_CAMERA, flat);
+  const chittering = resolveRaccoon(RACCOON_CHITTER_AT_MS + 40, trench, TABLET_CAMERA, flat);
+  const leaving = resolveRaccoon(RACCOON_OUT_AT_MS - 1, trench, TABLET_CAMERA, flat);
+
+  assert.equal(climbing.isClimbing, true);
+  assert.ok(climbing.y > trench.lipY, "it should start inside the trench");
+  assert.ok(climbing.x < trench.toX);
+  assert.equal(chittering.isClimbing, false);
+  assert.ok(chittering.x > trench.toX && chittering.y === trench.lipY);
+  assert.ok(chittering.chitter > 0);
+  assert.ok(leaving.x > TABLET_CAMERA.x + TABLET_CAMERA.width - 2);
+  assert.equal(resolveRaccoon(RACCOON_OUT_AT_MS + 1, trench, TABLET_CAMERA, flat).visible, false);
+});
+
+test("does send the board rolling on up the sidewalk when the hen is wiped out", () => {
+  const frame = { ...START, x: 200, outcome: "wiped" as const };
+  const early = resolveRunawayBoard(100, frame, ZONE);
+  const late = resolveRunawayBoard(1500, frame, ZONE);
+
+  assert.ok(late.x > early.x && early.x > SCHLONIC_WORLD.runnerX);
+  assert.ok(Math.abs(late.hop) < 1e-9, "the board should be back on its wheels");
 });
 
 test("does feed the wings to the badnik that is standing in the picture", () => {

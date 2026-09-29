@@ -3,6 +3,7 @@ import {
   playNoise,
   playTone,
   type CueTable,
+  type CueTakes,
   type CueVoice,
   type Soundboard,
   type SoundboardOptions
@@ -15,13 +16,18 @@ import {
  */
 export type SchlonicCueName =
   | "wing"
+  | "ollie"
+  | "land"
+  | "grindOn"
+  | "grind"
+  | "grindOff"
   | "spring"
   | "pop"
   | "hit"
   | "fell"
   | "wiped"
-  | "splash"
-  | "squawk"
+  | "thud"
+  | "chitter"
   | "chomp"
   | "burp"
   | "post"
@@ -32,13 +38,18 @@ export type SchlonicCueName =
 
 export const SCHLONIC_CUE_NAMES: readonly SchlonicCueName[] = [
   "wing",
+  "ollie",
+  "land",
+  "grindOn",
+  "grind",
+  "grindOff",
   "spring",
   "pop",
   "hit",
   "fell",
   "wiped",
-  "splash",
-  "squawk",
+  "thud",
+  "chitter",
   "chomp",
   "burp",
   "post",
@@ -49,7 +60,8 @@ export const SCHLONIC_CUE_NAMES: readonly SchlonicCueName[] = [
 ];
 
 // The pack folder its recorded takes live in: `assets/sfx/schlonic/hit-1.mp3` is a take of `hit`.
-// A cue with none keeps its synthesis.
+// A cue with none keeps its synthesis. The pack may still hold takes for cues this board no
+// longer has (the bay's `splash`, the gull's `squawk`); `resolveSchlonicTakes` leaves them out.
 export const SCHLONIC_SFX_FOLDER = "schlonic";
 
 // Music-friendly: loud enough to read across a room over a playlist, quiet enough that a line
@@ -58,19 +70,25 @@ export const SCHLONIC_MASTER_GAIN = 0.25;
 
 /**
  * The shortest gap between two soundings of the same cue. A wing line passes at one wing every
- * ~120 ms at top speed, so `wing` is the tightest; `bankTick` is the count-up at the post, held
+ * ~120 ms at top speed, so `wing` is the tightest; `grind` is a scrape sounded every few units along
+ * a rail, close enough together that the ticks run into one; `bankTick` is the count-up at the post, held
  * to a rate a room can hear as counting; the beats that are told twice (the mirror's outcome and
  * the surface's hold, a beat apart) collapse into one sounding.
  */
 export const SCHLONIC_CUE_MIN_GAP_MS: Record<SchlonicCueName, number> = {
   wing: 40,
+  ollie: 90,
+  land: 90,
+  grindOn: 200,
+  grind: 60,
+  grindOff: 200,
   spring: 150,
   pop: 120,
   hit: 250,
   fell: 1500,
   wiped: 1500,
-  splash: 1500,
-  squawk: 600,
+  thud: 1500,
+  chitter: 600,
   chomp: 60,
   burp: 1500,
   post: 1500,
@@ -106,6 +124,32 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
       peak: 0.1
     });
   },
+  // The ollie: the tail slapping the concrete. A hard wooden knock with a crack of grit on it.
+  ollie: (rig, startAt) => {
+    playNoise(rig, { startAt, durationSeconds: 0.05, peak: 0.5, filterType: "bandpass", fromHz: 1800, toHz: 900, q: 1.2 });
+    playTone(rig, { startAt, durationSeconds: 0.07, type: "triangle", fromHz: 340, toHz: 150, peak: 0.34 });
+  },
+  // Four wheels back on the sidewalk: a lower, duller clack than the pop, and a rattle of trucks.
+  land: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.06, type: "square", fromHz: 180, toHz: 90, peak: 0.2 });
+    playNoise(rig, { startAt, durationSeconds: 0.09, peak: 0.34, filterType: "bandpass", fromHz: 1300, toHz: 500, q: 1.6 });
+  },
+  // Onto a rail: steel on steel, a clank with a ring to it, then the scrape takes over.
+  grindOn: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.22, type: "square", fromHz: 1480, toHz: 1320, peak: 0.1 });
+    playTone(rig, { startAt, durationSeconds: 0.3, type: "triangle", fromHz: 2210, peak: 0.08 });
+    playNoise(rig, { startAt, durationSeconds: 0.14, peak: 0.4, filterType: "highpass", fromHz: 2600, toHz: 3800 });
+  },
+  // Along the rail: a bright metal scrape, sounded over and over as the truck slides so the ticks
+  // run together into one long grind.
+  grind: (rig, startAt) => {
+    playNoise(rig, { startAt, durationSeconds: 0.13, peak: 0.22, filterType: "bandpass", fromHz: 3600, toHz: 3100, q: 3 });
+    playNoise(rig, { startAt, durationSeconds: 0.13, peak: 0.08, filterType: "highpass", fromHz: 6000 });
+  },
+  // Off the end of it: the rail rings on after the truck has gone.
+  grindOff: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.35, type: "triangle", fromHz: 1760, toHz: 1700, peak: 0.08 });
+  },
   // A boing: a sine bent up hard, with a touch of air.
   spring: (rig, startAt) => {
     playTone(rig, {
@@ -119,7 +163,7 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
     });
     playNoise(rig, { startAt, durationSeconds: 0.08, peak: 0.12, filterType: "bandpass", fromHz: 1200, q: 1.5 });
   },
-  // A badnik popping under a ball: a short wet burst and a squeak down.
+  // A badnik popping under a board: a short wet burst and a squeak down.
   pop: (rig, startAt) => {
     playNoise(rig, { startAt, durationSeconds: 0.09, peak: 0.45, filterType: "bandpass", fromHz: 700, toHz: 250, q: 2 });
     playTone(rig, { startAt, durationSeconds: 0.12, type: "square", fromHz: 520, toHz: 140, peak: 0.18 });
@@ -129,8 +173,8 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
     playNoise(rig, { startAt, durationSeconds: 0.2, peak: 0.6, filterType: "highpass", fromHz: 1800, toHz: 4000 });
     playTone(rig, { startAt, durationSeconds: 0.16, type: "sawtooth", fromHz: 240, toHz: 70, peak: 0.35 });
   },
-  // Down a hole: a whistle falling away. The bay taking it is its own cue, `splash`, sounded
-  // when the picture gets there.
+  // Into the roadworks: a whistle falling away down the trench. Hitting the bottom is its own
+  // cue, `thud`, sounded when the picture gets there.
   fell: (rig, startAt) => {
     playTone(rig, {
       startAt,
@@ -148,28 +192,28 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
     playTone(rig, { startAt: startAt + 0.18, durationSeconds: 0.2, type: "triangle", fromHz: 349, peak: 0.29 });
     playTone(rig, { startAt: startAt + 0.36, durationSeconds: 0.34, type: "triangle", fromHz: 262, peak: 0.28 });
   },
-  // The fall's punchline, part one: the hen comes up in the bay. A wet thump, a bloop under
-  // it, and the spray hissing back down.
-  splash: (rig, startAt) => {
-    playNoise(rig, { startAt, durationSeconds: 0.45, peak: 0.55, filterType: "lowpass", fromHz: 2400, toHz: 350 });
-    playTone(rig, { startAt, durationSeconds: 0.18, type: "sine", fromHz: 320, toHz: 90, peak: 0.32 });
+  // The fall's punchline, part one: the bottom of the dig. A body into gravel — a low thump, a
+  // dull crunch over it, and the dust settling.
+  thud: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.22, type: "sine", fromHz: 150, toHz: 48, peak: 0.5 });
+    playNoise(rig, { startAt, durationSeconds: 0.16, peak: 0.5, filterType: "lowpass", fromHz: 1400, toHz: 300 });
     playNoise(rig, {
-      startAt: startAt + 0.06,
-      durationSeconds: 0.32,
-      peak: 0.12,
-      filterType: "highpass",
-      fromHz: 3200,
-      toHz: 5200
+      startAt: startAt + 0.08,
+      durationSeconds: 0.4,
+      peak: 0.1,
+      filterType: "bandpass",
+      fromHz: 900,
+      toHz: 600,
+      q: 0.8
     });
   },
-  // Part two: the gull. A rasping kee-OW as it takes the handful, then a laugh on the way out.
-  squawk: (rig, startAt) => {
-    playTone(rig, { startAt, durationSeconds: 0.09, type: "sawtooth", fromHz: 1100, toHz: 1500, peak: 0.16 });
-    playTone(rig, { startAt: startAt + 0.1, durationSeconds: 0.3, type: "sawtooth", fromHz: 1600, toHz: 700, peak: 0.2 });
-    playTone(rig, { startAt: startAt + 0.1, durationSeconds: 0.3, type: "square", fromHz: 1650, toHz: 760, peak: 0.07 });
+  // Part two: the raccoon, up on the lip with the handful, chittering at the hen — a run of quick
+  // squeaky trills, the last one cheekier than the rest.
+  chitter: (rig, startAt) => {
+    for (const [index, at] of [0, 0.07, 0.14, 0.21, 0.3, 0.37].entries()) {
+      const top = index === 5 ? 2600 : 2100 + (index % 2) * 250;
 
-    for (const laughAt of [0.48, 0.62, 0.76]) {
-      playTone(rig, { startAt: startAt + laughAt, durationSeconds: 0.08, type: "sawtooth", fromHz: 1250, toHz: 900, peak: 0.12 });
+      playTone(rig, { startAt: startAt + at, durationSeconds: 0.05, type: "square", fromHz: top, toHz: top * 0.7, peak: 0.09 });
     }
   },
   // The wipeout's punchline: one wing into the badnik. A wet crunch, short enough that five in
@@ -239,6 +283,17 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
 export const SCHLONIC_CUES: CueTable<SchlonicCueName> = Object.fromEntries(
   SCHLONIC_CUE_NAMES.map((cue) => [cue, { minGapMs: SCHLONIC_CUE_MIN_GAP_MS[cue], voice: CUE_VOICES[cue] }])
 ) as CueTable<SchlonicCueName>;
+
+/**
+ * The pack's takes for the cues this board plays. The pack keeps takes for cues it no longer
+ * has — `splash` and `squawk` from when the fall went into the bay — and a board decodes every
+ * take it is handed, so those are left behind here rather than fetched and never heard.
+ */
+export const resolveSchlonicTakes = (takes: Readonly<Record<string, readonly string[]>>): CueTakes<SchlonicCueName> => {
+  const known = new Set<string>(SCHLONIC_CUE_NAMES);
+
+  return Object.fromEntries(Object.entries(takes).filter(([cue]) => known.has(cue))) as CueTakes<SchlonicCueName>;
+};
 
 export type SchlonicSoundboard = Soundboard<SchlonicCueName>;
 

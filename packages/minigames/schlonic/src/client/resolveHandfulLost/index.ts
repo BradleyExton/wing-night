@@ -4,7 +4,7 @@ import { advanceSchlonic, createSchlonicRunStart } from "@wingnight/shared";
 /**
  * What the hen was holding when a hole took it: the terminal frame carries nothing (the wings
  * were the health bar), so it is read off the tick before, re-run from the log. That is the
- * handful the gull flies off with. A wipeout is a hit taken empty-handed, so it lost nothing
+ * handful the raccoon makes off with. A wipeout is a hit taken empty-handed, so it lost nothing
  * it was still holding; a cleared run lost nothing at all.
  */
 export const resolveHandfulLost = (

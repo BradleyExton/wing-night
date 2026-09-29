@@ -8,6 +8,7 @@ import {
   SCHLONIC_CUE_NAMES,
   WING_CHIME_TOP_AT,
   createSchlonicSoundboard,
+  resolveSchlonicTakes,
   resolveWingChimeHz
 } from "./index.js";
 
@@ -34,4 +35,14 @@ test("does climb the wing chime with the handful and stop climbing at the top", 
   assert.ok(resolveWingChimeHz(10) < resolveWingChimeHz(WING_CHIME_TOP_AT));
   assert.equal(resolveWingChimeHz(WING_CHIME_TOP_AT), resolveWingChimeHz(WING_CHIME_TOP_AT * 3));
   assert.equal(resolveWingChimeHz(-4), resolveWingChimeHz(0));
+});
+
+test("does keep the pack's takes for this board's cues and leave the retired ones behind", () => {
+  const takes = resolveSchlonicTakes({
+    hit: ["/content-assets/sfx/schlonic/hit-1.mp3"],
+    splash: ["/content-assets/sfx/schlonic/splash-1.mp3"],
+    squawk: ["/content-assets/sfx/schlonic/squawk-1.mp3"]
+  });
+
+  assert.deepEqual(Object.keys(takes), ["hit"]);
 });

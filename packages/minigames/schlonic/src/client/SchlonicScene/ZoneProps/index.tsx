@@ -1,10 +1,10 @@
 import type { SchlonicProp, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD } from "@wingnight/shared";
 
-import { schlonicPalette } from "../palette.js";
 import { Wing } from "../Wing/index.js";
 import { Badnik } from "./Badnik/index.js";
 import { GoalPost } from "./GoalPost/index.js";
+import { Rail } from "./Rail/index.js";
 import { Springboard } from "./Springboard/index.js";
 import { Thorns } from "./Thorns/index.js";
 
@@ -31,7 +31,7 @@ type ZonePropsProps = {
   goalGroundY: number;
 };
 
-const drawProp = (prop: SchlonicProp): JSX.Element => {
+const drawProp = (prop: SchlonicProp, zone: SchlonicZone): JSX.Element => {
   if (prop.kind === "wing") {
     return <ZoneWing prop={prop} />;
   }
@@ -45,19 +45,7 @@ const drawProp = (prop: SchlonicProp): JSX.Element => {
   }
 
   if (prop.kind === "rail") {
-    // A bare bar until the rail gets its drawing: it has to be seen to be landed on.
-    return (
-      <line
-        data-schlonic-rail={prop.index}
-        x1={prop.x}
-        x2={prop.toX ?? prop.x}
-        y1={prop.y}
-        y2={prop.y}
-        stroke={schlonicPalette.steelDark}
-        strokeWidth={1.2}
-        strokeLinecap="round"
-      />
-    );
+    return <Rail prop={prop} zone={zone} />;
   }
 
   return <Badnik prop={prop} />;
@@ -72,7 +60,7 @@ export const ZoneProps = ({ zone, registerProp, goalGroundY }: ZonePropsProps): 
           registerProp(prop.index, element);
         }}
       >
-        {drawProp(prop)}
+        {drawProp(prop, zone)}
       </g>
     ))}
     <GoalPost goalX={zone.goalX} groundY={goalGroundY} />

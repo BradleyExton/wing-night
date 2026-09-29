@@ -41,14 +41,16 @@ const render = (runs: SchlonicMinigameRun[], shownRunIndex: number, figure: Schl
   );
 };
 
-test("does lay out every hazard, every hole and the post along the strip", () => {
+test("does lay out every hazard, every rail, every trench and the post along the strip", () => {
   const markup = render([], 0);
   const hazards = ZONE.props.filter((prop) => prop.kind !== "wing" && prop.kind !== "rail").length;
+  const rails = ZONE.props.filter((prop) => prop.kind === "rail").length;
 
   assert.equal(markup.split("data-schlonic-track-hazard=").length - 1, hazards);
+  assert.equal(markup.split("data-schlonic-track-rail=").length - 1, rails);
   assert.equal(markup.split("data-schlonic-track-pit=").length - 1, ZONE.pits.length);
   assert.ok(markup.includes("data-schlonic-track-post"));
-  assert.ok(markup.includes(`${hazards} hazards and ${ZONE.pits.length} holes`));
+  assert.ok(markup.includes(`${hazards} hazards, ${rails} rail${rails === 1 ? "" : "s"} and ${ZONE.pits.length} trenches`));
 });
 
 test("does ride the runner's own head along the rail", () => {
@@ -71,7 +73,7 @@ test("does pin the turn's earlier runs where they ended, and only the refereed o
 
   assert.ok(markup.includes('data-schlonic-track-pin="cleared" data-schlonic-track-at="100"'));
   assert.ok(markup.includes('data-schlonic-track-pin="fell"'));
-  assert.ok(markup.includes("Alex went down a hole here"));
+  assert.ok(markup.includes("Alex went into the roadworks here"));
   assert.equal(markup.split("data-schlonic-track-pin=").length - 1, 2);
   // The run on the wall is the live pin, not a finished one.
   assert.equal(render(runs, 1).split("data-schlonic-track-pin=").length - 1, 1);

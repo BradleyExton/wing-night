@@ -1,5 +1,4 @@
 import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { CHARACTER_FOOT, CharacterFigure } from "@wingnight/cast";
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, createSchlonicRunStart } from "@wingnight/shared";
 
@@ -8,9 +7,11 @@ import { Backdrop, paintBackdropScroll, type BackdropRefs } from "./Backdrop/ind
 import { Burst, paintBurst } from "./Burst/index.js";
 import { TABLET_CAMERA_FIT, resolveCamera, type SchlonicCameraFit } from "./camera/index.js";
 import { FallPunchline } from "./FallPunchline/index.js";
-import { Ghost, RUNNER_SCALE, TUCK_DROP, TUCK_SHRINK, paintGhost, type GhostRefs } from "./Ghost/index.js";
+import { Ghost, paintGhost, type GhostRefs } from "./Ghost/index.js";
 import { Ground } from "./Ground/index.js";
-import { resolveRunnerCurl, resolveRunnerPose, resolveRunnerSlope } from "./runnerPose/index.js";
+import { Rider, paintRider, type RiderRefs } from "./Rider/index.js";
+import { resolveRiderPlacement } from "./riderPlacement/index.js";
+import { resolveRunnerCurl } from "./runnerPose/index.js";
 import { SetPieces } from "./SetPieces/index.js";
 import { shakeElement } from "./shake/index.js";
 import * as styles from "./styles.js";
@@ -53,9 +54,8 @@ export type SchlonicSceneProps = {
 
 type Box = { width: number; height: number };
 
-// The runner's scale and stance (`RUNNER_SCALE`, `TUCK_DROP`, `TUCK_SHRINK`) live with the
-// ghost, which is drawn as the same bird: the cast's 80×72 box at a fifth, and a tucked bird
-// pulled down onto the hitbox's own centre so the spin turns on the spot.
+// The runner's scale and stance live with the rider's placement (`riderPlacement/`), which the
+// ghost is placed by too: the same hen on the same board, by the same rule.
 
 /** How long after a hit the bird keeps flashing, in ticks — the sim's own mercy window. */
 const FLASH_TICKS = SCHLONIC_WORLD.invulnerableTicks;
@@ -64,8 +64,8 @@ const FLASH_HZ = 8;
 
 /**
  * One world both surfaces draw, each through its own camera. The zone is SVG in world units,
- * built once and scrolled by a transform; the runner is the player's own cast hen (§2.8) placed
- * in it under a transform of its own, turned and tucked every frame. Nothing here is
+ * built once and scrolled by a transform; the runner is the player's own cast hen (§2.8) on a
+ * skateboard, placed in it every frame — rolling, flipping the board, grinding or bailing. Nothing here is
  * React-driven per frame — the owner paints frames through the handle from its own loop, so the
  * scene re-renders only when the zone, the runner or the box it fills changes, which is what
  * keeps a costume head's halo filter rasterised once.
@@ -79,8 +79,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
     const camera = resolveCamera(cameraFit, box);
     const zoneLayerRef = useRef<SVGGElement>(null);
     const backdropRef = useRef<BackdropRefs | null>(null);
-    const runnerGroupRef = useRef<SVGGElement>(null);
-    const runnerTuckRef = useRef<SVGGElement>(null);
+    const riderRef = useRef<RiderRefs>(null);
     const ghostRefs = useRef<GhostRefs | null>(null);
     const ghostCurlRef = useRef(0);
     const cameraRef = useRef(camera);
@@ -133,41 +132,31 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       paintBackdropScroll(backdropRef.current, scrollX);
     };
 
-    const paintRunner = (
-      frame: SchlonicFrame,
-      extra: { curl: number; fade: number; sink: number }
-    ): void => {
-      const pose = resolveRunnerPose({
-        x: frame.x,
-        grounded: frame.grounded,
-        slope: resolveRunnerSlope(zoneRef.current, frame),
-        curl: extra.curl
+    const paintRunner = (frame: SchlonicFrame, extra: { curl: number; sink: number }): void => {
+      const placement = resolveRiderPlacement({
+        zone: zoneRef.current,
+        frame,
+        screenX: SCHLONIC_WORLD.runnerX,
+        curl: extra.curl,
+        sink: extra.sink
       });
       const lastHit = frame.hits[frame.hits.length - 1] ?? -FLASH_TICKS * 2;
       const sinceHit = frame.tick - lastHit;
       const isFlashing = sinceHit >= 0 && sinceHit < FLASH_TICKS;
       const flashOpacity =
         isFlashing && Math.floor((sinceHit / SCHLONIC_WORLD.tickHz) * FLASH_HZ * 2) % 2 === 1 ? 0.25 : 1;
-      const group = runnerGroupRef.current;
+      const group = riderRef.current?.hen ?? null;
 
-      group?.setAttribute(
-        "transform",
-        `translate(${SCHLONIC_WORLD.runnerX} ${frame.y - pose.bob + extra.sink}) rotate(${pose.angle})`
-      );
-      group?.setAttribute("opacity", `${flashOpacity * extra.fade}`);
-      // The runner writes where it is and whether its feet are down, every frame, so a harness
-      // reads the sim's own numbers rather than reverse-engineering them out of a transform
-      // (the JOUST and FAPPY convention — see `data-champ-top`).
+      paintRider(riderRef.current, placement, { hen: flashOpacity, board: 1 });
+      // The runner writes where it is and what its feet are on, every frame, so a harness reads
+      // the sim's own numbers rather than reverse-engineering them out of a transform (the JOUST
+      // and FAPPY convention — see `data-champ-top`).
       group?.setAttribute("data-schlonic-x", `${Math.round(frame.x * 10) / 10}`);
       group?.setAttribute("data-schlonic-grounded", frame.grounded ? "true" : "false");
+      group?.setAttribute("data-schlonic-grinding", placement.grinding ? "true" : "false");
+      group?.setAttribute("data-schlonic-board-roll", `${Math.round(placement.boardRoll)}`);
+      group?.setAttribute("data-schlonic-bailing", placement.bail === null ? "false" : "true");
       group?.setAttribute("data-schlonic-held-wings", `${frame.wings}`);
-
-      runnerTuckRef.current?.setAttribute(
-        "transform",
-        `translate(0 ${SCHLONIC_WORLD.runnerRadius + pose.tuck * TUCK_DROP}) scale(${
-          RUNNER_SCALE * (1 - pose.tuck * TUCK_SHRINK)
-        }) translate(${-CHARACTER_FOOT.x} ${-CHARACTER_FOOT.y})`
-      );
     };
 
     const paintGhostFrame = (ghostFrame: SchlonicFrame | null, frame: SchlonicFrame): void => {
@@ -185,8 +174,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
     // eater through it, and puts them back on the next paint.
     const punchline = usePunchline({
       frameRef,
-      runnerGroupRef,
-      runnerTuckRef,
+      riderRef,
       burstRef,
       propRefs,
       zoneRef,
@@ -199,11 +187,11 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       paintScroll(frame);
       paintProps(frame);
       paintGhostFrame(ghostFrame, frame);
-      paintRunner(frame, { curl: curlRef.current, fade: 1, sink: 0 });
+      paintRunner(frame, { curl: curlRef.current, sink: 0 });
       paintBurst(burstRef.current, frame);
     };
 
-    // The post: the bird hops on the spot while the room reads the tally.
+    // The post: the rider ollies on the spot while the room reads the tally.
     const paintCleared = (
       frame: SchlonicFrame,
       progress: number,
@@ -214,7 +202,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       paintScroll(frame);
       paintProps(frame);
       paintGhostFrame(ghostFrame, frame);
-      paintRunner(frame, { curl: 0, fade: 1, sink: -hop });
+      paintRunner(frame, { curl: 0, sink: -hop });
       burstRef.current?.setAttribute("opacity", "0");
     };
 
@@ -308,22 +296,11 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
             </g>
             <Burst ref={burstRef} />
             {ghost !== null && <Ghost ref={ghostRefs} figure={ghost} />}
-            {/* The bird turns about the hitbox's own centre; the group inside it stands the cast
-                on that centre and tucks it in. Two groups, because a spin and a stance are
-                different transforms and neither should have to know about the other. */}
+            {/* The hen and its board, clipped at a trench's lip while the fall's joke plays. */}
             <g ref={punchline.runnerClipRef}>
-              <g ref={runnerGroupRef} className={runner.fillClassName} data-schlonic-runner>
-                <g ref={runnerTuckRef}>
-                  <CharacterFigure
-                    appearance={runner.appearance}
-                    apparel={runner.apparel}
-                    silhouette={runner.silhouette}
-                    pose="walk"
-                  />
-                </g>
-              </g>
+              <Rider ref={riderRef} figure={runner} isRunner />
             </g>
-            <FallPunchline ref={punchline.fallRef} clipId={punchline.bayClipId} camera={camera} />
+            <FallPunchline ref={punchline.fallRef} clipId={punchline.trenchClipId} camera={camera} />
           </svg>
         </div>
       </div>

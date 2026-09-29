@@ -1,39 +1,41 @@
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import { SCHLONIC_WORLD, isSchlonicOverPit, resolveSchlonicGroundY } from "@wingnight/shared";
 
-import { SHORE_Y } from "../Backdrop/index.js";
 import type { SchlonicCamera } from "../camera/index.js";
-import { GULL_HAUL_DROP } from "../Gull/index.js";
 
 /**
  * A run that ends badly ends on a joke the game told, not on a verdict
  * (docs/minigame-design-principles.md §8, §9). Both jokes are the demand that beat the player,
  * played to its conclusion on the wall before the card goes up:
  *
- *   fell    the hole goes somewhere — the hen surfaces in the bay with a splash, and a gull
- *           takes the handful it was carrying
- *   wiped   the hit that found it empty-handed knocks it flat, and the wings it dropped roll
- *           down the shore to the nearest badnik, which eats them
+ *   fell    the trench was a real dig — the hen lands at the bottom in a cloud of dust and
+ *           peeks back up over the lip, and a raccoon in a hard hat climbs out beside it with
+ *           the handful it was carrying, chitters, and runs off down the street with it
+ *   wiped   the hit that found it empty-handed knocks it flat, the board rolls off without it,
+ *           and the wings it dropped roll down the sidewalk to the nearest badnik, which eats them
  *
  * This is the whole timeline as pure functions of the beat's elapsed milliseconds, so the scene
  * paints from it and the mirror sounds from it and neither keeps a clock of its own. Everything
  * lands inside `PUNCHLINE_MS` (`beats/`); the card goes up after that.
  */
 
-export type PunchlineCue = "splash" | "squawk" | "chomp" | "burp";
+export type PunchlineCue = "thud" | "chitter" | "chomp" | "burp";
 
 export type PunchlineCueMark = { atMs: number; cue: PunchlineCue };
 
 type Point = { x: number; y: number };
 
-// The fall. The hen goes down the shaft, then the bay spits it back out.
+// The fall. The hen goes down the trench, the dust comes up out of it, and so does the raccoon.
 export const FALL_DROP_MS = 420;
-export const FALL_SPLASH_AT_MS = 480;
-export const FALL_SPLASH_MS = 560;
-export const FALL_SURFACE_MS = 340;
-export const GULL_IN_AT_MS = 820;
-export const GULL_GRAB_AT_MS = 1250;
-export const GULL_OUT_AT_MS = 1880;
+export const FALL_THUD_AT_MS = 480;
+export const FALL_DUST_MS = 820;
+export const FALL_PEEK_MS = 340;
+export const RACCOON_IN_AT_MS = 820;
+/** Out of the trench and up on the far lip: it turns to the hen and chitters. */
+export const RACCOON_CHITTER_AT_MS = 1250;
+export const RACCOON_OUT_AT_MS = 1880;
+const RACCOON_CLIMBED_AT_MS = 1100;
+const RACCOON_RUNS_AT_MS = 1480;
 
 // The wipeout. Knocked flat, then the wings go one at a time.
 export const WIPEOUT_KNOCK_MS = 420;
@@ -43,12 +45,6 @@ export const ROLL_MS = 650;
 export const CHOMP_MS = 140;
 export const BURP_AT_MS = 1760;
 const BURP_SWELL_MS = 190;
-
-/** The water line the hen surfaces at: a little under the bay's near edge, clear of the beach. */
-export const BAY_SURFACE_Y = SHORE_Y - 6;
-/** Where the hen bobs, surfaced: head and chest out, the rest of it the bay's. */
-export const BAY_HEN_Y = BAY_SURFACE_Y + 1;
-const BAY_HEN_UNDER_Y = BAY_SURFACE_Y + 18;
 
 /** Where the dropped wings land either side of the hen, in world units. */
 const DROP_SPREAD = [-11, -5, 2, 8, 14] as const;
@@ -69,14 +65,14 @@ export const resolveChompAtMs = (index: number): number => {
 
 /**
  * What the wall says as the joke plays, in order. A fall with nothing in hand has nothing for a
- * gull to take, so it is the splash alone.
+ * raccoon to take, so it is the thud alone.
  */
 export const resolvePunchlineCues = (outcome: "fell" | "wiped", wingsLost: number): PunchlineCueMark[] => {
   if (outcome === "fell") {
-    const cues: PunchlineCueMark[] = [{ atMs: FALL_SPLASH_AT_MS, cue: "splash" }];
+    const cues: PunchlineCueMark[] = [{ atMs: FALL_THUD_AT_MS, cue: "thud" }];
 
     if (wingsLost > 0) {
-      cues.push({ atMs: GULL_GRAB_AT_MS, cue: "squawk" });
+      cues.push({ atMs: RACCOON_CHITTER_AT_MS, cue: "chitter" });
     }
 
     return cues;
@@ -100,12 +96,12 @@ export const resolveDueCues = (
   return cues.filter((mark) => mark.atMs > fromMs && mark.atMs <= toMs).map((mark) => mark.cue);
 };
 
-/** How many wings the gull flies off with, as a drawing: one to three, by the size of the handful. */
+/** How many wings the raccoon makes off with, as a drawing: one to three, by the size of the handful. */
 export const resolveBundleSize = (wingsLost: number): number => {
   return wingsLost <= 0 ? 0 : Math.min(3, Math.ceil(wingsLost / 10));
 };
 
-/** Where something resting on the shore sits at `x`: on the ground, or on a hole's lips. */
+/** Where something resting on the street sits at `x`: on the ground, or level with a trench's lips. */
 export const resolveRestY = (zone: SchlonicZone, x: number): number => {
   if (isSchlonicOverPit(zone, x)) {
     return zone.pits.find((pit) => x >= pit.fromX && x <= pit.toX)?.lipY ?? SCHLONIC_WORLD.groundBaseY;
@@ -116,120 +112,165 @@ export const resolveRestY = (zone: SchlonicZone, x: number): number => {
 
 // ── The fall ────────────────────────────────────────────────────────────────────────────────
 
-const BAY_X_LEAD = 34;
-const BAY_X_STEP = 6;
-const BAY_CLEAR_BEFORE = 10;
-const BAY_CLEAR_AFTER = 16;
+/** The trench that took the hen, on screen: its two lips' x and the height of the street at them. */
+export type Trench = { fromX: number; toX: number; lipY: number };
+
+/** How wide a stand-in trench is when the run somehow fell with no hole under it. */
+const STAND_IN_HALF_WIDTH = 11;
 
 /**
- * Where on screen the hen comes up: the first stretch ahead of it where the shore is low enough
- * that the bay shows above it, so the joke is not played behind a hill. The bay never scrolls,
- * so this is a screen x, found by reading the ground under it on the frame the run ended.
+ * The trench the hen went down, in screen x: the hole under the frame the run ended on (or the
+ * nearest one, if the last step carried it to a lip). It is under the runner by definition, so
+ * it is always in the picture.
  */
-export const resolveBayX = (zone: SchlonicZone, frame: SchlonicFrame, camera: SchlonicCamera): number => {
+export const resolveTrench = (zone: SchlonicZone, frame: SchlonicFrame): Trench => {
   const scrollX = frame.x - SCHLONIC_WORLD.runnerX;
-  const first = SCHLONIC_WORLD.runnerX + BAY_X_LEAD;
-  const last = camera.x + camera.width - BAY_CLEAR_AFTER;
+  const pit = [...zone.pits].sort((left, right) => {
+    const gap = (pit: { fromX: number; toX: number }): number =>
+      frame.x < pit.fromX ? pit.fromX - frame.x : frame.x > pit.toX ? frame.x - pit.toX : 0;
 
-  for (let screenX = first; screenX <= last; screenX += BAY_X_STEP) {
-    let isClear = true;
+    return gap(left) - gap(right);
+  })[0];
 
-    for (let probe = screenX - BAY_CLEAR_BEFORE; probe <= screenX + BAY_CLEAR_AFTER; probe += 2) {
-      if (resolveSchlonicGroundY(zone, scrollX + probe) < SHORE_Y + 2) {
-        isClear = false;
-        break;
-      }
-    }
-
-    if (isClear) {
-      return screenX;
-    }
+  if (pit === undefined) {
+    return {
+      fromX: SCHLONIC_WORLD.runnerX - STAND_IN_HALF_WIDTH,
+      toX: SCHLONIC_WORLD.runnerX + STAND_IN_HALF_WIDTH,
+      lipY: resolveSchlonicGroundY(zone, frame.x)
+    };
   }
 
-  return first;
+  return { fromX: pit.fromX - scrollX, toX: pit.toX - scrollX, lipY: pit.lipY };
 };
 
-/** The hen in the water: under until the splash, then up with a bob and a shake of the head. */
-export const resolveBayHen = (
+/** The hen, peeking up: head and chest over the lip, the rest of it the trench's. */
+export const TRENCH_HEN_BELOW_LIP = 0.5;
+const TRENCH_HEN_UNDER = 18;
+/** How far in from the near lip the hen comes up, and how much room it leaves the raccoon. */
+const HEN_IN_FROM_NEAR = 5;
+const HEN_CLEAR_OF_FAR = 16;
+/** The raccoon climbs out this far in from the far lip, and stands this far past it. */
+const RACCOON_IN_FROM_FAR = 2.4;
+const RACCOON_ON_LIP = 4;
+
+/** Where the hen comes up: under where it fell, but never in the raccoon's way. */
+export const resolveTrenchHenX = (trench: Trench): number => {
+  const nearest = trench.fromX + HEN_IN_FROM_NEAR;
+
+  return Math.max(nearest, Math.min(SCHLONIC_WORLD.runnerX, trench.toX - HEN_CLEAR_OF_FAR));
+};
+
+/** The hen in the trench: out of sight until the thud, then up to the lip with a dazed shake. */
+export const resolveTrenchHen = (
   elapsedMs: number,
-  bayX: number
+  trench: Trench
 ): { visible: boolean; x: number; y: number; angle: number } => {
-  const since = elapsedMs - FALL_SPLASH_AT_MS;
+  const since = elapsedMs - FALL_THUD_AT_MS;
+  const x = resolveTrenchHenX(trench);
+  const under = trench.lipY + TRENCH_HEN_UNDER;
 
   if (since < 0) {
-    return { visible: false, x: bayX, y: BAY_HEN_UNDER_Y, angle: 0 };
+    return { visible: false, x, y: under, angle: 0 };
   }
 
-  const rise = easeOutBack(clamp01(since / FALL_SURFACE_MS));
-  const bob = Math.sin(since / 190) * 0.6;
+  const rise = easeOutBack(clamp01(since / FALL_PEEK_MS));
   const shake = Math.sin(since / 70) * 9 * (1 - clamp01(since / 900));
 
   return {
     visible: true,
-    x: bayX,
-    y: lerp(BAY_HEN_UNDER_Y, BAY_HEN_Y, rise) + bob,
+    x,
+    y: lerp(under, trench.lipY + TRENCH_HEN_BELOW_LIP, rise),
     angle: shake
   };
 };
 
-/** Where the handful floats, beside the hen, until the gull has it. */
-export const resolveBundleRest = (elapsedMs: number, bayX: number): Point => {
-  const since = Math.max(0, elapsedMs - FALL_SPLASH_AT_MS);
-
-  return { x: bayX + 11, y: BAY_SURFACE_Y - 1 + Math.sin(since / 160 + 1) * 0.7 };
-};
-
-export type GullFlight = {
+export type RaccoonPlacement = {
   visible: boolean;
+  /** The feet, in screen x and world y. */
   x: number;
   y: number;
-  /** Nose down on the dive, nose up on the climb, in degrees. */
-  angle: number;
-  /** The wings' beat, -1 → 1: held nearly still on the dive, hard on the climb. */
-  flap: number;
-  carrying: boolean;
+  /** Still inside the trench, so the lip hides what is under it. */
+  isClimbing: boolean;
+  /** Where its legs are in a stride, -1 → 1: scrabbling up the wall, then running. */
+  stride: number;
+  /** 0 → 1 while it chitters at the hen from the lip, a wiggle of the whole animal. */
+  chitter: number;
 };
 
 /**
- * The gull swoops in from the top of the picture behind the hen, snatches the handful off the
- * water, and climbs away out of the top of the picture ahead, towards the sun.
+ * The raccoon: up the far wall of the trench with the handful hugged to its chest, a hop onto
+ * the far lip, a chitter at the hen, and off down the sidewalk out of the right of the picture.
  */
-export const resolveGullFlight = (
+export const resolveRaccoon = (
   elapsedMs: number,
-  bundle: Point,
-  camera: SchlonicCamera
-): GullFlight => {
-  if (elapsedMs < GULL_IN_AT_MS || elapsedMs > GULL_OUT_AT_MS) {
-    return { visible: false, x: bundle.x, y: camera.y - 20, angle: 0, flap: 0, carrying: false };
+  trench: Trench,
+  camera: SchlonicCamera,
+  groundAt: (screenX: number) => number
+): RaccoonPlacement => {
+  const climbX = trench.toX - RACCOON_IN_FROM_FAR;
+  const lipX = trench.toX + RACCOON_ON_LIP;
+  const hidden = { visible: false, x: climbX, y: trench.lipY + 16, isClimbing: true, stride: 0, chitter: 0 };
+
+  if (elapsedMs < RACCOON_IN_AT_MS || elapsedMs > RACCOON_OUT_AT_MS) {
+    return hidden;
   }
 
-  const from = { x: bundle.x - 52, y: camera.y - 14 };
-  const grab = { x: bundle.x, y: bundle.y - GULL_HAUL_DROP };
-  const to = { x: bundle.x + 70, y: camera.y - 22 };
-
-  if (elapsedMs < GULL_GRAB_AT_MS) {
-    const share = (elapsedMs - GULL_IN_AT_MS) / (GULL_GRAB_AT_MS - GULL_IN_AT_MS);
+  if (elapsedMs < RACCOON_CLIMBED_AT_MS) {
+    const share = (elapsedMs - RACCOON_IN_AT_MS) / (RACCOON_CLIMBED_AT_MS - RACCOON_IN_AT_MS);
 
     return {
       visible: true,
-      x: lerp(from.x, grab.x, share),
-      y: lerp(from.y, grab.y, Math.sin((share * Math.PI) / 2)),
-      angle: 28 * (1 - share),
-      flap: Math.sin(elapsedMs / 150) * 0.25,
-      carrying: false
+      x: climbX + Math.sin(elapsedMs / 45) * 0.4,
+      y: lerp(trench.lipY + 16, trench.lipY + 2.5, 1 - (1 - share) ** 2),
+      isClimbing: true,
+      stride: Math.sin(elapsedMs / 40),
+      chitter: 0
     };
   }
 
-  const share = (elapsedMs - GULL_GRAB_AT_MS) / (GULL_OUT_AT_MS - GULL_GRAB_AT_MS);
+  if (elapsedMs < RACCOON_CHITTER_AT_MS) {
+    const share = (elapsedMs - RACCOON_CLIMBED_AT_MS) / (RACCOON_CHITTER_AT_MS - RACCOON_CLIMBED_AT_MS);
+    const x = lerp(climbX, lipX, share);
+
+    return {
+      visible: true,
+      x,
+      y: lerp(trench.lipY + 2.5, groundAt(lipX), share) - Math.sin(share * Math.PI) * 4,
+      isClimbing: share < 0.5,
+      stride: 0,
+      chitter: 0
+    };
+  }
+
+  if (elapsedMs < RACCOON_RUNS_AT_MS) {
+    return {
+      visible: true,
+      x: lipX,
+      y: groundAt(lipX),
+      isClimbing: false,
+      stride: 0,
+      chitter: (elapsedMs - RACCOON_CHITTER_AT_MS) / (RACCOON_RUNS_AT_MS - RACCOON_CHITTER_AT_MS)
+    };
+  }
+
+  const share = (elapsedMs - RACCOON_RUNS_AT_MS) / (RACCOON_OUT_AT_MS - RACCOON_RUNS_AT_MS);
+  const x = lerp(lipX, camera.x + camera.width + 14, share * share);
 
   return {
     visible: true,
-    x: lerp(grab.x, to.x, share),
-    y: lerp(grab.y, to.y, 1 - Math.cos((share * Math.PI) / 2)),
-    angle: -24 * Math.min(1, share * 3),
-    flap: Math.sin(elapsedMs / 45),
-    carrying: true
+    x,
+    y: groundAt(x) - Math.abs(Math.sin(elapsedMs / 55)) * 1.2,
+    isClimbing: false,
+    stride: Math.sin(elapsedMs / 35),
+    chitter: 0
   };
+};
+
+/** The dust the thud throws up out of the trench: 0 → 1 across the cloud, or null outside it. */
+export const resolveDustShare = (elapsedMs: number): number | null => {
+  const share = (elapsedMs - FALL_THUD_AT_MS) / FALL_DUST_MS;
+
+  return share < 0 || share > 1 ? null : share;
 };
 
 // ── The wipeout ─────────────────────────────────────────────────────────────────────────────
@@ -315,6 +356,29 @@ export const resolveKnockedHen = (
   };
 };
 
+/** How far ahead the board rolls on without the hen, and how long it takes to get there. */
+const RUNAWAY_RUN = 34;
+const RUNAWAY_MS = 1100;
+
+/**
+ * The board, off on its own: kicked out from under the hen as it goes over, it bounces once and
+ * rolls on up the sidewalk, slowing, in screen x and world y (the wheels' contact point).
+ */
+export const resolveRunawayBoard = (
+  elapsedMs: number,
+  frame: SchlonicFrame,
+  zone: SchlonicZone
+): { x: number; y: number; hop: number } => {
+  const share = clamp01(elapsedMs / RUNAWAY_MS);
+  const run = RUNAWAY_RUN * (1 - (1 - share) ** 2);
+
+  return {
+    x: SCHLONIC_WORLD.runnerX + run,
+    y: resolveRestY(zone, frame.x + run),
+    hop: Math.sin(clamp01(elapsedMs / WIPEOUT_KNOCK_MS) * Math.PI) * 4
+  };
+};
+
 /** The share of a wing's roll spent on the ground; the rest is the hop up into the mouth. */
 const ROLL_SHARE = 0.72;
 
@@ -322,7 +386,7 @@ export type DroppedWing = { visible: boolean; x: number; y: number; spin: number
 
 /**
  * One of the dropped wings, in world units: thrown out of the hen as it goes over, landed on
- * the shore, then rolled down it to the eater and hopped up into its mouth.
+ * the sidewalk, then rolled down it to the eater and hopped up into its mouth.
  */
 export const resolveDroppedWing = (
   index: number,
@@ -412,5 +476,5 @@ export const resolveEaterSquash = (elapsedMs: number): { sx: number; sy: number 
 };
 
 /** Every mark lands inside the joke, so the card never goes up over the punchline. */
-export const PUNCHLINE_END_MS = Math.max(GULL_OUT_AT_MS, BURP_AT_MS + BURP_SWELL_MS);
+export const PUNCHLINE_END_MS = Math.max(RACCOON_OUT_AT_MS, BURP_AT_MS + BURP_SWELL_MS);
 

@@ -7,7 +7,7 @@ export const container = "relative mx-auto h-[clamp(1.5rem,2.1vh,1.9rem)] w-[min
 export const rail = "absolute inset-x-0 top-1/2 h-[0.3rem] -translate-y-1/2 rounded-full bg-text/10";
 
 // Every position below is a custom property or a class the strip writes — the house rule bans a
-// JSX `style` prop. The hazards and holes are laid out once per zone; only the runner's pin
+// JSX `style` prop. The hazards, rails and trenches are laid out once per zone; only the runner's pin
 // moves, and it moves through ONE property the paint loop writes on the root sixty times a
 // second (`zoneTrack/paintZoneTrack`), never through React.
 export const railRun = "absolute inset-y-0 left-0 w-[var(--schlonic-track-run,0%)] rounded-full bg-gold/45";
@@ -29,6 +29,13 @@ export const spike = `${hazard} h-[0.6rem] w-[0.9rem] rounded-sm bg-[#d81e5b]`;
 export const badnik = `${hazard} h-[0.8rem] w-[0.8rem] rounded-full bg-[#f9a3bc] shadow-[0_0_0_0.1rem_#8e2a52]`;
 
 export const spring = `${hazard} h-[0.8rem] w-[0.8rem] rounded-full border-[0.16rem] border-[#fff7ed] bg-[#e8453c]`;
+
+// A grind rail: a thin steel bar raised over the line for the rail's whole length, in the rail's
+// own steel and edge — kit to aim for, so it stands off the line rather than sitting on it as a
+// hazard does. Scene art, not chrome (DESIGN.md §2.11).
+const sceneRailSteel = "bg-[#aab5bf] shadow-[0_0_0_0.08rem_#1f262c]";
+
+export const grindRail = `absolute ${at} top-[12%] h-[0.22rem] w-[var(--schlonic-track-width,4%)] rounded-full ${sceneRailSteel}`;
 
 // The post: the finish, in gold like FAPPY's par tick.
 export const post = "absolute right-0 top-1/2 h-[0.85rem] w-[0.14rem] translate-x-1/2 -translate-y-1/2 rounded-full bg-gold";

@@ -28,7 +28,7 @@ test("measures a refereed distance on the same scale as a live x", () => {
   );
 });
 
-test("marks every hazard and every hole, and no wing or rail", () => {
+test("marks every hazard and every hole, and no wing", () => {
   const marks = resolveTrackMarks(ZONE);
   const kit = ZONE.props.filter((prop) => prop.kind !== "wing" && prop.kind !== "rail");
 
@@ -40,6 +40,16 @@ test("marks every hazard and every hole, and no wing or rail", () => {
   assert.deepEqual(percents, [...percents].sort((left, right) => left - right));
   assert.ok(percents.every((percent) => percent > 0 && percent < 100));
   assert.ok(marks.pits.every((pit) => pit.widthPercent > 0));
+});
+
+test("marks every rail as a span of its own, apart from the hazards", () => {
+  const marks = resolveTrackMarks(ZONE);
+  const rails = ZONE.props.filter((prop) => prop.kind === "rail");
+
+  assert.ok(rails.length > 0, "the party zone should have a rail to mark");
+  assert.equal(marks.rails.length, rails.length);
+  assert.ok(marks.rails.every((rail) => rail.widthPercent > 0 && rail.fromPercent > 0 && rail.fromPercent < 100));
+  assert.ok(marks.hazards.every((hazard) => (hazard.kind as string) !== "rail"));
 });
 
 test("writes the live pin as one custom property and one data attribute", () => {

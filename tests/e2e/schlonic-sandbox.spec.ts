@@ -22,30 +22,38 @@ test("schlonic sandbox lays out one zone for both screens and starts the run on 
 
   await expect(page.getByRole("heading", { name: "Minigame Dev Sandbox" })).toBeVisible();
 
-  // Both previews draw the same zone from the live fixture: fourteen chunks, a pit cutting the
-  // ground a third of the way in, all four pieces of hard kit somewhere along it, and the
-  // finale's springboard and hole before the post.
+  // Both previews draw the same zone from the live fixture: fourteen chunks, a trench cutting the
+  // ground a third of the way in, every piece of kit somewhere along it, with the springboard
+  // only at the finale, and the finale's springboard and trench before the post.
   await expect(page.locator("[data-schlonic-scene]")).toHaveCount(2);
   await expect(page.locator("[data-schlonic-ground-run]")).toHaveCount(6);
-  await expect(page.locator("[data-schlonic-spike]")).toHaveCount(2);
+  await expect(page.locator("[data-schlonic-spike]")).toHaveCount(4);
   await expect(page.locator("[data-schlonic-badnik]")).toHaveCount(2);
-  await expect(page.locator("[data-schlonic-spring]")).toHaveCount(4);
+  await expect(page.locator("[data-schlonic-spring]")).toHaveCount(2);
+  // A grind rail in each zone, drawn as a handrail on posts.
+  await expect(page.locator("[data-schlonic-rail]")).toHaveCount(2);
   // The high line is drawn bigger, because it is worth more.
   await expect(page.locator('[data-schlonic-wing-worth="2"]').first()).toBeAttached();
   await expect(page.locator("[data-schlonic-goal]")).toHaveCount(2);
   await expect(page.getByText("Run 1 of 2")).toBeVisible();
   await expect(page.getByText("Alex is on the line — tap to go")).toBeVisible();
-  // The wall carries the zone as a line over the arena: the kit, the hole and the post, with
-  // the runner's pin on the start line.
+  // The wall carries the zone as a line over the arena: the kit, the rail, the trenches and the
+  // post, with the runner's pin on the start line.
   const track = page.locator("[data-schlonic-track]");
 
   await expect(track).toHaveCount(1);
   await expect(track.locator("[data-schlonic-track-hazard]")).toHaveCount(4);
   await expect(track.locator("[data-schlonic-track-pit]")).toHaveCount(2);
+  await expect(track.locator("[data-schlonic-track-rail]")).toHaveCount(1);
   await expect(track.locator("[data-schlonic-track-post]")).toHaveCount(1);
   await expect(track).toHaveAttribute("data-schlonic-track-percent", "0");
   await expect(page.locator("[data-schlonic-wings]").first()).toHaveText(/0 \/ 52/);
   await expect(page.locator("[data-schlonic-in-hand]").first()).toHaveText("0");
+  // The runner says what its board is on, every frame, beside whether its feet are down.
+  const hostRunner = page.locator('[data-schlonic-scene="host-schlonic"] [data-schlonic-runner]');
+
+  await expect(hostRunner).toHaveAttribute("data-schlonic-grinding", "false");
+  await expect(hostRunner).toHaveAttribute("data-schlonic-board-roll", "0");
 
   // One tap takes the run off the line; the display mirrors it.
   await page.locator("[data-schlonic-arena]").click();
@@ -241,7 +249,7 @@ test("running the zone collects wings, clears the hole, and hands the tablet on 
   }
 });
 
-test("a run that goes down the hole comes up in the bay, loses its wings to a gull, and only then gets its card", async ({
+test("a run that goes into the roadworks peeks out of the trench, loses its wings to a raccoon, and only then gets its card", async ({
   page
 }) => {
   await page.goto(devSandboxPath("schlonic"));
@@ -250,7 +258,7 @@ test("a run that goes down the hole comes up in the bay, loses its wings to a gu
   // One tap off the line and never another: the fixture's first hole takes a walker, and the
   // walker has picked up the floor line on the way to it.
   const seen = await page.evaluate(() => {
-    return new Promise<{ joke: string | null; cardAtJoke: number; gull: boolean; cardAfterMs: number }>(
+    return new Promise<{ joke: string | null; cardAtJoke: number; raccoon: boolean; cardAfterMs: number }>(
       (resolve) => {
         const arena = document.querySelector("[data-schlonic-arena]");
         const send = (type: "pointerdown" | "pointerup"): void => {
@@ -261,7 +269,7 @@ test("a run that goes down the hole comes up in the bay, loses its wings to a gu
         let jokeAt = 0;
         let joke: string | null = null;
         let cardAtJoke = -1;
-        let gull = false;
+        let raccoon = false;
         const startedAt = performance.now();
 
         send("pointerdown");
@@ -280,12 +288,12 @@ test("a run that goes down the hole comes up in the bay, loses its wings to a gu
             cardAtJoke = card;
           }
 
-          if (jokeAt > 0 && Number(tv?.querySelector("[data-schlonic-gull]")?.getAttribute("opacity")) > 0) {
-            gull = true;
+          if (jokeAt > 0 && Number(tv?.querySelector("[data-schlonic-raccoon]")?.getAttribute("opacity")) > 0) {
+            raccoon = true;
           }
 
           if ((jokeAt > 0 && card > 0) || now - startedAt > 20_000) {
-            resolve({ joke, cardAtJoke, gull, cardAfterMs: jokeAt > 0 ? now - jokeAt : -1 });
+            resolve({ joke, cardAtJoke, raccoon, cardAfterMs: jokeAt > 0 ? now - jokeAt : -1 });
             return;
           }
 
@@ -298,22 +306,22 @@ test("a run that goes down the hole comes up in the bay, loses its wings to a gu
   });
 
   expect(seen.joke).toBe("fell");
-  // The picture tells the joke first: no card over it, a gull comes for the handful, and the
-  // card follows once the gull has gone.
+  // The picture tells the joke first: no card over it, a raccoon climbs out with the handful,
+  // and the card follows once it has run off with it.
   expect(seen.cardAtJoke).toBe(0);
-  expect(seen.gull).toBe(true);
+  expect(seen.raccoon).toBe(true);
   expect(seen.cardAfterMs).toBeGreaterThan(1500);
-  await expect(page.locator('[data-schlonic-outcome="fell"]')).toContainText("Down a hole!");
+  await expect(page.locator('[data-schlonic-outcome="fell"]')).toContainText("Into the roadworks!");
 });
 
-test("the runner curls into a ball the moment it leaves the ground, and unrolls when it lands", async ({
+test("the board kickflips under the runner the moment it leaves the ground, and lands wheels down", async ({
   page
 }) => {
   await page.goto(devSandboxPath("schlonic"));
   await expect(page.locator("[data-schlonic-scene]")).toHaveCount(2);
 
-  const angles = await page.evaluate(() => {
-    return new Promise<number[]>((resolve) => {
+  const samples = await page.evaluate(() => {
+    return new Promise<{ grounded: boolean; roll: number }[]>((resolve) => {
       const scene = document.querySelector('[data-schlonic-scene="host-schlonic"]');
       const arena = document.querySelector("[data-schlonic-arena]");
       const runner = scene?.querySelector("[data-schlonic-runner]");
@@ -323,27 +331,25 @@ test("the runner curls into a ball the moment it leaves the ground, and unrolls 
         return;
       }
 
-      const readAngle = (): number => {
-        const transform = runner.getAttribute("transform") ?? "";
-
-        return Number(transform.match(/rotate\(([-\d.]+)/)?.[1] ?? 0);
-      };
       const send = (type: "pointerdown" | "pointerup"): void => {
         arena.dispatchEvent(
           new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, isPrimary: true })
         );
       };
-      const sampled: number[] = [];
+      const sampled: { grounded: boolean; roll: number }[] = [];
       const startedAt = performance.now();
 
-      // Hold the very first tap out: a full jump, which is a full curl.
+      // Hold the very first tap out: a full jump, which is a full flip.
       send("pointerdown");
       setTimeout(() => {
         send("pointerup");
       }, 300);
 
       const loop = (): void => {
-        sampled.push(readAngle());
+        sampled.push({
+          grounded: runner.getAttribute("data-schlonic-grounded") === "true",
+          roll: Number(runner.getAttribute("data-schlonic-board-roll") ?? 0)
+        });
 
         if (performance.now() - startedAt > 1200) {
           resolve(sampled);
@@ -357,10 +363,14 @@ test("the runner curls into a ball the moment it leaves the ground, and unrolls 
     });
   });
 
-  expect(angles.length).toBeGreaterThan(30);
-  // Rolling is the ball's whole tell: on its feet the body only leans with the ground, so an
-  // angle well past any slope means it tucked and turned.
-  expect(Math.max(...angles.map((angle) => Math.abs(angle)))).toBeGreaterThan(90);
+  expect(samples.length).toBeGreaterThan(30);
+  // The flip is the ollie's whole tell: in the air the board turns over under the feet, so a
+  // roll well past a quarter turn means it flipped; on the ground it is always wheels down.
+  const airborne = samples.filter((sample) => !sample.grounded);
+
+  expect(airborne.length).toBeGreaterThan(10);
+  expect(Math.max(...airborne.map((sample) => sample.roll))).toBeGreaterThan(90);
+  expect(samples.filter((sample) => sample.grounded).every((sample) => sample.roll === 0)).toBe(true);
 });
 
 test("skipping banks nothing, finishing scores the turn, and reset puts the team back on the line", async ({

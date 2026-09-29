@@ -192,8 +192,8 @@ test("shows how each finished run went, and what it banked, once the team is thr
   );
 
   assert.ok(markup.includes("Post! +24"));
-  // A run that went down a hole is named as one, so the room knows what it saw.
-  assert.ok(markup.includes("Down a hole"));
+  // A run that went into a trench is named as one, so the room knows what it saw.
+  assert.ok(markup.includes("Into the roadworks"));
   // The chip stops naming a runner: nobody is.
   assert.ok(!markup.includes("data-schlonic-runner-name"));
 });

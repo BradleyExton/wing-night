@@ -6,6 +6,7 @@ import {
   SCHLONIC_SFX_FOLDER,
   WING_CHIME_TOP_AT,
   createSchlonicSoundboard,
+  resolveSchlonicTakes,
   type SchlonicSoundboard
 } from "../audio/index.js";
 import type { SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
@@ -44,7 +45,9 @@ export const useSchlonicSounds = ({ view, hold, serverOrigin }: SchlonicSoundsIn
   // With none, the board waits for the first cue as before. `play` reads the ref, so the
   // handlers keep their identity across the swap.
   useEffect(() => {
-    boardRef.current = Object.keys(takes).length === 0 ? null : createSchlonicSoundboard({ takes });
+    const boardTakes = resolveSchlonicTakes(takes);
+
+    boardRef.current = Object.keys(boardTakes).length === 0 ? null : createSchlonicSoundboard({ takes: boardTakes });
   }, [takes]);
 
   const onMirrorEvent = useCallback<SchlonicMirrorEventHandler>(
@@ -61,6 +64,16 @@ export const useSchlonicSounds = ({ view, hold, serverOrigin }: SchlonicSoundsIn
 
       if (event.kind === "finale") {
         play("riser");
+        return;
+      }
+
+      if (event.kind === "grindStart") {
+        play("grindOn");
+        return;
+      }
+
+      if (event.kind === "grindStop") {
+        play("grindOff");
         return;
       }
 
