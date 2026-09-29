@@ -101,7 +101,7 @@ export const MINIGAME_DEFINITIONS = {
   SCHLONIC: {
     id: "SCHLONIC",
     slug: "schlonic",
-    displayName: "Schlonic",
+    displayName: "Dunlop Dash",
     // Host-paced: the turn ends when the team has run the zone, not when a clock runs out. The
     // run has its own clock, and it is the zone's, not the room's.
     timerKey: null,

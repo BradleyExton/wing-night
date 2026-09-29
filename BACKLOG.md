@@ -184,6 +184,29 @@ trench and a raccoon. What it could not check from a desk:
 - **FAPPY's frame rate over the composited skyline** (two parallax bands of `@wingnight/scenery`
   landmarks) has not been checked on the Android host tablet.
 
+### Dunlop Dash relay and crowd — follow-ups
+
+The 2026-09-29 pass made the street one relay course (a leg per rider, the other team's rider
+as the ghost on each leg), retired the schlong kit for the Dunlop Street crowd and furniture,
+and renamed the game Dunlop Dash. What it could not check from a desk:
+
+- **Table-check the sway timings** (`SCHLONIC_HAZARDS` in `packages/shared/src/schlonic/world`):
+  the roadie's cab at 7 either side over 260 ticks, the show-goer at 9 over 150, the goose at 5
+  over 110. The show-goer is meant to be the one you cannot read; if it is the one nobody clears,
+  slow it.
+- **Look at the crowd from the sofa.** The birds are the cast figure at 0.13–0.165 scale in a
+  crow's black or a pigeon's grey; the tent, the sleeper and the goose are their own drawings.
+  If any of the six does not read as what it is at TV distance, it is the drawing, not the sim.
+- **The pack's `runsPerTurn` is 3 and the teams are 5.** A relay "for the whole team" wants
+  every rider on the street: 5 legs of 14 chunks is about the same length as today's 3 of 22.
+  Brad's call, in `~/wing-night-content/local/gameConfig.json`.
+- **The kicker's cue is still `spring`** (the pack's takes are filed as `spring-N.mp3`), and the
+  `pop` takes in the pack are orphaned now that nothing pops. The goose has no honk of its own
+  yet — `chomp` and `burp` carry the wipeout — and a `squawk` take exists in the pack unused.
+- **A middle leg's handoff has no set piece.** Souldiers stands on the first leg and the Queen's
+  on the last; a middle leg's post is a bare signpost. Crossover's is in `@wingnight/scenery` if
+  a handoff wants a landmark.
+
 ### FAPPY — the TV camera SCHLONIC got
 
 FAPPY's TV is still a mirror of the tablet: the same 16:9 box, the bird 40 of 160 units in. The

@@ -4,7 +4,7 @@
 // the subject kept inside the middle 170x100 so a wide band or a portrait crop
 // both hold it) and GLYPHS (one-line symbols, 64x64, stroke only).
 export const ROUNDS = [
-  { n: 1, label: "Warm Up", sauce: "Frank's", game: "Schlonic", id: "schlonic", heat: 2 },
+  { n: 1, label: "Warm Up", sauce: "Frank's", game: "Dunlop Dash", id: "schlonic", heat: 2 },
   { n: 2, label: "Second Heat", sauce: "Classic Buffalo", game: "Geo", id: "geo", heat: 3 },
   { n: 3, label: "Getting Spicy", sauce: "Mango Habanero", game: "Emoji Charades", id: "emoji-charades", heat: 3 },
   { n: 4, label: "Slow Burn", sauce: "Smoked Habanero", game: "Who's That Song", id: "song-guess", heat: 3 },

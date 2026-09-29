@@ -30,7 +30,7 @@ test("display follows host phase advances through the round-1 milestone chain", 
   // the phase moved, so the display is already announcing the team on the wings.
   await expect(displayPage.getByText("Game starts in")).toHaveCount(0);
   await expect(displayPage.getByText("playing", { exact: true })).toBeVisible();
-  await expect(displayPage.getByText("SCHLONIC")).toBeVisible();
+  await expect(displayPage.getByText("Dunlop Dash")).toBeVisible();
 
   // Eating: the briefing surface yields to the sauce timer.
   await startEatingFromBriefing(hostPage);

@@ -153,13 +153,13 @@ const resolveSchlonicBriefingContent = (
 
   return {
     illustrationPath: `${DISPLAY_ASSET_ROOT}/schlonic-illustration.svg`,
-    illustrationAlt: "Schlonic mini-game artwork",
+    illustrationAlt: "Dunlop Dash mini-game artwork",
     summary:
-      "One at a time, your chickens skate Dunlop Street Zone, collecting wings. The wings are the score — and they are the only health you have.",
+      "Your chickens skate Dunlop Street as a relay, a leg each, collecting wings. The wings are the score — and they are the only health you have.",
     steps: [
-      `${runsPerTurn} run${runsPerTurn === 1 ? "" : "s"} this turn, one player each, in seating order. Everyone skates the same street.`,
-      "Your bird rolls on its own; the tablet only jumps. Tap to ollie, hold to go higher — land on rails and faces.",
-      `A thorn bed or a trench is bad news either way. Take a hit and you drop half your wings; take one holding none and the run is over. ${parWingsPerRun * runsPerTurn} wings over the post is full marks.`
+      `${runsPerTurn} leg${runsPerTurn === 1 ? "" : "s"} this turn, one rider each, in seating order, end to end down the same street. The ghost on your leg is the other team's rider who ran it.`,
+      "Your bird rolls on its own; the tablet only jumps. Tap to ollie, hold to go higher. If it's flat on top — a rail, a bench, a parked car — land on it and grind. If it isn't — a tent, a sleeper, a punk, a goose — jump it.",
+      `A trench is bad news either way. Take a hit and you drop half your wings; take one holding none and your leg is over. ${parWingsPerRun * runsPerTurn} wings over the post is full marks.`
     ]
   };
 };

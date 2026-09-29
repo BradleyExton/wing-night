@@ -32,7 +32,7 @@ test("quick play skips the wings: the launcher opens the briefing and the TV fol
   await expect(startButton).toBeDisabled();
 
   await hostPage.getByRole("button", { name: "Everyone" }).click();
-  await hostPage.getByRole("button", { name: "Queue Schlonic" }).click();
+  await hostPage.getByRole("button", { name: "Queue Dunlop Dash" }).click();
 
   // The game's rules arrive seeded from the pack and are the host's to change.
   const runsPerTurnField = hostPage.getByLabel("Runs per turn");
@@ -50,7 +50,7 @@ test("quick play skips the wings: the launcher opens the briefing and the TV fol
   await expect(hostPage.getByText("Frank's")).toHaveCount(0);
 
   await expect(displayPage.getByText("playing", { exact: true })).toBeVisible();
-  await expect(displayPage.getByText("SCHLONIC")).toBeVisible();
+  await expect(displayPage.getByText("Dunlop Dash")).toBeVisible();
 
   await hostPage.getByRole("button", { name: "Start Mini-Game" }).click();
 

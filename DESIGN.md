@@ -1505,13 +1505,24 @@ bay at the bottom of the hill, so the room knows which game it is watching
 from the sofa before a word is read — and, because everyone on that sofa is
 from Barrie, knows which street it is watching.
 
--   **The two cast members finally meet, and the hen is the hero.** The runner
-    is the player's own bird (§2.8) — team colour, their generated head, their
-    team's apparel, the same character that parades in the lobby and flies
-    FAPPY's corridor. Everything standing in its way is the cast's schlong
-    (§2.8, the same `resolveSchlongPaths` JOUST fires). The sidewalk is
-    furnished with dicks and a chicken is skating down it; that is the joke,
-    and nothing else on screen has to carry it.
+-   **The hen is the hero, and the street is Barrie's.** The runner is the
+    player's own bird (§2.8) — team colour, their generated head, their team's
+    apparel, the same character that parades in the lobby and flies FAPPY's
+    corridor. Everything standing in its way is Dunlop Street as it is on a
+    Saturday: the crowd to be jumped and the furniture to be landed on
+    (below). The schlongs were the first furnishing (2026-09-19 to 09-28) and
+    were retired on 2026-09-29: the room never learned that "pink with a face"
+    meant "land on it", and a joke the sofa has to be taught is not a joke.
+    FAPPY keeps its schlongs.
+-   **One street, one leg each.** The course is one street of `runsPerTurn`
+    legs laid end to end from the one seed, and each rider takes a leg of it:
+    Souldiers' door is the first leg's start line, the Queen's patio the last
+    leg's post, and a middle leg's post is the next rider's line on the same
+    sidewalk. The strip over the TV's arena draws the whole street with a tick
+    at every handoff. The ghost on any leg is the OTHER team's rider on that
+    stretch — the turn to beat is a finished turn's whole set of leg logs,
+    carried through round memory and never updated mid-turn — so nobody ever
+    races a teammate who ran a different piece of the same street.
 -   **The zone is the city's own main street.** The runner skates Dunlop
     Street's near sidewalk, east into the morning sun, from the door of
     Souldiers Skate Shop to the Queen's Hotel patio, and the backdrop is five
@@ -1582,10 +1593,10 @@ from Barrie, knows which street it is watching.
     still reads against it; its tail hangs down into the trench while it
     climbs, out of the hen's face. *Wiped out*: the empty-handed hit knocks
     the hen flat on its back, the board rolls on up the sidewalk without it,
-    and the wings it dropped roll down to the nearest badnik still standing
-    in that camera's picture, which gulps once per wing and swells at the
-    burp; with none in the picture, a pink one hops on from the edge ahead to
-    do it. Each surface paints the joke through its own camera; the TV sounds
+    and the wings it dropped roll down to a goose (`ZoneProps/Crowd/Goose`)
+    that waddles in from the edge of the picture ahead of the hen, gulps once
+    per wing into its bill and swells at the burp. The crowd that did the
+    hitting stays where it is. Each surface paints the joke through its own camera; the TV sounds
     it from the SCHLONIC board (`thud`, `chitter`, one `chomp` per wing,
     `burp`) as its beat reaches each moment. The TV's card waits
     `PUNCHLINE_MS` into the hold, and the handoff ding waits with it, so the
@@ -1615,23 +1626,37 @@ from Barrie, knows which street it is watching.
     are near-black (`#0d1f14`): they are outside the world, and painting them
     sky-blue made the street read as floating. The wall has no bars at all — its
     camera fills the arena (below).
--   **Three readings of one creature, told apart at speed.** The schlong is
-    drawn three ways and the room has to know which is which in a glance:
-    *a FACE* — on a pink, a dark or a pale one, dealt by its index the way
-    FAPPY deals its champs (§2.9), veins and all — is alive, an enemy, and
-    pops when landed on; *crimson, stubby, several of them and no face* is a
-    thorn bed that hurts however you arrive; *pink with a red-and-white PAD
-    strapped over the glans* is a springboard, the only one on your side. The
-    face means alive and the pad means safe — colour alone was never going
-    to carry three meanings, which is also why the enemy can come in three
-    skins without the reading changing.
--   **The collectible is the one thing out there that is not a schlong.** It is
+-   **One question, told apart at speed: is it flat on top?** Everything on
+    the sidewalk is one of two things, and the room tells them apart the way
+    anyone who has watched a skate video does. *Flat on top* is furniture, and
+    you land on it and grind: the handrail (`ZoneProps/Rail`, 16.5 up, the
+    hard one), a park bench (9 up, slats on iron ends, no backrest — a back
+    would stand up over the line the board rides), a concrete planter ledge
+    (6 up, the hedge showing BEHIND the lip, lower than it) and a parked
+    sedan's roof (13.5 up, silver so it is not the rail's steel). Every one is
+    a one-way ledge to the sim (`SCHLONIC_RIDE_ONS`); the drawing is what
+    tells the room how high the landing is. *Not flat* is the crowd, and you
+    jump it — it hurts however you arrive, from above included: a dome tent
+    (red, bluer and deeper than a wing's sauce, with a tarp and a pylon), a
+    sleeper in a grey hoodie on the pavers, the crust punk slouched against
+    the wall with a tallboy, the roadie wheeling a bass cab, the show-goer
+    weaving out of the Queen's with a can, and the goose. The people are
+    birds — the cast's own figure, a crow in black or a pigeon in grey
+    (`Crowd/CrowdBird`) — because everything in the game is the cast and a
+    human stood next to a chicken on a skateboard would be the odd one out.
+    Three of them move: a triangle-wave sway across their spot on the tick
+    (`resolveSchlonicHazardX`, `SCHLONIC_HAZARDS`), slow for the cab, fast
+    for the goose, widest for the drunk, which is where the timing lives now
+    that nothing is stomped. The kicker ramp (`ZoneProps/Kicker`, plywood on a
+    timber frame) is the third thing and asks nothing: roll into it and it
+    throws you at the high line. The strip marks the crowd as a dark dot and
+    the kicker as a wedge; it does not say who, only where.
+-   **The collectible is the one thing out there that is not street.** It is
     a sauced party wing — a fat orange lobe on a pale bone, the night's own
     name picked up off the floor by a chicken, and nobody asks where they came
-    from. That it shares no outline with the furniture is the point and not a
-    detail: the zone's three hazards are one silhouette read three ways, so
-    "grab this" can only separate from "avoid that" by being a different shape
-    entirely. Every wing in a zone is drawn identically — a collectible line
+    from. That it shares no outline with the furniture or the crowd is the
+    point and not a detail: "grab this" separates from "land on that" and
+    "jump that" by being a different shape entirely. Every wing in a zone is drawn identically — a collectible line
     reads as a line because the eye stops resolving it after the first one —
     and the drawing is sized off the sim's own `wingRadius`, so what the room
     reaches for is the hitbox rather than a guess at it.

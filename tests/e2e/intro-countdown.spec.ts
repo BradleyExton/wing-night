@@ -155,7 +155,7 @@ test("intro lock screen counts the room in before the first team enters", async 
   await expect(displayPage.getByText("on the wings")).toBeVisible();
   await expect(displayPage.getByText("Game starts in")).toHaveCount(0);
   await expect(hostPage.locator("header").getByText("Frank's")).toBeVisible();
-  await expect(displayPage.getByText("SCHLONIC")).toBeVisible();
+  await expect(displayPage.getByText("Dunlop Dash")).toBeVisible();
 
   await context.close();
 });
