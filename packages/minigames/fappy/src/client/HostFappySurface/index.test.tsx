@@ -147,7 +147,7 @@ test("does stand the next player's bird on the landing cliff and name them in th
   assert.match(html, /Leg 2 of 2/);
   assert.match(html, /Flying: Morgan/);
   assert.match(html, /3 of 6 gates/);
-  assert.match(html, /come down on the far cliff/);
+  assert.match(html, /come down on the far roof/);
 
   const firstLegHtml = render(createView());
 
@@ -301,7 +301,7 @@ test("does peek the waiting player over the bezel while their bird is off screen
   const html = render(createView());
 
   assert.match(html, /data-fappy-waiter-peek/);
-  assert.match(html, /waiting at the cliff/);
+  assert.match(html, /waiting on the roof/);
 
   // The last leg has nobody waiting, so there is nobody to peek at either.
   assert.doesNotMatch(

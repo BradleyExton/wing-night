@@ -14,7 +14,7 @@ const onDeck = (waitingName: string | null, onDeckName: string | null): string =
 export const displayFappySurfaceCopy = {
   title: MINIGAME_DEFINITIONS.FAPPY.displayName,
   introDescription:
-    "Your team's chickens fly a relay through a corridor of champs, against one clock. One player per section: tap to flap, knock the eagles out of your way, land on the far cliff where the next bird is waiting, hand the tablet over. The quicker the whole team gets through, the more points.",
+    "Your team's chickens fly a relay through a corridor of champs, against one clock. One player per section: tap to flap, knock the eagles out of your way, land on the far roof where the next bird is waiting, hand the tablet over. The quicker the whole team gets through, the more points.",
   waitingLabel: "Waiting for the relay to start…",
   sceneLabel: (playerName: string | null): string =>
     playerName === null ? "The corridor" : `The corridor — ${playerName}'s bird`,
@@ -47,7 +47,7 @@ export const displayFappySurfaceCopy = {
     const flyer = playerName ?? "The bird";
 
     if (waitingName === null) {
-      return `${flyer} is flying — come down on the far cliff`;
+      return `${flyer} is flying — come down on the far roof`;
     }
 
     const head = `${flyer} is flying — land next to ${waitingName}`;

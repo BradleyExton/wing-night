@@ -66,7 +66,7 @@ test("fappy sandbox starts the clock on the first tap and sends a crashed bird b
 
   // Caitlin stands ~365 world units down a 160-unit viewport, so a bubble on
   // the bezel stands in for her until her bird scrolls into view.
-  await expect(page.locator("[data-fappy-waiter-peek]").first()).toContainText("waiting at the cliff");
+  await expect(page.locator("[data-fappy-waiter-peek]").first()).toContainText("waiting on the roof");
   await expect(page.locator("[data-fappy-waiter-peek]").first()).toHaveCSS("opacity", "1");
   // Caitlin waits on the landing cliff of leg 1, on both screens; every bird
   // carries its wing on its own layer so the loop can beat it.
@@ -114,7 +114,7 @@ test("fappy sandbox starts the clock on the first tap and sends a crashed bird b
   // the assertion names the tablet's rather than matching two elements.
   await expect(hostLineup.locator("[data-fappy-crashes='1']")).toBeVisible({ timeout: 8000 });
   await expect(page.getByText("Alex is back on the perch — go again")).toBeVisible();
-  await expect(page.getByText("Back on the start cliff. Tap to go again.")).toBeVisible();
+  await expect(page.getByText("Back on the start roof. Tap to go again.")).toBeVisible();
   await expect(page.getByText("Leg 1 of 2")).toHaveCount(2);
   // The poster comes back for the second attempt with the other instruction.
   await expect(page.locator('[data-fappy-leg-poster="respawn"]')).toContainText("Tap to go again");
@@ -292,7 +292,7 @@ test("landing next to the waiting bird holds the corridor, tells the room whose 
   await expect(page.getByText("Leg 1 of 2")).toHaveCount(1);
   await expect(page.getByText("Leg 2 of 2")).toHaveCount(1);
 
-  // Then the wipe: leg 2 on both screens, Caitlin on the start cliff, the
+  // Then the wipe: leg 2 on both screens, Caitlin on the start roof, the
   // finish flag where the waiter stood.
   await expect(page.locator("[data-fappy-handoff]")).toHaveCount(0, { timeout: 5000 });
   await expect(page.getByText("Leg 2 of 2")).toHaveCount(2);

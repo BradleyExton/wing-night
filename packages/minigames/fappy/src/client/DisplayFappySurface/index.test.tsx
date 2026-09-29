@@ -234,7 +234,7 @@ test("does leave the on-deck line off when there is nobody after the next player
 // bubble on the bezel stands in for it until it scrolls into view.
 test("does peek the waiting player over the bezel while their bird is off screen", () => {
   assert.match(render(createView()), /data-fappy-waiter-peek/);
-  assert.match(render(createView()), /waiting at the cliff/);
+  assert.match(render(createView()), /waiting on the roof/);
   assert.doesNotMatch(
     render(
       createView({

@@ -6,7 +6,7 @@ const onDeck = (onDeckName: string | null): string =>
 
 export const hostFappySurfaceCopy = {
   introDescription:
-    "Your team's chickens fly a relay through a corridor of champs, against one clock. Each player flies one section on the tablet: tap anywhere to flap, then come down on the far cliff where the next bird is waiting. Bump an eagle and it just flies off; hit a champ, the street or the cliff and you go again from the last gate you made — it only costs time. The quicker the whole team gets through, the more points.",
+    "Your team's chickens fly a relay through a corridor of champs, against one clock. Each player flies one section on the tablet: tap anywhere to flap, then come down on the far roof where the next bird is waiting. Bump an eagle and it just flies off; hit a champ, the street or a wall and you go again from the last gate you made — it only costs time. The quicker the whole team gets through, the more points.",
   waitingRelayLabel: "No relay is loaded. Check the round's FAPPY rules.",
   legCounter: (legNumber: number, legsTotal: number): string => `Leg ${legNumber} of ${legsTotal}`,
   flyingLabel: (playerName: string | null): string =>
@@ -19,7 +19,7 @@ export const hostFappySurfaceCopy = {
     const who = playerName === null ? "" : `${playerName}: `;
 
     return waitingName === null
-      ? `${who}tap anywhere to take off, keep tapping to stay up, and come down on the far cliff.`
+      ? `${who}tap anywhere to take off, keep tapping to stay up, and come down on the far roof.`
       : `${who}tap anywhere to take off, keep tapping to stay up, and land next to ${waitingName}.${onDeck(onDeckName)}`;
   },
   handoffHint: (landedName: string | null, nextName: string | null): string => {
@@ -31,12 +31,12 @@ export const hostFappySurfaceCopy = {
   },
   respawnHint: (gatesCleared: number, onDeckName: string | null = null): string =>
     gatesCleared === 0
-      ? `Back on the start cliff. Tap to go again.${onDeck(onDeckName)}`
+      ? `Back on the start roof. Tap to go again.${onDeck(onDeckName)}`
       : `Back on the perch at gate ${gatesCleared}. Tap to go again.${onDeck(onDeckName)}`,
   readyLockedHint: "Waiting for the host to open the round.",
   flyingHint: (waitingName: string | null, onDeckName: string | null = null): string =>
     waitingName === null
-      ? "Keep tapping — then come down on the far cliff."
+      ? "Keep tapping — then come down on the far roof."
       : `Keep tapping — then land next to ${waitingName} and hand it over.${onDeck(onDeckName)}`,
   finishedHint: "Through! Advance the phase when the room is ready.",
   timedOutHint: "Time. Advance the phase when the room is ready.",
