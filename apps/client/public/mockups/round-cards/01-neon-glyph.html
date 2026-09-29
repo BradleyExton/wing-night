@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Round Cards — 01 Neon Glyph</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      /* Same card, same footprint. The watermark numeral is gone and the game's
+         symbol hangs in its place as a small neon sign: the marquee's tube light
+         (§2.2D), so the lobby and the games already speak the same material. */
+      .card { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 clamp(0.6rem, 1vw, 1.2rem); text-align: left; border-radius: clamp(0.6rem, 0.9vw, 1.1rem); padding: clamp(0.9rem, 1.3vw, 1.4rem) clamp(1rem, 1.3vw, 1.5rem); }
+      .card::before { content: ""; position: absolute; inset: 0 12% auto; height: 1px; background: linear-gradient(90deg, transparent, var(--ember), transparent); }
+      .card .meta { justify-content: flex-start; flex-wrap: nowrap; white-space: nowrap; }
+      .card .pill { white-space: nowrap; }
+      .card .pill { margin-top: 0.7em; }
+      .sign { position: relative; width: clamp(3.4rem, 4.6vw, 6rem); aspect-ratio: 1; display: grid; place-items: center; border-radius: 22%; background: radial-gradient(circle at 50% 50%, rgb(249 115 22 / 0.16), transparent 70%); }
+      .sign::after { content: ""; position: absolute; inset: 0; border-radius: inherit; border: 1px solid rgb(255 179 90 / 0.12); }
+      .tube { width: 78%; color: #ffe3c2; filter: drop-shadow(0 0 2px #ffb35a) drop-shadow(0 0 7px #f97316) drop-shadow(0 0 18px rgb(249 115 22 / 0.8)); }
+      /* One game per round is live-ish: every sign breathes, each on its own beat,
+         and one tube in the row buzzes like the marquee's tired letter. */
+      .tube { animation: hum 4.2s ease-in-out var(--hum, 0s) infinite; }
+      @keyframes hum { 0%, 100% { opacity: 1; } 50% { opacity: 0.82; } }
+      .card:nth-child(6) .tube { animation: buzz 5s steps(1) infinite; }
+      @keyframes buzz { 0%, 86%, 90%, 94%, 100% { opacity: 1; } 88%, 92% { opacity: 0.25; } }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { mount, metaLine, glyph } from "./kit.js";
+      mount((r, i) => `<article class="card glass"><div>${metaLine(r)}<p class="sauce">${r.sauce}</p><span class="pill">${r.game}</span></div>
+        <div class="sign" style="--hum:${-i * 0.7}s">${glyph(r.id, "tube")}</div></article>`);
+    </script>
+  </body>
+</html>

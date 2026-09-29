@@ -30,7 +30,8 @@
   "dependencies": {
     "@wingnight/minigames-core": "workspace:*",
     "@wingnight/shared": "workspace:*",
-    "@wingnight/surface": "workspace:*"
+    "@wingnight/surface": "workspace:*",
+    "emojilib": "4.0.3"
   },
   "devDependencies": {
     "@types/node": "catalog:",

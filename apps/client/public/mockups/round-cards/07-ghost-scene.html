@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Round Cards — 07 Ghost Scene</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      .card { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; border-radius: clamp(0.6rem, 0.9vw, 1.1rem); padding: clamp(0.9rem, 1.4vw, 1.5rem) clamp(0.8rem, 1.1vw, 1.2rem); }
+      .card::before { content: ""; position: absolute; inset: 0 12% auto; height: 1px; background: linear-gradient(90deg, transparent, var(--ember), transparent); }
+      /* 02's painted scene, drained to one warm tone and sunk behind the glass:
+         you notice it second, after the sauce. */
+      .ghost { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; filter: grayscale(1) sepia(1) saturate(2.2) hue-rotate(-12deg) brightness(0.8) contrast(0.9); opacity: 0.2;
+        -webkit-mask-image: radial-gradient(ellipse 70% 90% at 50% 50%, #000 30%, transparent 85%); mask-image: radial-gradient(ellipse 70% 90% at 50% 50%, #000 30%, transparent 85%); }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { mount, metaLine, scene } from "./kit.js";
+      mount((r) => `<article class="card glass">${scene(r.id, "ghost")}${metaLine(r)}<p class="sauce">${r.sauce}</p><span class="pill">${r.game}</span></article>`);
+    </script>
+  </body>
+</html>

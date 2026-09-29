@@ -11,6 +11,7 @@ import { CastParade } from "./CastParade";
 import { setupStageCopy } from "./copy";
 import { Embers } from "./Embers";
 import { HeroFlame } from "./HeroFlame";
+import { RoundGlyph } from "./RoundGlyph";
 import * as styles from "./styles";
 
 type SetupStageBodyProps = {
@@ -120,9 +121,7 @@ export const SetupStageBody = ({
                 key={`round-${round.round}`}
                 className={`${styles.round} ${revealDelay}`}
               >
-                <span className={styles.roundWatermark} aria-hidden>
-                  {setupStageCopy.formatRoundNumber(round.round)}
-                </span>
+                <RoundGlyph minigame={round.minigame} />
                 <p className={styles.roundMeta}>
                   <span className={styles.roundNum}>
                     {setupStageCopy.formatRoundNumber(round.round)}

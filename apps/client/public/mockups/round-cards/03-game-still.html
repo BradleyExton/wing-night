@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Round Cards — 03 Game Still</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      /* No new art at all: each card is a real frame of its game on the TV,
+         captured from the /dev/minigame sandbox, toned into the hearth's
+         palette so eight different games still read as one lineup. The shipped
+         text sits on it unchanged. Press C to see the raw colour frames. */
+      .card { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; aspect-ratio: 16 / 9.2; border-radius: clamp(0.6rem, 0.9vw, 1.1rem); padding: clamp(0.8rem, 1.2vw, 1.3rem) clamp(0.8rem, 1.1vw, 1.2rem); border: 1px solid rgb(249 115 22 / 0.25); box-shadow: inset 0 1px 0 rgb(255 214 170 / 0.16), 0 18px 40px -20px rgb(0 0 0 / 0.9); background: #120904; }
+      .still { position: absolute; inset: 0; z-index: -3; width: 100%; height: 100%; object-fit: cover; object-position: 50% 58%; transform: scale(1.32); transform-origin: 50% 64%; filter: grayscale(1) contrast(1.2) brightness(1.15); transition: filter 400ms ease; }
+      .tone { position: absolute; inset: 0; z-index: -2; background: linear-gradient(160deg, #f97316, #7c1d06); mix-blend-mode: multiply; transition: opacity 400ms ease; }
+      .card::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, transparent 0%, transparent 40%, rgb(12 6 2 / 0.82) 68%, rgb(12 6 2 / 0.96) 100%); }
+      .raw .still { filter: saturate(1.05) brightness(0.95); }
+      .raw .tone { opacity: 0; }
+      .card .pill { background: rgb(0 0 0 / 0.35); }
+      .missing { position: absolute; top: 0.6em; left: 50%; transform: translateX(-50%); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgb(179 168 154 / 0.5); }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { mount, metaLine } from "./kit.js";
+      mount((r) => `<article class="card"><img class="still" src="stills/${r.id}.jpg" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'missing',textContent:'still not captured'}))" /><div class="tone"></div>${metaLine(r)}<p class="sauce">${r.sauce}</p><span class="pill">${r.game}</span></article>`, { hint: "C · toggle raw colour" });
+      document.addEventListener("keydown", (e) => { if (e.key === "c" || e.key === "C") document.body.classList.toggle("raw"); });
+      document.addEventListener("click", () => document.body.classList.toggle("raw"));
+    </script>
+  </body>
+</html>

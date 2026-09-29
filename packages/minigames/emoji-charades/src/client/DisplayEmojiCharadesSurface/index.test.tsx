@@ -7,13 +7,15 @@ import type { EmojiCharadesMinigameDisplayView } from "@wingnight/shared";
 
 import { DisplayEmojiCharadesSurface } from "./index.js";
 
-const playingView = (): EmojiCharadesMinigameDisplayView => ({
+const playingView = (
+  emojiSequence: string[] = ["🔥", "🐔"]
+): EmojiCharadesMinigameDisplayView => ({
   minigame: "EMOJI_CHARADES",
   activeTurnTeamId: "team-1",
   pendingPointsByTeamId: { "team-1": 4 },
   pointsPerCorrect: 2,
   status: "playing",
-  emojiSequence: ["🔥", "🐔"],
+  emojiSequence,
   reveal: null
 });
 
@@ -56,4 +58,15 @@ test("holds the marquee's right cell open with nothing when there is no clock", 
 
   assert.doesNotMatch(html, /pr-\[clamp\(/);
   assert.doesNotMatch(html, /min-h-\[1px\]/);
+});
+
+test("stands only the last six emoji of a long clue on the stage", () => {
+  const clue = ["🐶", "🍕", "🔥", "👀", "🎬", "🚗", "💀", "🌊"];
+  const html = render(playingView(clue));
+
+  assert.match(html, /data-visible-emoji-count="6"/);
+  assert.doesNotMatch(html, /🐶|🍕/);
+  assert.match(html, /🌊/);
+  // The status line still counts the whole clue, not the six on stage.
+  assert.match(html, /8 \/ 30/);
 });

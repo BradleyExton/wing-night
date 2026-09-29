@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Round Cards (TV SETUP) — Prototype Round</title>
+    <style>
+      :root { --bg:#121212; --surface:#1c1c1c; --surface-alt:#242424; --text:#fff; --muted:#a3a3a3; --primary:#f97316; --gold:#fbbf24; }
+      html, body { margin:0; background:var(--bg); color:var(--text); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; min-height:100dvh; }
+      main { max-width:1100px; margin:0 auto; padding:3rem 2rem 5rem; }
+      h1 { font-size:clamp(2rem,4vw,3.25rem); margin:0 0 0.5rem; }
+      p.lede { color:var(--muted); font-size:1.125rem; line-height:1.5; margin:0 0 2rem; }
+      p.note { color:var(--muted); font-size:0.95rem; line-height:1.5; margin:0 0 2.5rem; padding:0.85rem 1rem; background:var(--surface-alt); border-left:3px solid var(--primary); border-radius:6px; }
+      .q { color:var(--primary); font-weight:700; }
+      .grid { display:grid; gap:1.5rem; }
+      .card { display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid #333; border-radius:12px; overflow:hidden; transition:transform 120ms ease, border-color 120ms ease; }
+      .card:hover, .card:focus { border-color:var(--primary); transform:translateY(-2px); }
+      .shot { position:relative; aspect-ratio: 1920 / 1080; overflow:hidden; background:#000; }
+      .shot iframe { position:absolute; top:0; left:0; width:1920px; height:1080px; border:0; pointer-events:none; transform-origin:0 0; transform:scale(var(--s, 0.5)); }
+      .card .text { padding:1.25rem 1.75rem 1.5rem; }
+      .index { display:inline-block; background:var(--primary); color:#1a0f04; font-weight:800; font-size:0.75rem; letter-spacing:0.1em; padding:0.25rem 0.5rem; border-radius:4px; margin-bottom:0.6rem; }
+      .index.base { background:#444; color:#ddd; }
+      h2 { font-size:1.4rem; margin:0 0 0.4rem; }
+      .desc { color:var(--muted); line-height:1.5; margin:0; }
+      .cost { display:block; margin-top:0.5rem; color:var(--gold); font-size:0.9rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Round Cards (TV SETUP) — Prototype Round</h1>
+      <p class="lede">
+        Four directions for giving each of the eight round cards on the lobby screen a picture of its
+        game, plus today's card (00) for comparison. Every page is the whole SETUP stage at 1920×1080
+        with the pack's real 2026-09-24 schedule, so the cards are judged against the wordmark, the
+        flame and the floor the cast parades on, not in isolation.
+      </p>
+      <p class="note">
+        <span class="q">The question these answer:</span> today a card is three lines of type and a
+        pill, and the only thing that tells SCHLONIC from GEO is the word in the pill. These four
+        disagree about what the picture should be: a <em>symbol</em> (01), a <em>painted moment</em>
+        of the game (02), a <em>real frame</em> of the game on the TV (03), or art-first cards in a
+        new layout (04). 01 costs no height; 02 and 03 grow each card by roughly a quarter; 04 trades
+        the 4×2 grid for one row of eight. All the art in 01, 02 and 04 is hand-drawn SVG in the
+        cast's flat hand and lives in <code>kit.js</code>, so whichever wins can be tuned per game.
+      </p>
+      <h2 style="margin:0 0 0.4rem">Second pass: quieter <span style="color:var(--gold);font-size:0.8em">· after "01–04 are a little much"</span></h2>
+      <p class="desc" style="margin-bottom:1.5rem">Today's card, untouched, plus one restrained move each, least to most.</p>
+      <div class="grid" style="margin-bottom:3rem">
+        <a class="card" href="05-pill-icon.html"><div class="shot"><iframe src="05-pill-icon.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">05</span><h2>Pill Icon</h2>
+          <p class="desc">The only change: the orange dot in the mini-game pill becomes the game's symbol. Everything else is exactly today's card.</p>
+        </div></a>
+        <a class="card" href="06-corner-emboss.html"><div class="shot"><iframe src="06-corner-emboss.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">06 · CHOSEN</span><h2>Corner Emboss</h2>
+          <p class="desc">The faint corner numeral becomes the game's symbol at the same faintness, big and cropped by the card edge, pressed into the glass rather than lit. The round number already lives in the eyebrow. <strong>Chosen and built 2026-09-28</strong> as <code>RoundGlyph</code> in SetupStageBody; open slots keep the numeral.</p>
+        </div></a>
+        <a class="card" href="07-ghost-scene.html"><div class="shot"><iframe src="07-ghost-scene.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">07</span><h2>Ghost Scene</h2>
+          <p class="desc">02's painted scene drained to one warm tone and sunk behind the glass at 20%, so you notice it after the sauce. Same card size as today.</p>
+        </div></a>
+      </div>
+      <h2 style="margin:0 0 1.5rem">First pass</h2>
+      <div class="grid">
+        <a class="card" href="00-current.html"><div class="shot"><iframe src="00-current.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index base">00 · TODAY</span><h2>Current card</h2>
+          <p class="desc">The shipped card (SetupStageBody), rebuilt in the kit for a side-by-side: eyebrow, sauce, mini-game pill, a faint numeral in the corner.</p>
+        </div></a>
+        <a class="card" href="01-neon-glyph.html"><div class="shot"><iframe src="01-neon-glyph.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">01</span><h2>Neon Glyph</h2>
+          <p class="desc">Same footprint, same words. The corner numeral becomes a small neon sign of the game's symbol (a drumstick with speed lines, a map pin, a speech bubble, a record, a pencil, a flapping bird, a framed picture, a slingshot) in the marquee's tube light, so the lobby already speaks the chrome the games wear. The signs hum, one buzzes. The quietest change and the cheapest.</p>
+          <span class="cost">Symbol, not picture: it tells the games apart but doesn't show what playing one looks like.</span>
+        </div></a>
+        <a class="card" href="02-diorama.html"><div class="shot"><iframe src="02-diorama.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">02</span><h2>Diorama Window</h2>
+          <p class="desc">Each card opens a window onto a painted moment of its game: the hen running the checkered shore with drumettes overhead, a photo and two pins on the dark map, three emoji tiles and blanks, a record and an equalizer, a doodle on paper, the flapping bird between two cliffs, a real and a fake in gilt frames, the slingshot and the tower. The sauce and round ride a smoked sill at the foot; the game is a chip on the art.</p>
+          <span class="cost">Eight small illustrations to own and keep in step with the games. Cards grow ~25% taller; the floor still clears at 1080p.</span>
+        </div></a>
+        <a class="card" href="03-game-still.html"><div class="shot"><iframe src="03-game-still.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">03</span><h2>Game Still</h2>
+          <p class="desc">No new art: each card is a real frame of its game on the TV, captured from the <code>/dev/minigame</code> sandbox and toned into the hearth's orange so eight different games still read as one lineup. The shipped text sits on it unchanged. Click or press <strong>C</strong> to see the frames in raw colour.</p>
+          <span class="cost">Captured from the committed sample pack (no party photos), zoomed past each game's marquee. Finding: SCHLONIC, DRAWING and EMOJI read; GEO, WHO'S THAT SONG and FORGERY STUDIO read as nothing, because their TVs are type and dark space designed for full-screen. Stills also go stale whenever a game's look changes.</span>
+        </div></a>
+        <a class="card" href="04-trading-card.html"><div class="shot"><iframe src="04-trading-card.html" tabindex="-1"></iframe></div><div class="text">
+          <span class="index">04</span><h2>Trading Card</h2>
+          <p class="desc">The lineup as a hand of eight: one row of portrait cards, art first, read left to right like the night. Same painted scenes as 02, cropped square, with a numbered corner badge, the game as a banner across the art, the sauce as the name plate, a line in the show's voice ("Flap to the far cliff.") and a chilli heat rating from the round's points.</p>
+          <span class="cost">A new layout, not a new card: the 4×2 grid goes, and with it the "8 seats, 6 filled" placeholder reading, which would need redrawing as face-down cards.</span>
+        </div></a>
+      </div>
+    </main>
+    <script>
+      const fit = () => document.querySelectorAll(".shot").forEach((el) => el.style.setProperty("--s", String(el.clientWidth / 1920)));
+      fit(); addEventListener("resize", fit);
+    </script>
+  </body>
+</html>

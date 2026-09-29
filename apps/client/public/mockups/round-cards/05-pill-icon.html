@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Round Cards — 05 Pill Icon</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      .card { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; border-radius: clamp(0.6rem, 0.9vw, 1.1rem); padding: clamp(0.9rem, 1.4vw, 1.5rem) clamp(0.8rem, 1.1vw, 1.2rem); }
+      .card::before { content: ""; position: absolute; inset: 0 12% auto; height: 1px; background: linear-gradient(90deg, transparent, var(--ember), transparent); }
+      .wm { position: absolute; right: -0.06em; bottom: -0.2em; z-index: -1; font-family: var(--score); font-weight: 800; font-size: clamp(3.2rem, 5.5vw, 7rem); line-height: 1; letter-spacing: -0.06em; color: rgb(255 255 255 / 0.06); }
+      /* The whole change: the pill's orange dot becomes the game's symbol. */
+      .card .pill::before { display: none; }
+      .pill svg { width: 1.5em; height: 1.5em; margin: -0.3em 0 -0.3em -0.2em; color: var(--primary); }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { mount, metaLine, pad, glyph } from "./kit.js";
+      mount((r) => `<article class="card glass"><span class="wm">${pad(r.n)}</span>${metaLine(r)}<p class="sauce">${r.sauce}</p><span class="pill">${glyph(r.id)}${r.game}</span></article>`);
+    </script>
+  </body>
+</html>

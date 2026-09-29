@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Round Cards — 06 Corner Emboss</title>
+    <link rel="stylesheet" href="kit.css" />
+    <style>
+      .card { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; border-radius: clamp(0.6rem, 0.9vw, 1.1rem); padding: clamp(0.9rem, 1.4vw, 1.5rem) clamp(0.8rem, 1.1vw, 1.2rem); }
+      .card::before { content: ""; position: absolute; inset: 0 12% auto; height: 1px; background: linear-gradient(90deg, transparent, var(--ember), transparent); }
+      /* The watermark numeral swaps for the game's symbol, at the same faintness,
+         big and cropped by the card's corner. Pressed into the glass, not lit. */
+      .emboss { position: absolute; right: -0.9rem; bottom: -1.1rem; z-index: -1; width: clamp(5rem, 7.5vw, 9.5rem); color: rgb(255 214 170 / 0.09); transform: rotate(-12deg); stroke-width: 3.5; }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { mount, metaLine, glyph } from "./kit.js";
+      mount((r) => `<article class="card glass">${glyph(r.id, "emboss")}${metaLine(r)}<p class="sauce">${r.sauce}</p><span class="pill">${r.game}</span></article>`);
+    </script>
+  </body>
+</html>

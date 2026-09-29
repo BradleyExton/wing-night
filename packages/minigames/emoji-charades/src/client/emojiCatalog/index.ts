@@ -1,6 +1,7 @@
 // The picker catalog is client-owned, not content-driven (spec §2). "Top" is
 // the landing tab per DESIGN.md §2.6: frequency-ranked for charades rather
-// than unicode order, so the likely next tap is already on screen.
+// than unicode order, so the likely next tap is already on screen. The tabs are
+// a curated few hundred; search reaches every emoji (see emojiSearch).
 export type EmojiCatalogSection = {
   id: string;
   label: string;
@@ -29,7 +30,9 @@ export const EMOJI_CATALOG_TABS: EmojiCatalogTab[] = [
       section("staples", "Charades staples", [
         "😀", "😱", "❤️", "🔥", "👀", "🏃", "🎬", "🎵", "💀", "🚗",
         "🏠", "💡", "🍕", "⭐", "💰", "👑", "🐶", "☠️", "🌊", "⏰",
-        "🎉", "💤", "🌙", "☀️", "🧠", "👊", "🙌", "🤔", "😭", "💨"
+        "🎉", "💤", "🌙", "☀️", "🧠", "👊", "🙌", "🤔", "😭", "💨",
+        "👶", "👻", "🤖", "👽", "🧙", "🦸", "💍", "🎁", "🎂", "🍺",
+        "🎤", "🎸", "📺", "📱", "🎮", "⚽", "🏆", "✈️", "🚀", "🌎"
       ])
     ]
   },
@@ -128,36 +131,3 @@ export const EMOJI_CATALOG_TABS: EmojiCatalogTab[] = [
 ];
 
 export const DEFAULT_EMOJI_CATALOG_TAB_ID = "top";
-
-// Search matches the section labels and tab labels a picker would think of,
-// plus the emoji itself, so typing "dino" still surfaces 🦖 via its section.
-export const searchEmojiCatalog = (query: string): string[] => {
-  const normalizedQuery = query.trim().toLowerCase();
-
-  if (normalizedQuery.length === 0) {
-    return [];
-  }
-
-  const matches: string[] = [];
-
-  EMOJI_CATALOG_TABS.forEach((tab) => {
-    const tabMatches = tab.label.toLowerCase().includes(normalizedQuery);
-
-    tab.sections.forEach((catalogSection) => {
-      const sectionMatches =
-        tabMatches || catalogSection.label.toLowerCase().includes(normalizedQuery);
-
-      if (!sectionMatches) {
-        return;
-      }
-
-      catalogSection.emojis.forEach((emoji) => {
-        if (!matches.includes(emoji)) {
-          matches.push(emoji);
-        }
-      });
-    });
-  });
-
-  return matches;
-};
