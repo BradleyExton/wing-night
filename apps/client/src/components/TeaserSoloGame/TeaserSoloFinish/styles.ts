@@ -6,8 +6,8 @@ export const card =
 
 export const kicker = "m-0 text-xs font-extrabold uppercase tracking-[0.36em] text-primary";
 
-// Wings are the score and the health bar, and gold everywhere they are counted (DESIGN.md §2.11).
-export const wings =
+// The score is gold, as every score the show counts (DESIGN.md §2.11).
+export const headline =
   "m-0 font-score text-[clamp(2.4rem,7vw,3.4rem)] font-bold leading-none tabular-nums text-gold";
 
 export const newBest = "m-0 font-voice text-base italic text-text";

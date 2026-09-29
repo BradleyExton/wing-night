@@ -48,6 +48,7 @@ export const hostFappySurfaceCopy = {
     `${gatesCleared} of ${gatesTotal} gates`,
   skipLegButtonLabel: "Skip leg",
   resetTurnButtonLabel: "Reset turn",
+  restartButtonLabel: "Restart",
   parLine: (parSeconds: number): string => `Full points under ${parSeconds}s`,
   // The receipt on the finish card: which seconds of the scored time the
   // escape hatch put there.

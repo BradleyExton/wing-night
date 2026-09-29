@@ -1,8 +1,8 @@
 import * as styles from "./styles";
 
-type TeaserDashFinishProps = {
+type TeaserSoloFinishProps = {
   kicker: string;
-  wingsLabel: string;
+  headline: string;
   bestLabel: string | null;
   newBestLabel: string | null;
   runAgainLabel: string;
@@ -13,11 +13,11 @@ type TeaserDashFinishProps = {
   onSwitchTeam: () => void;
 };
 
-// The end of the relay, where on the night the host would advance the room: what the team
-// banked, the best this phone has seen, and the way back onto the street.
-export const TeaserDashFinish = ({
+// The end of a solo turn, where on the night the host would advance the room: how the team did,
+// the best this phone has seen, and the way back in.
+export const TeaserSoloFinish = ({
   kicker,
-  wingsLabel,
+  headline,
   bestLabel,
   newBestLabel,
   runAgainLabel,
@@ -26,11 +26,11 @@ export const TeaserDashFinish = ({
   homeHref,
   onRunAgain,
   onSwitchTeam
-}: TeaserDashFinishProps): JSX.Element => (
+}: TeaserSoloFinishProps): JSX.Element => (
   <div className={styles.scrim}>
     <div className={styles.card}>
       <p className={styles.kicker}>{kicker}</p>
-      <p className={styles.wings}>{wingsLabel}</p>
+      <p className={styles.headline}>{headline}</p>
       {newBestLabel !== null && <p className={styles.newBest}>{newBestLabel}</p>}
       {bestLabel !== null && <p className={styles.best}>{bestLabel}</p>}
       <div className={styles.actions}>

@@ -61,7 +61,8 @@ const RAIL = <span data-test-rail />;
 const render = (
   view: FappyMinigameHostView | null,
   phase: "intro" | "play" = "play",
-  serverOrigin: string | null = null
+  serverOrigin: string | null = null,
+  solo = false
 ): string => {
   return renderToStaticMarkup(
     <HostFappySurface
@@ -77,9 +78,25 @@ const render = (
         return;
       }}
       serverOrigin={serverOrigin}
+      solo={solo}
     />
   );
 };
+
+// Solo (the online teaser) there is no host and no room: nobody to skip a leg for, no phase to
+// advance, and no standings to post.
+test("drops the host's skip and the phase hint when it plays solo", () => {
+  const live = render(createView(), "play", null, true);
+
+  assert.doesNotMatch(live, /Skip leg/);
+  assert.doesNotMatch(live, /Reset turn/);
+  assert.match(live, /Restart/);
+
+  const through = render(createView({ phase: "finished", elapsedMs: 48_000, points: 15 }), "play", null, true);
+
+  assert.doesNotMatch(through, /Advance the phase/);
+  assert.match(render(createView({ phase: "finished", elapsedMs: 48_000, points: 15 })), /Advance the phase/);
+});
 
 test("does brief the relay without a corridor during the intro", () => {
   const html = render(createView(), "intro");

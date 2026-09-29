@@ -9,6 +9,7 @@ import {
   resolveRelayChase,
   type FinishClock
 } from "../pressure/index.js";
+import { useFappySounds } from "../useFappySounds/index.js";
 import { useHeldLeg, type LegHold } from "../useHeldLeg/index.js";
 import { formatRelayClock, formatRelayClockSeconds, useRelayClock } from "../useRelayClock/index.js";
 import { Corridor } from "./Corridor/index.js";
@@ -17,8 +18,9 @@ import { RelayClock } from "./RelayClock/index.js";
 import { hostFappySurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
-// Before the view arrives there is no leg to hold.
+// Before the view arrives there is no leg to hold and no relay to hear.
 const EMPTY_LEG_VIEW = { legIndex: 0, legsPerTurn: 1, legs: [] };
+const SILENT_RELAY_VIEW = { startedAtMs: null, phase: "ready" as const, parSeconds: 0, limitSeconds: 0 };
 
 const resolvePlayerName = (leg: FappyMinigameLeg | null | undefined): string | null => {
   return leg?.player?.name ?? null;
@@ -82,7 +84,12 @@ const resolveTotalsNote = (
     : hostFappySurfaceCopy.timeToBeat(formatRelayClockSeconds(chase.timeToBeatMs), rivalName);
 };
 
-const resolveHint = (view: FappyMinigameHostView, canAct: boolean, hold: LegHold | null): string => {
+const resolveHint = (
+  view: FappyMinigameHostView,
+  canAct: boolean,
+  hold: LegHold | null,
+  solo: boolean
+): string | null => {
   const legIndex = Math.min(view.legIndex, view.legsPerTurn - 1);
   const leg = view.legs[legIndex];
   const waitingName = resolvePlayerName(view.legs[legIndex + 1] ?? null);
@@ -112,6 +119,11 @@ const resolveHint = (view: FappyMinigameHostView, canAct: boolean, hold: LegHold
     return hostFappySurfaceCopy.flyingHint(waitingName, onDeckName);
   }
 
+  // Solo, there is no phase to advance: whoever is playing says what happens next.
+  if (solo) {
+    return null;
+  }
+
   return view.phase === "timedOut" ? hostFappySurfaceCopy.timedOutHint : hostFappySurfaceCopy.finishedHint;
 };
 
@@ -136,7 +148,8 @@ export const HostFappySurface = ({
   clock,
   canDispatchAction,
   onDispatchAction,
-  serverOrigin
+  serverOrigin,
+  solo = false
 }: MinigameHostRendererProps): JSX.Element => {
   const fappyView = minigameHostView?.minigame === "FAPPY" ? minigameHostView : null;
   const canAct = canDispatchAction && fappyView !== null;
@@ -155,6 +168,16 @@ export const HostFappySurface = ({
   // The corridor lingers on a cleared leg while the handoff plays; the chrome
   // row is already on the next one, which is the leg the room is asking about.
   const { shownLegIndex, hold } = useHeldLeg(fappyView ?? EMPTY_LEG_VIEW);
+  // On the night the TV is the speaker and the tablet is quiet. Solo, the tablet is the room, so
+  // it plays the TV's soundboard off its own flights.
+  const onRunnerEvent = useFappySounds({
+    view: fappyView ?? SILENT_RELAY_VIEW,
+    hold,
+    elapsedMs,
+    serverOrigin,
+    isSpeaker: solo
+  });
+  const hint = fappyView === null ? null : resolveHint(fappyView, canAct, hold, solo);
 
   const dispatch = (actionType: string): void => {
     onDispatchAction(actionType, {});
@@ -231,16 +254,19 @@ export const HostFappySurface = ({
             {/* The escape hatches stay on the canvas, not in the override dock:
                 skipping a leg and resetting the turn are the host's ordinary
                 moves here, and AGENTS.md §11 never lets them leave. */}
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              disabled={!canAct || !isLive}
-              onClick={(): void => {
-                dispatch("skipLeg");
-              }}
-            >
-              {hostFappySurfaceCopy.skipLegButtonLabel}
-            </button>
+            {/* Solo there is no host to skip a leg for anyone; a reset is just starting over. */}
+            {!solo && (
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                disabled={!canAct || !isLive}
+                onClick={(): void => {
+                  dispatch("skipLeg");
+                }}
+              >
+                {hostFappySurfaceCopy.skipLegButtonLabel}
+              </button>
+            )}
             <button
               className={styles.secondaryButton}
               type="button"
@@ -249,9 +275,9 @@ export const HostFappySurface = ({
                 dispatch("resetTurn");
               }}
             >
-              {hostFappySurfaceCopy.resetTurnButtonLabel}
+              {solo ? hostFappySurfaceCopy.restartButtonLabel : hostFappySurfaceCopy.resetTurnButtonLabel}
             </button>
-            <span className={styles.hint}>{resolveHint(fappyView, canAct, hold)}</span>
+            {hint !== null && <span className={styles.hint}>{hint}</span>}
           </>
         )
       }
@@ -261,12 +287,15 @@ export const HostFappySurface = ({
             {isRelayOver(fappyView) && finishClock !== null && (
               <FinishCard view={fappyView} finishClock={finishClock} />
             )}
-            <RunningTotals
-              pendingPointsByTeamId={fappyView.pendingPointsByTeamId}
-              activeTurnTeamId={fappyView.activeTurnTeamId}
-              teamNameByTeamId={teamNameByTeamId}
-              note={resolveTotalsNote(fappyView, teamNameByTeamId)}
-            />
+            {/* The room's standings. Solo there is no room to stand in. */}
+            {!solo && (
+              <RunningTotals
+                pendingPointsByTeamId={fappyView.pendingPointsByTeamId}
+                activeTurnTeamId={fappyView.activeTurnTeamId}
+                teamNameByTeamId={teamNameByTeamId}
+                note={resolveTotalsNote(fappyView, teamNameByTeamId)}
+              />
+            )}
           </>
         )
       }
@@ -281,6 +310,7 @@ export const HostFappySurface = ({
           onDispatchAction={onDispatchAction}
           hold={hold}
           legIndex={shownLegIndex}
+          onRunnerEvent={solo ? onRunnerEvent : undefined}
         />
       )}
     </TakeoverCanvas>

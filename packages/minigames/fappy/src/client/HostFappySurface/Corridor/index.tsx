@@ -5,6 +5,7 @@ import { resolveFappyGates } from "@wingnight/shared";
 
 import { FappyScene, type FappySceneHandle } from "../../FappyScene/index.js";
 import { resolveLegBird } from "../../resolveLegBird/index.js";
+import type { FappyMirrorEventHandler } from "../../mirrorEvents/index.js";
 import { useFappyRunner } from "../../useFappyRunner/index.js";
 import type { LegHold } from "../../useHeldLeg/index.js";
 import { LegPoster } from "./LegPoster/index.js";
@@ -18,6 +19,8 @@ type CorridorProps = {
   onDispatchAction: MinigameHostRendererProps["onDispatchAction"];
   hold: LegHold | null;
   legIndex: number;
+  /** The attempt's sound events, for a corridor that is its own speaker; absent on the night. */
+  onRunnerEvent?: FappyMirrorEventHandler;
 };
 
 // The beat between legs, over the corridor: whose tablet it is now. The
@@ -53,7 +56,8 @@ export const Corridor = ({
   serverOrigin,
   onDispatchAction,
   hold,
-  legIndex
+  legIndex,
+  onRunnerEvent
 }: CorridorProps): JSX.Element => {
   const sceneRef = useRef<FappySceneHandle>(null);
   const leg = view.legs[legIndex] ?? null;
@@ -94,7 +98,8 @@ export const Corridor = ({
     },
     onEndLeg: (): void => {
       onDispatchAction("endLeg", {});
-    }
+    },
+    onEvent: onRunnerEvent
   });
 
   return (

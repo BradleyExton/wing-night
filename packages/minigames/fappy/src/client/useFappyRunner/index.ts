@@ -11,6 +11,7 @@ import {
 
 import { CRASH_BEAT_MS, HANDOFF_BEAT_MS } from "../beats/index.js";
 import type { FappySceneHandle } from "../FappyScene/index.js";
+import { resolveMirrorEvents, type FappyMirrorEventHandler } from "../mirrorEvents/index.js";
 
 type FappyRunnerInput = {
   leg: FappyMinigameLeg | null;
@@ -19,6 +20,12 @@ type FappyRunnerInput = {
   sceneRef: RefObject<FappySceneHandle>;
   onFlap: (tick: number) => void;
   onEndLeg: () => void;
+  /**
+   * What the attempt announces as it flies — the same events the TV's mirror reads off its
+   * replay. Only a tablet that is its own speaker (a solo surface) listens; on the night the TV
+   * makes the noise and the tablet stays quiet.
+   */
+  onEvent?: FappyMirrorEventHandler;
 };
 
 type LocalRun = {
@@ -60,7 +67,8 @@ export const useFappyRunner = ({
   canAct,
   sceneRef,
   onFlap,
-  onEndLeg
+  onEndLeg,
+  onEvent
 }: FappyRunnerInput): { flap: () => void } => {
   const legIndex = leg?.legIndex ?? null;
   const legSeed = leg?.seed ?? 0;
@@ -87,6 +95,7 @@ export const useFappyRunner = ({
   const beatRef = useRef<LocalBeat | null>(null);
   const onFlapRef = useRef(onFlap);
   const onEndLegRef = useRef(onEndLeg);
+  const onEventRef = useRef(onEvent);
   const legRef = useRef(leg);
   const canActRef = useRef(canAct);
 
@@ -96,6 +105,7 @@ export const useFappyRunner = ({
 
   onFlapRef.current = onFlap;
   onEndLegRef.current = onEndLeg;
+  onEventRef.current = onEvent;
   legRef.current = leg;
   canActRef.current = canAct;
 
@@ -158,7 +168,18 @@ export const useFappyRunner = ({
 
     const targetTick = Math.floor(((now - run.startedAtMs) * FAPPY_WORLD.tickHz) / 1000);
 
+    const previous = run.frame;
+
     run.frame = advanceFappy(run.frame, gates, gatesPerLeg, run.flapTicks, targetTick);
+
+    // Nobody listening is the party tablet, every frame of the night: it skips the diffing.
+    const listener = onEventRef.current;
+
+    if (listener !== undefined) {
+      for (const event of resolveMirrorEvents(previous, run.frame, run.flapTicks)) {
+        listener(event);
+      }
+    }
 
     if (run.frame.outcome !== null) {
       run.rafHandle = 0;

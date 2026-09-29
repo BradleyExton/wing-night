@@ -35,11 +35,14 @@ const MIRROR_EVENT_CUES: Record<FappyMirrorEvent, FappyCueName> = {
 };
 
 type FappySoundsInput = {
-  view: FappyMinigameDisplayView;
+  view: Pick<FappyMinigameDisplayView, "startedAtMs" | "phase" | "parSeconds" | "limitSeconds">;
   hold: LegHold | null;
   /** The relay clock's running time, or null before the first flap. */
   elapsedMs: number | null;
   serverOrigin: string | null;
+  // False on a tablet with a TV beside it: the TV is the room's speaker, so the tablet asks for
+  // no takes and plays nothing. True on the TV, and on a surface playing solo.
+  isSpeaker?: boolean;
 };
 
 /**
@@ -58,13 +61,22 @@ export const useFappySounds = ({
   view,
   hold,
   elapsedMs,
-  serverOrigin
+  serverOrigin,
+  isSpeaker = true
 }: FappySoundsInput): FappyMirrorEventHandler => {
-  const takes = useSfxTakes(resolveSfxTakesUrl(FAPPY_SFX_FOLDER, serverOrigin));
+  const takes = useSfxTakes(isSpeaker ? resolveSfxTakesUrl(FAPPY_SFX_FOLDER, serverOrigin) : null);
   // Made on the first cue rather than on mount, so a surface that is only ever looked at
   // never asks the browser for an audio context at all.
   const boardRef = useRef<FappySoundboard | null>(null);
+  const isSpeakerRef = useRef(isSpeaker);
+
+  isSpeakerRef.current = isSpeaker;
+
   const play = useCallback((cue: FappyCueName, intensity?: number): void => {
+    if (!isSpeakerRef.current) {
+      return;
+    }
+
     boardRef.current ??= createFappySoundboard();
     boardRef.current.play(cue, intensity);
   }, []);

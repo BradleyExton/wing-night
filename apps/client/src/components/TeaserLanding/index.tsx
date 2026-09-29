@@ -6,7 +6,8 @@ import { CastParade } from "../DisplayBoard/StageSurface/SetupStageBody/CastPara
 import { Embers } from "../DisplayBoard/StageSurface/SetupStageBody/Embers";
 import { HeroFlame } from "../DisplayBoard/StageSurface/SetupStageBody/HeroFlame";
 import * as lobbyStyles from "../DisplayBoard/StageSurface/SetupStageBody/styles";
-import { TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
+import { resolveTeaserGameHref } from "../TeaserApp/teaserRoutes";
+import { dunlopDashGame, fappyBirdGame } from "../TeaserSoloGame/teaserGames";
 import { teaserLandingCopy } from "./copy";
 import { TeaserCountdown } from "./TeaserCountdown";
 import { TeaserGameCard } from "./TeaserGameCard";
@@ -62,15 +63,15 @@ export const TeaserLanding = ({ roster }: TeaserLandingProps): JSX.Element => {
             minigame="SCHLONIC"
             title={teaserLandingCopy.dunlopDashTitle}
             summary={teaserLandingCopy.dunlopDashSummary}
-            href={TEASER_ROUTES.dunlopDash}
+            href={resolveTeaserGameHref(dunlopDashGame.slug)}
             statusLabel={teaserLandingCopy.playLabel}
           />
           <TeaserGameCard
             minigame="FAPPY"
             title={teaserLandingCopy.fappyTitle}
             summary={teaserLandingCopy.fappySummary}
-            href={null}
-            statusLabel={teaserLandingCopy.lockedLabel}
+            href={resolveTeaserGameHref(fappyBirdGame.slug)}
+            statusLabel={teaserLandingCopy.playLabel}
           />
           <TeaserGameCard
             minigame="JOUST"
