@@ -9,7 +9,9 @@ import type {
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart } from "@wingnight/shared";
 
 import { CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
+import { resolveAirPeak, resolveMirrorEvents, type SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
 import { resolveHandfulLost } from "../resolveHandfulLost/index.js";
+import { resolveDueCues, resolvePunchlineCues } from "../SchlonicScene/punchlineTimeline/index.js";
 import type { SchlonicSceneHandle } from "../SchlonicScene/index.js";
 import { paintWingTally } from "../wingTally/index.js";
 
@@ -25,6 +27,12 @@ type SchlonicRunnerInput = {
   onPress: (tick: number) => void;
   onRelease: (tick: number) => void;
   onEndRun: () => void;
+  /**
+   * What the run announces as it plays — the same events the TV's mirror reads off its replay,
+   * punchline cues included. Only a tablet that is its own speaker (a solo surface) listens; on
+   * the night the TV makes the noise and the tablet stays quiet.
+   */
+  onEvent?: SchlonicMirrorEventHandler;
 };
 
 type LocalRun = {
@@ -38,6 +46,8 @@ type LocalRun = {
   rafHandle: number;
   hasEnded: boolean;
   isDown: boolean;
+  /** The most air since the runner's feet were last down (`resolveAirPeak`), for landings. */
+  airPeak: number;
 };
 
 // A beat playing over the run's terminal frame, `progress` 0 → 1: the post crossed, or the run
@@ -75,7 +85,8 @@ export const useSchlonicRunner = ({
   ghost = null,
   onPress,
   onRelease,
-  onEndRun
+  onEndRun,
+  onEvent
 }: SchlonicRunnerInput): { press: () => void; release: () => void } => {
   const runIndex = run?.runIndex ?? null;
   const runStatus = run?.status ?? null;
@@ -95,7 +106,8 @@ export const useSchlonicRunner = ({
       startedAtMs: null,
       rafHandle: 0,
       hasEnded: false,
-      isDown: false
+      isDown: false,
+      airPeak: 0
     };
   };
   const runRef = useRef<LocalRun | null>(null);
@@ -104,6 +116,7 @@ export const useSchlonicRunner = ({
   const onPressRef = useRef(onPress);
   const onReleaseRef = useRef(onRelease);
   const onEndRunRef = useRef(onEndRun);
+  const onEventRef = useRef(onEvent);
   const localRunRef = useRef(run);
   const canActRef = useRef(canAct);
 
@@ -115,6 +128,7 @@ export const useSchlonicRunner = ({
   onPressRef.current = onPress;
   onReleaseRef.current = onRelease;
   onEndRunRef.current = onEndRun;
+  onEventRef.current = onEvent;
   localRunRef.current = run;
   canActRef.current = canAct;
 
@@ -147,6 +161,9 @@ export const useSchlonicRunner = ({
 
     // A hole takes the handful with it, and the punchline shows what it took.
     const wingsLost = resolveHandfulLost(zoneRef.current, inputs, frame);
+    const punchlineCues =
+      frame.outcome === "fell" || frame.outcome === "wiped" ? resolvePunchlineCues(frame.outcome, wingsLost) : [];
+    let soundedToMs = -1;
 
     const beat: LocalBeat = {
       kind,
@@ -161,6 +178,14 @@ export const useSchlonicRunner = ({
         sceneRef.current?.paintCleared(frame, progress, ghostFrame);
       } else {
         sceneRef.current?.paintWipeout(frame, progress, ghostFrame, wingsLost);
+
+        const elapsedMs = progress * BEAT_DURATION_MS[kind];
+
+        for (const cue of resolveDueCues(punchlineCues, soundedToMs, elapsedMs)) {
+          onEventRef.current?.({ kind: cue });
+        }
+
+        soundedToMs = elapsedMs;
       }
 
       paintWingTally(tallyRef?.current ?? null, frame.wings);
@@ -193,9 +218,21 @@ export const useSchlonicRunner = ({
     }
 
     const targetTick = Math.floor(((now - local.startedAtMs) * SCHLONIC_WORLD.tickHz) / 1000);
+    const previous = local.frame;
     const hitsBefore = local.frame.hits.length;
 
     local.frame = advanceSchlonic(local.frame, zoneRef.current, local.inputs, targetTick);
+
+    // Nobody listening is the party tablet, every frame of the night: it skips the diffing.
+    const listener = onEventRef.current;
+
+    if (listener !== undefined) {
+      for (const event of resolveMirrorEvents(previous, local.frame, zoneRef.current, local.airPeak)) {
+        listener(event);
+      }
+
+      local.airPeak = resolveAirPeak(local.airPeak, local.frame, zoneRef.current);
+    }
 
     // A hit stops the clock for a beat and jolts the picture. The clock, not the sim: the run's
     // ticks are untouched, the tablet just holds this one a little longer.

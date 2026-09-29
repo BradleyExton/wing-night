@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { wakeAudio } from "@wingnight/audio";
 import type { SerializableValue } from "@wingnight/minigames-core";
 import { schlonicRuntimePlugin } from "@wingnight/minigames-schlonic";
 import { schlonicRendererBundle } from "@wingnight/minigames-schlonic/client";
@@ -51,8 +52,12 @@ export const TeaserDunlopDash = ({ roster }: TeaserDunlopDashProps): JSX.Element
   // The best this phone had when the turn began, to tell a new best from an old one at the end.
   const startingBestRef = useRef<number | null>(null);
 
+  // Always from a tap (the team picked, a rematch), which is the one moment a phone lets a page
+  // start its audio: the street's first ollie lands long after the gesture that could unlock it.
   const startTurn = (nextTeamId: string): void => {
     const roundMemory = bestTurnMemory.load();
+
+    wakeAudio();
 
     startingBestRef.current = readBestWings(roundMemory);
     setTeamId(nextTeamId);
@@ -124,6 +129,7 @@ export const TeaserDunlopDash = ({ roster }: TeaserDunlopDashProps): JSX.Element
             canDispatchAction
             onDispatchAction={handleDispatchAction}
             serverOrigin={serverOrigin}
+            solo
           />
         )}
       </TeaserPhoneFrame>

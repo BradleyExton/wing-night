@@ -5,27 +5,30 @@ import { RunningTotals, TakeoverCanvas } from "@wingnight/surface";
 
 import { resolveRunPlayerName } from "../resolveRunPlayerName/index.js";
 import { useHeldRun, type RunHold } from "../useHeldRun/index.js";
+import { useSchlonicSounds } from "../useSchlonicSounds/index.js";
 import { RunHistory } from "./RunHistory/index.js";
 import { Zone } from "./Zone/index.js";
 import { hostSchlonicSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
-// Before the view arrives there is no run to hold.
-const EMPTY_RUN_VIEW = { runIndex: 0, runsPerTurn: 1, runs: [] };
+// Before the view arrives there is no run to hold, and nothing yet to be through.
+const EMPTY_RUN_VIEW = { runIndex: 0, runsPerTurn: 1, runs: [], phase: "ready" as const };
 
 // The one line under the buttons, or nothing. A running bird's holder is not reading, and the
 // handoff is announced by the callout over the zone, so neither beat gets a sentence here.
 const resolveHint = (
   view: SchlonicMinigameHostView,
   canAct: boolean,
-  hold: RunHold | null
+  hold: RunHold | null,
+  solo: boolean
 ): string | null => {
   if (hold !== null) {
     return null;
   }
 
+  // Solo, there is no phase to advance: whoever is playing says what happens next.
   if (view.phase === "finished") {
-    return hostSchlonicSurfaceCopy.finishedHint;
+    return solo ? null : hostSchlonicSurfaceCopy.finishedHint;
   }
 
   if (view.phase === "running") {
@@ -70,7 +73,8 @@ export const HostSchlonicSurface = ({
   clock,
   canDispatchAction,
   onDispatchAction,
-  serverOrigin
+  serverOrigin,
+  solo = false
 }: MinigameHostRendererProps): JSX.Element => {
   const schlonicView = minigameHostView?.minigame === "SCHLONIC" ? minigameHostView : null;
   const canAct = canDispatchAction && schlonicView !== null;
@@ -80,6 +84,14 @@ export const HostSchlonicSurface = ({
   // The zone lingers on the run just ended while the handoff plays; the chrome
   // row is already on the next one, which is the run the room is asking about.
   const { shownRunIndex, hold } = useHeldRun(schlonicView ?? EMPTY_RUN_VIEW);
+  // On the night the TV is the speaker and the tablet is quiet. Solo, the tablet is the room, so
+  // it plays the TV's soundboard off its own run.
+  const { onMirrorEvent } = useSchlonicSounds({
+    view: schlonicView ?? EMPTY_RUN_VIEW,
+    hold,
+    serverOrigin,
+    isSpeaker: solo
+  });
   // Written by the runner's paint loop, sixty times a second: the wings in hand.
   const tallyRef = useRef<HTMLSpanElement>(null);
   const currentRun =
@@ -87,7 +99,7 @@ export const HostSchlonicSurface = ({
       ? null
       : (schlonicView.runs[Math.min(schlonicView.runIndex, schlonicView.runsPerTurn - 1)] ?? null);
   const currentRunnerName = isFinished ? null : resolveRunPlayerName(currentRun);
-  const hint = schlonicView === null ? null : resolveHint(schlonicView, canAct, hold);
+  const hint = schlonicView === null ? null : resolveHint(schlonicView, canAct, hold, solo);
   // The run list and the round's totals come out only when there is something
   // to read off them and nothing to dodge under them.
   const showsReadout = schlonicView !== null && (hold !== null || isFinished);
@@ -169,16 +181,19 @@ export const HostSchlonicSurface = ({
             {/* The escape hatches stay on the canvas, not in the override dock:
                 skipping a run and resetting the turn are the host's ordinary
                 moves here, and AGENTS.md §11 never lets them leave. */}
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              disabled={!canAct || !isLive}
-              onClick={(): void => {
-                dispatch("skipRun");
-              }}
-            >
-              {hostSchlonicSurfaceCopy.skipRunButtonLabel}
-            </button>
+            {/* Solo there is no host to skip a leg for anyone; a reset is just starting over. */}
+            {!solo && (
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                disabled={!canAct || !isLive}
+                onClick={(): void => {
+                  dispatch("skipRun");
+                }}
+              >
+                {hostSchlonicSurfaceCopy.skipRunButtonLabel}
+              </button>
+            )}
             <button
               className={styles.secondaryButton}
               type="button"
@@ -187,7 +202,9 @@ export const HostSchlonicSurface = ({
                 dispatch("resetTurn");
               }}
             >
-              {hostSchlonicSurfaceCopy.resetTurnButtonLabel}
+              {solo
+                ? hostSchlonicSurfaceCopy.restartButtonLabel
+                : hostSchlonicSurfaceCopy.resetTurnButtonLabel}
             </button>
             {hint !== null && (
               <span className={styles.hint} data-schlonic-hint>
@@ -232,6 +249,7 @@ export const HostSchlonicSurface = ({
           hold={hold}
           runIndex={shownRunIndex}
           tallyRef={tallyRef}
+          onRunnerEvent={solo ? onMirrorEvent : undefined}
         />
       )}
     </TakeoverCanvas>

@@ -159,6 +159,12 @@ export type MinigameHostRendererProps = {
   // so a content-pack image (a GEO photo, a player's head) has to be addressed
   // absolutely. `null` until the host app has resolved it in an effect.
   serverOrigin: string | null;
+  // The surface is the whole room: no TV beside it and no host running the night — the online
+  // teaser (wingnight.tv), where one phone plays a game alone. A game that honours it is its own
+  // speaker (the TV's soundboard plays here instead) and drops the controls that only a host
+  // needs. Absent everywhere in the party app, which is the default; a game that does not
+  // honour it simply renders its tablet surface.
+  solo?: boolean;
 };
 
 export type MinigameDisplayRendererProps = {

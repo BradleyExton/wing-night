@@ -1,5 +1,6 @@
 import { TeaserDunlopDash } from "../TeaserDunlopDash";
 import { TeaserLanding } from "../TeaserLanding";
+import { TeaserShareCard } from "../TeaserShareCard";
 import { resolveTeaserPath, TEASER_ROUTES } from "./teaserRoutes";
 import { useTeaserRoster } from "./useTeaserRoster";
 import * as styles from "./styles";
@@ -10,13 +11,16 @@ export const TeaserApp = (): JSX.Element => {
   const { roster, isLoaded } = useTeaserRoster();
   const path = resolveTeaserPath(window.location.pathname);
 
-  return (
-    <div className={styles.root}>
-      {path === TEASER_ROUTES.dunlopDash ? (
-        isLoaded && <TeaserDunlopDash roster={roster} />
-      ) : (
-        <TeaserLanding roster={roster} />
-      )}
-    </div>
-  );
+  const page = ((): JSX.Element | null => {
+    switch (path) {
+      case TEASER_ROUTES.dunlopDash:
+        return isLoaded ? <TeaserDunlopDash roster={roster} /> : null;
+      case TEASER_ROUTES.shareCard:
+        return isLoaded ? <TeaserShareCard roster={roster} /> : null;
+      default:
+        return <TeaserLanding roster={roster} />;
+    }
+  })();
+
+  return <div className={styles.root}>{page}</div>;
 };

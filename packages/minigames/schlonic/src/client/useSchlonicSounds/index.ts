@@ -13,9 +13,12 @@ import type { SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
 import { resolveCardDelayMs, type RunHold } from "../useHeldRun/index.js";
 
 type SchlonicSoundsInput = {
-  view: SchlonicMinigameDisplayView;
+  view: Pick<SchlonicMinigameDisplayView, "phase">;
   hold: RunHold | null;
   serverOrigin: string | null;
+  // False on a tablet with a TV beside it: the TV is the room's speaker, so the tablet asks for
+  // no takes and plays nothing. True on the TV, and on a surface playing solo.
+  isSpeaker?: boolean;
 };
 
 export type SchlonicSounds = {
@@ -31,12 +34,25 @@ export type SchlonicSounds = {
  * dependency array so a rAF loop is never torn down mid-run, which means its closure holds
  * whatever handlers it was set up with.
  */
-export const useSchlonicSounds = ({ view, hold, serverOrigin }: SchlonicSoundsInput): SchlonicSounds => {
-  const takes = useSfxTakes(resolveSfxTakesUrl(SCHLONIC_SFX_FOLDER, serverOrigin));
+export const useSchlonicSounds = ({
+  view,
+  hold,
+  serverOrigin,
+  isSpeaker = true
+}: SchlonicSoundsInput): SchlonicSounds => {
+  const takes = useSfxTakes(isSpeaker ? resolveSfxTakesUrl(SCHLONIC_SFX_FOLDER, serverOrigin) : null);
   // Made on the first cue rather than on mount, so a surface that is only ever looked at
   // never asks the browser for an audio context at all.
   const boardRef = useRef<SchlonicSoundboard | null>(null);
+  const isSpeakerRef = useRef(isSpeaker);
+
+  isSpeakerRef.current = isSpeaker;
+
   const play = useCallback((cue: Parameters<SchlonicSoundboard["play"]>[0], intensity?: number): void => {
+    if (!isSpeakerRef.current) {
+      return;
+    }
+
     boardRef.current ??= createSchlonicSoundboard();
     boardRef.current.play(cue, intensity);
   }, []);

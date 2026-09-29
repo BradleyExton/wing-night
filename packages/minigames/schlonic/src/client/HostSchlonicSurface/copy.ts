@@ -25,5 +25,6 @@ export const hostSchlonicSurfaceCopy = {
   finishPoints: (points: number): string => `+${points}`,
   skipRunButtonLabel: "Skip run",
   resetTurnButtonLabel: "Reset turn",
+  restartButtonLabel: "Restart",
   parLine: (par: number): string => `Full points at ${par} wings`
 } as const;

@@ -58,7 +58,8 @@ const createView = (
 const render = (
   view: SchlonicMinigameHostView | null,
   phase: "intro" | "play" = "play",
-  canDispatchAction = true
+  canDispatchAction = true,
+  solo = false
 ): string =>
   renderToStaticMarkup(
     <HostSchlonicSurface
@@ -72,6 +73,7 @@ const render = (
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
       serverOrigin={null}
+      solo={solo}
     />
   );
 
@@ -218,6 +220,22 @@ test("keeps both escape hatches on the canvas (AGENTS.md §11)", () => {
 
   assert.ok(markup.includes("Skip run"));
   assert.ok(markup.includes("Reset turn"));
+});
+
+// Solo (the online teaser) there is no host: nobody to skip a leg for, and a reset is starting over.
+test("drops the host's skip and offers a restart when it plays solo", () => {
+  const markup = render(createView(), "play", true, true);
+
+  assert.ok(!markup.includes("Skip run"));
+  assert.ok(!markup.includes("Reset turn"));
+  assert.ok(markup.includes("Restart"));
+});
+
+test("asks nobody to advance the phase when a solo team is through", () => {
+  const view = createView({ phase: "finished", runIndex: 2, points: 4 });
+
+  assert.ok(render(view).includes("Advance the phase"));
+  assert.ok(!render(view, "play", true, true).includes("Advance the phase"));
 });
 
 // The zone is one big jump button and draws no chrome of its own (§5). How to

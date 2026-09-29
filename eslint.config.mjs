@@ -30,6 +30,9 @@ export default [
       // both the folder and this entry (BACKLOG.md).
       "apps/client/src/components/ContraptionUiLab/**",
       "**/dist/**",
+      // The online teaser's build output and its pack-filled public dir (vite.teaser.config.ts).
+      "apps/client/dist-teaser/**",
+      "apps/client/teaser-public/**",
       "**/coverage/**",
       "**/.cache/**",
       "**/.turbo/**",

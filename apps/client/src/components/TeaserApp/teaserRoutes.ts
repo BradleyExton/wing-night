@@ -2,7 +2,9 @@
 // a real navigation.
 export const TEASER_ROUTES = {
   home: "/",
-  dunlopDash: "/dunlop-dash"
+  dunlopDash: "/dunlop-dash",
+  // The link-preview picture's page (TeaserShareCard); nothing links to it.
+  shareCard: "/card"
 } as const;
 
 export const resolveTeaserPath = (pathname: string): string => {

@@ -24,8 +24,9 @@
     "teaser:prepare": "node tools/build-teaser/index.ts",
     "teaser:dev": "pnpm teaser:prepare && pnpm --filter @wingnight/client dev:teaser",
     "teaser:build": "pnpm teaser:prepare && pnpm --filter @wingnight/client build:teaser",
+    "teaser:card": "node tools/build-teaser/captureShareCard.mjs",
     "teaser:deploy": "pnpm teaser:build && cd apps/client && pnpm dlx wrangler deploy --config wrangler.teaser.jsonc",
-    "test:build-teaser": "node --test tools/build-teaser/planTeaserRoster.test.ts"
+    "test:build-teaser": "node --test tools/build-teaser/planTeaserRoster.test.ts tools/build-teaser/planSfxTakes.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",

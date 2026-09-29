@@ -2,6 +2,7 @@ import { useRef, type RefObject } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { SchlonicMinigameHostView } from "@wingnight/shared";
 
+import type { SchlonicMirrorEventHandler } from "../../mirrorEvents/index.js";
 import { resolveRunPlayerName } from "../../resolveRunPlayerName/index.js";
 import { SchlonicScene, type SchlonicSceneHandle } from "../../SchlonicScene/index.js";
 import type { RunHold } from "../../useHeldRun/index.js";
@@ -20,6 +21,8 @@ type ZoneProps = {
   runIndex: number;
   /** The chrome's wings-in-hand figure, which the paint loop writes into. */
   tallyRef: RefObject<HTMLElement>;
+  /** The run's sound events, for a zone that is its own speaker; absent on the night. */
+  onRunnerEvent?: SchlonicMirrorEventHandler;
 };
 
 const HandoffCallout = ({ nextName }: { nextName: string | null }): JSX.Element => (
@@ -44,7 +47,8 @@ export const Zone = ({
   onDispatchAction,
   hold,
   runIndex,
-  tallyRef
+  tallyRef,
+  onRunnerEvent
 }: ZoneProps): JSX.Element => {
   const sceneRef = useRef<SchlonicSceneHandle>(null);
   const run = view.runs[runIndex] ?? null;
@@ -81,7 +85,8 @@ export const Zone = ({
     },
     onEndRun: (): void => {
       onDispatchAction("endRun", {});
-    }
+    },
+    onEvent: onRunnerEvent
   });
 
   return (
