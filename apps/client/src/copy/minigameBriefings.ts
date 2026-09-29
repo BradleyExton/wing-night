@@ -158,7 +158,7 @@ const resolveSchlonicBriefingContent = (
       "Your chickens skate Dunlop Street as a relay, a leg each, collecting wings. The wings are the score — and they are the only health you have.",
     steps: [
       `${runsPerTurn} leg${runsPerTurn === 1 ? "" : "s"} this turn, one rider each, in seating order, end to end down the same street. The ghost on your leg is the other team's rider who ran it.`,
-      "Your bird rolls on its own; the tablet only jumps. Tap to ollie, hold to go higher. If it's flat on top — a rail, a bench, a parked car — land on it and grind. If it isn't — a tent, a sleeper, a punk, a goose — jump it.",
+      "Your bird rolls on its own; the tablet only jumps. Tap to ollie, hold to go higher, tap again in the air to slam down. If it's flat on top — a rail, a bench, a parked car — land on it and grind. If it isn't — a tent, a sleeper, a punk, a goose — jump it.",
       `A trench is bad news either way. Take a hit and you drop half your wings; take one holding none and your leg is over. ${parWingsPerRun * runsPerTurn} wings over the post is full marks.`
     ]
   };

@@ -1679,6 +1679,22 @@ from Barrie, knows which street it is watching.
     `Rider` at half strength, placed by the same rule
     (`riderPlacement/resolveRiderPlacement`), so it ollies, grinds and bails
     exactly as its run did.
+-   **The press forgives, and the air has one verb.** A press within six
+    ticks of the feet leaving a surface — off a rail's end, over a trench's
+    lip — still jumps (the coyote window, `coyoteTicks`), and a press within
+    eight ticks of the feet coming down fires the tick after they do (the jump
+    buffer, `jumpBufferTicks`): a tap a hair early or late is not a tap
+    wasted, which is the difference between a runner that feels fair and one
+    that feels like it cheats. The arc itself is heavier coming down than
+    going up (`fallGravityShare` 1.6): the same height, less hang, a landing
+    that lands. A tap tops out about 17 up (the handrail's landing) and a full
+    hold about 30 (the high line's), far enough apart to be a choice. And a
+    press in the air with real clearance under it slams the rider straight
+    down (`slamVelocity`): stomp onto a bench or a car's roof, or drop short
+    of a goose. Close to the surface the same press is a buffered jump, so a
+    tap just before landing means "jump when I land" and never "drop". The
+    wall sounds the slam as a falling whoosh and the landing as the ordinary
+    clack.
 -   **Airborne is a kickflip, and still the rule.** The moment the feet leave
     the ground the hen tucks a little over the board (`AIR_TUCK`, never the old
     full ball), pitches nose up on the way up and nose down coming down, and

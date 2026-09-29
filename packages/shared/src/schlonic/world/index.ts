@@ -44,14 +44,46 @@ export const SCHLONIC_WORLD = {
   highLineWorth: 2,
   /** The high line's wings are drawn and reached this much bigger, so what you see is what you hit. */
   highLineWingScale: 1.35,
-  /** How far below the lip counts as being in the hole rather than over it. */
-  pitLipTolerance: 3,
+  /**
+   * How far below the lip counts as being in the hole rather than over it. Deeper than the
+   * coyote window can fall (`coyoteTicks` of the heavier gravity is about four units), because
+   * the lip is exactly where a late tap has to still count.
+   */
+  pitLipTolerance: 6,
   tickHz: 60,
   gravity: 0.115,
-  /** Gravity while the button is still down and the runner is still going up: the held jump. */
-  holdGravityShare: 0.62,
+  /**
+   * Gravity while the button is still down and the runner is still going up: the held jump. A
+   * tap tops out about 17 up, a full hold about 30 — far enough apart that choosing one means
+   * something, and the hold still short of the finale's arc, which is the kicker's to reach.
+   */
+  holdGravityShare: 0.55,
+  /**
+   * Gravity once past the peak, over the ordinary pull: the same height, a shorter hang. A
+   * symmetric arc floated; a rider that comes down harder than it went up lands like a landing
+   * and tightens the timing over the crowd.
+   */
+  fallGravityShare: 1.6,
   jumpVelocity: -1.95,
   maxFallVelocity: 3.2,
+  /**
+   * A press this many ticks after the feet left the ground — off a ledge, off a rail's end,
+   * down a drop — still jumps: the coyote window. Never after a jump, which is going up.
+   */
+  coyoteTicks: 6,
+  /**
+   * A press this many ticks before the feet come down fires the tick after they do: the jump
+   * buffer, so a tap a hair early is not a tap wasted.
+   */
+  jumpBufferTicks: 8,
+  /**
+   * A press in the air, past the coyote window and with this much clear under the feet, slams
+   * the rider straight down at `slamVelocity`: the one verb the air has. Closer to the surface
+   * than this, the press is a buffered jump instead — a tap just before landing means "jump
+   * when I land", not "drop".
+   */
+  slamMinClearance: 8,
+  slamVelocity: 4.4,
   /** What the legs can do on the flat. Downhill beats it; the drag bleeds it back afterwards. */
   topSpeed: 1.35,
   acceleration: 0.016,

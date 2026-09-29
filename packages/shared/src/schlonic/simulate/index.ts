@@ -37,6 +37,9 @@ export const createSchlonicRunStart = (zone: SchlonicZone): SchlonicFrame => {
     grindingRail: null,
     hits: [],
     invulnerableUntilTick: 0,
+    lastGroundedTick: 0,
+    bufferedPressTick: null,
+    slamming: false,
     outcome: null
   };
 };
@@ -143,9 +146,15 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
  * The whole physics, one tick. A terminal frame steps to itself, so callers can advance past the
  * outcome without guarding. Speed comes off the ground — a downhill is worth more than the legs
  * are — a press off the floor jumps and holding it climbs higher, a rail carries a bird that
- * comes down on it at the speed it arrived (the legs still working it up to top speed), a pit is the end of the run, and a hit costs half
- * the handful. Nothing but a hit taken with nothing in hand ends a run short of the post: the
- * wings are the health bar, which is why greed is the game.
+ * comes down on it at the speed it arrived (the legs still working it up to top speed), a pit
+ * is the end of the run, and a hit costs half the handful. Nothing but a hit taken with nothing
+ * in hand ends a run short of the post: the wings are the health bar, which is why greed is the
+ * game.
+ *
+ * The press is forgiving in the two ways a one-button runner has to be. A press just after the
+ * feet left the surface (`coyoteTicks`) still jumps, and a press just before they come down
+ * (`jumpBufferTicks`) jumps the tick after they do. A press in the air with real clearance
+ * under it is the air's one verb: a slam straight down.
  */
 export const stepSchlonic = (
   frame: SchlonicFrame,
@@ -160,8 +169,13 @@ export const stepSchlonic = (
     runnerRadius,
     gravity,
     holdGravityShare,
+    fallGravityShare,
     jumpVelocity,
     maxFallVelocity,
+    coyoteTicks,
+    jumpBufferTicks,
+    slamMinClearance,
+    slamVelocity,
     topSpeed,
     acceleration,
     drag,
@@ -174,7 +188,25 @@ export const stepSchlonic = (
     hitBounceVelocity
   } = SCHLONIC_WORLD;
   const tick = frame.tick + 1;
-  const isJumping = input.pressed && frame.grounded;
+  // A press held over from the air fires now that the feet are down; one that has waited too
+  // long is forgotten.
+  const isBufferedLive =
+    frame.bufferedPressTick !== null && frame.tick - frame.bufferedPressTick <= jumpBufferTicks;
+  const isCoyote =
+    !frame.grounded && frame.vy >= 0 && !frame.slamming && frame.tick - frame.lastGroundedTick <= coyoteTicks;
+  const isJumping = (input.pressed && (frame.grounded || isCoyote)) || (frame.grounded && isBufferedLive);
+  let bufferedPressTick = isJumping || !isBufferedLive ? null : frame.bufferedPressTick;
+  let slamming = frame.slamming;
+
+  if (input.pressed && !isJumping && !frame.grounded) {
+    const clearance = resolveSchlonicGroundY(zone, frame.x) - (frame.y + runnerRadius);
+
+    if (clearance > slamMinClearance) {
+      slamming = true;
+    } else {
+      bufferedPressTick = frame.tick;
+    }
+  }
 
   let vx: number;
 
@@ -194,8 +226,12 @@ export const stepSchlonic = (
 
   if (isJumping) {
     vy = jumpVelocity;
+    slamming = false;
+  } else if (slamming) {
+    vy = slamVelocity;
   } else {
-    const pull = input.holding && frame.vy < 0 ? gravity * holdGravityShare : gravity;
+    const pull =
+      input.holding && frame.vy < 0 ? gravity * holdGravityShare : frame.vy > 0 ? gravity * fallGravityShare : gravity;
 
     vy = Math.min(frame.vy + pull, maxFallVelocity);
   }
@@ -234,7 +270,10 @@ export const stepSchlonic = (
     vy,
     grounded,
     grindingRail,
-    holding: input.holding
+    holding: input.holding,
+    lastGroundedTick: grounded ? tick : frame.lastGroundedTick,
+    bufferedPressTick,
+    slamming: grounded ? false : slamming
   };
 
   if (y > pitDeathY || isSchlonicInPit(zone, x, y)) {
@@ -247,6 +286,7 @@ export const stepSchlonic = (
     vy: contact.vy ?? moved.vy,
     grounded: contact.vy === null ? moved.grounded : false,
     grindingRail: contact.vy === null ? moved.grindingRail : null,
+    slamming: contact.vy === null ? moved.slamming : false,
     wings: contact.wings,
     takenProps: contact.taken.length === 0 ? moved.takenProps : [...moved.takenProps, ...contact.taken]
   };
@@ -263,6 +303,8 @@ export const stepSchlonic = (
       vy: hitBounceVelocity,
       grounded: false,
       grindingRail: null,
+      slamming: false,
+      bufferedPressTick: null,
       hits: [...settled.hits, tick],
       invulnerableUntilTick: tick + invulnerableTicks
     };

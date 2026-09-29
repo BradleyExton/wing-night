@@ -18,6 +18,7 @@ export type SchlonicMirrorEvent =
   | { kind: "grind" }
   | { kind: "grindStop" }
   | { kind: "spring" }
+  | { kind: "slam" }
   | { kind: "hit" }
   | { kind: "finale" }
   | { kind: "cleared" }
@@ -53,8 +54,14 @@ const resolveBoardEvents = (
   const wasGrinding = previous.grindingRail !== null;
   const isGrinding = next.grindingRail !== null;
 
-  if (previous.grounded && !next.grounded && next.vy < 0 && !isThrown) {
+  // The jump's own launch speed, and nothing else at it: off the floor, off a rail, or off the
+  // coyote window's edge after rolling off a ledge.
+  if (next.vy === SCHLONIC_WORLD.jumpVelocity && previous.vy !== SCHLONIC_WORLD.jumpVelocity && !isThrown) {
     events.push({ kind: "ollie" });
+  }
+
+  if (!previous.slamming && next.slamming) {
+    events.push({ kind: "slam" });
   }
 
   if (!wasGrinding && isGrinding) {

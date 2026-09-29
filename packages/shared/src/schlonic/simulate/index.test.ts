@@ -35,6 +35,23 @@ const run = (
   return advanceSchlonic(createSchlonicRunStart(zone), zone, inputs, ticks);
 };
 
+const tap = (tick: number): SchlonicInput[] => [
+  { tick, down: true },
+  { tick: tick + 1, down: false }
+];
+
+const framesOf = (zone: SchlonicZone, inputs: readonly SchlonicInput[], ticks: number): SchlonicFrame[] => {
+  let frame = createSchlonicRunStart(zone);
+  const frames = [frame];
+
+  while (frame.tick < ticks && frame.outcome === null) {
+    frame = advanceSchlonic(frame, zone, inputs, frame.tick + 1);
+    frames.push(frame);
+  }
+
+  return frames;
+};
+
 // The runner leaves the line from a standstill and takes a second and a half to get up to speed,
 // so a tick is not a distance: a test that wants to jump somewhere has to go and find where.
 const tickAtX = (zone: SchlonicZone, x: number): number => {
@@ -99,20 +116,105 @@ test("jumps off the floor on a press and climbs higher while the button is held"
   assert.ok(held > tapped + 6, `holding bought nothing: ${held} against ${tapped}`);
 });
 
-test("refuses a second jump in the air, so one press is one jump", () => {
+test("comes down harder than it went up, so the arc hangs less than a symmetric one would", () => {
   const zone = flatZone([], 4000);
-  const single = run(zone, [{ tick: 0, down: true }], 40);
-  const doubled = run(
-    zone,
-    [
-      { tick: 0, down: true },
-      { tick: 1, down: false },
-      { tick: 12, down: true }
-    ],
-    40
-  );
+  let frame = createSchlonicRunStart(zone);
+  let apexTick = 0;
+  let apex = frame.y;
+  let landedTick = 0;
 
-  assert.ok(doubled.y > single.y, "the mid-air press lifted the runner");
+  for (let tick = 0; tick < 120 && landedTick === 0; tick += 1) {
+    frame = advanceSchlonic(frame, zone, [{ tick: 0, down: true }, { tick: 1, down: false }], frame.tick + 1);
+
+    if (frame.y < apex) {
+      apex = frame.y;
+      apexTick = frame.tick;
+    } else if (frame.grounded && frame.tick > 2) {
+      landedTick = frame.tick;
+    }
+  }
+
+  assert.ok(landedTick > apexTick && apexTick > 5);
+  assert.ok(landedTick - apexTick < apexTick, `fell for ${landedTick - apexTick} ticks after rising for ${apexTick}`);
+});
+
+test("keeps a tap and a full hold a clear distance apart, with the hold short of the finale's arc", () => {
+  const zone = flatZone([], 4000);
+  const apexOf = (inputs: SchlonicInput[]): number => {
+    let frame = createSchlonicRunStart(zone);
+    let apex = frame.y;
+
+    for (let tick = 0; tick < 90; tick += 1) {
+      frame = advanceSchlonic(frame, zone, inputs, frame.tick + 1);
+      apex = Math.min(apex, frame.y);
+    }
+
+    return FLAT_HEIGHT - SCHLONIC_WORLD.runnerRadius - apex;
+  };
+  const tapped = apexOf([{ tick: 0, down: true }, { tick: 1, down: false }]);
+  const held = apexOf([{ tick: 0, down: true }, { tick: 60, down: false }]);
+
+  // The handrail (16.5 up) is a tap's landing; the high line (20 up) wants a hold.
+  assert.ok(tapped > SCHLONIC_WORLD.railAbove, `a tap tops out at ${tapped}, under the rail`);
+  assert.ok(held - tapped >= 10, `the hold is only ${held - tapped} over the tap`);
+  assert.ok(held < 35, `the hold reaches ${held}, the finale's arc is the kicker's to reach`);
+});
+
+test("slams straight down on a press in the air with clearance under it, rather than lifting", () => {
+  const zone = flatZone([], 4000);
+  const landingOf = (inputs: SchlonicInput[]): number =>
+    framesOf(zone, inputs, 80).find((frame) => frame.tick > 5 && frame.grounded)?.tick ?? -1;
+  const slamLog = [...tap(0), { tick: 12, down: true }];
+  const slammedAt = run(zone, slamLog, 13);
+
+  assert.equal(slammedAt.slamming, true);
+  assert.equal(slammedAt.vy, SCHLONIC_WORLD.slamVelocity);
+  // Down sooner than the same tap alone, and back on its board when it gets there.
+  assert.ok(landingOf(slamLog) > 0 && landingOf(slamLog) < landingOf(tap(0)), "the slam did not shorten the air");
+  assert.equal(run(zone, slamLog, landingOf(slamLog)).slamming, false);
+  assert.ok(run(zone, slamLog, 20).y > run(zone, tap(0), 20).y, "the mid-air press lifted the runner");
+});
+
+test("still jumps on a press just after rolling off a lip, and not on one well after: the coyote window", () => {
+  // The ground is a slope between samples, never a cliff; a trench's lip is the real drop.
+  const zone: SchlonicZone = { ...flatZone([], 4000), pits: [{ fromX: 300, toX: 322, lipY: FLAT_HEIGHT }] };
+  const offAt = framesOf(zone, [], tickAtX(zone, 330)).find((frame) => !frame.grounded && frame.x > 295);
+
+  assert.ok(offAt !== undefined, "the runner never left the lip");
+
+  const late = SCHLONIC_WORLD.coyoteTicks - 1;
+  const jumped = framesOf(zone, tap(offAt.tick + late), offAt.tick + 60);
+  const launched = jumped.find((frame) => frame.tick === offAt.tick + late + 1);
+
+  assert.ok(launched !== undefined);
+  assert.equal(launched.vy, SCHLONIC_WORLD.jumpVelocity);
+  // And that jump clears the trench it was already over.
+  assert.equal(jumped[jumped.length - 1]?.outcome, null);
+
+  const tooLate = offAt.tick + SCHLONIC_WORLD.coyoteTicks + 2;
+  const missed = framesOf(zone, tap(tooLate), tooLate + 30);
+
+  assert.ok(missed.every((frame) => frame.vy !== SCHLONIC_WORLD.jumpVelocity), `a press ${SCHLONIC_WORLD.coyoteTicks + 2} ticks off the lip still jumped`);
+  assert.equal(missed[missed.length - 1]?.outcome, "fell");
+});
+
+test("jumps the tick after landing on a press taken just before it: the jump buffer", () => {
+  const zone = flatZone([], 4000);
+  const first = framesOf(zone, tap(0), 80);
+  const landing = first.find((frame) => frame.tick > 5 && frame.grounded);
+
+  assert.ok(landing !== undefined);
+
+  const early = landing.tick - 4;
+  const buffered = framesOf(zone, [...tap(0), ...tap(early)], landing.tick + 3);
+  const relaunched = buffered.find((frame) => frame.tick === landing.tick + 1);
+
+  assert.ok(relaunched !== undefined);
+  assert.equal(relaunched.vy, SCHLONIC_WORLD.jumpVelocity, "the early press did not fire on landing");
+  // A press held too long before the landing is forgotten.
+  const stale = framesOf(zone, [...tap(0), ...tap(landing.tick - SCHLONIC_WORLD.jumpBufferTicks - 6)], landing.tick + 3);
+
+  assert.ok(stale.find((frame) => frame.tick === landing.tick + 1)?.grounded, "a stale press fired on landing");
 });
 
 test("picks up a wing it runs through and leaves the ones it does not", () => {
@@ -258,24 +360,9 @@ const rail = (x: number, toX: number, above = RAIL_ABOVE): Omit<SchlonicProp, "i
 // The feet go on the rail's top, so the runner's centre rides a radius above it.
 const RAIL_RIDE_Y = FLAT_HEIGHT - RAIL_ABOVE - SCHLONIC_WORLD.runnerRadius;
 
-const tap = (tick: number): SchlonicInput[] => [
-  { tick, down: true },
-  { tick: tick + 1, down: false }
-];
 
 // Every frame of a run, one tick at a time, so a test can ask what the runner was doing at each
 // tick rather than only where it ended up.
-const framesOf = (zone: SchlonicZone, inputs: readonly SchlonicInput[], ticks: number): SchlonicFrame[] => {
-  let frame = createSchlonicRunStart(zone);
-  const frames = [frame];
-
-  while (frame.tick < ticks && frame.outcome === null) {
-    frame = advanceSchlonic(frame, zone, inputs, frame.tick + 1);
-    frames.push(frame);
-  }
-
-  return frames;
-};
 
 type Grind = { jumpTick: number; frames: SchlonicFrame[]; grinding: SchlonicFrame[] };
 

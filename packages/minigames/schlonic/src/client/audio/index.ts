@@ -22,6 +22,7 @@ export type SchlonicCueName =
   | "grind"
   | "grindOff"
   | "spring"
+  | "slam"
   | "hit"
   | "fell"
   | "wiped"
@@ -43,6 +44,7 @@ export const SCHLONIC_CUE_NAMES: readonly SchlonicCueName[] = [
   "grind",
   "grindOff",
   "spring",
+  "slam",
   "hit",
   "fell",
   "wiped",
@@ -81,6 +83,7 @@ export const SCHLONIC_CUE_MIN_GAP_MS: Record<SchlonicCueName, number> = {
   grind: 60,
   grindOff: 200,
   spring: 150,
+  slam: 200,
   hit: 250,
   fell: 1500,
   wiped: 1500,
@@ -159,6 +162,12 @@ const CUE_VOICES: Record<SchlonicCueName, CueVoice> = {
       attackSeconds: 0.02
     });
     playNoise(rig, { startAt, durationSeconds: 0.08, peak: 0.12, filterType: "bandpass", fromHz: 1200, q: 1.5 });
+  },
+  // The slam: a short whoosh falling away, the air the board drops through. The landing is the
+  // ordinary `land`, sounded when the feet get there.
+  slam: (rig, startAt) => {
+    playNoise(rig, { startAt, durationSeconds: 0.16, peak: 0.34, filterType: "bandpass", fromHz: 2400, toHz: 500, q: 1.1 });
+    playTone(rig, { startAt, durationSeconds: 0.12, type: "triangle", fromHz: 420, toHz: 160, peak: 0.14 });
   },
   hit: (rig, startAt) => {
     playNoise(rig, { startAt, durationSeconds: 0.2, peak: 0.6, filterType: "highpass", fromHz: 1800, toHz: 4000 });

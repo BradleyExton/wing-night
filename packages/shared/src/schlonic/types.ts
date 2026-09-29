@@ -122,8 +122,14 @@ export type SchlonicFrame = {
    * way it jumps off the floor — so a surface can draw the grind without guessing it from `y`.
    */
   grindingRail: number | null;
-  /** Hits pass through up to this tick, so one spike strip cannot cost two handfuls. */
+  /** Hits pass through up to this tick, so one hazard cannot cost two handfuls. */
   invulnerableUntilTick: number;
+  /** The last tick the feet were down, for the coyote window. */
+  lastGroundedTick: number;
+  /** A press taken in the air just short of the surface, held until the feet come down; null with none. */
+  bufferedPressTick: number | null;
+  /** Dropping straight down on a mid-air press, until the feet come down. */
+  slamming: boolean;
   outcome: SchlonicOutcome | null;
 };
 

@@ -206,6 +206,13 @@ and renamed the game Dunlop Dash. What it could not check from a desk:
 - **A middle leg's handoff has no set piece.** Souldiers stands on the first leg and the Queen's
   on the last; a middle leg's post is a bare signpost. Crossover's is in `@wingnight/scenery` if
   a handoff wants a landmark.
+- **Play the new jump at a table.** 2026-09-29 added the coyote window (6 ticks), the jump
+  buffer (8), a heavier fall (×1.6 past the peak), a wider tap-to-hold gap (~17 vs ~30 up) and
+  the mid-air slam (`SCHLONIC_WORLD` in `packages/shared/src/schlonic/world`). The hop-over bot
+  banks the same against par as before, but the slam has never been felt on a tablet: if
+  players slam by accident (a nervous double tap), raise `slamMinClearance` or drop the slam.
+  The slam has no drawing of its own yet — the rider pitches nose-down off its speed, and the
+  landing is the ordinary clack; a puff of dust on a slam landing would sell it.
 
 ### FAPPY — the TV camera SCHLONIC got
 

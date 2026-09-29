@@ -61,6 +61,18 @@ test("does pop an ollie when the feet leave the ground on the way up, and clack 
   assert.deepEqual(resolveMirrorEvents(falling, landed, ZONE, 14), [{ kind: "land" }]);
   // Rolling off a ledge leaves the ground at no speed: no pop.
   assert.deepEqual(resolveMirrorEvents(rolling, { ...rolling, tick: 11, vy: 0.1, grounded: false }, ZONE, 0), []);
+  // A coyote jump leaves from the air, at the jump's own speed: still an ollie.
+  const offLedge = { ...rolling, tick: 12, vy: 0.3, grounded: false };
+
+  assert.deepEqual(resolveMirrorEvents(offLedge, { ...offLedge, tick: 13, vy: SCHLONIC_WORLD.jumpVelocity }, ZONE, 0), [{ kind: "ollie" }]);
+});
+
+test("does hear a slam the tick it starts and not again while it lasts", () => {
+  const flying = { ...START, tick: 20, x: 80, vy: -0.4, grounded: false };
+  const slamming = { ...flying, tick: 21, vy: SCHLONIC_WORLD.slamVelocity, slamming: true };
+
+  assert.deepEqual(resolveMirrorEvents(flying, slamming, ZONE, 6), [{ kind: "slam" }]);
+  assert.deepEqual(resolveMirrorEvents(slamming, { ...slamming, tick: 22, y: slamming.y + 4 }, ZONE, 6), []);
 });
 
 test("does keep the board quiet on a hit's knock-back and through the bail after it", () => {
