@@ -25,7 +25,7 @@ type TeaserSoloGameProps = {
 // `solo` tells the surface it is the room: its own speaker, with no host controls. What the host
 // would do instead — pick the team, read out the result, run it again — is this shell.
 export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Element => {
-  const { HostSurface, runtimePlugin, rules } = game;
+  const { HostSurface, runtimePlugin, rules, content } = game;
   const serverOrigin = useServerOrigin();
   const memory = useTeaserGameMemory(game.slug);
   const teamThemeByTeamId = useMemo(() => resolveTeamThemeById(roster.teams), [roster.teams]);
@@ -57,13 +57,13 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
         pointsMax: TEASER_POINTS_MAX,
         pendingPointsByTeamId: {},
         rules,
-        content: null,
+        content,
         roundMemory: record.roundMemory
       })
     );
   };
 
-  const selectorInput = runtimeState === null ? null : { state: runtimeState, rules, content: null };
+  const selectorInput = runtimeState === null ? null : { state: runtimeState, rules, content };
   const hostView = selectorInput === null ? null : runtimePlugin.selectHostView(selectorInput);
   const outcome = hostView === null ? null : game.resolveOutcome(hostView);
   const isOver = outcome !== null;
@@ -84,11 +84,11 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
     const nextBest =
       result === null || (record.best !== null && !game.beats(result, record.best)) ? record.best : result;
     const roundMemory =
-      runtimePlugin.selectRoundMemory?.({ state: runtimeState, rules, content: null }) ?? null;
+      runtimePlugin.selectRoundMemory?.({ state: runtimeState, rules, content }) ?? null;
 
     memory.save({ best: nextBest, roundMemory });
     setBest(nextBest);
-  }, [isOver, runtimeState, result, memory, game, runtimePlugin, rules]);
+  }, [isOver, runtimeState, result, memory, game, runtimePlugin, rules, content]);
 
   const handleDispatchAction = (actionType: string, actionPayload: SerializableValue): void => {
     setRuntimeState((previousState) =>
@@ -100,7 +100,7 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
             envelope: { actionType, actionPayload, receivedAtMs: Date.now() },
             pointsMax: TEASER_POINTS_MAX,
             rules,
-            content: null
+            content
           }).state
     );
   };

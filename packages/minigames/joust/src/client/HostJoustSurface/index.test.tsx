@@ -112,7 +112,8 @@ const clock = <span data-slot="clock" />;
 const renderSurface = (
   view: JoustMinigameHostView | null,
   phase: "intro" | "play" = "play",
-  canDispatchAction = true
+  canDispatchAction = true,
+  solo = false
 ): string => {
   return renderToStaticMarkup(
     <HostJoustSurface
@@ -126,9 +127,28 @@ const renderSurface = (
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
       serverOrigin={null}
+      solo={solo}
     />
   );
 };
+
+// Solo (the online teaser) there is no host and no TV: nobody to skip a pull for, no phase to
+// advance, and the replay plays on the lane in hand.
+test("drops the host's skip and the TV, and offers a restart, when it plays solo", () => {
+  const aiming = renderSurface(hostView(), "play", true, true);
+
+  assert.equal(buttonFor(aiming, "Skip shot"), null);
+  assert.equal(buttonFor(aiming, "Reset turn"), null);
+  assert.notEqual(buttonFor(aiming, "Restart"), null);
+
+  const replaying = hostView({ phase: "resolved", lastShot: oneDown, shots: [oneDown] });
+
+  assert.match(renderSurface(replaying), /Watch the TV/);
+  assert.doesNotMatch(renderSurface(replaying, "play", true, true), /Watch the TV/);
+  assert.match(renderSurface(replaying, "play", true, true), /Watch it fly/);
+  assert.doesNotMatch(renderSurface(hostView({ phase: "done" }), "play", true, true), /advance the phase/);
+  assert.match(renderSurface(hostView({ phase: "done" })), /advance the phase/);
+});
 
 const buttonFor = (html: string, label: string): string | null => {
   const buttons = html.match(/<button[^>]*>[\s\S]*?<\/button>/g) ?? [];

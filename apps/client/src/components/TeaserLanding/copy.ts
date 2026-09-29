@@ -11,6 +11,5 @@ export const teaserLandingCopy = {
   fappySummary: "Flap the relay over downtown.",
   slingshlongTitle: "Slingshlong",
   slingshlongSummary: "Pull back, let fly, topple the tower.",
-  playLabel: "Play now",
-  lockedLabel: "Soon"
+  playLabel: "Play now"
 } as const;

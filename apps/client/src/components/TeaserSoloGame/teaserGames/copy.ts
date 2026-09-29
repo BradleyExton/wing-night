@@ -9,5 +9,11 @@ export const teaserGamesCopy = {
     "Your team flies a relay over downtown Barrie, one leg each. Tap to flap through the gaps, dodge the eagles, and come down on the far roof to hand it on. Beat the clock.",
   fappyFinishKicker: "Through",
   fappyTimedOutKicker: "Time",
-  fappyTimedOut: "Out of time"
+  fappyTimedOut: "Out of time",
+  slingshlongTitle: "Slingshlong",
+  slingshlongPickerBody:
+    "Your team takes one shot each off the beach slingshot. Pick what goes on the band, drag back and let go. Topple everyone else off the perches; the higher they stand, the more they are worth.",
+  slingshlongFinishKicker: "Turn over",
+  slingshlongClearedKicker: "Rack cleared",
+  points: (points: number): string => `${points} ${points === 1 ? "point" : "points"}`
 } as const;

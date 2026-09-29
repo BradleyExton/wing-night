@@ -1,8 +1,11 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import type { JoustShotResult } from "@wingnight/shared";
+import type { JoustMinigameHostView, JoustShotResult } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas } from "@wingnight/surface";
 
+import { isReplayFinished } from "../resolveJoustScene/index.js";
 import { resolveShotCopy } from "../shotResultCopy/index.js";
+import { useJoustSounds } from "../useJoustSounds/index.js";
+import { useShotReplay } from "../useShotReplay/index.js";
 import { AimArena } from "./AimArena/index.js";
 import { Loadout } from "./Loadout/index.js";
 import { ShotHistory } from "./ShotHistory/index.js";
@@ -31,6 +34,29 @@ const LanePlate = ({
     )}
   </div>
 );
+
+// The TV's speaker, on a tablet that is the whole room (`solo`): the same replay clock and the
+// same soundboard the display runs, so the band creaks, the shot twangs and the rack clacks
+// here. It draws nothing; mounted only when solo, so on the night the tablet asks for no
+// sound at all.
+const SoloSpeaker = ({
+  view,
+  serverOrigin
+}: {
+  view: JoustMinigameHostView;
+  serverOrigin: string | null;
+}): null => {
+  const replayIndex = useShotReplay(view.lastShot);
+
+  useJoustSounds({
+    view,
+    replayIndex,
+    replayFinished: isReplayFinished(view.lastShot, replayIndex),
+    serverOrigin
+  });
+
+  return null;
+};
 
 const ShotResultCard = ({
   shot,
@@ -79,7 +105,8 @@ export const HostJoustSurface = ({
   clock,
   canDispatchAction,
   onDispatchAction,
-  serverOrigin
+  serverOrigin,
+  solo = false
 }: MinigameHostRendererProps): JSX.Element => {
   const joustView = minigameHostView?.minigame === "JOUST" ? minigameHostView : null;
 
@@ -145,8 +172,9 @@ export const HostJoustSurface = ({
       }
       actions={
         <>
+          {/* Solo there is no phase to advance: whoever is playing says what happens next. */}
           {isDone ? (
-            <p className={styles.doneNote}>{hostJoustSurfaceCopy.turnOverLabel}</p>
+            !solo && <p className={styles.doneNote}>{hostJoustSurfaceCopy.turnOverLabel}</p>
           ) : (
             <button
               className={styles.primaryButton}
@@ -162,16 +190,19 @@ export const HostJoustSurface = ({
           {/* The escape hatches stay on the canvas, not in the override dock:
               skipping a pull and resetting the turn are the host's ordinary
               moves here, and AGENTS.md §11 never lets them leave. */}
-          <button
-            className={styles.secondaryButton}
-            type="button"
-            disabled={!canAct || !isAimingPhase}
-            onClick={(): void => {
-              dispatch("skipShot");
-            }}
-          >
-            {hostJoustSurfaceCopy.skipShotButtonLabel}
-          </button>
+          {/* Solo there is no host to skip a pull for anyone; a reset is just starting over. */}
+          {!solo && (
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              disabled={!canAct || !isAimingPhase}
+              onClick={(): void => {
+                dispatch("skipShot");
+              }}
+            >
+              {hostJoustSurfaceCopy.skipShotButtonLabel}
+            </button>
+          )}
           <button
             className={styles.secondaryButton}
             type="button"
@@ -180,17 +211,21 @@ export const HostJoustSurface = ({
               dispatch("resetTurn");
             }}
           >
-            {hostJoustSurfaceCopy.resetTurnButtonLabel}
+            {solo ? hostJoustSurfaceCopy.restartButtonLabel : hostJoustSurfaceCopy.resetTurnButtonLabel}
           </button>
-          <span className={styles.hint}>
-            {isAimingPhase
-              ? canAct
-                ? hostJoustSurfaceCopy.aimingHint
-                : hostJoustSurfaceCopy.aimingLockedHint
-              : isResolved
-                ? hostJoustSurfaceCopy.replayingHint
-                : hostJoustSurfaceCopy.turnOverLabel}
-          </span>
+          {!(solo && isDone) && (
+            <span className={styles.hint}>
+              {isAimingPhase
+                ? canAct
+                  ? hostJoustSurfaceCopy.aimingHint
+                  : hostJoustSurfaceCopy.aimingLockedHint
+                : isResolved
+                  ? solo
+                    ? hostJoustSurfaceCopy.soloReplayingHint
+                    : hostJoustSurfaceCopy.replayingHint
+                  : hostJoustSurfaceCopy.turnOverLabel}
+            </span>
+          )}
         </>
       }
       readout={
@@ -203,7 +238,8 @@ export const HostJoustSurface = ({
             {lastShot !== null && (
               <ShotResultCard shot={lastShot} nameByPlayerId={nameByPlayerId} />
             )}
-            {isDone && (
+            {/* The room's standings. Solo there is no room to stand in. */}
+            {isDone && !solo && (
               <RunningTotals
                 pendingPointsByTeamId={joustView.pendingPointsByTeamId}
                 activeTurnTeamId={joustView.activeTurnTeamId}
@@ -243,6 +279,7 @@ export const HostJoustSurface = ({
             }}
           />
           <LanePlate arenaName={arena.name} shooterName={shooter?.name ?? null} />
+          {solo && <SoloSpeaker view={joustView} serverOrigin={serverOrigin} />}
           {/* The strategy layer: which kind is on the band. Rides in the sky
               like the plate, and only its buttons take the pointer, so a pull
               that starts beside it still pulls. */}

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { MinigameHostView } from "@wingnight/shared";
 
-import { dunlopDashGame, fappyBirdGame, resolveTeaserGame } from "./index";
+import { dunlopDashGame, fappyBirdGame, resolveTeaserGame, slingshlongGame } from "./index";
 
 // Only the fields each outcome reads; the rest of a view is the runtime's business.
 const asView = (fields: Record<string, unknown>): MinigameHostView => fields as MinigameHostView;
@@ -10,6 +10,7 @@ const asView = (fields: Record<string, unknown>): MinigameHostView => fields as 
 test("finds a game by its page path", () => {
   assert.equal(resolveTeaserGame("/dunlop-dash"), dunlopDashGame);
   assert.equal(resolveTeaserGame("/fappy-bird"), fappyBirdGame);
+  assert.equal(resolveTeaserGame("/slingshlong"), slingshlongGame);
   assert.equal(resolveTeaserGame("/card"), null);
 });
 
@@ -31,6 +32,20 @@ test("scores a finished relay by its time and a timed-out one not at all", () =>
     null
   );
   assert.equal(fappyBirdGame.resolveOutcome(asView({ minigame: "FAPPY", phase: "flying", elapsedMs: null })), null);
+});
+
+test("scores a Slingshlong turn by its points once every shot is taken, and names a cleared rack", () => {
+  const shots = [
+    { points: 3, isRackCleared: false },
+    { points: 5, isRackCleared: true }
+  ];
+
+  assert.equal(slingshlongGame.resolveOutcome(asView({ minigame: "JOUST", phase: "resolved", shots })), null);
+  assert.deepEqual(slingshlongGame.resolveOutcome(asView({ minigame: "JOUST", phase: "done", shots })), {
+    kicker: "Rack cleared",
+    headline: "8 points",
+    result: 8
+  });
 });
 
 test("counts more wings and a faster relay as the better turn", () => {

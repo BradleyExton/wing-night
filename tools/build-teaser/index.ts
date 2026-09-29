@@ -31,7 +31,7 @@ const HEAD_MAX_PIXELS = 256;
 // The games the teaser plays, by their sound folder (each game's `*_SFX_FOLDER`). Their recorded
 // takes ship with the site, listed at `/sfx-takes/<game>` the way the server lists them; a game
 // with none plays its synthesised cues.
-const SFX_GAMES = ["schlonic", "fappy"];
+const SFX_GAMES = ["schlonic", "fappy", "joust"];
 
 const HEADERS_FILE = `/*
   X-Robots-Tag: noindex, nofollow, noarchive

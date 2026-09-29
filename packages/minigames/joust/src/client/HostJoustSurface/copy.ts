@@ -16,9 +16,12 @@ export const hostJoustSurfaceCopy = {
   emptyRackLabel: "Rack cleared — nobody left standing.",
   aimingLockedHint: "Waiting for the host to open the round.",
   replayingHint: "Watch the TV…",
+  // Solo (the online teaser) there is no TV: the lane on the phone is the replay.
+  soloReplayingHint: "Watch it fly…",
   resultPoints: (points: number): string => `+${points}`,
   nextShotButtonLabel: "Next shot →",
   turnOverLabel: "Turn over — advance the phase when the room is ready.",
   skipShotButtonLabel: "Skip shot",
-  resetTurnButtonLabel: "Reset turn"
+  resetTurnButtonLabel: "Reset turn",
+  restartButtonLabel: "Restart"
 } as const;
