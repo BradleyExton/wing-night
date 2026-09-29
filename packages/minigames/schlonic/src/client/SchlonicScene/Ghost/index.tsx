@@ -1,11 +1,11 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { CHARACTER_FOOT, CharacterFigure } from "@wingnight/cast";
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
-import { SCHLONIC_WORLD, resolveSchlonicGroundSlope } from "@wingnight/shared";
+import { SCHLONIC_WORLD } from "@wingnight/shared";
 
 import type { RunnerFigure } from "../../resolveRunnerFigure/index.js";
 import type { SchlonicCamera } from "../camera/index.js";
-import { resolveRunnerCurl, resolveRunnerPose } from "../runnerPose/index.js";
+import { resolveRunnerCurl, resolveRunnerPose, resolveRunnerSlope } from "../runnerPose/index.js";
 import * as styles from "./styles.js";
 
 /** The ghost is a shadow of a run, not a runner: never solid, never in front. */
@@ -69,7 +69,7 @@ export const paintGhost = ({ refs, ghostFrame, frame, camera, zone, curl }: Ghos
   const pose = resolveRunnerPose({
     x: ghostFrame.x,
     grounded: ghostFrame.grounded,
-    slope: resolveSchlonicGroundSlope(zone, ghostFrame.x),
+    slope: resolveRunnerSlope(zone, ghostFrame),
     curl: nextCurl
   });
 

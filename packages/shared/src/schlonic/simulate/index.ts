@@ -32,6 +32,7 @@ export const createSchlonicRunStart = (zone: SchlonicZone): SchlonicFrame => {
     holding: false,
     wings: 0,
     takenProps: [],
+    grindingRail: null,
     hits: [],
     invulnerableUntilTick: 0,
     outcome: null
@@ -61,10 +62,31 @@ const isTouching = (frame: SchlonicFrame, prop: SchlonicProp, halfWidth: number,
 };
 
 /**
+ * The rail a falling runner's feet came down through this tick, if any. A rail is a one-way
+ * ledge: it catches feet crossing its top on the way down and nothing else, so a jump from
+ * under one rises straight through it, and a bird already riding one is caught again every tick
+ * by the same rule — which is all "staying on" is.
+ */
+const resolveRailCatch = (zone: SchlonicZone, x: number, fromFeetY: number, toFeetY: number): SchlonicProp | null => {
+  for (const prop of zone.props) {
+    if (prop.kind !== "rail" || prop.toX === undefined || x < prop.x || x > prop.toX) {
+      continue;
+    }
+
+    if (fromFeetY <= prop.y && toFeetY >= prop.y) {
+      return prop;
+    }
+  }
+
+  return null;
+};
+
+/**
  * Everything the runner touched at its new position. Wings are taken, a badnik is popped by
  * anything airborne (the bird is a ball the moment its feet leave the ground, which is the whole
  * point of jumping on one) and pays for it, a springboard throws it at the high line, and a thorn
- * bed hurts however you arrive.
+ * bed hurts however you arrive. A rail is kit, not a hazard: the landing on it is the step's
+ * business, and touching its side does nothing.
  */
 const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
   const { runnerRadius, wingRadius, spikeWidth, spikeHeight, badnikWidth, badnikHeight, springWidth, springHeight } =
@@ -77,7 +99,7 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
       continue;
     }
 
-    if (frame.takenProps.includes(prop.index) || contact.taken.includes(prop.index)) {
+    if (prop.kind === "rail" || frame.takenProps.includes(prop.index) || contact.taken.includes(prop.index)) {
       continue;
     }
 
@@ -134,9 +156,10 @@ const resolveContacts = (frame: SchlonicFrame, zone: SchlonicZone): Contact => {
 /**
  * The whole physics, one tick. A terminal frame steps to itself, so callers can advance past the
  * outcome without guarding. Speed comes off the ground — a downhill is worth more than the legs
- * are — a press off the floor jumps and holding it climbs higher, a pit is the end of the run,
- * and a hit costs half the handful. Nothing but a hit taken with nothing in hand ends a run
- * short of the post: the wings are the health bar, which is why greed is the game.
+ * are — a press off the floor jumps and holding it climbs higher, a rail carries a bird that
+ * comes down on it at the speed it arrived, a pit is the end of the run, and a hit costs half
+ * the handful. Nothing but a hit taken with nothing in hand ends a run short of the post: the
+ * wings are the health bar, which is why greed is the game.
  */
 export const stepSchlonic = (
   frame: SchlonicFrame,
@@ -158,6 +181,7 @@ export const stepSchlonic = (
     drag,
     slopeAcceleration,
     minSpeed,
+    grindMaxSpeed,
     pitDeathY,
     invulnerableTicks,
     hitSpeedShare,
@@ -166,10 +190,16 @@ export const stepSchlonic = (
   const tick = frame.tick + 1;
   const isJumping = input.pressed && frame.grounded;
 
-  let vx = frame.vx + (frame.grounded ? resolveSchlonicGroundSlope(zone, frame.x) * slopeAcceleration : 0);
+  let vx: number;
 
-  vx = vx < topSpeed ? Math.min(topSpeed, vx + acceleration) : Math.max(topSpeed, vx - drag);
-  vx = Math.max(minSpeed, vx);
+  if (frame.grindingRail !== null) {
+    // A rail has no slope to run down and nothing to drag: the board keeps what it came with.
+    vx = Math.max(minSpeed, Math.min(grindMaxSpeed, frame.vx));
+  } else {
+    vx = frame.vx + (frame.grounded ? resolveSchlonicGroundSlope(zone, frame.x) * slopeAcceleration : 0);
+    vx = vx < topSpeed ? Math.min(topSpeed, vx + acceleration) : Math.max(topSpeed, vx - drag);
+    vx = Math.max(minSpeed, vx);
+  }
 
   let vy: number;
 
@@ -184,10 +214,18 @@ export const stepSchlonic = (
   const x = frame.x + vx;
   let y = frame.y + vy;
   let grounded = false;
+  let grindingRail: number | null = null;
   const groundY = resolveSchlonicGroundY(zone, x);
   const standY = groundY - runnerRadius;
+  const rail = isJumping || vy < 0 ? null : resolveRailCatch(zone, x, frame.y + runnerRadius, y + runnerRadius);
 
-  if (!isJumping && y >= standY) {
+  if (rail !== null) {
+    vx = Math.min(grindMaxSpeed, vx);
+    y = rail.y - runnerRadius;
+    vy = 0;
+    grounded = true;
+    grindingRail = rail.index;
+  } else if (!isJumping && y >= standY) {
     y = standY;
     vy = 0;
     grounded = true;
@@ -206,6 +244,7 @@ export const stepSchlonic = (
     vx,
     vy,
     grounded,
+    grindingRail,
     holding: input.holding
   };
 
@@ -218,6 +257,7 @@ export const stepSchlonic = (
     ...moved,
     vy: contact.vy ?? moved.vy,
     grounded: contact.vy === null ? moved.grounded : false,
+    grindingRail: contact.vy === null ? moved.grindingRail : null,
     wings: contact.wings,
     takenProps: contact.taken.length === 0 ? moved.takenProps : [...moved.takenProps, ...contact.taken]
   };
@@ -233,6 +273,7 @@ export const stepSchlonic = (
       vx: Math.max(minSpeed, settled.vx * hitSpeedShare),
       vy: hitBounceVelocity,
       grounded: false,
+      grindingRail: null,
       hits: [...settled.hits, tick],
       invulnerableUntilTick: tick + invulnerableTicks
     };

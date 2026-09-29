@@ -1,3 +1,6 @@
+import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
+import { resolveSchlonicGroundSlope } from "@wingnight/shared";
+
 /**
  * How the runner is held at one frame. The runner is the player's own cast hen (§2.8), so unlike
  * the schlong it has no spine to bend — its pose is how the whole bird is turned and how tightly
@@ -45,6 +48,14 @@ export const resolveRunnerPose = ({ x, grounded, slope, curl }: RunnerPoseInput)
     // A bird in a ball has no step to bounce.
     bob: grounded ? Math.abs(Math.sin((x / STRIDE_UNITS) * Math.PI)) * BOB_UNITS * (1 - eased) : 0
   };
+};
+
+/**
+ * What the runner leans with at this frame: the ground's gradient under it, or none on a rail —
+ * a rail is level, and a bird grinding one over a hill stands on the rail, not the hill.
+ */
+export const resolveRunnerSlope = (zone: SchlonicZone, frame: SchlonicFrame): number => {
+  return frame.grindingRail === null ? resolveSchlonicGroundSlope(zone, frame.x) : 0;
 };
 
 /** How tucked the runner is at this frame. Off the ground it curls, and it curls fast. */

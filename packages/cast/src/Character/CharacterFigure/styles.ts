@@ -48,6 +48,16 @@ export const poses: Record<Exclude<CharacterPose, "dance">, Partial<Record<Chara
   fly: {
     legNear: tuckedLeg,
     legFar: tuckedLeg
+  },
+  // On the board: the wings held out off the body for balance and the head
+  // up, looking where it is going. Static, like `fly` — the crouch itself is
+  // geometry (the figure sinks the body and redraws the legs bent), and a
+  // surface riding the bird along a zone moves the whole figure, so nothing
+  // here loops for it to fight or switch off.
+  ride: {
+    wing: "[transform:rotate(75deg)]",
+    head: "[transform:rotate(-8deg)]",
+    tail: "[transform:rotate(-8deg)]"
   }
 };
 

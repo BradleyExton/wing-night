@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveRunnerCurl, resolveRunnerPose } from "./index.js";
+import type { SchlonicZone } from "@wingnight/shared";
+import { SCHLONIC_WORLD, createSchlonicRunStart } from "@wingnight/shared";
+
+import { resolveRunnerCurl, resolveRunnerPose, resolveRunnerSlope } from "./index.js";
 
 const onFoot = { x: 100, grounded: true, slope: 0, curl: 0 };
 
@@ -45,4 +48,18 @@ test("curls towards the ball off the ground and back out on landing", () => {
   assert.ok(resolveRunnerCurl(false, 0.9) > 0.9);
   assert.ok(resolveRunnerCurl(true, 1) < 0.6);
   assert.ok(resolveRunnerCurl(true, 0.1) < 0.1);
+});
+
+test("leans with the rail, not the hill under it, while the bird is grinding", () => {
+  // A steady downhill, with a level rail over it.
+  const zone: SchlonicZone = {
+    heights: Array.from({ length: 40 }, (_unused, sample) => SCHLONIC_WORLD.groundBaseY + sample),
+    pits: [],
+    props: [{ index: 0, kind: "rail", x: 100, toX: 150, y: 50 }],
+    goalX: 380
+  };
+  const running = { ...createSchlonicRunStart(zone), x: 120 };
+
+  assert.ok(resolveRunnerSlope(zone, running) > 0, "the hill had no slope to lean with");
+  assert.equal(resolveRunnerSlope(zone, { ...running, grindingRail: 0 }), 0);
 });

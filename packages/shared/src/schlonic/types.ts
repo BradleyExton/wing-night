@@ -15,21 +15,28 @@ export type SchlonicPit = {
 
 /**
  * Everything that is not ground: a wing to collect, a thorn bed that always hurts, a badnik that
- * only hurts you on your feet (land on it and it pops instead), and a springboard that throws you
- * at the high wing line. The runner is the player's own cast hen and the three HAZARDS are all
- * the cast's schlong, which is the whole visual joke; the wing is deliberately neither, because
- * a collectible that shared a silhouette with the things that hurt you would be unreadable at
- * the speed this runs at.
+ * only hurts you on your feet (land on it and it pops instead), a springboard that throws you
+ * at the high wing line, and a grind rail — a one-way ledge that catches a falling runner and
+ * carries it, with the greedy line strung along its top. The runner is the player's own cast hen
+ * and the three HAZARDS are all the cast's schlong, which is the whole visual joke; the wing is
+ * deliberately neither, because a collectible that shared a silhouette with the things that hurt
+ * you would be unreadable at the speed this runs at. The rail is kit, not a hazard: its side does
+ * nothing to you, and the only way to meet it is to come down on it.
  */
-export type SchlonicPropKind = "wing" | "spike" | "badnik" | "spring";
+export type SchlonicPropKind = "wing" | "spike" | "badnik" | "spring" | "rail";
 
 export type SchlonicProp = {
   /** Index within the zone's own `props`, so a frame can name the ones it has taken. */
   index: number;
   kind: SchlonicPropKind;
+  /** The middle of anything but a rail, which starts here. */
   x: number;
-  /** Centre for a wing; the ground it stands on for everything else. */
+  /** Centre for a wing; a rail's top, where the feet go; the ground it stands on for everything else. */
   y: number;
+  /**
+   * Where a rail ends: it spans `x` to here, level, at `y`. Nothing but a rail carries it.
+   */
+  toX?: number;
   /**
    * What a wing is worth in hand: one on the floor, two on the high line — the line only speed,
    * a held jump or a springboard reaches. Absent means one; nothing but a wing carries it. It is
@@ -82,6 +89,12 @@ export type SchlonicFrame = {
   takenProps: number[];
   /** The tick of every hit this run, so a surface can burst wings at the right moment. */
   hits: number[];
+  /**
+   * The rail being ground, by its index in the zone's `props`; null anywhere else. Set on every
+   * frame the feet are on one — `grounded` is true there too, since a press jumps off a rail the
+   * way it jumps off the floor — so a surface can draw the grind without guessing it from `y`.
+   */
+  grindingRail: number | null;
   /** Hits pass through up to this tick, so one spike strip cannot cost two handfuls. */
   invulnerableUntilTick: number;
   outcome: SchlonicOutcome | null;

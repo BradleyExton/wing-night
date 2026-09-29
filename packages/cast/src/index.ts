@@ -18,8 +18,10 @@ export {
   CHARACTER_WING_PATH,
   CHARACTER_WING_ROOT,
   CharacterFigure,
+  resolveCharacterRideStance,
   resolveCharacterWingPath,
-  type CharacterFigureProps
+  type CharacterFigureProps,
+  type CharacterRideStance
 } from "./Character/CharacterFigure/index.js";
 export {
   CHARACTER_BOX,
@@ -29,6 +31,8 @@ export {
   CHARACTER_POSES,
   CHARACTER_HEAD_CENTRE,
   CHARACTER_HEAD_RADIUS,
+  CHARACTER_LEG_STROKE_WIDTH,
+  CHARACTER_RIDE_STANCE,
   CHARACTER_STAND_HEIGHT,
   COSTUME_HEAD_ANCHORS,
   COSTUME_HEAD_HEIGHT,

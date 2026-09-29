@@ -43,7 +43,7 @@ const render = (runs: SchlonicMinigameRun[], shownRunIndex: number, figure: Schl
 
 test("does lay out every hazard, every hole and the post along the strip", () => {
   const markup = render([], 0);
-  const hazards = ZONE.props.filter((prop) => prop.kind !== "wing").length;
+  const hazards = ZONE.props.filter((prop) => prop.kind !== "wing" && prop.kind !== "rail").length;
 
   assert.equal(markup.split("data-schlonic-track-hazard=").length - 1, hazards);
   assert.equal(markup.split("data-schlonic-track-pit=").length - 1, ZONE.pits.length);

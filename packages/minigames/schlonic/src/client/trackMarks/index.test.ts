@@ -28,9 +28,9 @@ test("measures a refereed distance on the same scale as a live x", () => {
   );
 });
 
-test("marks every hazard and every hole, and no wing", () => {
+test("marks every hazard and every hole, and no wing or rail", () => {
   const marks = resolveTrackMarks(ZONE);
-  const kit = ZONE.props.filter((prop) => prop.kind !== "wing");
+  const kit = ZONE.props.filter((prop) => prop.kind !== "wing" && prop.kind !== "rail");
 
   assert.equal(marks.hazards.length, kit.length);
   assert.equal(marks.pits.length, ZONE.pits.length);

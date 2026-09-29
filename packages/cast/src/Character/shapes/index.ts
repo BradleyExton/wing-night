@@ -1,6 +1,6 @@
 import type { CharacterBody, CharacterComb, CharacterTail } from "../../resolvePlayerAppearance/index.js";
 import type { CharacterSilhouette } from "../../resolveTeamSilhouette/index.js";
-import type { CharacterPivot } from "../geometry/index.js";
+import { CHARACTER_RIDE_STANCE, type CharacterPivot } from "../geometry/index.js";
 
 // What the bird is DRAWN from, separated from what moves it: `CharacterFigure`
 // owns the rig — the pivots, the poses, the parts stacked back to front — and
@@ -65,6 +65,8 @@ type SilhouetteShapes = {
   tail: string;
   wing: string;
   comb: string;
+  /** How far the whole bird above the knees sinks in the `ride` crouch; see `RIDE_CROUCH_BY_BODY`. */
+  rideCrouch: number;
   /** `spiky` needs a mitered join; see `styles.silhouetteMitered`. */
   mitered?: true;
 };
@@ -77,6 +79,7 @@ const SILHOUETTE_SHAPES: Record<CharacterSilhouette, SilhouetteShapes> = {
     wing:
       "M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 L 27 52 L 31 55 L 34 52 L 38 54 L 41 51 L 45 51 C 49 46 51 40 47 35 Z",
     comb: "M 48 13 L 51 1 L 54 10 L 57 -1 L 60 9 L 64 2 L 66 13 Z",
+    rideCrouch: 5,
     mitered: true
   },
   broody: {
@@ -84,14 +87,16 @@ const SILHOUETTE_SHAPES: Record<CharacterSilhouette, SilhouetteShapes> = {
     belly: "M 21 59 C 30 66 55 65 63 56 C 57 68 27 68 21 59 Z",
     tail: "M 24 46 C 12 58 0 55 0 42 C 4 52 12 53 22 44 Z M 24 41 C 12 47 2 43 2 31 C 7 41 16 42 25 38 Z",
     wing: "M 47 36 C 40 32 30 35 27 43 C 26 47 28 50 31 51 Q 35 47 39 50 C 45 47 49 41 47 36 Z",
-    comb: "M 51 13 C 51 7 56 5 58 9 C 60 6 64 7 63 13 Z"
+    comb: "M 51 13 C 51 7 56 5 58 9 C 60 6 64 7 63 13 Z",
+    rideCrouch: 1
   },
   preener: {
     body: "M 27 41 C 25 22 39 16 52 22 C 64 27 66 39 60 48 C 54 55 33 56 30 50 C 27 47 27 45 27 41 Z",
     belly: "M 32 49 C 38 54 51 53 57 45 C 53 55 34 56 32 49 Z",
     tail: "M 27 38 C 13 30 5 12 17 0 C 13 16 21 26 32 32 Z M 25 45 C 9 40 1 24 9 10 C 10 27 18 36 29 40 Z",
     wing: "M 47 34 C 37 29 21 32 17 43 C 16 48 19 53 23 54 C 28 48 33 43 40 41 C 46 40 50 38 47 34 Z",
-    comb: "M 51 13 C 50 5 55 -3 63 -4 C 59 2 59 8 62 13 Z"
+    comb: "M 51 13 C 50 5 55 -3 63 -4 C 59 2 59 8 62 13 Z",
+    rideCrouch: 7
   }
 };
 
@@ -102,6 +107,20 @@ const SILHOUETTE_SHAPES: Record<CharacterSilhouette, SilhouetteShapes> = {
 export const resolveCharacterWingPath = (silhouette?: CharacterSilhouette): string =>
   silhouette === undefined ? CHARACTER_WING_PATH : SILHOUETTE_SHAPES[silhouette].wing;
 
+// How far each stock body sinks in the `ride` crouch. Not one number, because
+// the belly line is the leg dial (see above): the crouch is the body coming
+// down onto the legs, and a body that already sits low has less of the way to
+// come before its belly is on the board. The stock bodies and `broody` all
+// come down to a belly near y=67, a couple of units of bent leg over the toes;
+// `spiky` and `preener` stop higher, because leggy is what those two ARE and a
+// crouch that took it away would take the genre with it. The one hard rule —
+// the painted belly never reaches the painted toes — is a test, not a comment.
+const RIDE_CROUCH_BY_BODY: Record<CharacterBody, number> = {
+  round: 3,
+  tall: 3,
+  wide: 3
+};
+
 // A shank from the hip to the ankle, then three toes.
 export const legPath = ({ x, y }: CharacterPivot): string =>
   `M ${x} ${y} L ${x - 1} ${y + 11} M ${x - 1} ${y + 11} L ${x - 7} ${y + 13.5} M ${x - 1} ${y + 11} L ${x} ${y + 14} M ${x - 1} ${y + 11} L ${x + 6} ${y + 13.5}`;
@@ -109,6 +128,53 @@ export const legPath = ({ x, y }: CharacterPivot): string =>
 // The drumstick the near leg hangs from, peeking out under the body.
 export const thighPath = ({ x, y }: CharacterPivot): string =>
   `M ${x - 5} ${y - 4} C ${x - 6} ${y + 3} ${x - 1} ${y + 6} ${x + 3} ${y + 2} C ${x + 4} ${y - 2} ${x} ${y - 6} ${x - 5} ${y - 4} Z`;
+
+// The `ride` leg: from the hip — already sunk by the crouch — out to a knee
+// bent AWAY from the other leg, in to the ankle over the foot, then the foot
+// laid FLAT on the stance's one toe line, heel to toe, because a foot standing
+// on a board is a sole and not three toes gripping the ground. Knees bowed
+// out from between the feet is the squat that reads at 76px; a knee bent the
+// same way on both legs reads as a lunge. Where the foot goes is the stance's
+// (`CHARACTER_RIDE_STANCE`), so the deck a surface lays under it is under both
+// feet whatever the bird's shape.
+const RIDE_ANKLE_RISE = 3;
+
+const RIDE_KNEE_OUT = 4;
+
+export const rideLegPath = (hip: CharacterPivot, footX: number): string => {
+  const { toeY, footReach } = CHARACTER_RIDE_STANCE;
+  const ankle = { x: footX, y: toeY - RIDE_ANKLE_RISE };
+  const knee = {
+    x: (hip.x + ankle.x) / 2 + Math.sign(footX - hip.x) * RIDE_KNEE_OUT,
+    y: (hip.y + ankle.y) / 2 - 1
+  };
+
+  return [
+    `M ${hip.x} ${hip.y} L ${knee.x} ${knee.y} L ${ankle.x} ${ankle.y}`,
+    `M ${footX - footReach} ${toeY} L ${ankle.x} ${ankle.y} L ${footX + footReach} ${toeY} Z`
+  ].join(" ");
+};
+
+/**
+ * Where a riding bird's feet are and how deep it crouches over them. The feet
+ * are the stance's and never move (`CHARACTER_RIDE_STANCE`); the crouch is the
+ * shape's, since a squat body has less far to sink than a leggy one. The drop
+ * applies to everything above the knees, head and costume head included, so a
+ * surface that wants the riding head's centre takes `CHARACTER_HEAD_CENTRE.y`
+ * plus `crouch`.
+ */
+export type CharacterRideStance = typeof CHARACTER_RIDE_STANCE & { crouch: number };
+
+export const resolveCharacterRideStance = ({
+  body,
+  silhouette
+}: {
+  body: CharacterBody;
+  silhouette: CharacterSilhouette | undefined;
+}): CharacterRideStance => ({
+  ...CHARACTER_RIDE_STANCE,
+  crouch: silhouette === undefined ? RIDE_CROUCH_BY_BODY[body] : SILHOUETTE_SHAPES[silhouette].rideCrouch
+});
 
 /**
  * Every path one bird is drawn from. A genre silhouette replaces the stock

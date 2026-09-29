@@ -56,7 +56,59 @@ test("deals every team the same mix of hard kit rather than rolling each slot", 
     assert.ok(kinds.has("spike"), `seed ${seed} laid no spikes`);
     assert.ok(kinds.has("badnik"), `seed ${seed} laid no badnik`);
     assert.ok(kinds.has("spring"), `seed ${seed} laid no spring`);
+    assert.ok(kinds.has("rail"), `seed ${seed} laid no rail`);
   }
+});
+
+test("strings a rail over a thorn bed, with its wings worth two where only the rail reaches", () => {
+  // Longer than a hop's arc, so the grind is the only way to take the whole line.
+  const { runnerRadius, wingRadius, highLineWingScale, highLineWorth, railAbove } = SCHLONIC_WORLD;
+
+  for (let seed = 0; seed < 25; seed += 1) {
+    const zone = zoneOf(seed, 22);
+    const rails = zone.props.filter((prop) => prop.kind === "rail");
+
+    assert.ok(rails.length >= 1, `seed ${seed} laid no rail`);
+
+    for (const rail of rails) {
+      assert.ok(rail.toX !== undefined, `seed ${seed} laid a rail with no end`);
+
+      const length = rail.toX - rail.x;
+      const ground = resolveSchlonicGroundY(zone, rail.x);
+
+      assert.ok(length >= 46 && length <= 52, `seed ${seed} laid a rail ${length} long`);
+      assert.equal(resolveSchlonicGroundY(zone, rail.toX), ground, "the rail stands over level ground");
+      assert.equal(rail.y, ground - railAbove);
+      assert.ok(
+        zone.props.some((prop) => prop.kind === "spike" && prop.x > rail.x && prop.x <= (rail.toX ?? 0) && prop.y === ground),
+        `seed ${seed} put no thorns under its rail`
+      );
+
+      // Everything hung over the rail's top; the floor line under its near end is not the rail's.
+      const strung = zone.props.filter(
+        (prop) => prop.kind === "wing" && prop.x >= rail.x && prop.x <= (rail.toX ?? 0) && prop.y < rail.y
+      );
+
+      assert.ok(strung.length >= 6, `seed ${seed} strung ${strung.length} wings along its rail`);
+      // Spread along the whole of it, not bunched at one end.
+      assert.ok(strung.some((wing) => wing.x < rail.x + length / 3), `seed ${seed} left the rail's near end bare`);
+      assert.ok(strung.some((wing) => wing.x > (rail.toX ?? 0) - length / 3), `seed ${seed} left the rail's far end bare`);
+
+      for (const wing of strung) {
+        assert.equal(wing.worth, highLineWorth);
+        // Just over the rail's top, where a grinding bird's body passes…
+        assert.equal(wing.y, rail.y - runnerRadius - wingRadius);
+        // …and out of reach of one on the floor under it.
+        assert.ok(ground - runnerRadius - wing.y > runnerRadius + wingRadius * highLineWingScale);
+      }
+    }
+  }
+});
+
+test("carries an end only on a rail", () => {
+  const zone = zoneOf(3, 22);
+
+  assert.ok(zone.props.every((prop) => (prop.kind === "rail") === (prop.toX !== undefined)));
 });
 
 test("hangs enough wings that a clean run is worth chasing", () => {

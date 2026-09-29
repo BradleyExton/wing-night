@@ -7,12 +7,16 @@ import { Apparel, apparelCrossesTheFace } from "../Apparel/index.js";
 import {
   CHARACTER_WING_PATH,
   legPath,
+  resolveCharacterRideStance,
   resolveCharacterShapes,
   resolveCharacterWingPath,
-  thighPath
+  rideLegPath,
+  thighPath,
+  type CharacterRideStance
 } from "../shapes/index.js";
 import {
   CHARACTER_PIVOTS,
+  CHARACTER_RIDE_STANCE,
   COSTUME_HEAD_ANCHORS,
   COSTUME_HEAD_HEIGHT,
   DRAWN_BEAK,
@@ -51,7 +55,7 @@ export const CHARACTER_WING_ROOT = CHARACTER_PIVOTS.wing;
 
 // The bird's paths live in `../shapes`; these stay exported from here because
 // that is where every consumer has always imported them from.
-export { CHARACTER_WING_PATH, resolveCharacterWingPath };
+export { CHARACTER_WING_PATH, resolveCharacterRideStance, resolveCharacterWingPath, type CharacterRideStance };
 
 // A part on its pivot: the outer translate puts the pivot at the origin, the
 // `<g>`s in the middle are what move it, and the inner translate puts the
@@ -71,13 +75,19 @@ type CharacterRig = {
   jig: PartClassNames;
 };
 
+// `drop` sinks the part, pivot and all, by that many units — the `ride`
+// crouch, which is the one place the bird's pieces are not where the rig drew
+// them. It moves the pivot rather than the drawing so the pose's own turn
+// (a raised wing, a lifted head) still happens about the joint.
 const Part = ({
   part,
   rig,
+  drop = 0,
   children
 }: {
   part: CharacterPart;
   rig: CharacterRig;
+  drop?: number;
   children: ReactNode;
 }): JSX.Element => {
   const pivot = CHARACTER_PIVOTS[part];
@@ -90,7 +100,7 @@ const Part = ({
   );
 
   return (
-    <g transform={`translate(${pivot.x} ${pivot.y})`}>
+    <g transform={`translate(${pivot.x} ${pivot.y + drop})`}>
       {jigClassName === undefined ? (
         posed
       ) : (
@@ -221,6 +231,17 @@ export const CharacterFigure = ({
     pose === "dance"
       ? { pose: styles.dances[danced], jig: styles.danceJigs[danced] }
       : { pose: styles.poses[pose], jig: {} };
+  // Riding is the one pose that redraws anything: a crouch is a bent knee, and
+  // no turn of a straight shank bends one. Everything above the knees sinks by
+  // the shape's crouch; the legs are drawn from the sunk hips down to the
+  // stance's fixed feet, which is what lets a surface put a deck under them
+  // without knowing what the bird looks like. It is not grooved — there is no
+  // loop in it for a groove's phase to scatter, and a surface that rides the
+  // bird along a zone moves the whole figure itself.
+  const riding = pose === "ride";
+  const crouch = riding ? resolveCharacterRideStance({ body: appearance.body, silhouette }).crouch : 0;
+  const hipNear = { x: CHARACTER_PIVOTS.legNear.x, y: CHARACTER_PIVOTS.legNear.y + crouch };
+  const hipFar = { x: CHARACTER_PIVOTS.legFar.x, y: CHARACTER_PIVOTS.legFar.y + crouch };
 
   return (
     <g
@@ -230,28 +251,34 @@ export const CharacterFigure = ({
       data-character-pose={pose}
       data-character-silhouette={silhouette}
     >
-      <Part part="tail" rig={rig}>
+      <Part part="tail" rig={rig} drop={crouch}>
         <path className={ink} d={shapes.tail} />
       </Part>
       <Part part="legFar" rig={rig}>
         <g className={styles.legFar}>
-          <path className={styles.legs} d={legPath(CHARACTER_PIVOTS.legFar)} />
+          <path
+            className={styles.legs}
+            d={riding ? rideLegPath(hipFar, CHARACTER_RIDE_STANCE.frontFootX) : legPath(CHARACTER_PIVOTS.legFar)}
+          />
         </g>
       </Part>
-      <Part part="body" rig={rig}>
+      <Part part="body" rig={rig} drop={crouch}>
         <path className={ink} d={shapes.body} />
         <path className={styles.shade} d={shapes.belly} />
       </Part>
       <Part part="legNear" rig={rig}>
-        <path className={ink} d={thighPath(CHARACTER_PIVOTS.legNear)} />
-        <path className={styles.legs} d={legPath(CHARACTER_PIVOTS.legNear)} />
+        <path className={ink} d={thighPath(hipNear)} />
+        <path
+          className={styles.legs}
+          d={riding ? rideLegPath(hipNear, CHARACTER_RIDE_STANCE.backFootX) : legPath(CHARACTER_PIVOTS.legNear)}
+        />
       </Part>
       {wing === "drawn" && (
-        <Part part="wing" rig={rig}>
+        <Part part="wing" rig={rig} drop={crouch}>
           <path className={ink} d={shapes.wing} data-character-wing />
         </Part>
       )}
-      <Part part="head" rig={rig}>
+      <Part part="head" rig={rig} drop={crouch}>
         <path className={ink} d={shapes.neck} />
         <g data-character-head>
           {appearance.avatarSrc === undefined ? (

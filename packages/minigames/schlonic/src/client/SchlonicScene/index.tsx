@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { CHARACTER_FOOT, CharacterFigure } from "@wingnight/cast";
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
-import { SCHLONIC_WORLD, createSchlonicRunStart, resolveSchlonicGroundSlope } from "@wingnight/shared";
+import { SCHLONIC_WORLD, createSchlonicRunStart } from "@wingnight/shared";
 
 import type { RunnerFigure } from "../resolveRunnerFigure/index.js";
 import {
@@ -17,7 +17,7 @@ import { TABLET_CAMERA_FIT, resolveCamera, type SchlonicCameraFit } from "./came
 import { FallPunchline } from "./FallPunchline/index.js";
 import { Ghost, RUNNER_SCALE, TUCK_DROP, TUCK_SHRINK, paintGhost, type GhostRefs } from "./Ghost/index.js";
 import { Ground } from "./Ground/index.js";
-import { resolveRunnerCurl, resolveRunnerPose } from "./runnerPose/index.js";
+import { resolveRunnerCurl, resolveRunnerPose, resolveRunnerSlope } from "./runnerPose/index.js";
 import { shakeElement } from "./shake/index.js";
 import * as styles from "./styles.js";
 import { usePunchline } from "./usePunchline/index.js";
@@ -152,7 +152,7 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
       const pose = resolveRunnerPose({
         x: frame.x,
         grounded: frame.grounded,
-        slope: resolveSchlonicGroundSlope(zoneRef.current, frame.x),
+        slope: resolveRunnerSlope(zoneRef.current, frame),
         curl: extra.curl
       });
       const lastHit = frame.hits[frame.hits.length - 1] ?? -FLASH_TICKS * 2;

@@ -313,8 +313,8 @@ test("re-reads the round's running totals without touching the runs", () => {
   assert.equal(hostView(synced).phase, "running");
 });
 
-// A six-chunk zone with nothing in it a walking bird cannot survive: seed 3 deals a badnik, and
-// the finale's springboard throws a walker over its hole. So a run with no jumps clears it, and
+// A six-chunk zone with nothing in it a walking bird cannot survive: seed 3 deals a springboard,
+// and the finale's springboard throws a walker over its hole. So a run with no jumps clears it, and
 // one with an early hop clears it with a different handful. Which is the bigger is the sim's
 // business, so the tests ask it rather than assume.
 const CLEAR_RULES = { runsPerTurn: 2, zoneSeed: 3, zoneChunks: 6, parWingsPerRun: 20 };
@@ -381,7 +381,7 @@ test("keeps the standing best when a later run clears with fewer wings", () => {
 });
 
 test("never makes a run that missed the post the one to beat", () => {
-  // The default rules' seed has a hole a third of the way in; a walking bird falls in it.
+  // The default rules' seed has a hole a quarter of the way in; a walking bird falls in it.
   const state = playRun(initialize(), []);
 
   assert.equal(hostView(state).runs[0]?.result?.outcome, "fell");

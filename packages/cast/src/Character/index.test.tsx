@@ -3,8 +3,22 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { Character, CharacterWing } from "./index.js";
-import { CHARACTER_PARTS, CHARACTER_PIVOTS, CHARACTER_POSES } from "./geometry/index.js";
-import { CHARACTER_DANCES, type CharacterDance } from "../resolvePlayerAppearance/index.js";
+import {
+  CHARACTER_FOOT,
+  CHARACTER_LEG_STROKE_WIDTH,
+  CHARACTER_PARTS,
+  CHARACTER_PIVOTS,
+  CHARACTER_POSES,
+  CHARACTER_RIDE_STANCE
+} from "./geometry/index.js";
+import { resolveCharacterRideStance, resolveCharacterShapes, resolveCharacterWingPath } from "./shapes/index.js";
+import {
+  CHARACTER_BODIES,
+  CHARACTER_DANCES,
+  type CharacterBody,
+  type CharacterDance
+} from "../resolvePlayerAppearance/index.js";
+import { CHARACTER_SILHOUETTES, type CharacterSilhouette } from "../resolveTeamSilhouette/index.js";
 import * as figureStyles from "./CharacterFigure/styles.js";
 
 const drawn = { body: "round", comb: "none", tail: "fan", dance: "bounce" } as const;
@@ -325,4 +339,223 @@ test("does step differently from bird to bird so a dancing team is not one bird 
   );
 
   assert.equal(steps.size, CHARACTER_DANCES.length);
+});
+
+// Every shape a riding bird can be: each stock body, and each genre's.
+const RIDERS: { body: CharacterBody; silhouette: CharacterSilhouette | undefined }[] = [
+  ...CHARACTER_BODIES.map((body) => ({ body, silhouette: undefined })),
+  ...CHARACTER_SILHOUETTES.map((silhouette) => ({ body: "round" as const, silhouette }))
+];
+
+type Point = { x: number; y: number };
+
+const pointsOf = (d: string): Point[] => {
+  const numbers = (d.match(/-?[\d.]+/g) ?? []).map(Number);
+  const points: Point[] = [];
+
+  for (let index = 0; index + 1 < numbers.length; index += 2) {
+    points.push({ x: numbers[index], y: numbers[index + 1] });
+  }
+
+  return points;
+};
+
+// The two legs of a riding bird, as drawn: `[hip, knee, ankle, heel, ankle, toe]`.
+const ridingLegs = (html: string): { near: Point[]; far: Point[] } => {
+  const leg = (part: string): Point[] => {
+    const d = html.match(
+      new RegExp(`data-character-part="${part}"[\\s\\S]*?<path class="${figureStyles.legs.replace(/[[\]().:]/g, "\\$&")}" d="([^"]+)"`)
+    )?.[1];
+    assert.ok(d !== undefined, `no ${part} drawn`);
+    return pointsOf(d);
+  };
+
+  return { near: leg("legNear"), far: leg("legFar") };
+};
+
+const partDrop = (html: string, part: string): number => {
+  const [, y] = html.match(new RegExp(`<g transform="translate\\([-\\d.]+ ([-\\d.]+)\\)"><g data-character-part="${part}"`)) ?? [];
+  return Number(y) - CHARACTER_PIVOTS[part as keyof typeof CHARACTER_PIVOTS].y;
+};
+
+// The lowest point a path reaches, walking its curves rather than trusting
+// their control points (a curve's handles hang below the curve itself).
+const lowestYOf = (d: string): number => {
+  const tokens = d.match(/[MLCQZ]|-?[\d.]+/g) ?? [];
+  let index = 0;
+  let command = "";
+  let at: Point = { x: 0, y: 0 };
+  let lowest = -Infinity;
+  const next = (): number => Number(tokens[index++]);
+
+  while (index < tokens.length) {
+    if (/[MLCQZ]/.test(tokens[index])) {
+      command = tokens[index++];
+    }
+    if (command === "Z") {
+      continue;
+    }
+    if (command === "M" || command === "L") {
+      at = { x: next(), y: next() };
+      lowest = Math.max(lowest, at.y);
+      continue;
+    }
+
+    const handles = command === "C" ? [at.y, (next(), next()), (next(), next())] : [at.y, (next(), next())];
+    const end = { x: next(), y: next() };
+    const ys = [...handles, end.y];
+
+    for (let step = 0; step <= 64; step += 1) {
+      const u = step / 64;
+      const y =
+        ys.length === 4
+          ? (1 - u) ** 3 * ys[0] + 3 * (1 - u) ** 2 * u * ys[1] + 3 * (1 - u) * u ** 2 * ys[2] + u ** 3 * ys[3]
+          : (1 - u) ** 2 * ys[0] + 2 * (1 - u) * u * ys[1] + u ** 2 * ys[2];
+      lowest = Math.max(lowest, y);
+    }
+    at = end;
+  }
+
+  return lowest;
+};
+
+test("does plant both feet flat on one line when riding", () => {
+  for (const rider of RIDERS) {
+    for (const appearance of [drawn, costume]) {
+      const html = renderToStaticMarkup(
+        <Character appearance={{ ...appearance, body: rider.body }} silhouette={rider.silhouette} pose="ride" />
+      );
+      const { near, far } = ridingLegs(html);
+
+      for (const leg of [near, far]) {
+        const lowest = Math.max(...leg.map((point) => point.y));
+        const onTheLine = leg.filter((point) => point.y === CHARACTER_RIDE_STANCE.toeY);
+
+        assert.equal(lowest, CHARACTER_RIDE_STANCE.toeY, `${rider.silhouette ?? rider.body}: nothing below the toe line`);
+        assert.ok(onTheLine.length >= 2, `${rider.silhouette ?? rider.body}: heel and toe both down, so the foot is flat`);
+      }
+    }
+  }
+});
+
+test("does stand the feet on the exported stance whatever the bird's shape when riding", () => {
+  const { backFootX, frontFootX, footReach, deckFromX, deckToX, toeY } = CHARACTER_RIDE_STANCE;
+
+  for (const rider of RIDERS) {
+    const html = renderToStaticMarkup(
+      <Character appearance={{ ...drawn, body: rider.body }} silhouette={rider.silhouette} pose="ride" />
+    );
+    const { near, far } = ridingLegs(html);
+    const soleXs = (leg: Point[]): number[] => leg.filter((point) => point.y === toeY).map((point) => point.x);
+
+    assert.deepEqual(
+      [Math.min(...soleXs(near)), Math.max(...soleXs(near))],
+      [backFootX - footReach, backFootX + footReach],
+      "the near foot is the back foot"
+    );
+    assert.deepEqual(
+      [Math.min(...soleXs(far)), Math.max(...soleXs(far))],
+      [frontFootX - footReach, frontFootX + footReach],
+      "the far foot is the front foot"
+    );
+    // The deck the stance names reaches the painted end of both feet, round caps and all.
+    assert.equal(deckFromX, backFootX - footReach - CHARACTER_LEG_STROKE_WIDTH / 2);
+    assert.equal(deckToX, frontFootX + footReach + CHARACTER_LEG_STROKE_WIDTH / 2);
+  }
+});
+
+test("does put the deck's top under the painted sole, on the cast's own foot line, when riding", () => {
+  // The legs are stroked as wide as the stance says they are, so half of it is
+  // the paint under the toes' centreline and the deck is exactly under that.
+  assert.match(figureStyles.legs, new RegExp(`\\[stroke-width:${CHARACTER_LEG_STROKE_WIDTH}\\]`));
+  assert.equal(CHARACTER_RIDE_STANCE.deckY, CHARACTER_RIDE_STANCE.toeY + CHARACTER_LEG_STROKE_WIDTH / 2);
+  // A surface that already stands the cast on `CHARACTER_FOOT` keeps it on its board.
+  assert.equal(CHARACTER_RIDE_STANCE.toeY, CHARACTER_FOOT.y);
+  assert.equal((CHARACTER_RIDE_STANCE.backFootX + CHARACTER_RIDE_STANCE.frontFootX) / 2, CHARACTER_FOOT.x);
+});
+
+test("does raise the wings when riding", () => {
+  const degrees = Number(figureStyles.poses.ride.wing?.match(/rotate\((-?[\d.]+)deg\)/)?.[1]);
+  const radians = (degrees * Math.PI) / 180;
+  const pivot = CHARACTER_PIVOTS.wing;
+
+  assert.ok(Number.isFinite(degrees), "the wing turns on the board");
+
+  for (const silhouette of [undefined, ...CHARACTER_SILHOUETTES]) {
+    const wing = pointsOf(resolveCharacterWingPath(silhouette));
+    const tip = wing.reduce((far, point) =>
+      Math.hypot(point.x - pivot.x, point.y - pivot.y) > Math.hypot(far.x - pivot.x, far.y - pivot.y) ? point : far
+    );
+    const dx = tip.x - pivot.x;
+    const dy = tip.y - pivot.y;
+    // SVG turns clockwise on screen, y down.
+    const raisedY = dx * Math.sin(radians) + dy * Math.cos(radians);
+
+    assert.ok(dy > 0, `${silhouette ?? "stock"}: the folded wing's tip hangs below the shoulder`);
+    assert.ok(raisedY < 0, `${silhouette ?? "stock"}: on the board it is held up above the shoulder`);
+  }
+});
+
+test("does crouch everything above the knees and leave the feet where they stand when riding", () => {
+  for (const rider of RIDERS) {
+    const html = renderToStaticMarkup(
+      <Character appearance={{ ...drawn, body: rider.body }} silhouette={rider.silhouette} pose="ride" />
+    );
+    const { crouch } = resolveCharacterRideStance(rider);
+
+    assert.ok(crouch > 0, `${rider.silhouette ?? rider.body} crouches`);
+
+    for (const part of ["tail", "body", "wing", "head"]) {
+      assert.equal(partDrop(html, part), crouch, `${rider.silhouette ?? rider.body}: the ${part} sinks`);
+    }
+    for (const part of ["legNear", "legFar"]) {
+      assert.equal(partDrop(html, part), 0, `${rider.silhouette ?? rider.body}: the ${part} stays planted`);
+    }
+
+    const { near, far } = ridingLegs(html);
+    assert.equal(near[0].y, CHARACTER_PIVOTS.legNear.y + crouch, "the near leg hangs from the sunk hip");
+    assert.equal(far[0].y, CHARACTER_PIVOTS.legFar.y + crouch, "the far leg hangs from the sunk hip");
+  }
+});
+
+test("does bow each knee out from between the feet when riding", () => {
+  const { near, far } = ridingLegs(renderToStaticMarkup(<Character appearance={drawn} pose="ride" />));
+  const [nearHip, nearKnee, nearAnkle] = near;
+  const [farHip, farKnee, farAnkle] = far;
+
+  assert.ok(nearKnee.x < (nearHip.x + nearAnkle.x) / 2, "the back knee bends back");
+  assert.ok(farKnee.x > (farHip.x + farAnkle.x) / 2, "the front knee bends forward");
+  assert.ok(nearKnee.y < nearAnkle.y && farKnee.y < farAnkle.y, "each knee is above its foot");
+});
+
+test("does keep the crouched belly off the toes for every shape when riding", () => {
+  // The body's own outline is a 2-unit stroke; the toes' is the leg stroke.
+  const bellyInk = 1;
+  const toeTop = CHARACTER_RIDE_STANCE.toeY - CHARACTER_LEG_STROKE_WIDTH / 2;
+
+  for (const rider of RIDERS) {
+    const shapes = resolveCharacterShapes({ body: rider.body, comb: "none", tail: "fan", silhouette: rider.silhouette });
+    const { crouch } = resolveCharacterRideStance(rider);
+    const lowest = Math.max(lowestYOf(shapes.body), lowestYOf(shapes.belly)) + crouch + bellyInk;
+
+    assert.ok(lowest < toeTop, `${rider.silhouette ?? rider.body} sits its belly on its feet (${lowest} ≥ ${toeTop})`);
+  }
+});
+
+test("does loop nothing and groove nothing when riding, so a surface can move the rider itself", () => {
+  const html = renderToStaticMarkup(<Character appearance={drawn} pose="ride" />);
+
+  assert.match(html, /data-character-pose="ride"/);
+  assert.doesNotMatch(html, /animation:/);
+  assert.doesNotMatch(html, /var\(--cast-/);
+  assert.doesNotMatch(html, /data-character-jig/);
+});
+
+test("does carry the costume head and the apparel down through the crouch when riding", () => {
+  const html = renderToStaticMarkup(<Character appearance={{ ...costume, body: "wide" }} apparel="medallion" pose="ride" />);
+  const head = html.match(/<g data-character-part="head"[\s\S]*$/)?.[0] ?? "";
+
+  assert.equal(partDrop(html, "head"), resolveCharacterRideStance({ body: "wide", silhouette: undefined }).crouch);
+  assert.match(head, /<image href="http:\/\/127\.0\.0\.1:3000/);
+  assert.match(head, /data-character-apparel="medallion"/);
 });

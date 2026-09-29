@@ -62,6 +62,20 @@ export const SCHLONIC_WORLD = {
   springWidth: 9,
   /** What a springboard is for: the high wing line, which the legs alone cannot reach. */
   springVelocity: -3.4,
+  /**
+   * A grind rail stands this far over level ground: under a tap's peak (about 16.5), so a tap
+   * timed right comes down on it. It runs most of its chunk, longer than a hop's whole arc, so a
+   * hop can only sweep the end of the line strung along it and the grind is the one way to take
+   * all of it.
+   */
+  railAbove: 12,
+  railLength: 48,
+  /**
+   * A rail has no slope and no drag, so the board keeps the speed it arrived with — up to this.
+   * Nothing in a zone arrives near it (a runner tops out around 1.4); it is there so a rail can
+   * never be where the sim runs away with itself.
+   */
+  grindMaxSpeed: 2.2,
   /** Popping a badnik bounces the runner back up, and pays. */
   badnikBounceVelocity: -1.7,
   badnikWings: 3,
@@ -75,7 +89,7 @@ export const SCHLONIC_WORLD = {
  * The kit a zone is built from, in two piles. The hard kit asks something of the player; the
  * soft kit is the running room between, where the speed and the greedy lines live.
  */
-const HARD_KINDS = ["pit", "spikes", "badnik", "spring"] as const;
+const HARD_KINDS = ["pit", "spikes", "badnik", "spring", "rail"] as const;
 const SOFT_KINDS = ["flat", "hill", "dip", "rise", "drop"] as const;
 
 /**
@@ -90,6 +104,11 @@ type ChunkKind = (typeof HARD_KINDS)[number] | (typeof SOFT_KINDS)[number] | typ
 /** Where the finale's kit stands inside its chunk. */
 const FINALE_SPRING_AT = 8;
 const FINALE_PIT_AT = 22;
+/** Where the rail starts inside its chunk; the thorn bed stands under its far end. */
+const RAIL_AT = 4;
+/** How many wings ride the rail, and how far in from its start the first one hangs. */
+const RAIL_WINGS = 6;
+const RAIL_LINE_INSET = 2;
 /** The post is two chunks off once the runner is here: the finale has begun. */
 export const SCHLONIC_FINALE_CHUNKS = 2;
 
@@ -142,7 +161,7 @@ const resolveChunkProfile = (kind: ChunkKind, random: () => number): number[] =>
 const resolveChunkKinds = (random: () => number, chunks: number): ChunkKind[] => {
   const kinds: ChunkKind[] = [];
   // The hard kit rotates rather than rolls, from a seeded starting point: over a zone every team
-  // meets each of the four about equally often. Rolling each slot independently is how a seed
+  // meets each of the five about equally often. Rolling each slot independently is how a seed
   // ends up with six spike strips and not one pit, and the zone is a rule — the whole round runs
   // the one it drew.
   let hardCursor = Math.floor(random() * HARD_KINDS.length);
@@ -275,10 +294,12 @@ const addProp = (
   placer.props.push({ index: placer.props.length, kind, x, y });
 };
 
-/** A wing, worth two if it hangs on the high line and one on the floor. */
-const addWing = (placer: PropPlacer, x: number, y: number, above: number): void => {
-  const worth = above >= SCHLONIC_WORLD.highLineAbove ? SCHLONIC_WORLD.highLineWorth : 1;
+/** What a wing hung `above` the ground is worth: two on the high line and one on the floor. */
+const resolveWingWorth = (above: number): number => {
+  return above >= SCHLONIC_WORLD.highLineAbove ? SCHLONIC_WORLD.highLineWorth : 1;
+};
 
+const addWing = (placer: PropPlacer, x: number, y: number, worth: number): void => {
   placer.props.push({ index: placer.props.length, kind: "wing", x, y, ...(worth === 1 ? {} : { worth }) });
 };
 
@@ -289,7 +310,7 @@ const addWingRun = (placer: PropPlacer, fromX: number, count: number, above: num
     const ground = groundAt(placer.heights, placer.pits, x);
     const floor = ground >= SCHLONIC_WORLD.pitFloorY ? SCHLONIC_WORLD.groundBaseY : ground;
 
-    addWing(placer, x, Math.max(6, floor - above), above);
+    addWing(placer, x, Math.max(6, floor - above), resolveWingWorth(above));
   }
 };
 
@@ -303,7 +324,7 @@ const addWingArc = (placer: PropPlacer, fromX: number, count: number, above: num
     const floor = ground >= SCHLONIC_WORLD.pitFloorY ? SCHLONIC_WORLD.groundBaseY : ground;
     const lift = 7 * (1 - ((step - middle) * (step - middle)) / Math.max(1, middle * middle));
 
-    addWing(placer, x, Math.max(6, floor - above - lift), above + lift);
+    addWing(placer, x, Math.max(6, floor - above - lift), resolveWingWorth(above + lift));
   }
 };
 
@@ -348,10 +369,40 @@ const addChunkProps = (
       const ground = groundAt(placer.heights, placer.pits, x);
       const above = 22 + step * 7;
 
-      addWing(placer, x, Math.max(6, ground - above), above);
+      addWing(placer, x, Math.max(6, ground - above), resolveWingWorth(above));
     }
 
     addWingRun(placer, chunkX + 44, 2, 9);
+    return;
+  }
+
+  if (kind === "rail") {
+    const { railLength, railAbove, runnerRadius, wingRadius, highLineWorth } = SCHLONIC_WORLD;
+    const railX = chunkX + RAIL_AT;
+    const toX = railX + railLength;
+    const ground = groundAt(placer.heights, placer.pits, railX);
+    const railY = ground - railAbove;
+
+    // The thorns wait under the rail's far end: a bird that stayed on the floor meets them late,
+    // and a hop over them leaves the ground too late to sweep more than the tail of the line.
+    addProp(placer, "spike", toX, ground);
+    placer.props.push({ index: placer.props.length, kind: "rail", x: railX, toX, y: railY });
+
+    // The greedy line rides the rail, just over its top, evenly from its near end to where the
+    // thorns begin: a grinding bird's body passes through every wing and a walking one's reaches
+    // none. Worth two however low it hangs, because only the grind collects the lot — a hop over
+    // the thorns leaves the ground a stride short of them and sweeps the last two.
+    const lineFrom = railX + RAIL_LINE_INSET;
+    const lineTo = toX - SCHLONIC_WORLD.spikeWidth / 2 + 1;
+
+    for (let step = 0; step < RAIL_WINGS; step += 1) {
+      const x = lineFrom + ((lineTo - lineFrom) * step) / (RAIL_WINGS - 1);
+
+      addWing(placer, x, railY - runnerRadius - wingRadius, highLineWorth);
+    }
+
+    // The floor line under the rail's near end, for whoever stays down: what the grind gives up.
+    addWingRun(placer, chunkX + 12, 2, 9);
     return;
   }
 

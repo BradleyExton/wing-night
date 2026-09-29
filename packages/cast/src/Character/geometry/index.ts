@@ -77,10 +77,13 @@ export const CHARACTER_PIVOTS: Record<CharacterPart, CharacterPivot> = {
 // What the parts are doing. `still` is the pose for a surface that moves the
 // parts itself (FAPPY beats the wing off its physics) or wants a frozen bird;
 // `idle` and `walk` are looping CSS beats keyed off `cast-*` keyframes in the
-// client's stylesheet; `fly` is a static tuck of the legs, not a loop; and
+// client's stylesheet; `fly` is a static tuck of the legs, not a loop;
 // `dance` is the player's own move (`CharacterAppearance.dance`), a two-state
-// groove that a `data-beat` toggle on a `group/beat` ancestor flips between.
-export const CHARACTER_POSES = ["still", "idle", "walk", "fly", "dance"] as const;
+// groove that a `data-beat` toggle on a `group/beat` ancestor flips between;
+// and `ride` is the hen crouched on a skateboard the SURFACE draws under it
+// (`CHARACTER_RIDE_STANCE`) — static like `fly`, so a surface that moves the
+// bird per frame moves the whole of it and nothing in the figure fights it.
+export const CHARACTER_POSES = ["still", "idle", "walk", "fly", "dance", "ride"] as const;
 export type CharacterPose = (typeof CHARACTER_POSES)[number];
 
 // The bird's own proportions, for surfaces that have to stand it up somewhere
@@ -106,3 +109,38 @@ export const CHARACTER_HEAD_CENTRE = {
 export const CHARACTER_STAND_HEIGHT = CHARACTER_FOOT.y - CHARACTER_HEAD_CENTRE.y;
 
 export const CHARACTER_HEAD_RADIUS = COSTUME_HEAD_HEIGHT / 2;
+
+// The width the legs are stroked at (`styles.legs`, which has to spell it as a
+// literal for Tailwind to see it). Everything that stands a foot ON something
+// needs half of it: the foot's path is the stroke's centreline, and the paint
+// reaches this much further down.
+export const CHARACTER_LEG_STROKE_WIDTH = 3.5;
+
+// The skate stance, for the `ride` pose: both feet flat on ONE line, spread
+// fore and aft along the board — the back foot under the tail end, the front
+// one under the chest — so a surface can lay a deck exactly under them. In the
+// figure's own 80×72 box, whatever the bird's shape: a silhouette changes how
+// deep the bird crouches (`resolveCharacterRideStance`), never where it stands.
+//
+// `toeY` is the centreline the toes are drawn along — the same line as
+// `CHARACTER_FOOT.y`, so a surface that already stands the cast on its foot
+// keeps doing so. `deckY` is where the painted sole ends, half a leg stroke
+// lower: the top of the deck, for toes that stand ON the board rather than in
+// it. `backFootX`/`frontFootX` are each foot's heel-to-toe centre, and
+// `deckFromX`/`deckToX` the painted toes' whole reach, which is the shortest
+// deck that carries both feet.
+const RIDE_FOOT_REACH = 6;
+
+const RIDE_BACK_FOOT_X = 22;
+
+const RIDE_FRONT_FOOT_X = 54;
+
+export const CHARACTER_RIDE_STANCE = {
+  toeY: CHARACTER_FOOT.y,
+  deckY: CHARACTER_FOOT.y + CHARACTER_LEG_STROKE_WIDTH / 2,
+  backFootX: RIDE_BACK_FOOT_X,
+  frontFootX: RIDE_FRONT_FOOT_X,
+  footReach: RIDE_FOOT_REACH,
+  deckFromX: RIDE_BACK_FOOT_X - RIDE_FOOT_REACH - CHARACTER_LEG_STROKE_WIDTH / 2,
+  deckToX: RIDE_FRONT_FOOT_X + RIDE_FOOT_REACH + CHARACTER_LEG_STROKE_WIDTH / 2
+} as const;
