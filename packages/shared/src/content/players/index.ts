@@ -1,3 +1,4 @@
+import { isNonEmptyString, isRecord } from "../../guards/index.js";
 import {
   prefixIssuePaths,
   type ValidationIssue
@@ -19,18 +20,10 @@ export type PlayersContentFile = {
   players: PlayersContentEntry[];
 };
 
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
-
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
-};
-
 export const validatePlayersContentEntry = (
   value: unknown
 ): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
@@ -62,7 +55,7 @@ export const validatePlayersContentEntry = (
 export const validatePlayersContentFile = (
   value: unknown
 ): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 

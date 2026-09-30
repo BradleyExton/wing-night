@@ -1,7 +1,10 @@
-import type {
-  DrawingPoint,
-  DrawingPromptReveal,
-  DrawingStroke
+import {
+  isFiniteNumber,
+  isNonEmptyString,
+  isNonNegativeInteger,
+  type DrawingPoint,
+  type DrawingPromptReveal,
+  type DrawingStroke
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
@@ -21,18 +24,6 @@ export type AppendStrokePointsPayload = {
 
 export type EndStrokePayload = {
   strokeId: string;
-};
-
-const isFiniteNumber = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isFinite(value);
-};
-
-const isNonNegativeInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-};
-
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
 };
 
 const isDrawingPoint = (value: unknown): value is DrawingPoint => {

@@ -1,3 +1,4 @@
+import { isPositiveInteger, isRecord } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { DEFAULT_SCHLONIC_RULES, type SchlonicRuntimeRules } from "../types/index.js";
@@ -6,10 +7,6 @@ const RULE_KEYS = ["runsPerTurn", "zoneChunks", "parWingsPerRun"] as const;
 
 /** The zone needs at least a run-up, one piece of kit and a straight to the post. */
 const ZONE_CHUNKS_MIN = 6;
-
-const isPositiveInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value > 0;
-};
 
 // The seed alone may be any integer, negative included: it is a hash input, not a count.
 const isSeed = (value: unknown): value is number => {
@@ -20,7 +17,7 @@ const isSeed = (value: unknown): value is number => {
 // when present it must be a positive integer, and a zone shorter than the run-up is refused
 // because there would be nothing between the line and the post.
 export const isSchlonicRules = (value: unknown): boolean => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 
@@ -38,7 +35,7 @@ export const isSchlonicRules = (value: unknown): boolean => {
 };
 
 export const resolveSchlonicRules = (rules: SerializableValue | null): SchlonicRuntimeRules => {
-  if (typeof rules !== "object" || rules === null || Array.isArray(rules)) {
+  if (!isRecord(rules)) {
     return { ...DEFAULT_SCHLONIC_RULES };
   }
 

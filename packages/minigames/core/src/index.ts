@@ -1,5 +1,7 @@
 import {
   hasMalformedFeaturedPlayers,
+  isNumberRecord,
+  isStringArray,
   readFeaturedPlayers
 } from "@wingnight/shared";
 import type {
@@ -469,18 +471,6 @@ export const isSerializableValue = (value: unknown): value is SerializableValue 
   }
 
   return false;
-};
-
-const isStringArray = (value: unknown): value is string[] => {
-  return Array.isArray(value) && value.every((entry) => typeof entry === "string");
-};
-
-const isNumberRecord = (value: unknown): value is Record<string, number> => {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    return false;
-  }
-
-  return Object.values(value).every((entry) => typeof entry === "number");
 };
 
 const isStringRecord = (value: unknown): value is Record<string, string> => {

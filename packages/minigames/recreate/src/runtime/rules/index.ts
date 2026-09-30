@@ -1,16 +1,13 @@
+import { isPositiveInteger, isRecord } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { DEFAULT_RECREATE_RULES, type RecreateRuntimeRules } from "../types/index.js";
-
-const isPositiveInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value > 0;
-};
 
 // Config-load-time schema check for gameConfig.minigameRules.recreate. Every
 // key is optional and falls back to the default, so a pack only spells out
 // what it changes; a key that IS present has to be the right shape.
 export const isRecreateRules = (value: unknown): boolean => {
-  if (typeof value !== "object" || value === null) {
+  if (!isRecord(value)) {
     return false;
   }
 
@@ -37,7 +34,7 @@ export const isRecreateRules = (value: unknown): boolean => {
 export const resolveRecreateRules = (
   rules: SerializableValue | null
 ): RecreateRuntimeRules => {
-  if (typeof rules !== "object" || rules === null || Array.isArray(rules)) {
+  if (!isRecord(rules)) {
     return { ...DEFAULT_RECREATE_RULES };
   }
 

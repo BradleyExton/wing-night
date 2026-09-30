@@ -1,32 +1,24 @@
-import type { JoustAim, JoustPhase } from "@wingnight/shared";
+import {
+  isFiniteNumber,
+  isNonNegativeInteger,
+  isNumberRecord,
+  isRecord,
+  isStringArray,
+  type JoustAim,
+  type JoustPhase
+} from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type { JoustRuntimeState } from "../types/index.js";
 
 const JOUST_PHASES: readonly JoustPhase[] = ["aiming", "resolved", "done"];
 
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-};
-
-const isNonNegativeInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-};
-
-const isFiniteNumber = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isFinite(value);
-};
-
 export const isJoustAim = (value: unknown): value is JoustAim => {
-  return isObjectLike(value) && isFiniteNumber(value.x) && isFiniteNumber(value.y);
+  return isRecord(value) && isFiniteNumber(value.x) && isFiniteNumber(value.y);
 };
 
 const isJoustPhase = (value: unknown): value is JoustPhase => {
   return JOUST_PHASES.some((phase) => phase === value);
-};
-
-const isStringArray = (value: unknown): value is string[] => {
-  return Array.isArray(value) && value.every((entry) => typeof entry === "string");
 };
 
 const isIndexArray = (value: unknown): value is number[] => {
@@ -35,7 +27,7 @@ const isIndexArray = (value: unknown): value is number[] => {
 
 const isPlayerFigure = (value: unknown): boolean => {
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     typeof value.playerId === "string" &&
     typeof value.name === "string" &&
     (value.avatarSrc === null || typeof value.avatarSrc === "string")
@@ -44,7 +36,7 @@ const isPlayerFigure = (value: unknown): boolean => {
 
 const isShotResult = (value: unknown): boolean => {
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     isNonNegativeInteger(value.shotNumber) &&
     isStringArray(value.toppledPlayerIds) &&
     isIndexArray(value.collapsedPerchIndices) &&
@@ -55,7 +47,7 @@ const isShotResult = (value: unknown): boolean => {
 
 const isTopple = (value: unknown): boolean => {
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     isNonNegativeInteger(value.pinIndex) &&
     isNonNegativeInteger(value.frameIndex)
   );
@@ -63,7 +55,7 @@ const isTopple = (value: unknown): boolean => {
 
 const isCollapse = (value: unknown): boolean => {
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     isNonNegativeInteger(value.perchIndex) &&
     isNonNegativeInteger(value.frameIndex)
   );
@@ -71,7 +63,7 @@ const isCollapse = (value: unknown): boolean => {
 
 const isShotRun = (value: unknown): boolean => {
   if (
-    !isObjectLike(value) ||
+    !isRecord(value) ||
     !Array.isArray(value.keyframes) ||
     !Array.isArray(value.topples) ||
     !Array.isArray(value.collapses)
@@ -96,7 +88,7 @@ const isLastShotOrNull = (value: unknown): boolean => {
 
   return (
     isShotResult(value) &&
-    isObjectLike(value) &&
+    isRecord(value) &&
     isJoustAim(value.aim) &&
     typeof value.shooterId === "string" &&
     isStringArray(value.pinPlayerIds) &&
@@ -111,7 +103,7 @@ const isGhostOrNull = (value: unknown): boolean => {
   }
 
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     isNonNegativeInteger(value.shotNumber) &&
     isJoustAim(value.aim) &&
     typeof value.shooterId === "string" &&
@@ -120,14 +112,10 @@ const isGhostOrNull = (value: unknown): boolean => {
   );
 };
 
-const isRecordOfNumbers = (value: unknown): value is Record<string, number> => {
-  return isObjectLike(value) && Object.values(value).every((entry) => isFiniteNumber(entry));
-};
-
 export const isJoustRuntimeState = (
   value: SerializableValue
 ): value is JoustRuntimeState => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 
@@ -153,7 +141,7 @@ export const isJoustRuntimeState = (
     state.shots.every(isShotResult) &&
     isLastShotOrNull(state.lastShot) &&
     isFiniteNumber(state.turnStartPoints) &&
-    isRecordOfNumbers(state.pendingPointsByTeamId)
+    isNumberRecord(state.pendingPointsByTeamId)
   );
 };
 
@@ -168,5 +156,5 @@ export type JoustPickShooterPayload = {
 export const isJoustPickShooterPayload = (
   actionPayload: SerializableValue
 ): actionPayload is JoustPickShooterPayload => {
-  return isObjectLike(actionPayload) && typeof actionPayload.shooterId === "string";
+  return isRecord(actionPayload) && typeof actionPayload.shooterId === "string";
 };

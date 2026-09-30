@@ -1,4 +1,4 @@
-import { isTeamColorToken, type Player, type Team } from "@wingnight/shared";
+import { isRecord, isTeamColorToken, type Player, type Team } from "@wingnight/shared";
 
 // The roster the online teaser draws with: the night's players and teams, as
 // tools/build-teaser wrote them to `/teaser-roster.json`. The file is the site's
@@ -11,9 +11,6 @@ export type TeaserRoster = {
 };
 
 export const TEASER_ROSTER_PATH = "/teaser-roster.json";
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
 
 const toPlayer = (value: unknown): Player | null => {
   if (!isRecord(value) || typeof value.id !== "string" || typeof value.name !== "string") {

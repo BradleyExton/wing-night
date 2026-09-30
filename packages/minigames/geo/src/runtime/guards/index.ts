@@ -1,4 +1,4 @@
-import type { GeoPromptResult } from "@wingnight/shared";
+import { isNonNegativeInteger, type GeoPromptResult } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type {
@@ -13,10 +13,6 @@ const isLatitude = (value: unknown): value is number => {
 
 const isLongitude = (value: unknown): value is number => {
   return typeof value === "number" && Number.isFinite(value) && value >= -180 && value <= 180;
-};
-
-const isNonNegativeInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
 };
 
 const isGeoRuntimeSubState = (value: unknown): value is GeoRuntimeSubState => {

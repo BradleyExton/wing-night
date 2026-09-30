@@ -1,3 +1,4 @@
+import { isPositiveInteger, isRecord, isStringArray } from "../guards/index.js";
 import {
   MINIGAME_TYPES,
   resolveMinigameDefinition,
@@ -45,17 +46,7 @@ export const QUICK_PLAY_CONFIG_NAME = "Quick Play";
 
 export const QUICK_PLAY_MIN_TEAMS = 2;
 
-const isPositiveInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value > 0;
-};
-
-const isRuleRecord = (value: unknown): value is MinigameRuleRecord => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-};
-
-const isStringArray = (value: unknown): value is string[] => {
-  return Array.isArray(value) && value.every((entry) => typeof entry === "string");
-};
+const isRuleRecord = (value: unknown): value is MinigameRuleRecord => isRecord(value);
 
 const isMinigameType = (value: unknown): value is MinigameType => {
   return typeof value === "string" && MINIGAME_TYPES.includes(value as MinigameType);

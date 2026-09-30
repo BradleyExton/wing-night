@@ -1,3 +1,4 @@
+import { isNonEmptyString, isRecord } from "../../guards/index.js";
 import { validatePromptPackFile } from "../promptPack/index.js";
 import type { ValidationIssue } from "../validationIssue/index.js";
 
@@ -34,14 +35,6 @@ export type RecreateContentFile = {
 export const RECREATE_MIN_INGREDIENTS = 2;
 export const RECREATE_MAX_INGREDIENTS = 6;
 
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
-
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
-};
-
 const validateIngredients = (value: unknown): ValidationIssue[] => {
   if (!Array.isArray(value)) {
     return [{ path: "ingredients", message: "must be an array of ingredient labels" }];
@@ -64,7 +57,7 @@ const validateIngredients = (value: unknown): ValidationIssue[] => {
 };
 
 export const validateRecreatePrompt = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 

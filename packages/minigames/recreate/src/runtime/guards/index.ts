@@ -1,15 +1,7 @@
-import type { RecreateAttempt } from "@wingnight/shared";
+import { isNonNegativeInteger, isStringArray, type RecreateAttempt } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type { RecreateRuntimeState } from "../types/index.js";
-
-const isNonNegativeInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-};
-
-const isStringArray = (value: unknown): value is string[] => {
-  return Array.isArray(value) && value.every((entry) => typeof entry === "string");
-};
 
 const isAttemptStatus = (value: unknown): value is RecreateAttempt["status"] => {
   return (

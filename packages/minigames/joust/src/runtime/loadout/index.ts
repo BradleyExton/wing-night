@@ -6,6 +6,7 @@ import type {
 import {
   JOUST_STANDARD_SHOOTER_PROFILE,
   isJoustShooter,
+  isRecord,
   resolveJoustShooterProfile
 } from "@wingnight/shared";
 
@@ -40,10 +41,6 @@ export const JOUST_STANDARD_SHOOTER: JoustRuntimeShooter = {
   profile: JOUST_STANDARD_SHOOTER_PROFILE
 };
 
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-};
-
 /**
  * Reads one kind out of whatever the content carries: the file's own shape (`usesPerTurn`
  * absent, `profile` a diff) or the runtime's (`usesPerTurn: null`, `profile` full), because the
@@ -51,7 +48,7 @@ const isObjectLike = (value: unknown): value is Record<string, unknown> => {
  * malformed reads as nothing, the way a malformed lane does.
  */
 export const readJoustShooter = (value: unknown): JoustRuntimeShooter | null => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return null;
   }
 

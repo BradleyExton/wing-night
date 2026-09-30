@@ -358,3 +358,9 @@ test("parses a content file strictly and resolves rules with defaults", () => {
   assert.equal(isRecreateRules({ liveGeneration: "yes" }), false);
   assert.equal(isRecreateRules(null), false);
 });
+
+test("isRecreateRules rejects an array when the rules are not an object", () => {
+  // Every key is optional, so an empty array used to pass as "all defaults".
+  assert.equal(isRecreateRules([]), false);
+  assert.equal(isRecreateRules([{ targetsPerTurn: 2 }]), false);
+});

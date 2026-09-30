@@ -1,3 +1,4 @@
+import { isPositiveInteger, isRecord } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import {
@@ -8,19 +9,11 @@ import {
 } from "../types/index.js";
 
 const normalizePromptsPerTurn = (promptsPerTurn: unknown): number => {
-  if (
-    typeof promptsPerTurn !== "number" ||
-    !Number.isInteger(promptsPerTurn) ||
-    promptsPerTurn <= 0
-  ) {
-    return DEFAULT_GEO_PROMPTS_PER_TURN;
-  }
-
-  return promptsPerTurn;
+  return isPositiveInteger(promptsPerTurn) ? promptsPerTurn : DEFAULT_GEO_PROMPTS_PER_TURN;
 };
 
 const isGeoScoreBand = (value: unknown): value is GeoScoreBand => {
-  if (typeof value !== "object" || value === null) {
+  if (!isRecord(value)) {
     return false;
   }
 
@@ -58,23 +51,15 @@ const normalizeScoreBandsKm = (scoreBandsKm: unknown): GeoScoreBand[] => {
 // Config-load-time schema check for gameConfig.minigameRules.geo. Both
 // fields are optional; when present they must be well-formed.
 export const isGeoRules = (value: unknown): boolean => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 
-  if (
-    "promptsPerTurn" in value &&
-    value.promptsPerTurn !== undefined &&
-    !(
-      typeof value.promptsPerTurn === "number" &&
-      Number.isInteger(value.promptsPerTurn) &&
-      value.promptsPerTurn > 0
-    )
-  ) {
+  if (value.promptsPerTurn !== undefined && !isPositiveInteger(value.promptsPerTurn)) {
     return false;
   }
 
-  if ("scoreBandsKm" in value && value.scoreBandsKm !== undefined) {
+  if (value.scoreBandsKm !== undefined) {
     if (!Array.isArray(value.scoreBandsKm) || value.scoreBandsKm.length === 0) {
       return false;
     }
@@ -90,7 +75,7 @@ export const isGeoRules = (value: unknown): boolean => {
 export const resolveGeoRules = (
   rules: SerializableValue | null
 ): GeoRuntimeRules => {
-  if (typeof rules !== "object" || rules === null || Array.isArray(rules)) {
+  if (!isRecord(rules)) {
     return {
       promptsPerTurn: DEFAULT_GEO_PROMPTS_PER_TURN,
       scoreBandsKm: DEFAULT_GEO_SCORE_BANDS_KM.map((band) => ({ ...band }))

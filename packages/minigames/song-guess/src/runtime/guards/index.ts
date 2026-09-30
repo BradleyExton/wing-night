@@ -1,4 +1,10 @@
-import type { SongGuessPhase, SongGuessTeamScore } from "@wingnight/shared";
+import {
+  isNonNegativeInteger,
+  isRecordOf,
+  isStringArray,
+  type SongGuessPhase,
+  type SongGuessTeamScore
+} from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type { SongGuessRuntimeState } from "../types/index.js";
@@ -13,16 +19,6 @@ const SONG_GUESS_PHASES: readonly SongGuessPhase[] = [
 
 export type SongGuessMarkPayload = {
   correct: boolean;
-};
-
-const isNonNegativeInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-};
-
-const isStringArray = (value: unknown): value is string[] => {
-  return (
-    Array.isArray(value) && value.every((entry) => typeof entry === "string")
-  );
 };
 
 const isSongGuessPhase = (value: unknown): value is SongGuessPhase => {
@@ -41,17 +37,6 @@ const isSongGuessTeamScore = (value: unknown): value is SongGuessTeamScore => {
   const score = value as Partial<SongGuessTeamScore>;
 
   return isMark(score.title) && isMark(score.artist);
-};
-
-const isRecordOf = (
-  value: unknown,
-  isEntry: (entry: unknown) => boolean
-): boolean => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-
-  return Object.values(value).every((entry) => isEntry(entry));
 };
 
 export const isSongGuessRuntimeState = (
@@ -100,7 +85,7 @@ export const isSongGuessRuntimeState = (
 
   return isRecordOf(
     state.pendingPointsByTeamId,
-    (entry) => typeof entry === "number"
+    (entry): entry is number => typeof entry === "number"
   );
 };
 

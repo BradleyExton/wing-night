@@ -1,3 +1,4 @@
+import { isNonEmptyString, isRecord } from "../../guards/index.js";
 import { validatePromptPackFile } from "../promptPack/index.js";
 import type { ValidationIssue } from "../validationIssue/index.js";
 
@@ -27,14 +28,6 @@ export type SongGuessPrompt = {
 
 export type SongGuessContentFile = {
   prompts: SongGuessPrompt[];
-};
-
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
-
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
 };
 
 const isNonNegativeFiniteNumber = (value: unknown): value is number => {
@@ -82,7 +75,7 @@ const validateClipWindow = (value: Record<string, unknown>): ValidationIssue[] =
 };
 
 export const validateSongGuessPrompt = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 

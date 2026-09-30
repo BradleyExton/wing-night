@@ -1,10 +1,14 @@
-import type {
-  SchlonicBestLeg,
-  SchlonicBestTurn,
-  SchlonicOutcome,
-  SchlonicPlayerFigure,
-  SchlonicRunResult,
-  SchlonicRunStatus
+import {
+  isFiniteNumber,
+  isNonNegativeInteger,
+  isNumberRecord,
+  isRecord,
+  type SchlonicBestLeg,
+  type SchlonicBestTurn,
+  type SchlonicOutcome,
+  type SchlonicPlayerFigure,
+  type SchlonicRunResult,
+  type SchlonicRunStatus
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
@@ -12,18 +16,6 @@ import type { SchlonicRoundMemory, SchlonicRuntimeRun, SchlonicRuntimeState } fr
 
 const RUN_STATUSES: readonly SchlonicRunStatus[] = ["ready", "running", "done"];
 const OUTCOMES: readonly SchlonicOutcome[] = ["cleared", "wiped", "fell"];
-
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-};
-
-const isNonNegativeInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-};
-
-const isFiniteNumber = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isFinite(value);
-};
 
 const isInteger = (value: unknown): value is number => {
   return typeof value === "number" && Number.isInteger(value);
@@ -39,7 +31,7 @@ const isResultOrNull = (value: unknown): value is SchlonicRunResult | null => {
   }
 
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     OUTCOMES.some((outcome) => outcome === value.outcome) &&
     isNonNegativeInteger(value.endTick) &&
     isNonNegativeInteger(value.wings) &&
@@ -53,7 +45,7 @@ const isFigureOrNull = (value: unknown): value is SchlonicPlayerFigure | null =>
   }
 
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     typeof value.playerId === "string" &&
     typeof value.name === "string" &&
     (value.avatarSrc === null || typeof value.avatarSrc === "string") &&
@@ -63,12 +55,12 @@ const isFigureOrNull = (value: unknown): value is SchlonicPlayerFigure | null =>
 };
 
 const isInput = (value: unknown): boolean => {
-  return isObjectLike(value) && isNonNegativeInteger(value.tick) && typeof value.down === "boolean";
+  return isRecord(value) && isNonNegativeInteger(value.tick) && typeof value.down === "boolean";
 };
 
 const isRun = (value: unknown): value is SchlonicRuntimeRun => {
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     isNonNegativeInteger(value.runIndex) &&
     isFigureOrNull(value.player) &&
     isRunStatus(value.status) &&
@@ -85,7 +77,7 @@ const isBestLegOrNull = (value: unknown): value is SchlonicBestLeg | null => {
   }
 
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     isFigureOrNull(value.player) &&
     Array.isArray(value.inputs) &&
     value.inputs.every(isInput) &&
@@ -101,7 +93,7 @@ const isBestTurnOrNull = (value: unknown): value is SchlonicBestTurn | null => {
   }
 
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     (value.teamId === null || typeof value.teamId === "string") &&
     (value.teamName === null || typeof value.teamName === "string") &&
     isNonNegativeInteger(value.wings) &&
@@ -117,17 +109,13 @@ const isBestTurnOrNull = (value: unknown): value is SchlonicBestTurn | null => {
 export const isSchlonicRoundMemory = (
   value: SerializableValue | null | undefined
 ): value is SchlonicRoundMemory => {
-  return isObjectLike(value) && isBestTurnOrNull(value.bestTurn);
-};
-
-const isRecordOfNumbers = (value: unknown): value is Record<string, number> => {
-  return isObjectLike(value) && Object.values(value).every((entry) => isFiniteNumber(entry));
+  return isRecord(value) && isBestTurnOrNull(value.bestTurn);
 };
 
 export const isSchlonicRuntimeState = (
   value: SerializableValue
 ): value is SchlonicRuntimeState => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 
@@ -144,7 +132,7 @@ export const isSchlonicRuntimeState = (
     Array.isArray(state.runs) &&
     state.runs.every(isRun) &&
     isFiniteNumber(state.turnStartPoints) &&
-    isRecordOfNumbers(state.pendingPointsByTeamId) &&
+    isNumberRecord(state.pendingPointsByTeamId) &&
     isBestTurnOrNull(state.bestTurn)
   );
 };
@@ -156,5 +144,5 @@ export type SchlonicTickPayload = {
 export const isSchlonicTickPayload = (
   actionPayload: SerializableValue
 ): actionPayload is SchlonicTickPayload => {
-  return isObjectLike(actionPayload) && isNonNegativeInteger(actionPayload.tick);
+  return isRecord(actionPayload) && isNonNegativeInteger(actionPayload.tick);
 };

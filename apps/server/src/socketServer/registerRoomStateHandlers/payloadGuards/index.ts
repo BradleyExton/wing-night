@@ -3,7 +3,9 @@ import {
   MUSIC_PLAYBACK_SOURCES,
   MINIGAME_API_VERSION,
   TIMER_EXTEND_MAX_SECONDS,
+  isNonNegativeInteger,
   isQuickPlayStartRequest,
+  isStringArray,
   isValidMusicVolume,
   type ConfigSavePayload,
   type GameReorderTurnOrderPayload,
@@ -41,9 +43,6 @@ const hasShape = (
 const isString: FieldPredicate = (value) => typeof value === "string";
 const isBoolean: FieldPredicate = (value) => typeof value === "boolean";
 const isPresent: FieldPredicate = () => true;
-const isStringArray: FieldPredicate = (value) =>
-  Array.isArray(value) && value.every((entry) => typeof entry === "string");
-
 export const isHostSecretPayload = (payload: unknown): payload is HostSecretPayload =>
   hasShape(payload, { hostSecret: isString });
 
@@ -128,8 +127,7 @@ export const isMusicTrackEndedPayload = (
       value === MUSIC_PLAYBACK_SOURCES.LOBBY ||
       value === MUSIC_PLAYBACK_SOURCES.EATING ||
       value === MUSIC_PLAYBACK_SOURCES.ANTHEM,
-    trackIndex: (value) =>
-      typeof value === "number" && Number.isInteger(value) && value >= 0
+    trackIndex: isNonNegativeInteger
   });
 
 export const isMusicSetVolumePayload = (

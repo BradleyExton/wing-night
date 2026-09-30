@@ -141,6 +141,20 @@ test("reports the rules key when a minigameRules entry is not an object", () => 
   ]);
 });
 
+test("reports the minigameRules path when minigameRules is an array", () => {
+  const config = configWith({ minigameRules: [] });
+
+  assert.deepEqual(pathsOf(validateGameConfigFile(config)), ["minigameRules"]);
+});
+
+test("reports the round path when a round is an array", () => {
+  const config = configWith({ rounds: [validRound(1), []] });
+
+  assert.deepEqual(validateGameConfigFile(config), [
+    { path: "rounds[1]", message: "must be an object" }
+  ]);
+});
+
 test("yields exactly one minigameRules issue when the injected validateRules rejects", () => {
   const config = configWith({ minigameRules: { trivia: { bad: true } } });
 

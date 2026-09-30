@@ -1,5 +1,5 @@
 import type { SerializableValue } from "@wingnight/minigames-core";
-import type { EmojiCharadesSubState } from "@wingnight/shared";
+import { isRecord, isRecordOf, isStringArray, type EmojiCharadesSubState } from "@wingnight/shared";
 
 import {
   DEFAULT_EMOJI_CHARADES_RULES,
@@ -9,25 +9,14 @@ import {
 
 const SUB_STATES: readonly EmojiCharadesSubState[] = ["playing", "turn_complete"];
 
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-};
-
-const isStringArray = (value: unknown): value is string[] => {
-  return Array.isArray(value) && value.every((entry) => typeof entry === "string");
-};
-
-const isNumberRecord = (value: unknown): value is Record<string, number> => {
-  return (
-    isObjectLike(value) &&
-    Object.values(value).every((entry) => typeof entry === "number")
-  );
-};
+// Any number, NaN included — looser than the shared `isNumberRecord`, which
+// wants every value finite. Kept as it was rather than tightened in passing.
+const isNumber = (entry: unknown): entry is number => typeof entry === "number";
 
 export const isEmojiCharadesRuntimeState = (
   value: unknown
 ): value is EmojiCharadesRuntimeState => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 
@@ -62,11 +51,11 @@ export const isEmojiCharadesRuntimeState = (
     return false;
   }
 
-  if (value.reveal !== null && !isObjectLike(value.reveal)) {
+  if (value.reveal !== null && !isRecord(value.reveal)) {
     return false;
   }
 
-  return isNumberRecord(value.pendingPointsByTeamId);
+  return isRecordOf(value.pendingPointsByTeamId, isNumber);
 };
 
 // One clue slot holds one emoji, so the payload has to be exactly that: a run
@@ -94,7 +83,7 @@ export const isAppendEmojiPayload = (
   value: SerializableValue
 ): value is { emoji: string } => {
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     typeof value.emoji === "string" &&
     isEmojiToken(value.emoji)
   );
@@ -132,7 +121,7 @@ export const isLetterEmoji = (emoji: string): boolean => {
 export const isEmojiCharadesRules = (
   value: unknown
 ): value is EmojiCharadesMinigameRules => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 

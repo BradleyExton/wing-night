@@ -1,3 +1,4 @@
+import { isPositiveInteger, isRecord } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import {
@@ -5,14 +6,10 @@ import {
   type SongGuessRuntimeRules
 } from "../types/index.js";
 
-const isPositiveInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value > 0;
-};
-
 // Config-load-time schema check for gameConfig.minigameRules.songGuess. The
 // single field is optional; when present it must be well-formed.
 export const isSongGuessRules = (value: unknown): boolean => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 
@@ -26,7 +23,7 @@ export const isSongGuessRules = (value: unknown): boolean => {
 export const resolveSongGuessRules = (
   rules: SerializableValue | null
 ): SongGuessRuntimeRules => {
-  if (typeof rules !== "object" || rules === null || Array.isArray(rules)) {
+  if (!isRecord(rules)) {
     return { songsPerTurn: DEFAULT_SONG_GUESS_SONGS_PER_TURN };
   }
 

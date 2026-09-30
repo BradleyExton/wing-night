@@ -1,3 +1,4 @@
+import { isNonEmptyString, isRecord } from "../../guards/index.js";
 import {
   isTeamColorToken,
   TEAM_COLOR_TOKENS,
@@ -19,20 +20,12 @@ export type TeamsContentFile = {
   teams: TeamsContentEntry[];
 };
 
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
-
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
-};
-
 const isNonEmptyStringArray = (value: unknown): value is string[] => {
   return Array.isArray(value) && value.every(isNonEmptyString);
 };
 
 export const validateTeamsContentEntry = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
@@ -70,7 +63,7 @@ export const validateTeamsContentEntry = (value: unknown): ValidationIssue[] => 
 };
 
 export const validateTeamsContentFile = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 

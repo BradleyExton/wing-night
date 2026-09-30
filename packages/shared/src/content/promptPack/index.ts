@@ -1,3 +1,4 @@
+import { isRecord } from "../../guards/index.js";
 import {
   prefixIssuePaths,
   type ValidationIssue
@@ -8,12 +9,8 @@ import {
 // per-prompt fields differ, so that is the one thing a caller injects.
 export type ValidatePrompt = (prompt: unknown) => ValidationIssue[];
 
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
-};
-
 const readPromptId = (prompt: unknown): string | null => {
-  if (!isObjectLike(prompt) || typeof prompt.id !== "string") {
+  if (!isRecord(prompt) || typeof prompt.id !== "string") {
     return null;
   }
 
@@ -53,7 +50,7 @@ export const validatePromptPackFile = (
   value: unknown,
   validatePrompt: ValidatePrompt
 ): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 

@@ -1,4 +1,9 @@
 import {
+  isFiniteNumber,
+  isNonEmptyString,
+  isRecord
+} from "../../guards/index.js";
+import {
   JOUST_PIN_HEAD_RADIUS,
   JOUST_RACK_LEFT,
   JOUST_RACK_RIGHT,
@@ -72,24 +77,12 @@ export type JoustContentFile = {
   shooters?: JoustShooterKind[];
 };
 
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
-
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
-};
-
-const isFiniteNumber = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isFinite(value);
-};
-
 const isWithin = (value: number, min: number, max: number): boolean => {
   return value >= min && value <= max;
 };
 
 export const validateJoustObstacle = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
@@ -144,7 +137,7 @@ export const validateJoustObstacle = (value: unknown): ValidationIssue[] => {
 };
 
 export const validateJoustPerch = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
@@ -189,7 +182,7 @@ export const validateJoustPerch = (value: unknown): ValidationIssue[] => {
 };
 
 export const validateJoustPrompt = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
@@ -244,7 +237,7 @@ export const validateJoustPrompt = (value: unknown): ValidationIssue[] => {
 export const validateJoustContentFile = (value: unknown): ValidationIssue[] => {
   const issues = validatePromptPackFile(value, validateJoustPrompt);
 
-  return isObjectLike(value) ? [...issues, ...validateJoustShooters(value.shooters)] : issues;
+  return isRecord(value) ? [...issues, ...validateJoustShooters(value.shooters)] : issues;
 };
 
 export const isJoustPrompt = (value: unknown): value is JoustPrompt => {

@@ -1,20 +1,12 @@
 import {
   CLIENT_ROLES,
+  isRecord,
   isSocketClientRole,
   type SocketClientRole
 } from "@wingnight/shared";
 
-type SocketAuthPayload = {
-  clientRole?: unknown;
-  hostControlToken?: unknown;
-};
-
-const isSocketAuthPayload = (value: unknown): value is SocketAuthPayload => {
-  return typeof value === "object" && value !== null;
-};
-
 const resolveRequestedClientRole = (authPayload: unknown): SocketClientRole => {
-  if (!isSocketAuthPayload(authPayload)) {
+  if (!isRecord(authPayload)) {
     return CLIENT_ROLES.DISPLAY;
   }
 
@@ -29,7 +21,7 @@ const hasValidHostControlToken = (
   authPayload: unknown,
   expectedHostControlToken: string
 ): boolean => {
-  if (!isSocketAuthPayload(authPayload)) {
+  if (!isRecord(authPayload)) {
     return false;
   }
 

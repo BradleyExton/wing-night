@@ -1,4 +1,14 @@
 export { Phase } from "./phase/index.js";
+export {
+  isFiniteNumber,
+  isNonEmptyString,
+  isNonNegativeInteger,
+  isNumberRecord,
+  isPositiveInteger,
+  isRecord,
+  isRecordOf,
+  isStringArray
+} from "./guards/index.js";
 export { SESSION_MODES } from "./sessionMode/index.js";
 export type { SessionMode } from "./sessionMode/index.js";
 export {

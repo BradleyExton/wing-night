@@ -1,3 +1,4 @@
+import { isNonEmptyString, isRecord } from "../../guards/index.js";
 import { validatePromptPackFile } from "../promptPack/index.js";
 import type { ValidationIssue } from "../validationIssue/index.js";
 
@@ -11,16 +12,8 @@ export type TriviaContentFile = {
   prompts: TriviaPrompt[];
 };
 
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
-
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
-};
-
 export const validateTriviaPrompt = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 

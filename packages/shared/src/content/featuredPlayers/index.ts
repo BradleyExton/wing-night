@@ -1,3 +1,4 @@
+import { isNonEmptyString } from "../../guards/index.js";
 // Tags naming the people who appear IN a prompt — the faces in a geo photo,
 // the subject of a trivia question. One concept across every prompt bank, so
 // it lives here rather than in any one minigame's content module.
@@ -9,10 +10,6 @@
 // survives that edit. It does not survive a rename — which is why an unknown
 // tag is reported rather than quietly treated as "absent".
 export type FeaturedPlayers = string[];
-
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
 
 export const isFeaturedPlayers = (value: unknown): value is FeaturedPlayers => {
   return Array.isArray(value) && value.every((entry) => isNonEmptyString(entry));

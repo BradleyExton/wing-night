@@ -1,3 +1,4 @@
+import { isNonEmptyString, isRecord } from "../../guards/index.js";
 import type { ValidationIssue } from "../validationIssue/index.js";
 
 export type EmojiCharadesSubject = {
@@ -19,18 +20,10 @@ export type EmojiCharadesContentFile = {
   decks: EmojiCharadesDeck[];
 };
 
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
-
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
-};
-
 export const validateEmojiCharadesSubject = (
   value: unknown
 ): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
@@ -59,7 +52,7 @@ export const validateEmojiCharadesSubject = (
 // Decks own their own id namespace: subject ids must be unique within a deck
 // but may repeat across decks, since only one deck is ever in play at a time.
 export const validateEmojiCharadesDeck = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
@@ -90,7 +83,7 @@ export const validateEmojiCharadesDeck = (value: unknown): ValidationIssue[] => 
       });
     });
 
-    if (isObjectLike(subject) && isNonEmptyString(subject.id)) {
+    if (isRecord(subject) && isNonEmptyString(subject.id)) {
       if (seenSubjectIds.has(subject.id)) {
         issues.push({
           path: `subjects[${index}].id`,
@@ -108,7 +101,7 @@ export const validateEmojiCharadesDeck = (value: unknown): ValidationIssue[] => 
 export const validateEmojiCharadesContentFile = (
   value: unknown
 ): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
@@ -132,7 +125,7 @@ export const validateEmojiCharadesContentFile = (
       });
     });
 
-    if (isObjectLike(deck) && isNonEmptyString(deck.id)) {
+    if (isRecord(deck) && isNonEmptyString(deck.id)) {
       if (seenDeckIds.has(deck.id)) {
         issues.push({
           path: `decks[${index}].id`,

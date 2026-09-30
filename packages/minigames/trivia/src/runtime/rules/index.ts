@@ -1,3 +1,4 @@
+import { isPositiveInteger, isRecord } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import {
@@ -5,27 +6,19 @@ import {
   type TriviaRuntimeRules
 } from "../types/index.js";
 
-const isQuestionsPerTurn = (questionsPerTurn: unknown): questionsPerTurn is number => {
-  return (
-    typeof questionsPerTurn === "number" &&
-    Number.isInteger(questionsPerTurn) &&
-    questionsPerTurn > 0
-  );
-};
-
 // Config-load-time schema check for gameConfig.minigameRules.trivia.
 export const isTriviaRules = (value: unknown): boolean => {
-  if (typeof value !== "object" || value === null) {
+  if (!isRecord(value)) {
     return false;
   }
 
-  return "questionsPerTurn" in value && isQuestionsPerTurn(value.questionsPerTurn);
+  return isPositiveInteger(value.questionsPerTurn);
 };
 
 export const resolveTriviaRules = (
   rules: SerializableValue | null
 ): TriviaRuntimeRules => {
-  if (typeof rules !== "object" || rules === null) {
+  if (!isRecord(rules)) {
     return {
       questionsPerTurn: DEFAULT_TRIVIA_QUESTIONS_PER_TURN
     };
@@ -34,7 +27,7 @@ export const resolveTriviaRules = (
   const parsedRules = rules as Partial<TriviaRuntimeRules>;
 
   return {
-    questionsPerTurn: isQuestionsPerTurn(parsedRules.questionsPerTurn)
+    questionsPerTurn: isPositiveInteger(parsedRules.questionsPerTurn)
       ? parsedRules.questionsPerTurn
       : DEFAULT_TRIVIA_QUESTIONS_PER_TURN
   };

@@ -1,3 +1,8 @@
+import {
+  isFiniteNumber,
+  isNonEmptyString,
+  isRecord
+} from "../../../guards/index.js";
 import type { JoustShooterProfile } from "../../../joust/types.js";
 import type { ValidationIssue } from "../../validationIssue/index.js";
 
@@ -53,20 +58,8 @@ const PROFILE_KEYS = Object.keys(JOUST_SHOOTER_PROFILE_RANGES) as (keyof JoustSh
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-};
-
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
-
-const isFiniteNumber = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isFinite(value);
-};
-
 export const validateJoustShooterProfile = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
@@ -100,7 +93,7 @@ export const validateJoustShooterProfile = (value: unknown): ValidationIssue[] =
 };
 
 const validateColor = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object with fill, dark and light" }];
   }
 
@@ -117,7 +110,7 @@ const prefixed = (prefix: string, issues: ValidationIssue[]): ValidationIssue[] 
 };
 
 export const validateJoustShooter = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
@@ -165,7 +158,7 @@ export const validateJoustShooters = (value: unknown): ValidationIssue[] => {
   value.forEach((kind, index) => {
     issues.push(...prefixed(`shooters[${index}]`, validateJoustShooter(kind)));
 
-    const id = isObjectLike(kind) && typeof kind.id === "string" ? kind.id : null;
+    const id = isRecord(kind) && typeof kind.id === "string" ? kind.id : null;
 
     if (id === null) {
       return;

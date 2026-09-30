@@ -1,18 +1,15 @@
+import { isPositiveInteger, isRecord } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { DEFAULT_FAPPY_RULES, type FappyRuntimeRules } from "../types/index.js";
 
 const RULE_KEYS = ["legsPerTurn", "gatesPerLeg", "parSeconds", "limitSeconds"] as const;
 
-const isPositiveInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value > 0;
-};
-
 // Config-load-time schema check for gameConfig.minigameRules.fappy. Every
 // field is optional; when present it must be a positive integer, and a par
 // past the limit is refused because the score curve would run backwards.
 export const isFappyRules = (value: unknown): boolean => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 
@@ -31,7 +28,7 @@ export const isFappyRules = (value: unknown): boolean => {
 };
 
 export const resolveFappyRules = (rules: SerializableValue | null): FappyRuntimeRules => {
-  if (typeof rules !== "object" || rules === null || Array.isArray(rules)) {
+  if (!isRecord(rules)) {
     return { ...DEFAULT_FAPPY_RULES };
   }
 

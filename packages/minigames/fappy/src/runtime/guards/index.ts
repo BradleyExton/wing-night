@@ -1,22 +1,18 @@
-import type { FappyLegRunResult, FappyLegStatus, FappyPlayerFigure } from "@wingnight/shared";
+import {
+  isFiniteNumber,
+  isNonNegativeInteger,
+  isNumberRecord,
+  isRecord,
+  type FappyLegRunResult,
+  type FappyLegStatus,
+  type FappyPlayerFigure
+} from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type { FappyRuntimeLeg, FappyRuntimeState } from "../types/index.js";
 
 const LEG_STATUSES: readonly FappyLegStatus[] = ["ready", "flying", "cleared"];
 const RUN_OUTCOMES: readonly FappyLegRunResult["outcome"][] = ["cleared", "crashed"];
-
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-};
-
-const isNonNegativeInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-};
-
-const isFiniteNumber = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isFinite(value);
-};
 
 const isFiniteNumberOrNull = (value: unknown): value is number | null => {
   return value === null || isFiniteNumber(value);
@@ -32,7 +28,7 @@ const isRunResultOrNull = (value: unknown): value is FappyLegRunResult | null =>
   }
 
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     isNonNegativeInteger(value.endTick) &&
     isNonNegativeInteger(value.gatesCleared) &&
     RUN_OUTCOMES.some((outcome) => outcome === value.outcome)
@@ -45,7 +41,7 @@ const isFigureOrNull = (value: unknown): value is FappyPlayerFigure | null => {
   }
 
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     typeof value.playerId === "string" &&
     typeof value.name === "string" &&
     (value.avatarSrc === null || typeof value.avatarSrc === "string") &&
@@ -56,7 +52,7 @@ const isFigureOrNull = (value: unknown): value is FappyPlayerFigure | null => {
 
 const isLeg = (value: unknown): value is FappyRuntimeLeg => {
   return (
-    isObjectLike(value) &&
+    isRecord(value) &&
     isNonNegativeInteger(value.legIndex) &&
     isFigureOrNull(value.player) &&
     isFiniteNumber(value.seed) &&
@@ -73,14 +69,10 @@ const isLeg = (value: unknown): value is FappyRuntimeLeg => {
   );
 };
 
-const isRecordOfNumbers = (value: unknown): value is Record<string, number> => {
-  return isObjectLike(value) && Object.values(value).every((entry) => isFiniteNumber(entry));
-};
-
 export const isFappyRuntimeState = (
   value: SerializableValue
 ): value is FappyRuntimeState => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 
@@ -100,7 +92,7 @@ export const isFappyRuntimeState = (
     isFiniteNumberOrNull(state.timedOutAtMs) &&
     isNonNegativeInteger(state.pointsMax) &&
     isFiniteNumber(state.turnStartPoints) &&
-    isRecordOfNumbers(state.pendingPointsByTeamId)
+    isNumberRecord(state.pendingPointsByTeamId)
   );
 };
 
@@ -111,7 +103,7 @@ export type FappyFlapPayload = {
 export const isFappyFlapPayload = (
   actionPayload: SerializableValue
 ): actionPayload is FappyFlapPayload => {
-  return isObjectLike(actionPayload) && isNonNegativeInteger(actionPayload.tick);
+  return isRecord(actionPayload) && isNonNegativeInteger(actionPayload.tick);
 };
 
 export const isReceivedAtMs = (value: unknown): value is number => {

@@ -1,3 +1,4 @@
+import { isNonEmptyString } from "../../guards/index.js";
 export type GeoCoordinates = {
   lat: number;
   lng: number;
@@ -13,10 +14,6 @@ export type GeoPrompt = {
 
 export type GeoContentFile = {
   prompts: GeoPrompt[];
-};
-
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
 };
 
 const isLatitude = (value: unknown): value is number => {

@@ -1,3 +1,8 @@
+import {
+  isNonEmptyString,
+  isPositiveInteger,
+  isRecord
+} from "../../../guards/index.js";
 import type { ValidationIssue } from "../../validationIssue/index.js";
 import {
   MINIGAME_DEFINITIONS,
@@ -67,25 +72,6 @@ export type ValidateGameConfigFileOptions = {
   validateRules?: ValidateMinigameRules;
 };
 
-const isPositiveInteger = (value: unknown): value is number => {
-  return typeof value === "number" && Number.isInteger(value) && value > 0;
-};
-
-const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
-};
-
-// Deliberately array-permissive to match the guard this replaces: the previous
-// `typeof x === "object" && x !== null` checks accepted arrays too, and
-// tightening that here would reject content the loader accepts today.
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null;
-};
-
-const isRuleRecord = (value: unknown): boolean => {
-  return isObjectLike(value) && !Array.isArray(value);
-};
-
 const isMinigameType = (value: unknown): value is MinigameType => {
   return typeof value === "string" && MINIGAME_TYPES.includes(value as MinigameType);
 };
@@ -107,7 +93,7 @@ const MINIGAME_RULES_KEYS: readonly MinigameRulesKey[] = MINIGAME_TYPES.map(
 ).filter((rulesKey): rulesKey is MinigameRulesKey => rulesKey !== null);
 
 const validateRound = (value: unknown, index: number): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: `rounds[${index}]`, message: "must be an object" }];
   }
 
@@ -152,7 +138,7 @@ const validateRound = (value: unknown, index: number): ValidationIssue[] => {
 };
 
 const validateScoring = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "minigameScoring", message: "must be an object" }];
   }
 
@@ -165,7 +151,7 @@ const validateScoring = (value: unknown): ValidationIssue[] => {
 };
 
 const validateTimers = (value: unknown): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "timers", message: "must be an object" }];
   }
 
@@ -181,7 +167,7 @@ const validateMinigameRules = (
   value: unknown,
   validateRules?: ValidateMinigameRules
 ): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [
       { path: "minigameRules", message: "must be an object keyed by rules key" }
     ];
@@ -191,7 +177,7 @@ const validateMinigameRules = (
   const malformedKeys = new Set<string>();
 
   for (const [rulesKey, rulesEntry] of Object.entries(value)) {
-    if (rulesEntry === undefined || isRuleRecord(rulesEntry)) {
+    if (rulesEntry === undefined || isRecord(rulesEntry)) {
       continue;
     }
 
@@ -234,7 +220,7 @@ export const validateGameConfigFile = (
   value: unknown,
   options: ValidateGameConfigFileOptions = {}
 ): ValidationIssue[] => {
-  if (!isObjectLike(value)) {
+  if (!isRecord(value)) {
     return [{ path: "", message: "must be an object" }];
   }
 
