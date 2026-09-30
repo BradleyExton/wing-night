@@ -6,7 +6,7 @@
 // other thing that claims this corner is the MINIGAME countdown, and music
 // never plays during a minigame (lobby is SETUP, the anthem is MINIGAME_INTRO).
 const containerBase =
-  "pointer-events-none absolute right-4 top-2 z-30 flex max-w-[min(42vw,34rem)] items-center gap-[clamp(0.5rem,0.85vw,0.95rem)] rounded-full py-[clamp(0.3rem,0.55vh,0.5rem)] pl-[clamp(0.4rem,0.55vw,0.6rem)] pr-[clamp(0.9rem,1.3vw,1.4rem)] backdrop-blur-[6px] [animation:reveal_500ms_cubic-bezier(0.2,0.7,0.2,1)_both] motion-reduce:[animation:none] md:right-8 md:top-4 2xl:right-12";
+  "pointer-events-none absolute right-4 top-2 z-30 flex max-w-[min(42vw,34rem)] items-center gap-[clamp(0.5rem,0.85vw,0.95rem)] rounded-full py-[clamp(0.3rem,0.55vh,0.5rem)] pl-[clamp(0.4rem,0.55vw,0.6rem)] pr-[clamp(0.9rem,1.3vw,1.4rem)] [animation:reveal_500ms_cubic-bezier(0.2,0.7,0.2,1)_both] motion-reduce:[animation:none] md:right-8 md:top-4 2xl:right-12";
 
 export const container = `${containerBase} border border-primary/30 bg-[linear-gradient(120deg,theme(colors.hearthGlass/88%)_0%,theme(colors.bg/86%)_72%)] [box-shadow:0_14px_34px_-18px_theme(colors.shade/95%),0_0_22px_-8px_theme(colors.primary/35%),inset_0_1px_0_theme(colors.glow/14%)]`;
 

@@ -68,11 +68,16 @@ const roundBase = `relative isolate flex flex-col items-center overflow-hidden r
 
 // A lit card: warm glass with a hairline ember rule along the top edge that fades into the
 // corners, and a faint glow pooling under that rule.
-export const round = `${roundBase} border border-primary/20 bg-[linear-gradient(180deg,theme(colors.hearthGlass/84%)_0%,theme(colors.shade/93%)_100%)] backdrop-blur-[3px] [box-shadow:inset_0_1px_0_theme(colors.glow/14%),0_18px_40px_-20px_theme(colors.shade/80%)] before:absolute before:inset-x-[12%] before:top-0 before:z-[1] before:h-px before:bg-gradient-to-r before:from-transparent before:via-ember before:to-transparent before:content-[''] after:pointer-events-none after:absolute after:inset-0 after:z-0 after:bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,theme(colors.primary/16%),transparent_70%)] after:content-['']`;
+//
+// No `backdrop-blur` on anything that floats over the lobby — cards, pills, the teaser's tiles.
+// The flame animates behind them, and a backdrop filter over moving content makes the GPU
+// redraw the whole stage under it every frame: the eight cards and two pills cost the TV a
+// third of its frame rate. At 84%+ opacity the blur was never visible anyway.
+export const round = `${roundBase} border border-primary/20 bg-[linear-gradient(180deg,theme(colors.hearthGlass/84%)_0%,theme(colors.shade/93%)_100%)] [box-shadow:inset_0_1px_0_theme(colors.glow/14%),0_18px_40px_-20px_theme(colors.shade/80%)] before:absolute before:inset-x-[12%] before:top-0 before:z-[1] before:h-px before:bg-gradient-to-r before:from-transparent before:via-ember before:to-transparent before:content-[''] after:pointer-events-none after:absolute after:inset-0 after:z-0 after:bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,theme(colors.primary/16%),transparent_70%)] after:content-['']`;
 
 // An open slot: same footprint, dashed and dim, so the lineup reads as "eight seats, six
 // filled" rather than two broken cards.
-export const roundPlaceholder = `${roundBase} border border-dashed border-mutedWarmDim/50 bg-bg/80 opacity-90 backdrop-blur-[2px]`;
+export const roundPlaceholder = `${roundBase} border border-dashed border-mutedWarmDim/50 bg-bg/80 opacity-90`;
 
 // Staggered in reading order. Slots past the eighth share the last delay.
 export const roundRevealDelays: readonly string[] = [
@@ -140,7 +145,7 @@ export const additionalRounds =
 // centre of the screen belongs to the wordmark and the lineup alone. It used
 // to sit in the flow under the cards, where a status line competed with the
 // content it was reporting on.
-export const waiting = `pointer-events-none absolute left-4 top-2 z-[3] inline-flex items-center gap-[clamp(0.5rem,0.85vw,0.95rem)] rounded-full border border-primary/30 bg-[linear-gradient(120deg,theme(colors.hearthGlass/88%)_0%,theme(colors.bg/86%)_72%)] py-[clamp(0.3rem,0.55vh,0.5rem)] pl-[clamp(0.4rem,0.55vw,0.6rem)] pr-[clamp(0.9rem,1.3vw,1.4rem)] text-[clamp(0.7rem,0.8vw,1.05rem)] font-extrabold uppercase leading-none tracking-[0.26em] text-mutedWarm backdrop-blur-[6px] [box-shadow:0_14px_34px_-18px_theme(colors.shade/95%),0_0_22px_-8px_theme(colors.primary/35%),inset_0_1px_0_theme(colors.glow/14%)] [animation:reveal_700ms_cubic-bezier(0.2,0.7,0.2,1)_900ms_both] motion-reduce:[animation:none] md:left-8 md:top-4 2xl:left-12`;
+export const waiting = `pointer-events-none absolute left-4 top-2 z-[3] inline-flex items-center gap-[clamp(0.5rem,0.85vw,0.95rem)] rounded-full border border-primary/30 bg-[linear-gradient(120deg,theme(colors.hearthGlass/88%)_0%,theme(colors.bg/86%)_72%)] py-[clamp(0.3rem,0.55vh,0.5rem)] pl-[clamp(0.4rem,0.55vw,0.6rem)] pr-[clamp(0.9rem,1.3vw,1.4rem)] text-[clamp(0.7rem,0.8vw,1.05rem)] font-extrabold uppercase leading-none tracking-[0.26em] text-mutedWarm [box-shadow:0_14px_34px_-18px_theme(colors.shade/95%),0_0_22px_-8px_theme(colors.primary/35%),inset_0_1px_0_theme(colors.glow/14%)] [animation:reveal_700ms_cubic-bezier(0.2,0.7,0.2,1)_900ms_both] motion-reduce:[animation:none] md:left-8 md:top-4 2xl:left-12`;
 
 // The beacon sits in the same lit badge as the equalizer across the screen.
 export const waitingBeacon =

@@ -5,7 +5,7 @@ import * as nowPlayingStyles from "../../DisplayBoard/NowPlayingSurface/styles";
 // shows a muted speaker; on, it lights and its bars move. On a phone it is only its disc — the
 // full pill would sit on the eyebrow — and the title joins it where there is width to spare.
 const containerBase =
-  "absolute right-3 top-[calc(env(safe-area-inset-top)+0.6rem)] z-[3] flex max-w-[16rem] cursor-pointer items-center gap-2 rounded-full p-[0.3rem] text-left backdrop-blur-[6px] transition-transform [animation:reveal_500ms_cubic-bezier(0.2,0.7,0.2,1)_both] active:scale-[0.97] motion-reduce:[animation:none] sm:right-6 sm:top-[calc(env(safe-area-inset-top)+1rem)] sm:pr-[0.9rem]";
+  "absolute right-3 top-[calc(env(safe-area-inset-top)+0.6rem)] z-[3] flex max-w-[16rem] cursor-pointer items-center gap-2 rounded-full p-[0.3rem] text-left transition-transform [animation:reveal_500ms_cubic-bezier(0.2,0.7,0.2,1)_both] active:scale-[0.97] motion-reduce:[animation:none] sm:right-6 sm:top-[calc(env(safe-area-inset-top)+1rem)] sm:pr-[0.9rem]";
 
 export const container = `${containerBase} border border-primary/30 bg-[linear-gradient(120deg,theme(colors.hearthGlass/88%)_0%,theme(colors.bg/86%)_72%)] [box-shadow:0_14px_34px_-18px_theme(colors.shade/95%),0_0_22px_-8px_theme(colors.primary/35%),inset_0_1px_0_theme(colors.glow/14%)]`;
 

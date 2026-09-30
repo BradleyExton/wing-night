@@ -4,9 +4,9 @@
 const cardBase =
   "relative isolate flex w-full items-center gap-3 overflow-hidden rounded-2xl px-3 py-[clamp(0.55rem,1.2vh,0.85rem)] text-left no-underline";
 
-export const card = `${cardBase} border border-primary/25 bg-[linear-gradient(180deg,theme(colors.hearthGlass/84%)_0%,theme(colors.shade/93%)_100%)] text-text backdrop-blur-[3px] transition-transform [box-shadow:inset_0_1px_0_theme(colors.glow/14%),0_18px_40px_-20px_theme(colors.shade/80%)] before:absolute before:inset-x-[12%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-ember before:to-transparent before:content-[''] active:scale-[0.98]`;
+export const card = `${cardBase} border border-primary/25 bg-[linear-gradient(180deg,theme(colors.hearthGlass/84%)_0%,theme(colors.shade/93%)_100%)] text-text transition-transform [box-shadow:inset_0_1px_0_theme(colors.glow/14%),0_18px_40px_-20px_theme(colors.shade/80%)] before:absolute before:inset-x-[12%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-ember before:to-transparent before:content-[''] active:scale-[0.98]`;
 
-export const cardLocked = `${cardBase} border border-dashed border-mutedWarmDim/50 bg-bg/80 text-mutedWarm opacity-80 backdrop-blur-[2px]`;
+export const cardLocked = `${cardBase} border border-dashed border-mutedWarmDim/50 bg-bg/80 text-mutedWarm opacity-80`;
 
 // The symbol's badge: the same lit disc the lobby's beacon sits in, big enough to read the
 // lines at arm's length, and a thumb's width from the row's edge.
