@@ -40,3 +40,6 @@ export {
   useSfxTakes,
   type SfxTakeUrls
 } from "./useSfxTakes/index.js";
+// Whether a reveal's answer is up, timed from this surface's arrival. DRAWING
+// and EMOJI_CHARADES each kept a copy, and the two drifted a render apart.
+export { useRevealWindow } from "./useRevealWindow/index.js";

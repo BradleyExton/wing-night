@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
 import {
   resolveRevealDurationMs,
   type MinigameDisplayRendererProps
 } from "@wingnight/minigames-core";
-import { NeonMarquee } from "@wingnight/surface";
+import { NeonMarquee, useRevealWindow } from "@wingnight/surface";
 import type {
   EmojiCharadesMinigameDisplayView,
   EmojiCharadesSubjectReveal
@@ -22,44 +22,13 @@ import {
 } from "./heldClue/index.js";
 import * as styles from "./styles.js";
 
-// The reveal window is display-client-driven: the subject text is visible for
-// the server's window, timed from when THIS display saw the reveal.
-//
-// Timed from arrival rather than measured against `expiresAtMs`, because that
-// stamp is on the server's clock and this comparison would be on the TV's —
-// see `resolveRevealDurationMs`. A TV two seconds fast used to find every
-// window already closed and show the room no answers at all.
-//
-// The trade is that a display joining mid-window gives the reveal its full
-// length rather than the remainder. That is the right way round: the window
-// exists so the room can read the answer, and a late display reading it a
-// beat late is the outcome worth having.
-const useIsRevealVisible = (
-  reveal: EmojiCharadesSubjectReveal | null
-): boolean => {
-  const [expiredRevealKey, setExpiredRevealKey] = useState<string | null>(null);
-  const revealKey = resolveRevealKey(reveal);
-  const durationMs = reveal === null ? 0 : resolveRevealDurationMs(reveal);
-
-  useEffect(() => {
-    if (revealKey === null || durationMs <= 0) {
-      return undefined;
-    }
-
-    const expiryTimer = setTimeout(() => {
-      setExpiredRevealKey(revealKey);
-    }, durationMs);
-
-    return (): void => {
-      clearTimeout(expiryTimer);
-    };
-  }, [durationMs, revealKey]);
-
-  // Visible from the very render the reveal arrives in, not one render later:
-  // the verdict empties the clue in the same update, and a render that saw the
-  // empty clue before the held one would send the stage's emoji off and bring
-  // them back popping.
-  return revealKey !== null && durationMs > 0 && expiredRevealKey !== revealKey;
+// The subject text is up for the server's window, timed from when THIS display
+// saw the reveal (see `useRevealWindow` for why arrival, not the server's stamp).
+const useIsRevealVisible = (reveal: EmojiCharadesSubjectReveal | null): boolean => {
+  return useRevealWindow(
+    resolveRevealKey(reveal),
+    reveal === null ? 0 : resolveRevealDurationMs(reveal)
+  );
 };
 
 export const DisplayEmojiCharadesSurface = ({

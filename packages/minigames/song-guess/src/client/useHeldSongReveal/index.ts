@@ -89,7 +89,7 @@ export const resolveRenderedSongView = (
 };
 
 // Timed from arrival rather than measured against `expiresAtMs`, for the same
-// reason DRAWING's `useIsRevealVisible` is: the stamps are on the server's
+// reason `useRevealWindow` (@wingnight/surface) is: the stamps are on the server's
 // clock and the comparison would be on the TV's. See
 // `resolveRevealDurationMs`.
 export const useHeldSongReveal = (
