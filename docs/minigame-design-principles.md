@@ -140,8 +140,8 @@ Players are drunk, sweating, and half-listening. Design for that.
 - **Budget five seconds for comprehension.** WarioWare gives a player five seconds at most
   to grasp the verb, and solves it with one fixed instruction form rather than a longer
   explanation (`1.5`, `5.1`). A minigame's rules fit one TV screen: one verb line and at most
-  two clauses. The MINIGAME_INTRO briefing (`apps/client/src/copy/minigameBriefings.ts`) is
-  that screen; if a game needs more than three steps there, the game is too complicated.
+  two clauses. The one-line `summary` in `apps/client/src/copy/minigameBriefings.ts` is that
+  verb line; if a game needs more than three steps to explain, the game is too complicated.
 - **One task at a time, and the player always knows what to do.** The Jack Principles, the
   document behind You Don't Know Jack and Jackbox: one task, few choices, always obvious,
   and move on if the response does not come (`5.2`). A tablet screen with two competing

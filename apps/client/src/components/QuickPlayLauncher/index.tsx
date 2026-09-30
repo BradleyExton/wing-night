@@ -141,7 +141,6 @@ export const QuickPlayLauncher = (): JSX.Element => {
           />
           <div className={styles.sectionWide}>
             <GameQueue
-              gameConfig={gameConfig}
               draft={draft}
               onToggleGame={(minigame: MinigameType): void => {
                 setDraft((previous) => toggleGame(previous, minigame, gameConfig));

@@ -1,8 +1,4 @@
-import {
-  MINIGAME_TYPES,
-  type GameConfigFile,
-  type MinigameType
-} from "@wingnight/shared";
+import { MINIGAME_TYPES, type MinigameType } from "@wingnight/shared";
 
 import { formatMinigameName } from "../../../copy/formatters";
 import { resolveMinigameBriefingContent } from "../../../copy/minigameBriefings";
@@ -12,7 +8,6 @@ import { GameSettings } from "./GameSettings";
 import * as styles from "./styles";
 
 type GameQueueProps = {
-  gameConfig: GameConfigFile | null;
   draft: QuickPlayDraft;
   onToggleGame: (minigame: MinigameType) => void;
   onMoveGame: (minigame: MinigameType, direction: -1 | 1) => void;
@@ -24,7 +19,6 @@ type GameQueueProps = {
 // Derived from MINIGAME_TYPES the way the dev launcher is, so a new game
 // shows up here without touching this component.
 export const GameQueue = ({
-  gameConfig,
   draft,
   onToggleGame,
   onMoveGame,
@@ -40,7 +34,7 @@ export const GameQueue = ({
       <p className={styles.hint}>{quickPlayLauncherCopy.gamesHint}</p>
       <div className={styles.list}>
         {MINIGAME_TYPES.map((minigameType) => {
-          const briefing = resolveMinigameBriefingContent(minigameType, gameConfig);
+          const briefing = resolveMinigameBriefingContent(minigameType);
           const gameName = formatMinigameName(minigameType);
           const queueIndex = draft.queue.findIndex((entry) => entry.minigame === minigameType);
           const entry = queueIndex === -1 ? null : draft.queue[queueIndex];

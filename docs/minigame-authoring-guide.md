@@ -33,7 +33,7 @@ repo then fails to compile until your new game is registered in it**:
 
 - `apps/server/src/minigames/registry/index.ts` — runtime plugin map (1 line)
 - `apps/client/src/minigames/registry/index.ts` — renderer bundle + dev manifest + runtime plugin (1 entry)
-- `apps/client/src/copy/minigameBriefings.ts` — display intro briefing copy (1 entry)
+- `apps/client/src/copy/minigameBriefings.ts` — illustration + one-line summary (1 entry)
 
 You cannot forget a registration: `pnpm typecheck` walks you to each one.
 Timer and rules config keys are also derived from `MINIGAME_DEFINITIONS`

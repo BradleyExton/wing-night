@@ -8,10 +8,6 @@ import {
   type TeamTheme
 } from "@wingnight/shared";
 
-import {
-  resolveMinigameBriefingContent,
-  type MinigameBriefingContent
-} from "../../../../copy/minigameBriefings";
 import { resolveTeamTheme, resolveTeamThemeById } from "../../../../utils/resolveTeamTheme";
 
 export type StageRenderMode =
@@ -53,8 +49,6 @@ export type StageViewModel = {
   teams: Team[];
   currentRoundConfig: DisplayRoomStateSnapshot["currentRoundConfig"];
   minigameType: MinigameType | null;
-  teamCount: number;
-  teamNames: string[];
   activeTeamName: string | null;
   activeTeamGenre: string | null;
   // The display's one copy of every team's kit (docs/team-identity.md), and
@@ -62,8 +56,6 @@ export type StageViewModel = {
   teamThemeByTeamId: Map<string, TeamTheme>;
   activeTeamTheme: TeamTheme | null;
   activeTeamPlayers: Player[];
-  shouldRenderTeamTurnContext: boolean;
-  minigameBriefingContent: MinigameBriefingContent | null;
   minigameDisplayView: DisplayRoomStateSnapshot["minigameDisplayView"];
   eatingTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
   minigameTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
@@ -128,15 +120,8 @@ export const resolveStageViewModel = (
     activeTeam?.playerIds
       .map((playerId) => playerByPlayerId.get(playerId) ?? null)
       .filter((player): player is Player => player !== null) ?? [];
-  const shouldRenderTeamTurnContext =
-    activeTeamName !== null &&
-    (stageMode === "eating" ||
-      stageMode === "minigame_intro" ||
-      stageMode === "minigame_play" ||
-      stageMode === "turn_results");
 
   const minigameDisplayView = roomState?.minigameDisplayView ?? null;
-  const minigameBriefingContent = resolveMinigameBriefingContent(minigameType, gameConfig);
 
   const eatingTimerSnapshot =
     stageMode === "eating" && roomState?.timer?.phase === Phase.EATING
@@ -219,15 +204,11 @@ export const resolveStageViewModel = (
     teams: roomState?.teams ?? [],
     currentRoundConfig,
     minigameType,
-    teamCount: roomState?.teams.length ?? 0,
-    teamNames: roomState?.teams.map((team) => team.name) ?? [],
     activeTeamName,
     activeTeamGenre: activeTeam?.genre ?? null,
     teamThemeByTeamId,
     activeTeamTheme,
     activeTeamPlayers,
-    shouldRenderTeamTurnContext,
-    minigameBriefingContent,
     minigameDisplayView,
     eatingTimerSnapshot,
     minigameTimerSnapshot,
