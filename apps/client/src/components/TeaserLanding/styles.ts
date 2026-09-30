@@ -3,8 +3,9 @@
 // the room above a floor the parade owns (the bottom padding, matched to `paradeStrip`). Every
 // height is in viewport units so the bands shrink together on a short phone rather than push
 // the floor off the bottom, and the top padding keeps the eyebrow out from under a notch.
+// `group/beat`, as on the TV's root (DisplayBoard/styles): `useBeatClock` flips `data-beat` here.
 export const container =
-  "relative isolate flex min-h-[100dvh] flex-col items-center justify-center gap-[clamp(0.9rem,2.6vh,2.5rem)] overflow-hidden px-4 pb-[clamp(7.5rem,17vh,13rem)] pt-[calc(env(safe-area-inset-top)+clamp(1rem,3vh,4rem))] text-center sm:px-8";
+  "group/beat relative isolate flex min-h-[100dvh] flex-col items-center justify-center gap-[clamp(0.9rem,2.6vh,2.5rem)] overflow-hidden px-4 pb-[clamp(7.5rem,17vh,13rem)] pt-[calc(env(safe-area-inset-top)+clamp(1rem,3vh,4rem))] text-center sm:px-8";
 
 // The parade's own strip is sized for a TV floor; on the teaser it is pinned to the page's foot
 // and gets the height a phone can spare, so the birds are big enough to tell whose face it is.

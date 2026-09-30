@@ -32,6 +32,10 @@ const HEAD_MAX_PIXELS = 256;
 // takes ship with the site, listed at `/sfx-takes/<game>` the way the server lists them; a game
 // with none plays its synthesised cues.
 const SFX_GAMES = ["schlonic", "fappy", "joust"];
+// The one lobby song the landing plays, out of the pack's SETUP playlist (the server mounts that
+// directory as the lobby route; it is the pack's alone, never layered). It lands in `lobby/`,
+// where vite.teaser.config.ts looks for it.
+const LOBBY_TRACK_FILE = "01-hot-in-herre.mp3";
 
 const HEADERS_FILE = `/*
   X-Robots-Tag: noindex, nofollow, noarchive
@@ -131,6 +135,14 @@ for (const game of SFX_GAMES) {
   writeFileSync(resolve(OUTPUT_DIR, "sfx-takes", game), JSON.stringify(listing));
 }
 
+const lobbyTrackPath = resolve(resolveContentRootDir(), "local", "audio", "lobby", LOBBY_TRACK_FILE);
+const hasLobbyTrack = existsSync(lobbyTrackPath);
+
+if (hasLobbyTrack) {
+  mkdirSync(resolve(OUTPUT_DIR, "lobby"), { recursive: true });
+  cpSync(lobbyTrackPath, resolve(OUTPUT_DIR, "lobby", LOBBY_TRACK_FILE));
+}
+
 // The link-preview picture, if `pnpm teaser:card` has captured one; the page only names it when
 // it is here (vite.teaser.config.ts).
 const shareCardPath = findLayeredAsset("teaser/share-card.png");
@@ -147,6 +159,10 @@ process.stdout.write(
   `teaser-public: ${roster.players.length} players on ${roster.teams.length} teams, ` +
     `${avatarSrcs.length - missingHeads.length} heads, from ${layerDirs[0]}\n`
 );
+
+if (!hasLobbyTrack) {
+  console.warn(`teaser-public: no ${lobbyTrackPath} — the landing plays no music.`);
+}
 
 if (missingHeads.length > 0) {
   console.warn(`teaser-public: no file for ${missingHeads.join(", ")} — those players wear a drawn head.`);

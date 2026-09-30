@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { defineConfig, type Plugin } from "vite";
@@ -37,6 +37,21 @@ const shareCardMeta = (): Plugin => ({
       : []
 });
 
+// The lobby's song (`tools/build-teaser` copies it out of the pack), named to the page only when
+// the build has one: without it the landing has no music pill at all.
+const LOBBY_TRACK_DIR = "lobby";
+const lobbyTrackFileName = existsSync(`${publicDir}/${LOBBY_TRACK_DIR}`)
+  ? readdirSync(`${publicDir}/${LOBBY_TRACK_DIR}`).find((fileName) => fileName.endsWith(".mp3"))
+  : undefined;
+const lobbyTrackDefine =
+  lobbyTrackFileName === undefined
+    ? {}
+    : {
+        "import.meta.env.VITE_TEASER_LOBBY_TRACK_SRC": JSON.stringify(
+          `/${LOBBY_TRACK_DIR}/${encodeURIComponent(lobbyTrackFileName)}`
+        )
+      };
+
 export default defineConfig({
   root: fileURLToPath(new URL("./teaser", import.meta.url)),
   // Filled by `tools/build-teaser`: the fonts, the chosen players' heads and the roster, copied
@@ -46,7 +61,8 @@ export default defineConfig({
   // The content assets are served from the page's own origin here, so the client's
   // "server is always another origin" resolver is pointed back at the page.
   define: {
-    "import.meta.env.VITE_SOCKET_SERVER_URL": JSON.stringify(SAME_ORIGIN_SERVER_URL)
+    "import.meta.env.VITE_SOCKET_SERVER_URL": JSON.stringify(SAME_ORIGIN_SERVER_URL),
+    ...lobbyTrackDefine
   },
   css: {
     postcss: clientRoot

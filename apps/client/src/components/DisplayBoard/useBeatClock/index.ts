@@ -25,7 +25,10 @@ const FFT_SIZE = 1024;
 const LOW_BAND_FIRST_BIN = 1;
 const LOW_BAND_LAST_BIN = 6;
 
-const attachAnalyser = (media: HTMLMediaElement): AnalyserGraph | null => {
+// Exported for a page that must build the graph INSIDE its tap: a phone's
+// browser keeps a context made outside a gesture suspended, and a tapped
+// element plays only through its context. The effect below finds the graph.
+export const attachAnalyser = (media: HTMLMediaElement): AnalyserGraph | null => {
   const existing = graphByMedia.get(media);
 
   if (existing !== undefined) {
