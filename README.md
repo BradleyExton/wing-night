@@ -140,13 +140,18 @@ Or individually:
 pnpm --filter @wingnight/server dev
 pnpm --filter @wingnight/client dev
 
-5)  Find your local IP address.
+The client binds to every interface, so other devices on the Wi-Fi can
+reach it with no extra flag.
 
-6)  Open on devices (same Wi-Fi):
+5)  On the laptop, open http://localhost:5173 and scan its QR code with
+    the host tablet. It opens http://`<laptop-ip>`:5173/host — the address
+    is printed under the code if you would rather type it. The code only
+    shows on the laptop itself, never to a guest who opens the page over
+    the Wi-Fi.
 
-Host: http://`<your-ip>`:5173/host
+6)  Open the display on the laptop driving the TV:
 
-Display: http://`<your-ip>`:5173/display
+Display: http://localhost:5173/display
 
 ------------------------------------------------------------------------
 

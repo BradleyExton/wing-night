@@ -5,6 +5,7 @@ import {
   CONTENT_ASSET_ROUTE_PATH,
   DEV_SANDBOX_MANIFEST_ROUTE_PATH,
   EATING_AUDIO_ROUTE_PATH,
+  LAN_ADDRESSES_ROUTE_PATH,
   LOBBY_AUDIO_ROUTE_PATH,
   SFX_TAKES_ROUTE_PATH,
   SONG_GUESS_AUDIO_ROUTE_PATH,
@@ -17,6 +18,7 @@ import {
 } from "../contentLoader/contentLoaderUtils/index.js";
 import { createDevSandboxRouter } from "../routes/devSandbox/index.js";
 import { healthRouter } from "../routes/health/index.js";
+import { createLanAddressesRouter } from "../routes/lanAddresses/index.js";
 import { createSfxTakesRouter } from "../routes/sfxTakes/index.js";
 
 type CreateAppOptions = {
@@ -67,6 +69,10 @@ export const createApp = (options: CreateAppOptions = {}): express.Express => {
     allowCrossOriginMedia,
     createSfxTakesRouter({ contentRootDir })
   );
+
+  // The laptop's Wi-Fi addresses, so a TV open on localhost can put the host
+  // page's real address on screen as a QR code for the tablet.
+  app.use(LAN_ADDRESSES_ROUTE_PATH, allowCrossOriginMedia, createLanAddressesRouter());
 
   // The TV listens to its own music: the display taps its `<audio>` with a
   // Web Audio analyser to find the beat the lobby cast dances to (DESIGN.md

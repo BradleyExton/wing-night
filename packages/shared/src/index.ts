@@ -221,6 +221,13 @@ export {
   type SfxTakesListing
 } from "./sfxTakes/index.js";
 export {
+  LAN_ADDRESSES_ROUTE_PATH,
+  isLoopbackHostname,
+  resolveHostJoinUrl,
+  resolveLanAddressesUrl,
+  type LanAddressesListing
+} from "./lanAddresses/index.js";
+export {
   DEV_SANDBOX_MANIFEST_ROUTE_PATH,
   resolveDevSandboxManifestUrl
 } from "./devSandbox/index.js";

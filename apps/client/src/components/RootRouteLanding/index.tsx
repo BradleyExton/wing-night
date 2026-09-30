@@ -1,4 +1,5 @@
 import { rootRouteLandingCopy } from "./copy";
+import { HostJoinCard } from "./HostJoinCard";
 import * as styles from "./styles";
 
 export const RootRouteLanding = (): JSX.Element => {
@@ -28,6 +29,7 @@ export const RootRouteLanding = (): JSX.Element => {
         <p className={styles.eyebrow}>{rootRouteLandingCopy.eyebrow}</p>
         <h1 className={styles.title}>{rootRouteLandingCopy.title}</h1>
         <p className={styles.description}>{rootRouteLandingCopy.description}</p>
+        <HostJoinCard />
         <p className={styles.selectionLabel}>{rootRouteLandingCopy.selectionLabel}</p>
 
         <nav className={styles.roleRail} aria-label="Role routes">
