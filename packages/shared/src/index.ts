@@ -1,5 +1,5 @@
 export { Phase } from "./phase/index.js";
-export { SESSION_MODES, isSessionMode } from "./sessionMode/index.js";
+export { SESSION_MODES } from "./sessionMode/index.js";
 export type { SessionMode } from "./sessionMode/index.js";
 export {
   QUICK_PLAY_CONFIG_NAME,
@@ -21,18 +21,15 @@ export type {
 export {
   CONTRAPTION_BENCHMARK_LAYOUT,
   CONTRAPTION_SETTLE_EPSILON_UNITS,
-  contraptionMaxDisplacement,
   measureContraptionTrackBytes,
   resolveContraptionSettleIndex,
   simulateContraption
 } from "./contraption/index.js";
 export type {
   ContraptionCircleBody,
-  ContraptionKeyframe,
   ContraptionLayout,
   ContraptionRun,
   ContraptionSegment,
-  ContraptionSimulateOptions,
   ContraptionTrackBytes,
   ContraptionVec2
 } from "./contraption/index.js";
@@ -240,7 +237,6 @@ export {
   MUSIC_VOLUME_MAX,
   MUSIC_VOLUME_MIN,
   isValidMusicVolume,
-  resolveAnthemForRound,
   resolveAnthemIndexForRound,
   resolveNextTrackIndex,
   resolvePreviousTrackIndex,
@@ -271,7 +267,6 @@ export type {
   EmojiCharadesSubjectOutcome,
   EmojiCharadesSubjectReveal,
   EmojiCharadesSubState,
-  GeoGuessCoordinates,
   GeoMinigameDisplayPrompt,
   GeoMinigameDisplayResult,
   GeoMinigameDisplayView,
@@ -306,7 +301,6 @@ export type {
   JoustShotGhost,
   JoustShotResult,
   JoustShotTrack,
-  MinigameContractCompatibilityStatus,
   MinigameDisplayView,
   MinigameHostView,
   RecreateAttempt,
@@ -356,7 +350,6 @@ export type {
   GameConfigRound,
   GameConfigScoring,
   GameConfigTimers,
-  MinigameContractMetadataDefaults,
   MinigameDefinition,
   MinigameRuleRecord,
   MinigameRules,
@@ -367,7 +360,6 @@ export type {
   ValidateMinigameRules
 } from "./content/gameConfig/index.js";
 export {
-  isPlayersContentEntry,
   isPlayersContentFile,
   validatePlayersContentEntry,
   validatePlayersContentFile
@@ -382,7 +374,6 @@ export {
   validateRosterAssignments
 } from "./content/rosterAssignment/index.js";
 export {
-  isTeamsContentEntry,
   isTeamsContentFile,
   validateTeamsContentEntry,
   validateTeamsContentFile
@@ -413,7 +404,6 @@ export type { FeaturedPlayers } from "./content/featuredPlayers/index.js";
 export {
   isEmojiCharadesContentFile,
   isEmojiCharadesDeck,
-  isEmojiCharadesSubject,
   validateEmojiCharadesContentFile,
   validateEmojiCharadesDeck,
   validateEmojiCharadesSubject
@@ -524,14 +514,10 @@ export type {
   ConfigApplyPayload,
   ConfigReadPayload,
   ConfigSavePayload,
-  GenericMinigameActionPayload,
   GameReorderTurnOrderPayload,
   HostSecretPayload,
   MinigameApiVersion,
-  MinigameActionEnvelope,
   MinigameActionPayload,
-  MinigameActionType,
-  MinigameActionEnvelopePayload,
   MusicSetVolumePayload,
   SfxSetVolumePayload,
   MusicTrackEndedPayload,

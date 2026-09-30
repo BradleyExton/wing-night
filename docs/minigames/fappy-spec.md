@@ -44,7 +44,7 @@ Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`. Client, minigam
    JOUST's `noTranscendentals.test.ts` — three parties re-run this sim from the same inputs
    (§0.4) and must land on the same bits.
 4. **Shared contracts.** `MINIGAME_DEFINITIONS.FAPPY` (`slug: "fappy"`, `timerKey: null`,
-   `rulesKey: "fappy"`, `capabilityFlags: ["flap","endLeg","timeOut","skipLeg","resetTurn"]`).
+   `rulesKey: "fappy"`).
    `FappyMinigameHostView` / `FappyMinigameDisplayView` in the room-state unions (§0.5).
 5. **Runtime package.** Scaffold from JOUST (closest sibling: rules-backed, host-paced).
    `src/runtime/{types,guards,rules,scoring,views}/index.ts` + `index.ts` + tests. No content

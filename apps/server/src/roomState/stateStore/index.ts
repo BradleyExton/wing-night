@@ -37,6 +37,12 @@ export const getRoomState = (): RoomState => {
   return roomState;
 };
 
+// A read of one field, for a caller that would otherwise clone the whole room
+// through `getRoomStateSnapshot` to look at it.
+export const getRoomPhase = (): RoomState["phase"] => {
+  return roomState.phase;
+};
+
 export const overwriteRoomState = (nextState: RoomState): void => {
   Object.assign(roomState, nextState);
 };

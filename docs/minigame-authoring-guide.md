@@ -64,8 +64,8 @@ For a content-backed game with the slug `<slug>`:
 2. `packages/shared/src/content/<slug>/index.ts` — content-file types + guards
    (`<Name>ContentFile`, `is<Name>ContentFile`, `is<Name>Prompt`), exported from
    `packages/shared/src/index.ts`.
-3. `packages/shared/src/content/gameConfig/index.ts` — one `MINIGAME_DEFINITIONS`
-   entry (`id`, `slug`, `timerKey`, `rulesKey`, `contractMetadata`).
+3. `packages/shared/src/content/gameConfig/minigameDefinitions/index.ts` — one
+   `MINIGAME_DEFINITIONS` entry (`id`, `slug`, `displayName`, `timerKey`, `rulesKey`).
 4. `packages/shared/src/roomState/index.ts` — host/display view types added to the
    `MinigameHostView` / `MinigameDisplayView` unions.
 5. `apps/server/src/minigames/registry/index.ts` — one registry line.

@@ -22,6 +22,5 @@ export const songGuessContentAdapter = createPromptContentAdapter<SongGuessPromp
   })
 });
 
-export const cloneSongGuessPrompt = songGuessContentAdapter.clonePrompt;
 export const parseSongGuessContentFile = songGuessContentAdapter.parseFileContent;
 export const resolveSongGuessContent = songGuessContentAdapter.resolveContent;

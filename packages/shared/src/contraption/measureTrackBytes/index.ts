@@ -1,7 +1,7 @@
 import type { Run } from "../types.js";
 
 /**
- * How heavy one recorded run is on the wire — the number WN-15's architecture call is waiting on
+ * How heavy one recorded run is on the wire — the number the architecture call is waiting on
  * (emit a keyframe track and replay it, versus re-simulating on both sides).
  *
  * The two JSON figures are the load-bearing ones: minigame runtime state crosses socket.io as

@@ -555,7 +555,7 @@ Three recognisable families, all safe to delete:
   only consumer.
 - **9 `<game>MinigameId` constants**, one per minigame package, used by nothing
   (`schlonicMinigameId`) or only by their own test. The plugin's `id` field already carries this.
-- **Assorted orphans**: `cloneJoustPrompt`, `cloneSongGuessPrompt`, `cloneEmojiCharadesSubject`,
+- **Assorted orphans**: `cloneEmojiCharadesSubject`,
   `cloneEmojiCharadesDeck`, `isEmojiToken`, `isJoustAim`, `createTriviaStateWithPendingPoints`,
   `BARRIE_CENTER`, `BARRIE_ZOOM`, `JOUST_PERCH_MARGIN` (used only inside its own file),
   `useRoomStateEnvelope`, `withHostProviders`, `withDisplayProviders`, `buildGeminiImageUrl`.

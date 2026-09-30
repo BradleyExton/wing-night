@@ -7,7 +7,7 @@ import {
   type ConfigSavePayload
 } from "@wingnight/shared";
 
-import { getRoomStateSnapshot } from "../../../roomState/index.js";
+import { getRoomPhase, getRoomStateSnapshot } from "../../../roomState/index.js";
 import type { ConfigEventContext } from "../index.js";
 
 // The apply handler, on its own because it is the one config event that
@@ -20,7 +20,7 @@ export const handleConfigApply = (
   // Saves stay legal past SETUP so next week's config can be prepped mid-night;
   // apply does not, because re-seeding room state mid-game would move the
   // ground under a running round. Reset Game is the escape hatch.
-  if (getRoomStateSnapshot().phase !== Phase.SETUP) {
+  if (getRoomPhase() !== Phase.SETUP) {
     context.emitConfigResult({
       action: CONFIG_ACTIONS.APPLY,
       ok: false,

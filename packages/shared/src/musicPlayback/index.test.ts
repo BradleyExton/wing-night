@@ -5,7 +5,6 @@ import {
   MUSIC_PLAYBACK_SOURCES,
   isPlaylistSource,
   isValidMusicVolume,
-  resolveAnthemForRound,
   resolveAnthemIndexForRound,
   resolveEatingTrackIndexForTurn,
   resolveNextTrackIndex,
@@ -13,47 +12,30 @@ import {
   resolveTrackTitle
 } from "./index.js";
 
-const ANTHEMS = ["one.mp3", "two.mp3", "three.mp3"];
-
-test("rotates anthems by round when the round count is within the list", () => {
-  assert.equal(resolveAnthemForRound(ANTHEMS, 1), "one.mp3");
-  assert.equal(resolveAnthemForRound(ANTHEMS, 2), "two.mp3");
-  assert.equal(resolveAnthemForRound(ANTHEMS, 3), "three.mp3");
+test("rotates the anthem index by round when the round count is within the list", () => {
+  assert.equal(resolveAnthemIndexForRound(3, 1), 0);
+  assert.equal(resolveAnthemIndexForRound(3, 2), 1);
+  assert.equal(resolveAnthemIndexForRound(3, 3), 2);
 });
 
-test("wraps to the top of the list when there are more rounds than anthems", () => {
-  assert.equal(resolveAnthemForRound(ANTHEMS, 4), "one.mp3");
-  assert.equal(resolveAnthemForRound(ANTHEMS, 5), "two.mp3");
+test("wraps the anthem index to the top of the list when there are more rounds than anthems", () => {
+  assert.equal(resolveAnthemIndexForRound(3, 4), 0);
+  assert.equal(resolveAnthemIndexForRound(3, 5), 1);
 });
 
 // The determinism contract: a display refresh mid-MINIGAME_INTRO resolves from
 // the same inputs and must land on the same track.
-test("resolves the same anthem when called twice for the same round", () => {
-  assert.equal(resolveAnthemForRound(ANTHEMS, 2), resolveAnthemForRound(ANTHEMS, 2));
+test("resolves the same anthem index when called twice for the same round", () => {
+  assert.equal(resolveAnthemIndexForRound(3, 2), resolveAnthemIndexForRound(3, 2));
 });
 
-test("returns the only anthem when a team has exactly one", () => {
-  assert.equal(resolveAnthemForRound(["only.mp3"], 7), "only.mp3");
+test("resolves the only anthem when a team has exactly one", () => {
+  assert.equal(resolveAnthemIndexForRound(1, 7), 0);
 });
 
 test("falls back to the first anthem when the round is pre-game or unknown", () => {
-  assert.equal(resolveAnthemForRound(ANTHEMS, 0), "one.mp3");
-  assert.equal(resolveAnthemForRound(ANTHEMS, null), "one.mp3");
-});
-
-test("returns null when a team has no anthems at all", () => {
-  assert.equal(resolveAnthemForRound([], 1), null);
-  assert.equal(resolveAnthemForRound(null, 1), null);
-});
-
-// The index is what the server stores in `musicPlayback.trackIndex`, so it has
-// to agree with the filename selector above rather than merely resemble it.
-test("resolves an anthem index that agrees with the anthem it selects", () => {
-  for (const round of [null, 0, 1, 2, 3, 4, 5, 9]) {
-    const index = resolveAnthemIndexForRound(ANTHEMS.length, round);
-
-    assert.equal(ANTHEMS[index], resolveAnthemForRound(ANTHEMS, round));
-  }
+  assert.equal(resolveAnthemIndexForRound(3, 0), 0);
+  assert.equal(resolveAnthemIndexForRound(3, null), 0);
 });
 
 test("resolves an anthem index of zero when the team has no anthems", () => {

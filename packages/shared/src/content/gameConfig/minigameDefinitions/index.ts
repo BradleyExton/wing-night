@@ -1,11 +1,6 @@
 export const MINIGAME_API_VERSION = 1 as const;
 export type MinigameApiVersion = typeof MINIGAME_API_VERSION;
 
-export type MinigameContractMetadataDefaults = {
-  minigameApiVersion: number;
-  capabilityFlags: readonly string[];
-};
-
 export type MinigameDefinition = {
   id: string;
   slug: string;
@@ -17,7 +12,6 @@ export type MinigameDefinition = {
   // clock and so own no field in `GameConfigTimers`.
   timerKey: string | null;
   rulesKey: string | null;
-  contractMetadata: MinigameContractMetadataDefaults;
 };
 
 // Single registration point for shared contracts: adding a game here brings
@@ -33,22 +27,14 @@ export const MINIGAME_DEFINITIONS = {
     // mid-turn while the verdict buttons stayed live, and a turn that ran out
     // of questions first went on wearing a countdown nobody was racing.
     timerKey: null,
-    rulesKey: "trivia",
-    contractMetadata: {
-      minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: ["recordAttempt"]
-    }
+    rulesKey: "trivia"
   },
   GEO: {
     id: "GEO",
     slug: "geo",
     displayName: "Geo",
     timerKey: "geoSeconds",
-    rulesKey: "geo",
-    contractMetadata: {
-      minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: ["setGuess", "submitGuess", "nextPrompt"]
-    }
+    rulesKey: "geo"
   },
   SONG_GUESS: {
     id: "SONG_GUESS",
@@ -57,20 +43,7 @@ export const MINIGAME_DEFINITIONS = {
     // Host-paced: the turn ends when the host has worked through the songs,
     // not when a clock runs out.
     timerKey: null,
-    rulesKey: "songGuess",
-    contractMetadata: {
-      minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: [
-        "playClip",
-        "pauseClip",
-        "replayClip",
-        "triggerReveal",
-        "markTitle",
-        "markArtist",
-        "nextSong",
-        "skipSong"
-      ]
-    }
+    rulesKey: "songGuess"
   },
   JOUST: {
     id: "JOUST",
@@ -79,11 +52,7 @@ export const MINIGAME_DEFINITIONS = {
     // Host-paced: the turn ends when the team has used its shots, not when a
     // clock runs out.
     timerKey: null,
-    rulesKey: "joust",
-    contractMetadata: {
-      minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: ["setAim", "launch", "nextShot", "skipShot", "resetTurn"]
-    }
+    rulesKey: "joust"
   },
   FAPPY: {
     id: "FAPPY",
@@ -92,11 +61,7 @@ export const MINIGAME_DEFINITIONS = {
     // Host-paced: the turn ends when the team has flown its legs, not when a
     // clock runs out.
     timerKey: null,
-    rulesKey: "fappy",
-    contractMetadata: {
-      minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: ["flap", "endLeg", "timeOut", "skipLeg", "resetTurn"]
-    }
+    rulesKey: "fappy"
   },
   SCHLONIC: {
     id: "SCHLONIC",
@@ -105,31 +70,14 @@ export const MINIGAME_DEFINITIONS = {
     // Host-paced: the turn ends when the team has run the zone, not when a clock runs out. The
     // run has its own clock, and it is the zone's, not the room's.
     timerKey: null,
-    rulesKey: "schlonic",
-    contractMetadata: {
-      minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: ["press", "release", "endRun", "skipRun", "resetTurn"]
-    }
+    rulesKey: "schlonic"
   },
   DRAWING: {
     id: "DRAWING",
     slug: "drawing",
     displayName: "Drawing",
     timerKey: "drawingSeconds",
-    rulesKey: null,
-    contractMetadata: {
-      minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: [
-        "beginStroke",
-        "appendStrokePoints",
-        "endStroke",
-        "undoStroke",
-        "clearCanvas",
-        "markCorrect",
-        "markIncorrect",
-        "skipPrompt"
-      ]
-    }
+    rulesKey: null
   },
   RECREATE: {
     id: "RECREATE",
@@ -138,36 +86,14 @@ export const MINIGAME_DEFINITIONS = {
     // Host-paced: a target ends when the host locks its score, not when a
     // clock runs out. The tablet is in the team's hands while they write.
     timerKey: null,
-    rulesKey: "recreate",
-    contractMetadata: {
-      minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: [
-        "submitPrompt",
-        "resolveGeneration",
-        "toggleIngredient",
-        "lockScore",
-        "retryPrompt",
-        "nextTarget"
-      ]
-    }
+    rulesKey: "recreate"
   },
   EMOJI_CHARADES: {
     id: "EMOJI_CHARADES",
     slug: "emoji-charades",
     displayName: "Emoji Charades",
     timerKey: "emojiCharadesSeconds",
-    rulesKey: "emojiCharades",
-    contractMetadata: {
-      minigameApiVersion: MINIGAME_API_VERSION,
-      capabilityFlags: [
-        "selectDeck",
-        "appendEmoji",
-        "removeEmoji",
-        "clearEmojis",
-        "markCorrect",
-        "skipSubject"
-      ]
-    }
+    rulesKey: "emojiCharades"
   }
 } as const satisfies Record<string, MinigameDefinition>;
 

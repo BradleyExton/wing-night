@@ -2,7 +2,7 @@ import type { DrawingPrompt } from "../content/drawing/index.js";
 import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
 import type { MinigameType } from "../content/gameConfig/index.js";
-import type { GeoPrompt } from "../content/geo/index.js";
+import type { GeoCoordinates, GeoPrompt } from "../content/geo/index.js";
 import type { JoustPrompt } from "../content/joust/index.js";
 import type { JoustShooterColor } from "../content/joust/shooters/index.js";
 import type {
@@ -40,14 +40,8 @@ export type RoomTimerState = {
   remainingMs: number;
 };
 
-export type MinigameContractCompatibilityStatus = "COMPATIBLE" | "MISMATCH";
-
 type MinigameViewMetadata = {
   minigame: MinigameType;
-  minigameApiVersion?: number;
-  capabilityFlags?: string[];
-  compatibilityStatus?: MinigameContractCompatibilityStatus;
-  compatibilityMessage?: string | null;
 };
 
 type MinigameHostViewBase = MinigameViewMetadata & {
@@ -68,11 +62,6 @@ export type TriviaMinigameHostView = MinigameHostViewBase & {
 };
 
 export type GeoMinigameSubState = "guessing" | "submitted";
-
-export type GeoGuessCoordinates = {
-  lat: number;
-  lng: number;
-};
 
 export type GeoPromptResult = {
   promptId: string;
@@ -100,7 +89,7 @@ export type GeoMinigameHostView = MinigameHostViewBase & {
   promptsPerTurn: number;
   promptsCompletedThisTurn: number;
   currentSubState: GeoMinigameSubState;
-  currentGuess: GeoGuessCoordinates | null;
+  currentGuess: GeoCoordinates | null;
   currentPrompt: GeoMinigameHostPrompt | null;
   lastResult: GeoPromptResult | null;
 };
@@ -124,7 +113,7 @@ export type GeoMinigameDisplayView = MinigameDisplayViewBase & {
   promptsPerTurn: number;
   promptsCompletedThisTurn: number;
   currentPrompt: GeoMinigameDisplayPrompt | null;
-  currentGuess: GeoGuessCoordinates | null;
+  currentGuess: GeoCoordinates | null;
 } & (
     | { status: "guessing" }
     | { status: "submitted"; result: GeoMinigameDisplayResult }

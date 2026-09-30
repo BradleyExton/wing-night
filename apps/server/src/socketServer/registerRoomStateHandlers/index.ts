@@ -2,7 +2,6 @@ import {
   CLIENT_TO_SERVER_EVENTS,
   CONFIG_ACTIONS,
   CONFIG_ERROR_CODES,
-  MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS
 } from "@wingnight/shared";
 import type {
@@ -27,7 +26,6 @@ import {
   createTeam,
   dispatchMinigameAction,
   extendRoomTimer,
-  getRoomStateSnapshot,
   pauseRoomMusic,
   pauseRoomTimer,
   previousRoomMusicTrack,
@@ -199,23 +197,15 @@ const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
   defineAuthorizedEvent(
     CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION,
     isMinigameActionEnvelope,
-    (payload) => {
-      if (payload.minigameApiVersion !== MINIGAME_API_VERSION) {
-        return getRoomStateSnapshot();
-      }
-
-      const currentSnapshot = getRoomStateSnapshot();
-
-      if (currentSnapshot.currentRoundConfig?.minigame !== payload.minigameId) {
-        return currentSnapshot;
-      }
-
-      return dispatchMinigameAction(
+    // The guard has already pinned `minigameApiVersion`, and the mutation
+    // rejects an action for any game but the one in play, so neither is
+    // re-checked here — DRAWING sends a dozen of these a second.
+    (payload) =>
+      dispatchMinigameAction(
         payload.minigameId,
         payload.actionType,
         payload.actionPayload as SerializableValue
-      );
-    }
+      )
   ),
   defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, isHostSecretPayload, () =>
     pauseRoomTimer()

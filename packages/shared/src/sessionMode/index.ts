@@ -10,7 +10,3 @@ export const SESSION_MODES = {
 } as const;
 
 export type SessionMode = (typeof SESSION_MODES)[keyof typeof SESSION_MODES];
-
-export const isSessionMode = (value: unknown): value is SessionMode => {
-  return value === SESSION_MODES.NIGHT || value === SESSION_MODES.QUICK_PLAY;
-};

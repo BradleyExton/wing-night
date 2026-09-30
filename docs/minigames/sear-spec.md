@@ -36,8 +36,7 @@ worktree needs `pnpm install` under fnm Node 25 first.
    the field; do not touch Drawing's in-reducer `Date.now()`. Land this first so the reducer
    in step 3 is pure from its first commit.
 2. **Shared contracts.** `packages/shared/src/content/gameConfig/minigameDefinitions`: add
-   `SEAR` (`slug: "sear"`, `timerKey: "searSeconds"`, `rulesKey: "sear"`,
-   `capabilityFlags: ["startShot","stopShot","redoShot","skipShot","overrideShotBand"]`).
+   `SEAR` (`slug: "sear"`, `timerKey: "searSeconds"`, `rulesKey: "sear"`).
    `packages/shared/src/roomState`: add `SearMinigameHostView` / `SearMinigameDisplayView`
    to the unions (§0.4 shapes; one outer member each, internal `status` discriminant per
    guide §3). No `packages/shared/src/content/sear` module — there is no content file.

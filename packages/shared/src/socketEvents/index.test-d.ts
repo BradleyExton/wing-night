@@ -3,7 +3,7 @@ import type {
   ClientToServerEvents,
   GameReorderTurnOrderPayload,
   HostSecretPayload,
-  MinigameActionEnvelopePayload,
+  MinigameActionPayload,
   RoleScopedStateSnapshotEnvelope,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
@@ -131,7 +131,7 @@ export type MinigameActionPayloadCheck = Assert<
     Parameters<
       ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]
     >,
-    [MinigameActionEnvelopePayload]
+    [MinigameActionPayload]
   >
 >;
 

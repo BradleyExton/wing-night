@@ -75,12 +75,6 @@ export const validatePlayersContentFile = (
   );
 };
 
-export const isPlayersContentEntry = (
-  value: unknown
-): value is PlayersContentEntry => {
-  return validatePlayersContentEntry(value).length === 0;
-};
-
 export const isPlayersContentFile = (
   value: unknown
 ): value is PlayersContentFile => {

@@ -300,6 +300,4 @@ export const recreateRuntimePlugin: MinigameRuntimePlugin = {
   }
 };
 
-export { isRecreateRuntimeState };
 export { RECREATE_MAX_PROMPT_LENGTH };
-export type { RecreateRuntimeState };

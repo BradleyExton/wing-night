@@ -94,8 +94,8 @@ const resolveOne = (
   //
   // NOTE: this inverts what `slip` means. It is now a Coulomb coefficient — 0 is frictionless and
   // larger values bite harder — where it used to be a retention factor. Every layout value in the
-  // tree is consciously re-tuned in this ticket rather than carried across; the rename is deferred
-  // to WN-15, where the piece vocabulary settles.
+  // tree was consciously re-tuned with this change rather than carried across; the rename waits
+  // until the piece vocabulary settles.
   const tangentSpeed = Math.sqrt(tangentX * tangentX + tangentY * tangentY);
   const normalImpulse = Math.abs(approach) * (1 + material.restitution);
   // The `min` is the clamp: friction can only ever remove tangential motion, never reverse it,

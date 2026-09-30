@@ -31,7 +31,8 @@ beforeEach(() => {
 
 test("setRoomStatePlayers stores a safe clone of player records", () => {
   const nextPlayers = [{ id: "player-1", name: "Player One" }];
-  const updatedSnapshot = setRoomStatePlayers(nextPlayers);
+  setRoomStatePlayers(nextPlayers);
+  const updatedSnapshot = getRoomStateSnapshot();
 
   assert.deepEqual(updatedSnapshot.players, nextPlayers);
 
@@ -45,7 +46,8 @@ test("setRoomStateTeams stores a safe clone of team records", () => {
   const nextTeams = [
     { id: "team-1", name: "Team One", playerIds: ["player-1"], totalScore: 0 }
   ];
-  const updatedSnapshot = setRoomStateTeams(nextTeams);
+  setRoomStateTeams(nextTeams);
+  const updatedSnapshot = getRoomStateSnapshot();
 
   assert.deepEqual(updatedSnapshot.teams, nextTeams);
 
@@ -57,7 +59,8 @@ test("setRoomStateTeams stores a safe clone of team records", () => {
 
 test("setRoomStateGameConfig stores a safe clone and updates totalRounds", () => {
   const nextConfig = structuredClone(gameConfigFixture);
-  const updatedSnapshot = setRoomStateGameConfig(nextConfig);
+  setRoomStateGameConfig(nextConfig);
+  const updatedSnapshot = getRoomStateSnapshot();
 
   assert.equal(updatedSnapshot.gameConfig?.name, gameConfigFixture.name);
   assert.equal(updatedSnapshot.totalRounds, 2);

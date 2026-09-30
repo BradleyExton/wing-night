@@ -1,9 +1,10 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-// The one Gemini image call this repo makes, in TypeScript so the party-time
-// generator (RECREATE's forger) and the author-time importer
-// (`pnpm import:recreate`) send the same request and read the same reply.
+// RECREATE's Gemini image call, in TypeScript so the party-time generator (the
+// forger) and the author-time importer (`pnpm import:recreate`) send the same
+// request and read the same reply. `pnpm import:avatars` keeps its own copy in
+// `tools/import-avatars/lib.mjs`.
 // Nothing here touches room state: it takes a prompt and an optional source
 // picture and hands back bytes, or throws with the model's own reason.
 

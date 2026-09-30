@@ -8,7 +8,7 @@ import {
   type ConfigSavePayload,
   type GameReorderTurnOrderPayload,
   type HostSecretPayload,
-  type MinigameActionEnvelope,
+  type MinigameActionPayload,
   type MusicSetVolumePayload,
   type SfxSetVolumePayload,
   type MusicTrackEndedPayload,
@@ -92,7 +92,7 @@ export const isScoringAdjustTeamScorePayload = (
 
 export const isMinigameActionEnvelope = (
   payload: unknown
-): payload is MinigameActionEnvelope =>
+): payload is MinigameActionPayload =>
   hasShape(payload, {
     hostSecret: isString,
     minigameId: isString,

@@ -53,7 +53,6 @@ export const joustContentAdapter: MinigameRuntimeContentAdapter = {
   }
 };
 
-export const cloneJoustPrompt = promptAdapter.clonePrompt;
 export const parseJoustContentFile = (
   rawContent: string,
   contentFilePath: string

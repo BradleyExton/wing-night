@@ -147,12 +147,6 @@ export const validateEmojiCharadesContentFile = (
   return issues;
 };
 
-export const isEmojiCharadesSubject = (
-  value: unknown
-): value is EmojiCharadesSubject => {
-  return validateEmojiCharadesSubject(value).length === 0;
-};
-
 export const isEmojiCharadesDeck = (value: unknown): value is EmojiCharadesDeck => {
   return validateEmojiCharadesDeck(value).length === 0;
 };

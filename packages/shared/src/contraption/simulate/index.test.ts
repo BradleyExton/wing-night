@@ -36,8 +36,9 @@ const options = (overrides: Partial<SimulateOptions> = {}): SimulateOptions => {
 };
 
 // Same-process replay stability only. This does NOT establish the cross-engine reproducibility
-// WN-15's option (b) needs — that rests on the module using no implementation-defined Math member,
-// which `../noTranscendentals.test.ts` is the (still only necessary, not sufficient) guard for.
+// that re-simulating on both sides needs — that rests on the module using no
+// implementation-defined Math member, which `../noTranscendentals.test.ts` is the (still only
+// necessary, not sufficient) guard for.
 test("produces a byte-identical track when the same layout and seed are re-simulated", () => {
   const first = simulate(BENCHMARK_LAYOUT, options());
   const second = simulate(BENCHMARK_LAYOUT, options());
@@ -114,12 +115,12 @@ test("throws when durationSeconds is not positive", () => {
   );
 });
 
-// ── WN-23 behavioural pins ────────────────────────────────────────────────────────────────────
+// ── Coulomb friction behavioural pins ─────────────────────────────────────────────────────────
 // Two pins, because either alone is satisfiable by a degenerate model: "it slides" alone passes a
-// frictionless integrator, and "it stops" alone passes the creep bug this ticket fixes. Together
-// they fence both failure modes.
+// frictionless integrator, and "it stops" alone passes the creep bug Coulomb friction fixed.
+// Together they fence both failure modes.
 //
-// BOTH ARE RED AGAINST THE PRE-WN-23 IMPLEMENTATION, confirmed by stashing the change and running
+// BOTH ARE RED AGAINST THE PRE-COULOMB IMPLEMENTATION, confirmed by stashing the change and running
 // them — not by assertion. Under the old flat per-step multiplier `slip` was a retention factor, so
 // slip 0.1 multiplied tangential velocity by 0.1 on EVERY contacting step (0.1^240 ≈ 0) and the
 // body creeps to a dead stop instead of sliding.
@@ -159,7 +160,7 @@ const travelAlongRamp = (run: ReturnType<typeof simulate>): number => {
 test("slides a low-friction body a meaningful distance down a shallow ramp", () => {
   const run = simulate(rampTest(0.1), options({ durationSeconds: 3 }));
 
-  // The whole point of the fix: a body released on a ramp travels ALONG it. The pre-WN-23
+  // The whole point of the fix: a body released on a ramp travels ALONG it. The pre-Coulomb
   // implementation creeps to a stop within a few units.
   assert.ok(
     travelAlongRamp(run) > 20,

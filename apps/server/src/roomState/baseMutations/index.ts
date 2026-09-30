@@ -192,25 +192,21 @@ export const setRoomStateFatalError = (message: string): RoomState => {
 // nothing else — otherwise repairing bad content would discard the rosters the
 // host entered while the server sat in its fatal state, and repairing bad
 // content is the entire point of the config surface.
-export const clearRoomStateFatalError = (): RoomState => {
+export const clearRoomStateFatalError = (): void => {
   const roomState = getRoomState();
 
   roomState.fatalError = null;
-
-  return getRoomStateSnapshot();
 };
 
-export const setRoomStatePlayers = (players: Player[]): RoomState => {
+export const setRoomStatePlayers = (players: Player[]): void => {
   const roomState = getRoomState();
   const nextPlayers = structuredClone(players);
 
   roomState.players = nextPlayers;
   syncSetupBaselineSnapshot({ players: nextPlayers });
-
-  return getRoomStateSnapshot();
 };
 
-export const setRoomStateTeams = (teams: Team[]): RoomState => {
+export const setRoomStateTeams = (teams: Team[]): void => {
   const roomState = getRoomState();
   const nextTeams = structuredClone(teams);
 
@@ -218,24 +214,20 @@ export const setRoomStateTeams = (teams: Team[]): RoomState => {
   syncSetupBaselineSnapshot({
     teams: normalizeBaselineTeams(nextTeams)
   });
-
-  return getRoomStateSnapshot();
 };
 
 // No setup-baseline sync: the playlist is not part of what "Reset Game"
 // restores, it is part of what a reset carries through untouched.
-export const setRoomStateEatingPlaylist = (eatingPlaylist: string[]): RoomState => {
+export const setRoomStateEatingPlaylist = (eatingPlaylist: string[]): void => {
   const roomState = getRoomState();
 
   roomState.eatingPlaylist = structuredClone(eatingPlaylist);
   // A mid-party reload while the wings are out picks up the new list the
   // same way the lobby does.
   setMusicForPhase(roomState, roomState.phase);
-
-  return getRoomStateSnapshot();
 };
 
-export const setRoomStateLobbyPlaylist = (lobbyPlaylist: string[]): RoomState => {
+export const setRoomStateLobbyPlaylist = (lobbyPlaylist: string[]): void => {
   const roomState = getRoomState();
 
   roomState.lobbyPlaylist = structuredClone(lobbyPlaylist);
@@ -244,11 +236,9 @@ export const setRoomStateLobbyPlaylist = (lobbyPlaylist: string[]): RoomState =>
   // what makes a mid-party content reload pick up a newly dropped track rather
   // than leaving the cursor on a list that no longer matches.
   setMusicForPhase(roomState, roomState.phase);
-
-  return getRoomStateSnapshot();
 };
 
-export const setRoomStateGameConfig = (gameConfig: GameConfigFile): RoomState => {
+export const setRoomStateGameConfig = (gameConfig: GameConfigFile): void => {
   const roomState = getRoomState();
   const nextGameConfig = structuredClone(gameConfig);
 
@@ -258,14 +248,12 @@ export const setRoomStateGameConfig = (gameConfig: GameConfigFile): RoomState =>
   syncSetupBaselineSnapshot({
     gameConfig: nextGameConfig
   });
-
-  return getRoomStateSnapshot();
 };
 
 export const setRoomStateMinigameContent = (
   minigameId: MinigameType,
   content: SerializableValue
-): RoomState => {
+): void => {
   const roomState = getRoomState();
 
   setMinigameContent(minigameId, content);
@@ -274,6 +262,4 @@ export const setRoomStateMinigameContent = (
     minigameId,
     resolveMinigameRules(roomState, minigameId)
   );
-
-  return getRoomStateSnapshot();
 };

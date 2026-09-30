@@ -1,10 +1,9 @@
-import type { MinigameType, RoomState } from "@wingnight/shared";
+import type { MinigameType } from "@wingnight/shared";
 import { isSerializableValue } from "@wingnight/minigames-core";
 
 import { loadContent } from "../contentLoader/index.js";
 import {
   clearRoomStateFatalError,
-  getRoomStateSnapshot,
   reportRoomStateMutation,
   setRoomStateGameConfig,
   setRoomStateEatingPlaylist,
@@ -19,7 +18,7 @@ type ReloadContentOptions = {
 };
 
 export type ReloadContentResult =
-  | { ok: true; roomState: RoomState }
+  | { ok: true }
   | { ok: false; reason: string };
 
 // The one-shot boot sequence, made callable so apply can re-run it.
@@ -43,9 +42,10 @@ export type ReloadContentResult =
 // `setRoomStateFatalError` overwrites the room wholesale.
 //
 // Which room-state fields a successful reload replaces: `players`, `teams`,
-// `lobbyPlaylist`, `gameConfig` (and the `totalRounds` / `currentRoundConfig` it derives), and
-// each minigame's content — plus the setup baseline snapshot those setters
-// re-sync, so Reset Game stays consistent. It also clears `fatalError`.
+// `lobbyPlaylist`, `eatingPlaylist` (both re-resolving `musicPlayback` for the
+// current phase), `gameConfig` (and the `totalRounds` / `currentRoundConfig` it
+// derives), and each minigame's content — plus the setup baseline snapshot
+// those setters re-sync, so Reset Game stays consistent. It also clears `fatalError`.
 // Everything else — phase, scores, timer, turn order — survives untouched.
 export const reloadContentIntoRoomState = (
   options: ReloadContentOptions = {}
@@ -86,7 +86,7 @@ export const reloadContentIntoRoomState = (
   // A reload is the repair path, so it has to work FROM the fatal state.
   clearRoomStateFatalError();
 
-  // The four setters above are plain functions — they never raise the
+  // The setters above are plain functions — they never raise the
   // module-scoped flag that `applyRoomStateMutation` reads, so without this
   // call `didMutate` stays false and `socketServer`'s broadcast returns early:
   // host and display would never see the new config. Routing the re-seed
@@ -97,5 +97,5 @@ export const reloadContentIntoRoomState = (
   // `applyRoomStateMutation`'s window; `config:apply` does exactly that.
   reportRoomStateMutation();
 
-  return { ok: true, roomState: getRoomStateSnapshot() };
+  return { ok: true };
 };

@@ -77,17 +77,6 @@ export const resolveAnthemIndexForRound = (
   return (currentRound - 1) % anthemCount;
 };
 
-export const resolveAnthemForRound = (
-  anthems: string[] | null,
-  currentRound: number | null
-): string | null => {
-  if (anthems === null || anthems.length === 0) {
-    return null;
-  }
-
-  return anthems[resolveAnthemIndexForRound(anthems.length, currentRound)] ?? null;
-};
-
 // Which eating track opens a turn's EATING. Deterministic by the turn's place
 // in the night — the same contract as the anthem rotation, for the same
 // refresh-mid-phase reason — and different from one turn to the next, so a

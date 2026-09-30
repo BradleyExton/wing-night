@@ -11,7 +11,6 @@ export {
 } from "./minigameDefinitions/index.js";
 export type {
   MinigameApiVersion,
-  MinigameContractMetadataDefaults,
   MinigameDefinition,
   MinigameRulesKey,
   MinigameTimerKey,

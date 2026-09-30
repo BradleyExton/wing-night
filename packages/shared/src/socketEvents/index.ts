@@ -26,23 +26,11 @@ export type ScoringSetWingParticipationPayload = HostSecretPayload &
 export type ScoringAdjustTeamScorePayload = HostSecretPayload &
   Record<"teamId", string> &
   Record<"delta", number>;
-export type MinigameActionEnvelopePayload = HostSecretPayload &
+export type MinigameActionPayload = HostSecretPayload &
   Record<"minigameId", MinigameType> &
   Record<"minigameApiVersion", MinigameApiVersion> &
   Record<"actionType", string> &
   Record<"actionPayload", unknown>;
-export type MinigameActionEnvelope = MinigameActionEnvelopePayload;
-type TriviaRecordAttemptMinigameActionPayload =
-  MinigameActionEnvelopePayload &
-    Record<"minigameId", "TRIVIA"> &
-    Record<"actionType", "recordAttempt"> &
-    Record<"actionPayload", Record<"isCorrect", boolean>>;
-export type GenericMinigameActionPayload = MinigameActionEnvelopePayload &
-  Record<"minigameId", MinigameType>;
-export type MinigameActionPayload =
-  | TriviaRecordAttemptMinigameActionPayload
-  | GenericMinigameActionPayload;
-export type MinigameActionType = MinigameActionPayload["actionType"];
 export type TimerExtendPayload = HostSecretPayload &
   Record<"additionalSeconds", number>;
 // On the `<audio>` element's own 0–1 scale; see `MUSIC_VOLUME_MIN`/`MAX`.
@@ -149,7 +137,7 @@ export type ClientToServerEvents = {
     payload: HostSecretPayload
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.MINIGAME_ACTION]: (
-    payload: MinigameActionEnvelopePayload
+    payload: MinigameActionPayload
   ) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE]: (payload: HostSecretPayload) => void;
   [CLIENT_TO_SERVER_EVENTS.TIMER_RESUME]: (payload: HostSecretPayload) => void;

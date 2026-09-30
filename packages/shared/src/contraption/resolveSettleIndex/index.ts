@@ -3,8 +3,8 @@ import type { Run, Vec2 } from "../types.js";
 /**
  * Whether and when a run stops moving.
  *
- * Extracted from the WN-18 lab (`ContraptionLab/runOutcome`) into the integrator's own package by
- * WN-23, because the fixture whose settling has to be PROVEN — `CONTRAPTION_BENCHMARK_LAYOUT` —
+ * Extracted from the lab (`ContraptionLab/runOutcome`) into the integrator's own package, because
+ * the fixture whose settling has to be PROVEN — `CONTRAPTION_BENCHMARK_LAYOUT` —
  * lives here, and a settle claim with its only predicate in `apps/client` had no runnable check in
  * the package that owns the claim.
  *

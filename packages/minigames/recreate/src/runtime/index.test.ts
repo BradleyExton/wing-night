@@ -11,11 +11,11 @@ import type { SerializableValue } from "@wingnight/minigames-core";
 import {
   recreateMinigameId,
   recreateRuntimePlugin,
-  resolveRecreateAttemptId,
-  type RecreateRuntimeState
+  resolveRecreateAttemptId
 } from "./index.js";
 import { parseRecreateContentFile } from "./content/index.js";
 import { isRecreateRules, resolveRecreateRules } from "./rules/index.js";
+import type { RecreateRuntimeState } from "./types/index.js";
 
 const contentFixture: RecreateContentFile = {
   prompts: [

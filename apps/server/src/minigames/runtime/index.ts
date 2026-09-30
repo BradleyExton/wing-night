@@ -86,11 +86,6 @@ export const clearMinigameRoundMemory = (): void => {
   minigameRoundMemoryById = {};
 };
 
-/** Test seam: what a game would hand its next team, as the server holds it now. */
-export const peekMinigameRoundMemory = (minigameId: MinigameType): SerializableValue | null => {
-  return minigameRoundMemoryById[minigameId] ?? null;
-};
-
 export const setMinigameContent = (
   minigameId: MinigameType,
   content: SerializableValue

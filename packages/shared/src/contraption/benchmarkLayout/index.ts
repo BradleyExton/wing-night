@@ -1,13 +1,13 @@
 import type { Layout } from "../types.js";
 
 /**
- * The layout every recorded byte measurement is taken against, so the numbers in WN-17's evidence
- * name a concrete build rather than "a representative run". Six bodies on a 100×100 field with a
- * floor, two walls, two ramps and a bucket — WN-15's "a few bodies" made specific.
+ * The layout every recorded byte measurement is taken against, so the figures pinned in
+ * `measureTrackBytes` name a concrete build rather than "a representative run". Six bodies on a
+ * 100×100 field with a floor, two walls, two ramps and a bucket — "a few bodies" made specific.
  *
  * Exported because a measurement whose input is not in the tree cannot be re-derived when the
  * body count or frame rate changes. This is a benchmark fixture, not authored game content: real
- * levels load through the content pipeline (WN-15), not from here.
+ * levels would load through the content pipeline, not from here.
  */
 export const BENCHMARK_LAYOUT: Layout = {
   gravity: { x: 0, y: 180 },

@@ -83,10 +83,6 @@ export const validateTeamsContentFile = (value: unknown): ValidationIssue[] => {
   );
 };
 
-export const isTeamsContentEntry = (value: unknown): value is TeamsContentEntry => {
-  return validateTeamsContentEntry(value).length === 0;
-};
-
 export const isTeamsContentFile = (value: unknown): value is TeamsContentFile => {
   return validateTeamsContentFile(value).length === 0;
 };

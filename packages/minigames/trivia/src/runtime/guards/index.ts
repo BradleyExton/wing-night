@@ -2,7 +2,7 @@ import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type { TriviaMinigameState, TriviaRuntimeState } from "../types/index.js";
 
-export const isTriviaMinigameState = (
+const isTriviaMinigameState = (
   value: unknown
 ): value is TriviaMinigameState => {
   if (typeof value !== "object" || value === null) {

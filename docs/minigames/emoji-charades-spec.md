@@ -75,11 +75,7 @@ EMOJI_CHARADES: {
   id: "EMOJI_CHARADES",
   slug: "emoji-charades",
   timerKey: "emojiCharadesSeconds",
-  rulesKey: "emojiCharades",
-  contractMetadata: {
-    minigameApiVersion: MINIGAME_API_VERSION,
-    capabilityFlags: []
-  }
+  rulesKey: "emojiCharades"
 }
 ```
 

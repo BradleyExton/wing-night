@@ -1,4 +1,7 @@
-import { resolveContraptionSettleIndex } from "@wingnight/shared";
+import {
+  CONTRAPTION_SETTLE_EPSILON_UNITS,
+  resolveContraptionSettleIndex
+} from "@wingnight/shared";
 import type {
   ContraptionLayout,
   ContraptionRun,
@@ -7,11 +10,11 @@ import type {
 } from "@wingnight/shared";
 
 /**
- * The lab's own success predicate, deliberately kept OUT of the WN-17 integrator.
+ * The lab's own success predicate, deliberately kept OUT of the shared integrator.
  *
  * The integrator models bodies, segments, gravity and keyframes — it has no notion of a goal, and
- * WN-15 wants it that way: it is destined for the server-side reducer, where scoring is the
- * reducer's business, not the physics'. But two of WN-15's four questions ("can the room see *why*
+ * that is on purpose: it is destined for the server-side reducer, where scoring is the reducer's
+ * business, not the physics'. But the questions the lab exists to answer ("can the room see *why*
  * a run failed", "one shot vs best-of-N") presuppose a verdict on a run, so the harness has to
  * supply one. It lives here, lab-local and disposable, rather than as a fork of the integrator.
  *
@@ -24,12 +27,6 @@ const WING_BODY_ID = "wing";
 
 /** Segments whose id starts with this form the bucket the wing has to end up inside. */
 const BUCKET_SEGMENT_PREFIX = "bucket-";
-
-/**
- * Per-keyframe displacement below which a body reads as stopped to someone across a room. Sized
- * against the 100-unit-wide field the layouts use: under this, motion is not visible on a TV.
- */
-const SETTLE_EPSILON_UNITS = 0.05;
 
 /**
  * How far above the bucket floor a settled wing has to sit before "it never got down there" is a
@@ -89,12 +86,12 @@ export const resolveBucket = (layout: ContraptionLayout): BucketRegion | null =>
   };
 };
 
-// Settling moved to @wingnight/shared in WN-23, so the benchmark fixture — which lives in that
-// package — can PROVE it settles rather than asserting it. The lab consumes the shared predicate
+// Settling lives in @wingnight/shared, so the benchmark fixture — which lives in that package — can
+// PROVE it settles rather than asserting it. The lab consumes the shared predicate AND its epsilon
 // instead of keeping a second copy: two settle definitions would drift, and the lab's own need is
 // what the shared one was extracted from.
 const resolveSettleIndex = (run: ContraptionRun): number | null => {
-  return resolveContraptionSettleIndex(run, SETTLE_EPSILON_UNITS);
+  return resolveContraptionSettleIndex(run, CONTRAPTION_SETTLE_EPSILON_UNITS);
 };
 
 const classify = ({

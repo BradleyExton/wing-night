@@ -14,18 +14,18 @@ const BYTE_MEASURE_OPTIONS = {
 } as const;
 
 /**
- * WN-23 AC-9. Before the Coulomb fix this fixture NEVER settled — the five marbles crept forever
+ * Before the Coulomb friction fix this fixture NEVER settled — the five marbles crept forever
  * under the flat per-step multiplier, so `resolveSettleIndex` returned null and the fixture could
- * not reach a verdict at all. WN-24 assumes "the benchmark preset now reaches a verdict"; this is
- * the assertion that makes that true rather than hoped.
+ * not reach a verdict at all. The lab's verdict on the benchmark preset assumes it now reaches one;
+ * this is the assertion that makes that true rather than hoped.
  *
  * What it does and does NOT guard, stated precisely because an earlier draft of this comment
  * overclaimed and the QA pass measured it: this is a gate on the FIXTURE, not on the physics. Under
  * the new physics a bad re-tune is caught — slip pairs 0/0, 0.1/0.1, 0.2/0.25 and 0.3/0.35 all
- * return null here. But it is not red against the pre-WN-23 resolver, because the fixture was
+ * return null here. But it is not red against the pre-Coulomb resolver, because the fixture was
  * re-tuned in the same commit and the old creep physics also drags these bodies to a dead stop
  * (old resolver + this fixture settles at index 28; old resolver + the OLD 0.86/0.9 fixture is the
- * null the ticket describes). The physics change itself is red-before-guarded by the two
+ * null described above). The physics change itself is red-before-guarded by the two
  * behavioural pins in `simulate/index.test.ts`, which is where that proof belongs.
  */
 test("settles the benchmark layout within the run the byte figures are measured over", () => {
@@ -37,8 +37,8 @@ test("settles the benchmark layout within the run the byte figures are measured 
 });
 
 // The settle has to land INSIDE the measured window with room to spare, or the fixture is only
-// nominally settling — a run that stops on its last frame tells WN-15 nothing about how long a
-// watchable run needs to be.
+// nominally settling — a run that stops on its last frame says nothing about how long a watchable
+// run needs to be.
 test("settles the benchmark layout well before the run ends", () => {
   const run = simulate(BENCHMARK_LAYOUT, BYTE_MEASURE_OPTIONS);
 
@@ -51,9 +51,9 @@ test("settles the benchmark layout well before the run ends", () => {
   );
 });
 
-// Guards the AC-9 re-tune against being silently reverted to the pre-WN-23 values, whose meaning
-// inverted: `slip` is now a Coulomb coefficient, so 0.86/0.9 would read as "very grippy" rather
-// than the "nearly frictionless" they were authored as.
+// Guards the friction re-tune against being silently reverted to the pre-Coulomb values, whose
+// meaning inverted: `slip` is now a Coulomb coefficient, so 0.86/0.9 would read as "very grippy"
+// rather than the "nearly frictionless" they were authored as.
 test("carries consciously re-chosen friction coefficients rather than the pre-Coulomb values", () => {
   const slips = BENCHMARK_LAYOUT.bodies.map((body) => body.slip);
 

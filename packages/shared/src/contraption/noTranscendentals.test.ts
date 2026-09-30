@@ -7,7 +7,8 @@ import test from "node:test";
 /**
  * ECMA-262 leaves the precision of these implementation-defined, so two engines may return
  * different bits for the same input. A run recorded by the server would then fail to replay
- * identically in a browser, which is the whole risk behind WN-15's option (b).
+ * identically in a browser, which is the whole risk of re-simulating on both sides instead of
+ * shipping the keyframe track.
  *
  * `Math.sqrt` is deliberately absent: IEEE-754 requires it to be correctly rounded, as it does the
  * four arithmetic operators — that pair is the entire numerical basis this integrator relies on.

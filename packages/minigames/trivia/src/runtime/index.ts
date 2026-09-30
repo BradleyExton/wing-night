@@ -3,11 +3,7 @@ import type { MinigameRuntimePlugin } from "@wingnight/minigames-core";
 import { resolveSeededPromptCursor } from "@wingnight/minigames-core";
 
 import { resolveTriviaContent, triviaContentAdapter } from "./content/index.js";
-import {
-  isRecordAttemptPayload,
-  isTriviaMinigameState,
-  isTriviaRuntimeState
-} from "./guards/index.js";
+import { isRecordAttemptPayload, isTriviaRuntimeState } from "./guards/index.js";
 import { isTriviaRules, resolveTriviaRules } from "./rules/index.js";
 import type { TriviaMinigameState, TriviaRuntimeState } from "./types/index.js";
 import {
@@ -188,5 +184,4 @@ export const triviaRuntimePlugin: MinigameRuntimePlugin = {
   }
 };
 
-export { isTriviaMinigameState };
 export type { TriviaMinigameState, TriviaRuntimeState };

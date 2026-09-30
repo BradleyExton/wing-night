@@ -1,5 +1,4 @@
 import {
-  type MinigameContractCompatibilityStatus,
   type DisplayRoomStateSnapshot,
   type GeoMinigameDisplayView,
   type GeoMinigameHostView,
@@ -49,10 +48,6 @@ export type ValidMinigameHostViewCheck = Assert<
   IsAssignable<
     {
       minigame: "TRIVIA";
-      minigameApiVersion: number;
-      capabilityFlags: string[];
-      compatibilityStatus: MinigameContractCompatibilityStatus;
-      compatibilityMessage: string | null;
       activeTurnTeamId: string | null;
       attemptsRemaining: number;
       promptCursor: number;

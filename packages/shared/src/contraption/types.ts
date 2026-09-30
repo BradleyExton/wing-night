@@ -1,7 +1,7 @@
 /**
  * CONTRAPTION's physics vocabulary: the layout a team builds, and the keyframe track one run
  * produces. Deliberately free of any minigame, transport or rendering concern — the integrator
- * that consumes these types is destined for the server-side reducer (WN-15), so a run stays a
+ * that consumes these types is destined for the server-side reducer, so a run stays a
  * pure function of layout + seed.
  */
 
@@ -24,7 +24,7 @@ export type CircleBody = {
    * resting on a ramp keeps sliding while a hard impact bites.
    *
    * NOTE: this reading is INVERTED from the retention factor this field used to hold, where 1 meant
-   * frictionless. The name is kept deliberately until the piece vocabulary settles in WN-15 — see
+   * frictionless. The name is kept deliberately until the piece vocabulary settles — see
    * `simulate/resolveSegmentContacts`.
    */
   readonly slip: number;

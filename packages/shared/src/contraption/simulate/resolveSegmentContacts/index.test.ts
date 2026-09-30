@@ -36,7 +36,7 @@ test("reverses the approach velocity scaled by restitution when it hits a segmen
   assert.equal(resolved.y - resolved.previousY, -0.25);
 });
 
-// The next two cases are DELIBERATELY RE-SPECIFIED, not weakened (WN-23 AC-5). They previously read
+// The next two cases are DELIBERATELY RE-SPECIFIED, not weakened. They previously read
 // `slip` as a retention factor — slip 1 kept all tangential velocity, slip 0 dropped it. Under
 // impulse-bounded Coulomb, `slip` is a friction COEFFICIENT and the meaning inverts: 0 is
 // frictionless, and a large coefficient removes tangential motion up to the bound the normal
