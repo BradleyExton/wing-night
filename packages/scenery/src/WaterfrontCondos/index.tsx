@@ -10,28 +10,6 @@ export type WaterfrontCondosPalette = {
   roof: string;
 };
 
-/**
- * The twin towers on the waterfront at the foot of Bayfield: traced off an aerial photograph
- * looking north up the bay (waterfront-condos). Two cream slabs of about fifteen storeys, each
- * roughly three times as tall as it is wide, standing side by side on a low podium that steps
- * down once toward the lake, the left one a storey or two shorter. Every corner is a stack of
- * blue-glass balconies running the full height, which is what the room knows them by from across
- * the bay — cream towers with blue edges — and each is crowned by a stepped penthouse box.
- *
- * Built to be stood small (the town bank, a dusk skyline, a corridor's far wall), so it is a
- * handful of solid slabs: the front face, a narrower shadow side, a glass stack down each
- * corner and one down the middle, and the balcony slabs across the stacks as cream bands. Left
- * out on purpose: every window in the cream (the middle strip stands for all of them), the
- * lobby's pavilion roof between the towers, the podium's own windows and terraces, the
- * rooftop plant, and the perspective the photograph is taken in — this is an elevation.
- *
- * `scale` sizes it: at 1 it is the width and height below, in the caller's world units.
- */
-export const WATERFRONT_CONDOS = {
-  width: 40,
-  height: 40.8
-} as const;
-
 const PODIUM_TOP = 4.6;
 const FLOORS = 15;
 
@@ -84,6 +62,23 @@ const Tower = ({ tower, palette }: { tower: TowerShape; palette: WaterfrontCondo
   );
 };
 
+/**
+ * The twin towers on the waterfront at the foot of Bayfield: traced off an aerial photograph
+ * looking north up the bay (waterfront-condos). Two cream slabs of about fifteen storeys, each
+ * roughly three times as tall as it is wide, standing side by side on a low podium that steps
+ * down once toward the lake, the left one a storey or two shorter. Every corner is a stack of
+ * blue-glass balconies running the full height, which is what the room knows them by from across
+ * the bay — cream towers with blue edges — and each is crowned by a stepped penthouse box.
+ *
+ * Built to be stood small (the town bank, a dusk skyline, a corridor's far wall), so it is a
+ * handful of solid slabs: the front face, a narrower shadow side, a glass stack down each
+ * corner and one down the middle, and the balcony slabs across the stacks as cream bands. Left
+ * out on purpose: every window in the cream (the middle strip stands for all of them), the
+ * lobby's pavilion roof between the towers, the podium's own windows and terraces, the
+ * rooftop plant, and the perspective the photograph is taken in — this is an elevation.
+ *
+ * `scale` sizes it: at 1 it is 40 wide and 40.8 tall, in the caller's world units.
+ */
 export const WaterfrontCondos = ({
   x,
   baseY,

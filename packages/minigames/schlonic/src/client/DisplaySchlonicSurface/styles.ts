@@ -37,7 +37,7 @@ const sceneZoneVeil =
 export const arenaArea = "relative flex min-h-0 flex-1 overflow-hidden rounded-2xl";
 
 // The venue, named where it is rather than on the marquee (which names the show, §2.2D): a small
-// plaque hung over the zone's sky, centred, clear of the sky the hen crosses on a spring.
+// plaque hung over the zone's sky, centred, clear of the sky the hen crosses off a kicker.
 export const venuePlaque =
   "pointer-events-none absolute left-1/2 top-[clamp(0.6rem,1.2vh,1.2rem)] z-10 -translate-x-1/2 rounded-md bg-bg/70 px-[0.9em] py-[0.35em] text-[clamp(0.9rem,1.1vw,1.4rem)] font-extrabold uppercase tracking-[0.22em] text-text/85";
 

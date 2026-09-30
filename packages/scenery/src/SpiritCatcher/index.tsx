@@ -28,8 +28,8 @@ export type SpiritCatcherPalette = {
  * falls. That is as much as a feather can say here without becoming a wire — and the band has
  * to run full depth, because a shallower one turns the thunderbird into a moth.
  *
- * `halfSpan` is the size, in the caller's world units: SCHLONIC's morning strip stands it at
- * 17.5, and the whole sculpture is then 35 wide and 30 tall.
+ * `halfSpan` is the size, in the caller's world units: at the default 17.5 the whole sculpture
+ * is 35 wide and 30 tall. JOUST's beach stands it a little smaller, at 16.
  */
 const DEFAULT_HALF_SPAN = 17.5;
 

@@ -48,9 +48,10 @@ export type SchlonicRoundMemory = {
 // Three legs covers a full team without cycling in the sample pack, and 22 chunks a leg is about
 // seventeen seconds of street each — long enough to find a rhythm, short enough that the tablet
 // keeps moving. Par is what a player who takes the high line and keeps hold of it comes home with:
-// well over what the floor gives away — a bot that hops every hazard on the floor and never takes
-// a hit banks ~105 of the default zone's 175, and a person takes hits — and well under a perfect
-// run (a searched greedy line, springs, rails and all, banks ~155). The floor alone cannot make
+// well over what the floor gives away, because a person takes hits, and under everything a leg
+// holds. The legs are not equal — on the default street (this seed, three legs of 22) they hold
+// 156, 174 and 140 wings (`resolveSchlonicWingTotal`), 470 for the turn — so one par sits 20
+// under the leanest leg and further under the other two. The floor alone is not meant to make
 // par, which is the point: the hill lines and the rails are the difference.
 export const DEFAULT_SCHLONIC_RULES: SchlonicRuntimeRules = {
   runsPerTurn: 3,

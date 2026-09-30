@@ -42,7 +42,6 @@ export const schlonicPalette = {
   // The street itself, behind the near sidewalk: asphalt and its yellow centre line, then the
   // far sidewalk the storefronts stand on, hazed like everything past the kerb.
   asphalt: "#5b6068",
-  asphaltLight: "#737a83",
   laneLine: "#f2c94c",
   farSidewalk: "#c9ccc6",
   // The bay at the bottom of the hill: deep at the horizon, bright where it meets the town.
@@ -191,8 +190,5 @@ export const schlonicPalette = {
   hardHatShine: "#ffc58f",
   post: "#f4f6fa",
   postPole: "#9aa6b5",
-  shadow: "#2e2a26",
-  eye: "#fff7ed",
-  pupil: "#1c0d02",
-  gloss: "#ffffff"
+  shadow: "#2e2a26"
 } as const;

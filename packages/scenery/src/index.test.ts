@@ -4,9 +4,7 @@ import { createElement, type ComponentType } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
-  AllandaleStation,
   Crossovers,
-  Marina,
   QUEENS_HOTEL,
   QueensHotel,
   resolveQueensPatioX,
@@ -18,7 +16,22 @@ import {
   TownCluster,
   WaterfrontCondos
 } from "./index.js";
-import type { CityPalette } from "./index.js";
+import type {
+  CrossoversPalette,
+  QueensHotelPalette,
+  SceneryPalette,
+  SouldiersSkateShopPalette,
+  StorefrontsPalette,
+  WaterfrontCondosPalette
+} from "./index.js";
+
+// Every slot any landmark here asks for, so one palette can be handed to all of them.
+type CityPalette = SceneryPalette &
+  SouldiersSkateShopPalette &
+  QueensHotelPalette &
+  CrossoversPalette &
+  WaterfrontCondosPalette &
+  StorefrontsPalette;
 
 // One colour per slot, each unique, so a render can be read back for exactly which slot painted
 // what — a landmark that carried a colour of its own would show up as a hex none of these are.
@@ -32,12 +45,6 @@ const PALETTE: CityPalette = {
   brick: "#070707",
   brickDark: "#080808",
   roof: "#090909",
-  platform: "#0a0a0a",
-  dock: "#0b0b0b",
-  dockDark: "#0c0c0c",
-  hull: "#0d0d0d",
-  mast: "#0e0e0e",
-  sail: "#0f0f0f",
   trim: "#101010",
   pane: "#111111",
   signGreen: "#121212",
@@ -69,8 +76,6 @@ type Landmark = ComponentType<{
 const LANDMARKS: Landmark[] = [
   SpiritCatcher,
   TownCluster,
-  AllandaleStation,
-  Marina,
   SouldiersSkateShop,
   QueensHotel,
   Crossovers,
@@ -98,8 +103,6 @@ test("does paint every landmark only in the colours it was handed", () => {
 test("does stand each landmark under its own marker so a scene can find it", () => {
   assert.match(stand(SpiritCatcher, { x: 0, baseY: 0 }), /data-scenery-spirit-catcher/);
   assert.match(stand(TownCluster, { x: 0, baseY: 0 }), /data-scenery-town/);
-  assert.match(stand(AllandaleStation, { x: 0, baseY: 0 }), /data-scenery-station/);
-  assert.match(stand(Marina, { x: 0, baseY: 0 }), /data-scenery-marina/);
   assert.match(stand(SouldiersSkateShop, { x: 0, baseY: 0 }), /data-scenery-souldiers/);
   assert.match(stand(QueensHotel, { x: 0, baseY: 0 }), /data-scenery-queens/);
   assert.match(stand(Crossovers, { x: 0, baseY: 0 }), /data-scenery-crossovers/);

@@ -62,11 +62,6 @@ export const resolveTrackPercent = (zone: SchlonicZone, x: number): number => {
   return round(clampPercent(((x - SCHLONIC_WORLD.runnerX) / length) * 100));
 };
 
-/** The same, for a distance the referee already measured from the line. */
-export const resolveTrackDistancePercent = (zone: SchlonicZone, distance: number): number => {
-  return resolveTrackPercent(zone, SCHLONIC_WORLD.runnerX + distance);
-};
-
 /**
  * The handoff lines: one at the start of every leg but the first, at the leg's width apart. A
  * course of one leg has none.

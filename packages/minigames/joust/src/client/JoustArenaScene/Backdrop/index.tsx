@@ -62,8 +62,8 @@ const SUN = { cx: 136, cy: 54, r: 6.5, glowRadius: 18 };
 
 /**
  * The landmarks in dusk silhouette: one colour, the light behind them. `@wingnight/scenery`
- * draws the same shapes SCHLONIC stands in its morning haze; only the windows are lit here, and
- * the condos' balcony glass holds the last of the glow.
+ * draws the same town and condos SCHLONIC stands in its morning haze; only the windows are lit
+ * here, and the condos' balcony glass holds the last of the glow.
  */
 const SCENERY: SceneryPalette & WaterfrontCondosPalette = {
   tower: joustPalette.silhouette,
@@ -75,15 +75,7 @@ const SCENERY: SceneryPalette & WaterfrontCondosPalette = {
   wall: joustPalette.silhouette,
   wallDark: joustPalette.silhouette,
   glass: joustPalette.glass,
-  brick: joustPalette.silhouette,
-  brickDark: joustPalette.silhouette,
-  roof: joustPalette.silhouette,
-  platform: joustPalette.silhouette,
-  dock: joustPalette.silhouette,
-  dockDark: joustPalette.silhouette,
-  hull: joustPalette.silhouette,
-  mast: joustPalette.silhouette,
-  sail: joustPalette.silhouette
+  roof: joustPalette.silhouette
 };
 
 /** Downtown, on the far horizon at the west end, half off the frame the way a skyline is. */

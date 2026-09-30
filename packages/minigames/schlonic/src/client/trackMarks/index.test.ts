@@ -10,7 +10,6 @@ import {
 
 import {
   paintZoneTrack,
-  resolveTrackDistancePercent,
   resolveTrackHandoffs,
   resolveTrackMarks,
   resolveTrackPercent
@@ -25,15 +24,6 @@ test("puts the start line at nought and the post at a hundred", () => {
   // Past the post is still the post; behind the line is still the line.
   assert.equal(resolveTrackPercent(ZONE, ZONE.goalX + 500), 100);
   assert.equal(resolveTrackPercent(ZONE, 0), 0);
-});
-
-test("measures a refereed distance on the same scale as a live x", () => {
-  const distance = 300;
-
-  assert.equal(
-    resolveTrackDistancePercent(ZONE, distance),
-    resolveTrackPercent(ZONE, SCHLONIC_WORLD.runnerX + distance)
-  );
 });
 
 test("marks every hazard and every hole, and no wing", () => {
