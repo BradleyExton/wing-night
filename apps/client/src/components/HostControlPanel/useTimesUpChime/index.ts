@@ -1,4 +1,4 @@
-import { createHouseSoundboard, type HouseSoundboard } from "@wingnight/audio";
+import { useHouseSoundboard } from "@wingnight/surface";
 import { useEffect, useRef } from "react";
 
 // Beeps once on the host tablet the moment a running countdown crosses zero.
@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 // buzzer instead, and neither is the other.
 export const useTimesUpChime = (remainingSeconds: number | null): void => {
   const previousRemainingRef = useRef<number | null>(null);
-  const soundboardRef = useRef<HouseSoundboard | null>(null);
+  const play = useHouseSoundboard();
 
   useEffect(() => {
     const previousRemaining = previousRemainingRef.current;
@@ -21,7 +21,6 @@ export const useTimesUpChime = (remainingSeconds: number | null): void => {
       return;
     }
 
-    soundboardRef.current ??= createHouseSoundboard();
-    soundboardRef.current.play("chime");
-  }, [remainingSeconds]);
+    play("chime");
+  }, [play, remainingSeconds]);
 };

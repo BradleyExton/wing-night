@@ -1,4 +1,4 @@
-import { createHouseSoundboard, type HouseSoundboard } from "@wingnight/audio";
+import { useHouseSoundboard } from "@wingnight/surface";
 import { useEffect, useRef } from "react";
 
 import { resolveClockSoundCue } from "../../../../utils/resolveClockSoundCue";
@@ -15,12 +15,12 @@ import { resolveClockSoundCue } from "../../../../utils/resolveClockSoundCue";
 // tongue. Sound ignores `prefers-reduced-motion`: that is a motion preference,
 // and the last ten seconds are still the loudest thing on the TV.
 //
-// The board is made on the first cue, not on mount, and kept in a ref: the
-// stage body remounts between turns and must not leave a trail of boards —
-// though the AudioContext under them is one per tab regardless.
+// The board is `useHouseSoundboard`'s, made on the first cue rather than on
+// mount; the stage body remounts between turns, and the AudioContext under
+// every board is one per tab regardless.
 export const useMinigameClockSound = (remainingSeconds: number | null): void => {
   const previousRemainingRef = useRef<number | null>(null);
-  const soundboardRef = useRef<HouseSoundboard | null>(null);
+  const play = useHouseSoundboard();
 
   useEffect(() => {
     const previousRemaining = previousRemainingRef.current;
@@ -33,7 +33,6 @@ export const useMinigameClockSound = (remainingSeconds: number | null): void => 
       return;
     }
 
-    soundboardRef.current ??= createHouseSoundboard();
-    soundboardRef.current.play(cue);
-  }, [remainingSeconds]);
+    play(cue);
+  }, [play, remainingSeconds]);
 };

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef } from "react";
 import { resolveSfxTakesUrl, type SchlonicMinigameDisplayView } from "@wingnight/shared";
-import { useSfxTakes } from "@wingnight/surface";
+import { useGameSoundboard, type GameSoundboardFactory } from "@wingnight/surface";
 
 import {
   SCHLONIC_SFX_FOLDER,
   WING_CHIME_TOP_AT,
   createSchlonicSoundboard,
   resolveSchlonicTakes,
-  type SchlonicSoundboard
+  type SchlonicCueName
 } from "../audio/index.js";
 import type { SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
 import { resolveCardDelayMs, type RunHold } from "../useHeldRun/index.js";
@@ -28,6 +28,10 @@ export type SchlonicSounds = {
   onBankTick: (share: number) => void;
 };
 
+// The pack's takes, less any file named for a cue this board does not have.
+const createSchlonicBoard: GameSoundboardFactory<SchlonicCueName> = (options) =>
+  createSchlonicSoundboard(options === undefined ? {} : { takes: resolveSchlonicTakes(options.takes) });
+
 /**
  * The room's sound for one team's zone, on the TV only. The handlers' identities are STABLE
  * for the life of the surface, deliberately: the mirror's effect carries a hand-narrowed
@@ -40,31 +44,11 @@ export const useSchlonicSounds = ({
   serverOrigin,
   isSpeaker = true
 }: SchlonicSoundsInput): SchlonicSounds => {
-  const takes = useSfxTakes(isSpeaker ? resolveSfxTakesUrl(SCHLONIC_SFX_FOLDER, serverOrigin) : null);
-  // Made on the first cue rather than on mount, so a surface that is only ever looked at
-  // never asks the browser for an audio context at all.
-  const boardRef = useRef<SchlonicSoundboard | null>(null);
-  const isSpeakerRef = useRef(isSpeaker);
-
-  isSpeakerRef.current = isSpeaker;
-
-  const play = useCallback((cue: Parameters<SchlonicSoundboard["play"]>[0], intensity?: number): void => {
-    if (!isSpeakerRef.current) {
-      return;
-    }
-
-    boardRef.current ??= createSchlonicSoundboard();
-    boardRef.current.play(cue, intensity);
-  }, []);
-
-  // A board per take listing, made as the takes land so they have decoded before the first cue.
-  // With none, the board waits for the first cue as before. `play` reads the ref, so the
-  // handlers keep their identity across the swap.
-  useEffect(() => {
-    const boardTakes = resolveSchlonicTakes(takes);
-
-    boardRef.current = Object.keys(boardTakes).length === 0 ? null : createSchlonicSoundboard({ takes: boardTakes });
-  }, [takes]);
+  const play = useGameSoundboard({
+    createBoard: createSchlonicBoard,
+    takesUrl: resolveSfxTakesUrl(SCHLONIC_SFX_FOLDER, serverOrigin),
+    isSpeaker
+  });
 
   const onMirrorEvent = useCallback<SchlonicMirrorEventHandler>(
     (event): void => {

@@ -1,14 +1,12 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { resolveSfxTakesUrl, type JoustMinigameDisplayView } from "@wingnight/shared";
-import { useSfxTakes } from "@wingnight/surface";
+import { useGameSoundboard } from "@wingnight/surface";
 
 import {
   JOUST_SFX_FOLDER,
   createJoustSoundboard,
   resolveCreak,
-  resolveReplayCues,
-  type JoustCueName,
-  type JoustSoundboard
+  resolveReplayCues
 } from "../audio/index.js";
 
 type JoustSoundsInput = {
@@ -35,19 +33,10 @@ export const useJoustSounds = ({
   replayFinished,
   serverOrigin
 }: JoustSoundsInput): void => {
-  const takes = useSfxTakes(resolveSfxTakesUrl(JOUST_SFX_FOLDER, serverOrigin));
-  const boardRef = useRef<JoustSoundboard | null>(null);
-
-  // A board per take listing, made as the takes land so they have decoded before the first shot.
-  // With none, the board waits for the first cue like any other.
-  useEffect(() => {
-    boardRef.current = Object.keys(takes).length === 0 ? null : createJoustSoundboard({ takes });
-  }, [takes]);
-
-  const play = useCallback((cue: JoustCueName, intensity?: number): void => {
-    boardRef.current ??= createJoustSoundboard();
-    boardRef.current.play(cue, intensity);
-  }, []);
+  const play = useGameSoundboard({
+    createBoard: createJoustSoundboard,
+    takesUrl: resolveSfxTakesUrl(JOUST_SFX_FOLDER, serverOrigin)
+  });
 
   // The band. Read only while a shot is not in the air: the aim the view carries during a replay
   // is the one that flew, and it does not creak.

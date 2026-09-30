@@ -4,14 +4,13 @@ import {
   type FappyMinigameDisplayView,
   type FappyPhase
 } from "@wingnight/shared";
-import { useSfxTakes } from "@wingnight/surface";
+import { useGameSoundboard } from "@wingnight/surface";
 
 import {
   FAPPY_SFX_FOLDER,
   createFappySoundboard,
   resolveClockCue,
-  type FappyCueName,
-  type FappySoundboard
+  type FappyCueName
 } from "../audio/index.js";
 import type { FappyMirrorEvent, FappyMirrorEventHandler } from "../mirrorEvents/index.js";
 import type { LegHold } from "../useHeldLeg/index.js";
@@ -64,29 +63,11 @@ export const useFappySounds = ({
   serverOrigin,
   isSpeaker = true
 }: FappySoundsInput): FappyMirrorEventHandler => {
-  const takes = useSfxTakes(isSpeaker ? resolveSfxTakesUrl(FAPPY_SFX_FOLDER, serverOrigin) : null);
-  // Made on the first cue rather than on mount, so a surface that is only ever looked at
-  // never asks the browser for an audio context at all.
-  const boardRef = useRef<FappySoundboard | null>(null);
-  const isSpeakerRef = useRef(isSpeaker);
-
-  isSpeakerRef.current = isSpeaker;
-
-  const play = useCallback((cue: FappyCueName, intensity?: number): void => {
-    if (!isSpeakerRef.current) {
-      return;
-    }
-
-    boardRef.current ??= createFappySoundboard();
-    boardRef.current.play(cue, intensity);
-  }, []);
-
-  // A board per take listing, made as the takes land so they have decoded before the first cue.
-  // With none, the board waits for the first cue as before. `play` reads the ref, so the
-  // handlers keep their identity across the swap.
-  useEffect(() => {
-    boardRef.current = Object.keys(takes).length === 0 ? null : createFappySoundboard({ takes });
-  }, [takes]);
+  const play = useGameSoundboard({
+    createBoard: createFappySoundboard,
+    takesUrl: resolveSfxTakesUrl(FAPPY_SFX_FOLDER, serverOrigin),
+    isSpeaker
+  });
 
   // Read by the stable mirror handler, so it always sees the current relay rather than the one
   // that was current when the mirror's effect last ran.
