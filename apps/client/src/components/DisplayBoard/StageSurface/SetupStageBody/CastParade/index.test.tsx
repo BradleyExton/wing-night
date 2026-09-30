@@ -131,6 +131,22 @@ test("does parade the unseated as a muted group of their own when nobody has a t
   assert.match(html, new RegExp(`data-cast-member="player-1"[^]*?${styles.unassignedFill}`));
 });
 
+test("does put one group in the middle of the floor at a time when the lineup is solo", () => {
+  const html = renderToStaticMarkup(
+    <CastParade players={players} teams={teams} teamThemeByTeamId={themes} lineup="solo" />
+  );
+
+  assert.match(html, /data-cast-group="team-alpha" data-cast-side="left"/);
+  assert.doesNotMatch(html, /data-cast-group="team-beta"/, "the second team waits for its own cycle");
+  assert.equal(countMembers(html), 2);
+  // Staged off the left edge, from where it walks to the centre line.
+  assert.match(
+    html,
+    new RegExp(`class="${escapeForRegExp(styles.groupSolo)} ${escapeForRegExp(styles.groupSoloLeftOffstage)}" data-cast-group="team-alpha"`)
+  );
+  assert.doesNotMatch(html, new RegExp(escapeForRegExp(styles.groupLeftOffstage)));
+});
+
 test("does render nothing when the roster is empty", () => {
   assert.equal(renderParade([]), "");
 });

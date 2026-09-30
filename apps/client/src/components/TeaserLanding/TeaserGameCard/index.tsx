@@ -12,8 +12,9 @@ type TeaserGameCardProps = {
   statusLabel: string;
 };
 
-// One game on the landing page, cut from the lobby's round card: the game's embossed glyph, its
-// name as the headline, a line of what you do, and the pill that says whether you can play it.
+// One game on the landing page, cut from the lobby's round card into a row: the game's symbol
+// in a lit badge, its name as the headline with a line of what you do under it, and the pill
+// that says whether you can play it.
 export const TeaserGameCard = ({
   minigame,
   title,
@@ -21,13 +22,18 @@ export const TeaserGameCard = ({
   href,
   statusLabel
 }: TeaserGameCardProps): JSX.Element => {
+  const isLocked = href === null;
   const body = (
     <>
-      <RoundGlyph minigame={minigame} />
-      <p className={styles.title}>{title}</p>
-      <p className={styles.summary}>{summary}</p>
-      <span className={href === null ? styles.pillLocked : styles.pill}>
-        <span className={href === null ? styles.pillDotLocked : styles.pillDot} aria-hidden />
+      <span className={isLocked ? styles.badgeLocked : styles.badge} aria-hidden>
+        <RoundGlyph minigame={minigame} variant="badge" />
+      </span>
+      <span className={styles.body}>
+        <span className={styles.title}>{title}</span>
+        <span className={styles.summary}>{summary}</span>
+      </span>
+      <span className={isLocked ? styles.pillLocked : styles.pill}>
+        <span className={isLocked ? styles.pillDotLocked : styles.pillDot} aria-hidden />
         {statusLabel}
       </span>
     </>

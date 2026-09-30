@@ -3,7 +3,9 @@ import { commonCopy } from "../../copy/common";
 export const teaserLandingCopy = {
   brandLabel: commonCopy.brandLabel,
   eyebrow: "Coming soon",
-  tagline: "Wings, sauce and a night of minigames. Warm up on your phone.",
+  // Two lines, on purpose: the night, then what the phone is for.
+  taglineLead: "Wings, sauce and a night of minigames.",
+  taglineCall: "Warm up on your phone.",
   gamesHeading: "Warm up",
   dunlopDashTitle: "Dunlop Dash",
   dunlopDashSummary: "Skate Dunlop Street. Tap to ollie, grab every wing.",
@@ -11,5 +13,5 @@ export const teaserLandingCopy = {
   fappySummary: "Flap the relay over downtown.",
   slingshlongTitle: "Slingshlong",
   slingshlongSummary: "Pull back, let fly, topple the tower.",
-  playLabel: "Play now"
+  playLabel: "Play"
 } as const;

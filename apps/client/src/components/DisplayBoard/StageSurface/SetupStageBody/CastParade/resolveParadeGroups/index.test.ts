@@ -54,3 +54,13 @@ test("does pair consecutive groups left and right and leave an odd last group al
 test("does make no pairs from no groups", () => {
   assert.deepEqual(resolveParadePairs([]), []);
 });
+
+test("does send every group on alone, in order, when the lineup is solo", () => {
+  const groups = resolveParadeGroups(players, teams, resolveTeamThemeById(teams));
+  const pairs = resolveParadePairs(groups, "solo");
+
+  assert.deepEqual(
+    pairs.map((pair) => pair.map((group) => group.id)),
+    [["team-alpha"], ["team-beta"], [UNSEATED_GROUP_ID]]
+  );
+});

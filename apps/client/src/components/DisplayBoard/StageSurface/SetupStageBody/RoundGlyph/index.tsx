@@ -78,14 +78,19 @@ const GLYPH_PATHS: Record<MinigameType, JSX.Element> = {
   )
 };
 
+export type RoundGlyphVariant = "emboss" | "badge";
+
 type RoundGlyphProps = {
   minigame: MinigameType;
+  // Pressed into a card's corner as texture (the lobby's default), or drawn
+  // plainly, filling the box it is given, as a badge's symbol.
+  variant?: RoundGlyphVariant;
 };
 
-export const RoundGlyph = ({ minigame }: RoundGlyphProps): JSX.Element => {
+export const RoundGlyph = ({ minigame, variant = "emboss" }: RoundGlyphProps): JSX.Element => {
   return (
     <svg
-      className={styles.svg}
+      className={variant === "badge" ? styles.svgBadge : styles.svg}
       viewBox="0 0 64 64"
       fill="none"
       stroke="currentColor"

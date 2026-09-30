@@ -8,7 +8,7 @@ import { resolveTeamTheme } from "../../../../../../utils/resolveTeamTheme";
 // cast's warm neutral, so nobody is missing from the floor while the host is
 // still seating the room. Pairs are consecutive groups: the first walks in
 // from the left, the second from the right, and an odd last group walks in
-// alone.
+// alone. A floor too narrow for two teams (a phone) takes them one at a time.
 export type ParadeGroup = {
   id: string;
   players: Player[];
@@ -73,7 +73,16 @@ export const resolveParadeGroups = (
   return groups;
 };
 
-export const resolveParadePairs = (groups: ParadeGroup[]): ParadePair[] => {
+export type ParadeLineup = "pairs" | "solo";
+
+export const resolveParadePairs = (
+  groups: ParadeGroup[],
+  lineup: ParadeLineup = "pairs"
+): ParadePair[] => {
+  if (lineup === "solo") {
+    return groups.map((group) => [group] as const);
+  }
+
   const pairs: ParadePair[] = [];
 
   for (let index = 0; index < groups.length; index += 2) {

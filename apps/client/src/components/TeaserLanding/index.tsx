@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import type { TeaserRoster } from "../../utils/parseTeaserRoster";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
+import { useMediaQuery } from "../../utils/useMediaQuery";
 import { CastParade } from "../DisplayBoard/StageSurface/SetupStageBody/CastParade";
 import { Embers } from "../DisplayBoard/StageSurface/SetupStageBody/Embers";
 import { HeroFlame } from "../DisplayBoard/StageSurface/SetupStageBody/HeroFlame";
@@ -18,11 +19,16 @@ type TeaserLandingProps = {
   roster: TeaserRoster;
 };
 
+// A phone's floor is too narrow for two teams abreast; past this the parade pairs them as the TV does.
+const WIDE_FLOOR_QUERY = "(min-width: 640px)";
+
 // The teaser's front page is the TV's lobby (SetupStageBody): the same flame, embers and floor,
-// the night's own cast parading two teams at a time, and the wordmark. Where the lobby lists the
-// rounds, the teaser counts down to the night and offers the games you can warm up on.
+// the night's own cast parading across it, and the wordmark. Where the lobby lists the rounds,
+// the teaser counts down to the night and offers the games you can warm up on — all of it on
+// one phone screen, with nothing to scroll to.
 export const TeaserLanding = ({ roster }: TeaserLandingProps): JSX.Element => {
   const teamThemeByTeamId = useMemo(() => resolveTeamThemeById(roster.teams), [roster.teams]);
+  const hasWideFloor = useMediaQuery(WIDE_FLOOR_QUERY);
 
   return (
     <main className={styles.container}>
@@ -38,11 +44,12 @@ export const TeaserLanding = ({ roster }: TeaserLandingProps): JSX.Element => {
           players={roster.players}
           teams={roster.teams}
           teamThemeByTeamId={teamThemeByTeamId}
+          lineup={hasWideFloor ? "pairs" : "solo"}
         />
       </div>
       <span className={lobbyStyles.floorBloom} aria-hidden />
 
-      <div className={lobbyStyles.header}>
+      <div className={styles.header}>
         <div className={lobbyStyles.eyebrowRow}>
           <span className={lobbyStyles.eyebrowRuleLeft} aria-hidden />
           <span className={lobbyStyles.eyebrow}>{teaserLandingCopy.eyebrow}</span>
@@ -51,14 +58,17 @@ export const TeaserLanding = ({ roster }: TeaserLandingProps): JSX.Element => {
         <div className={lobbyStyles.headingGlow}>
           <h1 className={styles.heading}>{teaserLandingCopy.brandLabel}</h1>
         </div>
-        <p className={styles.tagline}>{teaserLandingCopy.tagline}</p>
+        <p className={styles.tagline}>
+          <span className={styles.taglineLine}>{teaserLandingCopy.taglineLead}</span>
+          <span className={styles.taglineLine}>{teaserLandingCopy.taglineCall}</span>
+        </p>
       </div>
 
       <TeaserCountdown startsAt={TEASER_PARTY_STARTS_AT} />
 
       <section className={styles.games}>
         <h2 className={styles.gamesHeading}>{teaserLandingCopy.gamesHeading}</h2>
-        <div className={styles.gameGrid}>
+        <div className={styles.gameList}>
           <TeaserGameCard
             minigame="SCHLONIC"
             title={teaserLandingCopy.dunlopDashTitle}

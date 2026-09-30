@@ -10,7 +10,12 @@ import {
 
 import { useServerOrigin } from "../../../../../utils/useServerOrigin";
 import { resolveParadeFrame, type ParadeFrame, type ParadePhase } from "./resolveParadeFrame";
-import { resolveParadeGroups, resolveParadePairs, type ParadeGroup } from "./resolveParadeGroups";
+import {
+  resolveParadeGroups,
+  resolveParadePairs,
+  type ParadeGroup,
+  type ParadeLineup
+} from "./resolveParadeGroups";
 import * as styles from "./styles";
 
 type CastParadeProps = {
@@ -19,6 +24,10 @@ type CastParadeProps = {
   // Colour and apparel come off the theme map so the parade, the standings
   // dots and the intro lineup can never disagree about a team's look.
   teamThemeByTeamId: Map<string, TeamTheme>;
+  // Two teams a cycle, one a side (the TV's floor), or one team a cycle in
+  // the middle of the floor, from alternating edges (a phone's). Pairs unless
+  // said otherwise.
+  lineup?: ParadeLineup;
 };
 
 type Side = "left" | "right";
@@ -58,13 +67,24 @@ const useParadeFrame = (pairCount: number): ParadeFrame => {
 
 const isOnstage = (phase: ParadePhase): boolean => phase === "enter" || phase === "dance";
 
-const resolveGroupClassName = (side: Side, phase: ParadePhase): string => {
+const resolveGroupClassName = (side: Side, phase: ParadePhase, lineup: ParadeLineup): string => {
+  if (lineup === "solo") {
+    if (isOnstage(phase)) {
+      return `${styles.groupSolo} ${styles.groupSoloOnstage}`;
+    }
+
+    return `${styles.groupSolo} ${side === "left" ? styles.groupSoloLeftOffstage : styles.groupSoloRightOffstage}`;
+  }
+
   if (side === "left") {
     return `${styles.groupLeft} ${isOnstage(phase) ? styles.groupLeftOnstage : styles.groupLeftOffstage}`;
   }
 
   return `${styles.groupRight} ${isOnstage(phase) ? styles.groupRightOnstage : styles.groupRightOffstage}`;
 };
+
+// A solo team takes turns with the edges, so the floor is not a one-way street.
+const resolveSoloSide = (pairIndex: number): Side => (pairIndex % 2 === 0 ? "left" : "right");
 
 // A bird faces the way it is going, and its opposite number while it dances:
 // the left group faces right except on the way out, the right group faces
@@ -89,12 +109,17 @@ const resolveShadowClassName = (phase: ParadePhase): string =>
 // edge and one from the right, they dance to the beat facing each other, walk
 // back out their own edges, and the next pair walks in. Decoration only — no
 // state the server knows, `aria-hidden`.
-export const CastParade = ({ players, teams, teamThemeByTeamId }: CastParadeProps): JSX.Element | null => {
+export const CastParade = ({
+  players,
+  teams,
+  teamThemeByTeamId,
+  lineup = "pairs"
+}: CastParadeProps): JSX.Element | null => {
   // Player heads come from the content pack, which the SERVER serves — the TV
   // is a different origin, so they have to be addressed absolutely. `null` on
   // the first paint, and every player wears their drawn head until it resolves.
   const serverOrigin = useServerOrigin();
-  const pairs = resolveParadePairs(resolveParadeGroups(players, teams, teamThemeByTeamId));
+  const pairs = resolveParadePairs(resolveParadeGroups(players, teams, teamThemeByTeamId), lineup);
   const frame = useParadeFrame(pairs.length);
   const pair = pairs[frame.pairIndex] ?? pairs[0];
 
@@ -105,7 +130,7 @@ export const CastParade = ({ players, teams, teamThemeByTeamId }: CastParadeProp
   const renderGroup = (group: ParadeGroup, side: Side): JSX.Element => (
     <span
       key={group.id}
-      className={resolveGroupClassName(side, frame.phase)}
+      className={resolveGroupClassName(side, frame.phase, lineup)}
       data-cast-group={group.id}
       data-cast-side={side}
     >
@@ -139,7 +164,7 @@ export const CastParade = ({ players, teams, teamThemeByTeamId }: CastParadeProp
 
   return (
     <div className={styles.container} aria-hidden data-cast-parade data-cast-parade-phase={frame.phase}>
-      {renderGroup(pair[0], "left")}
+      {renderGroup(pair[0], lineup === "solo" ? resolveSoloSide(frame.pairIndex) : "left")}
       {pair[1] !== undefined && renderGroup(pair[1], "right")}
     </div>
   );

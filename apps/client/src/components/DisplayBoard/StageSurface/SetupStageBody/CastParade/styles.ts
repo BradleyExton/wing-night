@@ -16,11 +16,13 @@ export const unassignedFill = "text-mutedWarm";
 // face it is from the couch. Birds in a row overlap by a little, as a huddle
 // does, so a team of six still fits its half of the floor.
 const groupBase =
-  "absolute bottom-0 flex h-[clamp(5rem,12vh,15rem)] items-end -space-x-[2.5vw] will-change-transform transition-transform duration-[3200ms] ease-linear motion-reduce:transition-none";
+  "absolute bottom-0 flex items-end will-change-transform transition-transform duration-[3200ms] ease-linear motion-reduce:transition-none";
 
-export const groupLeft = `${groupBase} left-0`;
+const groupPaired = `${groupBase} h-[clamp(5rem,12vh,15rem)] -space-x-[2.5vw]`;
 
-export const groupRight = `${groupBase} right-0`;
+export const groupLeft = `${groupPaired} left-0`;
+
+export const groupRight = `${groupPaired} right-0`;
 
 // Off the edge is a whole group-width past it, whatever the group's width.
 export const groupLeftOffstage = "-translate-x-full";
@@ -30,6 +32,21 @@ export const groupLeftOnstage = "translate-x-[6vw]";
 export const groupRightOffstage = "translate-x-full";
 
 export const groupRightOnstage = "-translate-x-[6vw]";
+
+// A solo group has the whole floor: it walks in from one edge, dances in the
+// middle, and walks back out the way it came. Its birds huddle close — the
+// floor that takes teams one at a time is a phone's, where six birds at the
+// paired spacing are wider than the screen — and stand a touch shorter, so a
+// full team fits between the edges with its faces still readable.
+export const groupSolo = `${groupBase} left-1/2 h-[clamp(4.5rem,11vh,15rem)] -space-x-[11vw]`;
+
+// Pinned at the centre line, so "off the left edge" is half the screen plus
+// the group's own width back, and "off the right edge" is half the screen on.
+export const groupSoloLeftOffstage = "translate-x-[calc(-50vw_-_100%)]";
+
+export const groupSoloRightOffstage = "translate-x-[50vw]";
+
+export const groupSoloOnstage = "-translate-x-1/2";
 
 export const member = "relative block h-full";
 
