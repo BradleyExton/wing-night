@@ -1,8 +1,8 @@
 import { briefingCard, railCounterOverlay, takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
 
 // JOUST is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the lane is
-// evenly spread scenery, so a chip in one corner costs a corner of desert
-// rather than a word the host has to read.
+// evenly spread scenery, so a chip in one corner costs a corner of sky, bay or
+// sand rather than a word the host has to read.
 //
 // Nothing here positions the takeover's chrome and nothing here reserves the
 // corner dock. The rail, the clock, the counter's place in the row, the

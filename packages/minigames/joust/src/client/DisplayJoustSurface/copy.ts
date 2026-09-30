@@ -18,8 +18,6 @@ export const displayJoustSurfaceCopy = {
   resultPoints: (points: number): string => `+${points}`,
   toppledNames: (names: string[]): string => names.join(" · "),
   donePrompt: "That's the turn",
-  doneHint: "Scores go up at the end of the round.",
   noArenaLabel: "The lane is missing. The host is on it.",
-  emptyRackLabel: "Nobody left to knock over.",
   waitingLabel: "Waiting for the host…"
 } as const;

@@ -2,24 +2,14 @@ import type { MinigameType } from "@wingnight/shared";
 import type { Phase } from "@wingnight/shared";
 import { formatClockSeconds, formatMinigameName, formatPhaseLabel } from "./formatters";
 
-const STANDING_ROSTER_EMPTY_LABEL = "No players assigned.";
-
 export const displayCopy = {
   roundFallbackLabel: "Phase details will appear on the next update.",
   waitingForStateLabel: "Waiting for room state...",
   waitingPhaseLabel: "Connecting",
-  currentRoundLabel: (currentRound: number, totalRounds: number): string =>
-    `Round ${currentRound} of ${totalRounds}`,
   phaseLabel: (phase: Phase): string => formatPhaseLabel(phase),
-  stageContextPhaseLabel: (phaseLabel: string): string => `Phase: ${phaseLabel}`,
-  stageContextRoundLabel: (roundMetaLabel: string): string => `Round: ${roundMetaLabel}`,
-  stageContextTeamLabel: (teamName: string): string => `Team Up: ${teamName}`,
   phaseContextTitle: (phaseLabel: string): string => `${phaseLabel} in progress`,
   sauceLabel: "Sauce",
   minigameLabel: "Mini-Game",
-  roundSauceSummary: (sauce: string): string => `Sauce: ${sauce}`,
-  roundMinigameSummary: (minigame: MinigameType): string =>
-    `Mini-Game: ${formatMinigameName(minigame)}`,
   minigameSectionTitle: "Mini-Game",
   minigameIntroDescription: (minigame: MinigameType): string =>
     `${formatMinigameName(minigame)} is up next.`,
@@ -27,8 +17,6 @@ export const displayCopy = {
     "Waiting for minigame display state from the server snapshot.",
   minigameRendererUnavailableLabel: (minigame: MinigameType): string =>
     `${formatMinigameName(minigame)} display surface is not available yet.`,
-  triviaTurnTitle: "Trivia Turn",
-  triviaQuestionLabel: "Question",
   eatingTimerLabel: "Round Timer",
   eatingTimerValue: formatClockSeconds,
   eatingActiveTeamLabel: "on the wings",
@@ -42,31 +30,14 @@ export const displayCopy = {
   roundChipLabel: (round: number): string => `Round ${round}`,
   roundLabelSauceSummary: (label: string, sauce: string): string =>
     `${label} · ${sauce}`,
-  standingsTitle: "Standings",
   standingsEmptyLabel: "No teams have joined yet.",
   standingLeaderLabel: "Leading",
   standingWinnerLabel: "Winner",
   standingTiedLabel: "Tied",
-  standingRankLabel: (rank: number): string => `#${rank}`,
   standingRankOrdinalLabel: (rank: number): string => {
     if (rank === 1) return "1st";
     if (rank === 2) return "2nd";
     if (rank === 3) return "3rd";
     return `${rank}th`;
-  },
-  standingScoreLabel: (score: number): string => `${score} pts`,
-  standingRosterValue: (
-    visiblePlayerNames: string[],
-    hiddenPlayerCount: number
-  ): string => {
-    if (visiblePlayerNames.length === 0) {
-      return STANDING_ROSTER_EMPTY_LABEL;
-    }
-
-    if (hiddenPlayerCount > 0) {
-      return `${visiblePlayerNames.join(", ")} +${hiddenPlayerCount}`;
-    }
-
-    return visiblePlayerNames.join(", ");
   }
 } as const;

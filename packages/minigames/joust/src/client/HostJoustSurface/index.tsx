@@ -86,11 +86,11 @@ const ShotResultCard = ({
 
 // JOUST's host surface. At play it is a `<TakeoverCanvas>`
 // (docs/takeover-layout-api.md §3, §5): the lane is evenly spread scenery, so
-// a chip in one corner costs a corner of desert rather than a word, and the
-// 330px control deck this file used to grow — which cost the arena 342px of
-// the tablet — is gone. Its contents went to the slots §5 names: the counts
-// to `counter`, the beat-enders and the hint to `actions`, the last shot and
-// the running totals to `readout`.
+// a chip in one corner costs a corner of sky, bay or sand rather than a word,
+// and the 330px control deck this file used to grow — which cost the arena
+// 342px of the tablet — is gone. Its contents went to the slots §5 names: the
+// counts to `counter`, the beat-enders and the hint to `actions`, the last
+// shot and the running totals to `readout`.
 //
 // It renders no rail and no team chip of its own — `rail` arrives filled with
 // the shell's `<HostMiniRail />`, which already says the round, the sauce and

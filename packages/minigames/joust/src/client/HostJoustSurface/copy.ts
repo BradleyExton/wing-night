@@ -8,7 +8,6 @@ export const hostJoustSurfaceCopy = {
   shotCounter: (shotNumber: number, shotsTotal: number): string =>
     `Shot ${shotNumber} of ${shotsTotal}`,
   shooterLabel: (name: string): string => `${name} is up`,
-  nextShooterLabel: (name: string): string => `Next: ${name}`,
   aimingHint: "Drag back on the lane and release to fire.",
   standingLabel: (standingCount: number, rackSize: number): string =>
     `${standingCount} of ${rackSize} still standing`,

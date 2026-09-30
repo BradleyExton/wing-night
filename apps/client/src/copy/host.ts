@@ -2,7 +2,6 @@ import { Phase, type MinigameType } from "@wingnight/shared";
 import { formatClockSeconds, formatMinigameName, formatPhaseLabel } from "./formatters";
 
 const COMPACT_ROSTER_EMPTY_LABEL = "No players assigned.";
-const TEAM_ROSTER_EMPTY_LABEL = "No players assigned yet.";
 
 type PrimaryActionContext = {
   hasNextRoundTurn: boolean;
@@ -94,10 +93,6 @@ const phaseDescription = (
 
 export const hostCopy = {
   headerKickerLabel: "Host",
-  headerRoundContextTitle: "Round",
-  headerActiveTeamContextTitle: "Active Team",
-  headerSauceContextTitle: "Sauce",
-  headerMinigameContextTitle: "Mini-game",
   headerPreGameLabel: "Pre-game",
   headerWaitingTitle: "Waiting for room state",
   headerWaitingDescription:
@@ -108,7 +103,6 @@ export const hostCopy = {
     "Review score updates before revealing the final results.",
   primaryActionLabel,
   nextPhaseButtonLabel: "Next Phase",
-  startGameButtonLabel: "Start Game",
   // The tablet holds the same count-in the TV is showing the room, so the
   // host knows the tap landed and how long the lock screen has left.
   startGameCountingInLabel: (remainingSeconds: number): string =>
@@ -155,7 +149,6 @@ export const hostCopy = {
   scoreOverrideDeltaPlaceholder: "e.g. +2 or -1",
   scoreOverrideApplyButtonLabel: "Apply",
   scoreOverrideNoTeamsLabel: "No teams available for score adjustments.",
-  teamSetupTitle: "Team Setup",
   teamSetupDescription:
     "Preset teams load here, and you can still add teams and map players before moving the game forward.",
   // The setup headline and assignment summary interleave copy with styled <span>s around
@@ -219,21 +212,14 @@ export const hostCopy = {
     `Track ${trackIndex + 1} of ${trackCount}`,
   timerValue: formatClockSeconds,
   phaseAdvanceHint,
-  unassignedOptionLabel: "Unassigned",
   assignmentSelectLabel: (playerName: string): string =>
     `Assign ${playerName} to a team`,
   noPlayersLabel: "No players available.",
   activeTeamNoPlayersLabel: "No players assigned to the active team.",
   noTeamsLabel: "No teams created yet.",
   noAssignedTeamLabel: "No team assigned",
-  assignedTeamLabel: (teamName: string): string => `Team: ${teamName}`,
-  ateWingLabel: "Ate wing",
   wingParticipationToggleLabel: (playerName: string): string =>
     `Mark ${playerName} as ate wing`,
-  activeRoundTeamTitle: "Active Team",
-  activeRoundTeamValue: (teamName: string): string => teamName,
-  triviaSectionDescription:
-    "Mark the active team's answer as correct or incorrect.",
   minigameSectionTitle: "Mini-Game",
   minigameName: formatMinigameName,
   minigameHeadlineLead: "Up next:",
@@ -245,19 +231,11 @@ export const hostCopy = {
     context.isQuickPlay === true
       ? `${formatMinigameName(minigame)} is queued. Call the team up, explain it, then start the mini-game once they are set.`
       : `${formatMinigameName(minigame)} is queued. Call the team up, explain it, then start eating once they are set.`,
-  minigamePlayDescription: (minigame: MinigameType): string =>
-    `${formatMinigameName(minigame)} is live for this team turn.`,
   minigameWaitingForViewLabel:
     "Waiting for minigame host state from the server snapshot.",
   minigameRendererUnavailableLabel: (minigame: MinigameType): string =>
     `${formatMinigameName(minigame)} host surface is not available yet.`,
-  minigameFallbackType: "TRIVIA" as MinigameType,
   waitingStateLabel: "Waiting for room state...",
-  triviaActiveTeamLabel: (teamName: string): string => `Active Team: ${teamName}`,
-  triviaQuestionLabel: "Question",
-  triviaAnswerLabel: "Answer",
-  triviaCorrectButtonLabel: "Correct",
-  triviaIncorrectButtonLabel: "Incorrect",
   compactStandingsTitle: "Standings Snapshot",
   compactNoStandingsLabel: "No teams available for standings yet.",
   compactLeaderLabel: "Leader",
@@ -292,20 +270,6 @@ export const hostCopy = {
   compactScoreLabel: (score: number): string => `${score} pts`,
   teamMembersLabel: (memberCount: number): string =>
     `${memberCount} player${memberCount === 1 ? "" : "s"}`,
-  teamRosterValue: (
-    visiblePlayerNames: string[],
-    hiddenPlayerCount: number
-  ): string => {
-    if (visiblePlayerNames.length === 0) {
-      return TEAM_ROSTER_EMPTY_LABEL;
-    }
-
-    if (hiddenPlayerCount > 0) {
-      return `${visiblePlayerNames.join(", ")} +${hiddenPlayerCount}`;
-    }
-
-    return visiblePlayerNames.join(", ");
-  },
   turnOrderSectionTitle: "Turn Order",
   turnOrderDescription:
     "Adjust the order for the round about to start. Each round opens one team further down the list than the last.",

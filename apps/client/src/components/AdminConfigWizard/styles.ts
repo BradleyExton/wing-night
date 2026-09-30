@@ -36,9 +36,6 @@ export const lockBanner =
 
 export const lockBannerHint = "mt-1 block font-normal text-text/80";
 
-export const coexistenceWarning =
-  "rounded-md border border-heat/50 bg-heat/10 px-4 py-3 text-sm text-text/90";
-
 export const errorBanner =
   "rounded-md border border-danger/60 bg-danger/15 px-4 py-3 text-sm text-text";
 
