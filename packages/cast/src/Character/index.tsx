@@ -3,7 +3,7 @@ import type { CharacterApparel } from "../resolveTeamApparel/index.js";
 import type { CharacterSilhouette } from "../resolveTeamSilhouette/index.js";
 import type { CharacterDance } from "../resolvePlayerAppearance/index.js";
 import type { CharacterPose } from "./geometry/index.js";
-import { CHARACTER_WING_PATH, CharacterFigure } from "./CharacterFigure/index.js";
+import { CharacterFigure, resolveCharacterWingPath } from "./CharacterFigure/index.js";
 import * as styles from "./styles.js";
 
 // A hen, drawn facing RIGHT in an 80×72 box; surfaces that need it to face
@@ -57,14 +57,18 @@ export const CHARACTER_WING_ORIGIN_CLASS_NAME = styles.wingOrigin;
 // bird with `wing="none"` and beats this one over it: rotate the element
 // holding it about the shoulder (`CHARACTER_WING_ORIGIN_CLASS_NAME` on a box
 // the bird's size does it) and the hen flaps without the rest of it repainting.
-export const CharacterWing = ({ fillClassName }: Pick<CharacterProps, "fillClassName">): JSX.Element => {
+// Pass the bird's `silhouette` too, or a spiky bird flaps the stock wing.
+export const CharacterWing = ({
+  fillClassName,
+  silhouette
+}: Pick<CharacterProps, "fillClassName" | "silhouette">): JSX.Element => {
   return (
     <svg
       className={`${styles.svg} ${styles.wingOrigin} ${fillClassName ?? styles.defaultFill}`}
       viewBox="0 0 80 72"
       data-character-wing
     >
-      <path className={styles.silhouette} d={CHARACTER_WING_PATH} />
+      <path className={styles.silhouette} d={resolveCharacterWingPath(silhouette)} />
     </svg>
   );
 };

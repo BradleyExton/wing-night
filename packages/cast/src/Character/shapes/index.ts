@@ -102,7 +102,8 @@ const SILHOUETTE_SHAPES: Record<CharacterSilhouette, SilhouetteShapes> = {
 
 /**
  * The wing a bird of this silhouette has, for a surface that draws the wing on
- * its own layer and beats it (FAPPY). `CHARACTER_WING_PATH` is the stock one.
+ * its own layer (`CharacterWing`, which FAPPY beats; JOUST's `ArenaHen`).
+ * `CHARACTER_WING_PATH` is the stock one.
  */
 export const resolveCharacterWingPath = (silhouette?: CharacterSilhouette): string =>
   silhouette === undefined ? CHARACTER_WING_PATH : SILHOUETTE_SHAPES[silhouette].wing;

@@ -57,7 +57,7 @@ export const BirdSprite = forwardRef<
         }}
         className={`${styles.wingBox} ${CHARACTER_WING_ORIGIN_CLASS_NAME}`}
       >
-        <CharacterWing fillClassName={bird.fillClassName} />
+        <CharacterWing fillClassName={bird.fillClassName} silhouette={bird.silhouette} />
       </div>
     </div>
   );

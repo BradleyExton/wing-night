@@ -180,6 +180,18 @@ test("does draw the wing alone in the bird's box with its origin on the shoulder
   assert.equal((html.match(/<path/g) ?? []).length, 1);
 });
 
+test("does draw the silhouette's own wing on the standalone wing layer", () => {
+  for (const silhouette of CHARACTER_SILHOUETTES) {
+    const html = renderToStaticMarkup(<CharacterWing silhouette={silhouette} />);
+
+    assert.ok(
+      html.includes(`d="${resolveCharacterWingPath(silhouette)}"`),
+      `${silhouette} wing layer draws the stock wing`
+    );
+  }
+});
+
+
 test("does keep the wing layer's origin on the shoulder pivot the figure turns the wing about", () => {
   const html = renderToStaticMarkup(<CharacterWing />);
   const [, x, y] = html.match(/origin-\[([\d.]+)%_([\d.]+)%\]/) ?? [];
