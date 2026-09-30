@@ -7,7 +7,7 @@ import {
   type Team
 } from "@wingnight/shared";
 
-import { loadContent } from "../contentLoader/index.js";
+import { loadPackContent } from "../contentLoader/index.js";
 
 type ReadConfigContentOptions = {
   contentRootDir?: string;
@@ -61,7 +61,8 @@ const toTeamsContentEntries = (
 
 // Reads the MERGED on-disk content (local wins over sample) rather than
 // echoing room state: the geo import CLI may have written local files the room
-// never saw, and the prompt packs are not in room state at all.
+// never saw, and the prompt packs are not in room state at all. Unfiltered by
+// roster, because the wizard writes these banks back.
 //
 // Non-throwing for the same reason the reload is: this runs inside a socket
 // listener, and the acute case is reading content that is already broken.
@@ -70,7 +71,7 @@ export const readConfigContent = (
 ): ReadConfigContentResult => {
   try {
     const { players, teams, gameConfig, minigameContentById } =
-      loadContent(options);
+      loadPackContent(options);
     const triviaContent = minigameContentById.TRIVIA;
     const drawingContent = minigameContentById.DRAWING;
     const geoContent = minigameContentById.GEO;

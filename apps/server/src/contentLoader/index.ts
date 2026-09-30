@@ -22,7 +22,11 @@ type LoadedContent = {
   minigameContentById: Partial<Record<MinigameType, SerializableValue>>;
 };
 
-export const loadContent = (
+// The pack as authored — every prompt, whoever it features. Only the config
+// wizard wants this: it writes the prompt banks back to disk, and reading them
+// through the roster filter would delete every prompt about someone who is
+// not here tonight.
+export const loadPackContent = (
   options: LoadContentOptions = {}
 ): LoadedContent => {
   // The two roster files are loaded separately and joined here, because the
@@ -35,22 +39,32 @@ export const loadContent = (
     players,
     teams: loadTeams(options)
   });
-  const gameConfig = loadGameConfig(options);
-  const lobbyPlaylist = loadLobbyPlaylist(options);
-  const eatingPlaylist = loadEatingPlaylist(options);
-  const minigameContentById = loadMinigameContent(options);
 
-  // Applied HERE, at the one place that has both the roster and the prompt
-  // banks, so every consumer downstream — room state, the socket payloads, all
-  // three runtimes — sees a pack that is already about the people in the room.
-  // A runtime doing its own filtering would need player data threaded into it
-  // and would have to agree with the other two about the rule.
   return {
     players,
     teams,
-    lobbyPlaylist,
-    eatingPlaylist,
-    gameConfig,
-    minigameContentById: filterPromptsByRoster({ minigameContentById, players })
+    lobbyPlaylist: loadLobbyPlaylist(options),
+    eatingPlaylist: loadEatingPlaylist(options),
+    gameConfig: loadGameConfig(options),
+    minigameContentById: loadMinigameContent(options)
+  };
+};
+
+export const loadContent = (
+  options: LoadContentOptions = {}
+): LoadedContent => {
+  const content = loadPackContent(options);
+
+  // Applied HERE, at the one place that has both the roster and the prompt
+  // banks, so every consumer downstream — room state, the socket payloads, every
+  // runtime — sees a pack that is already about the people in the room.
+  // A runtime doing its own filtering would need player data threaded into it
+  // and would have to agree with the others about the rule.
+  return {
+    ...content,
+    minigameContentById: filterPromptsByRoster({
+      minigameContentById: content.minigameContentById,
+      players: content.players
+    })
   };
 };

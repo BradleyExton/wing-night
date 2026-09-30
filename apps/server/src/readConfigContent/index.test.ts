@@ -75,3 +75,45 @@ test("preserves every anthem in order for a team with several", () => {
     }
   ]);
 });
+
+test("does not drop prompts tagged with players who are off tonight's roster", () => {
+  const contentRoot = createContentRoot();
+
+  writeValidContentTree(contentRoot, "sample", "Sample");
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/trivia.json",
+    JSON.stringify({
+      prompts: [
+        { id: "t-1", question: "Everyone?", answer: "Yes" },
+        {
+          id: "t-2",
+          question: "Who is away?",
+          answer: "Robin",
+          featuredPlayers: ["Robin"]
+        }
+      ]
+    })
+  );
+  writeContentFile(
+    contentRoot,
+    "sample/minigames/drawing.json",
+    JSON.stringify({
+      prompts: [{ id: "d-1", prompt: "Robin", featuredPlayers: ["Robin"] }]
+    })
+  );
+
+  const result = readConfigContent({ contentRootDir: contentRoot });
+
+  assert.ok(result.ok);
+  // The wizard writes these banks back to disk, so a roster-filtered read
+  // would delete every prompt about someone who is not here tonight.
+  assert.deepEqual(
+    result.content.triviaPrompts.map((prompt) => prompt.id),
+    ["t-1", "t-2"]
+  );
+  assert.deepEqual(
+    result.content.drawingPrompts.map((prompt) => prompt.id),
+    ["d-1"]
+  );
+});
