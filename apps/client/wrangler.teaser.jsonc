@@ -1,9 +1,15 @@
 // The online teaser on Cloudflare (Workers static assets): `pnpm teaser:deploy` from the repo root.
 // A static site with no Worker script — every file is dist-teaser/, `_headers` included (the
 // noindex on every response), and an unknown path gets the page, so /dunlop-dash loads directly.
+// Served at wingnight.tv (and www.) as Worker custom domains: deploy creates their DNS records and
+// certificates, so the zone needs no hand-made records for either name.
 {
   "name": "wingnight",
   "compatibility_date": "2026-09-29",
+  "routes": [
+    { "pattern": "wingnight.tv", "custom_domain": true },
+    { "pattern": "www.wingnight.tv", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./dist-teaser",
     "not_found_handling": "single-page-application"

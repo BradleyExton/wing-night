@@ -14,10 +14,9 @@ import { SAME_ORIGIN_SERVER_URL } from "./src/utils/resolveServerOrigin";
 const clientRoot = fileURLToPath(new URL(".", import.meta.url));
 const publicDir = fileURLToPath(new URL("./teaser-public", import.meta.url));
 
-// Where the site lives, for the link preview: a scraper wants the picture's full URL. Override
-// with TEASER_SITE_URL once the domain moves.
+// Where the site lives, for the link preview: a scraper wants the picture's full URL.
 const TEASER_SITE_URL =
-  process.env.TEASER_SITE_URL ?? "https://wingnight.politicalrecord-site.workers.dev";
+  process.env.TEASER_SITE_URL ?? "https://wingnight.tv";
 const SHARE_CARD_FILE = "share-card.png";
 
 // Names the link-preview picture (`pnpm teaser:card`) when the build has one to serve.
