@@ -39,6 +39,7 @@ const initializeState = (
     pointsMax: number;
     pendingPointsByTeamId: Record<string, number>;
     content: SerializableValue | null;
+    roundMemory: SerializableValue | null;
   }> = {}
 ): DrawingRuntimeState => {
   const state = drawingRuntimePlugin.initialize({
@@ -54,7 +55,8 @@ const initializeState = (
     pendingPointsByTeamId: overrides.pendingPointsByTeamId ?? {},
     rules: null,
     content:
-      overrides.content === undefined ? drawingContentFixture : overrides.content
+      overrides.content === undefined ? drawingContentFixture : overrides.content,
+    roundMemory: overrides.roundMemory ?? null
   });
 
   assert.notEqual(state, null);
@@ -505,6 +507,43 @@ test("syncContent keeps known prompt order and appends new prompts", () => {
     content: { prompts: [drawingContentFixture.prompts[0]] }
   }) as DrawingRuntimeState;
   assert.deepEqual(shrunkenState.shuffledPromptIds, ["pizza"]);
+});
+
+const handOff = (state: DrawingRuntimeState): DrawingRuntimeState => {
+  const roundMemory =
+    drawingRuntimePlugin.selectRoundMemory?.({
+      state,
+      rules: null,
+      content: drawingContentFixture
+    }) ?? null;
+
+  return initializeState({ activeRoundTeamId: "team-2", roundMemory });
+};
+
+test("does not deal the next team a prompt the previous team already had", () => {
+  const firstTeam = reduce(initializeState(), "markCorrect", {})
+    .state as DrawingRuntimeState;
+  const secondTeam = handOff(firstTeam);
+
+  assert.deepEqual(secondTeam.shuffledPromptIds, firstTeam.shuffledPromptIds);
+  assert.equal(secondTeam.promptCursor, 1);
+  assert.equal(secondTeam.activeTurnTeamId, "team-2");
+  assert.deepEqual(secondTeam.strokes, []);
+  assert.equal(secondTeam.reveal, null);
+});
+
+test("does not re-deal a half-drawn prompt when the clock ran out on it", () => {
+  const firstTeam = beginStroke(initializeState(), "stroke-1");
+  const secondTeam = handOff(firstTeam);
+
+  // The room watched part of that sketch, so it is spent.
+  assert.equal(secondTeam.promptCursor, 1);
+});
+
+test("does keep an untouched prompt for the next team when nothing was drawn", () => {
+  const secondTeam = handOff(initializeState());
+
+  assert.equal(secondTeam.promptCursor, 0);
 });
 
 test("reducer ignores foreign runtime state", () => {

@@ -16,6 +16,14 @@ export type DrawingRuntimeState = {
   reveal: DrawingPromptReveal | null;
 };
 
+// What one team's turn hands the next in the same round: the deck, and how far
+// into it the room has seen. Without it each team reshuffled the whole bank and
+// could draw a prompt the room had just watched another team guess.
+export type DrawingRoundMemory = {
+  shuffledPromptIds: string[];
+  promptCursor: number;
+};
+
 export const PROMPT_REVEAL_MS = 2000;
 
 export const MAX_STROKES = 60;

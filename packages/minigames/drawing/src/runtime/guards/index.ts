@@ -5,7 +5,7 @@ import type {
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import type { DrawingRuntimeState } from "../types/index.js";
+import type { DrawingRoundMemory, DrawingRuntimeState } from "../types/index.js";
 
 export type BeginStrokePayload = {
   strokeId: string;
@@ -97,6 +97,22 @@ const isDrawingPromptReveal = (
     isFiniteNumber(reveal.expiresAtMs) &&
     reveal.revealedAtMs >= 0 &&
     reveal.expiresAtMs >= reveal.revealedAtMs
+  );
+};
+
+export const isDrawingRoundMemory = (
+  value: SerializableValue | null | undefined
+): value is DrawingRoundMemory => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const memory = value as Partial<DrawingRoundMemory>;
+
+  return (
+    isNonNegativeInteger(memory.promptCursor) &&
+    Array.isArray(memory.shuffledPromptIds) &&
+    memory.shuffledPromptIds.every((promptId) => isNonEmptyString(promptId))
   );
 };
 

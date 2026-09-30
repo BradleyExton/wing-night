@@ -13,6 +13,7 @@ import {
   isAppendStrokePointsPayload,
   isBeginStrokePayload,
   isDrawingRuntimeState,
+  isDrawingRoundMemory,
   isEndStrokePayload,
   sanitizeDrawingPoint
 } from "./guards/index.js";
@@ -21,6 +22,7 @@ import {
   MAX_POINTS_PER_STROKE,
   MAX_STROKES,
   PROMPT_REVEAL_MS,
+  type DrawingRoundMemory,
   type DrawingRuntimeState
 } from "./types/index.js";
 import {
@@ -44,6 +46,25 @@ const shufflePromptIds = (promptIds: string[]): string[] => {
   return shuffled;
 };
 
+// Keeps the deck's order for the prompts still in the pack and appends any the
+// pack gained, so a content reload mid-round never reshuffles what the room has
+// already been through.
+const reconcilePromptOrder = (
+  promptIds: string[],
+  contentPromptIds: string[]
+): string[] => {
+  const contentPromptIdSet = new Set(contentPromptIds);
+  const retainedPromptIds = promptIds.filter((promptId) =>
+    contentPromptIdSet.has(promptId)
+  );
+  const retainedPromptIdSet = new Set(retainedPromptIds);
+  const introducedPromptIds = contentPromptIds.filter(
+    (promptId) => !retainedPromptIdSet.has(promptId)
+  );
+
+  return [...retainedPromptIds, ...introducedPromptIds];
+};
+
 const resolveResultOutcome = (
   actionType: string
 ): DrawingPromptOutcome | null => {
@@ -63,13 +84,23 @@ export const drawingRuntimePlugin: MinigameRuntimePlugin = {
   content: drawingContentAdapter,
   initialize: (input) => {
     const drawingContent = resolveDrawingContent(input.content);
+    const contentPromptIds = drawingContent.prompts.map((prompt) => prompt.id);
+    // The round's first team shuffles the deck; every later team picks it up
+    // where the room left off.
+    const deck: DrawingRoundMemory = isDrawingRoundMemory(input.roundMemory)
+      ? {
+          shuffledPromptIds: reconcilePromptOrder(
+            input.roundMemory.shuffledPromptIds,
+            contentPromptIds
+          ),
+          promptCursor: input.roundMemory.promptCursor
+        }
+      : { shuffledPromptIds: shufflePromptIds(contentPromptIds), promptCursor: 0 };
 
     const initialState: DrawingRuntimeState = {
       activeTurnTeamId: input.activeRoundTeamId ?? input.teamIds[0] ?? null,
-      promptCursor: 0,
-      shuffledPromptIds: shufflePromptIds(
-        drawingContent.prompts.map((prompt) => prompt.id)
-      ),
+      promptCursor: deck.promptCursor,
+      shuffledPromptIds: deck.shuffledPromptIds,
       pendingPointsByTeamId: { ...input.pendingPointsByTeamId },
       strokes: [],
       activeStrokeId: null,
@@ -303,20 +334,29 @@ export const drawingRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     const drawingContent = resolveDrawingContent(input.content);
-    const contentPromptIds = drawingContent.prompts.map((prompt) => prompt.id);
-    const contentPromptIdSet = new Set(contentPromptIds);
-    const retainedPromptIds = input.state.shuffledPromptIds.filter((promptId) =>
-      contentPromptIdSet.has(promptId)
-    );
-    const retainedPromptIdSet = new Set(retainedPromptIds);
-    const introducedPromptIds = contentPromptIds.filter(
-      (promptId) => !retainedPromptIdSet.has(promptId)
-    );
 
     return {
       ...input.state,
-      shuffledPromptIds: [...retainedPromptIds, ...introducedPromptIds]
+      shuffledPromptIds: reconcilePromptOrder(
+        input.state.shuffledPromptIds,
+        drawingContent.prompts.map((prompt) => prompt.id)
+      )
     };
+  },
+  // A prompt with ink on the easel is spent even if nobody ruled on it: the
+  // room watched part of that sketch when the clock ran out.
+  selectRoundMemory: (input) => {
+    if (!isDrawingRuntimeState(input.state)) {
+      return null;
+    }
+
+    const memory: DrawingRoundMemory = {
+      shuffledPromptIds: [...input.state.shuffledPromptIds],
+      promptCursor:
+        input.state.promptCursor + (input.state.strokes.length > 0 ? 1 : 0)
+    };
+
+    return memory;
   },
   selectHostView: (input) => {
     if (!isDrawingRuntimeState(input.state)) {
