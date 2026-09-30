@@ -18,3 +18,6 @@ export const rotate =
 export const rotateTitle = "m-0 text-2xl font-black uppercase leading-tight text-text";
 
 export const rotateBody = "m-0 font-voice text-lg italic text-mutedWarm";
+
+// A phone with rotation lock on never turns, so without this the card is a dead end.
+export const rotateLockHint = "m-0 mt-4 text-sm text-mutedWarm/80";

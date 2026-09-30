@@ -171,6 +171,7 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
       <div className={styles.rotate}>
         <p className={styles.rotateTitle}>{teaserSoloGameCopy.rotateTitle}</p>
         <p className={styles.rotateBody}>{teaserSoloGameCopy.rotateBody}</p>
+        <p className={styles.rotateLockHint}>{teaserSoloGameCopy.rotateLockHint}</p>
       </div>
     </>
   );
