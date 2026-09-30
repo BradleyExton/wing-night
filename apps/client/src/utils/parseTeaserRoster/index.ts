@@ -1,4 +1,4 @@
-import type { Player, Team } from "@wingnight/shared";
+import { isTeamColorToken, type Player, type Team } from "@wingnight/shared";
 
 // The roster the online teaser draws with: the night's players and teams, as
 // tools/build-teaser wrote them to `/teaser-roster.json`. The file is the site's
@@ -41,7 +41,8 @@ const toTeam = (value: unknown): Team | null => {
     name: value.name,
     playerIds: [...(value.playerIds as string[])],
     totalScore: 0,
-    ...(typeof value.genre === "string" ? { genre: value.genre } : {})
+    ...(typeof value.genre === "string" ? { genre: value.genre } : {}),
+    ...(isTeamColorToken(value.color) ? { color: value.color } : {})
   };
 };
 

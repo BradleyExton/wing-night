@@ -38,3 +38,21 @@ test("returns null when no team has anyone seated", () => {
 test("returns null when the file is not a roster at all", () => {
   assert.equal(parseTeaserRoster("<!doctype html>"), null);
 });
+
+test("does keep a team's authored colour when the file carries one", () => {
+  const roster = parseTeaserRoster({
+    ...rosterFile,
+    teams: [{ ...rosterFile.teams[0], color: "teamD" }]
+  });
+
+  assert.equal(roster?.teams[0]?.color, "teamD");
+});
+
+test("does drop a team colour that is not a house token", () => {
+  const roster = parseTeaserRoster({
+    ...rosterFile,
+    teams: [{ ...rosterFile.teams[0], color: "chartreuse" }]
+  });
+
+  assert.equal(roster?.teams[0]?.color, undefined);
+});
