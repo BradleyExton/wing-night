@@ -7,6 +7,7 @@ import { resolveRunPlayerName } from "../../resolveRunPlayerName/index.js";
 import { SchlonicScene, type SchlonicSceneHandle } from "../../SchlonicScene/index.js";
 import type { RunHold } from "../../useHeldRun/index.js";
 import { useRunnerFigure } from "../../useRunnerFigure/index.js";
+import { useSchlonicLeg } from "../../useSchlonicLeg/index.js";
 import { useSchlonicRunner } from "../../useSchlonicRunner/index.js";
 import { useSchlonicStreet } from "../../useSchlonicStreet/index.js";
 import { zoneCopy } from "./copy.js";
@@ -67,6 +68,8 @@ export const Zone = ({
     serverOrigin
   });
   const ghost = ghostLeg === null ? null : ghostFigure;
+  // Who is either side of this leg in the relay, stood at its handoffs.
+  const leg = useSchlonicLeg({ view, runIndex, serverOrigin });
   const nextRun = view.runs[runIndex + 1] ?? null;
   const isLive = view.phase === "ready" || view.phase === "running";
   const isArmed = canAct && isLive && hold === null;
@@ -115,7 +118,7 @@ export const Zone = ({
           sceneId="host-schlonic"
           label={zoneCopy.sceneLabel(runner.playerName)}
           ghost={ghost}
-          leg={{ index: runIndex, count: view.runsPerTurn }}
+          leg={leg}
         />
       </div>
       {hold?.kind === "handoff" && <HandoffCallout nextName={resolveRunPlayerName(nextRun)} />}

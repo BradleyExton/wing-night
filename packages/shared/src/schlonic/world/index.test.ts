@@ -9,9 +9,11 @@ import {
   resolveSchlonicFinaleX,
   resolveSchlonicGroundSlope,
   resolveSchlonicGroundY,
+  resolveSchlonicHazardBox,
   resolveSchlonicWingTotal,
   resolveSchlonicTickCap,
   SCHLONIC_RIDE_ONS,
+  SCHLONIC_RIDE_ON_CROWD_GAP,
   resolveSchlonicCourse,
   resolveSchlonicLegFromX,
   resolveSchlonicZone
@@ -84,7 +86,7 @@ test("deals the whole crowd and every piece of furniture over the round's street
   assert.deepEqual([...furniture].sort(), ["bench", "car", "ledge", "rail"]);
 });
 
-test("stands every piece of furniture at its own height over level ground, one of the crowd at its end, and its wings worth two along its top", () => {
+test("stands every piece of furniture at its own height over level ground, one of the crowd a clear landing past its end, and its wings worth two along its top", () => {
   const { runnerRadius, wingRadius, highLineWingScale, highLineWorth } = SCHLONIC_WORLD;
 
   for (let seed = 0; seed < 25; seed += 1) {
@@ -103,10 +105,17 @@ test("stands every piece of furniture at its own height over level ground, one o
       assert.equal(length, spec.length);
       assert.equal(resolveSchlonicGroundY(zone, rail.toX), ground, "the furniture stands over level ground");
       assert.equal(rail.y, ground - spec.above);
-      assert.ok(
-        zone.props.some((prop) => prop.kind === "hazard" && prop.x === rail.toX && prop.y === ground),
-        `seed ${seed} put nobody at the end of its ${rail.rideOn}`
-      );
+      // Nobody stands under it or at its end: the next of the crowd is a landing's length past,
+      // on level ground — or nobody at all, when the finale's kicker is the next thing.
+      const next = zone.props.find((prop) => prop.kind === "hazard" && prop.x > rail.x);
+      const nextEdge = next === undefined ? Infinity : next.x - resolveSchlonicHazardBox(next).halfWidth;
+
+      assert.ok(nextEdge - rail.toX >= SCHLONIC_RIDE_ON_CROWD_GAP, `seed ${seed} stood the crowd ${nextEdge - rail.toX} past its ${rail.rideOn}`);
+
+      if (next !== undefined && nextEdge - rail.toX < SCHLONIC_RIDE_ON_CROWD_GAP + SCHLONIC_WORLD.chunkWidth) {
+        assert.equal(nextEdge - rail.toX, SCHLONIC_RIDE_ON_CROWD_GAP, `seed ${seed} stood the crowd off the landing past its ${rail.rideOn}`);
+        assert.equal(next.y, ground, `seed ${seed} stood the crowd past its ${rail.rideOn} off the level`);
+      }
 
       // Everything hung over the top; the floor line under its near end is not the top's.
       const strung = zone.props.filter(

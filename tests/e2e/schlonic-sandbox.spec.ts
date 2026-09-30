@@ -23,16 +23,19 @@ test("schlonic sandbox lays out one leg for both screens and starts the run on t
   await expect(page.getByRole("heading", { name: "Minigame Dev Sandbox" })).toBeVisible();
 
   // Both previews draw the same leg from the live fixture — the first of two, fourteen chunks, a
-  // trench cutting the ground a third of the way in, three of the crowd (a show-goer, a goose and
-  // a tent), two pieces of furniture (a bench and a planter), and the kicker only at the finale,
-  // over the trench before the post.
+  // trench cutting the ground a third of the way in, two of the crowd (a goose a landing past the
+  // parked car, and a tent city), two pieces of furniture (a car and the handrail), and the kicker
+  // only at the finale, over the trench before the post.
   await expect(page.locator("[data-schlonic-scene]")).toHaveCount(2);
   await expect(page.locator("[data-schlonic-ground-run]")).toHaveCount(6);
-  await expect(page.locator("[data-schlonic-hazard]")).toHaveCount(6);
+  await expect(page.locator("[data-schlonic-hazard]")).toHaveCount(4);
   await expect(page.locator('[data-schlonic-hazard-kind="goose"]')).toHaveCount(2);
   await expect(page.locator("[data-schlonic-kicker]")).toHaveCount(2);
   await expect(page.locator("[data-schlonic-rail]")).toHaveCount(4);
-  await expect(page.locator('[data-schlonic-ride-on="bench"]')).toHaveCount(2);
+  await expect(page.locator('[data-schlonic-ride-on="car"]')).toHaveCount(2);
+  // The next rider waits past the post on both screens: a relay leg hands off at Crossover's.
+  await expect(page.locator('[data-schlonic-relay-mate="next"]')).toHaveCount(2);
+  await expect(page.locator("[data-schlonic-handoff-post]")).toHaveCount(2);
   // The high line is drawn bigger, because it is worth more.
   await expect(page.locator('[data-schlonic-wing-worth="2"]').first()).toBeAttached();
   await expect(page.locator("[data-schlonic-goal]")).toHaveCount(2);
@@ -43,7 +46,7 @@ test("schlonic sandbox lays out one leg for both screens and starts the run on t
   const track = page.locator("[data-schlonic-track]");
 
   await expect(track).toHaveCount(1);
-  await expect(track.locator("[data-schlonic-track-hazard]")).toHaveCount(8);
+  await expect(track.locator("[data-schlonic-track-hazard]")).toHaveCount(7);
   await expect(track.locator("[data-schlonic-track-pit]")).toHaveCount(4);
   await expect(track.locator("[data-schlonic-track-rail]")).toHaveCount(3);
   await expect(track.locator("[data-schlonic-track-handoff]")).toHaveCount(1);

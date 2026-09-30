@@ -92,7 +92,11 @@ export const SCHLONIC_WORLD = {
   slopeAcceleration: 0.052,
   /** However badly it goes, the runner never comes to a stop — the room would be waiting. */
   minSpeed: 0.34,
-  wingRadius: 2.6,
+  /**
+   * A wing's reach and its drawing. Small enough that the street reads as Dunlop with wings on
+   * it rather than a wall of chicken, and still inside a walker's reach on the floor line.
+   */
+  wingRadius: 2,
   /** The kicker ramp: a plywood wedge you roll into, its lip this high at the far side. */
   kickerHeight: 6,
   kickerWidth: 10,
@@ -133,8 +137,12 @@ export const SCHLONIC_HAZARDS: Record<
   SchlonicHazardKind,
   { width: number; height: number; sway: number; swayTicks: number }
 > = {
-  /** A dome tent on the sidewalk, with its tarp and its pylon: wide, and jumped from well back. */
-  tent: { width: 18, height: 9, sway: 0, swayTicks: 0 },
+  /**
+   * A tent city on the sidewalk — a few domes, a tarp and a cart huddled together: the widest
+   * of the crowd, and low with it, so a tap from well back still clears it (a hair wider or a
+   * hair taller and only a held jump does).
+   */
+  tent: { width: 22, height: 7, sway: 0, swayTicks: 0 },
   /** Somebody asleep on the pavers in a hoodie: long and low, so the hop comes late. */
   sleeper: { width: 15, height: 4.5, sway: 0, swayTicks: 0 },
   /** The crust punk sat against the wall with a can: short, still, easy. */
@@ -208,8 +216,16 @@ type ChunkKind = (typeof HARD_KINDS)[number] | (typeof SOFT_KINDS)[number] | typ
 /** Where the finale's kit stands inside its chunk. */
 const FINALE_KICKER_AT = 8;
 const FINALE_PIT_AT = 22;
-/** Where a piece of furniture starts inside its chunk; one of the crowd stands at its far end. */
+/** Where a piece of furniture starts inside its chunk. */
 const RIDE_ON_AT = 4;
+/**
+ * How much clear sidewalk lies between a piece of furniture's far end and the one of the crowd
+ * waiting past it, so the two read as two things, never one person tucked under a bench. Rolling
+ * off the handrail's end at a fast grind comes down about 24 past it; this is that, the runner's
+ * own half-width, and a tap's run-up after the landing — and still a hop's length, so a rider
+ * can pop off the end and clear them from the ledge.
+ */
+export const SCHLONIC_RIDE_ON_CROWD_GAP = 44;
 /** How far in from a ride-on's start the first wing of its line hangs. */
 const RIDE_ON_LINE_INSET = 2;
 /** Where the crowd stands in a crowd chunk: room for the widest sway either side. */
@@ -286,6 +302,13 @@ const resolveChunkKinds = (
 
     if (chunk === chunks - 2) {
       kinds.push(FINALE_KIND);
+      continue;
+    }
+
+    // The chunk after a piece of furniture is level sidewalk: it is where the one of the crowd
+    // past its end stands, and a slope under them would stand them on a hill.
+    if (kinds[chunk - 1] === "rideOn") {
+      kinds.push("flat");
       continue;
     }
 
@@ -398,6 +421,12 @@ type PropPlacer = {
   /** Which of the crowd and which furniture comes next: each rotates, from a seeded start. */
   hazardCursor: number;
   rideOnCursor: number;
+  /**
+   * The floor is kept clear of wing lines up to here: past a piece of furniture, the one of the
+   * crowd waiting there stands on it, and a floor wing hung inside their box is one only a hit
+   * collects.
+   */
+  clearUntilX: number;
 };
 
 const addKicker = (placer: PropPlacer, x: number): void => {
@@ -431,6 +460,11 @@ const addWing = (placer: PropPlacer, x: number, y: number, worth: number): void 
 const addWingRun = (placer: PropPlacer, fromX: number, count: number, above: number): void => {
   for (let step = 0; step < count; step += 1) {
     const x = fromX + step * 10;
+
+    if (x < placer.clearUntilX && above < SCHLONIC_WORLD.highLineAbove) {
+      continue;
+    }
+
     const ground = groundAt(placer.heights, placer.pits, x);
     const floor = ground >= SCHLONIC_WORLD.pitFloorY ? SCHLONIC_WORLD.groundBaseY : ground;
 
@@ -457,7 +491,8 @@ const addChunkProps = (
   placer: PropPlacer,
   kind: ChunkKind,
   chunkX: number,
-  random: () => number
+  random: () => number,
+  nextKind: ChunkKind | undefined
 ): void => {
   if (kind === "pit") {
     addWingArc(placer, chunkX + 14, 5, 15);
@@ -504,20 +539,13 @@ const addChunkProps = (
     const topY = ground - spec.above;
 
     placer.rideOnCursor += 1;
-    // One of the crowd waits at the far end: a bird that stayed on the floor meets them late,
-    // and a hop over them leaves the ground too late to sweep more than the tail of the line.
-    addHazard(placer, toX);
-
-    const crowd = placer.props[placer.props.length - 1];
-    const crowdHalfWidth = crowd === undefined ? 0 : resolveSchlonicHazardBox(crowd).halfWidth;
-
     placer.props.push({ index: placer.props.length, kind: "rail", rideOn, x: fromX, toX, y: topY });
 
-    // The greedy line rides the top, just over it, evenly from the near end to where the crowd
-    // begins: a grinding bird's body passes through every wing and a walking one's reaches
-    // none. Worth two however low it hangs, because only the grind collects the lot.
+    // The greedy line rides the top, just over it, evenly from end to end: a grinding bird's
+    // body passes through every wing and a walking one's reaches none. Worth two however low it
+    // hangs, because only the grind collects the lot.
     const lineFrom = fromX + RIDE_ON_LINE_INSET;
-    const lineTo = toX - crowdHalfWidth + 1;
+    const lineTo = toX - RIDE_ON_LINE_INSET;
 
     for (let step = 0; step < spec.wings; step += 1) {
       const x = lineFrom + ((lineTo - lineFrom) * step) / Math.max(1, spec.wings - 1);
@@ -530,6 +558,21 @@ const addChunkProps = (
     if (spec.above > FLOOR_LINE_ABOVE + SCHLONIC_WORLD.wingRadius) {
       addWingRun(placer, chunkX + 12, 2, FLOOR_LINE_ABOVE);
     }
+
+    // One of the crowd waits a clear landing past the far end, on the level chunk after it: a
+    // bird that stayed on the floor meets them in the open, and one coming off the end hops
+    // them from the ledge. The arc over them is the one a crowd chunk hangs. With the finale
+    // next instead, its kicker is the next thing, and nobody stands in front of it.
+    if (nextKind !== "flat") {
+      return;
+    }
+
+    const crowdSpec = SCHLONIC_HAZARDS[HAZARD_KINDS[placer.hazardCursor % HAZARD_KINDS.length] ?? "punk"];
+    const crowdX = toX + SCHLONIC_RIDE_ON_CROWD_GAP + crowdSpec.width / 2;
+
+    addHazard(placer, crowdX);
+    addWingArc(placer, crowdX - 10, 3, crowdSpec.height + 9);
+    placer.clearUntilX = crowdX + crowdSpec.width / 2 + SCHLONIC_WORLD.runnerRadius;
 
     return;
   }
@@ -626,11 +669,12 @@ export const resolveSchlonicCourse = (course: SchlonicZoneCourse): SchlonicZone 
     pits,
     props: [],
     hazardCursor: Math.floor(random() * HAZARD_KINDS.length),
-    rideOnCursor: Math.floor(random() * RIDE_ON_KINDS.length)
+    rideOnCursor: Math.floor(random() * RIDE_ON_KINDS.length),
+    clearUntilX: 0
   };
 
   kinds.forEach((kind, chunk) => {
-    addChunkProps(placer, kind, chunk * SCHLONIC_WORLD.chunkWidth, random);
+    addChunkProps(placer, kind, chunk * SCHLONIC_WORLD.chunkWidth, random, kinds[chunk + 1]);
   });
 
   return {

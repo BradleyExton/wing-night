@@ -155,7 +155,7 @@ type StreetRun = { x: number; count: number; seed: number };
  * the water". Laid by a fixed rhythm, never at random, so both screens agree; a run that would
  * stand in front of Crossover's lot stops short of it, and the street picks up again past it.
  */
-const streetRuns = (width: number, keepClear: { from: number; to: number }): StreetRun[] => {
+const streetRuns = (width: number, keepClear: { from: number; to: number } | null): StreetRun[] => {
   const counts = [4, 3, 4, 2, 3];
   const gaps = [13, 19, 11, 22, 16];
   const frontWidth = STOREFRONTS.frontWidth * STOREFRONT_SCALE;
@@ -166,7 +166,7 @@ const streetRuns = (width: number, keepClear: { from: number; to: number }): Str
     const gap = gaps[run % gaps.length] ?? 16;
     const count = counts[run % counts.length] ?? 3;
 
-    if (x < keepClear.to && x + count * frontWidth > keepClear.from) {
+    if (keepClear !== null && x < keepClear.to && x + count * frontWidth > keepClear.from) {
       const fits = Math.floor((keepClear.from - x) / frontWidth);
 
       if (fits > 0) {
@@ -216,8 +216,18 @@ const treeBand = (width: number, baseY: number): string => {
   return `${path.join(" ")} L ${width} ${baseY + 3} L ${-step} ${baseY + 3} Z`;
 };
 
-export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number; camera: SchlonicCamera }>(
-  ({ zoneLength, camera }, ref): JSX.Element => {
+type BackdropProps = {
+  zoneLength: number;
+  camera: SchlonicCamera;
+  /**
+   * Whether Crossover's stands across the road. On a relay it is off this bank: it has come over
+   * to the runner's own sidewalk as the handoff (`SetPieces`), and one street has one of it.
+   */
+  crossovers?: boolean;
+};
+
+export const Backdrop = forwardRef<BackdropRefs, BackdropProps>(
+  ({ zoneLength, camera, crossovers = true }, ref): JSX.Element => {
     const clouds = useRef<SVGGElement>(null);
     const farShore = useRef<SVGGElement>(null);
     const town = useRef<SVGGElement>(null);
@@ -243,7 +253,10 @@ export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number; camera: S
     // has gone off the back of the picture before the Queen's comes up at the end.
     const crossoversWidth = CROSSOVERS.width * CROSSOVERS_SCALE;
     const crossoversX = bankXFor(CROSSOVERS_SCREEN_X, zoneLength * CROSSOVERS_AT, STREET_PARALLAX) - crossoversWidth / 2;
-    const runs = streetRuns(streetWidth, { from: crossoversX - 4, to: crossoversX + crossoversWidth + 2 });
+    const runs = streetRuns(
+      streetWidth,
+      crossovers ? { from: crossoversX - 4, to: crossoversX + crossoversWidth + 2 } : null
+    );
 
     return (
       <g data-schlonic-backdrop>
@@ -327,9 +340,11 @@ export const Backdrop = forwardRef<BackdropRefs, { zoneLength: number; camera: S
               scale={STOREFRONT_SCALE}
             />
           ))}
-          <g data-schlonic-crossovers>
-            <Crossovers x={crossoversX} baseY={FAR_KERB_Y + 0.4} palette={CROSSOVERS_PAINT} scale={CROSSOVERS_SCALE} />
-          </g>
+          {crossovers && (
+            <g data-schlonic-crossovers>
+              <Crossovers x={crossoversX} baseY={FAR_KERB_Y + 0.4} palette={CROSSOVERS_PAINT} scale={CROSSOVERS_SCALE} />
+            </g>
+          )}
         </g>
         <g ref={road} data-schlonic-bank="road" data-schlonic-parallax={ROAD_PARALLAX} fill={schlonicPalette.laneLine}>
           {Array.from({ length: Math.ceil(roadWidth / 9) + 2 }, (_unused, dash) => (

@@ -13,7 +13,8 @@ import { Ground } from "./Ground/index.js";
 import { Rider, paintRider, type RiderRefs } from "./Rider/index.js";
 import { resolveRiderPlacement } from "./riderPlacement/index.js";
 import { resolveRunnerCurl } from "./runnerPose/index.js";
-import { FIRST_LEG, SetPieces, type SchlonicLeg } from "./SetPieces/index.js";
+import { RelayMates } from "./RelayMates/index.js";
+import { FIRST_LEG, SetPieces, isRelayLeg, type SchlonicLeg } from "./SetPieces/index.js";
 import { shakeElement } from "./shake/index.js";
 import * as styles from "./styles.js";
 import { usePunchline } from "./usePunchline/index.js";
@@ -51,7 +52,10 @@ export type SchlonicSceneProps = {
    * behind, in the picture or off it. Null until someone has cleared the zone.
    */
   ghost?: RunnerFigure | null;
-  /** Which leg of the street the zone is: the shop stands on the first, the hotel on the last. */
+  /**
+   * Which leg of the street the zone is — the shop stands on the first, the hotel on the last,
+   * Crossover's at every handoff — and the teammates either side of it in the relay.
+   */
   leg?: SchlonicLeg;
 };
 
@@ -314,11 +318,12 @@ export const SchlonicScene = forwardRef<SchlonicSceneHandle, SchlonicSceneProps>
             preserveAspectRatio="none"
             aria-hidden="true"
           >
-            <Backdrop ref={backdropRef} zoneLength={zone.goalX} camera={camera} />
+            <Backdrop ref={backdropRef} zoneLength={zone.goalX} camera={camera} crossovers={!isRelayLeg(leg)} />
             <g ref={zoneLayerRef} data-schlonic-zone>
               <SetPieces zone={zone} goalGroundY={goalGroundY} leg={leg} />
               <Ground zone={zone} camera={camera} />
               <ZoneProps zone={zone} registerProp={registerProp} goalGroundY={goalGroundY} />
+              <RelayMates zone={zone} leg={leg} />
               <WipeoutPunchline ref={punchline.wipeoutRef} />
             </g>
             <Burst ref={burstRef} />

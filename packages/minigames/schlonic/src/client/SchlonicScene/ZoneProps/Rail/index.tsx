@@ -38,7 +38,7 @@ export const Rail = ({ prop, zone }: { prop: SchlonicProp; zone: SchlonicZone })
   });
 
   return (
-    <g data-schlonic-rail={prop.index}>
+    <g>
       {posts.map((post) => (
         <GroundShadow key={`shadow-${post.x}`} x={post.x} y={post.groundY} radius={1.6} />
       ))}

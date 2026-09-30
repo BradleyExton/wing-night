@@ -127,15 +127,19 @@ export const schlonicPalette = {
   wingGloss: "#ffce7a",
   wingBone: "#fff1d6",
   wingBoneDark: "#c9a273",
-  // The crowd. A dome tent in a red that is nothing like a wing's sauce (bluer, deeper), with
-  // a blue tarp lump beside it and one of the dig's pylons; a sleeper in a grey hoodie on the
+  // The crowd. A tent city: a dome in a red that is nothing like a wing's sauce (bluer, deeper),
+  // a faded green one behind it, a blue tarp strung over a shopping cart; a sleeper in a grey hoodie on the
   // pavers, bare feet out, a sandal in hand; the birds themselves take a colour class
   // (`Crowd/styles.ts`), because the cast is painted in currentColor.
   tentRed: "#c8352c",
   tentRedDark: "#7f1c16",
   tentSeam: "#f0d9d4",
+  tentGreen: "#5f8f5a",
+  tentGreenDark: "#34563a",
   tarp: "#2f6fd0",
   tarpDark: "#1d478a",
+  cart: "#a9b2ba",
+  cartDark: "#56606a",
   hoodie: "#8e8e8e",
   hoodieDark: "#565656",
   hoodieLight: "#b9b9b9",

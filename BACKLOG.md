@@ -203,9 +203,17 @@ and renamed the game Dunlop Dash. What it could not check from a desk:
 - **The kicker's cue is still `spring`** (the pack's takes are filed as `spring-N.mp3`), and the
   `pop` takes in the pack are orphaned now that nothing pops. The goose has no honk of its own
   yet — `chomp` and `burp` carry the wipeout — and a `squawk` take exists in the pack unused.
-- **A middle leg's handoff has no set piece.** Souldiers stands on the first leg and the Queen's
-  on the last; a middle leg's post is a bare signpost. Crossover's is in `@wingnight/scenery` if
-  a handoff wants a landmark.
+- **The handoff is still a cut.** Since 2026-09-30 every handoff is at Crossover's (brought over
+  from across the road): the next rider waits past the post facing the runner, and the leg after
+  opens with the last rider behind the line. Nothing moves between the two yet — no tag, no
+  push-off — and Crossover's is really out on the highway, not on Dunlop; if a real Dunlop
+  landmark gets drawn, it replaces it at the handoff.
+- **Retune the crowd gap at a table.** The one of the crowd past a piece of furniture now stands
+  `SCHLONIC_RIDE_ON_CROWD_GAP` (44) past its end — a fast roll off the handrail lands about 24
+  past it. If the room finds the stretch empty, shorten it, but never under the landing.
+- **Par after the smaller wings.** `wingRadius` went 2.6 → 2 and the kit reshuffled; a crude
+  hop-over bot banks about 90 a leg on the party seed against par 120 (about 100 before). Check
+  a real run before the night.
 - **Play the new jump at a table.** 2026-09-29 added the coyote window (6 ticks), the jump
   buffer (8), a heavier fall (×1.6 past the peak), a wider tap-to-hold gap (~17 vs ~30 up) and
   the mid-air slam (`SCHLONIC_WORLD` in `packages/shared/src/schlonic/world`). The hop-over bot

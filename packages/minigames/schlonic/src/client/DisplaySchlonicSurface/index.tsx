@@ -1,13 +1,15 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
-import type { SchlonicMinigameDisplayView, SchlonicMinigameRun } from "@wingnight/shared";
+import type { SchlonicMinigameDisplayView } from "@wingnight/shared";
 
 import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
+import { resolveRunPlayerName } from "../resolveRunPlayerName/index.js";
 import { TV_CAMERA_FIT } from "../SchlonicScene/camera/index.js";
 import { SchlonicScene, type SchlonicSceneHandle } from "../SchlonicScene/index.js";
 import { useHeldRun, useHoldCard, type RunHold } from "../useHeldRun/index.js";
 import { useRunnerFigure } from "../useRunnerFigure/index.js";
+import { useSchlonicLeg } from "../useSchlonicLeg/index.js";
 import { useSchlonicMirror } from "../useSchlonicMirror/index.js";
 import { useSchlonicSounds } from "../useSchlonicSounds/index.js";
 import { useSchlonicStreet } from "../useSchlonicStreet/index.js";
@@ -16,10 +18,6 @@ import { WingFlight } from "../WingFlight/index.js";
 import { ZoneTrack } from "../ZoneTrack/index.js";
 import { displaySchlonicSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
-
-const resolvePlayerName = (run: SchlonicMinigameRun | null | undefined): string | null => {
-  return run?.player?.name ?? null;
-};
 
 const SchlonicIntro = (): JSX.Element => (
   <div className={styles.container}>
@@ -153,6 +151,8 @@ const SchlonicPlayBody = ({
     serverOrigin
   });
   const ghost = ghostLeg === null ? null : ghostFigure;
+  // Who is either side of this leg in the relay, stood at its handoffs.
+  const leg = useSchlonicLeg({ view, runIndex: shownRunIndex, serverOrigin });
   const nextRun = view.runs[shownRunIndex + 1] ?? null;
   const isFinished = view.phase === "finished";
 
@@ -260,13 +260,13 @@ const SchlonicPlayBody = ({
             label={displaySchlonicSurfaceCopy.sceneLabel(runner.playerName)}
             cameraFit={TV_CAMERA_FIT}
             ghost={ghost}
-            leg={{ index: shownRunIndex, count: view.runsPerTurn }}
+            leg={leg}
           />
         </div>
         <span className={styles.venuePlaque} data-schlonic-venue>
           {displaySchlonicSurfaceCopy.zoneName}
         </span>
-        {hold !== null && isCardUp && <HoldPlaque hold={hold} nextName={resolvePlayerName(nextRun)} />}
+        {hold !== null && isCardUp && <HoldPlaque hold={hold} nextName={resolveRunPlayerName(nextRun)} />}
         {isFinished && hold === null && <FinishPlaque view={view} />}
       </div>
       <p className={styles.statusLine}>{resolveStatusLine(view, runner.playerName, hold)}</p>

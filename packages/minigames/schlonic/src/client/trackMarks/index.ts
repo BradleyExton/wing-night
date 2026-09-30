@@ -8,7 +8,7 @@ import { SCHLONIC_WORLD } from "@wingnight/shared";
  * scale. Wings are not on it: the strip is a map of what can go wrong, not of what there is to
  * collect, and a couple of hundred dots would read as a fence. Furniture is, but apart: a rail is
  * kit, not a hazard — the greedy line rides it — so it is a span over the line rather than a mark
- * on it, and whoever waits at its far end is marked as the hazard they are. A kicker is marked
+ * on it, and whoever waits past its far end is marked as the hazard they are. A kicker is marked
  * too: not a hazard, but the room wants to know where the launch is.
  */
 export type ZoneTrackHazard = {

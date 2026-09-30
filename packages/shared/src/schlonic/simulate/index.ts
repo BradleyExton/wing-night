@@ -213,7 +213,7 @@ export const stepSchlonic = (
   if (frame.grindingRail !== null) {
     // A rail has no slope to run down and nothing to drag: the board keeps what it came with,
     // and the legs still push it on towards top speed — a grind begun at the floor speed would
-    // otherwise crawl off the rail's end straight down into the crowd at its end.
+    // otherwise crawl off the rail's end and come down short.
     vx = frame.vx < topSpeed ? Math.min(topSpeed, frame.vx + acceleration) : frame.vx;
     vx = Math.max(minSpeed, Math.min(grindMaxSpeed, vx));
   } else {

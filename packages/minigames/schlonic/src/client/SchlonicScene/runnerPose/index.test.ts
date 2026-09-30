@@ -3,6 +3,7 @@ import test from "node:test";
 
 import type { SchlonicFrame, SchlonicZone } from "@wingnight/shared";
 import {
+  SCHLONIC_RIDE_ONS,
   SCHLONIC_WORLD,
   createSchlonicRunStart,
   resolveSchlonicGroundY,
@@ -161,7 +162,10 @@ test("does not flip the board when it drifts down a slope off the paving", () =>
 });
 
 test("does not flip the board when it rolls off a rail's end", () => {
-  const rail = PARTY.props.find((prop) => prop.kind === "rail");
+  // The first piece of furniture a bench's height or more, so the roll off its end is a fall.
+  const rail = PARTY.props.find((prop) => {
+    return prop.kind === "rail" && resolveSchlonicGroundY(PARTY, prop.x) - prop.y >= SCHLONIC_RIDE_ONS.bench.above;
+  });
 
   assert.ok(rail?.toX !== undefined);
 
@@ -175,7 +179,7 @@ test("does not flip the board when it rolls off a rail's end", () => {
   const frames = ride(PARTY, from, (frame) => frame.grounded && frame.grindingRail === null);
 
   assert.ok(frames.filter((frame) => !frame.grounded).length > 8, "the rail's end should be a real drop");
-  assert.deepEqual(frames[frames.length - 1]?.hits, [], "the drop should clear the crowd at the rail's end");
+  assert.deepEqual(frames[frames.length - 1]?.hits, [], "the drop should clear the crowd past the rail's end");
   assert.deepEqual(frames.filter((frame) => flipOf(PARTY, frame) !== 0).map((frame) => frame.tick), []);
 });
 

@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { SchlonicFrame, SchlonicInput, SchlonicProp, SchlonicZone } from "../types.js";
-import { SCHLONIC_HAZARDS, SCHLONIC_WORLD, resolveSchlonicHazardX, resolveSchlonicZone } from "../world/index.js";
+import {
+  SCHLONIC_HAZARDS,
+  SCHLONIC_WORLD,
+  resolveSchlonicHazardBox,
+  resolveSchlonicHazardX,
+  resolveSchlonicZone
+} from "../world/index.js";
 import {
   advanceSchlonic,
   createSchlonicRunSkip,
@@ -575,12 +581,12 @@ test("does nothing to a runner that touches the rail's side", () => {
   assert.equal(frame.outcome, null);
 });
 
-// The first generated zone whose first piece of hard kit is the handrail — one of the crowd at
-// its end, then the rail, with no hole before it — so a runner reaches the real chunk untouched.
-// The crowd member has to stay put, or the sweep depends on where the sway has it.
+// The first generated zone whose first piece of hard kit is the handrail — the rail, then one of
+// the crowd a landing past its end, with no hole before either — so a runner reaches the real
+// chunk untouched. The crowd member has to stay put, or the sweep depends on where the sway has it.
 const findRailCourse = (): { seed: number; chunks: number } => {
   const opensOnRail = (zone: SchlonicZone): boolean => {
-    const [crowd, railProp] = zone.props.filter((prop) => prop.kind !== "wing");
+    const [railProp, crowd] = zone.props.filter((prop) => prop.kind !== "wing");
 
     return (
       crowd?.kind === "hazard" &&
@@ -600,7 +606,7 @@ const findRailCourse = (): { seed: number; chunks: number } => {
   return course;
 };
 
-test("sweeps at most a third of the rail's line on a hop over the crowd at its end, and all of it on a grind", () => {
+test("sweeps at most a third of the rail's line on a hop over the crowd past its end, and all of it on a grind", () => {
   const zone = resolveSchlonicZone(findRailCourse());
   const railProp = zone.props.find((prop) => prop.kind === "rail");
   const crowd = zone.props.find((prop) => prop.kind === "hazard");
@@ -618,7 +624,7 @@ test("sweeps at most a third of the rail's line on a hop over the crowd at its e
   // The reflex: hop the crowd at the first stride they are close ahead, a tap or a short hold,
   // the way a player hops any hazard. It clears them, never touches the rail, and sweeps only
   // the tail of the line on the way over.
-  const reflexTick = tickAtX(zone, crowd.x - 18);
+  const reflexTick = tickAtX(zone, crowd.x - resolveSchlonicHazardBox(crowd).halfWidth - 12);
 
   for (const hold of [1, 7]) {
     const frames = framesOf(zone, [{ tick: reflexTick, down: true }, { tick: reflexTick + hold, down: false }], pastIt);
