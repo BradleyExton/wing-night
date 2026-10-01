@@ -378,14 +378,40 @@ test("does ignore an input logged before the frame's tick rather than apply it l
   assert.deepEqual(stepBrawl(at100, block, late), stepBrawl(at100, block, []));
 });
 
-test("does let a masher through the first wave of block 0 inside twenty seconds with a heart or two gone", () => {
+test("does take block 0's first wave down inside twenty seconds when the sandbox's seed is mashed", () => {
   const block = resolveBrawlBlock({ ...COURSE, block: 0 });
-  const { frames, frame } = play(block, masher);
+  const { frames } = play(block, masher);
   const waveDown = frames.findIndex((each) => each.waveIndex >= 1);
 
   assert.ok(waveDown > 0 && waveDown <= 20 * BRAWL_WORLD.tickHz, `wave 0 went down at ${waveDown}`);
-  assert.equal(frame.outcome, "cleared");
-  assert.ok(frame.hearts >= 1 && frame.hearts < BRAWL_WORLD.heartsMax, `the masher ended on ${frame.hearts} hearts`);
+});
+
+// The balance pin, measured over streets rather than one seed's luck: a mash gets most teams
+// through the easy block with something lost, and almost nobody through the block with the
+// raccoon and the boss — which is where turning round starts to matter.
+test("does let a masher through most block 0 streets and almost no block 2 streets", () => {
+  const SEEDS = 200;
+  const clears = (block: number): { cleared: number; hearts: number } => {
+    let cleared = 0;
+    let hearts = 0;
+
+    for (let seed = 1; seed <= SEEDS; seed += 1) {
+      const { frame } = play(resolveBrawlBlock({ seed, blocks: 3, block }), masher);
+
+      if (frame.outcome === "cleared") {
+        cleared += 1;
+        hearts += frame.hearts;
+      }
+    }
+
+    return { cleared, hearts: cleared === 0 ? 0 : hearts / cleared };
+  };
+  const easy = clears(0);
+  const hard = clears(2);
+
+  assert.ok(easy.cleared >= SEEDS * 0.55, `block 0 cleared on ${easy.cleared} of ${SEEDS}`);
+  assert.ok(easy.hearts < BRAWL_WORLD.heartsMax - 0.5, `block 0 cleared on ${easy.hearts} hearts on average`);
+  assert.ok(hard.cleared <= SEEDS * 0.1, `block 2 cleared on ${hard.cleared} of ${SEEDS}`);
 });
 
 test("does cost a masher at least two hearts when block 2 brings the raccoon and the boss", () => {

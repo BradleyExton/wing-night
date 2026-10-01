@@ -27,6 +27,8 @@ export type BrawlFillCameraFit = {
   y?: number;
   height: number;
   minWidth: number;
+  /** Put the width past `minWidth` on both sides of the sim's window rather than all to the right. */
+  split?: boolean;
 };
 
 export type BrawlCameraFit = { kind: "fixed"; camera: BrawlCamera } | BrawlFillCameraFit;
@@ -41,6 +43,22 @@ export const TABLET_CAMERA: BrawlCamera = {
 
 export const TABLET_CAMERA_FIT: BrawlCameraFit = { kind: "fixed", camera: TABLET_CAMERA };
 
+/**
+ * The TV's camera: the tablet's box widened to the arena's aspect, the extra street split either
+ * side of it (docs/minigames/brawl-spec.md §3). Goons step onto the street `BRAWL_WORLD.spawnLead`
+ * past the tablet's edges and walk in, so on the wall every one of them is in view before it
+ * reaches the holder's frame, from the left as much as the right — the room is the hen's lookout
+ * and "BEHIND YOU" is the team's job. Never narrower than the tablet's box.
+ */
+export const TV_CAMERA_FIT: BrawlFillCameraFit = {
+  kind: "fill",
+  x: 0,
+  y: 0,
+  height: BRAWL_WORLD.height,
+  minWidth: BRAWL_WORLD.width,
+  split: true
+};
+
 const round = (value: number): number => Math.round(value * 100) / 100;
 
 /** The camera a `fill` fit resolves to inside a box of this size (any unit — only the aspect counts). */
@@ -49,11 +67,13 @@ export const resolveFillCamera = (
   box: { width: number; height: number } | null
 ): BrawlCamera => {
   const aspect = box === null || box.height <= 0 ? 0 : box.width / box.height;
+  const width = Math.max(fit.minWidth, round(fit.height * aspect));
+  const extra = fit.split === true ? round((width - fit.minWidth) / 2) : 0;
 
   return {
-    x: fit.x ?? 0,
+    x: (fit.x ?? 0) - extra,
     y: fit.y ?? 0,
-    width: Math.max(fit.minWidth, round(fit.height * aspect)),
+    width,
     height: fit.height
   };
 };

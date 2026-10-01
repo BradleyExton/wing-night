@@ -3,6 +3,7 @@ import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { BrawlMinigameHostView } from "@wingnight/shared";
 
 import { BrawlScene, type BrawlSceneHandle } from "../../BrawlScene/index.js";
+import { resolveGoonsBanked } from "../../goonsTally/index.js";
 import type { BrawlMirrorEventHandler } from "../../mirrorEvents/index.js";
 import { useBrawlBlock } from "../../useBrawlBlock/index.js";
 import { useBrawlRunner, type BrawlWalkDir } from "../../useBrawlRunner/index.js";
@@ -32,13 +33,6 @@ const HandoffCallout = ({ nextName }: { nextName: string | null }): JSX.Element 
     <span className={styles.handoffName}>{streetCopy.handoffCalloutName(nextName)}</span>
   </div>
 );
-
-/** What the turn banked before this block: the floor the live tally counts up from. */
-const resolveGoonsBanked = (view: BrawlMinigameHostView, blockIndex: number): number => {
-  return view.blocks.reduce((total, entry) => {
-    return entry.blockIndex < blockIndex ? total + (entry.result?.goons ?? 0) : total;
-  }, 0);
-};
 
 /** Which way a thumb on the walk pad walks: the side of the pad's centre it is on. */
 const resolvePadDir = (event: PointerEvent<HTMLDivElement>): BrawlWalkDir => {
@@ -77,7 +71,7 @@ export const Street = ({
     sceneRef,
     heartsRef,
     tallyRef,
-    goonsBanked: resolveGoonsBanked(view, blockIndex),
+    goonsBanked: resolveGoonsBanked(view.blocks, blockIndex),
     goonsTotal: view.goonsTotal,
     onWalk: (tick, dir): void => {
       onDispatchAction("walk", { tick, dir });

@@ -119,12 +119,14 @@ const clampHen = (frame: BrawlFrame): BrawlFrame => {
 
 const createGoon = (spawn: BrawlSpawn, cameraX: number): BrawlGoon => {
   const { halfWidth, hp } = BRAWL_WORLD.goons[spawn.kind];
+  const lead = halfWidth + BRAWL_WORLD.spawnLead;
 
   return {
     spawnIndex: spawn.index,
     kind: spawn.kind,
-    // Just past the edge it comes in from, so it walks into the frame rather than appearing in it.
-    x: spawn.side === -1 ? cameraX - halfWidth : cameraX + BRAWL_WORLD.width + halfWidth,
+    // A lead past the edge it comes in from, so it walks into the tablet's frame rather than
+    // appearing in it — and the wall, which sees past that edge, watches it coming first.
+    x: spawn.side === -1 ? cameraX - lead : cameraX + BRAWL_WORLD.width + lead,
     y: spawn.kind === "gull" ? BRAWL_WORLD.gullCruiseY : 0,
     vx: 0,
     vy: 0,

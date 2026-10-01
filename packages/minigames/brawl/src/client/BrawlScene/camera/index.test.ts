@@ -32,6 +32,17 @@ test("does hold a fill camera at its floor when the box is narrower or not measu
   assert.equal(resolveFillCamera(fit, null).x, -12);
 });
 
+test("does split a fill camera's extra width either side of the tablet's window when asked", () => {
+  const camera = resolveCamera({ kind: "fill", minWidth: 160, height: 90, split: true }, TV_ARENA);
+
+  assert.equal(camera.width, 200.83);
+  // Half the extra on the left, so a goon from behind is on the wall as early as one from ahead.
+  assert.equal(camera.x, -20.42);
+  assert.equal((camera.x + camera.width).toFixed(2), "180.41");
+  // Nothing to split at the floor.
+  assert.equal(resolveFillCamera({ kind: "fill", minWidth: 160, height: 90, split: true }, null).x, 0);
+});
+
 test("does write a camera as the viewBox it is", () => {
   assert.equal(resolveViewBox(TABLET_CAMERA), "0 0 160 90");
 });

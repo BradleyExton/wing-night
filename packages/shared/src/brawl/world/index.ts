@@ -60,6 +60,16 @@ export const BRAWL_WORLD = {
   henHeight: 16,
   /** Where the hen stands at the start line. */
   henStartX: 30,
+  /**
+   * How far past the tablet's edge a goon steps onto the street, so it is already walking when
+   * it comes into view rather than appearing at the edge. The TV's camera is wider than the
+   * tablet's on both sides (the scene's `TV_CAMERA_FIT`), and the wall's own margin — 13 to 20
+   * units a side at a TV's aspect — is what the room sees first: about half a second of goose
+   * before the holder's frame has it, from behind as much as from ahead. The room is the hen's
+   * lookout, and "BEHIND YOU" is the team's job (docs/minigames/brawl-spec.md §3). At goose
+   * speed this lead is a second of walking in.
+   */
+  spawnLead: 30,
   /** Across the locked screen in under three seconds: a wave is a fight, not a walk. */
   henWalkSpeed: 0.9,
   henMargin: 10,

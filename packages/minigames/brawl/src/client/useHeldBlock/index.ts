@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { BrawlMinigameDisplayView, BrawlMinigameHostView } from "@wingnight/shared";
 
 import { CLEARED_BEAT_MS, KO_BEAT_MS, TIMEOUT_BEAT_MS } from "../beats/index.js";
@@ -68,24 +68,32 @@ export const resolveShownBlockIndex = (view: Pick<BlockView, "blockIndex" | "blo
  * The block a surface should draw right now, and the hold it is in, if any (`useHeldRun`'s twin).
  * A hold lasts the block's ending beat plus whatever slack the caller needs (the TV's replay runs
  * behind the tablet); a reset drops it at once.
+ *
+ * The hold is derived DURING the render that sees the cursor move, not in an effect after it: an
+ * effect commits one frame with the cursor already on the next block and no hold yet, and both
+ * surfaces key their street on the block they show — so that frame remounted the next block's
+ * street, and the hold then remounted the ended one, replaying its slide-in under the beat.
  */
 export const useHeldBlock = (view: BlockView, slackMs = 0): { shownBlockIndex: number; hold: BlockHold | null } => {
-  const [hold, setHold] = useState<BlockHold | null>(null);
-  const previousBlockIndexRef = useRef<number | null>(null);
+  const [tracked, setTracked] = useState<{ blockIndex: number | null; hold: BlockHold | null }>({
+    blockIndex: null,
+    hold: null
+  });
+  let { hold } = tracked;
 
-  useEffect(() => {
-    const previousBlockIndex = previousBlockIndexRef.current;
-
-    previousBlockIndexRef.current = view.blockIndex;
-
-    const nextHold = resolveBlockHold(previousBlockIndex, view, Date.now());
+  if (tracked.blockIndex !== view.blockIndex) {
+    const nextHold = resolveBlockHold(tracked.blockIndex, view, Date.now());
 
     if (nextHold !== null) {
-      setHold(nextHold);
-    } else if (previousBlockIndex !== null && view.blockIndex < previousBlockIndex) {
-      setHold(null);
+      hold = nextHold;
+    } else if (tracked.blockIndex !== null && view.blockIndex < tracked.blockIndex) {
+      hold = null;
     }
-  }, [view.blockIndex, view.blocks]);
+
+    // React's derived-state pattern: the render is thrown away and re-run with this state before
+    // anything is committed.
+    setTracked({ blockIndex: view.blockIndex, hold });
+  }
 
   useEffect(() => {
     if (hold === null) {
@@ -93,7 +101,7 @@ export const useHeldBlock = (view: BlockView, slackMs = 0): { shownBlockIndex: n
     }
 
     const handle = window.setTimeout(() => {
-      setHold(null);
+      setTracked((current) => (current.hold === hold ? { ...current, hold: null } : current));
     }, resolveBlockHoldDurationMs(hold) + slackMs);
 
     return (): void => {

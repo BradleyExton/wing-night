@@ -213,7 +213,7 @@ knowing before reaching for the bigger number:
     axes.
 
 Today: Stage for TRIVIA, DRAWING, EMOJI_CHARADES, RECREATE and SONG_GUESS;
-Canvas for GEO, JOUST, FAPPY and SCHLONIC. The migrations more than doubled
+Canvas for GEO, JOUST, FAPPY, SCHLONIC and BRAWL (§2.14). The migrations more than doubled
 TRIVIA's share of the tablet and RECREATE's, took the three arcade games from
 about three-fifths of it to about nine-tenths, and left GEO on the nine-tenths
 it already had.
@@ -2032,6 +2032,134 @@ the eye off the song.
         transport only dispatches actions. No arrangement of host slots can
         restart a song.
 
+## 2.14 BRAWL Minigame Surface Language ("Streets of Barrie")
+
+The BRAWL (Streets of Barrie) surfaces are the one place in the night that is a
+beat 'em up, and the only one that is after dark: the cast (§2.8) walks a
+Barrie street at night, a block each, and the street belongs to the geese.
+Spec: `docs/minigames/brawl-spec.md`.
+
+-   **A street after dark, and it is Barrie's.** The fourth time of day the
+    night draws — not SCHLONIC's pale summer morning on Dunlop Street (§2.11),
+    FAPPY's golden afternoon over the same rooftops (§2.9), or JOUST's purple
+    dusk on the beach (§2.7), but the lamps lit. The course is three settings,
+    one per block: **Dunlop Street** (Souldiers Skate Shop, the Queen's Hotel
+    and the fronts across the road, their panes lit warm from inside and their
+    awnings kept red), then **the waterfront** (the twin condos and the bay with
+    the lamps and the moon laid on it in short glints, a boardwalk rail), then
+    **Centennial Beach**, which every block past the third repeats, ending at
+    the Spirit Catcher. All of it is `@wingnight/scenery`, the same landmarks
+    the other three games stand in the daylight, handed a night palette: the
+    `--bn-*` custom properties on the scene's root (`BrawlScene/palette.ts`),
+    because the scenery takes its colours as presentation attributes and a
+    class cannot reach one. No hex lives in the scene. The backdrop is hazed
+    and kept to middling values the way §2.9's is, so every goose, gull and
+    hen is lighter or darker than anything behind it: the city is where you
+    are, never what you look at. The sky bank slides at 12% of the camera, the
+    street at the whole of it, and a chalk line across the pavement is the
+    handoff. Drawing content, exempt from the two-accent budget like the other
+    arenas.
+-   **The hen is the hero, and the goons are Barrie's own.** The fighter is the
+    leg's player's own cast hen — costume head, team accent, genre silhouette
+    — in three poses made for it (§2.8): she **pecks** leaning into the
+    strike from the press until the beak's box closes (the commit the room can
+    see), **hurts** when a goon lands (and flickers through her mercy window),
+    and lies **ko** on her back with her feet in the air while the geese carry
+    her off. The goons have a palette of their own (`Goons/palette.ts`) and a
+    drawing each: the goose, the gull that cruises and dives, the raccoon that
+    charges, and the boss, a goose with twice the neck. A goon you put down
+    falls with stars and is gone. Everyone in the room has been chased by one.
+-   **The arena is the controller, in two thumb zones.** The whole body is the
+    surface and nothing on it is a button: the **left 35% is the walk pad**
+    (hold it; the side of its centre your thumb is on is the way you go, and
+    sliding across the centre turns you, held even if the thumb slides off the
+    pad's edge) and **the rest is the peck zone** (any tap pecks). Faint
+    ◀ ▶ and a PECK ring teach the two zones on a block's first touch and then
+    go. The reason is FAPPY's and SCHLONIC's: a control the thumb has to find
+    is a control the player looks at, and the player's job is the street.
+    Facing follows the walk and never the peck, so a goon behind you needs a
+    step back — the genre's own "BEHIND YOU", and the room's job to shout.
+    The peck zone stops 5.5rem short of the arena's bottom edge so a mashed
+    thumb never lands on the corner dock; the arena dims to 80% and ignores
+    both zones when it is not armed (a beat playing, the team through). Mashing
+    is the comedy and is tuned to be survivable: a peck's box runs from the
+    hen's back edge to a beak's length past her front, so a mashing hen can
+    answer a goon lunging into her back, and still loses hearts to the raccoon
+    and the boss.
+-   **Two numbers in the chrome, and they are the two the thumbs are playing
+    for.** The **hearts** (three, lit and dimmed ♥ in the counter) and the
+    **worth down** over the course's whole worth ("12 / 34", with "Down" under
+    it), beside the block and whose it is, and the turn to beat once a team has
+    set one. Both are written by the runner's paint loop every frame, not by
+    React: the tally is what the turn banked before this block plus what the
+    hen has put down in it so far, so it climbs as the goons fall, and the room
+    sees the points move within a second (principles §11, 14). There is no
+    health bar in the street and no combo counter anywhere: the picture is the
+    fight.
+-   **The telegraph is the thing the TV reads.** A goon that has closed to its
+    reach stops dead, faces the hen, and honks — a crouch, a beat of half a
+    second for a goose and a little more for the raccoon and the boss, and the
+    gull's is the shortest — and only then lunges through her. The wall draws a wider window of the same
+    street than the tablet (the `fill` camera, split either side,
+    `BrawlScene/camera`) and goons are born past the tablet's edges, so the
+    couch sees a goon walk in about half a second before the holder does,
+    from either side, and every honk at wall size: the room is the lookout, and the information
+    collapses goon by goon as each enters the tablet's frame (spec §3). A
+    surface may never hide a telegraph behind chrome, which is also why the
+    host's `readout` only comes out between blocks (below).
+-   **Four beats the sim never sees**, all client-only, the same for every
+    team, and each ends on the hen, never a hard cut (principles §7). *GO ▶*
+    (not timed): a flashing arrow in screen space at the right edge of
+    whatever window the surface draws, shown whenever the camera is unlocked
+    and the block is live — after the last wave too, because the handoff is off
+    the tablet's right edge. *The handoff* (2 s): the hen walks up to the next
+    teammate waiting past the chalk line, and a callout drops over the street,
+    on the tablet "Hand it to *Caitlin*"; thumbs are ignored for the beat, so
+    the thumb that just won cannot start the next block. *The bay* (2.4 s, the
+    longest, because it is the joke): out of hearts, the geese lift the hen off
+    the top of the frame and drop her in Kempenfelt Bay, a splash. *The bell*
+    (1.6 s): the block's own clock ran out, a boxing bell, the hen slumps. A
+    hit also stops the clock for 120 ms (the clock, not the sim) and jolts the
+    picture.
+-   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5):
+    the street is full bleed and is the whole input surface, 89.9% of the
+    tablet like FAPPY's corridor. `rail` and `clock` are the shell's
+    (BRAWL's `timerKey` is null, so `clock` takes no width), and nothing in the
+    game types a z-index, an `isolate` or a dock gutter.
+    -   `counter`, read-only in the chrome row: "Block 1 of 3" and the block's
+        player, the hearts, the worth down, and the turn to beat.
+    -   `actions`, bottom-left: Skip block and Reset turn, then the hint that
+        says whose block it is and where the thumbs go — empty while a block
+        runs, because a brawling hen's holder is not reading. Skip is disabled
+        through the handoff so a tap cannot skip the NEXT player's block.
+    -   `readout`, bottom-right above the dock, **only during a block's ending
+        or once the team is through**: the finish card, the block list and
+        `RunningTotals`. The right of the street is where goons walk in from,
+        and a readout there during a fight would sit on the telegraph.
+-   **Display: the sign, the street through the room's camera, and a strip of
+    pips.** The marquee is the house neon sign (§2.2D) with the game's name as
+    its kicker and the same two numbers the tablet's chrome carries as its
+    readout: the block and whose it is, the hearts, the worth down over the
+    course's whole worth, and the turn to beat. They are the replay's, not the
+    view's, written every frame, because the server only banks a block once it
+    is refereed and the room is watching it now. The street under it is the
+    tablet's block re-run from its own input log a tenth of a second behind
+    (`useBrawlMirror`), drawn through a camera widened to the arena's aspect
+    with the extra split either side of the tablet's window (`TV_CAMERA_FIT`,
+    about 186 to 200 units against the tablet's 160), so a goon is on the wall
+    a half-second before the holder's frame has it from the left as much as
+    from the right. Over the sky sits the **wave meter**: one pip per goon in
+    the wave in hand, heavier for the raccoon and heaviest for the boss, each
+    waiting, in, or down, and GO ▶ in the strip once the wave is clear. It is
+    the room's tally to shout along with, folds away for a beat and for the
+    finish, and is a count of goons, never a health bar. Each ending's **callout** hangs low
+    over the pavement on a dark pool, in Playfair italic: *Hand it to Caitlin*,
+    *Into the bay!* in heat, *Time!*; it takes the pavement and never the hen.
+    A status line under the stage says whose block it is (§2.2D), and the
+    finish is the house `<ResultPlaque>` (§2.2E), silent, because the last
+    beat has already rung. There is no standings board on the wall mid-turn.
+    Specified in `docs/minigames/brawl-spec.md` §0.7.
+
 ## 2.8 Cast (shared character system)
 
 Every rostered player has a little hen that recurs across the show.
@@ -2094,7 +2222,22 @@ TV disagreed with.
     the knees sunk by the shape's own crouch, the wing held out and the head
     up; static, because a surface riding the bird along a zone moves the whole
     figure — `CHARACTER_RIDE_STANCE` says where the feet and the deck are, so a
-    surface can lay a board exactly under them).
+    surface can lay a board exactly under them), and BRAWL's three (§2.14):
+    `peck` (the head and neck thrust forward and down past the beak's own
+    line, the wing swept back, the back leg driving — the commit a room sees
+    before a goon does), `hurt` (the head thrown back, the wing flung up, the
+    legs splayed fore and aft as the bird skids) and `ko` (flat on its back,
+    the head along the street, the wing limp, the feet in the air). All three
+    are static, like `fly` and `ride`: the sim says which one a frame is and
+    the surface swaps the pose rather than waiting on a loop. They also use the
+    **stance layer**: a `<g data-character-stance>` wrapped around the whole
+    figure, turning it as one about its foot (`CHARACTER_STANCE_PIVOT`) — the
+    peck leans into the strike, the hurt rocks back on its heels, the ko rolls
+    over and is lifted so its back lies on the line its feet were on — which no
+    part turning about its own pivot can say, because the parts are siblings
+    and a leaning body would leave its head behind. A pose without a stance
+    (`styles.stances`) is not wrapped at all, so every other pose draws the
+    markup it always did.
     A dancing bird moves on TWO clocks: the beat, and a **jig** under it —
     quick feet at a tempo of its own, a hop, a tail or a wing going its own
     way (`danceJigs` next to the figure, `cast-jig-*` keyframes). Each part is

@@ -14,8 +14,8 @@ export const resolveGoonsTotal = (courseSeed: number, blocksPerTurn: number): nu
 
 /**
  * Worth is the whole currency: what the team put down against everything the course held. A
- * clean course is full points and there is nothing above it. Near misses are built in — 24 of 27
- * worth is 13 of 15 points.
+ * clean course is full points and there is nothing above it. Near misses are built in — on the
+ * default seed's 34-worth course, 29 down is 13 of 15 points.
  */
 export const resolveBrawlPoints = (
   goonsDown: number,

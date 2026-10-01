@@ -29,3 +29,11 @@ export const paintGoonsTally = (element: HTMLElement | null, down: number, total
     element.textContent = text;
   }
 };
+
+/** What a turn banked before this block: the floor the live tally counts up from. */
+export const resolveGoonsBanked = (
+  blocks: readonly { blockIndex: number; result: { goons: number } | null }[],
+  blockIndex: number
+): number => {
+  return blocks.reduce((total, entry) => (entry.blockIndex < blockIndex ? total + (entry.result?.goons ?? 0) : total), 0);
+};

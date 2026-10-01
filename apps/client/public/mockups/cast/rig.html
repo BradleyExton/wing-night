@@ -113,7 +113,8 @@
         <section><h2>Idle (the lineup)</h2><p class="note">Breathing, the tail swaying with it, and a double peck at the ground every four seconds.</p>
           <div class="row frozen">${strip("idle", 8, 4, { h: 150, color: "#14b8a6" })}</div><div class="row">${bird({ h: 200, pose: "idle", color: "#14b8a6" })}</div></section>
         <section><h2>Fly (FAPPY's flyer)</h2><p class="note">A static tuck of both legs; the wing is not on the figure here, FAPPY draws it on its own layer and beats it off the physics.</p>
-          <div class="row">${bird({ h: 200, pose: "fly", color: "#60a5fa" })}</div></section>`;
+          <div class="row">${bird({ h: 200, pose: "fly", color: "#60a5fa" })}</div></section>
+        <section><h2>Peck, hurt and ko (BRAWL's three)</h2><p class="note">Also in <code>CHARACTER_POSES</code>, not filmed on this page: <code>peck</code> (head and neck thrust forward and down, the strike), <code>hurt</code> (head thrown back, legs splayed as the bird skids) and <code>ko</code> (on its back, feet in the air). Static like fly and ride. Each also turns the whole bird as one about its foot (the stance layer, <code>styles.stances</code>), which no single part's pivot can do. Their rotations live in <code>packages/cast/src/Character/CharacterFigure/styles.ts</code>; DESIGN.md §2.8 and §2.14.</p></section>`;
 
       // Freeze each filmstrip frame at its phase: every animated part inherits the frame's negative delay.
       document.querySelectorAll(".frozen svg").forEach((svg) => {

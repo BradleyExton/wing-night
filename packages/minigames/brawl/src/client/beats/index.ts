@@ -19,3 +19,8 @@ export const KO_BEAT_MS = 2400;
 
 // The bell: the block's own clock ran out, the hen slumps and a boxing bell rings.
 export const TIMEOUT_BEAT_MS = 1600;
+
+// The wall replays a few ticks behind the tablet, so it holds a block's ending a little longer than
+// the tablet does or the next block is drawn over a beat the sofa has not finished seeing
+// (SCHLONIC's slack).
+export const MIRROR_HOLD_SLACK_MS = 700;

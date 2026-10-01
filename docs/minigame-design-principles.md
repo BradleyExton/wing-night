@@ -212,6 +212,9 @@ Worked example, the current pack schedule (`~/wing-night-content/local/gameConfi
 | 7 | RECREATE | mimicry, judged | write, slow reveal |
 | 8 | JOUST | agon + alea | aim, hard commit, spectator physics |
 
+Streets of Barrie (BRAWL) is unscheduled. When it is, it takes the slot SCHLONIC or FAPPY
+holds (twitch, two thumbs, relay) and must not sit next to either.
+
 No two consecutive rounds share a shape: recall alternates with perform through the middle
 of the night, and the two twitch games sit at rounds 1 and 6. Before 2026-09-24 the pack
 ran GEO then SONG_GUESS (two think-then-commit games) and EMOJI_CHARADES then DRAWING (two
