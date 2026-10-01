@@ -161,7 +161,7 @@ export const DisplayBoard = ({
     eatingPlaylist.length > 0 ||
     (roomState?.teams ?? []).some((team) => (team.anthems ?? []).length > 0);
 
-  // A game whose display surface is the room's speaker (Who's That Song) needs the
+  // A game whose display surface is the room's speaker (Name That Cheese) needs the
   // same tap even when the active team has no anthem — otherwise the first clip
   // of the round is silently swallowed by the autoplay policy.
   const roundMinigameType = roomState?.currentRoundConfig?.minigame ?? null;

@@ -7,7 +7,7 @@ import { resolveClientRoute, resolveDevLabName } from "../../utils/resolveClient
 import { devRouteIndexCopy } from "./copy";
 import { DevRouteIndex } from "./index";
 
-// "Who's That Song" reaches the markup as Who&#x27;s That Song.
+// A display name with an apostrophe reaches the markup as &#x27;.
 const escapeApostrophes = (text: string): string => {
   return text.replaceAll("'", "&#x27;");
 };

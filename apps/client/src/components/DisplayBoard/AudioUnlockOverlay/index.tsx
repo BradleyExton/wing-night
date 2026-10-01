@@ -8,7 +8,7 @@ type AudioUnlockOverlayProps = {
 };
 
 // Rendered while display audio is still locked and something wants to play: the
-// lobby playlist at SETUP, a team anthem or a Who's That Song clip at MINIGAME_INTRO.
+// lobby playlist at SETUP, a team anthem or a Name That Cheese clip at MINIGAME_INTRO.
 // The tap is the only moment a browser will let us prime a media element, so
 // this is the one place any of them can be armed from.
 export const AudioUnlockOverlay = ({
