@@ -79,9 +79,10 @@ export const waitingNote =
 export const actions =
   "flex min-h-[clamp(88px,12.5vh,100px)] items-stretch gap-3";
 
-// Transport absorbs the slack and the ruling group never squeezes: at reveal
-// the pad and "Next song" keep their size and the four transport buttons —
-// all but one of them disabled by then — give up the width.
+// Transport absorbs the slack and the ruling group never squeezes. At the
+// reveal the transport leaves the row altogether (every one of its buttons is
+// disabled there), because the pad and "Next song" beside even a squeezed
+// transport were wider than a 1280px tablet.
 export const transport = "flex min-w-0 flex-1 items-stretch gap-2";
 
 export const transportPrimary = `${takeoverPrimary} flex-[1.4] whitespace-nowrap`;

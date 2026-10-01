@@ -142,8 +142,28 @@ test("swaps reveal for the scoring pad and next song once revealed", () => {
 
   assert.match(html, /data-song-guess-scoring/);
   assert.match(html, /Score this song/);
-  assert.equal(isDisabled(html, "Next song"), false);
   assert.equal(buttonFor(html, "Reveal answer"), null);
+});
+
+// At 1280px the pad and "Next song" beside even a squeezed transport ran off
+// the tablet, and every transport button is disabled at the reveal anyway.
+test("clears the transport off the foot row at the reveal", () => {
+  const html = renderAtPhase("reveal");
+
+  assert.equal(buttonFor(html, "Play clip"), null);
+  assert.equal(buttonFor(html, "Skip song"), null);
+});
+
+// The ruling is what puts the answer on the TV; moving on half-ruled cut from
+// "And the ruling is…" straight to the next song.
+test("holds next song until both halves are ruled", () => {
+  const halfRuled: SongGuessTeamScore = { title: true, artist: null };
+
+  assert.equal(isDisabled(renderAtPhase("reveal"), "Next song"), true);
+  assert.equal(
+    isDisabled(renderSurface(hostView({ phase: "reveal", currentScore: halfRuled })), "Next song"),
+    true
+  );
 });
 
 test("hides the scoring pad until the answer is revealed", () => {
@@ -175,7 +195,6 @@ test("offers the skip escape hatch before the answer is on screen", () => {
   assert.equal(isDisabled(renderAtPhase("idle"), "Skip song"), false);
   assert.equal(isDisabled(renderAtPhase("clip_playing"), "Skip song"), false);
   assert.equal(isDisabled(renderAtPhase("clip_paused"), "Skip song"), false);
-  assert.equal(isDisabled(renderAtPhase("reveal"), "Skip song"), true);
 });
 
 test("tells the host the set is finished", () => {

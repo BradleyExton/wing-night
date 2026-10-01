@@ -1,6 +1,6 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { JoustMinigameHostView, JoustShotResult } from "@wingnight/shared";
-import { RunningTotals, TakeoverCanvas } from "@wingnight/surface";
+import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
 import { isReplayFinished } from "../resolveJoustScene/index.js";
 import { resolveShotCopy } from "../shotResultCopy/index.js";
@@ -109,6 +109,8 @@ export const HostJoustSurface = ({
   solo = false
 }: MinigameHostRendererProps): JSX.Element => {
   const joustView = minigameHostView?.minigame === "JOUST" ? minigameHostView : null;
+  const { dispatchVerdict, isSettling: isVerdictSettling } =
+    useVerdictDispatch(onDispatchAction);
 
   // The intro beat is a panel in the host's own control deck rather than a
   // takeover — `rail` and `clock` are both null on it — so a full-bleed lane
@@ -179,9 +181,9 @@ export const HostJoustSurface = ({
             <button
               className={styles.primaryButton}
               type="button"
-              disabled={!canAct || !isResolved}
+              disabled={!canAct || !isResolved || isVerdictSettling}
               onClick={(): void => {
-                dispatch("nextShot");
+                dispatchVerdict("nextShot", {});
               }}
             >
               {hostJoustSurfaceCopy.nextShotButtonLabel}
@@ -195,9 +197,9 @@ export const HostJoustSurface = ({
             <button
               className={styles.secondaryButton}
               type="button"
-              disabled={!canAct || !isAimingPhase}
+              disabled={!canAct || !isAimingPhase || isVerdictSettling}
               onClick={(): void => {
-                dispatch("skipShot");
+                dispatchVerdict("skipShot", {});
               }}
             >
               {hostJoustSurfaceCopy.skipShotButtonLabel}

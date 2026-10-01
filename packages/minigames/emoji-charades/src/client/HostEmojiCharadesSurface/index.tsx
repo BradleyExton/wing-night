@@ -1,6 +1,6 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { EmojiCharadesMinigameHostView } from "@wingnight/shared";
-import { TakeoverStage } from "@wingnight/surface";
+import { TakeoverStage, useVerdictDispatch } from "@wingnight/surface";
 
 import { hostEmojiCharadesSurfaceCopy } from "./copy.js";
 import { EmojiPicker } from "./EmojiPicker/index.js";
@@ -36,6 +36,8 @@ export const HostEmojiCharadesSurface = ({
 }: MinigameHostRendererProps): JSX.Element => {
   const hostView: EmojiCharadesMinigameHostView | null =
     minigameHostView?.minigame === "EMOJI_CHARADES" ? minigameHostView : null;
+  const { dispatchVerdict, isSettling: isVerdictSettling } =
+    useVerdictDispatch(onDispatchAction);
 
   // The intro beat is a panel in the control deck, not a takeover, so it
   // carries no chrome — but it does show the subject, because the host is the
@@ -116,9 +118,9 @@ export const HostEmojiCharadesSurface = ({
           <button
             className={styles.gotItButton}
             type="button"
-            disabled={!canDispatchAction || !hasSubject}
+            disabled={!canDispatchAction || !hasSubject || isVerdictSettling}
             onClick={(): void => {
-              onDispatchAction("markCorrect", {});
+              dispatchVerdict("markCorrect", {});
             }}
           >
             <span className={styles.verdictBody}>
@@ -143,9 +145,9 @@ export const HostEmojiCharadesSurface = ({
           <button
             className={styles.skipButton}
             type="button"
-            disabled={!canDispatchAction || !hasSubject}
+            disabled={!canDispatchAction || !hasSubject || isVerdictSettling}
             onClick={(): void => {
-              onDispatchAction("skipSubject", {});
+              dispatchVerdict("skipSubject", {});
             }}
           >
             <span className={styles.verdictBody}>

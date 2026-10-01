@@ -115,6 +115,10 @@ const advanceMarks = (
   return reduce(titleRuled, "markArtist", { correct: true }, { receivedAtMs }).state;
 };
 
+const ruleAndAdvance = (revealing: SerializableValue): SerializableValue => {
+  return reduce(advanceMarks(revealing, 5_000), "nextSong").state;
+};
+
 const hostViewOf = (state: SerializableValue): SongGuessMinigameHostView => {
   const view = songGuessRuntimePlugin.selectHostView({
     state,
@@ -233,12 +237,12 @@ test("restores the replay allowance on the next song", () => {
     "pauseClip",
     "replayClip",
     "pauseClip",
-    "triggerReveal",
-    "nextSong"
+    "triggerReveal"
   );
+  const advanced = reduce(advanceMarks(scored, 5_000), "nextSong").state;
 
-  assert.equal((scored as SongGuessRuntimeState).replayUsed, false);
-  assert.equal((scored as SongGuessRuntimeState).songCursor, 1);
+  assert.equal((advanced as SongGuessRuntimeState).replayUsed, false);
+  assert.equal((advanced as SongGuessRuntimeState).songCursor, 1);
 });
 
 test("ignores a reveal that is not preceded by a pause", () => {
@@ -380,11 +384,24 @@ test("ignores a mark with a malformed payload", () => {
   assert.equal(reduce(revealed, "markArtist", null).didMutate, false);
 });
 
+test("refuses to move on until both halves of the song are ruled", () => {
+  const revealing = advanceTo(initializeState(), "playClip", "pauseClip", "triggerReveal");
+  const titleRuled = reduce(revealing, "markTitle", { correct: true }).state;
+
+  assert.equal(reduce(revealing, "nextSong").didMutate, false);
+  assert.equal(reduce(titleRuled, "nextSong").didMutate, false);
+  assert.equal(
+    reduce(reduce(titleRuled, "markArtist", { correct: false }).state, "nextSong")
+      .didMutate,
+    true
+  );
+});
+
 test("lands on done after the last song is revealed and advanced", () => {
   let state: SerializableValue = initializeState();
 
   for (let songIndex = 0; songIndex < 4; songIndex += 1) {
-    state = advanceTo(state, "playClip", "pauseClip", "triggerReveal", "nextSong");
+    state = ruleAndAdvance(advanceTo(state, "playClip", "pauseClip", "triggerReveal"));
   }
 
   assert.equal((state as SongGuessRuntimeState).phase, "done");
@@ -395,7 +412,7 @@ test("ignores every transport action once the set is done", () => {
   let state: SerializableValue = initializeState();
 
   for (let songIndex = 0; songIndex < 4; songIndex += 1) {
-    state = advanceTo(state, "playClip", "pauseClip", "triggerReveal", "nextSong");
+    state = ruleAndAdvance(advanceTo(state, "playClip", "pauseClip", "triggerReveal"));
   }
 
   for (const actionType of [

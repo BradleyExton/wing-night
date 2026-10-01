@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { FappyMinigameHostView, FappyMinigameLeg } from "@wingnight/shared";
-import { RunningTotals, TakeoverCanvas } from "@wingnight/surface";
+import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
 import { RelayLineup } from "../RelayLineup/index.js";
 import {
@@ -182,6 +182,7 @@ export const HostFappySurface = ({
   const dispatch = (actionType: string): void => {
     onDispatchAction(actionType, {});
   };
+  const { dispatchVerdict, isSettling: isVerdictSettling } = useVerdictDispatch(onDispatchAction);
 
   // The tablet's clock says the limit has passed; tell the server, which
   // checks it against its own clock before ending the relay.
@@ -259,9 +260,11 @@ export const HostFappySurface = ({
               <button
                 className={styles.secondaryButton}
                 type="button"
-                disabled={!canAct || !isLive}
+                // Not in the handoff: the corridor still shows the leg just
+                // ended, so a tap there skipped the NEXT player's leg.
+                disabled={!canAct || !isLive || hold !== null || isVerdictSettling}
                 onClick={(): void => {
-                  dispatch("skipLeg");
+                  dispatchVerdict("skipLeg", {});
                 }}
               >
                 {hostFappySurfaceCopy.skipLegButtonLabel}

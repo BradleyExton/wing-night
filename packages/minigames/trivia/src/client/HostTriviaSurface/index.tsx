@@ -1,6 +1,6 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { TriviaPrompt } from "@wingnight/shared";
-import { TakeoverStage } from "@wingnight/surface";
+import { TakeoverStage, useVerdictDispatch } from "@wingnight/surface";
 
 import { hostTriviaSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
@@ -39,6 +39,8 @@ export const HostTriviaSurface = ({
   onDispatchAction
 }: MinigameHostRendererProps): JSX.Element => {
   const triviaHostView = minigameHostView?.minigame === "TRIVIA" ? minigameHostView : null;
+  const { dispatchVerdict, isSettling: isVerdictSettling } =
+    useVerdictDispatch(onDispatchAction);
   const currentPrompt = triviaHostView?.currentPrompt ?? null;
   const attemptsRemaining = triviaHostView?.attemptsRemaining ?? 0;
   const attemptsExhausted = attemptsRemaining <= 0;
@@ -92,9 +94,9 @@ export const HostTriviaSurface = ({
             <button
               className={styles.correctButton}
               type="button"
-              disabled={disableAttemptButtons}
+              disabled={disableAttemptButtons || isVerdictSettling}
               onClick={(): void => {
-                onDispatchAction("recordAttempt", { isCorrect: true });
+                dispatchVerdict("recordAttempt", { isCorrect: true });
               }}
             >
               <span className={styles.verdictIcon} aria-hidden="true">
@@ -105,9 +107,9 @@ export const HostTriviaSurface = ({
             <button
               className={styles.incorrectButton}
               type="button"
-              disabled={disableAttemptButtons}
+              disabled={disableAttemptButtons || isVerdictSettling}
               onClick={(): void => {
-                onDispatchAction("recordAttempt", { isCorrect: false });
+                dispatchVerdict("recordAttempt", { isCorrect: false });
               }}
             >
               <span className={styles.verdictIcon} aria-hidden="true">

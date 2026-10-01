@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import { TakeoverStage } from "@wingnight/surface";
+import { TakeoverStage, useVerdictDispatch } from "@wingnight/surface";
 
 import { RECREATE_MAX_PROMPT_LENGTH } from "../../runtime/index.js";
 import { resolveRecreateTargetNumber } from "../resolveRecreateTargetNumber/index.js";
@@ -73,6 +73,10 @@ export const HostRecreateSurface = ({
   // never renders a stale draft for a beat.
   const draftKey = `${currentTarget?.id ?? ""}:${targetsCompleted}`;
   const [draftState, setDraftState] = useState({ draftKey, draft: "" });
+  // Every beat's button is drawn in the same slot, so the second tap of a
+  // double tap on "Submit" used to land on "Lock it in" with nothing ticked.
+  const { dispatchVerdict, isSettling: isVerdictSettling } =
+    useVerdictDispatch(onDispatchAction);
   const draft = draftState.draftKey === draftKey ? draftState.draft : "";
 
   // The intro beat is a panel in the host's own control deck rather than a
@@ -101,9 +105,9 @@ export const HostRecreateSurface = ({
         <button
           className={styles.beatButton}
           type="button"
-          disabled={!canDispatchAction || trimmedDraft.length === 0}
+          disabled={!canDispatchAction || trimmedDraft.length === 0 || isVerdictSettling}
           onClick={(): void => {
-            onDispatchAction("submitPrompt", { prompt: trimmedDraft });
+            dispatchVerdict("submitPrompt", { prompt: trimmedDraft });
           }}
         >
           {hostRecreateSurfaceCopy.submitButtonLabel}
@@ -117,9 +121,9 @@ export const HostRecreateSurface = ({
           <button
             className={styles.beatButton}
             type="button"
-            disabled={!canDispatchAction}
+            disabled={!canDispatchAction || isVerdictSettling}
             onClick={(): void => {
-              onDispatchAction("lockScore", {});
+              dispatchVerdict("lockScore", {});
             }}
           >
             {hostRecreateSurfaceCopy.lockButtonLabel}
@@ -127,9 +131,9 @@ export const HostRecreateSurface = ({
           <button
             className={styles.beatButtonQuiet}
             type="button"
-            disabled={!canDispatchAction}
+            disabled={!canDispatchAction || isVerdictSettling}
             onClick={(): void => {
-              onDispatchAction("retryPrompt", {});
+              dispatchVerdict("retryPrompt", {});
             }}
           >
             {hostRecreateSurfaceCopy.retryButtonLabel}
@@ -148,9 +152,9 @@ export const HostRecreateSurface = ({
       <button
         className={styles.beatButton}
         type="button"
-        disabled={!canDispatchAction}
+        disabled={!canDispatchAction || isVerdictSettling}
         onClick={(): void => {
-          onDispatchAction("nextTarget", {});
+          dispatchVerdict("nextTarget", {});
         }}
       >
         {hostRecreateSurfaceCopy.nextTargetButtonLabel}

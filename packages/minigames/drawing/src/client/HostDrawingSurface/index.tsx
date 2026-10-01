@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import { TakeoverStage } from "@wingnight/surface";
+import { TakeoverStage, useVerdictDispatch } from "@wingnight/surface";
 
 import {
   DrawingCanvas,
@@ -58,6 +58,8 @@ export const HostDrawingSurface = ({
     INK_PALETTE[0].id
   );
   const isRevealVisible = useIsRevealVisible(drawingHostView?.reveal ?? null);
+  const { dispatchVerdict, isSettling: isVerdictSettling } =
+    useVerdictDispatch(onDispatchAction);
 
   if (phase !== "play") {
     return (
@@ -84,9 +86,12 @@ export const HostDrawingSurface = ({
 
   // Buffered stroke points must reach the server before a control action so
   // the canonical canvas matches what the drawer saw when they tapped it.
-  const dispatchControlAction = (actionType: string): void => {
+  const dispatchControlAction = (
+    actionType: string,
+    dispatch: typeof onDispatchAction = onDispatchAction
+  ): void => {
     canvasHandleRef.current?.finalizeStrokes();
-    onDispatchAction(actionType, {});
+    dispatch(actionType, {});
   };
 
   return (
@@ -137,9 +142,9 @@ export const HostDrawingSurface = ({
               <button
                 className={styles.toolButton}
                 type="button"
-                disabled={!canResolvePrompt}
+                disabled={!canResolvePrompt || isVerdictSettling}
                 onClick={(): void => {
-                  dispatchControlAction("skipPrompt");
+                  dispatchControlAction("skipPrompt", dispatchVerdict);
                 }}
               >
                 {hostDrawingSurfaceCopy.skipButtonLabel}
@@ -150,9 +155,9 @@ export const HostDrawingSurface = ({
               <button
                 className={styles.verdictCorrect}
                 type="button"
-                disabled={!canResolvePrompt}
+                disabled={!canResolvePrompt || isVerdictSettling}
                 onClick={(): void => {
-                  dispatchControlAction("markCorrect");
+                  dispatchControlAction("markCorrect", dispatchVerdict);
                 }}
               >
                 <span className={styles.verdictIcon} aria-hidden="true">
@@ -163,9 +168,9 @@ export const HostDrawingSurface = ({
               <button
                 className={styles.verdictIncorrect}
                 type="button"
-                disabled={!canResolvePrompt}
+                disabled={!canResolvePrompt || isVerdictSettling}
                 onClick={(): void => {
-                  dispatchControlAction("markIncorrect");
+                  dispatchControlAction("markIncorrect", dispatchVerdict);
                 }}
               >
                 <span className={styles.verdictIcon} aria-hidden="true">

@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import { resolveContentAssetSrc, type GeoMinigameHostView } from "@wingnight/shared";
-import { TakeoverCanvas } from "@wingnight/surface";
+import { TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
 import { resolvePhotoNumber } from "../resolvePhotoNumber/index.js";
 import { hostGeoSurfaceCopy } from "./copy.js";
@@ -94,6 +94,10 @@ export const HostGeoSurface = ({
 }: MinigameHostRendererProps): JSX.Element => {
   const geoHostView =
     minigameHostView?.minigame === "GEO" ? minigameHostView : null;
+  // One guard for both buttons: "Next photo" is drawn exactly where "Lock it
+  // in" was, so the second tap of a double tap used to skip the reveal.
+  const { dispatchVerdict, isSettling: isVerdictSettling } =
+    useVerdictDispatch(onDispatchAction);
 
   // The intro beat is a panel in the host's own control deck rather than a
   // takeover — `rail` and `clock` are both null on it — so a full-bleed chart
@@ -148,9 +152,9 @@ export const HostGeoSurface = ({
             <button
               className={styles.submitButton}
               type="button"
-              disabled={!canSubmitGuess}
+              disabled={!canSubmitGuess || isVerdictSettling}
               onClick={(): void => {
-                onDispatchAction("submitGuess", {});
+                dispatchVerdict("submitGuess", {});
               }}
             >
               {hostGeoSurfaceCopy.submitButtonLabel}
@@ -167,9 +171,9 @@ export const HostGeoSurface = ({
           <button
             className={styles.nextPromptButton}
             type="button"
-            disabled={!canDispatchAction}
+            disabled={!canDispatchAction || isVerdictSettling}
             onClick={(): void => {
-              onDispatchAction("nextPrompt", {});
+              dispatchVerdict("nextPrompt", {});
             }}
           >
             {hostGeoSurfaceCopy.nextPromptButtonLabel}

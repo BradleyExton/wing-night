@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { SchlonicMinigameHostView } from "@wingnight/shared";
-import { RunningTotals, TakeoverCanvas } from "@wingnight/surface";
+import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
 import { resolveRunPlayerName } from "../resolveRunPlayerName/index.js";
 import { useHeldRun, type RunHold } from "../useHeldRun/index.js";
@@ -107,6 +107,8 @@ export const HostSchlonicSurface = ({
   const dispatch = (actionType: string): void => {
     onDispatchAction(actionType, {});
   };
+  const { dispatchVerdict, isSettling: isVerdictSettling } =
+    useVerdictDispatch(onDispatchAction);
 
   // Every hook above runs on both beats: the intro is a panel in the host's own
   // control deck rather than a takeover — `rail` and `clock` are both null on
@@ -186,9 +188,12 @@ export const HostSchlonicSurface = ({
               <button
                 className={styles.secondaryButton}
                 type="button"
-                disabled={!canAct || !isLive}
+                // Not during the handoff either: the zone is still showing the
+                // leg just ended, and a tap there skipped the NEXT rider's leg
+                // before they had the tablet in their hands.
+                disabled={!canAct || !isLive || hold !== null || isVerdictSettling}
                 onClick={(): void => {
-                  dispatch("skipRun");
+                  dispatchVerdict("skipRun", {});
                 }}
               >
                 {hostSchlonicSurfaceCopy.skipRunButtonLabel}

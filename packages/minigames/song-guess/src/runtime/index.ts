@@ -158,6 +158,7 @@ const advanceToNextSong = (
 
 export const songGuessRuntimePlugin: MinigameRuntimePlugin = {
   id: "SONG_GUESS",
+  transientActionTypes: ["playClip", "pauseClip", "replayClip"],
   content: songGuessContentAdapter,
   isRules: isSongGuessRules,
   initialize: (input) => {
@@ -253,8 +254,11 @@ export const songGuessRuntimePlugin: MinigameRuntimePlugin = {
       );
     }
 
+    // Not until both halves are ruled: the ruling is what puts the answer on
+    // the TV (`revealedAtMs`), so moving on half-ruled cut straight from "And
+    // the ruling is…" to the next song and the room never saw what it was.
     if (actionType === "nextSong") {
-      if (state.phase !== "reveal") {
+      if (state.phase !== "reveal" || state.revealedAtMs === null) {
         return unchanged;
       }
 

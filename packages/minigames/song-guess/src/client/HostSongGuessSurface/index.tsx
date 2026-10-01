@@ -1,6 +1,6 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { SongGuessMinigameHostView } from "@wingnight/shared";
-import { RunningTotals, TakeoverStage } from "@wingnight/surface";
+import { RunningTotals, TakeoverStage, useVerdictDispatch } from "@wingnight/surface";
 
 import { SongScoringPad } from "./SongScoringPad/index.js";
 import { hostSongGuessSurfaceCopy } from "./copy.js";
@@ -72,6 +72,10 @@ export const HostSongGuessSurface = ({
 }: MinigameHostRendererProps): JSX.Element => {
   const songGuessView =
     minigameHostView?.minigame === "SONG_GUESS" ? minigameHostView : null;
+  // "Skip song" stays live on the next song, so its second tap burned one the
+  // room never heard.
+  const { dispatchVerdict, isSettling: isVerdictSettling } =
+    useVerdictDispatch(onDispatchAction);
 
   // The intro beat is a panel in the host's own control deck rather than a
   // takeover — `rail` and `clock` are both null on it — so it gets the
@@ -97,6 +101,10 @@ export const HostSongGuessSurface = ({
   const isPaused = songPhase === "clip_paused";
   const isRevealing = songPhase === "reveal";
   const isDone = songPhase === "done";
+  const isFullyRuled =
+    songGuessView !== null &&
+    songGuessView.currentScore.title !== null &&
+    songGuessView.currentScore.artist !== null;
 
   const dispatch = (actionType: string): void => {
     onDispatchAction(actionType, {});
@@ -126,55 +134,61 @@ export const HostSongGuessSurface = ({
       actions={
         songGuessView === null ? null : (
           <div className={styles.actions}>
-            <div className={styles.transport}>
-              <button
-                className={styles.transportPrimary}
-                type="button"
-                disabled={!canAct || isPlaying || isRevealing || isDone}
-                onClick={(): void => {
-                  dispatch("playClip");
-                }}
-              >
-                {isPaused
-                  ? hostSongGuessSurfaceCopy.resumeButtonLabel
-                  : hostSongGuessSurfaceCopy.playButtonLabel}
-              </button>
-              <button
-                className={styles.transportSecondary}
-                type="button"
-                disabled={!canAct || !isPlaying}
-                onClick={(): void => {
-                  dispatch("pauseClip");
-                }}
-              >
-                {hostSongGuessSurfaceCopy.pauseButtonLabel}
-              </button>
-              <button
-                className={styles.transportSecondary}
-                type="button"
-                disabled={!canAct || !isPaused || songGuessView.replayUsed}
-                onClick={(): void => {
-                  dispatch("replayClip");
-                }}
-              >
-                {songGuessView.replayUsed
-                  ? hostSongGuessSurfaceCopy.replayUsedLabel
-                  : hostSongGuessSurfaceCopy.replayButtonLabel}
-              </button>
-              {/* The escape hatch stays on the canvas, not in the override
-                  dock: dropping a song the room cannot hear is the host's
-                  ordinary move here, and AGENTS.md §11 never lets it leave. */}
-              <button
-                className={styles.transportSecondary}
-                type="button"
-                disabled={!canAct || isRevealing || isDone}
-                onClick={(): void => {
-                  dispatch("skipSong");
-                }}
-              >
-                {hostSongGuessSurfaceCopy.skipSongButtonLabel}
-              </button>
-            </div>
+            {/* Off the row at the reveal, where all four are disabled anyway:
+                the pad and "Next song" need the whole width of a 1280px
+                tablet, and squeezed beside the transport they pushed the row
+                off the screen and "Next song" under the corner dock. */}
+            {!isRevealing && (
+              <div className={styles.transport}>
+                <button
+                  className={styles.transportPrimary}
+                  type="button"
+                  disabled={!canAct || isPlaying || isRevealing || isDone}
+                  onClick={(): void => {
+                    dispatch("playClip");
+                  }}
+                >
+                  {isPaused
+                    ? hostSongGuessSurfaceCopy.resumeButtonLabel
+                    : hostSongGuessSurfaceCopy.playButtonLabel}
+                </button>
+                <button
+                  className={styles.transportSecondary}
+                  type="button"
+                  disabled={!canAct || !isPlaying}
+                  onClick={(): void => {
+                    dispatch("pauseClip");
+                  }}
+                >
+                  {hostSongGuessSurfaceCopy.pauseButtonLabel}
+                </button>
+                <button
+                  className={styles.transportSecondary}
+                  type="button"
+                  disabled={!canAct || !isPaused || songGuessView.replayUsed}
+                  onClick={(): void => {
+                    dispatch("replayClip");
+                  }}
+                >
+                  {songGuessView.replayUsed
+                    ? hostSongGuessSurfaceCopy.replayUsedLabel
+                    : hostSongGuessSurfaceCopy.replayButtonLabel}
+                </button>
+                {/* The escape hatch stays on the canvas, not in the override
+                    dock: dropping a song the room cannot hear is the host's
+                    ordinary move here, and AGENTS.md §11 never lets it leave. */}
+                <button
+                  className={styles.transportSecondary}
+                  type="button"
+                  disabled={!canAct || isRevealing || isDone || isVerdictSettling}
+                  onClick={(): void => {
+                    dispatchVerdict("skipSong", {});
+                  }}
+                >
+                  {hostSongGuessSurfaceCopy.skipSongButtonLabel}
+                </button>
+              </div>
+            )}
             <div className={styles.ruling}>
               {isDone ? (
                 <p className={styles.doneNote}>{hostSongGuessSurfaceCopy.doneLabel}</p>
@@ -187,10 +201,11 @@ export const HostSongGuessSurface = ({
                       onDispatchAction(actionType, { correct });
                     }}
                   />
+                  {/* Ruled first: the ruling is what puts the answer on the TV. */}
                   <button
                     className={styles.nextButton}
                     type="button"
-                    disabled={!canAct}
+                    disabled={!canAct || !isFullyRuled}
                     onClick={(): void => {
                       dispatch("nextSong");
                     }}
