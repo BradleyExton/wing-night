@@ -102,7 +102,7 @@ test("does charge an already-skipped leg against the live points", () => {
     ]
   });
 
-  assert.equal(resolveLivePoints(view, 50_000), resolveLivePoints(createView(), 62_500));
+  assert.equal(resolveLivePoints(view, 50_000), resolveLivePoints(createView(), 75_000));
 });
 
 test("does show no live points before the first flap or after the relay is over", () => {

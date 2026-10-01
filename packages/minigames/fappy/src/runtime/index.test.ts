@@ -370,26 +370,38 @@ test("does still pay for time when a flown relay ends on a skipped leg", () => {
   const view = hostView(finished.state);
 
   assert.equal(view.phase, "finished");
-  assert.equal(view.points, 18);
-  // One second on the wall clock plus the skipped leg's share of par (30 s
-  // over two legs), which together still beat this fixture's par.
-  assert.equal(view.elapsedMs, 16_000);
+  assert.equal(view.points, 15);
+  // One second on the wall clock plus the skipped leg's share of the limit
+  // (90 s over two legs): a quarter of the way down the slide.
+  assert.equal(view.elapsedMs, 46_000);
   // The flown leg's three gates; the skipped one contributes none.
   assert.equal(view.totalGatesCleared, RULES.gatesPerLeg);
 });
 
 // Skipping used to be the fastest way through the course: one flap to start
 // the clock, then skip every remaining leg and finish far under par for the
-// whole round. A forgiven leg now costs what a leg is worth.
-test("does charge a skipped leg its share of par when the relay is scored", () => {
+// whole round. A forgiven leg now costs what a leg is worth at the limit.
+test("does charge a skipped leg its share of the limit when the relay is scored", () => {
   const flown = clearCurrentLeg(initialize(), T0);
   const finished = dispatch(flown, "skipLeg", {}, T0 + 30_000);
   const view = hostView(finished.state);
 
-  // 30 s flown plus a 15 s skip is a quarter of the way down the slide; the
-  // raw 30 s on its own would have sat exactly on par and paid everything.
-  assert.equal(view.elapsedMs, 45_000);
-  assert.equal(view.points, 16);
+  // 30 s flown plus a 45 s skip is three quarters of the way down the slide;
+  // the raw 30 s on its own would have sat exactly on par and paid everything.
+  assert.equal(view.elapsedMs, 75_000);
+  assert.equal(view.points, 6);
+});
+
+// The same hole with a par-share penalty: skipping every leg came to par and a
+// second, and par pays the round. At a limit share it pays the curve's floor.
+test("does pay only the floor when one flap is followed by skipping every leg", () => {
+  const started = dispatch(initialize(), "flap", { tick: 0 }, T0).state;
+  const firstSkipped = dispatch(started, "skipLeg", {}, T0 + 500).state;
+  const finished = dispatch(firstSkipped, "skipLeg", {}, T0 + 1000);
+  const view = hostView(finished.state);
+
+  assert.equal(view.phase, "finished");
+  assert.equal(view.points, 2);
 });
 
 test("does reset the turn to the start line with the points it started with", () => {

@@ -34,7 +34,7 @@ export type FinishClock = {
 
 // `useRelayClock` measures the wall between the server's two stamps, which is
 // what the room watches while the bird is in the air — but it is NOT what the
-// relay scored: `resolveElapsedMs` adds a par-share for every forgiven leg, and
+// relay scored: `resolveElapsedMs` adds a limit-share for every forgiven leg, and
 // that sum is what `resolveFinishPoints` was handed. Once the relay is over the
 // screens show the scored number, so the time on the plaque and the points
 // beside it are the same arithmetic, and say out loud where the difference came

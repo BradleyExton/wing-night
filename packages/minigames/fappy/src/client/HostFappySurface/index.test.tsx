@@ -334,7 +334,7 @@ test("does peek the waiting player over the bezel while their bird is off screen
 });
 
 // The clock the host watched run is not what the relay scored the moment a leg
-// is forgiven: `elapsedMs` carries the par-share penalty, and the points beside
+// is forgiven: `elapsedMs` carries the limit-share penalty, and the points beside
 // it were taken from that. The card shows the scored time and says where the
 // difference came from.
 test("does show the scored time and name the penalty when a leg was skipped", () => {

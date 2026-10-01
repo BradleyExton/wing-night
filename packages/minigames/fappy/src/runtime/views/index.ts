@@ -10,7 +10,7 @@ import type { FappyRuntimeState } from "../types/index.js";
 // view the surfaces get, and both carry these three fields — so it is typed on
 // the fields rather than on the state, and the clock the room watches ticks
 // through the very function the score used.
-type SkipPenaltyFields = Pick<FappyRuntimeState, "legs" | "legsPerTurn" | "parSeconds">;
+type SkipPenaltyFields = Pick<FappyRuntimeState, "legs" | "legsPerTurn" | "limitSeconds">;
 
 // Derived, never stored: the limit passing or the last gate ends the relay;
 // otherwise the room is in whatever state the leg in hand is.
@@ -45,13 +45,16 @@ export const resolveTotalGatesCleared = (state: FappyRuntimeState): number => {
 };
 
 // A skipped leg is forgiven, not free. Nobody flew it, so the relay is charged
-// what a leg of it is worth — one leg's share of par. Without this the escape
-// hatch was the fastest route through the course: one flap to start the clock
-// and a skip on every remaining leg finished well under par and paid the whole
-// round, beating the team that actually flew it.
+// what a leg costs at the LIMIT's pace — one leg's share of the limit. It was
+// one leg's share of par, and par is exactly where the curve stops paying
+// more: one flap and a skip on every leg finished a second over par and paid
+// the whole round, the same as a team that flew every gate. Charged a share of
+// the limit, skipping the whole relay lands on the limit, where the curve pays
+// its floor, and a skip only saves time for a player stuck far longer than a
+// leg should take.
 export const resolveSkipPenaltyMs = (state: SkipPenaltyFields): number => {
   const skippedLegs = state.legs.filter((leg) => leg.skipped).length;
-  const perLegMs = (state.parSeconds * 1000) / Math.max(1, state.legsPerTurn);
+  const perLegMs = (state.limitSeconds * 1000) / Math.max(1, state.legsPerTurn);
 
   return Math.round(skippedLegs * perLegMs);
 };
