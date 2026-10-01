@@ -3,8 +3,19 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { JoustPlayerFigure } from "@wingnight/shared";
-import { JOUST_PIN_HEAD_RADIUS, JOUST_PIN_HEIGHT } from "@wingnight/shared";
-import { CHARACTER_HEAD_RADIUS, CHARACTER_STAND_HEIGHT } from "@wingnight/cast";
+import {
+  JOUST_PIN_CHEST,
+  JOUST_PIN_HEAD_FORWARD,
+  JOUST_PIN_HEAD_RADIUS,
+  JOUST_PIN_HEIGHT
+} from "@wingnight/shared";
+import {
+  CHARACTER_BODY,
+  CHARACTER_FOOT,
+  CHARACTER_HEAD_CENTRE,
+  CHARACTER_HEAD_RADIUS,
+  CHARACTER_STAND_HEIGHT
+} from "@wingnight/cast";
 
 import { ArenaHen } from "./index.js";
 
@@ -39,6 +50,38 @@ test("does draw a head the size of the one the physics collides against", () => 
   assert.ok(
     Math.abs(drawnHeadRadius - JOUST_PIN_HEAD_RADIUS) < 0.25,
     `drawn head is ${drawnHeadRadius.toFixed(2)}, pin head is ${JOUST_PIN_HEAD_RADIUS}`
+  );
+});
+
+// The bird's head is not over its feet: a hen leads with its face, and the costume head sits
+// twenty box units in front of the foot. The integrator collides the face where it is DRAWN
+// (`JOUST_PIN_HEAD_FORWARD`), and the chest as the body blob the cast measured, so a shot the room
+// sees land on a face or a belly is a shot the sim lands too. These hold the two sets of numbers
+// together across the package boundary the cast cannot be imported over.
+test("does put the collided face where the drawn head leads the foot", () => {
+  const laneScale = JOUST_PIN_HEIGHT / CHARACTER_STAND_HEIGHT;
+  const drawnForward = (CHARACTER_HEAD_CENTRE.x - CHARACTER_FOOT.x) * laneScale;
+
+  assert.ok(
+    Math.abs(drawnForward - JOUST_PIN_HEAD_FORWARD) < 0.1,
+    `drawn head leads by ${drawnForward.toFixed(2)}, the pin's face by ${JOUST_PIN_HEAD_FORWARD}`
+  );
+});
+
+test("does collide a chest the size and place of the drawn body", () => {
+  const laneScale = JOUST_PIN_HEIGHT / CHARACTER_STAND_HEIGHT;
+  const drawnUp = (CHARACTER_FOOT.y - CHARACTER_BODY.cy) * laneScale;
+  const drawnForward = (CHARACTER_BODY.cx - CHARACTER_FOOT.x) * laneScale;
+  const drawnRadius = CHARACTER_BODY.r * laneScale;
+
+  assert.ok(Math.abs(drawnUp - JOUST_PIN_CHEST.up) < 0.1, `chest up ${drawnUp.toFixed(2)} vs ${JOUST_PIN_CHEST.up}`);
+  assert.ok(
+    Math.abs(drawnForward - JOUST_PIN_CHEST.forward) < 0.1,
+    `chest forward ${drawnForward.toFixed(2)} vs ${JOUST_PIN_CHEST.forward}`
+  );
+  assert.ok(
+    Math.abs(drawnRadius - JOUST_PIN_CHEST.radius) < 0.1,
+    `chest radius ${drawnRadius.toFixed(2)} vs ${JOUST_PIN_CHEST.radius}`
   );
 });
 

@@ -15,7 +15,10 @@ import type {
   JoustVec2
 } from "../types.js";
 import {
+  JOUST_PIN_CHEST,
   JOUST_PIN_FOOT_RADIUS,
+  JOUST_PIN_HEAD_FORWARD,
+  JOUST_PIN_HEAD_RADIUS,
   JOUST_PIN_HEIGHT,
   JOUST_SHOOTER_BALL_INDICES,
   JOUST_SHOOTER_BODY_COUNT,
@@ -55,17 +58,33 @@ const CONSTRAINT_ITERATIONS = 4;
  * `JoustShooterProfile` (`options.shooter`). The Standard profile is the constants that used to
  * sit here; the numbers below are the RACK's and the TOWERS', which no kind changes.
  */
-/** Per-step pull of a wobbling pin's head back over its own foot — what keeps it on its feet. */
-const PIN_UPRIGHT_STIFFNESS = 0.08;
+/**
+ * Per-step pull of a wobbling pin's head back over its own foot — what keeps it on its feet. It is
+ * there to stand the rack against its own jitter and a neighbour's nudge, NOT against the shot: at
+ * 0.08 it won a tug of war with any contact under about sixty units a second, and the room watched
+ * a schlong lean on a bird that then shrugged it off (the 2026-10-01 sweep: 60% of birds the
+ * capsule touched were still standing). Halved, a soft hit still goes over.
+ */
+const PIN_UPRIGHT_STIFFNESS = 0.04;
 /**
  * How far a pin may lean and still recover. A pin is bistable like the real thing: inside this
  * band it rights itself, and past it nothing holds it up — gravity swings the head down about the
  * planted foot and it is going over. Without the cliff the rack is a rubber wall that returns the
- * shot instead of taking it.
+ * shot instead of taking it. Passing it is a one-way door (`Pin.falling`): the spring never comes
+ * back for a pin that has been past here, and its foot is let go of (see `settlePins`), so a bird
+ * leaning well past recovery cannot be stood back up by its own foot sliding home under it — which
+ * is exactly what the rigid stick used to do to a third of the hits that should have counted.
  */
-const PIN_RECOVERY_TILT = 0.14;
+const PIN_RECOVERY_TILT = 0.1;
 /** Per-step pull of a pin's foot back onto its column, so a glancing blow does not walk it away. */
 const PIN_FOOT_STIFFNESS = 0.06;
+/**
+ * How much of its own stick's correction a pin's FOOT takes against its head. A foot planted on
+ * the sand is the heavy end: push the head and the bird rotates about its feet, the way a thing
+ * standing up falls over. At an even split a sideways shove slid the foot out from under the head
+ * instead, and the foot spring then dragged it back and the bird with it.
+ */
+const PIN_FOOT_SHARE = 0.15;
 /** A pin that is over keeps only enough of that pull to stop it sliding off screen. */
 const PIN_FOOT_STIFFNESS_DOWN = 0.012;
 const PIN_DAMPING = 0.985;
@@ -126,7 +145,11 @@ type Pin = {
   homeY: number;
   /** The perch this pin stands on, so its tower folding can take it down. Null on bare sand. */
   readonly perchIndex: number | null;
+  /** Past the recovery band at least once this shot: committed to going over. */
+  falling: boolean;
   toppled: boolean;
+  /** Where this pin's foot-to-head stick sits in the constraint list. */
+  stickIndex: number;
 };
 
 type Leg = {
@@ -150,6 +173,11 @@ type DistanceConstraint = {
   readonly b: number;
   readonly rest: number;
   readonly stiffness: number;
+  /**
+   * How much of the correction `a` takes; `b` takes the rest. Even when absent. Mutable, because a
+   * pin's foot stops being its heavy end the moment the pin is over (`stickEvenly`).
+   */
+  aShare?: number;
 };
 
 const assertOptions = (options: JoustSimulateOptions): void => {
@@ -227,7 +255,9 @@ const buildPins = (arena: JoustArena): Pin[] => {
     homeX: foot.x,
     homeY: foot.y,
     perchIndex: resolveJoustPinPerchIndex(foot, arena.perches),
-    toppled: false
+    falling: false,
+    toppled: false,
+    stickIndex: -1
   }));
 };
 
@@ -282,7 +312,7 @@ const buildTowers = (
 
 const buildConstraints = (
   rest: readonly JoustVec2[],
-  pins: readonly Pin[],
+  pins: Pin[],
   legs: readonly Leg[],
   towers: readonly Tower[],
   profile: JoustShooterProfile
@@ -318,14 +348,16 @@ const buildConstraints = (
     stiffness: 1
   });
 
-  // A pin is a rigid stick: one link, foot to head. What holds it UPRIGHT is the spring in
-  // `settlePins`, which is the thing a hard enough shot is allowed to beat.
+  // A pin is a rigid stick: one link, foot to head, the foot the heavy end. What holds it UPRIGHT
+  // is the spring in `settlePins`, which is the thing a shot is allowed to beat.
   for (const pin of pins) {
+    pin.stickIndex = constraints.length;
     constraints.push({
       a: pin.footIndex,
       b: pin.headIndex,
       rest: JOUST_PIN_HEIGHT,
-      stiffness: 1
+      stiffness: 1,
+      aShare: PIN_FOOT_SHARE
     });
   }
 
@@ -382,12 +414,13 @@ const relax = (bodies: Body[], constraints: readonly DistanceConstraint[]): void
       continue;
     }
 
-    const correction = ((distance - constraint.rest) / distance) * constraint.stiffness * 0.5;
+    const correction = ((distance - constraint.rest) / distance) * constraint.stiffness;
+    const aShare = constraint.aShare ?? 0.5;
 
-    a.x += deltaX * correction;
-    a.y += deltaY * correction;
-    b.x -= deltaX * correction;
-    b.y -= deltaY * correction;
+    a.x += deltaX * correction * aShare;
+    a.y += deltaY * correction * aShare;
+    b.x -= deltaX * correction * (1 - aShare);
+    b.y -= deltaY * correction * (1 - aShare);
   }
 };
 
@@ -395,11 +428,13 @@ const relax = (bodies: Body[], constraints: readonly DistanceConstraint[]): void
  * What keeps the rack standing: a pin's foot is drawn back onto its own spot — the sand, or the
  * perch it was stood on — and while it is only wobbling, its head is drawn back over that foot. A
  * pin that has gone over keeps only the sideways part of that pull, so a player knocked off a
- * tower falls off it instead of being held in the air. Past `PIN_RECOVERY_TILT` that help stops, so
- * the pin goes all the way over instead of springing back up — which is the whole game, and the
- * reason a felled player can be counted once and left out of the next shot.
+ * tower falls off it instead of being held in the air. Past `PIN_RECOVERY_TILT` the pin is
+ * FALLING: the spring stops for good and the foot is held to its spot no harder than a toppled
+ * pin's, so it goes all the way over instead of springing back up — which is the whole game, and
+ * the reason a felled player can be counted once and left out of the next shot. It is still
+ * stood on its floor until it is counted, so a bird going over on a shelf goes over ON the shelf.
  */
-const settlePins = (bodies: Body[], pins: readonly Pin[]): void => {
+const settlePins = (bodies: Body[], pins: Pin[]): void => {
   for (const pin of pins) {
     const foot = bodies[pin.footIndex];
     const head = bodies[pin.headIndex];
@@ -408,17 +443,19 @@ const settlePins = (bodies: Body[], pins: readonly Pin[]): void => {
       continue;
     }
 
-    const footStiffness = pin.toppled ? PIN_FOOT_STIFFNESS_DOWN : PIN_FOOT_STIFFNESS;
+    if (!pin.falling && resolveJoustPinTilt(foot, head) > PIN_RECOVERY_TILT) {
+      pin.falling = true;
+    }
 
-    foot.x += (pin.homeX - foot.x) * footStiffness;
+    foot.x += (pin.homeX - foot.x) * (pin.falling ? PIN_FOOT_STIFFNESS_DOWN : PIN_FOOT_STIFFNESS);
 
     if (pin.toppled) {
       continue;
     }
 
-    foot.y += (pin.homeY - foot.y) * footStiffness;
+    foot.y += (pin.homeY - foot.y) * PIN_FOOT_STIFFNESS;
 
-    if (resolveJoustPinTilt(foot, head) > PIN_RECOVERY_TILT) {
+    if (pin.falling) {
       continue;
     }
 
@@ -460,10 +497,24 @@ const settleLegs = (bodies: Body[], legs: readonly Leg[], towers: readonly Tower
   }
 };
 
+/**
+ * A pin that is over is a loose stick, not a thing standing on heavy feet: its two ends weigh the
+ * same from here, so it tumbles and lands flat instead of balancing on its head on whatever broke
+ * its fall with its feet in the air.
+ */
+const stickEvenly = (pin: Pin, constraints: DistanceConstraint[]): void => {
+  const stick = constraints[pin.stickIndex];
+
+  if (stick !== undefined) {
+    stick.aShare = 0.5;
+  }
+};
+
 /** Latches every pin that has just passed the point of no return, newest columns last. */
 const latchTopples = (
   bodies: readonly Body[],
   pins: Pin[],
+  constraints: DistanceConstraint[],
   frameIndex: number,
   topples: JoustTopple[]
 ): void => {
@@ -477,6 +528,7 @@ const latchTopples = (
 
     if (resolveJoustPinTilt(foot, head) > JOUST_TOPPLE_TILT) {
       pin.toppled = true;
+      stickEvenly(pin, constraints);
       topples.push({ pinIndex, frameIndex });
     }
   }
@@ -493,6 +545,7 @@ const latchCollapses = (
   towers: Tower[],
   legs: readonly Leg[],
   pins: Pin[],
+  constraints: DistanceConstraint[],
   frameIndex: number,
   collapses: JoustCollapse[],
   topples: JoustTopple[]
@@ -538,6 +591,7 @@ const latchCollapses = (
       }
 
       pin.toppled = true;
+      stickEvenly(pin, constraints);
       pin.homeY = JOUST_WORLD.floorY - JOUST_PIN_FOOT_RADIUS;
       head.previousX -= DROP_KICK_UNITS * direction;
       topples.push({ pinIndex, frameIndex });
@@ -583,6 +637,63 @@ const clampUnit = (value: number): number => {
   return Math.min(1, Math.max(0, value));
 };
 
+type StickContact = {
+  /** From the body's centre toward the point on the stick it is being pushed away from. */
+  readonly deltaX: number;
+  readonly deltaY: number;
+  readonly distance: number;
+  /** How deep the body sits inside the surface, in world units. */
+  readonly depth: number;
+  /** Where along the stick the push lands: all to the foot at 0, all to the head at 1. */
+  readonly along: number;
+};
+
+const resolveStickContact = (
+  body: Body,
+  foot: Body,
+  head: Body
+): StickContact | null => {
+  const shaftX = head.x - foot.x;
+  const shaftY = head.y - foot.y;
+  const shaftLengthSquared = shaftX * shaftX + shaftY * shaftY;
+
+  if (shaftLengthSquared === 0) {
+    return null;
+  }
+
+  const along = clampUnit(
+    ((body.x - foot.x) * shaftX + (body.y - foot.y) * shaftY) / shaftLengthSquared
+  );
+  const deltaX = foot.x + shaftX * along - body.x;
+  const deltaY = foot.y + shaftY * along - body.y;
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  const minimum = body.radius + foot.radius + (head.radius - foot.radius) * along;
+
+  if (distance >= minimum || distance === 0) {
+    return null;
+  }
+
+  return { deltaX, deltaY, distance, depth: minimum - distance, along };
+};
+
+const applyStickContact = (
+  body: Body,
+  foot: Body,
+  head: Body,
+  contact: StickContact,
+  bodyShare: number
+): void => {
+  const push = contact.depth / contact.distance;
+  const pinShare = push * (1 - bodyShare);
+
+  body.x -= contact.deltaX * push * bodyShare;
+  body.y -= contact.deltaY * push * bodyShare;
+  foot.x += contact.deltaX * pinShare * (1 - contact.along);
+  foot.y += contact.deltaY * pinShare * (1 - contact.along);
+  head.x += contact.deltaX * pinShare * contact.along;
+  head.y += contact.deltaY * pinShare * contact.along;
+};
+
 /**
  * One circular body against one stick — a pin or a leg — treated as the capsule it is drawn as
  * rather than as its two endpoints. A two-body pin has a bird-sized hole between foot and head,
@@ -602,41 +713,121 @@ const collideCircleWithStick = (
   head: Body,
   bodyShare: number
 ): void => {
-  const shaftX = head.x - foot.x;
-  const shaftY = head.y - foot.y;
-  const shaftLengthSquared = shaftX * shaftX + shaftY * shaftY;
+  const contact = resolveStickContact(body, foot, head);
 
-  if (shaftLengthSquared === 0) {
-    return;
+  if (contact !== null) {
+    applyStickContact(body, foot, head, contact, bodyShare);
   }
-
-  const along = clampUnit(
-    ((body.x - foot.x) * shaftX + (body.y - foot.y) * shaftY) / shaftLengthSquared
-  );
-  const deltaX = foot.x + shaftX * along - body.x;
-  const deltaY = foot.y + shaftY * along - body.y;
-  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-  const minimum = body.radius + foot.radius + (head.radius - foot.radius) * along;
-
-  if (distance >= minimum || distance === 0) {
-    return;
-  }
-
-  const push = (minimum - distance) / distance;
-  const pinShare = push * (1 - bodyShare);
-
-  body.x -= deltaX * push * bodyShare;
-  body.y -= deltaY * push * bodyShare;
-  foot.x += deltaX * pinShare * (1 - along);
-  foot.y += deltaY * pinShare * (1 - along);
-  head.x += deltaX * pinShare * along;
-  head.y += deltaY * pinShare * along;
 };
 
 /**
- * The shot against the rack, then the rack against itself — so a pin going over takes its
- * neighbours with it and the lane goes down like bowling. A pin is never tested against its own
- * shaft; its two halves are held by their stick.
+ * One circular body against a circle carried rigidly on a stick: `along` of the way from foot to
+ * head and `side` units off it, toward the slingshot. This is how the FACE and the CHEST are hit —
+ * the parts of the bird the room sees that the capsule does not cover (`JOUST_PIN_HEAD_FORWARD`,
+ * `JOUST_PIN_CHEST`). The push lands on the two bodies by `along`, exactly as a stick contact
+ * does, so a blow to the face is a blow to the head and torques the pin over about its foot.
+ */
+const resolveCarriedContact = (
+  body: Body,
+  foot: Body,
+  head: Body,
+  along: number,
+  side: number,
+  radius: number
+): StickContact | null => {
+  const shaftX = head.x - foot.x;
+  const shaftY = head.y - foot.y;
+  const shaftLength = Math.sqrt(shaftX * shaftX + shaftY * shaftY);
+
+  if (shaftLength === 0) {
+    return null;
+  }
+
+  // Perpendicular to the stick, on the side the slingshot is for an upright pin.
+  const sideX = shaftY / shaftLength;
+  const sideY = -shaftX / shaftLength;
+  const deltaX = foot.x + shaftX * along + sideX * side - body.x;
+  const deltaY = foot.y + shaftY * along + sideY * side - body.y;
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  const minimum = body.radius + radius;
+
+  if (distance >= minimum || distance === 0) {
+    return null;
+  }
+
+  return { deltaX, deltaY, distance, depth: minimum - distance, along };
+};
+
+const CHEST_ALONG = JOUST_PIN_CHEST.up / JOUST_PIN_HEIGHT;
+
+/**
+ * The lowest a shot's blow is treated as landing, as a fraction of the bird's height. A bird is a
+ * lever on planted feet: a blow at the chest swings the head over by more than the blow itself,
+ * and a blow at the ankles would swing it by a silly multiple, so it is read as a shin hit.
+ */
+const BIRD_LEVER_FLOOR = 0.4;
+/**
+ * How much of its usual share the shot still pays against a bird that is already going over, as a
+ * fraction. At 1 a Log ploughing a row stalled in the third bird and came off the fourth
+ * backwards, kicked by felled heads swinging round onto its shaft; at 0 it bulldozed every row it
+ * met, the Standard cleared a twelve-rack on one pull in twenty and folded towers nearly as often
+ * as the Log. Halfway keeps both the plough and the Log's reason to exist.
+ */
+const FELLED_BIRD_SHARE = 0.5;
+
+/**
+ * One shooter body against one BIRD: the stick, the face and the chest as a single solid, resolved
+ * by whichever of the three it is deepest inside, and resolved as a LEVER. The bird's feet are
+ * planted — the shot never shoves them — and the whole of the bird's share swings the head over
+ * about them, scaled up by how low the blow landed so the contact itself clears in the one step.
+ * A chest hit therefore rotates the bird over rather than sliding it, which is both what a bird
+ * does and what keeps the row from being a wall: splitting the push to the foot the way the rack
+ * does among itself put most of a chest hit into a foot that is sprung to its spot, the contact
+ * never cleared, and a Log that should plough a row came off it backwards at highway speed.
+ */
+const collideCircleWithBird = (
+  body: Body,
+  foot: Body,
+  head: Body,
+  bodyShare: number
+): void => {
+  let deepest = resolveStickContact(body, foot, head);
+
+  for (const candidate of [
+    resolveCarriedContact(body, foot, head, 1, JOUST_PIN_HEAD_FORWARD, JOUST_PIN_HEAD_RADIUS),
+    resolveCarriedContact(
+      body,
+      foot,
+      head,
+      CHEST_ALONG,
+      JOUST_PIN_CHEST.forward,
+      JOUST_PIN_CHEST.radius
+    )
+  ]) {
+    if (candidate !== null && (deepest === null || candidate.depth > deepest.depth)) {
+      deepest = candidate;
+    }
+  }
+
+  if (deepest === null) {
+    return;
+  }
+
+  const push = deepest.depth / deepest.distance;
+  const lever = 1 / Math.max(BIRD_LEVER_FLOOR, deepest.along);
+
+  body.x -= deepest.deltaX * push * bodyShare;
+  body.y -= deepest.deltaY * push * bodyShare;
+  head.x += deepest.deltaX * push * (1 - bodyShare) * lever;
+  head.y += deepest.deltaY * push * (1 - bodyShare) * lever;
+};
+
+/**
+ * The shot against the rack — the stick, then the face and the chest the bird wears on it — then
+ * the rack against itself, so a pin going over takes its neighbours with it and the lane goes down
+ * like bowling. Birds meet each other as sticks only: their faces and chests already overlap at
+ * `JOUST_PIN_SPACING`, and a rack that shoves itself over before the shot is not a rack. A pin is
+ * never tested against its own shaft; its two halves are held by their stick.
  */
 const collideRack = (
   bodies: Body[],
@@ -652,11 +843,19 @@ const collideRack = (
       continue;
     }
 
+    // A bird already going over is out of the shot's way: it costs the shot nothing more, and is
+    // shoved aside whole. The shot pays for every bird it knocks down exactly once, on the contact
+    // that knocks it — not again on every frame of the fall, and not when a felled head swinging
+    // round lands on the shaft behind it. Without this a Log that should plough a row stalled in
+    // the third bird it met and came off the fourth backwards.
+    const bodyShare =
+      pin.falling || pin.toppled ? shooterMassShare * FELLED_BIRD_SHARE : shooterMassShare;
+
     for (let bodyIndex = 0; bodyIndex < JOUST_SHOOTER_BODY_COUNT; bodyIndex += 1) {
       const shooterBody = bodies[bodyIndex];
 
       if (shooterBody !== undefined) {
-        collideCircleWithStick(shooterBody, foot, head, shooterMassShare);
+        collideCircleWithBird(shooterBody, foot, head, bodyShare);
       }
     }
 
@@ -815,9 +1014,11 @@ export const simulateJoustShot = (
     collideWithSegments(bodies, segments, staticSegments, profile);
     collideTowers(bodies, legs, profile.legShare);
     collideRack(bodies, pins, legs, profile.massShare);
-    latchTopples(bodies, pins, keyframes.length, topples);
+    latchTopples(bodies, pins, constraints, keyframes.length, topples);
 
-    if (latchCollapses(bodies, towers, legs, pins, keyframes.length, collapses, topples)) {
+    if (
+      latchCollapses(bodies, towers, legs, pins, constraints, keyframes.length, collapses, topples)
+    ) {
       segments = toActiveSegments(staticSegments, towers);
     }
 

@@ -11,7 +11,7 @@ import {
   JOUST_WORLD,
   resolveLaneSlots
 } from "../../joust/world/index.js";
-import { JOUST_OBSTACLE_KINDS } from "../../joust/types.js";
+import { JOUST_OBSTACLE_KINDS, JOUST_PERCH_KINDS } from "../../joust/types.js";
 import type { JoustObstacle, JoustPerch } from "../../joust/types.js";
 import { validatePromptPackFile } from "../promptPack/index.js";
 import type { ValidationIssue } from "../validationIssue/index.js";
@@ -147,6 +147,12 @@ export const validateJoustPerch = (value: unknown): ValidationIssue[] => {
     if (!isFiniteNumber(value[field])) {
       issues.push({ path: field, message: "must be a finite number" });
     }
+  }
+
+  // `kind` is skin, and optional, exactly as an obstacle's is: a pack may leave it off and get
+  // the height rule, but may not name a landmark the renderer has no drawing for.
+  if (value.kind !== undefined && !JOUST_PERCH_KINDS.some((kind) => kind === value.kind)) {
+    issues.push({ path: "kind", message: `must be one of ${JOUST_PERCH_KINDS.join(", ")}` });
   }
 
   if (issues.length > 0) {

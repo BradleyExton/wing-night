@@ -110,6 +110,14 @@ export const CHARACTER_STAND_HEIGHT = CHARACTER_FOOT.y - CHARACTER_HEAD_CENTRE.y
 
 export const CHARACTER_HEAD_RADIUS = COSTUME_HEAD_HEIGHT / 2;
 
+// The body as one blob, for a surface that collides with the bird rather than
+// drawing it: the stock `round` body (`shapes` BODY_PATHS) spans x 16..67 and
+// y 22..66 of the box, so this is its middle and a radius that covers the
+// chest and the belly without reaching the tail. Measured off the path, not
+// the physics: JOUST reads it to put a chest in its lane where the room sees
+// one, and pins the agreement with a test.
+export const CHARACTER_BODY = { cx: 41.5, cy: 44, r: 23 } as const;
+
 // The width the legs are stroked at (`styles.legs`, which has to spell it as a
 // literal for Tailwind to see it). Everything that stands a foot ON something
 // needs half of it: the foot's path is the stroke's centreline, and the paint

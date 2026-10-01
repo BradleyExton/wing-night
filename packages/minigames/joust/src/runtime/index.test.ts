@@ -54,12 +54,14 @@ const TEAMS: Team[] = [
 ];
 
 // Found by sweeping the aim space against the fixture's three-player rack, which stands two on
-// the sand and one up on the shelf: a flat shot ploughs the sand row and leaves the shelf alone,
-// a shallow lob clips the one up top, a twitch never arrives — and a full-power shot just above
-// flat drives the sand row into the tower's legs and brings the whole thing down, which is the
-// ONLY way one shot takes both levels.
-const SWEEPING_AIM = { x: -1, y: 0 };
-const SINGLE_AIM = { x: -0.9, y: 0.6 };
+// the sand and one up on the shelf: a flat three-fifths pull ploughs the sand row and leaves the
+// shelf alone, a steep lob clips the one up top (and, thrown as the Log, takes one more without
+// folding anything, so the turn goes on), a twitch never arrives — and a full-power shot just
+// above flat drives the sand row into the tower's legs and brings the whole thing down, which is
+// the ONLY way one shot takes both levels. Re-found 2026-10-01, when the birds grew faces and
+// chests and stopped springing back: a full flat pull now reaches the legs too.
+const SWEEPING_AIM = { x: -0.6, y: 0 };
+const SINGLE_AIM = { x: -0.8, y: 0.6 };
 const MISSING_AIM = { x: -0.2, y: 0 };
 const TIMBER_AIM = { x: -0.95, y: 0.15 };
 

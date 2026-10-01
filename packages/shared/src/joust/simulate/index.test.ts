@@ -154,8 +154,10 @@ test("does stand a tower up on its own legs without a shot to hold it there", ()
 });
 
 // Found by sweeping the aim space: a full-power shot just above flat ploughs the sand row and
-// carries on into the tower's near leg with enough left to fold it.
-const TIMBER_AIM = { x: -1, y: 0.15 };
+// carries on into the tower's near leg with enough left to fold it. Re-found on 2026-10-01 when
+// the birds grew faces and chests and stopped springing back: the row now takes more out of a
+// shot, and this is the pull that still reaches the leg with weight behind it.
+const TIMBER_AIM = { x: -0.95, y: 0.1 };
 
 test("does fold a tower under a hard low shot and drop everyone stood on it", () => {
   const run = simulateJoustShot(OPEN_ARENA, TIMBER_AIM, OPTIONS);
@@ -386,12 +388,12 @@ test("does fly a different track for a different kind from the same pull", () =>
 });
 
 test("does fold a tower under a heavy kind at a pull the Standard bounces off", () => {
-  // Found by scanning this lane: a full-power pull a shade lower than TIMBER_AIM ploughs the sand
-  // row with the Standard and stops at the leg; the Log, absorbing a sixth of what the Standard
-  // does at a leg, carries on through it.
-  const lowPull = { x: -0.95, y: 0.1 };
-  const standard = simulateJoustShot(OPEN_ARENA, lowPull, OPTIONS);
-  const log = simulateJoustShot(OPEN_ARENA, lowPull, { ...OPTIONS, shooter: LOG });
+  // Found by scanning this lane: a hard, steep pull lobs the Standard over the sand row and it
+  // comes down on the shelf without folding anything; the Log, absorbing a sixth of what the
+  // Standard does at a leg, lands the same arc short and heavy enough to take the near leg out.
+  const steepPull = { x: -0.9, y: 0.4 };
+  const standard = simulateJoustShot(OPEN_ARENA, steepPull, OPTIONS);
+  const log = simulateJoustShot(OPEN_ARENA, steepPull, { ...OPTIONS, shooter: LOG });
 
   assert.equal(standard.collapses.length, 0, "the Standard leaves it standing from here");
   assert.ok(log.collapses.length > 0, "the Log brings it down");

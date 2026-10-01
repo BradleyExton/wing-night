@@ -20,8 +20,8 @@ const DEV_CONTENT: SerializableValue = {
       name: "Centennial Beach",
       perches: [
         { x: 54, y: 78, width: 102 },
-        { x: 54, y: 64, width: 28 },
-        { x: 71, y: 50, width: 83 }
+        { x: 54, y: 64, width: 28, kind: "dock" },
+        { x: 71, y: 50, width: 83, kind: "lifeguard-tower" }
       ],
       obstacles: [
         { x: 45, y: 64, width: 7, height: 14, kind: "umbrella" },
@@ -34,8 +34,8 @@ const DEV_CONTENT: SerializableValue = {
       name: "The Spirit Catcher",
       perches: [
         { x: 54, y: 78, width: 102 },
-        { x: 56, y: 52, width: 38 },
-        { x: 95, y: 40, width: 50 }
+        { x: 56, y: 52, width: 38, kind: "dock" },
+        { x: 95, y: 40, width: 50, kind: "lifeguard-tower" }
       ],
       obstacles: [
         { x: 41, y: 66, width: 13, height: 12, kind: "chip-truck" },
@@ -47,8 +47,8 @@ const DEV_CONTENT: SerializableValue = {
       name: "Allandale Dock",
       perches: [
         { x: 54, y: 78, width: 102 },
-        { x: 54, y: 48, width: 83 },
-        { x: 128, y: 62, width: 28 }
+        { x: 54, y: 48, width: 83, kind: "condo-balcony" },
+        { x: 128, y: 62, width: 28, kind: "dock" }
       ],
       obstacles: [
         { x: 45, y: 62, width: 6, height: 16, kind: "lifeguard-chair" },
@@ -60,12 +60,12 @@ const DEV_CONTENT: SerializableValue = {
       name: "Meridian Place",
       perches: [
         { x: 54, y: 78, width: 102 },
-        { x: 64, y: 44, width: 49 },
-        { x: 112, y: 52, width: 40 }
+        { x: 64, y: 44, width: 49, kind: "queens-balcony" },
+        { x: 112, y: 52, width: 40, kind: "souldiers-roof" }
       ],
       obstacles: [
-        { x: 44, y: 70, width: 8, height: 8, kind: "muskoka-chair" },
-        { x: 156, y: 52, width: 2, height: 26, kind: "mast" }
+        { x: 44, y: 70, width: 8, height: 8, kind: "planter" },
+        { x: 156, y: 52, width: 2, height: 26, kind: "lamp-post" }
       ]
     }
   ],

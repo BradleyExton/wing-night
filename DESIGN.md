@@ -1215,6 +1215,22 @@ are still told apart from the sofa by the hour:
     repaints the same legs and plank and hangs its trim off the plank's
     current ends, so it folds with the frame; the strain overlay, the
     target ring, the grit, the points tag and the rubble are untouched.
+    A perch may instead NAME its landmark (`kind`: `dock`, `lifeguard-tower`,
+    `queens-balcony`, `souldiers-roof`, `condo-balcony`), the way Dunlop Dash
+    stands the real buildings in its course: a landmark kind hangs that
+    building's façade between the shelf's own legs, behind the timber, in a
+    frame built from the legs' live feet and tops — the Queen's buff brick
+    and green QUEENS fascia under a white balcony rail with its small red
+    flags, Souldiers' red brick, green sign band, lit window and door under
+    a dark parapet, a condo's cream wall and blue-glass balcony stacks under
+    a slab with a thin glass rail — so when a shot folds the tower the whole
+    building shears over with it. The paints are the morning's brick, buff
+    and cream darkened by the dusk (`queensBuff`, `souldiersBrick`,
+    `condoCream` and kin in `palette.ts`), the windows holding downtown's
+    `glass` glow, and all of it kept lower-contrast than the team colours
+    so the bird on the balcony still wins the eye. Lettering only appears on
+    a façade at least 30 units wide, and only on the wall under the plank,
+    never where a bird stands.
 -   **Whoever is shooting walks up, and walks off.** The bench stands in
     turn order, not roster order (`resolveBenchOrder`): whoever shoots next
     is nearest the post, then the one after, and when the next shot opens the

@@ -55,6 +55,32 @@ export const joustPalette = {
   dockDark: "#4f3a22",
   lifeguard: "#efe6d3",
   lifeguardRail: "#c8433a",
+  // The landmarks a shelf can be BUILT as (§2.7) — the Queen's balcony, Souldiers' roof, a condo
+  // balcony — in dusk paint: the morning's brick, buff and cream (SCHLONIC's palette) darkened
+  // and warmed by the sunset off the bay, and their windows holding the same glow as downtown's
+  // (`glass`). Every one is kept lower-contrast than the eight team colours on purpose: a bird on
+  // the balcony has to win the eye over the building under it.
+  queensBuff: "#b08a5a",
+  queensBuffDark: "#7f6240",
+  queensGreen: "#1d4a2c",
+  queensCream: "#f1dcb2",
+  souldiersBrick: "#80402f",
+  souldiersBrickDark: "#4f261b",
+  souldiersGreen: "#2e7d3b",
+  signInk: "#1a0f0a",
+  signLetter: "#f4e4c8",
+  condoCream: "#c7ae8c",
+  condoCreamDark: "#947c5e",
+  // The near condo's balcony glass: blue-violet with the dusk in it, not the far pair's bay glow,
+  // because this one stands in the lane and has to read as glass rather than as more sky.
+  condoBalconyGlass: "#6f6a9e",
+  // Meridian Place's downtown furniture: a black acorn lamp post lit for the evening, and a stone
+  // planter whose shrub has gone blue-green in the dusk.
+  lampPost: "#1f1a1c",
+  planterStone: "#8a7f70",
+  planterStoneDark: "#5c5247",
+  shrub: "#3d6b3f",
+  shrubDark: "#274a2c",
   post: "#6b4423",
   postDark: "#3d2411",
   band: "#2a1b12",
