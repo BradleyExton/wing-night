@@ -17,6 +17,7 @@ import {
 import {
   CHARACTER_PIVOTS,
   CHARACTER_RIDE_STANCE,
+  CHARACTER_STANCE_PIVOT,
   COSTUME_HEAD_ANCHORS,
   COSTUME_HEAD_HEIGHT,
   DRAWN_BEAK,
@@ -108,6 +109,25 @@ const Part = ({
           {posed}
         </g>
       )}
+    </g>
+  );
+};
+
+// The whole bird turned as one about its foot, for the poses that lean it
+// (`styles.stances`): the same translate-turn-translate sandwich as a part, on
+// the figure's own pivot. A pose with no stance is not wrapped at all.
+const Stance = ({ className, children }: { className: string | undefined; children: ReactNode }): JSX.Element => {
+  if (className === undefined) {
+    return <>{children}</>;
+  }
+
+  const { x, y } = CHARACTER_STANCE_PIVOT;
+
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <g data-character-stance className={className}>
+        <g transform={`translate(${-x} ${-y})`}>{children}</g>
+      </g>
     </g>
   );
 };
@@ -251,45 +271,47 @@ export const CharacterFigure = ({
       data-character-pose={pose}
       data-character-silhouette={silhouette}
     >
-      <Part part="tail" rig={rig} drop={crouch}>
-        <path className={ink} d={shapes.tail} />
-      </Part>
-      <Part part="legFar" rig={rig}>
-        <g className={styles.legFar}>
+      <Stance className={styles.stances[pose]}>
+        <Part part="tail" rig={rig} drop={crouch}>
+          <path className={ink} d={shapes.tail} />
+        </Part>
+        <Part part="legFar" rig={rig}>
+          <g className={styles.legFar}>
+            <path
+              className={styles.legs}
+              d={riding ? rideLegPath(hipFar, CHARACTER_RIDE_STANCE.frontFootX) : legPath(CHARACTER_PIVOTS.legFar)}
+            />
+          </g>
+        </Part>
+        <Part part="body" rig={rig} drop={crouch}>
+          <path className={ink} d={shapes.body} />
+          <path className={styles.shade} d={shapes.belly} />
+        </Part>
+        <Part part="legNear" rig={rig}>
+          <path className={ink} d={thighPath(hipNear)} />
           <path
             className={styles.legs}
-            d={riding ? rideLegPath(hipFar, CHARACTER_RIDE_STANCE.frontFootX) : legPath(CHARACTER_PIVOTS.legFar)}
+            d={riding ? rideLegPath(hipNear, CHARACTER_RIDE_STANCE.backFootX) : legPath(CHARACTER_PIVOTS.legNear)}
           />
-        </g>
-      </Part>
-      <Part part="body" rig={rig} drop={crouch}>
-        <path className={ink} d={shapes.body} />
-        <path className={styles.shade} d={shapes.belly} />
-      </Part>
-      <Part part="legNear" rig={rig}>
-        <path className={ink} d={thighPath(hipNear)} />
-        <path
-          className={styles.legs}
-          d={riding ? rideLegPath(hipNear, CHARACTER_RIDE_STANCE.backFootX) : legPath(CHARACTER_PIVOTS.legNear)}
-        />
-      </Part>
-      {wing === "drawn" && (
-        <Part part="wing" rig={rig} drop={crouch}>
-          <path className={ink} d={shapes.wing} data-character-wing />
         </Part>
-      )}
-      <Part part="head" rig={rig} drop={crouch}>
-        <path className={ink} d={shapes.neck} />
-        <g data-character-head>
-          {appearance.avatarSrc === undefined ? (
-            <DrawnHead head={head} />
-          ) : (
-            <CostumeHead avatarSrc={appearance.avatarSrc} haloId={haloId} head={head} />
-          )}
-          {!wearsCostume && <Comb combPath={shapes.comb} head={head} ink={ink} />}
-          {wornApparel !== undefined && <Apparel apparel={wornApparel} head={head} />}
-        </g>
-      </Part>
+        {wing === "drawn" && (
+          <Part part="wing" rig={rig} drop={crouch}>
+            <path className={ink} d={shapes.wing} data-character-wing />
+          </Part>
+        )}
+        <Part part="head" rig={rig} drop={crouch}>
+          <path className={ink} d={shapes.neck} />
+          <g data-character-head>
+            {appearance.avatarSrc === undefined ? (
+              <DrawnHead head={head} />
+            ) : (
+              <CostumeHead avatarSrc={appearance.avatarSrc} haloId={haloId} head={head} />
+            )}
+            {!wearsCostume && <Comb combPath={shapes.comb} head={head} ink={ink} />}
+            {wornApparel !== undefined && <Apparel apparel={wornApparel} head={head} />}
+          </g>
+        </Part>
+      </Stance>
     </g>
   );
 };

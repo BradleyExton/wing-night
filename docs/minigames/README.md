@@ -6,7 +6,7 @@ A shipped game has one name: the `displayName` on its entry in `MINIGAME_DEFINIT
 which is what the **Game** column reads. **Id** is the enum key the code, the config and the
 package folder use; it is an identifier, never a title, and no game carries a third name.
 
-Last updated: 2026-09-28
+Last updated: 2026-10-01
 
 ## Stages
 
@@ -28,6 +28,7 @@ Last updated: 2026-09-28
 | Emoji Charades | `EMOJI_CHARADES` | shipped | — | [packages/minigames/emoji-charades/](../../packages/minigames/emoji-charades/) ([spec](emoji-charades-spec.md)) — built and tested; not in the sample lineup yet |
 | Forgery Studio | `RECREATE` | shipped | — | [packages/minigames/recreate/](../../packages/minigames/recreate/) — no spec; design in memory and `RecreateMinigameDisplayView` (`packages/shared/src/roomState`). Information asymmetry: the room and the team share the target photo; the ingredients are host-only while the team writes (in pass-and-play the tablet is in the team's hands and the ingredients are the answer) and the authored prompt is held back until the score is locked. It collapses in two beats: ingredients at submit, the authored prompt at scoring. |
 | Schlonic | `SCHLONIC` | shipped | — | [packages/minigames/schlonic/](../../packages/minigames/schlonic/) — no spec; `SchlonicMinigameDisplayView` (`packages/shared/src/roomState`). Information asymmetry: spectator-only lead over a nobody-knows outcome. The zone is a rule every team runs and host and display carry the same fields, but the TV's camera fills the wall and shows the street further ahead of the hen than the tablet's box does (`SchlonicScene/camera`), so the couch sees the next hazard before the holder and is the runner's lookout; the round's best run so far replays beside every later runner as a ghost, so the room reads ahead-or-behind off the wall rather than off a sum; the open question is how far the run gets, and it collapses run by run as the TV re-plays the input log, and hard at the post or the crash. |
+| Streets of Barrie | `BRAWL` | building | — | [packages/minigames/brawl/](../../packages/minigames/brawl/) ([spec](brawl-spec.md)) — a side-scrolling beat 'em up relay of the cast down Dunlop Street to the Spirit Catcher, a block each; registered and refereed, surfaces in progress; not in the sample lineup. Information asymmetry: spectator-only — the TV's camera is wider than the tablet's, so the wall sees a goose step in and honk before the holder does. |
 | PETMON | — | spec | ready | [petmon-design.md](../petmon-design.md) (design + mockups; runtime not started) |
 | Read the Room | — | idea | promising | [ideas/read-the-room.md](ideas/read-the-room.md) |
 | ANAMORPH | — | idea | promising | [ideas/anamorph.md](ideas/anamorph.md) |
@@ -35,7 +36,7 @@ Last updated: 2026-09-28
 | Photo Codenames | — | idea | promising | [ideas/photo-codenames.md](ideas/photo-codenames.md) — blocked on the photo library, [ADR-0004](../adr/ADR-0004-shared-photo-library.md) |
 | SEAR | — | spec | ready | [sear-spec.md](sear-spec.md) (build plan in §0; runtime not started) |
 
-Target: **at least 8 games**. Current: 9 shipped, 2 spec'd, 4 ideas → 15 concepts, target covered.
+Target: **at least 8 games**. Current: 9 shipped, 1 building, 2 spec'd, 4 ideas → 16 concepts, target covered.
 
 ANAMORPH and CONTRAPTION were added to close a specific gap: every other game on this
 list is words, recall, or expression, and none of them make the TV do something the room

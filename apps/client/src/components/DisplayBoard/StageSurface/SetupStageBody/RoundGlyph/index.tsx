@@ -52,6 +52,14 @@ const GLYPH_PATHS: Record<MinigameType, JSX.Element> = {
       <path d="M3 22 H12 M1 30 H10 M5 38 H12" />
     </>
   ),
+  BRAWL: (
+    <>
+      <circle cx="22" cy="30" r="12" />
+      <path d="M34 25 L47 30 L34 35" />
+      <path d="M51 19 L55 13 M53 30 H62 M51 41 L55 47" />
+      <path d="M6 56 H58" />
+    </>
+  ),
   DRAWING: (
     <>
       <path d="M16 50 L44 22 L50 28 L22 56 Z" />

@@ -9,7 +9,8 @@ import {
   CHARACTER_PARTS,
   CHARACTER_PIVOTS,
   CHARACTER_POSES,
-  CHARACTER_RIDE_STANCE
+  CHARACTER_RIDE_STANCE,
+  CHARACTER_STANCE_PIVOT
 } from "./geometry/index.js";
 import { resolveCharacterRideStance, resolveCharacterShapes, resolveCharacterWingPath } from "./shapes/index.js";
 import {
@@ -570,4 +571,51 @@ test("does carry the costume head and the apparel down through the crouch when r
   assert.equal(partDrop(html, "head"), resolveCharacterRideStance({ body: "wide", silhouette: undefined }).crouch);
   assert.match(head, /<image href="http:\/\/127\.0\.0\.1:3000/);
   assert.match(head, /data-character-apparel="medallion"/);
+});
+
+test("does lean the whole bird about its foot only when pecking, hurt or knocked out", () => {
+  const { x, y } = CHARACTER_STANCE_PIVOT;
+
+  for (const pose of CHARACTER_POSES) {
+    const html = renderToStaticMarkup(<Character appearance={drawn} pose={pose} />);
+    const stance = figureStyles.stances[pose];
+
+    if (stance === undefined) {
+      assert.doesNotMatch(html, /data-character-stance/, `${pose} draws no stance layer`);
+    } else {
+      assert.match(
+        html,
+        new RegExp(`<g transform="translate\\(${x} ${y}\\)"><g data-character-stance="true" class="[^"]*"><g transform="translate\\(${-x} ${-y}\\)">`),
+        `${pose} leans about the foot`
+      );
+      assert.ok(html.includes(stance), `${pose} carries ${stance}`);
+    }
+  }
+});
+
+test("does tip the peck forward and the hit back", () => {
+  const degrees = (className: string | undefined): number => Number(className?.match(/rotate\((-?[\d.]+)deg\)/)?.[1]);
+
+  assert.ok(degrees(figureStyles.stances.peck) > 0, "a peck leans into the strike");
+  assert.ok(degrees(figureStyles.poses.peck.head) > 0, "a peck thrusts the head forward and down");
+  assert.ok(degrees(figureStyles.stances.hurt) < 0, "a hit rocks the bird back");
+  assert.ok(degrees(figureStyles.poses.hurt.head) < 0, "a hit throws the head back");
+});
+
+test("does roll the knocked-out bird onto its back with its feet in the air", () => {
+  const html = renderToStaticMarkup(<Character appearance={costume} pose="ko" />);
+
+  assert.match(html, /data-character-pose="ko"/);
+  assert.match(figureStyles.stances.ko ?? "", /rotate\(180deg\)/);
+  assert.match(html, /<image /, "the costume head comes down with the bird");
+  assert.doesNotMatch(html, /animation:/);
+});
+
+test("does keep the brawler's poses static so a surface swaps them per frame", () => {
+  for (const pose of ["peck", "hurt", "ko"] as const) {
+    const html = renderToStaticMarkup(<Character appearance={drawn} pose={pose} />);
+
+    assert.match(html, new RegExp(`data-character-pose="${pose}"`));
+    assert.doesNotMatch(html, /animation:|data-character-jig/, `${pose} loops nothing`);
+  }
 });

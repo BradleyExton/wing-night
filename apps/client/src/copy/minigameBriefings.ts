@@ -44,6 +44,12 @@ const minigameBriefingContentByType: Record<MinigameType, MinigameBriefingConten
     summary:
       "Your chickens skate Dunlop Street as a relay, a leg each, collecting wings. The wings are the score — and they are the only health you have."
   },
+  BRAWL: {
+    illustrationPath: `${DISPLAY_ASSET_ROOT}/brawl-illustration.svg`,
+    illustrationAlt: "Streets of Barrie mini-game artwork",
+    summary:
+      "Your chickens brawl down Dunlop Street to the Spirit Catcher, a block each. Walk with your left thumb, peck with your right, and put down every goose."
+  },
   RECREATE: {
     illustrationPath: `${DISPLAY_ASSET_ROOT}/recreate-illustration.svg`,
     illustrationAlt: "Forgery Studio mini-game artwork",

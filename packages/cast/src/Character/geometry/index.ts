@@ -83,7 +83,12 @@ export const CHARACTER_PIVOTS: Record<CharacterPart, CharacterPivot> = {
 // and `ride` is the hen crouched on a skateboard the SURFACE draws under it
 // (`CHARACTER_RIDE_STANCE`) — static like `fly`, so a surface that moves the
 // bird per frame moves the whole of it and nothing in the figure fights it.
-export const CHARACTER_POSES = ["still", "idle", "walk", "fly", "dance", "ride"] as const;
+// `peck`, `hurt` and `ko` are the brawler's three (BRAWL, a beat 'em up on a
+// Barrie street): a beak-first strike leaning into it, a hit reeling the bird
+// back with its legs splayed, and the knockout flat on its back with its feet
+// in the air. Static like `fly`: the sim says which one a frame is, and a
+// surface swaps the pose rather than waiting on a loop.
+export const CHARACTER_POSES = ["still", "idle", "walk", "fly", "dance", "ride", "peck", "hurt", "ko"] as const;
 export type CharacterPose = (typeof CHARACTER_POSES)[number];
 
 // The bird's own proportions, for surfaces that have to stand it up somewhere
@@ -100,6 +105,14 @@ export const CHARACTER_BOX = { width: 80, height: 72 } as const;
 
 /** Between the two legs, on the ground. */
 export const CHARACTER_FOOT = { x: 38, y: 71 } as const;
+
+// The whole bird turns as one about its own foot for the poses that lean it —
+// a peck tips it into the strike, a hit rocks it back, a knockout lays it on
+// its back — which no turn of a part about its own pivot can do, because the
+// parts are siblings and a leaning body would leave its head behind. Only
+// those poses get the extra layer, so every other pose draws exactly the
+// markup it always did.
+export const CHARACTER_STANCE_PIVOT = CHARACTER_FOOT;
 
 export const CHARACTER_HEAD_CENTRE = {
   x: COSTUME_HEAD_ANCHORS.cx,

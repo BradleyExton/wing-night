@@ -15,6 +15,7 @@
   "dependencies": {
     "@wingnight/audio": "workspace:*",
     "@wingnight/cast": "workspace:*",
+    "@wingnight/minigames-brawl": "workspace:*",
     "@wingnight/minigames-core": "workspace:*",
     "@wingnight/minigames-drawing": "workspace:*",
     "@wingnight/minigames-emoji-charades": "workspace:*",

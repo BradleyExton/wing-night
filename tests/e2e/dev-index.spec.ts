@@ -64,7 +64,8 @@ test("links every dev lab and every minigame sandbox", async ({ page }) => {
     "song-guess",
     "joust",
     "drawing",
-    "emoji-charades"
+    "emoji-charades",
+    "brawl"
   ]) {
     await expect(page.locator(`a[href="/dev/minigame/${slug}"]`)).toBeVisible();
   }

@@ -13,6 +13,7 @@ import type {
   JoustVec2
 } from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
+import type { BrawlInput, BrawlOutcome } from "../brawl/types.js";
 import type { SchlonicInput, SchlonicOutcome } from "../schlonic/types.js";
 import type { SongGuessDifficulty } from "../content/songGuess/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
@@ -578,6 +579,74 @@ type SchlonicMinigameViewFields = {
 
 export type SchlonicMinigameHostView = MinigameHostViewBase & SchlonicMinigameViewFields;
 
+export type BrawlBlockStatus = "ready" | "running" | "done";
+
+export type BrawlPhase = "ready" | "running" | "finished";
+
+// The server's own re-run of one block's input log: the only reading of a block that scores.
+// `goons` is the worth put down, whatever the outcome — a KO keeps what it earned — and `hearts`
+// is what the hen walked off with.
+export type BrawlBlockResult = {
+  outcome: BrawlOutcome;
+  endTick: number;
+  goons: number;
+  hearts: number;
+};
+
+// One player as the brawler needs them named, SCHLONIC's twin: `avatarSrc` stays pack-relative
+// and the surface resolves it against the server origin; team id and genre are the hen's colour
+// and silhouette.
+export type BrawlPlayerFigure = {
+  playerId: string;
+  name: string;
+  avatarSrc: string | null;
+  teamId: string | null;
+  genre: string | null;
+};
+
+// One player's block of the street. There is no second attempt: a block ends at the handoff, in
+// the bay, or at the bell, and either way the tablet moves on to the next teammate. The input log
+// is what the display re-runs the shared sim from, and what the server refereed the result out of.
+export type BrawlMinigameBlock = {
+  blockIndex: number;
+  // Whose block it is; null fights with the house hen in the team colour.
+  player: BrawlPlayerFigure | null;
+  status: BrawlBlockStatus;
+  inputs: BrawlInput[];
+  skipped: boolean;
+  result: BrawlBlockResult | null;
+};
+
+// The turn to beat: the finished turn that put down the most worth over the whole course, from
+// any team BEFORE this one, carried from turn to turn by the plugin's round memory. A brawl has
+// nothing to race, so there is no ghost — only the number and whose it was.
+export type BrawlBestTurn = {
+  teamId: string | null;
+  teamName: string | null;
+  goons: number;
+};
+
+// Nothing about a block is secret — the whole street is on the TV as it happens — so the host
+// and display carry the same fields, as SCHLONIC does. The course is a RULE, not a roll: every
+// team in the round fights the same `blocksPerTurn` blocks off `courseSeed`, so the night is a
+// contest rather than a lottery. Block `n` is block `n` of it.
+export type BrawlMinigameViewFields = {
+  minigame: "BRAWL";
+  phase: BrawlPhase;
+  blockIndex: number;
+  blocksPerTurn: number;
+  courseSeed: number;
+  blocks: BrawlMinigameBlock[];
+  // The worth banked over the turn so far, and the worth of the whole course.
+  goonsDown: number;
+  goonsTotal: number;
+  points: number | null;
+  // The turn to beat, fixed for the whole turn; null until a team before this one has banked.
+  bestTurn: BrawlBestTurn | null;
+};
+
+export type BrawlMinigameHostView = MinigameHostViewBase & BrawlMinigameViewFields;
+
 export type MinigameHostView =
   | TriviaMinigameHostView
   | GeoMinigameHostView
@@ -585,6 +654,7 @@ export type MinigameHostView =
   | JoustMinigameHostView
   | FappyMinigameHostView
   | SchlonicMinigameHostView
+  | BrawlMinigameHostView
   | RecreateMinigameHostView
   | DrawingMinigameHostView
   | EmojiCharadesMinigameHostView;
@@ -689,6 +759,8 @@ export type FappyMinigameDisplayView = MinigameDisplayViewBase & FappyMinigameVi
 
 export type SchlonicMinigameDisplayView = MinigameDisplayViewBase & SchlonicMinigameViewFields;
 
+export type BrawlMinigameDisplayView = MinigameDisplayViewBase & BrawlMinigameViewFields;
+
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView
   | GeoMinigameDisplayView
@@ -696,6 +768,7 @@ export type MinigameDisplayView =
   | JoustMinigameDisplayView
   | FappyMinigameDisplayView
   | SchlonicMinigameDisplayView
+  | BrawlMinigameDisplayView
   | RecreateMinigameDisplayView
   | DrawingMinigameDisplayView
   | EmojiCharadesMinigameDisplayView;

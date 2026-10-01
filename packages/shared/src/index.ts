@@ -186,6 +186,32 @@ export type {
   SchlonicZone,
   SchlonicZoneCourse
 } from "./schlonic/index.js";
+export {
+  BRAWL_WORLD,
+  advanceBrawl,
+  createBrawlRunSkip,
+  createBrawlRunStart,
+  resolveBrawlBlock,
+  resolveBrawlCourseTotal,
+  resolveBrawlGoonBox,
+  resolveBrawlTickCap,
+  runBrawlRun,
+  stepBrawl
+} from "./brawl/index.js";
+export type {
+  BrawlBlock,
+  BrawlCourse,
+  BrawlFrame,
+  BrawlGoon,
+  BrawlGoonKind,
+  BrawlGoonState,
+  BrawlInput,
+  BrawlOutcome,
+  BrawlRun,
+  BrawlSide,
+  BrawlSpawn,
+  BrawlWave
+} from "./brawl/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
@@ -301,6 +327,15 @@ export type {
   SchlonicPlayerFigure,
   SchlonicRunResult,
   SchlonicRunStatus,
+  BrawlBestTurn,
+  BrawlBlockResult,
+  BrawlBlockStatus,
+  BrawlMinigameBlock,
+  BrawlMinigameDisplayView,
+  BrawlMinigameHostView,
+  BrawlMinigameViewFields,
+  BrawlPhase,
+  BrawlPlayerFigure,
   FappyMinigameLeg,
   FappyPhase,
   FappyPlayerFigure,

@@ -3,6 +3,9 @@ import type {
   MinigameRendererBundle,
   MinigameRuntimePlugin
 } from "@wingnight/minigames-core";
+import { brawlRendererBundle } from "@wingnight/minigames-brawl/client";
+import { brawlDevManifest } from "@wingnight/minigames-brawl/dev";
+import { brawlRuntimePlugin } from "@wingnight/minigames-brawl/runtime";
 import { drawingRendererBundle } from "@wingnight/minigames-drawing/client";
 import { drawingDevManifest } from "@wingnight/minigames-drawing/dev";
 import { drawingRuntimePlugin } from "@wingnight/minigames-drawing/runtime";
@@ -75,6 +78,11 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
     rendererBundle: schlonicRendererBundle,
     devManifest: schlonicDevManifest,
     runtimePlugin: schlonicRuntimePlugin
+  },
+  BRAWL: {
+    rendererBundle: brawlRendererBundle,
+    devManifest: brawlDevManifest,
+    runtimePlugin: brawlRuntimePlugin
   },
   DRAWING: {
     rendererBundle: drawingRendererBundle,

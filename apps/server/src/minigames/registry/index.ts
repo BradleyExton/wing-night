@@ -1,3 +1,4 @@
+import { brawlRuntimePlugin } from "@wingnight/minigames-brawl/runtime";
 import { drawingRuntimePlugin } from "@wingnight/minigames-drawing/runtime";
 import { emojiCharadesRuntimePlugin } from "@wingnight/minigames-emoji-charades/runtime";
 import { fappyRuntimePlugin } from "@wingnight/minigames-fappy/runtime";
@@ -20,6 +21,7 @@ const runtimePluginByMinigameType: Record<MinigameType, MinigameRuntimePlugin> =
   FAPPY: fappyRuntimePlugin,
   RECREATE: recreateRuntimePlugin,
   SCHLONIC: schlonicRuntimePlugin,
+  BRAWL: brawlRuntimePlugin,
   DRAWING: drawingRuntimePlugin,
   EMOJI_CHARADES: emojiCharadesRuntimePlugin
 };

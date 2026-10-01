@@ -78,6 +78,10 @@
       "zoneChunks": 22,
       "parWingsPerRun": 120
     },
+    "brawl": {
+      "blocksPerTurn": 3,
+      "courseSeed": 20261001
+    },
     "recreate": {
       "targetsPerTurn": 1,
       "pointsPerIngredient": 1,

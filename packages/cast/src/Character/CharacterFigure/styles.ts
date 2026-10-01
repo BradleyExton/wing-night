@@ -58,7 +58,49 @@ export const poses: Record<Exclude<CharacterPose, "dance">, Partial<Record<Chara
     wing: "[transform:rotate(75deg)]",
     head: "[transform:rotate(-8deg)]",
     tail: "[transform:rotate(-8deg)]"
+  },
+  // The brawler's three, static like `ride`: the sim says which one a frame
+  // is and the surface swaps the pose, so nothing here loops. Each leans the
+  // whole bird too (`stances`, below) — the parts only say what the limbs do
+  // inside that lean.
+  //
+  // The peck: the head and neck thrust forward and down past the beak's own
+  // line, the wing swept back and up out of the way, the back leg driving.
+  peck: {
+    head: "[transform:rotate(38deg)]",
+    wing: "[transform:rotate(40deg)]",
+    tail: "[transform:rotate(-12deg)]",
+    legNear: "[transform:rotate(24deg)]",
+    legFar: "[transform:rotate(-14deg)]"
+  },
+  // Hit: the head thrown back, the wing flung up, the legs splayed fore and
+  // aft as the bird skids.
+  hurt: {
+    head: "[transform:rotate(-34deg)]",
+    wing: "[transform:rotate(95deg)]",
+    tail: "[transform:rotate(14deg)]",
+    legNear: "[transform:rotate(28deg)]",
+    legFar: "[transform:rotate(-28deg)]"
+  },
+  // Out: on its back, so the head lies flat out along the street, the wing
+  // limp, and the feet splayed up in the air.
+  ko: {
+    head: "[transform:rotate(84deg)]",
+    wing: "[transform:rotate(20deg)]",
+    legNear: "[transform:rotate(-24deg)]",
+    legFar: "[transform:rotate(22deg)]"
   }
+};
+
+// The whole bird, turned as one about its foot (`CHARACTER_STANCE_PIVOT`), for
+// the poses a part alone cannot say: the peck leaning into the strike, the hit
+// rocking it back on its heels, the knockout rolled over onto its back and
+// lifted so its back is on the ground line its feet were on. A pose missing
+// here gets no extra layer at all.
+export const stances: Partial<Record<CharacterPose, string>> = {
+  peck: "[transform:rotate(14deg)]",
+  hurt: "[transform:rotate(-16deg)]",
+  ko: "[transform:translateY(-60px)_rotate(180deg)]"
 };
 
 // How hard a bird lands the beat, and how late. Both are the bird's own

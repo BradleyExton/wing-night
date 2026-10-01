@@ -72,6 +72,15 @@ export const MINIGAME_DEFINITIONS = {
     timerKey: null,
     rulesKey: "schlonic"
   },
+  BRAWL: {
+    id: "BRAWL",
+    slug: "brawl",
+    displayName: "Streets of Barrie",
+    // Host-paced: the turn ends when the team has fought its blocks, not when a clock runs out.
+    // A block has its own tick cap, and it is the street's, not the room's.
+    timerKey: null,
+    rulesKey: "brawl"
+  },
   DRAWING: {
     id: "DRAWING",
     slug: "drawing",
