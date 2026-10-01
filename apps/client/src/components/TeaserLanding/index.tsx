@@ -9,7 +9,7 @@ import { Embers } from "../DisplayBoard/StageSurface/SetupStageBody/Embers";
 import { HeroFlame } from "../DisplayBoard/StageSurface/SetupStageBody/HeroFlame";
 import * as lobbyStyles from "../DisplayBoard/StageSurface/SetupStageBody/styles";
 import { resolveTeaserGameHref } from "../TeaserApp/teaserRoutes";
-import { dunlopDashGame, fappyBirdGame, slingshlongGame } from "../TeaserSoloGame/teaserGames";
+import { dunlopDashGame, fappyBirdGame, slingshlongGame, streetsOfBarrieGame } from "../TeaserSoloGame/teaserGames";
 import { teaserLandingCopy } from "./copy";
 import { TeaserCountdown } from "./TeaserCountdown";
 import { TeaserGameCard } from "./TeaserGameCard";
@@ -99,6 +99,13 @@ export const TeaserLanding = ({ roster }: TeaserLandingProps): JSX.Element => {
             title={teaserLandingCopy.slingshlongTitle}
             summary={teaserLandingCopy.slingshlongSummary}
             href={resolveTeaserGameHref(slingshlongGame.slug)}
+            statusLabel={teaserLandingCopy.playLabel}
+          />
+          <TeaserGameCard
+            minigame="BRAWL"
+            title={teaserLandingCopy.streetsOfBarrieTitle}
+            summary={teaserLandingCopy.streetsOfBarrieSummary}
+            href={resolveTeaserGameHref(streetsOfBarrieGame.slug)}
             statusLabel={teaserLandingCopy.playLabel}
           />
         </div>

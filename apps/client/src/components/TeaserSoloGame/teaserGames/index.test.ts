@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { MinigameHostView } from "@wingnight/shared";
 
-import { dunlopDashGame, fappyBirdGame, resolveTeaserGame, slingshlongGame } from "./index";
+import { dunlopDashGame, fappyBirdGame, resolveTeaserGame, slingshlongGame, streetsOfBarrieGame } from "./index";
 
 // Only the fields each outcome reads; the rest of a view is the runtime's business.
 const asView = (fields: Record<string, unknown>): MinigameHostView => fields as MinigameHostView;
@@ -11,6 +11,7 @@ test("finds a game by its page path", () => {
   assert.equal(resolveTeaserGame("/dunlop-dash"), dunlopDashGame);
   assert.equal(resolveTeaserGame("/fappy-bird"), fappyBirdGame);
   assert.equal(resolveTeaserGame("/slingshlong"), slingshlongGame);
+  assert.equal(resolveTeaserGame("/streets-of-barrie"), streetsOfBarrieGame);
   assert.equal(resolveTeaserGame("/card"), null);
 });
 
@@ -53,4 +54,23 @@ test("counts more wings and a faster relay as the better turn", () => {
   assert.equal(dunlopDashGame.beats(42, 42), false);
   assert.equal(fappyBirdGame.beats(58_000, 63_400), true);
   assert.equal(fappyBirdGame.beats(70_000, 63_400), false);
+});
+
+test("scores a Streets of Barrie turn by the geese it put down once the last block is over, and names a clean street", () => {
+  assert.equal(
+    streetsOfBarrieGame.resolveOutcome(asView({ minigame: "BRAWL", phase: "running", goonsDown: 5, goonsTotal: 34 })),
+    null
+  );
+  assert.deepEqual(
+    streetsOfBarrieGame.resolveOutcome(asView({ minigame: "BRAWL", phase: "finished", goonsDown: 29, goonsTotal: 34 })),
+    { kicker: "Street over", headline: "29 geese down", result: 29 }
+  );
+  assert.equal(
+    streetsOfBarrieGame.resolveOutcome(asView({ minigame: "BRAWL", phase: "finished", goonsDown: 34, goonsTotal: 34 }))
+      ?.kicker,
+    "Street cleared"
+  );
+  assert.equal(streetsOfBarrieGame.formatResult(1), "1 goose down");
+  assert.equal(streetsOfBarrieGame.beats(30, 29), true);
+  assert.equal(streetsOfBarrieGame.beats(29, 29), false);
 });

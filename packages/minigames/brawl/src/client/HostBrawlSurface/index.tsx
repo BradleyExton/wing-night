@@ -4,7 +4,9 @@ import type { BrawlMinigameHostView } from "@wingnight/shared";
 import { BRAWL_WORLD } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
+import { useBrawlSounds } from "../useBrawlSounds/index.js";
 import { useHeldBlock, type BlockHold } from "../useHeldBlock/index.js";
+import { useSoloBeatSounds } from "../useSoloBeatSounds/index.js";
 import { BlockHistory } from "./BlockHistory/index.js";
 import { Street } from "./Street/index.js";
 import { hostBrawlSurfaceCopy } from "./copy.js";
@@ -67,6 +69,11 @@ export const HostBrawlSurface = ({
   // The street lingers on the block just ended while its beat plays; the chrome row is already on
   // the next one, which is the block the room is asking about.
   const { shownBlockIndex, hold } = useHeldBlock(brawlView ?? EMPTY_BLOCK_VIEW);
+  // On the night the TV is the speaker and the tablet is quiet. Solo, the tablet is the room, so
+  // it plays the TV's soundboard off its own run, and rings each beat as the hold opens.
+  const { onMirrorEvent } = useBrawlSounds({ serverOrigin, isSpeaker: solo });
+
+  useSoloBeatSounds(hold, solo ? onMirrorEvent : undefined);
   // Written by the runner's paint loop, sixty times a second: the hearts left and the worth down.
   const heartsRef = useRef<HTMLSpanElement>(null);
   const tallyRef = useRef<HTMLSpanElement>(null);
@@ -207,6 +214,7 @@ export const HostBrawlSurface = ({
           blockIndex={shownBlockIndex}
           heartsRef={heartsRef}
           tallyRef={tallyRef}
+          onRunnerEvent={solo ? onMirrorEvent : undefined}
         />
       )}
     </TakeoverCanvas>

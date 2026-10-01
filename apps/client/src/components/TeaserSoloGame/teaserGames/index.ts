@@ -4,6 +4,8 @@ import type {
   MinigameRuntimePlugin,
   SerializableValue
 } from "@wingnight/minigames-core";
+import { brawlRuntimePlugin } from "@wingnight/minigames-brawl";
+import { brawlRendererBundle } from "@wingnight/minigames-brawl/client";
 import { fappyRuntimePlugin } from "@wingnight/minigames-fappy";
 import { fappyRendererBundle, formatRelayClock } from "@wingnight/minigames-fappy/client";
 import { joustRuntimePlugin } from "@wingnight/minigames-joust";
@@ -132,7 +134,38 @@ export const slingshlongGame: TeaserGame = {
   formatResult: teaserGamesCopy.points
 };
 
-export const TEASER_GAMES: readonly TeaserGame[] = [dunlopDashGame, fappyBirdGame, slingshlongGame];
+export const streetsOfBarrieGame: TeaserGame = {
+  slug: "streets-of-barrie",
+  minigameType: "BRAWL",
+  runtimePlugin: brawlRuntimePlugin,
+  HostSurface: brawlRendererBundle.HostSurface,
+  rules: { blocksPerTurn: 3, courseSeed: 20261001 },
+  content: null,
+  title: teaserGamesCopy.streetsOfBarrieTitle,
+  pickerBody: teaserGamesCopy.streetsOfBarriePickerBody,
+  // The turn is over when the last block is, however it ended: what the team put down is the
+  // score, and a KO on the last block keeps it.
+  resolveOutcome: (view) =>
+    view.minigame === "BRAWL" && view.phase === "finished"
+      ? {
+          kicker:
+            view.goonsDown >= view.goonsTotal
+              ? teaserGamesCopy.streetsOfBarrieClearedKicker
+              : teaserGamesCopy.streetsOfBarrieFinishKicker,
+          headline: teaserGamesCopy.goons(view.goonsDown),
+          result: view.goonsDown
+        }
+      : null,
+  beats: (result, best) => result > best,
+  formatResult: teaserGamesCopy.goons
+};
+
+export const TEASER_GAMES: readonly TeaserGame[] = [
+  dunlopDashGame,
+  fappyBirdGame,
+  slingshlongGame,
+  streetsOfBarrieGame
+];
 
 export const resolveTeaserGame = (path: string): TeaserGame | null =>
   TEASER_GAMES.find((game) => `/${game.slug}` === path) ?? null;

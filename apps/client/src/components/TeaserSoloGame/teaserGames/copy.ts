@@ -15,5 +15,11 @@ export const teaserGamesCopy = {
     "Your team takes one shot each off the beach slingshot. Pick what goes on the band, drag back and let go. Topple everyone else off the perches; the higher they stand, the more they are worth.",
   slingshlongFinishKicker: "Turn over",
   slingshlongClearedKicker: "Rack cleared",
-  points: (points: number): string => `${points} ${points === 1 ? "point" : "points"}`
+  points: (points: number): string => `${points} ${points === 1 ? "point" : "points"}`,
+  streetsOfBarrieTitle: "Streets of Barrie",
+  streetsOfBarriePickerBody:
+    "Your team brawls down Dunlop Street to the Spirit Catcher, a block each. Hold the left side to walk, tap the right to peck. Put down every goose, and watch behind you.",
+  streetsOfBarrieFinishKicker: "Street over",
+  streetsOfBarrieClearedKicker: "Street cleared",
+  goons: (goons: number): string => `${goons} ${goons === 1 ? "goose" : "geese"} down`
 } as const;

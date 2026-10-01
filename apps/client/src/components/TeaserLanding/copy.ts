@@ -13,5 +13,7 @@ export const teaserLandingCopy = {
   fappySummary: "Flap the relay over downtown.",
   slingshlongTitle: "Slingshlong",
   slingshlongSummary: "Pull back, let fly, topple the tower.",
+  streetsOfBarrieTitle: "Streets of Barrie",
+  streetsOfBarrieSummary: "Walk the street, peck the geese. Watch behind you.",
   playLabel: "Play"
 } as const;

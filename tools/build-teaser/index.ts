@@ -31,7 +31,7 @@ const HEAD_MAX_PIXELS = 256;
 // The games the teaser plays, by their sound folder (each game's `*_SFX_FOLDER`). Their recorded
 // takes ship with the site, listed at `/sfx-takes/<game>` the way the server lists them; a game
 // with none plays its synthesised cues.
-const SFX_GAMES = ["schlonic", "fappy", "joust"];
+const SFX_GAMES = ["schlonic", "fappy", "joust", "brawl"];
 // The one lobby song the landing plays, out of the pack's SETUP playlist (the server mounts that
 // directory as the lobby route; it is the pack's alone, never layered). It lands in `lobby/`,
 // where vite.teaser.config.ts looks for it.
