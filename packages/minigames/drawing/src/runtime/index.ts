@@ -81,6 +81,13 @@ const resolveResultOutcome = (
 
 export const drawingRuntimePlugin: MinigameRuntimePlugin = {
   id: "DRAWING",
+  transientActionTypes: [
+    "beginStroke",
+    "appendStrokePoints",
+    "endStroke",
+    "undoStroke",
+    "clearCanvas"
+  ],
   content: drawingContentAdapter,
   initialize: (input) => {
     const drawingContent = resolveDrawingContent(input.content);

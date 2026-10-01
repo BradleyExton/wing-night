@@ -240,6 +240,7 @@ const endLeg = (
 
 export const fappyRuntimePlugin: MinigameRuntimePlugin = {
   id: "FAPPY",
+  transientActionTypes: ["flap"],
   isRules: isFappyRules,
   initialize: (input) => {
     const rules = resolveFappyRules(input.rules);

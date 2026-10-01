@@ -1,4 +1,4 @@
-import type { RoomState } from "@wingnight/shared";
+import { Phase, type RoomState } from "@wingnight/shared";
 
 import {
   captureMinigameRuntimeStateSnapshot,
@@ -31,6 +31,8 @@ export const createScoringMutationUndoSnapshot = (
 ): ScoringMutationUndoSnapshot => {
   return {
     round: state.currentRound,
+    roundTurnCursor: state.roundTurnCursor,
+    phase: state.phase,
     teamTotalScoreById: captureTeamTotalScoreById(state),
     wingParticipationByPlayerId: structuredClone(state.wingParticipationByPlayerId),
     pendingWingPointsByTeamId: structuredClone(state.pendingWingPointsByTeamId),
@@ -64,6 +66,21 @@ export const restoreScoringMutationUndoState = (
   state.pendingMinigamePointsByTeamId = structuredClone(
     snapshot.pendingMinigamePointsByTeamId
   );
+  // A game's runtime lives only for its own turn's MINIGAME_PLAY. An undo point
+  // taken anywhere else — a wing tick in EATING, a verdict now being undone
+  // from TURN_RESULTS — has no runtime to hand back, and restoring its `null`
+  // over a live turn is what left a DRAWING board with no buttons for the rest
+  // of the turn. So the runtime is left exactly as it is unless the point was
+  // taken in this very turn's play.
+  const isSameTurnPlay =
+    snapshot.phase === Phase.MINIGAME_PLAY &&
+    state.phase === Phase.MINIGAME_PLAY &&
+    snapshot.roundTurnCursor === state.roundTurnCursor;
+
+  if (!isSameTurnPlay) {
+    return;
+  }
+
   const minigameType = state.currentRoundConfig?.minigame ?? null;
   restoreMinigameRuntimeStateSnapshot(
     state,

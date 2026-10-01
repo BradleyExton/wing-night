@@ -1,5 +1,6 @@
 import type {
   GameConfigFile,
+  Phase,
   Player,
   RoomState,
   Team
@@ -10,6 +11,10 @@ import { createInitialRoomState } from "../createInitialRoomState/index.js";
 
 export type ScoringMutationUndoSnapshot = {
   round: number;
+  // Where in the night the undo point was taken: a game's runtime only comes
+  // back when the room is still in that same turn's MINIGAME_PLAY.
+  roundTurnCursor: number;
+  phase: Phase;
   teamTotalScoreById: Record<string, number>;
   wingParticipationByPlayerId: Record<string, boolean>;
   pendingWingPointsByTeamId: Record<string, number>;

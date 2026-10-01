@@ -17,6 +17,7 @@ export const geoMinigameId: MinigameType = "GEO";
 
 export const geoRuntimePlugin: MinigameRuntimePlugin = {
   id: "GEO",
+  transientActionTypes: ["setGuess"],
   content: geoContentAdapter,
   isRules: isGeoRules,
   initialize: (input) => {

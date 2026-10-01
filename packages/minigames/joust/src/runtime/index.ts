@@ -246,6 +246,7 @@ const launch = (
 
 export const joustRuntimePlugin: MinigameRuntimePlugin = {
   id: "JOUST",
+  transientActionTypes: ["setAim", "pickShooter"],
   content: joustContentAdapter,
   isRules: isJoustRules,
   initialize: (input) => {

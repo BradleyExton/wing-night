@@ -110,6 +110,12 @@ export type MinigameRuntimePlugin = {
   // through to `input.state` would rewrite the undo point under the host's
   // feet, and nothing would report it. Rebuild by spreading, always.
   reduceAction: (input: MinigameRuntimeReductionInput) => MinigameRuntimeReductionResult;
+  // Optional: the actions that are the turn being PLAYED rather than judged —
+  // a stroke, a flap, an aim, a typed emoji, a forgery landing. They never
+  // become the host's "Undo Last Score" point. Every other action that mutates
+  // does, so a DRAWING point stays undoable while the next sketch streams in
+  // fourteen sends a second, which used to replace it within 70ms.
+  transientActionTypes?: readonly string[];
   syncPendingPoints?: (input: MinigameRuntimeSyncPendingPointsInput) => SerializableValue;
   syncContent?: (input: MinigameRuntimeSyncContentInput) => SerializableValue;
   selectHostView: (input: MinigameRuntimeSelectorInput) => MinigameHostView | null;

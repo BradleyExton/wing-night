@@ -35,6 +35,7 @@ import {
   clockPacedGameConfigFixture,
   gameConfigFixture,
   geoPromptFixture,
+  resolveGeoHostView,
   setRoomStateGeoPrompts,
   resolveHostPromptCursor,
   resolveHostPromptId,
@@ -653,4 +654,91 @@ test("resetGameToSetup zeroes scores on the restored preset rosters", () => {
     { id: "team-1", name: "Preset Team One", playerIds: ["player-1"], totalScore: 0 },
     { id: "team-2", name: "Preset Team Two", playerIds: ["player-2"], totalScore: 0 }
   ]);
+});
+
+test("undo of a wing tick after play starts leaves the turn playable", () => {
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToEatingPhase();
+  setWingParticipation("player-1", true);
+  advanceRoomStatePhase();
+  assert.equal(getRoomStateSnapshot().phase, Phase.MINIGAME_PLAY);
+
+  redoLastScoringMutation();
+  const snapshot = getRoomStateSnapshot();
+
+  assert.deepEqual(snapshot.wingParticipationByPlayerId, {});
+  assert.equal(resolveHostPromptId(snapshot), "prompt-1");
+  assert.notEqual(snapshot.minigameDisplayView, null);
+
+  recordTriviaAttempt(true);
+  assert.equal(getRoomStateSnapshot().pendingMinigamePointsByTeamId["team-1"], 1);
+});
+
+test("undo from TURN_RESULTS takes the point back without reviving the turn", () => {
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+  recordTriviaAttempt(true);
+  advanceRoomStatePhase();
+  assert.equal(getRoomStateSnapshot().phase, Phase.TURN_RESULTS);
+  assert.equal(getRoomStateSnapshot().canRedoScoringMutation, true);
+
+  redoLastScoringMutation();
+  const snapshot = getRoomStateSnapshot();
+
+  assert.equal(snapshot.pendingMinigamePointsByTeamId["team-1"], undefined);
+  assert.equal(snapshot.minigameHostView, null);
+  assert.equal(snapshot.activeTurnTeamId, null);
+});
+
+test("undo history ends with the team's turn", () => {
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+  recordTriviaAttempt(true);
+  advanceRoomStatePhase();
+  assert.equal(getRoomStateSnapshot().canRedoScoringMutation, true);
+
+  const nextTurnSnapshot = advanceRoomStatePhase();
+
+  assert.equal(nextTurnSnapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(nextTurnSnapshot.activeRoundTeamId, "team-2");
+  assert.equal(nextTurnSnapshot.canRedoScoringMutation, false);
+  redoLastScoringMutation();
+  assert.equal(getRoomStateSnapshot().pendingMinigamePointsByTeamId["team-1"], 1);
+});
+
+test("undo history ends with a skipped turn", () => {
+  setupValidTeamsAndAssignments();
+  setRoomStateTriviaPrompts(triviaPromptFixture);
+  advanceToMinigamePlayPhase();
+  recordTriviaAttempt(true);
+
+  const skippedSnapshot = skipTurnBoundary();
+
+  assert.equal(skippedSnapshot.phase, Phase.MINIGAME_INTRO);
+  assert.equal(skippedSnapshot.canRedoScoringMutation, false);
+});
+
+test("an in-play action never replaces the last score as the undo point", () => {
+  setupValidTeamsAndAssignments({
+    ...clockPacedGameConfigFixture,
+    minigameRules: { geo: { promptsPerTurn: 2 } }
+  });
+  setRoomStateGeoPrompts(geoPromptFixture);
+  advanceToMinigamePlayPhase();
+
+  dispatchMinigameAction("GEO", "setGuess", { lat: 48.85837, lng: 2.294481 });
+  dispatchMinigameAction("GEO", "submitGuess", {});
+  dispatchMinigameAction("GEO", "nextPrompt", {});
+  // Moving a pin is playing the next photo, not scoring it, so the undo point
+  // stays on the turn of the page before it.
+  dispatchMinigameAction("GEO", "setGuess", { lat: 1, lng: 1 });
+
+  redoLastScoringMutation();
+  const geoHostView = resolveGeoHostView(getRoomStateSnapshot().minigameHostView);
+
+  assert.equal(geoHostView?.currentPrompt?.id, "geo-prompt-1");
+  assert.equal(geoHostView?.currentSubState, "submitted");
 });

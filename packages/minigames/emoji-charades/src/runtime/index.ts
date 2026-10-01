@@ -61,6 +61,7 @@ const resolveSubjectOutcome = (
 
 export const emojiCharadesRuntimePlugin: MinigameRuntimePlugin = {
   id: "EMOJI_CHARADES",
+  transientActionTypes: ["appendEmoji", "removeEmoji", "clearEmojis"],
   content: emojiCharadesContentAdapter,
   isRules: isEmojiCharadesRules,
   initialize: (input) => {

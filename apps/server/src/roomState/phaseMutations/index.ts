@@ -21,6 +21,8 @@ export const skipTurnBoundary = defineRoomMutation({
     const hasNextRoundTurn =
       roomState.roundTurnCursor + 1 < roomState.turnOrderTeamIds.length;
     finalizeActiveRoundTurn(roomState);
+    // The skipped team's last score goes with its turn (see `runPhaseAdvance`).
+    clearScoringMutationUndoState(roomState);
 
     const nextPhase = hasNextRoundTurn ? Phase.MINIGAME_INTRO : Phase.ROUND_RESULTS;
     roomState.phase = nextPhase;
@@ -41,6 +43,7 @@ export const skipTurnBoundary = defineRoomMutation({
 const runPhaseAdvance = (roomState: RoomState): boolean => {
   const previousPhase = roomState.phase;
   const previousRound = roomState.currentRound;
+  const previousRoundTurnCursor = roomState.roundTurnCursor;
 
   if (!resolveCanAdvancePhase(roomState)) {
     return false;
@@ -75,7 +78,12 @@ const runPhaseAdvance = (roomState: RoomState): boolean => {
   }
   applyPhaseTransitionEffects(roomState, previousPhase, nextPhase);
 
-  if (roomState.currentRound !== previousRound) {
+  // Undo reaches back within one team's turn and no further: the last score a
+  // host can take back is one the room is still looking at.
+  if (
+    roomState.currentRound !== previousRound ||
+    roomState.roundTurnCursor !== previousRoundTurnCursor
+  ) {
     clearScoringMutationUndoState(roomState);
   }
 

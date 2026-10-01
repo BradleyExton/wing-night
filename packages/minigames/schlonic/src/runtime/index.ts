@@ -179,6 +179,7 @@ const finishRun = (
 
 export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
   id: "SCHLONIC",
+  transientActionTypes: ["press", "release"],
   isRules: isSchlonicRules,
   initialize: (input) => {
     const rules = resolveSchlonicRules(input.rules);

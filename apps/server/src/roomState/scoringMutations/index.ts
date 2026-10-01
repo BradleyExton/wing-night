@@ -13,6 +13,7 @@ import { logError, logManualScoreAdjustment } from "../../logger/index.js";
 import {
   clearActiveMinigameRuntimeState,
   dispatchActiveMinigameRuntimeAction,
+  isTransientMinigameAction,
   syncActiveMinigameRuntimeWithPendingPoints
 } from "../../minigames/runtime/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
@@ -260,8 +261,10 @@ export const dispatchMinigameAction = defineRoomMutation({
       return false;
     }
 
-    setScoringMutationUndoSnapshot(nextUndoSnapshot);
-    roomState.canRedoScoringMutation = true;
+    if (!isTransientMinigameAction(minigameId, actionType)) {
+      setScoringMutationUndoSnapshot(nextUndoSnapshot);
+      roomState.canRedoScoringMutation = true;
+    }
 
     return didMinigameProjectionChange(previousProjection, roomState);
   }

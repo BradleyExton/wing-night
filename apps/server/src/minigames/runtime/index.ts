@@ -266,6 +266,19 @@ export const syncActiveMinigameRuntimeWithContent = (
   );
 };
 
+// Whether an action is part of playing the turn rather than judging it
+// (`MinigameRuntimePlugin.transientActionTypes`), and so must leave the undo
+// point where it is.
+export const isTransientMinigameAction = (
+  minigameId: MinigameType,
+  actionType: string
+): boolean => {
+  const transientActionTypes =
+    resolveMinigameRuntimePlugin(minigameId).transientActionTypes ?? [];
+
+  return transientActionTypes.includes(actionType);
+};
+
 export const dispatchActiveMinigameRuntimeAction = (
   state: RoomState,
   envelope: MinigameRuntimeActionEnvelope,

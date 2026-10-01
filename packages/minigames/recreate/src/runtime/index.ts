@@ -197,6 +197,7 @@ const reduceNextTarget = (
 
 export const recreateRuntimePlugin: MinigameRuntimePlugin = {
   id: "RECREATE",
+  transientActionTypes: ["resolveGeneration"],
   content: recreateContentAdapter,
   isRules: isRecreateRules,
   initialize: (input) => {
