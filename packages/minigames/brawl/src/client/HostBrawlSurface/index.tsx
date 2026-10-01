@@ -1,18 +1,84 @@
+import { useRef } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import { TakeoverCanvas } from "@wingnight/surface";
+import type { BrawlMinigameHostView } from "@wingnight/shared";
+import { BRAWL_WORLD } from "@wingnight/shared";
+import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
+import { useHeldBlock, type BlockHold } from "../useHeldBlock/index.js";
+import { BlockHistory } from "./BlockHistory/index.js";
+import { Street } from "./Street/index.js";
 import { hostBrawlSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
-// BRAWL's host surface. At play it is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3,
-// §5): the street is evenly spread scenery. `rail` and `clock` are forwarded untouched — the
-// shell's `<HostMiniRail />` already says the round, the sauce and whose turn it is.
+// Before the view arrives there is no block to hold, and nothing yet to be through.
+const EMPTY_BLOCK_VIEW = { blockIndex: 0, blocksPerTurn: 1, blocks: [] };
+
+const HEART_SLOTS = Array.from({ length: BRAWL_WORLD.heartsMax }, (_unused, index) => index);
+
+const currentPlayerName = (view: BrawlMinigameHostView): string | null => {
+  return view.blocks[Math.min(view.blockIndex, view.blocksPerTurn - 1)]?.player?.name ?? null;
+};
+
+// The one line under the buttons, or nothing. A brawling hen's holder is not reading, and the
+// handoff is announced by the callout over the street, so neither beat gets a sentence here.
+const resolveHint = (view: BrawlMinigameHostView, canAct: boolean, hold: BlockHold | null, solo: boolean): string | null => {
+  if (hold !== null) {
+    return null;
+  }
+
+  // Solo, there is no phase to advance: whoever is playing says what happens next.
+  if (view.phase === "finished") {
+    return solo ? null : hostBrawlSurfaceCopy.finishedHint;
+  }
+
+  if (view.phase === "running") {
+    return null;
+  }
+
+  return canAct ? hostBrawlSurfaceCopy.readyHint(currentPlayerName(view)) : hostBrawlSurfaceCopy.readyLockedHint;
+};
+
+// BRAWL's host surface (docs/minigames/brawl-spec.md §0.6). At play it is a `<TakeoverCanvas>`
+// (docs/takeover-layout-api.md §3, §5): the street is evenly spread scenery, so a chip in one
+// corner costs a corner of Barrie rather than a word. Its chrome is the slots §5 names and no
+// more: the block, whose it is, the hearts, the worth down and the number to beat in `counter`;
+// the escape hatches and the one hint in `actions`; and the block list and running totals in
+// `readout` — only while a block's ending is on screen or once the team is through, because the
+// right of the street is where goons walk in from.
 //
-// A placeholder: the street, the two thumb zones and the turn's chrome land with the surface
-// build (docs/minigames/brawl-spec.md §0.6).
-export const HostBrawlSurface = ({ phase, rail, clock }: MinigameHostRendererProps): JSX.Element => {
-  // The intro is a panel in the host's own control deck rather than a takeover — `rail` and
-  // `clock` are both null on it — so it gets the briefing note instead.
+// It renders no rail and no team chip of its own — `rail` arrives filled with the shell's
+// `<HostMiniRail />` — and it writes no z-index, no `isolate` and no dock gutter; the layout owns
+// all three. The body is the street with its two thumb zones (`Street/`).
+export const HostBrawlSurface = ({
+  phase,
+  minigameHostView,
+  teamNameByTeamId,
+  rail,
+  clock,
+  canDispatchAction,
+  onDispatchAction,
+  serverOrigin,
+  solo = false
+}: MinigameHostRendererProps): JSX.Element => {
+  const brawlView = minigameHostView?.minigame === "BRAWL" ? minigameHostView : null;
+  const canAct = canDispatchAction && brawlView !== null;
+  const isLive = brawlView !== null && (brawlView.phase === "ready" || brawlView.phase === "running");
+  const isFinished = brawlView?.phase === "finished";
+  // The street lingers on the block just ended while its beat plays; the chrome row is already on
+  // the next one, which is the block the room is asking about.
+  const { shownBlockIndex, hold } = useHeldBlock(brawlView ?? EMPTY_BLOCK_VIEW);
+  // Written by the runner's paint loop, sixty times a second: the hearts left and the worth down.
+  const heartsRef = useRef<HTMLSpanElement>(null);
+  const tallyRef = useRef<HTMLSpanElement>(null);
+  const hint = brawlView === null ? null : resolveHint(brawlView, canAct, hold, solo);
+  const playerName = brawlView === null || isFinished ? null : currentPlayerName(brawlView);
+  // The block list and the round's totals come out only when there is something to read off them
+  // and nothing to dodge under them.
+  const showsReadout = brawlView !== null && (hold !== null || isFinished);
+  const { dispatchVerdict, isSettling: isVerdictSettling } = useVerdictDispatch(onDispatchAction);
+
+  // Every hook above runs on both beats: the intro is a panel in the host's own control deck
+  // rather than a takeover — `rail` and `clock` are both null on it — so it gets the briefing.
   if (phase !== "play") {
     return (
       <div className={styles.introRoot}>
@@ -22,10 +88,127 @@ export const HostBrawlSurface = ({ phase, rail, clock }: MinigameHostRendererPro
   }
 
   return (
-    <TakeoverCanvas rail={rail} clock={clock}>
-      <p className={styles.waitingNote} data-brawl-placeholder="host">
-        {hostBrawlSurfaceCopy.waitingStreetLabel}
-      </p>
+    <TakeoverCanvas
+      rail={rail}
+      clock={clock}
+      counter={
+        brawlView === null ? null : (
+          <>
+            <span className={styles.counter}>
+              <span>
+                {hostBrawlSurfaceCopy.blockCounter(
+                  Math.min(brawlView.blockIndex + 1, brawlView.blocksPerTurn),
+                  brawlView.blocksPerTurn
+                )}
+              </span>
+              {playerName !== null && (
+                <span className={styles.counterName} data-brawl-block-name>
+                  {playerName}
+                </span>
+              )}
+            </span>
+            {!isFinished && (
+              <span className={styles.counterHearts}>
+                <span ref={heartsRef} data-brawl-hearts={BRAWL_WORLD.heartsMax}>
+                  {HEART_SLOTS.map((slot) => (
+                    <span key={slot} className={styles.heart} data-lit="true">
+                      {hostBrawlSurfaceCopy.heart}
+                    </span>
+                  ))}
+                </span>
+                <span className={styles.heartsLabel}>{hostBrawlSurfaceCopy.heartsLabel}</span>
+              </span>
+            )}
+            <span className={styles.counterGoons}>
+              <span ref={tallyRef} className={styles.counterGoonsTally} data-brawl-goons>
+                {hostBrawlSurfaceCopy.goonsTally(brawlView.goonsDown, brawlView.goonsTotal)}
+              </span>
+              <span className={styles.counterLabel}>{hostBrawlSurfaceCopy.goonsLabel}</span>
+            </span>
+            {brawlView.bestTurn !== null && (
+              <span className={styles.counterBest} data-brawl-best>
+                <span className={styles.counterBestGoons}>
+                  {hostBrawlSurfaceCopy.bestGoons(brawlView.bestTurn.goons)}
+                </span>
+                <span className={styles.counterLabel}>{hostBrawlSurfaceCopy.bestLabel(brawlView.bestTurn.teamName)}</span>
+              </span>
+            )}
+          </>
+        )
+      }
+      actions={
+        brawlView === null ? null : (
+          <>
+            {/* The escape hatches stay on the canvas: skipping a block and resetting the turn are
+                the host's ordinary moves here (AGENTS.md §11). Solo there is nobody to skip for. */}
+            {!solo && (
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                // Not during the handoff: the street still shows the block just ended, and a tap
+                // there would skip the NEXT player's block before they had the tablet.
+                disabled={!canAct || !isLive || hold !== null || isVerdictSettling}
+                onClick={(): void => {
+                  dispatchVerdict("skipBlock", {});
+                }}
+              >
+                {hostBrawlSurfaceCopy.skipBlockButtonLabel}
+              </button>
+            )}
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              disabled={!canAct}
+              onClick={(): void => {
+                onDispatchAction("resetTurn", {});
+              }}
+            >
+              {solo ? hostBrawlSurfaceCopy.restartButtonLabel : hostBrawlSurfaceCopy.resetTurnButtonLabel}
+            </button>
+            {hint !== null && (
+              <span className={styles.hint} data-brawl-hint>
+                {hint}
+              </span>
+            )}
+          </>
+        )
+      }
+      readout={
+        !showsReadout ? null : (
+          <>
+            {isFinished && (
+              <div className={styles.finishCard} data-brawl-finish="finished">
+                <p className={styles.finishTitle}>{hostBrawlSurfaceCopy.finishedTitle}</p>
+                <span className={styles.finishPoints}>{hostBrawlSurfaceCopy.finishPoints(brawlView.points ?? 0)}</span>
+              </div>
+            )}
+            <BlockHistory blocks={brawlView.blocks} activeBlockIndex={brawlView.blockIndex} />
+            {isFinished && (
+              <RunningTotals
+                pendingPointsByTeamId={brawlView.pendingPointsByTeamId}
+                activeTurnTeamId={brawlView.activeTurnTeamId}
+                teamNameByTeamId={teamNameByTeamId}
+                note={hostBrawlSurfaceCopy.totalLine(brawlView.goonsTotal)}
+              />
+            )}
+          </>
+        )
+      }
+    >
+      {brawlView === null ? (
+        <p className={styles.waitingNote}>{hostBrawlSurfaceCopy.waitingStreetLabel}</p>
+      ) : (
+        <Street
+          view={brawlView}
+          canAct={canAct}
+          serverOrigin={serverOrigin}
+          onDispatchAction={onDispatchAction}
+          hold={hold}
+          blockIndex={shownBlockIndex}
+          heartsRef={heartsRef}
+          tallyRef={tallyRef}
+        />
+      )}
     </TakeoverCanvas>
   );
 };

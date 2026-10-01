@@ -1053,3 +1053,16 @@ body {
     animation: none !important;
   }
 }
+
+/* BRAWL's GO ▶ arrow: the beat 'em up's own hard blink, on and off with no fade between, while a
+   wave is down and the street is waiting to be walked. */
+@keyframes brawl-go-blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0.15;
+  }
+}
