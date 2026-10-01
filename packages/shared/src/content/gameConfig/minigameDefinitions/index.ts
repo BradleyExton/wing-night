@@ -39,7 +39,7 @@ export const MINIGAME_DEFINITIONS = {
   SONG_GUESS: {
     id: "SONG_GUESS",
     slug: "song-guess",
-    displayName: "Who's That Song",
+    displayName: "Name That Cheese",
     // Host-paced: the turn ends when the host has worked through the songs,
     // not when a clock runs out.
     timerKey: null,

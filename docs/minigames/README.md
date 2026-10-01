@@ -22,7 +22,7 @@ Last updated: 2026-09-28
 | Trivia | `TRIVIA` | shipped | — | [packages/minigames/trivia/](../../packages/minigames/trivia/) — no spec. Information asymmetry: the host holds the answer (`TriviaMinigameHostView.currentPrompt`), the question is on the TV for everyone, and it collapses when the host marks Correct or Incorrect. The flattest game we ship on this axis ([principles §12](../minigame-design-principles.md#12-where-the-shipped-game-falls-short-today)). |
 | Geo | `GEO` | shipped | — | [packages/minigames/geo/](../../packages/minigames/geo/) ([spec](geo-spec.md)) |
 | Drawing | `DRAWING` | shipped | — | [packages/minigames/drawing/](../../packages/minigames/drawing/) ([spec](drawing-spec.md)) |
-| Who's That Song | `SONG_GUESS` | shipped | — | [packages/minigames/song-guess/](../../packages/minigames/song-guess/) ([spec](song-guess-spec.md)) |
+| Name That Cheese | `SONG_GUESS` | shipped | — | [packages/minigames/song-guess/](../../packages/minigames/song-guess/) ([spec](song-guess-spec.md)) |
 | Slingshlong | `JOUST` | shipped | — | [packages/minigames/joust/](../../packages/minigames/joust/) ([spec](joust-spec.md)) |
 | Fappy Bird | `FAPPY` | shipped | — | [packages/minigames/fappy/](../../packages/minigames/fappy/) ([spec](fappy-spec.md)) — a timed relay of the cast; built and tested; not in the sample lineup yet |
 | Emoji Charades | `EMOJI_CHARADES` | shipped | — | [packages/minigames/emoji-charades/](../../packages/minigames/emoji-charades/) ([spec](emoji-charades-spec.md)) — built and tested; not in the sample lineup yet |
