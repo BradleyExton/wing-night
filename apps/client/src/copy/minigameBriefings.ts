@@ -50,6 +50,12 @@ const minigameBriefingContentByType: Record<MinigameType, MinigameBriefingConten
     summary:
       "Your chickens brawl down Dunlop Street to the Spirit Catcher, a block each. Walk with your left thumb, peck with your right, and put down every goose."
   },
+  MOUNT: {
+    illustrationPath: `${DISPLAY_ASSET_ROOT}/mount-illustration.svg`,
+    illustrationAlt: "Mount Your Hens mini-game artwork",
+    summary:
+      "Drag a limb, let go to grab. Get above the line. Every hen stays on the pile, and the clock grows with it."
+  },
   RECREATE: {
     illustrationPath: `${DISPLAY_ASSET_ROOT}/recreate-illustration.svg`,
     illustrationAlt: "Forgery Studio mini-game artwork",

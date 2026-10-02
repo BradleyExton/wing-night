@@ -21,6 +21,9 @@ import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
 import { joustRendererBundle } from "@wingnight/minigames-joust/client";
 import { joustDevManifest } from "@wingnight/minigames-joust/dev";
 import { joustRuntimePlugin } from "@wingnight/minigames-joust/runtime";
+import { mountRendererBundle } from "@wingnight/minigames-mount/client";
+import { mountDevManifest } from "@wingnight/minigames-mount/dev";
+import { mountRuntimePlugin } from "@wingnight/minigames-mount/runtime";
 import { recreateRendererBundle } from "@wingnight/minigames-recreate/client";
 import { recreateDevManifest } from "@wingnight/minigames-recreate/dev";
 import { recreateRuntimePlugin } from "@wingnight/minigames-recreate/runtime";
@@ -83,6 +86,11 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
     rendererBundle: brawlRendererBundle,
     devManifest: brawlDevManifest,
     runtimePlugin: brawlRuntimePlugin
+  },
+  MOUNT: {
+    rendererBundle: mountRendererBundle,
+    devManifest: mountDevManifest,
+    runtimePlugin: mountRuntimePlugin
   },
   DRAWING: {
     rendererBundle: drawingRendererBundle,

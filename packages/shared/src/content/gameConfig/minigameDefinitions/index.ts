@@ -81,6 +81,15 @@ export const MINIGAME_DEFINITIONS = {
     timerKey: null,
     rulesKey: "brawl"
   },
+  MOUNT: {
+    id: "MOUNT",
+    slug: "mount",
+    displayName: "Mount Your Hens",
+    // Host-paced: the turn ends when the team has climbed, one climb each, not when a clock runs
+    // out. A climb has its own tick clock, and it is the pile's, not the room's.
+    timerKey: null,
+    rulesKey: "mount"
+  },
   DRAWING: {
     id: "DRAWING",
     slug: "drawing",

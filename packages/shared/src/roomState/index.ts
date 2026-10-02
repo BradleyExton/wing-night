@@ -14,6 +14,12 @@ import type {
 } from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
 import type { BrawlInput, BrawlOutcome } from "../brawl/types.js";
+import type {
+  MountClimbRules,
+  MountInputSample,
+  MountOutcome,
+  MountPile
+} from "../mount/types.js";
 import type { SchlonicInput, SchlonicOutcome } from "../schlonic/types.js";
 import type { SongGuessDifficulty } from "../content/songGuess/index.js";
 import type { TriviaPrompt } from "../content/trivia/index.js";
@@ -647,6 +653,71 @@ export type BrawlMinigameViewFields = {
 
 export type BrawlMinigameHostView = MinigameHostViewBase & BrawlMinigameViewFields;
 
+export type MountClimbStatus = "ready" | "running" | "done";
+
+export type MountPhase = "ready" | "running" | "finished";
+
+// The server's own re-run of one climb's input log (`runMountClimb`): the only reading of a climb
+// that scores. `share` is 1 on a mount, otherwise how far the crown got from the start toward the
+// line; the hen it left behind is on the pile, not here.
+export type MountMinigameClimbResult = {
+  outcome: MountOutcome;
+  endTick: number;
+  share: number;
+  bestHeight: number;
+  falls: number;
+};
+
+// One player as the climber needs them named, BRAWL's twin: `avatarSrc` stays pack-relative and
+// the surface resolves it against the server origin; team id and genre are the hen's colour and
+// silhouette.
+export type MountPlayerFigure = {
+  playerId: string;
+  name: string;
+  avatarSrc: string | null;
+  teamId: string | null;
+  genre: string | null;
+};
+
+// One player's climb. There is no second attempt: a climb ends on a mount or at its clock, its hen
+// joins the pile where it stopped, and the tablet moves on to the next teammate.
+export type MountMinigameClimb = {
+  climbIndex: number;
+  // Whose climb it is; null climbs the house hen in the team colour.
+  player: MountPlayerFigure | null;
+  status: MountClimbStatus;
+  /** This climb's clock by the published rule, fixed when it comes into hand; null before. */
+  climbTicks: number | null;
+  /** The climb in hand's log; emptied once the climb is refereed (its hen is on the pile). */
+  inputs: MountInputSample[];
+  skipped: boolean;
+  result: MountMinigameClimbResult | null;
+};
+
+// Nothing about a climb is secret — the whole pile is on the TV as it happens — so the host and
+// display carry the same fields, as BRAWL does. The pile is round memory: it outlives the turn,
+// so the second team climbs the first team's hens and the last team climbs everyone.
+export type MountMinigameViewFields = {
+  minigame: "MOUNT";
+  climbIndex: number;
+  climbsPerTurn: number;
+  /** The published clock rule, for the briefing line and the TV. */
+  rules: MountClimbRules;
+  /** The round's pile as it stands: every earlier turn's hens and this turn's refereed ones. */
+  pile: MountPile;
+  /** Every player on the pile or in this turn, so a head and a team colour can be drawn on each hen. */
+  figures: Record<string, MountPlayerFigure>;
+  climbs: MountMinigameClimb[];
+  /** The sum of this turn's shares so far, and the points it is worth now. */
+  shareBanked: number;
+  pointsSoFar: number;
+} & (
+  | { phase: "ready" | "running"; points: null }
+  | { phase: "finished"; points: number }
+);
+
+export type MountMinigameHostView = MinigameHostViewBase & MountMinigameViewFields;
+
 export type MinigameHostView =
   | TriviaMinigameHostView
   | GeoMinigameHostView
@@ -655,6 +726,7 @@ export type MinigameHostView =
   | FappyMinigameHostView
   | SchlonicMinigameHostView
   | BrawlMinigameHostView
+  | MountMinigameHostView
   | RecreateMinigameHostView
   | DrawingMinigameHostView
   | EmojiCharadesMinigameHostView;
@@ -761,6 +833,8 @@ export type SchlonicMinigameDisplayView = MinigameDisplayViewBase & SchlonicMini
 
 export type BrawlMinigameDisplayView = MinigameDisplayViewBase & BrawlMinigameViewFields;
 
+export type MountMinigameDisplayView = MinigameDisplayViewBase & MountMinigameViewFields;
+
 export type MinigameDisplayView =
   | TriviaMinigameDisplayView
   | GeoMinigameDisplayView
@@ -769,6 +843,7 @@ export type MinigameDisplayView =
   | FappyMinigameDisplayView
   | SchlonicMinigameDisplayView
   | BrawlMinigameDisplayView
+  | MountMinigameDisplayView
   | RecreateMinigameDisplayView
   | DrawingMinigameDisplayView
   | EmojiCharadesMinigameDisplayView;

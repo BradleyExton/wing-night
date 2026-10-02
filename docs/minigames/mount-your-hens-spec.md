@@ -614,6 +614,15 @@ the crown, the holder's head slides onto it, the share pops on the marquee), **s
 recovery: a thud, the hen set upright and blinking), **handoff** (the next climber's name).
 Every beat ends on the pile.
 
+**As built (runtime, 2026-10-02): every turn action is stamped.** The plugin envelope carries no
+team, so `limb`, `endClimb` and `skipClimb` take an optional `{ teamId, climbIndex }`; an action
+stamped for another team or another climb is refused. An `endClimb` on an untouched climb is only
+accepted when stamped (Streets of Barrie's `endBlock` rule), so a duplicate tap cannot end the next
+player's climb before they touch it. The surfaces always send both stamps. The views are
+`MinigameHostViewBase & MountMinigameViewFields` (and the display twin), Streets of Barrie's
+pattern, so they also carry `activeTurnTeamId` and `pendingPointsByTeamId`; `pointsSoFar` is
+pending points minus the turn's starting points.
+
 ### 0.6 Escape hatches
 
 - `skipClimb`: the climb in hand banks nothing (`skipped`, share 0), **no hen joins the pile**,
@@ -697,10 +706,14 @@ Data attributes, for the spec and never the drawing:
   wing's `data-mount-limb-state` reads `grabbed` on the host, then on the display within the
   mirror delay; the clock starts on that first touch.
 - Touching a grabbed foot turns it `held`, and lifting it in the air turns it `seeking`.
-- **The goose bot:** the sim test's scripted climb, replayed through the arena by mapping its
-  world points to the screen with `data-mount-camera`, waiting on limb states and a settled
-  `data-mount-crown-height` between steps (never on timeouts), mounts: the line holder becomes
-  the climber's id and the pile count goes to 1 on both scenes.
+- **The goose bot:** the sim is chaotic, so the same drags at a slightly different finger
+  timing do not reliably mount (found while building the sim: no timing-robust sequence
+  exists). Replaying world points through the arena would be a flaky test. Instead the sandbox
+  takes a dev-only hook that feeds `MOUNT_GOOSE_BOT_SAMPLES` (from `@wingnight/shared`) into the
+  `limb` action at their exact ticks, the same path a real tablet batch takes. The bot mounts on
+  tick 458: the line holder becomes the climber's id and the pile count goes to 1 on both
+  scenes. The pointer path is covered by the grab and held/seeking checks above, which assert
+  that samples are logged and limb states change, never where the bird ends up.
 - Skip climb leaves the pile count where it was and shows "Climb 3 of 3".
 - Switching the sandbox to the next team draws that pile on both scenes from round memory: pile
   count 1, the same line holder, and the climb's clock longer by `secondsPerHen`.
@@ -723,6 +736,25 @@ Data attributes, for the spec and never the drawing:
   and whether hanging by the beak is a swing or a drop. The sim tests pin only that both are
   possible. Retune `MOUNT_WORLD` at a table, the way Streets of Barrie's and Slingshlong's
   numbers were.
+- **Found while building the sim (2026-10-02), for the table:**
+  - Climbing the plinth slowly is nearly impossible. Standing on the floor, the beak and wing
+    fall 1 to 3 units short of the plinth top, and two grabbed rigid limbs lock the torso, so a
+    climb is beak hooks, hauls and flings. If the room cannot get off the floor in its first
+    climb, lower the plinth before touching the physics.
+  - The fling is very strong. An early search found a vault over the plinth corner that mounts
+    in about 1.4 s with four drags. `dragStep` 4 and `maxSpeed` 5 are the levers.
+  - Hanging by the beak is rigid, not a swing. Lifting both feet near the floor usually ends
+    in a fall.
+  - Near the line, a timeout share reaches 0.99 easily, because flings peak around 157 against
+    a line of 160. The share is capped at 0.99, so the mount still matters, but the gap
+    between a near miss and a mount is small.
+- **The host camera under a held finger.** If the tablet's camera follows the torso, a finger
+  held still on the glass keeps moving in world space and a haul never ends. The host runner
+  freezes the camera's follow while any finger is down, and resumes when the last one lifts.
+  This is a surface rule, not an open question; it is listed here so the surfaces build it.
+- **Cast drift.** `@wingnight/cast` depends on shared, so `MOUNT_WORLD.rig` holds copies of the
+  cast's anchors. A cast-side test pins them equal; without it, moving a pivot in the cast
+  silently desyncs the drawing from the physics.
 - **Freezing mid-air.** A hen that mounts or times out mid-fling freezes in the air. That is
   funny and a hold, but a pile of floating hens may read as broken. If it does, settle a
   timed-out hen for up to a second with no input before freezing it (a mount stays instant).

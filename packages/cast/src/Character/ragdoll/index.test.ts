@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { MOUNT_WORLD } from "@wingnight/shared";
+
 import {
   CHARACTER_BODY,
   CHARACTER_FOOT,
+  CHARACTER_HEAD_CENTRE,
+  CHARACTER_HEAD_RADIUS,
   CHARACTER_LEG_STROKE_WIDTH,
-  CHARACTER_PIVOTS
+  CHARACTER_PIVOTS,
+  COSTUME_HEAD_ANCHORS
 } from "../geometry/index.js";
 import { CHARACTER_WING_PATH, legPath } from "../shapes/index.js";
 import * as styles from "../styles.js";
@@ -123,4 +128,53 @@ test("does rest every part on its joint unturned and hand back fresh transforms 
 
   rest.head.rotation = 90;
   assert.equal(resolveCharacterRagdollRest().head.rotation, 0);
+});
+
+// `@wingnight/shared` cannot import this package, so Mount Your Hens' sim holds a copy of every
+// anchor below (`MOUNT_WORLD.rig`). The sim's own test pins each copy to a literal; this one pins
+// it to the cast, so a rig that moves here fails a test that says which anchor the sim must follow.
+test("does match the Mount Your Hens sim's copy of every anchor when the rig is unchanged", () => {
+  const { rig } = MOUNT_WORLD;
+  const { head, legFar, legNear, wingFar, wingNear } = CHARACTER_RAGDOLL_SEGMENTS;
+  const TOLERANCE = 1e-9;
+
+  const near = (actual: number, expected: number, label: string): void => {
+    assert.ok(Math.abs(actual - expected) <= TOLERANCE, `${label}: sim ${actual}, cast ${expected}`);
+  };
+  const samePoint = (actual: { x: number; y: number }, expected: { x: number; y: number }, label: string): void => {
+    near(actual.x, expected.x, `${label}.x`);
+    near(actual.y, expected.y, `${label}.y`);
+  };
+
+  samePoint(rig.rest.rump, CHARACTER_PIVOTS.tail, "rest.rump");
+  samePoint(rig.rest.neck, head.joint, "rest.neck");
+  samePoint(rig.rest.hipLeft, legNear.joint, "rest.hipLeft");
+  samePoint(rig.rest.hipRight, legFar.joint, "rest.hipRight");
+  samePoint(rig.rest.footLeft, legNear.tip, "rest.footLeft");
+  samePoint(rig.rest.footRight, legFar.tip, "rest.footRight");
+  samePoint(rig.rest.wing, wingNear.tip, "rest.wing");
+  samePoint(rig.rest.beak, head.tip, "rest.beak");
+  samePoint(rig.rest.wingFar, wingFar.tip, "rest.wingFar");
+
+  samePoint(rig.bodyJoint, CHARACTER_RAGDOLL_BODY.joint, "bodyJoint");
+  samePoint(rig.wingRoot, wingNear.joint, "wingRoot");
+  samePoint(rig.wingFarRoot, wingFar.joint, "wingFarRoot");
+
+  near(rig.bone.footLeft, legNear.length, "bone.footLeft");
+  near(rig.bone.footRight, legFar.length, "bone.footRight");
+  near(rig.bone.wing, wingNear.length, "bone.wing");
+  near(rig.bone.wingFar, wingFar.length, "bone.wingFar");
+  near(rig.bone.beak, head.length, "bone.beak");
+
+  samePoint(rig.body.c, CHARACTER_RAGDOLL_BODY.centre, "body.c");
+  near(rig.body.r, CHARACTER_RAGDOLL_BODY.radius, "body.r");
+  samePoint(rig.head.c, CHARACTER_HEAD_CENTRE, "head.c");
+  near(rig.head.r, CHARACTER_HEAD_RADIUS, "head.r");
+  samePoint(rig.crown, { x: COSTUME_HEAD_ANCHORS.cx, y: COSTUME_HEAD_ANCHORS.top }, "crown");
+
+  near(rig.radius.footLeft, legNear.thickness / 2, "radius.footLeft");
+  near(rig.radius.footRight, legFar.thickness / 2, "radius.footRight");
+  near(rig.radius.wing, wingNear.thickness / 2, "radius.wing");
+  near(rig.radius.wingFar, wingFar.thickness / 2, "radius.wingFar");
+  near(rig.radius.beak, head.thickness / 2, "radius.beak");
 });

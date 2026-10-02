@@ -60,6 +60,16 @@ const GLYPH_PATHS: Record<MinigameType, JSX.Element> = {
       <path d="M6 56 H58" />
     </>
   ),
+  MOUNT: (
+    <>
+      <path d="M8 58 H56" />
+      <path d="M16 58 V46 H48 V58" />
+      <path d="M22 46 V34 H42 V46" />
+      <path d="M27 34 V22 H37 V34" />
+      <path d="M24 10 H40" strokeDasharray="3 5" />
+      <path d="M26 15 L32 9 L38 15" />
+    </>
+  ),
   DRAWING: (
     <>
       <path d="M16 50 L44 22 L50 28 L22 56 Z" />

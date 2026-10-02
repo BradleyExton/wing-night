@@ -82,6 +82,11 @@
       "blocksPerTurn": 3,
       "courseSeed": 20261001
     },
+    "mount": {
+      "climbSeconds": 30,
+      "secondsPerHen": 3,
+      "pileSeed": 20261002
+    },
     "recreate": {
       "targetsPerTurn": 1,
       "pointsPerIngredient": 1,
