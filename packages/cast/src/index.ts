@@ -45,6 +45,28 @@ export {
   type CharacterPose,
   type HeadAnchors
 } from "./Character/geometry/index.js";
+// The hen as a physics ragdoll (Mount Your Hens): the bones a sim builds its
+// bodies from, the four limbs a player grabs with, and the figure drawn from
+// the transforms the sim hands back. The cast is the source of truth for every
+// anchor, so the drawing and the physics are one bird.
+export {
+  CHARACTER_RAGDOLL_BODY,
+  CHARACTER_RAGDOLL_LIMB_PARTS,
+  CHARACTER_RAGDOLL_LIMBS,
+  CHARACTER_RAGDOLL_PARTS,
+  CHARACTER_RAGDOLL_SEGMENTS,
+  resolveCharacterRagdollRest,
+  type CharacterRagdollLimb,
+  type CharacterRagdollPart,
+  type CharacterRagdollSegment,
+  type CharacterRagdollSegmentPart,
+  type CharacterRagdollTransform,
+  type CharacterRagdollTransforms
+} from "./Character/ragdoll/index.js";
+export {
+  CharacterRagdollFigure,
+  type CharacterRagdollFigureProps
+} from "./Character/CharacterRagdollFigure/index.js";
 // How loose one bird is: a class of custom properties that scatter its
 // footwork, its bounce and the moment it lands the room's beat.
 export {
