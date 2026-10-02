@@ -12,25 +12,7 @@ export const containerLocked = "opacity-80";
 // the keyframes live in the client's index.css (SCHLONIC's `scene-enter`).
 export const blockEnter = "h-full w-full motion-safe:animate-[scene-enter_420ms_ease-out_both]";
 
-// The left thumb: a pad the left 35% of the arena, held to walk, the side of its centre being
-// the way. A faint wash marks it off from the peck zone without drawing a box over the street.
-export const walkPad =
-  "absolute bottom-0 left-0 top-0 z-10 flex w-[35%] touch-none select-none items-center justify-between bg-gradient-to-r from-shade/25 to-transparent px-[6%]";
-
-// The right thumb: the rest of the arena, any tap a peck. It stops short of the bottom edge so the
-// corner dock's circle is never under it — a mashed peck must not land on the dock.
-export const peckZone =
-  "absolute bottom-[5.5rem] left-[35%] right-0 top-0 z-10 flex touch-none select-none items-center justify-center";
-
-// The ghosted thumb glyphs: big and faint, there to teach the two zones on the first block and
-// gone once the thumbs have found them.
-const ghost = "pointer-events-none text-text/25 transition-opacity duration-500";
-
-export const walkGlyph = `${ghost} font-score text-[clamp(2.5rem,6vw,4.5rem)] leading-none`;
-
-export const peckRing = `${ghost} flex h-[clamp(6rem,14vw,9rem)] w-[clamp(6rem,14vw,9rem)] items-center justify-center rounded-full border-4 border-text/20 font-score text-[clamp(1rem,2.4vw,1.6rem)] font-extrabold tracking-[0.2em]`;
-
-export const faded = "opacity-0";
+// The two thumb zones are their own components (`WalkPad/`, `PeckZone/`), each half the arena.
 
 // The handoff callout drops over the street for the beat: a dim pool in the middle of the scene
 // and the next player's name, nothing else.

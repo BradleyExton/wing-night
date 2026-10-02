@@ -2070,15 +2070,23 @@ Spec: `docs/minigames/brawl-spec.md`.
     charges, and the boss, a goose with twice the neck. A goon you put down
     falls with stars and is gone. Everyone in the room has been chased by one.
 -   **The arena is the controller, in two thumb zones.** The whole body is the
-    surface and nothing on it is a button: the **left 35% is the walk pad**
-    (hold it; the side of its centre your thumb is on is the way you go, and
-    sliding across the centre turns you, held even if the thumb slides off the
-    pad's edge) and **the rest is the peck zone** (any tap pecks). Faint
-    ◀ ▶ and a PECK ring teach the two zones on a block's first touch and then
-    go. The reason is FAPPY's and SCHLONIC's: a control the thumb has to find
+    surface and nothing on it is a button: the **left half walks** and the
+    **right half pecks**. The walk thumb floats: wherever it lands is its
+    centre and holding walks the hen the way she faces; a pull back of about
+    30 px turns her, and the turn is the new centre, so turning is a flick
+    rather than a reach across a line nobody can feel. A muted ring and dot
+    sit under the held thumb. Any touch on the right pecks, and a held thumb
+    keeps pecking at the sim's own rate, so holding is safe. Thumb-rest
+    glyphs — a thumb ring between ◀ ▶ with "hold to walk · pull back to
+    turn", and a PECK ring with "tap or hold" — sit at mid height on each
+    side, where a holding thumb rests, and go after a block's first touch.
+    The reason is FAPPY's and SCHLONIC's: a control the thumb has to find
     is a control the player looks at, and the player's job is the street.
     Facing follows the walk and never the peck, so a goon behind you needs a
-    step back — the genre's own "BEHIND YOU", and the room's job to shout.
+    turn — the genre's own "BEHIND YOU", and the room's job to shout. Depth
+    is scenery, never input: far goons mill on three depth lines and step
+    onto her line as they close, so the TV reads a street with a back and a
+    front and nobody ever whiffs a pixel off a line.
     The peck zone stops 5.5rem short of the arena's bottom edge so a mashed
     thumb never lands on the corner dock; the arena dims to 80% and ignores
     both zones when it is not armed (a beat playing, the team through). Mashing

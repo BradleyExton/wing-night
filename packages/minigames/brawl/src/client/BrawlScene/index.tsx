@@ -132,6 +132,8 @@ export const BrawlScene = forwardRef<BrawlSceneHandle, BrawlSceneProps>(
         pecking: isHenPecking(frame)
       });
       paintGo(goRef.current, !frame.cameraLocked && frame.outcome === null);
+      // Every peck the sim took moves this on, so a harness can count pecks a beak's flash would miss.
+      setIfChanged(frameRef.current, "data-brawl-peck-until", `${frame.peckUntilTick}`);
     };
 
     const paintCleared = (frame: BrawlFrame, progress: number): void => {

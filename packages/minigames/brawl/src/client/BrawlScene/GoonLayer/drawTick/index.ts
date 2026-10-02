@@ -1,6 +1,8 @@
 import type { BrawlFrame, BrawlGoon, BrawlGoonState } from "@wingnight/shared";
+import { BRAWL_WORLD } from "@wingnight/shared";
 
 import { GOON_WALK_FRAME_TICKS } from "../../Goons/index.js";
+import { DEPTH_SCALE, DEPTH_STEP } from "../../goonDepth/index.js";
 
 /**
  * How often a goon's drawing actually changes, by state, in ticks. A goon is drawn by React —
@@ -37,7 +39,18 @@ export const resolveGoonsSignature = (frame: Pick<BrawlFrame, "goons" | "tick">)
     .join(",");
 };
 
-/** A goon's group, placed: its foot point moved off the ground line by its height, flipped to its facing. */
-export const resolveGoonTransform = (goon: Pick<BrawlGoon, "x" | "y" | "facing">): string => {
-  return `translate(${Math.round(goon.x * 100) / 100} ${Math.round(-goon.y * 100) / 100}) scale(${goon.facing} 1)`;
+const round2 = (value: number): number => Math.round(value * 100) / 100;
+
+/**
+ * A goon's group, placed: its foot point moved off the ground line by its height, flipped to its
+ * facing, and stood on its depth line (`../goonDepth`): `depth` lines down the screen, scaled
+ * about its foot so it stays stood on that line — bigger in front of her line, smaller behind.
+ */
+export const resolveGoonTransform = (goon: Pick<BrawlGoon, "x" | "y" | "facing">, depth = 0): string => {
+  const scale = round2(1 + depth * DEPTH_SCALE);
+  // The drawing's foot is at the ground line, so scaling about the group's origin would slide it
+  // up the screen; this puts the foot back where the depth line is.
+  const footY = -goon.y + depth * DEPTH_STEP + BRAWL_WORLD.groundY * (1 - scale);
+
+  return `translate(${round2(goon.x)} ${round2(footY)}) scale(${goon.facing * scale} ${scale})`;
 };

@@ -37,6 +37,13 @@ export type BrawlRunnerInput = {
   onEvent?: BrawlMirrorEventHandler;
 };
 
+export type BrawlRunnerControls = {
+  walk: (dir: BrawlWalkDir) => void;
+  peck: () => void;
+  /** The way the hen faces in the local sim's latest frame: where a plain held walk thumb takes her. */
+  getFacing: () => -1 | 1;
+};
+
 type LocalRun = {
   frame: BrawlFrame;
   inputs: BrawlInput[];
@@ -85,7 +92,7 @@ export const useBrawlRunner = ({
   onPeck,
   onEndBlock,
   onEvent
-}: BrawlRunnerInput): { walk: (dir: BrawlWalkDir) => void; peck: () => void } => {
+}: BrawlRunnerInput): BrawlRunnerControls => {
   const blockIndex = viewBlock?.blockIndex ?? null;
   const blockStatus = viewBlock?.status ?? null;
   const blockRef = useRef(block);
@@ -336,5 +343,9 @@ export const useBrawlRunner = ({
     log({ kind: "peck" });
   };
 
-  return { walk, peck };
+  const getFacing = (): -1 | 1 => {
+    return runRef.current?.frame.facing ?? 1;
+  };
+
+  return { walk, peck, getFacing };
 };

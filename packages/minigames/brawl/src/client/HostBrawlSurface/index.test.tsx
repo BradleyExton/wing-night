@@ -90,7 +90,12 @@ test("does draw the counter, the street, both thumb zones, the hint and both act
   assert.ok(markup.includes("data-brawl-handoff"));
   // The next teammate waits at the handoff of every block but the last.
   assert.ok(markup.includes('data-brawl-relay-mate="next"'));
-  assert.match(markup, /data-brawl-hint="[^"]*">Alex is on the line — hold left to walk, tap right to peck</);
+  assert.match(markup, /data-brawl-hint="[^"]*">Alex is on the line — hold left to walk, pull back to turn, tap right to peck</);
+  // The thumb-rest glyphs teach both halves: the walk thumb's ring and its one line, and the peck ring.
+  assert.match(markup, /data-brawl-walk-glyph[^>]*>.*◀.*▶.*hold to walk · pull back to turn</);
+  assert.match(markup, /data-brawl-peck-glyph[^>]*>.*PECK.*tap or hold</);
+  // The live stick under a held thumb is mounted, and hidden until a thumb is down.
+  assert.ok(markup.includes('data-brawl-thumb-held="false"'));
   assert.ok(markup.includes("Skip block"));
   assert.ok(markup.includes("Reset turn"));
 });

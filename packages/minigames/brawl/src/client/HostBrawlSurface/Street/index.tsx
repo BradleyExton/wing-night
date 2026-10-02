@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent, type RefObject } from "react";
+import { useRef, useState, type RefObject } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { BrawlMinigameHostView } from "@wingnight/shared";
 
@@ -6,9 +6,11 @@ import { BrawlScene, type BrawlSceneHandle } from "../../BrawlScene/index.js";
 import { resolveGoonsBanked } from "../../goonsTally/index.js";
 import type { BrawlMirrorEventHandler } from "../../mirrorEvents/index.js";
 import { useBrawlBlock } from "../../useBrawlBlock/index.js";
-import { useBrawlRunner, type BrawlWalkDir } from "../../useBrawlRunner/index.js";
+import { useBrawlRunner } from "../../useBrawlRunner/index.js";
 import type { BlockHold } from "../../useHeldBlock/index.js";
 import { useHenFigure } from "../../useHenFigure/index.js";
+import { PeckZone } from "./PeckZone/index.js";
+import { WalkPad } from "./WalkPad/index.js";
 import { streetCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -34,17 +36,10 @@ const HandoffCallout = ({ nextName }: { nextName: string | null }): JSX.Element 
   </div>
 );
 
-/** Which way a thumb on the walk pad walks: the side of the pad's centre it is on. */
-const resolvePadDir = (event: PointerEvent<HTMLDivElement>): BrawlWalkDir => {
-  const rect = event.currentTarget.getBoundingClientRect();
-
-  return event.clientX < rect.left + rect.width / 2 ? -1 : 1;
-};
-
 // The street and the loop behind it, filling the takeover's body slot edge to edge, with the two
-// thumb zones over it (docs/minigames/brawl-spec.md §0.6). Each zone tracks its own pointer by
-// id, so a held walk and a tapped peck land together. The scene is keyed on the block it shows,
-// so a new block's street slides in fresh.
+// thumb zones over it (docs/minigames/brawl-spec.md §0.6): the left half walks, the right half
+// pecks. Each zone tracks its own pointers by id, so a held walk and a tapped peck land together.
+// The scene is keyed on the block it shows, so a new block's street slides in fresh.
 export const Street = ({
   view,
   canAct,
@@ -57,14 +52,13 @@ export const Street = ({
   onRunnerEvent
 }: StreetProps): JSX.Element => {
   const sceneRef = useRef<BrawlSceneHandle>(null);
-  const walkPointerRef = useRef<number | null>(null);
   const [touchedBlock, setTouchedBlock] = useState<number | null>(null);
   const viewBlock = view.blocks[blockIndex] ?? null;
   const { block, relay } = useBrawlBlock({ view, blockIndex, serverOrigin });
   const hen = useHenFigure({ figure: viewBlock?.player ?? null, activeTurnTeamId: view.activeTurnTeamId, serverOrigin });
   const isLive = view.phase === "ready" || view.phase === "running";
   const isArmed = canAct && isLive && hold === null;
-  const { walk, peck } = useBrawlRunner({
+  const { walk, peck, getFacing } = useBrawlRunner({
     viewBlock,
     block,
     canAct: isArmed,
@@ -84,37 +78,11 @@ export const Street = ({
     },
     onEvent: onRunnerEvent
   });
-  const glyphState = touchedBlock === blockIndex ? ` ${styles.faded}` : "";
+  const isGlyphFaded = touchedBlock === blockIndex;
 
   const markTouched = (): void => {
     if (isArmed && touchedBlock !== blockIndex) {
       setTouchedBlock(blockIndex);
-    }
-  };
-
-  const onWalkDown = (event: PointerEvent<HTMLDivElement>): void => {
-    event.preventDefault();
-    walkPointerRef.current = event.pointerId;
-    try {
-      // Held across the pad's edge: the thumb keeps walking until it lifts.
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {
-      // A pointer the browser is not tracking (a synthetic one) has nothing to capture.
-    }
-    markTouched();
-    walk(resolvePadDir(event));
-  };
-
-  const onWalkMove = (event: PointerEvent<HTMLDivElement>): void => {
-    if (walkPointerRef.current === event.pointerId) {
-      walk(resolvePadDir(event));
-    }
-  };
-
-  const onWalkUp = (event: PointerEvent<HTMLDivElement>): void => {
-    if (walkPointerRef.current === event.pointerId) {
-      walkPointerRef.current = null;
-      walk(0);
     }
   };
 
@@ -130,30 +98,8 @@ export const Street = ({
           relay={relay}
         />
       </div>
-      <div
-        className={styles.walkPad}
-        data-brawl-walk-pad
-        onPointerDown={onWalkDown}
-        onPointerMove={onWalkMove}
-        onPointerUp={onWalkUp}
-        onPointerCancel={onWalkUp}
-        onPointerLeave={onWalkUp}
-        onLostPointerCapture={onWalkUp}
-      >
-        <span className={`${styles.walkGlyph}${glyphState}`}>{streetCopy.walkLeft}</span>
-        <span className={`${styles.walkGlyph}${glyphState}`}>{streetCopy.walkRight}</span>
-      </div>
-      <div
-        className={styles.peckZone}
-        data-brawl-peck-zone
-        onPointerDown={(event): void => {
-          event.preventDefault();
-          markTouched();
-          peck();
-        }}
-      >
-        <span className={`${styles.peckRing}${glyphState}`}>{streetCopy.peck}</span>
-      </div>
+      <WalkPad isArmed={isArmed} isGlyphFaded={isGlyphFaded} walk={walk} getFacing={getFacing} onTouch={markTouched} />
+      <PeckZone isArmed={isArmed} isGlyphFaded={isGlyphFaded} peck={peck} onTouch={markTouched} />
       {hold?.kind === "handoff" && <HandoffCallout nextName={view.blocks[blockIndex + 1]?.player?.name ?? null} />}
     </div>
   );

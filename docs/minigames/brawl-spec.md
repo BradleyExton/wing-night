@@ -62,11 +62,13 @@ Steps 1–8 are all done (§0.11 lists where the build moved off the plan).
   regardless of size; a short roster cycles. Block `k` belongs to `playerIds[k % playerIds.length]`.
   Block `k` is harder than block `k − 1`: more goons, more at once, a raccoon from block 1 and
   the boss goose closing every block from index 2 on (block 3 of a default turn).
-- **Two thumbs, no aim.** The arena is the controller. The left ~35% of the body is the walk
-  pad: hold it to walk, the side of the pad's centre you are on is the direction, slide across
-  the centre to turn. The rest is the peck zone: any tap pecks. No jump, no block, no combos.
-  Facing follows the last walk direction, never the peck — a goon behind you needs a step
-  back, which is the beat 'em up's own "BEHIND YOU".
+- **Two thumbs, no aim.** The arena is the controller, split in halves. The left half is the
+  walk pad, a floating one-axis stick: wherever the thumb lands is its centre, and holding walks
+  the hen the way she faces; pulling back about 30 px turns her, and the turn re-centres, so the
+  next pull back turns her again. The right half is the peck zone: any touch pecks, and a held
+  thumb keeps pecking at the sim's own rate. No jump, no block, no combos. Facing follows the
+  last walk direction, never the peck — a goon behind you needs a turn, which is the beat 'em
+  up's own "BEHIND YOU" (docs/research/tablet-brawler-controls.md, scheme B).
 - **Three hearts, then the bay.** A hit costs a heart, knocks the hen back, reels her for
   a few ticks and shuts any peck she had out, then she is invulnerable for a short window. Out of hearts, the block ends
   `ko`: the geese carry her off (the wipeout punchline). What she put down stays banked.
@@ -253,8 +255,8 @@ forwarded untouched; BRAWL is `timerKey: null`, so `clock` is empty. The three s
   disabled through the handoff: the street still shows the block just ended, and a tap there
   would skip the NEXT player's block before they held the tablet. The hint says whose block it
   is and where the thumbs go while the block is ready ("Caitlin is on the line — hold left to
-  walk, tap right to peck"), and says nothing while a block runs or a beat plays: a brawling
-  hen's holder is not reading.
+  walk, pull back to turn, tap right to peck"), and says nothing while a block runs or a beat
+  plays: a brawling hen's holder is not reading.
 - `readout`, floating bottom-right above the dock, **only while a block's ending is on screen
   or once the team is through**, because the right of the street is where goons walk in from:
   the finish card ("Street clear", the points), the block list (`BlockHistory`: who fought
@@ -262,16 +264,26 @@ forwarded untouched; BRAWL is `timerKey: null`, so `clock` is empty. The three s
   at 34 down" under it.
 
 The body is `[data-brawl-arena]` (`HostBrawlSurface/Street`): the scene SVG full-bleed, and
-over it two pointer zones that take `touch-action: none` and track pointers by id, so a held
-walk and a tapped peck coexist. The walk pad is the left 35% (`[data-brawl-walk-pad]`); a held
-thumb walks toward the side of the pad's centre it is on, and keeps walking if it slides off
-the pad's edge (pointer capture). The peck zone is the rest (`[data-brawl-peck-zone]`) and any
-tap pecks. Each shows a ghosted glyph (◀ ▶, a PECK ring) that fades after the first touch of
-the block. The peck zone stops 5.5rem short of the arena's bottom edge, so a mashed peck never
-lands on the corner dock; nothing in the arena reaches the bottom-right corner. The arena
-dims to 80% when it is not armed (a hold, a finished team, a tablet that may not act) and
-ignores both zones. The handoff callout ("Hand it to *name*") drops over the street for the
-beat, client-only.
+over it two pointer zones, each half the arena, that take `touch-action: none` and track
+pointers by id, so a held walk and a tapped peck coexist. The walk pad (`Street/WalkPad`,
+`[data-brawl-walk-pad]`) is the left half and one pointer owns it: the touch-down x is the
+thumb's centre and the hen walks the way she faces (the runner's `getFacing()`); a pull back of
+`TURN_PX` (30 CSS px) against the way she is walking turns her, and the turn is the new centre;
+inside the dead band she keeps walking, never stops; the centre trails the thumb forward, so
+"back" is measured from where the thumb has got to. Lifting stops her, and pointer capture keeps
+a thumb that slides off the pad walking. The logic is the pure `thumbWalk/` reducer; a muted
+stick (`[data-brawl-thumb]`, ring at the centre, a dot on the pull, the way she walks lit) is
+written straight onto the DOM under a held thumb. The peck zone (`Street/PeckZone`,
+`[data-brawl-peck-zone]`) is the right half: any touch pecks at once, and while any pointer is
+held it pecks again every `PECK_REPEAT_MS` (the cooldown plus two ticks, 267 ms). Both let go when
+the arena disarms, so a thumb held through a handoff does not start the next player's clock.
+Thumb-rest glyphs sit at mid height on each side (a thumb ring between ◀ ▶ over "hold to walk ·
+pull back to turn"; a PECK ring over "tap or hold") and fade after the first touch of the block.
+The peck zone stops 5.5rem short of the arena's bottom edge, and the walk pad pads its glyph by
+the same, so a mashed peck never lands on the corner dock and the two glyphs sit level; nothing
+in the arena reaches the bottom-right corner. The arena dims to 80% when it is not armed (a
+hold, a finished team, a tablet that may not act) and ignores both zones. The handoff callout
+("Hand it to *name*") drops over the street for the beat, client-only.
 
 `useBrawlRunner` is `useSchlonicRunner`'s twin: a fixed-step sim on the local clock, painted
 every animation frame through a `BrawlSceneHandle`, the clock started by the first touch of
@@ -376,7 +388,15 @@ then `peck` from the press until the beak's box closes, then `walk` while the th
 ground line and the figure is scaled so foot-to-head-middle is the sim's `henHeight`; she
 flickers through the invulnerable window so the room sees the mercy. Goons are bare `<g>`
 components under `BrawlScene/Goons/{Goose,Gull,Raccoon,Boss}` with a `state` prop; a KO'd
-goon falls with stars; a telegraphing one is drawn honking. `data-brawl-*` attributes on the
+goon falls with stars; a telegraphing one is drawn honking. **Staged depth, scene only:** the
+sim stays one line, but a goon far from the hen is drawn on one of three depth lines (behind
+her line, on it, in front; `((spawnIndex × 7) mod 3) − 1`, so both screens agree) and walks onto
+her line as it closes (`BrawlScene/goonDepth`). Its share of its line is 0 within its `reach`
+plus `DEPTH_NEAR` (10) and ramps to 1 over `DEPTH_RAMP` (40) more; a whole line is `DEPTH_STEP`
+(5) units down the screen and 6% bigger in front, up and smaller behind, scaled about its foot.
+So it is on her line before it can honk or lunge, and nobody whiffs on depth. Gulls fly and have
+no line; a reeling or KO'd goon keeps the depth it was hit at. The goon layer draws the far line
+first and re-renders only when that order changes. `data-brawl-*` attributes on the
 scene (camera x, wave, locked), the hen (`data-brawl-x`, `data-brawl-pecking`), each goon
 (`data-brawl-goon-kind`, `data-brawl-goon-state`), the GO arrow (`data-brawl-go`), the handoff
 and the hearts, for the e2e spec. Backdrop from `@wingnight/scenery` in a night palette:
@@ -391,8 +411,12 @@ presentation attributes and a class cannot reach one; no hex lives in the scene'
 `createDevManifest({ rules: { blocksPerTurn: 2, courseSeed: 20261001 }, content: null })`.
 `tests/e2e/brawl-sandbox.spec.ts`: both previews draw the block (scene count 2, goons by kind
 present after the first wave opens, hearts at 3, "Block 1 of 2" and the ready hint visible),
-the first peck-zone tap logs a peck and the hen's `data-brawl-pecking` flips, a held walk-pad
-pointer moves the hen's `data-brawl-x`, and no socket request leaves the sandbox.
+the first peck-zone tap logs a peck and the hen's `data-brawl-pecking` flips, a hold in the
+middle of the walk pad walks her the way she faces, a 50 px pull back turns her
+(`data-brawl-facing` −1, `data-brawl-x` falls), lifting stops her, a held peck-zone pointer
+moves the scene's `data-brawl-peck-until` on three or more times in a second, and no socket
+request leaves the sandbox. The brawler bot walks through the same pad: a hold, and a pull
+the way it needs.
 The TV's half of the asymmetry is asserted too: for a goon from each side the wall's scene has it
 on the street before the tablet's does (§3).
 
@@ -475,6 +499,14 @@ in place to match; this is the list of the decisions that moved.
   names them.
 - **Host: GO ▶ is not a timed flash.** It shows whenever the camera is unlocked and the block is
   live, after the last wave too, because the handoff is off the tablet's right edge.
+- **Controls: scheme B, halves, staged depth** (2026-10-02, docs/research/tablet-brawler-controls.md).
+  The fixed-centre walk pad (left 35%, direction by the side of its centre) became a floating
+  one-axis thumb on the left half — a hold walks the way she faces, a 30 px pull back turns her —
+  because a resting thumb walked her backwards and a turn depended on a line nobody could feel.
+  The peck zone is the right half and a held thumb repeats at the cooldown. The glyphs moved to
+  mid height. Depth was not added as an input; goons are staged on three depth lines in the
+  scene only and step onto her line before they matter (§0.8). The sim and the action log are
+  unchanged.
 - **Host: the body measured 89.9% of the tablet** (the Canvas figure, same as FAPPY's). The peck
   zone stops 5.5rem short of the arena's bottom edge so the dock's circle is clear of it.
 - **Host: the paint loop owns the chrome numbers.** The hearts and the "Down" tally are written

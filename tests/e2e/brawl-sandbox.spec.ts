@@ -72,7 +72,7 @@ test("brawl sandbox lays out block 1 on both screens, with the wall's camera wid
 
   await expect(page.getByText("Block 1 of 2").first()).toBeVisible();
   await expect(page.locator("[data-brawl-hint]")).toHaveText(
-    "Alex is on the line — hold left to walk, tap right to peck"
+    "Alex is on the line — hold left to walk, pull back to turn, tap right to peck"
   );
 
   // Hearts at three on both chrome rows: the tablet's counter and the wall's marquee.
@@ -115,12 +115,15 @@ test("brawl sandbox lays out block 1 on both screens, with the wall's camera wid
   expect(socketRequests).toHaveLength(0);
 });
 
-test("a peck flips the hen's beak out and a held walk pad walks her until the thumb lifts", async ({ page }) => {
+test("a peck flips the hen's beak out, a held walk thumb walks her the way she faces and a pull back turns her, and a held peck keeps pecking", async ({
+  page
+}) => {
   await openStreet(page);
 
+  const scene = page.locator(HOST_SCENE);
   const hen = page.locator(`${HOST_SCENE} [data-brawl-hen]`);
 
-  // The beak is out a beat after the press, and only for a few frames: catch it from the page.
+  // The beak is out a beat after the tap, and only for a few frames: catch it from the page.
   const sawPeck = await page.evaluate(() => {
     return new Promise<boolean>((resolve) => {
       const henElement = document.querySelector('[data-brawl-scene="host-brawl"] [data-brawl-hen]');
@@ -132,18 +135,18 @@ test("a peck flips the hen's beak out and a held walk pad walks her until the th
       }
 
       const rect = zone.getBoundingClientRect();
+      const init = {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 9,
+        isPrimary: true,
+        pointerType: "touch",
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2
+      };
 
-      zone.dispatchEvent(
-        new PointerEvent("pointerdown", {
-          bubbles: true,
-          cancelable: true,
-          pointerId: 9,
-          isPrimary: true,
-          pointerType: "touch",
-          clientX: rect.left + rect.width / 2,
-          clientY: rect.top + rect.height / 2
-        })
-      );
+      zone.dispatchEvent(new PointerEvent("pointerdown", init));
+      zone.dispatchEvent(new PointerEvent("pointerup", init));
 
       let frames = 0;
       const loop = (): void => {
@@ -172,9 +175,11 @@ test("a peck flips the hen's beak out and a held walk pad walks her until the th
   await expect(page.getByText("Alex is brawling — count the wave down!")).toBeVisible();
 
   await expect(hen).toHaveAttribute("data-brawl-pecking", "false");
+  await expect(hen).toHaveAttribute("data-brawl-facing", "1");
 
   const startX = Number(await hen.getAttribute("data-brawl-x"));
   const pad = page.locator("[data-brawl-walk-pad]");
+  const stick = page.locator("[data-brawl-thumb]");
   const box = await pad.boundingBox();
 
   expect(box).not.toBeNull();
@@ -183,17 +188,37 @@ test("a peck flips the hen's beak out and a held walk pad walks her until the th
     return;
   }
 
-  // A real thumb on the right half of the pad, held for 600 ms.
-  await page.mouse.move(box.x + box.width * 0.8, box.y + box.height / 2);
+  // A real thumb lands in the middle of the pad — no side of anything — and holds: she walks
+  // the way she faces, and the stick shows under the thumb.
+  const thumbX = box.x + box.width / 2;
+  const thumbY = box.y + box.height / 2;
+
+  await page.mouse.move(thumbX, thumbY);
   await page.mouse.down();
+  await expect(stick).toHaveAttribute("data-brawl-thumb-held", "true");
   await page.waitForTimeout(600);
 
   const heldX = Number(await hen.getAttribute("data-brawl-x"));
 
-  await page.mouse.up();
-
   expect(heldX - startX).toBeGreaterThan(10);
   await expect(hen).toHaveAttribute("data-brawl-facing", "1");
+  await expect(stick).toHaveAttribute("data-brawl-thumb-dir", "right");
+
+  // Still held, the thumb pulls back past the dead band: she turns and walks back.
+  await page.mouse.move(thumbX - 50, thumbY, { steps: 5 });
+  await expect(hen).toHaveAttribute("data-brawl-facing", "-1");
+  await expect(stick).toHaveAttribute("data-brawl-thumb-dir", "left");
+
+  const turnedX = Number(await hen.getAttribute("data-brawl-x"));
+
+  await page.waitForTimeout(500);
+
+  const backX = Number(await hen.getAttribute("data-brawl-x"));
+
+  expect(turnedX - backX).toBeGreaterThan(10);
+
+  await page.mouse.up();
+  await expect(stick).toHaveAttribute("data-brawl-thumb-held", "false");
 
   // Lifted: she stands where she stopped.
   await page.waitForTimeout(150);
@@ -201,6 +226,38 @@ test("a peck flips the hen's beak out and a held walk pad walks her until the th
 
   await page.waitForTimeout(400);
   await expect(hen).toHaveAttribute("data-brawl-x", `${stoppedX}`);
+
+  // A thumb held on the peck zone keeps pecking at the sim's rate: every peck the sim takes moves
+  // the scene's peck mark on, and a second of holding takes several.
+  const zoneBox = await page.locator("[data-brawl-peck-zone]").boundingBox();
+
+  expect(zoneBox).not.toBeNull();
+
+  if (zoneBox === null) {
+    return;
+  }
+
+  const peckMarks = new Set<string>();
+  const readMark = async (): Promise<void> => {
+    peckMarks.add((await scene.getAttribute("data-brawl-peck-until")) ?? "");
+  };
+
+  await readMark();
+  const before = peckMarks.size;
+
+  await page.mouse.move(zoneBox.x + zoneBox.width / 2, zoneBox.y + zoneBox.height / 2);
+  await page.mouse.down();
+
+  const heldFrom = Date.now();
+
+  while (Date.now() - heldFrom < 1000) {
+    await readMark();
+    await page.waitForTimeout(40);
+  }
+
+  await page.mouse.up();
+
+  expect(peckMarks.size - before).toBeGreaterThanOrEqual(3);
 });
 
 type FirstSeen = {
@@ -234,17 +291,19 @@ test("the wall sees every first-wave goon before the tablet does, from both side
       const rect = zone.getBoundingClientRect();
       const startedAt = performance.now();
 
-      zone.dispatchEvent(
-        new PointerEvent("pointerdown", {
-          bubbles: true,
-          cancelable: true,
-          pointerId: 9,
-          isPrimary: true,
-          pointerType: "touch",
-          clientX: rect.left + rect.width / 2,
-          clientY: rect.top + rect.height / 2
-        })
-      );
+      const tap = {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 9,
+        isPrimary: true,
+        pointerType: "touch",
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2
+      };
+
+      // A tap, not a hold: a held peck thumb keeps pecking, and this hen is meant to stand idle.
+      zone.dispatchEvent(new PointerEvent("pointerdown", tap));
+      zone.dispatchEvent(new PointerEvent("pointerup", tap));
 
       const goonsOn = (scene: Element): { index: string; x: number }[] => {
         return [...scene.querySelectorAll("[data-brawl-goon]")].map((goon) => ({
@@ -360,8 +419,11 @@ const brawlBlock = (page: Page): Promise<BlockRun> => {
       const padRect = pad.getBoundingClientRect();
       const zoneRect = zone.getBoundingClientRect();
       const padY = padRect.top + padRect.height / 2;
-      const padX = (dir: number): number => padRect.left + padRect.width * (dir < 0 ? 0.2 : 0.8);
       const hen = (): Element | null => scene.querySelector("[data-brawl-hen]");
+      // The walk thumb as a player uses it: land anywhere (the pad's middle) and she walks the
+      // way she faces; pull back past the dead band to turn. `thumbX` is where the thumb is.
+      const PULL_PX = 45;
+      let thumbX = padRect.left + padRect.width / 2;
       let dir = 0;
       let frames = 0;
       let lastPeck = -99;
@@ -374,12 +436,21 @@ const brawlBlock = (page: Page): Promise<BlockRun> => {
           return;
         }
 
+        if (next === 0) {
+          send(pad, "pointerup", thumbX, padY, 7);
+          dir = 0;
+          return;
+        }
+
         if (dir === 0) {
-          send(pad, "pointerdown", padX(next), padY, 7);
-        } else if (next === 0) {
-          send(pad, "pointerup", padX(dir), padY, 7);
-        } else {
-          send(pad, "pointermove", padX(next), padY, 7);
+          thumbX = padRect.left + padRect.width / 2;
+          send(pad, "pointerdown", thumbX, padY, 7);
+          dir = Number(hen()?.getAttribute("data-brawl-facing"));
+        }
+
+        if (dir !== next) {
+          thumbX += next * PULL_PX;
+          send(pad, "pointermove", thumbX, padY, 7);
         }
 
         dir = next;
@@ -486,7 +557,7 @@ test("a brawler clears block 1, the wall counts each wave down to GO, and the ta
   await expect(page.getByText("Block 2 of 2").first()).toBeVisible();
   await expect(page.locator(HOST_SCENE)).toHaveAttribute("data-brawl-block", "1", { timeout: 6000 });
   await expect(page.locator("[data-brawl-hint]")).toHaveText(
-    "Caitlin is on the line — hold left to walk, tap right to peck",
+    "Caitlin is on the line — hold left to walk, pull back to turn, tap right to peck",
     { timeout: 6000 }
   );
 });

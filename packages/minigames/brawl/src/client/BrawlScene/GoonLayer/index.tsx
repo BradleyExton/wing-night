@@ -2,6 +2,7 @@ import { forwardRef, memo, useCallback, useImperativeHandle, useReducer, useRef 
 import type { BrawlFrame, BrawlGoon, BrawlGoonKind, BrawlGoonState } from "@wingnight/shared";
 
 import { Goon, brawlGoonPalette } from "../Goons/index.js";
+import { resolveDepthOrder, resolveGoonDepth } from "../goonDepth/index.js";
 import { resolveGoonDrawTick, resolveGoonTransform, resolveGoonsSignature } from "./drawTick/index.js";
 
 export type GoonLayerHandle = {
@@ -43,9 +44,22 @@ const GoonSlot = memo(
 
 GoonSlot.displayName = "GoonSlot";
 
-const placeGoon = (element: SVGGElement, goon: BrawlGoon): void => {
-  element.setAttribute("transform", resolveGoonTransform(goon));
+const placeGoon = (element: SVGGElement, goon: BrawlGoon, depth: number): void => {
+  element.setAttribute("transform", resolveGoonTransform(goon, depth));
   element.setAttribute("data-brawl-goon-x", `${Math.round(goon.x * 10) / 10}`);
+
+  const depthText = `${Math.round(depth * 100) / 100}`;
+
+  if (element.getAttribute("data-brawl-goon-depth") !== depthText) {
+    element.setAttribute("data-brawl-goon-depth", depthText);
+  }
+};
+
+const byDrawOrder = (frame: BrawlFrame | null, order: number[]): BrawlGoon[] => {
+  const goons = frame?.goons ?? [];
+  const rank = new Map(order.map((spawnIndex, index) => [spawnIndex, index]));
+
+  return [...goons].sort((left, right) => (rank.get(left.spawnIndex) ?? 0) - (rank.get(right.spawnIndex) ?? 0));
 };
 
 /**
@@ -54,11 +68,19 @@ const placeGoon = (element: SVGGElement, goon: BrawlGoon): void => {
  * or its walk frame turns over), a handful of times a second; on every other frame the paint just
  * moves the groups. `data-brawl-goon-renders` counts the layer's renders, so a harness can prove
  * a frame with nothing new costs no React work.
+ *
+ * Each goon also stands on a depth line while it is far from the hen (`../goonDepth`), and the
+ * goons are drawn far line first, so a nearer one is over a further one. The depth slides every
+ * frame through the transform; the draw order is React's, and changes only when two goons cross.
  */
 export const GoonLayer = forwardRef<GoonLayerHandle>((_props, ref): JSX.Element => {
   const [, forceRender] = useReducer((count: number) => count + 1, 0);
   const frameRef = useRef<BrawlFrame | null>(null);
   const signatureRef = useRef("");
+  // The depth each goon was last drawn at — a goon reeling or down keeps it — and the order
+  // they were last drawn in, far line first.
+  const depthsRef = useRef(new Map<number, number>());
+  const orderRef = useRef<number[]>([]);
   const nodes = useRef(new Map<number, SVGGElement>());
   const renders = useRef(0);
 
@@ -73,7 +95,7 @@ export const GoonLayer = forwardRef<GoonLayerHandle>((_props, ref): JSX.Element 
     const goon = frameRef.current?.goons.find((candidate) => candidate.spawnIndex === spawnIndex);
 
     if (goon !== undefined) {
-      placeGoon(element, goon);
+      placeGoon(element, goon, depthsRef.current.get(spawnIndex) ?? 0);
     }
   }, []);
 
@@ -83,15 +105,23 @@ export const GoonLayer = forwardRef<GoonLayerHandle>((_props, ref): JSX.Element 
       paint: (frame: BrawlFrame): void => {
         frameRef.current = frame;
 
+        const depths = new Map<number, number>();
+
         for (const goon of frame.goons) {
+          const depth = resolveGoonDepth(goon, frame.x, depthsRef.current.get(goon.spawnIndex));
           const element = nodes.current.get(goon.spawnIndex);
 
+          depths.set(goon.spawnIndex, depth);
+
           if (element !== undefined) {
-            placeGoon(element, goon);
+            placeGoon(element, goon, depth);
           }
         }
 
-        const signature = resolveGoonsSignature(frame);
+        depthsRef.current = depths;
+        orderRef.current = resolveDepthOrder(depths);
+
+        const signature = `${resolveGoonsSignature(frame)}|${orderRef.current.join(",")}`;
 
         if (signature !== signatureRef.current) {
           signatureRef.current = signature;
@@ -108,7 +138,7 @@ export const GoonLayer = forwardRef<GoonLayerHandle>((_props, ref): JSX.Element 
 
   return (
     <g data-brawl-goon-layer data-brawl-goon-renders={renders.current}>
-      {(frame?.goons ?? []).map((goon) => (
+      {byDrawOrder(frame, orderRef.current).map((goon) => (
         <GoonSlot
           key={goon.spawnIndex}
           spawnIndex={goon.spawnIndex}

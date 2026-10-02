@@ -44,3 +44,10 @@ test("does change the signature when a goon changes state, arrives or leaves", (
 test("does lift a goon by its height and flip it to its facing", () => {
   assert.equal(resolveGoonTransform({ x: 80.123, y: 12, facing: -1 }), "translate(80.12 -12) scale(-1 1)");
 });
+
+test("does stand a goon on its depth line about its foot when it is off the hen's line", () => {
+  // A whole line in front: 5 down the screen, drawn 6% bigger, the foot still on that line.
+  assert.equal(resolveGoonTransform({ x: 80, y: 0, facing: 1 }, 1), "translate(80 0.8) scale(1.06 1.06)");
+  // A whole line behind, facing left: up the screen and smaller.
+  assert.equal(resolveGoonTransform({ x: 80, y: 0, facing: -1 }, -1), "translate(80 -0.8) scale(-0.94 0.94)");
+});
