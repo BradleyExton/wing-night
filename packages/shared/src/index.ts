@@ -216,6 +216,45 @@ export type {
   BrawlSpawn,
   BrawlWave
 } from "./brawl/index.js";
+export {
+  MOUNT_GOOSE_BOT_SAMPLES,
+  MOUNT_GOOSE_BOT_STEPS,
+  MOUNT_LIMBS,
+  MOUNT_PARTICLES,
+  MOUNT_WORLD,
+  addMountHen,
+  advanceMount,
+  createMountPile,
+  createMountState,
+  resolveMountClimbTicks,
+  resolveMountCrown,
+  resolveMountOutcome,
+  resolveMountPileBounds,
+  resolveMountPileMesh,
+  runMountClimb,
+  stepMount
+} from "./mount/index.js";
+export type {
+  MountClimbResult,
+  MountClimbRules,
+  MountGooseBotStep,
+  MountGooseStance,
+  MountHighLine,
+  MountInputSample,
+  MountLimb,
+  MountLimbEvent,
+  MountLimbState,
+  MountOutcome,
+  MountParticle,
+  MountPile,
+  MountPileHen,
+  MountPose,
+  MountShape,
+  MountState,
+  MountSurfaceRef,
+  MountVec,
+  MountWorld
+} from "./mount/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
