@@ -33,6 +33,44 @@ test("does count every goon of the opening wave as still to come when the block 
   assert.equal(meter.pips.length, firstWave.length);
   assert.ok(meter.pips.every((pip) => pip.state === "waiting" && !pip.down));
   assert.equal(meter.clear, false);
+  // Nothing has touched her: the star is lit and nothing is banked yet.
+  assert.equal(meter.clean, true);
+  assert.equal(meter.banked, false);
+});
+
+test("does tell the room which edge each waiting goon steps in from", () => {
+  const meter = resolveWaveMeter(start, block);
+
+  assert.deepEqual(
+    meter.pips.map((pip) => pip.side),
+    firstWave.map((spawn) => spawn.side)
+  );
+  // Both edges, so the room has a BEHIND YOU to call before the goon is on the tablet.
+  assert.equal(new Set(meter.pips.map((pip) => pip.side)).size, 2);
+});
+
+test("does put the star out the moment she is hit in the wave, and relight it when the next wave opens", () => {
+  const fighting: BrawlFrame = { ...start, tick: 200, spawned: 2, goons: [goonFor(0, "approach")] };
+
+  assert.equal(resolveWaveMeter(fighting, block).clean, true);
+  assert.equal(resolveWaveMeter({ ...fighting, hits: [150] }, block).clean, false);
+  // A hit from the wave before does not count against this one.
+  assert.equal(resolveWaveMeter({ ...fighting, waveIndex: 1, waveOpenedTick: 160, hits: [150] }, block).clean, true);
+});
+
+test("does flare the star when the wave went down clean and keep it dark when it did not", () => {
+  const down: BrawlFrame = { ...start, tick: 400, cameraLocked: false, waveIndex: 1, spawned: firstWave.length, bonuses: [400] };
+  const clean = resolveWaveMeter(down, block);
+
+  assert.equal(clean.clear, true);
+  assert.equal(clean.clean, true);
+  assert.equal(clean.banked, true);
+
+  const bruised = resolveWaveMeter({ ...down, bonuses: [], hits: [300] }, block);
+
+  assert.equal(bruised.clear, true);
+  assert.equal(bruised.clean, false);
+  assert.equal(bruised.banked, false);
 });
 
 test("does light a goon that fell or was tidied away and not one still standing when the wave is fought", () => {
@@ -111,10 +149,11 @@ const createElement = (attributes: Record<string, string>, children: FakeElement
   return element;
 };
 
-test("does mark the current wave's group, light its fallen pips and raise GO when it is painted", () => {
+test("does mark the current wave's group, light its fallen pips, work the star and raise GO when it is painted", () => {
   const pips = firstWave.map((spawn) => createElement({ "data-brawl-wave-pip": `${spawn.index}` }));
+  const star = createElement({ "data-brawl-wave-star": "" });
   const groups = [createElement({ "data-brawl-wave-group": "0" }, pips), createElement({ "data-brawl-wave-group": "1" })];
-  const strip = createElement({}, groups);
+  const strip = createElement({}, [...groups, star]);
   const frame: BrawlFrame = { ...start, tick: 200, spawned: 2, goons: [goonFor(1, "approach")] };
 
   paintWaveMeter(strip as unknown as HTMLElement, resolveWaveMeter(frame, block));
@@ -126,15 +165,28 @@ test("does mark the current wave's group, light its fallen pips and raise GO whe
     ["true", "false", "false"]
   );
   assert.equal(strip.getAttribute("data-brawl-wave-clear"), "false");
+  assert.equal(strip.getAttribute("data-brawl-wave-clean"), "true");
+  assert.equal(strip.getAttribute("data-brawl-wave-down"), "1");
+  assert.equal(star.getAttribute("data-clean"), "true");
+  assert.equal(star.getAttribute("data-banked"), "false");
+
+  // She is hit: the star dies on the spot, and the pips are untouched.
+  paintWaveMeter(strip as unknown as HTMLElement, resolveWaveMeter({ ...frame, tick: 210, hits: [210] }, block));
+
+  assert.equal(star.getAttribute("data-clean"), "false");
+  assert.equal(strip.getAttribute("data-brawl-wave-clean"), "false");
   assert.equal(strip.getAttribute("data-brawl-wave-down"), "1");
 
   paintWaveMeter(
     strip as unknown as HTMLElement,
-    resolveWaveMeter({ ...frame, cameraLocked: false, waveIndex: 1, goons: [] }, block)
+    resolveWaveMeter({ ...frame, cameraLocked: false, waveIndex: 1, goons: [], bonuses: [300] }, block)
   );
 
   assert.equal(strip.getAttribute("data-brawl-wave-clear"), "true");
   assert.ok(pips.every((pip) => pip.getAttribute("data-lit") === "true"));
+  // Down clean: the star flares.
+  assert.equal(star.getAttribute("data-clean"), "true");
+  assert.equal(star.getAttribute("data-banked"), "true");
 });
 
 test("does nothing when there is no strip to write into", () => {

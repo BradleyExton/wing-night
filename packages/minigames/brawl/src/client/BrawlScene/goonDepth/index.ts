@@ -32,15 +32,16 @@ export const resolveDepthShare = (distance: number, reach: number): number => {
 
 /**
  * Where a goon is drawn in depth, as lane × share: −1 a whole line behind her, 1 a whole line in
- * front. A gull is airborne and has no line. A goon reeling or down keeps the depth it was hit at
- * (`held`, the last depth drawn) — it was in reach, so that is her line anyway.
+ * front. A gull is airborne and has no line. A stalking swan is in its reach, facing her down, so
+ * it is on her line. A goon reeling or down keeps the depth it was hit at (`held`, the last depth
+ * drawn) — it was in reach, so that is her line anyway.
  */
 export const resolveGoonDepth = (
   goon: Pick<BrawlGoon, "spawnIndex" | "kind" | "x" | "state">,
   henX: number,
   held: number | undefined
 ): number => {
-  if (goon.kind === "gull") {
+  if (goon.kind === "gull" || goon.state === "stalk") {
     return 0;
   }
 

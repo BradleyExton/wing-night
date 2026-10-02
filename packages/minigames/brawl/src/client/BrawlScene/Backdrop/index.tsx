@@ -1,6 +1,7 @@
 import { memo } from "react";
 import type { BrawlBlock } from "@wingnight/shared";
 
+import { Hazard } from "../Hazards/index.js";
 import { Beach } from "./Beach/index.js";
 import { Dunlop } from "./Dunlop/index.js";
 import { HandoffLine } from "./HandoffLine/index.js";
@@ -20,8 +21,8 @@ export const paintSky = (element: SVGGElement | null, cameraX: number): void => 
 
 /**
  * The block's own stretch of Barrie, in world units, scrolled with the fight: the buildings or the
- * water behind, the ground the hen and the goons stand on, the lamps, and the chalk line at the
- * handoff. Memoised on the block, so a block's street is built once and only ever moved.
+ * water behind, the ground the hen and the goons stand on, the lamps, the block's hazard (the
+ * railing, the bay's edge or the plinth, `../Hazards`), and the chalk line at the handoff. Memoised on the block, so a block's street is built once and only ever moved.
  */
 export const Street = memo(({ block }: { block: BrawlBlock }): JSX.Element => {
   const setting = resolveBrawlSetting(block.index);
@@ -31,6 +32,7 @@ export const Street = memo(({ block }: { block: BrawlBlock }): JSX.Element => {
       {setting === "dunlop" && <Dunlop block={block} />}
       {setting === "waterfront" && <Waterfront block={block} />}
       {setting === "beach" && <Beach block={block} />}
+      {block.hazard !== null && <Hazard hazard={block.hazard} />}
       <HandoffLine x={block.handoffX} />
     </g>
   );

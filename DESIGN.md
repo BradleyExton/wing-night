@@ -2083,8 +2083,15 @@ Spec: `docs/minigames/brawl-spec.md`.
     and lies **ko** on her back with her feet in the air while the geese carry
     her off. The goons have a palette of their own (`Goons/palette.ts`) and a
     drawing each: the goose, the gull that cruises and dives, the raccoon that
-    charges, and the boss, a goose with twice the neck. A goon you put down
-    falls with stars and is gone. Everyone in the room has been chased by one.
+    charges, and the boss, a goose with twice the neck. The **swan** is white
+    and a head taller, its neck a two-part S: faced, it draws up straight and
+    still on one foot with a narrowed eye (the stalk), and the moment she turns
+    away it hisses — neck drawn back, wings half up, wriggling lines, never a
+    honk. The **helmet goose** is the goose in a white hockey helmet with its
+    head driven low and the cage down over its bill; it flips the cage up over
+    the dome to honk, so the room reads "now" off the cage, and a peck off the
+    cage bursts a gold clank. A goon you put down falls with stars and is gone.
+    Everyone in the room has been chased by one.
 -   **The arena is the controller, in two thumb zones.** The whole body is the
     surface and nothing on it is a button: the **left half walks** and the
     **right half pecks**. The walk thumb floats: wherever it lands is its
@@ -2120,6 +2127,20 @@ Spec: `docs/minigames/brawl-spec.md`.
     sees the points move within a second (principles §11, 14). There is no
     health bar in the street and no combo counter anywhere: the picture is the
     fight.
+-   **The handoff pick is two cards, and doing nothing is one of them.** On a
+    block after the first, while it is on the line and the bank covers the
+    price, two cards float over the middle of the street, between the
+    thumb-rest glyphs and clear of the corner dock: **Buy a heart** (a heat
+    border and a single ♥, "a 4th heart · costs 3 worth · you have 14") and
+    **Keep the three** (a hairline, three dimmer ♥, "or just start walking").
+    Glass over the scene like the takeover secondaries, a 44px floor and more.
+    The layer under them passes every touch through to the thumb zones, so the
+    first thumb on the street is "keep" and closes them; there is no timer and
+    no dismiss link. A bought block's hearts row draws four glyphs in both
+    chromes, and the wall — which never shows the cards — calls out
+    "*Caitlin* bought a heart" low over the pavement for two seconds, with
+    "Four hearts · −3 worth" over it in heat, so the room sees where the
+    tally's three went.
 -   **The telegraph is the thing the TV reads.** A goon that has closed to its
     reach stops dead, faces the hen, and honks — a crouch, a beat of half a
     second for a goose and a little more for the raccoon and the boss, and the

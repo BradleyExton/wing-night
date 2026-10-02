@@ -52,8 +52,9 @@ const toBrawlViewFields = (state: BrawlRuntimeState) => {
       inputs: block.inputs.map((input) => ({ ...input })),
       result: block.result === null ? null : { ...block.result }
     })),
-    goonsDown: resolveGoonsDown(state.blocks),
+    goonsDown: resolveGoonsDown(state.blocks, state.heartPrice),
     goonsTotal: resolveGoonsTotal(state.courseSeed, state.blocksPerTurn),
+    heartPrice: state.heartPrice,
     points: resolvePoints(state),
     bestTurn: cloneBestTurn(state.bestTurn)
   };

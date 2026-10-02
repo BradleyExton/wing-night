@@ -80,7 +80,8 @@
     },
     "brawl": {
       "blocksPerTurn": 3,
-      "courseSeed": 20261001
+      "courseSeed": 20261001,
+      "heartPrice": 3
     },
     "recreate": {
       "targetsPerTurn": 1,

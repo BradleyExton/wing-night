@@ -134,6 +134,33 @@ These are `MinigameRuntimePlugin` packages registered on server and client like
 trivia/geo/drawing. Read `docs/minigame-authoring-guide.md` first — adding a `MinigameType` breaks
 every `Record<MinigameType, …>` in the repo until fully wired, so there's no throwaway half-state.
 
+### Streets of Barrie — depth pass
+
+Shipped 2026-10-02 as a two-verb relay that is fun for about a block. The research behind what to
+add is [docs/research/brawl-depth-and-strategy.md](docs/research/brawl-depth-and-strategy.md); its
+"Recommended package" is the plan, in three tiers, each ending with the gate green and the masher
+bot still clearing block 0 about two in three (`packages/shared/src/brawl/simulate/index.test.ts`).
+
+- ~~**Tier 1, rules only:**~~ Done 2026-10-02: perfect-wave bonus (a star on the wave meter that
+  dies on a hit), knockback chaining (a shoved goon stuns the one it lands in), hearts left at a
+  handoff carried as worth, and the TV's waiting pips showing each goon's side. No new input, no
+  new drawing (spec §0.11, "Depth pass, tier 1").
+- ~~**Tier 2, the roster:**~~ Done 2026-10-02: a swan that stalks when faced and lunges only at
+  her back (the SoR2 "Signal" role), a helmet goose a peck clanks off unless it is honking,
+  lunging or spent (the "Donovan" role, the counter into the honk — still to be table-tested, no
+  shipped precedent found), a hazard per block (railing, bay, plinth: a peck's shove into it is a
+  dunk), and a wing drop that restores a heart, eaten standing still (spec §0.11, "Depth pass,
+  tier 2").
+- ~~**Tier 3, the handoff pick:**~~ Done 2026-10-02: on every block after the first, the teammate on
+  the line may spend `heartPrice` (3) of the team's banked worth on a fourth heart before their
+  first touch, or keep the three by just starting to walk. A bought heart is never banked back
+  (carried hearts count up to three), so it is insurance, never profit, and the course total does
+  not move (spec §0.11, "Depth pass, tier 3"). The "+1 worth a goon" card was not built: one
+  spend-or-save choice, Double Dragon Gaiden's.
+- **Tier 3, still an idea:** phone-held spectator reinforcements (a new surface).
+- **Do not:** add a third verb, make mashing fatal, ship an unanswerable goon, randomise the course
+  per team, or hide a modifier.
+
 ### SCHLONIC — the rest of the wow pass
 
 All seven landed 2026-09-28. The first two on `claude/scholnic-game-improvements-27a62e`: the

@@ -7,12 +7,7 @@ import { readoutFigure } from "@wingnight/surface";
 // whose block it is from the sofa.
 export const blockName = "text-text";
 
-// The hearts: three glyphs the mirror lights and dims (`hearts/`), heat while they stand and a
-// ghost of themselves once they are gone, so a hit reads from across the room.
-export const hearts = `${readoutFigure} flex gap-[0.12em]`;
-
-export const heart =
-  "text-heat transition-opacity duration-150 data-[lit=false]:text-muted data-[lit=false]:opacity-30";
+// The hearts are the shared `HeartRow`, in its marquee tone.
 
 // The worth down over the course's worth: the score, in gold.
 export const goons = `${readoutFigure} text-gold`;

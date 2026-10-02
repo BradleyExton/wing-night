@@ -24,11 +24,16 @@ export type BrawlSounds = {
 
 /**
  * What a cue sounds at for one event: a goose's honk at a goon's heft and the boss's at full, so
- * the room hears the big one coming; everything else at the board's own level. Pure.
+ * the room hears the big one coming; a dunk into the bay is a splash and over the railing or the
+ * plinth a clatter; everything else is the cue of its own name at the board's own level. Pure.
  */
 export const resolveBrawlCue = (event: BrawlDisplayEvent): { cue: BrawlCueName; intensity?: number } => {
   if (event.kind === "honk") {
     return { cue: "honk", intensity: event.goonKind === "boss" ? 1 : BRAWL_HONK_GOON_INTENSITY };
+  }
+
+  if (event.kind === "dunk") {
+    return { cue: event.hazard === "bay" ? "splash" : "dunk" };
   }
 
   return { cue: event.kind };

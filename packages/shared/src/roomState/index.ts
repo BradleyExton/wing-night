@@ -615,6 +615,10 @@ export type BrawlMinigameBlock = {
   inputs: BrawlInput[];
   skipped: boolean;
   result: BrawlBlockResult | null;
+  // The handoff pick: the teammate on the line bought a fourth heart for `heartPrice` of the
+  // team's banked worth before their first touch. The block starts with four hearts on all three
+  // machines (`resolveBrawlStartHearts`), and the price stays paid if the block is then skipped.
+  heartBought: boolean;
 };
 
 // The turn to beat: the finished turn that put down the most worth over the whole course, from
@@ -637,9 +641,12 @@ export type BrawlMinigameViewFields = {
   blocksPerTurn: number;
   courseSeed: number;
   blocks: BrawlMinigameBlock[];
-  // The worth banked over the turn so far, and the worth of the whole course.
+  // The worth banked over the turn so far — every bought heart's price already taken off it —
+  // and the worth of the whole course.
   goonsDown: number;
   goonsTotal: number;
+  // What a fourth heart costs at a handoff, in banked worth (the `heartPrice` rule).
+  heartPrice: number;
   points: number | null;
   // The turn to beat, fixed for the whole turn; null until a team before this one has banked.
   bestTurn: BrawlBestTurn | null;

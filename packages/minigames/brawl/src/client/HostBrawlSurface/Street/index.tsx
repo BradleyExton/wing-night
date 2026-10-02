@@ -9,6 +9,8 @@ import { useBrawlBlock } from "../../useBrawlBlock/index.js";
 import { useBrawlRunner } from "../../useBrawlRunner/index.js";
 import type { BlockHold } from "../../useHeldBlock/index.js";
 import { useHenFigure } from "../../useHenFigure/index.js";
+import { HeartPick } from "./HeartPick/index.js";
+import { resolveHeartOffer } from "./heartOffer/index.js";
 import { PeckZone } from "./PeckZone/index.js";
 import { WalkPad } from "./WalkPad/index.js";
 import { streetCopy } from "./copy.js";
@@ -39,7 +41,9 @@ const HandoffCallout = ({ nextName }: { nextName: string | null }): JSX.Element 
 // The street and the loop behind it, filling the takeover's body slot edge to edge, with the two
 // thumb zones over it (docs/minigames/brawl-spec.md §0.6): the left half walks, the right half
 // pecks. Each zone tracks its own pointers by id, so a held walk and a tapped peck land together.
-// The scene is keyed on the block it shows, so a new block's street slides in fresh.
+// The scene is keyed on the block it shows, so a new block's street slides in fresh. While a block
+// after the first is on the line and the team can pay, the handoff pick's two cards float over it:
+// buy a fourth heart, or keep the three — which any thumb on the street also says.
 export const Street = ({
   view,
   canAct,
@@ -53,6 +57,16 @@ export const Street = ({
 }: StreetProps): JSX.Element => {
   const sceneRef = useRef<BrawlSceneHandle>(null);
   const [touchedBlock, setTouchedBlock] = useState<number | null>(null);
+  // The block whose pick the holder closed: client state, because keeping the three is no action.
+  const [closedPickBlock, setClosedPickBlock] = useState<number | null>(null);
+
+  // A reset puts the team back on an earlier block: a pick closed further down the street is
+  // stale, and that block's offer stands again when the team gets back to it (React's
+  // derived-state pattern, the render re-run before anything commits).
+  if (closedPickBlock !== null && view.blockIndex < closedPickBlock) {
+    setClosedPickBlock(null);
+  }
+
   const viewBlock = view.blocks[blockIndex] ?? null;
   const { block, relay } = useBrawlBlock({ view, blockIndex, serverOrigin });
   const hen = useHenFigure({ figure: viewBlock?.player ?? null, activeTurnTeamId: view.activeTurnTeamId, serverOrigin });
@@ -65,7 +79,7 @@ export const Street = ({
     sceneRef,
     heartsRef,
     tallyRef,
-    goonsBanked: resolveGoonsBanked(view.blocks, blockIndex),
+    goonsBanked: resolveGoonsBanked(view.blocks, blockIndex, view.heartPrice),
     goonsTotal: view.goonsTotal,
     onWalk: (tick, dir): void => {
       onDispatchAction("walk", { tick, dir });
@@ -79,10 +93,22 @@ export const Street = ({
     onEvent: onRunnerEvent
   });
   const isGlyphFaded = touchedBlock === blockIndex;
+  const heartOffer = resolveHeartOffer({ view, blockIndex, isArmed, closedBlockIndex: closedPickBlock });
 
+  const closePick = (): void => {
+    if (closedPickBlock !== blockIndex) {
+      setClosedPickBlock(blockIndex);
+    }
+  };
+
+  // The first thumb on the street starts the block, and keeps the three: it closes the pick.
   const markTouched = (): void => {
     if (isArmed && touchedBlock !== blockIndex) {
       setTouchedBlock(blockIndex);
+    }
+
+    if (isArmed && heartOffer !== null) {
+      closePick();
     }
   };
 
@@ -100,6 +126,17 @@ export const Street = ({
       </div>
       <WalkPad isArmed={isArmed} isGlyphFaded={isGlyphFaded} walk={walk} getFacing={getFacing} onTouch={markTouched} />
       <PeckZone isArmed={isArmed} isGlyphFaded={isGlyphFaded} peck={peck} onTouch={markTouched} />
+      {heartOffer !== null && (
+        <HeartPick
+          heartPrice={heartOffer.heartPrice}
+          banked={heartOffer.banked}
+          onBuy={(): void => {
+            closePick();
+            onDispatchAction("buyHeart", {});
+          }}
+          onKeep={closePick}
+        />
+      )}
       {hold?.kind === "handoff" && <HandoffCallout nextName={view.blocks[blockIndex + 1]?.player?.name ?? null} />}
     </div>
   );

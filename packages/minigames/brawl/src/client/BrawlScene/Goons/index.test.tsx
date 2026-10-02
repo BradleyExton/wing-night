@@ -4,12 +4,16 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { BRAWL_WORLD, type BrawlGoonKind, type BrawlGoonState } from "@wingnight/shared";
 
-import { Goon, brawlGoonPalette } from "./index.js";
+import { CLANK_TICKS, Goon, brawlGoonPalette } from "./index.js";
 
-const KINDS: BrawlGoonKind[] = ["goose", "gull", "raccoon", "boss"];
-const STATES: BrawlGoonState[] = ["entering", "approach", "telegraph", "attack", "recover", "stunned", "ko", "gone"];
+const KINDS: BrawlGoonKind[] = ["goose", "gull", "raccoon", "swan", "helmet", "boss"];
+const STATES: BrawlGoonState[] = ["entering", "approach", "stalk", "telegraph", "attack", "recover", "stunned", "ko", "gone"];
 
-const render = (kind: BrawlGoonKind, state: BrawlGoonState, overrides: Partial<{ x: number; y: number; facing: -1 | 1; tick: number }> = {}): string =>
+const render = (
+  kind: BrawlGoonKind,
+  state: BrawlGoonState,
+  overrides: Partial<{ x: number; y: number; facing: -1 | 1; tick: number; clank: number | null }> = {}
+): string =>
   renderToStaticMarkup(
     <svg viewBox="0 0 160 90">
       <Goon
@@ -20,6 +24,7 @@ const render = (kind: BrawlGoonKind, state: BrawlGoonState, overrides: Partial<{
         state={state}
         tick={overrides.tick ?? 37}
         palette={brawlGoonPalette}
+        clank={overrides.clank ?? null}
       />
     </svg>
   );
@@ -64,6 +69,31 @@ test("does draw the boss bigger than the goose it is built on", () => {
   const scale = (html: string): number => Number(html.match(/scale\(([\d.]+) /)?.[1]);
 
   assert.ok(scale(render("boss", "approach")) > scale(render("goose", "approach")));
+});
+
+test("does register the swan and the helmet goose, each drawn as its own bird", () => {
+  assert.notEqual(render("swan", "approach").replace(/swan/g, ""), render("goose", "approach").replace(/goose/g, ""));
+  assert.match(render("helmet", "approach"), /data-brawl-goon-guard="down"/);
+  assert.match(render("helmet", "telegraph"), /data-brawl-goon-guard="up"/);
+  assert.match(render("swan", "telegraph"), /data-brawl-goon-hiss/);
+});
+
+test("does draw a stalk as a stand only the swan has, and as a walk on any other kind", () => {
+  assert.notEqual(render("swan", "stalk"), render("swan", "approach").replace('"approach"', '"stalk"'));
+
+  for (const kind of KINDS.filter((each) => each !== "swan")) {
+    assert.equal(render(kind, "stalk"), render(kind, "approach").replace('data-brawl-goon-state="approach"', 'data-brawl-goon-state="stalk"'), kind);
+  }
+});
+
+test("does burst a clank off the helmet goose's cage while it is fresh, and on no other goon", () => {
+  assert.match(render("helmet", "approach", { clank: 0 }), /data-brawl-goon-clank/);
+  assert.doesNotMatch(render("helmet", "approach", { clank: CLANK_TICKS }), /data-brawl-goon-clank/);
+  assert.doesNotMatch(render("helmet", "approach"), /data-brawl-goon-clank/);
+
+  for (const kind of KINDS.filter((each) => each !== "helmet")) {
+    assert.doesNotMatch(render(kind, "approach", { clank: 0 }), /data-brawl-goon-clank/, kind);
+  }
 });
 
 test("does swap the walking legs between frames when entering or approaching", () => {

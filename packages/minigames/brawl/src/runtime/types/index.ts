@@ -8,6 +8,11 @@ export type BrawlRuntimeRules = {
    * an easier street than the one before it has not won a fight, it has won a lottery.
    */
   courseSeed: number;
+  /**
+   * What a fourth heart costs at a handoff, in the team's banked worth (the handoff pick). A
+   * trade, not physics, so it is a rule here and not in `BRAWL_WORLD`.
+   */
+  heartPrice: number;
 };
 
 export type BrawlRuntimeBlock = BrawlMinigameBlock;
@@ -18,6 +23,8 @@ export type BrawlRuntimeState = {
   activeTurnTeamName: string | null;
   blocksPerTurn: number;
   courseSeed: number;
+  /** What a fourth heart costs at a handoff, fixed for the turn from the rules. */
+  heartPrice: number;
   /** The block in hand; equal to `blocksPerTurn` once the team is through. */
   blockIndex: number;
   blocks: BrawlRuntimeBlock[];
@@ -39,8 +46,11 @@ export type BrawlRoundMemory = {
 
 // Three blocks is Dunlop Street, the waterfront and Centennial Beach ending at the Spirit
 // Catcher — the boss goose closes block three — and covers a full team without cycling in the
-// sample pack. The seed is the one the sandbox and the sample rules share.
+// sample pack. The seed is the one the sandbox and the sample rules share. A fourth heart costs
+// three worth: what a cleared block's three hearts are worth, so buying is insurance, never a
+// profit (the bought heart is never banked back — `resolveBrawlHeartsCarried`).
 export const DEFAULT_BRAWL_RULES: BrawlRuntimeRules = {
   blocksPerTurn: 3,
-  courseSeed: 20261001
+  courseSeed: 20261001,
+  heartPrice: 3
 };

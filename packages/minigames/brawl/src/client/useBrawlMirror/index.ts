@@ -4,7 +4,7 @@ import { BRAWL_WORLD, advanceBrawl, createBrawlRunStart, runBrawlRun } from "@wi
 
 import { CLEARED_BEAT_MS, HIT_PAUSE_MS, KO_BEAT_MS, TIMEOUT_BEAT_MS } from "../beats/index.js";
 import type { BrawlSceneHandle } from "../BrawlScene/index.js";
-import { paintGoonsTally } from "../goonsTally/index.js";
+import { paintGoonsTally, resolveHeartsCarried, resolveHeartsWorth } from "../goonsTally/index.js";
 import { paintHearts } from "../hearts/index.js";
 import { resolveMirrorEvents, type BrawlMirrorEvent } from "../mirrorEvents/index.js";
 import { paintWaveMeter, resolveWaveMeter } from "../waveMeter/index.js";
@@ -146,10 +146,16 @@ export const useBrawlMirror = ({
   const inputs = viewBlock?.inputs ?? [];
   const inputLogKey = resolveInputLogKey(inputs);
 
-  // The chrome the loop writes outside the scene: the hearts, the worth down and the wave strip.
-  const paintChrome = (frame: BrawlFrame, shownBlock: BrawlBlock): void => {
-    paintHearts(heartsRef?.current ?? null, frame.hearts);
-    paintGoonsTally(tallyRef?.current ?? null, tallyRangeRef.current.banked + frame.goonsDown, tallyRangeRef.current.total);
+  // The chrome the loop writes outside the scene: the hearts, the worth banked and the wave strip.
+  // `carried` is how many hearts have flown into the tally so far (the handoff beat only), each
+  // leaving the row and landing in the number at its worth — the same reading the view banks.
+  const paintChrome = (frame: BrawlFrame, shownBlock: BrawlBlock, carried = 0): void => {
+    paintHearts(heartsRef?.current ?? null, frame.hearts - carried);
+    paintGoonsTally(
+      tallyRef?.current ?? null,
+      tallyRangeRef.current.banked + frame.goonsDown + resolveHeartsWorth(carried),
+      tallyRangeRef.current.total
+    );
     paintWaveMeter(waveMeterRef?.current ?? null, resolveWaveMeter(frame, shownBlock));
   };
 
@@ -191,7 +197,7 @@ export const useBrawlMirror = ({
         scene?.paintTimeout(frame, progress);
       }
 
-      paintChrome(frame, shownBlock);
+      paintChrome(frame, shownBlock, outcome === "cleared" ? resolveHeartsCarried(frame.hearts, progress) : 0);
     };
     const step = (now: number): void => {
       const progress = (now - startedAtMs) / BEAT_DURATION_MS[outcome];
@@ -293,8 +299,11 @@ export const useBrawlMirror = ({
       return;
     }
 
+    // A still on the line is never carried on: the fight starts from the block as it is now, so a
+    // heart bought on the line (four hearts) is the frame the replay starts from even when the buy
+    // and the first thumb land in one render.
     const mirror: MirrorBlock =
-      current !== null && current.key === key
+      current !== null && current.key === key && current.startedAtMs !== null
         ? current
         : { key, inputs: [], frame: createBrawlRunStart(shownBlock), startedAtMs: null, rafHandle: 0 };
 

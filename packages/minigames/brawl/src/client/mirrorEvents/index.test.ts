@@ -85,8 +85,78 @@ test("does announce GO when a wave goes down and the camera lets go", () => {
   ]);
 });
 
+test("does announce a clean wave right behind GO when the bonus is banked, and not when it was not", () => {
+  const locked = at(start, { tick: 300 });
+  const clean = at(locked, { tick: 301, cameraLocked: false, waveIndex: 1, bonuses: [301], goonsDown: 5 });
+  const bruised = at(locked, { tick: 301, cameraLocked: false, waveIndex: 1, hits: [200], goonsDown: 3 });
+
+  assert.deepEqual(resolveMirrorEvents(locked, clean, block), [{ kind: "go" }, { kind: "clean" }]);
+  assert.deepEqual(resolveMirrorEvents(at(locked, { hits: [200] }), bruised, block), [{ kind: "go" }]);
+});
+
+test("does announce one bump per goon bowled over when a shove chains", () => {
+  const before = at(start, { tick: 80, goons: [goon(), goon({ spawnIndex: 1, x: 120 }), goon({ spawnIndex: 2, x: 132 })] });
+  const after = at(before, {
+    tick: 81,
+    goons: [goon({ state: "stunned" }), goon({ spawnIndex: 1, x: 120, state: "stunned" }), goon({ spawnIndex: 2, x: 132, state: "stunned" })],
+    landed: [81],
+    bumps: [81, 81]
+  });
+
+  assert.deepEqual(resolveMirrorEvents(before, after, block), [{ kind: "land" }, { kind: "bump" }, { kind: "bump" }]);
+});
+
 test("does announce nothing when a rebuilt replay hands back an earlier frame", () => {
-  const late = at(start, { tick: 500, hits: [100, 300], kos: [200] });
+  const late = at(start, { tick: 500, hits: [100, 300], kos: [200], bonuses: [250], bumps: [200] });
 
   assert.deepEqual(resolveMirrorEvents(late, at(start, { tick: 2 }), block), []);
+});
+
+test("does announce a hiss, never a honk, when a swan starts its telegraph, and nothing when it stalks", () => {
+  const walking = at(start, { tick: 50, goons: [goon({ kind: "swan" })] });
+  const stalking = at(walking, { tick: 51, goons: [goon({ kind: "swan", state: "stalk" })] });
+  const hissing = at(stalking, { tick: 52, goons: [goon({ kind: "swan", state: "telegraph" })] });
+
+  assert.deepEqual(resolveMirrorEvents(walking, stalking, block), []);
+  assert.deepEqual(resolveMirrorEvents(stalking, hissing, block), [{ kind: "hiss" }]);
+  assert.deepEqual(resolveMirrorEvents(hissing, at(hissing, { tick: 53 }), block), []);
+});
+
+test("does announce a clank and not a land when a peck bounces off a helmet", () => {
+  const before = at(start, { tick: 80, goons: [goon({ kind: "helmet" })] });
+  const clanked = at(before, { tick: 81, landed: [81], clanks: [{ tick: 81, spawnIndex: 0 }] });
+
+  assert.deepEqual(resolveMirrorEvents(before, clanked, block), [{ kind: "clank" }]);
+
+  // The next peck lands for real: a land, and no clank.
+  const landed = at(clanked, { tick: 101, landed: [81, 101] });
+
+  assert.deepEqual(resolveMirrorEvents(clanked, landed, block), [{ kind: "land" }]);
+});
+
+test("does announce a dunk into the block's hazard instead of a fall, and a fall for anything else", () => {
+  const raccoon = goon({ kind: "raccoon", hp: 2, state: "telegraph" });
+  const goose = goon({ spawnIndex: 1, state: "approach" });
+  const before = at(start, { tick: 80, goons: [raccoon, goose] });
+  const dunked = at(before, {
+    tick: 81,
+    landed: [81],
+    kos: [81],
+    dunks: [{ tick: 81, spawnIndex: 0 }],
+    goons: [{ ...raccoon, hp: 0, state: "ko" }, goose]
+  });
+
+  assert.equal(block.hazard?.kind, "plinth");
+  assert.deepEqual(resolveMirrorEvents(before, dunked, block), [{ kind: "land" }, { kind: "dunk", hazard: "plinth" }]);
+
+  const felled = at(dunked, { tick: 101, landed: [81, 101], kos: [81, 101], goons: [dunked.goons[0] ?? raccoon, { ...goose, state: "ko" }] });
+
+  assert.deepEqual(resolveMirrorEvents(dunked, felled, block), [{ kind: "land" }, { kind: "ko", goonKind: "goose" }]);
+});
+
+test("does announce a wing when she eats one", () => {
+  const hungry = at(start, { tick: 200, hearts: 2, pickups: [{ x: 40, untilTick: 500 }] });
+  const fed = at(hungry, { tick: 201, hearts: 3, pickups: [], wings: [201] });
+
+  assert.deepEqual(resolveMirrorEvents(hungry, fed, block), [{ kind: "wing" }]);
 });

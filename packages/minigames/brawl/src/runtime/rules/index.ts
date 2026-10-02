@@ -9,7 +9,8 @@ const isSeed = (value: unknown): value is number => {
 };
 
 // Config-load-time schema check for gameConfig.minigameRules.brawl. Every field is optional;
-// when present the block count must be a positive integer and the seed an integer.
+// when present the block count and the heart's price must be positive integers and the seed an
+// integer.
 export const isBrawlRules = (value: unknown): boolean => {
   if (!isRecord(value)) {
     return false;
@@ -18,6 +19,10 @@ export const isBrawlRules = (value: unknown): boolean => {
   const rules = value as Record<string, unknown>;
 
   if (rules.courseSeed !== undefined && !isSeed(rules.courseSeed)) {
+    return false;
+  }
+
+  if (rules.heartPrice !== undefined && !isPositiveInteger(rules.heartPrice)) {
     return false;
   }
 
@@ -35,6 +40,7 @@ export const resolveBrawlRules = (rules: SerializableValue | null): BrawlRuntime
     blocksPerTurn: isPositiveInteger(parsedRules.blocksPerTurn)
       ? parsedRules.blocksPerTurn
       : DEFAULT_BRAWL_RULES.blocksPerTurn,
-    courseSeed: isSeed(parsedRules.courseSeed) ? parsedRules.courseSeed : DEFAULT_BRAWL_RULES.courseSeed
+    courseSeed: isSeed(parsedRules.courseSeed) ? parsedRules.courseSeed : DEFAULT_BRAWL_RULES.courseSeed,
+    heartPrice: isPositiveInteger(parsedRules.heartPrice) ? parsedRules.heartPrice : DEFAULT_BRAWL_RULES.heartPrice
   };
 };

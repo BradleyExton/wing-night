@@ -2,11 +2,13 @@ import {
   isFiniteNumber,
   isNonNegativeInteger,
   isNumberRecord,
+  isPositiveInteger,
   isRecord,
   type BrawlBestTurn,
   type BrawlBlockResult,
   type BrawlBlockStatus,
   type BrawlInput,
+  type BrawlMinigameBlock,
   type BrawlOutcome,
   type BrawlPlayerFigure
 } from "@wingnight/shared";
@@ -76,7 +78,8 @@ const isBlock = (value: unknown): value is BrawlRuntimeBlock => {
     Array.isArray(value.inputs) &&
     value.inputs.every(isInput) &&
     typeof value.skipped === "boolean" &&
-    isResultOrNull(value.result)
+    isResultOrNull(value.result) &&
+    typeof value.heartBought === "boolean"
   );
 };
 
@@ -116,6 +119,7 @@ export const isBrawlRuntimeState = (value: SerializableValue): value is BrawlRun
     (state.activeTurnTeamName === null || typeof state.activeTurnTeamName === "string") &&
     isNonNegativeInteger(state.blocksPerTurn) &&
     isInteger(state.courseSeed) &&
+    isPositiveInteger(state.heartPrice) &&
     isNonNegativeInteger(state.blockIndex) &&
     Array.isArray(state.blocks) &&
     state.blocks.every(isBlock) &&
@@ -148,4 +152,35 @@ export const isBrawlPeckPayload = (
   actionPayload: SerializableValue
 ): actionPayload is BrawlPeckPayload => {
   return isRecord(actionPayload) && isNonNegativeInteger(actionPayload.tick);
+};
+
+/** `buyHeart` carries nothing: the block in hand is the one bought for. */
+export const isBrawlBuyHeartPayload = (actionPayload: SerializableValue): boolean => {
+  return isRecord(actionPayload);
+};
+
+/**
+ * The handoff pick (docs/minigames/brawl-spec.md §0.3): whether the teammate on the line may buy
+ * a fourth heart now. Only on a block after the first — the first block has nothing banked to
+ * spend — only while it is `ready` (the first thumb on the street closes the offer), only once,
+ * and only when the team's banked worth covers the price, so the bank can never go below nought.
+ * The reducer refuses `buyHeart` on the same test the tablet draws the cards on.
+ */
+export const canBuyBrawlHeart = ({
+  block,
+  banked,
+  heartPrice
+}: {
+  block: Pick<BrawlMinigameBlock, "blockIndex" | "status" | "heartBought"> | null;
+  banked: number;
+  heartPrice: number;
+}): boolean => {
+  return (
+    block !== null &&
+    block.status === "ready" &&
+    block.blockIndex >= 1 &&
+    !block.heartBought &&
+    heartPrice > 0 &&
+    banked >= heartPrice
+  );
 };

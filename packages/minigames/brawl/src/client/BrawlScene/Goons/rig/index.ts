@@ -8,6 +8,8 @@ import type { BrawlGoonPalette } from "../palette.js";
  * air), the sim's own convention — and the drawing is centred on `x`. `facing` is the way it is
  * looking, `+1` down the street to the right. `tick` is the sim's, so the walk cycle, the honk's
  * pulse and the stars' orbit are a pure function of the frame and the tablet and the TV agree.
+ * `clank` is how many ticks ago a peck last bounced off this goon's helmet (`BrawlFrame.clanks`),
+ * or null; only the helmet goose draws it (`../Clank`), and only while it is fresh.
  */
 export type GoonProps = {
   x: number;
@@ -16,6 +18,7 @@ export type GoonProps = {
   state: BrawlGoonState;
   tick: number;
   palette: BrawlGoonPalette;
+  clank?: number | null;
 };
 
 /** A walk frame lasts this many ticks: two frames a stride, about four steps a second. */

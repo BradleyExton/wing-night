@@ -19,11 +19,9 @@ export const counter = `${railCounterOverlay} text-muted`;
 
 export const counterName = "text-text";
 
-// The hearts: three glyphs the paint loop lights and dims (`hearts/`), heat while they stand and
-// a ghost of themselves once they are gone, so a hit reads from across the room.
+// The hearts: three glyphs, or four on a bought block (`HeartRow/`), lit and dimmed by the paint
+// loop, so a hit reads from across the room.
 export const counterHearts = `${railCounterOverlay} gap-1 font-score text-[1.2rem] leading-none tracking-normal`;
-
-export const heart = "text-heat transition-opacity duration-150 data-[lit=false]:text-muted data-[lit=false]:opacity-30";
 
 export const heartsLabel = takeoverLabel;
 

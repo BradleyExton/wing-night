@@ -3,7 +3,7 @@ import type { BrawlFrame, BrawlGoon, BrawlGoonKind, BrawlGoonState } from "@wing
 
 import { Goon, brawlGoonPalette } from "../Goons/index.js";
 import { resolveDepthOrder, resolveGoonDepth } from "../goonDepth/index.js";
-import { resolveGoonDrawTick, resolveGoonTransform, resolveGoonsSignature } from "./drawTick/index.js";
+import { resolveClankAge, resolveGoonDrawTick, resolveGoonTransform, resolveGoonsSignature } from "./drawTick/index.js";
 
 export type GoonLayerHandle = {
   /** Moves every goon on the street to this frame, and redraws only the ones whose picture changed. */
@@ -19,12 +19,14 @@ const GoonSlot = memo(
     kind,
     state,
     drawTick,
+    clank,
     register
   }: {
     spawnIndex: number;
     kind: BrawlGoonKind;
     state: BrawlGoonState;
     drawTick: number;
+    clank: number | null;
     register: Register;
   }): JSX.Element => {
     const attach = useCallback(
@@ -36,7 +38,7 @@ const GoonSlot = memo(
 
     return (
       <g ref={attach} data-brawl-goon={spawnIndex}>
-        <Goon kind={kind} x={0} y={0} facing={1} state={state} tick={drawTick} palette={brawlGoonPalette} />
+        <Goon kind={kind} x={0} y={0} facing={1} state={state} tick={drawTick} palette={brawlGoonPalette} clank={clank} />
       </g>
     );
   }
@@ -65,7 +67,8 @@ const byDrawOrder = (frame: BrawlFrame | null, order: number[]): BrawlGoon[] => 
 /**
  * The street's goons. Their drawings are React components with a `state`, so a goon is rendered
  * by React — but only when the layer's signature changes (a goon arrives, leaves, changes state,
- * or its walk frame turns over), a handful of times a second; on every other frame the paint just
+ * its walk frame turns over, or a clank bursts off a helmet goose's cage), a handful of times a
+ * second; on every other frame the paint just
  * moves the groups. `data-brawl-goon-renders` counts the layer's renders, so a harness can prove
  * a frame with nothing new costs no React work.
  *
@@ -145,6 +148,7 @@ export const GoonLayer = forwardRef<GoonLayerHandle>((_props, ref): JSX.Element 
           kind={goon.kind}
           state={goon.state}
           drawTick={resolveGoonDrawTick(goon.state, frame?.tick ?? 0)}
+          clank={frame === null ? null : resolveClankAge(frame, goon.spawnIndex)}
           register={register}
         />
       ))}

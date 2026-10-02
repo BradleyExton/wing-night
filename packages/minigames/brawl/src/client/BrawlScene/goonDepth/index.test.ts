@@ -11,7 +11,7 @@ import {
   resolveGoonLane
 } from "./index.js";
 
-const KINDS: BrawlGoonKind[] = ["goose", "gull", "raccoon", "boss"];
+const KINDS: BrawlGoonKind[] = ["goose", "gull", "raccoon", "swan", "helmet", "boss"];
 
 const goon = (overrides: Partial<BrawlGoon> = {}): Pick<BrawlGoon, "spawnIndex" | "kind" | "x" | "state"> => ({
   spawnIndex: 0,
@@ -84,4 +84,12 @@ test("does draw the far line first and keep spawn order among goons on one line"
   );
 
   assert.deepEqual(order, [2, 0, 3, 1]);
+});
+
+test("does stand a stalking swan on the hen's line whatever its lane", () => {
+  for (const spawnIndex of [0, 1, 2]) {
+    assert.equal(resolveGoonDepth(goon({ kind: "swan", spawnIndex, state: "stalk", x: 150 }), 150 - BRAWL_WORLD.goons.swan.reach, undefined), 0);
+    // Even one that drifted a little past its reach before it re-checked.
+    assert.equal(resolveGoonDepth(goon({ kind: "swan", spawnIndex, state: "stalk", x: 150 }), 60, undefined), 0);
+  }
 });

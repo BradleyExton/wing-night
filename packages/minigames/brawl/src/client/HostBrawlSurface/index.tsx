@@ -1,9 +1,10 @@
 import { useRef } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { BrawlMinigameHostView } from "@wingnight/shared";
-import { BRAWL_WORLD } from "@wingnight/shared";
+import { resolveBrawlStartHearts } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
+import { HeartRow } from "../HeartRow/index.js";
 import { useBrawlSounds } from "../useBrawlSounds/index.js";
 import { useHeldBlock, type BlockHold } from "../useHeldBlock/index.js";
 import { useSoloBeatSounds } from "../useSoloBeatSounds/index.js";
@@ -14,8 +15,6 @@ import * as styles from "./styles.js";
 
 // Before the view arrives there is no block to hold, and nothing yet to be through.
 const EMPTY_BLOCK_VIEW = { blockIndex: 0, blocksPerTurn: 1, blocks: [] };
-
-const HEART_SLOTS = Array.from({ length: BRAWL_WORLD.heartsMax }, (_unused, index) => index);
 
 const currentPlayerName = (view: BrawlMinigameHostView): string | null => {
   return view.blocks[Math.min(view.blockIndex, view.blocksPerTurn - 1)]?.player?.name ?? null;
@@ -79,6 +78,8 @@ export const HostBrawlSurface = ({
   const tallyRef = useRef<HTMLSpanElement>(null);
   const hint = brawlView === null ? null : resolveHint(brawlView, canAct, hold, solo);
   const playerName = brawlView === null || isFinished ? null : currentPlayerName(brawlView);
+  // One glyph per heart the street on screen starts with: four on a block bought at the handoff.
+  const heartsMax = resolveBrawlStartHearts(brawlView?.blocks[shownBlockIndex]?.heartBought ?? false);
   // The block list and the round's totals come out only when there is something to read off them
   // and nothing to dodge under them.
   const showsReadout = brawlView !== null && (hold !== null || isFinished);
@@ -116,13 +117,7 @@ export const HostBrawlSurface = ({
             </span>
             {!isFinished && (
               <span className={styles.counterHearts}>
-                <span ref={heartsRef} data-brawl-hearts={BRAWL_WORLD.heartsMax}>
-                  {HEART_SLOTS.map((slot) => (
-                    <span key={slot} className={styles.heart} data-lit="true">
-                      {hostBrawlSurfaceCopy.heart}
-                    </span>
-                  ))}
-                </span>
+                <HeartRow max={heartsMax} rowRef={heartsRef} tone="chrome" />
                 <span className={styles.heartsLabel}>{hostBrawlSurfaceCopy.heartsLabel}</span>
               </span>
             )}

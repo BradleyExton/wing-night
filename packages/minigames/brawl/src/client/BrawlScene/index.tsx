@@ -9,10 +9,12 @@ import { BayLift, paintBayLift, type BayLiftRefs } from "./BayLift/index.js";
 import { resolveClearedBeat, resolveKoBeat, resolveTimeoutBeat } from "./beatTimeline/index.js";
 import { Bell, paintBell } from "./Bell/index.js";
 import { TABLET_CAMERA_FIT, resolveCamera, resolveViewBox, type BrawlCameraFit } from "./camera/index.js";
+import { DunkSplash, paintDunkSplash, resolveDunkSplash } from "./DunkSplash/index.js";
 import { GoArrow, paintGo } from "./GoArrow/index.js";
 import { GoonLayer, type GoonLayerHandle } from "./GoonLayer/index.js";
 import { Hen, paintHen, type HenRefs } from "./Hen/index.js";
 import { isHenPecking, resolveHenOpacity, resolveHenPose } from "./henPose/index.js";
+import { PickupLayer, type PickupLayerHandle } from "./PickupLayer/index.js";
 import { NEXT_MATE_PAST_HANDOFF, RelayMates, placeMate, type RelayMatesRefs } from "./RelayMates/index.js";
 import { shakeElement } from "./shake/index.js";
 import * as styles from "./styles.js";
@@ -74,6 +76,8 @@ export const BrawlScene = forwardRef<BrawlSceneHandle, BrawlSceneProps>(
     const skyRef = useRef<SVGGElement>(null);
     const henRef = useRef<HenRefs>(null);
     const goonsRef = useRef<GoonLayerHandle>(null);
+    const pickupsRef = useRef<PickupLayerHandle>(null);
+    const dunkRef = useRef<SVGGElement>(null);
     const matesRef = useRef<RelayMatesRefs>(null);
     const goRef = useRef<SVGGElement>(null);
     const bellRef = useRef<SVGGElement>(null);
@@ -93,6 +97,8 @@ export const BrawlScene = forwardRef<BrawlSceneHandle, BrawlSceneProps>(
     const paintStreet = (frame: BrawlFrame): void => {
       worldRef.current?.setAttribute("transform", `translate(${Math.round(-frame.cameraX * 100) / 100} 0)`);
       paintSky(skyRef.current, frame.cameraX);
+      pickupsRef.current?.paint(frame);
+      paintDunkSplash(dunkRef.current, resolveDunkSplash(frame, blockRef.current.hazard?.kind ?? null));
       goonsRef.current?.paint(frame);
       setIfChanged(frameRef.current, "data-brawl-camera-x", `${Math.round(frame.cameraX)}`);
       setIfChanged(frameRef.current, "data-brawl-wave", `${frame.waveIndex}`);
@@ -242,6 +248,8 @@ export const BrawlScene = forwardRef<BrawlSceneHandle, BrawlSceneProps>(
             <g ref={worldRef} data-brawl-world>
               <Street block={block} />
               <RelayMates ref={matesRef} block={block} relay={relay} />
+              <PickupLayer ref={pickupsRef} />
+              <DunkSplash ref={dunkRef} kind={block.hazard?.kind ?? null} />
               <GoonLayer ref={goonsRef} />
               <Hen ref={henRef} figure={hen} />
               <BayLift ref={bayRef} />
