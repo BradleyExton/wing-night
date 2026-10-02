@@ -70,13 +70,26 @@ it is.
   `previousShotGhost`; the integrator never sees it. A skipped shot flew nothing and leaves the
   last ghost be; a reset clears it.
 - The **shooter** is a verlet chain (5 shaft links, a head, two balls). Each **pin** is a foot and
-  a head with a stick between them, collided against as the capsule it is drawn as. Obstacles are
+  a head with a stick between them, and the shot collides with it as the BIRD the room sees: the
+  stick's capsule, plus the face — a circle of the head's radius `JOUST_PIN_HEAD_FORWARD` (3.8)
+  in front of the head body, because a hen leads with its face — and the chest, a blob the cast
+  measured off its own body (`JOUST_PIN_CHEST`). The three are one solid (deepest contact wins),
+  and the shot hits it as a lever on planted feet: the blow swings the head over about the foot,
+  more the lower it lands. Birds meet each other and the timber as sticks only. Obstacles are
   content-authored rectangles the renderer draws as beach props; their optional `kind` (§5) is
   skin only, and the physics sees four segments whatever it says.
-- A pin is **bistable**, like the real thing: inside `PIN_RECOVERY_TILT` it rights itself, and past
-  it nothing holds it up — gravity swings the head down about the planted foot and it is going
-  over. A pin over `JOUST_TOPPLE_TILT` (0.45 of its own height) is latched down for good. Falling
-  pins collide with their neighbours, so the rack goes down in chains.
+- A pin is **bistable**, like the real thing: inside `PIN_RECOVERY_TILT` (0.1) it rights itself,
+  and past it nothing holds it up — the spring is off for good, the foot is let go of, and gravity
+  swings the head down about the heavy foot (`PIN_FOOT_SHARE`) until it is over. A pin over
+  `JOUST_TOPPLE_TILT` (0.45 of its own height) is latched down for good, and from there is a loose
+  stick that tumbles flat. Falling pins collide with their neighbours, so the rack goes down in
+  chains. A bird already going over costs the shot half what a standing one does, so a shot
+  ploughs a row it has knocked down rather than stalling in it.
+- **A hit is a hit.** The 2026-10-01 sweep (§7) found 63% of the birds the room saw a shot touch
+  were still standing afterwards: the face led the collider by four units, hits below the knees
+  shoved a sprung foot instead of the head, and a rigid even stick slid the foot back under a head
+  that was already past recovery. The bird above is what fixed it; the number is 8% now, and the
+  rest are slow end-of-flight touches.
 - **Scoring is bowling's, weighted by height.** A player's perch value per player toppled, plus
   `JOUST_RACK_CLEARED_BONUS` (3) for a shot that leaves nobody standing. Turn total is capped at
   `pointsMax`.
@@ -146,18 +159,23 @@ it is.
   bare `<g>` (`<CharacterFigure>`) so the lane can place it under its own transform, which is how a
   player's generated head, their team's colour and their genre's apparel all arrive for free. The
   pin's three numbers — `JOUST_PIN_HEIGHT`, `JOUST_PIN_HEAD_RADIUS`, `JOUST_PIN_FOOT_RADIUS` — are
-  that bird's own proportions at lane scale, and `ArenaHen`'s test fails if the drawn head and the
-  collided head stop being the same size.
+  that bird's own proportions at lane scale, as are the face's lead (`JOUST_PIN_HEAD_FORWARD`,
+  the costume head's twenty box units in front of the foot) and the chest (`JOUST_PIN_CHEST`,
+  the cast's `CHARACTER_BODY`), and `ArenaHen`'s tests fail if the drawn bird and the collided
+  bird stop agreeing on any of them. `packages/shared` cannot import the cast, so the numbers are
+  mirrored and the agreement is pinned from the client side.
 - **The shot is drawn along its bodies, between its keyframes.** `@wingnight/cast` exports
   `resolveSchlongPaths`: the five shaft links and the head body are the spine, the glans is a cap
   of the head body's radius, and FAPPY's champs come off the same function. The replay index is
   fractional — the scene blends the two keyframes either side of it — so a 24 Hz track moves on
   every screen frame. The lane's hens are memoised on their body positions, because a replay now
   re-renders the scene at screen rate and most of the rack is standing still through most of it.
-- **A pin is light, the shot is heavy, a leg is heavier.** `SHOOTER_MASS_SHARE` (0.15) is what
-  lets a shot plough on down the lane instead of stopping dead in the first player it meets;
-  `SHOOTER_LEG_SHARE` (0.35) is what makes a leg something to bounce off unless there is real
-  weight behind the shot. Legs come LAST in the body order (`resolveJoustBodies(pinCount,
+- **A pin is light, the shot is heavy, a leg is heavier.** `massShare` (0.15 on the Standard) is
+  what lets a shot plough on down the lane instead of stopping dead in the first player it meets,
+  and a bird already going over charges half of it (`FELLED_BIRD_SHARE`), because at the full
+  share a Log stalled in the third bird of a row it should have ploughed and at nothing it
+  bulldozed every row it met; `legShare` (0.35) is what makes a leg something to bounce off unless
+  there is real weight behind the shot. Legs come LAST in the body order (`resolveJoustBodies(pinCount,
   legCount)`, `joustLegFootIndex`), so felling a player never moves a tower's bodies and bringing
   a tower down never moves a pin's. The slab is the one piece of static timber; it is a segment
   while the tower stands and dropped from the active set the step the legs fold. The renderer
@@ -224,8 +242,8 @@ it is.
       "name": "Centennial Beach",
       "perches": [
         { "x": 54, "y": 78, "width": 102 },
-        { "x": 54, "y": 64, "width": 28 },
-        { "x": 71, "y": 50, "width": 83 }
+        { "x": 54, "y": 64, "width": 28, "kind": "dock" },
+        { "x": 71, "y": 50, "width": 83, "kind": "lifeguard-tower" }
       ],
       "obstacles": [
         { "x": 45, "y": 64, "width": 7, "height": 14, "kind": "umbrella" },
@@ -242,21 +260,35 @@ World is 160 wide, 90 tall, floor at y = 78, slingshot fork at (40, 46). A lane 
 not shooting that night, dealt across the perches. A perch is anchored by its left edge `x` and by
 the surface `y` players stand on; one at floor level is the sand, and any higher one grows its own
 slab and legs. Perches must sit between `JOUST_RACK_LEFT` (54) and `JOUST_RACK_RIGHT` (156) and no
-higher than `JOUST_RACK_TOP` (22). The renderer dresses a shelf by its rise: under
-`JOUST_PERCH_POINTS_TIER` (20) it is a dock on pilings, from there up a lifeguard tower — skin only,
-the timber is the same boxes either way.
+higher than `JOUST_RACK_TOP` (22).
+
+A perch's optional `kind` is what the renderer BUILDS it as, one of `dock`, `lifeguard-tower`,
+`queens-balcony`, `souldiers-roof` or `condo-balcony` (`JOUST_PERCH_KINDS`); anything else is
+rejected at load. A perch with no `kind` is dressed by its rise, as every pack before kinds was:
+under `JOUST_PERCH_POINTS_TIER` (20) a dock on pilings, from there up a lifeguard tower. The two
+beach kinds are those same skins named outright; the three landmark kinds hang a façade between
+the shelf's legs — the Queen's Hotel's ground floor under a white balcony rail, Souldiers Skate
+Shop's brick front under its parapet, a waterfront condo's glass-stacked storeys under a balcony
+slab — drawn in a frame built from the legs' live positions, so the building folds with the tower.
+Skin only: the timber is the same boxes whatever it is dressed as, the points are still the rise,
+and the physics never reads `kind`.
 
 An obstacle's optional `kind` is what the renderer dresses it as, one of `lifeguard-chair`,
-`muskoka-chair`, `canoe`, `chip-truck`, `mast` or `umbrella`; anything else is rejected at load,
-and a missing `kind` draws an umbrella. It never reaches the physics — a canoe and a chip truck of
-the same rectangle stop a shot identically — so pick the drawing that fits the rectangle rather
-than the other way round.
+`muskoka-chair`, `canoe`, `chip-truck`, `mast`, `umbrella`, `lamp-post` (a lit downtown lamp
+post, drawn for a mast's narrow rectangle) or `planter` (a stone planter and shrub, for a chair's
+squat one); anything else is rejected at load, and a missing `kind` draws an umbrella. It never
+reaches the physics — a canoe and a chip truck of the same rectangle stop a shot identically — so
+pick the drawing that fits the rectangle rather than the other way round.
 
-**The sample lanes are four Barrie lanes**, dealt by turn slot: Centennial Beach (a dock and a big
-lifeguard tower), The Spirit Catcher (a mid shelf and the tallest stand of the four), Allandale
-Dock (a long lifeguard tower and a dock at the water's end) and Meridian Place (two shelves). They
-seat 14, 15, 14 and 15, and the available points across them are within one at every rack size
-from 9 to 14, because the first team's lane must not be the richest one.
+**The sample lanes are four Barrie lanes**, dealt by turn slot, and each shelf is built as a
+piece of its place: Centennial Beach (a dock and a big lifeguard tower), The Spirit Catcher (a
+dock and the tallest lifeguard stand of the four — open timber, so the steel bird on the beach
+behind it stays in view; a façade there hid the thing the lane is named after), Allandale Dock
+(a long waterfront condo balcony, the pair that really does stand over that shore, and a dock at
+the water's end) and Meridian Place (the Queen's Hotel balcony and Souldiers' roof, the two Dunlop Street fronts
+beside the square, with a lamp post and a planter for furniture). They seat 17 each, and the
+available points across them are within one at every rack size from 9 to 14, because the first
+team's lane must not be the richest one.
 
 **The night pack carries no `joust.json`**, so the sample lanes above are what the party plays
 until one is added. A pack file replaces the whole file, not a lane at a time: an author adding one
@@ -327,6 +359,63 @@ demo night is unchanged. Schedule it with `"minigame": "JOUST"` on a round in
 - Manual score override — the global scoring dock, as for every game.
 
 ## 7) Open questions
+
+### Hit detection, by sweep (2026-10-01)
+
+The same 0.05 × 0.1 aim grid as below, four sample lanes, 12-player rack, seed 7, but classifying
+every bird the shot came NEAR: `drawn` is a bird the room saw the shot overlap (the cast's costume
+head 3.8 units in front of the pin, or its body blob), `stick` a bird the old physics capsule
+overlapped, `→stand` the share of those still standing when the track ended. `clear` is aims
+that felled the whole rack; `fold` is towers folded. Before is the shipped physics; after is the
+bird-as-lever collider (§3): face and chest on the pin, a one-way `falling` latch past recovery
+0.1, upright spring 0.04, a heavy foot while standing, and a felled bird charging the shot half.
+
+| kind     |        | score | mean  | fold  | drawn→stand | stick→stand | clear |
+| -------- | ------ | ----- | ----- | ----- | ----------- | ----------- | ----- |
+| standard | before | 30.7% | 6.22  | 9.9%  | 63.5%       | 60.3%       | 0.0%  |
+| standard | after  | 47.9% | 7.97  | 10.7% | 7.7%        | 12.5%       | 1.7%  |
+| log      | before | 39.0% | 7.68  | 21.5% | 54.6%       | 49.5%       | 0.7%  |
+| log      | after  | 53.6% | 8.29  | 22.9% | 9.9%        | 7.0%        | 1.7%  |
+| pencil   | before | 25.4% | 5.04  | 2.6%  | 56.4%       | 52.9%       | 0.0%  |
+| pencil   | after  | 39.6% | 7.36  | 3.7%  | 12.2%       | 28.5%       | 0.1%  |
+| bouncer  | before | 25.0% | 4.51  | 0.7%  | 49.5%       | 40.7%       | 0.0%  |
+| bouncer  | after  | 37.9% | 7.39  | 2.9%  | 5.3%        | 19.0%       | 0.5%  |
+
+What it says. Before, a bird the room watched get hit stayed up two times in three, and a fifth
+of those the capsule never touched at all — the face led it by four units. The fix is three
+things that each hid the other: the bird is collided where it is drawn (face, chest, stick as one
+solid); the blow is a lever about planted feet, so a chest hit swings the head over instead of
+shoving a sprung foot; and a pin past recovery is committed — spring off, foot let go, heavy foot
+until it is counted and a loose stick after — so the rigid stick can no longer slide the foot back
+under a head that was already going. Tuning the springs alone got standing-after-touch to 28%;
+the collider alone moved nothing; together, 8%, and what is left is slow end-of-flight touches
+under forty units a second and hits below the knees.
+
+The kinds keep their shape: the Log folds towers at 2.1× the Standard (was 2.2×), the Pencil and
+the Bouncer still barely fold one, and every kind scores on 12–15 more points of the aim space.
+What moved that bears watching at a table: a bird already going over now costs the shot half
+(`FELLED_BIRD_SHARE`) — at the full share a Log ploughing a row stalled in the third bird and came
+off the fourth backwards, kicked by felled heads swinging round onto its shaft; at nothing it
+bulldozed every row and the Standard cleared a twelve-rack on one pull in twenty. Half keeps the
+plough and the Log. Full clears are 1.7% of aims overall, but Allandale Dock's one big tower
+holding most of the rack clears on 5.9% of Standard pulls (was 0.1%): fold it and the sand row
+goes with it. That is the jackpot the lane was built around; if it comes up too often on the
+night, raise that tower or split it rather than touching the shares.
+
+At the night pack's real rack of fifteen (twenty at the table in teams of five) the same sweep
+reads: Standard score 32.2% → 56.5%, mean 6.30 → 9.49, touched-and-standing 73.7% → 24.8%, clears
+0.3% → 2.2% (Allandale 1.1% → 8.4%); Log 39.6% → 61.5%, 70.6% → 26.3% standing, fold 19.7% →
+22.6%. A fuller rack leaves more birds standing after a touch than a rack of twelve does because
+more of the touches are the shot settling into the pile it has already made; the first contact a
+flying shot makes is the one the room judges, and that is what the lever fixed.
+
+The harness was a scratch script, not a tool: it imports `simulateJoustShot` from
+`packages/shared/src/index.ts`, runs under `pnpm exec tsx` from `packages/shared`, and reads
+contacts off the 24 Hz keyframes with four sub-samples between each pair (so a graze between
+frames still counts). Every test fixture aim in `simulate/index.test.ts` and
+`runtime/index.test.ts` is a single hand-picked pull in a chaotic system; the pass re-found all of
+them with a finder that checks each test's whole intent, and the next physics change will have
+to again.
 
 ### The kinds, by sweep (2026-09-23)
 

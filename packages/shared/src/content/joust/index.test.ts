@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { JOUST_OBSTACLE_KINDS } from "../../joust/types.js";
+import { JOUST_OBSTACLE_KINDS, JOUST_PERCH_KINDS } from "../../joust/types.js";
 import type { JoustPerch } from "../../joust/types.js";
 import { resolveLaneSlots } from "../../joust/world/index.js";
 import {
@@ -69,6 +69,34 @@ test("does reject a prop kind the renderer has no drawing for", () => {
     ["obstacles[0].kind"]
   );
   assert.match(issues[0]?.message ?? "", /lifeguard-chair/);
+});
+
+test("does accept every landmark kind the renderer can build a shelf as", () => {
+  for (const kind of JOUST_PERCH_KINDS) {
+    const perches = validPrompt.perches.map((perch, index) =>
+      index === 1 ? { ...perch, kind } : perch
+    );
+
+    assert.deepEqual(validateJoustPrompt({ ...validPrompt, perches }), [], kind);
+  }
+});
+
+test("does reject a perch kind the renderer has no building for", () => {
+  const perches = validPrompt.perches.map((perch, index) =>
+    index === 1 ? { ...perch, kind: "water-tower" } : perch
+  );
+  const issues = validateJoustPrompt({ ...validPrompt, perches });
+
+  assert.deepEqual(
+    issues.map((issue) => issue.path),
+    ["perches[1].kind"]
+  );
+  assert.match(issues[0]?.message ?? "", /queens-balcony/);
+});
+
+test("does accept a perch that names no kind, which the renderer dresses by its height", () => {
+  assert.deepEqual(validateJoustPrompt(validPrompt), []);
+  assert.ok(validPrompt.perches.every((perch) => !("kind" in perch)));
 });
 
 test("accepts an open lane with no obstacles", () => {

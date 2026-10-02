@@ -45,6 +45,7 @@ export type {
 } from "./contraption/index.js";
 export {
   JOUST_OBSTACLE_KINDS,
+  JOUST_PERCH_KINDS,
   JOUST_PIN_FOOT_RADIUS,
   JOUST_PIN_HEAD_RADIUS,
   JOUST_PIN_HEIGHT,
@@ -58,6 +59,8 @@ export {
   JOUST_SHOOTER_SHAFT_COUNT,
   JOUST_LEG_RADIUS,
   JOUST_PERCH_LEG_INSET,
+  JOUST_PIN_CHEST,
+  JOUST_PIN_HEAD_FORWARD,
   JOUST_PERCH_LEG_WIDTH,
   JOUST_PERCH_POINTS_MAX,
   JOUST_PERCH_POINTS_TIER,
@@ -112,6 +115,7 @@ export type {
   JoustObstacle,
   JoustObstacleKind,
   JoustPerch,
+  JoustPerchKind,
   JoustRackLayout,
   JoustSegment,
   JoustShooterProfile,

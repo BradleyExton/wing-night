@@ -10,6 +10,7 @@ import {
 
 import type { JoustSceneLeg } from "../../resolveJoustScene/index.js";
 import { joustPalette } from "../palette.js";
+import { Facade } from "./Facade/index.js";
 import { LegTimber } from "./LegTimber/index.js";
 import { PerchShade } from "./PerchShade/index.js";
 import {
@@ -48,9 +49,12 @@ const legRestHeight = (perch: JoustPerch): number => {
  * two tops. So when a shot folds the frame, the plank comes down with it on the TV — nothing
  * here is a second opinion about where the tower is.
  *
- * What the timber is DRESSED as is decided by height (`PerchSkin`): a low shelf is a dock on
- * pilings, a high one a lifeguard tower. The skin only paints the same legs and plank and hangs
- * its trim off the plank's current ends, so it folds with the frame like everything else.
+ * What the timber is DRESSED as is the perch's authored `kind`, or failing that its height
+ * (`PerchSkin`): a low shelf is a dock on pilings, a high one a lifeguard tower. The skin only
+ * paints the same legs and plank and hangs its trim off the plank's current ends, so it folds with
+ * the frame like everything else. A landmark kind also hangs a façade (`Facade`) between the legs,
+ * behind them, in a frame built from the legs' live feet and tops — so the building shears over
+ * with the timber when a shot folds it.
  *
  * Fallen towers stay in the lane as rubble: plank flat on the sand, legs splayed under it.
  */
@@ -69,7 +73,7 @@ export const Perch = ({
   }
 
   const points = resolveJoustPerchPoints(perch);
-  const skin = resolvePerchSkin(JOUST_WORLD.floorY - perch.y);
+  const skin = resolvePerchSkin(JOUST_WORLD.floorY - perch.y, perch.kind);
   const plankPaint = resolvePlankPaint(skin);
   const [nearLeg, farLeg] = legs;
 
@@ -118,6 +122,7 @@ export const Perch = ({
   return (
     <g data-joust-perch>
       <PerchShade perch={perch} />
+      <Facade skin={skin} nearLeg={nearLeg} farLeg={farLeg} restHeight={legRestHeight(perch)} />
       {legs.map((leg, index) => (
         <LegTimber
           key={index}

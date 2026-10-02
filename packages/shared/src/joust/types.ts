@@ -21,7 +21,9 @@ export const JOUST_OBSTACLE_KINDS = [
   "canoe",
   "chip-truck",
   "mast",
-  "umbrella"
+  "umbrella",
+  "lamp-post",
+  "planter"
 ] as const;
 
 export type JoustObstacleKind = (typeof JOUST_OBSTACLE_KINDS)[number];
@@ -39,14 +41,33 @@ export type JoustObstacle = {
 };
 
 /**
+ * What the renderer dresses a shelf as: the two beach structures a shelf has always been by its
+ * height, and the Barrie landmarks a lane can now name — the Queen's Hotel balcony, Souldiers'
+ * roof and a waterfront condo balcony, each a façade hung between the shelf's own legs. Skin
+ * only — the physics never reads it, and a shelf that names none is dressed by its height as
+ * before (`PerchSkin` in the renderer).
+ */
+export const JOUST_PERCH_KINDS = [
+  "dock",
+  "lifeguard-tower",
+  "queens-balcony",
+  "souldiers-roof",
+  "condo-balcony"
+] as const;
+
+export type JoustPerchKind = (typeof JOUST_PERCH_KINDS)[number];
+
+/**
  * A shelf players stand on, anchored by its LEFT edge at `x` and by the surface they stand on at
  * `y`. A perch at floor level is the sand itself and builds nothing; any higher one grows its own
- * slab and legs, so an author cannot draw a platform and forget to make it solid.
+ * slab and legs, so an author cannot draw a platform and forget to make it solid. `kind` is what
+ * that slab and those legs are drawn as, and nothing else.
  */
 export type JoustPerch = {
   x: number;
   y: number;
   width: number;
+  kind?: JoustPerchKind;
 };
 
 /**

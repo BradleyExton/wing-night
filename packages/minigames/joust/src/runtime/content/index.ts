@@ -10,15 +10,21 @@ const promptAdapter = createPromptContentAdapter<JoustPrompt>({
   label: "joust",
   fileName: "minigames/joust.json",
   invalidContentHint:
-    "expected { prompts: [{ id, name, perches: [{ x, y, width }], obstacles: [{ x, y, width, height, kind? }] }], shooters?: [{ id, name, blurb, color: { fill, dark, light }, usesPerTurn?, profile? }] } with unique ids.",
+    "expected { prompts: [{ id, name, perches: [{ x, y, width, kind? }], obstacles: [{ x, y, width, height, kind? }] }], shooters?: [{ id, name, blurb, color: { fill, dark, light }, usesPerTurn?, profile? }] } with unique ids.",
   isContentFile: isJoustContentFile,
   isPrompt: isJoustPrompt,
   clonePrompt: (prompt) => ({
     id: prompt.id,
     name: prompt.name,
-    perches: prompt.perches.map((perch) => ({ ...perch })),
-    // `kind` is the prop's skin and rides through untouched; a pack that names none stays
-    // without one rather than gaining an explicit undefined.
+    // `kind` is a skin on either — the landmark a shelf is built as, the furniture an obstacle
+    // is drawn as — and rides through untouched; a pack that names none stays without one rather
+    // than gaining an explicit undefined.
+    perches: prompt.perches.map((perch) => ({
+      x: perch.x,
+      y: perch.y,
+      width: perch.width,
+      ...(perch.kind === undefined ? {} : { kind: perch.kind })
+    })),
     obstacles: prompt.obstacles.map((obstacle) => ({
       x: obstacle.x,
       y: obstacle.y,

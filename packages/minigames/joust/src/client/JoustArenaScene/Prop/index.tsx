@@ -174,18 +174,68 @@ const LifeguardChair = ({ x, y, width, height }: Box): JSX.Element => {
   );
 };
 
+/**
+ * A downtown lamp post, lit for the evening: a black pole on a plinth, an acorn lantern on top
+ * holding the same glow as downtown's windows, and a soft halo round it. Drawn for a mast's
+ * narrow rectangle; the lantern overhangs the pole the way the pennant overhangs the mast.
+ */
+const LampPost = ({ x, y, width, height }: Box): JSX.Element => {
+  const cx = x + width / 2;
+  const poleWidth = Math.max(0.7, width * 0.45);
+  const lanternRadius = Math.max(1.4, width * 0.9);
+  const lanternY = y + lanternRadius + 0.6;
+
+  return (
+    <g>
+      <circle cx={cx} cy={lanternY} r={lanternRadius * 2.4} fill={joustPalette.glass} opacity={0.14} />
+      <rect x={cx - poleWidth / 2} y={lanternY} width={poleWidth} height={height - (lanternY - y)} fill={joustPalette.lampPost} />
+      <rect x={cx - poleWidth * 1.4} y={y + height - 2} width={poleWidth * 2.8} height={2} rx={0.3} fill={joustPalette.lampPost} />
+      <circle cx={cx} cy={lanternY} r={lanternRadius} fill={joustPalette.glass} stroke={joustPalette.lampPost} strokeWidth={OUTLINE} />
+      <path d={`M${cx - lanternRadius * 0.7} ${lanternY - lanternRadius * 0.7} Q${cx} ${y - 0.4} ${cx + lanternRadius * 0.7} ${lanternY - lanternRadius * 0.7} Z`} fill={joustPalette.lampPost} />
+    </g>
+  );
+};
+
+/** A stone planter with its shrub, the squat box Meridian Place's benches sit beside. */
+const Planter = ({ x, y, width, height }: Box): JSX.Element => {
+  const rim = y + height * 0.5;
+  const cx = x + width / 2;
+  const bush = height * 0.32;
+
+  return (
+    <g>
+      <path
+        d={`M${x} ${rim} L${x + width} ${rim} L${x + width * 0.9} ${y + height} L${x + width * 0.1} ${y + height} Z`}
+        fill={joustPalette.planterStone}
+        stroke={joustPalette.planterStoneDark}
+        strokeWidth={OUTLINE}
+        strokeLinejoin="round"
+      />
+      <rect x={x - 0.3} y={rim - 0.9} width={width + 0.6} height={1.1} rx={0.2} fill={joustPalette.planterStoneDark} />
+      <g fill={joustPalette.shrubDark}>
+        <circle cx={x + width * 0.3} cy={rim - bush * 0.9} r={bush} />
+        <circle cx={x + width * 0.72} cy={rim - bush * 0.95} r={bush * 0.95} />
+      </g>
+      <circle cx={cx} cy={y + bush * 1.05} r={bush * 1.05} fill={joustPalette.shrub} />
+    </g>
+  );
+};
+
 const DRAWINGS: Record<JoustObstacleKind, (box: Box) => JSX.Element> = {
   umbrella: Umbrella,
   "muskoka-chair": MuskokaChair,
   canoe: Canoe,
   "chip-truck": ChipTruck,
   mast: Mast,
-  "lifeguard-chair": LifeguardChair
+  "lifeguard-chair": LifeguardChair,
+  "lamp-post": LampPost,
+  planter: Planter
 };
 
 /**
- * What an obstacle looks like: the furniture of a Barrie beach, each drawing fitted to the
- * rectangle the integrator collides against so what the room sees hit is what the shot hit.
+ * What an obstacle looks like: the furniture of a Barrie beach — and of Meridian Place, a lamp
+ * post and a planter — each drawing fitted to the rectangle the integrator collides against so
+ * what the room sees hit is what the shot hit.
  * Skin only — `kind` never reaches the physics, and a pack that names none gets an umbrella.
  */
 export const Prop = ({ obstacle }: { obstacle: JoustObstacle }): JSX.Element => {

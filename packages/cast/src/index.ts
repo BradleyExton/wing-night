@@ -24,6 +24,7 @@ export {
   type CharacterRideStance
 } from "./Character/CharacterFigure/index.js";
 export {
+  CHARACTER_BODY,
   CHARACTER_BOX,
   CHARACTER_FOOT,
   CHARACTER_PARTS,

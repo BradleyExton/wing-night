@@ -1,5 +1,5 @@
 export { simulateJoustShot } from "./simulate/index.js";
-export { JOUST_OBSTACLE_KINDS } from "./types.js";
+export { JOUST_OBSTACLE_KINDS, JOUST_PERCH_KINDS } from "./types.js";
 export {
   JOUST_STANDARD_SHOOTER_PROFILE,
   resolveJoustShooterProfile
@@ -14,6 +14,7 @@ export type {
   JoustObstacle,
   JoustObstacleKind,
   JoustPerch,
+  JoustPerchKind,
   JoustShooterProfile,
   JoustShotRun,
   JoustSimulateOptions,
@@ -23,6 +24,8 @@ export type {
 export {
   JOUST_LEG_RADIUS,
   JOUST_PERCH_LEG_INSET,
+  JOUST_PIN_CHEST,
+  JOUST_PIN_HEAD_FORWARD,
   JOUST_PERCH_LEG_WIDTH,
   JOUST_PERCH_POINTS_MAX,
   JOUST_PERCH_POINTS_TIER,

@@ -22,7 +22,7 @@ const minigameBriefingContentByType: Record<MinigameType, MinigameBriefingConten
   },
   SONG_GUESS: {
     illustrationPath: `${DISPLAY_ASSET_ROOT}/song-guess-illustration.svg`,
-    illustrationAlt: "Who's That Song mini-game artwork",
+    illustrationAlt: "Name That Cheese mini-game artwork",
     summary:
       "Lounge covers of songs you already know. Name the song, name who did it first."
   },

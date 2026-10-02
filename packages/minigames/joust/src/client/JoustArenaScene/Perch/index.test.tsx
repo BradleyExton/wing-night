@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { JOUST_WORLD, resolveJoustLegs } from "@wingnight/shared";
+import { JOUST_PERCH_KINDS, JOUST_WORLD, resolveJoustLegs } from "@wingnight/shared";
+import type { JoustPerch } from "@wingnight/shared";
 
 import { Perch } from "./index.js";
 
@@ -10,7 +11,7 @@ const SAND = { x: 54, y: 78, width: 102 };
 const SHELF = { x: 116, y: 50, width: 34 };
 const HIGH_SHELF = { x: 62, y: 30, width: 32 };
 
-const uprightLegs = (perch: typeof SHELF) =>
+const uprightLegs = (perch: JoustPerch) =>
   resolveJoustLegs([perch]).map((leg) => ({
     perchIndex: 0,
     foot: { x: leg.x, y: leg.footY },
@@ -141,6 +142,74 @@ test("does carry the tower's rail down with the plank when the frame folds", () 
 
   assert.ok(upright < SHELF.y, "upright, the rail stands above the shelf it was authored at");
   assert.ok(folded > upright + 10, "folded, the rail has come down with the plank");
+});
+
+// A pack may NAME what a shelf is, and the name beats the height: a landmark kind hangs that
+// building's façade between the legs, and the two beach kinds can be authored onto any rise.
+test("does dress a shelf as its authored kind rather than by its height", () => {
+  const LOW_TOWER = { x: 54, y: 64, width: 28, kind: "lifeguard-tower" as const };
+  const html = render(<Perch perch={LOW_TOWER} legs={uprightLegs(LOW_TOWER)} isRubble={false} />);
+
+  assert.match(html, /data-joust-perch-skin="lifeguard-tower"/);
+  assert.doesNotMatch(html, /data-joust-perch-skin="dock"/, "the height rule would have said dock");
+});
+
+test("does render every landmark kind under its own skin, with a façade between the legs", () => {
+  for (const kind of JOUST_PERCH_KINDS) {
+    const perch = { x: 64, y: 44, width: 49, kind };
+    const html = render(<Perch perch={perch} legs={uprightLegs(perch)} isRubble={false} />);
+    const skins = html.match(/data-joust-perch-skin="([^"]+)"/g) ?? [];
+
+    assert.deepEqual(skins, [`data-joust-perch-skin="${kind}"`], kind);
+    assert.equal((html.match(/data-joust-leg[^-]/g) ?? []).length, 2, `${kind} keeps its two legs`);
+    assert.match(html, /<path d="M/, `${kind} keeps its plank`);
+
+    if (kind === "dock" || kind === "lifeguard-tower") {
+      assert.doesNotMatch(html, /data-joust-perch-facade/, `${kind} is open timber`);
+    } else {
+      assert.match(html, new RegExp(`data-joust-perch-facade="${kind}"`), `${kind} builds a façade`);
+    }
+  }
+});
+
+test("does draw the façade behind the legs, in a frame that shears over when the legs fold", () => {
+  const QUEENS = { x: 64, y: 44, width: 49, kind: "queens-balcony" as const };
+  const matrixOf = (html: string): string => {
+    const facade = /<g data-joust-perch-facade="queens-balcony" transform="(matrix\([^)]*\))"/.exec(html);
+
+    assert.ok(facade !== null, "the façade carries a matrix transform");
+
+    return facade[1] ?? "";
+  };
+  const upright = render(<Perch perch={QUEENS} legs={uprightLegs(QUEENS)} isRubble={false} />);
+  const folded = render(
+    <Perch
+      perch={QUEENS}
+      legs={uprightLegs(QUEENS).map((leg) => ({ ...leg, top: { x: leg.top.x + 18, y: JOUST_WORLD.floorY - 6 } }))}
+      isRubble={false}
+    />
+  );
+
+  assert.match(matrixOf(upright), /^matrix\(1 0 0 1 /, "upright, the frame is a plain translate");
+  assert.notEqual(matrixOf(folded), matrixOf(upright), "folded, the building has sheared with the legs");
+  assert.ok(
+    upright.indexOf("data-joust-perch-facade") < upright.indexOf("data-joust-leg"),
+    "the façade is painted before (behind) the timber"
+  );
+});
+
+test("does letter a wide façade and leave a narrow one blank", () => {
+  const wideQueens = { x: 64, y: 44, width: 49, kind: "queens-balcony" as const };
+  const narrowQueens = { x: 54, y: 64, width: 28, kind: "queens-balcony" as const };
+  const wideSouldiers = { x: 112, y: 52, width: 40, kind: "souldiers-roof" as const };
+  const narrowSouldiers = { x: 54, y: 64, width: 28, kind: "souldiers-roof" as const };
+  const letters = (perch: JoustPerch, word: string): boolean =>
+    render(<Perch perch={perch} legs={uprightLegs(perch)} isRubble={false} />).includes(`>${word}<`);
+
+  assert.equal(letters(wideQueens, "QUEENS"), true);
+  assert.equal(letters(narrowQueens, "QUEENS"), false);
+  assert.equal(letters(wideSouldiers, "SOULDIERS"), true);
+  assert.equal(letters(narrowSouldiers, "SOULDIERS"), false);
 });
 
 test("does lay a fallen tower flat on the sand as rubble", () => {

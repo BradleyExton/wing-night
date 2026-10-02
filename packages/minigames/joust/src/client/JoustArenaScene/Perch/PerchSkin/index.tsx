@@ -1,30 +1,56 @@
-import type { JoustVec2 } from "@wingnight/shared";
+import type { JoustPerchKind, JoustVec2 } from "@wingnight/shared";
 import { JOUST_PERCH_POINTS_TIER, JOUST_PERCH_THICKNESS } from "@wingnight/shared";
 
 import { joustPalette } from "../../palette.js";
+import { LandmarkTrim } from "./LandmarkTrim/index.js";
 
 /**
- * What a shelf is dressed as, by how high it lifts a player: under a points tier of rise it is
- * a dock on pilings at the water's edge, and from there up it is a lifeguard tower. Skin only —
- * the plank and the legs are drawn where the integrator has them whatever they are dressed as.
+ * What a shelf is dressed as. A pack may name it (`kind` on the perch: the two beach structures,
+ * or one of the Barrie landmarks a façade is hung for); one that names nothing is dressed by how
+ * high it lifts a player — under a points tier of rise a dock on pilings at the water's edge, and
+ * from there up a lifeguard tower. Skin only — the plank and the legs are drawn where the
+ * integrator has them whatever they are dressed as.
  */
-export type PerchSkinKind = "dock" | "lifeguard-tower";
+export type PerchSkinKind = JoustPerchKind;
 
-export const resolvePerchSkin = (rise: number): PerchSkinKind => {
+export const resolvePerchSkin = (rise: number, kind?: JoustPerchKind): PerchSkinKind => {
+  if (kind !== undefined) {
+    return kind;
+  }
+
   return rise < JOUST_PERCH_POINTS_TIER ? "dock" : "lifeguard-tower";
 };
 
-/** The plank's own paint, by skin: weathered dock timber, or the tower's white. */
-export const resolvePlankPaint = (skin: PerchSkinKind): { fill: string; stroke: string } => {
-  return skin === "dock"
-    ? { fill: joustPalette.dock, stroke: joustPalette.dockDark }
-    : { fill: joustPalette.lifeguard, stroke: joustPalette.postDark };
+type Paint = { fill: string; stroke: string };
+
+/**
+ * The plank's own paint, by skin: weathered dock timber, the tower's white, the Queen's white
+ * balcony, Souldiers' dark parapet, a condo's cream slab.
+ */
+const PLANK_PAINT: Record<PerchSkinKind, Paint> = {
+  dock: { fill: joustPalette.dock, stroke: joustPalette.dockDark },
+  "lifeguard-tower": { fill: joustPalette.lifeguard, stroke: joustPalette.postDark },
+  "queens-balcony": { fill: joustPalette.lifeguard, stroke: joustPalette.queensBuffDark },
+  "souldiers-roof": { fill: joustPalette.souldiersBrickDark, stroke: joustPalette.signInk },
+  "condo-balcony": { fill: joustPalette.condoCream, stroke: joustPalette.condoCreamDark }
 };
 
-/** The legs' paint, by skin: dark pilings under a dock, white timber under a tower. */
-export const resolveLegPaint = (skin: PerchSkinKind): string => {
-  return skin === "dock" ? joustPalette.dockDark : joustPalette.lifeguard;
+export const resolvePlankPaint = (skin: PerchSkinKind): Paint => PLANK_PAINT[skin];
+
+/**
+ * The legs' paint, by skin: dark pilings under a dock, white timber under a tower, and under a
+ * façade the pilasters at the building's corners — the Queen's white posts, Souldiers' dark
+ * brick piers, the condo's shadowed cream.
+ */
+const LEG_PAINT: Record<PerchSkinKind, string> = {
+  dock: joustPalette.dockDark,
+  "lifeguard-tower": joustPalette.lifeguard,
+  "queens-balcony": joustPalette.lifeguard,
+  "souldiers-roof": joustPalette.souldiersBrickDark,
+  "condo-balcony": joustPalette.condoCreamDark
 };
+
+export const resolveLegPaint = (skin: PerchSkinKind): string => LEG_PAINT[skin];
 
 const DECK_BOARD_SPACING = 3;
 
@@ -54,6 +80,10 @@ export const PerchSkin = ({
     y: from.y + along.y * run + up.y * lift
   });
   const top = JOUST_PERCH_THICKNESS;
+
+  if (skin === "queens-balcony" || skin === "souldiers-roof" || skin === "condo-balcony") {
+    return <LandmarkTrim skin={skin} at={at} along={along} length={length} top={top} />;
+  }
 
   if (skin === "dock") {
     const boards = Math.max(0, Math.floor((length - 2) / DECK_BOARD_SPACING));

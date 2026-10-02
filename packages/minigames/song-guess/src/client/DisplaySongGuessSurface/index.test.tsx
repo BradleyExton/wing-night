@@ -178,7 +178,7 @@ test("names the active team on the marquee", () => {
 // marquee title is where the other displays carry it.
 test("carries the show title on the marquee for the whole set", () => {
   for (const view of [clipView("clip_paused"), revealView]) {
-    assert.match(renderSurface(view), /Who&#x27;s That Song/);
+    assert.match(renderSurface(view), /Name That Cheese/);
   }
 });
 
@@ -191,7 +191,7 @@ test("counts the set from the marquee through the reveal", () => {
 test("renders the rules summary during the minigame intro", () => {
   const html = renderSurface(null, "intro");
 
-  assert.match(html, /Who&#x27;s That Song/);
+  assert.match(html, /Name That Cheese/);
   assert.match(html, /who did it first/);
 });
 

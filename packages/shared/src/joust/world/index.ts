@@ -46,6 +46,21 @@ export const JOUST_PIN_FOOT_RADIUS = 1.6;
 export const JOUST_PIN_HEAD_RADIUS = 4.2;
 export const JOUST_PIN_HEIGHT = 11.6;
 
+/**
+ * Where the bird the room sees sticks out past its pin. A hen leads with its face: the cast's
+ * costume head sits twenty box units in FRONT of the foot — 3.8 at lane scale — and its body is a
+ * blob about the stick, wider than the capsule's taper. Before these two existed the integrator
+ * collided the capsule alone, so a shot that visibly landed on a face or a belly up to four units
+ * short of the pin's axis flew on through, and the room saw a hit the score never counted. The
+ * face is a circle of the head's own radius `JOUST_PIN_HEAD_FORWARD` ahead of the head body; the
+ * chest a circle `up` the stick from the foot and `forward` of it. "Forward" is toward the
+ * slingshot, which every bird in the lane faces. Both are the cast's numbers at lane scale
+ * (`@wingnight/cast` `CHARACTER_HEAD_CENTRE`, `CHARACTER_BODY`), and the joust client pins the
+ * agreement with a test, as it does the head radius.
+ */
+export const JOUST_PIN_HEAD_FORWARD = 3.8;
+export const JOUST_PIN_CHEST = { up: 5.13, forward: 0.67, radius: 4.37 } as const;
+
 export const JOUST_SHOOTER_SHAFT_COUNT = 5;
 
 const pinFoot: JoustBodyDescriptor = { kind: "pin-foot", radius: JOUST_PIN_FOOT_RADIUS };
