@@ -19,6 +19,26 @@ test("does name every cue in the table once in the list the tests walk", () => {
   assert.equal(BRAWL_SFX_FOLDER, "brawl");
 });
 
+test("does give the clean wave a sting and the chained stun a thud, each with its own gap", () => {
+  assert.ok(BRAWL_CUE_NAMES.includes("clean"));
+  assert.ok(BRAWL_CUE_NAMES.includes("bump"));
+  // A shove through a queue bumps several on one tick: heard as one thud, not a burst.
+  assert.ok(BRAWL_CUE_MIN_GAP_MS.bump > 0 && BRAWL_CUE_MIN_GAP_MS.bump < BRAWL_CUE_MIN_GAP_MS.ko);
+  // A clean wave is a once-a-wave event, told by the mirror and never twice inside a wave.
+  assert.ok(BRAWL_CUE_MIN_GAP_MS.clean >= BRAWL_CUE_MIN_GAP_MS.go);
+
+  const stub = createStubAudioContext();
+  const board = createBrawlSoundboard({ createContext: () => stub.context, now: () => 0 });
+
+  board.play("clean");
+
+  const afterClean = stub.startedNodes();
+
+  assert.ok(afterClean > 0, "the sting started nothing");
+  board.play("bump");
+  assert.ok(stub.startedNodes() > afterClean, "the thud started nothing");
+});
+
 test("does have a voice and a gap for every cue, and every cue makes a sound", () => {
   let nowMs = 0;
   const stub = createStubAudioContext();
@@ -117,4 +137,28 @@ test("does keep a cue on its voice when its take has not decoded", () => {
   board.play("peck");
 
   assert.ok(stub.startedNodes() > 0);
+});
+
+test("does give the new goons and the street their own cues, a clank as tight as the mash and a splash apart from the bay's", () => {
+  for (const cue of ["clank", "hiss", "dunk", "splash", "wing"] as const) {
+    assert.ok(BRAWL_CUE_NAMES.includes(cue), cue);
+  }
+
+  assert.ok(BRAWL_CUE_MIN_GAP_MS.clank < BRAWL_CUE_MIN_GAP_MS.land, "a mashed clank is a run of pings");
+  assert.equal(BRAWL_CUE_MIN_GAP_MS.hiss, BRAWL_CUE_MIN_GAP_MS.honk, "a hiss is told as often as a honk");
+  assert.ok(BRAWL_CUE_MIN_GAP_MS.splash < BRAWL_CUE_MIN_GAP_MS.bay, "a dunk's splash never swallows the bay beat's");
+
+  const stub = createStubAudioContext();
+  const board = createBrawlSoundboard({ createContext: () => stub.context, now: () => 0 });
+  const started = (cue: (typeof BRAWL_CUE_NAMES)[number]): number => {
+    const before = stub.startedNodes();
+
+    board.play(cue);
+
+    return stub.startedNodes() - before;
+  };
+
+  // The splash is the bay's own voice: the same nodes.
+  assert.equal(started("splash"), started("bay"));
+  assert.ok(started("hiss") > 0 && started("clank") > 0 && started("dunk") > 0 && started("wing") > 0);
 });

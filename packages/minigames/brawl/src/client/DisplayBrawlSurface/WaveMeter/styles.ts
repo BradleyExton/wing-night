@@ -12,9 +12,18 @@ export const label =
 
 export const pips = "flex items-center gap-[clamp(0.35rem,0.6vw,0.7rem)]";
 
+// ◀ / ▶ at the strip's two ends: which edge the pips beside it step in from, readable from a
+// couch. The TV's alone — the tablet never shows a side (spec §3).
+export const sideMarker = "text-[clamp(0.9rem,1.2vw,1.4rem)] font-extrabold leading-none text-mutedWarm";
+
+// The clean-wave star: gold while she is untouched, a dim ghost the moment she is hit, and a pop
+// with a glow when the wave goes down clean and the bonus banks.
+export const star =
+  "font-score text-[clamp(1.3rem,2vw,2.4rem)] leading-none text-gold transition-[opacity,color,transform] duration-200 data-[clean=false]:scale-90 data-[clean=false]:text-muted data-[clean=false]:opacity-30 data-[banked=true]:drop-shadow-[0_0_10px_theme(colors.gold/90%)] motion-safe:data-[banked=true]:animate-[tick_600ms_ease-out_both]";
+
 // A pip is a goon: an empty ring while it is still to come, a solid ring while it stands on the
-// street, filled gold once it is down. The heavier goons are bigger pips — a raccoon is worth two,
-// the boss four — so the room can see what is left is worth having.
+// street, filled gold once it is down. The heavier goons are bigger pips — a raccoon, a swan and a
+// helmet goose are worth two, the boss four — so the room can see what is left is worth having.
 const pipBase =
   "block rounded-full border-[3px] border-text/60 border-dashed transition-[background-color,border-color,transform] duration-200 data-[state=in]:border-solid data-[state=in]:border-text data-[state=down]:border-solid data-[state=down]:border-gold data-[state=down]:bg-gold data-[state=down]:shadow-[0_0_12px_theme(colors.gold/60%)] motion-safe:data-[state=down]:scale-110";
 

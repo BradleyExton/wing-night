@@ -16,7 +16,8 @@ const block = (
   status,
   inputs: [],
   skipped,
-  result: outcome === null ? null : { outcome, endTick: 900, goons: 5, hearts: 1 }
+  result: outcome === null ? null : { outcome, endTick: 900, goons: 5, hearts: 1 },
+  heartBought: false
 });
 
 const view = (blockIndex: number, blocks: BrawlMinigameBlock[]) => ({ blockIndex, blocksPerTurn: 2, blocks });

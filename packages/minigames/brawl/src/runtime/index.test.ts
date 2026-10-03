@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { BrawlBestTurn, BrawlInput, BrawlMinigameHostView, Player, Team } from "@wingnight/shared";
-import { BRAWL_WORLD, resolveBrawlCourseTotal, runBrawlRun } from "@wingnight/shared";
+import { BRAWL_WORLD, resolveBrawlBlockWorth, resolveBrawlCourseTotal, runBrawlRun } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { isBrawlRuntimeState } from "./guards/index.js";
+import { canBuyBrawlHeart, isBrawlRuntimeState } from "./guards/index.js";
 import { isBrawlRules, resolveBrawlRules } from "./rules/index.js";
-import { resolveBrawlPoints, resolveGoonsDown } from "./scoring/index.js";
+import { resolveBrawlPoints, resolveGoonsDown, resolveHeartsPaid } from "./scoring/index.js";
 import { DEFAULT_BRAWL_RULES, type BrawlRuntimeState } from "./types/index.js";
 import { brawlRuntimePlugin } from "./index.js";
 
@@ -207,17 +207,64 @@ test("does score the worth put down against the course's whole worth", () => {
   // The course is the ceiling.
   assert.equal(resolveBrawlPoints(40, 27, 15), 15);
   assert.equal(
-    resolveGoonsDown([
-      { blockIndex: 0, player: null, status: "done", inputs: [], skipped: false, result: { outcome: "ko", endTick: 10, goons: 5, hearts: 0 } },
-      { blockIndex: 1, player: null, status: "done", inputs: [], skipped: true, result: null }
-    ]),
+    resolveGoonsDown(
+      [
+        { blockIndex: 0, player: null, status: "done", inputs: [], skipped: false, result: { outcome: "ko", endTick: 10, goons: 5, hearts: 0 }, heartBought: false },
+        { blockIndex: 1, player: null, status: "done", inputs: [], skipped: true, result: null, heartBought: false }
+      ],
+      3
+    ),
     5
   );
 });
 
+test("does bank each heart she walked off with when a block was cleared, and none from the bay or the bell", () => {
+  const block = (result: { outcome: "cleared" | "ko" | "timeout"; goons: number; hearts: number }) => ({
+    blockIndex: 0,
+    player: null,
+    status: "done" as const,
+    inputs: [],
+    skipped: false,
+    result: { endTick: 10, ...result },
+    heartBought: false
+  });
+
+  assert.equal(resolveGoonsDown([block({ outcome: "cleared", goons: 11, hearts: 2 })], 3), 11 + 2 * BRAWL_WORLD.heartWorth);
+  assert.equal(resolveGoonsDown([block({ outcome: "ko", goons: 4, hearts: 0 })], 3), 4);
+  assert.equal(resolveGoonsDown([block({ outcome: "timeout", goons: 4, hearts: 3 })], 3), 4);
+  assert.equal(
+    resolveGoonsDown([block({ outcome: "cleared", goons: 11, hearts: 3 }), block({ outcome: "ko", goons: 6, hearts: 0 })], 3),
+    11 + 3 * BRAWL_WORLD.heartWorth + 6
+  );
+});
+
+test("does take each bought heart's price off the bank and never bank a fourth heart back when it scores", () => {
+  const block = (blockIndex: number, heartBought: boolean, result: { outcome: "cleared" | "ko"; goons: number; hearts: number } | null) => ({
+    blockIndex,
+    player: null,
+    status: "done" as const,
+    inputs: [],
+    skipped: result === null,
+    result: result === null ? null : { endTick: 10, ...result },
+    heartBought
+  });
+  // Block 0 banks 11 and three hearts; block 1 buys a heart and walks off with all four of them.
+  const turn = [block(0, false, { outcome: "cleared", goons: 11, hearts: 3 }), block(1, true, { outcome: "cleared", goons: 15, hearts: 4 })];
+
+  assert.equal(resolveHeartsPaid(turn, 3), 3);
+  assert.equal(resolveGoonsDown(turn, 3), 11 + 3 + (15 + 3) - 3);
+  // A heart bought for a block that was then skipped stays paid.
+  assert.equal(resolveGoonsDown([turn[0]!, block(1, true, null)], 3), 11 + 3 - 3);
+  assert.equal(resolveGoonsDown([turn[0]!, block(1, true, null)], 5), 11 + 3 - 5);
+});
+
 test("does take the round's rules and fall back to the defaults when a field is missing", () => {
   assert.deepEqual(resolveBrawlRules(null), DEFAULT_BRAWL_RULES);
+  assert.equal(DEFAULT_BRAWL_RULES.heartPrice, 3);
   assert.deepEqual(resolveBrawlRules({ blocksPerTurn: 4 }), { ...DEFAULT_BRAWL_RULES, blocksPerTurn: 4 });
+  assert.equal(resolveBrawlRules({ heartPrice: 5 }).heartPrice, 5);
+  assert.equal(resolveBrawlRules({ heartPrice: 0 }).heartPrice, DEFAULT_BRAWL_RULES.heartPrice);
+  assert.equal(resolveBrawlRules({ heartPrice: "3" }).heartPrice, DEFAULT_BRAWL_RULES.heartPrice);
   // A seed is a hash input, not a count: negative is fine.
   assert.equal(resolveBrawlRules({ courseSeed: -12 }).courseSeed, -12);
   assert.equal(resolveBrawlRules({ blocksPerTurn: 0 }).blocksPerTurn, DEFAULT_BRAWL_RULES.blocksPerTurn);
@@ -231,6 +278,10 @@ test("does refuse a rules block at config-load time when the pack got it wrong",
   assert.equal(isBrawlRules({ blocksPerTurn: 2.5 }), false);
   assert.equal(isBrawlRules({ courseSeed: 1.5 }), false);
   assert.equal(isBrawlRules({ courseSeed: "seed" }), false);
+  assert.equal(isBrawlRules({ heartPrice: 3 }), true);
+  assert.equal(isBrawlRules({ heartPrice: 0 }), false);
+  assert.equal(isBrawlRules({ heartPrice: 2.5 }), false);
+  assert.equal(isBrawlRules({ heartPrice: "3" }), false);
   assert.equal(isBrawlRules([]), false);
   assert.equal(isBrawlRules(null), false);
 });
@@ -276,19 +327,27 @@ test("does referee the block from its own re-run of the log when the tablet ends
     goons: refereed.goons,
     hearts: refereed.frame.hearts
   });
-  assert.equal(view.goonsDown, refereed.goons);
+  // The view banks the referee's worth and, if she walked off, her hearts.
+  assert.equal(
+    view.goonsDown,
+    resolveBrawlBlockWorth({ outcome: refereed.outcome === "running" ? "timeout" : refereed.outcome, goons: refereed.goons, hearts: refereed.frame.hearts })
+  );
 });
 
 test("does referee each block on its own stretch of street when the tablet changes hands", () => {
   const played = playBlock(playBlock(initialize(), MASH), MASH);
   const view = hostView(played);
-  const refereed = (block: number) =>
-    runBrawlRun({ seed: RULES.courseSeed, blocks: RULES.blocksPerTurn, block }, MASH).goons;
+  const refereed = (block: number) => runBrawlRun({ seed: RULES.courseSeed, blocks: RULES.blocksPerTurn, block }, MASH);
+  const worth = (block: number) => {
+    const run = refereed(block);
+
+    return resolveBrawlBlockWorth({ outcome: run.outcome === "running" ? "timeout" : run.outcome, goons: run.goons, hearts: run.frame.hearts });
+  };
 
   assert.equal(view.phase, "finished");
-  assert.equal(view.blocks[0]?.result?.goons, refereed(0));
-  assert.equal(view.blocks[1]?.result?.goons, refereed(1));
-  assert.equal(view.goonsDown, refereed(0) + refereed(1));
+  assert.equal(view.blocks[0]?.result?.goons, refereed(0).goons);
+  assert.equal(view.blocks[1]?.result?.goons, refereed(1).goons);
+  assert.equal(view.goonsDown, worth(0) + worth(1));
   assert.equal(view.points, resolveBrawlPoints(view.goonsDown, view.goonsTotal, POINTS_MAX));
   assert.equal(view.pendingPointsByTeamId["team-a"], view.points);
 });
@@ -416,4 +475,101 @@ test("does leave the memory as it inherited it when the turn is put back on the 
 
   assert.equal(memoryBestTurn(reset)?.teamId, "team-b");
   assert.equal(memoryBestTurn(reset)?.goons, 0);
+});
+
+// The handoff pick (spec §0.3): a fourth heart for `heartPrice` of the bank, on a block after the
+// first, before its first touch. The mashing log banks five on block 0, so block 1 can afford one.
+const HEART_PRICE = DEFAULT_BRAWL_RULES.heartPrice;
+const onBlockOne = (): SerializableValue => playBlock(initialize(), MASH);
+
+test("does offer the heart only on a ready block after the first, once, and only to a team that can pay", () => {
+  const ready = { blockIndex: 1, status: "ready" as const, heartBought: false };
+
+  assert.equal(canBuyBrawlHeart({ block: ready, banked: HEART_PRICE, heartPrice: HEART_PRICE }), true);
+  assert.equal(canBuyBrawlHeart({ block: { ...ready, blockIndex: 0 }, banked: 10, heartPrice: HEART_PRICE }), false);
+  assert.equal(canBuyBrawlHeart({ block: { ...ready, status: "running" }, banked: 10, heartPrice: HEART_PRICE }), false);
+  assert.equal(canBuyBrawlHeart({ block: { ...ready, status: "done" }, banked: 10, heartPrice: HEART_PRICE }), false);
+  assert.equal(canBuyBrawlHeart({ block: { ...ready, heartBought: true }, banked: 10, heartPrice: HEART_PRICE }), false);
+  assert.equal(canBuyBrawlHeart({ block: ready, banked: HEART_PRICE - 1, heartPrice: HEART_PRICE }), false);
+  assert.equal(canBuyBrawlHeart({ block: null, banked: 10, heartPrice: HEART_PRICE }), false);
+});
+
+test("does start the block on four hearts and take the price off the bank when the teammate on the line buys a heart", () => {
+  const before = hostView(onBlockOne());
+  const bought = reduce(onBlockOne(), "buyHeart");
+  const view = hostView(bought.state);
+
+  assert.ok(before.goonsDown >= HEART_PRICE, "the mashing log must bank enough to buy with");
+  assert.equal(bought.didMutate, true);
+  assert.equal(view.heartPrice, HEART_PRICE);
+  assert.equal(view.blocks[1]?.heartBought, true);
+  assert.equal(view.blocks[1]?.status, "ready");
+  assert.equal(view.goonsDown, before.goonsDown - HEART_PRICE);
+  assert.equal(view.pendingPointsByTeamId["team-a"], resolveBrawlPoints(view.goonsDown, view.goonsTotal, POINTS_MAX));
+  // The course's whole worth does not move: a bought heart only lowers the numerator.
+  assert.equal(view.goonsTotal, before.goonsTotal);
+
+  // The referee re-runs the bought block from four hearts.
+  const ended = hostView(playBlock(bought.state, MASH));
+  const refereed = runBrawlRun({ seed: RULES.courseSeed, blocks: RULES.blocksPerTurn, block: 1, hearts: 4 }, MASH);
+
+  assert.equal(ended.blocks[1]?.result?.endTick, refereed.endTick);
+  assert.equal(ended.blocks[1]?.result?.goons, refereed.goons);
+  assert.notEqual(refereed.endTick, runBrawlRun({ seed: RULES.courseSeed, blocks: RULES.blocksPerTurn, block: 1 }, MASH).endTick);
+});
+
+test("does refuse a heart on the first block, once the block has started, a second time and when the bank cannot cover it", () => {
+  // The first block: nothing banked to spend, and no handoff before it.
+  assert.equal(reduce(initialize(), "buyHeart").didMutate, false);
+  // The first thumb on the street closed the offer.
+  assert.equal(reduce(reduce(onBlockOne(), "peck", { tick: 0 }).state, "buyHeart").didMutate, false);
+  // Once is the whole offer.
+  assert.equal(reduce(reduce(onBlockOne(), "buyHeart").state, "buyHeart").didMutate, false);
+  // A skipped first block banks nothing, so there is nothing to pay with.
+  assert.equal(reduce(reduce(initialize(), "skipBlock").state, "buyHeart").didMutate, false);
+  // A dearer heart than the bank holds.
+  const dear = playBlock(initialize({ ...RULES, heartPrice: 50 }), MASH);
+
+  assert.equal(reduce(dear, "buyHeart").didMutate, false);
+  // A payload that is not a record, and a turn that is over.
+  assert.equal(reduce(onBlockOne(), "buyHeart", [] as SerializableValue).didMutate, false);
+  assert.equal(reduce(reduce(onBlockOne(), "skipBlock").state, "buyHeart").didMutate, false);
+});
+
+test("does keep the price paid when the host skips a block the team bought a heart for", () => {
+  const before = hostView(onBlockOne());
+  const skipped = hostView(reduce(reduce(onBlockOne(), "buyHeart").state, "skipBlock").state);
+
+  assert.equal(skipped.phase, "finished");
+  assert.equal(skipped.blocks[1]?.heartBought, true);
+  assert.equal(skipped.blocks[1]?.skipped, true);
+  assert.equal(skipped.goonsDown, before.goonsDown - HEART_PRICE);
+});
+
+test("does unbuy every heart and refund its price when the host resets the turn", () => {
+  const bought = reduce(onBlockOne(), "buyHeart").state;
+  const reset = hostView(reduce(bought, "resetTurn").state);
+
+  assert.deepEqual(
+    reset.blocks.map((block) => block.heartBought),
+    [false, false]
+  );
+  assert.equal(reset.goonsDown, 0);
+  assert.equal(reset.pendingPointsByTeamId["team-a"], 0);
+});
+
+test("does hand on the finished turn's worth after its purchases as the one to beat", () => {
+  const kept = playBlock(onBlockOne(), MASH);
+  const bought = playBlock(reduce(onBlockOne(), "buyHeart").state, MASH);
+  const keptWorth = hostView(kept).goonsDown;
+  const boughtWorth = hostView(bought).goonsDown;
+
+  assert.equal(memoryBestTurn(kept)?.goons, keptWorth);
+  assert.equal(memoryBestTurn(bought)?.goons, boughtWorth);
+  assert.equal(
+    boughtWorth,
+    resolveGoonsDown(runtimeState(bought).blocks, HEART_PRICE),
+    "the turn to beat is the bank after the heart's price"
+  );
+  assert.ok(runtimeState(bought).blocks[1]?.heartBought);
 });

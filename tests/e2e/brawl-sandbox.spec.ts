@@ -18,6 +18,19 @@ const collectSocketRequests = (page: Page): string[] => {
 const HOST_SCENE = '[data-brawl-scene="host-brawl"]';
 const DISPLAY_SCENE = '[data-brawl-display-arena] [data-brawl-scene="display-brawl"]';
 
+// The two hearts rows: the tablet's counter chip and the wall's marquee.
+const heartRows = (page: Page) => [
+  page.locator("[data-brawl-hearts]:not([data-neon-marquee] *)"),
+  page.locator("[data-neon-marquee] [data-brawl-hearts]")
+];
+
+// What the team has banked, off the tablet's tally ("14 / 32").
+const readBankedWorth = async (page: Page): Promise<number> => {
+  const tally = (await page.locator("[data-brawl-goons]:not([data-neon-marquee] *)").textContent()) ?? "";
+
+  return Number(tally.split("/")[0]?.trim());
+};
+
 const openStreet = async (page: Page): Promise<void> => {
   await page.goto(devSandboxPath("brawl"));
   await expect(page.locator(HOST_SCENE)).toHaveCount(1);
@@ -85,10 +98,20 @@ test("brawl sandbox lays out block 1 on both screens, with the wall's camera wid
     await expect(row.locator('[data-lit="true"]')).toHaveCount(3);
   }
 
-  // The worth down over the whole course: 7 for block 0 and 10 for block 1 on this seed.
-  await expect(page.locator("[data-brawl-goons]")).toHaveText(["0 / 17", "0 / 17"]);
+  // The worth of the whole course, under the "Worth" label on both rows: block 0 is 7 of goons and
+  // 2 waves at 2, block 1 is 11 (its swan is worth 2) and 2 waves at 2, and each block carries 3
+  // hearts — 11 + 15 + 6.
+  await expect(page.locator("[data-brawl-goons]")).toHaveText(["0 / 32", "0 / 32"]);
+  await expect(page.getByText("Worth", { exact: true })).toHaveCount(2);
   await expect(page.locator("[data-brawl-walk-pad]")).toHaveCount(1);
   await expect(page.locator("[data-brawl-peck-zone]")).toHaveCount(1);
+
+  // Block 0's hazard is Dunlop's patio railing, laid in the street on both screens (in wave 1's
+  // window, never the first wave's), and nothing else's.
+  for (const scene of [host, wall]) {
+    await expect(scene.locator('[data-brawl-hazard="railing"]')).toHaveCount(1);
+    await expect(scene.locator("[data-brawl-hazard]")).toHaveCount(1);
+  }
 
   // The wall's wave meter is on wave one of two, three geese to count down, none of them yet.
   const meter = page.locator("[data-brawl-display-arena] [data-brawl-wave-meter]");
@@ -100,6 +123,22 @@ test("brawl sandbox lays out block 1 on both screens, with the wall's camera wid
   await expect(meter.locator('[data-brawl-wave-group="0"]')).toContainText("Wave 1 of 2");
   await expect(meter.locator('[data-brawl-wave-group="0"] [data-brawl-wave-pip]')).toHaveCount(3);
   await expect(meter.locator('[data-brawl-wave-group="0"] [data-brawl-wave-pip][data-lit="true"]')).toHaveCount(0);
+
+  // The clean star is lit on the line, with nothing banked yet.
+  const star = meter.locator("[data-brawl-wave-star]");
+
+  await expect(star).toHaveCount(1);
+  await expect(star).toHaveAttribute("data-clean", "true");
+  await expect(star).toHaveAttribute("data-banked", "false");
+  await expect(meter).toHaveAttribute("data-brawl-wave-clean", "true");
+
+  // Every waiting pip on the wall says which edge it steps in from, with a marker at each end of
+  // the strip; the tablet shows no side at all — that is the room's half of the asymmetry (§3).
+  await expect(meter.locator('[data-brawl-wave-group="0"] [data-brawl-wave-pip][data-brawl-wave-side]')).toHaveCount(3);
+  await expect(meter.locator('[data-brawl-wave-group="0"] [data-brawl-wave-side-marker="left"]')).toHaveCount(1);
+  await expect(meter.locator('[data-brawl-wave-group="0"] [data-brawl-wave-side-marker="right"]')).toHaveCount(1);
+  await expect(page.locator("[data-brawl-arena] [data-brawl-wave-side], [data-brawl-arena] [data-brawl-wave-side-marker]")).toHaveCount(0);
+  await expect(page.locator("[data-brawl-arena] [data-brawl-wave-meter]")).toHaveCount(0);
 
   // The split camera: more street than the tablet's 160, the extra on both sides of it.
   await expect
@@ -560,6 +599,75 @@ test("a brawler clears block 1, the wall counts each wave down to GO, and the ta
     "Caitlin is on the line — hold left to walk, pull back to turn, tap right to peck",
     { timeout: 6000 }
   );
+
+  // Block 2 is the waterfront: the bay's edge is its hazard on both screens, and its first wave
+  // brings the swan.
+  for (const scene of [HOST_SCENE, DISPLAY_SCENE]) {
+    await expect(page.locator(`${scene} [data-brawl-hazard="bay"]`)).toHaveCount(1);
+  }
+
+  // The handoff pick: block 1 banked more than a heart's price, so the cards are up on the tablet
+  // — never on the wall. Caitlin keeps the three by just starting: one tap on the street closes
+  // the cards without buying, and the swan walks onto both streets.
+  const banked = await readBankedWorth(page);
+
+  expect(banked).toBeGreaterThanOrEqual(3);
+  await expect(page.locator("[data-brawl-heart-pick]")).toBeVisible();
+  await expect(page.locator("[data-brawl-heart-pick]")).toContainText(`a 4th heart · costs 3 worth · you have ${banked}`);
+  await expect(page.locator("[data-brawl-display-arena] [data-brawl-heart-pick]")).toHaveCount(0);
+
+  await peckOnce(page);
+
+  await expect(page.locator("[data-brawl-heart-pick]")).toHaveCount(0);
+
+  for (const row of heartRows(page)) {
+    await expect(row).toHaveAttribute("data-brawl-hearts", "3");
+  }
+
+  await expect(page.locator("[data-brawl-display-arena] [data-brawl-heart-callout]")).toHaveCount(0);
+
+  for (const scene of [HOST_SCENE, DISPLAY_SCENE]) {
+    await expect(page.locator(`${scene} [data-brawl-goon] [data-brawl-goon-kind="swan"]`)).toHaveCount(1, { timeout: 15_000 });
+  }
+});
+
+test("a teammate who buys a heart at the handoff starts block 2 on four hearts on both screens, three worth poorer", async ({
+  page
+}) => {
+  test.setTimeout(90_000);
+  await openStreet(page);
+
+  const run = await brawlBlock(page);
+
+  expect(run.handoffAfterMs).toBeGreaterThan(0);
+  await expect(page.locator(HOST_SCENE)).toHaveAttribute("data-brawl-block", "1", { timeout: 6000 });
+  // The wall has finished holding block 1's ending and shows Caitlin on the line too.
+  await expect(page.locator("[data-neon-marquee] [data-brawl-block-name]")).toHaveText("Caitlin", { timeout: 6000 });
+
+  const banked = await readBankedWorth(page);
+
+  expect(banked).toBeGreaterThanOrEqual(3);
+  await expect(page.locator("[data-brawl-goons]")).toHaveText([`${banked} / 32`, `${banked} / 32`]);
+
+  await page.locator('[data-brawl-heart-pick-choice="buy"]').click();
+
+  await expect(page.locator("[data-brawl-heart-pick]")).toHaveCount(0);
+
+  for (const row of heartRows(page)) {
+    await expect(row).toHaveAttribute("data-brawl-hearts", "4");
+    await expect(row.locator('[data-lit="true"]')).toHaveCount(4);
+  }
+
+  await expect(page.locator("[data-brawl-goons]")).toHaveText([`${banked - 3} / 32`, `${banked - 3} / 32`]);
+  await expect(page.locator("[data-brawl-display-arena] [data-brawl-heart-callout]")).toContainText("Caitlin");
+  await expect(page.locator("[data-brawl-display-arena] [data-brawl-heart-callout]")).toContainText("bought a heart");
+
+  // She starts on four: the first tap runs the block, and the hearts stay four on both screens.
+  await peckOnce(page);
+
+  for (const row of heartRows(page)) {
+    await expect(row).toHaveAttribute("data-brawl-hearts", "4");
+  }
 });
 
 test("a hen nobody steers is carried into the bay on both screens", async ({ page }) => {

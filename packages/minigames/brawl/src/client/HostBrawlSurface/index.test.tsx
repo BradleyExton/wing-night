@@ -22,6 +22,7 @@ const createBlock = (overrides: Partial<BrawlMinigameBlock> = {}): BrawlMinigame
   inputs: [],
   skipped: false,
   result: null,
+  heartBought: false,
   ...overrides
 });
 
@@ -36,6 +37,7 @@ const createView = (overrides: Partial<BrawlMinigameHostView> = {}): BrawlMiniga
   blocks: [createBlock(), createBlock({ blockIndex: 1, player: MORGAN })],
   goonsDown: 0,
   goonsTotal: 27,
+  heartPrice: 3,
   points: null,
   bestTurn: null,
   ...overrides
@@ -81,6 +83,8 @@ test("does draw the counter, the street, both thumb zones, the hint and both act
   assert.ok(markup.includes('data-brawl-hearts="3"'));
   assert.equal((markup.match(/data-lit="true"/g) ?? []).length, 3);
   assert.match(markup, /data-brawl-goons="[^"]*">0 \/ 27</);
+  assert.ok(markup.includes("Worth"));
+  assert.ok(!markup.includes("Down<"));
   assert.ok(markup.includes("data-brawl-arena"));
   assert.ok(markup.includes('data-brawl-scene="host-brawl"'));
   assert.ok(markup.includes("data-brawl-hen"));
@@ -112,6 +116,16 @@ test("does keep the readout off the street and the hint quiet while a block is l
   assert.ok(!running.includes("data-brawl-hint"));
 });
 
+// The side a goon steps in from is the room's to know, never the holder's (spec §3); the tablet
+// draws no wave strip at all.
+test("does never tell the holder which side a goon is coming from", () => {
+  for (const markup of [render(createView()), render(createView({ phase: "running", blocks: [createBlock({ status: "running" }), createBlock({ blockIndex: 1, player: MORGAN })] }))]) {
+    assert.ok(!markup.includes("data-brawl-wave-side"));
+    assert.ok(!markup.includes("data-brawl-wave-meter"));
+    assert.ok(!markup.includes("data-brawl-wave-star"));
+  }
+});
+
 test("does show the number to beat when a team before this one set one", () => {
   const markup = render(createView({ bestTurn: { teamId: "team-beta", teamName: "Team Beta", goons: 19 } }));
 
@@ -135,8 +149,10 @@ test("does put up the finish card, the block list and the totals when the team i
 
   assert.ok(markup.includes('data-brawl-finish="finished"'));
   assert.ok(markup.includes("+7"));
-  assert.ok(markup.includes("Handed off · 7 down"));
-  assert.ok(markup.includes("Into the bay · 5 down"));
+  // The handoff banks the two hearts she walked off with on top of the block's 7; the bay banks none.
+  assert.ok(markup.includes("Handed off · 9 worth"));
+  assert.ok(markup.includes("Into the bay · 5 worth"));
+  assert.ok(markup.includes("Full points at 27 worth"));
   assert.ok(markup.includes("That&#x27;s the team"));
   assert.ok(!markup.includes("data-brawl-hearts"));
 });
@@ -145,4 +161,51 @@ test("does lock the hint to the host when the tablet cannot act", () => {
   const markup = render(createView(), "play", false);
 
   assert.ok(markup.includes("Waiting for the host to open the round."));
+});
+
+// The handoff pick (spec §0.6): block 0 cleared and banked, block 1 on the line.
+const onBlockOne = (overrides: Partial<BrawlMinigameBlock> = {}, goonsDown = 14): BrawlMinigameHostView =>
+  createView({
+    blockIndex: 1,
+    goonsDown,
+    blocks: [
+      createBlock({ status: "done", result: { outcome: "cleared", endTick: 1800, goons: 11, hearts: 3 } }),
+      createBlock({ blockIndex: 1, player: MORGAN, ...overrides })
+    ]
+  });
+
+test("does put the buy-or-keep cards over the street when the block after a handoff is on the line and the team can pay", () => {
+  const markup = render(onBlockOne());
+
+  assert.ok(markup.includes("data-brawl-heart-pick"));
+  assert.ok(markup.includes('data-brawl-heart-pick-choice="buy"'));
+  assert.ok(markup.includes('data-brawl-heart-pick-choice="keep"'));
+  assert.ok(markup.replace(/<[^>]+>/g, "").includes("a 4th heart · costs 3 worth · you have 14"));
+  assert.ok(markup.includes("or just start walking"));
+  // The hint line stays, and so do both thumb zones: a thumb on the street is "keep the three".
+  assert.match(markup, /data-brawl-hint="[^"]*">Morgan is on the line/);
+  assert.ok(markup.includes("data-brawl-walk-pad"));
+  assert.ok(markup.includes("data-brawl-peck-zone"));
+  assert.ok(markup.includes('data-brawl-hearts="3"'));
+});
+
+test("does show no cards when the offer does not stand", () => {
+  // Block 0, too poor, already bought, already started, and a tablet that may not act.
+  for (const markup of [
+    render(createView()),
+    render(onBlockOne({}, 2)),
+    render(onBlockOne({ heartBought: true }, 11)),
+    render(createView({ ...onBlockOne({ status: "running" }), phase: "running" })),
+    render(onBlockOne(), "play", false)
+  ]) {
+    assert.ok(!markup.includes("data-brawl-heart-pick"));
+  }
+});
+
+test("does draw four hearts in the counter when the team bought one for the block on the line", () => {
+  const markup = render(onBlockOne({ heartBought: true }, 11));
+
+  assert.ok(markup.includes('data-brawl-hearts="4"'));
+  assert.equal((markup.match(/data-lit="true"/g) ?? []).length, 4);
+  assert.match(markup, /data-brawl-goons="[^"]*">11 \/ 27</);
 });

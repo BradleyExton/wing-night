@@ -1,4 +1,15 @@
-import type { BrawlBlock, BrawlCourse, BrawlGoonKind, BrawlSide, BrawlSpawn, BrawlWave } from "../types.js";
+import type {
+  BrawlBlock,
+  BrawlCourse,
+  BrawlGoon,
+  BrawlGoonKind,
+  BrawlHazard,
+  BrawlHazardKind,
+  BrawlOutcome,
+  BrawlSide,
+  BrawlSpawn,
+  BrawlWave
+} from "../types.js";
 import { createMulberry32, pickInteger } from "../../seededRandom/index.js";
 
 type BrawlGoonStats = {
@@ -39,14 +50,15 @@ const GULL_ATTACK_TICKS = 40;
  * line (a street fight is flat; only the gull leaves it). Speeds are per tick at `tickHz`, so a
  * tick count is a duration on every machine.
  *
- * Tuned against two bots (`simulate/index.test.ts`). A masher who holds right and pecks every
+ * Tuned against three bots (`simulate/index.test.ts`). A masher who holds right and pecks every
  * ten ticks stands pinned to the camera's right edge with everything from the left at her back:
- * over 200 seeds she clears block 0 about two times in three with a heart or two gone, block 1
- * about one in three, and block 2 about one in twenty, nearly always on her last heart.
- * A brawler who turns to face the nearest goon and pecks in reach clears all three. The levers
- * that set that curve are the peck's rhythm (a ten-tick mash lands every other press, live half
- * the time) and the goons' lunge through her (a goose behind her costs a heart unless the beak
- * happens to be out as it arrives).
+ * over 200 seeds she clears block 0 two times in three with a heart or two gone, block 1 about
+ * two in five, and block 2 about one in fourteen, nearly always on her last heart. A turner — the
+ * same mash, but holding toward the nearest goon so she faces it — clears 91%, 73% and 47%. A
+ * brawler who turns to face the nearest goon, pecks in reach and waits out a helmet goose's guard
+ * clears all three. The levers that set that curve are the peck's rhythm (a ten-tick mash lands
+ * every other press, live half the time) and the goons' lunge through her (a goose behind her
+ * costs a heart unless the beak happens to be out as it arrives).
  */
 export const BRAWL_WORLD = {
   width: 160,
@@ -92,6 +104,28 @@ export const BRAWL_WORLD = {
   invulnerableTicks: 90,
   hitKnockback: 10,
   heartsMax: 3,
+  /**
+   * What a clean wave banks: a wave taken down with no hit on her since it opened. A thing to
+   * lose in every wave with no new input (docs/research/brawl-depth-and-strategy.md, feature 1);
+   * INSIDE the course's total, so a perfect block is still "everything down" and no more.
+   */
+  cleanWaveBonus: 2,
+  /**
+   * What each heart she walks off a CLEARED block with is worth to the team: the first
+   * teammate's clean block reaches the last one, and the relay is a pot (feature 3). The bay and
+   * the bell bank no hearts. Banked by the runtime off the refereed result, never by the sim.
+   */
+  heartWorth: 1,
+  /**
+   * How long a dropped wing lies on the pavement: six seconds, then it is gone. A goon worth two
+   * or more leaves one where it went down (one a wave, one on the street at a time), and the hen
+   * eats it by STANDING (thumb up) within `henRadius + wingReach` of it — a heart back, up to the cap
+   * (`resolveBrawlHeartsCap`). At full hearts she walks over it and it stays.
+   */
+  wingTicks: 6 * 60,
+  wingReach: 3,
+  /** How wide each block's hazard is (the railing, the bay's edge, the plinth). */
+  hazardWidth: 24,
   koFallTicks: 45,
   /** Faster than she walks, so the camera catches up with her between waves. */
   cameraUnlockSpeed: 1.5,
@@ -153,6 +187,38 @@ export const BRAWL_WORLD = {
       // The charge: twice its walking speed, from well out of beak range to well past her.
       lunge: 1.2
     },
+    // The swan: SoR2's Signal. Bigger and slower than a goose, and it only lunges at a hen facing
+    // away from it — faced, it `stalk`s at its reach and waits, so a turn is always the answer.
+    swan: {
+      hp: 1,
+      worth: 2,
+      halfWidth: 6,
+      height: 18,
+      speed: 0.35,
+      reach: 18,
+      telegraphTicks: 30,
+      attackTicks: 18,
+      recoverTicks: 36,
+      stunTicks: 24,
+      knockback: 6,
+      lunge: 2.2
+    },
+    // The helmet goose: SoR2's Donovan. A goose's box and script, but its guard is down while it
+    // walks and reels, so a peck then clanks off (`isBrawlGoonGuarded`). Peck it into the honk.
+    helmet: {
+      hp: 1,
+      worth: 2,
+      halfWidth: 5,
+      height: 14,
+      speed: 0.5,
+      reach: 14,
+      telegraphTicks: 30,
+      attackTicks: 16,
+      recoverTicks: 30,
+      stunTicks: 24,
+      knockback: 8,
+      lunge: 2
+    },
     boss: {
       hp: 4,
       worth: 4,
@@ -183,39 +249,71 @@ export const resolveBrawlGoonBox = (kind: BrawlGoonKind): { halfWidth: number; h
 export const resolveBrawlTickCap = (): number => BRAWL_WORLD.blockTicks;
 
 /**
- * A wave's goons before they are dealt: how many walk on, and how many of those are gulls and
- * raccoons. The mix is a rule and only the order is dealt, so no seed hands one team a sky full
- * of gulls in the easy block (SCHLONIC deals its hard kit the same way).
+ * The hearts a block starts with: three, or four when the team bought a heart at the handoff
+ * (docs/minigames/brawl-spec.md §0.3, "The handoff pick"). One function, so the referee, the
+ * tablet's runner, the TV's mirror and both chromes' heart rows all count the same.
  */
-type WaveShape = { size: number; gulls: number; raccoons: number; boss: boolean };
+export const resolveBrawlStartHearts = (heartBought: boolean): number => {
+  return BRAWL_WORLD.heartsMax + (heartBought ? 1 : 0);
+};
+
+/**
+ * The most hearts she can hold: what a wing restores up to — the hearts the block started with,
+ * so a bought fourth heart can be eaten back and a block that kept the three tops out at three.
+ */
+export const resolveBrawlHeartsCap = (block: Pick<BrawlBlock, "hearts">): number => block.hearts;
+
+/** The states a helmet goose's guard is UP in: the honk, the lunge and the slump after it. */
+const GUARD_UP_STATES: readonly BrawlGoon["state"][] = ["telegraph", "attack", "recover"];
+
+/**
+ * Whether a peck landing on this goon now would clank off its guard: a helmet goose that is not
+ * honking, lunging or spent. The answer is to peck into the honk or after the lunge. The drawing
+ * flips the cage on the same states (`data-brawl-goon-guard`).
+ */
+export const isBrawlGoonGuarded = (goon: Pick<BrawlGoon, "kind" | "state">): boolean => {
+  return goon.kind === "helmet" && !GUARD_UP_STATES.includes(goon.state);
+};
+
+/**
+ * A wave's goons before they are dealt: how many walk on, and how many of those are gulls,
+ * raccoons, swans and helmet geese. The mix is a rule and only the order is dealt, so no seed
+ * hands one team a sky full of gulls in the easy block (SCHLONIC deals its hard kit the same way).
+ */
+type WaveShape = { size: number; gulls: number; raccoons: number; swans: number; helmets: number; boss: boolean };
 
 /**
  * The difficulty curve, in waves. Block 0 is three geese and then four with a gull among them
- * (the first gate is the easy one, principles §5 and §18); block 1 adds a wave's worth and a
- * raccoon; block 2 is three waves closing on the boss. Past block 2 the same shape, one goose
+ * (the first gate is the easy one, principles §5 and §18); block 1 brings the swan in its first
+ * wave and the raccoon in its second; block 2 is three waves closing on the boss, with the helmet
+ * goose in the first and last and a swan in the middle. Past block 2 the same shape, one goose
  * more a wave for every block beyond it.
  */
 const resolveWaveShapes = (blockIndex: number): WaveShape[] => {
+  const wave = (size: number, kit: Partial<Omit<WaveShape, "size">> = {}): WaveShape => ({
+    size,
+    gulls: 0,
+    raccoons: 0,
+    swans: 0,
+    helmets: 0,
+    boss: false,
+    ...kit
+  });
+
   if (blockIndex === 0) {
-    return [
-      { size: 3, gulls: 0, raccoons: 0, boss: false },
-      { size: 4, gulls: 1, raccoons: 0, boss: false }
-    ];
+    return [wave(3), wave(4, { gulls: 1 })];
   }
 
   if (blockIndex === 1) {
-    return [
-      { size: 4, gulls: 1, raccoons: 0, boss: false },
-      { size: 5, gulls: 1, raccoons: 1, boss: false }
-    ];
+    return [wave(4, { gulls: 1, swans: 1 }), wave(5, { gulls: 1, raccoons: 1 })];
   }
 
   const extra = blockIndex - 2;
 
   return [
-    { size: 4 + extra, gulls: 1, raccoons: 1, boss: false },
-    { size: 5 + extra, gulls: 2, raccoons: 1, boss: false },
-    { size: 2 + extra, gulls: 1, raccoons: 0, boss: true }
+    wave(4 + extra, { gulls: 1, raccoons: 1, helmets: 1 }),
+    wave(5 + extra, { gulls: 2, raccoons: 1, swans: 1 }),
+    wave(2 + extra, { gulls: 1, helmets: 1, boss: true })
   ];
 };
 
@@ -229,7 +327,7 @@ const WAVE_MIN_GAP_TICKS = 6;
 /** The boss comes in on its own, a couple of seconds after the last of its escort. */
 const BOSS_AFTER_TICKS = 120;
 
-/** The wave's kinds in slot order: its gulls and raccoons dealt into seeded slots, geese in the rest. */
+/** The wave's kinds in slot order: its gulls, raccoons, helmets and swans dealt into seeded slots, geese in the rest. */
 const dealKinds = (random: () => number, shape: WaveShape): BrawlGoonKind[] => {
   const kinds: BrawlGoonKind[] = Array.from({ length: shape.size }, () => "goose");
   const deal = (kind: BrawlGoonKind, count: number): void => {
@@ -247,6 +345,8 @@ const dealKinds = (random: () => number, shape: WaveShape): BrawlGoonKind[] => {
 
   deal("raccoon", shape.raccoons);
   deal("gull", shape.gulls);
+  deal("helmet", shape.helmets);
+  deal("swan", shape.swans);
 
   return kinds;
 };
@@ -296,11 +396,54 @@ const dealWave = (random: () => number, shape: WaveShape, index: number, firstSp
   return { index, lockX: index * BRAWL_WORLD.width, spawns };
 };
 
+/** Which hazard a block's setting carries: Dunlop's railing, the waterfront's bay, the beach's plinth. */
+const resolveHazardKind = (blockIndex: number): BrawlHazardKind => {
+  if (blockIndex === 0) {
+    return "railing";
+  }
+
+  return blockIndex === 1 ? "bay" : "plinth";
+};
+
+/**
+ * How far in from either edge of wave 1's window the hazard stays: clear of where a goon steps in
+ * (half a body inside the edge) and of the hen's margin, so nothing is born into it.
+ */
+const HAZARD_EDGE_CLEARANCE = 14;
+
+/**
+ * The block's hazard, dealt AFTER its waves so it never moves a goon: in wave 1's window, never
+ * wave 0's (the first wave of a block is a fight, not a puzzle — principles §18), in its left or
+ * right third. The hen walks into a wave's window at about 40% of it (`cameraLeadShare`), so a
+ * hazard in either outer third is never under her when the wave opens, and the clearance keeps it
+ * off the edges the goons walk in from.
+ */
+const dealHazard = (random: () => number, blockIndex: number, waves: readonly BrawlWave[]): BrawlHazard | null => {
+  const window = waves[1];
+
+  if (window === undefined) {
+    return null;
+  }
+
+  const { width, hazardWidth } = BRAWL_WORLD;
+  const third = Math.floor(width / 3);
+  const isRight = random() < 0.5;
+  const from = isRight ? width - third : HAZARD_EDGE_CLEARANCE;
+  const to = isRight ? width - HAZARD_EDGE_CLEARANCE - hazardWidth : third - hazardWidth;
+
+  return { kind: resolveHazardKind(blockIndex), x: window.lockX + pickInteger(random, from, to), width: hazardWidth };
+};
+
 /** Which block a course picks: the first of one unless it says, clamped to the course. */
 const resolveCourseBlock = ({ blocks = 1, block = 0 }: BrawlCourse): number => {
   const count = Math.max(1, Math.floor(blocks));
 
   return Math.max(0, Math.min(count - 1, Math.floor(block)));
+};
+
+/** The hearts a course starts its block with: `heartsMax` unless it says, and never fewer than one. */
+const resolveCourseHearts = ({ hearts = BRAWL_WORLD.heartsMax }: BrawlCourse): number => {
+  return Math.max(1, Math.floor(hearts));
 };
 
 /**
@@ -324,6 +467,7 @@ export const resolveBrawlBlock = (course: BrawlCourse): BrawlBlock => {
 
   const spawns = waves.flatMap((wave) => wave.spawns);
   const length = (waves.length + 1) * BRAWL_WORLD.width;
+  const hazard = dealHazard(random, blockIndex, waves);
 
   return {
     index: blockIndex,
@@ -331,17 +475,50 @@ export const resolveBrawlBlock = (course: BrawlCourse): BrawlBlock => {
     waves,
     handoffX: length - BRAWL_WORLD.henMargin * 3,
     spawns,
-    goonsTotal: spawns.reduce((total, spawn) => total + BRAWL_WORLD.goons[spawn.kind].worth, 0)
+    hazard,
+    hearts: resolveCourseHearts(course),
+    // Every goon's worth, and a clean-wave bonus for every wave: the most the sim itself can bank.
+    goonsTotal:
+      spawns.reduce((total, spawn) => total + BRAWL_WORLD.goons[spawn.kind].worth, 0) +
+      waves.length * BRAWL_WORLD.cleanWaveBonus
   };
 };
 
-/** What the whole course is worth: every block's goons, the number the team's worth is put over. */
+/** What the hearts of a perfect block are worth on top of its `goonsTotal`: all of them carried off. */
+export const resolveBrawlHeartsTotal = (): number => BRAWL_WORLD.heartsMax * BRAWL_WORLD.heartWorth;
+
+/**
+ * How many of the hearts she walked off a cleared block with are worth anything: three at the
+ * most. A bought fourth heart never earns worth back — buying is insurance, and the most it can
+ * hand back is the heart she would otherwise have lost — so the course total does not move.
+ */
+export const resolveBrawlHeartsCarried = (hearts: number): number => {
+  return Math.max(0, Math.min(hearts, BRAWL_WORLD.heartsMax));
+};
+
+/**
+ * What one refereed block banked for the team: the worth the sim banked (goons down and clean
+ * waves) plus `heartWorth` for every heart she walked off with, up to three — only when she
+ * walked off. The bay and the bell keep the goons and bank no hearts. Pure; the runtime scores
+ * from this and the surfaces count up from it. A bought heart's price is the runtime's to take.
+ */
+export const resolveBrawlBlockWorth = (result: { outcome: BrawlOutcome; goons: number; hearts: number }): number => {
+  return (
+    result.goons + (result.outcome === "cleared" ? resolveBrawlHeartsCarried(result.hearts) * BRAWL_WORLD.heartWorth : 0)
+  );
+};
+
+/**
+ * What the whole course is worth — the number the team's worth is put over: every block's goons
+ * and clean waves (`goonsTotal`) plus every block's hearts. A perfect course is full points and
+ * there is nothing above it; the bonuses are inside the max, not on top.
+ */
 export const resolveBrawlCourseTotal = (course: { seed: number; blocks: number }): number => {
   const blocks = Math.max(1, Math.floor(course.blocks));
   let total = 0;
 
   for (let block = 0; block < blocks; block += 1) {
-    total += resolveBrawlBlock({ seed: course.seed, blocks, block }).goonsTotal;
+    total += resolveBrawlBlock({ seed: course.seed, blocks, block }).goonsTotal + resolveBrawlHeartsTotal();
   }
 
   return total;

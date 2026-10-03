@@ -1,5 +1,5 @@
 import type { BrawlBestTurn, BrawlInput, BrawlPlayerFigure, MinigameType, Player, Team } from "@wingnight/shared";
-import { runBrawlRun } from "@wingnight/shared";
+import { resolveBrawlStartHearts, runBrawlRun } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult,
@@ -7,6 +7,8 @@ import type {
 } from "@wingnight/minigames-core";
 
 import {
+  canBuyBrawlHeart,
+  isBrawlBuyHeartPayload,
   isBrawlPeckPayload,
   isBrawlRoundMemory,
   isBrawlRuntimeState,
@@ -61,7 +63,8 @@ const createReadyBlock = (
     status: "ready",
     inputs: [],
     skipped: false,
-    result: null
+    result: null,
+    heartBought: false
   };
 };
 
@@ -75,12 +78,12 @@ const createBlocks = (
 };
 
 /**
- * This turn as a turn to beat, once it is over: what the whole team put down. Null while the
- * team is still on the street, and null for a turn that put nothing down — nought is nobody's
- * number to beat.
+ * This turn as a turn to beat, once it is over: what the whole team put down, less what it spent
+ * on fourth hearts. Null while the team is still on the street, and null for a turn that put
+ * nothing down — nought is nobody's number to beat.
  */
 const resolveTurnAsBest = (state: BrawlRuntimeState): BrawlBestTurn | null => {
-  const goons = resolveGoonsDown(state.blocks);
+  const goons = resolveGoonsDown(state.blocks, state.heartPrice);
 
   if (resolveBrawlPhase(state) !== "finished" || state.activeTurnTeamId === null || goons <= 0) {
     return null;
@@ -141,7 +144,7 @@ const withTurnScore = (state: BrawlRuntimeState, pointsMax: number): BrawlRuntim
   }
 
   const points = resolveBrawlPoints(
-    resolveGoonsDown(state.blocks),
+    resolveGoonsDown(state.blocks, state.heartPrice),
     resolveGoonsTotal(state.courseSeed, state.blocksPerTurn),
     pointsMax
   );
@@ -190,6 +193,7 @@ export const brawlRuntimePlugin: MinigameRuntimePlugin = {
       activeTurnTeamName: input.teams.find((team) => team.id === activeTurnTeamId)?.name ?? null,
       blocksPerTurn: rules.blocksPerTurn,
       courseSeed: rules.courseSeed,
+      heartPrice: rules.heartPrice,
       blockIndex: 0,
       blocks: createBlocks(figures, rules),
       turnStartPoints:
@@ -251,7 +255,12 @@ export const brawlRuntimePlugin: MinigameRuntimePlugin = {
       }
 
       const refereed = runBrawlRun(
-        { seed: state.courseSeed, blocks: state.blocksPerTurn, block: block.blockIndex },
+        {
+          seed: state.courseSeed,
+          blocks: state.blocksPerTurn,
+          block: block.blockIndex,
+          hearts: resolveBrawlStartHearts(block.heartBought)
+        },
         block.inputs
       );
 
@@ -275,25 +284,44 @@ export const brawlRuntimePlugin: MinigameRuntimePlugin = {
       );
     }
 
+    // The handoff pick (docs/minigames/brawl-spec.md §0.3): the teammate on the line spends
+    // `heartPrice` of the team's banked worth on a fourth heart for this block, before their first
+    // touch. Refused on the first block, once the block has started, a second time, and when the
+    // bank cannot cover it. Keeping the three is no action at all: the first thumb closes the offer.
+    if (actionType === "buyHeart") {
+      if (
+        block === null ||
+        !isBrawlBuyHeartPayload(actionPayload) ||
+        !canBuyBrawlHeart({ block, banked: resolveGoonsDown(state.blocks, state.heartPrice), heartPrice: state.heartPrice })
+      ) {
+        return unchanged;
+      }
+
+      return mutated(
+        withTurnScore(
+          { ...state, blocks: replaceBlock(state, block.blockIndex, { ...block, heartBought: true }) },
+          input.pointsMax
+        )
+      );
+    }
+
     // Escape hatch (AGENTS.md §11): forgive a block the tablet can't take — a dead touch surface,
-    // a player who would rather watch. It banks nothing and the tablet moves on.
+    // a player who would rather watch. It banks nothing and the tablet moves on; a heart bought
+    // for it stays paid.
     if (actionType === "skipBlock") {
       if (block === null || !isLive) {
         return unchanged;
       }
 
       return mutated(
-        finishBlock(
-          state,
-          { ...block, status: "done", skipped: true, inputs: [], result: null },
-          input.pointsMax
-        )
+        finishBlock(state, { ...block, status: "done", skipped: true, inputs: [], result: null }, input.pointsMax)
       );
     }
 
     // Escape hatch (AGENTS.md §11): put the whole team back on block one, handing back exactly
-    // the points this turn banked. The turn to beat is untouched: it was never this turn's, and a
-    // turn put back on the street is no longer finished, so it leaves the memory of its own accord.
+    // the points this turn banked — every bought heart is unbought with its block, so its price
+    // comes back too. The turn to beat is untouched: it was never this turn's, and a turn put back
+    // on the street is no longer finished, so it leaves the memory of its own accord.
     if (actionType === "resetTurn") {
       const reset: BrawlRuntimeState = {
         ...state,

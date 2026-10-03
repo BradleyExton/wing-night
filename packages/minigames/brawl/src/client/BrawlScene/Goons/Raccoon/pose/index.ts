@@ -46,7 +46,7 @@ const TROT: [RaccoonPose, RaccoonPose] = [
   }
 ];
 
-const POSES: Record<Exclude<BrawlGoonState, "entering" | "approach" | "gone">, RaccoonPose> = {
+const POSES: Record<Exclude<BrawlGoonState, "entering" | "approach" | "stalk" | "gone">, RaccoonPose> = {
   // The crouch before the charge: chest to the street, rump up, the tail bolt upright and the
   // feet spread wide for the push.
   telegraph: {
@@ -119,5 +119,5 @@ export const resolveRaccoonPose = (state: BrawlGoonState, frame: 0 | 1): Raccoon
     return null;
   }
 
-  return state === "entering" || state === "approach" ? TROT[frame] : POSES[state];
+  return state === "entering" || state === "approach" || state === "stalk" ? TROT[frame] : POSES[state];
 };

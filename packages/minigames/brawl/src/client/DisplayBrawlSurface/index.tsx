@@ -7,12 +7,14 @@ import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
 import { TV_CAMERA_FIT } from "../BrawlScene/camera/index.js";
 import { BrawlScene, type BrawlSceneHandle } from "../BrawlScene/index.js";
 import { resolveGoonsBanked } from "../goonsTally/index.js";
-import { useBrawlBlock } from "../useBrawlBlock/index.js";
+import { resolveViewCourse, useBrawlBlock } from "../useBrawlBlock/index.js";
 import { useBrawlMirror } from "../useBrawlMirror/index.js";
 import { useBrawlSounds } from "../useBrawlSounds/index.js";
 import { useHeldBlock, type BlockHold } from "../useHeldBlock/index.js";
+import { useHeartCallout } from "../useHeartCallout/index.js";
 import { useHenFigure } from "../useHenFigure/index.js";
 import { BeatCallout } from "./BeatCallout/index.js";
+import { HeartCallout } from "./HeartCallout/index.js";
 import { MarqueeReadout } from "./MarqueeReadout/index.js";
 import { WaveMeter } from "./WaveMeter/index.js";
 import { displayBrawlSurfaceCopy } from "./copy.js";
@@ -75,11 +77,16 @@ const BrawlPlayBody = ({ view, activeTeamName, clock, clockLine, serverOrigin }:
   const { block, relay } = useBrawlBlock({ view, blockIndex: shownBlockIndex, serverOrigin });
   const hen = useHenFigure({ figure: viewBlock?.player ?? null, activeTurnTeamId: view.activeTurnTeamId, serverOrigin });
   const { courseSeed, blocksPerTurn } = view;
+  const heartBought = viewBlock?.heartBought ?? false;
+  // The referee's own course for the block on the wall, bought heart and all, so a wall that
+  // missed the block re-runs it from the hearts the server did.
   const course = useMemo(() => {
-    return { seed: courseSeed, blocks: blocksPerTurn, block: shownBlockIndex };
-  }, [courseSeed, blocksPerTurn, shownBlockIndex]);
-  const goonsBanked = resolveGoonsBanked(view.blocks, shownBlockIndex);
+    return resolveViewCourse({ courseSeed, blocksPerTurn }, shownBlockIndex, heartBought);
+  }, [courseSeed, blocksPerTurn, shownBlockIndex, heartBought]);
+  const goonsBanked = resolveGoonsBanked(view.blocks, shownBlockIndex, view.heartPrice);
   const isFinished = view.phase === "finished";
+  // "Caitlin bought a heart", for a couple of seconds once her bought block is on the wall.
+  const isHeartCalloutUp = useHeartCallout(viewBlock, hold === null && !isFinished);
   // The TV is the room's speaker, so the street's whole soundboard hangs off this one surface.
   const { onMirrorEvent } = useBrawlSounds({ serverOrigin });
 
@@ -130,6 +137,7 @@ const BrawlPlayBody = ({ view, activeTeamName, clock, clockLine, serverOrigin }:
         </div>
         <WaveMeter key={`meter-${shownBlockIndex}`} ref={waveMeterRef} block={block} hidden={hold !== null || isFinished} />
         {hold !== null && <BeatCallout hold={hold} nextName={view.blocks[hold.blockIndex + 1]?.player?.name ?? null} />}
+        {isHeartCalloutUp && <HeartCallout playerName={viewBlock?.player?.name ?? null} heartPrice={view.heartPrice} />}
         {isFinished && hold === null && <FinishPlaque view={view} />}
       </div>
       <p className={styles.statusLine}>{resolveStatusLine(view, viewBlock?.player?.name ?? null, hold)}</p>

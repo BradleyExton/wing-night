@@ -18,10 +18,17 @@ import {
 export type BrawlCueName =
   | "peck"
   | "land"
+  | "clank"
   | "honk"
+  | "hiss"
   | "hurt"
   | "ko"
+  | "dunk"
+  | "splash"
+  | "bump"
+  | "wing"
   | "go"
+  | "clean"
   | "handoff"
   | "bay"
   | "bell"
@@ -30,10 +37,17 @@ export type BrawlCueName =
 export const BRAWL_CUE_NAMES: readonly BrawlCueName[] = [
   "peck",
   "land",
+  "clank",
   "honk",
+  "hiss",
   "hurt",
   "ko",
+  "dunk",
+  "splash",
+  "bump",
+  "wing",
   "go",
+  "clean",
   "handoff",
   "bay",
   "bell",
@@ -51,16 +65,27 @@ export const BRAWL_MASTER_GAIN = 0.25;
 /**
  * The shortest gap between two soundings of the same cue. `peck` is the tightest: the right
  * thumb mashes the zone at a handful a second, and each tick should be heard as one; `land` is
- * the same peck connecting, a beat behind it; the beats that are told twice (the mirror's
- * outcome and the surface's hold, a beat apart) collapse into one sounding.
+ * the same peck connecting, a beat behind it, and `clank` the same peck bouncing off a helmet,
+ * as tight as the mash that makes it; `bump` is a bowled goon landing, and a shove through a
+ * queue is several on one tick, heard as one thud; the beats that are told twice (the mirror's
+ * outcome and the surface's hold, a beat apart) collapse into one sounding. `splash` is a goon
+ * into the bay — the beat's own splash voice, on a gap of its own so a dunk never swallows the
+ * bay beat's.
  */
 export const BRAWL_CUE_MIN_GAP_MS: Record<BrawlCueName, number> = {
   peck: 60,
   land: 90,
+  clank: 80,
   honk: 500,
+  hiss: 500,
   hurt: 250,
   ko: 1200,
+  dunk: 300,
+  splash: 300,
+  bump: 120,
+  wing: 400,
   go: 900,
+  clean: 900,
   handoff: 900,
   bay: 1500,
   bell: 1500,
@@ -96,6 +121,14 @@ const playHonkNote = (rig: CueRig, startAt: number, hz: number, seconds: number)
   playNoise(rig, { startAt, durationSeconds: seconds * 0.8, peak: 0.07, filterType: "bandpass", fromHz: hz * 3, q: 2 });
 };
 
+// The bay: a swell of noise with the filter sweeping closed as it sinks. The hen's own trip into
+// the bay and a goon dunked into it are the same water.
+const playSplash = (rig: CueRig, startAt: number): void => {
+  playNoise(rig, { startAt, durationSeconds: 0.7, peak: 0.45, filterType: "lowpass", fromHz: 4200, toHz: 250, q: 0.8 });
+  playNoise(rig, { startAt: startAt + 0.05, durationSeconds: 0.35, peak: 0.16, filterType: "bandpass", fromHz: 1600, toHz: 700, q: 0.9 });
+  playTone(rig, { startAt, durationSeconds: 0.3, type: "sine", fromHz: 200, toHz: 70, peak: 0.22 });
+};
+
 // One voice per cue. The numbers are a table to retune, not a system.
 const CUE_VOICES: Record<BrawlCueName, CueVoice> = {
   // The peck: a quick dry tick, a flick of noise with a small pitch blip on it.
@@ -108,6 +141,21 @@ const CUE_VOICES: Record<BrawlCueName, CueVoice> = {
     playTone(rig, { startAt, durationSeconds: 0.12, type: "sine", fromHz: 170, toHz: 60, peak: 0.5 });
     playNoise(rig, { startAt, durationSeconds: 0.07, peak: 0.34, filterType: "lowpass", fromHz: 1800, toHz: 500 });
     playTone(rig, { startAt: startAt + 0.03, durationSeconds: 0.1, type: "square", fromHz: 420, toHz: 840, peak: 0.12 });
+  },
+  // A peck off a helmet's cage: a bright metallic ping — inharmonic partials struck hard and gone
+  // in a blink — on a click of noise. Sharp enough that a clank never reads as a land.
+  clank: (rig, startAt) => {
+    playNoise(rig, { startAt, durationSeconds: 0.02, peak: 0.3, filterType: "highpass", fromHz: 3000 });
+    playTone(rig, { startAt, durationSeconds: 0.16, type: "sine", fromHz: 2093, toHz: 2050, peak: 0.22, attackSeconds: 0.002 });
+    playTone(rig, { startAt, durationSeconds: 0.11, type: "sine", fromHz: 3270, peak: 0.12, attackSeconds: 0.002 });
+    playTone(rig, { startAt, durationSeconds: 0.07, type: "square", fromHz: 4920, peak: 0.04, attackSeconds: 0.002 });
+  },
+  // The swan's telegraph: a swan does not honk, it hisses — a breathy swell of high noise with a
+  // rasp in it, longer than the honk and with no note at all.
+  hiss: (rig, startAt) => {
+    playNoise(rig, { startAt, durationSeconds: 0.18, peak: 0.12, filterType: "bandpass", fromHz: 4200, toHz: 5200, q: 1.2 });
+    playNoise(rig, { startAt: startAt + 0.08, durationSeconds: 0.42, peak: 0.32, filterType: "bandpass", fromHz: 5200, toHz: 3600, q: 1.2 });
+    playNoise(rig, { startAt: startAt + 0.1, durationSeconds: 0.36, peak: 0.12, filterType: "highpass", fromHz: 7000 });
   },
   // The telegraph: two nasal notes, the second a little lower. A heavier goose honks lower and
   // longer; the boss's is the longest and the lowest.
@@ -131,11 +179,47 @@ const CUE_VOICES: Record<BrawlCueName, CueVoice> = {
       playTone(rig, { startAt: startAt + 0.2 + index * 0.07, durationSeconds: 0.12, type: "triangle", fromHz: hz, peak: 0.1 });
     }
   },
+  // A goon over the railing or off the plinth: a clatter — three quick knocks of wood and iron
+  // tumbling — and the thud of it landing on the far side.
+  dunk: (rig, startAt) => {
+    for (const [index, hz] of [1900, 1400, 1700].entries()) {
+      playNoise(rig, { startAt: startAt + index * 0.06, durationSeconds: 0.05, peak: 0.3, filterType: "bandpass", fromHz: hz, q: 3 });
+    }
+
+    playTone(rig, { startAt: startAt + 0.18, durationSeconds: 0.2, type: "sine", fromHz: 130, toHz: 48, peak: 0.42 });
+  },
+  // A goon into the bay: the bay's own splash.
+  splash: (rig, startAt) => {
+    playSplash(rig, startAt);
+  },
+  // She ate a wing: a crunch, then two quick notes up — a heart back.
+  wing: (rig, startAt) => {
+    playNoise(rig, { startAt, durationSeconds: 0.08, peak: 0.3, filterType: "bandpass", fromHz: 2400, toHz: 1200, q: 1.5 });
+    playNoise(rig, { startAt: startAt + 0.09, durationSeconds: 0.07, peak: 0.24, filterType: "bandpass", fromHz: 2200, toHz: 1100, q: 1.5 });
+    playTone(rig, { startAt: startAt + 0.16, durationSeconds: 0.1, type: "triangle", fromHz: 988, peak: 0.22 });
+    playTone(rig, { startAt: startAt + 0.25, durationSeconds: 0.22, type: "triangle", fromHz: 1480, peak: 0.24 });
+  },
+  // A bowled goon landing: a dull thud, lower and shorter than the fall, with no twinkle — it is
+  // down for a moment, not for good.
+  bump: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.16, type: "sine", fromHz: 110, toHz: 50, peak: 0.42 });
+    playNoise(rig, { startAt, durationSeconds: 0.09, peak: 0.3, filterType: "lowpass", fromHz: 700, toHz: 200 });
+  },
   // The GO arrow: a bright two-note chime, climbing.
   go: (rig, startAt) => {
     playTone(rig, { startAt, durationSeconds: 0.14, type: "triangle", fromHz: 784, peak: 0.26 });
     playTone(rig, { startAt: startAt + 0.11, durationSeconds: 0.24, type: "triangle", fromHz: 1175, peak: 0.26 });
     playTone(rig, { startAt: startAt + 0.11, durationSeconds: 0.2, type: "sine", fromHz: 2350, peak: 0.06 });
+  },
+  // A clean wave banked: a short bright sting, three quick notes up to a held top with a glint on
+  // it, a touch after GO so the two read as one phrase — the arrow, then the star.
+  clean: (rig, startAt) => {
+    const at = startAt + 0.16;
+
+    playTone(rig, { startAt: at, durationSeconds: 0.07, type: "triangle", fromHz: 1568, peak: 0.2 });
+    playTone(rig, { startAt: at + 0.06, durationSeconds: 0.07, type: "triangle", fromHz: 1976, peak: 0.2 });
+    playTone(rig, { startAt: at + 0.12, durationSeconds: 0.36, type: "triangle", fromHz: 2637, peak: 0.24 });
+    playTone(rig, { startAt: at + 0.12, durationSeconds: 0.3, type: "sine", fromHz: 5274, peak: 0.05 });
   },
   // The tablet changes hands: three notes up, the last held.
   handoff: (rig, startAt) => {
@@ -143,11 +227,9 @@ const CUE_VOICES: Record<BrawlCueName, CueVoice> = {
     playTone(rig, { startAt: startAt + 0.09, durationSeconds: 0.1, type: "triangle", fromHz: 880, peak: 0.26 });
     playTone(rig, { startAt: startAt + 0.18, durationSeconds: 0.3, type: "triangle", fromHz: 1319, peak: 0.28 });
   },
-  // The bay: a splash, a swell of noise with the filter sweeping closed as it sinks.
+  // The bay: the hen carried off into it, a splash.
   bay: (rig, startAt) => {
-    playNoise(rig, { startAt, durationSeconds: 0.7, peak: 0.45, filterType: "lowpass", fromHz: 4200, toHz: 250, q: 0.8 });
-    playNoise(rig, { startAt: startAt + 0.05, durationSeconds: 0.35, peak: 0.16, filterType: "bandpass", fromHz: 1600, toHz: 700, q: 0.9 });
-    playTone(rig, { startAt, durationSeconds: 0.3, type: "sine", fromHz: 200, toHz: 70, peak: 0.22 });
+    playSplash(rig, startAt);
   },
   // The boxing bell, struck twice: a bright metallic clang (inharmonic partials) that rings on.
   bell: (rig, startAt) => {

@@ -4,7 +4,7 @@ import { BRAWL_WORLD, advanceBrawl, createBrawlRunStart } from "@wingnight/share
 
 import { CLEARED_BEAT_MS, HIT_PAUSE_MS, KO_BEAT_MS, TIMEOUT_BEAT_MS } from "../beats/index.js";
 import type { BrawlSceneHandle } from "../BrawlScene/index.js";
-import { paintGoonsTally } from "../goonsTally/index.js";
+import { paintGoonsTally, resolveHeartsCarried, resolveHeartsWorth } from "../goonsTally/index.js";
 import { paintHearts } from "../hearts/index.js";
 import { resolveMirrorEvents, type BrawlMirrorEventHandler } from "../mirrorEvents/index.js";
 
@@ -52,6 +52,8 @@ type LocalRun = {
   hasEnded: boolean;
   /** The thumb as the log last has it, so a slide that stays on one side logs nothing. */
   walkDir: BrawlWalkDir;
+  /** The hearts the run started on: the block's, as the view had it when the clock started. */
+  startHearts: number;
 };
 
 // A beat playing over the block's terminal frame, `progress` 0 → 1. `then` runs when it is over —
@@ -95,6 +97,7 @@ export const useBrawlRunner = ({
 }: BrawlRunnerInput): BrawlRunnerControls => {
   const blockIndex = viewBlock?.blockIndex ?? null;
   const blockStatus = viewBlock?.status ?? null;
+  const blockHearts = block.hearts;
   const blockRef = useRef(block);
   const createLocalRun = (): LocalRun => ({
     frame: createBrawlRunStart(blockRef.current),
@@ -102,9 +105,13 @@ export const useBrawlRunner = ({
     startedAtMs: null,
     rafHandle: 0,
     hasEnded: false,
-    walkDir: 0
+    walkDir: 0,
+    startHearts: blockRef.current.hearts
   });
   const runRef = useRef<LocalRun | null>(null);
+  // The block and status the effect below last followed, so it can tell a heart bought on the
+  // line from a new block or a reset.
+  const followedRef = useRef<{ blockIndex: number | null; blockStatus: string | null }>({ blockIndex: null, blockStatus: null });
   const beatRef = useRef<LocalBeat | null>(null);
   const callbacksRef = useRef({ onWalk, onPeck, onEndBlock, onEvent });
   const viewBlockRef = useRef(viewBlock);
@@ -140,12 +147,15 @@ export const useBrawlRunner = ({
     beatRef.current = null;
   };
 
-  // The chrome the loop owns: the hearts left and the worth down, off the frame it just drew.
-  const paintChrome = (frame: BrawlFrame): void => {
-    paintHearts(heartsRef?.current ?? null, frame.hearts);
+  // The chrome the loop owns: the hearts left and the worth banked, off the frame it just drew.
+  // `carried` is how many hearts have flown into the tally so far (the handoff beat only): each
+  // leaves the row and lands in the number at its worth, so the two agree with the referee's
+  // reading the moment the view banks the block.
+  const paintChrome = (frame: BrawlFrame, carried = 0): void => {
+    paintHearts(heartsRef?.current ?? null, frame.hearts - carried);
     paintGoonsTally(
       tallyRef?.current ?? null,
-      tallyRangeRef.current.banked + frame.goonsDown,
+      tallyRangeRef.current.banked + frame.goonsDown + resolveHeartsWorth(carried),
       tallyRangeRef.current.total
     );
   };
@@ -161,7 +171,7 @@ export const useBrawlRunner = ({
       scene?.paintTimeout(beat.frame, progress);
     }
 
-    paintChrome(beat.frame);
+    paintChrome(beat.frame, beat.outcome === "cleared" ? resolveHeartsCarried(beat.frame.hearts, progress) : 0);
   };
 
   const startBeat = (frame: BrawlFrame, outcome: BrawlOutcome): void => {
@@ -196,6 +206,15 @@ export const useBrawlRunner = ({
     }
 
     const targetTick = Math.floor(((now - local.startedAtMs) * BRAWL_WORLD.tickHz) / 1000);
+
+    // The block's hearts moved under a running clock: a heart bought a thumb's width before the
+    // first touch, whose echo landed after it. The referee starts from the view's hearts, so the
+    // tablet re-runs its own log from the top on the block as it now is and agrees with it.
+    if (local.startHearts !== blockRef.current.hearts) {
+      local.startHearts = blockRef.current.hearts;
+      local.frame = advanceBrawl(createBrawlRunStart(blockRef.current), blockRef.current, local.inputs, local.frame.tick);
+    }
+
     const previous = local.frame;
 
     local.frame = advanceBrawl(local.frame, blockRef.current, local.inputs, targetTick);
@@ -233,11 +252,16 @@ export const useBrawlRunner = ({
   };
 
   // Follow the block the server says we are on. A `ready` block starts a fresh local run on the
-  // line — after the previous one's beat, if one is still playing. A `running` one with no local
+  // line — after the previous one's beat, if one is still playing — and starts it again when its
+  // hearts change (a heart bought at the handoff), so the line shows four. A `running` one with no local
   // run is a tablet that mounted mid-block (a reload): hand the server what it has rather than
   // pretend to resume a block nobody is fighting. A block that went `done` under a live local run
   // was skipped by the host: the loop stops where it is.
   useEffect(() => {
+    const followed = followedRef.current;
+
+    followedRef.current = { blockIndex, blockStatus };
+
     if (blockIndex === null || blockStatus === null) {
       stopLoop();
       stopBeat();
@@ -246,6 +270,16 @@ export const useBrawlRunner = ({
     }
 
     if (blockStatus === "ready") {
+      const live = runRef.current;
+      const isOnlyHearts = followed.blockIndex === blockIndex && followed.blockStatus === blockStatus;
+
+      // Only the hearts moved, and the thumb beat the echo: the clock is already running on this
+      // block, and the step loop re-runs it on the new hearts rather than throwing the player's
+      // first touches away.
+      if (isOnlyHearts && live !== null && live.startedAtMs !== null && !live.hasEnded) {
+        return;
+      }
+
       const restart = (): void => {
         stopLoop();
         runRef.current = createLocalRun();
@@ -275,7 +309,7 @@ export const useBrawlRunner = ({
       local.hasEnded = true;
       stopLoop();
     }
-  }, [blockIndex, blockStatus, sceneRef, heartsRef, tallyRef]);
+  }, [blockIndex, blockStatus, blockHearts, sceneRef, heartsRef, tallyRef]);
 
   useEffect(() => {
     return (): void => {
@@ -311,6 +345,7 @@ export const useBrawlRunner = ({
 
       local.startedAtMs = performance.now();
       local.frame = createBrawlRunStart(blockRef.current);
+      local.startHearts = blockRef.current.hearts;
       local.inputs = [];
     }
 

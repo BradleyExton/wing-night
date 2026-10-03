@@ -35,7 +35,7 @@ const STRIDES: [Pick<GoosePose, "near" | "far" | "neck">, Pick<GoosePose, "near"
   { near: { x: -0.9, y: 0 }, far: { x: 1.3, y: -0.6 }, neck: 25 }
 ];
 
-const POSES: Record<Exclude<BrawlGoonState, "entering" | "approach" | "gone">, GoosePose> = {
+const POSES: Record<Exclude<BrawlGoonState, "entering" | "approach" | "stalk" | "gone">, GoosePose> = {
   // The honk: drawn up to its full height, rocked back, bill to the sky and wide open, wings
   // half out. The longest the neck ever is, so it reads from the sofa before the lines do.
   telegraph: {
@@ -99,13 +99,16 @@ const POSES: Record<Exclude<BrawlGoonState, "entering" | "approach" | "gone">, G
   }
 };
 
-/** The goose's pose for a state and, while it walks, the walk frame. `gone` draws nothing. */
+/**
+ * The goose's pose for a state and, while it walks, the walk frame. `gone` draws nothing. A
+ * `stalk` is the swan's alone; handed one, the goose is drawn walking.
+ */
 export const resolveGoosePose = (state: BrawlGoonState, frame: 0 | 1): GoosePose | null => {
   if (state === "gone") {
     return null;
   }
 
-  if (state === "entering" || state === "approach") {
+  if (state === "entering" || state === "approach" || state === "stalk") {
     return { ...STAND, ...STRIDES[frame] };
   }
 

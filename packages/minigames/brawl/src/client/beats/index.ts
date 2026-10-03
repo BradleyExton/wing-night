@@ -24,3 +24,8 @@ export const TIMEOUT_BEAT_MS = 1600;
 // the tablet does or the next block is drawn over a beat the sofa has not finished seeing
 // (SCHLONIC's slack).
 export const MIRROR_HOLD_SLACK_MS = 700;
+
+// "Caitlin bought a heart": the wall's callout when a block starts on a heart bought at the
+// handoff, so the room sees where the three worth went. Not an ending — it hangs over the line
+// while the holder starts walking, and never holds the street.
+export const HEART_CALLOUT_MS = 2000;

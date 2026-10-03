@@ -4,7 +4,14 @@
 // street hands in this one, and a sandbox can hand in another without touching a drawing.
 //
 // Tailwind only generates a class it can read whole in the source, so every one is written out.
-export type BrawlGoonPalette = {
+//
+// The swan's legs and the dropped wing's colours live beside their drawings (`Swan/palette.ts`,
+// `../Pickups/Wing/palette.ts`) and are merged in here, so the scene hands every drawing on the
+// street one palette and each colour is written once.
+import { brawlWingPalette, type BrawlWingPalette } from "../Pickups/Wing/palette.js";
+import { brawlSwanPalette, type BrawlSwanPalette } from "./Swan/palette.js";
+
+type BrawlGoonBasePalette = {
   /** The goose's (and the boss's) body: Canada goose grey-brown. */
   feather: string;
   /** The goose's darker back and folded wing, and the gull's mantle. */
@@ -45,6 +52,8 @@ export type BrawlGoonPalette = {
   shadow: string;
 };
 
+export type BrawlGoonPalette = BrawlGoonBasePalette & BrawlSwanPalette & BrawlWingPalette;
+
 export const brawlGoonPalette: BrawlGoonPalette = {
   feather: "fill-mutedWarm",
   featherDark: "fill-mutedWarmDim",
@@ -65,5 +74,7 @@ export const brawlGoonPalette: BrawlGoonPalette = {
   stroke: "stroke-bg",
   rim: "stroke-mutedWarmDim",
   stars: "fill-gold",
-  shadow: "fill-shade/40"
+  shadow: "fill-shade/40",
+  ...brawlSwanPalette,
+  ...brawlWingPalette
 };

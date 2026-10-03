@@ -45,7 +45,7 @@ const FLAP: [GullPose, GullPose] = [
   { tilt: 4, near: { x: -2.6, y: 1.4 }, far: { x: -1, y: 0.8 }, talons: false, eye: "open", onBack: false }
 ];
 
-const POSES: Record<Exclude<BrawlGoonState, "entering" | "approach" | "gone">, GullPose> = {
+const POSES: Record<Exclude<BrawlGoonState, "entering" | "approach" | "stalk" | "gone">, GullPose> = {
   // Hanging over the hen with both wings up in a wide V and the talons down: the hover before
   // the dive, held still so the room has a beat to see it.
   telegraph: { tilt: -10, near: { x: -3.6, y: -6.6 }, far: { x: 2, y: -6.8 }, talons: true, eye: "open", onBack: false },
@@ -64,7 +64,7 @@ const resolveGullPose = (state: BrawlGoonState, frame: 0 | 1): GullPose | null =
     return null;
   }
 
-  return state === "entering" || state === "approach" ? FLAP[frame] : POSES[state];
+  return state === "entering" || state === "approach" || state === "stalk" ? FLAP[frame] : POSES[state];
 };
 
 // A wing from the shoulder out to `tip`, `chord` deep at its broadest: a curved leading edge

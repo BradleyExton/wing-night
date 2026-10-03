@@ -1,11 +1,10 @@
 import type { RefObject } from "react";
 import type { BrawlMinigameDisplayView } from "@wingnight/shared";
-import { BRAWL_WORLD } from "@wingnight/shared";
+import { resolveBrawlStartHearts } from "@wingnight/shared";
 
+import { HeartRow } from "../../HeartRow/index.js";
 import { marqueeReadoutCopy } from "./copy.js";
 import * as styles from "./styles.js";
-
-const HEART_SLOTS = Array.from({ length: BRAWL_WORLD.heartsMax }, (_unused, index) => index);
 
 type MarqueeReadoutProps = {
   view: BrawlMinigameDisplayView;
@@ -47,13 +46,12 @@ export const MarqueeReadout = ({
       </span>
       {!isFinished && (
         <>
-          <span ref={heartsRef} className={styles.hearts} data-brawl-hearts={BRAWL_WORLD.heartsMax}>
-            {HEART_SLOTS.map((slot) => (
-              <span key={slot} className={styles.heart} data-lit="true">
-                {marqueeReadoutCopy.heart}
-              </span>
-            ))}
-          </span>
+          {/* Four glyphs on a block the team bought a heart for: the wall counts what the tablet does. */}
+          <HeartRow
+            max={resolveBrawlStartHearts(view.blocks[shownBlockIndex]?.heartBought ?? false)}
+            rowRef={heartsRef}
+            tone="marquee"
+          />
           <span>{marqueeReadoutCopy.heartsLabel}</span>
         </>
       )}

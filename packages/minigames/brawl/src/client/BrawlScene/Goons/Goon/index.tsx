@@ -3,13 +3,17 @@ import type { BrawlGoonKind } from "@wingnight/shared";
 import { Boss } from "../Boss/index.js";
 import { Goose } from "../Goose/index.js";
 import { Gull } from "../Gull/index.js";
+import { Helmet } from "../Helmet/index.js";
 import { Raccoon } from "../Raccoon/index.js";
 import type { GoonProps } from "../rig/index.js";
+import { Swan } from "../Swan/index.js";
 
 const GOONS: Record<BrawlGoonKind, (props: GoonProps) => JSX.Element> = {
   goose: Goose,
   gull: Gull,
   raccoon: Raccoon,
+  swan: Swan,
+  helmet: Helmet,
   boss: Boss
 };
 

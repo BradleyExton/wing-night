@@ -15,6 +15,6 @@ export const displayBrawlSurfaceCopy = {
   heldPrompt: (endedName: string | null): string => (endedName === null ? "That's the block" : `That's ${endedName}'s block`),
   finishedPrompt: "That's the team's street.",
   finishedTitle: "Street clear",
-  finishedBlurb: (down: number, total: number): string => `${down} of ${total} down`,
+  finishedBlurb: (worth: number, total: number): string => `${worth} of ${total} worth`,
   points: (points: number): string => `+${points}`
 } as const;

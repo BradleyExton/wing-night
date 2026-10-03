@@ -1,14 +1,33 @@
-import type { BrawlBlock, BrawlCourse, BrawlFrame, BrawlGoon, BrawlInput, BrawlRun, BrawlSpawn } from "../types.js";
-import { BRAWL_WORLD, resolveBrawlBlock, resolveBrawlTickCap } from "../world/index.js";
+import type {
+  BrawlBlock,
+  BrawlCourse,
+  BrawlFrame,
+  BrawlGoon,
+  BrawlGoonState,
+  BrawlHazard,
+  BrawlInput,
+  BrawlRun,
+  BrawlSpawn
+} from "../types.js";
+import {
+  BRAWL_WORLD,
+  isBrawlGoonGuarded,
+  resolveBrawlBlock,
+  resolveBrawlHeartsCap,
+  resolveBrawlTickCap
+} from "../world/index.js";
 
-/** The frame a block starts from: the hen on the line, three hearts, the camera locked on wave 0. */
+/**
+ * The frame a block starts from: the hen on the line with the block's hearts (three, or four if
+ * the team bought one at the handoff), the camera locked on wave 0.
+ */
 export const createBrawlRunStart = (block: BrawlBlock): BrawlFrame => {
   return {
     tick: 0,
     x: BRAWL_WORLD.henStartX,
     facing: 1,
     walking: 0,
-    hearts: BRAWL_WORLD.heartsMax,
+    hearts: block.hearts,
     invulnerableUntilTick: 0,
     peckUntilTick: 0,
     peckCooldownUntilTick: 0,
@@ -23,6 +42,13 @@ export const createBrawlRunStart = (block: BrawlBlock): BrawlFrame => {
     hits: [],
     landed: [],
     kos: [],
+    bonuses: [],
+    bumps: [],
+    clanks: [],
+    dunks: [],
+    pickups: [],
+    drops: [],
+    wings: [],
     outcome: null
   };
 };
@@ -219,14 +245,29 @@ const enterGoon = (goon: BrawlGoon, frame: BrawlFrame): BrawlGoon => {
   return { ...goon, x, state: isInside ? "approach" : "entering" };
 };
 
+/**
+ * Whether the hen is facing this goon: a swan she faces stalks instead of hissing. `facing` is
+ * the goon's own, toward her, so she faces it when hers is the opposite.
+ */
+const isFacedBy = (frame: BrawlFrame, facing: -1 | 1): boolean => frame.facing === -facing;
+
+/** The honk: it stops dead, facing her, and the room has `telegraphTicks` to shout. */
+const startTelegraph = (goon: BrawlGoon, facing: -1 | 1, y: number, tick: number): BrawlGoon => {
+  return { ...goon, y, facing, vx: 0, state: "telegraph", stateUntilTick: tick + BRAWL_WORLD.goons[goon.kind].telegraphTicks };
+};
+
 const approachGoon = (goon: BrawlGoon, frame: BrawlFrame, tick: number): BrawlGoon => {
   const stats = BRAWL_WORLD.goons[goon.kind];
   const facing = signOf(frame.x - goon.x, goon.facing);
   const y = settleHeight(goon);
 
   if ((frame.x - goon.x) * facing <= stats.reach) {
-    // The honk: it stops dead, facing her, and the room has `telegraphTicks` to shout.
-    return { ...goon, y, facing, vx: 0, state: "telegraph", stateUntilTick: tick + stats.telegraphTicks };
+    // A swan she is facing stands and waits at its reach; one she has her back to hisses.
+    if (goon.kind === "swan" && isFacedBy(frame, facing)) {
+      return { ...goon, y, facing, vx: 0, state: "stalk" };
+    }
+
+    return startTelegraph(goon, facing, y, tick);
   }
 
   const nextX = goon.x + facing * stats.speed;
@@ -236,6 +277,27 @@ const approachGoon = (goon: BrawlGoon, frame: BrawlFrame, tick: number): BrawlGo
   }
 
   return { ...goon, x: nextX, y, facing, vx: facing * stats.speed };
+};
+
+/**
+ * The swan's stalk (SoR2's Signal): faced, it stands at its reach and does not advance or attack
+ * — and it can be pecked. The tick she turns her back it hisses (`telegraph`), committed from
+ * there, even if the turn stepped her out of its reach (the lunge covers it); faced but out of
+ * its reach — she was knocked back, or walked off facing it — it goes back to closing on her.
+ */
+const stalkGoon = (goon: BrawlGoon, frame: BrawlFrame, tick: number): BrawlGoon => {
+  const facing = signOf(frame.x - goon.x, goon.facing);
+
+  // Her back first: the turn that takes her a step out of its reach is still a turn away.
+  if (!isFacedBy(frame, facing)) {
+    return startTelegraph(goon, facing, goon.y, tick);
+  }
+
+  if ((frame.x - goon.x) * facing > BRAWL_WORLD.goons[goon.kind].reach) {
+    return { ...goon, facing, state: "approach" };
+  }
+
+  return goon.facing === facing && goon.vx === 0 ? goon : { ...goon, facing, vx: 0 };
 };
 
 /** The gull's dive starts going down at the speed that brings it back to its cruise on the last tick. */
@@ -306,6 +368,10 @@ const stepGoon = (goon: BrawlGoon, frame: BrawlFrame, tick: number): BrawlGoon =
     return clampGoon(approachGoon(goon, frame, tick), frame);
   }
 
+  if (goon.state === "stalk") {
+    return clampGoon(stalkGoon(goon, frame, tick), frame);
+  }
+
   if (goon.state === "attack") {
     return clampGoon(attackGoon(goon, tick), frame);
   }
@@ -333,11 +399,88 @@ const hasPeckLanded = (frame: BrawlFrame): boolean => {
 };
 
 /**
+ * The states a bowled goon can be knocked out of. A goon already reeling or down is not stunned
+ * again — so a chain is one pass and never runs on — and one still walking in off the tablet's
+ * frame is not on the street yet.
+ */
+const CHAINABLE_STATES: readonly BrawlGoonState[] = ["approach", "stalk", "telegraph", "attack", "recover"];
+
+/**
+ * The chain: a goon shoved from `fromX` to `toX` bowls through every other walker whose box
+ * overlaps its path (the path widened by both half-widths), and each one is stunned for its own
+ * `stunTicks` — no hp lost, no movement. Gulls are in the air and are never bowled. A stunned
+ * goon does not chain further: one pass, no recursion, so the boss's escort is never free.
+ */
+const chainKnockback = (
+  goons: readonly BrawlGoon[],
+  shoved: BrawlGoon,
+  fromX: number,
+  tick: number
+): { goons: BrawlGoon[]; bumped: number } => {
+  const { halfWidth } = BRAWL_WORLD.goons[shoved.kind];
+  const left = Math.min(fromX, shoved.x) - halfWidth;
+  const right = Math.max(fromX, shoved.x) + halfWidth;
+  let bumped = 0;
+  const next = goons.map((goon): BrawlGoon => {
+    if (goon === shoved || goon.kind === "gull" || !CHAINABLE_STATES.includes(goon.state)) {
+      return goon;
+    }
+
+    const stats = BRAWL_WORLD.goons[goon.kind];
+
+    if (goon.x + stats.halfWidth <= left || goon.x - stats.halfWidth >= right) {
+      return goon;
+    }
+
+    bumped += 1;
+
+    return { ...goon, vx: 0, vy: 0, state: "stunned", stateUntilTick: tick + stats.stunTicks };
+  });
+
+  return { goons: next, bumped };
+};
+
+/**
+ * Whether a shove from `fromX` to `toX` touches the hazard's span — into it, across it, or out of
+ * it. Only the goon the peck struck is shoved, so only it can be dunked.
+ */
+const isShovedThrough = (hazard: BrawlHazard, fromX: number, toX: number): boolean => {
+  return Math.min(fromX, toX) <= hazard.x + hazard.width && Math.max(fromX, toX) >= hazard.x;
+};
+
+/** Gulls fly over the hazard and the boss is too heavy to go in: everything else can be dunked. */
+const isDunkable = (goon: BrawlGoon): boolean => goon.kind !== "gull" && goon.kind !== "boss";
+
+/**
+ * A goon worth two or more that goes down drops a wing where it lands, inside the hen's reach of
+ * the window — unless one is already on the street or this wave has already dropped one (a drop
+ * at or after the tick the wave opened).
+ */
+const dropWing = (frame: BrawlFrame, goon: BrawlGoon, tick: number): BrawlFrame => {
+  const isDroppedThisWave = frame.drops.some((drop) => drop >= frame.waveOpenedTick);
+
+  if (BRAWL_WORLD.goons[goon.kind].worth < 2 || frame.pickups.length > 0 || isDroppedThisWave) {
+    return frame;
+  }
+
+  const { width, henMargin, wingTicks } = BRAWL_WORLD;
+  const x = Math.max(frame.cameraX + henMargin, Math.min(frame.cameraX + width - henMargin, goon.x));
+
+  return { ...frame, pickups: [{ x, untilTick: tick + wingTicks }], drops: [...frame.drops, tick] };
+};
+
+/**
  * The beak: a box from her back edge to `peckReach` past her front, her height tall. The
  * nearest goon standing in it — stepped in, not still entering from off the tablet's frame —
- * takes the peck: a hp, a shove away from her and a reel, or down if that was its last.
+ * takes the peck: a hp and a shove `knockback` away from her, then a reel, or the fall if that
+ * was its last (a KO is sent flying the same distance and falls where it lands). A helmet goose
+ * with its guard down (`isBrawlGoonGuarded`) takes the shove and nothing else: a CLANK, no hp, no
+ * reel, the peck spent. A shove that carries the goon into or across the block's hazard DUNKS
+ * it: down at once whatever its hp, its whole worth banked. Whatever it is bowled through on the
+ * way is stunned too (`chainKnockback`): let them queue, then bowl. A goon worth two or more
+ * that goes down drops a wing (`dropWing`).
  */
-const resolvePeck = (frame: BrawlFrame, tick: number): BrawlFrame => {
+const resolvePeck = (frame: BrawlFrame, block: BrawlBlock, tick: number): BrawlFrame => {
   if (!isPeckLive(frame, tick) || hasPeckLanded(frame)) {
     return frame;
   }
@@ -362,28 +505,48 @@ const resolvePeck = (frame: BrawlFrame, tick: number): BrawlFrame => {
   }
 
   const stats = BRAWL_WORLD.goons[target.kind];
-  const hp = target.hp - 1;
+  const isClank = isBrawlGoonGuarded(target);
+  const hp = isClank ? target.hp : target.hp - 1;
   const away = signOf(target.x - frame.x, frame.facing);
-  const struck: BrawlGoon =
-    hp <= 0
-      ? { ...target, hp: 0, vx: 0, vy: 0, state: "ko", koTick: tick, stateUntilTick: tick + BRAWL_WORLD.koFallTicks }
-      : {
-          ...target,
-          hp,
-          x: target.x + away * stats.knockback,
-          vx: 0,
-          vy: 0,
-          state: "stunned",
-          stateUntilTick: tick + stats.stunTicks
-        };
-
-  return {
+  const x = target.x + away * stats.knockback;
+  const fall = (goon: BrawlGoon): BrawlGoon => ({
+    ...goon,
+    hp: 0,
+    vx: 0,
+    vy: 0,
+    state: "ko",
+    koTick: tick,
+    stateUntilTick: tick + BRAWL_WORLD.koFallTicks
+  });
+  const struck: BrawlGoon = isClank
+    ? { ...target, x, vx: 0, vy: 0 }
+    : hp <= 0
+      ? fall({ ...target, x })
+      : { ...target, hp, x, vx: 0, vy: 0, state: "stunned", stateUntilTick: tick + stats.stunTicks };
+  // The locked window still pins it, so the path it bowls along ends where it actually lands.
+  const pinned = clampGoon(struck, frame);
+  const isDunk = block.hazard !== null && isDunkable(target) && isShovedThrough(block.hazard, target.x, pinned.x);
+  const shoved = isDunk && pinned.state !== "ko" ? fall(pinned) : pinned;
+  const isDown = shoved.state === "ko";
+  const chained = chainKnockback(
+    frame.goons.map((goon) => (goon === target ? shoved : goon)),
+    shoved,
+    target.x,
+    tick
+  );
+  const mark = { tick, spawnIndex: target.spawnIndex };
+  const pecked: BrawlFrame = {
     ...frame,
-    goons: frame.goons.map((goon) => (goon === target ? clampGoon(struck, frame) : goon)),
+    goons: chained.goons,
     landed: [...frame.landed, tick],
-    goonsDown: hp <= 0 ? frame.goonsDown + stats.worth : frame.goonsDown,
-    kos: hp <= 0 ? [...frame.kos, tick] : frame.kos
+    goonsDown: isDown ? frame.goonsDown + stats.worth : frame.goonsDown,
+    kos: isDown ? [...frame.kos, tick] : frame.kos,
+    bumps: chained.bumped === 0 ? frame.bumps : [...frame.bumps, ...Array.from({ length: chained.bumped }, () => tick)],
+    clanks: isClank ? [...frame.clanks, mark] : frame.clanks,
+    dunks: isDunk ? [...frame.dunks, mark] : frame.dunks
   };
+
+  return isDown ? dropWing(pecked, shoved, tick) : pecked;
 };
 
 /**
@@ -418,8 +581,50 @@ const resolveHits = (frame: BrawlFrame, tick: number): BrawlFrame => {
 };
 
 /**
+ * The wing on the street: gone at its `untilTick`, and eaten when she STANDS within
+ * `henRadius + wingReach` of it — thumb up, not walking — with a heart to fill: one heart back,
+ * up to the cap (`resolveBrawlHeartsCap`). Standing still is the price (Mother Russia Bleeds'
+ * harvest, research M.4.4): the wing lies where the goons fall, so stopping on it is stopping in
+ * the fight. A hen walking over it, or at full hearts, leaves it where it is; on her last
+ * heart's fall (nought hearts) it is too late. The stop is also what keeps the wing from being a
+ * masher's free heal: a hen pinned to the window's edge with the thumb held never eats one.
+ */
+const resolvePickups = (frame: BrawlFrame, block: BrawlBlock, tick: number): BrawlFrame => {
+  if (frame.pickups.length === 0) {
+    return frame;
+  }
+
+  const live = frame.pickups.filter((pickup) => pickup.untilTick > tick);
+  const canEat = frame.walking === 0 && frame.hearts > 0 && frame.hearts < resolveBrawlHeartsCap(block);
+  const reach = BRAWL_WORLD.henRadius + BRAWL_WORLD.wingReach;
+  const eaten = canEat ? live.find((pickup) => Math.abs(pickup.x - frame.x) <= reach) : undefined;
+
+  if (eaten === undefined) {
+    return live.length === frame.pickups.length ? frame : { ...frame, pickups: live };
+  }
+
+  return {
+    ...frame,
+    hearts: frame.hearts + 1,
+    pickups: live.filter((pickup) => pickup !== eaten),
+    wings: [...frame.wings, tick]
+  };
+};
+
+/**
+ * Whether the wave in hand is clean so far: no hit on her since the camera locked on it. Read by
+ * the sim as the wave goes down, and by the TV's wave meter every frame, so the star it lights is
+ * the one the sim banks. Once the camera lets go `waveOpenedTick` is still the wave just fought,
+ * so this then says whether that wave banked its bonus.
+ */
+export const isBrawlWaveClean = (frame: BrawlFrame): boolean => {
+  return !frame.hits.some((hit) => hit >= frame.waveOpenedTick);
+};
+
+/**
  * The wave is down when every one of its spawns has stepped in and none is still standing. The
- * camera lets go and the next wave waits at its own lock.
+ * camera lets go and the next wave waits at its own lock. A wave she took down without being hit
+ * banks `cleanWaveBonus` on the spot (feature 1): the thing to lose in every wave.
  */
 const resolveWaveDown = (frame: BrawlFrame, block: BrawlBlock): BrawlFrame => {
   const wave = block.waves[frame.waveIndex];
@@ -434,7 +639,15 @@ const resolveWaveDown = (frame: BrawlFrame, block: BrawlBlock): BrawlFrame => {
     return frame;
   }
 
-  return { ...frame, cameraLocked: false, waveIndex: frame.waveIndex + 1 };
+  const isClean = isBrawlWaveClean(frame);
+
+  return {
+    ...frame,
+    cameraLocked: false,
+    waveIndex: frame.waveIndex + 1,
+    goonsDown: isClean ? frame.goonsDown + BRAWL_WORLD.cleanWaveBonus : frame.goonsDown,
+    bonuses: isClean ? [...frame.bonuses, frame.tick] : frame.bonuses
+  };
 };
 
 const resolveOutcome = (frame: BrawlFrame, block: BrawlBlock): BrawlFrame => {
@@ -457,8 +670,9 @@ const resolveOutcome = (frame: BrawlFrame, block: BrawlBlock): BrawlFrame => {
  * The whole fight, one tick. A terminal frame steps to itself, so callers can advance past the
  * outcome without guarding. The inputs logged at this frame's tick apply first; then she
  * walks, the camera follows or holds, the wave's goons step in and run their scripts, the peck
- * lands, the goons' attacks land, the fallen are tidied away, and the wave and the block are
- * checked for their ends.
+ * lands (or clanks, or dunks, and maybe drops a wing), the goons' attacks land, she eats a wing
+ * she is standing on, the fallen are tidied away, and the wave and the block are checked for
+ * their ends.
  */
 export const stepBrawl = (frame: BrawlFrame, block: BrawlBlock, inputs: readonly BrawlInput[]): BrawlFrame => {
   if (frame.outcome !== null) {
@@ -473,7 +687,7 @@ export const stepBrawl = (frame: BrawlFrame, block: BrawlBlock, inputs: readonly
     ...placed,
     goons: placed.goons.map((goon) => stepGoon(goon, placed, tick))
   };
-  const fought = resolveHits(resolvePeck(scripted, tick), tick);
+  const fought = resolvePickups(resolveHits(resolvePeck(scripted, block, tick), tick), block, tick);
   const tidied = fought.goons.some((goon) => goon.state === "gone")
     ? { ...fought, goons: fought.goons.filter((goon) => goon.state !== "gone") }
     : fought;

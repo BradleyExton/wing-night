@@ -1,10 +1,12 @@
 import type { BrawlMinigameBlock } from "@wingnight/shared";
+import { resolveBrawlBlockWorth } from "@wingnight/shared";
 
 import { blockHistoryCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
-// One row per block of the turn: who fought it and how it ended, with the block in hand lit.
-// `activeBlockIndex` is the block the tablet is on.
+// One row per block of the turn: who fought it, how it ended and what it banked (its worth, hearts
+// included on a handoff), with the block in hand lit. `activeBlockIndex` is the block the tablet
+// is on.
 export const BlockHistory = ({
   blocks,
   activeBlockIndex
@@ -23,7 +25,10 @@ export const BlockHistory = ({
         <span>{block.player?.name ?? blockHistoryCopy.pending}</span>
         <span>
           {block.status === "done"
-            ? blockHistoryCopy.outcome(block.skipped ? null : (block.result?.outcome ?? null), block.result?.goons ?? 0)
+            ? blockHistoryCopy.outcome(
+                block.skipped ? null : (block.result?.outcome ?? null),
+                block.result === null ? 0 : resolveBrawlBlockWorth(block.result)
+              )
             : blockHistoryCopy.pending}
         </span>
       </span>

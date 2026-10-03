@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import type { BrawlBlock, BrawlPlayerFigure } from "@wingnight/shared";
-import { resolveBrawlBlock } from "@wingnight/shared";
+import type { BrawlBlock, BrawlCourse, BrawlPlayerFigure } from "@wingnight/shared";
+import { resolveBrawlBlock, resolveBrawlStartHearts } from "@wingnight/shared";
 
 import type { HenFigure } from "../resolveHenFigure/index.js";
 import { useHenFigure } from "../useHenFigure/index.js";
@@ -15,12 +15,34 @@ type BlockView = {
   activeTurnTeamId: string | null;
   courseSeed: number;
   blocksPerTurn: number;
-  blocks: readonly { player: BrawlPlayerFigure | null }[];
+  blocks: readonly { player: BrawlPlayerFigure | null; heartBought: boolean }[];
 };
 
-/** The block a view describes, laid out from its seed: block `n` of the course. Pure. */
-export const resolveViewBlock = (view: Pick<BlockView, "courseSeed" | "blocksPerTurn">, blockIndex: number): BrawlBlock => {
-  return resolveBrawlBlock({ seed: view.courseSeed, blocks: view.blocksPerTurn, block: blockIndex });
+/**
+ * The course that picks block `n` of a view, as the referee reads it: the seed, the course's
+ * length, the block, and the hearts it starts on — three, or four if the team bought one at the
+ * handoff. The tablet's runner, the TV's mirror and the server's `endBlock` all start from it. Pure.
+ */
+export const resolveViewCourse = (
+  view: Pick<BlockView, "courseSeed" | "blocksPerTurn">,
+  blockIndex: number,
+  heartBought: boolean
+): Required<BrawlCourse> => {
+  return {
+    seed: view.courseSeed,
+    blocks: view.blocksPerTurn,
+    block: blockIndex,
+    hearts: resolveBrawlStartHearts(heartBought)
+  };
+};
+
+/** The block a view describes, laid out from its seed (`resolveViewCourse`). Pure. */
+export const resolveViewBlock = (
+  view: Pick<BlockView, "courseSeed" | "blocksPerTurn">,
+  blockIndex: number,
+  heartBought: boolean
+): BrawlBlock => {
+  return resolveBrawlBlock(resolveViewCourse(view, blockIndex, heartBought));
 };
 
 /**
@@ -29,7 +51,8 @@ export const resolveViewBlock = (view: Pick<BlockView, "courseSeed" | "blocksPer
  * street. Both surfaces read it off the same view, so the tablet and the wall lay out the same
  * block and wait the same teammate at the same line. The block is memoised on the three numbers
  * that pick it, and the figures by `useHenFigure`, so the scene only changes when the block or a
- * player does.
+ * player does. The hearts follow the view's `heartBought`, so a heart bought at the handoff
+ * starts the tablet's runner and the TV's mirror on four, as the referee does.
  */
 export const useBrawlBlock = ({
   view,
@@ -41,9 +64,10 @@ export const useBrawlBlock = ({
   serverOrigin: string | null;
 }): { block: BrawlBlock; relay: BrawlRelay } => {
   const { courseSeed, blocksPerTurn } = view;
+  const heartBought = view.blocks[blockIndex]?.heartBought ?? false;
   const block = useMemo(() => {
-    return resolveViewBlock({ courseSeed, blocksPerTurn }, blockIndex);
-  }, [courseSeed, blocksPerTurn, blockIndex]);
+    return resolveViewBlock({ courseSeed, blocksPerTurn }, blockIndex, heartBought);
+  }, [courseSeed, blocksPerTurn, blockIndex, heartBought]);
   const lastBlock = blockIndex > 0 ? (view.blocks[blockIndex - 1] ?? null) : null;
   const nextBlock = blockIndex < blocksPerTurn - 1 ? (view.blocks[blockIndex + 1] ?? null) : null;
   const last = useHenFigure({
