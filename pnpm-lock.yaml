@@ -519,12 +519,24 @@ importers:
 
   packages/minigames/mount:
     dependencies:
+      '@wingnight/audio':
+        specifier: workspace:*
+        version: link:../../audio
+      '@wingnight/cast':
+        specifier: workspace:*
+        version: link:../../cast
       '@wingnight/minigames-core':
         specifier: workspace:*
         version: link:../core
+      '@wingnight/scenery':
+        specifier: workspace:*
+        version: link:../../scenery
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
+      '@wingnight/surface':
+        specifier: workspace:*
+        version: link:../../surface
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

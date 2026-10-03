@@ -28,8 +28,12 @@
     "test": "tsx --tsconfig ../../../tsconfig.tsx-runtime.json --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\""
   },
   "dependencies": {
+    "@wingnight/audio": "workspace:*",
+    "@wingnight/cast": "workspace:*",
     "@wingnight/minigames-core": "workspace:*",
-    "@wingnight/shared": "workspace:*"
+    "@wingnight/scenery": "workspace:*",
+    "@wingnight/shared": "workspace:*",
+    "@wingnight/surface": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

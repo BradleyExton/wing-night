@@ -3,7 +3,6 @@ import type { MinigameRendererBundle } from "@wingnight/minigames-core";
 import { DisplayMountSurface } from "./DisplayMountSurface/index.js";
 import { HostMountSurface } from "./HostMountSurface/index.js";
 
-// PLACEHOLDER surfaces until the surfaces step (spec §0.2 step 6) lands the real ones.
 export const mountRendererBundle: MinigameRendererBundle = {
   HostSurface: HostMountSurface,
   DisplaySurface: DisplayMountSurface,

@@ -126,3 +126,19 @@ test("frames the host preview as the tablet shell with the phase's host controls
   assert.match(html, /aria-label="Open host controls"/);
   assert.doesNotMatch(html, /End Team Turn/);
 });
+
+// The goose bot (`MinigameDevAction`) is the sandbox's own harness for Mount Your Hens: a button in
+// the controls, offered only for the game that registered it.
+test("does offer the goose bot as a sandbox button when the sandbox is on Mount Your Hens", () => {
+  const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="MOUNT" />);
+
+  assert.match(html, /data-sandbox-dev-action="mount-goose-bot"/);
+  assert.match(html, /data-mount-scene="host"/);
+  assert.match(html, /data-mount-scene="display"/);
+});
+
+test("does offer no scripted moves when the game registered none", () => {
+  const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="TRIVIA" />);
+
+  assert.doesNotMatch(html, /data-sandbox-dev-action/);
+});

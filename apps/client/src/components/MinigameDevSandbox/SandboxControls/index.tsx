@@ -1,4 +1,4 @@
-import type { MinigameSurfacePhase } from "@wingnight/minigames-core";
+import type { MinigameDevAction, MinigameSurfacePhase } from "@wingnight/minigames-core";
 import {
   MINIGAME_TYPES,
   resolveMinigameDefinition,
@@ -24,6 +24,10 @@ type SandboxControlsProps = {
   // can be judged here. Absent for a host-paced game, which has no clock to
   // run, so the block does not draw.
   onRehearseClock: (() => void) | null;
+  // The game's scripted moves (`MinigameDevAction`), one button each. Empty for most games, and
+  // the block does not draw.
+  devActions?: readonly MinigameDevAction[];
+  onRunDevAction?: (devAction: MinigameDevAction) => void;
 };
 
 // The option list is derived from MINIGAME_TYPES, and the option value is the
@@ -46,7 +50,9 @@ export const SandboxControls = ({
   onPhaseChange,
   onActiveTeamChange,
   onReset,
-  onRehearseClock
+  onRehearseClock,
+  devActions = [],
+  onRunDevAction
 }: SandboxControlsProps): JSX.Element => {
   const minigameOptions = resolveMinigameOptions();
   const activeSlug = resolveMinigameDefinition(minigameType).slug;
@@ -148,6 +154,27 @@ export const SandboxControls = ({
             >
               {minigameDevSandboxCopy.rehearseClockButtonLabel}
             </button>
+          </div>
+        )}
+
+        {devActions.length > 0 && (
+          <div className={styles.controlBlock}>
+            <span className={styles.controlLabel}>
+              {minigameDevSandboxCopy.devActionsLabel}
+            </span>
+            {devActions.map((devAction) => (
+              <button
+                key={devAction.id}
+                className={styles.resetButton}
+                type="button"
+                data-sandbox-dev-action={devAction.id}
+                onClick={(): void => {
+                  onRunDevAction?.(devAction);
+                }}
+              >
+                {devAction.label}
+              </button>
+            ))}
           </div>
         )}
       </div>

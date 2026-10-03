@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type {
+  MinigameDevAction,
   MinigameDevManifest,
   MinigameRendererBundle,
   MinigameRuntimePlugin,
@@ -39,6 +40,9 @@ type SandboxStageProps = {
   devManifest: MinigameDevManifest;
   rendererBundle: MinigameRendererBundle;
   runtimePlugin: MinigameRuntimePlugin;
+  // The game's own scripted moves, as buttons in the controls (`MinigameDevAction`). Each one
+  // dispatches through `handleDispatchAction`, the same reducer path a tablet's action takes.
+  devActions?: readonly MinigameDevAction[];
   serverOrigin: string | null;
 };
 
@@ -85,6 +89,7 @@ export const SandboxStage = ({
   devManifest,
   rendererBundle,
   runtimePlugin,
+  devActions = [],
   serverOrigin
 }: SandboxStageProps): JSX.Element => {
   const [phase, setPhase] = useState<MinigameSurfacePhase>("play");
@@ -207,6 +212,12 @@ export const SandboxStage = ({
           setClockRehearsalTimer(null);
         }}
         onRehearseClock={rehearseClock}
+        devActions={devActions}
+        onRunDevAction={(devAction): void => {
+          const action = devAction.resolve(minigameHostView);
+
+          return action === null ? undefined : handleDispatchAction(action.actionType, action.actionPayload);
+        }}
       />
 
       <section className={styles.previewGrid}>

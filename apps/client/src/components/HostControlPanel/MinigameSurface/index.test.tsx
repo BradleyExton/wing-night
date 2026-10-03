@@ -3,6 +3,9 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { MinigameHostView } from "@wingnight/shared";
 
+import { mountDevManifest } from "@wingnight/minigames-mount/dev";
+import { mountRuntimePlugin } from "@wingnight/minigames-mount/runtime";
+
 import { MinigameSurface } from "./index";
 
 const teamNameByTeamId = new Map<string, string>([["team-alpha", "Team Alpha"]]);
@@ -184,4 +187,40 @@ test("renders intro surface for configured trivia minigame", () => {
   // The intro deck is a panel, not a takeover: the stage hero above it already
   // carries the rail, so the panel names no team of its own.
   assert.doesNotMatch(html, /Team Alpha/);
+});
+
+// The goose bot is a dev sandbox button (`MinigameDevAction`), registered beside Mount Your Hens'
+// dev manifest. The party's own host surface renders the game's tablet and nothing of the
+// sandbox's harness, so a scripted climb can never be fired from the real tablet.
+test("does not render the sandbox's dev actions when the production host draws Mount Your Hens", () => {
+  const state = mountRuntimePlugin.initialize({
+    teamIds: [...mountDevManifest.teamIds],
+    players: mountDevManifest.players,
+    teams: mountDevManifest.teams,
+    activeRoundTeamId: mountDevManifest.activeRoundTeamId,
+    pointsMax: mountDevManifest.pointsMax,
+    pendingPointsByTeamId: { ...mountDevManifest.pendingPointsByTeamId },
+    rules: mountDevManifest.rules,
+    content: null
+  });
+  const hostView = mountRuntimePlugin.selectHostView({ state: state ?? null, rules: mountDevManifest.rules, content: null });
+  const html = renderToStaticMarkup(
+    <MinigameSurface
+      phase="play"
+      minigameType="MOUNT"
+      minigameHostView={hostView}
+      activeTeamName="Team Alpha"
+      teamNameByTeamId={teamNameByTeamId}
+      rail={<span data-test-rail />}
+      clock={null}
+      canDispatchAction
+      onDispatchAction={(): void => {
+        return;
+      }}
+    />
+  );
+
+  assert.match(html, /data-mount-arena/);
+  assert.doesNotMatch(html, /data-sandbox-dev-action/);
+  assert.doesNotMatch(html, /Goose bot/);
 });
