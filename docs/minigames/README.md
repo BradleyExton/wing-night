@@ -38,9 +38,9 @@ Last updated: 2026-10-02
 | Wing Roulette | — | idea | promising | [ideas/wing-roulette.md](ideas/wing-roulette.md) — push-your-luck peck at a wing rack; the roster's first chance game; cheapest build on the list |
 | Kempenfelt Curling | — | idea | promising | [ideas/kempenfelt-curling.md](ideas/kempenfelt-curling.md) — drag-release throw plus a teammate sweep after the commit; every team's stones stay in the house |
 | Scream Run | — | idea | promising | [ideas/scream-run.md](ideas/scream-run.md) — the tablet mic is the controller; blocked on HTTPS or a Chrome flag on the tablet |
-| Mount Your Hens | `MOUNT` | spec | ready | [mount-your-hens-spec.md](mount-your-hens-spec.md) (build plan in §0; runtime not started). Mount Your Friends with the cast: one climb per player onto a pile of everyone before them, kept as round memory; the cast's ragdoll mode is the first step |
+| Mount Your Hens | `MOUNT` | shipped | — | [packages/minigames/mount/](../../packages/minigames/mount/) ([spec](mount-your-hens-spec.md)) — Mount Your Friends with the cast: one climb per player onto a pile of everyone before them, kept as round memory; built and tested on both surfaces; not in the sample lineup, not yet played at a table. Information asymmetry: nobody knows where a fling lands, and the TV's fit-all camera sees holds the tablet's close-up does not |
 
-Target: **at least 8 games**. Current: 10 shipped, 3 spec'd, 7 ideas → 20 concepts, target covered.
+Target: **at least 8 games**. Current: 11 shipped, 2 spec'd, 7 ideas → 20 concepts, target covered.
 
 The four ideas added 2026-10-02 come from [docs/research/cast-minigame-candidates.md](../research/cast-minigame-candidates.md),
 a survey of known games worth giving the cast treatment; its scorecard says why the rest of

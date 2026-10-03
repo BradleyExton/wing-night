@@ -1,8 +1,10 @@
 # Mount Your Hens (MOUNT) Minigame Spec
 
-Status: **Planned** (`packages/minigames/mount/`, not started)
+Status: **Built** — `packages/minigames/mount/`, on both surfaces, not yet played at a table
+and not scheduled in any round
 
-Last updated: 2026-10-02 (promoted from `ideas/mount-your-hens.md`; the reasoning is
+Last updated: 2026-10-02 (promoted from `ideas/mount-your-hens.md`, then built the same day;
+§0.11 lists where the build moved off the plan. The reasoning is
 [cast-minigame-candidates.md](../research/cast-minigame-candidates.md) §4)
 
 > **§0 is the build plan; §1 to §3 are the reasoning it rests on; §4 answers the review
@@ -34,6 +36,8 @@ Streets of Barrie; each climb has its own tick clock, and it is the game's, not 
 TV carries the game's sound through `@wingnight/audio` (§0.7).
 
 ### 0.2 Order of work (each step ends with the gate green)
+
+Steps 1 to 8 are all done (§0.11 lists where the build moved off the plan).
 
 Gate for every step: `pnpm lint && pnpm typecheck && pnpm test`, judged on exit codes. Client,
 minigame `.tsx` and `tests/e2e` changes also need
@@ -774,6 +778,83 @@ Data attributes, for the spec and never the drawing:
   it as an image (to the pack, beside RECREATE's forgeries) is not in this build.
 - **Variants, not v1:** the four-teammates-one-limb-each mode, and the bridge mode across
   Kempenfelt Bay from the dock.
+
+### 0.11 As built
+
+Steps 1 to 8 are done; this list is where the build moved off §0.1 to §0.10, and why.
+
+**Cast (`packages/cast/src/Character/ragdoll`, `CharacterRagdollFigure`).**
+- The ragdoll's parts are the rig's own (`body`, `head`, `legNear`, `legFar`, `wingNear` for the
+  rig's `wing`) plus a new `wingFar`, drawn first and in the same ink. The tail rides the body.
+- The four limbs map to parts as seen facing right: `footLeft` is `legNear` (the back foot),
+  `footRight` is `legFar`, `wing` is `wingNear`, `beak` is the head's tip.
+- Every team's hen has the same bones whatever its genre silhouette, so every team weighs and
+  reaches the same.
+- The drawn and costume heads moved into one `CharacterHead` shared by both figures, verbatim.
+  Every existing pose renders byte-identically (checked across 13,824 combinations).
+
+**Sim (`packages/shared/src/mount`).** No signature in §0.4 changed. The rules that did:
+- A held tip is *planted* when it touched a surface last tick and the finger presses into it,
+  not merely when it touches; otherwise a foot on the floor could never be lifted.
+- Limp and seeking limbs keep their distance to the rump (`holdStrength` 2, a new constant), so
+  a limp head does not flop to the floor and count a fall. Two new joint limits keep the head up.
+- A fall needs no foot grabbed on the floor; a deep stance no longer counts as one.
+- Carried velocity is capped at `maxSpeed` after the solve, and a tick where nothing but the far
+  wing moves 0.05 is undone, so a fully grabbed hen is exactly still.
+- The timeout share is capped at 0.99, so a mount is always worth more than a near miss.
+- The seed deals only the goose's stance; seed 20261002 deals `stand`, a line of 160.
+- `MOUNT_GOOSE_BOT_SAMPLES` mounts the standing goose on tick 458 (7.6 s), found by a seeded
+  search. A hen nobody touches never mounts. A climber against 20 stuck hens costs about
+  0.04 ms a tick.
+- `MOUNT_WORLD.rig` copies the cast's anchors (the cast depends on shared, not the reverse); a
+  cast-side test pins every copied number.
+
+**Runtime (`packages/minigames/mount/src/runtime`).**
+- Every turn action is stamped `{ teamId, climbIndex }` (the note above §0.6).
+- Round memory is `{ pile }`; the high line lives inside the pile.
+- The rules type and guard live in the package, like every other game's; `minigameRules.mount`
+  defaults are in `content/sample/gameConfig.json` with no round.
+
+**Surfaces (`packages/minigames/mount/src/client`).**
+- `MountScene` is shared by both surfaces. The host camera is the 150-unit close-up and freezes
+  its follow while any finger is down; the TV's is fit-all over the pile, the climber and the
+  line, and snaps rather than eases when the pile changes so it never crops the plinth.
+- There is no separate fall paint: the fall beat is the sim's own recovery, a blink, a shake
+  and the thud.
+- `endClimb` carries only the stamp; the runtime reads no end tick.
+- The tablet's arrow reads "▲ 1.1 hens to the line", the gap from the crown, so it cannot be
+  confused with the line's own height ("2.2 hens up") on the same screen.
+- The `time` cue is kept as a fifth synthesised cue (a whistle).
+- The goose-bot hook is a dev-only `MinigameDevAction` (additive, in `packages/minigames/core`):
+  a sandbox button, `[data-sandbox-dev-action="mount-goose-bot"]`, that dispatches the recorded
+  samples through the sandbox's own reducer. A test proves the production host never renders it.
+- `DESIGN.md` §2.15 describes both surfaces.
+
+**E2E (`tests/e2e/mount-sandbox.spec.ts`, 8 tests).**
+- The wall's camera is already taller than the tablet's on the bare goose (a 220 minimum fit
+  height), so the asymmetry test asserts the wall's top reaches the line rather than "taller
+  than 150 once a pile exists".
+- The next team's pile only reaches round memory once the first team's turn is finished, so the
+  round-memory test skips the remaining climbs before switching teams.
+- Limb states are read from a `MutationObserver` history, because a lifted foot's `seeking` is
+  too brief to poll.
+
+**Known bug, dev sandbox only, not fixed.** The goose-bot button is offered during the 1.6 s
+hold after a skip, while the next climb already reads `ready`. Pressed then, its batch is
+accepted but the tablet's runner is still following the skipped climb, so it never sends
+`endClimb` and the climb wedges until the clock. Fingers cannot reach it (the arena is locked
+during a hold), and the e2e waits for the close-up before pressing. The fix is for the button
+to know the hold, which is client-side state its `resolve` cannot see from the view. Worth
+checking whether a tablet reload during a hold reaches the same path on a real night.
+
+**For the table, from the build (add to §0.10's list):**
+- With a drawn head rather than an avatar, the crown and its name tag sit up and left of the
+  head, because the crown is measured off the costume head.
+- On the tablet the hen is a third of the screen and the goose's body reads as a large beige ball.
+- The touch radius (about 75 px) is wider than the gap between the feet, so a touch between them
+  takes the nearer one. Check it with real thumbs.
+- With the dev bot the tablet ends a climb instantly, so the TV's marquee names the next climber
+  while the wall still replays the last. On a real night the beat's hold covers it.
 
 ## 1) Why Mount Your Friends
 
