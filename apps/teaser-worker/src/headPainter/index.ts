@@ -1,40 +1,89 @@
-// Paints a guest's avatar head from their photo (milestone 2). `GEMINI_TRANSPORT` picks: "fake"
-// in local dev and tests, which hands back a fixed picture and costs nothing; "gemini" will be
-// the real model, which arrives with the avatar flow — until then it, and any unknown value,
-// fails closed rather than pretending to paint.
-export type HeadPhoto = {
-  bytes: Uint8Array;
-  mimeType: string;
+// Paints a guest's avatar head: hands Gemini a generateContent request body and returns its reply
+// unread. `GEMINI_TRANSPORT` picks: "gemini" is the real model, "fake" (local dev and tests) costs
+// nothing and answers with a canned reply carrying a magenta test head. Anything else fails
+// closed, every paint throwing, rather than quietly painting fakes in production.
+//
+// The body arrives as a stream with its length known up front (src/headRequestBody builds it), and
+// the reply leaves as a Response whose body has not been touched: on the Workers free plan a
+// request gets 10 ms of CPU, and a head is a megabyte or two of base64 each way, so nothing here
+// may parse, encode or even buffer it.
+import { buildGeminiImageUrl } from "@wingnight/avatar-head";
+
+import { FAKE_GENERATE_CONTENT_RESPONSE } from "./fakeHead.ts";
+
+export type HeadPaintRequest = {
+  // The generateContent JSON, streamed.
+  body: ReadableStream<Uint8Array>;
+  byteLength: number;
 };
 
 export type HeadPainter = {
-  paintHead(photo: HeadPhoto): Promise<HeadPhoto>;
+  paint(request: HeadPaintRequest): Promise<Response>;
 };
 
 export const GEMINI_TRANSPORTS = ["gemini", "fake"] as const;
 
-// A 1×1 transparent PNG.
-const FAKE_HEAD_PNG = Uint8Array.from(
-  atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="),
-  (character) => character.charCodeAt(0)
-);
+// Gemini's image model can take most of a minute; past two, the guest is better off trying again.
+export const GEMINI_TIMEOUT_MS = 120_000;
 
+export type GeminiHeadPainterOptions = {
+  apiKey: string | undefined;
+  model: string;
+  fetch: (input: string, init: RequestInit) => Promise<Response>;
+  // Gives the stream its length, so the upload goes with a Content-Length instead of chunked:
+  // workerd's FixedLengthStream in the Worker, nothing at all in a test.
+  sizeBody: (body: ReadableStream<Uint8Array>, byteLength: number) => ReadableStream<Uint8Array>;
+};
+
+export const createGeminiHeadPainter = ({ apiKey, model, fetch, sizeBody }: GeminiHeadPainterOptions): HeadPainter => ({
+  paint: async ({ body, byteLength }) => {
+    if (apiKey === undefined || apiKey.length === 0) {
+      await body.cancel();
+      throw new Error("GEMINI_API_KEY is not set.");
+    }
+
+    return fetch(buildGeminiImageUrl(model), {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": apiKey,
+        "Content-Type": "application/json",
+        // Uncompressed, so the runtime has nothing to inflate on the way through: inflating two
+        // megabytes is CPU the free plan does not have, and base64 barely compresses anyway.
+        "Accept-Encoding": "identity"
+      },
+      body: sizeBody(body, byteLength),
+      signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS)
+    });
+  }
+});
+
+// Reads the request through, as Gemini would, and answers with the canned head.
 export const createFakeHeadPainter = (): HeadPainter => ({
-  paintHead: async () => ({ bytes: FAKE_HEAD_PNG, mimeType: "image/png" })
+  paint: async ({ body }) => {
+    await new Response(body).arrayBuffer();
+
+    return new Response(FAKE_GENERATE_CONTENT_RESPONSE, { headers: { "Content-Type": "application/json" } });
+  }
 });
 
 const createUnavailableHeadPainter = (reason: string): HeadPainter => ({
-  paintHead: async () => {
+  paint: async ({ body }) => {
+    await body.cancel();
     throw new Error(reason);
   }
 });
 
-export const resolveHeadPainter = (transport: string | undefined): HeadPainter => {
+type HeadPainterEnvironment = {
+  transport: string | undefined;
+  gemini: GeminiHeadPainterOptions;
+};
+
+export const resolveHeadPainter = ({ transport, gemini }: HeadPainterEnvironment): HeadPainter => {
   switch (transport) {
+    case "gemini":
+      return createGeminiHeadPainter(gemini);
     case "fake":
       return createFakeHeadPainter();
-    case "gemini":
-      return createUnavailableHeadPainter("The Gemini head painter is not wired yet (milestone 2).");
     default:
       return createUnavailableHeadPainter(
         `GEMINI_TRANSPORT ${JSON.stringify(transport)} is not one of ${GEMINI_TRANSPORTS.join(", ")}.`

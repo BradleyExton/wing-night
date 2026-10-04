@@ -22,6 +22,7 @@ test("does create every portal table when the migrations apply to an empty datab
     "guests",
     "personal_links",
     "sessions",
+    "style_reference",
     "votes"
   ]);
 });
@@ -35,7 +36,7 @@ test("does leave the schema as it was when the first migration is applied a seco
   database.prepare("INSERT INTO guests (guest_id, display_name, created_at) VALUES ('g_1', 'Rob', 1)").run();
   assert.doesNotThrow(() => database.exec(firstMigration?.sql ?? ""));
 
-  assert.equal(listTables(database).length, 6);
+  assert.equal(listTables(database).length, 7);
   assert.deepEqual(
     database.prepare("SELECT guest_id FROM guests").all().map((row) => ({ ...row })),
     [{ guest_id: "g_1" }]
@@ -47,7 +48,7 @@ test("does apply the migrations in file order when there are several", () => {
 
   assert.deepEqual(
     readMigrationFiles().map(({ fileName }) => fileName),
-    ["0001_guest_portal.sql", "0002_invite_attempts.sql"]
+    ["0001_guest_portal.sql", "0002_invite_attempts.sql", "0003_style_reference.sql"]
   );
   applyMigrations(database);
 
@@ -77,5 +78,17 @@ test("does refuse an address that is not lower-case when a guest is stored", () 
     database
       .prepare("INSERT INTO guests (guest_id, display_name, email, created_at) VALUES ('g_1', 'Rob', 'Rob@x.com', 1)")
       .run()
+  );
+});
+
+test("does refuse a second style reference when one is already picked", () => {
+  const database = new DatabaseSync(":memory:");
+
+  applyMigrations(database);
+  database.prepare("INSERT INTO guests (guest_id, display_name, created_at) VALUES ('g_1', 'Rob', 1)").run();
+  database.prepare("INSERT INTO style_reference (slot, guest_id, head_hash, picked_at) VALUES (1, 'g_1', 'h', 1)").run();
+
+  assert.throws(() =>
+    database.prepare("INSERT INTO style_reference (slot, guest_id, head_hash, picked_at) VALUES (2, 'g_1', 'h', 2)").run()
   );
 });

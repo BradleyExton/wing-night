@@ -214,6 +214,9 @@ importers:
 
   apps/teaser-worker:
     dependencies:
+      '@wingnight/avatar-head':
+        specifier: workspace:*
+        version: link:../../packages/avatar-head
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../packages/shared

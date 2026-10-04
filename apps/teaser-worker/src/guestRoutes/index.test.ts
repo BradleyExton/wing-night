@@ -62,6 +62,7 @@ test("does describe the signed-in guest, own address included, when they read /a
     email: "rob@example.com",
     isAdmin: false,
     hasHead: false,
+    avatar: { triesMax: 5, triesLeft: 5, hasPhoto: false, headHash: null },
     vote: null
   });
 });
@@ -130,13 +131,15 @@ test("does report a head when the guest has an accepted avatar attempt", async (
 
   portal.db.raw
     .prepare(
-      "INSERT INTO avatar_attempts (attempt_id, guest_id, created_at, status, accepted_at) VALUES ('a_1', 'g_rob', 1, 'painted', 2)"
+      `INSERT INTO avatar_attempts (attempt_id, guest_id, created_at, status, object_key, head_hash, accepted_at)
+       VALUES ('a_1', 'g_rob', 1, 'painted', 'avatars/g_rob/head.png', 'abc123', 2)`
     )
     .run();
 
   const me = (await (await portal.request("GET", "/api/me", { cookie })).json()) as PortalMe;
 
   assert.equal(me.hasHead, true);
+  assert.deepEqual(me.avatar, { triesMax: 5, triesLeft: 4, hasPhoto: false, headHash: "abc123" });
 });
 
 test("does stamp last-seen at most every ten minutes when a guest keeps using the API", async () => {

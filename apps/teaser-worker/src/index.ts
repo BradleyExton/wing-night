@@ -1,5 +1,7 @@
 // The Worker's entry: turns the bindings in wrangler.jsonc into the portal's deps and hands the
 // request to the app. Nothing else in src/ touches a workerd type, so the tests run on Node.
+import { DEFAULT_GEMINI_IMAGE_MODEL } from "@wingnight/avatar-head";
+
 import { handleRequest } from "./app/index.ts";
 import { resolveHeadPainter } from "./headPainter/index.ts";
 import { resolveMailTransport } from "./mail/index.ts";
@@ -25,6 +27,16 @@ const logError = (message: string, error?: unknown): void => {
   console.error(`[portal] ${message}`, error ?? "");
 };
 
+// The Gemini request is streamed from R2; this tells fetch its length so it uploads with a
+// Content-Length rather than chunked.
+const sizeBody = (body: ReadableStream<Uint8Array>, byteLength: number): ReadableStream<Uint8Array> => {
+  const sized = new FixedLengthStream(byteLength);
+
+  body.pipeTo(sized.writable).catch((error: unknown) => logError("avatar: the Gemini request body broke", error));
+
+  return sized.readable;
+};
+
 export default {
   fetch: (request: Request, env: Env, ctx: ExecutionContext): Promise<Response> => {
     return handleRequest(request, {
@@ -39,7 +51,15 @@ export default {
         },
         log: (line) => console.warn(line)
       }),
-      gemini: resolveHeadPainter(env.GEMINI_TRANSPORT),
+      gemini: resolveHeadPainter({
+        transport: env.GEMINI_TRANSPORT,
+        gemini: {
+          apiKey: env.GEMINI_API_KEY,
+          model: DEFAULT_GEMINI_IMAGE_MODEL,
+          fetch: (input, init) => fetch(input, init),
+          sizeBody
+        }
+      }),
       signInLimiter: env.SIGNIN_LIMITER,
       assets: env.ASSETS,
       publicOrigin: env.PUBLIC_ORIGIN !== undefined && env.PUBLIC_ORIGIN.length > 0 ? env.PUBLIC_ORIGIN : null,

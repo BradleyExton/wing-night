@@ -12,7 +12,7 @@
 //
 // Secrets, set with `wrangler secret put <NAME>` from this directory and never written here:
 //   RESEND_API_KEY   sends the sign-in emails
-//   GEMINI_API_KEY   paints the avatar heads (milestone 2)
+//   GEMINI_API_KEY   paints the avatar heads (GEMINI_TRANSPORT "gemini"; "fake" needs none)
 //   ADMIN_API_TOKEN  opens /api/admin/* to a script (the pack pull); unset turns that door off
 {
   "$schema": "node_modules/wrangler/config-schema.json",

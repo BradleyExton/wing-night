@@ -8,6 +8,7 @@ import { PORTAL_SIGN_IN_PATH_PREFIX } from "@wingnight/shared/guestPortal";
 
 import { ADMIN_ROUTES } from "../adminRoutes/index.ts";
 import { AUTH_ROUTES } from "../authRoutes/index.ts";
+import { AVATAR_ROUTES } from "../avatarRoutes/index.ts";
 import type { PortalDeps } from "../deps/index.ts";
 import { GUEST_ROUTES } from "../guestRoutes/index.ts";
 import { errorResponse, htmlResponse, readBearerToken, withPortalHeaders } from "../http/index.ts";
@@ -21,7 +22,12 @@ const API_PREFIX = "/api/";
 const ADMIN_API_PREFIX = "/api/admin/";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
-export const PORTAL_ROUTES: readonly PortalRoute[] = [...AUTH_ROUTES, ...GUEST_ROUTES, ...ADMIN_ROUTES];
+export const PORTAL_ROUTES: readonly PortalRoute[] = [
+  ...AUTH_ROUTES,
+  ...GUEST_ROUTES,
+  ...AVATAR_ROUTES,
+  ...ADMIN_ROUTES
+];
 
 // A request that carries a bearer is a script, and is judged on the bearer alone — its cookie,
 // if any, is ignored. That is also why it skips the Origin check: a browser never attaches an

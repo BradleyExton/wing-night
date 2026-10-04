@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 
 import { handleRequest } from "../../app/index.ts";
 import type { PortalBucket, PortalDeps, RateLimiter } from "../../deps/index.ts";
-import { createFakeHeadPainter } from "../../headPainter/index.ts";
+import { createFakeHeadPainter, type HeadPainter } from "../../headPainter/index.ts";
 import { createRecordingMailTransport } from "../../mail/index.ts";
 import { hashToken, mintToken } from "../../tokens/index.ts";
 import { createSqliteDb, type SqliteDb } from "../sqliteDb/index.ts";
@@ -28,17 +28,71 @@ const createCountingLimiter = (limit: number): RateLimiter & { counts: Map<strin
   };
 };
 
-const createMemoryBucket = (): PortalBucket => {
-  const objects = new Map<string, Uint8Array>();
+type StoredObject = {
+  bytes: Uint8Array;
+  contentType: string | undefined;
+  customMetadata: Record<string, string> | undefined;
+};
+
+// R2's chunks are tens of kilobytes; small ones here make a stream that is cut short show.
+const BUCKET_CHUNK_SIZE = 1024;
+
+const streamBytes = (bytes: Uint8Array): ReadableStream<Uint8Array> => {
+  let offset = 0;
+
+  return new ReadableStream<Uint8Array>({
+    pull: (controller) => {
+      if (offset >= bytes.length) {
+        controller.close();
+        return;
+      }
+
+      controller.enqueue(bytes.slice(offset, offset + BUCKET_CHUNK_SIZE));
+      offset += BUCKET_CHUNK_SIZE;
+    }
+  });
+};
+
+export type MemoryBucket = PortalBucket & {
+  // Every key it holds, sorted: what a test reads to prove a photo is gone.
+  keys(): string[];
+  readText(key: string): string | null;
+};
+
+const createMemoryBucket = (): MemoryBucket => {
+  const objects = new Map<string, StoredObject>();
 
   return {
-    get: async (key) => {
-      const bytes = objects.get(key);
+    keys: () => [...objects.keys()].sort(),
+    readText: (key) => {
+      const object = objects.get(key);
 
-      return bytes === undefined ? null : { arrayBuffer: async () => bytes.slice().buffer };
+      return object === undefined ? null : new TextDecoder().decode(object.bytes);
     },
-    put: async (key, value) => {
-      objects.set(key, typeof value === "string" ? new TextEncoder().encode(value) : new Uint8Array(value));
+    get: async (key) => {
+      const object = objects.get(key);
+
+      return object === undefined
+        ? null
+        : {
+            body: streamBytes(object.bytes),
+            size: object.bytes.byteLength,
+            arrayBuffer: async () => object.bytes.slice().buffer,
+            httpMetadata: { contentType: object.contentType },
+            customMetadata: object.customMetadata
+          };
+    },
+    head: async (key) => {
+      const object = objects.get(key);
+
+      return object === undefined ? null : { size: object.bytes.byteLength, customMetadata: object.customMetadata };
+    },
+    put: async (key, value, options) => {
+      objects.set(key, {
+        bytes: typeof value === "string" ? new TextEncoder().encode(value) : new Uint8Array(value),
+        contentType: options?.httpMetadata?.contentType,
+        customMetadata: options?.customMetadata
+      });
     },
     delete: async (key) => {
       objects.delete(key);
@@ -49,9 +103,15 @@ const createMemoryBucket = (): PortalBucket => {
 export type TestPortal = ReturnType<typeof createTestPortal>;
 
 export const createTestPortal = (
-  options: { ipLimit?: number; adminApiToken?: string | null; publicOrigin?: string | null } = {}
+  options: {
+    ipLimit?: number;
+    adminApiToken?: string | null;
+    publicOrigin?: string | null;
+    gemini?: HeadPainter;
+  } = {}
 ) => {
   const db: SqliteDb = createSqliteDb();
+  const bucket = createMemoryBucket();
   const mail = createRecordingMailTransport();
   const limiter = createCountingLimiter(options.ipLimit ?? 5);
   const deferred: Promise<unknown>[] = [];
@@ -59,9 +119,9 @@ export const createTestPortal = (
   const clock = { now: START_MS };
   const deps: PortalDeps = {
     db,
-    bucket: createMemoryBucket(),
+    bucket,
     mail,
-    gemini: createFakeHeadPainter(),
+    gemini: options.gemini ?? createFakeHeadPainter(),
     signInLimiter: limiter,
     assets: { fetch: async () => new Response("<!doctype html><title>teaser</title>", { status: 200 }) },
     publicOrigin: options.publicOrigin ?? null,
@@ -80,7 +140,14 @@ export const createTestPortal = (
   const request = async (
     method: string,
     path: string,
-    init: { body?: unknown; cookie?: string; origin?: string | null; headers?: Record<string, string> } = {}
+    init: {
+      body?: unknown;
+      // Sent as it is, not as JSON: the photo's data URL, a head's PNG bytes.
+      rawBody?: string | Uint8Array<ArrayBuffer>;
+      cookie?: string;
+      origin?: string | null;
+      headers?: Record<string, string>;
+    } = {}
   ): Promise<Response> => {
     const headers = new Headers(init.headers);
 
@@ -96,14 +163,14 @@ export const createTestPortal = (
       headers.set("Content-Type", "application/json");
     }
 
-    return handleRequest(
-      new Request(`${ORIGIN}${path}`, {
-        method,
-        headers,
-        body: init.body === undefined ? undefined : JSON.stringify(init.body)
-      }),
-      deps
-    );
+    const body = init.rawBody ?? (init.body === undefined ? undefined : JSON.stringify(init.body));
+
+    // A browser always declares the length of a string or byte body; Request does not.
+    if (body !== undefined && !headers.has("Content-Length")) {
+      headers.set("Content-Length", String(typeof body === "string" ? new TextEncoder().encode(body).byteLength : body.byteLength));
+    }
+
+    return handleRequest(new Request(`${ORIGIN}${path}`, { method, headers, body }), deps);
   };
 
   const settle = async (): Promise<void> => {
@@ -131,7 +198,7 @@ export const createTestPortal = (
     return `wn_session=${token}`;
   };
 
-  return { db, deps, mail, limiter, clock, errors, request, settle, addGuest, signInAs };
+  return { db, bucket, deps, mail, limiter, clock, errors, request, settle, addGuest, signInAs };
 };
 
 // The `/s/<token>` path out of a sign-in email or minted link.

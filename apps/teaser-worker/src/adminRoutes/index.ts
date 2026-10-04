@@ -1,19 +1,24 @@
 // Brad's side: the guest list and its sign-in status, adding and editing guests, invites, a link
-// to text by hand, and the vote summary. Reachable by a signed-in guest with `is_admin` or by a
+// to text by hand, the vote summary, every guest's head and the style reference. Reachable by a signed-in guest with `is_admin` or by a
 // script holding ADMIN_API_TOKEN (app/index.ts decides which).
 import {
+  AVATAR_HEAD_TYPE,
   PORTAL_API_ROUTES,
   isAdminCreateGuestRequest,
   isAdminEditGuestRequest,
+  isAdminStyleReferenceRequest,
   normalizeGuestDisplayName,
   normalizeGuestEmail,
   type AdminGuestStatus,
   type AdminInviteAllResult,
   type AdminInviteResult,
   type AdminMintedLink,
-  type AdminSignOutResult
+  type AdminSignOutResult,
+  type AdminStyleReference
 } from "@wingnight/shared/guestPortal";
 
+import { STYLE_REFERENCE_KEY, readAcceptedHead, serveHead } from "../avatarStore/index.ts";
+import { encodeBase64 } from "../base64/index.ts";
 import type { DbStatement, PortalDeps } from "../deps/index.ts";
 import { parseVoteRow } from "../guestRoutes/index.ts";
 import { errorResponse, jsonResponse, readJsonBody } from "../http/index.ts";
@@ -36,14 +41,16 @@ type GuestStatusRow = {
   invited_at: number | null;
   claimed_at: number | null;
   last_seen_at: number | null;
-  has_head: number;
+  head_hash: string | null;
+  is_style_reference: number;
   has_voted: number;
 };
 
 const GUEST_STATUS_SELECT = `
   SELECT g.guest_id, g.display_name, g.email, g.is_admin, g.created_at, g.invited_at,
     g.claimed_at, g.last_seen_at,
-    EXISTS (SELECT 1 FROM avatar_attempts a WHERE a.guest_id = g.guest_id AND a.accepted_at IS NOT NULL) AS has_head,
+    (SELECT a.head_hash FROM avatar_attempts a WHERE a.guest_id = g.guest_id AND a.accepted_at IS NOT NULL) AS head_hash,
+    EXISTS (SELECT 1 FROM style_reference s WHERE s.guest_id = g.guest_id) AS is_style_reference,
     EXISTS (SELECT 1 FROM votes v WHERE v.guest_id = g.guest_id) AS has_voted
   FROM guests g`;
 
@@ -56,7 +63,9 @@ const toGuestStatus = (row: GuestStatusRow): AdminGuestStatus => ({
   invitedAt: row.invited_at,
   claimedAt: row.claimed_at,
   lastSeenAt: row.last_seen_at,
-  hasHead: row.has_head === 1,
+  hasHead: row.head_hash !== null,
+  headHash: row.head_hash,
+  isStyleReference: row.is_style_reference === 1,
   hasVoted: row.has_voted === 1
 });
 
@@ -307,6 +316,44 @@ const summarizeVotes = async ({ deps }: AdminContext): Promise<Response> => {
   );
 };
 
+const readGuestHead = async ({ params, deps }: AdminContext): Promise<Response> => {
+  return serveHead(deps, params.guestId ?? "");
+};
+
+// Picks the head every new head is painted to match. Its base64 copy is made here, once, so that
+// no guest's paint ever encodes a byte (see src/base64 for what this one encode costs).
+const pickStyleReference = async ({ request, deps }: AdminContext): Promise<Response> => {
+  const body = await readJsonBody(request);
+
+  if (!isAdminStyleReferenceRequest(body)) {
+    return errorResponse("bad_request");
+  }
+
+  const head = await readAcceptedHead(deps, body.guestId);
+  const object = head === null ? null : await deps.bucket.get(head.objectKey);
+
+  if (head === null || object === null) {
+    return errorResponse("not_found");
+  }
+
+  const picked: AdminStyleReference = { guestId: body.guestId, headHash: head.headHash, pickedAt: deps.now() };
+
+  await deps.bucket.put(STYLE_REFERENCE_KEY, encodeBase64(new Uint8Array(await object.arrayBuffer())), {
+    httpMetadata: { contentType: "text/plain; charset=us-ascii" },
+    customMetadata: { mimeType: AVATAR_HEAD_TYPE, guestId: picked.guestId, headHash: picked.headHash }
+  });
+  await deps.db
+    .prepare(
+      `INSERT INTO style_reference (slot, guest_id, head_hash, picked_at) VALUES (1, ?, ?, ?)
+       ON CONFLICT (slot) DO UPDATE SET
+         guest_id = excluded.guest_id, head_hash = excluded.head_hash, picked_at = excluded.picked_at`
+    )
+    .bind(picked.guestId, picked.headHash, picked.pickedAt)
+    .run();
+
+  return jsonResponse(picked);
+};
+
 const GUEST_PATTERN = `${PORTAL_API_ROUTES.adminGuests}/:guestId`;
 
 export const ADMIN_ROUTES: PortalRoute[] = [
@@ -317,5 +364,7 @@ export const ADMIN_ROUTES: PortalRoute[] = [
   { method: "POST", pattern: `${GUEST_PATTERN}/link`, access: "admin", handle: mintLink },
   { method: "POST", pattern: `${GUEST_PATTERN}/sign-out`, access: "admin", handle: signGuestOut },
   { method: "POST", pattern: PORTAL_API_ROUTES.adminInviteAll, access: "admin", handle: inviteEveryone },
-  { method: "GET", pattern: PORTAL_API_ROUTES.adminVotes, access: "admin", handle: summarizeVotes }
+  { method: "GET", pattern: PORTAL_API_ROUTES.adminVotes, access: "admin", handle: summarizeVotes },
+  { method: "GET", pattern: `${GUEST_PATTERN}/avatar`, access: "admin", handle: readGuestHead },
+  { method: "POST", pattern: PORTAL_API_ROUTES.adminStyleReference, access: "admin", handle: pickStyleReference }
 ];

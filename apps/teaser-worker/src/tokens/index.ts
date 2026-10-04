@@ -41,6 +41,11 @@ export const hashToken = async (token: string): Promise<string> => {
   return toHex(await digest(token));
 };
 
+// SHA-256 hex of some bytes (an accepted head). Native code, about a millisecond a megabyte.
+export const hashBytes = async (bytes: Uint8Array<ArrayBuffer>): Promise<string> => {
+  return toHex(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)));
+};
+
 // Compares two secrets in time that depends on neither: both are hashed to 32 bytes first, so
 // even a length mismatch costs the same as a near miss.
 export const secretsMatch = async (given: string, expected: string): Promise<boolean> => {

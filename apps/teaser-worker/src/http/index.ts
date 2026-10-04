@@ -39,6 +39,11 @@ const ERROR_STATUS: Record<PortalErrorCode, number> = {
   email_taken: 409,
   no_email: 409,
   mail_failed: 502,
+  no_photo: 409,
+  tries_exhausted: 429,
+  painter_failed: 502,
+  too_large: 413,
+  unsupported_media_type: 415,
   server_error: 500
 };
 
@@ -63,6 +68,19 @@ export const readJsonBody = async (request: Request): Promise<unknown> => {
   } catch {
     return undefined;
   }
+};
+
+// The body's declared size, or null when it declares none. A route that takes a large body reads
+// this before the body, so an oversized upload is turned away unread.
+export const readContentLength = (request: Request): number | null => {
+  const value = request.headers.get("Content-Length");
+
+  return value !== null && /^\d+$/.test(value) ? Number(value) : null;
+};
+
+// The media type without its parameters, lower-cased.
+export const readMediaType = (request: Request): string => {
+  return (request.headers.get("Content-Type") ?? "").split(";")[0]?.trim().toLowerCase() ?? "";
 };
 
 export const readCookie = (request: Request, name: string): string | null => {

@@ -20,18 +20,28 @@ export type PortalDb = {
   batch(statements: DbStatement[]): Promise<unknown[]>;
 };
 
+// An object's bytes, read once: as a stream to pass along untouched, or whole.
 export type BucketObject = {
+  body: ReadableStream<Uint8Array>;
+  size: number;
   arrayBuffer(): Promise<ArrayBuffer>;
   httpMetadata?: { contentType?: string };
+  customMetadata?: Record<string, string>;
 };
 
-// The slice of R2 the avatar flow (milestone 2) uses.
+export type BucketObjectInfo = {
+  size: number;
+  customMetadata?: Record<string, string>;
+};
+
+// The slice of R2 the avatar flow uses.
 export type PortalBucket = {
   get(key: string): Promise<BucketObject | null>;
+  head(key: string): Promise<BucketObjectInfo | null>;
   put(
     key: string,
     value: ArrayBuffer | Uint8Array | string,
-    options?: { httpMetadata?: { contentType?: string } }
+    options?: { httpMetadata?: { contentType?: string }; customMetadata?: Record<string, string> }
   ): Promise<unknown>;
   delete(key: string): Promise<void>;
 };

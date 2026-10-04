@@ -1,5 +1,5 @@
 // What a signed-in guest can read and write: themself, the names of everyone else (for the
-// teammate-wish picker), and their own vote.
+// teammate-wish picker), their own vote, and how far along their head is (src/avatarRoutes).
 import {
   PORTAL_API_ROUTES,
   isGuestVote,
@@ -8,7 +8,7 @@ import {
   type PortalMe
 } from "@wingnight/shared/guestPortal";
 
-import type { PortalDeps } from "../deps/index.ts";
+import { readAvatarStatus } from "../avatarStore/index.ts";
 import { errorResponse, jsonResponse, readJsonBody } from "../http/index.ts";
 import type { GuestContext, PortalRoute } from "../routeContext/index.ts";
 
@@ -34,18 +34,9 @@ export const parseVoteRow = (row: VoteRow, guestId: string): GuestVote | null =>
   }
 };
 
-export const hasAcceptedHead = async (deps: PortalDeps, guestId: string): Promise<boolean> => {
-  const row = await deps.db
-    .prepare("SELECT 1 AS found FROM avatar_attempts WHERE guest_id = ? AND accepted_at IS NOT NULL")
-    .bind(guestId)
-    .first<{ found: number }>();
-
-  return row !== null;
-};
-
 const readMe = async ({ deps, session }: GuestContext): Promise<Response> => {
-  const [hasHead, voteRow] = await Promise.all([
-    hasAcceptedHead(deps, session.guestId),
+  const [avatar, voteRow] = await Promise.all([
+    readAvatarStatus(deps, session.guestId),
     deps.db
       .prepare("SELECT genre_ranking, teammate_wishes, team_format FROM votes WHERE guest_id = ?")
       .bind(session.guestId)
@@ -56,7 +47,8 @@ const readMe = async ({ deps, session }: GuestContext): Promise<Response> => {
     displayName: session.displayName,
     email: session.email,
     isAdmin: session.isAdmin,
-    hasHead,
+    hasHead: avatar.headHash !== null,
+    avatar,
     vote: voteRow === null ? null : parseVoteRow(voteRow, session.guestId)
   };
 

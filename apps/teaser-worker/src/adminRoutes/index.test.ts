@@ -5,9 +5,12 @@ import type {
   AdminGuestStatus,
   AdminInviteAllResult,
   AdminMintedLink,
+  AdminStyleReference,
   AdminVoteSummary
 } from "@wingnight/shared/guestPortal";
 
+import { STYLE_REFERENCE_KEY, resolveHeadKey } from "../avatarStore/index.ts";
+import { FAKE_HEAD_PNG_BASE64 } from "../headPainter/fakeHead.ts";
 import {
   ADMIN_API_TOKEN,
   createTestPortal,
@@ -121,6 +124,8 @@ test("does list every guest's sign-in, head and vote status when the admin reads
     claimedAt: null,
     lastSeenAt: null,
     hasHead: false,
+    headHash: null,
+    isStyleReference: false,
     hasVoted: true
   });
 });
@@ -357,4 +362,62 @@ test("does keep a guest's sessions when a fresh link is minted for them", async 
   await portal.request("POST", "/api/admin/guests/g_rob/link", { headers: BEARER });
 
   assert.equal((await portal.request("GET", "/api/me", { cookie })).status, 200);
+});
+
+// An accepted head, as the studio leaves one: the PNG in R2 and the accepted try in D1.
+const giveHead = async (portal: TestPortal, guestId: string, headHash: string): Promise<void> => {
+  await portal.bucket.put(
+    resolveHeadKey(guestId),
+    Uint8Array.from(atob(FAKE_HEAD_PNG_BASE64), (character) => character.charCodeAt(0))
+  );
+  portal.db.raw
+    .prepare(
+      `INSERT INTO avatar_attempts (attempt_id, guest_id, created_at, status, object_key, head_hash, accepted_at)
+       VALUES (?, ?, ?, 'painted', ?, ?, ?)`
+    )
+    .run(`a_${guestId}`, guestId, portal.clock.now, resolveHeadKey(guestId), headHash, portal.clock.now);
+};
+
+test("does let only an admin pick the style reference, and only from a guest with a head", async () => {
+  const portal = portalWithGuests();
+  const robCookie = await portal.signInAs("g_rob");
+  const bradCookie = await portal.signInAs("g_brad");
+  const pick = (cookie: string, guestId: string) =>
+    portal.request("POST", "/api/admin/style-reference", { cookie, body: { guestId } });
+
+  assert.equal((await pick(bradCookie, "g_rob")).status, 404, "Rob has no head yet");
+
+  await giveHead(portal, "g_rob", "f".repeat(64));
+
+  const refused = await pick(robCookie, "g_rob");
+
+  assert.equal(refused.status, 403);
+  assert.deepEqual(await refused.json(), { error: "forbidden" });
+  assert.equal(portal.bucket.readText(STYLE_REFERENCE_KEY), null, "a guest's press stored nothing");
+  assert.equal((await pick(bradCookie, "")).status, 400);
+
+  const picked = await pick(bradCookie, "g_rob");
+
+  assert.equal(picked.status, 200);
+  assert.deepEqual((await picked.json()) as AdminStyleReference, {
+    guestId: "g_rob",
+    headHash: "f".repeat(64),
+    pickedAt: portal.clock.now
+  });
+  assert.equal(portal.bucket.readText(STYLE_REFERENCE_KEY), FAKE_HEAD_PNG_BASE64, "kept as the base64 Gemini takes");
+  assert.deepEqual((await portal.bucket.head(STYLE_REFERENCE_KEY))?.customMetadata, {
+    mimeType: "image/png",
+    guestId: "g_rob",
+    headHash: "f".repeat(64)
+  });
+
+  const guests = (await (await portal.request("GET", "/api/admin/guests", { cookie: bradCookie })).json()) as AdminGuestStatus[];
+
+  assert.deepEqual(
+    guests.map(({ guestId, hasHead, headHash, isStyleReference }) => ({ guestId, hasHead, headHash, isStyleReference })),
+    [
+      { guestId: "g_brad", hasHead: false, headHash: null, isStyleReference: false },
+      { guestId: "g_rob", hasHead: true, headHash: "f".repeat(64), isStyleReference: true }
+    ]
+  );
 });

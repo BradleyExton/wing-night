@@ -12,6 +12,7 @@
     "test": "tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
+    "@wingnight/avatar-head": "workspace:*",
     "@wingnight/shared": "workspace:*"
   },
   "devDependencies": {
