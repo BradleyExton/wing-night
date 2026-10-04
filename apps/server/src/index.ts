@@ -5,6 +5,7 @@ import {
   resolveContentRootDir
 } from "./contentLoader/contentLoaderUtils/index.js";
 import { createApp } from "./createApp/index.js";
+import { resolveHostControlToken } from "./hostControlToken/index.js";
 import {
   createGeminiImageEditor,
   resolveGeminiApiKey
@@ -19,7 +20,10 @@ import { attachSocketServer } from "./socketServer/index.js";
 const parsedPort = Number(process.env.PORT);
 const port = Number.isInteger(parsedPort) && parsedPort > 0 ? parsedPort : 3000;
 const contentRootDir = resolveContentRootDir();
-const app = createApp({ contentRootDir });
+// Once, here, and handed to the two things that need it: the socket guard that
+// checks it and the laptop-only route that puts it in the host QR.
+const hostControlToken = resolveHostControlToken(process.env.HOST_CONTROL_TOKEN);
+const app = createApp({ contentRootDir, hostControlToken: hostControlToken.token });
 
 // Named at boot because the root is now resolved rather than fixed — it is the
 // night pack when one exists, the repo's content/ otherwise, and whatever
@@ -30,6 +34,9 @@ logInfo("server:contentRoot", {
   contentRootDir,
   layerDirs: resolveContentLayerDirs(contentRootDir)
 });
+// The source, never the token: the log is not where the key to the host seat
+// should be lying around.
+logInfo("server:hostControlToken", { source: hostControlToken.source });
 const httpServer = createServer(app);
 
 // Boot's failure policy: a server whose content will not load should not
@@ -43,7 +50,9 @@ if (!bootReloadResult.ok) {
   setRoomStateFatalError(bootReloadResult.reason);
 }
 
-const { broadcaster } = attachSocketServer(httpServer);
+const { broadcaster } = attachSocketServer(httpServer, {
+  hostControlToken: hostControlToken.token
+});
 
 // RECREATE's forger: the one thing the server does that is not a reply to a
 // host tap. With no key in the environment or the pack's .env the runner still

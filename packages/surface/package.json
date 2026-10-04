@@ -17,7 +17,8 @@
     "test": "tsx --tsconfig ../../tsconfig.tsx-runtime.json --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\""
   },
   "dependencies": {
-    "@wingnight/audio": "workspace:*"
+    "@wingnight/audio": "workspace:*",
+    "uqr": "^0.1.3"
   },
   "devDependencies": {
     "@types/node": "catalog:",

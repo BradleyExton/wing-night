@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CLIENT_TO_SERVER_EVENTS, Phase, type RoomState } from "@wingnight/shared";
+import { CLIENT_ROLES, CLIENT_TO_SERVER_EVENTS, Phase, type RoomState } from "@wingnight/shared";
 
 import {
   buildRoomState,
@@ -80,23 +80,10 @@ test("ignores unauthorized game:nextPhase requests", () => {
   assert.deepEqual(socketHarness.emittedSnapshots[0], toHostSnapshotEnvelope(initialState));
 });
 
-test("does not emit invalid-secret event when client cannot claim control", () => {
-  let authorizedCallCount = 0;
+test("does not emit invalid-secret event when the socket is seated as DISPLAY", () => {
+  const socketHarness = setupHandlers({ clientRole: CLIENT_ROLES.DISPLAY });
 
-  const socketHarness = setupHandlers({
-    canClaimControl: false,
-    overrides: {
-      [CLIENT_TO_SERVER_EVENTS.NEXT_PHASE]: () => {
-        authorizedCallCount += 1;
-      }
-    }
-  });
-
-  socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE, {
-    hostSecret: "invalid-host-secret"
-  });
-
-  assert.equal(authorizedCallCount, 0);
+  assert.equal(socketHarness.hasListener(CLIENT_TO_SERVER_EVENTS.NEXT_PHASE), false);
   assert.equal(socketHarness.invalidSecretEvents, 0);
 });
 

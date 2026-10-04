@@ -8,7 +8,8 @@ import {
   type ConfigResultPayload,
   type HostSecretPayload,
   type RoleScopedStateSnapshotEnvelope,
-  type RoomState
+  type RoomState,
+  type SocketClientRole
 } from "@wingnight/shared";
 
 import {
@@ -34,7 +35,10 @@ type SocketHarness = {
   triggerRequestState: () => void;
   triggerHostClaim: () => void;
   trigger: (event: AuthorizedEventName, payload: unknown) => void;
+  hasListener: (event: ClientEventName) => boolean;
 };
+
+type ClientEventName = (typeof CLIENT_TO_SERVER_EVENTS)[keyof typeof CLIENT_TO_SERVER_EVENTS];
 
 export const buildRoomState = (phase: RoomState["phase"], currentRound = 0): RoomState => {
   return {
@@ -75,12 +79,14 @@ export const createSocketHarness = (): SocketHarness => {
   const emittedConfigResults: ConfigResultPayload[] = [];
   const invalidSecretEvents = { count: 0 };
 
-  type ClientEventName =
-    (typeof CLIENT_TO_SERVER_EVENTS)[keyof typeof CLIENT_TO_SERVER_EVENTS];
   type EventListener = (() => void) | ((payload: unknown) => void);
 
   const listeners = new Map<ClientEventName, EventListener>();
 
+  // Strict on purpose: a test that triggers an event its socket never
+  // registered would otherwise pass on "nothing happened" for the wrong
+  // reason. A display is given no host listeners at all, so a test about a
+  // display says so with `hasListener` instead of triggering into the void.
   const resolveListener = (event: ClientEventName): EventListener => {
     const listener = listeners.get(event);
 
@@ -144,7 +150,8 @@ export const createSocketHarness = (): SocketHarness => {
     trigger: (event: AuthorizedEventName, payload: unknown): void => {
       const listener = resolveListener(event) as (payload: unknown) => void;
       listener(payload);
-    }
+    },
+    hasListener: (event: ClientEventName): boolean => listeners.has(event)
   };
 };
 
@@ -193,7 +200,9 @@ type SetupHandlersOptions = {
   phase?: RoomState["phase"];
   getSnapshot?: () => RoleScopedStateSnapshotEnvelope;
   overrides?: AuthorizedEventOverrides;
-  canClaimControl?: boolean;
+  clientRole?: SocketClientRole;
+  // Defaults to the laptop, where the host shell and the TV both run.
+  isLoopbackPeer?: boolean;
   hostAuth?: Parameters<typeof registerRoomStateHandlers>[4];
   dispatch?: AuthorizedMutationDispatch;
   configService?: ConfigService;
@@ -208,7 +217,10 @@ export const setupHandlers = (options: SetupHandlersOptions = {}): SocketHarness
       ((): RoleScopedStateSnapshotEnvelope =>
         toHostSnapshotEnvelope(buildRoomState(options.phase ?? Phase.SETUP))),
     options.dispatch ?? createAuthorizedMutationDispatch(options.overrides ?? {}),
-    options.canClaimControl ?? true,
+    {
+      clientRole: options.clientRole ?? CLIENT_ROLES.HOST,
+      isLoopbackPeer: options.isLoopbackPeer ?? true
+    },
     options.hostAuth ?? hostAuth,
     // Only the config:* tests pass one. Everything else registers handlers it
     // never triggers, so the production service is never asked to touch disk.

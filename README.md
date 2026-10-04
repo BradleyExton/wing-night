@@ -144,10 +144,11 @@ The client binds to every interface, so other devices on the Wi-Fi can
 reach it with no extra flag.
 
 5)  On the laptop, open http://localhost:5173 and scan its QR code with
-    the host tablet. It opens http://`<laptop-ip>`:5173/host — the address
-    is printed under the code if you would rather type it. The code only
-    shows on the laptop itself, never to a guest who opens the page over
-    the Wi-Fi.
+    the host tablet. It opens http://`<laptop-ip>`:5173/host with the
+    host control token in the query — the address is printed under the
+    code if you would rather type it. The code only shows on the laptop
+    itself, never to a guest who opens the page over the Wi-Fi, and a
+    device that opens `/host` without the token is refused the seat.
 
 6)  Open the display on the laptop driving the TV:
 
@@ -162,8 +163,17 @@ Display: http://localhost:5173/display
 -   All mutating socket events require it.
 -   Display is strictly read-only.
 -   One implicit room only.
--   Default LAN mode: if `HOST_CONTROL_TOKEN` is not configured, any `/host` client can claim host control.
--   Optional hardened mode: set both `HOST_CONTROL_TOKEN` (server) and `VITE_HOST_CONTROL_TOKEN` (client) to require a matching host control token before host role is granted.
+-   The host seat is locked. A socket asking for host control gets it only from the laptop
+    itself (a loopback connection from a page on `localhost`) or with the host control token;
+    anything else asking for it is refused outright, not quietly seated as a display.
+-   With `HOST_CONTROL_TOKEN` unset the server mints a token once and keeps it in a private file
+    in the OS temp directory (`wing-night-host-control-token`), so a restart mid-party keeps the
+    tablet seated; delete the file to rotate it. The laptop's root page reads the token from the
+    loopback-only `/host-join` route (refreshed every few seconds) and puts it in the host QR, so
+    the tablet takes the seat by scanning. A tablet holding a token that no longer matches shows
+    a "scan again" screen.
+-   `HOST_CONTROL_TOKEN` (server) pins the token across restarts; `VITE_HOST_CONTROL_TOKEN`
+    (client) bakes the same value into a build, for a host device that cannot scan.
 
 ------------------------------------------------------------------------
 

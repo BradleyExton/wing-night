@@ -116,9 +116,6 @@ importers:
       socket.io-client:
         specifier: ^4.8.1
         version: 4.8.3
-      uqr:
-        specifier: ^0.1.3
-        version: 0.1.3
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -205,6 +202,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      socket.io-client:
+        specifier: ^4.8.1
+        version: 4.8.3
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -746,6 +746,9 @@ importers:
       '@wingnight/audio':
         specifier: workspace:*
         version: link:../audio
+      uqr:
+        specifier: ^0.1.3
+        version: 0.1.3
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

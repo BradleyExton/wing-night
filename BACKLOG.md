@@ -490,7 +490,9 @@ publicly.
 - `adminAuth` mirrors the `hostAuth` issue/validate pattern but keeps admin and host secrets in
   separate slots, so claiming one never invalidates the other. `ADMIN_PASSCODE` is read server-side
   only — never a `VITE_` var, or it ships in the client bundle.
-- With `ADMIN_PASSCODE` unset the wizard stays open (LAN default, mirroring `HOST_CONTROL_TOKEN`).
+- With `ADMIN_PASSCODE` unset the wizard falls back to the host seat's rule: open on the laptop
+  itself, and to any other device only with the host control token (which the server mints at boot
+  when `HOST_CONTROL_TOKEN` is unset — the host seat is no longer LAN-open).
 - **This rewires the one surface with a dedicated Playwright spec.** `tests/e2e/admin-config-wizard.spec.ts`
   is built on exactly the host-secret ride-along this removes: `openWizard` waits on `config:read`,
   which only replies after the host claim issues a secret, and the spec sequences `/host` then

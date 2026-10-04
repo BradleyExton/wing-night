@@ -5,6 +5,7 @@ import {
   CONTENT_ASSET_ROUTE_PATH,
   DEV_SANDBOX_MANIFEST_ROUTE_PATH,
   EATING_AUDIO_ROUTE_PATH,
+  HOST_JOIN_ROUTE_PATH,
   LAN_ADDRESSES_ROUTE_PATH,
   LOBBY_AUDIO_ROUTE_PATH,
   SFX_TAKES_ROUTE_PATH,
@@ -18,11 +19,14 @@ import {
 } from "../contentLoader/contentLoaderUtils/index.js";
 import { createDevSandboxRouter } from "../routes/devSandbox/index.js";
 import { healthRouter } from "../routes/health/index.js";
+import { createHostJoinRouter } from "../routes/hostJoin/index.js";
 import { createLanAddressesRouter } from "../routes/lanAddresses/index.js";
 import { createSfxTakesRouter } from "../routes/sfxTakes/index.js";
 
 type CreateAppOptions = {
   contentRootDir?: string;
+  // The boot's host control token, the same one the socket guard checks.
+  hostControlToken: string;
 };
 
 const allowCrossOriginMedia: express.RequestHandler = (_request, response, next) => {
@@ -30,7 +34,7 @@ const allowCrossOriginMedia: express.RequestHandler = (_request, response, next)
   next();
 };
 
-export const createApp = (options: CreateAppOptions = {}): express.Express => {
+export const createApp = (options: CreateAppOptions): express.Express => {
   // Resolved at CALL time, not module scope — `resolveContentRootDir` reads
   // WN_CONTENT_ROOT_DIR, which the e2e stack points at its own seeded root.
   const contentRootDir = options.contentRootDir ?? resolveContentRootDir();
@@ -70,9 +74,20 @@ export const createApp = (options: CreateAppOptions = {}): express.Express => {
     createSfxTakesRouter({ contentRootDir })
   );
 
-  // The laptop's Wi-Fi addresses, so a TV open on localhost can put the host
-  // page's real address on screen as a QR code for the tablet.
+  // The laptop's Wi-Fi addresses, open to any origin and carrying no token.
+  // The host QR no longer reads this (it reads `/host-join` below); it stays
+  // for pages that need the addresses but must never hold the host seat's key —
+  // the TV's player QR for the guests' phones, in a later milestone.
   app.use(LAN_ADDRESSES_ROUTE_PATH, allowCrossOriginMedia, createLanAddressesRouter());
+
+  // The same addresses plus the host control token, for the laptop's host QR
+  // alone. No blanket CORS header: the route reflects a loopback Origin itself
+  // and refuses everything else, so neither a LAN device nor a web page open on
+  // the laptop can read the key to the host seat.
+  app.use(
+    HOST_JOIN_ROUTE_PATH,
+    createHostJoinRouter({ hostControlToken: options.hostControlToken })
+  );
 
   // The TV listens to its own music: the display taps its `<audio>` with a
   // Web Audio analyser to find the beat the lobby cast dances to (DESIGN.md

@@ -9,9 +9,9 @@ test("resolveSocketClientRole maps host route to HOST role", () => {
   assert.equal(resolveSocketClientRole("/host"), CLIENT_ROLES.HOST);
 });
 
-// Without this the wizard connects as DISPLAY, canClaimControl is false, no host
-// secret is ever issued, and every config:* call is dropped with no reply —
-// emitSecretInvalid early-returns for non-claimers, so not even an error arrives.
+// Without this the wizard connects as DISPLAY, no host secret is ever issued,
+// and every config:* call is dropped with no reply — a display socket has no
+// config listener, so not even an error arrives.
 test("resolveSocketClientRole maps the admin route to HOST role", () => {
   assert.equal(resolveSocketClientRole("/admin"), CLIENT_ROLES.HOST);
 });
@@ -48,5 +48,12 @@ test("resolveSocketAuthPayload includes host control token for host route only",
 test("resolveSocketAuthPayload omits token when not configured", () => {
   assert.deepEqual(resolveSocketAuthPayload("/host", null), {
     clientRole: CLIENT_ROLES.HOST
+  });
+});
+
+test("does include the host control token in the auth payload when the route is quick play", () => {
+  assert.deepEqual(resolveSocketAuthPayload("/quickplay", "host-token"), {
+    clientRole: CLIENT_ROLES.HOST,
+    hostControlToken: "host-token"
   });
 });

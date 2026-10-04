@@ -1,4 +1,5 @@
 import {
+  CLIENT_ROLES,
   CLIENT_TO_SERVER_EVENTS,
   CONFIG_ACTIONS,
   CONFIG_ERROR_CODES,
@@ -15,6 +16,7 @@ import type {
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { createConfigService, type ConfigService } from "../../configService/index.js";
+import type { SeatedSocketData } from "../hostSeatGuard/index.js";
 import { handleConfigApply } from "./handleConfigApply/index.js";
 
 import {
@@ -245,9 +247,10 @@ const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
   )
 ];
 
-// The display's track-ended report. It cannot go through
-// `defineAuthorizedEvent`: there is no secret to check, and there is no host to
-// emit `SECRET_INVALID` back to. A malformed payload is dropped in silence for
+// The display's track-ended report, registered only on a DISPLAY socket that
+// connected from the laptop. It
+// cannot go through `defineAuthorizedEvent`: there is no secret to check, and
+// there is no host to emit `SECRET_INVALID` back to. A malformed payload is dropped in silence for
 // the same reason every other guard drops one — a party does not stall over
 // background music.
 const REPORTED_EVENTS: AuthorizedEventRegistration[] = [
@@ -367,11 +370,18 @@ const CONFIG_EVENTS: ConfigEventRegistration[] = [
   )
 ];
 
+// Which listeners a socket gets is decided by the seat the guard gave it, so a
+// display never even has a host listener to probe. The host-secret check inside
+// each listener is still the real gate — this is the second wall, not the
+// first. The display's one report is the mirror image: only a display may say a
+// track ended, because only the display owns the `<audio>` element — and only a
+// display on the laptop, because that is where the TV is driven from. A display
+// opened on a guest's phone would otherwise be able to skip every lobby track.
 export const registerRoomStateHandlers = (
   socket: RoomStateSocket,
   getSnapshot: () => RoleScopedStateSnapshotEnvelope,
   dispatchAuthorizedMutation: AuthorizedMutationDispatch,
-  canClaimControl: boolean,
+  seat: SeatedSocketData,
   hostAuth: HostAuth,
   configService: ConfigService = createConfigService()
 ): void => {
@@ -379,26 +389,35 @@ export const registerRoomStateHandlers = (
     socket.emit(SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT, getSnapshot());
   };
 
-  const emitSecretInvalid = (): void => {
-    if (!canClaimControl) {
-      return;
-    }
-
-    socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
-  };
-
-  const handleHostClaim = (): void => {
-    if (!canClaimControl) {
-      return;
-    }
-
-    socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, hostAuth.issueHostSecret());
-  };
-
   emitSnapshot();
 
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, emitSnapshot);
-  socket.on(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL, handleHostClaim);
+
+  if (seat.clientRole === CLIENT_ROLES.DISPLAY) {
+    if (!seat.isLoopbackPeer) {
+      return;
+    }
+
+    const reportedEventContext: AuthorizedEventContext = {
+      isValidHostSecret: hostAuth.isValidHostSecret,
+      emitSecretInvalid: () => {},
+      dispatchAuthorizedMutation
+    };
+
+    for (const reportedEvent of REPORTED_EVENTS) {
+      socket.on(reportedEvent.event, reportedEvent.createListener(reportedEventContext));
+    }
+
+    return;
+  }
+
+  const emitSecretInvalid = (): void => {
+    socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_INVALID);
+  };
+
+  socket.on(CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL, () => {
+    socket.emit(SERVER_TO_CLIENT_EVENTS.SECRET_ISSUED, hostAuth.issueHostSecret());
+  });
 
   const authorizedEventContext: AuthorizedEventContext = {
     isValidHostSecret: hostAuth.isValidHostSecret,
@@ -406,7 +425,7 @@ export const registerRoomStateHandlers = (
     dispatchAuthorizedMutation
   };
 
-  for (const authorizedEvent of [...AUTHORIZED_EVENTS, ...REPORTED_EVENTS]) {
+  for (const authorizedEvent of AUTHORIZED_EVENTS) {
     socket.on(authorizedEvent.event, authorizedEvent.createListener(authorizedEventContext));
   }
 

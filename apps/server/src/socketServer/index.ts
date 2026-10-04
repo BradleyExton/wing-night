@@ -15,10 +15,7 @@ import {
   getRoomStateSnapshot
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
-import {
-  resolveAuthorizedSocketClientRole,
-  resolveConfiguredHostControlToken
-} from "./resolveAuthorizedSocketClientRole/index.js";
+import { createHostSeatGuard, type SeatedSocketData } from "./hostSeatGuard/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 
 const ROOM_BY_CLIENT_ROLE = {
@@ -37,30 +34,44 @@ export type RoomStateBroadcaster = {
   onBroadcast: (listener: (roomState: RoomState) => void) => void;
 };
 
+type RoomSocketServer = Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  Record<string, never>,
+  Partial<SeatedSocketData>
+>;
+
 export type AttachedSocketServer = {
-  socketServer: Server<ClientToServerEvents, ServerToClientEvents>;
+  socketServer: RoomSocketServer;
   broadcaster: RoomStateBroadcaster;
 };
 
-export const attachSocketServer = (httpServer: HttpServer): AttachedSocketServer => {
+type AttachSocketServerOptions = {
+  // Resolved once at boot (`resolveHostControlToken`) and shared with the
+  // laptop-only `/host-join` route, which hands it to the host QR.
+  hostControlToken: string;
+};
+
+export const attachSocketServer = (
+  httpServer: HttpServer,
+  options: AttachSocketServerOptions
+): AttachedSocketServer => {
   const configuredCorsOrigin = process.env.SOCKET_IO_CORS_ORIGIN;
   const corsOrigin =
     configuredCorsOrigin && configuredCorsOrigin.trim().length > 0
       ? configuredCorsOrigin.trim()
       : true;
-  const configuredHostControlToken = resolveConfiguredHostControlToken(
-    process.env.HOST_CONTROL_TOKEN
-  );
-
-  const socketServer = new Server<ClientToServerEvents, ServerToClientEvents>(
-    httpServer,
-    {
-      cors: {
-        origin: corsOrigin,
-        credentials: true
-      }
+  const socketServer: RoomSocketServer = new Server(httpServer, {
+    cors: {
+      origin: corsOrigin,
+      credentials: true
     }
-  );
+  });
+
+  // The host seat is decided here, before a connection exists: the laptop
+  // itself or the host control token, and anything else asking for HOST is
+  // turned away with a connect error rather than seated as a display.
+  socketServer.use(createHostSeatGuard(options.hostControlToken));
 
   const broadcastListeners: ((roomState: RoomState) => void)[] = [];
 
@@ -96,11 +107,10 @@ export const attachSocketServer = (httpServer: HttpServer): AttachedSocketServer
   };
 
   socketServer.on("connection", (socket) => {
-    const socketClientRole = resolveAuthorizedSocketClientRole(
-      socket.handshake.auth,
-      socket.handshake.address,
-      configuredHostControlToken
-    );
+    // The guard always seats a socket it lets through; the fallbacks are the
+    // least-privileged seat, for the type's sake.
+    const socketClientRole = socket.data.clientRole ?? CLIENT_ROLES.DISPLAY;
+    const isLoopbackPeer = socket.data.isLoopbackPeer ?? false;
     socket.join(ROOM_BY_CLIENT_ROLE[socketClientRole]);
 
     registerRoomStateHandlers(
@@ -112,7 +122,7 @@ export const attachSocketServer = (httpServer: HttpServer): AttachedSocketServer
       (_event, _payload, runMutation) => {
         broadcastAfter(runMutation);
       },
-      socketClientRole === CLIENT_ROLES.HOST,
+      { clientRole: socketClientRole, isLoopbackPeer },
       {
         issueHostSecret,
         isValidHostSecret

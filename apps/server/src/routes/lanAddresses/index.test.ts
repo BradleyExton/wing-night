@@ -49,7 +49,7 @@ test("does list nothing when the machine is on no network", () => {
 });
 
 test("does answer cross-origin with the machine's addresses", async () => {
-  const server: Server = createApp().listen(0, "127.0.0.1");
+  const server: Server = createApp({ hostControlToken: "test-token" }).listen(0, "127.0.0.1");
 
   try {
     await once(server, "listening");

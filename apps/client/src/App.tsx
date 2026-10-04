@@ -1,4 +1,5 @@
 import {
+  CLIENT_ROLES,
   resolveMinigameTypeFromSlug,
   type RoleScopedStateSnapshotEnvelope
 } from "@wingnight/shared";
@@ -11,14 +12,16 @@ import { ContraptionUiLab } from "./components/ContraptionUiLab";
 import { DevRouteIndex } from "./components/DevRouteIndex";
 import { DisplayBoard } from "./components/DisplayBoard";
 import { HostControlPanel } from "./components/HostControlPanel";
+import { HostSeatLocked } from "./components/HostSeatLocked";
 import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
 import { QuickPlayLauncher } from "./components/QuickPlayLauncher";
 import { RootRouteLanding } from "./components/RootRouteLanding";
 import { RouteNotFound } from "./components/RouteNotFound";
 import { HostHandlersProvider } from "./context/HostHandlersContext";
 import { RoomStateProvider } from "./context/RoomStateContext";
-import { createRoomSocket } from "./socket/createRoomSocket";
+import { createRoomSocket, resolveSocketClientRole } from "./socket/createRoomSocket";
 import { shouldCreateRoomSocket } from "./socket/shouldCreateRoomSocket";
+import { clearHostControlToken } from "./utils/hostControlToken";
 import { saveHostSecret } from "./utils/hostSecretStorage";
 import { createDisplayReportHandlers } from "./utils/displayReports";
 import { createHostRequestHandlers } from "./utils/hostRequests";
@@ -28,6 +31,7 @@ import {
   resolveDevMinigameSlug
 } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
+import { wireHostSeatLock } from "./utils/wireHostSeatLock";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 
 // Throwaway — deleted along with the lab when the ANAMORPH minigame ships
@@ -101,6 +105,7 @@ export const App = (): JSX.Element => {
   const pathname = window.location.pathname;
   const [roomStateEnvelope, setRoomStateEnvelope] =
     useState<RoleScopedStateSnapshotEnvelope | null>(null);
+  const [isHostSeatLocked, setIsHostSeatLocked] = useState(false);
   const route = resolveClientRoute(pathname);
   const devMinigameSlug = resolveDevMinigameSlug(pathname);
   const devMinigameType =
@@ -152,6 +157,19 @@ export const App = (): JSX.Element => {
     return wireHostControlClaim(roomSocket, saveHostSecret);
   }, [roomSocket, route]);
 
+  // A host page the server turned away: forget the token that failed (it is
+  // was rotated, or never was one) and say where the way in is.
+  useEffect(() => {
+    if (roomSocket === null || resolveSocketClientRole(pathname) !== CLIENT_ROLES.HOST) {
+      return;
+    }
+
+    return wireHostSeatLock(roomSocket, () => {
+      clearHostControlToken();
+      setIsHostSeatLocked(true);
+    });
+  }, [pathname, roomSocket]);
+
   useEffect(() => {
     if (roomSocket === null) {
       return;
@@ -161,6 +179,10 @@ export const App = (): JSX.Element => {
       roomSocket.disconnect();
     };
   }, [roomSocket]);
+
+  if (isHostSeatLocked) {
+    return <HostSeatLocked />;
+  }
 
   return (
     <RoomStateProvider value={roomStateEnvelope}>

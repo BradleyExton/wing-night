@@ -54,3 +54,6 @@ export { useRevealWindow } from "./useRevealWindow/index.js";
 // A host surface's verdict buttons through one double-tap guard. Every game's
 // Correct / Skip / Next had the same hole: a double tap was two verdicts.
 export { useVerdictDispatch } from "./useVerdictDispatch/index.js";
+// A QR code for a URL a device in the room should open — the laptop's host
+// code for the tablet, and the TV's player code for the guests' phones.
+export { QrCode, type QrCodeProps } from "./QrCode/index.js";

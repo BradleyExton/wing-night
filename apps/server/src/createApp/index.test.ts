@@ -37,7 +37,9 @@ const withApp = async (
   contentRootDir?: string
 ): Promise<void> => {
   const server = createApp(
-    contentRootDir === undefined ? {} : { contentRootDir }
+    contentRootDir === undefined
+      ? { hostControlToken: "test-token" }
+      : { contentRootDir, hostControlToken: "test-token" }
   ).listen(0, "127.0.0.1");
 
   try {

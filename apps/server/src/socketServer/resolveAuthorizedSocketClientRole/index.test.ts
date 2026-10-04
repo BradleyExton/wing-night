@@ -3,82 +3,76 @@ import test from "node:test";
 
 import { CLIENT_ROLES } from "@wingnight/shared";
 
-import {
-  resolveAuthorizedSocketClientRole,
-  resolveConfiguredHostControlToken
-} from "./index.js";
+import { resolveAuthorizedSocketClientRole } from "./index.js";
 
-test("resolveConfiguredHostControlToken trims and rejects empty strings", () => {
-  assert.equal(resolveConfiguredHostControlToken(undefined), null);
-  assert.equal(resolveConfiguredHostControlToken(""), null);
-  assert.equal(resolveConfiguredHostControlToken("   "), null);
-  assert.equal(resolveConfiguredHostControlToken("  token-123  "), "token-123");
-});
+// What the laptop is (address, Host, Origin) is `isLoopbackPeer`'s question and
+// is tested there and through the seat guard; this is the seating rule on top.
+const HOST_CONTROL_TOKEN = "room-token";
+const ON_LAPTOP = true;
+const ON_LAN = false;
 
-test("allows display clients without host token or loopback checks", () => {
-  const resolvedRole = resolveAuthorizedSocketClientRole(
-    {
-      clientRole: CLIENT_ROLES.DISPLAY
-    },
-    "198.51.100.23",
-    "room-token"
-  );
-
-  assert.equal(resolvedRole, CLIENT_ROLES.DISPLAY);
-});
-
-test("requires valid host control token when HOST_CONTROL_TOKEN is configured", () => {
-  const authorizedRole = resolveAuthorizedSocketClientRole(
-    {
-      clientRole: CLIENT_ROLES.HOST,
-      hostControlToken: "valid-room-token"
-    },
-    "198.51.100.23",
-    "valid-room-token"
-  );
-
-  const unauthorizedRole = resolveAuthorizedSocketClientRole(
-    {
-      clientRole: CLIENT_ROLES.HOST,
-      hostControlToken: "invalid-room-token"
-    },
-    "127.0.0.1",
-    "valid-room-token"
-  );
-
-  assert.equal(authorizedRole, CLIENT_ROLES.HOST);
-  assert.equal(unauthorizedRole, CLIENT_ROLES.DISPLAY);
-});
-
-test("defaults to LAN host authorization when token is not configured", () => {
-  const localHostRole = resolveAuthorizedSocketClientRole(
-    {
-      clientRole: CLIENT_ROLES.HOST
-    },
-    "::1",
-    null
-  );
-
-  const remoteHostRole = resolveAuthorizedSocketClientRole(
-    {
-      clientRole: CLIENT_ROLES.HOST
-    },
-    "203.0.113.20",
-    null
-  );
-
-  assert.equal(localHostRole, CLIENT_ROLES.HOST);
-  assert.equal(remoteHostRole, CLIENT_ROLES.HOST);
-});
-
-test("treats malformed auth payloads as display clients", () => {
-  assert.equal(resolveAuthorizedSocketClientRole(null, "::1", null), CLIENT_ROLES.DISPLAY);
+test("does seat a display when it asks for DISPLAY from anywhere", () => {
   assert.equal(
-    resolveAuthorizedSocketClientRole({ clientRole: "HACKER" }, "::1", null),
+    resolveAuthorizedSocketClientRole({ clientRole: CLIENT_ROLES.DISPLAY }, ON_LAN, HOST_CONTROL_TOKEN),
     CLIENT_ROLES.DISPLAY
   );
+});
+
+test("does deny HOST when a LAN peer brings no token", () => {
   assert.equal(
-    resolveAuthorizedSocketClientRole({ clientRole: CLIENT_ROLES.HOST }, undefined, null),
+    resolveAuthorizedSocketClientRole({ clientRole: CLIENT_ROLES.HOST }, ON_LAN, HOST_CONTROL_TOKEN),
+    null
+  );
+});
+
+test("does deny HOST when a LAN peer brings the wrong token", () => {
+  for (const hostControlToken of ["wrong-token", "room-toke", "", 42]) {
+    assert.equal(
+      resolveAuthorizedSocketClientRole(
+        { clientRole: CLIENT_ROLES.HOST, hostControlToken },
+        ON_LAN,
+        HOST_CONTROL_TOKEN
+      ),
+      null
+    );
+  }
+});
+
+test("does grant HOST when a LAN peer brings the right token", () => {
+  assert.equal(
+    resolveAuthorizedSocketClientRole(
+      { clientRole: CLIENT_ROLES.HOST, hostControlToken: HOST_CONTROL_TOKEN },
+      ON_LAN,
+      HOST_CONTROL_TOKEN
+    ),
     CLIENT_ROLES.HOST
   );
+});
+
+test("does grant HOST when the peer is the laptop and no token is sent", () => {
+  assert.equal(
+    resolveAuthorizedSocketClientRole({ clientRole: CLIENT_ROLES.HOST }, ON_LAPTOP, HOST_CONTROL_TOKEN),
+    CLIENT_ROLES.HOST
+  );
+});
+
+// A laptop tab holding a token that was since rotated must still get in.
+test("does grant HOST when the peer is the laptop and the token is stale", () => {
+  assert.equal(
+    resolveAuthorizedSocketClientRole(
+      { clientRole: CLIENT_ROLES.HOST, hostControlToken: "rotated-token" },
+      ON_LAPTOP,
+      HOST_CONTROL_TOKEN
+    ),
+    CLIENT_ROLES.HOST
+  );
+});
+
+test("does fall back to DISPLAY when the role is malformed or unknown", () => {
+  assert.equal(resolveAuthorizedSocketClientRole(null, ON_LAN, HOST_CONTROL_TOKEN), CLIENT_ROLES.DISPLAY);
+  assert.equal(
+    resolveAuthorizedSocketClientRole({ clientRole: "HACKER" }, ON_LAN, HOST_CONTROL_TOKEN),
+    CLIENT_ROLES.DISPLAY
+  );
+  assert.equal(resolveAuthorizedSocketClientRole({}, ON_LAPTOP, HOST_CONTROL_TOKEN), CLIENT_ROLES.DISPLAY);
 });

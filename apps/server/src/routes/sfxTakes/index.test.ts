@@ -26,7 +26,7 @@ const withApp = async (
   contentRootDir: string,
   handle: (baseUrl: string) => Promise<void>
 ): Promise<void> => {
-  const server = createApp({ contentRootDir }).listen(0, "127.0.0.1");
+  const server = createApp({ contentRootDir, hostControlToken: "test-token" }).listen(0, "127.0.0.1");
 
   try {
     await once(server, "listening");

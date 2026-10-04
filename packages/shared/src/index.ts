@@ -308,10 +308,15 @@ export {
   type SfxTakesListing
 } from "./sfxTakes/index.js";
 export {
+  HOST_CONTROL_TOKEN_QUERY_KEY,
+  HOST_JOIN_ROUTE_PATH,
+  HOST_ROUTE_PATH,
   LAN_ADDRESSES_ROUTE_PATH,
   isLoopbackHostname,
-  resolveHostJoinUrl,
+  resolveHostJoinRouteUrl,
   resolveLanAddressesUrl,
+  resolveLanJoinUrl,
+  type HostJoinListing,
   type LanAddressesListing
 } from "./lanAddresses/index.js";
 export {
@@ -607,7 +612,11 @@ export type {
   ConfigFileKey,
   ConfigResultPayload
 } from "./config/index.js";
-export { CLIENT_ROLES, isSocketClientRole } from "./socketClientRole/index.js";
+export {
+  CLIENT_ROLES,
+  HOST_AUTH_REQUIRED_ERROR_CODE,
+  isSocketClientRole
+} from "./socketClientRole/index.js";
 export type { SocketClientRole } from "./socketClientRole/index.js";
 export {
   CLIENT_TO_SERVER_EVENTS,

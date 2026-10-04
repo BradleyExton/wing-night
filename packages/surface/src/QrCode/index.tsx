@@ -1,11 +1,15 @@
 import { encode } from "uqr";
 
-import * as styles from "./styles";
+import * as styles from "./styles.js";
 
-type QrCodeProps = {
+export type QrCodeProps = {
   value: string;
 };
 
+// A QR code for a URL a device in the room should open: the laptop's host code
+// for the tablet today, the TV's player code for the guests' phones next.
+// Drawn in `currentColor`, so the caller's plate decides dark-on-light.
+//
 // One path, one subpath per dark module, drawn on a unit grid so the viewBox is
 // the symbol's own size and the SVG scales without a single blurred edge. No
 // quiet zone: the card around it is the margin a scanner needs.

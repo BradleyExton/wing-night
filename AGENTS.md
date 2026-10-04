@@ -83,6 +83,11 @@ The rules that keep this from eroding "the display is read-only" (SPEC.md §1):
   same track are all no-ops.
 - It may only ever touch `musicPlayback`. Nothing reachable from a display-reported event may
   advance a phase, move a turn cursor or change a score.
+- It is accepted only from a display on the laptop. The server registers the listener only on a
+  socket seated as DISPLAY whose handshake was loopback (`isLoopbackPeer`: loopback address, a
+  loopback Host header, and a loopback Origin or none), because the laptop is what drives the TV.
+  A display opened on a guest's phone over the Wi-Fi may watch, but it gets no say in the music,
+  and a HOST socket has no listener for the report at all.
 - It stays alone. A second display-reported event needs a decision in `AGENTS.md`, not a second
   entry in `REPORTED_EVENTS` — the exception is defensible precisely because it is one.
 

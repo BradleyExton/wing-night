@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Host Seat Locked — Mockup</title>
+    <!--
+      What a host page shows when the server refuses it the host seat: a device
+      on the Wi-Fi that opened /host (or /admin, /quickplay) with no host control
+      token, or with one that has since been rotated. Calm, not an error:
+      nothing is broken, the way in is just on the laptop's screen.
+      Same atmosphere as RouteNotFound (the root page's backdrop), at the host
+      tablet's 1280x800. One instruction, no button — there is nothing to press
+      on this device; the fix is a scan.
+    -->
+    <style>
+      :root {
+        --bg: #121212; --surface: #1c1c1c;
+        --text: #ffffff; --muted: #a3a3a3;
+        --primary: #f97316;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; min-height: 100dvh;
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      main {
+        position: relative; isolation: isolate; overflow: hidden;
+        display: grid; place-items: center; min-height: 100dvh;
+        padding: 1.5rem; text-align: center;
+      }
+      .atmosphere {
+        position: absolute; inset: 0; z-index: -2;
+        background: linear-gradient(135deg, var(--bg), var(--surface), var(--bg));
+      }
+      .glow {
+        position: absolute; left: 8%; top: 14%; z-index: -1;
+        width: 18rem; height: 18rem; border-radius: 9999px;
+        background: rgba(249, 115, 22, 0.15); filter: blur(64px);
+      }
+      .kicker {
+        font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.24em; color: rgba(249, 115, 22, 0.9); margin: 0;
+      }
+      h1 {
+        margin: 0.75rem 0 0; font-size: clamp(2.1rem, 4.5vw, 3.6rem);
+        font-weight: 900; line-height: 1.02;
+      }
+      p.subtext {
+        margin: 1rem auto 0; max-width: 36rem;
+        font-size: clamp(1rem, 1.5vw, 1.2rem); line-height: 1.6;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      p.hint {
+        margin: 2rem auto 0; max-width: 36rem;
+        font-size: 0.875rem; color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="atmosphere" aria-hidden="true"></div>
+      <div class="glow" aria-hidden="true"></div>
+      <div>
+        <p class="kicker">Host seat locked</p>
+        <h1>This screen can't run the night yet.</h1>
+        <p class="subtext">
+          Scan the QR code on the laptop's screen with this tablet to take the
+          host seat.
+        </p>
+        <p class="hint">
+          Scanned before? The code on the laptop may have changed — scan it again.
+        </p>
+      </div>
+    </main>
+  </body>
+</html>

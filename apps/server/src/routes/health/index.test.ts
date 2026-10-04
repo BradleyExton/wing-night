@@ -20,7 +20,7 @@ const closeServer = async (server: Server): Promise<void> => {
 };
 
 test("GET /health returns 200 and status payload", async () => {
-  const app = createApp();
+  const app = createApp({ hostControlToken: "test-token" });
   const server = app.listen(0, "127.0.0.1");
 
   try {
@@ -37,7 +37,7 @@ test("GET /health returns 200 and status payload", async () => {
 });
 
 test("POST /health is not available", async () => {
-  const app = createApp();
+  const app = createApp({ hostControlToken: "test-token" });
   const server = app.listen(0, "127.0.0.1");
 
   try {

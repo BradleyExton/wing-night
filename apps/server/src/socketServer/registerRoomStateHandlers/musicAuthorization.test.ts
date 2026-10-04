@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  CLIENT_ROLES,
   CLIENT_TO_SERVER_EVENTS,
   MUSIC_PLAYBACK_SOURCES,
   Phase
@@ -127,6 +128,7 @@ test("accepts a well-formed track-ended report with no host secret", () => {
 
   const socketHarness = setupHandlers({
     phase: Phase.SETUP,
+    clientRole: CLIENT_ROLES.DISPLAY,
     overrides: {
       [CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED]: (payload) => {
         reports.push(payload);
@@ -152,6 +154,7 @@ test("ignores malformed track-ended reports", () => {
 
   const socketHarness = setupHandlers({
     phase: Phase.SETUP,
+    clientRole: CLIENT_ROLES.DISPLAY,
     overrides: {
       [CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED]: () => {
         reportCalls += 1;
@@ -178,4 +181,47 @@ test("ignores malformed track-ended reports", () => {
 
   assert.equal(reportCalls, 0);
   assert.equal(socketHarness.invalidSecretEvents, 0);
+});
+
+// AGENTS.md §3.3: the track-ended report is the DISPLAY's, because the display
+// owns the room's one <audio>. A host socket has no listener for it at all, so
+// a tablet (or a phone that got the host seat) cannot skip the room's music by
+// claiming a track finished.
+test("does ignore a track-ended report when it comes from a HOST socket", () => {
+  let reportCalls = 0;
+
+  const socketHarness = setupHandlers({
+    phase: Phase.SETUP,
+    clientRole: CLIENT_ROLES.HOST,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED]: () => {
+        reportCalls += 1;
+      }
+    }
+  });
+
+  assert.equal(socketHarness.hasListener(CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED), false);
+  assert.equal(reportCalls, 0);
+});
+
+// The TV is driven by the laptop. A display opened on a guest's phone over the
+// Wi-Fi is still a display — read-only, and welcome to watch — but it does not
+// own the room's speaker, so it gets no say in when a track has ended.
+test("does ignore a track-ended report when the display is not on the laptop", () => {
+  let reportCalls = 0;
+
+  const socketHarness = setupHandlers({
+    phase: Phase.SETUP,
+    clientRole: CLIENT_ROLES.DISPLAY,
+    isLoopbackPeer: false,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED]: () => {
+        reportCalls += 1;
+      }
+    }
+  });
+
+  assert.equal(socketHarness.hasListener(CLIENT_TO_SERVER_EVENTS.MUSIC_TRACK_ENDED), false);
+  assert.equal(socketHarness.hasListener(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE), true);
+  assert.equal(reportCalls, 0);
 });

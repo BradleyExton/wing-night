@@ -1,5 +1,6 @@
+import { QrCode } from "@wingnight/surface";
+
 import { hostJoinCardCopy } from "./copy";
-import { QrCode } from "./QrCode";
 import * as styles from "./styles";
 import { useHostJoinUrl } from "./useHostJoinUrl";
 
@@ -13,6 +14,11 @@ export const HostJoinCard = (): JSX.Element | null => {
     return null;
   }
 
+  // The URL carries the host control token, in the code and in the typed
+  // address alike: printing it hides nothing the code does not already show to
+  // any camera, and without it a tablet that types the address is locked out.
+  // What keeps the token in the host's hands is that only the laptop's screen
+  // ever shows it (`useHostJoinUrl`, and `/host-join` on the server).
   return (
     <aside className={styles.card} data-host-join-url={hostJoinUrl}>
       <span className={styles.plate}>

@@ -1,9 +1,12 @@
+import { timingSafeEqual } from "node:crypto";
+
 import {
   CLIENT_ROLES,
   isRecord,
   isSocketClientRole,
   type SocketClientRole
 } from "@wingnight/shared";
+
 
 const resolveRequestedClientRole = (authPayload: unknown): SocketClientRole => {
   if (!isRecord(authPayload)) {
@@ -17,48 +20,38 @@ const resolveRequestedClientRole = (authPayload: unknown): SocketClientRole => {
   return authPayload.clientRole;
 };
 
-const hasValidHostControlToken = (
-  authPayload: unknown,
-  expectedHostControlToken: string
-): boolean => {
-  if (!isRecord(authPayload)) {
+const hasValidHostControlToken = (authPayload: unknown, hostControlToken: string): boolean => {
+  if (!isRecord(authPayload) || typeof authPayload.hostControlToken !== "string") {
     return false;
   }
 
-  return authPayload.hostControlToken === expectedHostControlToken;
+  const offered = Buffer.from(authPayload.hostControlToken);
+  const expected = Buffer.from(hostControlToken);
+
+  return offered.length === expected.length && timingSafeEqual(offered, expected);
 };
 
-export const resolveConfiguredHostControlToken = (
-  configuredHostControlToken: string | undefined
-): string | null => {
-  if (typeof configuredHostControlToken !== "string") {
-    return null;
-  }
-
-  const trimmedToken = configuredHostControlToken.trim();
-
-  if (trimmedToken.length === 0) {
-    return null;
-  }
-
-  return trimmedToken;
-};
-
+// Who a connecting socket is allowed to be. DISPLAY is open to anyone — it is
+// read-only — and anything malformed falls back to it. HOST is the laptop's
+// own browser (`isLoopbackPeer`, decided by the caller from the handshake;
+// token or not, so a laptop tab holding a stale token still gets in) or a device holding the host control
+// token, which reaches the tablet only through the laptop's QR code.
+// Null means HOST was asked for and refused: the caller turns the socket away
+// rather than seating it as a display it never asked to be.
 export const resolveAuthorizedSocketClientRole = (
   authPayload: unknown,
-  _remoteAddress: string | undefined,
-  configuredHostControlToken: string | null
-): SocketClientRole => {
+  isLoopbackPeer: boolean,
+  hostControlToken: string
+): SocketClientRole | null => {
   const requestedClientRole = resolveRequestedClientRole(authPayload);
 
   if (requestedClientRole === CLIENT_ROLES.DISPLAY) {
     return CLIENT_ROLES.DISPLAY;
   }
 
-  if (configuredHostControlToken !== null) {
-    return hasValidHostControlToken(authPayload, configuredHostControlToken)
-      ? CLIENT_ROLES.HOST
-      : CLIENT_ROLES.DISPLAY;
+  if (isLoopbackPeer) {
+    return CLIENT_ROLES.HOST;
   }
-  return CLIENT_ROLES.HOST;
+
+  return hasValidHostControlToken(authPayload, hostControlToken) ? CLIENT_ROLES.HOST : null;
 };
