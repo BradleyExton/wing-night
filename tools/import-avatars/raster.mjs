@@ -2,7 +2,7 @@
 // JPEG/PNG Gemini returns into RGBA pixels, and encoding RGBA back into a
 // PNG. Both run in the Playwright-managed Chromium the repo already carries,
 // on a canvas, so no image dependency is added. Everything between them
-// (the knockout and the crop) is pure and lives in lib.mjs.
+// (the knockout and the crop bounds) is pure and lives in packages/avatar-head.
 import { chromium } from "@playwright/test";
 
 // The bodies of the two page.evaluate callbacks below run inside the browser

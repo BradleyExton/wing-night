@@ -1,16 +1,33 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-// RECREATE's Gemini image call, in TypeScript so the party-time generator (the
-// forger) and the author-time importer (`pnpm import:recreate`) send the same
-// request and read the same reply. `pnpm import:avatars` keeps its own copy in
-// `tools/import-avatars/lib.mjs`.
-// Nothing here touches room state: it takes a prompt and an optional source
-// picture and hands back bytes, or throws with the model's own reason.
+import {
+  buildGeminiImageRequest as buildSharedGeminiImageRequest,
+  buildGeminiImageUrl,
+  DEFAULT_GEMINI_IMAGE_MODEL,
+  extractGeneratedImage,
+  GEMINI_API_BASE,
+  mimeTypeForImageFile,
+  type GeminiImageRequest,
+  type InlineImage
+} from "@wingnight/avatar-head";
 
-// Nano Banana 2. The older gemini-2.5-flash-image is retired on 2026-10-02.
-export const DEFAULT_GEMINI_IMAGE_MODEL = "gemini-3.1-flash-image";
-export const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+// RECREATE's Gemini image call: the party-time generator (the forger) and the
+// author-time importer (`pnpm import:recreate`) both send it. The request and
+// reply shapes are the shared ones in @wingnight/avatar-head, which
+// `pnpm import:avatars` and the teaser Worker's head painter send too; this
+// module adds what only the LAN server needs — reading pack images, the API key
+// from the pack, and a timeout.
+// Nothing here touches room state: it takes a prompt and optional pictures and
+// hands back bytes, or throws with the model's own reason.
+
+export {
+  buildGeminiImageUrl,
+  DEFAULT_GEMINI_IMAGE_MODEL,
+  extractGeneratedImage,
+  GEMINI_API_BASE,
+  mimeTypeForImageFile
+};
 export const GEMINI_API_KEY_ENV = "GEMINI_API_KEY";
 
 // Long enough for the model to paint, short enough that a stuck call does not
@@ -18,15 +35,15 @@ export const GEMINI_API_KEY_ENV = "GEMINI_API_KEY";
 // and the host scores the prompt anyway.
 export const DEFAULT_GEMINI_TIMEOUT_MS = 90_000;
 
-export type GeneratedImage = {
-  mimeType: string;
-  base64: string;
-};
+export type GeneratedImage = InlineImage;
 
 export type ImageEditRequest = {
   prompt: string;
   // The picture to edit; null asks for a fresh image from the prompt alone.
   sourceImage: GeneratedImage | null;
+  // Further pictures attached after the source, in order — a style reference
+  // the new image should match, say. The prompt has to say which is which.
+  referenceImages?: readonly GeneratedImage[];
   // Only honoured when there is no source image: an edit keeps its source's
   // frame.
   aspectRatio?: string;
@@ -35,17 +52,6 @@ export type ImageEditRequest = {
 export type ImageEditor = {
   model: string;
   generate: (request: ImageEditRequest) => Promise<GeneratedImage>;
-};
-
-export const mimeTypeForImageFile = (fileName: string): string | null => {
-  const extension = fileName.toLowerCase().split(".").pop();
-
-  if (extension === "jpg" || extension === "jpeg") return "image/jpeg";
-  if (extension === "png") return "image/png";
-  if (extension === "webp") return "image/webp";
-  if (extension === "heic") return "image/heic";
-
-  return null;
 };
 
 export const extensionForMimeType = (mimeType: string): string => {
@@ -90,70 +96,17 @@ export const readImageFromDirs = (
   return null;
 };
 
-export const buildGeminiImageUrl = (model: string): string => {
-  return `${GEMINI_API_BASE}/${model}:generateContent`;
-};
-
 export const buildGeminiImageRequest = ({
   prompt,
   sourceImage,
+  referenceImages = [],
   aspectRatio
-}: ImageEditRequest): Record<string, unknown> => {
-  const parts: Record<string, unknown>[] = [{ text: prompt }];
-
-  if (sourceImage !== null) {
-    parts.push({
-      inlineData: { mimeType: sourceImage.mimeType, data: sourceImage.base64 }
-    });
-  }
-
-  const imageConfig =
-    sourceImage === null && aspectRatio !== undefined ? { aspectRatio } : undefined;
-
-  return {
-    contents: [{ parts }],
-    generationConfig: {
-      responseModalities: ["IMAGE"],
-      ...(imageConfig === undefined ? {} : { imageConfig })
-    }
-  };
-};
-
-type GeminiCandidatePart = { inlineData?: { mimeType?: string; data?: string }; text?: string };
-
-// Returns the first image part, or throws with the model's own text so a
-// refusal reads as a reason on the TV rather than a stack trace in the log.
-export const extractGeneratedImage = (response: unknown): GeneratedImage => {
-  const candidate =
-    typeof response === "object" && response !== null && "candidates" in response
-      ? (response as { candidates?: unknown[] }).candidates?.[0]
-      : undefined;
-  const parts: GeminiCandidatePart[] =
-    typeof candidate === "object" && candidate !== null && "content" in candidate
-      ? ((candidate as { content?: { parts?: GeminiCandidatePart[] } }).content?.parts ?? [])
-      : [];
-  const imagePart = parts.find((part) => typeof part.inlineData?.data === "string");
-
-  if (imagePart?.inlineData?.data === undefined) {
-    const text = parts
-      .map((part) => part.text)
-      .filter((part): part is string => typeof part === "string")
-      .join(" ")
-      .trim();
-    const finishReason =
-      typeof candidate === "object" && candidate !== null && "finishReason" in candidate
-        ? String((candidate as { finishReason?: unknown }).finishReason)
-        : "unknown";
-
-    throw new Error(
-      `No image in response (finishReason: ${finishReason})${text ? `: ${text}` : ""}`
-    );
-  }
-
-  return {
-    mimeType: imagePart.inlineData.mimeType ?? "image/png",
-    base64: imagePart.inlineData.data
-  };
+}: ImageEditRequest): GeminiImageRequest => {
+  return buildSharedGeminiImageRequest({
+    prompt,
+    images: sourceImage === null ? referenceImages : [sourceImage, ...referenceImages],
+    aspectRatio: sourceImage === null ? aspectRatio : undefined
+  });
 };
 
 type ResolveGeminiApiKeyInput = {

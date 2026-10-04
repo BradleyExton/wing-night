@@ -147,6 +147,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@wingnight/avatar-head':
+        specifier: workspace:*
+        version: link:../../packages/avatar-head
       '@wingnight/minigames-brawl':
         specifier: workspace:*
         version: link:../../packages/minigames/brawl
@@ -239,6 +242,15 @@ importers:
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  packages/avatar-head:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

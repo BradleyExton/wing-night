@@ -1,0 +1,16 @@
+{
+  // The head pipeline runs in four places: the LAN server, the teaser Worker, the guest's browser
+  // and the plain-`node` import tools. So the source sees no runtime's globals (no DOM, no Node,
+  // no workerd), imports its own files with their `.ts` suffix and keeps to erasable syntax, which
+  // is what lets `node tools/…/index.mjs` import it with type stripping and no build step.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": [],
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}

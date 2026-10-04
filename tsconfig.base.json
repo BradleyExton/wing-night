@@ -4,6 +4,10 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": true,
+    // Nothing here emits, so a `.ts` suffix costs nothing — and packages/avatar-head needs it:
+    // plain-node tools import that package with type stripping, which resolves no `.js` alias,
+    // so every project that typechecks it (all its consumers) has to accept the suffix.
+    "allowImportingTsExtensions": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
