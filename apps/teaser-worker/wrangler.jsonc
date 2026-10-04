@@ -1,0 +1,64 @@
+// wingnight.tv on Cloudflare: the online teaser's static pages plus the guest portal's Worker.
+// `pnpm teaser:deploy` from the repo root builds the teaser, applies the D1 migrations and deploys.
+//
+// The pages are Workers static assets — every file in apps/client/dist-teaser, `_headers` included
+// (the noindex on every static response) — and an unknown path gets the page, so /dunlop-dash
+// loads directly. That fallback answers navigations WITHOUT running the Worker, so the Worker only
+// sees what `run_worker_first` names: the API, and the emailed sign-in links under /s/. `_headers`
+// never applies to a Worker-made response; the Worker sets its own (src/http).
+//
+// Served at wingnight.tv (and www.) as Worker custom domains: deploy creates their DNS records and
+// certificates, so the zone needs no hand-made records for either name.
+//
+// Secrets, set with `wrangler secret put <NAME>` from this directory and never written here:
+//   RESEND_API_KEY   sends the sign-in emails
+//   GEMINI_API_KEY   paints the avatar heads (milestone 2)
+//   ADMIN_API_TOKEN  opens /api/admin/* to a script (the pack pull); unset turns that door off
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wingnight",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-29",
+  "routes": [
+    { "pattern": "wingnight.tv", "custom_domain": true },
+    { "pattern": "www.wingnight.tv", "custom_domain": true }
+  ],
+  "assets": {
+    "directory": "../client/dist-teaser",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/s/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wingnight-portal",
+      // PLACEHOLDER. Brad: run `pnpm exec wrangler d1 create wingnight-portal` from this directory
+      // once and paste the database_id it prints here. Local dev works with the placeholder.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      // Created once with `pnpm exec wrangler r2 bucket create wingnight-portal`.
+      "bucket_name": "wingnight-portal"
+    }
+  ],
+  // Per-IP limit on "email me a sign-in link" (src/authRoutes); the per-address limit is D1's.
+  "ratelimits": [
+    {
+      "name": "SIGNIN_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 5, "period": 60 }
+    }
+  ],
+  "vars": {
+    "MAIL_TRANSPORT": "resend",
+    "MAIL_FROM": "party@wingnight.tv",
+    "GEMINI_TRANSPORT": "gemini",
+    // Every sign-in link is built on this, whichever host (www. included) the request came in on.
+    "PUBLIC_ORIGIN": "https://wingnight.tv"
+  }
+}

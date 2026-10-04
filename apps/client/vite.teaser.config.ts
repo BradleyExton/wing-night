@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, type Plugin, type ProxyOptions } from "vite";
 
 import { SAME_ORIGIN_SERVER_URL } from "./src/utils/resolveServerOrigin";
 
@@ -52,6 +52,30 @@ const lobbyTrackDefine =
         )
       };
 
+// The guest portal (apps/teaser-worker), which `pnpm teaser:dev` runs under `wrangler dev` here.
+// The party app's "no dev proxy" rule is the party app's: its client and server are separate
+// origins on the night as well. The teaser is the opposite — in production the pages and the
+// portal ARE one origin, wingnight.tv — so in dev Vite stands in for that origin and forwards the
+// Worker's two prefixes to it, the same two `run_worker_first` names in wrangler.jsonc. The dev
+// script pins Vite to 5173 with --strictPort, because the Worker builds its sign-in links on
+// that origin (PUBLIC_ORIGIN in apps/teaser-worker's dev script) and a drifted port would break them.
+const PORTAL_DEV_ORIGIN = process.env.TEASER_PORTAL_DEV_ORIGIN ?? "http://localhost:8787";
+
+const portalProxy: ProxyOptions = {
+  target: PORTAL_DEV_ORIGIN,
+  changeOrigin: true,
+  // The Worker refuses a state-changing request whose Origin is not its own. A page Vite served
+  // is same-origin with Vite, so that Origin is translated to the Worker's, as one origin needs no
+  // translating in production; any other Origin passes through untouched and is refused.
+  configure: (proxy) => {
+    proxy.on("proxyReq", (proxyRequest, request) => {
+      if (request.headers.origin === `http://${request.headers.host}`) {
+        proxyRequest.setHeader("origin", PORTAL_DEV_ORIGIN);
+      }
+    });
+  }
+};
+
 export default defineConfig({
   root: fileURLToPath(new URL("./teaser", import.meta.url)),
   // Filled by `tools/build-teaser`: the fonts, the chosen players' heads and the roster, copied
@@ -68,6 +92,10 @@ export default defineConfig({
     postcss: clientRoot
   },
   server: {
+    proxy: {
+      "^/api/": portalProxy,
+      "^/s/": portalProxy
+    },
     fs: {
       allow: [fileURLToPath(new URL("../..", import.meta.url))]
     }

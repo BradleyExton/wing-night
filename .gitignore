@@ -16,6 +16,10 @@ content/local/
 # build is a deploy artefact.
 apps/client/teaser-public/
 apps/client/dist-teaser/
+# The teaser Worker's local secrets and wrangler dev's local D1/R2 state.
+.dev.vars
+.dev.vars.*
+.wrangler/
 playwright-report/
 test-results/
 .playwright/

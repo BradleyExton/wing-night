@@ -1,0 +1,15 @@
+{
+  // The Worker itself: the workerd runtime's globals and nothing of Node's. Bundler resolution,
+  // because wrangler bundles it with esbuild. The tests and the node-side scripts are typechecked
+  // under tsconfig.test.json instead, since they run on Node.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "lib": ["ES2022"],
+    "types": ["@cloudflare/workers-types"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts", "src/testing/**"]
+}

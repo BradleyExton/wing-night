@@ -22,10 +22,10 @@
     "import:recreate": "node tools/import-recreate-targets/index.mjs",
     "test:import-recreate": "node --test tools/import-recreate-targets/tests/index.test.mjs",
     "teaser:prepare": "node tools/build-teaser/index.ts",
-    "teaser:dev": "pnpm teaser:prepare && pnpm --filter @wingnight/client dev:teaser",
+    "teaser:dev": "pnpm teaser:prepare && pnpm -r --parallel --filter @wingnight/teaser-worker --filter @wingnight/client dev:teaser",
     "teaser:build": "pnpm teaser:prepare && pnpm --filter @wingnight/client build:teaser",
     "teaser:card": "node tools/build-teaser/captureShareCard.mjs",
-    "teaser:deploy": "pnpm teaser:build && cd apps/client && pnpm dlx wrangler deploy --config wrangler.teaser.jsonc",
+    "teaser:deploy": "pnpm teaser:build && pnpm --filter @wingnight/teaser-worker deploy:portal",
     "test:build-teaser": "node --test tools/build-teaser/planTeaserRoster.test.ts tools/build-teaser/planSfxTakes.test.ts"
   },
   "devDependencies": {

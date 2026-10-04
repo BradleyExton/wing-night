@@ -295,6 +295,48 @@ export type {
   TextureId,
   WordmarkTreatment
 } from "./teamTheme/index.js";
+export {
+  GUEST_DISPLAY_NAME_MAX_LENGTH,
+  PORTAL_API_ROUTES,
+  PORTAL_ERROR_CODES,
+  PORTAL_GENRES,
+  PORTAL_HOME_PATH,
+  PORTAL_SESSION_COOKIE_NAME,
+  PORTAL_SIGN_IN_PATH_PREFIX,
+  TEAM_FORMATS,
+  TEAMMATE_WISHES_MAX,
+  isAdminCreateGuestRequest,
+  isAdminEditGuestRequest,
+  isEmailLinkRequest,
+  isGuestVote,
+  normalizeGuestDisplayName,
+  normalizeGuestEmail,
+  resolveAdminGuestInviteRoute,
+  resolveAdminGuestLinkRoute,
+  resolveAdminGuestRoute,
+  resolveAdminGuestSignOutRoute,
+  resolveGenreBordaPoints
+} from "./guestPortal/index.js";
+export type {
+  AdminCreateGuestRequest,
+  AdminEditGuestRequest,
+  AdminGuestStatus,
+  AdminInviteAllResult,
+  AdminInviteResult,
+  AdminMintedLink,
+  AdminSignOutResult,
+  AdminVoteSummary,
+  EmailLinkRequest,
+  GuestVote,
+  PortalErrorBody,
+  PortalErrorCode,
+  PortalGenre,
+  PortalGuest,
+  PortalMe,
+  TeamFormat,
+  VoteGenreTally,
+  VoteMutualWish
+} from "./guestPortal/index.js";
 export { LOBBY_AUDIO_ROUTE_PATH } from "./lobbyAudio/index.js";
 export { EATING_AUDIO_ROUTE_PATH } from "./eatingAudio/index.js";
 export {

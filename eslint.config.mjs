@@ -33,6 +33,8 @@ export default [
       // The online teaser's build output and its pack-filled public dir (vite.teaser.config.ts).
       "apps/client/dist-teaser/**",
       "apps/client/teaser-public/**",
+      // wrangler dev's local D1/R2 state and its bundled Worker (apps/teaser-worker).
+      "**/.wrangler/**",
       "**/coverage/**",
       "**/.cache/**",
       "**/.turbo/**",

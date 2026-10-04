@@ -9,6 +9,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./guestPortal": {
+      "types": "./src/guestPortal/index.ts",
+      "default": "./src/guestPortal/index.ts"
     }
   },
   "scripts": {
