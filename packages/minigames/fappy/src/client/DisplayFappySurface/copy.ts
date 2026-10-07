@@ -1,4 +1,4 @@
-import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
+import { MINIGAME_DEFINITIONS, CONTESTANT_CONTROLLERS, type ContestantController } from "@wingnight/shared";
 
 // Who is up after the player who is up next. The wall names the waiter first
 // so "then" has something to hang off: "Caitlin, then Dan". Empty when there
@@ -13,8 +13,9 @@ const onDeck = (waitingName: string | null, onDeckName: string | null): string =
 
 export const displayFappySurfaceCopy = {
   title: MINIGAME_DEFINITIONS.FAPPY.displayName,
-  introDescription:
-    "Your team's chickens fly a relay through a corridor of champs, against one clock. One player per section: tap to flap, knock the eagles out of your way, land on the far roof where the next bird is waiting, hand the tablet over. The quicker the whole team gets through, the more points.",
+  // Read out on the briefing. A phones turn picks up phones, not the tablet (`handset`).
+  introDescription: (handset: ContestantController): string =>
+    `Your team's chickens fly a relay through a corridor of champs, against one clock. One player per section: tap to flap, knock the eagles out of your way, land on the far roof where the next bird is waiting, ${handset === CONTESTANT_CONTROLLERS.PHONE ? "and the next player's phone takes over" : "hand the tablet over"}. The quicker the whole team gets through, the more points.`,
   waitingLabel: "Waiting for the relay to start…",
   sceneLabel: (playerName: string | null): string =>
     playerName === null ? "The corridor" : `The corridor — ${playerName}'s bird`,
@@ -55,11 +56,17 @@ export const displayFappySurfaceCopy = {
     return onDeckName === null ? head : `${head}. Then ${onDeckName}.`;
   },
   handoffCalloutName: (nextName: string | null): string => nextName ?? "Next player",
-  handoffCalloutLine: "You're up — grab the tablet",
+  // On a phones turn nobody grabs anything: the next player's phone has just come alive.
+  handoffCalloutLine: (handset: ContestantController): string =>
+    handset === CONTESTANT_CONTROLLERS.PHONE ? "You're up — your phone is live" : "You're up — grab the tablet",
   // The second line of the callout: who is up after the player it just named.
   handoffCalloutThen: (onDeckName: string): string => `then ${onDeckName}`,
-  handoffPrompt: (landedName: string | null, nextName: string | null): string => {
+  handoffPrompt: (landedName: string | null, nextName: string | null, handset: ContestantController): string => {
     const landed = landedName === null ? "Landed" : `${landedName} is through`;
+
+    if (handset === CONTESTANT_CONTROLLERS.PHONE) {
+      return nextName === null ? `${landed} — next phone's up` : `${landed} — ${nextName}, you're up on your phone`;
+    }
 
     return nextName === null ? `${landed} — pass the tablet on` : `${landed} — ${nextName}, grab the tablet`;
   },

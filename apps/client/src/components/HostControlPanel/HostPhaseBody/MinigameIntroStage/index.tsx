@@ -1,6 +1,8 @@
 import { SFX_VOLUME_DEFAULT, MUSIC_VOLUME_DEFAULT, SESSION_MODES } from "@wingnight/shared";
 
 import { ControlDeck } from "../ControlDeck";
+import { DeviceModeSurface } from "../../DeviceModeSurface";
+import { selectDeviceModeRounds } from "../../DeviceModeSurface/selectDeviceModeRounds";
 import { StageHero } from "../StageHero";
 import { MinigameSurface } from "../../MinigameSurface";
 import { MusicControlsSurface } from "../../MusicControlsSurface";
@@ -8,6 +10,7 @@ import { hostControlPanelCopy } from "../../copy";
 import { selectHeaderContext } from "../../HostMiniRail/selectHeaderContext";
 import { useMinigameHostContext } from "../../useMinigameHostContext";
 import { useHostHandlers } from "../../../../context/HostHandlersContext";
+import { resolveBriefingHandset } from "../../../../utils/resolveContestantHandset";
 import * as styles from "./styles";
 
 export const MinigameIntroStage = (): JSX.Element => {
@@ -22,6 +25,12 @@ export const MinigameIntroStage = (): JSX.Element => {
   } = useMinigameHostContext("minigame_intro");
   const headerContext = selectHeaderContext(roomState, teamNameByTeamId);
   const handlers = useHostHandlers();
+  const activeTeam = roomState?.teams.find((team) => team.id === roomState.activeRoundTeamId) ?? null;
+  const handset = resolveBriefingHandset(
+    roomState?.contestantTurn ?? null,
+    activeTeam?.playerIds ?? [],
+    roomState?.claimedPlayerIds ?? []
+  );
 
   return (
     <>
@@ -61,6 +70,12 @@ export const MinigameIntroStage = (): JSX.Element => {
           clock={null}
           canDispatchAction={canDispatchMinigameAction}
           onDispatchAction={handleDispatchMinigameAction}
+          handset={handset}
+        />
+        <DeviceModeSurface
+          rounds={selectDeviceModeRounds(roomState)}
+          lockedDeviceMode={roomState?.contestantTurn?.deviceMode ?? null}
+          onSetRoundDeviceMode={handlers.onSetRoundDeviceMode}
         />
         {/* The anthem is playing right now on the TV, so the controls for it
             belong on the phase that plays it — not parked on a settings screen

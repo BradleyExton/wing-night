@@ -37,7 +37,8 @@ export const createScoringMutationUndoSnapshot = (
     wingParticipationByPlayerId: structuredClone(state.wingParticipationByPlayerId),
     pendingWingPointsByTeamId: structuredClone(state.pendingWingPointsByTeamId),
     pendingMinigamePointsByTeamId: structuredClone(state.pendingMinigamePointsByTeamId),
-    minigameRuntimeSnapshot: captureMinigameRuntimeStateSnapshot()
+    minigameRuntimeSnapshot: captureMinigameRuntimeStateSnapshot(),
+    contestantTabletLegIndexes: state.contestantTurn === null ? null : [...state.contestantTurn.tabletLegIndexes]
   };
 };
 
@@ -79,6 +80,13 @@ export const restoreScoringMutationUndoState = (
 
   if (!isSameTurnPlay) {
     return;
+  }
+
+  if (state.contestantTurn !== null && snapshot.contestantTabletLegIndexes !== null) {
+    state.contestantTurn = {
+      ...state.contestantTurn,
+      tabletLegIndexes: [...snapshot.contestantTabletLegIndexes]
+    };
   }
 
   const minigameType = state.currentRoundConfig?.minigame ?? null;

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { SilentSurface } from "../SilentSurface/index.js";
 import type { SfxTakeUrls } from "../useSfxTakes/index.js";
 import { createGameSoundboardSlot, useGameSoundboard, type GameSoundboardFactory } from "./index.js";
 
@@ -115,4 +116,16 @@ test("does leave the board to the first cue when the listing has no takes", () =
 
   assert.equal(factory.boards.length, 1);
   assert.equal(factory.boards[0]?.takes, null);
+});
+
+test("does play nothing and build no board when the surface is a silent mirror of the TV", () => {
+  const factory = createFakeFactory();
+
+  renderToStaticMarkup(
+    <SilentSurface>
+      <Probe createBoard={factory.createBoard} cues={["flap", "crash"]} />
+    </SilentSurface>
+  );
+
+  assert.equal(factory.boards.length, 0);
 });

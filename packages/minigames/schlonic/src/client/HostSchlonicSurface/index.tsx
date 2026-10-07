@@ -75,7 +75,8 @@ export const HostSchlonicSurface = ({
   canDispatchAction,
   onDispatchAction,
   serverOrigin,
-  seat
+  seat,
+  handset
 }: MinigameHostRendererProps): JSX.Element => {
   const schlonicView = minigameHostView?.minigame === "SCHLONIC" ? minigameHostView : null;
   const canAct = canDispatchAction && schlonicView !== null;
@@ -118,7 +119,7 @@ export const HostSchlonicSurface = ({
   if (phase !== "play") {
     return (
       <div className={styles.introRoot}>
-        <p className={styles.introCard}>{hostSchlonicSurfaceCopy.introDescription}</p>
+        <p className={styles.introCard}>{hostSchlonicSurfaceCopy.introDescription(handset)}</p>
       </div>
     );
   }

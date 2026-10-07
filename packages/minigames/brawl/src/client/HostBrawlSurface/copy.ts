@@ -1,8 +1,11 @@
+import { CONTESTANT_CONTROLLERS, type ContestantController } from "@wingnight/shared";
+
 import { formatGoonsTally } from "../goonsTally/index.js";
 
 export const hostBrawlSurfaceCopy = {
-  introDescription:
-    "Your chickens brawl down Dunlop Street to the Spirit Catcher as a relay — one block each, and the street belongs to the geese. Hold your left thumb down anywhere on the left half and the hen walks the way she faces; pull it back to turn her round. Tap or hold anywhere on the right half to peck. The goons come in from both sides in waves and the street holds still until the wave is down — then GO, and walk on. A goose that honks is about to lunge: step back or peck first — and a goose in a helmet only feels a peck while it honks. Three hearts, then the geese carry you to the bay, and the next teammate takes the tablet — who can spend 3 of the team's worth on a fourth heart before they start. Everything you put down counts, whatever happens to you after.",
+  // Read out on the briefing. A phones turn picks up phones, not the tablet (`handset`).
+  introDescription: (handset: ContestantController): string =>
+    `Your chickens brawl down Dunlop Street to the Spirit Catcher as a relay — one block each, and the street belongs to the geese. Hold your left thumb down anywhere on the left half and the hen walks the way she faces; pull it back to turn her round. Tap or hold anywhere on the right half to peck. The goons come in from both sides in waves and the street holds still until the wave is down — then GO, and walk on. A goose that honks is about to lunge: step back or peck first — and a goose in a helmet only feels a peck while it honks. Three hearts, then the geese carry you to the bay, ${handset === CONTESTANT_CONTROLLERS.PHONE ? "and the next teammate's phone comes alive — they can spend" : "and the next teammate takes the tablet — who can spend"} 3 of the team's worth on a fourth heart before they start. Everything you put down counts, whatever happens to you after.`,
   waitingStreetLabel: "No street is loaded. Check the round's BRAWL rules.",
   blockCounter: (blockNumber: number, blocksTotal: number): string => `Block ${blockNumber} of ${blocksTotal}`,
   readyHint: (playerName: string | null): string =>

@@ -1,7 +1,7 @@
 import { useMemo, useRef, type ReactNode } from "react";
-import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import type { MinigameDisplayRendererProps, MinigameHandset } from "@wingnight/minigames-core";
 import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
-import type { FappyMinigameDisplayView, FappyMinigameLeg } from "@wingnight/shared";
+import type { FappyMinigameDisplayView, FappyMinigameLeg, ContestantController } from "@wingnight/shared";
 import { resolveFappyGates } from "@wingnight/shared";
 
 import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
@@ -18,11 +18,11 @@ import { MarqueeReadout } from "./MarqueeReadout/index.js";
 import { displayFappySurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
-const FappyIntro = (): JSX.Element => {
+const FappyIntro = ({ handset }: { handset: MinigameHandset }): JSX.Element => {
   return (
     <div className={styles.container}>
       <h2 className={styles.introTitle}>{displayFappySurfaceCopy.title}</h2>
-      <p className={styles.introDescription}>{displayFappySurfaceCopy.introDescription}</p>
+      <p className={styles.introDescription}>{displayFappySurfaceCopy.introDescription(handset)}</p>
     </div>
   );
 };
@@ -73,15 +73,17 @@ const RelayResult = ({
 // read from the sofa, over the landing the room just watched.
 const HandoffCallout = ({
   nextName,
-  onDeckName
+  onDeckName,
+  handset
 }: {
   nextName: string | null;
   onDeckName: string | null;
+  handset: ContestantController;
 }): JSX.Element => (
   <div className={styles.handoffOverlay} data-fappy-handoff="display">
     <div className={styles.handoffCard}>
       <span className={styles.handoffName}>{displayFappySurfaceCopy.handoffCalloutName(nextName)}</span>
-      <span className={styles.handoffLine}>{displayFappySurfaceCopy.handoffCalloutLine}</span>
+      <span className={styles.handoffLine}>{displayFappySurfaceCopy.handoffCalloutLine(handset)}</span>
       {/* And who is up after them, so the room gets the next one moving.
           Nothing at all when there is nobody after. */}
       {onDeckName !== null && (
@@ -99,10 +101,11 @@ const resolveStatusLine = (
   playerName: string | null,
   waitingName: string | null,
   onDeckName: string | null,
-  hold: LegHold | null
+  hold: LegHold | null,
+  handset: ContestantController
 ): string => {
   if (hold?.kind === "handoff") {
-    return displayFappySurfaceCopy.handoffPrompt(playerName, waitingName);
+    return displayFappySurfaceCopy.handoffPrompt(playerName, waitingName, handset);
   }
 
   if (view.phase === "finished") {
@@ -129,13 +132,15 @@ const FappyPlayBody = ({
   activeTeamName,
   clock,
   clockLine,
-  serverOrigin
+  serverOrigin,
+  handset
 }: {
   view: FappyMinigameDisplayView;
   activeTeamName: string | null;
   clock: ReactNode;
   clockLine: ReactNode;
   serverOrigin: string | null;
+  handset: ContestantController;
 }): JSX.Element => {
   const sceneRef = useRef<FappySceneHandle>(null);
   // A cleared leg stays on the wall while its landing and the handoff play,
@@ -231,12 +236,24 @@ const FappyPlayBody = ({
           />
         </div>
         {hold?.kind === "handoff" && (
-          <HandoffCallout nextName={waitingBird?.playerName ?? null} onDeckName={onDeckName} />
+          <HandoffCallout
+            nextName={waitingBird?.playerName ?? null}
+            onDeckName={onDeckName}
+            handset={handset}
+          />
         )}
         {isOver && hold === null && <RelayResult view={view} finishClock={finishClock} />}
       </div>
       <p className={styles.statusLine}>
-        {resolveStatusLine(view, leg, bird.playerName, waitingBird?.playerName ?? null, onDeckName, hold)}
+        {resolveStatusLine(
+          view,
+          leg,
+          bird.playerName,
+          waitingBird?.playerName ?? null,
+          onDeckName,
+          hold,
+          handset
+        )}
       </p>
     </div>
   );
@@ -248,12 +265,13 @@ export const DisplayFappySurface = ({
   activeTeamName,
   clock,
   clockLine,
-  serverOrigin
+  serverOrigin,
+  handset
 }: MinigameDisplayRendererProps): JSX.Element => {
   const fappyView = minigameDisplayView?.minigame === "FAPPY" ? minigameDisplayView : null;
 
   if (phase !== "play") {
-    return <FappyIntro />;
+    return <FappyIntro handset={handset} />;
   }
 
   if (fappyView === null) {
@@ -271,6 +289,7 @@ export const DisplayFappySurface = ({
       clock={clock}
       clockLine={clockLine}
       serverOrigin={serverOrigin}
+      handset={handset}
     />
   );
 };

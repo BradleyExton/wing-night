@@ -262,6 +262,7 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
   // the phone may send it as the tablet does — but the server sends it too (`selectDeadlineAction`).
   contestantActionTypes: ["flap", "endLeg", "timeOut"],
   contestantRetakeActionType: "retakeLeg",
+  contestantResetActionType: "resetTurn",
   isRules: isFappyRules,
   initialize: (input) => {
     const rules = resolveFappyRules(input.rules);

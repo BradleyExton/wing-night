@@ -31,6 +31,8 @@ const renderSurface = (
       minigameDisplayView={minigameDisplayView}
       activeTeamName="Molten Metal"
       clock={clock}
+      handset="tablet"
+
       clockLine={null}
       serverOrigin="http://localhost:3000"
     />

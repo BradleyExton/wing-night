@@ -26,6 +26,7 @@ const triviaHostViewFixture: MinigameHostView = {
 test("renders trivia controls from minigame host view during MINIGAME_PLAY", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      handset="tablet"
       phase="play"
       minigameType="TRIVIA"
       minigameHostView={triviaHostViewFixture}
@@ -56,6 +57,7 @@ test("renders trivia controls from minigame host view during MINIGAME_PLAY", () 
 test("renders waiting fallback when host view is unavailable", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      handset="tablet"
       phase="play"
       minigameType="TRIVIA"
       minigameHostView={null}
@@ -76,6 +78,7 @@ test("renders waiting fallback when host view is unavailable", () => {
 test("renders GEO guessing surface for configured geo minigame", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      handset="tablet"
       phase="play"
       minigameType="GEO"
       minigameHostView={{
@@ -118,6 +121,7 @@ test("renders GEO guessing surface for configured geo minigame", () => {
 test("renders GEO result card after a submitted guess", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      handset="tablet"
       phase="play"
       minigameType="GEO"
       minigameHostView={{
@@ -165,6 +169,7 @@ test("renders GEO result card after a submitted guess", () => {
 test("renders intro surface for configured trivia minigame", () => {
   const html = renderToStaticMarkup(
     <MinigameSurface
+      handset="tablet"
       phase="intro"
       minigameType="TRIVIA"
       minigameHostView={null}
@@ -206,6 +211,7 @@ test("does not render the sandbox's dev actions when the production host draws M
   const hostView = mountRuntimePlugin.selectHostView({ state: state ?? null, rules: mountDevManifest.rules, content: null });
   const html = renderToStaticMarkup(
     <MinigameSurface
+      handset="tablet"
       phase="play"
       minigameType="MOUNT"
       minigameHostView={hostView}

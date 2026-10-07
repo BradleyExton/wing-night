@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { type MinigameHostView, type MinigameType } from "@wingnight/shared";
 import type {
+  MinigameHandset,
   MinigameSurfacePhase,
   SerializableValue
 } from "@wingnight/minigames-core";
@@ -25,6 +26,9 @@ type MinigameSurfaceProps = {
   clock: ReactNode;
   canDispatchAction: boolean;
   onDispatchAction: (actionType: string, actionPayload: SerializableValue) => void;
+  // Who plays the leg in hand (`resolveLegHandset`), or on the briefing who will
+  // (`resolveBriefingHandset`), for the game's own "pass the tablet" copy.
+  handset: MinigameHandset;
 };
 
 export const MinigameSurface = ({
@@ -36,7 +40,8 @@ export const MinigameSurface = ({
   rail,
   clock,
   canDispatchAction,
-  onDispatchAction
+  onDispatchAction,
+  handset
 }: MinigameSurfaceProps): JSX.Element => {
   // The host tablet is a different origin from the server as well, so a
   // minigame surface that renders a content-pack image needs the absolute one.
@@ -101,6 +106,7 @@ export const MinigameSurface = ({
             onDispatchAction={onDispatchAction}
             serverOrigin={serverOrigin}
             seat="host"
+            handset={handset}
           />
         </div>
       </section>
@@ -127,6 +133,7 @@ export const MinigameSurface = ({
           onDispatchAction={onDispatchAction}
           serverOrigin={serverOrigin}
           seat="host"
+          handset={handset}
         />
       </div>
     </section>

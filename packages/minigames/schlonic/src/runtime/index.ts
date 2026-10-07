@@ -183,6 +183,7 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
   // The phone takes its own run and says when it is over; skipping and resetting stay the host's.
   contestantActionTypes: ["press", "release", "endRun"],
   contestantRetakeActionType: "retakeRun",
+  contestantResetActionType: "resetTurn",
   isRules: isSchlonicRules,
   initialize: (input) => {
     const rules = resolveSchlonicRules(input.rules);

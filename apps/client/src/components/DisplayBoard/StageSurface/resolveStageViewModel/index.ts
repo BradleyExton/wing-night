@@ -57,6 +57,11 @@ export type StageViewModel = {
   activeTeamTheme: TeamTheme | null;
   activeTeamPlayers: Player[];
   minigameDisplayView: DisplayRoomStateSnapshot["minigameDisplayView"];
+  // An arcade turn's locked device mode and whose leg it is, or null outside one: the TV tells
+  // the team to grab the tablet or their phones, and an arcade wall says it at each handoff.
+  contestantTurn: DisplayRoomStateSnapshot["contestantTurn"];
+  // Faces a phone holds: a phones briefing only sends the team to their phones when they have one.
+  claimedPlayerIds: string[];
   eatingTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
   minigameTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
   fallbackEatingSeconds: number | null;
@@ -210,6 +215,8 @@ export const resolveStageViewModel = (
     activeTeamTheme,
     activeTeamPlayers,
     minigameDisplayView,
+    contestantTurn: roomState?.contestantTurn ?? null,
+    claimedPlayerIds: roomState?.claimedPlayerIds ?? [],
     eatingTimerSnapshot,
     minigameTimerSnapshot,
     fallbackEatingSeconds: roomState?.gameConfig?.timers.eatingSeconds ?? null,

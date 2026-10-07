@@ -13,11 +13,13 @@ import { logError, logManualScoreAdjustment } from "../../logger/index.js";
 import {
   clearActiveMinigameRuntimeState,
   dispatchActiveMinigameRuntimeAction,
+  isContestantResetAction,
   isTransientMinigameAction,
   syncActiveMinigameRuntimeWithPendingPoints
 } from "../../minigames/runtime/index.js";
 import {
   holdContestantLegOnTablet,
+  releaseContestantTabletLegs,
   isLegHeldByPhone,
   resolveContestantLegForAction
 } from "../contestantTurnState/index.js";
@@ -303,6 +305,11 @@ export const dispatchMinigameAction = defineRoomMutation({
 
     if (outcome.didRuntimeMutate && tabletLegIndex !== null) {
       return holdContestantLegOnTablet(roomState, tabletLegIndex) || outcome.didProjectionChange;
+    }
+
+    // The turn starts over with every log fresh: the legs the tablet held go back to the phones.
+    if (outcome.didRuntimeMutate && isContestantResetAction(minigameId, actionType)) {
+      return releaseContestantTabletLegs(roomState) || outcome.didProjectionChange;
     }
 
     return outcome.didProjectionChange;

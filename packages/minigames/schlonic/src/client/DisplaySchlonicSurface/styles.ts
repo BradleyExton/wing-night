@@ -45,15 +45,4 @@ export const runEnter = "h-full w-full motion-safe:animate-[scene-enter_420ms_ea
 
 export const resultOverlay = `pointer-events-none absolute inset-0 z-10 flex items-center justify-center ${sceneZoneVeil}`;
 
-// Who takes the tablet next, under the result plaque's rule: the name large, the call to
-// grab the tablet under it. Sans like the rest of the plaque — SCHLONIC's italic serif lived
-// outside DESIGN.md's licences.
-export const handoff = "flex flex-col items-start gap-1";
-
-export const handoffName =
-  "text-[clamp(2rem,4.4vw,4rem)] font-black uppercase leading-none tracking-[0.03em] text-text";
-
-export const handoffLine =
-  "text-[clamp(0.85rem,1.1vw,1.3rem)] font-extrabold uppercase tracking-[0.26em] text-primary";
-
 export const statusLine = stageStatusLine;

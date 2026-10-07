@@ -80,6 +80,7 @@ const render = (
       }}
       serverOrigin={serverOrigin}
       seat={seat}
+      handset="tablet"
     />
   );
 };

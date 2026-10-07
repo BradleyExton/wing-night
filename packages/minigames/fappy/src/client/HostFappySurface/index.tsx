@@ -1,5 +1,10 @@
 import { useEffect } from "react";
-import { isSpeakerSeat, type MinigameHostRendererProps, type MinigameSeat } from "@wingnight/minigames-core";
+import {
+  isSpeakerSeat,
+  type MinigameHandset,
+  type MinigameHostRendererProps,
+  type MinigameSeat
+} from "@wingnight/minigames-core";
 import type { FappyMinigameHostView, FappyMinigameLeg } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
@@ -68,7 +73,8 @@ const resolveHint = (
   view: FappyMinigameHostView,
   canAct: boolean,
   hold: LegHold | null,
-  seat: MinigameSeat
+  seat: MinigameSeat,
+  handset: MinigameHandset
 ): string | null => {
   const legIndex = Math.min(view.legIndex, view.legsPerTurn - 1);
   const leg = view.legs[legIndex];
@@ -81,7 +87,8 @@ const resolveHint = (
   if (hold?.kind === "handoff") {
     return hostFappySurfaceCopy.handoffHint(
       resolvePlayerName(view.legs[hold.legIndex] ?? null),
-      resolvePlayerName(leg ?? null)
+      resolvePlayerName(leg ?? null),
+      handset
     );
   }
 
@@ -130,7 +137,8 @@ export const HostFappySurface = ({
   canDispatchAction,
   onDispatchAction,
   serverOrigin,
-  seat
+  seat,
+  handset
 }: MinigameHostRendererProps): JSX.Element => {
   const fappyView = minigameHostView?.minigame === "FAPPY" ? minigameHostView : null;
   const canAct = canDispatchAction && fappyView !== null;
@@ -158,7 +166,7 @@ export const HostFappySurface = ({
     serverOrigin,
     isSpeaker: isSpeakerSeat(seat)
   });
-  const hint = fappyView === null ? null : resolveHint(fappyView, canAct, hold, seat);
+  const hint = fappyView === null ? null : resolveHint(fappyView, canAct, hold, seat, handset);
 
   const dispatch = (actionType: string): void => {
     onDispatchAction(actionType, {});
@@ -180,7 +188,7 @@ export const HostFappySurface = ({
   if (phase !== "play") {
     return (
       <div className={styles.introRoot}>
-        <p className={styles.introCard}>{hostFappySurfaceCopy.introDescription}</p>
+        <p className={styles.introCard}>{hostFappySurfaceCopy.introDescription(handset)}</p>
       </div>
     );
   }

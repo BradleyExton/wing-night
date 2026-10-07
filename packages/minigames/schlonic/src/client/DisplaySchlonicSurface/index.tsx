@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
-import type { SchlonicMinigameDisplayView } from "@wingnight/shared";
+import type { ContestantController, SchlonicMinigameDisplayView } from "@wingnight/shared";
 
 import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
 import { resolveRunPlayerName } from "../resolveRunPlayerName/index.js";
@@ -17,6 +17,7 @@ import { flyWings, resolveCentre, resolveWingFlightCount } from "../flyWings/ind
 import { WingFlight } from "../WingFlight/index.js";
 import { ZoneTrack } from "../ZoneTrack/index.js";
 import { displaySchlonicSurfaceCopy } from "./copy.js";
+import { HoldPlaque } from "./HoldPlaque/index.js";
 import * as styles from "./styles.js";
 
 const SchlonicIntro = (): JSX.Element => (
@@ -25,56 +26,6 @@ const SchlonicIntro = (): JSX.Element => (
     <p className={styles.introDescription}>{displaySchlonicSurfaceCopy.introDescription}</p>
   </div>
 );
-
-// The beat over a run that just ended: how it went, and — when the tablet is changing hands —
-// who takes it. One card, the house `<ResultPlaque>` (DESIGN.md §2.2E), with who is next under
-// its rule. A skipped run has no ending to show, so on a handoff the card is only the name, and
-// on a finish there is no card at all: the points plaque follows.
-// Every plaque here is `silent`: the board's own cues (post, fall, wipeout, handoff, finish) sound
-// these moments when the wall shows them, and the house sting on top would be a second voice.
-const HoldPlaque = ({ hold, nextName }: { hold: RunHold; nextName: string | null }): JSX.Element | null => {
-  const { outcome } = hold;
-  const showsNext = hold.kind === "handoff";
-
-  // A skipped run is not a wipeout: the card names who is next and says nothing about how it
-  // went — and a skipped run that hands nothing on has no card at all.
-  if (outcome === "skipped") {
-    if (!showsNext) {
-      return null;
-    }
-
-    return (
-      <div className={styles.resultOverlay} data-schlonic-outcome={hold.outcome}>
-        <ResultPlaque tone="neutral" silent
-          kicker={displaySchlonicSurfaceCopy.handoffCalloutLine}
-          title={displaySchlonicSurfaceCopy.handoffCalloutName(nextName)}
-        />
-      </div>
-    );
-  }
-
-  const handoff = showsNext ? (
-    <div className={styles.handoff} data-schlonic-handoff="display">
-      <span className={styles.handoffName}>
-        {displaySchlonicSurfaceCopy.handoffCalloutName(nextName)}
-      </span>
-      <span className={styles.handoffLine}>{displaySchlonicSurfaceCopy.handoffCalloutLine}</span>
-    </div>
-  ) : null;
-
-  return (
-    <div className={styles.resultOverlay} data-schlonic-outcome={hold.outcome}>
-      <ResultPlaque
-        tone={outcome === "cleared" ? "hit" : "miss"}
-        silent
-        title={displaySchlonicSurfaceCopy.outcomeTitle(outcome)}
-        detail={displaySchlonicSurfaceCopy.outcomeBlurb(outcome, hold.wings)}
-      >
-        {handoff}
-      </ResultPlaque>
-    </div>
-  );
-};
 
 const FinishPlaque = ({ view }: { view: SchlonicMinigameDisplayView }): JSX.Element => (
   <div className={styles.resultOverlay} data-schlonic-result="finished">
@@ -113,13 +64,15 @@ const SchlonicPlayBody = ({
   activeTeamName,
   clock,
   clockLine,
-  serverOrigin
+  serverOrigin,
+  handset
 }: {
   view: SchlonicMinigameDisplayView;
   activeTeamName: string | null;
   clock: ReactNode;
   clockLine: ReactNode;
   serverOrigin: string | null;
+  handset: ContestantController;
 }): JSX.Element => {
   const sceneRef = useRef<SchlonicSceneHandle>(null);
   // Written by the mirror's paint loop: the wings the runner on the wall is holding, and the
@@ -266,7 +219,9 @@ const SchlonicPlayBody = ({
         <span className={styles.venuePlaque} data-schlonic-venue>
           {displaySchlonicSurfaceCopy.zoneName}
         </span>
-        {hold !== null && isCardUp && <HoldPlaque hold={hold} nextName={resolveRunPlayerName(nextRun)} />}
+        {hold !== null && isCardUp && (
+          <HoldPlaque hold={hold} nextName={resolveRunPlayerName(nextRun)} handset={handset} />
+        )}
         {isFinished && hold === null && <FinishPlaque view={view} />}
       </div>
       <p className={styles.statusLine}>{resolveStatusLine(view, runner.playerName, hold)}</p>
@@ -280,7 +235,8 @@ export const DisplaySchlonicSurface = ({
   activeTeamName,
   clock,
   clockLine,
-  serverOrigin
+  serverOrigin,
+  handset
 }: MinigameDisplayRendererProps): JSX.Element => {
   const schlonicView = minigameDisplayView?.minigame === "SCHLONIC" ? minigameDisplayView : null;
 
@@ -303,6 +259,7 @@ export const DisplaySchlonicSurface = ({
       clock={clock}
       clockLine={clockLine}
       serverOrigin={serverOrigin}
+      handset={handset}
     />
   );
 };

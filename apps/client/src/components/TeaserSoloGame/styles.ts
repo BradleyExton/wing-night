@@ -9,15 +9,3 @@ export const railBack =
 export const railBrand = "text-mutedWarm";
 
 export const railTitle = "text-primary";
-
-// A runner wants the street left to right, so a phone held upright gets asked to turn instead
-// of a street squeezed into a letterbox.
-export const rotate =
-  "fixed inset-0 z-40 hidden flex-col items-center justify-center gap-2 bg-bg px-8 text-center portrait:flex";
-
-export const rotateTitle = "m-0 text-2xl font-black uppercase leading-tight text-text";
-
-export const rotateBody = "m-0 font-voice text-lg italic text-mutedWarm";
-
-// A phone with rotation lock on never turns, so without this the card is a dead end.
-export const rotateLockHint = "m-0 mt-4 text-sm text-mutedWarm/80";

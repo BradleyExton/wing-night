@@ -107,7 +107,8 @@ export const HostJoustSurface = ({
   canDispatchAction,
   onDispatchAction,
   serverOrigin,
-  seat
+  seat,
+  handset
 }: MinigameHostRendererProps): JSX.Element => {
   const joustView = minigameHostView?.minigame === "JOUST" ? minigameHostView : null;
   const { dispatchVerdict, isSettling: isVerdictSettling } =
@@ -119,7 +120,7 @@ export const HostJoustSurface = ({
   if (phase !== "play") {
     return (
       <div className={styles.introRoot}>
-        <p className={styles.introCard}>{hostJoustSurfaceCopy.introDescription}</p>
+        <p className={styles.introCard}>{hostJoustSurfaceCopy.introDescription(handset)}</p>
       </div>
     );
   }

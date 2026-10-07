@@ -316,6 +316,11 @@ export const resolveContestantRetakeActionType = (minigameId: MinigameType): str
   return resolveMinigameRuntimePlugin(minigameId).contestantRetakeActionType ?? null;
 };
 
+// Whether this host action starts the whole turn over (`contestantResetActionType`).
+export const isContestantResetAction = (minigameId: MinigameType, actionType: string): boolean => {
+  return resolveMinigameRuntimePlugin(minigameId).contestantResetActionType === actionType;
+};
+
 const selectFromActiveRuntime = <TResult>(
   rules: SerializableValue | null,
   select: (

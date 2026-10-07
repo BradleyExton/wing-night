@@ -1,4 +1,4 @@
-import { MINIGAME_DEFINITIONS } from "@wingnight/shared";
+import { MINIGAME_DEFINITIONS, CONTESTANT_CONTROLLERS, type ContestantController } from "@wingnight/shared";
 
 export const displaySchlonicSurfaceCopy = {
   title: MINIGAME_DEFINITIONS.SCHLONIC.displayName,
@@ -44,7 +44,9 @@ export const displaySchlonicSurfaceCopy = {
     return outcome === "fell" ? "Everything went down with it" : "Nothing left to lose";
   },
   handoffCalloutName: (nextName: string | null): string => nextName ?? "Next up",
-  handoffCalloutLine: "You're up — grab the tablet",
+  // On a phones turn nobody grabs anything: the next rider's phone has just come alive.
+  handoffCalloutLine: (handset: ContestantController): string =>
+    handset === CONTESTANT_CONTROLLERS.PHONE ? "You're up — your phone is live" : "You're up — grab the tablet",
   finishedTitle: "Zone clear",
   finishedBlurb: (banked: number, par: number): string => `${banked} of ${par} wings`,
   points: (points: number): string => `+${points}`

@@ -54,6 +54,8 @@ const render = (view: BrawlMinigameDisplayView | null, phase: "intro" | "play" =
       minigameDisplayView={view}
       activeTeamName="Team Alpha"
       clock={<span data-test-clock />}
+      handset="tablet"
+
       clockLine={<span data-test-clock-line />}
       serverOrigin={null}
     />
@@ -168,7 +170,7 @@ test("does hang one pip per goon of the opening wave on the wave meter, each at 
 });
 
 test("does call the next player up by name in the show's voice when the hen makes the handoff", () => {
-  const markup = renderToStaticMarkup(<BeatCallout hold={createHold()} nextName="Morgan" />);
+  const markup = renderToStaticMarkup(<BeatCallout hold={createHold()} nextName="Morgan" handset="tablet" />);
 
   assert.ok(markup.includes('data-brawl-beat-callout="cleared"'));
   assert.match(markup, /data-brawl-handoff-callout="display"[^>]*>Morgan</);
@@ -176,26 +178,33 @@ test("does call the next player up by name in the show's voice when the hen make
 });
 
 test("does put the bay or the bell first and the handoff under it when the block went wrong", () => {
-  const bay = renderToStaticMarkup(<BeatCallout hold={createHold({ outcome: "ko" })} nextName="Morgan" />);
-  const bell = renderToStaticMarkup(<BeatCallout hold={createHold({ outcome: "timeout" })} nextName="Morgan" />);
+  const bay = renderToStaticMarkup(<BeatCallout hold={createHold({ outcome: "ko" })} nextName="Morgan" handset="tablet" />);
+  const bell = renderToStaticMarkup(<BeatCallout hold={createHold({ outcome: "timeout" })} nextName="Morgan" handset="tablet" />);
 
   assert.match(bay, /data-brawl-beat-line="bay"[^>]*>Into the bay!</);
   assert.ok(bay.includes('data-brawl-handoff-callout="display"'));
   assert.match(bell, /data-brawl-beat-line="bell"[^>]*>Time!</);
 
   // The last block hands nothing on.
-  const lastBay = renderToStaticMarkup(<BeatCallout hold={createHold({ outcome: "ko", kind: "finish" })} nextName={null} />);
+  const lastBay = renderToStaticMarkup(<BeatCallout hold={createHold({ outcome: "ko", kind: "finish" })} nextName={null} handset="tablet" />);
 
   assert.ok(lastBay.includes("Into the bay!"));
   assert.ok(!lastBay.includes("data-brawl-handoff-callout"));
 });
 
+test("does tell the room the next phone is live when the next block is played on a phone", () => {
+  const markup = renderToStaticMarkup(<BeatCallout hold={createHold()} nextName="Morgan" handset="phone" />);
+
+  assert.ok(markup.includes("Your phone is live,"));
+  assert.ok(!markup.includes("Hand it to"));
+});
+
 test("does say nothing over a skipped block but who is next when the tablet changes hands", () => {
-  const skipped = renderToStaticMarkup(<BeatCallout hold={createHold({ outcome: "skipped" })} nextName="Morgan" />);
+  const skipped = renderToStaticMarkup(<BeatCallout hold={createHold({ outcome: "skipped" })} nextName="Morgan" handset="tablet" />);
 
   assert.ok(skipped.includes("Morgan"));
   assert.ok(!skipped.includes("Into the bay"));
-  assert.equal(renderToStaticMarkup(<BeatCallout hold={createHold({ outcome: "skipped", kind: "finish" })} nextName={null} />), "");
+  assert.equal(renderToStaticMarkup(<BeatCallout hold={createHold({ outcome: "skipped", kind: "finish" })} nextName={null} handset="tablet" />), "");
 });
 
 test("does post the turn's points and no standings once the team is through", () => {

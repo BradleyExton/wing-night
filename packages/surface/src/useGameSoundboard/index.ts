@@ -1,6 +1,7 @@
 import type { Soundboard } from "@wingnight/audio";
 import { useCallback, useEffect, useRef } from "react";
 
+import { useIsSilentSurface } from "../SilentSurface/index.js";
 import { useSfxTakes, type SfxTakeUrls } from "../useSfxTakes/index.js";
 
 // A game's board factory (`createFappySoundboard` and its kin): called bare for a
@@ -58,8 +59,11 @@ export type GameSoundboardInput<Cue extends string> = {
 export const useGameSoundboard = <Cue extends string>({
   createBoard,
   takesUrl,
-  isSpeaker = true
+  isSpeaker: isSpeakerSeat = true
 }: GameSoundboardInput<Cue>): PlayGameCue<Cue> => {
+  // A surface inside `<SilentSurface>` is a mirror of the TV, not the TV: never a speaker.
+  const isSilent = useIsSilentSurface();
+  const isSpeaker = isSpeakerSeat && !isSilent;
   const takes = useSfxTakes(isSpeaker ? takesUrl : null);
   const slotRef = useRef<GameSoundboardSlot<Cue> | null>(null);
   const isSpeakerRef = useRef(isSpeaker);

@@ -18,6 +18,10 @@ import * as styles from "./styles";
 import { useEatingCountdown } from "./useEatingCountdown";
 import { useMinigameClockSound } from "./useMinigameClockSound";
 import { useMinigameCountdown } from "./useMinigameCountdown";
+import {
+  resolveBriefingHandset,
+  resolveLegHandset
+} from "../../../utils/resolveContestantHandset";
 import { resolveLeadingTeams } from "../../../utils/resolveLeadingTeams";
 import { resolveSortedStandings } from "../../../utils/resolveSortedStandings";
 
@@ -85,6 +89,15 @@ const MinigameIntroBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
       activeTeamTheme={stageViewModel.activeTeamTheme}
       activeTeamPlayers={stageViewModel.activeTeamPlayers}
       minigameType={stageViewModel.minigameType}
+      handset={
+        stageViewModel.contestantTurn === null
+          ? null
+          : resolveBriefingHandset(
+              stageViewModel.contestantTurn,
+              stageViewModel.activeTeamPlayers.map((player) => player.id),
+              stageViewModel.claimedPlayerIds
+            )
+      }
     />
   );
 };
@@ -99,6 +112,7 @@ const MinigamePlayBody = ({
       minigameType={stageViewModel.minigameType}
       activeTeamName={stageViewModel.activeTeamName}
       minigameDisplayView={stageViewModel.minigameDisplayView}
+      handset={resolveLegHandset(stageViewModel.contestantTurn)}
       remainingTimerSeconds={liveMinigameRemainingSeconds}
       totalTimerSeconds={
         stageViewModel.minigameTimerSnapshot !== null

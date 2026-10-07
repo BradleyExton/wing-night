@@ -60,7 +60,8 @@ export const HostBrawlSurface = ({
   canDispatchAction,
   onDispatchAction,
   serverOrigin,
-  seat
+  seat,
+  handset
 }: MinigameHostRendererProps): JSX.Element => {
   const brawlView = minigameHostView?.minigame === "BRAWL" ? minigameHostView : null;
   const canAct = canDispatchAction && brawlView !== null;
@@ -93,7 +94,7 @@ export const HostBrawlSurface = ({
   if (phase !== "play") {
     return (
       <div className={styles.introRoot}>
-        <p className={styles.introCard}>{hostBrawlSurfaceCopy.introDescription}</p>
+        <p className={styles.introCard}>{hostBrawlSurfaceCopy.introDescription(handset)}</p>
       </div>
     );
   }

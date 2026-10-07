@@ -5,6 +5,7 @@ import {
   readFeaturedPlayers
 } from "@wingnight/shared";
 import type {
+  ContestantController,
   MinigameDisplayView,
   MinigameHostView,
   MinigameType,
@@ -140,6 +141,10 @@ export type MinigameRuntimePlugin = {
   // could never continue. Absent for a game whose legs are atomic (a JOUST shot): taking one
   // back only moves the next leg to the tablet.
   contestantRetakeActionType?: string;
+  // Optional, beside the hooks above: the host action that starts the whole turn over from its
+  // first leg with every log fresh. Legs the tablet held (taken back, or begun on the tablet) go
+  // back to their contestants' phones when it lands.
+  contestantResetActionType?: string;
   // Optional: an action the SERVER sends on its own clock — a deadline the game enforces with no
   // device's help, so it still lands with the phone that was playing gone. Null while there is
   // none. Read after every broadcast; the server dispatches `actionType` at `atMs` (its own wall
@@ -204,6 +209,9 @@ export type MinigameHostRendererProps = {
   // Who the surface is in front of (`MinigameSeat`). Required, so every shell says which seat
   // it is; a game that has nothing seat-specific — every non-arcade one — simply ignores it.
   seat: MinigameSeat;
+  // Who plays the leg in hand (`MinigameHandset`), for the copy that tells players what to pick
+  // up: "pass the tablet" or "their phone is live". Games without phone turns ignore it.
+  handset: MinigameHandset;
 };
 
 // Who a host surface is in front of: one union, never a set of flags (ADR-0002 guardrail 2).
@@ -253,7 +261,18 @@ export type MinigameDisplayRendererProps = {
   // would 404 against the Vite origin. `null` until the host app has resolved
   // it — resolution reads `window`, so it happens in an effect.
   serverOrigin: string | null;
+  // Who plays the leg in hand (`MinigameHandset`). A fact the room is told, not a behaviour: an
+  // arcade relay's wall says "grab the tablet" or "your phone is live" at the handoff.
+  handset: MinigameHandset;
 };
+
+// Who plays the leg in hand of an arcade relay: the tablet, passed hand to hand, or the
+// contestant's own phone. What the server says actually holds the leg (`contestantTurn
+// .controller`), never just the turn's mode — a phones turn whose next player has no phone
+// plays that leg on the tablet, and the copy has to say so. On a briefing, before any leg is in
+// hand: "phone" when the turn is on phones and someone on the team has one. Every game with no
+// phone turns, and every harness with no room, says "tablet".
+export type MinigameHandset = ContestantController;
 
 export type MinigameRendererBundle = {
   HostSurface: ComponentType<MinigameHostRendererProps>;

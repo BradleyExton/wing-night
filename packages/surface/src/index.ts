@@ -32,6 +32,9 @@ export {
   type ResultPlaqueProps,
   type ResultPlaqueTone
 } from "./ResultPlaque/index.js";
+// A mirror of the TV drawn somewhere that is not the room's speaker (the tablet's phone monitor):
+// every board under it stays silent.
+export { SilentSurface, useIsSilentSurface } from "./SilentSurface/index.js";
 // The house cues, played from a surface (`@wingnight/audio` holds the board).
 export { useHouseSoundboard, type PlayHouseCue } from "./useHouseSoundboard/index.js";
 // A game's recorded takes, fetched from the pack for its board (`@wingnight/audio`).

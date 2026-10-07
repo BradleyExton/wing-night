@@ -30,7 +30,8 @@ test("does give the phone hooks to exactly the four arcade relays", () => {
     return (
       runtimePlugin.selectContestant !== undefined ||
       runtimePlugin.contestantActionTypes !== undefined ||
-      runtimePlugin.contestantRetakeActionType !== undefined
+      runtimePlugin.contestantRetakeActionType !== undefined ||
+      runtimePlugin.contestantResetActionType !== undefined
     );
   });
 
@@ -41,6 +42,8 @@ test("does give the phone hooks to exactly the four arcade relays", () => {
 
     assert.ok(runtimePlugin.selectContestant !== undefined, minigameType);
     assert.ok((runtimePlugin.contestantActionTypes ?? []).length > 0, minigameType);
+    // A reset hands every leg back to its phone, so each relay names its reset hatch.
+    assert.ok(runtimePlugin.contestantResetActionType !== undefined, minigameType);
 
     // A phone never sends a hatch: no skip, no reset, no retake among its actions.
     for (const actionType of runtimePlugin.contestantActionTypes ?? []) {

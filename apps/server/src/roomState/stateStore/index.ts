@@ -20,6 +20,10 @@ export type ScoringMutationUndoSnapshot = {
   pendingWingPointsByTeamId: Record<string, number>;
   pendingMinigamePointsByTeamId: Record<string, number>;
   minigameRuntimeSnapshot: MinigameRuntimeStateSnapshot;
+  // The legs the tablet held when the point was taken: they belong with that runtime state. An
+  // undo that hands back an earlier log hands back who held each leg then, so a leg the tablet
+  // took after the point goes back to its phone.
+  contestantTabletLegIndexes: number[] | null;
 };
 
 type SetupBaselineSnapshot = {

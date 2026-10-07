@@ -1,5 +1,5 @@
 import type { MinigameType, RoomState } from "@wingnight/shared";
-import type { MinigameSurfacePhase } from "@wingnight/minigames-core";
+import type { MinigameHandset, MinigameSurfacePhase } from "@wingnight/minigames-core";
 
 import { resolveMinigameRendererBundle } from "../../../../minigames/registry";
 import { useServerOrigin } from "../../../../utils/useServerOrigin";
@@ -14,6 +14,8 @@ type MinigameStageBodyProps = {
   minigameType: MinigameType | null;
   activeTeamName: string | null;
   minigameDisplayView: RoomState["minigameDisplayView"];
+  // Who plays the leg in hand (`resolveLegHandset`).
+  handset: MinigameHandset;
   remainingTimerSeconds?: number | null;
   totalTimerSeconds?: number | null;
 };
@@ -23,6 +25,7 @@ export const MinigameStageBody = ({
   minigameType,
   activeTeamName,
   minigameDisplayView,
+  handset,
   remainingTimerSeconds = null,
   totalTimerSeconds = null
 }: MinigameStageBodyProps): JSX.Element => {
@@ -82,6 +85,7 @@ export const MinigameStageBody = ({
           />
         }
         serverOrigin={serverOrigin}
+        handset={handset}
       />
     </div>
   );

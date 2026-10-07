@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Contestant Phone — Mockup</title>
+    <!--
+      An arcade relay (FAPPY, Dunlop Dash, BRAWL, Slingshlong) played leg by leg on each
+      contestant's own phone, with the tablet as the host's monitor. Seven frames:
+
+        1. The phone whose leg it is, turned sideways (844x390): the game's own host surface,
+           seat "contestant" — the same canvas the teaser's phone frame lays out, with NO hatches,
+           no running totals and no sound. The only chrome is the rail chip: whose leg, which leg.
+        2. The same phone the moment the leg lands in its hand: the handoff hold. A card over the
+           scene for one beat ("Alex landed it — your leg"), pointer-events none, so the first
+           tap still lands on the game.
+        3. The teammate after them, upright (390x844): "You're next", their bird, the leg number,
+           and the TV hint. Never the game.
+        4. Every other teammate: "Watch the TV".
+        5. The contestant whose leg the tablet holds (tablet mode, or taken back): "Grab the tablet".
+        6. The tablet while a phone plays (1280x800): the TV's own picture mirrored read-only in
+           the stage body, the rail counter saying whose phone has it, and the hatches in the
+           actions row — Take it back first, then Skip and Reset. The corner dock keeps its 4.5rem.
+        7. The tablet when that phone drops: the drop banner over the mirror, Take it back as the
+           one primary.
+        8. The deck group the host sets it with (EATING and the briefing): Tablet | Phones.
+
+      The phone cards are the player phone's language (mockups/player-phone): the Hearth without
+      its flame, warm glass, one accent. The tablet is the takeover's (DESIGN.md §2.0B): a Stage,
+      because the actions row holds three controls and the mirror is concentrated in one box.
+    -->
+    <style>
+      :root {
+        --bg: #121212; --surface: #1c1c1c; --text: #ffffff; --muted: #a3a3a3;
+        --mutedWarm: #b3a89a; --mutedWarmDim: #6b6157; --ember: #ffb35a; --glow: #ffd6aa;
+        --hearthGlass: #2e1609; --shade: #000; --primary: #f97316; --heat: #ef4444;
+        --gold: #fbbf24; --teamB: #06b6d4; --sky: #1e3a5f;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: #0b0b0b; color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        display: flex; gap: 32px; padding: 32px; align-items: flex-start; flex-wrap: wrap;
+      }
+      .label { width: 100%; margin: 12px 0 -18px; font-size: 12px; font-weight: 700; color: var(--mutedWarm); letter-spacing: .2em; text-transform: uppercase; }
+      .phone {
+        width: 390px; height: 844px; border-radius: 28px; overflow: hidden; position: relative;
+        background: radial-gradient(ellipse at 50% 115%, var(--hearthGlass) 0%, var(--bg) 58%);
+        padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 14px;
+      }
+      .land { width: 844px; height: 390px; border-radius: 28px; overflow: hidden; position: relative; background: linear-gradient(180deg, var(--sky), #0f172a 70%, #1c1917); }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .wordmark { font-weight: 900; text-transform: uppercase; font-size: 22px; text-shadow: 0 0 18px rgba(249,115,22,.35); }
+      .eyebrow { margin: 0; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .36em; color: var(--mutedWarm); }
+      .voice { margin: 0; font-family: "Playfair Display", Georgia, serif; font-style: italic; color: var(--mutedWarm); line-height: 1.4; }
+      .fine { margin: 0; font-size: 13px; color: var(--mutedWarmDim); line-height: 1.4; }
+      .card {
+        position: relative; border-radius: 16px; padding: 16px;
+        border: 1px solid rgba(249,115,22,.25);
+        background: linear-gradient(180deg, rgba(46,22,9,.84), rgba(0,0,0,.93));
+        box-shadow: inset 0 1px 0 rgba(255,214,170,.14);
+        display: flex; flex-direction: column; gap: 12px;
+      }
+      .card.hot { border-color: var(--primary); box-shadow: inset 0 1px 0 rgba(255,214,170,.14), 0 0 40px -10px rgba(249,115,22,.6); }
+      .bird { width: 120px; height: 108px; position: relative; margin: 0 auto; }
+      .bird .body { position: absolute; left: 8%; right: 28%; top: 38%; bottom: 10%; border-radius: 50% 40% 45% 50%; border: 2px solid var(--bg); background: var(--teamB); }
+      .bird .head { position: absolute; right: 4%; top: 0; width: 46%; height: 52%; border-radius: 45%; background: #e2b48c; border: 2px solid #3b2414; }
+      .big { margin: 0; font-size: 40px; font-weight: 900; text-transform: uppercase; line-height: .95; text-shadow: 0 0 18px rgba(249,115,22,.45); }
+      .leg { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 20px; color: var(--primary); }
+      .tv { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; border: 1px dashed rgba(255,179,90,.3); }
+      .tv .screen { width: 44px; height: 30px; border-radius: 4px; border: 2px solid var(--mutedWarm); flex: none; }
+      /* Landscape game */
+      .railchip { position: absolute; left: 14px; top: 12px; display: inline-flex; gap: 8px; align-items: center; padding: 6px 12px; border-radius: 99px; background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.1); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+      .railchip b { color: var(--primary); }
+      .counter { position: absolute; right: 14px; top: 12px; padding: 6px 12px; border-radius: 99px; background: rgba(0,0,0,.6); font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 15px; color: var(--muted); }
+      .champ { position: absolute; bottom: 0; width: 34px; border-radius: 16px 16px 0 0; background: #f4c7a1; }
+      .hen { position: absolute; left: 120px; top: 150px; width: 46px; height: 40px; border-radius: 50%; background: var(--teamB); border: 2px solid var(--bg); }
+      .hint { position: absolute; left: 14px; bottom: 12px; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.6); font-size: 13px; color: var(--muted); }
+      .hold { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.35); pointer-events: none; }
+      .hold .card { width: 380px; text-align: center; }
+      /* Tablet */
+      .tablet { width: 1280px; height: 800px; border-radius: 22px; overflow: hidden; position: relative; background: var(--bg); padding: 26px; display: grid; grid-template-rows: auto 1fr auto; gap: 16px; }
+      .rail { display: flex; gap: 10px; align-items: center; }
+      .minirail { display: inline-flex; gap: 14px; padding: 8px 14px; border-radius: 99px; background: var(--surface); font-size: 13px; font-weight: 700; color: var(--muted); }
+      .minirail b { color: var(--text); }
+      .pill { padding: 6px 12px; border-radius: 99px; background: var(--surface); font-size: 13px; font-weight: 800; }
+      .pill.live { color: var(--primary); }
+      .pill.live::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 99px; background: var(--primary); margin-right: 8px; box-shadow: 0 0 8px var(--primary); }
+      .mirrorwrap { display: grid; place-items: center; min-height: 0; position: relative; }
+      .mirror { height: 100%; aspect-ratio: 16/9; border-radius: 14px; border: 1px solid rgba(255,255,255,.1); background: linear-gradient(180deg, var(--sky), #0f172a 70%, #1c1917); position: relative; overflow: hidden; }
+      .mirror .tag { position: absolute; left: 12px; top: 10px; font-size: 11px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
+      .actions { display: flex; gap: 12px; align-items: center; padding-right: 4.5rem; }
+      .primary { min-height: 56px; padding: 0 28px; border-radius: 12px; background: var(--primary); color: var(--bg); font-weight: 900; text-transform: uppercase; letter-spacing: .12em; display: inline-flex; align-items: center; box-shadow: 0 4px 0 rgba(249,115,22,.5); }
+      .secondary { min-height: 48px; padding: 0 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,.15); background: rgba(18,18,18,.85); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .14em; display: inline-flex; align-items: center; }
+      .note { font-size: 14px; color: var(--muted); }
+      .dock { position: absolute; right: 20px; bottom: 20px; width: 48px; height: 48px; border-radius: 99px; background: var(--surface); border: 1px solid rgba(255,255,255,.15); }
+      .drop { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.55); }
+      .drop .box { padding: 22px 28px; border-radius: 16px; background: var(--surface); border: 1px solid var(--heat); text-align: center; display: grid; gap: 14px; }
+      .drop h2 { margin: 0; font-size: 28px; font-weight: 900; }
+      /* Deck group */
+      .deck { width: 420px; padding: 18px; background: var(--surface); border-radius: 16px; display: grid; gap: 12px; }
+      .gh { font-size: 11px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
+      .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .seg span { min-height: 48px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; font-size: 13px; }
+      .seg span.on { background: var(--primary); color: var(--bg); border-color: var(--primary); }
+    </style>
+  </head>
+  <body>
+    <p class="label">1 · Your leg, sideways (844×390) — the game, nothing else</p>
+    <section class="land">
+      <span class="railchip">Your leg <b>Leg 2 of 3</b></span>
+      <span class="counter">4 / 9 gates</span>
+      <span class="champ" style="left: 260px; height: 160px"></span>
+      <span class="champ" style="left: 440px; height: 210px"></span>
+      <span class="champ" style="left: 640px; height: 120px"></span>
+      <span class="hen"></span>
+      <span class="hint">Tap anywhere to flap.</span>
+    </section>
+
+    <p class="label">2 · The leg lands in your hand — the handoff hold, one beat</p>
+    <section class="land">
+      <span class="railchip">Your leg <b>Leg 2 of 3</b></span>
+      <span class="champ" style="left: 260px; height: 160px"></span>
+      <span class="hen" style="top: 250px"></span>
+      <div class="hold">
+        <div class="card hot">
+          <p class="eyebrow">Alex landed it</p>
+          <p class="big">Your leg</p>
+          <p class="voice">The clock's running. Tap to fly.</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="label">3–5 · Off your leg, upright (390×844) — never the game</p>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span><span class="leg">Leg 3 of 3</span></div>
+      <div class="card hot">
+        <p class="eyebrow">Your team is up</p>
+        <div class="bird"><span class="body"></span><span class="head"></span></div>
+        <p class="big">You're next</p>
+        <p class="voice">After Caitlin. Turn your phone sideways when it buzzes.</p>
+      </div>
+      <div class="tv"><span class="screen"></span><p class="voice">Watch Caitlin's leg on the TV. Your phone wakes up when it's yours.</p></div>
+    </section>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <div class="card">
+        <p class="eyebrow">Your team is up</p>
+        <div class="bird"><span class="body"></span><span class="head"></span></div>
+        <p class="big">Watch the TV</p>
+        <p class="voice">Caitlin's flying. Shout her through it.</p>
+      </div>
+    </section>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <div class="card hot">
+        <p class="eyebrow">Your leg</p>
+        <div class="bird"><span class="body"></span><span class="head"></span></div>
+        <p class="big">Grab the tablet</p>
+        <p class="voice">This one's on the tablet. The host has it.</p>
+      </div>
+    </section>
+
+    <p class="label">6 · The tablet while a phone plays (1280×800)</p>
+    <section class="tablet">
+      <div class="rail">
+        <span class="minirail">Round <b>3</b> · <b>Hot Honey</b> · <b>Fappy Bird</b> · <b>Spice Girls</b></span>
+        <span class="pill live">On Caitlin's phone</span>
+        <span class="pill">Leg 2 of 3</span>
+      </div>
+      <div class="mirrorwrap">
+        <div class="mirror"><span class="tag">The TV</span></div>
+      </div>
+      <div class="actions">
+        <span class="primary">Take it back</span>
+        <span class="secondary">Skip leg</span>
+        <span class="secondary">Reset turn</span>
+        <span class="note">Take it back restarts this leg here, on the tablet.</span>
+      </div>
+      <span class="dock"></span>
+    </section>
+
+    <p class="label">7 · That phone drops</p>
+    <section class="tablet">
+      <div class="rail">
+        <span class="minirail">Round <b>3</b> · <b>Hot Honey</b> · <b>Fappy Bird</b> · <b>Spice Girls</b></span>
+        <span class="pill">Leg 2 of 3</span>
+      </div>
+      <div class="mirrorwrap">
+        <div class="mirror"><span class="tag">The TV</span></div>
+        <div class="drop"><div class="box"><h2>Caitlin's phone dropped</h2><span class="note">Her leg waits. Finish it on the tablet.</span><span class="primary">Take it back</span></div></div>
+      </div>
+      <div class="actions">
+        <span class="secondary">Skip leg</span>
+        <span class="secondary">Reset turn</span>
+      </div>
+      <span class="dock"></span>
+    </section>
+
+    <p class="label">8 · Setting it (EATING deck and the briefing deck), arcade rounds only</p>
+    <section class="deck">
+      <span class="gh">Played on</span>
+      <div class="seg"><span>Tablet</span><span class="on">Phones</span></div>
+      <span class="note">This team's turn: on the tablet. Phones from the next team.</span>
+    </section>
+  </body>
+</html>

@@ -24,3 +24,15 @@ export const applyCanvasGeometry =
     element.style.height = `${height}px`;
     element.style.transform = `scale(${scale})`;
   };
+
+// A runner wants the street left to right, so a phone held upright gets asked to turn instead
+// of a street squeezed into a letterbox. Above anything a game or its shell lays over the canvas.
+export const rotate =
+  "fixed inset-0 z-40 hidden flex-col items-center justify-center gap-2 bg-bg px-8 text-center portrait:flex";
+
+export const rotateTitle = "m-0 text-2xl font-black uppercase leading-tight text-text";
+
+export const rotateBody = "m-0 font-voice text-lg italic text-mutedWarm";
+
+// A phone with rotation lock on never turns, so without this the card is a dead end.
+export const rotateLockHint = "m-0 mt-4 text-sm text-mutedWarm/80";

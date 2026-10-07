@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { FappyMinigameDisplayView, FappyMinigameLeg, FappyPlayerFigure } from "@wingnight/shared";
 
 
+import { displayFappySurfaceCopy } from "./copy.js";
 import { DisplayFappySurface } from "./index.js";
 
 const ALEX: FappyPlayerFigure = { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "disco" };
@@ -63,6 +64,8 @@ const render = (
       minigameDisplayView={view}
       activeTeamName="Team Alpha"
       clock={null}
+      handset="tablet"
+
       clockLine={null}
       serverOrigin={serverOrigin}
     />
@@ -303,4 +306,14 @@ test("does race the team's bird against a par-pace ghost under the marquee", () 
   assert.match(html, /data-fappy-pace-bird/);
   assert.match(html, /data-fappy-pace-ghost/);
   assert.match(html, /data-fappy-pace-percent="17"/);
+});
+
+test("does tell the room the next phone is live at the handoff when the turn is played on phones", () => {
+  assert.equal(displayFappySurfaceCopy.handoffCalloutLine("tablet"), "You're up — grab the tablet");
+  assert.equal(displayFappySurfaceCopy.handoffCalloutLine("phone"), "You're up — your phone is live");
+  assert.equal(
+    displayFappySurfaceCopy.handoffPrompt("Alex", "Caitlin", "phone"),
+    "Alex is through — Caitlin, you're up on your phone"
+  );
+  assert.doesNotMatch(displayFappySurfaceCopy.handoffPrompt("Alex", null, "phone"), /tablet/);
 });

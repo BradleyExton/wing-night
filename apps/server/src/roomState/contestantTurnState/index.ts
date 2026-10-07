@@ -155,15 +155,33 @@ export const resolveContestantLegForAction = (
 
 // One log writer per leg. While the phone holds the leg in hand, the tablet's input for it is
 // refused — its hatches (skip, reset, take back, JOUST's next shot) are not inputs and always land.
+// A phone that dropped mid-leg still owns the log it began: the tablet gets the leg only through
+// the take-back, which restarts it with a fresh log, never by writing into the phone's.
 export const isLegHeldByPhone = (
   state: RoomState,
   minigameId: MinigameType,
   actionType: string
 ): boolean => {
+  const turn = state.contestantTurn;
+
   return (
     resolveContestantLegForAction(state, minigameId, actionType) !== null &&
-    state.contestantTurn?.controller === CONTESTANT_CONTROLLERS.PHONE
+    (turn?.controller === CONTESTANT_CONTROLLERS.PHONE || turn?.droppedPlayerId !== null)
   );
+};
+
+// The turn started over (the game's reset hatch): every leg is fresh, so none is the tablet's any
+// more and each goes back to its contestant's phone.
+export const releaseContestantTabletLegs = (state: RoomState): boolean => {
+  const turn = state.contestantTurn;
+
+  if (turn === null || turn.tabletLegIndexes.length === 0) {
+    return false;
+  }
+
+  state.contestantTurn = { ...turn, tabletLegIndexes: [] };
+
+  return true;
 };
 
 // The tablet wrote to a leg, or the host took it back: the leg is the tablet's for the rest of

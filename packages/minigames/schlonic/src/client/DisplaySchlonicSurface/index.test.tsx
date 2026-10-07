@@ -8,6 +8,7 @@ import type {
 } from "@wingnight/shared";
 
 
+import { displaySchlonicSurfaceCopy } from "./copy.js";
 import { DisplaySchlonicSurface } from "./index.js";
 
 const ALEX: SchlonicPlayerFigure = {
@@ -59,6 +60,8 @@ const render = (
       minigameDisplayView={view}
       activeTeamName="Team Alpha"
       clock={null}
+      handset="tablet"
+
       clockLine={null}
       serverOrigin={null}
     />
@@ -165,4 +168,9 @@ test("hangs the zone strip over the arena so the room can read what is coming", 
 // THAT sign and not a private one — the drift the bulb-ring test used to catch.
 test("does hang the shared neon marquee", () => {
   assert.ok(render(createView()).includes("data-neon-marquee"));
+});
+
+test("does tell the room the next phone is live at the handoff when the turn is played on phones", () => {
+  assert.equal(displaySchlonicSurfaceCopy.handoffCalloutLine("tablet"), "You're up — grab the tablet");
+  assert.equal(displaySchlonicSurfaceCopy.handoffCalloutLine("phone"), "You're up — your phone is live");
 });

@@ -45,7 +45,7 @@ export const previewHeaderLabel = "text-xs font-semibold uppercase tracking-[0.1
 
 export const previewHeaderMeta = "text-xs text-muted";
 
-// Each preview frame reserves its device's aspect ratio; SandboxDeviceFrame lays
+// Each preview frame reserves its device's aspect ratio; ScaledDeviceFrame lays
 // the device out at full size inside and scales it down to the frame's width.
 export const hostViewport = "relative aspect-[16/10] w-full overflow-hidden bg-bg";
 

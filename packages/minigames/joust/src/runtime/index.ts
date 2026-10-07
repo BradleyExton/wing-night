@@ -434,6 +434,7 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
   // is the room's beat — the replay has to land on the TV first. No retake: a shot is atomic, so
   // taking one back just hands the shot about to be aimed to the tablet.
   contestantActionTypes: ["setAim", "pickShooter", "launch"],
+  contestantResetActionType: "resetTurn",
   selectContestant: (input) => {
     if (!isJoustRuntimeState(input.state)) {
       return null;

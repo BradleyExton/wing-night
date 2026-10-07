@@ -30,6 +30,8 @@ const render = (
       minigameDisplayView={minigameDisplayView}
       activeTeamName="Team Heat"
       clock={clock}
+      handset="tablet"
+
       clockLine={null}
       serverOrigin={null}
     />

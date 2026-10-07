@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import * as styles from "./styles";
 
-type SandboxDeviceFrameProps = {
+type ScaledDeviceFrameProps = {
   // The frame's own classes carry its aspect ratio, which must match
   // deviceWidth:deviceHeight for the scaled device to fill it edge to edge.
   frameClassName: string;
@@ -14,13 +14,15 @@ type SandboxDeviceFrameProps = {
 // A preview stands in for a real screen, so the surface inside is laid out at
 // that screen's CSS-pixel size and scaled to whatever width the card has. Every
 // game then renders against the same canvas, and `h-full` means the same thing
-// here as it does on the device.
-export const SandboxDeviceFrame = ({
+// here as it does on the device. The dev sandbox's two previews and the
+// tablet's monitor of the TV (while a contestant's phone plays) both draw
+// through it.
+export const ScaledDeviceFrame = ({
   frameClassName,
   deviceWidth,
   deviceHeight,
   children
-}: SandboxDeviceFrameProps): JSX.Element => {
+}: ScaledDeviceFrameProps): JSX.Element => {
   const frameRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
 

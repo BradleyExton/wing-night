@@ -224,7 +224,11 @@ Every action needs `envelope.receivedAtMs`; one without it is refused. All are
   times the relay out. A tablet that mounts into `flying` with no local run dispatches this
   once (SEAR's `redoShot`-on-mount pattern), which settles the attempt from the log.
 - `timeOut` — in `ready` or `flying`, only when `receivedAtMs − startedAtMs ≥ limit` on the
-  server's clock. Sets `timedOutAtMs` and scores by progress.
+  server's clock. Sets `timedOutAtMs` and scores by progress. Since the contestant's-phone work
+  the server sends it itself, from its deadline scheduler (`selectDeadlineAction`), so it lands
+  with no device's help. **Known:** undoing a timed-out relay hands back the state from before
+  the time-out, which is still past the limit, so the scheduler times it out again at once. The
+  host's way out of a time-out is Reset turn, not undo (BACKLOG.md, FAPPY).
 - `skipLeg` — in `ready` or `flying`. Marks the leg `cleared` and `skipped` and moves on; on
   the last leg it finishes the relay. The clock keeps running, and the relay is **charged
   `parSeconds / legsPerTurn` seconds for every skipped leg** — the time a leg of the course is

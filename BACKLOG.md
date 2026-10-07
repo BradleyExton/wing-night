@@ -259,6 +259,15 @@ tied to the 160-wide box (`left-[20cqw]`, `h-[9cqw]`, `--fappy-unit:0.625cqw`), 
 means deriving every one of those from the camera rather than from the box. Do it when FAPPY is
 next open; SCHLONIC's `camera/index.ts` is the shape to copy.
 
+### FAPPY — undo of a server-timed-out relay times it out again
+
+The relay's limit is enforced by the server's deadline scheduler, so the time-out lands with no
+device's help (a contestant's phone may be the one flying). Undo after that time-out restores the
+state from before it — which is still past the limit — and the scheduler fires `timeOut` again on
+the next broadcast. Known and left: a timed-out relay is over, and the host's tool for a relay to
+fly again is Reset turn. If undo ever has to reopen one, the undo point would need to carry the
+limit forward (or the scheduler would need to skip a deadline an undo just restored).
+
 ### Forgery Studio (RECREATE) — follow-ups
 The game shipped 2026-09-18: a doctored party photo on the TV, the team writes the prompt they
 think made it, the server sends that prompt (with the source photo) to the Gemini image API once

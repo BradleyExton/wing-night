@@ -19,6 +19,7 @@ import { resolveMirrorEvents, type MountDisplayEventHandler } from "../mirrorEve
 import type { MountSceneHandle } from "../MountScene/index.js";
 import { resolvePileKey } from "../MountScene/pileKey/index.js";
 import { createRunFingers, type RunFingers } from "./fingers/index.js";
+import { shouldEndWatchedClimb } from "./shouldEndWatchedClimb/index.js";
 
 /** Whose turn and which climb an action is for: the runtime refuses one stamped for another. */
 export type MountStamp = { teamId?: string; climbIndex: number };
@@ -298,7 +299,7 @@ export const useMountRunner = ({
     const local = runRef.current;
 
     if (status === "running") {
-      if (local !== null && local.startedAtMs === null && !local.hasEnded) {
+      if (local !== null && shouldEndWatchedClimb({ status, localRun: local, canAct: inputRef.current.canAct })) {
         local.hasEnded = true;
         callbacksRef.current.onEndClimb(local.stamp);
       }

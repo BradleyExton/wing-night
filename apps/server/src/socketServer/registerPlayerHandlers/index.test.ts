@@ -14,6 +14,7 @@ import {
 } from "@wingnight/shared";
 
 import { createPlayerClaimStore } from "../../playerClaims/index.js";
+import type { TokenBucket } from "../../utils/tokenBucket/index.js";
 import {
   PLAYER_ACTION_BURST,
   PLAYER_MINIGAME_ACTION_BURST,
@@ -33,7 +34,8 @@ const createPhone = (
   socketId: string,
   store: ReturnType<typeof createPlayerClaimStore>,
   handshake: PlayerHandshake = { joinToken: "join-token", claimSecret: null },
-  clock: { now: number } = { now: 0 }
+  clock: { now: number } = { now: 0 },
+  buckets?: Map<string, TokenBucket>
 ) => {
   const listeners = new Map<string, Listener>();
   const rooms = new Set<string>();
@@ -42,6 +44,7 @@ const createPhone = (
   const hostViewRequests: string[] = [];
   const dispatched: [string, PlayerMinigameActionPayload][] = [];
   let syncCount = 0;
+  let syncNowCount = 0;
 
   registerPlayerHandlers(
     {
@@ -76,7 +79,11 @@ const createPhone = (
       },
       syncClaimFlags: () => {
         syncCount += 1;
-      }
+      },
+      syncClaimFlagsNow: () => {
+        syncNowCount += 1;
+      },
+      ...(buckets === undefined ? {} : { minigameActionBuckets: buckets })
     }
   );
 
@@ -100,6 +107,9 @@ const createPhone = (
     dispatched,
     get syncCount(): number {
       return syncCount;
+    },
+    get syncNowCount(): number {
+      return syncNowCount;
     },
     claim: (payload: unknown) => call(CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM, payload),
     release: (payload: unknown) => call(CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE, payload),
@@ -181,7 +191,9 @@ test("does re-bind the face without a re-pick when the phone reconnects with its
 
   assert.deepEqual([...after.rooms], [resolvePlayerRoom("player-1")]);
   assert.deepEqual(after.selfEvents, ["player-1"]);
-  assert.equal(after.syncCount, 1);
+  // At once, not coalesced: the input the phone buffered while away is handled next.
+  assert.equal(after.syncNowCount, 1);
+  assert.equal(after.syncCount, 0);
   assert.deepEqual(store.resolveFlags(ROSTER).connectedPlayerIds, ["player-1"]);
 });
 
@@ -348,4 +360,25 @@ test("does hand a seated phone its leg back when it takes its seat or asks for t
   phone.requestState();
 
   assert.deepEqual(phone.hostViewRequests, ["player-1", "player-1"]);
+});
+
+test("does keep spending the same game-input bucket when the face comes back on a new socket", () => {
+  const store = createStore();
+  const clock = { now: 0 };
+  const buckets = new Map<string, TokenBucket>();
+  const before = createPhone("socket-a", store, { joinToken: "join-token", claimSecret: null }, clock, buckets);
+  const { claimSecret } = before.claim({ playerId: "player-1" }) as { claimSecret: string };
+
+  for (let index = 0; index < PLAYER_MINIGAME_ACTION_BURST; index += 1) {
+    assert.deepEqual(before.act(FLAP), { ok: true });
+  }
+
+  before.disconnect();
+
+  const after = createPhone("socket-b", store, { joinToken: "join-token", claimSecret }, clock, buckets);
+
+  assert.deepEqual(after.act(FLAP), {
+    ok: false,
+    reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.RATE_LIMITED
+  });
 });

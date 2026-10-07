@@ -1,3 +1,5 @@
+import { CONTESTANT_CONTROLLERS, type ContestantController } from "@wingnight/shared";
+
 // Who is up after the handoff, appended to the sentence that just named who
 // is up next. Empty when there is nobody after: a relay with two legs left
 // must not promise a third player.
@@ -5,8 +7,9 @@ const onDeck = (onDeckName: string | null): string =>
   onDeckName === null ? "" : ` Then ${onDeckName}.`;
 
 export const hostFappySurfaceCopy = {
-  introDescription:
-    "Your team's chickens fly a relay through a corridor of champs, against one clock. Each player flies one section on the tablet: tap anywhere to flap, then come down on the far roof where the next bird is waiting. Bump an eagle and it just flies off; hit a champ, the street or a wall and you go again from the last gate you made — it only costs time. The quicker the whole team gets through, the more points.",
+  // Read out on the briefing. A phones turn picks up phones, not the tablet (`handset`).
+  introDescription: (handset: ContestantController): string =>
+    `Your team's chickens fly a relay through a corridor of champs, against one clock. ${handset === CONTESTANT_CONTROLLERS.PHONE ? "Each player flies one section on their own phone:" : "Each player flies one section on the tablet:"} tap anywhere to flap, then come down on the far roof where the next bird is waiting. Bump an eagle and it just flies off; hit a champ, the street or a wall and you go again from the last gate you made — it only costs time. The quicker the whole team gets through, the more points.`,
   waitingRelayLabel: "No relay is loaded. Check the round's FAPPY rules.",
   legCounter: (legNumber: number, legsTotal: number): string => `Leg ${legNumber} of ${legsTotal}`,
   flyingLabel: (playerName: string | null): string =>
@@ -22,8 +25,16 @@ export const hostFappySurfaceCopy = {
       ? `${who}tap anywhere to take off, keep tapping to stay up, and come down on the far roof.`
       : `${who}tap anywhere to take off, keep tapping to stay up, and land next to ${waitingName}.${onDeck(onDeckName)}`;
   },
-  handoffHint: (landedName: string | null, nextName: string | null): string => {
+  // `handset` is the next leg's: on a phones turn whose next player has a phone, nobody passes
+  // the tablet — their phone has the leg.
+  handoffHint: (landedName: string | null, nextName: string | null, handset: ContestantController): string => {
     const landed = landedName === null ? "Landed" : `${landedName} landed`;
+
+    if (handset === CONTESTANT_CONTROLLERS.PHONE) {
+      return nextName === null
+        ? `${landed} — the next phone has it. The clock is running.`
+        : `${landed} — ${nextName}'s phone has it. The clock is running.`;
+    }
 
     return nextName === null
       ? `${landed} — pass the tablet on. The clock is running.`

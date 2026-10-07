@@ -2,6 +2,8 @@ import { SFX_VOLUME_DEFAULT, MUSIC_VOLUME_DEFAULT, Phase } from "@wingnight/shar
 import { useState } from "react";
 
 import { ControlDeck } from "../ControlDeck";
+import { DeviceModeSurface } from "../../DeviceModeSurface";
+import { selectDeviceModeRounds } from "../../DeviceModeSurface/selectDeviceModeRounds";
 import { StageHero } from "../StageHero";
 import { MusicControlsSurface } from "../../MusicControlsSurface";
 import { PlayersSurface } from "../../PlayersSurface";
@@ -133,6 +135,11 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
           onAddPlayer={handleAddPlayer}
           onReleasePlayerClaim={handlers.onReleasePlayerClaim}
           onRotatePlayerJoinCode={handlers.onRotatePlayerJoinCode}
+        />
+        <DeviceModeSurface
+          rounds={selectDeviceModeRounds(roomState)}
+          lockedDeviceMode={roomState?.contestantTurn?.deviceMode ?? null}
+          onSetRoundDeviceMode={handlers.onSetRoundDeviceMode}
         />
         {/* SETUP is where the lobby playlist plays, so this is where the host
             reaches for it — while people are arriving and the deck is not yet

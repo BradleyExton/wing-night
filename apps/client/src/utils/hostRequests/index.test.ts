@@ -223,6 +223,16 @@ const handlerInvocations: HandlerInvocation[] = [
     name: "onRotatePlayerJoinCode",
     invoke: (handlers) => handlers.onRotatePlayerJoinCode(),
     expectedPayload: { hostSecret: "valid-host-secret" }
+  },
+  {
+    name: "onSetRoundDeviceMode",
+    invoke: (handlers) => handlers.onSetRoundDeviceMode(3, "phones"),
+    expectedPayload: { hostSecret: "valid-host-secret", round: 3, deviceMode: "phones" }
+  },
+  {
+    name: "onTakeBackContestantLeg",
+    invoke: (handlers) => handlers.onTakeBackContestantLeg(),
+    expectedPayload: { hostSecret: "valid-host-secret" }
   }
 ];
 

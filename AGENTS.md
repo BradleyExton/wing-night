@@ -171,6 +171,17 @@ state, and these rules keep it from becoming a second host:
   never carries `minigameHostView`; it carries `contestantTurn` (ids, a leg number, a mode).
 - **The server keeps the clock.** A deadline a game enforces (`selectDeadlineAction`: FAPPY's relay
   limit) is fired by the server's own scheduler, so it lands with the phone gone.
+- **The clients read `contestantTurn` and nothing else.** The player phone (`PlayerPhone`,
+  `resolvePhoneTurn`) draws the game only when the snapshot says this player's phone holds the leg
+  in hand — the game's own `HostSurface` with `seat="contestant"` inside the shared
+  `PhoneGameFrame` (the teaser's landscape canvas and rotate card), sending through
+  `player:minigameAction` (`utils/contestantLeg`). Every other phone on the team gets a card
+  (briefing, you're next, watch the TV, grab the tablet); it never mounts the game. The tablet,
+  while a phone holds or has dropped the leg, mounts no runner: `ContestantPhoneMonitor` mirrors
+  the TV's own `DisplaySurface` inside `<SilentSurface>` (no board under it plays a sound) and
+  keeps Take it back, the game's skip, reset and JOUST's next shot. The host sets each arcade
+  round's mode from the deck (`DeviceModeSurface`): every arcade round before the night, the
+  round in hand during a turn, the rounds to come between rounds.
 
 ---
 

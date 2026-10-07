@@ -28,6 +28,7 @@ test("renders the team-first reveal with the genre kit, the lineup and the minig
       activeTeamTheme={resolveTeamTheme(buildTeam("metal"))}
       activeTeamPlayers={players}
       minigameType="TRIVIA"
+      handset={null}
     />
   );
 
@@ -52,6 +53,7 @@ test("falls back to placeholder labels when team and minigame data are missing",
       activeTeamTheme={null}
       activeTeamPlayers={[]}
       minigameType={null}
+      handset={null}
     />
   );
 
@@ -71,6 +73,7 @@ test("renders the eyebrow alone and a plain primary headline for a team with no 
       activeTeamTheme={resolveTeamTheme(buildTeam())}
       activeTeamPlayers={players}
       minigameType="TRIVIA"
+      handset={null}
     />
   );
 
@@ -78,4 +81,50 @@ test("renders the eyebrow alone and a plain primary headline for a team with no 
   assert.match(html, /class="[^"]*text-primary[^"]*"[^>]*data-team-wordmark="plain"/);
   assert.doesNotMatch(html, /data-team-ambient|data-team-emblem/);
   assert.match(html, /data-team-lineup/);
+});
+
+test("does tell an arcade team to grab their phones when the turn is played on phones", () => {
+  const html = renderToStaticMarkup(
+    <MinigameIntroStageBody
+      activeTeamName="Team Heat"
+      activeTeamGenre={null}
+      activeTeamTheme={resolveTeamTheme(buildTeam())}
+      activeTeamPlayers={players}
+      minigameType="FAPPY"
+      handset="phone"
+    />
+  );
+
+  assert.match(html, /data-turn-handset="phone"[^>]*>Grab your phones</);
+  assert.doesNotMatch(html, /Grab the tablet/);
+});
+
+test("does tell an arcade team to grab the tablet when the turn is played on the tablet", () => {
+  const html = renderToStaticMarkup(
+    <MinigameIntroStageBody
+      activeTeamName="Team Heat"
+      activeTeamGenre={null}
+      activeTeamTheme={resolveTeamTheme(buildTeam())}
+      activeTeamPlayers={players}
+      minigameType="FAPPY"
+      handset="tablet"
+    />
+  );
+
+  assert.match(html, /data-turn-handset="tablet"[^>]*>Grab the tablet</);
+});
+
+test("does say nothing about a handset when the game is never played on phones", () => {
+  const html = renderToStaticMarkup(
+    <MinigameIntroStageBody
+      activeTeamName="Team Heat"
+      activeTeamGenre={null}
+      activeTeamTheme={resolveTeamTheme(buildTeam())}
+      activeTeamPlayers={players}
+      minigameType="TRIVIA"
+      handset={null}
+    />
+  );
+
+  assert.doesNotMatch(html, /data-turn-handset/);
 });

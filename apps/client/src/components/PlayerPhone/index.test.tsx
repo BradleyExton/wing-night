@@ -4,6 +4,7 @@ import type { RoleScopedStateSnapshotEnvelope } from "@wingnight/shared";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { RoomStateProvider } from "../../context/RoomStateContext";
+import type { ContestantLegController } from "../../utils/contestantLeg";
 import type { PlayerSeatController, PlayerSeatState } from "../../utils/playerSeat";
 import { PlayerPhone } from "./index";
 
@@ -36,12 +37,47 @@ const seatIn = (state: PlayerSeatState): PlayerSeatController => ({
   dispose: () => undefined
 });
 
-const render = (seat: PlayerSeatController | null): string =>
+const render = (
+  seat: PlayerSeatController | null,
+  envelope: RoleScopedStateSnapshotEnvelope = ENVELOPE,
+  contestantLeg: ContestantLegController | null = null
+): string =>
   renderToStaticMarkup(
-    <RoomStateProvider value={ENVELOPE}>
-      <PlayerPhone seat={seat} />
+    <RoomStateProvider value={envelope}>
+      <PlayerPhone seat={seat} contestantLeg={contestantLeg} />
     </RoomStateProvider>
   );
+
+// Spice Girls' FAPPY relay on phones: Rob flying leg 1 on his phone, Brad after him.
+const PHONES_TURN_ENVELOPE = {
+  clientRole: "PLAYER",
+  roomState: {
+    ...ENVELOPE.roomState,
+    phase: "MINIGAME_PLAY",
+    teams: [{ id: "team-1", name: "Spice Girls", playerIds: ["player-2", "player-1"], totalScore: 0 }],
+    activeRoundTeamId: "team-1",
+    activeTurnTeamId: null,
+    claimedPlayerIds: ["player-1", "player-2"],
+    contestantTurn: {
+      minigame: "FAPPY",
+      deviceMode: "phones",
+      legIndex: 0,
+      contestantPlayerId: "player-2",
+      nextContestantPlayerId: "player-1",
+      controller: "phone",
+      tabletLegIndexes: [],
+      droppedPlayerId: null
+    }
+  }
+} as RoleScopedStateSnapshotEnvelope;
+
+const holdingNoView: ContestantLegController = {
+  getHostView: () => null,
+  subscribe: () => () => undefined,
+  dispatch: () => undefined,
+  forgetHostView: () => undefined,
+  dispose: () => undefined
+};
 
 test("does send the guest to the TV when the phone has no seat", () => {
   const html = render(null);
@@ -85,4 +121,22 @@ test("does offer to play here when the face moved to another screen", () => {
   const html = render(seatIn({ status: "claim_gone", playerId: "player-1", reason: "superseded" }));
 
   assert.match(html, /Play on this phone/);
+});
+
+test("does draw the game frame, not a card, on the contestant's phone when its phone holds the leg", () => {
+  const html = render(seatIn({ status: "seated", playerId: "player-2", confirmed: true }), PHONES_TURN_ENVELOPE, holdingNoView);
+
+  assert.match(html, /data-contestant-game="waiting"/);
+  assert.match(html, /data-contestant-leg="0"/);
+  assert.match(html, /You&#x27;re first/);
+  assert.doesNotMatch(html, /data-player-idle/);
+});
+
+test("does tell the next teammate they are next and never draw the game on their phone", () => {
+  const html = render(seatIn({ status: "seated", playerId: "player-1", confirmed: true }), PHONES_TURN_ENVELOPE, holdingNoView);
+
+  assert.match(html, /data-contestant-phone="next"/);
+  assert.match(html, /You&#x27;re next/);
+  assert.match(html, /After Rob/);
+  assert.doesNotMatch(html, /data-contestant-game/);
 });

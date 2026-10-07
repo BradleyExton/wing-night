@@ -182,6 +182,7 @@ export const brawlRuntimePlugin: MinigameRuntimePlugin = {
   // first touch; skipping and resetting stay the host's.
   contestantActionTypes: ["walk", "peck", "endBlock", "buyHeart"],
   contestantRetakeActionType: "retakeBlock",
+  contestantResetActionType: "resetTurn",
   isRules: isBrawlRules,
   initialize: (input) => {
     const rules = resolveBrawlRules(input.rules);

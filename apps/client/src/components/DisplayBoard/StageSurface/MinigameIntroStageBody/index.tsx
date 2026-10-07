@@ -1,3 +1,4 @@
+import type { MinigameHandset } from "@wingnight/minigames-core";
 import type { MinigameType, Player, TeamTheme } from "@wingnight/shared";
 
 import { TeamAmbient } from "../../../TeamAmbient";
@@ -13,6 +14,9 @@ type MinigameIntroStageBodyProps = {
   activeTeamTheme: TeamTheme | null;
   activeTeamPlayers: Player[];
   minigameType: MinigameType | null;
+  // What an arcade team picks up when the briefing ends (`resolveBriefingHandset`), or null for a
+  // game that is never played on phones, which says nothing about it.
+  handset: MinigameHandset | null;
 };
 
 // The team spotlight (docs/team-identity.md, "TV MINIGAME_INTRO"): the genre's
@@ -25,7 +29,8 @@ export const MinigameIntroStageBody = ({
   activeTeamGenre,
   activeTeamTheme,
   activeTeamPlayers,
-  minigameType
+  minigameType,
+  handset
 }: MinigameIntroStageBodyProps): JSX.Element => {
   const resolvedTeamName = activeTeamName ?? minigameIntroStageCopy.fallbackTeamName;
   const resolvedMinigameLabel =
@@ -91,6 +96,14 @@ export const MinigameIntroStageBody = ({
         <span className={styles.postLabel}>{minigameIntroStageCopy.playingLabel}</span>
         {resolvedMinigameLabel}
       </p>
+      {handset !== null && (
+        <p
+          className={`${styles.beatBase} ${styles.beatDelay4} ${styles.handset}`}
+          data-turn-handset={handset}
+        >
+          {minigameIntroStageCopy.handsetLine(handset)}
+        </p>
+      )}
     </div>
   );
 };

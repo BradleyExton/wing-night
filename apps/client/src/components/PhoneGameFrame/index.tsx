@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 
+import { phoneGameFrameCopy } from "./copy";
 import * as styles from "./styles";
 
-type TeaserPhoneFrameProps = {
+type PhoneGameFrameProps = {
   children: ReactNode;
 };
 
@@ -23,7 +24,11 @@ const measure = (): FrameGeometry => {
   return { width: viewportWidth / scale, height: viewportHeight / scale, scale };
 };
 
-export const TeaserPhoneFrame = ({ children }: TeaserPhoneFrameProps): JSX.Element => {
+// One arcade game on one phone, turned sideways: the teaser's solo phone (wingnight.tv) and a
+// contestant's own phone at the party draw the game's host surface the same way. A runner wants
+// the street left to right, so a phone held upright is asked to turn instead of being handed a
+// street squeezed into a letterbox — the card covers the game until it does.
+export const PhoneGameFrame = ({ children }: PhoneGameFrameProps): JSX.Element => {
   const [geometry, setGeometry] = useState<FrameGeometry | null>(null);
 
   useEffect(() => {
@@ -40,12 +45,20 @@ export const TeaserPhoneFrame = ({ children }: TeaserPhoneFrameProps): JSX.Eleme
   }, []);
 
   return (
-    <div className={styles.viewport}>
-      {geometry !== null && (
-        <div className={styles.canvas} ref={styles.applyCanvasGeometry(geometry)}>
-          {children}
-        </div>
-      )}
-    </div>
+    <>
+      <div className={styles.viewport}>
+        {geometry !== null && (
+          <div className={styles.canvas} ref={styles.applyCanvasGeometry(geometry)}>
+            {children}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.rotate} data-phone-rotate>
+        <p className={styles.rotateTitle}>{phoneGameFrameCopy.rotateTitle}</p>
+        <p className={styles.rotateBody}>{phoneGameFrameCopy.rotateBody}</p>
+        <p className={styles.rotateLockHint}>{phoneGameFrameCopy.rotateLockHint}</p>
+      </div>
+    </>
   );
 };

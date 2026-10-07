@@ -54,6 +54,7 @@ const renderSurface = (
       onDispatchAction={(): void => {}}
       serverOrigin={null}
       seat="host"
+      handset="tablet"
     />
   );
 };

@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { wakeAudio } from "@wingnight/audio";
+import { CONTESTANT_CONTROLLERS } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type { TeaserRoster } from "../../utils/parseTeaserRoster";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { useServerOrigin } from "../../utils/useServerOrigin";
+import { PhoneGameFrame } from "../PhoneGameFrame";
 import { TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
 import { teaserSoloGameCopy } from "./copy";
-import { TeaserPhoneFrame } from "./TeaserPhoneFrame";
 import { TeaserSoloFinish } from "./TeaserSoloFinish";
 import { TeaserTeamPicker } from "./TeaserTeamPicker";
 import { TEASER_POINTS_MAX, type TeaserGame } from "./teaserGames";
@@ -111,7 +112,7 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
 
   return (
     <>
-      <TeaserPhoneFrame>
+      <PhoneGameFrame>
         {runtimeState !== null && (
           <HostSurface
             phase="play"
@@ -131,9 +132,10 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
             onDispatchAction={handleDispatchAction}
             serverOrigin={serverOrigin}
             seat="solo"
+            handset={CONTESTANT_CONTROLLERS.TABLET}
           />
         )}
-      </TeaserPhoneFrame>
+      </PhoneGameFrame>
 
       {teamId === null && (
         <TeaserTeamPicker
@@ -167,12 +169,6 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
           }}
         />
       )}
-
-      <div className={styles.rotate}>
-        <p className={styles.rotateTitle}>{teaserSoloGameCopy.rotateTitle}</p>
-        <p className={styles.rotateBody}>{teaserSoloGameCopy.rotateBody}</p>
-        <p className={styles.rotateLockHint}>{teaserSoloGameCopy.rotateLockHint}</p>
-      </div>
     </>
   );
 };

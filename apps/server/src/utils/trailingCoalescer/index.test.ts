@@ -63,3 +63,20 @@ test("does drop the pending run when it is cancelled", () => {
   assert.equal(manual.queued.length, 0);
   assert.equal(runs, 0);
 });
+
+test("does run at once and drop the pending run when it is flushed", () => {
+  const manual = createManualTimers();
+  let runs = 0;
+  const coalescer = createTrailingCoalescer(() => {
+    runs += 1;
+  }, 100, manual.timers);
+
+  coalescer.schedule();
+  coalescer.flush();
+
+  assert.equal(runs, 1);
+  assert.equal(manual.queued.length, 0);
+
+  coalescer.flush();
+  assert.equal(runs, 2);
+});

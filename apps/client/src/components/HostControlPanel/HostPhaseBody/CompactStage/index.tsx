@@ -3,9 +3,12 @@ import { Phase } from "@wingnight/shared";
 import { ControlDeck } from "../ControlDeck";
 import { StageHero } from "../StageHero";
 import { CompactSummarySurface } from "../../CompactSummarySurface";
+import { DeviceModeSurface } from "../../DeviceModeSurface";
+import { selectDeviceModeRounds } from "../../DeviceModeSurface/selectDeviceModeRounds";
 import { hostControlPanelCopy } from "../../copy";
 import { selectHeaderContext } from "../../HostMiniRail/selectHeaderContext";
 import { selectHostTeamMaps } from "../../selectHostTeamMaps";
+import { useHostHandlers } from "../../../../context/HostHandlersContext";
 import { useHostRoomState } from "../../../../context/RoomStateContext";
 import { resolveLeadingTeams } from "../../../../utils/resolveLeadingTeams";
 import { resolveSortedStandings } from "../../../../utils/resolveSortedStandings";
@@ -13,6 +16,7 @@ import * as styles from "./styles";
 
 export const CompactStage = (): JSX.Element | null => {
   const roomState = useHostRoomState();
+  const handlers = useHostHandlers();
   const { teamNameByTeamId, teamThemeByTeamId } = selectHostTeamMaps(roomState);
 
   if (roomState === null) {
@@ -69,6 +73,13 @@ export const CompactStage = (): JSX.Element | null => {
           sortedStandings={sortedStandings}
           players={players}
           teamThemeByTeamId={teamThemeByTeamId}
+        />
+        {/* Between turns and between rounds: the next teams' device mode, set before their
+            briefings lock it. */}
+        <DeviceModeSurface
+          rounds={selectDeviceModeRounds(roomState)}
+          lockedDeviceMode={roomState.contestantTurn?.deviceMode ?? null}
+          onSetRoundDeviceMode={handlers.onSetRoundDeviceMode}
         />
       </ControlDeck>
     </>

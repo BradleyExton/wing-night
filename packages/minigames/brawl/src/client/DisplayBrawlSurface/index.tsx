@@ -1,5 +1,5 @@
 import { useMemo, useRef, type ReactNode } from "react";
-import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import type { MinigameDisplayRendererProps, MinigameHandset } from "@wingnight/minigames-core";
 import type { BrawlMinigameDisplayView } from "@wingnight/shared";
 import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 
@@ -62,9 +62,10 @@ type PlayBodyProps = {
   clock: ReactNode;
   clockLine: ReactNode;
   serverOrigin: string | null;
+  handset: MinigameHandset;
 };
 
-const BrawlPlayBody = ({ view, activeTeamName, clock, clockLine, serverOrigin }: PlayBodyProps): JSX.Element => {
+const BrawlPlayBody = ({ view, activeTeamName, clock, clockLine, serverOrigin, handset }: PlayBodyProps): JSX.Element => {
   const sceneRef = useRef<BrawlSceneHandle>(null);
   // Written by the mirror's paint loop: the hearts left, the worth down and the wave strip.
   const heartsRef = useRef<HTMLSpanElement>(null);
@@ -136,7 +137,9 @@ const BrawlPlayBody = ({ view, activeTeamName, clock, clockLine, serverOrigin }:
           />
         </div>
         <WaveMeter key={`meter-${shownBlockIndex}`} ref={waveMeterRef} block={block} hidden={hold !== null || isFinished} />
-        {hold !== null && <BeatCallout hold={hold} nextName={view.blocks[hold.blockIndex + 1]?.player?.name ?? null} />}
+        {hold !== null && (
+          <BeatCallout hold={hold} nextName={view.blocks[hold.blockIndex + 1]?.player?.name ?? null} handset={handset} />
+        )}
         {isHeartCalloutUp && <HeartCallout playerName={viewBlock?.player?.name ?? null} heartPrice={view.heartPrice} />}
         {isFinished && hold === null && <FinishPlaque view={view} />}
       </div>
@@ -155,7 +158,8 @@ export const DisplayBrawlSurface = ({
   activeTeamName,
   clock,
   clockLine,
-  serverOrigin
+  serverOrigin,
+  handset
 }: MinigameDisplayRendererProps): JSX.Element => {
   const brawlView = minigameDisplayView?.minigame === "BRAWL" ? minigameDisplayView : null;
 
@@ -181,6 +185,7 @@ export const DisplayBrawlSurface = ({
       clock={clock}
       clockLine={clockLine}
       serverOrigin={serverOrigin}
+      handset={handset}
     />
   );
 };

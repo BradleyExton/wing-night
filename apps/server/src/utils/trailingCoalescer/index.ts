@@ -8,6 +8,9 @@ export type CoalescerTimers = {
 
 export type TrailingCoalescer = {
   schedule: () => void;
+  // Runs now, folding any pending run into this one: for the one caller that cannot wait out the
+  // window (a contestant's phone re-binding mid-leg, whose buffered input lands next).
+  flush: () => void;
   // Drops a pending run, for a server shutting down.
   cancel: () => void;
 };
@@ -43,6 +46,14 @@ export const createTrailingCoalescer = (
         pending = null;
         run();
       }, windowMs);
+    },
+    flush: (): void => {
+      if (pending !== null) {
+        timers.clearTimeout(pending);
+        pending = null;
+      }
+
+      run();
     },
     cancel: (): void => {
       if (pending !== null) {

@@ -7,12 +7,7 @@ import type {
   MinigameSurfacePhase,
   SerializableValue
 } from "@wingnight/minigames-core";
-import {
-  Phase,
-  resolveMinigameDefinition,
-  type MinigameType,
-  type RoomTimerState
-} from "@wingnight/shared";
+import { CONTESTANT_CONTROLLERS, Phase, resolveMinigameDefinition, type MinigameType, type RoomTimerState } from "@wingnight/shared";
 
 import { hostCopy } from "../../../copy/host";
 import { RoomStateProvider } from "../../../context/RoomStateContext";
@@ -26,7 +21,7 @@ import { useMinigameClockSound } from "../../DisplayBoard/StageSurface/useMiniga
 import { useMinigameCountdown } from "../../DisplayBoard/StageSurface/useMinigameCountdown";
 import { MinigameSurface } from "../../HostControlPanel/MinigameSurface";
 import { SandboxControls } from "../SandboxControls";
-import { SandboxDeviceFrame } from "../SandboxDeviceFrame";
+import { ScaledDeviceFrame } from "../../ScaledDeviceFrame";
 import { minigameDevSandboxCopy } from "../copy";
 import {
   createClockRehearsalTimer,
@@ -230,7 +225,7 @@ export const SandboxStage = ({
               {minigameDevSandboxCopy.hostPreviewMetaLabel}
             </span>
           </header>
-          <SandboxDeviceFrame
+          <ScaledDeviceFrame
             frameClassName={styles.hostViewport}
             deviceWidth={HOST_DEVICE.width}
             deviceHeight={HOST_DEVICE.height}
@@ -259,6 +254,7 @@ export const SandboxStage = ({
                     clock={isTakeover ? <TakeoverTimerChip /> : null}
                     canDispatchAction
                     onDispatchAction={handleDispatchAction}
+                    handset={CONTESTANT_CONTROLLERS.TABLET}
                   />
                 </div>
               </RoomStateProvider>
@@ -277,7 +273,7 @@ export const SandboxStage = ({
                 />
               )}
             </div>
-          </SandboxDeviceFrame>
+          </ScaledDeviceFrame>
         </div>
         <div className={styles.previewCard}>
           <header className={styles.previewHeader}>
@@ -288,7 +284,7 @@ export const SandboxStage = ({
               {minigameDevSandboxCopy.displayPreviewMetaLabel}
             </span>
           </header>
-          <SandboxDeviceFrame
+          <ScaledDeviceFrame
             frameClassName={styles.displayViewport}
             deviceWidth={DISPLAY_DEVICE.width}
             deviceHeight={DISPLAY_DEVICE.height}
@@ -309,9 +305,10 @@ export const SandboxStage = ({
                   />
                 }
                 serverOrigin={serverOrigin}
+                handset={CONTESTANT_CONTROLLERS.TABLET}
               />
             </div>
-          </SandboxDeviceFrame>
+          </ScaledDeviceFrame>
         </div>
       </section>
     </>

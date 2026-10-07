@@ -14,7 +14,7 @@ import {
 } from "@wingnight/shared";
 
 import type { PlayerClaimStore } from "../../playerClaims/index.js";
-import { createTokenBucket } from "../../utils/tokenBucket/index.js";
+import { createTokenBucket, type TokenBucket } from "../../utils/tokenBucket/index.js";
 import {
   isPlayerClaimPayload,
   isPlayerMinigameActionPayload,
@@ -66,6 +66,14 @@ export type PlayerSeatContext = {
   // Copies the store's claimed/connected ids into the room and broadcasts
   // (coalesced by the caller, so a burst of claims is one snapshot).
   syncClaimFlags: () => void;
+  // The same, at once: for a phone re-binding its face. Its leg's controller is derived from
+  // these flags, and the input socket.io buffered while it was away is handled right after this
+  // handler returns — a coalesced sync would still say "dropped" and refuse it.
+  syncClaimFlagsNow: () => void;
+  // The room's game-input buckets, one per face, so a phone that reconnects keeps spending the
+  // bucket it had rather than getting a fresh burst on every new socket. Omitted, each socket
+  // gets its own (a harness with one socket per test).
+  minigameActionBuckets?: Map<string, TokenBucket>;
   // The rate limiter's clock; injected so a test can walk it.
   now?: () => number;
 };
@@ -125,11 +133,30 @@ export const registerPlayerHandlers = (
     now: context.now ?? Date.now
   });
 
-  const minigameActionBucket = createTokenBucket({
-    capacity: PLAYER_MINIGAME_ACTION_BURST,
-    refillPerSecond: PLAYER_MINIGAME_ACTIONS_PER_SECOND,
-    now: context.now ?? Date.now
-  });
+  const createMinigameActionBucket = (): TokenBucket =>
+    createTokenBucket({
+      capacity: PLAYER_MINIGAME_ACTION_BURST,
+      refillPerSecond: PLAYER_MINIGAME_ACTIONS_PER_SECOND,
+      now: context.now ?? Date.now
+    });
+  const minigameActionBuckets = context.minigameActionBuckets ?? new Map<string, TokenBucket>();
+  // A socket that holds no face still pays for what it sends, on a bucket of its own.
+  const unseatedActionBucket = createMinigameActionBucket();
+
+  const takeMinigameActionToken = (playerId: string | null): boolean => {
+    if (playerId === null) {
+      return unseatedActionBucket.take();
+    }
+
+    let bucket = minigameActionBuckets.get(playerId);
+
+    if (bucket === undefined) {
+      bucket = createMinigameActionBucket();
+      minigameActionBuckets.set(playerId, bucket);
+    }
+
+    return bucket.take();
+  };
 
   const takeSeat = (playerId: string): void => {
     socket.join(resolvePlayerRoom(playerId));
@@ -147,8 +174,12 @@ export const registerPlayerHandlers = (
         reason: PLAYER_CLAIM_GONE_REASONS.CLAIM_NOT_FOUND
       });
     } else {
+      socket.join(resolvePlayerRoom(playerId));
+      // At once, before this socket's buffered events are handled: the flaps a contestant's
+      // phone queued while its Wi-Fi blinked are its own leg's, and they have to find the leg
+      // the phone's again, not "dropped". The broadcast hands it the leg's host view as well.
+      context.syncClaimFlagsNow();
       takeSeat(playerId);
-      context.syncClaimFlags();
     }
   }
 
@@ -220,7 +251,9 @@ export const registerPlayerHandlers = (
   // this action now. Nothing here can advance a phase or move a turn: the actions a game lets a
   // phone send are its inputs and the end of its own run (AGENTS.md §3.5).
   socket.on(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION, (payload, ack) => {
-    if (!minigameActionBucket.take()) {
+    const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
+
+    if (!takeMinigameActionToken(playerId)) {
       answer<PlayerMinigameActionResult>(ack, {
         ok: false,
         reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.RATE_LIMITED
@@ -235,8 +268,6 @@ export const registerPlayerHandlers = (
       });
       return;
     }
-
-    const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
 
     if (playerId === null) {
       answer<PlayerMinigameActionResult>(ack, {

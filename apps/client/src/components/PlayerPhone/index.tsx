@@ -1,21 +1,29 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Player, Team, TeamTheme } from "@wingnight/shared";
 
 import { usePlayerRoomState } from "../../context/RoomStateContext";
+import type { ContestantLegController } from "../../utils/contestantLeg";
 import type { PlayerSeatController, PlayerSeatState } from "../../utils/playerSeat";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { useServerOrigin } from "../../utils/useServerOrigin";
 import * as shellStyles from "../PortalShell/styles";
 import { ClaimGoneCard } from "./ClaimGoneCard";
+import { ContestantGame } from "./ContestantGame";
+import { ContestantTurnCard } from "./ContestantTurnCard";
 import { playerPhoneCopy } from "./copy";
 import { FacePicker } from "./FacePicker";
 import { PlayerIdleCard } from "./PlayerIdleCard";
+import { resolvePhoneTurn, resolveTurnTeamId } from "./resolvePhoneTurn";
 import { ScanTheTvCard } from "./ScanTheTvCard";
 import * as styles from "./styles";
+import { useContestantHostView } from "./useContestantHostView";
 import { usePlayerSeat } from "./usePlayerSeat";
 
 type PlayerPhoneProps = {
   seat: PlayerSeatController | null;
+  // The phone's own leg of an arcade relay: the game's host view, sent to this phone alone, and
+  // the road its input takes back. Null without a socket.
+  contestantLeg: ContestantLegController | null;
 };
 
 type Seating = {
@@ -51,7 +59,7 @@ const EMPTY_TEAMS: Team[] = [];
 // snapshot carries. The phone never advances the night or touches a score —
 // the most it does is claim a face and let it go. No sound, ever: the TV is
 // the room's only speaker.
-export const PlayerPhone = ({ seat }: PlayerPhoneProps): JSX.Element => {
+export const PlayerPhone = ({ seat, contestantLeg }: PlayerPhoneProps): JSX.Element => {
   const roomState = usePlayerRoomState();
   const seatState: PlayerSeatState = usePlayerSeat(seat);
   const serverOrigin = useServerOrigin();
@@ -59,6 +67,45 @@ export const PlayerPhone = ({ seat }: PlayerPhoneProps): JSX.Element => {
   const teams = roomState?.teams ?? EMPTY_TEAMS;
   const claimedPlayerIds = roomState?.claimedPlayerIds ?? [];
   const seating = useMemo(() => resolveSeating(teams), [teams]);
+  const teamNameByTeamId = useMemo(() => new Map(teams.map((team) => [team.id, team.name])), [teams]);
+  const seatedPlayer =
+    seatState.status === "seated" ? players.find((player) => player.id === seatState.playerId) : undefined;
+  const contestantPlayerId = roomState?.contestantTurn?.contestantPlayerId ?? null;
+  // Who held the leg before this phone did, as this phone saw it: the handoff hold's name. Kept
+  // a render behind on purpose — the render that hands this phone the leg still reads the last.
+  const previousContestantRef = useRef<string | null>(null);
+  const phoneTurn =
+    roomState === null || seatedPlayer === undefined
+      ? null
+      : resolvePhoneTurn(roomState, seatedPlayer.id, previousContestantRef.current);
+  const contestantHostView = useContestantHostView(contestantLeg, phoneTurn?.role === "play");
+  const nameOf = (playerId: string | null): string | null =>
+    players.find((player) => player.id === playerId)?.name ?? null;
+
+  useEffect(() => {
+    if (contestantPlayerId !== null && contestantPlayerId !== seatedPlayer?.id) {
+      previousContestantRef.current = contestantPlayerId;
+    }
+  }, [contestantPlayerId, seatedPlayer?.id]);
+
+  // The one phone that shows the game: its own leg, on its own phone, sideways.
+  if (phoneTurn?.role === "play" && seatedPlayer !== undefined) {
+    const activeTurnTeamId = roomState === null ? null : resolveTurnTeamId(roomState);
+
+    return (
+      <ContestantGame
+        key={phoneTurn.legIndex}
+        hostView={contestantHostView}
+        playerName={seatedPlayer.name}
+        legIndex={phoneTurn.legIndex}
+        previousPlayerName={phoneTurn.legIndex === 0 ? null : nameOf(phoneTurn.previousPlayerId)}
+        activeTeamName={activeTurnTeamId === null ? null : (teamNameByTeamId.get(activeTurnTeamId) ?? null)}
+        teamNameByTeamId={teamNameByTeamId}
+        serverOrigin={serverOrigin}
+        onDispatchAction={(actionType, actionPayload) => contestantLeg?.dispatch(actionType, actionPayload)}
+      />
+    );
+  }
 
   const renderBody = (): JSX.Element => {
     if (seatState.status === "locked") {
@@ -80,8 +127,17 @@ export const PlayerPhone = ({ seat }: PlayerPhoneProps): JSX.Element => {
       );
     }
 
-    const seatedPlayer =
-      seatState.status === "seated" ? players.find((player) => player.id === seatState.playerId) : undefined;
+    if (seatedPlayer !== undefined && phoneTurn !== null && phoneTurn.role !== "play") {
+      return (
+        <ContestantTurnCard
+          turn={phoneTurn}
+          player={seatedPlayer}
+          teamTheme={seating.teamThemeByPlayerId.get(seatedPlayer.id) ?? null}
+          contestantName={nameOf(roomState.contestantTurn?.contestantPlayerId ?? null)}
+          serverOrigin={serverOrigin}
+        />
+      );
+    }
 
     if (seatedPlayer !== undefined) {
       return (

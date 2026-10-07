@@ -63,6 +63,7 @@ const render = (
       onDispatchAction={(): void => {}}
       serverOrigin={null}
       seat={seat}
+      handset="tablet"
     />
   );
 

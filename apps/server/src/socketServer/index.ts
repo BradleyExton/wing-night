@@ -28,6 +28,7 @@ import {
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
 import { playerClaimStore } from "../playerClaims/index.js";
 import { isLoopbackAddress } from "../utils/loopbackPeer/index.js";
+import type { TokenBucket } from "../utils/tokenBucket/index.js";
 import { createTrailingCoalescer } from "../utils/trailingCoalescer/index.js";
 import { registerPlayerHandlers, resolvePlayerRoom } from "./registerPlayerHandlers/index.js";
 import { resolveContestantHostViewDelivery } from "./contestantHostView/index.js";
@@ -178,6 +179,9 @@ export const attachSocketServer = (
     broadcastSnapshot(mutationResult.roomState);
   };
 
+  // Every contestant's game-input bucket, by face: it outlives the socket that spent it.
+  const minigameActionBuckets = new Map<string, TokenBucket>();
+
   const claimFlagSync = createTrailingCoalescer(() => {
     broadcastAfter(syncPlayerClaimFlags);
   }, CLAIM_FLAG_SYNC_WINDOW_MS);
@@ -312,7 +316,9 @@ export const attachSocketServer = (
 
           return { ok: true };
         },
-        syncClaimFlags: claimFlagSync.schedule
+        syncClaimFlags: claimFlagSync.schedule,
+        syncClaimFlagsNow: claimFlagSync.flush,
+        minigameActionBuckets
       });
     }
   });

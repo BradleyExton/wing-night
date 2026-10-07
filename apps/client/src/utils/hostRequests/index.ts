@@ -5,8 +5,10 @@ import {
   isValidMusicVolume,
   resolveQuickPlayStartIssues,
   type GameReorderTurnOrderPayload,
+  type GameSetRoundDeviceModePayload,
   type HostSecretPayload,
   type MinigameActionPayload,
+  type MinigameDeviceMode,
   type MinigameType,
   type MusicSetVolumePayload,
   type SfxSetVolumePayload,
@@ -77,6 +79,8 @@ type HostRequestArgs = {
   onStartQuickPlay: [games: QuickPlayGame[], teams: QuickPlayTeam[]];
   onReleasePlayerClaim: [playerId: string];
   onRotatePlayerJoinCode: [];
+  onSetRoundDeviceMode: [round: number, deviceMode: MinigameDeviceMode];
+  onTakeBackContestantLeg: [];
 };
 
 export type HostRequestName = keyof HostRequestArgs;
@@ -287,6 +291,19 @@ export const hostRequestTable: HostRequestTable = {
   onRotatePlayerJoinCode: {
     event: CLIENT_TO_SERVER_EVENTS.ROTATE_PLAYER_JOIN_TOKEN,
     buildPayload: buildHostSecretPayload
+  },
+  onSetRoundDeviceMode: {
+    event: CLIENT_TO_SERVER_EVENTS.SET_ROUND_DEVICE_MODE,
+    canEmit: (round): boolean => Number.isInteger(round) && round > 0,
+    buildPayload: (hostSecret, round, deviceMode): GameSetRoundDeviceModePayload => ({
+      hostSecret,
+      round,
+      deviceMode
+    })
+  },
+  onTakeBackContestantLeg: {
+    event: CLIENT_TO_SERVER_EVENTS.TAKE_BACK_CONTESTANT_LEG,
+    buildPayload: buildHostSecretPayload
   }
 };
 
@@ -352,6 +369,8 @@ export const createHostRequestHandlers = (
     onRedoLastMutation: buildHandler("onRedoLastMutation"),
     onStartQuickPlay: buildHandler("onStartQuickPlay"),
     onReleasePlayerClaim: buildHandler("onReleasePlayerClaim"),
-    onRotatePlayerJoinCode: buildHandler("onRotatePlayerJoinCode")
+    onRotatePlayerJoinCode: buildHandler("onRotatePlayerJoinCode"),
+    onSetRoundDeviceMode: buildHandler("onSetRoundDeviceMode"),
+    onTakeBackContestantLeg: buildHandler("onTakeBackContestantLeg")
   };
 };

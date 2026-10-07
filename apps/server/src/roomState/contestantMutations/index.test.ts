@@ -431,3 +431,53 @@ test("does keep the tablet's own timeOut working in a tablet turn", () => {
 
   assert.equal(hostViewOf("FAPPY").phase, "timedOut");
 });
+
+test("does hand a reset relay's first leg back to the contestant's phone when the host had taken it back", () => {
+  playArcadeTurn("FAPPY");
+  phoneSends("player-1", "FAPPY", "flap", { tick: 3 });
+  takeBackContestantLeg();
+  assert.equal(getRoomStateSnapshot().contestantTurn?.controller, "tablet");
+
+  // The host runs the whole relay again from the start line: a fresh log on every leg.
+  dispatchMinigameAction("FAPPY", "resetTurn", {});
+
+  assert.equal(hostViewOf("FAPPY").legIndex, 0);
+  assert.deepEqual(hostViewOf("FAPPY").legs[0]?.flapTicks, []);
+  assert.equal(
+    getRoomStateSnapshot().contestantTurn?.controller,
+    "phone",
+    `leg 0 stays on the tablet after the reset: ${JSON.stringify(getRoomStateSnapshot().contestantTurn)}`
+  );
+});
+
+test("does keep the tablet out of a dropped phone's log when the host has not taken the leg back", () => {
+  playArcadeTurn("FAPPY");
+  phoneSends("player-1", "FAPPY", "flap", { tick: 3 });
+  dropPhone("player-1");
+  assert.equal(getRoomStateSnapshot().contestantTurn?.droppedPlayerId, "player-1");
+  assert.equal(getRoomStateSnapshot().contestantTurn?.controller, "tablet");
+
+  // A tablet input for the dropped leg, without a take-back.
+  dispatchMinigameAction("FAPPY", "flap", { tick: 10 });
+
+  assert.deepEqual(
+    hostViewOf("FAPPY").legs[0]?.flapTicks,
+    [3],
+    `the phone's attempt now carries the tablet's tick too: ${JSON.stringify(hostViewOf("FAPPY").legs[0]?.flapTicks)}`
+  );
+});
+
+test("does hand back who held each leg when an undo restores an earlier log", () => {
+  playArcadeTurn("FAPPY");
+  phoneSends("player-1", "FAPPY", "flap", { tick: 3 });
+  // The phone's leg ends (an undo point), then the host takes leg 2 back from the next phone.
+  phoneSends("player-1", "FAPPY", "endLeg");
+  takeBackContestantLeg();
+  assert.deepEqual(getRoomStateSnapshot().contestantTurn?.tabletLegIndexes, [hostViewOf("FAPPY").legIndex]);
+
+  redoLastScoringMutation();
+
+  assert.equal(hostViewOf("FAPPY").legIndex, 0);
+  assert.deepEqual(getRoomStateSnapshot().contestantTurn?.tabletLegIndexes, []);
+  assert.equal(getRoomStateSnapshot().contestantTurn?.controller, "phone");
+});

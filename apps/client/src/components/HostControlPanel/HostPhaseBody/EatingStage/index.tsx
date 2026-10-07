@@ -1,6 +1,8 @@
 import { MUSIC_VOLUME_DEFAULT, SFX_VOLUME_DEFAULT } from "@wingnight/shared";
 
 import { ControlDeck } from "../ControlDeck";
+import { DeviceModeSurface } from "../../DeviceModeSurface";
+import { selectDeviceModeRounds } from "../../DeviceModeSurface/selectDeviceModeRounds";
 import { StageHero } from "../StageHero";
 import { MusicControlsSurface } from "../../MusicControlsSurface";
 import { PlayersSurface } from "../../PlayersSurface";
@@ -90,6 +92,11 @@ export const EatingStage = (): JSX.Element => {
           activeRoundTeamName={activeRoundTeamName}
           participationDisabled={participationDisabled}
           onSetWingParticipation={handleWingParticipationChange}
+        />
+        <DeviceModeSurface
+          rounds={selectDeviceModeRounds(roomState)}
+          lockedDeviceMode={roomState?.contestantTurn?.deviceMode ?? null}
+          onSetRoundDeviceMode={handlers.onSetRoundDeviceMode}
         />
         <TimerControlsSurface
           timer={timer}

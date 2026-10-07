@@ -27,6 +27,7 @@ import { clearHostControlToken } from "./utils/hostControlToken";
 import { saveHostSecret } from "./utils/hostSecretStorage";
 import { createDisplayReportHandlers } from "./utils/displayReports";
 import { createHostRequestHandlers } from "./utils/hostRequests";
+import { createContestantLegController, type ContestantLegController } from "./utils/contestantLeg";
 import { createPlayerSeatController, type PlayerSeatController } from "./utils/playerSeat";
 import {
   resolveClientRoute,
@@ -54,7 +55,8 @@ const resolveRouteContent = (
   devLabName: string | null,
   roomSocket: ReturnType<typeof createRoomSocket> | null,
   displayReports: ReturnType<typeof createDisplayReportHandlers> | null,
-  playerSeat: PlayerSeatController | null
+  playerSeat: PlayerSeatController | null,
+  contestantLeg: ContestantLegController | null
 ): JSX.Element => {
   if (route === "HOST") {
     return <HostControlPanel />;
@@ -80,9 +82,10 @@ const resolveRouteContent = (
   }
 
   // A guest's phone. Its seat (which face is this phone's) is its own, held
-  // beside room state rather than in it, so it rides in as a prop.
+  // beside room state rather than in it, so it rides in as a prop — and so
+  // does its leg of an arcade relay, whose host view only this phone is sent.
   if (route === "PLAY") {
-    return <PlayerPhone seat={playerSeat} />;
+    return <PlayerPhone seat={playerSeat} contestantLeg={contestantLeg} />;
   }
 
   if (route === "ROOT") {
@@ -152,6 +155,20 @@ export const App = (): JSX.Element => {
       playerSeat?.dispose();
     };
   }, [playerSeat]);
+
+  const contestantLeg = useMemo(() => {
+    if (route !== "PLAY" || roomSocket === null) {
+      return null;
+    }
+
+    return createContestantLegController(roomSocket);
+  }, [roomSocket, route]);
+
+  useEffect(() => {
+    return (): void => {
+      contestantLeg?.dispose();
+    };
+  }, [contestantLeg]);
 
   // The TV's player QR: only the laptop's display is ever handed the token.
   useEffect(() => {
@@ -229,7 +246,8 @@ export const App = (): JSX.Element => {
             devLabName,
             roomSocket,
             displayReports,
-            playerSeat
+            playerSeat,
+            contestantLeg
           )}
         </PlayerJoinTokenProvider>
       </HostHandlersProvider>

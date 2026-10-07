@@ -126,6 +126,8 @@ const renderSurface = (
       minigameDisplayView={minigameDisplayView}
       activeTeamName="Team Heat"
       clock={null}
+      handset="tablet"
+
       clockLine={null}
       serverOrigin="http://localhost:3000"
     />
