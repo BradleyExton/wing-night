@@ -28,6 +28,7 @@ test("renders the team-first reveal with the genre kit, the lineup and the minig
       activeTeamTheme={resolveTeamTheme(buildTeam("metal"))}
       activeTeamPlayers={players}
       minigameType="TRIVIA"
+      minigamePointsMax={null}
     />
   );
 
@@ -44,6 +45,23 @@ test("renders the team-first reveal with the genre kit, the lineup and the minig
   assert.match(html, />Trivia</);
 });
 
+test("puts the round's stakes beside the game when the cap is known", () => {
+  const html = renderToStaticMarkup(
+    <MinigameIntroStageBody
+      activeTeamName="Team Heat"
+      activeTeamGenre={null}
+      activeTeamTheme={null}
+      activeTeamPlayers={[]}
+      minigameType="JOUST"
+      minigamePointsMax={25}
+    />
+  );
+
+  assert.match(html, /data-minigame-points-max="25"/);
+  assert.match(html, /up to/);
+  assert.match(html, /25 pts/);
+});
+
 test("falls back to placeholder labels when team and minigame data are missing", () => {
   const html = renderToStaticMarkup(
     <MinigameIntroStageBody
@@ -52,6 +70,7 @@ test("falls back to placeholder labels when team and minigame data are missing",
       activeTeamTheme={null}
       activeTeamPlayers={[]}
       minigameType={null}
+      minigamePointsMax={null}
     />
   );
 
@@ -71,6 +90,7 @@ test("renders the eyebrow alone and a plain primary headline for a team with no 
       activeTeamTheme={resolveTeamTheme(buildTeam())}
       activeTeamPlayers={players}
       minigameType="TRIVIA"
+      minigamePointsMax={null}
     />
   );
 

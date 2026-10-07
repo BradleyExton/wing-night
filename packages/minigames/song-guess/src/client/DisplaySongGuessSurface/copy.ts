@@ -10,11 +10,13 @@ export const displaySongGuessSurfaceCopy = {
     `Song ${songNumber} of ${songsTotal}`,
   listenPrompt: "🎵 Listen closely…",
   lockInPrompt: "Lock in your answers",
-  lockInHint: "Title and original artist — one point each.",
+  lockInHint: (pointsPerMark: number): string =>
+    `Title and original artist — ${pointsPerMark === 1 ? "one point" : `${pointsPerMark} points`} each.`,
   // The host has opened the ruling and is still tapping; the answer stays
   // off the wall until both halves are in.
   rulingPrompt: "And the ruling is…",
-  rulingHint: "Title and original artist — one point each.",
+  rulingHint: (pointsPerMark: number): string =>
+    `Title and original artist — ${pointsPerMark === 1 ? "one point" : `${pointsPerMark} points`} each.`,
   revealLabel: "The answer",
   verdictTitleField: "Title",
   verdictArtistField: "Artist",

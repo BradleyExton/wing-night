@@ -13,6 +13,7 @@ type MinigameIntroStageBodyProps = {
   activeTeamTheme: TeamTheme | null;
   activeTeamPlayers: Player[];
   minigameType: MinigameType | null;
+  minigamePointsMax: number | null;
 };
 
 // The team spotlight (docs/team-identity.md, "TV MINIGAME_INTRO"): the genre's
@@ -25,7 +26,8 @@ export const MinigameIntroStageBody = ({
   activeTeamGenre,
   activeTeamTheme,
   activeTeamPlayers,
-  minigameType
+  minigameType,
+  minigamePointsMax
 }: MinigameIntroStageBodyProps): JSX.Element => {
   const resolvedTeamName = activeTeamName ?? minigameIntroStageCopy.fallbackTeamName;
   const resolvedMinigameLabel =
@@ -90,6 +92,17 @@ export const MinigameIntroStageBody = ({
       <p className={`${styles.beatBase} ${styles.beatDelay4} ${styles.post}`}>
         <span className={styles.postLabel}>{minigameIntroStageCopy.playingLabel}</span>
         {resolvedMinigameLabel}
+        {/* The stakes are a published rule (docs/minigame-design-principles.md
+            §4): a pack that ramps the cap round by round says so here. */}
+        {minigamePointsMax !== null && (
+          <span data-minigame-points-max={minigamePointsMax}>
+            <span className={styles.postSeparator} aria-hidden>
+              {minigameIntroStageCopy.rosterSeparator}
+            </span>
+            <span className={styles.postLabel}>{minigameIntroStageCopy.stakesLabel}</span>
+            {minigameIntroStageCopy.stakesValue(minigamePointsMax)}
+          </span>
+        )}
       </p>
     </div>
   );

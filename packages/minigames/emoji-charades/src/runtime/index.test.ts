@@ -41,7 +41,7 @@ const asSerializable = (value: unknown): SerializableValue => {
   return value as SerializableValue;
 };
 
-const initialize = (): EmojiCharadesRuntimeState => {
+const initialize = (roundMemory: SerializableValue | null = null): EmojiCharadesRuntimeState => {
   const state = emojiCharadesRuntimePlugin.initialize({
     teamIds: ["team-a", "team-b"],
     // This game never looks at the roster; JOUST is the one that does.
@@ -51,7 +51,8 @@ const initialize = (): EmojiCharadesRuntimeState => {
     pointsMax: POINTS_MAX,
     pendingPointsByTeamId: { "team-a": 0, "team-b": 0 },
     rules: null,
-    content: asSerializable(contentFixture)
+    content: asSerializable(contentFixture),
+    roundMemory
   });
 
   return state as EmojiCharadesRuntimeState;
@@ -641,4 +642,34 @@ test("tells the display what a solved subject is worth", () => {
   }) as EmojiCharadesMinigameDisplayView;
 
   assert.equal(view.pointsPerCorrect, 2);
+});
+
+test("does deal the subjects the room has already seen last in the round", () => {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const state = initialize({ shownSubjectIds: ["jaws", "rocky"] });
+
+    assert.deepEqual(state.shuffledSubjectIds.slice(0, 1), ["titanic"]);
+    assert.deepEqual([...state.shuffledSubjectIds.slice(1)].sort(), ["jaws", "rocky"]);
+  }
+});
+
+test("does hand the next team every subject the TV revealed, skips included", () => {
+  const first = initialize();
+  const [revealedFirst, revealedSecond, unrevealed] = first.shuffledSubjectIds;
+  const afterCorrect = reduce(first, "markCorrect").state;
+  const afterSkip = reduce(afterCorrect, "skipSubject").state;
+
+  const memory = emojiCharadesRuntimePlugin.selectRoundMemory?.({
+    state: asSerializable(afterSkip),
+    rules: null,
+    content: asSerializable(contentFixture)
+  }) as { shownSubjectIds: string[] };
+
+  assert.deepEqual(memory.shownSubjectIds, [revealedFirst, revealedSecond]);
+  assert.equal(memory.shownSubjectIds.includes(unrevealed as string), false);
+
+  // The third team inherits the second's list as well as what it adds.
+  const third = initialize(asSerializable(memory));
+  assert.deepEqual(third.roundShownSubjectIds, [revealedFirst, revealedSecond]);
+  assert.equal(third.shuffledSubjectIds[0], unrevealed);
 });

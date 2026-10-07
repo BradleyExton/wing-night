@@ -204,9 +204,14 @@ const launch = (
   const collapsedPerchIndices = run.collapses.map((collapse) => collapse.perchIndex);
   const isRackCleared =
     toppledPlayerIds.length > 0 && toppledPlayerIds.length === standing.length;
-  const points =
+  const scoredPoints =
     toppled.reduce((total, pin) => total + pointsForPin(pin, arena.perches), 0) +
     (isRackCleared ? JOUST_RACK_CLEARED_BONUS : 0);
+  // What the shot actually banks. A shot that runs the team into the round's
+  // cap is worth only what fits under it, and every surface shows this one
+  // number, so the "+N" on the plaque always matches the move on the marquee.
+  const teamPointsBefore = currentTeamPoints(state);
+  const points = Math.max(0, Math.min(pointsMax, teamPointsBefore + scoredPoints) - teamPointsBefore);
   const shot: JoustShotResult = {
     shotNumber: state.shotIndex + 1,
     toppledPlayerIds,
@@ -234,11 +239,7 @@ const launch = (
         pinPlayerIds: standing.map((pin) => pin.playerId),
         rubblePerchIndices: [...state.collapsedPerchIndices]
       },
-      pendingPointsByTeamId: withPendingPoints(
-        state,
-        currentTeamPoints(state) + points,
-        pointsMax
-      )
+      pendingPointsByTeamId: withPendingPoints(state, teamPointsBefore + points, pointsMax)
     },
     didMutate: true
   };

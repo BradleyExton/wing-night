@@ -82,6 +82,7 @@ const MinigameIntroBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
       activeTeamTheme={stageViewModel.activeTeamTheme}
       activeTeamPlayers={stageViewModel.activeTeamPlayers}
       minigameType={stageViewModel.minigameType}
+      minigamePointsMax={stageViewModel.minigamePointsMax}
     />
   );
 };

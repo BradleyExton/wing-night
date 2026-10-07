@@ -17,6 +17,8 @@ export type {
   MinigameType
 } from "./minigameDefinitions/index.js";
 
+export { resolveRoundMinigameMax } from "./resolveRoundMinigameMax/index.js";
+
 export {
   isGameConfigFile,
   SETUP_PREVIEW_ROUND_SLOTS_MAX,

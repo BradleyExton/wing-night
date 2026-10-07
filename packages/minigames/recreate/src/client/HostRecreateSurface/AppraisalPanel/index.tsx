@@ -7,7 +7,6 @@ import * as styles from "./styles.js";
 type AppraisalPanelProps = {
   attempt: RecreateAttempt;
   checklist: RecreateChecklist;
-  pointsPerIngredient: number;
   canDispatchAction: boolean;
   onDispatchAction: MinigameActionDispatch;
 };
@@ -38,12 +37,9 @@ const resolveAttemptNote = (attempt: RecreateAttempt): string => {
 export const AppraisalPanel = ({
   attempt,
   checklist,
-  pointsPerIngredient,
   canDispatchAction,
   onDispatchAction
 }: AppraisalPanelProps): JSX.Element => {
-  const checkedCount = checklist.checkedIngredientIndexes.length;
-
   return (
     <div className={styles.container}>
       <p className={styles.sectionLabel}>{hostRecreateSurfaceCopy.readAloudLabel}</p>
@@ -77,7 +73,7 @@ export const AppraisalPanel = ({
         })}
       </ul>
       <p className={styles.tally}>
-        {hostRecreateSurfaceCopy.tallyLabel(checkedCount * pointsPerIngredient)}
+        {hostRecreateSurfaceCopy.tallyLabel(checklist.pointsIfLocked)}
       </p>
     </div>
   );

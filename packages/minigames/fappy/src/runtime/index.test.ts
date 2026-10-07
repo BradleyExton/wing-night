@@ -157,13 +157,21 @@ test("does fly the drawn hen when the team has no roster", () => {
   assert.ok(view.legs.every((leg) => leg.player === null));
 });
 
-test("does derive the same seeds for the same team across initializations", () => {
-  const first = hostView(initialize()).legs.map((leg) => leg.seed);
-  const second = hostView(initialize()).legs.map((leg) => leg.seed);
-  const other = hostView(initialize({ activeRoundTeamId: "team-beta" })).legs.map((leg) => leg.seed);
+test("does deal every team the same relay when a turn starts", () => {
+  const coursesOf = (activeRoundTeamId: string): ReturnType<typeof resolveFappyGates>[] =>
+    hostView(initialize({ activeRoundTeamId })).legs.map((leg) =>
+      resolveFappyGates({ seed: leg.seed, legIndex: leg.legIndex, gatesPerLeg: RULES.gatesPerLeg })
+    );
 
-  assert.deepEqual(first, second);
-  assert.notDeepEqual(first, other);
+  assert.deepEqual(coursesOf("team-alpha"), coursesOf("team-beta"));
+});
+
+test("does fly different gates on each leg of a relay", () => {
+  const [first, second] = hostView(initialize()).legs.map((leg) =>
+    resolveFappyGates({ seed: leg.seed, legIndex: leg.legIndex, gatesPerLeg: RULES.gatesPerLeg })
+  );
+
+  assert.notDeepEqual(first, second);
 });
 
 test("does start the relay clock on the first flap and append the log in order", () => {

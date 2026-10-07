@@ -475,6 +475,9 @@ test("caps the turn at pointsMax", () => {
   state = reduce(state, "launch", SWEEPING_AIM, { pointsMax: 4 }).state;
 
   assert.equal(asState(state).pendingPointsByTeamId["team-1"], 4);
+  // The shot reads what it banked, not what it would have scored without the cap.
+  assert.equal(asState(state).lastShot?.points, 1);
+  assert.equal(asState(state).shots[0]?.points, 1);
 });
 
 test("forfeits a shot through the skip escape hatch", () => {

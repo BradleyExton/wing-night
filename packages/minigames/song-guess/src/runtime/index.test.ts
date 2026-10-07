@@ -79,6 +79,7 @@ const reduce = (
     pointsMax: number;
     content: SerializableValue | null;
     receivedAtMs: number;
+    rules: SerializableValue | null;
   }> = {}
 ): { state: SerializableValue; didMutate: boolean } => {
   return songGuessRuntimePlugin.reduceAction({
@@ -91,7 +92,7 @@ const reduce = (
         : { receivedAtMs: options.receivedAtMs })
     },
     pointsMax: options.pointsMax ?? 15,
-    rules: { songsPerTurn: 4 },
+    rules: options.rules === undefined ? { songsPerTurn: 4 } : options.rules,
     content: options.content === undefined ? contentFixture : options.content
   });
 };
@@ -267,6 +268,25 @@ test("awards a point each for a correct title and artist", () => {
   ).state;
 
   assert.equal(hostViewOf(marked).pendingPointsByTeamId["team-1"], 2);
+});
+
+test("does pay each half what the pack's pointsPerMark says", () => {
+  const rules = { songsPerTurn: 4, pointsPerMark: 2 };
+  const revealed = advanceTo(initializeState(), "playClip", "pauseClip", "triggerReveal");
+  const titled = reduce(revealed, "markTitle", { correct: true }, { rules }).state;
+  const marked = reduce(titled, "markArtist", { correct: true }, { rules, receivedAtMs: 5_000 })
+    .state;
+  const revoked = reduce(marked, "markTitle", { correct: false }, { rules }).state;
+
+  assert.equal(hostViewOf(marked).pendingPointsByTeamId["team-1"], 4);
+  assert.equal(hostViewOf(revoked).pendingPointsByTeamId["team-1"], 2);
+
+  const display = songGuessRuntimePlugin.selectDisplayView({
+    state: marked,
+    rules,
+    content: contentFixture
+  }) as SongGuessMinigameDisplayView;
+  assert.equal(display.phase === "reveal" ? display.reveal?.pointsEarned : null, 4);
 });
 
 test("takes the point back when the host changes a ruling", () => {
@@ -664,7 +684,11 @@ test("accepts a well-formed rules block and rejects a malformed one", () => {
   assert.equal(isSongGuessRules({ songsPerTurn: 0 }), false);
   assert.equal(isSongGuessRules({ songsPerTurn: 2.5 }), false);
   assert.equal(isSongGuessRules([]), false);
+  assert.equal(isSongGuessRules({ pointsPerMark: 2 }), true);
+  assert.equal(isSongGuessRules({ pointsPerMark: 0 }), false);
   assert.equal(resolveSongGuessRules(null).songsPerTurn, 4);
+  assert.equal(resolveSongGuessRules(null).pointsPerMark, 1);
+  assert.equal(resolveSongGuessRules({ pointsPerMark: 3 }).pointsPerMark, 3);
 });
 
 test("throws with file context when the content file is not valid JSON", () => {

@@ -15,7 +15,8 @@ const baseView = {
   pendingPointsByTeamId: { "team-1": 4, "team-2": 2 },
   songCursor: 1,
   songsTotal: 4,
-  replayUsed: false
+  replayUsed: false,
+  pointsPerMark: 1
 } as const;
 
 const clipView = (

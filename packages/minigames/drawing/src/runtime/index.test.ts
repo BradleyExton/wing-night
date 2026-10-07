@@ -11,6 +11,7 @@ import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { drawingMinigameId, drawingRuntimePlugin } from "./index.js";
 import { parseDrawingContentFile } from "./content/index.js";
+import { isDrawingRules, resolveDrawingRules } from "./guards/index.js";
 import {
   MAX_APPEND_POINTS_PER_ACTION,
   MAX_POINTS_PER_STROKE,
@@ -70,13 +71,14 @@ const reduce = (
   options: Partial<{
     pointsMax: number;
     content: SerializableValue | null;
+    rules: SerializableValue | null;
   }> = {}
 ): { state: SerializableValue; didMutate: boolean } => {
   return drawingRuntimePlugin.reduceAction({
     state,
     envelope: { actionType, actionPayload },
     pointsMax: options.pointsMax ?? 15,
-    rules: null,
+    rules: options.rules ?? null,
     content:
       options.content === undefined ? drawingContentFixture : options.content
   });
@@ -311,12 +313,41 @@ test("markCorrect awards one point, reveals the prompt, and resets the canvas", 
   assert.equal(nextState.activeStrokeId, null);
   assert.equal(nextState.reveal?.promptId, expectedPromptId);
   assert.equal(nextState.reveal?.outcome, "CORRECT");
+  assert.equal(nextState.reveal?.pointsAwarded, 1);
   assert.equal(
     nextState.reveal !== null &&
       nextState.reveal.expiresAtMs - nextState.reveal.revealedAtMs ===
         PROMPT_REVEAL_MS,
     true
   );
+});
+
+test("does pay each guessed drawing what the pack's pointsPerCorrect says", () => {
+  const state = initializeState({ pendingPointsByTeamId: { "team-1": 2 } });
+  const result = reduce(state, "markCorrect", {}, { rules: { pointsPerCorrect: 3 } });
+  const nextState = result.state as DrawingRuntimeState;
+
+  assert.equal(nextState.pendingPointsByTeamId["team-1"], 5);
+  assert.equal(nextState.reveal?.pointsAwarded, 3);
+});
+
+test("does put on the reveal only the points that fit under the cap", () => {
+  const state = initializeState({ pointsMax: 10, pendingPointsByTeamId: { "team-1": 9 } });
+  const result = reduce(state, "markCorrect", {}, {
+    pointsMax: 10,
+    rules: { pointsPerCorrect: 3 }
+  });
+
+  assert.equal((result.state as DrawingRuntimeState).reveal?.pointsAwarded, 1);
+});
+
+test("does accept a well-formed drawing rules block and reject a malformed one", () => {
+  assert.equal(isDrawingRules({}), true);
+  assert.equal(isDrawingRules({ pointsPerCorrect: 2 }), true);
+  assert.equal(isDrawingRules({ pointsPerCorrect: 0 }), false);
+  assert.equal(isDrawingRules({ pointsPerCorrect: 1.5 }), false);
+  assert.equal(isDrawingRules([]), false);
+  assert.equal(resolveDrawingRules(null).pointsPerCorrect, 1);
 });
 
 test("markCorrect clamps pending points at pointsMax", () => {

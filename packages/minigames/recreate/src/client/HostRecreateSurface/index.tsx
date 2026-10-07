@@ -198,7 +198,6 @@ export const HostRecreateSurface = ({
               <AppraisalPanel
                 attempt={recreateHostView.attempt}
                 checklist={recreateHostView.checklist}
-                pointsPerIngredient={recreateHostView.pointsPerIngredient}
                 canDispatchAction={canDispatchAction}
                 onDispatchAction={onDispatchAction}
               />

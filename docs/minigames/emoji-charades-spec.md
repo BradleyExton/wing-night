@@ -9,6 +9,7 @@ Last updated: 2026-09-24 (information asymmetry named)
 - Ship a full `EMOJI_CHARADES` minigame that fits the existing Wing Night turn loop.
 - One picker per team per turn; team chooses who holds the tablet (same physical handoff model as Drawing — the runtime does not track picker identity).
 - The turn is DEALT a deck at initialize — the room never picks one; subjects within it served in random order.
+- Every team in a round is dealt the same deck, and the TV reveals each subject (CORRECT or SKIPPED). So the round remembers what has been revealed (`selectRoundMemory` → `{ shownSubjectIds }`), and a later team's shuffle deals fresh subjects first and repeats only after them.
 - Picker sees the subject on the tablet and taps emojis; the emoji sequence streams to the TV display in real time.
 - Display never sees the subject text during play — only the emoji sequence the picker is building.
 - Brief subject reveal on display after Got It / Skip, then onto the next subject. Same reveal pattern as Drawing.
@@ -205,6 +206,7 @@ type EmojiCharadesRuntimeState = {
   status: EmojiCharadesSubState;
   selectedDeckId: string | null;
   shuffledSubjectIds: string[];     // populated by the deal, in initialize
+  roundShownSubjectIds: string[];   // revealed by earlier turns this round, from round memory
   subjectCursor: number;
   emojiSequence: string[];          // current subject's clue
   reveal: SubjectReveal | null;

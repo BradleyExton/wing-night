@@ -12,6 +12,8 @@ export const displayRecreateSurfaceCopy = {
   sealedIngredientsLabel: "Ingredients sealed until the prompt is in",
   promptLabel: "Their prompt",
   ingredientsLabel: "Secret ingredients",
+  sealedIngredientMark: "?",
+  sealedIngredientLabel: "Sealed until the score is locked",
   attemptGeneratingLabel: "Painting…",
   attemptFailedLabel: "The forger bailed",
   attemptSkippedLabel: "Judged by ear tonight",

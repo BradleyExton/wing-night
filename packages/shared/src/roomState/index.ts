@@ -153,6 +153,9 @@ export type RecreateChecklist = {
   ingredients: string[];
   checkedIngredientIndexes: number[];
   authoredPrompt: string;
+  // What locking the score right now would bank: the ticks at the rate, held
+  // to the round's cap.
+  pointsIfLocked: number;
 };
 
 type RecreateMinigameViewFields = {
@@ -172,12 +175,15 @@ export type RecreateMinigameHostView = MinigameHostViewBase &
     checklist: RecreateChecklist | null;
   };
 
-// The display's copy of the rubric lags the host's by one beat: the
-// ingredients appear once the prompt is in (they are no longer an answer the
-// team could use), the authored prompt only once the score is locked.
+// The display's copy of the rubric lags the host's by one beat. Once the prompt
+// is in, the board shows one slot per ingredient, but only a ticked one is named:
+// an unticked slot is `null` until the score is locked. "Let them rewrite" is
+// open the whole time the host grades, so an ingredient the room saw missed
+// would be an answer the rewrite could use. The authored prompt also waits for
+// the lock.
 export type RecreateMinigameDisplayView = MinigameDisplayViewBase &
   RecreateMinigameViewFields & {
-    ingredients: string[] | null;
+    ingredients: (string | null)[] | null;
     checkedIngredientIndexes: number[];
     authoredPrompt: string | null;
   };
@@ -204,6 +210,9 @@ export type DrawingPromptReveal = {
   promptId: string;
   promptText: string;
   outcome: DrawingPromptOutcome;
+  // What the verdict banked: the pack's points per drawing, held to the
+  // round's cap; 0 for a miss.
+  pointsAwarded: number;
   revealedAtMs: number;
   expiresAtMs: number;
 };
@@ -323,7 +332,8 @@ export type JoustShotResult = {
   // The shot left nobody standing — bowling's strike, and the only bonus in the game.
   isRackCleared: boolean;
   // A player is worth what their perch is worth (`resolveJoustPerchPoints`): one on the sand,
-  // more up a tower. Plus the bonus for a cleared rack.
+  // more up a tower. Plus the bonus for a cleared rack. Held to what fits under the round's cap,
+  // so this is what the shot banked, never more.
   points: number;
 };
 
@@ -726,6 +736,8 @@ export type SongGuessMinigameDisplayView = MinigameDisplayViewBase & {
   // Not an answer — the TV needs it to tell a replay (restart from the top)
   // apart from a resume after the host paused mid-clip.
   replayUsed: boolean;
+  // What each half (title, original artist) is worth tonight, for the hint.
+  pointsPerMark: number;
 } & (
     // `idle` carries the clip too so the TV can preload the file before the
     // host presses play, rather than buffering into the first bar.

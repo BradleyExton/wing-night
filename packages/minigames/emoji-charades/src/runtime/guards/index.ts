@@ -4,6 +4,7 @@ import { isRecord, isRecordOf, isStringArray, type EmojiCharadesSubState } from 
 import {
   DEFAULT_EMOJI_CHARADES_RULES,
   type EmojiCharadesMinigameRules,
+  type EmojiCharadesRoundMemory,
   type EmojiCharadesRuntimeState
 } from "../types/index.js";
 
@@ -35,7 +36,7 @@ export const isEmojiCharadesRuntimeState = (
     return false;
   }
 
-  if (!isStringArray(value.shuffledSubjectIds)) {
+  if (!isStringArray(value.shuffledSubjectIds) || !isStringArray(value.roundShownSubjectIds)) {
     return false;
   }
 
@@ -56,6 +57,12 @@ export const isEmojiCharadesRuntimeState = (
   }
 
   return isRecordOf(value.pendingPointsByTeamId, isNumber);
+};
+
+export const isEmojiCharadesRoundMemory = (
+  value: SerializableValue | null | undefined
+): value is EmojiCharadesRoundMemory => {
+  return isRecord(value) && isStringArray(value.shownSubjectIds);
 };
 
 // One clue slot holds one emoji, so the payload has to be exactly that: a run

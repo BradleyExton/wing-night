@@ -23,6 +23,7 @@ export const adminCopy = {
   roundSauceFieldLabel: "Sauce",
   roundMinigameFieldLabel: "Mini-game",
   roundPointsFieldLabel: "Points per wing eaten",
+  roundMinigameMaxFieldLabel: "Mini-game max points",
   removeRoundLabel: (roundNumber: number): string => `Remove round ${roundNumber}`,
   addRoundLabel: "+ Add a round",
   minigameName: formatMinigameName,

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Phase, toDisplayRoomStateSnapshot } from "@wingnight/shared";
 
-import { buildRoomState } from "../../../../testSupport/roomStateFixtures";
+import { buildGameConfig, buildRoomState } from "../../../../testSupport/roomStateFixtures";
 import { resolveStageViewModel } from "./index";
 
 const teams = [
@@ -68,4 +68,27 @@ test("does lay the turn tiles out in the rotated order when a later round is on"
     ]
   );
   assert.equal(viewModel.nextTurnTeamName, "Molten Metal");
+});
+
+test("does carry the round's mini-game cap, a round's own max over the defaults", () => {
+  const round = (roundNumber: number, minigameMax?: number) => ({
+    round: roundNumber,
+    label: `Round ${roundNumber}`,
+    sauce: "Mild",
+    pointsPerPlayer: 2,
+    minigame: "TRIVIA" as const,
+    ...(minigameMax === undefined ? {} : { minigameMax })
+  });
+  const gameConfig = buildGameConfig({ rounds: [round(1, 10), round(2), round(3)] });
+  const capAt = (currentRound: number): number | null =>
+    resolveStageViewModel(
+      toDisplayRoomStateSnapshot(
+        buildRoomState({ phase: Phase.MINIGAME_INTRO, gameConfig, currentRound, totalRounds: 3 })
+      )
+    ).minigamePointsMax;
+
+  assert.equal(capAt(1), 10);
+  assert.equal(capAt(2), 15);
+  assert.equal(capAt(3), 20);
+  assert.equal(capAt(0), null);
 });

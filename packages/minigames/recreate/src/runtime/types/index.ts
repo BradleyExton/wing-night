@@ -23,6 +23,9 @@ export type RecreateRuntimeState = {
   targetsPerTurn: number;
   targetsCompletedThisTurn: number;
   pointsPerIngredient: number;
+  // The round's cap, kept so the host's tally can show what a lock would
+  // really bank rather than the ticks times the rate.
+  pointsMax: number;
   liveGeneration: boolean;
   subState: RecreateSubState;
   attempt: RecreateAttempt | null;

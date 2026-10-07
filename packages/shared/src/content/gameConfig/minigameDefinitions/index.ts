@@ -86,7 +86,7 @@ export const MINIGAME_DEFINITIONS = {
     slug: "drawing",
     displayName: "Drawing",
     timerKey: "drawingSeconds",
-    rulesKey: null
+    rulesKey: "drawing"
   },
   RECREATE: {
     id: "RECREATE",

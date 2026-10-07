@@ -60,3 +60,5 @@ export const post =
   "m-0 text-[clamp(1.2rem,2.2vw,2.4rem)] font-extrabold uppercase leading-none tracking-[0.16em] text-text";
 
 export const postLabel = "mr-[0.6em] text-muted";
+
+export const postSeparator = "mx-[0.6em] text-muted";
