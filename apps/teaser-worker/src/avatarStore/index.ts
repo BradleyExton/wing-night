@@ -13,12 +13,16 @@ import type { PortalDeps } from "../deps/index.ts";
 import { errorResponse } from "../http/index.ts";
 
 // The uploaded photo, as the base64 text of its data URL; `mimeType` in its custom metadata.
-export const resolvePhotoKey = (guestId: string): string => `avatars/${guestId}/photo.b64`;
+// Under a prefix of its own, apart from the heads, so the bucket's lifecycle rule can expire
+// every face photo a guest abandoned without ever touching a head (wrangler.jsonc).
+export const PHOTO_KEY_PREFIX = "photos/";
+export const resolvePhotoKey = (guestId: string): string => `${PHOTO_KEY_PREFIX}${guestId}.b64`;
 // The accepted head, as PNG bytes.
 export const resolveHeadKey = (guestId: string): string => `avatars/${guestId}/head.png`;
 // The style reference, as base64 text ready to splice into a Gemini request.
 export const STYLE_REFERENCE_KEY = "style-reference/head.b64";
 
+// Tries Brad has reset (`reset_at`) count against nothing.
 export type AttemptCounts = {
   // Tries that count: recorded and painted, or recorded and never heard back from.
   spent: number;
@@ -31,8 +35,8 @@ export const readAttemptCounts = async (deps: PortalDeps, guestId: string): Prom
   const row = await deps.db
     .prepare(
       `SELECT
-         COALESCE(SUM(status IN ('painting', 'painted')), 0) AS spent,
-         COALESCE(SUM(status = 'failed'), 0) AS failed,
+         COALESCE(SUM(reset_at IS NULL AND status IN ('painting', 'painted')), 0) AS spent,
+         COALESCE(SUM(reset_at IS NULL AND status = 'failed'), 0) AS failed,
          MAX(CASE WHEN accepted_at IS NOT NULL THEN head_hash END) AS head_hash
        FROM avatar_attempts WHERE guest_id = ?`
     )
@@ -44,6 +48,12 @@ export const readAttemptCounts = async (deps: PortalDeps, guestId: string): Prom
 
 export const resolveTriesLeft = ({ spent, failed }: AttemptCounts): number => {
   return failed >= AVATAR_FAILED_TRIES_MAX ? 0 : Math.max(0, AVATAR_TRIES_MAX - spent);
+};
+
+// The face photo gone, from R2 and from every try that pointed at it.
+export const deletePhoto = async (deps: PortalDeps, guestId: string): Promise<void> => {
+  await deps.bucket.delete(resolvePhotoKey(guestId));
+  await deps.db.prepare("UPDATE avatar_attempts SET source_key = NULL WHERE guest_id = ?").bind(guestId).run();
 };
 
 export const readAvatarStatus = async (deps: PortalDeps, guestId: string): Promise<PortalAvatarStatus> => {

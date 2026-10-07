@@ -1,6 +1,7 @@
 // Brad's side: the guest list and its sign-in status, adding and editing guests, invites, a link
-// to text by hand, the vote summary, every guest's head and the style reference. Reachable by a signed-in guest with `is_admin` or by a
-// script holding ADMIN_API_TOKEN (app/index.ts decides which).
+// to text by hand, the vote summary, every guest's head, the style reference and a guest's tries.
+// Reachable by a signed-in guest with `is_admin` or by a script holding ADMIN_API_TOKEN
+// (app/index.ts decides which).
 import {
   AVATAR_HEAD_TYPE,
   PORTAL_API_ROUTES,
@@ -9,6 +10,7 @@ import {
   isAdminStyleReferenceRequest,
   normalizeGuestDisplayName,
   normalizeGuestEmail,
+  type AdminAvatarReset,
   type AdminGuestStatus,
   type AdminInviteAllResult,
   type AdminInviteResult,
@@ -17,7 +19,14 @@ import {
   type AdminStyleReference
 } from "@wingnight/shared/guestPortal";
 
-import { STYLE_REFERENCE_KEY, readAcceptedHead, serveHead } from "../avatarStore/index.ts";
+import {
+  STYLE_REFERENCE_KEY,
+  deletePhoto,
+  readAcceptedHead,
+  readAvatarStatus,
+  resolveTriesLeft,
+  serveHead
+} from "../avatarStore/index.ts";
 import { encodeBase64 } from "../base64/index.ts";
 import type { DbStatement, PortalDeps } from "../deps/index.ts";
 import { parseVoteRow } from "../guestRoutes/index.ts";
@@ -43,6 +52,8 @@ type GuestStatusRow = {
   last_seen_at: number | null;
   head_hash: string | null;
   is_style_reference: number;
+  tries_spent: number;
+  tries_failed: number;
   has_voted: number;
 };
 
@@ -50,7 +61,16 @@ const GUEST_STATUS_SELECT = `
   SELECT g.guest_id, g.display_name, g.email, g.is_admin, g.created_at, g.invited_at,
     g.claimed_at, g.last_seen_at,
     (SELECT a.head_hash FROM avatar_attempts a WHERE a.guest_id = g.guest_id AND a.accepted_at IS NOT NULL) AS head_hash,
-    EXISTS (SELECT 1 FROM style_reference s WHERE s.guest_id = g.guest_id) AS is_style_reference,
+    -- The reference only while it is a copy of the head the guest has now.
+    EXISTS (
+      SELECT 1 FROM style_reference s JOIN avatar_attempts a
+        ON a.guest_id = s.guest_id AND a.accepted_at IS NOT NULL AND a.head_hash = s.head_hash
+      WHERE s.guest_id = g.guest_id
+    ) AS is_style_reference,
+    (SELECT COUNT(*) FROM avatar_attempts a
+      WHERE a.guest_id = g.guest_id AND a.reset_at IS NULL AND a.status IN ('painting', 'painted')) AS tries_spent,
+    (SELECT COUNT(*) FROM avatar_attempts a
+      WHERE a.guest_id = g.guest_id AND a.reset_at IS NULL AND a.status = 'failed') AS tries_failed,
     EXISTS (SELECT 1 FROM votes v WHERE v.guest_id = g.guest_id) AS has_voted
   FROM guests g`;
 
@@ -66,6 +86,7 @@ const toGuestStatus = (row: GuestStatusRow): AdminGuestStatus => ({
   hasHead: row.head_hash !== null,
   headHash: row.head_hash,
   isStyleReference: row.is_style_reference === 1,
+  triesLeft: resolveTriesLeft({ spent: row.tries_spent, failed: row.tries_failed, headHash: row.head_hash }),
   hasVoted: row.has_voted === 1
 });
 
@@ -354,6 +375,26 @@ const pickStyleReference = async ({ request, deps }: AdminContext): Promise<Resp
   return jsonResponse(picked);
 };
 
+// Gives a guest their tries back and clears any photo they left in R2 — what "Brad can sort you
+// out" means on a guest's studio. The kept head stays (avatarStore: reset tries count for nothing).
+const resetGuestAvatar = async ({ params, deps }: AdminContext): Promise<Response> => {
+  const guestId = params.guestId ?? "";
+
+  if ((await readGuestStatus(deps, guestId)) === null) {
+    return errorResponse("not_found");
+  }
+
+  await deps.db
+    .prepare("UPDATE avatar_attempts SET reset_at = ? WHERE guest_id = ? AND reset_at IS NULL")
+    .bind(deps.now(), guestId)
+    .run();
+  await deletePhoto(deps, guestId);
+
+  const reset: AdminAvatarReset = { guestId, avatar: await readAvatarStatus(deps, guestId) };
+
+  return jsonResponse(reset);
+};
+
 const GUEST_PATTERN = `${PORTAL_API_ROUTES.adminGuests}/:guestId`;
 
 export const ADMIN_ROUTES: PortalRoute[] = [
@@ -366,5 +407,6 @@ export const ADMIN_ROUTES: PortalRoute[] = [
   { method: "POST", pattern: PORTAL_API_ROUTES.adminInviteAll, access: "admin", handle: inviteEveryone },
   { method: "GET", pattern: PORTAL_API_ROUTES.adminVotes, access: "admin", handle: summarizeVotes },
   { method: "GET", pattern: `${GUEST_PATTERN}/avatar`, access: "admin", handle: readGuestHead },
+  { method: "POST", pattern: `${GUEST_PATTERN}/avatar/reset`, access: "admin", handle: resetGuestAvatar },
   { method: "POST", pattern: PORTAL_API_ROUTES.adminStyleReference, access: "admin", handle: pickStyleReference }
 ];

@@ -20,6 +20,7 @@ export {
   isAdminStyleReferenceRequest,
   readAvatarHeadPng,
   readAvatarPhotoUpload,
+  type AdminAvatarReset,
   type AdminStyleReference,
   type AdminStyleReferenceRequest,
   type AvatarPhotoType,
@@ -37,6 +38,22 @@ export {
   type PortalGenre,
   type TeamFormat
 } from "./vote/index.js";
+export {
+  isAdminAvatarReset,
+  isAdminGuestList,
+  isAdminGuestStatus,
+  isAdminInviteAllResult,
+  isAdminInviteResult,
+  isAdminMintedLink,
+  isAdminStyleReference,
+  isAdminVoteSummary,
+  isPortalAvatarStatus,
+  isPortalErrorCode,
+  isPortalGuest,
+  isPortalGuestList,
+  isPortalMe,
+  readPortalErrorCode
+} from "./responses/index.js";
 export {
   GUEST_DISPLAY_NAME_MAX_LENGTH,
   isAdminCreateGuestRequest,
@@ -69,14 +86,21 @@ export const PORTAL_HOME_PATH = "/me";
 //                  which throws with the model's own words when it painted nothing, and keys it
 //                  with keyAndCropHead.
 //                  → 200 the JSON · 409 no_photo · 429 tries_exhausted · 502 painter_failed
+//                  The try that spends the last of a guest's tries also deletes the photo once
+//                  Gemini has answered: nothing can paint it again.
 //   POST accept?attemptId=<the generate's attempt id>
 //                  body: the finished keyed PNG, `Content-Type: image/png` (readAvatarHeadPng).
-//                  Stores it as the guest's head and DELETES the photo.
-//                  → 200 PortalAvatarStatus · 404 no such painted try · 400/413/415 a bad PNG
+//                  Stores it as the guest's head and DELETES the photo. A try is kept once.
+//                  → 200 PortalAvatarStatus · 404 no such painted try, or one already kept
+//                    · 400/413/415 a bad PNG
+//   DELETE photo   the guest takes their photo back unpainted → 200 PortalAvatarStatus
 //   GET  (myAvatar) the guest's own head as image/png → 404 until there is one
 //
-// Brad reads any guest's head at resolveAdminGuestAvatarRoute, and picks the style reference
-// with POST adminStyleReference { guestId } → 200 AdminStyleReference · 404 that guest has no head.
+// Brad reads any guest's head at resolveAdminGuestAvatarRoute; picks the style reference with
+// POST adminStyleReference { guestId } → 200 AdminStyleReference · 404 that guest has no head
+// (a reference goes stale, and is dropped, when its guest keeps a different head); and gives a
+// guest their tries back, clearing any photo, with POST resolveAdminGuestAvatarResetRoute
+// → 200 AdminAvatarReset · 404 no such guest.
 export const PORTAL_API_ROUTES = {
   me: "/api/me",
   myVote: "/api/me/vote",
@@ -110,6 +134,9 @@ export const resolveAdminGuestSignOutRoute = (guestId: string): string =>
 
 export const resolveAdminGuestAvatarRoute = (guestId: string): string =>
   `${resolveAdminGuestRoute(guestId)}/avatar`;
+
+export const resolveAdminGuestAvatarResetRoute = (guestId: string): string =>
+  `${resolveAdminGuestAvatarRoute(guestId)}/reset`;
 
 // Every failure the API names. The body of a failed request is `{ error }` and nothing else.
 export const PORTAL_ERROR_CODES = [
@@ -167,8 +194,10 @@ export type AdminGuestStatus = {
   hasHead: boolean;
   // The accepted head's SHA-256, for the gallery's `?v=` (see PortalAvatarStatus).
   headHash: string | null;
-  // This guest's head is the one new heads are painted to match.
+  // This guest's CURRENT head is the one new heads are painted to match.
   isStyleReference: boolean;
+  // Tries the guest has left at painting a head (PortalAvatarStatus.triesLeft).
+  triesLeft: number;
   hasVoted: boolean;
 };
 

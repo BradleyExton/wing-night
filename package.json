@@ -12,6 +12,7 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test && pnpm test:lint-rules && pnpm test:playwright-ports && pnpm test:e2e-content-root && pnpm test:import-avatars && pnpm test:import-recreate && pnpm test:build-teaser",
     "test:e2e": "playwright test",
+    "test:e2e:portal": "playwright test --config playwright.portal.config.ts",
     "test:lint-rules": "node --test tools/eslint-plugin-wingnight/tests/index.test.mjs",
     "test:playwright-ports": "node --test tools/playwright-ports/index.test.mjs",
     "test:e2e-content-root": "node --test tools/e2e-content-root/index.test.ts",

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guest Portal — Mockup</title>
+    <!--
+      wingnight.tv's signed-in pages, on a phone held upright (390 wide), scrolling.
+      Three frames side by side: /me (the head studio, then the vote) and /admin.
+
+      The language is the teaser landing's Hearth (DESIGN.md §2.2B, TeaserLanding and
+      TeaserGameCard): the room is bg with the flame's heat pooling at the foot, and every
+      section is a warm-glass card with an ember hairline along its top. One accent, primary.
+      Labels are mutedWarm caps with wide tracking; the show's voice (Playfair italic) says
+      the one sentence a section needs; numbers are Barlow Condensed. The guest's head is
+      always shown on a bird, never as a bare picture: the bird is what they will be on the TV.
+
+      No flame, no parade, no countdown: this is a form a guest fills in, and the motion budget
+      stays on the landing. Buttons are the house flat primary with an edge (§ cohesion pass):
+      solid primary for the one thing to do next, glass outline for the rest.
+    -->
+    <style>
+      :root {
+        --bg: #121212; --surface: #1c1c1c; --surfaceAlt: #242424;
+        --text: #ffffff; --mutedWarm: #b3a89a; --mutedWarmDim: #6b6157;
+        --ember: #ffb35a; --glow: #ffd6aa; --hearthGlass: #2e1609; --shade: #000;
+        --primary: #f97316; --success: #22c55e; --danger: #dc2626;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: #0b0b0b; color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        display: flex; gap: 32px; padding: 32px; align-items: flex-start; flex-wrap: wrap;
+      }
+      .phone {
+        width: 390px; min-height: 844px; border-radius: 28px; overflow: hidden;
+        background: radial-gradient(ellipse at 50% 115%, rgba(46, 22, 9, 1) 0%, var(--bg) 55%);
+        padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 16px;
+      }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .wordmark { font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; font-size: 22px; }
+      .link { color: var(--mutedWarm); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+      .eyebrow {
+        margin: 0; font-size: 11px; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.4em; color: var(--mutedWarm);
+      }
+      h1 { margin: 2px 0 0; font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 28px; }
+      .card {
+        position: relative; border-radius: 16px; padding: 16px;
+        border: 1px solid rgba(249, 115, 22, 0.25);
+        background: linear-gradient(180deg, rgba(46, 22, 9, 0.84), rgba(0, 0, 0, 0.93));
+        box-shadow: inset 0 1px 0 rgba(255, 214, 170, 0.14);
+        display: flex; flex-direction: column; gap: 12px;
+      }
+      .card::before {
+        content: ""; position: absolute; left: 12%; right: 12%; top: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--ember), transparent);
+      }
+      .card h2 { margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; }
+      .voice { margin: 0; font-family: "Playfair Display", Georgia, serif; font-style: italic; color: var(--mutedWarm); line-height: 1.4; }
+      .stage {
+        height: 200px; border-radius: 12px; display: grid; place-items: end center;
+        background: radial-gradient(ellipse at 50% 100%, rgba(249, 115, 22, 0.22), transparent 70%);
+        padding-bottom: 12px;
+      }
+      .bird { width: 150px; height: 135px; position: relative; }
+      .bird .body { position: absolute; inset: 40px 20px 20px 10px; background: var(--mutedWarm); border-radius: 50% 40% 45% 50%; border: 2px solid var(--bg); }
+      .bird .head { position: absolute; right: 8px; top: 0; width: 70px; height: 74px; border-radius: 45%; background: #e2b48c; border: 3px solid #3b2414; }
+      .row { display: flex; gap: 8px; }
+      .btn {
+        flex: 1; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 15px;
+        text-transform: uppercase; letter-spacing: 0.06em; text-align: center;
+        background: var(--primary); color: var(--bg); box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25);
+      }
+      .btn.ghost { background: rgba(28, 28, 28, 0.6); color: var(--text); border: 1px solid rgba(255,179,90,0.35); box-shadow: none; }
+      .pill {
+        display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+        border: 1px solid rgba(249,115,22,0.5); background: rgba(249,115,22,0.15);
+        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em;
+      }
+      .pill.dim { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--mutedWarmDim); }
+      .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--primary); }
+      .tries { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 26px; }
+      .rank { display: flex; flex-direction: column; gap: 6px; }
+      .rank li {
+        list-style: none; display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+        border-radius: 12px; background: rgba(18,18,18,0.7); border: 1px solid rgba(255,179,90,0.18);
+      }
+      .rank .n { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 22px; width: 22px; color: var(--primary); }
+      .rank .g { flex: 1; font-weight: 800; text-transform: uppercase; }
+      .arrow { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; border: 1px solid rgba(255,179,90,0.3); }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+      .chip { padding: 8px 12px; border-radius: 999px; border: 1px dashed var(--mutedWarmDim); color: var(--mutedWarm); font-size: 14px; }
+      .chip.on { border: 1px solid var(--primary); background: rgba(249,115,22,0.15); color: var(--text); }
+      .choice { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,179,90,0.18); }
+      .choice.on { border-color: var(--primary); background: rgba(249,115,22,0.12); }
+      .radio { width: 18px; height: 18px; border-radius: 99px; border: 2px solid var(--mutedWarm); }
+      .choice.on .radio { border-color: var(--primary); background: radial-gradient(var(--primary) 45%, transparent 50%); }
+      .private { font-size: 12px; color: var(--mutedWarmDim); }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      td { padding: 10px 4px; border-top: 1px solid rgba(255,179,90,0.12); vertical-align: middle; }
+      .name { font-weight: 800; }
+      .sub { color: var(--mutedWarmDim); font-size: 12px; }
+      .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .tile { border-radius: 12px; padding: 8px; text-align: center; border: 1px solid rgba(255,179,90,0.18); font-size: 12px; }
+      .tile.ref { border-color: var(--primary); box-shadow: 0 0 16px rgba(249,115,22,0.3); }
+      .tile .mini { height: 60px; display: grid; place-items: center; }
+      .tile .mini span { width: 40px; height: 42px; border-radius: 45%; background: #e2b48c; border: 2px solid #3b2414; }
+      .bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; }
+      .bar span { display: block; height: 100%; background: var(--primary); }
+      .tally { display: grid; grid-template-columns: 90px 1fr 30px; gap: 8px; align-items: center; font-size: 13px; }
+      .tally b { font-family: "Barlow Condensed", sans-serif; font-size: 18px; text-align: right; }
+    </style>
+  </head>
+  <body>
+    <!-- /me, the head studio -->
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span><span class="link">Sign out</span></div>
+      <div>
+        <p class="eyebrow">Your seat</p>
+        <h1>Hey, Rob.</h1>
+      </div>
+      <div class="card">
+        <p class="eyebrow">Your head</p>
+        <h2>Put your face on a bird</h2>
+        <p class="voice">Snap a selfie, face on, good light. We paint it as a cartoon and sit it on your bird.</p>
+        <div class="stage"><div class="bird"><div class="body"></div><div class="head"></div></div></div>
+        <div class="row"><span class="pill"><span class="dot"></span>Preview</span><span class="pill dim">Photo ready</span></div>
+        <div class="row"><span class="btn">Keep this one</span><span class="btn ghost">Try again</span></div>
+        <div class="row" style="justify-content: space-between; align-items: baseline">
+          <span class="eyebrow">Tries left</span><span class="tries">3 / 5</span>
+        </div>
+        <span class="link">Remove my photo</span>
+        <p class="private">Your photo goes to Google's Gemini to paint the head, and is deleted once you keep one. Your head is shown on the TV at the party.</p>
+      </div>
+    </section>
+
+    <!-- /me, the vote (further down the same page) -->
+    <section class="phone">
+      <div class="card">
+        <p class="eyebrow">Your vote</p>
+        <h2>What should your team be?</h2>
+        <p class="voice">Rank the music you'd play for. Your favourite first; stop whenever.</p>
+        <ol class="rank">
+          <li><span class="n">1</span><span class="g">Disco</span><span class="arrow">▲</span><span class="arrow">▼</span></li>
+          <li><span class="n">2</span><span class="g">Hip-hop</span><span class="arrow">▲</span><span class="arrow">▼</span></li>
+          <li><span class="n">3</span><span class="g">Metal</span><span class="arrow">▲</span><span class="arrow">▼</span></li>
+        </ol>
+        <p class="eyebrow">Not ranked</p>
+        <div class="chips"><span class="chip">+ Pop</span><span class="chip">+ Rock</span><span class="chip">+ Country</span><span class="chip">+ Punk</span></div>
+        <p class="eyebrow">Who you'd sit with (up to two)</p>
+        <div class="chips"><span class="chip on">Sam ✓</span><span class="chip">Jess</span><span class="chip">Alex</span><span class="chip">Brad</span></div>
+        <p class="private">Only Brad sees this. Nobody is told who asked for whom.</p>
+        <p class="eyebrow">How should teams be made?</p>
+        <div class="choice on"><span class="radio"></span>Brad picks the teams</div>
+        <div class="choice"><span class="radio"></span>Everyone picks their own</div>
+        <div class="choice"><span class="radio"></span>A random draw on the TV</div>
+        <span class="btn">Save my vote</span>
+        <span class="private">Saved. Change it any time before the night.</span>
+      </div>
+    </section>
+
+    <!-- /admin -->
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span><span class="link">My page</span></div>
+      <div><p class="eyebrow">Admin</p><h1>The guest list.</h1></div>
+      <div class="card">
+        <div class="row" style="justify-content: space-between"><h2>Guests</h2><span class="pill">Invite 4 more</span></div>
+        <table>
+          <tr><td><div class="name">Rob</div><div class="sub">rob@example.com</div></td><td><span class="pill">Signed in</span></td><td>Head · Voted · Tries 4/5 · <span class="link">Reset tries</span></td></tr>
+          <tr><td><div class="name">Sam</div><div class="sub">No email</div></td><td><span class="pill dim">Not invited</span></td><td><span class="link">Link</span></td></tr>
+        </table>
+        <span class="btn ghost">Add a guest</span>
+      </div>
+      <div class="card">
+        <h2>Heads</h2>
+        <div class="gallery">
+          <div class="tile ref"><div class="mini"><span></span></div>Rob<br /><span class="pill">Style</span></div>
+          <div class="tile"><div class="mini"><span></span></div>Jess<br /><span class="link">Use as style</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Votes</h2>
+        <p class="eyebrow">Genres · 6 voted</p>
+        <div class="tally">Disco<span class="bar"><span style="width: 80%"></span></span><b>41</b></div>
+        <div class="tally">Hip-hop<span class="bar"><span style="width: 60%"></span></span><b>30</b></div>
+        <p class="eyebrow">Mutual wishes</p><p class="voice">Rob &amp; Sam</p>
+        <p class="eyebrow">Still to vote</p><p class="sub">Alex, Jess</p>
+      </div>
+    </section>
+  </body>
+</html>

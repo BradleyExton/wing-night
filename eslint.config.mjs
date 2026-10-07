@@ -97,7 +97,7 @@ export default [
     }
   },
   {
-    files: ["tools/**/*.mjs", "tests/**/*.ts", "playwright.config.ts"],
+    files: ["tools/**/*.mjs", "tests/**/*.ts", "playwright.config.ts", "playwright.portal.config.ts"],
     languageOptions: {
       globals: globals.node
     },

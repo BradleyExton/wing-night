@@ -48,7 +48,12 @@ test("does apply the migrations in file order when there are several", () => {
 
   assert.deepEqual(
     readMigrationFiles().map(({ fileName }) => fileName),
-    ["0001_guest_portal.sql", "0002_invite_attempts.sql", "0003_style_reference.sql"]
+    [
+      "0001_guest_portal.sql",
+      "0002_invite_attempts.sql",
+      "0003_style_reference.sql",
+      "0004_avatar_tries_reset.sql"
+    ]
   );
   applyMigrations(database);
 

@@ -56,6 +56,9 @@ importers:
       '@wingnight/audio':
         specifier: workspace:*
         version: link:../../packages/audio
+      '@wingnight/avatar-head':
+        specifier: workspace:*
+        version: link:../../packages/avatar-head
       '@wingnight/cast':
         specifier: workspace:*
         version: link:../../packages/cast

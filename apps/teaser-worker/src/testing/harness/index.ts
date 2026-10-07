@@ -37,18 +37,26 @@ type StoredObject = {
 // R2's chunks are tens of kilobytes; small ones here make a stream that is cut short show.
 const BUCKET_CHUNK_SIZE = 1024;
 
-const streamBytes = (bytes: Uint8Array): ReadableStream<Uint8Array> => {
+// `open` counts the reads in flight: up by one when a body is handed out, down when it is read to
+// the end or cancelled — so a test can prove a handler let go of every object it opened.
+const streamBytes = (bytes: Uint8Array, open: { count: number }): ReadableStream<Uint8Array> => {
   let offset = 0;
+
+  open.count += 1;
 
   return new ReadableStream<Uint8Array>({
     pull: (controller) => {
       if (offset >= bytes.length) {
+        open.count -= 1;
         controller.close();
         return;
       }
 
       controller.enqueue(bytes.slice(offset, offset + BUCKET_CHUNK_SIZE));
       offset += BUCKET_CHUNK_SIZE;
+    },
+    cancel: () => {
+      open.count -= 1;
     }
   });
 };
@@ -57,13 +65,17 @@ export type MemoryBucket = PortalBucket & {
   // Every key it holds, sorted: what a test reads to prove a photo is gone.
   keys(): string[];
   readText(key: string): string | null;
+  // Bodies handed out by `get` and neither read to the end nor cancelled.
+  openReads(): number;
 };
 
 const createMemoryBucket = (): MemoryBucket => {
   const objects = new Map<string, StoredObject>();
+  const open = { count: 0 };
 
   return {
     keys: () => [...objects.keys()].sort(),
+    openReads: () => open.count,
     readText: (key) => {
       const object = objects.get(key);
 
@@ -75,7 +87,7 @@ const createMemoryBucket = (): MemoryBucket => {
       return object === undefined
         ? null
         : {
-            body: streamBytes(object.bytes),
+            body: streamBytes(object.bytes, open),
             size: object.bytes.byteLength,
             arrayBuffer: async () => object.bytes.slice().buffer,
             httpMetadata: { contentType: object.contentType },

@@ -25,6 +25,13 @@ CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e
 routinely held on this machine. Without them a run can silently verify a foreign dev server's code
 and report it green.
 
+Any guest-portal change (`apps/teaser-worker/**`, `packages/shared/src/guestPortal/**`,
+`packages/avatar-head/**`, the teaser's `Portal*` pages, `tests/e2e-portal/**`) also needs:
+
+```bash
+CI=1 WN_E2E_PORTAL_WORKER_PORT=8797 WN_E2E_PORTAL_CLIENT_PORT=5283 pnpm test:e2e:portal
+```
+
 If a check fails, say so with the output. If a step was skipped, say that.
 
 ## The night pack

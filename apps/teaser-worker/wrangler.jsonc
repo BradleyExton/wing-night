@@ -43,6 +43,13 @@
     {
       "binding": "BUCKET",
       // Created once with `pnpm exec wrangler r2 bucket create wingnight-portal`.
+      //
+      // Face photos live under `photos/` (src/avatarStore) and the Worker deletes each one as
+      // soon as it is spent: a head kept, the last try answered, the guest or Brad removing it.
+      // A photo a guest uploads and then walks away from is the one case no request reaches, so
+      // the bucket also expires that prefix on its own — a deploy step, run once from here:
+      //   pnpm exec wrangler r2 bucket lifecycle add wingnight-portal expire-abandoned-photos photos/ --expire-days 3 --force
+      // Heads (`avatars/`) and the style reference are never under that prefix.
       "bucket_name": "wingnight-portal"
     }
   ],

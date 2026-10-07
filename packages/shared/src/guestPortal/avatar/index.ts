@@ -61,6 +61,13 @@ export type AdminStyleReference = {
   pickedAt: number;
 };
 
+// POST resolveAdminGuestAvatarResetRoute: Brad gives a guest their tries back and clears any photo
+// they left behind. The kept head, if any, stays.
+export type AdminAvatarReset = {
+  guestId: string;
+  avatar: PortalAvatarStatus;
+};
+
 // The photo upload's body is a data URL — exactly what `canvas.toDataURL("image/jpeg", q)`
 // returns — sent as text. The base64 is stored as it came and later spliced, still as text, into
 // the Gemini request, so the Worker never encodes or decodes a byte of it.
@@ -70,6 +77,7 @@ export type AvatarPhotoUpload = {
 };
 
 const DATA_URL_PREFIX_PATTERN = /^data:(image\/(?:jpeg|png|webp));base64$/;
+const BASE64_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
 
 // What each type's first bytes look like in base64: JPEG's FF D8 FF, PNG's signature, RIFF.
 const BASE64_MAGIC: Record<AvatarPhotoType, string> = {
@@ -78,11 +86,11 @@ const BASE64_MAGIC: Record<AvatarPhotoType, string> = {
   "image/webp": "UklGR"
 };
 
-// The upload read back, or null when it is not one. Deliberately cheap — no pass over every
-// character with a regex — because the Worker runs it on a 2 MB string on a CPU budget: it checks
-// the prefix, the length, the picture's magic bytes, and that nothing in the text could close the
-// JSON string it is spliced into (a quote or a backslash). Whether the rest is good base64 is
-// Gemini's to find out; a guest who sends garbage only spends their own try.
+// The upload read back, or null when it is not one: the prefix, the length, the picture's magic
+// bytes, and one native regex over the base64 — about a millisecond on the largest photo, which
+// the Worker's budget can spare — so the text spliced into the Gemini request's JSON string is
+// base64 and nothing else: no quote or backslash to close it, no control character to break it.
+// Whether those bytes decode to a real picture is Gemini's to find out.
 export const readAvatarPhotoUpload = (text: string): AvatarPhotoUpload | null => {
   const comma = text.indexOf(",");
 
@@ -98,8 +106,7 @@ export const readAvatarPhotoUpload = (text: string): AvatarPhotoUpload | null =>
     base64.length === 0 ||
     base64.length % 4 !== 0 ||
     !base64.startsWith(BASE64_MAGIC[mimeType]) ||
-    base64.includes('"') ||
-    base64.includes("\\")
+    !BASE64_PATTERN.test(base64)
   ) {
     return null;
   }

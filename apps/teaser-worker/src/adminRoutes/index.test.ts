@@ -126,6 +126,7 @@ test("does list every guest's sign-in, head and vote status when the admin reads
     hasHead: false,
     headHash: null,
     isStyleReference: false,
+    triesLeft: 5,
     hasVoted: true
   });
 });

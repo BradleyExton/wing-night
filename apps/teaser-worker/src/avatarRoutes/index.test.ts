@@ -7,14 +7,17 @@ import {
   AVATAR_FAILED_TRIES_MAX,
   AVATAR_TRIES_LEFT_HEADER,
   AVATAR_TRIES_MAX,
+  type AdminAvatarReset,
+  type AdminGuestStatus,
   type PortalAvatarStatus,
   type PortalMe
 } from "@wingnight/shared/guestPortal";
 
+import { handleRequest } from "../app/index.ts";
 import { STYLE_REFERENCE_KEY, resolveHeadKey, resolvePhotoKey } from "../avatarStore/index.ts";
 import { FAKE_GENERATE_CONTENT_RESPONSE, FAKE_HEAD_PNG_BASE64 } from "../headPainter/fakeHead.ts";
 import { createFakeHeadPainter, type HeadPainter } from "../headPainter/index.ts";
-import { ADMIN_API_TOKEN, createTestPortal, type TestPortal } from "../testing/harness/index.ts";
+import { ADMIN_API_TOKEN, ORIGIN, createTestPortal, type TestPortal } from "../testing/harness/index.ts";
 
 const PHOTO_BASE64 = `/9j/${"QUJD".repeat(500)}`;
 const PHOTO_DATA_URL = `data:image/jpeg;base64,${PHOTO_BASE64}`;
@@ -162,13 +165,16 @@ test("does refuse the sixth try, without calling Gemini, when five are spent", a
     await response.arrayBuffer();
   }
 
+  // The fifth try spent the last of them, so the photo went with it: nothing could paint it.
+  assert.deepEqual(portal.bucket.keys(), [], "the photo is deleted once no try is left to paint it");
+
   const sixth = await generate(portal, cookie);
 
-  assert.equal(sixth.status, 429);
-  assert.deepEqual(await sixth.json(), { error: "tries_exhausted" });
-  assert.equal(sixth.headers.get(AVATAR_TRIES_LEFT_HEADER), "0");
+  assert.equal(sixth.status, 409);
+  assert.deepEqual(await sixth.json(), { error: "no_photo" });
   assert.equal(painter.bodies.length, AVATAR_TRIES_MAX, "Gemini was called five times, not six");
   assert.equal((await uploadPhoto(portal, cookie)).status, 429, "a new photo would never be painted or deleted");
+  assert.deepEqual(portal.bucket.keys(), []);
 });
 
 test("does hold the cap when a guest's presses all arrive at once", async () => {
@@ -179,9 +185,12 @@ test("does hold the cap when a guest's presses all arrive at once", async () => 
   await uploadPhoto(portal, cookie);
 
   const responses = await Promise.all(Array.from({ length: AVATAR_TRIES_MAX + 3 }, () => generate(portal, cookie)));
-  const statuses = responses.map((response) => response.status).sort();
+  const statuses = responses.map((response) => response.status);
 
-  assert.deepEqual(statuses, [...Array(AVATAR_TRIES_MAX).fill(200), 429, 429, 429]);
+  // The extra presses are refused at the cap (429) or, once the last try has deleted the photo,
+  // for want of one (409); none of them paints.
+  assert.equal(statuses.filter((status) => status === 200).length, AVATAR_TRIES_MAX);
+  assert.ok(statuses.every((status) => [200, 409, 429].includes(status)), statuses.join(","));
   assert.equal(painter.bodies.length, AVATAR_TRIES_MAX);
 });
 
@@ -209,7 +218,10 @@ test("does give the try back when Gemini fails, until the failures reach their o
     assert.equal((await generate(portal, cookie)).status, 502);
   }
 
-  assert.equal((await generate(portal, cookie)).status, 429);
+  // The last failure left no try, so it took the photo with it.
+  assert.deepEqual(portal.bucket.keys(), []);
+  assert.equal((await generate(portal, cookie)).status, 409);
+  assert.equal((await uploadPhoto(portal, cookie)).status, 429);
 });
 
 test("does stream Gemini's reply through unread when it paints", async () => {
@@ -406,4 +418,297 @@ test("does replace the head and keep one accepted try when a guest accepts anoth
     [false, true]
   );
   assert.deepEqual(portal.bucket.keys(), [resolveHeadKey("g_rob")]);
+});
+
+test("does refuse every avatar write when the request comes from another origin or none", async () => {
+  const portal = portalWithGuests();
+  const robCookie = await portal.signInAs("g_rob");
+  const bradCookie = await portal.signInAs("g_brad");
+
+  for (const origin of [null, "null", "https://evil.example"]) {
+    const writes = [
+      portal.request("POST", "/api/me/avatar/photo", {
+        cookie: robCookie,
+        origin,
+        rawBody: PHOTO_DATA_URL,
+        headers: { "Content-Type": "text/plain" }
+      }),
+      portal.request("POST", "/api/me/avatar/generate", { cookie: robCookie, origin }),
+      portal.request("POST", "/api/me/avatar/accept?attemptId=a_x", {
+        cookie: robCookie,
+        origin,
+        rawBody: HEAD_PNG,
+        headers: { "Content-Type": "image/png" }
+      }),
+      portal.request("POST", "/api/admin/style-reference", { cookie: bradCookie, origin, body: { guestId: "g_rob" } })
+    ];
+
+    for (const response of await Promise.all(writes)) {
+      assert.equal(response.status, 403, `origin ${String(origin)}`);
+      assert.deepEqual(await response.json(), { error: "cross_origin" });
+    }
+  }
+
+  assert.deepEqual(portal.bucket.keys(), []);
+  assert.equal(attemptRows(portal, "g_rob").length, 0);
+});
+
+test("does mark a painted reply and a head as private and never stored when either is served", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await uploadPhoto(portal, cookie);
+
+  const painted = await generate(portal, cookie);
+
+  assert.equal(painted.headers.get("Cache-Control"), "private, no-store");
+  await painted.arrayBuffer();
+  await accept(portal, cookie, painted.headers.get(AVATAR_ATTEMPT_ID_HEADER) ?? "");
+
+  const head = await portal.request("GET", "/api/me/avatar", { cookie });
+
+  assert.equal(head.status, 200);
+  assert.equal(head.headers.get("Cache-Control"), "private, no-store");
+});
+
+test("does refuse a photo upload when it declares no length", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+  const body = new ReadableStream<Uint8Array>({
+    start: (controller) => {
+      controller.enqueue(new TextEncoder().encode(PHOTO_DATA_URL));
+      controller.close();
+    }
+  });
+  const response = await handleRequest(
+    new Request(`${ORIGIN}/api/me/avatar/photo`, {
+      method: "POST",
+      body,
+      duplex: "half",
+      headers: { Origin: ORIGIN, Cookie: cookie }
+    } as RequestInit),
+    portal.deps
+  );
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(portal.bucket.keys(), []);
+});
+
+// --- Review fixes: the photo never outlives its use, a try is kept once, a stale reference goes.
+
+const readAdminGuest = async (portal: TestPortal, guestId: string): Promise<AdminGuestStatus | undefined> => {
+  const guests = (await (await portal.request("GET", "/api/admin/guests", { headers: BEARER })).json()) as AdminGuestStatus[];
+
+  return guests.find((guest) => guest.guestId === guestId);
+};
+
+test("does keep the photo while Gemini reads it and delete it once the last try is answered", async () => {
+  const photoWhilePainting: boolean[] = [];
+  const portal = portalWithGuests({
+    gemini: {
+      paint: async (request) => {
+        photoWhilePainting.push(portal.bucket.keys().includes(resolvePhotoKey("g_rob")));
+        return createFakeHeadPainter().paint(request);
+      }
+    }
+  });
+  const cookie = await portal.signInAs("g_rob");
+
+  await uploadPhoto(portal, cookie);
+
+  for (let spent = 1; spent < AVATAR_TRIES_MAX; spent += 1) {
+    await (await generate(portal, cookie)).arrayBuffer();
+    assert.deepEqual(portal.bucket.keys(), [resolvePhotoKey("g_rob")], `the photo stays while try ${spent + 1} is left`);
+  }
+
+  const last = await generate(portal, cookie);
+
+  assert.equal(last.status, 200);
+  assert.equal(last.headers.get(AVATAR_TRIES_LEFT_HEADER), "0");
+  await last.arrayBuffer();
+  assert.deepEqual(photoWhilePainting, Array(AVATAR_TRIES_MAX).fill(true), "every paint had the photo to read");
+  assert.deepEqual(portal.bucket.keys(), [], "nothing left can paint it, so it is gone");
+  assert.ok(attemptRows(portal, "g_rob").every((row) => row.source_key === null));
+});
+
+test("does refuse to keep a try a second time, and a try a newer head stood down", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+  const otherPng = HEAD_PNG.slice();
+
+  otherPng[50] = (otherPng[50] ?? 0) ^ 1;
+  await uploadPhoto(portal, cookie);
+
+  const first = await generate(portal, cookie);
+  const firstId = first.headers.get(AVATAR_ATTEMPT_ID_HEADER) ?? "";
+
+  await first.arrayBuffer();
+  assert.equal((await accept(portal, cookie, firstId)).status, 200);
+
+  const again = await accept(portal, cookie, firstId, otherPng);
+
+  assert.equal(again.status, 404);
+  assert.deepEqual(await again.json(), { error: "not_found" });
+  assert.deepEqual(new Uint8Array(await (await portal.request("GET", "/api/me/avatar", { cookie })).arrayBuffer()), HEAD_PNG);
+
+  await uploadPhoto(portal, cookie);
+
+  const second = await generate(portal, cookie);
+
+  await second.arrayBuffer();
+  assert.equal((await accept(portal, cookie, second.headers.get(AVATAR_ATTEMPT_ID_HEADER) ?? "", otherPng)).status, 200);
+  assert.equal((await accept(portal, cookie, firstId)).status, 404, "the stood-down try cannot come back");
+});
+
+test("does delete the photo, and nothing else, when the guest removes it", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  assert.equal((await portal.request("DELETE", "/api/me/avatar/photo")).status, 401);
+
+  await makeHead(portal, cookie);
+  await uploadPhoto(portal, cookie);
+  assert.deepEqual(portal.bucket.keys(), [resolveHeadKey("g_rob"), resolvePhotoKey("g_rob")]);
+
+  const crossSite = await portal.request("DELETE", "/api/me/avatar/photo", { cookie, origin: "https://evil.example" });
+
+  assert.equal(crossSite.status, 403);
+
+  const removed = await portal.request("DELETE", "/api/me/avatar/photo", { cookie });
+  const status = (await removed.json()) as PortalAvatarStatus;
+
+  assert.equal(removed.status, 200);
+  assert.equal(status.hasPhoto, false);
+  assert.match(status.headHash ?? "", /^[0-9a-f]{64}$/, "the kept head stays");
+  assert.deepEqual(portal.bucket.keys(), [resolveHeadKey("g_rob")]);
+});
+
+test("does give a guest their tries back and clear their photo, keeping the head, when the admin resets them", async () => {
+  const portal = portalWithGuests();
+  const robCookie = await portal.signInAs("g_rob");
+  const anaCookie = await portal.signInAs("g_ana");
+
+  await makeHead(portal, robCookie);
+  await uploadPhoto(portal, robCookie);
+  await (await generate(portal, robCookie)).arrayBuffer();
+  assert.equal((await readAdminGuest(portal, "g_rob"))?.triesLeft, AVATAR_TRIES_MAX - 2);
+
+  const refused = await portal.request("POST", "/api/admin/guests/g_rob/avatar/reset", { cookie: anaCookie });
+
+  assert.equal(refused.status, 403);
+  assert.equal((await portal.request("POST", "/api/admin/guests/g_nobody/avatar/reset", { headers: BEARER })).status, 404);
+
+  const response = await portal.request("POST", "/api/admin/guests/g_rob/avatar/reset", { headers: BEARER });
+  const reset = (await response.json()) as AdminAvatarReset;
+
+  assert.equal(response.status, 200);
+  assert.equal(reset.guestId, "g_rob");
+  assert.equal(reset.avatar.triesLeft, AVATAR_TRIES_MAX);
+  assert.equal(reset.avatar.hasPhoto, false);
+  assert.match(reset.avatar.headHash ?? "", /^[0-9a-f]{64}$/);
+  assert.deepEqual(portal.bucket.keys(), [resolveHeadKey("g_rob")]);
+  assert.equal((await readAdminGuest(portal, "g_rob"))?.triesLeft, AVATAR_TRIES_MAX);
+  assert.equal((await portal.request("GET", "/api/me/avatar", { cookie: robCookie })).status, 200);
+
+  await uploadPhoto(portal, robCookie);
+
+  const painted = await generate(portal, robCookie);
+
+  assert.equal(painted.status, 200);
+  assert.equal(painted.headers.get(AVATAR_TRIES_LEFT_HEADER), String(AVATAR_TRIES_MAX - 1));
+  await painted.arrayBuffer();
+});
+
+test("does drop the style reference when its guest keeps a different head", async () => {
+  const painter = createRecordingPainter();
+  const portal = portalWithGuests({ gemini: painter });
+  const anaCookie = await portal.signInAs("g_ana");
+  const robCookie = await portal.signInAs("g_rob");
+  const newerPng = HEAD_PNG.slice();
+
+  newerPng[50] = (newerPng[50] ?? 0) ^ 1;
+  await makeHead(portal, anaCookie);
+  await portal.request("POST", "/api/admin/style-reference", { headers: BEARER, body: { guestId: "g_ana" } });
+  assert.equal((await readAdminGuest(portal, "g_ana"))?.isStyleReference, true);
+
+  await uploadPhoto(portal, anaCookie);
+
+  const repaint = await generate(portal, anaCookie);
+
+  await repaint.arrayBuffer();
+  assert.equal((await accept(portal, anaCookie, repaint.headers.get(AVATAR_ATTEMPT_ID_HEADER) ?? "", newerPng)).status, 200);
+
+  assert.equal((await readAdminGuest(portal, "g_ana"))?.isStyleReference, false);
+  assert.equal(portal.bucket.readText(STYLE_REFERENCE_KEY), null);
+  assert.equal(portal.db.raw.prepare("SELECT COUNT(*) AS count FROM style_reference").get()?.count, 0);
+
+  await uploadPhoto(portal, robCookie);
+  await (await generate(portal, robCookie)).arrayBuffer();
+
+  const robRequest = JSON.parse(painter.bodies.at(-1) ?? "{}") as GeminiImageRequest;
+
+  assert.equal(robRequest.contents[0].parts.length, 2, "painted without the stale reference");
+});
+
+test("does give the try back and let go of the photo when painting throws before Gemini answers", async () => {
+  const portal = portalWithGuests({
+    gemini: {
+      paint: async () => {
+        throw new Error("network down");
+      }
+    }
+  });
+  const cookie = await portal.signInAs("g_rob");
+
+  await uploadPhoto(portal, cookie);
+
+  const response = await generate(portal, cookie);
+
+  assert.equal(response.status, 502);
+  assert.deepEqual(await response.json(), { error: "painter_failed" });
+  assert.equal(response.headers.get(AVATAR_TRIES_LEFT_HEADER), String(AVATAR_TRIES_MAX));
+  assert.deepEqual(attemptRows(portal, "g_rob").map((row) => row.status), ["failed"]);
+  assert.equal(portal.bucket.openReads(), 0, "the photo's stream was cancelled, not left open");
+});
+
+test("does give the try back and cancel the photo's stream when the style reference cannot be read", async () => {
+  const painter = createRecordingPainter();
+  const portal = portalWithGuests({ gemini: painter });
+  const cookie = await portal.signInAs("g_rob");
+  const get = portal.bucket.get.bind(portal.bucket);
+
+  await uploadPhoto(portal, cookie);
+  portal.bucket.get = async (key) => {
+    if (key === STYLE_REFERENCE_KEY) {
+      throw new Error("R2 hiccup");
+    }
+
+    return get(key);
+  };
+
+  const response = await generate(portal, cookie);
+
+  assert.equal(response.status, 502);
+  assert.equal(response.headers.get(AVATAR_TRIES_LEFT_HEADER), String(AVATAR_TRIES_MAX));
+  assert.equal(painter.bodies.length, 0, "Gemini was never called");
+  assert.deepEqual(attemptRows(portal, "g_rob").map((row) => row.status), ["failed"]);
+  assert.equal(portal.bucket.openReads(), 0);
+});
+
+test("does cancel the photo's stream when there is nothing to paint it with", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await portal.bucket.put(resolvePhotoKey("g_rob"), PHOTO_BASE64, { customMetadata: { mimeType: "image/gif" } });
+
+  assert.equal((await generate(portal, cookie)).status, 409);
+  assert.equal(portal.bucket.openReads(), 0);
+});
+
+test("does refuse a photo whose base64 carries control characters, before storing anything", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  assert.equal((await uploadPhoto(portal, cookie, "data:image/jpeg;base64,/9j/AA\n\u0000AAAA")).status, 400);
+  assert.deepEqual(portal.bucket.keys(), []);
 });

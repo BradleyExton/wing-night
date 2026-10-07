@@ -43,6 +43,14 @@ test("does refuse a photo upload when its text could close the JSON string it is
   assert.equal(readAvatarPhotoUpload(`data:image/jpeg;base64,/9j/\\u0022AA`), null);
 });
 
+test("does refuse a photo upload when its base64 carries whitespace, control characters or padding mid-way", () => {
+  assert.equal(readAvatarPhotoUpload("data:image/jpeg;base64,/9j/AA\nA"), null);
+  assert.equal(readAvatarPhotoUpload("data:image/jpeg;base64,/9j/A\u0000AA"), null);
+  assert.equal(readAvatarPhotoUpload("data:image/jpeg;base64,/9j/A AA"), null);
+  assert.equal(readAvatarPhotoUpload("data:image/jpeg;base64,/9j/A=AA"), null);
+  assert.deepEqual(readAvatarPhotoUpload("data:image/jpeg;base64,/9j/AAA="), { mimeType: "image/jpeg", base64: "/9j/AAA=" });
+});
+
 test("does read a head's size when its bytes are a whole PNG", () => {
   assert.deepEqual(readAvatarHeadPng(ONE_PIXEL_PNG), { width: 1, height: 1 });
 });
