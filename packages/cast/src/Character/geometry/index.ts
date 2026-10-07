@@ -25,6 +25,13 @@ export const DRAWN_BEAK = {
   y: DRAWN_HEAD.cy
 } as const;
 
+// The point of the upper mandible, which is where a ragdoll hen grabs with its
+// beak (`ragdoll`).
+export const DRAWN_BEAK_TIP = {
+  x: DRAWN_BEAK.x + 12,
+  y: DRAWN_BEAK.y
+} as const;
+
 export const DRAWN_HEAD_ANCHORS: HeadAnchors = {
   cx: DRAWN_HEAD.cx,
   top: DRAWN_HEAD.cy - DRAWN_HEAD.r,

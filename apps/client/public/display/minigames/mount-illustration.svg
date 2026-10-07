@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Mount Your Hens mini-game artwork">
+  <defs>
+    <linearGradient id="mount-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b1026" />
+      <stop offset="62%" stop-color="#26204a" />
+      <stop offset="100%" stop-color="#4a2a4f" />
+    </linearGradient>
+    <radialGradient id="mount-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#ffd27a" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#ffd27a" stop-opacity="0" />
+    </radialGradient>
+    <!-- The cast hen, drawn once and stood three times; each use sets the fill and the outline -->
+    <g id="mount-hen" stroke-width="2.4" stroke-linejoin="round">
+      <path d="M 22 46 C 10 47 2 41 0 30 C 6 39 14 42 26 41 Z M 22 41 C 11 40 3 33 2 20 C 9 31 15 36 25 36 Z M 24 36 C 14 32 8 24 11 10 C 14 25 19 30 28 31 Z" />
+      <path d="M 16 42 C 16 28 32 22 50 27 C 64 31 67 44 61 55 C 53 65 30 66 21 58 C 16 54 16 48 16 42 Z" />
+      <path d="M 47 13 C 46 5 52 3 54 9 C 55 2 61 2 62 8 C 63 4 68 5 66 13 Z" fill="#e8453c" />
+      <circle cx="58" cy="20" r="12" />
+      <path d="M 69 17 L 81 13 L 70 20 Z" fill="#f59e0b" />
+      <path d="M 69 22 L 80 25 L 69 25 Z" fill="#f59e0b" />
+      <path d="M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 Q 28 50 31 54 Q 35 49 38 53 Q 42 48 45 51 C 49 46 51 40 47 35 Z" />
+      <circle cx="59" cy="18" r="3.2" fill="#fff7ed" stroke="none" />
+      <circle cx="60" cy="18" r="1.6" fill="#1c0d02" stroke="none" />
+      <path d="M 54 11 L 63 14" fill="none" stroke-width="2.4" stroke-linecap="round" />
+    </g>
+  </defs>
+  <rect width="240" height="180" fill="url(#mount-sky)" />
+  <circle cx="34" cy="28" r="12" fill="#f4ecd0" opacity="0.92" />
+  <circle cx="29" cy="25" r="12" fill="#0e1430" opacity="0.9" />
+  <g fill="#f4ecd0" opacity="0.7">
+    <circle cx="80" cy="18" r="0.9" /><circle cx="196" cy="30" r="0.7" /><circle cx="168" cy="12" r="0.9" />
+    <circle cx="214" cy="52" r="0.7" /><circle cx="52" cy="58" r="0.6" />
+  </g>
+
+  <!-- The light the pile stands in -->
+  <ellipse cx="120" cy="152" rx="86" ry="14" fill="url(#mount-glow)" />
+
+  <!-- The line to get above -->
+  <g stroke="#ffd23f" stroke-linecap="round" fill="none">
+    <path d="M 18 26 H 222" stroke-width="2" stroke-dasharray="7 6" />
+    <path d="M 36 20 L 40 14 L 44 20 M 196 20 L 200 14 L 204 20" stroke-width="1.6" />
+  </g>
+
+  <!-- The ground and the plinth -->
+  <rect x="0" y="150" width="240" height="30" fill="#1e1218" />
+  <line x1="0" y1="150" x2="240" y2="150" stroke="#6b6672" stroke-width="2" />
+  <rect x="82" y="134" width="76" height="16" fill="#7b7584" stroke="#2a2420" stroke-width="1.6" stroke-linejoin="round" />
+  <rect x="78" y="130" width="84" height="6" fill="#a7a1ad" stroke="#2a2420" stroke-width="1.6" stroke-linejoin="round" />
+
+  <!-- The goose at the bottom, neck up and unimpressed -->
+  <g transform="translate(120 130) scale(0.74)">
+    <path d="M -4 -12 L -6 -1 M 6 -12 L 7 -1" fill="none" stroke="#f08a24" stroke-width="2.4" stroke-linecap="round" />
+    <path d="M -11 -1 L -3 -1 M 3 -1 L 11 -1" fill="none" stroke="#f08a24" stroke-width="2" stroke-linecap="round" />
+    <g stroke="#2a2420" stroke-width="1.8" stroke-linejoin="round">
+      <path d="M -16 -20 C -16 -32 2 -36 14 -30 C 22 -26 24 -16 16 -12 C 6 -8 -12 -10 -16 -20 Z" fill="#8a7a68" />
+      <path d="M -12 -14 C -4 -10 8 -10 15 -13" fill="none" stroke="#e8e2d6" stroke-width="3" />
+      <path d="M -10 -26 C -14 -36 -16 -44 -12 -52 C -9 -56 -3 -55 -2 -50 C -3 -42 -2 -34 -2 -28 Z" fill="#1c1a19" />
+      <ellipse cx="-9" cy="-52" rx="7" ry="5.6" fill="#1c1a19" />
+      <path d="M -6 -51 C -4 -54 -2 -52 -3 -48 C -5 -47 -7 -48 -6 -51 Z" fill="#f2efe8" stroke="none" />
+      <path d="M -15 -54 L -24 -52 L -15 -50 Z" fill="#2a2420" />
+    </g>
+    <circle cx="-11" cy="-54" r="1.4" fill="#ff5a3c" />
+  </g>
+
+  <!-- Three hens, each standing on the last, each leaning a little differently -->
+  <g transform="translate(122 108) rotate(-4) scale(0.46) translate(-38 -62)">
+    <use href="#mount-hen" fill="#34b86b" stroke="#0e3a22" />
+  </g>
+  <g transform="translate(116 84) rotate(5) scale(0.46) translate(-38 -62)">
+    <use href="#mount-hen" fill="#f2b84b" stroke="#5a3a08" />
+  </g>
+  <g transform="translate(124 60) rotate(-3) scale(0.46) translate(-38 -62)">
+    <use href="#mount-hen" fill="#5b8def" stroke="#16295e" />
+  </g>
+</svg>

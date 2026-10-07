@@ -229,6 +229,21 @@ export type MinigameDevManifest = {
   content: SerializableValue | null;
 };
 
+// A scripted move the dev sandbox offers as a button, and nothing outside the sandbox ever renders:
+// the game's own harness, for an e2e that must drive the real reducer with input no pointer can
+// reproduce (Mount Your Hens' goose bot, a climb timed to the tick). `resolve` reads the host view
+// the sandbox is showing and names the action to dispatch through the sandbox's own reducer — the
+// same path the tablet's actions take — or null when it has nothing to do right now. Functions,
+// not data, so it lives beside the manifest (the client registry) rather than in it: a manifest
+// may arrive from the server's content pack, and that copy is JSON.
+export type MinigameDevAction = {
+  id: string;
+  label: string;
+  resolve: (
+    hostView: MinigameHostView | null
+  ) => { actionType: string; actionPayload: SerializableValue } | null;
+};
+
 export type CreateDevManifestInput = {
   rules: SerializableValue | null;
   content: SerializableValue | null;

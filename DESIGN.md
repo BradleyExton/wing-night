@@ -2208,6 +2208,83 @@ Spec: `docs/minigames/brawl-spec.md`.
     beat has already rung. There is no standings board on the wall mid-turn.
     Specified in `docs/minigames/brawl-spec.md` §0.7.
 
+## 2.15 MOUNT Minigame Surface Language ("Mount Your Hens")
+
+The MOUNT (Mount Your Hens) surfaces are the night's one game about vertigo:
+the cast (§2.8) climbs a single pile, a climb each, and every hen stays where
+it stopped, so by the last team the thing on the wall is the whole room stuck
+to itself. Spec: `docs/minigames/mount-your-hens-spec.md`.
+
+-   **The waterfront at dusk, and it is Barrie's.** The fifth time of day the
+    night draws, between JOUST's purple dusk and Streets of Barrie's lamps: the
+    house dark running down into the hearth's warm glass and a last band of
+    orange at the horizon (screen space, so the sky stays put while the camera
+    climbs), the bay out to its far shore, the Spirit Catcher hazed on it from
+    `@wingnight/scenery`, and the boardwalk the climb starts from. The plinth
+    and the goose are drawn over the sim's own shapes, so every edge a beak can
+    hook is where it looks. All of it on the house tokens through the `--mt-*`
+    custom properties on the scene's root (`MountScene/palette.ts`); no hex.
+    The backdrop stays dark and middling so every hen, in its team colour, is
+    the brightest thing on it. Drawing content, exempt from the two-accent
+    budget like the other arenas.
+-   **Every hen is the player's own, as a ragdoll.** The climber and every hen
+    on the pile are `CharacterRagdollFigure`, wearing the player's head, team
+    colour and genre silhouette; the sim hands over nine particles and the
+    client turns them into the cast's part transforms (`ragdollTransforms`,
+    the only place angles are made). The goose is a prop, drawn in this
+    package: grey-brown body, black neck with a warm rim so it holds against
+    the dusk, white chinstrap, the house goose's orange bill. Stuck hens are
+    memoised on the pile's key and never redraw during a climb.
+-   **The line is the score colour.** The high line is dashed gold across the
+    whole world at the pile's line, with the holder's name and its height in
+    hens ("2.2 hens up") in the score face at the crown that set it — the
+    goose's head until somebody beats it, so the head on the line is the
+    holder's real one. Heights are said to people in hens, one decimal.
+-   **The arena is the controller, and the limbs are the handles.** The whole
+    body is the pointer area; a finger takes the nearest free limb tip within
+    `touchRadius` (about 75 CSS px on the tablet), so the four rings at the
+    tips — quiet while a limb hangs, orange while a finger holds it, gold
+    dashes while it is let go and looking for a hold, green once it has one —
+    are signs, never targets to find to the pixel. Two thumbs can hold two
+    limbs. The close-up follows the torso and **freezes while any finger is
+    down**, so a finger held still stays put in the world and a haul ends.
+    A fall blinks the hen while it is set upright and drops every finger's
+    hold. The boardwalk shows 26 units under the floor so a standing hen's feet
+    clear the bottom-left buttons.
+-   **Host layout is a `<TakeoverCanvas>`** (`docs/takeover-layout-api.md` §5),
+    the climb full bleed. `rail` and `clock` are the shell's (`timerKey` is
+    null, so `clock` takes no width), and nothing in the game types a z-index,
+    an `isolate` or a dock gutter.
+    -   `counter`, read-only: "Climb 1 of 3" and whose, the climb's clock (the
+        score face, heat in its last ten seconds), and the line's holder and
+        height in gold.
+    -   `actions`, bottom-left: Skip climb and Reset turn, then the hint that
+        says whose climb it is — empty while a climb runs. Skip is disabled
+        through a beat.
+    -   `readout`, bottom-right above the dock, only during a climb's ending or
+        once the team is through: the finish card, the climb list (mounted, or
+        how far of the way) and `RunningTotals`.
+    -   When the line is above the close-up a gold pill on the top edge, under
+        the chrome row, says how far: "▲ Line 1.1 hens up".
+-   **Display: the sign over the whole pile.** The house neon sign (§2.2D),
+    the game's name as kicker, carrying the climb and whose hands, the climb's
+    clock (the house last-ten treatment: larger, in heat, and the `time`
+    whistle at nought), the line's holder and height, and the points so far in
+    gold. Under it the pile through the room's fit-all camera — the pile's
+    bounds, the start stance, the climber and the line, margin 20, never
+    shorter than 220 units — so the room sees the holds the climber cannot and
+    calls them (spec §3). The climb is the tablet's log re-run twelve ticks
+    behind (`useMountMirror`). Endings hang low over the boardwalk in Playfair
+    italic: *Mounted!* in gold with the points in Barlow Condensed beside it,
+    *Stuck!* with how far of the way, and *Hand it to Caitlin*; the finish is
+    the house `<ResultPlaque>` ("2 of 3 mounted"), silent. No standings
+    mid-turn.
+-   **Three beats the sim never sees**, client-only. *The mount* (2 s): the
+    line rides up to the crown and the climber's name lands on it, the sting.
+    *Stuck* (1.6 s): the clock ran out and the hen stays exactly where it is,
+    the whistle. *The fall* is the sim's own 0.75 s recovery: a thud, the
+    picture flinches, the hen blinks at the start. Every beat ends on the pile.
+
 ## 2.8 Cast (shared character system)
 
 Every rostered player has a little hen that recurs across the show.

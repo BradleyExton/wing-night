@@ -215,6 +215,10 @@ Worked example, the current pack schedule (`~/wing-night-content/local/gameConfi
 Streets of Barrie (BRAWL) is unscheduled. When it is, it takes the slot SCHLONIC or FAPPY
 holds (twitch, two thumbs, relay) and must not sit next to either.
 
+Mount Your Hens (MOUNT) is unscheduled too. It is agon and ilinx with a drag-and-release
+input, the same shape as Slingshlong's pull, so it must never sit next to JOUST; a slot after
+a perform or recall round suits it.
+
 No two consecutive rounds share a shape: recall alternates with perform through the middle
 of the night, and the two twitch games sit at rounds 1 and 6. Before 2026-09-24 the pack
 ran GEO then SONG_GUESS (two think-then-commit games) and EMOJI_CHARADES then DRAWING (two

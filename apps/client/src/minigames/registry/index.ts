@@ -1,4 +1,5 @@
 import type {
+  MinigameDevAction,
   MinigameDevManifest,
   MinigameRendererBundle,
   MinigameRuntimePlugin
@@ -21,6 +22,9 @@ import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
 import { joustRendererBundle } from "@wingnight/minigames-joust/client";
 import { joustDevManifest } from "@wingnight/minigames-joust/dev";
 import { joustRuntimePlugin } from "@wingnight/minigames-joust/runtime";
+import { mountRendererBundle } from "@wingnight/minigames-mount/client";
+import { mountDevActions, mountDevManifest } from "@wingnight/minigames-mount/dev";
+import { mountRuntimePlugin } from "@wingnight/minigames-mount/runtime";
 import { recreateRendererBundle } from "@wingnight/minigames-recreate/client";
 import { recreateDevManifest } from "@wingnight/minigames-recreate/dev";
 import { recreateRuntimePlugin } from "@wingnight/minigames-recreate/runtime";
@@ -39,6 +43,9 @@ type MinigameRegistration = {
   rendererBundle: MinigameRendererBundle;
   devManifest: MinigameDevManifest;
   runtimePlugin: MinigameRuntimePlugin;
+  // Scripted moves only the dev sandbox offers, as buttons (`MinigameDevAction`). Nothing in the
+  // party app reads them: the one caller is `/dev/minigame/<slug>`.
+  devActions?: readonly MinigameDevAction[];
 };
 
 // Keyed by MinigameType so adding a new game to MINIGAME_DEFINITIONS fails to
@@ -84,6 +91,12 @@ const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
     devManifest: brawlDevManifest,
     runtimePlugin: brawlRuntimePlugin
   },
+  MOUNT: {
+    rendererBundle: mountRendererBundle,
+    devManifest: mountDevManifest,
+    runtimePlugin: mountRuntimePlugin,
+    devActions: mountDevActions
+  },
   DRAWING: {
     rendererBundle: drawingRendererBundle,
     devManifest: drawingDevManifest,
@@ -112,4 +125,11 @@ export const resolveMinigameRuntimePlugin = (
   minigameType: MinigameType
 ): MinigameRuntimePlugin | null => {
   return MINIGAME_REGISTRY[minigameType]?.runtimePlugin ?? null;
+};
+
+// Only the dev sandbox calls this: the party app's host and display never draw a dev action.
+export const resolveMinigameDevActions = (
+  minigameType: MinigameType
+): readonly MinigameDevAction[] => {
+  return MINIGAME_REGISTRY[minigameType]?.devActions ?? [];
 };

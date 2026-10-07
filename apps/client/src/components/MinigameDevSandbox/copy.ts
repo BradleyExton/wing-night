@@ -18,6 +18,8 @@ export const minigameDevSandboxCopy = {
   // at full, so this is the one way to judge the TV's last ten seconds here.
   clockLabel: "Clock",
   rehearseClockButtonLabel: "Run the last ten seconds",
+  // A game's own scripted moves, for driving its real reducer from a harness.
+  devActionsLabel: "Script",
   hostPreviewLabel: "Host Preview",
   hostPreviewMetaLabel: "Tablet · 1280 × 800 landscape",
   displayPreviewLabel: "Display Preview",

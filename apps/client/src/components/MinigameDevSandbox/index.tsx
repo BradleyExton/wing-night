@@ -1,6 +1,7 @@
 import type { MinigameType } from "@wingnight/shared";
 
 import {
+  resolveMinigameDevActions,
   resolveMinigameDevManifest,
   resolveMinigameRendererBundle,
   resolveMinigameRuntimePlugin
@@ -95,6 +96,7 @@ const SeededSandbox = ({
         devManifest={manifest}
         rendererBundle={rendererBundle}
         runtimePlugin={runtimePlugin}
+        devActions={resolveMinigameDevActions(minigameType)}
         serverOrigin={serverOrigin}
       />
     </main>
