@@ -4,6 +4,11 @@ import type {
   ConfigResultPayload
 } from "../config/index.js";
 import type {
+  MinigameDeviceMode,
+  PlayerMinigameActionResult
+} from "../contestantTurn/index.js";
+import type {
+  ContestantMinigameHostView,
   RoleScopedStateSnapshotEnvelope
 } from "../roomState/index.js";
 import type { MusicPlaybackSource } from "../musicPlayback/index.js";
@@ -83,6 +88,34 @@ export type PlayerReleasePayload = Record<"claimSecret", string>;
 export type PlayerClaimAck = (result: PlayerClaimResult) => void;
 export type PlayerReleaseAck = (result: PlayerReleaseResult) => void;
 
+// The host's per-round device setting for an arcade relay (`MinigameDeviceMode`). Accepted in
+// any phase, for a round of a `CONTESTANT_MINIGAME_TYPES` game only; a turn locks the mode its
+// briefing opened with, so a change lands from the next team's turn.
+export type GameSetRoundDeviceModePayload = HostSecretPayload &
+  Record<"round", number> &
+  Record<"deviceMode", MinigameDeviceMode>;
+
+// "Take it back": the host hands the leg in hand to the tablet for the rest of it, restarting
+// it on the server (a FAPPY respawn, a fresh SCHLONIC run or BRAWL block; a JOUST shot is atomic,
+// so the shot about to be aimed just moves to the tablet). Phones mode, MINIGAME_PLAY only.
+export type MinigameTakeBackPayload = HostSecretPayload;
+
+// A contestant's phone playing its own leg: the host's `minigame:action` envelope without the
+// secret. A PLAYER socket is authorized by the face it holds and nothing else, and only for the
+// game's own contestant action types, on its own leg, while the phone holds it.
+export type PlayerMinigameActionPayload = Record<"minigameId", MinigameType> &
+  Record<"minigameApiVersion", MinigameApiVersion> &
+  Record<"actionType", string> &
+  Record<"actionPayload", unknown>;
+// Optional: a flap does not need an answer, a test does.
+export type PlayerMinigameActionAck = (result: PlayerMinigameActionResult) => void;
+
+// Server → the current contestant's `player:<id>` room only, in phones mode only, for the four
+// arcade games only: the game's host view, which the phone's surface plays from. Re-sent with
+// every room broadcast while that player holds the leg, and when the phone takes its seat.
+// Never in the shared player snapshot.
+export type PlayerMinigameHostViewPayload = Record<"minigameHostView", ContestantMinigameHostView>;
+
 // Server → one phone, over its `player:<id>` room: who this phone is. Later
 // milestones grow this per-player channel (a contestant's turn, a ballot);
 // anything only one player may see goes here, never in the shared snapshot.
@@ -131,8 +164,11 @@ export const CLIENT_TO_SERVER_EVENTS = {
   RELEASE_PLAYER_CLAIM: "setup:releasePlayerClaim",
   ROTATE_PLAYER_JOIN_TOKEN: "setup:rotatePlayerJoinToken",
   REQUEST_PLAYER_JOIN_TOKEN: "display:requestPlayerJoinToken",
+  SET_ROUND_DEVICE_MODE: "game:setRoundDeviceMode",
+  TAKE_BACK_CONTESTANT_LEG: "minigame:takeBack",
   PLAYER_CLAIM: "player:claim",
-  PLAYER_RELEASE: "player:release"
+  PLAYER_RELEASE: "player:release",
+  PLAYER_MINIGAME_ACTION: "player:minigameAction"
 } as const;
 
 export const SERVER_TO_CLIENT_EVENTS = {
@@ -142,6 +178,7 @@ export const SERVER_TO_CLIENT_EVENTS = {
   CONFIG_RESULT: "config:result",
   PLAYER_SELF: "player:self",
   PLAYER_CLAIM_GONE: "player:claimGone",
+  PLAYER_MINIGAME_HOST_VIEW: "player:minigameHostView",
   PLAYER_JOIN_TOKEN: "display:playerJoinToken"
 } as const;
 
@@ -223,6 +260,14 @@ export type ClientToServerEvents = {
     payload: PlayerReleasePayload,
     ack: PlayerReleaseAck
   ) => void;
+  [CLIENT_TO_SERVER_EVENTS.SET_ROUND_DEVICE_MODE]: (
+    payload: GameSetRoundDeviceModePayload
+  ) => void;
+  [CLIENT_TO_SERVER_EVENTS.TAKE_BACK_CONTESTANT_LEG]: (payload: MinigameTakeBackPayload) => void;
+  [CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION]: (
+    payload: PlayerMinigameActionPayload,
+    ack?: PlayerMinigameActionAck
+  ) => void;
 };
 
 export type ServerToClientEvents = {
@@ -237,6 +282,9 @@ export type ServerToClientEvents = {
   [SERVER_TO_CLIENT_EVENTS.PLAYER_SELF]: (payload: PlayerSelfPayload) => void;
   [SERVER_TO_CLIENT_EVENTS.PLAYER_CLAIM_GONE]: (
     payload: PlayerClaimGonePayload
+  ) => void;
+  [SERVER_TO_CLIENT_EVENTS.PLAYER_MINIGAME_HOST_VIEW]: (
+    payload: PlayerMinigameHostViewPayload
   ) => void;
   [SERVER_TO_CLIENT_EVENTS.PLAYER_JOIN_TOKEN]: (
     payload: PlayerJoinTokenPayload

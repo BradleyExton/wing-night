@@ -16,6 +16,9 @@ import type {
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { createConfigService, type ConfigService } from "../../configService/index.js";
+// The phone family is registered by `registerPlayerHandlers`, on PLAYER sockets only; nothing
+// here touches it.
+import type { PlayerEventName } from "../registerPlayerHandlers/index.js";
 import type { SeatedSocketData } from "../seatGuard/index.js";
 import { handleConfigApply } from "./handleConfigApply/index.js";
 
@@ -40,12 +43,14 @@ import {
   resumeRoomMusic,
   resumeRoomTimer,
   setRoomMusicVolume,
+  setRoundDeviceMode,
   setRoomSfxVolume,
   setWingParticipation,
   skipRoomMusicTrack,
   skipTurnBoundary,
   startGame,
-  startQuickPlay
+  startQuickPlay,
+  takeBackContestantLeg
 } from "../../roomState/index.js";
 import {
   isGameReorderTurnOrderPayload,
@@ -62,6 +67,7 @@ import {
   isQuickPlayStartPayload,
   isSetupCreateTeamPayload,
   isSetupReleasePlayerClaimPayload,
+  isGameSetRoundDeviceModePayload,
   isTimerExtendPayload
 } from "./payloadGuards/index.js";
 
@@ -93,11 +99,6 @@ type HostAuth = {
 type ClientEventName =
   (typeof CLIENT_TO_SERVER_EVENTS)[keyof typeof CLIENT_TO_SERVER_EVENTS];
 
-// The phone family answers on an ack and is registered by
-// `registerPlayerHandlers`, on PLAYER sockets only; nothing here touches it.
-export type PlayerEventName =
-  | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM
-  | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE;
 
 // Everything that runs a mutation and broadcasts. All but one member is gated
 // on the host secret; `MUSIC_TRACK_ENDED` is the exception, reported by the
@@ -221,6 +222,15 @@ const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
         payload.actionType,
         payload.actionPayload as SerializableValue
       )
+  ),
+  // The contestant's phone (AGENTS.md §3.5): a round's device mode, and taking a leg back.
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.SET_ROUND_DEVICE_MODE,
+    isGameSetRoundDeviceModePayload,
+    (payload) => setRoundDeviceMode(payload.round, payload.deviceMode)
+  ),
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.TAKE_BACK_CONTESTANT_LEG, isHostSecretPayload, () =>
+    takeBackContestantLeg()
   ),
   defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.TIMER_PAUSE, isHostSecretPayload, () =>
     pauseRoomTimer()

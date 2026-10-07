@@ -867,3 +867,45 @@ test("parses a content file strictly and names a bad lane", () => {
     /Invalid joust content/
   );
 });
+
+const contestantOf = (state: SerializableValue) => {
+  return joustRuntimePlugin.selectContestant?.({ state, rules: null, content: contentFixture }) ?? null;
+};
+
+test("does name the shooter on the band, and during the replay the one getting ready", () => {
+  let state: SerializableValue = initializeState();
+
+  assert.deepEqual(contestantOf(state), { legIndex: 0, playerId: "p1", nextPlayerId: "p2" });
+
+  // The shot that flew is atomic and over: the leg in hand is the next one.
+  state = reduce(state, "launch", MISSING_AIM).state;
+  assert.equal(hostView(state).phase, "resolved");
+  assert.deepEqual(contestantOf(state), { legIndex: 1, playerId: "p2", nextPlayerId: "p3" });
+
+  state = reduce(state, "nextShot").state;
+  assert.deepEqual(contestantOf(state), { legIndex: 1, playerId: "p2", nextPlayerId: "p3" });
+
+  state = reduce(reduce(state, "skipShot").state, "launch", MISSING_AIM).state;
+  assert.equal(hostView(state).shotIndex, 2);
+  // The last shot's replay: nobody is up next.
+  assert.equal(contestantOf(state), null);
+  assert.equal(contestantOf(reduce(state, "nextShot").state), null);
+});
+
+test("does let a phone aim, load and let go while the host calls the next shot", () => {
+  assert.deepEqual(joustRuntimePlugin.contestantActionTypes, ["setAim", "pickShooter", "launch"]);
+  // A shot is atomic: there is nothing to restart, so taking one back is the server's alone.
+  assert.equal(joustRuntimePlugin.contestantRetakeActionType, undefined);
+});
+
+test("does carry no answer in the host view a contestant's phone is handed", () => {
+  const states: SerializableValue[] = [initializeState()];
+
+  states.push(reduce(states[0] as SerializableValue, "setAim", SWEEPING_AIM).state);
+  states.push(reduce(states[1] as SerializableValue, "launch", SWEEPING_AIM).state);
+  states.push(reduce(states[2] as SerializableValue, "nextShot").state);
+
+  for (const state of states) {
+    assert.deepEqual(hostView(state), displayView(state));
+  }
+});

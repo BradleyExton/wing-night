@@ -13,6 +13,7 @@ import type {
   JoustVec2
 } from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
+import type { ContestantTurn, RoundDeviceModes } from "../contestantTurn/index.js";
 import type { BrawlInput, BrawlOutcome } from "../brawl/types.js";
 import type {
   MountClimbRules,
@@ -738,6 +739,15 @@ export type MinigameHostView =
   | DrawingMinigameHostView
   | EmojiCharadesMinigameHostView;
 
+// The host views a contestant's phone may be handed (`player:minigameHostView`): the four arcade
+// relays, and nothing else. Each carries the same fields as its display view — no answer, no
+// secret — which the runtimes' tests pin.
+export type ContestantMinigameHostView =
+  | FappyMinigameHostView
+  | SchlonicMinigameHostView
+  | BrawlMinigameHostView
+  | JoustMinigameHostView;
+
 export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
   minigame: "TRIVIA";
   promptCursor: number;
@@ -916,6 +926,12 @@ export type RoomState = {
   // phone. Written by the server from that store, never derived by a client.
   claimedPlayerIds: string[];
   connectedPlayerIds: string[];
+  // The host's per-round choice of where an arcade relay is played (`MinigameDeviceMode`). Only
+  // rounds of a `CONTESTANT_MINIGAME_TYPES` game can carry one; the rest play on the tablet.
+  roundDeviceModes: RoundDeviceModes;
+  // The arcade turn in hand — its locked device mode, whose leg it is and which device writes
+  // it — from the turn's briefing to its results. Null outside one, and for every other game.
+  contestantTurn: ContestantTurn | null;
 };
 
 type DisplaySafeRoomStateKeys =
@@ -946,7 +962,9 @@ type DisplaySafeRoomStateKeys =
   | "fatalError"
   | "canRedoScoringMutation"
   | "canAdvancePhase"
-  | "claimedPlayerIds";
+  | "claimedPlayerIds"
+  | "roundDeviceModes"
+  | "contestantTurn";
 
 export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "phase",
@@ -976,7 +994,9 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "fatalError",
   "canRedoScoringMutation",
   "canAdvancePhase",
-  "claimedPlayerIds"
+  "claimedPlayerIds",
+  "roundDeviceModes",
+  "contestantTurn"
 ] as const satisfies readonly DisplaySafeRoomStateKeys[];
 
 type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
@@ -988,8 +1008,12 @@ type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
 // is. Never `minigameHostView` (answers), never `gameConfig` (every game's
 // rules and the round order), never the playlists; `minigameDisplayView` stays
 // out too until a game's phone surface asks for exactly the fields it needs.
+// `contestantTurn` is the one game field here: whose leg it is and which device
+// writes it, so a phone knows to play, to get ready, or to watch the TV. It is
+// ids, a leg number and a mode — nothing a turn could cheat with.
 // Anything only one player may see goes over that player's own channel
-// (`player:self`), never into this shared snapshot.
+// (`player:self`, and the contestant's `player:minigameHostView`), never into
+// this shared snapshot.
 export const PLAYER_SAFE_ROOM_STATE_KEYS = [
   "phase",
   "sessionMode",
@@ -1000,7 +1024,8 @@ export const PLAYER_SAFE_ROOM_STATE_KEYS = [
   "turnOrderTeamIds",
   "activeRoundTeamId",
   "activeTurnTeamId",
-  "claimedPlayerIds"
+  "claimedPlayerIds",
+  "contestantTurn"
 ] as const satisfies readonly (keyof RoomState)[];
 
 type PlayerSafeRoomStateKey = (typeof PLAYER_SAFE_ROOM_STATE_KEYS)[number];
@@ -1064,7 +1089,10 @@ export const toDisplayRoomStateSnapshot = (
     canRedoScoringMutation: roomState.canRedoScoringMutation,
     canAdvancePhase: roomState.canAdvancePhase,
     // Ids only — the TV counts the phones that are in.
-    claimedPlayerIds: roomState.claimedPlayerIds
+    claimedPlayerIds: roomState.claimedPlayerIds,
+    // The TV's briefing says "grab your phone" or "grab the tablet" from these.
+    roundDeviceModes: roomState.roundDeviceModes,
+    contestantTurn: roomState.contestantTurn
   } satisfies DisplayRoomStateSnapshot;
 
   return displaySnapshot;
@@ -1086,7 +1114,8 @@ export const toPlayerRoomStateSnapshot = (
     turnOrderTeamIds: roomState.turnOrderTeamIds,
     activeRoundTeamId: roomState.activeRoundTeamId,
     activeTurnTeamId: roomState.activeTurnTeamId,
-    claimedPlayerIds: roomState.claimedPlayerIds
+    claimedPlayerIds: roomState.claimedPlayerIds,
+    contestantTurn: roomState.contestantTurn
   } satisfies PlayerRoomStateSnapshot;
 
   return playerSnapshot;

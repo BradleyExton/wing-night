@@ -8,6 +8,7 @@ import {
   type TriviaPrompt
 } from "@wingnight/shared";
 
+import { playerClaimStore } from "../playerClaims/index.js";
 import {
   advanceRoomStatePhase,
   assignPlayerToTeam,
@@ -16,7 +17,8 @@ import {
   setRoomStateGameConfig,
   setRoomStateMinigameContent,
   setRoomStatePlayers,
-  setWingParticipation
+  setWingParticipation,
+  syncPlayerClaimFlags
 } from "./index.js";
 
 export const gameConfigFixture: GameConfigFile = {
@@ -248,4 +250,71 @@ export const advanceToFinalRoundMinigamePlayPhase = (): void => {
 
 export const advanceToRoundResultsPhase = (round: number): void => {
   advanceUntil(Phase.ROUND_RESULTS, round);
+};
+
+// An arcade night: the four relays in turn, two players a side, so a relay hands the leg from one
+// teammate to the other. Team 1 (Player One, Player Two) opens round 1.
+export const arcadeGameConfigFixture: GameConfigFile = {
+  ...gameConfigFixture,
+  rounds: [
+    { ...gameConfigFixture.rounds[0], round: 1, minigame: "FAPPY" },
+    { ...gameConfigFixture.rounds[0], round: 2, minigame: "SCHLONIC" },
+    { ...gameConfigFixture.rounds[0], round: 3, minigame: "BRAWL" },
+    { ...gameConfigFixture.rounds[0], round: 4, minigame: "JOUST" },
+    { ...gameConfigFixture.rounds[0], round: 5, minigame: "TRIVIA" }
+  ],
+  minigameRules: {
+    fappy: { legsPerTurn: 2, gatesPerLeg: 3, parSeconds: 30, limitSeconds: 90 },
+    schlonic: { runsPerTurn: 2, zoneSeed: 20260919, zoneChunks: 6, parWingsPerRun: 40 },
+    brawl: { blocksPerTurn: 2, courseSeed: 20261001, heartPrice: 3 },
+    joust: { shotsPerPlayer: 1 }
+  }
+};
+
+export const setupArcadeNight = (): void => {
+  setRoomStateGameConfig(arcadeGameConfigFixture);
+  setRoomStatePlayers([
+    { id: "player-1", name: "Player One" },
+    { id: "player-2", name: "Player Two" },
+    { id: "player-3", name: "Player Three" },
+    { id: "player-4", name: "Player Four" }
+  ]);
+  createTeam("Team Alpha");
+  createTeam("Team Beta");
+  assignPlayerToTeam("player-1", "team-1");
+  assignPlayerToTeam("player-2", "team-1");
+  assignPlayerToTeam("player-3", "team-2");
+  assignPlayerToTeam("player-4", "team-2");
+};
+
+// A phone taking a face, as the socket layer does it: the claim store, then the room's flags.
+const claimSecretByPlayerId = new Map<string, string>();
+
+export const seatPhone = (playerId: string, socketId = `socket-${playerId}`): void => {
+  const outcome = playerClaimStore.claim({
+    players: getRoomStateSnapshot().players,
+    playerId,
+    socketId,
+    claimSecret: null,
+    peerAddress: null
+  });
+
+  assert.ok(outcome.ok);
+  claimSecretByPlayerId.set(playerId, outcome.claimSecret);
+  syncPlayerClaimFlags();
+};
+
+// The phone's socket going away: the face stays claimed, asleep.
+export const dropPhone = (playerId: string): void => {
+  playerClaimStore.disconnect(`socket-${playerId}`);
+  syncPlayerClaimFlags();
+};
+
+// The phone coming back on the secret it was handed, as a reconnect does.
+export const wakePhone = (playerId: string): void => {
+  const claimSecret = claimSecretByPlayerId.get(playerId);
+
+  assert.ok(claimSecret !== undefined, `${playerId} was never seated`);
+  assert.equal(playerClaimStore.rebind(claimSecret, `socket-${playerId}`, null), playerId);
+  syncPlayerClaimFlags();
 };

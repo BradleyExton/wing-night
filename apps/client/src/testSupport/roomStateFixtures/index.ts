@@ -91,6 +91,8 @@ export const buildRoomState = (
     canAdvancePhase: true,
     claimedPlayerIds: [],
     connectedPlayerIds: [],
+    roundDeviceModes: {},
+    contestantTurn: null,
     ...overrides
   };
 };

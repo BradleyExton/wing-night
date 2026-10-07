@@ -6,6 +6,7 @@ import {
   initializeActiveMinigameRuntimeState
 } from "../../minigames/runtime/index.js";
 import { getNextPhase } from "../../utils/getNextPhase/index.js";
+import { applyContestantTurnPhaseEffects } from "../contestantTurnState/index.js";
 import { setMusicForPhase } from "../musicState/index.js";
 import {
   createRunningTimer,
@@ -127,6 +128,8 @@ export const applyPhaseTransitionEffects = (
   // After the turn state above, never before it: the anthem is the ACTIVE
   // team's, and `initializeRoundTurnState` is what decides who that is.
   setMusicForPhase(state, nextPhase);
+  // After the runtime is seated, so the first leg is already in hand to derive.
+  applyContestantTurnPhaseEffects(state, nextPhase);
 };
 
 export const resolveNextPhase = (state: RoomState, previousPhase: Phase): Phase => {

@@ -573,3 +573,64 @@ test("does hand on the finished turn's worth after its purchases as the one to b
   );
   assert.ok(runtimeState(bought).blocks[1]?.heartBought);
 });
+
+const contestantOf = (state: SerializableValue) => {
+  return brawlRuntimePlugin.selectContestant?.({ state, rules: RULES, content: null }) ?? null;
+};
+
+test("does name the block in hand and the next brawler for the contestant's phone", () => {
+  let state = initialize();
+
+  assert.deepEqual(contestantOf(state), { legIndex: 0, playerId: "p1", nextPlayerId: "p2" });
+
+  state = reduce(state, "skipBlock").state;
+  assert.deepEqual(contestantOf(state), { legIndex: 1, playerId: "p2", nextPlayerId: null });
+
+  state = reduce(state, "skipBlock").state;
+  assert.equal(hostView(state).phase, "finished");
+  assert.equal(contestantOf(state), null);
+});
+
+test("does let a phone send its thumbs, its block's end and the handoff pick but no hatch", () => {
+  assert.deepEqual(brawlRuntimePlugin.contestantActionTypes, ["walk", "peck", "endBlock", "buyHeart"]);
+  assert.equal(brawlRuntimePlugin.contestantRetakeActionType, "retakeBlock");
+});
+
+test("does put a taken-back block back at its start with an empty log and its heart still bought", () => {
+  const banked = { "team-a": 0, "team-b": 0 };
+  const running = runtimeState(
+    reduce(reduce(initialize(RULES, { pendingPointsByTeamId: banked }), "walk", { tick: 0, dir: 1 }).state, "peck", {
+      tick: 5
+    }).state
+  );
+  const withHeart: BrawlRuntimeState = {
+    ...running,
+    blocks: running.blocks.map((block, index) => (index === 0 ? { ...block, heartBought: true } : block))
+  };
+  const retaken = reduce(withHeart, "retakeBlock");
+  const view = hostView(retaken.state);
+
+  assert.equal(retaken.didMutate, true);
+  assert.equal(view.blockIndex, 0);
+  assert.equal(view.blocks[0]?.status, "ready");
+  assert.equal(view.blocks[0]?.player?.playerId, "p1");
+  assert.deepEqual(view.blocks[0]?.inputs, []);
+  assert.equal(view.blocks[0]?.heartBought, true);
+  assert.deepEqual(view.pendingPointsByTeamId, hostView(withHeart).pendingPointsByTeamId);
+  assert.equal(reduce(initialize(), "retakeBlock").didMutate, false);
+});
+
+test("does carry no answer in the host view a contestant's phone is handed", () => {
+  const states: SerializableValue[] = [initialize()];
+
+  states.push(reduce(states[0] as SerializableValue, "walk", { tick: 0, dir: 1 }).state);
+  states.push(reduce(states[1] as SerializableValue, "endBlock").state);
+  states.push(reduce(states[2] as SerializableValue, "skipBlock").state);
+
+  for (const state of states) {
+    assert.deepEqual(
+      brawlRuntimePlugin.selectHostView({ state, rules: RULES, content: null }),
+      brawlRuntimePlugin.selectDisplayView({ state, rules: RULES, content: null })
+    );
+  }
+});

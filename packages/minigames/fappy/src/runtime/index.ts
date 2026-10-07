@@ -238,9 +238,30 @@ const endLeg = (
   return mutated(isPastLimit(crashed, receivedAtMs) ? timeOut(crashed, receivedAtMs, pointsMax) : crashed);
 };
 
+// The take-back (`contestantRetakeActionType`): the host hands the leg in hand from a phone to
+// the tablet. The bird respawns exactly as a crash respawns it — on the perch of the last gate the
+// leg got behind, as the next attempt, with a fresh log — because the tablet can never continue a
+// log another device wrote. It is not a crash: nobody flew it into anything, so it is not counted
+// as one, and the gates already cleared stay cleared.
+const retakeLeg = (state: FappyRuntimeState, leg: FappyRuntimeLeg): FappyRuntimeState => {
+  return {
+    ...state,
+    legs: replaceLeg(state, leg.legIndex, {
+      ...leg,
+      status: "ready",
+      attempt: leg.attempt + 1,
+      flapTicks: []
+    })
+  };
+};
+
 export const fappyRuntimePlugin: MinigameRuntimePlugin = {
   id: "FAPPY",
   transientActionTypes: ["flap"],
+  // The phone flies its own leg and says when the attempt is over. `timeOut` is the clock's, so
+  // the phone may send it as the tablet does — but the server sends it too (`selectDeadlineAction`).
+  contestantActionTypes: ["flap", "endLeg", "timeOut"],
+  contestantRetakeActionType: "retakeLeg",
   isRules: isFappyRules,
   initialize: (input) => {
     const rules = resolveFappyRules(input.rules);
@@ -344,6 +365,16 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
       );
     }
 
+    // A phone's leg taken back by the host: the next attempt starts clean on the tablet. A leg
+    // nobody has flapped yet has nothing to restart.
+    if (actionType === "retakeLeg") {
+      if (leg === null || !isLive || leg.status !== "flying") {
+        return unchanged;
+      }
+
+      return mutated(retakeLeg(state, leg));
+    }
+
     // Escape hatch (AGENTS.md §11): run the whole relay again from the start
     // line, clock and all, handing back exactly the points this turn banked.
     if (actionType === "resetTurn") {
@@ -362,6 +393,40 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     return unchanged;
+  },
+  selectContestant: (input) => {
+    if (!isFappyRuntimeState(input.state)) {
+      return null;
+    }
+
+    const phase = resolveFappyPhase(input.state);
+    const leg = currentLeg(input.state);
+
+    if (leg === null || (phase !== "ready" && phase !== "flying")) {
+      return null;
+    }
+
+    return {
+      legIndex: leg.legIndex,
+      playerId: leg.player?.playerId ?? null,
+      nextPlayerId: input.state.legs[leg.legIndex + 1]?.player?.playerId ?? null
+    };
+  },
+  // The relay's limit, enforced by the server's own clock: the phone flying the leg may be in a
+  // pocket by then. The tablet's clock still sends `timeOut` too; whichever lands first wins and
+  // the other is a no-op, because a timed-out relay is no longer live.
+  selectDeadlineAction: (input) => {
+    if (!isFappyRuntimeState(input.state)) {
+      return null;
+    }
+
+    const phase = resolveFappyPhase(input.state);
+
+    if (input.state.startedAtMs === null || (phase !== "ready" && phase !== "flying")) {
+      return null;
+    }
+
+    return { actionType: "timeOut", atMs: input.state.startedAtMs + input.state.limitSeconds * 1000 };
   },
   syncPendingPoints: (input) => {
     if (!isFappyRuntimeState(input.state)) {

@@ -178,6 +178,10 @@ const finishBlock = (
 export const brawlRuntimePlugin: MinigameRuntimePlugin = {
   id: "BRAWL",
   transientActionTypes: ["walk", "peck"],
+  // The phone fights its own block, says when it is over, and makes the handoff pick before its
+  // first touch; skipping and resetting stay the host's.
+  contestantActionTypes: ["walk", "peck", "endBlock", "buyHeart"],
+  contestantRetakeActionType: "retakeBlock",
   isRules: isBrawlRules,
   initialize: (input) => {
     const rules = resolveBrawlRules(input.rules);
@@ -305,6 +309,20 @@ export const brawlRuntimePlugin: MinigameRuntimePlugin = {
       );
     }
 
+    // A phone's block taken back by the host: the same stretch, the same hen, back at the start
+    // with an empty log, for the tablet to fight from the top. A heart bought for it stays bought
+    // — it was bought for this block — and a block nobody has touched has nothing to put back.
+    if (actionType === "retakeBlock") {
+      if (block === null || block.status !== "running") {
+        return unchanged;
+      }
+
+      return mutated({
+        ...state,
+        blocks: replaceBlock(state, block.blockIndex, { ...block, status: "ready", inputs: [] })
+      });
+    }
+
     // Escape hatch (AGENTS.md §11): forgive a block the tablet can't take — a dead touch surface,
     // a player who would rather watch. It banks nothing and the tablet moves on; a heart bought
     // for it stays paid.
@@ -335,6 +353,24 @@ export const brawlRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     return unchanged;
+  },
+  selectContestant: (input) => {
+    if (!isBrawlRuntimeState(input.state)) {
+      return null;
+    }
+
+    const phase = resolveBrawlPhase(input.state);
+    const block = currentBlock(input.state);
+
+    if (block === null || (phase !== "ready" && phase !== "running")) {
+      return null;
+    }
+
+    return {
+      legIndex: block.blockIndex,
+      playerId: block.player?.playerId ?? null,
+      nextPlayerId: input.state.blocks[block.blockIndex + 1]?.player?.playerId ?? null
+    };
   },
   syncPendingPoints: (input) => {
     if (!isBrawlRuntimeState(input.state)) {

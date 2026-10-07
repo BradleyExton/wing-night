@@ -467,6 +467,7 @@ export type {
   RecreateSubState,
   RoleScopedSnapshotByRole,
   RoleScopedStateSnapshotEnvelope,
+  ContestantMinigameHostView,
   RoomFatalError,
   RoomState,
   RoomTimerState,
@@ -678,6 +679,25 @@ export {
 } from "./playerJoin/index.js";
 export type { SocketClientRole } from "./socketClientRole/index.js";
 export {
+  CONTESTANT_CONTROLLERS,
+  CONTESTANT_MINIGAME_TYPES,
+  DEFAULT_MINIGAME_DEVICE_MODE,
+  MINIGAME_DEVICE_MODES,
+  PLAYER_MINIGAME_ACTION_REFUSAL_REASONS,
+  isContestantMinigameType,
+  isMinigameDeviceMode,
+  resolveRoundDeviceMode
+} from "./contestantTurn/index.js";
+export type {
+  ContestantController,
+  ContestantMinigameType,
+  ContestantTurn,
+  MinigameDeviceMode,
+  PlayerMinigameActionRefusalReason,
+  PlayerMinigameActionResult,
+  RoundDeviceModes
+} from "./contestantTurn/index.js";
+export {
   CLIENT_TO_SERVER_EVENTS,
   MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS,
@@ -690,9 +710,11 @@ export type {
   ConfigReadPayload,
   ConfigSavePayload,
   GameReorderTurnOrderPayload,
+  GameSetRoundDeviceModePayload,
   HostSecretPayload,
   MinigameApiVersion,
   MinigameActionPayload,
+  MinigameTakeBackPayload,
   MusicSetVolumePayload,
   SfxSetVolumePayload,
   MusicTrackEndedPayload,
@@ -700,6 +722,9 @@ export type {
   PlayerClaimGonePayload,
   PlayerClaimPayload,
   PlayerJoinTokenPayload,
+  PlayerMinigameActionAck,
+  PlayerMinigameActionPayload,
+  PlayerMinigameHostViewPayload,
   PlayerReleaseAck,
   PlayerReleasePayload,
   PlayerSelfPayload,

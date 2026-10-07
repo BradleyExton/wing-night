@@ -3,15 +3,21 @@ import test from "node:test";
 
 import {
   CLIENT_TO_SERVER_EVENTS,
+  MINIGAME_API_VERSION,
   PLAYER_CLAIM_GONE_REASONS,
   PLAYER_CLAIM_REFUSAL_REASONS,
+  PLAYER_MINIGAME_ACTION_REFUSAL_REASONS,
   SERVER_TO_CLIENT_EVENTS,
-  type PlayerHandshake
+  type PlayerHandshake,
+  type PlayerMinigameActionPayload,
+  type PlayerMinigameActionResult
 } from "@wingnight/shared";
 
 import { createPlayerClaimStore } from "../../playerClaims/index.js";
 import {
   PLAYER_ACTION_BURST,
+  PLAYER_MINIGAME_ACTION_BURST,
+  PLAYER_MINIGAME_ACTIONS_PER_SECOND,
   registerPlayerHandlers,
   resolvePlayerRoom
 } from "./index.js";
@@ -33,6 +39,8 @@ const createPhone = (
   const rooms = new Set<string>();
   const emitted: [string, unknown][] = [];
   const selfEvents: string[] = [];
+  const hostViewRequests: string[] = [];
+  const dispatched: [string, PlayerMinigameActionPayload][] = [];
   let syncCount = 0;
 
   registerPlayerHandlers(
@@ -59,6 +67,13 @@ const createPhone = (
       emitPlayerSelf: (playerId) => {
         selfEvents.push(playerId);
       },
+      emitContestantHostView: (playerId) => {
+        hostViewRequests.push(playerId);
+      },
+      dispatchMinigameAction: (playerId, action): PlayerMinigameActionResult => {
+        dispatched.push([playerId, action]);
+        return { ok: true };
+      },
       syncClaimFlags: () => {
         syncCount += 1;
       }
@@ -81,11 +96,16 @@ const createPhone = (
     rooms,
     emitted,
     selfEvents,
+    hostViewRequests,
+    dispatched,
     get syncCount(): number {
       return syncCount;
     },
     claim: (payload: unknown) => call(CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM, payload),
     release: (payload: unknown) => call(CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE, payload),
+    act: (payload: unknown) => call(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION, payload),
+    actWithoutAck: (payload: unknown) => listeners.get(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION)?.(payload),
+    requestState: () => listeners.get(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE)?.(),
     disconnect: () => listeners.get("disconnect")?.()
   };
 };
@@ -216,4 +236,116 @@ test("does refuse claims and releases past the burst until the clock refills the
 
   clock.now = 1_000;
   assert.equal((phone.claim({ playerId: "player-1" }) as { ok: boolean }).ok, true);
+});
+
+const FLAP: PlayerMinigameActionPayload = {
+  minigameId: "FAPPY",
+  minigameApiVersion: MINIGAME_API_VERSION,
+  actionType: "flap",
+  actionPayload: { tick: 3 }
+};
+
+test("does pass a seated phone's action on as its own face and never one it names", () => {
+  const store = createStore();
+  const phone = createPhone("socket-a", store);
+
+  phone.claim({ playerId: "player-2" });
+
+  // The payload has no say in who is acting: the socket's face does.
+  assert.deepEqual(phone.act({ ...FLAP, playerId: "player-1" }), { ok: true });
+  assert.deepEqual(
+    phone.dispatched.map(([playerId]) => playerId),
+    ["player-2"]
+  );
+});
+
+test("does refuse a phone's action when it holds no face or sends no envelope", () => {
+  const store = createStore();
+  const phone = createPhone("socket-a", store);
+
+  assert.deepEqual(phone.act(FLAP), {
+    ok: false,
+    reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.NOT_SEATED
+  });
+
+  phone.claim({ playerId: "player-1" });
+
+  for (const malformed of [
+    undefined,
+    { ...FLAP, minigameApiVersion: 999 },
+    { minigameId: "FAPPY", minigameApiVersion: MINIGAME_API_VERSION, actionType: 7, actionPayload: {} },
+    { minigameId: "FAPPY", minigameApiVersion: MINIGAME_API_VERSION, actionType: "flap" }
+  ]) {
+    assert.deepEqual(phone.act(malformed), {
+      ok: false,
+      reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.MALFORMED
+    });
+  }
+
+  assert.equal(phone.dispatched.length, 0);
+});
+
+test("does rate-limit game input on its own bucket so play never spends the claim bucket", () => {
+  const store = createStore();
+  const clock = { now: 0 };
+  const phone = createPhone("socket-a", store, { joinToken: "join-token", claimSecret: null }, clock);
+
+  phone.claim({ playerId: "player-1" });
+
+  const answers = Array.from({ length: PLAYER_MINIGAME_ACTION_BURST + 5 }, () => phone.act(FLAP));
+  const refused = answers.filter(
+    (answer) =>
+      (answer as { reason?: string }).reason === PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.RATE_LIMITED
+  );
+
+  assert.equal(refused.length, 5);
+  assert.equal(phone.dispatched.length, PLAYER_MINIGAME_ACTION_BURST);
+  // The claim bucket is untouched by a burst of play.
+  assert.equal((phone.claim({ playerId: "player-1" }) as { ok: boolean }).ok, true);
+
+  // A thumb at the sustained rate is never refused: a second of refill is a second of input.
+  clock.now = 1_000;
+  const sustained = Array.from({ length: PLAYER_MINIGAME_ACTIONS_PER_SECOND }, () => phone.act(FLAP));
+
+  assert.equal(sustained.every((answer) => (answer as { ok: boolean }).ok), true);
+});
+
+test("does let two minutes of the busiest real input through without one refusal", () => {
+  const store = createStore();
+  const clock = { now: 0 };
+  const phone = createPhone("socket-a", store, { joinToken: "join-token", claimSecret: null }, clock);
+
+  phone.claim({ playerId: "player-1" });
+
+  // Two minutes of the busiest real input — a BRAWL brawler on two thumbs, ~20 a second.
+  for (let step = 0; step < 2_400; step += 1) {
+    clock.now = step * 50;
+    assert.deepEqual(phone.act(FLAP), { ok: true });
+  }
+});
+
+test("does answer an action without an ack in silence and still pass it on", () => {
+  const store = createStore();
+  const phone = createPhone("socket-a", store);
+
+  phone.claim({ playerId: "player-1" });
+
+  assert.doesNotThrow(() => {
+    phone.actWithoutAck(FLAP);
+    phone.actWithoutAck(undefined);
+  });
+  assert.equal(phone.dispatched.length, 1);
+});
+
+test("does hand a seated phone its leg back when it takes its seat or asks for the room", () => {
+  const store = createStore();
+  const phone = createPhone("socket-a", store);
+
+  phone.requestState();
+  assert.deepEqual(phone.hostViewRequests, []);
+
+  phone.claim({ playerId: "player-1" });
+  phone.requestState();
+
+  assert.deepEqual(phone.hostViewRequests, ["player-1", "player-1"]);
 });

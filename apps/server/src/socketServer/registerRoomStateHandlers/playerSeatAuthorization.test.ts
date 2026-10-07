@@ -9,7 +9,8 @@ const HOST_ONLY_EVENTS = Object.values(CLIENT_TO_SERVER_EVENTS).filter(
   (event) =>
     event !== CLIENT_TO_SERVER_EVENTS.REQUEST_STATE &&
     event !== CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM &&
-    event !== CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE
+    event !== CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE &&
+    event !== CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION
 );
 
 // A phone may read the room and nothing else here: the phone family is
@@ -33,6 +34,60 @@ test("does keep the phone family off HOST and DISPLAY sockets", () => {
 
     assert.equal(socketHarness.hasListener(CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM), false);
     assert.equal(socketHarness.hasListener(CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE), false);
+    assert.equal(socketHarness.hasListener(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION), false);
+  }
+});
+
+test("does give the device-mode setting and the take-back to the host alone, behind its secret", () => {
+  const settings: [number, string][] = [];
+  let takeBacks = 0;
+  const socketHarness = setupHandlers({
+    phase: Phase.MINIGAME_PLAY,
+    overrides: {
+      [CLIENT_TO_SERVER_EVENTS.SET_ROUND_DEVICE_MODE]: (payload) => {
+        settings.push([payload.round, payload.deviceMode]);
+      },
+      [CLIENT_TO_SERVER_EVENTS.TAKE_BACK_CONTESTANT_LEG]: () => {
+        takeBacks += 1;
+      }
+    }
+  });
+
+  for (const malformed of [
+    { hostSecret: "valid-host-secret", round: 0, deviceMode: "phones" },
+    { hostSecret: "valid-host-secret", round: 1.5, deviceMode: "phones" },
+    { hostSecret: "valid-host-secret", round: 1, deviceMode: "watch" },
+    { hostSecret: "valid-host-secret", deviceMode: "phones" }
+  ]) {
+    socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SET_ROUND_DEVICE_MODE, malformed);
+  }
+
+  socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SET_ROUND_DEVICE_MODE, {
+    hostSecret: "invalid-host-secret",
+    round: 1,
+    deviceMode: "phones"
+  });
+  socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.SET_ROUND_DEVICE_MODE, {
+    hostSecret: "valid-host-secret",
+    round: 2,
+    deviceMode: "phones"
+  });
+  socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TAKE_BACK_CONTESTANT_LEG, {
+    hostSecret: "invalid-host-secret"
+  });
+  socketHarness.trigger(CLIENT_TO_SERVER_EVENTS.TAKE_BACK_CONTESTANT_LEG, {
+    hostSecret: "valid-host-secret"
+  });
+
+  assert.deepEqual(settings, [[2, "phones"]]);
+  assert.equal(takeBacks, 1);
+  assert.equal(socketHarness.invalidSecretEvents, 2);
+
+  for (const clientRole of [CLIENT_ROLES.DISPLAY, CLIENT_ROLES.PLAYER]) {
+    const seat = setupHandlers({ clientRole });
+
+    assert.equal(seat.hasListener(CLIENT_TO_SERVER_EVENTS.SET_ROUND_DEVICE_MODE), false);
+    assert.equal(seat.hasListener(CLIENT_TO_SERVER_EVENTS.TAKE_BACK_CONTESTANT_LEG), false);
   }
 });
 

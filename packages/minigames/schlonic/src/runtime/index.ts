@@ -180,6 +180,9 @@ const finishRun = (
 export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
   id: "SCHLONIC",
   transientActionTypes: ["press", "release"],
+  // The phone takes its own run and says when it is over; skipping and resetting stay the host's.
+  contestantActionTypes: ["press", "release", "endRun"],
+  contestantRetakeActionType: "retakeRun",
   isRules: isSchlonicRules,
   initialize: (input) => {
     const rules = resolveSchlonicRules(input.rules);
@@ -277,6 +280,21 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
       );
     }
 
+    // A phone's run taken back by the host: the same leg, the same rider, back on the line with an
+    // empty log, for the tablet to take from the start. Not a second attempt at the leg — the run
+    // the phone began never reached the referee — and a run nobody has started has nothing to
+    // put back.
+    if (actionType === "retakeRun") {
+      if (run === null || run.status !== "running") {
+        return unchanged;
+      }
+
+      return mutated({
+        ...state,
+        runs: replaceRun(state, run.runIndex, { ...run, status: "ready", inputs: [] })
+      });
+    }
+
     // Escape hatch (AGENTS.md §11): forgive a run the tablet can't take — a dead touch surface,
     // a player who would rather watch. It banks nothing and the tablet moves on.
     if (actionType === "skipRun") {
@@ -310,6 +328,24 @@ export const schlonicRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     return unchanged;
+  },
+  selectContestant: (input) => {
+    if (!isSchlonicRuntimeState(input.state)) {
+      return null;
+    }
+
+    const phase = resolveSchlonicPhase(input.state);
+    const run = currentRun(input.state);
+
+    if (run === null || (phase !== "ready" && phase !== "running")) {
+      return null;
+    }
+
+    return {
+      legIndex: run.runIndex,
+      playerId: run.player?.playerId ?? null,
+      nextPlayerId: input.state.runs[run.runIndex + 1]?.player?.playerId ?? null
+    };
   },
   syncPendingPoints: (input) => {
     if (!isSchlonicRuntimeState(input.state)) {

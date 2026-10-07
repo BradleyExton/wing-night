@@ -71,7 +71,9 @@ export const buildRoomState = (phase: RoomState["phase"], currentRound = 0): Roo
     canRedoScoringMutation: false,
     canAdvancePhase: true,
     claimedPlayerIds: [],
-    connectedPlayerIds: []
+    connectedPlayerIds: [],
+    roundDeviceModes: {},
+    contestantTurn: null
   };
 };
 

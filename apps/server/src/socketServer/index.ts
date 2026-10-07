@@ -12,10 +12,17 @@ import {
   type SocketClientRole
 } from "@wingnight/shared";
 
+import type { SerializableValue } from "@wingnight/minigames-core";
+
+import { createMinigameDeadlineScheduler } from "../minigames/deadlineScheduler/index.js";
 import {
   applyRoomStateMutation,
+  dispatchContestantMinigameAction,
+  dispatchServerMinigameAction,
   getRoomPlayers,
   getRoomStateSnapshot,
+  readContestantActionRefusal,
+  readMinigameDeadline,
   syncPlayerClaimFlags
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
@@ -23,6 +30,7 @@ import { playerClaimStore } from "../playerClaims/index.js";
 import { isLoopbackAddress } from "../utils/loopbackPeer/index.js";
 import { createTrailingCoalescer } from "../utils/trailingCoalescer/index.js";
 import { registerPlayerHandlers, resolvePlayerRoom } from "./registerPlayerHandlers/index.js";
+import { resolveContestantHostViewDelivery } from "./contestantHostView/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 import { createSeatGuard, type SeatedSocketData } from "./seatGuard/index.js";
 
@@ -129,10 +137,31 @@ export const attachSocketServer = (
       );
   };
 
+  // The contestant's phone plays from the game's host view, which no shared snapshot carries:
+  // it goes to that one player's room, and only while their phone holds the leg in hand
+  // (`resolveContestantHostViewDelivery`).
+  const emitContestantHostView = (roomState: RoomState, onlyPlayerId: string | null = null): void => {
+    const delivery = resolveContestantHostViewDelivery(roomState);
+
+    if (delivery === null || (onlyPlayerId !== null && delivery.playerId !== onlyPlayerId)) {
+      return;
+    }
+
+    socketServer
+      .to(resolvePlayerRoom(delivery.playerId))
+      .emit(SERVER_TO_CLIENT_EVENTS.PLAYER_MINIGAME_HOST_VIEW, delivery.payload);
+  };
+
+  // Forward-declared: the deadline's action is itself a broadcast, so the scheduler and the
+  // broadcast each need the other.
+  let reconcileDeadline = (): void => {};
+
   const broadcastSnapshot = (roomState: RoomState): void => {
     emitRoleScopedSnapshotToRoom(CLIENT_ROLES.HOST, roomState);
     emitRoleScopedSnapshotToRoom(CLIENT_ROLES.DISPLAY, roomState);
     emitRoleScopedSnapshotToRoom(CLIENT_ROLES.PLAYER, roomState);
+    emitContestantHostView(roomState);
+    reconcileDeadline();
 
     for (const listener of broadcastListeners) {
       listener(roomState);
@@ -152,6 +181,19 @@ export const attachSocketServer = (
   const claimFlagSync = createTrailingCoalescer(() => {
     broadcastAfter(syncPlayerClaimFlags);
   }, CLAIM_FLAG_SYNC_WINDOW_MS);
+
+  // A game's deadline (FAPPY's relay limit) on the server's own clock, so it lands with the
+  // phone that was flying the leg gone.
+  const deadlineScheduler = createMinigameDeadlineScheduler({
+    readDeadline: readMinigameDeadline,
+    fire: (deadline, receivedAtMs) => {
+      broadcastAfter(() =>
+        dispatchServerMinigameAction(deadline.minigameId, deadline.actionType, receivedAtMs)
+      );
+    }
+  });
+
+  reconcileDeadline = deadlineScheduler.reconcile;
 
   const emitPlayerJoinToken = (joinToken: string): void => {
     socketServer.to(LAPTOP_DISPLAY_ROOM).emit(SERVER_TO_CLIENT_EVENTS.PLAYER_JOIN_TOKEN, {
@@ -195,6 +237,7 @@ export const attachSocketServer = (
     unsubscribeClaimReleased();
     unsubscribeJoinTokenRotated();
     claimFlagSync.cancel();
+    deadlineScheduler.cancel();
   });
 
   socketServer.on("connection", (socket) => {
@@ -246,6 +289,28 @@ export const attachSocketServer = (
           socketServer
             .to(resolvePlayerRoom(playerId))
             .emit(SERVER_TO_CLIENT_EVENTS.PLAYER_SELF, { playerId });
+        },
+        emitContestantHostView: (playerId) => {
+          emitContestantHostView(getRoomStateSnapshot(), playerId);
+        },
+        dispatchMinigameAction: (playerId, action) => {
+          const refusal = readContestantActionRefusal(playerId, action.minigameId, action.actionType);
+
+          if (refusal !== null) {
+            return { ok: false, reason: refusal };
+          }
+
+          broadcastAfter(() =>
+            dispatchContestantMinigameAction(
+              playerId,
+              action.minigameId,
+              action.actionType,
+              // The game's reducer guards its own payloads, exactly as it does the tablet's.
+              action.actionPayload as SerializableValue
+            )
+          );
+
+          return { ok: true };
         },
         syncClaimFlags: claimFlagSync.schedule
       });

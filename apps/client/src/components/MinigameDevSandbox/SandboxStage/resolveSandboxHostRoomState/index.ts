@@ -115,6 +115,8 @@ export const resolveSandboxHostRoomState = (
     canRedoScoringMutation: false,
     canAdvancePhase: true,
     claimedPlayerIds: [],
-    connectedPlayerIds: []
+    connectedPlayerIds: [],
+    roundDeviceModes: {},
+    contestantTurn: null
   };
 };

@@ -138,9 +138,39 @@ already holding a face survive a new code), and refuses anything else with the c
   drops every PLAYER socket); `setRoomStatePlayers` (content reload), `startQuickPlay` and
   `setRoomStateFatalError` drop a claim whose id is gone or now names somebody else (name and
   `avatarSrc` both compared). A new player-rewrite site must prune too.
-- **A phone is not a host.** Nothing a PLAYER socket can send may advance a phase, move a turn
-  cursor or change a score. When a later feature routes a contestant's turn to their phone,
-  that needs its own entry here, the way `music:trackEnded` has §3.3.
+- **A phone is not a host.** Nothing a PLAYER socket can send may advance a phase or move a
+  turn cursor. The one exception that touches a score is §3.5, and it stays alone.
+
+## 3.5 The Contestant's Phone (Arcade Turns)
+
+The arcade relays (`CONTESTANT_MINIGAME_TYPES`: FAPPY, SCHLONIC, BRAWL, JOUST) can be played
+leg by leg on each contestant's own phone. It is the one place a PLAYER socket changes game
+state, and these rules keep it from becoming a second host:
+
+- **The host decides, per round, and the turn locks it.** `game:setRoundDeviceMode` (host secret,
+  any phase, arcade rounds only) sets `roundDeviceModes[round]` to `tablet` (the default) or
+  `phones`. A turn's briefing (entering MINIGAME_INTRO) locks the round's mode into
+  `RoomState.contestantTurn.deviceMode`; a change lands from the next team's turn, never mid-turn.
+- **The game says whose leg it is.** A runtime opts in with `selectContestant` (the leg in hand and
+  whose it is) and `contestantActionTypes` (its inputs and the end of its own run — never a skip, a
+  reset, a retake or anything that paces the room, which the registry test pins). The server derives
+  `contestantTurn` from those and the claim flags after every mutation; no client derives it.
+- **One log writer per leg.** The phone controls the leg in hand only in phones mode, for a
+  contestant whose face is claimed and connected, on a leg the tablet does not hold. While it does,
+  the tablet's `minigame:action` for a contestant action type is refused; the host's hatches (skip,
+  reset, `minigame:takeBack`, JOUST's next shot) always land. A leg the tablet has written to, or
+  the host took back, is the tablet's for the rest of the turn (`tabletLegIndexes`).
+- **The phone sends only its own leg.** `player:minigameAction` is the host's envelope without the
+  secret, authorized by the face the socket holds and nothing in the payload: the game in play, a
+  phones turn, a contestant action type, this player's leg, the phone holding it. Past that it takes
+  the tablet's road (`applyMinigameAction`): the same `receivedAtMs` stamp, the same undo point. It
+  has its own token bucket, sized from the runners' real input rates.
+- **The host view goes to one phone.** `player:minigameHostView` is emitted only to the current
+  contestant's `player:<id>` room, only while their phone holds the leg, only for an arcade relay —
+  whose host view equals its display view (each runtime's tests pin it). The shared player snapshot
+  never carries `minigameHostView`; it carries `contestantTurn` (ids, a leg number, a mode).
+- **The server keeps the clock.** A deadline a game enforces (`selectDeadlineAction`: FAPPY's relay
+  limit) is fired by the server's own scheduler, so it lands with the phone gone.
 
 ---
 

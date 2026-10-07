@@ -7,7 +7,11 @@ import {
   isQuickPlayStartRequest,
   isStringArray,
   isValidMusicVolume,
+  isMinigameDeviceMode,
+  isPositiveInteger,
   type ConfigSavePayload,
+  type GameSetRoundDeviceModePayload,
+  type PlayerMinigameActionPayload,
   type GameReorderTurnOrderPayload,
   type HostSecretPayload,
   type MinigameActionPayload,
@@ -90,6 +94,27 @@ export const isScoringAdjustTeamScorePayload = (
     teamId: isString,
     delta: (value) =>
       typeof value === "number" && Number.isInteger(value) && value !== 0
+  });
+
+export const isGameSetRoundDeviceModePayload = (
+  payload: unknown
+): payload is GameSetRoundDeviceModePayload =>
+  hasShape(payload, {
+    hostSecret: isString,
+    round: isPositiveInteger,
+    deviceMode: isMinigameDeviceMode
+  });
+
+// The phone's envelope: the host's minus the secret. A PLAYER socket is authorized by the face
+// it holds; the mutation decides whether that face may send this action now.
+export const isPlayerMinigameActionPayload = (
+  payload: unknown
+): payload is PlayerMinigameActionPayload =>
+  hasShape(payload, {
+    minigameId: isString,
+    minigameApiVersion: (value) => value === MINIGAME_API_VERSION,
+    actionType: isString,
+    actionPayload: isPresent
   });
 
 export const isMinigameActionEnvelope = (

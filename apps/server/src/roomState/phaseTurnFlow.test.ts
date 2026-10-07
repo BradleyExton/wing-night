@@ -74,7 +74,9 @@ test("createInitialRoomState returns setup defaults", () => {
     canRedoScoringMutation: false,
     canAdvancePhase: false,
     claimedPlayerIds: [],
-    connectedPlayerIds: []
+    connectedPlayerIds: [],
+    roundDeviceModes: {},
+    contestantTurn: null
   });
 });
 

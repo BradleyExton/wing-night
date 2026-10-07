@@ -24,7 +24,12 @@ import {
   isJoustPickShooterPayload,
   isJoustRuntimeState
 } from "./guards/index.js";
-import { resolveJoustRoster, resolveStandingPins, type JoustStandingPin } from "./lineup/index.js";
+import {
+  resolveActiveShooter,
+  resolveJoustRoster,
+  resolveStandingPins,
+  type JoustStandingPin
+} from "./lineup/index.js";
 import {
   findJoustShooter,
   hasShooterUsesLeft,
@@ -123,6 +128,31 @@ const currentTeamPoints = (state: JoustRuntimeState): number => {
 
 const standingCount = (state: JoustRuntimeState): number => {
   return state.lineup.length - state.downPlayerIds.length;
+};
+
+// Who takes shot `shotIndex`, or null past the turn's last shot.
+const resolveShooterIdAt = (state: JoustRuntimeState, shotIndex: number): string | null => {
+  if (shotIndex >= state.shotsPerTurn) {
+    return null;
+  }
+
+  return resolveActiveShooter(state.teammates, shotIndex)?.playerId ?? null;
+};
+
+// The shot a contestant's phone is for. While aiming, the shot on the band. During the replay the
+// shot that flew is over — a shot is atomic, it cannot be taken back once launched — so the leg in
+// hand is the NEXT one, and its shooter's phone is the one getting ready. Null once the turn's
+// shots are spent or the rack is down, the same test `advanceToNextShot` makes.
+const resolveContestantShotIndex = (state: JoustRuntimeState): number | null => {
+  if (state.phase === "aiming") {
+    return state.shotIndex;
+  }
+
+  if (state.phase === "resolved" && state.shotIndex + 1 < state.shotsPerTurn && standingCount(state) > 0) {
+    return state.shotIndex + 1;
+  }
+
+  return null;
 };
 
 // Shared by `nextShot` and the `skipShot` escape hatch: both land on a fresh
@@ -399,6 +429,27 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     return unchanged;
+  },
+  // The shooter's phone aims, loads and lets go; the host still calls the next shot, because that
+  // is the room's beat — the replay has to land on the TV first. No retake: a shot is atomic, so
+  // taking one back just hands the shot about to be aimed to the tablet.
+  contestantActionTypes: ["setAim", "pickShooter", "launch"],
+  selectContestant: (input) => {
+    if (!isJoustRuntimeState(input.state)) {
+      return null;
+    }
+
+    const shotIndex = resolveContestantShotIndex(input.state);
+
+    if (shotIndex === null) {
+      return null;
+    }
+
+    return {
+      legIndex: shotIndex,
+      playerId: resolveShooterIdAt(input.state, shotIndex),
+      nextPlayerId: resolveShooterIdAt(input.state, shotIndex + 1)
+    };
   },
   syncPendingPoints: (input) => {
     if (!isJoustRuntimeState(input.state)) {

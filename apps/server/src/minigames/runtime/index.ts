@@ -1,4 +1,6 @@
 import type {
+  MinigameContestant,
+  MinigameDeadlineAction,
   MinigameRuntimeActionEnvelope,
   SerializableValue
 } from "@wingnight/minigames-core";
@@ -296,4 +298,53 @@ export const dispatchActiveMinigameRuntimeAction = (
 
     return reductionResult.didMutate ? reductionResult.state : null;
   });
+};
+
+// The phone hooks (`MinigameRuntimePlugin.selectContestant` and friends), read off the active
+// runtime. A game without them has no phone turns, whatever the host set for its round.
+export const supportsContestantTurns = (minigameId: MinigameType): boolean => {
+  const runtimePlugin = resolveMinigameRuntimePlugin(minigameId);
+
+  return runtimePlugin.selectContestant !== undefined && runtimePlugin.contestantActionTypes !== undefined;
+};
+
+export const isContestantMinigameAction = (minigameId: MinigameType, actionType: string): boolean => {
+  return (resolveMinigameRuntimePlugin(minigameId).contestantActionTypes ?? []).includes(actionType);
+};
+
+export const resolveContestantRetakeActionType = (minigameId: MinigameType): string | null => {
+  return resolveMinigameRuntimePlugin(minigameId).contestantRetakeActionType ?? null;
+};
+
+const selectFromActiveRuntime = <TResult>(
+  rules: SerializableValue | null,
+  select: (
+    plugin: ReturnType<typeof resolveMinigameRuntimePlugin>,
+    input: { state: SerializableValue; rules: SerializableValue | null; content: SerializableValue | null }
+  ) => TResult | null
+): { minigameId: MinigameType; result: TResult } | null => {
+  if (activeMinigameRuntimeState === null) {
+    return null;
+  }
+
+  const { minigameId, runtimeState } = activeMinigameRuntimeState;
+  const result = select(resolveMinigameRuntimePlugin(minigameId), {
+    state: runtimeState,
+    rules,
+    content: minigameContentById[minigameId] ?? null
+  });
+
+  return result === null ? null : { minigameId, result };
+};
+
+export const selectActiveMinigameContestant = (
+  rules: SerializableValue | null
+): { minigameId: MinigameType; result: MinigameContestant } | null => {
+  return selectFromActiveRuntime(rules, (plugin, input) => plugin.selectContestant?.(input) ?? null);
+};
+
+export const selectActiveMinigameDeadline = (
+  rules: SerializableValue | null
+): { minigameId: MinigameType; result: MinigameDeadlineAction } | null => {
+  return selectFromActiveRuntime(rules, (plugin, input) => plugin.selectDeadlineAction?.(input) ?? null);
 };

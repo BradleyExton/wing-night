@@ -470,3 +470,91 @@ test("does accept the default rules and reject each malformed field", () => {
   assert.deepEqual(resolveFappyRules({ gatesPerLeg: 5 }), { ...DEFAULT_FAPPY_RULES, gatesPerLeg: 5 });
   assert.deepEqual(resolveFappyRules({ parSeconds: 200, limitSeconds: 100 }), DEFAULT_FAPPY_RULES);
 });
+
+const contestantOf = (state: SerializableValue) => {
+  return fappyRuntimePlugin.selectContestant?.({ state, rules: null, content: null }) ?? null;
+};
+
+test("does name the leg in hand and the next teammate for the contestant's phone", () => {
+  let state = initialize();
+
+  assert.deepEqual(contestantOf(state), { legIndex: 0, playerId: "alex", nextPlayerId: "morgan" });
+
+  state = dispatch(state, "flap", { tick: 0 }).state;
+  assert.deepEqual(contestantOf(state), { legIndex: 0, playerId: "alex", nextPlayerId: "morgan" });
+
+  state = dispatch(state, "skipLeg").state;
+  assert.deepEqual(contestantOf(state), { legIndex: 1, playerId: "morgan", nextPlayerId: null });
+
+  state = dispatch(state, "skipLeg").state;
+  assert.equal(hostView(state).phase, "finished");
+  assert.equal(contestantOf(state), null);
+});
+
+test("does let a phone send its inputs and its attempt's end but none of the hatches", () => {
+  assert.deepEqual(fappyRuntimePlugin.contestantActionTypes, ["flap", "endLeg", "timeOut"]);
+  assert.equal(fappyRuntimePlugin.contestantRetakeActionType, "retakeLeg");
+});
+
+test("does respawn a taken-back leg as the next attempt from its checkpoint without a crash", () => {
+  const flying = dispatch(initialize(), "flap", { tick: 4 }, T0).state;
+  const before = hostView(flying).legs[0];
+  const retaken = dispatch(flying, "retakeLeg", {}, T0 + 2_000);
+  const after = hostView(retaken.state);
+
+  assert.equal(retaken.didMutate, true);
+  assert.equal(after.phase, "ready");
+  assert.equal(after.legIndex, 0);
+  assert.equal(after.legs[0]?.attempt, (before?.attempt ?? 0) + 1);
+  assert.equal(after.legs[0]?.checkpointGate, before?.checkpointGate);
+  assert.equal(after.legs[0]?.crashes, before?.crashes);
+  assert.deepEqual(after.legs[0]?.flapTicks, []);
+  // The relay's clock does not stop for a handoff between devices.
+  assert.equal(after.startedAtMs, T0);
+
+  // The tablet's first flap of the new attempt starts a fresh log at its own tick 0.
+  assert.deepEqual(hostView(dispatch(retaken.state, "flap", { tick: 0 }, T0 + 3_000).state).legs[0]?.flapTicks, [0]);
+});
+
+test("does leave a leg nobody has flapped yet alone when it is taken back", () => {
+  assert.equal(dispatch(initialize(), "retakeLeg").didMutate, false);
+});
+
+test("does carry no answer in the host view a contestant's phone is handed", () => {
+  const states: SerializableValue[] = [initialize()];
+
+  states.push(dispatch(states[0] as SerializableValue, "flap", { tick: 0 }, T0).state);
+  states.push(dispatch(states[1] as SerializableValue, "endLeg", {}, T0 + 4_000).state);
+  states.push(dispatch(states[2] as SerializableValue, "skipLeg", {}, T0 + 5_000).state);
+  states.push(dispatch(states[3] as SerializableValue, "skipLeg", {}, T0 + 6_000).state);
+
+  for (const state of states) {
+    assert.deepEqual(
+      fappyRuntimePlugin.selectHostView({ state, rules: null, content: null }),
+      fappyRuntimePlugin.selectDisplayView({ state, rules: null, content: null })
+    );
+  }
+});
+
+test("does ask the server for a timeOut at the relay's limit once its clock is running", () => {
+  const deadlineOf = (state: SerializableValue) =>
+    fappyRuntimePlugin.selectDeadlineAction?.({ state, rules: null, content: null }) ?? null;
+  const fresh = initialize();
+
+  assert.equal(deadlineOf(fresh), null);
+
+  const flying = dispatch(fresh, "flap", { tick: 0 }, T0).state;
+
+  assert.deepEqual(deadlineOf(flying), { actionType: "timeOut", atMs: T0 + RULES.limitSeconds * 1000 });
+
+  // Between attempts the clock still runs, so the deadline stands.
+  const crashed = dispatch(flying, "endLeg", {}, T0 + 4_000).state;
+
+  assert.deepEqual(deadlineOf(crashed), { actionType: "timeOut", atMs: T0 + RULES.limitSeconds * 1000 });
+
+  const timedOut = dispatch(flying, "timeOut", {}, T0 + RULES.limitSeconds * 1000).state;
+
+  assert.equal(hostView(timedOut).phase, "timedOut");
+  assert.equal(deadlineOf(timedOut), null);
+  assert.equal(deadlineOf(dispatch(flying, "resetTurn", {}, T0 + 1_000).state), null);
+});

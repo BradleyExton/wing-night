@@ -22,7 +22,8 @@ const ENVELOPE: RoleScopedStateSnapshotEnvelope = {
     turnOrderTeamIds: [],
     activeRoundTeamId: null,
     activeTurnTeamId: null,
-    claimedPlayerIds: ["player-1"]
+    claimedPlayerIds: ["player-1"],
+    contestantTurn: null
   }
 } as RoleScopedStateSnapshotEnvelope;
 

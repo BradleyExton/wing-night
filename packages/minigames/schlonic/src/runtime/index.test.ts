@@ -469,3 +469,60 @@ test("leaves the memory as it inherited it when the turn is put back on the line
   assert.equal(memoryBestTurn(reset)?.teamId, "team-b");
   assert.equal(memoryBestTurn(reset)?.wings, 5);
 });
+
+const contestantOf = (state: SerializableValue) => {
+  return schlonicRuntimePlugin.selectContestant?.({ state, rules: RULES, content: null }) ?? null;
+};
+
+test("does name the run in hand and the next rider for the contestant's phone", () => {
+  let state = initialize();
+
+  assert.deepEqual(contestantOf(state), { legIndex: 0, playerId: "p1", nextPlayerId: "p2" });
+
+  state = reduce(state, "skipRun").state;
+  assert.deepEqual(contestantOf(state), { legIndex: 1, playerId: "p2", nextPlayerId: null });
+
+  state = reduce(state, "skipRun").state;
+  assert.equal(hostView(state).phase, "finished");
+  assert.equal(contestantOf(state), null);
+});
+
+test("does let a phone send its button and its run's end but none of the hatches", () => {
+  assert.deepEqual(schlonicRuntimePlugin.contestantActionTypes, ["press", "release", "endRun"]);
+  assert.equal(schlonicRuntimePlugin.contestantRetakeActionType, "retakeRun");
+});
+
+test("does put a taken-back run back on the line for the same rider with an empty log", () => {
+  const running = reduce(reduce(initialize(), "press", { tick: 3 }).state, "release", { tick: 9 }).state;
+  const retaken = reduce(running, "retakeRun");
+  const view = hostView(retaken.state);
+
+  assert.equal(retaken.didMutate, true);
+  assert.equal(view.runIndex, 0);
+  assert.equal(view.runs[0]?.status, "ready");
+  assert.equal(view.runs[0]?.player?.playerId, "p1");
+  assert.deepEqual(view.runs[0]?.inputs, []);
+  assert.equal(view.runs[0]?.result, null);
+  assert.deepEqual(view.pendingPointsByTeamId, hostView(running).pendingPointsByTeamId);
+
+  // The tablet's log starts again at its own tick.
+  assert.deepEqual(hostView(reduce(retaken.state, "press", { tick: 0 }).state).runs[0]?.inputs, [
+    { tick: 0, down: true }
+  ]);
+  assert.equal(reduce(initialize(), "retakeRun").didMutate, false);
+});
+
+test("does carry no answer in the host view a contestant's phone is handed", () => {
+  const states: SerializableValue[] = [initialize()];
+
+  states.push(reduce(states[0] as SerializableValue, "press", { tick: 2 }).state);
+  states.push(reduce(states[1] as SerializableValue, "endRun").state);
+  states.push(reduce(states[2] as SerializableValue, "skipRun").state);
+
+  for (const state of states) {
+    assert.deepEqual(
+      schlonicRuntimePlugin.selectHostView({ state, rules: RULES, content: null }),
+      schlonicRuntimePlugin.selectDisplayView({ state, rules: RULES, content: null })
+    );
+  }
+});

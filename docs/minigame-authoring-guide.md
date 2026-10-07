@@ -106,6 +106,16 @@ In `packages/minigames/<slug>/src/runtime/index.ts`, export a
   The server calls it while loading `gameConfig.json`, so invalid rules still
   block game start with a clear error (AGENTS.md §8). Omit it if your game has
   no rules (`rulesKey: null` in the definition).
+- The phone hooks, for an arcade relay whose legs a contestant can play on
+  their own phone (AGENTS.md §3.5) — and ONLY for a game whose host view equals
+  its display view: `selectContestant` (the leg in hand, whose it is, whose is
+  next), `contestantActionTypes` (the phone's inputs and its run's end; never a
+  hatch), `contestantRetakeActionType` (the host's take-back: restart the leg
+  clean, as a crash respawn or a fresh run; omit it when legs are atomic, like a
+  JOUST shot) and `selectDeadlineAction` (a deadline the server fires on its own
+  clock, like FAPPY's relay limit). A game that grows them joins
+  `CONTESTANT_MINIGAME_TYPES` in `packages/shared`; the registry test holds the
+  two lists together.
 
 Rules:
 

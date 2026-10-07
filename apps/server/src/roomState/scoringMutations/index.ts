@@ -16,6 +16,11 @@ import {
   isTransientMinigameAction,
   syncActiveMinigameRuntimeWithPendingPoints
 } from "../../minigames/runtime/index.js";
+import {
+  holdContestantLegOnTablet,
+  isLegHeldByPhone,
+  resolveContestantLegForAction
+} from "../contestantTurnState/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
 import {
   arePointsByTeamIdEqual,
@@ -219,6 +224,69 @@ const didMinigameProjectionChange = (
   return !isDeepStrictEqual(previousProjection, captureMinigameProjection(roomState));
 };
 
+// The one way an action reaches the game, whoever sent it — the host's tablet, a contestant's
+// phone (`dispatchContestantMinigameAction`) or the server's own clock
+// (`dispatchServerMinigameAction`): the same `receivedAtMs` stamp, the same undo point for
+// anything the game does not call transient. Who may send what is each caller's to decide first.
+// Returns whether the game itself moved and whether the room's projection did.
+export const applyMinigameAction = (
+  roomState: RoomState,
+  minigameId: MinigameType,
+  actionType: string,
+  actionPayload: SerializableValue,
+  receivedAtMs: number
+): { didRuntimeMutate: boolean; didProjectionChange: boolean } => {
+  const unchanged = { didRuntimeMutate: false, didProjectionChange: false };
+
+  if (!isMinigamePlayState(roomState, minigameId)) {
+    return unchanged;
+  }
+
+  const minigameContext = resolveMinigameContext(roomState, minigameId);
+
+  if (minigameContext === null) {
+    return unchanged;
+  }
+
+  const previousProjection = captureMinigameProjection(roomState);
+  const nextUndoSnapshot = createScoringMutationUndoSnapshot(roomState);
+  let didRuntimeMutate = false;
+
+  try {
+    didRuntimeMutate = dispatchActiveMinigameRuntimeAction(
+      roomState,
+      { actionType, actionPayload, receivedAtMs },
+      minigameContext.minigamePointsMax,
+      minigameContext.minigameRules
+    );
+  } catch (error) {
+    logError("server:minigameRuntimeFailure", error);
+    clearActiveMinigameRuntimeState(roomState);
+    return {
+      didRuntimeMutate: false,
+      didProjectionChange: didMinigameProjectionChange(previousProjection, roomState)
+    };
+  }
+
+  if (!didRuntimeMutate) {
+    return unchanged;
+  }
+
+  if (!isTransientMinigameAction(minigameId, actionType)) {
+    setScoringMutationUndoSnapshot(nextUndoSnapshot);
+    roomState.canRedoScoringMutation = true;
+  }
+
+  return {
+    didRuntimeMutate: true,
+    didProjectionChange: didMinigameProjectionChange(previousProjection, roomState)
+  };
+};
+
+// The host's `minigame:action`. In a phones-mode arcade turn the tablet is one of two possible
+// log writers, so: while the contestant's phone holds the leg in hand, the tablet's inputs for it
+// are refused; once the tablet has written to a leg, that leg is the tablet's for the rest of the
+// turn. The host's hatches are not inputs and always land.
 export const dispatchMinigameAction = defineRoomMutation({
   run: (
     roomState,
@@ -226,47 +294,18 @@ export const dispatchMinigameAction = defineRoomMutation({
     actionType: string,
     actionPayload: SerializableValue
   ): boolean => {
-    if (!isMinigamePlayState(roomState, minigameId)) {
+    if (isLegHeldByPhone(roomState, minigameId, actionType)) {
       return false;
     }
 
-    const minigameContext = resolveMinigameContext(roomState, minigameId);
+    const tabletLegIndex = resolveContestantLegForAction(roomState, minigameId, actionType);
+    const outcome = applyMinigameAction(roomState, minigameId, actionType, actionPayload, Date.now());
 
-    if (minigameContext === null) {
-      return false;
+    if (outcome.didRuntimeMutate && tabletLegIndex !== null) {
+      return holdContestantLegOnTablet(roomState, tabletLegIndex) || outcome.didProjectionChange;
     }
 
-    const previousProjection = captureMinigameProjection(roomState);
-    const nextUndoSnapshot = createScoringMutationUndoSnapshot(roomState);
-    let didRuntimeMutate = false;
-
-    try {
-      didRuntimeMutate = dispatchActiveMinigameRuntimeAction(
-        roomState,
-        {
-          actionType,
-          actionPayload,
-          receivedAtMs: Date.now()
-        },
-        minigameContext.minigamePointsMax,
-        minigameContext.minigameRules
-      );
-    } catch (error) {
-      logError("server:minigameRuntimeFailure", error);
-      clearActiveMinigameRuntimeState(roomState);
-      return didMinigameProjectionChange(previousProjection, roomState);
-    }
-
-    if (!didRuntimeMutate) {
-      return false;
-    }
-
-    if (!isTransientMinigameAction(minigameId, actionType)) {
-      setScoringMutationUndoSnapshot(nextUndoSnapshot);
-      roomState.canRedoScoringMutation = true;
-    }
-
-    return didMinigameProjectionChange(previousProjection, roomState);
+    return outcome.didProjectionChange;
   }
 });
 

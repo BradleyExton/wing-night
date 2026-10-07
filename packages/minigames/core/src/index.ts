@@ -126,6 +126,40 @@ export type MinigameRuntimePlugin = {
   // latest state's — including after an undo — and never a stale one taken
   // at the turn's end. Cleared when a round starts. Serializable, like state.
   selectRoundMemory?: (input: MinigameRuntimeSelectorInput) => SerializableValue | null;
+  // The phone hooks, implemented by the four arcade relays alone (`CONTESTANT_MINIGAME_TYPES`)
+  // and by no game whose host view carries an answer. A game with both can be played leg by leg
+  // on each contestant's own phone; one without either stays on the tablet whatever the host sets.
+  //
+  // `selectContestant`: the leg in hand and whose it is — null when no leg is (the turn is
+  // over). `contestantActionTypes`: what that player's phone may send — the inputs and the
+  // run's own end, never a skip, a reset or anything that paces the turn for the room.
+  selectContestant?: (input: MinigameRuntimeSelectorInput) => MinigameContestant | null;
+  contestantActionTypes?: readonly string[];
+  // Optional, beside the two above: the host action that restarts the leg in hand when the host
+  // takes it back from a phone, so the tablet starts it clean rather than inheriting a log it
+  // could never continue. Absent for a game whose legs are atomic (a JOUST shot): taking one
+  // back only moves the next leg to the tablet.
+  contestantRetakeActionType?: string;
+  // Optional: an action the SERVER sends on its own clock — a deadline the game enforces with no
+  // device's help, so it still lands with the phone that was playing gone. Null while there is
+  // none. Read after every broadcast; the server dispatches `actionType` at `atMs` (its own wall
+  // clock, the one `receivedAtMs` is stamped with) unless the state has moved on by then.
+  selectDeadlineAction?: (input: MinigameRuntimeSelectorInput) => MinigameDeadlineAction | null;
+};
+
+// The leg in hand of an arcade relay (`MinigameRuntimePlugin.selectContestant`). `legIndex`
+// names it for the turn — FAPPY's leg, SCHLONIC's run, BRAWL's block, JOUST's shot — so a leg the
+// host took back stays the tablet's however many attempts it takes. Either player may be null:
+// the house bird flies a leg with nobody behind it.
+export type MinigameContestant = {
+  legIndex: number;
+  playerId: string | null;
+  nextPlayerId: string | null;
+};
+
+export type MinigameDeadlineAction = {
+  actionType: string;
+  atMs: number;
 };
 
 export type MinigameSurfacePhase = "intro" | "play";

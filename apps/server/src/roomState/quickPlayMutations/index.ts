@@ -92,6 +92,8 @@ export const startQuickPlay = defineRoomMutation({
 
     roomState.sessionMode = SESSION_MODES.QUICK_PLAY;
     roomState.gameConfig = gameConfig;
+    // The night's per-round device settings name the night's rounds, not the queue's.
+    roomState.roundDeviceModes = {};
     roomState.totalRounds = gameConfig.rounds.length;
     // Whoever is not here tonight is not on the board: JOUST racks every
     // player it is handed, and the TV lines a team up by its roster.

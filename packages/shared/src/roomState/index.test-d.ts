@@ -162,6 +162,8 @@ export type ValidRoomStateCheck = Assert<
       canAdvancePhase: boolean;
       claimedPlayerIds: string[];
       connectedPlayerIds: string[];
+      roundDeviceModes: RoomState["roundDeviceModes"];
+      contestantTurn: RoomState["contestantTurn"];
     },
     RoomState
   >
@@ -202,6 +204,8 @@ export type DisplaySnapshotShapeCheck = Assert<
       canRedoScoringMutation: boolean;
       canAdvancePhase: boolean;
       claimedPlayerIds: string[];
+      roundDeviceModes: RoomState["roundDeviceModes"];
+      contestantTurn: RoomState["contestantTurn"];
     },
     DisplayRoomStateSnapshot
   >
@@ -295,3 +299,9 @@ export type InvalidPlayerIdsCheck = Assert<IsAssignable<{ id: string; name: stri
 
 // @ts-expect-error Team.totalScore is required.
 export type MissingTotalScoreCheck = Assert<IsAssignable<{ id: string; name: string; playerIds: string[] }, Team>>;
+
+// The arcade turn's leg and controller reach a phone; the contestant's host view never does — it
+// goes to that one phone's own room as `player:minigameHostView`.
+export type PlayerSnapshotCarriesContestantTurnCheck = Assert<
+  IsAssignable<HasKey<PlayerRoomStateSnapshot, "contestantTurn">, true>
+>;

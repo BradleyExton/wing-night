@@ -2,11 +2,14 @@ import {
   CLIENT_TO_SERVER_EVENTS,
   PLAYER_CLAIM_GONE_REASONS,
   PLAYER_CLAIM_REFUSAL_REASONS,
+  PLAYER_MINIGAME_ACTION_REFUSAL_REASONS,
   SERVER_TO_CLIENT_EVENTS,
   type Player,
   type PlayerClaimGonePayload,
   type PlayerClaimResult,
   type PlayerHandshake,
+  type PlayerMinigameActionPayload,
+  type PlayerMinigameActionResult,
   type PlayerReleaseResult
 } from "@wingnight/shared";
 
@@ -14,6 +17,7 @@ import type { PlayerClaimStore } from "../../playerClaims/index.js";
 import { createTokenBucket } from "../../utils/tokenBucket/index.js";
 import {
   isPlayerClaimPayload,
+  isPlayerMinigameActionPayload,
   isPlayerReleasePayload
 } from "../registerRoomStateHandlers/payloadGuards/index.js";
 
@@ -22,9 +26,10 @@ import {
 // turn, their ballot) is emitted to this room and to nothing else.
 export const resolvePlayerRoom = (playerId: string): string => `player:${playerId}`;
 
-type PlayerEvent =
+export type PlayerEventName =
   | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM
-  | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE;
+  | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE
+  | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION;
 
 type PlayerSocket = {
   id: string;
@@ -35,16 +40,29 @@ type PlayerSocket = {
     payload: PlayerClaimGonePayload
   ) => void;
   on: {
-    (event: PlayerEvent, listener: (payload: unknown, ack: unknown) => void): void;
+    (event: PlayerEventName, listener: (payload: unknown, ack: unknown) => void): void;
+    (event: typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, listener: () => void): void;
     (event: "disconnect", listener: () => void): void;
   };
 };
 
 export type PlayerSeatContext = {
-  claimStore: Pick<PlayerClaimStore, "claim" | "rebind" | "releaseBySecret" | "disconnect">;
+  claimStore: Pick<
+    PlayerClaimStore,
+    "claim" | "rebind" | "releaseBySecret" | "disconnect" | "resolvePlayerIdBySocket"
+  >;
   getPlayers: () => readonly Player[];
   // Tells the one player — through their own room — who they are.
   emitPlayerSelf: (playerId: string) => void;
+  // Hands the player their arcade leg's host view, through their own room, if — and only if —
+  // their phone is the one playing the leg in hand right now. A no-op otherwise.
+  emitContestantHostView: (playerId: string) => void;
+  // A contestant's input for their own leg: refused with a reason, or let through to the game
+  // (`dispatchContestantMinigameAction`) and broadcast.
+  dispatchMinigameAction: (
+    playerId: string,
+    action: PlayerMinigameActionPayload
+  ) => PlayerMinigameActionResult;
   // Copies the store's claimed/connected ids into the room and broadcasts
   // (coalesced by the caller, so a burst of claims is one snapshot).
   syncClaimFlags: () => void;
@@ -64,9 +82,27 @@ export type PlayerConnection = {
 export const PLAYER_ACTION_BURST = 6;
 export const PLAYER_ACTIONS_PER_SECOND = 2;
 
+// A contestant playing their leg on the phone, on a bucket of its own so play never spends the
+// claim bucket. Sized from what the runners actually send, one action per touch: FAPPY a flap per
+// tap (a frantic tapper is ~10 a second); SCHLONIC a press AND a release per tap (~16 a second
+// mashing); BRAWL a walk per change of direction plus a peck per tap, two thumbs at once (~15–20
+// a second in a brawl); JOUST an aim every 80 ms while the band is drawn (12.5 a second). Thirty a
+// second sustained is half again the busiest human, and a burst of forty absorbs over a second of
+// mashing on top. A script flooding the room is held to thirty a second — the rate a tablet runs
+// at on a normal night anyway.
+export const PLAYER_MINIGAME_ACTION_BURST = 40;
+export const PLAYER_MINIGAME_ACTIONS_PER_SECOND = 30;
+
 type Ack<TResult> = (result: TResult) => void;
 
 const isAck = <TResult>(ack: unknown): ack is Ack<TResult> => typeof ack === "function";
+
+// `player:minigameAction` answers only if the phone asked for an answer: a flap does not wait.
+const answer = <TResult>(ack: unknown, result: TResult): void => {
+  if (isAck<TResult>(ack)) {
+    ack(result);
+  }
+};
 
 // The phone family, on PLAYER sockets only. Every event here answers on an ack
 // so a claim secret goes back to the one socket that asked; none of them can
@@ -89,9 +125,17 @@ export const registerPlayerHandlers = (
     now: context.now ?? Date.now
   });
 
+  const minigameActionBucket = createTokenBucket({
+    capacity: PLAYER_MINIGAME_ACTION_BURST,
+    refillPerSecond: PLAYER_MINIGAME_ACTIONS_PER_SECOND,
+    now: context.now ?? Date.now
+  });
+
   const takeSeat = (playerId: string): void => {
     socket.join(resolvePlayerRoom(playerId));
     context.emitPlayerSelf(playerId);
+    // A phone that took its seat mid-leg — a reload, a wake — gets the leg straight back.
+    context.emitContestantHostView(playerId);
   };
 
   if (handshake.claimSecret !== null) {
@@ -169,6 +213,49 @@ export const registerPlayerHandlers = (
     socket.leave(resolvePlayerRoom(playerId));
     context.syncClaimFlags();
     ack({ ok: true });
+  });
+
+  // A contestant playing their own leg. The face this socket holds is the only identity that
+  // counts — the payload names no player — and the mutation decides whether that face may send
+  // this action now. Nothing here can advance a phase or move a turn: the actions a game lets a
+  // phone send are its inputs and the end of its own run (AGENTS.md §3.5).
+  socket.on(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION, (payload, ack) => {
+    if (!minigameActionBucket.take()) {
+      answer<PlayerMinigameActionResult>(ack, {
+        ok: false,
+        reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.RATE_LIMITED
+      });
+      return;
+    }
+
+    if (!isPlayerMinigameActionPayload(payload)) {
+      answer<PlayerMinigameActionResult>(ack, {
+        ok: false,
+        reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.MALFORMED
+      });
+      return;
+    }
+
+    const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
+
+    if (playerId === null) {
+      answer<PlayerMinigameActionResult>(ack, {
+        ok: false,
+        reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.NOT_SEATED
+      });
+      return;
+    }
+
+    answer(ack, context.dispatchMinigameAction(playerId, payload));
+  });
+
+  // The phone asking for the room again (a reconnect, a tab brought back) asks for its leg too.
+  socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, () => {
+    const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
+
+    if (playerId !== null) {
+      context.emitContestantHostView(playerId);
+    }
   });
 
   // The face stays the phone's; the host just sees it go to sleep.

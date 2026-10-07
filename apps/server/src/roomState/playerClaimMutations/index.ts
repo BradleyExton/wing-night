@@ -3,6 +3,7 @@ import { isDeepStrictEqual } from "node:util";
 import { PLAYER_CLAIM_GONE_REASONS, type RoomState } from "@wingnight/shared";
 
 import { playerClaimStore } from "../../playerClaims/index.js";
+import { syncContestantTurn } from "../contestantTurnState/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
 
 // The claim store is the truth about which phone is which player; the room
@@ -20,6 +21,8 @@ export const writePlayerClaimFlags = (roomState: RoomState): boolean => {
 
   roomState.claimedPlayerIds = claimedPlayerIds;
   roomState.connectedPlayerIds = connectedPlayerIds;
+  // A phone waking, sleeping or losing its face moves who writes the leg in hand.
+  syncContestantTurn(roomState);
 
   return true;
 };

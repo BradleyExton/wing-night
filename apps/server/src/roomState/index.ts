@@ -54,6 +54,15 @@ export {
 
 export { startQuickPlay } from "./quickPlayMutations/index.js";
 
+export {
+  dispatchContestantMinigameAction,
+  dispatchServerMinigameAction,
+  readContestantActionRefusal,
+  readMinigameDeadline,
+  setRoundDeviceMode,
+  takeBackContestantLeg
+} from "./contestantMutations/index.js";
+
 export { getRoomPhase, getRoomPlayers } from "./stateStore/index.js";
 
 export {

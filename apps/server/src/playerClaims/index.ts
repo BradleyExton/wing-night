@@ -186,6 +186,11 @@ export const createPlayerClaimStore = (mintToken: () => string = mintJoinToken) 
     // Whether a socket holds a face right now.
     isSocketSeated: (socketId: string): boolean => findClaimBySocket(socketId) !== undefined,
 
+    // Which face a socket holds, if any: a phone's game input is authorized by
+    // this and nothing it says about itself.
+    resolvePlayerIdBySocket: (socketId: string): string | null =>
+      findClaimBySocket(socketId)?.playerId ?? null,
+
     // Which socket holds a face, for the invariant that the player room holds
     // only that socket.
     resolveHolderSocketId: (playerId: string): string | null =>
