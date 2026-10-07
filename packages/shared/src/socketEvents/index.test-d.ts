@@ -4,6 +4,14 @@ import type {
   GameReorderTurnOrderPayload,
   HostSecretPayload,
   MinigameActionPayload,
+  PlayerClaimAck,
+  PlayerClaimGonePayload,
+  PlayerClaimPayload,
+  PlayerJoinTokenPayload,
+  PlayerReleaseAck,
+  PlayerReleasePayload,
+  PlayerSelfPayload,
+  SetupReleasePlayerClaimPayload,
   RoleScopedStateSnapshotEnvelope,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
@@ -176,6 +184,51 @@ export type SecretInvalidNoArgsCheck = Assert<
     []
   >
 >;
+
+export type ReleasePlayerClaimPayloadCheck = Assert<
+  Equal<
+    Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.RELEASE_PLAYER_CLAIM]>,
+    [SetupReleasePlayerClaimPayload]
+  >
+>;
+
+export type PlayerClaimAckCheck = Assert<
+  Equal<
+    Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM]>,
+    [PlayerClaimPayload, PlayerClaimAck]
+  >
+>;
+
+export type PlayerReleaseAckCheck = Assert<
+  Equal<
+    Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE]>,
+    [PlayerReleasePayload, PlayerReleaseAck]
+  >
+>;
+
+export type PlayerSelfPayloadCheck = Assert<
+  Equal<
+    Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.PLAYER_SELF]>,
+    [PlayerSelfPayload]
+  >
+>;
+
+export type PlayerClaimGonePayloadCheck = Assert<
+  Equal<
+    Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.PLAYER_CLAIM_GONE]>,
+    [PlayerClaimGonePayload]
+  >
+>;
+
+export type PlayerJoinTokenPayloadCheck = Assert<
+  Equal<
+    Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.PLAYER_JOIN_TOKEN]>,
+    [PlayerJoinTokenPayload]
+  >
+>;
+
+// @ts-expect-error player:claim must answer on an ack.
+export type InvalidPlayerClaimNoAckCheck = Assert<Equal<Parameters<ClientToServerEvents[typeof CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM]>, [PlayerClaimPayload]>>;
 
 // @ts-expect-error server:stateSnapshot must accept role-scoped snapshot envelope.
 export type InvalidSnapshotPayloadCheck = Assert<Equal<Parameters<ServerToClientEvents[typeof SERVER_TO_CLIENT_EVENTS.STATE_SNAPSHOT]>, [string]>>;

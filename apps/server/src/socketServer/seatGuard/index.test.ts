@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CLIENT_ROLES, HOST_AUTH_REQUIRED_ERROR_CODE } from "@wingnight/shared";
+import {
+  CLIENT_ROLES,
+  HOST_AUTH_REQUIRED_ERROR_CODE,
+  PLAYER_AUTH_REQUIRED_ERROR_CODE
+} from "@wingnight/shared";
 
-import { createHostSeatGuard, type SeatedSocketData } from "./index.js";
+import { createSeatGuard, type SeatedSocketData } from "./index.js";
 
 type GuardOutcome = {
   error: Error | undefined;
@@ -26,7 +30,11 @@ const runGuard = (auth: unknown, { address, host, origin }: Handshake): GuardOut
   };
   const calls: (Error | undefined)[] = [];
 
-  createHostSeatGuard("room-token")(socket, (error) => {
+  createSeatGuard({
+    hostControlToken: "room-token",
+    isPlayerJoinToken: (joinToken) => joinToken === "join-token",
+    isPlayerClaimSecret: () => false
+  })(socket, (error) => {
     calls.push(error);
   });
 
@@ -104,4 +112,23 @@ test("does refuse the connection when a loopback socket names a foreign Host and
   );
 
   assert.equal(outcome.error?.message, HOST_AUTH_REQUIRED_ERROR_CODE);
+});
+
+test("does seat a phone as PLAYER when it brings the join token over the Wi-Fi", () => {
+  const outcome = runGuard({ clientRole: CLIENT_ROLES.PLAYER, joinToken: "join-token" }, TABLET);
+
+  assert.equal(outcome.error, undefined);
+  assert.deepEqual(outcome.data, { clientRole: CLIENT_ROLES.PLAYER, isLoopbackPeer: false });
+});
+
+test("does refuse a phone outright when it asks for PLAYER with a bad or missing token", () => {
+  for (const auth of [
+    { clientRole: CLIENT_ROLES.PLAYER },
+    { clientRole: CLIENT_ROLES.PLAYER, joinToken: "rotated" }
+  ]) {
+    const outcome = runGuard(auth, TABLET);
+
+    assert.equal(outcome.error?.message, PLAYER_AUTH_REQUIRED_ERROR_CODE);
+    assert.equal(outcome.data.clientRole, undefined);
+  }
 });

@@ -48,6 +48,11 @@ export const getRoomPhase = (): RoomState["phase"] => {
   return roomState.phase;
 };
 
+// The roster, uncloned, for a claim check that only reads ids and names.
+export const getRoomPlayers = (): readonly Player[] => {
+  return roomState.players;
+};
+
 export const overwriteRoomState = (nextState: RoomState): void => {
   Object.assign(roomState, nextState);
 };

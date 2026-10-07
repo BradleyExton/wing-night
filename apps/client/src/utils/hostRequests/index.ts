@@ -18,6 +18,7 @@ import {
   type SetupAddPlayerPayload,
   type SetupAssignPlayerPayload,
   type SetupCreateTeamPayload,
+  type SetupReleasePlayerClaimPayload,
   type TimerExtendPayload
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
@@ -74,6 +75,8 @@ type HostRequestArgs = {
   onResetGame: [];
   onRedoLastMutation: [];
   onStartQuickPlay: [games: QuickPlayGame[], teams: QuickPlayTeam[]];
+  onReleasePlayerClaim: [playerId: string];
+  onRotatePlayerJoinCode: [];
 };
 
 export type HostRequestName = keyof HostRequestArgs;
@@ -272,6 +275,18 @@ export const hostRequestTable: HostRequestTable = {
       games: structuredClone(games),
       teams: structuredClone(teams)
     })
+  },
+  onReleasePlayerClaim: {
+    event: CLIENT_TO_SERVER_EVENTS.RELEASE_PLAYER_CLAIM,
+    canEmit: (playerId): boolean => playerId.trim().length > 0,
+    buildPayload: (hostSecret, playerId): SetupReleasePlayerClaimPayload => ({
+      hostSecret,
+      playerId
+    })
+  },
+  onRotatePlayerJoinCode: {
+    event: CLIENT_TO_SERVER_EVENTS.ROTATE_PLAYER_JOIN_TOKEN,
+    buildPayload: buildHostSecretPayload
   }
 };
 
@@ -335,6 +350,8 @@ export const createHostRequestHandlers = (
     onAdjustTeamScore: buildHandler("onAdjustTeamScore"),
     onResetGame: buildHandler("onResetGame"),
     onRedoLastMutation: buildHandler("onRedoLastMutation"),
-    onStartQuickPlay: buildHandler("onStartQuickPlay")
+    onStartQuickPlay: buildHandler("onStartQuickPlay"),
+    onReleasePlayerClaim: buildHandler("onReleasePlayerClaim"),
+    onRotatePlayerJoinCode: buildHandler("onRotatePlayerJoinCode")
   };
 };

@@ -16,7 +16,7 @@ import type {
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import { createConfigService, type ConfigService } from "../../configService/index.js";
-import type { SeatedSocketData } from "../hostSeatGuard/index.js";
+import type { SeatedSocketData } from "../seatGuard/index.js";
 import { handleConfigApply } from "./handleConfigApply/index.js";
 
 import {
@@ -32,7 +32,9 @@ import {
   pauseRoomTimer,
   previousRoomMusicTrack,
   redoLastScoringMutation,
+  releasePlayerClaimByHost,
   reorderTurnOrder,
+  rotatePlayerJoinTokenByHost,
   reportRoomMusicTrackEnded,
   resetGameToSetup,
   resumeRoomMusic,
@@ -59,6 +61,7 @@ import {
   isConfigSavePayload,
   isQuickPlayStartPayload,
   isSetupCreateTeamPayload,
+  isSetupReleasePlayerClaimPayload,
   isTimerExtendPayload
 } from "./payloadGuards/index.js";
 
@@ -78,7 +81,7 @@ type RoomStateSocket = {
   on: {
     (event: typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, listener: () => void): void;
     (event: typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL, listener: () => void): void;
-    (event: Exclude<ClientEventName, typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL>, listener: (payload: unknown) => void): void;
+    (event: AuthorizedEventName, listener: (payload: unknown) => void): void;
   };
 };
 
@@ -90,12 +93,22 @@ type HostAuth = {
 type ClientEventName =
   (typeof CLIENT_TO_SERVER_EVENTS)[keyof typeof CLIENT_TO_SERVER_EVENTS];
 
+// The phone family answers on an ack and is registered by
+// `registerPlayerHandlers`, on PLAYER sockets only; nothing here touches it.
+export type PlayerEventName =
+  | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM
+  | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE;
+
 // Everything that runs a mutation and broadcasts. All but one member is gated
 // on the host secret; `MUSIC_TRACK_ENDED` is the exception, reported by the
 // display because only the display can know a track finished.
 export type AuthorizedEventName = Exclude<
   ClientEventName,
-  typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL
+  | typeof CLIENT_TO_SERVER_EVENTS.REQUEST_STATE
+  | typeof CLIENT_TO_SERVER_EVENTS.CLAIM_CONTROL
+  // A read the laptop's display makes, answered by the socket server itself.
+  | typeof CLIENT_TO_SERVER_EVENTS.REQUEST_PLAYER_JOIN_TOKEN
+  | PlayerEventName
 >;
 
 type HostSecretEventName = Exclude<
@@ -244,6 +257,16 @@ const AUTHORIZED_EVENTS: AuthorizedEventRegistration[] = [
     CLIENT_TO_SERVER_EVENTS.QUICKPLAY_START,
     isQuickPlayStartPayload,
     (payload) => startQuickPlay(payload.games, payload.teams)
+  ),
+  // Any phase: the host can always take a face back off a phone.
+  defineAuthorizedEvent(
+    CLIENT_TO_SERVER_EVENTS.RELEASE_PLAYER_CLAIM,
+    isSetupReleasePlayerClaimPayload,
+    (payload) => releasePlayerClaimByHost(payload.playerId)
+  ),
+  // A new join code for the TV's QR; seated phones keep their faces.
+  defineAuthorizedEvent(CLIENT_TO_SERVER_EVENTS.ROTATE_PLAYER_JOIN_TOKEN, isHostSecretPayload, () =>
+    rotatePlayerJoinTokenByHost()
   )
 ];
 
@@ -371,7 +394,8 @@ const CONFIG_EVENTS: ConfigEventRegistration[] = [
 ];
 
 // Which listeners a socket gets is decided by the seat the guard gave it, so a
-// display never even has a host listener to probe. The host-secret check inside
+// display or a phone never even has a host listener to probe. A phone's own
+// family (`player:*`) is registered beside this by `registerPlayerHandlers`. The host-secret check inside
 // each listener is still the real gate — this is the second wall, not the
 // first. The display's one report is the mirror image: only a display may say a
 // track ended, because only the display owns the `<audio>` element — and only a
@@ -392,6 +416,10 @@ export const registerRoomStateHandlers = (
   emitSnapshot();
 
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, emitSnapshot);
+
+  if (seat.clientRole === CLIENT_ROLES.PLAYER) {
+    return;
+  }
 
   if (seat.clientRole === CLIENT_ROLES.DISPLAY) {
     if (!seat.isLoopbackPeer) {

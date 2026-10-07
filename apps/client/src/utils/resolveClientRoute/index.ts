@@ -4,6 +4,7 @@ export type ClientRoute =
   | "ADMIN"
   | "QUICKPLAY"
   | "DISPLAY"
+  | "PLAY"
   | "DEV_INDEX"
   | "DEV_MINIGAME"
   | "DEV_LAB"
@@ -38,6 +39,12 @@ export const resolveClientRoute = (pathname: string): ClientRoute => {
 
   if (normalizedPathname === "/display") {
     return "DISPLAY";
+  }
+
+  // A guest's phone, arriving from the TV's QR with the join token in the
+  // query (PLAY_ROUTE_PATH).
+  if (normalizedPathname === "/play") {
+    return "PLAY";
   }
 
   // The host tablet's other front door: queue a few mini-games for whoever

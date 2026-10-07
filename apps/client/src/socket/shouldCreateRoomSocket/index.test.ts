@@ -32,3 +32,9 @@ test("does not create a socket for the dev index route", () => {
 test("does not create a socket for the dev lab route", () => {
   assert.equal(shouldCreateRoomSocket("DEV_LAB"), false);
 });
+
+// A phone is a room client like the TV: it reads the roster off room state and
+// claims its face over the socket.
+test("does create a socket for the phone's play route", () => {
+  assert.equal(shouldCreateRoomSocket("PLAY"), true);
+});

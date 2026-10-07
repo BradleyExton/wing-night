@@ -3,7 +3,11 @@ import test from "node:test";
 
 import { CLIENT_ROLES } from "@wingnight/shared";
 
-import { resolveSocketAuthPayload, resolveSocketClientRole } from "./index";
+import {
+  resolvePlayerSocketAuthPayload,
+  resolveSocketAuthPayload,
+  resolveSocketClientRole
+} from "./index";
 
 test("resolveSocketClientRole maps host route to HOST role", () => {
   assert.equal(resolveSocketClientRole("/host"), CLIENT_ROLES.HOST);
@@ -56,4 +60,20 @@ test("does include the host control token in the auth payload when the route is 
     clientRole: CLIENT_ROLES.HOST,
     hostControlToken: "host-token"
   });
+});
+
+test("does map the phone's play route to the PLAYER role", () => {
+  assert.equal(resolveSocketClientRole("/play"), CLIENT_ROLES.PLAYER);
+});
+
+test("does send the join token, and the claim secret once there is one, when a phone connects", () => {
+  assert.deepEqual(resolvePlayerSocketAuthPayload(null), { clientRole: CLIENT_ROLES.PLAYER });
+  assert.deepEqual(
+    resolvePlayerSocketAuthPayload({ joinToken: "tok", claimSecret: null, playerId: null }),
+    { clientRole: CLIENT_ROLES.PLAYER, joinToken: "tok" }
+  );
+  assert.deepEqual(
+    resolvePlayerSocketAuthPayload({ joinToken: "tok", claimSecret: "sec", playerId: "player-1" }),
+    { clientRole: CLIENT_ROLES.PLAYER, joinToken: "tok", claimSecret: "sec" }
+  );
 });

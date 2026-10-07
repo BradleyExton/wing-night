@@ -26,10 +26,10 @@ If it is not defined in this document, it is not MVP scope.
 
 - One implicit game room only
 - No room codes
-- No player phone join flow
-- Two screens:
+- Two screens, and the guests' phones:
   - Host UI (tablet-optimized)
   - Display UI (TV-optimized, HDMI laptop)
+  - Player UI (`/play`, a guest's phone held upright) — see "Player phones" below
 - Display must:
   - Be read-only
   - Never scroll vertically
@@ -42,9 +42,34 @@ If it is not defined in this document, it is not MVP scope.
 - Turn-based mini-games only (one team at a time)
 - Escape hatches always available (skip, redo, manual scoring)
 
+Player phones:
+- A guest's phone joins on the party Wi-Fi over plain HTTP — no tunnel, no internet. During
+  SETUP the TV shows a QR for `/play?t=<joinToken>` at the laptop's LAN address; the phone scans
+  it, sees tonight's roster as birds, and taps its own face to claim it. A face another phone
+  holds is greyed out. One face per phone: a second face claimed from the same Wi-Fi address
+  gives the first back to the room (the laptop itself is exempt, for testing).
+- The phone is then that player: it shows the guest's bird, their team (or "not on a team
+  yet") and "watch the TV", with a "this isn't me" release that asks for one confirming tap.
+  Teams are never chosen on a phone — the tablet seats players. Phones play no sound; the TV
+  is the room's only speaker.
+- A phone sleeps (plain HTTP cannot hold a wake lock), so coming back is instant: it keeps a
+  claim secret and reconnects as the same player with no re-pick.
+- On the tablet's SETUP screen, the Players list badges each claimed player (phone in /
+  asleep) with a one-tap Free button that gives the face back; the server accepts a free in
+  any phase, but SETUP is the only screen that shows the control. Under the list, "New join
+  code" swaps the TV's QR: new phones need the new code, phones already holding a face keep
+  it. Reset Game frees every face and rotates the code, so every phone scans the TV again.
+- Claims and releases are rate-limited per phone, and the TV hears claim changes at most ten
+  times a second.
+- In this scope a phone never advances a phase, moves a turn or touches a score; the only
+  thing it changes is which face it holds. Later scope routes a contestant's turn to their
+  phone — only the contestant's phone ever shows a game; every other phone is a ballot, a bet
+  or blank.
+
 Out of Scope (MVP):
 - Multiple rooms
-- Accounts/auth system
+- Accounts/auth system on the LAN — a phone is seated by the TV's join token and a per-face claim
+  secret, not an account
 - Persistent database
 - Cloud deployment
 - Image uploads

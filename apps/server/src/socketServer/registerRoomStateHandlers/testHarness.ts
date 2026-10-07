@@ -69,7 +69,9 @@ export const buildRoomState = (phase: RoomState["phase"], currentRound = 0): Roo
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
-    canAdvancePhase: true
+    canAdvancePhase: true,
+    claimedPlayerIds: [],
+    connectedPlayerIds: []
   };
 };
 

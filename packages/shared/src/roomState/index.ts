@@ -909,6 +909,13 @@ export type RoomState = {
   fatalError: RoomFatalError | null;
   canRedoScoringMutation: boolean;
   canAdvancePhase: boolean;
+  // Whose faces a phone has claimed, and which of those phones has a live
+  // socket right now (a claimed phone that is not connected is asleep). Ids
+  // only, always in roster order: the join token and every claim secret stay
+  // in the server's claim store, so nothing a snapshot carries can seat a
+  // phone. Written by the server from that store, never derived by a client.
+  claimedPlayerIds: string[];
+  connectedPlayerIds: string[];
 };
 
 type DisplaySafeRoomStateKeys =
@@ -938,7 +945,8 @@ type DisplaySafeRoomStateKeys =
   | "pendingMinigamePointsByTeamId"
   | "fatalError"
   | "canRedoScoringMutation"
-  | "canAdvancePhase";
+  | "canAdvancePhase"
+  | "claimedPlayerIds";
 
 export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "phase",
@@ -967,14 +975,41 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "pendingMinigamePointsByTeamId",
   "fatalError",
   "canRedoScoringMutation",
-  "canAdvancePhase"
+  "canAdvancePhase",
+  "claimedPlayerIds"
 ] as const satisfies readonly DisplaySafeRoomStateKeys[];
 
 type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
 
+// A guest's phone sees the room through its OWN allow-list, not the display's
+// minus a key: the display list grows with every TV feature, and a key added
+// for the TV must not reach a phone by default. What a phone needs today is
+// who is here, who is on which team, whose faces are taken, and where the night
+// is. Never `minigameHostView` (answers), never `gameConfig` (every game's
+// rules and the round order), never the playlists; `minigameDisplayView` stays
+// out too until a game's phone surface asks for exactly the fields it needs.
+// Anything only one player may see goes over that player's own channel
+// (`player:self`), never into this shared snapshot.
+export const PLAYER_SAFE_ROOM_STATE_KEYS = [
+  "phase",
+  "sessionMode",
+  "currentRound",
+  "totalRounds",
+  "players",
+  "teams",
+  "turnOrderTeamIds",
+  "activeRoundTeamId",
+  "activeTurnTeamId",
+  "claimedPlayerIds"
+] as const satisfies readonly (keyof RoomState)[];
+
+type PlayerSafeRoomStateKey = (typeof PLAYER_SAFE_ROOM_STATE_KEYS)[number];
+
 export type HostRoomStateSnapshot = RoomState;
 
 export type DisplayRoomStateSnapshot = Pick<RoomState, DisplaySafeRoomStateKey>;
+
+export type PlayerRoomStateSnapshot = Pick<RoomState, PlayerSafeRoomStateKey>;
 
 export type RoleScopedStateSnapshotEnvelope =
   | {
@@ -984,6 +1019,10 @@ export type RoleScopedStateSnapshotEnvelope =
   | {
       clientRole: "DISPLAY";
       roomState: DisplayRoomStateSnapshot;
+    }
+  | {
+      clientRole: "PLAYER";
+      roomState: PlayerRoomStateSnapshot;
     };
 
 export type RoleScopedSnapshotByRole<TRole extends SocketClientRole> = Extract<
@@ -1023,10 +1062,34 @@ export const toDisplayRoomStateSnapshot = (
     pendingMinigamePointsByTeamId: roomState.pendingMinigamePointsByTeamId,
     fatalError: roomState.fatalError,
     canRedoScoringMutation: roomState.canRedoScoringMutation,
-    canAdvancePhase: roomState.canAdvancePhase
+    canAdvancePhase: roomState.canAdvancePhase,
+    // Ids only — the TV counts the phones that are in.
+    claimedPlayerIds: roomState.claimedPlayerIds
   } satisfies DisplayRoomStateSnapshot;
 
   return displaySnapshot;
+};
+
+// Built key by key from the allow-list's own fields, never by spreading the
+// room and deleting: a field added to `RoomState` stays off the phone until
+// someone writes it in here.
+export const toPlayerRoomStateSnapshot = (
+  roomState: RoomState
+): PlayerRoomStateSnapshot => {
+  const playerSnapshot = {
+    phase: roomState.phase,
+    sessionMode: roomState.sessionMode,
+    currentRound: roomState.currentRound,
+    totalRounds: roomState.totalRounds,
+    players: roomState.players,
+    teams: roomState.teams,
+    turnOrderTeamIds: roomState.turnOrderTeamIds,
+    activeRoundTeamId: roomState.activeRoundTeamId,
+    activeTurnTeamId: roomState.activeTurnTeamId,
+    claimedPlayerIds: roomState.claimedPlayerIds
+  } satisfies PlayerRoomStateSnapshot;
+
+  return playerSnapshot;
 };
 
 export function toRoleScopedSnapshotEnvelope(
@@ -1037,6 +1100,10 @@ export function toRoleScopedSnapshotEnvelope(
   clientRole: "DISPLAY",
   roomState: RoomState
 ): { clientRole: "DISPLAY"; roomState: DisplayRoomStateSnapshot };
+export function toRoleScopedSnapshotEnvelope(
+  clientRole: "PLAYER",
+  roomState: RoomState
+): { clientRole: "PLAYER"; roomState: PlayerRoomStateSnapshot };
 export function toRoleScopedSnapshotEnvelope(
   clientRole: SocketClientRole,
   roomState: RoomState
@@ -1049,6 +1116,13 @@ export function toRoleScopedSnapshotEnvelope(
     return {
       clientRole: "HOST",
       roomState
+    };
+  }
+
+  if (clientRole === "PLAYER") {
+    return {
+      clientRole: "PLAYER",
+      roomState: toPlayerRoomStateSnapshot(roomState)
     };
   }
 

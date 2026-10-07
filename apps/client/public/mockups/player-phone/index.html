@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Player Phone — Mockup</title>
+    <!--
+      A guest's phone on the party Wi-Fi (/play), held upright at 390x844. Four frames:
+      the face picker, the idle card once a face is claimed, "claim gone", and "scan the TV".
+
+      The language is the guest portal's (mockups/guest-portal, DESIGN.md §2.2B): the Hearth
+      without its flame — bg with the fire's heat pooling at the foot, warm-glass cards with an
+      ember hairline, one accent (primary), mutedWarm caps for labels, Playfair italic for the
+      show's one sentence. Faces are always birds (the cast), never bare photos: the bird is what
+      the guest is on the TV. A seated face wears its team's colour; an unseated one the cast's
+      warm neutral, exactly as the lobby parade draws them.
+
+      The phone is quiet on purpose. The TV is the room's view and its only speaker: no sound,
+      no flame, no countdown here. Outside a turn the phone says who you are and points at the
+      TV. Teams are never picked on a phone — the tablet seats people.
+    -->
+    <style>
+      :root {
+        --bg: #121212; --surface: #1c1c1c;
+        --text: #ffffff; --mutedWarm: #b3a89a; --mutedWarmDim: #6b6157;
+        --ember: #ffb35a; --glow: #ffd6aa; --hearthGlass: #2e1609; --shade: #000;
+        --primary: #f97316; --teamB: #06b6d4; --teamC: #84cc16;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: #0b0b0b; color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        display: flex; gap: 32px; padding: 32px; align-items: flex-start; flex-wrap: wrap;
+      }
+      .phone {
+        width: 390px; height: 844px; border-radius: 28px; overflow: hidden;
+        background: radial-gradient(ellipse at 50% 115%, var(--hearthGlass) 0%, var(--bg) 58%);
+        padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 14px;
+      }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .wordmark { font-weight: 900; text-transform: uppercase; font-size: 22px; text-shadow: 0 0 18px rgba(249,115,22,.35); }
+      .eyebrow { margin: 0; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .36em; color: var(--mutedWarm); }
+      h1 { margin: 2px 0 0; font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 30px; font-weight: 400; }
+      .voice { margin: 0; font-family: "Playfair Display", Georgia, serif; font-style: italic; color: var(--mutedWarm); line-height: 1.4; }
+      .fine { margin: 0; font-size: 13px; color: var(--mutedWarmDim); line-height: 1.4; }
+      .card {
+        position: relative; border-radius: 16px; padding: 16px;
+        border: 1px solid rgba(249,115,22,.25);
+        background: linear-gradient(180deg, rgba(46,22,9,.84), rgba(0,0,0,.93));
+        box-shadow: inset 0 1px 0 rgba(255,214,170,.14);
+        display: flex; flex-direction: column; gap: 12px;
+      }
+      .card::before { content: ""; position: absolute; left: 12%; right: 12%; top: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--ember), transparent); }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; overflow: hidden; }
+      .face {
+        border-radius: 14px; padding: 10px 6px 8px; text-align: center; min-height: 118px;
+        border: 1px solid rgba(255,179,90,.22); background: rgba(18,18,18,.72);
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+      }
+      .face.pressed { border-color: var(--primary); box-shadow: 0 0 18px rgba(249,115,22,.35); }
+      .face.taken { opacity: .38; filter: grayscale(.7); }
+      .face .name { font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+      .face .tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .18em; color: var(--mutedWarmDim); }
+      .bird { width: 70px; height: 63px; position: relative; }
+      .bird .body { position: absolute; left: 8%; right: 28%; top: 38%; bottom: 10%; border-radius: 50% 40% 45% 50%; border: 2px solid var(--bg); background: var(--c, var(--mutedWarm)); }
+      .bird .head { position: absolute; right: 4%; top: 0; width: 46%; height: 52%; border-radius: 45%; background: #e2b48c; border: 2px solid #3b2414; }
+      .bird.big { width: 170px; height: 153px; }
+      .stage { height: 200px; display: grid; place-items: end center; padding-bottom: 10px; border-radius: 12px; background: radial-gradient(ellipse at 50% 100%, rgba(249,115,22,.22), transparent 70%); }
+      .bigname { margin: 0; font-size: 34px; font-weight: 900; text-transform: uppercase; line-height: .95; text-shadow: 0 0 18px rgba(249,115,22,.45); }
+      .team { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; font-size: 14px; }
+      .dot { width: 10px; height: 10px; border-radius: 99px; background: var(--teamB); box-shadow: 0 0 10px var(--teamB); }
+      .tv { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; border: 1px dashed rgba(255,179,90,.3); }
+      .tv .screen { width: 44px; height: 30px; border-radius: 4px; border: 2px solid var(--mutedWarm); flex: none; }
+      .btn {
+        padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; min-height: 48px;
+        text-transform: uppercase; letter-spacing: .08em; text-align: center;
+        background: var(--primary); color: var(--bg); box-shadow: inset 0 -3px 0 rgba(0,0,0,.28);
+      }
+      .btn.ghost { background: rgba(28,28,28,.6); color: var(--text); border: 1px solid rgba(255,179,90,.35); box-shadow: none; }
+      .spacer { flex: 1; }
+      .count { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 20px; }
+      .label { margin: 0 0 8px; font-size: 12px; font-weight: 700; color: var(--mutedWarm); }
+    </style>
+  </head>
+  <body>
+    <!-- 1. The picker -->
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span><span class="fine"><span class="count">5</span> of 12 in</span></div>
+      <div>
+        <p class="eyebrow">Tonight's roster</p>
+        <h1>Tap your face.</h1>
+      </div>
+      <div class="grid">
+        <div class="face"><div class="bird" style="--c: var(--primary)"><span class="body"></span><span class="head"></span></div><span class="name">Brad</span></div>
+        <div class="face taken"><div class="bird" style="--c: var(--teamB)"><span class="body"></span><span class="head"></span></div><span class="name">Rob</span><span class="tag">Taken</span></div>
+        <div class="face pressed"><div class="bird" style="--c: var(--teamB)"><span class="body"></span><span class="head"></span></div><span class="name">Kim</span></div>
+        <div class="face"><div class="bird" style="--c: var(--teamC)"><span class="body"></span><span class="head"></span></div><span class="name">Sam</span></div>
+        <div class="face taken"><div class="bird" style="--c: var(--teamC)"><span class="body"></span><span class="head"></span></div><span class="name">Alex</span><span class="tag">Taken</span></div>
+        <div class="face"><div class="bird"><span class="body"></span><span class="head"></span></div><span class="name">Jo</span></div>
+        <div class="face"><div class="bird" style="--c: var(--primary)"><span class="body"></span><span class="head"></span></div><span class="name">Morgan</span></div>
+        <div class="face taken"><div class="bird" style="--c: var(--primary)"><span class="body"></span><span class="head"></span></div><span class="name">Lee</span><span class="tag">Taken</span></div>
+        <div class="face"><div class="bird"><span class="body"></span><span class="head"></span></div><span class="name">Pat</span></div>
+      </div>
+      <p class="fine">Someone already took yours? Tell the host — they can free it from the tablet.</p>
+    </section>
+
+    <!-- 2. Idle: claimed, outside a turn -->
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <div class="card">
+        <p class="eyebrow">You're in</p>
+        <div class="stage"><div class="bird big" style="--c: var(--teamB)"><span class="body"></span><span class="head"></span></div></div>
+        <p class="bigname">Kim</p>
+        <span class="team"><span class="dot"></span>Spice Girls</span>
+      </div>
+      <div class="tv"><span class="screen"></span><p class="voice">Eyes on the TV. The host will call you up.</p></div>
+      <div class="spacer"></div>
+      <div class="btn ghost">This isn't me</div>
+    </section>
+
+    <!-- 3. Claim gone -->
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <div class="card">
+        <p class="eyebrow">Face freed</p>
+        <h1 style="margin:0">The host freed your face.</h1>
+        <p class="voice">Pick it again, or pick the right one.</p>
+        <div class="btn">Pick your face</div>
+      </div>
+      <p class="fine">Not on a team yet? That's the tablet's job — the host seats everyone.</p>
+    </section>
+
+    <!-- 4. Scan the TV (no token, or the night was reset) -->
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <div class="card">
+        <p class="eyebrow">Join the night</p>
+        <h1 style="margin:0">Scan the code on the TV.</h1>
+        <div class="tv"><span class="screen"></span><p class="voice">Point your camera at the code in the corner of the TV.</p></div>
+        <p class="fine">Scanned before? The night was reset, so the code changed — scan it again.</p>
+      </div>
+    </section>
+  </body>
+</html>

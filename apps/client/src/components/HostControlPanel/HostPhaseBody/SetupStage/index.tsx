@@ -127,8 +127,12 @@ export const SetupStage = ({ isLocked }: SetupStageProps): JSX.Element => {
           teamThemeByTeamId={teamThemeByTeamId}
           assignmentDisabled={assignmentDisabled}
           addPlayerDisabled={addPlayerDisabled}
+          claimedPlayerIds={roomState?.claimedPlayerIds}
+          connectedPlayerIds={roomState?.connectedPlayerIds}
           onAssignPlayer={handleAssignmentChange}
           onAddPlayer={handleAddPlayer}
+          onReleasePlayerClaim={handlers.onReleasePlayerClaim}
+          onRotatePlayerJoinCode={handlers.onRotatePlayerJoinCode}
         />
         {/* SETUP is where the lobby playlist plays, so this is where the host
             reaches for it — while people are arriving and the deck is not yet

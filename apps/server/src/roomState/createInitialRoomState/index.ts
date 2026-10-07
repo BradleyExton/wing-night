@@ -37,6 +37,8 @@ export const createInitialRoomState = (): RoomState => {
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
-    canAdvancePhase: false
+    canAdvancePhase: false,
+    claimedPlayerIds: [],
+    connectedPlayerIds: []
   };
 };

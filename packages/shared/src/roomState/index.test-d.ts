@@ -5,6 +5,7 @@ import {
   type GameConfigFile,
   type GameConfigRound,
   type HostRoomStateSnapshot,
+  type PlayerRoomStateSnapshot,
   type MinigameHostView,
   type Phase,
   type Player,
@@ -159,6 +160,8 @@ export type ValidRoomStateCheck = Assert<
       fatalError: RoomState["fatalError"];
       canRedoScoringMutation: boolean;
       canAdvancePhase: boolean;
+      claimedPlayerIds: string[];
+      connectedPlayerIds: string[];
     },
     RoomState
   >
@@ -198,6 +201,7 @@ export type DisplaySnapshotShapeCheck = Assert<
       fatalError: RoomState["fatalError"];
       canRedoScoringMutation: boolean;
       canAdvancePhase: boolean;
+      claimedPlayerIds: string[];
     },
     DisplayRoomStateSnapshot
   >
@@ -222,7 +226,8 @@ export type DisplaySnapshotHasNoMinigameHostViewCheck = Assert<
 export type ValidRoleScopedSnapshotEnvelopeCheck = Assert<
   IsAssignable<
     | { clientRole: "HOST"; roomState: HostRoomStateSnapshot }
-    | { clientRole: "DISPLAY"; roomState: DisplayRoomStateSnapshot },
+    | { clientRole: "DISPLAY"; roomState: DisplayRoomStateSnapshot }
+    | { clientRole: "PLAYER"; roomState: PlayerRoomStateSnapshot },
     RoleScopedStateSnapshotEnvelope
   >
 >;
@@ -239,6 +244,38 @@ export type DisplayRoleScopedSnapshotLookupCheck = Assert<
     RoleScopedSnapshotByRole<Extract<SocketClientRole, "DISPLAY">>,
     DisplayRoomStateSnapshot
   >
+>;
+
+export type PlayerRoleScopedSnapshotLookupCheck = Assert<
+  IsAssignable<
+    RoleScopedSnapshotByRole<Extract<SocketClientRole, "PLAYER">>,
+    PlayerRoomStateSnapshot
+  >
+>;
+
+// A phone's allow-list is its own: none of these reach a phone, whatever the
+// display is given.
+export type PlayerSnapshotHasNoMinigameHostViewCheck = Assert<
+  IsAssignable<HasKey<PlayerRoomStateSnapshot, "minigameHostView">, false>
+>;
+
+export type PlayerSnapshotHasNoMinigameDisplayViewCheck = Assert<
+  IsAssignable<HasKey<PlayerRoomStateSnapshot, "minigameDisplayView">, false>
+>;
+
+export type PlayerSnapshotHasNoGameConfigCheck = Assert<
+  IsAssignable<HasKey<PlayerRoomStateSnapshot, "gameConfig">, false>
+>;
+
+export type PlayerSnapshotHasNoPlaylistsCheck = Assert<
+  IsAssignable<
+    HasKey<PlayerRoomStateSnapshot, "lobbyPlaylist" | "eatingPlaylist">,
+    false
+  >
+>;
+
+export type PlayerSnapshotCarriesClaimedIdsCheck = Assert<
+  IsAssignable<PlayerRoomStateSnapshot["claimedPlayerIds"], string[]>
 >;
 
 // @ts-expect-error Invalid phase literal should be rejected.

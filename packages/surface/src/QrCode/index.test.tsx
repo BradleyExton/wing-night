@@ -22,3 +22,12 @@ test("does draw different symbols when the values differ", () => {
 
   assert.notEqual(first, second);
 });
+
+test("does widen the symbol by the quiet zone on every side when one is asked for", () => {
+  const url = "http://192.168.1.23:5173/play?t=abcdefghijklmnopqrstuv";
+  const sizeOf = (html: string): number => Number(/viewBox="0 0 (\d+)/.exec(html)?.[1]);
+  const bare = sizeOf(renderToStaticMarkup(<QrCode value={url} />));
+  const zoned = sizeOf(renderToStaticMarkup(<QrCode value={url} quietZone={4} />));
+
+  assert.equal(zoned, bare + 8);
+});

@@ -5,6 +5,10 @@ import type { ClientRoute } from "../../utils/resolveClientRoute";
 // `quickplay:start`, and both are host-authorized.
 export const shouldCreateRoomSocket = (route: ClientRoute): boolean => {
   return (
-    route === "HOST" || route === "ADMIN" || route === "QUICKPLAY" || route === "DISPLAY"
+    route === "HOST" ||
+    route === "ADMIN" ||
+    route === "QUICKPLAY" ||
+    route === "DISPLAY" ||
+    route === "PLAY"
   );
 };

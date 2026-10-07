@@ -12,3 +12,6 @@ export {
   deckChipActive as chipActive,
   teamDot
 } from "@wingnight/surface";
+
+// The name and, once a phone holds the face, its claim badge under it.
+export const rowIdentity = "flex min-w-0 flex-col items-start gap-1";

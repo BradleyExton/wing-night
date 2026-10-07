@@ -30,12 +30,15 @@ type StageBodyProps = {
 };
 
 const SetupBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
+  const claimedPlayerCount = useDisplayRoomState()?.claimedPlayerIds.length ?? 0;
+
   return (
     <SetupStageBody
       gameConfig={stageViewModel.gameConfig}
       players={stageViewModel.players}
       teams={stageViewModel.teams}
       teamThemeByTeamId={stageViewModel.teamThemeByTeamId}
+      claimedPlayerCount={claimedPlayerCount}
     />
   );
 };

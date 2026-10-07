@@ -18,8 +18,15 @@ export type SetupPlayersSurfaceProps = PlayersSurfaceBaseProps & {
   teams: Team[];
   assignmentDisabled: boolean;
   addPlayerDisabled: boolean;
+  // Whose faces a guest's phone holds, and which of those phones is awake.
+  claimedPlayerIds?: string[];
+  connectedPlayerIds?: string[];
   onAssignPlayer: (playerId: string, selectedTeamId: string) => void;
   onAddPlayer: (name: string) => void;
+  // Frees a face from its phone; absent, the badge's button is disabled.
+  onReleasePlayerClaim?: (playerId: string) => void;
+  // Prints a new join code on the TV, keeping every claim.
+  onRotatePlayerJoinCode?: () => void;
 };
 
 export type EatingPlayersSurfaceProps = PlayersSurfaceBaseProps & {

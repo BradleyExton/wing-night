@@ -18,6 +18,10 @@ import {
 import { createInitialRoomState } from "../createInitialRoomState/index.js";
 import { setMusicForPhase } from "../musicState/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
+import {
+  clearPlayerClaimsForReset,
+  prunePlayerClaimsForRoster
+} from "../playerClaimMutations/index.js";
 import { getRoomStateSnapshot } from "../getRoomStateSnapshot/index.js";
 import { clearScoringMutationUndoState } from "../scoringState/index.js";
 import {
@@ -121,6 +125,7 @@ export const resetRoomState = (): RoomState => {
   });
   resetMinigameRuntimeState();
   clearScoringMutationUndoState(roomState);
+  clearPlayerClaimsForReset(roomState);
 
   return getRoomStateSnapshot();
 };
@@ -158,6 +163,9 @@ export const resetGameToSetup = defineRoomMutation({
     overwriteRoomState(nextState);
     resetMinigameRuntimeState();
     clearScoringMutationUndoState(roomState);
+    // Every phone lets go of its face and has to scan the TV again: the join
+    // token rotates here, and the TV is handed the new one.
+    clearPlayerClaimsForReset(roomState);
 
     return !isDeepStrictEqual(previousSnapshot, getRoomStateSnapshot());
   }
@@ -169,6 +177,8 @@ export const setRoomStateFatalError = (message: string): RoomState => {
   overwriteRoomState(createInitialRoomState());
   resetMinigameRuntimeState();
   clearScoringMutationUndoState(roomState);
+  // The roster is gone with the rest of the room, and so is every face on it.
+  prunePlayerClaimsForRoster(roomState);
 
   const normalizedMessage =
     message.trim().length > 0
@@ -204,6 +214,9 @@ export const setRoomStatePlayers = (players: Player[]): void => {
 
   roomState.players = nextPlayers;
   syncSetupBaselineSnapshot({ players: nextPlayers });
+  // A reload can drop a guest or, ids being positional, move another guest
+  // into their id — either way the phone holding that face lets go of it.
+  prunePlayerClaimsForRoster(roomState);
 };
 
 export const setRoomStateTeams = (teams: Team[]): void => {

@@ -7,6 +7,11 @@ import type {
   RoleScopedStateSnapshotEnvelope
 } from "../roomState/index.js";
 import type { MusicPlaybackSource } from "../musicPlayback/index.js";
+import type {
+  PlayerClaimGoneReason,
+  PlayerClaimResult,
+  PlayerReleaseResult
+} from "../playerJoin/index.js";
 import type { QuickPlayStartRequest } from "../quickPlay/index.js";
 
 export { MINIGAME_API_VERSION } from "../content/gameConfig/index.js";
@@ -60,6 +65,39 @@ export type ConfigApplyPayload = ConfigSavePayload;
 // the room either starts the whole session or none of it.
 export type QuickPlayStartPayload = HostSecretPayload & QuickPlayStartRequest;
 
+// The host frees a face a phone holds — any phase, because the host can always
+// take a face back (a phone left in a coat, the wrong person on the night).
+export type SetupReleasePlayerClaimPayload = HostSecretPayload & Record<"playerId", string>;
+
+// The phone family (`player:*`), sent only by a PLAYER socket and carrying no
+// host secret: a phone is authorized by the join token its handshake brought
+// and, once it holds a face, by that face's claim secret. Both answer on a
+// Socket.IO ack, so the secret goes back to the one socket that asked.
+//
+// `claimSecret` on a claim is the phone's current secret, if it has one: the
+// same face claimed with its own secret is idempotent, which is how a phone
+// that lost its socket takes its face back without a host.
+export type PlayerClaimPayload = Record<"playerId", string> &
+  Partial<Record<"claimSecret", string>>;
+export type PlayerReleasePayload = Record<"claimSecret", string>;
+export type PlayerClaimAck = (result: PlayerClaimResult) => void;
+export type PlayerReleaseAck = (result: PlayerReleaseResult) => void;
+
+// Server → one phone, over its `player:<id>` room: who this phone is. Later
+// milestones grow this per-player channel (a contestant's turn, a ballot);
+// anything only one player may see goes here, never in the shared snapshot.
+export type PlayerSelfPayload = Record<"playerId", string>;
+
+// Server → one phone: its face was taken off it by the host, a roster change,
+// a reset or another socket. `playerId` is the face it held, when known.
+export type PlayerClaimGonePayload = Record<"playerId", string | null> &
+  Record<"reason", PlayerClaimGoneReason>;
+
+// Server → the laptop's own DISPLAY sockets only: the join token the TV's
+// player QR carries. Re-sent whenever Reset Game rotates it. A display opened
+// anywhere else never receives it, and no snapshot ever carries it.
+export type PlayerJoinTokenPayload = Record<"joinToken", string>;
+
 export const CLIENT_TO_SERVER_EVENTS = {
   REQUEST_STATE: "client:requestState",
   CLAIM_CONTROL: "host:claimControl",
@@ -89,14 +127,22 @@ export const CLIENT_TO_SERVER_EVENTS = {
   CONFIG_READ: "config:read",
   CONFIG_SAVE: "config:save",
   CONFIG_APPLY: "config:apply",
-  QUICKPLAY_START: "quickplay:start"
+  QUICKPLAY_START: "quickplay:start",
+  RELEASE_PLAYER_CLAIM: "setup:releasePlayerClaim",
+  ROTATE_PLAYER_JOIN_TOKEN: "setup:rotatePlayerJoinToken",
+  REQUEST_PLAYER_JOIN_TOKEN: "display:requestPlayerJoinToken",
+  PLAYER_CLAIM: "player:claim",
+  PLAYER_RELEASE: "player:release"
 } as const;
 
 export const SERVER_TO_CLIENT_EVENTS = {
   STATE_SNAPSHOT: "server:stateSnapshot",
   SECRET_ISSUED: "host:secretIssued",
   SECRET_INVALID: "host:secretInvalid",
-  CONFIG_RESULT: "config:result"
+  CONFIG_RESULT: "config:result",
+  PLAYER_SELF: "player:self",
+  PLAYER_CLAIM_GONE: "player:claimGone",
+  PLAYER_JOIN_TOKEN: "display:playerJoinToken"
 } as const;
 
 export type ClientToServerEventName =
@@ -159,6 +205,24 @@ export type ClientToServerEvents = {
   [CLIENT_TO_SERVER_EVENTS.QUICKPLAY_START]: (
     payload: QuickPlayStartPayload
   ) => void;
+  [CLIENT_TO_SERVER_EVENTS.RELEASE_PLAYER_CLAIM]: (
+    payload: SetupReleasePlayerClaimPayload
+  ) => void;
+  // The host prints a new join code: new phones need it, seated phones keep
+  // their faces (they reconnect on their claim secret).
+  [CLIENT_TO_SERVER_EVENTS.ROTATE_PLAYER_JOIN_TOKEN]: (payload: HostSecretPayload) => void;
+  // A read, like `client:requestState`, not a report: the laptop's display
+  // asks for the join token it may have missed while its listener attached.
+  // Answered only to a display on the laptop; nothing it reaches mutates.
+  [CLIENT_TO_SERVER_EVENTS.REQUEST_PLAYER_JOIN_TOKEN]: () => void;
+  [CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM]: (
+    payload: PlayerClaimPayload,
+    ack: PlayerClaimAck
+  ) => void;
+  [CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE]: (
+    payload: PlayerReleasePayload,
+    ack: PlayerReleaseAck
+  ) => void;
 };
 
 export type ServerToClientEvents = {
@@ -169,5 +233,12 @@ export type ServerToClientEvents = {
   [SERVER_TO_CLIENT_EVENTS.SECRET_INVALID]: () => void;
   [SERVER_TO_CLIENT_EVENTS.CONFIG_RESULT]: (
     payload: ConfigResultPayload
+  ) => void;
+  [SERVER_TO_CLIENT_EVENTS.PLAYER_SELF]: (payload: PlayerSelfPayload) => void;
+  [SERVER_TO_CLIENT_EVENTS.PLAYER_CLAIM_GONE]: (
+    payload: PlayerClaimGonePayload
+  ) => void;
+  [SERVER_TO_CLIENT_EVENTS.PLAYER_JOIN_TOKEN]: (
+    payload: PlayerJoinTokenPayload
   ) => void;
 };

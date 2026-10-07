@@ -14,10 +14,12 @@ import { DisplayBoard } from "./components/DisplayBoard";
 import { HostControlPanel } from "./components/HostControlPanel";
 import { HostSeatLocked } from "./components/HostSeatLocked";
 import { MinigameDevSandbox } from "./components/MinigameDevSandbox";
+import { PlayerPhone } from "./components/PlayerPhone";
 import { QuickPlayLauncher } from "./components/QuickPlayLauncher";
 import { RootRouteLanding } from "./components/RootRouteLanding";
 import { RouteNotFound } from "./components/RouteNotFound";
 import { HostHandlersProvider } from "./context/HostHandlersContext";
+import { PlayerJoinTokenProvider } from "./context/PlayerJoinTokenContext";
 import { RoomStateProvider } from "./context/RoomStateContext";
 import { createRoomSocket, resolveSocketClientRole } from "./socket/createRoomSocket";
 import { shouldCreateRoomSocket } from "./socket/shouldCreateRoomSocket";
@@ -25,6 +27,7 @@ import { clearHostControlToken } from "./utils/hostControlToken";
 import { saveHostSecret } from "./utils/hostSecretStorage";
 import { createDisplayReportHandlers } from "./utils/displayReports";
 import { createHostRequestHandlers } from "./utils/hostRequests";
+import { createPlayerSeatController, type PlayerSeatController } from "./utils/playerSeat";
 import {
   resolveClientRoute,
   resolveDevLabName,
@@ -32,6 +35,7 @@ import {
 } from "./utils/resolveClientRoute";
 import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireHostSeatLock } from "./utils/wireHostSeatLock";
+import { wirePlayerJoinToken } from "./utils/wirePlayerJoinToken";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
 
 // Throwaway — deleted along with the lab when the ANAMORPH minigame ships
@@ -49,7 +53,8 @@ const resolveRouteContent = (
   devMinigameType: ReturnType<typeof resolveMinigameTypeFromSlug> | null,
   devLabName: string | null,
   roomSocket: ReturnType<typeof createRoomSocket> | null,
-  displayReports: ReturnType<typeof createDisplayReportHandlers> | null
+  displayReports: ReturnType<typeof createDisplayReportHandlers> | null,
+  playerSeat: PlayerSeatController | null
 ): JSX.Element => {
   if (route === "HOST") {
     return <HostControlPanel />;
@@ -72,6 +77,12 @@ const resolveRouteContent = (
     // because it is the only thing the display ever sends and a context for one
     // callback is more machinery than the callback.
     return <DisplayBoard onMusicTrackEnded={displayReports?.onMusicTrackEnded} />;
+  }
+
+  // A guest's phone. Its seat (which face is this phone's) is its own, held
+  // beside room state rather than in it, so it rides in as a prop.
+  if (route === "PLAY") {
+    return <PlayerPhone seat={playerSeat} />;
   }
 
   if (route === "ROOT") {
@@ -106,6 +117,7 @@ export const App = (): JSX.Element => {
   const [roomStateEnvelope, setRoomStateEnvelope] =
     useState<RoleScopedStateSnapshotEnvelope | null>(null);
   const [isHostSeatLocked, setIsHostSeatLocked] = useState(false);
+  const [playerJoinToken, setPlayerJoinToken] = useState<string | null>(null);
   const route = resolveClientRoute(pathname);
   const devMinigameSlug = resolveDevMinigameSlug(pathname);
   const devMinigameType =
@@ -125,6 +137,29 @@ export const App = (): JSX.Element => {
     }
 
     return createDisplayReportHandlers(roomSocket);
+  }, [roomSocket, route]);
+
+  const playerSeat = useMemo(() => {
+    if (route !== "PLAY" || roomSocket === null) {
+      return null;
+    }
+
+    return createPlayerSeatController(roomSocket);
+  }, [roomSocket, route]);
+
+  useEffect(() => {
+    return (): void => {
+      playerSeat?.dispose();
+    };
+  }, [playerSeat]);
+
+  // The TV's player QR: only the laptop's display is ever handed the token.
+  useEffect(() => {
+    if (route !== "DISPLAY" || roomSocket === null) {
+      return;
+    }
+
+    return wirePlayerJoinToken(roomSocket, setPlayerJoinToken);
   }, [roomSocket, route]);
 
   const hostHandlers = useMemo(() => {
@@ -187,13 +222,16 @@ export const App = (): JSX.Element => {
   return (
     <RoomStateProvider value={roomStateEnvelope}>
       <HostHandlersProvider value={hostHandlers}>
-        {resolveRouteContent(
-          route,
-          devMinigameType,
-          devLabName,
-          roomSocket,
-          displayReports
-        )}
+        <PlayerJoinTokenProvider value={playerJoinToken}>
+          {resolveRouteContent(
+            route,
+            devMinigameType,
+            devLabName,
+            roomSocket,
+            displayReports,
+            playerSeat
+          )}
+        </PlayerJoinTokenProvider>
       </HostHandlersProvider>
     </RoomStateProvider>
   );

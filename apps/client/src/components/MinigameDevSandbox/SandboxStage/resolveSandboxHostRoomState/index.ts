@@ -113,6 +113,8 @@ export const resolveSandboxHostRoomState = (
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
-    canAdvancePhase: true
+    canAdvancePhase: true,
+    claimedPlayerIds: [],
+    connectedPlayerIds: []
   };
 };

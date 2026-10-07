@@ -77,7 +77,8 @@ export const createApp = (options: CreateAppOptions): express.Express => {
   // The laptop's Wi-Fi addresses, open to any origin and carrying no token.
   // The host QR no longer reads this (it reads `/host-join` below); it stays
   // for pages that need the addresses but must never hold the host seat's key —
-  // the TV's player QR for the guests' phones, in a later milestone.
+  // the TV's player QR for the guests' phones, whose join token arrives over
+  // the socket instead (`display:playerJoinToken`, laptop displays only).
   app.use(LAN_ADDRESSES_ROUTE_PATH, allowCrossOriginMedia, createLanAddressesRouter());
 
   // The same addresses plus the host control token, for the laptop's host QR

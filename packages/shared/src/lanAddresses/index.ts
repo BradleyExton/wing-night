@@ -7,7 +7,8 @@
 // This route is the token-free listing, open to any origin. The host QR no
 // longer reads it (it reads `/host-join`); it stays for a page that needs the
 // addresses but must never hold the host seat's key — the TV's player QR for
-// the guests' phones, in a later milestone.
+// the guests' phones, which pairs it with the join token the laptop's display
+// is handed over the socket.
 export const LAN_ADDRESSES_ROUTE_PATH = "/lan-addresses";
 
 // The same listing plus the host control token, answered to the laptop alone

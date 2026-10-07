@@ -6,12 +6,23 @@ import type {
   OutboundSocketEvents
 } from "../../socketContracts/index";
 import { consumeHostControlToken } from "../../utils/hostControlToken";
+import {
+  consumePlayerSeat,
+  readPlayerSeat,
+  type PlayerSeat
+} from "../../utils/playerSeatStorage";
 import { resolveClientRoute } from "../../utils/resolveClientRoute";
 import { resolveServerOrigin } from "../../utils/resolveServerOrigin";
 
 type SocketAuthPayload = {
   clientRole: SocketClientRole;
   hostControlToken?: string;
+};
+
+type PlayerSocketAuthPayload = {
+  clientRole: typeof CLIENT_ROLES.PLAYER;
+  joinToken?: string;
+  claimSecret?: string;
 };
 
 // This — not the route table — is what decides which listeners the server
@@ -25,6 +36,10 @@ export const resolveSocketClientRole = (pathname: string): SocketClientRole => {
 
   if (route === "HOST" || route === "ADMIN" || route === "QUICKPLAY") {
     return CLIENT_ROLES.HOST;
+  }
+
+  if (route === "PLAY") {
+    return CLIENT_ROLES.PLAYER;
   }
 
   return CLIENT_ROLES.DISPLAY;
@@ -64,6 +79,18 @@ export const resolveSocketAuthPayload = (
   };
 };
 
+// A phone's handshake: the join token it scanned, and its claim secret once it
+// holds a face, so a reconnect is that player again with no re-pick. No token
+// at all still connects — and is refused with `player_auth_required`, which is
+// what tells the phone to scan the TV.
+export const resolvePlayerSocketAuthPayload = (
+  seat: PlayerSeat | null
+): PlayerSocketAuthPayload => ({
+  clientRole: CLIENT_ROLES.PLAYER,
+  ...(seat === null ? {} : { joinToken: seat.joinToken }),
+  ...(seat === null || seat.claimSecret === null ? {} : { claimSecret: seat.claimSecret })
+});
+
 // A host page reads its token (URL > stored > build) before it connects; a
 // display never looks, so a display URL carrying one leaves it untouched. The
 // laptop's own tabs need no token at all — the server seats loopback as HOST —
@@ -71,6 +98,18 @@ export const resolveSocketAuthPayload = (
 export const createRoomSocket = (
   pathname: string
 ): Socket<InboundSocketEvents, OutboundSocketEvents> => {
+  if (resolveSocketClientRole(pathname) === CLIENT_ROLES.PLAYER) {
+    // Taken off the URL once, here; every connect after reads storage afresh
+    // (auth as a function), so the reconnect after a claim brings its secret.
+    consumePlayerSeat();
+
+    return io(resolveServerOrigin(), {
+      auth: (sendAuth) => {
+        sendAuth(resolvePlayerSocketAuthPayload(readPlayerSeat()));
+      }
+    });
+  }
+
   const hostControlToken =
     resolveSocketClientRole(pathname) === CLIENT_ROLES.HOST
       ? consumeHostControlToken(resolveConfiguredHostControlToken())

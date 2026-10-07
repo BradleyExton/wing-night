@@ -20,6 +20,9 @@ import {
   type SetupAddPlayerPayload,
   type SetupAssignPlayerPayload,
   type SetupCreateTeamPayload,
+  type SetupReleasePlayerClaimPayload,
+  type PlayerClaimPayload,
+  type PlayerReleasePayload,
   type TimerExtendPayload
 } from "@wingnight/shared";
 
@@ -157,3 +160,18 @@ export const isQuickPlayStartPayload = (
   payload: unknown
 ): payload is QuickPlayStartPayload =>
   hasShape(payload, { hostSecret: isString }) && isQuickPlayStartRequest(payload);
+
+export const isSetupReleasePlayerClaimPayload = (
+  payload: unknown
+): payload is SetupReleasePlayerClaimPayload =>
+  hasShape(payload, { hostSecret: isString, playerId: isString });
+
+// `claimSecret` is optional — a phone claiming its first face has none — but a
+// claim that sends one must send a string.
+export const isPlayerClaimPayload = (payload: unknown): payload is PlayerClaimPayload =>
+  hasShape(payload, { playerId: isString }) &&
+  (!("claimSecret" in (payload as Record<string, unknown>)) ||
+    isString((payload as Record<string, unknown>).claimSecret));
+
+export const isPlayerReleasePayload = (payload: unknown): payload is PlayerReleasePayload =>
+  hasShape(payload, { claimSecret: isString });

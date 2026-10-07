@@ -412,6 +412,7 @@ export type {
   GeoMinigameSubState,
   GeoPromptResult,
   HostRoomStateSnapshot,
+  PlayerRoomStateSnapshot,
   JoustMinigameArena,
   JoustMinigameDisplayView,
   JoustMinigameHostView,
@@ -485,7 +486,9 @@ export {
   DISPLAY_SAFE_ROOM_STATE_KEYS,
   GAME_START_COUNTDOWN_MS,
   GAME_START_COUNTDOWN_SECONDS,
+  PLAYER_SAFE_ROOM_STATE_KEYS,
   toDisplayRoomStateSnapshot,
+  toPlayerRoomStateSnapshot,
   toRoleScopedSnapshotEnvelope
 } from "./roomState/index.js";
 export type { ValidationIssue } from "./content/validationIssue/index.js";
@@ -657,8 +660,22 @@ export type {
 export {
   CLIENT_ROLES,
   HOST_AUTH_REQUIRED_ERROR_CODE,
+  PLAYER_AUTH_REQUIRED_ERROR_CODE,
   isSocketClientRole
 } from "./socketClientRole/index.js";
+export {
+  PLAYER_CLAIM_GONE_REASONS,
+  PLAYER_CLAIM_REFUSAL_REASONS,
+  PLAYER_JOIN_TOKEN_QUERY_KEY,
+  PLAY_ROUTE_PATH,
+  isPlayerClaimGoneReason,
+  readPlayerHandshake,
+  type PlayerClaimGoneReason,
+  type PlayerClaimRefusalReason,
+  type PlayerClaimResult,
+  type PlayerHandshake,
+  type PlayerReleaseResult
+} from "./playerJoin/index.js";
 export type { SocketClientRole } from "./socketClientRole/index.js";
 export {
   CLIENT_TO_SERVER_EVENTS,
@@ -679,6 +696,13 @@ export type {
   MusicSetVolumePayload,
   SfxSetVolumePayload,
   MusicTrackEndedPayload,
+  PlayerClaimAck,
+  PlayerClaimGonePayload,
+  PlayerClaimPayload,
+  PlayerJoinTokenPayload,
+  PlayerReleaseAck,
+  PlayerReleasePayload,
+  PlayerSelfPayload,
   QuickPlayStartPayload,
   ScoringAdjustTeamScorePayload,
   ScoringSetWingParticipationPayload,
@@ -687,5 +711,6 @@ export type {
   SetupAddPlayerPayload,
   SetupAssignPlayerPayload,
   SetupCreateTeamPayload,
+  SetupReleasePlayerClaimPayload,
   ServerToClientEvents
 } from "./socketEvents/index.js";

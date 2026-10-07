@@ -70,10 +70,11 @@ Run:
 
 ## 3.3 The One Display-Reported Event
 
-Every client→server event carries a `hostSecret` and runs a host-authorized mutation, with exactly
-one exception: `music:trackEnded`. The display owns the room's single `<audio>` element, so the
-display is the only client that can know a track finished — and the lobby playlist has to advance on
-its own or the music dies after track one.
+Three seats connect: HOST (the tablet), DISPLAY (the TV) and PLAYER (a guest's phone, §3.4).
+Every client→server event from a host or a display that mutates the room carries a `hostSecret`
+and runs a host-authorized mutation, with exactly one exception: `music:trackEnded`. The display
+owns the room's single `<audio>` element, so the display is the only client that can know a track
+finished — and the lobby playlist has to advance on its own or the music dies after track one.
 
 The rules that keep this from eroding "the display is read-only" (SPEC.md §1):
 
@@ -93,6 +94,53 @@ The rules that keep this from eroding "the display is read-only" (SPEC.md §1):
 
 Music playback itself is server-authoritative like `timer`: the display renders `musicPlayback` and
 derives nothing. A cue that decides what should be playing from `phase` is a bug.
+
+## 3.4 The PLAYER Seat (Guest Phones)
+
+A guest's phone connects as `PLAYER` with
+`auth = { clientRole: "PLAYER", joinToken, claimSecret? }`. The seat guard
+(`socketServer/seatGuard`) seats it on the current join token OR a live claim secret (so phones
+already holding a face survive a new code), and refuses anything else with the connect error
+`player_auth_required` — never downgraded to DISPLAY, the same rule HOST has with
+`host_auth_required`.
+
+- **Secrets live in one place.** The join token and every claim secret live only in the
+  server's claim store (`apps/server/src/playerClaims`). `RoomState` carries ids alone —
+  `claimedPlayerIds` and `connectedPlayerIds` — so no snapshot to any role can seat a phone.
+  The join token reaches the TV over `display:playerJoinToken`, emitted only to DISPLAY sockets
+  whose handshake was loopback (the laptop drives the TV): on connect, on every rotation, and
+  in answer to `display:requestPlayerJoinToken`, a read the laptop's display makes when its
+  listener attaches late. A display on the Wi-Fi has no listener for the ask and never
+  receives the token.
+- **Its own allow-list.** A phone's snapshot is `PLAYER_SAFE_ROOM_STATE_KEYS`, built key by key
+  — never the display's list minus a key. It never carries `minigameHostView`, `gameConfig`,
+  the playlists or (for now) `minigameDisplayView`; a game's phone surface adds exactly the
+  fields it needs. Anything only one player may see goes over that player's own room
+  (`player:<id>`) as its own event (`player:self` today), never into the shared snapshot.
+- **One holder per room.** `player:<id>` only ever contains the socket the store says holds
+  that face. Every path that ends a claim the holder did not end itself — host free, roster
+  prune, reset, the same secret on another socket, "this isn't me" from another tab, another
+  face claimed from the same Wi-Fi address — announces it, and the socket layer sends the
+  holder `player:claimGone { playerId, reason }` and removes it from the room.
+- **The phone family.** `player:claim { playerId, claimSecret? }` and `player:release
+  { claimSecret }` are registered only on PLAYER sockets, answer on a Socket.IO ack (so a claim
+  secret goes back to the one socket that asked), and share a per-socket token bucket
+  (`rate_limited` when spent). Claiming a face another phone holds is refused; claiming your
+  own (same socket or same secret) is idempotent; claiming a second face releases the first,
+  and so does a claim from the same non-loopback address. A phone reconnecting with its secret
+  is re-bound before its first paint. Claim-flag broadcasts are coalesced to one per 100 ms.
+- **The host's controls.** `setup:releasePlayerClaim` frees one face and
+  `setup:rotatePlayerJoinToken` prints a new join code without touching claims (unseated phone
+  sockets are dropped; seated ones stay). Both are host-authorized and accepted in any phase;
+  the tablet shows them on the SETUP Players list only.
+- **Ids are positional.** Every site that rewrites `players` prunes the claim store:
+  `resetGameToSetup` and `resetRoomState` clear every claim and rotate the join token (which
+  drops every PLAYER socket); `setRoomStatePlayers` (content reload), `startQuickPlay` and
+  `setRoomStateFatalError` drop a claim whose id is gone or now names somebody else (name and
+  `avatarSrc` both compared). A new player-rewrite site must prune too.
+- **A phone is not a host.** Nothing a PLAYER socket can send may advance a phase, move a turn
+  cursor or change a score. When a later feature routes a contestant's turn to their phone,
+  that needs its own entry here, the way `music:trackEnded` has §3.3.
 
 ---
 

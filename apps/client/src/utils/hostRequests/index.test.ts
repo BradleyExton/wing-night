@@ -213,6 +213,16 @@ const handlerInvocations: HandlerInvocation[] = [
         { teamId: "team-2", playerIds: ["player-2"] }
       ]
     }
+  },
+  {
+    name: "onReleasePlayerClaim",
+    invoke: (handlers) => handlers.onReleasePlayerClaim("player-3"),
+    expectedPayload: { hostSecret: "valid-host-secret", playerId: "player-3" }
+  },
+  {
+    name: "onRotatePlayerJoinCode",
+    invoke: (handlers) => handlers.onRotatePlayerJoinCode(),
+    expectedPayload: { hostSecret: "valid-host-secret" }
   }
 ];
 
@@ -330,6 +340,10 @@ const guardedInvocations: GuardedInvocation[] = [
         [{ minigame: "TRIVIA" }],
         [{ teamId: "team-1", playerIds: ["player-1"] }]
       )
+  },
+  {
+    label: "onReleasePlayerClaim rejects a blank player id",
+    invoke: (handlers) => handlers.onReleasePlayerClaim(" ")
   },
   {
     label: "onStartQuickPlay rejects an empty team",

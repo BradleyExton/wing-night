@@ -23,6 +23,12 @@ test("resolves /display and /display/ to DISPLAY", () => {
   assert.equal(resolveClientRoute("/display/"), "DISPLAY");
 });
 
+test("does resolve /play and /play/ to PLAY whatever the query", () => {
+  assert.equal(resolveClientRoute("/play"), "PLAY");
+  assert.equal(resolveClientRoute("/play/"), "PLAY");
+  assert.equal(resolveClientRoute("/play/extra"), "NOT_FOUND");
+});
+
 test("resolves /dev and /dev/ to DEV_INDEX", () => {
   assert.equal(resolveClientRoute("/dev"), "DEV_INDEX");
   assert.equal(resolveClientRoute("/dev/"), "DEV_INDEX");

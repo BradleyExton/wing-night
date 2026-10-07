@@ -11,6 +11,8 @@ import { CastParade } from "./CastParade";
 import { setupStageCopy } from "./copy";
 import { Embers } from "./Embers";
 import { HeroFlame } from "./HeroFlame";
+import { PlayerJoinCard } from "./PlayerJoinCard";
+import { usePlayerJoinUrl } from "./PlayerJoinCard/usePlayerJoinUrl";
 import { RoundGlyph } from "./RoundGlyph";
 import * as styles from "./styles";
 
@@ -19,6 +21,8 @@ type SetupStageBodyProps = {
   players: Player[];
   teams: Team[];
   teamThemeByTeamId: Map<string, TeamTheme>;
+  // How many faces the guests' phones have claimed, for the join card's count.
+  claimedPlayerCount?: number;
 };
 
 const DEFAULT_SETUP_PREVIEW_ROUND_SLOTS = 8;
@@ -67,8 +71,12 @@ export const SetupStageBody = ({
   gameConfig,
   players,
   teams,
-  teamThemeByTeamId
+  teamThemeByTeamId,
+  claimedPlayerCount = 0
 }: SetupStageBodyProps): JSX.Element => {
+  // Only the laptop's display is handed the join token, so only the TV swaps
+  // the status pill for the phones' QR; any other display keeps the pill.
+  const playerJoinUrl = usePlayerJoinUrl();
   const previewRoundSlotCount = resolveSetupPreviewRoundSlotCount(gameConfig);
   const configuredRounds = gameConfig?.rounds ?? [];
   const visibleRounds = configuredRounds.slice(0, previewRoundSlotCount);
@@ -91,13 +99,21 @@ export const SetupStageBody = ({
       <CastParade players={players} teams={teams} teamThemeByTeamId={teamThemeByTeamId} />
       <span className={styles.floorBloom} aria-hidden />
 
-      <p className={styles.waiting}>
-        <span className={styles.waitingBeacon} aria-hidden>
-          <span className={styles.waitingRing} />
-          <span className={styles.waitingDot} />
-        </span>
-        {setupStageCopy.waitingForTeamsLabel}
-      </p>
+      {playerJoinUrl === null ? (
+        <p className={styles.waiting}>
+          <span className={styles.waitingBeacon} aria-hidden>
+            <span className={styles.waitingRing} />
+            <span className={styles.waitingDot} />
+          </span>
+          {setupStageCopy.waitingForTeamsLabel}
+        </p>
+      ) : (
+        <PlayerJoinCard
+          joinUrl={playerJoinUrl}
+          claimedCount={claimedPlayerCount}
+          playerCount={players.length}
+        />
+      )}
 
       <div className={styles.header}>
         <div className={styles.eyebrowRow}>

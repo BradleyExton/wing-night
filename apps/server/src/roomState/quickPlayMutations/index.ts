@@ -14,6 +14,7 @@ import { logPhaseTransition } from "../../logger/index.js";
 import { isRulesValidForKey } from "../../minigames/rulesValidation/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
 import { applyPhaseTransitionEffects } from "../phaseState/index.js";
+import { prunePlayerClaimsForRoster } from "../playerClaimMutations/index.js";
 import { clearScoringMutationUndoState } from "../scoringState/index.js";
 import { resolveCurrentRoundConfig } from "../selectors/index.js";
 
@@ -95,6 +96,8 @@ export const startQuickPlay = defineRoomMutation({
     // Whoever is not here tonight is not on the board: JOUST racks every
     // player it is handed, and the TV lines a team up by its roster.
     roomState.players = roomState.players.filter((player) => seatedPlayerIds.has(player.id));
+    // A phone whose player was not dealt in has no face on this board.
+    prunePlayerClaimsForRoster(roomState);
     roomState.teams = resolvedTeams;
     roomState.turnOrderTeamIds = resolvedTeams.map((team) => team.id);
     roomState.currentRound = 1;

@@ -89,6 +89,8 @@ export const buildRoomState = (
     fatalError: null,
     canRedoScoringMutation: false,
     canAdvancePhase: true,
+    claimedPlayerIds: [],
+    connectedPlayerIds: [],
     ...overrides
   };
 };

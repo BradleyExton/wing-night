@@ -3,6 +3,8 @@ import { type FormEvent, useId, useState } from "react";
 import { hostControlPanelCopy } from "../../copy";
 import { resolveTeamTheme } from "../../../../utils/resolveTeamTheme";
 import type { SetupPlayersSurfaceProps } from "../index";
+import { PlayerClaimBadge } from "./PlayerClaimBadge";
+import { PlayerJoinCodeRow } from "./PlayerJoinCodeRow";
 import * as styles from "./styles";
 
 const truncateChipLabel = (teamName: string): string => {
@@ -22,10 +24,16 @@ export const SetupPlayersSurface = ({
   teamThemeByTeamId,
   assignmentDisabled,
   addPlayerDisabled,
+  claimedPlayerIds = [],
+  connectedPlayerIds = [],
   onAssignPlayer,
-  onAddPlayer
+  onAddPlayer,
+  onReleasePlayerClaim,
+  onRotatePlayerJoinCode
 }: SetupPlayersSurfaceProps): JSX.Element => {
   const [nextPlayerName, setNextPlayerName] = useState("");
+  const claimedIds = new Set(claimedPlayerIds);
+  const connectedIds = new Set(connectedPlayerIds);
   const playerNameInputId = useId();
 
   const handleAddPlayerSubmit = (event: FormEvent<HTMLFormElement>): void => {
@@ -58,8 +66,23 @@ export const SetupPlayersSurface = ({
         const assignedTeamId = assignedTeamByPlayerId.get(player.id) ?? "";
 
         return (
-          <div key={player.id} className={styles.row}>
-            <span className={styles.rowName}>{player.name}</span>
+          <div key={player.id} className={styles.row} data-setup-player-id={player.id}>
+            {/* A claimed face's badge sits under the name, not beside it: the
+                deck column is a tablet's third, and beside the name it pushed
+                the team chips onto a second line. */}
+            <span className={styles.rowIdentity}>
+              <span className={styles.rowName}>{player.name}</span>
+              {claimedIds.has(player.id) && (
+                <PlayerClaimBadge
+                  playerName={player.name}
+                  isConnected={connectedIds.has(player.id)}
+                  releaseDisabled={onReleasePlayerClaim === undefined}
+                  onRelease={(): void => {
+                    onReleasePlayerClaim?.(player.id);
+                  }}
+                />
+              )}
+            </span>
             <div
               className={styles.chipRow}
               role="group"
@@ -117,6 +140,13 @@ export const SetupPlayersSurface = ({
           {hostControlPanelCopy.addPlayerButtonLabel}
         </button>
       </form>
+
+      <PlayerJoinCodeRow
+        disabled={onRotatePlayerJoinCode === undefined}
+        onRotate={(): void => {
+          onRotatePlayerJoinCode?.();
+        }}
+      />
     </>
   );
 };

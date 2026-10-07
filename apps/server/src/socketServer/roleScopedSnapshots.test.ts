@@ -3,8 +3,10 @@ import test from "node:test";
 
 import {
   DISPLAY_SAFE_ROOM_STATE_KEYS,
+  PLAYER_SAFE_ROOM_STATE_KEYS,
   Phase,
   toDisplayRoomStateSnapshot,
+  toPlayerRoomStateSnapshot,
   toRoleScopedSnapshotEnvelope,
   type RoomState
 } from "@wingnight/shared";
@@ -45,7 +47,9 @@ const createRoomStateFixture = (): RoomState => {
     pendingMinigamePointsByTeamId: {},
     fatalError: null,
     canRedoScoringMutation: false,
-    canAdvancePhase: false
+    canAdvancePhase: false,
+    claimedPlayerIds: [],
+    connectedPlayerIds: []
   };
 };
 
@@ -76,4 +80,47 @@ test("toDisplayRoomStateSnapshot exposes every display-safe room-state key", () 
   }
 
   assert.equal("minigameHostView" in displaySnapshot, false);
+});
+
+test("does build a player snapshot from exactly its own allow-list", () => {
+  const roomState = createRoomStateFixture();
+  const playerSnapshot = toPlayerRoomStateSnapshot(roomState);
+
+  assert.deepEqual(Object.keys(playerSnapshot).sort(), [...PLAYER_SAFE_ROOM_STATE_KEYS].sort());
+});
+
+test("does leave answers, rules, playlists and the TV's game view off a phone", () => {
+  const roomState: RoomState = {
+    ...createRoomStateFixture(),
+    lobbyPlaylist: ["lobby.mp3"],
+    eatingPlaylist: ["eating.mp3"],
+    connectedPlayerIds: ["player-1"]
+  };
+  const envelope = toRoleScopedSnapshotEnvelope("PLAYER", roomState);
+
+  assert.equal(envelope.clientRole, "PLAYER");
+
+  for (const forbiddenKey of [
+    "minigameHostView",
+    "minigameDisplayView",
+    "gameConfig",
+    "currentRoundConfig",
+    "lobbyPlaylist",
+    "eatingPlaylist",
+    "musicPlayback",
+    "connectedPlayerIds"
+  ]) {
+    assert.equal(forbiddenKey in envelope.roomState, false, forbiddenKey);
+  }
+});
+
+test("does give the display claimed ids but not who is asleep", () => {
+  const displaySnapshot = toDisplayRoomStateSnapshot({
+    ...createRoomStateFixture(),
+    claimedPlayerIds: ["player-1", "player-2"],
+    connectedPlayerIds: ["player-1"]
+  });
+
+  assert.deepEqual(displaySnapshot.claimedPlayerIds, ["player-1", "player-2"]);
+  assert.equal("connectedPlayerIds" in displaySnapshot, false);
 });

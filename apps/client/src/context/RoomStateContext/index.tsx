@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 import type {
   DisplayRoomStateSnapshot,
+  PlayerRoomStateSnapshot,
   RoleScopedStateSnapshotEnvelope,
   RoomState
 } from "@wingnight/shared";
@@ -34,4 +35,12 @@ export const useDisplayRoomState = (): DisplayRoomStateSnapshot | null => {
   const envelope = useRoomStateEnvelope();
 
   return envelope?.clientRole === "DISPLAY" ? envelope.roomState : null;
+};
+
+// A guest's phone: the room through the PLAYER allow-list, null for any other
+// seat's envelope so a phone surface can never read a key it was not sent.
+export const usePlayerRoomState = (): PlayerRoomStateSnapshot | null => {
+  const envelope = useRoomStateEnvelope();
+
+  return envelope?.clientRole === "PLAYER" ? envelope.roomState : null;
 };

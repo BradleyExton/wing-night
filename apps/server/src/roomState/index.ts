@@ -54,7 +54,13 @@ export {
 
 export { startQuickPlay } from "./quickPlayMutations/index.js";
 
-export { getRoomPhase } from "./stateStore/index.js";
+export { getRoomPhase, getRoomPlayers } from "./stateStore/index.js";
+
+export {
+  releasePlayerClaimByHost,
+  rotatePlayerJoinTokenByHost,
+  syncPlayerClaimFlags
+} from "./playerClaimMutations/index.js";
 
 export {
   applyRoomStateMutation,
