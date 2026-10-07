@@ -12,6 +12,7 @@ import {
   clearScoringMutationUndoState
 } from "../scoringState/index.js";
 import { resolveCurrentRoundConfig } from "../selectors/index.js";
+import { voidSpectatorBets } from "../spectatorBetState/index.js";
 import { finalizeActiveRoundTurn } from "../turnState/index.js";
 
 export const skipTurnBoundary = defineRoomMutation({
@@ -20,6 +21,8 @@ export const skipTurnBoundary = defineRoomMutation({
     const previousPhase = roomState.phase;
     const hasNextRoundTurn =
       roomState.roundTurnCursor + 1 < roomState.turnOrderTeamIds.length;
+    // A skipped turn has no result to bet on: its bets are off, and the tally never hears of them.
+    voidSpectatorBets(roomState);
     finalizeActiveRoundTurn(roomState);
     // The skipped team's last score goes with its turn (see `runPhaseAdvance`).
     clearScoringMutationUndoState(roomState);

@@ -8,6 +8,7 @@ import {
 import { getNextPhase } from "../../utils/getNextPhase/index.js";
 import { applyContestantTurnPhaseEffects } from "../contestantTurnState/index.js";
 import { setMusicForPhase } from "../musicState/index.js";
+import { applySpectatorBetPhaseEffects } from "../spectatorBetState/index.js";
 import {
   createRunningTimer,
   isRoomInFatalState,
@@ -130,6 +131,9 @@ export const applyPhaseTransitionEffects = (
   setMusicForPhase(state, nextPhase);
   // After the runtime is seated, so the first leg is already in hand to derive.
   applyContestantTurnPhaseEffects(state, nextPhase);
+  // Last of all: the window opens on the turn the cursor now names, after the round's pending
+  // points were applied and cleared, and the results settle on the turn's final points.
+  applySpectatorBetPhaseEffects(state, previousPhase, nextPhase);
 };
 
 export const resolveNextPhase = (state: RoomState, previousPhase: Phase): Phase => {

@@ -40,6 +40,10 @@ type PlayerClaim = {
   // The Wi-Fi address the phone claimed from; null for the laptop itself,
   // which may hold several faces while the host tests.
   peerAddress: string | null;
+  // Which claim this is: a fresh claim of a face gets a new number, a phone coming back on its
+  // secret keeps the one it had. What belongs to one holder of a face (their side-bet pick) is
+  // only ever handed back to the same claim — never to the next guest who sits in the face.
+  serial: number;
 };
 
 // A face taken off a phone by something other than that phone, for the socket
@@ -108,6 +112,8 @@ export const createPlayerClaimStore = (mintToken: () => string = mintJoinToken) 
   let joinToken = mintToken();
   const claimsByPlayerId = new Map<string, PlayerClaim>();
   const releaseListeners = new Set<Listener<ReleasedPlayerClaim>>();
+  const endListeners = new Set<Listener<string>>();
+  let nextClaimSerial = 1;
   const joinTokenListeners = new Set<Listener<string>>();
 
   const findClaimBySecret = (claimSecret: string): PlayerClaim | undefined =>
@@ -126,8 +132,18 @@ export const createPlayerClaimStore = (mintToken: () => string = mintJoinToken) 
     }
   };
 
-  const release = (claim: PlayerClaim, reason: PlayerClaimGoneReason): void => {
+  // Every way a claim ends — announced or silent, the phone's own doing or not — passes here. A
+  // phone that only went to sleep keeps its claim and never does.
+  const endClaim = (claim: PlayerClaim): void => {
     claimsByPlayerId.delete(claim.playerId);
+
+    for (const listener of endListeners) {
+      listener(claim.playerId);
+    }
+  };
+
+  const release = (claim: PlayerClaim, reason: PlayerClaimGoneReason): void => {
+    endClaim(claim);
     announceRelease(claim, claim.socketId, reason);
   };
 
@@ -161,7 +177,7 @@ export const createPlayerClaimStore = (mintToken: () => string = mintJoinToken) 
       }
 
       if (claim.socketId === socketId) {
-        claimsByPlayerId.delete(claim.playerId);
+        endClaim(claim);
         silentlyReleasedPlayerId = claim.playerId;
       } else if (peerAddress !== null && claim.peerAddress === peerAddress) {
         release(claim, PLAYER_CLAIM_GONE_REASONS.ANOTHER_FACE);
@@ -214,6 +230,12 @@ export const createPlayerClaimStore = (mintToken: () => string = mintJoinToken) 
     onClaimReleased: (listener: Listener<ReleasedPlayerClaim>): (() => void) =>
       subscribe(releaseListeners, listener),
 
+    // Any claim ending, by whatever path, silent ones included: the face is nobody's now.
+    onClaimEnded: (listener: Listener<string>): (() => void) => subscribe(endListeners, listener),
+
+    // Which claim holds a face right now (`PlayerClaim.serial`), or null when nobody does.
+    resolveClaimSerial: (playerId: string): number | null => claimsByPlayerId.get(playerId)?.serial ?? null,
+
     // Claiming a face nobody holds takes it; claiming the face this socket
     // already holds, or one whose secret the phone brought, is idempotent and
     // keeps the secret; anyone else's face is refused.
@@ -249,9 +271,11 @@ export const createPlayerClaimStore = (mintToken: () => string = mintJoinToken) 
         playerAvatarSrc: player.avatarSrc ?? null,
         claimSecret: mintClaimSecret(),
         socketId,
-        peerAddress
+        peerAddress,
+        serial: nextClaimSerial
       };
 
+      nextClaimSerial += 1;
       claimsByPlayerId.set(playerId, claim);
 
       return { ok: true, playerId, claimSecret: claim.claimSecret, releasedPlayerId };
@@ -284,7 +308,7 @@ export const createPlayerClaimStore = (mintToken: () => string = mintJoinToken) 
         return null;
       }
 
-      claimsByPlayerId.delete(claim.playerId);
+      endClaim(claim);
 
       if (claim.socketId !== null && claim.socketId !== socketId) {
         announceRelease(claim, claim.socketId, PLAYER_CLAIM_GONE_REASONS.RELEASED_ELSEWHERE);

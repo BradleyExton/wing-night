@@ -698,6 +698,27 @@ export type {
   RoundDeviceModes
 } from "./contestantTurn/index.js";
 export {
+  SPECTATOR_BET_PICKS,
+  SPECTATOR_BET_REFUSAL_REASONS,
+  SPECTATOR_BET_STATUSES,
+  isSpectatorBetPick,
+  projectSpectatorBets,
+  resolveBestBettorPlayerIds,
+  resolveSpectatorBetLine,
+  resolveSpectatorBetOutcome,
+  resolveSpectatorBetWinnerIds
+} from "./spectatorBets/index.js";
+export type {
+  PlayerPlaceBetResult,
+  SpectatorBetOutcome,
+  SpectatorBetPick,
+  SpectatorBetRecord,
+  SpectatorBetRefusalReason,
+  SpectatorBets,
+  SpectatorBetStatus,
+  SpectatorBetTally
+} from "./spectatorBets/index.js";
+export {
   CLIENT_TO_SERVER_EVENTS,
   MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS,
@@ -725,6 +746,9 @@ export type {
   PlayerMinigameActionAck,
   PlayerMinigameActionPayload,
   PlayerMinigameHostViewPayload,
+  PlayerPlaceBetAck,
+  PlayerPlaceBetPayload,
+  PlayerSpectatorBetPayload,
   PlayerReleaseAck,
   PlayerReleasePayload,
   PlayerSelfPayload,

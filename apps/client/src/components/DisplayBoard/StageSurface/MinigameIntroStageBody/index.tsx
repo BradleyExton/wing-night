@@ -5,6 +5,8 @@ import { TeamAmbient } from "../../../TeamAmbient";
 import { TeamEmblem } from "../../../TeamEmblem";
 import { TeamLineup } from "../../../TeamLineup";
 import { TeamWordmark } from "../../../TeamWordmark";
+import type { SpectatorBetReadoutView } from "../resolveSpectatorBetView";
+import { SpectatorBetReadout } from "../SpectatorBetReadout";
 import { minigameIntroStageCopy } from "./copy";
 import * as styles from "./styles";
 
@@ -17,6 +19,8 @@ type MinigameIntroStageBodyProps = {
   // What an arcade team picks up when the briefing ends (`resolveBriefingHandset`), or null for a
   // game that is never played on phones, which says nothing about it.
   handset: MinigameHandset | null;
+  // The watchers' line while their window is open, or null (no phones off the team, no line).
+  betReadout?: SpectatorBetReadoutView | null;
 };
 
 // The team spotlight (docs/team-identity.md, "TV MINIGAME_INTRO"): the genre's
@@ -30,7 +34,8 @@ export const MinigameIntroStageBody = ({
   activeTeamTheme,
   activeTeamPlayers,
   minigameType,
-  handset
+  handset,
+  betReadout = null
 }: MinigameIntroStageBodyProps): JSX.Element => {
   const resolvedTeamName = activeTeamName ?? minigameIntroStageCopy.fallbackTeamName;
   const resolvedMinigameLabel =
@@ -103,6 +108,11 @@ export const MinigameIntroStageBody = ({
         >
           {minigameIntroStageCopy.handsetLine(handset)}
         </p>
+      )}
+      {betReadout !== null && (
+        <div className={`${styles.beatBase} ${styles.beatDelay5}`}>
+          <SpectatorBetReadout readout={betReadout} />
+        </div>
       )}
     </div>
   );

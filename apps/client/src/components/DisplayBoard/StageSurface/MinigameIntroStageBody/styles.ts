@@ -16,6 +16,7 @@ export const beatDelay1 = "[animation-delay:100ms]";
 export const beatDelay2 = "[animation-delay:600ms]";
 export const beatDelay3 = "[animation-delay:1100ms]";
 export const beatDelay4 = "[animation-delay:1500ms]";
+export const beatDelay5 = "[animation-delay:2000ms]";
 
 export const eyebrow =
   "inline-flex items-center text-[clamp(0.85rem,1.1vw,1.2rem)] font-bold uppercase tracking-[0.32em] text-muted";

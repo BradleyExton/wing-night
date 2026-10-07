@@ -1,6 +1,8 @@
 import type { RoomState, TeamTheme } from "@wingnight/shared";
 
 import { TeamWordmark } from "../../../TeamWordmark";
+import type { SpectatorBetReadoutView } from "../resolveSpectatorBetView";
+import { SpectatorBetReadout } from "../SpectatorBetReadout";
 
 import { isTimerTimeUp, isTimerUrgent } from "../../../../utils/timerUrgency";
 import { displayBoardCopy } from "../../copy";
@@ -14,6 +16,8 @@ type EatingStageBodyProps = {
   activeTeamTheme: TeamTheme | null;
   liveEatingRemainingSeconds: number;
   totalEatingSeconds: number | null;
+  // The watchers' line, still open while the team eats; under the clock, never over it.
+  betReadout?: SpectatorBetReadoutView | null;
 };
 
 export const EatingStageBody = ({
@@ -21,7 +25,8 @@ export const EatingStageBody = ({
   activeTeamName,
   activeTeamTheme,
   liveEatingRemainingSeconds,
-  totalEatingSeconds
+  totalEatingSeconds,
+  betReadout = null
 }: EatingStageBodyProps): JSX.Element => {
   const isUrgent = isTimerUrgent(liveEatingRemainingSeconds);
   const isTimeUp = isTimerTimeUp(liveEatingRemainingSeconds);
@@ -77,6 +82,7 @@ export const EatingStageBody = ({
         <p className={isTimeUp ? styles.timerLabelTimeUp : styles.timerLabel}>
           {timerLabelText}
         </p>
+        {betReadout !== null && <SpectatorBetReadout readout={betReadout} />}
       </div>
       <div className={styles.heatTrack}>
         <div

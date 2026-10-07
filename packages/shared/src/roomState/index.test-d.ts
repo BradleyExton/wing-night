@@ -164,6 +164,8 @@ export type ValidRoomStateCheck = Assert<
       connectedPlayerIds: string[];
       roundDeviceModes: RoomState["roundDeviceModes"];
       contestantTurn: RoomState["contestantTurn"];
+      spectatorBets: RoomState["spectatorBets"];
+      betTallyByPlayerId: RoomState["betTallyByPlayerId"];
     },
     RoomState
   >
@@ -206,6 +208,8 @@ export type DisplaySnapshotShapeCheck = Assert<
       claimedPlayerIds: string[];
       roundDeviceModes: RoomState["roundDeviceModes"];
       contestantTurn: RoomState["contestantTurn"];
+      spectatorBets: RoomState["spectatorBets"];
+      betTallyByPlayerId: RoomState["betTallyByPlayerId"];
     },
     DisplayRoomStateSnapshot
   >
@@ -304,4 +308,14 @@ export type MissingTotalScoreCheck = Assert<IsAssignable<{ id: string; name: str
 // goes to that one phone's own room as `player:minigameHostView`.
 export type PlayerSnapshotCarriesContestantTurnCheck = Assert<
   IsAssignable<HasKey<PlayerRoomStateSnapshot, "contestantTurn">, true>
+>;
+
+// The bet card reaches a phone through the snapshot (picks hidden until the turn settles); the
+// night's tally does not — it is the TV's, for the best bettor at the end.
+export type PlayerSnapshotCarriesSpectatorBetsCheck = Assert<
+  IsAssignable<HasKey<PlayerRoomStateSnapshot, "spectatorBets">, true>
+>;
+
+export type PlayerSnapshotHasNoBetTallyCheck = Assert<
+  IsAssignable<HasKey<PlayerRoomStateSnapshot, "betTallyByPlayerId">, false>
 >;

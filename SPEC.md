@@ -61,10 +61,10 @@ Player phones:
   it. Reset Game frees every face and rotates the code, so every phone scans the TV again.
 - Claims and releases are rate-limited per phone, and the TV hears claim changes at most ten
   times a second.
-- In this scope a phone never advances a phase, moves a turn or touches a score; the only
-  thing it changes is which face it holds. Later scope routes a contestant's turn to their
-  phone — only the contestant's phone ever shows a game; every other phone is a ballot, a bet
-  or blank.
+- A phone never advances a phase or moves a turn. Beyond the face it holds it changes two
+  things: a contestant's own arcade leg (AGENTS.md §3.5) and, off the playing team, a side bet
+  that never touches a score ("Spectator bets" below). Only the contestant's phone ever shows a
+  game; every other phone is a ballot, a bet or blank.
 
 Out of Scope (MVP):
 - Multiple rooms
@@ -414,6 +414,40 @@ and the screen picker); the TV stays on `/display` and follows as it always does
   scalar rules and clock, seeded from the pack. Start is disabled until at least one game is
   queued and every team has a player. Once the server opens the session the tablet navigates
   itself to `/host`. A room already past `SETUP` gets the way back and a two-tap reset instead.
+
+---
+
+### Spectator bets (side game)
+
+The watchers' job. Before each team's turn, every guest whose phone holds a face and who is NOT
+on the team about to play calls OVER or UNDER on that turn's score. It is a side game: a bet
+never touches `totalScore`, the pending round points or any team's standing.
+
+- **The line** is one visible rule for every game: `floor(max / 2) + 0.5`, where `max` is the
+  turn's minigame points cap (`defaultMax`, or `finalRoundMax` on the last round) — 7.5 on a cap
+  of 15, 10.5 on 20. A whole-number score can never land on a .5 line, so every turn settles and
+  somebody called it. A turn with no cap (or a cap of 0) has no bets.
+- **The window** opens when the turn's briefing does (`MINIGAME_INTRO`) and closes when play
+  starts (`MINIGAME_PLAY`), so a night's window is the briefing and the wings and a Quick Play
+  window the briefing alone. One pick per player, changeable until it closes; the playing team
+  cannot bet. No host action is needed.
+- **Settlement** is on the turn's results: the turn's points are what the team adds to its
+  pending minigame points during the turn (not the round's pending total). An undo on the
+  results re-settles it. Leaving the results freezes it: each bettor's record (won / played)
+  takes it once. A skipped turn's bets are void and count for nobody; a push (only reachable by
+  a fractional score) is no bet. Reset Game clears every bet and every record.
+- **Nobody herds**: until the turn settles no screen shows a pick — the TV and the phones see
+  how many have bet, the host also sees who, and each phone is told its own pick alone. A pick
+  belongs to the guest who placed it, not the face: a face let go or freed while the window is
+  open loses its pick, and whoever sits in it next is never told one. Once settled, the picks
+  are the show.
+- **Screens**: the phone shows the line and two buttons (then "bet locked — watch the TV", then
+  whether it called it); the TV shows the line and the count on the briefing and the wings,
+  nothing about bets during play, the settlement (line, score, side, who called it) on the
+  turn's results, and the best bettor in one line on the final results; the tablet shows a
+  compact count while the window is open.
+- **Best bettor**: the most bets won; level on wins, the fewer bets played; still level, the
+  title is shared. Nobody who won nothing is named. No team bonus.
 
 ---
 

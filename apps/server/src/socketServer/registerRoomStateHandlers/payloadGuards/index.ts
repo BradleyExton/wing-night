@@ -9,6 +9,7 @@ import {
   isValidMusicVolume,
   isMinigameDeviceMode,
   isPositiveInteger,
+  isSpectatorBetPick,
   type ConfigSavePayload,
   type GameSetRoundDeviceModePayload,
   type PlayerMinigameActionPayload,
@@ -26,6 +27,7 @@ import {
   type SetupCreateTeamPayload,
   type SetupReleasePlayerClaimPayload,
   type PlayerClaimPayload,
+  type PlayerPlaceBetPayload,
   type PlayerReleasePayload,
   type TimerExtendPayload
 } from "@wingnight/shared";
@@ -200,3 +202,8 @@ export const isPlayerClaimPayload = (payload: unknown): payload is PlayerClaimPa
 
 export const isPlayerReleasePayload = (payload: unknown): payload is PlayerReleasePayload =>
   hasShape(payload, { claimSecret: isString });
+
+// A watcher's bet names a side and nothing else: whose bet it is comes from the face the socket
+// holds, never from the payload.
+export const isPlayerPlaceBetPayload = (payload: unknown): payload is PlayerPlaceBetPayload =>
+  hasShape(payload, { pick: isSpectatorBetPick });

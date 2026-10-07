@@ -279,3 +279,43 @@ test("does recognise a live claim secret and a seated socket, and forget both wh
   assert.equal(store.isClaimSecret(secret), false);
   assert.equal(store.isSocketSeated("socket-a"), false);
 });
+
+test("does report every end of a claim when the phone lets go, a claim moves faces or the host frees it, and none when the phone only sleeps", () => {
+  const { store, claim } = createStore();
+  const ended: string[] = [];
+
+  store.onClaimEnded((playerId) => {
+    ended.push(playerId);
+  });
+
+  const secret = claimSecretOf(claim("player-1", "socket-a"));
+
+  store.disconnect("socket-a");
+  assert.equal(store.rebind(secret, "socket-a", null), "player-1");
+  assert.deepEqual(ended, []);
+
+  // Silent: the phone asked for another face, so its first goes back without an announcement.
+  claim("player-2", "socket-a");
+  // Silent: "this isn't me" from the holder itself.
+  store.releaseBySecret(claimSecretOf(claim("player-2", "socket-a")), "socket-a");
+  claim("player-3", "socket-b");
+  store.release("player-3", PLAYER_CLAIM_GONE_REASONS.RELEASED_BY_HOST);
+
+  assert.deepEqual(ended, ["player-1", "player-2", "player-3"]);
+});
+
+test("does give a face a new claim serial when someone claims it fresh and keep it when the phone comes back on its secret", () => {
+  const { store, claim } = createStore();
+  const secret = claimSecretOf(claim("player-1", "socket-a"));
+  const first = store.resolveClaimSerial("player-1");
+
+  store.disconnect("socket-a");
+  store.rebind(secret, "socket-b", null);
+  assert.equal(store.resolveClaimSerial("player-1"), first);
+
+  store.releaseBySecret(secret, "socket-b");
+  assert.equal(store.resolveClaimSerial("player-1"), null);
+
+  claim("player-1", "socket-c");
+  assert.notEqual(store.resolveClaimSerial("player-1"), first);
+});

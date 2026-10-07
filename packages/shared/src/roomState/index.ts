@@ -14,6 +14,7 @@ import type {
 } from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
 import type { ContestantTurn, RoundDeviceModes } from "../contestantTurn/index.js";
+import { projectSpectatorBets, type SpectatorBets, type SpectatorBetTally } from "../spectatorBets/index.js";
 import type { BrawlInput, BrawlOutcome } from "../brawl/types.js";
 import type {
   MountClimbRules,
@@ -932,6 +933,14 @@ export type RoomState = {
   // The arcade turn in hand — its locked device mode, whose leg it is and which device writes
   // it — from the turn's briefing to its results. Null outside one, and for every other game.
   contestantTurn: ContestantTurn | null;
+  // The watchers' side bet on the turn in hand (`SpectatorBets`): opened by the turn's briefing,
+  // closed by its play, settled on its results, gone once the results are left. Null outside a
+  // turn and on a turn whose game has no points cap. Every role sees it through
+  // `projectSpectatorBets`: no pick reaches any screen until the turn settles.
+  spectatorBets: SpectatorBets | null;
+  // Each bettor's side record for the night. A side game's tally: it never reaches `totalScore`
+  // or any team's points. FINAL_RESULTS names the best bettor from it.
+  betTallyByPlayerId: SpectatorBetTally;
 };
 
 type DisplaySafeRoomStateKeys =
@@ -964,7 +973,9 @@ type DisplaySafeRoomStateKeys =
   | "canAdvancePhase"
   | "claimedPlayerIds"
   | "roundDeviceModes"
-  | "contestantTurn";
+  | "contestantTurn"
+  | "spectatorBets"
+  | "betTallyByPlayerId";
 
 export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "phase",
@@ -996,7 +1007,9 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "canAdvancePhase",
   "claimedPlayerIds",
   "roundDeviceModes",
-  "contestantTurn"
+  "contestantTurn",
+  "spectatorBets",
+  "betTallyByPlayerId"
 ] as const satisfies readonly DisplaySafeRoomStateKeys[];
 
 type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
@@ -1011,6 +1024,8 @@ type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
 // `contestantTurn` is the one game field here: whose leg it is and which device
 // writes it, so a phone knows to play, to get ready, or to watch the TV. It is
 // ids, a leg number and a mode — nothing a turn could cheat with.
+// `spectatorBets` is the bet card's: the line, the window and how many are in — never who, and
+// never a pick until the turn settles. A phone's own pick comes over its own room.
 // Anything only one player may see goes over that player's own channel
 // (`player:self`, and the contestant's `player:minigameHostView`), never into
 // this shared snapshot.
@@ -1025,7 +1040,8 @@ export const PLAYER_SAFE_ROOM_STATE_KEYS = [
   "activeRoundTeamId",
   "activeTurnTeamId",
   "claimedPlayerIds",
-  "contestantTurn"
+  "contestantTurn",
+  "spectatorBets"
 ] as const satisfies readonly (keyof RoomState)[];
 
 type PlayerSafeRoomStateKey = (typeof PLAYER_SAFE_ROOM_STATE_KEYS)[number];
@@ -1092,7 +1108,10 @@ export const toDisplayRoomStateSnapshot = (
     claimedPlayerIds: roomState.claimedPlayerIds,
     // The TV's briefing says "grab your phone" or "grab the tablet" from these.
     roundDeviceModes: roomState.roundDeviceModes,
-    contestantTurn: roomState.contestantTurn
+    contestantTurn: roomState.contestantTurn,
+    // The count and the line while the window is open; the picks only once the turn settles.
+    spectatorBets: projectSpectatorBets(roomState.spectatorBets, { showBettors: false }),
+    betTallyByPlayerId: roomState.betTallyByPlayerId
   } satisfies DisplayRoomStateSnapshot;
 
   return displaySnapshot;
@@ -1115,7 +1134,8 @@ export const toPlayerRoomStateSnapshot = (
     activeRoundTeamId: roomState.activeRoundTeamId,
     activeTurnTeamId: roomState.activeTurnTeamId,
     claimedPlayerIds: roomState.claimedPlayerIds,
-    contestantTurn: roomState.contestantTurn
+    contestantTurn: roomState.contestantTurn,
+    spectatorBets: projectSpectatorBets(roomState.spectatorBets, { showBettors: false })
   } satisfies PlayerRoomStateSnapshot;
 
   return playerSnapshot;
@@ -1141,10 +1161,14 @@ export function toRoleScopedSnapshotEnvelope(
   clientRole: SocketClientRole,
   roomState: RoomState
 ): RoleScopedStateSnapshotEnvelope {
+  // The host sees everything but a pick before its turn settles: who has bet, not which way.
   if (clientRole === "HOST") {
     return {
       clientRole: "HOST",
-      roomState
+      roomState:
+        roomState.spectatorBets === null
+          ? roomState
+          : { ...roomState, spectatorBets: projectSpectatorBets(roomState.spectatorBets, { showBettors: true }) }
     };
   }
 

@@ -4,6 +4,7 @@ import { ControlDeck } from "../ControlDeck";
 import { DeviceModeSurface } from "../../DeviceModeSurface";
 import { selectDeviceModeRounds } from "../../DeviceModeSurface/selectDeviceModeRounds";
 import { StageHero } from "../StageHero";
+import { SpectatorBetCount } from "../../SpectatorBetCount";
 import { MusicControlsSurface } from "../../MusicControlsSurface";
 import { PlayersSurface } from "../../PlayersSurface";
 import { TimerControlsSurface } from "../../TimerControlsSurface";
@@ -79,6 +80,7 @@ export const EatingStage = (): JSX.Element => {
         <p className={styles.timerCap}>
           {hostControlPanelCopy.eatingParticipationDescription}
         </p>
+        <SpectatorBetCount spectatorBets={roomState?.spectatorBets ?? null} />
       </StageHero>
       <ControlDeck>
         <PlayersSurface

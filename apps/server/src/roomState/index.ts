@@ -55,6 +55,13 @@ export {
 export { startQuickPlay } from "./quickPlayMutations/index.js";
 
 export {
+  placeSpectatorBet,
+  readOwnSpectatorBet,
+  readSpectatorBetRefusal,
+  releaseSpectatorBet
+} from "./spectatorBetMutations/index.js";
+
+export {
   dispatchContestantMinigameAction,
   dispatchServerMinigameAction,
   readContestantActionRefusal,

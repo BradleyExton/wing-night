@@ -29,6 +29,7 @@ import { createDisplayReportHandlers } from "./utils/displayReports";
 import { createHostRequestHandlers } from "./utils/hostRequests";
 import { createContestantLegController, type ContestantLegController } from "./utils/contestantLeg";
 import { createPlayerSeatController, type PlayerSeatController } from "./utils/playerSeat";
+import { createSpectatorBetSlipController, type SpectatorBetSlipController } from "./utils/spectatorBetSlip";
 import {
   resolveClientRoute,
   resolveDevLabName,
@@ -56,7 +57,8 @@ const resolveRouteContent = (
   roomSocket: ReturnType<typeof createRoomSocket> | null,
   displayReports: ReturnType<typeof createDisplayReportHandlers> | null,
   playerSeat: PlayerSeatController | null,
-  contestantLeg: ContestantLegController | null
+  contestantLeg: ContestantLegController | null,
+  betSlip: SpectatorBetSlipController | null
 ): JSX.Element => {
   if (route === "HOST") {
     return <HostControlPanel />;
@@ -83,9 +85,10 @@ const resolveRouteContent = (
 
   // A guest's phone. Its seat (which face is this phone's) is its own, held
   // beside room state rather than in it, so it rides in as a prop — and so
-  // does its leg of an arcade relay, whose host view only this phone is sent.
+  // does its leg of an arcade relay, whose host view only this phone is sent,
+  // and its own side bet, whose pick only this phone is told.
   if (route === "PLAY") {
-    return <PlayerPhone seat={playerSeat} contestantLeg={contestantLeg} />;
+    return <PlayerPhone seat={playerSeat} contestantLeg={contestantLeg} betSlip={betSlip} />;
   }
 
   if (route === "ROOT") {
@@ -170,6 +173,20 @@ export const App = (): JSX.Element => {
     };
   }, [contestantLeg]);
 
+  const betSlip = useMemo(() => {
+    if (route !== "PLAY" || roomSocket === null) {
+      return null;
+    }
+
+    return createSpectatorBetSlipController(roomSocket);
+  }, [roomSocket, route]);
+
+  useEffect(() => {
+    return (): void => {
+      betSlip?.dispose();
+    };
+  }, [betSlip]);
+
   // The TV's player QR: only the laptop's display is ever handed the token.
   useEffect(() => {
     if (route !== "DISPLAY" || roomSocket === null) {
@@ -247,7 +264,8 @@ export const App = (): JSX.Element => {
             roomSocket,
             displayReports,
             playerSeat,
-            contestantLeg
+            contestantLeg,
+            betSlip
           )}
         </PlayerJoinTokenProvider>
       </HostHandlersProvider>

@@ -4,6 +4,7 @@ import { syncContestantTurn } from "../contestantTurnState/index.js";
 import { getRoomStateSnapshot } from "../getRoomStateSnapshot/index.js";
 import { reportRoomStateMutation } from "../mutationResult/index.js";
 import { isRoomInFatalState } from "../selectors/index.js";
+import { syncSpectatorBets } from "../spectatorBetState/index.js";
 import { getRoomState } from "../stateStore/index.js";
 
 type RoomMutationDefinition<TArgs extends unknown[]> = {
@@ -18,7 +19,8 @@ type RoomMutationDefinition<TArgs extends unknown[]> = {
 // A mutation that moved the room also re-derives the arcade turn's leg in hand
 // and its controller (`syncContestantTurn`), so whose leg it is and which
 // device writes it can never lag the change that moved it — a leg ending, a
-// phase advancing, an undo, a phone waking.
+// phase advancing, an undo, a phone waking. The turn's settled bets follow its score the same way
+// (`syncSpectatorBets`), so an undo on the results re-settles them in the same broadcast.
 export const defineRoomMutation = <TArgs extends unknown[]>(
   definition: RoomMutationDefinition<TArgs>
 ): ((...args: TArgs) => RoomState) => {
@@ -42,6 +44,7 @@ export const defineRoomMutation = <TArgs extends unknown[]>(
 
     if (definition.run(roomState, ...args)) {
       syncContestantTurn(roomState);
+      syncSpectatorBets(roomState);
       reportRoomStateMutation();
     }
 

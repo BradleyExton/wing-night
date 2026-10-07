@@ -4,6 +4,7 @@ import { ControlDeck } from "../ControlDeck";
 import { DeviceModeSurface } from "../../DeviceModeSurface";
 import { selectDeviceModeRounds } from "../../DeviceModeSurface/selectDeviceModeRounds";
 import { StageHero } from "../StageHero";
+import { SpectatorBetCount } from "../../SpectatorBetCount";
 import { MinigameSurface } from "../../MinigameSurface";
 import { MusicControlsSurface } from "../../MusicControlsSurface";
 import { hostControlPanelCopy } from "../../copy";
@@ -55,6 +56,7 @@ export const MinigameIntroStage = (): JSX.Element => {
               })
             : hostControlPanelCopy.headerWaitingDescription}
         </p>
+        <SpectatorBetCount spectatorBets={roomState?.spectatorBets ?? null} />
       </StageHero>
       <ControlDeck>
         {/* The intro deck is a panel in the host's own control deck, not a

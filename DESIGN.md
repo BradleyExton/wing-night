@@ -646,6 +646,34 @@ treatment GEO's own reveal had already refused) and GEO's stat tiles.
 The per-game sections below (§2.4–§2.13) describe what each card SAYS; where
 they describe how a result card looks, this section supersedes them.
 
+### 2.2F Spectator bets (readout, settlement band, best bettor)
+
+The watchers' side bet (SPEC.md "Spectator bets") on the TV. Mockup:
+`apps/client/public/mockups/spectator-bets/`. Three places and no others:
+
+-   **The readout** — the briefing (`MINIGAME_INTRO`, the last beat under "playing" and the
+    handset line) and the wings (`EATING`, under the clock's label, never competing with the
+    clock). "OVER / UNDER 7.5 · 3 bets in", in the Neon Heat Line's readout type (§2.2D:
+    `mutedWarm` caps, clamp-sized) with the line as a `readoutFigure` in white. Neither screen
+    wears the marquee, so the readout is the marquee's type, not its container. A count, never a
+    pick and never a name. It shows only while the window is open AND a phone off the playing
+    team is in (or a bet already is): a night without phones keeps the briefing as it was.
+-   **Nothing during play.** A standing over a turn in progress is what
+    docs/minigame-design-principles.md §3 rules out.
+-   **The settlement band** — the turn's results, under the progress dots, on the body's last
+    beat: three cells on dark glass (`surface` → `bg`, hairline top) — LINE, SCORED, IT WENT — the
+    figures in the `readoutFigure` face at the band's size, the side in `primary` caps (the
+    reveal, not points won, so never `gold`). Under it, in the show's voice: "Called it:" and the
+    names in white, or "Nobody called it." Shown only when somebody bet.
+-   **The best bettor** — FINAL_RESULTS, one line under the result: "BEST BETTOR <name> · 5 of 6
+    called", label caps in `mutedWarm`, the name in white. Not gold: gold is the champion's.
+-   **The phone** (mockups/spectator-bets frames 1–4) is the player phone's warm glass: the line
+    as a big figure, ONE choice as two big buttons (the pick lit `primary`, the other glass),
+    "Bet locked" with the TV hint once play starts, and "✓ Called it" (`success`) or "✗ Not this
+    time" on the results. On its side the line and buttons shrink so both stay on screen.
+-   **The tablet** gets a pill under the stage hero's line on the briefing and the wings:
+    "SIDE BETS O/U 7.5 · 3 IN". Nothing to press.
+
 ## 2.2B Setup Lobby ("Hearth")
 
 The SETUP stage is the screen the room looks at longest, so it is the one display surface that

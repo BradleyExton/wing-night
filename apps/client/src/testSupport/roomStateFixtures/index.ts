@@ -93,6 +93,8 @@ export const buildRoomState = (
     connectedPlayerIds: [],
     roundDeviceModes: {},
     contestantTurn: null,
+    spectatorBets: null,
+    betTallyByPlayerId: {},
     ...overrides
   };
 };

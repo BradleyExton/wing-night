@@ -398,6 +398,24 @@ minigame packages ship. Neither lab may create a package under `packages/minigam
 
 ---
 
+## Spectator bets — follow-ups
+
+Shipped: the watchers' OVER/UNDER on each turn (SPEC.md "Spectator bets", DESIGN.md §2.2F).
+Notes from the build, none of them blocking:
+
+- **Table-tune the line.** `floor(max / 2) + 0.5` is one rule for every game, but the games do not
+  score evenly (the 2026-10-03 point audit): TRIVIA rarely clears half its cap and an arcade relay
+  often does. If one side wins most nights, the fix is a per-game line in the game's definition —
+  still one visible number per turn — not a hidden modifier.
+- **A bettor's own record on the phone.** `betTallyByPlayerId` is on the TV's snapshot only. A
+  phone could be told its own record over its `player:<id>` room, the way its pick is.
+- **Sudden death.** A tie at FINAL_RESULTS is decided by sudden death trivia off the system; the
+  best bettor is named regardless. If sudden death ever becomes a turn, it gets a window like any
+  other.
+- **The briefing and the wings have no marquee**, so the readout borrows the Neon Heat Line's
+  readout type rather than sitting in its slot (DESIGN.md §2.2F). If those screens ever wear the
+  marquee, the readout moves into its `readout` slot as plain text.
+
 ## Team identity (genre theming)
 
 Spec: `docs/team-identity.md`. Teams are told apart by a hashed colour and a name; the genre only

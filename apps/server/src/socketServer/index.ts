@@ -1,9 +1,11 @@
 import type { Server as HttpServer } from "node:http";
+import { isDeepStrictEqual } from "node:util";
 import { Server } from "socket.io";
 import {
   CLIENT_ROLES,
   CLIENT_TO_SERVER_EVENTS,
   SERVER_TO_CLIENT_EVENTS,
+  SPECTATOR_BET_REFUSAL_REASONS,
   readPlayerHandshake,
   toRoleScopedSnapshotEnvelope,
   type ClientToServerEvents,
@@ -21,8 +23,12 @@ import {
   dispatchServerMinigameAction,
   getRoomPlayers,
   getRoomStateSnapshot,
+  placeSpectatorBet,
   readContestantActionRefusal,
   readMinigameDeadline,
+  readOwnSpectatorBet,
+  readSpectatorBetRefusal,
+  releaseSpectatorBet,
   syncPlayerClaimFlags
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
@@ -128,8 +134,21 @@ export const attachSocketServer = (
 
   const emitRoleScopedSnapshotToRoom = (
     clientRole: SocketClientRole,
-    roomState: RoomState
+    roomState: RoomState,
+    previousRoomState: RoomState | null = null
   ): void => {
+    // A role whose view did not move is not sent the same snapshot again (a watcher flipping a
+    // pick changes no view: the pick is hidden from every role until the turn settles).
+    if (
+      previousRoomState !== null &&
+      isDeepStrictEqual(
+        toRoleScopedSnapshotEnvelope(clientRole, previousRoomState),
+        toRoleScopedSnapshotEnvelope(clientRole, roomState)
+      )
+    ) {
+      return;
+    }
+
     socketServer
       .to(ROOM_BY_CLIENT_ROLE[clientRole])
       .emit(
@@ -153,14 +172,35 @@ export const attachSocketServer = (
       .emit(SERVER_TO_CLIENT_EVENTS.PLAYER_MINIGAME_HOST_VIEW, delivery.payload);
   };
 
+  // Which claim of a face placed its pick (`PlayerClaim.serial`). The pick belongs to that holder:
+  // a phone back on its own secret is handed it again, the next guest to sit in the face never is.
+  const betClaimSerialByPlayerId = new Map<string, number>();
+
+  // A watcher's own pick, which no snapshot carries before the turn settles: to their room alone.
+  const emitOwnSpectatorBet = (playerId: string): void => {
+    const own = readOwnSpectatorBet(playerId);
+
+    if (own === null) {
+      return;
+    }
+
+    const isSameHolder =
+      own.pick !== null && betClaimSerialByPlayerId.get(playerId) === playerClaimStore.resolveClaimSerial(playerId);
+
+    socketServer
+      .to(resolvePlayerRoom(playerId))
+      .emit(SERVER_TO_CLIENT_EVENTS.PLAYER_SPECTATOR_BET, isSameHolder ? own : { ...own, pick: null });
+  };
+
   // Forward-declared: the deadline's action is itself a broadcast, so the scheduler and the
   // broadcast each need the other.
   let reconcileDeadline = (): void => {};
 
-  const broadcastSnapshot = (roomState: RoomState): void => {
-    emitRoleScopedSnapshotToRoom(CLIENT_ROLES.HOST, roomState);
-    emitRoleScopedSnapshotToRoom(CLIENT_ROLES.DISPLAY, roomState);
-    emitRoleScopedSnapshotToRoom(CLIENT_ROLES.PLAYER, roomState);
+  // `previousRoomState`, when given, skips each role whose view did not change.
+  const broadcastSnapshot = (roomState: RoomState, previousRoomState: RoomState | null = null): void => {
+    emitRoleScopedSnapshotToRoom(CLIENT_ROLES.HOST, roomState, previousRoomState);
+    emitRoleScopedSnapshotToRoom(CLIENT_ROLES.DISPLAY, roomState, previousRoomState);
+    emitRoleScopedSnapshotToRoom(CLIENT_ROLES.PLAYER, roomState, previousRoomState);
     emitContestantHostView(roomState);
     reconcileDeadline();
 
@@ -179,8 +219,22 @@ export const attachSocketServer = (
     broadcastSnapshot(mutationResult.roomState);
   };
 
+  // The same, sent only to the roles whose view moved: for a mutation that often moves nobody's.
+  const broadcastChangedViewsAfter = (runMutation: () => RoomState): void => {
+    const previousRoomState = getRoomStateSnapshot();
+    const mutationResult = applyRoomStateMutation(runMutation);
+
+    if (!mutationResult.didMutate) {
+      return;
+    }
+
+    broadcastSnapshot(mutationResult.roomState, previousRoomState);
+  };
+
   // Every contestant's game-input bucket, by face: it outlives the socket that spent it.
   const minigameActionBuckets = new Map<string, TokenBucket>();
+  // Every watcher's bet bucket, by face, for the same reason: a reconnect is not a fresh burst.
+  const betBuckets = new Map<string, TokenBucket>();
 
   const claimFlagSync = createTrailingCoalescer(() => {
     broadcastAfter(syncPlayerClaimFlags);
@@ -237,7 +291,18 @@ export const attachSocketServer = (
     }
   });
 
+  // A face's claim ended — let go, freed, moved, pruned: its holder's open-window pick goes with
+  // them. After the mutation that ended it, never inside it (a host free and a reset end claims
+  // mid-mutation), so the drop is its own mutation on the next microtask.
+  const unsubscribeClaimEnded = playerClaimStore.onClaimEnded((playerId) => {
+    betClaimSerialByPlayerId.delete(playerId);
+    queueMicrotask(() => {
+      broadcastAfter(() => releaseSpectatorBet(playerId));
+    });
+  });
+
   httpServer.once("close", () => {
+    unsubscribeClaimEnded();
     unsubscribeClaimReleased();
     unsubscribeJoinTokenRotated();
     claimFlagSync.cancel();
@@ -316,9 +381,34 @@ export const attachSocketServer = (
 
           return { ok: true };
         },
+        placeBet: (playerId, pick) => {
+          const refusal = readSpectatorBetRefusal(playerId);
+
+          if (refusal !== null) {
+            return { ok: false, reason: refusal };
+          }
+
+          broadcastChangedViewsAfter(() => placeSpectatorBet(playerId, pick));
+
+          const claimSerial = playerClaimStore.resolveClaimSerial(playerId);
+
+          if (claimSerial !== null) {
+            betClaimSerialByPlayerId.set(playerId, claimSerial);
+          }
+
+          emitOwnSpectatorBet(playerId);
+
+          const own = readOwnSpectatorBet(playerId);
+
+          return own === null || own.pick === null
+            ? { ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.CLOSED }
+            : { ok: true, turnKey: own.turnKey, pick: own.pick };
+        },
+        emitOwnSpectatorBet,
         syncClaimFlags: claimFlagSync.schedule,
         syncClaimFlagsNow: claimFlagSync.flush,
-        minigameActionBuckets
+        minigameActionBuckets,
+        betBuckets
       });
     }
   });

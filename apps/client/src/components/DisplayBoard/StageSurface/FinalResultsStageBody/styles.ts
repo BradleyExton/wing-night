@@ -12,6 +12,7 @@ export const beatDelay1 = "[animation-delay:100ms]";
 export const beatDelay2 = "[animation-delay:700ms]";
 export const beatDelay3 = "[animation-delay:1500ms]";
 export const beatDelay4 = "[animation-delay:2400ms]";
+export const beatDelay5 = "[animation-delay:3200ms]";
 
 export const gameOver =
   "text-[clamp(1rem,1.4vw,1.6rem)] font-extrabold uppercase tracking-[0.42em] text-muted";
@@ -54,6 +55,13 @@ export const score =
 
 export const scoreNum =
   "font-score text-[clamp(2.5rem,6vw,7rem)] font-black tabular-nums leading-none tracking-[-0.05em] text-text";
+
+// The best bettor's one line: the deck's label caps, the name in white. Not gold — gold is the
+// champion's, and this is a side game's title.
+export const bestBettor =
+  "m-0 text-[clamp(0.9rem,1.25vw,1.4rem)] font-extrabold uppercase tracking-[0.2em] text-mutedWarm";
+
+export const bestBettorName = "text-text";
 
 export const scoreUnit =
   "text-[clamp(1.1rem,1.8vw,2.2rem)] font-extrabold uppercase tracking-[0.16em] text-muted";

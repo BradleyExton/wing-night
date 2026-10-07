@@ -140,6 +140,17 @@ already holding a face survive a new code), and refuses anything else with the c
   `avatarSrc` both compared). A new player-rewrite site must prune too.
 - **A phone is not a host.** Nothing a PLAYER socket can send may advance a phase or move a
   turn cursor. The one exception that touches a score is §3.5, and it stays alone.
+- **The side bet.** `player:placeBet { pick }` (the claims' bucket size, on a bucket of its own
+  per face that outlives the socket) writes the bettor's OVER or UNDER into `RoomState.spectatorBets` and nothing else —
+  the bets are settled FROM the turn's pending points and written only to the side tally
+  `betTallyByPlayerId`. The face the socket holds is the bettor; the room refuses the playing
+  team and a closed window. No pick reaches any snapshot before the turn settles
+  (`projectSpectatorBets`: the TV and phones get the count, the host who has bet); a phone's own
+  pick goes over its `player:<id>` room as `player:spectatorBet`. A pick is its holder's, not
+  the face's: a claim ending by any path (`onClaimEnded`; a phone asleep keeps its claim) drops
+  an open-window pick, and the pick is only ever replayed to the same claim (`PlayerClaim
+  .serial`), never to the next guest who sits in the face. A flip that moves no role's view
+  broadcasts no snapshot.
 
 ## 3.5 The Contestant's Phone (Arcade Turns)
 

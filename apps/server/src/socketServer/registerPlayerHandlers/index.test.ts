@@ -8,6 +8,7 @@ import {
   PLAYER_CLAIM_REFUSAL_REASONS,
   PLAYER_MINIGAME_ACTION_REFUSAL_REASONS,
   SERVER_TO_CLIENT_EVENTS,
+  SPECTATOR_BET_REFUSAL_REASONS,
   type PlayerHandshake,
   type PlayerMinigameActionPayload,
   type PlayerMinigameActionResult
@@ -35,7 +36,8 @@ const createPhone = (
   store: ReturnType<typeof createPlayerClaimStore>,
   handshake: PlayerHandshake = { joinToken: "join-token", claimSecret: null },
   clock: { now: number } = { now: 0 },
-  buckets?: Map<string, TokenBucket>
+  buckets?: Map<string, TokenBucket>,
+  betBuckets?: Map<string, TokenBucket>
 ) => {
   const listeners = new Map<string, Listener>();
   const rooms = new Set<string>();
@@ -43,6 +45,8 @@ const createPhone = (
   const selfEvents: string[] = [];
   const hostViewRequests: string[] = [];
   const dispatched: [string, PlayerMinigameActionPayload][] = [];
+  const bets: [string, string][] = [];
+  const ownBetRequests: string[] = [];
   let syncCount = 0;
   let syncNowCount = 0;
 
@@ -77,13 +81,21 @@ const createPhone = (
         dispatched.push([playerId, action]);
         return { ok: true };
       },
+      placeBet: (playerId, pick) => {
+        bets.push([playerId, pick]);
+        return { ok: true, turnKey: "1:0", pick };
+      },
+      emitOwnSpectatorBet: (playerId) => {
+        ownBetRequests.push(playerId);
+      },
       syncClaimFlags: () => {
         syncCount += 1;
       },
       syncClaimFlagsNow: () => {
         syncNowCount += 1;
       },
-      ...(buckets === undefined ? {} : { minigameActionBuckets: buckets })
+      ...(buckets === undefined ? {} : { minigameActionBuckets: buckets }),
+      ...(betBuckets === undefined ? {} : { betBuckets })
     }
   );
 
@@ -105,6 +117,8 @@ const createPhone = (
     selfEvents,
     hostViewRequests,
     dispatched,
+    bets,
+    ownBetRequests,
     get syncCount(): number {
       return syncCount;
     },
@@ -114,6 +128,7 @@ const createPhone = (
     claim: (payload: unknown) => call(CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM, payload),
     release: (payload: unknown) => call(CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE, payload),
     act: (payload: unknown) => call(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION, payload),
+    bet: (payload: unknown) => call(CLIENT_TO_SERVER_EVENTS.PLAYER_PLACE_BET, payload),
     actWithoutAck: (payload: unknown) => listeners.get(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION)?.(payload),
     requestState: () => listeners.get(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE)?.(),
     disconnect: () => listeners.get("disconnect")?.()
@@ -380,5 +395,81 @@ test("does keep spending the same game-input bucket when the face comes back on 
   assert.deepEqual(after.act(FLAP), {
     ok: false,
     reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.RATE_LIMITED
+  });
+});
+
+test("does refuse a bet when the socket holds no face or the bet names no side", () => {
+  const store = createStore();
+  const phone = createPhone("socket-a", store);
+
+  assert.deepEqual(phone.bet({ pick: "over" }), {
+    ok: false,
+    reason: SPECTATOR_BET_REFUSAL_REASONS.NOT_SEATED
+  });
+
+  phone.claim({ playerId: "player-1" });
+
+  assert.deepEqual(phone.bet({ pick: "sideways" }), {
+    ok: false,
+    reason: SPECTATOR_BET_REFUSAL_REASONS.MALFORMED
+  });
+  assert.deepEqual(phone.bet({ pick: "under", playerId: "player-2" }), { ok: true, turnKey: "1:0", pick: "under" });
+  // The face the socket holds is the bettor, whatever the payload names.
+  assert.deepEqual(phone.bets, [["player-1", "under"]]);
+});
+
+test("does rate-limit bets like claims when a phone flips faster than a thumb, on a bucket of their own", () => {
+  const store = createStore();
+  const clock = { now: 0 };
+  const phone = createPhone("socket-a", store, { joinToken: "join-token", claimSecret: null }, clock);
+
+  phone.claim({ playerId: "player-1" });
+
+  for (let index = 0; index < PLAYER_ACTION_BURST; index += 1) {
+    assert.equal((phone.bet({ pick: index % 2 === 0 ? "over" : "under" }) as { ok: boolean }).ok, true);
+  }
+
+  assert.deepEqual(phone.bet({ pick: "over" }), {
+    ok: false,
+    reason: SPECTATOR_BET_REFUSAL_REASONS.RATE_LIMITED
+  });
+  // Flipping a bet never cost the phone its claim bucket.
+  assert.equal((phone.claim({ playerId: "player-2" }) as { ok: boolean }).ok, true);
+});
+
+test("does hand a seated phone its own bet back when it takes its seat or asks for the room", () => {
+  const store = createStore();
+  const phone = createPhone("socket-a", store);
+
+  phone.requestState();
+  assert.deepEqual(phone.ownBetRequests, []);
+
+  phone.claim({ playerId: "player-1" });
+  phone.requestState();
+
+  assert.deepEqual(phone.ownBetRequests, ["player-1", "player-1"]);
+});
+
+test("does keep spending the same bet bucket when the face comes back on a new socket", () => {
+  const store = createStore();
+  const clock = { now: 0 };
+  const betBuckets = new Map<string, TokenBucket>();
+  const before = createPhone("socket-a", store, { joinToken: "join-token", claimSecret: null }, clock, undefined, betBuckets);
+  const { claimSecret } = before.claim({ playerId: "player-1" }) as { claimSecret: string };
+
+  for (let index = 0; index < PLAYER_ACTION_BURST; index += 1) {
+    assert.equal((before.bet({ pick: index % 2 === 0 ? "over" : "under" }) as { ok: boolean }).ok, true);
+  }
+
+  assert.deepEqual(before.bet({ pick: "over" }), { ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.RATE_LIMITED });
+
+  before.disconnect();
+
+  // Same instant, same face, a fresh socket re-bound on the claim secret: no fresh burst.
+  const after = createPhone("socket-b", store, { joinToken: "join-token", claimSecret }, clock, undefined, betBuckets);
+
+  assert.deepEqual(after.bet({ pick: "under" }), {
+    ok: false,
+    reason: SPECTATOR_BET_REFUSAL_REASONS.RATE_LIMITED
   });
 });

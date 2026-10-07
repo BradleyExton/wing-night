@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spectator Bets — Mockup</title>
+    <!--
+      The watchers' side bet (SPEC.md "Spectator bets"): before each team's turn, every guest whose
+      phone holds a face and who is NOT on the team about to play calls OVER or UNDER on the turn's
+      score line. A side game: it never touches a team's score.
+
+        1. The bet card (390x844), window open — the briefing and the wings. ONE choice: the line,
+           two big buttons. Nothing picked yet.
+        2. The same card with UNDER picked: the pick is lit primary, the other stays glass and can
+           still be tapped until play starts.
+        3. Play has started: "Bet locked — watch the TV". The phone never shows the game.
+        4. The turn's results: "You called it" (or "Not this time"), with the score and the line.
+        5. TV, MINIGAME_INTRO (1920x1080, scaled): the line rides the briefing's foot in the
+           marquee's readout type — "OVER / UNDER 7.5 · 3 bets in". The count, never a pick and
+           never who. EATING carries the same readout at the top centre of its meta row.
+        6. TV, TURN_RESULTS: the settlement band under the struck team — the line, the turn's
+           score, the side it fell, and who called it.
+        7. TV, FINAL_RESULTS: one line under the champion naming the best bettor.
+
+      Nothing about bets on the TV during MINIGAME_PLAY (a standing over a turn in progress is
+      what docs/minigame-design-principles.md §3 rules out). The phone language is the player
+      phone's (mockups/player-phone): warm glass, one accent. The TV readout is the Neon Heat
+      Line's readout type (DESIGN.md §2.2D): mutedWarm caps, with the line as a `readoutFigure`.
+    -->
+    <style>
+      :root {
+        --bg: #121212; --surface: #1c1c1c; --text: #ffffff; --muted: #a3a3a3;
+        --mutedWarm: #b3a89a; --mutedWarmDim: #6b6157; --ember: #ffb35a; --glow: #ffd6aa;
+        --hearthGlass: #2e1609; --shade: #000; --primary: #f97316; --heat: #ef4444;
+        --gold: #fbbf24; --success: #22c55e; --teamB: #06b6d4;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: #0b0b0b; color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        display: flex; gap: 32px; padding: 32px; align-items: flex-start; flex-wrap: wrap;
+      }
+      .label { width: 100%; margin: 12px 0 -18px; font-size: 12px; font-weight: 700; color: var(--mutedWarm); letter-spacing: .2em; text-transform: uppercase; }
+      .phone {
+        width: 390px; height: 844px; border-radius: 28px; overflow: hidden; position: relative;
+        background: radial-gradient(ellipse at 50% 115%, var(--hearthGlass) 0%, var(--bg) 58%);
+        padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 14px;
+      }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .wordmark { font-weight: 900; text-transform: uppercase; font-size: 22px; text-shadow: 0 0 18px rgba(249,115,22,.35); }
+      .count { font-family: "Barlow Condensed", sans-serif; font-weight: 800; color: var(--mutedWarm); }
+      .eyebrow { margin: 0; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .36em; color: var(--mutedWarm); }
+      .voice { margin: 0; font-family: "Playfair Display", Georgia, serif; font-style: italic; color: var(--mutedWarm); line-height: 1.4; }
+      .fine { margin: 0; font-size: 13px; color: var(--mutedWarmDim); line-height: 1.4; text-align: center; }
+      .card {
+        position: relative; border-radius: 16px; padding: 16px;
+        border: 1px solid rgba(249,115,22,.25);
+        background: linear-gradient(180deg, rgba(46,22,9,.84), rgba(0,0,0,.93));
+        box-shadow: inset 0 1px 0 rgba(255,214,170,.14);
+        display: flex; flex-direction: column; gap: 12px;
+      }
+      .card.hot { border-color: var(--primary); box-shadow: inset 0 1px 0 rgba(255,214,170,.14), 0 0 40px -10px rgba(249,115,22,.6); }
+      .big { margin: 0; font-size: 40px; font-weight: 900; text-transform: uppercase; line-height: .95; text-shadow: 0 0 18px rgba(249,115,22,.45); }
+      .line { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; }
+      .line b { font-family: "Barlow Condensed", sans-serif; font-weight: 900; font-size: 96px; line-height: .9; }
+      .line span { font-size: 12px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; color: var(--mutedWarm); }
+      .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .choice {
+        min-height: 112px; border-radius: 16px; border: 1px solid rgba(255,179,90,.35); background: rgba(28,28,28,.6);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+        font-weight: 900; font-size: 26px; letter-spacing: .1em; text-transform: uppercase;
+      }
+      .choice i { font-style: normal; font-size: 22px; color: var(--primary); }
+      .choice.on { background: var(--primary); color: var(--bg); border-color: var(--primary); box-shadow: inset 0 -4px 0 rgba(0,0,0,.28), 0 10px 24px -14px rgba(249,115,22,.7); }
+      .choice.on i { color: var(--bg); }
+      .tv { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; border: 1px dashed rgba(255,179,90,.3); }
+      .tv .screen { width: 44px; height: 30px; border-radius: 4px; border: 2px solid var(--mutedWarm); flex: none; }
+      .stamp { display: inline-flex; align-items: center; gap: 8px; font-weight: 900; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--success); }
+      /* TV frames, at half of 1920x1080 */
+      .screen16 { width: 960px; height: 540px; border-radius: 12px; overflow: hidden; position: relative; background: radial-gradient(ellipse at 20% 30%, rgba(249,115,22,.12), transparent 45%), var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
+      .tv-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .32em; text-transform: uppercase; color: var(--muted); }
+      .tv-team { font-size: 64px; font-weight: 900; text-transform: uppercase; color: var(--primary); line-height: .9; }
+      .tv-post { font-size: 14px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+      .tv-post span { color: var(--muted); margin-right: .6em; }
+      .readout { display: inline-flex; align-items: baseline; gap: 12px; font-size: 10px; font-weight: 800; letter-spacing: .24em; text-transform: uppercase; color: var(--mutedWarm); }
+      .readout b { font-family: "Barlow Condensed", sans-serif; font-size: 22px; letter-spacing: 0; color: var(--text); }
+      .struck { font-size: 64px; font-weight: 900; text-transform: uppercase; color: rgba(255,255,255,.55); text-decoration: line-through; text-decoration-color: var(--primary); line-height: .9; }
+      .band { display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 22px; padding: 12px 22px; border-radius: 14px; border-top: 1px solid rgba(255,255,255,.08); background: linear-gradient(180deg, rgba(28,28,28,.9), rgba(18,18,18,.95)); }
+      .band .cell { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+      .band .k { font-size: 9px; font-weight: 800; letter-spacing: .28em; text-transform: uppercase; color: var(--mutedWarm); }
+      .band .v { font-family: "Barlow Condensed", sans-serif; font-size: 34px; font-weight: 900; line-height: 1; }
+      .band .side { font-size: 26px; font-weight: 900; letter-spacing: .1em; color: var(--primary); }
+      .callers { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 18px; color: var(--mutedWarm); }
+      .callers b { font-family: ui-sans-serif, system-ui; font-style: normal; color: var(--text); }
+      .champ { font-size: 80px; font-weight: 900; text-transform: uppercase; color: var(--gold); line-height: .85; text-shadow: 0 0 50px rgba(251,191,36,.5); }
+      .best { font-size: 12px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--mutedWarm); }
+      .best b { color: var(--text); }
+    </style>
+  </head>
+  <body>
+    <p class="label">1–4 · The bet card (390×844)</p>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span><span class="count">9 of 14 in</span></div>
+      <div class="card hot">
+        <p class="eyebrow">Side bet · Spice Girls are up</p>
+        <div class="line"><b>7.5</b><span>points</span></div>
+        <p class="voice">Over or under? Change your mind till the game starts.</p>
+        <div class="choices"><span class="choice"><i>▲</i>Over</span><span class="choice"><i>▼</i>Under</span></div>
+      </div>
+      <p class="fine">Just for bragging rights. It never touches the team scores.</p>
+    </section>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span><span class="count">9 of 14 in</span></div>
+      <div class="card hot">
+        <p class="eyebrow">Side bet · Spice Girls are up</p>
+        <div class="line"><b>7.5</b><span>points</span></div>
+        <p class="voice">You've got them under. Change your mind till the game starts.</p>
+        <div class="choices"><span class="choice"><i>▲</i>Over</span><span class="choice on"><i>▼</i>Under</span></div>
+      </div>
+      <p class="fine">Just for bragging rights. It never touches the team scores.</p>
+    </section>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <div class="card">
+        <p class="eyebrow">Side bet · Spice Girls</p>
+        <p class="big">Bet locked</p>
+        <p class="voice">Under 7.5. Watch the TV.</p>
+      </div>
+      <div class="tv"><span class="screen"></span><p class="voice">It all happens up there.</p></div>
+    </section>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <div class="card hot">
+        <p class="eyebrow">Side bet · Spice Girls</p>
+        <span class="stamp">✓ Called it</span>
+        <p class="big">Under</p>
+        <p class="voice">They scored 5 on a 7.5 line.</p>
+      </div>
+    </section>
+
+    <p class="label">5 · TV briefing (1920×1080, at half) — the line in the readout type</p>
+    <section class="screen16">
+      <span class="tv-eyebrow">on the wings · pop</span>
+      <span class="tv-team">Spice Girls</span>
+      <span class="tv-post"><span>playing</span>Trivia</span>
+      <span class="readout">Over / under <b>7.5</b> · 3 bets in</span>
+    </section>
+
+    <p class="label">6 · TV turn results — the settlement band</p>
+    <section class="screen16">
+      <span class="tv-eyebrow">✓ Turn complete</span>
+      <span class="struck">Spice Girls</span>
+      <div class="band">
+        <span class="cell"><span class="k">Line</span><span class="v">7.5</span></span>
+        <span class="cell"><span class="k">Scored</span><span class="v">5</span></span>
+        <span class="cell"><span class="k">It went</span><span class="side">Under</span></span>
+      </div>
+      <span class="callers">Called it: <b>Rob, Dylan</b></span>
+      <span class="tv-eyebrow">→ Next: Honky Tonk Heat</span>
+    </section>
+
+    <p class="label">7 · TV final results — the best bettor, one line</p>
+    <section class="screen16">
+      <span class="tv-eyebrow">Game over</span>
+      <span class="champ">Molten Metal</span>
+      <span class="best">Best bettor <b>Rob</b> · 5 of 6 called</span>
+    </section>
+  </body>
+</html>

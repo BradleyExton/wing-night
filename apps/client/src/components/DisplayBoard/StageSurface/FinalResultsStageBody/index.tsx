@@ -3,6 +3,7 @@ import type { TeamTheme } from "@wingnight/shared";
 
 import { TeamAmbient } from "../../../TeamAmbient";
 import { TeamWordmark } from "../../../TeamWordmark";
+import type { BestBettorView } from "../resolveSpectatorBetView";
 import { finalResultsStageCopy } from "./copy";
 import * as styles from "./styles";
 
@@ -15,13 +16,17 @@ type FinalResultsStageBodyProps = {
   // own wordmark — a tied finale names its contenders rather than leaving the
   // stage empty. Empty for a sole winner.
   tiedTeams: { id: string; name: string; theme: TeamTheme | null }[];
+  // The night's best bettor, from the watchers' side tally; null when nobody won a bet. A side
+  // game's title: one line under the result, never a team's points.
+  bestBettor?: BestBettorView | null;
 };
 
 export const FinalResultsStageBody = ({
   winnerTeamNames,
   winnerScore,
   winnerTheme,
-  tiedTeams
+  tiedTeams,
+  bestBettor = null
 }: FinalResultsStageBodyProps): JSX.Element => {
   const isTie = winnerTeamNames.length > 1;
   const resolvedTeamName =
@@ -84,6 +89,13 @@ export const FinalResultsStageBody = ({
       {isTie && (
         <p className={`${styles.beatBase} ${styles.beatDelay4} ${styles.tieHint}`}>
           {finalResultsStageCopy.tieHintLabel}
+        </p>
+      )}
+      {bestBettor !== null && (
+        <p className={`${styles.beatBase} ${styles.beatDelay5} ${styles.bestBettor}`} data-best-bettor>
+          {finalResultsStageCopy.bestBettorLabel}{" "}
+          <span className={styles.bestBettorName}>{finalResultsStageCopy.bestBettorNames(bestBettor.names)}</span>{" "}
+          {finalResultsStageCopy.bestBettorRecord(bestBettor.won, bestBettor.played)}
         </p>
       )}
     </div>
