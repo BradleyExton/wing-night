@@ -4,11 +4,13 @@ import { Server } from "socket.io";
 import {
   CLIENT_ROLES,
   CLIENT_TO_SERVER_EVENTS,
+  PLAYER_MINIGAME_ACTION_REFUSAL_REASONS,
   SERVER_TO_CLIENT_EVENTS,
   SPECTATOR_BET_REFUSAL_REASONS,
   readPlayerHandshake,
   toRoleScopedSnapshotEnvelope,
   type ClientToServerEvents,
+  type MinigamePlayerView,
   type RoomState,
   type ServerToClientEvents,
   type SocketClientRole
@@ -20,18 +22,26 @@ import { createMinigameDeadlineScheduler } from "../minigames/deadlineScheduler/
 import {
   applyRoomStateMutation,
   dispatchContestantMinigameAction,
+  dispatchPlayerAnswerAction,
   dispatchServerMinigameAction,
   getRoomPlayers,
   getRoomStateSnapshot,
+  isAnswerHolder,
+  isPlayerAnswerAction,
   placeSpectatorBet,
+  readAnsweringPlayerIds,
   readContestantActionRefusal,
   readMinigameDeadline,
+  readMinigamePlayerView,
   readOwnSpectatorBet,
+  readPlayerAnswerRefusal,
   readSpectatorBetRefusal,
+  releasePlayerAnswer,
   releaseSpectatorBet,
   syncPlayerClaimFlags
 } from "../roomState/index.js";
 import { isValidHostSecret, issueHostSecret } from "../hostAuth/index.js";
+import { logError } from "../logger/index.js";
 import { playerClaimStore } from "../playerClaims/index.js";
 import { isLoopbackAddress } from "../utils/loopbackPeer/index.js";
 import type { TokenBucket } from "../utils/tokenBucket/index.js";
@@ -192,6 +202,48 @@ export const attachSocketServer = (
       .emit(SERVER_TO_CLIENT_EVENTS.PLAYER_SPECTATOR_BET, isSameHolder ? own : { ...own, pick: null });
   };
 
+  // The answer card each playing-team phone was last sent, so a broadcast only re-sends a card
+  // that moved, and a phone whose card went away (the turn moved on) is told once with a null.
+  const lastPlayerViewByPlayerId = new Map<string, MinigamePlayerView | null>();
+
+  // An answer is replayed only to the claim that gave it (`isAnswerHolder`): the next guest who sits
+  // in the face gets a blank card.
+  const resolvePlayerView = (playerId: string): MinigamePlayerView | null => {
+    return readMinigamePlayerView(playerId, isAnswerHolder(playerId));
+  };
+
+  const sendPlayerView = (playerId: string, view: MinigamePlayerView | null): void => {
+    lastPlayerViewByPlayerId.set(playerId, view);
+    socketServer
+      .to(resolvePlayerRoom(playerId))
+      .emit(SERVER_TO_CLIENT_EVENTS.PLAYER_MINIGAME_PLAYER_VIEW, { minigamePlayerView: view });
+  };
+
+  // A playing-team phone's own answer card, to its own room alone, on every broadcast that moved
+  // it — and a null to a phone whose card went away. No shared snapshot ever carries one.
+  const emitPlayerViews = (): void => {
+    const answeringPlayerIds = new Set(readAnsweringPlayerIds());
+
+    for (const playerId of answeringPlayerIds) {
+      const view = resolvePlayerView(playerId);
+
+      if (!isDeepStrictEqual(lastPlayerViewByPlayerId.get(playerId) ?? null, view)) {
+        sendPlayerView(playerId, view);
+      }
+    }
+
+    for (const [playerId, view] of lastPlayerViewByPlayerId) {
+      if (!answeringPlayerIds.has(playerId) && view !== null) {
+        sendPlayerView(playerId, null);
+      }
+    }
+  };
+
+  // The phone taking its seat or asking for the room again gets its card whether or not it moved.
+  const emitOwnPlayerView = (playerId: string): void => {
+    sendPlayerView(playerId, resolvePlayerView(playerId));
+  };
+
   // Forward-declared: the deadline's action is itself a broadcast, so the scheduler and the
   // broadcast each need the other.
   let reconcileDeadline = (): void => {};
@@ -202,6 +254,7 @@ export const attachSocketServer = (
     emitRoleScopedSnapshotToRoom(CLIENT_ROLES.DISPLAY, roomState, previousRoomState);
     emitRoleScopedSnapshotToRoom(CLIENT_ROLES.PLAYER, roomState, previousRoomState);
     emitContestantHostView(roomState);
+    emitPlayerViews();
     reconcileDeadline();
 
     for (const listener of broadcastListeners) {
@@ -294,10 +347,18 @@ export const attachSocketServer = (
   // A face's claim ended — let go, freed, moved, pruned: its holder's open-window pick goes with
   // them. After the mutation that ended it, never inside it (a host free and a reset end claims
   // mid-mutation), so the drop is its own mutation on the next microtask.
+  // An open answer goes the same way (`releasePlayerAnswer`); one the host already locked stays.
   const unsubscribeClaimEnded = playerClaimStore.onClaimEnded((playerId) => {
     betClaimSerialByPlayerId.delete(playerId);
+    lastPlayerViewByPlayerId.delete(playerId);
     queueMicrotask(() => {
-      broadcastAfter(() => releaseSpectatorBet(playerId));
+      // Off the phone's own event, so nothing above it catches a fault: log it here instead.
+      try {
+        broadcastAfter(() => releaseSpectatorBet(playerId));
+        broadcastAfter(() => releasePlayerAnswer(playerId));
+      } catch (error) {
+        logError("server:claimEndedFailure", error);
+      }
     });
   });
 
@@ -363,6 +424,45 @@ export const attachSocketServer = (
           emitContestantHostView(getRoomStateSnapshot(), playerId);
         },
         dispatchMinigameAction: (playerId, action) => {
+          // A playing-team phone's answer (the game's player action types): its own road, never
+          // an undo point, and the phone's own card re-sent the moment it moves.
+          if (isPlayerAnswerAction(action.minigameId, action.actionType)) {
+            // The socket holds this face, but the room's claim flags are coalesced: a phone that
+            // claimed and answered inside one window would read as unseated. Publish them first.
+            if (!getRoomStateSnapshot().claimedPlayerIds.includes(playerId)) {
+              claimFlagSync.flush();
+            }
+
+            const answerRefusal = readPlayerAnswerRefusal(playerId, action.minigameId, action.actionType);
+
+            if (answerRefusal !== null) {
+              return { ok: false, reason: answerRefusal };
+            }
+
+            const previousRoomState = getRoomStateSnapshot();
+            const outcome = applyRoomStateMutation(() =>
+              dispatchPlayerAnswerAction(
+                playerId,
+                action.minigameId,
+                action.actionType,
+                // The game's reducer guards its own payloads, exactly as it does the tablet's.
+                action.actionPayload as SerializableValue
+              )
+            );
+
+            // The game did not take it (the question is locked, the answer is not one it offers, or
+            // it is the answer already in): nothing moved, and the phone is told so.
+            if (!outcome.didMutate) {
+              return { ok: false, reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.NOT_ACCEPTED };
+            }
+
+            // The mutation stamped this claim as the answer's holder, so this broadcast already
+            // hands the phone its own card with the answer on it.
+            broadcastSnapshot(outcome.roomState, previousRoomState);
+
+            return { ok: true };
+          }
+
           const refusal = readContestantActionRefusal(playerId, action.minigameId, action.actionType);
 
           if (refusal !== null) {
@@ -405,6 +505,7 @@ export const attachSocketServer = (
             : { ok: true, turnKey: own.turnKey, pick: own.pick };
         },
         emitOwnSpectatorBet,
+        emitOwnPlayerView,
         syncClaimFlags: claimFlagSync.schedule,
         syncClaimFlagsNow: claimFlagSync.flush,
         minigameActionBuckets,

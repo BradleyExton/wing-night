@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { ConfigContentSnapshot } from "@wingnight/shared";
+import { validateTriviaPrompt, type ConfigContentSnapshot, type TriviaPrompt } from "@wingnight/shared";
 
 import {
   nextDrawingPrompt,
@@ -9,6 +9,7 @@ import {
   selectDirtyEdits,
   setPlayerAvatarSrc,
   setPlayerTeam,
+  setTriviaAnswer,
   toConfigDraft,
   type ConfigDraft
 } from "./index";
@@ -253,4 +254,67 @@ test("blocks a draft where a team rename orphaned a player's starting team", () 
   });
 
   assert.equal(selectDraftIssues(draft).length, 1);
+});
+
+test("does rewrite the answer's own choice when the answer of a multiple-choice question is retyped", () => {
+  const next = setTriviaAnswer(
+    { id: "q1", question: "Hottest?", answer: "Reaper", choices: ["Jalapeño", "Reaper"] },
+    "Carolina Reaper"
+  );
+
+  assert.deepEqual(next, {
+    id: "q1",
+    question: "Hottest?",
+    answer: "Carolina Reaper",
+    choices: ["Jalapeño", "Carolina Reaper"]
+  });
+});
+
+test("does only change the answer when the question has no choices", () => {
+  assert.deepEqual(setTriviaAnswer({ id: "q1", question: "Q?", answer: "A" }, "B"), {
+    id: "q1",
+    question: "Q?",
+    answer: "B"
+  });
+});
+
+// Typing an answer one keystroke at a time, the way a host does in the wizard's input.
+const typeAnswer = (prompt: TriviaPrompt, finalAnswer: string): TriviaPrompt => {
+  let next = setTriviaAnswer(prompt, "");
+
+  for (let length = 1; length <= finalAnswer.length; length += 1) {
+    next = setTriviaAnswer(next, finalAnswer.slice(0, length));
+  }
+
+  return next;
+};
+
+test("does keep a multiple-choice question valid when the answer is retyped past another choice's text", () => {
+  const prompt: TriviaPrompt = {
+    id: "bell-pepper-shu",
+    question: "How many Scoville heat units does a bell pepper score?",
+    answer: "Zero",
+    choices: ["Zero", "About 100", "About 1,000"]
+  };
+
+  // "About 1000" passes through "About 100" on the way, which is another choice's exact text.
+  const next = typeAnswer(prompt, "About 1000");
+
+  assert.deepEqual(next.choices, ["About 1000", "About 100", "About 1,000"]);
+  assert.deepEqual(validateTriviaPrompt(next), []);
+});
+
+test("does leave the choices as they were when the answer is retyped to another choice and back", () => {
+  const prompt: TriviaPrompt = {
+    id: "scoville-name",
+    question: "What scale is used to measure pepper heat?",
+    answer: "Scoville scale",
+    choices: ["Richter scale", "Scoville scale", "Mohs scale", "Beaufort scale"]
+  };
+
+  const tried = setTriviaAnswer(prompt, "richter scale ");
+
+  // The rename would make two of one button: refused, and the answer now names that choice's text.
+  assert.deepEqual(tried.choices, prompt.choices);
+  assert.deepEqual(setTriviaAnswer(tried, "Scoville scale"), prompt);
 });

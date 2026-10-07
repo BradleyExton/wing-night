@@ -8,6 +8,7 @@ import {
   isStringArray,
   isValidMusicVolume,
   isMinigameDeviceMode,
+  isMinigameType,
   isPositiveInteger,
   isSpectatorBetPick,
   type ConfigSavePayload,
@@ -113,7 +114,7 @@ export const isPlayerMinigameActionPayload = (
   payload: unknown
 ): payload is PlayerMinigameActionPayload =>
   hasShape(payload, {
-    minigameId: isString,
+    minigameId: isMinigameType,
     minigameApiVersion: (value) => value === MINIGAME_API_VERSION,
     actionType: isString,
     actionPayload: isPresent
@@ -124,7 +125,7 @@ export const isMinigameActionEnvelope = (
 ): payload is MinigameActionPayload =>
   hasShape(payload, {
     hostSecret: isString,
-    minigameId: isString,
+    minigameId: isMinigameType,
     minigameApiVersion: (value) => value === MINIGAME_API_VERSION,
     actionType: isString,
     actionPayload: isPresent

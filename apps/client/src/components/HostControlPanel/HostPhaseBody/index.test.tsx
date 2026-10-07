@@ -88,7 +88,9 @@ test("renders minigame surface in minigame play mode", () => {
       id: "prompt-1",
       question: "Which scale measures pepper heat?",
       answer: "Scoville"
-    }
+    },
+    phoneAnswers: null,
+    reveal: null
   };
 
   const html = renderPhaseBody(

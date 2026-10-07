@@ -12,6 +12,9 @@ export const hostTriviaSurfaceCopy = {
   turnCompleteTitle: "Turn complete",
   turnCompleteHint:
     "That's the team's questions. Advance the phase when the room is ready.",
+  // The team's phones are choosing: lock them in (the spread goes up on the TV).
+  lockLabel: (answered: number, seated: number): string => `Lock answers · ${answered} of ${seated} in`,
+  nextQuestionLabel: "Next question",
   correctButtonLabel: "Correct",
   correctIconGlyph: "✓",
   incorrectButtonLabel: "Incorrect",

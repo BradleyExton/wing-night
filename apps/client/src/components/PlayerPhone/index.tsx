@@ -3,6 +3,7 @@ import type { Player, Team, TeamTheme } from "@wingnight/shared";
 
 import { usePlayerRoomState } from "../../context/RoomStateContext";
 import type { ContestantLegController } from "../../utils/contestantLeg";
+import type { PhoneAnswerCardController } from "../../utils/phoneAnswerCard";
 import type { PlayerSeatController, PlayerSeatState } from "../../utils/playerSeat";
 import type { SpectatorBetSlipController } from "../../utils/spectatorBetSlip";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
@@ -13,7 +14,9 @@ import { ContestantGame } from "./ContestantGame";
 import { ContestantTurnCard } from "./ContestantTurnCard";
 import { playerPhoneCopy } from "./copy";
 import { FacePicker } from "./FacePicker";
+import { PhoneAnswerCard } from "./PhoneAnswerCard";
 import { PlayerIdleCard } from "./PlayerIdleCard";
+import { resolvePhoneAnswer } from "./resolvePhoneAnswer";
 import { resolvePhoneBet } from "./resolvePhoneBet";
 import { resolvePhoneTurn, resolveTurnTeamId } from "./resolvePhoneTurn";
 import { ScanTheTvCard } from "./ScanTheTvCard";
@@ -21,6 +24,7 @@ import { SpectatorBetCard } from "./SpectatorBetCard";
 import * as styles from "./styles";
 import { useContestantHostView } from "./useContestantHostView";
 import { useOwnSpectatorBet } from "./useOwnSpectatorBet";
+import { usePhoneAnswerCard } from "./usePhoneAnswerCard";
 import { usePlayerSeat } from "./usePlayerSeat";
 
 type PlayerPhoneProps = {
@@ -31,6 +35,9 @@ type PlayerPhoneProps = {
   // The phone's own side bet on another team's turn: which button it pressed, which no snapshot
   // says before the turn settles, and the road a tap takes. Null without a socket.
   betSlip?: SpectatorBetSlipController | null;
+  // The phone's own answer card while its team's turn is played (a GEO pin, a TRIVIA choice): this
+  // phone's own answer, which no snapshot carries, and the road a tap takes. Null without a socket.
+  answerCard?: PhoneAnswerCardController | null;
 };
 
 type Seating = {
@@ -66,7 +73,12 @@ const EMPTY_TEAMS: Team[] = [];
 // snapshot carries. The phone never advances the night or touches a score —
 // the most it does is claim a face and let it go. No sound, ever: the TV is
 // the room's only speaker.
-export const PlayerPhone = ({ seat, contestantLeg, betSlip = null }: PlayerPhoneProps): JSX.Element => {
+export const PlayerPhone = ({
+  seat,
+  contestantLeg,
+  betSlip = null,
+  answerCard = null
+}: PlayerPhoneProps): JSX.Element => {
   const roomState = usePlayerRoomState();
   const seatState: PlayerSeatState = usePlayerSeat(seat);
   const serverOrigin = useServerOrigin();
@@ -87,6 +99,10 @@ export const PlayerPhone = ({ seat, contestantLeg, betSlip = null }: PlayerPhone
       : resolvePhoneTurn(roomState, seatedPlayer.id, previousContestantRef.current);
   const contestantHostView = useContestantHostView(contestantLeg, phoneTurn?.role === "play");
   const ownBet = useOwnSpectatorBet(betSlip);
+  const ownCard = usePhoneAnswerCard(answerCard);
+  // Every phone on the playing team answers the question in hand at once, when the game asks.
+  const phoneAnswer =
+    roomState === null || seatedPlayer === undefined ? null : resolvePhoneAnswer(roomState, seatedPlayer.id, ownCard);
   // Every phone off the playing team is a bet while another team takes its turn.
   const phoneBet =
     roomState === null || seatedPlayer === undefined ? null : resolvePhoneBet(roomState, seatedPlayer.id, ownBet);
@@ -136,6 +152,10 @@ export const PlayerPhone = ({ seat, contestantLeg, betSlip = null }: PlayerPhone
           onPlayHere={(playerId) => seat?.claim(playerId)}
         />
       );
+    }
+
+    if (seatedPlayer !== undefined && phoneAnswer !== null) {
+      return <PhoneAnswerCard card={phoneAnswer} onAnswer={(actionType, payload) => answerCard?.answer(actionType, payload)} />;
     }
 
     if (seatedPlayer !== undefined && phoneTurn !== null && phoneTurn.role !== "play") {

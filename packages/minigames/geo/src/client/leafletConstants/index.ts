@@ -46,3 +46,35 @@ export const GEO_MAP_VIEWS: GeoMapView[] = [
 ];
 
 export const GEO_MAP_VIEW_FLY_SECONDS = 0.7;
+
+// The chart's graticule: a faint lat/lng grid drawn under the pins on every GEO map, so a party
+// whose Wi-Fi cannot reach the tile server (or a headless test with no network) still has a chart
+// to aim at and tap rather than a blank ground. Every 30 degrees, like a school atlas.
+export const GRATICULE_COLOR = "#FFFFFF";
+
+// Bright enough to aim at on the bare ground when no tile arrives; faint enough under real tiles.
+export const GRATICULE_OPACITY = 0.24;
+
+export const GRATICULE_STEP_DEGREES = 30;
+
+const graticuleSteps = (from: number, to: number): number[] => {
+  const steps: number[] = [];
+
+  for (let value = from; value <= to; value += GRATICULE_STEP_DEGREES) {
+    steps.push(value);
+  }
+
+  return steps;
+};
+
+// Each line as a list of [lat, lng] points, for a non-interactive Polyline each.
+export const GRATICULE_LINES: [number, number][][] = [
+  ...graticuleSteps(-60, 60).map((lat): [number, number][] => [
+    [lat, -180],
+    [lat, 180]
+  ]),
+  ...graticuleSteps(-180, 180).map((lng): [number, number][] => [
+    [-85, lng],
+    [85, lng]
+  ])
+];

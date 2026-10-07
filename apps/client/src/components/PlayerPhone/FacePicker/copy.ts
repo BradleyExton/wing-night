@@ -17,6 +17,10 @@ export const facePickerCopy = {
       return "Easy — one tap at a time. Try again in a second.";
     }
 
+    if (reason === PLAYER_CLAIM_REFUSAL_REASONS.SERVER_ERROR) {
+      return "Something went wrong at the party's end. Try again in a second.";
+    }
+
     return "That face isn't on tonight's roster any more.";
   }
 } as const;

@@ -7,6 +7,7 @@ export {
   MINIGAME_TYPE_BY_SLUG,
   MINIGAME_TYPES,
   resolveMinigameDefinition,
+  isMinigameType,
   resolveMinigameTypeFromSlug
 } from "./minigameDefinitions/index.js";
 export type {

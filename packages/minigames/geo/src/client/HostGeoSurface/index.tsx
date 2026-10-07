@@ -53,11 +53,17 @@ const GeoVerdict = ({
   lastResult: NonNullable<GeoMinigameHostView["lastResult"]>;
 }): JSX.Element => {
   const distance = hostGeoSurfaceCopy.distanceValue(lastResult.distanceKm);
+  // With more than one pin in, the tile says whose pin the team is scoring.
+  const bestPin = lastResult.pins.length > 1 ? lastResult.pins.find((pin) => pin.isBest) : undefined;
 
   return (
     <>
       <div className={styles.distanceTile}>
-        <div className={styles.tileLabel}>{hostGeoSurfaceCopy.distanceLabel}</div>
+        <div className={styles.tileLabel}>
+          {bestPin === undefined
+            ? hostGeoSurfaceCopy.distanceLabel
+            : hostGeoSurfaceCopy.bestPinDistanceLabel(bestPin.name)}
+        </div>
         <div className={styles.tileValue}>
           {distance.value}
           <span className={styles.tileUnit}>{distance.unit}</span>
@@ -124,16 +130,21 @@ export const HostGeoSurface = ({
   });
   const lastResult = geoHostView?.lastResult ?? null;
   const isGuessing = geoHostView !== null && !isSubmitted && currentPrompt !== null;
-  const canSubmitGuess =
-    canDispatchAction && geoHostView !== null && geoHostView.currentGuess !== null;
+  // The playing team's phones pin too (each its own, secret till the lock): the tablet can lock a
+  // photo with no tablet pin at all as long as a phone's pin is in.
+  const phoneAnswers = geoHostView?.phoneAnswers ?? null;
+  const hasAnyPin =
+    geoHostView !== null && (geoHostView.currentGuess !== null || (phoneAnswers?.answeredCount ?? 0) > 0);
+  const canSubmitGuess = canDispatchAction && hasAnyPin;
 
   // The answer only exists on the tablet once the guess is stamped, so the
   // reveal draws itself on the same chart the team just pinned rather than
   // swapping the canvas out from under them.
-  const answer =
-    isSubmitted && lastResult !== null && currentPrompt !== null
-      ? { lat: currentPrompt.answerLat, lng: currentPrompt.answerLng }
-      : null;
+  const isRevealed = isSubmitted && lastResult !== null && currentPrompt !== null;
+  const answer = isRevealed ? { lat: currentPrompt.answerLat, lng: currentPrompt.answerLng } : null;
+  // On the reveal the chart closes on the team's best pin and plots every pin, named.
+  const guess = isRevealed ? { lat: lastResult.guessLat, lng: lastResult.guessLng } : (geoHostView?.currentGuess ?? null);
+  const revealPins = isRevealed && lastResult.pins.length > 1 ? lastResult.pins : [];
 
   return (
     <TakeoverCanvas
@@ -160,7 +171,9 @@ export const HostGeoSurface = ({
               {hostGeoSurfaceCopy.submitButtonLabel}
             </button>
             <span className={styles.mapInstruction}>
-              {hostGeoSurfaceCopy.mapInstructionLabel}
+              {phoneAnswers === null
+                ? hostGeoSurfaceCopy.mapInstructionLabel
+                : hostGeoSurfaceCopy.phonePinsLabel(phoneAnswers.answeredCount, phoneAnswers.seatedCount)}
             </span>
           </>
         ) : isTurnComplete ? (
@@ -205,8 +218,10 @@ export const HostGeoSurface = ({
                 }
               >
                 <GeoGuessMap
-                  guess={geoHostView.currentGuess}
+                  guess={guess}
                   answer={answer}
+                  revealPins={revealPins}
+                  offlineNote={hostGeoSurfaceCopy.offlineNote}
                   onSelectLocation={(lat, lng): void => {
                     onDispatchAction("setGuess", { lat, lng });
                   }}

@@ -139,7 +139,10 @@ already holding a face survive a new code), and refuses anything else with the c
   `setRoomStateFatalError` drop a claim whose id is gone or now names somebody else (name and
   `avatarSrc` both compared). A new player-rewrite site must prune too.
 - **A phone is not a host.** Nothing a PLAYER socket can send may advance a phase or move a
-  turn cursor. The one exception that touches a score is §3.5, and it stays alone.
+  turn cursor, lock a question or reveal one. Exactly two kinds of phone input reach a game
+  reducer, and only through `player:minigameAction`: a contestant's own arcade leg (§3.5), which
+  plays the leg and so moves its score as the tablet would, and a playing-team phone's answer
+  (below), which only ever writes that phone's own answer — the host's lock is what scores it.
 - **The side bet.** `player:placeBet { pick }` (the claims' bucket size, on a bucket of its own
   per face that outlives the socket) writes the bettor's OVER or UNDER into `RoomState.spectatorBets` and nothing else —
   the bets are settled FROM the turn's pending points and written only to the side tally
@@ -151,6 +154,36 @@ already holding a face survive a new code), and refuses anything else with the c
   an open-window pick, and the pick is only ever replayed to the same claim (`PlayerClaim
   .serial`), never to the next guest who sits in the face. A flip that moves no role's view
   broadcasts no snapshot.
+
+- **The answer.** GEO and TRIVIA opt in with the answer hooks (`playerActionTypes`,
+  `reducePlayerAction`, `selectPlayerView`, `releasePlayerAnswer` — the minigame authoring
+  guide). `player:minigameAction` routes on the game's own lists, never the payload: an action
+  type in `playerActionTypes` is an answer, anything else takes the contestant's road. An answer
+  is accepted only in `MINIGAME_PLAY`, for the game in play, from a face this socket holds that
+  is claimed and on the team whose turn it is (`resolvePlayerAnswerRefusal`: `wrong_phase`,
+  `host_only_action`, `not_seated`, `not_on_turn`), on the contestant's per-face token bucket.
+  It is stamped with `receivedAtMs` and NEVER becomes an undo point (it is play, like a DRAWING
+  stroke); the reducer refuses it once the host has locked the question, and the ack says so
+  (`not_accepted`) — an `ok` means the game took it. Lock and reveal stay
+  host actions (`submitGuess`, `lockChoices`). The seated list — the playing team's claimed
+  players, in roster order, each with whether its phone is awake — is derived by the server from
+  the claim flags on every reduction and projection (`resolveAnsweringPlayers`), so a claim
+  landing or a phone sleeping re-projects the "n of m". The "m", and TRIVIA's share, count the
+  awake phones plus any asleep one that already answered (`resolveCountedAnsweringPlayers`).
+- **An answer is secret until the lock.** The display view carries a count (`phoneAnswers:
+  { answeredCount, seatedCount }`), the host view the same count and no more (the tablet is in
+  the team's hands, so never who or what), and the shared player snapshot nothing. Each phone's own answer goes
+  over its own room as `player:minigamePlayerView` (re-sent when it moves, on a seat and on
+  `client:requestState`; a null when its card goes away). It is replayed only to the claim that
+  gave it (`isAnswerHolder`: the room stamps `PlayerClaim.serial` when — and only when — an answer
+  changed the game), and a claim ending drops an open answer (`releasePlayerAnswer`), as it drops
+  an open bet. An undo that reopens a question re-drops the answers of holders who have gone
+  since (`releaseDepartedAnswers`). The spread, the pins and the names are the reveal's.
+- **No phone message can take the server down.** `player:minigameAction` names its game by a
+  known `MinigameType` or is malformed, every lookup by a wire-borne game name tolerates an
+  unknown one (`findMinigameRuntimePlugin`), and every phone-family listener runs guarded: a fault
+  is logged through the logger and acked `server_error`, never thrown into Socket.IO's loop. A
+  new phone event registers through the same guard (`onGuarded`).
 
 ## 3.5 The Contestant's Phone (Arcade Turns)
 

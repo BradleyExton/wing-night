@@ -1,4 +1,12 @@
-import { railCounter, takeoverLabel, takeoverLabelAccent, verdictButtonDanger, verdictButtonSuccess, verdictIcon } from "@wingnight/surface";
+import {
+  railCounter,
+  takeoverLabel,
+  takeoverLabelAccent,
+  takeoverPrimary,
+  verdictButtonDanger,
+  verdictButtonSuccess,
+  verdictIcon
+} from "@wingnight/surface";
 
 // TRIVIA is a `<TakeoverStage>` (docs/takeover-layout-api.md §3): a question
 // card and two verdicts, with nothing a floating chip could sit over without
@@ -79,6 +87,15 @@ export const correctButton = `${verdictButtonSuccess} ${verdictHeight}`;
 export const incorrectButton = `${verdictButtonDanger} ${verdictHeight}`;
 
 export { verdictIcon };
+
+// A multiple-choice question the team's phones are answering: the lock first and widest — it is
+// the beat's one move — with the spoken verdicts beside it as the hatch.
+export const actionsWithLock = "grid gap-[clamp(0.75rem,1.5vw,1.25rem)] sm:grid-cols-[2fr_1fr_1fr]";
+
+export const lockButton = `${takeoverPrimary} ${verdictHeight}`;
+
+// From a locked question's spread to the next question, in the verdicts' row at their height.
+export const nextButton = `${takeoverPrimary} ${verdictHeight} w-full`;
 
 // The spent turn takes the verdict buttons' place rather than sitting above
 // them greyed out: dimmed CORRECT/INCORRECT still read as controls, and the

@@ -10,5 +10,8 @@ export const displayTriviaSurfaceCopy = {
   questionsToGoLabel: (count: number): string =>
     `${count} question${count === 1 ? "" : "s"} to go`,
   turnCompleteLabel: "Turn complete",
+  // The team's phones choosing: a count beside the turn's budget, never a choice or a name.
+  phoneTallyLabel: (answered: number, seated: number, questionsLeft: number): string =>
+    `${answered} of ${seated} in · ${questionsLeft} question${questionsLeft === 1 ? "" : "s"} to go`,
   waitingMessage: "Waiting for trivia prompt..."
 } as const;

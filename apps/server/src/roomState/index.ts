@@ -70,6 +70,16 @@ export {
   takeBackContestantLeg
 } from "./contestantMutations/index.js";
 
+export {
+  dispatchPlayerAnswerAction,
+  isAnswerHolder,
+  isPlayerAnswerAction,
+  readAnsweringPlayerIds,
+  readMinigamePlayerView,
+  readPlayerAnswerRefusal,
+  releasePlayerAnswer
+} from "./phoneAnswerMutations/index.js";
+
 export { getRoomPhase, getRoomPlayers } from "./stateStore/index.js";
 
 export {

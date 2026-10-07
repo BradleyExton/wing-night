@@ -17,7 +17,9 @@ const TRIVIA_VIEW: MinigameHostView = {
   pendingPointsByTeamId: {},
   attemptsRemaining: 1,
   promptCursor: 0,
-  currentPrompt: { id: "prompt-1", question: "Who?", answer: "The answer" }
+  currentPrompt: { id: "prompt-1", question: "Who?", answer: "The answer" },
+  phoneAnswers: null,
+  reveal: null
 };
 
 const PHONE_TURN: ContestantTurn = {

@@ -132,6 +132,12 @@ export const MINIGAME_TYPES = Object.freeze(
   Object.keys(MINIGAME_DEFINITIONS) as MinigameType[]
 );
 
+// Whether an untrusted value names a game this build knows. A phone's or a host's action envelope
+// carries the game by name, and every lookup keyed by `MinigameType` assumes it is one.
+export const isMinigameType = (value: unknown): value is MinigameType => {
+  return typeof value === "string" && (MINIGAME_TYPES as readonly string[]).includes(value);
+};
+
 export const MINIGAME_TYPE_BY_SLUG: Readonly<Record<string, MinigameType>> =
   Object.freeze(
     MINIGAME_TYPES.reduce<Record<string, MinigameType>>((slugMap, minigameType) => {

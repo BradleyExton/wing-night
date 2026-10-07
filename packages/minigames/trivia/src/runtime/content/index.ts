@@ -8,13 +8,15 @@ import { createPromptContentAdapter } from "@wingnight/minigames-core";
 export const triviaContentAdapter = createPromptContentAdapter<TriviaPrompt>({
   label: "trivia",
   fileName: "minigames/trivia.json",
-  invalidContentHint: "expected { prompts: [{ id, question, answer }] }.",
+  invalidContentHint:
+    "expected { prompts: [{ id, question, answer, choices? }] } — choices, when given, are 2–6 distinct strings that include the answer.",
   isContentFile: isTriviaContentFile,
   isPrompt: isTriviaPrompt,
   clonePrompt: (prompt) => ({
     id: prompt.id,
     question: prompt.question,
-    answer: prompt.answer
+    answer: prompt.answer,
+    ...(prompt.choices === undefined ? {} : { choices: [...prompt.choices] })
   })
 });
 

@@ -221,7 +221,8 @@ test("selectDisplayView omits prompt answer while host view includes it", () => 
     displayView?.minigame === "TRIVIA" ? displayView.currentPrompt : null,
     {
       id: "prompt-1",
-      question: "Question 1?"
+      question: "Question 1?",
+      choices: null
     }
   );
   assert.equal(JSON.stringify(displayView).includes("Answer 1"), false);
@@ -292,7 +293,7 @@ test("parseTriviaContentFile rejects malformed content files", () => {
   );
   assert.throws(
     () => parseTriviaContentFile("{}", "trivia.json"),
-    /Invalid trivia content at "trivia.json": expected \{ prompts: \[\{ id, question, answer \}\] \}\./
+    /Invalid trivia content at "trivia.json": expected \{ prompts: \[\{ id, question, answer, choices\? \}\] \}/
   );
 
   const parsed = parseTriviaContentFile(
@@ -336,4 +337,462 @@ test("initialize seeds the prompt cursor by team index so later teams get fresh 
     initializeForTeam("team-1", { prompts: [] }).runtimeState.promptCursor,
     0
   );
+});
+
+// --- Answers on the phones: a question with choices is answered on every seated phone at once. ---
+
+const choiceContent: TriviaContentFile = {
+  prompts: [
+    {
+      id: "mc-1",
+      question: "Which pepper is hottest?",
+      answer: "Carolina Reaper",
+      choices: ["Jalapeño", "Carolina Reaper", "Poblano"]
+    },
+    { id: "spoken-1", question: "Name a hot sauce.", answer: "Frank's" },
+    {
+      id: "mc-2",
+      question: "What measures heat?",
+      answer: "Scoville scale",
+      choices: ["Scoville scale", "Richter scale"]
+    }
+  ]
+};
+
+const seatedThree = [
+  { id: "player-1", name: "Alex" },
+  { id: "player-2", name: "Caitlin" },
+  { id: "player-3", name: "Dan" }
+] as const;
+
+const choiceState = (questionsPerTurn = 3): TriviaRuntimeState => {
+  return initializeState({
+    activeRoundTeamId: "team-1",
+    rules: { questionsPerTurn },
+    content: choiceContent
+  });
+};
+
+const choose = (
+  state: SerializableValue,
+  playerId: string,
+  actionPayload: SerializableValue,
+  answeringPlayers: readonly { id: string; name: string }[] = seatedThree
+): { state: SerializableValue; didMutate: boolean } => {
+  const reducePlayerAction = triviaRuntimePlugin.reducePlayerAction;
+
+  assert.ok(reducePlayerAction !== undefined);
+
+  return reducePlayerAction({
+    state,
+    envelope: { actionType: "chooseAnswer", actionPayload },
+    pointsMax: 15,
+    rules: null,
+    content: choiceContent,
+    playerId,
+    answeringPlayers
+  });
+};
+
+const hostAction = (
+  state: SerializableValue,
+  actionType: string,
+  actionPayload: SerializableValue = {},
+  options: Partial<{ pointsMax: number; answeringPlayers: readonly { id: string; name: string }[] }> = {}
+): { state: SerializableValue; didMutate: boolean } => {
+  return triviaRuntimePlugin.reduceAction({
+    state,
+    envelope: { actionType, actionPayload },
+    pointsMax: options.pointsMax ?? 15,
+    rules: null,
+    content: choiceContent,
+    answeringPlayers: options.answeringPlayers ?? seatedThree
+  });
+};
+
+const pendingOf = (state: SerializableValue): number => {
+  return (state as TriviaRuntimeState).runtimeState.pendingPointsByTeamId["team-1"] ?? 0;
+};
+
+test("does take only chooseAnswer from a phone when the plugin lists its player actions", () => {
+  assert.deepEqual(triviaRuntimePlugin.playerActionTypes, ["chooseAnswer"]);
+  assert.equal(triviaRuntimePlugin.playerActionTypes?.includes("lockChoices"), false);
+});
+
+test("does accept a choice when it comes from a seated phone on the playing team", () => {
+  const chosen = choose(choiceState(), "player-2", { choiceIndex: 1 });
+
+  assert.equal(chosen.didMutate, true);
+  assert.deepEqual((chosen.state as TriviaRuntimeState).choicesByPlayerId, { "player-2": 1 });
+});
+
+test("does refuse a choice when the sender is not seated, the index is off the list or malformed", () => {
+  const state = choiceState();
+
+  assert.equal(choose(state, "player-9", { choiceIndex: 0 }).didMutate, false);
+  assert.equal(choose(state, "player-1", { choiceIndex: 3 }).didMutate, false);
+  assert.equal(choose(state, "player-1", { choiceIndex: -1 }).didMutate, false);
+  assert.equal(choose(state, "player-1", { choiceIndex: 1.5 }).didMutate, false);
+  assert.equal(choose(state, "player-1", { choice: 1 }).didMutate, false);
+});
+
+test("does let a phone change its choice when the question is still open", () => {
+  const first = choose(choiceState(), "player-1", { choiceIndex: 0 });
+  const changed = choose(first.state, "player-1", { choiceIndex: 1 });
+
+  assert.equal(changed.didMutate, true);
+  assert.equal((changed.state as TriviaRuntimeState).choicesByPlayerId["player-1"], 1);
+  assert.equal(choose(changed.state, "player-1", { choiceIndex: 1 }).didMutate, false);
+});
+
+test("does refuse a choice when the host has locked the question", () => {
+  const chosen = choose(choiceState(), "player-1", { choiceIndex: 1 });
+  const locked = hostAction(chosen.state, "lockChoices");
+
+  assert.equal(locked.didMutate, true);
+  assert.equal(choose(locked.state, "player-2", { choiceIndex: 1 }).didMutate, false);
+  assert.equal(choose(locked.state, "player-1", { choiceIndex: 0 }).didMutate, false);
+});
+
+test("does refuse a choice when the question has no choices", () => {
+  let state: SerializableValue = choiceState();
+
+  state = hostAction(state, "recordAttempt", { isCorrect: false }).state;
+
+  assert.equal((state as TriviaRuntimeState).runtimeState.promptCursor, 1);
+  assert.equal(choose(state, "player-1", { choiceIndex: 0 }).didMutate, false);
+  assert.equal(hostAction(state, "lockChoices").didMutate, false);
+});
+
+test("does score the share of seated phones that chose right when the host locks", () => {
+  let state: SerializableValue = choiceState();
+
+  // Two of three right: round(2/3) = 1 point.
+  state = choose(state, "player-1", { choiceIndex: 1 }).state;
+  state = choose(state, "player-2", { choiceIndex: 1 }).state;
+  state = choose(state, "player-3", { choiceIndex: 0 }).state;
+
+  const locked = hostAction(state, "lockChoices").state as TriviaRuntimeState;
+
+  assert.equal(pendingOf(locked), 1);
+  assert.deepEqual(locked.reveal, {
+    promptId: "mc-1",
+    choices: ["Jalapeño", "Carolina Reaper", "Poblano"],
+    choiceCounts: [1, 2, 0],
+    correctIndex: 1,
+    correctCount: 2,
+    answeredCount: 3,
+    seatedCount: 3,
+    pointsAwarded: 1
+  });
+  assert.equal(locked.attemptsUsedThisTurn, 1);
+  // The question stays on screen under its reveal.
+  assert.equal(locked.runtimeState.promptCursor, 0);
+});
+
+test("does round the share half up and down when a third or a half of the team is right", () => {
+  const scoreWith = (rightIds: string[], wrongIds: string[], seated: readonly { id: string; name: string }[]) => {
+    let state: SerializableValue = choiceState();
+
+    for (const playerId of rightIds) {
+      state = choose(state, playerId, { choiceIndex: 1 }, seated).state;
+    }
+
+    for (const playerId of wrongIds) {
+      state = choose(state, playerId, { choiceIndex: 2 }, seated).state;
+    }
+
+    return pendingOf(hostAction(state, "lockChoices", {}, { answeringPlayers: seated }).state);
+  };
+
+  // One of three right (0.33) rounds to nothing; one of two (0.5) rounds up to the point.
+  assert.equal(scoreWith(["player-1"], ["player-2", "player-3"], seatedThree), 0);
+  assert.equal(scoreWith(["player-1"], ["player-2"], [seatedThree[0], seatedThree[1]]), 1);
+  // A seated phone that never answered counts against the share: one right of three seated.
+  assert.equal(scoreWith(["player-1"], [], seatedThree), 0);
+});
+
+test("does refuse the lock when no phone has chosen yet", () => {
+  const refused = hostAction(choiceState(), "lockChoices");
+
+  assert.equal(refused.didMutate, false);
+  // The spoken verdict is still there for it.
+  assert.equal(pendingOf(hostAction(choiceState(), "recordAttempt", { isCorrect: true }).state), 1);
+});
+
+test("does clip the phones' point to the turn's cap when the team is already at the cap", () => {
+  let state: SerializableValue = initializeState({
+    activeRoundTeamId: "team-1",
+    rules: { questionsPerTurn: 3 },
+    content: choiceContent,
+    pendingPointsByTeamId: { "team-1": 4 }
+  });
+
+  state = choose(state, "player-1", { choiceIndex: 1 }).state;
+
+  const locked = hostAction(state, "lockChoices", {}, { pointsMax: 4, answeringPlayers: [seatedThree[0]] });
+
+  assert.equal(pendingOf(locked.state), 4);
+});
+
+test("does count only the seated phones' choices when a face was let go before the lock", () => {
+  let state: SerializableValue = choiceState();
+
+  state = choose(state, "player-1", { choiceIndex: 1 }).state;
+  state = choose(state, "player-2", { choiceIndex: 0 }).state;
+
+  const locked = hostAction(state, "lockChoices", {}, { answeringPlayers: [seatedThree[1]] })
+    .state as TriviaRuntimeState;
+
+  assert.deepEqual(locked.reveal?.choiceCounts, [1, 0, 0]);
+  assert.equal(locked.reveal?.seatedCount, 1);
+  assert.equal(pendingOf(locked), 0);
+});
+
+test("does move to the next question and clear the choices when the host moves on", () => {
+  let state: SerializableValue = choiceState();
+
+  state = choose(state, "player-1", { choiceIndex: 1 }).state;
+  state = hostAction(state, "lockChoices").state;
+  // A spoken verdict on a locked question would score it twice.
+  assert.equal(hostAction(state, "recordAttempt", { isCorrect: true }).didMutate, false);
+
+  const next = hostAction(state, "nextQuestion").state as TriviaRuntimeState;
+
+  assert.equal(next.runtimeState.promptCursor, 1);
+  assert.deepEqual(next.choicesByPlayerId, {});
+  assert.equal(next.reveal, null);
+  assert.equal(hostAction(next, "nextQuestion").didMutate, false);
+});
+
+test("does hold the last question's reveal when the lock spends the turn", () => {
+  let state: SerializableValue = choiceState(1);
+
+  state = choose(state, "player-1", { choiceIndex: 1 }).state;
+  state = hostAction(state, "lockChoices").state;
+
+  assert.equal((state as TriviaRuntimeState).attemptsUsedThisTurn, 1);
+  assert.equal(hostAction(state, "nextQuestion").didMutate, false);
+  assert.notEqual((state as TriviaRuntimeState).reveal, null);
+});
+
+test("does keep the host's spoken verdict working when a question has no choices", () => {
+  let state: SerializableValue = choiceState();
+
+  state = hostAction(state, "recordAttempt", { isCorrect: false }).state;
+
+  const judged = hostAction(state, "recordAttempt", { isCorrect: true }).state as TriviaRuntimeState;
+
+  assert.equal(pendingOf(judged), 1);
+  assert.equal(judged.reveal, null);
+  assert.equal(judged.runtimeState.promptCursor, 2);
+});
+
+test("does let the host judge a choice question aloud when nobody's phone answers", () => {
+  const judged = hostAction(choiceState(), "recordAttempt", { isCorrect: true }).state as TriviaRuntimeState;
+
+  assert.equal(pendingOf(judged), 1);
+  assert.equal(judged.reveal, null);
+  assert.deepEqual(judged.choicesByPlayerId, {});
+});
+
+test("does keep the display view to a count when phones have chosen on an open question", () => {
+  let state: SerializableValue = choiceState();
+
+  state = choose(state, "player-1", { choiceIndex: 1 }).state;
+  state = choose(state, "player-3", { choiceIndex: 2 }).state;
+
+  const displayView = triviaRuntimePlugin.selectDisplayView({
+    state,
+    rules: null,
+    content: choiceContent,
+    answeringPlayers: seatedThree
+  });
+  const serialized = JSON.stringify(displayView);
+
+  assert.ok(displayView?.minigame === "TRIVIA");
+  assert.deepEqual(displayView.phoneAnswers, { answeredCount: 2, seatedCount: 3 });
+  assert.deepEqual(displayView.currentPrompt?.choices, ["Jalapeño", "Carolina Reaper", "Poblano"]);
+  assert.equal(displayView.reveal, null);
+  // No choice index, no player, no answer.
+  assert.equal(serialized.includes("choiceIndex"), false);
+  assert.equal(serialized.includes("choicesByPlayerId"), false);
+  assert.equal(serialized.includes("player-"), false);
+  assert.equal(serialized.includes("correctIndex"), false);
+  assert.equal(serialized.includes("\"answer\""), false);
+});
+
+test("does show the spread on the display view when the host locks the question", () => {
+  let state: SerializableValue = choiceState();
+
+  state = choose(state, "player-1", { choiceIndex: 1 }).state;
+  state = hostAction(state, "lockChoices").state;
+
+  const displayView = triviaRuntimePlugin.selectDisplayView({
+    state,
+    rules: null,
+    content: choiceContent,
+    answeringPlayers: seatedThree
+  });
+
+  assert.ok(displayView?.minigame === "TRIVIA");
+  assert.deepEqual(displayView.reveal?.choiceCounts, [0, 1, 0]);
+  assert.equal(displayView.reveal?.correctIndex, 1);
+  assert.equal(displayView.phoneAnswers, null);
+  // The spread is counts, never who.
+  assert.equal(JSON.stringify(displayView).includes("player-"), false);
+});
+
+test("does show the host how many have chosen but never what or who when the question is open", () => {
+  const state = choose(choiceState(), "player-2", { choiceIndex: 2 }).state;
+  const hostView = triviaRuntimePlugin.selectHostView({
+    state,
+    rules: null,
+    content: choiceContent,
+    answeringPlayers: seatedThree
+  });
+
+  assert.ok(hostView?.minigame === "TRIVIA");
+  assert.deepEqual(hostView.phoneAnswers, { answeredCount: 1, seatedCount: 3 });
+  assert.equal(JSON.stringify(hostView).includes("choicesByPlayerId"), false);
+});
+
+test("does show each phone only its own choice when two phones have chosen", () => {
+  let state: SerializableValue = choiceState();
+
+  state = choose(state, "player-1", { choiceIndex: 2 }).state;
+  state = choose(state, "player-2", { choiceIndex: 0 }).state;
+
+  const viewOf = (playerId: string, showOwnAnswer = true) =>
+    triviaRuntimePlugin.selectPlayerView?.({
+      state,
+      rules: null,
+      content: choiceContent,
+      answeringPlayers: seatedThree,
+      playerId,
+      showOwnAnswer
+    });
+
+  assert.equal(viewOf("player-1")?.minigame === "TRIVIA" ? viewOf("player-1")?.status : null, "open");
+  assert.deepEqual(
+    [viewOf("player-1"), viewOf("player-2"), viewOf("player-3")].map((view) =>
+      view?.minigame === "TRIVIA" ? view.choiceIndex : undefined
+    ),
+    [2, 0, null]
+  );
+  // A face with a new holder sees a blank card.
+  assert.equal(viewOf("player-1", false)?.minigame === "TRIVIA" ? viewOf("player-1", false)?.status : null, "open");
+  assert.equal((viewOf("player-1", false) as { choiceIndex: number | null }).choiceIndex, null);
+  // The phone never learns the answer before the reveal.
+  assert.equal(JSON.stringify(viewOf("player-1")).includes("isCorrect\":null"), true);
+  assert.equal(JSON.stringify(viewOf("player-1")).includes("\"answer\""), false);
+});
+
+test("does tell a phone whether it was right when the host reveals the question", () => {
+  let state: SerializableValue = choiceState();
+
+  state = choose(state, "player-1", { choiceIndex: 1 }).state;
+  state = choose(state, "player-2", { choiceIndex: 0 }).state;
+  state = hostAction(state, "lockChoices").state;
+
+  const viewOf = (playerId: string) =>
+    triviaRuntimePlugin.selectPlayerView?.({
+      state,
+      rules: null,
+      content: choiceContent,
+      answeringPlayers: seatedThree,
+      playerId,
+      showOwnAnswer: true
+    }) as { status: string; isCorrect: boolean | null };
+
+  assert.equal(viewOf("player-1").status, "locked");
+  assert.equal(viewOf("player-1").isCorrect, true);
+  assert.equal(viewOf("player-2").isCorrect, false);
+  assert.equal(viewOf("player-3").isCorrect, null);
+});
+
+test("does give a phone a card with no choices when the question has none", () => {
+  const state = hostAction(choiceState(), "recordAttempt", { isCorrect: true }).state;
+  const view = triviaRuntimePlugin.selectPlayerView?.({
+    state,
+    rules: null,
+    content: choiceContent,
+    answeringPlayers: seatedThree,
+    playerId: "player-1",
+    showOwnAnswer: true
+  });
+
+  assert.ok(view?.minigame === "TRIVIA");
+  assert.equal(view.choices, null);
+  assert.equal(view.status, "locked");
+});
+
+test("does drop a phone's open choice when its claim ends and keep a locked one", () => {
+  const releasePlayerAnswer = triviaRuntimePlugin.releasePlayerAnswer;
+
+  assert.ok(releasePlayerAnswer !== undefined);
+
+  const chosen = choose(choiceState(), "player-1", { choiceIndex: 1 }).state;
+  const released = releasePlayerAnswer({ state: chosen, playerId: "player-1" });
+
+  assert.equal(released.didMutate, true);
+  assert.deepEqual((released.state as TriviaRuntimeState).choicesByPlayerId, {});
+
+  const locked = hostAction(chosen, "lockChoices").state;
+
+  assert.equal(releasePlayerAnswer({ state: locked, playerId: "player-1" }).didMutate, false);
+});
+
+test("does leave the state untouched when a phone chooses and the host locks", () => {
+  const state = choiceState();
+  const before = structuredClone(state);
+  const chosen = choose(state, "player-1", { choiceIndex: 1 }).state;
+  const chosenBefore = structuredClone(chosen);
+
+  hostAction(chosen, "lockChoices");
+
+  assert.deepEqual(state, before);
+  assert.deepEqual(chosen, chosenBefore);
+});
+
+test("does leave an asleep phone that never chose out of the share when the host locks", () => {
+  const withDan = [seatedThree[0], seatedThree[1], { ...seatedThree[2], isConnected: false }];
+  let state: SerializableValue = choiceState();
+
+  state = choose(state, "player-1", { choiceIndex: 1 }, withDan).state;
+  state = choose(state, "player-2", { choiceIndex: 0 }, withDan).state;
+
+  const locked = hostAction(state, "lockChoices", {}, { answeringPlayers: withDan }).state as TriviaRuntimeState;
+
+  // One of the two awake phones right: round(1/2) banks the point; Dan's sleeping phone is no "no".
+  assert.equal(locked.reveal?.seatedCount, 2);
+  assert.equal(pendingOf(locked), 1);
+});
+
+test("does keep an asleep phone in the share when it chose before it slept", () => {
+  let state: SerializableValue = choiceState();
+
+  state = choose(state, "player-1", { choiceIndex: 1 }).state;
+  state = choose(state, "player-3", { choiceIndex: 0 }).state;
+
+  const asleep = [seatedThree[0], { ...seatedThree[1], isConnected: false }, { ...seatedThree[2], isConnected: false }];
+  const locked = hostAction(state, "lockChoices", {}, { answeringPlayers: asleep }).state as TriviaRuntimeState;
+
+  assert.equal(locked.reveal?.seatedCount, 2);
+  assert.deepEqual(locked.reveal?.choiceCounts, [1, 1, 0]);
+});
+
+test("does count only awake or answered phones in the tally when a phone is asleep", () => {
+  const state = choose(choiceState(), "player-1", { choiceIndex: 1 }).state;
+  const displayView = triviaRuntimePlugin.selectDisplayView({
+    state,
+    rules: null,
+    content: choiceContent,
+    answeringPlayers: [seatedThree[0], seatedThree[1], { ...seatedThree[2], isConnected: false }]
+  });
+
+  assert.deepEqual(displayView?.minigame === "TRIVIA" ? displayView.phoneAnswers : undefined, {
+    answeredCount: 1,
+    seatedCount: 2
+  });
 });

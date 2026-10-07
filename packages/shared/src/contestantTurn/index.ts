@@ -91,7 +91,14 @@ export const PLAYER_MINIGAME_ACTION_REFUSAL_REASONS = {
   // Somebody else's leg, or no leg in hand.
   NOT_CONTESTANT: "not_contestant",
   // The contestant's own leg, but the tablet holds it (taken back, or begun on the tablet).
-  TABLET_HOLDS_LEG: "tablet_holds_leg"
+  TABLET_HOLDS_LEG: "tablet_holds_leg",
+  // An answer (a game's player action type) from a face that is not on the team whose turn it is.
+  NOT_ON_TURN: "not_on_turn",
+  // An answer the game did not take: the question is locked, the answer is not one it offers, or it
+  // is the answer already in. Nothing changed.
+  NOT_ACCEPTED: "not_accepted",
+  // The server hit a fault handling this message and refused it rather than go down with it.
+  SERVER_ERROR: "server_error"
 } as const;
 
 export type PlayerMinigameActionRefusalReason =

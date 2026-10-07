@@ -116,6 +116,37 @@ In `packages/minigames/<slug>/src/runtime/index.ts`, export a
   clock, like FAPPY's relay limit). A game that grows them joins
   `CONTESTANT_MINIGAME_TYPES` in `packages/shared`; the registry test holds the
   two lists together.
+- The answer hooks, for a game whose question every phone on the playing team
+  answers at once while the host still locks and reveals (GEO's pins, TRIVIA's
+  choices; AGENTS.md §3.4, SPEC.md "Answers on the phones"). Opt in with the
+  first two together:
+  - `playerActionTypes`: what a playing-team phone may send — an answer and
+    nothing else. Never a lock, a reveal, a skip, a next, a host verdict, and
+    never a type also in `transientActionTypes` or `contestantActionTypes`
+    (the registry test pins all of it).
+  - `reducePlayerAction(input)`: the answer landing. Same contract as
+    `reduceAction` (pure, never mutates `input.state`, `didMutate: false` on
+    anything invalid) plus `input.playerId` — the face the socket holds, which
+    the server already checked is seated and on the playing team — and
+    `input.answeringPlayers`, the team's seated phones (`{ id, name }`, roster
+    order). Refuse once the host has locked the question. Answers are always
+    transient: the server never makes one an undo point, so do not list them
+    in `transientActionTypes`.
+  - `selectPlayerView(input)`: one phone's card (`MinigamePlayerView` in
+    `packages/shared`) — the question as a phone needs it and THAT player's own
+    answer, nobody else's, and never the answer key before the lock. When
+    `input.showOwnAnswer` is false (a new guest holds the face) draw no answer.
+  - `releasePlayerAnswer(input)`: a claim ended; drop that player's OPEN
+    answer, keep a locked one.
+
+  Every reduction and selector also gets `answeringPlayers` (optional on the
+  host's road, so harnesses without a room pass none): score the lock against
+  it, and draw the room's "n of m in" from it — the same count on the display
+  view and the host view, never who and never an answer before the reveal. Each
+  player carries `isConnected`; count the awake phones plus any asleep one that
+  answered (`resolveCountedAnsweringPlayers` from core) wherever a share or an
+  "m" is taken.
+  The client half is `PlayerSurface` on the renderer bundle (§4).
 
 Rules:
 
@@ -151,7 +182,14 @@ Same rule applies to host views. Keeps `MinigameDisplayView` and `MinigameHostVi
 
 In `packages/minigames/<slug>/src/client/index.ts`:
 
-- Export a `MinigameRendererBundle` with `HostSurface` and `DisplaySurface`.
+- Export a `MinigameRendererBundle` with `HostSurface` and `DisplaySurface`,
+  and `PlayerSurface` if the runtime has the answer hooks: the card a playing-team
+  phone answers on (`MinigamePlayerRendererProps`: the phone's own
+  `minigamePlayerView` and `onDispatchAction`, which sends a player action type).
+  It sits in the guest phone's portrait column, wears the house phone answer
+  card from `@wingnight/surface` (`phoneCard`, `phoneCardHot`, …) and makes no
+  sound. Hang `data-phone-answer="<MINIGAME>"` and `data-phone-answer-status`
+  on it for e2e.
 
 In `packages/minigames/<slug>/src/dev/index.ts`:
 

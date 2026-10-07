@@ -14,6 +14,7 @@ import type {
 } from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
 import type { ContestantTurn, RoundDeviceModes } from "../contestantTurn/index.js";
+import type { PhoneAnswerTally } from "../phoneAnswers/index.js";
 import { projectSpectatorBets, type SpectatorBets, type SpectatorBetTally } from "../spectatorBets/index.js";
 import type { BrawlInput, BrawlOutcome } from "../brawl/types.js";
 import type {
@@ -63,21 +64,55 @@ type MinigameDisplayViewBase = MinigameViewMetadata & {
   pendingPointsByTeamId: Record<string, number>;
 };
 
+// A multiple-choice question the host has locked: how the playing team's phones split across the
+// choices, which one was right and what it scored (`TRIVIA_POINTS_PER_QUESTION` x the share of the
+// team's seated phones that chose it, rounded). Public once it exists — it is the reveal — so the
+// TV draws the spread from it. The counts are the seated phones' only; never who chose what.
+export type TriviaChoiceReveal = {
+  promptId: string;
+  choices: string[];
+  choiceCounts: number[];
+  correctIndex: number;
+  correctCount: number;
+  answeredCount: number;
+  seatedCount: number;
+  pointsAwarded: number;
+};
+
 export type TriviaMinigameHostView = MinigameHostViewBase & {
   minigame: "TRIVIA";
   attemptsRemaining: number;
   promptCursor: number;
   currentPrompt: TriviaPrompt | null;
+  // How many of the playing team's phones have chosen, on a question with choices, before it is
+  // locked. Never who or what: the tablet is in the team's hands.
+  phoneAnswers: PhoneAnswerTally | null;
+  reveal: TriviaChoiceReveal | null;
 };
 
 export type GeoMinigameSubState = "guessing" | "submitted";
 
+// One pin measured at the lock: the tablet's (`playerId` and `name` null) or a playing-team phone's.
+// The team scores its BEST pin — the most points, the shorter distance on a tie.
+export type GeoPinResult = {
+  playerId: string | null;
+  name: string | null;
+  lat: number;
+  lng: number;
+  distanceKm: number;
+  pointsAwarded: number;
+  isBest: boolean;
+};
+
+// `guessLat`/`guessLng`/`distanceKm`/`pointsAwarded` are the best pin's; `pins` is every pin that
+// was in when the host locked the photo, the best among them.
 export type GeoPromptResult = {
   promptId: string;
   guessLat: number;
   guessLng: number;
   distanceKm: number;
   pointsAwarded: number;
+  pins: GeoPinResult[];
 };
 
 export type GeoMinigameHostPrompt = Pick<
@@ -101,7 +136,13 @@ export type GeoMinigameHostView = MinigameHostViewBase & {
   currentGuess: GeoCoordinates | null;
   currentPrompt: GeoMinigameHostPrompt | null;
   lastResult: GeoPromptResult | null;
+  // How many of the playing team's phones have a pin down, while the photo is open. Never where:
+  // the tablet is in the team's hands, and a pin on it is a pin every teammate can copy.
+  phoneAnswers: PhoneAnswerTally | null;
 };
+
+// A pin as the TV plots it at the reveal: named (null for the tablet's), never by id.
+export type GeoMinigameDisplayPin = Omit<GeoPinResult, "playerId">;
 
 export type GeoMinigameDisplayResult = {
   guessLat: number;
@@ -110,6 +151,7 @@ export type GeoMinigameDisplayResult = {
   answerLng: number;
   distanceKm: number;
   pointsAwarded: number;
+  pins: GeoMinigameDisplayPin[];
 };
 
 // `currentGuess` is the team's own in-progress pin, projected so the TV can
@@ -123,6 +165,8 @@ export type GeoMinigameDisplayView = MinigameDisplayViewBase & {
   promptsCompletedThisTurn: number;
   currentPrompt: GeoMinigameDisplayPrompt | null;
   currentGuess: GeoCoordinates | null;
+  // How many of the playing team's phones have a pin down — a count, never a coordinate or a name.
+  phoneAnswers: PhoneAnswerTally | null;
 } & (
     | { status: "guessing" }
     | { status: "submitted"; result: GeoMinigameDisplayResult }
@@ -756,7 +800,12 @@ export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
   // host-paced, so the TV has no clock to tell the room the turn is over; the
   // count reaching zero is the only signal it gets.
   attemptsRemaining: number;
-  currentPrompt: Pick<TriviaPrompt, "id" | "question"> | null;
+  // The choices are public — the room reads them off the TV — but which one is right is not, until
+  // the host locks the question and `reveal` arrives.
+  currentPrompt: (Pick<TriviaPrompt, "id" | "question"> & { choices: string[] | null }) | null;
+  // How many of the playing team's phones have chosen — a count, never a choice or a name.
+  phoneAnswers: PhoneAnswerTally | null;
+  reveal: TriviaChoiceReveal | null;
 };
 
 // Answer-safe: the display never receives the current prompt; prompt text

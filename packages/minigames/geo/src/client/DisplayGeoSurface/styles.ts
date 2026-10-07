@@ -10,9 +10,9 @@ export const stage =
 // `isolate` keeps Leaflet's own stacking (panes at z-400, controls at z-1000)
 // inside the arena. Without it those layers compete with the display shell's
 // chrome in the same context and the map paints over it.
-// Scene art, licensed by DESIGN.md §2.4: the ground the inverted map tiles are laid on, so a
-// tile still loading shows the map's own dark rather than the stage's.
-const sceneMapGround = "bg-[#0e1419]";
+// The chart's ground, `mapGround` (DESIGN.md §0.1, §2.4): what the inverted tiles are laid on, so
+// a tile still loading — or none at all, offline — shows the map's own dark rather than the stage's.
+const sceneMapGround = "bg-mapGround";
 
 export const arena = `relative isolate flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-text/10 ${sceneMapGround}`;
 

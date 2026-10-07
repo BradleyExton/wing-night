@@ -154,7 +154,9 @@ export const SPECTATOR_BET_REFUSAL_REASONS = {
   // No window is open: play has started, or this turn has no line.
   CLOSED: "closed",
   // The bettor is on the team that is playing.
-  ACTIVE_TEAM: "active_team"
+  ACTIVE_TEAM: "active_team",
+  // The server hit a fault handling this message and refused it rather than go down with it.
+  SERVER_ERROR: "server_error"
 } as const;
 
 export type SpectatorBetRefusalReason =

@@ -1,13 +1,14 @@
 import type {
+  MinigameAnsweringPlayer,
   MinigameContestant,
   MinigameDeadlineAction,
   MinigameRuntimeActionEnvelope,
   SerializableValue
 } from "@wingnight/minigames-core";
 import { resolveRoomTurnOrderTeamIds } from "@wingnight/shared";
-import type { MinigameType, RoomState } from "@wingnight/shared";
+import type { MinigamePlayerView, MinigameType, RoomState } from "@wingnight/shared";
 
-import { resolveMinigameRuntimePlugin } from "../registry/index.js";
+import { findMinigameRuntimePlugin, resolveMinigameRuntimePlugin } from "../registry/index.js";
 
 type ActiveMinigameRuntimeState = {
   minigameId: MinigameType;
@@ -42,6 +43,26 @@ const resolveActiveRuntimeDescriptor = (
   return { minigameId };
 };
 
+// The playing team's players whose phones hold their faces right now, in roster order: who may
+// answer on a phone (`MinigameRuntimePlugin.playerActionTypes`), and the "m" of every "n of m in".
+// Derived from the claim flags on every call, never stored, so a phone claimed or let go mid-photo
+// moves the count on the next projection.
+export const resolveAnsweringPlayers = (state: RoomState): MinigameAnsweringPlayer[] => {
+  const team = state.teams.find((candidate) => candidate.id === state.activeRoundTeamId);
+
+  if (team === undefined) {
+    return [];
+  }
+
+  return state.players
+    .filter((player) => team.playerIds.includes(player.id) && state.claimedPlayerIds.includes(player.id))
+    .map((player) => ({
+      id: player.id,
+      name: player.name,
+      isConnected: state.connectedPlayerIds.includes(player.id)
+    }));
+};
+
 const projectActiveRuntimeStateToRoomState = (
   state: RoomState,
   rules: SerializableValue | null
@@ -54,15 +75,18 @@ const projectActiveRuntimeStateToRoomState = (
   const { minigameId, runtimeState } = activeMinigameRuntimeState;
   const runtimePlugin = resolveMinigameRuntimePlugin(minigameId);
   const content = minigameContentById[minigameId] ?? null;
+  const answeringPlayers = resolveAnsweringPlayers(state);
   const hostView = runtimePlugin.selectHostView({
     state: runtimeState,
     rules,
-    content
+    content,
+    answeringPlayers
   });
   const displayView = runtimePlugin.selectDisplayView({
     state: runtimeState,
     rules,
-    content
+    content,
+    answeringPlayers
   });
 
   state.minigameHostView = hostView;
@@ -276,7 +300,7 @@ export const isTransientMinigameAction = (
   actionType: string
 ): boolean => {
   const transientActionTypes =
-    resolveMinigameRuntimePlugin(minigameId).transientActionTypes ?? [];
+    findMinigameRuntimePlugin(minigameId)?.transientActionTypes ?? [];
 
   return transientActionTypes.includes(actionType);
 };
@@ -293,11 +317,103 @@ export const dispatchActiveMinigameRuntimeAction = (
       envelope,
       pointsMax,
       rules,
-      content
+      content,
+      answeringPlayers: resolveAnsweringPlayers(state)
     });
 
     return reductionResult.didMutate ? reductionResult.state : null;
   });
+};
+
+// The answer hooks (`MinigameRuntimePlugin.playerActionTypes` and friends), read off the game. A
+// game without them has no phone answers: its playing team's phones keep their idle card.
+// Unknown games answer false: the name comes off the wire.
+export const isPlayerAnswerMinigameAction = (minigameId: MinigameType, actionType: string): boolean => {
+  const runtimePlugin = findMinigameRuntimePlugin(minigameId);
+
+  return (
+    runtimePlugin !== null &&
+    runtimePlugin.reducePlayerAction !== undefined &&
+    (runtimePlugin.playerActionTypes ?? []).includes(actionType)
+  );
+};
+
+// A playing-team phone's answer reaching the game, from the player the socket's face names.
+export const dispatchActivePlayerAnswer = (
+  state: RoomState,
+  playerId: string,
+  envelope: MinigameRuntimeActionEnvelope,
+  pointsMax: number,
+  rules: SerializableValue | null
+): boolean => {
+  return withActiveRuntime(state, rules, ({ runtimePlugin, runtimeState, content }) => {
+    if (runtimePlugin.reducePlayerAction === undefined) {
+      return null;
+    }
+
+    const reductionResult = runtimePlugin.reducePlayerAction({
+      state: runtimeState,
+      envelope,
+      pointsMax,
+      rules,
+      content,
+      playerId,
+      answeringPlayers: resolveAnsweringPlayers(state)
+    });
+
+    return reductionResult.didMutate ? reductionResult.state : null;
+  });
+};
+
+// A face's claim ended: its holder's open answer leaves with them (`releasePlayerAnswer`).
+export const releaseActivePlayerAnswer = (
+  state: RoomState,
+  playerId: string,
+  rules: SerializableValue | null
+): boolean => {
+  return withActiveRuntime(state, rules, ({ runtimePlugin, runtimeState }) => {
+    if (runtimePlugin.releasePlayerAnswer === undefined) {
+      return null;
+    }
+
+    const releaseResult = runtimePlugin.releasePlayerAnswer({ state: runtimeState, playerId });
+
+    return releaseResult.didMutate ? releaseResult.state : null;
+  });
+};
+
+// Re-projects the game's views with the room as it stands now — for a change the game did not
+// make, like a phone on the playing team claimed or let go, which moves every "n of m in".
+export const refreshActiveMinigameProjection = (
+  state: RoomState,
+  rules: SerializableValue | null
+): void => {
+  if (activeMinigameRuntimeState === null || activeMinigameRuntimeState.minigameId !== state.currentRoundConfig?.minigame) {
+    return;
+  }
+
+  projectActiveRuntimeStateToRoomState(state, rules);
+};
+
+// One playing-team phone's own answer card (`selectPlayerView`), for that player's room alone.
+// Null for a player who is not seated on the playing team, and for a game with no phone answers.
+export const selectActiveMinigamePlayerView = (
+  state: RoomState,
+  playerId: string,
+  showOwnAnswer: boolean,
+  rules: SerializableValue | null
+): MinigamePlayerView | null => {
+  const answeringPlayers = resolveAnsweringPlayers(state);
+
+  if (!answeringPlayers.some((player) => player.id === playerId)) {
+    return null;
+  }
+
+  return (
+    selectFromActiveRuntime(rules, (plugin, input) =>
+      plugin.selectPlayerView?.({ ...input, answeringPlayers, playerId, showOwnAnswer }) ?? null
+    )?.result ?? null
+  );
 };
 
 // The phone hooks (`MinigameRuntimePlugin.selectContestant` and friends), read off the active
@@ -309,16 +425,16 @@ export const supportsContestantTurns = (minigameId: MinigameType): boolean => {
 };
 
 export const isContestantMinigameAction = (minigameId: MinigameType, actionType: string): boolean => {
-  return (resolveMinigameRuntimePlugin(minigameId).contestantActionTypes ?? []).includes(actionType);
+  return (findMinigameRuntimePlugin(minigameId)?.contestantActionTypes ?? []).includes(actionType);
 };
 
 export const resolveContestantRetakeActionType = (minigameId: MinigameType): string | null => {
-  return resolveMinigameRuntimePlugin(minigameId).contestantRetakeActionType ?? null;
+  return findMinigameRuntimePlugin(minigameId)?.contestantRetakeActionType ?? null;
 };
 
 // Whether this host action starts the whole turn over (`contestantResetActionType`).
 export const isContestantResetAction = (minigameId: MinigameType, actionType: string): boolean => {
-  return resolveMinigameRuntimePlugin(minigameId).contestantResetActionType === actionType;
+  return findMinigameRuntimePlugin(minigameId)?.contestantResetActionType === actionType;
 };
 
 const selectFromActiveRuntime = <TResult>(

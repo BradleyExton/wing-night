@@ -16,6 +16,7 @@ import {
   type SpectatorBetPick
 } from "@wingnight/shared";
 
+import { logError } from "../../logger/index.js";
 import type { PlayerClaimStore } from "../../playerClaims/index.js";
 import { createTokenBucket, type TokenBucket } from "../../utils/tokenBucket/index.js";
 import {
@@ -73,6 +74,9 @@ export type PlayerSeatContext = {
   // Hands the player their own pick on the turn in hand, through their own room. A no-op with no
   // bets up.
   emitOwnSpectatorBet: (playerId: string) => void;
+  // Hands a playing-team phone its own answer card (or a null, with nothing to answer), through
+  // its own room. Omitted by a harness that has no game in play.
+  emitOwnPlayerView?: (playerId: string) => void;
   // Copies the store's claimed/connected ids into the room and broadcasts
   // (coalesced by the caller, so a burst of claims is one snapshot).
   syncClaimFlags: () => void;
@@ -133,12 +137,58 @@ const answer = <TResult>(ack: unknown, result: TResult): void => {
 // .claimSecret`) and is that player again on this socket before its first
 // paint, with no re-pick: the phone cannot hold a wake lock on plain HTTP, so
 // coming back has to cost nothing.
+// A phone is a guest's device on the party Wi-Fi, so nothing it sends may take the server down: a
+// fault in any of the phone family's handlers is logged and refused, never thrown into Socket.IO's
+// event loop (where an uncaught exception ends the process and the night with it).
+const runGuarded = (label: string, body: () => void, onFault: () => void = () => undefined): void => {
+  try {
+    body();
+  } catch (error) {
+    logError(`server:playerEventFailure:${label}`, error);
+
+    try {
+      onFault();
+    } catch (ackError) {
+      logError(`server:playerEventFailure:${label}:ack`, ackError);
+    }
+  }
+};
+
 export const registerPlayerHandlers = (
+  socket: PlayerSocket,
+  connection: PlayerConnection,
+  context: PlayerSeatContext
+): void => {
+  runGuarded("register", () => {
+    registerGuardedPlayerHandlers(socket, connection, context);
+  });
+};
+
+const registerGuardedPlayerHandlers = (
   socket: PlayerSocket,
   { handshake, peerAddress }: PlayerConnection,
   context: PlayerSeatContext
 ): void => {
   const { claimStore } = context;
+
+  // Every listener below runs inside `runGuarded`; a fault acks `refusal` when the phone asked.
+  const onGuarded = (
+    event: PlayerEventName,
+    refusal: unknown,
+    listener: (payload: unknown, ack: unknown) => void
+  ): void => {
+    socket.on(event, (payload, ack) => {
+      runGuarded(
+        event,
+        () => {
+          listener(payload, ack);
+        },
+        () => {
+          answer(ack, refusal);
+        }
+      );
+    });
+  };
   const actionBucket = createTokenBucket({
     capacity: PLAYER_ACTION_BURST,
     refillPerSecond: PLAYER_ACTIONS_PER_SECOND,
@@ -203,6 +253,8 @@ export const registerPlayerHandlers = (
     context.emitContestantHostView(playerId);
     // And a watcher who bet before the reload sees the button they pressed.
     context.emitOwnSpectatorBet(playerId);
+    // And a phone on the playing team sees the question in hand, and its own answer to it.
+    context.emitOwnPlayerView?.(playerId);
   };
 
   if (handshake.claimSecret !== null) {
@@ -223,146 +275,168 @@ export const registerPlayerHandlers = (
     }
   }
 
-  socket.on(CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM, (payload, ack) => {
-    if (!isAck<PlayerClaimResult>(ack)) {
-      return;
-    }
+  onGuarded(
+    CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM,
+    { ok: false, reason: PLAYER_CLAIM_REFUSAL_REASONS.SERVER_ERROR },
+    (payload, ack) => {
+      if (!isAck<PlayerClaimResult>(ack)) {
+        return;
+      }
 
-    if (!actionBucket.take()) {
-      ack({ ok: false, reason: PLAYER_CLAIM_REFUSAL_REASONS.RATE_LIMITED });
-      return;
-    }
+      if (!actionBucket.take()) {
+        ack({ ok: false, reason: PLAYER_CLAIM_REFUSAL_REASONS.RATE_LIMITED });
+        return;
+      }
 
-    if (!isPlayerClaimPayload(payload)) {
-      ack({ ok: false, reason: PLAYER_CLAIM_REFUSAL_REASONS.UNKNOWN_PLAYER });
-      return;
-    }
+      if (!isPlayerClaimPayload(payload)) {
+        ack({ ok: false, reason: PLAYER_CLAIM_REFUSAL_REASONS.UNKNOWN_PLAYER });
+        return;
+      }
 
-    const outcome = claimStore.claim({
-      players: context.getPlayers(),
-      playerId: payload.playerId,
-      socketId: socket.id,
-      claimSecret: payload.claimSecret ?? null,
-      peerAddress
-    });
-
-    if (!outcome.ok) {
-      ack(outcome);
-      return;
-    }
-
-    if (outcome.releasedPlayerId !== null) {
-      socket.leave(resolvePlayerRoom(outcome.releasedPlayerId));
-    }
-
-    takeSeat(outcome.playerId);
-    context.syncClaimFlags();
-    ack({ ok: true, playerId: outcome.playerId, claimSecret: outcome.claimSecret });
-  });
-
-  socket.on(CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE, (payload, ack) => {
-    if (!isAck<PlayerReleaseResult>(ack)) {
-      return;
-    }
-
-    if (!actionBucket.take()) {
-      ack({ ok: false, reason: PLAYER_CLAIM_REFUSAL_REASONS.RATE_LIMITED });
-      return;
-    }
-
-    // A release from a socket that does not hold the face (another tab with
-    // the same storage) still ends the claim; the store tells the holder.
-    const playerId = isPlayerReleasePayload(payload)
-      ? claimStore.releaseBySecret(payload.claimSecret, socket.id)
-      : null;
-
-    if (playerId === null) {
-      ack({ ok: false, reason: PLAYER_CLAIM_REFUSAL_REASONS.UNKNOWN_CLAIM });
-      return;
-    }
-
-    socket.leave(resolvePlayerRoom(playerId));
-    context.syncClaimFlags();
-    ack({ ok: true });
-  });
-
-  // A contestant playing their own leg. The face this socket holds is the only identity that
-  // counts — the payload names no player — and the mutation decides whether that face may send
-  // this action now. Nothing here can advance a phase or move a turn: the actions a game lets a
-  // phone send are its inputs and the end of its own run (AGENTS.md §3.5).
-  socket.on(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION, (payload, ack) => {
-    const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
-
-    if (!takeMinigameActionToken(playerId)) {
-      answer<PlayerMinigameActionResult>(ack, {
-        ok: false,
-        reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.RATE_LIMITED
+      const outcome = claimStore.claim({
+        players: context.getPlayers(),
+        playerId: payload.playerId,
+        socketId: socket.id,
+        claimSecret: payload.claimSecret ?? null,
+        peerAddress
       });
-      return;
-    }
 
-    if (!isPlayerMinigameActionPayload(payload)) {
-      answer<PlayerMinigameActionResult>(ack, {
-        ok: false,
-        reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.MALFORMED
-      });
-      return;
-    }
+      if (!outcome.ok) {
+        ack(outcome);
+        return;
+      }
 
-    if (playerId === null) {
-      answer<PlayerMinigameActionResult>(ack, {
-        ok: false,
-        reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.NOT_SEATED
-      });
-      return;
-    }
+      if (outcome.releasedPlayerId !== null) {
+        socket.leave(resolvePlayerRoom(outcome.releasedPlayerId));
+      }
 
-    answer(ack, context.dispatchMinigameAction(playerId, payload));
-  });
+      takeSeat(outcome.playerId);
+      context.syncClaimFlags();
+      ack({ ok: true, playerId: outcome.playerId, claimSecret: outcome.claimSecret });
+    }
+  );
+
+  onGuarded(
+    CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE,
+    { ok: false, reason: PLAYER_CLAIM_REFUSAL_REASONS.SERVER_ERROR },
+    (payload, ack) => {
+      if (!isAck<PlayerReleaseResult>(ack)) {
+        return;
+      }
+
+      if (!actionBucket.take()) {
+        ack({ ok: false, reason: PLAYER_CLAIM_REFUSAL_REASONS.RATE_LIMITED });
+        return;
+      }
+
+      // A release from a socket that does not hold the face (another tab with
+      // the same storage) still ends the claim; the store tells the holder.
+      const playerId = isPlayerReleasePayload(payload)
+        ? claimStore.releaseBySecret(payload.claimSecret, socket.id)
+        : null;
+
+      if (playerId === null) {
+        ack({ ok: false, reason: PLAYER_CLAIM_REFUSAL_REASONS.UNKNOWN_CLAIM });
+        return;
+      }
+
+      socket.leave(resolvePlayerRoom(playerId));
+      context.syncClaimFlags();
+      ack({ ok: true });
+    }
+  );
+
+  // A contestant playing their own leg, or a playing-team phone answering the question in hand.
+  // The face this socket holds is the only identity that counts — the payload names no player —
+  // and the room decides whether that face may send this action now. Nothing here can advance a
+  // phase or move a turn: the actions a game lets a phone send are its inputs, the end of its own
+  // run and an answer (AGENTS.md §3.4, §3.5).
+  onGuarded(
+    CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION,
+    { ok: false, reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.SERVER_ERROR },
+    (payload, ack) => {
+      const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
+
+      if (!takeMinigameActionToken(playerId)) {
+        answer<PlayerMinigameActionResult>(ack, {
+          ok: false,
+          reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.RATE_LIMITED
+        });
+        return;
+      }
+
+      if (!isPlayerMinigameActionPayload(payload)) {
+        answer<PlayerMinigameActionResult>(ack, {
+          ok: false,
+          reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.MALFORMED
+        });
+        return;
+      }
+
+      if (playerId === null) {
+        answer<PlayerMinigameActionResult>(ack, {
+          ok: false,
+          reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.NOT_SEATED
+        });
+        return;
+      }
+
+      answer(ack, context.dispatchMinigameAction(playerId, payload));
+    }
+  );
 
   // A watcher's OVER or UNDER on the turn in hand. Like the contestant's input, the face this
   // socket holds is the only identity that counts; the room decides whether the window is open and
   // whether that face is on the team about to play. It reaches the turn's bets and nothing else.
-  socket.on(CLIENT_TO_SERVER_EVENTS.PLAYER_PLACE_BET, (payload, ack) => {
-    if (!isAck<PlayerPlaceBetResult>(ack)) {
-      return;
+  onGuarded(
+    CLIENT_TO_SERVER_EVENTS.PLAYER_PLACE_BET,
+    { ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.SERVER_ERROR },
+    (payload, ack) => {
+      if (!isAck<PlayerPlaceBetResult>(ack)) {
+        return;
+      }
+
+      const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
+
+      if (!takeBetToken(playerId)) {
+        ack({ ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.RATE_LIMITED });
+        return;
+      }
+
+      if (!isPlayerPlaceBetPayload(payload)) {
+        ack({ ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.MALFORMED });
+        return;
+      }
+
+      if (playerId === null) {
+        ack({ ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.NOT_SEATED });
+        return;
+      }
+
+      ack(context.placeBet(playerId, payload.pick));
     }
-
-    const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
-
-    if (!takeBetToken(playerId)) {
-      ack({ ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.RATE_LIMITED });
-      return;
-    }
-
-    if (!isPlayerPlaceBetPayload(payload)) {
-      ack({ ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.MALFORMED });
-      return;
-    }
-
-    if (playerId === null) {
-      ack({ ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.NOT_SEATED });
-      return;
-    }
-
-    ack(context.placeBet(playerId, payload.pick));
-  });
+  );
 
   // The phone asking for the room again (a reconnect, a tab brought back) asks for its leg too,
   // and for the bet it placed.
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, () => {
-    const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
+    runGuarded(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, () => {
+      const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
 
-    if (playerId !== null) {
-      context.emitContestantHostView(playerId);
-      context.emitOwnSpectatorBet(playerId);
-    }
+      if (playerId !== null) {
+        context.emitContestantHostView(playerId);
+        context.emitOwnSpectatorBet(playerId);
+        context.emitOwnPlayerView?.(playerId);
+      }
+    });
   });
 
   // The face stays the phone's; the host just sees it go to sleep.
   socket.on("disconnect", () => {
-    if (claimStore.disconnect(socket.id) !== null) {
-      context.syncClaimFlags();
-    }
+    runGuarded("disconnect", () => {
+      if (claimStore.disconnect(socket.id) !== null) {
+        context.syncClaimFlags();
+      }
+    });
   });
 };

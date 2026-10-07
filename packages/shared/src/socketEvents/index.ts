@@ -17,6 +17,7 @@ import type {
   PlayerClaimResult,
   PlayerReleaseResult
 } from "../playerJoin/index.js";
+import type { PlayerMinigamePlayerViewPayload } from "../phoneAnswers/index.js";
 import type { QuickPlayStartRequest } from "../quickPlay/index.js";
 import type { PlayerPlaceBetResult, SpectatorBetPick } from "../spectatorBets/index.js";
 
@@ -101,9 +102,12 @@ export type GameSetRoundDeviceModePayload = HostSecretPayload &
 // so the shot about to be aimed just moves to the tablet). Phones mode, MINIGAME_PLAY only.
 export type MinigameTakeBackPayload = HostSecretPayload;
 
-// A contestant's phone playing its own leg: the host's `minigame:action` envelope without the
-// secret. A PLAYER socket is authorized by the face it holds and nothing else, and only for the
-// game's own contestant action types, on its own leg, while the phone holds it.
+// A phone's game input: the host's `minigame:action` envelope without the secret. A PLAYER socket
+// is authorized by the face it holds and nothing else. Two kinds of input ride it, told apart by
+// the game's own action-type lists, never by the payload: a contestant playing their own arcade
+// leg (the game's contestant action types, their leg, while their phone holds it), and a playing
+// team's phone answering the question in hand (the game's player action types — a GEO pin, a
+// TRIVIA choice — from any seated phone on the team whose turn it is, until the host locks it).
 export type PlayerMinigameActionPayload = Record<"minigameId", MinigameType> &
   Record<"minigameApiVersion", MinigameApiVersion> &
   Record<"actionType", string> &
@@ -122,6 +126,11 @@ export type PlayerMinigameHostViewPayload = Record<"minigameHostView", Contestan
 // changed until it closes. Authorized by the face the socket holds; answers on an ack.
 export type PlayerPlaceBetPayload = Record<"pick", SpectatorBetPick>;
 export type PlayerPlaceBetAck = (result: PlayerPlaceBetResult) => void;
+
+// Server → one playing-team phone's `player:<id>` room only: its own answer card for the question
+// in hand (`MinigamePlayerView`). Re-sent whenever it changes, when the phone takes its seat and on
+// `client:requestState`; null when the card goes away. Never in any shared snapshot.
+export type { PlayerMinigamePlayerViewPayload };
 
 // Server → one bettor's `player:<id>` room only: their own pick for the turn named, sent when it
 // is placed and again when the phone takes its seat. No snapshot carries a pick before the turn
@@ -192,6 +201,7 @@ export const SERVER_TO_CLIENT_EVENTS = {
   PLAYER_SELF: "player:self",
   PLAYER_CLAIM_GONE: "player:claimGone",
   PLAYER_MINIGAME_HOST_VIEW: "player:minigameHostView",
+  PLAYER_MINIGAME_PLAYER_VIEW: "player:minigamePlayerView",
   PLAYER_SPECTATOR_BET: "player:spectatorBet",
   PLAYER_JOIN_TOKEN: "display:playerJoinToken"
 } as const;
@@ -303,6 +313,9 @@ export type ServerToClientEvents = {
   ) => void;
   [SERVER_TO_CLIENT_EVENTS.PLAYER_MINIGAME_HOST_VIEW]: (
     payload: PlayerMinigameHostViewPayload
+  ) => void;
+  [SERVER_TO_CLIENT_EVENTS.PLAYER_MINIGAME_PLAYER_VIEW]: (
+    payload: PlayerMinigamePlayerViewPayload
   ) => void;
   [SERVER_TO_CLIENT_EVENTS.PLAYER_SPECTATOR_BET]: (
     payload: PlayerSpectatorBetPayload

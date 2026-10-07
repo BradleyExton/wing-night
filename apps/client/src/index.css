@@ -1017,6 +1017,13 @@ body {
    tiles, and OSM only ships a light basemap. Inverting it and rotating the hue
    back gives a slate map that belongs on a dark stage (DESIGN.md §2.4) without
    adding a second tile provider a LAN party may not be able to reach. */
+/* Leaflet paints its container #ddd. Under the inverted tiles that only ever showed as a flash, but
+   at a party with no route to the tile server it IS the chart — a white slab the graticule cannot
+   be seen on. The container wears the chart's ground instead (DESIGN.md §2.4). */
+.geo-map-dark.leaflet-container {
+  background: theme(colors.mapGround);
+}
+
 .geo-map-dark .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9)
     saturate(0.5);
@@ -1031,6 +1038,21 @@ body {
 }
 .geo-map-dark .leaflet-control-attribution a {
   color: theme(colors.muted);
+}
+
+/* The reveal names every pin on the chart (GeoPinMarkers): Leaflet's tooltip is a white speech
+   bubble by default, which on the dark chart reads as a sticker. It wears the show's glass. */
+.geo-pin-label.leaflet-tooltip {
+  border: 1px solid theme(colors.text / 15%);
+  border-radius: 0.4rem;
+  background: theme(colors.bg / 88%);
+  color: theme(colors.text);
+  font-weight: 800;
+  font-size: clamp(0.7rem, 0.9vw, 1.05rem);
+  box-shadow: none;
+}
+.geo-pin-label.leaflet-tooltip-top::before {
+  border-top-color: theme(colors.bg / 88%);
 }
 
 /* The in-progress pin breathes so the room can pick it out of a whole world

@@ -69,6 +69,9 @@ export const adminCopy = {
     `Question ${promptIndex + 1}`,
   triviaQuestionFieldLabel: "Question",
   triviaAnswerFieldLabel: "Answer",
+  // Read-only: the wizard edits a question's answer (its own choice follows it) but not the list.
+  triviaChoicesFieldLabel: "Choices (edit in trivia.json)",
+  triviaNoChoices: "",
   removeTriviaPromptLabel: (promptIndex: number): string =>
     `Remove trivia question ${promptIndex + 1}`,
   addTriviaPromptLabel: "+ Add a question",

@@ -39,7 +39,8 @@ ember #FFB35A\
 glow #FFD6AA\
 glowHot #FFECD6\
 hearthGlass #2E1609\
-shade #000000
+shade #000000\
+mapGround #0E1419 (GEO's chart ground)
 
 primary #F97316 (burnt orange)\
 heat #EF4444 (intense red)\
@@ -639,9 +640,13 @@ treatment GEO's own reveal had already refused) and GEO's stat tiles.
 -   **One entrance**, `plaque-enter` (a 320ms rise that settles), nothing under
     reduced motion. The per-game `schlonic-callout` / 220ms `reveal` entrances
     on result cards are gone.
--   **TRIVIA has no TV verdict** — its display view carries no ruling (the
-    projection is answer-safe and sends only the count left). Giving the room
-    one is a projection change, not a styling one (BACKLOG.md).
+-   **TRIVIA's verdict is the spread** — on a multiple-choice question the
+    phones answered, the host's lock projects `reveal` (a `TriviaChoiceReveal`)
+    and the TV puts up the spread over a plaque: tone `hit` when the share
+    scored, the kicker "2 of 3 got it" (or "Nope — 0 of 3 got it"), the answer
+    as the title, the points. A question judged aloud (CORRECT/INCORRECT) still
+    has no TV verdict: that is the same projection change for `recordAttempt`'s
+    ruling, and stays in BACKLOG.md.
 
 The per-game sections below (§2.4–§2.13) describe what each card SAYS; where
 they describe how a result card looks, this section supersedes them.
@@ -673,6 +678,39 @@ The watchers' side bet (SPEC.md "Spectator bets") on the TV. Mockup:
     time" on the results. On its side the line and buttons shrink so both stay on screen.
 -   **The tablet** gets a pill under the stage hero's line on the briefing and the wings:
     "SIDE BETS O/U 7.5 · 3 IN". Nothing to press.
+
+### 2.2G Answers on the phones (phone cards, the count, the reveal)
+
+SPEC.md "Answers on the phones": during the playing team's turn every seated phone on it answers
+the question in hand at once — a GEO pin, a TRIVIA choice — and the host locks and reveals.
+Mockup: `apps/client/public/mockups/phone-answers/` (frames 1–7).
+
+-   **The phone card** is the game's own `PlayerSurface`, drawn in the guest phone's portrait
+    column and wearing the house phone answer card from `packages/surface` (`phoneCard`,
+    `phoneCardHot`, `phoneEyebrow`, `phoneVoice`, `phoneBigTitle`, `phoneStampWon/Lost`) — the
+    same warm glass as the bet card (§2.2F). ONE thing to do on it: GEO's chart (a tap drops the
+    pin, another moves it; the quick views and zoom ride the chart's top edge in a row, because a
+    phone cannot give an edge away), TRIVIA's choices as one column of thumb-high buttons lettered
+    A–F, the pick lit `primary`, the rest glass. The card glows (`phoneCardHot`) while there is
+    something to tap and on a result worth it.
+-   **After the lock**: "Locked in" (GEO, with the pin's `Off by` and points as two small stat
+    tiles) or the pick itself as the title (TRIVIA), a stamp in words — "✓ Best pin on the team",
+    "✓ You got it", "✗ Not this time" — and "Watch the TV.". A TRIVIA question without choices
+    gets one card, "Say it to your team", and no button.
+-   **The count, never the answer**: the TV says how many of the team's phones are in — GEO in its
+    status pill ("Molten Metal · 2 of 3 pins in"), TRIVIA in the marquee's readout ("2 of 3 in · 4
+    questions to go") — and the tablet says the same count beside its CTA (TRIVIA's LOCK ANSWERS
+    waits, greyed, until the first is in). The "of m" counts the team's awake phones plus any
+    asleep one that already answered. No coordinate, choice or name reaches either before the
+    lock. A team with no phones draws exactly what it drew before.
+-   **The reveal**: GEO's theatre plots every pin, each named on a glass label (`.geo-pin-label`,
+    the tablet's pin "Tablet"), the best one larger and starred (★), the answer in `success`, and
+    the plaque's kicker names whose pin scored. The TV fits the spread clear of its corner cards
+    (the photo plate's left third, the plaque's bottom-right), so no named pin hides under one. TRIVIA's spread is one row per choice: the letter
+    and the choice, a bar of one pip per seated phone (lit `muted` for each phone that chose it,
+    `success` on the answer's row) and the count; the answer's row also says "✓ The answer" in
+    words — tone by shape and words, never colour alone (§2.2E, §7). Counts only: never who chose
+    what.
 
 ## 2.2B Setup Lobby ("Hearth")
 
@@ -787,10 +825,13 @@ as DRAWING, EMOJI_CHARADES, JOUST, FAPPY and SCHLONIC. Directions:
     `index.css`, applied via `client/mapTheme`). This replaces the sepia
     filter and is what makes the chart belong on the stage. A second
     tile provider was rejected: a LAN party may not be able to reach one.
-    Under the tiles the map frame is `#0E1419` (`sceneMapGround`), the
+    Under the tiles the map frame is `mapGround` (`#0E1419`), the
     inverted basemap's own ocean, so a tile still loading shows the map's
-    dark rather than a grey hole. It is scene art under §0.1's licence,
-    not a surface token.
+    dark rather than a grey hole. It is a token of its own (§0.1), used
+    by the GEO charts alone — and it is the Leaflet container's own
+    background too (`.geo-map-dark.leaflet-container` in `index.css`),
+    because Leaflet paints that container `#ddd`, which is what a
+    party with no route to the tiles would otherwise be looking at.
 -   **Leaflet's own chrome never ships.** `zoomControl` is off on both
     surfaces — its white browser buttons are exactly the foreign
     furniture this language exists to remove. The tablet draws its own
@@ -863,6 +904,24 @@ as DRAWING, EMOJI_CHARADES, JOUST, FAPPY and SCHLONIC. Directions:
 -   **The reveal happens on the chart the team just pinned**, on both
     surfaces — the tablet no longer swaps its map out for a verdict
     panel.
+-   **The team's phones pin too** (§2.2G): each seated phone on the playing
+    team drops its own pin on the same chart at phone scale, and the tablet's
+    pin is one more. Before the lock the TV and the tablet carry a count only;
+    at the reveal both charts plot every pin, named, and close on all of them
+    and the answer. The team scores its best pin, and the plaque says whose.
+-   **A graticule under every chart** (`GeoGraticule`, every 30°, white at 24%,
+    in a pane that takes no pointer). It is what a chart with no route to the
+    OSM tiles still shows on its `mapGround` — the Leaflet container's own
+    background as well as the frame's, so the bare chart is the chart's dark
+    and never Leaflet's `#ddd` — and a tap on it still lands. The offline
+    party's degrade path is said in one glass line on every chart, and goes
+    the moment a tile loads again: the tablet's centred just under the chrome
+    row, clear of the rail and the photo plate ("No map tiles on this Wi-Fi —
+    tap your best guess on the grid"); a phone's along the chart's foot, above
+    the OSM credit, because its controls own the top ("…or ask the host for
+    the tablet"); the TV's a pill across the top of the arena in the
+    marquee's readout type ("No map tiles tonight — the pins land on the
+    grid").
 
 ## 2.5 DRAWING Minigame Surface Language ("Showtime Easel")
 
@@ -1972,6 +2031,16 @@ wears. Its language is what it refuses to draw.
     changes colour to `primary`, because at TV distance a wording change alone
     is not an event. The last question stays on the wall under it — it is
     nobody's to answer, and clearing it would leave the room staring at nothing.
+-   **A question with choices** (SPEC.md "Mini-Game Content") puts them under the question as
+    a row of lettered glass tiles, unmarked, and the question steps down a size
+    (`questionWithChoices`) so both fit a 1080p stage. The team's phones choose
+    (§2.2G); the marquee's readout adds the count. The host's lock swaps the
+    tiles for the spread: the question as a smaller heading, a row per choice,
+    and the plaque (§2.2E). The tablet's card lists the choices under the
+    answer, the answer ticked, with each choice's count beside it once locked;
+    its foot row is LOCK ANSWERS · 2 OF 3 IN (the `takeoverPrimary`, widest)
+    then CORRECT and INCORRECT, kept as the spoken verdict and the hatch, and
+    NEXT QUESTION from a reveal.
 -   The TV's counter is not the tablet's. The host's counter is operational
     ("3 questions left" — what is still his to run); the TV's is the room's
     ("3 questions to go"). SCHLONIC splits the same counter the same way, and

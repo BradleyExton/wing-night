@@ -25,7 +25,11 @@ export type GeoRuntimeState = {
   promptCursor: number;
   promptsPerTurn: number;
   promptsCompletedThisTurn: number;
+  // The tablet's pin — the host's `setGuess`, which the TV shows land while the team argues.
   currentGuess: GeoRuntimeGuess | null;
+  // Each playing-team phone's own pin on the photo in hand (`placePin`), by player. Secret until
+  // the lock: no view but that player's own card ever carries one before `submitGuess`.
+  phonePinsByPlayerId: Record<string, GeoRuntimeGuess>;
   currentSubState: GeoRuntimeSubState;
   lastResult: GeoPromptResult | null;
   pendingPointsByTeamId: Record<string, number>;

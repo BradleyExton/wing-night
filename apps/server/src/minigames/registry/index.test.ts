@@ -51,3 +51,31 @@ test("does give the phone hooks to exactly the four arcade relays", () => {
     }
   }
 });
+
+// The answer hooks let every seated phone on the playing team answer the question in hand. Only
+// GEO and TRIVIA carry them, never an arcade relay, and an answer is never a lock, a reveal, a
+// skip or anything the game also accepts from the host (or calls transient for the host's undo).
+test("does keep answers off every host list when GEO and TRIVIA alone carry the answer hooks", () => {
+  const withAnswers = MINIGAME_TYPES.filter((minigameType) => {
+    const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
+
+    return runtimePlugin.playerActionTypes !== undefined || runtimePlugin.reducePlayerAction !== undefined;
+  });
+
+  assert.deepEqual([...withAnswers].sort(), ["GEO", "TRIVIA"]);
+
+  for (const minigameType of withAnswers) {
+    const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
+
+    assert.ok(runtimePlugin.reducePlayerAction !== undefined, minigameType);
+    assert.ok(runtimePlugin.selectPlayerView !== undefined, minigameType);
+    assert.ok(runtimePlugin.releasePlayerAnswer !== undefined, minigameType);
+    assert.ok((runtimePlugin.playerActionTypes ?? []).length > 0, minigameType);
+
+    for (const actionType of runtimePlugin.playerActionTypes ?? []) {
+      assert.equal(/^(skip|reset|lock|submit|next|record|reveal)/.test(actionType), false, `${minigameType} ${actionType}`);
+      assert.equal(runtimePlugin.transientActionTypes?.includes(actionType) ?? false, false, actionType);
+      assert.equal(runtimePlugin.contestantActionTypes?.includes(actionType) ?? false, false, actionType);
+    }
+  }
+});

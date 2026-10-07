@@ -1,13 +1,14 @@
-import { createDevManifest } from "@wingnight/minigames-core";
+import { createDevManifest, type SerializableValue } from "@wingnight/minigames-core";
 
 // Mirrors content/sample/minigames/trivia.json so sandbox play matches a
 // real night.
-const DEV_CONTENT = {
+const DEV_CONTENT: { prompts: SerializableValue[] } = {
   prompts: [
     {
       id: "spice-origin",
       question: "What country is widely credited as the origin of hot sauce?",
-      answer: "Mexico"
+      answer: "Mexico",
+      choices: ["Mexico", "India", "Thailand", "Hungary"]
     },
     {
       id: "capsaicin-source",
@@ -17,7 +18,8 @@ const DEV_CONTENT = {
     {
       id: "scoville-name",
       question: "What scale is used to measure pepper heat?",
-      answer: "Scoville scale"
+      answer: "Scoville scale",
+      choices: ["Richter scale", "Scoville scale", "Mohs scale", "Beaufort scale"]
     }
   ]
 };

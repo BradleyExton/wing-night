@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Answers on the phones — Mockup</title>
+    <!--
+      Simultaneous answers (SPEC.md "Answers on the phones"): ONE team per turn, as ever, but during
+      that team's turn every one of its players answers on their own phone at the same time. The
+      host still locks and reveals on the tablet.
+
+        1. GEO phone (390x844), photo open: the photo's title, ONE map, the player's own pin. A tap
+           drops it, another moves it. No tiles (an offline party, a headless test) still leaves a
+           dark chart with a graticule that takes the tap, and a line saying so.
+        2. GEO phone, locked: "Locked in — watch the TV", and once revealed, how this pin measured.
+        3. TRIVIA phone, question open: the question and ONE column of choices, A–F, the pick lit
+           primary. Changeable until the host locks it.
+        4. TRIVIA phone, revealed: "✓ You got it" / "✗ Not this time", pointing at the TV.
+        5. TV GEO reveal (1920x1080 at half): every pin on the chart, each NAMED, the team's best
+           ringed, the answer in success green; the plaque says whose pin scored.
+        6. TV TRIVIA, question open: the choices under the question as a row of lettered tiles,
+           and the count — "2 of 3 in" — in the marquee's readout. A count, never a choice.
+        7. TV TRIVIA spread: one bar per choice, the count on it, the right one carrying ✓ and the
+           words "The answer" (tone by shape and words, never colour alone — DESIGN.md §2.2E), and
+           the plaque with the points.
+
+      The phone language is the player phone's (mockups/player-phone): warm glass, one accent. The
+      TV is the Neon Heat Line marquee over the game's own stage (DESIGN.md §2.2D, §2.4, §2.12).
+    -->
+    <style>
+      :root {
+        --bg: #121212; --surface: #1c1c1c; --text: #ffffff; --muted: #a3a3a3;
+        --mutedWarm: #b3a89a; --mutedWarmDim: #6b6157; --ember: #ffb35a; --glow: #ffd6aa;
+        --hearthGlass: #2e1609; --shade: #000; --primary: #f97316; --heat: #ef4444;
+        --gold: #fbbf24; --success: #22c55e; --danger: #ef4444; --map: #0e1419;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: #0b0b0b; color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        display: flex; gap: 32px; padding: 32px; align-items: flex-start; flex-wrap: wrap;
+      }
+      .label { width: 100%; margin: 12px 0 -18px; font-size: 12px; font-weight: 700; color: var(--mutedWarm); letter-spacing: .2em; text-transform: uppercase; }
+      .phone {
+        width: 390px; height: 844px; border-radius: 28px; overflow: hidden; position: relative;
+        background: radial-gradient(ellipse at 50% 115%, var(--hearthGlass) 0%, var(--bg) 58%);
+        padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 14px;
+      }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .wordmark { font-weight: 900; text-transform: uppercase; font-size: 22px; text-shadow: 0 0 18px rgba(249,115,22,.35); }
+      .eyebrow { margin: 0; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .36em; color: var(--mutedWarm); }
+      .voice { margin: 0; font-family: "Playfair Display", Georgia, serif; font-style: italic; color: var(--mutedWarm); line-height: 1.4; }
+      .fine { margin: 0; font-size: 13px; color: var(--mutedWarmDim); line-height: 1.4; text-align: center; }
+      .card {
+        position: relative; border-radius: 16px; padding: 16px;
+        border: 1px solid rgba(249,115,22,.25);
+        background: linear-gradient(180deg, rgba(46,22,9,.84), rgba(0,0,0,.93));
+        box-shadow: inset 0 1px 0 rgba(255,214,170,.14);
+        display: flex; flex-direction: column; gap: 12px;
+      }
+      .card.hot { border-color: var(--primary); box-shadow: inset 0 1px 0 rgba(255,214,170,.14), 0 0 40px -10px rgba(249,115,22,.6); }
+      .card.grow { flex: 1; min-height: 0; }
+      .title { margin: 0; font-size: 26px; font-weight: 900; line-height: 1.05; }
+      .big { margin: 0; font-size: 40px; font-weight: 900; text-transform: uppercase; line-height: .95; text-shadow: 0 0 18px rgba(249,115,22,.45); }
+      .map {
+        flex: 1; min-height: 0; border-radius: 14px; position: relative; overflow: hidden; background: var(--map);
+        background-image:
+          linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px);
+        background-size: 100% 16.6%, 12.5% 100%;
+        border: 1px solid rgba(255,255,255,.1);
+      }
+      .pin { position: absolute; width: 20px; height: 20px; border-radius: 50%; background: rgba(249,115,22,.6); border: 3px solid var(--primary); transform: translate(-50%,-50%); }
+      .mapnote { position: absolute; left: 10px; right: 10px; bottom: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(18,18,18,.82); font-size: 12px; color: var(--mutedWarm); }
+      .pill { display: inline-flex; align-self: flex-start; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(249,115,22,.5); background: rgba(249,115,22,.15); font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+      .pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 8px rgba(249,115,22,.7); }
+      .stack { display: flex; flex-direction: column; gap: 10px; }
+      .opt {
+        min-height: 64px; border-radius: 16px; border: 1px solid rgba(255,179,90,.35); background: rgba(28,28,28,.6);
+        display: flex; align-items: center; gap: 14px; padding: 0 16px; font-weight: 800; font-size: 19px;
+      }
+      .opt b { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(249,115,22,.15); color: var(--primary); font-size: 16px; flex: none; }
+      .opt.on { background: var(--primary); color: var(--bg); border-color: var(--primary); box-shadow: inset 0 -4px 0 rgba(0,0,0,.28), 0 10px 24px -14px rgba(249,115,22,.7); }
+      .opt.on b { background: rgba(0,0,0,.18); color: var(--bg); }
+      .tv { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; border: 1px dashed rgba(255,179,90,.3); }
+      .tv .screen { width: 44px; height: 30px; border-radius: 4px; border: 2px solid var(--mutedWarm); flex: none; }
+      .stamp { font-weight: 900; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; }
+      .won { color: var(--success); } .lost { color: var(--mutedWarm); }
+      .stat { display: flex; gap: 10px; }
+      .stat div { flex: 1; border-radius: 12px; border: 1px solid rgba(255,255,255,.1); padding: 10px; }
+      .stat span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .26em; text-transform: uppercase; color: var(--mutedWarm); }
+      .stat b { font-family: "Barlow Condensed", sans-serif; font-size: 30px; font-weight: 900; }
+      /* TV frames, at half of 1920x1080 */
+      .screen16 { width: 960px; height: 540px; border-radius: 12px; overflow: hidden; position: relative; background: var(--bg); display: flex; flex-direction: column; }
+      .marquee { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px 10px; border-bottom: 1px solid rgba(255,255,255,.08); }
+      .marquee .game { font-family: Monoton, cursive; font-size: 18px; color: #fff; text-shadow: 0 0 10px var(--gold); }
+      .marquee .team { font-family: Anton, Impact, sans-serif; font-size: 34px; text-transform: uppercase; line-height: 1; }
+      .marquee .readout { font-size: 10px; font-weight: 800; letter-spacing: .24em; text-transform: uppercase; color: var(--mutedWarm); }
+      .marquee .readout b { font-family: "Barlow Condensed", sans-serif; font-size: 22px; letter-spacing: 0; color: var(--text); }
+      .tvmap { flex: 1; position: relative; background: var(--map);
+        background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+        background-size: 100% 20%, 10% 100%; }
+      .tvpin { position: absolute; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+      .tvpin i { width: 18px; height: 18px; border-radius: 50%; background: rgba(249,115,22,.6); border: 3px solid var(--primary); }
+      .tvpin.best i { outline: 3px solid #fff; outline-offset: 3px; }
+      .tvpin.answer i { background: rgba(34,197,94,.6); border-color: var(--success); }
+      .tvpin span { padding: 2px 8px; border-radius: 6px; background: rgba(18,18,18,.88); font-size: 12px; font-weight: 800; white-space: nowrap; }
+      .plaque { position: absolute; right: 18px; bottom: 18px; width: 270px; border-radius: 14px; padding: 12px 14px; background: linear-gradient(180deg, var(--surface), var(--bg)); border: 1px solid rgba(34,197,94,.6); }
+      .plaque .k { font-size: 10px; font-weight: 800; letter-spacing: .24em; text-transform: uppercase; color: var(--mutedWarm); }
+      .plaque .t { font-size: 26px; font-weight: 900; }
+      .plaque .p { font-family: "Barlow Condensed", sans-serif; font-size: 34px; font-weight: 900; color: var(--gold); }
+      .q { margin: 0; padding: 0 60px; text-align: center; font-size: 46px; font-weight: 900; line-height: 1.05; }
+      .tvbody { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+      .tiles { display: flex; gap: 14px; }
+      .tile { min-width: 180px; padding: 14px 18px; border-radius: 14px; border: 1px solid rgba(255,255,255,.12); background: rgba(28,28,28,.7); font-size: 20px; font-weight: 800; display: flex; gap: 10px; align-items: center; }
+      .tile b { color: var(--primary); }
+      .bars { width: 720px; display: flex; flex-direction: column; gap: 10px; }
+      .bar { display: grid; grid-template-columns: 220px 1fr 60px; align-items: center; gap: 12px; font-size: 18px; font-weight: 800; }
+      .bar .track { height: 30px; border-radius: 8px; background: rgba(255,255,255,.06); overflow: hidden; }
+      .bar .fill { height: 100%; background: rgba(163,163,163,.55); }
+      .bar.right .fill { background: var(--success); }
+      .bar.right .name::after { content: "  ✓ The answer"; color: var(--success); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
+      .bar .n { font-family: "Barlow Condensed", sans-serif; font-size: 26px; text-align: right; }
+    </style>
+  </head>
+  <body>
+    <p class="label">1–2 · GEO on the phone (390×844)</p>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <p class="eyebrow">Photo 1 / 2 · Where was this taken?</p>
+      <p class="title">The bridge with the blue lights</p>
+      <div class="card hot grow">
+        <div class="map">
+          <span class="pin" style="left: 54%; top: 38%"></span>
+          <p class="mapnote">No map tiles on this Wi-Fi — tap your best guess on the grid, or ask the host for the tablet.</p>
+        </div>
+        <span class="pill"><i></i>Your pin is in</span>
+        <p class="voice">Tap to move it till the host locks the photo. The team scores its best pin.</p>
+      </div>
+    </section>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <div class="card hot">
+        <p class="eyebrow">Photo 1 / 2</p>
+        <span class="stamp won">✓ Best pin on the team</span>
+        <p class="big">Locked in</p>
+        <div class="stat"><div><span>Off by</span><b>4.2 km</b></div><div><span>Points</span><b>+2</b></div></div>
+      </div>
+      <div class="tv"><span class="screen"></span><p class="voice">Watch the TV.</p></div>
+    </section>
+
+    <p class="label">3–4 · TRIVIA on the phone (390×844)</p>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <div class="card hot">
+        <p class="eyebrow">Trivia · Pick one</p>
+        <p class="title">Which pepper held the world's-hottest title from 2013 to 2023?</p>
+        <div class="stack">
+          <span class="opt"><b>A</b>Ghost Pepper</span>
+          <span class="opt on"><b>B</b>Carolina Reaper</span>
+          <span class="opt"><b>C</b>Trinidad Scorpion</span>
+          <span class="opt"><b>D</b>Pepper X</span>
+        </div>
+        <p class="voice">Change your mind till the host locks it.</p>
+      </div>
+    </section>
+    <section class="phone">
+      <div class="top"><span class="wordmark">Wing Night</span></div>
+      <div class="card hot">
+        <p class="eyebrow">Trivia</p>
+        <span class="stamp won">✓ You got it</span>
+        <p class="big">Carolina Reaper</p>
+        <p class="voice">Your pick. The spread's on the TV.</p>
+      </div>
+      <div class="tv"><span class="screen"></span><p class="voice">Watch the TV.</p></div>
+    </section>
+
+    <p class="label">5 · TV, GEO reveal with every pin (1920×1080 at half)</p>
+    <section class="screen16">
+      <div class="marquee"><span class="team">Spice Girls <small style="color: var(--gold); font-size: 16px">+2 pending</small></span><span class="game">Geo</span><span class="readout">Photo <b>1</b> / 2</span></div>
+      <div class="tvmap">
+        <span class="tvpin answer" style="left: 50%; top: 46%"><i></i><span>Actual spot</span></span>
+        <span class="tvpin best" style="left: 55%; top: 40%"><i></i><span>★ Caitlin</span></span>
+        <span class="tvpin" style="left: 34%; top: 62%"><i></i><span>Alex</span></span>
+        <span class="tvpin" style="left: 70%; top: 30%"><i></i><span>Tablet</span></span>
+        <div class="plaque"><div class="k">Best pin · Caitlin · off by</div><div class="t">4.2 km</div><div class="p">+2</div></div>
+      </div>
+    </section>
+
+    <p class="label">6 · TV, TRIVIA question open with choices</p>
+    <section class="screen16">
+      <div class="marquee"><span class="team">Spice Girls</span><span class="game">Trivia</span><span class="readout"><b>2</b> of 3 in · 4 questions to go</span></div>
+      <div class="tvbody">
+        <p class="q">Which pepper held the world's-hottest title from 2013 to 2023?</p>
+        <div class="tiles"><span class="tile"><b>A</b>Ghost Pepper</span><span class="tile"><b>B</b>Carolina Reaper</span><span class="tile"><b>C</b>Trinidad Scorpion</span><span class="tile"><b>D</b>Pepper X</span></div>
+      </div>
+    </section>
+
+    <p class="label">7 · TV, TRIVIA spread at the reveal</p>
+    <section class="screen16">
+      <div class="marquee"><span class="team">Spice Girls <small style="color: var(--gold); font-size: 16px">+1 pending</small></span><span class="game">Trivia</span><span class="readout">4 questions to go</span></div>
+      <div class="tvbody" style="position: relative">
+        <p class="q" style="font-size: 34px">Which pepper held the world's-hottest title from 2013 to 2023?</p>
+        <div class="bars">
+          <div class="bar"><span class="name">A · Ghost Pepper</span><span class="track"><span class="fill" style="width: 33%; display: block"></span></span><span class="n">1</span></div>
+          <div class="bar right"><span class="name">B · Carolina Reaper</span><span class="track"><span class="fill" style="width: 66%; display: block"></span></span><span class="n">2</span></div>
+          <div class="bar"><span class="name">C · Trinidad Scorpion</span><span class="track"><span class="fill" style="width: 0; display: block"></span></span><span class="n">0</span></div>
+          <div class="bar"><span class="name">D · Pepper X</span><span class="track"><span class="fill" style="width: 0; display: block"></span></span><span class="n">0</span></div>
+        </div>
+        <div class="plaque" style="position: static; width: 360px"><div class="k">✓ 2 of 3 got it</div><div class="t">Carolina Reaper</div><div class="p">+1</div></div>
+      </div>
+    </section>
+  </body>
+</html>

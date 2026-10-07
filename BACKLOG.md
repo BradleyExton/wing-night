@@ -416,6 +416,28 @@ Notes from the build, none of them blocking:
   readout type rather than sitting in its slot (DESIGN.md §2.2F). If those screens ever wear the
   marquee, the readout moves into its `readout` slot as plain text.
 
+## Answers on the phones — follow-ups
+
+Shipped: during the playing team's turn every seated phone on it answers at once — GEO pins, TRIVIA
+choices — and the host locks and reveals (SPEC.md "Answers on the phones", DESIGN.md §2.2G).
+Notes from the build, none of them blocking:
+
+- **TRIVIA's share rule is a majority vote — Brad may want partial credit.** One question is worth
+  one point, so `round(correct / seated)` gives the point when at least half the counted phones
+  (awake, or asleep with an answer in) chose right and nothing otherwise: 2 of 3 right scores the
+  same as 3 of 3, 1 of 3 the same as 0 of 3. Partial credit needs a per-question value above one —
+  e.g. `pointsPerQuestion: 3` in the trivia rules, so 2 of 3 right banks 2 — still one visible
+  rule, not a hidden modifier, and the cap per turn would want re-checking against it.
+- **More choice questions in the night pack.** The sample pack carries choices on eight of its
+  twenty; the night pack has no `trivia.json` of its own yet.
+- **GEO has no offline basemap.** With no route to OSM the phones (and the tablet) tap a dark chart
+  with a graticule and a note; a coarse coastline layer bundled with the app would make that chart
+  readable at a party with no internet. It would be the second tile source DESIGN.md §2.4 refused —
+  only as an offline fallback.
+- **The tablet never sees the phones' pins before the lock**, on purpose (it is in the team's
+  hands). If the host wants to referee a pin that landed in the sea by mistake, the escape hatch is
+  undo after the reveal, not a peek.
+
 ## Team identity (genre theming)
 
 Spec: `docs/team-identity.md`. Teams are told apart by a hashed colour and a name; the genre only
@@ -699,9 +721,11 @@ surface language that DESIGN.md should name with real tokens, or the dusk-desert
 JOUST's arena alone and the others should stop borrowing it. Until then each migration substitutes
 tokens as it goes. **Answered at T6.2**: they were copying JOUST's skin. `DESIGN.md` §2.5 now states the direction — the brown goes and the other seven marquees follow DRAWING onto house tokens. Built 2026-09-24: the brown is gone from every chrome string and lint gates the minigame trees.
 
-### TRIVIA has no verdict on the TV
+### TRIVIA has no verdict on the TV — half shipped
 Surfaced by the 2026-09-24 visual cohesion pass. Every other game shows the room a `<ResultPlaque>`
-(DESIGN.md §2.2E) when something is decided; TRIVIA's TV just moves to the next question, because
-`TriviaMinigameDisplayView` carries only the count of questions left. Showing "✓ Correct — Mexico"
-means projecting the last ruling (and, once ruled, its answer) into the display view — a
-projection change with its own answer-safety test, not a styling one.
+(DESIGN.md §2.2E) when something is decided. **A multiple-choice question now has one**: the
+phones answer it and the host's lock projects the spread (`TriviaChoiceReveal`) — bars per choice,
+the answer marked, and a plaque with the points (DESIGN.md §2.12, "Answers on the phones"). A
+question judged aloud (no choices, a team with no phones, or the host's CORRECT/INCORRECT on a
+choice question) still just moves on: giving it "✓ Correct — Mexico" is the same projection change
+for `recordAttempt`'s ruling, with its own answer-safety test.

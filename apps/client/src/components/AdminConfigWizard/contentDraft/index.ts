@@ -1,5 +1,6 @@
 import {
   CONFIG_FILE_KEYS,
+  normalizeTriviaChoice,
   validateDrawingContentFile,
   validateGameConfigFile,
   validatePlayersContentFile,
@@ -138,6 +139,43 @@ export const nextTriviaPrompt = (
   question: "",
   answer: ""
 });
+
+// Which of a multiple-choice question's choices IS its answer, for prompts the wizard has edited.
+// The answer is retyped a keystroke at a time and may pass through another choice's text on the
+// way ("About 100" on the way to "About 1000"), so the answer's choice cannot be found again by
+// its text: it is remembered by position, against the prompt object the draft holds. A prompt
+// fresh off disk has none, and its answer's choice is the one that matches it — a valid pack has
+// exactly one.
+const answerChoiceIndexByPrompt = new WeakMap<TriviaPrompt, number>();
+
+const resolveAnswerChoiceIndex = (prompt: TriviaPrompt): number => {
+  return answerChoiceIndexByPrompt.get(prompt) ?? prompt.choices?.indexOf(prompt.answer) ?? -1;
+};
+
+// A multiple-choice question has to list its answer among its choices (the pack validator refuses
+// it otherwise), and the wizard edits the answer, not the choices. So the answer's own choice — and
+// only that one — follows the answer as it is retyped, and the question keeps the same buttons. A
+// retyped answer that reads the same as ANOTHER choice (case and spaces aside) leaves the choices
+// as they are: renaming would put two of the same button on the phones. The answer then names that
+// other choice, which is valid, and typing on moves the answer's own choice again.
+export const setTriviaAnswer = (prompt: TriviaPrompt, answer: string): TriviaPrompt => {
+  const answerIndex = resolveAnswerChoiceIndex(prompt);
+
+  if (prompt.choices === undefined || answerIndex === -1) {
+    return { ...prompt, answer };
+  }
+
+  const collides = prompt.choices.some(
+    (choice, index) => index !== answerIndex && normalizeTriviaChoice(choice) === normalizeTriviaChoice(answer)
+  );
+  const next: TriviaPrompt = collides
+    ? { ...prompt, answer }
+    : { ...prompt, answer, choices: prompt.choices.map((choice, index) => (index === answerIndex ? answer : choice)) };
+
+  answerChoiceIndexByPrompt.set(next, answerIndex);
+
+  return next;
+};
 
 export const nextDrawingPrompt = (
   prompts: readonly DrawingPrompt[]

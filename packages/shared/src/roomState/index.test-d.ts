@@ -54,6 +54,8 @@ export type ValidMinigameHostViewCheck = Assert<
       promptCursor: number;
       pendingPointsByTeamId: Record<string, number>;
       currentPrompt: TriviaPrompt | null;
+      phoneAnswers: null;
+      reveal: null;
     },
     MinigameHostView
   >
@@ -77,6 +79,7 @@ export type ValidGeoMinigameHostViewCheck = Assert<
         answerLng: number;
       } | null;
       lastResult: null;
+      phoneAnswers: null;
     },
     GeoMinigameHostView
   >
@@ -92,6 +95,7 @@ export type ValidGeoMinigameDisplayGuessingViewCheck = Assert<
       promptsCompletedThisTurn: number;
       currentPrompt: { id: string; title: string; imageSrc: string } | null;
       currentGuess: { lat: number; lng: number } | null;
+      phoneAnswers: { answeredCount: number; seatedCount: number } | null;
       status: "guessing";
     },
     GeoMinigameDisplayView
@@ -108,6 +112,7 @@ export type ValidGeoMinigameDisplaySubmittedViewCheck = Assert<
       promptsCompletedThisTurn: number;
       currentPrompt: { id: string; title: string; imageSrc: string } | null;
       currentGuess: { lat: number; lng: number } | null;
+      phoneAnswers: null;
       status: "submitted";
       result: {
         guessLat: number;
@@ -116,6 +121,7 @@ export type ValidGeoMinigameDisplaySubmittedViewCheck = Assert<
         answerLng: number;
         distanceKm: number;
         pointsAwarded: number;
+        pins: { name: string | null; lat: number; lng: number; distanceKm: number; pointsAwarded: number; isBest: boolean }[];
       };
     },
     GeoMinigameDisplayView

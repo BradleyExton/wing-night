@@ -15,6 +15,17 @@ export const container =
 export const question =
   "m-0 max-w-[22ch] text-balance text-[clamp(2.8rem,6.5vw,8rem)] font-black leading-[1.05] tracking-[-0.02em] text-text";
 
+// With choices under it the question gives up some size, so both fit a 1080p stage.
+export const questionWithChoices =
+  "m-0 max-w-[26ch] text-balance text-[clamp(2.2rem,4.6vw,6rem)] font-black leading-[1.05] tracking-[-0.02em] text-text";
+
+// The reveal: the question as a heading over the spread and the verdict card.
+export const revealContainer =
+  "flex min-h-0 flex-1 flex-col items-center justify-center gap-[clamp(1rem,2.2vw,2.4rem)] px-[clamp(1rem,3vw,3rem)] py-[clamp(0.6rem,1.4vw,1.4rem)] text-center";
+
+export const revealQuestion =
+  "m-0 max-w-[40ch] text-balance text-[clamp(1.5rem,2.6vw,3.4rem)] font-black leading-[1.1] text-text";
+
 export const underline =
   "block h-[6px] w-[clamp(120px,14vw,240px)] rounded-full bg-primary";
 

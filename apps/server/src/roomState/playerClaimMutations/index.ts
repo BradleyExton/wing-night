@@ -2,9 +2,11 @@ import { isDeepStrictEqual } from "node:util";
 
 import { PLAYER_CLAIM_GONE_REASONS, type RoomState } from "@wingnight/shared";
 
+import { refreshActiveMinigameProjection } from "../../minigames/runtime/index.js";
 import { playerClaimStore } from "../../playerClaims/index.js";
 import { syncContestantTurn } from "../contestantTurnState/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
+import { resolveMinigameRules } from "../selectors/index.js";
 
 // The claim store is the truth about which phone is which player; the room
 // carries only the ids it is safe to publish. This copies one into the other
@@ -23,6 +25,13 @@ export const writePlayerClaimFlags = (roomState: RoomState): boolean => {
   roomState.connectedPlayerIds = connectedPlayerIds;
   // A phone waking, sleeping or losing its face moves who writes the leg in hand.
   syncContestantTurn(roomState);
+
+  // And a face claimed or let go on the playing team moves every "n of m in" (phone answers).
+  const minigameId = roomState.currentRoundConfig?.minigame ?? null;
+
+  if (minigameId !== null) {
+    refreshActiveMinigameProjection(roomState, resolveMinigameRules(roomState, minigameId));
+  }
 
   return true;
 };

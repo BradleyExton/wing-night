@@ -9,7 +9,7 @@ import { recreateRuntimePlugin } from "@wingnight/minigames-recreate/runtime";
 import { schlonicRuntimePlugin } from "@wingnight/minigames-schlonic/runtime";
 import { songGuessRuntimePlugin } from "@wingnight/minigames-song-guess/runtime";
 import { triviaRuntimePlugin } from "@wingnight/minigames-trivia/runtime";
-import type { MinigameType } from "@wingnight/shared";
+import { isMinigameType, type MinigameType } from "@wingnight/shared";
 import type { MinigameRuntimePlugin } from "@wingnight/minigames-core";
 
 // Keyed by MinigameType so adding a new game to MINIGAME_DEFINITIONS fails to
@@ -32,4 +32,10 @@ export const resolveMinigameRuntimePlugin = (
   minigameType: MinigameType
 ): MinigameRuntimePlugin => {
   return runtimePluginByMinigameType[minigameType];
+};
+
+// The same lookup for a name that came off the wire: null for anything this build does not know,
+// so a typo — or a phone's garbage — is a refusal rather than a read of `undefined`.
+export const findMinigameRuntimePlugin = (minigameType: unknown): MinigameRuntimePlugin | null => {
+  return isMinigameType(minigameType) ? runtimePluginByMinigameType[minigameType] : null;
 };

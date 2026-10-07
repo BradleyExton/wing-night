@@ -404,14 +404,17 @@ export type {
   EmojiCharadesSubjectOutcome,
   EmojiCharadesSubjectReveal,
   EmojiCharadesSubState,
+  GeoMinigameDisplayPin,
   GeoMinigameDisplayPrompt,
   GeoMinigameDisplayResult,
   GeoMinigameDisplayView,
   GeoMinigameHostPrompt,
   GeoMinigameHostView,
   GeoMinigameSubState,
+  GeoPinResult,
   GeoPromptResult,
   HostRoomStateSnapshot,
+  TriviaChoiceReveal,
   PlayerRoomStateSnapshot,
   JoustMinigameArena,
   JoustMinigameDisplayView,
@@ -499,6 +502,7 @@ export {
   MINIGAME_TYPE_BY_SLUG,
   MINIGAME_TYPES,
   resolveMinigameDefinition,
+  isMinigameType,
   resolveMinigameTypeFromSlug,
   SETUP_PREVIEW_ROUND_SLOTS_MAX,
   validateGameConfigFile
@@ -634,9 +638,19 @@ export type {
   RecreateContentFile,
   RecreatePrompt
 } from "./content/recreate/index.js";
+export type {
+  GeoMinigamePlayerView,
+  MinigamePlayerView,
+  PhoneAnswerStatus,
+  PhoneAnswerTally,
+  TriviaMinigamePlayerView
+} from "./phoneAnswers/index.js";
 export {
+  TRIVIA_MAX_CHOICES,
+  TRIVIA_MIN_CHOICES,
   isTriviaContentFile,
   isTriviaPrompt,
+  normalizeTriviaChoice,
   validateTriviaContentFile,
   validateTriviaPrompt
 } from "./content/trivia/index.js";
@@ -746,6 +760,7 @@ export type {
   PlayerMinigameActionAck,
   PlayerMinigameActionPayload,
   PlayerMinigameHostViewPayload,
+  PlayerMinigamePlayerViewPayload,
   PlayerPlaceBetAck,
   PlayerPlaceBetPayload,
   PlayerSpectatorBetPayload,

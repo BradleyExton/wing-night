@@ -61,6 +61,10 @@ const config: Config = {
         // Pure black, for the dark half of light: drop shadows, vignettes, scrims. Never a
         // surface — `bg` is the darkest thing the show paints.
         shade: "#000000",
+        // GEO's chart ground: the inverted OSM basemap's own ocean (DESIGN.md §2.4), under the
+        // tiles on every GEO map — so a tile still loading, or a party with no route to the tile
+        // server, shows the chart's dark rather than Leaflet's grey.
+        mapGround: "#0e1419",
         primary: "#f97316",
         heat: "#ef4444",
         success: "#22c55e",

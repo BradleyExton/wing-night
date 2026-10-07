@@ -24,7 +24,9 @@ export const PLAYER_CLAIM_REFUSAL_REASONS = {
   UNKNOWN_CLAIM: "unknown_claim",
   // Too many claims and releases from one phone too fast: a tap-happy guest,
   // or a script flooding the TV with snapshots. Try again in a second.
-  RATE_LIMITED: "rate_limited"
+  RATE_LIMITED: "rate_limited",
+  // The server hit a fault handling this message and refused it rather than go down with it.
+  SERVER_ERROR: "server_error"
 } as const;
 
 export type PlayerClaimRefusalReason =

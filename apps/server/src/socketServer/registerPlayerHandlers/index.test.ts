@@ -473,3 +473,74 @@ test("does keep spending the same bet bucket when the face comes back on a new s
     reason: SPECTATOR_BET_REFUSAL_REASONS.RATE_LIMITED
   });
 });
+
+test("does refuse every phone message with a server error and never throw when a handler faults", () => {
+  const store = createPlayerClaimStore();
+  const listeners = new Map<string, Listener>();
+  const fault = (): never => {
+    throw new Error("a fault deep in the room");
+  };
+
+  store.claim({ players: ROSTER, playerId: "player-1", socketId: "socket-faulty", claimSecret: null, peerAddress: null });
+
+  registerPlayerHandlers(
+    {
+      id: "socket-faulty",
+      join: () => undefined,
+      leave: () => undefined,
+      emit: () => undefined,
+      on: (event: string, listener: Listener) => {
+        listeners.set(event, listener);
+      }
+    },
+    { handshake: { joinToken: "join-token", claimSecret: null }, peerAddress: null },
+    {
+      claimStore: store,
+      getPlayers: fault,
+      emitPlayerSelf: fault,
+      emitContestantHostView: fault,
+      dispatchMinigameAction: fault,
+      placeBet: fault,
+      emitOwnSpectatorBet: fault,
+      emitOwnPlayerView: fault,
+      syncClaimFlags: fault,
+      syncClaimFlagsNow: fault
+    }
+  );
+
+  const answers = new Map<string, unknown>();
+  const send = (event: string, payload: unknown): void => {
+    const listener = listeners.get(event);
+
+    assert.ok(listener, `${event} must be registered`);
+    assert.doesNotThrow(() => {
+      listener(payload, (result: unknown) => {
+        answers.set(event, result);
+      });
+    });
+  };
+
+  send(CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM, { playerId: "player-2" });
+  send(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION, {
+    minigameId: "GEO",
+    minigameApiVersion: MINIGAME_API_VERSION,
+    actionType: "placePin",
+    actionPayload: { lat: 1, lng: 2 }
+  });
+  send(CLIENT_TO_SERVER_EVENTS.PLAYER_PLACE_BET, { pick: "over" });
+  send(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, undefined);
+  send("disconnect", undefined);
+
+  assert.deepEqual(answers.get(CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM), {
+    ok: false,
+    reason: PLAYER_CLAIM_REFUSAL_REASONS.SERVER_ERROR
+  });
+  assert.deepEqual(answers.get(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION), {
+    ok: false,
+    reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.SERVER_ERROR
+  });
+  assert.deepEqual(answers.get(CLIENT_TO_SERVER_EVENTS.PLAYER_PLACE_BET), {
+    ok: false,
+    reason: SPECTATOR_BET_REFUSAL_REASONS.SERVER_ERROR
+  });
+});

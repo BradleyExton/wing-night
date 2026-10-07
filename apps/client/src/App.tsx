@@ -28,6 +28,7 @@ import { saveHostSecret } from "./utils/hostSecretStorage";
 import { createDisplayReportHandlers } from "./utils/displayReports";
 import { createHostRequestHandlers } from "./utils/hostRequests";
 import { createContestantLegController, type ContestantLegController } from "./utils/contestantLeg";
+import { createPhoneAnswerCardController, type PhoneAnswerCardController } from "./utils/phoneAnswerCard";
 import { createPlayerSeatController, type PlayerSeatController } from "./utils/playerSeat";
 import { createSpectatorBetSlipController, type SpectatorBetSlipController } from "./utils/spectatorBetSlip";
 import {
@@ -58,7 +59,8 @@ const resolveRouteContent = (
   displayReports: ReturnType<typeof createDisplayReportHandlers> | null,
   playerSeat: PlayerSeatController | null,
   contestantLeg: ContestantLegController | null,
-  betSlip: SpectatorBetSlipController | null
+  betSlip: SpectatorBetSlipController | null,
+  answerCard: PhoneAnswerCardController | null
 ): JSX.Element => {
   if (route === "HOST") {
     return <HostControlPanel />;
@@ -86,9 +88,12 @@ const resolveRouteContent = (
   // A guest's phone. Its seat (which face is this phone's) is its own, held
   // beside room state rather than in it, so it rides in as a prop — and so
   // does its leg of an arcade relay, whose host view only this phone is sent,
-  // and its own side bet, whose pick only this phone is told.
+  // its own side bet, whose pick only this phone is told, and its own answer card while its team
+  // plays a game the phones answer.
   if (route === "PLAY") {
-    return <PlayerPhone seat={playerSeat} contestantLeg={contestantLeg} betSlip={betSlip} />;
+    return (
+      <PlayerPhone seat={playerSeat} contestantLeg={contestantLeg} betSlip={betSlip} answerCard={answerCard} />
+    );
   }
 
   if (route === "ROOT") {
@@ -187,6 +192,20 @@ export const App = (): JSX.Element => {
     };
   }, [betSlip]);
 
+  const answerCard = useMemo(() => {
+    if (route !== "PLAY" || roomSocket === null) {
+      return null;
+    }
+
+    return createPhoneAnswerCardController(roomSocket);
+  }, [roomSocket, route]);
+
+  useEffect(() => {
+    return (): void => {
+      answerCard?.dispose();
+    };
+  }, [answerCard]);
+
   // The TV's player QR: only the laptop's display is ever handed the token.
   useEffect(() => {
     if (route !== "DISPLAY" || roomSocket === null) {
@@ -265,7 +284,8 @@ export const App = (): JSX.Element => {
             displayReports,
             playerSeat,
             contestantLeg,
-            betSlip
+            betSlip,
+            answerCard
           )}
         </PlayerJoinTokenProvider>
       </HostHandlersProvider>

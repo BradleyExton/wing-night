@@ -1,4 +1,4 @@
-import { isNonNegativeInteger, type GeoPromptResult } from "@wingnight/shared";
+import { isNonNegativeInteger, type GeoPinResult, type GeoPromptResult } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type {
@@ -28,6 +28,33 @@ const isGeoRuntimeGuess = (value: unknown): value is GeoRuntimeGuess => {
   return isLatitude(guess.lat) && isLongitude(guess.lng);
 };
 
+const isGeoPinResult = (value: unknown): value is GeoPinResult => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const pin = value as Partial<GeoPinResult>;
+
+  return (
+    (pin.playerId === null || typeof pin.playerId === "string") &&
+    (pin.name === null || typeof pin.name === "string") &&
+    isLatitude(pin.lat) &&
+    isLongitude(pin.lng) &&
+    typeof pin.distanceKm === "number" &&
+    Number.isFinite(pin.distanceKm) &&
+    isNonNegativeInteger(pin.pointsAwarded) &&
+    typeof pin.isBest === "boolean"
+  );
+};
+
+const isPinRecord = (value: unknown): value is Record<string, GeoRuntimeGuess> => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  return Object.values(value).every((pin) => isGeoRuntimeGuess(pin));
+};
+
 const isGeoPromptResult = (value: unknown): value is GeoPromptResult => {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -44,6 +71,10 @@ const isGeoPromptResult = (value: unknown): value is GeoPromptResult => {
   }
 
   if (typeof result.distanceKm !== "number" || !Number.isFinite(result.distanceKm)) {
+    return false;
+  }
+
+  if (!Array.isArray(result.pins) || !result.pins.every((pin) => isGeoPinResult(pin))) {
     return false;
   }
 
@@ -87,6 +118,10 @@ export const isGeoRuntimeState = (
   }
 
   if (state.currentGuess !== null && !isGeoRuntimeGuess(state.currentGuess)) {
+    return false;
+  }
+
+  if (!isPinRecord(state.phonePinsByPlayerId)) {
     return false;
   }
 

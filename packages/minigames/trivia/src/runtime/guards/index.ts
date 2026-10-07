@@ -1,3 +1,4 @@
+import { isNonNegativeInteger, type TriviaChoiceReveal } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import type { TriviaMinigameState, TriviaRuntimeState } from "../types/index.js";
@@ -53,6 +54,35 @@ const isTriviaMinigameState = (
   return true;
 };
 
+const isChoiceRecord = (value: unknown): value is Record<string, number> => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  return Object.values(value).every((choiceIndex) => isNonNegativeInteger(choiceIndex));
+};
+
+const isTriviaChoiceReveal = (value: unknown): value is TriviaChoiceReveal => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const reveal = value as Partial<TriviaChoiceReveal>;
+
+  return (
+    typeof reveal.promptId === "string" &&
+    Array.isArray(reveal.choices) &&
+    reveal.choices.every((choice) => typeof choice === "string") &&
+    Array.isArray(reveal.choiceCounts) &&
+    reveal.choiceCounts.every((count) => isNonNegativeInteger(count)) &&
+    isNonNegativeInteger(reveal.correctIndex) &&
+    isNonNegativeInteger(reveal.correctCount) &&
+    isNonNegativeInteger(reveal.answeredCount) &&
+    isNonNegativeInteger(reveal.seatedCount) &&
+    isNonNegativeInteger(reveal.pointsAwarded)
+  );
+};
+
 export const isTriviaRuntimeState = (
   value: SerializableValue
 ): value is TriviaRuntimeState => {
@@ -85,7 +115,21 @@ export const isTriviaRuntimeState = (
     return false;
   }
 
-  return true;
+  if (!isChoiceRecord(runtimeState.choicesByPlayerId)) {
+    return false;
+  }
+
+  return runtimeState.reveal === null || isTriviaChoiceReveal(runtimeState.reveal);
+};
+
+export const isChooseAnswerPayload = (
+  actionPayload: SerializableValue
+): actionPayload is Record<"choiceIndex", number> => {
+  if (typeof actionPayload !== "object" || actionPayload === null || Array.isArray(actionPayload)) {
+    return false;
+  }
+
+  return isNonNegativeInteger(actionPayload.choiceIndex);
 };
 
 export const isRecordAttemptPayload = (

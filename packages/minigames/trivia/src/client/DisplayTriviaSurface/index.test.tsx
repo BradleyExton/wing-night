@@ -16,7 +16,9 @@ const playView = (attemptsRemaining: number): TriviaMinigameDisplayView => ({
   pendingPointsByTeamId: { "team-1": 2 },
   promptCursor: 0,
   attemptsRemaining,
-  currentPrompt: { id: "prompt-1", question: QUESTION }
+  currentPrompt: { id: "prompt-1", question: QUESTION, choices: null },
+  phoneAnswers: null,
+  reveal: null
 });
 
 const renderSurface = (
@@ -118,4 +120,51 @@ test("puts the shell's clock in the marquee's meta cell when there is one", () =
 
   assert.match(html, /<span>0:45<\/span>/);
   assert.match(html, /3 questions to go[\s\S]*0:45/);
+});
+
+const CHOICES = ["Mexico", "India", "Thailand"];
+
+const choiceView = (overrides: Partial<TriviaMinigameDisplayView> = {}): TriviaMinigameDisplayView => ({
+  ...playView(3),
+  currentPrompt: { id: "prompt-1", question: QUESTION, choices: CHOICES },
+  phoneAnswers: { answeredCount: 2, seatedCount: 3 },
+  ...overrides
+});
+
+test("does show the choices and the phones' count but no answer when the phones are choosing", () => {
+  const html = renderSurface(choiceView());
+
+  for (const choice of CHOICES) {
+    assert.match(html, new RegExp(choice));
+  }
+
+  assert.match(html, /data-trivia-phone-tally="2\/3"/);
+  assert.match(html, /2 of 3 in/);
+  assert.doesNotMatch(html, /The answer/);
+  assert.doesNotMatch(html, /data-trivia-spread/);
+});
+
+test("does draw the spread with the answer marked in words when the host reveals the question", () => {
+  const html = renderSurface(
+    choiceView({
+      phoneAnswers: null,
+      reveal: {
+        promptId: "prompt-1",
+        choices: CHOICES,
+        choiceCounts: [2, 1, 0],
+        correctIndex: 0,
+        correctCount: 2,
+        answeredCount: 3,
+        seatedCount: 3,
+        pointsAwarded: 1
+      }
+    })
+  );
+
+  assert.match(html, /data-trivia-spread-choice="0" data-trivia-spread-count="2" data-trivia-spread-answer="true"/);
+  assert.match(html, /data-trivia-spread-choice="1" data-trivia-spread-count="1" data-trivia-spread-answer="false"/);
+  assert.match(html, /✓ The answer/);
+  assert.match(html, /2 of 3 got it/);
+  assert.match(html, /data-result-plaque/);
+  assert.match(html, /\+1/);
 });

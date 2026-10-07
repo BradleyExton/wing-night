@@ -8,6 +8,7 @@ import type {
   ContestantController,
   MinigameDisplayView,
   MinigameHostView,
+  MinigamePlayerView,
   MinigameType,
   Player,
   Team
@@ -54,12 +55,45 @@ export type MinigameRuntimeInitializationInput = {
   roundMemory?: SerializableValue | null;
 };
 
+// One of the playing team's players whose phone holds their face right now: the people who may
+// answer on their phones (`MinigameRuntimePlugin.playerActionTypes`). The server derives the list
+// from the claim flags on every call, in roster order; a game never works it out.
+export type MinigameAnsweringPlayer = {
+  id: string;
+  name: string;
+  // Whether the phone holding the face has a live socket right now. An asleep phone keeps its
+  // face (and any answer it gave) but cannot answer, so a game that scores a share of the team
+  // counts it only if it answered. Absent means awake — a harness with no sockets.
+  isConnected?: boolean;
+};
+
+// The phones a share is taken over, and the "m" of "n of m in": the seated phones that are awake,
+// plus any asleep one that answered before it slept.
+export const resolveCountedAnsweringPlayers = (
+  answeringPlayers: readonly MinigameAnsweringPlayer[],
+  hasAnswered: (playerId: string) => boolean
+): MinigameAnsweringPlayer[] => {
+  return answeringPlayers.filter((player) => player.isConnected !== false || hasAnswered(player.id));
+};
+
 export type MinigameRuntimeReductionInput = {
   state: SerializableValue;
   envelope: MinigameRuntimeActionEnvelope;
   pointsMax: number;
   rules: SerializableValue | null;
   content: SerializableValue | null;
+  // The playing team's seated phones at the moment of the action, so a host lock can score the
+  // answers that are in against the phones that could have answered. Optional: games without
+  // phone answers never read it, and a harness with no room passes none (no phones).
+  answeringPlayers?: readonly MinigameAnsweringPlayer[];
+};
+
+// A playing-team phone's answer (`reducePlayerAction`): the reduction input, plus WHO sent it —
+// the face the socket holds, which the server has already checked is seated and on the playing
+// team — and the seated list, required here because an answer is always judged against it.
+export type MinigameRuntimePlayerReductionInput = MinigameRuntimeReductionInput & {
+  playerId: string;
+  answeringPlayers: readonly MinigameAnsweringPlayer[];
 };
 
 export type MinigameRuntimeSyncPendingPointsInput = {
@@ -77,6 +111,21 @@ export type MinigameRuntimeSelectorInput = {
   state: SerializableValue;
   rules: SerializableValue | null;
   content: SerializableValue | null;
+  // As on the reduction input: the playing team's seated phones, so a view can say "2 of 3 in".
+  answeringPlayers?: readonly MinigameAnsweringPlayer[];
+};
+
+// One phone's own answer card (`selectPlayerView`). `showOwnAnswer` is false when the phone now
+// holding the face is not the guest who answered (a new claim on it): the card then shows no
+// answer, so an answer is only ever replayed to the holder who gave it.
+export type MinigameRuntimePlayerSelectorInput = MinigameRuntimeSelectorInput & {
+  playerId: string;
+  showOwnAnswer: boolean;
+};
+
+export type MinigameRuntimeReleasePlayerInput = {
+  state: SerializableValue;
+  playerId: string;
 };
 
 export type MinigameRuntimeReductionResult = {
@@ -150,6 +199,26 @@ export type MinigameRuntimePlugin = {
   // none. Read after every broadcast; the server dispatches `actionType` at `atMs` (its own wall
   // clock, the one `receivedAtMs` is stamped with) unless the state has moved on by then.
   selectDeadlineAction?: (input: MinigameRuntimeSelectorInput) => MinigameDeadlineAction | null;
+  // The answer hooks, implemented by GEO and TRIVIA: ONE team per turn as ever, but during it
+  // every seated phone on that team answers the question in hand at once, and the host still locks
+  // and reveals. A game opts in with `playerActionTypes` and `reducePlayerAction` together.
+  //
+  // `playerActionTypes`: what a playing-team phone may send — an answer and nothing else, never a
+  // lock, a reveal, a skip or anything that scores (the registry test pins the sets apart).
+  // `reducePlayerAction`: the answer landing, with the sender's id. Same contract as
+  // `reduceAction` — pure, no mutation of `input.state` — and every answer is TRANSIENT: it never
+  // becomes the host's undo point, and the server never makes one for it. After the host locks
+  // the question, answers are the reducer's to refuse.
+  playerActionTypes?: readonly string[];
+  reducePlayerAction?: (input: MinigameRuntimePlayerReductionInput) => MinigameRuntimeReductionResult;
+  // The one phone's answer card: the question as the phone needs it and that player's OWN answer —
+  // never anyone else's. Sent only over that player's own room; null when the phone has nothing
+  // to answer.
+  selectPlayerView?: (input: MinigameRuntimePlayerSelectorInput) => MinigamePlayerView | null;
+  // A face's claim ended (let go, freed, moved) while the question was open: its holder's answer
+  // goes with them, so whoever sits in the face next starts blank. A locked answer stays — it was
+  // in when the host locked. Pure, like the reducers; `didMutate` false when there was nothing.
+  releasePlayerAnswer?: (input: MinigameRuntimeReleasePlayerInput) => MinigameRuntimeReductionResult;
 };
 
 // The leg in hand of an arcade relay (`MinigameRuntimePlugin.selectContestant`). `legIndex`
@@ -274,9 +343,19 @@ export type MinigameDisplayRendererProps = {
 // phone turns, and every harness with no room, says "tablet".
 export type MinigameHandset = ContestantController;
 
+// A playing-team phone's answer card (`MinigameRendererBundle.PlayerSurface`): the game's own
+// view for this one phone, and the road an answer takes back (`player:minigameAction`). Drawn in
+// portrait inside the guest phone's shell, silent like every phone.
+export type MinigamePlayerRendererProps = {
+  minigamePlayerView: MinigamePlayerView;
+  onDispatchAction: MinigameActionDispatch;
+};
+
 export type MinigameRendererBundle = {
   HostSurface: ComponentType<MinigameHostRendererProps>;
   DisplaySurface: ComponentType<MinigameDisplayRendererProps>;
+  // Optional, beside the runtime's answer hooks: the card a playing-team phone answers on.
+  PlayerSurface?: ComponentType<MinigamePlayerRendererProps>;
   // Declares that the display surface is the room's speaker for this game, so
   // the display shell knows to offer its tap-to-enable-audio overlay even when
   // the active team has no anthem to play.

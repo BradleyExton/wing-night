@@ -28,9 +28,9 @@ export const statusNote =
 // paint over the plate that is their sibling. Containing them here keeps the
 // game's interior exactly that — interior — and means nothing GEO draws ever
 // competes with the shell's chrome row or the corner dock again.
-// Scene art, licensed by DESIGN.md §2.4: the ground the inverted map tiles are laid on, so a
-// tile still loading shows the map's own dark rather than the stage's.
-const sceneMapGround = "bg-[#0e1419]";
+// The chart's ground, `mapGround` (DESIGN.md §0.1, §2.4): what the inverted tiles are laid on, so
+// a tile still loading — or none at all, offline — shows the map's own dark rather than the stage's.
+const sceneMapGround = "bg-mapGround";
 
 export const map = `relative isolate h-full min-h-0 w-full overflow-hidden rounded-2xl border border-text/10 ${sceneMapGround}`;
 

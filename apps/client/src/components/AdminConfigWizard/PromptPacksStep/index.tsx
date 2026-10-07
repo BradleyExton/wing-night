@@ -6,7 +6,7 @@ import type {
 } from "@wingnight/shared";
 
 import { adminCopy } from "../../../copy/admin";
-import { nextDrawingPrompt, nextTriviaPrompt } from "../contentDraft";
+import { nextDrawingPrompt, nextTriviaPrompt, setTriviaAnswer } from "../contentDraft";
 import { addEntry, removeEntry, setEntry } from "../entryListDraft";
 import { EntryListEditor, type EntryFieldSpec } from "../EntryListEditor";
 import type { IssueMessagesByPath } from "../selectIssueMessages";
@@ -44,7 +44,14 @@ const TRIVIA_FIELDS: readonly EntryFieldSpec<TriviaPrompt>[] = [
     name: "answer",
     label: adminCopy.triviaAnswerFieldLabel,
     read: (prompt) => prompt.answer,
-    write: (prompt, answer) => ({ ...prompt, answer })
+    write: setTriviaAnswer
+  },
+  // Read-only, but a field all the same: a choices issue (the answer missing from them, a repeat)
+  // lands here, so Apply is never blocked by a fault the host cannot see.
+  {
+    name: "choices",
+    label: adminCopy.triviaChoicesFieldLabel,
+    read: (prompt) => prompt.choices?.join(" · ") ?? adminCopy.triviaNoChoices
   }
 ];
 

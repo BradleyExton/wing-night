@@ -536,3 +536,384 @@ test("parseGeoContentFile rejects malformed content files", () => {
   assert.equal(parsed.prompts.length, 3);
   assert.equal(parsed.prompts[0].id, "geo-1");
 });
+
+// --- Answers on the phones: every seated phone on the playing team drops its own pin. ---
+
+const seated = [
+  { id: "player-1", name: "Alex" },
+  { id: "player-2", name: "Caitlin" },
+  { id: "player-3", name: "Dan" }
+] as const;
+
+const placePin = (
+  state: SerializableValue,
+  playerId: string,
+  actionPayload: SerializableValue,
+  answeringPlayers: readonly { id: string; name: string }[] = seated
+): { state: SerializableValue; didMutate: boolean } => {
+  const reducePlayerAction = geoRuntimePlugin.reducePlayerAction;
+
+  assert.ok(reducePlayerAction !== undefined);
+
+  return reducePlayerAction({
+    state,
+    envelope: { actionType: "placePin", actionPayload },
+    pointsMax: 15,
+    rules: null,
+    content: geoContentFixture,
+    playerId,
+    answeringPlayers
+  });
+};
+
+const lockIn = (state: SerializableValue): { state: SerializableValue; didMutate: boolean } => {
+  return geoRuntimePlugin.reduceAction({
+    state,
+    envelope: { actionType: "submitGuess", actionPayload: {} },
+    pointsMax: 15,
+    rules: null,
+    content: geoContentFixture,
+    answeringPlayers: seated
+  });
+};
+
+const playerViewOf = (state: SerializableValue, playerId: string, showOwnAnswer = true) => {
+  return geoRuntimePlugin.selectPlayerView?.({
+    state,
+    rules: null,
+    content: geoContentFixture,
+    answeringPlayers: seated,
+    playerId,
+    showOwnAnswer
+  });
+};
+
+test("does take only placePin from a phone when the plugin lists its player actions", () => {
+  assert.deepEqual(geoRuntimePlugin.playerActionTypes, ["placePin"]);
+  assert.equal(geoRuntimePlugin.transientActionTypes?.includes("placePin"), false);
+});
+
+test("does accept a pin when it comes from a seated phone on the playing team", () => {
+  const placed = placePin(initializeState(), "player-2", { lat: 10, lng: 20 });
+
+  assert.equal(placed.didMutate, true);
+  assert.deepEqual((placed.state as GeoRuntimeState).phonePinsByPlayerId, { "player-2": { lat: 10, lng: 20 } });
+  // The tablet's pin is a different pin: a phone never moves it.
+  assert.equal((placed.state as GeoRuntimeState).currentGuess, null);
+});
+
+test("does refuse a pin when the sender is not among the seated phones", () => {
+  const refused = placePin(initializeState(), "player-9", { lat: 10, lng: 20 });
+
+  assert.equal(refused.didMutate, false);
+});
+
+test("does refuse a pin when it is malformed, off the map or not a pin", () => {
+  const state = initializeState();
+
+  assert.equal(placePin(state, "player-1", { lat: 91, lng: 0 }).didMutate, false);
+  assert.equal(placePin(state, "player-1", { lat: "10", lng: 0 }).didMutate, false);
+  assert.equal(placePin(state, "player-1", null).didMutate, false);
+
+  const reducePlayerAction = geoRuntimePlugin.reducePlayerAction;
+
+  assert.ok(reducePlayerAction !== undefined);
+  assert.equal(
+    reducePlayerAction({
+      state,
+      envelope: { actionType: "submitGuess", actionPayload: {} },
+      pointsMax: 15,
+      rules: null,
+      content: geoContentFixture,
+      playerId: "player-1",
+      answeringPlayers: seated
+    }).didMutate,
+    false
+  );
+});
+
+test("does let a phone move its pin when the photo is still open", () => {
+  const first = placePin(initializeState(), "player-1", { lat: 10, lng: 20 });
+  const moved = placePin(first.state, "player-1", { lat: 11, lng: 21 });
+  const same = placePin(moved.state, "player-1", { lat: 11, lng: 21 });
+
+  assert.equal(moved.didMutate, true);
+  assert.deepEqual((moved.state as GeoRuntimeState).phonePinsByPlayerId["player-1"], { lat: 11, lng: 21 });
+  assert.equal(same.didMutate, false);
+});
+
+test("does refuse a pin when the host has already locked the photo", () => {
+  const pinned = placePin(initializeState(), "player-1", { lat: 48.8, lng: 2.3 });
+  const locked = lockIn(pinned.state);
+
+  assert.equal(locked.didMutate, true);
+  assert.equal(placePin(locked.state, "player-2", { lat: 48.85, lng: 2.29 }).didMutate, false);
+  assert.equal(placePin(locked.state, "player-1", { lat: 48.85, lng: 2.29 }).didMutate, false);
+});
+
+test("does score the team's best pin when the tablet and the phones are all in", () => {
+  let state: SerializableValue = initializeState();
+
+  // The tablet: ~1.5 km off (3 points). Alex: Paris centre, ~4 km (2 points). Caitlin: on it (5).
+  state = reduce(state, "setGuess", { lat: 48.8584, lng: 2.3150 }).state;
+  state = placePin(state, "player-1", { lat: 48.8566, lng: 2.3522 }).state;
+  state = placePin(state, "player-2", { lat: 48.8584, lng: 2.2945 }).state;
+
+  const locked = lockIn(state).state as GeoRuntimeState;
+  const result = locked.lastResult;
+
+  assert.ok(result !== null);
+  assert.equal(result.pointsAwarded, 5);
+  assert.equal(locked.pendingPointsByTeamId["team-1"], 5);
+  assert.deepEqual(
+    result.pins.map((pin) => [pin.playerId, pin.name, pin.pointsAwarded, pin.isBest]),
+    [
+      [null, null, 3, false],
+      ["player-1", "Alex", 2, false],
+      ["player-2", "Caitlin", 5, true]
+    ]
+  );
+  // The headline guess is the best pin's.
+  assert.equal(result.guessLat, 48.8584);
+  assert.equal(result.guessLng, 2.2945);
+});
+
+test("does score the tablet's pin as one pin when it is the best one", () => {
+  let state: SerializableValue = initializeState();
+
+  state = reduce(state, "setGuess", { lat: 48.8584, lng: 2.2945 }).state;
+  state = placePin(state, "player-3", { lat: 41.9, lng: 12.5 }).state;
+
+  const result = (lockIn(state).state as GeoRuntimeState).lastResult;
+
+  assert.ok(result !== null);
+  assert.equal(result.pointsAwarded, 5);
+  assert.deepEqual(
+    result.pins.filter((pin) => pin.isBest).map((pin) => pin.playerId),
+    [null]
+  );
+});
+
+test("does lock in on the phones' pins alone when the tablet never pinned", () => {
+  const pinned = placePin(initializeState(), "player-3", { lat: 48.8584, lng: 2.2945 });
+  const locked = lockIn(pinned.state);
+
+  assert.equal(locked.didMutate, true);
+  assert.equal((locked.state as GeoRuntimeState).lastResult?.pointsAwarded, 5);
+  // And with no pin anywhere there is nothing to lock.
+  assert.equal(lockIn(initializeState()).didMutate, false);
+});
+
+test("does leave out a pin when its phone is no longer seated at the lock", () => {
+  let state: SerializableValue = initializeState();
+
+  state = placePin(state, "player-1", { lat: 48.8584, lng: 2.2945 }).state;
+  state = placePin(state, "player-2", { lat: 41.9, lng: 12.5 }).state;
+
+  const locked = geoRuntimePlugin.reduceAction({
+    state,
+    envelope: { actionType: "submitGuess", actionPayload: {} },
+    pointsMax: 15,
+    rules: null,
+    content: geoContentFixture,
+    // Alex let their face go before the host locked the photo.
+    answeringPlayers: [seated[1], seated[2]]
+  }).state as GeoRuntimeState;
+
+  assert.deepEqual(locked.lastResult?.pins.map((pin) => pin.playerId), ["player-2"]);
+  assert.equal(locked.lastResult?.pointsAwarded, 0);
+});
+
+test("does break a points tie on distance when two pins land in one band", () => {
+  let state: SerializableValue = initializeState();
+
+  // Both inside 10 km (2 points); Caitlin's is the closer.
+  state = placePin(state, "player-1", { lat: 48.9, lng: 2.3 }).state;
+  state = placePin(state, "player-2", { lat: 48.88, lng: 2.3 }).state;
+
+  const pins = (lockIn(state).state as GeoRuntimeState).lastResult?.pins ?? [];
+
+  assert.deepEqual(
+    pins.map((pin) => [pin.playerId, pin.pointsAwarded, pin.isBest]),
+    [
+      ["player-1", 2, false],
+      ["player-2", 2, true]
+    ]
+  );
+});
+
+test("does clear every phone's pin when the host moves to the next photo", () => {
+  let state: SerializableValue = initializeState();
+
+  state = placePin(state, "player-1", { lat: 48.8584, lng: 2.2945 }).state;
+  state = lockIn(state).state;
+  state = reduce(state, "nextPrompt", {}).state;
+
+  assert.deepEqual((state as GeoRuntimeState).phonePinsByPlayerId, {});
+  assert.equal(placePin(state, "player-1", { lat: 41.9, lng: 12.5 }).didMutate, true);
+});
+
+test("does keep the display view to a count when phones have pinned an open photo", () => {
+  let state: SerializableValue = initializeState();
+
+  state = placePin(state, "player-1", { lat: 12.3456, lng: 65.4321 }).state;
+  state = placePin(state, "player-3", { lat: -33.33, lng: 151.15 }).state;
+
+  const displayView = geoRuntimePlugin.selectDisplayView({
+    state,
+    rules: null,
+    content: geoContentFixture,
+    answeringPlayers: seated
+  });
+  const serialized = JSON.stringify(displayView);
+
+  assert.deepEqual(displayView?.minigame === "GEO" ? displayView.phoneAnswers : undefined, {
+    answeredCount: 2,
+    seatedCount: 3
+  });
+  // No coordinate, no player id, no name: only how many are in.
+  assert.equal(serialized.includes("12.3456"), false);
+  assert.equal(serialized.includes("65.4321"), false);
+  assert.equal(serialized.includes("151.15"), false);
+  assert.equal(serialized.includes("player-"), false);
+  assert.equal(serialized.includes("Alex"), false);
+});
+
+test("does show the host how many have pinned but never where or who when the photo is open", () => {
+  let state: SerializableValue = initializeState();
+
+  state = placePin(state, "player-2", { lat: 12.3456, lng: 65.4321 }).state;
+
+  const hostView = geoRuntimePlugin.selectHostView({
+    state,
+    rules: null,
+    content: geoContentFixture,
+    answeringPlayers: seated
+  });
+
+  assert.deepEqual(hostView?.minigame === "GEO" ? hostView.phoneAnswers : undefined, {
+    answeredCount: 1,
+    seatedCount: 3
+  });
+  // A count on the tablet too: never where, and never who.
+  assert.equal(JSON.stringify(hostView).includes("12.3456"), false);
+  assert.equal(JSON.stringify(hostView?.minigame === "GEO" ? hostView.phoneAnswers : null).includes("player-"), false);
+});
+
+test("does leave the tally off the views when the playing team has no phones", () => {
+  const displayView = geoRuntimePlugin.selectDisplayView({
+    state: initializeState(),
+    rules: null,
+    content: geoContentFixture
+  });
+
+  assert.equal(displayView?.minigame === "GEO" ? displayView.phoneAnswers : undefined, null);
+});
+
+test("does plot every pin by name on the display view when the host reveals the photo", () => {
+  let state: SerializableValue = initializeState();
+
+  state = reduce(state, "setGuess", { lat: 48.8584, lng: 2.3150 }).state;
+  state = placePin(state, "player-1", { lat: 48.8584, lng: 2.2945 }).state;
+  state = lockIn(state).state;
+
+  const displayView = geoRuntimePlugin.selectDisplayView({
+    state,
+    rules: null,
+    content: geoContentFixture,
+    answeringPlayers: seated
+  });
+
+  assert.ok(displayView?.minigame === "GEO" && displayView.status === "submitted");
+  assert.deepEqual(
+    displayView.result.pins.map((pin) => [pin.name, pin.isBest]),
+    [
+      [null, false],
+      ["Alex", true]
+    ]
+  );
+  assert.equal(displayView.phoneAnswers, null);
+  // The TV plots pins by name: ids stay off it.
+  assert.equal(JSON.stringify(displayView).includes("player-1"), false);
+});
+
+test("does show each phone only its own pin when two phones have pinned", () => {
+  let state: SerializableValue = initializeState();
+
+  state = placePin(state, "player-1", { lat: 12.3456, lng: 65.4321 }).state;
+  state = placePin(state, "player-2", { lat: -33.33, lng: 151.15 }).state;
+
+  const alexView = playerViewOf(state, "player-1");
+  const danView = playerViewOf(state, "player-3");
+
+  assert.deepEqual(alexView?.minigame === "GEO" ? alexView.pin : undefined, { lat: 12.3456, lng: 65.4321 });
+  assert.equal(JSON.stringify(alexView).includes("151.15"), false);
+  assert.equal(danView?.minigame === "GEO" ? danView.pin : undefined, null);
+  assert.equal(JSON.stringify(danView).includes("12.3456"), false);
+  assert.equal(JSON.stringify(danView).includes("151.15"), false);
+  // Never the answer.
+  assert.equal(JSON.stringify(alexView).includes("48.85837"), false);
+  assert.equal(alexView?.status, "open");
+});
+
+test("does hide a phone's pin from its card when the face has a new holder", () => {
+  const state = placePin(initializeState(), "player-1", { lat: 12.3456, lng: 65.4321 }).state;
+  const view = playerViewOf(state, "player-1", false);
+
+  assert.equal(view?.minigame === "GEO" ? view.pin : undefined, null);
+});
+
+test("does tell a phone how its own pin measured when the photo is locked", () => {
+  let state: SerializableValue = initializeState();
+
+  state = placePin(state, "player-1", { lat: 48.8584, lng: 2.2945 }).state;
+  state = lockIn(state).state;
+
+  const view = playerViewOf(state, "player-1");
+
+  assert.ok(view?.minigame === "GEO");
+  assert.equal(view.status, "locked");
+  assert.equal(view.result?.pointsAwarded, 5);
+  assert.equal(view.result?.isBest, true);
+});
+
+test("does drop a phone's open pin when its claim ends and keep a locked one", () => {
+  const releasePlayerAnswer = geoRuntimePlugin.releasePlayerAnswer;
+
+  assert.ok(releasePlayerAnswer !== undefined);
+
+  const pinned = placePin(initializeState(), "player-1", { lat: 48.8584, lng: 2.2945 }).state;
+  const released = releasePlayerAnswer({ state: pinned, playerId: "player-1" });
+
+  assert.equal(released.didMutate, true);
+  assert.deepEqual((released.state as GeoRuntimeState).phonePinsByPlayerId, {});
+  assert.equal(releasePlayerAnswer({ state: released.state, playerId: "player-1" }).didMutate, false);
+
+  const locked = lockIn(pinned).state;
+
+  assert.equal(releasePlayerAnswer({ state: locked, playerId: "player-1" }).didMutate, false);
+});
+
+test("does leave the state untouched when a phone pins", () => {
+  const state = initializeState();
+  const before = structuredClone(state);
+
+  placePin(state, "player-1", { lat: 10, lng: 20 });
+
+  assert.deepEqual(state, before);
+});
+
+test("does count only awake or pinned phones in the tally when a phone is asleep", () => {
+  const state = placePin(initializeState(), "player-1", { lat: 10, lng: 20 }).state;
+  const displayView = geoRuntimePlugin.selectDisplayView({
+    state,
+    rules: null,
+    content: geoContentFixture,
+    answeringPlayers: [seated[0], { ...seated[1], isConnected: false }, seated[2]]
+  });
+
+  assert.deepEqual(displayView?.minigame === "GEO" ? displayView.phoneAnswers : undefined, {
+    answeredCount: 1,
+    seatedCount: 2
+  });
+});

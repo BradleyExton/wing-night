@@ -47,12 +47,18 @@ const Marquee = ({
 
 const GeoResultReadout = ({ result }: { result: GeoDisplayResult }): ReactNode => {
   const distance = displayGeoSurfaceCopy.distanceValue(result.distanceKm);
+  // With more than one pin in, the plaque says whose pin the team scored.
+  const bestPin = result.pins.length > 1 ? result.pins.find((pin) => pin.isBest) : undefined;
 
   return (
     <>
       <ResultPlaque
         tone={result.pointsAwarded > 0 ? "hit" : "miss"}
-        kicker={displayGeoSurfaceCopy.distanceLabel}
+        kicker={
+          bestPin === undefined
+            ? displayGeoSurfaceCopy.distanceLabel
+            : displayGeoSurfaceCopy.bestPinLabel(bestPin.name)
+        }
         title={displayGeoSurfaceCopy.distanceTitle(distance.value, distance.unit)}
         points={displayGeoSurfaceCopy.pointsValue(result.pointsAwarded)}
         pointsCaption={displayGeoSurfaceCopy.pointsLabel}
@@ -60,7 +66,7 @@ const GeoResultReadout = ({ result }: { result: GeoDisplayResult }): ReactNode =
       <div className={styles.legendRow}>
         <span className={styles.legendEntry}>
           <span className={styles.legendGuessDot} aria-hidden="true" />
-          {displayGeoSurfaceCopy.guessPinLabel}
+          {result.pins.length > 1 ? displayGeoSurfaceCopy.teamPinsLabel : displayGeoSurfaceCopy.guessPinLabel}
         </span>
         <span className={styles.legendEntry}>
           <span className={styles.legendAnswerDot} aria-hidden="true" />
@@ -151,7 +157,12 @@ export const DisplayGeoSurface = ({
         <div className={styles.mapLayer}>
           {isBrowser && (
             <Suspense fallback={null}>
-              <GeoTheatreMap guess={guess} answer={answer} />
+              <GeoTheatreMap
+                guess={guess}
+                answer={answer}
+                pins={result?.pins}
+                offlineNote={displayGeoSurfaceCopy.offlineNote}
+              />
             </Suspense>
           )}
         </div>
@@ -185,9 +196,22 @@ export const DisplayGeoSurface = ({
         <div className={styles.readout}>
           {result === null
             ? activeTeamName !== null && (
-                <span className={styles.status}>
+                <span
+                  className={styles.status}
+                  data-geo-phone-tally={
+                    geoDisplayView.phoneAnswers === null
+                      ? undefined
+                      : `${geoDisplayView.phoneAnswers.answeredCount}/${geoDisplayView.phoneAnswers.seatedCount}`
+                  }
+                >
                   <span className={styles.statusDot} aria-hidden="true" />
-                  {displayGeoSurfaceCopy.plottingStatus(activeTeamName)}
+                  {geoDisplayView.phoneAnswers === null
+                    ? displayGeoSurfaceCopy.plottingStatus(activeTeamName)
+                    : displayGeoSurfaceCopy.phonePinsStatus(
+                        activeTeamName,
+                        geoDisplayView.phoneAnswers.answeredCount,
+                        geoDisplayView.phoneAnswers.seatedCount
+                      )}
                 </span>
               )
             : <GeoResultReadout result={result} />}

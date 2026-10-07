@@ -34,7 +34,9 @@ const createRoomStateFixture = (): RoomState => {
       attemptsRemaining: 1,
       promptCursor: 0,
       pendingPointsByTeamId: {},
-      currentPrompt: null
+      currentPrompt: null,
+      phoneAnswers: null,
+      reveal: null
     },
     minigameDisplayView: null,
     timer: null,

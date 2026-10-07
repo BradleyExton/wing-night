@@ -39,7 +39,9 @@ If it is not defined in this document, it is not MVP scope.
 - All devices run on the same local Wi-Fi network (LAN-first)
 - Server holds authoritative state (in-memory only)
 - Host-driven phase progression (never auto-advance)
-- Turn-based mini-games only (one team at a time)
+- Turn-based mini-games only: ONE team per turn. Only the input may go parallel — during that
+  team's turn each of its players can answer on their own phone at the same time (a GEO pin, a
+  TRIVIA choice); the host still locks and reveals ("Answers on the phones" below)
 - Escape hatches always available (skip, redo, manual scoring)
 
 Player phones:
@@ -61,10 +63,13 @@ Player phones:
   it. Reset Game frees every face and rotates the code, so every phone scans the TV again.
 - Claims and releases are rate-limited per phone, and the TV hears claim changes at most ten
   times a second.
-- A phone never advances a phase or moves a turn. Beyond the face it holds it changes two
-  things: a contestant's own arcade leg (AGENTS.md §3.5) and, off the playing team, a side bet
-  that never touches a score ("Spectator bets" below). Only the contestant's phone ever shows a
-  game; every other phone is a ballot, a bet or blank.
+- A phone never advances a phase or moves a turn. Beyond the face it holds it changes three
+  things: a contestant's own arcade leg (AGENTS.md §3.5); on the playing team, its own answer to
+  the question in hand ("Answers on the phones" below — the host's lock scores it, never the
+  phone); and, off the playing team, a side bet that never touches a score ("Spectator bets"
+  below). Only the contestant's phone ever shows a game surface. A playing-team phone in a GEO
+  or TRIVIA turn shows an answer card — its own chart to pin, or the question's choices — never
+  the game surface itself; every other phone is a ballot, a bet or blank.
 
 Out of Scope (MVP):
 - Multiple rooms
@@ -217,7 +222,11 @@ Minigame content files are plugin-declared and loaded from:
 - fallback: `content/sample/<plugin-file>.json`
 
 Current built-in content-backed minigames include:
-- `TRIVIA` → `minigames/trivia.json`
+- `TRIVIA` → `minigames/trivia.json` — `{ id, question, answer, choices? }`. `choices` is optional:
+  2–6 distinct non-empty strings, one of which is exactly `answer` (the loader refuses a pack
+  that breaks any of that). A question with choices is answered on the playing team's phones; one
+  without is judged aloud by the host. A pack may mix both.
+- `GEO` → `minigames/geo.json` — photos and their answer coordinates
 - `RECREATE` → `minigames/recreate.json` — targets authored ahead of the night: a party photo
   (`sourceImageSrc`), the prompt that remixed it, the remix (`targetImageSrc`, painted by
   `pnpm import:recreate`) and the two-to-six visible `ingredients` that prompt put in it. The
@@ -225,7 +234,6 @@ Current built-in content-backed minigames include:
   writing, unsealed once its prompt is in, the authored prompt only once the score is locked.
 
 Current built-in unsupported runtime placeholders:
-- `GEO` (no content file required yet)
 - `DRAWING` (no content file required yet)
 
 Local static assets:
@@ -417,6 +425,49 @@ and the screen picker); the TV stays on `/display` and follows as it always does
 
 ---
 
+### Answers on the phones (GEO, TRIVIA)
+
+ONE team per turn, as ever. Only the input goes parallel: during that team's turn, each of its
+players whose phone holds a face answers the question in hand on that phone, at the same time,
+and the host still locks and reveals on the tablet. A night without phones plays exactly as
+before — the tablet's own path is untouched.
+
+- **Who answers**: the playing team's seated phones (claimed faces), and nobody else. A phone on
+  another team, a socket with no face, any phase but `MINIGAME_PLAY` and any game but the one in
+  play are refused. Answers are rate-limited like a contestant's input.
+- **GEO**: every seated phone drops its own pin on its own chart (the GEO chart at phone scale;
+  with no route to the map tiles it still takes the tap on its dark ground and graticule, and
+  says so). The tablet's pin still counts as one more pin. The host's "Lock it in" locks the
+  photo — it can lock on phone pins alone — and the team scores its BEST pin: the most points,
+  then the shorter distance, then the tablet's pin before the phones' in roster order. After the
+  lock a phone's pin is refused. The TV plots every pin at the reveal, each named, the best one
+  starred.
+- **TRIVIA**: a question with choices is answered on the phones (ONE choice on screen, a tap
+  each, changeable until the lock). The host's "Lock answers" scores it:
+  `points = round(1 × correct / seated)` — one question's worth (the point a CORRECT banks),
+  scaled by the share of the team's phones that chose the answer, rounded half up. `seated` is
+  the team's claimed phones that are awake at the lock, plus any asleep one that chose before it
+  slept: an awake phone that never answered counts against the share, a sleeping one that never
+  answered does not. **With one point a question this is a majority vote**: half the counted
+  phones right bank the point, fewer bank nothing — there is no partial credit. Partial credit
+  needs a per-question value above one (BACKLOG.md); that is Brad's call after a table test.
+  "Lock answers" waits for at least one phone's answer (like GEO's lock, which waits for a pin).
+  The turn's cap still clips the total. CORRECT / INCORRECT stay on every question as the spoken
+  verdict and the escape hatch — a question without choices, a team with no phones, nobody's
+  phone answering, or a host who would rather judge it aloud. "Next question" moves on from a
+  reveal.
+  The TV shows the spread (a bar per choice, the answer marked ✓ "The answer") and the result.
+- **Secret until the lock**: before the host locks a question the TV and the room hear only how
+  many are in ("2 of 3 in"), the tablet the same count (never who or what — it is in the team's
+  hands), and each phone only its own answer, over its own room. The spread, every pin and every name are
+  the reveal. An answer belongs to the guest who gave it: a face let go while the question is
+  open loses its answer, and the next guest to sit in it never sees one.
+- **Undo**: an answer is play, not a ruling — it never becomes the host's undo point. The host's
+  lock is, and undoing it reopens the question with every answer still in — except those of
+  guests who have let their faces go since, which leave with them.
+- **A phone cannot take the party down**: every phone message is shape-checked (an unknown game
+  is malformed), and a fault handling one is logged and refused, never thrown.
+
 ### Spectator bets (side game)
 
 The watchers' job. Before each team's turn, every guest whose phone holds a face and who is NOT
@@ -500,6 +551,8 @@ Testing Expectations:
 ### Mini-Game Points
 - Defined in config
 - No negative scoring
+- A phone's answer never scores by itself: the host's lock turns the answers in into points
+  ("Answers on the phones")
 
 ---
 

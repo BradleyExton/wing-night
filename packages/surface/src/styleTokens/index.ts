@@ -323,3 +323,33 @@ export const revealPoints =
 // =============================================================================
 
 export const teamDot = "h-2.5 w-2.5 shrink-0 rounded-full";
+
+// =============================================================================
+// Phone answer card — a playing-team guest phone answering the question in hand
+// (a GEO pin, a TRIVIA choice), drawn by the game's own `PlayerSurface` in the
+// guest phone's column (mockups/phone-answers). The guest phone's warm glass —
+// an `ember` hairline along the top, `hearthGlass` over `shade` — the same card
+// the bet card and the idle card cut from the portal's kit, held here so a
+// minigame package can wear it without reaching into the app. The card glows
+// (`phoneCardHot`) while there is something to tap, and on a result worth it.
+// =============================================================================
+
+const phoneCardBase =
+  "relative isolate flex flex-col gap-3 overflow-hidden rounded-2xl border bg-[linear-gradient(180deg,theme(colors.hearthGlass/84%)_0%,theme(colors.shade/93%)_100%)] p-4 before:absolute before:inset-x-[12%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-ember before:to-transparent before:content-['']";
+
+export const phoneCard = `${phoneCardBase} border-primary/25 [box-shadow:inset_0_1px_0_theme(colors.glow/14%),0_18px_40px_-20px_theme(colors.shade/80%)]`;
+
+export const phoneCardHot = `${phoneCardBase} border-primary [box-shadow:inset_0_1px_0_theme(colors.glow/14%),0_0_40px_-10px_theme(colors.primary/60%)]`;
+
+export const phoneEyebrow = "m-0 text-[0.68rem] font-extrabold uppercase tracking-[0.3em] text-mutedWarm";
+
+export const phoneVoice = "m-0 font-voice text-[1rem] italic leading-snug text-mutedWarm";
+
+export const phoneBigTitle =
+  "m-0 break-words text-[clamp(2rem,10vw,2.6rem)] font-black uppercase leading-[0.95] [text-shadow:0_0_18px_theme(colors.primary/45%),0_2px_0_theme(colors.shade/40%)]";
+
+const phoneStampBase = "m-0 text-[0.95rem] font-black uppercase tracking-[0.14em]";
+
+export const phoneStampWon = `${phoneStampBase} text-success`;
+
+export const phoneStampLost = `${phoneStampBase} text-mutedWarm`;

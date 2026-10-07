@@ -11,6 +11,12 @@ export const displayGeoSurfaceCopy = {
   eyebrow: "Where was this taken?",
   hintLabel: (hint: string): string => `“${hint}”`,
   plottingStatus: (teamName: string): string => `${teamName} is dropping a pin`,
+  // The team's phones pin too: how many are in, never where or who.
+  phonePinsStatus: (teamName: string, answered: number, seated: number): string =>
+    `${teamName} · ${answered} of ${seated} pins in`,
+  bestPinLabel: (name: string | null): string => `Best pin · ${name ?? "Tablet"} · off by`,
+  teamPinsLabel: "Their pins",
+  offlineNote: "No map tiles tonight — the pins land on the grid",
   distanceLabel: "Off by",
   distanceValue: formatGeoDistance,
   distanceTitle: (value: string, unit: string): string => `${value} ${unit}`,
