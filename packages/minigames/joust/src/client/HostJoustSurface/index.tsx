@@ -1,4 +1,4 @@
-import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
+import { isSpeakerSeat, type MinigameHostRendererProps } from "@wingnight/minigames-core";
 import type { JoustMinigameHostView, JoustShotResult } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
@@ -9,6 +9,7 @@ import { useShotReplay } from "../useShotReplay/index.js";
 import { AimArena } from "./AimArena/index.js";
 import { Loadout } from "./Loadout/index.js";
 import { ShotHistory } from "./ShotHistory/index.js";
+import { resolveHint } from "./resolveHint/index.js";
 import { hostJoustSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -35,10 +36,10 @@ const LanePlate = ({
   </div>
 );
 
-// The TV's speaker, on a tablet that is the whole room (`solo`): the same replay clock and the
-// same soundboard the display runs, so the band creaks, the shot twangs and the rack clacks
-// here. It draws nothing; mounted only when solo, so on the night the tablet asks for no
-// sound at all.
+// The TV's speaker, on a phone that is the whole room (`seat="solo"`): the same replay clock and
+// the same soundboard the display runs, so the band creaks, the shot twangs and the rack clacks
+// here. It draws nothing; mounted only solo, so on the night neither the tablet nor a
+// contestant's phone asks for any sound at all.
 const SoloSpeaker = ({
   view,
   serverOrigin
@@ -106,7 +107,7 @@ export const HostJoustSurface = ({
   canDispatchAction,
   onDispatchAction,
   serverOrigin,
-  solo = false
+  seat
 }: MinigameHostRendererProps): JSX.Element => {
   const joustView = minigameHostView?.minigame === "JOUST" ? minigameHostView : null;
   const { dispatchVerdict, isSettling: isVerdictSettling } =
@@ -174,26 +175,30 @@ export const HostJoustSurface = ({
       }
       actions={
         <>
-          {/* Solo there is no phase to advance: whoever is playing says what happens next. */}
+          {/* Only the host advances the phase. Solo, whoever is playing says what happens next and
+              calls their own next shot; on a contestant's phone the host calls it from the tablet. */}
           {isDone ? (
-            !solo && <p className={styles.doneNote}>{hostJoustSurfaceCopy.turnOverLabel}</p>
+            seat === "host" && <p className={styles.doneNote}>{hostJoustSurfaceCopy.turnOverLabel}</p>
           ) : (
-            <button
-              className={styles.primaryButton}
-              type="button"
-              disabled={!canAct || !isResolved || isVerdictSettling}
-              onClick={(): void => {
-                dispatchVerdict("nextShot", {});
-              }}
-            >
-              {hostJoustSurfaceCopy.nextShotButtonLabel}
-            </button>
+            seat !== "contestant" && (
+              <button
+                className={styles.primaryButton}
+                type="button"
+                disabled={!canAct || !isResolved || isVerdictSettling}
+                onClick={(): void => {
+                  dispatchVerdict("nextShot", {});
+                }}
+              >
+                {hostJoustSurfaceCopy.nextShotButtonLabel}
+              </button>
+            )
           )}
           {/* The escape hatches stay on the canvas, not in the override dock:
               skipping a pull and resetting the turn are the host's ordinary
               moves here, and AGENTS.md §11 never lets them leave. */}
-          {/* Solo there is no host to skip a pull for anyone; a reset is just starting over. */}
-          {!solo && (
+          {/* Only the host skips a pull for anyone. Solo a reset is just starting over; a
+              contestant's phone has no hatches at all — the host keeps them on the tablet. */}
+          {seat === "host" && (
             <button
               className={styles.secondaryButton}
               type="button"
@@ -205,28 +210,20 @@ export const HostJoustSurface = ({
               {hostJoustSurfaceCopy.skipShotButtonLabel}
             </button>
           )}
-          <button
-            className={styles.secondaryButton}
-            type="button"
-            disabled={!canAct}
-            onClick={(): void => {
-              dispatch("resetTurn");
-            }}
-          >
-            {solo ? hostJoustSurfaceCopy.restartButtonLabel : hostJoustSurfaceCopy.resetTurnButtonLabel}
-          </button>
-          {!(solo && isDone) && (
-            <span className={styles.hint}>
-              {isAimingPhase
-                ? canAct
-                  ? hostJoustSurfaceCopy.aimingHint
-                  : hostJoustSurfaceCopy.aimingLockedHint
-                : isResolved
-                  ? solo
-                    ? hostJoustSurfaceCopy.soloReplayingHint
-                    : hostJoustSurfaceCopy.replayingHint
-                  : hostJoustSurfaceCopy.turnOverLabel}
-            </span>
+          {seat !== "contestant" && (
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              disabled={!canAct}
+              onClick={(): void => {
+                dispatch("resetTurn");
+              }}
+            >
+              {seat === "solo" ? hostJoustSurfaceCopy.restartButtonLabel : hostJoustSurfaceCopy.resetTurnButtonLabel}
+            </button>
+          )}
+          {(seat === "host" || !isDone) && (
+            <span className={styles.hint}>{resolveHint(seat, joustPhase, canAct)}</span>
           )}
         </>
       }
@@ -240,8 +237,9 @@ export const HostJoustSurface = ({
             {lastShot !== null && (
               <ShotResultCard shot={lastShot} nameByPlayerId={nameByPlayerId} />
             )}
-            {/* The room's standings. Solo there is no room to stand in. */}
-            {isDone && !solo && (
+            {/* The room's standings, for the host. Solo there is no room to stand in, and the
+                contestant's phone is for shooting, not for reading the table. */}
+            {isDone && seat === "host" && (
               <RunningTotals
                 pendingPointsByTeamId={joustView.pendingPointsByTeamId}
                 activeTurnTeamId={joustView.activeTurnTeamId}
@@ -281,7 +279,7 @@ export const HostJoustSurface = ({
             }}
           />
           <LanePlate arenaName={arena.name} shooterName={shooter?.name ?? null} />
-          {solo && <SoloSpeaker view={joustView} serverOrigin={serverOrigin} />}
+          {isSpeakerSeat(seat) && <SoloSpeaker view={joustView} serverOrigin={serverOrigin} />}
           {/* The strategy layer: which kind is on the band. Rides in the sky
               like the plate, and only its buttons take the pointer, so a pull
               that starts beside it still pulls. */}

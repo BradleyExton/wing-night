@@ -7,6 +7,7 @@ import type {
   SchlonicZone
 } from "@wingnight/shared";
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart } from "@wingnight/shared";
+import { shouldSettleMountedRun } from "@wingnight/surface";
 
 import { CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 import { resolveAirPeak, resolveMirrorEvents, type SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
@@ -269,9 +270,8 @@ export const useSchlonicRunner = ({
   };
 
   // Follow the run the server says we are on. A `ready` run starts a fresh local run on the line
-  // — after the previous one's beat, if one is still playing; a `running` one with no local run
-  // is a tablet that mounted mid-run (a reload), so hand the server what it has rather than
-  // pretend to resume a run nobody is taking.
+  // — after the previous one's beat, if one is still playing. A `running` one with no local run
+  // is settled by the effect below.
   useEffect(() => {
     if (runIndex === null || runStatus === null) {
       stopLoop();
@@ -295,16 +295,28 @@ export const useSchlonicRunner = ({
       }
 
       restart();
-      return;
-    }
-
-    if (runStatus === "running" && runRef.current?.startedAtMs === null) {
-      if (!runRef.current.hasEnded) {
-        runRef.current.hasEnded = true;
-        onEndRunRef.current();
-      }
     }
   }, [runIndex, runStatus, sceneRef, tallyRef]);
+
+  // A `running` run with no local run is a screen that mounted mid-run. One that can act (a reload)
+  // hands the server what it has rather than pretend to resume a run nobody is taking; one that
+  // cannot only watches, and never ends a run someone else is taking (`shouldSettleMountedRun`).
+  useEffect(() => {
+    const local = runRef.current;
+
+    if (
+      local !== null &&
+      shouldSettleMountedRun({
+        isRunLive: runStatus === "running",
+        hasLocalClock: local.startedAtMs !== null,
+        hasEnded: local.hasEnded,
+        canAct
+      })
+    ) {
+      local.hasEnded = true;
+      onEndRunRef.current();
+    }
+  }, [runIndex, runStatus, canAct]);
 
   useEffect(() => {
     return (): void => {

@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
+import { isSpeakerSeat, type MinigameHostRendererProps, type MinigameSeat } from "@wingnight/minigames-core";
 import type { SchlonicMinigameHostView } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
@@ -20,15 +20,16 @@ const resolveHint = (
   view: SchlonicMinigameHostView,
   canAct: boolean,
   hold: RunHold | null,
-  solo: boolean
+  seat: MinigameSeat
 ): string | null => {
   if (hold !== null) {
     return null;
   }
 
-  // Solo, there is no phase to advance: whoever is playing says what happens next.
+  // Only the host advances the phase. Solo, whoever is playing says what happens next; on a
+  // contestant's phone the host is the one who moves the room on.
   if (view.phase === "finished") {
-    return solo ? null : hostSchlonicSurfaceCopy.finishedHint;
+    return seat === "host" ? hostSchlonicSurfaceCopy.finishedHint : null;
   }
 
   if (view.phase === "running") {
@@ -74,7 +75,7 @@ export const HostSchlonicSurface = ({
   canDispatchAction,
   onDispatchAction,
   serverOrigin,
-  solo = false
+  seat
 }: MinigameHostRendererProps): JSX.Element => {
   const schlonicView = minigameHostView?.minigame === "SCHLONIC" ? minigameHostView : null;
   const canAct = canDispatchAction && schlonicView !== null;
@@ -84,13 +85,13 @@ export const HostSchlonicSurface = ({
   // The zone lingers on the run just ended while the handoff plays; the chrome
   // row is already on the next one, which is the run the room is asking about.
   const { shownRunIndex, hold } = useHeldRun(schlonicView ?? EMPTY_RUN_VIEW);
-  // On the night the TV is the speaker and the tablet is quiet. Solo, the tablet is the room, so
-  // it plays the TV's soundboard off its own run.
+  // On the night the TV is the speaker and the tablet — or the contestant's phone — is quiet.
+  // Solo, the phone is the room, so it plays the TV's soundboard off its own run.
   const { onMirrorEvent } = useSchlonicSounds({
     view: schlonicView ?? EMPTY_RUN_VIEW,
     hold,
     serverOrigin,
-    isSpeaker: solo
+    isSpeaker: isSpeakerSeat(seat)
   });
   // Written by the runner's paint loop, sixty times a second: the wings in hand.
   const tallyRef = useRef<HTMLSpanElement>(null);
@@ -99,7 +100,7 @@ export const HostSchlonicSurface = ({
       ? null
       : (schlonicView.runs[Math.min(schlonicView.runIndex, schlonicView.runsPerTurn - 1)] ?? null);
   const currentRunnerName = isFinished ? null : resolveRunPlayerName(currentRun);
-  const hint = schlonicView === null ? null : resolveHint(schlonicView, canAct, hold, solo);
+  const hint = schlonicView === null ? null : resolveHint(schlonicView, canAct, hold, seat);
   // The run list and the round's totals come out only when there is something
   // to read off them and nothing to dodge under them.
   const showsReadout = schlonicView !== null && (hold !== null || isFinished);
@@ -183,8 +184,9 @@ export const HostSchlonicSurface = ({
             {/* The escape hatches stay on the canvas, not in the override dock:
                 skipping a run and resetting the turn are the host's ordinary
                 moves here, and AGENTS.md §11 never lets them leave. */}
-            {/* Solo there is no host to skip a leg for anyone; a reset is just starting over. */}
-            {!solo && (
+            {/* Only the host skips a leg for anyone. Solo a reset is just starting over; a
+                contestant's phone has no hatches at all — the host keeps them on the tablet. */}
+            {seat === "host" && (
               <button
                 className={styles.secondaryButton}
                 type="button"
@@ -199,18 +201,20 @@ export const HostSchlonicSurface = ({
                 {hostSchlonicSurfaceCopy.skipRunButtonLabel}
               </button>
             )}
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              disabled={!canAct}
-              onClick={(): void => {
-                dispatch("resetTurn");
-              }}
-            >
-              {solo
-                ? hostSchlonicSurfaceCopy.restartButtonLabel
-                : hostSchlonicSurfaceCopy.resetTurnButtonLabel}
-            </button>
+            {seat !== "contestant" && (
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                disabled={!canAct}
+                onClick={(): void => {
+                  dispatch("resetTurn");
+                }}
+              >
+                {seat === "solo"
+                  ? hostSchlonicSurfaceCopy.restartButtonLabel
+                  : hostSchlonicSurfaceCopy.resetTurnButtonLabel}
+              </button>
+            )}
             {hint !== null && (
               <span className={styles.hint} data-schlonic-hint>
                 {hint}
@@ -231,7 +235,8 @@ export const HostSchlonicSurface = ({
               </div>
             )}
             <RunHistory runs={schlonicView.runs} activeRunIndex={schlonicView.runIndex} />
-            {isFinished && (
+            {/* The contestant's phone is for running, not for reading the table. */}
+            {isFinished && seat !== "contestant" && (
               <RunningTotals
                 pendingPointsByTeamId={schlonicView.pendingPointsByTeamId}
                 activeTurnTeamId={schlonicView.activeTurnTeamId}
@@ -254,7 +259,7 @@ export const HostSchlonicSurface = ({
           hold={hold}
           runIndex={shownRunIndex}
           tallyRef={tallyRef}
-          onRunnerEvent={solo ? onMirrorEvent : undefined}
+          onRunnerEvent={isSpeakerSeat(seat) ? onMirrorEvent : undefined}
         />
       )}
     </TakeoverCanvas>

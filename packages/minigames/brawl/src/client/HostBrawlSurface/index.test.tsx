@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { MinigameSeat } from "@wingnight/minigames-core";
 import type { BrawlMinigameBlock, BrawlMinigameHostView, BrawlPlayerFigure } from "@wingnight/shared";
 
 import { HostBrawlSurface } from "./index.js";
@@ -43,7 +44,12 @@ const createView = (overrides: Partial<BrawlMinigameHostView> = {}): BrawlMiniga
   ...overrides
 });
 
-const render = (view: BrawlMinigameHostView | null, phase: "intro" | "play" = "play", canDispatchAction = true): string =>
+const render = (
+  view: BrawlMinigameHostView | null,
+  phase: "intro" | "play" = "play",
+  canDispatchAction = true,
+  seat: MinigameSeat = "host"
+): string =>
   renderToStaticMarkup(
     <HostBrawlSurface
       phase={phase}
@@ -56,6 +62,7 @@ const render = (view: BrawlMinigameHostView | null, phase: "intro" | "play" = "p
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
       serverOrigin={null}
+      seat={seat}
     />
   );
 
@@ -155,6 +162,51 @@ test("does put up the finish card, the block list and the totals when the team i
   assert.ok(markup.includes("Full points at 27 worth"));
   assert.ok(markup.includes("That&#x27;s the team"));
   assert.ok(!markup.includes("data-brawl-hearts"));
+});
+
+const finishedView = (): BrawlMinigameHostView =>
+  createView({
+    phase: "finished",
+    blockIndex: 2,
+    goonsDown: 12,
+    points: 7,
+    blocks: [
+      createBlock({ status: "done", result: { outcome: "cleared", endTick: 1800, goons: 7, hearts: 2 } }),
+      createBlock({ blockIndex: 1, player: MORGAN, status: "done", result: { outcome: "ko", endTick: 900, goons: 5, hearts: 0 } })
+    ]
+  });
+
+// Solo (the online teaser) there is no host: nobody to skip a block for, a reset is starting over,
+// and nobody to ask to advance the phase.
+test("drops the host's skip, offers a restart and asks nobody to advance the phase when it plays solo", () => {
+  const live = render(createView(), "play", true, "solo");
+
+  assert.ok(!live.includes("Skip block"));
+  assert.ok(!live.includes("Reset turn"));
+  assert.ok(live.includes("Restart"));
+
+  const through = render(finishedView(), "play", true, "solo");
+
+  assert.ok(!through.includes("Advance the phase"));
+  // Solo keeps the totals it always showed at the finish.
+  assert.ok(through.includes("Round so far"));
+});
+
+// On a guest's phone at the party the host keeps every hatch on the tablet and moves the room on.
+test("drops every hatch, the room's totals and the phase hint when it sits on the contestant's phone", () => {
+  const live = render(createView(), "play", true, "contestant");
+
+  assert.ok(live.includes("data-brawl-arena"));
+  assert.ok(!live.includes("Skip block"));
+  assert.ok(!live.includes("Reset turn"));
+  assert.ok(!live.includes("Restart"));
+
+  const through = render(finishedView(), "play", true, "contestant");
+
+  assert.ok(through.includes('data-brawl-finish="finished"'));
+  assert.ok(!through.includes("Advance the phase"));
+  assert.ok(!through.includes("Round so far"));
+  assert.ok(render(finishedView()).includes("Round so far"));
 });
 
 test("does lock the hint to the host when the tablet cannot act", () => {

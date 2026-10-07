@@ -6,6 +6,7 @@ import {
   createPromptContentAdapter,
   isMinigameDevManifest,
   isSerializableValue,
+  isSpeakerSeat,
   resolveSeededPromptCursor
 } from "./index.js";
 
@@ -262,4 +263,11 @@ test("resolveSeededPromptCursor returns zero when the bank is empty", () => {
     }),
     0
   );
+});
+
+test("does make a surface its own speaker only when it plays solo", () => {
+  assert.equal(isSpeakerSeat("solo"), true);
+  // At the party the TV is the room's only speaker: the host tablet and a guest's phone are silent.
+  assert.equal(isSpeakerSeat("host"), false);
+  assert.equal(isSpeakerSeat("contestant"), false);
 });

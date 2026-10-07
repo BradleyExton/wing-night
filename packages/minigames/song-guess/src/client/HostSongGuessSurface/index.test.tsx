@@ -58,6 +58,7 @@ const renderSurface = (
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
       serverOrigin={null}
+      seat="host"
     />
   );
 };

@@ -64,6 +64,7 @@ const renderSurface = (
       canDispatchAction
       onDispatchAction={(): void => {}}
       serverOrigin={null}
+      seat="host"
     />
   );
 

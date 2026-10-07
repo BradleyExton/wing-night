@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { MinigameSeat } from "@wingnight/minigames-core";
 import type {
   SchlonicMinigameHostView,
   SchlonicMinigameRun,
@@ -59,7 +60,7 @@ const render = (
   view: SchlonicMinigameHostView | null,
   phase: "intro" | "play" = "play",
   canDispatchAction = true,
-  solo = false
+  seat: MinigameSeat = "host"
 ): string =>
   renderToStaticMarkup(
     <HostSchlonicSurface
@@ -73,7 +74,7 @@ const render = (
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
       serverOrigin={null}
-      solo={solo}
+      seat={seat}
     />
   );
 
@@ -224,7 +225,7 @@ test("keeps both escape hatches on the canvas (AGENTS.md §11)", () => {
 
 // Solo (the online teaser) there is no host: nobody to skip a leg for, and a reset is starting over.
 test("drops the host's skip and offers a restart when it plays solo", () => {
-  const markup = render(createView(), "play", true, true);
+  const markup = render(createView(), "play", true, "solo");
 
   assert.ok(!markup.includes("Skip run"));
   assert.ok(!markup.includes("Reset turn"));
@@ -235,7 +236,25 @@ test("asks nobody to advance the phase when a solo team is through", () => {
   const view = createView({ phase: "finished", runIndex: 2, points: 4 });
 
   assert.ok(render(view).includes("Advance the phase"));
-  assert.ok(!render(view, "play", true, true).includes("Advance the phase"));
+  assert.ok(!render(view, "play", true, "solo").includes("Advance the phase"));
+});
+
+// On a guest's phone at the party the host keeps every hatch on the tablet and moves the room on.
+test("drops every hatch, the room's totals and the phase hint when it sits on the contestant's phone", () => {
+  const live = render(createView(), "play", true, "contestant");
+
+  assert.ok(live.includes("data-schlonic-arena"));
+  assert.ok(!live.includes("Skip run"));
+  assert.ok(!live.includes("Reset turn"));
+  assert.ok(!live.includes("Restart"));
+
+  const through = render(createView({ phase: "finished", runIndex: 2, points: 4 }), "play", true, "contestant");
+
+  assert.ok(!through.includes("Advance the phase"));
+  assert.ok(!through.includes("Round so far"));
+  assert.ok(through.includes('data-schlonic-finish="finished"'));
+  // Solo keeps the totals it always showed at the finish.
+  assert.ok(render(createView({ phase: "finished", runIndex: 2, points: 4 }), "play", true, "solo").includes("Round so far"));
 });
 
 // The zone is one big jump button and draws no chrome of its own (§5). How to

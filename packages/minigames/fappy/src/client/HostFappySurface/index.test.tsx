@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { MinigameSeat } from "@wingnight/minigames-core";
 import type { FappyMinigameHostView, FappyMinigameLeg, FappyPlayerFigure } from "@wingnight/shared";
 
 import { HostFappySurface } from "./index.js";
@@ -62,7 +63,7 @@ const render = (
   view: FappyMinigameHostView | null,
   phase: "intro" | "play" = "play",
   serverOrigin: string | null = null,
-  solo = false
+  seat: MinigameSeat = "host"
 ): string => {
   return renderToStaticMarkup(
     <HostFappySurface
@@ -78,7 +79,7 @@ const render = (
         return;
       }}
       serverOrigin={serverOrigin}
-      solo={solo}
+      seat={seat}
     />
   );
 };
@@ -86,16 +87,45 @@ const render = (
 // Solo (the online teaser) there is no host and no room: nobody to skip a leg for, no phase to
 // advance, and no standings to post.
 test("drops the host's skip and the phase hint when it plays solo", () => {
-  const live = render(createView(), "play", null, true);
+  const live = render(createView(), "play", null, "solo");
 
   assert.doesNotMatch(live, /Skip leg/);
   assert.doesNotMatch(live, /Reset turn/);
   assert.match(live, /Restart/);
 
-  const through = render(createView({ phase: "finished", elapsedMs: 48_000, points: 15 }), "play", null, true);
+  const through = render(createView({ phase: "finished", elapsedMs: 48_000, points: 15 }), "play", null, "solo");
 
   assert.doesNotMatch(through, /Advance the phase/);
   assert.match(render(createView({ phase: "finished", elapsedMs: 48_000, points: 15 })), /Advance the phase/);
+});
+
+// On a guest's phone at the party the host keeps every hatch on the tablet, the TV keeps the
+// standings, and the host is the one who moves the room on: the phone is the corridor and the
+// relay's own counts, nothing else.
+test("drops every hatch, the room's totals and the phase hint when it sits on the contestant's phone", () => {
+  const live = render(createView(), "play", null, "contestant");
+
+  assert.match(live, /data-fappy-arena/);
+  assert.match(live, /Leg 1 of 2/);
+  assert.doesNotMatch(live, /Skip leg/);
+  assert.doesNotMatch(live, /Reset turn/);
+  assert.doesNotMatch(live, /Restart/);
+  assert.doesNotMatch(live, /Round so far/);
+
+  const through = render(createView({ phase: "finished", elapsedMs: 48_000, points: 15 }), "play", null, "contestant");
+
+  assert.doesNotMatch(through, /Advance the phase/);
+  assert.doesNotMatch(through, /Round so far/);
+  // The finish card is the relay's own result, not a standings table: it stays.
+  assert.match(through, /data-fappy-finish="finished"/);
+});
+
+test("does keep the skip, the reset and the room's totals when it sits at the host tablet", () => {
+  const live = render(createView(), "play", null, "host");
+
+  assert.match(live, /Skip leg/);
+  assert.match(live, /Reset turn/);
+  assert.match(live, /Round so far/);
 });
 
 test("does brief the relay without a corridor during the intro", () => {

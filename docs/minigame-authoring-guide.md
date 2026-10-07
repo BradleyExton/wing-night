@@ -256,6 +256,12 @@ From `MinigameHostRendererProps` (`packages/minigames/core/src/index.ts`):
   end — but a sentence that needs the name may use it.
 - `teamNameByTeamId` is what `RunningTotals` takes. `serverOrigin` is `null`
   until the host app resolves it in an effect (see 5.1 and 5.3).
+- `seat` (`MinigameSeat`) says who the surface is in front of: `"host"` (the
+  party tablet — every escape hatch, the running totals, silent), `"solo"` (the
+  online teaser — its own speaker, no Skip, Reset reads Restart) or
+  `"contestant"` (a guest's phone at the party — no hatches, no running totals,
+  no "advance the phase" hint, and silent). Ask `isSpeakerSeat(seat)` before
+  making any sound. A game with nothing seat-specific ignores the prop.
 
 ### 4.4 What goes in which slot
 

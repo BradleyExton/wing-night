@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
+import { isSpeakerSeat, type MinigameHostRendererProps, type MinigameSeat } from "@wingnight/minigames-core";
 import { resolveMountClimbTicks, type MountMinigameHostView } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
@@ -30,13 +30,14 @@ const resolveHolderName = (view: MountMinigameHostView): string => {
 
 // The one line under the buttons, or nothing. A climber's hands are busy, and the handoff is
 // announced by the callout over the climb, so neither beat gets a sentence here.
-const resolveHint = (view: MountMinigameHostView, canAct: boolean, hold: ClimbHold | null, solo: boolean): string | null => {
+const resolveHint = (view: MountMinigameHostView, canAct: boolean, hold: ClimbHold | null, seat: MinigameSeat): string | null => {
   if (hold !== null) {
     return null;
   }
 
+  // Only the host advances the phase.
   if (view.phase === "finished") {
-    return solo ? null : hostMountSurfaceCopy.finishedHint;
+    return seat === "host" ? hostMountSurfaceCopy.finishedHint : null;
   }
 
   if (view.phase === "running") {
@@ -63,7 +64,7 @@ export const HostMountSurface = ({
   canDispatchAction,
   onDispatchAction,
   serverOrigin,
-  solo = false
+  seat
 }: MinigameHostRendererProps): JSX.Element => {
   const mountView = minigameHostView?.minigame === "MOUNT" ? minigameHostView : null;
   const canAct = canDispatchAction && mountView !== null;
@@ -72,11 +73,13 @@ export const HostMountSurface = ({
   // The arena lingers on the climb just ended while its beat plays; the chrome is already on the
   // next one, which is the climb the room is asking about.
   const { shownClimbIndex, hold } = useHeldClimb(mountView ?? EMPTY_CLIMB_VIEW);
-  // On the night the TV is the speaker and the tablet is quiet. Solo, the tablet is the room.
-  const { onEvent } = useMountSounds({ serverOrigin, isSpeaker: solo });
+  // On the night the TV is the speaker and the tablet (or a contestant's phone) is quiet. Solo,
+  // the phone is the room.
+  const isSpeaker = isSpeakerSeat(seat);
+  const { onEvent } = useMountSounds({ serverOrigin, isSpeaker });
   // Written by the runner's paint loop, sixty times a second.
   const clockRef = useRef<HTMLSpanElement>(null);
-  const hint = mountView === null ? null : resolveHint(mountView, canAct, hold, solo);
+  const hint = mountView === null ? null : resolveHint(mountView, canAct, hold, seat);
   const playerName = mountView === null || isFinished ? null : currentPlayerName(mountView);
   const showsReadout = mountView !== null && (hold !== null || isFinished);
   const { dispatchVerdict, isSettling } = useVerdictDispatch(onDispatchAction);
@@ -135,8 +138,9 @@ export const HostMountSurface = ({
         mountView === null ? null : (
           <>
             {/* The escape hatches stay on the canvas: skipping a climb and resetting the turn are
-                the host's ordinary moves here (AGENTS.md §11). Solo there is nobody to skip for. */}
-            {!solo && (
+                the host's ordinary moves here (AGENTS.md §11). Solo there is nobody to skip for; a
+                contestant's phone has no hatches at all. */}
+            {seat === "host" && (
               <button
                 className={styles.secondaryButton}
                 type="button"
@@ -153,16 +157,18 @@ export const HostMountSurface = ({
                 {hostMountSurfaceCopy.skipClimbButtonLabel}
               </button>
             )}
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              disabled={!canAct}
-              onClick={(): void => {
-                onDispatchAction("resetTurn", {});
-              }}
-            >
-              {solo ? hostMountSurfaceCopy.restartButtonLabel : hostMountSurfaceCopy.resetTurnButtonLabel}
-            </button>
+            {seat !== "contestant" && (
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                disabled={!canAct}
+                onClick={(): void => {
+                  onDispatchAction("resetTurn", {});
+                }}
+              >
+                {seat === "solo" ? hostMountSurfaceCopy.restartButtonLabel : hostMountSurfaceCopy.resetTurnButtonLabel}
+              </button>
+            )}
             {hint !== null && (
               <span className={styles.hint} data-mount-hint>
                 {hint}
@@ -181,7 +187,7 @@ export const HostMountSurface = ({
               </div>
             )}
             <ClimbHistory climbs={mountView.climbs} activeClimbIndex={mountView.climbIndex} />
-            {isFinished && (
+            {isFinished && seat !== "contestant" && (
               <RunningTotals
                 pendingPointsByTeamId={mountView.pendingPointsByTeamId}
                 activeTurnTeamId={mountView.activeTurnTeamId}
@@ -204,7 +210,7 @@ export const HostMountSurface = ({
           hold={hold}
           climbIndex={shownClimbIndex}
           clockRef={clockRef}
-          onRunnerEvent={solo ? onEvent : undefined}
+          onRunnerEvent={isSpeaker ? onEvent : undefined}
         />
       )}
     </TakeoverCanvas>

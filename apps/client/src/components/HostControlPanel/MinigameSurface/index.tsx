@@ -100,6 +100,7 @@ export const MinigameSurface = ({
             canDispatchAction={canDispatchAction}
             onDispatchAction={onDispatchAction}
             serverOrigin={serverOrigin}
+            seat="host"
           />
         </div>
       </section>
@@ -125,6 +126,7 @@ export const MinigameSurface = ({
           canDispatchAction={canDispatchAction}
           onDispatchAction={onDispatchAction}
           serverOrigin={serverOrigin}
+          seat="host"
         />
       </div>
     </section>

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { MinigameSeat } from "@wingnight/minigames-core";
 
 import type {
   JoustMinigameHostView,
@@ -113,7 +114,7 @@ const renderSurface = (
   view: JoustMinigameHostView | null,
   phase: "intro" | "play" = "play",
   canDispatchAction = true,
-  solo = false
+  seat: MinigameSeat = "host"
 ): string => {
   return renderToStaticMarkup(
     <HostJoustSurface
@@ -127,7 +128,7 @@ const renderSurface = (
       canDispatchAction={canDispatchAction}
       onDispatchAction={(): void => {}}
       serverOrigin={null}
-      solo={solo}
+      seat={seat}
     />
   );
 };
@@ -135,7 +136,7 @@ const renderSurface = (
 // Solo (the online teaser) there is no host and no TV: nobody to skip a pull for, no phase to
 // advance, and the replay plays on the lane in hand.
 test("drops the host's skip and the TV, and offers a restart, when it plays solo", () => {
-  const aiming = renderSurface(hostView(), "play", true, true);
+  const aiming = renderSurface(hostView(), "play", true, "solo");
 
   assert.equal(buttonFor(aiming, "Skip shot"), null);
   assert.equal(buttonFor(aiming, "Reset turn"), null);
@@ -144,10 +145,34 @@ test("drops the host's skip and the TV, and offers a restart, when it plays solo
   const replaying = hostView({ phase: "resolved", lastShot: oneDown, shots: [oneDown] });
 
   assert.match(renderSurface(replaying), /Watch the TV/);
-  assert.doesNotMatch(renderSurface(replaying, "play", true, true), /Watch the TV/);
-  assert.match(renderSurface(replaying, "play", true, true), /Watch it fly/);
-  assert.doesNotMatch(renderSurface(hostView({ phase: "done" }), "play", true, true), /advance the phase/);
+  assert.doesNotMatch(renderSurface(replaying, "play", true, "solo"), /Watch the TV/);
+  assert.match(renderSurface(replaying, "play", true, "solo"), /Watch it fly/);
+  assert.doesNotMatch(renderSurface(hostView({ phase: "done" }), "play", true, "solo"), /advance the phase/);
   assert.match(renderSurface(hostView({ phase: "done" })), /advance the phase/);
+});
+
+// On a guest's phone at the party the host keeps every hatch on the tablet and calls the next
+// shot from there; the phone aims, picks its kind and lets go, and the room watches the TV.
+test("drops every hatch, the next shot and the room's totals when it sits on the contestant's phone", () => {
+  const aiming = renderSurface(hostView(), "play", true, "contestant");
+
+  assert.match(aiming, /data-joust-aim-arena/);
+  assert.equal(buttonFor(aiming, "Skip shot"), null);
+  assert.equal(buttonFor(aiming, "Reset turn"), null);
+  assert.equal(buttonFor(aiming, "Restart"), null);
+  assert.equal(buttonFor(aiming, "Next shot"), null);
+
+  const replaying = hostView({ phase: "resolved", lastShot: oneDown, shots: [oneDown] });
+  const replayingHtml = renderSurface(replaying, "play", true, "contestant");
+
+  assert.equal(buttonFor(replayingHtml, "Next shot"), null);
+  assert.match(replayingHtml, /Watch the TV/);
+
+  const done = renderSurface(hostView({ phase: "done" }), "play", true, "contestant");
+
+  assert.doesNotMatch(done, /advance the phase/);
+  assert.doesNotMatch(done, /Round so far/);
+  assert.match(renderSurface(hostView({ phase: "done" })), /Round so far/);
 });
 
 const buttonFor = (html: string, label: string): string | null => {

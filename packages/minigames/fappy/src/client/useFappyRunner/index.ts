@@ -8,6 +8,7 @@ import {
   resolveFappyGates,
   runFappyLeg
 } from "@wingnight/shared";
+import { shouldSettleMountedRun } from "@wingnight/surface";
 
 import { CRASH_BEAT_MS, HANDOFF_BEAT_MS } from "../beats/index.js";
 import type { FappySceneHandle } from "../FappyScene/index.js";
@@ -200,9 +201,8 @@ export const useFappyRunner = ({
   // Follow the attempt the server says we are on. A `ready` attempt (the first
   // one, the one after a crash, the next leg) starts a fresh local run on its
   // checkpoint — after the crash beat, if one is still playing; a `flying`
-  // one with no local run is a tablet that mounted mid-flight (a reload), so
-  // settle it from the log rather than pretend to resume a flight nobody is
-  // flying; a `cleared` leg holds its landing while the handoff beat plays.
+  // one with no local run is settled by the effect below; a `cleared` leg
+  // holds its landing while the handoff beat plays.
   useEffect(() => {
     const currentLeg = legRef.current;
 
@@ -231,14 +231,6 @@ export const useFappyRunner = ({
       return undefined;
     }
 
-    if (legStatus === "flying" && runRef.current?.startedAtMs === null) {
-      if (!runRef.current.hasEnded) {
-        runRef.current.hasEnded = true;
-        onEndLegRef.current();
-      }
-      return undefined;
-    }
-
     if (legStatus === "cleared") {
       stopLoop();
 
@@ -261,6 +253,27 @@ export const useFappyRunner = ({
 
     return undefined;
   }, [legIndex, legSeed, legStatus, attempt, checkpointGate, knockedEaglesKey, gatesPerLeg]);
+
+  // A `flying` attempt with no local run is a screen that mounted mid-flight. One that can act (a
+  // reload) settles it from the log rather than pretend to resume a flight nobody is flying; one
+  // that cannot only watches, and never ends a flight someone else is flying
+  // (`shouldSettleMountedRun`).
+  useEffect(() => {
+    const run = runRef.current;
+
+    if (
+      run !== null &&
+      shouldSettleMountedRun({
+        isRunLive: legStatus === "flying",
+        hasLocalClock: run.startedAtMs !== null,
+        hasEnded: run.hasEnded,
+        canAct
+      })
+    ) {
+      run.hasEnded = true;
+      onEndLegRef.current();
+    }
+  }, [legIndex, legStatus, attempt, canAct]);
 
   useEffect(() => {
     return (): void => {

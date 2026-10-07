@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
+import { isSpeakerSeat, type MinigameHostRendererProps, type MinigameSeat } from "@wingnight/minigames-core";
 import type { BrawlMinigameHostView } from "@wingnight/shared";
 import { resolveBrawlStartHearts } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
@@ -22,14 +22,15 @@ const currentPlayerName = (view: BrawlMinigameHostView): string | null => {
 
 // The one line under the buttons, or nothing. A brawling hen's holder is not reading, and the
 // handoff is announced by the callout over the street, so neither beat gets a sentence here.
-const resolveHint = (view: BrawlMinigameHostView, canAct: boolean, hold: BlockHold | null, solo: boolean): string | null => {
+const resolveHint = (view: BrawlMinigameHostView, canAct: boolean, hold: BlockHold | null, seat: MinigameSeat): string | null => {
   if (hold !== null) {
     return null;
   }
 
-  // Solo, there is no phase to advance: whoever is playing says what happens next.
+  // Only the host advances the phase. Solo, whoever is playing says what happens next; on a
+  // contestant's phone the host is the one who moves the room on.
   if (view.phase === "finished") {
-    return solo ? null : hostBrawlSurfaceCopy.finishedHint;
+    return seat === "host" ? hostBrawlSurfaceCopy.finishedHint : null;
   }
 
   if (view.phase === "running") {
@@ -59,7 +60,7 @@ export const HostBrawlSurface = ({
   canDispatchAction,
   onDispatchAction,
   serverOrigin,
-  solo = false
+  seat
 }: MinigameHostRendererProps): JSX.Element => {
   const brawlView = minigameHostView?.minigame === "BRAWL" ? minigameHostView : null;
   const canAct = canDispatchAction && brawlView !== null;
@@ -68,15 +69,17 @@ export const HostBrawlSurface = ({
   // The street lingers on the block just ended while its beat plays; the chrome row is already on
   // the next one, which is the block the room is asking about.
   const { shownBlockIndex, hold } = useHeldBlock(brawlView ?? EMPTY_BLOCK_VIEW);
-  // On the night the TV is the speaker and the tablet is quiet. Solo, the tablet is the room, so
-  // it plays the TV's soundboard off its own run, and rings each beat as the hold opens.
-  const { onMirrorEvent } = useBrawlSounds({ serverOrigin, isSpeaker: solo });
+  // On the night the TV is the speaker and the tablet — or the contestant's phone — is quiet.
+  // Solo, the phone is the room, so it plays the TV's soundboard off its own run, and rings each
+  // beat as the hold opens.
+  const isSpeaker = isSpeakerSeat(seat);
+  const { onMirrorEvent } = useBrawlSounds({ serverOrigin, isSpeaker });
 
-  useSoloBeatSounds(hold, solo ? onMirrorEvent : undefined);
+  useSoloBeatSounds(hold, isSpeaker ? onMirrorEvent : undefined);
   // Written by the runner's paint loop, sixty times a second: the hearts left and the worth down.
   const heartsRef = useRef<HTMLSpanElement>(null);
   const tallyRef = useRef<HTMLSpanElement>(null);
-  const hint = brawlView === null ? null : resolveHint(brawlView, canAct, hold, solo);
+  const hint = brawlView === null ? null : resolveHint(brawlView, canAct, hold, seat);
   const playerName = brawlView === null || isFinished ? null : currentPlayerName(brawlView);
   // One glyph per heart the street on screen starts with: four on a block bought at the handoff.
   const heartsMax = resolveBrawlStartHearts(brawlView?.blocks[shownBlockIndex]?.heartBought ?? false);
@@ -142,8 +145,9 @@ export const HostBrawlSurface = ({
         brawlView === null ? null : (
           <>
             {/* The escape hatches stay on the canvas: skipping a block and resetting the turn are
-                the host's ordinary moves here (AGENTS.md §11). Solo there is nobody to skip for. */}
-            {!solo && (
+                the host's ordinary moves here (AGENTS.md §11). Solo there is nobody to skip for; a
+                contestant's phone has no hatches at all — the host keeps them on the tablet. */}
+            {seat === "host" && (
               <button
                 className={styles.secondaryButton}
                 type="button"
@@ -157,16 +161,18 @@ export const HostBrawlSurface = ({
                 {hostBrawlSurfaceCopy.skipBlockButtonLabel}
               </button>
             )}
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              disabled={!canAct}
-              onClick={(): void => {
-                onDispatchAction("resetTurn", {});
-              }}
-            >
-              {solo ? hostBrawlSurfaceCopy.restartButtonLabel : hostBrawlSurfaceCopy.resetTurnButtonLabel}
-            </button>
+            {seat !== "contestant" && (
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                disabled={!canAct}
+                onClick={(): void => {
+                  onDispatchAction("resetTurn", {});
+                }}
+              >
+                {seat === "solo" ? hostBrawlSurfaceCopy.restartButtonLabel : hostBrawlSurfaceCopy.resetTurnButtonLabel}
+              </button>
+            )}
             {hint !== null && (
               <span className={styles.hint} data-brawl-hint>
                 {hint}
@@ -185,7 +191,8 @@ export const HostBrawlSurface = ({
               </div>
             )}
             <BlockHistory blocks={brawlView.blocks} activeBlockIndex={brawlView.blockIndex} />
-            {isFinished && (
+            {/* The contestant's phone is for brawling, not for reading the table. */}
+            {isFinished && seat !== "contestant" && (
               <RunningTotals
                 pendingPointsByTeamId={brawlView.pendingPointsByTeamId}
                 activeTurnTeamId={brawlView.activeTurnTeamId}
@@ -209,7 +216,7 @@ export const HostBrawlSurface = ({
           blockIndex={shownBlockIndex}
           heartsRef={heartsRef}
           tallyRef={tallyRef}
-          onRunnerEvent={solo ? onMirrorEvent : undefined}
+          onRunnerEvent={isSpeaker ? onMirrorEvent : undefined}
         />
       )}
     </TakeoverCanvas>

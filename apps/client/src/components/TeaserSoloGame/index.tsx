@@ -22,7 +22,7 @@ type TeaserSoloGameProps = {
 // One minigame on a phone, alone: the same pure runtime the party server drives, reduced in the
 // page the way the dev sandbox does it, with the tablet's own surface as the screen — each game
 // the teaser offers draws its whole scene there, not just a button, so the phone needs no TV.
-// `solo` tells the surface it is the room: its own speaker, with no host controls. What the host
+// `seat="solo"` tells the surface it is the room: its own speaker, with no host controls. What the host
 // would do instead — pick the team, read out the result, run it again — is this shell.
 export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Element => {
   const { HostSurface, runtimePlugin, rules, content } = game;
@@ -130,7 +130,7 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
             canDispatchAction
             onDispatchAction={handleDispatchAction}
             serverOrigin={serverOrigin}
-            solo
+            seat="solo"
           />
         )}
       </TeaserPhoneFrame>

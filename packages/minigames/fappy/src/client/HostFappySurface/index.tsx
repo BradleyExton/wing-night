@@ -1,12 +1,11 @@
 import { useEffect } from "react";
-import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
+import { isSpeakerSeat, type MinigameHostRendererProps, type MinigameSeat } from "@wingnight/minigames-core";
 import type { FappyMinigameHostView, FappyMinigameLeg } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
 import { RelayLineup } from "../RelayLineup/index.js";
 import {
   resolveFinishClock,
-  resolveRelayChase,
   type FinishClock
 } from "../pressure/index.js";
 import { useFappySounds } from "../useFappySounds/index.js";
@@ -15,6 +14,7 @@ import { formatRelayClock, formatRelayClockSeconds, useRelayClock } from "../use
 import { Corridor } from "./Corridor/index.js";
 import { PointsMeter } from "./PointsMeter/index.js";
 import { RelayClock } from "./RelayClock/index.js";
+import { resolveTotalsNote } from "./resolveTotalsNote/index.js";
 import { hostFappySurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -64,31 +64,11 @@ const FinishCard = ({
   );
 };
 
-// The line under the running totals: the slowest finish that still tops the
-// best rival this round, or par when even that would not do it. The par line
-// when there is nobody to chase yet.
-const resolveTotalsNote = (
-  view: FappyMinigameHostView,
-  teamNameByTeamId: Map<string, string>
-): string => {
-  const chase = resolveRelayChase(view);
-
-  if (chase === null || view.phase === "finished" || view.phase === "timedOut") {
-    return hostFappySurfaceCopy.parLine(view.parSeconds);
-  }
-
-  const rivalName = teamNameByTeamId.get(chase.teamId) ?? null;
-
-  return chase.timeToBeatMs === null
-    ? hostFappySurfaceCopy.beatPar(rivalName)
-    : hostFappySurfaceCopy.timeToBeat(formatRelayClockSeconds(chase.timeToBeatMs), rivalName);
-};
-
 const resolveHint = (
   view: FappyMinigameHostView,
   canAct: boolean,
   hold: LegHold | null,
-  solo: boolean
+  seat: MinigameSeat
 ): string | null => {
   const legIndex = Math.min(view.legIndex, view.legsPerTurn - 1);
   const leg = view.legs[legIndex];
@@ -119,8 +99,9 @@ const resolveHint = (
     return hostFappySurfaceCopy.flyingHint(waitingName, onDeckName);
   }
 
-  // Solo, there is no phase to advance: whoever is playing says what happens next.
-  if (solo) {
+  // Only the host advances the phase. Solo, whoever is playing says what happens next; on a
+  // contestant's phone the host is the one who moves the room on.
+  if (seat !== "host") {
     return null;
   }
 
@@ -149,7 +130,7 @@ export const HostFappySurface = ({
   canDispatchAction,
   onDispatchAction,
   serverOrigin,
-  solo = false
+  seat
 }: MinigameHostRendererProps): JSX.Element => {
   const fappyView = minigameHostView?.minigame === "FAPPY" ? minigameHostView : null;
   const canAct = canDispatchAction && fappyView !== null;
@@ -168,16 +149,16 @@ export const HostFappySurface = ({
   // The corridor lingers on a cleared leg while the handoff plays; the chrome
   // row is already on the next one, which is the leg the room is asking about.
   const { shownLegIndex, hold } = useHeldLeg(fappyView ?? EMPTY_LEG_VIEW);
-  // On the night the TV is the speaker and the tablet is quiet. Solo, the tablet is the room, so
-  // it plays the TV's soundboard off its own flights.
+  // On the night the TV is the speaker and the tablet — or the contestant's phone — is quiet.
+  // Solo, the phone is the room, so it plays the TV's soundboard off its own flights.
   const onRunnerEvent = useFappySounds({
     view: fappyView ?? SILENT_RELAY_VIEW,
     hold,
     elapsedMs,
     serverOrigin,
-    isSpeaker: solo
+    isSpeaker: isSpeakerSeat(seat)
   });
-  const hint = fappyView === null ? null : resolveHint(fappyView, canAct, hold, solo);
+  const hint = fappyView === null ? null : resolveHint(fappyView, canAct, hold, seat);
 
   const dispatch = (actionType: string): void => {
     onDispatchAction(actionType, {});
@@ -255,8 +236,9 @@ export const HostFappySurface = ({
             {/* The escape hatches stay on the canvas, not in the override dock:
                 skipping a leg and resetting the turn are the host's ordinary
                 moves here, and AGENTS.md §11 never lets them leave. */}
-            {/* Solo there is no host to skip a leg for anyone; a reset is just starting over. */}
-            {!solo && (
+            {/* Only the host skips a leg for anyone. Solo a reset is just starting over; a
+                contestant's phone has no hatches at all — the host keeps them on the tablet. */}
+            {seat === "host" && (
               <button
                 className={styles.secondaryButton}
                 type="button"
@@ -270,16 +252,18 @@ export const HostFappySurface = ({
                 {hostFappySurfaceCopy.skipLegButtonLabel}
               </button>
             )}
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              disabled={!canAct}
-              onClick={(): void => {
-                dispatch("resetTurn");
-              }}
-            >
-              {solo ? hostFappySurfaceCopy.restartButtonLabel : hostFappySurfaceCopy.resetTurnButtonLabel}
-            </button>
+            {seat !== "contestant" && (
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                disabled={!canAct}
+                onClick={(): void => {
+                  dispatch("resetTurn");
+                }}
+              >
+                {seat === "solo" ? hostFappySurfaceCopy.restartButtonLabel : hostFappySurfaceCopy.resetTurnButtonLabel}
+              </button>
+            )}
             {hint !== null && <span className={styles.hint}>{hint}</span>}
           </>
         )
@@ -290,8 +274,9 @@ export const HostFappySurface = ({
             {isRelayOver(fappyView) && finishClock !== null && (
               <FinishCard view={fappyView} finishClock={finishClock} />
             )}
-            {/* The room's standings. Solo there is no room to stand in. */}
-            {!solo && (
+            {/* The room's standings, for the host. Solo there is no room to stand in, and the
+                contestant's phone is for flying, not for reading the table. */}
+            {seat === "host" && (
               <RunningTotals
                 pendingPointsByTeamId={fappyView.pendingPointsByTeamId}
                 activeTurnTeamId={fappyView.activeTurnTeamId}
@@ -313,7 +298,7 @@ export const HostFappySurface = ({
           onDispatchAction={onDispatchAction}
           hold={hold}
           legIndex={shownLegIndex}
-          onRunnerEvent={solo ? onRunnerEvent : undefined}
+          onRunnerEvent={isSpeakerSeat(seat) ? onRunnerEvent : undefined}
         />
       )}
     </TakeoverCanvas>

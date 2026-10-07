@@ -167,12 +167,28 @@ export type MinigameHostRendererProps = {
   // so a content-pack image (a GEO photo, a player's head) has to be addressed
   // absolutely. `null` until the host app has resolved it in an effect.
   serverOrigin: string | null;
-  // The surface is the whole room: no TV beside it and no host running the night — the online
-  // teaser (wingnight.tv), where one phone plays a game alone. A game that honours it is its own
-  // speaker (the TV's soundboard plays here instead) and drops the controls that only a host
-  // needs. Absent everywhere in the party app, which is the default; a game that does not
-  // honour it simply renders its tablet surface.
-  solo?: boolean;
+  // Who the surface is in front of (`MinigameSeat`). Required, so every shell says which seat
+  // it is; a game that has nothing seat-specific — every non-arcade one — simply ignores it.
+  seat: MinigameSeat;
+};
+
+// Who a host surface is in front of: one union, never a set of flags (ADR-0002 guardrail 2).
+// - "host": the party's host tablet. Every escape hatch (skip, reset, the next-shot pacing), the
+//   room's running totals and the "advance the phase" hint. Silent: the TV is the room's speaker.
+// - "solo": the online teaser (wingnight.tv), where one phone is the whole room — no TV and no
+//   host. Its own speaker (the TV's soundboard plays here), no skip, Reset reads Restart, no
+//   room standings and nobody to ask to advance the phase.
+// - "contestant": a guest's own phone at the party, playing their own leg of a relay. No escape
+//   hatches at all (the host keeps every one on the tablet), no running totals, no phase hint,
+//   and NO sound — the TV is still the room's only speaker.
+export type MinigameSeat = "host" | "solo" | "contestant";
+
+// The one seat that makes sound. The TV is the room's speaker at the party, so the host tablet and
+// a contestant's phone are both silent; only a solo phone, which has no TV beside it, plays the
+// game's soundboard itself. Every arcade surface asks this rather than comparing seats, so the
+// rule that a guest's phone never makes a noise lives in one place.
+export const isSpeakerSeat = (seat: MinigameSeat): boolean => {
+  return seat === "solo";
 };
 
 export type MinigameDisplayRendererProps = {

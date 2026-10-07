@@ -1,6 +1,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import type { BrawlBlock, BrawlFrame, BrawlInput, BrawlMinigameBlock, BrawlOutcome } from "@wingnight/shared";
 import { BRAWL_WORLD, advanceBrawl, createBrawlRunStart } from "@wingnight/shared";
+import { shouldSettleMountedRun } from "@wingnight/surface";
 
 import { CLEARED_BEAT_MS, HIT_PAUSE_MS, KO_BEAT_MS, TIMEOUT_BEAT_MS } from "../beats/index.js";
 import type { BrawlSceneHandle } from "../BrawlScene/index.js";
@@ -254,9 +255,8 @@ export const useBrawlRunner = ({
   // Follow the block the server says we are on. A `ready` block starts a fresh local run on the
   // line — after the previous one's beat, if one is still playing — and starts it again when its
   // hearts change (a heart bought at the handoff), so the line shows four. A `running` one with no local
-  // run is a tablet that mounted mid-block (a reload): hand the server what it has rather than
-  // pretend to resume a block nobody is fighting. A block that went `done` under a live local run
-  // was skipped by the host: the loop stops where it is.
+  // run is settled by the effect below. A block that went `done` under a live local run was skipped
+  // by the host: the loop stops where it is.
   useEffect(() => {
     const followed = followedRef.current;
 
@@ -302,14 +302,32 @@ export const useBrawlRunner = ({
       return;
     }
 
-    if (blockStatus === "running" && local.startedAtMs === null) {
-      local.hasEnded = true;
-      callbacksRef.current.onEndBlock();
-    } else if (blockStatus === "done") {
+    if (blockStatus === "done") {
       local.hasEnded = true;
       stopLoop();
     }
   }, [blockIndex, blockStatus, blockHearts, sceneRef, heartsRef, tallyRef]);
+
+  // A `running` block with no local run is a screen that mounted mid-block. One that can act (a
+  // reload) hands the server what it has rather than pretend to resume a block nobody is fighting;
+  // one that cannot only watches, and never ends a block someone else is fighting
+  // (`shouldSettleMountedRun`).
+  useEffect(() => {
+    const local = runRef.current;
+
+    if (
+      local !== null &&
+      shouldSettleMountedRun({
+        isRunLive: blockStatus === "running",
+        hasLocalClock: local.startedAtMs !== null,
+        hasEnded: local.hasEnded,
+        canAct
+      })
+    ) {
+      local.hasEnded = true;
+      callbacksRef.current.onEndBlock();
+    }
+  }, [blockIndex, blockStatus, canAct]);
 
   useEffect(() => {
     return (): void => {
