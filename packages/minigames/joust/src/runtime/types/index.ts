@@ -20,6 +20,9 @@ export type JoustRuntimeContent = {
 
 export type JoustRuntimeRules = {
   shotsPerPlayer: number;
+  // What a bird on the sand is worth; a tower pays its perch multiple of it, and a cleared rack
+  // pays `JOUST_RACK_CLEARED_BONUS` of it. Raise it to make a closing JOUST weigh more.
+  pointsPerTopple: number;
 };
 
 export type JoustRuntimeState = {
@@ -46,6 +49,8 @@ export type JoustRuntimeState = {
   // back with `resetTurn`. A skipped shot fires nothing and spends nothing.
   usedShooterIds: string[];
   shotsPerTurn: number;
+  // Locked at initialize, like the shot count, so a turn scores by one rate throughout.
+  pointsPerTopple: number;
   shotIndex: number;
   phase: JoustPhase;
   aim: JoustAim;
@@ -67,10 +72,14 @@ export const DEFAULT_JOUST_SHOTS_PER_PLAYER = 1;
 /**
  * A player is worth what they were stood on: one a head on the sand, like bowling counts pins,
  * and more up a tower (`resolveJoustPerchPoints`). The tower is the harder target and the bigger
- * prize, which is what makes it a choice rather than a nuisance.
+ * prize, which is what makes it a choice rather than a nuisance. The pack can raise the rate
+ * (`minigameRules.joust.pointsPerTopple`); this is the default.
  */
-export const JOUST_POINTS_PER_TOPPLE = 1;
-/** For a shot that leaves nobody standing. The only bonus in the game, and the one to chase. */
+export const DEFAULT_JOUST_POINTS_PER_TOPPLE = 1;
+/**
+ * For a shot that leaves nobody standing, in sand birds: worth this many times the turn's
+ * `pointsPerTopple`. The only bonus in the game, and the one to chase.
+ */
 export const JOUST_RACK_CLEARED_BONUS = 3;
 
 // A band drawn less than this is a fumble, not a shot: the reducer refuses to

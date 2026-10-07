@@ -450,7 +450,8 @@ Testing Expectations:
   it as a rule the room can read. `resolveRoundMinigameMax` is the one place the rule lives.
 - What a game pays per success is a pack rule where it can be: `emojiCharades.pointsPerCorrect`,
   `drawing.pointsPerCorrect`, `songGuess.pointsPerMark`, `recreate.pointsPerIngredient`,
-  `schlonic.parWingsPerRun`, `geo.scoreBandsKm`. Tune these so a great turn lands near the
+  `schlonic.parWingsPerRun`, `geo.scoreBandsKm`, `joust.pointsPerTopple` (scales every bird and
+  the cleared-rack bonus, for a closing JOUST worth more than the 26 a rack holds at 1). Tune these so a great turn lands near the
   round's cap; a game whose best turn is a third of its cap barely moves the standings.
 
 ---
