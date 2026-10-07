@@ -438,6 +438,53 @@ Notes from the build, none of them blocking:
   hands). If the host wants to referee a pin that landed in the sea by mistake, the escape hatch is
   undo after the reveal, not a peek.
 
+## Online guest portal and party phones — follow-ups
+
+Shipped: the pre-party guest portal on wingnight.tv (sign-in links, avatar studio, private vote,
+`/admin`), `pnpm pack:pull` into the night pack, the locked host seat, and the party phones —
+PLAYER seats by the TV's QR, arcade legs on the contestant's phone, bets and answers (SPEC.md
+"Before the party" and "Player phones", DESIGN.md §2.2H–2.2I). Bets and answers keep their own
+lists above; nothing here repeats them.
+
+- **Real-device checks.** Only Chromium has run any of it. Still to try: an iPhone's Safari
+  through the avatar studio's photo path (HEIC and EXIF rotation are fixed by the browser's
+  re-encode, on paper), the `/s/<token>` sign-in POST in Firefox and WebKit (it is judged on
+  `Sec-Fetch-Site`), and every phone on the real party Wi-Fi rather than the laptop's.
+- **The first real Gemini call.** Local dev and the tests use the fake painter. Confirm Gemini
+  honours `Accept-Encoding: identity` (the Worker pipes the reply through untouched) and that the
+  accept-time SHA-256 of a head fits Workers Free's 10 ms CPU budget. If either fails, the answer
+  is Workers Paid, not image work in the Worker.
+- **An unkept paint lives only in browser memory.** Paints are never stored, so a reload or a
+  dropped tab before Keep loses the preview and the try is spent. The leave-page prompt is the
+  only guard.
+- **No "remove guest" route.** `/admin` can add and edit a guest but not delete one. A delete
+  would also have to clear the guest's head from R2 — including the style-reference copy if that
+  guest's head is the one in use.
+- **Public teaser heads vs private portal heads.** The teaser's public roster shows heads from
+  the pack, while a portal head is private to its guest and Brad. Once heads come from the
+  portal, a guest's head could reach the public teaser by `teaser:deploy`. Brad to decide which
+  rule wins.
+- **Pack pull: renames and non-attendees.** A guest is matched by the slug remembered at the last
+  pull, then by name, so a player renamed by hand in `players.json` after a pull is matched by
+  neither and added again as a new guest. And every exported guest becomes a player, signed in
+  or not; there is no "attending" flag to leave someone out.
+- **The laptop's host QR stays up all night.** It carries the host control token and the laptop
+  is often in view, so anyone who can see the laptop can scan it and take the seat. A hide or
+  "re-show for 30 s" control on the root page would close it.
+- **Quick Play's first team can never be on phones.** The session starts by clearing the device
+  modes and the briefing locks a turn's mode at once, so the first team is always on the tablet;
+  a mode set on the briefing lands from the second team.
+- **Bets: the line leans UNDER on even caps, and the best bettor can be shared.** On an even cap
+  `floor(max / 2) + 0.5` leaves more whole scores under the line than over (on 20: 0–10 under,
+  11–20 over). A tie on wins and plays shares the title. Both are fine for a side game; revisit
+  with "Table-tune the line" above.
+- **TRIVIA on the phones** — majority vote, partial credit and the night pack's missing
+  `trivia.json` (choices come from the sample pack's eight) are under "Answers on the phones"
+  above.
+- **Teams are still undecided.** The vote asks how teams should be made, and nothing beyond it is
+  built: no team pages, no self-pick on a phone, no random draw on the TV. Today Brad seats teams
+  through `players.json` or the tablet. Build whichever the vote picks once it is in.
+
 ## Team identity (genre theming)
 
 Spec: `docs/team-identity.md`. Teams are told apart by a hashed colour and a name; the genre only

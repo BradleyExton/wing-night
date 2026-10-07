@@ -71,14 +71,28 @@ Player phones:
   or TRIVIA turn shows an answer card — its own chart to pin, or the question's choices — never
   the game surface itself; every other phone is a ballot, a bet or blank.
 
-Out of Scope (MVP):
+Host seat:
+- The host seat is locked. A socket asking for HOST gets it only from the laptop itself (a
+  loopback connection from a page on `localhost`) or with the host control token, which reaches
+  the tablet through the QR on the laptop's root page; anything else is refused
+  (`host_auth_required`), never quietly seated as a display. The token survives a server restart
+  mid-party (README.md "Host Authorization").
+
+Out of Scope (MVP) — for the party app. The pre-party guest portal ("Before the party" in §2) is
+a separate deployable on wingnight.tv, and where it has one of these the line says so:
 - Multiple rooms
 - Accounts/auth system on the LAN — a phone is seated by the TV's join token and a per-face claim
-  secret, not an account
-- Persistent database
-- Cloud deployment
-- Image uploads
-- AI features
+  secret, not an account. Guest accounts (sign-in links and sessions) exist only on the pre-party
+  portal, and nothing on the night reads them
+- Persistent database in the party app — it stays in-memory over the pack's JSON files. Only the
+  pre-party portal keeps a database (guests, sessions, votes in Cloudflare D1; heads in R2)
+- Cloud deployment of the party app — it runs on the laptop. Only wingnight.tv (the teaser and the
+  pre-party portal) is deployed
+- Image uploads in the party app. Only the pre-party portal's avatar studio takes a guest's photo;
+  the night reads heads `pnpm pack:pull` copied into the pack
+- AI features in the party app, with one standing exception: RECREATE's live forgery (§3.3, "Local
+  static assets"), which never decides a score and fails readable with no signal. Heads are painted
+  before the night — by `pnpm import:avatars` or the portal's avatar studio — never at the party
 - Multiple config selection
 
 ---
@@ -87,11 +101,46 @@ Out of Scope (MVP):
 
 - 12–20 players
 - 3–5 teams
-- Players are preloaded from JSON
-- Teams are formed live at the party
+- Players are preloaded from JSON (`players.json`, which `pnpm pack:pull` fills from the guest
+  portal — "Before the party" below)
+- Teams start from the pack's preset seating (§3.1–3.2) and are finished live in SETUP. How this
+  night's teams are made is undecided, pending the guest vote: no team pages, phone self-pick or
+  random draw on the TV exist
 - Team sizes are locked once the game starts
 
 Display runs on a laptop connected to a TV via HDMI and must remain full-screen, scroll-free, and distance-readable on a 4K TV.
+
+### Before the party: the guest portal (wingnight.tv)
+
+Pre-party is online; the party is not. The portal is a Cloudflare Worker (`apps/teaser-worker`)
+behind the public teaser on wingnight.tv, with its own pages on the teaser's front end. It is a
+separate deployable from the party app and shares nothing with it at runtime.
+
+- **Guests are pre-created.** Brad adds every guest on `/admin`; nobody signs up. Each guest has a
+  personal sign-in link (reusable until Brad mints a new one), sent by invite email or by hand.
+  `/signin` (and a dead link's own page) offers "email me a new link": single-use, 30 minutes, and
+  the same answer whether or not the address is on the list. A link's page (`/s/<token>`) signs in
+  only on its button's POST, never on the GET a mail scanner prefetches.
+- **Avatar studio** (`/me`). The guest takes or picks a photo (the browser downscales it and
+  re-encodes it as JPEG), and Gemini paints a cartoon head from it, previewed on their bird. Five
+  tries; a try Gemini plainly fails is given back. The guest keeps one head or tries again. The
+  photo is deleted when a head is kept, when the last try is spent, or when the guest removes it,
+  and painted tries are never stored. Heads are private to the guest and Brad, who can pick one
+  kept head as the style reference for later paints and reset a guest's tries.
+- **Private vote** (`/me`). Rank the team genres, name up to two teammates you'd sit with (seen
+  only by Brad; nobody is told who asked for whom), and pick how teams should be made (Brad
+  assigns, guests pick, a random draw on the TV). Changeable until the night.
+- **Admin** (`/admin`, Brad's admin session only). The guest list with sign-in, head, vote and
+  tries status; add, edit, invite, invite all, mint a link, reset tries; the head gallery; the
+  vote summary (genre tallies, mutual wishes, who has still to vote).
+- **Into the night pack, one way.** `pnpm pack:pull` copies every guest's name and kept head from
+  the portal into `~/wing-night-content` (`local/players.json`, `local/assets/avatars/`), adding
+  new guests unseated and never renaming or removing a player. Votes, wishes and email addresses never leave
+  the portal; Brad reads the vote on `/admin` and seats teams himself.
+
+The party itself stays local and offline: nothing on the night depends on the internet or on the
+portal. GEO's map tiles degrade to a visible graticule with a note, and RECREATE's live forgery
+fails readable and the host scores the prompt anyway.
 
 ---
 
@@ -301,7 +350,7 @@ Host:
 - Lock game (disabled until valid)
 
 Display:
-- Idle screen
+- Idle screen (the lobby), with the phones' join QR in its corner ("Player phones", §1)
 
 ---
 
@@ -574,12 +623,17 @@ Testing Expectations:
 - WebSockets (Socket.IO) for realtime sync
 - Snapshot rehydrate behavior:
   - Clients request latest state with `client:requestState` on connect.
-  - `server:stateSnapshot` currently emits `RoomState` (role-scoped envelope types are defined for compatibility work).
+  - `server:stateSnapshot` emits a role-scoped envelope (`toRoleScopedSnapshotEnvelope`): the
+    full `RoomState` to the host (bet picks aside until they settle), a display-safe one to the
+    TV, and the player allow-list to a phone (AGENTS.md §3.4).
 - Generic mini-game mutation envelope:
   - Host sends `minigame:action` payloads with `hostSecret`, `minigameId`, `minigameApiVersion`, `actionType`, and `actionPayload`.
   - Server validates host authorization, active mini-game match, and contract compatibility before dispatch.
+  - A phone sends `player:minigameAction`: the same envelope without the secret, authorized by the
+    face its socket holds (a contestant's own arcade leg, or a playing-team answer — AGENTS.md
+    §3.4–3.5).
 - In-memory state only
-- LAN-first operation (no internet required)
+- LAN-first operation (no internet required on the night; the guest portal is pre-party only)
 
 ---
 

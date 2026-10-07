@@ -499,6 +499,10 @@ looks like another arena frame will not hurt anybody.
 -   Prefer cards and large rows
 -   No hover-only interactions
 -   Primary action uses `primary` token
+-   A device refused the host seat (no host control token, or a rotated one) gets `HostSeatLocked`
+    instead of the host shell: calm, not an error — the root page's backdrop at 1280×800, "Host
+    seat locked", one instruction to scan the laptop's QR and a "scanned before?" hint, no button,
+    because the fix is a scan. Mockup: `apps/client/public/mockups/host-seat-locked/`.
 
 ## 2.2 Display UI (TV Optimized)
 
@@ -712,6 +716,42 @@ Mockup: `apps/client/public/mockups/phone-answers/` (frames 1–7).
     words — tone by shape and words, never colour alone (§2.2E, §7). Counts only: never who chose
     what.
 
+### 2.2H The player phone (join, idle, contestant) and the TV's join card
+
+A guest's phone on the party Wi-Fi (`/play`, SPEC.md "Player phones"), held upright at 390×844.
+`PlayerPhone` and its cards. The language is the guest portal's (§2.2I): the Hearth without its
+flame — `bg` with the fire's heat pooling at the foot, warm-glass cards with an `ember` hairline,
+one accent (`primary`), `mutedWarm` caps for labels, Playfair italic for the show's one sentence.
+The phone is quiet on purpose: no sound (the TV is the room's only speaker), no flame, no
+countdown. A face is always a bird from the cast, never a bare photo — a seated one in its team's
+colour, an unseated one in the cast's warm neutral, as the lobby parade draws them.
+
+-   **Join and idle** (mockup: `apps/client/public/mockups/player-phone/`, frames 1–4). The face
+    picker ("Tap your face.", a three-across grid of birds, a taken face greyed with "Taken", the
+    room's "5 of 12 in" up top); the idle card once a face is claimed (the bird big, the name, the
+    team or "Not on a team yet", "Eyes on the TV", and "This isn't me" asking one confirming tap);
+    "Face freed" when the host frees it; and "Scan the code on the TV" when the phone has no
+    current join token. Teams are never picked here.
+-   **The contestant** (mockup: `apps/client/public/mockups/contestant-phone/`, frames 1–8). The
+    phone whose arcade leg it is turns sideways (844×390) and draws the game's own host surface
+    with `seat="contestant"` inside `PhoneGameFrame` — no hatches, no running totals, no sound;
+    the only chrome is a rail chip ("Caitlin's leg"). Held upright it shows the frame's rotate
+    card. The leg landing in its hand gets a one-beat handoff hold over the scene ("Alex is
+    through — Your leg"), pointer-events none so the first tap still reaches the game. Every
+    other teammate gets a card and never the game: "Grab your phone" on the briefing, "You're
+    next", "Watch the TV", or "Grab the tablet" when the leg is the tablet's. On the tablet,
+    `ContestantPhoneMonitor` mirrors the TV inside the takeover Stage (§2.0B) with Take it back,
+    the game's skip and Reset turn in the actions row, and a drop banner over the mirror when the
+    phone falls off the Wi-Fi; `DeviceModeSurface` is the deck's Tablet | Phones group.
+-   **The bet card and the answer cards** are §2.2F and §2.2G.
+-   **The TV's join card** (`PlayerJoinCard`, SETUP only). The QR the phones scan, in the lobby's
+    top-left corner where the status pill sits (§2.2B), in the same warm glass and reveal. A card
+    rather than a pill because a QR must read from the couch (about 220px at 1080p), lying on its
+    side in the strip beside the wordmark: the code on a white plate with its own quiet zone, then
+    "Join on your phone", "Scan, then tap your face" and the "n of m in" count in `primary`. Every
+    width is in `vw` so it keeps clear of the wordmark at any panel size. Only the laptop's display
+    holds the join token, so a display opened anywhere else draws no card.
+
 ## 2.2B Setup Lobby ("Hearth")
 
 The SETUP stage is the screen the room looks at longest, so it is the one display surface that
@@ -784,6 +824,41 @@ bar across the bottom of the screen. `DisplayBoard/StandingsSurface`; the slab's
     is ahead before the score does. Gold here is a winner accent per §0.1, not decoration.
 -   Accent budget: the team tint on the face (an identity use, like the standings dot) plus the
     hearth's `primary` wash. The deck's own material is warm neutral, never a team colour.
+
+## 2.2I Guest Portal (wingnight.tv, pre-party)
+
+The signed-in pages on wingnight.tv (SPEC.md "Before the party"), drawn by the teaser's front end
+(`PortalShell`, `PortalProfile`, `PortalAdmin`, `PortalSignIn`) over the portal Worker's API.
+Mockup: `apps/client/public/mockups/guest-portal/`. Phone portrait first (390 wide) and allowed to
+scroll: it is a form a guest fills in, not a show, so §2.2's no-scroll rule is the TV's, not its.
+
+-   **The Hearth, without the show.** The room is `bg` with the flame's heat pooling at the foot;
+    every section is a warm-glass card with an `ember` hairline along its top (the teaser landing's
+    card). One accent, `primary`. Labels are `mutedWarm` caps with wide tracking, the show's voice
+    (Playfair italic) says the one sentence a section needs, and numbers are Barlow Condensed. No
+    flame, no parade, no countdown: the motion budget stays on the landing. Buttons are the house
+    flat primary with an edge — solid `primary` for the one next thing, glass outline for the
+    rest.
+-   **A head is always on a bird** (`PortalHeadBird`, in the studio and Brad's head gallery alike),
+    never a bare picture: the bird is what the guest will be on the TV.
+-   **`/me`** — "Hey, Rob." under a "Your seat" eyebrow, then two cards. *Your head*: the bird on
+    a heat-lit stage, a status pill (No head yet / Photo ready / Preview / Your head), take a
+    selfie or pick a photo, Paint my head, then Keep this one or Try again, "Tries left 3 / 5" in
+    the score face, Remove my photo, and the privacy line in plain words (the photo goes to
+    Gemini and is deleted once a head is kept; the head is shown on the TV). *Your vote*: the
+    genres as a ranked list with ▲ ▼ and an unranked pool of chips below, up to two teammate
+    chips ("Only Brad sees this."), the team-format choice as three radio rows, and Save my vote.
+-   **`/admin`** — "The guest list.": the guest table (name, email, sign-in / head / vote / tries
+    status and its actions — invite, link, reset tries), Add a guest, the head gallery (three
+    across, the style reference ringed in `primary`), and the vote summary (genre bars, mutual
+    wishes, who has still to vote). A guest who is not Brad gets "This page is Brad's." instead.
+-   **`/signin`** — one card, "Email me a way in": an email field and one button, and an answer
+    that reads the same whether or not the address is on the list.
+-   **`/s/<token>`** is the Worker's own self-contained page, not the teaser's (it must work
+    before there is a session): the wordmark and one centred `surface` card with an `ember` top
+    rule over the heat-pooled `bg`, the house faces from the teaser's `/fonts`. "You're on the
+    list." and a single Sign in button that POSTs; a dead link gets "That link doesn't work any
+    more." and an email-me-a-new-link form; a cross-site POST gets a one-line explanation.
 
 ------------------------------------------------------------------------
 
@@ -2785,7 +2860,7 @@ One of each (2026-09-24):
 -   No advanced theming system
 -   No light mode
 -   No elaborate onboarding UI
--   No player mobile UI
+-   No player mobile UI beyond the party phone (§2.2H) and the pre-party guest portal (§2.2I)
 -   No complex animation system
 
 ------------------------------------------------------------------------

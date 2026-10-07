@@ -67,11 +67,14 @@ Wing Night uses a pnpm workspace monorepo.
 
 ```text
 apps/
-  client/                         # React app (routes: /host, /display, /quickplay, /admin, /dev/minigame/:minigameId)
+  client/                         # React app (routes: /host, /display, /play, /quickplay, /admin, /dev/minigame/:minigameId)
+                                  # + teaser/portal entry (wingnight.tv: /, /me, /admin, /signin)
   server/                         # Express + Socket.IO server
+  teaser-worker/                  # wingnight.tv's Worker: the guest portal API (D1, R2)
 
 packages/
   shared/                         # Shared types, schemas, socket contracts
+  avatar-head/                    # The Gemini head pipeline: importer, server and portal share it
   minigames/core/                 # Generic minigame contract
   minigames/trivia/               # Trivia runtime + host/display renderer + sandbox scenarios
   minigames/geo/                  # GEO runtime + host/display renderer + sample content
@@ -153,6 +156,38 @@ reach it with no extra flag.
 6)  Open the display on the laptop driving the TV:
 
 Display: http://localhost:5173/display
+
+7)  Guests join from their phones on the same Wi-Fi: the TV's SETUP
+    screen shows a QR for `/play` carrying the join token, and a guest
+    taps their own face. No accounts and no internet. Reset Game rotates
+    the code; the host can print a new one from the SETUP Players list.
+
+------------------------------------------------------------------------
+
+# 🌐 Guest Portal (pre-party, wingnight.tv)
+
+Before the night, guests sign in on wingnight.tv with a personal link,
+paint their head and vote (`SPEC.md` § Before the party). It is a separate
+deployable — the party never talks to it.
+
+    pnpm teaser:dev          # wrangler dev (:8787, fake painter, logged mail) + teaser Vite (:5173)
+    pnpm --filter @wingnight/teaser-worker seed:admin --name Brad --email you@example.com --local
+    pnpm test:e2e:portal     # Playwright at 390x844 against a throwaway seeded D1
+    pnpm teaser:deploy       # build, apply the remote D1 migrations, deploy
+
+`seed:admin` prints the admin's sign-in link. `test:e2e:portal` takes
+`CI=1` and `WN_E2E_PORTAL_WORKER_PORT` / `WN_E2E_PORTAL_CLIENT_PORT` like
+the party suite takes its ports.
+
+To bring the guests into the night pack, one way:
+
+    pnpm pack:pull --dry-run   # print what would change
+    pnpm pack:pull             # write players.json + heads into ~/wing-night-content
+
+It needs `WINGNIGHT_ADMIN_API_TOKEN` (the Worker's `ADMIN_API_TOKEN`) in
+`<pack>/.env`. It copies names and kept heads only — never votes, wishes
+or emails — adds new guests unseated, and never renames or removes a
+player.
 
 ------------------------------------------------------------------------
 
@@ -325,11 +360,15 @@ pnpm test
 
 E2E tests:
 
-pnpm test:e2e
+CI=1 WN_E2E_SERVER_PORT=3100 WN_E2E_CLIENT_PORT=5273 pnpm test:e2e
 
 or
 
 pnpm playwright test
+
+Guest portal E2E (its own stack, see Guest Portal above):
+
+pnpm test:e2e:portal
 
 ------------------------------------------------------------------------
 

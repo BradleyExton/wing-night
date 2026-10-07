@@ -53,6 +53,11 @@ Run:
 - Shared contracts and validation live in `packages/shared`.
 - Client and server must import types from `packages/shared`.
 - Do not duplicate state types in client or server.
+- The guest portal Worker (`apps/teaser-worker`) is a separate deployable on wingnight.tv, not part
+  of the party app: its handlers are pure over injected deps (`src/deps`; tests run them on
+  node:sqlite with the real migrations and in-memory fakes), and its CPU budget (Workers Free,
+  10 ms a request) forbids image work in the Worker — the browser keys, crops and re-encodes, and
+  the Worker only streams and hashes bytes (to Gemini, R2 and back).
 
 ## 3.1 Minigame Boundary Rules
 
@@ -71,6 +76,9 @@ Run:
 ## 3.3 The One Display-Reported Event
 
 Three seats connect: HOST (the tablet), DISPLAY (the TV) and PLAYER (a guest's phone, §3.4).
+The seat guard (`resolveAuthorizedSocketClientRole`) seats HOST only for the laptop itself
+(`isLoopbackPeer`) or a socket offering the host control token (`hostControlToken`), and refuses
+anything else with `host_auth_required`.
 Every client→server event from a host or a display that mutates the room carries a `hostSecret`
 and runs a host-authorized mutation, with exactly one exception: `music:trackEnded`. The display
 owns the room's single `<audio>` element, so the display is the only client that can know a track
@@ -307,6 +315,10 @@ Prefer `type` over `interface` unless declaration merging is required.
   served by the SERVER at `CONTENT_ASSET_ROUTE_PATH`; resolve them with `resolveContentAssetSrc`,
   never by interpolating the route. Real assets do not live in the client's `public/` directory —
   the client and server are separate origins, so a root-relative asset URL 404s on the TV.
+- `pnpm pack:pull` (`tools/pull-guests`) is the only path from the guest portal into the pack,
+  and it is one way: it writes guests' names into `players.json` and their kept heads into
+  `assets/avatars/`, atomically and backed up, and never renames or removes a player. Nothing on
+  the night reads the portal.
 - All content must be validated before game start.
 - Invalid content blocks start with clear error.
 - Never scatter direct JSON loads across components.
