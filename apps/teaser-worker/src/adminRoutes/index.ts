@@ -1,5 +1,6 @@
 // Brad's side: the guest list and its sign-in status, adding and editing guests, invites, a link
-// to text by hand, the vote summary, every guest's head, the style reference and a guest's tries.
+// to text by hand, the vote summary, every guest's head, the style reference, a guest's tries and
+// the export the pack pull reads.
 // Reachable by a signed-in guest with `is_admin` or by a script holding ADMIN_API_TOKEN
 // (app/index.ts decides which).
 import {
@@ -11,6 +12,7 @@ import {
   normalizeGuestDisplayName,
   normalizeGuestEmail,
   type AdminAvatarReset,
+  type AdminGuestExport,
   type AdminGuestStatus,
   type AdminInviteAllResult,
   type AdminInviteResult,
@@ -341,6 +343,38 @@ const readGuestHead = async ({ params, deps }: AdminContext): Promise<Response> 
   return serveHead(deps, params.guestId ?? "");
 };
 
+// What `pnpm pack:pull` copies into the night pack: each guest's name and their kept head's hash
+// and size, for the pull to fetch from readGuestHead. Selected column by column so an address,
+// a vote or a wish cannot ride along. A head whose PNG is missing from R2 exports as none, the
+// same answer readGuestHead would give.
+const exportGuests = async ({ deps }: AdminContext): Promise<Response> => {
+  const { results } = await deps.db
+    .prepare(
+      `SELECT g.guest_id, g.display_name, a.object_key, a.head_hash
+       FROM guests g
+       LEFT JOIN avatar_attempts a ON a.guest_id = g.guest_id AND a.accepted_at IS NOT NULL
+         AND a.object_key IS NOT NULL AND a.head_hash IS NOT NULL
+       ORDER BY g.display_name COLLATE NOCASE, g.guest_id`
+    )
+    .all<{ guest_id: string; display_name: string; object_key: string | null; head_hash: string | null }>();
+  const exported: AdminGuestExport[] = await Promise.all(
+    results.map(async (row) => {
+      const object = row.object_key === null ? null : await deps.bucket.head(row.object_key);
+
+      return {
+        guestId: row.guest_id,
+        displayName: row.display_name,
+        head:
+          object === null || row.head_hash === null
+            ? null
+            : { sha256: row.head_hash, contentType: AVATAR_HEAD_TYPE, bytes: object.size }
+      };
+    })
+  );
+
+  return jsonResponse(exported);
+};
+
 // Picks the head every new head is painted to match. Its base64 copy is made here, once, so that
 // no guest's paint ever encodes a byte (see src/base64 for what this one encode costs).
 const pickStyleReference = async ({ request, deps }: AdminContext): Promise<Response> => {
@@ -408,5 +442,6 @@ export const ADMIN_ROUTES: PortalRoute[] = [
   { method: "GET", pattern: PORTAL_API_ROUTES.adminVotes, access: "admin", handle: summarizeVotes },
   { method: "GET", pattern: `${GUEST_PATTERN}/avatar`, access: "admin", handle: readGuestHead },
   { method: "POST", pattern: `${GUEST_PATTERN}/avatar/reset`, access: "admin", handle: resetGuestAvatar },
-  { method: "POST", pattern: PORTAL_API_ROUTES.adminStyleReference, access: "admin", handle: pickStyleReference }
+  { method: "POST", pattern: PORTAL_API_ROUTES.adminStyleReference, access: "admin", handle: pickStyleReference },
+  { method: "GET", pattern: PORTAL_API_ROUTES.adminExport, access: "admin", handle: exportGuests }
 ];

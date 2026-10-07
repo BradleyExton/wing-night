@@ -166,7 +166,7 @@ const main = async () => {
     }
   });
 
-  writeJson(localPlayersPath, applyAvatarSrc(playersFile, Object.keys(manifest.generated)));
+  writeJson(localPlayersPath, applyAvatarSrc(playersFile, manifest.generated));
   writeFileSync(contactSheetPath, renderSheet(plan, manifest));
   console.log(`Contact sheet: ${contactSheetPath}`);
   console.log("Restart the server to load the updated roster.");

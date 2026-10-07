@@ -1,0 +1,10 @@
+{
+  // `pnpm typecheck` runs this (typecheck:pull-guests at the root). The tool runs under plain
+  // `node` with type stripping, so it keeps to erasable syntax and imports with `.ts` suffixes.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "erasableSyntaxOnly": true
+  },
+  "include": ["**/*.ts"]
+}

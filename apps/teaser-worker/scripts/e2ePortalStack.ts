@@ -33,6 +33,8 @@ const readEnv = (name: string): string => {
 const stateDir = readEnv("WN_E2E_PORTAL_STATE_DIR");
 const workerPort = readEnv("WN_E2E_PORTAL_WORKER_PORT");
 const clientOrigin = readEnv("WN_E2E_PORTAL_CLIENT_ORIGIN");
+// Optional: opens the admin API to a bearer, for driving `pnpm pack:pull` against this stack.
+const adminApiToken = process.env.WN_E2E_PORTAL_ADMIN_API_TOKEN ?? "";
 
 const runWrangler = (args: string[]): void => {
   const result = spawnSync("pnpm", ["exec", "wrangler", ...args], { cwd: PACKAGE_DIR, stdio: "inherit" });
@@ -118,7 +120,8 @@ const wrangler = spawn(
     "--var",
     "GEMINI_TRANSPORT:fake",
     "--var",
-    `PUBLIC_ORIGIN:${clientOrigin}`
+    `PUBLIC_ORIGIN:${clientOrigin}`,
+    ...(adminApiToken.length > 0 ? ["--var", `ADMIN_API_TOKEN:${adminApiToken}`] : [])
   ],
   { cwd: PACKAGE_DIR, stdio: "inherit" }
 );

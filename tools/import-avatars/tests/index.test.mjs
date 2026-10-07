@@ -21,6 +21,13 @@ test("does slug a name with spaces and case into a filename when planning", () =
   assert.equal(slugifyName("Joleeza!"), "joleeza");
 });
 
+test("does match an accented player to a photo named without the accent when planning", () => {
+  const plan = planImports({ players: [{ name: "Zoë" }, { name: "José" }], sourceFiles: ["zoe.jpg", "jos.jpg"], generated: {} });
+
+  assert.equal(plan[0].sourceFile, "zoe.jpg");
+  assert.equal(plan[1].sourceFile, null);
+});
+
 test("does skip a player when no source photo exists", () => {
   const plan = planImports({ players, sourceFiles: ["steve-b.jpg"], generated: {} });
 
@@ -95,7 +102,7 @@ test("does surface the model's text when a response has no image", () => {
 });
 
 test("does write avatarSrc as a pack-relative path when applying results", () => {
-  const updated = applyAvatarSrc({ players }, ["steve-b"]);
+  const updated = applyAvatarSrc({ players }, { "steve-b": { file: "steve-b.png" } });
 
   assert.equal(updated.players[1].avatarSrc, "avatars/steve-b.png");
   assert.equal(updated.players[0].avatarSrc, undefined);
@@ -196,4 +203,37 @@ test("does ask for the chroma background and a head-only crop in the prompt", ()
   assert.match(prompt, /Head ONLY/);
   assert.match(prompt, /nothing below the chin/);
   assert.doesNotMatch(prompt, /#1C1C1C, nothing else/);
+});
+
+const ONLINE_ROB = { file: "rob-1a2b3c4d.png", source: "online", at: "2026-10-07T12:00:00.000Z", sha256: "1a2b3c4d" };
+
+test("does skip a head pulled from wingnight.tv when --force is given too", () => {
+  const roster = [{ name: "Rob" }, { name: "Alex" }];
+  const generated = { rob: ONLINE_ROB, alex: { file: "alex.png" } };
+  const plan = planImports({ players: roster, sourceFiles: ["rob.jpg", "alex.jpg"], generated, force: true });
+
+  assert.match(plan[0].skipReason, /wingnight\.tv.*pack:pull/);
+  assert.equal(plan[1].skipReason, null);
+  assert.match(planImports({ players: roster, sourceFiles: ["rob.jpg"], generated })[0].skipReason, /pack:pull/);
+});
+
+test("does point avatarSrc at a pulled head's versioned file when applying results", () => {
+  const updated = applyAvatarSrc(
+    { players: [{ name: "Rob", team: "Metal" }, { name: "Alex" }] },
+    { rob: ONLINE_ROB, alex: { file: "alex.png", model: "m", at: "then" } }
+  );
+
+  assert.deepEqual(updated.players, [
+    { name: "Rob", team: "Metal", avatarSrc: "avatars/rob-1a2b3c4d.png" },
+    { name: "Alex", avatarSrc: "avatars/alex.png" }
+  ]);
+});
+
+test("does pass over a pulled head when picking the style reference", () => {
+  const roster = [{ name: "Rob" }, { name: "Alex" }];
+  const generated = { rob: ONLINE_ROB, alex: { file: "alex.png", model: "m", at: "then" } };
+  const plan = planImports({ players: roster, sourceFiles: [], generated });
+
+  assert.equal(pickStyleReference({ plan, generated }), "alex.png");
+  assert.equal(pickStyleReference({ plan, generated: { rob: ONLINE_ROB } }), null);
 });

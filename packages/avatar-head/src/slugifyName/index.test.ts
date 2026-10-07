@@ -8,3 +8,10 @@ test("does slug a name with spaces, case and punctuation into a file name when g
   assert.equal(slugifyName("Joleeza!"), "joleeza");
   assert.equal(slugifyName("--Mary  Kate--"), "mary-kate");
 });
+
+test("does fold accents to their plain letters when a name carries them", () => {
+  assert.equal(slugifyName("Zoë"), "zoe");
+  assert.equal(slugifyName("José"), "jose");
+  assert.equal(slugifyName("Ångström Ñu"), "angstrom-nu");
+  assert.notEqual(slugifyName("José"), slugifyName("Jos"));
+});

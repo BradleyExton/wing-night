@@ -9,8 +9,9 @@
   "scripts": {
     "dev": "pnpm -r --parallel --filter @wingnight/server --filter @wingnight/client dev",
     "build": "pnpm -r --if-present build",
-    "typecheck": "pnpm -r --if-present typecheck",
-    "test": "pnpm -r --if-present test && pnpm test:lint-rules && pnpm test:playwright-ports && pnpm test:e2e-content-root && pnpm test:import-avatars && pnpm test:import-recreate && pnpm test:build-teaser",
+    "typecheck": "pnpm -r --if-present typecheck && pnpm typecheck:pull-guests",
+    "typecheck:pull-guests": "tsc --noEmit -p tools/pull-guests/tsconfig.json",
+    "test": "pnpm -r --if-present test && pnpm test:lint-rules && pnpm test:playwright-ports && pnpm test:e2e-content-root && pnpm test:import-avatars && pnpm test:import-recreate && pnpm test:build-teaser && pnpm test:pull-guests",
     "test:e2e": "playwright test",
     "test:e2e:portal": "playwright test --config playwright.portal.config.ts",
     "test:lint-rules": "node --test tools/eslint-plugin-wingnight/tests/index.test.mjs",
@@ -27,14 +28,18 @@
     "teaser:build": "pnpm teaser:prepare && pnpm --filter @wingnight/client build:teaser",
     "teaser:card": "node tools/build-teaser/captureShareCard.mjs",
     "teaser:deploy": "pnpm teaser:build && pnpm --filter @wingnight/teaser-worker deploy:portal",
-    "test:build-teaser": "node --test tools/build-teaser/planTeaserRoster.test.ts tools/build-teaser/planSfxTakes.test.ts"
+    "test:build-teaser": "node --test tools/build-teaser/planTeaserRoster.test.ts tools/build-teaser/planSfxTakes.test.ts",
+    "pack:pull": "node tools/pull-guests/index.ts",
+    "test:pull-guests": "node --test \"tools/pull-guests/**/*.test.ts\""
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@playwright/test": "^1.58.2",
+    "@types/node": "catalog:",
     "eslint": "^9.19.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "globals": "^15.14.0",
+    "typescript": "catalog:",
     "typescript-eslint": "^8.21.0"
   }
 }

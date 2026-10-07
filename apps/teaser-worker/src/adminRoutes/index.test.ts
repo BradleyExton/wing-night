@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type {
+  AdminGuestExport,
   AdminGuestStatus,
   AdminInviteAllResult,
   AdminMintedLink,
@@ -29,7 +30,8 @@ const ADMIN_ROUTES: { method: string; path: string; body?: unknown }[] = [
   { method: "POST", path: "/api/admin/guests/g_rob/link" },
   { method: "POST", path: "/api/admin/guests/g_rob/sign-out" },
   { method: "POST", path: "/api/admin/invites" },
-  { method: "GET", path: "/api/admin/votes" }
+  { method: "GET", path: "/api/admin/votes" },
+  { method: "GET", path: "/api/admin/export" }
 ];
 
 const BEARER = { Authorization: `Bearer ${ADMIN_API_TOKEN}` };
@@ -421,4 +423,37 @@ test("does let only an admin pick the style reference, and only from a guest wit
       { guestId: "g_rob", hasHead: true, headHash: "f".repeat(64), isStyleReference: true }
     ]
   );
+});
+
+test("does export only names and kept heads when the pack pull reads the guest list", async () => {
+  const portal = portalWithGuests();
+
+  portal.addGuest({ guestId: "g_ana", displayName: "ana", email: "ana@example.com" });
+  portal.addGuest({ guestId: "g_kim", displayName: "Kim" });
+  await giveHead(portal, "g_rob", "a".repeat(64));
+  await giveHead(portal, "g_kim", "b".repeat(64));
+  // Kim's try is recorded but the PNG never reached R2, so there is nothing to pull.
+  await portal.bucket.delete(resolveHeadKey("g_kim"));
+  await portal.request("PUT", "/api/me/vote", {
+    cookie: await portal.signInAs("g_rob"),
+    body: { genreRanking: ["metal", "pop"], teammateWishes: ["g_ana"], teamFormat: "guests_pick" }
+  });
+
+  const response = await portal.request("GET", "/api/admin/export", { origin: null, headers: BEARER });
+  const text = await response.text();
+  const headBytes = atob(FAKE_HEAD_PNG_BASE64).length;
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(JSON.parse(text) as AdminGuestExport[], [
+    { guestId: "g_ana", displayName: "ana", head: null },
+    { guestId: "g_brad", displayName: "Brad", head: null },
+    { guestId: "g_kim", displayName: "Kim", head: null },
+    { guestId: "g_rob", displayName: "Rob", head: { sha256: "a".repeat(64), contentType: "image/png", bytes: headBytes } }
+  ]);
+  assert.doesNotMatch(text, /@|metal|guests_pick|email|vote|wish/i);
+
+  const head = await portal.request("GET", "/api/admin/guests/g_rob/avatar", { origin: null, headers: BEARER });
+
+  assert.equal(head.status, 200);
+  assert.equal((await head.arrayBuffer()).byteLength, headBytes);
 });

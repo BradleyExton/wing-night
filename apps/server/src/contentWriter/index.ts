@@ -1,5 +1,4 @@
-import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 
 import {
   isPlayersContentFile,
@@ -21,6 +20,7 @@ import { isRulesValidForKey } from "../minigames/rulesValidation/index.js";
 import { resolveContentRootDir } from "../contentLoader/contentLoaderUtils/index.js";
 import { loadPlayerEntries } from "../contentLoader/loadPlayers/index.js";
 import { loadTeams } from "../contentLoader/loadTeams/index.js";
+import { writeFileAtomically } from "../writeFileAtomically/index.js";
 
 type ContentWriterOptions = {
   contentRootDir?: string;
@@ -78,23 +78,6 @@ const prefixIssuesWithKey = (
     path: path.length === 0 ? key : `${key}.${path}`,
     message
   }));
-};
-
-// Write-then-rename so a reader never observes a half-written file: the
-// temp file is created in the destination directory, which keeps the rename
-// on one filesystem and therefore atomic.
-const writeFileAtomically = (filePath: string, contents: string): void => {
-  const temporaryFilePath = `${filePath}.${process.pid}.tmp`;
-
-  mkdirSync(dirname(filePath), { recursive: true });
-
-  try {
-    writeFileSync(temporaryFilePath, contents, "utf8");
-    renameSync(temporaryFilePath, filePath);
-  } catch (error) {
-    rmSync(temporaryFilePath, { force: true });
-    throw error;
-  }
 };
 
 // The current on-disk side of a roster the batch only half-touches. Read

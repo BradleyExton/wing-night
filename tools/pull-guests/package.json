@@ -1,0 +1,5 @@
+{
+  "//": "Not a workspace package (pnpm-workspace.yaml has no tools/*): only here so plain node reads the tool's .ts files as ES modules.",
+  "private": true,
+  "type": "module"
+}

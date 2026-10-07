@@ -41,6 +41,10 @@ export const AVATAR_PACK_PATH = "avatars";
 
 export const isSupportedSource = (fileName) => mimeTypeForImageFile(fileName) !== null;
 
+// A manifest entry `pnpm pack:pull` wrote: `{ file, source: "online", at, sha256 }`, its file
+// named `<slug>-<hash>.png` rather than `<slug>.png`.
+export const isOnlineHead = (entry) => entry !== undefined && entry.source === "online";
+
 // One plan row per roster entry. `sourceFiles` are bare filenames from the
 // sources folder; `generated` is the manifest's slug -> file map.
 export const planImports = ({ players, sourceFiles, generated, force = false, only = null }) => {
@@ -57,6 +61,10 @@ export const planImports = ({ players, sourceFiles, generated, force = false, on
 
     if (only !== null && !only.includes(slug)) {
       row.skipReason = "not in --only";
+    } else if (isOnlineHead(generated[slug])) {
+      // The guest made this head on wingnight.tv and `pnpm pack:pull` owns it: painting over it
+      // here, --force or not, would throw away the head they chose.
+      row.skipReason = "head pulled from wingnight.tv (pnpm pack:pull owns it, even under --force)";
     } else if (sourceFile === null) {
       row.skipReason = "no source photo";
     } else if (!force && generated[slug] !== undefined) {
@@ -69,10 +77,11 @@ export const planImports = ({ players, sourceFiles, generated, force = false, on
 
 // The style reference is the first head this tool generated, in roster order,
 // so every later head is asked to match it. Hand-placed avatars (a photo, a
-// booth sprite) are never picked, because they are not in the manifest.
+// booth sprite) are never picked, because they are not in the manifest, and
+// neither is a head pulled from wingnight.tv: this tool did not paint it.
 export const pickStyleReference = ({ plan, generated }) => {
   for (const row of plan) {
-    if (generated[row.slug] !== undefined) {
+    if (generated[row.slug] !== undefined && !isOnlineHead(generated[row.slug])) {
       return generated[row.slug].file;
     }
   }
@@ -90,20 +99,15 @@ export const buildGeminiRequest = ({ prompt, photo, styleReference = null }) =>
     aspectRatio: HEAD_ASPECT_RATIO
   });
 
-// Immutable: returns a new players file with avatarSrc set for the given slugs.
-export const applyAvatarSrc = (playersFile, generatedSlugs) => {
-  const generatedSet = new Set(generatedSlugs);
-
-  return {
-    ...playersFile,
-    players: playersFile.players.map((player) => {
-      const slug = slugifyName(player.name);
-      return generatedSet.has(slug)
-        ? { ...player, avatarSrc: `${AVATAR_PACK_PATH}/${slug}.png` }
-        : player;
-    })
-  };
-};
+// Immutable: returns a new players file with avatarSrc pointed at each manifest entry's file —
+// the entry's own name, never `<slug>.png` assumed, because a pulled head's file is versioned.
+export const applyAvatarSrc = (playersFile, generated) => ({
+  ...playersFile,
+  players: playersFile.players.map((player) => {
+    const entry = generated[slugifyName(player.name)];
+    return entry === undefined ? player : { ...player, avatarSrc: `${AVATAR_PACK_PATH}/${entry.file}` };
+  })
+});
 
 const escapeHtml = (text) =>
   text.replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
