@@ -33,9 +33,9 @@
     {
       "binding": "DB",
       "database_name": "wingnight-portal",
-      // PLACEHOLDER. Brad: run `pnpm exec wrangler d1 create wingnight-portal` from this directory
-      // once and paste the database_id it prints here. Local dev works with the placeholder.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Created 2026-10-08 with `pnpm exec wrangler d1 create wingnight-portal` (region ENAM).
+      // Local dev and the e2e stack keep their own state, so they never touch this database.
+      "database_id": "de68a256-e564-46e6-b58a-a8197a375fd8",
       "migrations_dir": "migrations"
     }
   ],
