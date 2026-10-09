@@ -28,6 +28,7 @@ test("renders the team-first reveal with the genre kit, the lineup and the minig
       activeTeamTheme={resolveTeamTheme(buildTeam("metal"))}
       activeTeamPlayers={players}
       minigameType="TRIVIA"
+      minigamePointsMax={null}
       handset={null}
     />
   );
@@ -45,6 +46,24 @@ test("renders the team-first reveal with the genre kit, the lineup and the minig
   assert.match(html, />Trivia</);
 });
 
+test("puts the round's stakes beside the game when the cap is known", () => {
+  const html = renderToStaticMarkup(
+    <MinigameIntroStageBody
+      activeTeamName="Team Heat"
+      activeTeamGenre={null}
+      activeTeamTheme={null}
+      activeTeamPlayers={[]}
+      minigameType="JOUST"
+      minigamePointsMax={25}
+      handset={null}
+    />
+  );
+
+  assert.match(html, /data-minigame-points-max="25"/);
+  assert.match(html, /up to/);
+  assert.match(html, /25 pts/);
+});
+
 test("falls back to placeholder labels when team and minigame data are missing", () => {
   const html = renderToStaticMarkup(
     <MinigameIntroStageBody
@@ -53,6 +72,7 @@ test("falls back to placeholder labels when team and minigame data are missing",
       activeTeamTheme={null}
       activeTeamPlayers={[]}
       minigameType={null}
+      minigamePointsMax={null}
       handset={null}
     />
   );
@@ -73,6 +93,7 @@ test("renders the eyebrow alone and a plain primary headline for a team with no 
       activeTeamTheme={resolveTeamTheme(buildTeam())}
       activeTeamPlayers={players}
       minigameType="TRIVIA"
+      minigamePointsMax={null}
       handset={null}
     />
   );
@@ -91,6 +112,7 @@ test("does tell an arcade team to grab their phones when the turn is played on p
       activeTeamTheme={resolveTeamTheme(buildTeam())}
       activeTeamPlayers={players}
       minigameType="FAPPY"
+      minigamePointsMax={null}
       handset="phone"
     />
   );
@@ -107,6 +129,7 @@ test("does tell an arcade team to grab the tablet when the turn is played on the
       activeTeamTheme={resolveTeamTheme(buildTeam())}
       activeTeamPlayers={players}
       minigameType="FAPPY"
+      minigamePointsMax={null}
       handset="tablet"
     />
   );
@@ -122,6 +145,7 @@ test("does say nothing about a handset when the game is never played on phones",
       activeTeamTheme={resolveTeamTheme(buildTeam())}
       activeTeamPlayers={players}
       minigameType="TRIVIA"
+      minigamePointsMax={null}
       handset={null}
     />
   );

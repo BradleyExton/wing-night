@@ -93,10 +93,25 @@ const IngredientBoard = ({
   ingredients,
   checkedIngredientIndexes
 }: Pick<RecreateMinigameDisplayView, "checkedIngredientIndexes"> & {
-  ingredients: string[];
+  ingredients: (string | null)[];
 }): JSX.Element => (
   <ul className={styles.ingredients}>
     {ingredients.map((ingredient, ingredientIndex) => {
+      // While the host grades, an ingredient nobody has ticked yet is a
+      // sealed slot: the room learns what was missed when the score locks.
+      if (ingredient === null) {
+        return (
+          <li
+            key={`${ingredientIndex}-sealed`}
+            className={styles.ingredientSealed}
+            data-recreate-ingredient="sealed"
+            aria-label={displayRecreateSurfaceCopy.sealedIngredientLabel}
+          >
+            {displayRecreateSurfaceCopy.sealedIngredientMark}
+          </li>
+        );
+      }
+
       const isChecked = checkedIngredientIndexes.includes(ingredientIndex);
 
       return (

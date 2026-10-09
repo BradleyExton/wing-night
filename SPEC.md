@@ -280,7 +280,10 @@ Current built-in content-backed minigames include:
   (`sourceImageSrc`), the prompt that remixed it, the remix (`targetImageSrc`, painted by
   `pnpm import:recreate`) and the two-to-six visible `ingredients` that prompt put in it. The
   ingredients and the authored prompt are secrets: absent from the display view while a team is
-  writing, unsealed once its prompt is in, the authored prompt only once the score is locked.
+  writing; once its prompt is in, the TV names each ingredient as the host ticks it and seals the
+  rest until the score is locked (the host can still "let them rewrite" while grading, so a
+  missed ingredient on the TV would be an answer); the authored prompt only once the score is
+  locked.
 
 Current built-in unsupported runtime placeholders:
 - `DRAWING` (no content file required yet)
@@ -602,6 +605,16 @@ Testing Expectations:
 - No negative scoring
 - A phone's answer never scores by itself: the host's lock turns the answers in into points
   ("Answers on the phones")
+- Each round's mini-game is capped: the round's own `minigameMax` when the pack sets one,
+  otherwise `minigameScoring.defaultMax` (`finalRoundMax` for the last round). The TV's team
+  briefing names the cap ("up to N pts"), so a pack that ramps the stakes round by round does
+  it as a rule the room can read. `resolveRoundMinigameMax` is the one place the rule lives.
+- What a game pays per success is a pack rule where it can be: `emojiCharades.pointsPerCorrect`,
+  `drawing.pointsPerCorrect`, `songGuess.pointsPerMark`, `recreate.pointsPerIngredient`,
+  `schlonic.parWingsPerRun`, `geo.scoreBandsKm`, `joust.pointsPerTopple` (scales every bird and
+  the cleared-rack bonus, for a closing JOUST worth more than the 26 a rack holds at 1). Tune
+  these so a great turn lands near the round's cap; a game whose best turn is a third of its cap
+  barely moves the standings.
 
 ---
 

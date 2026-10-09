@@ -163,7 +163,7 @@ const SongGuessPlayBody = ({
       return (
         <div className={styles.body} data-song-guess-ruling>
           <p className={styles.prompt}>{displaySongGuessSurfaceCopy.rulingPrompt}</p>
-          <p className={styles.hint}>{displaySongGuessSurfaceCopy.rulingHint}</p>
+          <p className={styles.hint}>{displaySongGuessSurfaceCopy.rulingHint(view.pointsPerMark)}</p>
         </div>
       );
     }
@@ -175,7 +175,7 @@ const SongGuessPlayBody = ({
     return (
       <div className={styles.body} data-song-guess-lock-in>
         <p className={styles.prompt}>{displaySongGuessSurfaceCopy.lockInPrompt}</p>
-        <p className={styles.hint}>{displaySongGuessSurfaceCopy.lockInHint}</p>
+        <p className={styles.hint}>{displaySongGuessSurfaceCopy.lockInHint(view.pointsPerMark)}</p>
       </div>
     );
   }

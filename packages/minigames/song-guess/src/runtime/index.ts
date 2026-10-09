@@ -11,7 +11,6 @@ import {
 } from "./guards/index.js";
 import { isSongGuessRules, resolveSongGuessRules } from "./rules/index.js";
 import {
-  SONG_GUESS_POINTS_PER_MARK,
   type SongGuessRuntimeContent,
   type SongGuessRuntimeState
 } from "./types/index.js";
@@ -69,17 +68,18 @@ const resolveSelectedSongIds = (
 // song would quietly eat a point the team won on an earlier one.
 const resolveMarkDelta = (
   previousMark: boolean | null,
-  nextMark: boolean
+  nextMark: boolean,
+  pointsPerMark: number
 ): number => {
   if (previousMark === nextMark) {
     return 0;
   }
 
   if (nextMark) {
-    return SONG_GUESS_POINTS_PER_MARK;
+    return pointsPerMark;
   }
 
-  return previousMark === true ? -SONG_GUESS_POINTS_PER_MARK : 0;
+  return previousMark === true ? -pointsPerMark : 0;
 };
 
 // The mark that completes the ruling — both halves no longer `null` — is the
@@ -92,6 +92,7 @@ const applyMark = (
   content: SongGuessRuntimeContent,
   field: keyof SongGuessTeamScore,
   correct: boolean,
+  pointsPerMark: number,
   pointsMax: number,
   receivedAtMs: number | undefined
 ): MinigameRuntimeReductionResult => {
@@ -104,7 +105,7 @@ const applyMark = (
   }
 
   const previousScore = resolveScoreForSong(state, currentSong.id);
-  const delta = resolveMarkDelta(previousScore[field], correct);
+  const delta = resolveMarkDelta(previousScore[field], correct, pointsPerMark);
 
   if (delta === 0 && previousScore[field] === correct) {
     return unchanged;
@@ -249,6 +250,7 @@ export const songGuessRuntimePlugin: MinigameRuntimePlugin = {
         content,
         actionType === "markTitle" ? "title" : "artist",
         actionPayload.correct,
+        resolveSongGuessRules(input.rules).pointsPerMark,
         input.pointsMax,
         receivedAtMs
       );
@@ -319,6 +321,10 @@ export const songGuessRuntimePlugin: MinigameRuntimePlugin = {
       return null;
     }
 
-    return toSongGuessDisplayView(input.state, resolveSongGuessContent(input.content));
+    return toSongGuessDisplayView(
+      input.state,
+      resolveSongGuessContent(input.content),
+      resolveSongGuessRules(input.rules).pointsPerMark
+    );
   }
 };

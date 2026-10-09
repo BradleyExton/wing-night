@@ -10,7 +10,6 @@ import type {
 
 import {
   EMPTY_SONG_GUESS_TEAM_SCORE,
-  SONG_GUESS_POINTS_PER_MARK,
   SONG_GUESS_REVEAL_MS,
   type SongGuessRuntimeContent,
   type SongGuessRuntimeState
@@ -90,7 +89,8 @@ export const toSongGuessHostView = (
 // can enter that puts the title up before the ruling is complete.
 const toDisplayReveal = (
   state: SongGuessRuntimeState,
-  currentSong: SongGuessPrompt
+  currentSong: SongGuessPrompt,
+  pointsPerMark: number
 ): SongGuessMinigameDisplayReveal | null => {
   const score = resolveScoreForSong(state, currentSong.id);
 
@@ -107,7 +107,7 @@ const toDisplayReveal = (
     audioFileName: currentSong.file,
     revealStart: currentSong.revealStart,
     verdict,
-    pointsEarned: hits * SONG_GUESS_POINTS_PER_MARK,
+    pointsEarned: hits * pointsPerMark,
     revealedAtMs: state.revealedAtMs,
     expiresAtMs: state.revealedAtMs + SONG_GUESS_REVEAL_MS
   };
@@ -118,7 +118,8 @@ const toDisplayReveal = (
 // other phase carries the audio asset and nothing else.
 export const toSongGuessDisplayView = (
   state: SongGuessRuntimeState,
-  content: SongGuessRuntimeContent
+  content: SongGuessRuntimeContent,
+  pointsPerMark: number
 ): MinigameDisplayView => {
   const currentSong = resolveCurrentSong(state, content);
 
@@ -128,7 +129,8 @@ export const toSongGuessDisplayView = (
     pendingPointsByTeamId: { ...state.pendingPointsByTeamId },
     songCursor: state.songCursor,
     songsTotal: state.selectedSongIds.length,
-    replayUsed: state.replayUsed
+    replayUsed: state.replayUsed,
+    pointsPerMark
   };
 
   if (state.phase === "done" || currentSong === null) {
@@ -139,7 +141,7 @@ export const toSongGuessDisplayView = (
     return {
       ...baseView,
       phase: "reveal",
-      reveal: toDisplayReveal(state, currentSong)
+      reveal: toDisplayReveal(state, currentSong, pointsPerMark)
     } satisfies SongGuessMinigameDisplayView;
   }
 

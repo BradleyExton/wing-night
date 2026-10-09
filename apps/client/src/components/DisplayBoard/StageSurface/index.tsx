@@ -90,6 +90,7 @@ const MinigameIntroBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
       activeTeamTheme={stageViewModel.activeTeamTheme}
       activeTeamPlayers={stageViewModel.activeTeamPlayers}
       minigameType={stageViewModel.minigameType}
+      minigamePointsMax={stageViewModel.minigamePointsMax}
       betReadout={stageViewModel.spectatorBetView.readout}
       handset={
         stageViewModel.contestantTurn === null

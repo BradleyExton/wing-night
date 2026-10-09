@@ -8,6 +8,8 @@ export type SongGuessRuntimeContent = SongGuessContentFile;
 
 export type SongGuessRuntimeRules = {
   songsPerTurn: number;
+  // What each half of a song (the title, the original artist) is worth.
+  pointsPerMark: number;
 };
 
 export type SongGuessRuntimeState = {
@@ -30,8 +32,9 @@ export type SongGuessRuntimeState = {
 
 export const DEFAULT_SONG_GUESS_SONGS_PER_TURN = 4;
 
-// One point for the title, one for the original artist.
-export const SONG_GUESS_POINTS_PER_MARK = 1;
+// One point for the title, one for the original artist, unless the pack says
+// otherwise (`minigameRules.songGuess.pointsPerMark`).
+export const DEFAULT_SONG_GUESS_POINTS_PER_MARK = 1;
 
 // How long the TV holds the reveal card once the host moves on — the same
 // window DRAWING's `PROMPT_REVEAL_MS` gives its plaque. It is a display-side

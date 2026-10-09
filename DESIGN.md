@@ -1625,8 +1625,10 @@ it, and the forger — the image model — paints their version next to it.
     points seal); `success` is the tick, and functional only. That is the
     two-accent budget; no gold, heat or team tokens inside these surfaces.
 -   Secrets stage in, never out: while the team writes, the TV shows only the
-    target and "ingredients sealed"; the prompt and the ingredient chips
-    appear the moment it is sent; the authored prompt only once the score is
+    target and "ingredients sealed"; the prompt and one chip per ingredient
+    appear the moment it is sent, each named only as the host ticks it (an
+    unticked chip is a dashed `?` until the lock, because the team can still
+    be sent back to rewrite); the authored prompt only once the score is
     locked. In PASS_AND_PLAY the tablet is in the team's hands, so the
     checklist is absent from the host view too until the prompt is in.
 -   **Host layout is a `<TakeoverStage>` with no deck**
@@ -1662,8 +1664,9 @@ it, and the forger — the image model — paints their version next to it.
         layout's.
 -   Display: masthead, two frames (target | original while writing, target |
     forgery after), the appraisal under a hairline: title, their prompt in
-    italics, ingredient chips that fill `success` as the host ticks, the
-    points seal and the real prompt on lock.
+    italics, sealed `?` chips that turn into named `success` chips as the
+    host ticks, the misses unsealed with the points seal and the real prompt
+    on lock.
 -   **RECREATE wears the shared neon marquee since 2026-09-23** (§2.2D), with
     its name ("Forgery Studio", the game's `displayName`) as the kicker and the appraisal office's subtitle in the
     readout slot; the masthead below is what it hung before. It was the one

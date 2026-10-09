@@ -38,7 +38,6 @@ import {
 import { isJoustRules, resolveJoustRules } from "./rules/index.js";
 import {
   JOUST_MIN_LAUNCH_PULL,
-  JOUST_POINTS_PER_TOPPLE,
   JOUST_RACK_CLEARED_BONUS,
   JOUST_SIMULATION_OPTIONS,
   SLACK_JOUST_AIM,
@@ -93,10 +92,14 @@ const toTrack = (run: JoustShotRun): JoustShotTrack => {
 };
 
 // What a felled player is worth: their perch's value, so a shelf pays more than the sand.
-const pointsForPin = (pin: JoustStandingPin, perches: readonly JoustPerch[]): number => {
+const pointsForPin = (
+  pin: JoustStandingPin,
+  perches: readonly JoustPerch[],
+  pointsPerTopple: number
+): number => {
   const perch = pin.perchIndex === null ? null : (perches[pin.perchIndex] ?? null);
 
-  return JOUST_POINTS_PER_TOPPLE * resolveJoustPerchPoints(perch);
+  return pointsPerTopple * resolveJoustPerchPoints(perch);
 };
 
 const aimMagnitude = (aim: JoustAim): number => {
@@ -234,9 +237,16 @@ const launch = (
   const collapsedPerchIndices = run.collapses.map((collapse) => collapse.perchIndex);
   const isRackCleared =
     toppledPlayerIds.length > 0 && toppledPlayerIds.length === standing.length;
-  const points =
-    toppled.reduce((total, pin) => total + pointsForPin(pin, arena.perches), 0) +
-    (isRackCleared ? JOUST_RACK_CLEARED_BONUS : 0);
+  const scoredPoints =
+    toppled.reduce(
+      (total, pin) => total + pointsForPin(pin, arena.perches, state.pointsPerTopple),
+      0
+    ) + (isRackCleared ? JOUST_RACK_CLEARED_BONUS * state.pointsPerTopple : 0);
+  // What the shot actually banks. A shot that runs the team into the round's
+  // cap is worth only what fits under it, and every surface shows this one
+  // number, so the "+N" on the plaque always matches the move on the marquee.
+  const teamPointsBefore = currentTeamPoints(state);
+  const points = Math.max(0, Math.min(pointsMax, teamPointsBefore + scoredPoints) - teamPointsBefore);
   const shot: JoustShotResult = {
     shotNumber: state.shotIndex + 1,
     toppledPlayerIds,
@@ -264,11 +274,7 @@ const launch = (
         pinPlayerIds: standing.map((pin) => pin.playerId),
         rubblePerchIndices: [...state.collapsedPerchIndices]
       },
-      pendingPointsByTeamId: withPendingPoints(
-        state,
-        currentTeamPoints(state) + points,
-        pointsMax
-      )
+      pendingPointsByTeamId: withPendingPoints(state, teamPointsBefore + points, pointsMax)
     },
     didMutate: true
   };
@@ -309,6 +315,7 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
       usedShooterIds: [],
       // Everybody on the team shoots, so the turn is as long as the team is.
       shotsPerTurn: Math.max(1, roster.teammates.length * rules.shotsPerPlayer),
+      pointsPerTopple: rules.pointsPerTopple,
       shotIndex: 0,
       phase: "aiming",
       aim: { ...SLACK_JOUST_AIM },

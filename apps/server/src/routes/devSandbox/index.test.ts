@@ -159,6 +159,44 @@ test("scores the night's final game out of the final-round max", async () => {
   });
 });
 
+test("scores a game out of its round's own max when the round sets one", async () => {
+  const contentRoot = createContentRoot();
+  writeValidContentTree(contentRoot, "local", "Party");
+  writeContentFile(
+    contentRoot,
+    "local/gameConfig.json",
+    JSON.stringify({
+      ...JSON.parse(createValidGameConfigJson("Party")),
+      rounds: [
+        {
+          round: 1,
+          label: "Warm Up",
+          sauce: "Frank's",
+          pointsPerPlayer: 2,
+          minigame: "TRIVIA",
+          minigameMax: 8
+        },
+        {
+          round: 2,
+          label: "Finale",
+          sauce: "Da Bomb",
+          pointsPerPlayer: 3,
+          minigame: "GEO",
+          minigameMax: 30
+        }
+      ]
+    })
+  );
+
+  await withApp(contentRoot, async (baseUrl) => {
+    const triviaManifest = await (await fetch(`${baseUrl}/trivia`)).json();
+    const geoManifest = await (await fetch(`${baseUrl}/geo`)).json();
+
+    assert.equal(triviaManifest.pointsMax, 8);
+    assert.equal(geoManifest.pointsMax, 30);
+  });
+});
+
 test("rejects a slug no minigame answers to", async () => {
   const contentRoot = createContentRoot();
   writeValidContentTree(contentRoot, "local", "Party");

@@ -2,13 +2,39 @@ import {
   isFiniteNumber,
   isNonEmptyString,
   isNonNegativeInteger,
+  isPositiveInteger,
+  isRecord,
   type DrawingPoint,
   type DrawingPromptReveal,
   type DrawingStroke
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import type { DrawingRoundMemory, DrawingRuntimeState } from "../types/index.js";
+import {
+  DEFAULT_DRAWING_RULES,
+  type DrawingRoundMemory,
+  type DrawingRuntimeRules,
+  type DrawingRuntimeState
+} from "../types/index.js";
+
+// Config-load-time schema check for gameConfig.minigameRules.drawing. The
+// field is optional; when present it must be a positive whole number.
+export const isDrawingRules = (value: unknown): boolean => {
+  return (
+    isRecord(value) &&
+    (value.pointsPerCorrect === undefined || isPositiveInteger(value.pointsPerCorrect))
+  );
+};
+
+export const resolveDrawingRules = (rules: SerializableValue | null): DrawingRuntimeRules => {
+  const pointsPerCorrect = isRecord(rules) ? rules.pointsPerCorrect : undefined;
+
+  return {
+    pointsPerCorrect: isPositiveInteger(pointsPerCorrect)
+      ? pointsPerCorrect
+      : DEFAULT_DRAWING_RULES.pointsPerCorrect
+  };
+};
 
 export type BeginStrokePayload = {
   strokeId: string;
@@ -76,6 +102,10 @@ const isDrawingPromptReveal = (
   const reveal = value as Partial<DrawingPromptReveal>;
 
   if (!isNonEmptyString(reveal.promptId) || !isNonEmptyString(reveal.promptText)) {
+    return false;
+  }
+
+  if (!isNonNegativeInteger(reveal.pointsAwarded)) {
     return false;
   }
 

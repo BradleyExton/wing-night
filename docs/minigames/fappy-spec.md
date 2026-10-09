@@ -208,8 +208,10 @@ pack flies five legs of six with a 60 s par and a 110 s limit).
 
 State: the rules, `activeTurnTeamId`, `legIndex`, `legs[]` (§0.5 shape), `startedAtMs`,
 `finishedAtMs`, `timedOutAtMs`, `turnStartPoints`, `pendingPointsByTeamId`. `phase` is
-derived in the selectors, never stored. Seeds are hashed from the team id and leg index (FNV,
-like JOUST's shot seed) so a reconnect re-derives the same course.
+derived in the selectors, never stored. Every leg carries one fixed course seed and
+`resolveFappyGates` mixes the leg index in, so every team flies the same relay (each leg its
+own gates) and a reconnect re-derives it. Mixing the leg in at both ends cancels it out: that
+bug flew one six-gate leg five times and dealt each team a different relay.
 
 Every action needs `envelope.receivedAtMs`; one without it is refused. All are
 `didMutate: false` outside their phase or on a malformed payload.

@@ -1,6 +1,7 @@
 import {
   Phase,
   resolveMinigameDefinition,
+  resolveRoundMinigameMax,
   type MinigameType,
   type RoomState,
   type RoomTimerState
@@ -36,11 +37,7 @@ export const resolveMinigamePointsMax = (state: RoomState): number | null => {
     return null;
   }
 
-  if (state.currentRound === state.totalRounds) {
-    return state.gameConfig.minigameScoring.finalRoundMax;
-  }
-
-  return state.gameConfig.minigameScoring.defaultMax;
+  return resolveRoundMinigameMax(state.gameConfig, state.currentRound - 1);
 };
 
 export const resolveMinigameRules = (

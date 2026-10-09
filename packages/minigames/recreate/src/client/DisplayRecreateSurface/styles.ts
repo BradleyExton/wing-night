@@ -72,6 +72,8 @@ export const ingredient = `${ingredientBase} border-text/15 text-text/80`;
 
 export const ingredientChecked = `${ingredientBase} border-success bg-success/15 text-text`;
 
+export const ingredientSealed = `${ingredientBase} border-dashed border-text/15 text-muted`;
+
 export const ingredientMark =
   "flex h-[1.3em] w-[1.3em] items-center justify-center rounded-full border-2 border-current text-[0.75em] font-black";
 

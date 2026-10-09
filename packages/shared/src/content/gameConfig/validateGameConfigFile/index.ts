@@ -40,6 +40,10 @@ export type GameConfigRound = {
   sauce: string;
   pointsPerPlayer: number;
   minigame: MinigameType;
+  // The most this round's mini-game can bank a team. Omitted, the round takes
+  // `minigameScoring.defaultMax` (`finalRoundMax` for the last round), so a pack
+  // can ramp the stakes round by round and the last rounds can swing the night.
+  minigameMax?: number;
 };
 
 export type GameConfigScoring = {
@@ -124,6 +128,13 @@ const validateRound = (value: unknown, index: number): ValidationIssue[] => {
     issues.push({
       path: fieldPath("pointsPerPlayer"),
       message: "must be a positive integer"
+    });
+  }
+
+  if (value.minigameMax !== undefined && !isPositiveInteger(value.minigameMax)) {
+    issues.push({
+      path: fieldPath("minigameMax"),
+      message: "must be a positive integer when set"
     });
   }
 

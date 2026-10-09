@@ -134,6 +134,7 @@ export const isJoustRuntimeState = (
     typeof state.selectedShooterId === "string" &&
     isStringArray(state.usedShooterIds) &&
     isNonNegativeInteger(state.shotsPerTurn) &&
+    isNonNegativeInteger(state.pointsPerTopple) &&
     isNonNegativeInteger(state.shotIndex) &&
     isJoustPhase(state.phase) &&
     isJoustAim(state.aim) &&

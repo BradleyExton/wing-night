@@ -4,7 +4,7 @@
 export const hostSongGuessSurfaceCopy = {
   pendingChip: (points: number): string => `+${points} pending`,
   introDescription:
-    "Lounge covers of songs everyone knows. Play the clip, let the team shout it out, then rule on the title and the original artist — a point each.",
+    "Lounge covers of songs everyone knows. Play the clip, let the team shout it out, then rule on the title and the original artist — each one scores.",
   waitingSongLabel:
     "No songs are loaded. Check minigames/song-guess.json and the audio folder.",
   songCounter: (songNumber: number, songsTotal: number): string =>

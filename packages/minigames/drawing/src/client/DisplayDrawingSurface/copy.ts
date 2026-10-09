@@ -8,7 +8,7 @@ export const displayDrawingSurfaceCopy = {
   revealAnswerLabel: "The answer was",
   // A miss names itself in words as well as in red (DESIGN.md §7).
   revealMissedLabel: "Nope — the answer was",
-  revealAwardPoints: "+1",
+  revealAwardPoints: (points: number): string => `+${points}`,
   revealSparkGlyphPrimary: "✦",
   revealSparkGlyphSecondary: "✧"
 } as const;

@@ -225,13 +225,19 @@ test("falls back to one shot each when the rules are missing or malformed", () =
     3 * DEFAULT_JOUST_SHOTS_PER_PLAYER
   );
   assert.equal(initializeState({ rules: { shotsPerPlayer: 2 } }).shotsPerTurn, 6);
-  assert.deepEqual(resolveJoustRules({ shotsPerPlayer: 5 }), { shotsPerPlayer: 5 });
+  assert.deepEqual(resolveJoustRules({ shotsPerPlayer: 5 }), {
+    shotsPerPlayer: 5,
+    pointsPerTopple: 1
+  });
+  assert.equal(resolveJoustRules({ pointsPerTopple: 2 }).pointsPerTopple, 2);
 });
 
 test("validates the rules block the way the content loader expects", () => {
   assert.equal(isJoustRules({}), true);
   assert.equal(isJoustRules({ shotsPerPlayer: 2 }), true);
   assert.equal(isJoustRules({ shotsPerPlayer: -1 }), false);
+  assert.equal(isJoustRules({ pointsPerTopple: 2 }), true);
+  assert.equal(isJoustRules({ pointsPerTopple: 0 }), false);
   assert.equal(isJoustRules([]), false);
 });
 
@@ -364,6 +370,20 @@ test("does pay the bonus onto the team's pending points when a shot leaves nobod
   assert.equal(state.pendingPointsByTeamId["team-1"], 1 + 1 + 2 + JOUST_RACK_CLEARED_BONUS);
 });
 
+test("does pay every bird and the rack bonus at the pack's pointsPerTopple", () => {
+  const state = asState(
+    reduce(
+      initializeState({ pointsMax: 40, rules: { shotsPerPlayer: 1, pointsPerTopple: 2 } }),
+      "launch",
+      TIMBER_AIM,
+      { pointsMax: 40 }
+    ).state
+  );
+
+  assert.equal(state.lastShot?.isRackCleared, true);
+  assert.equal(state.pendingPointsByTeamId["team-1"], 2 * (1 + 1 + 2 + JOUST_RACK_CLEARED_BONUS));
+});
+
 test("names the track's rack so a topple can be read back to a player", () => {
   const state = asState(reduce(initializeState(), "launch", TIMBER_AIM).state);
   const shot = state.lastShot;
@@ -475,6 +495,9 @@ test("caps the turn at pointsMax", () => {
   state = reduce(state, "launch", SWEEPING_AIM, { pointsMax: 4 }).state;
 
   assert.equal(asState(state).pendingPointsByTeamId["team-1"], 4);
+  // The shot reads what it banked, not what it would have scored without the cap.
+  assert.equal(asState(state).lastShot?.points, 1);
+  assert.equal(asState(state).shots[0]?.points, 1);
 });
 
 test("forfeits a shot through the skip escape hatch", () => {

@@ -62,6 +62,8 @@ export const post =
 
 export const postLabel = "mr-[0.6em] text-muted";
 
+export const postSeparator = "mx-[0.6em] text-muted";
+
 // What the team picks up, under the post: the one thing to do when the briefing ends.
 export const handset =
   "m-0 font-voice text-[clamp(1.1rem,1.9vw,2.1rem)] italic leading-none text-primary [text-shadow:0_0_24px_theme(colors.primary/35%)]";

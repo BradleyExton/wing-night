@@ -51,7 +51,8 @@ export const isRecreateRuntimeState = (
     !isNonNegativeInteger(state.targetsPerTurn) ||
     state.targetsPerTurn === 0 ||
     !isNonNegativeInteger(state.pointsPerIngredient) ||
-    state.pointsPerIngredient === 0
+    state.pointsPerIngredient === 0 ||
+    !isNonNegativeInteger(state.pointsMax)
   ) {
     return false;
   }

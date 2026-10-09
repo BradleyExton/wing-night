@@ -16,6 +16,7 @@ const reveal = (promptId: string, revealedAtMs: number): DrawingPromptReveal => 
   promptId,
   promptText: promptId,
   outcome: "CORRECT",
+  pointsAwarded: 1,
   revealedAtMs,
   expiresAtMs: revealedAtMs + 2000
 });

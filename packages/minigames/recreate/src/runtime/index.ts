@@ -218,6 +218,7 @@ export const recreateRuntimePlugin: MinigameRuntimePlugin = {
       targetsPerTurn: rules.targetsPerTurn,
       targetsCompletedThisTurn: 0,
       pointsPerIngredient: rules.pointsPerIngredient,
+      pointsMax: input.pointsMax,
       liveGeneration: rules.liveGeneration,
       subState: "writing",
       attempt: null,

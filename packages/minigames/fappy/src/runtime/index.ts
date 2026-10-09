@@ -19,19 +19,11 @@ import {
 
 export const fappyMinigameId: MinigameType = "FAPPY";
 
-// Stable per team and per leg, so a reconnect, a reset or a replayed reducer
-// derives the same course. Same FNV mix JOUST seeds its shots with.
-const resolveLegSeed = (teamId: string | null, legIndex: number): number => {
-  const key = teamId ?? "";
-  let hash = 2166136261;
-
-  for (let index = 0; index < key.length; index += 1) {
-    hash ^= key.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-
-  return (hash ^ Math.imul(legIndex + 1, 0x9e3779b1)) | 0;
-};
+// One course for every team: no relay is easier than another, the way SCHLONIC's
+// street is a rule. The legs still differ because `resolveFappyGates` mixes the
+// leg index into this seed. It must not be mixed in here as well — doing it twice
+// cancelled it out, and every leg of a relay flew the same six gates.
+const FAPPY_COURSE_SEED = 0x5eedfa99 | 0;
 
 // The active team's seating, as the figures the surfaces draw. Only players
 // the roster still lists count; an id with no player behind it is skipped.
@@ -64,7 +56,6 @@ const resolveTeamFigures = (
 };
 
 const createReadyLeg = (
-  teamId: string | null,
   figures: readonly FappyPlayerFigure[],
   legIndex: number
 ): FappyRuntimeLeg => {
@@ -73,7 +64,7 @@ const createReadyLeg = (
     // The roster cycles, so a short team's first player flies again rather
     // than the team flying fewer legs than everyone else.
     player: figures.length === 0 ? null : (figures[legIndex % figures.length] ?? null),
-    seed: resolveLegSeed(teamId, legIndex),
+    seed: FAPPY_COURSE_SEED,
     status: "ready",
     attempt: 0,
     checkpointGate: 0,
@@ -86,12 +77,11 @@ const createReadyLeg = (
 };
 
 const createLegs = (
-  teamId: string | null,
   figures: readonly FappyPlayerFigure[],
   rules: FappyRuntimeRules
 ): FappyRuntimeLeg[] => {
   return Array.from({ length: rules.legsPerTurn }, (_unused, legIndex) => {
-    return createReadyLeg(teamId, figures, legIndex);
+    return createReadyLeg(figures, legIndex);
   });
 };
 
@@ -276,7 +266,7 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
       parSeconds: rules.parSeconds,
       limitSeconds: rules.limitSeconds,
       legIndex: 0,
-      legs: createLegs(activeTurnTeamId, figures, rules),
+      legs: createLegs(figures, rules),
       startedAtMs: null,
       finishedAtMs: null,
       timedOutAtMs: null,
@@ -383,7 +373,7 @@ export const fappyRuntimePlugin: MinigameRuntimePlugin = {
         ...state,
         legIndex: 0,
         legs: state.legs.map((entry) =>
-          createReadyLeg(state.activeTurnTeamId, entry.player === null ? [] : [entry.player], entry.legIndex)
+          createReadyLeg(entry.player === null ? [] : [entry.player], entry.legIndex)
         ),
         startedAtMs: null,
         finishedAtMs: null,

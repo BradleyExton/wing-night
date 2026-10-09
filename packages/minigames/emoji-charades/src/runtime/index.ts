@@ -14,6 +14,7 @@ import {
 } from "./content/index.js";
 import {
   isAppendEmojiPayload,
+  isEmojiCharadesRoundMemory,
   isEmojiCharadesRules,
   isEmojiCharadesRuntimeState,
   isLetterEmoji,
@@ -22,6 +23,7 @@ import {
 import {
   MAX_EMOJIS_PER_SUBJECT,
   SUBJECT_REVEAL_MS,
+  type EmojiCharadesRoundMemory,
   type EmojiCharadesRuntimeState
 } from "./types/index.js";
 import {
@@ -43,6 +45,17 @@ const shuffleSubjectIds = (subjectIds: string[]): string[] => {
   }
 
   return shuffled;
+};
+
+// Fresh subjects first, then the ones the room has already seen this round, so
+// a later team only replays an answer once the deck has nothing new left.
+const dealSubjectOrder = (subjectIds: string[], shownSubjectIds: string[]): string[] => {
+  const shown = new Set(shownSubjectIds);
+
+  return [
+    ...shuffleSubjectIds(subjectIds.filter((subjectId) => !shown.has(subjectId))),
+    ...shuffleSubjectIds(subjectIds.filter((subjectId) => shown.has(subjectId)))
+  ];
 };
 
 const resolveSubjectOutcome = (
@@ -72,6 +85,10 @@ export const emojiCharadesRuntimePlugin: MinigameRuntimePlugin = {
       input.pointsMax
     );
 
+    const roundShownSubjectIds = isEmojiCharadesRoundMemory(input.roundMemory)
+      ? [...input.roundMemory.shownSubjectIds]
+      : [];
+
     const initialState: EmojiCharadesRuntimeState = {
       activeTurnTeamId: input.activeRoundTeamId ?? input.teamIds[0] ?? null,
       status: "playing",
@@ -79,7 +96,11 @@ export const emojiCharadesRuntimePlugin: MinigameRuntimePlugin = {
       shuffledSubjectIds:
         dealtDeck === null
           ? []
-          : shuffleSubjectIds(dealtDeck.subjects.map((subject) => subject.id)),
+          : dealSubjectOrder(
+              dealtDeck.subjects.map((subject) => subject.id),
+              roundShownSubjectIds
+            ),
+      roundShownSubjectIds,
       subjectCursor: 0,
       emojiSequence: [],
       reveal: null,
@@ -224,6 +245,24 @@ export const emojiCharadesRuntimePlugin: MinigameRuntimePlugin = {
       ...input.state,
       pendingPointsByTeamId: { ...input.pendingPointsByTeamId }
     };
+  },
+  // Everything before the cursor was revealed on the TV, a skip included. The
+  // subject on the board when the clock ran out was not, so it stays fresh.
+  selectRoundMemory: (input) => {
+    if (!isEmojiCharadesRuntimeState(input.state)) {
+      return null;
+    }
+
+    const memory: EmojiCharadesRoundMemory = {
+      shownSubjectIds: [
+        ...new Set([
+          ...input.state.roundShownSubjectIds,
+          ...input.state.shuffledSubjectIds.slice(0, input.state.subjectCursor)
+        ])
+      ]
+    };
+
+    return memory;
   },
   selectHostView: (input) => {
     if (!isEmojiCharadesRuntimeState(input.state)) {

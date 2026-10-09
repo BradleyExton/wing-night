@@ -24,6 +24,15 @@ export type DrawingRoundMemory = {
   promptCursor: number;
 };
 
+export type DrawingRuntimeRules = {
+  // What each drawing the team guesses is worth.
+  pointsPerCorrect: number;
+};
+
+export const DEFAULT_DRAWING_RULES: DrawingRuntimeRules = {
+  pointsPerCorrect: 1
+};
+
 export const PROMPT_REVEAL_MS = 2000;
 
 export const MAX_STROKES = 60;

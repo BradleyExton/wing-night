@@ -1,6 +1,7 @@
 import {
   Phase,
   resolveRoomTurnOrderTeamIds,
+  resolveRoundMinigameMax,
   type DisplayRoomStateSnapshot,
   type MinigameType,
   type Player,
@@ -50,6 +51,9 @@ export type StageViewModel = {
   teams: Team[];
   currentRoundConfig: DisplayRoomStateSnapshot["currentRoundConfig"];
   minigameType: MinigameType | null;
+  // The most this round's mini-game can bank a team, the same number the
+  // server caps it at, so the briefing can put the stakes on the TV.
+  minigamePointsMax: number | null;
   activeTeamName: string | null;
   activeTeamGenre: string | null;
   // The display's one copy of every team's kit (docs/team-identity.md), and
@@ -99,6 +103,11 @@ export const resolveStageViewModel = (
   const currentRoundConfig = roomState?.currentRoundConfig ?? null;
   const minigameType =
     roomState?.minigameDisplayView?.minigame ?? currentRoundConfig?.minigame ?? null;
+  const currentRound = roomState?.currentRound ?? 0;
+  const minigamePointsMax =
+    gameConfig !== null && currentRound > 0
+      ? resolveRoundMinigameMax(gameConfig, currentRound - 1)
+      : null;
 
   const activeRoundTeamId = roomState?.activeRoundTeamId ?? null;
   const activeTurnTeamId = roomState?.activeTurnTeamId ?? null;
@@ -212,6 +221,7 @@ export const resolveStageViewModel = (
     teams: roomState?.teams ?? [],
     currentRoundConfig,
     minigameType,
+    minigamePointsMax,
     activeTeamName,
     activeTeamGenre: activeTeam?.genre ?? null,
     teamThemeByTeamId,

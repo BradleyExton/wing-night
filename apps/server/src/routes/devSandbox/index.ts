@@ -3,6 +3,7 @@ import type { MinigameDevManifest } from "@wingnight/minigames-core";
 import {
   resolveMinigameDefinition,
   resolveMinigameTypeFromSlug,
+  resolveRoundMinigameMax,
   type GameConfigFile,
   type MinigameType
 } from "@wingnight/shared";
@@ -13,23 +14,18 @@ type CreateDevSandboxRouterOptions = {
   contentRootDir?: string;
 };
 
-// What the night would actually put on the board for this game. Mirrors
-// `resolveMinigamePointsMax`: the final round of the night scores out of
-// `finalRoundMax`, every other round out of `defaultMax`. A game the config
-// never schedules has no round to read, so it takes the default.
+// What the night would actually put on the board for this game: the same
+// `resolveRoundMinigameMax` the room scores with, for the first round that
+// schedules it. A game the config never schedules has no round to read, so it
+// takes the default.
 const resolvePointsMax = (
   gameConfig: GameConfigFile,
   minigameType: MinigameType
 ): number => {
-  const roundIndex = gameConfig.rounds.findIndex(
-    (round) => round.minigame === minigameType
+  return resolveRoundMinigameMax(
+    gameConfig,
+    gameConfig.rounds.findIndex((round) => round.minigame === minigameType)
   );
-
-  if (roundIndex === gameConfig.rounds.length - 1 && roundIndex !== -1) {
-    return gameConfig.minigameScoring.finalRoundMax;
-  }
-
-  return gameConfig.minigameScoring.defaultMax;
 };
 
 // Mirrors `resolveMinigameRules`, which reads the same key off the same config.

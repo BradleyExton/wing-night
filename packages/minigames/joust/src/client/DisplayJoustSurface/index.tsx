@@ -107,8 +107,8 @@ const JoustPlayBody = ({
   const inFlight = view.lastShot !== null && !replayFinished ? view.lastShot : null;
   const bankedPoints =
     view.activeTurnTeamId === null ? 0 : (view.pendingPointsByTeamId[view.activeTurnTeamId] ?? 0);
-  // A shot big enough to run the team into the round's cap banks less than it scored, so taking
-  // the whole score back off would read the marquee negative. Nothing below nothing was pending.
+  // A shot's points are what it banked (the runtime holds them to the cap), so taking them back
+  // off reads exactly what was pending at launch.
   const pendingPoints = Math.max(0, bankedPoints - (inFlight?.points ?? 0));
   const standingCount =
     view.lineup.length - view.downPlayerIds.length + (inFlight?.toppledPlayerIds.length ?? 0);

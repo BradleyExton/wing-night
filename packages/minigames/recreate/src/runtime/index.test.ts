@@ -148,7 +148,8 @@ test("submitting a prompt opens judging with a generating attempt when live gene
   assert.equal(state.attempt?.attemptId, resolveRecreateAttemptId("target-1", "team-1", 1));
 
   const display = displayView(state);
-  assert.deepEqual(display.ingredients, ["Underwater", "Neon sign", "Scuba gear"]);
+  // One slot per ingredient, every one sealed until the host ticks it.
+  assert.deepEqual(display.ingredients, [null, null, null]);
   assert.equal(display.attempt?.prompt, "Put them underwater next to a neon sign");
   // The authored prompt stays sealed until the score is locked.
   assert.equal(display.authoredPrompt, null);
@@ -240,6 +241,39 @@ test("toggles ingredients only while judging and only within the rubric", () => 
     dispatch(initializeState(), "toggleIngredient", { ingredientIndex: 0 }).didMutate,
     false
   );
+});
+
+test("does name on the TV only the ingredients the host has ticked while grading", () => {
+  const ticked = dispatch(submittedState(), "toggleIngredient", { ingredientIndex: 1 }).state;
+
+  assert.deepEqual(displayView(ticked).ingredients, [null, "Neon sign", null]);
+  // A rewrite from here must not hand the team the ingredients it missed.
+  assert.equal(JSON.stringify(displayView(ticked)).includes("Scuba gear"), false);
+});
+
+test("does unseal every ingredient on the TV once the score is locked", () => {
+  const ticked = dispatch(submittedState(), "toggleIngredient", { ingredientIndex: 1 }).state;
+  const scored = dispatch(ticked, "lockScore").state;
+
+  assert.deepEqual(displayView(scored).ingredients, ["Underwater", "Neon sign", "Scuba gear"]);
+});
+
+test("does hold the host's tally to the round's cap", () => {
+  const judging = submittedState({
+    pointsMax: 15,
+    pendingPointsByTeamId: { "team-1": 8 },
+    rules: { targetsPerTurn: 1, pointsPerIngredient: 4, liveGeneration: false }
+  });
+  const oneTick = dispatch(judging, "toggleIngredient", { ingredientIndex: 0 }).state;
+  const allTicked = [1, 2].reduce(
+    (state, ingredientIndex) => dispatch(state, "toggleIngredient", { ingredientIndex }).state,
+    oneTick
+  );
+
+  assert.equal(hostView(oneTick).checklist?.pointsIfLocked, 4);
+  // Three ticks at 4 is 12, but only 7 more fit under 15.
+  assert.equal(hostView(allTicked).checklist?.pointsIfLocked, 7);
+  assert.equal(dispatch(allTicked, "lockScore").state.lastPointsAwarded, 7);
 });
 
 test("locking the score awards a point per ticked ingredient, capped at pointsMax", () => {

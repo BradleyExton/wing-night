@@ -33,7 +33,7 @@ const RevealPlaque = ({
           : displayDrawingSurfaceCopy.revealMissedLabel
       }
       title={reveal.promptText}
-      points={isCorrect ? displayDrawingSurfaceCopy.revealAwardPoints : null}
+      points={isCorrect ? displayDrawingSurfaceCopy.revealAwardPoints(reveal.pointsAwarded) : null}
       pointsCaption={isCorrect ? teamName : null}
     />
   );

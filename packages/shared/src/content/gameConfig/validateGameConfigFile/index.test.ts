@@ -80,6 +80,23 @@ test("reports the offending field path when a round minigame is unknown", () => 
   ]);
 });
 
+test("does accept a round that sets its own mini-game max", () => {
+  const config = configWith({ rounds: [{ ...validRound(1), minigameMax: 25 }, validRound(2)] });
+
+  assert.deepEqual(validateGameConfigFile(config), []);
+});
+
+test("reports the field path when a round's mini-game max is not a positive integer", () => {
+  const config = configWith({
+    rounds: [{ ...validRound(1), minigameMax: 0 }, { ...validRound(2), minigameMax: 2.5 }]
+  });
+
+  assert.deepEqual(pathsOf(validateGameConfigFile(config)), [
+    "rounds[0].minigameMax",
+    "rounds[1].minigameMax"
+  ]);
+});
+
 test("reports the index when round numbers are not contiguous", () => {
   const config = configWith({ rounds: [validRound(1), validRound(3)] });
   const issues = validateGameConfigFile(config);

@@ -17,7 +17,8 @@ const baseView = {
   activeTurnTeamId: "team-1",
   pendingPointsByTeamId: { "team-1": 2 },
   songsTotal: 4,
-  replayUsed: false
+  replayUsed: false,
+  pointsPerMark: 1
 } as const;
 
 const revealView = (

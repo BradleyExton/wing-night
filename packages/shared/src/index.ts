@@ -504,6 +504,7 @@ export {
   resolveMinigameDefinition,
   isMinigameType,
   resolveMinigameTypeFromSlug,
+  resolveRoundMinigameMax,
   SETUP_PREVIEW_ROUND_SLOTS_MAX,
   validateGameConfigFile
 } from "./content/gameConfig/index.js";

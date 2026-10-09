@@ -14,7 +14,9 @@ import {
   isBeginStrokePayload,
   isDrawingRuntimeState,
   isDrawingRoundMemory,
+  isDrawingRules,
   isEndStrokePayload,
+  resolveDrawingRules,
   sanitizeDrawingPoint
 } from "./guards/index.js";
 import {
@@ -89,6 +91,7 @@ export const drawingRuntimePlugin: MinigameRuntimePlugin = {
     "clearCanvas"
   ],
   content: drawingContentAdapter,
+  isRules: isDrawingRules,
   initialize: (input) => {
     const drawingContent = resolveDrawingContent(input.content);
     const contentPromptIds = drawingContent.prompts.map((prompt) => prompt.id);
@@ -273,15 +276,16 @@ export const drawingRuntimePlugin: MinigameRuntimePlugin = {
       const nowMs = Date.now();
       const previousPoints =
         state.pendingPointsByTeamId[state.activeTurnTeamId] ?? 0;
+      const nextPoints =
+        resultOutcome === "CORRECT"
+          ? Math.min(
+              input.pointsMax,
+              previousPoints + resolveDrawingRules(input.rules).pointsPerCorrect
+            )
+          : previousPoints;
       const pendingPointsByTeamId =
         resultOutcome === "CORRECT"
-          ? {
-              ...state.pendingPointsByTeamId,
-              [state.activeTurnTeamId]: Math.min(
-                input.pointsMax,
-                previousPoints + 1
-              )
-            }
+          ? { ...state.pendingPointsByTeamId, [state.activeTurnTeamId]: nextPoints }
           : { ...state.pendingPointsByTeamId };
 
       return {
@@ -295,6 +299,7 @@ export const drawingRuntimePlugin: MinigameRuntimePlugin = {
             promptId: currentPrompt.id,
             promptText: currentPrompt.prompt,
             outcome: resultOutcome,
+            pointsAwarded: Math.max(0, nextPoints - previousPoints),
             revealedAtMs: nowMs,
             expiresAtMs: nowMs + PROMPT_REVEAL_MS
           }

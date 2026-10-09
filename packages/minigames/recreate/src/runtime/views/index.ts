@@ -53,6 +53,19 @@ const toSharedFields = (
   };
 };
 
+// The same sum `lockScore` banks, so the tablet never promises points the cap
+// will take back.
+const resolvePointsIfLocked = (state: RecreateRuntimeState): number => {
+  const teamId = resolveActiveTurnTeamId(state);
+  const previousPoints = teamId === null ? 0 : (state.pendingPointsByTeamId[teamId] ?? 0);
+  const nextPoints = Math.min(
+    state.pointsMax,
+    previousPoints + state.checkedIngredientIndexes.length * state.pointsPerIngredient
+  );
+
+  return Math.max(0, nextPoints - previousPoints);
+};
+
 export const toRecreateHostView = (
   state: RecreateRuntimeState,
   content: RecreateRuntimeContent
@@ -67,7 +80,8 @@ export const toRecreateHostView = (
         ? {
             ingredients: [...prompt.ingredients],
             checkedIngredientIndexes: [...state.checkedIngredientIndexes],
-            authoredPrompt: prompt.prompt
+            authoredPrompt: prompt.prompt,
+            pointsIfLocked: resolvePointsIfLocked(state)
           }
         : null
   };
@@ -82,7 +96,15 @@ export const toRecreateDisplayView = (
 
   return {
     ...toSharedFields(state, prompt),
-    ingredients: isChecklistOpen && prompt !== null ? [...prompt.ingredients] : null,
+    ingredients:
+      isChecklistOpen && prompt !== null
+        ? prompt.ingredients.map((ingredient, ingredientIndex) =>
+            state.subState === "scored" ||
+            state.checkedIngredientIndexes.includes(ingredientIndex)
+              ? ingredient
+              : null
+          )
+        : null,
     checkedIngredientIndexes: isChecklistOpen ? [...state.checkedIngredientIndexes] : [],
     authoredPrompt: state.subState === "scored" && prompt !== null ? prompt.prompt : null
   };

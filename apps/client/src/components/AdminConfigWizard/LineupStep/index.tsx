@@ -11,6 +11,14 @@ import { parsePositiveInteger } from "../gameConfigDraft";
 import type { IssueMessagesByPath } from "../selectIssueMessages";
 import * as styles from "./styles";
 
+// What a round with no max of its own is capped at: the scoring step's
+// final-round max for the last round, its default for every other.
+const resolveDefaultMinigameMax = (gameConfig: GameConfigFile, roundIndex: number): number => {
+  return roundIndex === gameConfig.rounds.length - 1
+    ? gameConfig.minigameScoring.finalRoundMax
+    : gameConfig.minigameScoring.defaultMax;
+};
+
 type LineupStepProps = {
   gameConfig: GameConfigFile;
   issueMessagesByPath: IssueMessagesByPath;
@@ -154,6 +162,45 @@ export const LineupStep = ({
               <FieldIssue
                 messagesByPath={issueMessagesByPath}
                 path={roundFieldPath(roundIndex, "pointsPerPlayer")}
+              />
+            </div>
+
+            {/* Optional: blank keeps the scoring step's default (the final
+                round's max for the last round), shown as the placeholder. */}
+            <div className={styles.field}>
+              <label
+                className={styles.label}
+                htmlFor={`admin-round-minigame-max-${roundIndex}`}
+              >
+                {adminCopy.roundMinigameMaxFieldLabel}
+              </label>
+              <input
+                id={`admin-round-minigame-max-${roundIndex}`}
+                className={`${styles.numberInput} ${invalidClassName(
+                  roundFieldPath(roundIndex, "minigameMax")
+                )}`}
+                inputMode="numeric"
+                value={round.minigameMax ?? ""}
+                placeholder={String(resolveDefaultMinigameMax(gameConfig, roundIndex))}
+                disabled={isLocked}
+                onChange={(event): void => {
+                  const rawValue = event.target.value.trim();
+
+                  onRoundChange(roundIndex, {
+                    minigameMax:
+                      rawValue === ""
+                        ? undefined
+                        : parsePositiveInteger(
+                            rawValue,
+                            round.minigameMax ??
+                              resolveDefaultMinigameMax(gameConfig, roundIndex)
+                          )
+                  });
+                }}
+              />
+              <FieldIssue
+                messagesByPath={issueMessagesByPath}
+                path={roundFieldPath(roundIndex, "minigameMax")}
               />
             </div>
           </div>

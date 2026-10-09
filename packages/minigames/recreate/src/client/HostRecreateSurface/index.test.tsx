@@ -44,7 +44,8 @@ const judgingView = (): RecreateMinigameHostView =>
     checklist: {
       ingredients: ["Outer space", "Spacesuits"],
       checkedIngredientIndexes: [0],
-      authoredPrompt: "The whole group floating in outer space"
+      authoredPrompt: "The whole group floating in outer space",
+      pointsIfLocked: 1
     }
   });
 

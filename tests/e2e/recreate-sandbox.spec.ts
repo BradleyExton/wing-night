@@ -51,6 +51,9 @@ test("recreate sandbox writes a prompt, grades it against the sealed checklist a
   await expect(page.getByRole("button", { name: "Outer space" })).toBeVisible();
   await expect(page.locator("[data-recreate-ingredient]")).toHaveCount(4);
   await expect(page.locator("[data-recreate-ingredient='checked']")).toHaveCount(0);
+  // The TV names an ingredient only once it is ticked: a rewrite must not hand
+  // the team the ones it missed.
+  await expect(page.locator("[data-recreate-ingredient='sealed']")).toHaveCount(4);
   // The authored prompt stays sealed until the score is locked.
   expect((await page.content()).includes("The real prompt")).toBe(false);
 
@@ -58,6 +61,7 @@ test("recreate sandbox writes a prompt, grades it against the sealed checklist a
   await page.getByRole("button", { name: "Spacesuits" }).click();
   await page.getByRole("button", { name: "A floating pizza" }).click();
   await expect(page.locator("[data-recreate-ingredient='checked']")).toHaveCount(3);
+  await expect(page.locator("[data-recreate-ingredient='sealed']")).toHaveCount(1);
   await expect(page.getByText("+3 pts on the table")).toBeVisible();
 
   // One tick back off, then lock: two points, and the real prompt revealed.
@@ -66,6 +70,7 @@ test("recreate sandbox writes a prompt, grades it against the sealed checklist a
 
   await expect(page.getByText("+2", { exact: true })).toHaveCount(2);
   await expect(page.getByText("The real prompt", { exact: true })).toBeVisible();
+  await expect(page.locator("[data-recreate-ingredient='sealed']")).toHaveCount(0);
   await expect(
     page.getByText(/The whole group floating in outer space in silver spacesuits/)
   ).toHaveCount(2);
