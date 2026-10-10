@@ -85,7 +85,7 @@ a separate deployable on wingnight.tv, and where it has one of these the line sa
   secret, not an account. Guest accounts (sign-in links and sessions) exist only on the pre-party
   portal, and nothing on the night reads them
 - Persistent database in the party app — it stays in-memory over the pack's JSON files. Only the
-  pre-party portal keeps a database (guests, sessions, votes in Cloudflare D1; heads in R2)
+  pre-party portal keeps a database (guests, sessions, team picks in Cloudflare D1; heads in R2)
 - Cloud deployment of the party app — it runs on the laptop. Only wingnight.tv (the teaser and the
   pre-party portal) is deployed
 - Image uploads in the party app. Only the pre-party portal's avatar studio takes a guest's photo;
@@ -103,9 +103,10 @@ a separate deployable on wingnight.tv, and where it has one of these the line sa
 - 3–5 teams
 - Players are preloaded from JSON (`players.json`, which `pnpm pack:pull` fills from the guest
   portal — "Before the party" below)
-- Teams start from the pack's preset seating (§3.1–3.2) and are finished live in SETUP. How this
-  night's teams are made is undecided, pending the guest vote: no team pages, phone self-pick or
-  random draw on the TV exist
+- Teams start from the pack's preset seating (§3.1–3.2) and are finished live in SETUP. Guests
+  pick their own team on the portal before the night ("Before the party" below) and
+  `pnpm pack:pull` writes the picks into that seating; on the night there is no team page, phone
+  self-pick or random draw on the TV
 - Team sizes are locked once the game starts
 
 Display runs on a laptop connected to a TV via HDMI and must remain full-screen, scroll-free, and distance-readable on a 4K TV.
@@ -127,16 +128,21 @@ separate deployable from the party app and shares nothing with it at runtime.
   photo is deleted when a head is kept, when the last try is spent, or when the guest removes it,
   and painted tries are never stored. Heads are private to the guest and Brad, who can pick one
   kept head as the style reference for later paints and reset a guest's tries.
-- **Private vote** (`/me`). Rank the team genres, name up to two teammates you'd sit with (seen
-  only by Brad; nobody is told who asked for whom), and pick how teams should be made (Brad
-  assigns, guests pick, a random draw on the TV). Changeable until the night.
-- **Admin** (`/admin`, Brad's admin session only). The guest list with sign-in, head, vote and
+- **Team pick** (`/me`). The guest picks their team from the night's real teams — the pack's
+  `teams.json`, shipped to the Worker as the teaser roster, so there is no second team list. A
+  tap saves the pick on the spot and it stays changeable; seats per team are
+  ceil(guests ÷ teams), recomputed on every read, and a full team cannot be picked. Brad can move
+  anyone (over the cap if he wants) and close picks, after which a guest sees their team but can
+  no longer change it.
+- **Admin** (`/admin`, Brad's admin session only). The guest list with sign-in, head, team and
   tries status; add, edit, invite, invite all, mint a link, reset tries; the head gallery; the
-  vote summary (genre tallies, mutual wishes, who has still to vote).
-- **Into the night pack, one way.** `pnpm pack:pull` copies every guest's name and kept head from
-  the portal into `~/wing-night-content` (`local/players.json`, `local/assets/avatars/`), adding
-  new guests unseated and never renaming or removing a player. Votes, wishes and email addresses never leave
-  the portal; Brad reads the vote on `/admin` and seats teams himself.
+  team board (every team's members in seating order plus the unseated, each movable) under the
+  "Picks are open / closed" switch.
+- **Into the night pack, one way.** `pnpm pack:pull` copies every guest's name, kept head and
+  picked team from the portal into `~/wing-night-content` (`local/players.json`,
+  `local/assets/avatars/`), adding new guests unseated and never renaming or removing a player.
+  A pick lands on the player's `team` and wins over whatever `players.json` had; a guest with no
+  pick leaves their player's seat alone. Email addresses never leave the portal.
 
 The party itself stays local and offline: nothing on the night depends on the internet or on the
 portal. GEO's map tiles degrade to a visible graticule with a note, and RECREATE's live forgery

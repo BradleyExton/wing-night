@@ -44,6 +44,9 @@ const ERROR_STATUS: Record<PortalErrorCode, number> = {
   painter_failed: 502,
   too_large: 413,
   unsupported_media_type: 415,
+  // PUT myTeam: the seat or the window is gone, not the request's fault.
+  team_full: 409,
+  picks_closed: 409,
   server_error: 500
 };
 

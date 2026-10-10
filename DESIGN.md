@@ -877,13 +877,18 @@ scroll: it is a form a guest fills in, not a show, so §2.2's no-scroll rule is 
     a heat-lit stage, a status pill (No head yet / Photo ready / Preview / Your head), take a
     selfie or pick a photo, Paint my head, then Keep this one or Try again, "Tries left 3 / 5" in
     the score face, Remove my photo, and the privacy line in plain words (the photo goes to
-    Gemini and is deleted once a head is kept; the head is shown on the TV). *Your vote*: the
-    genres as a ranked list with ▲ ▼ and an unranked pool of chips below, up to two teammate
-    chips ("Only Brad sees this."), the team-format choice as three radio rows, and Save my vote.
--   **`/admin`** — "The guest list.": the guest table (name, email, sign-in / head / vote / tries
+    Gemini and is deleted once a head is kept; the head is shown on the TV). *Your team*: a tile
+    per team — the wordmark over the team's colour, the members who already picked as small
+    heads on birds, and "3 of 4 seats" in the score face. The picked tile is ringed `primary`; a
+    full tile is dimmed with "Full"; once picks are closed the card says "Teams are set." and the
+    tiles are inert. A tap saves the pick, and the bird in the studio above repaints in that
+    team's kit.
+-   **`/admin`** — "The guest list.": the guest table (name, email, sign-in / head / team / tries
     status and its actions — invite, link, reset tries), Add a guest, the head gallery (three
-    across, the style reference ringed in `primary`), and the vote summary (genre bars, mutual
-    wishes, who has still to vote). A guest who is not Brad gets "This page is Brad's." instead.
+    across, the style reference ringed in `primary`), and the team board: the "Picks are open /
+    closed" switch above a column per team in seating order plus Unseated, each member as their
+    bird plus name with a move menu (the other teams, Unseat). A guest who is not Brad gets "This
+    page is Brad's." instead.
 -   **`/signin`** — one card, "Email me a way in": an email field and one button, and an answer
     that reads the same whether or not the address is on the list.
 -   **`/s/<token>`** is the Worker's own self-contained page, not the teaser's (it must work

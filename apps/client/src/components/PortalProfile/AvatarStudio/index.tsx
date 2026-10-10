@@ -1,3 +1,4 @@
+import type { TeamTheme } from "@wingnight/shared";
 import { PORTAL_API_ROUTES, type PortalAvatarStatus } from "@wingnight/shared/guestPortal";
 
 import { PortalHeadBird } from "../../PortalHeadBird";
@@ -10,12 +11,15 @@ import * as styles from "./styles";
 type AvatarStudioProps = {
   displayName: string;
   avatar: PortalAvatarStatus;
+  // The picked team's kit, so the bird under the head is dressed as the TV will dress it. It
+  // repaints the moment a tile is tapped (PortalProfile's optimistic pick), before the save lands.
+  theme?: TeamTheme;
   onAvatar: (next: PortalAvatarStatus) => void;
 };
 
 // The guest's head, made on their phone: a photo in, Gemini's paint keyed in the browser, the
 // head previewed on their bird, kept or tried again — five tries in all, counted by the portal.
-export const AvatarStudio = ({ displayName, avatar, onAvatar }: AvatarStudioProps): JSX.Element => {
+export const AvatarStudio = ({ displayName, avatar, theme, onAvatar }: AvatarStudioProps): JSX.Element => {
   const studio = useAvatarStudio(avatar, onAvatar);
   const { phase } = studio;
   const preview = phase.kind === "preview" || phase.kind === "accepting" ? phase : null;
@@ -89,7 +93,13 @@ export const AvatarStudio = ({ displayName, avatar, onAvatar }: AvatarStudioProp
         {avatarStudioCopy.title}
       </h2>
       <p className={shellStyles.voice}>{avatarStudioCopy.body}</p>
-      <PortalHeadBird name={displayName} headSrc={preview?.previewSrc ?? keptHeadSrc} size="large" label={birdLabel} />
+      <PortalHeadBird
+        name={displayName}
+        headSrc={preview?.previewSrc ?? keptHeadSrc}
+        theme={theme}
+        size="large"
+        label={birdLabel}
+      />
       <div className={styles.statusRow}>
         <span className={preview === null && keptHeadSrc === null ? shellStyles.pillDim : shellStyles.pill}>
           {(preview !== null || keptHeadSrc !== null) && <span className={shellStyles.pillDot} aria-hidden />}

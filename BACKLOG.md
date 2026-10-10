@@ -440,7 +440,7 @@ Notes from the build, none of them blocking:
 
 ## Online guest portal and party phones — follow-ups
 
-Shipped: the pre-party guest portal on wingnight.tv (sign-in links, avatar studio, private vote,
+Shipped: the pre-party guest portal on wingnight.tv (sign-in links, avatar studio, team pick,
 `/admin`), `pnpm pack:pull` into the night pack, the locked host seat, and the party phones —
 PLAYER seats by the TV's QR, arcade legs on the contestant's phone, bets and answers (SPEC.md
 "Before the party" and "Player phones", DESIGN.md §2.2H–2.2I). Bets and answers keep their own
@@ -481,9 +481,12 @@ lists above; nothing here repeats them.
 - **TRIVIA on the phones** — majority vote, partial credit and the night pack's missing
   `trivia.json` (choices come from the sample pack's eight) are under "Answers on the phones"
   above.
-- **Teams are still undecided.** The vote asks how teams should be made, and nothing beyond it is
-  built: no team pages, no self-pick on a phone, no random draw on the TV. Today Brad seats teams
-  through `players.json` or the tablet. Build whichever the vote picks once it is in.
+- **Wardrobe (milestones 2–4 of `docs/guest-portal-team-pick-plan.md`).** The team pick is
+  milestone 1. Still to build: the harness round where Brad picks each genre's rail on the 76px
+  row (no app code), the outfit vocabulary in `packages/shared/src/outfit` drawn by
+  `CharacterFigure` in the `body` part and carried on `Player.outfit` through the loader, the
+  pull and the teaser roster, and finally the wardrobe card on `/me` with its route and admin
+  export.
 
 ## Team identity (genre theming)
 

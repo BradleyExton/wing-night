@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/ensureAssetsDir.ts && wrangler d1 migrations apply wingnight-portal --local && wrangler dev --port 8787 --var MAIL_TRANSPORT:log --var GEMINI_TRANSPORT:fake --var PUBLIC_ORIGIN:http://localhost:5173",
+    "dev": "node scripts/ensureAssetsDir.ts && wrangler d1 migrations apply wingnight-portal --local && wrangler dev --port 8787 --assets ../client/teaser-public --var MAIL_TRANSPORT:log --var GEMINI_TRANSPORT:fake --var PUBLIC_ORIGIN:http://localhost:5173",
     "dev:teaser": "pnpm dev",
     "deploy:portal": "wrangler d1 migrations apply wingnight-portal --remote && wrangler deploy",
     "seed:admin": "tsx scripts/seedAdmin.ts",

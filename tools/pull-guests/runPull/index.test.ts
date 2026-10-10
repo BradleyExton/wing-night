@@ -23,7 +23,12 @@ type FakePortal = {
   fetch: typeof fetch;
 };
 
-const createFakePortal = (heads: Record<string, Uint8Array<ArrayBuffer>>, names: Record<string, string>): FakePortal => {
+const createFakePortal = (
+  heads: Record<string, Uint8Array<ArrayBuffer>>,
+  names: Record<string, string>,
+  // Guest id -> picked team; a guest not listed has not picked.
+  teams: Record<string, string> = {}
+): FakePortal => {
   const portal: FakePortal = {
     guests: Object.entries(names).map(([guestId, displayName]) => {
       const bytes = heads[guestId];
@@ -31,7 +36,8 @@ const createFakePortal = (heads: Record<string, Uint8Array<ArrayBuffer>>, names:
       return {
         guestId,
         displayName,
-        head: bytes === undefined ? null : { sha256: sha256(bytes), contentType: "image/png", bytes: bytes.byteLength }
+        head: bytes === undefined ? null : { sha256: sha256(bytes), contentType: "image/png", bytes: bytes.byteLength },
+        team: teams[guestId] ?? null
       };
     }),
     heads: new Map(Object.entries(heads)),
@@ -155,9 +161,37 @@ test("does write the heads, the manifest and the roster and back up the old ones
   }
 });
 
+test("does write each guest's picked team onto their player and leave the unpicked seat alone when picks come down", async () => {
+  const rootDir = createPack({ "local/players.json": ROSTER });
+  const portal = createFakePortal({ g_rob: ROB_HEAD }, { g_rob: "Rob", g_alex: "Alex", g_kim: "Kim" }, { g_rob: "Disco", g_kim: "Pop" });
+  const lines: string[] = [];
+
+  try {
+    const plan = await runPull(options(rootDir, portal, { log: (line) => lines.push(line) }));
+
+    assert.deepEqual(plan.teamChanges, [
+      { name: "Rob", from: "Metal", to: "Disco" },
+      { name: "Kim", from: null, to: "Pop" }
+    ]);
+    assert.deepEqual(readJson(rootDir, "local/players.json"), {
+      players: [
+        { name: "Rob", team: "Disco", avatarSrc: `avatars/rob-${sha256(ROB_HEAD).slice(0, 8)}.png` },
+        { name: "Alex" },
+        { name: "Kim", team: "Pop" }
+      ]
+    });
+    assert.ok(lines.includes("Team changes (2):"));
+    assert.ok(lines.includes("  Rob: Metal -> Disco"));
+    assert.ok(lines.includes("  Kim: (unseated) -> Pop"));
+    assert.equal(readFileSync(join(rootDir, "local/players.json.2026-10-07T12-00-00-000Z.bak"), "utf8"), ROSTER);
+  } finally {
+    rmSync(rootDir, { recursive: true, force: true });
+  }
+});
+
 test("does write nothing at all when the run is a dry run", async () => {
   const rootDir = createPack({ "local/players.json": ROSTER, "local/avatar-sources/manifest.json": MANIFEST });
-  const portal = createFakePortal({ g_rob: ROB_HEAD }, { g_rob: "Rob", g_kim: "Kim" });
+  const portal = createFakePortal({ g_rob: ROB_HEAD }, { g_rob: "Rob", g_kim: "Kim" }, { g_rob: "Disco" });
   const lines: string[] = [];
 
   try {
@@ -167,6 +201,7 @@ test("does write nothing at all when the run is a dry run", async () => {
     assert.deepEqual(snapshotPack(rootDir), before);
     assert.deepEqual(plan.addedPlayers, ["Kim"]);
     assert.ok(lines.includes("  + Kim"));
+    assert.ok(lines.includes("  Rob: Metal -> Disco"));
     assert.ok(lines.includes(`  local/assets/avatars/rob-${sha256(ROB_HEAD).slice(0, 8)}.png (7 bytes)`));
     assert.equal(lines.at(-1), "Dry run: nothing written.");
     assert.equal(portal.requests.length, 1, "a dry run fetches the export and no head");

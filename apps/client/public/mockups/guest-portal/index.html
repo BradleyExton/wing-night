@@ -6,7 +6,7 @@
     <title>Guest Portal — Mockup</title>
     <!--
       wingnight.tv's signed-in pages, on a phone held upright (390 wide), scrolling.
-      Three frames side by side: /me (the head studio, then the vote) and /admin.
+      Three frames side by side: /me (the head studio, then the team pick) and /admin.
 
       The language is the teaser landing's Hearth (DESIGN.md §2.2B, TeaserLanding and
       TeaserGameCard): the room is bg with the flame's heat pooling at the foot, and every
@@ -81,21 +81,29 @@
       .pill.dim { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--mutedWarmDim); }
       .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--primary); }
       .tries { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 26px; }
-      .rank { display: flex; flex-direction: column; gap: 6px; }
-      .rank li {
-        list-style: none; display: flex; align-items: center; gap: 10px; padding: 8px 10px;
-        border-radius: 12px; background: rgba(18,18,18,0.7); border: 1px solid rgba(255,179,90,0.18);
+      .teams { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .team {
+        display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px;
+        border: 1px solid rgba(255,179,90,0.18); background: rgba(255,255,255,0.03);
+        box-shadow: inset 0 24px 40px -28px var(--tint, transparent);
       }
-      .rank .n { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 22px; width: 22px; color: var(--primary); }
-      .rank .g { flex: 1; font-weight: 800; text-transform: uppercase; }
-      .arrow { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; border: 1px solid rgba(255,179,90,0.3); }
-      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-      .chip { padding: 8px 12px; border-radius: 999px; border: 1px dashed var(--mutedWarmDim); color: var(--mutedWarm); font-size: 14px; }
-      .chip.on { border: 1px solid var(--primary); background: rgba(249,115,22,0.15); color: var(--text); }
-      .choice { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,179,90,0.18); }
-      .choice.on { border-color: var(--primary); background: rgba(249,115,22,0.12); }
-      .radio { width: 18px; height: 18px; border-radius: 99px; border: 2px solid var(--mutedWarm); }
-      .choice.on .radio { border-color: var(--primary); background: radial-gradient(var(--primary) 45%, transparent 50%); }
+      .team.on { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary), inset 0 24px 40px -28px var(--tint, transparent); }
+      .team.full { opacity: 0.45; }
+      .team .mark { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 20px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--tint, var(--text)); }
+      .team .riders { display: flex; gap: 2px; min-height: 36px; }
+      .team .riders span { width: 34px; height: 30px; border-radius: 10px 10px 4px 4px; background: var(--tint, var(--mutedWarmDim)); position: relative; }
+      .team .riders span::after { content: ""; position: absolute; right: 2px; top: -8px; width: 14px; height: 14px; border-radius: 50%; background: var(--glow); }
+      .team .seats { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 22px; }
+      .team .seats small { font-size: 13px; font-weight: 600; color: var(--mutedWarm); font-family: ui-sans-serif, system-ui, sans-serif; margin-left: 4px; }
+      .switch { display: inline-flex; align-items: center; gap: 8px; }
+      .switch .knob { width: 36px; height: 20px; border-radius: 999px; background: var(--primary); position: relative; }
+      .switch .knob::after { content: ""; position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--text); }
+      .board { display: flex; flex-direction: column; gap: 10px; }
+      .column { border-top: 1px solid rgba(255,179,90,0.15); padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+      .column .head { display: flex; justify-content: space-between; align-items: baseline; }
+      .member { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+      .member .bird { width: 26px; height: 22px; border-radius: 8px 8px 3px 3px; background: var(--tint, var(--mutedWarmDim)); }
+      .member .move { margin-left: auto; font-size: 12px; color: var(--mutedWarm); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px 8px; }
       .private { font-size: 12px; color: var(--mutedWarmDim); }
       table { width: 100%; border-collapse: collapse; font-size: 14px; }
       td { padding: 10px 4px; border-top: 1px solid rgba(255,179,90,0.12); vertical-align: middle; }
@@ -135,28 +143,21 @@
       </div>
     </section>
 
-    <!-- /me, the vote (further down the same page) -->
+    <!-- /me, the team pick (further down the same page). Tapping a tile saves at once and the
+         bird in the studio above repaints in that team's kit; no Save button. -->
     <section class="phone">
       <div class="card">
-        <p class="eyebrow">Your vote</p>
-        <h2>What should your team be?</h2>
-        <p class="voice">Rank the music you'd play for. Your favourite first; stop whenever.</p>
-        <ol class="rank">
-          <li><span class="n">1</span><span class="g">Disco</span><span class="arrow">▲</span><span class="arrow">▼</span></li>
-          <li><span class="n">2</span><span class="g">Hip-hop</span><span class="arrow">▲</span><span class="arrow">▼</span></li>
-          <li><span class="n">3</span><span class="g">Metal</span><span class="arrow">▲</span><span class="arrow">▼</span></li>
-        </ol>
-        <p class="eyebrow">Not ranked</p>
-        <div class="chips"><span class="chip">+ Pop</span><span class="chip">+ Rock</span><span class="chip">+ Country</span><span class="chip">+ Punk</span></div>
-        <p class="eyebrow">Who you'd sit with (up to two)</p>
-        <div class="chips"><span class="chip on">Sam ✓</span><span class="chip">Jess</span><span class="chip">Alex</span><span class="chip">Brad</span></div>
-        <p class="private">Only Brad sees this. Nobody is told who asked for whom.</p>
-        <p class="eyebrow">How should teams be made?</p>
-        <div class="choice on"><span class="radio"></span>Brad picks the teams</div>
-        <div class="choice"><span class="radio"></span>Everyone picks their own</div>
-        <div class="choice"><span class="radio"></span>A random draw on the TV</div>
-        <span class="btn">Save my vote</span>
-        <span class="private">Saved. Change it any time before the night.</span>
+        <p class="eyebrow">Your team</p>
+        <h2>Pick your team</h2>
+        <p class="voice">Tap a team and you're on it. Your bird dresses for it on the spot. Switch any time until Brad closes the picks.</p>
+        <div class="teams">
+          <div class="team on" style="--tint: #06b6d4"><span class="mark">Iron Hens</span><div class="riders"><span></span><span></span></div><span class="seats">2 of 4<small>seats</small></span></div>
+          <div class="team full" style="--tint: #ec4899"><span class="mark">Mirror Balls</span><div class="riders"><span></span><span></span><span></span><span></span></div><span class="seats">4 of 4<small>seats</small></span><span class="pill dim">Full</span></div>
+          <div class="team" style="--tint: #d98324"><span class="mark">Barn Burners</span><div class="riders"><span></span></div><span class="seats">1 of 4<small>seats</small></span></div>
+          <div class="team" style="--tint: #84cc16"><span class="mark">Plain Jane</span><div class="riders"></div><span class="seats">0 of 4<small>seats</small></span></div>
+        </div>
+        <span class="private">You're on Iron Hens.</span>
+        <p class="private">Once Brad closes picks this card says "Teams are set." and the tiles go inert, your pick still ringed.</p>
       </div>
     </section>
 
@@ -167,7 +168,7 @@
       <div class="card">
         <div class="row" style="justify-content: space-between"><h2>Guests</h2><span class="pill">Invite 4 more</span></div>
         <table>
-          <tr><td><div class="name">Rob</div><div class="sub">rob@example.com</div></td><td><span class="pill">Signed in</span></td><td>Head · Voted · Tries 4/5 · <span class="link">Reset tries</span></td></tr>
+          <tr><td><div class="name">Rob</div><div class="sub">rob@example.com</div></td><td><span class="pill">Signed in</span></td><td>Head · Iron Hens · Tries 4/5 · <span class="link">Reset tries</span></td></tr>
           <tr><td><div class="name">Sam</div><div class="sub">No email</div></td><td><span class="pill dim">Not invited</span></td><td><span class="link">Link</span></td></tr>
         </table>
         <span class="btn ghost">Add a guest</span>
@@ -180,12 +181,20 @@
         </div>
       </div>
       <div class="card">
-        <h2>Votes</h2>
-        <p class="eyebrow">Genres · 6 voted</p>
-        <div class="tally">Disco<span class="bar"><span style="width: 80%"></span></span><b>41</b></div>
-        <div class="tally">Hip-hop<span class="bar"><span style="width: 60%"></span></span><b>30</b></div>
-        <p class="eyebrow">Mutual wishes</p><p class="voice">Rob &amp; Sam</p>
-        <p class="eyebrow">Still to vote</p><p class="sub">Alex, Jess</p>
+        <p class="eyebrow">4 of 6 seated</p>
+        <div class="row" style="justify-content: space-between; align-items: center"><h2>Teams</h2><span class="switch"><span class="knob"></span><span class="sub">Picks are open</span></span></div>
+        <div class="board">
+          <div class="column" style="--tint: #06b6d4"><div class="head"><span class="mark" style="color: var(--tint); font-weight: 800; text-transform: uppercase">Iron Hens</span><span class="tries">2 of 2</span></div>
+            <div class="member"><span class="bird"></span>Rob<span class="move">Move…</span></div>
+            <div class="member"><span class="bird"></span>Sam<span class="move">Move…</span></div></div>
+          <div class="column" style="--tint: #ec4899"><div class="head"><span class="mark" style="color: var(--tint); font-weight: 800; text-transform: uppercase">Mirror Balls</span><span class="tries">1 of 2</span></div>
+            <div class="member"><span class="bird"></span>Jess<span class="move">Move…</span></div></div>
+          <div class="column" style="--tint: #d98324"><div class="head"><span class="mark" style="color: var(--tint); font-weight: 800; text-transform: uppercase">Barn Burners</span><span class="tries">1 of 2</span></div>
+            <div class="member"><span class="bird"></span>Alex<span class="move">Move…</span></div></div>
+          <div class="column"><div class="head"><span class="eyebrow">Unseated</span><span class="tries">2</span></div>
+            <div class="member"><span class="bird"></span>Brad<span class="move">Move…</span></div>
+            <div class="member"><span class="bird"></span>Kim<span class="move">Move…</span></div></div>
+        </div>
       </div>
     </section>
   </body>

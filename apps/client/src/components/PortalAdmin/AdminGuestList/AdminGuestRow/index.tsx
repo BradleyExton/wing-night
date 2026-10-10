@@ -120,9 +120,9 @@ export const AdminGuestRow = ({ guest, onChanged }: AdminGuestRowProps): JSX.Ele
           {guest.hasHead ? <Check className={styles.tickGlyph} aria-hidden /> : <Minus className={styles.tickGlyph} aria-hidden />}
           {guest.hasHead ? adminGuestListCopy.hasHead : adminGuestListCopy.noHead}
         </span>
-        <span className={guest.hasVoted ? styles.tickOn : styles.tickOff}>
-          {guest.hasVoted ? <Check className={styles.tickGlyph} aria-hidden /> : <Minus className={styles.tickGlyph} aria-hidden />}
-          {guest.hasVoted ? adminGuestListCopy.hasVoted : adminGuestListCopy.notVoted}
+        <span className={guest.team === null ? styles.tickOff : styles.tickOn} data-team={guest.team ?? ""}>
+          {guest.team === null ? <Minus className={styles.tickGlyph} aria-hidden /> : <Check className={styles.tickGlyph} aria-hidden />}
+          {guest.team ?? adminGuestListCopy.noTeam}
         </span>
         <span className={guest.triesLeft === 0 ? styles.tickOn : styles.tickOff}>
           {adminGuestListCopy.tries(guest.triesLeft, AVATAR_TRIES_MAX)}

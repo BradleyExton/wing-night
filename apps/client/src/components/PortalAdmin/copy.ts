@@ -6,7 +6,7 @@ export const portalAdminCopy = {
   myPageLink: "My page",
   forbiddenEyebrow: "Hosts only",
   forbiddenTitle: "This page is Brad's.",
-  forbiddenBody: "It runs the guest list. Your own page has your head and your vote.",
+  forbiddenBody: "It runs the guest list. Your own page has your head and your team.",
   failedTitle: "Something went sideways.",
   failedBody: "We couldn't load the guest list. Refresh to try again."
 } as const;

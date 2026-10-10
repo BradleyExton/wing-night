@@ -64,9 +64,11 @@ uses the pack when `~/wing-night-content` exists and the repo's `content/` when 
 `WN_CONTENT_ROOT_DIR` overrides both (see `.env.example`), which is how the e2e stack stays on its
 own seeded root. The server logs the root it resolved at boot as `server:contentRoot`.
 
-Guests and the heads they made on wingnight.tv come down with `pnpm pack:pull` (`--dry-run` first
-to see the diff): one-way, it adds guests as players and never renames or removes one, and backs up
-`players.json` and the avatar manifest beside themselves before it writes. Votes never come down.
+Guests, the heads they made and the team they picked on wingnight.tv come down with
+`pnpm pack:pull` (`--dry-run` first to see the diff): one-way, it adds guests as players, writes a
+pick onto the player's `team` (a guest with no pick leaves it alone), never renames or removes a
+player, and backs up `players.json` and the avatar manifest beside themselves before it writes.
+Nothing else comes down.
 
 Anything the pack does not carry — `gameConfig.json`, the minigame prompt banks — falls back to the
 repo's committed `content/sample/`, so the pack only holds what a party actually customises.

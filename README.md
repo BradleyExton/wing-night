@@ -167,7 +167,7 @@ Display: http://localhost:5173/display
 # 🌐 Guest Portal (pre-party, wingnight.tv)
 
 Before the night, guests sign in on wingnight.tv with a personal link,
-paint their head and vote (`SPEC.md` § Before the party). It is a separate
+paint their head and pick their team (`SPEC.md` § Before the party). It is a separate
 deployable — the party never talks to it.
 
     pnpm teaser:dev          # wrangler dev (:8787, fake painter, logged mail) + teaser Vite (:5173)
@@ -185,9 +185,9 @@ To bring the guests into the night pack, one way:
     pnpm pack:pull             # write players.json + heads into ~/wing-night-content
 
 It needs `WINGNIGHT_ADMIN_API_TOKEN` (the Worker's `ADMIN_API_TOKEN`) in
-`<pack>/.env`. It copies names and kept heads only — never votes, wishes
-or emails — adds new guests unseated, and never renames or removes a
-player.
+`<pack>/.env`. It copies names, kept heads and picked teams only — never
+emails — adds new guests unseated (a pick seats them, and wins over the
+pack's seating), and never renames or removes a player.
 
 ------------------------------------------------------------------------
 

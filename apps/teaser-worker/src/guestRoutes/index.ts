@@ -1,46 +1,25 @@
-// What a signed-in guest can read and write: themself, the names of everyone else (for the
-// teammate-wish picker), their own vote, and how far along their head is (src/avatarRoutes).
+// What a signed-in guest can read and write: themself, the night's teams and their own pick of
+// one, any guest's kept head (the heads on a team tile), and how far along their own head is
+// (src/avatarRoutes).
 import {
   PORTAL_API_ROUTES,
-  isGuestVote,
-  type GuestVote,
-  type PortalGuest,
-  type PortalMe
+  isTeamPickRequest,
+  resolveTeamSeatCap,
+  type PortalMe,
+  type PortalTeamPicked
 } from "@wingnight/shared/guestPortal";
 
-import { readAvatarStatus } from "../avatarStore/index.ts";
+import { readAvatarStatus, serveHead } from "../avatarStore/index.ts";
 import { errorResponse, jsonResponse, readJsonBody } from "../http/index.ts";
+import { findRosterTeam, readRoster } from "../roster/index.ts";
 import type { GuestContext, PortalRoute } from "../routeContext/index.ts";
-
-type VoteRow = {
-  genre_ranking: string;
-  teammate_wishes: string;
-  team_format: string;
-};
-
-// A stored vote read back through the same guard that let it in, so a row the schema has since
-// outgrown reads as no vote rather than a malformed one.
-export const parseVoteRow = (row: VoteRow, guestId: string): GuestVote | null => {
-  try {
-    const vote: unknown = {
-      genreRanking: JSON.parse(row.genre_ranking),
-      teammateWishes: JSON.parse(row.teammate_wishes),
-      teamFormat: row.team_format
-    };
-
-    return isGuestVote(vote, guestId) ? vote : null;
-  } catch {
-    return null;
-  }
-};
+import { readGuestCount, readPicksClosed, readTeamList, readTeamPick } from "../teamPicks/index.ts";
 
 const readMe = async ({ deps, session }: GuestContext): Promise<Response> => {
-  const [avatar, voteRow] = await Promise.all([
+  const [avatar, team, picksClosed] = await Promise.all([
     readAvatarStatus(deps, session.guestId),
-    deps.db
-      .prepare("SELECT genre_ranking, teammate_wishes, team_format FROM votes WHERE guest_id = ?")
-      .bind(session.guestId)
-      .first<VoteRow>()
+    readTeamPick(deps, session.guestId),
+    readPicksClosed(deps)
   ]);
   const me: PortalMe = {
     guestId: session.guestId,
@@ -49,71 +28,88 @@ const readMe = async ({ deps, session }: GuestContext): Promise<Response> => {
     isAdmin: session.isAdmin,
     hasHead: avatar.headHash !== null,
     avatar,
-    vote: voteRow === null ? null : parseVoteRow(voteRow, session.guestId)
+    team,
+    picksClosed
   };
 
   return jsonResponse(me);
 };
 
-// Ids and names, and nothing else: no addresses, no wishes, no admin flags.
-const listGuests = async ({ deps }: GuestContext): Promise<Response> => {
-  const { results } = await deps.db
-    .prepare("SELECT guest_id, display_name FROM guests ORDER BY display_name COLLATE NOCASE, guest_id")
-    .all<{ guest_id: string; display_name: string }>();
-  const guests: PortalGuest[] = results.map((row) => ({ guestId: row.guest_id, displayName: row.display_name }));
+const listTeams = async ({ deps, url }: GuestContext): Promise<Response> => {
+  const roster = await readRoster(deps, url.origin);
 
-  return jsonResponse(guests);
+  return roster === null ? errorResponse("server_error") : jsonResponse(await readTeamList(deps, roster));
 };
 
-const saveVote = async ({ request, deps, session }: GuestContext): Promise<Response> => {
+// Tapping a tile is the save. The seat is taken in ONE conditional statement — the insert happens
+// only while the team's other members number fewer than the cap — so two guests racing for the
+// last seat cannot both get it: whichever D1 runs second finds the count at the cap and changes
+// nothing, which answers team_full. Re-tapping the team you are on is answered before any write:
+// a no-op success even when Brad has seated the team over the cap. The upsert never touches
+// outfits_json: the outfit built on another team is kept in the row (plan, decision 6).
+const pickTeam = async ({ request, url, deps, session }: GuestContext): Promise<Response> => {
   const body = await readJsonBody(request);
 
-  if (!isGuestVote(body, session.guestId)) {
+  if (!isTeamPickRequest(body)) {
     return errorResponse("bad_request");
   }
 
-  if (body.teammateWishes.length > 0) {
-    const placeholders = body.teammateWishes.map(() => "?").join(", ");
-    const { results } = await deps.db
-      .prepare(`SELECT guest_id FROM guests WHERE guest_id IN (${placeholders})`)
-      .bind(...body.teammateWishes)
-      .all<{ guest_id: string }>();
+  const roster = await readRoster(deps, url.origin);
 
-    if (results.length !== body.teammateWishes.length) {
-      return errorResponse("bad_request");
-    }
+  if (roster === null) {
+    return errorResponse("server_error");
   }
 
-  const vote: GuestVote = {
-    genreRanking: body.genreRanking,
-    teammateWishes: body.teammateWishes,
-    teamFormat: body.teamFormat
-  };
+  if (findRosterTeam(roster, body.teamName) === undefined) {
+    return errorResponse("bad_request");
+  }
 
-  await deps.db
+  if (await readPicksClosed(deps)) {
+    return errorResponse("picks_closed");
+  }
+
+  const current = await readTeamPick(deps, session.guestId);
+
+  if (current?.teamName === body.teamName) {
+    const unchanged: PortalTeamPicked = { team: current, teams: await readTeamList(deps, roster) };
+
+    return jsonResponse(unchanged);
+  }
+
+  const seatCap = resolveTeamSeatCap(await readGuestCount(deps), roster.teams.length);
+  const { meta } = await deps.db
     .prepare(
-      `INSERT INTO votes (guest_id, genre_ranking, teammate_wishes, team_format, updated_at)
-       VALUES (?, ?, ?, ?, ?)
-       ON CONFLICT (guest_id) DO UPDATE SET
-         genre_ranking = excluded.genre_ranking,
-         teammate_wishes = excluded.teammate_wishes,
-         team_format = excluded.team_format,
-         updated_at = excluded.updated_at`
+      `INSERT INTO team_picks (guest_id, team_name, outfits_json, updated_at)
+       SELECT ?, ?, '{}', ?
+       WHERE (SELECT COUNT(*) FROM team_picks WHERE team_name = ? AND guest_id != ?) < ?
+       ON CONFLICT (guest_id) DO UPDATE SET team_name = excluded.team_name, updated_at = excluded.updated_at`
     )
-    .bind(
-      session.guestId,
-      JSON.stringify(vote.genreRanking),
-      JSON.stringify(vote.teammateWishes),
-      vote.teamFormat,
-      deps.now()
-    )
+    .bind(session.guestId, body.teamName, deps.now(), body.teamName, session.guestId, seatCap)
     .run();
 
-  return jsonResponse(vote);
+  if (meta.changes === 0) {
+    return errorResponse("team_full");
+  }
+
+  const team = await readTeamPick(deps, session.guestId);
+
+  if (team === null) {
+    throw new Error(`team pick: ${session.guestId}'s row did not read back after the seat was taken`);
+  }
+
+  const picked: PortalTeamPicked = { team, teams: await readTeamList(deps, roster) };
+
+  return jsonResponse(picked);
+};
+
+// Any guest's kept head, for the heads on a team tile: the same bytes the TV shows on the night.
+const readGuestHead = async ({ params, deps }: GuestContext): Promise<Response> => {
+  return serveHead(deps, params.guestId ?? "");
 };
 
 export const GUEST_ROUTES: PortalRoute[] = [
   { method: "GET", pattern: PORTAL_API_ROUTES.me, access: "guest", handle: readMe },
-  { method: "GET", pattern: PORTAL_API_ROUTES.guests, access: "guest", handle: listGuests },
-  { method: "PUT", pattern: PORTAL_API_ROUTES.myVote, access: "guest", handle: saveVote }
+  { method: "GET", pattern: `${PORTAL_API_ROUTES.guests}/:guestId/avatar`, access: "guest", handle: readGuestHead },
+  { method: "GET", pattern: PORTAL_API_ROUTES.teams, access: "guest", handle: listTeams },
+  { method: "PUT", pattern: PORTAL_API_ROUTES.myTeam, access: "guest", handle: pickTeam }
 ];

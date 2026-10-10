@@ -7,8 +7,10 @@
 // portal id an earlier pull remembered, else by name slug; added unseated otherwise; never renamed
 // or removed); each kept head lands at
 // local/assets/avatars/<slug>-<hash>.png with the player's avatarSrc pointed at it, and is
-// recorded in `pnpm import:avatars`'s manifest as an online head that tool leaves alone. Votes
-// and teammate wishes never come down — the export does not carry them.
+// recorded in `pnpm import:avatars`'s manifest as an online head that tool leaves alone. A
+// guest's picked team comes down onto their player's `team`, replacing the pack's seating for
+// that player (a guest with no pick leaves it alone). Nothing else comes down — the export does
+// not carry it.
 //
 // Needs WINGNIGHT_ADMIN_API_TOKEN, the Worker's ADMIN_API_TOKEN, which lives in the pack's .env
 // beside GEMINI_API_KEY (an exported one in the shell wins). WN_CONTENT_ROOT_DIR points the run

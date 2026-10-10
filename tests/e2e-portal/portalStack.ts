@@ -32,16 +32,23 @@ export type SeededLinks = {
   admin: string;
   guest: string;
   guestWithoutEmail: string;
+  // The roster the stack served the Worker: its team names, in seating order.
+  teams: string[];
 };
 
 // The personal links apps/teaser-worker/scripts/e2ePortalStack.ts minted, as paths on the page's
-// origin (`/s/<token>`).
+// origin (`/s/<token>`), and the teams it seeded.
 export const readSeededLinks = (): SeededLinks => {
   const { stateDir } = resolvePortalStack(process.env);
   const links = JSON.parse(readFileSync(join(stateDir, "links.json"), "utf8")) as SeededLinks;
   const toPath = (url: string): string => new URL(url).pathname;
 
-  return { admin: toPath(links.admin), guest: toPath(links.guest), guestWithoutEmail: toPath(links.guestWithoutEmail) };
+  return {
+    admin: toPath(links.admin),
+    guest: toPath(links.guest),
+    guestWithoutEmail: toPath(links.guestWithoutEmail),
+    teams: links.teams
+  };
 };
 
 // Where a spec saves the screenshots a person looks at: WN_E2E_PORTAL_SCREENSHOT_DIR when set,

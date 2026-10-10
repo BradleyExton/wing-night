@@ -31,26 +31,50 @@
 // guest their tries back, clearing any photo, with POST resolveAdminGuestAvatarResetRoute
 // → 200 AdminAvatarReset · 404 no such guest.
 //
+// The team pick (../teamPick has the types; docs/guest-portal-team-pick-plan.md the rules):
+//
+//   GET  teams          any session → 200 PortalTeamList: the roster's teams in seating order,
+//                       who picked each, the shared seat cap and whether picks are closed
+//   PUT  myTeam         body { teamName } (isTeamPickRequest) → 200 PortalTeamPicked
+//                       · 400 bad_request (a name the roster does not have) · 409 team_full
+//                       · 409 picks_closed. Tapping a tile is the save: no confirm.
+//   GET  resolveGuestAvatarRoute(guestId)  another guest's kept head as image/png, for the heads
+//                       on a team tile → 404 until there is one (the same bytes the TV shows)
+//   GET  adminTeams     → 200 AdminTeamBoard: the list plus the unseated
+//   POST resolveAdminGuestTeamRoute(guestId)  body { teamName | null } (isAdminTeamSeatRequest):
+//                       reseat or unseat, the cap and the switch both ignored → 200 AdminTeamBoard
+//                       · 400 a name the roster does not have · 404 no such guest
+//   PUT  adminPicks     body { closed } (isAdminPicksRequest) → 200 AdminPicksState
+//
 // GET adminExport is what the pack pull copies into the night pack (../export has the shape).
 export const PORTAL_API_ROUTES = {
   me: "/api/me",
-  myVote: "/api/me/vote",
+  myTeam: "/api/me/team",
   myAvatar: "/api/me/avatar",
   myAvatarPhoto: "/api/me/avatar/photo",
   myAvatarGenerate: "/api/me/avatar/generate",
   myAvatarAccept: "/api/me/avatar/accept",
+  // Only the per-guest head hangs off it (resolveGuestAvatarRoute); there is no list.
   guests: "/api/guests",
+  teams: "/api/teams",
   emailLink: "/api/auth/email-link",
   signOut: "/api/auth/sign-out",
   adminGuests: "/api/admin/guests",
   adminInviteAll: "/api/admin/invites",
-  adminVotes: "/api/admin/votes",
+  adminTeams: "/api/admin/teams",
+  adminPicks: "/api/admin/picks",
   adminStyleReference: "/api/admin/style-reference",
   adminExport: "/api/admin/export"
 } as const;
 
+export const resolveGuestAvatarRoute = (guestId: string): string =>
+  `${PORTAL_API_ROUTES.guests}/${encodeURIComponent(guestId)}/avatar`;
+
 export const resolveAdminGuestRoute = (guestId: string): string =>
   `${PORTAL_API_ROUTES.adminGuests}/${encodeURIComponent(guestId)}`;
+
+export const resolveAdminGuestTeamRoute = (guestId: string): string =>
+  `${resolveAdminGuestRoute(guestId)}/team`;
 
 export const resolveAdminGuestInviteRoute = (guestId: string): string =>
   `${resolveAdminGuestRoute(guestId)}/invite`;

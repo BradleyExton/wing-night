@@ -6,7 +6,7 @@ import { PortalShell } from "../PortalShell";
 import { TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
 import { AdminGuestList } from "./AdminGuestList";
 import { AdminHeadGallery } from "./AdminHeadGallery";
-import { AdminVoteSummary } from "./AdminVoteSummary";
+import { AdminTeamBoard } from "./AdminTeamBoard";
 import { portalAdminCopy } from "./copy";
 import { useAdminData } from "./useAdminData";
 import * as styles from "./styles";
@@ -55,7 +55,7 @@ export const PortalAdmin = (): JSX.Element => {
       <div className={styles.cards}>
         <AdminGuestList guests={data.guests} onChanged={reload} />
         <AdminHeadGallery guests={data.guests} onChanged={reload} />
-        <AdminVoteSummary summary={data.votes} />
+        <AdminTeamBoard board={data.board} onChanged={reload} />
       </div>
     </PortalShell>
   );

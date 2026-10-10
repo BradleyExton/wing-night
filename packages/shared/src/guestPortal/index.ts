@@ -1,9 +1,9 @@
-// The guest portal's contract: wingnight.tv's pre-party sign-in, avatar and vote API, served by
-// the teaser Worker (apps/teaser-worker) and read by the teaser's pages. Nothing on the night
+// The guest portal's contract: wingnight.tv's pre-party sign-in, avatar and team-pick API, served
+// by the teaser Worker (apps/teaser-worker) and read by the teaser's pages. Nothing on the night
 // depends on it — the party stays on the LAN, and a pull copies what it needs into the pack.
 import { AVATAR_ATTEMPT_ID_PARAM, type PortalAvatarStatus } from "./avatar/index.js";
 import { PORTAL_API_ROUTES } from "./routes/index.js";
-import type { GuestVote, PortalGenre, TeamFormat } from "./vote/index.js";
+import type { TeamPick } from "./teamPick/index.js";
 
 export {
   AVATAR_ATTEMPT_ID_HEADER,
@@ -30,15 +30,24 @@ export {
 } from "./avatar/index.js";
 
 export {
-  PORTAL_GENRES,
-  TEAM_FORMATS,
-  TEAMMATE_WISHES_MAX,
-  isGuestVote,
-  resolveGenreBordaPoints,
-  type GuestVote,
-  type PortalGenre,
-  type TeamFormat
-} from "./vote/index.js";
+  isAdminPicksRequest,
+  isAdminTeamSeatRequest,
+  isTeamPick,
+  isTeamPickRequest,
+  resolveTeamSeatCap,
+  resolveThemeTeam,
+  type AdminPicksRequest,
+  type AdminPicksState,
+  type AdminTeamBoard,
+  type AdminTeamSeatRequest,
+  type OutfitDraft,
+  type PortalTeam,
+  type PortalTeamList,
+  type PortalTeamMember,
+  type PortalTeamPicked,
+  type TeamPick,
+  type TeamPickRequest
+} from "./teamPick/index.js";
 export {
   isAdminAvatarReset,
   isAdminGuestList,
@@ -46,13 +55,14 @@ export {
   isAdminInviteAllResult,
   isAdminInviteResult,
   isAdminMintedLink,
+  isAdminPicksState,
   isAdminStyleReference,
-  isAdminVoteSummary,
+  isAdminTeamBoard,
   isPortalAvatarStatus,
   isPortalErrorCode,
-  isPortalGuest,
-  isPortalGuestList,
   isPortalMe,
+  isPortalTeamList,
+  isPortalTeamPicked,
   readPortalErrorCode
 } from "./responses/index.js";
 export {
@@ -81,7 +91,9 @@ export {
   resolveAdminGuestInviteRoute,
   resolveAdminGuestLinkRoute,
   resolveAdminGuestRoute,
-  resolveAdminGuestSignOutRoute
+  resolveAdminGuestSignOutRoute,
+  resolveAdminGuestTeamRoute,
+  resolveGuestAvatarRoute
 } from "./routes/index.js";
 export { isAdminGuestExportList, type AdminGuestExport, type AdminGuestExportHead } from "./export/index.js";
 
@@ -104,6 +116,9 @@ export const PORTAL_ERROR_CODES = [
   "painter_failed",
   "too_large",
   "unsupported_media_type",
+  // PUT myTeam: every seat on that team is taken (resolveTeamSeatCap), or Brad has closed picks.
+  "team_full",
+  "picks_closed",
   "server_error"
 ] as const;
 export type PortalErrorCode = (typeof PORTAL_ERROR_CODES)[number];
@@ -122,13 +137,11 @@ export type PortalMe = {
   isAdmin: boolean;
   hasHead: boolean;
   avatar: PortalAvatarStatus;
-  vote: GuestVote | null;
-};
-
-// GET /api/guests: the teammate-wish picker's list, and deliberately nothing more.
-export type PortalGuest = {
-  guestId: string;
-  displayName: string;
+  // The guest's pick, or null before one. A pick naming a team GET teams does not list is
+  // orphaned (the pack renamed the team): /me asks them to pick again.
+  team: TeamPick | null;
+  // While true, PUT myTeam refuses with picks_closed and /me's tiles are inert.
+  picksClosed: boolean;
 };
 
 // The admin's guest list.
@@ -148,7 +161,9 @@ export type AdminGuestStatus = {
   isStyleReference: boolean;
   // Tries the guest has left at painting a head (PortalAvatarStatus.triesLeft).
   triesLeft: number;
-  hasVoted: boolean;
+  // The picked team's roster name; null before a pick, and null when the pick names a team the
+  // roster no longer has (so this row and the team board never disagree about who is seated).
+  team: string | null;
 };
 
 // A freshly minted personal link, shown once: only its hash is kept.
@@ -175,24 +190,4 @@ export type AdminInviteAllResult = {
   invited: string[];
   failed: string[];
   remaining: number;
-};
-
-export type VoteGenreTally = {
-  genre: PortalGenre;
-  points: number;
-  firstChoices: number;
-};
-
-export type VoteMutualWish = {
-  guests: [PortalGuest, PortalGuest];
-};
-
-export type AdminVoteSummary = {
-  voterCount: number;
-  // Highest Borda total first (resolveGenreBordaPoints).
-  genreTallies: VoteGenreTally[];
-  // Pairs who each named the other.
-  mutualWishes: VoteMutualWish[];
-  formatTallies: Record<TeamFormat, number>;
-  notVoted: PortalGuest[];
 };

@@ -6,6 +6,7 @@ import { handleRequest } from "../../app/index.ts";
 import type { PortalBucket, PortalDeps, RateLimiter } from "../../deps/index.ts";
 import { createFakeHeadPainter, type HeadPainter } from "../../headPainter/index.ts";
 import { createRecordingMailTransport } from "../../mail/index.ts";
+import { ROSTER_PATH } from "../../roster/index.ts";
 import { hashToken, mintToken } from "../../tokens/index.ts";
 import { createSqliteDb, type SqliteDb } from "../sqliteDb/index.ts";
 
@@ -114,18 +115,56 @@ const createMemoryBucket = (): MemoryBucket => {
 
 export type TestPortal = ReturnType<typeof createTestPortal>;
 
+// The roster the fake assets serve unless a test brings its own: three teams, as
+// tools/build-teaser writes them, with nobody seated (the portal seats by pick, not by player).
+export const TEST_ROSTER = {
+  players: [],
+  teams: [
+    { id: "team-1", name: "Iron Hens", playerIds: [], totalScore: 0, genre: "Metal", color: "teamB" },
+    { id: "team-2", name: "Mirror Balls", playerIds: [], totalScore: 0, genre: "Disco" },
+    { id: "team-3", name: "Barn Burners", playerIds: [], totalScore: 0, genre: "Country" }
+  ]
+};
+
+export const TEST_TEAM_NAMES = TEST_ROSTER.teams.map((team) => team.name);
+
+// The static assets as the Worker sees them: the roster at its path, the site's page anywhere
+// else. `roster` null is a deploy that shipped none (a 404, as an empty assets directory
+// answers); any other value is served as JSON, well-formed or not.
+const createFakeAssets = (roster: unknown): PortalDeps["assets"] & { rosterReads: number } => {
+  const assets = {
+    rosterReads: 0,
+    fetch: async (request: Request): Promise<Response> => {
+      if (new URL(request.url).pathname !== ROSTER_PATH) {
+        return new Response("<!doctype html><title>teaser</title>", { status: 200 });
+      }
+
+      assets.rosterReads += 1;
+
+      return roster === null
+        ? new Response("not found", { status: 404 })
+        : new Response(JSON.stringify(roster), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
+  };
+
+  return assets;
+};
+
 export const createTestPortal = (
   options: {
     ipLimit?: number;
     adminApiToken?: string | null;
     publicOrigin?: string | null;
     gemini?: HeadPainter;
+    // What the assets serve at /teaser-roster.json: TEST_ROSTER unless given, null for none.
+    roster?: unknown;
   } = {}
 ) => {
   const db: SqliteDb = createSqliteDb();
   const bucket = createMemoryBucket();
   const mail = createRecordingMailTransport();
   const limiter = createCountingLimiter(options.ipLimit ?? 5);
+  const assets = createFakeAssets(options.roster === undefined ? TEST_ROSTER : options.roster);
   const deferred: Promise<unknown>[] = [];
   const errors: string[] = [];
   const clock = { now: START_MS };
@@ -135,7 +174,7 @@ export const createTestPortal = (
     mail,
     gemini: options.gemini ?? createFakeHeadPainter(),
     signInLimiter: limiter,
-    assets: { fetch: async () => new Response("<!doctype html><title>teaser</title>", { status: 200 }) },
+    assets,
     publicOrigin: options.publicOrigin ?? null,
     adminApiToken: options.adminApiToken === undefined ? ADMIN_API_TOKEN : options.adminApiToken,
     now: () => clock.now,
@@ -210,7 +249,7 @@ export const createTestPortal = (
     return `wn_session=${token}`;
   };
 
-  return { db, bucket, deps, mail, limiter, clock, errors, request, settle, addGuest, signInAs };
+  return { db, bucket, assets, deps, mail, limiter, clock, errors, request, settle, addGuest, signInAs };
 };
 
 // The `/s/<token>` path out of a sign-in email or minted link.

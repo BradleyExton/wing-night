@@ -24,10 +24,16 @@ const PULLED_ROB: AvatarManifest = {
 
 const ONLY_OLD_ROB_ON_DISK = (file: string): boolean => file === "rob-1a2b3c4d.png";
 
-const guest = (guestId: string, displayName: string, sha256: string | null = null): AdminGuestExport => ({
+const guest = (
+  guestId: string,
+  displayName: string,
+  sha256: string | null = null,
+  team: string | null = null
+): AdminGuestExport => ({
   guestId,
   displayName,
-  head: sha256 === null ? null : { sha256, contentType: "image/png", bytes: 100 }
+  head: sha256 === null ? null : { sha256, contentType: "image/png", bytes: 100 },
+  team
 });
 
 const plan = (
@@ -160,6 +166,7 @@ test("does describe added players, avatar changes and files with sizes when ther
     "  + Kim",
     "Avatar changes (1):",
     "  Rob: avatars/rob.png -> avatars/rob-1a2b3c4d.png",
+    "Team changes (0):",
     "Files to write (3):",
     "  local/assets/avatars/rob-1a2b3c4d.png (100 bytes)",
     "  local/avatar-sources/manifest.json",
@@ -194,6 +201,73 @@ test("does refuse when a new guest's name matches the player another guest alrea
     () => plan(players, [guest("g_rob", "Robert"), guest("g_new", "rob")], PULLED_ROB),
     /Guests "Robert", "rob" all match the player "Rob"; rename the ones who are not them on wingnight\.tv/
   );
+});
+
+test("does write a pick onto a matched player's team in place of the one players.json had", () => {
+  const players = { players: [{ name: "Rob", team: "Metal", avatarSrc: "avatars/rob.png" }, { name: "Alex", team: "Metal" }] };
+  const result = plan(players, [guest("g_rob", "Rob", null, "Disco")]);
+
+  assert.deepEqual(result.players.players, [
+    { name: "Rob", team: "Disco", avatarSrc: "avatars/rob.png" },
+    { name: "Alex", team: "Metal" }
+  ]);
+  assert.deepEqual(result.teamChanges, [{ name: "Rob", from: "Metal", to: "Disco" }]);
+  assert.equal(result.playersChanged, true);
+  assert.deepEqual(listPlannedWrites(result), ["local/avatar-sources/manifest.json", "local/players.json"]);
+  assert.equal(players.players[0]?.team, "Metal", "the input is not mutated");
+});
+
+test("does seat an added player on their picked team when a new guest has picked", () => {
+  const result = plan({ players: [{ name: "Alex" }] }, [guest("g_kim", "Kim", KIM_HASH, "Pop")]);
+
+  assert.deepEqual(result.players.players, [{ name: "Alex" }, { name: "Kim", team: "Pop", avatarSrc: "avatars/kim-ffee0011.png" }]);
+  assert.deepEqual(result.addedPlayers, ["Kim"]);
+  assert.deepEqual(result.teamChanges, [{ name: "Kim", from: null, to: "Pop" }]);
+});
+
+test("does leave a player's team exactly as it is when their guest has not picked", () => {
+  const players = { players: [{ name: "Rob", team: "Metal" }, { name: "Alex" }] };
+  const result = plan(players, [guest("g_rob", "Rob"), guest("g_alex", "Alex")]);
+
+  assert.deepEqual(result.players.players, [{ name: "Rob", team: "Metal" }, { name: "Alex" }]);
+  assert.deepEqual(result.teamChanges, []);
+  assert.equal(result.playersChanged, false);
+  assert.deepEqual(listPlannedWrites(result), ["local/avatar-sources/manifest.json"]);
+});
+
+test("does plan no team change when the pick is the team the player already has", () => {
+  const result = plan({ players: [{ name: "Rob", team: "Metal" }] }, [guest("g_rob", "Rob", null, "Metal")]);
+
+  assert.deepEqual(result.teamChanges, []);
+  assert.equal(result.playersChanged, false);
+});
+
+test("does write the picked name as the export sent it without reading teams.json", () => {
+  // The export already drops a pick whose team the roster no longer has (an orphan exports as
+  // null), so the pull trusts the name: a second check here would need teams.json, which it
+  // never reads.
+  const result = plan({ players: [{ name: "Rob", team: "Metal" }] }, [guest("g_rob", "Rob", null, "Mirror Balls")]);
+
+  assert.deepEqual(result.players.players, [{ name: "Rob", team: "Mirror Balls" }]);
+  assert.deepEqual(result.teamChanges, [{ name: "Rob", from: "Metal", to: "Mirror Balls" }]);
+});
+
+test("does list team changes in the dry-run description when picks land", () => {
+  const players = { players: [{ name: "Rob", team: "Metal" }, { name: "Alex" }] };
+  const result = plan(players, [guest("g_rob", "Rob", null, "Disco"), guest("g_alex", "Alex", null, "Metal"), guest("g_kim", "Kim", null, "Pop")]);
+
+  assert.deepEqual(describePlan(result), [
+    "Players to add (1):",
+    "  + Kim",
+    "Avatar changes (0):",
+    "Team changes (3):",
+    "  Rob: Metal -> Disco",
+    "  Alex: (unseated) -> Metal",
+    "  Kim: (unseated) -> Pop",
+    "Files to write (2):",
+    "  local/avatar-sources/manifest.json",
+    "  local/players.json"
+  ]);
 });
 
 test("does match an accented guest to a plain-spelled player when the names fold together", () => {

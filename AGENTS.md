@@ -55,7 +55,9 @@ Run:
 - Do not duplicate state types in client or server.
 - The guest portal Worker (`apps/teaser-worker`) is a separate deployable on wingnight.tv, not part
   of the party app: its handlers are pure over injected deps (`src/deps`; tests run them on
-  node:sqlite with the real migrations and in-memory fakes), and its CPU budget (Workers Free,
+  node:sqlite with the real migrations and in-memory fakes — the one per-isolate memo is the
+  parsed teaser roster in `src/roster`, keyed on the ASSETS binding and never holding a failed
+  read), and its CPU budget (Workers Free,
   10 ms a request) forbids image work in the Worker — the browser keys, crops and re-encodes, and
   the Worker only streams and hashes bytes (to Gemini, R2 and back).
 
@@ -316,9 +318,9 @@ Prefer `type` over `interface` unless declaration merging is required.
   never by interpolating the route. Real assets do not live in the client's `public/` directory —
   the client and server are separate origins, so a root-relative asset URL 404s on the TV.
 - `pnpm pack:pull` (`tools/pull-guests`) is the only path from the guest portal into the pack,
-  and it is one way: it writes guests' names into `players.json` and their kept heads into
-  `assets/avatars/`, atomically and backed up, and never renames or removes a player. Nothing on
-  the night reads the portal.
+  and it is one way: it writes guests' names and picked teams into `players.json` and their kept
+  heads into `assets/avatars/`, atomically and backed up, and never renames or removes a player.
+  Nothing on the night reads the portal.
 - All content must be validated before game start.
 - Invalid content blocks start with clear error.
 - Never scatter direct JSON loads across components.

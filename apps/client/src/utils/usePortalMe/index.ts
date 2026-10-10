@@ -11,7 +11,7 @@ export type PortalMeState =
 
 export type PortalMeHandle = {
   state: PortalMeState;
-  // A section that changed the guest (a head accepted, a vote saved) hands back the new copy.
+  // A section that changed the guest (a head accepted, a team picked) hands back the new copy.
   update: (next: (me: PortalMe) => PortalMe) => void;
   signOut: () => Promise<void>;
 };

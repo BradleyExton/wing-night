@@ -3,9 +3,12 @@
 //
 // A fresh local D1 and R2 in a throwaway directory the config names — never this package's
 // `.wrangler/state`, which is the developer's own `teaser:dev` data — seeded with an admin (Brad),
-// a guest with an address (Rob) and one without (Sam). Rob's and Brad's personal links are written
-// to `links.json` there for the specs to read. Then `wrangler dev` on that state, with mail logged
-// and the fake painter, until Playwright stops it.
+// a guest with an address (Rob) and one without (Sam), and a three-team roster served as the
+// Worker's static assets (apps/client/dist-teaser is empty here, Vite serves the pages, so the
+// Worker would otherwise find no teams; three guests over three teams makes the seat cap one,
+// which the specs rely on). The personal links and the team names, in seating order, are written
+// to `links.json` there for the specs to read. Then `wrangler dev` on that state, with mail
+// logged and the fake painter, until Playwright stops it.
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
@@ -63,10 +66,27 @@ const seedGuestSql = async (displayName: string, email: string | null, now: numb
   return [sql, guest];
 };
 
+// The roster as tools/build-teaser writes it (planTeaserRoster), with nobody seated by player:
+// the portal seats by pick.
+const SEEDED_TEAMS = [
+  { name: "Iron Hens", genre: "Metal" },
+  { name: "Mirror Balls", genre: "Disco" },
+  { name: "Barn Burners", genre: "Country" }
+];
+const roster = {
+  players: [],
+  teams: SEEDED_TEAMS.map((team, index) => ({ id: `team-${index + 1}`, ...team, playerIds: [], totalScore: 0 }))
+};
+
 rmSync(stateDir, { recursive: true, force: true });
 mkdirSync(stateDir, { recursive: true });
-// wrangler dev refuses to boot without its assets directory; Vite serves the pages here.
-mkdirSync(join(PACKAGE_DIR, "../client/dist-teaser"), { recursive: true });
+
+// The Worker's static assets for this run: only the roster, in a directory `wrangler dev
+// --assets` is pointed at in place of wrangler.jsonc's dist-teaser (Vite serves the pages here).
+const assetsDir = join(stateDir, "assets");
+
+mkdirSync(assetsDir, { recursive: true });
+writeFileSync(join(assetsDir, "teaser-roster.json"), `${JSON.stringify(roster, null, 2)}\n`);
 
 runWrangler(["d1", "migrations", "apply", DATABASE_NAME, "--local", "--persist-to", stateDir]);
 
@@ -98,7 +118,8 @@ writeFileSync(
   JSON.stringify({
     admin: resolveSignInUrl(clientOrigin, adminToken),
     guest: resolveSignInUrl(clientOrigin, rob.token),
-    guestWithoutEmail: resolveSignInUrl(clientOrigin, sam.token)
+    guestWithoutEmail: resolveSignInUrl(clientOrigin, sam.token),
+    teams: SEEDED_TEAMS.map((team) => team.name)
   })
 );
 
@@ -114,6 +135,8 @@ const wrangler = spawn(
     workerPort,
     "--persist-to",
     stateDir,
+    "--assets",
+    assetsDir,
     "--show-interactive-dev-session=false",
     "--var",
     "MAIL_TRANSPORT:log",

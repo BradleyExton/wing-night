@@ -3,8 +3,11 @@ import test from "node:test";
 
 import {
   isAdminGuestStatus,
-  isAdminVoteSummary,
+  isAdminPicksState,
+  isAdminTeamBoard,
   isPortalMe,
+  isPortalTeamList,
+  isPortalTeamPicked,
   readPortalErrorCode
 } from "./index.js";
 
@@ -16,17 +19,19 @@ const me = {
   isAdmin: false,
   hasHead: false,
   avatar,
-  vote: { genreRanking: ["disco", "metal"], teammateWishes: ["g_ana"], teamFormat: "random_draw" }
+  team: { teamName: "Iron Hens", outfitsByGenre: {} },
+  picksClosed: false
 };
 
 test("does read a guest's own page when every field is the right shape", () => {
   assert.equal(isPortalMe(me), true);
-  assert.equal(isPortalMe({ ...me, vote: null, email: null }), true);
+  assert.equal(isPortalMe({ ...me, team: null, email: null }), true);
 });
 
-test("does refuse the guest's page when the avatar status or the vote is malformed", () => {
+test("does refuse the guest's page when the avatar status, the pick or the switch is malformed", () => {
   assert.equal(isPortalMe({ ...me, avatar: { ...avatar, triesLeft: -1 } }), false);
-  assert.equal(isPortalMe({ ...me, vote: { ...me.vote, teamFormat: "coin_toss" } }), false);
+  assert.equal(isPortalMe({ ...me, team: { teamName: "" } }), false);
+  assert.equal(isPortalMe({ ...me, picksClosed: "no" }), false);
   assert.equal(isPortalMe({ ...me, isAdmin: "no" }), false);
 });
 
@@ -44,28 +49,43 @@ test("does read an admin guest row when its timestamps are numbers or null", () 
     headHash: "abc",
     isStyleReference: false,
     triesLeft: 4,
-    hasVoted: true
+    team: "Iron Hens"
   };
 
   assert.equal(isAdminGuestStatus(row), true);
+  assert.equal(isAdminGuestStatus({ ...row, team: null }), true);
   assert.equal(isAdminGuestStatus({ ...row, claimedAt: "yesterday" }), false);
+  assert.equal(isAdminGuestStatus({ ...row, team: undefined }), false);
 });
 
-test("does read a vote summary when every format has a tally and each wish is a pair", () => {
-  const summary = {
-    voterCount: 2,
-    genreTallies: [{ genre: "disco", points: 18, firstChoices: 2 }],
-    mutualWishes: [{ guests: [{ guestId: "g_a", displayName: "A" }, { guestId: "g_b", displayName: "B" }] }],
-    formatTallies: { host_assigns: 1, guests_pick: 0, random_draw: 1 },
-    notVoted: [{ guestId: "g_c", displayName: "C" }]
-  };
+const member = { guestId: "g_rob", displayName: "Rob", headHash: "a".repeat(64) };
+const teamList = {
+  teams: [
+    { id: "team-1", name: "Iron Hens", genre: "Metal", color: "teamB", members: [member] },
+    { id: "team-2", name: "Plain", members: [{ ...member, guestId: "g_sam", displayName: "Sam", headHash: null }] }
+  ],
+  seatCap: 2,
+  picksClosed: false
+};
 
-  assert.equal(isAdminVoteSummary(summary), true);
-  assert.equal(isAdminVoteSummary({ ...summary, formatTallies: { host_assigns: 1 } }), false);
-  assert.equal(
-    isAdminVoteSummary({ ...summary, mutualWishes: [{ guests: [{ guestId: "g_a", displayName: "A" }] }] }),
-    false
-  );
+test("does read the team list when each team has its members and the genre and colour are absent or sound", () => {
+  assert.equal(isPortalTeamList(teamList), true);
+  assert.equal(isPortalTeamList({ ...teamList, teams: [] }), true);
+  assert.equal(isPortalTeamList({ ...teamList, teams: [{ ...teamList.teams[0], color: "mauve" }] }), false);
+  assert.equal(isPortalTeamList({ ...teamList, teams: [{ ...teamList.teams[0], genre: null }] }), false);
+  assert.equal(isPortalTeamList({ ...teamList, teams: [{ ...teamList.teams[0], members: [{ guestId: "g" }] }] }), false);
+  assert.equal(isPortalTeamList({ ...teamList, seatCap: 1.5 }), false);
+  assert.equal(isPortalTeamList({ ...teamList, picksClosed: undefined }), false);
+});
+
+test("does read a pick's answer and the admin board as the list plus the pick or the unseated", () => {
+  assert.equal(isPortalTeamPicked({ team: { teamName: "Iron Hens", outfitsByGenre: {} }, teams: teamList }), true);
+  assert.equal(isPortalTeamPicked({ team: null, teams: teamList }), false);
+  assert.equal(isAdminTeamBoard({ ...teamList, unseated: [member] }), true);
+  assert.equal(isAdminTeamBoard({ ...teamList, unseated: [] }), true);
+  assert.equal(isAdminTeamBoard(teamList), false);
+  assert.equal(isAdminPicksState({ picksClosed: true }), true);
+  assert.equal(isAdminPicksState({ picksClosed: 1 }), false);
 });
 
 test("does name the error code when a failed body carries a known one", () => {

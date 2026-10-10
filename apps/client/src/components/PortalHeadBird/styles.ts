@@ -8,6 +8,11 @@ export const stageLarge = `${stage} h-[min(13rem,38svh)] pb-3`;
 
 export const stageSmall = `${stage} h-[5.5rem] pb-1`;
 
+// A bird in a row: no pool, no clipping box, so a team's members can overlap shoulder to shoulder.
+export const stageTiny = "relative flex h-[3rem] items-end justify-center";
+
 export const birdLarge = "block h-[min(11rem,32svh)]";
 
 export const birdSmall = "block h-[4.75rem]";
+
+export const birdTiny = "block h-[2.75rem]";

@@ -6,14 +6,16 @@ import type {
   AdminGuestStatus,
   AdminInviteAllResult,
   AdminMintedLink,
+  AdminPicksState,
   AdminStyleReference,
-  AdminVoteSummary
+  AdminTeamBoard
 } from "@wingnight/shared/guestPortal";
 
 import { STYLE_REFERENCE_KEY, resolveHeadKey } from "../avatarStore/index.ts";
 import { FAKE_HEAD_PNG_BASE64 } from "../headPainter/fakeHead.ts";
 import {
   ADMIN_API_TOKEN,
+  TEST_TEAM_NAMES,
   createTestPortal,
   readSessionCookie,
   readSignInPath,
@@ -30,11 +32,29 @@ const ADMIN_ROUTES: { method: string; path: string; body?: unknown }[] = [
   { method: "POST", path: "/api/admin/guests/g_rob/link" },
   { method: "POST", path: "/api/admin/guests/g_rob/sign-out" },
   { method: "POST", path: "/api/admin/invites" },
-  { method: "GET", path: "/api/admin/votes" },
+  { method: "GET", path: "/api/admin/teams" },
+  { method: "POST", path: "/api/admin/guests/g_rob/team", body: { teamName: "Iron Hens" } },
+  { method: "PUT", path: "/api/admin/picks", body: { closed: false } },
   { method: "GET", path: "/api/admin/export" }
 ];
 
 const BEARER = { Authorization: `Bearer ${ADMIN_API_TOKEN}` };
+const [IRON_HENS, MIRROR_BALLS, BARN_BURNERS] = TEST_TEAM_NAMES as [string, string, string];
+
+const pickTeam = async (portal: TestPortal, guestId: string, teamName: string): Promise<Response> =>
+  portal.request("PUT", "/api/me/team", { cookie: await portal.signInAs(guestId), body: { teamName } });
+
+const readBoard = async (portal: TestPortal): Promise<AdminTeamBoard> =>
+  (await (await portal.request("GET", "/api/admin/teams", { headers: BEARER })).json()) as AdminTeamBoard;
+
+const seatGuest = (portal: TestPortal, guestId: string, teamName: string | null): Promise<Response> =>
+  portal.request("POST", `/api/admin/guests/${guestId}/team`, { headers: BEARER, body: { teamName } });
+
+const readSeating = (board: AdminTeamBoard): Record<string, string[]> =>
+  Object.fromEntries([
+    ...board.teams.map((team) => [team.name, team.members.map((member) => member.guestId)]),
+    ["unseated", board.unseated.map((member) => member.guestId)]
+  ]);
 
 const portalWithGuests = (options?: Parameters<typeof createTestPortal>[0]): TestPortal => {
   const portal = createTestPortal(options);
@@ -102,14 +122,10 @@ test("does refuse every bearer when no admin token is configured", async () => {
   assert.equal(response.status, 403);
 });
 
-test("does list every guest's sign-in, head and vote status when the admin reads the guest list", async () => {
+test("does list every guest's sign-in, head and team status when the admin reads the guest list", async () => {
   const portal = portalWithGuests();
-  const robCookie = await portal.signInAs("g_rob");
 
-  await portal.request("PUT", "/api/me/vote", {
-    cookie: robCookie,
-    body: { genreRanking: ["pop"], teammateWishes: [], teamFormat: "guests_pick" }
-  });
+  await pickTeam(portal, "g_rob", MIRROR_BALLS);
 
   const guests = (await (
     await portal.request("GET", "/api/admin/guests", { headers: BEARER })
@@ -129,8 +145,51 @@ test("does list every guest's sign-in, head and vote status when the admin reads
     headHash: null,
     isStyleReference: false,
     triesLeft: 5,
-    hasVoted: true
+    team: MIRROR_BALLS
   });
+  assert.equal(guests.find((guest) => guest.guestId === "g_brad")?.team, null);
+});
+
+test("does read an orphaned pick as no team, as the board does, when the admin reads the guest list", async () => {
+  const portal = portalWithGuests();
+
+  await pickTeam(portal, "g_rob", IRON_HENS);
+  // Brad's pick names a team the pack has since renamed.
+  portal.db.raw
+    .prepare("INSERT INTO team_picks (guest_id, team_name, outfits_json, updated_at) VALUES ('g_brad', 'Gone Team', '{}', 1)")
+    .run();
+
+  const guests = (await (
+    await portal.request("GET", "/api/admin/guests", { headers: BEARER })
+  ).json()) as AdminGuestStatus[];
+
+  assert.deepEqual(
+    guests.map(({ guestId, team }) => ({ guestId, team })),
+    [
+      { guestId: "g_brad", team: null },
+      { guestId: "g_rob", team: IRON_HENS }
+    ]
+  );
+  assert.deepEqual(readSeating(await readBoard(portal)).unseated, ["g_brad"]);
+
+  const edited = (await (
+    await portal.request("PATCH", "/api/admin/guests/g_brad", { headers: BEARER, body: { displayName: "Bradley" } })
+  ).json()) as AdminGuestStatus;
+
+  assert.equal(edited.team, null);
+});
+
+test("does keep the stored team name on the guest list when the deploy shipped no roster", async () => {
+  const portal = portalWithGuests({ roster: null });
+
+  portal.db.raw
+    .prepare("INSERT INTO team_picks (guest_id, team_name, outfits_json, updated_at) VALUES ('g_rob', 'Gone Team', '{}', 1)")
+    .run();
+
+  const response = await portal.request("GET", "/api/admin/guests", { headers: BEARER });
+
+  assert.equal(response.status, 200);
+  assert.equal(((await response.json()) as AdminGuestStatus[]).find((guest) => guest.guestId === "g_rob")?.team, "Gone Team");
 });
 
 test("does refuse an address when another guest already has it, and otherwise add and edit guests", async () => {
@@ -253,26 +312,131 @@ test("does return a working link once when the admin mints one to text", async (
   assert.equal(((await me.json()) as { guestId: string }).guestId, "g_rob");
 });
 
-test("does pair mutual wishes and name non-voters when the admin reads the vote summary", async () => {
+test("does list each team's members and the unseated, orphaned picks included, when the admin reads the board", async () => {
   const portal = portalWithGuests();
 
-  portal.addGuest({ guestId: "g_ana", displayName: "Ana" });
+  portal.addGuest({ guestId: "g_ana", displayName: "ana" });
+  portal.addGuest({ guestId: "g_kim", displayName: "Kim" });
+  await pickTeam(portal, "g_rob", IRON_HENS);
+  await pickTeam(portal, "g_ana", BARN_BURNERS);
+  // Kim picked a team the pack has since renamed.
+  portal.db.raw
+    .prepare("INSERT INTO team_picks (guest_id, team_name, outfits_json, updated_at) VALUES ('g_kim', 'Gone Team', '{}', 1)")
+    .run();
 
-  const vote = async (guestId: string, body: unknown) =>
-    portal.request("PUT", "/api/me/vote", { cookie: await portal.signInAs(guestId), body });
+  const board = await readBoard(portal);
 
-  await vote("g_rob", { genreRanking: ["metal", "pop"], teammateWishes: ["g_ana"], teamFormat: "guests_pick" });
-  await vote("g_ana", { genreRanking: ["pop"], teammateWishes: ["g_rob", "g_brad"], teamFormat: "guests_pick" });
-
-  const summary = (await (await portal.request("GET", "/api/admin/votes", { headers: BEARER })).json()) as AdminVoteSummary;
-
-  assert.equal(summary.voterCount, 2);
-  assert.equal(summary.genreTallies[0]?.genre, "pop");
-  assert.deepEqual(summary.mutualWishes, [
-    { guests: [{ guestId: "g_ana", displayName: "Ana" }, { guestId: "g_rob", displayName: "Rob" }] }
+  assert.deepEqual(readSeating(board), {
+    [IRON_HENS]: ["g_rob"],
+    [MIRROR_BALLS]: [],
+    [BARN_BURNERS]: ["g_ana"],
+    unseated: ["g_brad", "g_kim"]
+  });
+  assert.deepEqual(board.unseated, [
+    { guestId: "g_brad", displayName: "Brad", headHash: null },
+    { guestId: "g_kim", displayName: "Kim", headHash: null }
   ]);
-  assert.equal(summary.formatTallies.guests_pick, 2);
-  assert.deepEqual(summary.notVoted, [{ guestId: "g_brad", displayName: "Brad" }]);
+  assert.equal(board.seatCap, 2, "four guests over three teams");
+  assert.equal(board.picksClosed, false);
+  assert.deepEqual(
+    board.teams.map(({ id, name, genre, color }) => ({ id, name, genre, color })),
+    [
+      { id: "team-1", name: IRON_HENS, genre: "Metal", color: "teamB" },
+      { id: "team-2", name: MIRROR_BALLS, genre: "Disco", color: undefined },
+      { id: "team-3", name: BARN_BURNERS, genre: "Country", color: undefined }
+    ]
+  );
+});
+
+test("does reseat and unseat a guest, over the cap and with picks closed, when the admin moves them", async () => {
+  const portal = portalWithGuests();
+
+  await pickTeam(portal, "g_rob", IRON_HENS);
+  await portal.request("PUT", "/api/admin/picks", { headers: BEARER, body: { closed: true } });
+
+  // The cap is one, Rob is on Iron Hens, picks are closed: Brad seats himself there anyway.
+  const seated = await seatGuest(portal, "g_brad", IRON_HENS);
+
+  assert.equal(seated.status, 200);
+  assert.deepEqual(readSeating((await seated.json()) as AdminTeamBoard), {
+    [IRON_HENS]: ["g_brad", "g_rob"],
+    [MIRROR_BALLS]: [],
+    [BARN_BURNERS]: [],
+    unseated: []
+  });
+
+  const moved = await seatGuest(portal, "g_rob", BARN_BURNERS);
+
+  assert.deepEqual(readSeating((await moved.json()) as AdminTeamBoard)[BARN_BURNERS], ["g_rob"]);
+
+  const unseated = await seatGuest(portal, "g_rob", null);
+
+  assert.equal(unseated.status, 200);
+  assert.deepEqual(readSeating((await unseated.json()) as AdminTeamBoard), {
+    [IRON_HENS]: ["g_brad"],
+    [MIRROR_BALLS]: [],
+    [BARN_BURNERS]: [],
+    unseated: ["g_rob"]
+  });
+  assert.equal(portal.db.raw.prepare("SELECT COUNT(*) AS n FROM team_picks WHERE guest_id = 'g_rob'").get()?.n, 0);
+});
+
+test("does keep the row's outfits when the admin moves a guest", async () => {
+  const portal = portalWithGuests();
+
+  await pickTeam(portal, "g_rob", IRON_HENS);
+  portal.db.raw.prepare("UPDATE team_picks SET outfits_json = '{\"metal\":{\"torso\":\"vest\"}}' WHERE guest_id = 'g_rob'").run();
+  await seatGuest(portal, "g_rob", MIRROR_BALLS);
+
+  assert.deepEqual(
+    { ...portal.db.raw.prepare("SELECT team_name, outfits_json FROM team_picks WHERE guest_id = 'g_rob'").get() },
+    { team_name: MIRROR_BALLS, outfits_json: '{"metal":{"torso":"vest"}}' }
+  );
+});
+
+test("does refuse the move when the guest is unknown, the team is not the roster's, or the body is not a seat", async () => {
+  const portal = portalWithGuests();
+
+  assert.equal((await seatGuest(portal, "g_nobody", IRON_HENS)).status, 404);
+  assert.equal((await seatGuest(portal, "g_rob", "Hens of Iron")).status, 400);
+  assert.equal((await seatGuest(portal, "g_rob", "")).status, 400);
+  assert.equal(
+    (await portal.request("POST", "/api/admin/guests/g_rob/team", { headers: BEARER, body: { team: IRON_HENS } })).status,
+    400
+  );
+  assert.equal(portal.db.raw.prepare("SELECT COUNT(*) AS n FROM team_picks").get()?.n, 0);
+});
+
+test("does close and reopen picks for every guest when the admin flips the switch", async () => {
+  const portal = portalWithGuests();
+  const robCookie = await portal.signInAs("g_rob");
+  const flip = async (closed: unknown) => portal.request("PUT", "/api/admin/picks", { headers: BEARER, body: { closed } });
+
+  const closed = await flip(true);
+
+  assert.equal(closed.status, 200);
+  assert.deepEqual((await closed.json()) as AdminPicksState, { picksClosed: true });
+  assert.equal((await readBoard(portal)).picksClosed, true);
+  assert.equal(
+    (await portal.request("PUT", "/api/me/team", { cookie: robCookie, body: { teamName: IRON_HENS } })).status,
+    409
+  );
+
+  assert.deepEqual((await (await flip(false)).json()) as AdminPicksState, { picksClosed: false });
+  assert.equal(
+    (await portal.request("PUT", "/api/me/team", { cookie: robCookie, body: { teamName: IRON_HENS } })).status,
+    200
+  );
+  assert.equal((await flip("yes")).status, 400);
+});
+
+test("does answer server_error on the board, the move and the export when the deploy shipped no roster", async () => {
+  const portal = portalWithGuests({ roster: null });
+
+  assert.equal((await portal.request("GET", "/api/admin/teams", { headers: BEARER })).status, 500);
+  assert.equal((await seatGuest(portal, "g_rob", IRON_HENS)).status, 500);
+  assert.equal((await portal.request("GET", "/api/admin/export", { headers: BEARER })).status, 500);
+  assert.equal((await portal.request("GET", "/api/admin/guests", { headers: BEARER })).status, 200);
 });
 
 test("does reach the guests behind the first batch when the first batch's mail keeps failing", async () => {
@@ -425,7 +589,7 @@ test("does let only an admin pick the style reference, and only from a guest wit
   );
 });
 
-test("does export only names and kept heads when the pack pull reads the guest list", async () => {
+test("does export only names, kept heads and picked teams when the pack pull reads the guest list", async () => {
   const portal = portalWithGuests();
 
   portal.addGuest({ guestId: "g_ana", displayName: "ana", email: "ana@example.com" });
@@ -434,10 +598,13 @@ test("does export only names and kept heads when the pack pull reads the guest l
   await giveHead(portal, "g_kim", "b".repeat(64));
   // Kim's try is recorded but the PNG never reached R2, so there is nothing to pull.
   await portal.bucket.delete(resolveHeadKey("g_kim"));
-  await portal.request("PUT", "/api/me/vote", {
-    cookie: await portal.signInAs("g_rob"),
-    body: { genreRanking: ["metal", "pop"], teammateWishes: ["g_ana"], teamFormat: "guests_pick" }
-  });
+  await pickTeam(portal, "g_rob", IRON_HENS);
+  portal.db.raw.prepare("UPDATE team_picks SET outfits_json = '{\"metal\":{\"torso\":\"vest\"}}' WHERE guest_id = 'g_rob'").run();
+  // Ana's pick names a team the pack has since renamed: the night server refuses to boot on a
+  // player whose team teams.json does not declare, so it must export as none.
+  portal.db.raw
+    .prepare("INSERT INTO team_picks (guest_id, team_name, outfits_json, updated_at) VALUES ('g_ana', 'Gone Team', '{}', 1)")
+    .run();
 
   const response = await portal.request("GET", "/api/admin/export", { origin: null, headers: BEARER });
   const text = await response.text();
@@ -445,12 +612,17 @@ test("does export only names and kept heads when the pack pull reads the guest l
 
   assert.equal(response.status, 200);
   assert.deepEqual(JSON.parse(text) as AdminGuestExport[], [
-    { guestId: "g_ana", displayName: "ana", head: null },
-    { guestId: "g_brad", displayName: "Brad", head: null },
-    { guestId: "g_kim", displayName: "Kim", head: null },
-    { guestId: "g_rob", displayName: "Rob", head: { sha256: "a".repeat(64), contentType: "image/png", bytes: headBytes } }
+    { guestId: "g_ana", displayName: "ana", head: null, team: null },
+    { guestId: "g_brad", displayName: "Brad", head: null, team: null },
+    { guestId: "g_kim", displayName: "Kim", head: null, team: null },
+    {
+      guestId: "g_rob",
+      displayName: "Rob",
+      head: { sha256: "a".repeat(64), contentType: "image/png", bytes: headBytes },
+      team: IRON_HENS
+    }
   ]);
-  assert.doesNotMatch(text, /@|metal|guests_pick|email|vote|wish/i);
+  assert.doesNotMatch(text, /@|metal|vest|outfit|email|gone team/i);
 
   const head = await portal.request("GET", "/api/admin/guests/g_rob/avatar", { origin: null, headers: BEARER });
 

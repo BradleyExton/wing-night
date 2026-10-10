@@ -6,7 +6,9 @@ import { readSeededLinks, resolveScreenshotPath } from "./portalStack.ts";
 
 // The guest portal against wrangler dev (local D1/R2, logged mail, the fake painter) through the
 // teaser's Vite proxy, on a phone. In order, because each step builds on the last: Rob makes his
-// head and votes, Rob is kept out of Brad's page, then Brad sees what Rob did and runs the list.
+// head and picks a team (and Sam finds it full), Rob is kept out of Brad's page, then Brad runs
+// the team board and the list. The stack seeds three guests and three teams, so every team has
+// exactly one seat (resolveTeamSeatCap) until Brad adds a fourth guest.
 test.describe.configure({ mode: "serial" });
 
 // Against the repo root, never `import.meta.url`: Playwright transpiles specs to CommonJS
@@ -18,6 +20,14 @@ const signIn = async (page: Page, linkPath: string): Promise<void> => {
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/me$/);
 };
+
+const teamTile = (page: Page, teamName: string) =>
+  page.locator(`[data-testid="team-tile"][data-team-name="${teamName}"]`);
+
+// The studio's big bird, with a kept head or still waiting for one: its stage says which team
+// colour it is painted in.
+const studioBird = (page: Page) =>
+  page.getByRole("img", { name: /^Your (head on your bird|bird, still waiting for a head)$/ });
 
 // The keyed head, read back off the page: some of it clear, some of it solid, and no solid
 // magenta left anywhere — the browser keyed what the painter sent.
@@ -44,8 +54,16 @@ const readHeadAlpha = (page: Page, href: string): Promise<{ clear: number; solid
     return counts;
   }, href);
 
-test("a guest signs in, paints and keeps a head, and saves a vote that survives a reload", async ({ page }, testInfo) => {
+test("a guest signs in, paints and keeps a head, and picks a team that repaints the bird and survives a reload", async ({
+  page,
+  browser
+}, testInfo) => {
   const links = readSeededLinks();
+  const [firstTeam, secondTeam] = links.teams;
+
+  if (firstTeam === undefined || secondTeam === undefined) {
+    throw new Error("The e2e stack seeded fewer than two teams.");
+  }
 
   await signIn(page, links.guest);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hey, Rob.");
@@ -75,7 +93,7 @@ test("a guest signs in, paints and keeps a head, and saves a vote that survives 
   await expect(previewBird).toBeVisible();
 
   await page.getByRole("button", { name: "Keep this one" }).click();
-  const keptBird = page.getByRole("img", { name: "Your head on your bird" });
+  const keptBird = studioBird(page);
   await expect(keptBird).toBeVisible();
   await expect(keptBird.locator("image")).toHaveAttribute("href", /^\/api\/me\/avatar\?v=[0-9a-f]{64}$/);
   await expect(page.getByText("Photo ready")).toHaveCount(0);
@@ -89,33 +107,67 @@ test("a guest signs in, paints and keeps a head, and saves a vote that survives 
   await expect(page.getByRole("button", { name: "Paint my head" })).toHaveCount(0);
   await expect(page.getByTestId("avatar-tries-left")).toHaveText("4 / 5");
 
-  await page.getByRole("button", { name: "Rank Metal" }).click();
-  await page.getByRole("button", { name: "Rank Disco" }).click();
-  await page.getByRole("button", { name: "Move Disco up" }).click();
-  await page.getByRole("button", { name: "Brad" }).click();
-  await page.getByLabel("A random draw on the TV").check();
-  await page.getByRole("button", { name: "Save my vote" }).click();
-  await expect(page.getByText("Saved. Change it any time before the night.")).toBeVisible();
+  // Sam opens his page BEFORE Rob picks, so his tiles still show the seat as open: the stale
+  // client the Worker has to refuse.
+  const samContext = await browser.newContext({ ...testInfo.project.use, viewport: { width: 390, height: 844 } });
+  const samPage = await samContext.newPage();
+  await signIn(samPage, links.guestWithoutEmail);
+  await expect(samPage.getByRole("heading", { level: 1 })).toHaveText("Hey, Sam.");
+  await expect(teamTile(samPage, firstTeam)).toBeEnabled();
+  await expect(teamTile(samPage, firstTeam).getByTestId("team-seats")).toContainText("0 of 1");
+
+  // No pick yet: the stock bird. Tapping a tile saves at once and repaints the bird above.
+  await expect(keptBird).toHaveAttribute("data-team-color", "none");
+  const firstTile = teamTile(page, firstTeam);
+  await firstTile.click();
+  await expect(firstTile).toHaveAttribute("aria-pressed", "true");
+  const teamColor = await firstTile.getAttribute("data-team-color");
+  expect(teamColor).not.toBeNull();
+  expect(teamColor).not.toBe("none");
+  await expect(keptBird).toHaveAttribute("data-team-color", teamColor ?? "");
+  await expect(firstTile.getByTestId("team-seats")).toContainText("1 of 1");
+  await expect(firstTile.locator('[data-testid="team-member"]')).toHaveCount(1);
 
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hey, Rob.");
-  const ranking = page.getByTestId("genre-ranking").locator("li");
-  await expect(ranking).toHaveCount(2);
-  await expect(ranking.nth(0)).toContainText("Disco");
-  await expect(ranking.nth(1)).toContainText("Metal");
-  await expect(page.getByRole("button", { name: "Brad" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByLabel("A random draw on the TV")).toBeChecked();
-  await expect(page.getByRole("img", { name: "Your head on your bird" })).toBeVisible();
+  await expect(teamTile(page, firstTeam)).toHaveAttribute("aria-pressed", "true");
+  await expect(studioBird(page)).toHaveAttribute("data-team-color", teamColor ?? "");
+  await expect(studioBird(page)).toBeVisible();
   await expect(page.getByTestId("avatar-tries-left")).toHaveText("4 / 5");
 
   await page.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, "portal-me-390x844.png"), fullPage: true });
-  await page.getByRole("button", { name: "Save my vote" }).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, "portal-me-vote-390x844.png") });
+  await teamTile(page, firstTeam).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, "portal-me-team-390x844.png") });
+
+  // Sam taps the seat Rob just took: the Worker refuses, the bird snaps back, the tile fills.
+  await teamTile(samPage, firstTeam).click();
+  await expect(samPage.getByRole("status").filter({ hasText: "That team just filled up." })).toBeVisible();
+  await expect(studioBird(samPage)).toHaveAttribute("data-team-color", "none");
+  await expect(teamTile(samPage, firstTeam)).toBeDisabled();
+  await expect(teamTile(samPage, firstTeam)).toContainText("Full");
+  await expect(teamTile(samPage, firstTeam)).not.toHaveAttribute("aria-pressed", "true");
+
+  // The refusal is the Worker's, not the tile's: a request straight past the dimmed tile fails the same way.
+  const refusal = await samPage.evaluate(async (teamName) => {
+    const response = await fetch("/api/me/team", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamName })
+    });
+
+    return { status: response.status, body: await response.json() };
+  }, firstTeam);
+  expect(refusal).toEqual({ status: 409, body: { error: "team_full" } });
+
+  await teamTile(samPage, secondTeam).click();
+  await expect(teamTile(samPage, secondTeam)).toHaveAttribute("aria-pressed", "true");
+  await expect(studioBird(samPage)).not.toHaveAttribute("data-team-color", "none");
+  await samContext.close();
 
   // Turned on its side, the bird never takes the whole first screen.
   await page.setViewportSize({ width: 844, height: 390 });
   await page.evaluate(() => window.scrollTo(0, 0));
-  const stage = await page.getByRole("img", { name: "Your head on your bird" }).boundingBox();
+  const stage = await studioBird(page).boundingBox();
   expect(stage?.height ?? 390).toBeLessThanOrEqual(390 * 0.4);
   await page.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, "portal-me-844x390.png") });
 });
@@ -140,11 +192,18 @@ test("a guest who is not an admin is refused the admin page and the admin API", 
   expect(refusals).toEqual({ list: 403, pick: 403, pickBody: { error: "forbidden" } });
 });
 
-test("the admin sees the guest's head and vote, adds a guest, mints a link and picks the style reference", async ({
+test("the admin runs the team board, closes picks, adds a guest, mints a link and picks the style reference", async ({
   page,
   browser
 }, testInfo) => {
-  await signIn(page, readSeededLinks().admin);
+  const links = readSeededLinks();
+  const [firstTeam, secondTeam, thirdTeam] = links.teams;
+
+  if (firstTeam === undefined || secondTeam === undefined || thirdTeam === undefined) {
+    throw new Error("The e2e stack seeded fewer than three teams.");
+  }
+
+  await signIn(page, links.admin);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hey, Brad.");
   await page.getByRole("link", { name: "Admin" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("The guest list.");
@@ -152,13 +211,49 @@ test("the admin sees the guest's head and vote, adds a guest, mints a link and p
   const robRow = page.locator('[data-testid="admin-guest-row"][data-guest-name="Rob"]');
   await expect(robRow).toContainText("Signed in");
   await expect(robRow).toContainText("Head");
-  await expect(robRow).toContainText("Voted");
+  await expect(robRow).toContainText(firstTeam);
 
-  await expect(page.locator('[data-genre="disco"]')).toHaveAttribute("data-points", "9");
-  await expect(page.locator('[data-genre="metal"]')).toHaveAttribute("data-points", "8");
-  await expect(page.locator('[data-format="random_draw"]')).toContainText("1");
-  await expect(page.getByTestId("admin-not-voted")).toHaveText("Brad, Sam");
+  // The board: Rob on the first team, Sam on the second, the third empty, Brad unseated.
+  const column = (teamName: string) => page.locator(`[data-testid="admin-team-column"][data-team-name="${teamName}"]`);
+  const member = (name: string) => page.locator(`[data-testid="admin-team-member"][data-guest-name="${name}"]`);
+  await expect(column(firstTeam).locator(member("Rob"))).toHaveCount(1);
+  await expect(column(secondTeam).locator(member("Sam"))).toHaveCount(1);
+  await expect(column(thirdTeam).locator('[data-testid="admin-team-member"]')).toHaveCount(0);
+  await expect(page.getByTestId("admin-unseated").locator(member("Brad"))).toHaveCount(1);
   await page.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, "portal-admin-390x844.png"), fullPage: true });
+
+  // Brad moves Rob onto the empty team; the cap never applies to him.
+  await page.getByLabel("Move Rob").selectOption({ label: thirdTeam });
+  await expect(column(thirdTeam).locator(member("Rob"))).toHaveCount(1);
+  await expect(column(firstTeam).locator(member("Rob"))).toHaveCount(0);
+  await expect(robRow).toContainText(thirdTeam);
+
+  // Closing picks: the switch flips, and Rob's tiles go inert on his phone while his pick shows.
+  const picksSwitch = page.getByRole("switch", { name: "Picks are open" });
+  await expect(picksSwitch).toHaveAttribute("aria-checked", "true");
+  await picksSwitch.click();
+  await expect(page.getByRole("switch", { name: "Picks are closed" })).toHaveAttribute("aria-checked", "false");
+
+  const robContext = await browser.newContext({ ...testInfo.project.use, viewport: { width: 390, height: 844 } });
+  const robPage = await robContext.newPage();
+  await signIn(robPage, links.guest);
+  await expect(robPage.getByText("Teams are set.")).toBeVisible();
+  await expect(teamTile(robPage, thirdTeam)).toHaveAttribute("aria-pressed", "true");
+  for (const teamName of links.teams) {
+    await expect(teamTile(robPage, teamName)).toBeDisabled();
+  }
+  const closedRefusal = await robPage.evaluate(async (teamName) => {
+    const response = await fetch("/api/me/team", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamName })
+    });
+
+    return { status: response.status, body: await response.json() };
+  }, firstTeam);
+  expect(closedRefusal).toEqual({ status: 409, body: { error: "picks_closed" } });
+  await robPage.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, "portal-me-closed-390x844.png"), fullPage: true });
+  await robContext.close();
 
   await page.getByRole("button", { name: "Add a guest" }).click();
   await page.getByLabel("Name").fill("Jess");

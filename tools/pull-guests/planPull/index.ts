@@ -8,6 +8,14 @@
 // their portal id — remembered in the manifest from the last pull, so a guest renamed on the
 // portal still lands on the same player — and otherwise by name slug (slugifyName, accents
 // folded). A guest neither finds is added under their portal name, unseated.
+//
+// The team is the one thing a guest's pick does rewrite: a picked team lands on the player's
+// `team` and wins over whatever players.json had (docs/guest-portal-team-pick-plan.md, decision
+// 5). A guest with no pick leaves the player's `team` exactly as it is, seated by hand or
+// unseated. The pick is written as the exact name the portal sent, with no look at teams.json:
+// the Worker's export only carries a pick that names a team its roster still has (a renamed team
+// orphans its picks, and an orphan exports as no pick), and the server refuses to boot on a
+// player seated on a team teams.json does not declare — so the name is trusted, not checked twice.
 import { slugifyName } from "../../../packages/avatar-head/src/index.ts";
 import type { AdminGuestExport } from "../../../packages/shared/src/guestPortal/export/index.ts";
 
@@ -60,6 +68,14 @@ export type AvatarChange = {
   to: string;
 };
 
+// A guest's pick landing on their player's `team`: `from` is what players.json had (null when the
+// player was unseated), `to` the picked team's name.
+export type TeamChange = {
+  name: string;
+  from: string | null;
+  to: string;
+};
+
 // A guest whose portal name no longer matches their player's: the player keeps theirs.
 export type NameNote = {
   name: string;
@@ -71,6 +87,7 @@ export type PullPlan = {
   manifest: AvatarManifest;
   addedPlayers: string[];
   avatarChanges: AvatarChange[];
+  teamChanges: TeamChange[];
   nameNotes: NameNote[];
   downloads: HeadDownload[];
   playersChanged: boolean;
@@ -215,6 +232,7 @@ export const planPull = ({
   const generated = { ...manifest.generated };
   const addedPlayers: string[] = [];
   const avatarChanges: AvatarChange[] = [];
+  const teamChanges: TeamChange[] = [];
   const nameNotes: NameNote[] = [];
   const downloads: HeadDownload[] = [];
   let playersChanged = false;
@@ -230,7 +248,7 @@ export const planPull = ({
       index = players.length - 1;
     }
 
-    const player = players[index] as PlayerRecord;
+    let player = players[index] as PlayerRecord;
     // The player's own slug, never the portal name's: it is `pnpm import:avatars`'s key too.
     const slug = slugifyName(player.name);
 
@@ -241,6 +259,14 @@ export const planPull = ({
     if (onlineGuests[guest.guestId] !== slug) {
       onlineGuests[guest.guestId] = slug;
       manifestChanged = true;
+    }
+
+    // A pick wins over the pack's seating; no pick leaves the seat as it is.
+    if (guest.team !== null && player.team !== guest.team) {
+      teamChanges.push({ name: player.name, from: typeof player.team === "string" ? player.team : null, to: guest.team });
+      player = { ...player, team: guest.team };
+      players[index] = player;
+      playersChanged = true;
     }
 
     // No head online leaves whatever head the player already has.
@@ -286,6 +312,7 @@ export const planPull = ({
     manifest: { ...manifest, generated, onlineGuests },
     addedPlayers,
     avatarChanges,
+    teamChanges,
     nameNotes,
     downloads,
     playersChanged,
@@ -322,6 +349,8 @@ export const describePlan = (plan: PullPlan): string[] => {
     ...plan.addedPlayers.map((name) => `  + ${name}`),
     `Avatar changes (${plan.avatarChanges.length}):`,
     ...plan.avatarChanges.map((change) => `  ${change.name}: ${change.from ?? "(none)"} -> ${change.to}`),
+    `Team changes (${plan.teamChanges.length}):`,
+    ...plan.teamChanges.map((change) => `  ${change.name}: ${change.from ?? "(unseated)"} -> ${change.to}`),
     `Files to write (${writes.length}):`,
     ...writes.map((write) => `  ${write}${sizeByWrite.get(write) ?? ""}`)
   ];

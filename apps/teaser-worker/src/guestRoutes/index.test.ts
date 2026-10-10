@@ -1,20 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { GuestVote, PortalGuest, PortalMe } from "@wingnight/shared/guestPortal";
+import type { PortalMe, PortalTeamList, PortalTeamPicked } from "@wingnight/shared/guestPortal";
 
-import { createTestPortal, type TestPortal } from "../testing/harness/index.ts";
+import { resolveHeadKey } from "../avatarStore/index.ts";
+import { FAKE_HEAD_PNG_BASE64 } from "../headPainter/fakeHead.ts";
+import { createTestPortal, TEST_TEAM_NAMES, type TestPortal } from "../testing/harness/index.ts";
 
 const GUEST_ROUTES = [
   ["GET", "/api/me"],
-  ["GET", "/api/guests"],
-  ["PUT", "/api/me/vote"]
+  ["GET", "/api/guests/g_ana/avatar"],
+  ["GET", "/api/teams"],
+  ["PUT", "/api/me/team"]
 ] as const;
 
-const VOTE: GuestVote = { genreRanking: ["disco", "metal"], teammateWishes: ["g_ana"], teamFormat: "random_draw" };
+const [IRON_HENS, MIRROR_BALLS, BARN_BURNERS] = TEST_TEAM_NAMES as [string, string, string];
 
-const portalWithGuests = (): TestPortal => {
-  const portal = createTestPortal();
+const portalWithGuests = (options?: Parameters<typeof createTestPortal>[0]): TestPortal => {
+  const portal = createTestPortal(options);
 
   portal.addGuest({ guestId: "g_rob", displayName: "Rob", email: "rob@example.com" });
   portal.addGuest({ guestId: "g_ana", displayName: "Ana", email: "ana@example.com", isAdmin: true });
@@ -22,11 +25,42 @@ const portalWithGuests = (): TestPortal => {
   return portal;
 };
 
+const pickTeam = (portal: TestPortal, cookie: string, teamName: unknown): Promise<Response> =>
+  portal.request("PUT", "/api/me/team", { cookie, body: { teamName } });
+
+const readMe = async (portal: TestPortal, cookie: string): Promise<PortalMe> =>
+  (await (await portal.request("GET", "/api/me", { cookie })).json()) as PortalMe;
+
+const readTeams = async (portal: TestPortal, cookie: string): Promise<PortalTeamList> =>
+  (await (await portal.request("GET", "/api/teams", { cookie })).json()) as PortalTeamList;
+
+// Spread because a node:sqlite row has no prototype, which deepEqual minds.
+const readPickRow = (portal: TestPortal, guestId: string): { team_name: string; outfits_json: string } | undefined => {
+  const row = portal.db.raw.prepare("SELECT team_name, outfits_json FROM team_picks WHERE guest_id = ?").get(guestId);
+
+  return row === undefined ? undefined : { team_name: String(row.team_name), outfits_json: String(row.outfits_json) };
+};
+
+// An accepted head, as the studio leaves one: the PNG in R2 and the accepted try in D1.
+const giveHead = async (portal: TestPortal, guestId: string, headHash: string): Promise<void> => {
+  await portal.bucket.put(
+    resolveHeadKey(guestId),
+    Uint8Array.from(atob(FAKE_HEAD_PNG_BASE64), (character) => character.charCodeAt(0)),
+    { httpMetadata: { contentType: "image/png" } }
+  );
+  portal.db.raw
+    .prepare(
+      `INSERT INTO avatar_attempts (attempt_id, guest_id, created_at, status, object_key, head_hash, accepted_at)
+       VALUES (?, ?, ?, 'painted', ?, ?, ?)`
+    )
+    .run(`a_${guestId}`, guestId, portal.clock.now, resolveHeadKey(guestId), headHash, portal.clock.now);
+};
+
 test("does answer 401 on every guest route when there is no session", async () => {
   const portal = portalWithGuests();
 
   for (const [method, path] of GUEST_ROUTES) {
-    const response = await portal.request(method, path, method === "PUT" ? { body: VOTE } : {});
+    const response = await portal.request(method, path, method === "PUT" ? { body: { teamName: IRON_HENS } } : {});
 
     assert.equal(response.status, 401, `${method} ${path}`);
     assert.deepEqual(await response.json(), { error: "unauthorized" });
@@ -40,7 +74,7 @@ test("does answer 401 on every guest route when the session has expired or is un
   portal.clock.now += 60_000;
 
   for (const [method, path] of GUEST_ROUTES) {
-    const options = method === "PUT" ? { body: VOTE } : {};
+    const options = method === "PUT" ? { body: { teamName: IRON_HENS } } : {};
 
     assert.equal((await portal.request(method, path, { ...options, cookie })).status, 401, `${method} ${path}`);
     assert.equal(
@@ -54,75 +88,268 @@ test("does answer 401 on every guest route when the session has expired or is un
 test("does describe the signed-in guest, own address included, when they read /api/me", async () => {
   const portal = portalWithGuests();
   const cookie = await portal.signInAs("g_rob");
-  const me = (await (await portal.request("GET", "/api/me", { cookie })).json()) as PortalMe;
 
-  assert.deepEqual(me, {
+  assert.deepEqual(await readMe(portal, cookie), {
     guestId: "g_rob",
     displayName: "Rob",
     email: "rob@example.com",
     isAdmin: false,
     hasHead: false,
     avatar: { triesMax: 5, triesLeft: 5, hasPhoto: false, headHash: null },
-    vote: null
+    team: null,
+    picksClosed: false
   });
 });
 
-test("does list only ids and names when a guest reads the guest list", async () => {
+test("does list the roster's teams in file order with the cap and the switch when a guest reads the teams", async () => {
   const portal = portalWithGuests();
-  const anaCookie = await portal.signInAs("g_ana");
-
-  await portal.request("PUT", "/api/me/vote", { cookie: anaCookie, body: { ...VOTE, teammateWishes: ["g_rob"] } });
-
   const cookie = await portal.signInAs("g_rob");
-  const response = await portal.request("GET", "/api/guests", { cookie });
-  const text = await response.text();
-  const guests = JSON.parse(text) as PortalGuest[];
 
-  assert.deepEqual(guests, [
-    { guestId: "g_ana", displayName: "Ana" },
-    { guestId: "g_rob", displayName: "Rob" }
-  ]);
-  assert.ok(guests.every((guest) => Object.keys(guest).sort().join() === "displayName,guestId"));
-  assert.ok(!text.includes("@"), "an address leaked");
-  assert.ok(!/wish|admin|vote/i.test(text), "a wish or flag leaked");
+  assert.deepEqual(await readTeams(portal, cookie), {
+    teams: [
+      { id: "team-1", name: IRON_HENS, genre: "Metal", color: "teamB", members: [] },
+      { id: "team-2", name: MIRROR_BALLS, genre: "Disco", members: [] },
+      { id: "team-3", name: BARN_BURNERS, genre: "Country", members: [] }
+    ],
+    seatCap: 1,
+    picksClosed: false
+  });
 });
 
-test("does save the vote and read it back when it is valid", async () => {
+test("does cap each team at the guests over the teams, rounded up and counting admins, when the teams are read", async () => {
   const portal = portalWithGuests();
   const cookie = await portal.signInAs("g_rob");
-  const saved = await portal.request("PUT", "/api/me/vote", { cookie, body: VOTE });
 
-  assert.equal(saved.status, 200);
-  assert.deepEqual(await saved.json(), VOTE);
+  // Rob and Ana (an admin) over three teams: one seat each.
+  assert.equal((await readTeams(portal, cookie)).seatCap, 1);
 
-  const replaced = { ...VOTE, teamFormat: "host_assigns" as const, teammateWishes: [] };
+  portal.addGuest({ guestId: "g_kim", displayName: "Kim" });
+  portal.addGuest({ guestId: "g_lee", displayName: "Lee" });
+  assert.equal((await readTeams(portal, cookie)).seatCap, 2, "four guests over three teams");
 
-  await portal.request("PUT", "/api/me/vote", { cookie, body: replaced });
-
-  const me = (await (await portal.request("GET", "/api/me", { cookie })).json()) as PortalMe;
-
-  assert.deepEqual(me.vote, replaced);
-});
-
-test("does refuse the vote when it wishes for the voter, an unknown guest, or too many", async () => {
-  const portal = portalWithGuests();
-  const cookie = await portal.signInAs("g_rob");
-  const refusedBodies = [
-    { ...VOTE, teammateWishes: ["g_rob"] },
-    { ...VOTE, teammateWishes: ["g_nobody"] },
-    { ...VOTE, teammateWishes: ["g_ana", "g_x", "g_y"] },
-    { ...VOTE, genreRanking: ["yodel"] },
-    { ...VOTE, teamFormat: "draft" },
-    "not json at all"
-  ];
-
-  for (const body of refusedBodies) {
-    const response = await portal.request("PUT", "/api/me/vote", { cookie, body });
-
-    assert.equal(response.status, 400, JSON.stringify(body));
+  for (const guestId of ["g_max", "g_ned", "g_oli"]) {
+    portal.addGuest({ guestId, displayName: guestId });
   }
 
-  assert.equal(portal.db.raw.prepare("SELECT COUNT(*) AS n FROM votes").get()?.n, 0);
+  assert.equal((await readTeams(portal, cookie)).seatCap, 3, "seven guests over three teams");
+});
+
+test("does seat the guest and answer the pick with the list when they pick a team", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await giveHead(portal, "g_rob", "a".repeat(64));
+
+  const response = await pickTeam(portal, cookie, MIRROR_BALLS);
+  const picked = (await response.json()) as PortalTeamPicked;
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(picked.team, { teamName: MIRROR_BALLS, outfitsByGenre: {} });
+  assert.deepEqual(
+    picked.teams.teams.map((team) => [team.name, team.members]),
+    [
+      [IRON_HENS, []],
+      [MIRROR_BALLS, [{ guestId: "g_rob", displayName: "Rob", headHash: "a".repeat(64) }]],
+      [BARN_BURNERS, []]
+    ]
+  );
+  assert.deepEqual(readPickRow(portal, "g_rob"), { team_name: MIRROR_BALLS, outfits_json: "{}" });
+  assert.deepEqual((await readMe(portal, cookie)).team, { teamName: MIRROR_BALLS, outfitsByGenre: {} });
+});
+
+test("does move the guest and keep every outfit in the row when they switch teams", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+  const outfits = { metal: { torso: "battle-vest" }, disco: { wing: "medallion" } };
+
+  await pickTeam(portal, cookie, IRON_HENS);
+  portal.db.raw
+    .prepare("UPDATE team_picks SET outfits_json = ? WHERE guest_id = 'g_rob'")
+    .run(JSON.stringify(outfits));
+
+  const moved = (await (await pickTeam(portal, cookie, BARN_BURNERS)).json()) as PortalTeamPicked;
+
+  assert.deepEqual(moved.team, { teamName: BARN_BURNERS, outfitsByGenre: outfits });
+  assert.deepEqual(
+    moved.teams.teams.map((team) => team.members.map((member) => member.guestId)),
+    [[], [], ["g_rob"]]
+  );
+  assert.deepEqual(readPickRow(portal, "g_rob"), { team_name: BARN_BURNERS, outfits_json: JSON.stringify(outfits) });
+});
+
+test("does succeed without writing anything when the guest re-picks the team they are on", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await pickTeam(portal, cookie, IRON_HENS);
+  portal.db.raw
+    .prepare("UPDATE team_picks SET outfits_json = '{\"metal\":{}}', updated_at = 7 WHERE guest_id = 'g_rob'")
+    .run();
+
+  // The team is full (cap 1) with Rob on it; his own seat does not count against him.
+  const again = await pickTeam(portal, cookie, IRON_HENS);
+  const picked = (await again.json()) as PortalTeamPicked;
+
+  assert.equal(again.status, 200);
+  assert.deepEqual(picked.team, { teamName: IRON_HENS, outfitsByGenre: { metal: {} } });
+  assert.deepEqual(picked.teams.teams[0]?.members.map((member) => member.guestId), ["g_rob"]);
+  assert.deepEqual(readPickRow(portal, "g_rob"), { team_name: IRON_HENS, outfits_json: '{"metal":{}}' });
+  assert.equal(portal.db.raw.prepare("SELECT updated_at FROM team_picks WHERE guest_id = 'g_rob'").get()?.updated_at, 7);
+});
+
+test("does succeed when the guest re-picks a team Brad has seated over the cap", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  // Cap 1; Brad seats Ana beside Rob anyway. The others on the team now equal the cap, so the
+  // conditional insert alone would refuse Rob his own seat.
+  await pickTeam(portal, cookie, IRON_HENS);
+  portal.db.raw
+    .prepare("INSERT INTO team_picks (guest_id, team_name, outfits_json, updated_at) VALUES ('g_ana', ?, '{}', 1)")
+    .run(IRON_HENS);
+
+  const again = await pickTeam(portal, cookie, IRON_HENS);
+
+  assert.equal(again.status, 200);
+  assert.deepEqual(
+    ((await again.json()) as PortalTeamPicked).teams.teams[0]?.members.map((member) => member.guestId),
+    ["g_ana", "g_rob"]
+  );
+  assert.equal((await pickTeam(portal, cookie, MIRROR_BALLS)).status, 200, "a different team still seats him");
+});
+
+test("does refuse with team_full and leave the guest where they were when the team has no seat left", async () => {
+  const portal = portalWithGuests();
+  const robCookie = await portal.signInAs("g_rob");
+  const anaCookie = await portal.signInAs("g_ana");
+
+  await pickTeam(portal, robCookie, IRON_HENS);
+  await pickTeam(portal, anaCookie, MIRROR_BALLS);
+
+  const refused = await pickTeam(portal, anaCookie, IRON_HENS);
+
+  assert.equal(refused.status, 409);
+  assert.deepEqual(await refused.json(), { error: "team_full" });
+  assert.equal(readPickRow(portal, "g_ana")?.team_name, MIRROR_BALLS);
+  assert.deepEqual(
+    (await readTeams(portal, anaCookie)).teams.map((team) => team.members.map((member) => member.guestId)),
+    [["g_rob"], ["g_ana"], []]
+  );
+});
+
+test("does refuse with team_full when a guest with no pick yet asks for a full team", async () => {
+  const portal = portalWithGuests();
+
+  await pickTeam(portal, await portal.signInAs("g_rob"), IRON_HENS);
+
+  const refused = await pickTeam(portal, await portal.signInAs("g_ana"), IRON_HENS);
+
+  assert.equal(refused.status, 409);
+  assert.equal(readPickRow(portal, "g_ana"), undefined);
+});
+
+// Two guests racing for the last seat. The seat is taken by one conditional statement, so
+// whichever runs second finds the count at the cap and changes nothing. The sqlite fake runs
+// statements one at a time, so this proves the single-statement shape refuses the loser — not
+// that D1 interleaves two requests the same way (it serialises writes too).
+test("does seat exactly one of two guests when both pick the last seat at once", async () => {
+  const portal = portalWithGuests();
+  const [robCookie, anaCookie] = await Promise.all([portal.signInAs("g_rob"), portal.signInAs("g_ana")]);
+  const responses = await Promise.all([pickTeam(portal, robCookie, BARN_BURNERS), pickTeam(portal, anaCookie, BARN_BURNERS)]);
+  const statuses = responses.map((response) => response.status).sort();
+
+  assert.deepEqual(statuses, [200, 409]);
+
+  const seated = portal.db.raw.prepare("SELECT guest_id FROM team_picks WHERE team_name = ?").all(BARN_BURNERS);
+
+  assert.equal(seated.length, 1);
+});
+
+test("does refuse with picks_closed and leave the row alone when Brad has closed picks", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await pickTeam(portal, cookie, IRON_HENS);
+  portal.db.raw.prepare("INSERT INTO settings (key, value) VALUES ('picks_closed', '1')").run();
+
+  const refused = await pickTeam(portal, cookie, MIRROR_BALLS);
+
+  assert.equal(refused.status, 409);
+  assert.deepEqual(await refused.json(), { error: "picks_closed" });
+  assert.equal(readPickRow(portal, "g_rob")?.team_name, IRON_HENS);
+  assert.equal((await readMe(portal, cookie)).picksClosed, true);
+  assert.equal((await readTeams(portal, cookie)).picksClosed, true);
+});
+
+test("does refuse with bad_request when the pick names a team the roster lacks or is not a pick", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  for (const body of [{ teamName: "Hens of Iron" }, { teamName: "iron hens" }, { teamName: "" }, { team: IRON_HENS }, "x"]) {
+    const response = await portal.request("PUT", "/api/me/team", { cookie, body });
+
+    assert.equal(response.status, 400, JSON.stringify(body));
+    assert.deepEqual(await response.json(), { error: "bad_request" });
+  }
+
+  assert.equal(readPickRow(portal, "g_rob"), undefined);
+});
+
+test("does read a pick the guard no longer accepts as no pick when /api/me is read", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  portal.db.raw
+    .prepare("INSERT INTO team_picks (guest_id, team_name, outfits_json, updated_at) VALUES ('g_rob', ?, 'not json', 1)")
+    .run(IRON_HENS);
+
+  assert.equal((await readMe(portal, cookie)).team, null);
+});
+
+test("does answer server_error on the team routes, and still /api/me, when the deploy shipped no roster", async () => {
+  const portal = portalWithGuests({ roster: null });
+  const cookie = await portal.signInAs("g_rob");
+
+  for (const [method, path] of [
+    ["GET", "/api/teams"],
+    ["PUT", "/api/me/team"]
+  ] as const) {
+    const response = await portal.request(method, path, {
+      cookie,
+      ...(method === "PUT" ? { body: { teamName: IRON_HENS } } : {})
+    });
+
+    assert.equal(response.status, 500, `${method} ${path}`);
+    assert.deepEqual(await response.json(), { error: "server_error" });
+  }
+
+  assert.ok(portal.errors.some((message) => /teaser-roster\.json is missing/.test(message)));
+  assert.equal((await portal.request("GET", "/api/me", { cookie })).status, 200);
+});
+
+test("does answer server_error when the roster the deploy shipped is malformed", async () => {
+  const portal = portalWithGuests({ roster: { players: [], teams: [{ id: "team-1" }] } });
+  const response = await portal.request("GET", "/api/teams", { cookie: await portal.signInAs("g_rob") });
+
+  assert.equal(response.status, 500);
+  assert.ok(portal.errors.some((message) => /not a roster/.test(message)));
+});
+
+test("does serve another guest's kept head, and 404 before there is one, when a guest reads it", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  assert.equal((await portal.request("GET", "/api/guests/g_ana/avatar", { cookie })).status, 404);
+  assert.equal((await portal.request("GET", "/api/guests/g_nobody/avatar", { cookie })).status, 404);
+
+  await giveHead(portal, "g_ana", "b".repeat(64));
+
+  const head = await portal.request("GET", "/api/guests/g_ana/avatar", { cookie });
+
+  assert.equal(head.status, 200);
+  assert.equal(head.headers.get("Content-Type"), "image/png");
+  assert.equal(head.headers.get("ETag"), `"${"b".repeat(64)}"`);
+  assert.equal((await head.arrayBuffer()).byteLength, atob(FAKE_HEAD_PNG_BASE64).length);
 });
 
 test("does report a head when the guest has an accepted avatar attempt", async () => {
@@ -136,7 +363,7 @@ test("does report a head when the guest has an accepted avatar attempt", async (
     )
     .run();
 
-  const me = (await (await portal.request("GET", "/api/me", { cookie })).json()) as PortalMe;
+  const me = await readMe(portal, cookie);
 
   assert.equal(me.hasHead, true);
   assert.deepEqual(me.avatar, { triesMax: 5, triesLeft: 4, hasPhoto: false, headHash: "abc123" });

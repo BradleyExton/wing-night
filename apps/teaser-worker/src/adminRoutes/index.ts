@@ -1,6 +1,6 @@
 // Brad's side: the guest list and its sign-in status, adding and editing guests, invites, a link
-// to text by hand, the vote summary, every guest's head, the style reference, a guest's tries and
-// the export the pack pull reads.
+// to text by hand, the team board and its switch, every guest's head, the style reference, a
+// guest's tries and the export the pack pull reads.
 // Reachable by a signed-in guest with `is_admin` or by a script holding ADMIN_API_TOKEN
 // (app/index.ts decides which).
 import {
@@ -8,7 +8,9 @@ import {
   PORTAL_API_ROUTES,
   isAdminCreateGuestRequest,
   isAdminEditGuestRequest,
+  isAdminPicksRequest,
   isAdminStyleReferenceRequest,
+  isAdminTeamSeatRequest,
   normalizeGuestDisplayName,
   normalizeGuestEmail,
   type AdminAvatarReset,
@@ -17,6 +19,7 @@ import {
   type AdminInviteAllResult,
   type AdminInviteResult,
   type AdminMintedLink,
+  type AdminPicksState,
   type AdminSignOutResult,
   type AdminStyleReference
 } from "@wingnight/shared/guestPortal";
@@ -31,13 +34,13 @@ import {
 } from "../avatarStore/index.ts";
 import { encodeBase64 } from "../base64/index.ts";
 import type { DbStatement, PortalDeps } from "../deps/index.ts";
-import { parseVoteRow } from "../guestRoutes/index.ts";
 import { errorResponse, jsonResponse, readJsonBody } from "../http/index.ts";
+import { findRosterTeam, readRoster, type PortalRoster } from "../roster/index.ts";
 import type { AdminContext, PortalRoute } from "../routeContext/index.ts";
 import { composeSignInMail } from "../signInMail/index.ts";
 import { mintPersonalLink, resolveLinkOrigin, resolveSignInUrl } from "../signInLinks/index.ts";
+import { readTeamBoard, writePicksClosed } from "../teamPicks/index.ts";
 import { mintGuestId } from "../tokens/index.ts";
-import { resolveVoteSummary, type CastVote } from "../voteSummary/index.ts";
 
 // "Invite everyone" sends at most this many per request. Each invite is three D1 statements and
 // one Resend call, and a Worker on the free plan gets 50 of each per request; ten leaves room.
@@ -56,7 +59,7 @@ type GuestStatusRow = {
   is_style_reference: number;
   tries_spent: number;
   tries_failed: number;
-  has_voted: number;
+  team: string | null;
 };
 
 const GUEST_STATUS_SELECT = `
@@ -73,7 +76,8 @@ const GUEST_STATUS_SELECT = `
       WHERE a.guest_id = g.guest_id AND a.reset_at IS NULL AND a.status IN ('painting', 'painted')) AS tries_spent,
     (SELECT COUNT(*) FROM avatar_attempts a
       WHERE a.guest_id = g.guest_id AND a.reset_at IS NULL AND a.status = 'failed') AS tries_failed,
-    EXISTS (SELECT 1 FROM votes v WHERE v.guest_id = g.guest_id) AS has_voted
+    -- The pick as stored; withRosterTeam checks it against the roster before it leaves.
+    (SELECT p.team_name FROM team_picks p WHERE p.guest_id = g.guest_id) AS team
   FROM guests g`;
 
 const toGuestStatus = (row: GuestStatusRow): AdminGuestStatus => ({
@@ -89,16 +93,34 @@ const toGuestStatus = (row: GuestStatusRow): AdminGuestStatus => ({
   headHash: row.head_hash,
   isStyleReference: row.is_style_reference === 1,
   triesLeft: resolveTriesLeft({ spent: row.tries_spent, failed: row.tries_failed, headHash: row.head_hash }),
-  hasVoted: row.has_voted === 1
+  team: row.team
 });
 
-const readGuestStatus = async (deps: PortalDeps, guestId: string): Promise<AdminGuestStatus | null> => {
+// A pick naming a team the roster no longer has is orphaned: the board lists that guest as
+// unseated, and the guest row says the same (`team: null`) so the two never disagree. With no
+// roster to check against (a deploy bug the board already fails loudly on) the raw name stays,
+// rather than the guest list failing too.
+const withRosterTeam = (status: AdminGuestStatus, roster: PortalRoster | null): AdminGuestStatus => {
+  return status.team === null || roster === null || findRosterTeam(roster, status.team) !== undefined
+    ? status
+    : { ...status, team: null };
+};
+
+// The row as stored, the pick unchecked: for the handlers' own lookups. What leaves the Worker
+// goes through readGuestStatus / listGuests.
+const readGuestRow = async (deps: PortalDeps, guestId: string): Promise<AdminGuestStatus | null> => {
   const row = await deps.db
     .prepare(`${GUEST_STATUS_SELECT} WHERE g.guest_id = ?`)
     .bind(guestId)
     .first<GuestStatusRow>();
 
   return row === null ? null : toGuestStatus(row);
+};
+
+const readGuestStatus = async (deps: PortalDeps, origin: string, guestId: string): Promise<AdminGuestStatus | null> => {
+  const status = await readGuestRow(deps, guestId);
+
+  return status === null ? null : withRosterTeam(status, await readRoster(deps, origin));
 };
 
 const isEmailTaken = async (deps: PortalDeps, email: string, exceptGuestId: string | null): Promise<boolean> => {
@@ -124,15 +146,16 @@ const evictGuest = (deps: PortalDeps, guestId: string): DbStatement[] => {
   ];
 };
 
-const listGuests = async ({ deps }: AdminContext): Promise<Response> => {
-  const { results } = await deps.db
-    .prepare(`${GUEST_STATUS_SELECT} ORDER BY g.display_name COLLATE NOCASE, g.guest_id`)
-    .all<GuestStatusRow>();
+const listGuests = async ({ url, deps }: AdminContext): Promise<Response> => {
+  const [{ results }, roster] = await Promise.all([
+    deps.db.prepare(`${GUEST_STATUS_SELECT} ORDER BY g.display_name COLLATE NOCASE, g.guest_id`).all<GuestStatusRow>(),
+    readRoster(deps, url.origin)
+  ]);
 
-  return jsonResponse(results.map(toGuestStatus));
+  return jsonResponse(results.map((row) => withRosterTeam(toGuestStatus(row), roster)));
 };
 
-const createGuest = async ({ request, deps }: AdminContext): Promise<Response> => {
+const createGuest = async ({ request, url, deps }: AdminContext): Promise<Response> => {
   const body = await readJsonBody(request);
 
   if (!isAdminCreateGuestRequest(body)) {
@@ -152,10 +175,10 @@ const createGuest = async ({ request, deps }: AdminContext): Promise<Response> =
     .bind(guestId, normalizeGuestDisplayName(body.displayName), email, deps.now())
     .run();
 
-  return jsonResponse(await readGuestStatus(deps, guestId), 201);
+  return jsonResponse(await readGuestStatus(deps, url.origin, guestId), 201);
 };
 
-const editGuest = async ({ request, params, deps }: AdminContext): Promise<Response> => {
+const editGuest = async ({ request, params, url, deps }: AdminContext): Promise<Response> => {
   const guestId = params.guestId ?? "";
   const body = await readJsonBody(request);
 
@@ -163,7 +186,7 @@ const editGuest = async ({ request, params, deps }: AdminContext): Promise<Respo
     return errorResponse("bad_request");
   }
 
-  const current = await readGuestStatus(deps, guestId);
+  const current = await readGuestRow(deps, guestId);
 
   if (current === null) {
     return errorResponse("not_found");
@@ -187,7 +210,7 @@ const editGuest = async ({ request, params, deps }: AdminContext): Promise<Respo
   // yet used is spent, and every session ends. The guest gets back in with a fresh invite.
   await deps.db.batch(email === current.email ? [update] : [update, ...evictGuest(deps, guestId)]);
 
-  return jsonResponse(await readGuestStatus(deps, guestId));
+  return jsonResponse(await readGuestStatus(deps, url.origin, guestId));
 };
 
 type InviteOutcome = { kind: "invited"; invitedAt: number } | { kind: "no_email" } | { kind: "mail_failed" };
@@ -239,7 +262,7 @@ const inviteGuest = async (
 };
 
 const sendInvite = async ({ params, url, deps }: AdminContext): Promise<Response> => {
-  const guest = await readGuestStatus(deps, params.guestId ?? "");
+  const guest = await readGuestRow(deps, params.guestId ?? "");
 
   if (guest === null) {
     return errorResponse("not_found");
@@ -287,7 +310,7 @@ const inviteEveryone = async ({ url, deps }: AdminContext): Promise<Response> =>
 
 // For texting by hand: a fresh personal link, its URL returned this once.
 const mintLink = async ({ params, url, deps }: AdminContext): Promise<Response> => {
-  const guest = await readGuestStatus(deps, params.guestId ?? "");
+  const guest = await readGuestRow(deps, params.guestId ?? "");
 
   if (guest === null) {
     return errorResponse("not_found");
@@ -306,7 +329,7 @@ const mintLink = async ({ params, url, deps }: AdminContext): Promise<Response> 
 const signGuestOut = async ({ params, deps }: AdminContext): Promise<Response> => {
   const guestId = params.guestId ?? "";
 
-  if ((await readGuestStatus(deps, guestId)) === null) {
+  if ((await readGuestRow(deps, guestId)) === null) {
     return errorResponse("not_found");
   }
 
@@ -316,47 +339,100 @@ const signGuestOut = async ({ params, deps }: AdminContext): Promise<Response> =
   return jsonResponse(result);
 };
 
-const summarizeVotes = async ({ deps }: AdminContext): Promise<Response> => {
-  const [guestRows, voteRows] = await Promise.all([
-    deps.db
-      .prepare("SELECT guest_id, display_name FROM guests ORDER BY display_name COLLATE NOCASE, guest_id")
-      .all<{ guest_id: string; display_name: string }>(),
-    deps.db
-      .prepare("SELECT guest_id, genre_ranking, teammate_wishes, team_format FROM votes")
-      .all<{ guest_id: string; genre_ranking: string; teammate_wishes: string; team_format: string }>()
-  ]);
-  const votes: CastVote[] = voteRows.results.flatMap((row) => {
-    const vote = parseVoteRow(row, row.guest_id);
+// The board: every team's members in seating order, the unseated, the cap and the switch.
+const readBoard = async ({ url, deps }: AdminContext): Promise<Response> => {
+  const roster = await readRoster(deps, url.origin);
 
-    return vote === null ? [] : [{ guestId: row.guest_id, vote }];
-  });
+  return roster === null ? errorResponse("server_error") : jsonResponse(await readTeamBoard(deps, roster));
+};
 
-  return jsonResponse(
-    resolveVoteSummary(
-      guestRows.results.map((row) => ({ guestId: row.guest_id, displayName: row.display_name })),
-      votes
-    )
-  );
+// Brad moving someone: onto a team (over the cap if he wants, closed or not) or off every team.
+// Like the guest's own pick, the row's outfits_json is left as it is.
+const seatGuest = async ({ request, params, url, deps }: AdminContext): Promise<Response> => {
+  const guestId = params.guestId ?? "";
+  const body = await readJsonBody(request);
+
+  if (!isAdminTeamSeatRequest(body)) {
+    return errorResponse("bad_request");
+  }
+
+  if ((await readGuestRow(deps, guestId)) === null) {
+    return errorResponse("not_found");
+  }
+
+  const roster = await readRoster(deps, url.origin);
+
+  if (roster === null) {
+    return errorResponse("server_error");
+  }
+
+  if (body.teamName === null) {
+    await deps.db.prepare("DELETE FROM team_picks WHERE guest_id = ?").bind(guestId).run();
+  } else if (findRosterTeam(roster, body.teamName) === undefined) {
+    return errorResponse("bad_request");
+  } else {
+    await deps.db
+      .prepare(
+        `INSERT INTO team_picks (guest_id, team_name, outfits_json, updated_at) VALUES (?, ?, '{}', ?)
+         ON CONFLICT (guest_id) DO UPDATE SET team_name = excluded.team_name, updated_at = excluded.updated_at`
+      )
+      .bind(guestId, body.teamName, deps.now())
+      .run();
+  }
+
+  return jsonResponse(await readTeamBoard(deps, roster));
+};
+
+// The switch: closed, PUT myTeam refuses with picks_closed and /me's tiles go inert, which is
+// what makes the last pack pull before the night stable (plan, decision 4).
+const setPicksClosed = async ({ request, deps }: AdminContext): Promise<Response> => {
+  const body = await readJsonBody(request);
+
+  if (!isAdminPicksRequest(body)) {
+    return errorResponse("bad_request");
+  }
+
+  await writePicksClosed(deps, body.closed);
+
+  const state: AdminPicksState = { picksClosed: body.closed };
+
+  return jsonResponse(state);
 };
 
 const readGuestHead = async ({ params, deps }: AdminContext): Promise<Response> => {
   return serveHead(deps, params.guestId ?? "");
 };
 
-// What `pnpm pack:pull` copies into the night pack: each guest's name and their kept head's hash
-// and size, for the pull to fetch from readGuestHead. Selected column by column so an address,
-// a vote or a wish cannot ride along. A head whose PNG is missing from R2 exports as none, the
-// same answer readGuestHead would give.
-const exportGuests = async ({ deps }: AdminContext): Promise<Response> => {
+// What `pnpm pack:pull` copies into the night pack: each guest's name, their kept head's hash
+// and size (for the pull to fetch from readGuestHead), and the team they picked. Selected column
+// by column so an address, a sign-in time or an outfit cannot ride along. A head whose PNG is
+// missing from R2 exports as none, the same answer readGuestHead would give. A pick naming a
+// team the roster no longer has exports as none, as the board lists it: the night server refuses
+// to boot on a player whose team teams.json does not declare (seatPresetRosters), so an orphan
+// must never reach the pack. No roster, no export (server_error): the pull is told, not fed.
+const exportGuests = async ({ url, deps }: AdminContext): Promise<Response> => {
+  const roster = await readRoster(deps, url.origin);
+
+  if (roster === null) {
+    return errorResponse("server_error");
+  }
+
   const { results } = await deps.db
     .prepare(
-      `SELECT g.guest_id, g.display_name, a.object_key, a.head_hash
+      `SELECT g.guest_id, g.display_name, a.object_key, a.head_hash, p.team_name
        FROM guests g
        LEFT JOIN avatar_attempts a ON a.guest_id = g.guest_id AND a.accepted_at IS NOT NULL
          AND a.object_key IS NOT NULL AND a.head_hash IS NOT NULL
+       LEFT JOIN team_picks p ON p.guest_id = g.guest_id
        ORDER BY g.display_name COLLATE NOCASE, g.guest_id`
     )
-    .all<{ guest_id: string; display_name: string; object_key: string | null; head_hash: string | null }>();
+    .all<{
+      guest_id: string;
+      display_name: string;
+      object_key: string | null;
+      head_hash: string | null;
+      team_name: string | null;
+    }>();
   const exported: AdminGuestExport[] = await Promise.all(
     results.map(async (row) => {
       const object = row.object_key === null ? null : await deps.bucket.head(row.object_key);
@@ -367,7 +443,8 @@ const exportGuests = async ({ deps }: AdminContext): Promise<Response> => {
         head:
           object === null || row.head_hash === null
             ? null
-            : { sha256: row.head_hash, contentType: AVATAR_HEAD_TYPE, bytes: object.size }
+            : { sha256: row.head_hash, contentType: AVATAR_HEAD_TYPE, bytes: object.size },
+        team: row.team_name !== null && findRosterTeam(roster, row.team_name) !== undefined ? row.team_name : null
       };
     })
   );
@@ -414,7 +491,7 @@ const pickStyleReference = async ({ request, deps }: AdminContext): Promise<Resp
 const resetGuestAvatar = async ({ params, deps }: AdminContext): Promise<Response> => {
   const guestId = params.guestId ?? "";
 
-  if ((await readGuestStatus(deps, guestId)) === null) {
+  if ((await readGuestRow(deps, guestId)) === null) {
     return errorResponse("not_found");
   }
 
@@ -439,7 +516,9 @@ export const ADMIN_ROUTES: PortalRoute[] = [
   { method: "POST", pattern: `${GUEST_PATTERN}/link`, access: "admin", handle: mintLink },
   { method: "POST", pattern: `${GUEST_PATTERN}/sign-out`, access: "admin", handle: signGuestOut },
   { method: "POST", pattern: PORTAL_API_ROUTES.adminInviteAll, access: "admin", handle: inviteEveryone },
-  { method: "GET", pattern: PORTAL_API_ROUTES.adminVotes, access: "admin", handle: summarizeVotes },
+  { method: "GET", pattern: PORTAL_API_ROUTES.adminTeams, access: "admin", handle: readBoard },
+  { method: "POST", pattern: `${GUEST_PATTERN}/team`, access: "admin", handle: seatGuest },
+  { method: "PUT", pattern: PORTAL_API_ROUTES.adminPicks, access: "admin", handle: setPicksClosed },
   { method: "GET", pattern: `${GUEST_PATTERN}/avatar`, access: "admin", handle: readGuestHead },
   { method: "POST", pattern: `${GUEST_PATTERN}/avatar/reset`, access: "admin", handle: resetGuestAvatar },
   { method: "POST", pattern: PORTAL_API_ROUTES.adminStyleReference, access: "admin", handle: pickStyleReference },

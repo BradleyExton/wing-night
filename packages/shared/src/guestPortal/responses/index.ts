@@ -3,16 +3,23 @@
 // and a deploy boundary, so a page that got an answer it cannot read says so instead of
 // rendering `undefined`. Shape checks only, as deep as a caller reads.
 import { isNonNegativeInteger, isRecord } from "../../guards/index.js";
+import { isTeamColorToken } from "../../teamTheme/index.js";
 import { PORTAL_ERROR_CODES, type PortalErrorCode } from "../index.js";
-import { PORTAL_GENRES, TEAM_FORMATS, type GuestVote, type PortalGenre, type TeamFormat } from "../vote/index.js";
+import {
+  isTeamPick,
+  type AdminPicksState,
+  type AdminTeamBoard,
+  type PortalTeam,
+  type PortalTeamList,
+  type PortalTeamMember,
+  type PortalTeamPicked
+} from "../teamPick/index.js";
 import type { AdminAvatarReset, AdminStyleReference, PortalAvatarStatus } from "../avatar/index.js";
 import type {
   AdminGuestStatus,
   AdminInviteAllResult,
   AdminInviteResult,
   AdminMintedLink,
-  AdminVoteSummary,
-  PortalGuest,
   PortalMe
 } from "../index.js";
 
@@ -42,23 +49,6 @@ export const isPortalAvatarStatus = (value: unknown): value is PortalAvatarStatu
   );
 };
 
-const isPortalGenre = (value: unknown): value is PortalGenre =>
-  isString(value) && (PORTAL_GENRES as readonly string[]).includes(value);
-
-const isTeamFormat = (value: unknown): value is TeamFormat =>
-  isString(value) && (TEAM_FORMATS as readonly string[]).includes(value);
-
-// A vote as the API hands one back. The Worker validated it on the way in (isGuestVote); this
-// only proves the shape survived the trip.
-const isStoredVote = (value: unknown): value is GuestVote => {
-  return (
-    isRecord(value) &&
-    isListOf(value.genreRanking, isPortalGenre) &&
-    isListOf(value.teammateWishes, isString) &&
-    isTeamFormat(value.teamFormat)
-  );
-};
-
 export const isPortalMe = (value: unknown): value is PortalMe => {
   return (
     isRecord(value) &&
@@ -68,15 +58,10 @@ export const isPortalMe = (value: unknown): value is PortalMe => {
     isBoolean(value.isAdmin) &&
     isBoolean(value.hasHead) &&
     isPortalAvatarStatus(value.avatar) &&
-    (value.vote === null || isStoredVote(value.vote))
+    (value.team === null || isTeamPick(value.team)) &&
+    isBoolean(value.picksClosed)
   );
 };
-
-export const isPortalGuest = (value: unknown): value is PortalGuest => {
-  return isRecord(value) && isString(value.guestId) && isString(value.displayName);
-};
-
-export const isPortalGuestList = (value: unknown): value is PortalGuest[] => isListOf(value, isPortalGuest);
 
 export const isAdminGuestStatus = (value: unknown): value is AdminGuestStatus => {
   return (
@@ -93,7 +78,7 @@ export const isAdminGuestStatus = (value: unknown): value is AdminGuestStatus =>
     isNullableString(value.headHash) &&
     isBoolean(value.isStyleReference) &&
     isNonNegativeInteger(value.triesLeft) &&
-    isBoolean(value.hasVoted)
+    isNullableString(value.team)
   );
 };
 
@@ -127,28 +112,45 @@ export const isAdminAvatarReset = (value: unknown): value is AdminAvatarReset =>
   return isRecord(value) && isString(value.guestId) && isPortalAvatarStatus(value.avatar);
 };
 
-export const isAdminVoteSummary = (value: unknown): value is AdminVoteSummary => {
-  if (!isRecord(value) || !isNonNegativeInteger(value.voterCount) || !isRecord(value.formatTallies)) {
+const isPortalTeamMember = (value: unknown): value is PortalTeamMember => {
+  return isRecord(value) && isString(value.guestId) && isString(value.displayName) && isNullableString(value.headHash);
+};
+
+// `genre` and `color` are optional on the way out, as on a roster `Team`: absent, not null.
+const isPortalTeam = (value: unknown): value is PortalTeam => {
+  return (
+    isRecord(value) &&
+    isString(value.id) &&
+    isString(value.name) &&
+    (value.genre === undefined || isString(value.genre)) &&
+    (value.color === undefined || isTeamColorToken(value.color)) &&
+    isListOf(value.members, isPortalTeamMember)
+  );
+};
+
+export const isPortalTeamList = (value: unknown): value is PortalTeamList => {
+  return (
+    isRecord(value) &&
+    isListOf(value.teams, isPortalTeam) &&
+    isNonNegativeInteger(value.seatCap) &&
+    isBoolean(value.picksClosed)
+  );
+};
+
+export const isPortalTeamPicked = (value: unknown): value is PortalTeamPicked => {
+  return isRecord(value) && isTeamPick(value.team) && isPortalTeamList(value.teams);
+};
+
+export const isAdminTeamBoard = (value: unknown): value is AdminTeamBoard => {
+  if (!isRecord(value)) {
     return false;
   }
 
-  const { formatTallies } = value;
+  const { unseated } = value;
 
-  return (
-    isListOf(
-      value.genreTallies,
-      (tally): tally is AdminVoteSummary["genreTallies"][number] =>
-        isRecord(tally) &&
-        isPortalGenre(tally.genre) &&
-        isNonNegativeInteger(tally.points) &&
-        isNonNegativeInteger(tally.firstChoices)
-    ) &&
-    isListOf(
-      value.mutualWishes,
-      (wish): wish is AdminVoteSummary["mutualWishes"][number] =>
-        isRecord(wish) && isListOf(wish.guests, isPortalGuest) && wish.guests.length === 2
-    ) &&
-    TEAM_FORMATS.every((format) => isNonNegativeInteger(formatTallies[format])) &&
-    isPortalGuestList(value.notVoted)
-  );
+  return isPortalTeamList(value) && isListOf(unseated, isPortalTeamMember);
+};
+
+export const isAdminPicksState = (value: unknown): value is AdminPicksState => {
+  return isRecord(value) && isBoolean(value.picksClosed);
 };

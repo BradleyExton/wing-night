@@ -1,6 +1,7 @@
 // GET adminExport: everything `pnpm pack:pull` copies from wingnight.tv into the night pack, and
-// deliberately nothing more — no address, no sign-in history, no vote and no teammate wish ever
-// leaves for the party. A head's bytes come separately, from resolveAdminGuestAvatarRoute.
+// deliberately nothing more — no address, no sign-in history, and (until milestone 3 of
+// docs/guest-portal-team-pick-plan.md adds the picked team's outfit) nothing else ever leaves for
+// the party. A head's bytes come separately, from resolveAdminGuestAvatarRoute.
 //
 // Imports its guards with the `.ts` suffix, like ../routes, because the pull runs under plain
 // `node`, which resolves no `.js` alias (see ../routes).
@@ -19,6 +20,12 @@ export type AdminGuestExport = {
   displayName: string;
   // Null until the guest keeps a head.
   head: AdminGuestExportHead | null;
+  // The picked team's exact roster name, which the pull writes onto the player's `team` (plan,
+  // decision 5); null when the guest has not picked, and null again when their pick names a team
+  // the roster no longer has (the Worker checks the roster on the way out, as the admin board
+  // does): the night server refuses to boot on a player seated on an undeclared team, so an
+  // orphan must never reach the pack.
+  team: string | null;
 };
 
 // Lower-case hex only: the pull writes part of it into a file name.
@@ -40,7 +47,8 @@ export const isAdminGuestExport = (value: unknown): value is AdminGuestExport =>
     typeof value.guestId === "string" &&
     value.guestId.length > 0 &&
     typeof value.displayName === "string" &&
-    (value.head === null || isExportHead(value.head))
+    (value.head === null || isExportHead(value.head)) &&
+    (value.team === null || (typeof value.team === "string" && value.team.length > 0))
   );
 };
 

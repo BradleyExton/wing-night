@@ -40,7 +40,8 @@ test("does put the robots, cache and referrer headers on a response when any rou
     ["404", await portal.request("GET", "/api/nope")],
     ["405", await portal.request("DELETE", "/api/me")],
     ["static fallthrough", await portal.request("GET", "/dunlop-dash")],
-    ["bearer admin", await portal.request("GET", "/api/admin/votes", { headers: { Authorization: `Bearer ${ADMIN_API_TOKEN}` } })]
+    ["bearer admin", await portal.request("GET", "/api/admin/teams", { headers: { Authorization: `Bearer ${ADMIN_API_TOKEN}` } })],
+    ["guest head", await portal.request("GET", "/api/guests/g_brad/avatar", { cookie: robCookie })]
   ];
 
   portal.deps.db = {
@@ -65,7 +66,9 @@ test("does refuse a state-changing API request when it comes from another origin
   const attempts: [string, string, unknown][] = [
     ["POST", "/api/auth/email-link", { email: "rob@example.com" }],
     ["POST", "/api/auth/sign-out", undefined],
-    ["PUT", "/api/me/vote", { genreRanking: ["pop"], teammateWishes: [], teamFormat: "random_draw" }],
+    ["PUT", "/api/me/team", { teamName: "Iron Hens" }],
+    ["POST", "/api/admin/guests/g_rob/team", { teamName: "Iron Hens" }],
+    ["PUT", "/api/admin/picks", { closed: true }],
     ["POST", "/api/admin/guests", { displayName: "Mallory", email: null }]
   ];
 
@@ -81,7 +84,8 @@ test("does refuse a state-changing API request when it comes from another origin
   await portal.settle();
   assert.equal(portal.mail.sent.length, 0);
   assert.equal(portal.db.raw.prepare("SELECT COUNT(*) AS n FROM sessions").get()?.n, 1);
-  assert.equal(portal.db.raw.prepare("SELECT COUNT(*) AS n FROM votes").get()?.n, 0);
+  assert.equal(portal.db.raw.prepare("SELECT COUNT(*) AS n FROM team_picks").get()?.n, 0);
+  assert.equal(portal.db.raw.prepare("SELECT COUNT(*) AS n FROM settings").get()?.n, 0);
 });
 
 test("does refuse the sign-in POST when another site sends it", async () => {
