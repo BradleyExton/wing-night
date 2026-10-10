@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WARDROBE — disco</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+    <link rel="stylesheet" href="./wardrobe-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>WARDROBE — disco · Disco Inferno (teamB) · the <code>preener</code> silhouette</h1>
+      <p class="lede">
+        <strong>The round.</strong> The portal's wardrobe (docs/guest-portal-team-pick-plan.md,
+        decision 7) gives each guest two slots, <code>torso</code> and <code>wing</code>, with a
+        rail per genre. This page draws disco's first-cut rail — open shirt with one wedge,
+        sequin shirt, medallion on the wing, tambourine — on the bird disco actually is now: the
+        <code>preener</code> silhouette from <code>Character/shapes</code>, the tall leggy one,
+        chest up high, two sickle tail feathers swept up, and a wing that is a thin crescent
+        rather than a plate. That wing is the constraint on this page: it is eight or nine units
+        across at its widest, so a wing item here is a 9-unit mark or it hangs off the wing onto
+        the body. Every item is a <code>bodyApparel</code>: painted after the body and the wing
+        and before the neck and head, so it rides the body under a photographed jaw. Nothing
+        here crosses a face.
+        <br /><br />
+        <strong>The rules</strong> are the September round's, listed in the first card and
+        measured on every card from the item's drawn outline. Disco's own round settled two
+        things this page inherits: one white wedge on the chest, never two (the butterfly collar
+        read as fangs on sight), and the medallion on the chest is a necklace — so here the
+        medallion is moved to the wing, where the question becomes whether a white disc on a
+        wing is a coin or an eye.
+      </p>
+      <div id="root"></div>
+    </main>
+    <script type="module">
+      import { renderWardrobe, PALETTE, HEADS, clipId, dotGrid } from "./wardrobe-harness.js";
+
+      const INK = PALETTE.bg;
+      const WHITE = PALETTE.text;
+      const FILL = PALETTE.teamB;
+      const S = `stroke="${INK}" stroke-width="2" stroke-linejoin="round"`;
+      const LIGHT = `fill="${WHITE}" ${S}`;
+
+      // ------------------------------------------------------- torso · 1 --
+      // OPEN SHIRT, ONE WEDGE. Disco's survivor with one change: its top
+      // edge is the shoulders anchor itself instead of three above it, so
+      // it never crosses the chin line (the original started at s-3, which
+      // on a drawn head is y=29). One wedge, one point, hung off the
+      // shoulders, tip on the chest; right edge +2.5 from the head centre,
+      // because the preener chest's edge at the shoulders is x≈63.
+      const openShirt = ({ cx, shoulders: s }) => {
+        const d = [
+          `M ${cx - 13.5} ${s}`,
+          `Q ${cx - 5} ${s + 6} ${cx + 2.5} ${s}`,
+          `L ${cx + 2} ${s + 9}`,
+          `L ${cx - 6} ${s + 16}`,
+          "Z"
+        ].join(" ");
+        return `<g data-wardrobe="open-shirt"><path ${LIGHT} d="${d}"/></g>`;
+      };
+
+      // ------------------------------------------------------- torso · 2 --
+      // SEQUIN SHIRT. The opposite material: an ink shirt with a scoop
+      // neck, and the sequins as a staggered grid of WHITE dots clipped to
+      // it — a black sequin shirt catching the light. Hem at shoulders+13.5,
+      // pulled in to x=58, because the preener belly narrows fast below
+      // y=48 and a costume head drops the whole shirt five. It is the one dark mass on the page, and the note says so.
+      const sequinShirt = (head) => {
+        const s = head.shoulders;
+        const id = clipId("sequin");
+        const panel = `M 44 ${s + 1} Q 52 ${s + 7} 60 ${s + 1} C 63 ${s + 5} 63 ${s + 9} 58 ${s + 13.5}
+                       L 44 ${s + 13.5} C 42.5 ${s + 10} 43 ${s + 5} 44 ${s + 1} Z`;
+        return `<g data-wardrobe="sequin-shirt">
+          <clipPath id="${id}"><path d="${panel}"/></clipPath>
+          <path fill="${INK}" d="${panel}"/>
+          <g clip-path="url(#${id})">${dotGrid({ x0: 43, y0: s + 3.5, x1: 64, y1: s + 14, step: 2.4, r: 0.65, fill: WHITE })}</g>
+        </g>`;
+      };
+
+      // -------------------------------------------------------- wing · 3 --
+      // MEDALLION ON THE WING. The shipping disc (4.6) taken off the chain
+      // and sewn on the wing as a patch, with an ink ring just inside the
+      // rim so it is a coin and not a sticker. Centred on the crescent at
+      // (29,40.5), where the preener wing is widest. A white disc with a
+      // ring inside it is the shape the eye rule names, and it is drawn to
+      // find out whether a wing can carry it where a chest cannot.
+      const medallion = () => `
+        <g data-wardrobe="medallion">
+          <circle ${LIGHT} cx="29" cy="40.5" r="4.4"/>
+          <circle fill="none" stroke="${INK}" stroke-width="0.8" cx="29" cy="40.5" r="2.6"/>
+        </g>`;
+
+      // -------------------------------------------------------- wing · 4 --
+      // TAMBOURINE. Held in the wing: an ink hoop with the bird's own colour
+      // showing through it (no head, like a real one) and five pairs of
+      // white jingles on the rim. A dark ring, not a white one, so it is
+      // not the eye shape; the jingles are dots, not points. It is bigger
+      // than the wing is wide, so its lower half sits on the body — the
+      // preener body at x=33 goes down to y≈55 and the hoop stops at 49.5.
+      const tambourine = (head, fill) => {
+        const cx = 27;
+        const cy = 43;
+        const R = 6.2;
+        const jingles = [-80, -30, 20, 70, 120]
+          .map((deg) => {
+            const a = (deg * Math.PI) / 180;
+            const x = cx + R * Math.cos(a);
+            const y = cy + R * Math.sin(a);
+            return `<circle fill="${WHITE}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.15"/>`;
+          })
+          .join("");
+        return `<g data-wardrobe="tambourine">
+          <circle fill="none" stroke="${INK}" stroke-width="2.6" cx="${cx}" cy="${cy}" r="${R}"/>
+          <circle fill="none" stroke="${fill}" stroke-width="0.7" cx="${cx}" cy="${cy}" r="${R - 1.6}"/>
+          ${jingles}
+        </g>`;
+      };
+
+      // --------------------------------------------------------- the pair --
+      const shirtAndTambourine = (head, fill) => tambourine(head, fill) + openShirt(head, fill);
+
+      renderWardrobe({
+        fill: FILL,
+        silhouette: "preener",
+        heads: [
+          { src: HEADS.rosi, name: "rosi" },
+          { src: HEADS.rob, name: "rob" }
+        ],
+        items: [
+          {
+            key: "open-shirt",
+            short: "open shirt",
+            slot: "torso",
+            title: "1 · OPEN SHIRT, ONE WEDGE",
+            draw: openShirt,
+            whitePoints: 1,
+            whitePointsNote: "the wedge's one tip",
+            note:
+              "Disco's survivor, re-hung so its top edge IS the shoulders anchor — the original started three units above it, which on a drawn head is y=29 and over the chin line, and this round's rule is the chin line. One white wedge, one point, from the shoulders down to a tip on the chest. On the preener it works harder than it did on the round bird: the chest is higher and narrower, so the wedge reads as a shirt open to the sternum on a tall thin frame, which is the exact silhouette the genre wants. On a costume head the tip lands at y≈53, two units above the preener's underside; the measure below has it inside. At 76px it is a bright wedge at the neck, as before."
+          },
+          {
+            key: "sequin-shirt",
+            short: "sequin shirt",
+            slot: "torso",
+            title: "2 · SEQUIN SHIRT",
+            draw: sequinShirt,
+            whitePoints: 0,
+            note:
+              "The other material: a black shirt with a scoop neck and white sequins as a staggered grid of dots clipped to it, a shirt catching the light. It is the one dark mass on the page, which is metal's round 2 objection, but cyan is the brightest team colour in the set and loses less to it than chrome did. Its hem is at shoulders+13.5 and pulled in to x=58, because the preener belly narrows fast under the chest and a costume head drops the shirt five. At 76px the dots become a grey shimmer on a dark chest, which still reads as a shirt and, on a cyan bird under the flame, as a sequinned one more than you would expect; at 152px it is unmistakable. Dots are not points and there is no white shape with a centre here, so it passes every rule on paper."
+          },
+          {
+            key: "medallion",
+            short: "medallion",
+            slot: "wing",
+            title: "3 · MEDALLION ON THE WING",
+            draw: medallion,
+            whitePoints: 0,
+            darkCentre: true,
+            darkCentreNote: "a white disc with an ink ring inside it, on the wing; the ring is what makes it a coin, and also what makes it an iris",
+            note:
+              "The shipping medallion off its chain and sewn on the wing as a patch, with a thin ink ring inside the rim so it is a coin. It answers the necklace note by not being a necklace. It also walks straight into the eye rule: a white disc with a dark ring inside it is an iris, and at 76px — when the ring is a pixel and the disc is five — that is what it is, on a wing, behind the real eye. It is on this page because the plan's rail names it, and because the measure should say so rather than a note: the rule fails on paper and the strip at the foot of the page is where it fails or does not in practice. Expect to cut it."
+          },
+          {
+            key: "tambourine",
+            short: "tambourine",
+            slot: "wing",
+            title: "4 · TAMBOURINE",
+            draw: tambourine,
+            whitePoints: 0,
+            note:
+              "Held in the wing: an ink hoop with the bird's own cyan through the middle — no head, like a real one — a thin cyan inner rim, and five pairs of white jingles on the ring. It is drawn as a DARK ring so it is not the eye shape, and its jingles are dots, not points, so it passes every rule on paper. It is wider than the preener wing, so its lower half sits on the body rather than the wing; everything stays inside the outline. At 76px it degrades to a dark circle with a few bright specks, which is either a tambourine or a hole in the bird — the thing to look at in the strip is whether the specks survive, because they are the whole difference."
+          },
+          {
+            key: "shirt-and-tambourine",
+            short: "shirt + tambourine",
+            slot: "torso + wing",
+            title: "1 + 4 · OPEN SHIRT with the TAMBOURINE — the two slots worn at once",
+            draw: shirtAndTambourine,
+            whitePoints: 1,
+            whitePointsNote: "the shirt's tip; the jingles are dots",
+            note:
+              "The strongest pair, and the layering a guest sees with both slots filled: the white wedge at the throat, the dark hoop in the wing, cyan between. One bright mark and one dark mark on two different planes, which is the arrangement metal's round 2 said a pair needs. They are nowhere near each other — the shirt's back edge is x≈44.5 and the hoop's right edge x≈33. At 76px it is a bright wedge and a dark circle on a tall cyan bird, and the bird is dancing with something in its hand."
+          }
+        ],
+        verdict: `
+          <section class="cell">
+            <h2>verdict · what to cut, from the 76px row</h2>
+            <p class="note">
+              <strong>On the torso, the open shirt is the slot</strong>: it survived its own round,
+              it is the only white garment on four pages that is allowed its one point, and on
+              the preener it finally has the tall frame the open shirt was always meant for. The
+              sequin shirt is the alternative — it passes every rule, it is a real garment, and
+              it is a dark mass on a bird whose colour is doing nothing wrong. Keep it on the rail
+              if Brad wants the guest a choice of material; cut it if the rail should be one
+              item.
+            </p>
+            <p class="note">
+              <strong>On the wing, cut the medallion and keep the tambourine.</strong> The
+              medallion fails the eye rule on paper and, from the strip, in practice: a white
+              disc with a ring in it on a wing is a second eye at 76px. The tambourine is the
+              only wing item on four pages that is DARK, and that is exactly why it survives a
+              rule the others cannot: it is a hole in the bird before it is anything else, and
+              the jingles are what tip it from a hole to an instrument. If the jingles do not
+              survive 76px, it is cut too and disco's wing rail is empty — which the plan allows,
+              and which the preener silhouette can afford, since it carries the genre on its own.
+            </p>
+            <p class="note">
+              <strong>Pair for the portal's default preview: open shirt + tambourine.</strong>
+            </p>
+          </section>`
+      });
+    </script>
+  </body>
+</html>

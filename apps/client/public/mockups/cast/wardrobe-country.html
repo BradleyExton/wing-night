@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WARDROBE — country</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+    <link rel="stylesheet" href="./wardrobe-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>WARDROBE — country · Honky Tonk Heat (teamE) · the <code>broody</code> silhouette</h1>
+      <p class="lede">
+        <strong>The round.</strong> The portal's wardrobe (docs/guest-portal-team-pick-plan.md,
+        decision 7) gives each guest two slots, <code>torso</code> and <code>wing</code>, with a
+        rail per genre. This page draws country's first-cut rail — plaid shirt, bandana down the
+        chest, horseshoe patch, banjo — on the bird country actually is now: the
+        <code>broody</code> silhouette from <code>Character/shapes</code>, the squat one, belly
+        down near the toes, a small tucked wing and two low tail plumes. That body changes the
+        maths for the rail: the chest is wider than the round bird's (its edge is at x≈69 at the
+        waist) and the wing is the smallest of the four, a 22-unit tuck, so a wing item has half
+        the plane pop's star had. Every item is a <code>bodyApparel</code>: painted after the
+        body and the wing and before the neck and head, so it rides the body under a
+        photographed jaw. Nothing here crosses a face; country's own round already buried the
+        hat for that reason.
+        <br /><br />
+        <strong>The rules</strong> are the September round's, listed in the first card and
+        measured on every card from the item's drawn outline. The two about white matter most
+        here, because country's good ideas are mostly white shapes with something inside them: a
+        horseshoe is a ring and a banjo head is a disc, and both are exactly the "white with a
+        dark centre" an eye is. They are drawn anyway and the note on each says where it fails.
+      </p>
+      <div id="root"></div>
+    </main>
+    <script type="module">
+      import { renderWardrobe, PALETTE, HEADS, clipId } from "./wardrobe-harness.js";
+
+      const INK = PALETTE.bg;
+      const WHITE = PALETTE.text;
+      const FILL = PALETTE.teamE;
+      const S = `stroke="${INK}" stroke-width="2" stroke-linejoin="round"`;
+      const LIGHT = `fill="${WHITE}" ${S}`;
+
+      // The chest's own centre is ~5 left of the head centre (the country
+      // round measured this off the shipping paths); the broody body is
+      // wider still, so the shirt reaches x=67 at the waist and the bandana
+      // keeps the old centre.
+      const chestX = (head) => head.cx - 5;
+
+      // ------------------------------------------------------- torso · 1 --
+      // PLAID SHIRT. An ink western shirt with a pointed collar, and the
+      // plaid as a grid of TEAM-colour lines — buffalo check in ink and the
+      // bird's own orange, no white anywhere, so the shirt is two-tone and
+      // the colour keeps a share of the chest. The collar's two points are
+      // ink, so the fangs rule (white points) does not touch them. Hem at
+      // shoulders+21, well above the broody underside at y≈68, and pulled in
+      // to x=63.5 at the hem so it stays inside the belly's curve on a
+      // costume head, where the whole shirt sits five lower.
+      const plaidShirt = (head, fill) => {
+        const s = head.shoulders;
+        const id = clipId("plaid");
+        const panel = `M 44 ${s + 1} L 50.5 ${s + 1} L 53.5 ${s + 6} L 56.5 ${s + 1} L 63 ${s + 1}
+                       C 67 ${s + 7} 68 ${s + 13} 63.5 ${s + 21} L 42.5 ${s + 21}
+                       C 41 ${s + 15} 42 ${s + 8} 44 ${s + 1} Z`;
+        const grid = [47, 53, 59, 65].map((x) => `M ${x} ${s} L ${x} ${s + 22}`).join(" ")
+          + [6, 12, 18].map((dy) => ` M 40 ${s + dy} L 70 ${s + dy}`).join("");
+        return `<g data-wardrobe="plaid-shirt">
+          <clipPath id="${id}"><path d="${panel}"/></clipPath>
+          <path fill="${INK}" d="${panel}"/>
+          <path clip-path="url(#${id})" fill="none" stroke="${fill}" stroke-width="1.4" stroke-opacity="0.85" d="${grid}"/>
+        </g>`;
+      };
+
+      // ------------------------------------------------------- torso · 2 --
+      // BANDANA DOWN THE CHEST. Country's survivor, exactly as its round
+      // drew it: a white neckerchief hung from the shoulders with ONE point
+      // down the chest, one small ink knot ON the white. Its top edge sits
+      // on the shoulders anchor itself — y=32 on a drawn head, the chin
+      // line exactly, and 37 on a costume head.
+      const bandana = (head) => {
+        const x = chestX(head);
+        const y = head.shoulders;
+        const cloth =
+          `M ${x - 9} ${y} Q ${x} ${y + 7} ${x + 9} ${y + 1}` +
+          ` Q ${x + 7} ${y + 9} ${x - 0.5} ${y + 16}` +
+          ` Q ${x - 6} ${y + 10} ${x - 9} ${y} Z`;
+        const knot =
+          `M ${x - 3.4} ${y + 1.4} Q ${x} ${y + 5.6} ${x + 3.4} ${y + 2}` +
+          ` Q ${x + 2.4} ${y + 4.4} ${x + 0.2} ${y + 5.4}` +
+          ` Q ${x - 2.2} ${y + 4.4} ${x - 3.4} ${y + 1.4} Z`;
+        return `<g data-wardrobe="bandana">
+          <path ${LIGHT} d="${cloth}"/>
+          <path fill="${INK}" d="${knot}"/>
+        </g>`;
+      };
+
+      // -------------------------------------------------------- wing · 3 --
+      // HORSESHOE PATCH. A white shoe, heels up (luck in), on the broody
+      // wing's centre (37,43). Drawn as one filled band — outer arc, inner
+      // arc — on the 2 ink stroke. The ring is the item and the ring is the
+      // problem: its centre is the bird's own orange, so this IS a white
+      // shape with a darker centre, which the rules say reads as an eye. The
+      // opening at the top is what should save it; the 76px row says whether
+      // it does.
+      const horseshoe = () => {
+        const cx = 37;
+        const cy = 43.5;
+        const R = 5.8;
+        const r = 2.7;
+        const a = (Math.PI * 7) / 12; // the heels, 105° either side of straight down
+        const px = (rad, ang) => (cx + rad * Math.sin(ang)).toFixed(1);
+        const py = (rad, ang) => (cy - rad * Math.cos(ang)).toFixed(1);
+        const d =
+          `M ${px(R, -a)} ${py(R, -a)} A ${R} ${R} 0 1 0 ${px(R, a)} ${py(R, a)}` +
+          ` L ${px(r, a)} ${py(r, a)} A ${r} ${r} 0 1 1 ${px(r, -a)} ${py(r, -a)} Z`;
+        return `<g data-wardrobe="horseshoe"><path ${LIGHT} d="${d}"/></g>`;
+      };
+
+      // -------------------------------------------------------- wing · 4 --
+      // BANJO. Carried, not worn: a white head with an ink rim at the wing's
+      // lower edge, the neck in ink running up the back toward the tail, a
+      // round headstock at the end — the whole instrument inside the body's
+      // outline (the broody back at x=24 is y≈29.5 and the neck ends at 35).
+      // The head is a white disc with an ink hoop just inside its edge and
+      // a two-unit bridge in the middle: a bridge is a dark centre, and it
+      // is drawn anyway because a banjo without one is a plate.
+      const banjo = () => `
+        <g data-wardrobe="banjo">
+          <path fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round" d="M 35 43.5 L 25 35.5"/>
+          <circle fill="${INK}" cx="24.3" cy="35" r="2"/>
+          <circle ${LIGHT} cx="37" cy="45.5" r="5"/>
+          <circle fill="none" stroke="${INK}" stroke-width="0.8" cx="37" cy="45.5" r="3.4"/>
+          <rect fill="${INK}" x="36.4" y="44.3" width="1.2" height="2.4" rx="0.3"/>
+        </g>`;
+
+      // --------------------------------------------------------- the pair --
+      const bandanaAndBanjo = (head, fill) => banjo(head, fill) + bandana(head, fill);
+
+      renderWardrobe({
+        fill: FILL,
+        silhouette: "broody",
+        heads: [
+          { src: HEADS.rosi, name: "rosi" },
+          { src: HEADS.rob, name: "rob" }
+        ],
+        items: [
+          {
+            key: "plaid-shirt",
+            short: "plaid shirt",
+            slot: "torso",
+            title: "1 · PLAID SHIRT",
+            draw: plaidShirt,
+            whitePoints: 0,
+            whitePointsNote: "the collar's two points are ink, not white",
+            note:
+              "A western shirt with a pointed collar, in ink, with the check as a grid of the team's own orange lines — buffalo plaid in black and the bird's colour, no white in it. It hangs off <code>shoulders</code> so the collar stays under a jaw on a costume head, and the hem at shoulders+21 is a clear ten units above the broody underside. The grid is what keeps it from being metal's rejected dark mass: at 304px it is unmistakably plaid, at 152px it is a textured shirt, and at 76px the lines are a pixel and it is a dark chest with a faint weave. The collar points are the one risk — two points under a beak — and they are drawn in ink precisely so the fangs rule, which is about white, is not the thing that cuts them; whether two dark points read as a mouth is for the 76px row."
+          },
+          {
+            key: "bandana",
+            short: "bandana",
+            slot: "torso",
+            title: "2 · BANDANA DOWN THE CHEST",
+            draw: bandana,
+            whitePoints: 1,
+            whitePointsNote: "the one point of the neckerchief",
+            note:
+              "Country's survivor, moved onto the broody body without a change: a white neckerchief hung from the shoulders with one point down the chest and one small ink knot on the white. On this body it sits better than it did on the round one, because the broody chest is wider and the point lands in the middle of it rather than near its edge. Its top edge is the shoulders anchor itself — y=32 on a drawn head, the chin line exactly, which the measure below reports as a pass on the boundary — and it drops 5 on a costume head. At 76px it degrades to a bright wedge at the throat, which was the finding last time and still holds."
+          },
+          {
+            key: "horseshoe",
+            short: "horseshoe",
+            slot: "wing",
+            title: "3 · HORSESHOE PATCH",
+            draw: horseshoe,
+            whitePoints: 0,
+            darkCentre: true,
+            darkCentreNote: "the shoe is a white ring round the bird's own orange; it is on the wing, not the chest, and open at the top — judge it at 76px",
+            note:
+              "A white shoe, heels up, on the wing's centre, one filled band on the ink stroke. It is the most country-specific mark that fits the broody wing, which is the smallest of the four silhouettes' and takes nothing wider than 12 units. It fails a rule on paper: it is a white shape round a darker centre, which is the eye the rules warn about, and the measure below reports that. Two things argue for drawing it anyway — it is on the wing, a hand's width behind the beak where no eye belongs, and the gap between the heels is a third of the ring, which a closed ring would not have. At 76px, look for whether the gap survives: if the ring closes, this is an eye on a wing and it is cut."
+          },
+          {
+            key: "banjo",
+            short: "banjo",
+            slot: "wing",
+            title: "4 · BANJO",
+            draw: banjo,
+            whitePoints: 0,
+            darkCentre: true,
+            darkCentreNote: "the head is a white disc with an ink hoop and a two-unit bridge in the middle; on the wing, not the chest",
+            note:
+              "Carried rather than worn, like metal's small V: the head a white disc at the wing's lower edge, the neck in ink running up the bird's back toward the tail, the headstock a round ink knob at the end. The whole thing sits inside the outline — the broody back at x=24 is at y≈29.5 and the neck stops at 35, under the chin line and left of the hair line. It is the item on the page that says country without a word. It also fails the eye rule twice over, on paper: the head is a white disc, and the bridge is a dark mark in the middle of it. Drawn with the bridge anyway, because a banjo with no bridge is a plate on a wing. At 76px the neck is a short dark diagonal up the back and the head is a bright dot — a dot and a dash, the same degrade pop's mic has."
+          },
+          {
+            key: "bandana-and-banjo",
+            short: "bandana + banjo",
+            slot: "torso + wing",
+            title: "2 + 4 · BANDANA with the BANJO — the two slots worn at once",
+            draw: bandanaAndBanjo,
+            whitePoints: 1,
+            darkCentre: true,
+            darkCentreNote: "the banjo's, as above",
+            note:
+              "The strongest pair, and the layering Brad will see on a guest who fills both slots: the bandana claims the throat, the banjo claims the wing and the back, and the two never meet — the bandana's point is at x≈53 and the banjo's head stops at x=42. It is also the pair with the most going on at 76px: a bright wedge at the throat, a bright dot on the wing and a dark line up the back. If the banjo is cut for the eye rule, bandana + horseshoe is the fallback and is quieter."
+          }
+        ],
+        verdict: `
+          <section class="cell">
+            <h2>verdict · what to cut, from the 76px row</h2>
+            <p class="note">
+              <strong>On the torso, the bandana is the slot</strong> — it has already survived a
+              round, it sits better on the broody chest than it did on the round one, and it is
+              the only item on this page with a white point that is allowed to have one. The
+              plaid shirt is the alternative, not the second layer: it passes every rule because
+              it has no white in it, and it is the better garment at 304px, but at 76px it is a
+              dark chest with two dark points at the collar. If the ink collar reads as a mouth
+              at TV size, cut the shirt; if it does not, it is the richer drawing of the two.
+            </p>
+            <p class="note">
+              <strong>On the wing, both candidates fail the eye rule on paper</strong>, and the
+              page draws them anyway so the rule can be tested instead of assumed. The banjo is
+              the one to keep if either survives: it is a dot and a dash, and the dash goes
+              somewhere — up the back, where nothing else on the bird lives — so even when the
+              head is a plain bright dot the bird is holding something. The horseshoe is a ring
+              on a wing, and at 76px a 12-unit ring is six pixels with a one-pixel gap at the
+              top; if the gap closes it is an eye and it is cut. Expect to cut it.
+            </p>
+            <p class="note">
+              <strong>Pair for the portal's default preview: bandana + banjo</strong>, with
+              bandana + plaid shirt impossible (same slot) and bandana + horseshoe as the quiet
+              fallback.
+            </p>
+          </section>`
+      });
+    </script>
+  </body>
+</html>

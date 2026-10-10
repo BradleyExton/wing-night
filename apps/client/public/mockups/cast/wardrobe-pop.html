@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WARDROBE — pop</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+    <link rel="stylesheet" href="./wardrobe-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>WARDROBE — pop · Spice Girls (teamH, pink) · the stock bird</h1>
+      <p class="lede">
+        <strong>The round.</strong> The portal's wardrobe (docs/guest-portal-team-pick-plan.md,
+        decision 7) gives each guest two slots, <code>torso</code> and <code>wing</code>, with a
+        rail per genre. This page draws pop's first-cut rail — crop jacket, sequin tee, star
+        patch, mic — on the bird pop actually is: <code>resolveTeamSilhouette</code> gives pop
+        <em>no</em> silhouette, because "smooth, round, upright" is a description of the stock
+        bird, and pop carries its genre in motion (the team bounce) instead. So pop's items have
+        a job the other three rails do not: with no silhouette doing the talking, the item is
+        the only thing on the bird that says pop. Every item is a <code>bodyApparel</code>:
+        painted after the body and the wing and before the neck and head, so it rides the body
+        under a photographed jaw. Nothing here crosses a face.
+        <br /><br />
+        <strong>The rules</strong> are the September round's, listed in the first card and
+        measured on every card from the item's drawn outline. Pop's own round found two things
+        that still hold: the wing is the one flat plane and a 12-unit star is the biggest single
+        mark it takes; and white props die on chrome, which pop is not, but the rail should not
+        assume a colour — pink is the pack's, not the genre's.
+      </p>
+      <div id="root"></div>
+    </main>
+    <script type="module">
+      import { renderWardrobe, PALETTE, HEADS, clipId, dotGrid, starPath } from "./wardrobe-harness.js";
+
+      const INK = PALETTE.bg;
+      const WHITE = PALETTE.text;
+      const FILL = PALETTE.teamH;
+      const LIGHT = `fill="${WHITE}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"`;
+
+      // ------------------------------------------------------- torso · 1 --
+      // CROP JACKET. A white jacket cut short — its hem is at shoulders+13,
+      // so the pink belly shows under it, which is the whole word "crop" —
+      // worn open: a narrow V from the collar to the hem lets the body
+      // colour through, drawn as a hole in one shape (even-odd) rather than
+      // as two lapels, because two white points under a beak are fangs.
+      // Round-bird chest at the shoulders runs x≈44–63.
+      const cropJacket = (head) => {
+        const s = head.shoulders;
+        return `<g data-wardrobe="crop-jacket">
+          <path ${LIGHT} fill-rule="evenodd"
+            d="M 42.5 ${s + 1} L 61 ${s + 1} C 63.5 ${s + 5} 64 ${s + 9} 63 ${s + 13}
+               L 41 ${s + 13} C 40.5 ${s + 9} 41 ${s + 5} 42.5 ${s + 1} Z
+               M 49.5 ${s + 1} L 55 ${s + 1} L 52.8 ${s + 13} L 51.6 ${s + 13} Z"/>
+        </g>`;
+      };
+
+      // ------------------------------------------------------- torso · 2 --
+      // SEQUIN TEE. A white crew-neck tee to the hip, with the sequins as a
+      // staggered grid of TEAM-colour dots clipped to it — pink glitter on
+      // white, so the tee has no ink inside it and nothing that could be
+      // read as a centre. Honest at 76px: the dots vanish and it is a white
+      // tee, which is still a garment and still not a necklace.
+      const sequinTee = (head, fill) => {
+        const s = head.shoulders;
+        const id = clipId("tee");
+        const panel = `M 43 ${s + 2} Q 51.5 ${s + 8} 60 ${s + 2} C 63 ${s + 7} 63.5 ${s + 12} 59.5 ${s + 19}
+                       L 40.5 ${s + 19} C 40 ${s + 13} 41 ${s + 7} 43 ${s + 2} Z`;
+        return `<g data-wardrobe="sequin-tee">
+          <clipPath id="${id}"><path d="${panel}"/></clipPath>
+          <path ${LIGHT} d="${panel}"/>
+          <g clip-path="url(#${id})">${dotGrid({ x0: 41, y0: s + 5, x1: 64, y1: s + 18, step: 2.6, r: 0.75, fill })}</g>
+        </g>`;
+      };
+
+      // -------------------------------------------------------- wing · 3 --
+      // STAR PATCH. Pop's own round's winner, star billing, exactly: the
+      // star off the eye line and onto the wing, 2.4 stroke so it holds on
+      // chrome. Five white points, but none of them on the CHEST — the
+      // fangs rule is about what sits under a beak, and the wing is a hand's
+      // width behind it.
+      const starPatch = () => `
+        <g data-wardrobe="star-patch">
+          <path fill="${WHITE}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round" d="${starPath(33.5, 42, 6)}"/>
+        </g>`;
+
+      // -------------------------------------------------------- wing · 4 --
+      // MIC. A handheld in the wing: the capsule up near the wing root, the
+      // handle running down the wing's own axis to the tip, so the bird is
+      // holding it up to sing. Capsule at (39.5,39): its stroke tops out at
+      // y≈34.4 (chin ✓) and reaches x≈44.1 (hair ✓). One thin ink latitude
+      // on the ball, deliberately not a grid, so it is a ball with a line
+      // and not a white shape with a dark centre.
+      const mic = () => `
+        <g data-wardrobe="mic">
+          <path fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round" d="M 37.8 41.4 L 27 50"/>
+          <path fill="none" stroke="${WHITE}" stroke-width="1" stroke-linecap="round" d="M 36.6 42.6 L 28.2 49.2"/>
+          <circle ${LIGHT} cx="39.5" cy="39" r="3.6"/>
+          <path fill="none" stroke="${INK}" stroke-width="0.9" d="M 36.2 38.2 Q 39.5 40.6 42.8 38.2"/>
+        </g>`;
+
+      // --------------------------------------------------------- the pair --
+      const jacketAndStar = (head, fill) => cropJacket(head, fill) + starPatch(head, fill);
+
+      renderWardrobe({
+        fill: FILL,
+        silhouette: undefined,
+        heads: [
+          { src: HEADS.rosi, name: "rosi" },
+          { src: HEADS.rob, name: "rob" }
+        ],
+        items: [
+          {
+            key: "crop-jacket",
+            short: "crop jacket",
+            slot: "torso",
+            title: "1 · CROP JACKET",
+            draw: cropJacket,
+            whitePoints: 0,
+            whitePointsNote: "the open front is a hole in one shape, not two lapels",
+            note:
+              "A white jacket with a straight hem at shoulders+13, worn open. The hem is the whole idea: it stops high enough that a band of pink belly shows under it, so it reads as a crop and not as a bib. The open front is a narrow V cut OUT of the one shape, letting the body colour through, instead of two lapels — two white points under a beak are the fangs this codebase has drawn twice and thrown away twice. On the costume birds it drops 5 with the shoulders and its collar sits under the jaw. At 76px it degrades to a white band across the chest with a pink slit; the slit is a pixel wide and may close, at which point it is a white tube top, which is also pop."
+          },
+          {
+            key: "sequin-tee",
+            short: "sequin tee",
+            slot: "torso",
+            title: "2 · SEQUIN TEE",
+            draw: sequinTee,
+            whitePoints: 0,
+            note:
+              "A crew-neck tee to the hip, white on the ink stroke, with the sequins as a staggered grid of pink dots clipped to it — the team colour on white, so nothing inside the tee is ink and nothing can be read as a centre. The contrast with the jacket is the hem: this covers the chest to shoulders+19, so at 76px it is a plain white torso, and the sequins are gone by 152px. It is the honest baseline garment for the slot; it says dressed, it does not say pop on its own, and it needs the wing slot to finish the sentence."
+          },
+          {
+            key: "star-patch",
+            short: "star patch",
+            slot: "wing",
+            title: "3 · STAR PATCH",
+            draw: starPatch,
+            whitePoints: 0,
+            whitePointsNote: "five points on the WING, none on the chest — the fangs rule is about what sits under a beak",
+            note:
+              "Pop's survivor, unchanged: the star from the eye line moved to the wing plate, 12 units, 2.4 stroke. It is the one item on any of the four pages whose whole idea survives 76px intact — a bright five-point mark mid-bird is a star at any size — and it is pixel-identical under a drawn head and a photograph because it lives on the body. It keeps the joke the shades were telling. The only thing to re-check on this page is that it is now sharing the bird with a torso item, and both of pop's torso candidates stop at x=40, two units clear of the star's right arm."
+          },
+          {
+            key: "mic",
+            short: "mic",
+            slot: "wing",
+            title: "4 · MIC",
+            draw: mic,
+            whitePoints: 0,
+            darkCentre: false,
+            darkCentreNote: "",
+            note:
+              "A handheld, held up. The capsule sits near the wing root and the handle runs down the wing's own axis toward the tip, so the bird is singing into it. Pop's first round had a mic STAND and rejected it as furniture; this one is carried, inside the outline, and needs no floor. The capsule is placed so its stroke tops out at y≈34.4, under the chin line, and reaches x≈44, inside the hair line on a costume head; the one ink latitude is a line, not a centre, so a white ball with a line stays a mic and not an eye — look at 76px to check that claim, because at that size the line is a pixel and the ball is five. The handle is where it is weakest: at 76px it is a short dark diagonal, which is also what metal's small V degraded to."
+          },
+          {
+            key: "jacket-and-star",
+            short: "jacket + star",
+            slot: "torso + wing",
+            title: "1 + 3 · CROP JACKET with the STAR PATCH — the two slots worn at once",
+            draw: jacketAndStar,
+            whitePoints: 0,
+            note:
+              "The layering a guest sees with both slots filled: jacket on the chest, star on the wing, pink belly between them. Two white marks on one pink bird is the most white any pair on these four pages carries, and it is also the pair most likely to read from across the room, because the bird has no silhouette of its own to carry the genre. They do not touch — the jacket's back edge is x=41, the star's right arm x≈39.2 — and at 76px it is a white chest, a white star, and a pink bird, which is a Spice Girl."
+          }
+        ],
+        verdict: `
+          <section class="cell">
+            <h2>verdict · what to cut, from the 76px row</h2>
+            <p class="note">
+              <strong>The star patch is the wing slot</strong>, and it is not close: it survived
+              its own round, it survives this one, and it is the only mark on four pages that
+              degrades to exactly itself. <strong>The mic is the one to show Brad and expect to
+              cut</strong> — it is the funnier drawing at 304px, it is placed legally, and at 76px
+              it is a dot and a dash. If it stays it stays because the dot reads as a mic held up,
+              and that is a judgement for the strip at the foot of the page, not for this note.
+            </p>
+            <p class="note">
+              <strong>On the torso, the crop jacket over the tee.</strong> Both are white
+              garments that pass every rule; the jacket says something — it is cut, it is open,
+              it leaves the belly out — and the tee says only "dressed". The jacket's risk is its
+              slit closing at 76px, and the fallback when it does is a white band, which is not
+              wrong. The tee is the safe default if the slit is judged to fail.
+            </p>
+            <p class="note">
+              <strong>Pair for the portal's default preview: crop jacket + star patch.</strong>
+              Pop has no silhouette, so the pair is doing all the work, and this pair is the one
+              that does most of it at the smallest size.
+            </p>
+          </section>`
+      });
+    </script>
+  </body>
+</html>

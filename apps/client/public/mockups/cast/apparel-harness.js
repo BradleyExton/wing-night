@@ -5,7 +5,9 @@
 // CharacterFigure/index.tsx for the body, geometry/index.ts for the anchors,
 // Apparel/index.tsx for the four props that ship today. Change nothing in this
 // file from a prototype page: add your candidates in your own page and pass
-// them to `bird({ apparel })`.
+// them to `bird({ apparel })`. The one extension since: `silhouette` draws a
+// genre body (shapes/index.ts) and `bodyApparel` paints an item under the
+// head; neither changes a bird that does not ask for it.
 
 export const PALETTE = {
   bg: "#121212",
@@ -85,6 +87,56 @@ const NECK_PATH = "M 45 33 C 47 24 52 17 60 15 L 68 25 C 63 28 60 34 60 40 Z";
 const WING_PATH =
   "M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 Q 28 50 31 54 Q 35 49 38 53 Q 42 48 45 51 C 49 46 51 40 47 35 Z";
 
+// ------------------------------------------------------------ silhouettes --
+// Character/shapes/index.ts `SILHOUETTE_SHAPES`, the genre bodies that
+// replace the stock paths outright (resolveTeamSilhouette: metal/punk/rock →
+// spiky, country → broody, disco → preener; pop keeps the stock bird). The
+// neck, legs, head and anchors are the stock ones. `spiky` is drawn with a
+// mitered join, as `styles.silhouetteMitered` does, because the house round
+// join blunts a point by a unit and at 76px a unit IS the point.
+export const SILHOUETTE_SHAPES = {
+  spiky: {
+    body: "M 18 47 C 17 37 23 31 29 29 L 32 17 L 36 28 L 40 18 L 44 29 C 57 31 66 40 62 51 C 55 61 32 62 25 57 C 20 54 18 51 18 47 Z",
+    belly: "M 28 54 C 36 60 51 59 58 51 C 53 60 31 61 28 54 Z",
+    tail: "M 30 48 L 2 46 L 28 40 Z M 28 42 L 0 26 L 29 33 Z M 29 34 L 7 9 L 31 27 Z",
+    wing:
+      "M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 L 27 52 L 31 55 L 34 52 L 38 54 L 41 51 L 45 51 C 49 46 51 40 47 35 Z",
+    comb: "M 48 13 L 51 1 L 54 10 L 57 -1 L 60 9 L 64 2 L 66 13 Z",
+    mitered: true
+  },
+  broody: {
+    body: "M 14 49 C 14 33 31 25 52 29 C 68 32 71 47 65 58 C 57 67 24 69 18 61 C 14 57 14 53 14 49 Z",
+    belly: "M 21 59 C 30 66 55 65 63 56 C 57 68 27 68 21 59 Z",
+    tail: "M 24 46 C 12 58 0 55 0 42 C 4 52 12 53 22 44 Z M 24 41 C 12 47 2 43 2 31 C 7 41 16 42 25 38 Z",
+    wing: "M 47 36 C 40 32 30 35 27 43 C 26 47 28 50 31 51 Q 35 47 39 50 C 45 47 49 41 47 36 Z",
+    comb: "M 51 13 C 51 7 56 5 58 9 C 60 6 64 7 63 13 Z",
+    mitered: false
+  },
+  preener: {
+    body: "M 27 41 C 25 22 39 16 52 22 C 64 27 66 39 60 48 C 54 55 33 56 30 50 C 27 47 27 45 27 41 Z",
+    belly: "M 32 49 C 38 54 51 53 57 45 C 53 55 34 56 32 49 Z",
+    tail: "M 27 38 C 13 30 5 12 17 0 C 13 16 21 26 32 32 Z M 25 45 C 9 40 1 24 9 10 C 10 27 18 36 29 40 Z",
+    wing: "M 47 34 C 37 29 21 32 17 43 C 16 48 19 53 23 54 C 28 48 33 43 40 41 C 46 40 50 38 47 34 Z",
+    comb: "M 51 13 C 50 5 55 -3 63 -4 C 59 2 59 8 62 13 Z",
+    mitered: false
+  }
+};
+
+const S_MITER = `stroke="${BG}" stroke-width="2" stroke-linejoin="miter"`;
+
+/** Every path one bird is drawn from — `resolveCharacterShapes`, in plain data. */
+const resolveShapes = ({ body, comb, tail, silhouette }) => {
+  const genre = silhouette ? SILHOUETTE_SHAPES[silhouette] : undefined;
+  return {
+    body: genre?.body ?? BODY_PATHS[body],
+    belly: genre?.belly ?? BELLY_SHADE_PATHS[body],
+    tail: genre?.tail ?? TAIL_PATHS[tail],
+    wing: genre?.wing ?? WING_PATH,
+    comb: comb === "none" ? null : (genre?.comb ?? COMB_PATHS[comb]),
+    ink: genre?.mitered ? S_MITER : S
+  };
+};
+
 const PIVOTS = { legFar: { x: 44, y: 57 }, legNear: { x: 32, y: 57 } };
 
 const legPath = ({ x, y }) =>
@@ -132,16 +184,36 @@ const costumeHead = (avatarSrc, head) => {
  * @param {"round"|"tall"|"wide"} [o.body]
  * @param {"none"|"crest"|"mohawk"} [o.comb]
  * @param {"fan"|"plume"} [o.tail]
+ * @param {"spiky"|"broody"|"preener"} [o.silhouette]
+ *        the genre's own body (shapes/index.ts); omit for the stock bird,
+ *        which is what `body`/`comb`/`tail` pick between. With a silhouette
+ *        those three are ignored except `comb: "none"`, as on the TV.
  * @param {string} [o.avatarSrc]   a costume head; omit for the drawn head
  * @param {(head: object, fill: string) => string} [o.apparel]
  *        your candidate: given the head anchors and the team colour, return
  *        SVG. It is drawn LAST, over the head. Set `fn.crossesTheFace = true`
  *        on it if it lands on the face, and a costume head will drop it the
  *        way `CharacterFigure` does.
+ * @param {(head: object, fill: string) => string} [o.bodyApparel]
+ *        a candidate that belongs to the BODY: drawn after the wing and
+ *        before the neck and head, so it sits under the head the way the body
+ *        does and a photograph's jaw or hair is always over it, never under.
+ *        A wardrobe item that keeps below the chin goes here.
  * @returns {string} the inner SVG markup
  */
-export const birdMarkup = ({ fill, body = "round", comb = "crest", tail = "fan", avatarSrc, apparel }) => {
+export const birdMarkup = ({
+  fill,
+  body = "round",
+  comb = "crest",
+  tail = "fan",
+  silhouette,
+  avatarSrc,
+  apparel,
+  bodyApparel
+}) => {
   const head = avatarSrc ? COSTUME_HEAD_ANCHORS : DRAWN_HEAD_ANCHORS;
+  const shapes = resolveShapes({ body, comb, tail, silhouette });
+  const ink = shapes.ink;
   // `apparelCrossesTheFace` (Character/Apparel/index.tsx): a player's own face
   // is not a place to put a hat, so a costume head wears only what hangs below
   // it. The harness has to honour this or a prototype page shows the team
@@ -149,16 +221,17 @@ export const birdMarkup = ({ fill, body = "round", comb = "crest", tail = "fan",
   // round is about.
   const worn = apparel && !(avatarSrc && apparel.crossesTheFace) ? apparel : undefined;
   return `
-  <path fill="${fill}" ${S} d="${TAIL_PATHS[tail]}"/>
+  <path fill="${fill}" ${ink} d="${shapes.tail}"/>
   <g opacity="0.7"><path fill="none" stroke="${PALETTE.primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="${legPath(PIVOTS.legFar)}"/></g>
-  <path fill="${fill}" ${S} d="${BODY_PATHS[body]}"/>
-  <path fill="${BG}" fill-opacity="0.2" d="${BELLY_SHADE_PATHS[body]}"/>
+  <path fill="${fill}" ${ink} d="${shapes.body}"/>
+  <path fill="${BG}" fill-opacity="0.2" d="${shapes.belly}"/>
   <path fill="${fill}" ${S} d="${thighPath(PIVOTS.legNear)}"/>
   <path fill="none" stroke="${PALETTE.primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="${legPath(PIVOTS.legNear)}"/>
-  <path fill="${fill}" ${S} d="${WING_PATH}"/>
+  <path fill="${fill}" ${ink} d="${shapes.wing}"/>
+  ${bodyApparel ? bodyApparel(head, fill) : ""}
   <path fill="${fill}" ${S} d="${NECK_PATH}"/>
   ${avatarSrc ? costumeHead(avatarSrc, head) : drawnHead(fill, head)}
-  ${!avatarSrc && comb !== "none" ? `<path fill="${fill}" ${S} transform="${perchTransform(head.cx, head.top + 4)}" d="${COMB_PATHS[comb]}"/>` : ""}
+  ${!avatarSrc && shapes.comb ? `<path fill="${fill}" ${ink} transform="${perchTransform(head.cx, head.top + 4)}" d="${shapes.comb}"/>` : ""}
   ${worn ? worn(head, fill) : ""}`;
 };
 

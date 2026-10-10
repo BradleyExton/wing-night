@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WARDROBE — metal</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+    <link rel="stylesheet" href="./wardrobe-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>WARDROBE — metal · Molten Metal (teamD, chrome) · the <code>spiky</code> silhouette</h1>
+      <p class="lede">
+        <strong>The round.</strong> The portal's wardrobe (docs/guest-portal-team-pick-plan.md,
+        decision 7) gives each guest two slots, <code>torso</code> and <code>wing</code>, with a
+        rail per genre. This page draws metal's first-cut rail — battle vest, chain-mail shirt,
+        spiked bracer, guitar pick patch — on the bird metal actually IS now: the
+        <code>spiky</code> silhouette from <code>Character/shapes</code>, mitered join, three
+        blade tail, two back spikes, pointed wing tips. The silhouette is the genre's statement;
+        an item is the player's flavour on top, and it must sit with that shape rather than
+        repeat it. Every item is a <code>bodyApparel</code>: painted after the body and the wing
+        and before the neck and head, so it rides the body under a photographed jaw. Nothing on
+        this page crosses a face, so <code>crossesTheFace</code> is never needed.
+        <br /><br />
+        <strong>The rules</strong> are the September round's, listed in the first card and
+        measured on every card from the item's drawn outline. Two things worth knowing before
+        the 76px row: chrome (<code>#d9dee6</code>) is nearly white, so a white item has no fill
+        contrast and lives on its 2.4 ink stroke; and metal's round 2 found that the bird has
+        exactly one flat plane, the wing, and a second item has to claim a different anatomy.
+        The torso slot and the wing slot are that split made literal.
+      </p>
+      <div id="root"></div>
+    </main>
+    <script type="module">
+      import { renderWardrobe, PALETTE, HEADS, clipId, ringGrid } from "./wardrobe-harness.js";
+
+      const INK = PALETTE.bg;
+      const WHITE = PALETTE.text;
+      const FILL = PALETTE.teamD;
+      const LIGHT = `fill="${WHITE}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"`;
+
+      // ------------------------------------------------------- torso · 1 --
+      // BATTLE VEST. Round 1's cut, re-hung on the spiky chest: an ink panel
+      // with a notched collar and a straight hem, one chrome patch sewn on.
+      // Everything hangs off `shoulders`, so a costume head drops the whole
+      // garment 5 with its jaw. The armhole is cut around the wing root, and
+      // because the wing is painted first the wing comes out from UNDER the
+      // hem, which is what makes it sleeveless. The hem stops at x=40 so the
+      // wing's leading edge and both back spikes stay clear of it.
+      const battleVest = (head, fill) => {
+        const s = head.shoulders;
+        return `<g data-wardrobe="battle-vest">
+          <path fill="${INK}" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"
+            d="M 44 ${s + 1} L 50 ${s + 7.5} L 56 ${s + 1} L 59.5 ${s + 3}
+               C 62 ${s + 8} 62 ${s + 13} 60 ${s + 17} L 40 ${s + 16.5}
+               Q 41.5 ${s + 8} 44 ${s + 1} Z"/>
+          <rect fill="${fill}" x="53.5" y="${s + 9.5}" width="6.4" height="5.6" rx="1.1"
+                transform="rotate(-8 56.7 ${s + 12.3})"/>
+        </g>`;
+      };
+
+      // ------------------------------------------------------- torso · 2 --
+      // CHAIN-MAIL SHIRT. An ink bib with a crew neck, and the mail drawn as
+      // a staggered grid of open rings stroked in the TEAM colour — chrome rings on ink,
+      // so the shirt is two-tone with no white in it at all and the colour
+      // keeps a share of the chest. Clipped to the panel. At 76px the rings
+      // are sub-pixel and it degrades to a dark stippled bib.
+      const chainMail = (head, fill) => {
+        const s = head.shoulders;
+        const id = clipId("mail");
+        const panel = `M 43 ${s + 2} Q 51 ${s + 8} 59.5 ${s + 2} C 62 ${s + 7} 62 ${s + 12} 60 ${s + 17}
+                       L 41 ${s + 17} C 40 ${s + 12} 41 ${s + 6} 43 ${s + 2} Z`;
+        return `<g data-wardrobe="chain-mail">
+          <clipPath id="${id}"><path d="${panel}"/></clipPath>
+          <path fill="${INK}" d="${panel}"/>
+          <g clip-path="url(#${id})" fill="none" stroke="${fill}" stroke-width="0.6">${ringGrid({ x0: 41, y0: s + 4, x1: 62, y1: s + 18, step: 2.4, r: 1 })}</g>
+        </g>`;
+      };
+
+      // -------------------------------------------------------- wing · 3 --
+      // SPIKED BRACER. A strap across the wing's forearm, square to the
+      // wing's own axis (root 47,35 → tip 22,50), with three ink spikes
+      // standing off its upper end over the wing's leading edge. The band
+      // sits low enough on the wing that the spikes top out at y=32 — the
+      // chin line — and nowhere else. Spikes in ink against chrome, so this
+      // is the one item on the page that gets STRONGER on the palest colour.
+      const spikedBracer = (head, fill) => `
+        <g data-wardrobe="spiked-bracer">
+          <path fill="${INK}" d="M 31 37.5 L 37 49 L 32.6 51.2 L 26.5 39.8 Z"/>
+          <path fill="${INK}" stroke="${fill}" stroke-width="0.7" stroke-linejoin="miter"
+                d="M 26.2 40 L 26.4 32.6 L 28.4 38.9 Z
+                   M 28.3 38.9 L 29.3 32.1 L 30.3 37.9 Z
+                   M 30.3 37.9 L 32.4 32.6 L 31.6 37.2 Z"/>
+        </g>`;
+
+      // -------------------------------------------------------- wing · 4 --
+      // GUITAR PICK PATCH. A plectrum, white with the 2.4 ink stroke, sewn
+      // on the wing plate with its tip pointing down the wing. One white
+      // point, and a rounded one. It is the metal emblem that needs no
+      // explaining and no second hue, and it is the same size as round 2's
+      // skull, so the wing's own edges and feather tips stay legible round it.
+      const pickPatch = () => `
+        <g data-wardrobe="pick-patch">
+          <path ${LIGHT} d="M 28.8 39 Q 33.2 36.2 37.6 39 Q 38.3 43.5 34.2 48.2 Q 33.4 48.9 32.6 48.2 Q 28.1 43.5 28.8 39 Z"/>
+        </g>`;
+
+      // --------------------------------------------------------- the pair --
+      const vestAndPick = (head, fill) => battleVest(head, fill) + pickPatch(head, fill);
+
+      renderWardrobe({
+        fill: FILL,
+        silhouette: "spiky",
+        heads: [
+          { src: HEADS.rosi, name: "rosi" },
+          { src: HEADS.kenny, name: "kenny" }
+        ],
+        items: [
+          {
+            key: "battle-vest",
+            short: "battle vest",
+            slot: "torso",
+            title: "1 · BATTLE VEST",
+            draw: battleVest,
+            whitePoints: 0,
+            note:
+              "Round 1's cut on the new body. An ink panel with a notched collar and a flat hem, one chrome patch sewn on; it hangs off <code>shoulders</code>, so the costume birds wear it five lower and its collar never climbs into a jaw. On the spiky chest it does something it could not on the round bird: the back spikes rise out of the top of it and the hem stops short of the wing's leading edge, so the vest reads as cut around the anatomy instead of laid across it. The honest cost is unchanged from round 2 — it is a dark mass on a chrome bird, and at 76px the colour share drops visibly. Below the chin by construction."
+          },
+          {
+            key: "chain-mail",
+            short: "chain mail",
+            slot: "torso",
+            title: "2 · CHAIN-MAIL SHIRT",
+            draw: chainMail,
+            whitePoints: 0,
+            note:
+              "A crew-necked ink bib with the mail drawn as a staggered grid of chrome rings — team colour on ink, so there is no white anywhere on the chest and the rings give some of the colour back. The point of putting it beside the vest: same footprint, same hang, but a textured mass instead of a flat one. At 76px the rings go sub-pixel and the bib degrades to a dark stipple, which is still cloth, but it says <em>armour</em> only if you already know. On a photographed head it is the better of the two, because it has no collar shape to argue with a chin."
+          },
+          {
+            key: "spiked-bracer",
+            short: "spiked bracer",
+            slot: "wing",
+            title: "3 · SPIKED BRACER",
+            draw: spikedBracer,
+            whitePoints: 0,
+            note:
+              "Round 2's cuff with the spikes it was missing. The strap crosses the wing square to the wing's axis, and three ink spikes stand off its upper end over the leading edge, against the body. It is placed low on the wing on purpose: that is what keeps the spike tips at y=32, exactly the chin line, and not above it. All ink, no white, so chrome makes it louder rather than quieter. The trade is the one the cuff had — at 76px the strap is a four-pixel dark dash, and the spikes are two pixels of jag on top of it; it reads as a notch in the wing before it reads as a bracer."
+          },
+          {
+            key: "pick-patch",
+            short: "pick patch",
+            slot: "wing",
+            title: "4 · GUITAR PICK PATCH",
+            draw: pickPatch,
+            whitePoints: 1,
+            whitePointsNote: "the plectrum's tip, rounded",
+            note:
+              "A plectrum sewn on the wing plate, white on the 2.4 ink stroke, tip pointing down the wing. The one white point allowed. It is the same move as round 2's skull — one small mark on the wing's flat plane, inside the wing's own edges — and it is cheaper: three curves. On chrome the fill is nearly the body colour and the stroke does the work, which is why the stroke is 2.4 and not 2. At 76px it degrades to a bright rounded triangle, and a bright triangle on a wing is a pick the way a bright star is a star."
+          },
+          {
+            key: "vest-and-pick",
+            short: "vest + pick",
+            slot: "torso + wing",
+            title: "1 + 4 · BATTLE VEST with the PICK PATCH — the two slots worn at once",
+            draw: vestAndPick,
+            whitePoints: 1,
+            whitePointsNote: "the pick's tip; the vest has none",
+            note:
+              "The layering Brad will actually see on a guest who fills both slots. The vest claims the chest, the pick claims the wing, and they do not touch: the vest's hem stops at x=40 and the pick ends at x=38. This is the lesson of round 2's failed pairing applied — a second item claims a different anatomy. At 76px it is a dark chest, a bright mark on the wing and chrome everywhere else, which is a dressed bird. Whether it is still a chrome bird is the question the vest always raises."
+          }
+        ],
+        verdict: `
+          <section class="cell">
+            <h2>verdict · what to cut, from the 76px row</h2>
+            <p class="note">
+              <strong>The pick patch is the wing slot.</strong> It passes every rule by
+              construction, it is one shape, it reads on chrome because its outline reads, and at
+              76px it is unmistakably a pick. <strong>The bracer is the one to cut</strong>: it
+              only fits under the chin line by sitting so low on the wing that it stops being a
+              forearm, and at TV size it is a dark nick with a jag — it does not say metal, it
+              says damage.
+            </p>
+            <p class="note">
+              <strong>On the torso, keep the vest and show it to Brad beside the mail.</strong>
+              The vest is the garment the plan marked as survived; on the spiky body it finally
+              reads as cut around the bird, and the spikes rising out of its collar are the best
+              thing on this page. Its cost is the one it has always had and the chain mail does
+              not fix it — both are a dark bib on a chrome bird. If the colour-share objection
+              from round 2 is still live, the mail is the version that gives some chrome back,
+              and it is the one that behaves better under a photographed jaw. If it is not, the
+              vest is the stronger drawing.
+            </p>
+            <p class="note">
+              <strong>Pair for the portal's default preview: vest + pick.</strong> One dark mass,
+              one bright mark, on two different planes. Everything on this page is a
+              <code>bodyApparel</code> hung off the shoulders or sat on the wing, so the cast
+              needs no new anchor to ship any of it.
+            </p>
+          </section>`
+      });
+    </script>
+  </body>
+</html>
