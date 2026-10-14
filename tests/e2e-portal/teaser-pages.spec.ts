@@ -10,6 +10,7 @@ test("the landing, a game page and the share card still draw", async ({ page }) 
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Wing Night");
   await expect(page.getByRole("link", { name: /Dunlop Dash/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/signin");
 
   await page.goto("/dunlop-dash");
   await expect(page.getByText("Dunlop Dash").first()).toBeVisible();

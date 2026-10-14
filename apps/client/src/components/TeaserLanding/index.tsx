@@ -1,4 +1,5 @@
 import { useMemo, useRef } from "react";
+import { UserRound } from "lucide-react";
 
 import type { TeaserRoster } from "../../utils/parseTeaserRoster";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
@@ -8,7 +9,7 @@ import { CastParade } from "../DisplayBoard/StageSurface/SetupStageBody/CastPara
 import { Embers } from "../DisplayBoard/StageSurface/SetupStageBody/Embers";
 import { HeroFlame } from "../DisplayBoard/StageSurface/SetupStageBody/HeroFlame";
 import * as lobbyStyles from "../DisplayBoard/StageSurface/SetupStageBody/styles";
-import { resolveTeaserGameHref } from "../TeaserApp/teaserRoutes";
+import { resolveTeaserGameHref, TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
 import { dunlopDashGame, fappyBirdGame, slingshlongGame, streetsOfBarrieGame } from "../TeaserSoloGame/teaserGames";
 import { teaserLandingCopy } from "./copy";
 import { TeaserCountdown } from "./TeaserCountdown";
@@ -33,6 +34,7 @@ const WIDE_FLOOR_QUERY = "(min-width: 640px)";
 // the teaser counts down to the night and offers the games you can warm up on — all of it on
 // one phone screen, with nothing to scroll to. The lobby's song plays on a tap of its pill, and
 // the parade dances to it through the TV's own beat clock (keeping its own time until then).
+// A guest's way into the portal is the pill in the opposite corner.
 export const TeaserLanding = ({ roster }: TeaserLandingProps): JSX.Element => {
   const teamThemeByTeamId = useMemo(() => resolveTeamThemeById(roster.teams), [roster.teams]);
   const hasWideFloor = useMediaQuery(WIDE_FLOOR_QUERY);
@@ -59,6 +61,11 @@ export const TeaserLanding = ({ roster }: TeaserLandingProps): JSX.Element => {
         />
       </div>
       <span className={lobbyStyles.floorBloom} aria-hidden />
+
+      <a className={styles.signInLink} href={TEASER_ROUTES.signIn} data-teaser-sign-in>
+        <UserRound className={styles.signInIcon} aria-hidden />
+        <span className={styles.signInLabel}>{teaserLandingCopy.signInLabel}</span>
+      </a>
 
       <div className={styles.header}>
         <div className={lobbyStyles.eyebrowRow}>

@@ -31,3 +31,14 @@ export const gamesHeading =
   "m-0 text-[clamp(0.65rem,1.5vh,0.8rem)] font-extrabold uppercase tracking-[0.42em] text-mutedWarm";
 
 export const gameList = "flex w-full flex-col gap-[clamp(0.45rem,1vh,0.75rem)]";
+
+// The guest portal's door, in the top-left: the music pill's twin (TeaserMusicToggle) in size and
+// material, and like it only a disc on a phone — the word would sit on the eyebrow — with the
+// label joining it where there is width to spare.
+export const signInLink =
+  "absolute left-3 top-[calc(env(safe-area-inset-top)+0.6rem)] z-[3] inline-flex h-[2.85rem] min-w-[2.85rem] items-center justify-center gap-2 rounded-full border border-text/15 bg-[linear-gradient(120deg,theme(colors.surface/88%)_0%,theme(colors.bg/86%)_72%)] text-mutedWarm no-underline transition-transform [animation:reveal_500ms_cubic-bezier(0.2,0.7,0.2,1)_both] [box-shadow:0_14px_34px_-18px_theme(colors.shade/95%)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow motion-reduce:[animation:none] sm:left-6 sm:top-[calc(env(safe-area-inset-top)+1rem)] sm:pl-[0.85rem] sm:pr-[1rem]";
+
+export const signInIcon = "h-[1.1rem] w-[1.1rem] flex-none";
+
+export const signInLabel =
+  "sr-only text-[0.6rem] font-extrabold uppercase leading-none tracking-[0.24em] sm:not-sr-only";
