@@ -493,6 +493,12 @@ looks like another arena frame will not hurt anybody.
 
 ## 2.1 Host UI (Tablet Optimized)
 
+-   The host tablet is a **16:10 Android tablet, ~1280×800, held in landscape**. That is the size a
+    host surface is designed and checked at — not desktop width, which hides the failures. Measured
+    on the shipped SETUP console at 1280×800 before the lineup board (§2.1A): the stage hero was
+    766×724 with ~505px of empty canvas under its last line of text, while the control deck was
+    413px wide carrying 1911px of content — a 2.6-screen scroll in a gutter, with the music
+    controls at the bottom of it.
 -   Touch targets ≥ 44x44 CSS px
 -   Primary actions always visible — except during `MINIGAME_PLAY`, where they live one tap deep in the corner dock (§2.0A)
 -   Avoid dense tables
@@ -526,6 +532,32 @@ looks like another arena frame will not hurt anybody.
 -   Avoid tiny informational text on display surfaces; critical game context should remain readable at distance
 
 Timer must be the most visually dominant element during EATING.
+
+### 2.1A Setup Lineup Board (proposed — mockup only)
+
+Direction under review, not built: `apps/client/public/mockups/host/04-lineup.html`. It applies to
+SETUP alone; every other host phase keeps the stage/deck split of §2.0A.
+
+-   **The split is for phases with a live datum.** EATING's hero holds a 16rem timer and earns its
+    65%. SETUP's hero holds one sentence, so on SETUP the split is what produces the dead canvas
+    measured in §2.1. SETUP gives the whole canvas to a team board instead.
+-   **One column per team, drawn as the TV draws it** — genre wordmark in its own face and
+    treatment, emblem as a watermark, the team's identity accent along the top edge. A team accent
+    on a team column is the identity use §0.1 allows (the same use as a standings row), so four
+    teams may carry four accents; `primary` stays the CTA's and the held-player state's.
+-   **Rosters are the real heads, not text.** Each player is a tile carrying the generated avatar
+    the lobby cast already wears, with a pool of shadow under it for the same reason the parade has
+    one (§2.2C). A player with no imported head falls back to initials rather than a hole.
+-   **Every tile on the board is one size.** Rows are sized off the fullest roster, not each team's
+    own, or a team of two gets faces twice the size of a team of five and the board stops reading as
+    one lineup. A short column shows its empty seats.
+-   **Assignment is tap-a-face-then-tap-a-column**, never a per-player × per-team chip matrix — that
+    is 80 controls for a 20-person room, for an assignment the content pack has usually already
+    made. Unassigned players wait in a tray that collapses to zero height when it is empty, which
+    is the normal state on a night the pack seated.
+-   The hero's copy demotes to the top rail, and the music controls move up beside it — on SETUP the
+    lobby playlist is a primary control, not something to scroll past twenty players to reach.
+-   Degrades to ~6 teams before names start truncating; 3–4 teams is the tuned case.
 
 ### 2.2A Now-Playing Strip
 

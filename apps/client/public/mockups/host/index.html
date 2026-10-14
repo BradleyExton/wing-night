@@ -137,6 +137,24 @@
         background: var(--primary);
       }
 
+      /* Variant 4 preview - lineup board */
+      .p4 { display: grid; grid-template-rows: auto 1fr auto; background: var(--bg); }
+      .p4-rail { height: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+      .p4-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 5px; }
+      .p4-col {
+        border-radius: 4px; padding: 4px;
+        border: 1px solid color-mix(in srgb, var(--t) 25%, transparent);
+        background: linear-gradient(180deg, color-mix(in srgb, var(--t) 16%, transparent), rgba(0,0,0,0.2));
+        border-top: 2px solid var(--t);
+        display: grid; grid-template-columns: 1fr 1fr; gap: 3px; align-content: start;
+      }
+      .p4-col i {
+        display: block; aspect-ratio: 1; border-radius: 3px;
+        background: color-mix(in srgb, var(--t) 22%, rgba(255,255,255,0.06));
+      }
+      .p4-col i:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - 1.5px); }
+      .p4-cta { height: 30px; background: var(--primary); }
+
       /* Variant 2 preview - console */
       .p2 {
         display: grid; grid-template-rows: auto 1fr auto;
@@ -300,8 +318,9 @@
   <body>
     <main class="wrap">
       <span class="eyebrow">Host Control Panel</span>
-      <h1>Three cockpits.<br/><span class="accent">Pick one.</span></h1>
-      <p class="lede">All three are variants of the <strong>Cockpit direction</strong>: 60–65 / 35–50 split with a dramatic left side, a control deck on the right, and a primary CTA pinned to the bottom. They differ in how dramatic the left side leans, how the control surface is structured, and how prominent the chrome is. Each shows <strong>EATING</strong> + <strong>SETUP</strong> phases — flip between them with the pill in the corner.</p>
+      <h1>Three cockpits,<br/><span class="accent">and one that isn't.</span></h1>
+      <p class="lede">Variants <strong>01–03</strong> are the <strong>Cockpit direction</strong> that shipped: 60–65 / 35–50 split with a dramatic left side, a control deck on the right, and a primary CTA pinned to the bottom. They differ in how dramatic the left side leans, how the control surface is structured, and how prominent the chrome is. Each shows <strong>EATING</strong> + <strong>SETUP</strong> — flip with the pill in the corner.</p>
+      <p class="lede">Variant <strong>04</strong> is a later argument, and only about <strong>SETUP</strong>: the split earns its keep when the hero holds a live datum, and on SETUP it holds a sentence. Measured on the shipped console at 1280×800, that leaves ~500px of empty hero while the roster scrolls 2.6 screens inside a 413px deck. So SETUP gives up the split and draws the room instead.</p>
 
       <div class="grid">
         <a class="card" href="01-broadcast.html">
@@ -401,6 +420,29 @@
               <span class="tag">Maximally dramatic</span>
               <span class="tag">No top chrome</span>
               <span class="tag">Heat strip CTA</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="card" href="04-lineup.html">
+          <div class="preview p4">
+            <div class="p4-rail"></div>
+            <div class="p4-board">
+              <div class="p4-col" style="--t:#d9dee6"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="p4-col" style="--t:#ec4899"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="p4-col" style="--t:#d98324"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="p4-col" style="--t:#06b6d4"><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <div class="p4-cta"></div>
+          </div>
+          <div class="meta">
+            <span class="label">Variant 04 · SETUP only</span>
+            <h2 class="name">Lineup board</h2>
+            <p class="desc">SETUP drops the 65/35 split entirely — on this phase the hero carries a sentence, not a timer, so the whole canvas goes to the room. One column per team in its own genre wordmark and identity colour, rosters drawn as the real avatar heads the TV already uses. Assignment is tap-a-face-then-tap-a-column; the unassigned tray collapses to nothing on a night where the pack already seated everyone. Tuned for 1280×800 landscape.</p>
+            <div class="feel">
+              <span class="tag">Full-canvas board</span>
+              <span class="tag">Real heads &amp; genre kits</span>
+              <span class="tag">No scroll at 20 players</span>
             </div>
           </div>
         </a>

@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Host SETUP — The Lineup Board</title>
+    <!--
+      SETUP redrawn as a full-canvas team board, tuned for a 16:10 Android
+      tablet in landscape (1280x800).
+
+      Why it is not the stage/deck split every other host phase uses: that split
+      (DESIGN.md 2.0A) pays for itself when the hero carries a live datum — the
+      EATING timer, a score. SETUP's hero carries one sentence, so at 1280x800
+      the left 65% is ~500px of empty canvas while the roster scrolls 2.6
+      screens inside a 413px gutter. This gives the whole canvas to the room.
+
+      Heads, fonts, wordmark treatments and emblems are the REAL ones the TV
+      already draws — the point of the exercise is that the tablet and the
+      television stop speaking two different languages.
+    -->
+    <style>
+      /* ---- Fonts: the same files the client serves, same faces ------------- */
+      @font-face { font-family: "Metal Mania"; font-style: normal; font-weight: 400; font-display: block; src: url("/fonts/metal-mania/metal-mania-latin.woff2") format("woff2"); }
+      @font-face { font-family: "Fredoka";     font-style: normal; font-weight: 700; font-display: block; src: url("/fonts/fredoka/fredoka-700-latin.woff2") format("woff2"); }
+      @font-face { font-family: "Rye";         font-style: normal; font-weight: 400; font-display: block; src: url("/fonts/rye/rye-latin.woff2") format("woff2"); }
+      @font-face { font-family: "Monoton";     font-style: normal; font-weight: 400; font-display: block; src: url("/fonts/monoton/monoton-latin.woff2") format("woff2"); }
+
+      :root {
+        --bg: #121212; --surface: #1c1c1c; --surfaceAlt: #242424;
+        --text: #ffffff; --muted: #a3a3a3;
+        --primary: #f97316; --heat: #ef4444; --gold: #fbbf24; --success: #22c55e;
+        /* Identity accents, DESIGN.md 0.1 */
+        --teamA: #f97316; --teamB: #06b6d4; --teamC: #84cc16; --teamD: #d9dee6;
+        --teamE: #d98324; --teamF: #14b8a6; --teamG: #60a5fa; --teamH: #ec4899;
+      }
+
+      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body { margin: 0; height: 100%; overflow: hidden; }
+      body {
+        background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        user-select: none;
+      }
+
+      /* ---- Shell: rail / board / tray / CTA ------------------------------- */
+      .shell {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto auto;
+        height: 100dvh;
+      }
+
+      /* ---- Top rail: the demoted hero ------------------------------------- */
+      .rail {
+        display: flex; align-items: center; gap: 1rem;
+        padding: 0.85rem clamp(0.9rem, 1.4vw, 1.4rem);
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+      }
+      .rail-pills { display: flex; align-items: center; gap: 0.85rem; min-width: 0; }
+      .pill-phase {
+        font-size: 0.72rem; font-weight: 800; letter-spacing: 0.34em;
+        text-transform: uppercase; color: var(--primary);
+      }
+      .rail-dot { width: 5px; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.2); flex: none; }
+      .rail-stat {
+        font-size: 0.78rem; font-weight: 700; letter-spacing: 0.22em;
+        text-transform: uppercase; color: var(--muted); white-space: nowrap;
+      }
+      .rail-stat b { color: var(--text); font-weight: 800; }
+      .rail-stat.is-open b { color: var(--primary); }
+
+      /* Music lives up here now, not buried under twenty player rows. */
+      .music {
+        margin-left: auto; display: flex; align-items: center; gap: 0.6rem;
+        padding: 0.35rem 0.4rem 0.35rem 0.85rem;
+        border: 1px solid rgba(255,255,255,0.07); border-radius: 999px;
+        background: linear-gradient(90deg, rgba(249,115,22,0.14), rgba(249,115,22,0.02));
+      }
+      .eq { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+      .eq i {
+        width: 3px; border-radius: 1px; background: var(--primary);
+        animation: eq 0.9s ease-in-out infinite alternate;
+      }
+      .eq i:nth-child(1) { height: 40%; animation-duration: 0.72s; }
+      .eq i:nth-child(2) { height: 85%; animation-duration: 1.02s; }
+      .eq i:nth-child(3) { height: 60%; animation-duration: 0.61s; }
+      .eq i:nth-child(4) { height: 100%; animation-duration: 0.88s; }
+      .eq i:nth-child(5) { height: 50%; animation-duration: 1.18s; }
+      @keyframes eq { from { transform: scaleY(0.35); } to { transform: scaleY(1); } }
+      .music-title {
+        font-size: 0.82rem; font-weight: 700; color: var(--text);
+        max-width: 17ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .music-pos { font-size: 0.7rem; font-family: ui-monospace, monospace; color: var(--muted); }
+      .music-btns { display: flex; gap: 0.25rem; }
+      .mbtn {
+        width: 44px; height: 44px; display: grid; place-items: center;
+        border: 0; border-radius: 999px; background: transparent;
+        color: var(--muted); cursor: pointer;
+      }
+      .mbtn:active { background: rgba(255,255,255,0.07); color: var(--text); }
+      .mbtn svg { width: 17px; height: 17px; fill: currentColor; }
+
+      /* ---- The board ------------------------------------------------------ */
+      .board {
+        display: grid; gap: clamp(0.6rem, 1vw, 0.9rem);
+        grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+        padding: clamp(0.7rem, 1.2vw, 1.1rem);
+        min-height: 0;
+      }
+
+      .team {
+        position: relative; isolation: isolate;
+        display: grid; grid-template-rows: auto minmax(0, 1fr);
+        min-height: 0; min-width: 0;
+        border-radius: 0.9rem;
+        border: 1px solid color-mix(in srgb, var(--tint) 22%, transparent);
+        background:
+          linear-gradient(180deg,
+            color-mix(in srgb, var(--tint) 13%, transparent) 0%,
+            color-mix(in srgb, var(--tint) 4%, transparent) 42%,
+            rgba(0,0,0,0.22) 100%);
+        overflow: hidden;
+        transition: border-color 140ms ease, transform 140ms ease;
+      }
+      /* The team's own stretch of hairline along the top — the standings bay's
+         lip, borrowed. It is what makes four tinted boxes read as a lineup. */
+      .team::before {
+        content: ""; position: absolute; inset: 0 0 auto 0; height: 2px; z-index: 2;
+        background: linear-gradient(90deg, transparent, var(--tint) 18%, var(--tint) 82%, transparent);
+        opacity: 0.85;
+      }
+      /* A watermark, not a texture: parked behind the wordmark at the top so it
+         never shows through the gaps between faces and read as debris. */
+      .team-emblem {
+        position: absolute; right: -6%; top: -10%; width: 52%; z-index: -1;
+        color: var(--tint); opacity: 0.07;
+        pointer-events: none;
+      }
+
+      .team-head {
+        display: flex; align-items: center; gap: 0.6rem;
+        padding: clamp(0.7rem, 1.2vh, 1rem) 0.85rem clamp(0.5rem, 0.9vh, 0.75rem);
+        min-width: 0;
+      }
+      .team-name {
+        display: block; min-width: 0; flex: 1;
+        font-size: clamp(1.05rem, 1.75vw, 1.6rem); line-height: 1.05;
+        overflow-wrap: anywhere;
+      }
+      .team-count {
+        flex: none; font-family: ui-monospace, monospace;
+        font-size: 0.78rem; font-weight: 800; letter-spacing: 0.1em;
+        color: color-mix(in srgb, var(--tint) 75%, #fff);
+        padding: 0.2rem 0.5rem; border-radius: 0.4rem;
+        background: color-mix(in srgb, var(--tint) 15%, transparent);
+      }
+
+      /* ---- Wordmark treatments: ported verbatim from index.css ------------ */
+      .team-wordmark { display: inline-block; line-height: 1; text-wrap: balance; }
+      .team-wordmark-chrome {
+        letter-spacing: 0.02em;
+        background: linear-gradient(180deg, #fafafa 0%, #d4d4d4 38%, #6b6b6b 50%, #e5e5e5 56%, #8a8a8a 100%);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        filter: drop-shadow(0 3px 0 #2a2a2a) drop-shadow(0 0 18px color-mix(in srgb, var(--tint) 70%, transparent));
+      }
+      .team-wordmark-candy {
+        color: var(--tint); -webkit-text-stroke: 0.06em #fff; paint-order: stroke fill;
+        text-shadow: 0.05em 0.07em 0 color-mix(in srgb, var(--tint) 45%, #000); letter-spacing: 0.02em;
+      }
+      .team-wordmark-rope {
+        color: var(--tint); -webkit-text-stroke: 0.035em #3b2412; paint-order: stroke fill;
+        text-shadow: 0.06em 0.06em 0 #3b2412; letter-spacing: 0.06em; text-transform: uppercase;
+      }
+      .team-wordmark-neon {
+        color: color-mix(in srgb, var(--tint) 30%, #fff);
+        text-shadow: 0 0 0.04em #fff, 0 0 0.12em var(--tint), 0 0 0.3em var(--tint),
+                     0 0 0.8em color-mix(in srgb, var(--tint) 70%, transparent);
+        animation: neon-flicker 4s infinite;
+      }
+      @keyframes neon-flicker { 0%,18%,22%,100% { opacity: 1; } 20% { opacity: 0.72; } 21% { opacity: 0.95; } }
+
+      /* ---- Roster: the faces --------------------------------------------- */
+      .roster {
+        list-style: none; margin: 0; min-height: 0;
+        padding: 0 0.55rem 0.55rem;
+        display: grid; gap: 0.45rem;
+        grid-template-columns: 1fr 1fr;
+        /* Rows are sized off the BIGGEST roster on the board, not this team's.
+           Otherwise a team of two gets faces twice the size of a team of five,
+           and the lineup stops reading as one row of teams. A short column
+           just leaves its empty seats showing. */
+        grid-template-rows: repeat(var(--rows, 3), minmax(0, 1fr));
+        align-content: start;
+        overflow: hidden;
+      }
+      .tile {
+        position: relative; display: grid; grid-template-rows: minmax(0, 1fr) auto;
+        min-height: 0; min-width: 0;
+        border: 1px solid rgba(255,255,255,0.05); border-radius: 0.6rem;
+        background: linear-gradient(180deg, rgba(255,255,255,0.03), color-mix(in srgb, var(--tint) 7%, transparent));
+        cursor: pointer; overflow: hidden;
+        transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+      }
+      .tile:active { transform: scale(0.97); }
+      /* Five is the common team size, so an odd roster always ends on an
+         orphan. Centre it rather than letting it hang in column one looking
+         like a layout accident. */
+      .roster[data-cols="2"] .tile:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - 0.225rem); }
+      /* The head sits ON a floor rather than floating — the lobby's trade
+         (DESIGN.md 2.2C): a cutout on black with no pool under it reads as a
+         sticker, not a person. */
+      .tile-face { position: relative; min-height: 0; display: grid; place-items: end center; }
+      .tile-face::after {
+        content: ""; position: absolute; left: 18%; right: 18%; bottom: 2px; height: 7px;
+        border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,0.55), transparent 70%);
+      }
+      /* height/width 100% + contain, NOT max-*: a max-height on a grid item
+         whose row is 1fr still lets the intrinsic image height win, and the
+         head spills over the name row below it. */
+      .tile-face img {
+        position: relative; z-index: 1;
+        height: 100%; width: 100%; min-height: 0;
+        object-fit: contain; object-position: center bottom;
+        padding: 0.3rem 0.3rem 0;
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+      }
+      /* A player with no imported head still gets a face-shaped thing. */
+      .tile-initials {
+        position: relative; z-index: 1;
+        width: 58%; aspect-ratio: 1; margin-bottom: 8%;
+        display: grid; place-items: center; border-radius: 999px;
+        background: color-mix(in srgb, var(--tint) 24%, #1c1c1c);
+        border: 2px solid color-mix(in srgb, var(--tint) 55%, transparent);
+        font-size: 1.15rem; font-weight: 900; color: #fff;
+      }
+      .tile-name {
+        padding: 0.3rem 0.3rem 0.42rem; text-align: center;
+        font-size: clamp(0.72rem, 0.95vw, 0.88rem); font-weight: 700; line-height: 1.1;
+        color: var(--text);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+
+      /* Selected: one player is "in hand", waiting for a column tap. */
+      .tile.is-held {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary), 0 8px 24px rgba(249,115,22,0.3);
+        background: linear-gradient(180deg, rgba(249,115,22,0.22), rgba(249,115,22,0.05));
+      }
+      .tile.is-held .tile-name { color: var(--primary); }
+
+      /* A column that can receive the held player. */
+      body.is-holding .team { cursor: pointer; }
+      body.is-holding .team:not(.is-source) {
+        border-color: color-mix(in srgb, var(--tint) 65%, transparent);
+      }
+      body.is-holding .team:not(.is-source)::after {
+        content: "Move here";
+        position: absolute; inset: auto 0 0 0; z-index: 3;
+        padding: 0.55rem; text-align: center;
+        font-size: 0.68rem; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase;
+        color: #121212; background: color-mix(in srgb, var(--tint) 88%, #fff);
+      }
+      body.is-holding .team.is-source { opacity: 0.55; }
+      /* Give the drop bar its own strip instead of letting it sit on top of the
+         bottom row's names. Rows are 1fr, so the faces just shrink a little. */
+      body.is-holding .roster { padding-bottom: 2.5rem; }
+
+      /* ---- Unassigned tray: zero-height on a normal night ----------------- */
+      .tray {
+        display: grid; grid-template-rows: 0fr;
+        transition: grid-template-rows 220ms ease;
+        background: rgba(0,0,0,0.3); border-top: 1px solid transparent;
+      }
+      .tray.is-open { grid-template-rows: 1fr; border-top-color: rgba(249,115,22,0.3); }
+      .tray-inner { overflow: hidden; }
+      .tray-body { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 1rem; }
+      .tray-label {
+        flex: none; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.26em;
+        text-transform: uppercase; color: var(--primary);
+      }
+      .tray-list { display: flex; gap: 0.5rem; overflow-x: auto; flex: 1; }
+      .tray .tile { --tint: var(--primary); width: 92px; height: 104px; flex: none; }
+      .tray-auto {
+        flex: none; min-height: 44px; padding: 0 1rem;
+        border: 1px solid rgba(249,115,22,0.5); border-radius: 0.4rem;
+        background: rgba(249,115,22,0.14); color: var(--primary);
+        font-size: 0.75rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      /* ---- CTA + heat strip: unchanged from the shipped shell ------------- */
+      .heat { position: relative; height: 10px; overflow: hidden;
+        background: linear-gradient(90deg, rgba(251,191,36,0.4), rgba(249,115,22,0.8), rgba(239,68,68,0.6)); }
+      .heat span {
+        position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
+        animation: shimmer 3s linear infinite;
+      }
+      @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+      .cta {
+        display: flex; width: 100%; min-height: clamp(78px, 11vh, 100px);
+        align-items: center; justify-content: center; gap: 0.75rem;
+        border: 0; background: var(--primary); color: #121212;
+        font-size: clamp(1.05rem, 1.6vw, 1.45rem); font-weight: 900;
+        letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer;
+      }
+      .cta:active { background: #ea6a0c; }
+
+      /* ---- Mockup-only scaffolding (not part of the design) --------------- */
+      .demo {
+        margin-left: auto; display: flex; gap: 0.3rem;
+        font-size: 0.6rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+        opacity: 0.35; transition: opacity 140ms ease;
+      }
+      .demo:hover, .demo:focus-within { opacity: 1; }
+      .demo button {
+        border: 1px dashed rgba(255,255,255,0.18); border-radius: 0.3rem;
+        background: transparent; color: var(--muted); padding: 0.5rem 0.55rem; cursor: pointer;
+      }
+      .demo button:hover { color: var(--text); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .eq i, .heat span, .team-wordmark-neon { animation: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="rail">
+        <div class="rail-pills">
+          <span class="pill-phase">Setup</span>
+          <span class="rail-dot"></span>
+          <span class="rail-stat" id="stat-assigned"><b>20</b> of <b>20</b> seated</span>
+          <span class="rail-dot"></span>
+          <span class="rail-stat"><b id="stat-teams">4</b> teams</span>
+        </div>
+
+        <!-- Mockup-only: lets you feel the states without a server. -->
+        <div class="demo">
+          <button id="demo-tray">Toggle tray</button>
+          <button id="demo-teams">3 / 4 / 6 teams</button>
+          <button id="demo-heads">Heads on/off</button>
+        </div>
+
+        <div class="music">
+          <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <span class="music-title">Hot In Herre</span>
+          <span class="music-pos">3 / 12</span>
+          <span class="music-btns">
+            <button class="mbtn" aria-label="Previous track"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm12 0v12l-9-6z"/></svg></button>
+            <button class="mbtn" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zm6 0h4v14h-4z"/></svg></button>
+            <button class="mbtn" aria-label="Next track"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 6l9 6-9 6z"/></svg></button>
+          </span>
+        </div>
+      </header>
+
+      <main class="board" id="board"></main>
+
+      <section class="tray" id="tray">
+        <div class="tray-inner">
+          <div class="tray-body">
+            <span class="tray-label">Not seated</span>
+            <div class="tray-list" id="tray-list"></div>
+            <button class="tray-auto" id="auto-seat">Auto-seat</button>
+          </div>
+        </div>
+      </section>
+
+      <div>
+        <div class="heat"><span></span></div>
+        <button class="cta">Lock teams &amp; continue</button>
+      </div>
+    </div>
+
+    <script type="module">
+      // The heads are pack content the SERVER serves, so they come from its
+      // origin, not Vite's (CLAUDE.md, "Client and server are separate origins").
+      const ASSET_ORIGIN = location.origin.includes(":")
+        ? location.origin.replace(/:\d+$/, ":3800")
+        : `${location.origin}:3800`;
+
+      const GENRES = {
+        metal:   { tint: "var(--teamD)", font: '"Metal Mania"', wordmark: "chrome", emblem: "skull-hen" },
+        pop:     { tint: "var(--teamH)", font: '"Fredoka"',     wordmark: "candy",  emblem: "star-mic" },
+        country: { tint: "var(--teamE)", font: '"Rye"',         wordmark: "rope",   emblem: "hat-horseshoe" },
+        disco:   { tint: "var(--teamB)", font: '"Monoton"',     wordmark: "neon",   emblem: "mirrorball" }
+      };
+
+      // Ported from TeamEmblem/EmblemDrawing — the same 64x64 drawings.
+      const EMBLEMS = {
+        "skull-hen": `
+          <path fill="currentColor" stroke="#121212" stroke-width="2" stroke-linejoin="round" d="M 6 34 L 16 22 L 12 34 L 20 30 L 14 44 Z"/>
+          <path fill="currentColor" stroke="#121212" stroke-width="2" stroke-linejoin="round" d="M 58 34 L 48 22 L 52 34 L 44 30 L 50 44 Z"/>
+          <path fill="currentColor" stroke="#121212" stroke-width="2" stroke-linejoin="round" d="M 26 12 L 29 4 L 32 10 L 35 2 L 38 10 L 41 5 L 42 13 Z"/>
+          <circle fill="#fff" stroke="#121212" stroke-width="2" cx="32" cy="30" r="17"/>
+          <rect fill="#fff" stroke="#121212" stroke-width="2" x="22" y="40" width="20" height="14" rx="3"/>
+          <rect fill="#121212" x="26" y="44" width="2.5" height="8"/><rect fill="#121212" x="31" y="44" width="2.5" height="8"/><rect fill="#121212" x="36" y="44" width="2.5" height="8"/>
+          <circle fill="#121212" cx="25" cy="29" r="5"/><circle fill="#121212" cx="39" cy="29" r="5"/>
+          <path fill="#f97316" stroke="#121212" stroke-width="2" stroke-linejoin="round" d="M 30 34 L 34 34 L 32 40 Z"/>`,
+        "star-mic": `
+          <path fill="#fff" stroke="#121212" stroke-width="2" stroke-linejoin="round" d="M 32 2 L 39 20 L 58 22 L 44 34 L 48 53 L 32 43 L 16 53 L 20 34 L 6 22 L 25 20 Z"/>
+          <rect fill="currentColor" stroke="#121212" stroke-width="2" x="24" y="14" width="16" height="24" rx="8"/>
+          <path fill="none" stroke="#121212" stroke-width="1.5" d="M 26 21 H 38 M 26 26 H 38 M 26 31 H 38"/>
+          <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" d="M 20 32 C 20 46 44 46 44 32"/>
+          <rect fill="currentColor" stroke="#121212" stroke-width="2" x="29" y="42" width="6" height="18" rx="2"/>`,
+        "hat-horseshoe": `
+          <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" d="M 16 36 C 12 52 24 60 32 60 C 40 60 52 52 48 36"/>
+          <path fill="none" stroke="#121212" stroke-width="1.5" d="M 20 44 l 3 -1 M 44 44 l -3 -1 M 24 54 l 2 -3 M 40 54 l -2 -3"/>
+          <path fill="#fff" stroke="#121212" stroke-width="2" stroke-linejoin="round" d="M 6 34 Q 32 44 58 34 Q 52 28 46 28 L 42 8 Q 32 4 22 8 L 18 28 Q 12 28 6 34 Z"/>
+          <rect fill="currentColor" stroke="#121212" stroke-width="2" x="20" y="24" width="24" height="6"/>`,
+        mirrorball: `
+          <rect fill="#fff" stroke="#121212" stroke-width="2" x="30" y="0" width="4" height="8"/>
+          <circle fill="currentColor" stroke="#121212" stroke-width="2" cx="32" cy="34" r="24"/>
+          <path fill="none" stroke="#121212" stroke-width="1.5" d="M 8 34 H 56 M 12 22 H 52 M 12 46 H 52 M 32 10 V 58 M 20 12 V 56 M 44 12 V 56"/>
+          <rect fill="#fff" x="26" y="16" width="6" height="6"/><rect fill="#fff" x="38" y="28" width="6" height="6"/>
+          <rect fill="#fff" x="20" y="40" width="6" height="6"/><rect fill="#fff" x="32" y="46" width="6" height="6"/>
+          <path fill="#fff" d="M 56 8 l 1.5 4 l 4 1.5 l -4 1.5 l -1.5 4 l -1.5 -4 l -4 -1.5 l 4 -1.5 Z"/>`
+      };
+
+      // The real night pack (~/wing-night-content/local).
+      const TEAMS = [
+        { id: "t1", name: "Molten Metal",    genre: "metal" },
+        { id: "t2", name: "Spice Girls",     genre: "pop" },
+        { id: "t3", name: "Honky Tonk Heat", genre: "country" },
+        { id: "t4", name: "Disco Inferno",   genre: "disco" }
+      ];
+      const PLAYERS = [
+        ["Alex M", "alex-m", "t1"], ["Kaitlyn", "kaitlyn", "t1"], ["Dan B", "dan-b", "t1"],
+        ["Rosi", "rosi", "t1"], ["Matt", "matt", "t1"],
+        ["Darren M", "darren-m", "t2"], ["Steve Burke", "steve-burke", "t2"], ["Sara", "sara", "t2"],
+        ["Jaz", "jaz", "t2"], ["Alex Royce", "alex-royce", "t2"],
+        ["Dylan", "dylan", "t3"], ["Sam", "sam", "t3"], ["Rob Barnes", "rob-barnes", "t3"],
+        ["Ryan", "ryan", "t3"], ["Kenny", "kenny", "t3"],
+        ["Joleeza", "joleeza", "t4"], ["Steve Crane", "steve-crane", "t4"], ["Tay", "tay", "t4"],
+        ["Sean", "sean", "t4"], ["Josh J", "josh-j", "t4"]
+      ].map(([name, slug, teamId], i) => ({ id: `p${i}`, name, slug, teamId }));
+
+      let teams = TEAMS.slice();
+      let players = PLAYERS.map((p) => ({ ...p }));
+      let held = null;
+      let showHeads = true;
+
+      const board = document.getElementById("board");
+      const tray = document.getElementById("tray");
+      const trayList = document.getElementById("tray-list");
+
+      const initials = (name) =>
+        name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+
+      const renderTile = (player, tint) => {
+        const li = document.createElement("li");
+        li.className = `tile${held === player.id ? " is-held" : ""}`;
+        li.dataset.player = player.id;
+        const face = document.createElement("div");
+        face.className = "tile-face";
+        if (showHeads) {
+          const img = document.createElement("img");
+          img.src = `${ASSET_ORIGIN}/content-assets/avatars/${player.slug}.png`;
+          img.alt = "";
+          // No head imported yet (or the server is down) — fall back rather
+          // than leaving a hole in the lineup.
+          img.onerror = () => {
+            face.innerHTML = `<span class="tile-initials">${initials(player.name)}</span>`;
+          };
+          face.append(img);
+        } else {
+          face.innerHTML = `<span class="tile-initials">${initials(player.name)}</span>`;
+        }
+        const name = document.createElement("div");
+        name.className = "tile-name";
+        name.textContent = player.name;
+        li.append(face, name);
+        li.addEventListener("click", (event) => {
+          event.stopPropagation();
+          held = held === player.id ? null : player.id;
+          render();
+        });
+        return li;
+      };
+
+      const render = () => {
+        board.style.setProperty("--cols", teams.length);
+        board.innerHTML = "";
+        const heldPlayer = players.find((p) => p.id === held) ?? null;
+
+        // One tile size for the whole board: the fullest team sets the row
+        // count, everyone else inherits it.
+        const rosterSizes = teams.map((t) => players.filter((p) => p.teamId === t.id).length);
+        const biggest = Math.max(1, ...rosterSizes);
+        const tileCols = biggest > 6 ? 3 : 2;
+        const rows = Math.max(1, Math.ceil(biggest / tileCols));
+
+        for (const team of teams) {
+          const kit = GENRES[team.genre];
+          const roster = players.filter((p) => p.teamId === team.id);
+          const section = document.createElement("section");
+          section.className = `team${heldPlayer?.teamId === team.id ? " is-source" : ""}`;
+          section.style.setProperty("--tint", kit.tint);
+          section.innerHTML = `
+            <svg class="team-emblem" viewBox="0 0 64 64" aria-hidden="true">${EMBLEMS[kit.emblem]}</svg>
+            <div class="team-head">
+              <span class="team-name team-wordmark team-wordmark-${kit.wordmark}"
+                    style="font-family:${kit.font},sans-serif">${team.name}</span>
+              <span class="team-count">${roster.length}</span>
+            </div>`;
+          const ul = document.createElement("ul");
+          ul.className = "roster";
+          // Two across up to six, three across beyond that, so a big team
+          // shrinks rather than scrolls — and every column agrees.
+          ul.style.gridTemplateColumns = `repeat(${tileCols}, minmax(0, 1fr))`;
+          ul.style.setProperty("--rows", rows);
+          ul.dataset.cols = String(tileCols);
+          for (const player of roster) ul.append(renderTile(player, kit.tint));
+          section.append(ul);
+          section.addEventListener("click", () => {
+            if (heldPlayer === null || heldPlayer.teamId === team.id) return;
+            heldPlayer.teamId = team.id;
+            held = null;
+            render();
+          });
+          board.append(section);
+        }
+
+        const loose = players.filter((p) => p.teamId === null);
+        tray.classList.toggle("is-open", loose.length > 0);
+        trayList.innerHTML = "";
+        for (const player of loose) trayList.append(renderTile(player, "var(--primary)"));
+
+        const seated = players.length - loose.length;
+        document.getElementById("stat-assigned").innerHTML =
+          `<b>${seated}</b> of <b>${players.length}</b> seated`;
+        document.getElementById("stat-assigned").classList.toggle("is-open", loose.length > 0);
+        document.getElementById("stat-teams").textContent = teams.length;
+        document.body.classList.toggle("is-holding", held !== null);
+      };
+
+      document.body.addEventListener("click", () => {
+        if (held === null) return;
+        held = null;
+        render();
+      });
+
+      document.getElementById("auto-seat").addEventListener("click", (event) => {
+        event.stopPropagation();
+        for (const player of players) {
+          if (player.teamId !== null) continue;
+          const smallest = teams
+            .map((t) => ({ t, n: players.filter((p) => p.teamId === t.id).length }))
+            .sort((a, b) => a.n - b.n)[0];
+          player.teamId = smallest.t.id;
+        }
+        render();
+      });
+
+      // ---- Mockup-only controls -------------------------------------------
+      document.getElementById("demo-tray").addEventListener("click", (event) => {
+        event.stopPropagation();
+        const loose = players.filter((p) => p.teamId === null);
+        if (loose.length > 0) {
+          for (const p of loose) p.teamId = teams[0].id;
+        } else {
+          players.slice(-3).forEach((p) => { p.teamId = null; });
+        }
+        render();
+      });
+      const TEAM_COUNTS = [4, 3, 6];
+      let teamCountIndex = 0;
+      document.getElementById("demo-teams").addEventListener("click", (event) => {
+        event.stopPropagation();
+        teamCountIndex = (teamCountIndex + 1) % TEAM_COUNTS.length;
+        const want = TEAM_COUNTS[teamCountIndex];
+        const genreCycle = ["metal", "pop", "country", "disco"];
+        teams = Array.from({ length: want }, (_, i) =>
+          TEAMS[i] ?? { id: `t${i + 1}`, name: ["Wing Kings", "Sauce Bosses"][i - 4] ?? `Team ${i + 1}`, genre: genreCycle[i % 4] }
+        );
+        // Redeal the whole room evenly, so the state on screen is an honest
+        // n-team night rather than the old four teams plus empties.
+        players.forEach((p, i) => { p.teamId = teams[i % teams.length].id; });
+        render();
+      });
+      document.getElementById("demo-heads").addEventListener("click", (event) => {
+        event.stopPropagation();
+        showHeads = !showHeads;
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>
