@@ -651,6 +651,11 @@ constants don't move; body colour, comb, tail shape and dance stay hashed and te
 
 ## Open questions for Brad
 
+> **Answered 2026-10-14: Brad took the defaults.** All seven slots; gold is tested in the drawing
+> round and decided at its cut; pop birds get personal Moves as a one-bar flourish; bare by default;
+> country has no Boots; teammates see each other's outfits; props never in games; freezing the
+> wardrobe with picks is decided in M5. The build runs per [bird-wardrobe-build-plan.md](../bird-wardrobe-build-plan.md).
+
 1. **Seven slots, or start smaller?** I recommend all seven, phased (M3 kit, M4 showpieces). The
    minimum that still feels rich is Top, Sleeve, Tail and Prop.
 2. **Is it OK that country has no Boots?** Its squat bird shows 2.3 units of leg, so boots would be
