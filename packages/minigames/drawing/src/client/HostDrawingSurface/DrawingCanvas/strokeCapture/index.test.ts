@@ -11,7 +11,6 @@ import {
 const activeStroke = (pointerId: number): ActiveStrokeCapture => ({
   pointerId,
   strokeId: "stroke-1",
-  startedAtMs: 0,
   pendingPoints: []
 });
 
@@ -37,11 +36,9 @@ test("does normalize a point against the board it was drawn on", () => {
     toNormalizedPoint({
       clientX: 150,
       clientY: 65,
-      bounds: BOARD,
-      startedAtMs: 1_000,
-      nowMs: 1_250
+      bounds: BOARD
     }),
-    { x: 0.25, y: 0.25, t: 250 }
+    { x: 0.25, y: 0.25 }
   );
 });
 
@@ -49,12 +46,10 @@ test("does clamp a finger that slid off the board back onto it", () => {
   const point = toNormalizedPoint({
     clientX: 20,
     clientY: 9_000,
-    bounds: BOARD,
-    startedAtMs: 1_000,
-    nowMs: 900
+    bounds: BOARD
   });
 
-  assert.deepEqual(point, { x: 0, y: 1, t: 0 }, "and time never runs backwards");
+  assert.deepEqual(point, { x: 0, y: 1 });
 });
 
 test("does hand every stroke its own id", () => {

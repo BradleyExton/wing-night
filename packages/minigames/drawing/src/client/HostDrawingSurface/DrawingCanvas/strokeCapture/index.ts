@@ -3,7 +3,6 @@ import type { DrawingPoint } from "@wingnight/shared";
 export type ActiveStrokeCapture = {
   pointerId: number;
   strokeId: string;
-  startedAtMs: number;
   pendingPoints: DrawingPoint[];
 };
 
@@ -32,27 +31,21 @@ export type CanvasBounds = {
   height: number;
 };
 
-// Where the finger is on the board, 0..1 on each axis, and how long into the
-// stroke it got there. Normalized because the TV replays the same stroke at a
+// Where the finger is on the board, 0..1 on each axis. Normalized because the TV replays the same stroke at a
 // different size than the tablet drew it at.
 export const toNormalizedPoint = ({
   clientX,
   clientY,
-  bounds,
-  startedAtMs,
-  nowMs
+  bounds
 }: {
   clientX: number;
   clientY: number;
   bounds: CanvasBounds;
-  startedAtMs: number;
-  nowMs: number;
 }): DrawingPoint => {
   const clamp = (value: number): number => Math.min(1, Math.max(0, value));
 
   return {
     x: clamp((clientX - bounds.left) / Math.max(1, bounds.width)),
-    y: clamp((clientY - bounds.top) / Math.max(1, bounds.height)),
-    t: Math.max(0, nowMs - startedAtMs)
+    y: clamp((clientY - bounds.top) / Math.max(1, bounds.height))
   };
 };

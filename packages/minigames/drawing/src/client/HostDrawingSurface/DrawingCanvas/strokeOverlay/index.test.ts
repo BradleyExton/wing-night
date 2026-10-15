@@ -13,8 +13,7 @@ const stroke = (pointCount: number, strokeId = "stroke-1"): DrawingStroke => ({
   strokeId,
   points: Array.from({ length: pointCount }, (_unused, index) => ({
     x: index / pointCount,
-    y: 0.5,
-    t: index
+    y: 0.5
   })),
   color: "#F3EEE2",
   size: 0.03

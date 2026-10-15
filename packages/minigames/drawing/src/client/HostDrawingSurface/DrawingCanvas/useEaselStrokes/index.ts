@@ -227,15 +227,12 @@ export const useEaselStrokes = ({
   }, [renderScene, stopFlushInterval]);
 
   const samplePoint = (
-    pointerEvent: ReactPointerEvent<HTMLCanvasElement>,
-    startedAtMs: number
+    pointerEvent: ReactPointerEvent<HTMLCanvasElement>
   ): DrawingPoint => {
     return toNormalizedPoint({
       clientX: pointerEvent.clientX,
       clientY: pointerEvent.clientY,
-      bounds: pointerEvent.currentTarget.getBoundingClientRect(),
-      startedAtMs,
-      nowMs: Date.now()
+      bounds: pointerEvent.currentTarget.getBoundingClientRect()
     });
   };
 
@@ -248,14 +245,12 @@ export const useEaselStrokes = ({
 
     pointerEvent.currentTarget.setPointerCapture(pointerEvent.pointerId);
 
-    const startedAtMs = Date.now();
     const strokeId = createStrokeId();
-    const startPoint = samplePoint(pointerEvent, startedAtMs);
+    const startPoint = samplePoint(pointerEvent);
 
     activeStrokeRef.current = {
       pointerId: pointerEvent.pointerId,
       strokeId,
-      startedAtMs,
       pendingPoints: []
     };
     localStrokesRef.current.set(strokeId, {
@@ -288,7 +283,7 @@ export const useEaselStrokes = ({
       return;
     }
 
-    const nextPoint = samplePoint(pointerEvent, activeStroke.startedAtMs);
+    const nextPoint = samplePoint(pointerEvent);
     const localRecord = localStrokesRef.current.get(activeStroke.strokeId);
 
     localRecord?.stroke.points.push(nextPoint);

@@ -245,7 +245,6 @@ export type DrawingPoint = {
   // each scale to their own pixel dimensions.
   x: number;
   y: number;
-  t: number;
 };
 
 export type DrawingStroke = {

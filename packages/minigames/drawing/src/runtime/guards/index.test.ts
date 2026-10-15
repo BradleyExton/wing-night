@@ -5,7 +5,7 @@ import type { DrawingPoint } from "@wingnight/shared";
 
 import { sanitizeDrawingPoint } from "./index.js";
 
-const point = (x: number, y: number, t = 0): DrawingPoint => ({ x, y, t });
+const point = (x: number, y: number): DrawingPoint => ({ x, y });
 
 test("sanitizeDrawingPoint rounds to three decimals when the sample carries full float precision", () => {
   const sanitized = sanitizeDrawingPoint(point(0.4738291847362819, 0.1234567890123));
@@ -46,8 +46,8 @@ test("sanitizeDrawingPoint yields positive zero when a coordinate rounds down fr
   assert.ok(Object.is(sanitized.y, 0), "y should be +0, not -0");
 });
 
-test("sanitizeDrawingPoint passes t through untouched when it rounds x and y", () => {
-  const sanitized = sanitizeDrawingPoint(point(0.1239999, 0.5, 1234.5678));
+test("sanitizeDrawingPoint drops anything but x and y when an old tablet still sends a timestamp", () => {
+  const stray = { x: 0.1239999, y: 0.5, t: 1234.5678 } as DrawingPoint;
 
-  assert.equal(sanitized.t, 1234.5678);
+  assert.deepEqual(sanitizeDrawingPoint(stray), { x: 0.124, y: 0.5 });
 });
