@@ -4,9 +4,11 @@ import test from "node:test";
 import {
   applyAvatarSrc,
   assemblePrompt,
+  AVATAR_MAX_EDGE,
   buildContactSheet,
   buildGeminiRequest,
   extractGeneratedImage,
+  fitWithin,
   knockOutBackground,
   opaqueBounds,
   pickStyleReference,
@@ -55,6 +57,32 @@ test("does limit generation to the --only slugs when given", () => {
 
   assert.equal(plan[0].skipReason, "not in --only");
   assert.equal(plan[1].skipReason, null);
+});
+
+test("does scale a crop down to the max edge when it is larger, keeping the aspect ratio", () => {
+  assert.deepEqual(fitWithin({ width: 1024, height: 1024 }), { width: 512, height: 512 });
+  assert.deepEqual(fitWithin({ width: 906, height: 1024 }), { width: 453, height: 512 });
+  assert.deepEqual(fitWithin({ width: 1024, height: 612 }), { width: 512, height: 306 });
+});
+
+test("does leave a crop alone when it already fits, rather than blowing it up", () => {
+  assert.deepEqual(fitWithin({ width: 300, height: 180 }), { width: 300, height: 180 });
+  assert.deepEqual(fitWithin({ width: AVATAR_MAX_EDGE, height: 10 }), { width: AVATAR_MAX_EDGE, height: 10 });
+});
+
+test("does keep a sliver at least one pixel wide when scaling it down", () => {
+  assert.deepEqual(fitWithin({ width: 2000, height: 1 }), { width: 512, height: 1 });
+});
+
+test("does honour an explicit max edge over the default", () => {
+  assert.deepEqual(fitWithin({ width: 1024, height: 512, maxEdge: 256 }), { width: 256, height: 128 });
+});
+
+test("does keep the max edge big enough for the surfaces that paint a head", () => {
+  // The TV's team lineup paints 86 CSS px, 172 device pixels at dpr 2. The
+  // cast wears the head as an SVG <image> that scales with the bird, so the
+  // constant carries headroom rather than tracking that one measurement.
+  assert.ok(AVATAR_MAX_EDGE >= 172 * 2, "at least twice the largest measured paint");
 });
 
 test("does add the style reference clause only when a reference is given", () => {

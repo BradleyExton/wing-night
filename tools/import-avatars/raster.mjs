@@ -33,19 +33,26 @@ export const withRaster = async (run) => {
         }, { mimeType, base64 });
         return { width: raw.width, height: raw.height, pixels: new Uint8ClampedArray(Buffer.from(raw.base64, "base64")) };
       },
-      encodePng: async ({ pixels, width, height, crop }) => {
-        const dataUrl = await page.evaluate(({ base64, width, height, crop }) => {
+      // `crop` is the source rectangle to take; `output` is the size to write
+      // it at, so the same drawImage that crops also downsamples. The canvas
+      // is RGBA throughout and toDataURL("image/png") keeps the alpha
+      // channel, so a keyed-out background survives the resample.
+      encodePng: async ({ pixels, width, height, crop, output = crop }) => {
+        const dataUrl = await page.evaluate(({ base64, width, height, crop, output }) => {
           const bytes = Uint8ClampedArray.from(atob(base64), (char) => char.charCodeAt(0));
           const source = document.createElement("canvas");
           source.width = width;
           source.height = height;
           source.getContext("2d").putImageData(new ImageData(bytes, width, height), 0, 0);
           const out = document.createElement("canvas");
-          out.width = crop.width;
-          out.height = crop.height;
-          out.getContext("2d").drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+          out.width = output.width;
+          out.height = output.height;
+          const context = out.getContext("2d");
+          context.imageSmoothingEnabled = true;
+          context.imageSmoothingQuality = "high";
+          context.drawImage(source, crop.x, crop.y, crop.width, crop.height, 0, 0, output.width, output.height);
           return out.toDataURL("image/png");
-        }, { base64: Buffer.from(pixels.buffer, pixels.byteOffset, pixels.byteLength).toString("base64"), width, height, crop });
+        }, { base64: Buffer.from(pixels.buffer, pixels.byteOffset, pixels.byteLength).toString("base64"), width, height, crop, output });
         return Buffer.from(dataUrl.split(",")[1], "base64");
       }
     });

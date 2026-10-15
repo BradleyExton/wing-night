@@ -13,7 +13,9 @@
 // sources.
 // The head comes back on a magenta background (Gemini cannot return alpha);
 // that is flood-filled out and the result cropped to the head before it is
-// written, so the bird wears the head's own silhouette.
+// written, so the bird wears the head's own silhouette. The crop is then
+// downsampled to AVATAR_MAX_EDGE, because the model returns 1024x1024 and no
+// surface in the app samples anything like that many pixels.
 // Offline-time tool only: the app never talks to Gemini. Needs GEMINI_API_KEY,
 // which lives in the pack's own .env beside the content it generates — one key
 // file, not one per worktree.
@@ -28,6 +30,7 @@ import {
   buildGeminiUrl,
   DEFAULT_MODEL,
   extractGeneratedImage,
+  fitWithin,
   knockOutBackground,
   opaqueBounds,
   pickStyleReference,
@@ -155,11 +158,20 @@ const main = async () => {
           styleRefPath: currentStyleRef
         });
         const outputPath = join(avatarsDir, row.outputFile);
-        writeFileSync(outputPath, await finishHead(raster, image));
-        manifest.generated[row.slug] = { file: row.outputFile, model: args.model, at: new Date().toISOString() };
+        const { png, crop, output } = await finishHead(raster, image);
+        writeFileSync(outputPath, png);
+        manifest.generated[row.slug] = {
+          file: row.outputFile,
+          model: args.model,
+          at: new Date().toISOString(),
+          width: output.width,
+          height: output.height
+        };
         writeJson(manifestPath, manifest);
         if (currentStyleRef === null) currentStyleRef = outputPath;
-        console.log(`ok (${image.mimeType}, keyed and cropped)`);
+        console.log(
+          `ok (${image.mimeType}, keyed, cropped to ${crop.width}x${crop.height}, written at ${output.width}x${output.height}, ${Math.round(png.length / 1024)} kB)`
+        );
       } catch (error) {
         console.log(`FAILED: ${error.message}`);
       }
@@ -172,7 +184,10 @@ const main = async () => {
   console.log("Restart the server to load the updated roster.");
 };
 
-// Key the background out, crop to what is left, and hand back a PNG buffer.
+// Key the background out, crop to what is left, downsample it to the size the
+// app actually paints, and hand back a PNG buffer with its dimensions. The
+// model hands back 1024x1024 whatever we ask; writing that straight to the
+// pack cost ~700 kB a head for pixels no surface ever samples.
 const finishHead = async (raster, image) => {
   const decoded = await raster.decode(image);
   knockOutBackground(decoded);
@@ -180,7 +195,8 @@ const finishHead = async (raster, image) => {
   if (crop === null) {
     throw new Error("nothing left after keying the background out");
   }
-  return raster.encodePng({ ...decoded, crop });
+  const output = fitWithin(crop);
+  return { png: await raster.encodePng({ ...decoded, crop, output }), crop, output };
 };
 
 const renderSheet = (plan, manifest) =>

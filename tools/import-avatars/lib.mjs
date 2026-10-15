@@ -39,6 +39,33 @@ export const buildGeminiUrl = buildGeminiImageUrl;
 // "Vite serves this" and 404 there.
 export const AVATAR_PACK_PATH = "avatars";
 
+// The longest edge a head is written at. The model returns 1024x1024 however
+// it is asked, and a crop of that lands ~700 kB — for pixels nothing samples.
+// Measured on the TV at 1920x1080: the SETUP lineup paints a head at 86 CSS
+// px and the parade's jig swells one to 112, so 224 device pixels at dpr 2 is
+// today's worst case. The headroom on top of that is for the cast: a head is
+// worn as an SVG <image> inside the bird, so it scales with the figure, and a
+// hero bird, the host tablet's roster or a layout nobody has drawn yet can all
+// ask for more than the lineup does. 512 is a bit over 2x the largest paint
+// measured, covers any head drawn up to 256 CSS px at dpr 2, and costs ~250 kB
+// rather than ~700. Going to 256 would save another 150 kB a head but leaves
+// no room for a surface that ever wants a face bigger than a thumbnail.
+export const AVATAR_MAX_EDGE = 512;
+
+// Scales a box down so its longest edge is at most `maxEdge`. Never up: a
+// head that already fits is written at its own size rather than blown up
+// into a bigger, blurrier file. The aspect ratio is kept and the result is
+// whole pixels, because a canvas cannot be a fraction wide.
+export const fitWithin = ({ width, height, maxEdge = AVATAR_MAX_EDGE }) => {
+  const longestEdge = Math.max(width, height);
+  if (longestEdge <= maxEdge) return { width, height };
+  const scale = maxEdge / longestEdge;
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale))
+  };
+};
+
 export const isSupportedSource = (fileName) => mimeTypeForImageFile(fileName) !== null;
 
 // A manifest entry `pnpm pack:pull` wrote: `{ file, source: "online", at, sha256 }`, its file
