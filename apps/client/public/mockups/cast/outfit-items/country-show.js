@@ -45,20 +45,6 @@ const unit = (a, b) => {
   return { x: (b.x - a.x) / l, y: (b.y - a.y) / l };
 };
 
-/** Points along an ellipse from angle t0 to t1 (degrees, y down), tilted by `tilt` degrees, as an open polyline. */
-const ellipseArc = (cx, cy, rx, ry, t0, t1, step = 4, tilt = 0) => {
-  const out = [];
-  const n = Math.max(2, Math.ceil(Math.abs(t1 - t0) / step));
-  const c = Math.cos((tilt * Math.PI) / 180);
-  const s = Math.sin((tilt * Math.PI) / 180);
-  for (let i = 0; i <= n; i += 1) {
-    const t = ((t0 + ((t1 - t0) * i) / n) * Math.PI) / 180;
-    const x = rx * Math.cos(t);
-    const y = ry * Math.sin(t);
-    out.push({ x: cx + x * c - y * s, y: cy + x * s + y * c });
-  }
-  return `M ${out.map(pt).join(" L ")}`;
-};
 
 /** A rope: solid ink for the ink style, an ink-cased tube of the style colour otherwise. */
 const rope = (d, style, styleFill, w = 2.8) =>
