@@ -9,8 +9,7 @@ import { CastParade } from "../DisplayBoard/StageSurface/SetupStageBody/CastPara
 import { Embers } from "../DisplayBoard/StageSurface/SetupStageBody/Embers";
 import { HeroFlame } from "../DisplayBoard/StageSurface/SetupStageBody/HeroFlame";
 import * as lobbyStyles from "../DisplayBoard/StageSurface/SetupStageBody/styles";
-import { resolveTeaserGameHref, TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
-import { dunlopDashGame, fappyBirdGame, slingshlongGame, streetsOfBarrieGame } from "../TeaserSoloGame/teaserGames";
+import { resolveTeaserGameHref, TEASER_GAME_SLUGS, TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
 import { teaserLandingCopy } from "./copy";
 import { TeaserCountdown } from "./TeaserCountdown";
 import { TeaserGameCard } from "./TeaserGameCard";
@@ -91,28 +90,28 @@ export const TeaserLanding = ({ roster }: TeaserLandingProps): JSX.Element => {
             minigame="SCHLONIC"
             title={teaserLandingCopy.dunlopDashTitle}
             summary={teaserLandingCopy.dunlopDashSummary}
-            href={resolveTeaserGameHref(dunlopDashGame.slug)}
+            href={resolveTeaserGameHref(TEASER_GAME_SLUGS.dunlopDash)}
             statusLabel={teaserLandingCopy.playLabel}
           />
           <TeaserGameCard
             minigame="FAPPY"
             title={teaserLandingCopy.fappyTitle}
             summary={teaserLandingCopy.fappySummary}
-            href={resolveTeaserGameHref(fappyBirdGame.slug)}
+            href={resolveTeaserGameHref(TEASER_GAME_SLUGS.fappyBird)}
             statusLabel={teaserLandingCopy.playLabel}
           />
           <TeaserGameCard
             minigame="JOUST"
             title={teaserLandingCopy.slingshlongTitle}
             summary={teaserLandingCopy.slingshlongSummary}
-            href={resolveTeaserGameHref(slingshlongGame.slug)}
+            href={resolveTeaserGameHref(TEASER_GAME_SLUGS.slingshlong)}
             statusLabel={teaserLandingCopy.playLabel}
           />
           <TeaserGameCard
             minigame="BRAWL"
             title={teaserLandingCopy.streetsOfBarrieTitle}
             summary={teaserLandingCopy.streetsOfBarrieSummary}
-            href={resolveTeaserGameHref(streetsOfBarrieGame.slug)}
+            href={resolveTeaserGameHref(TEASER_GAME_SLUGS.streetsOfBarrie)}
             statusLabel={teaserLandingCopy.playLabel}
           />
         </div>

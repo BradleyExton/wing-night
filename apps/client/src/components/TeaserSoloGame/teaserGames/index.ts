@@ -15,6 +15,7 @@ import { schlonicRuntimePlugin } from "@wingnight/minigames-schlonic";
 import { schlonicRendererBundle } from "@wingnight/minigames-schlonic/client";
 import type { MinigameHostView, MinigameType } from "@wingnight/shared";
 
+import { TEASER_GAME_SLUGS } from "../../TeaserApp/teaserRoutes";
 import { teaserGamesCopy } from "./copy";
 
 // How a finished turn reads on the teaser's end card, and the number the phone keeps a best of:
@@ -53,7 +54,7 @@ export type TeaserGame = {
 export const TEASER_POINTS_MAX = 15;
 
 export const dunlopDashGame: TeaserGame = {
-  slug: "dunlop-dash",
+  slug: TEASER_GAME_SLUGS.dunlopDash,
   minigameType: "SCHLONIC",
   runtimePlugin: schlonicRuntimePlugin,
   HostSurface: schlonicRendererBundle.HostSurface,
@@ -74,7 +75,7 @@ export const dunlopDashGame: TeaserGame = {
 };
 
 export const fappyBirdGame: TeaserGame = {
-  slug: "fappy-bird",
+  slug: TEASER_GAME_SLUGS.fappyBird,
   minigameType: "FAPPY",
   runtimePlugin: fappyRuntimePlugin,
   HostSurface: fappyRendererBundle.HostSurface,
@@ -105,7 +106,7 @@ export const fappyBirdGame: TeaserGame = {
 };
 
 export const slingshlongGame: TeaserGame = {
-  slug: "slingshlong",
+  slug: TEASER_GAME_SLUGS.slingshlong,
   minigameType: "JOUST",
   runtimePlugin: joustRuntimePlugin,
   HostSurface: joustRendererBundle.HostSurface,
@@ -135,7 +136,7 @@ export const slingshlongGame: TeaserGame = {
 };
 
 export const streetsOfBarrieGame: TeaserGame = {
-  slug: "streets-of-barrie",
+  slug: TEASER_GAME_SLUGS.streetsOfBarrie,
   minigameType: "BRAWL",
   runtimePlugin: brawlRuntimePlugin,
   HostSurface: brawlRendererBundle.HostSurface,

@@ -11,7 +11,7 @@ import { TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
 import { teaserSoloGameCopy } from "./copy";
 import { TeaserSoloFinish } from "./TeaserSoloFinish";
 import { TeaserTeamPicker } from "./TeaserTeamPicker";
-import { TEASER_POINTS_MAX, type TeaserGame } from "./teaserGames";
+import { resolveTeaserGame, TEASER_POINTS_MAX, type TeaserGame } from "./teaserGames";
 import { useTeaserGameMemory } from "./useTeaserGameMemory";
 import * as styles from "./styles";
 
@@ -171,4 +171,18 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
       )}
     </>
   );
+};
+
+type TeaserGamePageProps = {
+  path: string;
+  roster: TeaserRoster;
+};
+
+// A game's page, as the one thing TeaserApp loads lazily for it: the four games' runtimes and
+// surfaces are most of the site's weight, and the landing — the page nearly everyone opens, on a
+// phone, often over cellular — needs none of them.
+export const TeaserGamePage = ({ path, roster }: TeaserGamePageProps): JSX.Element | null => {
+  const game = resolveTeaserGame(path);
+
+  return game === null ? null : <TeaserSoloGame key={game.slug} game={game} roster={roster} />;
 };
