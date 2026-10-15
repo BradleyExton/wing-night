@@ -3,9 +3,9 @@ import type { MinigameType } from "@wingnight/shared";
 import {
   resolveMinigameDevActions,
   resolveMinigameDevManifest,
-  resolveMinigameRendererBundle,
   resolveMinigameRuntimePlugin
-} from "../../minigames/registry";
+} from "../../minigames/devRegistry";
+import { resolveMinigameRendererBundle } from "../../minigames/registry";
 import { SandboxStage } from "./SandboxStage";
 import { useSandboxManifest } from "./useSandboxManifest";
 import { minigameDevSandboxCopy } from "./copy";

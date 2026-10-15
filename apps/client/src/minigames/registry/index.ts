@@ -1,135 +1,40 @@
-import type {
-  MinigameDevAction,
-  MinigameDevManifest,
-  MinigameRendererBundle,
-  MinigameRuntimePlugin
-} from "@wingnight/minigames-core";
+import type { MinigameRendererBundle } from "@wingnight/minigames-core";
 import { brawlRendererBundle } from "@wingnight/minigames-brawl/client";
-import { brawlDevManifest } from "@wingnight/minigames-brawl/dev";
-import { brawlRuntimePlugin } from "@wingnight/minigames-brawl/runtime";
 import { drawingRendererBundle } from "@wingnight/minigames-drawing/client";
-import { drawingDevManifest } from "@wingnight/minigames-drawing/dev";
-import { drawingRuntimePlugin } from "@wingnight/minigames-drawing/runtime";
 import { emojiCharadesRendererBundle } from "@wingnight/minigames-emoji-charades/client";
-import { emojiCharadesDevManifest } from "@wingnight/minigames-emoji-charades/dev";
-import { emojiCharadesRuntimePlugin } from "@wingnight/minigames-emoji-charades/runtime";
 import { fappyRendererBundle } from "@wingnight/minigames-fappy/client";
-import { fappyDevManifest } from "@wingnight/minigames-fappy/dev";
-import { fappyRuntimePlugin } from "@wingnight/minigames-fappy/runtime";
 import { geoRendererBundle } from "@wingnight/minigames-geo/client";
-import { geoDevManifest } from "@wingnight/minigames-geo/dev";
-import { geoRuntimePlugin } from "@wingnight/minigames-geo/runtime";
 import { joustRendererBundle } from "@wingnight/minigames-joust/client";
-import { joustDevManifest } from "@wingnight/minigames-joust/dev";
-import { joustRuntimePlugin } from "@wingnight/minigames-joust/runtime";
 import { mountRendererBundle } from "@wingnight/minigames-mount/client";
-import { mountDevActions, mountDevManifest } from "@wingnight/minigames-mount/dev";
-import { mountRuntimePlugin } from "@wingnight/minigames-mount/runtime";
 import { recreateRendererBundle } from "@wingnight/minigames-recreate/client";
-import { recreateDevManifest } from "@wingnight/minigames-recreate/dev";
-import { recreateRuntimePlugin } from "@wingnight/minigames-recreate/runtime";
 import { schlonicRendererBundle } from "@wingnight/minigames-schlonic/client";
-import { schlonicDevManifest } from "@wingnight/minigames-schlonic/dev";
-import { schlonicRuntimePlugin } from "@wingnight/minigames-schlonic/runtime";
 import { songGuessRendererBundle } from "@wingnight/minigames-song-guess/client";
-import { songGuessDevManifest } from "@wingnight/minigames-song-guess/dev";
-import { songGuessRuntimePlugin } from "@wingnight/minigames-song-guess/runtime";
 import { triviaRendererBundle } from "@wingnight/minigames-trivia/client";
-import { triviaDevManifest } from "@wingnight/minigames-trivia/dev";
-import { triviaRuntimePlugin } from "@wingnight/minigames-trivia/runtime";
 import type { MinigameType } from "@wingnight/shared";
 
-type MinigameRegistration = {
-  rendererBundle: MinigameRendererBundle;
-  devManifest: MinigameDevManifest;
-  runtimePlugin: MinigameRuntimePlugin;
-  // Scripted moves only the dev sandbox offers, as buttons (`MinigameDevAction`). Nothing in the
-  // party app reads them: the one caller is `/dev/minigame/<slug>`.
-  devActions?: readonly MinigameDevAction[];
-};
-
+// The party half of the registry: the surfaces the tablet, the TV and the
+// phones draw. The dev manifests and runtime plugins live in ../devRegistry,
+// which only the dev sandbox reaches — a party never downloads the server's
+// reducers.
+//
 // Keyed by MinigameType so adding a new game to MINIGAME_DEFINITIONS fails to
-// compile until its bundle, dev manifest, and runtime plugin are registered.
-const MINIGAME_REGISTRY: Record<MinigameType, MinigameRegistration> = {
-  TRIVIA: {
-    rendererBundle: triviaRendererBundle,
-    devManifest: triviaDevManifest,
-    runtimePlugin: triviaRuntimePlugin
-  },
-  GEO: {
-    rendererBundle: geoRendererBundle,
-    devManifest: geoDevManifest,
-    runtimePlugin: geoRuntimePlugin
-  },
-  SONG_GUESS: {
-    rendererBundle: songGuessRendererBundle,
-    devManifest: songGuessDevManifest,
-    runtimePlugin: songGuessRuntimePlugin
-  },
-  JOUST: {
-    rendererBundle: joustRendererBundle,
-    devManifest: joustDevManifest,
-    runtimePlugin: joustRuntimePlugin
-  },
-  FAPPY: {
-    rendererBundle: fappyRendererBundle,
-    devManifest: fappyDevManifest,
-    runtimePlugin: fappyRuntimePlugin
-  },
-  RECREATE: {
-    rendererBundle: recreateRendererBundle,
-    devManifest: recreateDevManifest,
-    runtimePlugin: recreateRuntimePlugin
-  },
-  SCHLONIC: {
-    rendererBundle: schlonicRendererBundle,
-    devManifest: schlonicDevManifest,
-    runtimePlugin: schlonicRuntimePlugin
-  },
-  BRAWL: {
-    rendererBundle: brawlRendererBundle,
-    devManifest: brawlDevManifest,
-    runtimePlugin: brawlRuntimePlugin
-  },
-  MOUNT: {
-    rendererBundle: mountRendererBundle,
-    devManifest: mountDevManifest,
-    runtimePlugin: mountRuntimePlugin,
-    devActions: mountDevActions
-  },
-  DRAWING: {
-    rendererBundle: drawingRendererBundle,
-    devManifest: drawingDevManifest,
-    runtimePlugin: drawingRuntimePlugin
-  },
-  EMOJI_CHARADES: {
-    rendererBundle: emojiCharadesRendererBundle,
-    devManifest: emojiCharadesDevManifest,
-    runtimePlugin: emojiCharadesRuntimePlugin
-  }
+// compile until its renderer bundle is registered.
+const MINIGAME_RENDERER_REGISTRY: Record<MinigameType, MinigameRendererBundle> = {
+  TRIVIA: triviaRendererBundle,
+  GEO: geoRendererBundle,
+  SONG_GUESS: songGuessRendererBundle,
+  JOUST: joustRendererBundle,
+  FAPPY: fappyRendererBundle,
+  RECREATE: recreateRendererBundle,
+  SCHLONIC: schlonicRendererBundle,
+  BRAWL: brawlRendererBundle,
+  MOUNT: mountRendererBundle,
+  DRAWING: drawingRendererBundle,
+  EMOJI_CHARADES: emojiCharadesRendererBundle
 };
 
 export const resolveMinigameRendererBundle = (
   minigameType: MinigameType
 ): MinigameRendererBundle | null => {
-  return MINIGAME_REGISTRY[minigameType]?.rendererBundle ?? null;
-};
-
-export const resolveMinigameDevManifest = (
-  minigameType: MinigameType
-): MinigameDevManifest | null => {
-  return MINIGAME_REGISTRY[minigameType]?.devManifest ?? null;
-};
-
-export const resolveMinigameRuntimePlugin = (
-  minigameType: MinigameType
-): MinigameRuntimePlugin | null => {
-  return MINIGAME_REGISTRY[minigameType]?.runtimePlugin ?? null;
-};
-
-// Only the dev sandbox calls this: the party app's host and display never draw a dev action.
-export const resolveMinigameDevActions = (
-  minigameType: MinigameType
-): readonly MinigameDevAction[] => {
-  return MINIGAME_REGISTRY[minigameType]?.devActions ?? [];
+  return MINIGAME_RENDERER_REGISTRY[minigameType] ?? null;
 };

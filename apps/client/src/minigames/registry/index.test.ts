@@ -6,27 +6,11 @@ import {
   resolveMinigameTypeFromSlug
 } from "@wingnight/shared";
 
-import {
-  resolveMinigameDevManifest,
-  resolveMinigameRendererBundle,
-  resolveMinigameRuntimePlugin
-} from "./index";
+import { resolveMinigameRendererBundle } from "./index";
 
 test("resolves renderer bundles for all minigame types", () => {
   for (const minigameType of MINIGAME_TYPES) {
     assert.ok(resolveMinigameRendererBundle(minigameType));
-  }
-});
-
-test("resolves dev manifests for all minigame types", () => {
-  for (const minigameType of MINIGAME_TYPES) {
-    assert.ok(resolveMinigameDevManifest(minigameType));
-  }
-});
-
-test("resolves runtime plugins matching each minigame type", () => {
-  for (const minigameType of MINIGAME_TYPES) {
-    assert.equal(resolveMinigameRuntimePlugin(minigameType)?.id, minigameType);
   }
 });
 
