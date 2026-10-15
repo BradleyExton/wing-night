@@ -136,13 +136,102 @@ export const LIMITS = {
 };
 
 export const WING_PIVOT_POINT = WING_PIVOT;
+/**
+ * The prop sweep (§2.1, run 1b): a prop is only drawn in the parade, the intro
+ * lineup and the portal, never in a game, so ride (+75°) and hurt (+95°) are
+ * gone. Strict angles: out of the head box and above the floor. Soft angles:
+ * may pass BEHIND the head (props paint in the wing part, under the head) and
+ * may dip SOFT_DIP under the floor.
+ */
 export const SWEEP = [
-  { angle: -62, label: "flap" },
-  { angle: -26, label: "bounce" },
-  { angle: 75, label: "ride" },
-  { angle: 95, label: "hurt" }
+  { angle: 0, label: "rest", strict: true },
+  { angle: -8, label: "walk tuck", strict: true },
+  { angle: -26, label: "bounce/jig", strict: false },
+  { angle: -62, label: "flap", strict: false }
 ];
+export const SOFT_DIP = 4;
 export const HEAD_BOX = { x0: 36, x1: 80, y0: -12, y1: 37 };
+/** At rest, no prop point right of x 64 above y 40: that is pointing forward at the face. */
+export const FACE_FORWARD = { x: 64, y: 40 };
+
+// The Moves' wing extremes, copied from outfit-moves.html (MOVES[].keys): for
+// each Move, the key poses where the wing turns furthest up-and-back and
+// furthest forward-and-down. A prop rides the wing part, so it takes the whole
+// part transform the Moves page computes (partTransform there): the wing's own
+// turn and nudge, plus the lean about LEAN_AT and the whole-bird hop/drop. If a
+// Move's keys change there, change them here.
+const MOVE_LEAN_AT = { x: 38, y: 60 };
+const MOVE_GENRE = {
+  "horns-pump": "metal",
+  "double-headbang": "metal",
+  "heart-point": "pop",
+  "sporty-hop": "pop",
+  "lasso-twirl": "country",
+  "boot-scoot": "country",
+  "night-fever": "disco",
+  "the-bump": "disco",
+  "chicken-dance": "shared"
+};
+export const MOVE_WING_EXTREMES = [
+  { move: "horns-pump", label: "thrust", pose: { wing: 70, wingX: -15, wingY: -4, lean: -7, drop: -1.5 } },
+  { move: "horns-pump", label: "stamp", pose: { wing: -30, drop: 2, lean: 4 } },
+  { move: "double-headbang", label: "wind back", pose: { lean: -5, drop: -1, wing: 8 } },
+  { move: "double-headbang", label: "bang", pose: { lean: 10, drop: 2, wing: -22 } },
+  { move: "heart-point", label: "point", pose: { wing: -172, wingX: 12, wingY: 2, lean: 5, x: 1.5 } },
+  { move: "heart-point", label: "jab", pose: { wing: -172, wingX: 13, wingY: 2, lean: 6, x: 2 } },
+  { move: "heart-point", label: "swoon", pose: { lean: -12, wing: 64, wingX: -13, wingY: -3, drop: -2 } },
+  { move: "sporty-hop", label: "apex", pose: { y: -18, drop: -1, wing: 72, wingX: -15, wingY: -4, lean: -5 } },
+  { move: "sporty-hop", label: "victory", pose: { y: -3, drop: -1.5, wing: 75, wingX: -15, wingY: -4, lean: -4 } },
+  { move: "sporty-hop", label: "squash", pose: { drop: 3.5, wing: -24, lean: 6 } },
+  { move: "lasso-twirl", label: "twirl", pose: { wing: 68, wingX: -12, wingY: 0, lean: -6 } },
+  { move: "lasso-twirl", label: "wind-up", pose: { wing: 78, wingX: -15, wingY: -5, lean: -8 } },
+  { move: "lasso-twirl", label: "throw", pose: { wing: -165, wingX: 11, wingY: 4.5, lean: 8, x: 2 } },
+  { move: "lasso-twirl", label: "yank", pose: { wing: -150, wingX: 8, wingY: 3, lean: -10, x: -1 } },
+  { move: "boot-scoot", label: "heel", pose: { x: 5, lean: -14, wing: -10 } },
+  { move: "boot-scoot", label: "toe", pose: { x: -5, lean: 10, wing: 10 } },
+  { move: "boot-scoot", label: "lift", pose: { wing: -24, drop: -1 } },
+  { move: "night-fever", label: "up", pose: { wing: 72, wingX: -14, wingY: -5, lean: -10, x: 3 } },
+  { move: "night-fever", label: "down", pose: { wing: -100, lean: 7, x: -1, drop: 1.5 } },
+  { move: "the-bump", label: "bump", pose: { x: -7, lean: 14, wing: -14 } },
+  { move: "the-bump", label: "knocked", pose: { y: -3, x: -5, lean: -8, wing: 55, wingX: -12 } },
+  { move: "chicken-dance", label: "flap up", pose: { wing: 55, wingX: -12, wingY: -3, y: -3.5 } },
+  { move: "chicken-dance", label: "flap down", pose: { wing: -40, drop: 0.5 } },
+  { move: "chicken-dance", label: "clap", pose: { wing: -135, wingX: 4, y: -2, lean: -3 } }
+].map((m) => ({ ...m, genre: MOVE_GENRE[m.move] }));
+
+const rad = (d) => (d * Math.PI) / 180;
+/** The wing part's transform for a Moves pose, as { r, tx, ty } (outfit-moves.html partTransform). */
+const wingPartTransform = (pose) => {
+  const lean = pose.lean ?? 0;
+  const c = Math.cos(rad(lean));
+  const s = Math.sin(rad(lean));
+  const vx = MOVE_LEAN_AT.x - WING_PIVOT.x;
+  const vy = MOVE_LEAN_AT.y - WING_PIVOT.y;
+  return {
+    r: (pose.wing ?? 0) + lean,
+    tx: (pose.x ?? 0) + (pose.wingX ?? 0) + vx - (c * vx - s * vy),
+    ty: (pose.y ?? 0) + (pose.wingY ?? 0) + vy - (s * vx + c * vy) + (pose.drop ?? 0)
+  };
+};
+/** A point in bird units through a wing transform: turned about the pivot, then nudged. */
+const throughWing = (p, { r, tx, ty }) => {
+  const a = rad(r);
+  const dx = p.x - WING_PIVOT.x;
+  const dy = p.y - WING_PIVOT.y;
+  return { x: WING_PIVOT.x + tx + dx * Math.cos(a) - dy * Math.sin(a), y: WING_PIVOT.y + ty + dx * Math.sin(a) + dy * Math.cos(a) };
+};
+/** The same transform as an SVG transform attribute. */
+const wingTransformAttr = ({ r, tx, ty }) =>
+  `translate(${WING_PIVOT.x + tx} ${WING_PIVOT.y + ty}) rotate(${r}) translate(${-WING_PIVOT.x} ${-WING_PIVOT.y})`;
+/** Every pose a genre's prop is swept through: the four angles, then its Moves' extremes. */
+const sweepPosesFor = (genre) => [
+  ...SWEEP.map((s) => ({ kind: s.strict ? "strict" : "soft", label: s.label, angle: s.angle, t: { r: s.angle, tx: 0, ty: 0 } })),
+  ...MOVE_WING_EXTREMES.filter((m) => m.genre === genre || m.genre === "shared").map((m) => {
+    const t = wingPartTransform(m.pose);
+    return { kind: "move", label: `${m.move} ${m.label}`, move: m.move, angle: Math.round(t.r), t };
+  })
+];
+const signed = (deg) => `${deg > 0 ? "+" : deg < 0 ? "−" : ""}${Math.abs(deg)}°`;
 
 const FOOT_Y = 71;
 const EPS = 0.01;
@@ -453,7 +542,7 @@ const regionsFor = (genre) => {
 export const RULES = [
   {
     key: "chin",
-    text: "Chin (§2.8 rule 1): no geometry above y 32. A Tail item is held to that only in the head column (x > 34), so it may rise with the genre tail out at the back."
+    text: "Chin (§2.8 rule 1): no geometry above y 32. A Tail item and a Prop are held to that only in the head column (x > 34): the tail rises with the genre tail out at the back, and a prop may be held up and back behind the head."
   },
   {
     key: "hair",
@@ -463,12 +552,25 @@ export const RULES = [
   {
     key: "region",
     text:
-      "Region (rule 6). Top: inside the body outline (1-unit tolerance for the ink edge) and from head.shoulders down. Sleeve: inside the wing, or within 7 units of its trailing edge on the trailing side. Tail: within 10 units of the genre tail. Boots: within 9 units of a leg's x, between y 52 and the floor. Prop: see sweep. Stage: under the feet, y 55..80, x −8..88."
+      "Region (rule 6). Top: inside the body outline (1-unit tolerance for the ink edge) and from head.shoulders down. Sleeve: inside the wing, or within 7 units of its trailing edge on the trailing side. Tail: within 10 units of the genre tail. Boots: within 9 units of a leg's x, between y 52 and the floor. Prop: see reach, face and the sweep. Stage: under the feet, y 55..80, x −8..88."
   },
   {
     key: "sweep",
     text:
-      "Prop sweep (rule 5): rotated about the wing pivot (47,35) by −62° flap, −26° bounce, +75° ride and +95° hurt, no point enters the head box (x 36..80, y −12..37) and none drops below 72.75. At rest it reaches at most 10 units past the drawn bird's outline."
+      "Prop sweep, strict (§2.1, rule 5): a prop is drawn only in the parade, the intro lineup and the portal, never in a game, so it is swept only through the wing angles those use, about the wing pivot (47,35). At rest/idle (0°) and the walk tuck (−8°), no point enters the head box (x 36..80, y −12..37) and none drops below 72.75. Ride (+75°) and hurt (+95°) are game poses and are not checked."
+  },
+  {
+    key: "sweepSoft",
+    text:
+      "Prop sweep, soft: at the dance extremes (−26° bounce/jig, −62° flap) and at each of the genre's Moves' wing extremes (the whole wing-part transform from outfit-moves.html: turn, nudge, lean and hop), a prop may pass BEHIND the head — it paints in the wing part, under the head, so it can never cover a face — and may dip up to 4 units under the floor (y 76.75). Only a deeper dip fails; passing behind the head is reported as information."
+  },
+  {
+    key: "reach",
+    text: "Prop reach (rule 5): at rest it reaches at most 10 units past the drawn bird's outline."
+  },
+  {
+    key: "face",
+    text: "Prop face (rule 5): never pointing forward at the face — at rest, no point right of x 64 above y 40."
   },
   { key: "whitePoints", text: "White points (rule 4): at most one on the chest — counted by the author, printed here." },
   { key: "darkCentre", text: "Dark centre (rule 4): no light ring or disc with a dark centre — it reads as an eye. Declared by the author." },
@@ -482,8 +584,7 @@ export const RULES = [
 const ruleLine = (key, ok, text, level) => ({ key, level: level ?? (ok === null ? "info" : ok ? "ok" : "fail"), text });
 
 /** Measure one variant against every rule. Returns { rules, extension, sweep }. */
-const judgeVariant = (genre, item, variant) => {
-  const style = variant.styles[0];
+const judgeVariant = (genre, item, variant, style = variant.styles[0]) => {
   const outfit = { [item.slot]: { item, variant, style } };
   const drawn = measureOutfit(genre, outfit, "drawn");
   const costume = measureOutfit(genre, outfit, "costume");
@@ -503,14 +604,14 @@ const judgeVariant = (genre, item, variant) => {
   const wingNote = slot === "sleeve" ? " — off the wing" : "";
 
   // chin
-  if (slot === "tail") {
+  if (slot === "tail" || slot === "prop") {
     const over = all.filter((p) => p.x > LIMITS.headColumnX + EPS && p.y < LIMITS.chin - EPS);
     rules.push(
       ruleLine(
         "chin",
         over.length === 0,
         over.length === 0
-          ? `chin: nothing above y 32 in the head column (tail rises to y=${fmt(minY(all))} out at the back)`
+          ? `chin: nothing above y 32 in the head column (top edge y=${fmt(minY(all))}${minY(all) < LIMITS.chin ? ", above the chin out at the back" : ""})`
           : `chin: ${over.length} points above y 32 at x > 34 (to x=${fmt(Math.max(...over.map((p) => p.x)))}, y=${fmt(minY(over))})`
       )
     );
@@ -593,36 +694,74 @@ const judgeVariant = (genre, item, variant) => {
     rules.push(ruleLine("region", ok, `stage: y ${fmt(minY(all))}..${fmt(maxY(all))} (needs 55..80), x ${fmt(x0)}..${fmt(x1)} (needs −8..88)`));
   } else if (slot === "prop") {
     extension = Math.max(...drawn.map((p) => R.outside(p)));
-    rules.push(ruleLine("region", extension <= LIMITS.propReach + EPS, `prop: reaches ${fmt(extension)}u past the bird's outline at rest (limit 10)`));
-    const rot = (p, deg) => {
-      const a = (deg * Math.PI) / 180;
-      const dx = p.x - WING_PIVOT.x;
-      const dy = p.y - WING_PIVOT.y;
-      return { x: WING_PIVOT.x + dx * Math.cos(a) - dy * Math.sin(a), y: WING_PIVOT.y + dx * Math.sin(a) + dy * Math.cos(a) };
-    };
-    sweep = SWEEP.map(({ angle, label }) => {
-      const pts = all.map((p) => rot(p, angle));
-      const inHead = pts.filter((p) => p.x >= HEAD_BOX.x0 && p.x <= HEAD_BOX.x1 && p.y >= HEAD_BOX.y0 && p.y <= HEAD_BOX.y1);
-      const below = pts.filter((p) => p.y > LIMITS.floor + EPS);
+    rules.push(ruleLine("reach", extension <= LIMITS.propReach + EPS, `reach: ${fmt(extension)}u past the bird's outline at rest (limit 10)`));
+    const forward = all.filter((p) => p.x > FACE_FORWARD.x + EPS && p.y < FACE_FORWARD.y - EPS);
+    rules.push(
+      ruleLine(
+        "face",
+        forward.length === 0,
+        forward.length === 0
+          ? "face: nothing at rest right of x 64 above y 40"
+          : `face: ${forward.length} points at rest right of x 64 above y 40, pointing at the face (to x=${fmt(Math.max(...forward.map((p) => p.x)))}, y=${fmt(minY(forward))})`
+      )
+    );
+    const r1 = (n) => Math.round(n * 10) / 10;
+    sweep = sweepPosesFor(genre).map(({ kind, label, move, angle, t }) => {
+      const pts = all.map((p) => throughWing(p, t));
+      const inHead = pts.filter((p) => p.x >= HEAD_BOX.x0 && p.x <= HEAD_BOX.x1 && p.y >= HEAD_BOX.y0 && p.y <= HEAD_BOX.y1).length;
+      const floorLimit = kind === "strict" ? LIMITS.floor : LIMITS.floor + SOFT_DIP;
+      const below = pts.filter((p) => p.y > floorLimit + EPS).length;
       return {
-        angle,
+        kind,
         label,
-        ok: inHead.length === 0 && below.length === 0,
-        headPoints: inHead.length,
-        floorPoints: below.length,
-        minY: Math.round(minY(pts) * 10) / 10,
-        maxY: Math.round(maxY(pts) * 10) / 10,
-        maxX: Math.round(Math.max(...pts.map((p) => p.x)) * 10) / 10
+        move: move ?? null,
+        angle,
+        ok: kind === "strict" ? inHead === 0 && below === 0 : below === 0,
+        headPoints: inHead,
+        behindHead: kind !== "strict" && inHead > 0,
+        floorPoints: below,
+        floorLimit,
+        minY: r1(minY(pts)),
+        maxY: r1(maxY(pts)),
+        maxX: r1(Math.max(...pts.map((p) => p.x)))
       };
     });
-    const sweepOk = sweep.every((s) => s.ok);
+    const strict = sweep.filter((s) => s.kind === "strict");
+    const soft = sweep.filter((s) => s.kind !== "strict");
+    const fault = (s) =>
+      [s.kind === "strict" && s.headPoints ? `head ×${s.headPoints}` : "", s.floorPoints ? `floor ×${s.floorPoints} (y ${fmt(s.maxY)})` : ""].filter(Boolean).join(" ");
     rules.push(
       ruleLine(
         "sweep",
-        sweepOk,
-        `sweep: ${sweep
-          .map((s) => `${s.label} ${s.angle > 0 ? "+" : ""}${s.angle}° ${s.ok ? "clear" : `${s.headPoints ? `head ×${s.headPoints}` : ""}${s.headPoints && s.floorPoints ? " " : ""}${s.floorPoints ? `floor ×${s.floorPoints} (y ${fmt(s.maxY)})` : ""}`}`)
-          .join(" · ")}`
+        strict.every((s) => s.ok),
+        `sweep, strict: ${strict.map((s) => `${s.label} ${signed(s.angle)} ${s.ok ? `clear (lowest y ${fmt(s.maxY)})` : fault(s)}`).join(" · ")}`
+      )
+    );
+    const dance = soft.filter((s) => s.kind === "soft");
+    const moves = soft.filter((s) => s.kind === "move");
+    const lowest = moves.reduce((a, b) => (b.maxY > (a?.maxY ?? -Infinity) ? b : a), null);
+    const badMoves = moves.filter((s) => !s.ok);
+    rules.push(
+      ruleLine(
+        "sweepSoft",
+        soft.every((s) => s.ok),
+        `sweep, soft (floor 76.75): ${dance.map((s) => `${s.label} ${signed(s.angle)} ${s.ok ? `lowest y ${fmt(s.maxY)}` : fault(s)}`).join(" · ")} · ${moves.length} Move extremes ${
+          badMoves.length
+            ? `— ${badMoves.map((s) => `${s.label} ${signed(s.angle)} ${fault(s)}`).join(", ")}`
+            : lowest
+              ? `clear, lowest y ${fmt(lowest.maxY)} (${lowest.label} ${signed(lowest.angle)})`
+              : ""
+        }`
+      )
+    );
+    const behind = soft.filter((s) => s.behindHead);
+    rules.push(
+      ruleLine(
+        "behindHead",
+        null,
+        behind.length
+          ? `passes behind the head (allowed, it paints under the head) at ${behind.map((s) => `${s.label} ${signed(s.angle)}`).join(", ")}`
+          : "never passes behind the head"
       )
     );
   }
@@ -724,22 +863,37 @@ const trio = (genre, item, variant, style, h, heads) => {
   ].join("");
 };
 
-/** The prop sweep diagram: the prop at rest plus a ghost at each angle, the head box and the floor. */
-const sweepFigure = (genre, item, variant, h) => {
+/**
+ * The prop sweep diagrams: the prop at rest plus a ghost at each pose, the
+ * head box, the floor (strict) and the floor + 4 (soft). `which` is "angles"
+ * (rest, tuck, bounce, flap) or "moves" (the genre's Moves' wing extremes).
+ */
+const sweepFigure = (genre, item, variant, h, which = "angles") => {
   const style = variant.styles[0];
   const ctx = makeCtx({ genre, headKind: "drawn", style });
-  const ghosts = SWEEP.map(
-    ({ angle }) => `<g opacity="0.45" transform="rotate(${angle} ${WING_PIVOT.x} ${WING_PIVOT.y})">${variant.draw(ctx)}</g>`
-  ).join("");
+  const poses = sweepPosesFor(genre).filter((p) => (which === "moves" ? p.kind === "move" : p.kind !== "move" && p.angle !== 0));
+  const ghosts = poses
+    .map((p) => `<g opacity="${p.kind === "strict" ? 0.55 : 0.3}" transform="${wingTransformAttr(p.t)}">${variant.draw(ctx)}</g>`)
+    .join("");
+  const dash = 'stroke="#fda4af" stroke-width="0.6" stroke-dasharray="2 1.5"';
   const overlay = () => `
     <rect x="${HEAD_BOX.x0}" y="${HEAD_BOX.y0}" width="${HEAD_BOX.x1 - HEAD_BOX.x0}" height="${HEAD_BOX.y1 - HEAD_BOX.y0}"
-          fill="#fda4af" fill-opacity="0.12" stroke="#fda4af" stroke-width="0.6" stroke-dasharray="2 1.5"/>
-    <line x1="-8" x2="88" y1="${LIMITS.floor}" y2="${LIMITS.floor}" stroke="#fda4af" stroke-width="0.6" stroke-dasharray="2 1.5"/>
+          fill="#fda4af" fill-opacity="0.12" ${dash}/>
+    <line x1="-8" x2="88" y1="${LIMITS.floor}" y2="${LIMITS.floor}" ${dash}/>
+    <line x1="-8" x2="88" y1="${LIMITS.floor + SOFT_DIP}" y2="${LIMITS.floor + SOFT_DIP}" ${dash} stroke-opacity="0.5"/>
+    <path d="M ${FACE_FORWARD.x} ${HEAD_BOX.y1} V ${FACE_FORWARD.y} H 88" fill="none" ${dash} stroke-opacity="0.7"/>
     <circle cx="${WING_PIVOT.x}" cy="${WING_PIVOT.y}" r="1.2" fill="#fda4af"/>
     ${ghosts}`;
   const outfit = { [item.slot]: { item, variant, style } };
-  return fig(svgOf(birdFor(genre, outfit, { extra: { apparel: overlay } }), h), "sweep · −62 −26 +75 +95 · head box, floor", 'class="sweep-fig"');
+  const caption =
+    which === "moves"
+      ? `Moves · ${[...new Set(poses.map((p) => p.move))].join(", ")} · soft`
+      : "sweep · rest 0 · tuck −8 strict · −26 −62 soft";
+  return fig(svgOf(birdFor(genre, outfit, { extra: { apparel: overlay } }), h), caption, 'class="sweep-fig"');
 };
+
+/** A blurred figure, padded on top so a photo head (y −12) or a raised prop never spills over what sits above it. */
+const blurBox = (svg, h) => `<div class="blur" style="padding-top:${Math.ceil((h * 20) / 72)}px">${svg}</div>`;
 
 const stageRow = (h, inner, attrs = "", cls = "") =>
   `<div class="stage ${cls}" data-size="${h}" ${attrs}><div class="sizes">${inner}</div><span class="scale">${SCALE_LABEL[h] ?? `${h}px`}</span></div>`;
@@ -758,7 +912,7 @@ const variantCard = (genre, mod, item, variant, heads, multi) => {
       return `<div class="judge-group"><span class="judge-style">${s}${s === "gold" ? " · trial" : ""}</span><div class="judge-figs">
         ${fig(svgOf(birdFor(genre, outfit), 76), "76 · drawn")}
         ${fig(svgOf(birdFor(genre, outfit, { avatarSrc: heads[0].src }), 76), `76 · ${heads[0].name}`)}
-        ${fig(`<div class="blur">${svgOf(birdFor(genre, outfit, { avatarSrc: heads[0].src }), 130)}</div>`, `130 blurred · ${heads[0].name}`)}
+        ${fig(blurBox(svgOf(birdFor(genre, outfit, { avatarSrc: heads[0].src }), 130), 130), `130 blurred · ${heads[0].name}`)}
       </div></div>`;
     })
     .join("");
@@ -770,10 +924,10 @@ const variantCard = (genre, mod, item, variant, heads, multi) => {
     ${item.note ? `<p class="note"><strong>${esc(item.name)}.</strong> ${esc(item.note)}</p>` : ""}
     <p class="note"><strong>Variant ${esc(variant.key)}.</strong> ${esc(variant.note ?? "")} <span class="dim">Styles: ${styles.join(", ")} (default ${def}).</span></p>
     ${stageRow(304, trio(genre, item, variant, def, 304, heads), `data-capture-304="${esc(name)}"`)}
-    ${stageRow(152, trio(genre, item, variant, def, 152, heads) + (item.slot === "prop" ? sweepFigure(genre, item, variant, 152) : ""))}
+    ${stageRow(152, trio(genre, item, variant, def, 152, heads) + (item.slot === "prop" ? sweepFigure(genre, item, variant, 152) + sweepFigure(genre, item, variant, 152, "moves") : ""))}
     ${stageRow(130, styles.map((s) => trio(genre, item, variant, s, 130, heads)).join(""), "", "blur")}
     ${stageRow(76, bare + styles.map((s) => trio(genre, item, variant, s, 76, heads)).join(""))}
-    <p class="rules" data-rules>measuring…</p>
+    <div class="rules" data-rules>measuring…</div>
     <div class="stage judge" data-capture="${esc(name)}"><div class="judge-row">${judge}</div><span class="scale">judge strip · 76 drawn · 76 costume · 130 blurred</span></div>
   </section>`;
 };
@@ -788,7 +942,7 @@ const rulesCard = () => `
   <section class="cell rules-list">
     <h2>the rules every card is measured on</h2>
     <ol>${RULES.map((r) => `<li>${esc(r.text)}</li>`).join("")}</ol>
-    <p class="note">Measured on the default style from the item's drawn outline (every shape sampled along its length, strokes excluded, a clipped shape measured by the part of it that shows) on the drawn head and on a costume head, in the bird's 80×72 units. Green passes, red fails, amber is advisory. A fail is reported, not fixed: Brad cuts at Gate 1. Rows run 304 → 152 → 130 blurred → 76, and the 76 row is the one that counts. Paint order, back to front: stage · tail · tail item · far leg + far boot · body · near leg + near boot · wing · sleeve · top · prop · neck · head.</p>
+    <p class="note">Measured on every style of every variant, each in its own block (the default first; a later style lists only what fails or measures differently), from the item's drawn outline (every shape sampled along its length, strokes excluded, a clipped shape measured by the part of it that shows) on the drawn head and on a costume head, in the bird's 80×72 units. Green passes, red fails, amber is advisory. A fail is reported, not fixed: Brad cuts at Gate 1. Rows run 304 → 152 → 130 blurred → 76, and the 76 row is the one that counts. Paint order, back to front: stage · tail · tail item · far leg + far boot · body · near leg + near boot · wing · sleeve · top · prop · neck · head.</p>
   </section>`;
 
 // --------------------------------------------------------------- looks --
@@ -858,7 +1012,7 @@ const lookBlock = (genre, look, resolved, heads, multi) => {
     <div class="look-figs">
       ${fig(svgOf(birdFor(genre, outfit), 76), "76 · drawn")}
       ${heads.map((hd) => fig(svgOf(birdFor(genre, outfit, { avatarSrc: hd.src }), 76), `76 · ${hd.name}`)).join("")}
-      ${fig(`<div class="blur">${svgOf(birdFor(genre, outfit, { avatarSrc: heads[0].src }), 130)}</div>`, `130 blurred · ${heads[0].name}`)}
+      ${fig(blurBox(svgOf(birdFor(genre, outfit, { avatarSrc: heads[0].src }), 130), 130), `130 blurred · ${heads[0].name}`)}
     </div>
     <div class="look-worn">${resolved.worn.map((w) => `${w.slot}: ${esc(w.item)}/${w.variant} ${w.style}`).join(" · ") || "nothing drawn yet"}</div>
     ${resolved.missing.length ? `<div class="look-missing">not drawn yet: ${resolved.missing.map(esc).join(", ")}</div>` : ""}
@@ -905,7 +1059,7 @@ const preload = (src) =>
 export const renderOutfitPage = async ({ genres, modules, looks = {} }) => {
   const root = document.getElementById("root");
   const params = new URLSearchParams(location.search);
-  const only = params.get("only");
+  const only = params.get("only")?.replace(/\.js$/, "") || null;
   const multi = genres.length > 1;
   const heads = [
     { src: HEADS.rosi, name: "rosi" },
@@ -1056,23 +1210,59 @@ export const renderOutfitPage = async ({ genres, modules, looks = {} }) => {
   if (only && pending.length === 0) html.splice(1, 0, errorCard(`--only ${only} matched nothing`, "No module or item with that name rendered a card."));
   root.innerHTML = html.join("");
 
-  // Measure.
+  // Measure every style of every variant.
+  const ruleSpan = (r) =>
+    `<span class="${r.level}">${r.level === "ok" ? "✓" : r.level === "fail" ? "✗" : r.level === "warn" ? "!" : "·"} ${esc(r.text)}</span>`;
+  const keysAt = (rules, level) => [...new Set(rules.filter((r) => r.level === level).map((r) => r.key))];
   for (const p of pending) {
     const cell = root.querySelector(`[data-card="${CSS.escape(p.key)}"]`);
-    let judged;
-    try {
-      judged = judgeVariant(p.genre, p.item, p.variant);
-    } catch (e) {
-      judged = { rules: [ruleLine("measure", false, `measuring threw: ${e?.message ?? e}`)], extension: null, sweep: null };
+    const styles = p.variant.styles;
+    const byStyle = {};
+    for (const style of styles) {
+      let judged;
+      try {
+        judged = judgeVariant(p.genre, p.item, p.variant, style);
+      } catch (e) {
+        judged = { rules: [ruleLine("measure", false, `measuring threw: ${e?.message ?? e}`)], extension: null, sweep: null };
+      }
+      byStyle[style] = {
+        ok: keysAt(judged.rules, "fail").length === 0,
+        fails: keysAt(judged.rules, "fail"),
+        warns: keysAt(judged.rules, "warn"),
+        rules: judged.rules,
+        extension: judged.extension === null ? null : Math.round(judged.extension * 10) / 10,
+        sweep: judged.sweep
+      };
     }
+    const def = styles[0];
+    const judged = byStyle[def];
     const node = cell?.querySelector("[data-rules]");
     if (node)
-      node.innerHTML = judged.rules
-        .map((r) => `<span class="${r.level}">${r.level === "ok" ? "✓" : r.level === "fail" ? "✗" : r.level === "warn" ? "!" : "·"} ${esc(r.text)}</span>`)
-        .join("<br>");
-    const fails = judged.rules.filter((r) => r.level === "fail").map((r) => r.key);
-    const warns = judged.rules.filter((r) => r.level === "warn").map((r) => r.key);
-    if (cell) cell.dataset.fails = fails.join(" ");
+      node.innerHTML = styles
+        .map((s, i) => {
+          const b = byStyle[s];
+          const head = `<span class="style-head ${b.fails.length ? "fail" : b.warns.length ? "warn" : "ok"}">${esc(s)}${i === 0 ? " · default" : ""}${
+            s === "gold" ? " · trial" : ""
+          }: ${b.fails.length ? `fails ${b.fails.join(", ")}` : "passes every rule"}${b.warns.length ? ` · advisory ${b.warns.join(", ")}` : ""}</span>`;
+          if (i === 0) return `<div class="style-rules">${head}<br>${b.rules.map(ruleSpan).join("<br>")}</div>`;
+          // A later style lists only what fails, warns or measures differently.
+          const shown = b.rules.filter(
+            (r) => r.level === "fail" || r.level === "warn" || !judged.rules.some((d) => d.key === r.key && d.text === r.text)
+          );
+          const same = b.rules.length - shown.length;
+          return `<div class="style-rules">${head}${shown.length ? `<br>${shown.map(ruleSpan).join("<br>")}` : ""}${
+            same ? `<br><span class="info">· ${shown.length ? `the other ${same}` : `all ${same}`} measurements as ${esc(def)}</span>` : ""
+          }</div>`;
+        })
+        .join("");
+    const fails = [...new Set(styles.flatMap((s) => byStyle[s].fails))];
+    const warns = [...new Set(styles.flatMap((s) => byStyle[s].warns))];
+    const failsByStyle = Object.fromEntries(styles.map((s) => [s, byStyle[s].fails]));
+    const warnsByStyle = Object.fromEntries(styles.map((s) => [s, byStyle[s].warns]));
+    if (cell) {
+      cell.dataset.fails = fails.join(" ");
+      cell.dataset.failsByStyle = styles.map((s) => `${s}:${byStyle[s].fails.join(",")}`).join(" ");
+    }
     results.items.push({
       genre: p.genre,
       module: p.module,
@@ -1083,11 +1273,14 @@ export const renderOutfitPage = async ({ genres, modules, looks = {} }) => {
       styles: p.variant.styles,
       capture: p.capture,
       ok: fails.length === 0,
-      fails,
+      fails, // every style's fails, merged
       warns,
-      rules: judged.rules,
-      extension: judged.extension === null ? null : Math.round(judged.extension * 10) / 10,
+      failsByStyle,
+      warnsByStyle,
+      rules: judged.rules, // the default style's; every style's are in byStyle
+      extension: judged.extension,
       sweep: judged.sweep,
+      byStyle,
       error: null
     });
   }

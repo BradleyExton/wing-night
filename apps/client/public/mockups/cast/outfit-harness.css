@@ -42,3 +42,6 @@
 .look-worn { font-size: .6rem; color: var(--muted); max-width: 26rem; line-height: 1.4; }
 .look-missing { font-size: .6rem; color: #fcd34d; max-width: 26rem; line-height: 1.4; }
 .sweep-fig figcaption { margin-top: 1.9rem; color: #fda4af; }
+/* Every style is measured: one block per style, the default first. */
+div.rules .style-rules { margin: 0 0 .55rem; }
+div.rules .style-head { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 650; }
