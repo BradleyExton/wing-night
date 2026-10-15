@@ -5,6 +5,8 @@ import {
 } from "@wingnight/shared";
 import { useEffect, useMemo, useState } from "react";
 
+import { AppErrorBoundary } from "./components/AppErrorBoundary";
+import type { AppCrashSurface } from "./components/AppErrorBoundary/copy";
 import { HostSeatLocked } from "./components/HostSeatLocked";
 import { RouteContent } from "./components/RouteContent";
 import { HostHandlersProvider } from "./context/HostHandlersContext";
@@ -29,6 +31,14 @@ import { wireHostControlClaim } from "./utils/wireHostControlClaim";
 import { wireHostSeatLock } from "./utils/wireHostSeatLock";
 import { wirePlayerJoinToken } from "./utils/wirePlayerJoinToken";
 import { wireRoomStateRehydration } from "./utils/wireRoomStateRehydration";
+
+const resolveCrashSurface = (route: ReturnType<typeof resolveClientRoute>): AppCrashSurface => {
+  if (route === "DISPLAY") {
+    return "DISPLAY";
+  }
+
+  return route === "PLAY" ? "PHONE" : "CONTROL";
+};
 
 export const App = (): JSX.Element => {
   const pathname = window.location.pathname;
@@ -183,17 +193,22 @@ export const App = (): JSX.Element => {
     <RoomStateProvider value={roomStateEnvelope}>
       <HostHandlersProvider value={hostHandlers}>
         <PlayerJoinTokenProvider value={playerJoinToken}>
-          <RouteContent
-            route={route}
-            devMinigameType={devMinigameType}
-            devLabName={devLabName}
-            roomSocket={roomSocket}
-            displayReports={displayReports}
-            playerSeat={playerSeat}
-            contestantLeg={contestantLeg}
-            betSlip={betSlip}
-            answerCard={answerCard}
-          />
+          {/* Inside the providers so the notice could read room state if it
+              ever needs to, and outside RouteContent so a route chunk that
+              never arrives is caught rather than unmounting the root. */}
+          <AppErrorBoundary surface={resolveCrashSurface(route)}>
+            <RouteContent
+              route={route}
+              devMinigameType={devMinigameType}
+              devLabName={devLabName}
+              roomSocket={roomSocket}
+              displayReports={displayReports}
+              playerSeat={playerSeat}
+              contestantLeg={contestantLeg}
+              betSlip={betSlip}
+              answerCard={answerCard}
+            />
+          </AppErrorBoundary>
         </PlayerJoinTokenProvider>
       </HostHandlersProvider>
     </RoomStateProvider>
