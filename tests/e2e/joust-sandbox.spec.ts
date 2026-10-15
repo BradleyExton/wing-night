@@ -17,6 +17,9 @@ const collectSocketRequests = (page: Page): string[] => {
 // down past it, the way a finger pulls the band, and releases.
 const pullAndRelease = async (page: Page): Promise<void> => {
   const arena = page.locator("[data-joust-aim-arena]");
+
+  await expect(arena).toBeVisible();
+
   const bounds = await arena.boundingBox();
 
   expect(bounds).not.toBeNull();
@@ -142,6 +145,11 @@ test("a barely drawn band does not spend a shot", async ({ page }) => {
   await page.goto(devSandboxPath("joust"));
 
   const arena = page.locator("[data-joust-aim-arena]");
+
+  // boundingBox() does not wait for the element, and the game's surface is its own chunk that
+  // lands a beat after the sandbox page: wait for the arena before measuring it.
+  await expect(arena).toBeVisible();
+
   const bounds = await arena.boundingBox();
 
   expect(bounds).not.toBeNull();
