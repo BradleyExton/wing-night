@@ -18,6 +18,20 @@
 // new, different solutions under the same keys.
 // Round 3 (after critic 2): fixes applied as specified; the five cut variants
 // are replaced under the same keys (biker-jacket's keys are now a and b).
+// Run 1b (after critic 3): the three fixes applied (biker-jacket a, chain-loop
+// a, spiked-boots a); every cut replaced under its key by a different read.
+// Two facts the drawings now lean on: a Top may paint over the wing anywhere
+// inside the body below head.shoulders (the slung bandolier does), and the
+// boots only show below the body's underside, about y 61.
+// Polish 1 (after the polish critic): the six fixes applied (bandolier a,
+// biker-jacket a and b, flame-sleeve a, spiked-cuff a, lava-tips a), and the
+// two cut boots replaced under their keys (combat-boots c, spiked-boots b).
+// Where a fix as written failed a measured rule or drew badly, the variant's
+// note says what changed and why.
+// Polish 2 (after polish critic 2): the six fixes applied as specified
+// (battle-vest b, bandolier a, leather-sleeve b, flame-sleeve a, lava-tips a,
+// spiked-boots a), and the four cuts replaced under their keys by different
+// reads (biker-jacket b, spiked-cuff a, combat-boots c, spiked-boots b).
 
 import { inkStroke, clip } from "../outfit-harness.js";
 
@@ -67,6 +81,15 @@ const frontEdgeFrom = (top) => {
   return [{ x: pts[0].x, y: top }, ...pts];
 };
 
+/** The x of the wing's front edge (pushed 0.8 forward) at height `y`. */
+const wingFrontX = (y) => {
+  const i = WING_FRONT.findIndex((p) => p.y >= y);
+  if (i <= 0) return WING_FRONT[Math.max(i, 0)].x;
+  const a = WING_FRONT[i - 1];
+  const b = WING_FRONT[i];
+  return a.x + ((y - a.y) / (b.y - a.y)) * (b.x - a.x);
+};
+
 /** The whole chest, from `top` (≥ head.shoulders) down past the belly. */
 const chestPanel = (top) => {
   const edge = frontEdgeFrom(top);
@@ -83,8 +106,13 @@ const onBody = (ctx, inner) => {
   return `<defs>${c.def}</defs><g clip-path="${c.url}">${inner}</g>`;
 };
 
-// The laced vest: X laces down a line from the collar to the hem.
-const LACE_LINE = { from: { x: 57.6, y: 38.6 }, to: { x: 53.6, y: 57 } };
+// The hot-rod vest's flame patch: one big flame, 11 wide and 15.6 tall, its
+// main tongue up to y 39.2 (under the costume shoulders; the drawn neck hides
+// about 3 units of it) and one side tongue, solid ember with nothing dark
+// inside it, so it is a flame and never a face. Its base sits at y 54.8, so
+// about 6 units of black vest show under it, clear of the orange legs.
+const VEST_FLAME =
+  "M 56.6 54.8 C 52.2 54.8 50.6 51.57 51.2 48.68 C 51.6 46.47 53.4 45.11 53.4 42.56 C 55.4 43.58 56.2 45.28 56 46.81 C 57.4 44.77 57.6 41.88 56.4 39.16 C 59.8 40.69 62.6 44.09 62.8 47.83 C 63 51.91 60.6 54.8 56.6 54.8 Z";
 
 // ------------------------------------------------------------------- TOP --
 
@@ -107,71 +135,45 @@ const battleVest = {
     },
     {
       key: "b",
-      note: "Round 3, replaces the inverted-star patch (a duplicate of a): no patch at all. The vest is LACED: a lace-up leather front, a thin chrome gap running from the collar to the hem with three fat chrome X laces across it. A light zigzag down a dark block reads as leather lacing where a reads as one emblem; nothing in it is a dot, a ring or a pair.",
+      note: "Run 1b, replaces the laced vest (a light squiggle on black, the same read as a): the hot-rod vest. ONE big ember flame patch fills the open chest, 11 wide and 15.6 tall, a main tongue and a side tongue, solid with nothing dark inside. Polish 2: lifted 3.4 units so about 6 units of black vest show under it; set on the hem it smeared into the orange legs and read as a belly patch or an egg. A flame rising from the hem was tried first and read as an orange belly: the chest strip is too short for tongues, so the flame is the patch. a is a cold silver bolt, this is a warm fire.",
       styles: ["ink"],
       whitePoints: 0,
       darkCentre: false,
-      draw: (ctx) => {
-        const { from, to } = LACE_LINE;
-        const L = (t) => ({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t });
-        const xs = [0.2, 0.5, 0.8]
-          .map((t) => {
-            const c = L(t);
-            return `M ${f1(c.x - 3)} ${f1(c.y - 2.6)} L ${f1(c.x + 3)} ${f1(c.y + 2.6)} M ${f1(c.x + 3)} ${f1(c.y - 2.6)} L ${f1(c.x - 3)} ${f1(c.y + 2.6)}`;
-          })
-          .join(" ");
-        const gap = `M ${pt(from)} L ${pt(to)}`;
-        return onBody(
-          ctx,
-          `<path fill="${ctx.styleFill}" d="${chestPanel(ctx.head.shoulders)}"/><path fill="none" stroke="${ctx.fill}" stroke-width="1.6" d="${gap}"/><path fill="none" stroke="${ctx.fill}" stroke-width="2" stroke-linecap="round" d="${xs}"/>`
-        );
-      }
+      draw: (ctx) =>
+        onBody(ctx, `<path fill="${ctx.styleFill}" d="${chestPanel(ctx.head.shoulders)}"/><path fill="${EMBER}" ${EDGE} d="${VEST_FLAME}"/>`)
     }
   ]
 };
 
-// The bandolier's strap: a band of half-width `half` along the line
-// from → to, cut level at the top (under the neck) and run long at the
-// bottom, where the body clip ends it.
+// A bandolier strap is a band of half-width `half` along the line from → to.
 const strapFrame = ({ from, to }) => {
   const l = Math.hypot(to.x - from.x, to.y - from.y);
   const u = { x: (to.x - from.x) / l, y: (to.y - from.y) / l };
   return { u, n: { x: -u.y, y: u.x } };
 };
-const strapPath = (s, top, bottom = 66) => {
+// The slung belt: from under the chin (62,39) down over the wing to the lower
+// back (22,57), 4.6 either side of that line; the body clip ends it.
+const SLUNG = { from: { x: 62, y: 39 }, to: { x: 22, y: 57.5 }, half: 3.2 };
+// A long cartridge, 9.6 × 3.6, pointed end (2) out along +x: longer than the
+// slung strap is wide, so tip and base stand proud of it and read as bullets.
+const LONG_CARTRIDGE = "M -4.8 -1.8 L 2.8 -1.8 L 4.8 0 L 2.8 1.8 L -4.8 1.8 Z";
+// The crossing strap for the crossed pair: from the back of the shoulder
+// (40,37) down over the wing to the belly's front (66,61). It crosses SLUNG at
+// about (49.6,45.4), on the wing's front edge.
+const CROSS = { from: { x: 40, y: 37 }, to: { x: 66, y: 61 }, half: 3.2 };
+/** A long strap `s`, run 12 past each end and cut level at `top`; the body clip ends it. */
+const longStrapPath = (s, top) => {
   const { u, n } = strapFrame(s);
-  const edge = (side) => {
-    const o = { x: s.from.x + n.x * s.half * side, y: s.from.y + n.y * s.half * side };
-    const at = (y) => ({ x: o.x + (u.x * (y - o.y)) / u.y, y });
-    return [at(top), at(bottom)];
-  };
-  const [l0, l1] = edge(1);
-  const [r0, r1] = edge(-1);
-  return `M ${pt(r0)} L ${pt(r1)} L ${pt(l1)} L ${pt(l0)} Z`;
-};
-const strapAt = (s, y) => {
-  const { u } = strapFrame(s);
-  return { x: s.from.x + (u.x * (y - s.from.y)) / u.y, y };
-};
-
-// One cartridge, 5.5 long × 3.2 wide, pointed end (1.6) out along +x.
-const CARTRIDGE = "M -2.75 -1.6 L 1.15 -1.6 L 2.75 0 L 1.15 1.6 L -2.75 1.6 Z";
-const BELT = { from: { x: 48, y: 37 }, to: { x: 63, y: 55 }, half: 4.5 };
-
-/**
- * A straight band of half-width `half` from a to b, cut flat at y = top so
- * nothing of it rises above the shoulders (the measurement reads only one
- * clip, the body's, so the cut is in the geometry).
- */
-const band = (a, b, half, top) => {
-  const l = Math.hypot(b.x - a.x, b.y - a.y);
-  const n = { x: -(b.y - a.y) / l, y: (b.x - a.x) / l };
+  const a = { x: s.from.x + u.x * -12, y: s.from.y + u.y * -12 };
+  const b = { x: s.to.x + u.x * 12, y: s.to.y + u.y * 12 };
+  const h = s.half;
   const quad = [
-    { x: a.x + n.x * half, y: a.y + n.y * half },
-    { x: b.x + n.x * half, y: b.y + n.y * half },
-    { x: b.x - n.x * half, y: b.y - n.y * half },
-    { x: a.x - n.x * half, y: a.y - n.y * half }
+    { x: a.x + n.x * h, y: a.y + n.y * h },
+    { x: b.x + n.x * h, y: b.y + n.y * h },
+    { x: b.x - n.x * h, y: b.y - n.y * h },
+    { x: a.x - n.x * h, y: a.y - n.y * h }
   ];
+  // cut level at `top`: nothing of a Top rises above head.shoulders
   const out = [];
   quad.forEach((p, i) => {
     const q = quad[(i + 1) % quad.length];
@@ -184,96 +186,142 @@ const band = (a, b, half, top) => {
   return `M ${out.map(pt).join(" L ")} Z`;
 };
 
+/** Long cartridges at fractions `ts` of strap `s`, tips out along its upward normal. */
+const strapBullets = (s, ts, brass) => {
+  let { n } = strapFrame(s);
+  if (n.y > 0) n = { x: -n.x, y: -n.y };
+  const rot = (Math.atan2(n.y, n.x) * 180) / Math.PI;
+  return ts
+    .map((t) => {
+      const p = { x: s.from.x + (s.to.x - s.from.x) * t, y: s.from.y + (s.to.y - s.from.y) * t };
+      return `<path fill="${brass}" ${inkStroke(1, "miter")} transform="translate(${f1(p.x)} ${f1(p.y)}) rotate(${f1(rot)})" d="${LONG_CARTRIDGE}"/>`;
+    })
+    .join("");
+};
+
 const bandolier = {
   id: "bandolier",
   slot: "top",
   name: "Bullet belt",
-  note: "A bandolier across the open chest: a wide ink strap from under the neck down to the belly's front edge, so it crosses the visible chest strip diagonally instead of hiding under the wing.",
+  note: "Bullet belts worn over everything: wide ink straps that cross the chest strip and the wing diagonally, with long brass cartridges standing proud of both edges.",
   variants: [
     {
       key: "a",
-      note: "Round 2: a 9-unit ink strap from (48,37) to (63,55) carrying three fat cartridges (5.5 × 3.2, pointed tips) set across it. Default bullets are ember, a house token at about 11:1 on the ink, so they read as brass; the gold style is the open-question-4 trial.",
+      note: "Polish 2, the critic's fix: the crossed pair, Pancho Villa's or Lemmy's X, which no other variant has. b's slung strap from under the chin to the lower back, and over it a second strap from the back of the shoulder (40,37) down to the belly's front, both 6.4 wide, crossing at about (49.6,45.4) on the wing's front edge. Five long cartridges (9.6 × 3.6, tips out on each strap's upward normal), three on the slung strap and two on the cross, and none within 5 units of the crossing, so the middle is a clean black X. At 76 it is a big black X with brass bars, a different silhouette from b's single sash. The short chest strap it replaces read as a striped badge (hazard tape, a bee). Default bullets are ember, a house token at about 11:1 on the ink; the gold style is the open-question-4 trial.",
       styles: ["ink", "gold"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
         const brass = ctx.style === "gold" ? ctx.colors.gold : EMBER;
-        const { n } = strapFrame(BELT);
-        const rot = (Math.atan2(-n.y, -n.x) * 180) / Math.PI; // tips point up and forward
-        const top = Math.max(ctx.head.shoulders, 36);
-        const bullets = [41.2, 46.6, 51.8]
-          .map((y) => {
-            const p = strapAt(BELT, y);
-            return `<path fill="${brass}" ${inkStroke(1, "miter")} transform="translate(${f1(p.x - 0.4)} ${f1(p.y)}) rotate(${f1(rot)})" d="${CARTRIDGE}"/>`;
-          })
-          .join("");
-        return onBody(ctx, `<path fill="${INK}" d="${strapPath(BELT, top)}"/>${bullets}`);
+        const top = Math.max(ctx.head.shoulders, 37);
+        return onBody(
+          ctx,
+          `<path fill="${INK}" d="${longStrapPath(SLUNG, top)}"/><path fill="${INK}" d="${longStrapPath(CROSS, top)}"/>${strapBullets(SLUNG, [0.18, 0.62, 0.84], brass)}${strapBullets(CROSS, [0.66, 0.86], brass)}`
+        );
       }
     },
     {
       key: "b",
-      note: "Round 3, the gag made legible: ONE hot-sauce bottle as big as the chest strip allows, standing upright (body 6.8 × 12.5 with round shoulders, a 2.4-unit neck, an ink cap, an ink label band), stroked a full 2 units so the bottle's silhouette holds on chrome, where ember alone is only 1.4:1. A short 5-unit ink strap comes over the shoulder from behind the wing to the cap, so the neck and cap make the outline and it hangs like a holstered bottle.",
-      styles: ["ink"],
+      note: "Run 1b, replaces the hot-sauce bottle (it read as a cowbell): the slung belt. One long bullet belt worn across the whole bird, from under the chin down over the wing to the lower back, 40 units long where a is a 20-unit chest strap, carrying four long cartridges that stand proud of the strap on both sides. It paints over the sleeve as a real bandolier sits over the arm, so on the leather sleeve the brass still reads (11:1).",
+      styles: ["ink", "gold"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
-        const top = Math.max(ctx.head.shoulders, 36);
-        const strap = band({ x: 47.6, y: 35.4 }, { x: 57, y: 39.8 }, 2.5, top);
-        const bottle =
-          "M 53.6 57 L 53.6 47.6 Q 53.6 45 55.8 44.5 L 55.8 40.8 L 58.2 40.8 L 58.2 44.5 Q 60.4 45 60.4 47.6 L 60.4 57 Z";
-        const label = "M 53.6 49 L 60.4 49 L 60.4 51.6 L 53.6 51.6 Z";
-        const cap = "M 55.2 38.4 L 58.8 38.4 L 58.8 40.8 L 55.2 40.8 Z";
-        return onBody(
-          ctx,
-          `<path fill="${INK}" d="${strap}"/><path fill="${EMBER}" d="${bottle}"/><path fill="${INK}" d="${label}"/><path fill="none" ${ROUND} d="${bottle}"/><path fill="${INK}" ${ROUND} d="${cap}"/>`
-        );
+        const brass = ctx.style === "gold" ? ctx.colors.gold : EMBER;
+        const top = Math.max(ctx.head.shoulders, 37);
+        return onBody(ctx, `<path fill="${INK}" d="${longStrapPath(SLUNG, top)}"/>${strapBullets(SLUNG, [0.18, 0.4, 0.62, 0.84], brass)}`);
       }
     }
   ]
+};
+
+// The jacket is a VALUE change of the whole visible body: everything on the
+// body that is not wing turns ink (body minus wing, evenodd), cut level at
+// head.shoulders. The chest, the belly under the wing and the rump go black
+// and the wing, or whatever sleeve is worn, shows through as a silver arm:
+// the inverse of leather-sleeve a, and a whole jacket where the battle vest
+// is only a front panel.
+const jacketBody = (ctx) => {
+  const s = ctx.head.shoulders;
+  const c = clip(`M 0 ${s} L 80 ${s} L 80 80 L 0 80 Z`);
+  return `<defs>${c.def}</defs><g clip-path="${c.url}"><path fill="${ctx.styleFill}" fill-rule="evenodd" d="${ctx.bodyPath} ${ctx.wingPath}"/></g>`;
 };
 
 const bikerJacket = {
   id: "biker-jacket",
   slot: "top",
   name: "Biker jacket",
-  note: "The Perfecto: an ink jacket, one big lapel point, an off-centre zip. The lapel is what says 'jacket' and not 'vest'.",
+  note: "The Perfecto: the whole body in ink with the wing left silver as the sleeve, one big lapel point, an off-centre zip. The full-body value change is what says 'jacket' and not 'vest'.",
   variants: [
     {
       key: "a",
-      note: "Round 3 (was b): the Perfecto's asymmetry is the read. A 2.4-unit chrome zip runs straight on the diagonal from under the collar (61.4,39.6) down to the hem at (51.8,57.4), and a big notched chrome lapel folds back on the zip side. Nothing is centred, so it cannot read as a shirt front.",
+      note: "Polish 1, the critic's fix: the jacket is the whole body, not a chest panel. Body minus wing goes ink from head.shoulders down (chest, belly, rump), so the bird is black with a silver wing; the yoke is gone, the chrome wing against the black body is the shoulder line. A 3-unit chrome zip runs from under the collar to the hem and ONE 13-unit chrome lapel point folds back from the collar. A black bird with a silver arm, the inverse of leather-sleeve a; the battle vest is a front panel only.",
       styles: ["ink"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
-        const lapel = "M 53.4 37.2 L 63.2 38.4 L 59.8 43.4 L 61.8 46.6 L 56.2 47.2 Z";
+        const lapel = "M 53.6 37.6 L 64.4 38.6 L 59.6 46.4 L 62.4 51.6 L 54.6 50.2 Z";
         return onBody(
           ctx,
-          `<path fill="${ctx.styleFill}" d="${chestPanel(ctx.head.shoulders)}"/><path fill="none" stroke="${ctx.fill}" stroke-width="2.4" stroke-linecap="butt" d="M 61.4 39.6 L 51.8 57.4"/><path fill="${ctx.fill}" ${EDGE_MITER} d="${lapel}"/>`
+          `${jacketBody(ctx)}<path fill="none" stroke="${ctx.fill}" stroke-width="3" stroke-linecap="butt" d="M 61.4 39.6 L 51.8 57.4"/><path fill="${ctx.fill}" ${EDGE_MITER} d="${lapel}"/>`
         );
       }
     },
     {
       key: "b",
-      note: "Round 3 (was c): the cropped jacket, ink down to y 48.6 and then the bare chrome belly, now with a chrome collar point on the yoke. The point stops 2 units above the crop, so the belly below stays one clean light block. It reads by its lapel and its crop; a reads by its full length and its diagonal zip.",
+      note: "Polish 2, replaces the open Ramones jacket (it duplicated a at 76 and its thin white wedge read as a tuxedo front): the club jacket. The same whole-body ink jacket, closed, crossed by ONE wide ember band, 6.8 tall, from the wing's front edge to the chest's front: the black-and-orange of a biker club's leathers. Where a's chrome zip and lapel run diagonally and cold, this is one warm horizontal bar, ember on ink at about 11:1, no white anywhere, nothing thin. A black bird with a silver arm and an orange chest stripe.",
       styles: ["ink"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
-        const s = ctx.head.shoulders;
-        const edge = frontEdgeFrom(s).filter((p) => p.y <= 48.6);
-        const panel = `M ${pt(edge[0])} L 72 ${f1(s)} L 72 48.6 L ${pt(edge[edge.length - 1])} ${edge
-          .slice()
-          .reverse()
-          .map((p) => `L ${pt(p)}`)
-          .join(" ")} Z`;
-        const lapel = "M 53.6 37.2 L 61.6 39 L 56.6 46.6 Z";
-        return onBody(ctx, `<path fill="${ctx.styleFill}" d="${panel}"/><path fill="${ctx.fill}" ${EDGE_MITER} d="${lapel}"/>`);
+        const band = `M ${f1(wingFrontX(42.6))} 42.6 L 72 42.6 L 72 49.4 L ${f1(wingFrontX(49.4))} 49.4 Z`;
+        return onBody(ctx, `${jacketBody(ctx)}<path fill="${EMBER}" ${EDGE_MITER} d="${band}"/>`);
       }
     }
   ]
 };
 
 // ---------------------------------------------------------------- SLEEVE --
+
+// The spiky wing with its trailing edge redrawn as a bat's: three points
+// (21,57.4) (30.6,59.4) (39.8,58.6), each within the 7-unit fringe and ending
+// ON the chrome body (an ink point off the body vanishes on the dark TV), with
+// deep arches between them, each about 9.6 wide and rising to an apex near
+// y 44, so a real block of chrome shows through. The arch controls lean to +x,
+// so each point's back side is steep and its front side sweeps: the points
+// rake back like finger tips instead of hanging straight down.
+const BATWING =
+  "M 47 35 C 38 29 24 33 20 44 C 19.4 48 19.8 53 21 57.4 C 23.6 39.5 29.4 41 30.6 59.4 C 32.8 39.5 38.6 41 39.8 58.6 C 40.6 52 42.4 50.4 45 51 C 49 46 51 40 47 35 Z";
+
+// The flame wing: a wing made of fire, its flames rising up and back out of
+// the leather. The spiky wing's front edge and its top edge as far as
+// (29.5,33.9) are kept; from there the top-back edge is three tongues, each
+// with a long front side sweeping up and back to a sharp tip and a short,
+// steep back side, like a hot-rod flame stood on end. The first two tips sit
+// ON the old outline with a notch cut down and forward behind each (the
+// chrome body shows in it: the batwing's trick, pointed the way fire goes).
+// The sleeve fringe only exists below the line from the wing pivot through
+// the back tip, so the third tongue, the only one that leaves the wing,
+// streams straight back off the back tip. The bottom is one smooth edge:
+// nothing hangs toward the legs.
+const FLAME_WING =
+  "M 47 35 C 41.87 31.58 35.12 31.41 29.52 33.93 C 30 36.4 29.6 39 30.4 41.6 C 28.4 40 25.4 40.6 22.23 39.8 C 22.8 42 22.6 44 23.6 46.2 C 21 46.9 17 48.8 13.6 50.4 C 16.6 51.2 19.4 52.4 21.8 53.8 C 24 55.6 28 56.4 32 56 C 38 55.6 42 54 45 51 C 49 46 51 40 47 35 Z";
+// The leather the fire burns out of: the whole front and bottom of the wing in
+// ink, its edge running from the first tongue's tip down and BACK to the
+// wing's bottom at x 33.4, so the ember above it is one back-leaning flame
+// whose tips are the three tongues, like fire streaming off a moving wing.
+// Every flame points one way, up and back; nothing licks forward (forward
+// licks gave the ember lobes in every direction, a maple leaf). Light into
+// dark only: no dark shape is ever enclosed by ember.
+const INK_SHOULDER = "M 28 28 L 29.52 33.93 C 33.4 35.4 36.6 37.4 37.4 41.4 C 38 45.6 36.4 51 33.4 57 L 52 57 L 52 28 Z";
+
+/**
+ * The stock wing painted out in the body colour, outline and all, so a sleeve
+ * that redraws the trailing edge higher (the batwing's arches, the flame's
+ * valleys) shows the body there and not the old wing's zigzag.
+ */
+const eraseWing = (ctx) =>
+  `<path fill="${ctx.fill}" stroke="${ctx.fill}" stroke-width="3.2" stroke-linejoin="round" d="${ctx.wingPath}"/>`;
 
 const leatherSleeve = {
   id: "leather-sleeve",
@@ -291,14 +339,11 @@ const leatherSleeve = {
     },
     {
       key: "b",
-      note: "Round 3: the long band read as a racing stripe, so the chrome now runs ACROSS the wing at its back end: a 5-unit wristband (x 24..30) on the ink sleeve, the cuff of a leather jacket. One short light bar at the wing's end, not a slit along it.",
+      note: "Run 1b, replaces the chrome wristband (a two-tone stripe): the batwing. The ink sleeve's trailing feathers become three long points with deep scalloped arches between them, so the chrome body shows through each arch; every point ends on the chrome body, where ink reads. Polish 2: the arches are cut about 5 units deeper (apex near y 44, about 9.6 wide by 14 tall of chrome) and lean back, so the points rake back like a bat's finger tips; at y 49 they were 2-px bumps that read as a ragged hem, and the points hung like drips. Goth leather by outline alone, inside the 7-unit fringe; a is the plain wing.",
       styles: ["ink"],
       whitePoints: 0,
       darkCentre: false,
-      draw: (ctx) => {
-        const c = clip(ctx.wingPath);
-        return `<defs>${c.def}</defs><path fill="${ctx.styleFill}" d="${ctx.wingPath}"/><g clip-path="${c.url}"><path fill="${ctx.fill}" d="M 25.4 33.6 L 30.6 33.2 L 29.4 57 L 24.2 56.6 Z"/></g><path fill="none" ${MITER} d="${ctx.wingPath}"/>`;
-      }
+      draw: (ctx) => `${eraseWing(ctx)}<path fill="${ctx.styleFill}" ${MITER} d="${BATWING}"/>`
     }
   ]
 };
@@ -311,15 +356,13 @@ const flameSleeve = {
   variants: [
     {
       key: "a",
-      note: "Round 3, replaces the loose ember tongues (orange crumbs by the legs; the 7-unit fringe below the wing's back cannot hold a flame big enough to read). The fire moves inside the wing instead and burns UP from its hem: the trailing feathers are alight, an ember band along the wing's whole bottom edge with four tongues licking up and back into the ink. b is a painted decal trailing from the shoulder; this is the sleeve itself on fire from the bottom.",
+      note: "Polish 1, the critic's fix, adapted: fire points up and back. The wing keeps its smooth bottom (nothing hangs toward the legs), the leather is the front of the wing in ink, and the fire rises out of it: the top-back edge becomes three ember tongues, each a long front side sweeping up and back to a sharp tip and a short steep back side, with a notch cut down behind each where the chrome body shows. Polish 2: the two forward licks are gone and the ink now covers the whole front and bottom of the wing, its edge sweeping from the first tongue's tip down and back, so the ember is ONE back-leaning flame whose tips are the three tongues; with licks pointing forward too, the ember had lobes in every direction and read as a maple leaf. The fix as written (tips out at (13.6,37.6) and (13.2,43.4), above the back tip) fails the sleeve rule: the 7-unit fringe only exists below the line from the wing pivot through the back tip, which falls 0.45 a unit per unit back, so no tongue may leave the wing upward. The tips therefore sit ON the old outline, and only the third tongue leaves the wing, straight back off the back tip, light against the dark TV. Every tongue is light into dark, so no mouth can open. b is a decal on an ink wing; this is a wing made of fire.",
       styles: ["ink"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
-        const c = clip(ctx.wingPath);
-        const fire =
-          "M 14 62 L 14 49 C 17 48.6 19 47.2 19.8 44.6 C 21.4 46.6 22.8 47.6 24.4 48 C 23.6 45.4 23.8 42.4 25.4 39.6 C 26.6 43 28.4 45.2 30.6 46.2 C 30 43.4 30.6 40.6 32.6 38.4 C 33.6 42 35.6 44.4 38 45.4 C 37.8 43 38.6 41 40.6 39.4 C 41.2 42.4 43 44.4 46.4 45 L 52 45 L 52 62 Z";
-        return `<defs>${c.def}</defs><path fill="${ctx.styleFill}" d="${ctx.wingPath}"/><g clip-path="${c.url}"><path fill="${EMBER}" ${ROUND} d="${fire}"/></g><path fill="none" ${MITER} d="${ctx.wingPath}"/>`;
+        const c = clip(FLAME_WING);
+        return `${eraseWing(ctx)}<defs>${c.def}</defs><path fill="${EMBER}" d="${FLAME_WING}"/><g clip-path="${c.url}"><path fill="${ctx.styleFill}" d="${INK_SHOULDER}"/></g><path fill="none" ${MITER} d="${FLAME_WING}"/>`;
       }
     },
     {
@@ -358,18 +401,21 @@ const alongCubic = (a, b, c, d, step) => {
 };
 
 /** A flat link: a long chrome stadium (aspect 2.2+, so never a bead) with only an ink slit along its long axis. */
-const flatLink = (m, ang, fill, len = 7.6, wid = 3.4) => {
+const flatLink = (m, ang, fill, len = 7.6, wid = 3.4, edge = THIN) => {
   const tf = `translate(${f1(m.x)} ${f1(m.y)}) rotate(${f1(ang)})`;
   const slit = len * 0.5; // a slit, never a round hole: the link reads as steel, not a ring or a "0"
-  return `<g transform="${tf}"><rect fill="${fill}" ${THIN} x="${f1(-len / 2)}" y="${f1(-wid / 2)}" width="${f1(len)}" height="${f1(wid)}" rx="${f1(wid / 2)}"/><rect fill="${INK}" x="${f1(-slit / 2)}" y="-0.4" width="${f1(slit)}" height="0.8" rx="0.4"/></g>`;
+  return `<g transform="${tf}"><rect fill="${fill}" ${edge} x="${f1(-len / 2)}" y="${f1(-wid / 2)}" width="${f1(len)}" height="${f1(wid)}" rx="${f1(wid / 2)}"/><rect fill="${INK}" x="${f1(-slit / 2)}" y="-0.4" width="${f1(slit)}" height="0.8" rx="0.4"/></g>`;
 };
 
 /** An edge-on link: a solid chrome bar. */
-const barLink = (m, ang, fill, len = 6, wid = 1.8) =>
-  `<rect fill="${fill}" ${THIN} transform="translate(${f1(m.x)} ${f1(m.y)}) rotate(${f1(ang)})" x="${f1(-len / 2)}" y="${f1(-wid / 2)}" width="${f1(len)}" height="${f1(wid)}" rx="${f1(wid / 2)}"/>`;
+const barLink = (m, ang, fill, len = 6, wid = 1.8, edge = THIN) =>
+  `<rect fill="${fill}" ${edge} transform="translate(${f1(m.x)} ${f1(m.y)}) rotate(${f1(ang)})" x="${f1(-len / 2)}" y="${f1(-wid / 2)}" width="${f1(len)}" height="${f1(wid)}" rx="${f1(wid / 2)}"/>`;
 
-/** Links on every segment of `points`, edge-on bars under flat links. */
-const chain = (points, fill) => {
+/**
+ * Links on every segment of `points`, edge-on bars under flat links. `size`
+ * sets the flat link, the bar and the edge: { flat: [len, wid], bar: [len, wid], edge }.
+ */
+const chain = (points, fill, size = { flat: [7.6, 3.4], bar: [6, 1.8], edge: THIN }) => {
   const bars = [];
   const flats = [];
   for (let i = 0; i < points.length - 1; i += 1) {
@@ -377,7 +423,8 @@ const chain = (points, fill) => {
     const b = points[i + 1];
     const ang = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
     const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-    (i % 2 === 0 ? flats : bars).push(i % 2 === 0 ? flatLink(m, ang, fill) : barLink(m, ang, fill));
+    if (i % 2 === 0) flats.push(flatLink(m, ang, fill, ...size.flat, size.edge));
+    else bars.push(barLink(m, ang, fill, ...size.bar, size.edge));
   }
   return bars.join("") + flats.join("");
 };
@@ -405,11 +452,16 @@ const chainLoop = {
   variants: [
     {
       key: "a",
-      note: "Round 3: the swag across all three blades, sagging back, alternating flat links and edge-on bars. The links are now long (7.6 × 3.4, aspect 2.2, a slit half their length) and the bars 6 × 1.8, stepped 6 apart, so the swag reads as heavy chain and not a string of beads. No round dark centres.",
+      note: "Run 1b, the critic's fix: a fat, continuous chain. Flat links 10 × 5 and edge-on bars 9 × 3.6, edged 1.5, stepped 7 apart so every link overlaps the next by 2.5 and no dark gap opens between them (the gaps were what made the old swag a dash-dot line). The critic asked for 9 × 4.4 and 7.5 × 2.6 at 7.5: drawn, the 2.6 bars still left a light core of about 1 unit, so the swag still dashed; they are fattened until it reads as one rope of steel. It hangs lower and clear of the blades, sagging under the bottom blade instead of tracing its tip.",
       styles: ["team"],
       whitePoints: 0,
       darkCentre: false,
-      draw: (ctx) => chain(alongCubic({ x: 18.5, y: 17.5 }, { x: 7, y: 24 }, { x: 2, y: 40 }, { x: 15, y: 50.5 }, 6), ctx.styleFill)
+      draw: (ctx) =>
+        chain(alongCubic({ x: 18.5, y: 17.5 }, { x: 4, y: 20 }, { x: -3, y: 46 }, { x: 14, y: 54 }, 7), ctx.styleFill, {
+          flat: [10, 5],
+          bar: [9, 3.6],
+          edge: EDGE
+        })
     },
     {
       key: "b",
@@ -427,9 +479,6 @@ const chainLoop = {
     }
   ]
 };
-
-/** A cone with base corners b1, b2 and its point at tip. */
-const cone = (b1, b2, tip) => `M ${pt(b1)} L ${pt(tip)} L ${pt(b2)} Z`;
 
 // The spiky tail's blades, top to bottom: tip t and base corners a, b.
 const TAIL_BLADES = [
@@ -458,33 +507,33 @@ const spikedCuff = {
   id: "spiked-cuff",
   slot: "tail",
   name: "Spiked cuff",
-  note: "A steel cuff round the tail, with real spikes: it must change the tail's outline, not tint it.",
+  note: "Steel round the tail, with real spikes: it must change the tail's outline, not tint it.",
   variants: [
     {
       key: "a",
-      note: "Round 3, replaces the all-chrome cuff (it merged into the tail): a studded-collar cuff on each blade, out where the blades are clear of the body. An INK band wraps each blade (ink on chrome, 13.9:1, so the item is visibly worn), and the outer two cuffs each throw one long chrome spike straight out sideways, up off the top blade and down off the bottom one, into the dark air. The spikes stand perpendicular to the blades, where b's spearheads run along them.",
-      styles: ["team", "white"],
+      note: "Polish 2, replaces the ink collar (it vanished against the dark TV and its spikes merged into the blades): the studded wristband worn round the tail. ONE leather band, 5.8 wide, arcs across all three blades 15.6 to 21.4 out from the tail root (31,36), ink with a 2-unit chrome rim on both edges and a thin ink line outside the rim. Over the blades the black core reads on chrome; over the dark gaps the chrome rims read on the TV, so the band holds as one strap where the old ink-only collar broke into holes. Two chrome spikes, 6.4 at the base and 8.5 proud, stand off its outer rim in the two gaps between the blades. A black leather cuff on a chrome tail: b caps each tip with a spearhead, and chain-loop a is light links swinging out past the tips.",
+      styles: ["team"],
       whitePoints: 0,
       darkCentre: false,
-      draw: (ctx) =>
-        TAIL_BLADES.map((blade, i) => {
-          const { at, len, half } = bladeFrame(blade);
-          const f = [0.5, 0.55, 0.55][i];
-          const w = half(f) + 2.4; // the band stands 2.4 proud of the blade each side
-          const df = 2.4 / len; // the band is 4.8 units along the blade
-          const cuff = `M ${pt(at(f - df, w))} L ${pt(at(f + df, w))} L ${pt(at(f + df, -w))} L ${pt(at(f - df, -w))} Z`;
-          const side = [1, 0, -1][i]; // top blade spikes up, bottom blade down
-          const sf = 2.3 / len; // a 4.6-unit spike base, inside the band
-          const spike = side
-            ? `<path fill="${ctx.styleFill}" ${THIN_MITER} d="${cone(at(f - sf, side * (w - 0.6)), at(f + sf, side * (w - 0.6)), at(f, side * (w + 7.4)))}"/>`
-            : "";
-          return `${spike}<path fill="${INK}" ${THIN_MITER} d="${cuff}"/>`;
-        }).join("")
+      draw: (ctx) => {
+        const C = { x: 31, y: 36 };
+        const at = (deg, r) => ({ x: C.x + r * Math.cos((deg * Math.PI) / 180), y: C.y + r * Math.sin((deg * Math.PI) / 180) });
+        const [a0, a1] = [236, 156];
+        const [ri, ro] = [15.6, 21.4];
+        const band = `M ${pt(at(a0, ro))} A ${ro} ${ro} 0 0 0 ${pt(at(a1, ro))} L ${pt(at(a1, ri))} A ${ri} ${ri} 0 0 1 ${pt(at(a0, ri))} Z`;
+        const da = (3.2 / ro) * (180 / Math.PI); // a 6.4-unit spike base on the outer edge
+        const spike = (deg) => `M ${pt(at(deg + da, ro))} L ${pt(at(deg, ro + 8.5))} L ${pt(at(deg - da, ro))} Z`;
+        // seen from (31,36) the blade tips sit at 228, 198 and 161 degrees: the spikes go in the gaps
+        const spikes = [213, 180].map((d) => `<path fill="${ctx.styleFill}" ${EDGE_MITER} d="${spike(d)}"/>`).join("");
+        // the rim: an ink stroke 6 wide, a chrome one 4 wide over it, then the ink core on top,
+        // so 2 units of chrome show outside the core with 1 unit of ink beyond
+        return `${spikes}<path fill="none" stroke="${INK}" stroke-width="6" stroke-linejoin="round" d="${band}"/><path fill="none" stroke="${ctx.styleFill}" stroke-width="4" stroke-linejoin="round" d="${band}"/><path fill="${INK}" d="${band}"/>`;
+      }
     },
     {
       key: "b",
-      note: "Steel spearheads capping each blade: three chrome points 6 units longer than the blade, ringed by an ink collar. The tail gets longer and sharper; the collar is the cuff.",
-      styles: ["team", "white"],
+      note: "Steel spearheads capping each blade: three chrome points 6 units longer than the blade, ringed by an ink collar. The tail gets longer and sharper; the collar is the cuff. (Run 1b: the white style is dropped, it was 1.35:1 on chrome, the same as team.)",
+      styles: ["team"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
@@ -513,11 +562,6 @@ const spikedCuff = {
   ]
 };
 
-// A three-tongue flame pointing up (−y) in local units: the root at y +2
-// (it swallows the blade tip), the tallest tongue at y −10, ~6.6 wide.
-const TORCH =
-  "M -2.4 2 C -3.6 0 -3.8 -3 -2.8 -6 C -2 -4.4 -1.2 -3.8 -0.6 -3.6 C -1 -6 -0.4 -8.4 0.2 -10 C 1 -8 1.6 -6.6 1.4 -4.8 C 2 -5.4 2.4 -6.2 2.6 -7 C 3.6 -4.4 3.6 -1 2.4 2 Z";
-
 const lavaTips = {
   id: "lava-tips",
   slot: "tail",
@@ -526,21 +570,21 @@ const lavaTips = {
   variants: [
     {
       key: "a",
-      note: "Round 2: each blade burns at its tip. A 10-unit three-tongue ember flame is rooted ON the tip (it swallows the last 2 units of the blade, so the steel runs into the fire) and licks up and back toward (−2,38) (−3,17) (4,0).",
+      note: "Polish 2, the critic's fix: a tail of red-hot steel. Every blade's outer 58% is ember, from a wavy heat line (a 3-unit wave at 0.42 of the blade) out to a tip run 2 units past the blade's own, all three blades the same, so the tail ends in three long, even, glowing points. A 4-wide ink underlay edges each one. The stalactites are gone: a round drop beside a pointed tip read as a thumb beside a finger, an orange glove, and nothing hangs now that could become a finger. b is fire behind a chrome tail; this is the tail's own steel glowing.",
       styles: ["ink"],
       whitePoints: 0,
       darkCentre: false,
-      draw: () =>
-        [
-          [{ x: 2, y: 46 }, { x: -2, y: 38 }],
-          [{ x: 0, y: 26 }, { x: -3, y: 17 }],
-          [{ x: 7, y: 9 }, { x: 4, y: 0 }]
-        ]
-          .map(([tip, to]) => {
-            const deg = (Math.atan2(to.x - tip.x, -(to.y - tip.y)) * 180) / Math.PI;
-            return `<path fill="${EMBER}" ${EDGE} transform="translate(${f1(tip.x)} ${f1(tip.y)}) rotate(${f1(deg)})" d="${TORCH}"/>`;
-          })
-          .join("")
+      draw: () => {
+        const dips = TAIL_BLADES.map((blade) => {
+          const { at, len, half } = bladeFrame(blade);
+          const fb = 0.42; // the heat line: ember covers the outer 58% of the blade
+          const h = half(fb) + 0.4;
+          const wob = 3 / len; // the heat line's wave, along the blade
+          return `M ${pt(at(fb, h))} L ${pt(at(1 + 2 / len, 0))} L ${pt(at(fb, -h))} Q ${pt(at(fb - wob, -h / 2))} ${pt(at(fb, 0))} Q ${pt(at(fb + wob, h / 2))} ${pt(at(fb, h))} Z`;
+        });
+        // the outline first, 4 wide so 2 shows outside, then the fill over it
+        return `<path fill="none" stroke="${INK}" stroke-width="4" stroke-linejoin="round" d="${dips.join(" ")}"/>${dips.map((d) => `<path fill="${EMBER}" d="${d}"/>`).join("")}`;
+      }
     },
     {
       key: "b",
@@ -603,14 +647,16 @@ const combatBoots = {
     },
     {
       key: "c",
-      note: "Round 2: knee-high, the shaft up to the thigh (y 56) as one tall column, now with the chrome turn-down cuff actually drawn: a 3-unit band a unit proud of the shaft each side, ink-edged, at y 58–61, because at the critic's y 55–57.5 the wing's trailing feathers (down to y 55, plus their ink) cover it on the near leg and the body hides it on the far one. Plus a 2.4-unit chrome sole so the column stands on the floor. The white style flips both bands to ink.",
-      styles: ["ink", "white"],
+      note: "Polish 2, replaces the chrome sabatons (chrome under a chrome belly made grey wellies): steel caps, the New Rock boot. An ink boot with an angular toe and two bare-steel caps, a toe cap 7.2 long that runs from the instep down the sloped toe, and a heel plate 4.4 wide, both chrome with a thin ink edge. The ink shaft keeps the boot dark under the belly, and the light shows only down at the floor, at both ends of the foot. a is the plain boot on a thin light sole, b the platform slab; this is a dark boot with steel ends. Ink only: in white the caps turned into a white sock over a black shoe.",
+      styles: ["ink"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
         const ax = ctx.leg.x - 1;
-        const band = ctx.style === "white" ? INK : ctx.fill;
-        return `<path fill="${ctx.styleFill}" ${ROUND} d="${combatBoot(ax, 56)}"/><path fill="${band}" ${THIN} d="M ${ax - 7.8} 69.8 L ${ax + 9.6} 69.8 L ${ax + 9.6} ${SOLE_Y} L ${ax - 7.8} ${SOLE_Y} Z"/><path fill="${band}" ${THIN} d="M ${ax - 6} 58 L ${ax + 4.4} 58 L ${ax + 4.4} 61 L ${ax - 6} 61 Z"/>`;
+        const boot = `M ${ax - 5} 56 L ${ax + 3.4} 56 L ${ax + 3.4} 63.6 L ${ax + 5.4} 63.6 L ${ax + 9.8} 67 L ${ax + 9.8} ${SOLE_Y} L ${ax - 7.8} ${SOLE_Y} L ${ax - 7.8} 67.6 L ${ax - 5} 66.6 Z`;
+        const toe = `M ${ax + 2.6} 63.6 L ${ax + 5.4} 63.6 L ${ax + 9.8} 67 L ${ax + 9.8} 70.4 L ${ax + 2.6} 70.4 Z`;
+        const heel = `M ${ax - 7.8} 67.6 L ${ax - 3.4} 66.2 L ${ax - 3.4} 70.4 L ${ax - 7.8} 70.4 Z`;
+        return `<path fill="${ctx.styleFill}" ${MITER} d="${boot}"/><path fill="${ctx.fill}" ${THIN_MITER} d="${toe}"/><path fill="${ctx.fill}" ${THIN_MITER} d="${heel}"/>`;
       }
     }
   ]
@@ -620,30 +666,30 @@ const spikedBoots = {
   id: "spiked-boots",
   slot: "boots",
   name: "Spiked boots",
-  note: "An ink boot with ONE cone each, in steel so it reads over the dark floor. The 9-unit leg band is the limit: a toe spike cannot get 5 units past a boot that covers the whole foot, so the cones go on the shin and the calf instead.",
+  note: "An ink boot carrying steel spikes, in chrome so they read over the dark floor. The boots band is the limit: the boot shows only below the belly (about y 61), and a boot that covers the whole foot leaves about a unit past the toe or heel, so the spikes stand out from the shin and the ankle. If neither variant survives Gate 1, this item folds into Combat boots.",
   variants: [
     {
       key: "a",
-      note: "Round 3: a slender shin spike, low against the dark floor (higher up, the near boot sits over the chrome belly and a chrome spike vanishes): a 3.6-unit base on the shaft front at y 60.2–63.8 and a point 6.6 units forward, mitered so the tip stays sharp. The shaft now runs up to y 56, so no orange shows under the thigh.",
+      note: "Polish 2, the critic's fix: ONE big chrome horn, 14 long and 5.2 tall at the base, set lower (y 62.6 to 67.8) so all of it shows under the belly: its base sits on the ink shaft (chrome on ink, 13.9:1) and its point runs out over the dark floor above the toe cap to the edge of the boots band (leg.x + 9). At y 61 the belly hid its top and only a 6-unit tick showed. The white style is a white horn on ink.",
       styles: ["team", "white"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
         const ax = ctx.leg.x - 1;
-        const spike = `M ${ax + 3.4} 60.2 L ${ax + 10} 62 L ${ax + 3.4} 63.8 Z`;
+        const spike = `M ${ax - 4} 62.6 L ${ax + 10} 64.8 L ${ax - 4} 67.8 Z`;
         return `<path fill="${INK}" ${ROUND} d="${combatBoot(ax, 56)}"/><path fill="${ctx.styleFill}" ${THIN_MITER} d="${spike}"/>`;
       }
     },
     {
       key: "b",
-      note: "Round 3, replaces the rooster spur (invisible: the back of the leg band has no room): a toe horn. One curved chrome cone hooks up and forward off the toe cap like a rhino horn (base about 4, tip at y 60.6, 8.8 units ahead of the hip). It stops below the body's underside, because higher up the near horn sits over the chrome belly and vanishes, so both horns stand over the dark floor; a's spike lies flat on the shin instead.",
+      note: "Polish 2, replaces the fur wrap (it read as feathered chicken legs or Uggs, and had no spike): the spiked strap. A chrome strap 4.4 tall buckled round the ankle of the ink boot, wider than the shaft, sharpened to a point at each end: forward to the edge of the boots band (leg.x + 9) and back to the band's other edge (leg.x − 9). A light double-ended bar across the black boot, where a is one big horn jutting forward off the shin; it sits just under the belly (y 60.4 to 64.8), so all of it shows. The boots band leaves no room for a second cone, so this is the profile of a Demonia strap rather than another horn. The white style is a white strap on ink.",
       styles: ["team", "white"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
         const ax = ctx.leg.x - 1;
-        const horn = `M ${ax + 3.4} 64.6 Q ${ax + 7.6} 64.2 ${ax + 9.8} 60.6 Q ${ax + 9.6} 64.6 ${ax + 7.8} 66.2 Z`;
-        return `<path fill="${INK}" ${ROUND} d="${combatBoot(ax, 56)}"/><path fill="${ctx.styleFill}" ${THIN_MITER} d="${horn}"/>`;
+        const strap = `M ${ax - 5.6} 60.4 L ${ax + 4} 60.4 L ${ax + 10} 62.6 L ${ax + 4} 64.8 L ${ax - 5.6} 64.8 L ${ax - 8} 62.6 Z`;
+        return `<path fill="${INK}" ${ROUND} d="${combatBoot(ax, 56)}"/><path fill="${ctx.styleFill}" ${THIN_MITER} d="${strap}"/>`;
       }
     }
   ]

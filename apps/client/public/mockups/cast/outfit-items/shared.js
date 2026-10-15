@@ -18,6 +18,43 @@
 // and its ink char is two rim blotches; the straw nest is a smooth mound under
 // whole eggs; the hatched shells (egg-nest c) were cut for "the big one".
 //
+// Run 1b (art polish, after critic round 3, under the relaxed prop sweep of
+// §2.1): every cut got a different replacement and every fix was applied.
+//   team-sash b   far-shoulder slash (a prohibition sign) -> the knotted sash
+//   golden-egg b  egg basket (a padlock) -> the trophy, the egg held aloft
+//   drumstick b   wing bucket (teeth) -> raised and bitten, held up like a toast
+//   egg-nest b    straw nest (rocks) -> the twig nest, a dark bowl with a rim
+//   egg-nest c    one small front egg, not two (the pair read as eyes)
+//   drumstick a   the glaze drip ends 1u higher (it swung under the floor in
+//                 the team and gold styles on the pop squash and broody tuck)
+//
+// Polish round 1 (after the run 1b critic):
+//   team-sash b   knot higher, tails shorter and splayed so the forks stay on
+//                 the body; flared 8u ribbons with 6.8u V notches; a bigger
+//                 knot; ink tails get a team-colour rim so they read as two
+//   golden-egg b  the handles (a dog bone) are gone: a wide shallow bowl, a
+//                 long stem and a two-tier foot, the egg seated IN the bowl
+//   egg-nest b    twig nest (a frying pan) -> the straw nest: a shallow bowl
+//                 whose rim is broken by long straw strands, eggs in trios
+//   egg-nest c    the giant egg leans back on the pad, 27 long (a stage may
+//                 not rise above y 55, so it cannot stand taller); small egg
+//                 9 wide
+//
+// Polish round 2 (after the polish critic's round 2):
+//   team-sash b   a's WHOLE diagonal with the knot tied ON it: a 7 x 11
+//                 rounded-rectangle cinch half way down (ink: two team-colour
+//                 cinch lines, no ring), two constant-width 5.2u ribbon tails
+//                 hanging almost straight down in a 20-degree inverted V, each
+//                 with one 2.2u V notch (round 1's knot ellipse and 60-degree
+//                 forks read as a white glove, or in ink a crow)
+//   golden-egg b  hoisted: 15 degrees back of vertical, no ink plinth (a brick
+//                 by the legs), one light 11 x 3.5 foot, a 12u stem, a deep U
+//                 bowl 16 wide under an 18u flat lip, a 10 x 12.5 egg with its
+//                 lower third behind the lip
+//   egg-nest b    straw nest (a woodpile, crossbones) -> one nest at the tail
+//                 end: a light straw wall, three eggs of three sizes, lopsided
+//                 tapered straw ends
+//
 // Shared items have to work on all four bodies, so every placement is read off
 // the silhouette (stock/pop, spiky/metal, broody/country, preener/disco):
 //
@@ -25,11 +62,12 @@
 //   follows that genre's chest edge; the body's ink outline is then restroked
 //   over the item (clipped to the item) so the clip never eats the edge.
 //   The neck is painted after the Top, so a Top's upper edge tucks under it.
-// - Props live in the one band the sweep allows: y >= ~49, x >= ~14 and under
-//   the bounce line y <= ~53 + x/2 (bottom-left trimmed), and never higher
-//   than ~49 right of x 30 (hurt swings that into the head box). That band is
-//   the lower body and the gap under the belly, so a prop makes its read
-//   below the belly against the hearth, where light reads and ink does not.
+// - Props (run 1b sweep): at rest and the walk tuck, nothing in the head box
+//   (x 36..80, y < 37) or under 72.75; at the dance and Move extremes only a
+//   dip past 76.75 fails. So a prop may now be held up and back, at x < 36.
+//   What still bites: the flap (-62) and the preener's Night Fever drop swing
+//   anything far back at pivot height down under the floor, so a raised prop
+//   stays steep (its far end high) and, on the preener, right of x ~9.
 // - The stage sits behind the legs, so anything straw-coloured right under the
 //   feet would swallow the orange legs (mutedWarm vs leg orange is ~1.2:1).
 //   Under the feet a stage is ink; straw only goes out at the sides.
@@ -290,7 +328,6 @@ const bandPts = (a, b, hw) => {
     [a[0] - nx, a[1] - ny]
   ];
 };
-const band = (a, b, hw) => poly(bandPts(a, b, hw));
 
 /** A polygon cut to y >= y0 (Sutherland–Hodgman against one half-plane). */
 const belowY = (pts, y0) => {
@@ -338,21 +375,122 @@ const pageantSash = (ctx) => {
   return sashMarkup(ctx, poly(belowY(bandPts([c.shoulder[0], s - 4], c.hip, 4.2), Math.max(36.5, s))));
 };
 
-// Over the FAR shoulder: the opposite diagonal, from high on the back (where
-// it comes over the far shoulder, off the body's back edge) down across the
-// wing to the front of the belly. Its long lower run is on the open chest and
-// belly, clear of the wing outline, where white reads largest.
-const FAR = {
-  stock: { from: [16, 28], to: [64, 63] },
-  spiky: { from: [17, 30], to: [63, 60] },
-  broody: { from: [14, 31], to: [68, 66] },
-  preener: { from: [24, 27], to: [62, 56] }
+// The knotted sash (run 1b, replaces the cut far-shoulder sash, whose
+// mirrored slash read as a prohibition sign). Polish round 2: the band is a's
+// WHOLE diagonal, shoulder to back hip, because the full-length band is the
+// one shape that says "sash"; round 1 stopped it at a fat knot ellipse with
+// two forks splayed 60 degrees, which read as a white glove (ink: a crow).
+// Now the knot is tied ON the band: a rounded rectangle 7u along it by 11u
+// across (1.3x the band), half way down, with two short ribbon tails hanging
+// almost straight down out of it in a narrow 20-degree inverted V. The critic
+// asked for the knot at 60%; there the belly is so close under it that only
+// 3u of tail showed, so it sits at 50% (45% on the preener, the highest its
+// top corner can go without rising past the costume shoulders) and the tails
+// get about 10u below the knot.
+// `t` is where the knot sits along the band, `k` its scale, `tail` each
+// tail's length from its root under the knot's middle: as long as the belly
+// allows with every tip at least 2u inside it (stock tips y 60.8 over a belly
+// at 62.9, spiky 57.6 / 59.6, broody 61.9 / 65.9). The preener's chest is
+// ~11u deep under the band, so its knot is 85% and its tails show ~4u.
+const KNOT = {
+  stock: { t: 0.5, k: 1, tail: 15.5 },
+  spiky: { t: 0.5, k: 1, tail: 12.3 },
+  broody: { t: 0.5, k: 1, tail: 17 },
+  preener: { t: 0.45, k: 0.85, tail: 8 }
 };
 
-const farShoulderSash = (ctx) => {
-  const c = FAR[keyOf(ctx)];
+/**
+ * A constant-width ribbon from `a` to `b`, half-width hw, its far end cut into
+ * one V `notch` deep.
+ */
+const ribbon = (a, b, hw, notch) => {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const len = Math.hypot(dx, dy);
+  const [ux, uy] = [dx / len, dy / len];
+  const [nx, ny] = [-uy, ux];
+  return poly([
+    [a[0] + nx * hw, a[1] + ny * hw],
+    [b[0] + nx * hw, b[1] + ny * hw],
+    [b[0] - ux * notch, b[1] - uy * notch],
+    [b[0] - nx * hw, b[1] - ny * hw],
+    [a[0] - nx * hw, a[1] - ny * hw]
+  ]);
+};
+
+/** A rounded rectangle centred on `c`, `len` along `deg` by `wid` across, corner radius rx. */
+const roundRect = (c, deg, len, wid, rx) => {
+  const at = frame(c, deg);
+  const [u, v] = [len / 2, wid / 2];
+  const P = (a, b) => at([a, b]).map(f).join(" ");
+  return (
+    `M ${P(-u + rx, -v)} L ${P(u - rx, -v)} Q ${P(u, -v)} ${P(u, -v + rx)} L ${P(u, v - rx)} Q ${P(u, v)} ${P(u - rx, v)} ` +
+    `L ${P(-u + rx, v)} Q ${P(-u, v)} ${P(-u, v - rx)} L ${P(-u, -v + rx)} Q ${P(-u, -v)} ${P(-u + rx, -v)} Z`
+  );
+};
+
+const knottedSash = (ctx) => {
+  const key = keyOf(ctx);
+  const line = SASH[key];
+  const c = KNOT[key];
   const s = ctx.head.shoulders;
-  return sashMarkup(ctx, poly(belowY(bandPts(c.from, c.to, 4.4), s)));
+  const bandD = poly(belowY(bandPts([line.shoulder[0], s - 4], line.hip, 4.2), Math.max(36.5, s)));
+  // The knot is placed on the costume head's line (shoulder end at y 33), so
+  // it sits in the same place on the drawn head, whose band only starts
+  // higher under the neck.
+  const a = [line.shoulder[0], 33];
+  const b = line.hip;
+  const kc = [a[0] + (b[0] - a[0]) * c.t, a[1] + (b[1] - a[1]) * c.t];
+  const deg = (Math.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI;
+  const along = frame(kc, deg);
+  const [kl, kw] = [7 * c.k, 11 * c.k];
+  const knotD = roundRect(kc, deg, kl, kw, 1.5);
+  // The tails leave from under the knot, 3.1u apart along the band (u runs
+  // toward the hip, -v is down), and hang 10 degrees back (100) and 10
+  // degrees forward (80) of straight down.
+  const hw = 2.6 * c.k;
+  const tails = [
+    [along([1.2 * c.k, -0.6]), 100],
+    [along([-1.9 * c.k, -0.6]), 80]
+  ].map(([p0, dir]) => {
+    const tip = [p0[0] + c.tail * Math.cos(rad(dir)), p0[1] + c.tail * Math.sin(rad(dir))];
+    return ribbon(p0, tip, hw, hw * 0.85);
+  });
+  const all = `${bandD} ${tails.join(" ")} ${knotD}`;
+  const fill = ctx.styleFill;
+  if (ctx.style === "white") {
+    // White: the tails first, each with its own 2.4u ink edge, then the band
+    // and the knot as ONE lump (both 4.8u strokes, then both fills), so the
+    // knot is a cinch on the band and never an oval in its own ring.
+    const tailWhite = tails.map((d) => `<path d="${d}" fill="${fill}" ${ctx.inkStroke(2.4)}/>`).join("");
+    const lump = [bandD, knotD];
+    return onBody(
+      ctx,
+      all,
+      tailWhite +
+        lump.map((d) => `<path d="${d}" fill="none" ${ctx.inkStroke(4.8)}/>`).join("") +
+        lump.map((d) => `<path d="${d}" fill="${fill}"/>`).join("")
+    );
+  }
+  // Ink: each tail keeps a 1.6u team-colour rim UNDER its fill, so the two
+  // read as two ribbons; the knot has no ring (a ring round it drew an eye),
+  // just two straight team-colour lines across the band at its two ends, so
+  // it reads as a cinch.
+  const tailInk = tails
+    .map((d) => `<path d="${d}" fill="${fill}" stroke="${ctx.fill}" stroke-width="3.2" stroke-linejoin="miter" paint-order="stroke"/>`)
+    .join("");
+  const cinch = [-kl / 2, kl / 2]
+    .map((u) => {
+      const [p, q] = [along([u, -kw / 2]), along([u, kw / 2])];
+      return `M ${f(p[0])} ${f(p[1])} L ${f(q[0])} ${f(q[1])}`;
+    })
+    .join(" ");
+  return onBody(
+    ctx,
+    all,
+    `${tailInk}<path d="${bandD}" fill="${fill}"/><path d="${knotD}" fill="${fill}"/>` +
+      `<path d="${cinch}" fill="none" stroke="${ctx.fill}" stroke-width="1.6"/>`
+  );
 };
 
 // ------------------------------------------------------------ golden egg --
@@ -397,46 +535,82 @@ const clutchedEgg = (ctx) => {
   return outlined([{ d: eggPath(c[0], c[1], w, h, tilt), fill: ctx.styleFill }], 4.4) + shine;
 };
 
-// The egg basket: a little straw basket hung on the wing tip at the back hip,
-// one egg sitting up out of it. Round 3: the weave hatching (mush at 76px) is
-// gone; the basket is a solid mutedWarm tub (10 x 6) with the house outline
-// and one ink rim band, and an arched ink handle is what says "basket". The egg
-// is bigger (6.5 x 8.5) and sits high, its top 6.3u over the rim, behind the
-// handle. It stays left of the near leg so both legs stay clear, and nothing
-// rises above y 49.5 (higher swings into the head box on hurt).
-const BASKET = {
-  stock: { x0: 19, x1: 30, rim: 57.5, base: 63.5, eggX: 22.6 },
-  spiky: { x0: 19, x1: 30, rim: 57.5, base: 63.5, eggX: 22.6 },
-  broody: { x0: 19.5, x1: 30.5, rim: 57, base: 63, eggX: 23.1 },
-  preener: { x0: 19, x1: 30, rim: 57, base: 63, eggX: 22.6 }
+// The trophy (run 1b, replaces the cut egg basket, which read as a padlock):
+// the egg held ALOFT, the way the spec always wanted it, now that a prop may
+// be held up and back (§2.1, run 1b). A championship cup gripped by its foot
+// at the wing tip, tilted up and back so the cup and the egg stand up over the
+// tail, never toward the face. The cup is silver (mutedWarm) in white, so the
+// white egg is its own value step, and gold in gold (a gold cup with a gold
+// egg: the prize). `base` is the plinth's centre, `deg` the axis from it
+// toward the egg; the preener's is steepest, because the Night Fever drop
+// swings anything left of x ~9 under the floor.
+// Polish round 1: no handles (two solid ovals at the lip plus the stem made a
+// dog bone). Polish round 2: in white it read as an egg cup or a cone tipped
+// back 40 degrees, and its ink plinth as a black brick by the legs. Now it is
+// HOISTED: nearly upright (15 degrees back of vertical), a light one-step foot
+// in the wing tip, a 12u stem, a deep U bowl 16 wide with a flat lip, and a
+// smaller egg (10 x 12.5) whose lower third is behind the lip, so the cup is
+// the bigger shape. `base` is the foot's centre, `deg` the axis from it up
+// toward the egg (-90 is straight up), `stem` the stem's length (12; the
+// broody's back is low and round, so a full stem lifts the cup more than 10u
+// past her outline).
+const TROPHY = {
+  stock: { base: [24.5, 55], deg: -105 },
+  spiky: { base: [24.5, 54.5], deg: -105 },
+  broody: { base: [29, 54], deg: -108, stem: 9.5 },
+  preener: { base: [23.5, 54], deg: -103 }
 };
 
-const eggBasket = (ctx) => {
-  const b = BASKET[keyOf(ctx)];
-  const taper = 1.2;
-  const r = 1.6;
-  const basketD =
-    `M ${f(b.x0)} ${f(b.rim)} L ${f(b.x1)} ${f(b.rim)} L ${f(b.x1 - taper)} ${f(b.base - r)} ` +
-    `Q ${f(b.x1 - taper - 0.2)} ${f(b.base)} ${f(b.x1 - taper - r)} ${f(b.base)} L ${f(b.x0 + taper + r)} ${f(b.base)} ` +
-    `Q ${f(b.x0 + taper + 0.2)} ${f(b.base)} ${f(b.x0 + taper)} ${f(b.base - r)} Z`;
-  const [ew, eh] = [6.5, 8.5];
-  const eggCy = b.rim - 6.3 + eh / 2;
-  const eggD = eggPath(b.eggX, eggCy, ew, eh, -8);
-  // Handle: rim end to rim end, a round arch whose apex is ~7.9u over the
-  // rim (y ~49.6), in front of the egg, which sits in the back half so the
-  // arch's front leg shows clear against the body.
-  const handle = `M ${f(b.x0 + 0.9)} ${f(b.rim)} C ${f(b.x0 + 0.9)} ${f(b.rim - 10.5)} ${f(b.x1 - 0.9)} ${f(b.rim - 10.5)} ${f(b.x1 - 0.9)} ${f(b.rim)}`;
-  const band = `M ${f(b.x0 + 0.3)} ${f(b.rim + 1.3)} L ${f(b.x1 - 0.35)} ${f(b.rim + 1.3)}`;
-  const shine = ctx.style === "gold" ? goldShine(ctx, b.eggX, eggCy, ew, eh, -8) : "";
+/** A smooth open curve through points (Catmull-Rom), closed by a straight line. */
+const smoothOpen = (pts) => {
+  const n = pts.length;
+  const P = (i) => pts[Math.max(0, Math.min(n - 1, i))];
+  let d = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
+  for (let i = 0; i < n - 1; i += 1) {
+    const [p0, p1, p2, p3] = [P(i - 1), P(i), P(i + 1), P(i + 2)];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C ${f(c1[0])} ${f(c1[1])} ${f(c2[0])} ${f(c2[1])} ${f(p2[0])} ${f(p2[1])}`;
+  }
+  return `${d} Z`;
+};
+
+const trophyParts = ({ base, deg, stem: stemLen = 12 }) => {
+  const at = frame(base, deg);
+  const P = (u, v) => at([u, v]);
+  // u runs up the axis from the foot. The foot is one 11 x 3.5 step, then
+  // the stem, then a deep U bowl 16 wide and 8 deep (straight-ish sides and a
+  // round bottom: a V under the egg read as an ice-cream cone), and the lip a
+  // flat 18 x 2.5 band over the bowl's mouth.
+  const b0 = 1.75 + stemLen;
+  const foot = poly([P(-1.75, -5.5), P(-1.75, 5.5), P(1.75, 5.5), P(1.75, -5.5)]);
+  const stem = poly([P(1.75, -1.9), P(1.75, 1.9), P(b0 + 1, 1.9), P(b0 + 1, -1.9)]);
+  const bowl = smoothOpen([P(b0 + 8, -8), P(b0 + 4, -7.8), P(b0 + 1, -5.6), P(b0, 0), P(b0 + 1, 5.6), P(b0 + 4, 7.8), P(b0 + 8, 8)]);
+  const lip = poly([P(b0 + 7, -9), P(b0 + 7, 9), P(b0 + 9.5, 9), P(b0 + 9.5, -9)]);
+  // The egg's lower third sits behind the lip (its narrow end along the axis;
+  // eggPath's tilt is measured from straight up, so axis -90 is no tilt).
+  const egg = { c: P(b0 + 9.5 + 6.25 - 4.2, 0), w: 10, h: 12.5, tilt: deg + 90 };
+  return { foot, stem, bowl, lip, egg };
+};
+
+const trophyEgg = (ctx) => {
+  const t = trophyParts(TROPHY[keyOf(ctx)]);
+  const gold = ctx.style === "gold";
+  // White: a silver cup (mutedWarm, the house grey) under the white egg, so
+  // the egg is its own value step; the foot is cup colour too, so the bottom
+  // of the trophy is light (round 1's ink plinth read as a brick).
+  const cup = gold ? ctx.styleFill : ctx.colors.mutedWarm;
+  const { c, w, h, tilt } = t.egg;
+  const shine = gold ? goldShine(ctx, c[0], c[1], w, h, tilt) : "";
   return (
-    outlined([{ d: eggD, fill: ctx.styleFill }], 3.6) +
+    // The egg first, with its own 4.4u outline, so gold egg and gold cup are
+    // two shapes; then the cup over its lower third, the lip's 2.4u ink edge
+    // across it.
+    outlined([{ d: eggPath(c[0], c[1], w, h, tilt), fill: ctx.styleFill }], 4.4) +
     shine +
-    // An ink-only handle vanished into the wing's own scalloped outline, so
-    // it is a straw band (1.8u mutedWarm) inside a 3.4u ink edge.
-    `<path d="${handle}" fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/>` +
-    `<path d="${handle}" fill="none" stroke="${ctx.colors.mutedWarm}" stroke-width="1.8" stroke-linecap="round"/>` +
-    outlined([{ d: basketD, fill: ctx.colors.mutedWarm }]) +
-    `<path d="${band}" fill="none" stroke="${INK}" stroke-width="1.5"/>`
+    outlined([t.foot, t.stem, t.bowl].map((d) => ({ d, fill: cup })), 4.8) +
+    // The lip on its own, so its ink edge crosses the bowl's mouth.
+    outlined([{ d: t.lip, fill: cup }], 4)
   );
 };
 
@@ -476,7 +650,7 @@ const ellipsePath = (cx, cy, rx, ry, deg) => {
   return smooth(pts);
 };
 
-const sauceOnMeat = (ctx, p) => {
+const sauceOnMeat = (ctx, p, cover = 0.45) => {
   const { at, L, m0, r, meatD } = p;
   const meatClip = ctx.clip(meatD);
   const len = L - m0;
@@ -491,7 +665,7 @@ const sauceOnMeat = (ctx, p) => {
       `<path d="${ellipsePath(c2[0], c2[1], 1.2, 0.9, 25)}" fill="${INK}"/></g>`
     );
   }
-  const uc = L - len * 0.45;
+  const uc = L - len * cover;
   const edge = [];
   const span = r * 1.4;
   for (let i = 0; i <= 24; i += 1) {
@@ -513,12 +687,14 @@ const glazeDrip = (t, end) => {
 const DROP = {
   stock: { k: [28.5, 53.5], t: [38.5, 69] },
   spiky: { k: [28.5, 53], t: [38.5, 69] },
-  broody: { k: [31, 51], t: [39.6, 71.6], glazeEnd: 72.4 },
+  broody: { k: [31, 51], t: [39.6, 71], glazeEnd: 71 },
   preener: { k: [27.5, 52.5], t: [38.5, 69] }
 };
 
 const micDrop = (ctx) => {
-  const { k, t, glazeEnd = 71.6 } = DROP[keyOf(ctx)];
+  // Run 1b: the drip ends 1u higher (70.6, broody 71); at 71.6 / 72.4 the
+  // pop squash and the broody walk tuck swung it under the floor.
+  const { k, t, glazeEnd = 70.6 } = DROP[keyOf(ctx)];
   const p = drumstickParts({ k, t, r: 4.8, meat: 0.55 });
   const glazed = ctx.style !== "ink";
   return (
@@ -531,66 +707,73 @@ const micDrop = (ctx) => {
   );
 };
 
-// The wing bucket: the night's order, a striped bucket hung at the back hip
-// with drumsticks heaped out of the top (ember meat, one white bone up). The
-// bucket is white with the house outline; the style paints its stripes, so
-// the default team stripes make it that team's bucket. It sits left of the
-// near leg, and nothing rises above y 49.5 (hurt swings that into the head).
-const BUCKET = {
-  stock: { x0: 18.5, x1: 30.5, rim: 57.5, base: 64 },
-  spiky: { x0: 18.5, x1: 30.5, rim: 57.5, base: 64 },
-  broody: { x0: 19, x1: 31, rim: 57, base: 63.5 },
-  preener: { x0: 18.5, x1: 30, rim: 57, base: 63.5 }
+// The raised drumstick (run 1b, replaces the cut wing bucket, whose stripes
+// read as teeth): the drumstick held UP like a mic, or a toast, now that a
+// prop may be raised up and back (§2.1, run 1b). The knuckle is gripped at the
+// wing tip and the meat stands up and back over the tail (steeper than this
+// and lower, the flap and the Night Fever drop swing it under the floor),
+// with one big round bite out of its underside: a single smooth arc, never a
+// row of scallops (scallops read as teeth). It is bigger than a's (r 7.4, 28
+// long) because the meat is the read. `k` is the knuckle, `deg` the axis.
+const RAISED = {
+  stock: { k: [27, 58.5], deg: -124 },
+  spiky: { k: [27, 58], deg: -124 },
+  broody: { k: [32.5, 54.5], deg: -134 },
+  preener: { k: [25, 57], deg: -112 }
 };
 
-const wingBucket = (ctx) => {
-  const b = BUCKET[keyOf(ctx)];
-  const taper = 1.8;
-  const w = b.x1 - b.x0;
-  const bucketD = poly([
-    [b.x0, b.rim],
-    [b.x1, b.rim],
-    [b.x1 - taper, b.base],
-    [b.x0 + taper, b.base]
-  ]);
-  // Two stripes, each following the bucket's taper.
-  const stripe = (t0, t1) => {
-    const top = (t) => b.x0 + w * t;
-    const bot = (t) => b.x0 + taper + (w - 2 * taper) * t;
-    return poly([
-      [top(t0), b.rim],
-      [top(t1), b.rim],
-      [bot(t1), b.base],
-      [bot(t0), b.base]
-    ]);
-  };
-  // The heap: three low lumps of meat over the rim and two bones standing
-  // up out of it in a V (the bones are what say chicken, not popcorn). The
-  // knuckles stop at y 49.6: anything higher swings into the head on hurt.
-  const lumps = [
-    [b.x0 + w * 0.2, b.rim - 0.9, 2.5],
-    [b.x0 + w * 0.5, b.rim - 1.5, 2.7],
-    [b.x0 + w * 0.8, b.rim - 0.9, 2.4]
-  ].map(([x, y, r]) => circlePath(x, y, r));
-  const bones = [
-    { from: [b.x0 + w * 0.36, b.rim - 1.5], to: [b.x0 + w * 0.12, 51.6] },
-    { from: [b.x0 + w * 0.62, b.rim - 1.5], to: [b.x0 + w * 0.86, 51.4] }
-  ].flatMap(({ from, to }) => {
-    const deg = (Math.atan2(to[1] - from[1], to[0] - from[0]) * 180) / Math.PI;
-    const at = frame(to, deg);
-    return [band(from, to, 0.85), ...[at([0.3, -1.05]), at([0.3, 1.05])].map((c) => circlePath(c[0], c[1], 1.15))];
+/** Sample a closed path of cubic segments (M x y C … Z) into points. */
+const sampleCubics = (d) => {
+  const n = d.match(/-?[\d.]+/g).map(Number);
+  const pts = [];
+  let p0 = [n[0], n[1]];
+  for (let i = 2; i + 5 < n.length; i += 6) {
+    const [c1, c2, p3] = [[n[i], n[i + 1]], [n[i + 2], n[i + 3]], [n[i + 4], n[i + 5]]];
+    // Dense, so a bite's points land close enough together to draw its arc.
+    for (let j = 0; j < 60; j += 1) {
+      const t = j / 60;
+      const m = 1 - t;
+      pts.push([0, 1].map((a) => m * m * m * p0[a] + 3 * m * m * t * c1[a] + 3 * m * t * t * c2[a] + t * t * t * p3[a]));
+    }
+    p0 = p3;
+  }
+  return pts;
+};
+
+/** Points inside the circle (cx, cy, r) pushed out onto it: a round bite. */
+const bite = (pts, cx, cy, r) =>
+  pts.map(([x, y]) => {
+    const d = Math.hypot(x - cx, y - cy);
+    return d >= r ? [x, y] : [cx + ((x - cx) / (d || 1)) * r, cy + ((y - cy) / (d || 1)) * r];
   });
-  const clipB = ctx.clip(bucketD);
-  const stripeFill = ctx.styleFill;
+
+const raisedDrumstick = (ctx) => {
+  const { k, deg } = RAISED[keyOf(ctx)];
+  const L = 30;
+  const t = frame(k, deg)([L, 0]);
+  const p = drumstickParts({ k, t, r: 7.4, meat: 0.6, bone: 1.8 });
+  // The bite: out of the meat's underside (-v), near its fat end, where it is
+  // against the room on every body (its top edge runs along the tail).
+  const [bx, by] = p.at([L - 5.5, -8.4]);
+  const meatPts = bite(
+    sampleCubics(p.meatD).map((q) => q.map(f)),
+    bx,
+    by,
+    5
+  );
+  const meatD = poly(meatPts);
+  const q = { ...p, meatD };
+  // White is the plain roast: no sauce, so the whole ember meat and its bite
+  // read (a team glaze over the same-colour tail behind it made the meat look
+  // half its size; an ink char cap merged into the outline). Team and gold
+  // glaze the top third.
+  const sauce = ctx.style === "white" ? "" : sauceOnMeat(ctx, q, 0.34);
   return (
     outlined([
-      ...lumps.map((d) => ({ d, fill: EMBER })),
-      ...bones.map((d) => ({ d, fill: WHITE })),
-      { d: bucketD, fill: WHITE }
-    ]) +
-    `<defs>${clipB.def}</defs><g clip-path="${clipB.url}">` +
-    `<path d="${stripe(0.2, 0.4)}" fill="${stripeFill}"/><path d="${stripe(0.6, 0.8)}" fill="${stripeFill}"/>` +
-    `</g><path d="${bucketD}" fill="none" ${ctx.inkStroke(1.4)}/>`
+      { d: p.boneD, fill: WHITE },
+      ...p.lobes.map((d) => ({ d, fill: WHITE })),
+      { d: meatD, fill: EMBER }
+    ]) + sauce
   );
 };
 
@@ -617,73 +800,91 @@ const clutch = (ctx) => {
   return `<path d="${PAD}" fill="${INK}" ${ctx.inkStroke(2)}/>` + eggsIn(ctx, back) + eggsIn(ctx, front);
 };
 
+// The nest (polish round 2, replaces the cut straw nest, whose ink bowl
+// vanished into the dark floor and left two piles of straight crossed planks
+// either side of the legs: a woodpile, or crossbones). Now there is ONE nest,
+// beside her at the tail end, and it reads by one light shape: a thick straw
+// (mutedWarm) wall, dished on top and round underneath, with three eggs of
+// three sizes standing well up out of it, each with its own outline so they
+// overlap as a clutch (never a same-size pair peeking over a wall, which read
+// as eyes). Straw ends curl out of the wall's two ends: tapered, curved, light,
+// sharing the wall's one ink outline, so nothing reads as a plank or a bone.
+// No separate bowl or brim under the wall: a rim band over a smaller bowl
+// read as a saucer (blurred, a flying saucer with egg domes), and ink spikes
+// under it as its landing legs.
+// It stops at x 20, short of the far foot (so straw never sits behind the
+// orange legs) and as far back as the stage's side limit allows, because the
+// stage paints behind the body and the broody's low belly hides anything
+// right of x ~16 above y 61. Under the feet is the clutch's thin ink pad.
+const NEST_WALL = "M -6.8 65 C -1 67.6 14 67.6 19.8 65 C 21 70 15 73.8 6.5 73.8 C -2 73.8 -8 70 -6.8 65 Z";
+
 /**
- * A low straw mound from x0 to x1: a smooth top arc peaking at `top`, a flat
- * base at `base`, ends rounded. No teeth along the top (round 2's zigzag cut
- * across the white eggs and read as snow-capped peaks, or teeth).
+ * A tapered strand: a quadratic curve from `a` (half-width w) through the
+ * control point `c` to a point at `b`, as a filled outline.
  */
-const strawMound = (x0, x1, top, base) => {
-  const mid = (x0 + x1) / 2;
-  const endY = top + (base - top) * 0.55;
+const strand = (a, c, b, w) => {
+  const N = 12;
+  const at = (t) => {
+    const m = 1 - t;
+    return [m * m * a[0] + 2 * m * t * c[0] + t * t * b[0], m * m * a[1] + 2 * m * t * c[1] + t * t * b[1]];
+  };
+  const left = [];
+  const right = [];
+  for (let i = 0; i <= N; i += 1) {
+    const t = i / N;
+    const [p, q] = [at(Math.max(0, t - 0.01)), at(Math.min(1, t + 0.01))];
+    const len = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+    const [nx, ny] = [-(q[1] - p[1]) / len, (q[0] - p[0]) / len];
+    const hw = w * (1 - t);
+    const o = at(t);
+    left.push([o[0] + nx * hw, o[1] + ny * hw]);
+    right.push([o[0] - nx * hw, o[1] - ny * hw]);
+  }
+  return poly([...left, ...right.reverse()]);
+};
+
+// Four straw ends, deliberately lopsided: one long curl up and out of the
+// back corner, one short flick out low at the back, and two fanned out of
+// the front end at their own angles. A matching pair at each end (round 2's
+// first draft) made the nest a sack with four corners, or a cat's head. Each
+// root sits inside the wall, so the wall's fill hides it.
+const NEST_STRANDS = [
+  [[-4.6, 66], [-8.2, 63.6], [-5.2, 57.4]],
+  [[-3.4, 71.4], [-6, 72.4], [-7.2, 74.6]],
+  [[17.4, 66], [21.6, 65.2], [25.6, 63.4]],
+  [[16, 71], [19, 73], [20.6, 77]]
+];
+
+const strawNest = (ctx) => {
+  // Back to front: the middle-sized egg, the small one, then the big one over
+  // both, each outlined on its own.
+  const eggs = [
+    [-1.6, 64.4, 11, 13.5, -24],
+    [14.2, 64.6, 10, 12.5, 14],
+    [5.6, 63.2, 12.5, 15.5, -8]
+  ];
+  const straw = ctx.colors.mutedWarm;
+  const strands = NEST_STRANDS.map(([a, c, b]) => strand(a, c, b, 1.9));
   return (
-    `M ${f(x0)} ${f(endY)} C ${f(x0 + 2)} ${f(top)} ${f(mid - 6)} ${f(top)} ${f(mid)} ${f(top)} ` +
-    `C ${f(mid + 6)} ${f(top)} ${f(x1 - 2)} ${f(top)} ${f(x1)} ${f(endY)} ` +
-    `C ${f(x1 + 1)} ${f(base - 0.6)} ${f(x1 - 1)} ${f(base)} ${f(x1 - 3)} ${f(base)} L ${f(x0 + 3)} ${f(base)} ` +
-    `C ${f(x0 + 1)} ${f(base)} ${f(x0 - 1)} ${f(base - 0.6)} ${f(x0)} ${f(endY)} Z`
+    `<path d="${PAD}" fill="${INK}" ${ctx.inkStroke(2)}/>` +
+    eggs.map(([x, y, w, h, tilt]) => outlined([{ d: eggPath(x, y, w, h, tilt), fill: ctx.styleFill }], 4.4)).join("") +
+    // The wall and its straw ends share one 1.6u ink outline.
+    outlined([NEST_WALL, ...strands].map((d) => ({ d, fill: straw })), 3.2)
   );
 };
 
-/** Short ink straws (1u, 3u long) poking out past a mound's ends and base. */
-const strawPokes = (x0, x1, top, base) => {
-  const endY = top + (base - top) * 0.55;
-  const stick = (x, y, deg) => {
-    const dx = 3 * Math.cos(rad(deg));
-    const dy = 3 * Math.sin(rad(deg));
-    return `M ${f(x - dx * 0.35)} ${f(y - dy * 0.35)} L ${f(x + dx * 0.65)} ${f(y + dy * 0.65)}`;
-  };
-  const d = [
-    stick(x0 + 0.2, endY - 0.6, 180 + 28), // out of the back end, up and out
-    stick(x0 + 0.4, endY + 1.6, 180 - 22), // out of the back end, down and out
-    stick(x1 - 0.2, endY - 0.6, -28), // out of the front end, up and out
-    stick(x1 - 0.4, endY + 1.6, 22), // out of the front end, down and out
-    stick(x0 + (x1 - x0) * 0.3, base, 90 + 35), // under the base, down and back
-    stick(x0 + (x1 - x0) * 0.72, base, 90 - 35) // under the base, down and forward
-  ].join(" ");
-  return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="1" stroke-linecap="round"/>`;
-};
-
-// The straw nest: the clutch sat down on straw. A low smooth mutedWarm mound
-// either side of the bird (never under the feet: the ink pad stays alone
-// there), the eggs whole in FRONT of it with full outlines, so no egg is cut
-// by any line; the straw shows round their bottoms and out at the ends, and a
-// few ink straws poke past the mound's ends and base.
-const strawNest = (ctx) => {
-  const back = [
-    [3, 62.4, 8.5, 10.8, -14],
-    [12.5, 61.4, 9.5, 11.6, -3],
-    [18.6, 65.4, 6.6, 8, 12]
-  ];
-  const front = [
-    [66, 61.6, 9.5, 11.6, 5],
-    [75.5, 63.6, 8, 10, 16]
-  ];
-  const straw = ctx.colors.mutedWarm;
-  const [top, base] = [65.5, 73.5];
-  const mound = (x0, x1) => strawPokes(x0, x1, top, base) + `<path d="${strawMound(x0, x1, top, base)}" fill="${straw}" ${ctx.inkStroke(2)}/>`;
-  return `<path d="${PAD}" fill="${INK}" ${ctx.inkStroke(2)}/>` + mound(-5.5, 24) + mound(58.5, 85.5) + eggsIn(ctx, back) + eggsIn(ctx, front);
-};
-
 // The big one (new in round 3, replaces the cut hatched shells): one giant
-// egg, as tall as the legs, stood on the ink pad behind the tail, with one
-// ordinary egg at the front for scale. The read is the scale gag ("she laid
-// THAT?"), where the clutch reads as many. Gold gives the giant egg the same
-// glint and shade as the golden egg prop.
+// egg behind the tail, with one ordinary egg at the front for scale. The read
+// is the scale gag ("she laid THAT?"), where the clutch reads as many. Gold
+// gives the giant egg the same glint and shade as the golden egg prop.
+// Polish round 1: the giant was foot-sized and the small egg a 6.5u dot, so it
+// read as an egg and a pebble. A stage's top edge may not rise above y 55, so
+// the giant cannot stand taller than ~17u; it LEANS BACK on the pad instead,
+// 27 long and 16.5 thick, its narrow end up and back at 30 degrees, filling
+// the space behind the legs. The small egg is 9 wide.
 const bigOne = (ctx) => {
-  const giant = [3.5, 64.7, 15, 18.8, -5];
-  const smalls = [
-    [69, 68.2, 5.8, 7.2, 10],
-    [76.5, 69.2, 5, 6.2, 22]
-  ];
+  const giant = [7.5, 64.9, 16.5, 27, -60];
+  const smalls = [[71, 65.3, 9, 11.5, 12]];
   const shine = ctx.style === "gold" ? goldShine(ctx, ...giant) : "";
   return (
     `<path d="${PAD}" fill="${INK}" ${ctx.inkStroke(2)}/>` +
@@ -736,11 +937,11 @@ export const ITEMS = [
       },
       {
         key: "b",
-        note: "Far shoulder (new in round 2, replaces the cut chest band): the opposite diagonal, from high on the back down across the wing to the front of the belly, so its long lower run lies on the open chest and belly, clear of the wing outline.",
+        note: "Knotted sash (run 1b, replaces the cut far-shoulder sash, which read as a prohibition sign). Polish round 2: a's whole shoulder-to-hip band with the knot tied ON it, because the full-length diagonal is what says sash (round 1 stopped the band at a knot ellipse with two forks splayed 60 degrees: a white glove, or in ink a crow). The knot is a rounded rectangle 7u along the band by 11u across (1.3x the band) half way down; in white it is one lump with the band under one 2.4u ink edge, in ink it has no ring, just two straight 1.6u team-colour lines across the band at its ends, a cinch. Two constant-width ribbon tails (5.2u, no flare) hang out of it almost straight down, 10 degrees back and 10 forward, each end with one 2.2u V notch; white tails keep their own ink edge, ink tails a 1.6u team rim. The knot sits at 50% (the critic's 60% left only 3u of tail above the belly) and every tip is at least 2u inside the belly; the preener's shallow chest gets an 85% knot at 45% and tails that show about 4u.",
         styles: ["white", "ink"],
         whitePoints: 1,
         darkCentre: false,
-        draw: farShoulderSash
+        draw: knottedSash
       }
     ]
   },
@@ -748,7 +949,7 @@ export const ITEMS = [
     id: "golden-egg",
     slot: "prop",
     name: "Golden egg",
-    note: "An egg held low (never aloft: up is the face). White with the house outline by default; gold is the trial style, and now carries a curved glint and a shade crescent so it reads as metal, not mustard. Back and down only, inside the sweep band.",
+    note: "The golden egg. White with the house outline by default; gold is the trial style, with a curved glint and a shade crescent so it reads as metal, not mustard. Run 1b: with the relaxed prop sweep (§2.1) the egg can finally be held aloft, so a is the egg clutched low and b is the egg raised in a trophy.",
     variants: [
       {
         key: "a",
@@ -760,11 +961,11 @@ export const ITEMS = [
       },
       {
         key: "b",
-        note: "Egg basket (new in round 2): a little basket hung on the wing tip at the back hip, one egg sitting up out of it. Round 3: a solid mutedWarm tub (11 x 6) with an ink rim band, an arched straw handle (apex ~y 49.6) in front of a bigger egg (6.5 x 8.5, 6.3u over the rim). Left of the near leg, so both legs stay clear.",
+        note: "The trophy (run 1b, replaces the cut egg basket): the egg held aloft. Polish round 2: hoisted. It stands only 15 degrees back of vertical (it was tipped back 40, so it read as poured), behind the tail at x ~8..26, away from the face. The ink plinth is gone (it read as a black brick by the legs): the foot is one light 11 x 3.5 step in the cup colour, gripped at the wing tip, then a 12u stem (9.5 on the broody, whose low round back would put a full-height cup more than 10u past her outline), a deep U bowl 16 wide and 8 deep with round bottom and straight-ish sides (a V read as an ice-cream cone, a shallow saucer as an egg cup) and a flat 18u lip with its own 2u ink edge. The egg shrinks to 10 x 12.5 so the cup is the bigger shape, its lower third behind the lip. No handles (solid lugs read as a dog bone). White: a white egg in a silver (mutedWarm) cup; gold: a gold egg in a gold cup, with the glint and shade.",
         styles: ["white", "gold"],
-        whitePoints: 1,
+        whitePoints: 0,
         darkCentre: false,
-        draw: eggBasket
+        draw: trophyEgg
       }
     ]
   },
@@ -772,7 +973,7 @@ export const ITEMS = [
     id: "drumstick",
     slot: "prop",
     name: "Drumstick",
-    note: "Wing-night food, held low. The meat is always ember (the house cooked colour) with a white bone; the style paints only the sauce: team = wing sauce in the wearer's colour, ink = BBQ char stripes, gold = honey glaze. Round 2: the mic grip was cut (the sweep keeps every prop off the beak), so a is the mic drop, re-lettered from b.",
+    note: "Wing-night food. The meat is always ember (the house cooked colour) with a white bone; the style paints only the sauce: team = wing sauce in the wearer's colour, ink = BBQ char, gold = honey glaze, white = none. Round 2: the mic grip was cut, so a is the mic drop, re-lettered from b. Run 1b: the relaxed sweep (§2.1) lets b hold one up and back, like a toast.",
     variants: [
       {
         key: "a",
@@ -784,11 +985,11 @@ export const ITEMS = [
       },
       {
         key: "b",
-        note: "Wing bucket (new in round 2): a white bucket hung at the back hip, stripes in the style, drumsticks heaped out of the top (ember meat, one white bone up). The order, not the bite.",
-        styles: ["team", "ink"],
-        whitePoints: 1,
+        note: "Raised and bitten (run 1b, replaces the cut wing bucket): the drumstick held up like a mic or a toast, knuckle at the wing tip, a fat meat (r 7.4, 28 long) standing up and back over the tail with one big round bite out of its underside. White is the plain roast (white bone, all-ember meat, no sauce), the strongest read; team and gold glaze its top third. No ink: a char cap merged into the outline, and char blotches beside a bite would make a face.",
+        styles: ["white", "team", "gold"],
+        whitePoints: 0,
         darkCentre: false,
-        draw: wingBucket
+        draw: raisedDrumstick
       }
     ]
   },
@@ -808,7 +1009,7 @@ export const ITEMS = [
       },
       {
         key: "b",
-        note: "Straw nest (new in round 2): the clutch sat on straw either side of the bird; the ink pad stays alone under the feet. Round 3: the eggs are whole ovals in front of a smooth low mutedWarm mound (no zigzag), the straw showing under and round them, with six short ink straws poking past the mound's ends and base.",
+        note: "The nest (polish round 2, replaces the cut straw nest, whose dark bowl vanished into the floor and left two piles of crossed planks: a woodpile, or crossbones). ONE nest beside her at the tail end (x -7.5..26), reading by one light shape: a thick straw (mutedWarm) wall, dished on top and round underneath, with three eggs of three sizes (12.5 x 15.5, 11 x 13.5, 10 x 12.5) standing well up out of it, each outlined on its own so they overlap as a clutch, never a same-size pair over a wall. Four tapered, curved straw ends share the wall's ink outline, deliberately lopsided (a long curl up off the back corner, a short flick low at the back, two fanned out of the front end): a matching pair at each end made a sack, or a cat's head, and a rim over a smaller bowl made a flying saucer. It stops short of the far foot, so no straw sits behind the orange legs; under the feet is the thin ink pad.",
         styles: ["white", "gold"],
         whitePoints: 0,
         darkCentre: false,
@@ -816,7 +1017,7 @@ export const ITEMS = [
       },
       {
         key: "c",
-        note: "The big one (new in round 3, replaces the cut hatched shells): one giant egg, as tall as the legs, stood on the ink pad behind the tail, with one ordinary egg at the front for scale. A scale gag, where a reads as many eggs.",
+        note: "The big one (new in round 3, replaces the cut hatched shells): one giant egg behind the legs, with one ordinary egg at the front for scale. A scale gag, where a reads as many eggs. Run 1b: the second small front egg is gone (the pair read as eyes in the dark). Polish round 1: the giant egg was foot-sized and the small one a 6.5u dot (an egg and a pebble); a stage may not rise above y 55, so instead of standing taller the giant leans back on the pad, 27 long and 16.5 thick with its narrow end up, about three times the small egg, which is now 9 wide.",
         styles: ["white", "gold"],
         whitePoints: 0,
         darkCentre: false,

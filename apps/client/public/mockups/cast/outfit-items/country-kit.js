@@ -5,7 +5,8 @@
 // four (555 u²), a 21-unit wing tuck and two low tail plumes, and NO Boots
 // slot. So the flavour goes on the chest, and every Top here is a big flat
 // value shape on it. Ink reads (6.1:1 on the orange); white only lives on
-// its 2-unit ink outline (2.91:1); the leg orange is never a fill.
+// its 2-unit ink outline (2.91:1); the leg orange is never a fill. Gold is
+// 1.30:1 on the orange, so no country item offers it.
 //
 // Round 2 (after critic round 1): no continuous row of pointed tongues (it
 // reads as teeth or a beard), fringe is square-ended strands with gaps; tail
@@ -14,17 +15,24 @@
 // bars read as teeth), so wing fringe is ink on the team wing and the ink
 // wing is the default; never a white band split by an ink shape (two white
 // wedges round a dark centre read as angry eyes); buckles carry a motif
-// (star, longhorn), never a plain plate. Rope on the tail was judged
-// unworkable at this size (bands read as stripes); only one variant is kept.
+// (star, longhorn), never a plain plate.
+// Run 1b (after the final critic): the yoke gets piping, the longhorn thin
+// open horns, the vest-b fringe moves to the wing-side hem, the gauntlet
+// becomes a tan cuff at the wing's tip; the cut fringe-sleeve a, tail-bandana
+// a and rope-coil a are redrawn. Rope never wraps a plume as bands (stripes):
+// it hangs or trails as one rope, ink on a mutedWarm casing so it shows on the
+// orange AND on the dark hearth.
 //
 // Broody geometry these drawings are fitted to (bird units):
-//   body    front edge x≈66–68 at y 40–50, underside y≈64 at x 50
+//   body    front edge x≈66–68 at y 40–50, underside y≈64 at x 50; back
+//           edge x 14 at y 49..57
 //   neck    painted OVER every Top: its lower edge runs (45,33)→(60,40),
 //           so on a drawn head the top 3–5 units of a chest item tuck under it
 //   wing    x 27–48, y 34–51; front edge (47,37)→(44,47)→(39,50). A Top is
 //           painted over the wing, so the chest items hug that edge instead
 //           of covering the Sleeve
-//   tail    two plumes, tips (0,42) and (2,31); the body hides x > ~16
+//   tail    two thin hooked plumes. Upper: tip (2,31), y 39..43 at x 10.
+//           Lower: tip (0,42), hangs to y 53.4 at x 8. The body hides x > ~15
 
 export const GENRES = ["country"];
 
@@ -106,9 +114,6 @@ const wingBottom = (x) => {
   const near = WING_LOW.filter(([px]) => Math.abs(px - x) < 0.35);
   return near.length ? Math.max(...near.map(([, py]) => py)) : null;
 };
-// The harness's trailing-edge line: from the pivot (47,35) to the wing's back tip.
-const BACK_TIP = WING_LOW.reduce((a, b) => (b[0] < a[0] ? b : a));
-const trailLineY = (x) => 35 + ((BACK_TIP[1] - 35) * (x - 47)) / (BACK_TIP[0] - 47);
 
 // ================================================================= TOP ===
 
@@ -150,13 +155,28 @@ const bandanaBib = (ctx) => {
 // (45,33)→(60,40), and a band any higher hides under it.
 const yokeTop = (ctx) => Math.max(ctx.head.shoulders, 36);
 
+// The piped yoke's lower edge: level at y 44, one shallow dip to (57,48.5)
+// across a wide base (50.2..63.6), so it is a shirt yoke and not a bandana point.
+const YOKE_LOW = 44;
+const YOKE_DIP = [57, 48.5];
+const YOKE_BASE = [50.2, 63.6];
+
 const yokeDip = (ctx) => {
   const y0 = yokeTop(ctx);
-  // One solid band, no piping: a straight lower edge at y 43 and one deep dip
-  // to a point at (57,50). It starts clear of the wing's front edge, so an
-  // ink Sleeve keeps an orange gap; the white style is for an ink-sleeve Look.
-  const band = `M 50.6 ${y0} ${frontEdge(y0, 43)} L 63 43 L 57 50 L 51 43 L 50.6 43 Z`;
-  return `<path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${band}"/>`;
+  const [dx, dy] = YOKE_DIP;
+  const [b0, b1] = YOKE_BASE;
+  const band = `M ${b0} ${y0} ${frontEdge(y0, YOKE_LOW)} L ${b1} ${YOKE_LOW} L ${dx} ${dy} L ${b0} ${YOKE_LOW} Z`;
+  // The western cue is the piping: ONE continuous contrasting line inset
+  // along the lower edge and down into the dip, white on the ink yoke and ink
+  // on the white one.
+  const up = 2.5;
+  const py = YOKE_LOW - up;
+  const piping =
+    `M ${frontX(py, 1.6)} ${f1(py)} L ${b1 - 0.6} ${f1(py)} L ${dx} ${f1(dy - up - 0.6)}` +
+    ` L ${b0 + 1.4} ${f1(py)}`;
+  const line = ctx.style === "ink" ? WHITE : INK;
+  return `<path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${band}"/>
+    <path fill="none" stroke="${line}" stroke-width="2" stroke-linejoin="round" stroke-linecap="butt" d="${piping}"/>`;
 };
 
 const yokeBolo = (ctx) => {
@@ -188,19 +208,27 @@ const buckleStar = (ctx) => {
 };
 
 const buckleLonghorn = (ctx) => {
-  // A longhorn steer buckle: a horn bar sweeping up to two sharp tips, and a
-  // steer's face tapering down from it. One merged white shape with one ink
-  // outline on the belt stub; no eyes, no marks inside it.
-  const horns =
-    "M 43.2 45.6 Q 44.2 52.4 50.4 52.6 L 59.6 52.6 Q 65.8 52.4 66.8 45.6" +
-    " Q 66.6 55.4 60 55.6 L 50 55.6 Q 43.4 55.4 43.2 45.6 Z";
-  const face = "M 51.4 53 L 58.6 53 L 56.8 62 Q 55 62.8 53.2 62 Z";
-  return `${beltStub()}${merged(`${horns} ${face}`, ctx.styleFill, 3)}`;
+  // A longhorn steer buckle, about 22 wide and 12 tall: a short bar on the
+  // belt, two THIN horns sweeping out and up off its ends to sharp tips at
+  // (44,46.5) and (66.4,46.5), open hooks with orange inside their curve (a
+  // thick white U read as underpants), and a short wedge of face under the
+  // bar. One merged white shape with one ink outline; no eyes, no marks.
+  const c = 55.2;
+  const horn = (s) => {
+    const X = (x) => f1(c + s * (x - c));
+    return (
+      `M ${X(50.4)} 55.2 C ${X(46)} 55.2 ${X(44.2)} 51.8 ${X(44)} 46.5` +
+      ` C ${X(45.4)} 50.4 ${X(47.2)} 52.6 ${X(50.4)} 52.6 Z`
+    );
+  };
+  const hornBar = rect(49.6, 52.6, 60.8, 55.2);
+  const face = "M 51.9 54.6 L 58.5 54.6 L 56.6 58.5 L 53.8 58.5 Z";
+  return `${beltStub()}${merged(`${horn(1)} ${horn(-1)} ${hornBar} ${face}`, ctx.styleFill, 2.8)}`;
 };
 
 // -------------------------------------------------------- fringed vest --
-// Fringe strands are square-ended, 1.4 wide with 1.2 gaps: a pointed tongue in
-// a row reads as teeth at 76px.
+// Fringe strands are square-ended with gaps: a pointed tongue in a row reads
+// as teeth at 76px.
 
 const vestHem = (ctx) => {
   const s = ctx.head.shoulders;
@@ -216,63 +244,56 @@ const vestHem = (ctx) => {
   return `<path fill="${ctx.styleFill}" d="${left} ${right} ${strands}"/>`;
 };
 
-const vestSide = (ctx) => {
+const vestVee = (ctx) => {
   const s = ctx.head.shoulders;
   const hem = 47;
-  // Two fronts to y 47 with a straight orange gap at x 53.6..56; the fringe
-  // hangs only off the right front's hem, five strands staggered 6/5/4/5/6
-  // long, so it reads as a side fringe and never as a's flat hem comb.
+  // Two fronts to y 47 with a straight orange gap at x 53.6..56. The fringe
+  // hangs only off the LEFT front's hem, next to the wing, where it shows on
+  // the orange: four strands 1.8 wide with 1.2 gaps, long at the ends and
+  // short in the middle (7/4/4/7), so the fringe dips in a V — never a's
+  // flat comb. The right front is bare.
   const left = `M 48.5 ${s} L 53.6 ${s} L 53.6 ${hem} L 43.6 ${hem} C 46.4 44.4 47.8 41 48.5 ${s} Z`;
   const right = `M 56 ${s} ${frontEdge(s, hem, 0.6)} L 56 ${hem} Z`;
-  const lens = [6, 5, 4, 5, 6];
-  const strands = [56.2, 59, 61.8, 64.6, 67.1]
-    .map((x, i) => rect(x, hem - 0.4, x + 1.5, hem + lens[i]))
+  const lens = [7, 4, 4, 7];
+  const strands = [43.8, 46.8, 49, 51.8]
+    .map((x, i) => rect(x, hem - 0.4, x + 1.8, hem + lens[i]))
     .join(" ");
-  const c = ctx.clip(ctx.bodyPath);
-  return `${c.def}<path fill="${ctx.styleFill}" d="${left} ${right}"/>
-    <path clip-path="${c.url}" fill="${ctx.styleFill}" d="${strands}"/>`;
+  return `<path fill="${ctx.styleFill}" d="${left} ${right} ${strands}"/>`;
 };
 
 // ============================================================== SLEEVE ===
 // The broody wing's trailing edge, back tip to the front point:
 //   (27,43) (26.8,46.3) (28.6,49.6) (31,51) ·(35,48.8)· (39,50) (42.3,47.9) (45,45.2)
-// Fringe contrasts with the wing it hangs from: INK on the team wing (white
-// strands in a row read as teeth), team colour with an ink edge on the ink
-// wing. The strand fringe leaves the near-leg column, x 31..35, bare.
 
-// Strands are ink on the team wing (white bars in a row read as teeth), and
-// team colour with an ink edge on the ink wing.
-const fringeLook = (ctx) =>
-  ctx.style === "ink" ? `fill="${ctx.fill}" ${ctx.inkStroke(0.9)}` : `fill="${INK}"`;
-
-const fringeOver = (ctx, fringe) =>
-  `<path ${fringeLook(ctx)} d="${fringe}"/>
-    <path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${ctx.wingPath}"/>`;
-
-const sleeveFringeDrop = (ctx) => {
-  // Six straight strands hanging straight down, three off the back corner and
-  // three off the front edge, with the leg column between them left bare.
-  // Ragged lengths, so no two neighbours make an even comb.
-  const w = 1.5;
+const sleeveFringeTrim = (ctx) => {
+  // The plain team wing trimmed in ink: a solid ink cuff band 3 units deep
+  // along the whole trailing edge, and five bold ink strands, 2.2 wide with
+  // 1.6 gaps, hanging off it swept a little back as if the bird is moving.
+  // Ink on orange is the one contrast that holds at 76px (a's old hollow
+  // strands read as tar drips; thin ink ticks vanished).
+  const c = ctx.clip(ctx.wingPath);
+  const edge = WING_LOW.filter(([x, y]) => y >= 35 + ((45 - 35) * (x - 47)) / (26.9 - 47) - 0.5);
+  const top = edge.map(([x, y]) => `${f1(x)} ${f1(y - 3.2)}`).reverse();
+  const band = `M ${edge.map(([x, y]) => `${f1(x)} ${f1(y)}`).join(" L ")} L ${top.join(" L ")} Z`;
   const strands = [
-    [25, 7], [27.4, 6.5], [29.8, 5.5], [37, 5], [40, 6], [43, 4.5]
+    [28.2, 6.6], [31.8, 5.6], [36.6, 6.6], [40.2, 5.8], [43.6, 5.2]
   ]
     .map(([x, len]) => {
-      const edge = wingBottom(x);
-      // Off the wing, the strand must start below the harness's trailing line.
-      const top = Math.max(edge === null ? -Infinity : edge - 1.5, trailLineY(x - w / 2) + 0.3);
-      const bottom = (edge ?? top) + len;
-      return rect(x - w / 2, top, x + w / 2, bottom);
+      const root = (wingBottom(x) ?? 50) - 1.6;
+      return bar(x, root, -0.28, 1, len + 1.6, 2.2);
     })
     .join(" ");
-  return fringeOver(ctx, strands);
+  return `${c.def}<path fill="${INK}" d="${strands}"/>
+    <path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${ctx.wingPath}"/>
+    <path clip-path="${c.url}" fill="${INK}" d="${band}"/>`;
 };
 
 const sleeveFringeTabs = (ctx) => {
   // The trailing edge cut into five square tabs, 2.1 wide with 1.3 gaps,
   // hanging straight down to ONE common baseline (55 at the back, 54 at the
   // front), so their ends line up as a cut hem rather than drips. In the
-  // wing's own colour, so the fringe is part of the wing's silhouette.
+  // wing's own ink, so the fringe is part of the wing's silhouette. Ink only:
+  // the team version is a's trim.
   const w = 2.1;
   const base = (x) => 55 - (x - 28) / 14;
   const tabs = [28.2, 31.6, 35, 38.4, 41.8]
@@ -281,80 +302,85 @@ const sleeveFringeTabs = (ctx) => {
       return rect(x - w / 2, top, x + w / 2, base(x));
     })
     .join(" ");
-  const edge = ctx.style === "ink" ? "" : ctx.inkStroke(1.2);
-  return `<path fill="${ctx.styleFill}" ${edge} d="${tabs}"/>
+  return `<path fill="${ctx.styleFill}" d="${tabs}"/>
     <path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${ctx.wingPath}"/>`;
 };
 
 const sleeveSuede = (ctx) => `<path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${ctx.wingPath}"/>`;
 
-const sleeveSuedeGauntlet = (ctx) => {
-  // A suede gauntlet: a tan suede cuff band across the ink wing, and a small
-  // flared cuff point hugging its back-bottom corner.
-  const cuff = "M 27.2 45 C 26.3 48 25.7 50.4 25 52.5 C 27.6 52.2 30.4 51.6 33 50.4 Z";
-  const seam = "M 27.6 44 C 26.8 47 26.3 49.4 26 51.2 C 28 51 30 50.6 31.6 50.2 L 30 48 Z";
-  // The band: 4.5 wide (3.5 of tan inside its ink edges), crossing the wing square to its long axis (pivot to
-  // back tip) about 4 units in from the back, ink edges both sides, clipped
-  // to the wing, so it reads as the cuff's top edge across the whole sleeve.
-  const [ax, ay, bx, by] = [29.4, 36, 34.6, 50.6];
-  const len = Math.hypot(bx - ax, by - ay);
-  const [ux, uy] = [(bx - ax) / len, (by - ay) / len];
-  const band = bar(ax - ux * 4, ay - uy * 4, ux, uy, len + 8, 4.5);
+const sleeveSuedeCuff = (ctx) => {
+  // A suede gauntlet: the black sleeve ends in a tan (mutedWarm) cuff at the
+  // wing's tip, the back 5 units of the wing, behind one ink seam; and the
+  // cuff's flared point breaks the silhouette below the back corner, down to
+  // (24,53.5).
   const c = ctx.clip(ctx.wingPath);
-  return `${c.def}<path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${cuff}"/>
+  const tan = ctx.colors.mutedWarm;
+  const flare = "M 28.4 46 C 27 49.6 25.6 52 24 53.5 C 27.4 53.6 30.4 52.8 33 51 Z";
+  const cuff = "M 20 30 L 32.6 30 L 31.4 56 L 20 56 Z";
+  const seam = "M 32.4 34 L 31.2 53";
+  return `${c.def}<path fill="${tan}" ${ctx.inkStroke(2)} d="${flare}"/>
     <path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${ctx.wingPath}"/>
-    <path fill="${ctx.styleFill}" d="${seam}"/>
-    <path clip-path="${c.url}" fill="${ctx.colors.mutedWarm}" ${ctx.inkStroke(1)} d="${band}"/>`;
+    <g clip-path="${c.url}"><path fill="${tan}" d="${cuff}"/>
+    <path fill="none" stroke="${INK}" stroke-width="2" d="${seam}"/></g>
+    <path fill="none" ${ctx.inkStroke(2)} d="${ctx.wingPath}"/>`;
 };
 
 // ================================================================ TAIL ===
-// Broody plumes: lower one tip (0,42), y 42..54 at x 10; upper one tip
-// (2,31), y 38..44 at x 10. Painted under the body, which hides x > ~16.
-const UPPER_PLUME = "M 24 41 C 12 47 2 43 2 31 C 7 41 16 42 25 38 Z";
-
-const tailBandanaDrape = (ctx) => {
-  // A kerchief knotted round the upper plume's root: a short wrap whose right
-  // half tucks under the body, so only a 4-unit strip shows and the plume tips
-  // stay visible beyond it; two knot tails trailing straight back off it,
-  // parallel (fanned ears made a Z with the cloth and read as a lightning
-  // bolt); and one big cloth triangle swung wide and back below (an upright
-  // point read as a fang, a band over a centred point as a down arrow).
-  // One cloth, one outline.
-  const band = "M 10 38.6 L 14.6 38.6 L 14.6 45.4 L 10 45.4 Z";
-  const tails =
-    "M 10.6 39 L 4.6 38.4 L 5.2 40.4 L 10.6 40.6 Z M 10.6 41.2 L 5.6 42.2 L 6.6 43.8 L 10.6 42.8 Z";
-  const cloth = "M 6 44.6 L 14.6 44.6 L 5.4 53.4 Z";
-  return merged(`${tails} ${band} ${cloth}`, ctx.styleFill);
-};
+// Broody plumes: lower one tip (0,42), hanging to y 53.4 at x 8; upper one
+// tip (2,31), y 39..43 at x 10. Painted under the body, which hides x > ~15.
 
 const tailBandanaHanky = (ctx) => {
-  // A kerchief tied along its top edge at the upper plume's tip and hanging
-  // under it as a pennant: a level top edge and its point straight down under
-  // the middle. The tie is a short wrap across the plume tip in the detail
-  // colour (no loose ears: with them the triangle read as a mouse cursor).
-  // White on the dark background, clear of the lower plume.
-  const cloth = "M -5 33 L 3.6 33.4 L -1 41 Z";
-  const tie = "M 1.2 31.6 L 4.4 31.6 L 4.4 34.6 L 1.2 34.6 Z";
-  return `${merged(cloth, ctx.styleFill)}
-    <path fill="${detailOn(ctx)}" ${ctx.inkStroke(1.2)} d="${tie}"/>`;
+  // A kerchief tied along the upper plume: its top edge runs along the
+  // plume's underside from (3,37) to (13.5,41.5), so it hangs off the plume
+  // instead of off the tip, and its point drops to (6,48.5) over the lower
+  // plume: a 10-unit triangle. The knot is a solid block, half tucked under
+  // the body's edge, with no loose ears (ears made it a mouse cursor).
+  const cloth = "M 2.6 36.6 L 14 41.2 L 6 48.6 Z";
+  const knot = rect(13.2, 38.2, 17, 42.2);
+  return `<path fill="${detailOn(ctx)}" ${ctx.inkStroke(1.2)} d="${knot}"/>
+    <path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${cloth}"/>`;
 };
 
-// Rope is bands, never rings: a 3.0 ink band under a 1.6 core, laid across
-// the plume and clipped to it, with orange showing between the wraps.
-const ropeBands = (ctx, centres, dir, clipD) => {
-  const c = ctx.clip(clipD);
-  const [dx, dy] = dir;
-  const n = Math.hypot(dx, dy);
-  const half = 9;
-  const under = centres.map(([x, y]) => bar(x - (dx / n) * half, y - (dy / n) * half, dx, dy, half * 2, 3)).join(" ");
-  const core = centres.map(([x, y]) => bar(x - (dx / n) * half, y - (dy / n) * half, dx, dy, half * 2, 1.6)).join(" ");
-  return `${c.def}<g clip-path="${c.url}"><path fill="${INK}" d="${under}"/><path fill="${ctx.styleFill}" d="${core}"/></g>`;
+const tailBandanaSling = (ctx) => {
+  // A big kerchief slung UNDER the tail: tied round the lower plume's bend
+  // with a knot block on the plume, the cloth hanging below it as one wide
+  // triangle swung back, point at (2,63). It sits under the plumes, so both
+  // tips stay in the silhouette; the cloth adds a new outline below them.
+  const cloth = "M 3.4 51.6 Q 9 55.4 15 53.4 L 2.2 63.2 Z";
+  const knot = rect(8.6, 50.4, 12.6, 55.6);
+  return `<path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${cloth}"/>
+    <path fill="${detailOn(ctx)}" ${ctx.inkStroke(1.2)} d="${knot}"/>`;
 };
 
-const ropeWound = (ctx) =>
-  // The upper plume wound root to tip like a rope-wrapped handle: four slanted
-  // wraps marching out along it, the lower plume left bare.
-  ropeBands(ctx, [[3.6, 33.6], [7, 37.2], [10.4, 39.8], [13.8, 41.6]], [0.55, -1], UPPER_PLUME);
+// Rope is ONE rope, never bands round a plume (stripes): an ink core on a
+// wider mutedWarm casing, so it shows on the orange plume and on the dark
+// hearth alike. The white style is a white rope on an ink casing.
+const rope = (ctx, d, core = 2.8) => {
+  const ink = ctx.style === "ink";
+  const casing = ink ? ctx.colors.mutedWarm : INK;
+  return `<path fill="none" stroke="${casing}" stroke-width="${core + 2}" stroke-linecap="round" stroke-linejoin="round" d="${d}"/>
+    <path fill="none" stroke="${ctx.styleFill}" stroke-width="${core}" stroke-linecap="round" stroke-linejoin="round" d="${d}"/>`;
+};
+/** A honda/knot block on the rope: a solid casing-edged square. */
+const ropeKnot = (ctx, x, y, w = 4, h = 4) => {
+  const casing = ctx.style === "ink" ? ctx.colors.mutedWarm : INK;
+  return `<path fill="${ctx.styleFill}" stroke="${casing}" stroke-width="1.4" stroke-linejoin="round" d="${rect(x - w / 2, y - h / 2, x + w / 2, y + h / 2)}"/>`;
+};
+
+const ropeHungLoop = (ctx) =>
+  // A lariat hung on the tail like on a saddle horn: one big teardrop loop
+  // (15 wide, 19 tall, so it is a loop and never an eye) hanging off the upper
+  // plume, the lower plume passing through it, and a knot where it hangs.
+  `${rope(ctx, "M 4.6 39 C -3.6 41.6 -4.6 55.4 3 57.2 C 10.8 59 12.4 46.4 4.6 39")}
+    ${ropeKnot(ctx, 4.6, 39.2)}`;
+
+const ropeTrailing = (ctx) =>
+  // A rope tied at the tail root with its long end trailing back between the
+  // plumes in a lazy S, past their tips, ending in a frayed tassel: a third
+  // plume of rope. The knot sits half under the body's edge.
+  `${rope(ctx, "M 15 46 C 10 44.6 7 48.4 2.6 47.4 C -1 46.6 -2.2 44.6 -5 45.2", 3)}
+    ${rope(ctx, "M -5 45.2 L -8.4 43.2 M -5 45.2 L -8.8 46 M -5 45.2 L -7.6 48.4", 1.6)}
+    ${ropeKnot(ctx, 14.6, 46, 4.4, 5)}`;
 
 // =============================================================== ITEMS ===
 
@@ -391,7 +417,7 @@ export const ITEMS = [
     variants: [
       {
         key: "a",
-        note: "One solid band, no piping: straight lower edge at y 43 and one deep dip to a point at (57,50). White style for Looks with an ink sleeve.",
+        note: "The piped yoke: a band with a level lower edge at y 44 and one shallow dip to (57,48.5) across a wide base, and one continuous contrasting piping line inset along that edge. White style (ink piping) for Looks with an ink sleeve.",
         styles: ["ink", "white"],
         whitePoints: 1,
         darkCentre: false,
@@ -411,20 +437,20 @@ export const ITEMS = [
     id: "trophy-buckle",
     slot: "top",
     name: "Trophy buckle",
-    note: "One big buckle at the belly on an ink belt stub. A motif silhouette, never a plain oval (egg, eye).",
+    note: "One big buckle at the belly on an ink belt stub. A motif silhouette, never a plain oval (egg, eye). White only: gold is 1.30:1 on the orange.",
     variants: [
       {
         key: "a",
         note: "A sheriff's star, 16 units across, on the belt. Five points: a star, never an egg.",
-        styles: ["white", "gold"],
+        styles: ["white"],
         whitePoints: 1,
         darkCentre: false,
         draw: buckleStar
       },
       {
         key: "b",
-        note: "A longhorn steer buckle: a horn bar sweeping up to two sharp tips at (43.2,45.6) and (66.8,45.6), and a tapering steer face below it, one merged white shape on the belt. A motif, not a plate.",
-        styles: ["white", "gold"],
+        note: "A longhorn steer buckle, 22 by 12: thin horns sweeping out and up off a short bar to sharp tips at (44,46.5) and (66.4,46.5), open hooks with orange inside, and a short face wedge under the bar. One merged white shape on the belt.",
+        styles: ["white"],
         whitePoints: 1,
         darkCentre: false,
         draw: buckleLonghorn
@@ -447,11 +473,11 @@ export const ITEMS = [
       },
       {
         key: "b",
-        note: "Two fronts to y 47 with a straight gap; five strands hang only off the right front's hem, staggered 6/5/4/5/6 long, so the fringe is a side tassel, not a hem comb.",
+        note: "Two fronts to y 47 with a straight gap; four strands hang only off the left (wing-side) front's hem, long-short-short-long (7/4/4/7), so the fringe dips in a V and never repeats a's flat comb.",
         styles: ["ink"],
         whitePoints: 0,
         darkCentre: false,
-        draw: vestSide
+        draw: vestVee
       }
     ]
   },
@@ -463,16 +489,16 @@ export const ITEMS = [
     variants: [
       {
         key: "a",
-        note: "Six square strands hanging down at ragged lengths, three off the back corner and three off the front edge; the leg column stays bare. Ink wing with team strands by default; ink strands on the team wing.",
-        styles: ["ink", "team"],
+        note: "The plain team wing trimmed in ink: a solid ink cuff band along the whole trailing edge and five bold ink strands (2.2 wide, 1.6 gaps) hanging off it, swept a little back. Team only: on the ink wing it is b.",
+        styles: ["team"],
         whitePoints: 0,
         darkCentre: false,
-        draw: sleeveFringeDrop
+        draw: sleeveFringeTrim
       },
       {
         key: "b",
-        note: "The trailing edge itself cut into five square tabs in the wing's colour, ends lined up on one baseline: a cut hem that is part of the wing's silhouette, not strands hung under it.",
-        styles: ["ink", "team"],
+        note: "The black wing's trailing edge itself cut into five square tabs, ends lined up on one baseline: a cut hem that is part of the wing's silhouette. Ink only (the team version is a).",
+        styles: ["ink"],
         whitePoints: 0,
         darkCentre: false,
         draw: sleeveFringeTabs
@@ -495,11 +521,11 @@ export const ITEMS = [
       },
       {
         key: "b",
-        note: "A suede gauntlet: a tan (mutedWarm) cuff band with ink edges across the ink wing, and a small cuff point hugging its back corner.",
+        note: "A suede gauntlet: the black sleeve ends in a tan (mutedWarm) cuff at the wing's tip behind one ink seam, and the cuff's flared point breaks the outline below the back corner.",
         styles: ["ink"],
         whitePoints: 0,
         darkCentre: false,
-        draw: sleeveSuedeGauntlet
+        draw: sleeveSuedeCuff
       }
     ]
   },
@@ -507,19 +533,19 @@ export const ITEMS = [
     id: "tail-bandana",
     slot: "tail",
     name: "Tail bandana",
-    note: "A bandana knotted on the tail plume, drawn as one cloth with one outline.",
+    note: "A bandana knotted on the tail, one cloth with one outline, the plume tips left in the silhouette.",
     variants: [
       {
         key: "a",
-        note: "Knotted at the root: one cloth with one outline, a short wrap (4 units show; the plume tips stay visible beyond it), two knot tails trailing straight back, and one big cloth triangle swung wide and back below.",
+        note: "Slung under the tail: knotted round the lower plume's bend, one wide cloth triangle hanging below it, swung back. It adds an outline under the plumes and covers neither tip.",
         styles: ["white", "ink"],
         whitePoints: 0,
         darkCentre: false,
-        draw: tailBandanaDrape
+        draw: tailBandanaSling
       },
       {
         key: "b",
-        note: "A kerchief tied along its top edge at the upper plume's tip, hanging under it as a pennant (level top, point straight down), tied with a short wrap across the plume tip, over the background.",
+        note: "Tied along the upper plume: a 10-unit kerchief triangle whose top edge runs along the plume's underside, point down over the lower plume, and a solid knot block half tucked under the body.",
         styles: ["white", "ink"],
         whitePoints: 0,
         darkCentre: false,
@@ -531,15 +557,23 @@ export const ITEMS = [
     id: "rope-coil",
     slot: "tail",
     name: "Rope coil",
-    note: "Rope on the tail, as bands, never rings. Critic round 2 judged the whole item unworkable (rope bands read as raccoon or zebra stripes at 76px; a coil is a light ring round a dark centre) and recommends dropping it: the lasso prop carries the rope. Only the best variant is kept.",
+    note: "Rope on the tail as ONE rope, never bands round a plume (they read as raccoon or barber stripes): an ink rope on a mutedWarm casing, so it shows on the orange and on the dark hearth.",
     variants: [
       {
         key: "a",
-        note: "The upper plume wound root to tip like a rope-wrapped handle: four slanted wraps, the lower plume bare.",
-        styles: ["white", "ink"],
+        note: "A lariat hung on the tail like on a saddle horn: one big teardrop loop, 15 by 19 (a loop, never an eye), hanging off the upper plume with the lower plume through it.",
+        styles: ["ink", "white"],
         whitePoints: 0,
         darkCentre: false,
-        draw: ropeWound
+        draw: ropeHungLoop
+      },
+      {
+        key: "b",
+        note: "Tied at the root, its long end trailing back between the plumes in a lazy S past their tips and ending in a frayed tassel: a third plume, of rope.",
+        styles: ["ink", "white"],
+        whitePoints: 0,
+        darkCentre: false,
+        draw: ropeTrailing
       }
     ]
   }

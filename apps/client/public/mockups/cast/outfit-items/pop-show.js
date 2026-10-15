@@ -1,15 +1,19 @@
 // pop · show: the Prop and Stage items of the pop rail (docs/research/bird-wardrobe.md §2.2).
 // The contract is at the top of ../outfit-harness.js.
 //
-// Where a prop can go. The sweep (the wing turned about its pivot (47,35) to
-// flap, bounce, ride and hurt) leaves a prop a disc of radius ~37.5 round the
-// pivot, below y ~48, and no further round the back than ~150° (past that it
-// rises into the head box on hurt). The body's lower-back edge already sits
-// at radius 33–35, so a prop pokes only 2–4 units past the outline at the
-// back and ~6 below the belly. The §2.1 hope of pushing props to the 10-unit
-// limit does not survive the sweep. So these props go big INSIDE that disc:
-// flat value shapes 16–20 units across over the lower body and wing, held at
-// the wing's trailing edge.
+// Where a prop can go (run 1b). A prop is only drawn in the parade, the
+// lineup and the portal, so it is swept at rest (0°) and the walk tuck (−8°)
+// strictly — out of the head box (x 36..80, y −12..37), above the floor —
+// and at the dance and Move extremes softly: behind the head is fine (the
+// prop paints under it), and it may dip 4 under the floor. That frees the
+// BAY above the back: the dark gap between the top tail feather, the body's
+// top edge (y ~25 at x 25..40) and the neck (x 45). A prop held up there is
+// on the page, not on the pink, and reads by its outline. Three limits shape
+// it: the chin (nothing above y 32 right of x 34), reach (10 past the
+// outline at rest, so no higher than y ~16 in the middle of the bay, higher
+// only near the tail tip), and the Move extremes that swing the wing over —
+// the chicken-dance clap (−138°) and the heart-point (−167°) throw a raised
+// prop down in front, so nothing reaches further than ~40 from the pivot.
 
 import { COLORS } from "../outfit-harness.js";
 
@@ -23,13 +27,6 @@ const pt = ([x, y]) => `${n2(x)} ${n2(y)}`;
 /** A closed polygon path through points. */
 const polyD = (pts) => `M ${pts.map(pt).join(" L ")} Z`;
 const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-/** A point on the cubic Bézier p0 c1 c2 p3. */
-const bez = (p0, c1, c2, p3) => (t) => {
-  const u = 1 - t;
-  const k = [u * u * u, 3 * u * u * t, 3 * u * t * t, t * t * t];
-  return [0, 1].map((i) => k[0] * p0[i] + k[1] * c1[i] + k[2] * c2[i] + k[3] * p3[i]);
-};
-
 /** A star with `points` tips, the first aimed at `aimDeg` (y down), optionally squashed. */
 const star = (cx, cy, r, { aimDeg = -90, inner = 0.5, points = 5, sx = 1, sy = 1 } = {}) => {
   const out = [];
@@ -39,6 +36,14 @@ const star = (cx, cy, r, { aimDeg = -90, inner = 0.5, points = 5, sx = 1, sy = 1
     out.push([cx + rad * Math.cos(a) * sx, cy + rad * Math.sin(a) * sy]);
   }
   return polyD(out);
+};
+
+/** The unit normal of `centre` at t (left of the direction of travel, y down). */
+const normalAt = (centre, t) => {
+  const [xa, ya] = centre(Math.max(0, t - 0.01));
+  const [xb, yb] = centre(Math.min(1, t + 0.01));
+  const len = Math.hypot(xb - xa, yb - ya) || 1;
+  return [-(yb - ya) / len, (xb - xa) / len];
 };
 
 /**
@@ -51,18 +56,13 @@ const ribbon = (centre, w, steps = 36) => {
   for (let i = 0; i <= steps; i += 1) {
     const t = i / steps;
     const [x, y] = centre(t);
-    const [xa, ya] = centre(Math.max(0, t - 0.01));
-    const [xb, yb] = centre(Math.min(1, t + 0.01));
-    const len = Math.hypot(xb - xa, yb - ya) || 1;
-    const nx = -(yb - ya) / len;
-    const ny = (xb - xa) / len;
+    const [nx, ny] = normalAt(centre, t);
     const h = w(t);
     left.push([x + nx * h, y + ny * h]);
     right.push([x - nx * h, y - ny * h]);
   }
   return polyD([...left, ...right.reverse()]);
 };
-
 
 /**
  * A cloud disc of deep round lobes: `bumps` cubic lobes between valleys at
@@ -85,12 +85,6 @@ const cloud = (cx, cy, rv, rp, bumps, rotDeg = 0) => {
   return `${d} Z`;
 };
 
-/** The other light/dark value, for detail on a base. */
-const against = (style) => (style === "ink" ? WHITE : INK);
-
-/** A circle as a path, for clips. */
-const circleD = (cx, cy, r) => `M ${n2(cx - r)} ${n2(cy)} A ${r} ${r} 0 1 0 ${n2(cx + r)} ${n2(cy)} A ${r} ${r} 0 1 0 ${n2(cx - r)} ${n2(cy)} Z`;
-
 /**
  * An ink band across the segment p0 → p1 at t: the grip collar where a handle
  * meets its head. `reach` is how far it runs either side of the centreline.
@@ -103,6 +97,16 @@ const collar = (p0, p1, t, reach, width = 1.2) => {
   return `<path fill="none" stroke="${INK}" stroke-width="${width}" stroke-linecap="butt" d="M ${pt([x + nx * reach, y + ny * reach])} L ${pt([x - nx * reach, y - ny * reach])}"/>`;
 };
 
+/** A fat white mic handle p0 → p1, half-width w0 → w1, ink-outlined, with its grip collar at 0.85. */
+const micHandle = (p0, p1, w0, w1, fill = WHITE) => {
+  const w = (t) => w0 + (w1 - w0) * t;
+  return `<path fill="${fill}" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round" d="${ribbon((t) => lerp(p0, p1, t), w, 6)}"/>
+    ${collar(p0, p1, 0.85, w(0.85) + 0.8, 1.6)}`;
+};
+
+/** Which way p0 → p1 points, in degrees (y down): a star head aims a tip along its handle. */
+const heading = (p0, p1) => (Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) * 180) / Math.PI;
+
 // ------------------------------------------------------------------ props --
 
 const starMic = {
@@ -113,197 +117,178 @@ const starMic = {
   variants: [
     {
       key: "a",
-      note: "Star on the hip: a 17-unit star head held down-back, a fat white handle (half-width 2 rising to 2.6) running up into the wing, an ink collar where handle meets star. As big a star as the sweep allows; one tip pokes past the lower back. The handle starts at (42.3,48.4): its fat back corner at (42.5,47.5) swung to x 36.6 on hurt, into the head box.",
+      note: "NEW (fix 2, replaces the cut hip mic). Out to the crowd: the mic held out back at shoulder height, the handle running back nearly level out of the wing and a big star (r 9) aimed away from the face, out over the tail fan where its tips break the fan's outline: the sing-it-back-to-me gesture, where b sings into it and c raises it. White on the pink fan reads by value; the level handle is what makes the outline new.",
       styles: ["white", "gold"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ styleFill, inkStroke }) => {
-        const p0 = [42.3, 48.4];
-        const p1 = [35.5, 53.2];
-        const w = (t) => 2 + 0.6 * t;
-        const handle = ribbon((t) => lerp(p0, p1, t), w, 6);
-        return `<path fill="${styleFill}" ${inkStroke(1.6)} d="${handle}"/>
-          ${collar(p0, p1, 0.85, w(0.85) + 0.8, 1.6)}
-          <path fill="${styleFill}" ${inkStroke(2)} d="${star(31, 57.2, 8.4, { aimDeg: 140, inner: 0.5 })}"/>`;
+      draw: ({ styleFill }) => {
+        const p0 = [40, 42];
+        const p1 = [20.6, 33];
+        const u = heading(p0, p1);
+        const r = (u * Math.PI) / 180;
+        return `${micHandle(p0, p1, 2, 2.6, styleFill)}
+          <path fill="${styleFill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${star(p1[0] + Math.cos(r) * 8, p1[1] + Math.sin(r) * 8, 9, { aimDeg: u, inner: 0.5 })}"/>`;
       }
     },
     {
       key: "b",
-      note: "Held out to the crowd: the fat white handle runs forward-down from the wing and the star head sits out in front of the legs, tip aimed forward-down, the mic pointed at the room. A forward stick-and-star where a is a star on the hip.",
+      note: "Held up to sing (critic fix, pushed): the star lifted clear of the feet, past the belly the critic asked for, to the front of the breast just under the chin line, a tip aimed up at the beak like a mic sung into. The fat white handle runs forward from the wing. Half the star sits past the breast on the dark page; nothing goes right of x 64 above y 40 or into the head box.",
       styles: ["white", "gold"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ styleFill, inkStroke }) => {
-        const p0 = [42.5, 49];
-        const p1 = [48.5, 56];
-        const w = (t) => 1.8 + 0.6 * t;
-        const handle = ribbon((t) => lerp(p0, p1, t), w, 6);
-        return `<path fill="${styleFill}" ${inkStroke(1.6)} d="${handle}"/>
-          ${collar(p0, p1, 0.85, w(0.85) + 0.8, 1.6)}
-          <path fill="${styleFill}" ${inkStroke(2)} d="${star(51, 61.5, 6.5, { aimDeg: 20, inner: 0.5 })}"/>`;
+      draw: ({ styleFill }) => {
+        const p0 = [44, 48.5];
+        const p1 = [56.5, 50.5];
+        return `${micHandle(p0, p1, 1.9, 2.5, styleFill)}
+          <path fill="${styleFill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${star(62.4, 48.6, 8, { aimDeg: -100, inner: 0.5 })}"/>`;
+      }
+    },
+    {
+      key: "c",
+      note: "NEW (run 1b). Held up to sing: the mic raised up and back behind the head, the star head in the bay above the back where the page is dark, a tip aimed straight up the handle. The handle rises from mid-wing past the back's top edge. Behind the neck, never in front of the face; in the heart-point the wing throws it out front at chest height, a mic pointed at the room.",
+      styles: ["white", "gold"],
+      whitePoints: 1,
+      darkCentre: false,
+      draw: ({ styleFill }) => {
+        const p0 = [36.5, 44];
+        const p1 = [29, 30.5];
+        return `${micHandle(p0, p1, 2, 2.6, styleFill)}
+          <path fill="${styleFill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${star(25.4, 24.2, 8.4, { aimDeg: heading(p0, p1), inner: 0.5 })}"/>`;
       }
     }
   ]
 };
 
 /**
- * A chili's half-width along its length: a plump shoulder at the stem, a long
- * curved taper to the tip. The tip never drops under `min`: at 1.1 a 2-unit
- * hook still shows at 76; at 0.4 it dissolved into the nearest ink edge.
+ * A corded handheld mic: a white egg head at `ball` (6.8 along the handle, 6
+ * across), an ink collar band 2.4 deep and 7.5 wide where it meets the handle
+ * (painted under the head, so it never crosses it), and a white handle 14
+ * long, half-width 3.2 at the collar tapering to 1.8 at the butt, with a 1.6
+ * ink outline, running toward `toward`: an ice-cream-cone outline under the
+ * head, which is what says mic at 76. No grille stripes: stripes on a ball
+ * read as teeth. Returns the markup and the handle's butt, where the cable
+ * leaves.
  */
-const chiliWidth = (shoulder, min = 1.1) => (t) => {
-  if (t < 0.08) return shoulder * (0.75 + (0.25 * t) / 0.08);
-  if (t < 0.35) return shoulder;
-  return Math.max(min, shoulder * (1 - (t - 0.35) / 0.65) ** 0.7);
-};
-
-/**
- * A centreline that runs `path` (t 0..1) for t up to `split`, then bends on
- * through `turnDeg` over `hookLen` units: the chili's hook. Positive turns
- * clockwise on screen (y down).
- */
-const hooked = (path, hookLen, turnDeg, split = 0.86) => {
-  const end = path(1);
-  const before = path(0.995);
-  const a0 = Math.atan2(end[1] - before[1], end[0] - before[0]);
-  const turn = (turnDeg * Math.PI) / 180;
-  return (t) => {
-    if (t <= split) return path(t / split);
-    // an arc of length s from the end, its heading going a0 → a0 + turn
-    const s = ((t - split) / (1 - split)) * hookLen;
-    if (Math.abs(turn) < 1e-6) return [end[0] + s * Math.cos(a0), end[1] + s * Math.sin(a0)];
-    const rad = hookLen / turn;
-    const a = a0 + s / rad;
-    return [end[0] + rad * (Math.sin(a) - Math.sin(a0)), end[1] - rad * (Math.cos(a) - Math.cos(a0))];
+const cordedMic = (ball, toward, styleFill) => {
+  const along = 6.8;
+  const across = 6;
+  const len = Math.hypot(toward[0] - ball[0], toward[1] - ball[1]);
+  const d = [(toward[0] - ball[0]) / len, (toward[1] - ball[1]) / len];
+  const at = (s) => [ball[0] + d[0] * s, ball[1] + d[1] * s];
+  const n = (half) => [-d[1] * half, d[0] * half];
+  const quad = (s0, s1, w0, w1) => {
+    const [a, b] = [at(s0), at(s1)];
+    const [h0, h1] = [n(w0), n(w1)];
+    return polyD([
+      [a[0] + h0[0], a[1] + h0[1]],
+      [b[0] + h1[0], b[1] + h1[1]],
+      [b[0] - h1[0], b[1] - h1[1]],
+      [a[0] - h0[0], a[1] - h0[1]]
+    ]);
   };
+  const collarTop = along - 1.2;
+  const collarEnd = collarTop + 2.4;
+  const buttS = collarEnd + 14;
+  const butt = at(buttS);
+  // the egg: two half-arcs between its tips on the handle's axis, the long axis along it
+  const rot = n2((Math.atan2(d[1], d[0]) * 180) / Math.PI);
+  const [tipA, tipB] = [at(-along), at(along)];
+  const egg = `M ${pt(tipA)} A ${along} ${across} ${rot} 1 0 ${pt(tipB)} A ${along} ${across} ${rot} 1 0 ${pt(tipA)} Z`;
+  const markup = `<path fill="${styleFill}" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round" d="${quad(collarEnd - 0.4, buttS, 3.2, 1.8)}"/>
+    <path fill="${INK}" stroke="${INK}" stroke-width="0.6" stroke-linejoin="round" d="${quad(collarTop, collarEnd, 3.75, 3.75)}"/>
+    <path fill="${styleFill}" stroke="${INK}" stroke-width="2" d="${egg}"/>`;
+  return { markup, butt };
 };
 
-/**
- * A three-lobed calyx cap wrapping a chili's shoulder at the start of
- * `centre`, in a frame along the chili: u along it, v across it.
- */
-const calyx = (centre, shoulder, colour, inkStroke) => {
-  const o = centre(0);
-  const ahead = centre(0.04);
-  const len = Math.hypot(ahead[0] - o[0], ahead[1] - o[1]);
-  const d = [(ahead[0] - o[0]) / len, (ahead[1] - o[1]) / len];
-  const nrm = [-d[1], d[0]];
-  const at = (u, v) => [o[0] + u * d[0] + v * nrm[0], o[1] + u * d[1] + v * nrm[1]];
-  const half = shoulder * 0.78;
-  const lobeW = (2 * half) / 3;
-  const capPts = [at(-1.6, -half)];
-  for (let k = 0; k < 3; k += 1) {
-    for (let s = 0; s <= 10; s += 1) {
-      const a = Math.PI * (s / 10);
-      const v = -half + lobeW * k + (lobeW / 2) * (1 - Math.cos(a));
-      capPts.push(at(0.7 + 1.3 * Math.sin(a), v));
-    }
-  }
-  capPts.push(at(-1.6, half));
-  return `<path fill="${colour}" ${inkStroke(1.2)} d="${polyD(capPts)}"/>`;
-};
+/** The mic's cable: an ink cord (2.2) from the butt along a path of cubic segments. */
+const cable = (butt, segs) =>
+  `<path fill="none" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M ${pt(butt)} ${segs}"/>`;
 
-const chiliMic = {
-  id: "chili-mic",
+const cordedMicItem = {
+  id: "corded-mic",
   slot: "prop",
-  name: "Chili mic",
-  note: "\"Spice\" Girls: a handheld mic made of a chili. The chili is a free crescent over pink, never laid along the wing's ink edge, and its tip keeps 1.1 units of width so the hook survives at 76. No new colour: ink, white, and gold on trial.",
+  name: "Corded mic",
+  note: "Replaces the chili mic (the palette has no red, so a chili never read as one). A corded handheld mic: a white egg head (6.8 along the handle, 6 across), an ink collar band 2.4 deep and 7.5 wide, and a white cone handle 14 long tapering from half-width 3.2 to 1.8 with a 1.6 ink outline, so the outline is an ice-cream cone and not a lollipop (fix 2: the old 2.6 ink handle vanished at 76). No grille stripes (stripes read as teeth). A short ink cable (2.2) off the butt. White by default: an ink head dies on the ink outline.",
   variants: [
     {
       key: "a",
-      note: "NEW (replaces the cut forward chili with the grey ball). Chili head: the chili IS the mic head, held out to the crowd. A plump chili with a calyx collar on a fat white rod, hanging forward-down off the front of the belly and curling up at the tip. It hangs steep: any flatter, flap lifts its tip into the head box. The star-mic's build with a chili for the star, where b makes the chili the handle and a grille ball the head.",
-      styles: ["white", "ink"],
+      note: "Sung into, cable swinging (fix 2): the egg head at the front of the breast, half off the body on the dark page, the white cone handle back into the front of the wing, and the cable off the butt in one loop about 10 across in front of the knee, ending there (no trail to the floor).",
+      styles: ["white", "gold"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ styleFill, style, inkStroke }) => {
-        const p0 = [42.5, 49];
-        const p1 = [46.2, 53.2];
-        const w = (t) => 1.6 + 0.4 * t;
-        const handle = ribbon((t) => lerp(p0, p1, t), w, 6);
-        const centre = hooked(bez([46.2, 54], [48.6, 57.4], [51.6, 60], [51.8, 64.4]), 3, -120, 0.82);
-        const body = ribbon(centre, chiliWidth(3.6), 48);
-        return `<path fill="${WHITE}" ${inkStroke(1.6)} d="${handle}"/>
-          <path fill="${styleFill}" ${inkStroke(2)} d="${body}"/>
-          ${calyx(centre, 3.6, against(style), inkStroke)}`;
+      draw: ({ styleFill }) => {
+        const { markup, butt } = cordedMic([63, 47.5], [44, 54], styleFill);
+        return `${cable(butt, "C 46 66 56 66 56 60 C 56 55 48 56 47 61")}
+          ${markup}`;
       }
     },
     {
       key: "b",
-      note: "Chili handle: an ink mesh ball (two parallel white grille arcs, so it reads as a mic head, not a wheel) at the rear hip, and the white chili swooping from it forward along the lower belly, kept up off the belly's outline, to a 3-unit hook that curls back at the front. The mic reads first, the chili second.",
+      note: "Raised to sing (fix 2): the mic held up and back like star-mic c, the egg head in the dark bay above the back and 8+ units of white cone handle showing against the page before it enters the wing; the cable hangs from the butt in one loose U across the wing, dropping under 10 and ending on the body, never below y 60.",
       styles: ["white", "gold"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ styleFill, inkStroke, clip }) => {
-        const centre = hooked(bez([31.5, 57.6], [37, 61.4], [45, 61.8], [49, 56.6]), 4.2, -150, 0.78);
-        const body = ribbon(centre, chiliWidth(4.4, 1.5), 64);
-        const [gx, gy, gr] = [27.6, 59.6, 4.6];
-        const g = clip(circleD(gx, gy, gr));
-        // two parallel latitude arcs: a grille. Crossing arcs made an X that read as a wheel hub.
-        const mesh = `M ${n2(gx - gr)} ${n2(gy - 1.8)} Q ${n2(gx)} ${n2(gy - 0.2)} ${n2(gx + gr)} ${n2(gy - 1.8)} M ${n2(gx - gr)} ${n2(gy + 1.2)} Q ${n2(gx)} ${n2(gy + 2.8)} ${n2(gx + gr)} ${n2(gy + 1.2)}`;
-        return `<path fill="${styleFill}" ${inkStroke(2)} d="${body}"/>
-          ${calyx(centre, 4.4, INK, inkStroke)}
-          ${g.def}<circle fill="${INK}" cx="${gx}" cy="${gy}" r="${gr}"/>
-          <path fill="none" stroke="${WHITE}" stroke-width="0.9" clip-path="${g.url}" d="${mesh}"/>
-          <circle fill="none" ${inkStroke(2)} cx="${gx}" cy="${gy}" r="${gr}"/>`;
+      draw: ({ styleFill }) => {
+        const { markup, butt } = cordedMic([25.4, 24.6], [36.6, 44], styleFill);
+        return `${cable(butt, "C 40 54 30 56 30 50")}
+          ${markup}`;
       }
     }
   ]
 };
 
-/**
- * The pom's handle: a solid ink stick from inside the wing down into the pom,
- * painted under it so its top shows above. It starts on the wing's pink, not
- * on its scalloped edge: from (41.5,49) it lay along that edge and vanished.
- */
-const POM_HANDLE = `<path fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round" d="M 40.6 46.8 L 36.6 54.5"/>`;
+/** `hex` at 0.7 over the ink page, solid: the far side's dimming (the far leg's 0.7) without seeing through. */
+const dimmed = (hex) => {
+  const mix = (i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * 0.7 + parseInt(INK.slice(i, i + 2), 16) * 0.3);
+  return `#${[1, 3, 5].map((i) => mix(i).toString(16).padStart(2, "0")).join("")}`;
+};
+
+/** An ink stick from p0 to p1: the pom's handle, painted under the pom so its top shows. */
+const stick = (p0, p1) => `<path fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round" d="M ${pt(p0)} L ${pt(p1)}"/>`;
+
+/** A white cloud pom, its outline painted under the fill so the lobe roots stay white. */
+const cloudPom = (styleFill, cx, cy, rot = -6) =>
+  `<path fill="${styleFill}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke" d="${cloud(cx, cy, 5.6, 8.5, 13, rot)}"/>`;
 
 const pomPom = {
   id: "pom-pom",
   slot: "prop",
   name: "Pom-pom",
-  note: "Sporty's cheer pom-pom: a big fluffy white outline, never a ring and never a dark centre. Held over the near thigh at the belly line on a solid ink stick, so it is in the hand, not a cottontail on the rump. No team style: pink on the pink body is 1.00:1.",
+  note: "Sporty's cheer pom-pom: a big fluffy white outline, thirteen deep round lobes each wider at its top than its root, never a ring and never a dark centre, on a solid ink stick, so it is in the hand, not a cottontail on the rump. No strand ticks (a snowflake) and no inner curls (a smiley face). No team style: pink on the pink body is 1.00:1.",
   variants: [
     {
       key: "a",
-      note: "Cloud: thirteen deep round lobes, each wider at its top than its root, 17 units across, over the near thigh, on a solid ink stick from the wing. No strand ticks (they made a snowflake) and no inner curls (three made a smiley face): the lobed outline alone. The outline is painted under the fill, so the thin lobe roots stay white and only notch the valleys.",
+      note: "NEW (fix 2, replaces the cut thigh pom). High V, a pom in each wing: the near pom punched out front at breast height as in b, and the far wing's pom thrown up behind the back, peeking over it in the bay: the bird's body hides its lower half and its stick (it is clipped to outside the body outline) and it is painted 0.7 over the page like the far leg, solid so the tail does not show through, so it reads as behind. Two poms in a V is the cheer pose itself, where b and c each throw one.",
       styles: ["white", "gold"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ styleFill }) => {
-        const cx = 34;
-        const cy = 60;
-        return `${POM_HANDLE}
-          <path fill="${styleFill}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke" d="${cloud(cx, cy, 5.6, 8.5, 13, -6)}"/>`;
+      draw: ({ styleFill, uid, shapes }) => {
+        const id = uid("pfar");
+        // outside the body: a big box with the body cut out of it, even-odd
+        const behind = `<clipPath id="${id}"><path fill-rule="evenodd" clip-rule="evenodd" d="M -20 -30 H 100 V 100 H -20 Z ${shapes.body}"/></clipPath>`;
+        return `<defs>${behind}</defs><g clip-path="url(#${id})">${stick([38, 40], [30, 30])}
+          ${cloudPom(dimmed(styleFill), 25, 26.8, 8)}</g>
+          ${stick([45, 48], [57.6, 50.3])}
+          ${cloudPom(styleFill, 64.4, 49.8, 10)}`;
       }
     },
     {
       key: "b",
-      note: "Mop: the plastic-strip cheer pom, twenty separate blunt strands of two lengths (9 and 7.4), each gently curled and jittered so it is shaggy and never a starburst, over the near thigh on a solid ink stick whose top shows above the mop. All strands are one path with its outline painted under the fill, so the outline only rings the mop's edge.",
+      note: "Punched out front (fix 2): the cloud pom thrust forward at breast height on its ink stick, half on the dark page in front of the breast, its top at y 41 (below the face line) and well clear of the feet and trainers. The cheer punched at the crowd.",
       styles: ["white", "gold"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ styleFill }) => {
-        const c = [34, 60.5];
-        const n = 20;
-        const jitter = [6, -4, 2, -6, 4, -2, 5, -5, 1, -3];
-        const strands = [];
-        for (let k = 0; k < n; k += 1) {
-          const a = (((k * 360) / n - 80 + jitter[k % jitter.length]) * Math.PI) / 180;
-          const r = k % 2 === 0 ? 9 : 7.4;
-          const dir = [Math.cos(a), Math.sin(a)];
-          const side = [-dir[1], dir[0]];
-          const bend = (k % 3 === 0 ? 1.3 : k % 3 === 1 ? -1 : 0.6) * (r / 9);
-          // a strand from the core out to r, its tip 0.9 from straight: a curl, not a spike
-          const centre = (t) => {
-            const d = 1 + (r - 1.6) * t;
-            const off = bend * t * t;
-            return [c[0] + dir[0] * d + side[0] * off, c[1] + dir[1] * d + side[1] * off];
-          };
-          strands.push(ribbon(centre, (t) => 0.95 + 0.25 * t, 8));
-        }
-        return `${POM_HANDLE}
-          <path fill="${styleFill}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke" d="${strands.join(" ")} ${circleD(c[0], c[1], 3.4)}"/>`;
-      }
+      draw: ({ styleFill }) => `${stick([45, 48], [57.6, 50.3])}
+          ${cloudPom(styleFill, 64.4, 49.8, 10)}`
+    },
+    {
+      key: "c",
+      note: "NEW (run 1b). Shaken high: the cloud pom thrown up and back behind the head on its ink stick, in the bay above the back, half on the dark page. The cheer at the top of the shake, where a and b hold it low.",
+      styles: ["white", "gold"],
+      whitePoints: 1,
+      darkCentre: false,
+      draw: ({ styleFill }) => `${stick([37.6, 45], [29, 31])}
+          ${cloudPom(styleFill, 23.4, 26.2, 4)}`
     }
   ]
 };
@@ -312,10 +297,12 @@ const pomPom = {
  * A Union Jack in pink, white and ink on the parallelogram whose top edge
  * runs tl → tr and whose drop is `down`. `field` is the base, `cross` the
  * saltire and cross, `centre` (optional) a thinner line down the cross, so no
- * blue or red comes in. See `jackColours` for the two palettes.
- * Band widths are in bird units, so the thinnest stripe stays 2.
+ * blue or red comes in. `hem` (optional) is an inset band just inside the ink
+ * outline, so an ink flag keeps a light rim on an ink dress or the dark page.
+ * See `jackColours` for the two palettes. Band widths are in bird units, so
+ * the thinnest stripe stays 2.
  */
-const unionJack = ({ tl, tr, down, field, cross, centre, inkStroke, clip }) => {
+const unionJack = ({ tl, tr, down, field, cross, centre, hem, clip, crossW = 3.4, hemW = 2.8 }) => {
   const at = (u, v) => [tl[0] + u * (tr[0] - tl[0]) + v * down[0], tl[1] + u * (tr[1] - tl[1]) + v * down[1]];
   const outline = polyD([at(0, 0), at(1, 0), at(1, 1), at(0, 1)]);
   const c = clip(outline);
@@ -338,59 +325,117 @@ const unionJack = ({ tl, tr, down, field, cross, centre, inkStroke, clip }) => {
     ]);
   };
   const saltire = `${band(0, 0, 1, 1, 2)} ${band(0, 1, 1, 0, 2)}`;
-  const crossD = `${band(0, 0.5, 1, 0.5, 3.6)} ${band(0.5, 0, 0.5, 1, 3.6)}`;
+  const crossD = `${band(0, 0.5, 1, 0.5, crossW)} ${band(0.5, 0, 0.5, 1, crossW)}`;
   const centreD = `${band(0, 0.5, 1, 0.5, 2)} ${band(0.5, 0, 0.5, 1, 2)}`;
+  // the hem: a white stroke clipped to the flag shows (hemW − 2) / 2 inside the
+  // 2-unit ink outline. Painted under the crosses, so they run through it to
+  // the edge. Thin (2.8) by default, so the ink field triangles stay big and
+  // never read as a white flag with black teeth.
+  const hemD = hem ? `<path fill="none" stroke="${hem}" stroke-width="${hemW}" stroke-linejoin="miter" d="${outline}"/>` : "";
   return `${c.def}<path fill="${field}" d="${outline}"/>
-    <g clip-path="${c.url}"><path fill="${cross}" d="${saltire}"/><path fill="${cross}" d="${crossD}"/>${centre ? `<path fill="${centre}" d="${centreD}"/>` : ""}</g>
-    <path fill="none" ${inkStroke(2)} d="${outline}"/>`;
+    <g clip-path="${c.url}">${hemD}<path fill="${cross}" d="${saltire}"/><path fill="${cross}" d="${crossD}"/>${centre ? `<path fill="${centre}" d="${centreD}"/>` : ""}</g>
+    <path fill="none" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${outline}"/>`;
 };
 
+/**
+ * The flag's palette per style. Ink (the default) is the dark flag: white
+ * crosses, a pink centre line and a white inset hem, so it reads instantly as
+ * a Union Jack and keeps a light rim on the ink Union Jack dress. White is a
+ * white field with team-pink crosses, like the real flag's red on white.
+ */
+const jackColours = (style, styleFill, fill, { centre = true } = {}) =>
+  style === "ink"
+    ? { field: styleFill, cross: WHITE, centre: centre ? fill : null, hem: WHITE }
+    : { field: styleFill, cross: fill, centre: null, hem: null };
 
 /**
- * The flag's palette per style. White reads like the real flag's red-on-white
- * crosses: a white field with team-pink crosses (3.53:1), apart from the ink
- * Union Jack dress. Ink is the dark flag: white crosses, a pink centre line.
+ * A Union Jack streaming in the wind: the flag's centreline `path(t)`
+ * (t 0 at the hoist, 1 at the fly) and half-height `h`. The outline and the
+ * horizontal arm of the cross are ribbons round the centreline, the saltire's
+ * two arms run corner to corner along it, and the vertical arm crosses at
+ * mid-fly, so the whole pattern rides the wave. Same palettes as `unionJack`.
  */
-const jackColours = (style, styleFill, fill) =>
-  style === "ink" ? { field: styleFill, cross: WHITE, centre: fill } : { field: styleFill, cross: fill, centre: null };
+const wavyJack = ({ path, h, field, cross, centre: mid, hem, clip, crossW = 3.4, hemW = 2.8 }) => {
+  const off = (k) => (t) => {
+    const [x, y] = path(t);
+    const [nx, ny] = normalAt(path, t);
+    return [x + nx * k(t), y + ny * k(t)];
+  };
+  const outline = ribbon(path, () => h);
+  const c = clip(outline);
+  // the arms run past the flag's ends, so the clip cuts them clean at the edge
+  const long = (t) => path(Math.min(1, Math.max(0, t)));
+  const ext = (f) => (t) => f(-0.15 + t * 1.3);
+  const diagA = ribbon(ext(off((t) => h * (1 - 2 * t))), () => 1);
+  const diagB = ribbon(ext(off((t) => -h * (1 - 2 * t))), () => 1);
+  const armH = (w) => ribbon(ext(long), () => w / 2);
+  const [mx, my] = path(0.5);
+  const [nx, ny] = normalAt(path, 0.5);
+  const armV = (w) => {
+    const [tx, ty] = [ny, -nx];
+    const a = [mx + nx * (h + 4), my + ny * (h + 4)];
+    const b = [mx - nx * (h + 4), my - ny * (h + 4)];
+    return polyD([
+      [a[0] + (tx * w) / 2, a[1] + (ty * w) / 2],
+      [b[0] + (tx * w) / 2, b[1] + (ty * w) / 2],
+      [b[0] - (tx * w) / 2, b[1] - (ty * w) / 2],
+      [a[0] - (tx * w) / 2, a[1] - (ty * w) / 2]
+    ]);
+  };
+  const hemD = hem ? `<path fill="none" stroke="${hem}" stroke-width="${hemW}" stroke-linejoin="round" d="${outline}"/>` : "";
+  return `${c.def}<path fill="${field}" d="${outline}"/>
+    <g clip-path="${c.url}">${hemD}<path fill="${cross}" d="${diagA} ${diagB}"/><path fill="${cross}" d="${armH(crossW)} ${armV(crossW)}"/>${mid ? `<path fill="${mid}" d="${armH(2)} ${armV(2)}"/>` : ""}</g>
+    <path fill="none" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${outline}"/>`;
+};
+
+/** The flag's solid ink pole. */
+const pole = (p0, p1) => `<path fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" d="M ${pt(p0)} L ${pt(p1)}"/>`;
 
 const unionJackFlag = {
   id: "union-jack-flag",
   slot: "prop",
   name: "Union Jack flag",
-  note: "Ginger's flag on a stick, in pink, white and ink: the cross reads by its geometry. White by default, with team-pink crosses like the real flag's red on white, so it parts from the ink Union Jack dress. The Ginger Look should wear b: a's flag lies over the hip and reads as dress print next to the dress's own Union Jack.",
+  note: "Ginger's flag on a stick, in pink, white and ink: the cross reads by its geometry. Ink by default (white saltire and cross, pink centre line) with a white inset hem, so it reads at once as a Union Jack and keeps a light rim against the ink Union Jack dress. White, with pink crosses, as the second style.",
   variants: [
     {
       key: "a",
-      note: "Flown back: a solid ink pole (2.6) runs from the wing down-back past the hip, its butt poking 3.8 units past the flag; the flag, 22 by 10, droops off it, its drop sheared a little forward over the lower back.",
-      styles: ["white", "ink"],
+      note: "NEW (replaces the cut hip flag). Waved at the crowd: a short upright pole held at the front of the wing, beside the breast, and the flag flying forward off its top, half past the breast on the dark page, under the chin line and right of the wing. A crowd flag waved at chest height, where b trails low behind and c flies high behind the head.",
+      styles: ["ink", "white"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ styleFill, style, fill, inkStroke, clip }) => {
-        const p0 = [44, 49.2];
-        const p1 = [17, 59.9];
-        const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
-        const along = (s) => lerp(p0, p1, s);
-        const back = (len - 5) / len;
-        const front = (len - 5 - 22) / len;
-        // the butt stops 1.2 short of the line: further out, flap swings it through the floor
-        const butt = along((len - 1.2) / len);
-        return `${unionJack({ tl: along(back), tr: along(front), down: [5, 8.4], ...jackColours(style, styleFill, fill), inkStroke, clip })}
-          <path fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" d="M ${pt(p0)} L ${pt(butt)}"/>`;
-      }
+      draw: ({ styleFill, style, fill, clip }) =>
+        `${unionJack({ tl: [52.4, 41], tr: [69, 42.2], down: [-0.3, 10.2], ...jackColours(style, styleFill, fill), clip })}
+          ${pole([52.6, 40.2], [50.6, 60])}`
     },
     {
       key: "b",
-      note: "Waved upright: a near-upright stick from the front of the wing, the flag flying straight back off its top, 19 by 10. The stick stops just below the flag, before the shins, so it never reads as a third leg. A parade flag held at the side.",
-      styles: ["white", "ink"],
+      note: "NEW (fix 2, replaces the cut tail banner). Trailed: a short pole held level out of the back of the wing at hip height and the flag streaming straight back off its end, in the wind of a strut, on the dark page under the tail fan and behind the rump, never on the tail. White by default (pink crosses on white), so it reads by value on the page. Low and behind where a flies at the breast and c flies high.",
+      styles: ["ink", "white"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ styleFill, style, fill, inkStroke, clip }) => {
-        const p0 = [43.8, 46.6];
-        const p1 = [44.9, 64.5];
-        return `<path fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" d="M ${pt(p0)} L ${pt(p1)}"/>
-          ${unionJack({ tl: [25.6, 52.2], tr: [44.2, 50.6], down: [0.4, 10], ...jackColours(style, styleFill, fill), inkStroke, clip })}`;
+      draw: ({ styleFill, style, fill, clip }) => {
+        const p0 = [40, 42];
+        const p1 = [23.4, 32.6];
+        const len = 22;
+        const u = [(p1[0] - p0[0]) / Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), (p1[1] - p0[1]) / Math.hypot(p1[0] - p0[0], p1[1] - p0[1])];
+        // straight back along the pole, one full wave across it
+        const centre = (t) => {
+          const w = Math.sin(t * Math.PI * 2) * 2.2 * t;
+          return [p1[0] + u[0] * len * t - u[1] * w, p1[1] + u[1] * len * t + u[0] * w];
+        };
+        return `${pole(p0, p1)}
+          ${wavyJack({ path: centre, h: 5.6, ...jackColours(style, styleFill, fill), clip })}`;
       }
+    },
+    {
+      key: "c",
+      note: "Waved high (run 1b; hem thinned to 2.8 and cross to 3.4 in the polish, so the ink triangles grow): the pole raised up and back from the wing, the flag flying back off its top over the bay and the top tail feather, its fly end lifted toward the tail tip. In ink its white hem draws its outline on the dark page; it never comes near the face.",
+      styles: ["ink", "white"],
+      whitePoints: 1,
+      darkCentre: false,
+      draw: ({ styleFill, style, fill, clip }) =>
+        `${pole([36, 45.5], [30.2, 18.2])}
+          ${unionJack({ tl: [30.2, 19], tr: [12.4, 15], down: [0.9, 10.4], ...jackColours(style, styleFill, fill), clip })}`
     }
   ]
 };
@@ -408,46 +453,53 @@ const ledStarRiser = {
   variants: [
     {
       key: "a",
-      note: "Drum: a lit white top under the feet, a team-pink drum side, and one big star on the drum's front right, under the breast where no foot covers it, breaking the drum's top edge.",
+      note: "Podium (fix 2): a narrower drum (rx 30) with a tall team-pink side, 8.4 deep at the front with a 2 ink outline, under a lit white top the feet stand on, and one big star (r 8.6) on the drum's front right, under the breast where no foot covers it, breaking the white top edge by about 5 and filling the side. A tall podium, not a plate: the top is a thin lens (ry 2.6) so the side, not the top, carries the outline. The front bottom is at 79.4.",
       styles: ["white", "gold"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ styleFill, fill, inkStroke }) =>
-        `<path fill="${fill}" ${inkStroke(2)} d="M 5 70.6 L 5 75.2 A 33 4.6 0 0 0 71 75.2 L 71 70.6 Z"/>
-         <ellipse fill="${styleFill}" ${inkStroke(2)} cx="38" cy="70.6" rx="33" ry="4.6"/>
-         <path fill="${styleFill}" ${inkStroke(2)} d="${star(59, 73.6, 6.8, { inner: 0.5 })}"/>`
+      draw: ({ styleFill, fill }) => {
+        const [cx, rx, ry, top, side] = [38, 30, 2.6, 68.4, 8.4];
+        return `<path fill="${fill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="M ${cx - rx} ${top} L ${cx - rx} ${top + side} A ${rx} ${ry} 0 0 0 ${cx + rx} ${top + side} L ${cx + rx} ${top} Z"/>
+         <ellipse fill="${styleFill}" stroke="${INK}" stroke-width="2" cx="${cx}" cy="${top}" rx="${rx}" ry="${ry}"/>
+         <path fill="${styleFill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${star(58, 72.2, 8.6, { inner: 0.5 })}"/>`;
+      }
     },
     {
       key: "b",
-      note: "NEW (replaces the cut star slab). LED band: the drum inside out, a team-pink top under the feet on a lit band whose front is studded with a row of small pink LED stars, unoutlined so the row reads as lights, not a zigzag. A string of lights where a is one emblem.",
+      note: "Marquee band (critic fix): the drum inside out, a team-pink top under the feet on a tall lit band (8.4) whose front carries five big unoutlined pink stars, 8.4 across and 13 apart, centred on the band's curved front. Few and big, so they read as a marquee of lights and not a dotted cake. A string of stars where a is one emblem.",
       styles: ["white", "gold"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ styleFill, fill, inkStroke }) => {
+      draw: ({ styleFill, fill }) => {
         const cx = 38;
         const rx = 32;
-        const ry = 3.6;
-        const top = 70.2;
-        const band = 6;
-        let studs = "";
-        for (const x of [10.5, 19.5, 28.5, 38, 47.5, 56.5, 65.5]) {
-          const front = top + ry * Math.sqrt(Math.max(0, 1 - ((x - cx) / rx) ** 2));
-          studs += star(x, front + band / 2, 2.7, { inner: 0.48 }) + " ";
-        }
-        return `<path fill="${styleFill}" ${inkStroke(2)} d="M ${cx - rx} ${top} L ${cx - rx} ${top + band} A ${rx} ${ry} 0 0 0 ${cx + rx} ${top + band} L ${cx + rx} ${top} Z"/>
-          <path fill="${fill}" d="${studs.trim()}"/>
-          <ellipse fill="${fill}" ${inkStroke(2)} cx="${cx}" cy="${top}" rx="${rx}" ry="${ry}"/>`;
+        const ry = 3.2;
+        const top = 68.4;
+        const band = 8.4;
+        const front = (x) => top + ry * Math.sqrt(Math.max(0, 1 - ((x - cx) / rx) ** 2));
+        const studs = [12, 25, 38, 51, 64].map((x) => star(x, front(x) + band / 2, 4.2, { inner: 0.5 })).join(" ");
+        return `<path fill="${styleFill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="M ${cx - rx} ${top} L ${cx - rx} ${top + band} A ${rx} ${ry} 0 0 0 ${cx + rx} ${top + band} L ${cx + rx} ${top} Z"/>
+          <path fill="${fill}" d="${studs}"/>
+          <ellipse fill="${fill}" stroke="${INK}" stroke-width="2" cx="${cx}" cy="${top}" rx="${rx}" ry="${ry}"/>`;
       }
     },
     {
       key: "c",
-      note: "Walk of Fame: not a riser but the Hollywood plaque, a team-pink star on a lit slab set into the floor, seen from low enough that the star still reads. The star sits forward of the foot line, two thirds of it in front of y 71, so the feet cover only its top points. The pop-star joke, flat.",
+      note: "NEW (replaces the cut Walk of Fame slab). Star posts: a low squared-off riser, white top and team-pink face, with a big lit star standing up on an ink post at each end, either side of the bird. The stars change the stage's outline: it is wider and taller than the bird's feet, a stage set and not a disc.",
       styles: ["white", "gold"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ styleFill, fill, inkStroke }) =>
-        `<path fill="${styleFill}" ${inkStroke(2)} d="M 8 63 L 68 63 L 77 79 L -1 79 Z"/>
-         <path fill="${fill}" ${inkStroke(2)} d="${star(38, 75.3, 22, { inner: 0.42, sy: 0.26, aimDeg: -90 })}"/>`
+      draw: ({ styleFill, fill }) => {
+        const top = 70;
+        const face = 76;
+        const box = `M 1 ${top} L 75 ${top} L 75 ${face} L 1 ${face} Z`;
+        const lid = `M 1 ${top} L 5.5 ${top - 2.6} L 70.5 ${top - 2.6} L 75 ${top} Z`;
+        const posts = `M 3.5 ${top - 1.4} L 3.5 63 M 72.5 ${top - 1.4} L 72.5 63`;
+        return `<path fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" d="${posts}"/>
+          <path fill="${fill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${box}"/>
+          <path fill="${styleFill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${lid}"/>
+          <path fill="${styleFill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${star(3.5, 62.2, 7, { inner: 0.48 })} ${star(72.5, 62.2, 7, { inner: 0.48 })}"/>`;
+      }
     }
   ]
 };
@@ -473,27 +525,24 @@ const spotlight = {
     },
     {
       key: "b",
-      note: "NEW (replaces the cut hard plate). Star gobo: a dimmer soft pool scattered with crisp four-point light glints round its rim, the gobo a pop show throws on the floor. Sparkle where a is plain glow.",
+      note: "Star gobo (critic fix): a soft pool with four crisp four-point glints off the feet, big pair at the ends (r 6) and an inner pair (r 5.2, 10.4 by 8.3), painted full strength with a 2-unit ink edge under the fill (a 1-unit rim shows) so they hold on the light pool. No glint under the feet. Sparkle where a is plain glow.",
       styles: ["white", "team", "gold"],
       whitePoints: 0,
       darkCentre: false,
       draw: ({ styleFill, uid }) => {
         const glints = [
-          [5, 70.6, 2.8],
-          [13.5, 75.2, 2.4],
-          [25, 77.4, 2.6],
-          [38, 77.8, 2.2],
-          [51, 77.4, 2.6],
-          [62.5, 75.2, 2.4],
-          [71, 70.6, 2.8]
+          [2, 68, 6],
+          [13, 74.5, 5.2],
+          [63, 74.5, 5.2],
+          [74, 68, 6]
         ]
-          .map(([x, y, r]) => star(x, y, r, { points: 4, inner: 0.28, sy: 0.75 }))
+          .map(([x, y, r]) => star(x, y, r, { points: 4, inner: 0.28, sy: 0.8 }))
           .join(" ");
-        return `${softPool(uid("pgobo"), styleFill, { rx: 36, ry: 6.6, peak: 0.7, mid: 0.4 })}
-          <path fill="${styleFill}" d="${glints}"/>`;
+        return `${softPool(uid("pgobo"), styleFill, { rx: 36, ry: 6.6, peak: 0.8, mid: 0.45 })}
+          <path fill="${styleFill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" paint-order="stroke" d="${glints}"/>`;
       }
     }
   ]
 };
 
-export const ITEMS = [starMic, chiliMic, pomPom, unionJackFlag, ledStarRiser, spotlight];
+export const ITEMS = [starMic, cordedMicItem, pomPom, unionJackFlag, ledStarRiser, spotlight];

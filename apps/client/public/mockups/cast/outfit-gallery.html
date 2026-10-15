@@ -44,8 +44,9 @@
         border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: .08rem .45rem; }
       .chip.gold { color: var(--gold); border-color: rgba(212,167,44,.55); }
       .chip.mod { text-transform: none; letter-spacing: .03em; opacity: .7; }
+      .chip.polish { color: #121212; background: var(--fix); border-color: var(--fix); font-weight: 700; }
       .tile .stage { margin: 0; }
-      .figs { display: flex; flex-wrap: wrap; gap: .5rem .7rem; align-items: flex-end; justify-content: center; padding: 1.3rem .5rem .45rem; }
+      .figs { display: flex; flex-wrap: wrap; gap: 1.4rem .7rem; align-items: flex-end; justify-content: center; padding: 1.3rem .5rem .45rem; }
       .figs figure { margin: 0; text-align: center; }
       .figs figcaption { font-size: .58rem; color: var(--muted); margin-top: .35rem; letter-spacing: .03em; white-space: nowrap; }
       .figs figure.alt figcaption { color: rgba(255,255,255,.7); }
@@ -137,7 +138,7 @@
     <main>
       <h1>Wardrobe · Gate 1 cut sheet</h1>
       <p class="lede">
-        <strong>What this is.</strong> Every item of the seven-slot bird wardrobe that run 1 drew (docs/bird-wardrobe-build-plan.md,
+        <strong>What this is.</strong> Every item of the seven-slot bird wardrobe that runs 1 and 1b drew (docs/bird-wardrobe-build-plan.md,
         docs/research/bird-wardrobe.md §2), one tile per variant, with the critics' last verdict on it. You keep or cut each one;
         <strong>Copy my cuts</strong> at the foot copies the whole list as plain text for you to paste back into the chat. Your
         toggles are saved in this browser.
@@ -146,13 +147,15 @@
         costume (photo) head, then <strong>130px blurred</strong>. 76px is the bird's actual size on a 1080p TV, and it is the cut line:
         if it doesn't read at 76, it doesn't ship. The blurred 130 is the parade seen from about 3 m away on a 55" TV. Any other
         styles follow at 76px on the photo head. The coloured edge and badge are the critic's verdict (<span style="color:var(--keep)">keep</span>,
-        <span style="color:var(--fix)">fix</span>, <span style="color:var(--cut)">cut</span>); the toggle starts on keep only for a critic keep.
-        A <em>fix</em> means the critic asked for a change: the tile shows the art as it is on disk now, and "why" holds the change it asked for.
-        The measured line is the slot rules (chin, hair, floor, region, prop sweep), measured on the drawn geometry.
+        <span style="color:var(--fix)">fix</span>, <span style="color:var(--cut)">cut</span>); the toggle starts on keep for a critic keep <em>and</em> a critic fix, and on cut for a critic cut.
+        A <em>fix</em> tile carries a <span class="chip polish">needs polish</span> chip: the critic asked for a change, the tile shows the art as it is on disk now,
+        and "why" holds the change it asked for. The measured line is the slot rules (chin, hair, floor, region, and for a prop its reach, the face check
+        and the sweep), measured on the drawn geometry of <em>every</em> style; a fail that only some styles have names them. Props are swept only at the
+        angles they are drawn at (rest, walk tuck, the dance extremes and the Moves), never a game pose.
         <br /><br />
         <strong>The open gold question.</strong> Gold (#d4a72c) is not a house token. A few items offer it as an optional style, never the
-        default; those tiles are marked <span class="chip gold">gold · open question</span> and show the gold style. Critics so far: on metal
-        it looks like ember, and on country it is 1.30:1 against the orange.
+        default; those tiles are marked <span class="chip gold">gold · open question</span> and show the gold style. The run notes below
+        say what the critics found.
         <br /><br />
         Below the items: the <a href="#looks" style="color:var(--primary)">Looks</a> (every slot of a kit worn at once, the density test),
         then the <a href="#moves" style="color:var(--primary)">Moves</a>, looping live at 130px from
@@ -160,6 +163,7 @@
         pages (<a href="./outfit-metal.html" style="color:var(--primary)">metal</a>, <a href="./outfit-pop.html" style="color:var(--primary)">pop</a>,
         <a href="./outfit-country.html" style="color:var(--primary)">country</a>, <a href="./outfit-disco.html" style="color:var(--primary)">disco</a>).
       </p>
+      <p class="gap-note" id="run-notes" hidden></p>
       <nav class="jump" id="jump"></nav>
       <p class="status" id="status">Rendering the wardrobe…</p>
       <div id="gallery"></div>
@@ -222,12 +226,13 @@
       const TOGGLES = [];
 
       // --------------------------------------------------------- verdicts --
-      let VERDICTS = [], LOOK_NOTES = {}, GAPS = {};
+      let VERDICTS = [], LOOK_NOTES = {}, GAPS = {}, RUN_NOTES = "";
       try {
-        ({ VERDICTS = [], LOOK_NOTES = {}, GAPS = {} } = await import(`./outfit-items/verdicts.js${bust()}`));
+        ({ VERDICTS = [], LOOK_NOTES = {}, GAPS = {}, RUN_NOTES = "" } = await import(`./outfit-items/verdicts.js${bust()}`));
       } catch (e) {
         pageErrors.push(`verdicts.js failed to load: ${e?.message ?? e}`);
       }
+      if (RUN_NOTES) { $("#run-notes").innerHTML = `<b>Run notes:</b> ${esc(RUN_NOTES)}`; $("#run-notes").hidden = false; }
       const scopeOf = (v) => (v.unit === "moves" ? "moves" : v.genre);
       const verdictOf = new Map(VERDICTS.map((v) => [`${scopeOf(v)}:${v.item}:${v.variant}`, v]));
       const usedVerdicts = new Set();
@@ -246,24 +251,36 @@
       };
 
       const measuredHtml = (entries) => {
-        // entries: [{ genre?, item result }]
+        // entries: [{ genre, r: item result }]. Every style is measured; a fail
+        // that only some styles have is tagged with them.
         const errs = entries.filter((e) => e.r?.error);
         if (errs.length) return `<span class="fail">✗ draw error${errs.length > 1 ? `s (${errs.map((e) => e.genre).join(", ")})` : ""}</span>`;
+        const multi = entries.length > 1;
         const fails = new Map(), warns = new Map();
         const titles = [];
+        const collect = (into, by, genre) => {
+          const styles = Object.keys(by);
+          for (const k of new Set(Object.values(by).flat())) {
+            const ss = styles.filter((s) => by[s].includes(k));
+            const tag = [multi ? genre : "", ss.length < styles.length ? ss.join("/") : ""].filter(Boolean).join(" ");
+            into.set(k, [...(into.get(k) ?? []), tag]);
+          }
+        };
         for (const { genre, r } of entries) {
           if (!r) continue;
-          for (const k of r.fails ?? []) fails.set(k, [...(fails.get(k) ?? []), genre]);
-          for (const k of r.warns ?? []) warns.set(k, [...(warns.get(k) ?? []), genre]);
-          for (const rule of r.rules ?? []) if (rule.level !== "ok") titles.push(`${entries.length > 1 ? `${genre}: ` : ""}${rule.text}`);
+          const def = r.styles?.[0] ?? "default";
+          collect(fails, r.failsByStyle ?? { [def]: r.fails ?? [] }, genre);
+          collect(warns, r.warnsByStyle ?? { [def]: r.warns ?? [] }, genre);
+          const byStyle = r.byStyle ?? { [def]: { rules: r.rules ?? [] } };
+          for (const [s, b] of Object.entries(byStyle))
+            for (const rule of b.rules ?? []) if (rule.level === "fail" || rule.level === "warn") titles.push(`${multi ? `${genre} ` : ""}${s}: ${rule.text}`);
         }
-        const multi = entries.length > 1;
-        const list = (m) => [...m].map(([k, gs]) => `${k}${multi ? ` (${gs.join(", ")})` : ""}`).join(", ");
-        const bits = [fails.size ? `<span class="fail">✗ ${esc(list(fails))}</span>` : `<span class="ok">✓ rules pass${multi ? " on all four" : ""}</span>`];
+        const list = (m) => [...m].map(([k, tags]) => `${k}${tags.some(Boolean) ? ` (${tags.filter(Boolean).join(", ")})` : ""}`).join(", ");
+        const bits = [fails.size ? `<span class="fail">✗ ${esc(list(fails))}</span>` : `<span class="ok">✓ every style passes${multi ? " on all four" : ""}</span>`];
         if (warns.size) bits.push(`<span class="warn">! ${esc(list(warns))}</span>`);
         const ext = entries.map((e) => e.r?.extension).filter((x) => typeof x === "number");
         if (ext.length) bits.push(`<span class="dim">ext ${Math.max(...ext).toFixed(1)}</span>`);
-        return `<span title="${esc(titles.join("\n"))}">${bits.join(" · ")}</span>`;
+        return `<span title="${esc(titles.join("\n") || "every rule passes on every style")}">${bits.join(" · ")}</span>`;
       };
 
       const toggleHtml = () => `<label class="toggle"><span class="changed">changed</span><input type="checkbox" /><span class="pill"><span class="k">keep</span><span class="c">cut</span></span></label>`;
@@ -271,7 +288,9 @@
       /** Wire a tile's toggle into the registry and saved state. */
       const register = (tile, { id, group, slot, label, critic }) => {
         const input = $(".toggle input", tile);
-        const def = critic === "keep";
+        // A fix is a keep that needs polish; only a critic cut starts on cut.
+        const def = critic === "keep" || critic === "fix";
+        if (critic === "fix" && !$(".chip.polish", tile)) $(".tile-head", tile)?.insertAdjacentHTML("beforeend", `<span class="chip polish">needs polish</span>`);
         input.checked = typeof saved[id] === "boolean" ? saved[id] : def;
         tile.dataset.verdict = critic ?? "none";
         tile.dataset.id = id;
@@ -394,7 +413,7 @@
         if (res.looksError) pageErrors.push(`looks.js failed to load: ${res.looksError.split("\n")[0]}`);
 
         const sec = sectionEl(genre, `${genre} · ${GENRE_NAME[genre]}`);
-        if (GAPS[genre]) sec.insertAdjacentHTML("beforeend", `<p class="gap-note"><b>Gaps the critics flagged:</b> ${esc(GAPS[genre])}</p>`);
+        if (GAPS[genre]) sec.insertAdjacentHTML("beforeend", `<p class="gap-note"><b>Still missing:</b> ${esc(GAPS[genre])}</p>`);
         const items = res.items.filter((r) => r.module !== "shared");
         for (const slot of SLOT_ORDER) {
           const inSlot = items.filter((r) => r.slot === slot);
@@ -456,7 +475,7 @@
 
       // The shared rail: one tile per variant, the item on all four genres.
       const sharedSec = sectionEl("shared", GENRE_NAME.shared);
-      if (GAPS.shared) sharedSec.insertAdjacentHTML("beforeend", `<p class="gap-note"><b>Gaps the critics flagged:</b> ${esc(GAPS.shared)}</p>`);
+      if (GAPS.shared) sharedSec.insertAdjacentHTML("beforeend", `<p class="gap-note"><b>Still missing:</b> ${esc(GAPS.shared)}</p>`);
       const shared = [...sharedResults.values()];
       for (const slot of SLOT_ORDER) {
         const inSlot = shared.filter((e) => e.slot === slot);
@@ -512,7 +531,7 @@
 
       // ------------------------------------------------------------ moves --
       const movesSec = sectionEl("moves", "Moves · the seventh slot");
-      movesSec.insertAdjacentHTML("beforeend", `<p class="gap-note">${GAPS.moves ? `<b>Critic:</b> ${esc(GAPS.moves)} ` : ""}Each loop is one bar (2 s at 120 bpm) at 130px, the lobby parade size, live from <a href="./outfit-moves.html" style="color:var(--primary)">outfit-moves.html</a>, where the key-frame strips and silhouettes are.</p>`);
+      movesSec.insertAdjacentHTML("beforeend", `<p class="gap-note">${GAPS.moves ? `<b>Still missing:</b> ${esc(GAPS.moves)} ` : ""}Each loop is one bar (2 s at 120 bpm) at 130px, the lobby parade size, live from <a href="./outfit-moves.html" style="color:var(--primary)">outfit-moves.html</a>, where the key-frame strips and silhouettes are.</p>`);
       gallery.append(movesSec);
       say("Loading the Moves…");
       const loadMoves = () => new Promise((resolve) => {
