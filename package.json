@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm -r --parallel --filter @wingnight/server --filter @wingnight/client dev",
+    "start": "pnpm --filter @wingnight/client build && pnpm -r --parallel --filter @wingnight/server --filter @wingnight/client start",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck && pnpm typecheck:pull-guests",
     "typecheck:pull-guests": "tsc --noEmit -p tools/pull-guests/tsconfig.json",

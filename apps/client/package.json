@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
+    "start": "vite preview --host",
     "build": "vite build",
     "preview": "vite preview",
     "dev:teaser": "vite --config vite.teaser.config.ts --port 5173 --strictPort",

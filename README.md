@@ -118,6 +118,39 @@ State: - In-memory authoritative server state - No database in MVP
 
 ------------------------------------------------------------------------
 
+# 🎉 Running a Party
+
+Same three setup steps as Development Setup below (Node 25, pnpm,
+`pnpm install`). Then, on the night, one command:
+
+pnpm start
+
+It builds the client for production, then runs the server and a static
+file server for the build side by side, the same shape as `pnpm dev`. A
+broken build stops the command before anything starts.
+
+**Run the party on `pnpm start`, not `pnpm dev`.** The dev server hands the
+TV and the tablet every `.ts` and `.tsx` module as its own request, plus
+React's development build. The build is a handful of hashed files, and each
+screen downloads only its own route and the game being played. Over party
+Wi-Fi that is the difference between "it's up" and "hang on, it's still
+loading".
+
+The client is served on port **4173** instead of 5173 (Vite picks the next
+free port if 4173 is taken, so read the `Local:` line it prints). Everything
+else is the same as dev: open http://localhost:4173 on the laptop and scan
+the host QR with the tablet, then open http://localhost:4173/display for the
+TV. The QR codes carry whatever port the page was opened on.
+
+The client finds the server on port **3000** at whatever hostname the page
+was opened from, so nothing is baked into the build. To move the server, set
+`PORT` for it and `VITE_SOCKET_SERVER_URL` in the environment of the
+`pnpm start` that builds the client.
+
+`pnpm dev` is for building the thing; `pnpm start` is for running the party.
+
+------------------------------------------------------------------------
+
 # 🚀 Development Setup
 
 1)  Use Node 25:
