@@ -263,7 +263,7 @@ never fight for the same pixels.
 | **Sleeve** | the whole near wing (fill, trailing edge, a broad band) | inside the wing drawing, everywhere the wing is drawn (posed figure, `CharacterWing`, JOUST aim wing, both ragdoll wings) | everywhere | value / outline |
 | **Tail** | an ornament *on* the genre tail: tips, streamers, a cuff | inside the `tail` part | everywhere | outline |
 | **Boots** | the shank and foot, around the existing leg | inside each leg part; sole never below y 72.75, `CHARACTER_FOOT` unchanged | everywhere; **metal, pop and disco only** | outline |
-| **Prop** | held at the wing tip, ≤10 units past the outline, pointing back or down only | inside the wing part, after the Sleeve | showpiece: portal, parade, intro lineup | outline |
+| **Prop** | held at the wing tip, ≤10 units past the outline at rest, never pointing forward at the face | inside the wing part, after the Sleeve | showpiece: portal, parade, intro lineup | outline |
 | **Stage** | a flat disc or riser under the feet, behind the legs | a new layer before `tail`, drawn by the surface's own ground | showpiece: portal, parade, intro lineup | frame |
 | **Move** | a signature flourish: a new pose or beat in the cast | `CharacterFigure` pose | showpiece: parade and intro lineup; tap the portal bird to play it | motion |
 
@@ -290,8 +290,14 @@ Why split kit from showpieces:
   load-bearing organ (silhouette round verdict), and a swap would take the genre's statement away.
 - Boots exist only on rails whose bird shows a shank. Broody shows 2.3 units, so country has no
   Boots slot and gets an extra Top instead.
-- The Prop is checked at wing −62° (flap), −26° (bounce), +75° (ride) and +95° (hurt). No point may
-  enter the head box (x 36–80, y −12..37) or drop below 72.75.
+- The Prop is checked only at the wing angles where props are drawn: the parade, the lineup and the
+  portal, never a game. At rest and idle (0°) and the walk tuck (−8°), no point may enter the head
+  box (x 36–80, y −12..37) or drop below 72.75. At the dance extremes (−26° bounce and jig, −62°
+  flap) and at each Move's wing extremes, a prop may pass *behind* the head, and may dip up to 4
+  units under the foot line. A prop paints in the wing part, which paints under the head, so it can
+  never cover a face. Ride (+75°) and hurt (+95°) are game poses, and no prop is drawn in a game.
+  (Run 1 checked all four angles strictly, which pinned every prop hanging straight down under the
+  belly. That is why its Flying V read as a paper plane.)
 
 **The density budget.** The feasibility pass found that two items on one *region* turn to mush.
 This model spreads them out, but a bird in a full kit plus a prop has four marks on 130px of bird,
@@ -536,8 +542,8 @@ export const OUTFIT_LOOKS: Partial<Record<GenreKey, readonly { id: string; outfi
   token if adopted).
 - **A property test fails** if any catalogue item lacks a drawing, or any drawing lacks a catalogue
   entry.
-- **A unit test runs the Prop sweep**: the prop's declared extent, rotated to −62°, −26°, +75° and
-  +95° about the wing pivot, stays out of the head box. That puts feasibility rule 6 in the gate,
+- **A unit test runs the Prop sweep** described in §2.1: the prop's declared extent, rotated
+  about the wing pivot to the angles where props are drawn, stays inside the allowed regions. That puts feasibility rule 6 in the gate,
   not in a note.
 
 ### 2.8 Authoring rules for every item
@@ -555,7 +561,7 @@ harness before it gets a catalogue id.
    orange as a fill.
 4. No eyes, teeth or grins. At most one white point on the chest, no light ring or disc with a dark
    centre, no white U, and no light point within about 16 units of the head centre.
-5. At most 10 units past the outline, back or down only. Run the Prop sweep.
+5. At most 10 units past the outline at rest, and never forward toward the face. Run the Prop sweep (§2.1).
 6. Kit stays inside its part: Top inside the body outline (and so inside `CHARACTER_BODY`), Sleeve
    inside the wing plus its trailing-edge fringe, Tail at the genre tail's tips.
 7. Judge at device scale 1: at 76px, at 130px blurred 1px, and in the full-kit row.
