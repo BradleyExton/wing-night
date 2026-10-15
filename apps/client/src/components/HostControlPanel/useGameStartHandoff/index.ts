@@ -1,9 +1,7 @@
 import { Phase } from "@wingnight/shared";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
-import { resolveGameStartCountdownSeconds } from "../../../utils/resolveGameStartCountdownSeconds";
-
-const COUNTDOWN_POLL_MS = 100;
+import { useGameStartCountdownSeconds } from "../../../utils/useGameStartCountdownSeconds";
 
 type UseGameStartHandoffProps = {
   phase: Phase | null;
@@ -23,24 +21,10 @@ export const useGameStartHandoff = ({
   gameStartCountdownEndsAt,
   onStartGame
 }: UseGameStartHandoffProps): number | null => {
-  const [nowTimestampMs, setNowTimestampMs] = useState(() => Date.now());
   const isCountingIn = phase === Phase.INTRO && gameStartCountdownEndsAt !== null;
-
-  useEffect(() => {
-    if (!isCountingIn) {
-      return;
-    }
-
-    setNowTimestampMs(Date.now());
-
-    const intervalId = window.setInterval(() => {
-      setNowTimestampMs(Date.now());
-    }, COUNTDOWN_POLL_MS);
-
-    return (): void => {
-      window.clearInterval(intervalId);
-    };
-  }, [isCountingIn, gameStartCountdownEndsAt]);
+  const countdownSeconds = useGameStartCountdownSeconds(
+    isCountingIn ? gameStartCountdownEndsAt : null
+  );
 
   useEffect(() => {
     if (!isCountingIn || gameStartCountdownEndsAt === null || onStartGame === undefined) {
@@ -57,9 +41,5 @@ export const useGameStartHandoff = ({
     };
   }, [isCountingIn, gameStartCountdownEndsAt, onStartGame]);
 
-  if (!isCountingIn) {
-    return null;
-  }
-
-  return resolveGameStartCountdownSeconds(gameStartCountdownEndsAt, nowTimestampMs);
+  return countdownSeconds;
 };
