@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  CONTESTANT_CONTROLLERS,
   DISPLAY_SAFE_ROOM_STATE_KEYS,
   PLAYER_SAFE_ROOM_STATE_KEYS,
   Phase,
   toDisplayRoomStateSnapshot,
+  toHostRoomStateSnapshot,
   toPlayerRoomStateSnapshot,
   toRoleScopedSnapshotEnvelope,
   type RoomState
@@ -38,7 +40,16 @@ const createRoomStateFixture = (): RoomState => {
       phoneAnswers: null,
       reveal: null
     },
-    minigameDisplayView: null,
+    minigameDisplayView: {
+      minigame: "TRIVIA",
+      activeTurnTeamId: null,
+      promptCursor: 0,
+      attemptsRemaining: 1,
+      pendingPointsByTeamId: {},
+      currentPrompt: null,
+      phoneAnswers: null,
+      reveal: null
+    },
     timer: null,
     gameStartCountdownEndsAt: null,
     musicPlayback: null,
@@ -66,6 +77,45 @@ test("toRoleScopedSnapshotEnvelope keeps host payload intact", () => {
 
   assert.equal(snapshot.clientRole, "HOST");
   assert.equal(snapshot.roomState.minigameHostView?.minigame, "TRIVIA");
+});
+
+test("toRoleScopedSnapshotEnvelope drops the display view from the host payload when no phone holds the leg", () => {
+  const roomState = createRoomStateFixture();
+
+  const snapshot = toRoleScopedSnapshotEnvelope("HOST", roomState);
+
+  // The tablet renders minigameHostView; the TV's copy of the same turn doubled what a DRAWING
+  // board cost the tablet.
+  assert.equal(snapshot.roomState.minigameDisplayView, null);
+  assert.notEqual(roomState.minigameDisplayView, null);
+});
+
+test("toRoleScopedSnapshotEnvelope keeps the display view for the host while a phone holds the leg", () => {
+  const roomState: RoomState = {
+    ...createRoomStateFixture(),
+    contestantTurn: {
+      minigame: "FAPPY",
+      deviceMode: "phones",
+      legIndex: 0,
+      contestantPlayerId: "p1",
+      nextContestantPlayerId: null,
+      controller: CONTESTANT_CONTROLLERS.PHONE,
+      tabletLegIndexes: [],
+      droppedPlayerId: null
+    }
+  };
+
+  const snapshot = toRoleScopedSnapshotEnvelope("HOST", roomState);
+
+  // The tablet mirrors the TV's picture while the phone plays (ContestantPhoneMonitor).
+  assert.equal(snapshot.roomState.minigameDisplayView, roomState.minigameDisplayView);
+});
+
+test("toHostRoomStateSnapshot keeps every room-state key", () => {
+  const roomState = createRoomStateFixture();
+  const hostSnapshot = toHostRoomStateSnapshot(roomState);
+
+  assert.deepEqual(Object.keys(hostSnapshot).sort(), Object.keys(roomState).sort());
 });
 
 test("toRoleScopedSnapshotEnvelope removes host payload for display role", () => {

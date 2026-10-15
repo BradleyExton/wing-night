@@ -498,6 +498,7 @@ export {
   GAME_START_COUNTDOWN_SECONDS,
   PLAYER_SAFE_ROOM_STATE_KEYS,
   toDisplayRoomStateSnapshot,
+  toHostRoomStateSnapshot,
   toPlayerRoomStateSnapshot,
   toRoleScopedSnapshotEnvelope
 } from "./roomState/index.js";
@@ -706,6 +707,7 @@ export {
   MINIGAME_DEVICE_MODES,
   PLAYER_MINIGAME_ACTION_REFUSAL_REASONS,
   isContestantMinigameType,
+  isContestantPhoneLeg,
   isMinigameDeviceMode,
   resolveRoundDeviceMode
 } from "./contestantTurn/index.js";

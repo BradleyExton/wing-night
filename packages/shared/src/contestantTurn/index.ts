@@ -73,6 +73,13 @@ export type ContestantTurn = {
   droppedPlayerId: string | null;
 };
 
+// A contestant's phone is the leg's one log writer while it holds it — and while it has dropped
+// it, until the host takes it back. Either way the tablet must not mount the game's runner: it
+// mirrors the TV's picture instead, which is the one time the host needs the display view.
+export const isContestantPhoneLeg = (turn: ContestantTurn | null): turn is ContestantTurn => {
+  return turn !== null && (turn.controller === CONTESTANT_CONTROLLERS.PHONE || turn.droppedPlayerId !== null);
+};
+
 // Why `player:minigameAction` said no, in the order the server asks. A phone that sees anything
 // but `rate_limited` should stop sending until the next snapshot says the leg is its own.
 export const PLAYER_MINIGAME_ACTION_REFUSAL_REASONS = {

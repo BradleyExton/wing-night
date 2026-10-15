@@ -13,7 +13,7 @@ import type {
   JoustVec2
 } from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
-import type { ContestantTurn, RoundDeviceModes } from "../contestantTurn/index.js";
+import { isContestantPhoneLeg, type ContestantTurn, type RoundDeviceModes } from "../contestantTurn/index.js";
 import type { PhoneAnswerTally } from "../phoneAnswers/index.js";
 import { projectSpectatorBets, type SpectatorBets, type SpectatorBetTally } from "../spectatorBets/index.js";
 import type { BrawlInput, BrawlOutcome } from "../brawl/types.js";
@@ -1178,6 +1178,23 @@ export const toDisplayRoomStateSnapshot = (
   return displaySnapshot;
 };
 
+// The host sees everything but two things. A pick before its turn settles: who has bet, not
+// which way. And the display view, which is the TV's copy of the turn the tablet already holds as
+// `minigameHostView` — shipping both sent a DRAWING board twice in every snapshot, so the tablet
+// paid twice the bytes the TV did. The one exception is a contestant's phone leg, where the tablet
+// mirrors the TV's picture instead of running the game (ContestantPhoneMonitor). Null rather than
+// absent: the key stays in the type, and a null view is what every host reader already handles.
+export const toHostRoomStateSnapshot = (roomState: RoomState): HostRoomStateSnapshot => {
+  return {
+    ...roomState,
+    minigameDisplayView: isContestantPhoneLeg(roomState.contestantTurn) ? roomState.minigameDisplayView : null,
+    spectatorBets:
+      roomState.spectatorBets === null
+        ? null
+        : projectSpectatorBets(roomState.spectatorBets, { showBettors: true })
+  };
+};
+
 // Built key by key from the allow-list's own fields, never by spreading the
 // room and deleting: a field added to `RoomState` stays off the phone until
 // someone writes it in here.
@@ -1226,10 +1243,7 @@ export function toRoleScopedSnapshotEnvelope(
   if (clientRole === "HOST") {
     return {
       clientRole: "HOST",
-      roomState:
-        roomState.spectatorBets === null
-          ? roomState
-          : { ...roomState, spectatorBets: projectSpectatorBets(roomState.spectatorBets, { showBettors: true }) }
+      roomState: toHostRoomStateSnapshot(roomState)
     };
   }
 

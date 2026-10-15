@@ -1,4 +1,4 @@
-import { CONTESTANT_CONTROLLERS, type ContestantTurn } from "@wingnight/shared";
+import { isContestantPhoneLeg } from "@wingnight/shared";
 
 import { resolveLegHandset } from "../../../../utils/resolveContestantHandset";
 import { ContestantPhoneMonitor } from "../../ContestantPhoneMonitor";
@@ -7,13 +7,6 @@ import { MinigameSurface } from "../../MinigameSurface";
 import { useMinigameHostContext } from "../../useMinigameHostContext";
 import { TakeoverTimerChip } from "./TakeoverTimerChip";
 import * as styles from "./styles";
-
-// A contestant's phone is the leg's one log writer while it holds it — and while it has dropped
-// it, until the host takes it back. Either way the tablet must not mount the game's runner, which
-// could act and so settle the run: it watches instead.
-const isPhoneLeg = (turn: ContestantTurn | null): turn is ContestantTurn => {
-  return turn !== null && (turn.controller === CONTESTANT_CONTROLLERS.PHONE || turn.droppedPlayerId !== null);
-};
 
 // The shell stops rendering the control deck at MINIGAME_PLAY. It does not
 // stop rendering the room's context (docs/takeover-layout-api.md §1): the
@@ -38,7 +31,7 @@ export const MinigamePlayTakeover = (): JSX.Element => {
 
   return (
     <div className={styles.container}>
-      {isPhoneLeg(contestantTurn) ? (
+      {isContestantPhoneLeg(contestantTurn) ? (
         <ContestantPhoneMonitor turn={contestantTurn} activeTeamName={activeTeamName} />
       ) : (
         <MinigameSurface
