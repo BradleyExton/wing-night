@@ -63,19 +63,6 @@ const ribbon = (centre, w, steps = 36) => {
   return polyD([...left, ...right.reverse()]);
 };
 
-/** A fluffy scalloped disc: `bumps` round lobes between valleys at radius rv, lobes peaking near rp. */
-const scallop = (cx, cy, rv, rp, bumps, rotDeg = 0) => {
-  const step = (2 * Math.PI) / bumps;
-  const rot = (rotDeg * Math.PI) / 180;
-  const at = (r, a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-  const ctrl = 2 * rp - rv * Math.cos(step / 2); // a quadratic's peak sits halfway to its control
-  let d = `M ${pt(at(rv, rot))}`;
-  for (let i = 0; i < bumps; i += 1) {
-    const a0 = rot + i * step;
-    d += ` Q ${pt(at(ctrl, a0 + step / 2))} ${pt(at(rv, a0 + step))}`;
-  }
-  return `${d} Z`;
-};
 
 /**
  * A cloud disc of deep round lobes: `bumps` cubic lobes between valleys at

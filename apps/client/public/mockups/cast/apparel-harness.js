@@ -153,7 +153,8 @@ export const legStrokePath = (pivot) => legPath(pivot);
 export const thighOutline = (pivot) => thighPath(pivot);
 /** The paths one bird is drawn from, as `birdMarkup` resolves them. */
 export const shapesFor = ({ body = "round", comb = "crest", tail = "fan", silhouette } = {}) => {
-  const { ink, ...paths } = resolveShapes({ body, comb, tail, silhouette });
+  const paths = { ...resolveShapes({ body, comb, tail, silhouette }) };
+  delete paths.ink;
   return { ...paths, neck: NECK_PATH, mitered: Boolean(silhouette && SILHOUETTE_SHAPES[silhouette].mitered) };
 };
 

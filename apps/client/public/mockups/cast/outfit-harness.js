@@ -33,7 +33,7 @@
 // 0.7 with the far leg) · near boot · sleeve (over the wing — redraw
 // ctx.wingPath to recolour it) · top (over the sleeve) · prop · then neck/head.
 
-/* global document, window, DOMPoint, CSS, Image, location, URLSearchParams, getComputedStyle */
+/* global document, window, DOMPoint, CSS, Image, location, URLSearchParams, getComputedStyle, URL */
 
 import {
   PALETTE,
@@ -716,7 +716,7 @@ const SCALE_LABEL = {
 const fig = (inner, caption, attrs = "") => `<figure ${attrs}>${inner}<figcaption>${caption}</figcaption></figure>`;
 
 /** The figures for one variant in one style at one height: drawn + the costume heads. */
-const trio = (genre, item, variant, style, h, heads, { blur = false } = {}) => {
+const trio = (genre, item, variant, style, h, heads) => {
   const outfit = { [item.slot]: { item, variant, style } };
   return [
     fig(svgOf(birdFor(genre, outfit), h), `drawn · ${style}`),
