@@ -1,4 +1,4 @@
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 
 import express from "express";
 import {
@@ -17,6 +17,7 @@ import {
   resolveContentLayerDirs,
   resolveContentRootDir
 } from "../contentLoader/contentLoaderUtils/index.js";
+import { RECREATE_ATTEMPTS_PACK_PATH } from "../minigames/recreateGeneration/recreateEditPrompt/index.js";
 import { createDevSandboxRouter } from "../routes/devSandbox/index.js";
 import { healthRouter } from "../routes/health/index.js";
 import { createHostJoinRouter } from "../routes/hostJoin/index.js";
@@ -28,6 +29,26 @@ type CreateAppOptions = {
   // The boot's host control token, the same one the socket guard checks.
   hostControlToken: string;
 };
+
+// Party content does not change while the party is running, and the room is on
+// house Wi-Fi with a tablet and a TV that mount the same heads over and over —
+// the SETUP parade alone remounts every player's avatar each time the pairs
+// rotate. Without this, `express.static` sends `max-age=0` and each of those
+// remounts is a conditional round-trip for a byte-identical file. An hour
+// covers a night's worth of rotations, and nothing here is fingerprinted, so it
+// is also the longest window we can hand out without making a between-parties
+// content edit (import:avatars, pack:pull, /admin) feel broken. If content ever
+// changes mid-party, the fix is a content hash in `resolveContentAssetSrc`, not
+// a shorter max-age.
+const PARTY_ASSET_MAX_AGE = "1h";
+
+// The forgeries RECREATE paints DURING the night are the one exception, and
+// they have to stay revalidated. The file name comes from the attempt id, which
+// restarts its sequence every turn, so a dry run before the guests arrive and
+// the real party after a reset write DIFFERENT images to the SAME file name.
+// Cached for an hour the TV would show the dry run's forgery. This is one image
+// per attempt, fetched once, so there is nothing to save by caching it.
+const LIVE_WRITTEN_ASSET_MAX_AGE = 0;
 
 const allowCrossOriginMedia: express.RequestHandler = (_request, response, next) => {
   response.setHeader("Access-Control-Allow-Origin", "*");
@@ -47,9 +68,13 @@ export const createApp = (options: CreateAppOptions): express.Express => {
   // directory) falls through to the next layer and finally to a 404. Paths are
   // absolute because the server's dev cwd is apps/server, so a cwd-relative
   // string would resolve against the wrong tree.
-  const mountPerLayer = (routePath: string, relativeDir: string): void => {
+  const mountPerLayer = (
+    routePath: string,
+    relativeDir: string,
+    maxAge: string | number = PARTY_ASSET_MAX_AGE
+  ): void => {
     for (const layerDir of layerDirs) {
-      app.use(routePath, express.static(resolve(layerDir, relativeDir)));
+      app.use(routePath, express.static(resolve(layerDir, relativeDir), { maxAge }));
     }
   };
 
@@ -114,6 +139,18 @@ export const createApp = (options: CreateAppOptions): express.Express => {
   // which 404s on the TV: there is no dev proxy here, so the display is always
   // a different origin from the server. `resolveContentAssetSrc` is the client
   // half of this route.
+  //
+  // RECREATE's forgeries live under this same route, and they are the one part
+  // of the pack written while the party runs. Their narrower path is mounted
+  // FIRST so an attempt URL never reaches the hour-long mount below; everything
+  // else falls straight through to it. Both mounts resolve an attempt to the
+  // same file on disk, so there is no gap between them.
+  mountPerLayer(
+    `${CONTENT_ASSET_ROUTE_PATH}/${RECREATE_ATTEMPTS_PACK_PATH}`,
+    join("assets", RECREATE_ATTEMPTS_PACK_PATH),
+    LIVE_WRITTEN_ASSET_MAX_AGE
+  );
+
   mountPerLayer(CONTENT_ASSET_ROUTE_PATH, "assets");
 
   mountPerLayer(TEAM_AUDIO_ROUTE_PATH, "teams/audio");
@@ -128,12 +165,16 @@ export const createApp = (options: CreateAppOptions): express.Express => {
   // — nobody's party clips belong in the repo.
   app.use(
     LOBBY_AUDIO_ROUTE_PATH,
-    express.static(resolve(contentRootDir, "local", "audio", "lobby"))
+    express.static(resolve(contentRootDir, "local", "audio", "lobby"), {
+      maxAge: PARTY_ASSET_MAX_AGE
+    })
   );
   // The bed under the wings, same convention and same reasons.
   app.use(
     EATING_AUDIO_ROUTE_PATH,
-    express.static(resolve(contentRootDir, "local", "audio", "eating"))
+    express.static(resolve(contentRootDir, "local", "audio", "eating"), {
+      maxAge: PARTY_ASSET_MAX_AGE
+    })
   );
 
   return app;
