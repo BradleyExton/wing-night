@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OUTFIT — disco</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+    <link rel="stylesheet" href="./outfit-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>OUTFIT — disco · Disco Inferno (teamB) · the <code>preener</code> silhouette</h1>
+      <p class="lede">
+        <strong>The round.</strong> Run 1 of the wardrobe build (docs/bird-wardrobe-build-plan.md):
+        every item of the seven-slot wardrobe in docs/research/bird-wardrobe.md §2.2, in two or
+        three genuinely different variants, each drawn on the shipping hen and measured against
+        the slot rules (§2.1) and the authoring rules (§2.8). Disco is the <code>preener</code> silhouette in cyan (teamB): the smallest chest, the biggest tail (two sickles to y 0) and 16 units of leg, so its flavour goes on the tail, the wing and the feet. Ink reads; white only with its outline (2.43:1). The rail is in <code>outfit-items/disco-kit.js</code> (Top, Sleeve, Tail, Boots) and <code>disco-show.js</code> (Prop, Stage), with the shared rail after them.
+        <br /><br />
+        <strong>Reading a card.</strong> Rows run 304 → 152 → 130 blurred → 76px, on the drawn head
+        and two costume heads; the 76 row is actual size on a 1080p TV and it is the row that
+        counts. Under it, the measured rules (green passes, red fails, amber is advisory) and the
+        judge strip the critic is shown. The full kit at the foot is every Look at once: the
+        density test. Add <code>?only=&lt;module or item id&gt;</code> to see one.
+      </p>
+      <div id="root"><p class="note">loading the rail…</p></div>
+    </main>
+    <script type="module">
+      import { renderOutfitPage } from "./outfit-harness.js";
+
+      renderOutfitPage({
+        genres: ["disco"],
+        modules: [
+          { name: "disco-kit", url: "./outfit-items/disco-kit.js" },
+          { name: "disco-show", url: "./outfit-items/disco-show.js" },
+          { name: "shared", url: "./outfit-items/shared.js" }
+        ],
+        looks: "./outfit-items/looks.js"
+      });
+    </script>
+  </body>
+</html>

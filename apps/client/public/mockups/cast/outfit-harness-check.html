@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OUTFIT — harness check</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+    <link rel="stylesheet" href="./outfit-harness.css" />
+  </head>
+  <body>
+    <main>
+      <h1>OUTFIT — harness check · one throwaway item per slot on all four silhouettes</h1>
+      <p class="lede">
+        <strong>Not a candidate page.</strong> These six drawings exist to prove
+        <code>outfit-harness.js</code> before anyone draws for real: every slot paints on its own
+        layer (stage behind the tail, the tail item under the body, the far boot dimmed with the
+        far leg, the near boot under the wing, the sleeve over the wing, the Top over the sleeve,
+        the prop over the Top and under the neck), and every rule is measured. Some fail on
+        purpose — the long stick prop is there to show the sweep catching a prop that drops through
+        the floor on <code>flap</code>. Country's boots card is the harness refusing a Boots item
+        on the broody bird. Add <code>?broken=1</code> to see the error cards a missing module, a
+        throwing <code>draw</code> and a malformed item get.
+      </p>
+      <div id="root"><p class="note">loading…</p></div>
+    </main>
+    <script type="module">
+      import { renderOutfitPage, inkStroke, clip, starPath } from "./outfit-harness.js";
+
+      // ----------------------------------------------------------- top --
+      const panel = {
+        id: "check-panel",
+        slot: "top",
+        name: "Check panel",
+        note: "A chest panel clipped to the body, from head.shoulders down.",
+        variants: [
+          {
+            key: "a",
+            note: "A wedge clipped to the body outline, with one team stripe.",
+            styles: ["ink", "white", "gold"],
+            whitePoints: 0,
+            darkCentre: false,
+            draw: ({ head, bodyPath, styleFill, fill }) => {
+              const s = head.shoulders;
+              const c = clip(bodyPath);
+              const d = `M 42 ${s} L 66 ${s} L 66 ${s + 18} L 40 ${s + 18} Z`;
+              return `<defs>${c.def}</defs><g clip-path="${c.url}">
+                <path fill="${styleFill}" d="${d}"/>
+                <path fill="none" stroke="${fill}" stroke-width="2.4" d="M 41 ${s + 8} L 67 ${s + 4}"/>
+              </g>`;
+            }
+          },
+          {
+            key: "b",
+            note: "An unclipped vest that overshoots the chest: should fail the region rule.",
+            styles: ["ink"],
+            whitePoints: 0,
+            darkCentre: false,
+            draw: ({ head }) => {
+              const s = head.shoulders;
+              return `<path fill="#121212" ${inkStroke(1.4)} d="M 46 ${s} L 70 ${s + 2} L 68 ${s + 16} L 46 ${s + 18} Z"/>`;
+            }
+          }
+        ]
+      };
+
+      // -------------------------------------------------------- sleeve --
+      const sleeve = {
+        id: "check-sleeve",
+        slot: "sleeve",
+        name: "Check sleeve",
+        variants: [
+          {
+            key: "a",
+            note: "The wing redrawn in the style colour.",
+            styles: ["ink", "white"],
+            whitePoints: 0,
+            darkCentre: false,
+            draw: ({ wingPath, styleFill, mitered }) =>
+              `<path fill="${styleFill}" ${inkStroke(2, mitered ? "miter" : "round")} d="${wingPath}"/>`
+          },
+          {
+            key: "b",
+            note: "Team wing, a white band clipped to it, and ink fringe hung at fixed offsets from the wing grip. On the preener, whose trailing edge climbs steeply, the fringe misses the edge and the region rule should fail.",
+            styles: ["white", "ink"],
+            whitePoints: 0,
+            darkCentre: false,
+            draw: ({ wingPath, styleFill, fill, wingGrip }) => {
+              const c = clip(wingPath);
+              const strands = [0, 5, 10, 15]
+                .map((dx) => `<path stroke="#121212" stroke-width="2" stroke-linecap="round" d="M ${wingGrip.x + dx} ${wingGrip.y - 2} l -1.5 5.5"/>`)
+                .join("");
+              return `${strands}<path fill="${fill}" ${inkStroke()} d="${wingPath}"/>
+                <defs>${c.def}</defs>
+                <g clip-path="${c.url}"><path fill="none" stroke="${styleFill}" stroke-width="3" d="M 50 38 C 39 35 28 39 20 49"/></g>
+                <path fill="none" ${inkStroke()} d="${wingPath}"/>`;
+            }
+          }
+        ]
+      };
+
+      // ---------------------------------------------------------- tail --
+      const streamer = {
+        id: "check-streamer",
+        slot: "tail",
+        name: "Check streamer",
+        variants: [
+          {
+            key: "a",
+            note: "A ribbon off the highest tail tip, changing the tail's outline.",
+            styles: ["white", "ink", "gold"],
+            whitePoints: 0,
+            darkCentre: false,
+            draw: ({ tailTips, styleFill }) => {
+              const t = tailTips[tailTips.length - 1];
+              const d = `M ${t.x} ${t.y} C ${t.x - 6} ${t.y + 2} ${t.x - 2} ${t.y + 8} ${t.x - 8} ${t.y + 12}`;
+              return `<path fill="none" stroke="#121212" stroke-width="4.4" stroke-linecap="round" d="${d}"/>
+                <path fill="none" stroke="${styleFill}" stroke-width="2.4" stroke-linecap="round" d="${d}"/>`;
+            }
+          }
+        ]
+      };
+
+      // --------------------------------------------------------- boots --
+      const boot = {
+        id: "check-boot",
+        slot: "boots",
+        name: "Check boot",
+        variants: [
+          {
+            key: "a",
+            note: "A boot round the shank and foot; drawn once per leg, sole on 71.8.",
+            styles: ["ink", "white"],
+            whitePoints: 0,
+            darkCentre: false,
+            draw: ({ leg, styleFill }) => {
+              const x = leg.x - 1;
+              return `<path fill="${styleFill}" ${inkStroke(1.8)} d="M ${x - 3.5} 61 L ${x + 2.5} 61 L ${x + 2.5} 66.5 L ${x + 7} 68.5 L ${x + 7} 71.8 L ${x - 4} 71.8 Z"/>`;
+            }
+          }
+        ]
+      };
+
+      // ---------------------------------------------------------- prop --
+      const stick = {
+        id: "check-stick",
+        slot: "prop",
+        name: "Check prop",
+        variants: [
+          {
+            key: "a",
+            note: "A long stick off the wing grip, back and down, ending in a star: should breach the floor on flap.",
+            styles: ["white", "ink"],
+            whitePoints: 0,
+            darkCentre: false,
+            draw: ({ wingGrip: g, styleFill }) =>
+              `<path stroke="#121212" stroke-width="3" stroke-linecap="round" d="M ${g.x + 2} ${g.y - 2} L ${g.x - 9} ${g.y + 5}"/>
+               <path fill="${styleFill}" ${inkStroke()} d="${starPath(g.x - 12, g.y + 7, 5.5)}"/>`
+          },
+          {
+            key: "b",
+            note: "A small star hung straight down from the wing grip on a short cord: should clear every angle. Hung above the grip it would rise into the hair on hurt; hung lower it would drop through the floor on bounce.",
+            styles: ["white", "ink"],
+            whitePoints: 0,
+            darkCentre: false,
+            draw: ({ wingGrip: g, styleFill }) =>
+              `<path stroke="#121212" stroke-width="2" stroke-linecap="round" d="M ${g.x} ${g.y - 1} L ${g.x - 0.5} ${g.y + 2.5}"/>
+               <path fill="${styleFill}" ${inkStroke()} d="${starPath(g.x - 1, g.y + 5.5, 4.2)}"/>`
+          }
+        ]
+      };
+
+      // --------------------------------------------------------- stage --
+      const disc = {
+        id: "check-disc",
+        slot: "stage",
+        name: "Check disc",
+        variants: [
+          {
+            key: "a",
+            note: "A disc under the feet, behind the legs.",
+            styles: ["team", "ink"],
+            whitePoints: 0,
+            darkCentre: false,
+            draw: ({ styleFill, footY }) =>
+              `<ellipse fill="${styleFill}" stroke="#ffffff" stroke-width="1.6" cx="38" cy="${footY + 0.5}" rx="31" ry="4.6"/>`
+          }
+        ]
+      };
+
+      const modules = [{ name: "check", items: [disc, streamer, boot, sleeve, panel, stick] }];
+
+      if (new URLSearchParams(location.search).get("broken")) {
+        modules.push({ name: "broken-url", url: "./outfit-items/does-not-exist.js" });
+        modules.push({
+          name: "broken-inline",
+          items: [
+            {
+              id: "throws",
+              slot: "prop",
+              name: "Throws",
+              variants: [{ key: "a", note: "", styles: ["ink"], whitePoints: 0, darkCentre: false, draw: () => { throw new Error("half-written draw"); } }]
+            },
+            { id: "Bad Id", slot: "hat", name: "Malformed", variants: [] },
+            {
+              id: "gold-first",
+              slot: "top",
+              name: "Gold first",
+              variants: [{ key: "a", note: "", styles: ["gold", "ink"], whitePoints: 0, darkCentre: false, draw: () => "" }]
+            }
+          ]
+        });
+      }
+
+      const kit = (sleeveStyle, propStyle) => ({
+        stage: { item: "check-disc" },
+        tail: { item: "check-streamer" },
+        boots: { item: "check-boot" },
+        sleeve: { item: "check-sleeve", style: sleeveStyle },
+        top: { item: "check-panel" },
+        prop: { item: "check-stick", variant: "b", style: propStyle }
+      });
+      const looks = Object.fromEntries(
+        ["metal", "pop", "country", "disco"].map((g) => [
+          g,
+          [
+            { name: "check kit", test: true, outfit: kit("ink", "white") },
+            { name: "rule 8 clash", test: true, outfit: { ...kit("ink", "ink"), stage: undefined, missing: undefined, tail: { item: "not-drawn-yet" } } }
+          ].map((l) => ({ ...l, outfit: Object.fromEntries(Object.entries(l.outfit).filter(([, v]) => v)) }))
+        ])
+      );
+
+      renderOutfitPage({ genres: ["metal", "pop", "country", "disco"], modules, looks });
+    </script>
+  </body>
+</html>

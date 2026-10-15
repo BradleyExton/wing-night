@@ -7,7 +7,10 @@
 // file from a prototype page: add your candidates in your own page and pass
 // them to `bird({ apparel })`. The one extension since: `silhouette` draws a
 // genre body (shapes/index.ts) and `bodyApparel` paints an item under the
-// head; neither changes a bird that does not ask for it.
+// head; neither changes a bird that does not ask for it. The outfit round
+// (outfit-harness.js) added one optional hook per wardrobe slot — stage,
+// tailItem, farBoot, nearBoot, sleeve, prop — on the same terms: a bird that
+// passes none of them is byte-identical markup.
 
 export const PALETTE = {
   bg: "#121212",
@@ -139,6 +142,21 @@ const resolveShapes = ({ body, comb, tail, silhouette }) => {
 
 const PIVOTS = { legFar: { x: 44, y: 57 }, legNear: { x: 32, y: 57 } };
 
+// --------------------------------------------- geometry for outfit-harness --
+// Read-only exports so the outfit harness measures against the very paths the
+// bird is drawn from. Nothing in birdMarkup reads these.
+export const LEG_PIVOTS = PIVOTS;
+export const WING_PIVOT = { x: 47, y: 35 };
+export const STOCK_SHAPES = { body: BODY_PATHS, belly: BELLY_SHADE_PATHS, tail: TAIL_PATHS, comb: COMB_PATHS, wing: WING_PATH };
+export const NECK = NECK_PATH;
+export const legStrokePath = (pivot) => legPath(pivot);
+export const thighOutline = (pivot) => thighPath(pivot);
+/** The paths one bird is drawn from, as `birdMarkup` resolves them. */
+export const shapesFor = ({ body = "round", comb = "crest", tail = "fan", silhouette } = {}) => {
+  const { ink, ...paths } = resolveShapes({ body, comb, tail, silhouette });
+  return { ...paths, neck: NECK_PATH, mitered: Boolean(silhouette && SILHOUETTE_SHAPES[silhouette].mitered) };
+};
+
 const legPath = ({ x, y }) =>
   `M ${x} ${y} L ${x - 1} ${y + 11} M ${x - 1} ${y + 11} L ${x - 7} ${y + 13.5} M ${x - 1} ${y + 11} L ${x} ${y + 14} M ${x - 1} ${y + 11} L ${x + 6} ${y + 13.5}`;
 
@@ -198,7 +216,21 @@ const costumeHead = (avatarSrc, head) => {
  *        a candidate that belongs to the BODY: drawn after the wing and
  *        before the neck and head, so it sits under the head the way the body
  *        does and a photograph's jaw or hair is always over it, never under.
- *        A wardrobe item that keeps below the chin goes here.
+ *        A wardrobe item that keeps below the chin goes here. The outfit
+ *        harness paints the Top slot here.
+ *
+ * The outfit hooks below (outfit-harness.js) all take `(head, fill)` like the
+ * two above and default to nothing, so a bird that passes none of them is the
+ * same markup, byte for byte, as before they existed. Back to front:
+ *   stage → tail → tailItem → far leg + farBoot (both at the far leg's 0.7)
+ *   → body → belly → thigh → near leg → nearBoot → wing → sleeve
+ *   → bodyApparel (Top) → prop → neck → head → comb → apparel.
+ * @param {(head: object, fill: string) => string} [o.stage]     under the feet, behind everything
+ * @param {(head: object, fill: string) => string} [o.tailItem]  on the genre tail, under the body
+ * @param {(head: object, fill: string) => string} [o.farBoot]   round the far leg, inside its 0.7 group
+ * @param {(head: object, fill: string) => string} [o.nearBoot]  round the near leg, under the wing
+ * @param {(head: object, fill: string) => string} [o.sleeve]    over the wing (redraw the wing to recolour it)
+ * @param {(head: object, fill: string) => string} [o.prop]      held at the wing, over the Top, under the neck
  * @returns {string} the inner SVG markup
  */
 export const birdMarkup = ({
@@ -209,7 +241,13 @@ export const birdMarkup = ({
   silhouette,
   avatarSrc,
   apparel,
-  bodyApparel
+  bodyApparel,
+  stage,
+  tailItem,
+  farBoot,
+  nearBoot,
+  sleeve,
+  prop
 }) => {
   const head = avatarSrc ? COSTUME_HEAD_ANCHORS : DRAWN_HEAD_ANCHORS;
   const shapes = resolveShapes({ body, comb, tail, silhouette });
@@ -220,15 +258,18 @@ export const birdMarkup = ({
   // wearing something the TV will never draw — which is the whole trap this
   // round is about.
   const worn = apparel && !(avatarSrc && apparel.crossesTheFace) ? apparel : undefined;
-  return `
-  <path fill="${fill}" ${ink} d="${shapes.tail}"/>
-  <g opacity="0.7"><path fill="none" stroke="${PALETTE.primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="${legPath(PIVOTS.legFar)}"/></g>
+  // Every outfit hook is spliced in on an existing line, so an empty one adds
+  // no whitespace and the pages that pass none render exactly as before.
+  const hook = (fn) => (fn ? fn(head, fill) : "");
+  return `${hook(stage)}
+  <path fill="${fill}" ${ink} d="${shapes.tail}"/>${hook(tailItem)}
+  <g opacity="0.7"><path fill="none" stroke="${PALETTE.primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="${legPath(PIVOTS.legFar)}"/>${hook(farBoot)}</g>
   <path fill="${fill}" ${ink} d="${shapes.body}"/>
   <path fill="${BG}" fill-opacity="0.2" d="${shapes.belly}"/>
   <path fill="${fill}" ${S} d="${thighPath(PIVOTS.legNear)}"/>
-  <path fill="none" stroke="${PALETTE.primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="${legPath(PIVOTS.legNear)}"/>
-  <path fill="${fill}" ${ink} d="${shapes.wing}"/>
-  ${bodyApparel ? bodyApparel(head, fill) : ""}
+  <path fill="none" stroke="${PALETTE.primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="${legPath(PIVOTS.legNear)}"/>${hook(nearBoot)}
+  <path fill="${fill}" ${ink} d="${shapes.wing}"/>${hook(sleeve)}
+  ${bodyApparel ? bodyApparel(head, fill) : ""}${hook(prop)}
   <path fill="${fill}" ${S} d="${NECK_PATH}"/>
   ${avatarSrc ? costumeHead(avatarSrc, head) : drawnHead(fill, head)}
   ${!avatarSrc && shapes.comb ? `<path fill="${fill}" ${ink} transform="${perchTransform(head.cx, head.top + 4)}" d="${shapes.comb}"/>` : ""}
