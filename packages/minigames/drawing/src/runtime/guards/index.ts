@@ -235,16 +235,39 @@ export const isEndStrokePayload = (
   return isNonEmptyString(payload.strokeId);
 };
 
+const COORDINATE_ROUNDING_FACTOR = 1000;
+
 const clampUnitInterval = (value: number): number => {
   return Math.min(1, Math.max(0, value));
 };
 
+// Three decimals is a step of 0.001 on a normalized axis — roughly one pixel
+// on a 1080-tall board and under two on a 1920-wide one, and perfect-freehand
+// already smooths the samples. Past that the extra digits are wire bytes and
+// nothing else, on the hottest payload in the game.
+//
+// Clamping runs first so rounding can only ever move a value inside [0, 1];
+// rounding first could hand the clamp a 1.0004. The explicit zero case
+// normalizes -0, which Math.round returns for a tiny negative sample: JSON
+// prints it as 0, but state would be holding a value that fails Object.is
+// against the 0 it prints as.
+const sanitizeCoordinate = (value: number): number => {
+  const rounded =
+    Math.round(clampUnitInterval(value) * COORDINATE_ROUNDING_FACTOR) /
+    COORDINATE_ROUNDING_FACTOR;
+
+  return rounded === 0 ? 0 : rounded;
+};
+
 // Coordinates arrive normalized from the tablet; clamping keeps stray
-// out-of-bounds pointer samples from distorting the display projection.
+// out-of-bounds pointer samples from distorting the display projection, and
+// rounding is enforced here — at the trust boundary — rather than at each
+// render site, so nothing downstream ever holds precision the board cannot
+// draw.
 export const sanitizeDrawingPoint = (point: DrawingPoint): DrawingPoint => {
   return {
-    x: clampUnitInterval(point.x),
-    y: clampUnitInterval(point.y),
+    x: sanitizeCoordinate(point.x),
+    y: sanitizeCoordinate(point.y),
     t: point.t
   };
 };
