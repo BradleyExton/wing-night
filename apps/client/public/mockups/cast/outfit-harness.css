@@ -1,0 +1,44 @@
+/* The outfit round's additions to apparel-harness.css: tags on each card, the
+   measured rules line, the blurred row, the judge strip and the full kit. */
+.cell h2 .tag { font-size: .66rem; letter-spacing: .14em; color: var(--muted);
+  border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: .15rem .55rem;
+  margin-left: .5rem; vertical-align: middle; }
+.cell h2 .tag.dim { opacity: .6; text-transform: none; letter-spacing: .04em; }
+.cell h2 .tag.gold { color: #d4a72c; border-color: rgba(212,167,44,.5); }
+.dim { color: var(--muted); opacity: .75; }
+.genre-head { font-size: 1.3rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text);
+  margin: 2.5rem 0 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.12); }
+.module-head { display: flex; justify-content: space-between; align-items: baseline;
+  font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--primary);
+  margin: 1.75rem 0 .6rem; padding: 0 .25rem; }
+.rules { font-size: .8rem; line-height: 1.65; color: var(--muted); margin: .25rem 0 .75rem;
+  font-variant-numeric: tabular-nums; }
+.rules .ok { color: #86efac; }
+.rules .fail { color: #fda4af; }
+.rules .warn { color: #fcd34d; }
+.rules .info { color: var(--muted); }
+.rules-list ol { color: var(--muted); max-width: 110ch; line-height: 1.55; padding-left: 1.2rem;
+  margin: 0 0 .75rem; font-size: .9rem; }
+.rules-list li { margin-bottom: .3rem; }
+.sizes figure { padding: 0 .35rem; }
+.blur svg { filter: blur(1px); }
+.error-card { border: 1px solid rgba(253,164,175,.45); }
+.error-card h2 { color: #fda4af; }
+.error-card pre { color: #fecdd3; font-size: .75rem; white-space: pre-wrap; margin: 0; max-height: 18rem; overflow: auto; }
+/* The judge strip: what capture.mjs photographs for the critic. */
+.stage.judge { display: inline-block; max-width: 100%; }
+.judge-row { display: flex; flex-wrap: wrap; gap: 1rem 2rem; align-items: flex-end;
+  padding: 2.25rem 1.5rem 1rem; }
+.judge-group { display: flex; flex-direction: column; gap: .4rem; }
+.judge-style { font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+.judge-figs { display: flex; gap: 1.1rem; align-items: flex-end; }
+.judge-figs figure, .look-figs figure { margin: 0; text-align: center; }
+.judge-figs figcaption, .look-figs figcaption { font-size: .6rem; color: var(--muted); margin-top: .45rem; }
+/* The full kit. */
+.look-grid { display: flex; flex-wrap: wrap; gap: 1.5rem 2.25rem; padding: 2.25rem 1.5rem 1rem; align-items: flex-start; }
+.look { display: flex; flex-direction: column; gap: .45rem; padding-left: .9rem; border-left: 1px solid rgba(255,255,255,.12); }
+.look-name { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text); }
+.look-figs { display: flex; gap: 1rem; align-items: flex-end; padding-top: 1rem; }
+.look-worn { font-size: .6rem; color: var(--muted); max-width: 26rem; line-height: 1.4; }
+.look-missing { font-size: .6rem; color: #fcd34d; max-width: 26rem; line-height: 1.4; }
+.sweep-fig figcaption { margin-top: 1.9rem; color: #fda4af; }

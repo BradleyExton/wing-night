@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OUTFIT — Moves</title>
+    <link rel="stylesheet" href="./apparel-harness.css" />
+    <style>
+      .tag { font-size: .66rem; letter-spacing: .14em; color: var(--muted); border: 1px solid rgba(255,255,255,.18);
+        border-radius: 999px; padding: .15rem .55rem; margin-left: .5rem; vertical-align: middle; }
+      .genre-head { font-size: 1.3rem; letter-spacing: .08em; text-transform: uppercase; margin: 2.5rem 0 1rem;
+        padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.12); }
+      .rules { font-size: .8rem; line-height: 1.65; color: var(--muted); margin: .25rem 0 .75rem; font-variant-numeric: tabular-nums; }
+      .ok { color: #86efac; } .fail { color: #fda4af; } .info { color: var(--muted); }
+      .live { display: flex; gap: 2.5rem; align-items: flex-end; flex-wrap: wrap; padding: 1.5rem 1.5rem 1rem; }
+      .live figure, .strip figure { margin: 0; text-align: center; }
+      .live figcaption, .strip figcaption { font-size: .62rem; color: var(--muted); margin-top: .35rem; letter-spacing: .04em;
+        font-variant-numeric: tabular-nums; line-height: 1.35; }
+      .strip figcaption b { color: var(--text); font-weight: 600; letter-spacing: .06em; }
+      svg { display: block; overflow: visible; }
+      .bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; width: 144px; margin: .45rem auto 0; }
+      .bar i { height: 5px; border-radius: 2px; background: rgba(255,255,255,.12); animation: barcell 2s steps(1, end) infinite; }
+      .bar i:nth-child(2) { animation-delay: -1.5s; } .bar i:nth-child(3) { animation-delay: -1s; } .bar i:nth-child(4) { animation-delay: -.5s; }
+      @keyframes barcell { 0% { background: var(--primary); } 25%, 100% { background: rgba(255,255,255,.12); } }
+      .strip { display: flex; gap: 1rem; align-items: flex-end; padding: 1rem 1rem .75rem; }
+      .strip.sil { background: #b3a89a; border-radius: 8px; }
+      .strip.sil svg { filter: brightness(0); }
+      .strip.sil figcaption { color: #2a2622; }
+      .strip-label { font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.5); margin: .2rem 0 .35rem .25rem; }
+      .capture { display: inline-block; background: var(--surface); padding: .5rem; border-radius: 10px; }
+      .floor { stroke: rgba(255,255,255,.22); stroke-width: .5; }
+      table.timing { border-collapse: collapse; font-size: .78rem; color: var(--muted); margin: .5rem 0 0; font-variant-numeric: tabular-nums; }
+      table.timing td, table.timing th { padding: .2rem .8rem .2rem 0; text-align: left; vertical-align: top; }
+      table.timing th { color: var(--text); font-weight: 600; }
+      .summary td, .summary th { padding: .25rem .9rem .25rem 0; font-size: .8rem; text-align: left; font-variant-numeric: tabular-nums; }
+      .summary th { color: var(--text); }
+      .summary { border-collapse: collapse; color: var(--muted); margin-bottom: 1rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>OUTFIT — Moves · the seventh slot</h1>
+      <p class="lede">
+        <strong>The round.</strong> Run 1 of the wardrobe build (docs/bird-wardrobe-build-plan.md). A Move is a
+        signature flourish one bar long (2 s at 120 bpm) that fires in the lobby parade every ~8 bars and once at
+        the intro lineup (docs/research/bird-wardrobe.md §2.1, §2.2). Each one is drawn on the <strong>parted rig</strong>
+        (<code>rig.html</code>): six parts — tail, far leg, body, near leg, wing, head-with-neck — each turned and
+        nudged about its own fixed pivot. There is no whole-bird layer here at all: a lean is every upper part turned by
+        the same angle about the hips (each part's own translate + rotate, computed), a hop is every part lifted. That is
+        what a cast pose can carry, so every Move ports to <code>CharacterFigure</code> as a keyframe set per part.
+        <br /><br />
+        <strong>Reading a card.</strong> The live loop runs the bar over and over at 130px (the lobby parade) and 173px
+        (the intro lineup); the four cells under it are the four beats. Below it, six key frames at 130px, in colour on the
+        stage and then in pure <strong>silhouette</strong> (the test: the Move has to read as a shape). Every Move starts
+        and ends at rest so it splices into whatever dance the bird is doing. The rules line is measured off the rendered
+        geometry every 20 ms through the bar: the photo's total turn (head plus lean) stays within ±40°, and nothing,
+        stroke included, drops below the foot line at y 72.75. Add <code>?move=&lt;id&gt;</code> for one Move,
+        <code>?head=rob|sara|kenny</code> for another face, <code>?t=0.5</code> to park the live loops on one moment of the bar.
+      </p>
+      <div id="summary"></div>
+      <div id="root"><p class="note">loading…</p></div>
+    </main>
+    <script type="module">
+      import { PALETTE, HEADS, SILHOUETTE_SHAPES, shapesFor, legStrokePath, thighOutline, NECK } from "./apparel-harness.js";
+
+      const params = new URLSearchParams(location.search);
+      const HEAD = HEADS[params.get("head")] ?? HEADS.rosi;
+      const ONLY = params.get("move");
+
+      // ------------------------------------------------------------- the rig --
+      // rig.html's parts and pivots, which are CHARACTER_PIVOTS in the cast.
+      const PIVOTS = { tail: [20, 42], legFar: [44, 57], body: [40, 45], legNear: [32, 57], wing: [47, 35], head: [52, 36] };
+      const UPPER = ["tail", "body", "wing", "head"];
+      const PARTS = ["tail", "legFar", "body", "legNear", "wing", "head"];
+      // Where a lean turns the upper body: between the two hips and just under
+      // them, so the body pitches over legs that stay planted on the foot line.
+      const LEAN_AT = [38, 60];
+      const BAR_S = 2; // one bar at 120 bpm
+      const FOOT_LINE = 72.75; // CHARACTER_FOOT.y 71 + half the 3.5 leg stroke
+
+      const GENRES = {
+        metal: { name: "Molten Metal", fill: PALETTE.teamD, silhouette: "spiky", shape: "spiky · chrome teamD" },
+        pop: { name: "Spice Girls", fill: PALETTE.teamH, silhouette: undefined, shape: "stock bird · pink teamH" },
+        country: { name: "Honky Tonk Heat", fill: PALETTE.teamE, silhouette: "broody", shape: "broody · orange teamE" },
+        disco: { name: "Disco Inferno", fill: PALETTE.teamB, silhouette: "preener", shape: "preener · cyan teamB" }
+      };
+
+      const BG = PALETTE.bg;
+      let uid = 0;
+
+      /** One hen cut into the rig's six parts, facing right, in her 80×72 box. */
+      const riggedBird = (genre) => {
+        const g = GENRES[genre];
+        const s = shapesFor({ body: "round", comb: "crest", tail: "fan", silhouette: g.silhouette });
+        const join = s.mitered ? "miter" : "round";
+        const ink = `stroke="${BG}" stroke-width="2" stroke-linejoin="${join}"`;
+        const round = `stroke="${BG}" stroke-width="2" stroke-linejoin="round"`;
+        const legStroke = `fill="none" stroke="${PALETTE.primary}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"`;
+        const part = (name, inner) => {
+          const [x, y] = PIVOTS[name];
+          return `<g transform="translate(${x} ${y})"><g data-part="${name}"><g transform="translate(${-x} ${-y})">${inner}</g></g></g>`;
+        };
+        const id = `halo${(uid += 1)}`;
+        // The costume head exactly as apparel-harness.js draws it: a 44-unit
+        // photo, chin on y 32, a 1.4-unit ink halo; no beak, no comb.
+        const head = `<filter id="${id}" x="-30%" y="-30%" width="160%" height="160%" primitiveUnits="userSpaceOnUse">
+            <feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="halo"/><feFlood flood-color="${BG}" result="ink"/>
+            <feComposite in="ink" in2="halo" operator="in" result="outline"/><feMerge><feMergeNode in="outline"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <image data-photo href="${HEAD}" x="36" y="-12" width="44" height="44" preserveAspectRatio="xMidYMax meet" filter="url(#${id})"/>`;
+        return (
+          part("tail", `<path fill="${g.fill}" ${ink} d="${s.tail}"/>`) +
+          part("legFar", `<g opacity="0.7"><path ${legStroke} d="${legStrokePath({ x: 44, y: 57 })}"/></g>`) +
+          part("body", `<path fill="${g.fill}" ${ink} d="${s.body}"/><path fill="${BG}" fill-opacity="0.2" d="${s.belly}"/>`) +
+          part("legNear", `<path fill="${g.fill}" ${round} d="${thighOutline({ x: 32, y: 57 })}"/><path ${legStroke} d="${legStrokePath({ x: 32, y: 57 })}"/>`) +
+          part("wing", `<path fill="${g.fill}" ${ink} d="${s.wing}"/>`) +
+          part("head", `<path fill="${g.fill}" ${round} d="${NECK}"/>${head}`)
+        );
+      };
+
+      // ------------------------------------------------------------ the poses --
+      // A key pose is a handful of numbers; every part's transform falls out of
+      // it. Angles in degrees, SVG sense (positive is clockwise on screen):
+      //   head +  nods forward/down, −  throws it back
+      //   wing +  lifts the back tip (ride 75°, hurt 95°), −  drops it and
+      //           swings the wing forward (flap −62°)
+      //   tail +  raises the tail, legs + swing a foot back, − kick it forward
+      //   lean    the whole upper body (tail, body, wing, head) turned about
+      //           LEAN_AT: + pitches forward, − leans back
+      //   x, y    the whole bird (a hop is y < 0); drop sinks the upper body
+      //           over the legs (a squash); <part>X/<part>Y nudge one part;
+      //           legNearLift/legFarLift raise a hip (a step).
+      const rad = (d) => (d * Math.PI) / 180;
+      const fix = (n) => (Math.abs(n) < 1e-4 ? 0 : Math.round(n * 1000) / 1000);
+      const partTransform = (pose, p) => {
+        const [cx, cy] = PIVOTS[p];
+        let tx = (pose.x ?? 0) + (pose[`${p}X`] ?? 0);
+        let ty = (pose.y ?? 0) + (pose[`${p}Y`] ?? 0);
+        let r = pose[p] ?? 0;
+        if (UPPER.includes(p)) {
+          const lean = pose.lean ?? 0;
+          const c = Math.cos(rad(lean)), s = Math.sin(rad(lean));
+          const vx = LEAN_AT[0] - cx, vy = LEAN_AT[1] - cy;
+          // (I − R)(L − c): the translate that makes "turn about my own pivot"
+          // equal "turn about the hips".
+          tx += vx - (c * vx - s * vy);
+          ty += vy - (s * vx + c * vy) + (pose.drop ?? 0);
+          r += lean;
+        } else {
+          ty -= pose[`${p}Lift`] ?? 0;
+        }
+        return `translate(${fix(tx)}px, ${fix(ty)}px) rotate(${fix(r)}deg)`;
+      };
+
+      const EASE = {
+        io: "cubic-bezier(.45,0,.55,1)",
+        out: "cubic-bezier(.15,.85,.3,1)", // snaps into the pose
+        in: "cubic-bezier(.65,0,.85,.35)", // falls into the next one
+        lin: "linear"
+      };
+
+      const moveCss = (move, role = "") => {
+        const key = `${move.id}${role ? `-${role}` : ""}`;
+        const keys = role ? move.roles[role] : move.keys;
+        return PARTS.map((p) => {
+          const frames = keys.map(([pct, pose, ease = "io"]) => ({ pct, t: partTransform(pose, p), ease }));
+          if (frames.every((f) => f.t === "translate(0px, 0px) rotate(0deg)")) return "";
+          const name = `mv-${key}-${p}`;
+          return `@keyframes ${name} {${frames.map((f) => ` ${f.pct}% { transform: ${f.t}; animation-timing-function: ${EASE[f.ease]}; }`).join("")} }
+            .mv-${key} [data-part=${p}] { animation: ${name} ${BAR_S}s linear infinite; }`;
+        }).join("\n");
+      };
+
+      // -------------------------------------------------------------- the Moves --
+      // Sixteenth-note names at 120 bpm (a sixteenth is 125 ms): 1, 1e, 1&, 1a, 2 …
+      const beatLabel = (t) => {
+        const n = Math.floor(t / 0.125 + 1e-6);
+        const name = `${Math.floor(n / 4) + 1}${["", "e", "&", "a"][n % 4]}`;
+        const off = Math.round((t - n * 0.125) * 1000);
+        return `${n % 4 === 0 ? "beat " : ""}${name}${off ? ` ${off > 0 ? "+" : "−"}${Math.abs(off)} ms` : ""}`;
+      };
+
+      // A raised wing has to stand CLEAR of the photo (x 36..80, y −12..32)
+      // with daylight between them, or it hides behind the hair and reads as a
+      // hump. So no Move raises the wing on the shoulder alone: every "wing up"
+      // is also slid back and up behind the shoulder (wingX −12…−15, wingY
+      // −3…−5), which stands the tip out past the back of the head.
+      const STOMP = { legNear: -8, legNearLift: 2 };
+      // The lasso: the wing held up and back while its shoulder goes round a
+      // small circle, one turn a beat, a key every 32nd so the path stays
+      // round, and a canter under it (a foot up on every eighth, alternating).
+      const lassoTwirl = (from, to) => {
+        const keys = [];
+        for (let k = 0; from + k * 3.125 <= to + 1e-9; k += 1) {
+          const th = (k * Math.PI) / 4;
+          const step = k % 4 === 1 ? { y: -2, legNear: -16, legNearLift: 2 } : k % 4 === 3 ? { y: -2, legFar: -16, legFarLift: 2 } : {};
+          keys.push([from + k * 3.125, {
+            wing: 62 + 6 * Math.sin(th), wingX: -12 + 3 * Math.cos(th), wingY: -3 + 3 * Math.sin(th),
+            lean: -6, head: -6 + 2 * Math.sin(th), tail: 10 - 8 * Math.sin(th), ...step
+          }, "lin"]);
+        }
+        return keys;
+      };
+
+      const MOVES = [
+        {
+          id: "horns-pump", genre: "metal", name: "Horns pump",
+          note: `Dio's horns can't be made with a wing, so the wing IS the horn: one stamp-and-thrust on beat 2, the wing thrown up and back and slid behind the shoulder (+60°, wingX −12) so it stands as a spike in clear air behind the hair, never flush against it. It pumps on the sixteenths through beat 3 between +60° and +46°, so the tip shakes like a fist and never folds onto the back, with a stomp of the near foot and a head bang against every pump, then drops on 4&. The raised wing and the spiky tail (+14…16°) make one spiky crown.`,
+          cues: [[0, "rest"], [0.25, "wind-up"], [0.5, "thrust"], [0.625, "pump down"], [1.0, "pump up"], [1.75, "drop"]],
+          keys: [
+            [0, {}],
+            [10, { wing: -24, head: 8, drop: 1.5, lean: 3 }, "in"],
+            [15, { wing: -30, head: 10, drop: 2, lean: 4, ...STOMP }, "in"],
+            [25, { wing: 70, wingX: -15, wingY: -4, head: -12, lean: -7, drop: -1.5, tail: 16, ...STOMP }, "out"],
+            [31.25, { wing: 54, wingX: -15, wingY: -4, head: 12, lean: -4, tail: 14 }],
+            [37.5, { wing: 70, wingX: -15, wingY: -4, head: -10, lean: -7, drop: -1.5, tail: 16, ...STOMP }],
+            [43.75, { wing: 54, wingX: -15, wingY: -4, head: 12, lean: -4, tail: 14 }],
+            [50, { wing: 70, wingX: -15, wingY: -4, head: -12, lean: -7, drop: -1.5, tail: 16, ...STOMP }],
+            [56.25, { wing: 54, wingX: -15, wingY: -4, head: 12, lean: -4, tail: 14 }],
+            [62.5, { wing: 70, wingX: -15, wingY: -4, head: -10, lean: -7, drop: -1.5, tail: 16, ...STOMP }],
+            [75, { wing: 68, wingX: -15, wingY: -4, head: -8, lean: -6, tail: 14 }, "in"],
+            [87.5, { wing: -8, head: 4, lean: 1 }],
+            [100, {}]
+          ]
+        },
+        {
+          id: "double-headbang", genre: "metal", name: "Double headbang",
+          note: `Two bangs, on beats 2 and 3. The photo only ever nods: a wind-back to −18° then a slam to +38° (a 56° swing; the shipping headbang dance swings 38°), and the extra size comes from the whole upper body pitching with it (lean ±10°) rather than from turning the face further. The 40° cap is what stops a literal "double amplitude". Each bang lands with a stomp of the near foot and a flare of the spiky tail (+22°), which is what tells it apart from the shipping headbang dance it may fire inside of.`,
+          cues: [[0, "rest"], [0.25, "wind back"], [0.5, "bang"], [0.7, "whip back"], [1.0, "bang"], [1.5, "nod out"]],
+          keys: [
+            [0, {}],
+            [12.5, { lean: -5, head: -13, drop: -1, tail: -6, wing: 8 }, "in"],
+            [25, { lean: 10, head: 28, drop: 2, tail: 22, wing: -22, legNear: -10, legNearLift: 2 }, "out"],
+            [35, { lean: -5, head: -13, drop: -1, tail: -4, wing: 6 }, "in"],
+            [50, { lean: 10, head: 28, drop: 2, tail: 22, wing: -22, legNear: -10, legNearLift: 2 }, "out"],
+            [60, { lean: -2, head: -8, tail: 0, wing: 4 }],
+            [75, { lean: 4, head: 12, drop: 1, tail: 8, wing: -8 }],
+            [87.5, { lean: -1, head: -3 }],
+            [100, {}]
+          ]
+        },
+        {
+          id: "heart-point", genre: "pop", name: "Point and swoon",
+          note: `Point, then swoon. The wing cocks back and swings under into a flat point straight out at the room (−172°, slid forward so the tip juts past the front of the face like a finger, under the chin), jabbed three times on 2, 2& and 2a: "you, you, YOU". Then the swoon on beat 3: the bird falls back (lean −12°, head −22°, a −34° photo turn), the arm flung back clear of the hair, the tail up and the far foot popped behind, held through beat 4 with two heartbeat sinks ("ba-dum"). Hand-on-heart was tried first and dropped: a same-colour wing on a same-colour chest vanishes in silhouette.`,
+          cues: [[0, "rest"], [0.25, "cock"], [0.5, "point"], [0.875, "jab"], [1.0, "swoon"], [1.125, "ba-dum"]],
+          keys: [
+            [0, {}],
+            [15, { wing: 28, head: -6, lean: -3, tail: 6 }, "in"],
+            [25, { wing: -172, wingX: 12, wingY: 2, head: 4, lean: 5, x: 1.5, tail: 12 }, "out"],
+            [31.25, { wing: -168, wingX: 8, wingY: 2, head: 2, lean: 3, x: 1, tail: 10 }],
+            [37.5, { wing: -172, wingX: 12, wingY: 2, head: 4, lean: 5, x: 1.5, tail: 12 }, "out"],
+            [40.625, { wing: -168, wingX: 8, wingY: 2, head: 2, lean: 3, x: 1, tail: 10 }],
+            [43.75, { wing: -172, wingX: 13, wingY: 2, head: 5, lean: 6, x: 2, tail: 14 }, "out"],
+            [47, { wing: -150, wingX: 6, wingY: 2, head: 0, lean: 2, x: 1, tail: 10 }, "in"],
+            [50, { lean: -12, head: -22, tail: 24, legNear: 50, legNearLift: 4, wing: 64, wingX: -13, wingY: -3 }, "out"],
+            [56.25, { lean: -12, head: -22, tail: 24, legNear: 50, legNearLift: 4, wing: 64, wingX: -13, wingY: -3, drop: -2 }],
+            [59.375, { lean: -12, head: -22, tail: 24, legNear: 50, legNearLift: 4, wing: 64, wingX: -13, wingY: -3 }],
+            [62.5, { lean: -12, head: -22, tail: 24, legNear: 50, legNearLift: 4, wing: 64, wingX: -13, wingY: -3, drop: -2 }],
+            [68.75, { lean: -12, head: -22, tail: 24, legNear: 50, legNearLift: 4, wing: 64, wingX: -13, wingY: -3 }],
+            [80, { lean: -10, head: -18, tail: 20, legNear: 44, legNearLift: 3.5, wing: 58, wingX: -12, wingY: -3 }, "in"],
+            [90, { wing: -8, head: 2, lean: 1 }],
+            [100, {}]
+          ]
+        },
+        {
+          id: "sporty-hop", genre: "pop", name: "Sporty hop",
+          note: `Mel C's backflip without the flip, because a flip turns the photo upside down. A squash on 1&, a hop on beat 2 that lifts the whole bird 18 units (a quarter of her height) with the legs scissored apart, front foot forward and back foot back, so the top of the jump is a star and not a flying hen; a squash landing on beat 3, then a victory wing thrown up and back clear of the head on a little rebound, held through beat 4. All of it is the parts: the squash is the upper body sinking over the legs, not a scale, so the face never stretches.`,
+          cues: [[0, "rest"], [0.25, "squash"], [0.5, "launch"], [0.8, "apex"], [1.0, "land"], [1.2, "victory"]],
+          keys: [
+            [0, {}],
+            [15, { drop: 3.5, head: 10, wing: -24, lean: 6, tail: -8 }, "in"],
+            [25, { y: -10, drop: -1, head: -8, wing: 50, wingX: -8, wingY: -2, lean: -4, tail: 14, legNear: 40, legFar: -22 }, "out"],
+            [40, { y: -18, drop: -1, head: -10, wing: 72, wingX: -15, wingY: -4, lean: -5, tail: 16, legNear: 62, legFar: -45 }, "in"],
+            [50, { drop: 3.5, head: 10, wing: -10, lean: 6, tail: -6 }, "out"],
+            [60, { y: -3, drop: -1.5, head: -10, wing: 75, wingX: -15, wingY: -4, lean: -4, tail: 14 }, "out"],
+            [75, { drop: -1, head: -8, wing: 74, wingX: -15, wingY: -4, lean: -3, tail: 12 }, "in"],
+            [87.5, { wing: -6, head: 2 }],
+            [100, {}]
+          ]
+        },
+        {
+          id: "lasso-twirl", genre: "country", name: "Lasso twirl",
+          note: `Replaces Thumbs in the belt, cut after two rounds: on the broody bird's huge chest an elbow on the hip never broke the outline at 130px, even slid 14 units back, so the gesture was invisible. The lasso is the same swagger with an arm that reads: the wing goes up and back clear of the hair on 1& and its shoulder traces a small circle (3 units round, one turn a beat) while the wing rocks ±6°, which at 130px is the rope going round. Under it the bird canters on the eighths, one foot then the other. On 3a the wing winds up high, on beat 4 it throws straight out at the room under the chin with a step into it, and on 4e the bird sits back on its heels with the arm still out, yanking as the rope catches.`,
+          cues: [[0, "rest"], [0.375, "twirl"], [0.625, "twirl"], [1.0, "twirl"], [1.5, "throw"], [1.625, "yank"]],
+          keys: [
+            [0, {}],
+            [8, { wing: 30, wingX: -6, wingY: -1, lean: -3, head: -4, tail: 6 }, "in"],
+            ...lassoTwirl(12.5, 62.5),
+            [68.75, { wing: 78, wingX: -15, wingY: -5, lean: -8, head: -10, tail: 16 }, "in"],
+            [75, { wing: -165, wingX: 11, wingY: 4.5, lean: 8, head: 6, x: 2, legFarX: -2, tail: 22, legNear: -12, legNearLift: 2 }, "out"],
+            [81.25, { wing: -150, wingX: 8, wingY: 3, lean: -10, head: -12, x: -1, legFarX: 1, tail: 4, legNear: -18, legNearLift: 1.5 }, "out"],
+            [90, { wing: -10, lean: 0, head: 2 }],
+            [100, {}]
+          ]
+        },
+        {
+          id: "boot-scoot", genre: "country", name: "Boot-scoot",
+          note: `Heel-toe, heel-toe, stomp, as a line-dance step: the body travels forward onto each heel and back over each toe (x +5 then −5) while the standing foot stays pinned to the floor. The broody belly hides a foot tucked under it, so each heel lifts the hip and pokes the boot out ahead of the belly front, and each toe taps well behind. A foot lifts one sixteenth before beat 4 and comes down as the stomp, the body sinking onto it with a flick of the tail.`,
+          cues: [[0, "rest"], [0.25, "heel"], [0.5, "toe"], [1.0, "heel"], [1.375, "lift"], [1.5, "stomp"]],
+          keys: [
+            [0, {}],
+            [12.5, { x: 5, legFarX: -5, lean: -14, legNear: -42, legNearLift: 4, legNearX: 12, tail: 20, head: -4, wing: -10 }, "out"],
+            [25, { x: -5, legFarX: 5, lean: 10, legNear: 35, legNearX: -6, legNearLift: 1.6, tail: -14, head: 6, wing: 10 }, "out"],
+            [37.5, { tail: 0 }],
+            [50, { x: 5, legNearX: -5, lean: -14, legFar: -38, legFarLift: 4, legFarX: 9, tail: 20, head: -4, wing: -10 }, "out"],
+            [62.5, { x: -5, legNearX: 5, lean: 10, legFar: 35, legFarX: -6, legFarLift: 1.6, tail: -14, head: 6, wing: 10 }, "out"],
+            [68.75, { legNear: -10, legNearLift: 3, tail: 14, head: -8, wing: -24, drop: -1 }, "in"],
+            [75, { drop: 3.5, head: 10, tail: 24, wing: 6 }, "out"],
+            [87.5, { drop: 0.5, head: 2 }],
+            [100, {}]
+          ]
+        },
+        {
+          id: "night-fever", genre: "disco", name: "Night Fever point",
+          note: `Up on 1&, down across the body on 2&, up again on beat 3 and held, hip popped, through beat 4. The up is the wing thrown to the up-back diagonal and slid behind the shoulder (+58°, wingX −13) so it stands as a spike clear of the hair, with the near leg kicked out to the down-forward one, so wing tip, body and foot make the one straight line the pose is known by. The preener's tail drops right out of the way (−34°) as the wing goes up, leaving daylight between them.`,
+          cues: [[0, "rest"], [0.25, "up"], [0.75, "down"], [1.0, "up"], [1.25, "hold, hip"], [1.85, "out"]],
+          keys: [
+            [0, {}],
+            [6, { wing: -16, lean: 3, head: 4, drop: 1 }, "in"],
+            [12.5, { wing: 72, wingX: -14, wingY: -5, lean: -10, head: -12, x: 1, tail: -40, legNear: -28, legNearLift: 3 }, "out"],
+            [25, { wing: 70, wingX: -14, wingY: -5, lean: -10, head: -10, x: 1, tail: -38, legNear: -26, legNearLift: 3 }, "in"],
+            [37.5, { wing: -100, lean: 7, head: 8, x: -1, tail: 6, drop: 1.5 }, "out"],
+            [44, { wing: -94, lean: 6, head: 6, x: -1, tail: 4, drop: 1 }, "in"],
+            [50, { wing: 72, wingX: -14, wingY: -5, lean: -10, head: -12, x: 1, tail: -40, legNear: -28, legNearLift: 3 }, "out"],
+            [62.5, { wing: 72, wingX: -14, wingY: -5, lean: -10, head: -12, x: 3, legFarX: -2, tail: -36, legNear: -28, legNearLift: 3 }, "out"],
+            [68.75, { wing: 72, wingX: -14, wingY: -5, lean: -10, head: -12, x: 1, tail: -40, legNear: -28, legNearLift: 3 }],
+            [75, { wing: 72, wingX: -14, wingY: -5, lean: -10, head: -12, x: 3, legFarX: -2, tail: -36, legNear: -28, legNearLift: 3 }, "out"],
+            [82, { wing: 70, wingX: -14, wingY: -5, lean: -9, head: -12, x: 1, tail: -38, legNear: -26, legNearLift: 3 }, "in"],
+            [92, { wing: -8, lean: 1, head: 2 }],
+            [100, {}]
+          ]
+        },
+        {
+          id: "the-bump", genre: "disco", name: "The Bump",
+          note: `Hips together on beats 2 and 4, a shimmy in between. In the parade a team stands in a line all facing the same way, so the bird in front bumps its rump BACK into the chest of the bird behind it, across a 14-unit gap that the bump closes, and that bird is knocked clean off its feet (a little hop, legs swinging, head and wing thrown back). The shimmy is a tail shake and a dip. The front bird's half is also the solo fallback for the last bird in the line, who has no partner: on its own it reads as a butt-shake. Back to back is the dance-floor version and is only on the table if the intro lineup may flip one bird for a bar.`,
+          cues: [[0, "rest"], [0.5, "bump"], [0.625, "knocked"], [1.0, "shimmy"], [1.125, "shimmy"], [1.5, "bump"]],
+          keys: [
+            [0, {}],
+            [15, { x: 1.5, lean: -4, head: -6, tail: -6 }, "in"],
+            [25, { x: -7, lean: 14, head: 4, tail: 28, wing: -14 }, "out"],
+            [31.25, { x: -4, lean: 8, head: 2, tail: 14 }],
+            [40, { head: -4 }],
+            [50, { drop: 2, head: 6, tail: 26, wing: 10 }],
+            [56.25, { drop: 0, head: -4, tail: -26, wing: -10 }],
+            [62.5, { x: 1.5, lean: -4, head: -6, tail: -6 }, "in"],
+            [75, { x: -7, lean: 14, head: 4, tail: 28, wing: -14 }, "out"],
+            [81.25, { x: -4, lean: 8, head: 2, tail: 14 }],
+            [100, {}]
+          ],
+          roles: {
+            // The bird behind: leans in to meet the rump, takes it on the chest
+            // and is knocked off its feet, head and wing thrown back.
+            answer: [
+              [0, {}],
+              [15, { x: -1, lean: -3, head: -2 }, "in"],
+              [25, { x: 2, lean: 5, head: 4, tail: 6 }, "out"],
+              [31.25, { y: -3, x: -5, legNear: 20, legFar: 20, lean: -8, head: -18, wing: 55, wingX: -12, tail: -14 }, "out"],
+              [42, { x: 0, lean: -1, head: -3, wing: 4 }, "in"],
+              [50, { drop: 2, head: 6, tail: -26, wing: 10 }],
+              [56.25, { drop: 0, head: -4, tail: 26, wing: -10 }],
+              [62.5, { x: -1, lean: -3, head: -2 }, "in"],
+              [75, { x: 2, lean: 5, head: 4, tail: 6 }, "out"],
+              [81.25, { y: -3, x: -5, legNear: 20, legFar: 20, lean: -8, head: -18, wing: 55, wingX: -12, tail: -14 }, "out"],
+              [92, { x: 0, lean: -1, head: -3, wing: 4 }, "in"],
+              [100, {}]
+            ]
+          }
+        },
+        {
+          id: "chicken-dance", genre: "shared", name: "The Chicken Dance",
+          note: `The four figures of the Birdie Song, one beat each, every figure hit fast enough to survive 130px: beak-pinch (a quick head peck with a wing snap, on the sixteenths), four wing flaps on the sixteenths of beat 2 with the wing thrown up clear of the head each time, a deep squat-and-wiggle on beat 3 (tail and hips swinging, so the broody bird's short tail reads too), and two claps of the wing onto the chest on beat 4. Drawn on all four silhouettes; it is the same keyframes on every one.`,
+          cues: [[0.0625, "beak"], [0.5, "flap up"], [0.5625, "flap down"], [1.0625, "wiggle"], [1.1875, "wiggle"], [1.5625, "clap"]],
+          keys: [
+            [0, {}],
+            [3.125, { head: 16, wing: -18, drop: 0.5 }],
+            [6.25, { head: -4, wing: 8 }],
+            [9.375, { head: 16, wing: -18, drop: 0.5 }],
+            [12.5, { head: -4, wing: 8 }],
+            [15.625, { head: 16, wing: -18, drop: 0.5 }],
+            [18.75, { head: -4, wing: 8 }],
+            [21.875, { head: 16, wing: -18, drop: 0.5 }],
+            [25, { wing: 55, wingX: -12, wingY: -3, y: -3.5, head: -8, tail: 10 }, "out"],
+            [28.125, { wing: -40, drop: 0.5, head: 4, tail: -4 }, "out"],
+            [31.25, { wing: 55, wingX: -12, wingY: -3, y: -3.5, head: -8, tail: 10 }, "out"],
+            [34.375, { wing: -40, drop: 0.5, head: 4, tail: -4 }, "out"],
+            [37.5, { wing: 55, wingX: -12, wingY: -3, y: -3.5, head: -8, tail: 10 }, "out"],
+            [40.625, { wing: -40, drop: 0.5, head: 4, tail: -4 }, "out"],
+            [43.75, { wing: 55, wingX: -12, wingY: -3, y: -3.5, head: -8, tail: 10 }, "out"],
+            [46.875, { wing: -40, drop: 0.5, head: 4, tail: -4 }],
+            [53.125, { drop: 4, lean: 12, tail: 34, x: -2.5, head: 2, wing: -10 }, "out"],
+            [59.375, { drop: 4, lean: 12, tail: -28, x: 2.5, head: 2, wing: -10 }],
+            [65.625, { drop: 4, lean: 12, tail: 34, x: -2.5, head: 2, wing: -10 }],
+            [71.875, { drop: 4, lean: 12, tail: -28, x: 2.5, head: 2, wing: -10 }],
+            [78.125, { wing: -135, wingX: 4, y: -2, lean: -3, head: -8 }, "out"],
+            [84.375, { wing: -40, head: 0 }],
+            [90.625, { wing: -135, wingX: 4, y: -2, lean: -3, head: -8 }, "out"],
+            [96, { wing: -30 }],
+            [100, {}]
+          ]
+        }
+      ];
+
+      // ---------------------------------------------------------------- scenes --
+      // A scene is one or more birds in one svg. `vb` is padded round the 80×72
+      // box for the hop and the raised wing; the svg is sized so the box itself
+      // is exactly `h` px tall, which is what "130px" means on this page.
+      const VB = { x: -12, y: -36, w: 104, h: 112 };
+      const sceneFor = (move, genre, arrangement) => {
+        if (move.id !== "the-bump") return { vb: VB, birds: [{ genre, cls: `mv-${move.id}`, at: "" }] };
+        if (arrangement === "solo")
+          // The last bird in the line has no one behind it: the front half alone.
+          return { vb: VB, birds: [{ genre, cls: "mv-the-bump", at: "" }] };
+        if (arrangement === "line")
+          // Front bird on the right, the bird behind 51 units back so there is
+          // a 14-unit gap at rest for the bump to close; the bird behind is
+          // painted last so its face sits over the front bird's tail, as a
+          // profile line would overlap.
+          return {
+            vb: { x: -55, y: -36, w: 147, h: 112 },
+            birds: [
+              { genre, cls: "mv-the-bump", at: "" },
+              { genre, cls: "mv-the-bump-answer", at: "translate(-51 0)" }
+            ]
+          };
+        // Back to back, rumps 9 apart; the left bird is the same Move mirrored.
+        return {
+          vb: { x: -12, y: -36, w: 144, h: 112 },
+          birds: [
+            { genre, cls: "mv-the-bump", at: "matrix(-1 0 0 1 81.5 0)" },
+            { genre, cls: "mv-the-bump", at: "translate(38.5 0)" }
+          ]
+        };
+      };
+
+      const sceneSvg = (scene, h, { floor = true } = {}) => {
+        const { vb } = scene;
+        const px = (h / 72);
+        const birds = scene.birds
+          .map((b) => `<g transform="${b.at}"><g class="${b.cls}" data-bird>${riggedBird(b.genre)}</g></g>`)
+          .join("");
+        const line = floor ? `<line class="floor" x1="${vb.x}" x2="${vb.x + vb.w}" y1="${FOOT_LINE}" y2="${FOOT_LINE}"/>` : "";
+        return `<svg viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}" width="${(vb.w * px).toFixed(1)}" height="${(vb.h * px).toFixed(1)}">${line}${birds}</svg>`;
+      };
+
+      // ------------------------------------------------------------ measuring --
+      // Every shape's outline in the bird's own units (the [data-bird] group's
+      // frame, so a mirrored partner measures the same as the lead).
+      // Each path is sampled once in its own units; per frame only its CTM is read.
+      const pathSamples = new WeakMap();
+      const samplesOf = (el) => {
+        let pts = pathSamples.get(el);
+        if (!pts) {
+          const len = el.getTotalLength();
+          const steps = Math.max(48, Math.ceil(len * 4));
+          pts = [];
+          for (let i = 0; i <= steps; i += 1) pts.push(el.getPointAtLength((len * i) / steps));
+          pathSamples.set(el, pts);
+        }
+        return pts;
+      };
+      const sampleMaxY = (root) => {
+        const toBird = root.getScreenCTM().inverse();
+        let maxY = -Infinity, minY = Infinity;
+        root.querySelectorAll("path").forEach((el) => {
+          const m = toBird.multiply(el.getScreenCTM());
+          const half = el.getAttribute("stroke") && el.getAttribute("stroke") !== "none" ? parseFloat(el.getAttribute("stroke-width") ?? "0") / 2 : 0;
+          for (const p of samplesOf(el)) {
+            const y = m.b * p.x + m.d * p.y + m.f;
+            if (y + half > maxY) maxY = y + half;
+            if (y - half < minY) minY = y - half;
+          }
+        });
+        return { maxY, minY };
+      };
+      const photoAngle = (root) => {
+        const img = root.querySelector("[data-photo]");
+        const m = root.getScreenCTM().inverse().multiply(img.getScreenCTM());
+        return (Math.atan2(m.b, m.a) * 180) / Math.PI;
+      };
+      const freeze = (svg, t) => {
+        svg.getAnimations({ subtree: true }).forEach((a) => {
+          a.pause();
+          a.currentTime = t * 1000;
+        });
+      };
+      const measure = (svg) => {
+        const roots = [...svg.querySelectorAll("[data-bird]")];
+        const out = roots.map(() => ({ maxY: -Infinity, minY: Infinity, angMin: Infinity, angMax: -Infinity, worstAt: 0 }));
+        for (let ms = 0; ms <= BAR_S * 1000; ms += 20) {
+          freeze(svg, ms / 1000);
+          roots.forEach((r, i) => {
+            const { maxY, minY } = sampleMaxY(r);
+            const a = photoAngle(r);
+            const o = out[i];
+            if (maxY > o.maxY) { o.maxY = maxY; o.worstAt = ms; }
+            o.minY = Math.min(o.minY, minY);
+            o.angMin = Math.min(o.angMin, a);
+            o.angMax = Math.max(o.angMax, a);
+          });
+        }
+        return out;
+      };
+
+      // -------------------------------------------------------------- the page --
+      const css = document.createElement("style");
+      css.textContent = MOVES.map((m) => moveCss(m) + (m.roles ? Object.keys(m.roles).map((r) => moveCss(m, r)).join("\n") : "")).join("\n");
+      document.head.appendChild(css);
+
+      const genresOf = (m) => (m.genre === "shared" ? ["metal", "pop", "country", "disco"] : [m.genre]);
+      const arrangementsOf = (m) => (m.id === "the-bump" ? ["line", "solo", "back"] : [null]);
+      const ARR_NAME = { line: "in the line (parade-true)", solo: "solo fallback (last bird in the line)", back: "back to back (only if the lineup may flip a bird)" };
+      const ARR_SHORT = { line: "in the line", solo: "solo fallback", back: "back to back" };
+
+      const strips = (m, genre, arr) => {
+        const scene = sceneFor(m, genre, arr);
+        const frames = (sil) => m.cues
+          .map(([t, label]) => `<figure>${sceneSvg(scene, 130, { floor: !sil })}<figcaption data-t="${t}"><b>${label}</b><br>${t.toFixed(2)} s · ${beatLabel(t)}</figcaption></figure>`)
+          .join("");
+        const cap = `${m.id}${m.genre === "shared" ? `-${genre}` : ""}${arr ? `-${arr}` : ""}`;
+        return `<div class="capture" data-capture="${cap}">
+            <div class="strip-label">${m.name} · ${GENRES[genre].shape}${arr ? ` · ${ARR_NAME[arr]}` : ""} · 6 key frames at 130px</div>
+            <div class="stage"><div class="strip frozen">${frames(false)}</div></div>
+            <div class="strip-label">silhouette</div>
+            <div class="strip sil frozen">${frames(true)}</div>
+          </div>`;
+      };
+
+      const lives = (m) => genresOf(m).flatMap((genre) => arrangementsOf(m).map((arr) => {
+        const scene = sceneFor(m, genre, arr);
+        return [130, 173].map((h) => `<figure>${sceneSvg(scene, h)}<div class="bar"><i></i><i></i><i></i><i></i></div>
+            <figcaption>${h === 130 ? "130px · lobby parade" : "173px · intro lineup"}${m.genre === "shared" ? ` · ${genre}` : ""}${arr ? ` · ${ARR_SHORT[arr]}` : ""}</figcaption></figure>`).join("");
+      })).join("");
+
+      const card = (m) => `
+        <section class="cell" id="${m.id}" data-move="${m.id}">
+          <h2>${m.name}<span class="tag">${m.id}</span><span class="tag">${m.genre}</span></h2>
+          <p class="note">${m.note}</p>
+          <div class="rules" data-rules="${m.id}">measuring…</div>
+          <div class="stage"><div class="live">${lives(m)}</div><span class="scale">live · one bar = 2 s at 120 bpm</span></div>
+          ${genresOf(m).flatMap((g) => arrangementsOf(m).map((a) => strips(m, g, a))).join("<br>")}
+          <table class="timing"><tr><th>key frame</th>${m.cues.map(([, l]) => `<th>${l}</th>`).join("")}</tr>
+            <tr><td>time</td>${m.cues.map(([t]) => `<td>${(t * 1000).toFixed(0)} ms</td>`).join("")}</tr>
+            <tr><td>beat</td>${m.cues.map(([t]) => `<td>${beatLabel(t)}</td>`).join("")}</tr></table>
+        </section>`;
+
+      const shown = MOVES.filter((m) => !ONLY || m.id === ONLY);
+      const order = ["metal", "pop", "country", "disco", "shared"];
+      document.getElementById("root").innerHTML = order
+        .map((g) => {
+          const ms = shown.filter((m) => m.genre === g);
+          if (!ms.length) return "";
+          const head = g === "shared" ? "Shared rail · every team" : `${g} · ${GENRES[g].name} · ${GENRES[g].shape}`;
+          return `<h2 class="genre-head">${head}</h2>${ms.map(card).join("")}`;
+        })
+        .join("");
+
+      // Freeze every filmstrip frame at its key time.
+      document.querySelectorAll(".frozen figure").forEach((f) => freeze(f.querySelector("svg"), parseFloat(f.querySelector("figcaption").dataset.t)));
+      // Line every live loop and beat cell up on one clock.
+      const t0 = document.timeline.currentTime;
+      document.querySelectorAll(".live svg, .bar i").forEach((el) => el.getAnimations({ subtree: true }).forEach((a) => (a.startTime = t0)));
+      // ?t=0.5 parks every live loop on that moment of the bar, for a close look.
+      if (params.has("t")) document.querySelectorAll(".live svg").forEach((svg) => freeze(svg, parseFloat(params.get("t"))));
+
+      // Measure on a scratch copy of each scene so the live loops keep running.
+      const results = {};
+      const scratch = document.createElement("div");
+      scratch.style.cssText = "position:absolute;left:-9999px;top:0";
+      document.body.appendChild(scratch);
+      const fmt = (n) => (Math.round(n * 10) / 10).toFixed(1);
+      const run = async () => {
+      for (const m of shown) {
+        await new Promise((r) => setTimeout(r, 0));
+        const lines = [];
+        results[m.id] = [];
+        for (const genre of genresOf(m)) for (const arr of arrangementsOf(m)) {
+          scratch.innerHTML = sceneSvg(sceneFor(m, genre, arr), 130);
+          const res = measure(scratch.querySelector("svg"));
+          res.forEach((r, i) => {
+            const angOk = Math.max(Math.abs(r.angMin), Math.abs(r.angMax)) <= 40.05;
+            const footOk = r.maxY <= FOOT_LINE + 0.01;
+            const who = `${m.genre === "shared" ? genre : ""}${arr ? ` ${arr === "line" ? (i === 0 ? "front bird" : "bird behind") : arr === "solo" ? "solo" : i === 0 ? "left bird" : "right bird"}` : ""}`.trim();
+            results[m.id].push({ genre, arr, bird: i, ...r, angOk, footOk });
+            lines.push(`${who ? `<span class="info">${who}:</span> ` : ""}<span class="${angOk ? "ok" : "fail"}">photo turns ${fmt(r.angMin)}° … ${fmt(r.angMax)}° (cap ±40°)</span> · <span class="${footOk ? "ok" : "fail"}">lowest point y ${fmt(r.maxY)}${footOk ? "" : ` at ${r.worstAt} ms`} (foot line ${FOOT_LINE})</span> · <span class="info">highest y ${fmt(r.minY)}</span>`);
+          });
+        }
+        document.querySelector(`[data-rules="${m.id}"]`).innerHTML = lines.join("<br>");
+      }
+      scratch.remove();
+      document.getElementById("summary").innerHTML = `<table class="summary"><tr><th>Move</th><th>genre</th><th>photo turn</th><th>lowest point</th></tr>${shown
+        .map((m) => {
+          const rs = results[m.id];
+          const ang = Math.max(...rs.map((r) => Math.max(Math.abs(r.angMin), Math.abs(r.angMax))));
+          const low = Math.max(...rs.map((r) => r.maxY));
+          return `<tr><td><a href="#${m.id}" style="color:inherit">${m.name}</a> <span class="dim">${m.id}</span></td><td>${m.genre}</td><td class="${ang <= 40.05 ? "ok" : "fail"}">≤ ${fmt(ang)}°</td><td class="${low <= FOOT_LINE + 0.01 ? "ok" : "fail"}">y ${fmt(low)}</td></tr>`;
+        })
+        .join("")}</table>`;
+      window.__moves = results;
+      window.__movesReady = true;
+      };
+      if (document.readyState === "complete") run(); else addEventListener("load", run);
+    </script>
+  </body>
+</html>
