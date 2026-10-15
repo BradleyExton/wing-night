@@ -6,7 +6,7 @@ import type {
   SerializableValue
 } from "@wingnight/minigames-core";
 
-import { resolveMinigameRendererBundle } from "../../../minigames/registry";
+import { useMinigameRendererBundle } from "../../../minigames/useMinigameRendererBundle";
 import { useServerOrigin } from "../../../utils/useServerOrigin";
 import { hostControlPanelCopy } from "../copy";
 import * as styles from "./styles";
@@ -46,6 +46,10 @@ export const MinigameSurface = ({
   // The host tablet is a different origin from the server as well, so a
   // minigame surface that renders a content-pack image needs the absolute one.
   const serverOrigin = useServerOrigin();
+  // Unconditional, above the early returns. In a real game the chunk is already
+  // warm — HostControlPanel asked for it when the room named the round — so this
+  // is a cache read, not a fetch.
+  const minigameRendererLoad = useMinigameRendererBundle(minigameType);
   const isTakeover = phase === "play";
   const containerClassName = isTakeover ? styles.takeoverCanvas : styles.group;
 
@@ -60,20 +64,27 @@ export const MinigameSurface = ({
     );
   }
 
-  const minigameRendererBundle = resolveMinigameRendererBundle(minigameType);
-
-  if (minigameRendererBundle === null) {
+  // The renderer chunk has not landed yet. Same wording as a host view that has
+  // not arrived, because it is the same situation from the host's side: the
+  // panel is a beat behind and is about to catch up — unless the chunk has
+  // failed enough times that "catching up" is no longer an honest description,
+  // in which case the host is told what actually happened and how to fix it.
+  if (minigameRendererLoad.rendererBundle === null) {
     return (
       <section className={containerClassName}>
         <div className={styles.groupHead}>
           <span>{hostControlPanelCopy.minigameSectionTitle}</span>
         </div>
         <p className={styles.description}>
-          {hostControlPanelCopy.minigameRendererUnavailableLabel(minigameType)}
+          {minigameRendererLoad.status === "unavailable"
+            ? hostControlPanelCopy.minigameRendererUnavailableLabel(minigameType)
+            : hostControlPanelCopy.minigameWaitingForViewLabel}
         </p>
       </section>
     );
   }
+
+  const { HostSurface } = minigameRendererLoad.rendererBundle;
 
   // Minigame-agnostic loading state: during play the host view can be null
   // for a beat while the server snapshot catches up after (re)connection.
@@ -94,7 +105,7 @@ export const MinigameSurface = ({
     return (
       <section className={containerClassName}>
         <div className={styles.takeoverInner}>
-          <minigameRendererBundle.HostSurface
+          <HostSurface
             phase={phase}
             minigameType={minigameType}
             minigameHostView={minigameHostView}
@@ -121,7 +132,7 @@ export const MinigameSurface = ({
         <span>{hostControlPanelCopy.minigameSectionTitle}</span>
       </div>
       <div className={styles.body}>
-        <minigameRendererBundle.HostSurface
+        <HostSurface
           phase={phase}
           minigameType={minigameType}
           minigameHostView={minigameHostView}

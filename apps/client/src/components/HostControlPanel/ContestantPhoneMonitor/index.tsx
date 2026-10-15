@@ -4,7 +4,7 @@ import type { ContestantTurn } from "@wingnight/shared";
 
 import { useHostHandlers } from "../../../context/HostHandlersContext";
 import { useHostRoomState } from "../../../context/RoomStateContext";
-import { resolveMinigameRendererBundle } from "../../../minigames/registry";
+import { useMinigameRendererBundle } from "../../../minigames/useMinigameRendererBundle";
 import { resolveLegHandset } from "../../../utils/resolveContestantHandset";
 import { useServerOrigin } from "../../../utils/useServerOrigin";
 import { ScaledDeviceFrame } from "../../ScaledDeviceFrame";
@@ -32,7 +32,8 @@ export const ContestantPhoneMonitor = ({ turn, activeTeamName }: ContestantPhone
   const handlers = useHostHandlers();
   const serverOrigin = useServerOrigin();
   const view = roomState?.minigameDisplayView ?? null;
-  const rendererBundle = resolveMinigameRendererBundle(turn.minigame);
+  // Warm: HostControlPanel asked for the round's chunk when the room named the game.
+  const { rendererBundle } = useMinigameRendererBundle(turn.minigame);
   const players = roomState?.players ?? [];
   const nameOf = (playerId: string | null): string | null =>
     players.find((player) => player.id === playerId)?.name ?? null;

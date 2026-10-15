@@ -1,3 +1,4 @@
+import type { MinigameRendererBundle } from "@wingnight/minigames-core";
 import type { MinigameType } from "@wingnight/shared";
 
 import {
@@ -5,7 +6,7 @@ import {
   resolveMinigameDevManifest,
   resolveMinigameRuntimePlugin
 } from "../../minigames/devRegistry";
-import { resolveMinigameRendererBundle } from "../../minigames/registry";
+import { useMinigameRendererBundle } from "../../minigames/useMinigameRendererBundle";
 import { SandboxStage } from "./SandboxStage";
 import { useSandboxManifest } from "./useSandboxManifest";
 import { minigameDevSandboxCopy } from "./copy";
@@ -19,7 +20,8 @@ export const MinigameDevSandbox = ({
   minigameType
 }: MinigameDevSandboxProps): JSX.Element => {
   const fixtureManifest = resolveMinigameDevManifest(minigameType);
-  const rendererBundle = resolveMinigameRendererBundle(minigameType);
+  // The same lazy chunk the party loads: the sandbox exercises the real split.
+  const { status: rendererStatus, rendererBundle } = useMinigameRendererBundle(minigameType);
   const runtimePlugin = resolveMinigameRuntimePlugin(minigameType);
 
   if (fixtureManifest === null || rendererBundle === null || runtimePlugin === null) {
@@ -29,7 +31,9 @@ export const MinigameDevSandbox = ({
           <h1 className={styles.heading}>{minigameDevSandboxCopy.title}</h1>
           <p className={styles.description}>
             {rendererBundle === null
-              ? minigameDevSandboxCopy.noRendererLabel
+              ? rendererStatus === "unavailable"
+                ? minigameDevSandboxCopy.noRendererLabel
+                : minigameDevSandboxCopy.loadingRendererLabel
               : minigameDevSandboxCopy.noRuntimeLabel}
           </p>
         </div>
@@ -50,7 +54,7 @@ export const MinigameDevSandbox = ({
 type SeededSandboxProps = {
   minigameType: MinigameType;
   fixtureManifest: NonNullable<ReturnType<typeof resolveMinigameDevManifest>>;
-  rendererBundle: NonNullable<ReturnType<typeof resolveMinigameRendererBundle>>;
+  rendererBundle: MinigameRendererBundle;
   runtimePlugin: NonNullable<ReturnType<typeof resolveMinigameRuntimePlugin>>;
 };
 

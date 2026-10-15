@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { before } from "node:test";
 import type { MinigamePlayerView, RoleScopedStateSnapshotEnvelope } from "@wingnight/shared";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -8,6 +8,11 @@ import type { ContestantLegController } from "../../utils/contestantLeg";
 import type { PhoneAnswerCardController } from "../../utils/phoneAnswerCard";
 import type { PlayerSeatController, PlayerSeatState } from "../../utils/playerSeat";
 import { PlayerPhone } from "./index";
+import { warmMinigameRenderers } from "../../testSupport/warmMinigameRenderers";
+
+// The surfaces below arrive over a dynamic import; warm them so these tests
+// assert on the minigame's markup and not on the pre-chunk placeholder.
+before(warmMinigameRenderers);
 
 const ENVELOPE: RoleScopedStateSnapshotEnvelope = {
   clientRole: "PLAYER",

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { SerializableValue } from "@wingnight/minigames-core";
 import { CONTESTANT_CONTROLLERS, type ContestantMinigameHostView } from "@wingnight/shared";
 
-import { resolveMinigameRendererBundle } from "../../../minigames/registry";
+import { useMinigameRendererBundle } from "../../../minigames/useMinigameRendererBundle";
 import { PhoneGameFrame } from "../../PhoneGameFrame";
 import { useIsLandscape } from "../../PhoneGameFrame/useIsLandscape";
 import { contestantGameCopy } from "./copy";
@@ -41,7 +41,9 @@ export const ContestantGame = ({
 }: ContestantGameProps): JSX.Element => {
   const [isHolding, setIsHolding] = useState(true);
   const isLandscape = useIsLandscape();
-  const rendererBundle = hostView === null ? null : resolveMinigameRendererBundle(hostView.minigame);
+  // Warm by now: PlayerPhone asked for the game's chunk at the team's briefing. Until it lands
+  // (or while it fails) the phone holds its waiting line, the same as a view not yet arrived.
+  const { rendererBundle } = useMinigameRendererBundle(hostView?.minigame ?? null);
 
   // The hold is a beat the player has to SEE, so its clock starts when the phone is on its side:
   // upright, the rotate card covers the game and the hold with it.

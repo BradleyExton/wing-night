@@ -32,7 +32,8 @@ extends `MinigameType`, and **every `Record<MinigameType, ...>` map in the
 repo then fails to compile until your new game is registered in it**:
 
 - `apps/server/src/minigames/registry/index.ts` — runtime plugin map (1 line)
-- `apps/client/src/minigames/registry/index.ts` — renderer bundle + dev manifest + runtime plugin (1 entry)
+- `apps/client/src/minigames/registry/index.ts` — the renderer bundle's lazy loader (1 entry)
+- `apps/client/src/minigames/devRegistry/index.ts` — dev manifest + runtime plugin for the sandbox (1 entry)
 - `apps/client/src/copy/minigameBriefings.ts` — illustration + one-line summary (1 entry)
 
 You cannot forget a registration: `pnpm typecheck` walks you to each one.
@@ -69,7 +70,10 @@ For a content-backed game with the slug `<slug>`:
 4. `packages/shared/src/roomState/index.ts` — host/display view types added to the
    `MinigameHostView` / `MinigameDisplayView` unions.
 5. `apps/server/src/minigames/registry/index.ts` — one registry line.
-6. `apps/client/src/minigames/registry/index.ts` — one registry entry.
+6. `apps/client/src/minigames/registry/index.ts` (the renderer's lazy loader) and
+   `apps/client/src/minigames/devRegistry/index.ts` (dev manifest + runtime plugin) —
+   one entry each. Never import a `@wingnight/minigames-*/client` entry statically from
+   a party route: that hoists the game back into every screen's download.
 7. `apps/client/src/copy/minigameBriefings.ts` — one briefing entry.
 8. `apps/server/package.json` + `apps/client/package.json` — workspace dependency
    on `@wingnight/minigames-<slug>` (packages run from source; there is no build
@@ -528,9 +532,11 @@ If the display surface plays audio or video, the TV browser has had no user inte
   after the cue that same tap triggers and kills the music a beat after it
   starts — sets session-scoped `audioUnlocked` state, and clears: once a night,
   not once a round.
-- To opt your game in, set `requiresDisplayAudio: true` on its
-  `MinigameRendererBundle`. `DisplayBoard` asks the registry, so the overlay also
-  appears for a round whose active team has no anthem. Do not add a second primer.
+- To opt your game in, set `requiresDisplayAudio: true` on its entry in
+  `apps/client/src/minigames/registry` — beside the loader, not on the bundle,
+  because `DisplayBoard` decides at MINIGAME_INTRO, before the renderer has
+  downloaded. The overlay then also appears for a round whose active team has no
+  anthem. Do not add a second primer.
 - Your display surface owns its own `<audio>` element and drives it in effects.
   Render the element for the whole surface lifetime, not per phase, so seeking
   never has to re-create it mid-round. Every media call is best-effort — a

@@ -356,10 +356,9 @@ export type MinigameRendererBundle = {
   DisplaySurface: ComponentType<MinigameDisplayRendererProps>;
   // Optional, beside the runtime's answer hooks: the card a playing-team phone answers on.
   PlayerSurface?: ComponentType<MinigamePlayerRendererProps>;
-  // Declares that the display surface is the room's speaker for this game, so
-  // the display shell knows to offer its tap-to-enable-audio overlay even when
-  // the active team has no anthem to play.
-  requiresDisplayAudio?: boolean;
+  // Whether the TV is the room's speaker for the game is NOT here: the display
+  // decides on its audio overlay before it downloads a renderer, so that flag
+  // lives beside the loader in the client's registry (`requiresDisplayAudio`).
 };
 
 // Everything the dev sandbox needs to boot a minigame's runtime plugin with

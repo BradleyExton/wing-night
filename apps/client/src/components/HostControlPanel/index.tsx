@@ -17,6 +17,7 @@ import { useHostHandlers } from "../../context/HostHandlersContext";
 import { HostOverridesUiProvider } from "../../context/HostOverridesUiContext";
 import type { HostOverridesUi } from "../../context/HostOverridesUiContext";
 import { useHostRoomState } from "../../context/RoomStateContext";
+import { useMinigameRendererBundle } from "../../minigames/useMinigameRendererBundle";
 import { useGameStartHandoff } from "./useGameStartHandoff";
 import { useHostWakeLock } from "./useHostWakeLock";
 import * as styles from "./styles";
@@ -33,6 +34,10 @@ export const HostControlPanel = (): JSX.Element => {
   const phase = roomState?.phase ?? null;
   const fatalError = roomState?.fatalError ?? null;
   const hostMode = resolveHostRenderMode(phase);
+  // Warms the round's renderer chunk as soon as the room names the game, phases
+  // before MinigameSurface first draws it. Nothing here renders it; the call is
+  // for the fetch.
+  useMinigameRendererBundle(roomState?.currentRoundConfig?.minigame ?? null);
   const isMinigameTakeover =
     hostMode === "minigame_intro" || hostMode === "minigame_play";
   // Only MINIGAME_PLAY hands the tablet over; MINIGAME_INTRO is still the host

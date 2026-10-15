@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { before } from "node:test";
 import {
   Phase,
   SETUP_PREVIEW_ROUND_SLOTS_MAX,
@@ -9,6 +9,11 @@ import {
 import { renderDisplayMarkup } from "../../../testSupport/renderWithProviders";
 import { buildGameConfig, buildRoomState } from "../../../testSupport/roomStateFixtures";
 import { StageSurface } from "./index";
+import { warmMinigameRenderers } from "../../../testSupport/warmMinigameRenderers";
+
+// The surfaces below arrive over a dynamic import; warm them so these tests
+// assert on the minigame's markup and not on the pre-chunk placeholder.
+before(warmMinigameRenderers);
 
 const gameConfigFixture = buildGameConfig({
   minigameRules: {

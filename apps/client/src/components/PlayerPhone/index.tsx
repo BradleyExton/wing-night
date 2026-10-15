@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
-import type { Player, Team, TeamTheme } from "@wingnight/shared";
+import { MINIGAME_DEVICE_MODES, type Player, type Team, type TeamTheme } from "@wingnight/shared";
 
 import { usePlayerRoomState } from "../../context/RoomStateContext";
+import { useMinigameRendererBundle } from "../../minigames/useMinigameRendererBundle";
 import type { ContestantLegController } from "../../utils/contestantLeg";
 import type { PhoneAnswerCardController } from "../../utils/phoneAnswerCard";
 import type { PlayerSeatController, PlayerSeatState } from "../../utils/playerSeat";
@@ -98,6 +99,13 @@ export const PlayerPhone = ({
       ? null
       : resolvePhoneTurn(roomState, seatedPlayer.id, previousContestantRef.current);
   const contestantHostView = useContestantHostView(contestantLeg, phoneTurn?.role === "play");
+  // Warms the game's renderer chunk from the team's briefing on, on the team's phones only, and
+  // only when the turn is played on phones: the leg that lands on this phone draws at once.
+  useMinigameRendererBundle(
+    phoneTurn !== null && roomState?.contestantTurn?.deviceMode === MINIGAME_DEVICE_MODES.PHONES
+      ? roomState.contestantTurn.minigame
+      : null
+  );
   const ownBet = useOwnSpectatorBet(betSlip);
   const ownCard = usePhoneAnswerCard(answerCard);
   // Every phone on the playing team answers the question in hand at once, when the game asks.

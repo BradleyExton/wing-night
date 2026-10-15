@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { before } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MINIGAME_TYPES, resolveMinigameDefinition } from "@wingnight/shared";
 
 import { MinigameDevSandbox } from "./index";
+import { warmMinigameRenderers } from "../../testSupport/warmMinigameRenderers";
+
+// The surfaces below arrive over a dynamic import; warm them so these tests
+// assert on the minigame's markup and not on the pre-chunk placeholder.
+before(warmMinigameRenderers);
 
 test("renders the trivia sandbox from the live runtime plugin", () => {
   const html = renderToStaticMarkup(<MinigameDevSandbox minigameType="TRIVIA" />);
